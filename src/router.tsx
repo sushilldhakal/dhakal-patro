@@ -37,7 +37,12 @@ const routeTree = rootRoute.addChildren([
   kundaliRoute,
 ]);
 
-export const router = createRouter({ routeTree });
+const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+export const router = createRouter({
+  routeTree,
+  ...(basepath ? { basepath } : {}),
+});
 
 declare module "@tanstack/react-router" {
   interface Register {
