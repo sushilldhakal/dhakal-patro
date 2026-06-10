@@ -7,7 +7,10 @@ import { getSunrise, getSunset, toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
+import { DayTimeline } from "@/components/panchanga/DayTimeline";
+import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
+import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
   DinVisheshSection,
   FestivalsSection,
@@ -30,6 +33,7 @@ function toAdStr(d: Date): string {
 }
 
 export function Panchanga() {
+  const { location, setLocation } = usePanchangaLocation();
   const [date, setDate] = useState(() => new Date());
   const [view, setView] = useState<ViewMode>(() => {
     const saved = localStorage.getItem("dhakalPatroPanchView");
@@ -48,8 +52,8 @@ export function Panchanga() {
   };
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: panchangaKeys.day(adDateStr, "ad"),
-    queryFn: () => fetchPanchanga(adDateStr, "ad"),
+    queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
+    queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -79,12 +83,17 @@ export function Panchanga() {
             {" · "}
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              काठमाडौं, नेपाल
+              {data?.location?.name ?? location.label}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <LocationSelector
+            compact
+            location={location}
+            onLocationChange={setLocation}
+          />
           <div
             className="inline-flex p-0.5 gap-0.5 border border-border rounded-lg bg-card"
             role="tablist"
@@ -126,6 +135,7 @@ export function Panchanga() {
           <QuickDateStrip date={date} onDateChange={setDate} />
           <PanchangaMonthGrid
             date={date}
+            locationParams={location.params}
             onPickDay={(d) => {
               setDate(d);
               switchView("day");
@@ -137,6 +147,8 @@ export function Panchanga() {
           <div className="flex flex-col gap-4 min-w-0">
             <PanchangaDateNav date={date} onDateChange={setDate} />
             <QuickDateStrip date={date} onDateChange={setDate} />
+
+            {data && !isLoading && <DayTimeline p={data} dateAd={adDateStr} />}
 
             {isLoading && (
               <div className="space-y-4">

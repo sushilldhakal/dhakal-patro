@@ -6,29 +6,114 @@ async function get<T>(path: string): Promise<T> {
   return res.json();
 }
 
+// ─── Location ─────────────────────────────────────────────────────────────────
+
+export interface LocationParams {
+  city_id?: number;
+  city?: string;
+  lat?: number;
+  lon?: number;
+  timezone?: string;
+}
+
+export function locationCacheKey(location?: LocationParams): string {
+  if (!location) return "default";
+  if (location.city_id != null) return `city:${location.city_id}`;
+  if (location.lat != null && location.lon != null) {
+    return `coords:${location.lat.toFixed(4)},${location.lon.toFixed(4)}`;
+  }
+  if (location.city) return `name:${location.city}`;
+  return "default";
+}
+
+function appendLocation(path: string, location?: LocationParams): string {
+  if (!location) return path;
+  const params = new URLSearchParams();
+  if (location.city_id != null) {
+    params.set("city_id", String(location.city_id));
+  } else if (location.city) {
+    params.set("city", location.city);
+  } else {
+    if (location.lat != null) params.set("lat", String(location.lat));
+    if (location.lon != null) params.set("lon", String(location.lon));
+    if (location.timezone) params.set("timezone", location.timezone);
+  }
+  const qs = params.toString();
+  if (!qs) return path;
+  return `${path}${path.includes("?") ? "&" : "?"}${qs}`;
+}
+
+export interface City {
+  id: number;
+  name: string;
+  ascii_name: string;
+  lat: number;
+  lon: number;
+  country: string;
+  population: number;
+  timezone: string;
+}
+
+export interface CitiesSearchResponse {
+  query: string;
+  count: number;
+  cities: City[];
+}
+
+export const cityKeys = {
+  search: (q: string) => ["cities", "search", q] as const,
+  popular: () => ["cities", "popular"] as const,
+};
+
+export const searchCities = (q: string, limit = 10) =>
+  get<CitiesSearchResponse>(
+    `/nepal/cities/search?q=${encodeURIComponent(q)}&limit=${limit}`
+  );
+
+export const fetchPopularCities = () =>
+  get<{ count: number; cities: City[] }>("/nepal/cities/popular");
+
 // ─── Panchanga ────────────────────────────────────────────────────────────────
 
 export const panchangaKeys = {
-  today: () => ["panchanga", "today"] as const,
-  day: (date: string, era: string) => ["panchanga", "day", date, era] as const,
-  nepalDay: (date: string) => ["panchanga", "nepal", date] as const,
-  month: (year: number, month: number) => ["panchanga", "month", year, month] as const,
-  header: (year: number, month: number) => ["calendar", "header", year, month] as const,
+  today: (location?: LocationParams) =>
+    ["panchanga", "today", locationCacheKey(location)] as const,
+  day: (date: string, era: string, location?: LocationParams) =>
+    ["panchanga", "day", date, era, locationCacheKey(location)] as const,
+  nepalDay: (date: string, location?: LocationParams) =>
+    ["panchanga", "nepal", date, locationCacheKey(location)] as const,
+  month: (year: number, month: number, location?: LocationParams) =>
+    ["panchanga", "month", year, month, locationCacheKey(location)] as const,
+  header: (year: number, month: number, location?: LocationParams) =>
+    ["calendar", "header", year, month, locationCacheKey(location)] as const,
 };
 
-export const fetchTodayPanchanga = () => {
+export const fetchTodayPanchanga = (location?: LocationParams) => {
   const today = new Date().toISOString().split("T")[0];
-  return get<PanchangaDay>(`/panchanga/${today}?era=ad&festivals=true`);
+  return get<PanchangaDay>(
+    appendLocation(`/panchanga/${today}?era=ad&festivals=true`, location)
+  );
 };
 
-export const fetchPanchanga = (date: string, era: "bs" | "ad" = "bs") =>
-  get<PanchangaDay>(`/panchanga/${date}?era=${era}&festivals=true`);
+export const fetchPanchanga = (
+  date: string,
+  era: "bs" | "ad" = "bs",
+  location?: LocationParams
+) =>
+  get<PanchangaDay>(
+    appendLocation(`/panchanga/${date}?era=${era}&festivals=true`, location)
+  );
 
-export const fetchNepalPanchanga = (dateAd: string) =>
-  get<PanchangaDay>(`/nepal/panchanga/${dateAd}?era=ad`);
+export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =>
+  get<PanchangaDay>(
+    appendLocation(`/nepal/panchanga/${dateAd}?era=ad`, location)
+  );
 
-export const fetchMonthCalendar = (year: number, month: number) =>
-  get<MonthCalendar>(`/panchanga/${year}/${month}`);
+export const fetchMonthCalendar = (
+  year: number,
+  month: number,
+  location?: LocationParams
+) => get<MonthCalendar>(appendLocation(`/panchanga/${year}/${month}`, location));
 
 export const fetchCalendarHeader = (year: number, month: number) =>
   get<CalendarHeader>(`/calendar/header/${year}/${month}`);
@@ -80,6 +165,7 @@ export const fetchKundali = (date: string, era: "bs" | "ad" = "ad") =>
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface PanchangaDay {
+  location?: { name?: string; lat?: number; lon?: number; timezone?: string; city_id?: number };
   date_bs?: string;
   date_ad?: string;
   bs_date?: { year: number; month: number; day: number; month_name_ne?: string };

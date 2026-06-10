@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchMonthCalendar, panchangaKeys, type CalendarDay } from "@/lib/api";
+import {
+  fetchMonthCalendar,
+  panchangaKeys,
+  type CalendarDay,
+  type LocationParams,
+} from "@/lib/api";
 import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
@@ -8,16 +13,17 @@ const WEEKDAYS_NE = ["आइत", "सोम", "मंगल", "बुध", "ब
 
 interface Props {
   date: Date;
+  locationParams?: LocationParams;
   onPickDay: (d: Date) => void;
 }
 
-export function PanchangaMonthGrid({ date, onPickDay }: Props) {
+export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
   const bs = adToBS(date);
   const todayBs = adToBS(new Date());
 
   const { data, isLoading } = useQuery({
-    queryKey: panchangaKeys.month(bs.year, bs.month),
-    queryFn: () => fetchMonthCalendar(bs.year, bs.month),
+    queryKey: panchangaKeys.month(bs.year, bs.month, locationParams),
+    queryFn: () => fetchMonthCalendar(bs.year, bs.month, locationParams),
     staleTime: 1000 * 60 * 60,
   });
 
