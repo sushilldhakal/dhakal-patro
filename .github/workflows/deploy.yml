@@ -7,15 +7,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Required for actions/deploy-pages OIDC authentication
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: dhakal-patro-pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  # PRs: verify build only (no deploy)
+  ci:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,34 +37,28 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          GITHUB_PAGES: ${{ github.event_name == 'pull_request' && '' || 'true' }}
-          GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-          retention-days: 7
-
-  deploy:
+  build:
     if: github.event_name != 'pull_request'
-    needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          name: dist
-          path: dist
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for GitHub Pages
+        run: npm run build
+        env:
+          GITHUB_PAGES: "true"
+          GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
 
       - name: SPA fallback for client-side routing
         run: cp dist/index.html dist/404.html
@@ -69,6 +68,14 @@ jobs:
         with:
           path: dist
 
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
