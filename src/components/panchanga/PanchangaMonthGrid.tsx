@@ -102,7 +102,6 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
             const isToday =
               day.day === todayBs.day && bs.month === todayBs.month && bs.year === todayBs.year;
             const phase = getPakshaPhase(day);
-            const isKrishna = phase === "krishna";
 
             return (
               <button

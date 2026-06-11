@@ -17,7 +17,6 @@ const BS_YEARS = Array.from(
 );
 
 function pickBsDate(
-  date: Date,
   onDateChange: (d: Date) => void,
   year: number,
   month: number,
@@ -63,7 +62,7 @@ export function PanchangaDateNav({ date, onDateChange }: Props) {
           value={bs.year}
           aria-label="Year"
           onChange={(e) =>
-            pickBsDate(date, onDateChange, Number(e.target.value), bs.month, bs.day)
+            pickBsDate(onDateChange, Number(e.target.value), bs.month, bs.day)
           }
         >
           {BS_YEARS.map((y) => (
@@ -79,7 +78,7 @@ export function PanchangaDateNav({ date, onDateChange }: Props) {
           aria-label="Month"
           onChange={(e) => {
             const mIdx = Number(e.target.value);
-            pickBsDate(date, onDateChange, bs.year, mIdx + 1, bs.day);
+            pickBsDate(onDateChange, bs.year, mIdx + 1, bs.day);
           }}
         >
           {BS_MONTHS_NE.map((ne, i) => (
@@ -94,7 +93,7 @@ export function PanchangaDateNav({ date, onDateChange }: Props) {
           value={bs.day}
           aria-label="Day"
           onChange={(e) =>
-            pickBsDate(date, onDateChange, bs.year, bs.month, Number(e.target.value))
+            pickBsDate(onDateChange, bs.year, bs.month, Number(e.target.value))
           }
         >
           {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
@@ -140,7 +139,7 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
   const todayBs = adToBS(new Date());
 
   const pickMonth = (mIdx: number) => {
-    pickBsDate(date, onDateChange, bs.year, mIdx + 1, bs.day);
+    pickBsDate(onDateChange, bs.year, mIdx + 1, bs.day);
   };
 
   const stepMonth = (delta: number) => {
@@ -154,13 +153,13 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
       year += 1;
     }
     if (year < BS_SUPPORTED_START_YEAR || year > BS_SUPPORTED_END_YEAR) return;
-    pickBsDate(date, onDateChange, year, month, bs.day);
+    pickBsDate(onDateChange, year, month, bs.day);
   };
 
   const stepYear = (delta: number) => {
     const year = bs.year + delta;
     if (year < BS_SUPPORTED_START_YEAR || year > BS_SUPPORTED_END_YEAR) return;
-    pickBsDate(date, onDateChange, year, bs.month, bs.day);
+    pickBsDate(onDateChange, year, bs.month, bs.day);
   };
 
   return (
@@ -180,7 +179,7 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
           value={bs.year}
           aria-label="Year"
           onChange={(e) =>
-            pickBsDate(date, onDateChange, Number(e.target.value), bs.month, bs.day)
+            pickBsDate(onDateChange, Number(e.target.value), bs.month, bs.day)
           }
         >
           {BS_YEARS.map((y) => (
