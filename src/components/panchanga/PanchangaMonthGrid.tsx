@@ -63,10 +63,10 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
     return cn(
       "relative min-h-[132px] p-1.5 text-left cursor-pointer flex flex-col gap-1 transition-colors border-0",
       isKrishna
-        ? "bg-[#284143] text-white hover:bg-[#222c48] dark:bg-[#12182a] dark:hover:bg-[#284143]"
-        : "bg-card text-foreground hover:bg-secondary/[0.08]",
+        ? "bg-background text-foreground dark:text-foreground dark:bg-background"
+        : "bg-white text-foreground dark:text-foreground dark:bg-background",
       isSel &&
-        (isKrishna ? "ring-2 ring-white/90 ring-inset" : "ring-2 ring-secondary ring-inset"),
+        (isKrishna ? "ring-2 ring-secondary ring-inset" : "ring-2 ring-secondary ring-inset"),
       isToday && !isKrishna && "bg-secondary/20",
       isToday && isKrishna && "ring-2 ring-slate-300/50 ring-inset"
     );
@@ -103,8 +103,6 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
               day.day === todayBs.day && bs.month === todayBs.month && bs.year === todayBs.year;
             const phase = getPakshaPhase(day);
             const isKrishna = phase === "krishna";
-            const muted = isKrishna ? "text-white/80" : "text-muted-foreground";
-            const faint = isKrishna ? "text-white/45" : "text-muted-foreground/40";
 
             return (
               <button
@@ -116,8 +114,7 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                 {/* Top: tithi */}
                 <p
                   className={cn(
-                    "text-xs font-semibold truncate text-center w-full leading-tight m-0",
-                    isKrishna ? "text-white" : "text-muted-foreground"
+                    "text-xs font-semibold truncate text-center w-full leading-tight m-0 ext-foreground",
                   )}
                 >
                   {formatTithiWithPaksha(day)}
@@ -130,8 +127,7 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                       <>
                         <Sunrise
                           className={cn(
-                            "w-4 h-4 shrink-0",
-                            isKrishna ? "text-amber-200" : "text-orange-500"
+                            "w-4 h-4 shrink-0 text-orange-500"
                           )}
                         />
                         <span className="font-mono text-xs leading-none tabular-nums">
@@ -139,7 +135,7 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                         </span>
                       </>
                     ) : (
-                      <span className={cn("text-xs", faint)}>—</span>
+                      <span className={cn("text-xs")}>—</span>
                     )}
                   </div>
 
@@ -147,16 +143,13 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                     <span className="font-mono font-bold text-[22px] leading-none tabular-nums">
                       {toNepaliDigits(day.day)}
                     </span>
-                    <span className={cn("font-mono text-xs leading-none mt-0.5", muted)}>
+                    <span className="font-mono text-xs leading-none mt-0.5 text-foreground">
                       {ad.getDate()}
                     </span>
                     {isToday && (
                       <span
                         className={cn(
-                          "text-[8px] font-bold px-1 py-px rounded-full mt-0.5",
-                          isKrishna
-                            ? "bg-white/20 text-white"
-                            : "bg-secondary text-secondary-foreground"
+                          "text-[8px] font-bold px-1 py-px rounded-full mt-0.5 g-secondary text-secondary-foreground",
                         )}
                       >
                         आज
@@ -169,8 +162,7 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                       <>
                         <Sunset
                           className={cn(
-                            "w-4 h-4 shrink-0",
-                            isKrishna ? "text-sky-200" : "text-blue-500"
+                            "w-4 h-4 shrink-0 text-blue-500"
                           )}
                         />
                         <span className="font-mono text-xs leading-none tabular-nums">
@@ -178,7 +170,7 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                         </span>
                       </>
                     ) : (
-                      <span className={cn("text-xs", faint)}>—</span>
+                      <span className={cn("text-xs")}>—</span>
                     )}
                   </div>
                 </div>
@@ -190,29 +182,29 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                       name={day.nakshatra_ne ?? day.nakshatra}
                       size={20}
                       strokeWidth={1.8}
-                      className={isKrishna ? "text-white/90" : "text-secondary dark:text-[var(--brand-yellow)]"}
+                      className="text-secondary dark:text-[var(--brand-yellow)]"
                     />
                     <span className="truncate font-medium text-center w-full">
                       {day.nakshatra_ne ?? day.nakshatra ?? "—"}
                     </span>
                   </span>
-                  <span className={cn("truncate text-center", muted)}>
+                  <span className={cn("truncate text-center")}>
                     {day.yoga_ne ?? day.yoga ?? "—"}
                   </span>
-                  <span className={cn("truncate text-center", muted)}>
+                  <span className={cn("truncate text-center")}>
                     {day.karana_ne ?? day.karana ?? "—"}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between gap-1 min-w-0 w-full">
                   <span className="inline-flex items-center gap-0.5 min-w-0">
-                    <SunMoon className={cn("w-4 h-4 shrink-0", isKrishna ? "text-white/75" : muted)} />
+                    <SunMoon className="w-4 h-4 shrink-0 text-foreground" />
                     <span className="font-mono text-xs leading-none tabular-nums truncate">
                       {formatMonthMoonEventDisplay(day, "moonrise") ?? "—"}
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-0.5 min-w-0">
-                    <Moon className={cn("w-4 h-4 shrink-0", isKrishna ? "text-white/75" : muted)} />
+                    <Moon className="w-4 h-4 shrink-0 text-foreground" />
                     <span className="font-mono text-xs leading-none tabular-nums truncate">
                       {formatMonthMoonEventDisplay(day, "moonset") ?? "—"}
                     </span>
@@ -223,9 +215,7 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
                   <span
                     className={cn(
                       "max-w-full truncate text-xs font-semibold px-1 py-0.5 rounded-full self-start",
-                      isKrishna
-                        ? "bg-white/15 text-white"
-                        : "bg-secondary/14 text-secondary dark:text-teal-300"
+                      "bg-secondary/14 text-secondary dark:text-teal-300"
                     )}
                   >
                     {day.festivals[0]}

@@ -8,6 +8,7 @@ import {
   formatAdTitle,
   formatAngaTransition,
   formatBsTitle,
+  formatClockNepali,
   formatDinamaanShort,
   formatNepalSambatDisplay,
   formatNepalSambatSubtitle,
@@ -20,8 +21,8 @@ import {
   getPanchangaDetail,
   getMuhurtaRows,
   getPlanetRows,
-  getSunrise,
-  getSunset,
+  getSunriseDisplay,
+  getSunsetDisplay,
   getVaaraNe,
   relativeDayLabel,
 } from "@/lib/panchanga-format";
@@ -114,8 +115,10 @@ function PanchangaTable({
 }
 
 function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
-  const sunrise = getSunrise(p) ?? day.sunrise;
-  const sunset = getSunset(p) ?? day.sunset;
+  const sunrise =
+    getSunriseDisplay(p) ?? (day.sunrise ? formatClockNepali(day.sunrise) : undefined);
+  const sunset =
+    getSunsetDisplay(p) ?? (day.sunset ? formatClockNepali(day.sunset) : undefined);
   const moonrise = getMoonriseDisplay(p);
   const moonset = getMoonsetDisplay(p);
 
@@ -275,8 +278,14 @@ function PanchangaFull({
           { label: "करण", value: formatAngaTransition(karana) ?? karana?.name_ne },
           { label: "चन्द्रराशि", value: chandraNe },
           { label: "दिनमान", value: formatDinamaanShort(p) },
-          { label: "सूर्योदय", value: getSunrise(p) ?? day.sunrise },
-          { label: "सूर्यास्त", value: getSunset(p) ?? day.sunset },
+          {
+            label: "सूर्योदय",
+            value: getSunriseDisplay(p) ?? formatClockNepali(day.sunrise),
+          },
+          {
+            label: "सूर्यास्त",
+            value: getSunsetDisplay(p) ?? formatClockNepali(day.sunset),
+          },
           { label: "चन्द्रोदय", value: getMoonriseDisplay(p) },
           { label: "चन्द्रास्त", value: getMoonsetDisplay(p) },
         ]}

@@ -13,8 +13,8 @@ import {
   getMoonsetDisplay,
   getPanchangaDetail,
   getPlanetRows,
-  getSunrise,
-  getSunset,
+  getSunriseDisplay,
+  getSunsetDisplay,
   getVaaraNe,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
@@ -61,19 +61,27 @@ export function SunMoonSection({ p }: { p: PanchangaDay }) {
       <PanchangaRows>
         <PanchangaRow label="सूर्योदय" labelEn="Sunrise" oddBorder>
           <span>🌅</span>
-          <span className="font-mono">{getSunrise(p) ?? "—"}</span>
+          <span className="font-mono font-semibold text-foreground">
+            {getSunriseDisplay(p) ?? "—"}
+          </span>
         </PanchangaRow>
         <PanchangaRow label="सूर्यास्त" labelEn="Sunset">
           <span>🌇</span>
-          <span className="font-mono">{getSunset(p) ?? "—"}</span>
+          <span className="font-mono font-semibold text-foreground">
+            {getSunsetDisplay(p) ?? "—"}
+          </span>
         </PanchangaRow>
         <PanchangaRow label="चन्द्रोदय" labelEn="Moonrise" oddBorder>
           <span>🌒</span>
-          <span className="font-mono">{getMoonriseDisplay(p) ?? "—"}</span>
+          <span className="font-mono font-semibold text-foreground">
+            {getMoonriseDisplay(p) ?? "—"}
+          </span>
         </PanchangaRow>
         <PanchangaRow label="चन्द्रास्त" labelEn="Moonset">
           <span>🌘</span>
-          <span className="font-mono">{getMoonsetDisplay(p) ?? "—"}</span>
+          <span className="font-mono font-semibold text-foreground">
+            {getMoonsetDisplay(p) ?? "—"}
+          </span>
         </PanchangaRow>
       </PanchangaRows>
     </PanchangaSection>
@@ -323,7 +331,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
                 <div className="text-[11px] text-muted-foreground">{rashiNe}</div>
               )}
             </div>
-            <span className="font-mono text-[11.5px] font-semibold text-muted-foreground whitespace-nowrap">
+            <span className="font-mono text-[11.5px] font-semibold text-foreground whitespace-nowrap">
               {coords}
             </span>
           </div>

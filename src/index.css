@@ -285,6 +285,35 @@
   margin: 0 auto;
   padding: 24px 28px 72px;
 }
+@media (max-width: 640px) {
+  .pn-page {
+    padding: 0 0 64px;
+  }
+  .pn-nav {
+    padding: 0 12px;
+  }
+  .pn-layout {
+    gap: 16px;
+  }
+  .pn-calendar-col .pn-monthhead {
+    padding: 12px 10px 0;
+    margin: 0 0 10px;
+  }
+  .pn-warn-banner {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  .pn-h1 {
+    font-size: 28px;
+  }
+  .pn-aside,
+  .pn-holidays {
+    padding: 0 10px;
+  }
+  .pn-note {
+    padding: 0 10px;
+  }
+}
 .pn-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 350px;
@@ -451,6 +480,10 @@
 .pn-wk.weekend .pn-wk-ne {
   color: var(--color-danger);
 }
+.pn-wk-short,
+.pn-cell-ad-mob {
+  display: none;
+}
 .pn-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -494,10 +527,19 @@
 .pn-cell.tint-teal {
   background: color-mix(in srgb, var(--brand-teal) 9%, var(--card));
 }
-.pn-cell-top {
+.pn-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+.pn-cell-head {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  width: 100%;
 }
 .pn-cell-num {
   font: 600 24px / 1 var(--pn-num);
@@ -508,25 +550,24 @@
   color: var(--color-danger);
 }
 .pn-cell-ad {
-  margin-left: auto;
   font: 500 10.5px var(--pn-num);
   color: var(--muted-foreground);
   white-space: nowrap;
 }
+.pn-cell-ad-desk {
+  margin-left: auto;
+}
 .pn-today-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
   font: 700 10px / 1 var(--pn-font);
   padding: 3px 7px;
   border-radius: var(--radius-pill);
   background: var(--secondary);
   color: var(--secondary-foreground);
   letter-spacing: 0.04em;
-}
-.pn-cell-bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
-  min-width: 0;
+  z-index: 1;
 }
 .pn-cell-tithi {
   display: inline-flex;
@@ -575,6 +616,69 @@
 }
 .dark .pn-chip.festival {
   color: #7fd6db;
+}
+
+/* Mobile calendar — must follow base .pn-wk-short / .pn-cell-ad-mob hide */
+@media (max-width: 768px) {
+  .pn-calcard {
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .pn-wk {
+    padding: 4px 0;
+    align-items: center;
+  }
+  .pn-wk-en,
+  .pn-wk-long {
+    display: none;
+  }
+  .pn-wk-short.pn-wk-ne {
+    display: block;
+    font-size: 9px;
+    line-height: 1.1;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+  .pn-cell {
+    min-height: 48px;
+    padding: 4px 1px;
+    align-items: center;
+    text-align: center;
+    justify-content: flex-start;
+    gap: 0;
+  }
+  .pn-cell-stack {
+    align-items: center;
+    gap: 1px;
+  }
+  .pn-cell-head {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .pn-cell-num {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+  .pn-cell-ad-desk,
+  .pn-chip,
+  .pn-cell-tithi,
+  .pn-tithi-skel {
+    display: none;
+  }
+  .pn-cell-ad-mob {
+    display: block;
+    margin-left: 0;
+    font-size: 8px;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+  .pn-today-badge {
+    top: 1px;
+    right: 1px;
+    font-size: 6px;
+    padding: 1px 3px;
+  }
 }
 
 /* ── Aside / panchanga ───────────────────────────────── */
@@ -884,9 +988,42 @@
   align-items: flex-end;
   gap: 1px;
   flex-shrink: 0;
+  min-width: 0;
+}
+.pn-hol-bs {
+  font: 600 12.5px / 1.3 var(--pn-font);
+  text-align: right;
+  white-space: nowrap;
+}
+.pn-hol-ad-line {
+  font: 500 11px var(--pn-num);
+  color: var(--muted-foreground);
 }
 .pn-hol-ad .mono {
   font: 500 12.5px var(--pn-num);
+}
+@media (max-width: 480px) {
+  .pn-hol-row {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 10px 12px;
+  }
+  .pn-hol-ad {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .pn-hol-bs {
+    flex: 1;
+    text-align: left;
+    white-space: normal;
+  }
+  .pn-badge {
+    margin-left: auto;
+  }
 }
 .pn-hol-rel {
   font: 500 11px var(--pn-font);
@@ -1220,11 +1357,35 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 4px;
+  padding: 0 16px;
+}
+.pg-tl-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .pg-tl-sub {
   font: 500 12px var(--font-sans);
   color: var(--muted-foreground);
   flex: 1;
+}
+@media (max-width: 639px) {
+  .pg-tl-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .pg-tl-head-text {
+    width: 100%;
+  }
+  .pg-tl-sub {
+    flex: none;
+    line-height: 1.35;
+  }
+  .pg-tl-legend {
+    width: 100%;
+  }
 }
 .pg-tl-legend {
   display: inline-flex;
@@ -1244,6 +1405,25 @@
 }
 .pg-tl-key.night {
   background: color-mix(in srgb, var(--brand-teal) 18%, var(--card));
+}
+.pg-tl-lagna-name {
+  font: 700 11px var(--pn-font);
+  fill: var(--secondary);
+}
+.dark .pg-tl-lagna-name {
+  fill: #7fd6db;
+}
+.pg-tl-graha-title {
+  font: 700 12px var(--pn-font);
+  fill: var(--secondary);
+}
+.dark .pg-tl-graha-title {
+  fill: #7fd6db;
+}
+.pg-tl-graha-coords {
+  font: 600 12px var(--font-mono, ui-monospace, monospace);
+  fill: var(--muted-foreground);
+  letter-spacing: -0.02em;
 }
 .pg-tl-fit {
   width: 100%;
@@ -1271,6 +1451,12 @@
 }
 .pg-tl-row-band-4 {
   fill: color-mix(in srgb, var(--foreground) 6%, var(--card));
+}
+.pg-tl-row-band-5 {
+  fill: color-mix(in srgb, var(--secondary) 10%, var(--card));
+}
+.pg-tl-row-band-6 {
+  fill: color-mix(in srgb, var(--brand-teal) 8%, var(--card));
 }
 .pg-tl-vgrid-major {
   stroke: var(--foreground);
@@ -1391,6 +1577,12 @@
 .pg-tl-rowline-4 {
   stroke: color-mix(in srgb, var(--foreground) 45%, var(--border));
 }
+.pg-tl-rowline-5 {
+  stroke: color-mix(in srgb, var(--secondary) 65%, var(--foreground));
+}
+.pg-tl-rowline-6 {
+  stroke: color-mix(in srgb, var(--brand-teal) 55%, var(--foreground));
+}
 .dark .pg-tl-row-band-0 {
   fill: color-mix(in srgb, var(--brand-yellow) 16%, var(--card));
 }
@@ -1405,6 +1597,12 @@
 }
 .dark .pg-tl-row-band-4 {
   fill: color-mix(in srgb, var(--foreground) 8%, var(--card));
+}
+.dark .pg-tl-row-band-5 {
+  fill: color-mix(in srgb, var(--secondary) 14%, var(--card));
+}
+.dark .pg-tl-row-band-6 {
+  fill: color-mix(in srgb, var(--brand-teal) 12%, var(--card));
 }
 .pg-tl-segname {
   font: 700 16px var(--font-sans);

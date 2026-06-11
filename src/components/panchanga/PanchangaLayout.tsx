@@ -103,7 +103,7 @@ export function UptoValue({
         </span>
       )}
       {endTime && (
-        <span className="text-[11.5px] font-mono text-muted-foreground whitespace-nowrap">
+        <span className="text-[11.5px] font-mono font-semibold text-foreground whitespace-nowrap">
           {endTime} सम्म
         </span>
       )}
@@ -124,9 +124,10 @@ export function TimingRange({
   return (
     <span
       className={cn(
-        "font-mono text-[12.5px]",
+        "font-mono text-[12.5px] font-semibold",
         variant === "good" && "text-[var(--color-success)]",
-        variant === "bad" && "text-destructive"
+        variant === "bad" && "text-destructive",
+        variant === "neutral" && "text-foreground"
       )}
     >
       {start} → {end}

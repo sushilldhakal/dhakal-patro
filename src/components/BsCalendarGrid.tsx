@@ -2,12 +2,21 @@ import type { CalendarDay } from "@/lib/api";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** Mobile headers — drop वार suffix (आइत, सोम, …). */
+const WEEKDAYS_SHORT = ["आइत", "सोम", "मंगल", "बुध", "बिही", "शुक्र", "शनि"];
 
 const TODAY_AD = new Date().toISOString().split("T")[0];
 
 function fmtAdShort(iso: string): string {
-  const d = new Date(iso);
+  const d = new Date(iso + "T12:00:00");
   return d.toLocaleString("en", { month: "short", day: "numeric" });
+}
+
+/** Compact AD label for narrow cells, e.g. may 18 */
+function fmtAdCompact(iso: string): string {
+  const d = new Date(iso + "T12:00:00");
+  const month = d.toLocaleString("en", { month: "short" }).toLowerCase();
+  return `${month} ${d.getDate()}`;
 }
 
 interface Props {
@@ -41,7 +50,8 @@ export function BsCalendarGrid({
       <div className="pn-weekrow">
         {WEEKDAYS_NE.map((ne, i) => (
           <div key={ne} className={`pn-wk${i === 0 || i === 6 ? " weekend" : ""}`}>
-            <span className="pn-wk-ne">{ne}</span>
+            <span className="pn-wk-ne pn-wk-long">{ne}</span>
+            <span className="pn-wk-ne pn-wk-short">{WEEKDAYS_SHORT[i]}</span>
             <span className="pn-wk-en">{WEEKDAYS_EN[i]}</span>
           </div>
         ))}
@@ -80,6 +90,7 @@ export function BsCalendarGrid({
             .join(" ");
 
           const mainFest = day.festivals[0];
+          const tithi = day.tithi_ne ?? day.tithi;
 
           return (
             <button
@@ -88,15 +99,17 @@ export function BsCalendarGrid({
               className={cellClass}
               onClick={() => onSelectDay?.(day)}
             >
-              <span className="pn-cell-top">
-                <span className="pn-cell-num">{primaryNum}</span>
-                {isToday && <span className="pn-today-badge">आज</span>}
-                <span className="pn-cell-ad">{secondaryLabel}</span>
-              </span>
+              {isToday && <span className="pn-today-badge">आज</span>}
 
-              <span className="pn-cell-bottom">
-                {day.tithi_ne || day.tithi ? (
-                  <span className="pn-cell-tithi">{day.tithi_ne ?? day.tithi}</span>
+              <span className="pn-cell-stack">
+                <span className="pn-cell-head">
+                  <span className="pn-cell-num">{primaryNum}</span>
+                  <span className="pn-cell-ad pn-cell-ad-desk">{secondaryLabel}</span>
+                  <span className="pn-cell-ad pn-cell-ad-mob">{fmtAdCompact(day.date_ad)}</span>
+                </span>
+
+                {tithi ? (
+                  <span className="pn-cell-tithi">{tithi}</span>
                 ) : isEnriching ? (
                   <span className="pn-tithi-skel" aria-hidden />
                 ) : null}

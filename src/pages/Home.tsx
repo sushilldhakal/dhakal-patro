@@ -7,22 +7,20 @@ import {
   fetchHolidays,
   panchangaKeys,
   holidayKeys,
-  type PanchangaDay,
   type Holiday,
   type CalendarDay,
 } from "../lib/api";
 import { CalendarView } from "../components/CalendarView";
 import { BS_MONTHS_NE, getCurrentBs } from "../lib/bs-calendar";
-import { getMoonriseDisplay } from "../lib/panchanga-format";
-
-function getSunrise(p: PanchangaDay) {
-  if (typeof p.sunrise === "object") return p.sunrise?.local_time_short;
-  return p.sun?.sunrise;
-}
-function getSunset(p: PanchangaDay) {
-  if (typeof p.sunset === "object") return p.sunset?.local_time_short;
-  return p.sun?.sunset;
-}
+import {
+  formatClockNepali,
+  formatHolidayBsDisplay,
+  formatMonthMoonEventDisplay,
+  getMoonriseDisplay,
+  getSunriseDisplay,
+  getSunsetDisplay,
+  toNepaliDigits,
+} from "../lib/panchanga-format";
 
 const TODAY_AD = new Date().toISOString().split("T")[0];
 
@@ -67,19 +65,31 @@ function PanchangaAside({
   const yoga = p?.yoga?.name_ne ?? p?.yoga?.name;
   const karana = p?.karana?.name_ne ?? p?.karana?.name;
   const paksha = p?.paksha?.label_ne ?? p?.paksha_ne;
-  const sunrise = p ? getSunrise(p) : selectedDay?.sunrise;
-  const sunset = p ? getSunset(p) : selectedDay?.sunset;
-  const moonrise = p ? getMoonriseDisplay(p) : undefined;
+  const sunrise = p
+    ? getSunriseDisplay(p)
+    : selectedDay?.sunrise
+      ? formatClockNepali(selectedDay.sunrise)
+      : undefined;
+  const sunset = p
+    ? getSunsetDisplay(p)
+    : selectedDay?.sunset
+      ? formatClockNepali(selectedDay.sunset)
+      : undefined;
+  const moonrise = p
+    ? getMoonriseDisplay(p)
+    : selectedDay
+      ? formatMonthMoonEventDisplay(selectedDay, "moonrise")
+      : undefined;
   const ritu = p?.ritu?.name_ne;
   const rahuKalam = p?.muhurta?.rahu_kalam;
 
   const displayHeroDate = (() => {
     if (p?.bs_date && typeof p.bs_date === "object") {
-      return `${BS_MONTHS_NE[p.bs_date.month - 1]} ${p.bs_date.day}`;
+      return `${BS_MONTHS_NE[p.bs_date.month - 1]} ${toNepaliDigits(p.bs_date.day)}`;
     }
-    if (p?.display?.bs_ne) return p.display.bs_ne;
-    if (p?.date_bs) return p.date_bs;
-    return bsDisplay ?? "—";
+    if (p?.display?.bs_ne) return toNepaliDigits(p.display.bs_ne);
+    if (p?.date_bs) return toNepaliDigits(p.date_bs);
+    return bsDisplay ? toNepaliDigits(bsDisplay) : "—";
   })();
 
   const minis = [
@@ -96,7 +106,9 @@ function PanchangaAside({
     { label: "ऋतु", value: ritu, hint: p?.ritu?.season },
     {
       label: "राहुकाल",
-      value: rahuKalam ? `${rahuKalam.start_time} – ${rahuKalam.end_time}` : undefined,
+      value: rahuKalam
+        ? `${formatClockNepali(rahuKalam.start_time) ?? rahuKalam.start_time} – ${formatClockNepali(rahuKalam.end_time) ?? rahuKalam.end_time}`
+        : undefined,
       mono: true,
     },
   ];
@@ -150,7 +162,7 @@ function PanchangaAside({
             <div className="pn-hero-sub">
               {weekdayNe}
               {p?.bs_date && typeof p.bs_date === "object"
-                ? `, वि.सं. ${p.bs_date.year}`
+                ? `, वि.सं. ${toNepaliDigits(p.bs_date.year)}`
                 : ""}
             </div>
             <div className="pn-hero-ad">
@@ -219,12 +231,13 @@ function UpcomingHolidays({ bsYear }: { bsYear: number }) {
             const bsParts = (h.bs_start_date ?? "").split("-");
             const bsDay = bsParts[2] ? Number(bsParts[2]) : new Date(h.start_date).getDate();
             const bsMonthIdx = bsParts[1] ? Number(bsParts[1]) - 1 : 0;
+            const bsLabel = formatHolidayBsDisplay(h);
             const type = h.is_public_holiday ? "public" : "festival";
 
             return (
               <Link key={h.id} to="/holidays" className="pn-hol-row">
                 <span className={`pn-datetile ${type}`}>
-                  <span className="pn-datetile-d">{bsDay}</span>
+                  <span className="pn-datetile-d">{toNepaliDigits(bsDay)}</span>
                   <span className="pn-datetile-m">{BS_MONTHS_NE[bsMonthIdx] ?? ""}</span>
                 </span>
                 <span className="pn-hol-names">
@@ -237,7 +250,8 @@ function UpcomingHolidays({ bsYear }: { bsYear: number }) {
                   {h.is_public_holiday ? "बिदा" : "पर्व"}
                 </span>
                 <span className="pn-hol-ad">
-                  <span className="mono">{fmtAdFull(h.start_date)}</span>
+                  <span className="pn-hol-bs">{bsLabel}</span>
+                  <span className="pn-hol-ad-line mono">{fmtAdFull(h.start_date)}</span>
                   <span className="pn-hol-rel">{relLabel(days)}</span>
                 </span>
               </Link>

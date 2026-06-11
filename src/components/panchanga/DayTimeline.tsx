@@ -50,10 +50,12 @@ export function DayTimeline({ p, dateAd }: Props) {
   return (
     <div className="pg-timeline-card">
       <div className="pg-tl-head">
-        <h2 className="text-base font-bold m-0">दिन-रेखा · ६० घडी</h2>
-        <span className="pg-tl-sub">
-          सूर्योदयदेखि सूर्योदयसम्म · घण्टा र घडी दुवै
-        </span>
+        <div className="pg-tl-head-text">
+          <h2 className="text-base font-bold m-0">दिन-रेखा · ६० घडी</h2>
+          <span className="pg-tl-sub">
+            सूर्योदयदेखि सूर्योदयसम्म · घण्टा र घडी दुवै
+          </span>
+        </div>
         <span className="pg-tl-legend">
           <span className="pg-tl-key day" />
           दिन
@@ -79,6 +81,7 @@ export function DayTimeline({ p, dateAd }: Props) {
           />
         </svg>
       </div>
+
     </div>
   );
 }
@@ -136,7 +139,7 @@ function TimelineCanvas({
           y={rowY(ri) - ROW_BAND_HALF}
           width={gx(60) - gx(0)}
           height={ROW_BAND_HALF * 2}
-          className={`pg-tl-row-band pg-tl-row-band-${ri % 5}`}
+          className={`pg-tl-row-band pg-tl-row-band-${ri % 7}`}
         />
       ))}
 
@@ -185,7 +188,6 @@ function TimelineCanvas({
         rx={4}
       />
 
-      {/* panchanga markers in events strip (not on grid) */}
       <EventMarker
         g={0}
         y={eventsCenterY}
@@ -306,7 +308,7 @@ function EventMarker({
   const iconClass =
     kind === "sunrise" || kind === "sunset" || kind === "next-sunrise"
       ? "text-[var(--color-warning)]"
-      : "text-muted-foreground";
+      : "text-foreground";
 
   return (
     <g>
@@ -319,10 +321,8 @@ function EventMarker({
         <div className={`flex flex-col items-center gap-0 leading-none ${iconClass}`}>
           <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={2.2} aria-hidden />
           <span className="font-mono text-[10px] font-bold tabular-nums">{clock}</span>
-        
         </div>
       </foreignObject>
-     
     </g>
   );
 }
@@ -345,7 +345,7 @@ function TimelineRow({
   label: string;
   labelEn: string;
   items: TimelineSegment[];
-  kind?: "choghadiya";
+  kind?: "choghadiya" | "lagna" | "graha";
   sunriseMin: number;
   dayG: number;
   weekdayNe: string;
@@ -353,6 +353,8 @@ function TimelineRow({
   gridTop: number;
 }) {
   const isChoghadiya = kind === "choghadiya";
+  const isLagna = kind === "lagna";
+  const isGraha = kind === "graha";
   let prev = 0;
 
   return (
@@ -368,7 +370,7 @@ function TimelineRow({
         y1={y}
         x2={gx(60)}
         y2={y}
-        className={`pg-tl-rowline pg-tl-rowline-${rowIndex % 5}`}
+        className={`pg-tl-rowline pg-tl-rowline-${rowIndex % 7}`}
       />
 
       {items.map((it, ii) => {
@@ -388,22 +390,39 @@ function TimelineRow({
               />
             )}
             {(isChoghadiya ? span >= 2 : true) && (
-              <text
-                x={midX}
-                y={y - (isChoghadiya && it.bad ? 11 : 8)}
-                className={
-                  isChoghadiya && it.bad
-                    ? "pg-tl-badname"
-                    : span < (isChoghadiya ? 3 : 8)
-                      ? "pg-tl-segname-sm"
-                      : "pg-tl-segname"
-                }
-                textAnchor="middle"
-              >
-                {it.name}
-              </text>
+              <>
+                {isGraha && it.subLabel && span >= 1.5 && (
+                  <text
+                    x={midX}
+                    y={y - 14}
+                    className="pg-tl-graha-title"
+                    textAnchor="middle"
+                  >
+                    {it.subLabel}
+                  </text>
+                )}
+                <text
+                  x={midX}
+                  y={y + (isGraha ? 14 : 0) - (isChoghadiya && it.bad ? 11 : isGraha ? 0 : 8)}
+                  className={
+                    isChoghadiya && it.bad
+                      ? "pg-tl-badname"
+                      : isGraha
+                        ? "pg-tl-graha-coords"
+                        : span < (isChoghadiya ? 3 : isLagna ? 3.5 : 8)
+                          ? "pg-tl-segname-sm"
+                          : isLagna
+                            ? "pg-tl-lagna-name"
+                            : "pg-tl-segname"
+                  }
+                  textAnchor="middle"
+                >
+                  {it.name}
+                </text>
+              </>
             )}
             {!isChoghadiya &&
+              !isGraha &&
               it.endG !== undefined &&
               it.endG !== null &&
               it.endG < 60 && (
@@ -415,6 +434,7 @@ function TimelineRow({
                   gridTop={gridTop}
                   segmentSpan={span}
                   nextSpan={60 - end}
+                  minimal={isLagna}
                 />
               )}
           </g>
@@ -445,6 +465,7 @@ function TransitionMarker({
   gridTop,
   segmentSpan,
   nextSpan,
+  minimal = false,
 }: {
   g: number;
   y: number;
@@ -453,6 +474,7 @@ function TransitionMarker({
   gridTop: number;
   segmentSpan: number;
   nextSpan: number;
+  minimal?: boolean;
 }) {
   const { clock } = dualTimeAtGhati(g, sunriseMin);
   const x = gx(g);
@@ -460,6 +482,19 @@ function TransitionMarker({
   const anchor: "start" | "middle" | "end" =
     g > 52 ? "end" : g < 8 ? "start" : "middle";
   const dx = anchor === "end" ? -4 : anchor === "start" ? 4 : 0;
+
+  if (minimal) {
+    return (
+      <text
+        x={x + dx}
+        y={y + (narrow ? 22 : 26)}
+        className="pg-tl-time"
+        textAnchor={anchor}
+      >
+        {clock}
+      </text>
+    );
+  }
 
   return (
     <g>

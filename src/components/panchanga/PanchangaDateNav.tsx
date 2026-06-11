@@ -1,7 +1,31 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { BS_MONTHS_NE, BS_MONTH_NAMES, adToBS, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import {
+  BS_MONTHS_NE,
+  BS_MONTH_NAMES,
+  BS_SUPPORTED_END_YEAR,
+  BS_SUPPORTED_START_YEAR,
+  adToBS,
+  bsToAD,
+  getBSMonthLength,
+} from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+
+const BS_YEARS = Array.from(
+  { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
+  (_, i) => BS_SUPPORTED_START_YEAR + i
+);
+
+function pickBsDate(
+  date: Date,
+  onDateChange: (d: Date) => void,
+  year: number,
+  month: number,
+  day: number
+) {
+  const safeDay = Math.min(day, getBSMonthLength(year, month));
+  onDateChange(bsToAD(year, month, safeDay));
+}
 
 interface Props {
   date: Date;
@@ -36,12 +60,26 @@ export function PanchangaDateNav({ date, onDateChange }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
         <select
           className="h-8 px-2.5 rounded-lg border border-border bg-card text-foreground text-[13px] font-medium cursor-pointer"
+          value={bs.year}
+          aria-label="Year"
+          onChange={(e) =>
+            pickBsDate(date, onDateChange, Number(e.target.value), bs.month, bs.day)
+          }
+        >
+          {BS_YEARS.map((y) => (
+            <option key={y} value={y}>
+              वि.सं. {toNepaliDigits(y)}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="h-8 px-2.5 rounded-lg border border-border bg-card text-foreground text-[13px] font-medium cursor-pointer"
           value={bs.month - 1}
           aria-label="Month"
           onChange={(e) => {
             const mIdx = Number(e.target.value);
-            const day = Math.min(bs.day, getBSMonthLength(bs.year, mIdx + 1));
-            onDateChange(bsToAD(bs.year, mIdx + 1, day));
+            pickBsDate(date, onDateChange, bs.year, mIdx + 1, bs.day);
           }}
         >
           {BS_MONTHS_NE.map((ne, i) => (
@@ -55,7 +93,9 @@ export function PanchangaDateNav({ date, onDateChange }: Props) {
           className="h-8 px-2.5 rounded-lg border border-border bg-card text-foreground text-[13px] font-medium cursor-pointer"
           value={bs.day}
           aria-label="Day"
-          onChange={(e) => onDateChange(bsToAD(bs.year, bs.month, Number(e.target.value)))}
+          onChange={(e) =>
+            pickBsDate(date, onDateChange, bs.year, bs.month, Number(e.target.value))
+          }
         >
           {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
             <option key={dd} value={dd}>
@@ -100,18 +140,72 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
   const todayBs = adToBS(new Date());
 
   const pickMonth = (mIdx: number) => {
-    const day = Math.min(bs.day, getBSMonthLength(bs.year, mIdx + 1));
-    onDateChange(bsToAD(bs.year, mIdx + 1, day));
+    pickBsDate(date, onDateChange, bs.year, mIdx + 1, bs.day);
+  };
+
+  const stepMonth = (delta: number) => {
+    let month = bs.month + delta;
+    let year = bs.year;
+    if (month < 1) {
+      month = 12;
+      year -= 1;
+    } else if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+    if (year < BS_SUPPORTED_START_YEAR || year > BS_SUPPORTED_END_YEAR) return;
+    pickBsDate(date, onDateChange, year, month, bs.day);
+  };
+
+  const stepYear = (delta: number) => {
+    const year = bs.year + delta;
+    if (year < BS_SUPPORTED_START_YEAR || year > BS_SUPPORTED_END_YEAR) return;
+    pickBsDate(date, onDateChange, year, bs.month, bs.day);
   };
 
   return (
     <div className="rounded-xl bg-card px-3 py-2.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] flex flex-col gap-2">
+      <div className="flex flex-wrap gap-1.5 items-center">
+        <button
+          type="button"
+          className="w-[26px] h-[26px] rounded-full border-0 bg-transparent text-muted-foreground hover:text-foreground disabled:opacity-30"
+          disabled={bs.year <= BS_SUPPORTED_START_YEAR}
+          onClick={() => stepYear(-1)}
+          aria-label="Previous year"
+        >
+          ‹
+        </button>
+        <select
+          className="h-[26px] min-w-[5.5rem] px-2 rounded-md border border-border bg-card text-foreground text-xs font-semibold cursor-pointer"
+          value={bs.year}
+          aria-label="Year"
+          onChange={(e) =>
+            pickBsDate(date, onDateChange, Number(e.target.value), bs.month, bs.day)
+          }
+        >
+          {BS_YEARS.map((y) => (
+            <option key={y} value={y}>
+              {toNepaliDigits(y)}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="w-[26px] h-[26px] rounded-full border-0 bg-transparent text-muted-foreground hover:text-foreground disabled:opacity-30"
+          disabled={bs.year >= BS_SUPPORTED_END_YEAR}
+          onClick={() => stepYear(1)}
+          aria-label="Next year"
+        >
+          ›
+        </button>
+      </div>
+
       <div className="flex flex-wrap gap-1 items-center">
         <button
           type="button"
           className="w-[26px] h-[26px] rounded-full border-0 bg-transparent text-muted-foreground hover:text-foreground disabled:opacity-30"
-          disabled={bs.month <= 1 && bs.year <= 2082}
-          onClick={() => pickMonth(bs.month - 2 < 0 ? 11 : bs.month - 2)}
+          disabled={bs.month <= 1 && bs.year <= BS_SUPPORTED_START_YEAR}
+          onClick={() => stepMonth(-1)}
           aria-label="Previous month"
         >
           ‹
@@ -133,8 +227,9 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
         ))}
         <button
           type="button"
-          className="w-[26px] h-[26px] rounded-full border-0 bg-transparent text-muted-foreground hover:text-foreground"
-          onClick={() => pickMonth(bs.month >= 12 ? 0 : bs.month)}
+          className="w-[26px] h-[26px] rounded-full border-0 bg-transparent text-muted-foreground hover:text-foreground disabled:opacity-30"
+          disabled={bs.month >= 12 && bs.year >= BS_SUPPORTED_END_YEAR}
+          onClick={() => stepMonth(1)}
           aria-label="Next month"
         >
           ›

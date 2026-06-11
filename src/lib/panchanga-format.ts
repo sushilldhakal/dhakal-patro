@@ -1,5 +1,5 @@
 import type { PanchangaDay } from "./api";
-import { BS_MONTH_NAMES } from "./bs-calendar";
+import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
 
 const NEPALI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"] as const;
 
@@ -14,6 +14,13 @@ export function formatTimeShort(time?: string | null): string | undefined {
   const h = match[1]!.padStart(2, "0");
   const m = match[2]!;
   return `${h}:${m}`;
+}
+
+/** Clock time with Nepali digits (e.g. ०७:३२). */
+export function formatClockNepali(time?: string | null): string | undefined {
+  if (!time) return undefined;
+  const short = formatTimeShort(time) ?? time;
+  return toNepaliDigits(short);
 }
 
 export function formatGhatiEnd(clock?: string | null): string | undefined {
@@ -67,6 +74,14 @@ export function getPanchangaDetail(p: PanchangaDay) {
     | undefined;
 }
 
+export function getLagnaSpans(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const fromDetail = detail?.lagna_spans as PanchangaDay["lagna_spans"];
+  if (fromDetail?.length) return fromDetail;
+  if (p.lagna_spans?.length) return p.lagna_spans;
+  return undefined;
+}
+
 export function getSunrise(p: PanchangaDay): string | undefined {
   const detail = getPanchangaDetail(p);
   const fromDetail = (detail?.sunrise as { local_time_short?: string } | undefined)?.local_time_short;
@@ -83,6 +98,14 @@ export function getSunset(p: PanchangaDay): string | undefined {
   if (typeof p.sunset === "object") return p.sunset?.local_time_short;
   if (typeof p.sunset === "string") return p.sunset;
   return p.sun?.sunset;
+}
+
+export function getSunriseDisplay(p: PanchangaDay): string | undefined {
+  return formatClockNepali(getSunrise(p));
+}
+
+export function getSunsetDisplay(p: PanchangaDay): string | undefined {
+  return formatClockNepali(getSunset(p));
 }
 
 type MoonTimeBlock = { local?: string; local_time_short?: string };
@@ -104,11 +127,40 @@ function addDaysIso(isoDate: string, days: number): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-function formatAdDateShort(isoDate: string): string {
+/** BS date label for a civil (AD) calendar day, e.g. जेठ २९. */
+function formatEventDateBsNepali(isoDate: string): string {
   const [y, m, d] = isoDate.split("-").map(Number);
-  if (!y || !m || !d) return isoDate;
-  const label = new Date(y, m - 1, d).toLocaleDateString("en", { day: "numeric", month: "short" });
-  return toNepaliDigits(label);
+  if (!y || !m || !d) return toNepaliDigits(isoDate);
+  const bs = adToBS(new Date(y, m - 1, d));
+  return `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.day)}`;
+}
+
+/** BS date from YYYY-MM-DD (BS era), e.g. जेठ १५, वि.सं. २०८२. */
+export function formatBsIsoDateNepali(
+  bsIso?: string | null,
+  opts?: { includeYear?: boolean }
+): string | undefined {
+  if (!bsIso) return undefined;
+  const [ys, ms, ds] = bsIso.split("-");
+  const year = Number(ys);
+  const month = Number(ms);
+  const day = Number(ds);
+  if (!month || !day) return undefined;
+  const label = `${BS_MONTHS_NE[month - 1]} ${toNepaliDigits(day)}`;
+  if (opts?.includeYear === false || !year) return label;
+  return `${label}, वि.सं. ${toNepaliDigits(year)}`;
+}
+
+export function formatHolidayBsDisplay(holiday: {
+  bs_start_date?: string;
+  start_date: string;
+}): string {
+  const fromApi = formatBsIsoDateNepali(holiday.bs_start_date);
+  if (fromApi) return fromApi;
+  const [y, m, d] = holiday.start_date.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  const bs = adToBS(new Date(y, m - 1, d));
+  return `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.day)}, वि.सं. ${toNepaliDigits(bs.year)}`;
 }
 
 function getMoonTimeBlock(p: PanchangaDay, key: "moonrise" | "moonset"): MoonTimeBlock | undefined {
@@ -158,10 +210,11 @@ export function resolveMoonEventAdDate(
 export function formatMoonEventDisplay(p: PanchangaDay, key: "moonrise" | "moonset"): string | undefined {
   const block = getMoonTimeBlock(p, key);
   if (!block?.local_time_short) return undefined;
-  const time = toNepaliDigits(formatTimeShort(block.local_time_short) ?? block.local_time_short);
+  const time = formatClockNepali(block.local_time_short);
   const eventDate = resolveMoonEventAdDate(p, key, block);
+  if (!time) return undefined;
   if (!eventDate) return time;
-  return `${formatAdDateShort(eventDate)} · ${time}`;
+  return `${formatEventDateBsNepali(eventDate)} · ${time}`;
 }
 
 export function formatMonthMoonEventDisplay(day: {
@@ -178,9 +231,10 @@ export function formatMonthMoonEventDisplay(day: {
   const block: MoonTimeBlock = { local_time_short: time, local };
   const pseudo = { date_ad: day.date_ad, sunrise: day.sunrise } as PanchangaDay;
   const eventDate = resolveMoonEventAdDate(pseudo, key, block);
-  const timeNe = toNepaliDigits(formatTimeShort(time) ?? time);
+  const timeNe = formatClockNepali(time);
+  if (!timeNe) return undefined;
   if (!eventDate) return timeNe;
-  return `${formatAdDateShort(eventDate)} · ${timeNe}`;
+  return `${formatEventDateBsNepali(eventDate)} · ${timeNe}`;
 }
 
 export function getMoonriseDisplay(p: PanchangaDay): string | undefined {
@@ -361,6 +415,22 @@ type PlanetDetail = {
   rashi_name?: string;
 };
 
+export function getLagnaDisplay(
+  p: PanchangaDay
+): { nameNe: string; degree?: string } | undefined {
+  const detail = getPanchangaDetail(p);
+  const lagna = (detail?.lagna ?? p.lagna) as
+    | { name_ne?: string; name?: string; degree_in_rashi?: number }
+    | undefined;
+  const nameNe = lagna?.name_ne ?? lagna?.name;
+  if (!nameNe) return undefined;
+  const degree =
+    lagna?.degree_in_rashi != null
+      ? toNepaliDigits(lagna.degree_in_rashi.toFixed(1))
+      : undefined;
+  return { nameNe, degree };
+}
+
 export function getPlanetRows(p: PanchangaDay): { label: string; rashiNe?: string; coords: string }[] {
   const detail = getPanchangaDetail(p);
   const planets = (detail?.planets ?? p.planets) as Record<string, PlanetDetail | string> | undefined;
@@ -399,7 +469,9 @@ type MuhurtaDetail = {
 
 function formatMuhurtaRange(start?: string, end?: string): string | undefined {
   if (!start || !end) return undefined;
-  return `${start} – ${end}`;
+  const s = formatClockNepali(start) ?? start;
+  const e = formatClockNepali(end) ?? end;
+  return `${s} – ${e}`;
 }
 
 export function getMuhurtaRows(p: PanchangaDay): {
@@ -427,7 +499,9 @@ export function getMuhurtaRows(p: PanchangaDay): {
     const noon = m.abhijit?.solar_noon;
     rows.push({
       label: "अभिजित् मुहूर्त",
-      value: noon ? `${abhijitRange} (मध्यान्ह ${noon})` : abhijitRange,
+      value: noon
+        ? `${abhijitRange} (मध्यान्ह ${formatClockNepali(noon) ?? noon})`
+        : abhijitRange,
       auspicious: m.abhijit?.is_auspicious ?? true,
     });
   }

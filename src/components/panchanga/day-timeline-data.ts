@@ -1,9 +1,11 @@
 import type { PanchangaDay } from "@/lib/api";
 import {
   formatPakshaNepaliDisplay,
+  getLagnaSpans,
   getMoonrise,
   getMoonset,
   getPanchangaDetail,
+  getPlanetRows,
   getSunrise,
   getSunset,
   toNepaliDigits,
@@ -13,12 +15,14 @@ export interface TimelineSegment {
   name: string;
   endG?: number | null;
   bad?: boolean;
+  /** Planet name above rashi (ग्रह स्थिति row). */
+  subLabel?: string;
 }
 
 export interface TimelineRowData {
   label: string;
   en: string;
-  kind?: "choghadiya";
+  kind?: "choghadiya" | "lagna" | "graha";
   items: TimelineSegment[];
 }
 
@@ -34,6 +38,13 @@ export interface CivilHourTick {
   g: number;
 }
 
+export interface GrahaSpashtaItem {
+  label: string;
+  rashiNe?: string;
+  /** Patro cells: rashi|deg|min|sec e.g. २|२५|५१|२६ */
+  coords?: string;
+}
+
 export interface DayTimelineData {
   dayG: number;
   gMin: number;
@@ -47,6 +58,7 @@ export interface DayTimelineData {
   sunsetLabel: string;
   moonriseLabel: string | null;
   moonsetLabel: string | null;
+  grahaSpashta: GrahaSpashtaItem[];
   civilHourTicks: CivilHourTick[];
   rows: TimelineRowData[];
   choghadiya: ChoghadiyaSegment[];
@@ -73,6 +85,14 @@ type AngaBlock = {
       end_local_time?: string;
     };
   };
+};
+
+type LagnaSpanBlock = {
+  name_ne?: string;
+  name?: string;
+  degree_in_rashi?: number;
+  end_ghati_clock?: string;
+  end_hours_clock?: string;
 };
 
 const CHOGHADIYA = [
@@ -212,6 +232,35 @@ function karanaSegments(anga?: AngaBlock | null): TimelineSegment[] {
   return items;
 }
 
+function lagnaSegments(spans?: LagnaSpanBlock[] | null): TimelineSegment[] {
+  if (!spans?.length) return [];
+  return spans.map((span, index) => ({
+    name: span.name_ne ?? span.name ?? "",
+    endG: index < spans.length - 1 ? ghatiFromBlock(span) : null,
+  }));
+}
+
+/** deg|min|sec from patro coords (rashi|deg|min|sec). */
+function grahaDegreeCells(coords: string): string {
+  const parts = coords.split("|");
+  if (parts.length >= 4) return parts.slice(1).join("|");
+  return coords;
+}
+
+/** Sunrise graha positions — equal columns (all udaya at once). */
+function grahaSegments(planets: GrahaSpashtaItem[]): TimelineSegment[] {
+  const list = planets.filter(
+    (p) => p.rashiNe && p.coords && p.coords !== "—"
+  );
+  const n = list.length;
+  if (!n) return [];
+  return list.map((p, i) => ({
+    name: grahaDegreeCells(p.coords!),
+    subLabel: `${p.label}-${p.rashiNe}`,
+    endG: i < n - 1 ? ((i + 1) / n) * 60 : null,
+  }));
+}
+
 function tithiSegments(tithi: AngaBlock | undefined, p: PanchangaDay): TimelineSegment[] {
   const paksha = formatPakshaNepaliDisplay(p);
   return angaSegments(tithi).map((seg, i) => ({
@@ -281,6 +330,12 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
   const karana = (detail?.karana ?? p.karana) as AngaBlock | undefined;
 
   const cho = buildChoghadiya(dayG, dow);
+  const lagnaSpans = (getLagnaSpans(p) ?? []) as LagnaSpanBlock[];
+  const grahaSpashta = getPlanetRows(p).map(({ label, rashiNe, coords }) => ({
+    label,
+    rashiNe,
+    coords,
+  }));
 
   return {
     dayG,
@@ -295,6 +350,7 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
     sunsetLabel: sunset ?? "",
     moonriseLabel: getMoonrise(p) ?? null,
     moonsetLabel: getMoonset(p) ?? null,
+    grahaSpashta,
     civilHourTicks: buildCivilHourTicks(sunriseMin, gMin, gMax),
     rows: [
       { label: "तिथि", en: "Tithi", items: tithiSegments(tithi, p) },
@@ -311,6 +367,26 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
           bad: c.bad,
         })),
       },
+      ...(lagnaSpans.length > 0
+        ? [
+            {
+              label: "लग्न",
+              en: "Lagna",
+              kind: "lagna" as const,
+              items: lagnaSegments(lagnaSpans),
+            },
+          ]
+        : []),
+      ...(grahaSpashta.length > 0
+        ? [
+            {
+              label: "ग्रह",
+              en: "Planets",
+              kind: "graha" as const,
+              items: grahaSegments(grahaSpashta),
+            },
+          ]
+        : []),
     ],
     choghadiya: cho,
     badChoghadiya: cho.filter((c) => c.bad),

@@ -16,7 +16,7 @@ import {
   type Holiday, type Festival,
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
-import { getCurrentBs } from "../lib/bs-calendar";
+import { BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR, getCurrentBs } from "../lib/bs-calendar";
 import { cn } from "../lib/utils";
 
 type Tab = "holidays" | "festivals";
@@ -205,8 +205,8 @@ export function Holidays() {
         <input
           type="number"
           value={year}
-          min={2000}
-          max={2200}
+          min={BS_SUPPORTED_START_YEAR}
+          max={BS_SUPPORTED_END_YEAR}
           onChange={e => setYear(Number(e.target.value))}
           className="w-28 bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
         />

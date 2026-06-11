@@ -78,7 +78,7 @@ export function Panchanga() {
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
       {/* Page header */}
-      <div className="flex items-end justify-between gap-4 flex-wrap mb-4 mt-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
         <div>
           <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
             नेपाली पात्रो · पञ्चाङ्ग
@@ -112,9 +112,10 @@ export function Panchanga() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
           <LocationSelector
             compact
+            className="shrink-0"
             location={location}
             onLocationChange={setLocation}
           />

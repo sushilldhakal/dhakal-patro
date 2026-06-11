@@ -92,7 +92,7 @@ export const panchangaKeys = {
 export const fetchTodayPanchanga = (location?: LocationParams) => {
   const today = new Date().toISOString().split("T")[0];
   return get<PanchangaDay>(
-    appendLocation(`/panchanga/${today}?era=ad&festivals=true`, location)
+    appendLocation(`/panchanga/${today}?era=ad&festivals=true&detail=true`, location)
   );
 };
 
@@ -102,7 +102,7 @@ export const fetchPanchanga = (
   location?: LocationParams
 ) =>
   get<PanchangaDay>(
-    appendLocation(`/panchanga/${date}?era=${era}&festivals=true`, location)
+    appendLocation(`/panchanga/${date}?era=${era}&festivals=true&detail=true`, location)
   );
 
 export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =>
@@ -217,6 +217,17 @@ export const fetchKundali = (date: string, era: "bs" | "ad" = "ad") =>
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface LagnaSpan {
+  number?: number;
+  name?: string;
+  name_ne?: string;
+  degree_in_rashi?: number;
+  end_ghati_clock?: string;
+  end_hours_clock?: string;
+  end_local_time?: string;
+  start_local_time?: string;
+}
+
 export interface PanchangaDay {
   location?: { name?: string; lat?: number; lon?: number; timezone?: string; city_id?: number };
   date_bs?: string;
@@ -236,6 +247,12 @@ export interface PanchangaDay {
   paksha_ne?: string;
   chandra_rashi?: { name_ne?: string };
   ritu?: { name_ne?: string; season?: string };
+  lagna?: { name?: string; name_ne?: string; degree_in_rashi?: number; longitude?: number };
+  lagna_spans?: LagnaSpan[];
+  detail?: {
+    lagna_spans?: LagnaSpan[];
+    [key: string]: unknown;
+  };
   dinamaan?: { label_en?: string; label_ne?: string };
   aayan?: { name?: string; name_ne?: string };
   lahiri_ayanamsa?: { degrees?: number };
