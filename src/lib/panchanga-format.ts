@@ -388,13 +388,35 @@ export function rashiNeFromNumber(rashi?: number): string | undefined {
   return RASHI_NE[rashi - 1];
 }
 
-export function longitudeToPlanetCells(longitude: number): string {
-  const rashi = Math.floor(longitude / 30) + 1;
+/** DMS within sign (deg|min|sec) from absolute sidereal longitude. */
+export function longitudeToDegreeCells(longitude: number): string {
   const rem = longitude % 30;
   const deg = Math.floor(rem);
   const min = Math.floor((rem - deg) * 60);
-  const sec = Math.round(((rem - deg) * 60 - min) * 60);
-  return [rashi, deg, min, sec].map((n) => toNepaliDigits(n)).join("|");
+  let sec = Math.round(((rem - deg) * 60 - min) * 60);
+  let m = min;
+  let d = deg;
+  if (sec >= 60) {
+    sec -= 60;
+    m += 1;
+  }
+  if (m >= 60) {
+    m -= 60;
+    d += 1;
+  }
+  return [d, m, sec].map((n) => toNepaliDigits(n)).join("|");
+}
+
+/** Parse patro DMS string (22°59'15") to Nepali deg|min|sec cells. */
+export function dmsInRashiToDegreeCells(dms: string): string | undefined {
+  const match = dms.match(/(\d+)°(\d+)'(\d+)"/);
+  if (!match) return undefined;
+  return [match[1], match[2], match[3]].map((n) => toNepaliDigits(Number(n))).join("|");
+}
+
+export function longitudeToPlanetCells(longitude: number): string {
+  const rashi = Math.floor(longitude / 30) + 1;
+  return [rashi, ...longitudeToDegreeCells(longitude).split("|")].join("|");
 }
 
 const PLANET_LABELS: Record<string, string> = {
@@ -413,7 +435,16 @@ type PlanetDetail = {
   longitude?: number;
   rashi?: number;
   rashi_name?: string;
+  rashi_ne?: string;
+  deg_in_rashi?: number;
+  dms_in_rashi?: string;
 };
+
+export function getPlanetsAnchorLabel(p: PanchangaDay): string {
+  const detail = getPanchangaDetail(p);
+  const anchor = detail?.planets_anchor as { label_ne?: string; label_en?: string } | undefined;
+  return anchor?.label_ne ?? anchor?.label_en ?? "स्थानीय समय ६ बजे";
+}
 
 export function getLagnaDisplay(
   p: PanchangaDay
@@ -431,6 +462,20 @@ export function getLagnaDisplay(
   return { nameNe, degree };
 }
 
+function planetDegreeCells(info: PlanetDetail): string {
+  if (info.dms_in_rashi) {
+    const fromDms = dmsInRashiToDegreeCells(info.dms_in_rashi);
+    if (fromDms) return fromDms;
+  }
+  if (info.deg_in_rashi != null && info.rashi != null) {
+    return longitudeToDegreeCells((info.rashi - 1) * 30 + info.deg_in_rashi);
+  }
+  if (info.longitude != null) {
+    return longitudeToDegreeCells(info.longitude);
+  }
+  return "—";
+}
+
 export function getPlanetRows(p: PanchangaDay): { label: string; rashiNe?: string; coords: string }[] {
   const detail = getPanchangaDetail(p);
   const planets = (detail?.planets ?? p.planets) as Record<string, PlanetDetail | string> | undefined;
@@ -446,9 +491,8 @@ export function getPlanetRows(p: PanchangaDay): { label: string; rashiNe?: strin
       if (typeof info === "string") {
         return { label, coords: info };
       }
-      const rashiNe = rashiNeFromNumber(info.rashi);
-      const coords =
-        info.longitude != null ? longitudeToPlanetCells(info.longitude) : "—";
+      const rashiNe = info.rashi_ne ?? rashiNeFromNumber(info.rashi);
+      const coords = planetDegreeCells(info);
       return { label, rashiNe, coords };
     });
 }

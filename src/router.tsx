@@ -6,11 +6,13 @@ import {
 } from "@tanstack/react-router";
 import { Header } from "./components/Header";
 import { Home } from "./pages/Home";
-import { Calendar } from "./pages/Calendar";
-import { Panchanga } from "./pages/Panchanga";
-import { Converter } from "./pages/Converter";
-import { Holidays } from "./pages/Holidays";
-import { Kundali } from "./pages/Kundali";
+import { lazyRoute } from "./lib/lazy-route";
+
+const Calendar = lazyRoute(() => import("./pages/Calendar"), "Calendar");
+const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
+const Converter = lazyRoute(() => import("./pages/Converter"), "Converter");
+const Holidays = lazyRoute(() => import("./pages/Holidays"), "Holidays");
+const Kundali = lazyRoute(() => import("./pages/Kundali"), "Kundali");
 
 const rootRoute = createRootRoute({
   component: () => (

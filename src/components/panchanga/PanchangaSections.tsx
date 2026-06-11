@@ -13,6 +13,7 @@ import {
   getMoonsetDisplay,
   getPanchangaDetail,
   getPlanetRows,
+  getPlanetsAnchorLabel,
   getSunriseDisplay,
   getSunsetDisplay,
   getVaaraNe,
@@ -314,7 +315,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
     <div className="rounded-xl bg-card p-4 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       <div className="flex items-baseline gap-2 mb-2">
         <h2 className="text-base font-bold m-0">ग्रह स्थिति</h2>
-        <span className="text-[11.5px] text-muted-foreground">Planets at sunrise</span>
+        <span className="text-[11.5px] text-muted-foreground">{getPlanetsAnchorLabel(p)}</span>
       </div>
       <div className="flex flex-col">
         {planets.map(({ label, rashiNe, coords }) => (

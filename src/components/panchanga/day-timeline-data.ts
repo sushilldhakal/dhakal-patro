@@ -240,14 +240,7 @@ function lagnaSegments(spans?: LagnaSpanBlock[] | null): TimelineSegment[] {
   }));
 }
 
-/** deg|min|sec from patro coords (rashi|deg|min|sec). */
-function grahaDegreeCells(coords: string): string {
-  const parts = coords.split("|");
-  if (parts.length >= 4) return parts.slice(1).join("|");
-  return coords;
-}
-
-/** Sunrise graha positions — equal columns (all udaya at once). */
+/** Equal-width columns for all grahas at the patro anchor time (6 AM local). */
 function grahaSegments(planets: GrahaSpashtaItem[]): TimelineSegment[] {
   const list = planets.filter(
     (p) => p.rashiNe && p.coords && p.coords !== "—"
@@ -255,7 +248,7 @@ function grahaSegments(planets: GrahaSpashtaItem[]): TimelineSegment[] {
   const n = list.length;
   if (!n) return [];
   return list.map((p, i) => ({
-    name: grahaDegreeCells(p.coords!),
+    name: p.coords!,
     subLabel: `${p.label}-${p.rashiNe}`,
     endG: i < n - 1 ? ((i + 1) / n) * 60 : null,
   }));
@@ -381,7 +374,7 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
         ? [
             {
               label: "ग्रह",
-              en: "Planets",
+              en: "Graha 6AM",
               kind: "graha" as const,
               items: grahaSegments(grahaSpashta),
             },
