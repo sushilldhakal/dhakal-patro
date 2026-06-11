@@ -1,4 +1,5 @@
-const BASE = "https://193-123-67-133.sslip.io";
+const BASE =
+  import.meta.env.VITE_API_BASE_URL ?? "https://193-123-67-133.sslip.io";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
@@ -109,11 +110,63 @@ export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =
     appendLocation(`/nepal/panchanga/${dateAd}?era=ad`, location)
   );
 
-export const fetchMonthCalendar = (
+type RawMonthDay = CalendarDay & {
+  panchanga?: {
+    paksha?: string;
+    paksha_ne?: string;
+    moon?: { rise?: string; set?: string };
+  };
+};
+
+function parsePakshaName(label?: string): string | undefined {
+  if (!label) return undefined;
+  const lower = label.toLowerCase();
+  if (lower.includes("shukla") || label.includes("शुक्ल")) return "shukla";
+  if (lower.includes("krishna") || label.includes("कृष्ण")) return "krishna";
+  return undefined;
+}
+
+function parsePakshaNeShort(label?: string): string | undefined {
+  if (!label) return undefined;
+  if (label.includes("शुक्ल")) return "शुक्ल";
+  if (label.includes("कृष्ण")) return "कृष्ण";
+  return undefined;
+}
+
+function normalizeMonthDay(day: RawMonthDay): CalendarDay {
+  const nested = day.panchanga;
+  const paksha =
+    day.paksha ??
+    parsePakshaName(nested?.paksha) ??
+    parsePakshaName(nested?.paksha_ne);
+  const pakshaNe =
+    day.paksha_ne ??
+    parsePakshaNeShort(nested?.paksha_ne) ??
+    nested?.paksha_ne;
+
+  return {
+    ...day,
+    paksha,
+    paksha_ne: pakshaNe,
+    moonrise: day.moonrise ?? nested?.moon?.rise,
+    moonrise_local: day.moonrise_local,
+    moonset: day.moonset ?? nested?.moon?.set,
+    moonset_local: day.moonset_local,
+  };
+}
+
+export const fetchMonthCalendar = async (
   year: number,
   month: number,
   location?: LocationParams
-) => get<MonthCalendar>(appendLocation(`/panchanga/${year}/${month}`, location));
+): Promise<MonthCalendar> => {
+  const path = appendLocation(`/panchanga/${year}/${month}?full=true`, location);
+  const data = await get<MonthCalendar & { calendar: RawMonthDay[] }>(path);
+  return {
+    ...data,
+    calendar: data.calendar.map(normalizeMonthDay),
+  };
+};
 
 export const fetchCalendarHeader = (year: number, month: number) =>
   get<CalendarHeader>(`/calendar/header/${year}/${month}`);
@@ -173,8 +226,8 @@ export interface PanchangaDay {
   weekday?: string;
   sunrise?: { local_time_short?: string } | string;
   sunset?: { local_time_short?: string } | string;
-  moonrise?: { local_time_short?: string };
-  moonset?: { local_time_short?: string };
+  moonrise?: { local?: string; local_time_short?: string };
+  moonset?: { local?: string; local_time_short?: string };
   tithi?: { name?: string; name_ne?: string; end_ghati_clock?: string; next?: { name_ne?: string } };
   nakshatra?: { name?: string; name_ne?: string; next?: { name_ne?: string } };
   yoga?: { name?: string; name_ne?: string; next?: { name_ne?: string } };
@@ -242,9 +295,20 @@ export interface CalendarDay {
   weekday_ne?: string;
   tithi: string;
   tithi_ne?: string;
+  paksha?: string;
+  paksha_ne?: string;
   nakshatra?: string;
+  nakshatra_ne?: string;
+  yoga?: string;
+  yoga_ne?: string;
+  karana?: string;
+  karana_ne?: string;
   sunrise?: string;
   sunset?: string;
+  moonrise?: string;
+  moonrise_local?: string;
+  moonset?: string;
+  moonset_local?: string;
   festivals: string[];
 }
 

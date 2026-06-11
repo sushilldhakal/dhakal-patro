@@ -9,8 +9,8 @@ import {
   formatGhatiEnd,
   getDinVisheshLabels,
   getMuhurtaRows,
-  getMoonrise,
-  getMoonset,
+  getMoonriseDisplay,
+  getMoonsetDisplay,
   getPanchangaDetail,
   getPlanetRows,
   getSunrise,
@@ -18,6 +18,7 @@ import {
   getVaaraNe,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
 import {
   PanchangaRow,
   PanchangaRows,
@@ -68,11 +69,11 @@ export function SunMoonSection({ p }: { p: PanchangaDay }) {
         </PanchangaRow>
         <PanchangaRow label="चन्द्रोदय" labelEn="Moonrise" oddBorder>
           <span>🌒</span>
-          <span className="font-mono">{getMoonrise(p) ?? "—"}</span>
+          <span className="font-mono">{getMoonriseDisplay(p) ?? "—"}</span>
         </PanchangaRow>
         <PanchangaRow label="चन्द्रास्त" labelEn="Moonset">
           <span>🌘</span>
-          <span className="font-mono">{getMoonset(p) ?? "—"}</span>
+          <span className="font-mono">{getMoonsetDisplay(p) ?? "—"}</span>
         </PanchangaRow>
       </PanchangaRows>
     </PanchangaSection>
@@ -96,7 +97,14 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
           <AngaCell anga={tithi} />
         </PanchangaRow>
         <PanchangaRow label="नक्षत्र" labelEn="Nakshatra">
-          <AngaCell anga={nakshatra} />
+          <span className="inline-flex items-center gap-2.5 flex-wrap">
+            <NakshatraIcon
+              name={nakshatra?.name_ne ?? nakshatra?.name}
+              size={32}
+              className="text-secondary dark:text-[var(--brand-yellow)]"
+            />
+            <AngaCell anga={nakshatra} />
+          </span>
         </PanchangaRow>
         <PanchangaRow label="योग" labelEn="Yoga" oddBorder>
           <AngaCell anga={yoga} />
@@ -164,8 +172,19 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
           <span className="font-semibold">{chandra ?? "—"}</span>
         </PanchangaRow>
         <PanchangaRow label="नक्षत्र" labelEn="Nakshatra">
-          <span className="font-semibold">
-            {(detail?.nakshatra as Anga | undefined)?.name_ne ?? p.nakshatra?.name_ne ?? "—"}
+          <span className="inline-flex items-center gap-2.5">
+            <NakshatraIcon
+              name={
+                (detail?.nakshatra as Anga | undefined)?.name_ne ??
+                p.nakshatra?.name_ne ??
+                p.nakshatra?.name
+              }
+              size={30}
+              className="text-secondary dark:text-[var(--brand-yellow)]"
+            />
+            <span className="font-semibold">
+              {(detail?.nakshatra as Anga | undefined)?.name_ne ?? p.nakshatra?.name_ne ?? "—"}
+            </span>
           </span>
         </PanchangaRow>
       </PanchangaRows>

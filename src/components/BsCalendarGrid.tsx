@@ -40,7 +40,7 @@ export function BsCalendarGrid({
     <div className="pn-calcard">
       <div className="pn-weekrow">
         {WEEKDAYS_NE.map((ne, i) => (
-          <div key={ne} className={`pn-wk${i === 6 ? " sat" : ""}`}>
+          <div key={ne} className={`pn-wk${i === 0 || i === 6 ? " weekend" : ""}`}>
             <span className="pn-wk-ne">{ne}</span>
             <span className="pn-wk-en">{WEEKDAYS_EN[i]}</span>
           </div>
@@ -56,7 +56,7 @@ export function BsCalendarGrid({
           const col = i % 7;
           const isToday = day.date_ad === TODAY_AD;
           const isSelected = day.date_ad === selectedAdDate && !isToday;
-          const isSaturday = col === 6;
+          const isWeekend = col === 0 || col === 6;
           const isPublicHoliday = publicHolidayDates.has(day.date_ad);
           const hasFestival = day.festivals.length > 0 && !isPublicHoliday;
           const adDay = new Date(day.date_ad).getDate();
@@ -68,7 +68,7 @@ export function BsCalendarGrid({
               : fmtAdShort(day.date_ad);
 
           const tintClass = isPublicHoliday ? " tint-red" : hasFestival ? " tint-teal" : "";
-          const offClass = isSaturday || isPublicHoliday ? " off" : "";
+          const offClass = isWeekend || isPublicHoliday ? " off" : "";
           const cellClass = [
             "pn-cell",
             isToday ? "today" : "",

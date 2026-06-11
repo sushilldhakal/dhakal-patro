@@ -15,8 +15,8 @@ import {
   formatPakshaTithiLine,
   formatShakaYear,
   getDinVisheshLabels,
-  getMoonrise,
-  getMoonset,
+  getMoonriseDisplay,
+  getMoonsetDisplay,
   getPanchangaDetail,
   getMuhurtaRows,
   getPlanetRows,
@@ -116,8 +116,8 @@ function PanchangaTable({
 function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
   const sunrise = getSunrise(p) ?? day.sunrise;
   const sunset = getSunset(p) ?? day.sunset;
-  const moonrise = getMoonrise(p);
-  const moonset = getMoonset(p);
+  const moonrise = getMoonriseDisplay(p);
+  const moonset = getMoonsetDisplay(p);
 
   if (!sunrise && !sunset && !moonrise && !moonset) return null;
 
@@ -277,8 +277,8 @@ function PanchangaFull({
           { label: "दिनमान", value: formatDinamaanShort(p) },
           { label: "सूर्योदय", value: getSunrise(p) ?? day.sunrise },
           { label: "सूर्यास्त", value: getSunset(p) ?? day.sunset },
-          { label: "चन्द्रोदय", value: getMoonrise(p) },
-          { label: "चन्द्रास्त", value: getMoonset(p) },
+          { label: "चन्द्रोदय", value: getMoonriseDisplay(p) },
+          { label: "चन्द्रास्त", value: getMoonsetDisplay(p) },
         ]}
       />
 

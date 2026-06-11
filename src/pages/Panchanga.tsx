@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin } from "lucide-react";
 import { fetchPanchanga, panchangaKeys } from "@/lib/api";
 import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
+import { getBsMonthAdSpanLabel } from "@/lib/local-calendar";
 import { getSunrise, getSunset, toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/PanchangaDateNav";
@@ -32,6 +33,10 @@ function toAdStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function fmtAdFull(d: Date): string {
+  return d.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export function Panchanga() {
   const { location, setLocation } = usePanchangaLocation();
   const [date, setDate] = useState(() => new Date());
@@ -59,6 +64,16 @@ export function Panchanga() {
 
   const sunrise = data ? getSunrise(data) : undefined;
   const sunset = data ? getSunset(data) : undefined;
+  const locationTimezone =
+    data?.location?.timezone ?? location.params.timezone;
+
+  const adMonthSpan = useMemo(
+    () => getBsMonthAdSpanLabel(bs.year, bs.month),
+    [bs.year, bs.month]
+  );
+
+  const locationLabel = data?.location?.name ?? location.label;
+  const adDateLabel = data?.display?.gregorian_en ?? fmtAdFull(date);
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
@@ -76,14 +91,23 @@ export function Panchanga() {
                 : "पञ्चाङ्ग विवरण"}
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
-            {view === "month"
-              ? `${bs.monthName} ${bs.year}`
-              : data?.display?.bs_ne ??
-                `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.day)}, वि.सं. ${toNepaliDigits(bs.year)}`}
+            {view === "month" ? (
+              <>
+                {bs.monthName} {bs.year}
+                {" · "}
+                {adMonthSpan}
+              </>
+            ) : (
+              <>
+                {bs.monthName} {bs.day}, {bs.year}
+                {" · "}
+                {adDateLabel}
+              </>
+            )}
             {" · "}
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              {data?.location?.name ?? location.label}
+              {locationLabel}
             </span>
           </div>
         </div>
@@ -179,7 +203,7 @@ export function Panchanga() {
           </div>
 
           <aside className="flex flex-col gap-4 xl:sticky xl:top-[76px]">
-            <GhatiClock sunrise={sunrise} sunset={sunset} />
+            <GhatiClock sunrise={sunrise} sunset={sunset} timezone={locationTimezone} />
             {data && <PlanetsPanel p={data} />}
           </aside>
         </div>

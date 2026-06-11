@@ -85,18 +85,110 @@ export function getSunset(p: PanchangaDay): string | undefined {
   return p.sun?.sunset;
 }
 
-export function getMoonrise(p: PanchangaDay): string | undefined {
+type MoonTimeBlock = { local?: string; local_time_short?: string };
+
+function parseTimeToMinutes(time?: string | null): number | null {
+  if (!time) return null;
+  const match = time.match(/(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function addDaysIso(isoDate: string, days: number): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  if (!y || !m || !d) return isoDate;
+  const dt = new Date(y, m - 1, d + days);
+  const yy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+function formatAdDateShort(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  if (!y || !m || !d) return isoDate;
+  const label = new Date(y, m - 1, d).toLocaleDateString("en", { day: "numeric", month: "short" });
+  return toNepaliDigits(label);
+}
+
+function getMoonTimeBlock(p: PanchangaDay, key: "moonrise" | "moonset"): MoonTimeBlock | undefined {
   const detail = getPanchangaDetail(p);
-  const fromDetail = (detail?.moonrise as { local_time_short?: string } | undefined)?.local_time_short;
-  if (fromDetail) return fromDetail;
-  return p.moonrise?.local_time_short ?? p.moon?.rise;
+  const fromDetail = detail?.[key] as MoonTimeBlock | undefined;
+  if (fromDetail?.local_time_short) return fromDetail;
+  const top = p[key];
+  if (top?.local_time_short) return top;
+  const fallback = key === "moonrise" ? p.moon?.rise : p.moon?.set;
+  if (fallback) return { local_time_short: fallback };
+  return undefined;
+}
+
+export function getMoonrise(p: PanchangaDay): string | undefined {
+  return getMoonTimeBlock(p, "moonrise")?.local_time_short;
 }
 
 export function getMoonset(p: PanchangaDay): string | undefined {
-  const detail = getPanchangaDetail(p);
-  const fromDetail = (detail?.moonset as { local_time_short?: string } | undefined)?.local_time_short;
-  if (fromDetail) return fromDetail;
-  return p.moonset?.local_time_short ?? p.moon?.set;
+  return getMoonTimeBlock(p, "moonset")?.local_time_short;
+}
+
+/** AD date of moonrise/moonset (often the next civil day within a sunrise-to-sunrise panchanga day). */
+export function resolveMoonEventAdDate(
+  p: PanchangaDay,
+  key: "moonrise" | "moonset",
+  block: MoonTimeBlock
+): string | undefined {
+  const dayDate = p.date_ad;
+  if (!dayDate) return block.local?.slice(0, 10);
+
+  const eventDate = block.local?.slice(0, 10);
+  const eventMin = parseTimeToMinutes(block.local_time_short);
+  const sunriseMin = parseTimeToMinutes(getSunrise(p));
+
+  if (eventDate && eventDate !== dayDate) {
+    return eventDate;
+  }
+
+  if (key === "moonrise" && eventMin != null && sunriseMin != null && eventMin < sunriseMin) {
+    return addDaysIso(dayDate, 1);
+  }
+
+  return eventDate ?? dayDate;
+}
+
+/** Always show AD date + time — moonrise/moonset often fall on the next civil date. */
+export function formatMoonEventDisplay(p: PanchangaDay, key: "moonrise" | "moonset"): string | undefined {
+  const block = getMoonTimeBlock(p, key);
+  if (!block?.local_time_short) return undefined;
+  const time = toNepaliDigits(formatTimeShort(block.local_time_short) ?? block.local_time_short);
+  const eventDate = resolveMoonEventAdDate(p, key, block);
+  if (!eventDate) return time;
+  return `${formatAdDateShort(eventDate)} · ${time}`;
+}
+
+export function formatMonthMoonEventDisplay(day: {
+  date_ad: string;
+  sunrise?: string;
+  moonrise?: string;
+  moonrise_local?: string;
+  moonset?: string;
+  moonset_local?: string;
+}, key: "moonrise" | "moonset"): string | undefined {
+  const time = key === "moonrise" ? day.moonrise : day.moonset;
+  if (!time) return undefined;
+  const local = key === "moonrise" ? day.moonrise_local : day.moonset_local;
+  const block: MoonTimeBlock = { local_time_short: time, local };
+  const pseudo = { date_ad: day.date_ad, sunrise: day.sunrise } as PanchangaDay;
+  const eventDate = resolveMoonEventAdDate(pseudo, key, block);
+  const timeNe = toNepaliDigits(formatTimeShort(time) ?? time);
+  if (!eventDate) return timeNe;
+  return `${formatAdDateShort(eventDate)} · ${timeNe}`;
+}
+
+export function getMoonriseDisplay(p: PanchangaDay): string | undefined {
+  return formatMoonEventDisplay(p, "moonrise");
+}
+
+export function getMoonsetDisplay(p: PanchangaDay): string | undefined {
+  return formatMoonEventDisplay(p, "moonset");
 }
 
 export function getVaaraNe(p: PanchangaDay, fallback?: string): string | undefined {

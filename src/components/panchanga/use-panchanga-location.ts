@@ -51,11 +51,15 @@ export function cityToLocation(city: {
   ascii_name: string;
   name: string;
   country: string;
+  timezone?: string;
 }): PanchangaLocation {
   const name = city.ascii_name || city.name;
   return {
     label: `${name}, ${city.country}`,
-    params: { city_id: city.id },
+    params: {
+      city_id: city.id,
+      ...(city.timezone ? { timezone: city.timezone } : {}),
+    },
   };
 }
 

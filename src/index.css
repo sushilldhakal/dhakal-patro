@@ -448,7 +448,7 @@
   text-transform: uppercase;
   color: var(--muted-foreground);
 }
-.pn-wk.sat .pn-wk-ne {
+.pn-wk.weekend .pn-wk-ne {
   color: var(--color-danger);
 }
 .pn-grid {
@@ -1206,4 +1206,276 @@
 }
 .dark .pn-theme-icon-moon {
   display: none;
+}
+
+/* Panchanga day timeline (matches design reference) */
+.pg-timeline-card {
+  background: var(--background);
+  border-radius: var(--radius-xl);
+  padding: 16px 0px 8px;
+}
+.pg-tl-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.pg-tl-sub {
+  font: 500 12px var(--font-sans);
+  color: var(--muted-foreground);
+  flex: 1;
+}
+.pg-tl-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 12px var(--font-sans);
+  color: var(--muted-foreground);
+}
+.pg-tl-key {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.pg-tl-key.day {
+  background: color-mix(in srgb, var(--brand-yellow) 32%, var(--card));
+}
+.pg-tl-key.night {
+  background: color-mix(in srgb, var(--brand-teal) 18%, var(--card));
+}
+.pg-tl-fit {
+  width: 100%;
+  overflow: hidden;
+}
+.pg-tl-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.pg-tl-row-band {
+  stroke: none;
+}
+.pg-tl-row-band-0 {
+  fill: color-mix(in srgb, var(--brand-yellow) 22%, var(--card));
+}
+.pg-tl-row-band-1 {
+  fill: color-mix(in srgb, var(--brand-teal) 18%, var(--card));
+}
+.pg-tl-row-band-2 {
+  fill: color-mix(in srgb, var(--color-info) 14%, var(--card));
+}
+.pg-tl-row-band-3 {
+  fill: color-mix(in srgb, var(--color-danger) 12%, var(--card));
+}
+.pg-tl-row-band-4 {
+  fill: color-mix(in srgb, var(--foreground) 6%, var(--card));
+}
+.pg-tl-vgrid-major {
+  stroke: var(--foreground);
+  stroke-opacity: 0.14;
+  stroke-width: 1;
+}
+.pg-tl-axis-tag {
+  font: 600 10px var(--font-sans);
+  fill: var(--muted-foreground);
+  letter-spacing: 0.06em;
+}
+.pg-tl-civil-hour {
+  font: 700 14px var(--font-mono);
+  fill: var(--foreground);
+}
+.pg-tl-ghati-hour {
+  font: 600 11px var(--font-mono);
+  fill: var(--muted-foreground);
+}
+.pg-tl-events-bg {
+  fill: color-mix(in srgb, var(--foreground) 4%, var(--card));
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.pg-tl-event-ghati {
+  font: 600 9px var(--font-mono);
+  fill: var(--muted-foreground);
+}
+.pg-tl-sunrise-line {
+  stroke: var(--color-warning);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  opacity: 0.85;
+}
+.pg-tl-sunset-line {
+  stroke: var(--color-warning);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  opacity: 0.7;
+}
+.pg-tl-end-line {
+  stroke: var(--foreground);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.25;
+}
+.pg-tl-tick-major {
+  stroke: var(--foreground);
+  stroke-opacity: 0.55;
+  stroke-width: 1.2;
+}
+.pg-tl-row-connector {
+  stroke: var(--foreground);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 4;
+  opacity: 0.45;
+}
+.pg-tl-chg-connector {
+  opacity: 0.28;
+}
+.pg-tl-day {
+  fill: color-mix(in srgb, var(--brand-yellow) 14%, transparent);
+}
+.pg-tl-night {
+  fill: color-mix(in srgb, var(--brand-teal) 10%, transparent);
+}
+.pg-tl-axis {
+  stroke: var(--foreground);
+  stroke-opacity: 0.45;
+  stroke-width: 1.2;
+}
+.pg-tl-tick {
+  stroke: var(--foreground);
+  stroke-opacity: 0.4;
+  stroke-width: 1;
+}
+.pg-tl-num {
+  font: 700 15px var(--font-mono);
+  fill: var(--foreground);
+}
+.pg-tl-num-sub {
+  font: 600 13px var(--font-mono);
+  fill: var(--muted-foreground);
+}
+.pg-tl-sun {
+  font: 700 14px var(--font-mono);
+  fill: var(--color-warning);
+}
+.pg-tl-moon {
+  font: 700 14px var(--font-mono);
+  fill: var(--muted-foreground);
+}
+.pg-tl-rowlabel {
+  font: 700 15px var(--font-sans);
+  fill: var(--foreground);
+}
+.pg-tl-rowlabel-en {
+  font: 600 12px var(--font-sans);
+  fill: var(--muted-foreground);
+  letter-spacing: 0.04em;
+}
+.pg-tl-rowline {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.pg-tl-rowline-0 {
+  stroke: color-mix(in srgb, var(--brand-yellow) 70%, var(--foreground));
+}
+.pg-tl-rowline-1 {
+  stroke: color-mix(in srgb, var(--brand-teal) 75%, var(--foreground));
+}
+.pg-tl-rowline-2 {
+  stroke: color-mix(in srgb, var(--color-info) 70%, var(--foreground));
+}
+.pg-tl-rowline-3 {
+  stroke: color-mix(in srgb, var(--color-danger) 55%, var(--foreground));
+}
+.pg-tl-rowline-4 {
+  stroke: color-mix(in srgb, var(--foreground) 45%, var(--border));
+}
+.dark .pg-tl-row-band-0 {
+  fill: color-mix(in srgb, var(--brand-yellow) 16%, var(--card));
+}
+.dark .pg-tl-row-band-1 {
+  fill: color-mix(in srgb, var(--brand-teal) 14%, var(--card));
+}
+.dark .pg-tl-row-band-2 {
+  fill: color-mix(in srgb, var(--color-info) 12%, var(--card));
+}
+.dark .pg-tl-row-band-3 {
+  fill: color-mix(in srgb, var(--color-danger) 10%, var(--card));
+}
+.dark .pg-tl-row-band-4 {
+  fill: color-mix(in srgb, var(--foreground) 8%, var(--card));
+}
+.pg-tl-segname {
+  font: 700 16px var(--font-sans);
+  fill: var(--foreground);
+}
+.pg-tl-segname-sm {
+  font: 600 13px var(--font-sans);
+  fill: var(--foreground);
+}
+.pg-tl-segname.dim {
+  font-weight: 600;
+  font-size: 15px;
+  fill: var(--muted-foreground);
+}
+.pg-tl-arrow {
+  stroke: var(--foreground);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+}
+.pg-tl-arrow-tick {
+  stroke: var(--foreground);
+  stroke-width: 1.5;
+  opacity: 0.45;
+}
+.dark .pg-tl-arrow {
+  stroke: var(--brand-yellow);
+  opacity: 0.85;
+}
+.dark .pg-tl-arrow-tick {
+  stroke: var(--brand-yellow);
+  opacity: 0.5;
+}
+.pg-tl-time {
+  font: 700 14px var(--font-mono);
+  fill: var(--foreground);
+}
+.pg-tl-time-sub {
+  font: 600 13px var(--font-mono);
+  fill: var(--muted-foreground);
+}
+.pg-tl-bad {
+  fill: none;
+  stroke: var(--color-danger);
+  stroke-width: 1.6;
+}
+.pg-tl-badname {
+  font: 700 11px var(--font-sans);
+  fill: var(--color-danger);
+}
+
+/* Nakshatra traditional symbol icons (not constellation diagrams) */
+.nakshatra-icon {
+  color: var(--foreground);
+  display: block;
+}
+.nakshatra-icon .ax {
+  stroke: var(--secondary);
+}
+.dark .nakshatra-icon .ax {
+  stroke: var(--brand-yellow);
+}
+.nakshatra-icon .ax-f {
+  fill: var(--secondary);
+  stroke: none;
+}
+.dark .nakshatra-icon .ax-f {
+  fill: var(--brand-yellow);
+}
+.nakshatra-icon .fx {
+  fill: currentColor;
+  stroke: none;
 }

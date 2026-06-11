@@ -1,74 +1,45 @@
-# React + TypeScript + Vite
+# Dhakal Patro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Nepali calendar with Surya Panchanga, BS/AD date converter, festivals, public holidays, and Janma Kundali.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+cp .env.example .env   # optional — defaults to the bundled API URL
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deploy to Vercel
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This app is configured for [Vercel](https://vercel.com) (no GitHub required). Deploy from your machine with the CLI:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm i -g vercel
+vercel login
+cd dhakal-patro
+vercel link          # create or link a Vercel project (one-time)
+vercel               # preview deployment
+vercel --prod        # production deployment
 ```
-# dhakal-patro
+
+Or use the npm scripts after linking:
+
+```bash
+npm run deploy       # preview
+npm run deploy:prod  # production
+```
+
+### Environment variables
+
+In the [Vercel dashboard](https://vercel.com/docs/projects/environment-variables) (or via `vercel env`), set:
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_BASE_URL` | Panchanga API base URL (no trailing slash). Example: `https://193-123-67-133.sslip.io` |
+
+Redeploy after changing env vars so Vite can bake them into the build.
+
+### Client-side routing
+
+`vercel.json` rewrites all routes to `index.html` so TanStack Router paths (`/calendar`, `/panchanga`, etc.) work on refresh and direct links.

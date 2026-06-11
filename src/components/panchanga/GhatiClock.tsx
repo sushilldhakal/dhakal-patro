@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sunrise, Moon } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
@@ -13,30 +13,51 @@ function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
+function getZonedTimeParts(date: Date, timeZone: string): { hour: number; minute: number; second: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  }).formatToParts(date);
+
+  const read = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+
+  let hour = read("hour");
+  if (hour === 24) hour = 0;
+
+  return { hour, minute: read("minute"), second: read("second") };
+}
+
 interface Props {
   sunrise?: string;
   sunset?: string;
+  timezone?: string;
 }
 
-export function GhatiClock({ sunrise, sunset }: Props) {
+export function GhatiClock({ sunrise, sunset, timezone }: Props) {
   const [now, setNow] = useState(() => new Date());
+  const timeZone = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 200);
     return () => clearInterval(id);
   }, []);
 
+  const { hour: hh, minute: mm, second: ss } = useMemo(
+    () => getZonedTimeParts(now, timeZone),
+    [now, timeZone]
+  );
+
   const sunriseMin = parseTimeToMinutes(sunrise) ?? 5 * 60 + 12;
-  const minsNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const minsNow = hh * 60 + mm + ss / 60;
   let vg = (minsNow - sunriseMin) / 24;
   if (vg < 0) vg += 60;
   const gh = Math.floor(vg);
   const pa = Math.floor((vg - gh) * 60);
   const vi = Math.floor(((vg - gh) * 60 - pa) * 60);
-
-  const hh = now.getHours();
-  const mm = now.getMinutes();
-  const ss = now.getSeconds();
 
   return (
     <div className="relative overflow-hidden isolate text-center rounded-xl px-4 pt-5 pb-4 bg-[#07080d] text-[#f5f5f1] shadow-lg">

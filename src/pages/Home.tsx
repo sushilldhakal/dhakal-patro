@@ -13,6 +13,7 @@ import {
 } from "../lib/api";
 import { CalendarView } from "../components/CalendarView";
 import { BS_MONTHS_NE, getCurrentBs } from "../lib/bs-calendar";
+import { getMoonriseDisplay } from "../lib/panchanga-format";
 
 function getSunrise(p: PanchangaDay) {
   if (typeof p.sunrise === "object") return p.sunrise?.local_time_short;
@@ -68,7 +69,7 @@ function PanchangaAside({
   const paksha = p?.paksha?.label_ne ?? p?.paksha_ne;
   const sunrise = p ? getSunrise(p) : selectedDay?.sunrise;
   const sunset = p ? getSunset(p) : selectedDay?.sunset;
-  const moonrise = p?.moonrise?.local_time_short;
+  const moonrise = p ? getMoonriseDisplay(p) : undefined;
   const ritu = p?.ritu?.name_ne;
   const rahuKalam = p?.muhurta?.rahu_kalam;
 

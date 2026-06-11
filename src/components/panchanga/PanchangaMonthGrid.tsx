@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Moon, Sunrise, SunMoon, Sunset } from "lucide-react";
 import {
   fetchMonthCalendar,
   panchangaKeys,
@@ -6,10 +7,33 @@ import {
   type LocationParams,
 } from "@/lib/api";
 import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
+import { formatMonthMoonEventDisplay, toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 
 const WEEKDAYS_NE = ["आइत", "सोम", "मंगल", "बुध", "बिहि", "शुक्र", "शनि"];
+
+type PakshaPhase = "shukla" | "krishna";
+
+function getPakshaPhase(day: CalendarDay): PakshaPhase | undefined {
+  if (day.paksha === "shukla" || day.paksha_ne?.includes("शुक्ल")) return "shukla";
+  if (day.paksha === "krishna" || day.paksha_ne?.includes("कृष्ण")) return "krishna";
+  return undefined;
+}
+
+function formatTithiWithPaksha(day: CalendarDay): string {
+  const tithi = day.tithi_ne ?? day.tithi ?? "—";
+  const pakshaLabel = (() => {
+    if (day.paksha_ne?.includes("शुक्ल")) return "शुक्ल";
+    if (day.paksha_ne?.includes("कृष्ण")) return "कृष्ण";
+    if (day.paksha_ne) return day.paksha_ne.replace(/\s*पक्ष$/, "");
+    if (day.paksha === "shukla") return "शुक्ल";
+    if (day.paksha === "krishna") return "कृष्ण";
+    return undefined;
+  })();
+  if (!pakshaLabel) return tithi;
+  return `${pakshaLabel} ${tithi}`;
+}
 
 interface Props {
   date: Date;
@@ -31,16 +55,20 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
   const firstWeekday = days[0] ? new Date(days[0].date_ad).getDay() : 0;
   const blanks = Array.from({ length: firstWeekday }, (_, i) => i);
 
-  const cellClass = (day: CalendarDay) => {
+  const cellClass = (day: CalendarDay, phase: PakshaPhase | undefined) => {
     const isToday =
       day.day === todayBs.day && bs.month === todayBs.month && bs.year === todayBs.year;
     const isSel = day.day === bs.day;
+    const isKrishna = phase === "krishna";
     return cn(
-      "relative min-h-[128px] p-2.5 bg-card text-left cursor-pointer flex flex-col gap-0.5 text-foreground transition-colors border-0",
-      "hover:bg-secondary/[0.08]",
-      isSel && "ring-2 ring-secondary ring-inset",
-      isToday && "bg-secondary/20",
-      day.weekday === "Sat" && "text-destructive"
+      "relative min-h-[132px] p-1.5 text-left cursor-pointer flex flex-col gap-1 transition-colors border-0",
+      isKrishna
+        ? "bg-[#284143] text-white hover:bg-[#222c48] dark:bg-[#12182a] dark:hover:bg-[#284143]"
+        : "bg-card text-foreground hover:bg-secondary/[0.08]",
+      isSel &&
+        (isKrishna ? "ring-2 ring-white/90 ring-inset" : "ring-2 ring-secondary ring-inset"),
+      isToday && !isKrishna && "bg-secondary/20",
+      isToday && isKrishna && "ring-2 ring-slate-300/50 ring-inset"
     );
   };
 
@@ -50,13 +78,10 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
         {WEEKDAYS_NE.map((ne, i) => (
           <div
             key={ne}
-            className={cn(
-              "bg-foreground/[0.03] px-2.5 py-2 flex flex-col gap-0.5",
-              i === 6 && "text-destructive"
-            )}
+            className="bg-foreground/[0.03] px-1.5 py-1.5 flex flex-col gap-0.5"
           >
-            <span className="text-[12.5px] font-semibold">{ne}</span>
-            <span className="text-[9.5px] uppercase tracking-wider text-muted-foreground">
+            <span className="text-[11px] font-semibold truncate">{ne}</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground truncate">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][i]}
             </span>
           </div>
@@ -70,49 +95,139 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
       ) : (
         <div className="grid grid-cols-7 gap-px bg-border">
           {blanks.map((b) => (
-            <div key={`b-${b}`} className="min-h-[128px] bg-foreground/[0.025]" />
+            <div key={`b-${b}`} className="min-h-[132px] bg-foreground/[0.025]" />
           ))}
           {days.map((day) => {
             const ad = new Date(day.date_ad);
             const isToday =
               day.day === todayBs.day && bs.month === todayBs.month && bs.year === todayBs.year;
+            const phase = getPakshaPhase(day);
+            const isKrishna = phase === "krishna";
+            const muted = isKrishna ? "text-white/80" : "text-muted-foreground";
+            const faint = isKrishna ? "text-white/45" : "text-muted-foreground/40";
+
             return (
               <button
                 key={day.date_ad}
                 type="button"
-                className={cellClass(day)}
+                className={cellClass(day, phase)}
                 onClick={() => onPickDay(ad)}
               >
-                <span className="text-[10.5px] font-semibold text-muted-foreground truncate">
-                  {day.tithi_ne ?? day.tithi}
-                </span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-mono font-bold text-[22px] leading-none tabular-nums">
-                    {toNepaliDigits(day.day)}
-                  </span>
-                  {isToday && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                      आज
-                    </span>
+                {/* Top: tithi */}
+                <p
+                  className={cn(
+                    "text-xs font-semibold truncate text-center w-full leading-tight m-0",
+                    isKrishna ? "text-white" : "text-muted-foreground"
                   )}
-                  <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                    {ad.getDate()}
+                >
+                  {formatTithiWithPaksha(day)}
+                </p>
+
+                {/* Middle: sunrise · day · sunset */}
+                <div className="flex items-center justify-between gap-0.5 min-w-0 flex-1">
+                  <div className="flex flex-col items-start justify-center gap-0.5 w-[30%] min-w-0 shrink-0">
+                    {day.sunrise ? (
+                      <>
+                        <Sunrise
+                          className={cn(
+                            "w-4 h-4 shrink-0",
+                            isKrishna ? "text-amber-200" : "text-orange-500"
+                          )}
+                        />
+                        <span className="font-mono text-xs leading-none tabular-nums">
+                          {toNepaliDigits(day.sunrise)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={cn("text-xs", faint)}>—</span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center flex-1 min-w-0 px-0.5">
+                    <span className="font-mono font-bold text-[22px] leading-none tabular-nums">
+                      {toNepaliDigits(day.day)}
+                    </span>
+                    <span className={cn("font-mono text-xs leading-none mt-0.5", muted)}>
+                      {ad.getDate()}
+                    </span>
+                    {isToday && (
+                      <span
+                        className={cn(
+                          "text-[8px] font-bold px-1 py-px rounded-full mt-0.5",
+                          isKrishna
+                            ? "bg-white/20 text-white"
+                            : "bg-secondary text-secondary-foreground"
+                        )}
+                      >
+                        आज
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col items-end justify-center gap-0.5 w-[30%] min-w-0 shrink-0">
+                    {day.sunset ? (
+                      <>
+                        <Sunset
+                          className={cn(
+                            "w-4 h-4 shrink-0",
+                            isKrishna ? "text-sky-200" : "text-blue-500"
+                          )}
+                        />
+                        <span className="font-mono text-xs leading-none tabular-nums">
+                          {toNepaliDigits(day.sunset)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={cn("text-xs", faint)}>—</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom: nakshatra · yoga · karana */}
+                <div className="grid grid-cols-3 gap-0.5 text-xs leading-tight min-w-0 w-full">
+                  <span className="flex flex-col items-center gap-0.5 min-w-0">
+                    <NakshatraIcon
+                      name={day.nakshatra_ne ?? day.nakshatra}
+                      size={20}
+                      strokeWidth={1.8}
+                      className={isKrishna ? "text-white/90" : "text-secondary dark:text-[var(--brand-yellow)]"}
+                    />
+                    <span className="truncate font-medium text-center w-full">
+                      {day.nakshatra_ne ?? day.nakshatra ?? "—"}
+                    </span>
+                  </span>
+                  <span className={cn("truncate text-center", muted)}>
+                    {day.yoga_ne ?? day.yoga ?? "—"}
+                  </span>
+                  <span className={cn("truncate text-center", muted)}>
+                    {day.karana_ne ?? day.karana ?? "—"}
                   </span>
                 </div>
-                {(day.sunrise || day.sunset) && (
-                  <span className="font-mono text-[9.5px] text-muted-foreground whitespace-nowrap">
-                    {day.sunrise && <>↑{toNepaliDigits(day.sunrise)}</>}
-                    {day.sunrise && day.sunset && " "}
-                    {day.sunset && <>↓{toNepaliDigits(day.sunset)}</>}
+
+                <div className="flex items-center justify-between gap-1 min-w-0 w-full">
+                  <span className="inline-flex items-center gap-0.5 min-w-0">
+                    <SunMoon className={cn("w-4 h-4 shrink-0", isKrishna ? "text-white/75" : muted)} />
+                    <span className="font-mono text-xs leading-none tabular-nums truncate">
+                      {formatMonthMoonEventDisplay(day, "moonrise") ?? "—"}
+                    </span>
                   </span>
-                )}
-                {day.nakshatra && (
-                  <span className="text-[10.5px] truncate">
-                    ✦ {day.nakshatra}
+                  <span className="inline-flex items-center gap-0.5 min-w-0">
+                    <Moon className={cn("w-4 h-4 shrink-0", isKrishna ? "text-white/75" : muted)} />
+                    <span className="font-mono text-xs leading-none tabular-nums truncate">
+                      {formatMonthMoonEventDisplay(day, "moonset") ?? "—"}
+                    </span>
                   </span>
-                )}
+                </div>
+
                 {day.festivals[0] && (
-                  <span className="mt-auto max-w-full truncate text-[10px] font-semibold px-1.5 py-1 rounded-full self-start bg-secondary/14 text-secondary dark:text-teal-300">
+                  <span
+                    className={cn(
+                      "max-w-full truncate text-xs font-semibold px-1 py-0.5 rounded-full self-start",
+                      isKrishna
+                        ? "bg-white/15 text-white"
+                        : "bg-secondary/14 text-secondary dark:text-teal-300"
+                    )}
+                  >
                     {day.festivals[0]}
                   </span>
                 )}
