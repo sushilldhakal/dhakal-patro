@@ -14,6 +14,8 @@ import {
   getPanchangaDetail,
   getPlanetRows,
   getPlanetsAnchorLabel,
+  formatSolarCorrectionDisplay,
+  getSolarCorrections,
   getSunriseDisplay,
   getSunsetDisplay,
   getVaaraNe,
@@ -57,6 +59,10 @@ function AngaCell({ anga }: { anga?: Anga | null }) {
 }
 
 export function SunMoonSection({ p }: { p: PanchangaDay }) {
+  const solar = getSolarCorrections(p);
+  const belaantar = formatSolarCorrectionDisplay(solar?.belaantar);
+  const deshaantar = formatSolarCorrectionDisplay(solar?.deshaantar);
+
   return (
     <PanchangaSection titleNe="सूर्योदय र चन्द्रोदय" titleEn="Sunrise & Moonrise">
       <PanchangaRows>
@@ -84,7 +90,22 @@ export function SunMoonSection({ p }: { p: PanchangaDay }) {
             {getMoonsetDisplay(p) ?? "—"}
           </span>
         </PanchangaRow>
+        {belaantar ? (
+          <PanchangaRow label="बेलान्तर" labelEn="Equation of time" oddBorder>
+            <span className="font-mono font-semibold text-foreground">{belaantar}</span>
+          </PanchangaRow>
+        ) : null}
+        {deshaantar ? (
+          <PanchangaRow label="देशान्तर" labelEn="Longitude correction">
+            <span className="font-mono font-semibold text-foreground">{deshaantar}</span>
+          </PanchangaRow>
+        ) : null}
       </PanchangaRows>
+      {solar?.ishtakaal_note_ne ? (
+        <p className="text-[11px] text-muted-foreground mt-2 mb-0 leading-snug px-0.5">
+          {solar.ishtakaal_note_ne}
+        </p>
+      ) : null}
     </PanchangaSection>
   );
 }

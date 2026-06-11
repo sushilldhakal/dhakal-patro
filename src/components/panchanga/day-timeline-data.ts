@@ -240,7 +240,7 @@ function lagnaSegments(spans?: LagnaSpanBlock[] | null): TimelineSegment[] {
   }));
 }
 
-/** Equal-width columns for all grahas at the patro anchor time (6 AM local). */
+/** Equal-width columns for Navagraha at Udayakal (sunrise). */
 function grahaSegments(planets: GrahaSpashtaItem[]): TimelineSegment[] {
   const list = planets.filter(
     (p) => p.rashiNe && p.coords && p.coords !== "—"
@@ -374,7 +374,7 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
         ? [
             {
               label: "ग्रह",
-              en: "Graha 6AM",
+              en: "Udayakal",
               kind: "graha" as const,
               items: grahaSegments(grahaSpashta),
             },

@@ -108,6 +108,35 @@ export function getSunsetDisplay(p: PanchangaDay): string | undefined {
   return formatClockNepali(getSunset(p));
 }
 
+type SolarCorrection = {
+  minutes?: number;
+  seconds?: number;
+  sign?: "dhan" | "rin";
+  sign_ne?: string;
+  name_ne?: string;
+  label_ne?: string;
+};
+
+export type SolarCorrections = {
+  belaantar?: SolarCorrection;
+  deshaantar?: SolarCorrection;
+  ishtakaal_note_ne?: string;
+  sunrise_includes_corrections?: boolean;
+};
+
+export function getSolarCorrections(p: PanchangaDay): SolarCorrections | undefined {
+  const detail = getPanchangaDetail(p);
+  return detail?.solar_corrections as SolarCorrections | undefined;
+}
+
+export function formatSolarCorrectionDisplay(c?: SolarCorrection): string | undefined {
+  if (!c || c.minutes == null || c.seconds == null) return undefined;
+  const prefix = c.sign === "rin" ? "-" : "+";
+  const body = `${prefix}${c.minutes} मि ${String(c.seconds).padStart(2, "0")} से`;
+  const signNe = c.sign_ne ? ` (${c.sign_ne})` : "";
+  return `${toNepaliDigits(body)}${signNe}`;
+}
+
 type MoonTimeBlock = { local?: string; local_time_short?: string };
 
 function parseTimeToMinutes(time?: string | null): number | null {
@@ -443,7 +472,7 @@ type PlanetDetail = {
 export function getPlanetsAnchorLabel(p: PanchangaDay): string {
   const detail = getPanchangaDetail(p);
   const anchor = detail?.planets_anchor as { label_ne?: string; label_en?: string } | undefined;
-  return anchor?.label_ne ?? anchor?.label_en ?? "स्थानीय समय ६ बजे";
+  return anchor?.label_ne ?? anchor?.label_en ?? "उदयकालिक स्पष्टग्रह (सूर्योदय)";
 }
 
 export function getLagnaDisplay(

@@ -21,7 +21,6 @@ import {
   getPanchangaDetail,
   getMuhurtaRows,
   getPlanetRows,
-  getPlanetsAnchorLabel,
   getSunriseDisplay,
   getSunsetDisplay,
   getVaaraNe,
@@ -80,7 +79,7 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
 
   return (
     <>
-      <h4 className="pn-daymodal-section-title">ग्रह स्पष्ट ({getPlanetsAnchorLabel(p)})</h4>
+      <h4 className="pn-daymodal-section-title">उदयकालिक स्पष्टग्रह</h4>
       <div className="pn-daymodal-planets">
         {planets.map(({ label, rashiNe, coords }) => (
           <div key={label} className="pn-daymodal-planet">
