@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Moon, Sunrise, SunMoon, Sunset } from "lucide-react";
+import type { PanchangaDataMode } from "@/components/panchanga/use-panchanga-mode";
 import {
   fetchMonthCalendar,
   panchangaKeys,
@@ -39,15 +40,29 @@ interface Props {
   date: Date;
   locationParams?: LocationParams;
   onPickDay: (d: Date) => void;
+  dataMode?: PanchangaDataMode;
+  clock?: string;
 }
 
-export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
+export function PanchangaMonthGrid({
+  date,
+  locationParams,
+  onPickDay,
+  dataMode = "udaya",
+  clock = "12:00",
+}: Props) {
   const bs = adToBS(date);
   const todayBs = adToBS(new Date());
+  const isInstant = dataMode === "instant";
 
   const { data, isLoading } = useQuery({
-    queryKey: panchangaKeys.month(bs.year, bs.month, locationParams),
-    queryFn: () => fetchMonthCalendar(bs.year, bs.month, locationParams),
+    queryKey: isInstant
+      ? panchangaKeys.monthAtClock(bs.year, bs.month, clock, locationParams)
+      : panchangaKeys.month(bs.year, bs.month, locationParams),
+    queryFn: () =>
+      fetchMonthCalendar(bs.year, bs.month, locationParams, {
+        clock: isInstant ? clock : undefined,
+      }),
     staleTime: 1000 * 60 * 60,
   });
 
@@ -74,6 +89,15 @@ export function PanchangaMonthGrid({ date, locationParams, onPickDay }: Props) {
 
   return (
     <div className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+      {isInstant && (
+        <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border bg-secondary/10">
+          प्रत्येक दिन{" "}
+          <span className="font-mono font-semibold text-foreground tabular-nums">
+            {toNepaliDigits(clock)}
+          </span>{" "}
+          बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)
+        </div>
+      )}
       <div className="grid grid-cols-7 gap-px bg-border border-b border-border">
         {WEEKDAYS_NE.map((ne, i) => (
           <div

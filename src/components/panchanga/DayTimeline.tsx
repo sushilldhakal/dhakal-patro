@@ -1,537 +1,457 @@
-import { useMemo } from "react";
-import { Moon, Sunrise, SunMoon, Sunset } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import type { PanchangaDay } from "@/lib/api";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { getPlanetRows, toNepaliDigits } from "@/lib/panchanga-format";
+import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   buildDayTimelineData,
   dualTimeAtGhati,
-  type DayTimelineData,
   type TimelineRowData,
-  type TimelineSegment,
 } from "./day-timeline-data";
 
 const W = 1000;
-const X_LBL = 6;
 const X0 = 96;
 const X1 = 994;
-const ROW_BAND_HALF = 36;
-
-/** Layout — civil hours drive column grid; ghati is a secondary scale below. */
-const CIVIL_LABEL_Y = 16;
-const GHATI_LABEL_Y = 34;
-const EVENTS_TOP = 48;
-const EVENTS_H = 30;
-const GRID_TOP = EVENTS_TOP + EVENTS_H + 6;
-const ROW0 = 128;
-const ROW_STEP = 72;
+const RULER_H = 58;
+const SUN_H = 30;
+const T0 = RULER_H + SUN_H + 6;
+const TRACK = 58;
+const BAND = 34;
+const SUNLINE_Y = RULER_H + 12;
+const MARKER_TIME_Y = SUNLINE_Y + 14;
+const SUN_R = 6;
 
 const GHATI_TICKS = Array.from({ length: 16 }, (_, i) => i * 4);
 
-function makeGx(gMin: number, gMax: number) {
-  return (g: number) => X0 + ((g - gMin) / (gMax - gMin)) * (X1 - X0);
+const PLANET_SYM: Record<string, string> = {
+  सूर्य: "☉",
+  चन्द्र: "☽",
+  मंगल: "♂",
+  बुध: "☿",
+  बृहस्पति: "♃",
+  शुक्र: "♀",
+  शनि: "♄",
+  राहु: "☊",
+  केतु: "☋",
+};
+
+const TRACK_CLS: Record<string, string> = {
+  तिथि: "tithi",
+  नक्षत्र: "nak",
+  योग: "yoga",
+  करण: "karana",
+  चौघडिया: "cho",
+  लग्न: "lagna",
+};
+
+function gx(g: number) {
+  return X0 + (Math.max(0, Math.min(60, g)) / 60) * (X1 - X0);
+}
+
+function clampX(x: number, pad: number) {
+  return Math.max(X0 + pad, Math.min(X1 - pad, x));
+}
+
+interface ChartSegment {
+  ne: string;
+  fromG: number;
+  toG: number;
+  bad?: boolean;
+  cut?: boolean;
+}
+
+function segmentsFromRow(row: TimelineRowData): ChartSegment[] {
+  let prev = 0;
+  return row.items.map((it) => {
+    const toG = it.endG != null ? Math.min(it.endG, 60) : 60;
+    const seg: ChartSegment = {
+      ne: it.name,
+      fromG: prev,
+      toG,
+      bad: it.bad,
+      cut: it.endG != null && it.endG < 60,
+    };
+    prev = toG;
+    return seg;
+  });
 }
 
 interface Props {
   p: PanchangaDay;
   dateAd?: string;
+  isToday?: boolean;
+  timezone?: string;
 }
 
-export function DayTimeline({ p, dateAd }: Props) {
+export function DayTimeline({ p, dateAd, isToday = false, timezone }: Props) {
   const data = useMemo(() => buildDayTimelineData(p, dateAd), [p, dateAd]);
+  const planets = useMemo(() => getPlanetRows(p), [p]);
+  const timeZone = resolveTimeZone(p.location?.timezone, timezone);
+
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    if (!isToday) return;
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, [isToday]);
+
   if (!data) return null;
 
-  const gx = makeGx(data.gMin, data.gMax);
-  const rows = data.rows;
-  const rowY = (i: number) => ROW0 + i * ROW_STEP;
-  const choY = rowY(rows.length);
-  const gridBottom = choY + 44;
-  const H = gridBottom + 20;
+  const tracks = data.rows
+    .filter((row) => row.kind !== "graha")
+    .map((row) => {
+      const cls = TRACK_CLS[row.label] ?? "tithi";
+      const segs =
+        row.kind === "choghadiya"
+          ? data.choghadiya.map((c) => ({
+              ne: c.name,
+              fromG: c.startG,
+              toG: c.endG,
+              bad: c.bad,
+              cut: false,
+            }))
+          : segmentsFromRow(row);
+      return { key: row.label, ne: row.label, en: row.en, cls, segs };
+    });
+
+  const H = T0 + tracks.length * TRACK + 6;
+  const tLabel = (g: number) => dualTimeAtGhati(g, data.sunriseMin).clock;
+
+  let nowG: number | null = null;
+  if (isToday) {
+    const minsNow = minutesSinceMidnightInTimezone(now, timeZone);
+    nowG = (minsNow - data.sunriseMin) / 24;
+    if (nowG < 0) nowG += 60;
+  }
+
+  const trackY = (i: number) => T0 + i * TRACK;
 
   return (
-    <div className="pg-timeline-card">
-      <div className="pg-tl-head">
-        <div className="pg-tl-head-text">
-          <h2 className="text-base font-bold m-0">दिन-रेखा · ६० घडी</h2>
-          <span className="pg-tl-sub">
-            सूर्योदयदेखि सूर्योदयसम्म · घण्टा र घडी दुवै
-          </span>
-        </div>
-        <span className="pg-tl-legend">
-          <span className="pg-tl-key day" />
-          दिन
-          <span className="pg-tl-key night" />
+    <div className="pg-sec pgx-card">
+      <div className="pg-sec-band pgx-band">
+        <h2>दिन-चक्र</h2>
+        <span>पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise</span>
+        <span className="pgx-legend">
+          <i className="pgx-key good" />
+          शुभ
+          <i className="pgx-key bad" />
+          अशुभ
+          <i className="pgx-key night" />
           रात
         </span>
       </div>
 
-      <div className="pg-tl-fit">
+      <div className="pgx-scroll">
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="pg-tl-svg"
+          className="pgx-svg"
           preserveAspectRatio="xMidYMid meet"
           role="img"
-          aria-label="Day timeline — 60 ghati panchanga chart"
+          aria-label="Full panchanga day chart"
         >
-          <TimelineCanvas
-            data={data}
-            gx={gx}
-            rows={rows}
-            rowY={rowY}
-            gridBottom={gridBottom}
+          <rect
+            x={gx(data.dayG)}
+            y={RULER_H - 8}
+            width={X1 - gx(data.dayG)}
+            height={H - RULER_H + 2}
+            className="pgx-nightwash"
           />
+
+          <text x={X0 - 10} y={20} className="pgx-scale-label" textAnchor="end">
+            घण्टा
+          </text>
+          <text x={X0 - 10} y={47} className="pgx-scale-label dim" textAnchor="end">
+            घडी
+          </text>
+          <line x1={X0} y1={30} x2={X1} y2={30} className="pg-tl-axis" />
+          {data.civilHourTicks.map(({ hour, g }) => (
+            <g key={`h-${hour}-${g}`}>
+              <line x1={gx(g)} y1={30} x2={gx(g)} y2={24} className="pg-tl-tick" />
+              <text x={gx(g)} y={18} className="pgx-hour" textAnchor="middle">
+                {toNepaliDigits(hour)}
+              </text>
+            </g>
+          ))}
+          {GHATI_TICKS.map((g) => (
+            <g key={`g-${g}`}>
+              <line x1={gx(g)} y1={30} x2={gx(g)} y2={36} className="pg-tl-tick" />
+              <text x={gx(g)} y={48} className="pgx-ghati" textAnchor="middle">
+                {toNepaliDigits(g)}
+              </text>
+            </g>
+          ))}
+
+          <line x1={X0} y1={SUNLINE_Y} x2={X1} y2={SUNLINE_Y} className="pgx-sunline" />
+          <EventMarker g={0} sunriseMin={data.sunriseMin} kind="sunrise" anchor="start" />
+          <EventMarker g={data.dayG} sunriseMin={data.sunriseMin} kind="sunset" anchor="middle" />
+          {data.moonsetG != null && (
+            <EventMarker g={data.moonsetG} sunriseMin={data.sunriseMin} kind="moonset" anchor="middle" />
+          )}
+          {data.moonriseG != null && (
+            <EventMarker g={data.moonriseG} sunriseMin={data.sunriseMin} kind="moonrise" anchor="middle" />
+          )}
+          <EventMarker g={60} sunriseMin={data.sunriseMin} kind="next-sunrise" anchor="end" />
+
+          {[0, data.dayG, 60].map((g) => (
+            <line
+              key={`hair-${g}`}
+              x1={gx(g)}
+              y1={RULER_H + 18}
+              x2={gx(g)}
+              y2={H - 4}
+              className="pgx-sunhair"
+            />
+          ))}
+
+          {tracks.map((tr, ti) => {
+            const y = trackY(ti);
+            return (
+              <g key={tr.key}>
+                <text x={X0 - 10} y={y + BAND / 2 - 2} className="pg-tl-rowlabel" textAnchor="end">
+                  {tr.ne}
+                </text>
+                <text x={X0 - 10} y={y + BAND / 2 + 11} className="pg-tl-rowlabel-en" textAnchor="end">
+                  {tr.en}
+                </text>
+                <line
+                  x1={X0}
+                  y1={y + BAND}
+                  x2={X1}
+                  y2={y + BAND}
+                  className={`pg-tl-rowline pg-tl-rowline-${ti % 7}`}
+                />
+
+                {tr.segs.map((s, si) => {
+                  const x = gx(s.fromG);
+                  const x2 = gx(s.toG);
+                  const w = x2 - x;
+                  const segCls =
+                    tr.cls === "cho"
+                      ? s.bad
+                        ? "pgx-seg cho-bad"
+                        : "pgx-seg cho-good"
+                      : `pgx-seg ${tr.cls}${si % 2 ? " alt" : ""}`;
+                  const midX = clampX((x + x2) / 2, 26);
+                  const narrow = w < 64;
+                  const [mainName, paksha] = s.ne.includes(", ")
+                    ? [s.ne.split(", ")[0]!, s.ne.split(", ").slice(1).join(", ")]
+                    : [s.ne, ""];
+
+                  const clipId = `pgx-clip-${ti}-${si}`;
+                  const labelY = y + BAND / 2 + 4.5;
+
+                  return (
+                    <g key={si}>
+                      <defs>
+                        <clipPath id={clipId}>
+                          <rect
+                            x={x + 1}
+                            y={y}
+                            width={Math.max(0, w - 2)}
+                            height={BAND}
+                            rx={4}
+                          />
+                        </clipPath>
+                      </defs>
+                      <rect
+                        x={x + 1}
+                        y={y}
+                        width={Math.max(0, w - 2)}
+                        height={BAND}
+                        rx={4}
+                        className={segCls}
+                      >
+                        <title>{`${tr.ne}: ${s.ne} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
+                      </rect>
+                      {tr.cls === "cho" ? (
+                        w > 26 && (
+                          <text
+                            x={(x + x2) / 2}
+                            y={y + BAND / 2 + 4}
+                            className={`pgx-segname cho${s.bad ? " bad" : ""}`}
+                            textAnchor="middle"
+                          >
+                            {s.ne}
+                          </text>
+                        )
+                      ) : (
+                        w >= 20 && (
+                          <text
+                            x={midX}
+                            y={labelY}
+                            className={narrow ? "pgx-segname pgx-segname-sm" : "pgx-segname"}
+                            textAnchor="middle"
+                            clipPath={`url(#${clipId})`}
+                          >
+                            {mainName}
+                            {!narrow && paksha ? (
+                              <tspan className="pgx-paksha">{` · ${paksha}`}</tspan>
+                            ) : null}
+                          </text>
+                        )
+                      )}
+                      {tr.cls !== "lagna" && tr.cls !== "cho" && si === 0 && (
+                        <text x={x + 4} y={y + BAND + 16} className="pgx-time" textAnchor="start">
+                          {tLabel(s.fromG)}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })}
+
+          {data.civilHourTicks.map(({ hour, g }) => (
+            <line
+              key={`hour-grid-${hour}-${g}`}
+              x1={gx(g)}
+              y1={T0}
+              x2={gx(g)}
+              y2={H - 4}
+              className="pg-tl-vgrid-major"
+            />
+          ))}
+
+          {tracks.map((tr, ti) => {
+            const y = trackY(ti);
+            if (tr.cls === "cho") return null;
+            return (
+              <g key={`${tr.key}-cuts`}>
+                {tr.segs.map((s, si) => {
+                  if (!s.cut || s.toG >= 59.97) return null;
+                  const x2 = gx(s.toG);
+                  const time = tLabel(s.toG);
+                  const prevTime =
+                    si > 0 && tr.segs[si - 1]?.cut
+                      ? tLabel(tr.segs[si - 1]!.toG)
+                      : null;
+                  if (prevTime === time) return null;
+                  return (
+                    <g key={`cut-${si}`}>
+                      <TransitionArrow x2={x2} y={y} />
+                      <text x={clampX(x2, 22)} y={y + BAND + 16} className="pgx-time" textAnchor="middle">
+                        {time}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })}
+
+          {nowG != null && nowG >= 0 && nowG <= 60 && (
+            <g className="pgx-now">
+              <line x1={gx(nowG)} y1={RULER_H - 6} x2={gx(nowG)} y2={H - 4} />
+              <rect
+                x={clampX(gx(nowG), 30) - 27}
+                y={RULER_H - 22}
+                width={54}
+                height={17}
+                rx={8.5}
+                className="pgx-now-pill"
+              />
+              <text x={clampX(gx(nowG), 30)} y={RULER_H - 10} textAnchor="middle" className="pgx-now-text">
+                अहिले {tLabel(nowG)}
+              </text>
+            </g>
+          )}
         </svg>
       </div>
 
+      {planets.length > 0 && (
+        <div className="pgx-grahas">
+          <div className="pgx-grahas-label">
+            <span className="ne">ग्रह</span>
+            <span className="en">Udayakal</span>
+          </div>
+          <div className="pgx-graha-row">
+            {planets.map(({ label, rashiNe, coords }) => (
+              <div key={label} className="pgx-graha" title={`${label} — ${rashiNe ?? ""} ${coords}`}>
+                <span className="pgx-graha-sym">{PLANET_SYM[label] ?? "★"}</span>
+                <span className="pgx-graha-name">
+                  {label}–{rashiNe ?? "—"}
+                </span>
+                <span className="pgx-graha-deg mono">{coords}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function TimelineCanvas({
-  data,
-  gx,
-  rows,
-  rowY,
-  gridBottom,
-}: {
-  data: DayTimelineData;
-  gx: (g: number) => number;
-  rows: TimelineRowData[];
-  rowY: (i: number) => number;
-  gridBottom: number;
-}) {
-  const eventsCenterY = EVENTS_TOP + EVENTS_H / 2;
+/** ↔ marker on the row horizontal line at a segment boundary. */
+function TransitionArrow({ x2, y }: { x2: number; y: number }) {
+  const rowY = y + BAND;
 
   return (
-    <>
-      {/* civil-hour column grid (normal time) */}
-      {data.civilHourTicks.map(({ hour, g }) => (
-        <line
-          key={`civil-grid-${hour}`}
-          x1={gx(g)}
-          y1={GRID_TOP}
-          x2={gx(g)}
-          y2={gridBottom}
-          className="pg-tl-vgrid-major"
-        />
-      ))}
+    <g className="pgx-arrow">
+      <line x1={x2 - 14} y1={rowY} x2={x2 - 5} y2={rowY} />
+      <path d={`M ${x2 - 6} ${rowY - 3.6} L ${x2 - 1.5} ${rowY} L ${x2 - 6} ${rowY + 3.6} z`} />
+      <line x1={x2 + 14} y1={rowY} x2={x2 + 5} y2={rowY} />
+      <path d={`M ${x2 + 6} ${rowY - 3.6} L ${x2 + 1.5} ${rowY} L ${x2 + 6} ${rowY + 3.6} z`} />
+      <line className="pgx-arrow-bound" x1={x2} y1={rowY - 5} x2={x2} y2={rowY + 5} />
+    </g>
+  );
+}
 
-      {/* day / night shading */}
-      <rect
-        x={gx(0)}
-        y={GRID_TOP}
-        width={gx(data.dayG) - gx(0)}
-        height={gridBottom - GRID_TOP}
-        className="pg-tl-day"
-      />
-      <rect
-        x={gx(data.dayG)}
-        y={GRID_TOP}
-        width={gx(60) - gx(data.dayG)}
-        height={gridBottom - GRID_TOP}
-        className="pg-tl-night"
-      />
+function SunHalfIcon({ x, y, variant }: { x: number; y: number; variant: "rise" | "set" }) {
+  const arc =
+    variant === "rise"
+      ? `M ${x - SUN_R} ${y} A ${SUN_R} ${SUN_R} 0 0 1 ${x + SUN_R} ${y} Z`
+      : `M ${x - SUN_R} ${y} A ${SUN_R} ${SUN_R} 0 0 0 ${x + SUN_R} ${y} Z`;
 
-      {/* row bands */}
-      {rows.map((_, ri) => (
-        <rect
-          key={`band-${ri}`}
-          x={gx(0)}
-          y={rowY(ri) - ROW_BAND_HALF}
-          width={gx(60) - gx(0)}
-          height={ROW_BAND_HALF * 2}
-          className={`pg-tl-row-band pg-tl-row-band-${ri % 7}`}
-        />
-      ))}
-
-      {/* ── top axis: civil hours (column headers) ── */}
-      <text x={X_LBL} y={CIVIL_LABEL_Y} className="pg-tl-axis-tag">
-        घण्टा
-      </text>
-      {data.civilHourTicks.map(({ hour, g }) => (
-        <g key={`civil-${hour}`}>
-          <line
-            x1={gx(g)}
-            y1={CIVIL_LABEL_Y + 6}
-            x2={gx(g)}
-            y2={GHATI_LABEL_Y - 0}
-            className="pg-tl-tick"
-          />
-          <text x={gx(g)} y={CIVIL_LABEL_Y} className="pg-tl-civil-hour" textAnchor="middle">
-            {toNepaliDigits(hour)}
-          </text>
-        </g>
-      ))}
-
-      {/* ── secondary axis: ghati scale (labels only, no column grid) ── */}
-      <text x={X_LBL} y={GHATI_LABEL_Y} className="pg-tl-axis-tag">
-        घडी
-      </text>
-      {GHATI_TICKS.map((g) => (
-        <text
-          key={`ghati-${g}`}
-          x={gx(g)}
-          y={GHATI_LABEL_Y}
-          className="pg-tl-ghati-hour"
-          textAnchor="middle"
-        >
-          {toNepaliDigits(g)}
-        </text>
-      ))}
-
-      {/* events strip background */}
-      <rect
-        x={gx(data.gMin)}
-        y={EVENTS_TOP}
-        width={gx(data.gMax) - gx(data.gMin)}
-        height={EVENTS_H}
-        className="pg-tl-events-bg"
-        rx={4}
-      />
-
-      <EventMarker
-        g={0}
-        y={eventsCenterY}
-        sunriseMin={data.sunriseMin}
-        gx={gx}
-        kind="sunrise"
-        label={data.sunriseLabel}
-      />
-      <EventMarker
-        g={data.dayG}
-        y={eventsCenterY}
-        sunriseMin={data.sunriseMin}
-        gx={gx}
-        kind="sunset"
-        label={data.sunsetLabel}
-      />
-      {data.moonriseG != null && (
-        <EventMarker
-          g={data.moonriseG}
-          y={eventsCenterY}
-          sunriseMin={data.sunriseMin}
-          gx={gx}
-          kind="moonrise"
-          label={data.moonriseLabel ?? undefined}
-        />
-      )}
-      {data.moonsetG != null && (
-        <EventMarker
-          g={data.moonsetG}
-          y={eventsCenterY}
-          sunriseMin={data.sunriseMin}
-          gx={gx}
-          kind="moonset"
-          label={data.moonsetLabel ?? undefined}
-        />
-      )}
-      <EventMarker
-        g={60}
-        y={eventsCenterY}
-        sunriseMin={data.sunriseMin}
-        gx={gx}
-        kind="next-sunrise"
-      />
-
-      {/* key vertical guides through chart only */}
-      <line
-        x1={gx(0)}
-        y1={GRID_TOP}
-        x2={gx(0)}
-        y2={gridBottom}
-        className="pg-tl-sunrise-line"
-      />
-      <line
-        x1={gx(data.dayG)}
-        y1={GRID_TOP}
-        x2={gx(data.dayG)}
-        y2={gridBottom}
-        className="pg-tl-sunset-line"
-      />
-      <line
-        x1={gx(60)}
-        y1={GRID_TOP}
-        x2={gx(60)}
-        y2={gridBottom}
-        className="pg-tl-end-line"
-      />
-
-      {/* panchanga rows */}
-      {rows.map((row, ri) => (
-        <TimelineRow
-          key={row.label}
-          y={rowY(ri)}
-          rowIndex={ri}
-          label={row.label}
-          labelEn={row.en}
-          items={row.items}
-          kind={row.kind}
-          sunriseMin={data.sunriseMin}
-          dayG={data.dayG}
-          weekdayNe={data.weekdayNe}
-          gx={gx}
-          gridTop={GRID_TOP}
-        />
-      ))}
-    </>
+  return (
+    <g aria-hidden>
+      <line x1={x - SUN_R - 3} y1={y} x2={x + SUN_R + 3} y2={y} className="pg-tl-sun-horizon" />
+      <path d={arc} className="pg-tl-sun-disc" />
+    </g>
   );
 }
 
 function EventMarker({
   g,
-  y,
   sunriseMin,
-  gx,
   kind,
+  anchor,
 }: {
   g: number;
-  y: number;
   sunriseMin: number;
-  gx: (g: number) => number;
   kind: "sunrise" | "sunset" | "moonrise" | "moonset" | "next-sunrise";
-  label?: string;
+  anchor: "start" | "middle" | "end";
 }) {
   const { clock } = dualTimeAtGhati(g, sunriseMin);
   const x = gx(g);
-  const anchor: "start" | "middle" | "end" =
-    g <= 1 ? "start" : g >= 59 ? "end" : "middle";
-  const tx = anchor === "start" ? x + 2 : anchor === "end" ? x - 2 : x;
-
-  const Icon =
-    kind === "sunrise" || kind === "next-sunrise"
-      ? Sunrise
-      : kind === "sunset"
-        ? Sunset
-        : kind === "moonset"
-          ? Moon
-          : SunMoon;
-
-  const iconClass =
-    kind === "sunrise" || kind === "sunset" || kind === "next-sunrise"
-      ? "text-[var(--color-warning)]"
-      : "text-foreground";
+  const labelX = anchor === "start" ? x : anchor === "end" ? x : x;
+  const isSun = kind === "sunrise" || kind === "sunset" || kind === "next-sunrise";
+  const sunVariant = kind === "sunset" ? "set" : "rise";
+  const moonEmoji = kind === "moonset" ? "🌘" : "🌒";
 
   return (
     <g>
-      <foreignObject
-        x={anchor === "end" ? tx - 52 : anchor === "start" ? tx - 2 : tx - 26}
-        y={y - 10}
-        width={54}
-        height={24}
-      >
-        <div className={`flex flex-col items-center gap-0 leading-none ${iconClass}`}>
-          <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={2.2} aria-hidden />
-          <span className="font-mono text-[10px] font-bold tabular-nums">{clock}</span>
-        </div>
-      </foreignObject>
-    </g>
-  );
-}
-
-function TimelineRow({
-  y,
-  rowIndex,
-  label,
-  labelEn,
-  items,
-  kind,
-  sunriseMin,
-  dayG,
-  weekdayNe,
-  gx,
-  gridTop,
-}: {
-  y: number;
-  rowIndex: number;
-  label: string;
-  labelEn: string;
-  items: TimelineSegment[];
-  kind?: "choghadiya" | "lagna" | "graha";
-  sunriseMin: number;
-  dayG: number;
-  weekdayNe: string;
-  gx: (g: number) => number;
-  gridTop: number;
-}) {
-  const isChoghadiya = kind === "choghadiya";
-  const isLagna = kind === "lagna";
-  const isGraha = kind === "graha";
-  let prev = 0;
-
-  return (
-    <g>
-      <text x={X_LBL} y={y - 20} className="pg-tl-rowlabel">
-        {label}
-      </text>
-      <text x={X_LBL} y={y - 4} className="pg-tl-rowlabel-en">
-        {labelEn}
-      </text>
-      <line
-        x1={gx(0)}
-        y1={y}
-        x2={gx(60)}
-        y2={y}
-        className={`pg-tl-rowline pg-tl-rowline-${rowIndex % 7}`}
-      />
-
-      {items.map((it, ii) => {
-        const end =
-          it.endG !== undefined && it.endG !== null ? Math.min(it.endG, 60) : 60;
-        const span = end - prev;
-        const midX = gx((prev + end) / 2);
-        const xStart = gx(prev);
-        const xEnd = gx(end);
-
-        const seg = (
-          <g key={ii}>
-            {isChoghadiya && it.bad && (
-              <path
-                d={`M ${xStart} ${y - 8} v 8 h ${xEnd - xStart} v -8`}
-                className="pg-tl-bad"
-              />
-            )}
-            {(isChoghadiya ? span >= 2 : true) && (
-              <>
-                {isGraha && it.subLabel && span >= 1.5 && (
-                  <text
-                    x={midX}
-                    y={y - 14}
-                    className="pg-tl-graha-title"
-                    textAnchor="middle"
-                  >
-                    {it.subLabel}
-                  </text>
-                )}
-                <text
-                  x={midX}
-                  y={y + (isGraha ? 14 : 0) - (isChoghadiya && it.bad ? 11 : isGraha ? 0 : 8)}
-                  className={
-                    isChoghadiya && it.bad
-                      ? "pg-tl-badname"
-                      : isGraha
-                        ? "pg-tl-graha-coords"
-                        : span < (isChoghadiya ? 3 : isLagna ? 3.5 : 8)
-                          ? "pg-tl-segname-sm"
-                          : isLagna
-                            ? "pg-tl-lagna-name"
-                            : "pg-tl-segname"
-                  }
-                  textAnchor="middle"
-                >
-                  {it.name}
-                </text>
-              </>
-            )}
-            {!isChoghadiya &&
-              !isGraha &&
-              it.endG !== undefined &&
-              it.endG !== null &&
-              it.endG < 60 && (
-                <TransitionMarker
-                  g={end}
-                  y={y}
-                  sunriseMin={sunriseMin}
-                  gx={gx}
-                  gridTop={gridTop}
-                  segmentSpan={span}
-                  nextSpan={60 - end}
-                  minimal={isLagna}
-                />
-              )}
-          </g>
-        );
-        prev = end;
-        return seg;
-      })}
-
-      {isChoghadiya && (
+      {isSun ? (
+        <SunHalfIcon x={x} y={SUNLINE_Y} variant={sunVariant} />
+      ) : (
         <text
-          x={gx(dayG / 2)}
-          y={y + 34}
-          className="pg-tl-segname dim"
+          x={x}
+          y={SUNLINE_Y - 7}
           textAnchor="middle"
+          className="pg-tl-moon-emoji"
+          dominantBaseline="central"
+          aria-hidden
         >
-          {weekdayNe}
+          {moonEmoji}
         </text>
       )}
-    </g>
-  );
-}
-
-function TransitionMarker({
-  g,
-  y,
-  sunriseMin,
-  gx,
-  gridTop,
-  segmentSpan,
-  nextSpan,
-  minimal = false,
-}: {
-  g: number;
-  y: number;
-  sunriseMin: number;
-  gx: (g: number) => number;
-  gridTop: number;
-  segmentSpan: number;
-  nextSpan: number;
-  minimal?: boolean;
-}) {
-  const { clock } = dualTimeAtGhati(g, sunriseMin);
-  const x = gx(g);
-  const narrow = segmentSpan < 10 || nextSpan < 10;
-  const anchor: "start" | "middle" | "end" =
-    g > 52 ? "end" : g < 8 ? "start" : "middle";
-  const dx = anchor === "end" ? -4 : anchor === "start" ? 4 : 0;
-
-  if (minimal) {
-    return (
       <text
-        x={x + dx}
-        y={y + (narrow ? 22 : 26)}
-        className="pg-tl-time"
+        x={labelX}
+        y={MARKER_TIME_Y}
         textAnchor={anchor}
+        className={isSun ? "pg-tl-event-time" : "pg-tl-event-time moon"}
       >
         {clock}
       </text>
-    );
-  }
-
-  return (
-    <g>
-      <line
-        x1={x}
-        y1={gridTop}
-        x2={x}
-        y2={y - 7}
-        className="pg-tl-row-connector"
-      />
-      <path
-        d={`M ${x - 8} ${y - 5} L ${x - 2} ${y} L ${x - 8} ${y + 5}`}
-        className="pg-tl-arrow"
-        fill="none"
-      />
-      <path
-        d={`M ${x + 8} ${y - 5} L ${x + 2} ${y} L ${x + 8} ${y + 5}`}
-        className="pg-tl-arrow"
-        fill="none"
-      />
-      <line x1={x} y1={y - 5} x2={x} y2={y + 5} className="pg-tl-arrow-tick" />
-      <text
-        x={x + dx}
-        y={y + (narrow ? 22 : 26)}
-        className="pg-tl-time"
-        textAnchor={anchor}
-      >
-        {clock}
-      </text>
-      {/* <text
-        x={x + dx}
-        y={y + (narrow ? 36 : 42)}
-        className="pg-tl-time-sub"
-        textAnchor={anchor}
-      >
-        {ghati}
-      </text> */}
     </g>
   );
 }

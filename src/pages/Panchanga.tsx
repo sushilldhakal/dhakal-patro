@@ -1,23 +1,41 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin } from "lucide-react";
-import { fetchPanchanga, panchangaKeys } from "@/lib/api";
+import {
+  fetchPanchanga,
+  fetchPanchangaAtTime,
+  panchangaKeys,
+} from "@/lib/api";
 import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
 import { getBsMonthAdSpanLabel } from "@/lib/local-calendar";
+import {
+  atTimeToPanchangaDay,
+  buildAtTimeDatetime,
+  isEphemerisPanchanga,
+} from "@/lib/ephemeris-adapters";
 import { getSunrise, getSunset, toNepaliDigits } from "@/lib/panchanga-format";
+import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { cn } from "@/lib/utils";
 import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
+import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
+import { PanchangaModeControls } from "@/components/panchanga/PanchangaModeControls";
+import {
+  EphemerisModeBanner,
+  MuhurtaNowPanel,
+} from "@/components/panchanga/MuhurtaNowPanel";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { usePanchangaMode } from "@/components/panchanga/use-panchanga-mode";
 import {
   DinVisheshSection,
   FestivalsSection,
   MuhurtaTimingsSection,
   PanchangCoreSection,
-  PlanetsPanel,
+  BalamSection,
+  PanchakaLagnaSection,
   RashiSection,
   RituSection,
   SamvatSection,
@@ -45,27 +63,45 @@ export function Panchanga() {
     return saved === "month" ? "month" : "day";
   });
 
+  const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
+  const { mode: dataMode, setMode: setDataMode, clock, setClock } =
+    usePanchangaMode(timezoneForMode);
+
   const adDateStr = toAdStr(date);
   const bs = adToBS(date);
-  const todayBs = adToBS(new Date());
-  const isToday =
-    bs.day === todayBs.day && bs.month === todayBs.month && bs.year === todayBs.year;
+  const isInstant = dataMode === "instant";
+  const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
 
   const switchView = (v: ViewMode) => {
     setView(v);
     localStorage.setItem("dhakalPatroPanchView", v);
   };
 
-  const { data, isLoading, isError } = useQuery({
+  const udayaQuery = useQuery({
     queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
     queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
+    enabled: !isInstant,
   });
+
+  const instantQuery = useQuery({
+    queryKey: panchangaKeys.atTime(atTimeDatetime, location.params),
+    queryFn: async () => {
+      const raw = await fetchPanchangaAtTime(atTimeDatetime, location.params);
+      return atTimeToPanchangaDay(raw);
+    },
+    staleTime: 1000 * 60 * 5,
+    enabled: isInstant,
+  });
+
+  const activeQuery = isInstant ? instantQuery : udayaQuery;
+  const { data, isLoading, isError } = activeQuery;
+  const ephemeris = isEphemerisPanchanga(data);
 
   const sunrise = data ? getSunrise(data) : undefined;
   const sunset = data ? getSunset(data) : undefined;
-  const locationTimezone =
-    data?.location?.timezone ?? location.params.timezone;
+  const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
+  const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
 
   const adMonthSpan = useMemo(
     () => getBsMonthAdSpanLabel(bs.year, bs.month),
@@ -75,20 +111,31 @@ export function Panchanga() {
   const locationLabel = data?.location?.name ?? location.label;
   const adDateLabel = data?.display?.gregorian_en ?? fmtAdFull(date);
 
+  const titleSuffix =
+    isInstant && view === "day"
+      ? ` — ${toNepaliDigits(clock)} बजे`
+      : isInstant && view === "month"
+        ? ` — ${toNepaliDigits(clock)} बजे`
+        : "";
+
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
-      {/* Page header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
         <div>
           <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
             नेपाली पात्रो · पञ्चाङ्ग
+            {isInstant && (
+              <span className="ml-2 text-secondary normal-case tracking-normal font-semibold">
+                · समय-आधारित
+              </span>
+            )}
           </div>
           <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
             {view === "month"
-              ? `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)} — मासिक पञ्चाङ्ग`
-              : isToday
+              ? `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)} — मासिक पञ्चाङ्ग${titleSuffix}`
+              : isToday && !isInstant
                 ? "आजको पञ्चाङ्ग"
-                : "पञ्चाङ्ग विवरण"}
+                : `पञ्चाङ्ग विवरण${titleSuffix}`}
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
             {view === "month" ? (
@@ -113,6 +160,12 @@ export function Panchanga() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
+          <PanchangaModeControls
+            mode={dataMode}
+            onModeChange={setDataMode}
+            clock={clock}
+            onClockChange={setClock}
+          />
           <LocationSelector
             compact
             className="shrink-0"
@@ -161,6 +214,8 @@ export function Panchanga() {
           <PanchangaMonthGrid
             date={date}
             locationParams={location.params}
+            dataMode={dataMode}
+            clock={clock}
             onPickDay={(d) => {
               setDate(d);
               switchView("day");
@@ -173,7 +228,18 @@ export function Panchanga() {
             <PanchangaDateNav date={date} onDateChange={setDate} />
             <QuickDateStrip date={date} onDateChange={setDate} />
 
-            {data && !isLoading && <DayTimeline p={data} dateAd={adDateStr} />}
+            {ephemeris && data && !isLoading && (
+              <EphemerisModeBanner p={data} clock={clock} />
+            )}
+
+            {data && !isLoading && !ephemeris && (
+              <DayTimeline
+                p={data}
+                dateAd={adDateStr}
+                isToday={isToday}
+                timezone={effectiveTimezone}
+              />
+            )}
 
             {isLoading && (
               <div className="space-y-4">
@@ -193,19 +259,30 @@ export function Panchanga() {
               <>
                 <SunMoonSection p={data} />
                 <PanchangCoreSection p={data} />
-                <SamvatSection p={data} />
-                <RashiSection p={data} />
-                <RituSection p={data} />
+                {!ephemeris && (
+                  <>
+                    <SamvatSection p={data} />
+                    <RashiSection p={data} />
+                    <BalamSection p={data} />
+                    <PanchakaLagnaSection p={data} />
+                    <RituSection p={data} />
+                  </>
+                )}
                 <MuhurtaTimingsSection p={data} />
-                <DinVisheshSection p={data} />
-                <FestivalsSection p={data} />
+                {!ephemeris && (
+                  <>
+                    <DinVisheshSection p={data} />
+                    <FestivalsSection p={data} />
+                  </>
+                )}
               </>
             )}
           </div>
 
           <aside className="flex flex-col gap-4 xl:sticky xl:top-[76px]">
-            <GhatiClock sunrise={sunrise} sunset={sunset} timezone={locationTimezone} />
-            {data && <PlanetsPanel p={data} />}
+            <GhatiClock sunrise={sunrise} sunset={sunset} timezone={effectiveTimezone} />
+            {ephemeris && data && <MuhurtaNowPanel p={data} clock={clock} />}
+            <PlanetEventsPanel dateAd={adDateStr} location={location.params} />
           </aside>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sunrise, Moon } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { getZonedTimeParts, minutesSinceMidnightInTimezone } from "@/lib/zoned-time";
 
 function parseTimeToMinutes(time?: string): number | null {
   if (!time) return null;
@@ -11,24 +12,6 @@ function parseTimeToMinutes(time?: string): number | null {
 
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
-}
-
-function getZonedTimeParts(date: Date, timeZone: string): { hour: number; minute: number; second: number } {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    hour12: false,
-  }).formatToParts(date);
-
-  const read = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((p) => p.type === type)?.value ?? 0);
-
-  let hour = read("hour");
-  if (hour === 24) hour = 0;
-
-  return { hour, minute: read("minute"), second: read("second") };
 }
 
 interface Props {
@@ -52,7 +35,7 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
   );
 
   const sunriseMin = parseTimeToMinutes(sunrise) ?? 5 * 60 + 12;
-  const minsNow = hh * 60 + mm + ss / 60;
+  const minsNow = minutesSinceMidnightInTimezone(now, timeZone, true);
   let vg = (minsNow - sunriseMin) / 24;
   if (vg < 0) vg += 60;
   const gh = Math.floor(vg);

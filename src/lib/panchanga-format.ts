@@ -412,9 +412,132 @@ const RASHI_NE = [
   "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
 ] as const;
 
+export const RASHI_SYM = [
+  "♈", "♉", "♊", "♋", "♌", "♍",
+  "♎", "♏", "♐", "♑", "♒", "♓",
+] as const;
+
+const RASHI_DISPLAY_NE: Record<string, string> = {
+  मेष: "मेष",
+  वृष: "वृषभ",
+  मिथुन: "मिथुन",
+  कर्कट: "कर्कट",
+  सिंह: "सिंह",
+  कन्या: "कन्या",
+  तुला: "तुला",
+  वृश्चिक: "वृश्चिक",
+  धनु: "धनु",
+  मकर: "मकर",
+  कुम्भ: "कुम्भ",
+  मीन: "मीन",
+};
+
 export function rashiNeFromNumber(rashi?: number): string | undefined {
   if (rashi == null || rashi < 1 || rashi > 12) return undefined;
   return RASHI_NE[rashi - 1];
+}
+
+export function rashiSymFromNumber(rashi?: number): string | undefined {
+  if (rashi == null || rashi < 1 || rashi > 12) return undefined;
+  return RASHI_SYM[rashi - 1];
+}
+
+export function formatRashiDisplayNe(nameNe?: string): string | undefined {
+  if (!nameNe) return undefined;
+  return RASHI_DISPLAY_NE[nameNe] ?? nameNe;
+}
+
+type SpanEndBlock = {
+  end_local_time_short?: string;
+  end_local_time?: string;
+  end_hours_clock?: string;
+  end_ghati_clock?: string;
+};
+
+export function formatSpanEndTime(span?: SpanEndBlock | null): string | undefined {
+  if (!span) return undefined;
+  const raw =
+    span.end_local_time_short ??
+    formatTimeShort(span.end_local_time) ??
+    formatTimeShort(span.end_hours_clock) ??
+    formatGhatiEnd(span.end_ghati_clock);
+  return raw ? toNepaliDigits(raw) : undefined;
+}
+
+export function getChandraRashiSpans(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const spans = (detail?.chandra_rashi_spans ?? p.chandra_rashi_spans) as
+    | import("@/lib/api").RashiSpan[]
+    | undefined;
+  return spans?.length ? spans : undefined;
+}
+
+export function getNakshatraPadaSpans(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const spans = (detail?.nakshatra_pada_spans ?? p.nakshatra_pada_spans) as
+    | import("@/lib/api").NakshatraPadaSpan[]
+    | undefined;
+  return spans?.length ? spans : undefined;
+}
+
+export function getSuryaRashi(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const block = (detail?.surya_rashi ?? p.surya_rashi) as
+    | { name_ne?: string; number?: number; name?: string }
+    | undefined;
+  if (block?.name_ne || block?.name) return block;
+  if (p.surya_rashi_ne) return { name_ne: p.surya_rashi_ne };
+  return undefined;
+}
+
+export function getSuryaNakshatra(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const block = (detail?.surya_nakshatra ?? p.surya_nakshatra) as
+    | { name_ne?: string; name?: string }
+    | undefined;
+  return block?.name_ne || block?.name ? block : undefined;
+}
+
+export function getChandrabalam(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  return (detail?.chandrabalam ?? p.chandrabalam) as import("@/lib/api").BalamBlock | undefined;
+}
+
+export function getTarabalam(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  return (detail?.tarabalam ?? p.tarabalam) as import("@/lib/api").BalamBlock | undefined;
+}
+
+export function getPanchakaRahita(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const rows = (detail?.panchaka_rahita ?? p.panchaka_rahita) as
+    | import("@/lib/api").PanchakaSegment[]
+    | undefined;
+  return rows?.length ? rows : undefined;
+}
+
+export function getUdayaLagna(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const rows = (detail?.udaya_lagna ?? p.udaya_lagna ?? detail?.lagna_spans ?? p.lagna_spans) as
+    | import("@/lib/api").UdayaLagnaRow[]
+    | undefined;
+  return rows?.length ? rows : undefined;
+}
+
+export function formatShortClock(time?: string | null): string | undefined {
+  if (!time) return undefined;
+  const t = formatTimeShort(time) ?? time.slice(0, 5);
+  return toNepaliDigits(t);
+}
+
+export function formatTimeRangeShort(
+  start?: string | null,
+  end?: string | null
+): string | undefined {
+  const a = formatShortClock(start);
+  const b = formatShortClock(end);
+  if (!a || !b) return undefined;
+  return `${a} → ${b}`;
 }
 
 /** DMS within sign (deg|min|sec) from absolute sidereal longitude. */

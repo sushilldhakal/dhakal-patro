@@ -85,6 +85,15 @@ export const panchangaKeys = {
     ["panchanga", "nepal", date, locationCacheKey(location)] as const,
   month: (year: number, month: number, location?: LocationParams) =>
     ["panchanga", "month", year, month, locationCacheKey(location)] as const,
+  monthAtClock: (
+    year: number,
+    month: number,
+    clock: string,
+    location?: LocationParams
+  ) =>
+    ["panchanga", "month", "clock", year, month, clock, locationCacheKey(location)] as const,
+  atTime: (datetime: string, location?: LocationParams) =>
+    ["panchanga", "at-time", datetime, locationCacheKey(location)] as const,
   header: (year: number, month: number, location?: LocationParams) =>
     ["calendar", "header", year, month, locationCacheKey(location)] as const,
 };
@@ -108,6 +117,49 @@ export const fetchPanchanga = (
 export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =>
   get<PanchangaDay>(
     appendLocation(`/nepal/panchanga/${dateAd}?era=ad`, location)
+  );
+
+export const fetchPanchangaAtTime = (datetime: string, location?: LocationParams) =>
+  get<PanchangaAtTime>(
+    appendLocation(
+      `/panchanga/at-time?datetime=${encodeURIComponent(datetime)}`,
+      location
+    )
+  );
+
+// ─── Gochar (planetary transits) ─────────────────────────────────────────────
+
+export interface GocharNextEntry {
+  to_rashi: string;
+  entry_time_local: string;
+  entry_time_utc?: string;
+}
+
+export interface GocharGraha {
+  name_ne: string;
+  name_vedic?: string;
+  symbol: string;
+  rashi?: string;
+  next_rashi_entry?: GocharNextEntry | null;
+}
+
+export interface GocharResponse {
+  date_ad: string;
+  gochar: Record<string, GocharGraha>;
+}
+
+export const gocharKeys = {
+  day: (date: string, era: string, location?: LocationParams) =>
+    ["gochar", date, era, locationCacheKey(location)] as const,
+};
+
+export const fetchGochar = (
+  date: string,
+  era: "bs" | "ad" = "ad",
+  location?: LocationParams
+) =>
+  get<GocharResponse>(
+    appendLocation(`/nepal/gochar/${date}?era=${era}`, location)
   );
 
 type RawMonthDay = CalendarDay & {
@@ -158,9 +210,16 @@ function normalizeMonthDay(day: RawMonthDay): CalendarDay {
 export const fetchMonthCalendar = async (
   year: number,
   month: number,
-  location?: LocationParams
+  location?: LocationParams,
+  options?: { clock?: string }
 ): Promise<MonthCalendar> => {
-  const path = appendLocation(`/panchanga/${year}/${month}?full=true`, location);
+  const clockParam = options?.clock
+    ? `&clock=${encodeURIComponent(options.clock)}`
+    : "";
+  const path = appendLocation(
+    `/panchanga/${year}/${month}?full=true${clockParam}`,
+    location
+  );
   const data = await get<MonthCalendar & { calendar: RawMonthDay[] }>(path);
   return {
     ...data,
@@ -228,7 +287,123 @@ export interface LagnaSpan {
   start_local_time?: string;
 }
 
+export interface RashiSpan {
+  number?: number;
+  name?: string;
+  name_ne?: string;
+  end_local_time?: string;
+  end_local_time_short?: string;
+  end_hours_clock?: string;
+  end_ghati_clock?: string;
+}
+
+export interface NakshatraPadaSpan {
+  nakshatra_number?: number;
+  nakshatra_name?: string;
+  nakshatra_name_ne?: string;
+  pada?: number;
+  pada_ne?: string;
+  end_local_time?: string;
+  end_local_time_short?: string;
+  end_hours_clock?: string;
+  end_ghati_clock?: string;
+}
+
+export interface SuryaNakshatra {
+  number?: number;
+  name?: string;
+  name_ne?: string;
+}
+
+export interface BalamChip {
+  number?: number;
+  name?: string;
+  name_ne?: string;
+}
+
+export interface BalamTill {
+  end_local_time_short?: string;
+  end_local_time?: string;
+  end_hours_clock?: string;
+}
+
+export interface BalamBlock {
+  till?: BalamTill | null;
+  set1?: BalamChip[];
+  set2?: BalamChip[];
+}
+
+export interface PanchakaSegment {
+  name?: string;
+  name_ne?: string;
+  good?: boolean;
+  start_local_time_short?: string;
+  end_local_time_short?: string;
+  start_local_time?: string;
+  end_local_time?: string;
+  start_hours_clock?: string;
+  end_hours_clock?: string;
+}
+
+export interface UdayaLagnaRow {
+  number?: number;
+  name?: string;
+  name_ne?: string;
+  start_local_time_short?: string;
+  end_local_time_short?: string;
+  start_local_time?: string;
+  end_local_time?: string;
+  start_hours_clock?: string;
+  end_hours_clock?: string;
+}
+
+export interface MuhurtaNowBlock {
+  active?: boolean;
+  start_time?: string;
+  end_time?: string;
+  start_local?: string;
+  end_local?: string;
+  label_ne?: string;
+  label_en?: string;
+}
+
+export interface PanchangaAtTime {
+  mode: "ephemeris";
+  query_instant: string;
+  query_instant_local?: string;
+  panchanga_date_ad?: string;
+  date_ad?: string;
+  date_bs?: string;
+  before_sunrise_of_civil_day?: boolean;
+  bs_date?: { year: number; month: number; day: number };
+  vaara?: { name_ne?: string; name_english?: string };
+  weekday?: string;
+  sunrise?: { local_time_short?: string } | string;
+  sunset?: { local_time_short?: string } | string;
+  tithi?: PanchangaDay["tithi"];
+  nakshatra?: PanchangaDay["nakshatra"];
+  yoga?: PanchangaDay["yoga"];
+  karana?: PanchangaDay["karana"];
+  planets?: Record<string, PlanetInfo | string>;
+  lagna?: PanchangaDay["lagna"];
+  muhurta?: PanchangaDay["muhurta"];
+  muhurta_now?: {
+    rahu_kalam?: MuhurtaNowBlock;
+    yamaganda?: MuhurtaNowBlock;
+    gulika?: MuhurtaNowBlock;
+    abhijit?: MuhurtaNowBlock;
+  };
+  planets_anchor?: { type?: string; local_time?: string; label_ne?: string; label_en?: string };
+  location?: PanchangaDay["location"];
+}
+
 export interface PanchangaDay {
+  mode?: "ephemeris" | "udaya";
+  query_instant?: string;
+  query_instant_local?: string;
+  before_sunrise_of_civil_day?: boolean;
+  muhurta_now?: PanchangaAtTime["muhurta_now"];
+  planets_anchor?: PanchangaAtTime["planets_anchor"];
   location?: { name?: string; lat?: number; lon?: number; timezone?: string; city_id?: number };
   date_bs?: string;
   date_ad?: string;
@@ -245,7 +420,16 @@ export interface PanchangaDay {
   karana?: { name?: string; name_ne?: string; next?: { name_ne?: string } };
   paksha?: { label_ne?: string; label_en?: string; is_adhik?: boolean };
   paksha_ne?: string;
-  chandra_rashi?: { name_ne?: string };
+  chandra_rashi?: { name_ne?: string; number?: number; name?: string };
+  chandra_rashi_spans?: RashiSpan[];
+  nakshatra_pada_spans?: NakshatraPadaSpan[];
+  surya_rashi?: { name_ne?: string; number?: number; name?: string };
+  surya_rashi_ne?: string;
+  surya_nakshatra?: SuryaNakshatra;
+  chandrabalam?: BalamBlock;
+  tarabalam?: BalamBlock;
+  panchaka_rahita?: PanchakaSegment[];
+  udaya_lagna?: UdayaLagnaRow[];
   ritu?: { name_ne?: string; season?: string };
   lagna?: { name?: string; name_ne?: string; degree_in_rashi?: number; longitude?: number };
   lagna_spans?: LagnaSpan[];
@@ -301,6 +485,8 @@ export interface MonthCalendar {
   month_name_ne?: string;
   month_start_ad: string;
   month_length: number;
+  mode?: "ephemeris" | "udaya";
+  clock?: string;
   calendar: CalendarDay[];
 }
 
@@ -327,6 +513,8 @@ export interface CalendarDay {
   moonset?: string;
   moonset_local?: string;
   festivals: string[];
+  mode?: "ephemeris";
+  query_instant?: string;
 }
 
 export interface PatroMonth {

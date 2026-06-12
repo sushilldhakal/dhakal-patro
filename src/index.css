@@ -114,6 +114,9 @@
   --pn-font: "Oxanium", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
   --pn-num: "Fira Code", "Noto Sans Devanagari", ui-monospace, monospace;
   --pn-ring-soft: color-mix(in srgb, var(--foreground) 10%, transparent);
+
+  --chart-4: #6c625a;
+  --chart-5: #cf8400;
 }
 
 .dark {
@@ -137,6 +140,9 @@
   --input: #303030;
   --ring: var(--brand-yellow);
   --sidebar-accent: var(--brand-yellow);
+
+  --chart-4: #9c4e1f;
+  --chart-5: #1c5d80;
 
   --shadow-xs: 0px 2px 3px 0px hsl(0 0% 10.196% / 0.09);
   --shadow-sm: 0px 2px 3px 0px hsl(0 0% 10.196% / 0.18),
@@ -1345,11 +1351,352 @@
   display: none;
 }
 
-/* Panchanga day timeline (matches design reference) */
+/* Panchanga day chart — PanchChart from design */
+.pg-sec {
+  background: var(--card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.pg-sec-band {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--brand-teal) 9%, var(--card));
+  border-bottom: 1px solid var(--border);
+}
+.dark .pg-sec-band {
+  background: color-mix(in srgb, var(--brand-teal) 22%, var(--card));
+}
+.pg-sec-band h2 {
+  margin: 0;
+  font: 700 14.5px var(--font-sans);
+}
+.pg-sec-band > span {
+  font: 500 11px var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.pgx-card {
+  overflow: hidden;
+  max-width: 100%;
+}
+.pgx-band {
+  flex-wrap: wrap;
+}
+.pgx-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 11px var(--font-sans);
+  color: var(--muted-foreground);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: auto;
+}
+.pgx-key {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+  font-style: normal;
+}
+.pgx-key.good {
+  background: color-mix(in srgb, var(--color-success) 34%, var(--card));
+}
+.pgx-key.bad {
+  background: color-mix(in srgb, var(--color-danger) 30%, var(--card));
+}
+.pgx-key.night {
+  background: color-mix(in srgb, var(--brand-teal) 22%, var(--card));
+}
+.pgx-scroll {
+  padding: 12px 12px 4px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+.pgx-svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+.pgx-nightwash {
+  fill: color-mix(in srgb, var(--brand-teal) 7%, transparent);
+}
+.dark .pgx-nightwash {
+  fill: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+.pgx-scale-label {
+  font: 600 11px var(--font-sans);
+  fill: var(--muted-foreground);
+}
+.pgx-scale-label.dim {
+  opacity: 0.75;
+}
+.pgx-hour {
+  font: 600 11px var(--font-mono);
+  fill: var(--foreground);
+}
+.pgx-ghati {
+  font: 500 10px var(--font-mono);
+  fill: var(--muted-foreground);
+}
+.pgx-sunline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.pgx-sunhair {
+  stroke: var(--color-warning);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  opacity: 0.55;
+}
+.pgx-seg {
+  stroke: color-mix(in srgb, var(--foreground) 10%, transparent);
+  stroke-width: 1;
+}
+.pgx-seg.tithi {
+  fill: color-mix(in srgb, var(--brand-yellow) 26%, var(--card));
+}
+.pgx-seg.tithi.alt {
+  fill: color-mix(in srgb, var(--brand-yellow) 14%, var(--card));
+}
+.pgx-seg.nak {
+  fill: color-mix(in srgb, var(--brand-teal) 18%, var(--card));
+}
+.pgx-seg.nak.alt {
+  fill: color-mix(in srgb, var(--brand-teal) 9%, var(--card));
+}
+.pgx-seg.yoga {
+  fill: color-mix(in srgb, #6c625a 20%, var(--card));
+}
+.pgx-seg.yoga.alt {
+  fill: color-mix(in srgb, #6c625a 10%, var(--card));
+}
+.dark .pgx-seg.yoga {
+  fill: color-mix(in srgb, #9c4e1f 24%, var(--card));
+}
+.dark .pgx-seg.yoga.alt {
+  fill: color-mix(in srgb, #9c4e1f 12%, var(--card));
+}
+.pgx-seg.karana {
+  fill: color-mix(in srgb, #cf8400 18%, var(--card));
+}
+.pgx-seg.karana.alt {
+  fill: color-mix(in srgb, #cf8400 9%, var(--card));
+}
+.dark .pgx-seg.karana {
+  fill: color-mix(in srgb, #1c5d80 22%, var(--card));
+}
+.dark .pgx-seg.karana.alt {
+  fill: color-mix(in srgb, #1c5d80 11%, var(--card));
+}
+.pgx-seg.lagna {
+  fill: color-mix(in srgb, var(--foreground) 7%, var(--card));
+}
+.pgx-seg.lagna.alt {
+  fill: color-mix(in srgb, var(--foreground) 3%, var(--card));
+}
+.pgx-seg.cho-good {
+  fill: color-mix(in srgb, var(--color-success) 13%, var(--card));
+}
+.pgx-seg.cho-bad {
+  fill: color-mix(in srgb, var(--color-danger) 13%, var(--card));
+}
+.pgx-segname {
+  font: 600 12.5px var(--font-sans);
+  fill: var(--foreground);
+}
+.pgx-segname-sm {
+  font: 600 10px var(--font-sans);
+  letter-spacing: -0.02em;
+}
+.pgx-segname.cho {
+  font-size: 11px;
+}
+.pgx-segname.cho.bad {
+  fill: var(--color-danger);
+}
+.pgx-paksha {
+  font: 500 10.5px var(--font-sans);
+  fill: var(--muted-foreground);
+}
+.pgx-arrow line {
+  stroke: var(--brand-teal);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.pgx-arrow line.pgx-arrow-bound {
+  stroke: var(--brand-teal);
+  stroke-width: 1.3;
+  opacity: 1;
+}
+.dark .pgx-arrow line.pgx-arrow-bound {
+  stroke: var(--brand-yellow);
+}
+.pgx-arrow path {
+  fill: var(--brand-teal);
+}
+.dark .pgx-arrow line {
+  stroke: var(--brand-yellow);
+}
+.dark .pgx-arrow path {
+  fill: var(--brand-yellow);
+}
+.pgx-time {
+  font: 500 12px var(--font-mono);
+  fill: var(--foreground);
+}
+.pgx-time.lagna {
+  opacity: 0.9;
+}
+.pgx-now line {
+  stroke: var(--color-danger);
+  stroke-width: 1.4;
+}
+.pgx-now-pill {
+  fill: var(--color-danger);
+}
+.pgx-now-text {
+  font: 600 9.5px var(--font-sans);
+  fill: #fff;
+}
+.pgx-grahas {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--border);
+}
+.pgx-grahas-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 86px;
+}
+.pgx-grahas-label .ne {
+  font: 700 12.5px var(--font-sans);
+}
+.pgx-grahas-label .en {
+  font: 500 9.5px var(--font-sans);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.pgx-graha-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.pgx-graha {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 10px;
+  border-radius: var(--radius-lg);
+  min-width: 86px;
+  background: color-mix(in srgb, var(--foreground) 4%, var(--card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.pgx-graha-sym {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--secondary);
+}
+.dark .pgx-graha-sym {
+  color: #7fd6db;
+}
+.pgx-graha-name {
+  font: 600 11.5px var(--font-sans);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.pgx-graha-deg {
+  font: 500 10px var(--font-mono);
+  color: var(--muted-foreground);
+}
+
+/* Sidebar — upcoming planetary events */
+.pg-events-card {
+  background: var(--card);
+  border-radius: var(--radius-xl);
+  padding: 14px 16px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.pg-events-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.pg-planets {
+  display: flex;
+  flex-direction: column;
+}
+.pg-planet-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.pg-planet-row:last-child {
+  border-bottom: none;
+}
+.pg-planet-sym {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  background: color-mix(in srgb, var(--brand-teal) 11%, var(--card));
+  color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.dark .pg-planet-sym {
+  color: #7fd6db;
+}
+.pg-planet-names {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pg-planet-ne {
+  font: 600 13px var(--font-sans);
+}
+.pg-planet-en {
+  font: 400 11px var(--font-sans);
+  color: var(--muted-foreground);
+}
+.pg-planet-when {
+  font: 600 11.5px var(--font-mono);
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+
+/* Legacy timeline helpers still used by chart SVG */
 .pg-timeline-card {
   background: var(--background);
   border-radius: var(--radius-xl);
-  padding: 16px 0px 8px;
+  padding: 16px 12px 8px;
+  overflow: hidden;
+  max-width: 100%;
 }
 .pg-tl-head {
   display: flex;
@@ -1427,12 +1774,20 @@
 }
 .pg-tl-fit {
   width: 100%;
+  max-width: 100%;
   overflow: hidden;
 }
 .pg-tl-svg {
   width: 100%;
+  max-width: 100%;
   height: auto;
   display: block;
+}
+.pg-tl-nightwash {
+  fill: color-mix(in srgb, var(--brand-teal) 7%, transparent);
+}
+.dark .pg-tl-nightwash {
+  fill: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 .pg-tl-row-band {
   stroke: none;
@@ -1459,14 +1814,26 @@
   fill: color-mix(in srgb, var(--brand-teal) 8%, var(--card));
 }
 .pg-tl-vgrid-major {
-  stroke: var(--foreground);
-  stroke-opacity: 0.14;
+  stroke: color-mix(in srgb, var(--foreground) 28%, var(--border));
   stroke-width: 1;
+  stroke-dasharray: 3 4;
+  stroke-opacity: 0.4;
+  pointer-events: none;
+}
+.dark .pg-tl-vgrid-major {
+  stroke: color-mix(in srgb, var(--foreground) 38%, var(--border));
 }
 .pg-tl-axis-tag {
-  font: 600 10px var(--font-sans);
+  font: 600 11px var(--font-sans);
   fill: var(--muted-foreground);
   letter-spacing: 0.06em;
+}
+.pg-tl-axis-tag.dim {
+  opacity: 0.75;
+}
+.pg-tl-sunline {
+  stroke: var(--border);
+  stroke-width: 1;
 }
 .pg-tl-civil-hour {
   font: 700 14px var(--font-mono);
@@ -1476,31 +1843,20 @@
   font: 600 11px var(--font-mono);
   fill: var(--muted-foreground);
 }
-.pg-tl-events-bg {
-  fill: color-mix(in srgb, var(--foreground) 4%, var(--card));
-  stroke: var(--border);
-  stroke-width: 1;
-}
 .pg-tl-event-ghati {
   font: 600 9px var(--font-mono);
   fill: var(--muted-foreground);
 }
-.pg-tl-sunrise-line {
+.pg-tl-sunrise-line,
+.pg-tl-sunset-line,
+.pg-tl-end-line {
   stroke: var(--color-warning);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
-  opacity: 0.85;
-}
-.pg-tl-sunset-line {
-  stroke: var(--color-warning);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 4;
-  opacity: 0.7;
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  opacity: 0.55;
 }
 .pg-tl-end-line {
   stroke: var(--foreground);
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
   opacity: 0.25;
 }
 .pg-tl-tick-major {
@@ -1545,8 +1901,28 @@
   font: 700 14px var(--font-mono);
   fill: var(--color-warning);
 }
+.pg-tl-sun-disc {
+  fill: color-mix(in srgb, var(--color-warning) 88%, #fff);
+  stroke: color-mix(in srgb, var(--color-warning) 70%, #c9a000);
+  stroke-width: 0.75;
+}
+.pg-tl-sun-horizon {
+  stroke: color-mix(in srgb, var(--color-warning) 55%, var(--muted-foreground));
+  stroke-width: 1;
+  stroke-linecap: round;
+}
 .pg-tl-moon {
   font: 700 14px var(--font-mono);
+  fill: var(--muted-foreground);
+}
+.pg-tl-moon-emoji {
+  font-size: 15px;
+}
+.pg-tl-event-time {
+  font: 600 10.5px var(--font-mono);
+  fill: var(--color-warning);
+}
+.pg-tl-event-time.moon {
   fill: var(--muted-foreground);
 }
 .pg-tl-rowlabel {
@@ -1563,19 +1939,19 @@
   stroke-linecap: round;
 }
 .pg-tl-rowline-0 {
-  stroke: color-mix(in srgb, var(--brand-yellow) 70%, var(--foreground));
+  stroke: color-mix(in srgb, var(--color-info) 70%, var(--foreground));
 }
 .pg-tl-rowline-1 {
-  stroke: color-mix(in srgb, var(--brand-teal) 75%, var(--foreground));
+  stroke: color-mix(in srgb, var(--color-info) 70%, var(--foreground));
 }
 .pg-tl-rowline-2 {
   stroke: color-mix(in srgb, var(--color-info) 70%, var(--foreground));
 }
 .pg-tl-rowline-3 {
-  stroke: color-mix(in srgb, var(--color-danger) 55%, var(--foreground));
+  stroke: color-mix(in srgb, var(--color-info) 70%, var(--foreground));
 }
 .pg-tl-rowline-4 {
-  stroke: color-mix(in srgb, var(--foreground) 45%, var(--border));
+  stroke: color-mix(in srgb, var(--color-info) 70%, var(--foreground));
 }
 .pg-tl-rowline-5 {
   stroke: color-mix(in srgb, var(--secondary) 65%, var(--foreground));
@@ -1676,4 +2052,86 @@
 .nakshatra-icon .fx {
   fill: currentColor;
   stroke: none;
+}
+
+/* ── chandrabalam / tarabalam / panchaka ───────────────── */
+.pg-balam {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 860px) {
+  .pg-balam {
+    grid-template-columns: 1fr;
+  }
+}
+.pg-balam-col {
+  padding: 12px 16px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.pg-balam > .pg-balam-col:first-child {
+  border-right: 1px solid var(--border);
+}
+@media (max-width: 860px) {
+  .pg-balam > .pg-balam-col:first-child {
+    border-right: none;
+  }
+}
+.pg-balam-h {
+  margin: 6px 0 8px;
+  font: 500 12.5px var(--font-sans);
+  color: var(--muted-foreground);
+}
+.pg-balam-h b {
+  color: var(--foreground);
+  font-weight: 700;
+}
+.pg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.pg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 11.5px/1 var(--font-sans);
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.pg-chip-sym {
+  font-size: 13px;
+  line-height: 1;
+}
+.pg-mlist {
+  display: flex;
+  flex-direction: column;
+}
+.pg-mrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--border);
+  font: 500 12.5px var(--font-sans);
+}
+.pg-mrow:last-child {
+  border-bottom: none;
+}
+.pg-mrow-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.pg-mrow.good .pg-mrow-name {
+  color: var(--color-success);
+  font-weight: 600;
+}
+.pg-mrow-time {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
 }

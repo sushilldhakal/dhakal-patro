@@ -19,8 +19,22 @@ import {
   getSunriseDisplay,
   getSunsetDisplay,
   getVaaraNe,
+  formatRashiDisplayNe,
+  formatSpanEndTime,
+  getChandrabalam,
+  getChandraRashiSpans,
+  getNakshatraPadaSpans,
+  getPanchakaRahita,
+  getSuryaNakshatra,
+  getSuryaRashi,
+  getTarabalam,
+  getUdayaLagna,
+  formatShortClock,
+  formatTimeRangeShort,
+  rashiSymFromNumber,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import type { BalamChip } from "@/lib/api";
 import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
 import {
   PanchangaRow,
@@ -192,32 +206,185 @@ export function SamvatSection({ p }: { p: PanchangaDay }) {
 
 export function RashiSection({ p }: { p: PanchangaDay }) {
   const detail = getPanchangaDetail(p);
-  const chandra = (detail?.chandra_rashi as { name_ne?: string } | undefined)?.name_ne ??
-    p.chandra_rashi?.name_ne;
+  const moonRashiSpans = getChandraRashiSpans(p);
+  const padaSpans = getNakshatraPadaSpans(p);
+  const suryaRashi = getSuryaRashi(p);
+  const suryaNak = getSuryaNakshatra(p);
+
+  const fallbackMoon = (detail?.chandra_rashi as { name_ne?: string; number?: number } | undefined) ??
+    p.chandra_rashi;
+  const moonSpans =
+    moonRashiSpans ??
+    (fallbackMoon?.name_ne
+      ? [{ name_ne: fallbackMoon.name_ne, number: fallbackMoon.number }]
+      : []);
 
   return (
-    <PanchangaSection titleNe="राशि" titleEn="Rashi">
+    <PanchangaSection titleNe="राशि र नक्षत्र पद" titleEn="Rashi & Nakshatra Pada">
       <PanchangaRows>
         <PanchangaRow label="चन्द्र राशि" labelEn="Moonsign" oddBorder>
-          <span className="font-semibold">{chandra ?? "—"}</span>
+          <div className="flex flex-col gap-1 w-full">
+            {moonSpans.length > 0 ? (
+              moonSpans.map((span, i) => (
+                <UptoValue
+                  key={`moon-rashi-${i}`}
+                  sym={rashiSymFromNumber(span.number)}
+                  name={formatRashiDisplayNe(span.name_ne)}
+                  endTime={formatSpanEndTime(span)}
+                />
+              ))
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </div>
         </PanchangaRow>
-        <PanchangaRow label="नक्षत्र" labelEn="Nakshatra">
-          <span className="inline-flex items-center gap-2.5">
-            <NakshatraIcon
-              name={
-                (detail?.nakshatra as Anga | undefined)?.name_ne ??
-                p.nakshatra?.name_ne ??
-                p.nakshatra?.name
-              }
-              size={30}
-              className="text-secondary dark:text-[var(--brand-yellow)]"
+        <PanchangaRow label="नक्षत्र पद" labelEn="Pada">
+          <div className="flex flex-col gap-1 w-full">
+            {padaSpans && padaSpans.length > 0 ? (
+              padaSpans.map((span, i) => (
+                <UptoValue
+                  key={`pada-${i}`}
+                  name={
+                    span.nakshatra_name_ne
+                      ? `${span.nakshatra_name_ne} — ${span.pada_ne ?? toNepaliDigits(span.pada ?? "")} पद`
+                      : undefined
+                  }
+                  endTime={formatSpanEndTime(span)}
+                />
+              ))
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </div>
+        </PanchangaRow>
+        <PanchangaRow label="सूर्य राशि" labelEn="Sunsign" oddBorder>
+          {suryaRashi?.name_ne || suryaRashi?.name ? (
+            <UptoValue
+              sym={rashiSymFromNumber(suryaRashi.number)}
+              name={formatRashiDisplayNe(suryaRashi.name_ne ?? suryaRashi.name)}
             />
-            <span className="font-semibold">
-              {(detail?.nakshatra as Anga | undefined)?.name_ne ?? p.nakshatra?.name_ne ?? "—"}
-            </span>
-          </span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </PanchangaRow>
+        <PanchangaRow label="सूर्य नक्षत्र" labelEn="Surya Nakshatra">
+          {suryaNak?.name_ne || suryaNak?.name ? (
+            <UptoValue name={suryaNak.name_ne ?? suryaNak.name} />
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
         </PanchangaRow>
       </PanchangaRows>
+    </PanchangaSection>
+  );
+}
+
+function BalamChips({ items, rashi = false }: { items: BalamChip[]; rashi?: boolean }) {
+  return (
+    <div className="pg-chips">
+      {items.map((it, i) => (
+        <span key={`${it.name_ne ?? it.name}-${i}`} className="pg-chip">
+          {rashi && it.number != null && (
+            <span className="pg-chip-sym">{rashiSymFromNumber(it.number)}</span>
+          )}
+          <span>{rashi ? formatRashiDisplayNe(it.name_ne) : it.name_ne}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function BalamSection({ p }: { p: PanchangaDay }) {
+  const chandra = getChandrabalam(p);
+  const tara = getTarabalam(p);
+  const chandraTill = formatShortClock(chandra?.till?.end_local_time_short ?? chandra?.till?.end_local_time);
+  const taraTill = formatShortClock(tara?.till?.end_local_time_short ?? tara?.till?.end_local_time);
+
+  return (
+    <PanchangaSection titleNe="चन्द्रबलम् र ताराबलम्" titleEn="Chandrabalam & Tarabalam">
+      <div className="pg-balam">
+        <div className="pg-balam-col">
+          <h3 className="pg-balam-h">
+            शुभ <b>चन्द्रबलम्</b>
+            {chandraTill ? (
+              <>
+                {" "}
+                — <span className="font-mono">{chandraTill}</span> सम्म
+              </>
+            ) : null}
+          </h3>
+          <BalamChips items={chandra?.set1 ?? []} rashi />
+          <h3 className="pg-balam-h">त्यसपछि भोलि सूर्योदयसम्म</h3>
+          <BalamChips items={chandra?.set2 ?? []} rashi />
+        </div>
+        <div className="pg-balam-col">
+          <h3 className="pg-balam-h">
+            शुभ <b>ताराबलम्</b>
+            {taraTill ? (
+              <>
+                {" "}
+                — <span className="font-mono">{taraTill}</span> सम्म
+              </>
+            ) : null}
+          </h3>
+          <BalamChips items={tara?.set1 ?? []} />
+          <h3 className="pg-balam-h">त्यसपछि भोलि सूर्योदयसम्म</h3>
+          <BalamChips items={tara?.set2 ?? []} />
+        </div>
+      </div>
+    </PanchangaSection>
+  );
+}
+
+export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
+  const panchaka = getPanchakaRahita(p);
+  const lagna = getUdayaLagna(p);
+
+  return (
+    <PanchangaSection titleNe="पञ्चक रहित मुहूर्त र उदय लग्न" titleEn="Panchaka Rahita & Udaya Lagna">
+      <div className="pg-balam">
+        <div className="pg-balam-col">
+          <h3 className="pg-balam-h">
+            आजको <b>पञ्चक रहित मुहूर्त</b>
+          </h3>
+          <div className="pg-mlist">
+            {panchaka?.map((seg, i) => (
+              <div key={`pr-${i}`} className={`pg-mrow${seg.good ? " good" : ""}`}>
+                <span className="pg-mrow-name">{seg.name_ne ?? seg.name}</span>
+                <span className="pg-mrow-time font-mono">
+                  {formatTimeRangeShort(
+                    seg.start_local_time_short ?? seg.start_local_time,
+                    seg.end_local_time_short ?? seg.end_local_time
+                  ) ?? "—"}
+                </span>
+              </div>
+            )) ?? <span className="text-muted-foreground text-sm">—</span>}
+          </div>
+        </div>
+        <div className="pg-balam-col">
+          <h3 className="pg-balam-h">
+            आजको <b>उदय लग्न</b>
+          </h3>
+          <div className="pg-mlist">
+            {lagna?.map((row, i) => (
+              <div key={`lagna-${i}`} className="pg-mrow lagna">
+                <span className="pg-mrow-name">
+                  {row.number != null && (
+                    <span className="pg-chip-sym">{rashiSymFromNumber(row.number)}</span>
+                  )}
+                  {formatRashiDisplayNe(row.name_ne ?? row.name)}
+                </span>
+                <span className="pg-mrow-time font-mono">
+                  {formatTimeRangeShort(
+                    row.start_local_time_short ?? row.start_local_time,
+                    row.end_local_time_short ?? row.end_local_time
+                  ) ?? "—"}
+                </span>
+              </div>
+            )) ?? <span className="text-muted-foreground text-sm">—</span>}
+          </div>
+        </div>
+      </div>
     </PanchangaSection>
   );
 }

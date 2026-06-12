@@ -165,16 +165,16 @@ function computeGMin(sunriseMin: number): number {
 
 function buildCivilHourTicks(
   sunriseMin: number,
-  gMin: number,
+  _gMin: number,
   gMax: number
 ): CivilHourTick[] {
   const ticks: CivilHourTick[] = [];
-  const startHour = Math.floor(sunriseMin / 60);
-  for (let h = startHour; h <= startHour + 28; h++) {
-    const g = (h * 60 - sunriseMin) / 24;
-    if (g < gMin - 0.05) continue;
+  const firstHourMin = Math.ceil(sunriseMin / 60) * 60;
+  for (let m = firstHourMin; m < sunriseMin + 1440; m += 60) {
+    const g = (m - sunriseMin) / 24;
     if (g > gMax) break;
-    ticks.push({ hour: h % 24 === 0 ? 24 : h % 24, g });
+    const hh = Math.floor((m % 1440) / 60);
+    ticks.push({ hour: hh === 0 ? 24 : hh, g });
   }
   return ticks;
 }
