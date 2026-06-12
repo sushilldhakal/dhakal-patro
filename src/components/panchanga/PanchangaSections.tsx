@@ -12,6 +12,7 @@ import {
   getMoonriseDisplay,
   getMoonsetDisplay,
   getPanchangaDetail,
+  getLagnaDisplay,
   getPlanetRows,
   getPlanetsAnchorLabel,
   formatSolarCorrectionDisplay,
@@ -126,10 +127,11 @@ export function SunMoonSection({ p }: { p: PanchangaDay }) {
 
 export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
   const detail = getPanchangaDetail(p);
-  const tithi = (detail?.tithi ?? p.tithi) as Anga | undefined;
-  const nakshatra = (detail?.nakshatra ?? p.nakshatra) as Anga | undefined;
-  const yoga = (detail?.yoga ?? p.yoga) as Anga | undefined;
-  const karana = (detail?.karana ?? p.karana) as Anga | undefined;
+  const instant = p.mode === "ephemeris";
+  const tithi = (instant ? p.tithi : detail?.tithi ?? p.tithi) as Anga | undefined;
+  const nakshatra = (instant ? p.nakshatra : detail?.nakshatra ?? p.nakshatra) as Anga | undefined;
+  const yoga = (instant ? p.yoga : detail?.yoga ?? p.yoga) as Anga | undefined;
+  const karana = (instant ? p.karana : detail?.karana ?? p.karana) as Anga | undefined;
   const paksha = formatPakshaNepaliDisplay(p);
   const pakshaName = (detail?.paksha as { name?: string } | undefined)?.name;
   const pakshaSym = pakshaName === "shukla" ? "🌕" : "🌑";
@@ -485,7 +487,8 @@ export function DinVisheshSection({ p }: { p: PanchangaDay }) {
 
 export function PlanetsPanel({ p }: { p: PanchangaDay }) {
   const planets = getPlanetRows(p);
-  if (!planets.length) return null;
+  const lagna = getLagnaDisplay(p);
+  if (!planets.length && !lagna) return null;
 
   const symbols: Record<string, string> = {
     सूर्य: "☉",
@@ -506,6 +509,22 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
         <span className="text-[11.5px] text-muted-foreground">{getPlanetsAnchorLabel(p)}</span>
       </div>
       <div className="flex flex-col">
+        {lagna && (
+          <div className="flex items-center gap-3 py-2 border-b border-border">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] bg-secondary/11 text-secondary dark:text-teal-300 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+              ASC
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] font-semibold">लग्न</div>
+              <div className="text-[11px] text-muted-foreground">{lagna.nameNe}</div>
+            </div>
+            {lagna.degree && (
+              <span className="font-mono text-[11.5px] font-semibold text-foreground whitespace-nowrap">
+                {lagna.degree}°
+              </span>
+            )}
+          </div>
+        )}
         {planets.map(({ label, rashiNe, coords }) => (
           <div
             key={label}

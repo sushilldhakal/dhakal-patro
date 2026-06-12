@@ -95,13 +95,13 @@
   --card: var(--parchment-card);
   --card-foreground: var(--ink);
   --popover: var(--parchment-card);
-  --popover-foreground: var(--ink-muted);
+  --popover-foreground: var(--ink);
   --primary: var(--brand-yellow);
   --primary-foreground: var(--ink);
   --secondary: var(--brand-teal);
   --secondary-foreground: #ffffff;
   --muted: #b8d2d3;
-  --muted-foreground: var(--ink-muted);
+  --muted-foreground: var(--ink);
   --accent: #007a80;
   --accent-foreground: #ffffff;
   --destructive: var(--color-danger);
@@ -210,7 +210,7 @@
   color: var(--brand-yellow);
 }
 .pn-brand-en {
-  font: 500 10px var(--pn-font);
+  font: 500 12px var(--pn-font);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted-foreground);
@@ -478,7 +478,7 @@
   font: 600 13px var(--pn-font);
 }
 .pn-wk-en {
-  font: 500 10px var(--pn-font);
+  font: 500 12px var(--pn-font);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted-foreground);
@@ -1502,6 +1502,11 @@
 .pgx-seg.lagna.alt {
   fill: color-mix(in srgb, var(--foreground) 3%, var(--card));
 }
+.pgx-seg.lagna.active {
+  fill: color-mix(in srgb, var(--secondary) 28%, var(--card));
+  stroke: var(--secondary);
+  stroke-width: 1.5;
+}
 .pgx-seg.cho-good {
   fill: color-mix(in srgb, var(--color-success) 13%, var(--card));
 }
@@ -1563,7 +1568,7 @@
   fill: var(--color-danger);
 }
 .pgx-now-text {
-  font: 600 9.5px var(--font-sans);
+  font: 600 12px var(--font-sans);
   fill: #fff;
 }
 .pgx-grahas {
@@ -1622,7 +1627,7 @@
   gap: 3px;
 }
 .pgx-graha-deg {
-  font: 500 10px var(--font-mono);
+  font: 500 12px var(--font-mono);
   color: var(--muted-foreground);
 }
 

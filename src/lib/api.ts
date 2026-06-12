@@ -120,7 +120,7 @@ export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =
   );
 
 export const fetchPanchangaAtTime = (datetime: string, location?: LocationParams) =>
-  get<PanchangaAtTime>(
+  get<PanchangaDay>(
     appendLocation(
       `/panchanga/at-time?datetime=${encodeURIComponent(datetime)}`,
       location
@@ -281,10 +281,15 @@ export interface LagnaSpan {
   name?: string;
   name_ne?: string;
   degree_in_rashi?: number;
+  longitude?: number;
+  start_time?: string;
+  end_time?: string;
+  start_ghati_clock?: string;
+  start_hours_clock?: string;
+  start_local_time?: string;
   end_ghati_clock?: string;
   end_hours_clock?: string;
   end_local_time?: string;
-  start_local_time?: string;
 }
 
 export interface RashiSpan {
@@ -401,6 +406,7 @@ export interface PanchangaDay {
   mode?: "ephemeris" | "udaya";
   query_instant?: string;
   query_instant_local?: string;
+  panchanga_date_ad?: string;
   before_sunrise_of_civil_day?: boolean;
   muhurta_now?: PanchangaAtTime["muhurta_now"];
   planets_anchor?: PanchangaAtTime["planets_anchor"];

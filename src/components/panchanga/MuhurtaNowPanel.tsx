@@ -80,10 +80,10 @@ export function EphemerisModeBanner({ p, clock }: Props) {
   const civil = p.before_sunrise_of_civil_day;
   return (
     <div className="rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm">
-      <p className="m-0 font-semibold text-secondary-foreground">
+      <p className="m-0 font-semibold text-foreground">
         समय-आधारित पञ्चाङ्ग · Ephemeris mode
       </p>
-      <p className="m-0 mt-1 text-muted-foreground text-[13px] leading-relaxed">
+      <p className="m-0 mt-1 text-foreground text-[13px] leading-relaxed">
         {time ? (
           <>
             <span className="font-mono tabular-nums">{toNepaliDigits(time)}</span> बजे चलिरहेको

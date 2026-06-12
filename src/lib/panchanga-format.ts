@@ -76,9 +76,10 @@ export function getPanchangaDetail(p: PanchangaDay) {
 
 export function getLagnaSpans(p: PanchangaDay) {
   const detail = getPanchangaDetail(p);
+  const fromTop = p.lagna_spans;
   const fromDetail = detail?.lagna_spans as PanchangaDay["lagna_spans"];
+  if (fromTop?.length) return fromTop;
   if (fromDetail?.length) return fromDetail;
-  if (p.lagna_spans?.length) return p.lagna_spans;
   return undefined;
 }
 
@@ -594,21 +595,34 @@ type PlanetDetail = {
 
 export function getPlanetsAnchorLabel(p: PanchangaDay): string {
   const detail = getPanchangaDetail(p);
-  const anchor = detail?.planets_anchor as { label_ne?: string; label_en?: string } | undefined;
-  return anchor?.label_ne ?? anchor?.label_en ?? "उदयकालिक स्पष्टग्रह (सूर्योदय)";
+  const anchor = (detail?.planets_anchor ?? p.planets_anchor) as
+    | { label_ne?: string; label_en?: string; local_time?: string }
+    | undefined;
+  if (anchor?.label_ne) {
+    return anchor.local_time
+      ? `${anchor.label_ne} (${toNepaliDigits(anchor.local_time)})`
+      : anchor.label_ne;
+  }
+  return anchor?.label_en ?? "उदयकालिक स्पष्टग्रह (सूर्योदय)";
 }
 
 export function getLagnaDisplay(
   p: PanchangaDay
 ): { nameNe: string; degree?: string } | undefined {
   const detail = getPanchangaDetail(p);
-  const lagna = (detail?.lagna ?? p.lagna) as
-    | { name_ne?: string; name?: string; degree_in_rashi?: number }
-    | undefined;
-  const nameNe = lagna?.name_ne ?? lagna?.name;
+  const lagna = (
+    p.mode === "ephemeris"
+      ? (detail?.instant_lagna ?? p.lagna)
+      : detail?.lagna ?? p.lagna
+  ) as { name_ne?: string; name?: string; degree_in_rashi?: number } | string | undefined;
+  if (!lagna) return undefined;
+  if (typeof lagna === "string") {
+    return { nameNe: lagna };
+  }
+  const nameNe = lagna.name_ne ?? lagna.name;
   if (!nameNe) return undefined;
   const degree =
-    lagna?.degree_in_rashi != null
+    lagna.degree_in_rashi != null
       ? toNepaliDigits(lagna.degree_in_rashi.toFixed(1))
       : undefined;
   return { nameNe, degree };

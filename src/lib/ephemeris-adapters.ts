@@ -1,18 +1,31 @@
-import type { PanchangaAtTime, PanchangaDay } from "@/lib/api";
+import {
+  fetchPanchanga,
+  fetchPanchangaAtTime,
+  type LocationParams,
+  type PanchangaDay,
+} from "@/lib/api";
+import { getLagnaSpans } from "@/lib/panchanga-format";
 
-/** Map ephemeris at-time payload into PanchangaDay for shared section components. */
-export function atTimeToPanchangaDay(raw: PanchangaAtTime): PanchangaDay {
+/** Ensure at-time lagna_spans are available for chart + cards (top-level and detail). */
+export function normalizeEphemerisDay(raw: PanchangaDay): PanchangaDay {
+  const detailIn = (raw.detail ?? {}) as Record<string, unknown>;
+  const lagnaSpans =
+    raw.lagna_spans ??
+    (detailIn.lagna_spans as PanchangaDay["lagna_spans"]);
+
+  const detail = {
+    ...detailIn,
+    lagna_spans: lagnaSpans,
+    udaya_lagna: detailIn.udaya_lagna ?? lagnaSpans,
+  };
+
   return {
     ...raw,
     mode: "ephemeris",
     date_ad: raw.panchanga_date_ad ?? raw.date_ad,
-    weekday: raw.vaara?.name_ne ?? raw.weekday,
-    muhurta_now: raw.muhurta_now,
-    query_instant: raw.query_instant,
-    query_instant_local: raw.query_instant_local,
-    planets_anchor: raw.planets_anchor,
-    before_sunrise_of_civil_day: raw.before_sunrise_of_civil_day,
-    detail: raw as unknown as PanchangaDay["detail"],
+    lagna_spans: lagnaSpans,
+    udaya_lagna: raw.udaya_lagna ?? (detailIn.udaya_lagna as PanchangaDay["udaya_lagna"]) ?? lagnaSpans,
+    detail: detail as PanchangaDay["detail"],
   };
 }
 
@@ -25,4 +38,55 @@ export function buildAtTimeDatetime(adDate: string, clock: string): string {
   const h = String(hh ?? "12").padStart(2, "0");
   const m = String(mm ?? "00").padStart(2, "0");
   return `${adDate}T${h}:${m}:00`;
+}
+
+export function chartDateAd(p: PanchangaDay | undefined, fallback: string): string {
+  return p?.panchanga_date_ad ?? p?.date_ad ?? fallback;
+}
+
+/** Legacy fallback when at-time lacks lagna_spans (pre-deploy API). */
+export function mergeEphemerisWithDaily(
+  instant: PanchangaDay,
+  daily: PanchangaDay
+): PanchangaDay {
+  const dailyDetail = (daily.detail ?? {}) as Record<string, unknown>;
+  const instantDetail = (instant.detail ?? {}) as Record<string, unknown>;
+  const lagnaSpans =
+    instant.lagna_spans ??
+    (instantDetail.lagna_spans as PanchangaDay["lagna_spans"]) ??
+    (dailyDetail.lagna_spans as PanchangaDay["lagna_spans"]) ??
+    daily.lagna_spans;
+
+  return normalizeEphemerisDay({
+    ...daily,
+    ...instant,
+    lagna_spans: lagnaSpans,
+    detail: {
+      ...dailyDetail,
+      ...instantDetail,
+      lagna_spans: lagnaSpans,
+      udaya_lagna: lagnaSpans,
+    } as PanchangaDay["detail"],
+  });
+}
+
+/**
+ * Ephemeris day from `/panchanga/at-time` — uses API lagna_spans directly.
+ * Falls back to daily merge only when the API omits spans (older deployment).
+ */
+export async function fetchEphemerisPanchangaDay(
+  datetime: string,
+  civilDateAd: string,
+  location?: LocationParams
+): Promise<PanchangaDay> {
+  const raw = await fetchPanchangaAtTime(datetime, location);
+  const normalized = normalizeEphemerisDay(raw);
+
+  if (getLagnaSpans(normalized)?.length) {
+    return normalized;
+  }
+
+  const anchor = raw.panchanga_date_ad ?? raw.date_ad ?? civilDateAd;
+  const daily = await fetchPanchanga(anchor, "ad", location);
+  return mergeEphemerisWithDaily(raw, daily);
 }

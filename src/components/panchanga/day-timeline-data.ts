@@ -15,6 +15,8 @@ export interface TimelineSegment {
   name: string;
   endG?: number | null;
   bad?: boolean;
+  /** Wall-clock label at segment end (used for lagna transitions). */
+  transitionLocal?: string;
   /** Planet name above rashi (ग्रह स्थिति row). */
   subLabel?: string;
 }
@@ -91,6 +93,10 @@ type LagnaSpanBlock = {
   name_ne?: string;
   name?: string;
   degree_in_rashi?: number;
+  start_local_time?: string;
+  end_local_time?: string;
+  start_ghati_clock?: string;
+  start_hours_clock?: string;
   end_ghati_clock?: string;
   end_hours_clock?: string;
 };
@@ -232,11 +238,20 @@ function karanaSegments(anga?: AngaBlock | null): TimelineSegment[] {
   return items;
 }
 
+function lagnaLocalClock(local?: string | null): string | undefined {
+  if (!local) return undefined;
+  const m = local.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return local;
+  return `${m[1]}:${m[2]}`;
+}
+
 function lagnaSegments(spans?: LagnaSpanBlock[] | null): TimelineSegment[] {
   if (!spans?.length) return [];
   return spans.map((span, index) => ({
     name: span.name_ne ?? span.name ?? "",
     endG: index < spans.length - 1 ? ghatiFromBlock(span) : null,
+    transitionLocal:
+      index < spans.length - 1 ? lagnaLocalClock(span.end_local_time) : undefined,
   }));
 }
 

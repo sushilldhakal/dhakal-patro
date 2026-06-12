@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { MapPin } from "lucide-react";
 import {
   fetchPanchanga,
-  fetchPanchangaAtTime,
   panchangaKeys,
 } from "@/lib/api";
 import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
 import { getBsMonthAdSpanLabel } from "@/lib/local-calendar";
 import {
-  atTimeToPanchangaDay,
   buildAtTimeDatetime,
+  chartDateAd,
+  fetchEphemerisPanchangaDay,
   isEphemerisPanchanga,
 } from "@/lib/ephemeris-adapters";
 import { getSunrise, getSunset, toNepaliDigits } from "@/lib/panchanga-format";
@@ -86,10 +86,7 @@ export function Panchanga() {
 
   const instantQuery = useQuery({
     queryKey: panchangaKeys.atTime(atTimeDatetime, location.params),
-    queryFn: async () => {
-      const raw = await fetchPanchangaAtTime(atTimeDatetime, location.params);
-      return atTimeToPanchangaDay(raw);
-    },
+    queryFn: () => fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params),
     staleTime: 1000 * 60 * 5,
     enabled: isInstant,
   });
@@ -117,6 +114,8 @@ export function Panchanga() {
       : isInstant && view === "month"
         ? ` — ${toNepaliDigits(clock)} बजे`
         : "";
+
+  const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
@@ -232,12 +231,13 @@ export function Panchanga() {
               <EphemerisModeBanner p={data} clock={clock} />
             )}
 
-            {data && !isLoading && !ephemeris && (
+            {data && !isLoading && (
               <DayTimeline
                 p={data}
-                dateAd={adDateStr}
-                isToday={isToday}
+                dateAd={chartAd}
+                isToday={isToday && !ephemeris}
                 timezone={effectiveTimezone}
+                needleClock={ephemeris ? clock : undefined}
               />
             )}
 
@@ -259,22 +259,14 @@ export function Panchanga() {
               <>
                 <SunMoonSection p={data} />
                 <PanchangCoreSection p={data} />
-                {!ephemeris && (
-                  <>
-                    <SamvatSection p={data} />
-                    <RashiSection p={data} />
-                    <BalamSection p={data} />
-                    <PanchakaLagnaSection p={data} />
-                    <RituSection p={data} />
-                  </>
-                )}
+                <SamvatSection p={data} />
+                <RashiSection p={data} />
+                <BalamSection p={data} />
+                <PanchakaLagnaSection p={data} />
+                <RituSection p={data} />
                 <MuhurtaTimingsSection p={data} />
-                {!ephemeris && (
-                  <>
-                    <DinVisheshSection p={data} />
-                    <FestivalsSection p={data} />
-                  </>
-                )}
+                <DinVisheshSection p={data} />
+                <FestivalsSection p={data} />
               </>
             )}
           </div>
@@ -282,7 +274,7 @@ export function Panchanga() {
           <aside className="flex flex-col gap-4 xl:sticky xl:top-[76px]">
             <GhatiClock sunrise={sunrise} sunset={sunset} timezone={effectiveTimezone} />
             {ephemeris && data && <MuhurtaNowPanel p={data} clock={clock} />}
-            <PlanetEventsPanel dateAd={adDateStr} location={location.params} />
+            <PlanetEventsPanel dateAd={chartAd} location={location.params} />
           </aside>
         </div>
       )}
