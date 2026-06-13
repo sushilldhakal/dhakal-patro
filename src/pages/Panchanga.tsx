@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
+import { PanchangaCircularDiagram } from "@/components/panchanga/PanchangaCircularDiagram";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
@@ -233,6 +234,16 @@ export function Panchanga() {
 
             {data && !isLoading && (
               <DayTimeline
+                p={data}
+                dateAd={chartAd}
+                isToday={isToday && !ephemeris}
+                timezone={effectiveTimezone}
+                needleClock={ephemeris ? clock : undefined}
+              />
+            )}
+
+            {data && !isLoading && (
+              <PanchangaCircularDiagram
                 p={data}
                 dateAd={chartAd}
                 isToday={isToday && !ephemeris}
