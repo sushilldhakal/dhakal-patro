@@ -12,20 +12,22 @@ import {
   type WheelTweaks,
   WHEEL_RASHIS,
 } from "@/lib/wheel-data";
-import { KARANA_SEQ, karanaColor, WHEEL_TITHIS } from "@/lib/tithi-wheel-data";
+import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 
 const DEG = Math.PI / 180;
 const CX = 500;
 const CY = 500;
 
-/** Scale factor applied to all planet orbit radii so inner tithi/karana rings fit. */
-const ORBIT_SCALE = 0.68;
+/** Scale factor applied to all planet orbit radii to leave room for the inner yoga/karana/tithi rings. */
+const ORBIT_SCALE = 0.58;
 
-/** Inner karana + tithi ring radii — karana is inside tithi, they share the R_KAR_O boundary. */
-const R_KAR_I = 152;
-const R_KAR_O = 178;
-const R_TIT_I = 178; // same as R_KAR_O — no gap between the two rings
-const R_TIT_O = 220;
+/** Yoga → Karana → Tithi rings, each nested inside the next, sharing boundaries. */
+const R_YOGA_I = 140;
+const R_YOGA_O = 158;
+const R_KAR_I  = 160;
+const R_KAR_O  = 178;
+const R_TIT_I  = 178; // shared boundary with karana outer
+const R_TIT_O  = 218;
 
 const R = {
   rimOuter: 497,
@@ -159,28 +161,16 @@ export function WheelChart({
         className={`w-seg-nak${i % 2 ? " alt" : ""}${isHot ? " hot" : ""}${isSel ? " sel" : ""}`}
       />
     );
-    const [ix, iy] = pol(Lm, R.nakIcon);
-    const s = 30;
     nakDecor.push(
-      <g key={`ni${i}`}>
-        <svg
-          x={ix - s / 2}
-          y={iy - s / 2}
-          width={s}
-          height={s}
-          viewBox="0 0 48 48"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="w-nk-ico"
-          dangerouslySetInnerHTML={{ __html: ico.svg }}
-        />
-        <RingLabel L={Lm} r={R.nakName} cls={`w-nak-name${isSel || isHot ? " sel" : ""}`} spin={spin}>
-          {ico.ne}
-        </RingLabel>
-      </g>
+      <RingLabel
+        key={`ni${i}`}
+        L={Lm}
+        r={(R.nakIn + R.nakOut) / 2}
+        cls={`w-nak-name${isSel || isHot ? " sel" : ""}`}
+        spin={spin}
+      >
+        {ico.ne}
+      </RingLabel>
     );
   }
 
@@ -358,11 +348,52 @@ export function WheelChart({
     const curTithiIdx = Math.floor(elongation / 12);
     const curKarIdx = Math.floor(elongation / 6);
 
-    // Separator circles — shared boundary at R_KAR_O=R_TIT_I divides karana (inner) from tithi (outer)
+    // Separator circles
     innerRings.push(
       <circle key="ir-boundary" cx={CX} cy={CY} r={R_KAR_O} className="w-rim-circle" strokeWidth="1.1" opacity="0.75" />,
-      <circle key="ir-kar-i" cx={CX} cy={CY} r={R_KAR_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+      <circle key="ir-kar-i"  cx={CX} cy={CY} r={R_KAR_I}  className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+      <circle key="ir-yoga-i" cx={CX} cy={CY} r={R_YOGA_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
     );
+
+    // Yoga ring — 27 segments × (360/27)° each, anchored at ecliptic 0°
+    const yogaDeg = 360 / 27;
+    const yogaSum = normDeg(markers.sunLon + markers.moonLon);
+    const curYogaIdx = Math.floor(yogaSum / yogaDeg);
+    for (let y = 0; y < 27; y++) {
+      const L0 = y * yogaDeg;
+      const L1 = (y + 1) * yogaDeg;
+      const Lm = y * yogaDeg + yogaDeg / 2;
+      const isCur = y === curYogaIdx;
+      const yName = WHEEL_YOGAS[y]!;
+      innerRings.push(
+        <path
+          key={`yog${y}`}
+          d={arcSeg(L0, L1, R_YOGA_I, R_YOGA_O)}
+          fill={
+            isCur
+              ? "color-mix(in srgb, #a07de8 38%, #10063a)"
+              : y % 2
+              ? "color-mix(in srgb, #7c5cbf 22%, #08041a)"
+              : "color-mix(in srgb, #6448a8 16%, #06031a)"
+          }
+          stroke={isCur ? "#c4a8f0" : "rgba(100,72,168,.25)"}
+          strokeWidth={isCur ? 1.6 : 0.4}
+          opacity={isCur ? 1 : 0.82}
+        />
+      );
+      innerRings.push(
+        <RingLabel
+          key={`yog-lbl-${y}`}
+          L={Lm}
+          r={(R_YOGA_I + R_YOGA_O) / 2}
+          cls={`w-yoga-lbl${isCur ? " sel" : ""}`}
+          spin={spin}
+          size={isCur ? 7 : 5.5}
+        >
+          {yName.length > 4 ? yName.slice(0, 4) : yName}
+        </RingLabel>
+      );
+    }
 
     // Karana ring — 60 segments × 6° each
     for (let k = 0; k < 60; k++) {
@@ -585,7 +616,7 @@ export function WheelChart({
       >
         <circle cx={CX} cy={CY} r={R.rimOuter} className="w-rim-circle" strokeWidth="1.4" />
         <circle cx={CX} cy={CY} r={R.tickIn} className="w-rim-circle" strokeWidth="0.7" opacity="0.5" />
-        {[R.gregIn, R.bsIn, R.nakOut, R.nakIn, R.padaIn, R.rashiIn].map((r, k) => (
+        {[R.bsIn, R.nakOut, R.nakIn, R.padaIn, R.rashiIn].map((r, k) => (
           <circle key={`rc${k}`} cx={CX} cy={CY} r={r} className="w-rim-circle" strokeWidth="0.8" opacity="0.55" />
         ))}
         <circle cx={CX} cy={CY} r={R.core} className="w-rim-circle" strokeWidth="1.1" opacity="0.7" />
