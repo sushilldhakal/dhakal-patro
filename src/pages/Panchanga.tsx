@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
-import { PanchangaCircularDiagram } from "@/components/panchanga/PanchangaCircularDiagram";
+import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
@@ -82,7 +82,7 @@ export function Panchanga() {
     queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
     queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
-    enabled: !isInstant,
+    enabled: view === "day",
   });
 
   const instantQuery = useQuery({
@@ -117,6 +117,7 @@ export function Panchanga() {
         : "";
 
   const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
+  const wheelData = udayaQuery.data ?? data;
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
@@ -242,13 +243,15 @@ export function Panchanga() {
               />
             )}
 
-            {data && !isLoading && (
-              <PanchangaCircularDiagram
-                p={data}
-                dateAd={chartAd}
-                isToday={isToday && !ephemeris}
+            {wheelData && !isLoading && (
+              <PanchangaWheel
+                p={wheelData}
+                bsYear={bs.year}
+                bsMonthNe={bs.monthName}
+                bsDay={bs.day}
+                isToday={isToday}
                 timezone={effectiveTimezone}
-                needleClock={ephemeris ? clock : undefined}
+                locationLabel={locationLabel}
               />
             )}
 
