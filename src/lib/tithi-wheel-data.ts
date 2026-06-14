@@ -138,3 +138,13 @@ export function tithiIndexFromPanchanga(p: PanchangaDay): number {
 
   return krishna ? 15 : 0;
 }
+
+/** 27 yoga names in Nepali, index 0 = Vishkambha, anchored at ecliptic 0°. */
+export const WHEEL_YOGAS = [
+  "विष्कम्भ", "प्रीति", "आयुष्मान्", "सौभाग्य", "शोभन",
+  "अतिगण्ड", "सुकर्मा", "धृति", "शूल", "गण्ड",
+  "वृद्धि", "ध्रुव", "व्याघात", "हर्षण", "वज्र",
+  "सिद्धि", "व्यतीपात", "वरियान्", "परिघ", "शिव",
+  "सिद्ध", "साध्य", "शुभ", "शुक्ल", "ब्रह्म",
+  "इन्द्र", "वैधृति",
+] as const;

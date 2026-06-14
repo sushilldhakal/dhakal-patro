@@ -2278,6 +2278,8 @@
 .pn-wheel .w-tw-paksha { fill: var(--w-ink-faint); font: 600 12px var(--pn-font); letter-spacing: 0.04em; }
 .pn-wheel .w-kar-lbl { fill: rgba(0,0,0,0.65); font: 700 10px var(--pn-font); }
 .pn-wheel .w-kar-lbl.sel { fill: var(--w-accent); text-shadow: 0 0 4px rgba(0,0,0,0.8); }
+.pn-wheel .w-yoga-lbl { fill: #b09dd4; font: 600 10px var(--pn-font); }
+.pn-wheel .w-yoga-lbl.sel { fill: #e0d0ff; }
 .pn-wheel .w-year { fill: var(--w-accent); font: 700 22px var(--pn-num); letter-spacing: 0.02em; }
 
 .pn-wheel .w-nk-ico { color: var(--w-ink); }
