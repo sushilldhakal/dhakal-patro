@@ -45,7 +45,7 @@ export function PanchangaWheel({
   const [scrubPinned, setScrubPinned] = useState(false);
 
   const handleZoom = useCallback((z: number) => {
-    setZoom(Math.max(0.55, Math.min(2.8, z)));
+    setZoom(Math.max(0.55, Math.min(14, z)));
   }, []);
 
   const nowG = useMemo(() => {
@@ -245,7 +245,7 @@ export function PanchangaWheel({
               type="button"
               className="w-iconbtn"
               title="Zoom in"
-              onClick={() => handleZoom(zoom + 0.2)}
+              onClick={() => handleZoom(zoom * 1.4)}
             >
               +
             </button>
@@ -253,7 +253,7 @@ export function PanchangaWheel({
               type="button"
               className="w-iconbtn"
               title="Zoom out"
-              onClick={() => handleZoom(zoom - 0.2)}
+              onClick={() => handleZoom(zoom / 1.4)}
             >
               −
             </button>

@@ -572,7 +572,7 @@ export function WheelChart({
       if (pinchRef.current) {
         const d = pinchDist();
         if (d > 0) {
-          const next = Math.max(0.55, Math.min(2.8, pinchRef.current.zoom0 * (d / pinchRef.current.dist)));
+          const next = Math.max(0.55, Math.min(14, pinchRef.current.zoom0 * (d / pinchRef.current.dist)));
           onZoom(next);
         }
       }

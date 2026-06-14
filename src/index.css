@@ -2524,7 +2524,7 @@
   -webkit-appearance: none;
   appearance: none;
   width: 168px;
-  height: 4px;
+  height: 6px;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
@@ -2534,11 +2534,16 @@
   );
   outline: none;
   cursor: pointer;
+  touch-action: pan-x;
+  /* Increase tap target without changing visual size */
+  padding: 10px 0;
+  margin: -10px 0;
+  box-sizing: content-box;
 }
 .pn-wheel .w-scrub::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
   background: var(--w-accent);
   border: 2px solid var(--w-surface);
@@ -2546,12 +2551,13 @@
   box-shadow: 0 0 10px var(--w-accent-soft);
 }
 .pn-wheel .w-scrub::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
   background: var(--w-accent);
   border: 2px solid var(--w-surface);
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .pn-wheel .w-dock-todaybtn {

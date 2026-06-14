@@ -104,7 +104,7 @@ export interface WheelTweaks {
 }
 
 export const DEFAULT_WHEEL_TWEAKS: WheelTweaks = {
-  show_greg: true,
+  show_greg: false,
   show_lunar: true,
   show_pada: true,
   show_planets: true,
