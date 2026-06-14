@@ -320,10 +320,10 @@ export function WheelChart({
         style={{ pointerEvents: "none" }}
       />
     );
-    const [lx, ly] = pol(lagnaLon, R.rimOuter - 2);
-    markerNodes.push(<line key="lagna" x1={CX} y1={CY} x2={lx} y2={ly} className="w-lagna-line" />);
+    const [lx, ly] = pol(moonLon, R.rimOuter - 2);
+    markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className="w-lagna-line" />);
     markerNodes.push(
-      <g key="lagnacap" transform={`rotate(${-(lagnaLon + spin)} ${CX} ${CY})`}>
+      <g key="moon-cap" transform={`rotate(${-(moonLon + spin)} ${CX} ${CY})`}>
         <circle cx={CX} cy={CY - (R.rimOuter - 2)} r="3.4" className="w-lagna-cap" />
         <text
           x={CX}
@@ -331,14 +331,14 @@ export function WheelChart({
           textAnchor="middle"
           dominantBaseline="central"
           className="w-label"
-          style={{ fontSize: 11, fill: "var(--w-accent)" }}
+          style={{ fontSize: 14, fill: "var(--w-accent)", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
           transform={
-            normDeg(lagnaLon + spin) > 90 && normDeg(lagnaLon + spin) < 270
+            normDeg(moonLon + spin) > 90 && normDeg(moonLon + spin) < 270
               ? `rotate(180 ${CX} ${CY - (R.rimOuter + 9)})`
               : undefined
           }
         >
-          लग्न
+          {"☾︎"}
         </text>
       </g>
     );
@@ -393,8 +393,10 @@ export function WheelChart({
     for (let k = 0; k < 60; k++) {
       const L0 = sunL + k * 6;
       const L1 = sunL + (k + 1) * 6;
+      const Lm = sunL + k * 6 + 3;
       const kd = KARANA_SEQ[k]!;
       const isCur = k === curKarIdx;
+      const kName = kd.ne;
       innerRings.push(
         <path
           key={`kar${k}`}
@@ -405,6 +407,18 @@ export function WheelChart({
           opacity={isCur ? 1 : 0.78}
         />
       );
+      innerRings.push(
+        <RingLabel
+          key={`kar-lbl-${k}`}
+          L={Lm}
+          r={(R_KAR_I + R_KAR_O) / 2}
+          cls={`w-kar-lbl${isCur ? " sel" : ""}`}
+          spin={spin}
+          size={isCur ? 7 : 5.5}
+        >
+          {kName.length > 4 ? kName.slice(0, 4) : kName}
+        </RingLabel>
+      );
     }
 
     // Tithi ring — 30 segments × 12° each
@@ -414,6 +428,7 @@ export function WheelChart({
       const Lm = sunL + i * 12 + 6;
       const isCur = i === curTithiIdx;
       const shukla = i < 15;
+      const tName = WHEEL_TITHIS[i]!.ne;
       innerRings.push(
         <g key={`tit${i}`}>
           <path
@@ -430,18 +445,22 @@ export function WheelChart({
           />
           <RingLabel
             L={Lm}
-            r={(R_TIT_I + R_TIT_O) / 2}
+            r={R_TIT_I + 10}
             cls={`w-tw-num${isCur ? " sel" : ""}`}
             spin={spin}
-            size={isCur ? 11 : 8.5}
+            size={isCur ? 9 : 7.5}
           >
             {num(tithiNum(i))}
           </RingLabel>
-          {isCur && (
-            <RingLabel L={Lm} r={R_TIT_O + 12} cls="w-tw-name sel" spin={spin} size={9}>
-              {WHEEL_TITHIS[i]!.ne}
-            </RingLabel>
-          )}
+          <RingLabel
+            L={Lm}
+            r={R_TIT_I + 26}
+            cls={`w-tw-name${isCur ? " sel" : ""}`}
+            spin={spin}
+            size={isCur ? 8 : 6.5}
+          >
+            {tName.length > 5 ? tName.slice(0, 5) : tName}
+          </RingLabel>
         </g>
       );
     }
