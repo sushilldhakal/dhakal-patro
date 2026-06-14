@@ -230,27 +230,6 @@ export function WheelChart({
     }
   }
 
-  const ticks = [];
-  for (let d = 0; d < 360; d += 1) {
-    const major = d % 30 === 0;
-    const mid = d % 10 === 0;
-    if (!major && !mid && d % 2) continue;
-    const [x1, y1] = pol(d, R.rimOuter);
-    const len = major ? 15 : mid ? 9 : 5;
-    const [x2, y2] = pol(d, R.rimOuter - len);
-    ticks.push(
-      <line
-        key={`t${d}`}
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        className={`w-tick${major ? " major" : ""}`}
-        strokeWidth={major ? 1.1 : 0.7}
-      />
-    );
-  }
-
   const dayTicks = [];
   if (tw.show_lunar) {
     for (let i = 0; i < 12; i++) {
@@ -316,21 +295,21 @@ export function WheelChart({
         style={{ pointerEvents: "none" }}
       />
     );
-    const [lx, ly] = pol(moonLon, R.rimOuter - 2);
+    const [lx, ly] = pol(moonLon, R.bsOut - 2);
     markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className="w-lagna-line" />);
     markerNodes.push(
       <g key="moon-cap" transform={`rotate(${-(moonLon + spin)} ${CX} ${CY})`}>
-        <circle cx={CX} cy={CY - (R.rimOuter - 2)} r="3.4" className="w-lagna-cap" />
+        <circle cx={CX} cy={CY - (R.bsOut - 2)} r="3.4" className="w-lagna-cap" />
         <text
           x={CX}
-          y={CY - (R.rimOuter + 9)}
+          y={CY - (R.bsOut + 5)}
           textAnchor="middle"
           dominantBaseline="central"
           className="w-label"
           style={{ fontSize: 14, fill: "var(--w-accent)", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
           transform={
             normDeg(moonLon + spin) > 90 && normDeg(moonLon + spin) < 270
-              ? `rotate(180 ${CX} ${CY - (R.rimOuter + 9)})`
+              ? `rotate(180 ${CX} ${CY - (R.bsOut + 5)})`
               : undefined
           }
         >
@@ -607,21 +586,19 @@ export function WheelChart({
       style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: dragRef.current ? "none" : "transform 0.12s ease-out" }}
     >
       <svg
-        viewBox="0 0 1000 1000"
+        viewBox="42 42 916 916"
         className={`w-svg${dragRef.current?.moved ? " dragging" : ""}`}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        <circle cx={CX} cy={CY} r={R.rimOuter} className="w-rim-circle" strokeWidth="1.4" />
-        <circle cx={CX} cy={CY} r={R.tickIn} className="w-rim-circle" strokeWidth="0.7" opacity="0.5" />
+        <circle cx={CX} cy={CY} r={R.bsOut} className="w-rim-circle" strokeWidth="1.4" />
         {[R.bsIn, R.nakOut, R.nakIn, R.padaIn, R.rashiIn].map((r, k) => (
           <circle key={`rc${k}`} cx={CX} cy={CY} r={r} className="w-rim-circle" strokeWidth="0.8" opacity="0.55" />
         ))}
         <circle cx={CX} cy={CY} r={R.core} className="w-rim-circle" strokeWidth="1.1" opacity="0.7" />
 
-        {ticks}
         {rashiSegs}
         {nakSegs}
         {padaCells}
