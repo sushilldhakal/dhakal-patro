@@ -39,14 +39,19 @@ export function PanchangaWheel({
 
   const [spin, setSpin] = useState(0);
   const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [picked, setPicked] = useState<WheelPick | null>(null);
   const [hover, setHover] = useState<WheelHover | null>(null);
   const [tip, setTip] = useState({ x: 0, y: 0 });
   const [scrubPinned, setScrubPinned] = useState(false);
 
   const handleZoom = useCallback((z: number) => {
-    setZoom(Math.max(0.55, Math.min(14, z)));
+    const next = Math.max(0.55, Math.min(14, z));
+    setZoom(next);
+    if (next <= 1) setPan({ x: 0, y: 0 });
   }, []);
+
+  const handlePan = useCallback((x: number, y: number) => setPan({ x, y }), []);
 
   const nowG = useMemo(() => {
     const mins = minutesSinceMidnightInTimezone(now, tz, true);
@@ -70,6 +75,7 @@ export function PanchangaWheel({
   const snapToNow = useCallback(() => {
     setScrubPinned(false);
     setSpin(0);
+    setPan({ x: 0, y: 0 });
     setScrubG(nowG);
   }, [nowG]);
 
@@ -177,6 +183,8 @@ export function PanchangaWheel({
           onSpin={setSpin}
           zoom={zoom}
           onZoom={handleZoom}
+          pan={pan}
+          onPan={handlePan}
         />
 
         {tipNode}
@@ -262,7 +270,7 @@ export function PanchangaWheel({
                 type="button"
                 className="w-iconbtn"
                 title="Reset zoom"
-                onClick={() => handleZoom(1)}
+                onClick={() => { handleZoom(1); setPan({ x: 0, y: 0 }); }}
                 style={{ fontSize: 9, padding: "0 6px" }}
               >
                 1:1
