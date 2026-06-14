@@ -21,10 +21,10 @@ const CY = 500;
 /** Scale factor applied to all planet orbit radii so inner tithi/karana rings fit. */
 const ORBIT_SCALE = 0.68;
 
-/** Inner tithi and karana ring radii (inside the rashi inner boundary). */
+/** Inner karana + tithi ring radii — karana is inside tithi, they share the R_KAR_O boundary. */
 const R_KAR_I = 152;
 const R_KAR_O = 178;
-const R_TIT_I = 181;
+const R_TIT_I = 178; // same as R_KAR_O — no gap between the two rings
 const R_TIT_O = 220;
 
 const R = {
@@ -360,11 +360,10 @@ export function WheelChart({
     const curTithiIdx = Math.floor(elongation / 12);
     const curKarIdx = Math.floor(elongation / 6);
 
-    // Separator circles for the new inner rings
+    // Separator circles — shared boundary at R_KAR_O=R_TIT_I divides karana (inner) from tithi (outer)
     innerRings.push(
-      <circle key="ir-kar-o" cx={CX} cy={CY} r={R_KAR_O} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+      <circle key="ir-boundary" cx={CX} cy={CY} r={R_KAR_O} className="w-rim-circle" strokeWidth="1.1" opacity="0.75" />,
       <circle key="ir-kar-i" cx={CX} cy={CY} r={R_KAR_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
-      <circle key="ir-tit-i" cx={CX} cy={CY} r={R_TIT_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
     );
 
     // Karana ring — 60 segments × 6° each
@@ -423,21 +422,12 @@ export function WheelChart({
           />
           <RingLabel
             L={Lm}
-            r={R_TIT_I + 10}
-            cls={`w-tw-num${isCur ? " sel" : ""}`}
-            spin={spin}
-            size={isCur ? 9 : 7.5}
-          >
-            {num(tithiNum(i))}
-          </RingLabel>
-          <RingLabel
-            L={Lm}
-            r={R_TIT_I + 26}
+            r={(R_TIT_I + R_TIT_O) / 2}
             cls={`w-tw-name${isCur ? " sel" : ""}`}
             spin={spin}
-            size={isCur ? 8 : 6.5}
+            size={isCur ? 10 : 8}
           >
-            {tName.length > 5 ? tName.slice(0, 5) : tName}
+            {tName.length > 6 ? tName.slice(0, 6) : tName}
           </RingLabel>
         </g>
       );
@@ -629,9 +619,6 @@ export function WheelChart({
         {markerNodes}
         {hits}
 
-        <RingLabel L={295} r={R.rimOuter + 18} cls="w-year" spin={spin}>
-          {num(bsYear)}
-        </RingLabel>
       </svg>
     </div>
   );
