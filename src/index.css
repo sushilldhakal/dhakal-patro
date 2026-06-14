@@ -2526,7 +2526,7 @@
   -webkit-appearance: none;
   appearance: none;
   width: 168px;
-  height: 6px;
+  height: 8px;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
@@ -2537,28 +2537,31 @@
   outline: none;
   cursor: pointer;
   touch-action: pan-x;
-  /* Increase tap target without changing visual size */
-  padding: 10px 0;
-  margin: -10px 0;
-  box-sizing: content-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .pn-wheel .w-scrub::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   background: var(--w-accent);
-  border: 2px solid var(--w-surface);
-  cursor: pointer;
-  box-shadow: 0 0 10px var(--w-accent-soft);
+  border: 3px solid var(--w-surface);
+  cursor: grab;
+  box-shadow: 0 0 12px var(--w-accent-soft);
+}
+.pn-wheel .w-scrub:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.1);
 }
 .pn-wheel .w-scrub::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   background: var(--w-accent);
-  border: 2px solid var(--w-surface);
-  cursor: pointer;
+  border: 3px solid var(--w-surface);
+  cursor: grab;
   box-sizing: border-box;
 }
 
