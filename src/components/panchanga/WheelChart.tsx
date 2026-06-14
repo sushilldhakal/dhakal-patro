@@ -12,10 +12,20 @@ import {
   type WheelTweaks,
   WHEEL_RASHIS,
 } from "@/lib/wheel-data";
+import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, tithiNum } from "@/lib/tithi-wheel-data";
 
 const DEG = Math.PI / 180;
 const CX = 500;
 const CY = 500;
+
+/** Scale factor applied to all planet orbit radii so inner tithi/karana rings fit. */
+const ORBIT_SCALE = 0.68;
+
+/** Inner tithi and karana ring radii (inside the rashi inner boundary). */
+const R_KAR_I = 152;
+const R_KAR_O = 178;
+const R_TIT_I = 181;
+const R_TIT_O = 220;
 
 const R = {
   rimOuter: 497,
@@ -85,6 +95,8 @@ interface WheelChartProps {
   onLeave: () => void;
   onPick: (p: WheelPick) => void;
   onSpin: (deg: number) => void;
+  zoom: number;
+  onZoom: (z: number) => void;
 }
 
 export function WheelChart({
@@ -100,9 +112,14 @@ export function WheelChart({
   onLeave,
   onPick,
   onSpin,
+  zoom,
+  onZoom,
 }: WheelChartProps) {
   const dragRef = useRef<{ a: number; spin0: number; moved: boolean } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  /** Active pointer positions for pinch-to-zoom. */
+  const ptrRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchRef = useRef<{ dist: number; zoom0: number } | null>(null);
 
   const pol = (L: number, r: number): [number, number] => {
     const a = (L + spin) * DEG;
@@ -357,15 +374,89 @@ export function WheelChart({
     );
   }
 
+  // ── Inner tithi + karana rings ────────────────────────────────────────────
+  const innerRings: React.ReactNode[] = [];
+  if (tw.show_today) {
+    const sunL = markers.sunLon;
+    const elongation = normDeg(markers.moonLon - sunL);
+    const curTithiIdx = Math.floor(elongation / 12);
+    const curKarIdx = Math.floor(elongation / 6);
+
+    // Separator circles for the new inner rings
+    innerRings.push(
+      <circle key="ir-kar-o" cx={CX} cy={CY} r={R_KAR_O} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+      <circle key="ir-kar-i" cx={CX} cy={CY} r={R_KAR_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+      <circle key="ir-tit-i" cx={CX} cy={CY} r={R_TIT_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+    );
+
+    // Karana ring — 60 segments × 6° each
+    for (let k = 0; k < 60; k++) {
+      const L0 = sunL + k * 6;
+      const L1 = sunL + (k + 1) * 6;
+      const kd = KARANA_SEQ[k]!;
+      const isCur = k === curKarIdx;
+      innerRings.push(
+        <path
+          key={`kar${k}`}
+          d={arcSeg(L0, L1, R_KAR_I, R_KAR_O)}
+          fill={karanaColor(kd)}
+          stroke={isCur ? "var(--w-accent)" : "rgba(0,0,0,.32)"}
+          strokeWidth={isCur ? 1.7 : 0.4}
+          opacity={isCur ? 1 : 0.78}
+        />
+      );
+    }
+
+    // Tithi ring — 30 segments × 12° each
+    for (let i = 0; i < 30; i++) {
+      const L0 = sunL + i * 12;
+      const L1 = sunL + (i + 1) * 12;
+      const Lm = sunL + i * 12 + 6;
+      const isCur = i === curTithiIdx;
+      const shukla = i < 15;
+      innerRings.push(
+        <g key={`tit${i}`}>
+          <path
+            d={arcSeg(L0, L1, R_TIT_I, R_TIT_O)}
+            fill={
+              isCur
+                ? "color-mix(in srgb, var(--w-accent) 28%, #0d2428)"
+                : shukla
+                ? "color-mix(in srgb, #2d8a86 26%, #0a1a1e)"
+                : "color-mix(in srgb, #2d8a86 14%, #060e10)"
+            }
+            stroke={isCur ? "var(--w-accent)" : "rgba(143,191,193,.18)"}
+            strokeWidth={isCur ? 1.7 : 0.5}
+          />
+          <RingLabel
+            L={Lm}
+            r={(R_TIT_I + R_TIT_O) / 2}
+            cls={`w-tw-num${isCur ? " sel" : ""}`}
+            spin={spin}
+            size={isCur ? 11 : 8.5}
+          >
+            {num(tithiNum(i))}
+          </RingLabel>
+          {isCur && (
+            <RingLabel L={Lm} r={R_TIT_O + 12} cls="w-tw-name sel" spin={spin} size={9}>
+              {WHEEL_TITHIS[i]!.ne}
+            </RingLabel>
+          )}
+        </g>
+      );
+    }
+  }
+
+  // ── Planet core ───────────────────────────────────────────────────────────
   const core = [];
   if (tw.show_planets) {
     [44, 70, 96, 120, 150, 178, 204, 216].forEach((r, k) =>
-      core.push(<circle key={`orb${k}`} cx={CX} cy={CY} r={r} className="w-orbit" />)
+      core.push(<circle key={`orb${k}`} cx={CX} cy={CY} r={r * ORBIT_SCALE} className="w-orbit" />)
     );
     det.grahas.forEach((g, i) => {
       const meta = GRAHA_META[i]!;
       const lon = planetLons[i] ?? 0;
-      const [px, py] = pol(lon, meta.orbit);
+      const [px, py] = pol(lon, meta.orbit * ORBIT_SCALE);
       const rad = "big" in meta && meta.big ? 13 : i === 1 ? 9 : 7;
       core.push(
         <g key={`pl${i}`} style={{ pointerEvents: "none" }}>
@@ -439,25 +530,55 @@ export function WheelChart({
     );
   };
 
+  const pinchDist = () => {
+    const pts = [...ptrRef.current.values()];
+    if (pts.length < 2) return 0;
+    return Math.hypot(pts[1]!.x - pts[0]!.x, pts[1]!.y - pts[0]!.y);
+  };
+
   const onDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    dragRef.current = { a: angleAt(e), spin0: spin, moved: false };
+    ptrRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     e.currentTarget.setPointerCapture(e.pointerId);
+    if (ptrRef.current.size === 1) {
+      dragRef.current = { a: angleAt(e), spin0: spin, moved: false };
+    } else {
+      // Two fingers: cancel rotation, start pinch
+      dragRef.current = null;
+      pinchRef.current = { dist: pinchDist(), zoom0: zoom };
+    }
   };
   const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    ptrRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrRef.current.size >= 2) {
+      if (pinchRef.current) {
+        const d = pinchDist();
+        if (d > 0) {
+          const next = Math.max(0.55, Math.min(2.8, pinchRef.current.zoom0 * (d / pinchRef.current.dist)));
+          onZoom(next);
+        }
+      }
+      return;
+    }
     if (!dragRef.current) return;
     const d = angleAt(e) - dragRef.current.a;
     if (Math.abs(d) > 1.2) dragRef.current.moved = true;
     onSpin(dragRef.current.spin0 + d);
   };
   const onUp = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (dragRef.current) e.currentTarget.releasePointerCapture(e.pointerId);
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    ptrRef.current.delete(e.pointerId);
     dragRef.current = null;
+    if (ptrRef.current.size < 2) pinchRef.current = null;
   };
 
   const bsMonths = bsMonthsForWheel();
 
   return (
-    <div className="w-svg-wrap" ref={wrapRef}>
+    <div
+      className="w-svg-wrap"
+      ref={wrapRef}
+      style={{ transform: `scale(${zoom})`, transformOrigin: "center", transition: "transform 0.12s ease-out" }}
+    >
       <svg
         viewBox="0 0 1000 1000"
         className={`w-svg${dragRef.current?.moved ? " dragging" : ""}`}
@@ -495,6 +616,7 @@ export function WheelChart({
           ))}
         {dayTicks}
 
+        {innerRings}
         {core}
         {markerNodes}
         {hits}

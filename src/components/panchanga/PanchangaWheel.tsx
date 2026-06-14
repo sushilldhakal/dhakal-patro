@@ -3,12 +3,6 @@ import type { PanchangaDay } from "@/lib/api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
-  KAR_FIX_COLOR,
-  KAR_FIX_NAMES,
-  KAR_MOV,
-  KAR_MOV_COLOR,
-} from "@/lib/tithi-wheel-data";
-import {
   buildWheelDetail,
   buildWheelMarkers,
   DEFAULT_WHEEL_TWEAKS,
@@ -17,13 +11,8 @@ import {
   type WheelDetail,
 } from "@/lib/wheel-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { TithiWheel } from "./TithiWheel";
 import { WheelChart, type WheelHover, type WheelPick } from "./WheelChart";
 import { WheelPanel } from "./WheelPanel";
-
-type WheelMode = "rashi" | "tithi";
-
-const WHEEL_MODE_KEY = "dhakalWheelMode";
 
 interface Props {
   p: PanchangaDay;
@@ -48,21 +37,15 @@ export function PanchangaWheel({
   const tz = resolveTimeZone(p?.location?.timezone, timezone);
   const [now, setNow] = useState(() => new Date());
 
-  const [mode, setMode] = useState<WheelMode>(() => {
-    const saved = localStorage.getItem(WHEEL_MODE_KEY);
-    return saved === "tithi" ? "tithi" : "rashi";
-  });
   const [spin, setSpin] = useState(0);
+  const [zoom, setZoom] = useState(1);
   const [picked, setPicked] = useState<WheelPick | null>(null);
   const [hover, setHover] = useState<WheelHover | null>(null);
   const [tip, setTip] = useState({ x: 0, y: 0 });
   const [scrubPinned, setScrubPinned] = useState(false);
 
-  const setModePersist = useCallback((next: WheelMode) => {
-    setMode(next);
-    localStorage.setItem(WHEEL_MODE_KEY, next);
-    setPicked(null);
-    setHover(null);
+  const handleZoom = useCallback((z: number) => {
+    setZoom(Math.max(0.55, Math.min(2.8, z)));
   }, []);
 
   const nowG = useMemo(() => {
@@ -120,14 +103,13 @@ export function PanchangaWheel({
   const locLabel = locationLabel ?? p.location?.name ?? "काठमाडौं";
 
   const onStageMove = (e: React.MouseEvent) => {
-    if (mode !== "rashi") return;
     const r = stageRef.current?.getBoundingClientRect();
     if (!r) return;
     setTip({ x: e.clientX - r.left, y: e.clientY - r.top });
   };
 
   let tipNode: React.ReactNode = null;
-  if (mode === "rashi" && hover) {
+  if (hover) {
     if (hover.type === "nak") {
       const ic = NAKSHATRA_ICONS[hover.i]!;
       tipNode = (
@@ -167,8 +149,8 @@ export function PanchangaWheel({
         <div className="w-head">
           <div className="w-head-eyebrow">नेपाली पात्रो · पञ्चाङ्ग चक्र</div>
           <div className="w-head-title">
-            {isToday && !scrubPinned && mode === "rashi" ? "आजको" : ""}{" "}
-            {mode === "rashi" ? "ग्रह–नक्षत्र चक्र" : "तिथि–करण चक्र"}{" "}
+            {isToday && !scrubPinned ? "आजको" : ""}{" "}
+            ग्रह–नक्षत्र · तिथि–करण चक्र{" "}
             <span className="yr">{num(bsYear)}</span>
           </div>
           <div className="w-head-sub">
@@ -176,129 +158,72 @@ export function PanchangaWheel({
           </div>
         </div>
 
-        {mode === "rashi" ? (
-          <WheelChart
-            det={det}
-            markers={markers}
-            spin={spin}
-            tw={DEFAULT_WHEEL_TWEAKS}
-            num={num}
-            bsYear={bsYear}
-            sel={picked}
-            hover={hover}
-            onHover={setHover}
-            onLeave={() => setHover(null)}
-            onPick={(pick) =>
-              setPicked((prev) =>
-                prev && prev.type === pick.type && prev.i === pick.i ? null : pick
-              )
-            }
-            onSpin={setSpin}
-          />
-        ) : (
-          <TithiWheel p={p} num={num} spin={spin} onSpin={setSpin} />
-        )}
+        <WheelChart
+          det={det}
+          markers={markers}
+          spin={spin}
+          tw={DEFAULT_WHEEL_TWEAKS}
+          num={num}
+          bsYear={bsYear}
+          sel={picked}
+          hover={hover}
+          onHover={setHover}
+          onLeave={() => setHover(null)}
+          onPick={(pick) =>
+            setPicked((prev) =>
+              prev && prev.type === pick.type && prev.i === pick.i ? null : pick
+            )
+          }
+          onSpin={setSpin}
+          zoom={zoom}
+          onZoom={handleZoom}
+        />
 
         {tipNode}
 
-        {mode === "rashi" && (
-          <WheelPanel
-            sel={picked}
-            open={!!picked}
-            num={num}
-            onClose={() => setPicked(null)}
-          />
-        )}
+        <WheelPanel
+          sel={picked}
+          open={!!picked}
+          num={num}
+          onClose={() => setPicked(null)}
+        />
 
-        {mode === "rashi" ? (
-          <div className="w-legend">
-            <div className="w-legend-row">
-              <span className="w-legend-dot" style={{ background: "var(--w-accent)" }} />
-              लग्न · वर्तमान नक्षत्र
-            </div>
-            <div className="w-legend-row">
-              <span className="w-legend-dot" style={{ background: "#f2a81d" }} />
-              सूर्य राशि
-            </div>
-            <div className="w-legend-row">
-              <span className="w-legend-dot" style={{ background: "#d3dce4" }} />
-              चन्द्र राशि
-            </div>
-            <div className="w-legend-row" style={{ opacity: 0.7, marginTop: 2 }}>
-              घुमाउन तान्नुहोस् · drag to rotate
-            </div>
+        <div className="w-legend">
+          <div className="w-legend-row">
+            <span className="w-legend-dot" style={{ background: "var(--w-accent)" }} />
+            लग्न · वर्तमान नक्षत्र · तिथि
           </div>
-        ) : (
-          <div
-            className="w-legend"
-            style={{ flexDirection: "row", gap: 22, alignItems: "flex-start" }}
-          >
-            <div>
-              <div className="w-kleg-title">चर करण</div>
-              {KAR_MOV.map((n) => (
-                <div className="w-legend-row" key={n}>
-                  <span
-                    className="w-legend-dot"
-                    style={{ background: KAR_MOV_COLOR[n], borderRadius: 2 }}
-                  />
-                  {n}
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className="w-kleg-title">स्थिर करण</div>
-              {KAR_FIX_NAMES.map((n) => (
-                <div className="w-legend-row" key={n}>
-                  <span
-                    className="w-legend-dot"
-                    style={{ background: KAR_FIX_COLOR[n], borderRadius: 2 }}
-                  />
-                  {n}
-                </div>
-              ))}
-            </div>
+          <div className="w-legend-row">
+            <span className="w-legend-dot" style={{ background: "#f2a81d" }} />
+            सूर्य राशि
           </div>
-        )}
+          <div className="w-legend-row">
+            <span className="w-legend-dot" style={{ background: "#d3dce4" }} />
+            चन्द्र राशि
+          </div>
+          <div className="w-legend-row" style={{ opacity: 0.7, marginTop: 2 }}>
+            घुमाउन तान्नुहोस् · pinch to zoom
+          </div>
+        </div>
 
         <div className="w-dock">
           <div className="w-dock-grp">
-            <button
-              type="button"
-              className={`w-modebtn${mode === "rashi" ? " on" : ""}`}
-              onClick={() => setModePersist("rashi")}
-            >
-              राशि
-            </button>
-            <button
-              type="button"
-              className={`w-modebtn${mode === "tithi" ? " on" : ""}`}
-              onClick={() => setModePersist("tithi")}
-            >
-              तिथि
-            </button>
+            <span className="w-dock-label">समय</span>
+            <input
+              className="w-scrub"
+              type="range"
+              min="0"
+              max="60"
+              step="0.25"
+              value={scrubG}
+              style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
+              onChange={(e) => handleScrubChange(+e.target.value)}
+            />
+            <span className="w-dock-val">{num(scrubClock)}</span>
           </div>
           <div className="w-dock-sep" />
-          {mode === "rashi" && (
-            <>
-              <div className="w-dock-grp">
-                <span className="w-dock-label">समय</span>
-                <input
-                  className="w-scrub"
-                  type="range"
-                  min="0"
-                  max="60"
-                  step="0.25"
-                  value={scrubG}
-                  style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
-                  onChange={(e) => handleScrubChange(+e.target.value)}
-                />
-                <span className="w-dock-val">{num(scrubClock)}</span>
-              </div>
-              <div className="w-dock-sep" />
-            </>
-          )}
           <div className="w-dock-grp">
-            {isToday && mode === "rashi" && (
+            {isToday && (
               <button
                 type="button"
                 className="w-dock-todaybtn"
@@ -316,6 +241,33 @@ export function PanchangaWheel({
             >
               ⟳
             </button>
+            <button
+              type="button"
+              className="w-iconbtn"
+              title="Zoom in"
+              onClick={() => handleZoom(zoom + 0.2)}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              className="w-iconbtn"
+              title="Zoom out"
+              onClick={() => handleZoom(zoom - 0.2)}
+            >
+              −
+            </button>
+            {zoom !== 1 && (
+              <button
+                type="button"
+                className="w-iconbtn"
+                title="Reset zoom"
+                onClick={() => handleZoom(1)}
+                style={{ fontSize: 9, padding: "0 6px" }}
+              >
+                1:1
+              </button>
+            )}
           </div>
         </div>
       </div>
