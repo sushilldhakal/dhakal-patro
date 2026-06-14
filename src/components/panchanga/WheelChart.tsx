@@ -135,7 +135,7 @@ export function WheelChart({
     return `M${x1},${y1} A${r1},${r1} 0 ${large} 0 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${large} 1 ${x4},${y4} Z`;
   };
 
-  const { lagnaLon, sunLon, moonLon, moonNak, planetLons } = markers;
+  const { sunLon, moonLon, moonNak, planetLons } = markers;
 
   const nakSegs = [];
   const nakDecor = [];
