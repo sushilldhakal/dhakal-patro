@@ -443,65 +443,147 @@ export function WheelChart({
   }
 
   // ── Planet core ───────────────────────────────────────────────────────────
-  const core = [];
+  const core: React.ReactNode[] = [];
   if (tw.show_planets) {
+    // Radial gradients giving each planet a 3D sphere appearance
+    core.push(
+      <defs key="pdefs">
+        {/* 0 Sun */}
+        <radialGradient id="pg0" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#fff9c0"/><stop offset="35%" stopColor="#f9c800"/>
+          <stop offset="75%" stopColor="#e07000"/><stop offset="100%" stopColor="#8b3c00"/>
+        </radialGradient>
+        {/* 1 Moon */}
+        <radialGradient id="pg1" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#f6f8fa"/><stop offset="55%" stopColor="#b8c0cc"/>
+          <stop offset="100%" stopColor="#6a7480"/>
+        </radialGradient>
+        {/* 2 Mars */}
+        <radialGradient id="pg2" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#ff9870"/><stop offset="55%" stopColor="#c84830"/>
+          <stop offset="100%" stopColor="#6e1800"/>
+        </radialGradient>
+        {/* 3 Mercury */}
+        <radialGradient id="pg3" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#d8d4cc"/><stop offset="55%" stopColor="#989090"/>
+          <stop offset="100%" stopColor="#504848"/>
+        </radialGradient>
+        {/* 4 Jupiter */}
+        <radialGradient id="pg4" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#f0d898"/><stop offset="50%" stopColor="#c89840"/>
+          <stop offset="100%" stopColor="#7a5010"/>
+        </radialGradient>
+        {/* 5 Venus */}
+        <radialGradient id="pg5" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#fffae0"/><stop offset="50%" stopColor="#e8d870"/>
+          <stop offset="100%" stopColor="#a09020"/>
+        </radialGradient>
+        {/* 6 Saturn */}
+        <radialGradient id="pg6" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#f0e0b0"/><stop offset="50%" stopColor="#c4a060"/>
+          <stop offset="100%" stopColor="#7a5c28"/>
+        </radialGradient>
+        {/* 7 Rahu */}
+        <radialGradient id="pg7" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#7060c0"/><stop offset="55%" stopColor="#2a2060"/>
+          <stop offset="100%" stopColor="#080420"/>
+        </radialGradient>
+        {/* 8 Ketu */}
+        <radialGradient id="pg8" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#b06080"/><stop offset="55%" stopColor="#601828"/>
+          <stop offset="100%" stopColor="#1c0408"/>
+        </radialGradient>
+        {/* Earth */}
+        <radialGradient id="pg-earth" cx="38%" cy="32%" r="68%" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#a8f0d0"/><stop offset="45%" stopColor="#1f8f6f"/>
+          <stop offset="100%" stopColor="#0a3828"/>
+        </radialGradient>
+      </defs>
+    );
+
     [44, 70, 96, 120, 150, 178, 204, 216].forEach((r, k) =>
       core.push(<circle key={`orb${k}`} cx={CX} cy={CY} r={r * ORBIT_SCALE} className="w-orbit" />)
     );
+
     det.grahas.forEach((g, i) => {
       const meta = GRAHA_META[i]!;
       const lon = planetLons[i] ?? 0;
       const [px, py] = pol(lon, meta.orbit * ORBIT_SCALE);
-      const rad = "big" in meta && meta.big ? 13 : i === 1 ? 9 : 7;
+      const rad = "big" in meta && meta.big ? 15 : i === 1 ? 10 : 8;
+
+      // Ambient glow
       core.push(
-        <g key={`pl${i}`} style={{ pointerEvents: "none" }}>
-          <circle cx={px} cy={py} r={rad + 5} fill={meta.color} className="w-planet-glow" />
-          {"ring" in meta && meta.ring && (
-            <ellipse
-              cx={px}
-              cy={py}
-              rx={rad + 6}
-              ry={rad * 0.5}
-              fill="none"
-              stroke={meta.color}
-              strokeWidth="1.4"
-              opacity="0.8"
-              transform={`rotate(-18 ${px} ${py})`}
-            />
-          )}
-          <circle cx={px} cy={py} r={rad} fill={meta.color} />
-          <text
-            x={px}
-            y={py + 0.5}
-            textAnchor="middle"
-            dominantBaseline="central"
-            style={{
-              fontSize: rad * 1.2,
-              fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif',
-              fill: "rgba(0,0,0,.66)",
-            }}
-          >
-            {g.sym + "\uFE0E"}
-          </text>
-          <text x={px} y={py + rad + 8} textAnchor="middle" className="w-planet-name">
-            {g.ne}
-          </text>
-        </g>
+        <circle key={`pg${i}`} cx={px} cy={py} r={rad + 6} fill={meta.color}
+          className="w-planet-glow" style={{ pointerEvents: "none" }} />
+      );
+
+      // Sun: radiating spikes
+      if (i === 0) {
+        const rays: React.ReactNode[] = [];
+        for (let r = 0; r < 12; r++) {
+          const ang = (r * 30) * DEG;
+          const r1 = rad + 3, r2 = rad + (r % 2 === 0 ? 11 : 7);
+          rays.push(<line key={r}
+            x1={px + r1 * Math.sin(ang)} y1={py - r1 * Math.cos(ang)}
+            x2={px + r2 * Math.sin(ang)} y2={py - r2 * Math.cos(ang)}
+            stroke="#f9c800" strokeWidth="2.2" strokeLinecap="round" opacity="0.9" />);
+        }
+        core.push(<g key="sun-rays" style={{ pointerEvents: "none" }}>{rays}</g>);
+      }
+
+      // Saturn ring (behind planet body)
+      if ("ring" in meta && meta.ring) {
+        core.push(
+          <ellipse key={`ring${i}`} cx={px} cy={py} rx={rad + 8} ry={rad * 0.45}
+            fill="none" stroke={meta.color} strokeWidth="2.4" opacity="0.88"
+            transform={`rotate(-20 ${px} ${py})`} style={{ pointerEvents: "none" }} />
+        );
+      }
+
+      // Planet sphere with gradient
+      core.push(
+        <circle key={`pl${i}`} cx={px} cy={py} r={rad} fill={`url(#pg${i})`}
+          style={{ pointerEvents: "none" }} />
+      );
+
+      // Moon: dark overlay offset to create crescent
+      if (i === 1) {
+        core.push(
+          <circle key="moon-shd" cx={px + rad * 0.36} cy={py} r={rad * 0.82}
+            fill="rgba(14,18,34,0.65)" style={{ pointerEvents: "none" }} />
+        );
+      }
+
+      // Jupiter: horizontal dark bands (clipped to sphere)
+      if (i === 4) {
+        const clipId = `jclip${i}`;
+        core.push(
+          <g key={`jbands${i}`} style={{ pointerEvents: "none" }}>
+            <defs>
+              <clipPath id={clipId}><circle cx={px} cy={py} r={rad - 0.5} /></clipPath>
+            </defs>
+            {[-rad * 0.3, rad * 0.05, rad * 0.36].map((oy, bi) => (
+              <rect key={bi} x={px - rad} y={py + oy - 1.8} width={rad * 2} height={3.2}
+                fill="rgba(80,42,8,0.42)" clipPath={`url(#${clipId})`} />
+            ))}
+          </g>
+        );
+      }
+
+      // Name label
+      core.push(
+        <text key={`pn${i}`} x={px} y={py + rad + 9} textAnchor="middle"
+          className="w-planet-name" style={{ pointerEvents: "none" }}>
+          {g.ne}
+        </text>
       );
     });
+
+    // Earth at center
     core.push(
       <g key="earth" style={{ pointerEvents: "none" }}>
-        <circle cx={CX} cy={CY} r="11" fill="#1f6f63" />
-        <circle cx={CX} cy={CY} r="11" fill="none" stroke="#9fe0c8" strokeWidth="1" opacity="0.5" />
-        <text
-          x={CX}
-          y={CY + 0.5}
-          textAnchor="middle"
-          dominantBaseline="central"
-          style={{ fontSize: 12, fill: "#bdeede" }}
-        >
-          ♁
-        </text>
+        <circle cx={CX} cy={CY} r="13" fill="url(#pg-earth)" />
+        <circle cx={CX} cy={CY} r="13" fill="none" stroke="#9fe0c8" strokeWidth="0.8" opacity="0.5" />
       </g>
     );
   }
