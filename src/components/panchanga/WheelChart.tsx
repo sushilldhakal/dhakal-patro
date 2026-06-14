@@ -12,7 +12,7 @@ import {
   type WheelTweaks,
   WHEEL_RASHIS,
 } from "@/lib/wheel-data";
-import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, tithiNum } from "@/lib/tithi-wheel-data";
+import { KARANA_SEQ, karanaColor, WHEEL_TITHIS } from "@/lib/tithi-wheel-data";
 
 const DEG = Math.PI / 180;
 const CX = 500;
@@ -87,7 +87,6 @@ interface WheelChartProps {
   markers: WheelMarkers;
   spin: number;
   tw: WheelTweaks;
-  num: (n: number | string) => string | number;
   bsYear: number;
   sel: WheelPick | null;
   hover: WheelHover | null;
@@ -106,7 +105,6 @@ export function WheelChart({
   markers,
   spin,
   tw,
-  num,
   bsYear,
   sel,
   hover,

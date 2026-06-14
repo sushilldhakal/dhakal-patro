@@ -169,7 +169,6 @@ export function PanchangaWheel({
           markers={markers}
           spin={spin}
           tw={DEFAULT_WHEEL_TWEAKS}
-          num={num}
           bsYear={bsYear}
           sel={picked}
           hover={hover}
