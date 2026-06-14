@@ -21,10 +21,10 @@ const CY = 500;
 /** Scale factor applied to all planet orbit radii so inner tithi/karana rings fit. */
 const ORBIT_SCALE = 0.68;
 
-/** Inner tithi and karana ring radii (inside the rashi inner boundary). */
+/** Inner karana + tithi ring radii — karana is inside tithi, they share the R_KAR_O boundary. */
 const R_KAR_I = 152;
 const R_KAR_O = 178;
-const R_TIT_I = 181;
+const R_TIT_I = 178; // same as R_KAR_O — no gap between the two rings
 const R_TIT_O = 220;
 
 const R = {
@@ -97,6 +97,8 @@ interface WheelChartProps {
   onSpin: (deg: number) => void;
   zoom: number;
   onZoom: (z: number) => void;
+  pan: { x: number; y: number };
+  onPan: (x: number, y: number) => void;
 }
 
 export function WheelChart({
@@ -114,8 +116,14 @@ export function WheelChart({
   onSpin,
   zoom,
   onZoom,
+  pan,
+  onPan,
 }: WheelChartProps) {
-  const dragRef = useRef<{ a: number; spin0: number; moved: boolean } | null>(null);
+  const dragRef = useRef<
+    | { mode: "r"; a: number; spin0: number; moved: boolean }
+    | { mode: "p"; x0: number; y0: number; pan0x: number; pan0y: number; moved: boolean }
+    | null
+  >(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   /** Active pointer positions for pinch-to-zoom. */
   const ptrRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -135,7 +143,7 @@ export function WheelChart({
     return `M${x1},${y1} A${r1},${r1} 0 ${large} 0 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${large} 1 ${x4},${y4} Z`;
   };
 
-  const { sunLon, moonLon, moonNak, planetLons } = markers;
+  const { moonLon, moonNak, planetLons } = markers;
 
   const nakSegs = [];
   const nakDecor = [];
@@ -342,36 +350,6 @@ export function WheelChart({
         </text>
       </g>
     );
-    const [sx, sy] = pol(sunLon, R.rashiOut + 12);
-    markerNodes.push(
-      <g key="sunpip" style={{ pointerEvents: "none" }}>
-        <circle cx={sx} cy={sy} r="9" fill="#f2a81d" opacity="0.92" />
-        <text
-          x={sx}
-          y={sy + 0.5}
-          textAnchor="middle"
-          dominantBaseline="central"
-          style={{ fontSize: 12, fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif', fill: "#1a1205" }}
-        >
-          {"\u2609\uFE0E"}
-        </text>
-      </g>
-    );
-    const [mx, my] = pol(moonLon, R.rashiOut + 12);
-    markerNodes.push(
-      <g key="moonpip" style={{ pointerEvents: "none" }}>
-        <circle cx={mx} cy={my} r="9" fill="#d3dce4" opacity="0.94" />
-        <text
-          x={mx}
-          y={my + 0.5}
-          textAnchor="middle"
-          dominantBaseline="central"
-          style={{ fontSize: 12, fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif', fill: "#1a2430" }}
-        >
-          {"\u263E\uFE0E"}
-        </text>
-      </g>
-    );
   }
 
   // ── Inner tithi + karana rings ────────────────────────────────────────────
@@ -382,11 +360,10 @@ export function WheelChart({
     const curTithiIdx = Math.floor(elongation / 12);
     const curKarIdx = Math.floor(elongation / 6);
 
-    // Separator circles for the new inner rings
+    // Separator circles — shared boundary at R_KAR_O=R_TIT_I divides karana (inner) from tithi (outer)
     innerRings.push(
-      <circle key="ir-kar-o" cx={CX} cy={CY} r={R_KAR_O} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+      <circle key="ir-boundary" cx={CX} cy={CY} r={R_KAR_O} className="w-rim-circle" strokeWidth="1.1" opacity="0.75" />,
       <circle key="ir-kar-i" cx={CX} cy={CY} r={R_KAR_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
-      <circle key="ir-tit-i" cx={CX} cy={CY} r={R_TIT_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
     );
 
     // Karana ring — 60 segments × 6° each
@@ -445,21 +422,12 @@ export function WheelChart({
           />
           <RingLabel
             L={Lm}
-            r={R_TIT_I + 10}
-            cls={`w-tw-num${isCur ? " sel" : ""}`}
-            spin={spin}
-            size={isCur ? 9 : 7.5}
-          >
-            {num(tithiNum(i))}
-          </RingLabel>
-          <RingLabel
-            L={Lm}
-            r={R_TIT_I + 26}
+            r={(R_TIT_I + R_TIT_O) / 2}
             cls={`w-tw-name${isCur ? " sel" : ""}`}
             spin={spin}
-            size={isCur ? 8 : 6.5}
+            size={isCur ? 10 : 8}
           >
-            {tName.length > 5 ? tName.slice(0, 5) : tName}
+            {tName.length > 6 ? tName.slice(0, 6) : tName}
           </RingLabel>
         </g>
       );
@@ -559,9 +527,13 @@ export function WheelChart({
     ptrRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     e.currentTarget.setPointerCapture(e.pointerId);
     if (ptrRef.current.size === 1) {
-      dragRef.current = { a: angleAt(e), spin0: spin, moved: false };
+      if (zoom > 1) {
+        dragRef.current = { mode: "p", x0: e.clientX, y0: e.clientY, pan0x: pan.x, pan0y: pan.y, moved: false };
+      } else {
+        dragRef.current = { mode: "r", a: angleAt(e), spin0: spin, moved: false };
+      }
     } else {
-      // Two fingers: cancel rotation, start pinch
+      // Two fingers: cancel single-finger gesture, start pinch
       dragRef.current = null;
       pinchRef.current = { dist: pinchDist(), zoom0: zoom };
     }
@@ -572,16 +544,23 @@ export function WheelChart({
       if (pinchRef.current) {
         const d = pinchDist();
         if (d > 0) {
-          const next = Math.max(0.55, Math.min(2.8, pinchRef.current.zoom0 * (d / pinchRef.current.dist)));
+          const next = Math.max(0.55, Math.min(14, pinchRef.current.zoom0 * (d / pinchRef.current.dist)));
           onZoom(next);
         }
       }
       return;
     }
     if (!dragRef.current) return;
-    const d = angleAt(e) - dragRef.current.a;
-    if (Math.abs(d) > 1.2) dragRef.current.moved = true;
-    onSpin(dragRef.current.spin0 + d);
+    if (dragRef.current.mode === "p") {
+      const dx = e.clientX - dragRef.current.x0;
+      const dy = e.clientY - dragRef.current.y0;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.moved = true;
+      onPan(dragRef.current.pan0x + dx, dragRef.current.pan0y + dy);
+    } else {
+      const d = angleAt(e) - dragRef.current.a;
+      if (Math.abs(d) > 1.2) dragRef.current.moved = true;
+      onSpin(dragRef.current.spin0 + d);
+    }
   };
   const onUp = (e: React.PointerEvent<SVGSVGElement>) => {
     e.currentTarget.releasePointerCapture(e.pointerId);
@@ -596,7 +575,7 @@ export function WheelChart({
     <div
       className="w-svg-wrap"
       ref={wrapRef}
-      style={{ transform: `scale(${zoom})`, transformOrigin: "center", transition: "transform 0.12s ease-out" }}
+      style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: dragRef.current ? "none" : "transform 0.12s ease-out" }}
     >
       <svg
         viewBox="0 0 1000 1000"
@@ -640,9 +619,6 @@ export function WheelChart({
         {markerNodes}
         {hits}
 
-        <RingLabel L={295} r={R.rimOuter + 18} cls="w-year" spin={spin}>
-          {num(bsYear)}
-        </RingLabel>
       </svg>
     </div>
   );
