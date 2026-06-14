@@ -23,6 +23,7 @@ import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
+import { VedicDayCard } from "@/components/panchanga/VedicDayCard";
 import { PanchangaModeControls } from "@/components/panchanga/PanchangaModeControls";
 import {
   EphemerisModeBanner,
@@ -254,6 +255,8 @@ export function Panchanga() {
                 locationLabel={locationLabel}
               />
             )}
+
+            <VedicDayCard />
 
             {isLoading && (
               <div className="space-y-4">
