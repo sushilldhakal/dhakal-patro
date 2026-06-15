@@ -268,11 +268,20 @@ export const fetchBsToAd = (date: string) =>
 // ─── Kundali ──────────────────────────────────────────────────────────────────
 
 export const kundaliKeys = {
-  kundali: (date: string, era: string) => ["kundali", date, era] as const,
+  udaya: (date: string, era: string, location?: LocationParams) =>
+    ["kundali", "udaya", date, era, locationCacheKey(location)] as const,
+  atTime: (datetime: string, location?: LocationParams) =>
+    ["kundali", "at-time", datetime, locationCacheKey(location)] as const,
 };
 
-export const fetchKundali = (date: string, era: "bs" | "ad" = "ad") =>
-  get<KundaliResponse>(`/kundali/${date}?era=${era}`);
+export const fetchKundali = (
+  date: string,
+  era: "bs" | "ad" = "ad",
+  location?: LocationParams
+) =>
+  get<KundaliResponse>(
+    appendLocation(`/kundali/${date}?era=${era}`, location)
+  );
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -611,9 +620,11 @@ export interface ConvertBsToAd {
 export interface KundaliResponse {
   date_bs?: string;
   date_ad?: string;
+  location?: PanchangaDay["location"];
   sunrise?: { local_time_short?: string };
-  planets?: Record<string, PlanetInfo>;
-  planets_detail?: Record<string, object>;
+  planets?: Record<string, PlanetInfo | string>;
+  planets_detail?: Record<string, PlanetInfo & { rashi_name?: string; is_retrograde?: boolean }>;
+  lagna_note?: string;
 }
 
 export interface CalendarHeader {

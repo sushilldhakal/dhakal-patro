@@ -29,13 +29,15 @@ function pickBsDate(
 interface Props {
   date: Date;
   onDateChange: (d: Date) => void;
+  /** Replaces the आज button — used for kundali time/location controls */
+  centerSlot?: React.ReactNode;
 }
 
 function fmtAdFull(d: Date): string {
   return d.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
 }
 
-export function PanchangaDateNav({ date, onDateChange }: Props) {
+export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
   const bs = adToBS(date);
   const monthLen = getBSMonthLength(bs.year, bs.month);
 
@@ -112,13 +114,15 @@ export function PanchangaDateNav({ date, onDateChange }: Props) {
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button
-            type="button"
-            className="h-8 px-4 rounded-lg border-0 bg-secondary text-secondary-foreground text-[13.5px] font-semibold shadow-sm hover:brightness-105 active:translate-y-px transition"
-            onClick={goToday}
-          >
-            आज
-          </button>
+          {centerSlot ?? (
+            <button
+              type="button"
+              className="h-8 px-4 rounded-lg border-0 bg-secondary text-secondary-foreground text-[13.5px] font-semibold shadow-sm hover:brightness-105 active:translate-y-px transition"
+              onClick={goToday}
+            >
+              आज
+            </button>
+          )}
           <button
             type="button"
             className="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-border bg-card hover:bg-foreground/[0.06] transition-colors"

@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { MoonPhaseIcon } from "./MoonPhaseIcon";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { getBSMonthLength } from "@/lib/bs-calendar";
 import {
@@ -540,17 +541,18 @@ export function WheelChart({
         );
       }
 
-      // Planet sphere with gradient
-      core.push(
-        <circle key={`pl${i}`} cx={px} cy={py} r={rad} fill={`url(#pg${i})`}
-          style={{ pointerEvents: "none" }} />
-      );
-
-      // Moon: dark overlay offset to create crescent
-      if (i === 1) {
+      // Planet sphere with gradient (moon uses phase disc instead)
+      if (i !== 1) {
         core.push(
-          <circle key="moon-shd" cx={px + rad * 0.36} cy={py} r={rad * 0.82}
-            fill="rgba(14,18,34,0.65)" style={{ pointerEvents: "none" }} />
+          <circle key={`pl${i}`} cx={px} cy={py} r={rad} fill={`url(#pg${i})`}
+            style={{ pointerEvents: "none" }} />
+        );
+      } else {
+        const elongation = normDeg(markers.moonLon - markers.sunLon);
+        core.push(
+          <g key="moon-phase" transform={`translate(${px},${py})`} style={{ pointerEvents: "none" }}>
+            <MoonPhaseIcon elongation={elongation} r={rad} />
+          </g>
         );
       }
 

@@ -20,10 +20,10 @@ import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/Panchan
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
+import { HoraRing } from "@/components/panchanga/HoraRing";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
-import { VedicDayCard } from "@/components/panchanga/VedicDayCard";
 import { PanchangaModeControls } from "@/components/panchanga/PanchangaModeControls";
 import {
   EphemerisModeBanner,
@@ -245,18 +245,19 @@ export function Panchanga() {
             )}
 
             {wheelData && !isLoading && (
-              <PanchangaWheel
-                p={wheelData}
-                bsYear={bs.year}
-                bsMonthNe={bs.monthName}
-                bsDay={bs.day}
-                isToday={isToday}
-                timezone={effectiveTimezone}
-                locationLabel={locationLabel}
-              />
+              <>
+                <PanchangaWheel
+                  p={wheelData}
+                  bsYear={bs.year}
+                  bsMonthNe={bs.monthName}
+                  bsDay={bs.day}
+                  isToday={isToday}
+                  timezone={effectiveTimezone}
+                  locationLabel={locationLabel}
+                />
+                <HoraRing p={wheelData} isToday={isToday} timezone={effectiveTimezone} />
+              </>
             )}
-
-            <VedicDayCard />
 
             {isLoading && (
               <div className="space-y-4">

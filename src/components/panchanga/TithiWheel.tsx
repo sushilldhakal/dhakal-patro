@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import type { PanchangaDay } from "@/lib/api";
+import { MoonPhaseIcon } from "./MoonPhaseIcon";
 import {
   karanaColor,
   KARANA_SEQ,
@@ -30,26 +31,6 @@ const R = {
 
 function normDeg(d: number): number {
   return ((d % 360) + 360) % 360;
-}
-
-function moonPhasePath(E: number, r: number): string {
-  const e = normDeg(E);
-  const rx = Math.abs(Math.cos(e * DEG)) * r;
-  const litRight = e <= 180;
-  const gibbous = e > 90 && e < 270;
-  const outerSweep = litRight ? 1 : 0;
-  const termSweep = litRight ? (gibbous ? 1 : 0) : gibbous ? 0 : 1;
-  return `M0,${-r} A${r},${r} 0 0 ${outerSweep} 0,${r} A${rx.toFixed(2)},${r} 0 0 ${termSweep} 0,${-r} Z`;
-}
-
-function MoonPhase({ E, r }: { E: number; r: number }) {
-  const e = normDeg(E);
-  return (
-    <g>
-      <circle cx="0" cy="0" r={r} fill="#11181c" stroke="#4a5a60" strokeWidth="0.8" />
-      {e > 2 && e < 358 && <path d={moonPhasePath(E, r)} fill="#eef3f1" />}
-    </g>
-  );
 }
 
 interface RingLabelProps {
@@ -187,7 +168,7 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
           <circle cx={ix} cy={iy} r="20" fill="none" stroke="var(--w-accent)" strokeWidth="2" />
         )}
         <g transform={`translate(${ix},${iy})`}>
-          <MoonPhase E={Em} r={14.5} />
+          <MoonPhaseIcon elongation={Em} r={14.5} />
         </g>
         <RingLabel L={Lm} r={R.tnum} cls="w-tw-num" spin={spin}>
           {num(tithiNum(i))}
@@ -258,7 +239,7 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
         <div className="w-panel-head">
           <div className="w-panel-ico" style={{ display: "grid", placeItems: "center" }}>
             <svg viewBox="-18 -18 36 36" width="56" height="56">
-              <MoonPhase E={picked * 12 + 6} r={15} />
+              <MoonPhaseIcon elongation={picked * 12 + 6} r={15} />
             </svg>
           </div>
           <div>
@@ -328,7 +309,7 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
 
         <circle cx={mx} cy={my} r="13" fill="#11181c" />
         <g transform={`translate(${mx},${my})`}>
-          <MoonPhase E={curE} r={12} />
+          <MoonPhaseIcon elongation={curE} r={12} />
         </g>
         <line x1={CX} y1={CY} x2={mx} y2={my} className="w-core-sep" style={{ opacity: 0.5 }} />
         <circle cx={CX} cy={CY} r={R.earth} fill="#1f6f63" />
