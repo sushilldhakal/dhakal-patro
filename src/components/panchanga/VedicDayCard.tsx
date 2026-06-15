@@ -2,80 +2,108 @@ import { useEffect, useRef, useState } from "react";
 
 const D = Math.PI / 180;
 
-// Hora sequence (Chaldean): Sun Venus Mercury Moon Saturn Jupiter Mars
+// Chaldean hora sequence: Sun(0) Venus(1) Mercury(2) Moon(3) Saturn(4) Jupiter(5) Mars(6)
 const HORA = [
-  { ne: "रवि",   sh: "र॰", color: "#f9c800", lt: "#fff8c0", dk: "#b87800" },
-  { ne: "शुक्र", sh: "शु",  color: "#52c87a", lt: "#a0f0c0", dk: "#207840" },
-  { ne: "बुध",   sh: "बु",  color: "#d4a060", lt: "#f0d8a0", dk: "#885820" },
-  { ne: "सोम",   sh: "सो",  color: "#90b8d8", lt: "#c8e8f8", dk: "#3858a0" },
-  { ne: "शनि",   sh: "श॰",  color: "#6878a0", lt: "#a0a8c8", dk: "#2a3860" },
-  { ne: "गुरु",  sh: "गु",  color: "#4890d0", lt: "#88c8f0", dk: "#1850a0" },
-  { ne: "मङ्गल", sh: "म॰",  color: "#e05530", lt: "#f09070", dk: "#801010" },
+  { ne: "रवि",    color: "#f9c800", lt: "#fff8c0", dk: "#b87800" },
+  { ne: "शुक्र",  color: "#52c87a", lt: "#a0f0c0", dk: "#207840" },
+  { ne: "बुध",    color: "#c8a060", lt: "#f0d8a8", dk: "#805018" },
+  { ne: "सोम",    color: "#88b8d8", lt: "#c0e0f0", dk: "#385890" },
+  { ne: "शनि",    color: "#6878a0", lt: "#a0a8c8", dk: "#283860" },
+  { ne: "गुरु",   color: "#4890d0", lt: "#88c8f0", dk: "#1850a0" },
+  { ne: "मङ्गल",  color: "#e05030", lt: "#f09878", dk: "#801010" },
 ] as const;
 
+// weekday 0=Sun…6=Sat → first hora planet index
 const WD_START = [0, 3, 6, 2, 5, 1, 4] as const;
-const WD_NE    = ["आइत", "सोम", "मङ्ग", "बुध", "बिहि", "शुक्र", "शनि"] as const;
+const WD_NE    = ["आइत", "सोम", "मङ्गल", "बुध", "बिहि", "शुक्र", "शनि"] as const;
 const WD_FULL  = ["आइतबार", "सोमबार", "मङ्गलबार", "बुधबार", "बिहिबार", "शुक्रबार", "शनिबार"] as const;
 
-// Layout: rings centred at (CX, CY) inside a 360×345 canvas
-const CX = 148, CY = 172;
-const R0 = 32, RW = 13, RG = 2; // innermost ring inner-r, ring width, gap
+// Arc: right half-circle from sunrise (top) → noon (right) → sunset (bottom)
+// Center at left edge so the arc opens rightward
+const ACX = 14, ACY = 205;
+const R_IN = 112, R_OUT = 182, R_MID = 147;
 
-function rI(k: number) { return R0 + k * (RW + RG); }
-function rO(k: number) { return rI(k) + RW; }
+function hMidDeg(h: number) { return -90 + h * 15 + 7.5; }
 
-// Civil hour 0-23 → SVG angle; hour 6 (sunrise) maps to top (−π/2)
-function hAng(h: number) { return (h * 15 - 180) * D; }
+function hMidPt(h: number, r: number) {
+  const a = hMidDeg(h) * D;
+  return { x: ACX + r * Math.cos(a), y: ACY + r * Math.sin(a) };
+}
 
-function arcPath(r1: number, r2: number, a1: number, a2: number): string {
-  const [c1, s1, c2, s2] = [Math.cos(a1), Math.sin(a1), Math.cos(a2), Math.sin(a2)];
-  const lg = +(a2 - a1 > Math.PI);
+function segPath(h: number): string {
+  const a1 = (-90 + h * 15 + 0.7) * D;
+  const a2 = (-90 + h * 15 + 14.3) * D;
+  const [c1,s1,c2,s2] = [Math.cos(a1),Math.sin(a1),Math.cos(a2),Math.sin(a2)];
   return (
-    `M${CX+r1*c1},${CY+r1*s1}` +
-    `L${CX+r2*c1},${CY+r2*s1}` +
-    `A${r2},${r2},0,${lg},1,${CX+r2*c2},${CY+r2*s2}` +
-    `L${CX+r1*c2},${CY+r1*s2}` +
-    `A${r1},${r1},0,${lg},0,${CX+r1*c1},${CY+r1*s1}Z`
+    `M${ACX+R_IN*c1},${ACY+R_IN*s1}` +
+    `L${ACX+R_OUT*c1},${ACY+R_OUT*s1}` +
+    `A${R_OUT},${R_OUT},0,0,1,${ACX+R_OUT*c2},${ACY+R_OUT*s2}` +
+    `L${ACX+R_IN*c2},${ACY+R_IN*s2}` +
+    `A${R_IN},${R_IN},0,0,0,${ACX+R_IN*c1},${ACY+R_IN*s1}Z`
+  );
+}
+
+// Text arc path for textPath element
+function textPath(h: number): string {
+  // Always go clockwise; for lower half we reverse direction so text reads naturally
+  const lower = hMidDeg(h) > 0;
+  const a1 = (-90 + h * 15 + 1) * D;
+  const a2 = (-90 + h * 15 + 14) * D;
+  const [c1,s1,c2,s2] = [Math.cos(a1),Math.sin(a1),Math.cos(a2),Math.sin(a2)];
+  if (lower) {
+    // Reversed (counter-clockwise) so text reads left-to-right on bottom arc
+    return `M${ACX+R_MID*c2},${ACY+R_MID*s2}A${R_MID},${R_MID},0,0,0,${ACX+R_MID*c1},${ACY+R_MID*s1}`;
+  }
+  return `M${ACX+R_MID*c1},${ACY+R_MID*s1}A${R_MID},${R_MID},0,0,1,${ACX+R_MID*c2},${ACY+R_MID*s2}`;
+}
+
+function SunIcon({ cx, cy, r, dim }: { cx: number; cy: number; r: number; dim?: boolean }) {
+  return (
+    <g opacity={dim ? 0.55 : 1}>
+      {Array.from({ length: 8 }, (_, i) => {
+        const a = (i / 8) * 2 * Math.PI;
+        return (
+          <line key={i}
+            x1={cx + (r+2)*Math.cos(a)} y1={cy + (r+2)*Math.sin(a)}
+            x2={cx + (r+7)*Math.cos(a)} y2={cy + (r+7)*Math.sin(a)}
+            stroke={dim ? "#e08030" : "#f9c800"} strokeWidth="1.5" strokeLinecap="round" />
+        );
+      })}
+      <circle cx={cx} cy={cy} r={r}
+        fill={dim ? "#e08030" : "#f9c800"} />
+      <circle cx={cx-r*0.3} cy={cy-r*0.3} r={r*0.3}
+        fill={dim ? "#f0a050" : "#fff8c0"} opacity="0.5" />
+    </g>
   );
 }
 
 export function VedicDayCard() {
-  const [nowH, setNowH] = useState(() => {
-    const n = new Date();
-    return n.getHours() + n.getMinutes() / 60 + n.getSeconds() / 3600;
-  });
-  const raf = useRef<number>(0);
+  const todayWd = new Date().getDay();
+  const [animDay, setAnimDay] = useState(todayWd);
+  const [visible, setVisible] = useState(true);
+  const timer = useRef<number>(0);
 
   useEffect(() => {
-    const tick = () => {
-      const n = new Date();
-      setNowH(n.getHours() + n.getMinutes() / 60 + n.getSeconds() / 3600);
-      raf.current = requestAnimationFrame(tick);
-    };
-    raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
+    timer.current = window.setInterval(() => {
+      // brief fade → switch day → fade in
+      setVisible(false);
+      setTimeout(() => {
+        setAnimDay(d => (d + 1) % 7);
+        setVisible(true);
+      }, 350);
+    }, 2800);
+    return () => clearInterval(timer.current);
   }, []);
 
-  const today   = new Date();
-  const todayWd = today.getDay();
-  const curH    = Math.floor(nowH);
-  const needleA = hAng(nowH);
-  const outerR  = rO(6); // = 32 + 6*15 + 13 = 135
+  const base        = WD_START[animDay]!;
+  const firstPlanet = HORA[base]!;
 
-  // 7 rings: k=0 oldest (innermost), k=6 today (outermost)
-  const rings = Array.from({ length: 7 }, (_, k) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - (6 - k));
-    return { wd: d.getDay(), isToday: k === 6 };
-  });
+  // Arrow: from label area → outer edge of first hora
+  const arrowTip = hMidPt(0, R_OUT + 4);
 
-  const curPlanet   = HORA[(WD_START[todayWd]! + curH) % 7]!;
-  const labelX      = CX + outerR + 12;       // right of outermost ring
-  const needleEndR  = outerR + 18;
-
-  // Sun icon position helpers (top = sunrise, bottom = sunset)
-  const sunY_top = CY - outerR - 18;
-  const sunY_bot = CY + outerR + 18;
+  // Label position: right side, near top
+  const labelX = 320;
+  const labelY = 52;
 
   return (
     <div className="rounded-2xl border border-border overflow-hidden bg-card">
@@ -84,236 +112,205 @@ export function VedicDayCard() {
         <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
           होरा चक्र
         </div>
-        <div className="flex items-baseline gap-2">
-          <h3 className="font-bold text-base leading-tight">ग्रह–होरा चक्र</h3>
-          <span className="text-xs text-muted-foreground">{WD_FULL[todayWd]}</span>
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          अहिले:{" "}
-          <b style={{ color: curPlanet.color }}>{curPlanet.ne} होरा</b>
-          {" "}(घण्टा {curH}–{curH + 1})
+        <h3 className="font-bold text-sm leading-tight">
+          Weekdays with the first <i>hora</i>
+        </h3>
+        <p className="text-[11px] text-muted-foreground mt-0.5">
+          पहिलो होरा ग्रहले वारको नाम दिन्छ
         </p>
       </div>
 
-      {/* Wheel — responsive, full-width */}
-      <div className="w-full">
-        <svg
-          viewBox="0 0 360 345"
-          style={{ width: "100%", display: "block" }}
-          aria-label="ग्रह होरा चक्र"
-        >
-          {/* Full dark background */}
-          <rect width="360" height="345" fill="#080f1e" />
-
-          <defs>
-            {HORA.map((p, i) => (
-              <radialGradient key={i} id={`vhg${i}`} cx="34%" cy="28%" r="66%">
-                <stop offset="0%"   stopColor={p.lt} />
-                <stop offset="55%"  stopColor={p.color} />
-                <stop offset="100%" stopColor={p.dk} />
-              </radialGradient>
-            ))}
-            <filter id="vglow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="b" />
-              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id="vglow-sm" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="1.5" result="b" />
-              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-          </defs>
-
-          {/* Faint stars */}
-          {Array.from({ length: 22 }, (_, i) => {
-            const a = (i / 22) * 2 * Math.PI + i * 0.5;
-            const r = outerR + 10 + (i % 4) * 4;
-            return (
-              <circle
-                key={i}
-                cx={CX + r * Math.cos(a)} cy={CY + r * Math.sin(a)}
-                r={i % 5 === 0 ? 1.3 : 0.7}
-                fill="#fff" opacity={0.1 + (i % 3) * 0.1}
-              />
-            );
-          })}
-
-          {/* === RINGS === */}
-          {rings.map((ring, k) => {
-            const ri = rI(k), ro = rO(k);
-            const base = WD_START[ring.wd]!;
-            const isToday = ring.isToday;
-
-            return (
-              <g key={k}>
-                {Array.from({ length: 24 }, (_, h) => {
-                  const pi = (base + h) % 7;
-                  const p = HORA[pi]!;
-                  const a1 = hAng(h) + 0.6 * D;
-                  const a2 = hAng(h + 1) - 0.6 * D;
-                  const isCurHora = isToday && h === curH;
-                  const isPast    = isToday && h < curH;
-                  const opacity   = isCurHora ? 1 : isPast ? 0.28 : isToday ? 0.82 : 0.22 + k * 0.08;
-
-                  // midpoint of this segment for labelling
-                  const midA = hAng(h) + 7.5 * D;
-                  const midRk = (ri + ro) / 2;
-                  const tx = CX + midRk * Math.cos(midA);
-                  const ty = CY + midRk * Math.sin(midA);
-                  // text rotation: tangent to arc, flipped in bottom half
-                  const tDeg = midA / D + 90;
-                  const flip = midA > 0 && midA < Math.PI;
-
-                  return (
-                    <g key={h}>
-                      <path
-                        d={arcPath(ri, ro, a1, a2)}
-                        fill={isCurHora ? p.lt : p.color}
-                        opacity={opacity}
-                      />
-                      {/* Planet abbreviation inside TODAY's ring */}
-                      {isToday && (
-                        <text
-                          x={tx} y={ty}
-                          textAnchor="middle"
-                          dominantBaseline="central"
-                          fontSize="5.5"
-                          fontWeight={isCurHora ? "700" : "400"}
-                          fill={isCurHora ? "#080f1e" : "rgba(255,255,255,0.7)"}
-                          transform={`rotate(${flip ? tDeg + 180 : tDeg} ${tx} ${ty})`}
-                        >
-                          {p.sh}
-                        </text>
-                      )}
-                    </g>
-                  );
-                })}
-
-                {/* Ring divider */}
-                <circle cx={CX} cy={CY} r={ri} fill="none" stroke="#080f1e" strokeWidth="1.5" />
-
-                {/* Today's ring: bright highlight border */}
-                {isToday && (
-                  <circle cx={CX} cy={CY} r={ro} fill="none"
-                    stroke="#ffffff60" strokeWidth="1" />
+      {/* Planet icon strip — 7 planets, active one highlighted */}
+      <div className="grid grid-cols-7 border-b border-border">
+        {HORA.map((p, i) => {
+          const isActive = i === base;
+          return (
+            <div
+              key={i}
+              className="flex flex-col items-center py-2 gap-[3px] transition-all duration-300"
+              style={{ background: isActive ? p.color + "28" : undefined }}
+            >
+              <svg width="28" height="28" viewBox="0 0 28 28">
+                <defs>
+                  <radialGradient id={`vps${i}`} cx="34%" cy="28%" r="66%">
+                    <stop offset="0%"   stopColor={p.lt} />
+                    <stop offset="55%"  stopColor={p.color} />
+                    <stop offset="100%" stopColor={p.dk} />
+                  </radialGradient>
+                </defs>
+                <circle cx="14" cy="14" r="12" fill={`url(#vps${i})`} />
+                <circle cx="10" cy="10" r="3.5" fill={p.lt} opacity="0.45" />
+                {/* Saturn ring */}
+                {i === 4 && (
+                  <ellipse cx="14" cy="14" rx="16" ry="5"
+                    fill="none" stroke={p.color} strokeWidth="2.2" opacity="0.55"
+                    transform="rotate(-20 14 14)" />
                 )}
-              </g>
-            );
-          })}
+                {/* Jupiter bands */}
+                {i === 5 && [10,14,18].map(y => (
+                  <line key={y} x1="3" y1={y} x2="25" y2={y}
+                    stroke="#1a3860" strokeWidth="1.5" opacity="0.22"
+                    clipPath="inset(0 round 50%)" />
+                ))}
+              </svg>
+              <span
+                className="text-[8px] font-medium leading-none"
+                style={{ color: isActive ? p.dk : undefined }}
+              >
+                {p.ne}
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
-          {/* Outer ring border */}
-          <circle cx={CX} cy={CY} r={outerR} fill="none" stroke="#080f1e" strokeWidth="1.5" />
+      {/* Main arc SVG — fully responsive */}
+      <svg
+        viewBox="0 0 340 415"
+        style={{ width: "100%", display: "block", transition: "opacity 0.3s" }}
+        opacity={visible ? 1 : 0}
+      >
+        <defs>
+          {/* Gradient for each planet (for legend spheres) */}
+          {HORA.map((p, i) => (
+            <radialGradient key={i} id={`vhg${i}`} cx="34%" cy="28%" r="66%">
+              <stop offset="0%"   stopColor={p.lt} />
+              <stop offset="55%"  stopColor={p.color} />
+              <stop offset="100%" stopColor={p.dk} />
+            </radialGradient>
+          ))}
+          {/* textPath definitions for each segment */}
+          {Array.from({ length: 12 }, (_, h) => (
+            <path key={h} id={`vtp${h}`} d={textPath(h)} />
+          ))}
+          {/* Arrow marker */}
+          <marker id="varr" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 L1.5,3.5Z" fill="var(--muted-foreground)" />
+          </marker>
+        </defs>
 
-          {/* === CENTER: current hora info === */}
-          <circle cx={CX} cy={CY} r={R0 - 2} fill="#0d1a30" />
-          <circle cx={CX} cy={CY} r={R0 - 2} fill="none" stroke="#ffffff18" strokeWidth="0.8" />
-          {/* Planet sphere icon */}
-          <circle cx={CX} cy={CY - 10} r={8} fill={`url(#vhg${(WD_START[todayWd]! + curH) % 7})`} filter="url(#vglow-sm)" />
-          <circle cx={CX - 2} cy={CY - 12} r={2.5} fill={curPlanet.lt} opacity="0.45" />
-          {/* Planet name */}
-          <text x={CX} y={CY + 6} textAnchor="middle" fontSize="7" fontWeight="700" fill="#ffffffee">
-            {curPlanet.ne}
-          </text>
+        {/* Background track (faint arc band) */}
+        <path
+          d={`M${ACX},${ACY-R_OUT-3}A${R_OUT+3},${R_OUT+3},0,0,1,${ACX},${ACY+R_OUT+3}L${ACX},${ACY+R_IN-3}A${R_IN-3},${R_IN-3},0,0,0,${ACX},${ACY-R_IN+3}Z`}
+          fill="var(--muted)" opacity="0.3"
+        />
 
-          {/* === SUN markers === */}
-          {/* Sunrise (top) */}
-          <circle cx={CX} cy={sunY_top} r={10} fill="url(#vhg0)" filter="url(#vglow-sm)" />
-          <circle cx={CX - 3} cy={sunY_top - 3} r={3} fill="#fff8c0" opacity="0.5" />
-          {Array.from({ length: 8 }, (_, i) => {
-            const a = (i / 8) * 2 * Math.PI;
-            return (
-              <line key={i}
-                x1={CX + 12 * Math.cos(a)} y1={sunY_top + 12 * Math.sin(a)}
-                x2={CX + 17 * Math.cos(a)} y2={sunY_top + 17 * Math.sin(a)}
-                stroke="#f9c800" strokeWidth="1.4" strokeLinecap="round" opacity="0.75"
-              />
-            );
-          })}
-          <text x={CX} y={sunY_top - 22} textAnchor="middle" fontSize="8" fontWeight="700" fill="#f9c800">
-            सूर्योदय
-          </text>
-
-          {/* Sunset (bottom) */}
-          <circle cx={CX} cy={sunY_bot} r={10} fill="url(#vhg0)" opacity="0.55" filter="url(#vglow-sm)" />
-          <text x={CX} y={sunY_bot + 22} textAnchor="middle" fontSize="8" fontWeight="700" fill="#e08040">
-            सूर्यास्त
-          </text>
-
-          {/* Noon / midnight hints */}
-          <text x={CX + outerR + 6} y={CY + 4} fontSize="7" fill="#ffffff35">मध्याह्न</text>
-          <text x={CX - outerR - 5} y={CY + 4} textAnchor="end" fontSize="7" fill="#ffffff20">अर्धरात्रि</text>
-
-          {/* === DAY LABELS on right === */}
-          {rings.map((ring, k) => {
-            // Connect from right-side midpoint of ring to staggered label
-            const mr = (rI(k) + rO(k)) / 2;
-            const lx = labelX;
-            const ly = CY - 48 + k * 16;
-            const isToday = ring.isToday;
-            return (
-              <g key={`dl${k}`}>
-                <line
-                  x1={CX + mr} y1={CY}
-                  x2={lx - 4} y2={ly + 4}
-                  stroke={isToday ? "#ffffff90" : "#ffffff22"}
-                  strokeWidth={isToday ? 0.9 : 0.5}
-                />
-                <text
-                  x={lx} y={ly + 8}
-                  fontSize={isToday ? 10.5 : 8}
-                  fontWeight={isToday ? "700" : "400"}
-                  fill={isToday ? "#ffffffee" : "#ffffff45"}
-                >
-                  {WD_NE[ring.wd]}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* === Planet legend (right side, below day labels) === */}
-          {HORA.map((p, i) => {
-            const lx = labelX;
-            const ly = CY + 60 + i * 20;
-            return (
-              <g key={`hl${i}`}>
-                <circle cx={lx + 6} cy={ly} r={6} fill={`url(#vhg${i})`} />
-                <circle cx={lx + 4} cy={ly - 2} r={2} fill={p.lt} opacity="0.45" />
-                <text x={lx + 16} y={ly + 4} fontSize="8.5" fill="#ffffffcc">
+        {/* 12 hora arc segments */}
+        {Array.from({ length: 12 }, (_, h) => {
+          const pi    = (base + h) % 7;
+          const p     = HORA[pi]!;
+          const isFst = h === 0;
+          return (
+            <g key={h}>
+              <path d={segPath(h)} fill={p.color} opacity={isFst ? 1 : 0.65} />
+              <text
+                fontSize={isFst ? 9 : 7.5}
+                fontWeight={isFst ? "700" : "500"}
+                fill="white"
+              >
+                <textPath href={`#vtp${h}`} startOffset="50%" textAnchor="middle">
                   {p.ne}
-                </text>
-              </g>
-            );
-          })}
+                </textPath>
+              </text>
+            </g>
+          );
+        })}
 
-          {/* === Time needle === */}
-          <line
-            x1={CX} y1={CY}
-            x2={CX + needleEndR * Math.cos(needleA)}
-            y2={CY + needleEndR * Math.sin(needleA)}
-            stroke="#ffffff"
-            strokeWidth="1.3"
-            strokeDasharray="4 3"
-            filter="url(#vglow)"
-            opacity="0.85"
-          />
-          {/* Needle tip dot */}
-          <circle
-            cx={CX + needleEndR * Math.cos(needleA)}
-            cy={CY + needleEndR * Math.sin(needleA)}
-            r="3" fill={curPlanet.color} opacity="0.95"
-          />
-          {/* Center hub */}
-          <circle cx={CX} cy={CY} r={R0 - 2} fill="none" />
-          <circle cx={CX} cy={CY} r="3.5" fill="#fff" opacity="0.9" />
-          <circle cx={CX} cy={CY} r="1.5" fill="#080f1e" />
-        </svg>
-      </div>
+        {/* Sunrise: top of arc */}
+        <SunIcon cx={ACX + 2} cy={ACY - R_OUT - 16} r={10} />
+        <text x={ACX + 18} y={ACY - R_OUT - 12} fontSize="9" fontWeight="600" fill="var(--foreground)">
+          Sunrise
+        </text>
 
-      {/* Footer: explanation */}
-      <div className="px-4 pb-4 pt-1 text-[11px] text-muted-foreground border-t border-border flex flex-wrap gap-x-4 gap-y-1">
-        <span>● सफेद रेखा = अहिलेको समय</span>
-        <span>● बाहिरी रिङ = आज ({WD_FULL[todayWd]})</span>
-        <span>● माथि = सूर्योदय · तल = सूर्यास्त</span>
-      </div>
+        {/* Sunset: bottom of arc */}
+        <SunIcon cx={ACX + 2} cy={ACY + R_OUT + 16} r={10} dim />
+        <text x={ACX + 18} y={ACY + R_OUT + 20} fontSize="9" fontWeight="600" fill="var(--foreground)">
+          Sunset
+        </text>
+
+        {/* Noon tick at right */}
+        <line
+          x1={ACX + R_OUT + 2} y1={ACY}
+          x2={ACX + R_OUT + 10} y2={ACY}
+          stroke="var(--muted-foreground)" strokeWidth="1"
+        />
+        <text x={ACX + R_OUT + 14} y={ACY + 4} fontSize="8" fill="var(--muted-foreground)">Noon</text>
+
+        {/* Day label + arrow → first hora */}
+        <text
+          x={labelX} y={labelY - 10}
+          textAnchor="end"
+          fontSize="15"
+          fontWeight="700"
+          fill="var(--foreground)"
+        >
+          {WD_FULL[animDay]}
+        </text>
+        <text
+          x={labelX} y={labelY + 7}
+          textAnchor="end"
+          fontSize="9"
+          fontWeight="600"
+          fill={firstPlanet.color}
+        >
+          {firstPlanet.ne} — पहिलो होरा
+        </text>
+        {/* Dashed arrow line from label → first hora */}
+        <line
+          x1={labelX - 2} y1={labelY + 14}
+          x2={arrowTip.x + 6} y2={arrowTip.y + 2}
+          stroke="var(--muted-foreground)"
+          strokeWidth="1.2"
+          strokeDasharray="4 3"
+          markerEnd="url(#varr)"
+        />
+
+        {/* Planet legend: colored spheres + names on right */}
+        {HORA.map((p, i) => {
+          const lx = 210, ly = 150 + i * 26;
+          const isAct = i === base;
+          return (
+            <g key={i} opacity={isAct ? 1 : 0.55}>
+              <circle cx={lx + 7} cy={ly} r={7} fill={`url(#vhg${i})`} />
+              <circle cx={lx + 5} cy={ly - 2} r={2.2} fill={p.lt} opacity="0.45" />
+              <text x={lx + 18} y={ly + 4} fontSize="9" fill="var(--foreground)" fontWeight={isAct ? "700" : "400"}>
+                {p.ne}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Day chips — 7 buttons at bottom showing week */}
+        {Array.from({ length: 7 }, (_, k) => {
+          const chipW = 42, gap = 4;
+          const totalW = 7 * chipW + 6 * gap;
+          const sx = (340 - totalW) / 2 + k * (chipW + gap);
+          const isAnim  = k === animDay;
+          const isToday = k === todayWd;
+          const p = HORA[WD_START[k]!]!;
+          return (
+            <g key={k}>
+              <rect
+                x={sx} y={393}
+                width={chipW} height={18} rx={9}
+                fill={isAnim ? p.color : "transparent"}
+                stroke={isAnim ? p.color : isToday ? p.color : "var(--border)"}
+                strokeWidth={isToday || isAnim ? 1.5 : 0.8}
+                opacity={isAnim ? 0.9 : isToday ? 0.7 : 0.5}
+              />
+              <text
+                x={sx + chipW / 2} y={406}
+                textAnchor="middle"
+                fontSize="7.5"
+                fontWeight={isAnim ? "700" : "400"}
+                fill={isAnim ? "white" : "var(--foreground)"}
+              >
+                {WD_NE[k]}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
