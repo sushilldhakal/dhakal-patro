@@ -11,7 +11,7 @@ const HORA = [
   { ne: "शनि",    color: "#6878a0", lt: "#a0a8c8", dk: "#283860" },
   { ne: "गुरु",   color: "#4890d0", lt: "#88c8f0", dk: "#1850a0" },
   { ne: "मङ्गल",  color: "#e05030", lt: "#f09878", dk: "#801010" },
-] as const;
+];
 
 // weekday (0=Sun..6=Sat) → first hora planet index
 const WD_START = [0, 3, 6, 2, 5, 1, 4] as const;
@@ -227,7 +227,7 @@ export function VedicDayCard() {
         </text>
 
         {/* Sunset (bottom) */}
-        <Sphere x={CX} y={CY + R_OUT + 20} r={10} p={{ ...HORA[0]!, color: "#e08030", lt: "#f0c080" }} />
+        <Sphere x={CX} y={CY + R_OUT + 20} r={10} p={{ ne: "सूर्यास्त", color: "#e08030", lt: "#f0c080", dk: "#804010" }} />
         <text x={CX} y={CY + R_OUT + 36} textAnchor="middle"
           fontSize="8.5" fontWeight="600" fill="var(--foreground)">
           Sunset
