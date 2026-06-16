@@ -101,7 +101,6 @@ interface WheelChartProps {
   onZoom: (z: number) => void;
   pan: { x: number; y: number };
   onPan: (x: number, y: number) => void;
-  svgRef?: React.RefObject<SVGSVGElement | null>;
 }
 
 export function WheelChart({
@@ -120,7 +119,6 @@ export function WheelChart({
   onZoom,
   pan,
   onPan,
-  svgRef,
 }: WheelChartProps) {
   const dragRef = useRef<
     | { mode: "r"; a: number; spin0: number; moved: boolean }
@@ -317,28 +315,6 @@ export function WheelChart({
         style={{ pointerEvents: "none" }}
       />
     );
-    const [sx, sy] = pol(sunLon, R.bsOut - 2);
-    markerNodes.push(<line key="sun-line" x1={CX} y1={CY} x2={sx} y2={sy} className="w-lagna-line" />);
-    markerNodes.push(
-      <g key="sun-cap" transform={`rotate(${-(sunLon + spin)} ${CX} ${CY})`}>
-        <circle cx={CX} cy={CY - (R.bsOut - 2)} r="3.4" className="w-lagna-cap" />
-        <text
-          x={CX}
-          y={CY - (R.bsOut + 5)}
-          textAnchor="middle"
-          dominantBaseline="central"
-          className="w-label"
-          style={{ fontSize: 14, fill: "#f9c800", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
-          transform={
-            normDeg(sunLon + spin) > 90 && normDeg(sunLon + spin) < 270
-              ? `rotate(180 ${CX} ${CY - (R.bsOut + 5)})`
-              : undefined
-          }
-        >
-          {"☀"}
-        </text>
-      </g>
-    );
     const [lx, ly] = pol(moonLon, R.bsOut - 2);
     markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className="w-lagna-line" />);
     markerNodes.push(
@@ -350,7 +326,7 @@ export function WheelChart({
           textAnchor="middle"
           dominantBaseline="central"
           className="w-label"
-          style={{ fontSize: 14, fill: "var(--w-accent)", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
+          style={{ fontSize: 14, fill: "#f9c800", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
           transform={
             normDeg(moonLon + spin) > 90 && normDeg(moonLon + spin) < 270
               ? `rotate(180 ${CX} ${CY - (R.bsOut + 5)})`
@@ -713,7 +689,6 @@ export function WheelChart({
       style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: dragRef.current ? "none" : "transform 0.12s ease-out" }}
     >
       <svg
-        ref={svgRef}
         viewBox="42 42 916 916"
         className={`w-svg${dragRef.current?.moved ? " dragging" : ""}`}
         onPointerDown={onDown}

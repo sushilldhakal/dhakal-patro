@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { fetchPanchanga, panchangaKeys } from "@/lib/api";
@@ -72,6 +72,7 @@ export function PanchangaYear() {
     queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
     queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
+    placeholderData: keepPreviousData,
   });
 
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);

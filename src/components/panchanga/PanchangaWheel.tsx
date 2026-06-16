@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Copy } from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
@@ -12,7 +11,6 @@ import {
   type WheelDetail,
 } from "@/lib/wheel-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { exportWheelImage } from "@/lib/export-svg";
 import { WheelChart, type WheelHover, type WheelPick } from "./WheelChart";
 import { WheelPanel } from "./WheelPanel";
 
@@ -46,20 +44,6 @@ export function PanchangaWheel({
   const [hover, setHover] = useState<WheelHover | null>(null);
   const [tip, setTip] = useState({ x: 0, y: 0 });
   const [scrubPinned, setScrubPinned] = useState(false);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [exportStatus, setExportStatus] = useState<"copied" | "downloaded" | null>(null);
-
-  const handleExport = useCallback(async () => {
-    if (!svgRef.current) return;
-    try {
-      const result = await exportWheelImage(svgRef.current);
-      setExportStatus(result);
-    } catch {
-      setExportStatus(null);
-    } finally {
-      setTimeout(() => setExportStatus(null), 2200);
-    }
-  }, []);
 
   const handleZoom = useCallback((z: number) => {
     const next = Math.max(0.55, Math.min(14, z));
@@ -200,7 +184,6 @@ export function PanchangaWheel({
           onZoom={handleZoom}
           pan={pan}
           onPan={handlePan}
-          svgRef={svgRef}
         />
 
         {tipNode}
@@ -292,21 +275,8 @@ export function PanchangaWheel({
                 1:1
               </button>
             )}
-            <button
-              type="button"
-              className="w-iconbtn"
-              title="चक्र प्रतिलिपि गर्नुहोस्"
-              onClick={handleExport}
-            >
-              {exportStatus ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            </button>
           </div>
         </div>
-        {exportStatus && (
-          <div className="w-tip show" style={{ left: "50%", bottom: 64, transform: "translateX(-50%)" }}>
-            {exportStatus === "copied" ? "तस्बिर क्लिपबोर्डमा प्रतिलिपि भयो" : "तस्बिर डाउनलोड भयो"}
-          </div>
-        )}
       </div>
     </div>
   );

@@ -2290,12 +2290,12 @@
 .pn-wheel .w-rashi-glyph { fill: var(--w-ink); font-weight: 400; }
 
 .pn-wheel .w-lagna-line {
-  stroke: var(--w-accent);
+  stroke: #f9c800;
   stroke-width: 1.4;
   stroke-dasharray: 3 4;
-  opacity: 0.85;
+  opacity: 0.9;
 }
-.pn-wheel .w-lagna-cap { fill: var(--w-accent); }
+.pn-wheel .w-lagna-cap { fill: #f9c800; }
 
 .pn-wheel .w-orbit {
   fill: none;
