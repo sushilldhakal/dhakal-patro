@@ -101,6 +101,7 @@ interface WheelChartProps {
   onZoom: (z: number) => void;
   pan: { x: number; y: number };
   onPan: (x: number, y: number) => void;
+  svgRef?: React.RefObject<SVGSVGElement | null>;
 }
 
 export function WheelChart({
@@ -119,6 +120,7 @@ export function WheelChart({
   onZoom,
   pan,
   onPan,
+  svgRef,
 }: WheelChartProps) {
   const dragRef = useRef<
     | { mode: "r"; a: number; spin0: number; moved: boolean }
@@ -144,7 +146,8 @@ export function WheelChart({
     return `M${x1},${y1} A${r1},${r1} 0 ${large} 0 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${large} 1 ${x4},${y4} Z`;
   };
 
-  const { moonLon, moonNak, planetLons } = markers;
+  const { moonLon, moonNak, planetLons, sunLon } = markers;
+  const sunRashiIdx = Math.floor(normDeg(sunLon) / 30);
 
   const nakSegs = [];
   const nakDecor = [];
@@ -295,6 +298,46 @@ export function WheelChart({
         className="w-seg-now"
         style={{ pointerEvents: "none" }}
       />
+    );
+    const rL0 = sunRashiIdx * 30;
+    const rL1 = rL0 + 30;
+    markerNodes.push(
+      <path
+        key="nowwedge-rashi"
+        d={arcSeg(rL0, rL1, R.rashiIn, R.rashiOut)}
+        className="w-seg-now"
+        style={{ pointerEvents: "none" }}
+      />
+    );
+    markerNodes.push(
+      <path
+        key="nowwedge-month"
+        d={arcSeg(rL0, rL1, R.bsIn, R.bsOut)}
+        className="w-seg-now"
+        style={{ pointerEvents: "none" }}
+      />
+    );
+    const [sx, sy] = pol(sunLon, R.bsOut - 2);
+    markerNodes.push(<line key="sun-line" x1={CX} y1={CY} x2={sx} y2={sy} className="w-lagna-line" />);
+    markerNodes.push(
+      <g key="sun-cap" transform={`rotate(${-(sunLon + spin)} ${CX} ${CY})`}>
+        <circle cx={CX} cy={CY - (R.bsOut - 2)} r="3.4" className="w-lagna-cap" />
+        <text
+          x={CX}
+          y={CY - (R.bsOut + 5)}
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="w-label"
+          style={{ fontSize: 14, fill: "#f9c800", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
+          transform={
+            normDeg(sunLon + spin) > 90 && normDeg(sunLon + spin) < 270
+              ? `rotate(180 ${CX} ${CY - (R.bsOut + 5)})`
+              : undefined
+          }
+        >
+          {"☀"}
+        </text>
+      </g>
     );
     const [lx, ly] = pol(moonLon, R.bsOut - 2);
     markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className="w-lagna-line" />);
@@ -670,6 +713,7 @@ export function WheelChart({
       style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: dragRef.current ? "none" : "transform 0.12s ease-out" }}
     >
       <svg
+        ref={svgRef}
         viewBox="42 42 916 916"
         className={`w-svg${dragRef.current?.moved ? " dragging" : ""}`}
         onPointerDown={onDown}
@@ -698,7 +742,13 @@ export function WheelChart({
           ))}
         {tw.show_lunar &&
           bsMonths.map((m, i) => (
-            <RingLabel key={`b${i}`} L={i * 30 + 15} r={R.bsMid} cls="w-month-ne" spin={spin}>
+            <RingLabel
+              key={`b${i}`}
+              L={i * 30 + 15}
+              r={R.bsMid}
+              cls={`w-month-ne${tw.show_today && i === sunRashiIdx ? " now" : ""}`}
+              spin={spin}
+            >
               {m.ne}
             </RingLabel>
           ))}

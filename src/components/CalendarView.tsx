@@ -8,7 +8,14 @@ import {
   holidayKeys,
   type CalendarDay,
 } from "@/lib/api";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, getCurrentBs, bsMonthLabel } from "@/lib/bs-calendar";
+import {
+  BS_MONTH_NAMES,
+  BS_MONTHS_NE,
+  BS_SUPPORTED_END_YEAR,
+  BS_SUPPORTED_START_YEAR,
+  getCurrentBs,
+  bsMonthLabel,
+} from "@/lib/bs-calendar";
 import {
   applyHolidaysToDays,
   buildLocalMonthDays,
@@ -18,7 +25,10 @@ import {
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { DayDetailModal } from "./DayDetailModal";
 
-const BS_YEAR_OPTIONS = Array.from({ length: 51 }, (_, i) => 2060 + i);
+const BS_YEAR_OPTIONS = Array.from(
+  { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
+  (_, i) => BS_SUPPORTED_START_YEAR + i
+);
 
 interface Props {
   onDaySelect?: (day: CalendarDay | null) => void;
@@ -83,6 +93,7 @@ export function CalendarView({
   }
 
   function prev() {
+    if (month === 1 && year <= BS_SUPPORTED_START_YEAR) return;
     setSelected(null);
     onDaySelect?.(null);
     if (month === 1) {
@@ -92,6 +103,7 @@ export function CalendarView({
   }
 
   function nextMonth() {
+    if (month === 12 && year >= BS_SUPPORTED_END_YEAR) return;
     setSelected(null);
     onDaySelect?.(null);
     if (month === 12) {
@@ -186,13 +198,25 @@ export function CalendarView({
         </select>
 
         <div className="pn-navgroup">
-          <button type="button" className="pn-iconbtn" onClick={prev} aria-label="Previous month">
+          <button
+            type="button"
+            className="pn-iconbtn"
+            onClick={prev}
+            disabled={month === 1 && year <= BS_SUPPORTED_START_YEAR}
+            aria-label="Previous month"
+          >
             <ChevronLeft size={16} strokeWidth={1.8} />
           </button>
           <button type="button" className="pn-todaybtn" onClick={goToday}>
             आज
           </button>
-          <button type="button" className="pn-iconbtn" onClick={nextMonth} aria-label="Next month">
+          <button
+            type="button"
+            className="pn-iconbtn"
+            onClick={nextMonth}
+            disabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
+            aria-label="Next month"
+          >
             <ChevronRight size={16} strokeWidth={1.8} />
           </button>
         </div>
