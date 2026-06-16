@@ -608,13 +608,16 @@ export function getPlanetsAnchorLabel(p: PanchangaDay): string {
 
 export function getLagnaDisplay(
   p: PanchangaDay
-): { nameNe: string; degree?: string } | undefined {
+): { nameNe: string; degree?: string; longitude?: number } | undefined {
   const detail = getPanchangaDetail(p);
   const lagna = (
     p.mode === "ephemeris"
       ? (detail?.instant_lagna ?? p.lagna)
       : detail?.lagna ?? p.lagna
-  ) as { name_ne?: string; name?: string; degree_in_rashi?: number } | string | undefined;
+  ) as
+    | { name_ne?: string; name?: string; degree_in_rashi?: number; longitude?: number }
+    | string
+    | undefined;
   if (!lagna) return undefined;
   if (typeof lagna === "string") {
     return { nameNe: lagna };
@@ -625,7 +628,7 @@ export function getLagnaDisplay(
     lagna.degree_in_rashi != null
       ? toNepaliDigits(lagna.degree_in_rashi.toFixed(1))
       : undefined;
-  return { nameNe, degree };
+  return { nameNe, degree, longitude: lagna.longitude };
 }
 
 function planetDegreeCells(info: PlanetDetail): string {
