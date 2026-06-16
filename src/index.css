@@ -2297,6 +2297,13 @@
 }
 .pn-wheel .w-lagna-cap { fill: var(--w-accent); }
 
+.pn-wheel .w-sun-tick {
+  stroke: #f9c800;
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
 .pn-wheel .w-orbit {
   fill: none;
   stroke: color-mix(in srgb, #8fbfc1 14%, transparent);

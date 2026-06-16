@@ -134,6 +134,7 @@ export function PanchangaYear() {
           <PanchangaWheel
             p={data}
             bsYear={year}
+            bsMonth={bsMonth}
             bsMonthNe={BS_MONTHS_NE[bsMonth - 1]!}
             bsDay={bsDay}
             isToday={isToday}

@@ -250,6 +250,7 @@ export function Panchanga() {
                 <PanchangaWheel
                   p={wheelData}
                   bsYear={bs.year}
+                  bsMonth={bs.month}
                   bsMonthNe={bs.monthName}
                   bsDay={bs.day}
                   isToday={isToday}
