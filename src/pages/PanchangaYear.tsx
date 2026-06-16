@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { fetchPanchanga, panchangaKeys } from "@/lib/api";
@@ -45,28 +45,49 @@ function dayOfYearFromBs(year: number, month: number, day: number): number {
   return d;
 }
 
+function adDateStrForDay(year: number, dayOfYear: number): string {
+  const { month, day } = bsMonthDayFromDayOfYear(year, dayOfYear);
+  const date = bsToAD(year, month, day);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** How long to wait after the slider stops moving before fetching that day's data. */
+const SCRUB_DEBOUNCE_MS = 180;
+
 export function PanchangaYear() {
   const { location, setLocation } = usePanchangaLocation();
+  const queryClient = useQueryClient();
   const todayBs = useMemo(() => adToBS(new Date()), []);
   const [year, setYear] = useState(() => getCurrentBs().year);
   const [dayOfYear, setDayOfYear] = useState(() =>
     dayOfYearFromBs(todayBs.year, todayBs.month, todayBs.day)
   );
+  // Decoupled from dayOfYear so the slider thumb tracks the pointer instantly
+  // while the (much heavier) network fetch only fires once dragging settles —
+  // otherwise every day crossed while dragging fires its own request and they
+  // all queue up behind each other.
+  const [queryDay, setQueryDay] = useState(dayOfYear);
 
   const totalDays = useMemo(() => daysInBsYear(year), [year]);
   const clampedDay = Math.min(dayOfYear, totalDays);
-  const { month: bsMonth, day: bsDay } = useMemo(
-    () => bsMonthDayFromDayOfYear(year, clampedDay),
-    [year, clampedDay]
-  );
-  const date = useMemo(() => bsToAD(year, bsMonth, bsDay), [year, bsMonth, bsDay]);
+  const clampedQueryDay = Math.min(queryDay, totalDays);
 
-  const adDateStr = useMemo(() => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }, [date]);
+  useEffect(() => {
+    const id = setTimeout(() => setQueryDay(dayOfYear), SCRUB_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [dayOfYear]);
+
+  const { month: bsMonth, day: bsDay } = useMemo(
+    () => bsMonthDayFromDayOfYear(year, clampedQueryDay),
+    [year, clampedQueryDay]
+  );
+  const adDateStr = useMemo(
+    () => adDateStrForDay(year, clampedQueryDay),
+    [year, clampedQueryDay]
+  );
 
   const { data, isLoading, isError } = useQuery({
     queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
@@ -75,6 +96,20 @@ export function PanchangaYear() {
     placeholderData: keepPreviousData,
   });
 
+  // Warm the cache for the immediate neighbours once the scrub settles, so
+  // small nudges right after a drag feel instant too.
+  useEffect(() => {
+    for (const d of [clampedQueryDay - 1, clampedQueryDay + 1]) {
+      if (d < 1 || d > totalDays) continue;
+      const neighborDateStr = adDateStrForDay(year, d);
+      queryClient.prefetchQuery({
+        queryKey: panchangaKeys.day(neighborDateStr, "ad", location.params),
+        queryFn: () => fetchPanchanga(neighborDateStr, "ad", location.params),
+        staleTime: 1000 * 60 * 30,
+      });
+    }
+  }, [year, clampedQueryDay, totalDays, location.params, queryClient]);
+
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
   const locationLabel = data?.location?.name ?? location.label;
@@ -82,6 +117,7 @@ export function PanchangaYear() {
   function handleYearChange(nextYear: number) {
     setYear(nextYear);
     setDayOfYear((d) => Math.min(d, daysInBsYear(nextYear)));
+    setQueryDay((d) => Math.min(d, daysInBsYear(nextYear)));
   }
 
   return (
