@@ -422,7 +422,7 @@ export function WheelChart({
           r={(R_KAR_I + R_KAR_O) / 2}
           cls={`w-kar-lbl${isCur ? " sel" : ""}`}
           spin={spin}
-          size={isCur ? 7 : 5.5}
+          size={isCur ? 9 : 7.5}
         >
           {kName.length > 4 ? kName.slice(0, 4) : kName}
         </RingLabel>
@@ -456,7 +456,7 @@ export function WheelChart({
             r={(R_TIT_I + R_TIT_O) / 2}
             cls={`w-tw-name${isCur ? " sel" : ""}`}
             spin={spin}
-            size={isCur ? 10 : 8}
+            size={isCur ? 12 : 9.5}
           >
             {tName.length > 6 ? tName.slice(0, 6) : tName}
           </RingLabel>
