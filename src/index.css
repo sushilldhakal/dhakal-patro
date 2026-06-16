@@ -2274,11 +2274,11 @@
 .pn-wheel .w-core-sep { stroke: var(--w-sep); stroke-width: 0.6; stroke-dasharray: 1 5; opacity: 0.42; }
 .pn-wheel .w-tw-num { fill: var(--w-ink-faint); font: 600 10px var(--pn-num); }
 .pn-wheel .w-tw-num.sel { fill: var(--w-accent); }
-.pn-wheel .w-tw-name { fill: var(--w-ink-dim); font: 600 11px var(--pn-font); }
-.pn-wheel .w-tw-name.sel { fill: var(--w-accent); }
+.pn-wheel .w-tw-name { fill: var(--w-ink); font: 600 11px var(--pn-font); paint-order: stroke fill; stroke: rgba(0,0,0,0.55); stroke-width: 0.4px; }
+.pn-wheel .w-tw-name.sel { fill: var(--w-accent); stroke: rgba(0,0,0,0.7); }
 .pn-wheel .w-tw-paksha { fill: var(--w-ink-faint); font: 600 12px var(--pn-font); letter-spacing: 0.04em; }
-.pn-wheel .w-kar-lbl { fill: rgba(0,0,0,0.65); font: 700 10px var(--pn-font); }
-.pn-wheel .w-kar-lbl.sel { fill: var(--w-accent); text-shadow: 0 0 4px rgba(0,0,0,0.8); }
+.pn-wheel .w-kar-lbl { fill: rgba(0,0,0,0.82); font: 700 10px var(--pn-font); paint-order: stroke fill; stroke: rgba(255,255,255,0.55); stroke-width: 0.4px; }
+.pn-wheel .w-kar-lbl.sel { fill: var(--w-accent); stroke: rgba(0,0,0,0.55); }
 .pn-wheel .w-yoga-lbl { fill: #b09dd4; font: 600 10px var(--pn-font); }
 .pn-wheel .w-yoga-lbl.sel { fill: #e0d0ff; }
 .pn-wheel .w-year { fill: var(--w-accent); font: 700 22px var(--pn-num); letter-spacing: 0.02em; }

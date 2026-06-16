@@ -274,18 +274,43 @@ const MEAN_MOTION_PER_DAY = [
 
 /**
  * The moon's longitude at `g` ghati past sunrise, extrapolated from its
- * reported sunrise longitude at the sidereal mean rate (~13.176°/day).
+ * reported sunrise longitude.
  *
  * We deliberately don't interpolate from the API's chandra-rashi-span
  * boundaries: those spans only describe the slice of a (possibly
  * multi-day) rashi transit that falls within today, so stretching a full
  * 30° sweep across just that slice wildly overstates the moon's speed
  * and produces spurious extra tithi/nakshatra transitions while scrubbing.
+ *
+ * Instead of a flat mean rate, we calibrate the sun-moon elongation's
+ * local rate against the API's authoritative `tithi.end_ghati_clock` (the
+ * exact ghati when today's tithi ends) whenever it's available, so the
+ * tithi/karana boundary we draw lands at the same instant the rest of the
+ * app (e.g. the day timeline) reports — the flat mean rate alone can drift
+ * by an hour or more since the moon's true angular speed varies with its
+ * orbital position.
  */
-function moonLonAtG(det: WheelDetail, g: number): number {
+function moonLonAtG(p: PanchangaDay, det: WheelDetail, g: number): number {
   const moon = det.grahas[1];
+  const sun = det.grahas[0];
   if (!moon) return 0;
-  return normDeg(grahaLon(moon) + (g / 60) * MEAN_MOTION_PER_DAY[1]);
+  const moon0 = grahaLon(moon);
+  if (!sun) return normDeg(moon0 + (g / 60) * MEAN_MOTION_PER_DAY[1]);
+
+  const sun0 = grahaLon(sun);
+  const elong0 = normDeg(moon0 - sun0);
+  const detail = getPanchangaDetail(p);
+  const tithi = (detail?.tithi ?? p.tithi) as { end_ghati_clock?: string } | undefined;
+  const gEnd = parseGhatiClock(tithi?.end_ghati_clock);
+
+  let elongRate = (MEAN_MOTION_PER_DAY[1] - MEAN_MOTION_PER_DAY[0]) / 60; // deg/ghati fallback
+  if (gEnd != null && gEnd > 0.25) {
+    const boundary = (Math.floor(elong0 / 12) + 1) * 12;
+    elongRate = (boundary - elong0) / gEnd;
+  }
+
+  const sunLonAtGVal = normDeg(sun0 + (g / 60) * MEAN_MOTION_PER_DAY[0]);
+  return normDeg(sunLonAtGVal + elong0 + elongRate * g);
 }
 
 function grahaLonAtG(
@@ -315,7 +340,7 @@ export function buildWheelMarkers(
   scrubG: number
 ): WheelMarkers {
   const lagnaLon = lagnaLongitudeAtG(p, scrubG) ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", rashi: WHEEL_RASHIS[0]!, deg: [0, 0, 0] });
-  const moonLon = moonLonAtG(det, scrubG);
+  const moonLon = moonLonAtG(p, det, scrubG);
   const moonNak = Math.floor(normDeg(moonLon) / (360 / 27));
 
   const rahuBase = det.grahas[7] ? grahaLonAtG(det.grahas[7], 7, scrubG, moonLon) : undefined;
