@@ -14,11 +14,21 @@ import {
 import {
   getLagnaDisplay,
   getPanchangaDetail,
+  rashiNeFromNumber,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import {
+  AYANAMSHA_MODES,
+  getAyanamshaModeInfo,
+  getAyanamshaOffsetDeg,
+  isApproximateMode,
+  shiftSiderealLongitude,
+  type AyanamshaMode,
+} from "@/lib/ayanamsha";
 import { resolveTimeZone } from "@/lib/zoned-time";
 import { cn } from "@/lib/utils";
 import { KundaliControls } from "@/components/kundali/KundaliControls";
+import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 
@@ -47,6 +57,12 @@ const PLANET_ORDER = [
 ];
 
 const CLOCK_KEY = "dhakalPatroKundaliClock";
+const AYANAMSHA_KEY = "dhakalPatroAyanamshaMode";
+
+function loadSavedAyanamshaMode(): AyanamshaMode {
+  const saved = localStorage.getItem(AYANAMSHA_KEY);
+  return AYANAMSHA_MODES.some((m) => m.id === saved) ? (saved as AyanamshaMode) : "nepal";
+}
 
 function toAdStr(d: Date): string {
   const y = d.getFullYear();
@@ -69,16 +85,31 @@ type RawPlanet = PlanetInfo & {
   deg_in_rashi?: number;
 };
 
-function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
+function planetsFromPanchanga(p: PanchangaDay, mode: AyanamshaMode): PlanetCard[] {
   const detail = getPanchangaDetail(p);
   const planets = (detail?.planets ?? p.planets) as Record<string, RawPlanet | string> | undefined;
   if (!planets) return [];
+
+  const offset = getAyanamshaOffsetDeg(mode);
 
   return PLANET_ORDER.filter((key) => key in planets).map((key) => {
     const info = planets[key];
     if (typeof info === "string") {
       return { key, label: PLANET_LABELS[key] ?? key, rashi: info };
     }
+
+    if (offset !== 0 && info.longitude != null) {
+      const shifted = shiftSiderealLongitude(info.longitude, mode);
+      const rashiIndex = Math.floor(shifted / 30);
+      return {
+        key,
+        label: PLANET_LABELS[key] ?? key,
+        rashi: rashiNeFromNumber(rashiIndex + 1) ?? "—",
+        degrees: `${(shifted % 30).toFixed(1)}°`,
+        retrograde: info.is_retrograde ?? info.retrograde,
+      };
+    }
+
     const rashi = info.rashi_ne ?? info.rashi_name ?? info.rashi ?? "—";
     const degrees =
       info.deg_in_rashi != null
@@ -102,6 +133,12 @@ export function Kundali() {
   const { location, setLocation } = usePanchangaLocation();
   const [date, setDate] = useState(() => new Date());
   const [era, setEra] = useState<"bs" | "ad">("bs");
+  const [ayanamshaMode, setAyanamshaModeState] = useState<AyanamshaMode>(loadSavedAyanamshaMode);
+
+  const setAyanamshaMode = (next: AyanamshaMode) => {
+    setAyanamshaModeState(next);
+    localStorage.setItem(AYANAMSHA_KEY, next);
+  };
 
   const timezone = location.params.timezone ?? "Asia/Kathmandu";
   const [clock, setClock] = useState(() => {
@@ -124,8 +161,23 @@ export function Kundali() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const planets = useMemo(() => (data ? planetsFromPanchanga(data) : []), [data]);
-  const lagna = data ? getLagnaDisplay(data) : undefined;
+  const planets = useMemo(
+    () => (data ? planetsFromPanchanga(data, ayanamshaMode) : []),
+    [data, ayanamshaMode]
+  );
+  const rawLagna = data ? getLagnaDisplay(data) : undefined;
+  const lagna = useMemo(() => {
+    if (!rawLagna) return undefined;
+    const offset = getAyanamshaOffsetDeg(ayanamshaMode);
+    if (offset === 0 || rawLagna.longitude == null) return rawLagna;
+    const shifted = shiftSiderealLongitude(rawLagna.longitude, ayanamshaMode);
+    const rashiIndex = Math.floor(shifted / 30);
+    return {
+      nameNe: rashiNeFromNumber(rashiIndex + 1) ?? rawLagna.nameNe,
+      degree: toNepaliDigits((shifted % 30).toFixed(1)),
+    };
+  }, [rawLagna, ayanamshaMode]);
+  const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const locationLabel = data?.location?.name ?? location.label;
 
@@ -157,6 +209,8 @@ export function Kundali() {
           location={location}
           onLocationChange={setLocation}
         />
+
+        <AyanamshaSelector mode={ayanamshaMode} onModeChange={setAyanamshaMode} />
 
         {isLoading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -190,9 +244,15 @@ export function Kundali() {
 
             {lagna && (
               <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                  Lagna (लग्न)
-                </p>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Lagna (लग्न)
+                  </p>
+                  <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
+                    अयनांश: {ayanamshaInfo.labelNe}
+                    {isApproximateMode(ayanamshaMode) ? " (अनुमानित)" : ""}
+                  </span>
+                </div>
                 <p className="text-xl font-bold text-foreground">
                   {lagna.nameNe}
                   {lagna.degree && (
