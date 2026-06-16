@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { CalendarRange, MapPin } from "lucide-react";
 import {
   fetchPanchanga,
   panchangaKeys,
@@ -256,6 +257,13 @@ export function Panchanga() {
                   locationLabel={locationLabel}
                 />
                 <HoraRing p={wheelData} isToday={isToday} timezone={effectiveTimezone} />
+                <Link
+                  to="/panchanga/year"
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"
+                >
+                  <CalendarRange className="w-4 h-4" />
+                  वर्षभरिको पञ्चाङ्ग हेर्नुहोस्
+                </Link>
               </>
             )}
 
