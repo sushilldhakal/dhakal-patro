@@ -395,12 +395,13 @@ export function WheelChart({
       );
     }
 
-    // Karana ring — 60 segments × 6° each, rotated by elongation so the
-    // current karana (and tithi, below) stay near the top as time scrubs
+    // Karana ring — 60 segments × 6° each, anchored at the sun's absolute
+    // longitude so the highlighted segment always contains the moon's
+    // actual position (where the yellow needle points)
     for (let k = 0; k < 60; k++) {
-      const L0 = k * 6 - elongation;
-      const L1 = (k + 1) * 6 - elongation;
-      const Lm = k * 6 + 3 - elongation;
+      const L0 = sunL + k * 6;
+      const L1 = sunL + (k + 1) * 6;
+      const Lm = sunL + k * 6 + 3;
       const kd = KARANA_SEQ[k]!;
       const isCur = k === curKarIdx;
       const kName = kd.ne;
@@ -428,11 +429,11 @@ export function WheelChart({
       );
     }
 
-    // Tithi ring — 30 segments × 12° each, same elongation-rotated frame as karana
+    // Tithi ring — 30 segments × 12° each, same sun-anchored absolute frame as karana
     for (let i = 0; i < 30; i++) {
-      const L0 = i * 12 - elongation;
-      const L1 = (i + 1) * 12 - elongation;
-      const Lm = i * 12 + 6 - elongation;
+      const L0 = sunL + i * 12;
+      const L1 = sunL + (i + 1) * 12;
+      const Lm = sunL + i * 12 + 6;
       const isCur = i === curTithiIdx;
       const shukla = i < 15;
       const tName = WHEEL_TITHIS[i]!.ne;
