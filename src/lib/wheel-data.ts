@@ -1,9 +1,7 @@
 import type { PanchangaDay, LagnaSpan } from "@/lib/api";
 import { BS_MONTHS_NE } from "@/lib/bs-calendar";
-import { findNakshatraIcon, NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import {
   formatRashiDisplayNe,
-  getChandraRashiSpans,
   getLagnaSpans,
   getPanchangaDetail,
   getSunrise,
@@ -261,49 +259,6 @@ function lagnaLongitudeAtG(p: PanchangaDay, g: number): number | null {
   return lagnaSpanLongitude(spans[spans.length - 1]!);
 }
 
-type AngaBlock = {
-  name_ne?: string;
-  name?: string;
-  end_ghati_clock?: string;
-  end_hours_clock?: string;
-  next?: AngaBlock;
-};
-
-function ghatiFromAngaBlock(block?: AngaBlock | null): number | null {
-  if (!block) return null;
-  return (
-    parseHoursClockToGhati(block.end_hours_clock) ??
-    parseGhatiClock(block.end_ghati_clock)
-  );
-}
-
-function nakshatraIndexFromName(name?: string | null): number | null {
-  if (!name) return null;
-  const icon = findNakshatraIcon(name);
-  if (!icon) return null;
-  const idx = NAKSHATRA_ICONS.findIndex((n) => n.ne === icon.ne);
-  return idx >= 0 ? idx : null;
-}
-
-function nakshatraIndexAtG(p: PanchangaDay, g: number): number | null {
-  const detail = getPanchangaDetail(p);
-  const nakshatra = (detail?.nakshatra ?? p.nakshatra) as AngaBlock | undefined;
-  if (!nakshatra) return null;
-
-  let current: AngaBlock | undefined = nakshatra;
-  while (current) {
-    const name = current.name_ne ?? current.name;
-    const endG = ghatiFromAngaBlock(current);
-    const bound = endG != null ? Math.min(endG, 60) : 60;
-    if (g < bound || !current.next) {
-      if (!name) return null;
-      return nakshatraIndexFromName(name);
-    }
-    current = current.next;
-  }
-  return null;
-}
-
 /** Sidereal mean motion in degrees per vedic day (sunrise → next sunrise). */
 const MEAN_MOTION_PER_DAY = [
   0.9856,  // Sun
@@ -317,36 +272,17 @@ const MEAN_MOTION_PER_DAY = [
   -0.053,  // Ketu
 ] as const;
 
-function ghatiFromRashiSpan(span: { end_hours_clock?: string; end_ghati_clock?: string }): number | null {
-  return (
-    parseHoursClockToGhati(span.end_hours_clock) ??
-    parseGhatiClock(span.end_ghati_clock)
-  );
-}
-
-function moonLonAtG(p: PanchangaDay, det: WheelDetail, g: number): number {
-  const spans = getChandraRashiSpans(p);
-  if (spans?.length) {
-    let fromG = 0;
-    for (let i = 0; i < spans.length; i++) {
-      const span = spans[i]!;
-      const rawEnd = ghatiFromRashiSpan(span);
-      const toG = rawEnd != null ? Math.min(rawEnd, 60) : i === spans.length - 1 ? 60 : null;
-      if (toG == null || toG <= fromG) continue;
-
-      const rashiNum = span.number ?? rashiIndexFromNe(span.name_ne);
-      if (rashiNum != null && g >= fromG && g <= toG) {
-        const lonStart = (rashiNum - 1) * 30;
-        const next = spans[i + 1];
-        const nextNum = next ? (next.number ?? rashiIndexFromNe(next.name_ne)) : null;
-        const lonEnd = nextNum != null ? (nextNum - 1) * 30 : rashiNum * 30;
-        const t = toG > fromG ? (g - fromG) / (toG - fromG) : 0;
-        return interpolateAngle(lonStart, lonEnd, t);
-      }
-      fromG = toG;
-    }
-  }
-
+/**
+ * The moon's longitude at `g` ghati past sunrise, extrapolated from its
+ * reported sunrise longitude at the sidereal mean rate (~13.176°/day).
+ *
+ * We deliberately don't interpolate from the API's chandra-rashi-span
+ * boundaries: those spans only describe the slice of a (possibly
+ * multi-day) rashi transit that falls within today, so stretching a full
+ * 30° sweep across just that slice wildly overstates the moon's speed
+ * and produces spurious extra tithi/nakshatra transitions while scrubbing.
+ */
+function moonLonAtG(det: WheelDetail, g: number): number {
   const moon = det.grahas[1];
   if (!moon) return 0;
   return normDeg(grahaLon(moon) + (g / 60) * MEAN_MOTION_PER_DAY[1]);
@@ -379,10 +315,8 @@ export function buildWheelMarkers(
   scrubG: number
 ): WheelMarkers {
   const lagnaLon = lagnaLongitudeAtG(p, scrubG) ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", rashi: WHEEL_RASHIS[0]!, deg: [0, 0, 0] });
-  const moonLon = moonLonAtG(p, det, scrubG);
-  const moonNak =
-    nakshatraIndexAtG(p, scrubG) ??
-    Math.floor(normDeg(moonLon) / (360 / 27));
+  const moonLon = moonLonAtG(det, scrubG);
+  const moonNak = Math.floor(normDeg(moonLon) / (360 / 27));
 
   const rahuBase = det.grahas[7] ? grahaLonAtG(det.grahas[7], 7, scrubG, moonLon) : undefined;
   const planetLons = det.grahas.map((gr, i) =>
