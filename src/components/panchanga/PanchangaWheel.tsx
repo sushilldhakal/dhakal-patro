@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PanchangaDay } from "@/lib/api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
@@ -24,7 +24,7 @@ interface Props {
   locationLabel?: string;
 }
 
-export function PanchangaWheel({
+function PanchangaWheelImpl({
   p,
   bsYear,
   bsMonthNe,
@@ -52,6 +52,15 @@ export function PanchangaWheel({
   }, []);
 
   const handlePan = useCallback((x: number, y: number) => setPan({ x, y }), []);
+
+  const handleLeave = useCallback(() => setHover(null), []);
+  const handlePick = useCallback(
+    (pick: WheelPick) =>
+      setPicked((prev) =>
+        prev && prev.type === pick.type && prev.i === pick.i ? null : pick
+      ),
+    []
+  );
 
   const nowG = useMemo(() => {
     const mins = minutesSinceMidnightInTimezone(now, tz, true);
@@ -173,12 +182,8 @@ export function PanchangaWheel({
           sel={picked}
           hover={hover}
           onHover={setHover}
-          onLeave={() => setHover(null)}
-          onPick={(pick) =>
-            setPicked((prev) =>
-              prev && prev.type === pick.type && prev.i === pick.i ? null : pick
-            )
-          }
+          onLeave={handleLeave}
+          onPick={handlePick}
           onSpin={setSpin}
           zoom={zoom}
           onZoom={handleZoom}
@@ -281,3 +286,5 @@ export function PanchangaWheel({
     </div>
   );
 }
+
+export const PanchangaWheel = memo(PanchangaWheelImpl);

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 import { MoonPhaseIcon } from "./MoonPhaseIcon";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { getBSMonthLength } from "@/lib/bs-calendar";
@@ -103,7 +103,7 @@ interface WheelChartProps {
   onPan: (x: number, y: number) => void;
 }
 
-export function WheelChart({
+function WheelChartImpl({
   det,
   markers,
   spin,
@@ -130,164 +130,202 @@ export function WheelChart({
   const ptrRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinchRef = useRef<{ dist: number; zoom0: number } | null>(null);
 
-  const pol = (L: number, r: number): [number, number] => {
-    const a = (L + spin) * DEG;
-    return [CX - r * Math.sin(a), CY - r * Math.cos(a)];
-  };
+  const pol = useCallback(
+    (L: number, r: number): [number, number] => {
+      const a = (L + spin) * DEG;
+      return [CX - r * Math.sin(a), CY - r * Math.cos(a)];
+    },
+    [spin]
+  );
 
-  const arcSeg = (L0: number, L1: number, r0: number, r1: number): string => {
-    const [x1, y1] = pol(L0, r1);
-    const [x2, y2] = pol(L1, r1);
-    const [x3, y3] = pol(L1, r0);
-    const [x4, y4] = pol(L0, r0);
-    const large = L1 - L0 > 180 ? 1 : 0;
-    return `M${x1},${y1} A${r1},${r1} 0 ${large} 0 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${large} 1 ${x4},${y4} Z`;
-  };
+  const arcSeg = useCallback(
+    (L0: number, L1: number, r0: number, r1: number): string => {
+      const [x1, y1] = pol(L0, r1);
+      const [x2, y2] = pol(L1, r1);
+      const [x3, y3] = pol(L1, r0);
+      const [x4, y4] = pol(L0, r0);
+      const large = L1 - L0 > 180 ? 1 : 0;
+      return `M${x1},${y1} A${r1},${r1} 0 ${large} 0 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 ${large} 1 ${x4},${y4} Z`;
+    },
+    [pol]
+  );
 
   const { moonLon, moonNak, planetLons, sunLon } = markers;
-  const sunRashiIdx = Math.floor(normDeg(sunLon) / 30);
-  const moonRashiIdx = Math.floor(normDeg(moonLon) / 30);
 
-  const nakSegs = [];
-  const nakDecor = [];
-  for (let i = 0; i < 27; i++) {
-    const L0 = i * (360 / 27);
-    const L1 = (i + 1) * (360 / 27);
-    const Lm = (L0 + L1) / 2;
-    const ico = NAKSHATRA_ICONS[i]!;
-    const isHot = hover?.type === "nak" && hover.i === i;
-    const isSel = sel?.type === "nak" && sel.i === i;
-    nakSegs.push(
-      <path
-        key={`ns${i}`}
-        d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
-        className={`w-seg-nak${i % 2 ? " alt" : ""}${isHot ? " hot" : ""}${isSel ? " sel" : ""}`}
-      />
-    );
-    nakDecor.push(
-      <RingLabel
-        key={`ni${i}`}
-        L={Lm}
-        r={(R.nakIn + R.nakOut) / 2}
-        cls={`w-nak-name${isSel || isHot ? " sel" : ""}`}
-        spin={spin}
-      >
-        {ico.ne}
-      </RingLabel>
-    );
-  }
-
-  const rashiSegs = [];
-  const rashiDecor = [];
-  for (let i = 0; i < 12; i++) {
-    const L0 = i * 30;
-    const L1 = (i + 1) * 30;
-    const Lm = L0 + 15;
-    const rs = WHEEL_RASHIS[i]!;
-    const isHot = hover?.type === "rashi" && hover.i === i;
-    const isSel = sel?.type === "rashi" && sel.i === i;
-    rashiSegs.push(
-      <path
-        key={`rs${i}`}
-        d={arcSeg(L0, L1, R.rashiIn, R.rashiOut)}
-        className={`w-seg-rashi${i % 2 ? " alt" : ""}${isHot ? " hot" : ""}${isSel ? " sel" : ""}`}
-      />
-    );
-    const [gx, gy] = pol(Lm, R.rashiGlyph);
-    rashiDecor.push(
-      <g key={`rd${i}`}>
-        <text
-          x={gx}
-          y={gy}
-          textAnchor="middle"
-          dominantBaseline="central"
-          className="w-rashi-glyph"
-          style={{ fontSize: 27, fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
-        >
-          {rs.sym + "\uFE0E"}
-        </text>
-        <RingLabel L={Lm} r={R.rashiName} cls={`w-rashi-name${isSel || isHot ? " sel" : ""}`} spin={spin}>
-          {rs.ne}
-        </RingLabel>
-      </g>
-    );
-  }
-
-  const padaCells = [];
-  if (tw.show_pada) {
-    for (let i = 0; i < 108; i++) {
-      const L0 = i * (360 / 108);
-      const L1 = (i + 1) * (360 / 108);
+  // The static rings \u2014 nakshatra / rashi / pada arcs, day ticks, hit targets and
+  // the Gregorian month labels \u2014 depend only on the wheel's geometry (spin),
+  // hover/selection and the BS year, NOT on the panchanga data. Memoizing them
+  // here means scrubbing the year slider (which only changes `det`/`markers`)
+  // never rebuilds these ~600 nodes; only the data layers below re-render.
+  const staticLayers = useMemo(() => {
+    const nakSegs: React.ReactNode[] = [];
+    const nakDecor: React.ReactNode[] = [];
+    for (let i = 0; i < 27; i++) {
+      const L0 = i * (360 / 27);
+      const L1 = (i + 1) * (360 / 27);
       const Lm = (L0 + L1) / 2;
-      padaCells.push(
-        <g key={`pc${i}`}>
-          <path
-            d={arcSeg(L0, L1, R.padaIn, R.padaOut)}
-            className={`w-seg-pada${Math.floor(i / 4) % 2 ? " alt" : ""}`}
-          />
-          <RingLabel L={Lm} r={R.padaNum} cls="w-pada-akshar" spin={spin}>
-            {PADA_AKSHAR[Math.floor(i / 4)]![i % 4]}
+      const ico = NAKSHATRA_ICONS[i]!;
+      const isHot = hover?.type === "nak" && hover.i === i;
+      const isSel = sel?.type === "nak" && sel.i === i;
+      nakSegs.push(
+        <path
+          key={`ns${i}`}
+          d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
+          className={`w-seg-nak${i % 2 ? " alt" : ""}${isHot ? " hot" : ""}${isSel ? " sel" : ""}`}
+        />
+      );
+      nakDecor.push(
+        <RingLabel
+          key={`ni${i}`}
+          L={Lm}
+          r={(R.nakIn + R.nakOut) / 2}
+          cls={`w-nak-name${isSel || isHot ? " sel" : ""}`}
+          spin={spin}
+        >
+          {ico.ne}
+        </RingLabel>
+      );
+    }
+
+    const rashiSegs: React.ReactNode[] = [];
+    const rashiDecor: React.ReactNode[] = [];
+    for (let i = 0; i < 12; i++) {
+      const L0 = i * 30;
+      const L1 = (i + 1) * 30;
+      const Lm = L0 + 15;
+      const rs = WHEEL_RASHIS[i]!;
+      const isHot = hover?.type === "rashi" && hover.i === i;
+      const isSel = sel?.type === "rashi" && sel.i === i;
+      rashiSegs.push(
+        <path
+          key={`rs${i}`}
+          d={arcSeg(L0, L1, R.rashiIn, R.rashiOut)}
+          className={`w-seg-rashi${i % 2 ? " alt" : ""}${isHot ? " hot" : ""}${isSel ? " sel" : ""}`}
+        />
+      );
+      const [gx, gy] = pol(Lm, R.rashiGlyph);
+      rashiDecor.push(
+        <g key={`rd${i}`}>
+          <text
+            x={gx}
+            y={gy}
+            textAnchor="middle"
+            dominantBaseline="central"
+            className="w-rashi-glyph"
+            style={{ fontSize: 27, fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
+          >
+            {rs.sym + "\uFE0E"}
+          </text>
+          <RingLabel L={Lm} r={R.rashiName} cls={`w-rashi-name${isSel || isHot ? " sel" : ""}`} spin={spin}>
+            {rs.ne}
           </RingLabel>
         </g>
       );
     }
-  }
 
-  const dayTicks = [];
-  if (tw.show_lunar) {
-    for (let i = 0; i < 12; i++) {
-      const days = getBSMonthLength(bsYear, i + 1);
-      for (let d = 1; d < days; d++) {
-        const L = i * 30 + (d / days) * 30;
-        const major = d % 5 === 0;
-        const [x1, y1] = pol(L, R.bsOut - 1);
-        const [x2, y2] = pol(L, R.bsOut - (major ? 11 : 6));
-        dayTicks.push(
-          <line
-            key={`dt${i}_${d}`}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-            className={`w-daytick${major ? " major" : ""}`}
-          />
+    const padaCells: React.ReactNode[] = [];
+    if (tw.show_pada) {
+      for (let i = 0; i < 108; i++) {
+        const L0 = i * (360 / 108);
+        const L1 = (i + 1) * (360 / 108);
+        const Lm = (L0 + L1) / 2;
+        padaCells.push(
+          <g key={`pc${i}`}>
+            <path
+              d={arcSeg(L0, L1, R.padaIn, R.padaOut)}
+              className={`w-seg-pada${Math.floor(i / 4) % 2 ? " alt" : ""}`}
+            />
+            <RingLabel L={Lm} r={R.padaNum} cls="w-pada-akshar" spin={spin}>
+              {PADA_AKSHAR[Math.floor(i / 4)]![i % 4]}
+            </RingLabel>
+          </g>
         );
       }
     }
-  }
 
-  const hits = [];
-  for (let i = 0; i < 27; i++) {
-    const L0 = i * (360 / 27);
-    const L1 = (i + 1) * (360 / 27);
-    hits.push(
-      <path
-        key={`hn${i}`}
-        d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
-        className="w-hit"
-        onMouseEnter={() => onHover({ type: "nak", i })}
-        onMouseLeave={onLeave}
-        onClick={() => onPick({ type: "nak", i })}
-      />
-    );
-  }
-  for (let i = 0; i < 12; i++) {
-    const L0 = i * 30;
-    const L1 = (i + 1) * 30;
-    hits.push(
-      <path
-        key={`hr${i}`}
-        d={arcSeg(L0, L1, R.rashiIn, R.rashiOut)}
-        className="w-hit"
-        onMouseEnter={() => onHover({ type: "rashi", i })}
-        onMouseLeave={onLeave}
-        onClick={() => onPick({ type: "rashi", i })}
-      />
-    );
-  }
+    const dayTicks: React.ReactNode[] = [];
+    if (tw.show_lunar) {
+      for (let i = 0; i < 12; i++) {
+        const days = getBSMonthLength(bsYear, i + 1);
+        for (let d = 1; d < days; d++) {
+          const L = i * 30 + (d / days) * 30;
+          const major = d % 5 === 0;
+          const [x1, y1] = pol(L, R.bsOut - 1);
+          const [x2, y2] = pol(L, R.bsOut - (major ? 11 : 6));
+          dayTicks.push(
+            <line
+              key={`dt${i}_${d}`}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              className={`w-daytick${major ? " major" : ""}`}
+            />
+          );
+        }
+      }
+    }
 
-  const markerNodes = [];
-  if (tw.show_today) {
+    const hits: React.ReactNode[] = [];
+    for (let i = 0; i < 27; i++) {
+      const L0 = i * (360 / 27);
+      const L1 = (i + 1) * (360 / 27);
+      hits.push(
+        <path
+          key={`hn${i}`}
+          d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
+          className="w-hit"
+          onMouseEnter={() => onHover({ type: "nak", i })}
+          onMouseLeave={onLeave}
+          onClick={() => onPick({ type: "nak", i })}
+        />
+      );
+    }
+    for (let i = 0; i < 12; i++) {
+      const L0 = i * 30;
+      const L1 = (i + 1) * 30;
+      hits.push(
+        <path
+          key={`hr${i}`}
+          d={arcSeg(L0, L1, R.rashiIn, R.rashiOut)}
+          className="w-hit"
+          onMouseEnter={() => onHover({ type: "rashi", i })}
+          onMouseLeave={onLeave}
+          onClick={() => onPick({ type: "rashi", i })}
+        />
+      );
+    }
+
+    const rashiRays: React.ReactNode[] = [];
+    for (let i = 0; i < 12; i++) {
+      const [x1, y1] = pol(i * 30, 12);
+      const [x2, y2] = pol(i * 30, R.rimOuter - 2);
+      rashiRays.push(
+        <line key={`ray${i}`} x1={x1} y1={y1} x2={x2} y2={y2} className="w-rashi-ray" />
+      );
+    }
+
+    const gregLabels: React.ReactNode[] = tw.show_greg
+      ? GREG_NE.map((m, i) => (
+          <RingLabel key={`g${i}`} L={(i - 3) * 30 + 5} r={R.gregMid} cls="w-month-greg" spin={spin}>
+            {m}
+          </RingLabel>
+        ))
+      : [];
+
+    return { nakSegs, nakDecor, rashiSegs, rashiDecor, padaCells, dayTicks, hits, rashiRays, gregLabels };
+  }, [spin, hover, sel, bsYear, tw, pol, arcSeg, onHover, onLeave, onPick]);
+
+  // The data layers — current-time markers, the inner tithi/karana/yoga rings
+  // and the planet core — are the only parts that depend on the panchanga data
+  // (`markers`/`det`). Memoizing them keeps non-data re-renders (hover, zoom,
+  // pan) from rebuilding them, and isolates the work done per day while scrubbing.
+  const dataLayers = useMemo(() => {
+    const sunRashiIdx = Math.floor(normDeg(sunLon) / 30);
+    const moonRashiIdx = Math.floor(normDeg(moonLon) / 30);
+
+    const markerNodes: React.ReactNode[] = [];
+    if (tw.show_today) {
     const L0 = moonNak * (360 / 27);
     const L1 = (moonNak + 1) * (360 / 27);
     markerNodes.push(
@@ -612,14 +650,22 @@ export function WheelChart({
     );
   }
 
-  const rashiRays = [];
-  for (let i = 0; i < 12; i++) {
-    const [x1, y1] = pol(i * 30, 12);
-    const [x2, y2] = pol(i * 30, R.rimOuter - 2);
-    rashiRays.push(
-      <line key={`ray${i}`} x1={x1} y1={y1} x2={x2} y2={y2} className="w-rashi-ray" />
-    );
-  }
+    const bsLabels: React.ReactNode[] = tw.show_lunar
+      ? bsMonthsForWheel().map((m, i) => (
+          <RingLabel
+            key={`b${i}`}
+            L={i * 30 + 15}
+            r={R.bsMid}
+            cls={`w-month-ne${tw.show_today && i === sunRashiIdx ? " now" : ""}`}
+            spin={spin}
+          >
+            {m.ne}
+          </RingLabel>
+        ))
+      : [];
+
+    return { markerNodes, innerRings, core, bsLabels };
+  }, [markers, det, spin, tw, moonNak, moonLon, sunLon, planetLons, pol, arcSeg]);
 
   const angleAt = (e: React.PointerEvent) => {
     const r = wrapRef.current!.getBoundingClientRect();
@@ -683,7 +729,9 @@ export function WheelChart({
     if (ptrRef.current.size < 2) pinchRef.current = null;
   };
 
-  const bsMonths = bsMonthsForWheel();
+  const { nakSegs, nakDecor, rashiSegs, rashiDecor, padaCells, dayTicks, hits, rashiRays, gregLabels } =
+    staticLayers;
+  const { markerNodes, innerRings, core, bsLabels } = dataLayers;
 
   return (
     <div
@@ -712,24 +760,8 @@ export function WheelChart({
         {nakDecor}
         {rashiDecor}
 
-        {tw.show_greg &&
-          GREG_NE.map((m, i) => (
-            <RingLabel key={`g${i}`} L={(i - 3) * 30 + 5} r={R.gregMid} cls="w-month-greg" spin={spin}>
-              {m}
-            </RingLabel>
-          ))}
-        {tw.show_lunar &&
-          bsMonths.map((m, i) => (
-            <RingLabel
-              key={`b${i}`}
-              L={i * 30 + 15}
-              r={R.bsMid}
-              cls={`w-month-ne${tw.show_today && i === sunRashiIdx ? " now" : ""}`}
-              spin={spin}
-            >
-              {m.ne}
-            </RingLabel>
-          ))}
+        {gregLabels}
+        {bsLabels}
         {dayTicks}
 
         {innerRings}
@@ -741,3 +773,5 @@ export function WheelChart({
     </div>
   );
 }
+
+export const WheelChart = memo(WheelChartImpl);

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, MapPin } from "lucide-react";
-import { fetchPanchanga, panchangaKeys } from "@/lib/api";
+import { fetchPanchanga, panchangaKeys, type PanchangaDay } from "@/lib/api";
 import {
   BS_MONTHS_NE,
   BS_SUPPORTED_END_YEAR,
@@ -54,8 +54,13 @@ function adDateStrForDay(year: number, dayOfYear: number): string {
   return `${y}-${m}-${d}`;
 }
 
-/** How long to wait after the slider stops moving before fetching that day's data. */
-const SCRUB_DEBOUNCE_MS = 180;
+/**
+ * How long to wait after the slider stops moving before kicking off the network
+ * fetch for an as-yet-uncached day. Days already warmed in the React Query cache
+ * render instantly while dragging (see liveData below); this debounce only gates
+ * the request that fills in a cold day, so it can be short.
+ */
+const SCRUB_DEBOUNCE_MS = 90;
 
 export function PanchangaYear() {
   const { location, setLocation } = usePanchangaLocation();
@@ -80,21 +85,48 @@ export function PanchangaYear() {
     return () => clearTimeout(id);
   }, [dayOfYear]);
 
-  const { month: bsMonth, day: bsDay } = useMemo(
-    () => bsMonthDayFromDayOfYear(year, clampedQueryDay),
-    [year, clampedQueryDay]
-  );
-  const adDateStr = useMemo(
+  // The debounced day drives the actual network subscription: it only changes
+  // once dragging settles, so we never fire a request per crossed day.
+  const debouncedDateStr = useMemo(
     () => adDateStrForDay(year, clampedQueryDay),
     [year, clampedQueryDay]
   );
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
-    queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
+    queryKey: panchangaKeys.day(debouncedDateStr, "ad", location.params),
+    queryFn: () => fetchPanchanga(debouncedDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
+
+  // The live day tracks the slider thumb exactly. If that day is already in the
+  // cache (the background warm-up below fills the whole year), read it straight
+  // out synchronously so the wheel re-renders for it on this very frame instead
+  // of waiting for the debounce + a fetch. Cold days fall back to whatever the
+  // debounced query last resolved, so the wheel holds steady rather than
+  // flickering until the new day loads.
+  const liveDateStr = useMemo(
+    () => adDateStrForDay(year, clampedDay),
+    [year, clampedDay]
+  );
+  const liveData = queryClient.getQueryData<PanchangaDay>(
+    panchangaKeys.day(liveDateStr, "ad", location.params)
+  );
+
+  const displayData = liveData ?? data;
+  const displayDay = liveData ? clampedDay : clampedQueryDay;
+  const displayDateStr = liveData ? liveDateStr : debouncedDateStr;
+
+  // Wheel header tracks the day actually shown in the wheel; the page heading
+  // tracks the live slider position for instant textual feedback.
+  const { month: bsMonth, day: bsDay } = useMemo(
+    () => bsMonthDayFromDayOfYear(year, displayDay),
+    [year, displayDay]
+  );
+  const { month: liveMonth, day: liveDay } = useMemo(
+    () => bsMonthDayFromDayOfYear(year, clampedDay),
+    [year, clampedDay]
+  );
 
   // Warm the cache for the immediate neighbours once the scrub settles, so
   // small nudges right after a drag feel instant too.
@@ -151,9 +183,9 @@ export function PanchangaYear() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, location.params, queryClient, totalDays]);
 
-  const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
-  const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
-  const locationLabel = data?.location?.name ?? location.label;
+  const effectiveTimezone = resolveTimeZone(displayData?.location?.timezone, location.params.timezone);
+  const isToday = displayDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
+  const locationLabel = displayData?.location?.name ?? location.label;
 
   function handleYearChange(nextYear: number) {
     setYear(nextYear);
@@ -176,7 +208,7 @@ export function PanchangaYear() {
             वार्षिक पञ्चाङ्ग चक्र
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
-            {BS_MONTHS_NE[bsMonth - 1]} {toNepaliDigits(bsDay)}, {toNepaliDigits(year)}
+            {BS_MONTHS_NE[liveMonth - 1]} {toNepaliDigits(liveDay)}, {toNepaliDigits(year)}
             {" · "}
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
@@ -208,9 +240,9 @@ export function PanchangaYear() {
       </div>
 
       <div className="flex flex-col gap-4">
-        {data && !isLoading && (
+        {displayData && (
           <PanchangaWheel
-            p={data}
+            p={displayData}
             bsYear={year}
             bsMonthNe={BS_MONTHS_NE[bsMonth - 1]!}
             bsDay={bsDay}
@@ -220,7 +252,7 @@ export function PanchangaYear() {
           />
         )}
 
-        {isLoading && (
+        {!displayData && isLoading && (
           <div className="h-[600px] rounded-2xl bg-muted/50 animate-pulse" />
         )}
 
