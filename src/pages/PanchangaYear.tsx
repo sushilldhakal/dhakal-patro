@@ -99,8 +99,8 @@ export function PanchangaYear() {
   // Warm the cache for the immediate neighbours once the scrub settles, so
   // small nudges right after a drag feel instant too.
   useEffect(() => {
-    for (const d of [clampedQueryDay - 1, clampedQueryDay + 1]) {
-      if (d < 1 || d > totalDays) continue;
+    for (let d = clampedQueryDay - 3; d <= clampedQueryDay + 3; d++) {
+      if (d < 1 || d > totalDays || d === clampedQueryDay) continue;
       const neighborDateStr = adDateStrForDay(year, d);
       queryClient.prefetchQuery({
         queryKey: panchangaKeys.day(neighborDateStr, "ad", location.params),
@@ -109,6 +109,47 @@ export function PanchangaYear() {
       });
     }
   }, [year, clampedQueryDay, totalDays, location.params, queryClient]);
+
+  // Slowly warm the whole year in the background, spiraling outward from
+  // wherever the scrub currently sits. The backend computes each day's
+  // panchanga on first request and caches it, so a day that's never been
+  // requested before can take well over a second - prefetching the rest of
+  // the year ahead of time means most drags land on an already-warm day.
+  useEffect(() => {
+    let cancelled = false;
+    const startDay = clampedQueryDay;
+    const order = Array.from({ length: totalDays }, (_, i) => i + 1).sort(
+      (a, b) => Math.abs(a - startDay) - Math.abs(b - startDay)
+    );
+
+    async function worker(queue: number[]) {
+      while (!cancelled && queue.length) {
+        const d = queue.shift();
+        if (d == null) return;
+        const dateStr = adDateStrForDay(year, d);
+        try {
+          await queryClient.prefetchQuery({
+            queryKey: panchangaKeys.day(dateStr, "ad", location.params),
+            queryFn: () => fetchPanchanga(dateStr, "ad", location.params),
+            staleTime: 1000 * 60 * 30,
+          });
+        } catch {
+          // Ignore - this is a best-effort cache warm, not a user-facing fetch.
+        }
+      }
+    }
+
+    const queue = [...order];
+    const WARM_CONCURRENCY = 3;
+    for (let i = 0; i < WARM_CONCURRENCY; i++) worker(queue);
+
+    return () => {
+      cancelled = true;
+    };
+    // Only re-sweep when the year or location changes, not on every scrub
+    // settle - the neighbour-prefetch effect above already covers that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, location.params, queryClient, totalDays]);
 
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
