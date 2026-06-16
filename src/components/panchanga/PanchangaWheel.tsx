@@ -17,7 +17,6 @@ import { WheelPanel } from "./WheelPanel";
 interface Props {
   p: PanchangaDay;
   bsYear: number;
-  bsMonth: number;
   bsMonthNe: string;
   bsDay: number;
   isToday?: boolean;
@@ -28,7 +27,6 @@ interface Props {
 export function PanchangaWheel({
   p,
   bsYear,
-  bsMonth,
   bsMonthNe,
   bsDay,
   isToday,
@@ -172,7 +170,6 @@ export function PanchangaWheel({
           spin={spin}
           tw={DEFAULT_WHEEL_TWEAKS}
           bsYear={bsYear}
-          bsMonth={bsMonth}
           sel={picked}
           hover={hover}
           onHover={setHover}

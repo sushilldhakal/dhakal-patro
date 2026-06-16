@@ -91,7 +91,6 @@ interface WheelChartProps {
   spin: number;
   tw: WheelTweaks;
   bsYear: number;
-  bsMonth: number;
   sel: WheelPick | null;
   hover: WheelHover | null;
   onHover: (h: WheelHover) => void;
@@ -110,7 +109,6 @@ export function WheelChart({
   spin,
   tw,
   bsYear,
-  bsMonth,
   sel,
   hover,
   onHover,
@@ -309,20 +307,13 @@ export function WheelChart({
         style={{ pointerEvents: "none" }}
       />
     );
-    const mL0 = (bsMonth - 1) * 30;
-    const mL1 = mL0 + 30;
     markerNodes.push(
       <path
         key="nowwedge-month"
-        d={arcSeg(mL0, mL1, R.bsIn, R.bsOut)}
+        d={arcSeg(rL0, rL1, R.bsIn, R.bsOut)}
         className="w-seg-now"
         style={{ pointerEvents: "none" }}
       />
-    );
-    const [mtx1, mty1] = pol(sunLon, R.bsOut + 3);
-    const [mtx2, mty2] = pol(sunLon, R.bsIn - 3);
-    markerNodes.push(
-      <line key="sun-tick" x1={mtx1} y1={mty1} x2={mtx2} y2={mty2} className="w-sun-tick" />
     );
     const [lx, ly] = pol(moonLon, R.bsOut - 2);
     markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className="w-lagna-line" />);
@@ -335,7 +326,7 @@ export function WheelChart({
           textAnchor="middle"
           dominantBaseline="central"
           className="w-label"
-          style={{ fontSize: 14, fill: "var(--w-accent)", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
+          style={{ fontSize: 14, fill: "#f9c800", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
           transform={
             normDeg(moonLon + spin) > 90 && normDeg(moonLon + spin) < 270
               ? `rotate(180 ${CX} ${CY - (R.bsOut + 5)})`
@@ -730,7 +721,7 @@ export function WheelChart({
               key={`b${i}`}
               L={i * 30 + 15}
               r={R.bsMid}
-              cls={`w-month-ne${tw.show_today && i === bsMonth - 1 ? " now" : ""}`}
+              cls={`w-month-ne${tw.show_today && i === sunRashiIdx ? " now" : ""}`}
               spin={spin}
             >
               {m.ne}
