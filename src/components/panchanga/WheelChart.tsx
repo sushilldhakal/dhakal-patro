@@ -146,6 +146,7 @@ export function WheelChart({
 
   const { moonLon, moonNak, planetLons, sunLon } = markers;
   const sunRashiIdx = Math.floor(normDeg(sunLon) / 30);
+  const moonRashiIdx = Math.floor(normDeg(moonLon) / 30);
 
   const nakSegs = [];
   const nakDecor = [];
@@ -297,7 +298,7 @@ export function WheelChart({
         style={{ pointerEvents: "none" }}
       />
     );
-    const rL0 = sunRashiIdx * 30;
+    const rL0 = moonRashiIdx * 30;
     const rL1 = rL0 + 30;
     markerNodes.push(
       <path
@@ -307,10 +308,12 @@ export function WheelChart({
         style={{ pointerEvents: "none" }}
       />
     );
+    const mL0 = sunRashiIdx * 30;
+    const mL1 = mL0 + 30;
     markerNodes.push(
       <path
         key="nowwedge-month"
-        d={arcSeg(rL0, rL1, R.bsIn, R.bsOut)}
+        d={arcSeg(mL0, mL1, R.bsIn, R.bsOut)}
         className="w-seg-now"
         style={{ pointerEvents: "none" }}
       />
