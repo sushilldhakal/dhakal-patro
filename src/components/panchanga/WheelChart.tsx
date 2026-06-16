@@ -22,13 +22,13 @@ const CY = 500;
 /** Scale factor applied to all planet orbit radii to leave room for the inner yoga/karana/tithi rings. */
 const ORBIT_SCALE = 0.58;
 
-/** Yoga → Karana → Tithi rings, each nested inside the next, sharing boundaries. */
+/** Yoga ring stays deep in the core. Karana → Tithi now sit between the rashi and nakshatra rings, sharing boundaries. */
 const R_YOGA_I = 140;
 const R_YOGA_O = 158;
-const R_KAR_I  = 160;
-const R_KAR_O  = 178;
-const R_TIT_I  = 178; // shared boundary with karana outer
-const R_TIT_O  = 218;
+const R_KAR_I  = 303;
+const R_KAR_O  = 327; // shared boundary with pada inner
+const R_TIT_I  = 263; // shared boundary with rashi outer
+const R_TIT_O  = 303; // shared boundary with karana inner
 
 const R = {
   rimOuter: 497,
@@ -40,17 +40,17 @@ const R = {
   bsMid: 438,
   bsIn: 424,
   nakOut: 423,
-  nakIcon: 397,
-  nakName: 350,
-  nakIn: 330,
-  padaOut: 330,
-  padaNum: 318,
-  padaIn: 306,
-  rashiOut: 305,
-  rashiGlyph: 283,
-  rashiName: 250,
-  rashiIn: 226,
-  core: 226,
+  nakIcon: 403,
+  nakName: 372,
+  nakIn: 345,
+  padaOut: 345,
+  padaNum: 336,
+  padaIn: 327,
+  rashiOut: 263,
+  rashiGlyph: 246,
+  rashiName: 222,
+  rashiIn: 178,
+  core: 178,
 } as const;
 
 export type WheelHover = { type: "nak"; i: number } | { type: "rashi"; i: number };
@@ -350,10 +350,8 @@ export function WheelChart({
     const curTithiIdx = Math.floor(elongation / 12);
     const curKarIdx = Math.floor(elongation / 6);
 
-    // Separator circles
+    // Separator circles (karana/pada and tithi/rashi boundaries are drawn by the main rim-circle list below)
     innerRings.push(
-      <circle key="ir-boundary" cx={CX} cy={CY} r={R_KAR_O} className="w-rim-circle" strokeWidth="1.1" opacity="0.75" />,
-      <circle key="ir-kar-i"  cx={CX} cy={CY} r={R_KAR_I}  className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
       <circle key="ir-yoga-i" cx={CX} cy={CY} r={R_YOGA_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
     );
 
@@ -701,7 +699,7 @@ export function WheelChart({
         onPointerCancel={onUp}
       >
         <circle cx={CX} cy={CY} r={R.bsOut} className="w-rim-circle" strokeWidth="1.4" />
-        {[R.bsIn, R.nakOut, R.nakIn, R.padaIn, R.rashiIn].map((r, k) => (
+        {[R.bsIn, R.nakOut, R.nakIn, R.padaIn, R_KAR_I, R.rashiOut, R.rashiIn].map((r, k) => (
           <circle key={`rc${k}`} cx={CX} cy={CY} r={r} className="w-rim-circle" strokeWidth="0.8" opacity="0.55" />
         ))}
         <circle cx={CX} cy={CY} r={R.core} className="w-rim-circle" strokeWidth="1.1" opacity="0.7" />
