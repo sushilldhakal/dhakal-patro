@@ -26,6 +26,8 @@ interface Props {
   onSelectDay?: (day: CalendarDay) => void;
   mode?: "bs" | "ad";
   isEnriching?: boolean;
+  /** AD date (YYYY-MM-DD) to mark as "today", resolved for the active location's timezone. */
+  todayAd?: string;
 }
 
 export function BsCalendarGrid({
@@ -35,6 +37,7 @@ export function BsCalendarGrid({
   onSelectDay,
   mode = "bs",
   isEnriching = false,
+  todayAd = TODAY_AD,
 }: Props) {
   const firstDay = days[0];
   const startOffset = firstDay ? new Date(firstDay.date_ad).getDay() : 0;
@@ -64,7 +67,7 @@ export function BsCalendarGrid({
           }
 
           const col = i % 7;
-          const isToday = day.date_ad === TODAY_AD;
+          const isToday = day.date_ad === todayAd;
           const isSelected = day.date_ad === selectedAdDate && !isToday;
           const isWeekend = col === 0 || col === 6;
           const isPublicHoliday = publicHolidayDates.has(day.date_ad);

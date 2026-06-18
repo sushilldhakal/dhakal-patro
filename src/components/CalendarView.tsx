@@ -13,9 +13,11 @@ import {
   BS_MONTHS_NE,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
+  adToBS,
   getCurrentBs,
   bsMonthLabel,
 } from "@/lib/bs-calendar";
+import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
   applyHolidaysToDays,
   buildLocalMonthDays,
@@ -35,6 +37,10 @@ interface Props {
   aside?: ReactNode;
   holidays?: ReactNode;
   showMonthHeader?: boolean;
+  /** Active location — drives per-day tithi/sunrise for the month grid. */
+  location?: PanchangaLocation;
+  /** AD date (YYYY-MM-DD) considered "today", resolved for the location's timezone. */
+  todayAd?: string;
 }
 
 export function CalendarView({
@@ -42,8 +48,18 @@ export function CalendarView({
   aside,
   holidays,
   showMonthHeader = true,
+  location,
+  todayAd,
 }: Props) {
-  const init = getCurrentBs();
+  // "Today" follows the active location's timezone when provided, so opening the
+  // patro lands on the correct local month/day rather than the browser's.
+  const init = useMemo(() => {
+    if (todayAd) {
+      const bs = adToBS(new Date(`${todayAd}T12:00:00`));
+      return { year: bs.year, month: bs.month };
+    }
+    return getCurrentBs();
+  }, [todayAd]);
   const [year, setYear] = useState(init.year);
   const [month, setMonth] = useState(init.month);
   const [selected, setSelected] = useState<CalendarDay | null>(null);
@@ -52,8 +68,8 @@ export function CalendarView({
   const localDays = useMemo(() => buildLocalMonthDays(year, month), [year, month]);
   const adMonthSpan = useMemo(() => getBsMonthAdSpanLabel(year, month), [year, month]);
   const monthQ = useQuery({
-    queryKey: panchangaKeys.month(year, month),
-    queryFn: () => fetchMonthCalendar(year, month),
+    queryKey: panchangaKeys.month(year, month, location?.params),
+    queryFn: () => fetchMonthCalendar(year, month, location?.params),
     staleTime: 1000 * 60 * 60,
   });
 
@@ -134,6 +150,7 @@ export function CalendarView({
         onSelectDay={selectDay}
         mode={mode}
         isEnriching={isEnriching}
+        todayAd={todayAd}
       />
 
       <DayDetailModal

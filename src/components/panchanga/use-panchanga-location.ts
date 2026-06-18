@@ -13,6 +13,15 @@ export const DEFAULT_PANCHANGA_LOCATION: PanchangaLocation = {
   params: { city_id: 1283240 },
 };
 
+/**
+ * Best-effort IANA timezone for a location. City and coordinate selections carry
+ * their own timezone; the default Kathmandu (and any city the API didn't tag)
+ * falls back to Nepal time so "today" stays correct for the patro's home region.
+ */
+export function resolveLocationTimezone(location: PanchangaLocation): string {
+  return location.params.timezone ?? "Asia/Kathmandu";
+}
+
 function readStoredLocation(): PanchangaLocation {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

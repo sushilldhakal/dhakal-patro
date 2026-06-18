@@ -35,6 +35,7 @@ import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-locat
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import { buildBhavaChart } from "@/lib/bhava";
 import { navamsaRashiFromLongitude } from "@/lib/navamsa";
+import { drekkanaRashiFromLongitude } from "@/lib/drekkana";
 import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-elements";
 import { vimshottariDasha } from "@/lib/dasha";
 
@@ -216,6 +217,31 @@ export function Kundali() {
         rashi: navamsaRashiFromLongitude(p.longitude!),
       }));
     return buildBhavaChart(d9LagnaRashi, planetNavamsas, rashiNeFromNumber);
+  }, [lagna, planets]);
+
+  // Chandra (Moon) chart — same rashi positions as D1 but reckoned from the
+  // Moon's sign as the 1st house, the classical way to read a horoscope from
+  // the mind/Moon rather than the rising sign.
+  const moonChartHouses = useMemo(() => {
+    const moonRashi = planets.find((p) => p.key === "moon")?.rashiNum;
+    if (moonRashi == null) return [];
+    const planetRashis = planets
+      .filter((p) => p.rashiNum != null)
+      .map((p) => ({ key: p.key, labelNe: p.label, rashi: p.rashiNum! }));
+    return buildBhavaChart(moonRashi, planetRashis, rashiNeFromNumber);
+  }, [planets]);
+
+  const d3Houses = useMemo(() => {
+    if (lagna?.longitude == null) return [];
+    const d3LagnaRashi = drekkanaRashiFromLongitude(lagna.longitude);
+    const planetDrekkanas = planets
+      .filter((p) => p.longitude != null)
+      .map((p) => ({
+        key: p.key,
+        labelNe: p.label,
+        rashi: drekkanaRashiFromLongitude(p.longitude!),
+      }));
+    return buildBhavaChart(d3LagnaRashi, planetDrekkanas, rashiNeFromNumber);
   }, [lagna, planets]);
 
   const panchangSummary = useMemo(() => {
@@ -413,12 +439,28 @@ export function Kundali() {
                       </h3>
                       <D1Chart houses={bhavaHouses} />
                     </div>
+                    {moonChartHouses.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                          Chandra Kundali (चन्द्र)
+                        </h3>
+                        <D1Chart houses={moonChartHouses} />
+                      </div>
+                    )}
                     {d9Houses.length > 0 && (
                       <div>
                         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                           D9 Navamsha (नवांश)
                         </h3>
                         <D1Chart houses={d9Houses} />
+                      </div>
+                    )}
+                    {d3Houses.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                          D3 Drekkana (द्रेष्काण)
+                        </h3>
+                        <D1Chart houses={d3Houses} />
                       </div>
                     )}
                   </div>

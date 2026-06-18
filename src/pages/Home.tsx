@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Flag } from "lucide-react";
@@ -11,6 +11,13 @@ import {
   type CalendarDay,
 } from "../lib/api";
 import { CalendarView } from "../components/CalendarView";
+import { LocationSelector } from "@/components/panchanga/LocationSelector";
+import {
+  resolveLocationTimezone,
+  usePanchangaLocation,
+  type PanchangaLocation,
+} from "@/components/panchanga/use-panchanga-location";
+import { todayAdStringInTimezone } from "@/lib/zoned-time";
 import { BS_MONTHS_NE, getCurrentBs } from "../lib/bs-calendar";
 import {
   formatClockNepali,
@@ -44,17 +51,21 @@ function relLabel(days: number): string {
 function PanchangaAside({
   selectedDay,
   selectedAdDate,
+  location,
+  todayAd,
 }: {
   selectedDay: CalendarDay | null;
   selectedAdDate: string;
+  location: PanchangaLocation;
+  todayAd: string;
 }) {
   const panchangaQ = useQuery({
-    queryKey: panchangaKeys.day(selectedAdDate, "ad"),
-    queryFn: () => fetchPanchanga(selectedAdDate, "ad"),
+    queryKey: panchangaKeys.day(selectedAdDate, "ad", location.params),
+    queryFn: () => fetchPanchanga(selectedAdDate, "ad", location.params),
     staleTime: 1000 * 60 * 30,
   });
 
-  const isSelectedToday = selectedAdDate === TODAY_AD;
+  const isSelectedToday = selectedAdDate === todayAd;
   const p = panchangaQ.data;
 
   const bsDisplay = p?.display?.bs_ne ?? p?.date_bs;
@@ -264,16 +275,35 @@ function UpcomingHolidays({ bsYear }: { bsYear: number }) {
 }
 
 export function Home() {
+  const { location, setLocation } = usePanchangaLocation();
   const { year: bsYear } = getCurrentBs();
+  const todayAd = useMemo(
+    () => todayAdStringInTimezone(new Date(), resolveLocationTimezone(location)),
+    [location],
+  );
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
-  const selectedAdDate = selectedDay?.date_ad ?? TODAY_AD;
+  const selectedAdDate = selectedDay?.date_ad ?? todayAd;
 
   return (
     <main className="pn-page">
+      <div className="flex justify-end px-4 sm:px-0 mb-3">
+        <LocationSelector
+          compact
+          location={location}
+          onLocationChange={setLocation}
+        />
+      </div>
       <CalendarView
+        location={location}
+        todayAd={todayAd}
         onDaySelect={setSelectedDay}
         aside={
-          <PanchangaAside selectedDay={selectedDay} selectedAdDate={selectedAdDate} />
+          <PanchangaAside
+            selectedDay={selectedDay}
+            selectedAdDate={selectedAdDate}
+            location={location}
+            todayAd={todayAd}
+          />
         }
         holidays={<UpcomingHolidays bsYear={bsYear} />}
       />
