@@ -80,6 +80,11 @@ export function tithiPaksha(idx: number): string {
   return idx < 15 ? "शुक्ल पक्ष" : "कृष्ण पक्ष";
 }
 
+/** Tithi band index 0–29 from moon–sun elongation (degrees). */
+export function tithiIndexFromElongation(E: number): number {
+  return Math.floor((((E % 360) + 360) % 360) / 12);
+}
+
 /** Map moon–sun elongation E to wheel longitude (0° Amavasya at bottom). */
 export function mapElongation(E: number): number {
   const e = ((E % 360) + 360) % 360;

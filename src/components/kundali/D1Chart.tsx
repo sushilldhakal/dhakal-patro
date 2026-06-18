@@ -59,6 +59,7 @@ export function D1Chart({ houses }: Props) {
         const house = byHouse.get(houseNum);
         const [cx, cy] = centroid(points);
         const planetLines = house?.planets ?? [];
+        const hasPlanets = planetLines.length > 0;
 
         return (
           <g key={houseNum}>
@@ -68,17 +69,19 @@ export function D1Chart({ houses }: Props) {
                 className="fill-secondary/10"
               />
             )}
-            <text
-              x={cx}
-              y={cy - (planetLines.length > 0 ? 14 : 0)}
-              textAnchor="middle"
-              className={cn(
-                "text-[11px] font-semibold",
-                house?.isLagna ? "fill-secondary" : "fill-muted-foreground"
-              )}
-            >
-              {house ? toNepaliDigits(house.rashi) : ""}
-            </text>
+            {house && (
+              <text
+                x={cx}
+                y={cy - (hasPlanets ? 14 : 0)}
+                textAnchor="middle"
+                className={cn(
+                  "text-[11px] font-semibold",
+                  house.isLagna ? "fill-secondary" : "fill-muted-foreground"
+                )}
+              >
+                {toNepaliDigits(house.rashi)} {house.rashiNe}
+              </text>
+            )}
             {planetLines.map((planet, i) => (
               <text
                 key={planet.key}

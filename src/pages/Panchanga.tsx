@@ -21,7 +21,6 @@ import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/Panchan
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
-import { HoraRing } from "@/components/panchanga/HoraRing";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
@@ -256,7 +255,6 @@ export function Panchanga() {
                   timezone={effectiveTimezone}
                   locationLabel={locationLabel}
                 />
-                <HoraRing p={wheelData} isToday={isToday} timezone={effectiveTimezone} />
                 <Link
                   to="/panchanga/year"
                   className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"

@@ -247,19 +247,19 @@ export function HoraRing({ p, isToday, timezone }: Props) {
 
         <div className="hora-layout">
           <div className="hora-intro">
-            <div className="hora-eyebrow">होरा · Planetary hours</div>
+            <div className="hora-eyebrow">होरा · ग्रहीय होरा</div>
             <h2 className="hora-title">
-              One week,
+              एक हप्ता,
               <br />
-              <span className="hora-title-accent">unbroken horā</span>
+              <span className="hora-title-accent">निरन्तर होरा</span>
             </h2>
             <p className="hora-lede">
-              Every ring is a single day — twenty‑four <em>horā</em> ruled in turn by the seven grahas.
-              The graha of the <em>first</em> horā after sunrise names the day. The count never resets: the
-              last horā of <span className="hora-deva">आइतबार</span> rolls into{" "}
-              <span className="hora-deva">सोम</span>, opening <span className="hora-deva">सोमबार</span>.
-              Follow the spiral outward — <span className="hora-deva">आदित्य → शनि</span> — from the centre
-              through the week.
+              हरेक वलय एउटै दिन हो — सात ग्रहले पालो–पालोमा शासन गर्ने चौबीस{" "}
+              <em>होरा</em>। सूर्योदयपछिको <em>पहिलो</em> होराको ग्रहले दिनको नाम दिन्छ। गणना
+              कहिल्यै रोकिँदैन: <span className="hora-deva">आइतबार</span>को अन्तिम होरा{" "}
+              <span className="hora-deva">सोम</span>मा गुड्छ र{" "}
+              <span className="hora-deva">सोमबार</span> खोल्छ। केन्द्रबाट बाहिरतिर —{" "}
+              <span className="hora-deva">आदित्य → शनि</span> — हप्ताभरि सर्पिल अनुसरण गर्नुहोस्।
             </p>
           </div>
 
@@ -393,7 +393,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
           </div>
 
           <div className="hora-legend">
-            <div className="hora-legend-head">The seven days · inner → outer</div>
+            <div className="hora-legend-head">सात दिन · भित्र → बाहिर</div>
             {HORA_WEEK.map((w, i) => {
               const P = HORA_PLANETS[w.ruler];
               return (
@@ -419,7 +419,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
           <button
             type="button"
             className="hora-pp"
-            aria-label={playing ? "Pause" : "Play"}
+            aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
             onClick={() => {
               const next = !playing;
               setPlaying(next);
@@ -455,7 +455,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
             <div className="hora-knob" style={{ left: `${prog * 100}%` }} />
           </div>
           <div className="hora-readout">
-            <b>{week.rom}</b> · horā {horaPad(gii + 1)} · {ruler.nep}
+            <b>{week.day}</b> · होरा {horaPad(gii + 1)} · {ruler.nep}
             {isToday && (
               <span className="hora-readout-ne">
                 {" "}

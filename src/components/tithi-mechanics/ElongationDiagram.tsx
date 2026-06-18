@@ -1,0 +1,298 @@
+import { useRef } from "react";
+import { toNepaliDigits } from "@/lib/panchanga-format";
+import {
+  tithiIndexFromElongation,
+  tithiNum,
+} from "@/lib/tithi-wheel-data";
+
+const RAD = Math.PI / 180;
+
+const ED = {
+  W: 1180,
+  H: 760,
+  sunX: 96,
+  sunR: 66,
+  earthX: 690,
+  earthY: 380,
+  earthR: 30,
+  R: 276,
+  ringIn: 250,
+  ringOut: 302,
+  degR: 332,
+  moonR: 17,
+};
+
+const edAng = (E: number) => 180 - E;
+const edPos = (E: number, r: number): [number, number] => {
+  const a = edAng(E) * RAD;
+  return [ED.earthX + r * Math.cos(a), ED.earthY - r * Math.sin(a)];
+};
+
+function EdMoon({ E, r }: { E: number; r: number }) {
+  const e = ((E % 360) + 360) % 360;
+  const rx = Math.abs(Math.cos(e * RAD)) * r;
+  const gibbous = e > 90 && e < 270;
+  const outerSweep = 0;
+  const termSweep = gibbous ? 1 : 0;
+  const litPath = `M0,${-r} A${r},${r} 0 0 ${outerSweep} 0,${r} A${rx.toFixed(2)},${r} 0 0 ${termSweep} 0,${-r} Z`;
+  return (
+    <g>
+      <circle cx={0} cy={0} r={r} fill="#0e1417" stroke="#46585f" strokeWidth={0.9} />
+      {e > 1.5 && e < 358.5 && <path d={litPath} fill="#eef4f2" />}
+      {e > 172 && e < 188 && (
+        <circle cx={0} cy={0} r={r} fill="none" stroke="#fff" strokeWidth={0.6} opacity={0.5} />
+      )}
+    </g>
+  );
+}
+
+interface Props {
+  E?: number;
+  onE?: (v: number) => void;
+  compact?: boolean;
+  month?: string;
+}
+
+export function ElongationDiagram({ E = 87, onE, compact, month = "असार" }: Props) {
+  const fmt = (n: number) => toNepaliDigits(n);
+  const curPaksha = (((E % 360) + 360) % 360) < 180 ? "शुक्ल" : "कृष्ण";
+  const idx = tithiIndexFromElongation(E);
+  const [mx, my] = edPos(E, ED.R);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const drag = useRef(false);
+
+  const eFromEvt = (e: React.PointerEvent) => {
+    const svg = svgRef.current;
+    if (!svg) return E;
+    const r = svg.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * ED.W;
+    const py = ((e.clientY - r.top) / r.height) * ED.H;
+    const a = Math.atan2(-(py - ED.earthY), px - ED.earthX) / RAD;
+    const val = 180 - a;
+    return ((val % 360) + 360) % 360;
+  };
+
+  const degTicks: React.ReactNode[] = [];
+  if (!compact) {
+    for (let d = 0; d <= 360; d += 12) {
+      const isMajor = d % 24 === 0;
+      const [tx, ty] = edPos(d, ED.degR);
+      const [i0x, i0y] = edPos(d, ED.ringOut);
+      const [i1x, i1y] = edPos(d, ED.ringOut + (isMajor ? 13 : 7));
+      degTicks.push(
+        <line
+          key={`dt${d}`}
+          x1={i0x}
+          y1={i0y}
+          x2={i1x}
+          y2={i1y}
+          className="ed-degtick"
+          strokeWidth={isMajor ? 1.3 : 0.8}
+          opacity={isMajor ? 0.9 : 0.5}
+        />
+      );
+      if (isMajor && d < 360) {
+        const shown = d <= 180 ? d : 360 - d;
+        degTicks.push(
+          <text
+            key={`dl${d}`}
+            x={tx}
+            y={ty}
+            className="ed-deglabel"
+            textAnchor="middle"
+            dominantBaseline="central"
+          >
+            {fmt(shown)}°
+          </text>
+        );
+      }
+    }
+  }
+
+  const cells: React.ReactNode[] = [];
+  for (let i = 0; i < 30; i++) {
+    const E0 = i * 12;
+    const Emid = i * 12 + 6;
+    const isCur = i === idx;
+    const [lx, ly] = edPos(E0, ED.R);
+    cells.push(
+      <g key={`lens${i}`} transform={`translate(${lx},${ly}) rotate(${-edAng(E0) + 90})`}>
+        <ellipse cx={0} cy={0} rx={4.6} ry={13} className="ed-lens" />
+      </g>
+    );
+    const [nx, ny] = edPos(Emid, ED.ringIn - 22);
+    cells.push(
+      <text
+        key={`tn${i}`}
+        x={nx}
+        y={ny}
+        className={`ed-tnum${isCur ? " cur" : ""}`}
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {fmt(tithiNum(i))}
+      </text>
+    );
+    if (isCur) {
+      const [hx, hy] = edPos(Emid, ED.R);
+      cells.push(<circle key={`cur${i}`} cx={hx} cy={hy} r={21} className="ed-curband" />);
+    }
+  }
+
+  const arcR = ED.ringOut + 36;
+  const arcPts: string[] = [];
+  for (let e = 0; e <= E; e += 2) {
+    const [x, y] = edPos(e, arcR);
+    arcPts.push((e === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1));
+  }
+  {
+    const [x, y] = edPos(E, arcR);
+    arcPts.push("L" + x.toFixed(1) + "," + y.toFixed(1));
+  }
+  const sweepArc = arcPts.join(" ");
+  const [capx, capy] = edPos(E, arcR);
+
+  const rays = Array.from({ length: 16 }, (_, k) => {
+    const a = (k / 16) * Math.PI * 2;
+    const r0 = ED.sunR + 3;
+    const r1 = ED.sunR + (k % 2 ? 12 : 20);
+    return (
+      <line
+        key={`ray${k}`}
+        x1={ED.sunX + r0 * Math.cos(a)}
+        y1={ED.earthY + r0 * Math.sin(a)}
+        x2={ED.sunX + r1 * Math.cos(a)}
+        y2={ED.earthY + r1 * Math.sin(a)}
+        className="ed-ray"
+      />
+    );
+  });
+
+  const [shuklaX, shuklaY] = edPos(90, ED.degR + 20);
+  const [krishnaX, krishnaY] = edPos(270, ED.degR + 20);
+  const [amX, amY] = edPos(0, ED.R);
+  const [puX, puY] = edPos(180, ED.R);
+  const [arcLabelX, arcLabelY] = edPos(E / 2, arcR - 30);
+
+  return (
+    <svg
+      ref={svgRef}
+      viewBox={`0 0 ${ED.W} ${ED.H}`}
+      className={`ed-svg${onE ? " grab" : ""}`}
+      onPointerDown={(e) => {
+        if (!onE) return;
+        drag.current = true;
+        onE(eFromEvt(e));
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (drag.current && onE) onE(eFromEvt(e));
+      }}
+      onPointerUp={() => {
+        drag.current = false;
+      }}
+      onPointerCancel={() => {
+        drag.current = false;
+      }}
+    >
+      <defs>
+        <radialGradient id="ed-sun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff6d8" />
+          <stop offset="38%" stopColor="#ffd24a" />
+          <stop offset="78%" stopColor="#f08a1d" />
+          <stop offset="100%" stopColor="#d65b12" />
+        </radialGradient>
+        <radialGradient id="ed-sunglow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffcf57" stopOpacity={0.5} />
+          <stop offset="100%" stopColor="#ffcf57" stopOpacity={0} />
+        </radialGradient>
+        <radialGradient id="ed-earth" cx="38%" cy="34%" r="72%">
+          <stop offset="0%" stopColor="#6fc6e8" />
+          <stop offset="48%" stopColor="#2b7fa8" />
+          <stop offset="100%" stopColor="#123a52" />
+        </radialGradient>
+      </defs>
+
+      <line x1={ED.sunX} y1={ED.earthY} x2={ED.earthX} y2={ED.earthY} className="ed-axis" />
+      <circle cx={ED.earthX} cy={ED.earthY} r={ED.R} className="ed-orbit" />
+      <circle cx={ED.earthX} cy={ED.earthY} r={ED.ringIn} className="ed-ring" />
+      <circle cx={ED.earthX} cy={ED.earthY} r={ED.ringOut} className="ed-ring" />
+
+      {!compact && degTicks}
+      {cells}
+
+      {!compact && (
+        <text
+          x={shuklaX}
+          y={shuklaY}
+          className={`ed-paksha${curPaksha === "शुक्ल" ? " on" : ""}`}
+          textAnchor="middle"
+        >
+          {month} शुक्ल पक्ष
+        </text>
+      )}
+      {!compact && (
+        <text
+          x={krishnaX}
+          y={krishnaY}
+          className={`ed-paksha${curPaksha === "कृष्ण" ? " on" : ""}`}
+          textAnchor="middle"
+        >
+          {month} कृष्ण पक्ष
+        </text>
+      )}
+
+      <path d={sweepArc} className="ed-arc" fill="none" />
+      <circle cx={capx} cy={capy} r={4} className="ed-arc-cap" />
+      <text
+        x={arcLabelX}
+        y={arcLabelY}
+        className="ed-arc-val"
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {fmt(Math.round(E))}°
+      </text>
+
+      <line x1={ED.earthX} y1={ED.earthY} x2={mx} y2={my} className="ed-rmline" />
+
+      <circle cx={ED.sunX} cy={ED.earthY} r={ED.sunR + 34} fill="url(#ed-sunglow)" />
+      {rays}
+      <circle cx={ED.sunX} cy={ED.earthY} r={ED.sunR} fill="url(#ed-sun)" />
+      <text x={ED.sunX} y={ED.earthY + ED.sunR + 30} className="ed-body-label" textAnchor="middle">
+        सूर्य
+      </text>
+
+      <circle cx={ED.earthX} cy={ED.earthY} r={ED.earthR} fill="url(#ed-earth)" />
+      <circle
+        cx={ED.earthX}
+        cy={ED.earthY}
+        r={ED.earthR}
+        fill="none"
+        stroke="#bfeaff"
+        strokeWidth={1}
+        opacity={0.45}
+      />
+      <text x={ED.earthX} y={ED.earthY + ED.earthR + 22} className="ed-body-label" textAnchor="middle">
+        पृथ्वी
+      </text>
+
+      <g transform={`translate(${mx},${my})`}>
+        <EdMoon E={E} r={ED.moonR} />
+      </g>
+
+      <text x={amX - 14} y={amY - 30} className="ed-end ne" textAnchor="middle">
+        अमावस्या
+      </text>
+      <text x={amX - 14} y={amY - 12} className="ed-end en" textAnchor="middle">
+        ०°
+      </text>
+      <text x={puX + 16} y={puY - 30} className="ed-end ne" textAnchor="middle">
+        पूर्णिमा
+      </text>
+      <text x={puX + 16} y={puY - 12} className="ed-end en" textAnchor="middle">
+        १८०°
+      </text>
+    </svg>
+  );
+}

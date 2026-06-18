@@ -34,6 +34,7 @@ import { D1Chart } from "@/components/kundali/D1Chart";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import { buildBhavaChart } from "@/lib/bhava";
+import { navamsaRashiFromLongitude } from "@/lib/navamsa";
 import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-elements";
 import { vimshottariDasha } from "@/lib/dasha";
 
@@ -184,11 +185,12 @@ export function Kundali() {
     const shifted = shiftSiderealLongitude(rawLagna.longitude, ayanamshaMode);
     const rashiNum = Math.floor(shifted / 30) + 1;
     const offset = getAyanamshaOffsetDeg(ayanamshaMode);
-    if (offset === 0) return { ...rawLagna, rashiNum };
+    if (offset === 0) return { ...rawLagna, rashiNum, longitude: shifted };
     return {
       nameNe: rashiNeFromNumber(rashiNum) ?? rawLagna.nameNe,
       degree: toNepaliDigits((shifted % 30).toFixed(1)),
       rashiNum,
+      longitude: shifted,
     };
   }, [rawLagna, ayanamshaMode]);
   const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
@@ -201,6 +203,19 @@ export function Kundali() {
       .filter((p) => p.rashiNum != null)
       .map((p) => ({ key: p.key, labelNe: p.label, rashi: p.rashiNum! }));
     return buildBhavaChart(lagna.rashiNum, planetRashis, rashiNeFromNumber);
+  }, [lagna, planets]);
+
+  const d9Houses = useMemo(() => {
+    if (lagna?.longitude == null) return [];
+    const d9LagnaRashi = navamsaRashiFromLongitude(lagna.longitude);
+    const planetNavamsas = planets
+      .filter((p) => p.longitude != null)
+      .map((p) => ({
+        key: p.key,
+        labelNe: p.label,
+        rashi: navamsaRashiFromLongitude(p.longitude!),
+      }));
+    return buildBhavaChart(d9LagnaRashi, planetNavamsas, rashiNeFromNumber);
   }, [lagna, planets]);
 
   const panchangSummary = useMemo(() => {
@@ -398,30 +413,14 @@ export function Kundali() {
                       </h3>
                       <D1Chart houses={bhavaHouses} />
                     </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                        Bhava (भाव)
-                      </h3>
-                      <div className="grid grid-cols-3 gap-2">
-                        {bhavaHouses.map((house) => (
-                          <div
-                            key={house.house}
-                            className={cn(
-                              "rounded-lg border p-2 text-center",
-                              house.isLagna ? "border-secondary bg-secondary/5" : "border-border bg-card"
-                            )}
-                          >
-                            <p className="text-[10px] text-muted-foreground">भाव {toNepaliDigits(house.house)}</p>
-                            <p className="text-sm font-semibold text-foreground">{house.rashiNe}</p>
-                            {house.planets.length > 0 && (
-                              <p className="text-[10px] text-muted-foreground truncate">
-                                {house.planets.map((pl) => pl.labelNe.split(" ")[0]).join(", ")}
-                              </p>
-                            )}
-                          </div>
-                        ))}
+                    {d9Houses.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                          D9 Navamsha (नवांश)
+                        </h3>
+                        <D1Chart houses={d9Houses} />
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
