@@ -393,14 +393,19 @@ function WheelChartImpl({
       <circle key="ir-yoga-i" cx={CX} cy={CY} r={R_YOGA_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
     );
 
-    // Yoga ring — 27 segments × (360/27)° each, anchored at ecliptic 0°
+    // Yoga ring — 27 segments × (360/27)° each. Anchored at −sun so the segment
+    // the single moon needle points at is always the current yoga: yoga = sun +
+    // moon, and with this framing the needle at moonLon = (−sun) + (sun + moon)
+    // lands inside floor((sun+moon)/yogaDeg). Same sun-anchored trick the tithi
+    // and karana rings use, so the yoga ring rotates with the moon needle too.
     const yogaDeg = 360 / 27;
+    const yogaAnchor = -sunL;
     const yogaSum = normDeg(markers.sunLon + markers.moonLon);
     const curYogaIdx = Math.floor(yogaSum / yogaDeg);
     for (let y = 0; y < 27; y++) {
-      const L0 = y * yogaDeg;
-      const L1 = (y + 1) * yogaDeg;
-      const Lm = y * yogaDeg + yogaDeg / 2;
+      const L0 = yogaAnchor + y * yogaDeg;
+      const L1 = yogaAnchor + (y + 1) * yogaDeg;
+      const Lm = yogaAnchor + y * yogaDeg + yogaDeg / 2;
       const isCur = y === curYogaIdx;
       const yName = WHEEL_YOGAS[y]!;
       innerRings.push(

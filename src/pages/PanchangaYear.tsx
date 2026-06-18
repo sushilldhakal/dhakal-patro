@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin, Pause, Play } from "lucide-react";
 import { fetchPanchanga, panchangaKeys, type PanchangaDay } from "@/lib/api";
 import {
   BS_MONTHS_NE,
@@ -75,6 +75,7 @@ export function PanchangaYear() {
   // otherwise every day crossed while dragging fires its own request and they
   // all queue up behind each other.
   const [queryDay, setQueryDay] = useState(dayOfYear);
+  const [playing, setPlaying] = useState(false);
 
   const totalDays = useMemo(() => daysInBsYear(year), [year]);
   const clampedDay = Math.min(dayOfYear, totalDays);
@@ -84,6 +85,15 @@ export function PanchangaYear() {
     const id = setTimeout(() => setQueryDay(dayOfYear), SCRUB_DEBOUNCE_MS);
     return () => clearTimeout(id);
   }, [dayOfYear]);
+
+  // Playback: advance one day per second, looping back to day 1 at year's end.
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setDayOfYear((d) => (d >= totalDays ? 1 : d + 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [playing, totalDays]);
 
   // The debounced day drives the actual network subscription: it only changes
   // once dragging settles, so we never fire a request per crossed day.
@@ -271,15 +281,30 @@ export function PanchangaYear() {
               {toNepaliDigits(clampedDay)} / {toNepaliDigits(totalDays)}
             </span>
           </div>
-          <input
-            type="range"
-            className="w-full"
-            min={1}
-            max={totalDays}
-            step={1}
-            value={clampedDay}
-            onChange={(e) => setDayOfYear(Number(e.target.value))}
-          />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+              title={playing ? "रोक्नुहोस्" : "एक दिन प्रति सेकेन्ड चलाउनुहोस्"}
+              className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+            >
+              {playing ? (
+                <Pause className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4 translate-x-[1px]" />
+              )}
+            </button>
+            <input
+              type="range"
+              className="w-full"
+              min={1}
+              max={totalDays}
+              step={1}
+              value={clampedDay}
+              onChange={(e) => setDayOfYear(Number(e.target.value))}
+            />
+          </div>
         </div>
       </div>
     </div>

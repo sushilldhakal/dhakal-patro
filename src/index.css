@@ -2163,8 +2163,8 @@
   --w-ink: #eaf3f1;
   --w-ink-dim: #a7c4c3;
   --w-ink-faint: #84a3a2;
-  --w-accent: var(--brand-yellow, #ffd70a);
-  --w-accent-soft: color-mix(in srgb, var(--brand-yellow, #ffd70a) 22%, transparent);
+  --w-accent: var(--color-danger, #E0795B);
+  --w-accent-soft: color-mix(in srgb, var(--color-danger, #E0795B) 22%, transparent);
   color: var(--w-ink);
 }
 
@@ -2173,7 +2173,7 @@
   width: 100%;
   min-height: 800px;
   height: min(90vh, 960px);
-  max-width: 1000px;
+  max-width: 1400px;
   margin-inline: auto;
   background: radial-gradient(circle at 50% 47%, var(--w-sky-0) 0%, var(--w-sky-1) 42%, var(--w-sky-2) 78%);
   overflow: hidden;
