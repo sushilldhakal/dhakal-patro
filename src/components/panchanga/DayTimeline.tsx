@@ -328,11 +328,6 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
                           </text>
                         )
                       )}
-                      {tr.cls !== "lagna" && tr.cls !== "cho" && si === 0 && (
-                        <text x={x + 4} y={y + BAND + 16} className="pgx-time" textAnchor="start">
-                          {tLabel(s.fromG)}
-                        </text>
-                      )}
                     </g>
                   );
                 })}
