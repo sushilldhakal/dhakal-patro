@@ -3068,3 +3068,38 @@
   .ed-readout { gap: 16px; }
   .tm-wrap { padding: 0 14px 32px; }
 }
+
+/* Learn hub (index) */
+.learn-hero {
+  background:
+    radial-gradient(900px 520px at 78% 8%, #112c2a 0%, transparent 62%),
+    radial-gradient(640px 420px at 12% 88%, color-mix(in srgb, #e0795b 18%, transparent) 0%, transparent 70%),
+    linear-gradient(145deg, #0a1a1b 0%, #050c0d 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+}
+.learn-hero-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(255, 255, 255, 0.45) 0, transparent 100%),
+    radial-gradient(1px 1px at 78% 18%, rgba(255, 255, 255, 0.35) 0, transparent 100%),
+    radial-gradient(1px 1px at 44% 62%, rgba(255, 255, 255, 0.28) 0, transparent 100%),
+    radial-gradient(1px 1px at 88% 74%, rgba(255, 255, 255, 0.22) 0, transparent 100%);
+  opacity: 0.55;
+}
+.learn-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 14px;
+  font: 600 12px var(--pn-font);
+  color: rgba(234, 243, 241, 0.82);
+  letter-spacing: 0.02em;
+}
+.learn-featured-card {
+  backdrop-filter: blur(8px);
+}

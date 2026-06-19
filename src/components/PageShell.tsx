@@ -7,7 +7,7 @@ interface Props {
 
 export function PageShell({ children, className }: Props) {
   return (
-    <main className={cn("max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8", className)}>
+    <main className={cn("max-w-[1400px] mx-auto px-4 sm:px-6 py-8 space-y-8", className)}>
       {children}
     </main>
   );
