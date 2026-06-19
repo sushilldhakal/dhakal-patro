@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, MapPin, Sparkles } from "lucide-react";
+import { Clock, MapPin, Sparkles } from "lucide-react";
 import {
   fetchShadbala,
   kundaliKeys,
@@ -35,6 +35,7 @@ import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { D1Chart } from "@/components/kundali/D1Chart";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
+import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import { buildBhavaChart } from "@/lib/bhava";
@@ -42,6 +43,30 @@ import { navamsaRashiFromLongitude } from "@/lib/navamsa";
 import { drekkanaRashiFromLongitude } from "@/lib/drekkana";
 import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-elements";
 import { vimshottariDasha } from "@/lib/dasha";
+
+function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-background/50 dark:bg-background/30 px-3.5 py-3 min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1 truncate">
+        {label}
+      </p>
+      <p className="text-base font-bold text-foreground leading-tight">{value}</p>
+      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
+function ChartPanel({ titleNe, titleEn, houses }: { titleNe: string; titleEn: string; houses: ReturnType<typeof buildBhavaChart> }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/40 dark:bg-background/20 p-4 flex flex-col items-center gap-2">
+      <div className="text-center">
+        <p className="text-base font-bold text-foreground">{titleNe}</p>
+        <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{titleEn}</p>
+      </div>
+      <D1Chart houses={houses} />
+    </div>
+  );
+}
 
 const PLANET_LABELS: Record<string, string> = {
   sun: "☀️ Sun (सूर्य)",
@@ -276,8 +301,6 @@ export function Kundali() {
     return vimshottariDasha(moonLon, birthDate);
   }, [planets, atTimeDatetime]);
 
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
   const dateBs =
     data?.date_bs ??
     `${bs.year}-${String(bs.month).padStart(2, "0")}-${String(bs.day).padStart(2, "0")}`;
@@ -293,6 +316,9 @@ export function Kundali() {
           <Sparkles className="w-7 h-7 text-secondary shrink-0" />
           Janma Kundali
         </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          जन्म मिति, समय र स्थान अनुसार राशि, ग्रह र दशा विवरण
+        </p>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -324,199 +350,187 @@ export function Kundali() {
         )}
 
         {data && !isLoading && (
-          <div className="space-y-6">
-            <div className="bg-secondary rounded-2xl p-6 text-secondary-foreground">
-              <p className="text-primary-foreground/80 text-sm mb-1">Graha at Birth Time</p>
-              <p className="text-2xl font-bold">{dateBs}</p>
-              <p className="text-secondary-foreground/80 text-sm mt-0.5">{dateAd}</p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-secondary-foreground/70">
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {locationLabel}
-                  {effectiveTimezone ? ` (${effectiveTimezone})` : ""}
-                </span>
-                <span>🕐 {toNepaliDigits(clock)}</span>
-              </div>
-            </div>
-
-            {lagna && (
-              <div className="bg-card border border-border rounded-xl p-4">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Lagna (लग्न)
+          <div className="space-y-5">
+            {/* Birth summary */}
+            <section className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+              <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
+                <div className="flex-1 px-5 py-4 border-b lg:border-b-0 border-border bg-secondary/[0.09] dark:bg-secondary/20">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                    जन्म समय · Birth moment
                   </p>
-                  <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
-                    अयनांश: {ayanamshaInfo.labelNe}
-                    {isApproximateMode(ayanamshaMode) ? " (अनुमानित)" : ""}
-                  </span>
-                </div>
-                <p className="text-xl font-bold text-foreground">
-                  {lagna.nameNe}
-                  {lagna.degree && (
-                    <span className="text-sm font-normal text-muted-foreground ml-2">
-                      {lagna.degree}°
+                  <p className="text-2xl font-bold text-foreground font-[family-name:var(--pn-num)] leading-tight">
+                    {dateBs}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">{dateAd}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground">
+                      <MapPin className="w-3.5 h-3.5 shrink-0" />
+                      {locationLabel}
+                      {effectiveTimezone ? ` · ${effectiveTimezone}` : ""}
                     </span>
-                  )}
-                </p>
-              </div>
-            )}
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      {toNepaliDigits(clock)}
+                    </span>
+                  </div>
+                </div>
 
+                {lagna && (
+                  <div className="flex-1 px-5 py-4 flex flex-col justify-center min-w-[200px]">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        लग्न · Lagna
+                      </p>
+                      <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
+                        {ayanamshaInfo.labelNe}
+                        {isApproximateMode(ayanamshaMode) ? " · अनुमानित" : ""}
+                      </span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">
+                      {lagna.nameNe}
+                      {lagna.degree && (
+                        <span className="text-base font-normal text-muted-foreground ml-2 font-mono">
+                          {lagna.degree}°
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Panchang essentials */}
             {panchangSummary && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-card border border-border rounded-xl p-3.5">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">राशि (चन्द्र)</p>
-                  <p className="text-base font-bold text-foreground">
-                    {planets.find((p) => p.key === "moon")?.rashi ?? "—"}
-                  </p>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-3.5">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">नक्षत्र</p>
-                  <p className="text-base font-bold text-foreground">
-                    {panchangSummary.nakshatra
-                      ? `${panchangSummary.nakshatra.ne} (पाद ${toNepaliDigits(panchangSummary.nakshatra.pada)})`
-                      : "—"}
-                  </p>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-3.5">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">तिथि</p>
-                  <p className="text-base font-bold text-foreground">{panchangSummary.tithiNe ?? "—"}</p>
-                </div>
-                <div className="bg-card border border-border rounded-xl p-3.5">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">वार</p>
-                  <p className="text-base font-bold text-foreground">{panchangSummary.vaaraNe ?? "—"}</p>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <StatTile
+                  label="राशि (चन्द्र)"
+                  value={planets.find((p) => p.key === "moon")?.rashi ?? "—"}
+                />
+                <StatTile
+                  label="नक्षत्र"
+                  value={
+                    panchangSummary.nakshatra
+                      ? `${panchangSummary.nakshatra.ne}`
+                      : "—"
+                  }
+                  sub={
+                    panchangSummary.nakshatra
+                      ? `पाद ${toNepaliDigits(panchangSummary.nakshatra.pada)}`
+                      : undefined
+                  }
+                />
+                <StatTile label="तिथि" value={panchangSummary.tithiNe ?? "—"} />
+                <StatTile label="वार" value={panchangSummary.vaaraNe ?? "—"} />
+                <StatTile label="योग" value={panchangSummary.yoga?.ne ?? "—"} />
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => setShowAdvanced((v) => !v)}
-              aria-expanded={showAdvanced}
-              className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-secondary hover:text-secondary/80"
-            >
-              विस्तृत विवरण (Advanced)
-              <ChevronDown className={cn("w-4 h-4 transition-transform", showAdvanced && "rotate-180")} />
-            </button>
-
-            {showAdvanced && (
-              <div className="space-y-6">
-                {panchangSummary?.yoga && (
-                  <div className="bg-card border border-border rounded-xl p-3.5">
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">योग</p>
-                    <p className="text-base font-bold text-foreground">{panchangSummary.yoga.ne}</p>
-                  </div>
-                )}
-
-                {planets.length > 0 ? (
-                  <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                      Nava Graha (नव ग्रह)
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {planets.map((planet) => (
-                        <div
-                          key={planet.key}
-                          className={cn(
-                            "bg-card border rounded-xl p-4 space-y-1.5",
-                            planet.retrograde
-                              ? "border-secondary/30 bg-secondary/5"
-                              : "border-border"
-                          )}
-                        >
-                          <p className="text-xs font-semibold text-muted-foreground">{planet.label}</p>
-                          <p className="text-lg font-bold text-foreground">{planet.rashi}</p>
-                          {planet.degrees && (
-                            <p className="text-xs text-muted-foreground">{planet.degrees}</p>
-                          )}
-                          {planet.retrograde && (
-                            <span className="text-[10px] text-secondary font-semibold bg-secondary/10 px-2 py-0.5 rounded-full">
-                              Vakri ↺
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No planet data available for this date.</p>
-                )}
-
-                {bhavaHouses.length > 0 && (
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                        D1 Rashi Chart
-                      </h3>
-                      <D1Chart houses={bhavaHouses} />
-                    </div>
-                    {moonChartHouses.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                          Chandra Kundali (चन्द्र)
-                        </h3>
-                        <D1Chart houses={moonChartHouses} />
+            {/* Nava Graha */}
+            {planets.length > 0 ? (
+              <PanchangaSection titleNe="नव ग्रह" titleEn="Nava Graha">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-border">
+                  {planets.map((planet) => (
+                    <div
+                      key={planet.key}
+                      className={cn(
+                        "bg-card px-4 py-3.5 flex flex-col gap-1 min-h-[88px]",
+                        planet.retrograde && "bg-secondary/[0.06] dark:bg-secondary/10"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-[12px] font-semibold text-muted-foreground leading-snug">
+                          {planet.label}
+                        </p>
+                        {planet.retrograde && (
+                          <span className="text-[9.5px] text-secondary font-bold bg-secondary/15 dark:text-secondary px-1.5 py-0.5 rounded-full shrink-0">
+                            वक्री
+                          </span>
+                        )}
                       </div>
-                    )}
-                    {d9Houses.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                          D9 Navamsha (नवांश)
-                        </h3>
-                        <D1Chart houses={d9Houses} />
-                      </div>
-                    )}
-                    {d3Houses.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                          D3 Drekkana (द्रेष्काण)
-                        </h3>
-                        <D1Chart houses={d3Houses} />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {shadbalaQ.data && <ShadbalaCard data={shadbalaQ.data} />}
-                {shadbalaQ.isLoading && (
-                  <div className="bg-muted/50 animate-pulse rounded-xl h-40" />
-                )}
-
-                {dasha && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                      Vimshottari Dasha
-                    </h3>
-                    <div className="bg-card border border-border rounded-xl p-4 mb-3">
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">महादशा सुरु (जन्मकालीन)</p>
-                      <p className="text-xl font-bold text-foreground">{dasha.mahadashaLordNe}</p>
-                      <p className="text-sm text-muted-foreground mt-0.5">बाँकी अवधि: {dasha.balanceLabel}</p>
+                      <p className="text-lg font-bold text-foreground leading-tight">{planet.rashi}</p>
+                      {planet.degrees && (
+                        <p className="text-xs font-mono text-muted-foreground">{planet.degrees}</p>
+                      )}
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-left text-muted-foreground text-xs uppercase">
-                            <th className="py-1.5 pr-3">दशा</th>
-                            <th className="py-1.5 pr-3">सुरु</th>
-                            <th className="py-1.5">अन्त्य</th>
+                  ))}
+                </div>
+              </PanchangaSection>
+            ) : (
+              <p className="text-muted-foreground text-sm">No planet data available for this date.</p>
+            )}
+
+            {/* Charts */}
+            {bhavaHouses.length > 0 && (
+              <PanchangaSection titleNe="कुण्डली चक्र" titleEn="Divisional Charts">
+                <div className="grid sm:grid-cols-2 gap-4 p-4">
+                  <ChartPanel titleNe="राशि कुण्डली" titleEn="D1 Rashi" houses={bhavaHouses} />
+                  {moonChartHouses.length > 0 && (
+                    <ChartPanel titleNe="चन्द्र कुण्डली" titleEn="Chandra" houses={moonChartHouses} />
+                  )}
+                  {d9Houses.length > 0 && (
+                    <ChartPanel titleNe="नवांश" titleEn="D9 Navamsha" houses={d9Houses} />
+                  )}
+                  {d3Houses.length > 0 && (
+                    <ChartPanel titleNe="द्रेष्काण" titleEn="D3 Drekkana" houses={d3Houses} />
+                  )}
+                </div>
+              </PanchangaSection>
+            )}
+
+            {/* Vimshottari Dasha */}
+            {dasha && (
+              <PanchangaSection titleNe="विंशोत्तरी दशा" titleEn="Vimshottari Dasha">
+                <div className="p-4 space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <StatTile
+                      label="महादशा सुरु (जन्मकालीन)"
+                      value={dasha.mahadashaLordNe}
+                      sub={`बाँकी अवधि: ${dasha.balanceLabel}`}
+                    />
+                  </div>
+                  <div className="overflow-x-auto rounded-xl border border-border">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-muted-foreground text-[11px] uppercase tracking-wide bg-muted/40">
+                          <th className="py-2 px-3 font-semibold">दशा</th>
+                          <th className="py-2 px-3 font-semibold">सुरु</th>
+                          <th className="py-2 px-3 font-semibold">अन्त्य</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dasha.sequence.map((period, i) => (
+                          <tr key={i} className="border-t border-border">
+                            <td className="py-2 px-3 font-medium text-foreground">{period.lordNe}</td>
+                            <td className="py-2 px-3 text-muted-foreground">
+                              {period.startDate.toLocaleDateString("en", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </td>
+                            <td className="py-2 px-3 text-muted-foreground">
+                              {period.endDate.toLocaleDateString("en", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {dasha.sequence.map((period, i) => (
-                            <tr key={i} className="border-t border-border">
-                              <td className="py-1.5 pr-3 font-medium text-foreground">{period.lordNe}</td>
-                              <td className="py-1.5 pr-3 text-muted-foreground">
-                                {period.startDate.toLocaleDateString("en", { day: "2-digit", month: "short", year: "numeric" })}
-                              </td>
-                              <td className="py-1.5 text-muted-foreground">
-                                {period.endDate.toLocaleDateString("en", { day: "2-digit", month: "short", year: "numeric" })}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
+                </div>
+              </PanchangaSection>
+            )}
+
+            {/* Shadbala */}
+            {shadbalaQ.isLoading && (
+              <div className="bg-muted/50 animate-pulse rounded-xl h-40" />
+            )}
+            {shadbalaQ.data && (
+              <div className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
+                <ShadbalaCard data={shadbalaQ.data} />
               </div>
             )}
           </div>

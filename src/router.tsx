@@ -8,7 +8,6 @@ import { Header } from "./components/Header";
 import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
 
-const Calendar = lazyRoute(() => import("./pages/Calendar"), "Calendar");
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
 const PanchangaYear = lazyRoute(() => import("./pages/PanchangaYear"), "PanchangaYear");
 const Converter = lazyRoute(() => import("./pages/Converter"), "Converter");
@@ -27,7 +26,6 @@ const rootRoute = createRootRoute({
 });
 
 const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
-const calendarRoute = createRoute({ getParentRoute: () => rootRoute, path: "/calendar", component: Calendar });
 const panchangaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga", component: Panchanga });
 const panchangaYearRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/year", component: PanchangaYear });
 const converterRoute = createRoute({ getParentRoute: () => rootRoute, path: "/converter", component: Converter });
@@ -38,7 +36,6 @@ const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  calendarRoute,
   panchangaRoute,
   panchangaYearRoute,
   converterRoute,

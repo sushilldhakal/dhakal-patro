@@ -1,0 +1,332 @@
+import { useMemo, useRef } from "react";
+import { toNepaliDigits } from "@/lib/panchanga-format";
+import {
+  ORBIT,
+  ORBIT_B,
+  ORBIT_MARKERS,
+  ellipsePathPoints,
+  meanFromPointer,
+  meanFromTrue,
+  orbitFromMeanAnomaly,
+} from "./orbit-math";
+
+const TILT = 23.5;
+const HO = { W: 1200, H: 880, sunR: 70, earthR: 30, axisLen: 64 };
+
+/** Spin axis fixed in space; lean varies with orbital position (ν). */
+function earthAxis(nuDeg: number) {
+  const nu = (nuDeg * Math.PI) / 180;
+  const lean = ((TILT * Math.PI) / 180) * Math.cos(nu);
+  const ux = Math.sin(lean);
+  const uy = -Math.cos(lean);
+  return { ux, uy, lean };
+}
+
+function northernCapPath(ex: number, ey: number, r: number, ux: number, uy: number) {
+  const north = Math.atan2(-uy, ux);
+  const a0 = north - Math.PI / 2;
+  const a1 = north + Math.PI / 2;
+  const x0 = ex + r * Math.cos(a0);
+  const y0 = ey - r * Math.sin(a0);
+  const x1 = ex + r * Math.cos(a1);
+  const y1 = ey - r * Math.sin(a1);
+  return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${r} ${r} 0 0 0 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`;
+}
+
+function tiltArcPath(ex: number, ey: number, r: number, lean: number) {
+  const refX = ex;
+  const refY = ey - r;
+  const ax = ex + Math.sin(lean) * r;
+  const ay = ey - Math.cos(lean) * r;
+  const large = lean > Math.PI ? 1 : 0;
+  return `M ${refX.toFixed(1)} ${refY.toFixed(1)} A ${r} ${r} 0 ${large} 1 ${ax.toFixed(1)} ${ay.toFixed(1)}`;
+}
+
+function markerLabelLayout(pos: { ex: number; ey: number }, nu: number) {
+  const dx = pos.ex - ORBIT.cx;
+  const dy = pos.ey - ORBIT.cy;
+
+  if (nu === 90) {
+    const lx = ORBIT.cx + dx * 1.08;
+    const ly = ORBIT.cy + dy * 1.22;
+    return {
+      lx,
+      anchor: "middle" as const,
+      lines: { ne: ly - 32, detail: ly - 14 },
+    };
+  }
+  if (nu === 270) {
+    const lx = ORBIT.cx + dx * 1.08;
+    const ly = ORBIT.cy + dy * 1.22;
+    return {
+      lx,
+      anchor: "middle" as const,
+      lines: { ne: ly - 38, detail: ly - 20 },
+    };
+  }
+  if (nu === 0) {
+    const lx = pos.ex + 28;
+    const ly = pos.ey;
+    return {
+      lx,
+      anchor: "start" as const,
+      lines: { ne: ly - 22, detail: ly - 6, tag: ly + 10 },
+    };
+  }
+  // nu === 180 — summer, left side
+  const lx = pos.ex - 28;
+  const ly = pos.ey;
+  return {
+    lx,
+    anchor: "end" as const,
+    lines: { ne: ly - 22, detail: ly - 6, tag: ly + 10 },
+  };
+}
+
+interface Props {
+  meanDeg?: number;
+  spinDeg?: number;
+  onMeanDeg?: (v: number) => void;
+}
+
+export function HeliocentricOrbitDiagram({
+  meanDeg = meanFromTrue(180),
+  spinDeg = 0,
+  onMeanDeg,
+}: Props) {
+  const fmt = (n: number) => toNepaliDigits(n);
+  const orbit = orbitFromMeanAnomaly(meanDeg);
+  const { ex, ey, speed, nuDeg } = orbit;
+  const svgRef = useRef<SVGSVGElement>(null);
+  const drag = useRef(false);
+
+  const ellipsePath = useMemo(() => ellipsePathPoints(), []);
+  const centerX = ORBIT.cx + ORBIT.a * ORBIT.e;
+
+  const sunDx = ORBIT.cx - ex;
+  const sunDy = ORBIT.cy - ey;
+  const sunDist = Math.hypot(sunDx, sunDy) || 1;
+  const sunUx = sunDx / sunDist;
+  const sunUy = sunDy / sunDist;
+
+  const { ux: axisUx, uy: axisUy, lean } = earthAxis(nuDeg);
+  const eqUx = -axisUy;
+  const eqUy = axisUx;
+  const eqHalf = HO.earthR * 0.94;
+
+  const northX = ex + axisUx * HO.axisLen;
+  const northY = ey + axisUy * HO.axisLen;
+  const southX = ex - axisUx * HO.axisLen * 0.42;
+  const southY = ey - axisUy * HO.axisLen * 0.42;
+
+  const spinRad = (spinDeg * Math.PI) / 180;
+  const spinX = ex + eqUx * Math.cos(spinRad) * HO.earthR * 0.82;
+  const spinY = ey + eqUy * Math.cos(spinRad) * HO.earthR * 0.82;
+
+  const speedLabel = speed > 1.02 ? "छिटो" : speed < 0.98 ? "ढिलो" : "मध्यम";
+
+  const rays = Array.from({ length: 16 }, (_, k) => {
+    const a = (k / 16) * Math.PI * 2;
+    const r0 = HO.sunR + 4;
+    const r1 = HO.sunR + (k % 2 ? 14 : 22);
+    return (
+      <line
+        key={`ray${k}`}
+        x1={ORBIT.cx + r0 * Math.cos(a)}
+        y1={ORBIT.cy + r0 * Math.sin(a)}
+        x2={ORBIT.cx + r1 * Math.cos(a)}
+        y2={ORBIT.cy + r1 * Math.sin(a)}
+        className="ed-ray"
+      />
+    );
+  });
+
+  const sweepPts: string[] = [];
+  const steps = Math.max(2, Math.ceil(meanDeg / 3));
+  for (let i = 0; i <= steps; i++) {
+    const m = (meanDeg * i) / steps;
+    const p = orbitFromMeanAnomaly(m);
+    sweepPts.push((i === 0 ? "M" : "L") + p.ex.toFixed(1) + "," + p.ey.toFixed(1));
+  }
+
+  const peri = orbitFromMeanAnomaly(meanFromTrue(0));
+  const aphe = orbitFromMeanAnomaly(meanFromTrue(180));
+
+  return (
+    <svg
+      ref={svgRef}
+      viewBox={`0 0 ${HO.W} ${HO.H}`}
+      className={`ed-svg ho-svg${onMeanDeg ? " grab" : ""}`}
+      onPointerDown={(e) => {
+        if (!onMeanDeg) return;
+        drag.current = true;
+        const rect = svgRef.current!.getBoundingClientRect();
+        const px = ((e.clientX - rect.left) / rect.width) * HO.W;
+        const py = ((e.clientY - rect.top) / rect.height) * HO.H;
+        onMeanDeg(meanFromPointer(px, py));
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (!drag.current || !onMeanDeg) return;
+        const rect = svgRef.current!.getBoundingClientRect();
+        const px = ((e.clientX - rect.left) / rect.width) * HO.W;
+        const py = ((e.clientY - rect.top) / rect.height) * HO.H;
+        onMeanDeg(meanFromPointer(px, py));
+      }}
+      onPointerUp={() => {
+        drag.current = false;
+      }}
+      onPointerCancel={() => {
+        drag.current = false;
+      }}
+    >
+      <defs>
+        <radialGradient id="ho-sun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff6d8" />
+          <stop offset="38%" stopColor="#ffd24a" />
+          <stop offset="78%" stopColor="#f08a1d" />
+          <stop offset="100%" stopColor="#d65b12" />
+        </radialGradient>
+        <radialGradient id="ho-sunglow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffcf57" stopOpacity={0.45} />
+          <stop offset="100%" stopColor="#ffcf57" stopOpacity={0} />
+        </radialGradient>
+        <radialGradient id="ho-earth" cx="38%" cy="34%" r="72%">
+          <stop offset="0%" stopColor="#6fc6e8" />
+          <stop offset="48%" stopColor="#2b7fa8" />
+          <stop offset="100%" stopColor="#123a52" />
+        </radialGradient>
+        <linearGradient id="ho-north-cap" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8ed4a0" stopOpacity={0.55} />
+          <stop offset="100%" stopColor="#2b7fa8" stopOpacity={0.15} />
+        </linearGradient>
+      </defs>
+
+      <ellipse
+        cx={centerX}
+        cy={ORBIT.cy}
+        rx={ORBIT.a}
+        ry={ORBIT_B}
+        className="ho-orbit-ellipse ho-orbit-guide"
+        transform={`rotate(0 ${centerX} ${ORBIT.cy})`}
+      />
+      <path d={ellipsePath} className="ho-orbit-ellipse" fill="none" />
+
+      <line
+        x1={ORBIT.cx}
+        y1={ORBIT.cy}
+        x2={peri.ex}
+        y2={peri.ey}
+        className="ho-focus-line"
+      />
+      <line
+        x1={ORBIT.cx}
+        y1={ORBIT.cy}
+        x2={aphe.ex}
+        y2={aphe.ey}
+        className="ho-focus-line ho-focus-aphelion"
+      />
+      <text
+        x={(ORBIT.cx + peri.ex) / 2}
+        y={(ORBIT.cy + peri.ey) / 2 - 10}
+        className="ho-focus-label"
+        textAnchor="middle"
+      >
+        उपसौर (नजिक)
+      </text>
+      <text
+        x={(ORBIT.cx + aphe.ex) / 2}
+        y={(ORBIT.cy + aphe.ey) / 2 - 10}
+        className="ho-focus-label"
+        textAnchor="middle"
+      >
+        अपसौर (टाढा)
+      </text>
+
+      {ORBIT_MARKERS.map((m) => {
+        const pos = orbitFromMeanAnomaly(meanFromTrue(m.nu));
+        const { lx, anchor, lines } = markerLabelLayout(pos, m.nu);
+        return (
+          <g key={m.nu}>
+            <circle cx={pos.ex} cy={pos.ey} r={5} className="ho-marker-dot" />
+            <text x={lx} y={lines.ne} className="ho-marker-ne" textAnchor={anchor}>
+              {m.ne}
+            </text>
+            <text x={lx} y={lines.detail} className="ho-marker-detail" textAnchor={anchor}>
+              {m.detail}
+            </text>
+            {"tag" in lines && m.tag ? (
+              <text x={lx} y={lines.tag!} className="ho-marker-tag" textAnchor={anchor}>
+                {m.tag}
+              </text>
+            ) : null}
+          </g>
+        );
+      })}
+
+      {sweepPts.length > 1 && <path d={sweepPts.join(" ")} className="ho-sweep" fill="none" />}
+
+      <text x={HO.W / 2} y={HO.H - 22} className="ho-orbit-dir" textAnchor="middle">
+        ↺ वामावर्त (वास्तविक दिशा)
+      </text>
+
+      <line x1={ex} y1={ey} x2={ORBIT.cx} y2={ORBIT.cy} className="ho-sun-ray" />
+      <circle cx={ORBIT.cx} cy={ORBIT.cy} r={HO.sunR + 36} fill="url(#ho-sunglow)" />
+      {rays}
+      <circle cx={ORBIT.cx} cy={ORBIT.cy} r={HO.sunR} fill="url(#ho-sun)" />
+      <text x={ORBIT.cx} y={ORBIT.cy + HO.sunR + 28} className="ed-body-label" textAnchor="middle">
+        सूर्य (केन्द्रबिन्दु)
+      </text>
+
+      <g className="ho-earth-group">
+        <circle cx={ex} cy={ey} r={HO.earthR + 14} className="ho-earth-glow" />
+        <circle cx={ex} cy={ey} r={HO.earthR} fill="url(#ho-earth)" />
+        <path d={northernCapPath(ex, ey, HO.earthR, axisUx, axisUy)} fill="url(#ho-north-cap)" />
+        <line
+          x1={ex - eqUx * eqHalf}
+          y1={ey - eqUy * eqHalf}
+          x2={ex + eqUx * eqHalf}
+          y2={ey + eqUy * eqHalf}
+          className="ho-equator"
+        />
+        <line
+          x1={ex}
+          y1={ey}
+          x2={ex}
+          y2={ey - HO.earthR * 0.55}
+          className="ho-tilt-ref"
+        />
+        <path d={tiltArcPath(ex, ey, HO.earthR * 0.55, lean)} className="ho-tilt-arc" fill="none" />
+        <line x1={southX} y1={southY} x2={northX} y2={northY} className="ho-pole-axis" />
+        <circle cx={northX} cy={northY} r={5} className="ho-north-pole" />
+        <text
+          x={northX + axisUx * 14 + eqUx * 6}
+          y={northY + axisUy * 14 + eqUy * 6}
+          className="ho-pole-label"
+        >
+          उत्तर · {fmt(TILT)}°
+        </text>
+        <line
+          x1={ex}
+          y1={ey}
+          x2={spinX}
+          y2={spinY}
+          className="ho-spin-arm"
+        />
+        <circle cx={spinX} cy={spinY} r={5} className="ho-spin-dot" />
+      </g>
+
+      <text x={ex} y={ey + HO.earthR + 24} className="ed-body-label" textAnchor="middle">
+        पृथ्वी
+      </text>
+
+      <g
+        transform={`translate(${ex + sunUx * 72},${ey + sunUy * 72})`}
+      >
+        <text className="ho-callout-ne" textAnchor="middle" y={-6}>
+          गति: {speedLabel}
+        </text>
+      </g>
+    </svg>
+  );
+}

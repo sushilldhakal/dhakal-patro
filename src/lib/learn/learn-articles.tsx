@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { ElongationStudy } from "@/components/tithi-mechanics/TithiMechanics";
+import { HeliocentricOrbitStudy } from "@/components/learn/HeliocentricOrbitStudy";
+import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
+import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
   SunriseTimeline,
   AdhikMassDiagram,
@@ -77,6 +80,7 @@ export function SolarSystem() {
           यही परिक्रमाले <span className="hl">वर्ष</span> बन्छ। पृथ्वी आफैँ पनि २३.५° ढल्केर
           घुम्ने हुनाले ऋतु फेरिन्छन्।
         </Lede>
+        <HeliocentricOrbitStudy />
       </Section>
       <Section kicker="०२" title="चन्द्रको गति" en="Lunar motion">
         <Lede>
@@ -85,6 +89,7 @@ export function SolarSystem() {
           लाग्छ (चान्द्र मास)। यिनै दुई गतिको खेलले पञ्चाङ्गका तिथि, नक्षत्र र पक्ष निर्धारण
           गर्छन्।
         </Lede>
+        <ElongationStudy />
         <Keys
           items={[
             { h: "नाक्षत्र मास ~२७.३ दिन", p: "चन्द्र आकाशमा एकै तारापुञ्जमा फर्किन लाग्ने समय।" },
@@ -92,6 +97,57 @@ export function SolarSystem() {
             { h: "सौर वर्ष ~३६५.२५ दिन", p: "पृथ्वीको एक पूर्ण परिक्रमा — ऋतु र साल यसैले बन्छ।" },
           ]}
         />
+      </Section>
+      <Section kicker="०३" title="पृथ्वीको घूर्णन" en="Earth's Rotation">
+        <Lede>
+          पृथ्वी आफ्नै अक्षमा <b>पश्चिमबाट पूर्वतर्फ</b> घुम्छ। एक पूरा घूर्णन पूरा गर्न करिब{" "}
+          <b>{N(24)} घण्टा</b> लाग्छ। यही घूर्णनका कारण दिन र रात हुन्छन्।
+        </Lede>
+        <div className="tm-card pad-lg">
+          <EarthRotationDiagram />
+        </div>
+        <Keys
+          items={[
+            { h: `१ घूर्णन ≈ ${N(24)} घण्टा`, p: "सौर दिन — सूर्य फेरि उस्तै स्थानमा देखा पर्ने समय।" },
+            {
+              h: "सूर्य पूर्वबाट उदाएजस्तो देखिनु",
+              p: "पृथ्वीको घूर्णनका कारण हो — सूर्य नभई पृथ्वी नै घुमिरहेको हुन्छ।",
+            },
+            {
+              h: "सूर्योदय र सूर्यास्तको समय",
+              p: "स्थानअनुसार फरक हुन्छ — देशान्तर र समय क्षेत्रले निर्धारण गर्छ।",
+            },
+          ]}
+        />
+      </Section>
+      <Section kicker="०४" title="पृथ्वीको अक्षीय झुकाव" en="Axial Tilt">
+        <Lede>
+          पृथ्वीको अक्ष लगभग <b>{N(23.5)}°</b> झुकेको छ। यही झुकावका कारण विभिन्न ऋतुहरू
+          उत्पन्न हुन्छन् — नेपालमा छ ऋतु:
+        </Lede>
+        <Keys
+          items={[
+            { h: "वसन्त", p: "तापमान बढ्दै, दिन लामो हुँदै।" },
+            { h: "ग्रीष्म", p: "सबैभन्दा लामो दिन, उच्च ताप।" },
+            { h: "वर्षा", p: "मनसुन — नेपालमा प्रमुख वर्षाकाल।" },
+            { h: "शरद", p: "ताप घट्दै, शुष्क र सफा आकाश।" },
+            { h: "हेमन्त", p: "जाडो सुरु, रात लामो हुँदै।" },
+            { h: "शिशिर", p: "सबैभन्दा चिसो, छोटो दिन।" },
+          ]}
+        />
+        <Note>
+          यदि पृथ्वीको अक्ष नझुकेको भए ऋतुहरूको परिवर्तन धेरै कम हुने थियो।
+        </Note>
+      </Section>
+      <Section kicker="०५" title="चन्द्रका कला" en="Phases of the Moon">
+        <Lede>
+          चन्द्रमा आफैं प्रकाश दिने वस्तु होइन। <span className="hl">सूर्यको प्रकाश</span>{" "}
+          परावर्तित गरेर चम्किन्छ। यिनै कलाहरूले पक्ष र तिथिको अनुभव गराउँछन्।
+        </Lede>
+        <div className="tm-card pad-lg">
+          <p className="ss-phases-heading">मुख्य चरणहरू</p>
+          <MoonPhasesStrip />
+        </div>
       </Section>
       <Note>
         खगोलीय गतिको यही नियमितताले नै नेपाली पात्रोदेखि पञ्चाङ्गसम्मका सबै गणनाको जग बसाल्छ।

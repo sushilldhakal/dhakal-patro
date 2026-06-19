@@ -1,9 +1,11 @@
 import { useRef } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
 import {
   tithiIndexFromElongation,
   tithiNum,
 } from "@/lib/tithi-wheel-data";
+import { MoonPhaseDisc } from "./MoonPhaseDisc";
 
 const RAD = Math.PI / 180;
 
@@ -19,32 +21,15 @@ const ED = {
   ringIn: 250,
   ringOut: 302,
   degR: 332,
-  moonR: 17,
+  moonR: 22,
 };
 
-const edAng = (E: number) => 180 - E;
+/** CCW on screen (वामावर्त) as elongation E increases; अमावस्या left, पूर्णिमा right. */
+const edAng = (E: number) => 180 + E;
 const edPos = (E: number, r: number): [number, number] => {
   const a = edAng(E) * RAD;
   return [ED.earthX + r * Math.cos(a), ED.earthY - r * Math.sin(a)];
 };
-
-function EdMoon({ E, r }: { E: number; r: number }) {
-  const e = ((E % 360) + 360) % 360;
-  const rx = Math.abs(Math.cos(e * RAD)) * r;
-  const gibbous = e > 90 && e < 270;
-  const outerSweep = 0;
-  const termSweep = gibbous ? 1 : 0;
-  const litPath = `M0,${-r} A${r},${r} 0 0 ${outerSweep} 0,${r} A${rx.toFixed(2)},${r} 0 0 ${termSweep} 0,${-r} Z`;
-  return (
-    <g>
-      <circle cx={0} cy={0} r={r} fill="#0e1417" stroke="#46585f" strokeWidth={0.9} />
-      {e > 1.5 && e < 358.5 && <path d={litPath} fill="#eef4f2" />}
-      {e > 172 && e < 188 && (
-        <circle cx={0} cy={0} r={r} fill="none" stroke="#fff" strokeWidth={0.6} opacity={0.5} />
-      )}
-    </g>
-  );
-}
 
 interface Props {
   E?: number;
@@ -68,7 +53,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
     const px = ((e.clientX - r.left) / r.width) * ED.W;
     const py = ((e.clientY - r.top) / r.height) * ED.H;
     const a = Math.atan2(-(py - ED.earthY), px - ED.earthX) / RAD;
-    const val = 180 - a;
+    const val = a - 180;
     return ((val % 360) + 360) % 360;
   };
 
@@ -174,6 +159,15 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
   const [puX, puY] = edPos(180, ED.R);
   const [arcLabelX, arcLabelY] = edPos(E / 2, arcR - 30);
 
+  const orbitDirPath = (() => {
+    const [x0, y0] = edPos(24, ED.R);
+    const [x1, y1] = edPos(66, ED.R);
+    const [xm, ym] = edPos(45, ED.R + 28);
+    return `M ${x0.toFixed(1)} ${y0.toFixed(1)} Q ${xm.toFixed(1)} ${ym.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  })();
+
+  const moonRot = moonSunFacingRotation(mx, my, ED.sunX, ED.earthY);
+
   return (
     <svg
       ref={svgRef}
@@ -196,6 +190,16 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
       }}
     >
       <defs>
+        <marker
+          id="ed-orbit-arrow"
+          markerWidth="8"
+          markerHeight="8"
+          refX="7"
+          refY="4"
+          orient="auto"
+        >
+          <path d="M0,0 L8,4 L0,8 Z" className="ed-orbit-dir-arrow" />
+        </marker>
         <radialGradient id="ed-sun" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#fff6d8" />
           <stop offset="38%" stopColor="#ffd24a" />
@@ -217,6 +221,11 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
       <circle cx={ED.earthX} cy={ED.earthY} r={ED.R} className="ed-orbit" />
       <circle cx={ED.earthX} cy={ED.earthY} r={ED.ringIn} className="ed-ring" />
       <circle cx={ED.earthX} cy={ED.earthY} r={ED.ringOut} className="ed-ring" />
+
+      <path d={orbitDirPath} className="ed-orbit-dir" fill="none" markerEnd="url(#ed-orbit-arrow)" />
+      <text x={ED.earthX} y={ED.earthY - ED.R - 18} className="ed-orbit-dir-label" textAnchor="middle">
+        ↺ वामावर्त
+      </text>
 
       {!compact && degTicks}
       {cells}
@@ -277,8 +286,8 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         पृथ्वी
       </text>
 
-      <g transform={`translate(${mx},${my})`}>
-        <EdMoon E={E} r={ED.moonR} />
+      <g transform={`translate(${mx},${my}) rotate(${moonRot})`}>
+        <MoonPhaseDisc elongation={E} r={ED.moonR} uid="ed-moon" />
       </g>
 
       <text x={amX - 14} y={amY - 30} className="ed-end ne" textAnchor="middle">

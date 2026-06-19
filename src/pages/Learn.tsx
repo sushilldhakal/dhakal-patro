@@ -41,28 +41,28 @@ const CATEGORY_META: Record<
 > = {
   astronomy: {
     icon: Orbit,
-    chip: "bg-sky-500/15 text-sky-300 border-sky-500/25",
-    ring: "group-hover:ring-sky-500/30",
+    chip: "bg-sky-500/10 text-sky-800 border-sky-500/25 dark:text-sky-200",
+    ring: "group-hover:ring-sky-500/25",
   },
   calendars: {
     icon: CalendarRange,
-    chip: "bg-amber-500/15 text-amber-200 border-amber-500/25",
-    ring: "group-hover:ring-amber-500/30",
+    chip: "bg-amber-500/10 text-amber-900 border-amber-500/25 dark:text-amber-200",
+    ring: "group-hover:ring-amber-500/25",
   },
   panchanga: {
     icon: ScrollText,
-    chip: "bg-teal-500/15 text-teal-200 border-teal-500/25",
-    ring: "group-hover:ring-teal-500/30",
+    chip: "bg-teal-500/10 text-teal-900 border-teal-500/25 dark:text-teal-200",
+    ring: "group-hover:ring-teal-500/25",
   },
   eclipses: {
     icon: Moon,
-    chip: "bg-violet-500/15 text-violet-200 border-violet-500/25",
-    ring: "group-hover:ring-violet-500/30",
+    chip: "bg-violet-500/10 text-violet-900 border-violet-500/25 dark:text-violet-200",
+    ring: "group-hover:ring-violet-500/25",
   },
   kundali: {
     icon: Compass,
-    chip: "bg-rose-500/15 text-rose-200 border-rose-500/25",
-    ring: "group-hover:ring-rose-500/30",
+    chip: "bg-rose-500/10 text-rose-900 border-rose-500/25 dark:text-rose-200",
+    ring: "group-hover:ring-rose-500/25",
   },
 };
 
@@ -100,28 +100,33 @@ function TopicCard({
       <Link
         to="/learn/$slug"
         params={{ slug: topic.slug }}
-        className="learn-featured-card group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition-all hover:border-[#6fd4d2]/40 hover:bg-white/[0.07]"
+        className="group relative flex h-full flex-col rounded-2xl border border-secondary/25 bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-secondary/50 hover:shadow-md"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#6fd4d2]/15 text-[#6fd4d2] ring-1 ring-[#6fd4d2]/20">
-            <Icon className="h-5 w-5" />
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary/12 text-secondary">
+            <Icon className="h-6 w-6" />
           </span>
-          {category && (
-            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">
-              {category.en}
+          {category && meta && (
+            <span
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide",
+                meta.chip,
+              )}
+            >
+              {category.ne}
             </span>
           )}
         </div>
-        <h3 className="text-base font-bold leading-snug text-[#eaf3f1]">
+        <h3 className="text-xl font-bold leading-snug text-foreground">
           {topic.titleNe}
         </h3>
-        <p className="mt-1 text-xs font-medium text-[#ffd70a]/90">{topic.titleEn}</p>
-        <p className="mt-3 flex-1 text-sm leading-relaxed text-white/60">
+        <p className="mt-1 text-sm font-medium text-muted-foreground">{topic.titleEn}</p>
+        <p className="mt-3 flex-1 text-base leading-relaxed text-foreground/80">
           {topic.summary}
         </p>
-        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#6fd4d2]">
+        <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
           पढ्न सुरु गर्नुहोस्
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </span>
       </Link>
     );
@@ -132,20 +137,20 @@ function TopicCard({
       <Link
         to="/learn/$slug"
         params={{ slug: topic.slug }}
-        className="group flex items-center gap-3 rounded-xl border border-border bg-card/60 px-3 py-2.5 transition-colors hover:border-secondary/50 hover:bg-secondary/[0.05]"
+        className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-secondary/50 hover:bg-secondary/[0.05]"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
-          <Icon className="h-4 w-4" />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+          <Icon className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-foreground">
+          <span className="block truncate text-base font-semibold text-foreground">
             {topic.titleNe}
           </span>
-          <span className="block truncate text-xs text-muted-foreground">
+          <span className="block truncate text-sm text-muted-foreground">
             {topic.titleEn}
           </span>
         </span>
-        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
+        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
       </Link>
     );
   }
@@ -155,18 +160,18 @@ function TopicCard({
       to="/learn/$slug"
       params={{ slug: topic.slug }}
       className={cn(
-        "group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-secondary/45 hover:shadow-md",
+        "group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-secondary/45 hover:shadow-md",
         meta?.ring && `hover:ring-2 ${meta.ring}`,
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary/15">
-          <Icon className="h-[18px] w-[18px]" />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary/15">
+          <Icon className="h-5 w-5" />
         </span>
         {category && meta && (
           <span
             className={cn(
-              "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]",
+              "rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide",
               meta.chip,
             )}
           >
@@ -175,17 +180,17 @@ function TopicCard({
         )}
       </div>
       <div>
-        <h3 className="font-bold leading-snug text-foreground">{topic.titleNe}</h3>
-        <p className="mt-0.5 text-xs font-medium text-muted-foreground">
+        <h3 className="text-lg font-bold leading-snug text-foreground">{topic.titleNe}</h3>
+        <p className="mt-1 text-sm font-medium text-muted-foreground">
           {topic.titleEn}
         </p>
       </div>
-      <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
+      <p className="flex-1 text-base leading-relaxed text-foreground/80">
         {topic.summary}
       </p>
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-secondary">
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
         विस्तृत पढ्नुहोस्
-        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </span>
     </Link>
   );
@@ -230,71 +235,76 @@ export function Learn() {
 
   return (
     <PageShell className="space-y-8">
-      <section className="learn-hero relative overflow-hidden rounded-3xl border border-border">
-        <div className="learn-hero-glow pointer-events-none absolute inset-0" aria-hidden />
-        <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-10">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#ffd70a]/25 bg-[#ffd70a]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#ffd70a]">
-                <BookOpen className="h-3.5 w-3.5" />
-                ज्ञानकेन्द्र
-              </div>
-              <h1 className="text-3xl font-bold tracking-tight text-[#eaf3f1] sm:text-4xl">
-                नेपाली पात्रो र पञ्चाङ्ग
-                <span className="block text-[#6fd4d2]">सरल भाषामा बुझौं</span>
-              </h1>
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base">
-                तिथि, नक्षत्र, ग्रहण, विक्रम सम्वत् र कुण्डली — खगोलीय आधारदेखि
-                दैनिक प्रयोगसम्मका लेखहरू।
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <div className="learn-stat-pill">
-                  <GraduationCap className="h-4 w-4 text-[#6fd4d2]" />
-                  <span>{LEARN_TOPICS.length} विषय</span>
-                </div>
-                <div className="learn-stat-pill">
-                  <Layers3 className="h-4 w-4 text-[#ffd70a]" />
-                  <span>{LEARN_CATEGORIES.length} श्रेणी</span>
-                </div>
-              </div>
+      <section className="learn-hero rounded-3xl border border-border bg-card px-6 py-8 sm:px-10 sm:py-10">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-secondary/25 bg-secondary/8 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary">
+              <BookOpen className="h-4 w-4" />
+              ज्ञानकेन्द्र
             </div>
-
-            <div className="w-full max-w-md shrink-0">
-              <label htmlFor="learn-search" className="sr-only">
-                विषय खोज्नुहोस्
-              </label>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
-                <Input
-                  id="learn-search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="तिथि, ग्रहण, अयनांश…"
-                  className="h-11 border-white/15 bg-black/25 pl-10 pr-10 text-[#eaf3f1] placeholder:text-white/40 focus-visible:border-[#6fd4d2]/60 focus-visible:ring-[#6fd4d2]/25"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-white/50 transition-colors hover:bg-white/10 hover:text-white"
-                    aria-label="खोज मेट्नुहोस्"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              नेपाली पात्रो र पञ्चाङ्ग
+              <span className="block text-secondary">सरल भाषामा बुझौं</span>
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-foreground/80 sm:text-lg">
+              तिथि, नक्षत्र, ग्रहण, विक्रम सम्वत् र कुण्डली — खगोलीय आधारदेखि
+              दैनिक प्रयोगसम्मका लेखहरू।
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <div className="learn-stat-pill">
+                <GraduationCap className="h-4 w-4 text-secondary" />
+                <span>{LEARN_TOPICS.length} विषय</span>
+              </div>
+              <div className="learn-stat-pill">
+                <Layers3 className="h-4 w-4 text-secondary" />
+                <span>{LEARN_CATEGORIES.length} श्रेणी</span>
               </div>
             </div>
           </div>
 
-          {!isFiltering && (
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {featuredTopics.map((topic) => (
-                <TopicCard key={topic.slug} topic={topic} variant="featured" />
-              ))}
+          <div className="w-full max-w-md shrink-0">
+            <label htmlFor="learn-search" className="sr-only">
+              विषय खोज्नुहोस्
+            </label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="learn-search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="तिथि, ग्रहण, अयनांश…"
+                className="h-12 pl-11 pr-11 text-base"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                  aria-label="खोज मेट्नुहोस्"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </section>
+
+      {!isFiltering && (
+        <section>
+          <div className="mb-5">
+            <h2 className="text-xl font-bold text-foreground sm:text-2xl">प्रमुख विषयहरू</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              सुरु गर्नका लागि सबैभन्दा उपयोगी लेखहरू
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredTopics.map((topic) => (
+              <TopicCard key={topic.slug} topic={topic} variant="featured" />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
@@ -302,7 +312,7 @@ export function Learn() {
             type="button"
             onClick={() => setActiveCategory("all")}
             className={cn(
-              "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+              "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
               activeCategory === "all"
                 ? "border-secondary bg-secondary text-secondary-foreground"
                 : "border-border bg-card text-muted-foreground hover:border-secondary/40 hover:text-foreground",
@@ -319,7 +329,7 @@ export function Learn() {
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
                   activeCategory === cat.id
                     ? "border-secondary bg-secondary text-secondary-foreground"
                     : "border-border bg-card text-muted-foreground hover:border-secondary/40 hover:text-foreground",
@@ -333,25 +343,25 @@ export function Learn() {
           })}
         </div>
         {isFiltering && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             {filteredTopics.length} विषय भेटियो
           </p>
         )}
       </div>
 
       {!isFiltering && (
-        <section className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6">
-          <div className="mb-4 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-secondary" />
-            <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-foreground">
+        <section className="rounded-2xl border border-border bg-card p-6 sm:p-7">
+          <div className="mb-5 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-secondary" />
+            <h2 className="text-lg font-bold text-foreground sm:text-xl">
               सुरुवाती मार्ग
             </h2>
-            <span className="text-xs text-muted-foreground">· Suggested path</span>
+            <span className="text-sm text-muted-foreground">· Suggested path</span>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {starterPath.map((topic, index) => (
               <div key={topic.slug} className="relative">
-                <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.18em] text-secondary/80">
+                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-secondary">
                   चरण {index + 1}
                 </span>
                 <TopicCard topic={topic} variant="compact" />
@@ -399,8 +409,8 @@ export function Learn() {
                       <CatIcon className="h-5 w-5" />
                     </span>
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">{cat.ne}</h2>
-                      <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
+                      <h2 className="text-2xl font-bold text-foreground">{cat.ne}</h2>
+                      <p className="text-sm text-muted-foreground">
                         {cat.en} · {topics.length} articles
                       </p>
                     </div>
@@ -408,7 +418,7 @@ export function Learn() {
                   <button
                     type="button"
                     onClick={() => setActiveCategory(cat.id)}
-                    className="text-xs font-semibold text-secondary hover:underline"
+                    className="text-sm font-semibold text-secondary hover:underline"
                   >
                     यो श्रेणी मात्र हेर्नुहोस्
                   </button>

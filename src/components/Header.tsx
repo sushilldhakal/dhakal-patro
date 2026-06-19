@@ -13,7 +13,6 @@ import { useTheme } from "next-themes";
 import { cn } from "../lib/utils";
 
 const NAV = [
-  { to: "/calendar" as const, label: "Calendar", icon: CalendarDays },
   { to: "/panchanga" as const, label: "Surya Panchanga", icon: Star },
   { to: "/converter" as const, label: "Converter", icon: ArrowLeftRight },
   { to: "/holidays" as const, label: "Holidays", icon: PartyPopper },

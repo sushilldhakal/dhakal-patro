@@ -58,7 +58,7 @@ export function LearnArticle() {
               <Link
                 to="/learn/$slug"
                 params={{ slug: prev.slug }}
-                className="group flex flex-1 items-center gap-2 rounded-xl border border-border bg-card/40 p-3 text-left transition-colors hover:border-secondary/60"
+                className="group flex flex-1 items-center gap-2 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-secondary/60"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0 text-secondary" />
                 <span className="min-w-0">
@@ -77,7 +77,7 @@ export function LearnArticle() {
               <Link
                 to="/learn/$slug"
                 params={{ slug: next.slug }}
-                className="group flex flex-1 items-center justify-end gap-2 rounded-xl border border-border bg-card/40 p-3 text-right transition-colors hover:border-secondary/60"
+                className="group flex flex-1 items-center justify-end gap-2 rounded-xl border border-border bg-card p-3 text-right transition-colors hover:border-secondary/60"
               >
                 <span className="min-w-0">
                   <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">
