@@ -1,9 +1,18 @@
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { ElongationStudy } from "@/components/tithi-mechanics/TithiMechanics";
 import {
   SunriseTimeline,
   AdhikMassDiagram,
 } from "@/components/tithi-mechanics/tithi-mechanics-diagrams";
+import { HoraRing } from "@/components/panchanga/HoraRing";
+import {
+  resolveLocationTimezone,
+  usePanchangaLocation,
+} from "@/components/panchanga/use-panchanga-location";
+import { fetchPanchanga, panchangaKeys } from "@/lib/api";
+import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 
 const N = toNepaliDigits;
 
@@ -506,6 +515,63 @@ export function Ayanamsha() {
         यस एपको कुण्डली पृष्ठमा तपाईं आफैँ अयनांश प्रणाली रोज्न सक्नुहुन्छ र फरक आफ्नै आँखाले
         हेर्न सक्नुहुन्छ।
       </Note>
+    </>
+  );
+}
+
+export function HoraArticle() {
+  const { location } = usePanchangaLocation();
+  const todayAd = useMemo(
+    () => todayAdStringInTimezone(new Date(), resolveLocationTimezone(location)),
+    [location],
+  );
+  const panchangaQ = useQuery({
+    queryKey: panchangaKeys.day(todayAd, "ad", location.params),
+    queryFn: () => fetchPanchanga(todayAd, "ad", location.params),
+    staleTime: 1000 * 60 * 30,
+  });
+  const p = panchangaQ.data;
+  const timezone = resolveTimeZone(p?.location?.timezone, location.params.timezone);
+
+  return (
+    <>
+      <Section kicker="०१" title="दिनका चौबीस होरा" en="Planetary hours">
+        <Lede>
+          प्रत्येक दिनलाई <b>चौबीस होरा</b> (ग्रहीय घण्टा) मा बाँडिन्छ — सूर्योदयदेखि अर्को
+          सूर्योदयसम्म। हरेक होरालाई <span className="hl-amber">सात ग्रह</span> (आदित्य,
+          शुक्र, बुध, चन्द्र, शनि, बृहस्पति, मङ्गल) ले पालैपालो शासन गर्छन्। सूर्योदयपछिको{" "}
+          <b>पहिलो होरा</b> को स्वामी ग्रहले नै <span className="hl">दिनको नाम</span> दिन्छ।
+        </Lede>
+        {p ? (
+          <div className="mt-5">
+            <HoraRing p={p} isToday timezone={timezone} />
+          </div>
+        ) : (
+          <div className="tm-card pad-lg flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
+            लोड हुँदैछ…
+          </div>
+        )}
+      </Section>
+
+      <Section kicker="०२" title="कसरी पढ्ने" en="How to read it">
+        <Keys
+          items={[
+            { h: "वलय = एक दिन", p: "भित्री वलय आइतबार, बाहिरी शनिबार — सात वलय सात दिन।" },
+            { h: "होरा क्रम", p: "हरेक वलयभित्र चौबीस होरा; ग्रह आदित्य → शनि क्रममा घुम्छन्।" },
+            { h: "दिनको स्वामी", p: "सूर्योदयको पहिलो होराको ग्रह = त्यो दिनको स्वामी (वार)।" },
+            { h: "निरन्तर गणना", p: "आइतबारको अन्तिम होरा सोमबारमा गुड्छ — कहिल्यै रोकिँदैन।" },
+          ]}
+        />
+      </Section>
+
+      <Section kicker="०३" title="किन काम लाग्छ" en="Why it matters">
+        <Lede>
+          शुभ कार्यको मुहूर्त छान्दा होरा हेरिन्छ — जस्तै यात्रा वा व्यापारका लागि{" "}
+          <b>बुध/बृहस्पति</b> होरा, स्थिर कामका लागि <b>शनि</b> होरा अनुकूल मानिन्छ। माथिको
+          चक्र अहिलेको होरामा केन्द्रित छ; तल स्लाइडर चलाएर वा प्ले थिचेर हप्ताभरि होरा कसरी
+          सर्छ हेर्नुहोस्।
+        </Lede>
+      </Section>
     </>
   );
 }

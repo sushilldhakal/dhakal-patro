@@ -307,7 +307,7 @@ export function Panchanga() {
       <LearnMoreCard
         className="mt-7"
         heading="पञ्चाङ्गका पाँच अङ्ग बुझ्नुहोस्"
-        slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "sankranti"]}
+        slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "hora"]}
       />
 
       <p className="mt-7 text-[11.5px] text-muted-foreground text-center">
