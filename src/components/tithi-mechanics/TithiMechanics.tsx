@@ -12,7 +12,7 @@ const PRESETS = [
   { ne: "कृष्ण अष्टमी", E: 270 },
 ];
 
-function ElongationStudy() {
+export function ElongationStudy() {
   const [E, setE] = useState(87);
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);

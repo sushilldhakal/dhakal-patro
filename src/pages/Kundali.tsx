@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { KundaliControls } from "@/components/kundali/KundaliControls";
 import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { D1Chart } from "@/components/kundali/D1Chart";
+import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import { buildBhavaChart } from "@/lib/bhava";
@@ -507,6 +508,12 @@ export function Kundali() {
           </div>
         )}
       </div>
+
+      <LearnMoreCard
+        className="mt-7"
+        heading="कुण्डली बुझ्न आवश्यक आधार"
+        slugs={["ayanamsha", "nakshatra", "solar-system"]}
+      />
 
       <p className="mt-7 text-[11.5px] text-muted-foreground text-center">
         कुण्डलीका मानहरू Dhakal Patro API बाट · Kundali values from live API

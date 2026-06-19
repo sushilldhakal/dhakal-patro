@@ -9,7 +9,7 @@ import {
   resolveLocationTimezone,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
-import { TithiMechanics } from "@/components/tithi-mechanics/TithiMechanics";
+import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { fetchPanchanga, panchangaKeys } from "@/lib/api";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 
@@ -46,8 +46,11 @@ export function Calendar() {
         />
       </div>
       <CalendarView location={location} todayAd={todayAd} />
-      <TithiMechanics />
       {p && <HoraRing p={p} isToday timezone={timezone} />}
+      <LearnMoreCard
+        slugs={["tithi", "bs-calendar", "adhik-maas"]}
+        heading="नेपाली पात्रो कसरी बन्छ?"
+      />
     </PageShell>
   );
 }

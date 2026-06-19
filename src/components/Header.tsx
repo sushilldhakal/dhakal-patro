@@ -5,6 +5,7 @@ import {
   ArrowLeftRight,
   PartyPopper,
   Sparkles,
+  BookOpen,
   Sun,
   Moon,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const NAV = [
   { to: "/converter" as const, label: "Converter", icon: ArrowLeftRight },
   { to: "/holidays" as const, label: "Holidays", icon: PartyPopper },
   { to: "/kundali" as const, label: "Kundali", icon: Sparkles },
+  { to: "/learn" as const, label: "Learn", icon: BookOpen },
 ];
 
 export function Header() {

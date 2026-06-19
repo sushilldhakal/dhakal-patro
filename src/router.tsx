@@ -14,6 +14,8 @@ const PanchangaYear = lazyRoute(() => import("./pages/PanchangaYear"), "Panchang
 const Converter = lazyRoute(() => import("./pages/Converter"), "Converter");
 const Holidays = lazyRoute(() => import("./pages/Holidays"), "Holidays");
 const Kundali = lazyRoute(() => import("./pages/Kundali"), "Kundali");
+const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
+const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -31,6 +33,8 @@ const panchangaYearRoute = createRoute({ getParentRoute: () => rootRoute, path: 
 const converterRoute = createRoute({ getParentRoute: () => rootRoute, path: "/converter", component: Converter });
 const holidaysRoute = createRoute({ getParentRoute: () => rootRoute, path: "/holidays", component: Holidays });
 const kundaliRoute = createRoute({ getParentRoute: () => rootRoute, path: "/kundali", component: Kundali });
+const learnRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn", component: Learn });
+const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/$slug", component: LearnArticle });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -40,6 +44,8 @@ const routeTree = rootRoute.addChildren([
   converterRoute,
   holidaysRoute,
   kundaliRoute,
+  learnRoute,
+  learnArticleRoute,
 ]);
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");

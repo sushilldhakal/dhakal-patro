@@ -23,6 +23,7 @@ import { DayTimeline } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
+import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
 import { PanchangaModeControls } from "@/components/panchanga/PanchangaModeControls";
 import {
@@ -302,6 +303,12 @@ export function Panchanga() {
           </aside>
         </div>
       )}
+
+      <LearnMoreCard
+        className="mt-7"
+        heading="पञ्चाङ्गका पाँच अङ्ग बुझ्नुहोस्"
+        slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "sankranti"]}
+      />
 
       <p className="mt-7 text-[11.5px] text-muted-foreground text-center">
         पञ्चाङ्गका मानहरू Dhakal Patro API बाट · Panchanga values from live API
