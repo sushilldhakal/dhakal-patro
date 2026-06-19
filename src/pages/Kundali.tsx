@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, MapPin, Sparkles } from "lucide-react";
 import {
+  fetchShadbala,
   kundaliKeys,
+  shadbalaKeys,
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
@@ -31,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { KundaliControls } from "@/components/kundali/KundaliControls";
 import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { D1Chart } from "@/components/kundali/D1Chart";
+import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
@@ -173,6 +176,12 @@ export function Kundali() {
   const { data, isLoading, isError } = useQuery({
     queryKey: kundaliKeys.atTime(atTimeDatetime, location.params),
     queryFn: () => fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const shadbalaQ = useQuery({
+    queryKey: shadbalaKeys.atTime(atTimeDatetime, location.params),
+    queryFn: () => fetchShadbala(atTimeDatetime, location.params),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -465,6 +474,11 @@ export function Kundali() {
                       </div>
                     )}
                   </div>
+                )}
+
+                {shadbalaQ.data && <ShadbalaCard data={shadbalaQ.data} />}
+                {shadbalaQ.isLoading && (
+                  <div className="bg-muted/50 animate-pulse rounded-xl h-40" />
                 )}
 
                 {dasha && (

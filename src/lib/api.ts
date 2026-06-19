@@ -283,6 +283,75 @@ export const fetchKundali = (
     appendLocation(`/kundali/${date}?era=${era}`, location)
   );
 
+// ─── Shadbala ─────────────────────────────────────────────────────────────────
+
+export type ShadbalaStatus =
+  | "Exceptional"
+  | "Strong"
+  | "Adequate"
+  | "Borderline"
+  | "Weak";
+
+export interface ShadbalaBreakdown {
+  sthana: number;
+  dig: number;
+  kala: number;
+  cheshta: number;
+  naisargika: number;
+  drik: number;
+}
+
+export interface ShadbalaPlanet {
+  key: string;
+  name: string;
+  name_ne: string;
+  total_virupas: number;
+  rupas: number;
+  required: number;
+  ratio: number;
+  status: ShadbalaStatus;
+  top_bala: string;
+  weakest_bala: string;
+  breakdown: ShadbalaBreakdown;
+}
+
+export interface ShadbalaSummaryRef {
+  key: string;
+  name: string;
+  name_ne: string;
+  status: ShadbalaStatus;
+  ratio: number;
+}
+
+export interface ShadbalaResponse {
+  planets: ShadbalaPlanet[];
+  summary: {
+    strongest: ShadbalaSummaryRef;
+    weakest: ShadbalaSummaryRef;
+    average_rupas: number;
+    average_virupas: number;
+    meeting_threshold: number;
+    total_planets: number;
+    counts: Record<ShadbalaStatus, number>;
+  };
+  method: string;
+  location?: Record<string, unknown>;
+  query_instant?: string;
+}
+
+export const shadbalaKeys = {
+  atTime: (datetime: string, location?: LocationParams) =>
+    ["shadbala", "at-time", datetime, locationCacheKey(location)] as const,
+};
+
+export const fetchShadbala = (datetime: string, location?: LocationParams) =>
+  get<ShadbalaResponse>(
+    appendLocation(
+      `/shadbala?datetime=${encodeURIComponent(datetime)}`,
+      location
+    )
+  );
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface LagnaSpan {
