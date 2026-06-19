@@ -9,8 +9,10 @@ import {
   orbitFromMeanAnomaly,
 } from "./orbit-math";
 
-function nearestPreset(meanDeg: number) {
-  return ORBIT_PRESETS.reduce((best, p) => {
+type OrbitPresetWithDiff = (typeof ORBIT_PRESETS)[number] & { diff: number };
+
+function nearestPreset(meanDeg: number): OrbitPresetWithDiff {
+  return ORBIT_PRESETS.reduce<OrbitPresetWithDiff>((best, p) => {
     const diff = Math.abs((((meanDeg - p.meanDeg + 180) % 360) + 360) % 360 - 180);
     return diff < best.diff ? { ...p, diff } : best;
   }, { ...ORBIT_PRESETS[0], diff: Infinity });
