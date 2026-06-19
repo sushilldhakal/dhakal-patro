@@ -142,7 +142,8 @@ export function SolarSystem() {
       <Section kicker="०५" title="चन्द्रका कला" en="Phases of the Moon">
         <Lede>
           चन्द्रमा आफैं प्रकाश दिने वस्तु होइन। <span className="hl">सूर्यको प्रकाश</span>{" "}
-          परावर्तित गरेर चम्किन्छ। यिनै कलाहरूले पक्ष र तिथिको अनुभव गराउँछन्।
+          परावर्तित गरेर चम्किन्छ। <b>अमावस्या</b> मा चन्द्र देखिँदैन; <b>पूर्णिमा</b> मा
+          पूरै चम्किन्छ — यिनै कलाहरूले पक्ष र तिथिको अनुभव गराउँछन्।
         </Lede>
         <div className="tm-card pad-lg">
           <p className="ss-phases-heading">मुख्य चरणहरू</p>
