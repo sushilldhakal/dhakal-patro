@@ -13,10 +13,16 @@ import {
 const TILT = 23.5;
 const HO = { W: 1200, H: 880, sunR: 70, earthR: 30, axisLen: 64 };
 
-/** Spin axis fixed in space; lean varies with orbital position (ν). */
-function earthAxis(nuDeg: number) {
-  const nu = (nuDeg * Math.PI) / 180;
-  const lean = ((TILT * Math.PI) / 180) * Math.cos(nu);
+/**
+ * Spin axis is fixed in space (it always points at the same distant star,
+ * Polaris). Its absolute direction therefore does NOT change as Earth orbits —
+ * the seasons come from where Earth sits relative to the Sun. We lean the axis
+ * a constant 23.5° toward +x: at perihelion (right, winter) the North pole
+ * leans away from the Sun, while half an orbit later at aphelion (left, summer)
+ * the very same axis leans toward the Sun.
+ */
+function earthAxis() {
+  const lean = (TILT * Math.PI) / 180;
   const ux = Math.sin(lean);
   const uy = -Math.cos(lean);
   return { ux, uy, lean };
@@ -96,7 +102,7 @@ export function HeliocentricOrbitDiagram({
 }: Props) {
   const fmt = (n: number) => toNepaliDigits(n);
   const orbit = orbitFromMeanAnomaly(meanDeg);
-  const { ex, ey, speed, nuDeg } = orbit;
+  const { ex, ey, speed } = orbit;
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef(false);
 
@@ -109,7 +115,7 @@ export function HeliocentricOrbitDiagram({
   const sunUx = sunDx / sunDist;
   const sunUy = sunDy / sunDist;
 
-  const { ux: axisUx, uy: axisUy, lean } = earthAxis(nuDeg);
+  const { ux: axisUx, uy: axisUy, lean } = earthAxis();
   const eqUx = -axisUy;
   const eqUy = axisUx;
   const eqHalf = HO.earthR * 0.94;

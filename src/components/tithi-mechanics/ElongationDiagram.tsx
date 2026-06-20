@@ -168,6 +168,21 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
 
   const moonRot = moonSunFacingRotation(mx, my, ED.sunX, ED.earthY);
 
+  // Earth's fixed 23.5° axial tilt, drawn on the Earth glyph for consistency
+  // with the heliocentric (सूर्य केन्द्र) diagram.
+  const TILT_RAD = (23.5 * Math.PI) / 180;
+  const axUx = Math.sin(TILT_RAD);
+  const axUy = -Math.cos(TILT_RAD);
+  const eqUx = -axUy;
+  const eqUy = axUx;
+  const eqHalf = ED.earthR * 0.92;
+  const poleNX = ED.earthX + axUx * ED.earthR * 1.5;
+  const poleNY = ED.earthY + axUy * ED.earthR * 1.5;
+  const poleSX = ED.earthX - axUx * ED.earthR * 1.05;
+  const poleSY = ED.earthY - axUy * ED.earthR * 1.05;
+  const capX = ED.earthX + axUx * ED.earthR;
+  const capY = ED.earthY + axUy * ED.earthR;
+
   return (
     <svg
       ref={svgRef}
@@ -282,6 +297,36 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         strokeWidth={1}
         opacity={0.45}
       />
+      {/* Earth's axial tilt (23.5°) */}
+      <line
+        x1={ED.earthX - eqUx * eqHalf}
+        y1={ED.earthY - eqUy * eqHalf}
+        x2={ED.earthX + eqUx * eqHalf}
+        y2={ED.earthY + eqUy * eqHalf}
+        stroke="#bfeaff"
+        strokeWidth={1}
+        opacity={0.5}
+        strokeDasharray="3 3"
+      />
+      <line
+        x1={poleSX}
+        y1={poleSY}
+        x2={poleNX}
+        y2={poleNY}
+        stroke="#eaf6ff"
+        strokeWidth={2.2}
+        strokeLinecap="round"
+        opacity={0.92}
+      />
+      <circle cx={capX} cy={capY} r={4} fill="#8ed4a0" />
+      <text
+        x={poleNX + 8}
+        y={poleNY - 2}
+        textAnchor="start"
+        style={{ fill: "#cfeaff", fontSize: 14, fontWeight: 600 }}
+      >
+        अक्ष {fmt(23.5)}°
+      </text>
       <text x={ED.earthX} y={ED.earthY + ED.earthR + 22} className="ed-body-label" textAnchor="middle">
         पृथ्वी
       </text>
