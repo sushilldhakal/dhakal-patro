@@ -3127,6 +3127,21 @@
 .ss-phase-moon { width: 72px; height: 72px; display: block; }
 .ss-phase-ne { font: 700 13px var(--pn-font); color: var(--tm-ink); line-height: 1.25; }
 .ss-phase-en { font: 500 11px var(--pn-font); color: var(--tm-ink-faint); letter-spacing: 0.03em; }
+
+.sem-svg { min-height: 300px; }
+.sem-orbit { fill: none; stroke: var(--tm-ring-soft); stroke-width: 1.4; }
+.sem-month-tick { stroke: var(--tm-gold); stroke-width: 1; opacity: 0.75; }
+.sem-month-label { fill: var(--tm-ink-faint); font: 600 13px var(--pn-font); }
+.sem-month-label.cur { fill: var(--tm-gold); font-weight: 700; }
+.sem-moon-orbit { fill: none; stroke: color-mix(in srgb, var(--tm-teal) 32%, transparent); stroke-width: 1.1; stroke-dasharray: 3 4; }
+.sem-moon-label { fill: var(--tm-ink-faint); font: 600 10px var(--pn-num); }
+.sem-moon-label.key { fill: var(--tm-teal); font: 700 10.5px var(--pn-font); }
+.sem-radius-line { stroke: color-mix(in srgb, var(--tm-ink) 16%, transparent); stroke-width: 1; stroke-dasharray: 2 6; }
+.sem-earth-glow { fill: color-mix(in srgb, var(--tm-teal) 12%, transparent); }
+.sem-earth-night { fill: color-mix(in srgb, #000 55%, transparent); }
+.sem-spin-arm { stroke: var(--tm-gold); stroke-width: 1.6; stroke-linecap: round; }
+.sem-spin-dot { fill: var(--tm-gold); stroke: var(--tm-card); stroke-width: 1; }
+.sem-tidal-marker { fill: color-mix(in srgb, #000 45%, transparent); }
 .tm-formula { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 22px; }
 .tm-fcard { flex: 1; min-width: 220px; background: var(--tm-card); border: 1px solid var(--tm-border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow-xs); }
 .dark .tm-fcard { box-shadow: none; }

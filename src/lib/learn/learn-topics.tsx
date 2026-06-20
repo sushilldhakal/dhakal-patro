@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Orbit,
-  SunMoon,
   CalendarRange,
   Globe,
   Layers,
@@ -19,7 +18,6 @@ import {
 } from "lucide-react";
 import {
   SolarSystem,
-  SolarVsLunar,
   BsCalendar,
   CalendarDifferences,
   WhatIsPanchang,
@@ -72,21 +70,12 @@ export const LEARN_TOPICS: LearnTopic[] = [
     Content: SolarSystem,
   },
   {
-    slug: "solar-vs-lunar",
-    category: "astronomy",
-    titleNe: "सौर वर्ष vs चान्द्र वर्ष",
-    titleEn: "Solar vs Lunar Calendar",
-    icon: SunMoon,
-    summary: "सूर्य र चन्द्रमा आधारित दुई पात्रो किन फरक पर्छन् र कसरी मिलाइन्छन्।",
-    Content: SolarVsLunar,
-  },
-  {
     slug: "bs-calendar",
     category: "calendars",
-    titleNe: "विक्रम सम्वत् कसरी बन्छ",
-    titleEn: "How the BS Calendar is Formed",
+    titleNe: "सौर vs चान्द्र — विक्रम सम्वत् कसरी बन्छ",
+    titleEn: "Solar vs Lunar & How the BS Calendar is Formed",
     icon: CalendarRange,
-    summary: "बि.सं. का महिना सूर्यको राशि–गतिले कसरी तय हुन्छन्, र किन घटबढ हुन्छ।",
+    summary: "सूर्य र चन्द्र आधारित दुई पात्रो किन फरक पर्छन्, र बि.सं. का महिना सूर्यको राशि–गतिले कसरी तय हुन्छन्।",
     Content: BsCalendar,
   },
   {

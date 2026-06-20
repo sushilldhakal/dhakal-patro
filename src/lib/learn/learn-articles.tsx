@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { ElongationStudy } from "@/components/tithi-mechanics/TithiMechanics";
 import { HeliocentricOrbitStudy } from "@/components/learn/HeliocentricOrbitStudy";
+import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
 import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
@@ -157,7 +158,7 @@ export function SolarSystem() {
   );
 }
 
-export function SolarVsLunar() {
+export function BsCalendar() {
   return (
     <>
       <Section kicker="०१" title="दुई फरक घडी" en="Two different clocks">
@@ -182,14 +183,17 @@ export function SolarVsLunar() {
           ]}
         />
       </Section>
-    </>
-  );
-}
-
-export function BsCalendar() {
-  return (
-    <>
-      <Section kicker="०१" title="विक्रम सम्वत् के हो" en="Bikram Sambat">
+      <Section kicker="०३" title="सूर्य · पृथ्वी · चन्द्र एकसाथ" en="Both cycles, side by side">
+        <Lede>
+          तल पृथ्वी सूर्यको वरिपरि (वर्ष, <b>{N(12)} सौर महिनामा</b> बाँडिएको) र चन्द्रमा पृथ्वीको
+          वरिपरि (हरेक फेरो एक <b>चान्द्र महिना</b>) — दुवै <span className="hl">एकैसाथ</span>{" "}
+          परिक्रमा गर्छन्; दुवै आफ्नै अक्षमा पनि घुम्छन् (पृथ्वी दैनिक, चन्द्र एक फेरोमा एक पटक —
+          त्यसैले चन्द्रको सधैँ उस्तै पट्टि देखिन्छ)। प्ले थिचेर वा तानेर हेर्नुहोस् — पृथ्वीले
+          वर्ष पूरा गर्दा चन्द्रले झन्डै {N(12)} फेरो लगाइसकेको हुन्छ, तर ठ्याक्कै होइन।
+        </Lede>
+        <SunEarthMoonStudy />
+      </Section>
+      <Section kicker="०४" title="विक्रम सम्वत् के हो" en="Bikram Sambat">
         <Lede>
           विक्रम सम्वत् (बि.सं.) नेपालको आधिकारिक पात्रो हो, जुन ग्रेगोरियन भन्दा झन्डै{" "}
           <b>{N(56)}–{N(57)} वर्ष</b> अगाडि चल्छ। यो <span className="hl">चान्द्र–सौर</span>{" "}
@@ -197,7 +201,7 @@ export function BsCalendar() {
           गर्छ।
         </Lede>
       </Section>
-      <Section kicker="०२" title="महिना कसरी बन्छ" en="Solar months">
+      <Section kicker="०५" title="महिना कसरी बन्छ" en="Solar months">
         <Lede>
           सूर्य एक राशिबाट अर्को राशिमा प्रवेश गर्ने क्षणलाई <span className="hl-amber">
           सङ्क्रान्ति</span> भनिन्छ, र त्यही दिन नयाँ महिना सुरु हुन्छ। सूर्य कुनै राशिमा{" "}
