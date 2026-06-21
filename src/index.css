@@ -3162,6 +3162,37 @@
 .ed-svg { width: 100%; height: auto; display: block; touch-action: none; overflow: visible; }
 .ed-svg-tithi { min-height: 520px; max-height: min(920px, 88vh); }
 .ho-svg { min-height: 280px; }
+
+/* ----- Eclipse geometry (lunar-eclipse article) ----- */
+.ecl-svg { min-height: 300px; max-height: min(620px, 76vh); }
+.ecl-plane { fill: color-mix(in srgb, var(--tm-teal) 6%, transparent); stroke: color-mix(in srgb, var(--tm-teal) 24%, transparent); stroke-width: 1; stroke-dasharray: 4 6; }
+.ecl-axis { stroke: color-mix(in srgb, var(--tm-gold) 40%, transparent); stroke-width: 1.1; stroke-dasharray: 2 7; }
+.ecl-ray { stroke: color-mix(in srgb, #ffcf57 70%, transparent); stroke-width: 2; stroke-linecap: round; }
+.ecl-penumbra { fill: color-mix(in srgb, var(--tm-ink) 16%, transparent); }
+.dark .ecl-penumbra { fill: color-mix(in srgb, #0a0e12 42%, transparent); }
+.ecl-umbra-shape { stroke: none; }
+.ecl-shadow-label { fill: color-mix(in srgb, var(--tm-ink) 55%, transparent); font: 600 13px var(--pn-font); }
+.ecl-shadow-label.on-umbra { fill: color-mix(in srgb, #e8eef2 88%, transparent); }
+.ecl-shadow-label.faint { fill: var(--tm-ink-faint); font-size: 12px; }
+.ecl-orbit-front { stroke: var(--tm-teal); stroke-width: 2.4; stroke-linecap: round; }
+.ecl-orbit-back { stroke: color-mix(in srgb, var(--tm-teal) 50%, transparent); stroke-width: 1.6; stroke-dasharray: 5 7; stroke-linecap: round; }
+.ecl-orbit-arrow-head { fill: var(--tm-teal); }
+.ecl-node-line { stroke: var(--tm-amber); stroke-width: 1.5; stroke-dasharray: 7 5; opacity: 0.75; }
+.ecl-node { fill: var(--tm-amber); stroke: var(--tm-card); stroke-width: 2; }
+.ecl-node-label { fill: var(--tm-amber); font: 700 15px var(--pn-font); }
+.ecl-earth-glow { fill: color-mix(in srgb, var(--tm-teal) 14%, transparent); }
+.ecl-beta-drop { stroke: color-mix(in srgb, var(--tm-amber) 70%, transparent); stroke-width: 1.4; stroke-dasharray: 2 4; }
+.ecl-blood-glow { fill: color-mix(in srgb, #d2402a 38%, transparent); }
+.ecl-blood-tint { fill: color-mix(in srgb, #c0392b 46%, transparent); mix-blend-mode: multiply; }
+.ecl-moon-eclipsed { filter: drop-shadow(0 0 6px color-mix(in srgb, #e0473a 60%, transparent)); }
+.ecl-status { font: 800 22px var(--pn-font); }
+.ecl-status-total { fill: #d2402a; }
+.ecl-status-partial { fill: var(--tm-amber); }
+.ecl-status-penumbral { fill: var(--tm-ink-dim); }
+.ecl-status-solar { fill: var(--tm-gold); }
+.ecl-status-none { fill: var(--tm-ink-faint); }
+.ecl-status-sub { fill: var(--tm-ink-faint); font: 600 13px var(--pn-num); }
+.ecl-tilt-note { fill: var(--tm-ink-faint); font: 500 12px var(--pn-font); }
 .ed-svg.grab { cursor: grab; }
 .ed-svg.grab:active { cursor: grabbing; }
 .ed-axis { stroke: color-mix(in srgb, var(--tm-gold) 42%, transparent); stroke-width: 1.2; stroke-dasharray: 2 6; }

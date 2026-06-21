@@ -5,6 +5,7 @@ import { ElongationStudy } from "@/components/tithi-mechanics/TithiMechanics";
 import { HeliocentricOrbitStudy } from "@/components/learn/HeliocentricOrbitStudy";
 import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
 import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
+import { EclipseStudy } from "@/components/learn/EclipseStudy";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
   GrahaReferenceTable,
@@ -683,7 +684,16 @@ export function LunarEclipse() {
           देखिन सक्छ (“ब्लड मुन”), किनकि पृथ्वीको वायुमण्डलले रातो प्रकाश मोडेर पठाउँछ।
         </Lede>
       </Section>
-      <Section kicker="०२" title="हरेक पूर्णिमामा किन हुँदैन" en="Why not every month">
+      <Section kicker="०२" title="सूर्य–पृथ्वी–चन्द्र र राहु–केतु" en="Shadow geometry & the nodes">
+        <Lede>
+          सूर्यको उज्यालोले पृथ्वीपछाडि <span className="hl">प्रच्छायाँ (umbra)</span> र{" "}
+          <span className="hl">उपछायाँ (penumbra)</span> को शंकु बनाउँछ। तल{" "}
+          <b>चन्द्रलाई कक्षमा घुमाउनुहोस्</b> — पूर्णिमा राहु वा केतु (पात) नजिक पर्दा चन्द्र
+          प्रच्छायाँभित्र छिरेर रातो हुन्छ; “सामान्य महिना” मा भने छायाँ चुकेर माथि/तल जान्छ।
+        </Lede>
+        <EclipseStudy />
+      </Section>
+      <Section kicker="०३" title="हरेक पूर्णिमामा किन हुँदैन" en="Why not every month">
         <Lede>
           चन्द्रको कक्ष पृथ्वीको कक्षभन्दा <b>~५° ढल्केको</b> छ, त्यसैले धेरैजसो पूर्णिमामा
           चन्द्र छायाँभन्दा माथि वा तल हुन्छ। ग्रहण त्यतिबेला मात्र हुन्छ जब पूर्णिमा{" "}
@@ -693,10 +703,16 @@ export function LunarEclipse() {
           items={[
             { h: "पूर्ण ग्रहण", p: "चन्द्र पूरै पृथ्वीको गाढा छायाँ (umbra) भित्र।" },
             { h: "खण्डग्रास", p: "चन्द्रको केही भाग मात्र छायाँमा।" },
+            { h: "उपछायाँ ग्रहण", p: "चन्द्र penumbra मा मात्र — हल्का मलिन देखिन्छ।" },
             { h: "खुला आँखाले सुरक्षित", p: "सूर्यग्रहणभन्दा फरक — चन्द्रग्रहण सीधै हेर्न सकिन्छ।" },
           ]}
         />
       </Section>
+      <Note>
+        राहु–केतु आकाशका भौतिक पिण्ड होइनन् — चन्द्रको कक्ष र सूर्यपथ (क्रान्तिवृत्त) काट्ने
+        दुई गणितीय बिन्दु हुन्। यी पात बिस्तारै घुम्छन् (~१८.६ वर्षमा एक फेरो), त्यसैले ग्रहण
+        ऋतु पनि सर्दै जान्छ।
+      </Note>
     </>
   );
 }
