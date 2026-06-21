@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X, ChevronLeft, Sunrise, Sunset, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchPanchanga, panchangaKeys, type CalendarDay, type PanchangaDay } from "@/lib/api";
+import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
   formatAdShort,
   formatAdTitle,
@@ -32,6 +33,8 @@ interface Props {
   bsYear: number;
   bsMonth: number;
   publicHolidayDates: Set<string>;
+  /** Active location — drives sunrise/muhurta/tithi so the modal matches the side panel & grid. */
+  location?: PanchangaLocation;
   onClose: () => void;
 }
 
@@ -302,13 +305,13 @@ function PanchangaFull({
   );
 }
 
-export function DayDetailModal({ day, bsYear, bsMonth, onClose }: Props) {
+export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Props) {
   const [showPanchanga, setShowPanchanga] = useState(false);
   const dateAd = day?.date_ad ?? "";
 
   const q = useQuery({
-    queryKey: panchangaKeys.day(dateAd, "ad"),
-    queryFn: () => fetchPanchanga(dateAd, "ad"),
+    queryKey: panchangaKeys.day(dateAd, "ad", location?.params),
+    queryFn: () => fetchPanchanga(dateAd, "ad", location?.params),
     enabled: !!day,
     staleTime: 1000 * 60 * 60,
   });

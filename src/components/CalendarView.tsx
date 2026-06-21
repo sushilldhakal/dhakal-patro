@@ -158,6 +158,7 @@ export function CalendarView({
         bsYear={year}
         bsMonth={month}
         publicHolidayDates={publicHolidayDates}
+        location={location}
         onClose={() => {
           setSelected(null);
           onDaySelect?.(null);
