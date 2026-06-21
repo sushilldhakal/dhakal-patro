@@ -3235,24 +3235,9 @@
   will-change: transform;
 }
 
-/* earth_rotating.svg — tilt wrapper only; spin is in the asset */
-.earth-globe-fo {
-  overflow: visible;
-}
-.earth-globe-tilt {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
-  transform-origin: center center;
-}
+/* earth_rotating.svg — spin is baked into the asset; clip + tilt are SVG attrs */
 .earth-globe-object {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: none;
   pointer-events: none;
-  background: transparent;
 }
 .ho-equator { stroke: color-mix(in srgb, var(--tm-gold) 75%, white); stroke-width: 2.2; stroke-linecap: round; }
 .ho-tilt-ref { stroke: color-mix(in srgb, var(--tm-ink) 22%, transparent); stroke-width: 1.2; stroke-dasharray: 3 4; }

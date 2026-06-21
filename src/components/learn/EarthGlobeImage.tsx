@@ -1,10 +1,8 @@
-import { memo } from "react";
+import { memo, useId } from "react";
 import earthRotatingUrl from "@/assets/earth_rotating.svg?url";
 
 /** Mean obliquity of the ecliptic (Earth's axial tilt). */
 export const EARTH_AXIAL_TILT = 23.5;
-
-const XHTML = "http://www.w3.org/1999/xhtml";
 
 interface Props {
   cx: number;
@@ -19,8 +17,12 @@ interface Props {
 
 /**
  * earth_rotating.svg — built-in spin; we only apply axial tilt.
+ * Rendered as a native SVG <image> (clipped + rotated with SVG attributes,
+ * not CSS-on-foreignObject) so it tracks the parent orbit transform exactly
+ * — foreignObject + CSS transform on embedded <object> content is unreliable
+ * on mobile WebKit and was the cause of Earth drifting out of place.
  * Memoized so parent orbit animation can move a translate() group without
- * reloading the embedded <object> every frame.
+ * reloading the embedded image every frame.
  */
 export const EarthGlobeImage = memo(function EarthGlobeImage({
   cx,
@@ -31,31 +33,27 @@ export const EarthGlobeImage = memo(function EarthGlobeImage({
   glowPad = 14,
   tilt = EARTH_AXIAL_TILT,
 }: Props) {
+  const clipId = `earth-clip-${useId().replace(/:/g, "")}`;
   const d = r * 2;
 
   return (
     <>
       {glow && <circle cx={cx} cy={cy} r={r + glowPad} className={glowClassName} />}
-      <foreignObject
+      <clipPath id={clipId}>
+        <circle cx={cx} cy={cy} r={r} />
+      </clipPath>
+      <image
+        href={earthRotatingUrl}
         x={cx - r}
         y={cy - r}
         width={d}
         height={d}
-        className="earth-globe-fo"
-      >
-        <div
-          {...({ xmlns: XHTML } as Record<string, string>)}
-          className="earth-globe-tilt"
-          style={{ transform: `rotateZ(${tilt}deg)` }}
-        >
-          <object
-            data={earthRotatingUrl}
-            type="image/svg+xml"
-            className="earth-globe-object"
-            aria-hidden="true"
-          />
-        </div>
-      </foreignObject>
+        clipPath={`url(#${clipId})`}
+        transform={`rotate(${tilt} ${cx} ${cy})`}
+        className="earth-globe-object"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      />
     </>
   );
 });
