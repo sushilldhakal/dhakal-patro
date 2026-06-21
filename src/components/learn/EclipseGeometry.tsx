@@ -8,7 +8,7 @@ import {
   isSolarAlignment,
   lunarEclipseStatus,
   moonGeo,
-  penumbraHalfWidth,
+  realBeta,
 } from "./eclipse-math";
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function EclipseGeometry({ u, omega, onU }: Props) {
-  const fmt = (n: number) => toNepaliDigits(n);
+  const fmt = (n: string | number) => toNepaliDigits(n);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef(false);
 
@@ -78,10 +78,6 @@ export function EclipseGeometry({ u, omega, onU }: Props) {
       />
     );
   });
-
-  const px = ECL.earthX + ECL.penumbraLen;
-  const phEnd = penumbraHalfWidth(ECL.penumbraLen);
-  const moonOnTop = g.sy <= ECL.axisY; // draw order: keep Moon above shadow when behind
 
   const statusLabel =
     status === "total"
@@ -151,11 +147,10 @@ export function EclipseGeometry({ u, omega, onU }: Props) {
         className="ecl-axis"
       />
 
-      {/* penumbra (light) then umbra (dark) cones, anti-sunward */}
+      {/* penumbra (light) then umbra (dark) cones, anti-sunward — both converge */}
       <path
         d={`M ${ECL.earthX} ${ECL.axisY - ECL.earthR}
-            L ${px} ${ECL.axisY - phEnd}
-            L ${px} ${ECL.axisY + phEnd}
+            L ${ECL.earthX + ECL.penumbraLen} ${ECL.axisY}
             L ${ECL.earthX} ${ECL.axisY + ECL.earthR} Z`}
         className="ecl-penumbra"
       />
@@ -166,10 +161,10 @@ export function EclipseGeometry({ u, omega, onU }: Props) {
         fill="url(#ecl-umbra)"
         className="ecl-umbra-shape"
       />
-      <text x={ECL.earthX + 116} y={ECL.axisY + 26} className="ecl-shadow-label on-umbra" textAnchor="middle">
+      <text x={ECL.earthX + 132} y={ECL.axisY + 22} className="ecl-shadow-label on-umbra" textAnchor="middle">
         प्रच्छाया · umbra
       </text>
-      <text x={ECL.earthX + 320} y={ECL.axisY + phEnd * 0.66 + 18} className="ecl-shadow-label faint" textAnchor="middle">
+      <text x={ECL.earthX + ECL.penumbraLen - 78} y={ECL.axisY + 40} className="ecl-shadow-label faint" textAnchor="middle">
         उपछाया · penumbra
       </text>
 
@@ -196,18 +191,27 @@ export function EclipseGeometry({ u, omega, onU }: Props) {
         </text>
       </g>
 
-      {/* nodes */}
+      {/* nodes — Rahu labelled above, Ketu below, so they stay legible when the
+          node line foreshortens (both nodes crowd near Earth). */}
       {[
-        { p: asc, ne: "राहु", sym: "☊", en: "आरोही पात" },
-        { p: desc, ne: "केतु", sym: "☋", en: "अवरोही पात" },
-      ].map((n) => (
-        <g key={n.ne}>
-          <circle cx={n.p.sx} cy={n.p.sy} r={7} className="ecl-node" />
-          <text x={n.p.sx} y={n.p.sy - 14} className="ecl-node-label" textAnchor="middle">
-            {n.ne} {n.sym}
-          </text>
-        </g>
-      ))}
+        { p: asc, ne: "राहु", sym: "☊", dy: -16 },
+        { p: desc, ne: "केतु", sym: "☋", dy: 26 },
+      ].map((n) => {
+        const dirX = n.p.sx >= ECL.earthX ? 1 : -1;
+        return (
+          <g key={n.ne}>
+            <circle cx={n.p.sx} cy={n.p.sy} r={7} className="ecl-node" />
+            <text
+              x={n.p.sx + dirX * 12}
+              y={n.p.sy + n.dy}
+              className="ecl-node-label"
+              textAnchor="middle"
+            >
+              {n.ne} {n.sym}
+            </text>
+          </g>
+        );
+      })}
 
       {/* Moon (rendered last when in front so it can sit inside the shadow) */}
       <g
@@ -241,8 +245,7 @@ export function EclipseGeometry({ u, omega, onU }: Props) {
           {statusLabel}
         </text>
         <text textAnchor="end" y={26} className="ecl-status-sub">
-          {moonOnTop ? "" : ""}
-          अक्षांश β = {fmt(Math.abs(Math.round(g.betaDeg)))}° · कोण {fmt(Math.round(g.E))}°
+          अक्षांश β = {fmt(Math.abs(realBeta(g.betaDeg)).toFixed(1))}° · कोण {fmt(Math.round(g.E))}°
         </text>
       </g>
 

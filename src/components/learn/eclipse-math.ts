@@ -19,16 +19,31 @@ export const ECL = {
   moonR: 15,
   /** Moon orbit radius on screen (Earth-centred). */
   R: 190,
-  /** Exaggerated orbital inclination. */
-  iDeg: 22,
+  /** Visually exaggerated orbital inclination (real ≈ 5.14°). */
+  iDeg: 20,
   /** Depth shear that fakes the 3-D tilt of the ring (front/back → left/right). */
   perspX: 0.5,
-  /** Umbra converges to a point this far right of Earth. */
-  umbraLen: 620,
-  /** How far right we actually paint the diverging penumbra. */
-  penumbraLen: 600,
-  penumbraSlope: 0.09,
+  /** Umbra (dark cone) converges to a point this far right of Earth. */
+  umbraLen: 312,
+  /** Penumbra (lighter cone) converges a little farther out. */
+  penumbraLen: 437,
 } as const;
+
+/** Real mean inclination — used only to print believable latitude numbers. */
+export const REAL_INCL = 5.14;
+export function realBeta(modelBetaDeg: number): number {
+  return (modelBetaDeg * REAL_INCL) / ECL.iDeg;
+}
+
+/**
+ * Eclipse thresholds are distances (px) from the shadow axis, tuned so eclipses
+ * only cluster into ~2 seasons a year — independent of the (exaggerated) drawn
+ * cone widths, which are sized to match these at the Moon's distance.
+ */
+const TH_TOTAL = 7;
+const TH_PARTIAL = 18;
+const TH_PENUMBRAL = 26;
+const TH_SOLAR = 20;
 
 const SIN_I = Math.sin(ECL.iDeg * RAD);
 const COS_I = Math.cos(ECL.iDeg * RAD);
@@ -79,26 +94,93 @@ export function moonGeo(u: number, omega: number): MoonGeo {
 
 export type EclipseStatus = "total" | "partial" | "penumbral" | "none";
 
+/** Drawn cone half-widths (both converge), sized to match the thresholds at the Moon. */
 export function umbraHalfWidth(axial: number): number {
   if (axial <= 0 || axial >= ECL.umbraLen) return 0;
   return ECL.earthR * (1 - axial / ECL.umbraLen);
 }
 export function penumbraHalfWidth(axial: number): number {
-  if (axial <= 0) return 0;
-  return ECL.earthR + ECL.penumbraSlope * axial;
+  if (axial <= 0 || axial >= ECL.penumbraLen) return 0;
+  return ECL.earthR * (1 - axial / ECL.penumbraLen);
 }
 
 export function lunarEclipseStatus(g: MoonGeo): EclipseStatus {
-  if (g.xEc <= 0.2) return "none"; // sunward half — no lunar eclipse
-  const uh = umbraHalfWidth(g.axial);
-  const ph = penumbraHalfWidth(g.axial);
-  if (g.radial + ECL.moonR * 0.5 < uh) return "total";
-  if (g.radial - ECL.moonR < uh) return "partial";
-  if (g.radial - ECL.moonR * 0.4 < ph) return "penumbral";
+  if (g.xEc <= 0.5) return "none"; // must be near the full-moon (anti-solar) point
+  if (g.radial < TH_TOTAL) return "total";
+  if (g.radial < TH_PARTIAL) return "partial";
+  if (g.radial < TH_PENUMBRAL) return "penumbral";
   return "none";
 }
 
 /** New-moon at a node → the Moon's shadow touches Earth (solar eclipse). */
 export function isSolarAlignment(g: MoonGeo): boolean {
-  return g.xEc < -0.2 && g.radial < ECL.earthR * 0.9;
+  return g.xEc < -0.5 && g.radial < TH_SOLAR;
+}
+
+/* ------------------------------------------------------------------ */
+/* Time-driven model — why eclipses cluster into ~2 seasons a year     */
+/* ------------------------------------------------------------------ */
+
+export const SYNODIC_MONTH = 29.530589;
+/** Sun returns to the same node every 346.6 days (an "eclipse year"). */
+export const ECLIPSE_YEAR = 346.62;
+/** Node longitude (from the anti-solar/shadow axis) at day 0. */
+export const NODE_START = 30;
+/** One full node-line revolution in the Sun-fixed frame → two eclipse seasons. */
+export const ECL_RANGE_DAYS = ECLIPSE_YEAR;
+
+/**
+ * Sun-fixed frame: the Sun stays left, the shadow stays right (anti-solar at
+ * longitude 0). The Moon sweeps round synodically; the Rahu–Ketu line drifts
+ * retrograde once per eclipse year. A full/new moon only meets a node when the
+ * node line is pointed near the Sun–shadow axis — i.e. twice a year.
+ */
+export function moonLonFromDay(t: number): number {
+  return (((360 * t) / SYNODIC_MONTH) % 360 + 360) % 360;
+}
+export function nodeOmegaFromDay(t: number): number {
+  return (((NODE_START - (360 * t) / ECLIPSE_YEAR) % 360) + 360) % 360;
+}
+
+export function geoFromDay(t: number): { u: number; omega: number; g: MoonGeo } {
+  const omega = nodeOmegaFromDay(t);
+  const lam = moonLonFromDay(t);
+  const u = (((lam - omega) % 360) + 360) % 360;
+  return { u, omega, g: moonGeo(u, omega) };
+}
+
+export interface EclipseEvent {
+  t: number;
+  kind: "lunar" | "solar";
+  status: EclipseStatus;
+  betaDeg: number;
+}
+
+/** Scan a span of days and return each eclipse (deepest moment of each window). */
+export function findEclipses(range = ECL_RANGE_DAYS): EclipseEvent[] {
+  const out: EclipseEvent[] = [];
+  let cur: { kind: "lunar" | "solar"; best: EclipseEvent } | null = null;
+  const flush = () => {
+    if (cur) out.push(cur.best);
+    cur = null;
+  };
+  for (let t = 0; t <= range; t += 0.2) {
+    const { g } = geoFromDay(t);
+    const lunar = lunarEclipseStatus(g);
+    const kind: "lunar" | "solar" | null =
+      lunar !== "none" ? "lunar" : isSolarAlignment(g) ? "solar" : null;
+    if (!kind) {
+      flush();
+      continue;
+    }
+    const ev: EclipseEvent = { t, kind, status: kind === "lunar" ? lunar : "total", betaDeg: g.betaDeg };
+    if (!cur || cur.kind !== kind) {
+      flush();
+      cur = { kind, best: ev };
+    } else if (Math.abs(g.betaDeg) < Math.abs(cur.best.betaDeg)) {
+      cur.best = ev;
+    }
+  }
+  flush();
+  return out;
 }
