@@ -4,33 +4,42 @@ import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EarthGlobeImage } from "./EarthGlobeImage";
 
 /**
- * 3-D perspective of the Moon's orbital plane (tilted ~5°, drawn larger) cutting
- * the flat ecliptic plane, the two nodes राहु/केतु where they cross, and the
- * 18.6-year retrograde drift (precession) of the line of nodes. Orthographic
- * projection viewed from a fixed elevation; the Moon rides the tilted ring while
- * the whole ring's node line slowly sweeps round and returns after 18.6 years.
+ * 3-D perspective of the Moon's tilted orbit (~5°, drawn larger) over the flat
+ * ecliptic plane. A Sun–Earth–shadow line runs through Earth's centre; the Sun
+ * sweeps round once a year so the line rotates. An eclipse happens only when the
+ * Moon sits ON that line AND at a node (राहु/केतु) — i.e. when the line of nodes
+ * points at the Sun. A second control drifts the node line through its 18.6-year
+ * precession, showing how the eclipse seasons shift around the year.
  */
 
 const RAD = Math.PI / 180;
-const VB = { W: 1240, H: 820 };
+const VB = { W: 1240, H: 860 };
 const CX = 620;
-const CY = 432;
-// EL high enough that the tilted ring never collapses edge-on as it precesses
-// (needs EL + INC < 90 with margin), yet low enough to read as a 3-D arch.
-const EL = 26 * RAD; // viewing elevation above the ecliptic plane
+const CY = 446;
+const EL = 26 * RAD; // viewing elevation (keeps the tilted ring off edge-on)
 const SE = Math.sin(EL);
 const CE = Math.cos(EL);
 const RD = 498; // ecliptic disc radius
-const RM = 275; // Moon-orbit radius (sits inside the plane so the arch reads)
+const RM = 270; // Moon-orbit radius
+const RSUN = 430; // Sun distance (well outside the Moon's orbit)
 const REAL_TILT = 5.14;
-const INC = 22 * RAD; // drawn tilt (exaggerated from ~5° so the arch is obvious)
+const INC = 22 * RAD; // drawn tilt (exaggerated from ~5°)
 const CI = Math.cos(INC);
 const SI = Math.sin(INC);
-const EARTH_R = 50;
+const EARTH_R = 48;
 const MOON_R = 17;
+
+const SIDEREAL_MONTH = 27.32166;
+const YEAR_DAYS = 365.2422;
 const NODAL_YEARS = 18.6;
+const YEAR_RANGE = 400; // scrub span for the annual Sun motion (days)
+const NODE0 = 120;
 
 const fmt = (n: string | number) => toNepaliDigits(n);
+const norm360 = (a: number) => ((a % 360) + 360) % 360;
+const angDiff = (a: number, b: number) => Math.abs(((a - b + 180) % 360) - 180);
+
+type Status = "lunar" | "solar" | "none";
 
 interface Pt {
   x: number;
@@ -61,9 +70,17 @@ function planePt(a: number, r: number): Pt {
   return proj(r * Math.cos(ar), r * Math.sin(ar), 0);
 }
 
-function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
-  // Orbit ring split into small segments — coloured by above/below the ecliptic,
-  // and layered in front of / behind Earth for a true 3-D crossing.
+interface DiagramProps {
+  omega: number;
+  moonU: number;
+  sunLon: number;
+  status: Status;
+  season: boolean;
+}
+
+function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps) {
+  // Orbit ring as small segments — coloured above/below the ecliptic, layered
+  // in front of / behind Earth for a true 3-D crossing.
   const segs = useMemo(() => {
     const back: React.ReactNode[] = [];
     const front: React.ReactNode[] = [];
@@ -72,7 +89,7 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
       const a = orbitPt(u, omega);
       const b = orbitPt(u + STEP, omega);
       const above = a.Z + b.Z >= 0;
-      const node = Math.abs(((u + STEP / 2) % 180)) < STEP; // near a crossing
+      const node = Math.abs((u + STEP / 2) % 180) < STEP;
       const seg = (
         <line
           key={`o${u}`}
@@ -88,19 +105,17 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
     return { back, front };
   }, [omega]);
 
-  const asc = orbitPt(0, omega); // राहु — ascending node
-  const desc = orbitPt(180, omega); // केतु — descending node
-  // Node line extended to the disc edge for clarity.
-  const ascEdge = planePt(omega, RD * 0.96);
-  const descEdge = planePt(omega + 180, RD * 0.96);
+  const asc = orbitPt(0, omega);
+  const desc = orbitPt(180, omega);
+  const ascEdge = planePt(omega, RM);
+  const descEdge = planePt(omega + 180, RM);
 
-  // Dihedral tilt wedge at the ascending node: a reference ray in the ecliptic
-  // plane and the orbit's rising ray, with an arc between them = the tilt.
+  // Dihedral tilt wedge at the ascending node.
   const tiltWedge = useMemo(() => {
     const O = omega * RAD;
     const na: [number, number, number] = [RM * Math.cos(O), RM * Math.sin(O), 0];
-    const dPlane: [number, number, number] = [-Math.sin(O), Math.cos(O), 0]; // ⟂ node line, in ecliptic
-    const up: [number, number, number] = [0, 0, 1]; // ecliptic normal
+    const dPlane: [number, number, number] = [-Math.sin(O), Math.cos(O), 0];
+    const up: [number, number, number] = [0, 0, 1];
     const ray = (d: [number, number, number], L: number) =>
       proj(na[0] + d[0] * L, na[1] + d[1] * L, na[2] + d[2] * L);
     const dOrbit: [number, number, number] = [
@@ -109,7 +124,7 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
       dPlane[2] * CI + up[2] * SI,
     ];
     const arc: string[] = [];
-    const R = 64;
+    const R = 60;
     const STEPS = 16;
     for (let k = 0; k <= STEPS; k++) {
       const t = (k / STEPS) * INC;
@@ -119,11 +134,10 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
       const p = proj(na[0] + dx * R, na[1] + dy * R, na[2] + dz * R);
       arc.push(`${k === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`);
     }
-    return { p0: proj(na[0], na[1], na[2]), pPlane: ray(dPlane, 104), pOrbit: ray(dOrbit, 104), arc: arc.join(" ") };
+    return { p0: proj(na[0], na[1], na[2]), pPlane: ray(dPlane, 100), pOrbit: ray(dOrbit, 100), arc: arc.join(" ") };
   }, [omega]);
 
   const moon = orbitPt(moonU, omega);
-  // Vertical post from the Moon down to its shadow point on the ecliptic plane.
   const O = omega * RAD;
   const ur = moonU * RAD;
   const baseX = RM * (Math.cos(O) * Math.cos(ur) - Math.sin(O) * Math.sin(ur) * CI);
@@ -131,7 +145,9 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
   const moonBase = proj(baseX, baseY, 0);
   const moonAbove = moon.Z >= 0;
 
-  const sunDir = planePt(0, RD);
+  const sun = planePt(sunLon, RSUN);
+  const shadow = planePt(sunLon + 180, RSUN);
+  const eclipsing = status !== "none";
 
   return (
     <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg mot-svg" role="img">
@@ -145,40 +161,55 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
           <stop offset="55%" stopColor="#aab2bb" />
           <stop offset="100%" stopColor="#5f6770" />
         </radialGradient>
-        <marker id="mot-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-          <path d="M0,0 L9,4.5 L0,9 Z" className="mot-arrow-head" />
-        </marker>
+        <radialGradient id="mot-sun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff6d8" />
+          <stop offset="44%" stopColor="#ffd24a" />
+          <stop offset="100%" stopColor="#ef8a1d" />
+        </radialGradient>
+        <radialGradient id="mot-sunglow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffcf57" stopOpacity={0.5} />
+          <stop offset="100%" stopColor="#ffcf57" stopOpacity={0} />
+        </radialGradient>
       </defs>
 
       {/* legend */}
       <g className="mot-legend">
-        <line x1={34} y1={34} x2={70} y2={34} className="mot-orbit above" />
-        <text x={78} y={39} className="mot-legend-label">चन्द्र-कक्ष — समतलभन्दा माथि</text>
-        <line x1={34} y1={62} x2={70} y2={62} className="mot-orbit below" />
-        <text x={78} y={67} className="mot-legend-label">समतलभन्दा तल</text>
+        <line x1={34} y1={32} x2={70} y2={32} className="mot-orbit above" />
+        <text x={78} y={37} className="mot-legend-label">कक्ष — समतलभन्दा माथि</text>
+        <line x1={34} y1={58} x2={70} y2={58} className="mot-orbit below" />
+        <text x={78} y={63} className="mot-legend-label">समतलभन्दा तल</text>
+        <line x1={34} y1={84} x2={70} y2={84} className="mot-sun-line" />
+        <text x={78} y={89} className="mot-legend-label">सूर्य–पृथ्वी (ग्रहण) रेखा</text>
       </g>
 
-      {/* ecliptic plane (flat disc) */}
+      {/* ecliptic plane */}
       <ellipse cx={CX} cy={CY} rx={RD} ry={RD * SE} fill="url(#mot-disc)" className="mot-plane" />
       <ellipse cx={CX} cy={CY} rx={RD} ry={RD * SE} className="mot-plane-rim" fill="none" />
       <text x={CX} y={CY + RD * SE + 30} className="mot-plane-label" textAnchor="middle">
         क्रान्तिवृत्त तल (सूर्यपथको समतल)
       </text>
 
-      {/* node-drift track (where the nodes travel) + retrograde arrow */}
+      {/* node-drift track */}
       <ellipse cx={CX} cy={CY} rx={RM} ry={RM * SE} className="mot-node-track" fill="none" />
+
+      {/* Sun–Earth–shadow line through Earth's centre */}
+      <line
+        x1={sun.x}
+        y1={sun.y}
+        x2={shadow.x}
+        y2={shadow.y}
+        className={`mot-sun-line${season ? " aligned" : ""}`}
+      />
+      <circle cx={shadow.x} cy={shadow.y} r={7} className="mot-shadow-dot" />
+      <text x={shadow.x} y={shadow.y - 14} className="mot-shadow-label" textAnchor="middle">
+        छायाँ
+      </text>
 
       {/* orbit ring behind Earth */}
       {segs.back}
 
-      {/* node line through Earth */}
+      {/* line of nodes */}
       <line x1={ascEdge.x} y1={ascEdge.y} x2={descEdge.x} y2={descEdge.y} className="mot-node-line" />
-
-      {/* Sun direction reference in the plane */}
-      <line x1={CX} y1={CY} x2={sunDir.x} y2={sunDir.y} className="mot-sun-ray" markerEnd="url(#mot-arrow)" />
-      <text x={sunDir.x + 6} y={sunDir.y + 4} className="mot-sun-label" textAnchor="start">
-        सूर्यतिर
-      </text>
 
       {/* Earth */}
       <g className="ho-earth-group" transform={`translate(${CX} ${CY})`}>
@@ -191,11 +222,18 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
       {/* orbit ring in front of Earth */}
       {segs.front}
 
-      {/* tilt wedge at ascending node */}
+      {/* Sun */}
+      <circle cx={sun.x} cy={sun.y} r={40} fill="url(#mot-sunglow)" />
+      <circle cx={sun.x} cy={sun.y} r={24} fill="url(#mot-sun)" />
+      <text x={sun.x} y={sun.y + 42} className="mot-sun-label" textAnchor="middle">
+        सूर्य
+      </text>
+
+      {/* tilt wedge */}
       <path d={tiltWedge.arc} className="mot-tilt-arc" fill="none" />
       <line x1={tiltWedge.p0.x} y1={tiltWedge.p0.y} x2={tiltWedge.pPlane.x} y2={tiltWedge.pPlane.y} className="mot-tilt-ref" />
       <line x1={tiltWedge.p0.x} y1={tiltWedge.p0.y} x2={tiltWedge.pOrbit.x} y2={tiltWedge.pOrbit.y} className="mot-tilt-ref orbit" />
-      <text x={tiltWedge.p0.x + 14} y={tiltWedge.p0.y - 44} className="mot-tilt-label" textAnchor="start">
+      <text x={tiltWedge.p0.x + 12} y={tiltWedge.p0.y - 42} className="mot-tilt-label" textAnchor="start">
         ~{fmt(5)}° झुकाव
       </text>
 
@@ -216,26 +254,39 @@ function MoonOrbitDiagram({ omega, moonU }: { omega: number; moonU: number }) {
       {/* Moon + height post */}
       <line x1={moon.x} y1={moon.y} x2={moonBase.x} y2={moonBase.y} className="mot-height-post" />
       <circle cx={moonBase.x} cy={moonBase.y} r={3} className="mot-base-dot" />
-      <g transform={`translate(${moon.x} ${moon.y})`}>
+      <g transform={`translate(${moon.x} ${moon.y})`} className={eclipsing ? "mot-moon-eclipsing" : ""}>
+        {eclipsing && <circle cx={0} cy={0} r={MOON_R + 7} className={`mot-eclipse-glow ${status}`} />}
         <circle cx={0} cy={0} r={MOON_R + 3} className={`mot-moon-halo ${moonAbove ? "up" : "down"}`} />
-        <circle cx={0} cy={0} r={MOON_R} fill="url(#mot-moon)" className="mot-moon" />
-        <text y={-MOON_R - 8} className="mot-moon-label" textAnchor="middle">
+        <circle
+          cx={0}
+          cy={0}
+          r={MOON_R}
+          fill={status === "lunar" ? "#c0392b" : status === "solar" ? "#33373d" : "url(#mot-moon)"}
+          className="mot-moon"
+        />
+        <text y={-MOON_R - 9} className="mot-moon-label" textAnchor="middle">
           चन्द्र
         </text>
       </g>
+
+      {/* eclipse banner */}
+      {eclipsing && (
+        <text x={CX} y={48} className={`mot-eclipse-banner ${status}`} textAnchor="middle">
+          {status === "lunar" ? "● चन्द्रग्रहण — चन्द्र पृथ्वीको छायाँमा" : "● सूर्यग्रहण — चन्द्र सूर्य–पृथ्वी बीचमा"}
+        </text>
+      )}
+      {!eclipsing && season && (
+        <text x={CX} y={48} className="mot-season-banner" textAnchor="middle">
+          ग्रहण ऋतु — पात रेखा सूर्यसँग मिल्यो (पूर्णिमा/अमावस्या कुर्नुहोस्)
+        </text>
+      )}
     </svg>
   );
 }
 
-const PRESETS = [
-  { ne: "१/४ चक्र", years: NODAL_YEARS / 4 },
-  { ne: "आधा चक्र", years: NODAL_YEARS / 2 },
-  { ne: "पूरा चक्र", years: NODAL_YEARS },
-];
-
 export function MoonOrbitTiltStudy() {
-  const [years, setYears] = useState(0);
-  const [moonU, setMoonU] = useState(40);
+  const [dayT, setDayT] = useState(0); // annual clock (Sun + Moon)
+  const [precT, setPrecT] = useState(0); // nodal precession (years)
   const [playing, setPlaying] = useState(true);
   const raf = useRef(0);
 
@@ -245,21 +296,65 @@ export function MoonOrbitTiltStudy() {
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setYears((p) => (p + dt * 1.6) % NODAL_YEARS); // precession clock
-      setMoonU((p) => (p + dt * 150) % 360); // Moon orbits much faster
+      setDayT((p) => (p + dt * 26) % YEAR_RANGE);
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
   }, [playing]);
 
-  // Retrograde node drift: Ω decreases, one full turn per 18.6 years.
-  const omega = ((120 - (years / NODAL_YEARS) * 360) % 360 + 360) % 360;
-  const remaining = NODAL_YEARS - years;
+  const model = useMemo(() => {
+    const sunLon = norm360((360 * dayT) / YEAR_DAYS);
+    const moonLon = norm360((360 * dayT) / SIDEREAL_MONTH);
+    const omega = norm360(NODE0 - (360 * precT) / NODAL_YEARS);
+    const u = norm360(moonLon - omega);
+    const E = norm360(moonLon - sunLon); // elongation: 0 new, 180 full
+    const nodeProx = Math.abs(Math.sin(u * RAD)); // 0 at a node
+    const atNode = nodeProx < Math.sin(11 * RAD);
+    let status: Status = "none";
+    if (atNode && angDiff(E, 180) < 15) status = "lunar";
+    else if (atNode && angDiff(E, 0) < 15) status = "solar";
+    const season = angDiff(omega, sunLon) < 13 || angDiff(omega, sunLon + 180) < 13;
+    const phase =
+      angDiff(E, 180) < 12 ? "पूर्णिमा" : angDiff(E, 0) < 12 ? "अमावस्या" : E < 180 ? "शुक्ल पक्ष" : "कृष्ण पक्ष";
+    return { sunLon, omega, u, status, season, phase };
+  }, [dayT, precT]);
+
+  const jumpNextEclipse = () => {
+    const omega = norm360(NODE0 - (360 * precT) / NODAL_YEARS);
+    for (let d = dayT + 1; d < dayT + YEAR_RANGE; d += 0.4) {
+      const t = d % YEAR_RANGE;
+      const sunLon = norm360((360 * t) / YEAR_DAYS);
+      const moonLon = norm360((360 * t) / SIDEREAL_MONTH);
+      const u = norm360(moonLon - omega);
+      const E = norm360(moonLon - sunLon);
+      const atNode = Math.abs(Math.sin(u * RAD)) < Math.sin(11 * RAD);
+      if (atNode && (angDiff(E, 180) < 12 || angDiff(E, 0) < 12)) {
+        setPlaying(false);
+        setDayT(t);
+        return;
+      }
+    }
+  };
+
+  const statusText =
+    model.status === "lunar"
+      ? "चन्द्रग्रहण"
+      : model.status === "solar"
+        ? "सूर्यग्रहण"
+        : model.season
+          ? "ग्रहण ऋतु — पर्खंदै"
+          : "ग्रहण छैन";
 
   return (
     <div className="tm-card pad-lg">
-      <MoonOrbitDiagram omega={omega} moonU={moonU} />
+      <MoonOrbitDiagram
+        omega={model.omega}
+        moonU={model.u}
+        sunLon={model.sunLon}
+        status={model.status}
+        season={model.season}
+      />
       <div className="ed-controls">
         <div className="ed-readout">
           <div className="ed-ro">
@@ -267,64 +362,81 @@ export function MoonOrbitTiltStudy() {
             <span className="ed-ro-v mono">~{fmt(REAL_TILT.toFixed(1))}°</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">पात रेखा कोण</span>
-            <span className="ed-ro-v mono">{fmt(Math.round(omega))}°</span>
+            <span className="ed-ro-k">चन्द्र चरण</span>
+            <span className="ed-ro-v">{model.phase}</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">बितेका वर्ष</span>
-            <span className="ed-ro-v mono">{fmt(years.toFixed(1))} / {fmt(NODAL_YEARS)}</span>
+            <span className="ed-ro-k">पात-चक्र</span>
+            <span className="ed-ro-v mono">{fmt(precT.toFixed(1))} / {fmt(NODAL_YEARS)} वर्ष</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">पात फर्कन</span>
-            <span className="ed-ro-v amber">{fmt(remaining.toFixed(1))} वर्ष बाँकी</span>
+            <span className="ed-ro-k">अवस्था</span>
+            <span className={"ed-ro-v" + (model.status !== "none" ? " amber" : "")}>{statusText}</span>
           </div>
         </div>
-        <div className="ed-scrub-wrap">
-          <button
-            type="button"
-            className="ed-playbtn"
-            onClick={() => setPlaying((p) => !p)}
-            title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-            aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-          >
-            {playing ? <Pause size={16} /> : <Play size={16} />}
-          </button>
+
+        <div className="mot-slider-row">
+          <span className="mot-slider-label">☉ वर्ष — सूर्य रेखा घुम्छ</span>
+          <div className="ed-scrub-wrap">
+            <button
+              type="button"
+              className="ed-playbtn"
+              onClick={() => setPlaying((p) => !p)}
+              title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+            >
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+            </button>
+            <input
+              className="ed-scrub"
+              type="range"
+              min={0}
+              max={YEAR_RANGE}
+              step={0.5}
+              value={dayT}
+              style={{ "--fill": `${(dayT / YEAR_RANGE) * 100}%` } as React.CSSProperties}
+              onChange={(e) => {
+                setPlaying(false);
+                setDayT(+e.target.value);
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="mot-slider-row">
+          <span className="mot-slider-label">☊ पात-चक्र — {fmt(NODAL_YEARS)} वर्षे precession</span>
           <input
             className="ed-scrub"
             type="range"
             min={0}
             max={NODAL_YEARS}
             step={0.05}
-            value={years}
-            style={{ "--fill": `${(years / NODAL_YEARS) * 100}%` } as React.CSSProperties}
-            onChange={(e) => {
-              setPlaying(false);
-              setYears(+e.target.value);
-            }}
+            value={precT}
+            style={{ "--fill": `${(precT / NODAL_YEARS) * 100}%` } as React.CSSProperties}
+            onChange={(e) => setPrecT(+e.target.value)}
           />
         </div>
+
         <div className="ed-presets">
-          {PRESETS.map((p) => (
-            <button
-              key={p.ne}
-              type="button"
-              className={"ed-preset" + (Math.abs(years - p.years) < 0.3 ? " on" : "")}
-              onClick={() => {
-                setPlaying(false);
-                setYears(p.years % NODAL_YEARS);
-              }}
-            >
-              {p.ne}
-            </button>
-          ))}
+          <button type="button" className="ed-preset" onClick={jumpNextEclipse}>
+            अर्को ग्रहण →
+          </button>
+          <button
+            type="button"
+            className="ed-preset"
+            onClick={() => setPrecT((p) => (p + NODAL_YEARS / 4) % NODAL_YEARS)}
+          >
+            पात रेखा घुमाउनुहोस्
+          </button>
         </div>
       </div>
       <p className="tm-card-cap">
-        चन्द्रको कक्ष क्रान्तिवृत्तभन्दा <span className="hl-amber">~{fmt(5)}° झुकेको</span> छ — त्यसैले
-        आधा कक्ष समतलभन्दा माथि, आधा तल पर्छ। दुई समतल काट्ने बिन्दु नै{" "}
-        <span className="hl">राहु (आरोही)</span> र <span className="hl">केतु (अवरोही)</span> पात हुन्।
-        यो पात रेखा बिस्तारै पछाडितिर घुम्छ र <b>~{fmt(NODAL_YEARS)} वर्षमा</b> उही ठाउँमा फर्कन्छ
-        (पात-चक्र) — यसैले ग्रहण ऋतु पनि हरेक वर्ष केही दिन सर्दै जान्छ।
+        पृथ्वीको बीचबाट गएको <span className="hl-amber">सूर्य–पृथ्वी (ग्रहण) रेखा</span> सूर्यसँगै वर्षमा
+        एक फेरो घुम्छ। चन्द्रको कक्ष <b>~{fmt(5)}°</b> झुकेकाले धेरैजसो पूर्णिमामा चन्द्र यो रेखाभन्दा
+        माथि/तल हुन्छ — ग्रहण <b>हुँदैन</b>। ग्रहण त्यतिबेला मात्र हुन्छ जब यो रेखा{" "}
+        <span className="hl">राहु वा केतु</span> मा पुग्छ र त्यहीँ चन्द्र (पूर्णिमा/अमावस्या) पर्छ।
+        तल्लो स्लाइडरले पात रेखालाई <b>{fmt(NODAL_YEARS)} वर्षे</b> चक्रमा घुमाउँछ — त्यसैले ग्रहण ऋतु
+        हरेक वर्ष सर्दै जान्छ।
       </p>
     </div>
   );

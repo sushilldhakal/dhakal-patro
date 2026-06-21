@@ -3226,6 +3226,20 @@
 .mot-moon-halo.down { fill: color-mix(in srgb, var(--tm-teal) 18%, transparent); }
 .mot-moon-label { fill: var(--tm-ink-dim); font: 600 13px var(--pn-font); }
 .mot-legend-label { fill: var(--tm-ink-faint); font: 600 13px var(--pn-font); }
+.mot-sun-line { stroke: #e0901a; stroke-width: 2.6; stroke-linecap: round; }
+.mot-sun-line.aligned { stroke: #e0461a; stroke-width: 3.4; }
+.mot-shadow-dot { fill: color-mix(in srgb, var(--tm-ink) 60%, transparent); }
+.mot-shadow-label { fill: var(--tm-ink-faint); font: 600 12px var(--pn-font); }
+.mot-eclipse-glow.lunar { fill: color-mix(in srgb, #d2402a 45%, transparent); }
+.mot-eclipse-glow.solar { fill: color-mix(in srgb, #ffcf57 55%, transparent); }
+.mot-moon-eclipsing { filter: drop-shadow(0 0 7px color-mix(in srgb, #e0473a 55%, transparent)); }
+.mot-eclipse-banner { font: 800 21px var(--pn-font); }
+.mot-eclipse-banner.lunar { fill: #d2402a; }
+.mot-eclipse-banner.solar { fill: #d99a18; }
+.mot-season-banner { fill: var(--tm-ink-dim); font: 700 17px var(--pn-font); }
+.mot-slider-row { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.mot-slider-label { font: 600 11px var(--pn-font); letter-spacing: 0.04em; color: var(--tm-ink-faint); }
+.mot-slider-row > input.ed-scrub { width: 100%; }
 
 .ed-svg.grab { cursor: grab; }
 .ed-svg.grab:active { cursor: grabbing; }
