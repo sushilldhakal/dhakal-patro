@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
+import { WHEEL_RASHIS } from "@/lib/wheel-data";
 import { SunEarthMoonOrbit } from "./SunEarthMoonOrbit";
 import {
   BS_MONTHS,
   SYNODIC_MONTH,
   TROPICAL_YEAR,
+  earthOrbitFromMeanAnomaly,
   elongationFromDay,
   lunarMonthsCompleted,
-  monthIndexFromAngle,
+  nakshatraIndexFromLon,
+  rashiIndexFromLon,
+  sunSiderealLonFromEarthNu,
   yearAngleFromDay,
 } from "./sun-earth-moon-math";
 
@@ -39,8 +44,12 @@ export function SunEarthMoonStudy() {
   }, [playing]);
 
   const yearAngle = yearAngleFromDay(day);
+  const { nuDeg } = earthOrbitFromMeanAnomaly(yearAngle);
+  const sunLon = sunSiderealLonFromEarthNu(nuDeg);
+  const rashiIdx = rashiIndexFromLon(sunLon);
+  const nakIdx = nakshatraIndexFromLon(sunLon);
   const E = elongationFromDay(day);
-  const monthIdx = monthIndexFromAngle(yearAngle);
+  const monthIdx = rashiIdx;
   const monthsDone = lunarMonthsCompleted(day);
   const paksha = E < 180 ? "शुक्ल" : "कृष्ण";
   const daysIntoLunarMonth = day - monthsDone * SYNODIC_MONTH;
@@ -59,6 +68,16 @@ export function SunEarthMoonStudy() {
           <div className="ed-ro">
             <span className="ed-ro-k">सौर महिना</span>
             <span className="ed-ro-v">{BS_MONTHS[monthIdx]}</span>
+          </div>
+          <div className="ed-ro">
+            <span className="ed-ro-k">सूर्य राशि · नक्षत्र</span>
+            <span className="ed-ro-v">
+              {WHEEL_RASHIS[rashiIdx]!.sym} {WHEEL_RASHIS[rashiIdx]!.ne} · {NAKSHATRA_ICONS[nakIdx]!.ne}
+            </span>
+          </div>
+          <div className="ed-ro">
+            <span className="ed-ro-k">सूर्य देशान्तर</span>
+            <span className="ed-ro-v mono">{fmt(Math.round(sunLon))}°</span>
           </div>
           <div className="ed-ro">
             <span className="ed-ro-k">वर्षको दिन</span>
@@ -120,9 +139,11 @@ export function SunEarthMoonStudy() {
         </div>
       </div>
       <p className="tm-card-cap">
-        पृथ्वीले सूर्यको १ फेरो (~{fmt(365)} दिन) लगाउँदा चन्द्रले पृथ्वीको ~{fmt(12)}.{fmt(4)} फेरो
-        लगाउँछ — त्यसैले १२ चान्द्र महिना सकिँदा वर्ष ~{fmt(11)} दिन बाँकी रहन्छ, जसले{" "}
-        <span className="hl-amber">अधिक मास</span> जन्माउँछ।
+        बाहिरी {toNepaliDigits(12)} राशि र {toNepaliDigits(27)} नक्षत्रको ग्रिडले पृथ्वीबाट देखिने{" "}
+        <span className="hl-amber">सूर्यको स्थिति</span> देखाउँछ — सूर्य नयाँ राशि वा नक्षत्रमा
+        प्रवेश गर्दा ग्रिड सीमा पार हुन्छ (सङ्क्रान्ति)। पृथ्वीले सूर्यको १ फेरो (~{fmt(365)} दिन)
+        लगाउँदा चन्द्रले ~{fmt(12)}.{fmt(4)} फेरो लगाउँछ — त्यसैले १२ चान्द्र महिना सकिँदा वर्ष ~{" "}
+        {fmt(11)} दिन बाँकी रहन्छ, जसले <span className="hl-amber">अधिक मास</span> जन्माउँछ।
       </p>
     </div>
   );

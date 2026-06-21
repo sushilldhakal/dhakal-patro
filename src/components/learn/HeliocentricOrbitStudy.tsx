@@ -34,7 +34,6 @@ function orbitEvent(meanDeg: number): string {
 
 export function HeliocentricOrbitStudy() {
   const [meanDeg, setMeanDeg] = useState(() => meanFromTrue(180));
-  const [spinDeg, setSpinDeg] = useState(0);
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);
   const fmt = (n: number) => toNepaliDigits(n);
@@ -46,7 +45,6 @@ export function HeliocentricOrbitStudy() {
       const dt = (now - last) / 1000;
       last = now;
       setMeanDeg((prev) => (prev + dt * 10) % 360);
-      setSpinDeg((prev) => (prev + dt * 95) % 360);
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
@@ -60,7 +58,6 @@ export function HeliocentricOrbitStudy() {
     <div className="tm-card pad-lg">
       <HeliocentricOrbitDiagram
         meanDeg={meanDeg}
-        spinDeg={spinDeg}
         onMeanDeg={(v) => {
           setPlaying(false);
           setMeanDeg(v);

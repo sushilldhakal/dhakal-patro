@@ -1,49 +1,72 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { EarthGlobeImage, EARTH_AXIAL_TILT } from "./EarthGlobeImage";
+import { EclipticGridLayer } from "./EclipticGridLayer";
 import {
-  BS_MONTHS,
-  RAD,
   SEM,
-  dayFromYearAngle,
+  SEM_EARTH_ORBIT_B,
+  SEM_GRID,
+  SEM_MOON_ORBIT_B,
+  dayFromEarthMean,
+  earthMeanFromPointer,
+  earthOrbitFromMeanAnomaly,
   elongationFromDay,
-  monthIndexFromAngle,
+  ellipsePathAtFocus,
+  ellipsePathAtOrigin,
+  localRadialOffset,
+  moonAbsoluteFromElongation,
+  moonLocalFromTrueAnomaly,
   pol,
+  sunDirFromEarth,
+  sunSiderealLonFromEarthNu,
   yearAngleFromDay,
 } from "./sun-earth-moon-math";
-
-function litHemispherePath(ex: number, ey: number, r: number, towardDeg: number) {
-  const a0 = (towardDeg - 90) * RAD;
-  const a1 = (towardDeg + 90) * RAD;
-  const x0 = ex + r * Math.cos(a0);
-  const y0 = ey - r * Math.sin(a0);
-  const x1 = ex + r * Math.cos(a1);
-  const y1 = ey - r * Math.sin(a1);
-  return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${r} ${r} 0 0 0 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`;
-}
 
 interface Props {
   day: number;
   onDay?: (v: number) => void;
+  /** Rashi + nakshatra grid (Sun sidereal longitude from Earth). */
+  showEclipticGrid?: boolean;
 }
 
-export function SunEarthMoonOrbit({ day, onDay }: Props) {
+export function SunEarthMoonOrbit({ day, onDay, showEclipticGrid = true }: Props) {
   const fmt = (n: number) => toNepaliDigits(n);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef(false);
 
-  const yearAngle = yearAngleFromDay(day);
+  const meanDeg = yearAngleFromDay(day);
+  const earthOrbit = earthOrbitFromMeanAnomaly(meanDeg);
+  const { ex, ey, nuDeg } = earthOrbit;
+  const sunLon = sunSiderealLonFromEarthNu(nuDeg);
   const E = elongationFromDay(day);
-  const sunDirFromEarth = yearAngle + 180;
-  const moonAngleAbs = sunDirFromEarth + E;
+  const sunDir = sunDirFromEarth(ex, ey);
+  const [mx, my] = moonAbsoluteFromElongation(ex, ey, sunDir, E);
 
-  const [ex, ey] = pol(SEM.cx, SEM.cy, SEM.earthOrbitR, yearAngle);
-  const [mx, my] = pol(ex, ey, SEM.moonOrbitR, moonAngleAbs);
+  const lean = (EARTH_AXIAL_TILT * Math.PI) / 180;
+  const axisUx = Math.sin(lean);
+  const axisUy = -Math.cos(lean);
+  const eqUx = -axisUy;
+  const eqUy = axisUx;
+  const eqHalf = SEM.earthR * 0.94;
+  const axisLen = SEM.earthR * 2.1;
+  const northX = axisUx * axisLen;
+  const northY = axisUy * axisLen;
+  const southX = -axisUx * axisLen * 0.42;
+  const southY = -axisUy * axisLen * 0.42;
 
-  /** Stylised — not to scale — just to show Earth visibly spinning. */
-  const spinDeg = (day * 760) % 360;
-  const [spinMX, spinMY] = pol(ex, ey, SEM.earthR * 0.72, spinDeg);
+  const earthEllipsePath = useMemo(
+    () => ellipsePathAtFocus(SEM.cx, SEM.cy, SEM.earthOrbitA, SEM.earthOrbitE),
+    [],
+  );
+  const moonEllipsePath = useMemo(
+    () => ellipsePathAtOrigin(SEM.moonOrbitA, SEM.moonOrbitE),
+    [],
+  );
+  const earthOrbitCenterX = SEM.cx + SEM.earthOrbitA * SEM.earthOrbitE;
+
   /** Tidal lock: this point always sits on the Earth-facing side of the Moon. */
-  const [tlX, tlY] = pol(mx, my, SEM.moonR * 0.62, moonAngleAbs + 180);
+  const earthDir = Math.atan2(-(ey - my), ex - mx) / (Math.PI / 180);
+  const [tlX, tlY] = pol(mx, my, SEM.moonR * 0.62, earthDir);
 
   const dayFromEvt = (e: React.PointerEvent) => {
     const svg = svgRef.current;
@@ -51,35 +74,13 @@ export function SunEarthMoonOrbit({ day, onDay }: Props) {
     const r = svg.getBoundingClientRect();
     const px = ((e.clientX - r.left) / r.width) * SEM.W;
     const py = ((e.clientY - r.top) / r.height) * SEM.H;
-    const a = Math.atan2(-(py - SEM.cy), px - SEM.cx) / RAD;
-    return dayFromYearAngle(a);
+    return dayFromEarthMean(earthMeanFromPointer(px, py));
   };
 
-  const curMonth = monthIndexFromAngle(yearAngle);
-  const monthTicks = Array.from({ length: 12 }, (_, k) => {
-    const deg = k * 30;
-    const [tx, ty] = pol(SEM.cx, SEM.cy, SEM.earthOrbitR + 36, deg);
-    const [i0x, i0y] = pol(SEM.cx, SEM.cy, SEM.earthOrbitR - 9, deg);
-    const [i1x, i1y] = pol(SEM.cx, SEM.cy, SEM.earthOrbitR + 9, deg);
-    return (
-      <g key={`mo-${k}`}>
-        <line x1={i0x} y1={i0y} x2={i1x} y2={i1y} className="sem-month-tick" />
-        <text
-          x={tx}
-          y={ty}
-          className={`sem-month-label${curMonth === k ? " cur" : ""}`}
-          textAnchor="middle"
-          dominantBaseline="central"
-        >
-          {BS_MONTHS[k]}
-        </text>
-      </g>
-    );
-  });
-
   const moonTicks = Array.from({ length: 12 }, (_, k) => {
-    const deg = sunDirFromEarth + k * 30;
-    const [tx, ty] = pol(ex, ey, SEM.moonOrbitR + 18, deg);
+    const nu = k * 30;
+    const [lx, ly] = moonLocalFromTrueAnomaly(nu);
+    const [tx, ty] = localRadialOffset(lx, ly, 18);
     const isNew = k === 0;
     const isFull = k === 6;
     return (
@@ -128,11 +129,6 @@ export function SunEarthMoonOrbit({ day, onDay }: Props) {
           <stop offset="0%" stopColor="#ffcf57" stopOpacity={0.45} />
           <stop offset="100%" stopColor="#ffcf57" stopOpacity={0} />
         </radialGradient>
-        <radialGradient id="sem-earth" cx="38%" cy="34%" r="72%">
-          <stop offset="0%" stopColor="#6fc6e8" />
-          <stop offset="48%" stopColor="#2b7fa8" />
-          <stop offset="100%" stopColor="#123a52" />
-        </radialGradient>
         <radialGradient id="sem-moon" cx="36%" cy="32%" r="74%">
           <stop offset="0%" stopColor="#eef1f4" />
           <stop offset="55%" stopColor="#aab2bb" />
@@ -140,11 +136,28 @@ export function SunEarthMoonOrbit({ day, onDay }: Props) {
         </radialGradient>
       </defs>
 
-      <circle cx={SEM.cx} cy={SEM.cy} r={SEM.earthOrbitR} className="sem-orbit" />
-      {monthTicks}
+      {showEclipticGrid && <EclipticGridLayer sunLon={sunLon} />}
 
-      <circle cx={ex} cy={ey} r={SEM.moonOrbitR} className="sem-moon-orbit" />
-      {moonTicks}
+      <ellipse
+        cx={earthOrbitCenterX}
+        cy={SEM.cy}
+        rx={SEM.earthOrbitA}
+        ry={SEM_EARTH_ORBIT_B}
+        className="sem-orbit sem-orbit-guide"
+      />
+      <path d={earthEllipsePath} className="sem-orbit" fill="none" />
+
+      <g transform={`translate(${ex} ${ey}) rotate(${-sunDir})`}>
+        <ellipse
+          cx={SEM.moonOrbitA * SEM.moonOrbitE}
+          cy={0}
+          rx={SEM.moonOrbitA}
+          ry={SEM_MOON_ORBIT_B}
+          className="sem-moon-orbit sem-moon-orbit-guide"
+        />
+        <path d={moonEllipsePath} className="sem-moon-orbit" fill="none" />
+        {moonTicks}
+      </g>
 
       <line x1={SEM.cx} y1={SEM.cy} x2={ex} y2={ey} className="sem-radius-line" />
 
@@ -154,20 +167,33 @@ export function SunEarthMoonOrbit({ day, onDay }: Props) {
         सूर्य
       </text>
 
-      <circle cx={ex} cy={ey} r={SEM.earthR + 8} className="sem-earth-glow" />
-      <circle cx={ex} cy={ey} r={SEM.earthR} fill="url(#sem-earth)" />
-      <path
-        d={litHemispherePath(ex, ey, SEM.earthR, sunDirFromEarth + 180)}
-        className="sem-earth-night"
-      />
-      <line x1={ex} y1={ey} x2={spinMX} y2={spinMY} className="sem-spin-arm" />
-      <circle cx={spinMX} cy={spinMY} r={3.6} className="sem-spin-dot" />
-      <text x={ex} y={ey + SEM.earthR + 22} className="ed-body-label" textAnchor="middle">
-        पृथ्वी
-      </text>
+      <g className="sem-earth-group ho-earth-group" transform={`translate(${ex} ${ey})`}>
+        <EarthGlobeImage cx={0} cy={0} r={SEM.earthR} glow glowClassName="sem-earth-glow" glowPad={8} />
+        <line
+          x1={-eqUx * eqHalf}
+          y1={-eqUy * eqHalf}
+          x2={eqUx * eqHalf}
+          y2={eqUy * eqHalf}
+          className="ho-equator"
+        />
+        <line x1={southX} y1={southY} x2={northX} y2={northY} className="ho-pole-axis" />
+        <text y={SEM.earthR + 22} className="ed-body-label" textAnchor="middle">
+          पृथ्वी
+        </text>
+      </g>
 
       <circle cx={mx} cy={my} r={SEM.moonR} fill="url(#sem-moon)" />
       <circle cx={tlX} cy={tlY} r={2.4} className="sem-tidal-marker" />
+
+      {showEclipticGrid && (() => {
+        const [sunMx, sunMy] = pol(SEM.cx, SEM.cy, (SEM_GRID.rashiIn + SEM_GRID.nakOut) / 2, sunLon);
+        return (
+          <g className="sem-sun-lon-indicator">
+            <line x1={SEM.cx} y1={SEM.cy} x2={sunMx} y2={sunMy} className="sem-sun-lon-ray" />
+            <circle cx={sunMx} cy={sunMy} r={5.5} className="sem-sun-lon-marker" />
+          </g>
+        );
+      })()}
 
       <text x={SEM.cx} y={SEM.H - 18} className="ho-orbit-dir" textAnchor="middle">
         ↺ वामावर्त — पृथ्वी १ वर्षमा १ फेरो, चन्द्र सोही समयमा ~{fmt(12)}.{fmt(4)} फेरो

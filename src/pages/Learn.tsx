@@ -29,6 +29,7 @@ import {
 const FEATURED_SLUGS = ["what-is-panchang", "tithi", "solar-system"] as const;
 
 const STARTER_PATH_SLUGS = [
+  "astronomy-basics",
   "solar-system",
   "what-is-panchang",
   "tithi",

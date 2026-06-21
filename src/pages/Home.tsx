@@ -11,6 +11,7 @@ import {
   type CalendarDay,
 } from "../lib/api";
 import { CalendarView } from "../components/CalendarView";
+import { SunTimesYearGrid } from "../components/SunTimesYearGrid";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import {
   resolveLocationTimezone,
@@ -207,7 +208,13 @@ function PanchangaAside({
   );
 }
 
-function UpcomingHolidays({ bsYear }: { bsYear: number }) {
+function UpcomingHolidays({
+  bsYear,
+  location,
+}: {
+  bsYear: number;
+  location: PanchangaLocation;
+}) {
   const { data, isLoading } = useQuery({
     queryKey: holidayKeys.holidays(bsYear),
     queryFn: () => fetchHolidays(bsYear),
@@ -270,6 +277,12 @@ function UpcomingHolidays({ bsYear }: { bsYear: number }) {
           })
         )}
       </div>
+
+      <SunTimesYearGrid
+        bsYear={bsYear}
+        locationLabel={location.label}
+        locationParams={location.params}
+      />
     </section>
   );
 }
@@ -305,7 +318,7 @@ export function Home() {
             todayAd={todayAd}
           />
         }
-        holidays={<UpcomingHolidays bsYear={bsYear} />}
+        holidays={<UpcomingHolidays bsYear={bsYear} location={location} />}
       />
 
       <p className="pn-note">

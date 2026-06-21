@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { EarthGlobeImage, EARTH_AXIAL_TILT } from "./EarthGlobeImage";
 import {
   ORBIT,
   ORBIT_B,
@@ -10,8 +11,8 @@ import {
   orbitFromMeanAnomaly,
 } from "./orbit-math";
 
-const TILT = 23.5;
-const HO = { W: 1200, H: 880, sunR: 70, earthR: 30, axisLen: 64 };
+const TILT = EARTH_AXIAL_TILT;
+const HO = { W: 1200, H: 880, sunR: 70, earthR: 60, axisLen: 128 };
 
 /**
  * Spin axis is fixed in space (it always points at the same distant star,
@@ -28,24 +29,11 @@ function earthAxis() {
   return { ux, uy, lean };
 }
 
-function northernCapPath(ex: number, ey: number, r: number, ux: number, uy: number) {
-  const north = Math.atan2(-uy, ux);
-  const a0 = north - Math.PI / 2;
-  const a1 = north + Math.PI / 2;
-  const x0 = ex + r * Math.cos(a0);
-  const y0 = ey - r * Math.sin(a0);
-  const x1 = ex + r * Math.cos(a1);
-  const y1 = ey - r * Math.sin(a1);
-  return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${r} ${r} 0 0 0 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`;
-}
-
-function tiltArcPath(ex: number, ey: number, r: number, lean: number) {
-  const refX = ex;
-  const refY = ey - r;
-  const ax = ex + Math.sin(lean) * r;
-  const ay = ey - Math.cos(lean) * r;
+function tiltArcPathAtOrigin(r: number, lean: number) {
+  const ax = Math.sin(lean) * r;
+  const ay = -Math.cos(lean) * r;
   const large = lean > Math.PI ? 1 : 0;
-  return `M ${refX.toFixed(1)} ${refY.toFixed(1)} A ${r} ${r} 0 ${large} 1 ${ax.toFixed(1)} ${ay.toFixed(1)}`;
+  return `M 0 ${-r} A ${r} ${r} 0 ${large} 1 ${ax.toFixed(1)} ${ay.toFixed(1)}`;
 }
 
 function markerLabelLayout(pos: { ex: number; ey: number }, nu: number) {
@@ -91,13 +79,11 @@ function markerLabelLayout(pos: { ex: number; ey: number }, nu: number) {
 
 interface Props {
   meanDeg?: number;
-  spinDeg?: number;
   onMeanDeg?: (v: number) => void;
 }
 
 export function HeliocentricOrbitDiagram({
   meanDeg = meanFromTrue(180),
-  spinDeg = 0,
   onMeanDeg,
 }: Props) {
   const fmt = (n: number) => toNepaliDigits(n);
@@ -120,40 +106,43 @@ export function HeliocentricOrbitDiagram({
   const eqUy = axisUx;
   const eqHalf = HO.earthR * 0.94;
 
-  const northX = ex + axisUx * HO.axisLen;
-  const northY = ey + axisUy * HO.axisLen;
-  const southX = ex - axisUx * HO.axisLen * 0.42;
-  const southY = ey - axisUy * HO.axisLen * 0.42;
-
-  const spinRad = (spinDeg * Math.PI) / 180;
-  const spinX = ex + eqUx * Math.cos(spinRad) * HO.earthR * 0.82;
-  const spinY = ey + eqUy * Math.cos(spinRad) * HO.earthR * 0.82;
+  const northX = axisUx * HO.axisLen;
+  const northY = axisUy * HO.axisLen;
+  const southX = -axisUx * HO.axisLen * 0.42;
+  const southY = -axisUy * HO.axisLen * 0.42;
 
   const speedLabel = speed > 1.02 ? "छिटो" : speed < 0.98 ? "ढिलो" : "मध्यम";
 
-  const rays = Array.from({ length: 16 }, (_, k) => {
-    const a = (k / 16) * Math.PI * 2;
-    const r0 = HO.sunR + 4;
-    const r1 = HO.sunR + (k % 2 ? 14 : 22);
-    return (
-      <line
-        key={`ray${k}`}
-        x1={ORBIT.cx + r0 * Math.cos(a)}
-        y1={ORBIT.cy + r0 * Math.sin(a)}
-        x2={ORBIT.cx + r1 * Math.cos(a)}
-        y2={ORBIT.cy + r1 * Math.sin(a)}
-        className="ed-ray"
-      />
-    );
-  });
+  const sweepPath = useMemo(() => {
+    const pts: string[] = [];
+    const steps = Math.max(2, Math.ceil(meanDeg / 3));
+    for (let i = 0; i <= steps; i++) {
+      const m = (meanDeg * i) / steps;
+      const p = orbitFromMeanAnomaly(m);
+      pts.push((i === 0 ? "M" : "L") + p.ex.toFixed(1) + "," + p.ey.toFixed(1));
+    }
+    return pts.length > 1 ? pts.join(" ") : "";
+  }, [meanDeg]);
 
-  const sweepPts: string[] = [];
-  const steps = Math.max(2, Math.ceil(meanDeg / 3));
-  for (let i = 0; i <= steps; i++) {
-    const m = (meanDeg * i) / steps;
-    const p = orbitFromMeanAnomaly(m);
-    sweepPts.push((i === 0 ? "M" : "L") + p.ex.toFixed(1) + "," + p.ey.toFixed(1));
-  }
+  const rays = useMemo(
+    () =>
+      Array.from({ length: 16 }, (_, k) => {
+        const a = (k / 16) * Math.PI * 2;
+        const r0 = HO.sunR + 4;
+        const r1 = HO.sunR + (k % 2 ? 14 : 22);
+        return (
+          <line
+            key={`ray${k}`}
+            x1={ORBIT.cx + r0 * Math.cos(a)}
+            y1={ORBIT.cy + r0 * Math.sin(a)}
+            x2={ORBIT.cx + r1 * Math.cos(a)}
+            y2={ORBIT.cy + r1 * Math.sin(a)}
+            className="ed-ray"
+          />
+        );
+      }),
+    [],
+  );
 
   const peri = orbitFromMeanAnomaly(meanFromTrue(0));
   const aphe = orbitFromMeanAnomaly(meanFromTrue(180));
@@ -197,15 +186,6 @@ export function HeliocentricOrbitDiagram({
           <stop offset="0%" stopColor="#ffcf57" stopOpacity={0.45} />
           <stop offset="100%" stopColor="#ffcf57" stopOpacity={0} />
         </radialGradient>
-        <radialGradient id="ho-earth" cx="38%" cy="34%" r="72%">
-          <stop offset="0%" stopColor="#6fc6e8" />
-          <stop offset="48%" stopColor="#2b7fa8" />
-          <stop offset="100%" stopColor="#123a52" />
-        </radialGradient>
-        <linearGradient id="ho-north-cap" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8ed4a0" stopOpacity={0.55} />
-          <stop offset="100%" stopColor="#2b7fa8" stopOpacity={0.15} />
-        </linearGradient>
       </defs>
 
       <ellipse
@@ -270,7 +250,7 @@ export function HeliocentricOrbitDiagram({
         );
       })}
 
-      {sweepPts.length > 1 && <path d={sweepPts.join(" ")} className="ho-sweep" fill="none" />}
+      {sweepPath && <path d={sweepPath} className="ho-sweep" fill="none" />}
 
       <text x={HO.W / 2} y={HO.H - 22} className="ho-orbit-dir" textAnchor="middle">
         ↺ वामावर्त (वास्तविक दिशा)
@@ -284,25 +264,17 @@ export function HeliocentricOrbitDiagram({
         सूर्य (केन्द्रबिन्दु)
       </text>
 
-      <g className="ho-earth-group">
-        <circle cx={ex} cy={ey} r={HO.earthR + 14} className="ho-earth-glow" />
-        <circle cx={ex} cy={ey} r={HO.earthR} fill="url(#ho-earth)" />
-        <path d={northernCapPath(ex, ey, HO.earthR, axisUx, axisUy)} fill="url(#ho-north-cap)" />
+      <g className="ho-earth-group" transform={`translate(${ex} ${ey})`}>
+        <EarthGlobeImage cx={0} cy={0} r={HO.earthR} glow />
         <line
-          x1={ex - eqUx * eqHalf}
-          y1={ey - eqUy * eqHalf}
-          x2={ex + eqUx * eqHalf}
-          y2={ey + eqUy * eqHalf}
+          x1={-eqUx * eqHalf}
+          y1={-eqUy * eqHalf}
+          x2={eqUx * eqHalf}
+          y2={eqUy * eqHalf}
           className="ho-equator"
         />
-        <line
-          x1={ex}
-          y1={ey}
-          x2={ex}
-          y2={ey - HO.earthR * 0.55}
-          className="ho-tilt-ref"
-        />
-        <path d={tiltArcPath(ex, ey, HO.earthR * 0.55, lean)} className="ho-tilt-arc" fill="none" />
+        <line x1={0} y1={0} x2={0} y2={-HO.earthR * 0.55} className="ho-tilt-ref" />
+        <path d={tiltArcPathAtOrigin(HO.earthR * 0.55, lean)} className="ho-tilt-arc" fill="none" />
         <line x1={southX} y1={southY} x2={northX} y2={northY} className="ho-pole-axis" />
         <circle cx={northX} cy={northY} r={5} className="ho-north-pole" />
         <text
@@ -312,19 +284,10 @@ export function HeliocentricOrbitDiagram({
         >
           उत्तर · {fmt(TILT)}°
         </text>
-        <line
-          x1={ex}
-          y1={ey}
-          x2={spinX}
-          y2={spinY}
-          className="ho-spin-arm"
-        />
-        <circle cx={spinX} cy={spinY} r={5} className="ho-spin-dot" />
+        <text y={HO.earthR + 24} className="ed-body-label" textAnchor="middle">
+          पृथ्वी
+        </text>
       </g>
-
-      <text x={ex} y={ey + HO.earthR + 24} className="ed-body-label" textAnchor="middle">
-        पृथ्वी
-      </text>
 
       <g
         transform={`translate(${ex + sunUx * 72},${ey + sunUy * 72})`}

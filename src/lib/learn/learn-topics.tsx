@@ -15,8 +15,10 @@ import {
   Moon,
   Sun,
   Telescope,
+  Eye,
 } from "lucide-react";
 import {
+  AstronomyBasics,
   SolarSystem,
   BsCalendar,
   CalendarDifferences,
@@ -60,6 +62,15 @@ export const LEARN_CATEGORIES: LearnCategory[] = [
 ];
 
 export const LEARN_TOPICS: LearnTopic[] = [
+  {
+    slug: "astronomy-basics",
+    category: "astronomy",
+    titleNe: "गहिरो जानुअघि — खगोलीय आधार",
+    titleEn: "Before Going Deeper — Sky Basics",
+    icon: Eye,
+    summary: "आकाश, कोण, १२ राशि, ९ ग्रह, २७ नक्षत्र, तिथि, योग, करण — गहिरो पढ्नुअघि पूरा सूची।",
+    Content: AstronomyBasics,
+  },
   {
     slug: "solar-system",
     category: "astronomy",

@@ -7,6 +7,14 @@ import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
 import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
+  GrahaReferenceTable,
+  KaranaReferenceTable,
+  NakshatraReferenceTable,
+  RashiReferenceTable,
+  TithiReferenceTable,
+  YogaReferenceTable,
+} from "@/components/learn/PanchangaReferenceGuide";
+import {
   SunriseTimeline,
   AdhikMassDiagram,
 } from "@/components/tithi-mechanics/tithi-mechanics-diagrams";
@@ -71,6 +79,177 @@ function Note({ children }: { children: React.ReactNode }) {
 /* ================================================================== */
 /* ARTICLES                                                            */
 /* ================================================================== */
+
+export function AstronomyBasics() {
+  return (
+    <>
+      <Section kicker="०१" title="आकाश कसरी देखिन्छ" en="What we see from Earth">
+        <Lede>
+          रातको आकाशमा <span className="hl">ताराहरू</span> टाढाका सूर्यजस्तै उज्यालो
+          बिन्दु हुन्। दिनमा <span className="hl-amber">सूर्य</span> सबैभन्दा चम्किलो
+          देखिन्छ; रातमा <span className="hl">चन्द्रमा</span> सबैभन्दा नजिकको खगोलीय
+          पिण्ड हो — यिनै तीनले नेपाली पात्रो र पञ्चाङ्गको गणनाको आधार बनाउँछन्।
+        </Lede>
+        <Keys
+          items={[
+            {
+              h: "क्षितिज र zenith",
+              p: "जहाँ आकाश र जमिन भेटिन्छ — क्षितिज; सिधै माथि — zenith। सबै खगोलीय वस्तु यही गोलाकार आकाशमा देखिन्छ।",
+            },
+            {
+              h: "सूर्य पूर्व → पश्चिम",
+              p: "सूर्य नभई पृथ्वी घुमिरहेको हुनाले सूर्य उदाएजस्तो लाग्छ — यो घूर्णनको परिणाम हो, परिक्रमा होइन।",
+            },
+            {
+              h: "चन्द्रमा र ताराहरू",
+              p: "चन्द्रमा सूर्यको प्रकाश परावर्तन गर्छ (आफैं बल्दैन); ताराहरू आफैं चम्किन्छन्।",
+            },
+          ]}
+        />
+      </Section>
+      <Section kicker="०२" title="घूर्णन र परिक्रमा" en="Rotation vs revolution">
+        <Lede>
+          खगोलमा <b>दुई फरक गति</b> छन् — यिनलाई नमिलाउँदा धेरै भ्रम हुन्छ।{" "}
+          <span className="hl">घूर्णन</span> = आफ्नै अक्षमा फर्किने (दिन–रात)।{" "}
+          <span className="hl-amber">परिक्रमा</span> = अर्को वस्तुको वरिपरि फर्किने
+          (वर्ष, महिना)।
+        </Lede>
+        <Keys
+          items={[
+            { h: "पृथ्वीको घूर्णन ≈ २४ घण्टा", p: "एक सौर दिन — सूर्य फेरि उस्तै स्थानमा देखा पर्ने समय।" },
+            { h: "पृथ्वीको परिक्रमा ≈ ३६५ दिन", p: "सूर्यको वरिपरि एक फेरो — वर्ष र ऋतु यसैले बन्छ।" },
+            { h: "चन्द्रको परिक्रमा ≈ २९.५ दिन", p: "पृथ्वीको वरिपरि — तिथि र पक्ष यसै गतिमा आधारित।" },
+          ]}
+        />
+        <Note>
+          पछिल्लो लेखमा यी गतिहरू चित्रसहित विस्तारमा हेर्न सकिन्छ — तर पहिले यो भिन्नता
+          स्पष्ट हुनु जरूरी छ।
+        </Note>
+      </Section>
+      <Section kicker="०३" title="कोण किन महत्त्वपूर्ण" en="Why degrees matter">
+        <Lede>
+          पञ्चाङ्गमा सूर्य, चन्द्र र अन्य ग्रहहरूको स्थिति <b>कोण (°)</b> मा मापिन्छ।
+          पूर्ण आकाशलाई <b>{N(360)}°</b> मा बाँडेर “चन्द्र सूर्यभन्दा कति अगाडि छ” भन्ने
+          प्रश्नको उत्तर दिइन्छ — तिथि, नक्षत्र र योग यही कोणबाट निकालिन्छ।
+        </Lede>
+        <div className="tm-formula">
+          <div className="tm-fcard">
+            <div className="big">
+              {N(360)}
+              <span className="u">°</span>
+            </div>
+            <div className="lbl">पूर्ण वृत्त</div>
+            <div className="desc">आकाशको एक पूरा फेरो — सबै राशि र नक्षत्र यसैभित्र।</div>
+          </div>
+          <div className="tm-fcard">
+            <div className="big">
+              {N(12)}
+              <span className="u">°</span>
+            </div>
+            <div className="lbl">१ तिथि</div>
+            <div className="desc">चन्द्र–सूर्यको कोणीय दूरी — ३६०° ÷ ३० तिथि।</div>
+          </div>
+          <div className="tm-fcard">
+            <div className="big">
+              ~{N(13)}
+              <span className="u">°२०′</span>
+            </div>
+            <div className="lbl">१ नक्षत्र</div>
+            <div className="desc">३६०° ÷ २७ नक्षत्र — चन्द्रको गति यसै स्केलमा मापिन्छ।</div>
+          </div>
+        </div>
+      </Section>
+      <Section kicker="०४" title="हाम्रो दृष्टिकोण" en="Geocentric framing">
+        <Lede>
+          वास्तवमा पृथ्वी सूर्यको वरिपरि घुम्छ, तर पात्रो बनाउँदा हामी{" "}
+          <span className="hl">पृथ्वीबाट हेर्दा</span> के देखिन्छ भन्ने दृष्टिकोण (
+          <b>geocentric</b>) प्रयोग गर्छौं — “आज सूर्य कुन राशिमा छ”, “चन्द्र कति अगाडि
+          सर्‍यो”। यो सुविधाजनक हो र हजारौं वर्षदेखि प्रयोग भइरहेको छ।
+        </Lede>
+        <Keys
+          items={[
+            {
+              h: "सूर्यको मार्ग (ecliptic)",
+              p: "सूर्य, चन्द्र र ग्रहहरू लगभग एउटै पट्टीमा देखिन्छ — यही चन्द्र–मार्ग हो।",
+            },
+            {
+              h: "राशि चक्र",
+              p: "यो मार्गलाई १२ भाग — मेषदेखि मीनसम्म; सङ्क्रान्ति = सूर्य अर्को राशिमा।",
+            },
+            {
+              h: "heliocentric vs geocentric",
+              p: "वास्तविक गति सूर्य–केन्द्रित; पात्रो गणना पृथ्वी–केन्द्रित — दुवै सही, प्रयोजन फरक।",
+            },
+          ]}
+        />
+      </Section>
+      <Section kicker="०५" title="१२ राशि" en="Zodiac signs">
+        <Lede>
+          सूर्यको मार्ग (ecliptic) लाई <b>{N(12)} बराबर भाग</b> मा बाँडिएको छ — प्रत्येक{" "}
+          <span className="hl-amber">३०°</span> को एक राशि। सङ्क्रान्ति = सूर्य अर्को राशिमा
+          प्रवेश; बि.सं. को महिना पनि यही सूर्य–राशिमा आधारित।
+        </Lede>
+        <RashiReferenceTable />
+      </Section>
+      <Section kicker="०६" title="नव ग्रह" en="Nine grahas">
+        <Lede>
+          पञ्चाङ्ग र कुण्डलीमा <b>{N(9)} ग्रह</b> (नव ग्रह) प्रयोग हुन्छ — सात वास्तविक ग्रह
+          र दुई <span className="hl">छाया बिन्दु</span> (राहु, केतु)। सबैको स्थिति कोणमा
+          मापिन्छ।
+        </Lede>
+        <GrahaReferenceTable />
+      </Section>
+      <Section kicker="०७" title="२७ नक्षत्र र पाद" en="Lunar mansions & padas">
+        <Lede>
+          चन्द्र–मार्ग <b>{N(27)} नक्षत्र</b> मा बाँडिन्छ (प्रत्येक{" "}
+          <b>{N(13)}°{N(20)}′</b>)। हरेक नक्षत्र फेरि <b>{N(4)} पाद</b> ({N(3)}°{N(20)}′
+          प्रति पाद) — जन्म नामाक्षर र कुण्डलीका लागि यही पाद प्रयोग हुन्छ।
+        </Lede>
+        <NakshatraReferenceTable />
+      </Section>
+      <Section kicker="०८" title="३० तिथि" en="Lunar days">
+        <Lede>
+          चन्द्र र सूर्यबीचको कोण हरेक <b>{N(12)}°</b> बढ्दा नयाँ तिथि सुरु — शुक्ल पक्ष{" "}
+          {N(1)}–{N(15)} (पूर्णिमासम्म), कृष्ण पक्ष {N(1)}–{N(15)} (औंसीसम्म)।
+        </Lede>
+        <TithiReferenceTable />
+      </Section>
+      <Section kicker="०९" title="२७ योग" en="Yogas">
+        <Lede>
+          सूर्य र चन्द्रको <b>देशान्तर जोड</b> बढ्दै गए बढ्दै {N(27)} योग बन्दै जान्छ —
+          विष्कम्भदेखि वैधृतिसम्म। शुभ–अशुभ मुहूर्तमा योग पनि हेरिन्छ।
+        </Lede>
+        <YogaReferenceTable />
+      </Section>
+      <Section kicker="१०" title="११ करण" en="Karanas">
+        <Lede>
+          प्रत्येक तिथिको <b>आधा</b> (= {N(6)}° कोण) एक करण — महिनामा जम्मा{" "}
+          <span className="hl-amber">{N(60)} करण</span>। नाम {N(11)} मात्र: {N(7)} चर
+          (बारम्बार) र {N(4)} स्थिर (महिनामा एक पटक)।
+        </Lede>
+        <KaranaReferenceTable />
+      </Section>
+      <Section kicker="११" title="अर्को कदम" en="What comes next">
+        <Lede>
+          अब तपाईंले जान्नुपर्ने मूल कुरा — <b>के हेर्दैछौं</b>, <b>कसरी घुमिरहेको छ</b>, र{" "}
+          <b>किन कोण गनिन्छ</b> — स्पष्ट भयो। अर्को लेखमा सौर्यमण्डल, पृथ्वीको झुकाव, चन्द्र
+          कला र वास्तविक परिक्रमा चित्रसहित हेर्नुहोस्।
+        </Lede>
+        <Keys
+          items={[
+            { h: "सौर्यमण्डल र चन्द्र गति", p: "पृथ्वीको अण्डाकार कक्ष, २३.५° झुकाव, चन्द्रका कला।" },
+            { h: "सौर vs चान्द्र पात्रो", p: "विक्रम सम्वत् किन दुई घडी मिलाएर चल्छ।" },
+            { h: "पञ्चाङ्गका पाँच अङ्ग", p: "तिथि, वार, नक्षत्र, योग, करण — कोणबाट कसरी जन्मिन्छन्।" },
+          ]}
+        />
+      </Section>
+      <Note>
+        यी आधार बुझिसकेपछि बाँकी लेखहरू सजिलो लाग्नेछ — प्रत्येकले माथिको एउटै भाषा (
+        कोण, परिक्रमा, पृथ्वी–केन्द्रित दृष्टि) प्रयोग गर्छ।
+      </Note>
+    </>
+  );
+}
 
 export function SolarSystem() {
   return (
@@ -285,8 +464,10 @@ export function TithiArticle() {
       <Section kicker="०१" title="तिथि = १२° कोणीय दूरी" en="12° of elongation">
         <Lede>
           पृथ्वीबाट हेर्दा चन्द्रमा सूर्यभन्दा जति <span className="hl">कोणले अगाडि</span> पुग्छ,
-          त्यही कोणले तिथि निर्धारण गर्छ। <b>०°</b> मा अमावस्या, <b>१८०°</b> मा पूर्णिमा। तल
-          मुनको गोलो तानेर वा चलाएर हेर्नुहोस्।
+          त्यही कोणले तिथि निर्धारण गर्छ। <b>०°</b> मा अमावस्या, <b>१८०°</b> मा पूर्णिमा।
+          यो चित्रमा पृथ्वी पनि सूर्यको वरिपरि <span className="hl-amber">~{N(29)}°</span> सर्छ
+          (एक चान्द्र मास) — त्यसैले चन्द्रले नक्षत्रमा फर्कन ~{N(27)} दिन, अर्को अमावस्यासम्म
+          ~{N(29.5)} दिन। तल तानेर वा चलाउनुहोस्।
         </Lede>
         <ElongationStudy />
         <div className="tm-formula">

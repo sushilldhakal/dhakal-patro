@@ -50,7 +50,7 @@ export function BsCalendarGrid({
 
   return (
     <div className="pn-calcard">
-      <div className="pn-weekrow">
+      <div className="pn-grid">
         {WEEKDAYS_NE.map((ne, i) => (
           <div key={ne} className={`pn-wk${i === 0 || i === 6 ? " weekend" : ""}`}>
             <span className="pn-wk-ne pn-wk-long">{ne}</span>
@@ -58,9 +58,7 @@ export function BsCalendarGrid({
             <span className="pn-wk-en">{WEEKDAYS_EN[i]}</span>
           </div>
         ))}
-      </div>
 
-      <div className="pn-grid">
         {cells.map((day, i) => {
           if (!day) {
             return <div key={`empty-${i}`} className="pn-cell empty" aria-hidden />;

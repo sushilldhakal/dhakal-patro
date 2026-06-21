@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { moonIllumination, WHEEL_TITHIS, tithiIndexFromElongation, tithiNum, tithiPaksha } from "@/lib/tithi-wheel-data";
-import { ElongationDiagram } from "./ElongationDiagram";
+import { ElongationDiagram, EARTH_ARC_SYNODIC, earthOrbitDegFromElongation } from "./ElongationDiagram";
+import { SYNODIC_MONTH } from "@/components/learn/sun-earth-moon-math";
 import { AdhikMassDiagram, SunriseTimeline } from "./tithi-mechanics-diagrams";
 
 const PRESETS = [
@@ -37,6 +38,8 @@ export function ElongationStudy() {
   const tno = tithiNum(idx);
   const illum = moonIllumination(E);
   const tithiLabel = t.moon === "full" ? "पूर्णिमा" : t.moon === "new" ? "औंसी" : t.ne;
+  const earthArc = earthOrbitDegFromElongation(E);
+  const siderealDays = 27.321661;
 
   return (
     <div className="tm-card pad-lg">
@@ -60,6 +63,18 @@ export function ElongationStudy() {
           <div className="ed-ro">
             <span className="ed-ro-k">चन्द्रकला</span>
             <span className="ed-ro-v mono">{fmt(illum)}%</span>
+          </div>
+          <div className="ed-ro">
+            <span className="ed-ro-k">पृथ्वी सार · चान्द्र मास</span>
+            <span className="ed-ro-v mono">
+              {fmt(Math.round(earthArc))}° / ~{fmt(Math.round(EARTH_ARC_SYNODIC))}°
+            </span>
+          </div>
+          <div className="ed-ro">
+            <span className="ed-ro-k">नाक्षत्र vs चान्द्र मास</span>
+            <span className="ed-ro-v amber">
+              ~{fmt(Math.round(siderealDays))} दिन vs ~{fmt(Math.round(SYNODIC_MONTH))} दिन
+            </span>
           </div>
         </div>
         <div className="ed-scrub-wrap">
