@@ -6,6 +6,7 @@ import { HeliocentricOrbitStudy } from "@/components/learn/HeliocentricOrbitStud
 import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
 import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
 import { EclipseStudy } from "@/components/learn/EclipseStudy";
+import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
   GrahaReferenceTable,
@@ -694,7 +695,16 @@ export function LunarEclipse() {
         </Lede>
         <EclipseStudy />
       </Section>
-      <Section kicker="०३" title="हरेक पूर्णिमामा किन हुँदैन" en="Why not every month">
+      <Section kicker="०३" title="चन्द्र कक्षको ५° झुकाव र १८.६ वर्षे पात-चक्र" en="The tilted orbit & 18.6-year nodal cycle">
+        <Lede>
+          तलको <b>त्रिआयामिक</b> चित्रमा सम्म <span className="hl">क्रान्तिवृत्त तल</span> (सूर्यपथको
+          समतल) र त्यसमाथि <span className="hl-amber">~५° झुकेको</span> चन्द्र-कक्ष देखिन्छ। कक्षको
+          आधा भाग समतलभन्दा माथि (सुनौलो) र आधा तल पर्छ; दुई समतल काट्ने ठाउँ नै राहु–केतु पात हुन्।
+          <b>▶ चलाउनुहोस्</b> — पात रेखा बिस्तारै पछाडि घुम्दै <b>~१८.६ वर्षमा</b> उही ठाउँमा फर्कन्छ।
+        </Lede>
+        <MoonOrbitTiltStudy />
+      </Section>
+      <Section kicker="०४" title="हरेक पूर्णिमामा किन हुँदैन" en="Why not every month">
         <Lede>
           चन्द्रको कक्ष पृथ्वीको कक्षभन्दा <b>~५° ढल्केको</b> छ, त्यसैले धेरैजसो पूर्णिमामा
           चन्द्र छायाँभन्दा माथि वा तल हुन्छ। ग्रहण त्यतिबेला मात्र हुन्छ जब पूर्णिमा{" "}
