@@ -343,7 +343,7 @@ export function MoonOrbitTiltStudy() {
       : model.status === "solar"
         ? "सूर्यग्रहण"
         : model.season
-          ? "ग्रहण ऋतु — पर्खंदै"
+          ? "ग्रहण ऋतु"
           : "ग्रहण छैन";
 
   return (

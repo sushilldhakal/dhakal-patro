@@ -63,16 +63,14 @@ export function EclipseStudy() {
 
   const statusText =
     status === "total"
-      ? "पूर्ण चन्द्रग्रहण — चन्द्र पूरै प्रच्छायामा"
+      ? "पूर्ण ग्रहण"
       : status === "partial"
-        ? "खण्डग्रास — चन्द्रको केही भाग प्रच्छायामा"
+        ? "खण्डग्रास"
         : status === "penumbral"
-          ? "उपछाया ग्रहण — मधुरो अँध्यारो मात्र"
+          ? "उपछाया ग्रहण"
           : solar
-            ? "नयाँ चन्द्र पातमा — सूर्यग्रहण"
-            : phaseName(g.E) === "पूर्णिमा"
-              ? "पूर्णिमा — तर चन्द्र छायाँभन्दा माथि/तल, ग्रहण छैन"
-              : "ग्रहण छैन";
+            ? "सूर्यग्रहण"
+            : "ग्रहण छैन";
 
   const lunarCount = events.filter((e) => e.kind === "lunar").length;
   const solarCount = events.filter((e) => e.kind === "solar").length;
