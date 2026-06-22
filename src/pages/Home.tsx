@@ -12,6 +12,7 @@ import {
 } from "../lib/api";
 import { CalendarView } from "../components/CalendarView";
 import { SunTimesYearGrid } from "../components/SunTimesYearGrid";
+import { RituSeasons } from "../components/RituSeasons";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import {
   resolveLocationTimezone,
@@ -277,6 +278,8 @@ function UpcomingHolidays({
           })
         )}
       </div>
+
+      <RituSeasons locationLabel={location.label} />
 
       <SunTimesYearGrid
         bsYear={bsYear}

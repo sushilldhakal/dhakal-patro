@@ -1037,6 +1037,158 @@
   animation: pn-pulse 1.2s ease-in-out infinite;
 }
 
+/* ── ऋतु (seasons) ───────────────────────────────────── */
+.sea-block {
+  margin-top: 22px;
+}
+.sea-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.sea-head > svg {
+  align-self: center;
+  color: var(--brand-teal);
+}
+.dark .sea-head > svg {
+  color: var(--brand-yellow);
+}
+.sea-title {
+  margin: 0;
+  font: 700 18px var(--pn-font);
+}
+.sea-sub {
+  font: 500 12px var(--pn-font);
+  color: var(--muted-foreground);
+  flex: 1;
+}
+.sea-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 560px) {
+  .sea-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.sea-card {
+  background: var(--card);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 0 1px var(--pn-ring-soft), var(--shadow-xs);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.sea-card.current {
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--brand-teal) 38%, transparent), var(--shadow-xs);
+}
+.sea-eyebrow {
+  font: 700 9.5px / 1 var(--pn-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.sea-card.current .sea-eyebrow {
+  color: var(--brand-teal);
+}
+.dark .sea-card.current .sea-eyebrow {
+  color: var(--brand-yellow);
+}
+.sea-card-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sea-emoji {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.sea-name-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sea-name {
+  font: 700 20px / 1.1 var(--pn-font);
+}
+.sea-name-en {
+  font: 500 11.5px var(--pn-font);
+  color: var(--muted-foreground);
+}
+.sea-tile {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  background: color-mix(in srgb, var(--brand-teal) 13%, var(--card));
+  color: var(--accent);
+}
+.dark .sea-tile {
+  color: #7fd6db;
+}
+.sea-tile-d {
+  font: 700 17px / 1 var(--pn-num);
+}
+.sea-tile-m {
+  font: 600 9.5px / 1 var(--pn-font);
+}
+.sea-when {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sea-when-bs {
+  font: 600 13px var(--pn-font);
+}
+.sea-when-ad {
+  font: 500 12px var(--pn-num);
+  color: var(--muted-foreground);
+}
+.sea-progress {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  overflow: hidden;
+}
+.sea-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--brand-teal), color-mix(in srgb, var(--brand-teal) 55%, var(--brand-yellow)));
+  transition: width var(--motion-slow, 400ms) ease;
+}
+.sea-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font: 500 11.5px var(--pn-font);
+  color: var(--muted-foreground);
+}
+.sea-meta .mono {
+  font: 600 12px var(--pn-num);
+  color: var(--foreground);
+}
+.sea-next-rel {
+  font: 600 11.5px var(--pn-font);
+  color: var(--brand-teal);
+}
+.dark .sea-next-rel {
+  color: var(--brand-yellow);
+}
+
 /* ── Sun times year grid ─────────────────────────────── */
 .pn-sun-grid-wrap {
   margin-top: 20px;
