@@ -23,7 +23,7 @@ function phaseName(E: number): string {
 
 export function EclipseStudy() {
   const [t, setT] = useState(18);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const raf = useRef(0);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export function EclipseStudy() {
 
   const events = useMemo(() => findEclipses(RANGE), []);
 
-  const { u, omega, g } = geoFromDay(t);
+  const { u, omega, earthLon, g } = geoFromDay(t);
   const status = lunarEclipseStatus(g);
   const solar = isSolarAlignment(g);
   const monthNo = Math.floor(t / SYNODIC_MONTH) + 1;
@@ -77,7 +77,7 @@ export function EclipseStudy() {
 
   return (
     <div className="tm-card pad-lg">
-      <EclipseGeometry u={u} omega={omega} />
+      <EclipseGeometry u={u} omega={omega} earthLon={earthLon} />
       <div className="ed-controls">
         <div className="ed-readout">
           <div className="ed-ro">
@@ -152,10 +152,10 @@ export function EclipseStudy() {
         </div>
       </div>
       <p className="tm-card-cap">
-        सूर्यलाई बायाँ स्थिर राखेर हेर्दा <span className="hl-amber">राहु–केतु रेखा</span> ~{fmt(347)}{" "}
-        दिनमा एक फेरो घुम्छ। चन्द्रले हरेक ~{fmt(30)} दिनमा पूर्णिमा ल्याउँछ, तर ग्रहण त्यतिबेला
-        मात्र हुन्छ जब पूर्णिमा/अमावस्या <b>पात रेखा</b> नजिक पर्छ — वर्षमा झन्डै दुई पटक मात्र
-        (<span className="hl">ग्रहण ऋतु</span>)। यो एक वर्षमा {fmt(lunarCount)} चन्द्रग्रहण र{" "}
+        सूर्यको केन्द्रमा स्थिर राखेर हेर्दा <span className="hl-amber">पृथ्वी क्रान्तिवृत्तमा</span> घुम्छ र{" "}
+        <span className="hl-amber">राहु–केतु रेखा</span> ~{fmt(347)} दिनमा एक फेरो घुम्छ। चन्द्रले हरेक ~{fmt(30)}{" "}
+        दिनमा पूर्णिमा ल्याउँछ, तर ग्रहण त्यतिबेला मात्र हुन्छ जब पूर्णिमा/अमावस्या <b>पात रेखा</b> नजिक पर्छ —
+        वर्षमा झन्डै दुई पटक मात्र (<span className="hl">ग्रहण ऋतु</span>)। यो एक वर्षमा {fmt(lunarCount)} चन्द्रग्रहण र{" "}
         {fmt(solarCount)} सूर्यग्रहण देखिन्छन्{next ? `; अर्को ग्रहण ~${fmt(Math.max(0, Math.round(next.t - t)))} दिनमा।` : "।"}
       </p>
     </div>

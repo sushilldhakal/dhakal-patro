@@ -137,8 +137,8 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
 
   const asc = orbitPt(0, omega);
   const desc = orbitPt(180, omega);
-  const ascEdge = planePt(omega, RM);
-  const descEdge = planePt(omega + 180, RM);
+  const ascEdge = planePt(omega, RD);
+  const descEdge = planePt(omega + 180, RD);
 
   // Dihedral tilt wedge at the ascending node.
   const tiltWedge = useMemo(() => {

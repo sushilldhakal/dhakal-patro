@@ -1,9 +1,7 @@
 /**
  * Sun–Earth–Moon eclipse geometry for the lunar-eclipse article.
- * Top-down-ish oblique model: the Sun→Earth→shadow axis is horizontal, the
- * Moon rides a tilted orbit ring whose two crossings of the ecliptic plane are
- * the nodes राहु (ascending) and केतु (descending). Inclination is visually
- * exaggerated (real lunar orbit ≈ 5°) so the "miss" above/below the shadow reads.
+ * Sun sits at the centre; Earth orbits on the ecliptic ring. The Moon rides a
+ * tilted orbit around Earth; its two ecliptic crossings are राहु / केतु.
  */
 
 const RAD = Math.PI / 180;
@@ -11,23 +9,68 @@ const RAD = Math.PI / 180;
 export const ECL = {
   W: 1240,
   H: 720,
-  sunX: 122,
-  axisY: 360,
-  sunR: 54,
-  earthX: 560,
+  /** Sun at the centre of Earth's orbital ring. */
+  sunCX: 400,
+  sunCY: 360,
+  sunR: 38,
   earthR: 46,
-  moonR: 15,
+  moonR: 17,
   /** Moon orbit radius on screen (Earth-centred). */
-  R: 190,
+  R: 118,
+  /** Earth's heliocentric orbit radius on screen. */
+  earthOrbitR: 330,
   /** Visually exaggerated orbital inclination (real ≈ 5.14°). */
-  iDeg: 20,
-  /** Depth shear that fakes the 3-D tilt of the ring (front/back → left/right). */
-  perspX: 0.5,
-  /** Umbra (dark cone) converges to a point this far right of Earth. */
-  umbraLen: 312,
-  /** Penumbra (lighter cone) converges a little farther out. */
-  penumbraLen: 437,
+  iDeg: 22,
+  /** Oblique viewing elevation so the ~5° tilt reads clearly. */
+  elevDeg: 26,
+  /** Umbra (dark cone) length in local Earth frame (+x = anti-solar). */
+  umbraLen: 200,
+  /** Penumbra (lighter cone) length in local Earth frame. */
+  penumbraLen: 280,
 } as const;
+
+const EL_RAD = ECL.elevDeg * RAD;
+const SE = Math.sin(EL_RAD);
+const CE = Math.cos(EL_RAD);
+
+export interface ScreenPt {
+  x: number;
+  y: number;
+  /** Model-space height above the ecliptic (for front/back layering). */
+  z: number;
+}
+
+/** Heliocentric ecliptic coords → screen (Sun at origin). */
+export function heliocentricToScreen(xh: number, yh: number, zh: number): ScreenPt {
+  return {
+    x: ECL.sunCX + xh,
+    y: ECL.sunCY - (yh * SE + zh * CE),
+    z: zh,
+  };
+}
+
+/** Earth-centred local coords → screen, given Earth's orbital longitude (deg). */
+export function localToScreen(xl: number, yl: number, zl: number, earthLon: number): ScreenPt {
+  const lr = earthLon * RAD;
+  const xh = ECL.earthOrbitR * Math.cos(lr) + xl * Math.cos(lr) - yl * Math.sin(lr);
+  const yh = ECL.earthOrbitR * Math.sin(lr) + xl * Math.sin(lr) + yl * Math.cos(lr);
+  return heliocentricToScreen(xh, yh, zl);
+}
+
+/** Earth's position on the heliocentric ecliptic (lon 0° = to the right of the Sun). */
+export function earthScreen(earthLon: number): ScreenPt {
+  return localToScreen(0, 0, 0, earthLon);
+}
+
+/** Point on the heliocentric ecliptic ring centred on the Sun. */
+export function planePtSun(a: number, r: number): ScreenPt {
+  const ar = a * RAD;
+  return heliocentricToScreen(r * Math.cos(ar), r * Math.sin(ar), 0);
+}
+
+export function sunScreen(): ScreenPt {
+  return { x: ECL.sunCX, y: ECL.sunCY, z: 0 };
+}
 
 /** Real mean inclination — used only to print believable latitude numbers. */
 export const REAL_INCL = 5.14;
@@ -35,11 +78,6 @@ export function realBeta(modelBetaDeg: number): number {
   return (modelBetaDeg * REAL_INCL) / ECL.iDeg;
 }
 
-/**
- * Eclipse thresholds are distances (px) from the shadow axis, tuned so eclipses
- * only cluster into ~2 seasons a year — independent of the (exaggerated) drawn
- * cone widths, which are sized to match these at the Moon's distance.
- */
 const TH_TOTAL = 7;
 const TH_PARTIAL = 18;
 const TH_PENUMBRAL = 26;
@@ -56,19 +94,17 @@ export interface MoonGeo {
   sy: number;
   /** Elongation 0°=new(अमावस्या) … 180°=full(पूर्णिमा). */
   E: number;
-  /** Latitude above/below the ecliptic, degrees (exaggerated model). */
   betaDeg: number;
-  /** Distance from the shadow axis (px). */
   radial: number;
-  /** Distance down-shadow from Earth (px); negative = sunward. */
   axial: number;
 }
 
 /**
- * Moon position for argument-of-latitude `u` (deg from ascending node) and
- * ascending-node longitude `omega` (deg from the Sun→shadow axis).
+ * Moon position for argument-of-latitude `u` (deg from ascending node),
+ * ascending-node longitude `omega` (deg in Earth-local ecliptic), and Earth's
+ * heliocentric longitude `earthLon` (deg on the Sun-centred ecliptic).
  */
-export function moonGeo(u: number, omega: number): MoonGeo {
+export function moonGeo(u: number, omega: number, earthLon = 0): MoonGeo {
   const ur = u * RAD;
   const Om = omega * RAD;
   const cu = Math.cos(ur);
@@ -76,15 +112,14 @@ export function moonGeo(u: number, omega: number): MoonGeo {
   const xEc = Math.cos(Om) * cu - Math.sin(Om) * su * COS_I;
   const yEc = Math.sin(Om) * cu + Math.cos(Om) * su * COS_I;
   const zEc = su * SIN_I;
-  const sx = ECL.earthX + ECL.R * xEc + ECL.R * yEc * ECL.perspX;
-  const sy = ECL.axisY - ECL.R * zEc;
+  const scr = localToScreen(ECL.R * xEc, ECL.R * yEc, ECL.R * zEc, earthLon);
   const E = (((Math.atan2(yEc, xEc) / RAD - 180) % 360) + 360) % 360;
   return {
     xEc,
     yEc,
     zEc,
-    sx,
-    sy,
+    sx: scr.x,
+    sy: scr.y,
     E,
     betaDeg: Math.asin(Math.max(-1, Math.min(1, zEc))) / RAD,
     radial: ECL.R * Math.hypot(yEc, zEc),
@@ -92,9 +127,16 @@ export function moonGeo(u: number, omega: number): MoonGeo {
   };
 }
 
+/** Endpoints of the राहु–केतु line through Earth's centre (ecliptic diameter). */
+export function nodeLineEndpoints(omega: number, earthLon: number, halfLen = ECL.earthOrbitR * 0.92) {
+  const a = omega * RAD;
+  const p1 = localToScreen(halfLen * Math.cos(a), halfLen * Math.sin(a), 0, earthLon);
+  const p2 = localToScreen(-halfLen * Math.cos(a), -halfLen * Math.sin(a), 0, earthLon);
+  return { a: p1, b: p2 };
+}
+
 export type EclipseStatus = "total" | "partial" | "penumbral" | "none";
 
-/** Drawn cone half-widths (both converge), sized to match the thresholds at the Moon. */
 export function umbraHalfWidth(axial: number): number {
   if (axial <= 0 || axial >= ECL.umbraLen) return 0;
   return ECL.earthR * (1 - axial / ECL.umbraLen);
@@ -105,48 +147,48 @@ export function penumbraHalfWidth(axial: number): number {
 }
 
 export function lunarEclipseStatus(g: MoonGeo): EclipseStatus {
-  if (g.xEc <= 0.5) return "none"; // must be near the full-moon (anti-solar) point
+  if (g.xEc <= 0.5) return "none";
   if (g.radial < TH_TOTAL) return "total";
   if (g.radial < TH_PARTIAL) return "partial";
   if (g.radial < TH_PENUMBRAL) return "penumbral";
   return "none";
 }
 
-/** New-moon at a node → the Moon's shadow touches Earth (solar eclipse). */
 export function isSolarAlignment(g: MoonGeo): boolean {
   return g.xEc < -0.5 && g.radial < TH_SOLAR;
 }
 
 /* ------------------------------------------------------------------ */
-/* Time-driven model — why eclipses cluster into ~2 seasons a year     */
+/* Time-driven model                                                    */
 /* ------------------------------------------------------------------ */
 
 export const SYNODIC_MONTH = 29.530589;
-/** Sun returns to the same node every 346.6 days (an "eclipse year"). */
 export const ECLIPSE_YEAR = 346.62;
-/** Node longitude (from the anti-solar/shadow axis) at day 0. */
+export const YEAR_DAYS = 365.2422;
 export const NODE_START = 30;
-/** One full node-line revolution in the Sun-fixed frame → two eclipse seasons. */
 export const ECL_RANGE_DAYS = ECLIPSE_YEAR;
 
-/**
- * Sun-fixed frame: the Sun stays left, the shadow stays right (anti-solar at
- * longitude 0). The Moon sweeps round synodically; the Rahu–Ketu line drifts
- * retrograde once per eclipse year. A full/new moon only meets a node when the
- * node line is pointed near the Sun–shadow axis — i.e. twice a year.
- */
 export function moonLonFromDay(t: number): number {
   return (((360 * t) / SYNODIC_MONTH) % 360 + 360) % 360;
 }
 export function nodeOmegaFromDay(t: number): number {
   return (((NODE_START - (360 * t) / ECLIPSE_YEAR) % 360) + 360) % 360;
 }
+export function earthLonFromDay(t: number): number {
+  return (((360 * t) / YEAR_DAYS) % 360 + 360) % 360;
+}
 
-export function geoFromDay(t: number): { u: number; omega: number; g: MoonGeo } {
+export function geoFromDay(t: number): {
+  u: number;
+  omega: number;
+  earthLon: number;
+  g: MoonGeo;
+} {
   const omega = nodeOmegaFromDay(t);
+  const earthLon = earthLonFromDay(t);
   const lam = moonLonFromDay(t);
   const u = (((lam - omega) % 360) + 360) % 360;
-  return { u, omega, g: moonGeo(u, omega) };
+  return { u, omega, earthLon, g: moonGeo(u, omega, earthLon) };
 }
 
 export interface EclipseEvent {
@@ -156,7 +198,6 @@ export interface EclipseEvent {
   betaDeg: number;
 }
 
-/** Scan a span of days and return each eclipse (deepest moment of each window). */
 export function findEclipses(range = ECL_RANGE_DAYS): EclipseEvent[] {
   const out: EclipseEvent[] = [];
   let cur: { kind: "lunar" | "solar"; best: EclipseEvent } | null = null;
