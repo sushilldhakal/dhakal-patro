@@ -3195,59 +3195,57 @@
 .ecl-tilt-note { fill: var(--tm-ink-faint); font: 500 12px var(--pn-font); }
 
 /* ----- Moon orbit tilt & 18.6-year nodal precession (3-D) ----- */
-.mot-svg { min-height: 340px; max-height: min(680px, 80vh); }
-.mot-plane { stroke: none; }
-.mot-plane-rim { stroke: color-mix(in srgb, var(--tm-teal) 55%, transparent); stroke-width: 2; stroke-dasharray: 4 6; }
-.mot-plane-label { fill: var(--tm-ink-faint); font: 600 14px var(--pn-font); }
-.mot-node-track { stroke: color-mix(in srgb, var(--tm-amber) 40%, transparent); stroke-width: 1.6; stroke-dasharray: 2 7; }
+/* This diagram renders on its own dark "space" panel (in both themes), so its
+   colours are fixed light-on-dark rather than theme-driven. */
+.mot-svg { min-height: 360px; max-height: min(700px, 82vh); }
+.mot-plane-face { stroke: none; }
+.mot-plane-rim { stroke: color-mix(in srgb, #8fc0ff 62%, transparent); stroke-width: 2; }
+.mot-plane-label { fill: #9fb6d8; font: 600 14px var(--pn-font); }
+.mot-earth-label { fill: #d4e4ee; }
+.mot-node-track { stroke: color-mix(in srgb, #ffd86b 32%, transparent); stroke-width: 1.6; stroke-dasharray: 2 7; }
 .mot-orbit { stroke-linecap: round; }
-.mot-orbit.above { stroke: #e0a01a; stroke-width: 4; }
-.dark .mot-orbit.above { stroke: #ffd70a; }
-.mot-orbit.below { stroke: color-mix(in srgb, var(--tm-teal) 60%, transparent); stroke-width: 2; stroke-dasharray: 6 6; }
-.mot-orbit.cross { stroke: #41b368; stroke-width: 4.2; }
-.mot-node-line { stroke: var(--tm-amber); stroke-width: 3; stroke-dasharray: 9 6; opacity: 0.9; }
+.mot-orbit.above { stroke: #ffd23a; stroke-width: 6; }
+.mot-orbit.below { stroke: #c2a443; stroke-width: 5; opacity: 0.9; }
+.mot-orbit.cross { stroke: #4ade80; stroke-width: 6.5; }
+.mot-node-line { stroke: color-mix(in srgb, #ffd86b 52%, transparent); stroke-width: 3; stroke-dasharray: 9 6; }
 .mot-sun-ray { stroke: color-mix(in srgb, var(--tm-gold) 60%, transparent); stroke-width: 1.6; stroke-dasharray: 5 5; }
 .mot-arrow-head { fill: color-mix(in srgb, var(--tm-gold) 75%, transparent); }
-.mot-sun-label { fill: color-mix(in srgb, var(--tm-gold) 88%, var(--tm-ink-faint)); font: 600 13px var(--pn-font); }
-.mot-earth-glow { fill: color-mix(in srgb, var(--tm-teal) 16%, transparent); }
-.mot-tilt-arc { stroke: var(--tm-amber); stroke-width: 2; }
-.mot-tilt-ref { stroke: color-mix(in srgb, var(--tm-ink) 40%, transparent); stroke-width: 1.4; }
-.mot-tilt-ref.orbit { stroke: color-mix(in srgb, var(--tm-gold) 70%, transparent); }
-.mot-tilt-label { fill: var(--tm-amber); font: 700 16px var(--pn-font); }
-.mot-node { fill: #57c47a; stroke: var(--tm-card); stroke-width: 2.5; }
-.mot-node-dot { fill: #0d3b22; }
-.dark .mot-node-dot { fill: #b9f5cf; }
-.mot-node-label { fill: var(--tm-amber); font: 700 17px var(--pn-font); }
-.mot-height-post { stroke: color-mix(in srgb, var(--tm-ink) 36%, transparent); stroke-width: 1.3; stroke-dasharray: 2 4; }
-.mot-base-dot { fill: color-mix(in srgb, var(--tm-ink) 45%, transparent); }
-.mot-moon { stroke: color-mix(in srgb, var(--tm-ink) 35%, transparent); stroke-width: 1; }
+.mot-sun-label { fill: #ffdd80; font: 600 14px var(--pn-font); }
+.mot-earth-glow { fill: color-mix(in srgb, #5aa9ff 22%, transparent); }
+.mot-tilt-arc { stroke: #ffd86b; stroke-width: 2; }
+.mot-tilt-ref { stroke: color-mix(in srgb, #cfe0ea 34%, transparent); stroke-width: 1.4; }
+.mot-tilt-ref.orbit { stroke: color-mix(in srgb, #ffd86b 70%, transparent); }
+.mot-tilt-label { fill: #ffe08a; font: 700 16px var(--pn-font); }
+.mot-node { fill: #3ddc6f; stroke: #07203a; stroke-width: 2.5; }
+.mot-node-dot { fill: #07351c; }
+.mot-node-label { fill: #84f0aa; font: 700 18px var(--pn-font); }
+.mot-height-post { stroke: color-mix(in srgb, #cfe0ea 32%, transparent); stroke-width: 1.3; stroke-dasharray: 2 4; }
+.mot-base-dot { fill: color-mix(in srgb, #cfe0ea 42%, transparent); }
+.mot-moon { stroke: rgba(255, 255, 255, 0.4); stroke-width: 1; }
+.mot-moon-submerged { opacity: 0.5; }
 .mot-moon-halo { fill: transparent; }
-.mot-moon-halo.up { fill: color-mix(in srgb, var(--tm-gold) 22%, transparent); }
-.mot-moon-halo.down { fill: color-mix(in srgb, var(--tm-teal) 18%, transparent); }
-.mot-moon-label { fill: var(--tm-ink-dim); font: 600 13px var(--pn-font); }
-.mot-legend-label { fill: var(--tm-ink-faint); font: 600 13px var(--pn-font); }
+.mot-moon-halo.up { fill: color-mix(in srgb, #ffd86b 24%, transparent); }
+.mot-moon-halo.down { fill: color-mix(in srgb, #5aa9ff 22%, transparent); }
+.mot-moon-label { fill: #d4e4ee; font: 600 13px var(--pn-font); }
+.mot-legend-label { fill: #9fb6d8; font: 600 13px var(--pn-font); }
 /* Sun–Earth–shadow axis: crimson (used nowhere else in this diagram, which is
    otherwise all amber/gold) + a card-coloured knockout outline so the core
    reads crisply over the orbit ring, Earth and Moon regardless of theme. */
-.mot-sun-beam { stroke: color-mix(in srgb, #d81b3f 34%, transparent); stroke-width: 34; stroke-linecap: round; }
-.mot-sun-beam.aligned { stroke: color-mix(in srgb, #ff1f3d 40%, transparent); stroke-width: 42; }
-.mot-sun-outline { stroke: var(--tm-card); stroke-width: 17; stroke-linecap: round; opacity: 0.95; }
+.mot-sun-beam { stroke: color-mix(in srgb, #ff4d6a 36%, transparent); stroke-width: 34; stroke-linecap: round; }
+.mot-sun-beam.aligned { stroke: color-mix(in srgb, #ff2348 44%, transparent); stroke-width: 42; }
+.mot-sun-outline { stroke: #0a1730; stroke-width: 17; stroke-linecap: round; opacity: 0.92; }
 .mot-sun-outline.aligned { stroke-width: 21; }
-.mot-sun-line { stroke: #d81b3f; stroke-width: 11; stroke-linecap: round; }
-.mot-sun-line.aligned { stroke: #ff1f3d; stroke-width: 14; }
-.dark .mot-sun-line { stroke: #ff5b78; }
-.dark .mot-sun-line.aligned { stroke: #ff3358; }
-.dark .mot-sun-beam { stroke: color-mix(in srgb, #ff5b78 34%, transparent); }
-.dark .mot-sun-beam.aligned { stroke: color-mix(in srgb, #ff3358 40%, transparent); }
-.mot-shadow-dot { fill: color-mix(in srgb, var(--tm-ink) 60%, transparent); }
-.mot-shadow-label { fill: var(--tm-ink-faint); font: 600 12px var(--pn-font); }
+.mot-sun-line { stroke: #ff4d6a; stroke-width: 11; stroke-linecap: round; }
+.mot-sun-line.aligned { stroke: #ff2348; stroke-width: 14; }
+.mot-shadow-dot { fill: rgba(212, 228, 238, 0.62); }
+.mot-shadow-label { fill: #d4e4ee; font: 600 12px var(--pn-font); }
 .mot-eclipse-glow.lunar { fill: color-mix(in srgb, #d2402a 45%, transparent); }
 .mot-eclipse-glow.solar { fill: color-mix(in srgb, #ffcf57 55%, transparent); }
 .mot-moon-eclipsing { filter: drop-shadow(0 0 7px color-mix(in srgb, #e0473a 55%, transparent)); }
 .mot-eclipse-banner { font: 800 21px var(--pn-font); }
 .mot-eclipse-banner.lunar { fill: #d2402a; }
 .mot-eclipse-banner.solar { fill: #d99a18; }
-.mot-season-banner { fill: var(--tm-ink-dim); font: 700 17px var(--pn-font); }
+.mot-season-banner { fill: #d4e4ee; font: 700 17px var(--pn-font); }
 .mot-slider-row { display: flex; flex-direction: column; gap: 5px; width: 100%; }
 .mot-slider-label { font: 600 11px var(--pn-font); letter-spacing: 0.04em; color: var(--tm-ink-faint); }
 .mot-slider-row > input.ed-scrub { width: 100%; }

@@ -26,8 +26,8 @@ const REAL_TILT = 5.14;
 const INC = 22 * RAD; // drawn tilt (exaggerated from ~5°)
 const CI = Math.cos(INC);
 const SI = Math.sin(INC);
-const EARTH_R = 48;
-const MOON_R = 17;
+const EARTH_R = 58;
+const MOON_R = 18;
 
 const SIDEREAL_MONTH = 27.32166;
 const YEAR_DAYS = 365.2422;
@@ -70,6 +70,34 @@ function planePt(a: number, r: number): Pt {
   return proj(r * Math.cos(ar), r * Math.sin(ar), 0);
 }
 
+/** Deterministic starfield for the space backdrop (stable across renders). */
+const STARS = (() => {
+  let seed = 1337;
+  const rnd = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  return Array.from({ length: 110 }, () => ({
+    x: +(rnd() * VB.W).toFixed(1),
+    y: +(rnd() * VB.H).toFixed(1),
+    r: +(0.5 + rnd() * 1.7).toFixed(2),
+    o: +(0.2 + rnd() * 0.6).toFixed(2),
+  }));
+})();
+
+/** Half-disc outlines of the ecliptic plane (far = behind Earth, near = in front). */
+const DISC = (() => {
+  const sample = (a0: number, a1: number) => {
+    const pts: string[] = [];
+    for (let a = a0; a <= a1; a += 6) {
+      const p = planePt(a, RD);
+      pts.push(`${p.x.toFixed(1)},${p.y.toFixed(1)}`);
+    }
+    return `M${pts.join(" L")} Z`;
+  };
+  return { far: sample(0, 180), near: sample(180, 360) };
+})();
+
 interface DiagramProps {
   omega: number;
   moonU: number;
@@ -79,16 +107,18 @@ interface DiagramProps {
 }
 
 function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps) {
-  // Orbit ring as small segments — coloured above/below the ecliptic, layered
-  // in front of / behind Earth for a true 3-D crossing.
+  // Orbit ring as small segments, split by whether they sit ABOVE or BELOW the
+  // ecliptic plane. The below-plane half is drawn first (then the translucent
+  // blue plane is painted over it, so it reads as "submerged"); the above-plane
+  // half is drawn last, bright and clear.
   const segs = useMemo(() => {
-    const back: React.ReactNode[] = [];
-    const front: React.ReactNode[] = [];
+    const below: React.ReactNode[] = [];
+    const above: React.ReactNode[] = [];
     const STEP = 4;
     for (let u = 0; u < 360; u += STEP) {
       const a = orbitPt(u, omega);
       const b = orbitPt(u + STEP, omega);
-      const above = a.Z + b.Z >= 0;
+      const isAbove = a.Z + b.Z >= 0;
       const node = Math.abs((u + STEP / 2) % 180) < STEP;
       const seg = (
         <line
@@ -97,12 +127,12 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
           y1={a.y}
           x2={b.x}
           y2={b.y}
-          className={`mot-orbit ${above ? "above" : "below"}${node ? " cross" : ""}`}
+          className={`mot-orbit ${isAbove ? "above" : "below"}${node ? " cross" : ""}`}
         />
       );
-      ((a.depth + b.depth) / 2 < 0 ? back : front).push(seg);
+      (isAbove ? above : below).push(seg);
     }
-    return { back, front };
+    return { below, above };
   }, [omega]);
 
   const asc = orbitPt(0, omega);
@@ -149,13 +179,49 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
   const shadow = planePt(sunLon + 180, RSUN);
   const eclipsing = status !== "none";
 
+  // Moon + drop-post to its shadow on the plane. Rendered into either the
+  // "submerged" slot (under the translucent plane) or the "emerged" slot (on
+  // top) depending on whether it is currently below or above the ecliptic.
+  const moonGroup = (
+    <g>
+      <line x1={moon.x} y1={moon.y} x2={moonBase.x} y2={moonBase.y} className="mot-height-post" />
+      <circle cx={moonBase.x} cy={moonBase.y} r={3} className="mot-base-dot" />
+      <g
+        transform={`translate(${moon.x} ${moon.y})`}
+        className={`${eclipsing ? "mot-moon-eclipsing" : ""}${moonAbove ? "" : " mot-moon-submerged"}`}
+      >
+        {eclipsing && <circle cx={0} cy={0} r={MOON_R + 7} className={`mot-eclipse-glow ${status}`} />}
+        <circle cx={0} cy={0} r={MOON_R + 3} className={`mot-moon-halo ${moonAbove ? "up" : "down"}`} />
+        <circle
+          cx={0}
+          cy={0}
+          r={MOON_R}
+          fill={status === "lunar" ? "#c0392b" : status === "solar" ? "#33373d" : "url(#mot-moon)"}
+          className="mot-moon"
+        />
+        <text y={-MOON_R - 9} className="mot-moon-label" textAnchor="middle">
+          चन्द्र
+        </text>
+      </g>
+    </g>
+  );
+
   return (
     <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg mot-svg" role="img">
       <defs>
-        <radialGradient id="mot-disc" cx="50%" cy="42%" r="62%">
-          <stop offset="0%" stopColor="color-mix(in srgb, var(--tm-teal) 42%, transparent)" />
-          <stop offset="100%" stopColor="color-mix(in srgb, var(--tm-teal) 16%, transparent)" />
+        <radialGradient id="mot-panel" cx="50%" cy="38%" r="78%">
+          <stop offset="0%" stopColor="#15315c" />
+          <stop offset="58%" stopColor="#0c1d3a" />
+          <stop offset="100%" stopColor="#060d1e" />
         </radialGradient>
+        <linearGradient id="mot-plane-far" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2a5cc0" stopOpacity={0.18} />
+          <stop offset="100%" stopColor="#3070d6" stopOpacity={0.34} />
+        </linearGradient>
+        <linearGradient id="mot-plane-near" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2f6bd0" stopOpacity={0.30} />
+          <stop offset="100%" stopColor="#4a90ee" stopOpacity={0.55} />
+        </linearGradient>
         <radialGradient id="mot-moon" cx="36%" cy="32%" r="74%">
           <stop offset="0%" stopColor="#eef1f4" />
           <stop offset="55%" stopColor="#aab2bb" />
@@ -170,117 +236,117 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
           <stop offset="0%" stopColor="#ffcf57" stopOpacity={0.5} />
           <stop offset="100%" stopColor="#ffcf57" stopOpacity={0} />
         </radialGradient>
+        <clipPath id="mot-clip">
+          <rect x={2} y={2} width={VB.W - 4} height={VB.H - 4} rx={20} />
+        </clipPath>
       </defs>
 
-      {/* legend */}
-      <g className="mot-legend">
-        <line x1={34} y1={32} x2={70} y2={32} className="mot-orbit above" />
-        <text x={78} y={37} className="mot-legend-label">कक्ष — समतलभन्दा माथि</text>
-        <line x1={34} y1={58} x2={70} y2={58} className="mot-orbit below" />
-        <text x={78} y={63} className="mot-legend-label">समतलभन्दा तल</text>
-        <line x1={34} y1={84} x2={70} y2={84} className="mot-sun-line" />
-        <text x={78} y={89} className="mot-legend-label">सूर्य–पृथ्वी (ग्रहण) रेखा</text>
-      </g>
+      <g clipPath="url(#mot-clip)">
+        {/* space backdrop */}
+        <rect x={0} y={0} width={VB.W} height={VB.H} fill="url(#mot-panel)" />
+        {STARS.map((s, i) => (
+          <circle key={`s${i}`} cx={s.x} cy={s.y} r={s.r} fill="#ffffff" opacity={s.o} />
+        ))}
 
-      {/* ecliptic plane */}
-      <ellipse cx={CX} cy={CY} rx={RD} ry={RD * SE} fill="url(#mot-disc)" className="mot-plane" />
-      <ellipse cx={CX} cy={CY} rx={RD} ry={RD * SE} className="mot-plane-rim" fill="none" />
-      <text x={CX} y={CY + RD * SE + 30} className="mot-plane-label" textAnchor="middle">
-        क्रान्तिवृत्त तल (सूर्यपथको समतल)
-      </text>
+        {/* legend */}
+        <g className="mot-legend">
+          <line x1={34} y1={32} x2={70} y2={32} className="mot-orbit above" />
+          <text x={78} y={37} className="mot-legend-label">कक्ष — समतलभन्दा माथि (उज्यालो)</text>
+          <line x1={34} y1={58} x2={70} y2={58} className="mot-orbit below" />
+          <text x={78} y={63} className="mot-legend-label">समतलभन्दा तल (छायाँमा)</text>
+          <circle cx={52} cy={84} r={8} className="mot-node" />
+          <text x={78} y={89} className="mot-legend-label">राहु / केतु — पात बिन्दु</text>
+        </g>
 
-      {/* node-drift track */}
-      <ellipse cx={CX} cy={CY} rx={RM} ry={RM * SE} className="mot-node-track" fill="none" />
+        {/* ── ecliptic plane: FAR half (behind Earth) ───────────────── */}
+        <path d={DISC.far} fill="url(#mot-plane-far)" className="mot-plane-face" />
 
-      {/* orbit ring behind Earth */}
-      {segs.back}
+        {/* node-drift track on the plane */}
+        <ellipse cx={CX} cy={CY} rx={RM} ry={RM * SE} className="mot-node-track" fill="none" />
 
-      {/* line of nodes */}
-      <line x1={ascEdge.x} y1={ascEdge.y} x2={descEdge.x} y2={descEdge.y} className="mot-node-line" />
+        {/* orbit half BELOW the plane — painted first, then submerged by the
+            translucent plane so it reads as shaded/underwater */}
+        {segs.below}
 
-      {/* Earth */}
-      <g className="ho-earth-group" transform={`translate(${CX} ${CY})`}>
-        <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName="mot-earth-glow" glowPad={10} />
-        <text y={EARTH_R + 26} className="ed-body-label" textAnchor="middle">
+        {/* line of nodes (sits in the plane, behind Earth) */}
+        <line x1={ascEdge.x} y1={ascEdge.y} x2={descEdge.x} y2={descEdge.y} className="mot-node-line" />
+
+        {/* Moon while it is below the plane (gets tinted by the near plane) */}
+        {!moonAbove && moonGroup}
+
+        {/* Earth — sits across the plane; its lower half is tinted by the near plane */}
+        <g className="ho-earth-group" transform={`translate(${CX} ${CY})`}>
+          <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName="mot-earth-glow" glowPad={10} />
+        </g>
+
+        {/* ── ecliptic plane: NEAR half (in front of Earth + below-orbit) ── */}
+        <path d={DISC.near} fill="url(#mot-plane-near)" className="mot-plane-face" />
+        <ellipse cx={CX} cy={CY} rx={RD} ry={RD * SE} className="mot-plane-rim" fill="none" />
+        <text x={CX} y={CY + RD * SE + 34} className="mot-plane-label" textAnchor="middle">
+          क्रान्तिवृत्त तल — सूर्यपथको समतल
+        </text>
+        <text x={CX} y={CY + EARTH_R + 28} className="ed-body-label mot-earth-label" textAnchor="middle">
           पृथ्वी
         </text>
-      </g>
 
-      {/* orbit ring in front of Earth */}
-      {segs.front}
+        {/* orbit half ABOVE the plane — bright, on top of the plane */}
+        {segs.above}
 
-      {/* Sun */}
-      <circle cx={sun.x} cy={sun.y} r={40} fill="url(#mot-sunglow)" />
-      <circle cx={sun.x} cy={sun.y} r={24} fill="url(#mot-sun)" />
-      <text x={sun.x} y={sun.y + 42} className="mot-sun-label" textAnchor="middle">
-        सूर्य
-      </text>
+        {/* tilt wedge */}
+        <path d={tiltWedge.arc} className="mot-tilt-arc" fill="none" />
+        <line x1={tiltWedge.p0.x} y1={tiltWedge.p0.y} x2={tiltWedge.pPlane.x} y2={tiltWedge.pPlane.y} className="mot-tilt-ref" />
+        <line x1={tiltWedge.p0.x} y1={tiltWedge.p0.y} x2={tiltWedge.pOrbit.x} y2={tiltWedge.pOrbit.y} className="mot-tilt-ref orbit" />
+        <text x={tiltWedge.p0.x + 12} y={tiltWedge.p0.y - 42} className="mot-tilt-label" textAnchor="start">
+          ~{fmt(5)}° झुकाव
+        </text>
 
-      {/* tilt wedge */}
-      <path d={tiltWedge.arc} className="mot-tilt-arc" fill="none" />
-      <line x1={tiltWedge.p0.x} y1={tiltWedge.p0.y} x2={tiltWedge.pPlane.x} y2={tiltWedge.pPlane.y} className="mot-tilt-ref" />
-      <line x1={tiltWedge.p0.x} y1={tiltWedge.p0.y} x2={tiltWedge.pOrbit.x} y2={tiltWedge.pOrbit.y} className="mot-tilt-ref orbit" />
-      <text x={tiltWedge.p0.x + 12} y={tiltWedge.p0.y - 42} className="mot-tilt-label" textAnchor="start">
-        ~{fmt(5)}° झुकाव
-      </text>
+        {/* nodes — the two points where the tilted orbit pierces the plane */}
+        {[
+          { p: asc, ne: "राहु", sym: "☊", dy: -20 },
+          { p: desc, ne: "केतु", sym: "☋", dy: 32 },
+        ].map((n) => (
+          <g key={n.ne}>
+            <circle cx={n.p.x} cy={n.p.y} r={11} className="mot-node" />
+            <circle cx={n.p.x} cy={n.p.y} r={4} className="mot-node-dot" />
+            <text x={n.p.x} y={n.p.y + n.dy} className="mot-node-label" textAnchor="middle">
+              {n.ne} {n.sym}
+            </text>
+          </g>
+        ))}
 
-      {/* nodes */}
-      {[
-        { p: asc, ne: "राहु", sym: "☊", dy: -18 },
-        { p: desc, ne: "केतु", sym: "☋", dy: 30 },
-      ].map((n) => (
-        <g key={n.ne}>
-          <circle cx={n.p.x} cy={n.p.y} r={9} className="mot-node" />
-          <circle cx={n.p.x} cy={n.p.y} r={3.4} className="mot-node-dot" />
-          <text x={n.p.x} y={n.p.y + n.dy} className="mot-node-label" textAnchor="middle">
-            {n.ne} {n.sym}
+        {/* Moon while it is above the plane (drawn on top, bright) */}
+        {moonAbove && moonGroup}
+
+        {/* Sun */}
+        <circle cx={sun.x} cy={sun.y} r={40} fill="url(#mot-sunglow)" />
+        <circle cx={sun.x} cy={sun.y} r={24} fill="url(#mot-sun)" />
+        <text x={sun.x} y={sun.y + 42} className="mot-sun-label" textAnchor="middle">
+          सूर्य
+        </text>
+
+        {/* Sun–Earth–shadow axis — crimson, drawn last so nothing occludes it */}
+        <g className="mot-sun-axis">
+          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-beam${season ? " aligned" : ""}`} />
+          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-outline${season ? " aligned" : ""}`} />
+          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-line${season ? " aligned" : ""}`} />
+          <circle cx={shadow.x} cy={shadow.y} r={11} className="mot-shadow-dot" />
+          <text x={shadow.x} y={shadow.y - 18} className="mot-shadow-label" textAnchor="middle">
+            छायाँ
           </text>
         </g>
-      ))}
 
-      {/* Moon + height post */}
-      <line x1={moon.x} y1={moon.y} x2={moonBase.x} y2={moonBase.y} className="mot-height-post" />
-      <circle cx={moonBase.x} cy={moonBase.y} r={3} className="mot-base-dot" />
-      <g transform={`translate(${moon.x} ${moon.y})`} className={eclipsing ? "mot-moon-eclipsing" : ""}>
-        {eclipsing && <circle cx={0} cy={0} r={MOON_R + 7} className={`mot-eclipse-glow ${status}`} />}
-        <circle cx={0} cy={0} r={MOON_R + 3} className={`mot-moon-halo ${moonAbove ? "up" : "down"}`} />
-        <circle
-          cx={0}
-          cy={0}
-          r={MOON_R}
-          fill={status === "lunar" ? "#c0392b" : status === "solar" ? "#33373d" : "url(#mot-moon)"}
-          className="mot-moon"
-        />
-        <text y={-MOON_R - 9} className="mot-moon-label" textAnchor="middle">
-          चन्द्र
-        </text>
+        {/* eclipse banner */}
+        {eclipsing && (
+          <text x={CX} y={48} className={`mot-eclipse-banner ${status}`} textAnchor="middle">
+            {status === "lunar" ? "● चन्द्रग्रहण — चन्द्र पृथ्वीको छायाँमा" : "● सूर्यग्रहण — चन्द्र सूर्य–पृथ्वी बीचमा"}
+          </text>
+        )}
+        {!eclipsing && season && (
+          <text x={CX} y={48} className="mot-season-banner" textAnchor="middle">
+            ग्रहण ऋतु — पात रेखा सूर्यसँग मिल्यो (पूर्णिमा/अमावस्या कुर्नुहोस्)
+          </text>
+        )}
       </g>
-
-      {/* Sun–Earth–shadow axis — drawn LAST so the orbit ring, Earth and Moon
-          never paint over it, in a crimson found nowhere else in this diagram
-          (every other line here is amber/gold) so it can't blend into them. A
-          card-coloured outline halo keeps the bright core crisp on any backdrop. */}
-      <g className="mot-sun-axis">
-        <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-beam${season ? " aligned" : ""}`} />
-        <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-outline${season ? " aligned" : ""}`} />
-        <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-line${season ? " aligned" : ""}`} />
-        <circle cx={shadow.x} cy={shadow.y} r={11} className="mot-shadow-dot" />
-        <text x={shadow.x} y={shadow.y - 18} className="mot-shadow-label" textAnchor="middle">
-          छायाँ
-        </text>
-      </g>
-
-      {/* eclipse banner */}
-      {eclipsing && (
-        <text x={CX} y={48} className={`mot-eclipse-banner ${status}`} textAnchor="middle">
-          {status === "lunar" ? "● चन्द्रग्रहण — चन्द्र पृथ्वीको छायाँमा" : "● सूर्यग्रहण — चन्द्र सूर्य–पृथ्वी बीचमा"}
-        </text>
-      )}
-      {!eclipsing && season && (
-        <text x={CX} y={48} className="mot-season-banner" textAnchor="middle">
-          ग्रहण ऋतु — पात रेखा सूर्यसँग मिल्यो (पूर्णिमा/अमावस्या कुर्नुहोस्)
-        </text>
-      )}
     </svg>
   );
 }
