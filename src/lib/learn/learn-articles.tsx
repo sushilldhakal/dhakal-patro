@@ -8,6 +8,8 @@ import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
 import { EclipseStudy } from "@/components/learn/EclipseStudy";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { SolarEclipseStudy } from "@/components/learn/SolarEclipseStudy";
+import { AyanamshaWheel } from "@/components/learn/AyanamshaWheel";
+import { PrecessionCone } from "@/components/learn/PrecessionCone";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
   GrahaReferenceTable,
@@ -676,10 +678,10 @@ export function Sankranti() {
   );
 }
 
-export function LunarEclipse() {
+export function Eclipses() {
   return (
     <>
-      <Section kicker="०१" title="पृथ्वीको छायाँमा चन्द्र" en="Earth's shadow">
+      <Section kicker="०१" title="चन्द्रग्रहण — पृथ्वीको छायाँमा चन्द्र" en="Lunar eclipse: Earth's shadow">
         <Lede>
           चन्द्रग्रहण सधैँ <b>पूर्णिमा</b> मा हुन्छ — जब सूर्य, पृथ्वी र चन्द्रमा एकै रेखामा
           आउँछन् र पृथ्वीको <span className="hl">छायाँ</span> चन्द्रमाथि पर्छ। चन्द्र रातो
@@ -690,9 +692,9 @@ export function LunarEclipse() {
         <Lede>
           सूर्यको उज्यालोले पृथ्वीपछाडि <span className="hl">प्रच्छायाँ (umbra)</span> र{" "}
           <span className="hl">उपछायाँ (penumbra)</span> को शंकु बनाउँछ। तल{" "}
-          <b>▶ चलाउनुहोस्</b> — समयसँगै राहु–केतु रेखा घुम्छ र चन्द्र हरेक महिना पूर्णिमा
-          ल्याउँछ, तर ग्रहण त्यतिबेला मात्र हुन्छ जब पूर्णिमा/अमावस्या <b>पात रेखा</b> नजिक
-          पर्छ — वर्षमा झन्डै दुई पटक मात्र।
+          <b>▶ चलाउनुहोस्</b> — पृथ्वी क्रान्तिवृत्तमा घुम्छ, चन्द्र छिटो चर्किन्छ;{" "}
+          <b>☊ पात-चक्र</b> बटनले मात्र राहु–केतु ढिलो घुमाउँछ। ग्रहण त्यतिबेला मात्र हुन्छ जब
+          पूर्णिमा/अमावस्या <b>पात रेखा</b> नजिक पर्छ — वर्षमा झन्डै दुई पटक मात्र।
         </Lede>
         <EclipseStudy />
       </Section>
@@ -706,7 +708,7 @@ export function LunarEclipse() {
         </Lede>
         <MoonOrbitTiltStudy />
       </Section>
-      <Section kicker="०४" title="हरेक पूर्णिमामा किन हुँदैन" en="Why not every month">
+      <Section kicker="०४" title="चन्द्रग्रहण — प्रकार र सुरक्षा" en="Lunar types & safety">
         <Lede>
           चन्द्रको कक्ष पृथ्वीको कक्षभन्दा <b>~५° ढल्केको</b> छ, त्यसैले धेरैजसो पूर्णिमामा
           चन्द्र छायाँभन्दा माथि वा तल हुन्छ। ग्रहण त्यतिबेला मात्र हुन्छ जब पूर्णिमा{" "}
@@ -721,26 +723,14 @@ export function LunarEclipse() {
           ]}
         />
       </Section>
-      <Note>
-        राहु–केतु आकाशका भौतिक पिण्ड होइनन् — चन्द्रको कक्ष र सूर्यपथ (क्रान्तिवृत्त) काट्ने
-        दुई गणितीय बिन्दु हुन्। यी पात बिस्तारै घुम्छन् (~१८.६ वर्षमा एक फेरो), त्यसैले ग्रहण
-        ऋतु पनि सर्दै जान्छ।
-      </Note>
-    </>
-  );
-}
-
-export function SolarEclipse() {
-  return (
-    <>
-      <Section kicker="०१" title="चन्द्रको छायाँमा पृथ्वी" en="Moon's shadow">
+      <Section kicker="०५" title="सूर्यग्रहण — चन्द्रको छायाँमा पृथ्वी" en="Solar eclipse: Moon's shadow">
         <Lede>
           सूर्यग्रहण सधैँ <b>अमावस्या</b> मा हुन्छ — जब चन्द्रमा सूर्य र पृथ्वीको ठ्याक्क
           बीचमा आएर सूर्यलाई <span className="hl">ढाक्छ</span>। चन्द्रको छायाँ पृथ्वीको
           सानो भागमा मात्र पर्ने हुनाले ग्रहण सीमित क्षेत्रबाट मात्र देखिन्छ।
         </Lede>
       </Section>
-      <Section kicker="०२" title="चन्द्रको छायाँ–शंकु र पृथ्वीमा मार्ग" en="Shadow cones: umbra, antumbra & penumbra">
+      <Section kicker="०६" title="चन्द्रको छायाँ–शंकु र पृथ्वीमा मार्ग" en="Shadow cones: umbra, antumbra & penumbra">
         <Lede>
           तलको चित्रमा सूर्यको उज्यालोले चन्द्रपछाडि <span className="hl">प्रच्छायाँ (umbra)</span> को
           सानो गाढा शंकु र फराकिलो <span className="hl">उपछायाँ (penumbra)</span> बनाउँछ। <b>▶ चलाउनुहोस्</b>{" "}
@@ -750,7 +740,7 @@ export function SolarEclipse() {
         </Lede>
         <SolarEclipseStudy />
       </Section>
-      <Section kicker="०३" title="प्रकार र सावधानी" en="Types & safety">
+      <Section kicker="०७" title="सूर्यग्रहण — प्रकार र सावधानी" en="Solar types & safety">
         <Keys
           items={[
             { h: "पूर्ण (Total)", p: "चन्द्र नजिक हुँदा प्रच्छायाँले पृथ्वी छुन्छ — सूर्य पूरै ढाकिन्छ, दिनमै अँध्यारो र सूर्यमुकुट (corona) देखिन्छ।" },
@@ -761,41 +751,74 @@ export function SolarEclipse() {
         />
       </Section>
       <Note>
-        अमावस्या पनि राहु–केतु (पात बिन्दु) नजिक परेमा मात्र सूर्यग्रहण हुन्छ — त्यसैले हरेक महिना हुँदैन।
-        चन्द्रको छायाँ सानो हुनाले सूर्यग्रहण पृथ्वीको सीमित पट्टीबाट मात्र देखिन्छ।
+        राहु–केतु आकाशका भौतिक पिण्ड होइनन् — चन्द्रको कक्ष र सूर्यपथ (क्रान्तिवृत्त) काट्ने
+        दुई गणितीय बिन्दु हुन्। यी पात बिस्तारै घुम्छन् (~१८.६ वर्षमा एक फेरो), त्यसैले ग्रहण
+        ऋतु पनि सर्दै जान्छ। अमावस्या/पूर्णिमा पनि राहु–केतु नजिक परेमा मात्र ग्रहण हुन्छ — त्यसैले
+        हरेक महिना हुँदैन। सूर्यग्रहणमा चन्द्रको छायाँ सानो हुनाले पृथ्वीको सीमित पट्टीबाट मात्र
+        देखिन्छ।
       </Note>
     </>
   );
 }
 
+/** @deprecated merged into {@link Eclipses} */
+export const LunarEclipse = Eclipses;
+/** @deprecated merged into {@link Eclipses} */
+export const SolarEclipse = Eclipses;
+
 export function Ayanamsha() {
   return (
     <>
-      <Section kicker="०१" title="सायन र निरयन" en="Tropical vs sidereal">
+      <Section kicker="०१" title="सायन र निरयन — एउटै आकाश, दुई शून्य" en="Tropical vs sidereal zero">
         <Lede>
-          पृथ्वीको अक्ष लठ्ठाझैँ बिस्तारै घुम्छ (अयन चलन), जसले गर्दा वसन्त–विषुव बिन्दु तारापुञ्जका
-          तुलनामा सर्दै जान्छ। <b>सायन (tropical)</b> राशि ऋतुमा अडिन्छ भने{" "}
-          <b>निरयन (sidereal)</b> साँचो तारापुञ्जमा। दुईबीचको कोणीय फरक नै{" "}
-          <span className="hl-amber">अयनांश</span> हो — हाल झन्डै <b>{N(24)}°</b>।
+          राशिचक्रको <b>शून्य अंश</b> कहाँबाट सुरु गर्ने? दुई जवाफ छन्।{" "}
+          <span className="hl-amber">सायन (tropical)</span> ले <b>वसन्त-विषुव</b> — जुन दिन सूर्य
+          भूमध्यरेखा काटेर उत्तर लाग्छ — लाई शून्य मान्छ, त्यसैले यो <b>ऋतु</b> मा अडिन्छ।{" "}
+          <span className="hl">निरयन (sidereal)</span> ले साँचो <b>तारापुञ्ज</b> (मेष राशिको
+          आरम्भ) लाई शून्य मान्छ। यी दुई शून्यबीचको कोणीय फरक नै <b>अयनांश</b> हो।
         </Lede>
       </Section>
-      <Section kicker="०२" title="तीन प्रमुख प्रणाली" en="Lahiri · Raman · KP">
+
+      <Section kicker="०२" title="अयनांश चक्र" en="Interactive: the precessing equinox">
         <Lede>
-          अयनांशको शून्य–बिन्दु कहाँ राख्ने भन्नेमा मतभेद हुनाले फरक–फरक प्रणाली छन्। एउटै
-          ग्रह कुन राशि वा नक्षत्रमा पर्छ भन्ने <span className="hl">अयनांश रोजाइले</span> केही
-          अंशले फरक पार्छ — त्यसैले कुण्डली बनाउँदा कुन प्रणाली प्रयोग भयो भन्ने महत्त्वपूर्ण।
+          तलको चक्रमा बाहिरी <b>१२ राशि तारापुञ्जमा अडिएका</b> छन् (निरयन)। <b>▶ चलाउनुहोस्</b> —
+          वर्ष अघि बढ्दा पृथ्वीको अक्ष-चलनले <span className="hl-amber">सायन शून्य (☉ विषुव)</span>{" "}
+          लाई ताराका सापेक्ष पछाडि सार्छ; बढ्दै जाने <span className="hl-amber">अम्बर खाँडो</span> नै
+          अयनांश हो। तल्लो स्लाइडरले एउटै <span className="hl">ग्रह</span> लाई सार्छ — हेर्नुहोस्
+          कसरी त्यही आकाश-स्थान निरयन र सायनमा फरक राशिमा पढिन्छ।
+        </Lede>
+        <AyanamshaWheel />
+      </Section>
+
+      <Section kicker="०३" title="किन सर्छ — अयन चलन" en="Precession of the equinoxes">
+        <Lede>
+          पृथ्वी ठ्याक्क सिधा घुम्दैन — लठ्ठा (lattu) झैँ यसको अक्ष ठूलो वृत्तमा बिस्तारै{" "}
+          <span className="hl">डुल्छ</span>। एक फेरो पूरा गर्न झन्डै{" "}
+          <b>{N(25800)} वर्ष</b> लाग्छ, अर्थात् विषुव बिन्दु प्रति वर्ष करिब{" "}
+          <b>५०.३″</b> (हरेक <b>~{N(72)} वर्ष</b> मा १°) पछाडि सर्छ। त्यसैले अयनांश पनि वर्षेनि
+          बढ्छ — आज लाहिरीमा झन्डै <b>{N(24)}°</b>।
+        </Lede>
+        <PrecessionCone />
+      </Section>
+
+      <Section kicker="०४" title="तीन प्रमुख प्रणाली" en="Lahiri · Raman · KP">
+        <Lede>
+          निरयन शून्य ठ्याक्क कुन ताराबाट गन्ने भन्नेमा मतभेद हुनाले फरक–फरक प्रणाली छन् — मूल फरक
+          केही अंश/कलाको मात्र हो, तर ग्रह राशि-सन्धिमा परेमा त्यही सानो फरकले <span className="hl">राशि नै बदल्न</span>{" "}
+          सक्छ। चक्रमाथिका बटनले प्रणाली बदलेर फरक हेर्नुहोस्।
         </Lede>
         <Keys
           items={[
-            { h: "लाहिरी (Lahiri)", p: "भारत सरकारको आधिकारिक — धेरैजसो पञ्चाङ्गको पूर्वनिर्धारित।" },
-            { h: "रमन (Raman)", p: "बी.वी. रमनद्वारा प्रचलित — लाहिरीभन्दा ~०.८° फरक।" },
-            { h: "कृष्णमूर्ति (KP)", p: "के.एस. कृष्णमूर्ति पद्धति — सूक्ष्म भविष्यवाणीमा प्रयोग।" },
+            { h: "लाहिरी (Lahiri)", p: "भारत सरकारको आधिकारिक (चित्रा-पक्ष) — धेरैजसो पञ्चाङ्गको पूर्वनिर्धारित; आज ~२४°।" },
+            { h: "रमन (Raman)", p: "बी.वी. रमनद्वारा प्रचलित — लाहिरीभन्दा झन्डै १.३° कम।" },
+            { h: "कृष्णमूर्ति (KP)", p: "के.एस. कृष्णमूर्ति पद्धति — लाहिरीभन्दा अति थोरै (~६′) कम; सूक्ष्म भविष्यवाणीमा।" },
           ]}
         />
       </Section>
+
       <Note>
-        यस एपको कुण्डली पृष्ठमा तपाईं आफैँ अयनांश प्रणाली रोज्न सक्नुहुन्छ र फरक आफ्नै आँखाले
-        हेर्न सक्नुहुन्छ।
+        पश्चिमी ज्योतिष प्रायः <b>सायन</b> चलाउँछ, नेपाली–भारतीय वैदिक ज्योतिष <b>निरयन</b>। यस एपको
+        कुण्डली पृष्ठमा तपाईं आफैँ अयनांश प्रणाली रोज्न सक्नुहुन्छ र फरक आफ्नै आँखाले हेर्न सक्नुहुन्छ।
       </Note>
     </>
   );

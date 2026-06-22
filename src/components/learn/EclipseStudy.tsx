@@ -4,16 +4,19 @@ import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EclipseGeometry } from "./EclipseGeometry";
 import {
   ECL_RANGE_DAYS,
+  ECLIPSE_YEAR,
+  NODE_PLAY_SPEED,
   SYNODIC_MONTH,
   findEclipses,
   geoFromDay,
   isSolarAlignment,
   lunarEclipseStatus,
-  realBeta,
 } from "./eclipse-math";
 
 const fmt = (n: string | number) => toNepaliDigits(n);
 const RANGE = Math.round(ECL_RANGE_DAYS);
+/** Simulated days per real second for Moon / Earth animation. */
+const MOON_PLAY_SPEED = 9;
 
 function phaseName(E: number): string {
   if (E < 12 || E > 348) return "अमावस्या";
@@ -23,8 +26,11 @@ function phaseName(E: number): string {
 
 export function EclipseStudy() {
   const [t, setT] = useState(18);
+  const [precDays, setPrecDays] = useState(18);
   const [playing, setPlaying] = useState(true);
-  const raf = useRef(0);
+  const [playingNodes, setPlayingNodes] = useState(false);
+  const rafMoon = useRef(0);
+  const rafNode = useRef(0);
 
   useEffect(() => {
     if (!playing) return;
@@ -32,23 +38,37 @@ export function EclipseStudy() {
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setT((prev) => (prev + dt * 9) % RANGE);
-      raf.current = requestAnimationFrame(tick);
+      setT((prev) => (prev + dt * MOON_PLAY_SPEED) % RANGE);
+      rafMoon.current = requestAnimationFrame(tick);
     };
-    raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
+    rafMoon.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafMoon.current);
   }, [playing]);
+
+  useEffect(() => {
+    if (!playingNodes) return;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      setPrecDays((prev) => (prev + dt * NODE_PLAY_SPEED) % ECLIPSE_YEAR);
+      rafNode.current = requestAnimationFrame(tick);
+    };
+    rafNode.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafNode.current);
+  }, [playingNodes]);
 
   const events = useMemo(() => findEclipses(RANGE), []);
 
-  const { u, omega, earthLon, g } = geoFromDay(t);
+  const { u, omega, omegaInertial, earthLon, g } = geoFromDay(t, precDays);
   const status = lunarEclipseStatus(g);
   const solar = isSolarAlignment(g);
   const monthNo = Math.floor(t / SYNODIC_MONTH) + 1;
+  const nodeCyclePct = precDays / ECLIPSE_YEAR;
 
   const next = useMemo(() => {
     const after = events.filter((e) => e.t > t + 0.5);
-    const list = after.length ? after : events; // wrap to start
+    const list = after.length ? after : events;
     return list[0] ?? null;
   }, [events, t]);
 
@@ -57,7 +77,9 @@ export function EclipseStudy() {
     const target = (after.length ? after : events.filter((e) => e.kind === kind))[0];
     if (target) {
       setPlaying(false);
+      setPlayingNodes(false);
       setT(target.t);
+      setPrecDays(target.t);
     }
   };
 
@@ -77,7 +99,7 @@ export function EclipseStudy() {
 
   return (
     <div className="tm-card pad-lg">
-      <EclipseGeometry u={u} omega={omega} earthLon={earthLon} />
+      <EclipseGeometry u={u} omega={omega} omegaInertial={omegaInertial} earthLon={earthLon} />
       <div className="ed-controls">
         <div className="ed-readout">
           <div className="ed-ro">
@@ -91,8 +113,14 @@ export function EclipseStudy() {
             <span className="ed-ro-v">{phaseName(g.E)}</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">चन्द्र अक्षांश β</span>
-            <span className="ed-ro-v mono">{fmt(Math.abs(realBeta(g.betaDeg)).toFixed(1))}°</span>
+            <span className="ed-ro-k">पात कोण ☊</span>
+            <span className="ed-ro-v mono">{fmt(Math.round(omegaInertial))}°</span>
+          </div>
+          <div className="ed-ro">
+            <span className="ed-ro-k">पात-चक्र</span>
+            <span className="ed-ro-v mono">
+              {fmt(Math.round(precDays))} दिन · {fmt(Math.round(nodeCyclePct * 100))}%
+            </span>
           </div>
           <div className="ed-ro">
             <span className="ed-ro-k">अवस्था</span>
@@ -108,29 +136,59 @@ export function EclipseStudy() {
             </span>
           </div>
         </div>
-        <div className="ed-scrub-wrap">
-          <button
-            type="button"
-            className="ed-playbtn"
-            onClick={() => setPlaying((p) => !p)}
-            title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-            aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-          >
-            {playing ? <Pause size={16} /> : <Play size={16} />}
-          </button>
-          <input
-            className="ed-scrub"
-            type="range"
-            min={0}
-            max={RANGE}
-            step={0.5}
-            value={t}
-            style={{ "--fill": `${(t / RANGE) * 100}%` } as React.CSSProperties}
-            onChange={(e) => {
-              setPlaying(false);
-              setT(+e.target.value);
-            }}
-          />
+        <div className="mot-slider-row">
+          <span className="mot-slider-label">☾ चन्द्र · पृथ्वी र चन्द्र (छिटो)</span>
+          <div className="ed-scrub-wrap">
+            <button
+              type="button"
+              className="ed-playbtn"
+              onClick={() => setPlaying((p) => !p)}
+              title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+            >
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+            </button>
+            <input
+              className="ed-scrub"
+              type="range"
+              min={0}
+              max={RANGE}
+              step={0.5}
+              value={t}
+              style={{ "--fill": `${(t / RANGE) * 100}%` } as React.CSSProperties}
+              onChange={(e) => {
+                setPlaying(false);
+                setT(+e.target.value);
+              }}
+            />
+          </div>
+        </div>
+        <div className="mot-slider-row">
+          <span className="mot-slider-label">☊ राहु–केतु · पात-चक्र (ढिलो · घडीको दिशा)</span>
+          <div className="ed-scrub-wrap">
+            <button
+              type="button"
+              className="ed-playbtn"
+              onClick={() => setPlayingNodes((p) => !p)}
+              title={playingNodes ? "रोक्नुहोस्" : "पात चलाउनुहोस्"}
+              aria-label={playingNodes ? "रोक्नुहोस्" : "पात चलाउनुहोस्"}
+            >
+              {playingNodes ? <Pause size={16} /> : <Play size={16} />}
+            </button>
+            <input
+              className="ed-scrub"
+              type="range"
+              min={0}
+              max={ECLIPSE_YEAR}
+              step={0.5}
+              value={precDays}
+              style={{ "--fill": `${(precDays / ECLIPSE_YEAR) * 100}%` } as React.CSSProperties}
+              onChange={(e) => {
+                setPlayingNodes(false);
+                setPrecDays(+e.target.value);
+              }}
+            />
+          </div>
         </div>
         <div className="ed-presets">
           <button type="button" className="ed-preset" onClick={() => jumpNext("lunar")}>
@@ -144,7 +202,9 @@ export function EclipseStudy() {
             className="ed-preset"
             onClick={() => {
               setPlaying(false);
+              setPlayingNodes(false);
               setT(0);
+              setPrecDays(0);
             }}
           >
             सुरुमा
@@ -152,11 +212,12 @@ export function EclipseStudy() {
         </div>
       </div>
       <p className="tm-card-cap">
-        सूर्यको केन्द्रमा स्थिर राखेर हेर्दा <span className="hl-amber">पृथ्वी क्रान्तिवृत्तमा</span> घुम्छ र{" "}
-        <span className="hl-amber">राहु–केतु रेखा</span> ~{fmt(347)} दिनमा एक फेरो घुम्छ। चन्द्रले हरेक ~{fmt(30)}{" "}
-        दिनमा पूर्णिमा ल्याउँछ, तर ग्रहण त्यतिबेला मात्र हुन्छ जब पूर्णिमा/अमावस्या <b>पात रेखा</b> नजिक पर्छ —
-        वर्षमा झन्डै दुई पटक मात्र (<span className="hl">ग्रहण ऋतु</span>)। यो एक वर्षमा {fmt(lunarCount)} चन्द्रग्रहण र{" "}
-        {fmt(solarCount)} सूर्यग्रहण देखिन्छन्{next ? `; अर्को ग्रहण ~${fmt(Math.max(0, Math.round(next.t - t)))} दिनमा।` : "।"}
+        चन्द्रले ~{fmt(27)} दिनमा एक राशि पार गर्छ; <span className="hl-amber">राहु–केतु</span> भने आकाशमा
+        बिस्तारै <b>घडीको दिशामा</b> घुम्छन् (~{fmt(19)}°/वर्ष, ~{fmt(19)} वर्षे पूरा चक्र) — चन्द्रभन्दा लगभग{" "}
+        {fmt(250)} गुणा ढिलो। माथिको <b>☾</b> बटनले चन्द्र/पृथ्वी चलाउँछ; <b>☊</b> बटन वा स्लाइडरले मात्र पात
+        रेखा सार्छ। ग्रहण तब हुन्छ जब पूर्णिमा/अमावस्या पात रेखा नजिक पर्छ — वर्षमा झन्डै दुई पटक (
+        {fmt(lunarCount)} चन्द्र, {fmt(solarCount)} सूर्य यस चक्रमा)।
+        {next ? ` अर्को ग्रहण ~${fmt(Math.max(0, Math.round(next.t - t)))} दिनमा।` : ""}
       </p>
     </div>
   );

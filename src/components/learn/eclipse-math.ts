@@ -9,8 +9,8 @@ const RAD = Math.PI / 180;
 export const ECL = {
   W: 1240,
   H: 720,
-  /** Sun at the centre of Earth's orbital ring. */
-  sunCX: 400,
+  /** Sun at the centre of the diagram and Earth's orbital ring. */
+  sunCX: 620,
   sunCY: 360,
   sunR: 38,
   earthR: 46,
@@ -127,12 +127,41 @@ export function moonGeo(u: number, omega: number, earthLon = 0): MoonGeo {
   };
 }
 
-/** Endpoints of the राहु–केतु line through Earth's centre (ecliptic diameter). */
-export function nodeLineEndpoints(omega: number, earthLon: number, halfLen = ECL.earthOrbitR * 0.92) {
-  const a = omega * RAD;
-  const p1 = localToScreen(halfLen * Math.cos(a), halfLen * Math.sin(a), 0, earthLon);
-  const p2 = localToScreen(-halfLen * Math.cos(a), -halfLen * Math.sin(a), 0, earthLon);
-  return { a: p1, b: p2 };
+/** Endpoints of the राहु–केतु line through Earth's centre in the Sun-fixed sky frame. */
+export function nodeLineEndpointsInertial(
+  omegaInertial: number,
+  earthLon: number,
+  halfLen = ECL.earthOrbitR * 0.92,
+) {
+  const lr = earthLon * RAD;
+  const Or = omegaInertial * RAD;
+  const ex = ECL.earthOrbitR * Math.cos(lr);
+  const ey = ECL.earthOrbitR * Math.sin(lr);
+  const c = Math.cos(Or);
+  const s = Math.sin(Or);
+  return {
+    a: heliocentricToScreen(ex + halfLen * c, ey + halfLen * s, 0),
+    b: heliocentricToScreen(ex - halfLen * c, ey - halfLen * s, 0),
+  };
+}
+
+/** राहु / केतु on the ecliptic through Earth (sky-fixed). */
+export function nodeMarkersInertial(omegaInertial: number, earthLon: number, dist = ECL.R) {
+  const lr = earthLon * RAD;
+  const Or = omegaInertial * RAD;
+  const ex = ECL.earthOrbitR * Math.cos(lr);
+  const ey = ECL.earthOrbitR * Math.sin(lr);
+  const c = Math.cos(Or);
+  const s = Math.sin(Or);
+  return {
+    asc: heliocentricToScreen(ex + dist * c, ey + dist * s, 0),
+    desc: heliocentricToScreen(ex - dist * c, ey - dist * s, 0),
+  };
+}
+
+/** Convert sky-fixed node longitude to Earth-local frame (rotates with Earth's orbit). */
+export function earthLocalOmega(omegaInertial: number, earthLon: number): number {
+  return (((omegaInertial - earthLon) % 360) + 360) % 360;
 }
 
 export type EclipseStatus = "total" | "partial" | "penumbral" | "none";
@@ -167,28 +196,43 @@ export const ECLIPSE_YEAR = 346.62;
 export const YEAR_DAYS = 365.2422;
 export const NODE_START = 30;
 export const ECL_RANGE_DAYS = ECLIPSE_YEAR;
+/** Nodal precession: ~0.05°/day (vs Moon ~13°/day). */
+export const NODE_DEG_PER_DAY = 360 / ECLIPSE_YEAR;
+/** Simulated days advanced per real second when ☊ पात-चक्र play is on (slow). */
+export const NODE_PLAY_SPEED = 1;
 
 export function moonLonFromDay(t: number): number {
   return (((360 * t) / SYNODIC_MONTH) % 360 + 360) % 360;
 }
+/** राहु–केतु axis in the Sun-fixed sky — retrograde (clockwise on the ecliptic). */
+export function nodeOmegaInertialFromDay(precDays: number): number {
+  return (((NODE_START - (360 * precDays) / ECLIPSE_YEAR) % 360) + 360) % 360;
+}
+/** @deprecated use nodeOmegaInertialFromDay */
 export function nodeOmegaFromDay(t: number): number {
-  return (((NODE_START - (360 * t) / ECLIPSE_YEAR) % 360) + 360) % 360;
+  return nodeOmegaInertialFromDay(t);
 }
 export function earthLonFromDay(t: number): number {
   return (((360 * t) / YEAR_DAYS) % 360 + 360) % 360;
 }
 
-export function geoFromDay(t: number): {
+export function geoFromDay(
+  t: number,
+  /** Nodal precession in simulated days (independent of Moon time `t`). */
+  precDays = t,
+): {
   u: number;
   omega: number;
+  omegaInertial: number;
   earthLon: number;
   g: MoonGeo;
 } {
-  const omega = nodeOmegaFromDay(t);
   const earthLon = earthLonFromDay(t);
+  const omegaInertial = nodeOmegaInertialFromDay(precDays);
+  const omega = earthLocalOmega(omegaInertial, earthLon);
   const lam = moonLonFromDay(t);
   const u = (((lam - omega) % 360) + 360) % 360;
-  return { u, omega, earthLon, g: moonGeo(u, omega, earthLon) };
+  return { u, omega, omegaInertial, earthLon, g: moonGeo(u, omega, earthLon) };
 }
 
 export interface EclipseEvent {
@@ -206,7 +250,7 @@ export function findEclipses(range = ECL_RANGE_DAYS): EclipseEvent[] {
     cur = null;
   };
   for (let t = 0; t <= range; t += 0.2) {
-    const { g } = geoFromDay(t);
+    const { g } = geoFromDay(t, t);
     const lunar = lunarEclipseStatus(g);
     const kind: "lunar" | "solar" | null =
       lunar !== "none" ? "lunar" : isSolarAlignment(g) ? "solar" : null;

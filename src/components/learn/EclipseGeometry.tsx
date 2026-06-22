@@ -10,7 +10,8 @@ import {
   localToScreen,
   lunarEclipseStatus,
   moonGeo,
-  nodeLineEndpoints,
+  nodeLineEndpointsInertial,
+  nodeMarkersInertial,
   planePtSun,
   realBeta,
   sunScreen,
@@ -19,6 +20,7 @@ import {
 interface Props {
   u: number;
   omega: number;
+  omegaInertial: number;
   earthLon: number;
   onU?: (v: number) => void;
 }
@@ -62,7 +64,7 @@ function NodeCallout({
   );
 }
 
-export function EclipseGeometry({ u, omega, earthLon, onU }: Props) {
+export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Props) {
   const fmt = (n: string | number) => toNepaliDigits(n);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef(false);
@@ -74,7 +76,14 @@ export function EclipseGeometry({ u, omega, earthLon, onU }: Props) {
   const earth = earthScreen(earthLon);
 
   const earthOrbit = useMemo(() => sunOrbitPath(ECL.earthOrbitR), []);
-  const nodeLine = useMemo(() => nodeLineEndpoints(omega, earthLon), [omega, earthLon]);
+  const nodeLine = useMemo(
+    () => nodeLineEndpointsInertial(omegaInertial, earthLon),
+    [omegaInertial, earthLon],
+  );
+  const nodes = useMemo(
+    () => nodeMarkersInertial(omegaInertial, earthLon),
+    [omegaInertial, earthLon],
+  );
 
   const moonOrbit = useMemo(() => {
     const below: React.ReactNode[] = [];
@@ -99,8 +108,8 @@ export function EclipseGeometry({ u, omega, earthLon, onU }: Props) {
     return { below, above };
   }, [omega, earthLon]);
 
-  const asc = moonGeo(0, omega, earthLon);
-  const desc = moonGeo(180, omega, earthLon);
+  const asc = nodes.asc;
+  const desc = nodes.desc;
   const moonAbove = g.zEc >= 0;
 
   const moonRot = moonSunFacingRotation(g.sx, g.sy, sun.x, sun.y);
@@ -277,22 +286,22 @@ export function EclipseGeometry({ u, omega, earthLon, onU }: Props) {
 
         {moonOrbit.above}
 
-        <circle cx={asc.sx} cy={asc.sy} r={5} className="ecl-node-dot" />
-        <circle cx={desc.sx} cy={desc.sy} r={5} className="ecl-node-dot" />
+        <circle cx={asc.x} cy={asc.y} r={7} className="ecl-node-dot" />
+        <circle cx={desc.x} cy={desc.y} r={7} className="ecl-node-dot" />
 
         <NodeCallout
-          px={asc.sx}
-          py={asc.sy}
+          px={asc.x}
+          py={asc.y}
           label="राहु · उत्तरी पात"
           sym="☊"
-          side={asc.sx < earth.x ? "left" : "right"}
+          side={asc.x < earth.x ? "left" : "right"}
         />
         <NodeCallout
-          px={desc.sx}
-          py={desc.sy}
+          px={desc.x}
+          py={desc.y}
           label="केतु · दक्षिणी पात"
           sym="☋"
-          side={desc.sx < earth.x ? "left" : "right"}
+          side={desc.x < earth.x ? "left" : "right"}
         />
 
         {moonAbove && moonGroup}
@@ -305,7 +314,7 @@ export function EclipseGeometry({ u, omega, earthLon, onU }: Props) {
           क्रान्तिवृत्त — पृथ्वीको सूर्याङ्को कक्ष (ठोस वृत्त)
         </text>
         <text x={ECL.W / 2} y={ECL.H - 28} className="ecl-tilt-note" textAnchor="middle">
-          चन्द्र-कक्ष ~{fmt(5)}° झुकेको (टुट्टेदार) · पृथ्वी, चन्द्र र राहु–केतु सँगै घुम्छ
+          चन्द्र-कक्ष ~{fmt(5)}° झुकेको (टुट्टेदार) · राहु–केतु घडीको दिशामा ~{fmt(19)} वर्षे चक्र
         </text>
       </g>
 

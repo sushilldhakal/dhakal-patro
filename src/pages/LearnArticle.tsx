@@ -1,4 +1,4 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, Navigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { PageShell } from "../components/PageShell";
 import {
@@ -7,8 +7,18 @@ import {
   adjacentTopics,
 } from "@/lib/learn/learn-topics";
 
+const LEGACY_ECLIPSE_SLUGS: Record<string, string> = {
+  "lunar-eclipse": "eclipses",
+  "solar-eclipse": "eclipses",
+};
+
 export function LearnArticle() {
   const { slug } = useParams({ strict: false }) as { slug?: string };
+
+  if (slug && LEGACY_ECLIPSE_SLUGS[slug]) {
+    return <Navigate to="/learn/$slug" params={{ slug: LEGACY_ECLIPSE_SLUGS[slug] }} replace />;
+  }
+
   const topic = slug ? LEARN_TOPICS_BY_SLUG[slug] : undefined;
 
   if (!topic) {

@@ -12,10 +12,9 @@ import {
   Scissors,
   Compass,
   Clock,
-  Moon,
-  Sun,
-  Telescope,
+  Eclipse,
   Eye,
+  Sun,
 } from "lucide-react";
 import {
   AstronomyBasics,
@@ -32,8 +31,7 @@ import {
   Karana,
   Sankranti,
   HoraArticle,
-  LunarEclipse,
-  SolarEclipse,
+  Eclipses,
   Ayanamsha,
 } from "./learn-articles";
 
@@ -189,22 +187,14 @@ export const LEARN_TOPICS: LearnTopic[] = [
     Content: HoraArticle,
   },
   {
-    slug: "lunar-eclipse",
+    slug: "eclipses",
     category: "eclipses",
-    titleNe: "चन्द्रग्रहण",
-    titleEn: "Lunar Eclipse Explained",
-    icon: Moon,
-    summary: "पूर्णिमामा पृथ्वीको छायाँले चन्द्र किन ढाक्छ र हरेक महिना किन हुँदैन।",
-    Content: LunarEclipse,
-  },
-  {
-    slug: "solar-eclipse",
-    category: "eclipses",
-    titleNe: "सूर्यग्रहण",
-    titleEn: "Solar Eclipse Explained",
-    icon: Telescope,
-    summary: "अमावस्यामा चन्द्रको छायाँले सूर्य कसरी ढाक्छ — प्रकार र सावधानी।",
-    Content: SolarEclipse,
+    titleNe: "ग्रहण — सूर्य र चन्द्र",
+    titleEn: "Solar & Lunar Eclipses",
+    icon: Eclipse,
+    summary:
+      "राहु–केतु, पात रेखा, चन्द्रग्रहण (पूर्णिमा) र सूर्यग्रहण (अमावस्या) — प्रकार, चित्र र सावधानी।",
+    Content: Eclipses,
   },
   {
     slug: "ayanamsha",
