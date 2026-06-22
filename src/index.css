@@ -3250,6 +3250,39 @@
 .mot-slider-label { font: 600 11px var(--pn-font); letter-spacing: 0.04em; color: var(--tm-ink-faint); }
 .mot-slider-row > input.ed-scrub { width: 100%; }
 
+/* ----- Solar eclipse: shadow cones + observer's view ----- */
+.sol-svg { min-height: 320px; max-height: min(620px, 78vh); }
+.sol-light { fill: color-mix(in srgb, #ffd24a 9%, transparent); }
+.sol-ray { stroke: color-mix(in srgb, #ffcf57 70%, transparent); stroke-width: 2.4; stroke-linecap: round; }
+.sol-sun-glow { fill: color-mix(in srgb, #ffcf57 26%, transparent); }
+.sol-penumbra { fill: color-mix(in srgb, var(--tm-ink) 18%, transparent); }
+.dark .sol-penumbra { fill: color-mix(in srgb, #000 34%, transparent); }
+.sol-antumbra { fill: color-mix(in srgb, var(--tm-ink) 32%, transparent); }
+.dark .sol-antumbra { fill: color-mix(in srgb, #000 52%, transparent); }
+.sol-umbra { fill: color-mix(in srgb, #11151b 88%, transparent); }
+.sol-legend-label { fill: var(--tm-ink-faint); font: 600 13px var(--pn-font); }
+.sol-moon { fill: #2b2f36; stroke: color-mix(in srgb, #fff 45%, transparent); stroke-width: 1.5; }
+.sol-moon-label { fill: var(--tm-ink-dim); font: 600 13px var(--pn-font); }
+.sol-earth-glow { fill: color-mix(in srgb, var(--tm-teal) 18%, transparent); }
+.sol-spot-pen { fill: color-mix(in srgb, #11151b 22%, transparent); }
+.sol-spot-umbra { fill: #0a0c10; }
+.sol-spot-anti { fill: color-mix(in srgb, #11151b 46%, transparent); stroke: #ffd24a; stroke-width: 1.5; }
+.sol-banner { font: 800 21px var(--pn-font); }
+.sol-banner.total { fill: #d2402a; }
+.sol-banner.annular { fill: #e0901a; }
+.sol-banner.partial { fill: var(--tm-ink-dim); }
+/* observer inset */
+.sol-eye-frame { fill: var(--tm-card); stroke: var(--tm-border); stroke-width: 1.5; }
+.sol-eye-title { fill: var(--tm-ink-faint); font: 700 14px var(--pn-font); letter-spacing: 0.02em; }
+.sol-eye-sky { fill: #070b16; }
+.sol-eye-sun { fill: #ffd24a; }
+.sol-eye-moon { fill: #05070c; }
+.sol-corona { fill: url(#sol-coronaGrad); }
+.sol-eye-rim { fill: none; stroke: var(--tm-border); stroke-width: 2; }
+.sol-eye-status { font: 700 15px var(--pn-font); fill: var(--tm-ink-dim); }
+.sol-eye-status.total { fill: #d2402a; }
+.sol-eye-status.annular { fill: #e0901a; }
+
 .ed-svg.grab { cursor: grab; }
 .ed-svg.grab:active { cursor: grabbing; }
 .ed-axis { stroke: color-mix(in srgb, var(--tm-gold) 42%, transparent); stroke-width: 1.2; stroke-dasharray: 2 6; }

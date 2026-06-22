@@ -7,6 +7,7 @@ import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
 import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
 import { EclipseStudy } from "@/components/learn/EclipseStudy";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
+import { SolarEclipseStudy } from "@/components/learn/SolarEclipseStudy";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
   GrahaReferenceTable,
@@ -739,18 +740,29 @@ export function SolarEclipse() {
           सानो भागमा मात्र पर्ने हुनाले ग्रहण सीमित क्षेत्रबाट मात्र देखिन्छ।
         </Lede>
       </Section>
-      <Section kicker="०२" title="प्रकार र सावधानी" en="Types & safety">
+      <Section kicker="०२" title="चन्द्रको छायाँ–शंकु र पृथ्वीमा मार्ग" en="Shadow cones: umbra, antumbra & penumbra">
+        <Lede>
+          तलको चित्रमा सूर्यको उज्यालोले चन्द्रपछाडि <span className="hl">प्रच्छायाँ (umbra)</span> को
+          सानो गाढा शंकु र फराकिलो <span className="hl">उपछायाँ (penumbra)</span> बनाउँछ। <b>▶ चलाउनुहोस्</b>{" "}
+          — चन्द्रको छायाँ पृथ्वीमाथि सर्छ, त्यही नै <span className="hl-amber">पूर्णताको मार्ग</span> हो।
+          तल्लो स्लाइडरले चन्द्र दूरी (perigee ↔ apogee) बदल्छ — हेर्नुहोस् कसरी प्रच्छायाँ पुग्दा{" "}
+          <b>पूर्ण</b> र अपुग हुँदा <b>वलयाकार</b> ग्रहण हुन्छ।
+        </Lede>
+        <SolarEclipseStudy />
+      </Section>
+      <Section kicker="०३" title="प्रकार र सावधानी" en="Types & safety">
         <Keys
           items={[
-            { h: "पूर्ण (Total)", p: "चन्द्रले सूर्यलाई पूरै ढाक्छ — दिनमै अँध्यारो।" },
-            { h: "वलयाकार (Annular)", p: "चन्द्र टाढा हुँदा सूर्यको किनारा “आगोको औँठी” झैँ देखिन्छ।" },
-            { h: "खण्डग्रास (Partial)", p: "सूर्यको केही भाग मात्र ढाकिन्छ।" },
+            { h: "पूर्ण (Total)", p: "चन्द्र नजिक हुँदा प्रच्छायाँले पृथ्वी छुन्छ — सूर्य पूरै ढाकिन्छ, दिनमै अँध्यारो र सूर्यमुकुट (corona) देखिन्छ।" },
+            { h: "वलयाकार (Annular)", p: "चन्द्र टाढा हुँदा प्रच्छायाँ अपुग — वलयच्छायाँ (antumbra) पुग्छ र सूर्यको किनारा “आगोको औँठी” झैँ देखिन्छ।" },
+            { h: "खण्डग्रास (Partial)", p: "उपछायाँभित्र पर्ने ठूलो क्षेत्रबाट सूर्यको केही भाग मात्र ढाकिएको देखिन्छ।" },
             { h: "⚠ कहिल्यै नाङ्गो आँखाले नहेर्नुहोस्", p: "ग्रहण चश्मा वा प्रोजेक्सन मात्र — आँखा स्थायी बिग्रन सक्छ।" },
           ]}
         />
       </Section>
       <Note>
-        अमावस्या पनि राहु–केतु नजिक परेमा मात्र सूर्यग्रहण हुन्छ — त्यसैले हरेक महिना हुँदैन।
+        अमावस्या पनि राहु–केतु (पात बिन्दु) नजिक परेमा मात्र सूर्यग्रहण हुन्छ — त्यसैले हरेक महिना हुँदैन।
+        चन्द्रको छायाँ सानो हुनाले सूर्यग्रहण पृथ्वीको सीमित पट्टीबाट मात्र देखिन्छ।
       </Note>
     </>
   );
