@@ -153,8 +153,8 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
     <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg mot-svg" role="img">
       <defs>
         <radialGradient id="mot-disc" cx="50%" cy="42%" r="62%">
-          <stop offset="0%" stopColor="color-mix(in srgb, var(--tm-teal) 26%, transparent)" />
-          <stop offset="100%" stopColor="color-mix(in srgb, var(--tm-teal) 7%, transparent)" />
+          <stop offset="0%" stopColor="color-mix(in srgb, var(--tm-teal) 42%, transparent)" />
+          <stop offset="100%" stopColor="color-mix(in srgb, var(--tm-teal) 16%, transparent)" />
         </radialGradient>
         <radialGradient id="mot-moon" cx="36%" cy="32%" r="74%">
           <stop offset="0%" stopColor="#eef1f4" />
@@ -192,7 +192,9 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
       {/* node-drift track */}
       <ellipse cx={CX} cy={CY} rx={RM} ry={RM * SE} className="mot-node-track" fill="none" />
 
-      {/* Sun–Earth–shadow line through Earth's centre */}
+      {/* Sun–Earth–shadow line through Earth's centre — translucent beam behind
+          the crisp line so it always reads (and stays visible when thin on mobile) */}
+      <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-beam${season ? " aligned" : ""}`} />
       <line
         x1={sun.x}
         y1={sun.y}
@@ -200,7 +202,7 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
         y2={shadow.y}
         className={`mot-sun-line${season ? " aligned" : ""}`}
       />
-      <circle cx={shadow.x} cy={shadow.y} r={7} className="mot-shadow-dot" />
+      <circle cx={shadow.x} cy={shadow.y} r={9} className="mot-shadow-dot" />
       <text x={shadow.x} y={shadow.y - 14} className="mot-shadow-label" textAnchor="middle">
         छायाँ
       </text>
