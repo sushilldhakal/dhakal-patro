@@ -3226,10 +3226,19 @@
 .mot-moon-halo.down { fill: color-mix(in srgb, var(--tm-teal) 18%, transparent); }
 .mot-moon-label { fill: var(--tm-ink-dim); font: 600 13px var(--pn-font); }
 .mot-legend-label { fill: var(--tm-ink-faint); font: 600 13px var(--pn-font); }
-.mot-sun-beam { stroke: color-mix(in srgb, #e0901a 26%, transparent); stroke-width: 16; stroke-linecap: round; }
-.mot-sun-beam.aligned { stroke: color-mix(in srgb, #e0461a 30%, transparent); stroke-width: 20; }
-.mot-sun-line { stroke: #e0901a; stroke-width: 5; stroke-linecap: round; }
-.mot-sun-line.aligned { stroke: #e0461a; stroke-width: 6; }
+/* Sun–Earth–shadow axis: crimson (used nowhere else in this diagram, which is
+   otherwise all amber/gold) + a card-coloured knockout outline so the core
+   reads crisply over the orbit ring, Earth and Moon regardless of theme. */
+.mot-sun-beam { stroke: color-mix(in srgb, #d81b3f 34%, transparent); stroke-width: 34; stroke-linecap: round; }
+.mot-sun-beam.aligned { stroke: color-mix(in srgb, #ff1f3d 40%, transparent); stroke-width: 42; }
+.mot-sun-outline { stroke: var(--tm-card); stroke-width: 17; stroke-linecap: round; opacity: 0.95; }
+.mot-sun-outline.aligned { stroke-width: 21; }
+.mot-sun-line { stroke: #d81b3f; stroke-width: 11; stroke-linecap: round; }
+.mot-sun-line.aligned { stroke: #ff1f3d; stroke-width: 14; }
+.dark .mot-sun-line { stroke: #ff5b78; }
+.dark .mot-sun-line.aligned { stroke: #ff3358; }
+.dark .mot-sun-beam { stroke: color-mix(in srgb, #ff5b78 34%, transparent); }
+.dark .mot-sun-beam.aligned { stroke: color-mix(in srgb, #ff3358 40%, transparent); }
 .mot-shadow-dot { fill: color-mix(in srgb, var(--tm-ink) 60%, transparent); }
 .mot-shadow-label { fill: var(--tm-ink-faint); font: 600 12px var(--pn-font); }
 .mot-eclipse-glow.lunar { fill: color-mix(in srgb, #d2402a 45%, transparent); }

@@ -192,21 +192,6 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
       {/* node-drift track */}
       <ellipse cx={CX} cy={CY} rx={RM} ry={RM * SE} className="mot-node-track" fill="none" />
 
-      {/* Sun–Earth–shadow line through Earth's centre — translucent beam behind
-          the crisp line so it always reads (and stays visible when thin on mobile) */}
-      <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-beam${season ? " aligned" : ""}`} />
-      <line
-        x1={sun.x}
-        y1={sun.y}
-        x2={shadow.x}
-        y2={shadow.y}
-        className={`mot-sun-line${season ? " aligned" : ""}`}
-      />
-      <circle cx={shadow.x} cy={shadow.y} r={9} className="mot-shadow-dot" />
-      <text x={shadow.x} y={shadow.y - 14} className="mot-shadow-label" textAnchor="middle">
-        छायाँ
-      </text>
-
       {/* orbit ring behind Earth */}
       {segs.back}
 
@@ -268,6 +253,20 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
         />
         <text y={-MOON_R - 9} className="mot-moon-label" textAnchor="middle">
           चन्द्र
+        </text>
+      </g>
+
+      {/* Sun–Earth–shadow axis — drawn LAST so the orbit ring, Earth and Moon
+          never paint over it, in a crimson found nowhere else in this diagram
+          (every other line here is amber/gold) so it can't blend into them. A
+          card-coloured outline halo keeps the bright core crisp on any backdrop. */}
+      <g className="mot-sun-axis">
+        <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-beam${season ? " aligned" : ""}`} />
+        <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-outline${season ? " aligned" : ""}`} />
+        <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-line${season ? " aligned" : ""}`} />
+        <circle cx={shadow.x} cy={shadow.y} r={11} className="mot-shadow-dot" />
+        <text x={shadow.x} y={shadow.y - 18} className="mot-shadow-label" textAnchor="middle">
+          छायाँ
         </text>
       </g>
 
