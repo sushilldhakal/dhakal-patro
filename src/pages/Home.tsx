@@ -279,7 +279,7 @@ function UpcomingHolidays({
         )}
       </div>
 
-      <RituSeasons locationLabel={location.label} />
+      <RituSeasons location={location} />
 
       <SunTimesYearGrid
         bsYear={bsYear}
