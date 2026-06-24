@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Flag } from "lucide-react";
+import { ArrowRight, Flag, Sunrise, Sunset } from "lucide-react";
 import {
   fetchPanchanga,
   fetchHolidays,
@@ -11,7 +11,6 @@ import {
   type CalendarDay,
 } from "../lib/api";
 import { CalendarView } from "../components/CalendarView";
-import { SunTimesYearGrid } from "../components/SunTimesYearGrid";
 import { RituSeasons } from "../components/RituSeasons";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import {
@@ -281,11 +280,14 @@ function UpcomingHolidays({
 
       <RituSeasons location={location} />
 
-      <SunTimesYearGrid
-        bsYear={bsYear}
-        locationLabel={location.label}
-        locationParams={location.params}
-      />
+      <Link to="/suryakranti" className="pn-sun-times-cta">
+        <span className="pn-sun-times-cta-icons" aria-hidden>
+          <Sunrise size={16} strokeWidth={1.8} />
+          <Sunset size={16} strokeWidth={1.8} />
+        </span>
+        <span className="pn-sun-times-cta-text">सूर्य क्रान्ति — वार्षिक सूर्योदय–सूर्यास्त</span>
+        <ArrowRight size={14} className="pn-sun-times-cta-arrow" />
+      </Link>
     </section>
   );
 }

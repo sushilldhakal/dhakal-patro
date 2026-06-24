@@ -22,6 +22,10 @@ const TAU = Math.PI * 2;
 /* precession rate, degrees / year (≈ 50.2879″) */
 const RATE = 50.2879 / 3600;
 
+/* CE → बिक्रम सम्वत् (Vikram Sambat runs ≈ 57 years ahead). Internal ayanāṁśa
+ * math stays in CE; only the year readout is shown in बि.सं. */
+const ceToBs = (ce: number) => Math.round(ce) + 57;
+
 /* each system's ayanāṁśa at year 2000 CE (degrees) */
 const SYSTEMS = {
   lahiri: { ne: "लाहिरी", en: "Lahiri", base2000: 23.85 },
@@ -290,7 +294,7 @@ export function AyanamshaWheel() {
         <div className="ed-readout">
           <div className="ed-ro">
             <span className="ed-ro-k">वर्ष</span>
-            <span className="ed-ro-v mono">{N(Math.round(m.year))} CE</span>
+            <span className="ed-ro-v mono">{N(ceToBs(m.year))} बि.सं.</span>
           </div>
           <div className="ed-ro">
             <span className="ed-ro-k">प्रणाली</span>
@@ -311,7 +315,7 @@ export function AyanamshaWheel() {
 
         <div className="mot-slider-row">
           <span className="mot-slider-label">
-            ☉ वर्ष — अक्ष-चलनले विषुव बिन्दु सर्छ ({N(285)} → {N(2200)} CE)
+            ☉ वर्ष — अक्ष-चलनले विषुव बिन्दु सर्छ ({N(ceToBs(285))} → {N(ceToBs(2200))} बि.सं.)
           </span>
           <div className="ed-scrub-wrap">
             <button

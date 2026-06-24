@@ -83,8 +83,8 @@ export const panchangaKeys = {
     ["panchanga", "day", date, era, locationCacheKey(location)] as const,
   nepalDay: (date: string, location?: LocationParams) =>
     ["panchanga", "nepal", date, locationCacheKey(location)] as const,
-  month: (year: number, month: number, location?: LocationParams) =>
-    ["panchanga", "month", year, month, locationCacheKey(location)] as const,
+  month: (year: number, month: number, location?: LocationParams, full = true) =>
+    ["panchanga", "month", year, month, locationCacheKey(location), full ? "full" : "lite"] as const,
   monthAtClock: (
     year: number,
     month: number,
@@ -162,10 +162,33 @@ export const fetchGochar = (
     appendLocation(`/nepal/gochar/${date}?era=${era}`, location)
   );
 
+export interface SankrantiEvent {
+  to_rashi_index: number;
+  to_rashi_ne?: string;
+  timestamp?: { local_date?: string };
+}
+
+export interface SankrantiYearResponse {
+  ad_year: number;
+  sankrantis: SankrantiEvent[];
+}
+
+export const sankrantiKeys = {
+  year: (adYear: number, location?: LocationParams) =>
+    ["sankranti", "year", adYear, locationCacheKey(location)] as const,
+};
+
+export const fetchSankrantiYear = (adYear: number, location?: LocationParams) =>
+  get<SankrantiYearResponse>(
+    appendLocation(`/nepal/sankranti/year/${adYear}`, location),
+  );
+
 type RawMonthDay = CalendarDay & {
   panchanga?: {
     paksha?: string;
     paksha_ne?: string;
+    aayan?: string;
+    aayan_ne?: string;
     moon?: { rise?: string; set?: string };
   };
 };
@@ -200,6 +223,8 @@ function normalizeMonthDay(day: RawMonthDay): CalendarDay {
     ...day,
     paksha,
     paksha_ne: pakshaNe,
+    aayan: day.aayan ?? nested?.aayan,
+    aayan_ne: day.aayan_ne ?? nested?.aayan_ne,
     moonrise: day.moonrise ?? nested?.moon?.rise,
     moonrise_local: day.moonrise_local,
     moonset: day.moonset ?? nested?.moon?.set,
@@ -211,13 +236,15 @@ export const fetchMonthCalendar = async (
   year: number,
   month: number,
   location?: LocationParams,
-  options?: { clock?: string }
+  options?: { clock?: string; full?: boolean }
 ): Promise<MonthCalendar> => {
-  const clockParam = options?.clock
-    ? `&clock=${encodeURIComponent(options.clock)}`
-    : "";
+  const full = options?.full !== false;
+  const params = new URLSearchParams();
+  if (full) params.set("full", "true");
+  if (options?.clock) params.set("clock", options.clock);
+  const qs = params.toString();
   const path = appendLocation(
-    `/panchanga/${year}/${month}?full=true${clockParam}`,
+    `/panchanga/${year}/${month}${qs ? `?${qs}` : ""}`,
     location
   );
   const data = await get<MonthCalendar & { calendar: RawMonthDay[] }>(path);
@@ -592,6 +619,8 @@ export interface CalendarDay {
   karana_ne?: string;
   sunrise?: string;
   sunset?: string;
+  aayan?: string;
+  aayan_ne?: string;
   moonrise?: string;
   moonrise_local?: string;
   moonset?: string;

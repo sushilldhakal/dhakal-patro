@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, MapPin, Pause, Play } from "lucide-react";
 import { fetchPanchanga, panchangaKeys, type PanchangaDay } from "@/lib/api";
 import {
@@ -62,11 +62,32 @@ function adDateStrForDay(year: number, dayOfYear: number): string {
  */
 const SCRUB_DEBOUNCE_MS = 90;
 
+function initialYearFromSearch(searchYear?: number): number {
+  if (
+    searchYear != null &&
+    searchYear >= BS_SUPPORTED_START_YEAR &&
+    searchYear <= BS_SUPPORTED_END_YEAR
+  ) {
+    return searchYear;
+  }
+  return getCurrentBs().year;
+}
+
+function readYearFromLocationSearch(search: unknown): number | undefined {
+  const raw = (search as { year?: unknown } | undefined)?.year;
+  const year = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : undefined;
+  if (year == null || !Number.isFinite(year)) return undefined;
+  return year;
+}
+
 export function PanchangaYear() {
   const { location, setLocation } = usePanchangaLocation();
+  const searchYear = useRouterState({
+    select: (state) => readYearFromLocationSearch(state.location.search),
+  });
   const queryClient = useQueryClient();
   const todayBs = useMemo(() => adToBS(new Date()), []);
-  const [year, setYear] = useState(() => getCurrentBs().year);
+  const [year, setYear] = useState(() => initialYearFromSearch(searchYear));
   const [dayOfYear, setDayOfYear] = useState(() =>
     dayOfYearFromBs(todayBs.year, todayBs.month, todayBs.day)
   );
@@ -76,6 +97,12 @@ export function PanchangaYear() {
   // all queue up behind each other.
   const [queryDay, setQueryDay] = useState(dayOfYear);
   const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    if (searchYear == null) return;
+    const next = initialYearFromSearch(searchYear);
+    setYear((current) => (current === next ? current : next));
+  }, [searchYear]);
 
   const totalDays = useMemo(() => daysInBsYear(year), [year]);
   const clampedDay = Math.min(dayOfYear, totalDays);

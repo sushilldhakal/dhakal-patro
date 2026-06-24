@@ -15,6 +15,7 @@ import {
   Eclipse,
   Eye,
   Sun,
+  History,
 } from "lucide-react";
 import {
   AstronomyBasics,
@@ -33,6 +34,7 @@ import {
   HoraArticle,
   Eclipses,
   Ayanamsha,
+  RituDrift,
 } from "./learn-articles";
 
 export interface LearnTopic {
@@ -104,6 +106,16 @@ export const LEARN_TOPICS: LearnTopic[] = [
     icon: Layers,
     summary: "चान्द्र र सौर मासको फरकले किन झन्डै तीन वर्षमा एक महिना थपिन्छ।",
     Content: AdhikMaas,
+  },
+  {
+    slug: "ritu-drift",
+    category: "calendars",
+    titleNe: "ऋतु किन सर्छ — सायन vs निरयन",
+    titleEn: "Why Ṛtu Drifts — Tropical vs Sidereal",
+    icon: History,
+    summary:
+      "ऋतु सायन (विषुव–अयनान्त) ले, महिना निरयन (राशि–सङ्क्रान्ति) ले — अयन चलनले हरेक ~७२ वर्षमा १ दिन फरक पार्छ; दुवै सँगै स्थिर राख्न सकिँदैन।",
+    Content: RituDrift,
   },
   {
     slug: "what-is-panchang",

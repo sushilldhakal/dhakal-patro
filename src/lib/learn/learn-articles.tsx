@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { ElongationStudy } from "@/components/tithi-mechanics/TithiMechanics";
@@ -9,6 +10,7 @@ import { EclipseStudy } from "@/components/learn/EclipseStudy";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { SolarEclipseStudy } from "@/components/learn/SolarEclipseStudy";
 import { AyanamshaWheel } from "@/components/learn/AyanamshaWheel";
+import { EquinoxPrecession } from "@/components/learn/EquinoxPrecession";
 import { PrecessionCone } from "@/components/learn/PrecessionCone";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import {
@@ -819,6 +821,82 @@ export function Ayanamsha() {
       <Note>
         पश्चिमी ज्योतिष प्रायः <b>सायन</b> चलाउँछ, नेपाली–भारतीय वैदिक ज्योतिष <b>निरयन</b>। यस एपको
         कुण्डली पृष्ठमा तपाईं आफैँ अयनांश प्रणाली रोज्न सक्नुहुन्छ र फरक आफ्नै आँखाले हेर्न सक्नुहुन्छ।
+      </Note>
+    </>
+  );
+}
+
+export function RituDrift() {
+  return (
+    <>
+      <Section kicker="०१" title="ऋतु सायन, महिना निरयन" en="Seasons are tropical, months are sidereal">
+        <Lede>
+          एउटै सूर्यलाई <b>दुई फरक शून्य</b> बाट नापिन्छ। <span className="hl-amber">ऋतु</span> लाई{" "}
+          <b>सायन (tropical)</b> ले नाप्छ — शून्य अंश भनेको <b>वसन्त-विषुव</b> (सूर्य भूमध्यरेखा
+          काटेर उत्तर लाग्ने क्षण), त्यसैले ऋतु सधैँ विषुव र अयनान्तमा अडिन्छ। तर बि.सं. का{" "}
+          <span className="hl">महिना</span> लाई <b>निरयन (sidereal)</b> ले नाप्छ — शून्य भनेको
+          आकाशको साँचो <b>मेष तारापुञ्ज</b>, र महिनाको पहिलो गते भनेको <b>सङ्क्रान्ति</b> (सूर्य
+          नयाँ राशिमा पस्ने क्षण) हो। यी दुई शून्यबीचको कोण नै <b>अयनांश</b> — आज ~<b>{N(24)}°</b>।
+        </Lede>
+        <EquinoxPrecession />
+      </Section>
+
+      <Section kicker="०२" title="किन सर्छ — अयन चलन" en="Why it drifts: precession">
+        <Lede>
+          पृथ्वी लठ्ठा (lattu) झैँ अक्षमा बिस्तारै <span className="hl">डुल्छ</span>। एक फेरो पूरा
+          हुन ~<b>{N(25800)} वर्ष</b> लाग्छ, अर्थात् विषुव बिन्दु प्रति वर्ष ~<b>५०.३″</b> — हरेक
+          ~<b>{N(72)} वर्ष</b> मा ठ्याक्क <b>१°</b> — पछाडि सर्छ। सूर्य दिनमा ~<b>१°</b> हिँड्ने
+          हुनाले, यो <b>१° = झन्डै १ दिन</b>। त्यसैले निरयन महिनाको सापेक्ष ऋतु{" "}
+          <span className="hl-amber">हरेक ~{N(72)} वर्षमा १ दिन</span> सर्दै जान्छ।
+        </Lede>
+        <PrecessionCone />
+      </Section>
+
+      <Section kicker="०३" title="दुई बाटो — दुवै सँगै सम्भव छैन" en="The trade-off: you cannot fix both">
+        <Lede>
+          महिना र ऋतु दुवैलाई सधैँभरि एकनासले मिलाइराख्न <b>सकिँदैन</b>, किनकि एउटा ताराको
+          सापेक्ष स्थिर छ भने अर्को विषुवको। कुनै एउटा रोज्नैपर्छ — र अर्को बिस्तारै सर्छ।
+        </Lede>
+        <Keys
+          items={[
+            {
+              h: "महिनालाई राशिमा अडाए (अहिलेको प्रचलन)",
+              p: (
+                <>
+                  वैशाख सधैँ मेष सङ्क्रान्तिमै सुरु हुन्छ — कुण्डली, नक्षत्र र ग्रह-राशि{" "}
+                  <b>ताराका सापेक्ष स्थिर</b> रहन्छन्। तर ऋतु निरयनको सापेक्ष ~<b>{N(72)} वर्षमा
+                  १ दिन</b> (~{N(2160)} वर्षमा पूरा १ महिना) सर्छ — धेरै शताब्दीपछि वैशाख वसन्त
+                  नभई अर्कै ऋतुमा पर्न सक्छ।
+                </>
+              ),
+            },
+            {
+              h: "महिनालाई ऋतुमा अडाए (सायन सुधार)",
+              p: (
+                <>
+                  वैशाख सधैँ वसन्त-विषुवमै बस्छ — ऋतु <b>कहिल्यै सर्दैन</b>। तर बदलामा हरेक
+                  राशिको पछाडिको <b>तारापुञ्ज सर्छ</b> — कुण्डली, ग्रहको राशि, नक्षत्र र जन्म-चार्ट
+                  सबै ~१°/{N(72)} वर्षका दरले फरक पर्न थाल्छन्; आज मेषमा देखिने तारा भोलि अर्कै
+                  राशिमा पढिन्छ।
+                </>
+              ),
+            },
+          ]}
+        />
+      </Section>
+
+      <Section kicker="०४" title="यस पात्रोले के गर्छ" en="What this patro does">
+        <Lede>
+          यो पात्रोले <b>दुवै</b> देखाउँछ — महिना/गते <span className="hl">निरयन सङ्क्रान्ति</span>{" "}
+          ले (तारा स्थिर), अनि गृहपृष्ठको <span className="hl-amber">ऋतु पट्टी सायन</span>{" "}
+          (विषुव–अयनान्त) ले गणना गर्छ, ताकि ऋतु वास्तविक मौसमसँगै रहोस्। त्यसैले बैशाख कहिलेकाहीँ
+          वसन्तसँग ठ्याक्क नमिल्न सक्छ — त्यो भुल होइन, अयन चलनको असर हो।
+        </Lede>
+      </Section>
+
+      <Note>
+        पश्चिमी ज्योतिष प्रायः <b>सायन</b> (ऋतु-केन्द्रित) चलाउँछ, नेपाली–भारतीय वैदिक ज्योतिष{" "}
+        <b>निरयन</b> (तारा-केन्द्रित)। अयनांशको गहिराइ <Link to="/learn/$slug" params={{ slug: "ayanamsha" }} className="hl">अयनांश</Link> लेखमा छ।
       </Note>
     </>
   );

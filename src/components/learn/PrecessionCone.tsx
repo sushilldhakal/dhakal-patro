@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EarthGlobeImage } from "./EarthGlobeImage";
+import { RashiGlyph } from "./rashi-icons";
 
 /**
  * Precession of the equinoxes (अयन चलन) — the 26,000-year wobble.
@@ -34,9 +35,10 @@ const CE = Math.cos(EPS);
 const RING_R = EARTH_R + 12; // celestial-equator ring radius
 
 type V3 = [number, number, number];
-/** project (x east, y up, z depth) → screen point */
+/** project (x east, y up, z depth) → screen point.
+ * Depth is mirrored (−z·K) so the zodiac runs anti-clockwise, as राशि always do. */
 function proj(x: number, y: number, z: number): [number, number] {
-  return [CX + x, CY + z * K - y];
+  return [CX + x, CY - z * K - y];
 }
 const ps = (p: [number, number]) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
 
@@ -45,13 +47,6 @@ function axisDir(phi: number): V3 {
   return [SE * Math.cos(phi), CE, SE * Math.sin(phi)];
 }
 
-/* ---- simplified zodiac constellation motifs ---------------------------- */
-const PATTERNS: [number, number][][] = [
-  [[0, 0], [15, -7], [27, 3], [40, -2], [31, 15]],
-  [[0, 0], [12, 11], [26, 6], [35, 19], [20, 24]],
-  [[2, -2], [17, -5], [11, 12], [29, 13], [41, 5]],
-  [[0, -8], [9, 7], [22, -2], [31, 12], [18, 21], [5, 16]],
-];
 const RASHI = [
   "मेष", "वृष", "मिथुन", "कर्कट", "सिंह", "कन्या",
   "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
@@ -75,24 +70,6 @@ function fmtYear(bs: number): string {
   const r = Math.round(bs);
   const abs = N(Math.abs(r).toLocaleString("en-US"));
   return r < 0 ? `${abs} बि.सं. पूर्व` : `${abs} बि.सं.`;
-}
-
-function Constellation({ cx, cy, idx }: { cx: number; cy: number; idx: number }) {
-  const pat = PATTERNS[idx % PATTERNS.length]!;
-  const pts = pat.map(([dx, dy]) => [cx + dx - 18, cy + dy - 8] as [number, number]);
-  return (
-    <g>
-      <polyline
-        points={pts.map(ps).join(" ")}
-        fill="none"
-        stroke="color-mix(in srgb, var(--tm-teal) 55%, transparent)"
-        strokeWidth={1}
-      />
-      {pts.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r={i === 0 ? 2.1 : 1.5} fill="var(--tm-ink)" />
-      ))}
-    </g>
-  );
 }
 
 export function PrecessionCone() {
@@ -127,10 +104,13 @@ export function PrecessionCone() {
   const circRY = LA * SE * K;
 
   /* equinox line: lies in the ecliptic plane and sweeps the zodiac as the axis
-   * precesses (labelled end points outward, toward the current constellation) */
-  const eqEnd = proj(ZR * Math.cos(phi), 0, ZR * Math.sin(phi));
-  const eqEnd2 = proj(-ZR * Math.cos(phi), 0, -ZR * Math.sin(phi));
-  const eqRashi = RASHI[((Math.round(phi / (30 * D2R)) % 12) + 12) % 12]!;
+   * precesses. Precession is RETROGRADE — as the year advances the equinox
+   * regresses मेष → मीन → कुम्भ — so it runs on −phi, opposite the pole's advance. */
+  const eqPhi = -phi;
+  const eqEnd = proj(ZR * Math.cos(eqPhi), 0, ZR * Math.sin(eqPhi));
+  const eqEnd2 = proj(-ZR * Math.cos(eqPhi), 0, -ZR * Math.sin(eqPhi));
+  const eqIdx = ((-Math.round(phi / (30 * D2R)) % 12) + 12) % 12;
+  const eqRashi = RASHI[eqIdx]!;
 
   /* celestial-equator ring (perpendicular to the spin axis) split front/back */
   const ring = useMemo(() => {
@@ -178,10 +158,12 @@ export function PrecessionCone() {
         {RASHI.map((name, i) => {
           const th = i * 30 * D2R;
           const [bx, by] = proj(ZR * Math.cos(th), 0, ZR * Math.sin(th));
+          const here = i === eqIdx;
+          const col = here ? "var(--tm-amber)" : "var(--tm-ink-dim)";
           return (
             <g key={name}>
-              <Constellation cx={bx} cy={by} idx={i} />
-              <text x={bx} y={by + 30} fill="var(--tm-ink-faint)" textAnchor="middle" style={{ font: "500 9.5px var(--pn-font)" }}>
+              <RashiGlyph index={i} size={32} cx={bx} cy={by - 2} color={col} opacity={here ? 1 : 0.9} title={name} />
+              <text x={bx} y={by + 26} fill={here ? "var(--tm-amber)" : "var(--tm-ink-faint)"} textAnchor="middle" style={{ font: `${here ? 700 : 500} 10px var(--pn-font)` }}>
                 {name}
               </text>
             </g>
@@ -221,16 +203,20 @@ export function PrecessionCone() {
         {/* top precession circle (north pole path) — drawn after, sits above */}
         <ellipse cx={CX} cy={topCY} rx={circRX} ry={circRY} fill="none" stroke="var(--tm-gold)" strokeWidth={1.8} />
 
-        {/* pole-star markers on the top circle — label above on the far
-            (back) side, below on the near side, so they don't collide */}
+        {/* pole-star markers on the top circle. The circle is vertically squashed,
+            so labels are fanned out onto a taller "label ellipse" (and anchored
+            left/right by side) with a thin leader line, to avoid overlap. */}
         {POLE_STARS.map((s) => {
           const [mx, my] = proj(LA * SE * Math.cos(s.phi), LA * CE, LA * SE * Math.sin(s.phi));
           const isNow = s === nearStar;
-          const ly = Math.sin(s.phi) < 0 ? my - 9 : my + 16;
+          const lx = CX + circRX * 1.6 * Math.cos(s.phi);
+          const ly = topCY - 82 * Math.sin(s.phi);
+          const onRight = Math.cos(s.phi) >= 0;
           return (
             <g key={s.ne}>
+              <line x1={mx} y1={my} x2={lx} y2={ly} stroke="var(--tm-ink-faint)" strokeWidth={0.8} opacity={0.7} />
               <circle cx={mx} cy={my} r={isNow ? 4 : 2.6} fill={isNow ? "var(--tm-gold)" : "var(--tm-ink-dim)"} stroke="var(--tm-card)" strokeWidth={1} />
-              <text x={mx} y={ly} fill={isNow ? "var(--tm-gold)" : "var(--tm-ink-faint)"} textAnchor="middle" style={{ font: `${isNow ? 700 : 500} ${isNow ? 10 : 9}px var(--pn-font)` }}>
+              <text x={lx + (onRight ? 5 : -5)} y={ly} fill={isNow ? "var(--tm-gold)" : "var(--tm-ink-dim)"} textAnchor={onRight ? "start" : "end"} dominantBaseline="central" style={{ font: `${isNow ? 700 : 500} ${isNow ? 10.5 : 9.5}px var(--pn-font)` }}>
                 {s.ne}
               </text>
             </g>
@@ -239,7 +225,7 @@ export function PrecessionCone() {
 
         {/* current north pole position */}
         <circle cx={topEnd[0]} cy={topEnd[1]} r={5.5} fill="var(--tm-amber)" stroke="var(--tm-card)" strokeWidth={1.5} />
-        <text x={topEnd[0]} y={topEnd[1] + 16} fill="var(--tm-amber)" textAnchor="middle" style={{ font: "700 10px var(--pn-font)" }}>
+        <text x={topEnd[0]} y={topEnd[1] + 116} fill="var(--tm-amber)" textAnchor="middle" style={{ font: "700 10px var(--pn-font)" }}>
           उत्तर ध्रुव
         </text>
 

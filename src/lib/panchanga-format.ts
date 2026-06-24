@@ -23,6 +23,22 @@ export function formatClockNepali(time?: string | null): string | undefined {
   return toNepaliDigits(short);
 }
 
+/** Suryakranti side: उ (उत्तरायण) or द (दक्षिणायण). */
+export function formatAyanaKrantiMark(
+  aayanNe?: string | null,
+  aayanEn?: string | null,
+): "उ" | "द" | undefined {
+  const ne = aayanNe?.trim();
+  if (ne) {
+    if (ne.includes("उत्तर")) return "उ";
+    if (ne.includes("दक्षिण")) return "द";
+  }
+  const en = aayanEn?.toLowerCase();
+  if (en?.includes("uttar")) return "उ";
+  if (en?.includes("dakshin")) return "द";
+  return undefined;
+}
+
 export function formatGhatiEnd(clock?: string | null): string | undefined {
   if (!clock) return undefined;
   const parts = clock.split(":").map(Number);
