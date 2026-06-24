@@ -14,7 +14,7 @@ import {
   type LocationParams,
 } from "@/lib/api";
 import { BS_MONTHS_NE, getBSMonthLength, getCurrentBs } from "@/lib/bs-calendar";
-import { formatAyanaKrantiMark, formatClockNepali, formatTimeShort, toNepaliDigits } from "@/lib/panchanga-format";
+import { formatClockNepali, formatTimeShort, toNepaliDigits } from "@/lib/panchanga-format";
 import {
   Accordion,
   AccordionContent,
@@ -44,9 +44,8 @@ export type SunDayRow = {
 type SunCell = SunDayRow;
 
 function resolveAyanaMark(day: CalendarDay): { mark?: "उ" | "द"; label?: string } {
-  const mark = formatAyanaKrantiMark(day.aayan_ne, day.aayan);
-  if (!mark) return {};
-  return { mark, label: day.aayan_ne ?? day.aayan };
+  if (!day.ayana_mark) return {};
+  return { mark: day.ayana_mark, label: day.aayan_ne ?? day.aayan };
 }
 
 function buildYearGrid(
@@ -385,8 +384,8 @@ export function SunTimesYearGrid({
     queries: Array.from({ length: 12 }, (_, i) => {
       const month = i + 1;
       return {
-        queryKey: panchangaKeys.month(bsYear, month, locationParams, true),
-        queryFn: () => fetchMonthCalendar(bsYear, month, locationParams, { full: true }),
+        queryKey: panchangaKeys.month(bsYear, month, locationParams, false),
+        queryFn: () => fetchMonthCalendar(bsYear, month, locationParams, { full: false }),
         staleTime: 1000 * 60 * 60,
       };
     }),

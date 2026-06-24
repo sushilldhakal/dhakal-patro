@@ -334,6 +334,36 @@ export interface WheelMarkers {
   planetLons: number[];
 }
 
+export function scrubGToDatetime(
+  anchorAd: string,
+  scrubG: number,
+  sunriseMin: number
+): string {
+  const totalMin = sunriseMin + scrubG * 24;
+  const dayOffset = Math.floor(totalMin / 1440);
+  const minsInDay = totalMin - dayOffset * 1440;
+  const h = Math.floor(minsInDay / 60);
+  const m = Math.round(minsInDay % 60);
+  const [y, mo, d] = anchorAd.split("-").map(Number);
+  const date = new Date(y!, mo! - 1, d! + dayOffset);
+  const ad = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return `${ad}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+}
+
+export function buildWheelMarkersFromDetail(
+  det: WheelDetail,
+  lagnaLongitude?: number | null
+): WheelMarkers {
+  const planetLons = det.grahas.map((gr) => grahaLon(gr));
+  const moonLon = planetLons[1] ?? 0;
+  const sunLon = planetLons[0] ?? 0;
+  const moonNak = Math.floor(normDeg(moonLon) / (360 / 27));
+  const lagnaLon =
+    lagnaLongitude != null ? normDeg(lagnaLongitude) : sunLon;
+  return { lagnaLon, sunLon, moonLon, moonNak, planetLons };
+}
+
+/** @deprecated Use buildWheelMarkersFromDetail with API at-time scrub data. */
 export function buildWheelMarkers(
   p: PanchangaDay,
   det: WheelDetail,

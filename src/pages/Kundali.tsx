@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin, Sparkles } from "lucide-react";
 import {
   fetchShadbala,
+  fetchVimshottari,
   kundaliKeys,
   shadbalaKeys,
+  vimshottariKeys,
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
@@ -23,9 +25,6 @@ import {
 import {
   AYANAMSHA_MODES,
   getAyanamshaModeInfo,
-  getAyanamshaOffsetDeg,
-  isApproximateMode,
-  shiftSiderealLongitude,
   type AyanamshaMode,
 } from "@/lib/ayanamsha";
 import { resolveTimeZone } from "@/lib/zoned-time";
@@ -42,7 +41,6 @@ import { buildBhavaChart } from "@/lib/bhava";
 import { navamsaRashiFromLongitude } from "@/lib/navamsa";
 import { drekkanaRashiFromLongitude } from "@/lib/drekkana";
 import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-elements";
-import { vimshottariDasha } from "@/lib/dasha";
 
 function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -123,12 +121,10 @@ type RawPlanet = PlanetInfo & {
   deg_in_rashi?: number;
 };
 
-function planetsFromPanchanga(p: PanchangaDay, mode: AyanamshaMode): PlanetCard[] {
+function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
   const detail = getPanchangaDetail(p);
   const planets = (detail?.planets ?? p.planets) as Record<string, RawPlanet | string> | undefined;
   if (!planets) return [];
-
-  const offset = getAyanamshaOffsetDeg(mode);
 
   return PLANET_ORDER.filter((key) => key in planets).map((key) => {
     const info = planets[key];
@@ -136,20 +132,8 @@ function planetsFromPanchanga(p: PanchangaDay, mode: AyanamshaMode): PlanetCard[
       return { key, label: PLANET_LABELS[key] ?? key, rashi: info };
     }
 
-    const shifted = info.longitude != null ? shiftSiderealLongitude(info.longitude, mode) : undefined;
-    const rashiNum = shifted != null ? Math.floor(shifted / 30) + 1 : undefined;
-
-    if (offset !== 0 && shifted != null) {
-      return {
-        key,
-        label: PLANET_LABELS[key] ?? key,
-        rashi: rashiNeFromNumber(rashiNum) ?? "—",
-        rashiNum,
-        degrees: `${(shifted % 30).toFixed(1)}°`,
-        retrograde: info.is_retrograde ?? info.retrograde,
-        longitude: shifted,
-      };
-    }
+    const lon = info.longitude;
+    const rashiNum = lon != null ? Math.floor(lon / 30) + 1 : undefined;
 
     const rashi = info.rashi_ne ?? info.rashi_name ?? info.rashi ?? "—";
     const degrees =
@@ -157,8 +141,8 @@ function planetsFromPanchanga(p: PanchangaDay, mode: AyanamshaMode): PlanetCard[
         ? `${info.deg_in_rashi.toFixed(1)}°`
         : info.degrees != null
           ? `${info.degrees.toFixed(1)}°`
-          : info.longitude != null
-            ? `${(info.longitude % 30).toFixed(1)}°`
+          : lon != null
+            ? `${(lon % 30).toFixed(1)}°`
             : undefined;
     return {
       key,
@@ -167,7 +151,7 @@ function planetsFromPanchanga(p: PanchangaDay, mode: AyanamshaMode): PlanetCard[
       rashiNum,
       degrees,
       retrograde: info.is_retrograde ?? info.retrograde,
-      longitude: shifted,
+      longitude: lon,
     };
   });
 }
@@ -199,9 +183,22 @@ export function Kundali() {
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: kundaliKeys.atTime(atTimeDatetime, location.params),
-    queryFn: () => fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params),
+    queryKey: kundaliKeys.atTime(atTimeDatetime, location.params, ayanamshaMode),
+    queryFn: () =>
+      fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params, {
+        ayanamsha: ayanamshaMode,
+      }),
     staleTime: 1000 * 60 * 5,
+  });
+
+  const dashaQ = useQuery({
+    queryKey: vimshottariKeys.atTime(atTimeDatetime, location.params, ayanamshaMode),
+    queryFn: () =>
+      fetchVimshottari(atTimeDatetime, location.params, {
+        ayanamsha: ayanamshaMode,
+      }),
+    staleTime: 1000 * 60 * 5,
+    enabled: Boolean(atTimeDatetime),
   });
 
   const shadbalaQ = useQuery({
@@ -210,25 +207,16 @@ export function Kundali() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const planets = useMemo(
-    () => (data ? planetsFromPanchanga(data, ayanamshaMode) : []),
-    [data, ayanamshaMode]
-  );
+  const planets = useMemo(() => (data ? planetsFromPanchanga(data) : []), [data]);
   const rawLagna = data ? getLagnaDisplay(data) : undefined;
   const lagna = useMemo(() => {
     if (!rawLagna) return undefined;
-    if (rawLagna.longitude == null) return { ...rawLagna, rashiNum: undefined as number | undefined };
-    const shifted = shiftSiderealLongitude(rawLagna.longitude, ayanamshaMode);
-    const rashiNum = Math.floor(shifted / 30) + 1;
-    const offset = getAyanamshaOffsetDeg(ayanamshaMode);
-    if (offset === 0) return { ...rawLagna, rashiNum, longitude: shifted };
-    return {
-      nameNe: rashiNeFromNumber(rashiNum) ?? rawLagna.nameNe,
-      degree: toNepaliDigits((shifted % 30).toFixed(1)),
-      rashiNum,
-      longitude: shifted,
-    };
-  }, [rawLagna, ayanamshaMode]);
+    const rashiNum =
+      rawLagna.longitude != null
+        ? Math.floor(rawLagna.longitude / 30) + 1
+        : undefined;
+    return { ...rawLagna, rashiNum, longitude: rawLagna.longitude };
+  }, [rawLagna]);
   const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const locationLabel = data?.location?.name ?? location.label;
@@ -294,12 +282,7 @@ export function Kundali() {
     return { tithiNe, vaaraNe, nakshatra, yoga };
   }, [data, planets]);
 
-  const dasha = useMemo(() => {
-    const moonLon = planets.find((p) => p.key === "moon")?.longitude;
-    if (moonLon == null) return undefined;
-    const birthDate = new Date(atTimeDatetime);
-    return vimshottariDasha(moonLon, birthDate);
-  }, [planets, atTimeDatetime]);
+  const dasha = dashaQ.data;
 
   const dateBs =
     data?.date_bs ??
@@ -383,7 +366,6 @@ export function Kundali() {
                       </p>
                       <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
                         {ayanamshaInfo.labelNe}
-                        {isApproximateMode(ayanamshaMode) ? " · अनुमानित" : ""}
                       </span>
                     </div>
                     <p className="text-2xl font-bold text-foreground">
@@ -484,8 +466,8 @@ export function Kundali() {
                   <div className="grid sm:grid-cols-2 gap-3">
                     <StatTile
                       label="महादशा सुरु (जन्मकालीन)"
-                      value={dasha.mahadashaLordNe}
-                      sub={`बाँकी अवधि: ${dasha.balanceLabel}`}
+                      value={dasha.mahadasha_lord_ne}
+                      sub={`बाँकी अवधि: ${dasha.balance_label}`}
                     />
                   </div>
                   <div className="overflow-x-auto rounded-xl border border-border">
@@ -500,16 +482,16 @@ export function Kundali() {
                       <tbody>
                         {dasha.sequence.map((period, i) => (
                           <tr key={i} className="border-t border-border">
-                            <td className="py-2 px-3 font-medium text-foreground">{period.lordNe}</td>
+                            <td className="py-2 px-3 font-medium text-foreground">{period.lord_ne}</td>
                             <td className="py-2 px-3 text-muted-foreground">
-                              {period.startDate.toLocaleDateString("en", {
+                              {new Date(period.start).toLocaleDateString("en", {
                                 day: "2-digit",
                                 month: "short",
                                 year: "numeric",
                               })}
                             </td>
                             <td className="py-2 px-3 text-muted-foreground">
-                              {period.endDate.toLocaleDateString("en", {
+                              {new Date(period.end).toLocaleDateString("en", {
                                 day: "2-digit",
                                 month: "short",
                                 year: "numeric",

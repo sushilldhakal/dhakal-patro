@@ -77,9 +77,10 @@ export function mergeEphemerisWithDaily(
 export async function fetchEphemerisPanchangaDay(
   datetime: string,
   civilDateAd: string,
-  location?: LocationParams
+  location?: LocationParams,
+  options?: { ayanamsha?: string }
 ): Promise<PanchangaDay> {
-  const raw = await fetchPanchangaAtTime(datetime, location);
+  const raw = await fetchPanchangaAtTime(datetime, location, options);
   const normalized = normalizeEphemerisDay(raw);
 
   if (getLagnaSpans(normalized)?.length) {

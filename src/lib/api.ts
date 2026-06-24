@@ -119,13 +119,85 @@ export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =
     appendLocation(`/nepal/panchanga/${dateAd}?era=ad`, location)
   );
 
-export const fetchPanchangaAtTime = (datetime: string, location?: LocationParams) =>
-  get<PanchangaDay>(
-    appendLocation(
-      `/panchanga/at-time?datetime=${encodeURIComponent(datetime)}`,
-      location
-    )
+export const fetchPanchangaAtTime = (
+  datetime: string,
+  location?: LocationParams,
+  options?: { ayanamsha?: string }
+) => {
+  const params = new URLSearchParams();
+  params.set("datetime", datetime);
+  if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  return get<PanchangaDay>(
+    appendLocation(`/panchanga/at-time?${params.toString()}`, location)
   );
+};
+
+// ─── Tropical seasons ─────────────────────────────────────────────────────────
+
+export interface TropicalSeasonBoundary {
+  slot: number;
+  angle: number;
+  start_instant_utc: string;
+  start_ad: string;
+  start_bs: string;
+  is_current: boolean;
+}
+
+export interface TropicalSeasonsResponse {
+  timezone: string;
+  latitude?: number;
+  southern_hemisphere: boolean;
+  boundaries: TropicalSeasonBoundary[];
+}
+
+export const seasonsKeys = {
+  tropical: (location?: LocationParams) =>
+    ["seasons", "tropical", locationCacheKey(location)] as const,
+};
+
+export const fetchTropicalSeasons = (location?: LocationParams) =>
+  get<TropicalSeasonsResponse>(appendLocation("/seasons/tropical", location));
+
+// ─── Vimshottari dasha ───────────────────────────────────────────────────────
+
+export interface VimshottariPeriod {
+  lord: string;
+  lord_ne: string;
+  start: string;
+  end: string;
+  years: number;
+}
+
+export interface VimshottariResponse {
+  ayanamsha: string;
+  moon_longitude: number;
+  nakshatra_index: number;
+  mahadasha_lord: string;
+  mahadasha_lord_ne: string;
+  balance_years: number;
+  balance_label: string;
+  sequence: VimshottariPeriod[];
+  query_instant?: string;
+}
+
+export const vimshottariKeys = {
+  atTime: (datetime: string, location?: LocationParams, ayanamsha?: string) =>
+    ["vimshottari", datetime, locationCacheKey(location), ayanamsha ?? "lahiri"] as const,
+};
+
+export const fetchVimshottari = (
+  datetime: string,
+  location?: LocationParams,
+  options?: { ayanamsha?: string; cycles?: number }
+) => {
+  const params = new URLSearchParams();
+  params.set("datetime", datetime);
+  if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  if (options?.cycles != null) params.set("cycles", String(options.cycles));
+  return get<VimshottariResponse>(
+    appendLocation(`/kundali/vimshottari?${params.toString()}`, location)
+  );
+};
 
 // ─── Gochar (planetary transits) ─────────────────────────────────────────────
 
@@ -162,33 +234,13 @@ export const fetchGochar = (
     appendLocation(`/nepal/gochar/${date}?era=${era}`, location)
   );
 
-export interface SankrantiEvent {
-  to_rashi_index: number;
-  to_rashi_ne?: string;
-  timestamp?: { local_date?: string };
-}
-
-export interface SankrantiYearResponse {
-  ad_year: number;
-  sankrantis: SankrantiEvent[];
-}
-
-export const sankrantiKeys = {
-  year: (adYear: number, location?: LocationParams) =>
-    ["sankranti", "year", adYear, locationCacheKey(location)] as const,
-};
-
-export const fetchSankrantiYear = (adYear: number, location?: LocationParams) =>
-  get<SankrantiYearResponse>(
-    appendLocation(`/nepal/sankranti/year/${adYear}`, location),
-  );
-
 type RawMonthDay = CalendarDay & {
   panchanga?: {
     paksha?: string;
     paksha_ne?: string;
     aayan?: string;
     aayan_ne?: string;
+    ayana_mark?: "उ" | "द";
     moon?: { rise?: string; set?: string };
   };
 };
@@ -225,6 +277,7 @@ function normalizeMonthDay(day: RawMonthDay): CalendarDay {
     paksha_ne: pakshaNe,
     aayan: day.aayan ?? nested?.aayan,
     aayan_ne: day.aayan_ne ?? nested?.aayan_ne,
+    ayana_mark: day.ayana_mark ?? nested?.ayana_mark,
     moonrise: day.moonrise ?? nested?.moon?.rise,
     moonrise_local: day.moonrise_local,
     moonset: day.moonset ?? nested?.moon?.set,
@@ -297,8 +350,8 @@ export const fetchBsToAd = (date: string) =>
 export const kundaliKeys = {
   udaya: (date: string, era: string, location?: LocationParams) =>
     ["kundali", "udaya", date, era, locationCacheKey(location)] as const,
-  atTime: (datetime: string, location?: LocationParams) =>
-    ["kundali", "at-time", datetime, locationCacheKey(location)] as const,
+  atTime: (datetime: string, location?: LocationParams, ayanamsha?: string) =>
+    ["kundali", "at-time", datetime, locationCacheKey(location), ayanamsha ?? "lahiri"] as const,
 };
 
 export const fetchKundali = (
@@ -546,6 +599,14 @@ export interface PanchangaDay {
   lagna_spans?: LagnaSpan[];
   detail?: {
     lagna_spans?: LagnaSpan[];
+    day_ghati?: number;
+    choghadiya?: Array<{
+      name_ne: string;
+      start_g: number;
+      end_g: number;
+      bad?: boolean;
+      phase?: string;
+    }>;
     [key: string]: unknown;
   };
   dinamaan?: { label_en?: string; label_ne?: string };
@@ -621,6 +682,7 @@ export interface CalendarDay {
   sunset?: string;
   aayan?: string;
   aayan_ne?: string;
+  ayana_mark?: "उ" | "द";
   moonrise?: string;
   moonrise_local?: string;
   moonset?: string;

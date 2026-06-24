@@ -101,16 +101,6 @@ type LagnaSpanBlock = {
   end_hours_clock?: string;
 };
 
-const CHOGHADIYA = [
-  { ne: "उद्वेग", bad: true },
-  { ne: "चर" },
-  { ne: "लाभ" },
-  { ne: "अमृत" },
-  { ne: "काल", bad: true },
-  { ne: "शुभ" },
-  { ne: "रोग", bad: true },
-] as const;
-
 const CHO_DAY_START = [0, 3, 6, 2, 5, 1, 4];
 const CHO_NIGHT_START = [5, 1, 4, 0, 3, 6, 2];
 
@@ -277,12 +267,32 @@ function tithiSegments(tithi: AngaBlock | undefined, p: PanchangaDay): TimelineS
   }));
 }
 
-function buildChoghadiya(dayG: number, dow: number): ChoghadiyaSegment[] {
+function buildChoghadiyaFromApi(
+  segments: Array<{ name_ne: string; start_g: number; end_g: number; bad?: boolean }>
+): ChoghadiyaSegment[] {
+  return segments.map((c) => ({
+    name: c.name_ne,
+    startG: c.start_g,
+    endG: c.end_g,
+    bad: Boolean(c.bad),
+  }));
+}
+
+function buildChoghadiyaFallback(dayG: number, dow: number): ChoghadiyaSegment[] {
+  const CHOGHADIYA = [
+    { ne: "उद्वेग", bad: true },
+    { ne: "चर" },
+    { ne: "लाभ" },
+    { ne: "अमृत" },
+    { ne: "काल", bad: true },
+    { ne: "शुभ" },
+    { ne: "रोग", bad: true },
+  ] as const;
   const segments: ChoghadiyaSegment[] = [];
   const dSeg = dayG / 8;
   const nSeg = (60 - dayG) / 8;
   for (let i = 0; i < 8; i++) {
-    const c = CHOGHADIYA[(CHO_DAY_START[dow] + i) % 7];
+    const c = CHOGHADIYA[(CHO_DAY_START[dow] + i) % 7]!;
     segments.push({
       name: c.ne,
       startG: i * dSeg,
@@ -291,7 +301,7 @@ function buildChoghadiya(dayG: number, dow: number): ChoghadiyaSegment[] {
     });
   }
   for (let i = 0; i < 8; i++) {
-    const c = CHOGHADIYA[(CHO_NIGHT_START[dow] + i) % 7];
+    const c = CHOGHADIYA[(CHO_NIGHT_START[dow] + i) % 7]!;
     segments.push({
       name: c.ne,
       startG: dayG + i * nSeg,
@@ -310,7 +320,9 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
   const sunsetMin = parseTimeToMinutes(sunset);
   if (sunriseMin == null || sunsetMin == null) return null;
 
-  const dayG = minutesToGhati(sunsetMin, sunriseMin);
+  const dayG =
+    (detail?.day_ghati as number | undefined) ??
+    minutesToGhati(sunsetMin, sunriseMin);
   const gMin = computeGMin(sunriseMin);
   const gMax = 60 + G_MAX_PAD;
   const moonriseMin = parseTimeToMinutes(getMoonrise(p));
@@ -337,7 +349,13 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
   const yoga = (detail?.yoga ?? p.yoga) as AngaBlock | undefined;
   const karana = (detail?.karana ?? p.karana) as AngaBlock | undefined;
 
-  const cho = buildChoghadiya(dayG, dow);
+  const apiChoghadiya = detail?.choghadiya as
+    | Array<{ name_ne: string; start_g: number; end_g: number; bad?: boolean }>
+    | undefined;
+  const cho =
+    apiChoghadiya?.length === 16
+      ? buildChoghadiyaFromApi(apiChoghadiya)
+      : buildChoghadiyaFallback(dayG, dow);
   const lagnaSpans = (getLagnaSpans(p) ?? []) as LagnaSpanBlock[];
   const grahaSpashta = getPlanetRows(p).map(({ label, rashiNe, coords }) => ({
     label,

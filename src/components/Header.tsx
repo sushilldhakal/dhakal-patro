@@ -31,6 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 const PANCHANGA_LINKS = [
   { to: "/panchanga" as const, label: "Surya Panchanga", icon: Star },
   { to: "/suryakranti" as const, label: "Suryakranti", icon: Sunrise },
+  { to: "/chandrakranti" as const, label: "Chandra Kranti", icon: Moon },
   { to: "/panchanga/avakahada-chakra" as const, label: "अवकहडा चक्र", icon: Grid3x3 },
 ] as const;
 

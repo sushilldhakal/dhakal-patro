@@ -4,20 +4,19 @@ import { useQuery } from "@tanstack/react-query";
 import { Sprout, HelpCircle } from "lucide-react";
 import { adToBS } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { fetchPanchanga, panchangaKeys } from "@/lib/api";
+import { fetchTropicalSeasons, seasonsKeys } from "@/lib/api";
 import {
   resolveLocationTimezone,
   type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
-import { tropicalSeasonCycle } from "@/lib/tropical-seasons";
 
 /**
  * ऋतु — the six traditional Nepali seasons, driven by the Sun's APPARENT TROPICAL
  * longitude (sāyana), i.e. the actual equinoxes and solstices — NOT by the
  * sidereal rāśi / साङ्क्रान्ति. वसन्त begins at the vernal equinox and शरद् at the
  * autumnal equinox; the two solstices fall mid-season (in ग्रीष्म and हेमन्त).
- * Each ऋतु spans an equal 60° of tropical longitude. See `lib/tropical-seasons`.
+ * Each ऋतु spans an equal 60° of tropical longitude (computed by API).
  *
  *   वसन्त   λ 0°    ग्रीष्म  λ 60°    वर्षा   λ 120°
  *   शरद्    λ 180°  हेमन्त  λ 240°    शिशिर  λ 300°
@@ -67,30 +66,30 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
   const tz = resolveLocationTimezone(location);
   const todayAd = useMemo(() => todayAdStringInTimezone(new Date(), tz), [tz]);
 
-  // latitude → hemisphere. Prefer coords on the params; otherwise the panchanga
-  // response resolves a city_id to its lat/lon (query shared with the aside).
-  const panchangaQ = useQuery({
-    queryKey: panchangaKeys.day(todayAd, "ad", location.params),
-    queryFn: () => fetchPanchanga(todayAd, "ad", location.params),
-    staleTime: 1000 * 60 * 30,
+  const seasonsQ = useQuery({
+    queryKey: seasonsKeys.tropical(location.params),
+    queryFn: () => fetchTropicalSeasons(location.params),
+    staleTime: 1000 * 60 * 60,
   });
-  const lat = location.params.lat ?? panchangaQ.data?.location?.lat;
-  const south = lat != null && lat < 0;
+
+  const south = seasonsQ.data?.southern_hemisphere ?? false;
 
   const seasons = useMemo<SeasonItem[]>(() => {
-    const now = new Date();
-    const nowMs = now.getTime();
-    const todayMid = midnightUtcMs(todayAdStringInTimezone(now, tz));
-    const cycle = tropicalSeasonCycle(now);
+    const boundaries = seasonsQ.data?.boundaries;
+    if (!boundaries?.length) return [];
 
-    return cycle.map((b, i) => {
-      const startAd = todayAdStringInTimezone(b.startInstant, tz);
+    const nowMs = Date.now();
+    const todayMid = midnightUtcMs(todayAd);
+
+    return boundaries.map((b, i) => {
+      const startAd = todayAdStringInTimezone(new Date(b.start_instant_utc), tz);
       const bs = adToBS(civilNoon(startAd));
-      const next = cycle[i + 1];
+      const next = boundaries[i + 1];
       let progress: SeasonItem["progress"] = null;
-      if (b.isCurrent && next) {
-        const startMs = b.startInstant.getTime();
-        const total = Math.max(1, (next.startInstant.getTime() - startMs) / DAY);
+      if (b.is_current && next) {
+        const startMs = Date.parse(b.start_instant_utc);
+        const endMs = Date.parse(next.start_instant_utc);
+        const total = Math.max(1, (endMs - startMs) / DAY);
         const elapsed = Math.max(0, (nowMs - startMs) / DAY);
         progress = {
           elapsed: Math.round(elapsed),
@@ -103,12 +102,12 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
         angle: b.angle,
         startBs: { day: bs.day, monthName: bs.monthName },
         startAd,
-        isCurrent: b.isCurrent,
+        isCurrent: b.is_current,
         daysUntil: Math.round((midnightUtcMs(startAd) - todayMid) / DAY),
         progress,
       };
     });
-  }, [tz]);
+  }, [seasonsQ.data, todayAd, tz]);
 
   // southern hemisphere → opposite season (shift 3 slots / 180° of longitude)
   const flip = (slot: number) => (south ? (slot + 3) % 6 : slot);

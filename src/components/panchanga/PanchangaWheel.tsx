@@ -1,12 +1,15 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { PanchangaDay } from "@/lib/api";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { fetchPanchangaAtTime, panchangaKeys } from "@/lib/api";
+import { getPanchangaDetail, toNepaliDigits } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   buildWheelDetail,
-  buildWheelMarkers,
+  buildWheelMarkersFromDetail,
   DEFAULT_WHEEL_TWEAKS,
   gClock,
+  scrubGToDatetime,
   WHEEL_RASHIS,
   type WheelDetail,
 } from "@/lib/wheel-data";
@@ -70,10 +73,55 @@ function PanchangaWheelImpl({
   }, [now, det.sunriseMin, tz]);
 
   const [scrubG, setScrubG] = useState(() => (isToday ? nowG : 0));
+  const [debouncedScrubG, setDebouncedScrubG] = useState(scrubG);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedScrubG(scrubG), 280);
+    return () => clearTimeout(id);
+  }, [scrubG]);
+
+  const anchorAd = p.panchanga_date_ad ?? p.date_ad ?? "";
+  const locationParams = useMemo(
+    () =>
+      p.location?.city_id != null
+        ? { city_id: p.location.city_id as number }
+        : p.location?.lat != null && p.location?.lon != null
+          ? {
+              lat: p.location.lat as number,
+              lon: p.location.lon as number,
+              timezone: p.location.timezone,
+            }
+          : undefined,
+    [p.location]
+  );
+
+  const scrubDatetime = useMemo(
+    () => scrubGToDatetime(anchorAd, debouncedScrubG, det.sunriseMin),
+    [anchorAd, debouncedScrubG, det.sunriseMin]
+  );
+
+  const scrubQ = useQuery({
+    queryKey: panchangaKeys.atTime(scrubDatetime, locationParams),
+    queryFn: () => fetchPanchangaAtTime(scrubDatetime, locationParams),
+    staleTime: 1000 * 60,
+    enabled: Boolean(anchorAd),
+  });
+
+  const scrubDet: WheelDetail = useMemo(
+    () => (scrubQ.data ? buildWheelDetail(scrubQ.data) : det),
+    [scrubQ.data, det]
+  );
+
+  const scrubLagnaLon = useMemo(() => {
+    if (!scrubQ.data) return null;
+    const detail = getPanchangaDetail(scrubQ.data);
+    const instant = detail?.instant_lagna as { longitude?: number } | undefined;
+    return instant?.longitude ?? null;
+  }, [scrubQ.data]);
 
   const markers = useMemo(
-    () => buildWheelMarkers(p, det, scrubG),
-    [p, det, scrubG]
+    () => buildWheelMarkersFromDetail(scrubDet, scrubLagnaLon),
+    [scrubDet, scrubLagnaLon]
   );
 
   const handleScrubChange = useCallback((g: number) => {
@@ -114,7 +162,14 @@ function PanchangaWheelImpl({
   const stageRef = useRef<HTMLDivElement>(null);
   const num = (n: number | string) => toNepaliDigits(n);
   const scrubClock = gClock(scrubG, det.sunriseMin);
-  const tithiNe = det.tithi2[0]?.ne ?? "—";
+  const tithiNe =
+    (scrubQ.data
+      ? ((getPanchangaDetail(scrubQ.data)?.tithi as { name_ne?: string } | undefined)
+          ?.name_ne ??
+        (scrubQ.data.tithi as { name_ne?: string } | undefined)?.name_ne)
+      : undefined) ??
+    det.tithi2[0]?.ne ??
+    "—";
   const locLabel = locationLabel ?? p.location?.name ?? "काठमाडौं";
 
   const onStageMove = (e: React.MouseEvent) => {
@@ -174,7 +229,7 @@ function PanchangaWheelImpl({
         </div>
 
         <WheelChart
-          det={det}
+          det={scrubDet}
           markers={markers}
           spin={spin}
           tw={DEFAULT_WHEEL_TWEAKS}

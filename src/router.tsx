@@ -12,6 +12,7 @@ import { lazyRoute } from "./lib/lazy-route";
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
 const PanchangaYear = lazyRoute(() => import("./pages/PanchangaYear"), "PanchangaYear");
 const AvakahadaChakra = lazyRoute(() => import("./pages/AvakahadaChakra"), "AvakahadaChakra");
+const ChandraKranti = lazyRoute(() => import("./pages/ChandraKranti"), "ChandraKranti");
 const Converter = lazyRoute(() => import("./pages/Converter"), "Converter");
 const Holidays = lazyRoute(() => import("./pages/Holidays"), "Holidays");
 const Kundali = lazyRoute(() => import("./pages/Kundali"), "Kundali");
@@ -42,6 +43,7 @@ const panchangaYearRoute = createRoute({
   component: PanchangaYear,
 });
 const avakahadaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/avakahada-chakra", component: AvakahadaChakra });
+const chandraKrantiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/chandrakranti", component: ChandraKranti });
 const converterRoute = createRoute({ getParentRoute: () => rootRoute, path: "/converter", component: Converter });
 const holidaysRoute = createRoute({ getParentRoute: () => rootRoute, path: "/holidays", component: Holidays });
 const kundaliRoute = createRoute({ getParentRoute: () => rootRoute, path: "/kundali", component: Kundali });
@@ -63,6 +65,7 @@ const routeTree = rootRoute.addChildren([
   panchangaRoute,
   panchangaYearRoute,
   avakahadaRoute,
+  chandraKrantiRoute,
   converterRoute,
   holidaysRoute,
   kundaliRoute,
