@@ -1,6 +1,7 @@
 import type { GocharGraha } from "@/lib/api";
 import { adToBS } from "@/lib/bs-calendar";
-import { formatBsIsoDateNepali } from "@/lib/panchanga-format";
+import { GOCHAR_RASHI_TO_HOUSE } from "@/lib/kundali/north-indian-layout";
+import { formatBsIsoDateNepali, toNepaliDigits } from "@/lib/panchanga-format";
 
 export const RASHI_NE = [
   "मेष", "वृष", "मिथुन", "कर्क", "सिंह", "कन्या",
@@ -65,6 +66,32 @@ export function buildPlanetsByRashi(
     (out[num] ??= []).push(grahaChartLabel(g.key, g));
   }
   return out;
+}
+
+/** पापाशाः — पाप ग्रहको गोचर कुण्डली घर (जस्तै म.८, रा.५, के.११) */
+const PAPA_GRAHA_ORDER = ["mars", "saturn", "rahu", "ketu"] as const;
+
+const PAPA_GRAHA_ABBREV: Record<(typeof PAPA_GRAHA_ORDER)[number], string> = {
+  mars: "म",
+  saturn: "श",
+  rahu: "रा",
+  ketu: "के",
+};
+
+export function buildPapanshaCodes(
+  grahas: Array<GocharGraha & { key: string }>,
+): string[] {
+  const codes: string[] = [];
+  for (const key of PAPA_GRAHA_ORDER) {
+    const g = grahas.find((row) => row.key === key);
+    if (!g) continue;
+    const rashi = rashiNoFromGraha(g);
+    if (rashi == null) continue;
+    const house = GOCHAR_RASHI_TO_HOUSE[rashi];
+    if (house == null) continue;
+    codes.push(`${PAPA_GRAHA_ABBREV[key]}.${toNepaliDigits(house)}`);
+  }
+  return codes;
 }
 
 export function formatGocharBsLabel(dateBs?: string | null, dateAd?: string | null): string | undefined {

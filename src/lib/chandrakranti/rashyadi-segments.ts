@@ -15,20 +15,59 @@ const RASHI_EN = [
   "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
 ] as const;
 
+const LUNAR_MONTH_INITIAL: Record<string, string> = {
+  baisakh: "वै.",
+  baishakh: "वै.",
+  vaisakha: "वै.",
+  vaishakha: "वै.",
+  jestha: "ज्ये.",
+  jyeshtha: "ज्ये.",
+  jyestha: "ज्ये.",
+  ashadh: "आषा.",
+  ashadha: "आषा.",
+  asar: "आषा.",
+  shrawan: "श्रा.",
+  shrawn: "श्रा.",
+  shravan: "श्रा.",
+  shravana: "श्रा.",
+  bhadra: "भा.",
+  bhadau: "भा.",
+  bhadrapada: "भा.",
+  ashwin: "आश्व.",
+  ashwina: "आश्व.",
+  aswin: "आश्व.",
+  kartik: "का.",
+  kartika: "का.",
+  mangsir: "मार्ग.",
+  margashir: "मार्ग.",
+  margashirsha: "मार्ग.",
+  margasirsa: "मार्ग.",
+  poush: "पौ.",
+  paush: "पौ.",
+  pausha: "पौ.",
+  push: "पौ.",
+  magh: "माघ.",
+  magha: "माघ.",
+  falgun: "फा.",
+  phalgun: "फा.",
+  phalguna: "फा.",
+  chaitra: "चै.",
+  chait: "चै.",
+  chaitya: "चै.",
+};
+
 export type PakshaSegmentInfo = { key: string; label: string };
 
-/** चन्द्र यो तालिकामा छैन — राशि/पद परिवर्तनले थप तालिका नबनोस्। */
+export type RashyadiRangeTables = {
+  start: RashyadiSegment | null;
+  end: RashyadiSegment | null;
+};
+
 function isMoonIngress(ev: GocharIngressEvent): boolean {
   const g = (ev.graha ?? "").toLowerCase();
   if (g === "moon" || g === "chandra") return true;
   const ne = ev.graha_ne ?? "";
   return ne.includes("चन्द्र") || ne.includes("चंद्र");
-}
-
-/** थप तालिका — केवल अन्य ग्रहको राशि परिवर्तन (पद, गति, उदयास्त होइन)। */
-function triggersExtraTable(ev: GocharIngressEvent): boolean {
-  if (isMoonIngress(ev)) return false;
-  return ev.level === "rashi";
 }
 
 function resolveVedicDateAd(
@@ -65,17 +104,6 @@ export function formatGapashaCode(
   return `${toNepaliDigits(bsDay)}${abbrev}${toNepaliDigits(rashiNo)}`;
 }
 
-function breakpointLabel(ev: GocharIngressEvent): string {
-  const graha = ev.graha_ne ?? ev.graha;
-  if (ev.level === "motion") {
-    return `${graha} ${ev.label_ne ?? ev.motion_ne ?? "गति परिवर्तन"}`;
-  }
-  if (ev.level === "rashi") {
-    return `${graha} ${ev.label_ne ?? `${ev.to_rashi_ne ?? ""}मा`}`;
-  }
-  return `${graha} ${ev.label_ne ?? "गोचर"}`;
-}
-
 function moonRashiAtDay(day: CalendarDay): string | undefined {
   const det = day.panchanga;
   return (
@@ -100,11 +128,11 @@ function planetsAtDay(day: CalendarDay): Partial<Record<RashyadiPlanetKey, Rashy
 }
 
 function collectTransitCodes(
-  groupDays: CalendarDay[],
+  rangeDays: CalendarDay[],
   allDays: CalendarDay[],
   ingressEvents: GocharIngressEvent[],
 ): string[] {
-  const rangeDates = new Set(groupDays.map((d) => d.date_ad));
+  const rangeDates = new Set(rangeDays.map((d) => d.date_ad));
   const dayByDate = new Map(allDays.map((d) => [d.date_ad, d]));
   const codes: string[] = [];
 
@@ -122,107 +150,97 @@ function collectTransitCodes(
   return codes;
 }
 
-type DayGroup = PakshaSegmentInfo & { days: CalendarDay[] };
+export function lunarMonthInitialLabel(day: CalendarDay): string {
+  const lc = day.panchanga?.lunar_calendar;
+  const layer = lc?.purnimant ?? lc?.amanta ?? day.panchanga?.lunar_month;
+  const key = (layer?.name ?? "").toLowerCase().replace(/[^a-z]/g, "");
+  return LUNAR_MONTH_INITIAL[key] ?? "श्रा.";
+}
 
-function groupDaysByPaksha(
-  days: CalendarDay[],
-  pakshaSegmentOf: (day: CalendarDay) => PakshaSegmentInfo,
-): DayGroup[] {
-  const groups: DayGroup[] = [];
-  for (const d of days) {
-    const seg = pakshaSegmentOf(d);
-    const last = groups[groups.length - 1];
-    if (!last || last.key !== seg.key) {
-      groups.push({ ...seg, days: [d] });
-    } else {
-      last.days.push(d);
-    }
-  }
-  return groups;
+function buildSegment(
+  day: CalendarDay,
+  anchor: "start" | "end",
+  labelNe: string,
+  versionNe: string,
+  pakshaDayCount: number,
+  transitCodes: string[],
+): RashyadiSegment {
+  return {
+    id: `${anchor}-${day.date_ad}`,
+    anchor,
+    versionNe,
+    labelNe,
+    anchorDateAd: day.date_ad,
+    bsDay: day.day,
+    pakshaDayCount,
+    monthInitialLabel: lunarMonthInitialLabel(day),
+    moonRashiNe: moonRashiAtDay(day),
+    transitCodes,
+    planets: planetsAtDay(day),
+  };
 }
 
 /**
- * प्रत्येक १५-दिने पक्ष (शुक्ल/कृष्ण, अधिक/शुद्ध) का लागि संस्करण तालिका।
- * पक्षभित्र चन्द्र बाहेकका ग्रहले राशि परिवर्तन गरे मात्र थप तालिका।
+ * देखाइएको अवधिका लागि अधिकतम दुई तालिका — आरम्भ र समाप्ति मिति मात्र।
  */
+export function buildRashyadiRangeTables(
+  days: CalendarDay[],
+  allDays: CalendarDay[],
+  ingressEvents: GocharIngressEvent[],
+  pakshaSegmentOf: (day: CalendarDay) => PakshaSegmentInfo,
+): RashyadiRangeTables {
+  if (days.length === 0) {
+    return { start: null, end: null };
+  }
+
+  const firstDay = days[0]!;
+  const lastDay = days[days.length - 1]!;
+  const transitCodes = collectTransitCodes(days, allDays, ingressEvents);
+  const pakshaDayCount = days.length;
+  const versionNe = pakshaSegmentOf(firstDay).label;
+
+  const start = buildSegment(
+    firstDay,
+    "start",
+    "आरम्भ",
+    versionNe,
+    pakshaDayCount,
+    transitCodes,
+  );
+
+  if (lastDay.date_ad === firstDay.date_ad) {
+    return { start, end: null };
+  }
+
+  const endVersion =
+    pakshaSegmentOf(lastDay).label !== versionNe
+      ? `${versionNe} → ${pakshaSegmentOf(lastDay).label}`
+      : versionNe;
+
+  const end = buildSegment(
+    lastDay,
+    "end",
+    "समाप्त",
+    endVersion,
+    pakshaDayCount,
+    transitCodes,
+  );
+
+  return { start, end };
+}
+
+/** @deprecated use buildRashyadiRangeTables */
 export function buildRashyadiSegments(
   days: CalendarDay[],
   allDays: CalendarDay[],
   ingressEvents: GocharIngressEvent[],
   pakshaSegmentOf: (day: CalendarDay) => PakshaSegmentInfo,
 ): RashyadiSegment[] {
-  if (days.length === 0) return [];
-
-  const dayByDate = new Map(allDays.map((d) => [d.date_ad, d]));
-  const groups = groupDaysByPaksha(days, pakshaSegmentOf);
-  const segments: RashyadiSegment[] = [];
-
-  for (const group of groups) {
-    const firstDay = group.days[0]!;
-    const rangeDates = new Set(group.days.map((d) => d.date_ad));
-    const transitCodes = collectTransitCodes(group.days, allDays, ingressEvents);
-
-    type Bp = { dateAd: string; labelNe: string; sortKey: string };
-    const breakpoints: Bp[] = [
-      {
-        dateAd: firstDay.date_ad,
-        labelNe: "आरम्भ",
-        sortKey: `0-${firstDay.date_ad}`,
-      },
-    ];
-
-    for (const ev of ingressEvents) {
-      if (!triggersExtraTable(ev)) continue;
-      const dateAd = resolveVedicDateAd(ev, allDays);
-      if (!dateAd || !rangeDates.has(dateAd)) continue;
-      if (dateAd === firstDay.date_ad) continue;
-      breakpoints.push({
-        dateAd,
-        labelNe: breakpointLabel(ev),
-        sortKey: ev.entry_time_utc ?? `${dateAd}T12:00`,
-      });
-    }
-
-    breakpoints.sort((a, b) => {
-      const dayA = dayByDate.get(a.dateAd)?.day ?? 0;
-      const dayB = dayByDate.get(b.dateAd)?.day ?? 0;
-      if (dayA !== dayB) return dayA - dayB;
-      return a.sortKey.localeCompare(b.sortKey);
-    });
-
-    // एकै गते धेरै ग्रहको राशि परिवर्तन → एउटै तालिका
-    const mergedByDate = new Map<string, Bp>();
-    for (const bp of breakpoints) {
-      const existing = mergedByDate.get(bp.dateAd);
-      if (!existing) {
-        mergedByDate.set(bp.dateAd, { ...bp });
-        continue;
-      }
-      if (!existing.labelNe.includes(bp.labelNe)) {
-        existing.labelNe = `${existing.labelNe} · ${bp.labelNe}`;
-      }
-      if (bp.sortKey.localeCompare(existing.sortKey) < 0) {
-        existing.sortKey = bp.sortKey;
-      }
-    }
-
-    let tableIndex = 0;
-    for (const bp of mergedByDate.values()) {
-      const day = dayByDate.get(bp.dateAd);
-      if (!day) continue;
-
-      segments.push({
-        id: `${group.key}-${bp.dateAd}-${tableIndex++}`,
-        versionNe: group.label,
-        labelNe: bp.labelNe,
-        anchorDateAd: bp.dateAd,
-        bsDay: day.day,
-        moonRashiNe: moonRashiAtDay(day),
-        transitCodes,
-        planets: planetsAtDay(day),
-      });
-    }
-  }
-
-  return segments;
+  const { start, end } = buildRashyadiRangeTables(
+    days,
+    allDays,
+    ingressEvents,
+    pakshaSegmentOf,
+  );
+  return [start, end].filter((s): s is RashyadiSegment => s != null);
 }

@@ -48,8 +48,9 @@ import {
 } from "@/components/ui/accordion";
 import { DayPatroExpandPanel } from "@/components/chandrakranti/DayPatroExpandPanel";
 import { GocharKundaliChart } from "@/components/chandrakranti/GocharKundaliChart";
-import { GocharRashyadiTables } from "@/components/chandrakranti/GocharRashyadiTables";
-import { buildRashyadiSegments } from "@/lib/chandrakranti/rashyadi-segments";
+import { GocharRashyadiTable } from "@/components/chandrakranti/GocharRashyadiTables";
+import { buildRashyadiRangeTables } from "@/lib/chandrakranti/rashyadi-segments";
+import { buildGapanshaLine, buildPapanshaDisplayLine } from "@/lib/chandrakranti/gapansha";
 import { grahaRashiNe, formatGocharBsLabel } from "@/lib/chandrakranti/gochar-display";
 import { MonthLagnaMatrix } from "@/components/chandrakranti/MonthLagnaMatrix";
 import { MonthGrahaSpashta } from "@/components/chandrakranti/MonthGrahaSpashta";
@@ -431,9 +432,9 @@ export function ChandraKranti() {
     () => buildCalcNotes(days, ingressQ.data?.events ?? [], headerByDate),
     [days, ingressQ.data?.events, headerByDate],
   );
-  const rashyadiSegments = useMemo(
+  const rashyadiRange = useMemo(
     () =>
-      buildRashyadiSegments(
+      buildRashyadiRangeTables(
         days,
         allDays,
         ingressQ.data?.events ?? [],
@@ -441,6 +442,14 @@ export function ChandraKranti() {
       ),
     [days, allDays, ingressQ.data?.events, adhikMonthEn],
   );
+  const papanshaLine = useMemo(() => {
+    if (days.length === 0) return "";
+    return buildPapanshaDisplayLine(days[0]!);
+  }, [days]);
+  const gapanshaLine = useMemo(() => {
+    if (days.length === 0) return "";
+    return buildGapanshaLine(days, allDays, ingressQ.data?.events ?? []);
+  }, [days, allDays, ingressQ.data?.events]);
   const lagnaByDate = useMemo(
     () => Object.fromEntries(lagnaMatrix.map((r) => [r.dateAd, r])),
     [lagnaMatrix],
@@ -456,19 +465,6 @@ export function ChandraKranti() {
     }
     return out;
   }, [calcNotes]);
-
-  const festivals = useMemo(() => {
-    const seen = new Set<string>();
-    const list: { day: number; name: string }[] = [];
-    for (const d of days) {
-      for (const f of d.festivals ?? []) {
-        if (!f || seen.has(f)) continue;
-        seen.add(f);
-        list.push({ day: d.day, name: f });
-      }
-    }
-    return list;
-  }, [days]);
 
   const ritu = useMemo(
     () => allDays.find((d) => d.panchanga?.ritu_ne)?.panchanga?.ritu_ne,
@@ -817,20 +813,31 @@ export function ChandraKranti() {
             );
           })()}
 
-          {/* gochar kundali + rashyadi coordinates */}
-          <div className="grid gap-4 md:col-span-2 xl:col-span-2 xl:grid-cols-2">
+          {/* gochar kundali flanked by rashyadi start / end */}
+          <div className="grid grid-cols-1 items-stretch gap-4 md:col-span-2 xl:col-span-4 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)_minmax(0,1fr)]">
+            {rashyadiRange.start ? (
+              <GocharRashyadiTable
+                segment={rashyadiRange.start}
+                kundaliGrahas={grahas}
+                kundaliDateAd={gocharQ.data?.date_ad}
+                loading={monthQ.isLoading || ingressQ.isLoading}
+              />
+            ) : null}
             <GocharKundaliChart
+              className="flex flex-col justify-center lg:mx-auto lg:w-full lg:max-w-[300px]"
               grahas={grahas}
+              gapanshaLine={gapanshaLine}
+              papanshaLine={papanshaLine}
               dateBs={gocharQ.data?.date_bs}
               dateAd={gocharQ.data?.date_ad}
               loading={gocharQ.isLoading}
             />
-            <GocharRashyadiTables
-              segments={rashyadiSegments}
-              kundaliGrahas={grahas}
-              kundaliDateAd={gocharQ.data?.date_ad}
-              loading={monthQ.isLoading || ingressQ.isLoading}
-            />
+            {rashyadiRange.end ? (
+              <GocharRashyadiTable
+                segment={rashyadiRange.end}
+                loading={monthQ.isLoading || ingressQ.isLoading}
+              />
+            ) : null}
           </div>
 
           {/* graha gochar / udayast */}
@@ -860,23 +867,6 @@ export function ChandraKranti() {
                         {N(g.next_rashi_entry.entry_time_local)}
                       </span>
                     ) : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* festivals */}
-          <div className="rounded-xl border border-border p-4">
-            <h3 className="mb-2 text-sm font-semibold text-foreground">पर्व र चाडबाड</h3>
-            {festivals.length === 0 ? (
-              <p className="text-sm text-muted-foreground">यो पक्षमा उल्लेख्य पर्व छैन।</p>
-            ) : (
-              <ul className="space-y-1.5 text-sm">
-                {festivals.map((f) => (
-                  <li key={`${f.day}-${f.name}`} className="flex gap-2">
-                    <span className="shrink-0 font-semibold text-secondary">{N(f.day)}</span>
-                    <span className="text-foreground">{f.name}</span>
                   </li>
                 ))}
               </ul>

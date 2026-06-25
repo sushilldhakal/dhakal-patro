@@ -47,17 +47,61 @@ export type RashyadiPlanetRow = RashyadiCells & {
 
 export type RashyadiSegment = {
   id: string;
+  anchor: "start" | "end";
   /** पक्ष संस्करण — जस्तै अधिक ज्येष्ठ शुक्लपक्ष */
   versionNe: string;
   labelNe: string;
   anchorDateAd: string;
   bsDay?: number;
-  /** दैनिक पञ्चाङ्ग च.रा. — यो तालिकामा चन्द्र स्तम्भ हुँदैन */
+  /** पक्षमा दिनहरूको सङ्ख्या (सामान्यतया १५) */
+  pakshaDayCount: number;
+  /** मास आरम्भ सङ्केत — जस्तै श्रा. */
+  monthInitialLabel: string;
+  /** दैनिक पञ्चाङ्ग च.रा. */
   moonRashiNe?: string;
-  /** गा.पाशाः — पक्षभित्रका राशि परिवर्तन सङ्केत (२७सू३) */
+  /** गा.पाशाः — अवधिभित्रका राशि परिवर्तन सङ्केत */
   transitCodes: string[];
   planets: Partial<Record<RashyadiPlanetKey, RashyadiPlanetRow>>;
 };
+
+/** पङ्क्ति सङ्केत — मुद्रित पत्रो शैली */
+export const RASHYADI_ROW_KEYS = [
+  "rashi",
+  "ansha",
+  "kala",
+  "vikala",
+  "prati",
+  "truti",
+] as const;
+
+export type RashyadiRowKey = (typeof RASHYADI_ROW_KEYS)[number];
+
+/** तटपरा / प्रतितत्परा = प्रति-विकला / त्रुटि */
+export const RASHYADI_ROW_LABEL: Record<RashyadiRowKey, string> = {
+  rashi: "monthInitial",
+  ansha: "अं",
+  kala: "ग",
+  vikala: "वि",
+  prati: "प्र",
+  truti: "त्र",
+};
+
+export function rashyadiCellValue(row: RashyadiPlanetRow, key: RashyadiRowKey): string {
+  switch (key) {
+    case "rashi":
+      return formatRashyadiCell(row.rashi);
+    case "ansha":
+      return formatRashyadiCell(row.ansha);
+    case "kala":
+      return formatRashyadiCell(row.kala);
+    case "vikala":
+      return formatRashyadiCell(row.vikala);
+    case "prati":
+      return formatRashyadiCell(row.prati);
+    case "truti":
+      return formatRashyadiCell(row.truti);
+  }
+}
 
 function degInSignFromInfo(info: PlanetInfo): number | undefined {
   if (info.deg_in_rashi != null) return info.deg_in_rashi;

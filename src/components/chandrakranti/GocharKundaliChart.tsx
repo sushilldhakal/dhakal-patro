@@ -16,21 +16,48 @@ type GrahaRow = GocharGraha & { key: string };
 
 type Props = {
   grahas: GrahaRow[];
+  /** पापाशाःसू०७, म.६, श.१०, रा.९के.३ */
+  papanshaLine?: string;
+  /** गा.पाशाः१५सू८, १८म.७, … */
+  gapanshaLine?: string;
   dateBs?: string | null;
   dateAd?: string | null;
   loading?: boolean;
   className?: string;
 };
 
-export function GocharKundaliChart({ grahas, dateBs, dateAd, loading, className }: Props) {
+export function GocharKundaliChart({
+  grahas,
+  papanshaLine = "",
+  gapanshaLine = "",
+  dateBs,
+  dateAd,
+  loading,
+  className,
+}: Props) {
   const planetsByRashi = buildPlanetsByRashi(grahas);
   const dateLabel = formatGocharBsLabel(dateBs, dateAd);
 
   return (
     <div className={cn("rounded-xl border border-border p-4", className)}>
-      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+      <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
         <Sparkles className="h-4 w-4 text-secondary" /> गोचर कुण्डली
       </h3>
+
+      <div className="mb-3 space-y-2">
+        <div className="rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5">
+          <p className="font-mono text-base font-medium leading-relaxed text-foreground">
+            {papanshaLine || "पापाशाः—"}
+          </p>
+        </div>
+        {gapanshaLine ? (
+          <div className="rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5">
+            <p className="font-mono text-base font-medium leading-relaxed text-foreground">
+              {gapanshaLine}
+            </p>
+          </div>
+        ) : null}
+      </div>
 
       {loading ? (
         <p className="py-8 text-center text-sm text-muted-foreground">लोड हुँदैछ…</p>
@@ -39,7 +66,7 @@ export function GocharKundaliChart({ grahas, dateBs, dateAd, loading, className 
       ) : (
         <svg
           viewBox="0 0 300 300"
-          className="mx-auto h-auto w-full max-w-[360px] text-foreground"
+          className="mx-auto h-auto w-full max-w-[300px] text-foreground"
           role="img"
           aria-label="गोचर कुण्डली"
         >
@@ -67,7 +94,7 @@ export function GocharKundaliChart({ grahas, dateBs, dateAd, loading, className 
                     x={cx}
                     y={cy - 6}
                     textAnchor="middle"
-                    className="fill-foreground text-[11px] font-semibold"
+                    className="fill-foreground text-[13px] font-semibold"
                   >
                     {planetLine}
                   </text>
@@ -76,7 +103,7 @@ export function GocharKundaliChart({ grahas, dateBs, dateAd, loading, className 
                   x={cx}
                   y={cy + (planetLine ? 14 : 4)}
                   textAnchor="middle"
-                  className="fill-foreground/80 text-[11px] font-medium"
+                  className="fill-foreground/80 text-[13px] font-medium"
                 >
                   {rashiNe}
                 </text>
