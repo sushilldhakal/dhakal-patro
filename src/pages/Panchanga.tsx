@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange, MapPin } from "lucide-react";
 import {
   fetchPanchanga,
@@ -33,6 +33,13 @@ import {
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { usePanchangaMode } from "@/components/panchanga/use-panchanga-mode";
 import {
+  locationToSearch,
+  sameLocationParams,
+  sameSearch,
+  searchToLocation,
+  type PanchangaSearch,
+} from "@/lib/url-state";
+import {
   DinVisheshSection,
   FestivalsSection,
   MuhurtaTimingsSection,
@@ -47,6 +54,8 @@ import {
 
 type ViewMode = "day" | "month";
 
+const routeApi = getRouteApi("/panchanga");
+
 function toAdStr(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -54,21 +63,36 @@ function toAdStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Parse "YYYY-MM-DD" into a Date in the local zone (no UTC shift). */
+function parseAdStr(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+
 function fmtAdFull(d: Date): string {
   return d.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
 }
 
 export function Panchanga() {
-  const { location, setLocation } = usePanchangaLocation();
-  const [date, setDate] = useState(() => new Date());
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+
+  // Seed every selection from the URL on first render so a shared link opens on
+  // exactly the date/time/view/location it encodes; otherwise fall back to the
+  // stored preference / today.
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const [date, setDate] = useState(() =>
+    search.date ? parseAdStr(search.date) : new Date()
+  );
   const [view, setView] = useState<ViewMode>(() => {
+    if (search.view) return search.view;
     const saved = localStorage.getItem("dhakalPatroPanchView");
     return saved === "month" ? "month" : "day";
   });
 
   const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
   const { mode: dataMode, setMode: setDataMode, clock, setClock } =
-    usePanchangaMode(timezoneForMode);
+    usePanchangaMode(timezoneForMode, { mode: search.mode, clock: search.time });
 
   const adDateStr = toAdStr(date);
   const bs = adToBS(date);
@@ -79,6 +103,38 @@ export function Panchanga() {
     setView(v);
     localStorage.setItem("dhakalPatroPanchView", v);
   };
+
+  // Mirror the current selection into the URL so the address bar always reflects
+  // what's on screen and stays copy-paste shareable. `time` is only meaningful
+  // in instant mode. `replace` keeps date/time scrubbing out of the back stack.
+  useEffect(() => {
+    const desired: PanchangaSearch = {
+      ...locationToSearch(location),
+      date: adDateStr,
+      view,
+      mode: dataMode,
+      ...(isInstant ? { time: clock } : {}),
+    };
+    if (!sameSearch(desired, search)) {
+      navigate({ search: desired, replace: true });
+    }
+  }, [location, adDateStr, view, dataMode, isInstant, clock, search, navigate]);
+
+  // Adopt URL changes that originate outside our own writes — primarily the
+  // browser back/forward buttons. This effect deliberately subscribes page state
+  // to the router (an external system), so the setState calls are intended; the
+  // value guards keep it from fighting the mirror above.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (search.date && search.date !== adDateStr) setDate(parseAdStr(search.date));
+    if (search.view && search.view !== view) setView(search.view);
+    if (search.mode && search.mode !== dataMode) setDataMode(search.mode);
+    if (search.time && search.time !== clock) setClock(search.time);
+    const loc = searchToLocation(search);
+    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const udayaQuery = useQuery({
     queryKey: panchangaKeys.day(adDateStr, "ad", location.params),

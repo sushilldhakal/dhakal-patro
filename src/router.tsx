@@ -8,6 +8,10 @@ import {
 import { Header } from "./components/Header";
 import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
+import {
+  validateChandraKrantiSearch,
+  validatePanchangaSearch,
+} from "./lib/url-state";
 
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
 const PanchangaYear = lazyRoute(() => import("./pages/PanchangaYear"), "PanchangaYear");
@@ -32,7 +36,12 @@ const rootRoute = createRootRoute({
 });
 
 const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
-const panchangaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga", component: Panchanga });
+const panchangaRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/panchanga",
+  validateSearch: validatePanchangaSearch,
+  component: Panchanga,
+});
 const panchangaYearRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/panchanga/year",
@@ -45,7 +54,12 @@ const panchangaYearRoute = createRoute({
   component: PanchangaYear,
 });
 const avakahadaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/avakahada-chakra", component: AvakahadaChakra });
-const chandraKrantiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/chandrakranti", component: ChandraKranti });
+const chandraKrantiRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/chandrakranti",
+  validateSearch: validateChandraKrantiSearch,
+  component: ChandraKranti,
+});
 const shantiVidhiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/shanti-vidhi", component: ShantiVidhi });
 const converterRoute = createRoute({ getParentRoute: () => rootRoute, path: "/converter", component: Converter });
 const holidaysRoute = createRoute({ getParentRoute: () => rootRoute, path: "/holidays", component: Holidays });

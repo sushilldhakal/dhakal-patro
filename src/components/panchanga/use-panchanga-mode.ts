@@ -21,13 +21,20 @@ export function defaultClockForTimezone(timezone: string): string {
   return `${pad2(Number(h) % 24)}:${m}`;
 }
 
-export function usePanchangaMode(defaultTimezone: string) {
+export function usePanchangaMode(
+  defaultTimezone: string,
+  initial?: { mode?: PanchangaDataMode; clock?: string }
+) {
+  // URL-supplied mode/clock (shared link) seed first render; otherwise we fall
+  // back to the persisted preference.
   const [mode, setModeState] = useState<PanchangaDataMode>(() => {
+    if (initial?.mode) return initial.mode;
     const saved = localStorage.getItem(MODE_KEY);
     return saved === "instant" ? "instant" : "udaya";
   });
 
   const [clock, setClockState] = useState(() => {
+    if (initial?.clock) return initial.clock;
     const saved = localStorage.getItem(CLOCK_KEY);
     return saved ?? defaultClockForTimezone(defaultTimezone);
   });

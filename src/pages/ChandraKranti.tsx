@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import {
   ChevronLeft,
   ChevronRight,
@@ -39,6 +40,13 @@ import {
 } from "@/components/ui/table";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import {
+  locationToSearch,
+  sameLocationParams,
+  sameSearch,
+  searchToLocation,
+  type ChandraKrantiSearch,
+} from "@/lib/url-state";
 import { cn } from "@/lib/utils";
 import {
   Accordion,
@@ -63,6 +71,8 @@ import {
 
 const N = toNepaliDigits;
 const COL_SPAN = 13;
+
+const routeApi = getRouteApi("/chandrakranti");
 
 type Phase = "krishna" | "shukla";
 type PakshaFilter = Phase | "all";
@@ -270,13 +280,44 @@ function motionNe(g: { motion?: string; is_retrograde?: boolean }): { label: str
 }
 
 export function ChandraKranti() {
-  const { location, setLocation } = usePanchangaLocation();
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+
+  // Seed from the URL so a shared link opens on its month/paksha/location.
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const today = useMemo(() => getCurrentBs(), []);
-  const [year, setYear] = useState(today.year);
-  const [month, setMonth] = useState(today.month);
-  const [paksha, setPaksha] = useState<PakshaFilter>("all");
+  const [year, setYear] = useState(() => search.year ?? today.year);
+  const [month, setMonth] = useState(() => search.month ?? today.month);
+  const [paksha, setPaksha] = useState<PakshaFilter>(() => search.paksha ?? "all");
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const nowKey = useMemo(() => todayKey(), []);
+
+  // Mirror the selection into the URL so the view stays copy-paste shareable.
+  useEffect(() => {
+    const desired: ChandraKrantiSearch = {
+      ...locationToSearch(location),
+      year,
+      month,
+      paksha,
+    };
+    if (!sameSearch(desired, search)) {
+      navigate({ search: desired, replace: true });
+    }
+  }, [location, year, month, paksha, search, navigate]);
+
+  // Adopt URL changes from browser back/forward. This effect deliberately
+  // subscribes page state to the router (an external system); the value guards
+  // avoid fighting the mirror above.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (search.year != null && search.year !== year) setYear(search.year);
+    if (search.month != null && search.month !== month) setMonth(search.month);
+    if (search.paksha && search.paksha !== paksha) setPaksha(search.paksha);
+    const loc = searchToLocation(search);
+    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const toggleDayExpand = (dateAd: string) => {
     setExpandedDays((prev) => {
