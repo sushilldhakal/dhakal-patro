@@ -202,9 +202,49 @@ export const fetchVimshottari = (
 // ─── Gochar (planetary transits) ─────────────────────────────────────────────
 
 export interface GocharNextEntry {
-  to_rashi: string;
+  to_rashi?: string;
+  to_rashi_ne?: string;
+  to_nakshatra?: string;
+  to_nakshatra_ne?: string;
+  to_pada?: number;
+  to_pada_ne?: string;
+  label_ne?: string;
   entry_time_local: string;
+  entry_time_local_short?: string;
   entry_time_utc?: string;
+}
+
+export interface GocharIngressEvent {
+  graha: string;
+  graha_ne: string;
+  level: string;
+  to_rashi?: string;
+  to_rashi_ne?: string;
+  from_rashi?: string;
+  from_rashi_ne?: string;
+  to_nakshatra?: string;
+  to_nakshatra_ne?: string;
+  to_pada?: number;
+  to_pada_ne?: string;
+  label_ne?: string;
+  entry_time_local: string;
+  entry_time_local_short?: string;
+  entry_time_utc?: string;
+  entry_date_ad?: string;
+  /** Vedic day (sunrise–sunrise) civil date — patro गते row key. */
+  entry_vedic_date_ad?: string;
+  /** udayast only */
+  event?: "udaya" | "asta";
+  hemisphere?: "east" | "west";
+  motion_ne?: string;
+}
+
+export interface GocharIngressResponse {
+  from_date_ad: string;
+  to_date_ad: string;
+  level: string;
+  location?: Record<string, unknown>;
+  events: GocharIngressEvent[];
 }
 
 export interface GocharGraha {
@@ -212,17 +252,36 @@ export interface GocharGraha {
   name_vedic?: string;
   symbol: string;
   rashi?: string;
+  rashi_ne?: string;
+  rashi_no?: number;
+  deg_in_rashi?: number;
+  dms_in_rashi?: string;
+  dms_absolute?: string;
+  longitude?: number;
+  speed_deg_day?: number;
+  /** "Margi" (direct) or "Vakri" (retrograde). */
+  motion?: string;
+  is_retrograde?: boolean;
   next_rashi_entry?: GocharNextEntry | null;
+  next_nakshatra_entry?: GocharNextEntry | null;
+  next_pada_entry?: GocharNextEntry | null;
 }
 
 export interface GocharResponse {
   date_ad: string;
+  date_bs?: string;
   gochar: Record<string, GocharGraha>;
 }
 
 export const gocharKeys = {
   day: (date: string, era: string, location?: LocationParams) =>
     ["gochar", date, era, locationCacheKey(location)] as const,
+  ingress: (
+    from: string,
+    to: string,
+    level: string,
+    location?: LocationParams
+  ) => ["gochar", "ingress", from, to, level, locationCacheKey(location)] as const,
 };
 
 export const fetchGochar = (
@@ -234,16 +293,23 @@ export const fetchGochar = (
     appendLocation(`/nepal/gochar/${date}?era=${era}`, location)
   );
 
-type RawMonthDay = CalendarDay & {
-  panchanga?: {
-    paksha?: string;
-    paksha_ne?: string;
-    aayan?: string;
-    aayan_ne?: string;
-    ayana_mark?: "उ" | "द";
-    moon?: { rise?: string; set?: string };
-  };
+export const fetchGocharIngress = (
+  from: string,
+  to: string,
+  location?: LocationParams,
+  options?: { level?: "pada" | "nakshatra" | "rashi" | "patro" | "udayast"; era?: "bs" | "ad" }
+) => {
+  const params = new URLSearchParams();
+  params.set("from", from);
+  params.set("to", to);
+  params.set("era", options?.era ?? "ad");
+  params.set("level", options?.level ?? "pada");
+  return get<GocharIngressResponse>(
+    appendLocation(`/nepal/gochar/ingress?${params.toString()}`, location)
+  );
 };
+
+type RawMonthDay = CalendarDay;
 
 function parsePakshaName(label?: string): string | undefined {
   if (!label) return undefined;
@@ -345,6 +411,33 @@ export const fetchAdToBs = (date: string) =>
 export const fetchBsToAd = (date: string) =>
   get<ConvertBsToAd>(`/convert/bs-to-ad/${date}`);
 
+// ─── Special months (adhik / kshaya maas) ─────────────────────────────────────
+
+export interface SpecialMonthsResponse {
+  bs_year: number;
+  adhik_maas?: {
+    has_adhik_maas?: boolean;
+    month_name?: string;
+    full_name_en?: string;
+    full_name_ne?: string;
+    start_date?: string;
+    end_date?: string;
+    purnima_date?: string;
+    note?: string;
+  };
+  kshaya_maas?: {
+    is_kshaya?: boolean;
+    month_name?: string;
+  };
+}
+
+export const specialMonthsKeys = {
+  year: (year: number) => ["special-months", year] as const,
+};
+
+export const fetchSpecialMonths = (year: number) =>
+  get<SpecialMonthsResponse>(`/nepal/special-months/${year}`);
+
 // ─── Kundali ──────────────────────────────────────────────────────────────────
 
 export const kundaliKeys = {
@@ -445,9 +538,11 @@ export interface LagnaSpan {
   start_ghati_clock?: string;
   start_hours_clock?: string;
   start_local_time?: string;
+  start_local_time_short?: string;
   end_ghati_clock?: string;
   end_hours_clock?: string;
   end_local_time?: string;
+  end_local_time_short?: string;
 }
 
 export interface RashiSpan {
@@ -628,9 +723,16 @@ export interface PanchangaDay {
 export interface PlanetInfo {
   rashi?: string;
   rashi_ne?: string;
+  rashi_name?: string;
+  rashi_no?: number;
   degrees?: number;
+  deg_in_rashi?: number;
+  dms_in_rashi?: string;
   retrograde?: boolean;
+  is_retrograde?: boolean;
   longitude?: number;
+  speed?: number;
+  motion?: string;
 }
 
 export interface Festival {
@@ -662,6 +764,96 @@ export interface MonthCalendar {
   calendar: CalendarDay[];
 }
 
+/**
+ * A panchanga aṅga (tithi / nakshatra / yoga / karaṇa) as returned in the
+ * month-calendar nested `panchanga` block. Unlike `PanchangaDay`'s aṅga shape,
+ * the calendar endpoint carries plain `start`/`end` datetime strings
+ * (e.g. "2026-06-20 16:02") and string `next`/`next_ne` names — including
+ * end-times for yoga and karaṇa.
+ */
+export interface CalendarDayAnga {
+  name?: string;
+  name_ne?: string;
+  start?: string;
+  end?: string;
+  next?: string;
+  next_ne?: string;
+}
+
+/** Full per-day detail embedded under each month-calendar day when `full=true`. */
+export interface CalendarDayDetail {
+  paksha?: string;
+  paksha_ne?: string;
+  aayan?: string;
+  aayan_ne?: string;
+  ayana_mark?: "उ" | "द";
+  tithi?: CalendarDayAnga;
+  nakshatra?: CalendarDayAnga;
+  yoga?: CalendarDayAnga;
+  karana?: CalendarDayAnga;
+  surya_rashi?: string;
+  surya_rashi_ne?: string;
+  chandra_rashi?: string;
+  chandra_rashi_ne?: string;
+  sun?: { sunrise?: string; sunset?: string; noon?: string };
+  moon?: { rise?: string; set?: string };
+  dinamaan?: string;
+  ritu_ne?: string;
+  lunar_month?: LunarLayer & { name_ne?: string };
+  lagna_spans?: LagnaSpan[];
+  udaya_lagna?: UdayaLagnaRow[];
+  planets?: Record<string, PlanetInfo>;
+  planets_anchor?: {
+    type?: string;
+    local_time?: string;
+    label_ne?: string;
+    label_en?: string;
+  };
+  solar_corrections?: {
+    belaantar?: {
+      minutes?: number;
+      seconds?: number;
+      sign?: "dhan" | "rin";
+      sign_ne?: string;
+      label_ne?: string;
+      name_ne?: string;
+    };
+    deshaantar?: {
+      minutes?: number;
+      seconds?: number;
+      sign?: "dhan" | "rin";
+      sign_ne?: string;
+      label_ne?: string;
+      name_ne?: string;
+    };
+    ishtakaal_note_ne?: string;
+    sunrise_includes_corrections?: boolean;
+  };
+  /**
+   * Both lunar reckonings, as merged by the backend's
+   * `merge_lunar_month_for_day()`. `purnimant` is the model Nepali patro uses
+   * (months run pūrṇimā→pūrṇimā); `amanta` runs new-moon→new-moon.
+   */
+  lunar_calendar?: {
+    adhik_maas?: { year_has_adhik?: boolean; name?: string; name_ne?: string };
+    amanta?: LunarLayer;
+    purnimant?: LunarLayer;
+    festival_masa?: string;
+  };
+}
+
+export interface LunarLayer {
+  name?: string;
+  full_name?: string;
+  is_adhik?: boolean;
+  type?: string;
+  paksha_model?: string;
+  window_start?: string;
+  window_end?: string;
+  solar_name?: string;
+  festival_masa?: string;
+}
+
 export interface CalendarDay {
   day: number;
   date_ad: string;
@@ -688,6 +880,8 @@ export interface CalendarDay {
   moonset?: string;
   moonset_local?: string;
   festivals: string[];
+  /** Embedded full panchanga (present when the month is fetched with `full=true`). */
+  panchanga?: CalendarDayDetail;
   mode?: "ephemeris";
   query_instant?: string;
 }

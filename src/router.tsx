@@ -13,12 +13,14 @@ const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
 const PanchangaYear = lazyRoute(() => import("./pages/PanchangaYear"), "PanchangaYear");
 const AvakahadaChakra = lazyRoute(() => import("./pages/AvakahadaChakra"), "AvakahadaChakra");
 const ChandraKranti = lazyRoute(() => import("./pages/ChandraKranti"), "ChandraKranti");
+const ShantiVidhi = lazyRoute(() => import("./pages/ShantiVidhi"), "ShantiVidhi");
 const Converter = lazyRoute(() => import("./pages/Converter"), "Converter");
 const Holidays = lazyRoute(() => import("./pages/Holidays"), "Holidays");
 const Kundali = lazyRoute(() => import("./pages/Kundali"), "Kundali");
 const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
+const History = lazyRoute(() => import("./pages/History"), "History");
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -44,6 +46,7 @@ const panchangaYearRoute = createRoute({
 });
 const avakahadaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/avakahada-chakra", component: AvakahadaChakra });
 const chandraKrantiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/chandrakranti", component: ChandraKranti });
+const shantiVidhiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/shanti-vidhi", component: ShantiVidhi });
 const converterRoute = createRoute({ getParentRoute: () => rootRoute, path: "/converter", component: Converter });
 const holidaysRoute = createRoute({ getParentRoute: () => rootRoute, path: "/holidays", component: Holidays });
 const kundaliRoute = createRoute({ getParentRoute: () => rootRoute, path: "/kundali", component: Kundali });
@@ -59,6 +62,7 @@ const sunTimesLegacyRoute = createRoute({
   path: "/sun-times",
   component: () => <Navigate to="/suryakranti" replace />,
 });
+const historyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/history", component: History });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -66,6 +70,7 @@ const routeTree = rootRoute.addChildren([
   panchangaYearRoute,
   avakahadaRoute,
   chandraKrantiRoute,
+  shantiVidhiRoute,
   converterRoute,
   holidaysRoute,
   kundaliRoute,
@@ -73,6 +78,7 @@ const routeTree = rootRoute.addChildren([
   learnArticleRoute,
   suryakrantiRoute,
   sunTimesLegacyRoute,
+  historyRoute,
 ]);
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");

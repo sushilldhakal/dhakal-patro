@@ -1,4 +1,9 @@
 import type { BhavaHouse } from "@/lib/bhava";
+import {
+  NI_HOUSE_POLYGONS,
+  pointsToSvg,
+  polygonCentroid,
+} from "@/lib/kundali/north-indian-layout";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 
@@ -13,28 +18,6 @@ const PLANET_ABBR_NE: Record<string, string> = {
   rahu: "रा",
   ketu: "के",
 };
-
-/** 300x300 North Indian diamond chart — fixed house slots, rashi rotates with Lagna. */
-const HOUSE_POLYGONS: Record<number, [number, number][]> = {
-  1: [[150, 0], [225, 75], [150, 150], [75, 75]],
-  2: [[0, 0], [150, 0], [75, 75]],
-  3: [[0, 0], [75, 75], [0, 150]],
-  4: [[0, 150], [75, 75], [150, 150], [75, 225]],
-  5: [[0, 150], [75, 225], [0, 300]],
-  6: [[0, 300], [75, 225], [150, 300]],
-  7: [[150, 300], [75, 225], [150, 150], [225, 225]],
-  8: [[150, 300], [225, 225], [300, 300]],
-  9: [[225, 225], [300, 300], [300, 150]],
-  10: [[300, 150], [225, 225], [150, 150], [225, 75]],
-  11: [[300, 150], [225, 75], [300, 0]],
-  12: [[225, 75], [300, 0], [150, 0]],
-};
-
-function centroid(points: [number, number][]): [number, number] {
-  const n = points.length;
-  const sum = points.reduce((acc, [x, y]) => [acc[0] + x, acc[1] + y], [0, 0]);
-  return [sum[0] / n, sum[1] / n];
-}
 
 interface Props {
   houses: BhavaHouse[];
@@ -67,10 +50,10 @@ export function D1Chart({ houses }: Props) {
         strokeWidth="1.25"
       />
 
-      {Object.entries(HOUSE_POLYGONS).map(([houseStr, points]) => {
+      {Object.entries(NI_HOUSE_POLYGONS).map(([houseStr, points]) => {
         const houseNum = Number(houseStr);
         const house = byHouse.get(houseNum);
-        const [cx, cy] = centroid(points);
+        const [cx, cy] = polygonCentroid(points);
         const planetLines = house?.planets ?? [];
         const hasPlanets = planetLines.length > 0;
 
@@ -78,7 +61,7 @@ export function D1Chart({ houses }: Props) {
           <g key={houseNum}>
             {house?.isLagna && (
               <polygon
-                points={points.map((p) => p.join(",")).join(" ")}
+                points={pointsToSvg(points)}
                 className="fill-secondary/15 dark:fill-secondary/25"
               />
             )}

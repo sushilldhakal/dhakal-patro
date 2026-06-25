@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Sunrise,
   Grid3x3,
+  Flame,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "../lib/utils";
@@ -32,6 +33,7 @@ const PANCHANGA_LINKS = [
   { to: "/panchanga" as const, label: "Surya Panchanga", icon: Star },
   { to: "/suryakranti" as const, label: "Suryakranti", icon: Sunrise },
   { to: "/chandrakranti" as const, label: "Chandra Kranti", icon: Moon },
+  { to: "/shanti-vidhi" as const, label: "शान्ति विधि", icon: Flame },
   { to: "/panchanga/avakahada-chakra" as const, label: "अवकहडा चक्र", icon: Grid3x3 },
 ] as const;
 
@@ -58,7 +60,8 @@ function isPanchangaRoute(pathname: string) {
   return (
     pathname === "/panchanga" ||
     pathname.startsWith("/panchanga/") ||
-    pathname === "/suryakranti" || pathname === "/sun-times"
+    pathname === "/suryakranti" || pathname === "/sun-times" ||
+    pathname === "/chandrakranti" || pathname === "/shanti-vidhi"
   );
 }
 

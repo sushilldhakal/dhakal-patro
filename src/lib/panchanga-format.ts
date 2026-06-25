@@ -433,6 +433,23 @@ const RASHI_DISPLAY_NE: Record<string, string> = {
   मीन: "मीन",
 };
 
+/** Clock time for patro tables — adds 24h when after midnight before sunrise. */
+export function formatVedicPatroTime(
+  timeShort?: string | null,
+  sunriseShort?: string | null
+): string | undefined {
+  const t = formatTimeShort(timeShort);
+  if (!t) return undefined;
+  const sunrise = formatTimeShort(sunriseShort);
+  if (!sunrise) return toNepaliDigits(t);
+  const [th, tm] = t.split(":").map(Number);
+  const [sh] = sunrise.split(":").map(Number);
+  if (th != null && tm != null && sh != null && th < sh) {
+    return toNepaliDigits(`${String(th + 24).padStart(2, "0")}:${String(tm).padStart(2, "0")}`);
+  }
+  return toNepaliDigits(t);
+}
+
 export function rashiNeFromNumber(rashi?: number): string | undefined {
   if (rashi == null || rashi < 1 || rashi > 12) return undefined;
   return RASHI_NE[rashi - 1];

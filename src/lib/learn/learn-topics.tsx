@@ -92,7 +92,7 @@ export const LEARN_TOPICS: LearnTopic[] = [
   {
     slug: "calendar-differences",
     category: "calendars",
-    titleNe: "नेपाली, भारतीय र ग्रेगोरियन भिन्नता",
+    titleNe: "नेपाली, वैदिक र ग्रेगोरियन भिन्नता",
     titleEn: "Nepali vs Indian vs Gregorian",
     icon: Globe,
     summary: "तीन पात्रो प्रणालीको आधार, वर्षारम्भ र महिना–लम्बाइको तुलना।",
