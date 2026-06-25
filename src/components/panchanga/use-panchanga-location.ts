@@ -34,8 +34,12 @@ function readStoredLocation(): PanchangaLocation {
   }
 }
 
-export function usePanchangaLocation() {
-  const [location, setLocationState] = useState<PanchangaLocation>(readStoredLocation);
+export function usePanchangaLocation(initial?: PanchangaLocation) {
+  // A location supplied via the URL (shared link) wins over the stored
+  // preference on first render so the page opens on the shared place.
+  const [location, setLocationState] = useState<PanchangaLocation>(
+    () => initial ?? readStoredLocation()
+  );
 
   const setLocation = useCallback((next: PanchangaLocation) => {
     setLocationState(next);
