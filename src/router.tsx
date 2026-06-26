@@ -76,7 +76,12 @@ const sunTimesLegacyRoute = createRoute({
   path: "/sun-times",
   component: () => <Navigate to="/suryakranti" replace />,
 });
-const historyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/history", component: History });
+const historyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/history", component: History });
+const historyLegacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/history",
+  component: () => <Navigate to="/learn/history" replace />,
+});
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -93,6 +98,7 @@ const routeTree = rootRoute.addChildren([
   suryakrantiRoute,
   sunTimesLegacyRoute,
   historyRoute,
+  historyLegacyRoute,
 ]);
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");

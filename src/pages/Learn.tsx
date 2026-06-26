@@ -14,6 +14,7 @@ import {
   X,
   GraduationCap,
   Layers3,
+  History as HistoryIcon,
 } from "lucide-react";
 import { PageShell } from "../components/PageShell";
 import { Input } from "@/components/ui/input";
@@ -305,6 +306,32 @@ export function Learn() {
             ))}
           </div>
         </section>
+      )}
+
+      {!isFiltering && (
+        <Link
+          to="/learn/history"
+          className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-secondary/50 sm:flex-row sm:items-center sm:gap-6 sm:p-7"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+            <HistoryIcon className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-secondary">
+              इतिहास · सम्पदा
+            </div>
+            <h2 className="mt-0.5 text-lg font-bold text-foreground sm:text-xl">
+              मयासुरको सूर्य सिद्धान्त
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-secondary">
+            पढ्नुहोस्
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </Link>
       )}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
