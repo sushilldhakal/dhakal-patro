@@ -525,6 +525,121 @@ export const fetchShadbala = (datetime: string, location?: LocationParams) =>
     )
   );
 
+// ─── Kundali interpretation report (streamed, deterministic) ──────────────────
+
+/** How strongly the supporting factors agree for one insight. */
+export type ReportConfidence = "strong" | "moderate" | "mixed" | "tentative";
+
+export interface ReportItem {
+  label: string;
+  confidence: ReportConfidence;
+  factors?: string[];
+  text: string;
+  polarity?: "benefic" | "mixed" | "caution";
+}
+
+export interface ReportSection {
+  kind: "section";
+  index: number;
+  total: number;
+  id: string;
+  title_en: string;
+  title_ne: string;
+  body: string[];
+  confidence?: ReportConfidence;
+  factors?: string[];
+  items?: ReportItem[];
+  optional?: boolean;
+}
+
+export interface ReportRashiRef {
+  sign: number;
+  name_en: string;
+  name_ne: string;
+}
+
+export interface ReportMeta {
+  kind: "meta";
+  lagna: ReportRashiRef;
+  moon_sign: ReportRashiRef;
+  sun_sign: ReportRashiRef;
+  mahadasha: {
+    lord: string;
+    lord_en: string;
+    lord_ne: string;
+    antardasha?: string;
+    window?: [string, string];
+  } | null;
+  yoga_count: number;
+  generated_at: string;
+  method: string;
+  disclaimer: string;
+}
+
+export interface ReportHeader {
+  kind: "header";
+  ayanamsha: string;
+  location: Record<string, unknown>;
+  birth_instant: string;
+}
+
+export type ReportRecord =
+  | ReportHeader
+  | ReportMeta
+  | ReportSection
+  | { kind: "done"; total: number };
+
+/**
+ * Stream the deterministic kundali report as NDJSON, invoking `onRecord` for
+ * each line (header, meta, one per section, then done) so the UI can render
+ * sections progressively. Pass an AbortSignal to cancel an in-flight report.
+ */
+export async function streamKundaliReport(
+  datetime: string,
+  location: LocationParams | undefined,
+  options: { ayanamsha?: string } | undefined,
+  onRecord: (record: ReportRecord) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.set("datetime", datetime);
+  if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  const path = appendLocation(`/kundali/report?${params.toString()}`, location);
+
+  const res = await fetch(`${BASE}${path}`, {
+    signal,
+    headers: { Accept: "application/x-ndjson" },
+  });
+  if (!res.ok || !res.body) {
+    throw new Error(`API ${res.status}: ${path}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  const flush = (chunk: string, final = false) => {
+    buffer += chunk;
+    let nl: number;
+    while ((nl = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, nl).trim();
+      buffer = buffer.slice(nl + 1);
+      if (line) onRecord(JSON.parse(line) as ReportRecord);
+    }
+    if (final && buffer.trim()) {
+      onRecord(JSON.parse(buffer.trim()) as ReportRecord);
+      buffer = "";
+    }
+  };
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    flush(decoder.decode(value, { stream: true }));
+  }
+  flush(decoder.decode(), true);
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface LagnaSpan {

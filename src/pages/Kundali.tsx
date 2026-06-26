@@ -5,6 +5,7 @@ import {
   fetchShadbala,
   fetchVimshottari,
   kundaliKeys,
+  locationCacheKey,
   shadbalaKeys,
   vimshottariKeys,
   type PanchangaDay,
@@ -33,6 +34,7 @@ import { KundaliControls } from "@/components/kundali/KundaliControls";
 import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { D1Chart } from "@/components/kundali/D1Chart";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
+import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -515,6 +517,17 @@ export function Kundali() {
                 <ShadbalaCard data={shadbalaQ.data} />
               </div>
             )}
+
+            {/* Deterministic interpretation report with confidence indicator.
+                Keyed on the chart inputs so it remounts (and clears any stale
+                report) whenever the birth moment, place or ayanamsha changes. */}
+            <KundaliReport
+              key={`${atTimeDatetime}|${locationCacheKey(location.params)}|${ayanamshaMode}`}
+              datetime={atTimeDatetime}
+              location={location.params}
+              ayanamsha={ayanamshaMode}
+              disabled={isLoading || isError}
+            />
           </div>
         )}
       </div>
