@@ -37,7 +37,10 @@ import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import {
+  usePanchangaLocation,
+  type PanchangaLocation,
+} from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import { buildBhavaChart } from "@/lib/bhava";
 import { navamsaRashiFromLongitude } from "@/lib/navamsa";
@@ -180,33 +183,53 @@ export function Kundali() {
     localStorage.setItem(CLOCK_KEY, next);
   };
 
-  const adDateStr = toAdStr(date);
-  const bs = adToBS(date);
-  const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
+  // Nothing is computed until the visitor enters their birth details and presses
+  // "Generate". This snapshot captures the exact inputs used for the displayed
+  // chart, so editing the form afterwards doesn't silently recompute — the user
+  // generates again when ready.
+  const [applied, setApplied] = useState<{
+    date: Date;
+    clock: string;
+    location: PanchangaLocation;
+    ayanamshaMode: AyanamshaMode;
+  } | null>(null);
+
+  const generate = () => {
+    setApplied({ date, clock, location, ayanamshaMode });
+  };
+
+  const adDateStr = applied ? toAdStr(applied.date) : "";
+  const bs = applied ? adToBS(applied.date) : null;
+  const atTimeDatetime = applied ? buildAtTimeDatetime(adDateStr, applied.clock) : "";
+  const appliedLocationParams = applied?.location.params;
+  const appliedAyanamsha = applied?.ayanamshaMode ?? ayanamshaMode;
+  const appliedClock = applied?.clock ?? clock;
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: kundaliKeys.atTime(atTimeDatetime, location.params, ayanamshaMode),
+    queryKey: kundaliKeys.atTime(atTimeDatetime, appliedLocationParams, appliedAyanamsha),
     queryFn: () =>
-      fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params, {
-        ayanamsha: ayanamshaMode,
+      fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, appliedLocationParams, {
+        ayanamsha: appliedAyanamsha,
       }),
     staleTime: 1000 * 60 * 5,
+    enabled: Boolean(applied),
   });
 
   const dashaQ = useQuery({
-    queryKey: vimshottariKeys.atTime(atTimeDatetime, location.params, ayanamshaMode),
+    queryKey: vimshottariKeys.atTime(atTimeDatetime, appliedLocationParams, appliedAyanamsha),
     queryFn: () =>
-      fetchVimshottari(atTimeDatetime, location.params, {
-        ayanamsha: ayanamshaMode,
+      fetchVimshottari(atTimeDatetime, appliedLocationParams, {
+        ayanamsha: appliedAyanamsha,
       }),
     staleTime: 1000 * 60 * 5,
-    enabled: Boolean(atTimeDatetime),
+    enabled: Boolean(applied && atTimeDatetime),
   });
 
   const shadbalaQ = useQuery({
-    queryKey: shadbalaKeys.atTime(atTimeDatetime, location.params),
-    queryFn: () => fetchShadbala(atTimeDatetime, location.params),
+    queryKey: shadbalaKeys.atTime(atTimeDatetime, appliedLocationParams),
+    queryFn: () => fetchShadbala(atTimeDatetime, appliedLocationParams),
     staleTime: 1000 * 60 * 5,
+    enabled: Boolean(applied),
   });
 
   const planets = useMemo(() => (data ? planetsFromPanchanga(data) : []), [data]);
@@ -219,9 +242,9 @@ export function Kundali() {
         : undefined;
     return { ...rawLagna, rashiNum, longitude: rawLagna.longitude };
   }, [rawLagna]);
-  const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
-  const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
-  const locationLabel = data?.location?.name ?? location.label;
+  const ayanamshaInfo = getAyanamshaModeInfo(appliedAyanamsha);
+  const effectiveTimezone = resolveTimeZone(data?.location?.timezone, appliedLocationParams?.timezone);
+  const locationLabel = data?.location?.name ?? applied?.location.label ?? location.label;
 
   const bhavaHouses = useMemo(() => {
     if (!lagna?.rashiNum) return [];
@@ -288,7 +311,9 @@ export function Kundali() {
 
   const dateBs =
     data?.date_bs ??
-    `${bs.year}-${String(bs.month).padStart(2, "0")}-${String(bs.day).padStart(2, "0")}`;
+    (bs
+      ? `${bs.year}-${String(bs.month).padStart(2, "0")}-${String(bs.day).padStart(2, "0")}`
+      : "");
   const dateAd = data?.date_ad ?? adDateStr;
 
   return (
@@ -319,6 +344,35 @@ export function Kundali() {
         />
 
         <AyanamshaSelector mode={ayanamshaMode} onModeChange={setAyanamshaMode} />
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={generate}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-secondary px-5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90"
+          >
+            <Sparkles className="h-4 w-4" />
+            {applied ? "Update kundali" : "Generate kundali"}
+          </button>
+          <p className="text-xs text-muted-foreground">
+            जन्म मिति, समय र स्थान भरेर “Generate” थिच्नुहोस् · Set your birth date,
+            time and place, then generate.
+          </p>
+        </div>
+
+        {!applied && (
+          <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center">
+            <Clock className="mx-auto mb-3 h-7 w-7 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">
+              कुण्डली देखाउन जन्म विवरण आवश्यक छ
+            </p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+              Enter the birth date, time and place above, then press
+              <span className="font-medium text-foreground"> Generate kundali</span>.
+              Nothing is calculated until you do.
+            </p>
+          </div>
+        )}
 
         {isLoading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -355,7 +409,7 @@ export function Kundali() {
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
                       <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      {toNepaliDigits(clock)}
+                      {toNepaliDigits(appliedClock)}
                     </span>
                   </div>
                 </div>
@@ -522,10 +576,10 @@ export function Kundali() {
                 Keyed on the chart inputs so it remounts (and clears any stale
                 report) whenever the birth moment, place or ayanamsha changes. */}
             <KundaliReport
-              key={`${atTimeDatetime}|${locationCacheKey(location.params)}|${ayanamshaMode}`}
+              key={`${atTimeDatetime}|${locationCacheKey(appliedLocationParams)}|${appliedAyanamsha}`}
               datetime={atTimeDatetime}
-              location={location.params}
-              ayanamsha={ayanamshaMode}
+              location={appliedLocationParams}
+              ayanamsha={appliedAyanamsha}
               disabled={isLoading || isError}
             />
           </div>
