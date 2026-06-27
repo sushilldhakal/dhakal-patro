@@ -563,11 +563,20 @@ export interface ReportMeta {
   lagna: ReportRashiRef;
   moon_sign: ReportRashiRef;
   sun_sign: ReportRashiRef;
+  nakshatra?: {
+    name_en: string;
+    name_ne: string;
+    pada: number;
+    lord_en: string;
+  };
   mahadasha: {
     lord: string;
     lord_en: string;
     lord_ne: string;
+    ends?: string;
     antardasha?: string;
+    antardasha_en?: string;
+    antardasha_ends?: string;
     window?: [string, string];
   } | null;
   yoga_count: number;
