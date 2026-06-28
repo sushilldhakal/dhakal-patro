@@ -13,6 +13,7 @@ import {
   type PlanetInfo,
 } from "@/lib/api";
 import { adToBS, bsToAD } from "@/lib/bs-calendar";
+import { parseBirthDateParts } from "@/lib/birth-date";
 import {
   buildAtTimeDatetime,
   fetchEphemerisPanchangaDay,
@@ -168,16 +169,15 @@ function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
   });
 }
 
-/** Parse a saved profile's birth date (BS or AD) into an AD Date. */
+/** Parse a saved profile's birth date (BS or AD, any separator) into an AD Date. */
 function parseBirthDate(p: Profile): Date | null {
   if (!p.birth_date) return null;
-  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(p.birth_date.trim());
-  if (!m) return null;
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
+  const parts = parseBirthDateParts(p.birth_date);
+  if (!parts) return null;
   try {
-    return p.birth_era === "ad" ? new Date(y, mo - 1, d) : bsToAD(y, mo, d);
+    return p.birth_era === "ad"
+      ? new Date(parts.y, parts.m - 1, parts.d)
+      : bsToAD(parts.y, parts.m, parts.d);
   } catch {
     return null;
   }

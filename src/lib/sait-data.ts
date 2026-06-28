@@ -104,12 +104,8 @@ export function pickNearestSaitYear(preferred: number, available: number[]): num
   );
 }
 
-/** Merge API years with offline years for one ceremony type. */
+/** Merge API years with offline fallback when API is unavailable. */
 export function mergeSaitYears(apiYears: number[] | undefined, category: SaitCategoryId): number[] {
-  const merged = new Set<number>(getLocalSaitYearsForCategory(category));
-  // rules/sait_dates_v1.json currently only lists vivah rows; other categories are placeholders.
-  if (category === "vivah") {
-    for (const y of apiYears ?? []) merged.add(y);
-  }
-  return [...merged].sort((a, b) => a - b);
+  if (apiYears?.length) return [...apiYears].sort((a, b) => a - b);
+  return getLocalSaitYearsForCategory(category);
 }

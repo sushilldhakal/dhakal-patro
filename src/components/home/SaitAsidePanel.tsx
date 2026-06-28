@@ -113,11 +113,7 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
       {saitQ.isLoading && !entries.length ? (
         <div className="pn-aside-tab-skel" />
       ) : !yearsForCategory.length ? (
-        <p className="pn-aside-tab-empty">
-          {category === "vivah"
-            ? "साइत डाटा अहिले उपलब्ध छैन।"
-            : `${SAIT_CATEGORIES.find((c) => c.id === category)?.label ?? "यो"} साइत अहिले उपलब्ध छैन — विवाह मात्र समावेश छ।`}
-        </p>
+        <p className="pn-aside-tab-empty">साइत डाटा अहिले उपलब्ध छैन।</p>
       ) : entries.length === 0 ? (
         <p className="pn-aside-tab-empty">यस वर्ष र प्रकारका लागि साइत उपलब्ध छैन।</p>
       ) : (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityAutocomplete } from "@/components/auth/CityAutocomplete";
+import { formatDateInput, formatTimeInput } from "@/lib/birth-date";
 import {
   createProfile,
   updateProfile,
@@ -43,8 +44,8 @@ export function profileToInput(p: Profile): ProfileInput {
     latitude: p.latitude,
     longitude: p.longitude,
     timezone: p.timezone ?? "",
-    birth_date: p.birth_date ?? "",
-    birth_time: p.birth_time ?? "",
+    birth_date: p.birth_date ? formatDateInput(p.birth_date) : "",
+    birth_time: p.birth_time ? formatTimeInput(p.birth_time) : "",
     birth_era: p.birth_era ?? "bs",
     is_default: p.is_default,
   };
@@ -153,16 +154,20 @@ export function ProfileForm({
           <label className={labelClass}>Birth date</label>
           <Input
             value={form.birth_date ?? ""}
-            onChange={(e) => set("birth_date", e.target.value)}
+            onChange={(e) => set("birth_date", formatDateInput(e.target.value))}
             placeholder="YYYY-MM-DD"
+            inputMode="numeric"
+            maxLength={10}
           />
         </div>
         <div className={fieldWrap}>
           <label className={labelClass}>Birth time</label>
           <Input
             value={form.birth_time ?? ""}
-            onChange={(e) => set("birth_time", e.target.value)}
+            onChange={(e) => set("birth_time", formatTimeInput(e.target.value))}
             placeholder="HH:MM"
+            inputMode="numeric"
+            maxLength={5}
           />
         </div>
         <div className={fieldWrap}>
