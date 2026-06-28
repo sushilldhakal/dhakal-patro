@@ -18,6 +18,7 @@ declare global {
 }
 
 let gsiPromise: Promise<void> | null = null;
+let gsiInitializedFor: string | null = null;
 
 /** Load the Google Identity Services script once, shared across mounts. */
 function loadGsi(): Promise<void> {
@@ -35,6 +36,22 @@ function loadGsi(): Promise<void> {
   return gsiPromise;
 }
 
+function ensureGsiInitialized(onCredential: (idToken: string) => void) {
+  const id = window.google?.accounts?.id;
+  if (!id || !CLIENT_ID) return false;
+
+  if (gsiInitializedFor !== CLIENT_ID) {
+    id.initialize({
+      client_id: CLIENT_ID,
+      callback: (res) => {
+        if (res.credential) onCredential(res.credential);
+      },
+    });
+    gsiInitializedFor = CLIENT_ID;
+  }
+  return true;
+}
+
 /**
  * Renders Google's official "Continue with Google" button. On success it hands
  * back the Google ID token (a JWT) for the backend to verify.
@@ -50,6 +67,8 @@ export function GoogleSignInButton({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
+  const onCredentialRef = useRef(onCredential);
+  onCredentialRef.current = onCredential;
 
   useEffect(() => {
     if (!CLIENT_ID || !ref.current) return;
@@ -57,16 +76,16 @@ export function GoogleSignInButton({
 
     loadGsi()
       .then(() => {
-        const id = window.google?.accounts?.id;
-        if (cancelled || !ref.current || !id) return;
-        id.initialize({
-          client_id: CLIENT_ID,
-          callback: (res) => {
-            if (res.credential) onCredential(res.credential);
-          },
-        });
+        if (cancelled || !ref.current) return;
+        if (
+          !ensureGsiInitialized((token) => {
+            onCredentialRef.current(token);
+          })
+        ) {
+          return;
+        }
         ref.current.innerHTML = "";
-        id.renderButton(ref.current, {
+        window.google!.accounts!.id!.renderButton(ref.current, {
           type: "standard",
           theme: resolvedTheme === "dark" ? "filled_black" : "outline",
           size: "large",
@@ -81,7 +100,7 @@ export function GoogleSignInButton({
     return () => {
       cancelled = true;
     };
-  }, [onCredential, onError, resolvedTheme]);
+  }, [onError, resolvedTheme]);
 
   if (!CLIENT_ID) return null;
   return <div ref={ref} className="flex justify-center" />;

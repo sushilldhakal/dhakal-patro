@@ -16,7 +16,11 @@ echo "==> Installing dependencies (npm ci)"
 npm ci
 
 echo "==> Building production bundle (API base = /api, same-origin)"
-VITE_API_BASE_URL=/api npm run build
+BUILD_ENV=(VITE_API_BASE_URL=/api)
+if [[ -f .env ]] && grep -q '^VITE_GOOGLE_CLIENT_ID=' .env; then
+  BUILD_ENV+=(VITE_GOOGLE_CLIENT_ID="$(grep '^VITE_GOOGLE_CLIENT_ID=' .env | cut -d= -f2- | tr -d '"')")
+fi
+env "${BUILD_ENV[@]}" npm run build
 
 echo "==> Publishing dist/ → ${WEB_ROOT}"
 sudo mkdir -p "${WEB_ROOT}"

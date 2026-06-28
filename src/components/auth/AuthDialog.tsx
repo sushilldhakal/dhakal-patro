@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -78,18 +78,21 @@ export function AuthDialog({
     }
   }
 
-  async function onGoogle(idToken: string) {
-    setError(null);
-    setBusy(true);
-    try {
-      await loginWithGoogle(idToken);
-      onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Google sign-in failed");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const onGoogle = useCallback(
+    async (idToken: string) => {
+      setError(null);
+      setBusy(true);
+      try {
+        await loginWithGoogle(idToken);
+        onOpenChange(false);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : "Google sign-in failed");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [loginWithGoogle, onOpenChange],
+  );
 
   const title =
     mode === "login" ? "Sign in" : mode === "signup" ? "Create account" : "Reset password";
