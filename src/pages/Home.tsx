@@ -21,14 +21,14 @@ import {
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
 import { BS_MONTHS_NE, getCurrentBs } from "../lib/bs-calendar";
 import {
-  formatClockNepali,
   formatHolidayBsDisplay,
-  formatMonthMoonEventDisplay,
-  getMoonriseDisplay,
-  getSunriseDisplay,
-  getSunsetDisplay,
   toNepaliDigits,
 } from "../lib/panchanga-format";
+import {
+  ASIDE_TABS,
+  PanchangaAsideTabPanel,
+  type AsideTabId,
+} from "@/components/home/PanchangaAsideTabs";
 
 const TODAY_AD = new Date().toISOString().split("T")[0];
 
@@ -66,6 +66,8 @@ function PanchangaAside({
     staleTime: 1000 * 60 * 30,
   });
 
+  const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
+
   const isSelectedToday = selectedAdDate === todayAd;
   const p = panchangaQ.data;
 
@@ -73,27 +75,7 @@ function PanchangaAside({
   const adDisplay = p?.display?.gregorian_en ?? fmtAdFull(selectedAdDate);
   const weekdayNe = p?.weekday ?? selectedDay?.weekday_ne ?? selectedDay?.weekday;
   const tithi = p?.tithi?.name_ne ?? p?.tithi?.name ?? selectedDay?.tithi_ne ?? selectedDay?.tithi;
-  const nakshatra = p?.nakshatra?.name_ne ?? p?.nakshatra?.name ?? selectedDay?.nakshatra;
-  const yoga = p?.yoga?.name_ne ?? p?.yoga?.name;
-  const karana = p?.karana?.name_ne ?? p?.karana?.name;
   const paksha = p?.paksha?.label_ne ?? p?.paksha_ne;
-  const sunrise = p
-    ? getSunriseDisplay(p)
-    : selectedDay?.sunrise
-      ? formatClockNepali(selectedDay.sunrise)
-      : undefined;
-  const sunset = p
-    ? getSunsetDisplay(p)
-    : selectedDay?.sunset
-      ? formatClockNepali(selectedDay.sunset)
-      : undefined;
-  const moonrise = p
-    ? getMoonriseDisplay(p)
-    : selectedDay
-      ? formatMonthMoonEventDisplay(selectedDay, "moonrise")
-      : undefined;
-  const ritu = p?.ritu?.name_ne;
-  const rahuKalam = p?.muhurta?.rahu_kalam;
 
   const displayHeroDate = (() => {
     if (p?.bs_date && typeof p.bs_date === "object") {
@@ -104,26 +86,6 @@ function PanchangaAside({
     return bsDisplay ? toNepaliDigits(bsDisplay) : "—";
   })();
 
-  const minis = [
-    { label: "तिथि", value: tithi, hint: paksha },
-    { label: "नक्षत्र", value: nakshatra },
-    { label: "योग", value: yoga },
-    { label: "करण", value: karana },
-    {
-      label: "सूर्योदय / सूर्यास्त",
-      value: sunrise && sunset ? `${sunrise} / ${sunset}` : undefined,
-      mono: true,
-    },
-    { label: "चन्द्रोदय", value: moonrise ?? "—", mono: true },
-    { label: "ऋतु", value: ritu, hint: p?.ritu?.season },
-    {
-      label: "राहुकाल",
-      value: rahuKalam
-        ? `${formatClockNepali(rahuKalam.start_time) ?? rahuKalam.start_time} – ${formatClockNepali(rahuKalam.end_time) ?? rahuKalam.end_time}`
-        : undefined,
-      mono: true,
-    },
-  ];
 
   const topFestName =
     p?.festivals?.[0]?.name_ne ??
@@ -135,75 +97,108 @@ function PanchangaAside({
 
   return (
     <aside className="pn-aside">
-      <div className="pn-aside-head">
-        <h2 className="pn-aside-title">
-          {isSelectedToday ? "आजको पञ्चाङ्ग" : "पञ्चाङ्ग"}
-        </h2>
-        <Link to="/panchanga" className="pn-aside-link">
-          Full detail →
-        </Link>
-      </div>
+      <div className="pn-aside-panel">
+        <div className="pn-aside-head">
+          <h2 className="pn-aside-title">
+            {isSelectedToday ? "आजको पञ्चाङ्ग" : "पञ्चाङ्ग"}
+          </h2>
+          <Link to="/panchanga" className="pn-aside-link">
+            Full detail →
+          </Link>
+        </div>
 
-      {panchangaQ.isLoading ? (
-        <>
-          <div className="pn-hero">
-            <div className="pn-hero-grid" />
-            <div className="pn-hero-eyebrow">{isSelectedToday ? "TODAY · आज" : "…"}</div>
-            <div className="pn-mini-skel" style={{ height: 36, marginTop: 10 }} />
-            <div className="pn-mini-skel" style={{ height: 16, width: "70%", marginTop: 8 }} />
-          </div>
-          <div className="pn-minis">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="pn-mini">
-                <div className="pn-mini-label">…</div>
-                <div className="pn-mini-skel" />
-              </div>
-            ))}
-          </div>
-        </>
-      ) : panchangaQ.isError ? (
-        <div className="pn-error-box">Could not load panchanga. Try again shortly.</div>
-      ) : (
-        <>
-          <div className="pn-hero">
-            <div className="pn-hero-grid" />
-            <div className="pn-hero-eyebrow">
-              {isSelectedToday ? "TODAY · आज" : (weekdayNe ?? "").toUpperCase()}
+        {panchangaQ.isLoading ? (
+          <div className="pn-aside-body">
+            <div className="pn-hero">
+              <div className="pn-hero-grid" />
+              <div className="pn-hero-eyebrow">{isSelectedToday ? "TODAY · आज" : "…"}</div>
+              <div className="pn-mini-skel" style={{ height: 36, marginTop: 10 }} />
+              <div className="pn-mini-skel" style={{ height: 16, width: "70%", marginTop: 8 }} />
             </div>
-            <div className="pn-hero-date">{displayHeroDate}</div>
-            <div className="pn-hero-sub">
-              {weekdayNe}
-              {p?.bs_date && typeof p.bs_date === "object"
-                ? `, वि.सं. ${toNepaliDigits(p.bs_date.year)}`
-                : ""}
+            <div className="pn-aside-tabs" role="tablist" aria-label="पञ्चाङ्ग विवरण">
+              {ASIDE_TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  className={`pn-aside-tab${t.id === asideTab ? " active" : ""}`}
+                  aria-selected={t.id === asideTab}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
-            <div className="pn-hero-ad">
-              {adDisplay} · {selectedAdDate}
-            </div>
-            <div className="pn-hero-pills">
-              {paksha && <span className="pn-pill">{paksha}</span>}
-              {tithi && <span className="pn-pill">{tithi}</span>}
-              {topFestName && (
-                <span className={`pn-pill ev ${topFestIsPublic ? "public" : "festival"}`}>
-                  {topFestName}
-                </span>
-              )}
+            <div className="pn-aside-scroll">
+              <PanchangaAsideTabPanel
+                tab={asideTab}
+                loading
+                selectedDay={selectedDay}
+                selectedAdDate={selectedAdDate}
+              />
             </div>
           </div>
-
-          <div className="pn-minis">
-            {minis.map((mi) => (
-              <div key={mi.label} className="pn-mini">
-                <div className="pn-mini-label">{mi.label}</div>
-                <div className={`pn-mini-value${mi.mono ? " mono" : ""}`}>
-                  {mi.value ?? "—"}
+        ) : panchangaQ.isError ? (
+          <div className="pn-aside-body">
+            <div className="pn-error-box">Could not load panchanga. Try again shortly.</div>
+          </div>
+        ) : (
+          <div className="pn-aside-body">
+            <div className="pn-hero">
+              <div className="pn-hero-grid" />
+              <div className="pn-hero-layout">
+                <div className="pn-hero-main">
+                  <div className="pn-hero-eyebrow">
+                    {isSelectedToday ? "TODAY · आज" : (weekdayNe ?? "").toUpperCase()}
+                  </div>
+                  <div className="pn-hero-date">{displayHeroDate}</div>
+                  <div className="pn-hero-sub">
+                    {weekdayNe}
+                    {p?.bs_date && typeof p.bs_date === "object"
+                      ? `, वि.सं. ${toNepaliDigits(p.bs_date.year)}`
+                      : ""}
+                  </div>
+                  <div className="pn-hero-ad">{adDisplay}</div>
                 </div>
-                {mi.hint && <div className="pn-mini-hint">{mi.hint}</div>}
+                {(paksha || tithi || topFestName) ? (
+                  <div className="pn-hero-pills">
+                    {paksha && <span className="pn-pill">{paksha}</span>}
+                    {tithi && <span className="pn-pill">{tithi}</span>}
+                    {topFestName && (
+                      <span className={`pn-pill ev ${topFestIsPublic ? "public" : "festival"}`}>
+                        {topFestName}
+                      </span>
+                    )}
+                  </div>
+                ) : null}
               </div>
-            ))}
+            </div>
+
+            <div className="pn-aside-tabs" role="tablist" aria-label="पञ्चाङ्ग विवरण">
+              {ASIDE_TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  className={`pn-aside-tab${t.id === asideTab ? " active" : ""}`}
+                  aria-selected={t.id === asideTab}
+                  onClick={() => setAsideTab(t.id)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="pn-aside-scroll" role="tabpanel">
+              <PanchangaAsideTabPanel
+                tab={asideTab}
+                p={p}
+                selectedDay={selectedDay}
+                selectedAdDate={selectedAdDate}
+              />
+            </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </aside>
   );
 }

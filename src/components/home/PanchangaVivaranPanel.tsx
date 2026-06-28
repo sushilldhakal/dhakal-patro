@@ -1,0 +1,164 @@
+import type { CalendarDay, PanchangaDay } from "@/lib/api";
+import {
+  formatAngaPatroTransitionHint,
+  formatClockNepali,
+  formatMonthMoonEventDisplay,
+  formatPatroBelaantar,
+  formatPatroDeshaantar,
+  getMoonriseDisplay,
+  getPanchangaDetail,
+  getPlanetGocharLines,
+  getRituDisplayNe,
+  getRituSeason,
+  getSolarCorrections,
+  getSunriseDisplay,
+  getSunsetDisplay,
+} from "@/lib/panchanga-format";
+
+type AngaBlock = {
+  name_ne?: string;
+  name?: string;
+  end_local_time?: string;
+  end_hours_clock?: string;
+  end_ghati_clock?: string;
+  next?: AngaBlock;
+};
+
+type Props = {
+  p?: PanchangaDay;
+  selectedDay?: CalendarDay | null;
+  loading?: boolean;
+};
+
+type DetailCell = {
+  label: string;
+  value?: string;
+  hint?: string;
+  wide?: boolean;
+  mono?: boolean;
+};
+
+function angaName(anga?: AngaBlock | null): string | undefined {
+  return anga?.name_ne ?? anga?.name;
+}
+
+function VivaranCell({ label, value, hint, wide, mono }: DetailCell) {
+  return (
+    <div className={`pn-vivaran-cell${wide ? " wide" : ""}`}>
+      <div className="pn-vivaran-cell-label">{label}</div>
+      <div className={`pn-vivaran-cell-value${mono ? " mono" : ""}`}>{value ?? "—"}</div>
+      {hint ? <div className="pn-vivaran-cell-hint">{hint}</div> : null}
+    </div>
+  );
+}
+
+function buildPanchangaDetailCells(
+  p: PanchangaDay,
+  selectedDay?: CalendarDay | null,
+): DetailCell[] {
+  const detail = getPanchangaDetail(p);
+  const nakshatra = (detail?.nakshatra ?? p.nakshatra) as AngaBlock | undefined;
+  const yoga = (detail?.yoga ?? p.yoga) as AngaBlock | undefined;
+  const karana = (detail?.karana ?? p.karana) as AngaBlock | undefined;
+  const karanaHint = formatAngaPatroTransitionHint(karana);
+
+  const sunrise = getSunriseDisplay(p) ??
+    (selectedDay?.sunrise ? formatClockNepali(selectedDay.sunrise) : undefined);
+  const sunset = getSunsetDisplay(p) ??
+    (selectedDay?.sunset ? formatClockNepali(selectedDay.sunset) : undefined);
+  const moonrise =
+    getMoonriseDisplay(p) ??
+    (selectedDay ? formatMonthMoonEventDisplay(selectedDay, "moonrise") : undefined);
+
+  return [
+    {
+      label: "सूर्योदय / सूर्यास्त",
+      value: sunrise && sunset ? `${sunrise} / ${sunset}` : undefined,
+      mono: true,
+    },
+    { label: "चन्द्रोदय", value: moonrise ?? "—", mono: true },
+    { label: "ऋतु", value: getRituDisplayNe(p), hint: getRituSeason(p) },
+    {
+      label: "नक्षत्र",
+      value: angaName(nakshatra),
+      hint: formatAngaPatroTransitionHint(nakshatra),
+    },
+    {
+      label: "योग",
+      value: angaName(yoga),
+      hint: formatAngaPatroTransitionHint(yoga),
+    },
+    {
+      label: "करण",
+      value: angaName(karana),
+      hint: karanaHint,
+      wide: Boolean(karanaHint && karanaHint.length > 18),
+    },
+  ];
+}
+
+export function PanchangaVivaranPanel({ p, selectedDay, loading }: Props) {
+  if (loading || !p) {
+    return (
+      <section className="pn-vivaran">
+        <div className="pn-vivaran-angas">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="pn-vivaran-cell">
+              <div className="pn-mini-label">…</div>
+              <div className="pn-mini-skel" />
+            </div>
+          ))}
+        </div>
+        <div className="pn-vivaran-skel" style={{ height: 120, marginTop: 10 }} />
+      </section>
+    );
+  }
+
+  const cells = buildPanchangaDetailCells(p, selectedDay);
+  const planets = getPlanetGocharLines(p);
+  const solar = getSolarCorrections(p);
+  const deshaantar = formatPatroDeshaantar(solar?.deshaantar);
+  const belaantar = formatPatroBelaantar(solar?.belaantar);
+
+  return (
+    <section className="pn-vivaran">
+      <div className="pn-vivaran-angas">
+        {cells.map((cell) => (
+          <VivaranCell key={cell.label} {...cell} />
+        ))}
+      </div>
+
+      {planets.length > 0 || deshaantar || belaantar ? (
+        <div className="pn-vivaran-block pn-vivaran-gochar">
+          <div className="pn-vivaran-block-title">ग्रह गोचर</div>
+          {planets.length > 0 ? (
+            <div className="pn-gochar-grid">
+              {planets.map(({ label, value }) => (
+                <div key={label} className="pn-gochar-chip">
+                  <span className="pn-gochar-chip-label">{label}</span>
+                  <span className="pn-gochar-chip-value">{value}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {deshaantar || belaantar ? (
+            <div className="pn-gochar-foot">
+              {deshaantar ? (
+                <div className="pn-gochar-chip">
+                  <span className="pn-gochar-chip-label">सूर्यक्रान्ति</span>
+                  <span className="pn-gochar-chip-value">{deshaantar}</span>
+                </div>
+              ) : null}
+              {belaantar ? (
+                <div className="pn-gochar-chip">
+                  <span className="pn-gochar-chip-label">वेलान्तर</span>
+                  <span className="pn-gochar-chip-value">{belaantar}</span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}

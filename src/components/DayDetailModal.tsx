@@ -20,6 +20,7 @@ import {
   getMoonriseDisplay,
   getMoonsetDisplay,
   getPanchangaDetail,
+  getRituDisplayNe,
   getMuhurtaRows,
   getPlanetRows,
   getSunriseDisplay,
@@ -232,7 +233,7 @@ function PanchangaFull({
     (detail?.chandra_rashi as { name_ne?: string } | undefined)?.name_ne ??
     p.chandra_rashi?.name_ne ??
     (typeof p.chandra_rashi === "string" ? p.chandra_rashi : undefined);
-  const ritu = (detail?.ritu as { name_ne?: string } | undefined)?.name_ne ?? p.ritu?.name_ne;
+  const ritu = getRituDisplayNe(p);
   const aayan = (detail?.aayan as { name_ne?: string } | undefined)?.name_ne ?? p.aayan?.name_ne ?? p.aayan?.name;
 
   const bs = (detail?.bs_date ?? p.bs_date) as

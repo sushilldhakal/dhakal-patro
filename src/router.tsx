@@ -25,6 +25,9 @@ const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
 const History = lazyRoute(() => import("./pages/History"), "History");
+const Account = lazyRoute(() => import("./pages/Account"), "Account");
+const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail");
+const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPassword");
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -82,6 +85,9 @@ const historyLegacyRoute = createRoute({
   path: "/history",
   component: () => <Navigate to="/learn/history" replace />,
 });
+const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/account", component: Account });
+const verifyEmailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
+const resetPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -99,6 +105,9 @@ const routeTree = rootRoute.addChildren([
   sunTimesLegacyRoute,
   historyRoute,
   historyLegacyRoute,
+  accountRoute,
+  verifyEmailRoute,
+  resetPasswordRoute,
 ]);
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");

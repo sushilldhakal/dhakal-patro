@@ -272,7 +272,7 @@ export function CalendarView({
           {monthHeader}
           {calendarBlock}
         </div>
-        {aside}
+        {aside ? <div className="pn-aside-col">{aside}</div> : null}
         {holidays}
       </div>
     );

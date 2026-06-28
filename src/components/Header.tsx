@@ -28,6 +28,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AccountMenu } from "@/components/auth/AccountMenu";
 
 const PANCHANGA_LINKS = [
   { to: "/panchanga" as const, label: "Surya Panchanga", icon: Star },
@@ -200,7 +201,10 @@ export function Header() {
           ))}
         </nav>
 
-        <ThemeToggle className="hidden lg:flex" />
+        <div className="hidden lg:flex items-center gap-2">
+          <ThemeToggle />
+          <AccountMenu />
+        </div>
 
         {/* Mobile / tablet (< 1024px) — menu left, brand center, theme right */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full lg:hidden">
@@ -250,8 +254,9 @@ export function Header() {
 
           <BrandMark className="justify-center" />
 
-          <div className="flex justify-end">
+          <div className="flex justify-end items-center gap-2">
             <ThemeToggle />
+            <AccountMenu />
           </div>
         </div>
       </div>

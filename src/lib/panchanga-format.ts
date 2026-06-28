@@ -68,6 +68,103 @@ export function formatAngaTransition(anga?: AngaDetail | null): string | undefin
   return `${current}, ${toNepaliDigits(endTime)} बजेपछि ${next}`;
 }
 
+type AngaPatro = {
+  name_ne?: string;
+  name?: string;
+  end_local_time?: string;
+  end_hours_clock?: string;
+  end_ghati_clock?: string;
+  next?: AngaPatro;
+};
+
+function patroAngaEndClock(anga: AngaPatro): string | undefined {
+  const t =
+    formatTimeShort(anga.end_local_time) ??
+    formatTimeShort(anga.end_hours_clock) ??
+    formatGhatiEnd(anga.end_ghati_clock);
+  if (!t) return undefined;
+  const [hh, mm] = t.split(":");
+  if (!hh || !mm) return toNepaliDigits(t);
+  return toNepaliDigits(`${hh.padStart(2, "0")}:${mm.padStart(2, "0")}`);
+}
+
+function angaEndsNextDay(anga: AngaPatro): boolean {
+  if (anga.end_hours_clock) {
+    const h = Number(anga.end_hours_clock.split(":")[0]);
+    if (!Number.isNaN(h) && h >= 24) return true;
+  }
+  if (anga.end_ghati_clock) {
+    const gh = Number(anga.end_ghati_clock.split(":")[0]);
+    if (!Number.isNaN(gh) && gh >= 60) return true;
+  }
+  const end =
+    formatTimeShort(anga.end_local_time) ??
+    formatTimeShort(anga.end_hours_clock);
+  if (end) {
+    const h = Number(end.split(":")[0]);
+    if (!Number.isNaN(h) && h < 5) return true;
+  }
+  return false;
+}
+
+/** Patro sidebar — शुक्ल त्रयोदशी•००:४३ बाट शुक्ल चतुर्दशी(अर्को दिन) */
+export function formatAngaPatroChain(anga?: AngaPatro | null): string | undefined {
+  if (!anga) return undefined;
+  const first = anga.name_ne ?? anga.name;
+  if (!first) return undefined;
+  let result = first;
+  let node: AngaPatro | undefined = anga;
+  while (node?.next) {
+    const end = patroAngaEndClock(node);
+    const nextNode: AngaPatro = node.next;
+    const nextName = nextNode.name_ne ?? nextNode.name ?? "";
+    if (!end || !nextName) break;
+    const isLast = !nextNode.next;
+    const dayNote = isLast && angaEndsNextDay(node) ? "(अर्को दिन)" : "";
+    result += `•${end} बाट ${nextName}${dayNote}`;
+    node = nextNode;
+  }
+  return result;
+}
+
+/** Transition tail only — •००:४३ बाट शुक्ल चतुर्दशी(अर्को दिन) */
+export function formatAngaPatroTransitionHint(
+  anga?: AngaPatro | null,
+): string | undefined {
+  const full = formatAngaPatroChain(anga);
+  const name = anga?.name_ne ?? anga?.name;
+  if (!full || !name || full === name) return undefined;
+  if (full.startsWith(name)) return full.slice(name.length);
+  return full;
+}
+
+export function formatPakshaShortNe(p: PanchangaDay): string | undefined {
+  const detail = getPanchangaDetail(p);
+  const label =
+    (detail?.paksha as { label_ne?: string } | undefined)?.label_ne ??
+    p.paksha?.label_ne ??
+    p.paksha_ne;
+  if (!label) return undefined;
+  return label.replace(/\s*पक्ष\s*$/u, "").trim();
+}
+
+export function formatPatroBelaantar(c?: SolarCorrection): string | undefined {
+  if (!c || c.minutes == null || c.seconds == null) return undefined;
+  const mm = toNepaliDigits(c.minutes);
+  const ss = toNepaliDigits(String(c.seconds).padStart(2, "0"));
+  const prefix = c.sign === "rin" ? "(-) " : "(+) ";
+  return `${prefix}${mm}:${ss}`;
+}
+
+/** Patro label सूर्यक्रान्ति — maps to देशान्तर correction. */
+export function formatPatroDeshaantar(c?: SolarCorrection): string | undefined {
+  if (!c || c.minutes == null || c.seconds == null) return undefined;
+  const mm = toNepaliDigits(c.minutes);
+  const ss = toNepaliDigits(String(c.seconds).padStart(2, "0"));
+  if (c.sign === "rin") return `(-) ${mm}:${ss}`;
+  return `उ ${mm}:${ss}`;
+}
+
 export function getPanchangaDetail(p: PanchangaDay) {
   return (p as PanchangaDay & { detail?: Record<string, unknown> }).detail as
     | Record<string, unknown>
@@ -127,7 +224,28 @@ export type SolarCorrections = {
 
 export function getSolarCorrections(p: PanchangaDay): SolarCorrections | undefined {
   const detail = getPanchangaDetail(p);
-  return detail?.solar_corrections as SolarCorrections | undefined;
+  return (
+    (detail?.solar_corrections as SolarCorrections | undefined) ??
+    (p as PanchangaDay & { solar_corrections?: SolarCorrections }).solar_corrections
+  );
+}
+
+type RituBlock = { name_ne?: string; season?: string };
+
+export function getRituDisplayNe(p?: PanchangaDay | null): string | undefined {
+  if (!p) return undefined;
+  const ritu = getPanchangaDetail(p)?.ritu as RituBlock | undefined;
+  if (ritu?.name_ne) return ritu.name_ne;
+  if (typeof p.ritu === "object" && p.ritu?.name_ne) return p.ritu.name_ne;
+  return p.ritu_ne;
+}
+
+export function getRituSeason(p?: PanchangaDay | null): string | undefined {
+  if (!p) return undefined;
+  const ritu = getPanchangaDetail(p)?.ritu as RituBlock | undefined;
+  if (ritu?.season) return ritu.season;
+  if (typeof p.ritu === "object" && p.ritu?.season) return p.ritu.season;
+  return undefined;
 }
 
 export function formatSolarCorrectionDisplay(c?: SolarCorrection): string | undefined {
@@ -680,6 +798,48 @@ export function getPlanetRows(p: PanchangaDay): { label: string; rashiNe?: strin
       const rashiNe = info.rashi_ne ?? rashiNeFromNumber(info.rashi);
       const coords = planetDegreeCells(info);
       return { label, rashiNe, coords };
+    });
+}
+
+export function formatPlanetGocharLine(info: PlanetDetail): string {
+  const cells = planetDegreeCells(info).split("|");
+  const rashiNo = info.rashi;
+  if (rashiNo != null && rashiNo >= 1 && rashiNo <= 12) {
+    return [toNepaliDigits(rashiNo), ...cells].join(":");
+  }
+  return cells.join(":");
+}
+
+export function getPlanetGocharLines(
+  p: PanchangaDay,
+): { label: string; value: string }[] {
+  const detail = getPanchangaDetail(p);
+  const planets = (detail?.planets ?? p.planets) as
+    | Record<string, PlanetDetail | string>
+    | undefined;
+  if (!planets) return [];
+
+  const order = [
+    "sun",
+    "moon",
+    "mars",
+    "mercury",
+    "jupiter",
+    "venus",
+    "saturn",
+    "rahu",
+    "ketu",
+  ] as const;
+
+  return order
+    .filter((key) => key in planets)
+    .map((key) => {
+      const label = PLANET_LABELS[key] ?? key;
+      const info = planets[key];
+      if (typeof info === "string") {
+        return { label, value: info };
+      }
+      return { label, value: formatPlanetGocharLine(info) };
     });
 }
 

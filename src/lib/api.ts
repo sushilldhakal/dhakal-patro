@@ -1,6 +1,9 @@
 const BASE =
   import.meta.env.VITE_API_BASE_URL ?? "https://193-123-67-133.sslip.io";
 
+/** Shared API base URL — also used by the auth client. */
+export const API_BASE = BASE;
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
@@ -804,7 +807,8 @@ export interface PanchangaDay {
   tarabalam?: BalamBlock;
   panchaka_rahita?: PanchakaSegment[];
   udaya_lagna?: UdayaLagnaRow[];
-  ritu?: { name_ne?: string; season?: string };
+  ritu?: { name_ne?: string; season?: string } | string;
+  ritu_ne?: string;
   lagna?: { name?: string; name_ne?: string; degree_in_rashi?: number; longitude?: number };
   lagna_spans?: LagnaSpan[];
   detail?: {

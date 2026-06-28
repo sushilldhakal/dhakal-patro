@@ -11,6 +11,8 @@ import {
   getMuhurtaRows,
   getMoonriseDisplay,
   getMoonsetDisplay,
+  getRituDisplayNe,
+  getRituSeason,
   getPanchangaDetail,
   getLagnaDisplay,
   getPlanetRows,
@@ -393,7 +395,6 @@ export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
 
 export function RituSection({ p }: { p: PanchangaDay }) {
   const detail = getPanchangaDetail(p);
-  const ritu = (detail?.ritu as { name_ne?: string; season?: string } | undefined);
   const aayan = (detail?.aayan as { name_ne?: string } | undefined)?.name_ne ??
     p.aayan?.name_ne ??
     p.aayan?.name;
@@ -403,9 +404,9 @@ export function RituSection({ p }: { p: PanchangaDay }) {
       <PanchangaRows>
         <PanchangaRow label="ऋतु" labelEn="Ritu" oddBorder>
           <span>☀</span>
-          <span className="font-semibold">{ritu?.name_ne ?? p.ritu?.name_ne ?? "—"}</span>
-          {ritu?.season && (
-            <span className="text-xs text-muted-foreground">({ritu.season})</span>
+          <span className="font-semibold">{getRituDisplayNe(p) ?? "—"}</span>
+          {getRituSeason(p) && (
+            <span className="text-xs text-muted-foreground">({getRituSeason(p)})</span>
           )}
         </PanchangaRow>
         <PanchangaRow label="दिनमान" labelEn="Dinamana">
