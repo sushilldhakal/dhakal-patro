@@ -384,6 +384,15 @@ export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
                     row.end_local_time_short ?? row.end_local_time
                   ) ?? "—"}
                 </span>
+                {row.pushkara_navamsha?.length ? (
+                  <span className="pg-mrow-pushkara font-mono text-xs text-muted-foreground">
+                    पुष्कर:{" "}
+                    {row.pushkara_navamsha
+                      .map((h) => formatShortClock(h.local_time_short ?? h.local_time))
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
+                ) : null}
               </div>
             )) ?? <span className="text-muted-foreground text-sm">—</span>}
           </div>

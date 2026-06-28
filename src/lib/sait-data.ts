@@ -86,3 +86,30 @@ export function getSaitMonthEntries(
     .filter((entry) => entry.days.length > 0)
     .sort((a, b) => a.month - b.month);
 }
+
+/** BS years that have at least one sait entry for a ceremony type (offline bundle). */
+export function getLocalSaitYearsForCategory(category: SaitCategoryId): number[] {
+  return Object.keys(SAIT_DATA)
+    .map(Number)
+    .filter((y) => getSaitMonthEntries(y, category).length > 0)
+    .sort((a, b) => a - b);
+}
+
+/** Pick the closest year that actually has sait rows for this category. */
+export function pickNearestSaitYear(preferred: number, available: number[]): number {
+  if (!available.length) return preferred;
+  if (available.includes(preferred)) return preferred;
+  return available.reduce((best, y) =>
+    Math.abs(y - preferred) < Math.abs(best - preferred) ? y : best,
+  );
+}
+
+/** Merge API years with offline years for one ceremony type. */
+export function mergeSaitYears(apiYears: number[] | undefined, category: SaitCategoryId): number[] {
+  const merged = new Set<number>(getLocalSaitYearsForCategory(category));
+  // rules/sait_dates_v1.json currently only lists vivah rows; other categories are placeholders.
+  if (category === "vivah") {
+    for (const y of apiYears ?? []) merged.add(y);
+  }
+  return [...merged].sort((a, b) => a - b);
+}

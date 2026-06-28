@@ -1084,7 +1084,7 @@
 }
 .pn-aside-muhurta-subtabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
 }
 .pn-aside-muhurta-subtab {
@@ -1120,6 +1120,59 @@
   flex-shrink: 0;
   margin-top: 1px;
   opacity: 0.75;
+}
+.pn-aside-pushkara-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-aside-pushkara-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+}
+.pn-aside-pushkara-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pn-aside-pushkara-rashi {
+  font: 700 13px var(--pn-font);
+  color: var(--foreground);
+}
+.pn-aside-pushkara-range {
+  font: 600 12px var(--pn-num);
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.pn-aside-pushkara-hits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  font-size: 12px;
+}
+.pn-aside-pushkara-label {
+  font: 600 11.5px var(--pn-font);
+  color: var(--muted-foreground);
+}
+.pn-aside-pushkara-hit {
+  font: 700 12px var(--pn-num);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-teal) 10%, var(--card));
+}
+.pn-aside-pushkara-none {
+  font: 500 12px var(--pn-font);
+  color: var(--muted-foreground);
 }
 .pn-aside-navatara-moon {
   margin: 0 0 8px;

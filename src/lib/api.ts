@@ -425,8 +425,11 @@ export interface SaitResponse {
 }
 
 export const saitKeys = {
+  years: () => ["sait", "years"] as const,
   entries: (year: number, category: string) => ["sait", year, category] as const,
 };
+
+export const fetchSaitYears = () => get<{ years: number[] }>("/nepal/sait/years");
 
 export const fetchSait = (year: number, category: string) =>
   get<SaitResponse>(`/nepal/sait/${year}/${category}`);
@@ -684,6 +687,13 @@ export async function streamKundaliReport(
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface PushkaraNavamshaHit {
+  degree?: number;
+  degree_dms?: string;
+  local_time?: string;
+  local_time_short?: string;
+}
+
 export interface LagnaSpan {
   number?: number;
   name?: string;
@@ -700,6 +710,7 @@ export interface LagnaSpan {
   end_hours_clock?: string;
   end_local_time?: string;
   end_local_time_short?: string;
+  pushkara_navamsha?: PushkaraNavamshaHit[];
 }
 
 export interface RashiSpan {
@@ -770,6 +781,7 @@ export interface UdayaLagnaRow {
   end_local_time?: string;
   start_hours_clock?: string;
   end_hours_clock?: string;
+  pushkara_navamsha?: PushkaraNavamshaHit[];
 }
 
 export interface MuhurtaNowBlock {

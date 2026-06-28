@@ -149,7 +149,7 @@ function BrandMark({ className }: { className?: string }) {
   return (
     <Link to="/" className={cn("flex items-center gap-2.5 shrink-0 group min-w-0", className)}>
       <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shadow group-hover:shadow-primary/40 transition-shadow">
-        <span className="text-primary font-bold text-lg leading-none">V</span>
+        <CalendarDays className="w-5 h-5 text-primary" />
       </div>
       <span className="font-bold text-[15px] tracking-tight truncate">
         <span className="text-secondary">Vedic</span>
@@ -219,7 +219,7 @@ export function Header() {
                 <DrawerHeader className="border-b border-border text-left">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shadow">
-                      <span className="text-primary font-bold text-lg leading-none">V</span>
+                      <CalendarDays className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <DrawerTitle className="text-base">

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, MapPin, Sparkles } from "lucide-react";
+import { Clock, MapPin, Plus, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   fetchShadbala,
   fetchVimshottari,
@@ -11,7 +12,7 @@ import {
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
-import { adToBS } from "@/lib/bs-calendar";
+import { adToBS, bsToAD } from "@/lib/bs-calendar";
 import {
   buildAtTimeDatetime,
   fetchEphemerisPanchangaDay,
@@ -31,7 +32,13 @@ import {
 import { resolveTimeZone } from "@/lib/zoned-time";
 import { cn } from "@/lib/utils";
 import { KundaliControls } from "@/components/kundali/KundaliControls";
+import {
+  KundaliProfilePicker,
+  type KundaliProfilePickerHandle,
+} from "@/components/kundali/KundaliProfilePicker";
 import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
+import { useAuth } from "@/lib/auth/AuthContext";
+import type { Profile } from "@/lib/auth/client";
 import { D1Chart } from "@/components/kundali/D1Chart";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
@@ -161,7 +168,38 @@ function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
   });
 }
 
+/** Parse a saved profile's birth date (BS or AD) into an AD Date. */
+function parseBirthDate(p: Profile): Date | null {
+  if (!p.birth_date) return null;
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(p.birth_date.trim());
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  try {
+    return p.birth_era === "ad" ? new Date(y, mo - 1, d) : bsToAD(y, mo, d);
+  } catch {
+    return null;
+  }
+}
+
+/** Build a location from a profile's saved coordinates, falling back if absent. */
+function profileLocation(p: Profile, fallback: PanchangaLocation): PanchangaLocation {
+  if (p.latitude != null && p.longitude != null) {
+    return {
+      label: p.location_label || p.city || "Birth place",
+      params: {
+        lat: p.latitude,
+        lon: p.longitude,
+        ...(p.timezone ? { timezone: p.timezone } : {}),
+      },
+    };
+  }
+  return fallback;
+}
+
 export function Kundali() {
+  const { isAuthenticated } = useAuth();
   const { location, setLocation } = usePanchangaLocation();
   const [date, setDate] = useState(() => new Date());
   const [era, setEra] = useState<"bs" | "ad">("bs");
@@ -197,6 +235,38 @@ export function Kundali() {
   const generate = () => {
     setApplied({ date, clock, location, ayanamshaMode });
   };
+
+  // ─── Saved-profile mode (signed-in users) ──────────────────────────────────
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const pickerRef = useRef<KundaliProfilePickerHandle>(null);
+
+  const applyProfile = useCallback(
+    (p: Profile) => {
+      setSelectedProfileId(p.id);
+      const birthDate = parseBirthDate(p);
+      const loc = profileLocation(p, location);
+      setLocation(loc);
+      if (!birthDate) {
+        // Profile has no usable birth date yet — prompt the user to add it.
+        setApplied(null);
+        return;
+      }
+      const clk =
+        p.birth_time && /^\d{1,2}:\d{2}/.test(p.birth_time) ? p.birth_time : clock;
+      setDate(birthDate);
+      if (p.birth_era === "bs" || p.birth_era === "ad") setEra(p.birth_era);
+      setClock(clk);
+      setApplied({ date: birthDate, clock: clk, location: loc, ayanamshaMode });
+    },
+    [location, clock, ayanamshaMode, setLocation]
+  );
+
+  // Recompute when the ayanamsha changes while a profile is selected.
+  useEffect(() => {
+    if (selectedProfileId) {
+      setApplied((a) => (a ? { ...a, ayanamshaMode } : a));
+    }
+  }, [ayanamshaMode, selectedProfileId]);
 
   const adDateStr = applied ? toAdStr(applied.date) : "";
   const bs = applied ? adToBS(applied.date) : null;
@@ -318,47 +388,60 @@ export function Kundali() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
-      <div className="mb-4 mt-2">
-        <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
-          नेपाली पात्रो · जन्म कुण्डली
+      <div className="mb-4 mt-2 flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+            नेपाली पात्रो · जन्म कुण्डली
+          </div>
+          <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
+            <Sparkles className="w-7 h-7 text-secondary shrink-0" />
+            Janma Kundali
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            जन्म मिति, समय र स्थान अनुसार राशि, ग्रह र दशा विवरण
+          </p>
         </div>
-        <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
-          <Sparkles className="w-7 h-7 text-secondary shrink-0" />
-          Janma Kundali
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          जन्म मिति, समय र स्थान अनुसार राशि, ग्रह र दशा विवरण
-        </p>
+        {isAuthenticated && (
+          <Button className="shrink-0" onClick={() => pickerRef.current?.openAdd()}>
+            <Plus className="size-4" /> Add profile
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-4">
-        <KundaliControls
-          date={date}
-          onDateChange={setDate}
-          era={era}
-          onEraChange={setEra}
-          clock={clock}
-          onClockChange={handleClockChange}
-          location={location}
-          onLocationChange={setLocation}
-        />
+        {isAuthenticated ? (
+          <KundaliProfilePicker ref={pickerRef} selectedId={selectedProfileId} onSelect={applyProfile} />
+        ) : (
+          <KundaliControls
+            date={date}
+            onDateChange={setDate}
+            era={era}
+            onEraChange={setEra}
+            clock={clock}
+            onClockChange={handleClockChange}
+            location={location}
+            onLocationChange={setLocation}
+          />
+        )}
 
         <AyanamshaSelector mode={ayanamshaMode} onModeChange={setAyanamshaMode} />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={generate}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-secondary px-5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90"
-          >
-            <Sparkles className="h-4 w-4" />
-            {applied ? "Update kundali" : "Generate kundali"}
-          </button>
-          <p className="text-xs text-muted-foreground">
-            जन्म मिति, समय र स्थान भरेर “Generate” थिच्नुहोस् · Set your birth date,
-            time and place, then generate.
-          </p>
-        </div>
+        {!isAuthenticated && (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={generate}
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-secondary px-5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90"
+            >
+              <Sparkles className="h-4 w-4" />
+              {applied ? "Update kundali" : "Generate kundali"}
+            </button>
+            <p className="text-xs text-muted-foreground">
+              जन्म मिति, समय र स्थान भरेर “Generate” थिच्नुहोस् · Set your birth date,
+              time and place, then generate.
+            </p>
+          </div>
+        )}
 
         {!applied && (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center">
@@ -367,9 +450,11 @@ export function Kundali() {
               कुण्डली देखाउन जन्म विवरण आवश्यक छ
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-              Enter the birth date, time and place above, then press
-              <span className="font-medium text-foreground"> Generate kundali</span>.
-              Nothing is calculated until you do.
+              {isAuthenticated
+                ? selectedProfileId
+                  ? "This profile has no birth date yet — add the birth date, time and place to it, then it'll generate."
+                  : "Pick a profile above (or add one) to generate its kundali."
+                : "Enter the birth date, time and place above, then press Generate kundali. Nothing is calculated until you do."}
             </p>
           </div>
         )}

@@ -15,18 +15,21 @@ import {
 import { buildHoraSchedule, formatMinutesClock, horaQuality, horaTone } from "@/lib/hora-schedule";
 import {
   formatClockNepali,
+  formatTimeRangeShort,
   getSunrise,
   getSunset,
+  getUdayaLagna,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
 
-type MuhurtaSubTab = "tarabal" | "chandrabal" | "choghadiya" | "hora";
+type MuhurtaSubTab = "tarabal" | "chandrabal" | "choghadiya" | "hora" | "pushkara";
 
 const SUB_TABS: { id: MuhurtaSubTab; label: string }[] = [
   { id: "tarabal", label: "ताराबल" },
   { id: "chandrabal", label: "चन्द्रबल" },
   { id: "choghadiya", label: "चौघडी" },
   { id: "hora", label: "होरा" },
+  { id: "pushkara", label: "पुष्कर" },
 ];
 
 const SUB_TAB_HINT: Record<MuhurtaSubTab, string> = {
@@ -34,6 +37,8 @@ const SUB_TAB_HINT: Record<MuhurtaSubTab, string> = {
   chandrabal: "यात्रा र कार्यको सफलता हेर्न।",
   choghadiya: "दिन र रातका चौघडिया खण्ड।",
   hora: "सूर्योदयदेखि सूर्यास्तसम्मका ग्रह होरा।",
+  pushkara:
+    "प्रत्येक लग्नभित्रका शुभ नवांश — संकल्प वा कार्य सुरु गर्न उपयुक्त समय (१०–१३ मिनेटको सुरुवात मात्र)।",
 };
 
 const MOON_REF_LABEL: Record<MuhurtaSubTab, string> = {
@@ -41,6 +46,7 @@ const MOON_REF_LABEL: Record<MuhurtaSubTab, string> = {
   chandrabal: "आजको चन्द्र राशि",
   choghadiya: "",
   hora: "",
+  pushkara: "",
 };
 
 function parseTimeToMinutes(time?: string | null): number | null {
@@ -166,6 +172,48 @@ function HoraList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
   );
 }
 
+function PushkaraList({ p }: { p: PanchangaDay }) {
+  const rows = getUdayaLagna(p);
+
+  if (!rows?.length) {
+    return <p className="pn-aside-tab-empty">पुष्कर नवांश उपलब्ध छैन।</p>;
+  }
+
+  return (
+    <ul className="pn-aside-pushkara-list">
+      {rows.map((row, i) => {
+        const range =
+          formatTimeRangeShort(
+            row.start_local_time_short ?? row.start_local_time,
+            row.end_local_time_short ?? row.end_local_time,
+          ) ?? "—";
+        const hits = row.pushkara_navamsha ?? [];
+        return (
+          <li key={`${row.name}-${i}`} className="pn-aside-pushkara-row">
+            <div className="pn-aside-pushkara-head">
+              <span className="pn-aside-pushkara-rashi">{row.name_ne ?? row.name}</span>
+              <span className="pn-aside-pushkara-range mono">{range}</span>
+            </div>
+            {hits.length ? (
+              <div className="pn-aside-pushkara-hits">
+                <span className="pn-aside-pushkara-label">पुष्कर नवांश:</span>
+                {hits.map((hit, j) => (
+                  <span key={j} className="pn-aside-pushkara-hit mono">
+                    {formatClockNepali(hit.local_time_short ?? hit.local_time) ??
+                      hit.local_time_short}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="pn-aside-pushkara-none">—</span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 type Props = {
   p: PanchangaDay;
   dateAd: string;
@@ -217,6 +265,7 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
         ) : null}
         {subTab === "choghadiya" ? <ChoghadiyaList p={p} dateAd={dateAd} /> : null}
         {subTab === "hora" ? <HoraList p={p} dateAd={dateAd} /> : null}
+        {subTab === "pushkara" ? <PushkaraList p={p} /> : null}
       </div>
     </div>
   );
