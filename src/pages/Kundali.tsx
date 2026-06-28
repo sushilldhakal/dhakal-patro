@@ -126,6 +126,8 @@ type PlanetCard = {
   degrees?: string;
   retrograde?: boolean;
   longitude?: number;
+  nakshatra?: string;
+  pada?: number;
 };
 
 type RawPlanet = PlanetInfo & {
@@ -147,6 +149,7 @@ function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
 
     const lon = info.longitude;
     const rashiNum = lon != null ? Math.floor(lon / 30) + 1 : undefined;
+    const nakshatra = lon != null ? nakshatraPadaFromLongitude(lon) : undefined;
 
     const rashi = info.rashi_ne ?? info.rashi_name ?? info.rashi ?? "—";
     const degrees =
@@ -165,6 +168,8 @@ function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
       degrees,
       retrograde: info.is_retrograde ?? info.retrograde,
       longitude: lon,
+      nakshatra: nakshatra?.ne,
+      pada: nakshatra?.pada,
     };
   });
 }
@@ -556,23 +561,40 @@ export function Kundali() {
                     <div
                       key={planet.key}
                       className={cn(
-                        "bg-card px-4 py-3.5 flex flex-col gap-1 min-h-[88px]",
+                        "bg-card px-4 py-3.5 flex items-start justify-between gap-3 min-h-[88px]",
                         planet.retrograde && "bg-secondary/[0.06] dark:bg-secondary/10"
                       )}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-[12px] font-semibold text-muted-foreground leading-snug">
-                          {planet.label}
-                        </p>
-                        {planet.retrograde && (
-                          <span className="text-[9.5px] text-secondary font-bold bg-secondary/15 dark:text-secondary px-1.5 py-0.5 rounded-full shrink-0">
-                            वक्री
-                          </span>
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <div className="flex items-start gap-2">
+                          <p className="text-[12px] font-semibold text-muted-foreground leading-snug">
+                            {planet.label}
+                          </p>
+                          {planet.retrograde && (
+                            <span className="text-[9.5px] text-secondary font-bold bg-secondary/15 dark:text-secondary px-1.5 py-0.5 rounded-full shrink-0">
+                              वक्री
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-lg font-bold text-foreground leading-tight">{planet.rashi}</p>
+                        {planet.degrees && (
+                          <p className="text-xs font-mono text-muted-foreground">{planet.degrees}</p>
                         )}
                       </div>
-                      <p className="text-lg font-bold text-foreground leading-tight">{planet.rashi}</p>
-                      {planet.degrees && (
-                        <p className="text-xs font-mono text-muted-foreground">{planet.degrees}</p>
+                      {planet.nakshatra && (
+                        <div className="flex flex-col items-end text-right shrink-0">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                            नक्षत्र
+                          </p>
+                          <p className="text-sm font-semibold text-foreground leading-tight">
+                            {planet.nakshatra}
+                          </p>
+                          {planet.pada != null && (
+                            <p className="text-[11px] text-muted-foreground">
+                              पाद {toNepaliDigits(planet.pada)}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
