@@ -367,7 +367,7 @@ export function Panchanga() {
       />
 
       <p className="mt-7 text-[11.5px] text-muted-foreground text-center">
-        पञ्चाङ्गका मानहरू Dhakal Patro API बाट · Panchanga values from live API
+        पञ्चाङ्गका मानहरू Vedic Patro API बाट · Panchanga values from live API
       </p>
     </div>
   );

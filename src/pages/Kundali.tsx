@@ -593,7 +593,7 @@ export function Kundali() {
       />
 
       <p className="mt-7 text-[11.5px] text-muted-foreground text-center">
-        कुण्डलीका मानहरू Dhakal Patro API बाट · Kundali values from live API
+        कुण्डलीका मानहरू Vedic Patro API बाट · Kundali values from live API
       </p>
     </div>
   );

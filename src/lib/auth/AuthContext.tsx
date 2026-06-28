@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  apiGoogle,
   apiLogin,
   apiLogout,
   apiMe,
@@ -22,6 +23,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -70,6 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(await apiMe());
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    tokenStore.set(await apiGoogle(idToken));
+    setUser(await apiMe());
+  }, []);
+
   const logout = useCallback(async () => {
     await apiLogout();
     setUser(null);
@@ -82,10 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null,
       login,
       signup,
+      loginWithGoogle,
       logout,
       refreshUser,
     }),
-    [user, loading, login, signup, logout, refreshUser]
+    [user, loading, login, signup, loginWithGoogle, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

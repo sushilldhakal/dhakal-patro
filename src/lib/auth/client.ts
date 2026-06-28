@@ -149,6 +149,15 @@ export async function apiLogin(email: string, password: string): Promise<TokenPa
   return res.json();
 }
 
+export async function apiGoogle(idToken: string): Promise<TokenPair> {
+  const res = await raw("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ id_token: idToken }),
+  });
+  if (!res.ok) throw new ApiError(res.status, await parseError(res));
+  return res.json();
+}
+
 export async function apiLogout(): Promise<void> {
   const refresh_token = tokenStore.refresh;
   if (refresh_token) {

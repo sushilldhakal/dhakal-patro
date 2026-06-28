@@ -149,11 +149,11 @@ function BrandMark({ className }: { className?: string }) {
   return (
     <Link to="/" className={cn("flex items-center gap-2.5 shrink-0 group min-w-0", className)}>
       <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shadow group-hover:shadow-primary/40 transition-shadow">
-        <CalendarDays className="w-5 h-5 text-primary" />
+        <span className="text-primary font-bold text-lg leading-none">V</span>
       </div>
       <span className="font-bold text-[15px] tracking-tight truncate">
-        <span className="text-secondary">ढhakal</span>
-        <span className="text-secondary"> Patro</span>
+        <span className="text-secondary">Vedic</span>
+        <span className="text-foreground"> Patro</span>
       </span>
     </Link>
   );
@@ -219,12 +219,12 @@ export function Header() {
                 <DrawerHeader className="border-b border-border text-left">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shadow">
-                      <CalendarDays className="w-5 h-5 text-primary" />
+                      <span className="text-primary font-bold text-lg leading-none">V</span>
                     </div>
                     <div>
                       <DrawerTitle className="text-base">
-                        <span className="text-secondary">ढhakal</span>
-                        <span className="text-secondary"> Patro</span>
+                        <span className="text-secondary">Vedic</span>
+                        <span className="text-foreground"> Patro</span>
                       </DrawerTitle>
                       <DrawerDescription>नेपाली पात्रो र पञ्चाङ्ग</DrawerDescription>
                     </div>

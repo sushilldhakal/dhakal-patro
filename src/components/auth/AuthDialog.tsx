@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { apiForgotPassword, ApiError } from "@/lib/auth/client";
+import { GoogleSignInButton, googleSignInEnabled } from "./GoogleSignInButton";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -25,7 +26,7 @@ export function AuthDialog({
   onOpenChange: (open: boolean) => void;
   initialMode?: Mode;
 }) {
-  const { login, signup } = useAuth();
+  const { login, signup, loginWithGoogle } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,11 +78,24 @@ export function AuthDialog({
     }
   }
 
+  async function onGoogle(idToken: string) {
+    setError(null);
+    setBusy(true);
+    try {
+      await loginWithGoogle(idToken);
+      onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Google sign-in failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const title =
     mode === "login" ? "Sign in" : mode === "signup" ? "Create account" : "Reset password";
   const desc =
     mode === "login"
-      ? "Welcome back to Dhakal Patro."
+      ? "Welcome back to Vedic Patro."
       : mode === "signup"
         ? "Save your kundali profiles across devices."
         : "We'll email you a link to set a new password.";
@@ -93,6 +107,17 @@ export function AuthDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{desc}</DialogDescription>
         </DialogHeader>
+
+        {mode !== "forgot" && googleSignInEnabled && (
+          <div className="flex flex-col gap-3">
+            <GoogleSignInButton onCredential={onGoogle} onError={setError} />
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              or
+              <span className="h-px flex-1 bg-border" />
+            </div>
+          </div>
+        )}
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <div className={fieldWrap}>
