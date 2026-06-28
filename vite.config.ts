@@ -11,6 +11,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // In dev, mirror the production nginx setup: forward "/api/*" to the local
+  // FastAPI server with the prefix stripped, so the app is same-origin here too.
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ""),
+      },
+    },
+  },
   build: {
     rollupOptions: {
       output: {

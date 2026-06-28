@@ -105,14 +105,19 @@ export function applyHolidaysToDays(
   for (const h of holidays) {
     const name = h.name_ne ?? h.name_en ?? h.id;
     const existing = namesByDate.get(h.start_date) ?? [];
-    if (!existing.includes(name)) existing.push(name);
+    const aliasKey = (h.name_ne ?? h.name_en ?? h.id).toLowerCase();
+    const duplicate = existing.some((entry) => {
+      const entryKey = entry.toLowerCase();
+      return entryKey === aliasKey || entry === name;
+    });
+    if (!duplicate) existing.push(name);
     namesByDate.set(h.start_date, existing);
   }
 
   return days.map((day) => {
     const extra = namesByDate.get(day.date_ad);
     if (!extra?.length) return day;
-    const merged = [...day.festivals];
+    const merged = [...(day.festivals ?? [])];
     for (const name of extra) {
       if (!merged.includes(name)) merged.push(name);
     }

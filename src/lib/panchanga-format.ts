@@ -1,4 +1,4 @@
-import type { PanchangaDay } from "./api";
+import type { CalendarDay, Festival, PanchangaDay } from "./api";
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
 
 const NEPALI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"] as const;
@@ -899,6 +899,210 @@ export function getMuhurtaRows(p: PanchangaDay): {
   return rows;
 }
 
+/** Patro-style BS date, e.g. असार १४, २०८३ */
+export function formatBsMonthDayPatro(
+  bsYear: number,
+  bsMonth: number,
+  bsDay: number,
+): string {
+  return `${BS_MONTHS_NE[bsMonth - 1]} ${toNepaliDigits(bsDay)}, ${toNepaliDigits(bsYear)}`;
+}
+
+export type MonthFestivalEntry = {
+  name: string;
+  bsDay: number;
+  isPublicHoliday?: boolean;
+};
+
+const NOTABLE_TITHI_NE = new Set([
+  "चतुर्थी",
+  "अष्टमी",
+  "एकादशी",
+  "द्वादशी",
+  "पूर्णिमा",
+  "अमावास्या",
+  "औंसी",
+]);
+
+function parseBsDayInMonth(
+  festival: Festival,
+  bsYear: number,
+  bsMonth: number,
+): number | null {
+  if (festival.bs_start_date) {
+    const [y, m, d] = festival.bs_start_date.split("-").map(Number);
+    if (y === bsYear && m === bsMonth && d) return d;
+  }
+  if (festival.start_date) {
+    const bs = adToBS(new Date(`${festival.start_date}T12:00:00`));
+    if (bs.year === bsYear && bs.month === bsMonth) return bs.day;
+  }
+  return null;
+}
+
+function pakshaShortNe(day: CalendarDay): string | undefined {
+  const label = day.paksha_ne ?? day.paksha ?? "";
+  if (label.includes("शुक्ल")) return "शुक्ल";
+  if (label.includes("कृष्ण")) return "कृष्ण";
+  return undefined;
+}
+
+function tithiPatroLabel(day: CalendarDay): string | undefined {
+  const tithi = day.tithi_ne ?? day.tithi;
+  if (!tithi || !NOTABLE_TITHI_NE.has(tithi)) return undefined;
+  if (tithi === "पूर्णिमा") return "पूर्णिमा";
+  if (tithi === "अमावास्या" || tithi === "औंसी") return "अमावास्या";
+  const paksha = pakshaShortNe(day);
+  if (paksha) return `${paksha} ${tithi}`;
+  return tithi;
+}
+
+function hasDevanagari(text: string): boolean {
+  return /[\u0900-\u097F]/.test(text);
+}
+
+function normalizeFestKey(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\u0900-\u097F]+/g, " ")
+    .trim();
+}
+
+/** Map any festival label to a stable alias id for deduplication. */
+function buildFestivalAliasIndex(festivals: Festival[]): Map<string, string> {
+  const index = new Map<string, string>();
+  for (const festival of festivals) {
+    const alias = `fest:${festival.id}`;
+    for (const label of [festival.name_ne, festival.name_en, festival.name, festival.id]) {
+      if (!label) continue;
+      index.set(normalizeFestKey(label), alias);
+    }
+  }
+  return index;
+}
+
+function resolveFestivalAlias(name: string, aliasIndex: Map<string, string>): string {
+  return aliasIndex.get(normalizeFestKey(name)) ?? `name:${normalizeFestKey(name)}`;
+}
+
+function preferNepaliName(current: string, candidate: string): string {
+  if (hasDevanagari(candidate) && !hasDevanagari(current)) return candidate;
+  return current;
+}
+
+/** Collapse Nepali + English duplicates on the same calendar day. */
+function dedupeDayFestivalNames(names: string[], aliasIndex: Map<string, string>): string[] {
+  const byAlias = new Map<string, string>();
+  for (const name of names) {
+    const trimmed = name.trim();
+    if (!trimmed) continue;
+    const alias = resolveFestivalAlias(trimmed, aliasIndex);
+    const existing = byAlias.get(alias);
+    byAlias.set(alias, existing ? preferNepaliName(existing, trimmed) : trimmed);
+  }
+  return Array.from(byAlias.values());
+}
+
+function entryCoversTithi(entryName: string, tithiLabel: string): boolean {
+  const tithiCore = tithiLabel.replace(/^(शुक्ल|कृष्ण)\s+/, "");
+  return entryName.includes(tithiCore) || entryName.includes(tithiLabel);
+}
+
+/** Month-wide चाडपर्व list for the patro-style aside tab. */
+export function buildMonthFestivalEntries(
+  bsYear: number,
+  bsMonth: number,
+  days: CalendarDay[],
+  apiFestivals: Festival[] = [],
+): MonthFestivalEntry[] {
+  const monthNe = BS_MONTHS_NE[bsMonth - 1];
+  const aliasIndex = buildFestivalAliasIndex(apiFestivals);
+  const byDay = new Map<number, MonthFestivalEntry[]>();
+  const claimed = new Map<number, Set<string>>();
+
+  const add = (
+    bsDay: number,
+    name: string,
+    opts?: { isPublicHoliday?: boolean; alias?: string },
+  ) => {
+    const trimmed = name.trim();
+    if (!trimmed) return false;
+    const alias = opts?.alias ?? resolveFestivalAlias(trimmed, aliasIndex);
+    const dayClaims = claimed.get(bsDay) ?? new Set<string>();
+    if (dayClaims.has(alias)) return false;
+
+    const list = byDay.get(bsDay) ?? [];
+    const existing = list.find((entry) => resolveFestivalAlias(entry.name, aliasIndex) === alias);
+    if (existing) {
+      existing.name = preferNepaliName(existing.name, trimmed);
+      existing.isPublicHoliday ||= opts?.isPublicHoliday;
+      dayClaims.add(alias);
+      claimed.set(bsDay, dayClaims);
+      return false;
+    }
+
+    list.push({ name: trimmed, bsDay, isPublicHoliday: opts?.isPublicHoliday });
+    byDay.set(bsDay, list);
+    dayClaims.add(alias);
+    claimed.set(bsDay, dayClaims);
+    return true;
+  };
+
+  add(1, `${monthNe} संक्रान्ति`, { alias: `sankranti:${bsMonth}` });
+
+  for (const festival of apiFestivals) {
+    const bsDay = parseBsDayInMonth(festival, bsYear, bsMonth);
+    if (bsDay == null) continue;
+    const name = festival.name_ne ?? festival.name_en ?? festival.name ?? festival.id;
+    add(bsDay, name, {
+      isPublicHoliday: festival.is_public_holiday,
+      alias: `fest:${festival.id}`,
+    });
+  }
+
+  for (const day of days) {
+    const names = dedupeDayFestivalNames(day.festivals ?? [], aliasIndex);
+    for (const name of names) {
+      add(day.day, name);
+    }
+  }
+
+  let prevTithiLabel: string | undefined;
+  for (const day of days) {
+    if (day.day === 1) {
+      prevTithiLabel = undefined;
+      continue;
+    }
+
+    const dayEntries = byDay.get(day.day) ?? [];
+    const hasNamedFest = dayEntries.some(
+      (entry) => !entry.name.endsWith("संक्रान्ति"),
+    );
+    if (hasNamedFest) {
+      prevTithiLabel = undefined;
+      continue;
+    }
+
+    const tithiLabel = tithiPatroLabel(day);
+    if (!tithiLabel) {
+      prevTithiLabel = undefined;
+      continue;
+    }
+    if (tithiLabel === prevTithiLabel) continue;
+    if (dayEntries.some((entry) => entryCoversTithi(entry.name, tithiLabel))) continue;
+
+    if (add(day.day, tithiLabel, { alias: `tithi:${day.day}:${tithiLabel}` })) {
+      prevTithiLabel = tithiLabel;
+    }
+  }
+
+  return Array.from(byDay.entries())
+    .sort(([a], [b]) => a - b)
+    .flatMap(([, entries]) => entries);
+}
+
 export function getEventNames(p: PanchangaDay, dayFestivals: string[]): string[] {
   const fromApi = (p.festivals ?? []).map((f) => f.name_ne ?? f.name_en ?? f.name ?? "").filter(Boolean);
   const merged = [...fromApi];
@@ -943,4 +1147,19 @@ export function relativeDayLabel(daysDiff: number): string {
   if (daysDiff === 0) return "Today";
   if (daysDiff > 0) return `${daysDiff} Days left`;
   return `${Math.abs(daysDiff)} Days before`;
+}
+
+export function daysDiffFromAd(fromAd: string, toAd: string): number {
+  const from = new Date(`${fromAd}T12:00:00`);
+  const to = new Date(`${toAd}T12:00:00`);
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+/** Days until a festival — Nepali labels for the aside चाडपर्व tab. */
+export function festivalRelLabelNepali(daysDiff: number): string {
+  if (daysDiff === 0) return "आज";
+  if (daysDiff === 1) return "भोलि";
+  if (daysDiff > 1) return `${toNepaliDigits(daysDiff)} दिन`;
+  if (daysDiff === -1) return "हिजो";
+  return `${toNepaliDigits(Math.abs(daysDiff))} दिन अघि`;
 }

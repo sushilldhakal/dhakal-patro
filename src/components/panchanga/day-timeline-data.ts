@@ -425,6 +425,13 @@ export function choghadiyaTone(name: string, bad?: boolean): "bad" | "good" | "n
   return "neutral";
 }
 
+export function choghadiyaQuality(name: string, bad?: boolean): "शुभ" | "अशुभ" | "सामान्य" {
+  const tone = choghadiyaTone(name, bad);
+  if (tone === "good") return "शुभ";
+  if (tone === "bad") return "अशुभ";
+  return "सामान्य";
+}
+
 /** Civil clock from sunrise; after 24:00 wraps to 1, 2, 3… (not 25, 26, 27). */
 export function ghatiToCivilClockLabel(g: number, sunriseMin: number): string {
   const totalMin = sunriseMin + g * 24;

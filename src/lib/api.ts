@@ -1,5 +1,7 @@
-const BASE =
-  import.meta.env.VITE_API_BASE_URL ?? "https://193-123-67-133.sslip.io";
+// Same-origin by default: nginx proxies "/api" → the FastAPI backend, so the
+// browser never makes a cross-origin request (no CORS). Override with
+// VITE_API_BASE_URL for a split host (e.g. http://localhost:8080 in dev).
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 /** Shared API base URL — also used by the auth client. */
 export const API_BASE = BASE;
@@ -392,14 +394,42 @@ export const fetchPatroMonth = (year: number, month: number) =>
 
 export const holidayKeys = {
   holidays: (year: number) => ["holidays", year] as const,
-  festivals: (year: number) => ["festivals", year] as const,
+  festivals: (year: number, month?: number) =>
+    month != null
+      ? (["festivals", year, month] as const)
+      : (["festivals", year] as const),
 };
 
 export const fetchHolidays = (year: number) =>
   get<HolidaysResponse>(`/nepal/holidays?year=${year}&era=bs`);
 
-export const fetchFestivals = (year: number) =>
-  get<FestivalsResponse>(`/nepal/festivals?year=${year}&era=bs`);
+export const fetchFestivals = (year: number, month?: number) => {
+  const params = new URLSearchParams({ year: String(year), era: "bs" });
+  if (month != null) params.set("month", String(month));
+  return get<FestivalsResponse>(`/nepal/festivals?${params}`);
+};
+
+// ─── Sait (auspicious dates) ──────────────────────────────────────────────────
+
+export interface SaitMonthEntry {
+  month: number;
+  month_name_ne: string;
+  days: number[];
+}
+
+export interface SaitResponse {
+  bs_year: number;
+  category: string;
+  category_label_ne: string;
+  months: SaitMonthEntry[];
+}
+
+export const saitKeys = {
+  entries: (year: number, category: string) => ["sait", year, category] as const,
+};
+
+export const fetchSait = (year: number, category: string) =>
+  get<SaitResponse>(`/nepal/sait/${year}/${category}`);
 
 // ─── Convertor ────────────────────────────────────────────────────────────────
 

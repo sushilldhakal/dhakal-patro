@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Flag, Sunrise, Sunset } from "lucide-react";
@@ -10,7 +10,7 @@ import {
   type Holiday,
   type CalendarDay,
 } from "../lib/api";
-import { CalendarView } from "../components/CalendarView";
+import { CalendarView, type CalendarMonthContext } from "../components/CalendarView";
 import { RituSeasons } from "../components/RituSeasons";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import {
@@ -54,11 +54,13 @@ function PanchangaAside({
   selectedAdDate,
   location,
   todayAd,
+  monthContext,
 }: {
   selectedDay: CalendarDay | null;
   selectedAdDate: string;
   location: PanchangaLocation;
   todayAd: string;
+  monthContext: CalendarMonthContext;
 }) {
   const panchangaQ = useQuery({
     queryKey: panchangaKeys.day(selectedAdDate, "ad", location.params),
@@ -134,6 +136,10 @@ function PanchangaAside({
                 loading
                 selectedDay={selectedDay}
                 selectedAdDate={selectedAdDate}
+                bsYear={monthContext.year}
+                bsMonth={monthContext.month}
+                monthDays={monthContext.days}
+                todayAd={todayAd}
               />
             </div>
           </div>
@@ -194,6 +200,10 @@ function PanchangaAside({
                 p={p}
                 selectedDay={selectedDay}
                 selectedAdDate={selectedAdDate}
+                bsYear={monthContext.year}
+                bsMonth={monthContext.month}
+                monthDays={monthContext.days}
+                todayAd={todayAd}
               />
             </div>
           </div>
@@ -289,12 +299,20 @@ function UpcomingHolidays({
 
 export function Home() {
   const { location, setLocation } = usePanchangaLocation();
-  const { year: bsYear } = getCurrentBs();
+  const { year: bsYear, month: bsMonth } = getCurrentBs();
   const todayAd = useMemo(
     () => todayAdStringInTimezone(new Date(), resolveLocationTimezone(location)),
     [location],
   );
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const [monthContext, setMonthContext] = useState<CalendarMonthContext>(() => ({
+    year: bsYear,
+    month: bsMonth,
+    days: [],
+  }));
+  const handleMonthContextChange = useCallback((ctx: CalendarMonthContext) => {
+    setMonthContext(ctx);
+  }, []);
   const selectedAdDate = selectedDay?.date_ad ?? todayAd;
 
   return (
@@ -310,12 +328,14 @@ export function Home() {
         location={location}
         todayAd={todayAd}
         onDaySelect={setSelectedDay}
+        onMonthContextChange={handleMonthContextChange}
         aside={
           <PanchangaAside
             selectedDay={selectedDay}
             selectedAdDate={selectedAdDate}
             location={location}
             todayAd={todayAd}
+            monthContext={monthContext}
           />
         }
         holidays={<UpcomingHolidays bsYear={bsYear} location={location} />}

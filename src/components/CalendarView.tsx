@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -32,8 +32,15 @@ const BS_YEAR_OPTIONS = Array.from(
   (_, i) => BS_SUPPORTED_START_YEAR + i
 );
 
+export type CalendarMonthContext = {
+  year: number;
+  month: number;
+  days: CalendarDay[];
+};
+
 interface Props {
   onDaySelect?: (day: CalendarDay | null) => void;
+  onMonthContextChange?: (ctx: CalendarMonthContext) => void;
   aside?: ReactNode;
   holidays?: ReactNode;
   showMonthHeader?: boolean;
@@ -45,6 +52,7 @@ interface Props {
 
 export function CalendarView({
   onDaySelect,
+  onMonthContextChange,
   aside,
   holidays,
   showMonthHeader = true,
@@ -89,6 +97,10 @@ export function CalendarView({
     }
     return result;
   }, [localDays, holidayQ.data, monthQ.data]);
+
+  useEffect(() => {
+    onMonthContextChange?.({ year, month, days });
+  }, [year, month, days, onMonthContextChange]);
 
   const publicHolidayDates = useMemo(
     () =>

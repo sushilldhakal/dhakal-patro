@@ -1,16 +1,17 @@
 import type { ReactNode } from "react";
-import type { CalendarDay, Festival, PanchangaDay } from "@/lib/api";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { CalendarDay, PanchangaDay } from "@/lib/api";
+import { fetchFestivals, holidayKeys } from "@/lib/api";
 import {
-  buildDayTimelineData,
-  choghadiyaTone,
-  ghatiToCivilClockLabel,
-} from "@/components/panchanga/day-timeline-data";
-import {
-  getEventNames,
-  getMuhurtaRows,
-  getSunrise,
+  buildMonthFestivalEntries,
+  daysDiffFromAd,
+  formatBsMonthDayPatro,
+  toNepaliDigits,
 } from "@/lib/panchanga-format";
 import { PanchangaVivaranPanel } from "@/components/home/PanchangaVivaranPanel";
+import { SaitAsidePanel } from "@/components/home/SaitAsidePanel";
+import { MuhurtaAsidePanel } from "@/components/home/MuhurtaAsidePanel";
 
 export type AsideTabId = "panchanga" | "festivals" | "sait" | "muhurta";
 
@@ -21,13 +22,6 @@ export const ASIDE_TABS: { id: AsideTabId; label: string }[] = [
   { id: "muhurta", label: "दैनिक मुहूर्त" },
 ];
 
-function parseTimeToMinutes(time?: string | null): number | null {
-  if (!time) return null;
-  const m = time.match(/(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  return Number(m[1]) * 60 + Number(m[2]);
-}
-
 function AsideEmpty({ children }: { children: ReactNode }) {
   return (
     <p className="pn-aside-tab-empty">{children}</p>
@@ -35,119 +29,79 @@ function AsideEmpty({ children }: { children: ReactNode }) {
 }
 
 function FestivalsTab({
-  p,
-  selectedDay,
+  bsYear,
+  bsMonth,
+  monthDays,
+  todayAd,
 }: {
-  p: PanchangaDay;
-  selectedDay: CalendarDay | null;
+  bsYear: number;
+  bsMonth: number;
+  monthDays: CalendarDay[];
+  todayAd: string;
 }) {
-  const apiFestivals = p.festivals ?? [];
-  const dayNames = selectedDay?.festivals ?? [];
-  const named = getEventNames(p, dayNames);
+  const festivalsQ = useQuery({
+    queryKey: holidayKeys.festivals(bsYear, bsMonth),
+    queryFn: () => fetchFestivals(bsYear, bsMonth),
+    staleTime: 1000 * 60 * 60,
+  });
 
-  if (!apiFestivals.length && !named.length) {
-    return <AsideEmpty>यस दिन कुनै चाडपर्व छैन।</AsideEmpty>;
+  const adByBsDay = useMemo(
+    () => new Map(monthDays.map((day) => [day.day, day.date_ad])),
+    [monthDays],
+  );
+
+  const entries = useMemo(
+    () => buildMonthFestivalEntries(bsYear, bsMonth, monthDays, festivalsQ.data?.festivals ?? []),
+    [bsYear, bsMonth, monthDays, festivalsQ.data?.festivals],
+  );
+
+  if (festivalsQ.isLoading && !entries.length) {
+    return <div className="pn-aside-tab-skel" />;
+  }
+
+  if (!entries.length) {
+    return <AsideEmpty>यस महिनामा कुनै चाडपर्व छैन।</AsideEmpty>;
   }
 
   return (
-    <ul className="pn-aside-fest-list">
-      {apiFestivals.map((f: Festival) => {
-        const name = f.name_ne ?? f.name_en ?? f.name ?? "—";
+    <ul className="pn-aside-fest-compact">
+      {entries.map((entry) => {
+        const festAd = adByBsDay.get(entry.bsDay);
+        const daysLeft = festAd != null ? daysDiffFromAd(todayAd, festAd) : null;
+        const isToday = daysLeft === 0;
+        const isPast = daysLeft != null && daysLeft < 0;
+
+        let countLabel: string | null = null;
+        if (daysLeft != null) {
+          if (daysLeft === 0) countLabel = "आज";
+          else if (daysLeft === 1) countLabel = "भोलि";
+          else if (daysLeft > 1) countLabel = toNepaliDigits(daysLeft);
+          else if (daysLeft === -1) countLabel = "हिजो";
+          else countLabel = toNepaliDigits(Math.abs(daysLeft));
+        }
+
         return (
           <li
-            key={f.id}
-            className={`pn-aside-fest-item${f.is_public_holiday ? " public" : ""}`}
+            key={`${entry.bsDay}-${entry.name}`}
+            className={`pn-aside-fest-compact-row${entry.isPublicHoliday ? " public" : ""}${isToday ? " today" : ""}${isPast ? " past" : ""}`}
+            title={formatBsMonthDayPatro(bsYear, bsMonth, entry.bsDay)}
           >
-            <span className="pn-aside-fest-name">{name}</span>
-            {f.is_public_holiday ? (
-              <span className="pn-aside-fest-badge">बिदा</span>
-            ) : (
-              <span className="pn-aside-fest-badge festival">पर्व</span>
-            )}
+            <span className="pn-aside-fest-compact-day" aria-hidden>
+              {toNepaliDigits(entry.bsDay)}
+            </span>
+            <span className="pn-aside-fest-compact-name">{entry.name}</span>
+            {countLabel ? (
+              <span className="pn-aside-fest-compact-count">
+                {countLabel}
+                {daysLeft != null && daysLeft > 1 ? (
+                  <span className="pn-aside-fest-compact-count-unit">दिन</span>
+                ) : null}
+              </span>
+            ) : null}
           </li>
         );
       })}
-      {named
-        .filter((name) => !apiFestivals.some((f) => (f.name_ne ?? f.name_en) === name))
-        .map((name) => (
-          <li key={name} className="pn-aside-fest-item">
-            <span className="pn-aside-fest-name">{name}</span>
-            <span className="pn-aside-fest-badge festival">पर्व</span>
-          </li>
-        ))}
     </ul>
-  );
-}
-
-function SaitTab({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
-  const timeline = buildDayTimelineData(p, dateAd);
-  const sunriseMin = parseTimeToMinutes(getSunrise(p));
-
-  if (!timeline?.choghadiya.length || sunriseMin == null) {
-    return <AsideEmpty>साइत (चौघडिया) उपलब्ध छैन।</AsideEmpty>;
-  }
-
-  const dayG = timeline.dayG;
-
-  return (
-    <div className="pn-aside-sait">
-      <p className="pn-aside-sait-note">चौघडिया · दिन र रात</p>
-      <ul className="pn-aside-sait-list">
-        {timeline.choghadiya.map((seg, i) => {
-          const tone = choghadiyaTone(seg.name, seg.bad);
-          const phase = seg.startG < dayG ? "दिन" : "रात";
-          const range = `${ghatiToCivilClockLabel(seg.startG, sunriseMin)} – ${ghatiToCivilClockLabel(seg.endG, sunriseMin)}`;
-          return (
-            <li
-              key={`${seg.name}-${i}`}
-              className={`pn-aside-sait-row ${tone}${seg.startG >= dayG && i === 8 ? " night-start" : ""}`}
-            >
-              <span className="pn-aside-sait-phase">{phase}</span>
-              <span className="pn-aside-sait-name">{seg.name}</span>
-              <span className="pn-aside-sait-time mono">{range}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-function MuhurtaTab({ p }: { p: PanchangaDay }) {
-  const rows = getMuhurtaRows(p);
-
-  if (!rows.length) {
-    return <AsideEmpty>मुहूर्त विवरण उपलब्ध छैन।</AsideEmpty>;
-  }
-
-  const good = rows.filter((r) => r.auspicious);
-  const bad = rows.filter((r) => !r.auspicious);
-
-  return (
-    <div className="pn-aside-muhurta">
-      {good.length > 0 ? (
-        <section className="pn-aside-muhurta-block">
-          <h4 className="pn-aside-muhurta-head good">शुभ</h4>
-          {good.map((row) => (
-            <div key={row.label} className="pn-aside-muhurta-row">
-              <span className="pn-aside-muhurta-label">{row.label}</span>
-              <span className="pn-aside-muhurta-val mono">{row.value}</span>
-            </div>
-          ))}
-        </section>
-      ) : null}
-      {bad.length > 0 ? (
-        <section className="pn-aside-muhurta-block">
-          <h4 className="pn-aside-muhurta-head bad">अशुभ</h4>
-          {bad.map((row) => (
-            <div key={row.label} className="pn-aside-muhurta-row">
-              <span className="pn-aside-muhurta-label">{row.label}</span>
-              <span className="pn-aside-muhurta-val mono">{row.value}</span>
-            </div>
-          ))}
-        </section>
-      ) : null}
-    </div>
   );
 }
 
@@ -156,6 +110,10 @@ type Props = {
   p?: PanchangaDay;
   selectedDay: CalendarDay | null;
   selectedAdDate: string;
+  bsYear: number;
+  bsMonth: number;
+  monthDays: CalendarDay[];
+  todayAd: string;
   loading?: boolean;
 };
 
@@ -164,13 +122,42 @@ export function PanchangaAsideTabPanel({
   p,
   selectedDay,
   selectedAdDate,
+  bsYear,
+  bsMonth,
+  monthDays,
+  todayAd,
   loading,
 }: Props) {
   if (loading) {
     return tab === "panchanga" ? (
       <PanchangaVivaranPanel loading />
+    ) : tab === "sait" ? (
+      <SaitAsidePanel defaultYear={bsYear} />
+    ) : tab === "festivals" ? (
+      <div className="pn-aside-tab-skel" />
     ) : (
       <div className="pn-aside-tab-skel" />
+    );
+  }
+
+  if (tab === "festivals") {
+    return (
+      <FestivalsTab
+        bsYear={bsYear}
+        bsMonth={bsMonth}
+        monthDays={monthDays}
+        todayAd={todayAd}
+      />
+    );
+  }
+
+  if (tab === "sait") {
+    return (
+      <SaitAsidePanel
+        defaultYear={bsYear}
+        highlightMonth={bsMonth}
+        highlightDay={selectedDay?.day}
+      />
     );
   }
 
@@ -179,14 +166,9 @@ export function PanchangaAsideTabPanel({
   switch (tab) {
     case "panchanga":
       return <PanchangaVivaranPanel p={p} selectedDay={selectedDay} />;
-    case "festivals":
-      return <FestivalsTab p={p} selectedDay={selectedDay} />;
-    case "sait":
-      return <SaitTab p={p} dateAd={selectedAdDate} />;
     case "muhurta":
-      return <MuhurtaTab p={p} />;
+      return <MuhurtaAsidePanel p={p} dateAd={selectedAdDate} />;
     default:
       return null;
   }
 }
-
