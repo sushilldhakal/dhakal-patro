@@ -164,10 +164,22 @@ function SectionCard({ section }: { section: ReportSection }) {
 }
 
 function MetaStrip({ meta }: { meta: ReportMeta }) {
-  const cells: { label: string; value: string }[] = [
+  const cells: { label: string; value: string; sub?: string }[] = [
     { label: "लग्न · Lagna", value: `${meta.lagna.name_ne} (${meta.lagna.name_en})` },
-    { label: "चन्द्र राशि · Moon", value: `${meta.moon_sign.name_ne}` },
-    { label: "सूर्य राशि · Sun", value: `${meta.sun_sign.name_ne}` },
+    {
+      label: "नक्षत्र · Nakshatra",
+      value: meta.nakshatra
+        ? `${meta.nakshatra.name_ne}`
+        : `${meta.moon_sign.name_ne}`,
+      sub: meta.nakshatra
+        ? `${meta.nakshatra.name_en} · pada ${meta.nakshatra.pada}`
+        : "Moon sign",
+    },
+    {
+      label: "सूर्य · Sun",
+      value: `${meta.sun_sign.name_ne}`,
+      sub: meta.sun_sign.name_en,
+    },
     {
       label: "महादशा · Mahadasha",
       value: meta.mahadasha
@@ -175,6 +187,10 @@ function MetaStrip({ meta }: { meta: ReportMeta }) {
             meta.mahadasha.antardasha ? ` / ${meta.mahadasha.antardasha}` : ""
           }`
         : "—",
+      sub:
+        meta.mahadasha && meta.mahadasha.antardasha_ends
+          ? `antar ends ${meta.mahadasha.antardasha_ends}`
+          : undefined,
     },
   ];
   return (
@@ -188,6 +204,7 @@ function MetaStrip({ meta }: { meta: ReportMeta }) {
             {c.label}
           </p>
           <p className="text-sm font-bold leading-tight text-foreground">{c.value}</p>
+          {c.sub && <p className="mt-0.5 text-[10.5px] text-muted-foreground">{c.sub}</p>}
         </div>
       ))}
     </div>
