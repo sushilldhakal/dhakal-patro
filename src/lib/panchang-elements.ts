@@ -9,6 +9,8 @@ export interface NakshatraPadaResult {
   index: number;
   ne: string;
   pada: number;
+  /** Nakshatra lord (नक्षत्रेश) in Nepali — the Vimshottari ruling planet. */
+  lordNe: string;
 }
 
 /** Nakshatra + pada (1-4) from a sidereal Moon longitude. Ayanamsha-dependent. */
@@ -17,7 +19,12 @@ export function nakshatraPadaFromLongitude(moonSiderealLonDeg: number): Nakshatr
   const index = Math.floor(lon / NAKSHATRA_SPAN_DEG);
   const withinNakshatra = lon % NAKSHATRA_SPAN_DEG;
   const pada = Math.floor(withinNakshatra / PADA_SPAN_DEG) + 1;
-  return { index, ne: NAKSHATRA_ICONS[index]?.ne ?? "—", pada };
+  return {
+    index,
+    ne: NAKSHATRA_ICONS[index]?.ne ?? "—",
+    pada,
+    lordNe: NAKSHATRA_ICONS[index]?.lord_ne ?? "—",
+  };
 }
 
 export interface YogaResult {

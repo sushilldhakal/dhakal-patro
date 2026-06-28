@@ -128,6 +128,7 @@ type PlanetCard = {
   longitude?: number;
   nakshatra?: string;
   pada?: number;
+  nakshatresh?: string;
 };
 
 type RawPlanet = PlanetInfo & {
@@ -170,6 +171,7 @@ function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
       longitude: lon,
       nakshatra: nakshatra?.ne,
       pada: nakshatra?.pada,
+      nakshatresh: nakshatra?.lordNe,
     };
   });
 }
@@ -592,6 +594,12 @@ export function Kundali() {
                           {planet.pada != null && (
                             <p className="text-[11px] text-muted-foreground">
                               पाद {toNepaliDigits(planet.pada)}
+                            </p>
+                          )}
+                          {planet.nakshatresh && (
+                            <p className="mt-1 text-[11px] text-muted-foreground">
+                              <span className="text-muted-foreground/70">नक्षत्रेश: </span>
+                              <span className="font-semibold text-foreground">{planet.nakshatresh}</span>
                             </p>
                           )}
                         </div>
