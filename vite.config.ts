@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite"
 import path from "path"
 
 export default defineConfig({
-  base: "/",
+  base: process.env.GITHUB_PAGES ? "/dhakal-patro/" : "/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
