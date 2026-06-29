@@ -12,12 +12,16 @@ const W = 1000;
 const X0 = 96;
 const X1 = 994;
 const RULER_H = 58;
-const SUN_H = 30;
-const T0 = RULER_H + SUN_H + 6;
+const MOON_BAND_H = 20;
+const SUN_H = 28;
+/** Moon events sit above the sun row, just under the घडी ruler. */
+const MOON_EMOJI_Y = RULER_H + 5;
+const MOON_TIME_Y = RULER_H + 16;
+const T0 = RULER_H + MOON_BAND_H + SUN_H + 6;
 const TRACK = 58;
 const BAND = 34;
-const SUNLINE_Y = RULER_H + 12;
-const MARKER_TIME_Y = SUNLINE_Y + 14;
+const SUNLINE_Y = RULER_H + MOON_BAND_H + 8;
+const MARKER_TIME_Y = SUNLINE_Y + 13;
 const SUN_R = 6;
 
 const GHATI_TICKS = Array.from({ length: 16 }, (_, i) => i * 4);
@@ -214,6 +218,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
           ))}
 
           <line x1={X0} y1={SUNLINE_Y} x2={X1} y2={SUNLINE_Y} className="pgx-sunline" />
+          <line x1={X0} y1={T0 - 1} x2={X1} y2={T0 - 1} className="pgx-moonline" />
           <EventMarker g={0} sunriseMin={data.sunriseMin} kind="sunrise" anchor="start" />
           <EventMarker g={data.dayG} sunriseMin={data.sunriseMin} kind="sunset" anchor="middle" />
           {data.moonsetG != null && (
@@ -228,7 +233,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
             <line
               key={`hair-${g}`}
               x1={gx(g)}
-              y1={RULER_H + 18}
+              y1={T0}
               x2={gx(g)}
               y2={H - 4}
               className="pgx-sunhair"
@@ -477,7 +482,7 @@ function EventMarker({
       ) : (
         <text
           x={x}
-          y={SUNLINE_Y - 7}
+          y={MOON_EMOJI_Y}
           textAnchor="middle"
           className="pg-tl-moon-emoji"
           dominantBaseline="central"
@@ -488,7 +493,7 @@ function EventMarker({
       )}
       <text
         x={labelX}
-        y={MARKER_TIME_Y}
+        y={isSun ? MARKER_TIME_Y : MOON_TIME_Y}
         textAnchor={anchor}
         className={isSun ? "pg-tl-event-time" : "pg-tl-event-time moon"}
       >

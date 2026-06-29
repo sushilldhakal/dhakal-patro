@@ -2716,6 +2716,12 @@
   stroke: var(--border);
   stroke-width: 1;
 }
+.pgx-moonline {
+  stroke: color-mix(in srgb, var(--muted-foreground) 35%, var(--border));
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  opacity: 0.7;
+}
 .pgx-sunhair {
   stroke: var(--color-warning);
   stroke-width: 1;
