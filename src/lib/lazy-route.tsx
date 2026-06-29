@@ -1,12 +1,5 @@
 import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
-
-function PageFallback() {
-  return (
-    <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-      लोड हुँदैछ…
-    </div>
-  );
-}
+import { RouteSuspenseFallback } from "@/lib/route-loading";
 
 export function lazyRoute<
   M extends Record<string, ComponentType<unknown>>,
@@ -18,7 +11,7 @@ export function lazyRoute<
 
   return function LazyRoute() {
     return (
-      <Suspense fallback={<PageFallback />}>
+      <Suspense fallback={<RouteSuspenseFallback />}>
         <Lazy />
       </Suspense>
     );

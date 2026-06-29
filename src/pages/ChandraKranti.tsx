@@ -29,7 +29,8 @@ import {
   getCurrentBs,
 } from "@/lib/bs-calendar";
 import { toNepaliDigits, formatTimeShort, formatVedicPatroTime } from "@/lib/panchanga-format";
-import { PageShell, PageHeader } from "../components/PageShell";
+import { useRouteLoading } from "@/lib/route-loading";
+import { PageShell, PageHeader } from "@/components/PageShell";
 import {
   Table,
   TableBody,
@@ -517,11 +518,19 @@ export function ChandraKranti() {
   const atStart = year * 12 + (month - 1) <= BS_MIN_INDEX;
   const atEnd = year * 12 + (month - 1) >= BS_MAX_INDEX;
 
+  const pageLoading =
+    monthQ.isLoading ||
+    specialQ.isLoading ||
+    gocharQ.isLoading ||
+    ingressQ.isLoading;
+
+  useRouteLoading(pageLoading);
+
   return (
     <PageShell>
       <PageHeader
         icon={<Moon className="h-7 w-7 text-secondary" />}
-        title="चन्द्र क्रान्ति"
+        title="दैनिक क्रान्ति"
         subtitle="पक्ष अनुसार दैनिक पञ्चाङ्ग — तिथि, नक्षत्र, योग, करण, सूर्योदय/अस्त, पर्व र ग्रह गोचर।"
       />
 
@@ -648,9 +657,7 @@ export function ChandraKranti() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {monthQ.isLoading ? (
-                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center text-muted-foreground">लोड हुँदैछ…</TableCell></TableRow>
-              ) : monthQ.isError ? (
+              {monthQ.isError ? (
                 <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center text-muted-foreground">विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।</TableCell></TableRow>
               ) : days.length === 0 ? (
                 <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center text-muted-foreground">यो पक्षमा कुनै दिन भेटिएन।</TableCell></TableRow>

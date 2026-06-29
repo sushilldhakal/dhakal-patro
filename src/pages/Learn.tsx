@@ -16,6 +16,7 @@ import {
   Layers3,
   History as HistoryIcon,
 } from "lucide-react";
+import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -199,6 +200,7 @@ function TopicCard({
 }
 
 export function Learn() {
+  useRouteLoading(false);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
 

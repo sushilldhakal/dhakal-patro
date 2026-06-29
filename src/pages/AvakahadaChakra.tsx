@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { Grid3x3, Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { useRouteLoading } from "@/lib/route-loading";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -153,6 +154,7 @@ const columns: ColumnDef<Row>[] = [
 ];
 
 export function AvakahadaChakra() {
+  useRouteLoading(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 

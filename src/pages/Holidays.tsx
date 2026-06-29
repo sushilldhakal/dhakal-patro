@@ -16,6 +16,7 @@ import {
   type Holiday, type Festival,
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { useRouteLoading } from "@/lib/route-loading";
 import { BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR, getCurrentBs } from "../lib/bs-calendar";
 import { cn } from "../lib/utils";
 
@@ -191,6 +192,8 @@ export function Holidays() {
   const holidays = holidaysQ.data?.holidays ?? [];
   const festivals = festivalsQ.data?.festivals ?? [];
 
+  useRouteLoading(loading);
+
   return (
     <PageShell>
       <PageHeader
@@ -254,14 +257,6 @@ export function Holidays() {
           className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
       </div>
-
-      {loading && (
-        <div className="space-y-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-muted/50 animate-pulse rounded-lg h-12" />
-          ))}
-        </div>
-      )}
 
       {error && (
         <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 text-sm">

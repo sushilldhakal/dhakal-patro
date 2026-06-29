@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouteLoading } from "@/lib/route-loading";
 import { apiVerifyEmail, ApiError } from "@/lib/auth/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 
@@ -28,14 +29,11 @@ export function VerifyEmail() {
       });
   }, [refreshUser]);
 
+  useRouteLoading(status === "loading");
+
   return (
     <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center px-4 text-center">
-      {status === "loading" && (
-        <>
-          <Loader2 className="size-8 animate-spin text-muted-foreground" />
-          <p className="mt-4 text-muted-foreground">Verifying your email…</p>
-        </>
-      )}
+      {status === "loading" && null}
       {status === "ok" && (
         <>
           <CheckCircle2 className="size-12 text-emerald-500" />

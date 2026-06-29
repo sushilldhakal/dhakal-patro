@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Moon, Sunrise, SunMoon, Sunset } from "lucide-react";
 import type { PanchangaDataMode } from "@/components/panchanga/use-panchanga-mode";
@@ -7,7 +8,7 @@ import {
   type CalendarDay,
   type LocationParams,
 } from "@/lib/api";
-import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
+import { adToBS } from "@/lib/bs-calendar";
 import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
 import { formatMonthMoonEventDisplay, toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ interface Props {
   onPickDay: (d: Date) => void;
   dataMode?: PanchangaDataMode;
   clock?: string;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 export function PanchangaMonthGrid({
@@ -50,6 +52,7 @@ export function PanchangaMonthGrid({
   onPickDay,
   dataMode = "udaya",
   clock = "12:00",
+  onLoadingChange,
 }: Props) {
   const bs = adToBS(date);
   const todayBs = adToBS(new Date());
@@ -65,6 +68,10 @@ export function PanchangaMonthGrid({
       }),
     staleTime: 1000 * 60 * 60,
   });
+
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   const days = data?.calendar ?? [];
   const firstWeekday = days[0] ? new Date(days[0].date_ad).getDay() : 0;
@@ -112,12 +119,7 @@ export function PanchangaMonthGrid({
         ))}
       </div>
 
-      {isLoading ? (
-        <div className="p-8 text-center text-sm text-muted-foreground animate-pulse">
-          Loading {BS_MONTHS_NE[bs.month - 1]}…
-        </div>
-      ) : (
-        <div className="grid grid-cols-7 gap-px bg-border">
+      <div className="grid grid-cols-7 gap-px bg-border">
           {blanks.map((b) => (
             <div key={`b-${b}`} className="min-h-[132px] bg-foreground/[0.025]" />
           ))}
@@ -248,7 +250,6 @@ export function PanchangaMonthGrid({
             );
           })}
         </div>
-      )}
     </div>
   );
 }

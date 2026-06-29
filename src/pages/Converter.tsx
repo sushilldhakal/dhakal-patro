@@ -7,6 +7,7 @@ import {
   type ConvertAdToBs, type ConvertBsToAd,
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { useRouteLoading } from "@/lib/route-loading";
 import { StatCard } from "../components/StatCard";
 import { cn } from "../lib/utils";
 
@@ -45,6 +46,8 @@ export function Converter() {
   const bsResult = bsToAdQ.data as ConvertBsToAd | undefined;
   const loading = mode === "ad-to-bs" ? adToBsQ.isLoading : bsToAdQ.isLoading;
   const error = mode === "ad-to-bs" ? adToBsQ.isError : bsToAdQ.isError;
+
+  useRouteLoading(loading);
 
   return (
     <PageShell>
@@ -112,16 +115,6 @@ export function Converter() {
         </button>
       </form>
 
-      {/* Loading */}
-      {loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-muted/50 animate-pulse rounded-xl h-20" />
-          ))}
-        </div>
-      )}
-
-      {/* Error */}
       {error && (
         <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 text-sm">
           Conversion failed. Please check the date format.
@@ -129,7 +122,7 @@ export function Converter() {
       )}
 
       {/* AD → BS result */}
-      {mode === "ad-to-bs" && adResult && !loading && (
+      {mode === "ad-to-bs" && adResult && (
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-2xl font-bold text-foreground">
             <span className="text-secondary">{adResult.ad_date}</span>
@@ -148,7 +141,7 @@ export function Converter() {
       )}
 
       {/* BS → AD result */}
-      {mode === "bs-to-ad" && bsResult && !loading && (
+      {mode === "bs-to-ad" && bsResult && (
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-2xl font-bold text-foreground">
             <span className="text-secondary">{bsResult.bs_date}</span>

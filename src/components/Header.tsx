@@ -33,7 +33,7 @@ import { AccountMenu } from "@/components/auth/AccountMenu";
 const PANCHANGA_LINKS = [
   { to: "/panchanga" as const, label: "Surya Panchanga", icon: Star },
   { to: "/suryakranti" as const, label: "Suryakranti", icon: Sunrise },
-  { to: "/chandrakranti" as const, label: "Chandra Kranti", icon: Moon },
+  { to: "/chandrakranti" as const, label: "दैनिक क्रान्ति", icon: Moon },
   { to: "/shanti-vidhi" as const, label: "शान्ति विधि", icon: Flame },
   { to: "/panchanga/avakahada-chakra" as const, label: "अवकहडा चक्र", icon: Grid3x3 },
 ] as const;
@@ -145,12 +145,26 @@ function PanchangaNavGroup({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function BrandLogo({ size = 36, className }: { size?: number; className?: string }) {
+  return (
+    <img
+      src="/favicon.svg"
+      alt=""
+      width={size}
+      height={size}
+      className={cn("shrink-0", className)}
+      aria-hidden
+    />
+  );
+}
+
 function BrandMark({ className }: { className?: string }) {
   return (
-    <Link to="/" className={cn("flex items-center gap-2.5 shrink-0 group min-w-0", className)}>
-      <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shadow group-hover:shadow-primary/40 transition-shadow">
-        <CalendarDays className="w-5 h-5 text-primary" />
-      </div>
+    <Link to="/" className={cn("flex items-center gap-2.5 group min-w-0", className)}>
+      <BrandLogo
+        size={42}
+        className="shadow group-hover:shadow-primary/40 transition-shadow"
+      />
       <span className="font-bold text-[15px] tracking-tight truncate">
         <span className="text-secondary">Vedic</span>
         <span className="text-foreground"> Patro</span>
@@ -182,7 +196,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+      <div className="max-w-[1400px] py-4 mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
         {/* Desktop — brand left, nav center, theme right */}
         <BrandMark className="hidden lg:flex" />
 
@@ -218,9 +232,7 @@ export function Header() {
               <DrawerContent className="p-0">
                 <DrawerHeader className="border-b border-border text-left">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shadow">
-                      <CalendarDays className="w-5 h-5 text-primary" />
-                    </div>
+                    <BrandLogo size={36} className="rounded-[22%] shadow" />
                     <div>
                       <DrawerTitle className="text-base">
                         <span className="text-secondary">Vedic</span>

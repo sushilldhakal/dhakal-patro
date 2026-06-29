@@ -51,6 +51,7 @@ import {
   SamvatSection,
   SunMoonSection,
 } from "@/components/panchanga/PanchangaSections";
+import { useRouteLoading } from "@/lib/route-loading";
 
 type ViewMode = "day" | "month";
 
@@ -89,6 +90,9 @@ export function Panchanga() {
     const saved = localStorage.getItem("dhakalPatroPanchView");
     return saved === "month" ? "month" : "day";
   });
+  const [monthGridLoading, setMonthGridLoading] = useState(
+    () => (search.view ?? localStorage.getItem("dhakalPatroPanchView")) === "month",
+  );
 
   const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
   const { mode: dataMode, setMode: setDataMode, clock, setClock } =
@@ -101,6 +105,7 @@ export function Panchanga() {
 
   const switchView = (v: ViewMode) => {
     setView(v);
+    if (v === "month") setMonthGridLoading(true);
     localStorage.setItem("dhakalPatroPanchView", v);
   };
 
@@ -176,6 +181,9 @@ export function Panchanga() {
 
   const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
   const wheelData = udayaQuery.data ?? data;
+  const pageLoading = view === "day" ? isLoading : monthGridLoading;
+
+  useRouteLoading(pageLoading);
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
@@ -275,6 +283,7 @@ export function Panchanga() {
             locationParams={location.params}
             dataMode={dataMode}
             clock={clock}
+            onLoadingChange={setMonthGridLoading}
             onPickDay={(d) => {
               setDate(d);
               switchView("day");
@@ -287,11 +296,11 @@ export function Panchanga() {
             <PanchangaDateNav date={date} onDateChange={setDate} />
             <QuickDateStrip date={date} onDateChange={setDate} />
 
-            {ephemeris && data && !isLoading && (
+            {ephemeris && data && (
               <EphemerisModeBanner p={data} clock={clock} />
             )}
 
-            {data && !isLoading && (
+            {data && (
               <DayTimeline
                 p={data}
                 dateAd={chartAd}
@@ -301,7 +310,7 @@ export function Panchanga() {
               />
             )}
 
-            {wheelData && !isLoading && (
+            {wheelData && (
               <>
                 <PanchangaWheel
                   p={wheelData}
@@ -322,21 +331,13 @@ export function Panchanga() {
               </>
             )}
 
-            {isLoading && (
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-32 rounded-xl bg-muted/50 animate-pulse" />
-                ))}
-              </div>
-            )}
-
             {isError && (
               <div className="rounded-xl border border-destructive/20 bg-destructive/10 text-destructive p-4 text-sm">
                 Could not load panchanga. Check the date or try again.
               </div>
             )}
 
-            {data && !isLoading && (
+            {data && (
               <>
                 <SunMoonSection p={data} />
                 <PanchangCoreSection p={data} />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, MapPin, Plus, Sparkles } from "lucide-react";
+import { Clock, LogIn, MapPin, Plus, Sparkles, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   fetchShadbala,
@@ -12,7 +12,7 @@ import {
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
-import { adToBS, bsToAD } from "@/lib/bs-calendar";
+import { adToBS, bsToAD, BS_MONTHS_NE } from "@/lib/bs-calendar";
 import { parseBirthDateParts } from "@/lib/birth-date";
 import {
   buildAtTimeDatetime,
@@ -39,11 +39,13 @@ import {
 } from "@/components/kundali/KundaliProfilePicker";
 import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { AuthDialog } from "@/components/auth/AuthDialog";
 import type { Profile } from "@/lib/auth/client";
 import { D1Chart } from "@/components/kundali/D1Chart";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
+import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import {
   usePanchangaLocation,
@@ -109,6 +111,11 @@ const AYANAMSHA_KEY = "dhakalPatroAyanamshaMode";
 function loadSavedAyanamshaMode(): AyanamshaMode {
   const saved = localStorage.getItem(AYANAMSHA_KEY);
   return AYANAMSHA_MODES.some((m) => m.id === saved) ? (saved as AyanamshaMode) : "nepal";
+}
+
+function formatBsDateNe(iso: string): string {
+  const bs = adToBS(new Date(iso));
+  return `${toNepaliDigits(bs.day)} ${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)}`;
 }
 
 function toAdStr(d: Date): string {
@@ -194,7 +201,7 @@ function parseBirthDate(p: Profile): Date | null {
 function profileLocation(p: Profile, fallback: PanchangaLocation): PanchangaLocation {
   if (p.latitude != null && p.longitude != null) {
     return {
-      label: p.location_label || p.city || "Birth place",
+      label: p.location_label || p.city || "जन्म स्थान",
       params: {
         lat: p.latitude,
         lon: p.longitude,
@@ -206,7 +213,13 @@ function profileLocation(p: Profile, fallback: PanchangaLocation): PanchangaLoca
 }
 
 export function Kundali() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const openAuth = (mode: "login" | "signup") => {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  };
   const { location, setLocation } = usePanchangaLocation();
   const [date, setDate] = useState(() => new Date());
   const [era, setEra] = useState<"bs" | "ad">("bs");
@@ -393,6 +406,11 @@ export function Kundali() {
       : "");
   const dateAd = data?.date_ad ?? adDateStr;
 
+  const chartLoading =
+    Boolean(applied) &&
+    (isLoading || dashaQ.isLoading || shadbalaQ.isLoading);
+  useRouteLoading(chartLoading);
+
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
       <div className="mb-4 mt-2 flex items-start justify-between gap-3">
@@ -402,7 +420,7 @@ export function Kundali() {
           </div>
           <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
             <Sparkles className="w-7 h-7 text-secondary shrink-0" />
-            Janma Kundali
+            जन्म कुण्डली
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             जन्म मिति, समय र स्थान अनुसार राशि, ग्रह र दशा विवरण
@@ -410,11 +428,37 @@ export function Kundali() {
         </div>
         {isAuthenticated && (
           <Button className="shrink-0" onClick={() => pickerRef.current?.openAdd()}>
-            <Plus className="size-4" /> Add profile
+            <Plus className="size-4" /> प्रोफाइल थप्नुहोस्
           </Button>
         )}
       </div>
 
+      {authLoading ? (
+        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm text-muted-foreground">
+          लोड हुँदै… · Loading
+        </div>
+      ) : !isAuthenticated ? (
+        <section className="rounded-2xl border border-border bg-card px-6 py-12 text-center shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/15">
+            <Sparkles className="h-7 w-7 text-secondary" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">
+            कुण्डली बनाउन लग-इन गर्नुहोस्
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            जन्म कुण्डली बनाउन र आफ्ना प्रोफाइलहरू सुरक्षित राख्न खाता आवश्यक छ।
+            कृपया साइन-इन गर्नुहोस् वा नयाँ खाता खोल्नुहोस्।
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button size="lg" onClick={() => openAuth("login")}>
+              <LogIn className="size-4" /> लग-इन
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => openAuth("signup")}>
+              <UserPlus className="size-4" /> खाता खोल्नुहोस्
+            </Button>
+          </div>
+        </section>
+      ) : (
       <div className="flex flex-col gap-4">
         {isAuthenticated ? (
           <KundaliProfilePicker ref={pickerRef} selectedId={selectedProfileId} onSelect={applyProfile} />
@@ -441,11 +485,10 @@ export function Kundali() {
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-secondary px-5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90"
             >
               <Sparkles className="h-4 w-4" />
-              {applied ? "Update kundali" : "Generate kundali"}
+              {applied ? "कुण्डली अपडेट गर्नुहोस्" : "कुण्डली बनाउनुहोस्"}
             </button>
             <p className="text-xs text-muted-foreground">
-              जन्म मिति, समय र स्थान भरेर “Generate” थिच्नुहोस् · Set your birth date,
-              time and place, then generate.
+              जन्म मिति, समय र स्थान भरेर "कुण्डली बनाउनुहोस्" थिच्नुहोस्।
             </p>
           </div>
         )}
@@ -459,28 +502,22 @@ export function Kundali() {
             <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
               {isAuthenticated
                 ? selectedProfileId
-                  ? "This profile has no birth date yet — add the birth date, time and place to it, then it'll generate."
-                  : "Pick a profile above (or add one) to generate its kundali."
-                : "Enter the birth date, time and place above, then press Generate kundali. Nothing is calculated until you do."}
+                  ? "यो प्रोफाइलमा जन्म मिति अझै थपिएको छैन — जन्म मिति, समय र स्थान थपेपछि कुण्डली बन्छ।"
+                  : "कुण्डली बनाउन माथिबाट प्रोफाइल छान्नुहोस् (वा नयाँ थप्नुहोस्)।"
+                : "माथि जन्म मिति, समय र स्थान भरेर \"कुण्डली बनाउनुहोस्\" थिच्नुहोस्। नभरेसम्म केही गणना हुँदैन।"}
             </p>
           </div>
         )}
 
-        {isLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className="bg-muted/50 animate-pulse rounded-xl h-24" />
-            ))}
-          </div>
-        )}
-
+        {applied && (
+          <>
         {isError && (
           <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 text-sm">
-            Could not load kundali data. Check the date and location, then try again.
+            कुण्डली डाटा लोड हुन सकेन। मिति र स्थान जाँच गरी फेरि प्रयास गर्नुहोस्।
           </div>
         )}
 
-        {data && !isLoading && (
+        {data && (
           <div className="space-y-5">
             {/* Birth summary */}
             <section className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
@@ -609,7 +646,7 @@ export function Kundali() {
                 </div>
               </PanchangaSection>
             ) : (
-              <p className="text-muted-foreground text-sm">No planet data available for this date.</p>
+              <p className="text-muted-foreground text-sm">यो मितिको लागि ग्रह डाटा उपलब्ध छैन।</p>
             )}
 
             {/* Charts */}
@@ -655,18 +692,10 @@ export function Kundali() {
                           <tr key={i} className="border-t border-border">
                             <td className="py-2 px-3 font-medium text-foreground">{period.lord_ne}</td>
                             <td className="py-2 px-3 text-muted-foreground">
-                              {new Date(period.start).toLocaleDateString("en", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
+                              {formatBsDateNe(period.start)}
                             </td>
                             <td className="py-2 px-3 text-muted-foreground">
-                              {new Date(period.end).toLocaleDateString("en", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
+                              {formatBsDateNe(period.end)}
                             </td>
                           </tr>
                         ))}
@@ -678,9 +707,6 @@ export function Kundali() {
             )}
 
             {/* Shadbala */}
-            {shadbalaQ.isLoading && (
-              <div className="bg-muted/50 animate-pulse rounded-xl h-40" />
-            )}
             {shadbalaQ.data && (
               <div className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
                 <ShadbalaCard data={shadbalaQ.data} />
@@ -699,7 +725,17 @@ export function Kundali() {
             />
           </div>
         )}
+          </>
+        )}
       </div>
+      )}
+
+      <AuthDialog
+        key={authMode}
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        initialMode={authMode}
+      />
 
       <LearnMoreCard
         className="mt-7"

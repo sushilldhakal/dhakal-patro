@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import {
   createColumnHelper,
@@ -169,8 +169,11 @@ function MonthSunDataTable({
         {isLoading && rows.every((r) => !r.sunrise && !r.sunset) ? (
           Array.from({ length: 6 }).map((_, i) => (
             <TableRow key={i}>
-              {MONTH_TABLE_COLUMNS.map((col) => (
-                <TableCell key={col.id ?? i} className="px-3 py-3">
+              {MONTH_TABLE_COLUMNS.map((col, colIdx) => (
+                <TableCell
+                  key={col.id ?? ("accessorKey" in col ? String(col.accessorKey) : colIdx)}
+                  className="px-3 py-3"
+                >
                   <span className="pn-sun-grid-skel h-5" />
                 </TableCell>
               ))}
@@ -372,6 +375,7 @@ interface Props {
   locationParams: LocationParams;
   /** Hide title row when the parent page supplies its own heading */
   hideHeader?: boolean;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 export function SunTimesYearGrid({
@@ -379,6 +383,7 @@ export function SunTimesYearGrid({
   locationLabel,
   locationParams,
   hideHeader = false,
+  onLoadingChange,
 }: Props) {
   const monthQueries = useQueries({
     queries: Array.from({ length: 12 }, (_, i) => {
@@ -393,6 +398,10 @@ export function SunTimesYearGrid({
 
   const isLoading = monthQueries.some((q) => q.isLoading);
   const isError = monthQueries.every((q) => q.isError);
+
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   const grid = useMemo(() => {
     const monthDays = monthQueries.map((q) => q.data?.calendar);

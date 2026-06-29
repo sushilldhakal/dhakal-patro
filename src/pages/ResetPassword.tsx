@@ -4,8 +4,10 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiResetPassword, ApiError } from "@/lib/auth/client";
+import { useRouteLoading } from "@/lib/route-loading";
 
 export function ResetPassword() {
+  useRouteLoading(false);
   const navigate = useNavigate();
   const [token, setToken] = useState<string | null>(null);
   const [password, setPassword] = useState("");

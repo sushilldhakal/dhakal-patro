@@ -2,7 +2,6 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useRef,
   useState,
 } from "react";
 import { Sparkles, Star, Pencil, Loader2, MapPin, Clock, Navigation, Globe } from "lucide-react";
@@ -36,7 +35,6 @@ export const KundaliProfilePicker = forwardRef<
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [error, setError] = useState<string | null>(null);
-  const autoSelected = useRef(false);
 
   useImperativeHandle(ref, () => ({ openAdd: () => setDialog({ mode: "add" }) }), []);
 
@@ -55,13 +53,6 @@ export const KundaliProfilePicker = forwardRef<
   useEffect(() => {
     void load();
   }, []);
-
-  // Show the default (or first) profile's kundali automatically the first time.
-  useEffect(() => {
-    if (autoSelected.current || !profiles || profiles.length === 0 || selectedId) return;
-    autoSelected.current = true;
-    onSelect(profiles.find((p) => p.is_default) ?? profiles[0]);
-  }, [profiles, selectedId, onSelect]);
 
   if (profiles === null) {
     return (

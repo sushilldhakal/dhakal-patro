@@ -48,6 +48,7 @@ interface Props {
   location?: PanchangaLocation;
   /** AD date (YYYY-MM-DD) considered "today", resolved for the location's timezone. */
   todayAd?: string;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 export function CalendarView({
@@ -58,6 +59,7 @@ export function CalendarView({
   showMonthHeader = true,
   location,
   todayAd,
+  onLoadingChange,
 }: Props) {
   // "Today" follows the active location's timezone when provided, so opening the
   // patro lands on the correct local month/day rather than the browser's.
@@ -113,6 +115,10 @@ export function CalendarView({
   );
 
   const isEnriching = monthQ.isFetching && !monthQ.data;
+
+  useEffect(() => {
+    onLoadingChange?.(monthQ.isLoading || holidayQ.isLoading);
+  }, [monthQ.isLoading, holidayQ.isLoading, onLoadingChange]);
 
   function selectDay(day: CalendarDay) {
     const next = selected?.date_ad === day.date_ad ? null : day;

@@ -8,6 +8,7 @@ import {
 import { Header } from "./components/Header";
 import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
+import { RouteLoadingProvider } from "./lib/route-loading";
 import {
   validateChandraKrantiSearch,
   validatePanchangaSearch,
@@ -31,10 +32,12 @@ const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPas
 
 const rootRoute = createRootRoute({
   component: () => (
-    <div className="min-h-screen">
-      <Header />
-      <Outlet />
-    </div>
+    <RouteLoadingProvider>
+      <div className="min-h-screen">
+        <Header />
+        <Outlet />
+      </div>
+    </RouteLoadingProvider>
   ),
 });
 

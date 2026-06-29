@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
+import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
 import {
   LEARN_CATEGORIES,
@@ -13,6 +14,7 @@ const LEGACY_ECLIPSE_SLUGS: Record<string, string> = {
 };
 
 export function LearnArticle() {
+  useRouteLoading(false);
   const { slug } = useParams({ strict: false }) as { slug?: string };
 
   if (slug && LEGACY_ECLIPSE_SLUGS[slug]) {

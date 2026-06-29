@@ -11,6 +11,7 @@ import {
   ArrowDownToLine,
 } from "lucide-react";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { useRouteLoading } from "@/lib/route-loading";
 import {
   Table,
   TableBody,
@@ -171,6 +172,8 @@ export function ShantiVidhi() {
     requestAnimationFrame(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
+  useRouteLoading(isCalcLoading);
+
   return (
     <PageShell>
       <PageHeader
@@ -202,11 +205,6 @@ export function ShantiVidhi() {
           {isCalcError ? (
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               गणना ल्याउन सकिएन। मिति/समय/स्थान जाँचेर पुनः प्रयास गर्नुहोस्।
-            </div>
-          ) : isCalcLoading ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="h-28 animate-pulse rounded-xl bg-muted/50" />
-              <div className="h-28 animate-pulse rounded-xl bg-muted/50" />
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">

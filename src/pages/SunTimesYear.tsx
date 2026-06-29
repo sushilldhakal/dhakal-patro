@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, CalendarRange, MapPin } from "lucide-react";
 import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
+import { useRouteLoading } from "@/lib/route-loading";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
@@ -19,6 +20,9 @@ const BS_YEAR_OPTIONS = Array.from(
 export function SunTimesYear() {
   const { location, setLocation } = usePanchangaLocation();
   const [year, setYear] = useState(() => getCurrentBs().year);
+  const [gridLoading, setGridLoading] = useState(true);
+
+  useRouteLoading(gridLoading);
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16 overflow-x-hidden">
@@ -113,6 +117,7 @@ export function SunTimesYear() {
         locationLabel={location.label}
         locationParams={location.params}
         hideHeader
+        onLoadingChange={setGridLoading}
       />
     </div>
   );

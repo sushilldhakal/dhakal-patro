@@ -9,6 +9,7 @@ import {
   Video,
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
+import { useRouteLoading } from "@/lib/route-loading";
 import {
   Accordion,
   AccordionContent,
@@ -58,6 +59,7 @@ function SectionBlock({
 }
 
 export function History() {
+  useRouteLoading(false);
   const [activeId, setActiveId] = useState(SURYA_SIDDHANTA_HISTORY[0]?.id ?? "");
   const currentBsYear = getCurrentBs().year;
 

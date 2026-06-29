@@ -9,10 +9,12 @@ import {
   holidayKeys,
   type Holiday,
   type CalendarDay,
+  type PanchangaDay,
 } from "../lib/api";
 import { CalendarView, type CalendarMonthContext } from "../components/CalendarView";
 import { RituSeasons } from "../components/RituSeasons";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
+import { useRouteLoading } from "@/lib/route-loading";
 import {
   resolveLocationTimezone,
   usePanchangaLocation,
@@ -52,26 +54,23 @@ function relLabel(days: number): string {
 function PanchangaAside({
   selectedDay,
   selectedAdDate,
-  location,
   todayAd,
   monthContext,
+  p,
+  loading,
+  error,
 }: {
   selectedDay: CalendarDay | null;
   selectedAdDate: string;
-  location: PanchangaLocation;
   todayAd: string;
   monthContext: CalendarMonthContext;
+  p?: PanchangaDay;
+  loading: boolean;
+  error: boolean;
 }) {
-  const panchangaQ = useQuery({
-    queryKey: panchangaKeys.day(selectedAdDate, "ad", location.params),
-    queryFn: () => fetchPanchanga(selectedAdDate, "ad", location.params),
-    staleTime: 1000 * 60 * 30,
-  });
-
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
 
   const isSelectedToday = selectedAdDate === todayAd;
-  const p = panchangaQ.data;
 
   const bsDisplay = p?.display?.bs_ne ?? p?.date_bs;
   const adDisplay = p?.display?.gregorian_en ?? fmtAdFull(selectedAdDate);
@@ -109,41 +108,7 @@ function PanchangaAside({
           </Link>
         </div>
 
-        {panchangaQ.isLoading ? (
-          <div className="pn-aside-body">
-            <div className="pn-hero">
-              <div className="pn-hero-grid" />
-              <div className="pn-hero-eyebrow">{isSelectedToday ? "TODAY · आज" : "…"}</div>
-              <div className="pn-mini-skel" style={{ height: 36, marginTop: 10 }} />
-              <div className="pn-mini-skel" style={{ height: 16, width: "70%", marginTop: 8 }} />
-            </div>
-            <div className="pn-aside-tabs" role="tablist" aria-label="पञ्चाङ्ग विवरण">
-              {ASIDE_TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  className={`pn-aside-tab${t.id === asideTab ? " active" : ""}`}
-                  aria-selected={t.id === asideTab}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            <div className="pn-aside-scroll">
-              <PanchangaAsideTabPanel
-                tab={asideTab}
-                loading
-                selectedDay={selectedDay}
-                selectedAdDate={selectedAdDate}
-                bsYear={monthContext.year}
-                bsMonth={monthContext.month}
-                monthDays={monthContext.days}
-                todayAd={todayAd}
-              />
-            </div>
-          </div>
-        ) : panchangaQ.isError ? (
+        {loading ? null : error ? (
           <div className="pn-aside-body">
             <div className="pn-error-box">Could not load panchanga. Try again shortly.</div>
           </div>
@@ -214,22 +179,12 @@ function PanchangaAside({
 }
 
 function UpcomingHolidays({
-  bsYear,
+  upcoming,
   location,
 }: {
-  bsYear: number;
+  upcoming: Holiday[];
   location: PanchangaLocation;
 }) {
-  const { data, isLoading } = useQuery({
-    queryKey: holidayKeys.holidays(bsYear),
-    queryFn: () => fetchHolidays(bsYear),
-    staleTime: 1000 * 60 * 60,
-  });
-
-  const upcoming: Holiday[] = (data?.holidays ?? [])
-    .filter((h) => h.start_date >= TODAY_AD)
-    .slice(0, 6);
-
   return (
     <section className="pn-holidays">
       <div className="pn-hol-head">
@@ -242,9 +197,7 @@ function UpcomingHolidays({
       </div>
 
       <div className="pn-hol-list">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <div key={i} className="pn-hol-skel" />)
-        ) : upcoming.length === 0 ? (
+        {upcoming.length === 0 ? (
           <div style={{ padding: "16px", color: "var(--muted-foreground)", fontSize: "var(--fs-sm)" }}>
             No upcoming holidays found.
           </div>
@@ -305,6 +258,7 @@ export function Home() {
     [location],
   );
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const [calendarLoading, setCalendarLoading] = useState(false);
   const [monthContext, setMonthContext] = useState<CalendarMonthContext>(() => ({
     year: bsYear,
     month: bsMonth,
@@ -314,6 +268,31 @@ export function Home() {
     setMonthContext(ctx);
   }, []);
   const selectedAdDate = selectedDay?.date_ad ?? todayAd;
+
+  const panchangaQ = useQuery({
+    queryKey: panchangaKeys.day(selectedAdDate, "ad", location.params),
+    queryFn: () => fetchPanchanga(selectedAdDate, "ad", location.params),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const holidaysQ = useQuery({
+    queryKey: holidayKeys.holidays(bsYear),
+    queryFn: () => fetchHolidays(bsYear),
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const upcomingHolidays = useMemo(
+    () =>
+      (holidaysQ.data?.holidays ?? [])
+        .filter((h) => h.start_date >= TODAY_AD)
+        .slice(0, 6),
+    [holidaysQ.data],
+  );
+
+  const pageLoading =
+    calendarLoading || panchangaQ.isLoading || holidaysQ.isLoading;
+
+  useRouteLoading(pageLoading);
 
   return (
     <main className="pn-page">
@@ -329,16 +308,19 @@ export function Home() {
         todayAd={todayAd}
         onDaySelect={setSelectedDay}
         onMonthContextChange={handleMonthContextChange}
+        onLoadingChange={setCalendarLoading}
         aside={
           <PanchangaAside
             selectedDay={selectedDay}
             selectedAdDate={selectedAdDate}
-            location={location}
             todayAd={todayAd}
             monthContext={monthContext}
+            p={panchangaQ.data}
+            loading={panchangaQ.isLoading}
+            error={panchangaQ.isError}
           />
         }
-        holidays={<UpcomingHolidays bsYear={bsYear} location={location} />}
+        holidays={<UpcomingHolidays upcoming={upcomingHolidays} location={location} />}
       />
 
       <p className="pn-note">

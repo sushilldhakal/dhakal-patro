@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus, Star, Trash2, Pencil, MailWarning, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouteLoading } from "@/lib/route-loading";
 import { useAuth } from "@/lib/auth/AuthContext";
 import {
   listProfiles,
@@ -57,12 +58,10 @@ export function Account() {
     void load();
   }
 
+  useRouteLoading(authLoading || !user || loading);
+
   if (authLoading || !user) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return null;
   }
 
   return (

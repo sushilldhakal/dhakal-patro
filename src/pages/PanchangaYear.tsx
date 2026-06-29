@@ -14,6 +14,7 @@ import {
 } from "@/lib/bs-calendar";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -230,6 +231,8 @@ export function PanchangaYear() {
     setQueryDay((d) => Math.min(d, daysInBsYear(nextYear)));
   }
 
+  useRouteLoading(!displayData && isLoading);
+
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
@@ -287,10 +290,6 @@ export function PanchangaYear() {
             timezone={effectiveTimezone}
             locationLabel={locationLabel}
           />
-        )}
-
-        {!displayData && isLoading && (
-          <div className="h-[600px] rounded-2xl bg-muted/50 animate-pulse" />
         )}
 
         {isError && (
