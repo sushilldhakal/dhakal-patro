@@ -1,4 +1,8 @@
-import ReactGA from "react-ga4";
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
 
 let initialized = false;
 
@@ -6,17 +10,14 @@ export function initAnalytics(): void {
   const id = import.meta.env.VITE_GA_MEASUREMENT_ID;
   if (!id || initialized) return;
 
-  ReactGA.initialize(id, { gtagOptions: { send_page_view: false } });
-  initialized = true;
+  // gtag.js is injected in index.html at build time — avoid loading it twice.
+  initialized = typeof window.gtag === "function";
 }
 
 export function trackPageView(path: string): void {
-  if (!initialized) return;
+  if (!initialized || !window.gtag) return;
 
-  ReactGA.send({
-    hitType: "pageview",
-    page: path,
-  });
+  window.gtag("event", "page_view", { page_path: path });
 }
 
 export function isAnalyticsEnabled(): boolean {

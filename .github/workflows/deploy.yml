@@ -17,4 +17,5 @@ jobs:
           script_stop: true
           command_timeout: 15m
           script: |
+            export VITE_GA_MEASUREMENT_ID="${{ secrets.VITE_GA_MEASUREMENT_ID }}"
             bash /home/ubuntu/dhakal-patro/scripts/deploy.sh

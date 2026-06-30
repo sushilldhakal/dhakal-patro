@@ -20,10 +20,19 @@ BUILD_ENV=(VITE_API_BASE_URL=/api)
 if [[ -f .env ]] && grep -q '^VITE_GOOGLE_CLIENT_ID=' .env; then
   BUILD_ENV+=(VITE_GOOGLE_CLIENT_ID="$(grep '^VITE_GOOGLE_CLIENT_ID=' .env | cut -d= -f2- | tr -d '"')")
 fi
-if [[ -f .env ]] && grep -q '^VITE_GA_MEASUREMENT_ID=' .env; then
+if [[ -n "${VITE_GA_MEASUREMENT_ID:-}" ]]; then
+  BUILD_ENV+=(VITE_GA_MEASUREMENT_ID="$VITE_GA_MEASUREMENT_ID")
+elif [[ -f .env ]] && grep -q '^VITE_GA_MEASUREMENT_ID=' .env; then
   BUILD_ENV+=(VITE_GA_MEASUREMENT_ID="$(grep '^VITE_GA_MEASUREMENT_ID=' .env | cut -d= -f2- | tr -d '"')")
 fi
 env "${BUILD_ENV[@]}" npm run build
+
+if grep -q 'googletagmanager.com/gtag/js' dist/index.html 2>/dev/null; then
+  echo "==> Google Analytics tag present in build"
+else
+  echo "WARNING: Google Analytics tag missing from dist/index.html." >&2
+  echo "         Set VITE_GA_MEASUREMENT_ID in server .env or GitHub Actions secrets." >&2
+fi
 
 echo "==> Publishing dist/ → ${WEB_ROOT}"
 sudo mkdir -p "${WEB_ROOT}"
@@ -31,6 +40,7 @@ sudo rsync -a --delete dist/ "${WEB_ROOT}/"
 
 echo "==> Verifying published build"
 test -f "${WEB_ROOT}/index.html" || { echo "index.html missing after publish" >&2; exit 1; }
+test -f "${WEB_ROOT}/robots.txt" || { echo "robots.txt missing after publish" >&2; exit 1; }
 
 if systemctl is-active --quiet nginx 2>/dev/null; then
   echo "==> Reloading nginx"

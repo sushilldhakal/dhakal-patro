@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /account
+Disallow: /verify-email
+Disallow: /reset-password
+Disallow: /kundali/
+Disallow: /api/
+
+Sitemap: https://www.vedicpatro.com/sitemap.xml
