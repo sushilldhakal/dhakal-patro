@@ -38,15 +38,18 @@ export function RouteLoadingProvider({ children }: { children: ReactNode }) {
   return (
     <RouteLoadingContext.Provider value={value}>
       {children}
-      {isLoading ? (
-        <div
-          className="fixed inset-x-0 top-16 bottom-0 z-40 flex items-center justify-center bg-background"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <VedicPatroLoader />
-        </div>
-      ) : null}
+      {/* Always mounted, toggled via `hidden`. Conditionally mounting this as a
+          trailing sibling races with route children swapping in the same commit
+          and can throw "removeChild ... not a child of this node" during
+          navigation; keeping it mounted avoids that reconciliation crash. */}
+      <div
+        hidden={!isLoading}
+        className="fixed inset-x-0 top-16 bottom-0 z-40 flex items-center justify-center bg-background"
+        aria-busy={isLoading}
+        aria-live="polite"
+      >
+        {isLoading ? <VedicPatroLoader /> : null}
+      </div>
     </RouteLoadingContext.Provider>
   );
 }

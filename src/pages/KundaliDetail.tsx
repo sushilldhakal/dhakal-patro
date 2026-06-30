@@ -15,7 +15,6 @@ import {
   profileClock,
   profileLocation,
 } from "@/lib/kundali/profile-chart";
-import { useRouteLoading } from "@/lib/route-loading";
 
 const AYANAMSHA_KEY = "dhakalPatroAyanamshaMode";
 
@@ -71,8 +70,6 @@ export function KundaliDetail() {
   const birthDate = useMemo(() => (profile ? parseBirthDate(profile) : null), [profile]);
   const location = useMemo(() => (profile ? profileLocation(profile) : null), [profile]);
   const clock = profile ? profileClock(profile) : "12:00";
-
-  useRouteLoading(authLoading || (isAuthenticated && isLoading));
 
   const backLink = (
     <Link

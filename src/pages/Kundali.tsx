@@ -12,7 +12,6 @@ import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { KundaliView } from "@/components/kundali/KundaliView";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { AuthDialog } from "@/components/auth/AuthDialog";
-import { LearnMoreCard } from "@/components/LearnMoreCard";
 import {
   usePanchangaLocation,
   type PanchangaLocation,
@@ -185,11 +184,11 @@ export function Kundali() {
         initialMode={authMode}
       />
 
-      <LearnMoreCard
+      {/* <LearnMoreCard
         className="mt-7"
         heading="कुण्डली बुझ्न आवश्यक आधार"
         slugs={["ayanamsha", "nakshatra", "solar-system"]}
-      />
+      /> */}
     </div>
   );
 }
