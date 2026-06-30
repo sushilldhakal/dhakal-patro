@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Clock, Flame, MapPin } from "lucide-react";
 import {
   fetchShadbala,
@@ -39,8 +40,8 @@ import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-e
 
 function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-background/50 dark:bg-background/30 px-3.5 py-3 min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1 truncate">
+    <div className="rounded-xl border border-border/80 bg-card px-3.5 py-3 min-w-0 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_5%,transparent)]">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 truncate">
         {label}
       </p>
       <p className="text-base font-bold text-foreground leading-tight">{value}</p>
@@ -51,10 +52,10 @@ function StatTile({ label, value, sub }: { label: string; value: string; sub?: s
 
 function ChartPanel({ titleNe, titleEn, houses }: { titleNe: string; titleEn: string; houses: ReturnType<typeof buildBhavaChart> }) {
   return (
-    <div className="rounded-xl border border-border bg-background/40 dark:bg-background/20 p-4 flex flex-col items-center gap-2">
-      <div className="text-center">
-        <p className="text-base font-bold text-foreground">{titleNe}</p>
-        <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{titleEn}</p>
+    <div className="rounded-2xl border border-border bg-card p-4 flex flex-col items-center gap-3 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
+      <div className="text-center w-full border-b border-border/60 pb-2">
+        <p className="text-sm font-bold text-foreground">{titleNe}</p>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-0.5">{titleEn}</p>
       </div>
       <D1Chart houses={houses} />
     </div>
@@ -160,6 +161,8 @@ export interface KundaliViewProps {
   ayanamshaMode: AyanamshaMode;
   /** Show the embedded Navagraha Shanti section for this kundali. Default true. */
   showShanti?: boolean;
+  /** Hide the birth-moment hero (profile page shows birth facts in sidebar). */
+  hideBirthSummary?: boolean;
 }
 
 /**
@@ -177,7 +180,9 @@ export function KundaliView({
   locationLabel: locationLabelProp,
   ayanamshaMode,
   showShanti = true,
+  hideBirthSummary = false,
 }: KundaliViewProps) {
+  const { t } = useTranslation();
   const adDateStr = toAdStr(date);
   const bs = adToBS(date);
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
@@ -274,24 +279,25 @@ export function KundaliView({
   if (isError) {
     return (
       <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 text-sm">
-        कुण्डली डाटा लोड हुन सकेन। मिति र स्थान जाँच गरी फेरि प्रयास गर्नुहोस्।
+        {t("kundali.load_error")}
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm text-muted-foreground">
-        <Clock className="mx-auto mb-3 h-7 w-7 text-muted-foreground" />
-        कुण्डली गणना हुँदै… · Computing
+      <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
+        <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
+        {t("kundali.computing")}
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {/* Birth summary */}
-      <section className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+    <div className="space-y-6">
+      {/* Birth summary — anonymous / generator flow only */}
+      {!hideBirthSummary && (
+        <section className="rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
         <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
           <div className="flex-1 px-5 py-4 border-b lg:border-b-0 border-border bg-secondary/[0.09] dark:bg-secondary/20">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -336,8 +342,42 @@ export function KundaliView({
           )}
         </div>
       </section>
+      )}
 
-      {/* Panchang essentials */}
+      {/* Panchang essentials + lagna highlight when profile view */}
+      {hideBirthSummary && lagna && (
+        <div className="rounded-2xl border border-secondary/25 bg-gradient-to-br from-secondary/[0.08] to-card p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                लग्न · Lagna
+              </p>
+              <p className="text-3xl font-bold text-foreground leading-tight">
+                {lagna.nameNe}
+                {lagna.degree && (
+                  <span className="text-lg font-normal text-muted-foreground ml-2 font-mono">
+                    {lagna.degree}°
+                  </span>
+                )}
+              </p>
+            </div>
+            <span className="text-[11px] font-medium text-muted-foreground bg-card border border-border px-2.5 py-1 rounded-full">
+              {ayanamshaInfo.labelNe}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              {locationLabel}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/80 px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              {toNepaliDigits(clock)}
+            </span>
+          </div>
+        </div>
+      )}
+
       {panchangSummary && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatTile label="राशि (चन्द्र)" value={planets.find((p) => p.key === "moon")?.rashi ?? "—"} />
@@ -354,14 +394,15 @@ export function KundaliView({
 
       {/* Nava Graha */}
       {planets.length > 0 ? (
+        <div id="kundali-graha" className="scroll-mt-24">
         <PanchangaSection titleNe="नव ग्रह" titleEn="Nava Graha">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4">
             {planets.map((planet) => (
               <div
                 key={planet.key}
                 className={cn(
-                  "bg-card px-4 py-3.5 flex items-start justify-between gap-3 min-h-[88px]",
-                  planet.retrograde && "bg-secondary/[0.06] dark:bg-secondary/10"
+                  "rounded-xl border border-border bg-card px-4 py-3.5 flex items-start justify-between gap-3 min-h-[5.5rem] transition-colors",
+                  planet.retrograde && "border-secondary/30 bg-secondary/[0.04] dark:bg-secondary/10"
                 )}
               >
                 <div className="flex flex-col gap-1 min-w-0">
@@ -405,12 +446,14 @@ export function KundaliView({
             ))}
           </div>
         </PanchangaSection>
+        </div>
       ) : (
         <p className="text-muted-foreground text-sm">यो मितिको लागि ग्रह डाटा उपलब्ध छैन।</p>
       )}
 
       {/* Charts */}
       {bhavaHouses.length > 0 && (
+        <div id="kundali-charts" className="scroll-mt-24">
         <PanchangaSection titleNe="कुण्डली चक्र" titleEn="Divisional Charts">
           <div className="grid sm:grid-cols-2 gap-4 p-4">
             <ChartPanel titleNe="राशि कुण्डली" titleEn="D1 Rashi" houses={bhavaHouses} />
@@ -425,10 +468,11 @@ export function KundaliView({
             )}
           </div>
         </PanchangaSection>
+        </div>
       )}
 
-      {/* Vimshottari Dasha */}
       {dasha && (
+        <div id="kundali-dasha" className="scroll-mt-24">
         <PanchangaSection titleNe="विंशोत्तरी दशा" titleEn="Vimshottari Dasha">
           <div className="p-4 space-y-4">
             <div className="grid sm:grid-cols-2 gap-3">
@@ -449,7 +493,7 @@ export function KundaliView({
                 </thead>
                 <tbody>
                   {dasha.sequence.map((period, i) => (
-                    <tr key={i} className="border-t border-border">
+                    <tr key={i} className={cn("border-t border-border", i % 2 === 1 && "bg-muted/20")}>
                       <td className="py-2 px-3 font-medium text-foreground">{period.lord_ne}</td>
                       <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.start)}</td>
                       <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.end)}</td>
@@ -460,17 +504,17 @@ export function KundaliView({
             </div>
           </div>
         </PanchangaSection>
+        </div>
       )}
 
-      {/* Shadbala */}
       {shadbalaQ.data && (
-        <div className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
+        <div id="kundali-shadbala" className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
           <ShadbalaCard data={shadbalaQ.data} />
         </div>
       )}
 
-      {/* Navagraha Shanti — derived from this chart's dasha + shadbala */}
       {showShanti && (
+        <div id="kundali-shanti" className="scroll-mt-24">
         <PanchangaSection titleNe="शान्ति विधि" titleEn="Navagraha Shanti">
           <div className="p-4">
             <div className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -484,9 +528,10 @@ export function KundaliView({
             />
           </div>
         </PanchangaSection>
+        </div>
       )}
 
-      {/* Deterministic interpretation report */}
+      <div id="kundali-report" className="scroll-mt-24">
       <KundaliReport
         key={`${atTimeDatetime}|${locationCacheKey(locationParams)}|${ayanamshaMode}`}
         datetime={atTimeDatetime}
@@ -494,6 +539,7 @@ export function KundaliView({
         ayanamsha={ayanamshaMode}
         disabled={isLoading || isError}
       />
+      </div>
     </div>
   );
 }

@@ -863,6 +863,69 @@ function formatMuhurtaRange(start?: string, end?: string): string | undefined {
   return `${s} – ${e}`;
 }
 
+function clockMinutes(time?: string | null): number | null {
+  if (!time) return null;
+  const m = time.match(/(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  return Number(m[1]) * 60 + Number(m[2]);
+}
+
+function minutesToClock(mins: number): string {
+  const rounded = Math.round(mins);
+  const h = Math.floor(rounded / 60) % 24;
+  const m = rounded % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+export type AbhijitMuhurtaInfo = {
+  start_time: string;
+  end_time: string;
+  solar_noon?: string;
+  rangeDisplay: string;
+  noonDisplay?: string;
+};
+
+/** Abhijit muhurta from sunrise/sunset — same 8th-muhurta rule as the backend. */
+export function computeAbhijitFromSunTimes(
+  sunrise?: string | null,
+  sunset?: string | null,
+): AbhijitMuhurtaInfo | null {
+  const sr = clockMinutes(sunrise);
+  const ss = clockMinutes(sunset);
+  if (sr == null || ss == null || ss <= sr) return null;
+  const total = ss - sr;
+  const muh = total / 15;
+  const start_time = minutesToClock(sr + 7 * muh);
+  const end_time = minutesToClock(sr + 8 * muh);
+  const solar_noon = minutesToClock(sr + total / 2);
+  const rangeDisplay = formatMuhurtaRange(start_time, end_time) ?? `${start_time} – ${end_time}`;
+  return {
+    start_time,
+    end_time,
+    solar_noon,
+    rangeDisplay,
+    noonDisplay: formatClockNepali(solar_noon),
+  };
+}
+
+export function getAbhijitMuhurta(p: PanchangaDay): AbhijitMuhurtaInfo | null {
+  const detail = getPanchangaDetail(p);
+  const m = (detail?.muhurta ?? p.muhurta) as MuhurtaDetail | undefined;
+  const ab = m?.abhijit;
+  if (ab?.start_time && ab?.end_time) {
+    const rangeDisplay = formatMuhurtaRange(ab.start_time, ab.end_time);
+    if (!rangeDisplay) return null;
+    return {
+      start_time: ab.start_time,
+      end_time: ab.end_time,
+      solar_noon: ab.solar_noon,
+      rangeDisplay,
+      noonDisplay: ab.solar_noon ? formatClockNepali(ab.solar_noon) : undefined,
+    };
+  }
+  return computeAbhijitFromSunTimes(getSunrise(p), getSunset(p));
+}
+
 export function getMuhurtaRows(p: PanchangaDay): {
   label: string;
   value: string;
@@ -883,15 +946,14 @@ export function getMuhurtaRows(p: PanchangaDay): {
   const gulika = formatMuhurtaRange(m.gulika?.start_time, m.gulika?.end_time);
   if (gulika) rows.push({ label: "गुलिक काल", value: gulika });
 
-  const abhijitRange = formatMuhurtaRange(m.abhijit?.start_time, m.abhijit?.end_time);
-  if (abhijitRange) {
-    const noon = m.abhijit?.solar_noon;
+  const abhijit = getAbhijitMuhurta(p);
+  if (abhijit) {
     rows.push({
       label: "अभिजित् मुहूर्त",
-      value: noon
-        ? `${abhijitRange} (मध्यान्ह ${formatClockNepali(noon) ?? noon})`
-        : abhijitRange,
-      auspicious: m.abhijit?.is_auspicious ?? true,
+      value: abhijit.noonDisplay
+        ? `${abhijit.rangeDisplay} (मध्यान्ह ${abhijit.noonDisplay})`
+        : abhijit.rangeDisplay,
+      auspicious: m?.abhijit?.is_auspicious ?? true,
     });
   }
 

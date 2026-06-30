@@ -6,7 +6,7 @@ export function initAnalytics(): void {
   const id = import.meta.env.VITE_GA_MEASUREMENT_ID;
   if (!id || initialized) return;
 
-  ReactGA.initialize(id);
+  ReactGA.initialize(id, { gtagOptions: { send_page_view: false } });
   initialized = true;
 }
 

@@ -1,11 +1,37 @@
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv, type Plugin } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import path from "path"
 
-export default defineConfig({
+function injectGaSnippet(measurementId: string | undefined): Plugin {
+  return {
+    name: "inject-ga-snippet",
+    transformIndexHtml(html) {
+      if (!measurementId) {
+        return html.replace(/\s*<!-- @ga-snippet -->\s*/, "\n")
+      }
+
+      const snippet = `<!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${measurementId}', { send_page_view: false });
+    </script>`
+
+      return html.replace("<!-- @ga-snippet -->", snippet)
+    },
+  }
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "")
+  const gaId = env.VITE_GA_MEASUREMENT_ID
+
+  return {
   base: "/",
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), injectGaSnippet(gaId)],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -49,4 +75,5 @@ export default defineConfig({
       },
     },
   },
+  }
 })

@@ -127,7 +127,7 @@ export function PanchangaAsideTabPanel({
 }: Props) {
   if (loading) {
     return tab === "panchanga" ? (
-      <PanchangaVivaranPanel loading />
+      <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} />
     ) : tab === "sait" ? (
       <SaitAsidePanel defaultYear={bsYear} />
     ) : tab === "festivals" ? (
@@ -162,7 +162,14 @@ export function PanchangaAsideTabPanel({
 
   switch (tab) {
     case "panchanga":
-      return <PanchangaVivaranPanel p={p} selectedDay={selectedDay} />;
+      return (
+        <PanchangaVivaranPanel
+          p={p}
+          selectedDay={selectedDay}
+          bsYear={bsYear}
+          bsMonth={bsMonth}
+        />
+      );
     case "muhurta":
       return <MuhurtaAsidePanel p={p} dateAd={selectedAdDate} />;
     default:

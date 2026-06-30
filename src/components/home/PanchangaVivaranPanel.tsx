@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
 import {
   formatAngaPatroTransitionHint,
@@ -5,6 +7,7 @@ import {
   formatMonthMoonEventDisplay,
   formatPatroBelaantar,
   formatPatroDeshaantar,
+  getAbhijitMuhurta,
   getMoonriseDisplay,
   getPanchangaDetail,
   getPlanetGocharLines,
@@ -27,8 +30,53 @@ type AngaBlock = {
 type Props = {
   p?: PanchangaDay;
   selectedDay?: CalendarDay | null;
+  bsYear?: number;
+  bsMonth?: number;
   loading?: boolean;
 };
+
+function AbhijitVivaranBlock({
+  p,
+  bsYear,
+  bsMonth,
+}: {
+  p: PanchangaDay;
+  bsYear: number;
+  bsMonth: number;
+}) {
+  const { t } = useTranslation();
+  const abhijit = getAbhijitMuhurta(p);
+
+  return (
+    <div className="pn-vivaran-block pn-vivaran-abhijit">
+      <div className="pn-vivaran-abhijit-head">
+        <div className="pn-vivaran-block-title">{t("abhijit.title")}</div>
+        <Link
+          to="/abhijit-muhurta"
+          search={{ year: bsYear, month: bsMonth }}
+          className="pn-aside-link shrink-0"
+        >
+          {t("holidays.view_all")} →
+        </Link>
+      </div>
+      {abhijit ? (
+        <div className="pn-vivaran-abhijit-row">
+          <span className="pn-vivaran-abhijit-label">{t("abhijit.today_window")}</span>
+          <span className="pn-vivaran-abhijit-val">
+            <span className="pn-vivaran-abhijit-time mono">{abhijit.rangeDisplay}</span>
+            {abhijit.noonDisplay ? (
+              <span className="pn-vivaran-abhijit-noon mono">
+                ({t("abhijit.noon_short")} {abhijit.noonDisplay})
+              </span>
+            ) : null}
+          </span>
+        </div>
+      ) : (
+        <p className="pn-aside-tab-empty">{t("abhijit.unavailable")}</p>
+      )}
+    </div>
+  );
+}
 
 type DetailCell = {
   label: string;
@@ -97,7 +145,7 @@ function buildPanchangaDetailCells(
   ];
 }
 
-export function PanchangaVivaranPanel({ p, selectedDay, loading }: Props) {
+export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading }: Props) {
   if (loading || !p) {
     return (
       <section className="pn-vivaran">
@@ -158,6 +206,10 @@ export function PanchangaVivaranPanel({ p, selectedDay, loading }: Props) {
             </div>
           ) : null}
         </div>
+      ) : null}
+
+      {bsYear != null && bsMonth != null ? (
+        <AbhijitVivaranBlock p={p} bsYear={bsYear} bsMonth={bsMonth} />
       ) : null}
     </section>
   );

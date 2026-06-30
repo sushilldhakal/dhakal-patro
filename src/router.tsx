@@ -27,6 +27,7 @@ const KundaliDetail = lazyRoute(() => import("./pages/KundaliDetail"), "KundaliD
 const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
+const AbhijitMuhurta = lazyRoute(() => import("./pages/AbhijitMuhurta"), "AbhijitMuhurta");
 const History = lazyRoute(() => import("./pages/History"), "History");
 const Account = lazyRoute(() => import("./pages/Account"), "Account");
 const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail");
@@ -81,6 +82,18 @@ const suryakrantiRoute = createRoute({
   path: "/suryakranti",
   component: SunTimesYear,
 });
+const abhijitMuhurtaRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/abhijit-muhurta",
+  validateSearch: (search: Record<string, unknown>): { year?: number; month?: number } => {
+    const parse = (raw: unknown) => {
+      const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : undefined;
+      return Number.isFinite(n) ? n : undefined;
+    };
+    return { year: parse(search.year), month: parse(search.month) };
+  },
+  component: AbhijitMuhurta,
+});
 const sunTimesLegacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sun-times",
@@ -110,6 +123,7 @@ const routeTree = rootRoute.addChildren([
   learnRoute,
   learnArticleRoute,
   suryakrantiRoute,
+  abhijitMuhurtaRoute,
   sunTimesLegacyRoute,
   historyRoute,
   historyLegacyRoute,

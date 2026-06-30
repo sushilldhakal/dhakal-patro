@@ -1360,6 +1360,111 @@
   text-align: right;
   color: var(--muted-foreground);
 }
+.pn-vivaran-abhijit .pn-vivaran-block-title {
+  color: var(--brand-teal);
+  margin-bottom: 0;
+}
+.dark .pn-vivaran-abhijit .pn-vivaran-block-title {
+  color: var(--brand-yellow);
+}
+.pn-vivaran-abhijit-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pn-vivaran-abhijit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.pn-vivaran-abhijit-label {
+  flex-shrink: 0;
+  font: 600 12.5px var(--pn-font);
+  color: var(--foreground);
+}
+.pn-vivaran-abhijit-val {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  text-align: right;
+}
+.pn-vivaran-abhijit-time {
+  font: 700 12px var(--pn-num);
+  color: var(--foreground);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.pn-vivaran-abhijit-noon {
+  font: 600 11px var(--pn-num);
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.pn-abhijit-note {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--secondary) 8%, transparent);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+.pn-abhijit-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+}
+.pn-abhijit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.pn-abhijit-table th,
+.pn-abhijit-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
+  vertical-align: top;
+}
+.pn-abhijit-table th {
+  font: 700 11px var(--pn-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+.pn-abhijit-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.pn-abhijit-table tbody tr.today {
+  background: color-mix(in srgb, var(--secondary) 12%, transparent);
+}
+.pn-abhijit-table tbody tr.upcoming td {
+  color: var(--foreground);
+}
+.pn-abhijit-bs-day {
+  display: block;
+  font: 700 15px var(--pn-num);
+}
+.pn-abhijit-bs-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.pn-abhijit-time {
+  color: var(--brand-teal);
+  font-weight: 700;
+}
+.dark .pn-abhijit-time {
+  color: var(--brand-yellow);
+}
 
 @media (min-width: 1081px) {
   .pn-aside-panel .pn-aside-tabs {
