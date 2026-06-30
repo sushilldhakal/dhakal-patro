@@ -41,55 +41,71 @@ function injectGaSnippet(measurementId: string | undefined): Plugin {
   }
 }
 
+/** Load built CSS without blocking first paint (boot loader uses inline styles). */
+function asyncCss(): Plugin {
+  return {
+    name: "async-css",
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        return html.replace(
+          /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
+          '<link rel="preload" href="$1" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">\n    <noscript><link rel="stylesheet" href="$1"></noscript>',
+        )
+      },
+    },
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "")
   const gaId = env.VITE_GA_MEASUREMENT_ID
 
   return {
-  base: "/",
-  plugins: [react(), tailwindcss(), injectGaSnippet(gaId)],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  // In dev, mirror the production nginx setup: forward "/api/*" to the local
-  // FastAPI server with the prefix stripped, so the app is same-origin here too.
-  server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:8080",
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api/, ""),
+    base: "/",
+    plugins: [react(), tailwindcss(), injectGaSnippet(gaId), asyncCss()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
       },
     },
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes("node_modules")) return;
-
-          if (id.includes("@tanstack/react-table")) return "table";
-          if (id.includes("react-day-picker") || id.includes("date-fns")) {
-            return "calendar-picker";
-          }
-          if (id.includes("@tanstack/react-router")) return "router";
-          if (id.includes("@tanstack/react-query")) return "query";
-          if (id.includes("lucide-react")) return "icons";
-          if (
-            id.includes("@base-ui") ||
-            id.includes("radix-ui") ||
-            id.includes("class-variance-authority") ||
-            id.includes("clsx") ||
-            id.includes("tailwind-merge")
-          ) {
-            return "ui";
-          }
-          if (id.includes("react-dom") || id.includes("/react/")) return "react";
+    // In dev, mirror the production nginx setup: forward "/api/*" to the local
+    // FastAPI server with the prefix stripped, so the app is same-origin here too.
+    server: {
+      proxy: {
+        "/api": {
+          target: "http://localhost:8080",
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/api/, ""),
         },
       },
     },
-  },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return
+
+            if (id.includes("@tanstack/react-table")) return "table"
+            if (id.includes("react-day-picker") || id.includes("date-fns")) {
+              return "calendar-picker"
+            }
+            if (id.includes("@tanstack/react-router")) return "router"
+            if (id.includes("@tanstack/react-query")) return "query"
+            if (id.includes("lucide-react")) return "icons"
+            if (
+              id.includes("@base-ui") ||
+              id.includes("radix-ui") ||
+              id.includes("class-variance-authority") ||
+              id.includes("clsx") ||
+              id.includes("tailwind-merge")
+            ) {
+              return "ui"
+            }
+            if (id.includes("react-dom") || id.includes("/react/")) return "react"
+          },
+        },
+      },
+    },
   }
 })
