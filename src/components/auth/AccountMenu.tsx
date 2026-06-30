@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { User, LogOut, UserCircle, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { AuthDialog } from "./AuthDialog";
+
+const LazyAuthDialog = lazy(() =>
+  import("./AuthDialog").then((m) => ({ default: m.AuthDialog })),
+);
 
 export function AccountMenu() {
   const { user, loading, logout } = useAuth();
@@ -22,7 +25,11 @@ export function AccountMenu() {
           <User className="size-3.5" />
           Sign in
         </Button>
-        <AuthDialog open={authOpen} onOpenChange={setAuthOpen} initialMode="login" />
+        {authOpen ? (
+          <Suspense fallback={null}>
+            <LazyAuthDialog open={authOpen} onOpenChange={setAuthOpen} initialMode="login" />
+          </Suspense>
+        ) : null}
       </>
     );
   }
