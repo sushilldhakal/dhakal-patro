@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { User, LogOut, UserCircle, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ const LazyAuthDialog = lazy(() =>
 );
 
 export function AccountMenu() {
+  const { t } = useTranslation();
   const { user, loading, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,7 +25,7 @@ export function AccountMenu() {
       <>
         <Button variant="outline" size="sm" onClick={() => setAuthOpen(true)}>
           <User className="size-3.5" />
-          Sign in
+          {t("auth.sign_in")}
         </Button>
         {authOpen ? (
           <Suspense fallback={null}>
@@ -42,7 +44,7 @@ export function AccountMenu() {
         <button
           type="button"
           className="flex size-8 items-center justify-center rounded-full bg-secondary/15 text-sm font-semibold text-secondary transition-colors hover:bg-secondary/25"
-          aria-label="Account menu"
+          aria-label={t("account_page.menu_aria")}
         >
           {initial}
         </button>
@@ -57,10 +59,10 @@ export function AccountMenu() {
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               {user.is_verified ? (
                 <>
-                  <BadgeCheck className="size-3 text-emerald-500" /> Verified
+                  <BadgeCheck className="size-3 text-emerald-500" /> {t("account_page.verified")}
                 </>
               ) : (
-                "Email not verified"
+                t("account_page.email_unverified")
               )}
             </p>
           </div>
@@ -72,7 +74,7 @@ export function AccountMenu() {
           className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <UserCircle className="size-4" />
-          My profiles
+          {t("account_page.my_profiles")}
         </Link>
         <button
           type="button"
@@ -83,7 +85,7 @@ export function AccountMenu() {
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <LogOut className="size-4" />
-          Sign out
+          {t("account_page.sign_out")}
         </button>
       </PopoverContent>
     </Popover>

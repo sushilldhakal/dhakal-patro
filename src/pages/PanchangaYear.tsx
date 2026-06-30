@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, MapPin, Pause, Play } from "lucide-react";
@@ -82,6 +83,7 @@ function readYearFromLocationSearch(search: unknown): number | undefined {
 }
 
 export function PanchangaYear() {
+  const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation();
   const searchYear = useRouterState({
     select: (state) => readYearFromLocationSearch(state.location.search),
@@ -242,10 +244,10 @@ export function PanchangaYear() {
             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            दिन हेराइमा फर्कनुहोस्
+            {t("panchanga_year.back")}
           </Link>
           <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
-            वार्षिक पञ्चाङ्ग चक्र
+            {t("panchanga_year.title")}
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
             {BS_MONTHS_NE[liveMonth - 1]} {toNepaliDigits(liveDay)}, {toNepaliDigits(year)}
@@ -261,7 +263,7 @@ export function PanchangaYear() {
           <select
             className="pn-select"
             value={year}
-            aria-label="वि.सं. वर्ष"
+            aria-label={t("common.bs_year")}
             onChange={(e) => handleYearChange(Number(e.target.value))}
           >
             {BS_YEAR_OPTIONS.map((y) => (
@@ -294,14 +296,14 @@ export function PanchangaYear() {
 
         {isError && (
           <div className="rounded-xl border border-destructive/20 bg-destructive/10 text-destructive p-4 text-sm">
-            Could not load panchanga for this date.
+            {t("panchanga_year.error")}
           </div>
         )}
 
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
-              वर्षभरि चलाउनुहोस्
+              {t("panchanga_year.scrub_label")}
             </span>
             <span className="text-sm font-mono font-semibold tabular-nums">
               {toNepaliDigits(clampedDay)} / {toNepaliDigits(totalDays)}
@@ -311,8 +313,8 @@ export function PanchangaYear() {
             <button
               type="button"
               onClick={() => setPlaying((p) => !p)}
-              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-              title={playing ? "रोक्नुहोस्" : "एक दिन प्रति सेकेन्ड चलाउनुहोस्"}
+              aria-label={playing ? t("panchanga_year.pause") : t("panchanga_year.play")}
+              title={playing ? t("panchanga_year.pause") : t("panchanga_year.play_title")}
               className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
             >
               {playing ? (

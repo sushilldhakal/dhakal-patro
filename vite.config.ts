@@ -57,17 +57,26 @@ function asyncCss(): Plugin {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isSsrBuild }) => {
   const env = loadEnv(mode, process.cwd(), "")
   const gaId = env.VITE_GA_MEASUREMENT_ID
 
   return {
     base: "/",
-    plugins: [react(), tailwindcss(), injectGaSnippet(gaId), asyncCss()],
+    plugins: [react(), tailwindcss(), ...(isSsrBuild ? [] : [injectGaSnippet(gaId), asyncCss()])],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
+    },
+    ssr: {
+      noExternal: [
+        "@tanstack/react-router",
+        "@tanstack/react-query",
+        "@tanstack/history",
+        "react-i18next",
+        "i18next",
+      ],
     },
     // In dev, mirror the production nginx setup: forward "/api/*" to the local
     // FastAPI server with the prefix stripped, so the app is same-origin here too.

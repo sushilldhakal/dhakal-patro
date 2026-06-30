@@ -16,6 +16,7 @@ import {
   tokenStore,
   type AuthUser,
 } from "./client";
+import { isBrowser } from "@/lib/browser";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -30,9 +31,9 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, ssr = false }: { children: ReactNode; ssr?: boolean }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!ssr && isBrowser);
 
   const refreshUser = useCallback(async () => {
     if (!tokenStore.access && !tokenStore.refresh) {
@@ -48,11 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Bootstrap from any stored session on first mount.
   useEffect(() => {
+    if (ssr) return;
     void refreshUser().finally(() => setLoading(false));
-  }, [refreshUser]);
+  }, [refreshUser, ssr]);
 
   // Keep tabs in sync when a session changes elsewhere.
   useEffect(() => {
+    if (ssr) return;
     const onStorage = (e: StorageEvent) => {
       if (e.key === "dhakalPatroAccessToken" || e.key === "dhakalPatroRefreshToken") {
         void refreshUser();

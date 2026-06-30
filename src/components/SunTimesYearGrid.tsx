@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueries } from "@tanstack/react-query";
 import {
   createColumnHelper,
@@ -85,59 +86,65 @@ function buildMonthRows(bsYear: number, month: number, grid: Map<string, SunCell
 
 const monthCol = createColumnHelper<SunDayRow>();
 
-const MONTH_TABLE_COLUMNS = [
-  monthCol.accessor("day", {
-    header: "दिन",
-    cell: (info) => (
-      <span className="font-semibold tabular-nums">{toNepaliDigits(info.getValue())}</span>
-    ),
-  }),
-  monthCol.accessor("ayanaMark", {
-    header: "अयन",
-    cell: (info) => {
-      const mark = info.getValue();
-      const ayanaNe = info.row.original.ayanaNe;
-      if (!mark) return <span className="text-muted-foreground">—</span>;
-      return (
-        <span
-          className={cn(
-            "pn-sun-grid-ayana",
-            mark === "उ" ? "pn-sun-grid-ayana--north" : "pn-sun-grid-ayana--south",
-          )}
-          title={ayanaNe}
-        >
-          {mark}
-        </span>
-      );
-    },
-  }),
-  monthCol.accessor("sunriseDisplay", {
-    header: () => (
-      <span className="inline-flex items-center gap-1.5">
-        <Sunrise className="size-4 text-orange-500" />
-        सूर्योदय
-      </span>
-    ),
-    cell: (info) => (
-      <span className="font-mono text-base tabular-nums text-orange-600 dark:text-[#7fd6db]">
-        {info.getValue() ?? "—"}
-      </span>
-    ),
-  }),
-  monthCol.accessor("sunsetDisplay", {
-    header: () => (
-      <span className="inline-flex items-center gap-1.5">
-        <Sunset className="size-4 text-blue-500" />
-        सूर्यास्त
-      </span>
-    ),
-    cell: (info) => (
-      <span className="font-mono text-base tabular-nums text-destructive/90">
-        {info.getValue() ?? "—"}
-      </span>
-    ),
-  }),
-];
+function useMonthTableColumns() {
+  const { t } = useTranslation();
+  return useMemo(
+    () => [
+      monthCol.accessor("day", {
+        header: t("sun_times.col_day"),
+        cell: (info) => (
+          <span className="font-semibold tabular-nums">{toNepaliDigits(info.getValue())}</span>
+        ),
+      }),
+      monthCol.accessor("ayanaMark", {
+        header: t("sun_times.col_ayana_short"),
+        cell: (info) => {
+          const mark = info.getValue();
+          const ayanaNe = info.row.original.ayanaNe;
+          if (!mark) return <span className="text-muted-foreground">—</span>;
+          return (
+            <span
+              className={cn(
+                "pn-sun-grid-ayana",
+                mark === "उ" ? "pn-sun-grid-ayana--north" : "pn-sun-grid-ayana--south",
+              )}
+              title={ayanaNe}
+            >
+              {mark}
+            </span>
+          );
+        },
+      }),
+      monthCol.accessor("sunriseDisplay", {
+        header: () => (
+          <span className="inline-flex items-center gap-1.5">
+            <Sunrise className="size-4 text-orange-500" />
+            {t("sun_times.col_sunrise")}
+          </span>
+        ),
+        cell: (info) => (
+          <span className="font-mono text-base tabular-nums text-orange-600 dark:text-[#7fd6db]">
+            {info.getValue() ?? "—"}
+          </span>
+        ),
+      }),
+      monthCol.accessor("sunsetDisplay", {
+        header: () => (
+          <span className="inline-flex items-center gap-1.5">
+            <Sunset className="size-4 text-blue-500" />
+            {t("sun_times.col_sunset")}
+          </span>
+        ),
+        cell: (info) => (
+          <span className="font-mono text-base tabular-nums text-destructive/90">
+            {info.getValue() ?? "—"}
+          </span>
+        ),
+      }),
+    ],
+    [t],
+  );
+}
 
 function MonthSunDataTable({
   rows,
@@ -146,9 +153,10 @@ function MonthSunDataTable({
   rows: SunDayRow[];
   isLoading: boolean;
 }) {
+  const columns = useMonthTableColumns();
   const table = useReactTable({
     data: rows,
-    columns: MONTH_TABLE_COLUMNS,
+    columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -169,7 +177,7 @@ function MonthSunDataTable({
         {isLoading && rows.every((r) => !r.sunrise && !r.sunset) ? (
           Array.from({ length: 6 }).map((_, i) => (
             <TableRow key={i}>
-              {MONTH_TABLE_COLUMNS.map((col, colIdx) => (
+              {columns.map((col, colIdx) => (
                 <TableCell
                   key={col.id ?? ("accessorKey" in col ? String(col.accessorKey) : colIdx)}
                   className="px-3 py-3"
@@ -200,32 +208,33 @@ function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
   locationLabel: string;
   bsYear: number;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={cn("pn-sun-grid-head", hideHeader && "pn-sun-grid-head--legend-only")}>
       {!hideHeader ? (
         <div className="pn-sun-grid-titles">
-          <h3 className="pn-sun-grid-title">सूर्य क्रान्ति</h3>
+          <h3 className="pn-sun-grid-title">{t("sun_times.grid_title")}</h3>
           <span className="pn-sun-grid-sub">
-            Suryakranti · {locationLabel} · वि.सं. {bsYear}
+            {t("sun_times.subtitle", { year: toNepaliDigits(bsYear) })} · {locationLabel}
           </span>
         </div>
       ) : null}
       <div className="pn-sun-grid-legend">
         <span className="pn-sun-grid-legend-item">
           <Sunrise className="size-4" strokeWidth={1.8} />
-          सूर्योदय
+          {t("sun_times.col_sunrise")}
         </span>
         <span className="pn-sun-grid-legend-item">
           <Sunset className="size-4" strokeWidth={1.8} />
-          सूर्यास्त
+          {t("sun_times.col_sunset")}
         </span>
         <span className="pn-sun-grid-legend-item">
           <span className="pn-sun-grid-ayana pn-sun-grid-ayana--north">उ</span>
-          उत्तरायण
+          {t("sun_times.north_ayana")}
         </span>
         <span className="pn-sun-grid-legend-item">
           <span className="pn-sun-grid-ayana pn-sun-grid-ayana--south">द</span>
-          दक्षिणायण
+          {t("sun_times.south_ayana")}
         </span>
       </div>
     </div>
@@ -243,13 +252,14 @@ function SunTimesYearMatrix({
   maxDay: number;
   isLoading: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="pn-sun-grid-scroll">
       <table className="pn-sun-grid" aria-label={`Sunrise and sunset grid for BS year ${bsYear}`}>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead scope="col" className="pn-sun-grid-corner">
-              दिन
+              {t("sun_times.col_day")}
             </TableHead>
             {BS_MONTHS_NE.map((name) => (
               <TableHead key={name} scope="col" className="pn-sun-grid-month">
@@ -336,6 +346,7 @@ function SunTimesYearAccordion({
   grid: Map<string, SunCell>;
   isLoading: boolean;
 }) {
+  const { t } = useTranslation();
   const currentMonth =
     getCurrentBs().year === bsYear ? String(getCurrentBs().month) : "1";
 
@@ -355,7 +366,7 @@ function SunTimesYearAccordion({
               <span>
                 {name}
                 <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  {toNepaliDigits(getBSMonthLength(bsYear, month))} दिन
+                  {t("sun_times.days_count", { count: toNepaliDigits(getBSMonthLength(bsYear, month)) })}
                 </span>
               </span>
             </AccordionTrigger>

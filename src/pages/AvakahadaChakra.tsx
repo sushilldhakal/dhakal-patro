@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useReactTable,
   getCoreRowModel,
@@ -25,20 +26,30 @@ import { cn } from "../lib/utils";
 import { findNakshatraIcon } from "@/lib/nakshatra-icons";
 import {
   AVAKAHADA,
-  RASHI_META,
   MANGLI_VARGAS,
   BHAUMA_DOSHA_SHLOKAS,
-  ABHIJIT_NOTE,
   type Gana,
 } from "@/lib/avakahada-data";
+import {
+  localizeGana,
+  localizeLord,
+  localizeNadi,
+  localizeNakshatra,
+  localizeRashi,
+  localizeRashis,
+  localizeVarga,
+  localizeVarna,
+  localizeVashya,
+  localizeYoni,
+  rowMetaFromCharans,
+} from "@/lib/avakahada-locale";
+import { AvakahadaWheel } from "@/components/avakahada/AvakahadaWheel";
 
 const ganaTone: Record<Gana, string> = {
   देव: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
   नर: "bg-sky-500/15 text-sky-700 dark:text-sky-300",
   राक्षस: "bg-rose-500/15 text-rose-700 dark:text-rose-300",
 };
-
-const uniq = (xs: string[]) => [...new Set(xs)];
 
 interface Row {
   index: number;
@@ -57,38 +68,54 @@ interface Row {
   nadi: string;
 }
 
-const ROWS: Row[] = AVAKAHADA.map((r) => {
-  const metas = r.rashis.map((x) => RASHI_META[x]!);
-  return {
-    index: r.index,
-    ne: r.ne,
-    en: r.en,
-    aksharas: r.aksharas,
-    charanRashis: r.charanRashis,
-    aksharaText: r.aksharas.join(" "),
-    rashiText: r.rashis.join(" / "),
-    lord: uniq(metas.map((m) => m.lord)).join(" / "),
-    varna: uniq(metas.map((m) => m.varna)).join(" / "),
-    vashya: uniq(metas.map((m) => m.vashya)).join(" / "),
-    yoni: r.yoni,
-    vairiYoni: r.vairiYoni,
-    gana: r.gana,
-    nadi: r.nadi,
-  };
-});
+function buildRows(lang: string): Row[] {
+  return AVAKAHADA.map((r) => {
+    const meta = rowMetaFromCharans(r.charanRashis);
+    return {
+      index: r.index,
+      ne: r.ne,
+      en: r.en,
+      aksharas: r.aksharas,
+      charanRashis: r.charanRashis,
+      aksharaText: r.aksharas.join(" "),
+      rashiText: localizeRashis(r.rashis, lang),
+      lord: localizeLord(meta.lord, lang),
+      varna: localizeVarna(meta.varna, lang),
+      vashya: localizeVashya(meta.vashya, lang),
+      yoni: localizeYoni(r.yoni, lang),
+      vairiYoni: localizeYoni(r.vairiYoni, lang),
+      gana: r.gana,
+      nadi: localizeNadi(r.nadi, lang),
+    };
+  });
+}
 
 const fuzzy: FilterFn<Row> = (row, _id, value: string) => {
   const q = String(value).trim().toLowerCase();
   if (!q) return true;
   const o = row.original;
-  return [o.ne, o.aksharaText, o.rashiText, o.lord, o.varna, o.vashya, o.yoni, o.vairiYoni, o.gana, o.nadi]
+  return [
+    o.ne,
+    o.en,
+    o.aksharaText,
+    o.rashiText,
+    o.lord,
+    o.varna,
+    o.vashya,
+    o.yoni,
+    o.vairiYoni,
+    o.gana,
+    localizeGana(o.gana, "en"),
+    o.nadi,
+  ]
     .join(" ")
     .toLowerCase()
     .includes(q);
 };
 
-function NakshatraCell({ row }: { row: Row }) {
+function NakshatraCell({ row, lang }: { row: Row; lang: string }) {
   const icon = findNakshatraIcon(row.en);
+  const label = localizeNakshatra(row, lang);
   return (
     <div className="flex items-center gap-2">
       <span className="grid h-6 w-6 shrink-0 place-items-center text-secondary">
@@ -103,63 +130,115 @@ function NakshatraCell({ row }: { row: Row }) {
         )}
       </span>
       <span className="whitespace-nowrap font-medium text-foreground">
-        {row.index}. {row.ne}
+        {row.index}. {label}
       </span>
     </div>
   );
 }
 
-const columns: ColumnDef<Row>[] = [
-  {
-    id: "nakshatra",
-    header: "नक्षत्र",
-    accessorFn: (r) => r.index,
-    cell: ({ row }) => <NakshatraCell row={row.original} />,
-  },
-  {
-    id: "akshara",
-    header: "नामाक्षर (चरण १–४)",
-    accessorFn: (r) => r.aksharaText,
-    enableSorting: false,
-    cell: ({ row }) => (
-      <div className="flex flex-wrap gap-1">
-        {row.original.aksharas.map((a, i) => (
-          <span
-            key={i}
-            title={`चरण ${i + 1} · ${row.original.charanRashis[i]}`}
-            className="inline-flex min-w-7 items-center justify-center rounded-md border border-border bg-card px-1.5 py-0.5 font-medium text-foreground"
-          >
-            {a}
-          </span>
-        ))}
-      </div>
-    ),
-  },
-  { id: "rashi", header: "राशि", accessorKey: "rashiText", cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span> },
-  { id: "lord", header: "स्वामी", accessorKey: "lord", cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span> },
-  { id: "varna", header: "वर्ण", accessorKey: "varna", cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span> },
-  { id: "vashya", header: "वश्य", accessorKey: "vashya", cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span> },
-  { id: "yoni", header: "योनि", accessorKey: "yoni", cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span> },
-  { id: "vairi", header: "वैरि योनि", accessorKey: "vairiYoni", cell: (c) => <span className="whitespace-nowrap text-muted-foreground">{c.getValue<string>()}</span> },
-  {
-    id: "gana",
-    header: "गण",
-    accessorKey: "gana",
-    cell: ({ getValue }) => {
-      const g = getValue<Gana>();
-      return <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", ganaTone[g])}>{g}</span>;
-    },
-  },
-  { id: "nadi", header: "नाडी", accessorKey: "nadi", cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span> },
-];
+function useColumns(lang: string, t: (key: string, opts?: Record<string, string>) => string): ColumnDef<Row>[] {
+  return useMemo(
+    () => [
+      {
+        id: "nakshatra",
+        header: t("avakahada.col_nakshatra"),
+        accessorFn: (r) => r.index,
+        cell: ({ row }) => <NakshatraCell row={row.original} lang={lang} />,
+      },
+      {
+        id: "akshara",
+        header: t("avakahada.col_akshara"),
+        accessorFn: (r) => r.aksharaText,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            {row.original.aksharas.map((a, i) => (
+              <span
+                key={i}
+                title={t("avakahada.charan_title", {
+                  n: String(i + 1),
+                  rashi: localizeRashi(row.original.charanRashis[i]!, lang),
+                })}
+                className="inline-flex min-w-7 items-center justify-center rounded-md border border-border bg-card px-1.5 py-0.5 font-medium text-foreground"
+              >
+                {a}
+              </span>
+            ))}
+          </div>
+        ),
+      },
+      {
+        id: "rashi",
+        header: t("avakahada.col_rashi"),
+        accessorKey: "rashiText",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+      {
+        id: "lord",
+        header: t("avakahada.col_lord"),
+        accessorKey: "lord",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+      {
+        id: "varna",
+        header: t("avakahada.col_varna"),
+        accessorKey: "varna",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+      {
+        id: "vashya",
+        header: t("avakahada.col_vashya"),
+        accessorKey: "vashya",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+      {
+        id: "yoni",
+        header: t("avakahada.col_yoni"),
+        accessorKey: "yoni",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+      {
+        id: "vairi",
+        header: t("avakahada.col_vairi_yoni"),
+        accessorKey: "vairiYoni",
+        cell: (c) => <span className="whitespace-nowrap text-muted-foreground">{c.getValue<string>()}</span>,
+      },
+      {
+        id: "gana",
+        header: t("avakahada.col_gana"),
+        accessorKey: "gana",
+        cell: ({ getValue }) => {
+          const g = getValue<Gana>();
+          return (
+            <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", ganaTone[g])}>
+              {localizeGana(g, lang)}
+            </span>
+          );
+        },
+      },
+      {
+        id: "nadi",
+        header: t("avakahada.col_nadi"),
+        accessorKey: "nadi",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+    ],
+    [lang, t],
+  );
+}
 
 export function AvakahadaChakra() {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   useRouteLoading(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
+  const data = useMemo(() => buildRows(lang), [lang]);
+  const columns = useColumns(lang, t);
+
   const table = useReactTable({
-    data: ROWS,
+    data,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
@@ -178,26 +257,24 @@ export function AvakahadaChakra() {
     <PageShell>
       <PageHeader
         icon={<Grid3x3 className="h-7 w-7 text-secondary" />}
-        title="अवकहडा चक्र"
-        subtitle="२७ नक्षत्र, १०८ चरण — नामाक्षर, राशि, स्वामी, वर्ण, वश्य, योनि, गण र नाडीको परम्परागत तालिका।"
+        title={t("avakahada.title")}
+        subtitle={t("avakahada.subtitle")}
       />
 
       <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-        {ABHIJIT_NOTE}
+        {t("avakahada.abhijit_note")}
       </p>
 
-      {/* search */}
       <div className="relative max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="नक्षत्र, नामाक्षर, राशि, योनि… खोज्नुहोस्"
+          placeholder={t("avakahada.search_placeholder")}
           className="pl-9"
         />
       </div>
 
-      {/* shadcn data table */}
       <div className="overflow-x-auto rounded-xl border border-border">
         <Table>
           <TableHeader>
@@ -237,7 +314,7 @@ export function AvakahadaChakra() {
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="py-8 text-center text-muted-foreground">
-                  कुनै नतिजा भेटिएन।
+                  {t("avakahada.no_results")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -258,27 +335,26 @@ export function AvakahadaChakra() {
         </Table>
       </div>
 
-      {/* भौमदोष */}
+      <AvakahadaWheel highlighted={globalFilter.trim() ? rows.map((r) => r.original) : undefined} />
+
       <section className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">भौमदोष (मङ्गली) विचार</h2>
+        <h2 className="text-xl font-bold text-foreground">{t("avakahada.bhoomadosha_title")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-border p-4">
-            <h3 className="mb-2 text-sm font-semibold text-foreground">नामाक्षर वर्ग र शत्रु वर्ग</h3>
+            <h3 className="mb-2 text-sm font-semibold text-foreground">{t("avakahada.name_groups")}</h3>
             <ul className="space-y-1.5 text-sm">
               {MANGLI_VARGAS.map((v) => (
                 <li key={v.varga} className="flex items-center gap-2 text-muted-foreground">
-                  <span className="font-medium text-foreground">{v.varga}</span>
+                  <span className="font-medium text-foreground">{localizeVarga(v.varga, lang)}</span>
                   <span className="text-xs">⚔</span>
-                  <span className="font-medium text-foreground">{v.shatru}</span>
+                  <span className="font-medium text-foreground">{localizeVarga(v.shatru, lang)}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-muted-foreground">
-              वर र वधूको नामाक्षर वर्ग परस्पर शत्रु परेमा भौमदोष (मङ्गली) मानिन्छ।
-            </p>
+            <p className="mt-3 text-xs text-muted-foreground">{t("avakahada.bhoomadosha_note")}</p>
           </div>
           <div className="rounded-xl border border-border p-4">
-            <h3 className="mb-2 text-sm font-semibold text-foreground">श्लोक</h3>
+            <h3 className="mb-2 text-sm font-semibold text-foreground">{t("avakahada.shloka")}</h3>
             <div className="space-y-3">
               {BHAUMA_DOSHA_SHLOKAS.map((s, i) => (
                 <p key={i} className="text-sm leading-relaxed text-muted-foreground">
@@ -288,10 +364,7 @@ export function AvakahadaChakra() {
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          टिप्पणी: मङ्गल लग्न, ४, ७, ८ वा १२ भावमा परेमा भौमदोष लाग्छ; शनि दृष्टि, गुरु/शुक्र/चन्द्रको
-          स्थिति, केन्द्रगत राहु आदिले दोष परिहार हुन सक्छ (माथिका श्लोक हेर्नुहोस्)।
-        </p>
+        <p className="text-xs text-muted-foreground">{t("avakahada.footnote")}</p>
       </section>
     </PageShell>
   );

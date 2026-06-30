@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Trans, useTranslation } from "react-i18next";
 import { ArrowLeft, CalendarRange, MapPin } from "lucide-react";
 import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -18,6 +19,7 @@ const BS_YEAR_OPTIONS = Array.from(
 );
 
 export function SunTimesYear() {
+  const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation();
   const [year, setYear] = useState(() => getCurrentBs().year);
   const [gridLoading, setGridLoading] = useState(true);
@@ -33,13 +35,13 @@ export function SunTimesYear() {
             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            गृहपृष्ठमा फर्कनुहोस्
+            {t("common.back_home")}
           </Link>
           <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
-            सूर्य क्रान्ति
+            {t("sun_times.title")}
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
-            Suryakranti · वार्षिक सूर्योदय–सूर्यास्त · वि.सं. {toNepaliDigits(year)}
+            {t("sun_times.subtitle", { year: toNepaliDigits(year) })}
             {" · "}
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
@@ -52,7 +54,7 @@ export function SunTimesYear() {
           <select
             className="pn-select"
             value={year}
-            aria-label="वि.सं. वर्ष"
+            aria-label={t("common.bs_year")}
             onChange={(e) => setYear(Number(e.target.value))}
           >
             {BS_YEAR_OPTIONS.map((y) => (
@@ -72,32 +74,30 @@ export function SunTimesYear() {
 
       <div className="pn-suryakranti-ayana-note">
         <p className="pn-suryakranti-ayana-lead">
-          प्रत्येक दिनको <strong>उ</strong> वा <strong>द</strong> सूर्योदयको बेला सूर्य कुन राशिमा
-          छ भन्ने आधारमा तय हुन्छ — पूरै महिनाले होइन। वर्षमा दुई पटक सङ्क्रान्तिमा परिवर्तन
-          हुन्छ (कर्कट र मकर)।
+          <Trans i18nKey="sun_times.ayana_note" components={{ strong: <strong /> }} />
         </p>
         <div className="pn-suryakranti-ayana-table-wrap">
           <table className="pn-suryakranti-ayana-table">
             <thead>
               <tr>
-                <th scope="col">अयन</th>
-                <th scope="col">सूर्य राशि (उदयकाल)</th>
+                <th scope="col">{t("sun_times.col_ayana")}</th>
+                <th scope="col">{t("sun_times.col_sun_sign")}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>
                   <span className="pn-sun-grid-ayana pn-sun-grid-ayana--north">उ</span>{" "}
-                  उत्तरायण
+                  {t("sun_times.north_ayana")}
                 </td>
-                <td>मकर, कुम्भ, मीन, मेष, वृष, मिथुन</td>
+                <td>{t("sun_times.north_signs")}</td>
               </tr>
               <tr>
                 <td>
                   <span className="pn-sun-grid-ayana pn-sun-grid-ayana--south">द</span>{" "}
-                  दक्षिणायण
+                  {t("sun_times.south_ayana")}
                 </td>
-                <td>कर्कट, सिंह, कन्या, तुला, वृश्चिक, धनु</td>
+                <td>{t("sun_times.south_signs")}</td>
               </tr>
             </tbody>
           </table>
@@ -108,7 +108,7 @@ export function SunTimesYear() {
           className="pn-suryakranti-ayana-cta"
         >
           <CalendarRange className="w-4 h-4 shrink-0" />
-          सूर्यको राशि यात्रा हेर्नुहोस् — वार्षिक पञ्चाङ्ग चक्र
+          {t("sun_times.year_wheel_link")}
         </Link>
       </div>
 

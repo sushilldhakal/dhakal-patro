@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
 import {
@@ -24,29 +25,25 @@ import {
 
 type MuhurtaSubTab = "tarabal" | "chandrabal" | "choghadiya" | "hora" | "pushkara";
 
-const SUB_TABS: { id: MuhurtaSubTab; label: string }[] = [
-  { id: "tarabal", label: "ताराबल" },
-  { id: "chandrabal", label: "चन्द्रबल" },
-  { id: "choghadiya", label: "चौघडी" },
-  { id: "hora", label: "होरा" },
-  { id: "pushkara", label: "पुष्कर" },
+const SUB_TABS: { id: MuhurtaSubTab; labelKey: string }[] = [
+  { id: "tarabal", labelKey: "muhurta_aside.tarabal" },
+  { id: "chandrabal", labelKey: "muhurta_aside.chandrabal" },
+  { id: "choghadiya", labelKey: "muhurta_aside.choghadiya" },
+  { id: "hora", labelKey: "muhurta_aside.hora" },
+  { id: "pushkara", labelKey: "muhurta_aside.pushkara" },
 ];
 
-const SUB_TAB_HINT: Record<MuhurtaSubTab, string> = {
-  tarabal: "कामको प्रतिफल र सफलता हेर्न।",
-  chandrabal: "यात्रा र कार्यको सफलता हेर्न।",
-  choghadiya: "दिन र रातका चौघडिया खण्ड।",
-  hora: "सूर्योदयदेखि सूर्यास्तसम्मका ग्रह होरा।",
-  pushkara:
-    "प्रत्येक लग्नभित्रका शुभ नवांश — संकल्प वा कार्य सुरु गर्न उपयुक्त समय (१०–१३ मिनेटको सुरुवात मात्र)।",
+const SUB_TAB_HINT_KEY: Record<MuhurtaSubTab, string> = {
+  tarabal: "muhurta_aside.hint_tarabal",
+  chandrabal: "muhurta_aside.hint_chandrabal",
+  choghadiya: "muhurta_aside.hint_choghadiya",
+  hora: "muhurta_aside.hint_hora",
+  pushkara: "muhurta_aside.hint_pushkara",
 };
 
-const MOON_REF_LABEL: Record<MuhurtaSubTab, string> = {
-  tarabal: "आजको चन्द्र नक्षत्र",
-  chandrabal: "आजको चन्द्र राशि",
-  choghadiya: "",
-  hora: "",
-  pushkara: "",
+const MOON_REF_KEY: Partial<Record<MuhurtaSubTab, string>> = {
+  tarabal: "muhurta_aside.moon_ref_tarabal",
+  chandrabal: "muhurta_aside.moon_ref_chandrabal",
 };
 
 function parseTimeToMinutes(time?: string | null): number | null {
@@ -67,15 +64,18 @@ function NavataraList({
   moonRefKind: "tarabal" | "chandrabal";
   highlightName?: string | null;
 }) {
+  const { t } = useTranslation();
   if (!rows.length) {
-    return <p className="pn-aside-tab-empty">विवरण उपलब्ध छैन।</p>;
+    return <p className="pn-aside-tab-empty">{t("muhurta_aside.unavailable")}</p>;
   }
+
+  const moonRefKey = MOON_REF_KEY[moonRefKind];
 
   return (
     <div className="pn-aside-navatara">
-      {moonLabel ? (
+      {moonLabel && moonRefKey ? (
         <p className="pn-aside-navatara-moon">
-          {MOON_REF_LABEL[moonRefKind]}: <strong>{moonLabel}</strong>
+          {t(moonRefKey)}: <strong>{moonLabel}</strong>
         </p>
       ) : null}
       <ul className="pn-aside-navatara-list">
@@ -104,11 +104,12 @@ function NavataraList({
 }
 
 function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
+  const { t } = useTranslation();
   const timeline = buildDayTimelineData(p, dateAd);
   const sunriseMin = parseTimeToMinutes(getSunrise(p));
 
   if (!timeline?.choghadiya.length || sunriseMin == null) {
-    return <p className="pn-aside-tab-empty">चौघडिया उपलब्ध छैन।</p>;
+    return <p className="pn-aside-tab-empty">{t("muhurta_aside.choghadiya_unavailable")}</p>;
   }
 
   const dayG = timeline.dayG;
@@ -118,7 +119,7 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
       {timeline.choghadiya.map((seg, i) => {
         const tone = choghadiyaTone(seg.name, seg.bad);
         const quality = choghadiyaQuality(seg.name, seg.bad);
-        const phase = seg.startG < dayG ? "दिन" : "रात";
+        const phase = seg.startG < dayG ? t("muhurta_aside.phase_day") : t("muhurta_aside.phase_night");
         const range = `${ghatiToCivilClockLabel(seg.startG, sunriseMin)} – ${ghatiToCivilClockLabel(seg.endG, sunriseMin)}`;
         return (
           <li
@@ -139,11 +140,12 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
 }
 
 function HoraList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
+  const { t } = useTranslation();
   const jsDay = new Date(`${dateAd}T12:00:00`).getDay();
   const slots = buildHoraSchedule(getSunrise(p), getSunset(p), jsDay);
 
   if (!slots.length) {
-    return <p className="pn-aside-tab-empty">होरा उपलब्ध छैन।</p>;
+    return <p className="pn-aside-tab-empty">{t("muhurta_aside.hora_unavailable")}</p>;
   }
 
   return (
@@ -173,10 +175,11 @@ function HoraList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
 }
 
 function PushkaraList({ p }: { p: PanchangaDay }) {
+  const { t } = useTranslation();
   const rows = getUdayaLagna(p);
 
   if (!rows?.length) {
-    return <p className="pn-aside-tab-empty">पुष्कर नवांश उपलब्ध छैन।</p>;
+    return <p className="pn-aside-tab-empty">{t("muhurta_aside.pushkara_unavailable")}</p>;
   }
 
   return (
@@ -196,7 +199,7 @@ function PushkaraList({ p }: { p: PanchangaDay }) {
             </div>
             {hits.length ? (
               <div className="pn-aside-pushkara-hits">
-                <span className="pn-aside-pushkara-label">पुष्कर नवांश:</span>
+                <span className="pn-aside-pushkara-label">{t("muhurta_aside.pushkara_label")}</span>
                 {hits.map((hit, j) => (
                   <span key={j} className="pn-aside-pushkara-hit mono">
                     {formatClockNepali(hit.local_time_short ?? hit.local_time) ??
@@ -220,13 +223,14 @@ type Props = {
 };
 
 export function MuhurtaAsidePanel({ p, dateAd }: Props) {
+  const { t } = useTranslation();
   const [subTab, setSubTab] = useState<MuhurtaSubTab>("tarabal");
   const tara = buildTaraBalaTable(p);
   const chandra = buildChandraBalaTable(p);
 
   return (
     <div className="pn-aside-muhurta-panel">
-      <div className="pn-aside-muhurta-subtabs" role="tablist" aria-label="दैनिक मुहूर्त">
+      <div className="pn-aside-muhurta-subtabs" role="tablist" aria-label={t("muhurta_aside.tabs_label")}>
         {SUB_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -236,14 +240,14 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
             aria-selected={subTab === tab.id}
             onClick={() => setSubTab(tab.id)}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
 
       <p className="pn-aside-muhurta-hint">
         <Info size={13} strokeWidth={2} aria-hidden />
-        <span>{SUB_TAB_HINT[subTab]}</span>
+        <span>{t(SUB_TAB_HINT_KEY[subTab])}</span>
       </p>
 
       <div role="tabpanel">

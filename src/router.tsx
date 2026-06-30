@@ -4,9 +4,11 @@ import {
   createRouter,
   Navigate,
   Outlet,
+  type RouterHistory,
 } from "@tanstack/react-router";
 import { Header } from "./components/Header";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
+import { RouteSeo } from "./components/seo/RouteSeo";
 import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
 import { RouteLoadingProvider } from "./lib/route-loading";
@@ -36,6 +38,7 @@ const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPas
 const rootRoute = createRootRoute({
   component: () => (
     <RouteLoadingProvider>
+      <RouteSeo />
       <AnalyticsTracker />
       <div className="min-h-screen">
         <Header />
@@ -134,10 +137,15 @@ const routeTree = rootRoute.addChildren([
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-export const router = createRouter({
-  routeTree,
-  ...(basepath ? { basepath } : {}),
-});
+export function createAppRouter(history?: RouterHistory) {
+  return createRouter({
+    routeTree,
+    ...(history ? { history } : {}),
+    ...(basepath ? { basepath } : {}),
+  });
+}
+
+export const router = createAppRouter();
 
 declare module "@tanstack/react-router" {
   interface Register {

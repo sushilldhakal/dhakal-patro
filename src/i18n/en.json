@@ -1,5 +1,91 @@
 {
   "app_name": "Dhakal Patro",
+  "seo": {
+    "site_keywords": "Nepali calendar, Panchanga, Kundali, Tithi, Nakshatra, Vedic astrology, BS AD converter",
+    "default_description": "Nepali calendar, Surya Panchanga, Tithi, Nakshatra, holidays and Kundali — Vedic Patro.",
+    "routes": {
+      "home": {
+        "title": "Nepali Calendar & Panchanga | Vedic Patro",
+        "description": "Daily Nepali Panchanga, Tithi, Nakshatra, BS/AD calendar, public holidays and Janma Kundali.",
+        "keywords": "Nepali calendar, Panchanga, Nepali patro, Tithi, Nakshatra"
+      },
+      "panchanga": {
+        "title": "Today's Surya Panchanga | Vedic Patro",
+        "description": "Daily Nepali Panchanga with Tithi, Nakshatra, Yoga, Karana, sunrise, sunset and muhurta.",
+        "keywords": "Panchanga, Tithi, Nakshatra, Yoga, Karana, daily panchang"
+      },
+      "panchanga_year": {
+        "title": "Yearly Panchanga Wheel | Vedic Patro",
+        "description": "Full-year Panchanga chakra with Tithi, Nakshatra and planetary positions.",
+        "keywords": "yearly panchanga, panchanga wheel"
+      },
+      "avakahada": {
+        "title": "Avakahada Chakra | Vedic Patro",
+        "description": "27 nakshatras — name syllables, rashi, lord, varna, vashya, yoni, gana and nadi.",
+        "keywords": "Avakahada chakra, naming syllables, nakshatra"
+      },
+      "chandrakranti": {
+        "title": "Chandra Kranti | Vedic Patro",
+        "description": "Moon sign transits, Gochar kundali and daily lunar positions.",
+        "keywords": "Chandra kranti, moon transit, gochar"
+      },
+      "shanti_vidhi": {
+        "title": "Shanti Vidhi | Vedic Patro",
+        "description": "Shanti vidhi and related patro guidance.",
+        "keywords": "Shanti vidhi, Vedic remedies"
+      },
+      "converter": {
+        "title": "BS / AD Date Converter | Vedic Patro",
+        "description": "Convert between Bikram Sambat and Gregorian dates.",
+        "keywords": "date converter, BS AD, Nepali date"
+      },
+      "holidays": {
+        "title": "Nepal Public Holidays & Festivals | Vedic Patro",
+        "description": "Nepal public holidays, festivals and special observance days.",
+        "keywords": "Nepal holidays, public holidays, festivals"
+      },
+      "kundali": {
+        "title": "Janma Kundali | Vedic Patro",
+        "description": "Generate birth chart — lagna, planets, dasha and detailed kundali report.",
+        "keywords": "Kundali, birth chart, horoscope calculator"
+      },
+      "learn": {
+        "title": "Learn Panchanga & Astrology | Vedic Patro",
+        "description": "Educational articles on Tithi, Nakshatra, Panchanga, calendars and Kundali.",
+        "keywords": "what is Tithi, Nakshatra explained, Panchanga guide"
+      },
+      "learn_history": {
+        "title": "History of Nepali Calendar | Vedic Patro",
+        "description": "Historical overview of Nepali calendar and Panchanga systems.",
+        "keywords": "Nepali calendar history"
+      },
+      "suryakranti": {
+        "title": "Surya Kranti | Vedic Patro",
+        "description": "Annual solar transits, sunrise and sunset times.",
+        "keywords": "Surya kranti, sankranti, sunrise times"
+      },
+      "abhijit_muhurta": {
+        "title": "Abhijit Muhurta | Vedic Patro",
+        "description": "Abhijit muhurta and auspicious time calculation.",
+        "keywords": "Abhijit muhurta, auspicious time"
+      },
+      "account": {
+        "title": "Account | Vedic Patro",
+        "description": "User account settings.",
+        "keywords": ""
+      },
+      "verify_email": {
+        "title": "Verify Email | Vedic Patro",
+        "description": "Verify your email address.",
+        "keywords": ""
+      },
+      "reset_password": {
+        "title": "Reset Password | Vedic Patro",
+        "description": "Set a new password.",
+        "keywords": ""
+      }
+    }
+  },
   "brand_vedic": "Vedic",
   "brand_patro": "Patro",
   "tagline": "Nepali calendar and Panchanga",
@@ -16,12 +102,26 @@
     "converter": "Converter",
     "holidays": "Holidays",
     "kundali": "Kundali",
-    "learn": "Learn"
+    "learn": "Learn",
+    "abhijit_muhurta": "Abhijit Muhurta"
   },
   "common": {
     "loading": "Loading…",
     "no_results": "No results found.",
-    "yes": "Yes"
+    "yes": "Yes",
+    "back_home": "Back to home",
+    "view_all": "View all",
+    "bs_year": "B.S. year",
+    "month": "Month",
+    "year": "Year",
+    "read_more": "Read more",
+    "not_found": "Not found",
+    "clear_search": "Clear search",
+    "all": "All",
+    "from": "from",
+    "day": "day",
+    "days": "days",
+    "enriching": "Loading tithi…"
   },
   "panchanga": {
     "today_title": "Today's Panchanga",
@@ -226,9 +326,228 @@
     "col_abhijit": "Abhijit Muhurta",
     "col_noon": "Solar noon"
   },
+  "calendar": {
+    "eyebrow": "Nepali Patro · B.S.",
+    "today_btn": "Today",
+    "mode_bs": "B.S.",
+    "mode_ad": "A.D.",
+    "prev_month": "Previous month",
+    "next_month": "Next month",
+    "month_aria": "Month",
+    "year_aria": "Year",
+    "era_aria": "Calendar era",
+    "today_badge": "Today"
+  },
+  "aside": {
+    "sunrise_sunset": "Sunrise / Sunset",
+    "moonrise": "Moonrise",
+    "ritu": "Ritu",
+    "nakshatra": "Nakshatra",
+    "yoga": "Yoga",
+    "karana": "Karana",
+    "gochar": "Planet transit",
+    "suryakranti": "Suryakranti",
+    "belaantar": "Belaantar"
+  },
+  "muhurta_aside": {
+    "tabs_label": "Daily Muhurta",
+    "tarabal": "Tarabal",
+    "chandrabal": "Chandrabala",
+    "choghadiya": "Choghadiya",
+    "hora": "Hora",
+    "pushkara": "Pushkara",
+    "hint_tarabal": "For work outcomes and success.",
+    "hint_chandrabal": "For travel and task success.",
+    "hint_choghadiya": "Day and night choghadiya segments.",
+    "hint_hora": "Planetary hora from sunrise to sunset.",
+    "hint_pushkara": "Auspicious navamsha within each lagna — best first 10–13 minutes for starting work.",
+    "moon_ref_tarabal": "Today's Moon nakshatra",
+    "moon_ref_chandrabal": "Today's Moon sign",
+    "unavailable": "Details not available.",
+    "choghadiya_unavailable": "Choghadiya not available.",
+    "hora_unavailable": "Hora not available.",
+    "pushkara_unavailable": "Pushkara navamsha not available.",
+    "pushkara_label": "Pushkara navamsha:",
+    "phase_day": "Day",
+    "phase_night": "Night"
+  },
+  "sait": {
+    "year": "Year",
+    "categories_aria": "Sait type",
+    "no_data": "Sait data is not available yet.",
+    "no_entries": "No sait for this year and type.",
+    "categories": {
+      "vivah": "Marriage",
+      "bratabandha": "Bratabandha",
+      "griha-aarambha": "House foundation",
+      "griha-pravesh": "Housewarming",
+      "byaparik-pratisthan": "Business opening",
+      "rudri-jurne": "Rudri homa",
+      "agni-jurne": "Agni homa",
+      "annaprasan": "Annaprasan"
+    }
+  },
+  "sun_times": {
+    "title": "Suryakranti",
+    "subtitle": "Annual sunrise & sunset · B.S. {{year}}",
+    "ayana_note": "Each day's <strong>उ</strong> or <strong>द</strong> mark is set by the Sun's sign at sunrise — not by the whole month. It changes twice a year at sankranti (Cancer and Capricorn).",
+    "col_ayana": "Ayana",
+    "col_sun_sign": "Sun sign (at sunrise)",
+    "north_ayana": "Uttarayana",
+    "south_ayana": "Dakshinayana",
+    "north_signs": "Capricorn, Aquarius, Pisces, Aries, Taurus, Gemini",
+    "south_signs": "Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius",
+    "year_wheel_link": "View the Sun's rashi journey — annual Panchanga wheel",
+    "col_day": "Day",
+    "col_ayana_short": "Ayana",
+    "col_sunrise": "Sunrise",
+    "col_sunset": "Sunset",
+    "grid_title": "Suryakranti",
+    "days_count": "{{count}} days"
+  },
+  "panchanga_year": {
+    "back": "Back to day view",
+    "title": "Annual Panchanga wheel",
+    "error": "Could not load panchanga for this date.",
+    "scrub_label": "Scrub through the year",
+    "play": "Play",
+    "pause": "Pause",
+    "play_title": "Play one day per second"
+  },
+  "shanti_vidhi": {
+    "title": "Shanti Vidhi",
+    "subtitle": "Navagraha shanti — find afflicted planets from birth details, or pick a graha to view bija mantra, samidha, gem and dana.",
+    "birth_section": "Calculate from birth details",
+    "birth_meta": "Date · time · place"
+  },
+  "learn_page": {
+    "eyebrow": "Knowledge hub",
+    "title": "Nepali Patro & Panchanga",
+    "title_accent": "explained simply",
+    "subtitle": "Articles from astronomical foundations to daily use — tithi, eclipses, Vikram Sambat and kundali.",
+    "topics_count": "{{count}} topics",
+    "categories_count": "{{count}} categories",
+    "search_label": "Search topics",
+    "search_placeholder": "Tithi, eclipse, ayanamsha…",
+    "featured_title": "Featured topics",
+    "featured_sub": "The most useful articles to start with",
+    "history_eyebrow": "History · heritage",
+    "history_title": "Mayasura's Surya Siddhanta",
+    "history_desc": "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
+    "starter_path": "Starter path",
+    "step": "Step {{n}}",
+    "results_count": "{{count}} topics found",
+    "no_topics": "No topics found",
+    "no_topics_hint": "Try a different word or category.",
+    "clear_filters": "Clear all filters",
+    "view_category": "View this category only",
+    "back_hub": "Back to knowledge hub",
+    "topic_not_found": "This topic was not found.",
+    "prev": "Previous",
+    "next": "Next",
+    "all_topics": "View all topics",
+    "read_start": "Start reading",
+    "read_detail": "Read in full",
+    "articles_count": "{{count}} articles",
+    "suggested_path_sub": "Suggested path"
+  },
+  "avakahada": {
+    "title": "Avakahada Chakra",
+    "subtitle": "27 nakshatras, 108 charans — traditional table of name syllables, rashi, lord, varna, vashya, yoni, gana and nadi.",
+    "search_placeholder": "Search nakshatra, syllable, rashi, yoni…",
+    "no_results": "No results found.",
+    "abhijit_note": "Abhijit — the intercalary 28th nakshatra formed by the last quarter of Uttara Ashadha and the first 15th of Shravana; name syllables: Ju, Je, Jo, Kha.",
+    "col_nakshatra": "Nakshatra",
+    "col_akshara": "Name syllable (charan 1–4)",
+    "col_rashi": "Rashi",
+    "col_lord": "Lord",
+    "col_varna": "Varna",
+    "col_vashya": "Vashya",
+    "col_yoni": "Yoni",
+    "col_vairi_yoni": "Enemy yoni",
+    "col_gana": "Gana",
+    "col_nadi": "Nadi",
+    "charan_title": "Charan {{n}} · {{rashi}}",
+    "wheel_aria": "Avakahada chakra diagram",
+    "wheel_title": "Avakahada Chakra — wheel view",
+    "wheel_subtitle": "Outside to inside: nakshatra → name syllable (108 charans) → rashi → lord → varna → vashya → yoni → gana → nadi",
+    "wheel_svg_aria": "27 nakshatra Avakahada chakra",
+    "wheel_hub_title": "Avakahada",
+    "wheel_hub_hint": "Tap a nakshatra",
+    "wheel_vairi": "Enemy yoni: {{yoni}}",
+    "wheel_legend_gana": "Gana colors:",
+    "wheel_legend_rings": "· 7 inner rings: rashi, lord, varna, vashya, yoni, gana, nadi",
+    "wheel_legend_filter": "· {{count}} nakshatras in search",
+    "wheel_zoom_in": "Zoom in",
+    "wheel_zoom_out": "Zoom out",
+    "wheel_zoom_reset": "Reset zoom",
+    "wheel_pan_hint": "Drag to pan when zoomed",
+    "bhoomadosha_title": "Bhoomadosha (Mangal) considerations",
+    "name_groups": "Name-syllable groups and enemy groups",
+    "bhoomadosha_note": "Bhoomadosha (Mangal) is considered when bride and groom name-syllable groups are mutual enemies.",
+    "shloka": "Shloka",
+    "footnote": "Note: Mangal in lagna, 4th, 7th, 8th or 12th causes bhoomadosha; Saturn's aspect, Jupiter/Venus/Moon placement, kendragata Rahu etc. can cancel it (see shloka above)."
+  },
+  "account_page": {
+    "title": "My account",
+    "verify_email": "Please verify your email address.",
+    "resent": "Verification email sent ✓",
+    "resend": "Resend verification email",
+    "profiles_title": "Kundali profiles",
+    "add_profile": "Add profile",
+    "no_profiles": "No profiles yet. Add your birth details to save your kundali.",
+    "no_birth_details": "No birth details",
+    "default": "Default",
+    "make_default": "Make default",
+    "edit": "Edit",
+    "delete": "Delete",
+    "delete_confirm": "Delete this profile?",
+    "load_error": "Failed to load profiles",
+    "menu_aria": "Account menu",
+    "verified": "Verified",
+    "email_unverified": "Email not verified",
+    "my_profiles": "My profiles",
+    "sign_out": "Sign out"
+  },
+  "ritu": {
+    "title": "Ritu",
+    "subtitle": "Tropical seasons · equinox–solstice",
+    "southern": " · Southern hemisphere",
+    "why_link": "Why do seasons shift?",
+    "current": "Current season",
+    "tomorrow": "Tomorrow",
+    "days_after": "{{count}} days later",
+    "sun_deg": "Sun {{deg}}°",
+    "spring": "Spring",
+    "summer": "Summer",
+    "monsoon": "Monsoon",
+    "autumn": "Autumn",
+    "pre_winter": "Pre-winter",
+    "winter": "Winter",
+    "vernal_equinox": "Vernal equinox",
+    "autumnal_equinox": "Autumnal equinox"
+  },
+  "weekdays": {
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun_long": "Sunday",
+    "mon_long": "Monday",
+    "tue_long": "Tuesday",
+    "wed_long": "Wednesday",
+    "thu_long": "Thursday",
+    "fri_long": "Friday",
+    "sat_long": "Saturday"
+  },
   "sun_times_cta": "Surya Kranti — Annual sunrise & sunset",
   "footer_note": "Powered by Vedic Patro · Lahiri Ayanamsa · Default Location kathmandu at the time of calculation",
   "theme_toggle": "Toggle theme",
+  "theme_light": "Light",
+  "theme_dark": "Dark",
   "menu_open": "Open menu",
   "language": "Language",
   "switch_to_nepali": "नेपाली",

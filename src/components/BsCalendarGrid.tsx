@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { CalendarDay } from "@/lib/api";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
@@ -39,6 +40,7 @@ export function BsCalendarGrid({
   isEnriching = false,
   todayAd = TODAY_AD,
 }: Props) {
+  const { t } = useTranslation();
   const firstDay = days[0];
   const startOffset = firstDay ? new Date(firstDay.date_ad).getDay() : 0;
 
@@ -100,7 +102,7 @@ export function BsCalendarGrid({
               className={cellClass}
               onClick={() => onSelectDay?.(day)}
             >
-              {isToday && <span className="pn-today-badge">आज</span>}
+              {isToday && <span className="pn-today-badge">{t("calendar.today_badge")}</span>}
 
               <span className="pn-cell-stack">
                 <span className="pn-cell-head">

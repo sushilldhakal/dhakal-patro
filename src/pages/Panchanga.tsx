@@ -53,6 +53,7 @@ import {
   SunMoonSection,
 } from "@/components/panchanga/PanchangaSections";
 import { useRouteLoading } from "@/lib/route-loading";
+import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 
 type ViewMode = "day" | "month";
 
@@ -89,11 +90,11 @@ export function Panchanga() {
   );
   const [view, setView] = useState<ViewMode>(() => {
     if (search.view) return search.view;
-    const saved = localStorage.getItem("dhakalPatroPanchView");
+    const saved = getLocalStorageItem("dhakalPatroPanchView");
     return saved === "month" ? "month" : "day";
   });
   const [monthGridLoading, setMonthGridLoading] = useState(
-    () => (search.view ?? localStorage.getItem("dhakalPatroPanchView")) === "month",
+    () => (search.view ?? getLocalStorageItem("dhakalPatroPanchView")) === "month",
   );
 
   const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
@@ -108,7 +109,7 @@ export function Panchanga() {
   const switchView = (v: ViewMode) => {
     setView(v);
     if (v === "month") setMonthGridLoading(true);
-    localStorage.setItem("dhakalPatroPanchView", v);
+    setLocalStorageItem("dhakalPatroPanchView", v);
   };
 
   // Mirror the current selection into the URL so the address bar always reflects

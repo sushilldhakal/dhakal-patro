@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -61,6 +62,7 @@ export function CalendarView({
   todayAd,
   onLoadingChange,
 }: Props) {
+  const { t } = useTranslation();
   // "Today" follows the active location's timezone when provided, so opening the
   // patro lands on the correct local month/day rather than the browser's.
   const init = useMemo(() => {
@@ -188,7 +190,7 @@ export function CalendarView({
   const monthHeader = showMonthHeader ? (
     <div className="pn-monthhead">
       <div className="pn-monthtitle">
-        <div className="pn-eyebrow">नेपाली पात्रो · वि.सं.</div>
+        <div className="pn-eyebrow">{t("calendar.eyebrow")}</div>
         <h1 className="pn-h1">
           {BS_MONTHS_NE[month - 1]}{" "}
           <span className="pn-h1-yr">{year}</span>
@@ -202,7 +204,7 @@ export function CalendarView({
         <select
           className="pn-select"
           value={month}
-          aria-label="Month"
+          aria-label={t("calendar.month_aria")}
           onChange={(e) => {
             setMonth(Number(e.target.value));
             setSelected(null);
@@ -219,7 +221,7 @@ export function CalendarView({
         <select
           className="pn-select"
           value={year}
-          aria-label="Year"
+          aria-label={t("calendar.year_aria")}
           onChange={(e) => {
             setYear(Number(e.target.value));
             setSelected(null);
@@ -239,40 +241,44 @@ export function CalendarView({
             className="pn-iconbtn"
             onClick={prev}
             disabled={month === 1 && year <= BS_SUPPORTED_START_YEAR}
-            aria-label="Previous month"
+            aria-label={t("calendar.prev_month")}
           >
             <ChevronLeft size={16} strokeWidth={1.8} />
           </button>
           <button type="button" className="pn-todaybtn" onClick={goToday}>
-            आज
+            {t("calendar.today_btn")}
           </button>
           <button
             type="button"
             className="pn-iconbtn"
             onClick={nextMonth}
             disabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
-            aria-label="Next month"
+            aria-label={t("calendar.next_month")}
           >
             <ChevronRight size={16} strokeWidth={1.8} />
           </button>
         </div>
 
-        {isEnriching && <span className="pn-enrich-note">Loading tithi…</span>}
+        {isEnriching && <span className="pn-enrich-note">{t("common.enriching")}</span>}
 
-        <div className="pn-seg" role="tablist">
+        <div className="pn-seg" role="radiogroup" aria-label={t("calendar.era_aria")}>
           <button
             type="button"
+            role="radio"
+            aria-checked={mode === "bs"}
             className={`pn-seg-btn${mode === "bs" ? " on" : ""}`}
             onClick={() => setMode("bs")}
           >
-            वि.सं.
+            {t("calendar.mode_bs")}
           </button>
           <button
             type="button"
+            role="radio"
+            aria-checked={mode === "ad"}
             className={`pn-seg-btn${mode === "ad" ? " on" : ""}`}
             onClick={() => setMode("ad")}
           >
-            A.D.
+            {t("calendar.mode_ad")}
           </button>
         </div>
       </div>

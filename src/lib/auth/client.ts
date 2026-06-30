@@ -7,6 +7,7 @@
  */
 
 import { API_BASE } from "@/lib/api";
+import { getLocalStorageItem, removeLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 
 const ACCESS_KEY = "dhakalPatroAccessToken";
 const REFRESH_KEY = "dhakalPatroRefreshToken";
@@ -54,18 +55,18 @@ export type ProfileInput = Partial<Omit<Profile, "id" | "created_at" | "updated_
 
 export const tokenStore = {
   get access() {
-    return localStorage.getItem(ACCESS_KEY);
+    return getLocalStorageItem(ACCESS_KEY);
   },
   get refresh() {
-    return localStorage.getItem(REFRESH_KEY);
+    return getLocalStorageItem(REFRESH_KEY);
   },
   set(tokens: TokenPair) {
-    localStorage.setItem(ACCESS_KEY, tokens.access_token);
-    localStorage.setItem(REFRESH_KEY, tokens.refresh_token);
+    setLocalStorageItem(ACCESS_KEY, tokens.access_token);
+    setLocalStorageItem(REFRESH_KEY, tokens.refresh_token);
   },
   clear() {
-    localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
+    removeLocalStorageItem(ACCESS_KEY);
+    removeLocalStorageItem(REFRESH_KEY);
   },
 };
 

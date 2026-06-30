@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Flame, UserSearch } from "lucide-react";
 import { PageShell, PageHeader } from "../components/PageShell";
@@ -23,6 +24,7 @@ function toAdStr(d: Date): string {
 }
 
 export function ShantiVidhi() {
+  const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation();
   const [date, setDate] = useState(() => new Date());
   const [era, setEra] = useState<"bs" | "ad">("ad");
@@ -52,16 +54,15 @@ export function ShantiVidhi() {
     <PageShell>
       <PageHeader
         icon={<Flame className="h-7 w-7 text-secondary" />}
-        title="शान्ति विधि"
-        subtitle="नवग्रह शान्ति — जन्म विवरणबाट पीडित ग्रह पत्ता लगाउनुहोस् वा ग्रह छानेर बीज मन्त्र, समिधा, रत्न र दान हेर्नुहोस्।"
+        title={t("shanti_vidhi.title")}
+        subtitle={t("shanti_vidhi.subtitle")}
       />
 
-      {/* व्यक्तिगत गणना (birth-details → afflicted graha) */}
       <section className="rounded-2xl border border-border">
         <header className="flex items-center gap-1.5 border-b border-border px-4 py-3">
           <UserSearch className="h-4 w-4 text-secondary" />
-          <h2 className="text-sm font-semibold text-foreground">जन्म विवरणबाट गणना</h2>
-          <span className="ml-auto text-[11px] text-muted-foreground">मिति · समय · स्थान</span>
+          <h2 className="text-sm font-semibold text-foreground">{t("shanti_vidhi.birth_section")}</h2>
+          <span className="ml-auto text-[11px] text-muted-foreground">{t("shanti_vidhi.birth_meta")}</span>
         </header>
 
         <div className="space-y-4 p-4">

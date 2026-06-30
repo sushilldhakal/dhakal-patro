@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LocationParams } from "@/lib/api";
+import { getLocalStorageItem, isBrowser, setLocalStorageItem } from "@/lib/browser";
 
 const STORAGE_KEY = "dhakalPatroLocation";
 
@@ -23,8 +24,9 @@ export function resolveLocationTimezone(location: PanchangaLocation): string {
 }
 
 function readStoredLocation(): PanchangaLocation {
+  if (!isBrowser) return DEFAULT_PANCHANGA_LOCATION;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = getLocalStorageItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PANCHANGA_LOCATION;
     const parsed = JSON.parse(raw) as PanchangaLocation;
     if (!parsed?.label || !parsed?.params) return DEFAULT_PANCHANGA_LOCATION;
@@ -43,10 +45,11 @@ export function usePanchangaLocation(initial?: PanchangaLocation) {
 
   const setLocation = useCallback((next: PanchangaLocation) => {
     setLocationState(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setLocalStorageItem(STORAGE_KEY, JSON.stringify(next));
   }, []);
 
   useEffect(() => {
+    if (!isBrowser) return;
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) {
         setLocationState(readStoredLocation());

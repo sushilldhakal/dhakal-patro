@@ -1,0 +1,542 @@
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { AVAKAHADA, type Gana, type NakshatraRow } from "@/lib/avakahada-data";
+import {
+  localizeGana,
+  localizeLord,
+  localizeNadi,
+  localizeNakshatra,
+  localizeRashi,
+  localizeVarna,
+  localizeVashya,
+  localizeYoni,
+  rowMetaFromCharans,
+} from "@/lib/avakahada-locale";
+import { findNakshatraIcon } from "@/lib/nakshatra-icons";
+import { cn } from "@/lib/utils";
+
+const CX = 310;
+const CY = 310;
+const RIM = 302;
+
+/** Outside → inside */
+const R = {
+  nakOut: 302,
+  nakIn: 254,
+  padaOut: 254,
+  padaIn: 224,
+  rashiOut: 224,
+  rashiIn: 208,
+  lordOut: 208,
+  lordIn: 192,
+  varnaOut: 192,
+  varnaIn: 176,
+  vashyaOut: 176,
+  vashyaIn: 160,
+  yoniOut: 160,
+  yoniIn: 144,
+  ganaOut: 144,
+  ganaIn: 128,
+  nadiOut: 128,
+  nadiIn: 112,
+  hub: 104,
+} as const;
+
+const NAK_STEP = 360 / 27;
+
+const GANA_FILL: Record<Gana, string> = {
+  देव: "var(--av-gana-dev)",
+  नर: "var(--av-gana-nar)",
+  राक्षस: "var(--av-gana-rak)",
+};
+
+const ATTR_RINGS = [
+  { id: "rashi" as const, rOut: R.rashiOut, rIn: R.rashiIn },
+  { id: "lord" as const, rOut: R.lordOut, rIn: R.lordIn },
+  { id: "varna" as const, rOut: R.varnaOut, rIn: R.varnaIn },
+  { id: "vashya" as const, rOut: R.vashyaOut, rIn: R.vashyaIn },
+  { id: "yoni" as const, rOut: R.yoniOut, rIn: R.yoniIn },
+  { id: "gana" as const, rOut: R.ganaOut, rIn: R.ganaIn },
+  { id: "nadi" as const, rOut: R.nadiOut, rIn: R.nadiIn },
+] as const;
+
+type AttrRingId = (typeof ATTR_RINGS)[number]["id"];
+
+export type AvakahadaWheelRow = {
+  index: number;
+  ne: string;
+  en: string;
+  nakshatraLabel: string;
+  aksharas: string[];
+  charanRashis: string[];
+  lord: string;
+  varna: string;
+  vashya: string;
+  yoni: string;
+  vairiYoni: string;
+  gana: Gana;
+  nadi: string;
+};
+
+export function toWheelRow(r: NakshatraRow, lang: string): AvakahadaWheelRow {
+  const meta = rowMetaFromCharans(r.charanRashis);
+  return {
+    index: r.index,
+    ne: r.ne,
+    en: r.en,
+    nakshatraLabel: localizeNakshatra(r, lang),
+    aksharas: r.aksharas,
+    charanRashis: r.charanRashis,
+    lord: localizeLord(meta.lord, lang),
+    varna: localizeVarna(meta.varna, lang),
+    vashya: localizeVashya(meta.vashya, lang),
+    yoni: localizeYoni(r.yoni, lang),
+    vairiYoni: localizeYoni(r.vairiYoni, lang),
+    gana: r.gana,
+    nadi: localizeNadi(r.nadi, lang),
+  };
+}
+
+function polar(r: number, deg: number): [number, number] {
+  const a = ((deg - 90) * Math.PI) / 180;
+  return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+}
+
+function sectorPath(rIn: number, rOut: number, a0: number, a1: number): string {
+  const large = a1 - a0 > 180 ? 1 : 0;
+  const [x1, y1] = polar(rOut, a0);
+  const [x2, y2] = polar(rOut, a1);
+  const [x3, y3] = polar(rIn, a1);
+  const [x4, y4] = polar(rIn, a0);
+  return [
+    `M${x1.toFixed(2)},${y1.toFixed(2)}`,
+    `A${rOut},${rOut} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)}`,
+    `L${x3.toFixed(2)},${y3.toFixed(2)}`,
+    `A${rIn},${rIn} 0 ${large} 0 ${x4.toFixed(2)},${y4.toFixed(2)}`,
+    "Z",
+  ].join(" ");
+}
+
+function formatRashi(row: AvakahadaWheelRow, lang: string): string {
+  const u = [...new Set(row.charanRashis)];
+  if (u.length === 1) return localizeRashi(u[0]!, lang);
+  return u.map((r) => localizeRashi(r, lang)).join("/");
+}
+
+function formatDual(value: string): string {
+  return value.replace(/ \/ /g, "·");
+}
+
+function attrValue(id: AttrRingId, row: AvakahadaWheelRow, lang: string): string {
+  switch (id) {
+    case "rashi":
+      return formatRashi(row, lang);
+    case "lord":
+      return formatDual(row.lord);
+    case "varna":
+      return formatDual(row.varna);
+    case "vashya":
+      return localizeVashya(row.vashya, lang, true);
+    case "yoni":
+      return row.yoni;
+    case "gana":
+      return localizeGana(row.gana, lang);
+    case "nadi":
+      return row.nadi;
+  }
+}
+
+function RadialText({
+  deg,
+  r,
+  className,
+  children,
+  size,
+}: {
+  deg: number;
+  r: number;
+  className?: string;
+  children: React.ReactNode;
+  size?: number;
+}) {
+  const [x, y] = polar(r, deg);
+  const flip = deg > 90 && deg < 270;
+  const rot = flip ? deg + 180 : deg;
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="middle"
+      dominantBaseline="central"
+      className={className}
+      style={size ? { fontSize: size } : undefined}
+      transform={`rotate(${rot} ${x.toFixed(2)} ${y.toFixed(2)})`}
+    >
+      {children}
+    </text>
+  );
+}
+
+function HubDetail({ row }: { row: AvakahadaWheelRow }) {
+  const { t } = useTranslation();
+  const icon = findNakshatraIcon(row.en);
+  return (
+    <div className="av-wheel-hub-detail">
+      <div className="av-wheel-hub-icon">
+        {icon?.svg ? (
+          <span
+            className="inline-block h-full w-full [&>svg]:h-full [&>svg]:w-full [&_path]:fill-current"
+            aria-hidden
+            dangerouslySetInnerHTML={{ __html: icon.svg }}
+          />
+        ) : (
+          <span className="text-2xl font-bold text-secondary">{row.index}</span>
+        )}
+      </div>
+      <p className="av-wheel-hub-title">
+        {row.index}. {row.nakshatraLabel}
+      </p>
+      <p className="av-wheel-hub-vairi text-[9px] text-muted-foreground">
+        {t("avakahada.wheel_vairi", { yoni: row.vairiYoni })}
+      </p>
+    </div>
+  );
+}
+
+type Props = {
+  highlighted?: Pick<AvakahadaWheelRow, "index">[];
+};
+
+const ZOOM_MIN = 0.6;
+const ZOOM_MAX = 3.5;
+const ZOOM_STEP = 1.35;
+
+export function AvakahadaWheel({ highlighted }: Props) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
+  const [selected, setSelected] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+
+  const handleZoom = useCallback((z: number) => {
+    const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+    setZoom(next);
+    if (next <= 1) setPan({ x: 0, y: 0 });
+  }, []);
+
+  const resetView = useCallback(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (zoom <= 1) return;
+      dragRef.current = { x: e.clientX, y: e.clientY, px: pan.x, py: pan.y };
+      setIsDragging(true);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [zoom, pan.x, pan.y],
+  );
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    setPan({ x: d.px + (e.clientX - d.x), y: d.py + (e.clientY - d.y) });
+  }, []);
+
+  const endDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current = null;
+    setIsDragging(false);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
+  const onWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+      handleZoom(zoom * factor);
+    },
+    [handleZoom, zoom],
+  );
+
+  const allRows = useMemo(() => AVAKAHADA.map((r) => toWheelRow(r, lang)), [lang]);
+
+  const attrRings = useMemo(
+    () =>
+      ATTR_RINGS.map((ring) => ({
+        ...ring,
+        label: t(`avakahada.col_${ring.id}`),
+      })),
+    [t],
+  );
+
+  const activeIndex = selected ?? hovered;
+
+  const highlightSet = useMemo(
+    () => new Set((highlighted ?? allRows).map((r) => r.index)),
+    [highlighted, allRows],
+  );
+  const hasFilter = highlighted !== undefined && highlighted.length < allRows.length;
+
+  const activeRow = useMemo(
+    () => (activeIndex != null ? allRows.find((r) => r.index === activeIndex) : undefined),
+    [activeIndex, allRows],
+  );
+
+  const pickNak = (index: number) => setSelected((s) => (s === index ? null : index));
+
+  const nakLayers = useMemo(() => {
+    const segs: React.ReactNode[] = [];
+    const hits: React.ReactNode[] = [];
+    const labels: React.ReactNode[] = [];
+
+    allRows.forEach((row, i) => {
+      const a0 = i * NAK_STEP;
+      const a1 = (i + 1) * NAK_STEP;
+      const mid = (a0 + a1) / 2;
+      const isActive = activeIndex === row.index;
+      const isDim = hasFilter && !highlightSet.has(row.index);
+
+      segs.push(
+        <path
+          key={`nak-${row.index}`}
+          d={sectorPath(R.nakIn, R.nakOut, a0, a1)}
+          className={cn("av-wheel-seg-nak", i % 2 === 1 && "alt", isActive && "sel", isDim && "dim")}
+          style={{ fill: GANA_FILL[row.gana] }}
+        />,
+      );
+
+      attrRings.forEach((ring) => {
+        const val = attrValue(ring.id, row, lang);
+        segs.push(
+          <path
+            key={`${ring.id}-${row.index}`}
+            d={sectorPath(ring.rIn, ring.rOut, a0, a1)}
+            className={cn(
+              "av-wheel-seg-attr",
+              ring.id,
+              i % 2 === 1 && "alt",
+              isActive && "sel",
+              isDim && "dim",
+            )}
+          />,
+        );
+        labels.push(
+          <RadialText
+            key={`${ring.id}-lbl-${row.index}`}
+            deg={mid}
+            r={(ring.rOut + ring.rIn) / 2}
+            className={cn("av-wheel-attr-val", ring.id, isActive && "sel")}
+            size={ring.id === "rashi" || ring.id === "yoni" ? 7 : 6.5}
+          >
+            {val}
+          </RadialText>,
+        );
+      });
+
+      const nakName =
+        row.nakshatraLabel.length > 8 ? `${row.nakshatraLabel.slice(0, 7)}…` : row.nakshatraLabel;
+
+      labels.push(
+        <RadialText deg={mid} r={278} className={cn("av-wheel-nak-idx", isActive && "sel")} size={8}>
+          {row.index}
+        </RadialText>,
+        <RadialText deg={mid} r={264} className={cn("av-wheel-nak-name", isActive && "sel")} size={9}>
+          {nakName}
+        </RadialText>,
+      );
+
+      hits.push(
+        <path
+          key={`hit-${row.index}`}
+          d={sectorPath(R.nadiIn, R.nakOut, a0, a1)}
+          className="av-wheel-hit"
+          onMouseEnter={() => setHovered(row.index)}
+          onMouseLeave={() => setHovered(null)}
+          onClick={() => pickNak(row.index)}
+        />,
+      );
+    });
+
+    return { segs, hits, labels };
+  }, [activeIndex, allRows, attrRings, hasFilter, highlightSet, lang]);
+
+  const padaSegs = useMemo(() => {
+    const step = 360 / 108;
+    return AVAKAHADA.flatMap((row, ni) =>
+      row.aksharas.map((akshara, pi) => {
+        const i = ni * 4 + pi;
+        const a0 = i * step;
+        const a1 = (i + 1) * step;
+        const mid = (a0 + a1) / 2;
+        const isDim = hasFilter && !highlightSet.has(row.index);
+        return (
+          <g key={`pada-${i}`}>
+            <path
+              d={sectorPath(R.padaIn, R.padaOut, a0, a1)}
+              className={cn("av-wheel-seg-pada", i % 2 === 1 && "alt", isDim && "dim")}
+            />
+            <RadialText deg={mid} r={239} className="av-wheel-pada-akshar" size={7.5}>
+              {akshara}
+            </RadialText>
+          </g>
+        );
+      }),
+    );
+  }, [hasFilter, highlightSet]);
+
+  const ringGuides = useMemo(
+    () =>
+      attrRings.map((ring) => (
+        <RadialText
+          key={`guide-${ring.id}`}
+          deg={286}
+          r={(ring.rOut + ring.rIn) / 2}
+          className="av-wheel-ring-guide"
+          size={6}
+        >
+          {ring.label}
+        </RadialText>
+      )),
+    [attrRings],
+  );
+
+  const guideCircles = useMemo(
+    () =>
+      [R.padaIn, R.rashiIn, R.lordIn, R.varnaIn, R.vashyaIn, R.yoniIn, R.ganaIn, R.nadiIn].map((r) => (
+        <circle key={`guide-c-${r}`} cx={CX} cy={CY} r={r} className="av-wheel-guide-circle" />
+      )),
+    [],
+  );
+
+  const ganas: Gana[] = ["देव", "नर", "राक्षस"];
+
+  return (
+    <section className="av-wheel pn-wheel" aria-label={t("avakahada.wheel_aria")}>
+      <div className="av-wheel-head">
+        <h2 className="text-lg font-bold text-foreground">{t("avakahada.wheel_title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("avakahada.wheel_subtitle")}</p>
+      </div>
+
+      <div className="av-wheel-stage">
+        <div className="av-wheel-dock">
+          <button
+            type="button"
+            className="w-iconbtn"
+            title={t("avakahada.wheel_zoom_in")}
+            aria-label={t("avakahada.wheel_zoom_in")}
+            onClick={() => handleZoom(zoom * ZOOM_STEP)}
+          >
+            <ZoomIn className="size-4" strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            className="w-iconbtn"
+            title={t("avakahada.wheel_zoom_out")}
+            aria-label={t("avakahada.wheel_zoom_out")}
+            onClick={() => handleZoom(zoom / ZOOM_STEP)}
+            disabled={zoom <= ZOOM_MIN}
+          >
+            <ZoomOut className="size-4" strokeWidth={2} />
+          </button>
+          {zoom !== 1 && (
+            <button
+              type="button"
+              className="w-iconbtn av-wheel-reset-btn"
+              title={t("avakahada.wheel_zoom_reset")}
+              onClick={resetView}
+            >
+              1:1
+            </button>
+          )}
+          <span className="av-wheel-zoom-val">{Math.round(zoom * 100)}%</span>
+        </div>
+
+        <div
+          className={cn("av-wheel-viewport", zoom > 1 && "pannable", isDragging && "dragging")}
+          onWheel={onWheel}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+        >
+          <div
+            className="av-wheel-transform"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: "center center",
+              transition: isDragging ? "none" : "transform 0.12s ease-out",
+            }}
+          >
+        <svg viewBox="0 0 620 620" className="av-wheel-svg" role="img" aria-label={t("avakahada.wheel_svg_aria")}>
+          <defs>
+            <radialGradient id="av-hub-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="var(--av-hub-center)" />
+              <stop offset="100%" stopColor="var(--av-hub-edge)" />
+            </radialGradient>
+          </defs>
+
+          <circle cx={CX} cy={CY} r={RIM} className="av-wheel-rim" />
+          {guideCircles}
+
+          {padaSegs}
+          {nakLayers.segs}
+          {nakLayers.labels}
+          {ringGuides}
+
+          {Array.from({ length: 27 }, (_, i) => {
+            const deg = i * NAK_STEP;
+            const [x1, y1] = polar(R.nadiIn, deg);
+            const [x2, y2] = polar(R.nakOut, deg);
+            return <line key={`spoke-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} className="av-wheel-spoke" />;
+          })}
+
+          {nakLayers.hits}
+
+          <circle cx={CX} cy={CY} r={R.hub} fill="url(#av-hub-glow)" className="av-wheel-hub-ring" />
+
+          <foreignObject x={CX - R.hub + 10} y={CY - R.hub + 10} width={R.hub * 2 - 20} height={R.hub * 2 - 20}>
+            <div className="av-wheel-hub-inner">
+              {activeRow ? (
+                <HubDetail row={activeRow} />
+              ) : (
+                <div className="av-wheel-hub-placeholder">
+                  <p className="av-wheel-hub-placeholder-title">{t("avakahada.wheel_hub_title")}</p>
+                  <p className="av-wheel-hub-placeholder-sub">{t("avakahada.wheel_hub_hint")}</p>
+                </div>
+              )}
+            </div>
+          </foreignObject>
+        </svg>
+          </div>
+        </div>
+      </div>
+
+      <div className="av-wheel-legend">
+        <span className="av-wheel-legend-label">{t("avakahada.wheel_legend_gana")}</span>
+        {ganas.map((g) => (
+          <span key={g} className="av-wheel-legend-item">
+            <span className={cn("av-wheel-legend-swatch", `gana-${g}`)} aria-hidden />
+            {localizeGana(g, lang)}
+          </span>
+        ))}
+        <span className="av-wheel-legend-rings text-muted-foreground">{t("avakahada.wheel_legend_rings")}</span>
+        <span className="av-wheel-legend-rings text-muted-foreground">· {t("avakahada.wheel_pan_hint")}</span>
+        {hasFilter && (
+          <span className="av-wheel-legend-filter text-muted-foreground">
+            {t("avakahada.wheel_legend_filter", { count: String(highlightSet.size) })}
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export const AVAKAHADA_WHEEL_ROWS = AVAKAHADA.map((r) => toWheelRow(r, "ne"));

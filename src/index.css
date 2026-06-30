@@ -4842,3 +4842,381 @@
   color: var(--foreground);
   letter-spacing: 0.01em;
 }
+
+/* ── Avakahada Chakra wheel ───────────────────────────────── */
+.av-wheel {
+  --av-gana-dev: color-mix(in srgb, #059862 38%, #0b181a);
+  --av-gana-nar: color-mix(in srgb, #0ea5e9 32%, #0b181a);
+  --av-gana-rak: color-mix(in srgb, #e11d48 28%, #0b181a);
+  --av-hub-center: #0f2224;
+  --av-hub-edge: #091315;
+  margin-top: 8px;
+}
+
+.av-wheel-head {
+  margin-bottom: 12px;
+}
+
+.av-wheel-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--w-surface-border, color-mix(in srgb, #8fbfc1 28%, transparent));
+  background: radial-gradient(ellipse at 50% 42%, var(--w-sky-0, #112c2a) 0%, var(--w-sky-2, #050c0d) 72%);
+  min-height: min(92vw, 680px);
+}
+
+.av-wheel-dock {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.av-wheel-zoom-val {
+  min-width: 42px;
+  text-align: center;
+  font: 600 11px var(--pn-num, var(--font-sans));
+  color: var(--w-ink-dim, #a7c4c3);
+}
+
+.av-wheel-reset-btn {
+  font-size: 9px !important;
+  padding: 0 6px !important;
+}
+
+.av-wheel-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.av-wheel-viewport.pannable {
+  cursor: grab;
+}
+
+.av-wheel-viewport.pannable.dragging {
+  cursor: grabbing;
+}
+
+.av-wheel-transform {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  will-change: transform;
+}
+
+.av-wheel-svg {
+  width: min(100%, 660px);
+  height: auto;
+  display: block;
+  user-select: none;
+}
+
+.av-wheel-rim {
+  fill: none;
+  stroke: var(--w-rim, color-mix(in srgb, #a9d4d4 50%, transparent));
+  stroke-width: 1.5;
+}
+
+.av-wheel-spoke {
+  stroke: var(--w-sep-soft, color-mix(in srgb, #8fbfc1 16%, transparent));
+  stroke-width: 0.5;
+}
+
+.av-wheel-seg-pada {
+  fill: var(--w-pada, #0d2024);
+  stroke: var(--w-sep-soft);
+  stroke-width: 0.35;
+  pointer-events: none;
+}
+
+.av-wheel-seg-pada.alt {
+  fill: var(--w-pada-alt, #112a2f);
+}
+
+.av-wheel-seg-attr {
+  fill: color-mix(in srgb, var(--brand-teal, #2d8a86) 14%, #0a1518);
+  stroke: var(--w-sep-soft);
+  stroke-width: 0.3;
+  pointer-events: none;
+}
+
+.av-wheel-seg-attr.alt {
+  fill: color-mix(in srgb, var(--brand-teal, #2d8a86) 22%, #0b181a);
+}
+
+.av-wheel-seg-attr.sel {
+  fill: color-mix(in srgb, var(--w-accent, #e0795b) 18%, #1a1210);
+  stroke: color-mix(in srgb, var(--w-accent) 35%, transparent);
+}
+
+.av-wheel-seg-attr.gana.sel {
+  filter: brightness(1.15);
+}
+
+.av-wheel-seg-attr.dim {
+  opacity: 0.22;
+}
+
+.av-wheel-attr-val {
+  fill: var(--w-ink-dim, #a7c4c3);
+  font-family: var(--pn-font, var(--font-sans));
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.av-wheel-attr-val.gana {
+  fill: #b8e8d8;
+  font-weight: 700;
+}
+
+.av-wheel-attr-val.nadi {
+  fill: #c4d4f0;
+}
+
+.av-wheel-attr-val.sel {
+  fill: var(--w-accent, var(--color-danger, #e0795b));
+}
+
+.av-wheel-ring-guide {
+  fill: var(--w-accent, var(--color-danger, #e0795b));
+  font-family: var(--pn-font, var(--font-sans));
+  font-weight: 700;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.av-wheel-guide-circle {
+  fill: none;
+  stroke: var(--w-sep-soft);
+  stroke-width: 0.35;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.av-wheel-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.av-wheel-seg-nak {
+  stroke: var(--w-sep, color-mix(in srgb, #8fbfc1 42%, transparent));
+  stroke-width: 0.55;
+  cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.av-wheel-seg-nak.alt {
+  filter: brightness(1.06);
+}
+
+.av-wheel-seg-nak.sel {
+  filter: brightness(1.22);
+  stroke: var(--w-accent, var(--color-danger, #e0795b));
+  stroke-width: 1.2;
+}
+
+.av-wheel-seg-nak.dim,
+.av-wheel-seg-pada.dim {
+  opacity: 0.22;
+}
+
+.av-wheel-nak-idx {
+  fill: var(--w-ink-faint, #84a3a2);
+  font-family: var(--pn-num, var(--font-sans));
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.av-wheel-nak-name {
+  fill: var(--w-ink, #eaf3f1);
+  font-family: var(--pn-font, var(--font-sans));
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.av-wheel-nak-idx.sel,
+.av-wheel-nak-name.sel {
+  fill: var(--w-accent, var(--color-danger, #e0795b));
+}
+
+.av-wheel-pada-akshar {
+  fill: var(--w-ink-dim, #a7c4c3);
+  font-family: var(--pn-font, var(--font-sans));
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.av-wheel-hub-ring {
+  stroke: var(--w-surface-border);
+  stroke-width: 1;
+}
+
+.av-wheel-hub-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+}
+
+.av-wheel-hub-placeholder-title {
+  font: 700 18px var(--pn-font, var(--font-sans));
+  color: var(--w-accent, var(--color-danger, #e0795b));
+  margin: 0;
+}
+
+.av-wheel-hub-placeholder-sub {
+  font: 600 13px var(--pn-font, var(--font-sans));
+  color: var(--w-ink, #eaf3f1);
+  margin: 4px 0 0;
+}
+
+.av-wheel-hub-placeholder-hint {
+  font: 500 10px var(--pn-font, var(--font-sans));
+  color: var(--w-ink-faint, #84a3a2);
+  margin: 6px 0 0;
+}
+
+.av-wheel-hub-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.av-wheel-hub-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--w-ink, #eaf3f1);
+  flex-shrink: 0;
+}
+
+.av-wheel-hub-title {
+  font: 700 13px/1.2 var(--pn-font, var(--font-sans));
+  color: var(--w-ink, #eaf3f1);
+  margin: 0;
+}
+
+.av-wheel-hub-dl {
+  margin: 4px 0 0;
+  width: 100%;
+  text-align: left;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.av-wheel-hub-dl > div {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 4px;
+  padding: 2px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--w-sep-soft) 80%, transparent);
+}
+
+.av-wheel-hub-dl > div:last-child {
+  border-bottom: none;
+}
+
+.av-wheel-hub-dl dt {
+  color: var(--w-ink-faint, #84a3a2);
+  font-weight: 500;
+}
+
+.av-wheel-hub-dl dd {
+  margin: 0;
+  color: var(--w-ink, #eaf3f1);
+  font-weight: 600;
+}
+
+.av-wheel-gana-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0 5px;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.av-wheel-gana-pill.gana-देव {
+  background: color-mix(in srgb, #059862 25%, transparent);
+  color: #6ee7b7;
+}
+
+.av-wheel-gana-pill.gana-नर {
+  background: color-mix(in srgb, #0ea5e9 25%, transparent);
+  color: #7dd3fc;
+}
+
+.av-wheel-gana-pill.gana-राक्षस {
+  background: color-mix(in srgb, #e11d48 25%, transparent);
+  color: #fda4af;
+}
+
+.av-wheel-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.av-wheel-legend-label {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.av-wheel-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.av-wheel-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.av-wheel-legend-swatch.gana-देव {
+  background: var(--av-gana-dev);
+}
+
+.av-wheel-legend-swatch.gana-नर {
+  background: var(--av-gana-nar);
+}
+
+.av-wheel-legend-swatch.gana-राक्षस {
+  background: var(--av-gana-rak);
+}
+
+@media (max-width: 640px) {
+  .av-wheel-stage {
+    padding: 6px;
+    min-height: min(95vw, 420px);
+  }
+
+  .av-wheel-hub-dl {
+    font-size: 8px;
+  }
+
+  .av-wheel-hub-dl > div {
+    grid-template-columns: 44px 1fr;
+  }
+}

@@ -1,4 +1,5 @@
 import { Link, Navigate, useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
@@ -14,6 +15,7 @@ const LEGACY_ECLIPSE_SLUGS: Record<string, string> = {
 };
 
 export function LearnArticle() {
+  const { t } = useTranslation();
   useRouteLoading(false);
   const { slug } = useParams({ strict: false }) as { slug?: string };
 
@@ -27,12 +29,12 @@ export function LearnArticle() {
     return (
       <PageShell>
         <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <p className="text-muted-foreground">यो विषय भेटिएन।</p>
+          <p className="text-muted-foreground">{t("learn_page.topic_not_found")}</p>
           <Link
             to="/learn"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-secondary"
           >
-            <ArrowLeft className="h-4 w-4" /> ज्ञानकेन्द्रमा फर्कनुहोस्
+            <ArrowLeft className="h-4 w-4" /> {t("learn_page.back_hub")}
           </Link>
         </div>
       </PageShell>
@@ -49,7 +51,7 @@ export function LearnArticle() {
         to="/learn"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> ज्ञानकेन्द्र
+        <ArrowLeft className="h-4 w-4" /> {t("learn_page.eyebrow")}
       </Link>
 
       <article className="tm-page rounded-2xl border border-border overflow-hidden">
@@ -75,7 +77,7 @@ export function LearnArticle() {
                 <ArrowLeft className="h-4 w-4 shrink-0 text-secondary" />
                 <span className="min-w-0">
                   <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">
-                    अघिल्लो
+                    {t("learn_page.prev")}
                   </span>
                   <span className="block truncate text-sm font-medium text-foreground">
                     {prev.titleNe}
@@ -93,7 +95,7 @@ export function LearnArticle() {
               >
                 <span className="min-w-0">
                   <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">
-                    अर्को
+                    {t("learn_page.next")}
                   </span>
                   <span className="block truncate text-sm font-medium text-foreground">
                     {next.titleNe}
@@ -111,7 +113,7 @@ export function LearnArticle() {
               to="/learn"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-secondary"
             >
-              <BookOpen className="h-4 w-4" /> सबै विषय हेर्नुहोस्
+              <BookOpen className="h-4 w-4" /> {t("learn_page.all_topics")}
             </Link>
           </div>
         </div>

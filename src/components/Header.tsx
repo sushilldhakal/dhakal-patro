@@ -23,6 +23,7 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -34,6 +35,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 const PANCHANGA_LINKS = [
   { to: "/panchanga" as const, labelKey: "nav.surya_panchanga", icon: Star },
   { to: "/suryakranti" as const, labelKey: "nav.suryakranti", icon: Sunrise },
+  { to: "/abhijit-muhurta" as const, labelKey: "nav.abhijit_muhurta", icon: Sparkles },
   { to: "/chandrakranti" as const, labelKey: "nav.chandrakranti", icon: Moon },
   { to: "/panchanga/avakahada-chakra" as const, labelKey: "nav.avakahada_chakra", icon: Grid3x3 },
 ] as const;
@@ -62,6 +64,7 @@ function isPanchangaRoute(pathname: string) {
     pathname === "/panchanga" ||
     pathname.startsWith("/panchanga/") ||
     pathname === "/suryakranti" || pathname === "/sun-times" ||
+    pathname === "/abhijit-muhurta" ||
     pathname === "/chandrakranti"
   );
 }
@@ -177,28 +180,96 @@ function BrandMark({ className }: { className?: string }) {
   );
 }
 
-function ThemeToggle({ className }: { className?: string }) {
+function ThemeToggle({ className, showLabel }: { className?: string; showLabel?: boolean }) {
   const { t } = useTranslation();
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const isDark = (resolvedTheme ?? theme) === "dark";
+
   return (
     <button
       type="button"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0",
+        showLabel
+          ? "flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
+          : "w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0",
         className,
       )}
       aria-label={t("theme_toggle")}
     >
       <Sun className="w-4 h-4 hidden dark:block" />
       <Moon className="w-4 h-4 dark:hidden" />
+      {showLabel ? (
+        <span>{isDark ? t("theme_light") : t("theme_dark")}</span>
+      ) : null}
     </button>
+  );
+}
+
+function MenuPreferences() {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-medium text-foreground">{t("language")}</span>
+        <LanguageSwitcher />
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-medium text-foreground">{t("theme_toggle")}</span>
+        <ThemeToggle showLabel />
+      </div>
+    </div>
+  );
+}
+
+function NavMenuContent({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation();
+
+  return (
+    <nav className="flex flex-col gap-1 p-3">
+      <DrawerClose asChild>
+        <Link to="/" className={linkClass} activeProps={{ className: "active" }} onClick={onNavigate}>
+          <CalendarDays className="w-4 h-4 shrink-0" />
+          {t("home")}
+        </Link>
+      </DrawerClose>
+      <PanchangaNavGroup onNavigate={onNavigate} />
+      {NAV.map(({ to, labelKey, icon: Icon }) => (
+        <DrawerClose asChild key={to}>
+          <Link to={to} className={linkClass} activeProps={{ className: "active" }} onClick={onNavigate}>
+            <Icon className="w-4 h-4 shrink-0" />
+            {t(labelKey)}
+          </Link>
+        </DrawerClose>
+      ))}
+    </nav>
+  );
+}
+
+function DrawerBrandHeader() {
+  const { t } = useTranslation();
+
+  return (
+    <DrawerHeader className="border-b border-border text-left">
+      <div className="flex items-center gap-2.5">
+        <BrandLogo size={36} className="rounded-[22%] shadow" />
+        <div>
+          <DrawerTitle className="text-base">
+            <span className="text-secondary">{t("brand_vedic")}</span>
+            <span className="text-foreground"> {t("brand_patro")}</span>
+          </DrawerTitle>
+          <DrawerDescription>{t("tagline")}</DrawerDescription>
+        </div>
+      </div>
+    </DrawerHeader>
   );
 }
 
 export function Header() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [tabletOpen, setTabletOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
@@ -227,46 +298,46 @@ export function Header() {
           <AccountMenu />
         </div>
 
-        {/* Mobile / tablet (< 1024px) — menu left, brand center, theme right */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full lg:hidden">
+        {/* Mobile (< 768px) — menu left, brand center, account right; sheet from left */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full md:hidden">
           <div className="flex justify-start">
-            <Drawer direction="left" open={open} onOpenChange={setOpen}>
+            <Drawer direction="left" open={mobileOpen} onOpenChange={setMobileOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="ghost" size="icon" className="shrink-0" aria-label={t("menu_open")}>
+                  <Menu className="size-5" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="flex h-full flex-col p-0">
+                <DrawerBrandHeader />
+                <div className="flex-1 overflow-y-auto">
+                  <NavMenuContent onNavigate={() => setMobileOpen(false)} />
+                </div>
+                <DrawerFooter className="border-t border-border">
+                  <MenuPreferences />
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
+          </div>
+
+          <BrandMark className="justify-center" />
+
+          <div className="flex justify-end items-center shrink-0">
+            <AccountMenu />
+          </div>
+        </div>
+
+        {/* Tablet (768px–1023px) — menu left, brand center, lang/theme/account right */}
+        <div className="hidden md:grid lg:hidden grid-cols-[1fr_auto_1fr] items-center w-full">
+          <div className="flex justify-start">
+            <Drawer direction="left" open={tabletOpen} onOpenChange={setTabletOpen}>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="shrink-0" aria-label={t("menu_open")}>
                   <Menu className="size-5" />
                 </Button>
               </DrawerTrigger>
               <DrawerContent className="p-0">
-                <DrawerHeader className="border-b border-border text-left">
-                  <div className="flex items-center gap-2.5">
-                    <BrandLogo size={36} className="rounded-[22%] shadow" />
-                    <div>
-                      <DrawerTitle className="text-base">
-                        <span className="text-secondary">{t("brand_vedic")}</span>
-                        <span className="text-foreground"> {t("brand_patro")}</span>
-                      </DrawerTitle>
-                      <DrawerDescription>{t("tagline")}</DrawerDescription>
-                    </div>
-                  </div>
-                </DrawerHeader>
-
-                <nav className="flex flex-col gap-1 p-3">
-                  <DrawerClose asChild>
-                    <Link to="/" className={linkClass} activeProps={{ className: "active" }}>
-                      <CalendarDays className="w-4 h-4 shrink-0" />
-                      {t("home")}
-                    </Link>
-                  </DrawerClose>
-                  <PanchangaNavGroup onNavigate={() => setOpen(false)} />
-                  {NAV.map(({ to, labelKey, icon: Icon }) => (
-                    <DrawerClose asChild key={to}>
-                      <Link to={to} className={linkClass} activeProps={{ className: "active" }}>
-                        <Icon className="w-4 h-4 shrink-0" />
-                        {t(labelKey)}
-                      </Link>
-                    </DrawerClose>
-                  ))}
-                </nav>
+                <DrawerBrandHeader />
+                <NavMenuContent onNavigate={() => setTabletOpen(false)} />
               </DrawerContent>
             </Drawer>
           </div>

@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
@@ -56,7 +57,7 @@ function AbhijitVivaranBlock({
           search={{ year: bsYear, month: bsMonth }}
           className="pn-aside-link shrink-0"
         >
-          {t("holidays.view_all")} →
+          {t("common.view_all")} →
         </Link>
       </div>
       {abhijit ? (
@@ -102,6 +103,7 @@ function VivaranCell({ label, value, hint, wide, mono }: DetailCell) {
 
 function buildPanchangaDetailCells(
   p: PanchangaDay,
+  t: TFunction,
   selectedDay?: CalendarDay | null,
 ): DetailCell[] {
   const detail = getPanchangaDetail(p);
@@ -120,24 +122,24 @@ function buildPanchangaDetailCells(
 
   return [
     {
-      label: "सूर्योदय / सूर्यास्त",
+      label: t("aside.sunrise_sunset"),
       value: sunrise && sunset ? `${sunrise} / ${sunset}` : undefined,
       mono: true,
     },
-    { label: "चन्द्रोदय", value: moonrise ?? "—", mono: true },
-    { label: "ऋतु", value: getRituDisplayNe(p), hint: getRituSeason(p) },
+    { label: t("aside.moonrise"), value: moonrise ?? t("sections.dash"), mono: true },
+    { label: t("aside.ritu"), value: getRituDisplayNe(p), hint: getRituSeason(p) },
     {
-      label: "नक्षत्र",
+      label: t("aside.nakshatra"),
       value: angaName(nakshatra),
       hint: formatAngaPatroTransitionHint(nakshatra),
     },
     {
-      label: "योग",
+      label: t("aside.yoga"),
       value: angaName(yoga),
       hint: formatAngaPatroTransitionHint(yoga),
     },
     {
-      label: "करण",
+      label: t("aside.karana"),
       value: angaName(karana),
       hint: karanaHint,
       wide: Boolean(karanaHint && karanaHint.length > 18),
@@ -146,6 +148,8 @@ function buildPanchangaDetailCells(
 }
 
 export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading }: Props) {
+  const { t } = useTranslation();
+
   if (loading || !p) {
     return (
       <section className="pn-vivaran">
@@ -162,7 +166,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
     );
   }
 
-  const cells = buildPanchangaDetailCells(p, selectedDay);
+  const cells = buildPanchangaDetailCells(p, t, selectedDay);
   const planets = getPlanetGocharLines(p);
   const solar = getSolarCorrections(p);
   const deshaantar = formatPatroDeshaantar(solar?.deshaantar);
@@ -178,7 +182,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
 
       {planets.length > 0 || deshaantar || belaantar ? (
         <div className="pn-vivaran-block pn-vivaran-gochar">
-          <div className="pn-vivaran-block-title">ग्रह गोचर</div>
+          <div className="pn-vivaran-block-title">{t("aside.gochar")}</div>
           {planets.length > 0 ? (
             <div className="pn-gochar-grid">
               {planets.map(({ label, value }) => (
@@ -193,13 +197,13 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
             <div className="pn-gochar-foot">
               {deshaantar ? (
                 <div className="pn-gochar-chip">
-                  <span className="pn-gochar-chip-label">सूर्यक्रान्ति</span>
+                  <span className="pn-gochar-chip-label">{t("aside.suryakranti")}</span>
                   <span className="pn-gochar-chip-value">{deshaantar}</span>
                 </div>
               ) : null}
               {belaantar ? (
                 <div className="pn-gochar-chip">
-                  <span className="pn-gochar-chip-label">वेलान्तर</span>
+                  <span className="pn-gochar-chip-label">{t("aside.belaantar")}</span>
                   <span className="pn-gochar-chip-value">{belaantar}</span>
                 </div>
               ) : null}

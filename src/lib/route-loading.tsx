@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { VedicPatroLoader } from "@/components/VedicPatroLoader";
+import { isBrowser } from "@/lib/browser";
 
 type RouteLoadingContextValue = {
   setDataLoading: (loading: boolean) => void;
@@ -20,7 +21,7 @@ const RouteLoadingContext = createContext<RouteLoadingContextValue | null>(null)
 /** Fixed overlay below the site header; covers the full content area until the route is ready. */
 export function RouteLoadingProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [dataLoading, setDataLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(isBrowser);
   const [suspenseLoading, setSuspenseLoading] = useState(false);
 
   useLayoutEffect(() => {
@@ -61,9 +62,11 @@ export function useRouteLoading(loading: boolean) {
     throw new Error("useRouteLoading must be used within RouteLoadingProvider");
   }
 
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
   useLayoutEffect(() => {
     ctx.setDataLoading(loading);
-  }, [loading, ctx]);
+  }, [loading, ctx, pathname]);
 }
 
 /** Suspense fallback for lazy route chunks — pairs with RouteLoadingProvider overlay. */

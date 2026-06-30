@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -94,6 +95,7 @@ function TopicCard({
   topic: LearnTopic;
   variant?: "default" | "featured" | "compact";
 }) {
+  const { t } = useTranslation();
   const Icon = topic.icon;
   const category = categoryForTopic(topic);
   const meta = CATEGORY_META[topic.category];
@@ -128,7 +130,7 @@ function TopicCard({
           {topic.summary}
         </p>
         <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
-          पढ्न सुरु गर्नुहोस्
+          {t("learn_page.read_start")}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </span>
       </Link>
@@ -192,7 +194,7 @@ function TopicCard({
         {topic.summary}
       </p>
       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
-        विस्तृत पढ्नुहोस्
+        {t("learn_page.read_detail")}
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </span>
     </Link>
@@ -200,6 +202,7 @@ function TopicCard({
 }
 
 export function Learn() {
+  const { t } = useTranslation();
   useRouteLoading(false);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -244,31 +247,30 @@ export function Learn() {
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-secondary/25 bg-secondary/8 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary">
               <BookOpen className="h-4 w-4" />
-              ज्ञानकेन्द्र
+              {t("learn_page.eyebrow")}
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              नेपाली पात्रो र पञ्चाङ्ग
-              <span className="block text-secondary">सरल भाषामा बुझौं</span>
+              {t("learn_page.title")}
+              <span className="block text-secondary">{t("learn_page.title_accent")}</span>
             </h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-foreground/80 sm:text-lg">
-              तिथि, नक्षत्र, ग्रहण, विक्रम सम्वत् र कुण्डली — खगोलीय आधारदेखि
-              दैनिक प्रयोगसम्मका लेखहरू।
+              {t("learn_page.subtitle")}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <div className="learn-stat-pill">
                 <GraduationCap className="h-4 w-4 text-secondary" />
-                <span>{LEARN_TOPICS.length} विषय</span>
+                <span>{t("learn_page.topics_count", { count: LEARN_TOPICS.length })}</span>
               </div>
               <div className="learn-stat-pill">
                 <Layers3 className="h-4 w-4 text-secondary" />
-                <span>{LEARN_CATEGORIES.length} श्रेणी</span>
+                <span>{t("learn_page.categories_count", { count: LEARN_CATEGORIES.length })}</span>
               </div>
             </div>
           </div>
 
           <div className="w-full max-w-md shrink-0">
             <label htmlFor="learn-search" className="sr-only">
-              विषय खोज्नुहोस्
+              {t("learn_page.search_label")}
             </label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -276,7 +278,7 @@ export function Learn() {
                 id="learn-search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="तिथि, ग्रहण, अयनांश…"
+                placeholder={t("learn_page.search_placeholder")}
                 className="h-12 pl-11 pr-11 text-base"
               />
               {query && (
@@ -284,7 +286,7 @@ export function Learn() {
                   type="button"
                   onClick={() => setQuery("")}
                   className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                  aria-label="खोज मेट्नुहोस्"
+                  aria-label={t("common.clear_search")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -297,9 +299,9 @@ export function Learn() {
       {!isFiltering && (
         <section>
           <div className="mb-5">
-            <h2 className="text-xl font-bold text-foreground sm:text-2xl">प्रमुख विषयहरू</h2>
+            <h2 className="text-xl font-bold text-foreground sm:text-2xl">{t("learn_page.featured_title")}</h2>
             <p className="mt-1 text-base text-muted-foreground">
-              सुरु गर्नका लागि सबैभन्दा उपयोगी लेखहरू
+              {t("learn_page.featured_sub")}
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -320,17 +322,17 @@ export function Learn() {
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-secondary">
-              इतिहास · सम्पदा
+              {t("learn_page.history_eyebrow")}
             </div>
             <h2 className="mt-0.5 text-lg font-bold text-foreground sm:text-xl">
-              मयासुरको सूर्य सिद्धान्त
+              {t("learn_page.history_title")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।
+              {t("learn_page.history_desc")}
             </p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-secondary">
-            पढ्नुहोस्
+            {t("common.read_more")}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </span>
         </Link>
@@ -348,7 +350,7 @@ export function Learn() {
                 : "border-border bg-card text-muted-foreground hover:border-secondary/40 hover:text-foreground",
             )}
           >
-            सबै
+            {t("common.all")}
           </button>
           {LEARN_CATEGORIES.map((cat) => {
             const MetaIcon = CATEGORY_META[cat.id]?.icon ?? BookOpen;
@@ -374,7 +376,7 @@ export function Learn() {
         </div>
         {isFiltering && (
           <p className="text-base text-muted-foreground">
-            {filteredTopics.length} विषय भेटियो
+            {t("learn_page.results_count", { count: filteredTopics.length })}
           </p>
         )}
       </div>
@@ -384,15 +386,15 @@ export function Learn() {
           <div className="mb-5 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-secondary" />
             <h2 className="text-lg font-bold text-foreground sm:text-xl">
-              सुरुवाती मार्ग
+              {t("learn_page.starter_path")}
             </h2>
-            <span className="text-sm text-muted-foreground">· Suggested path</span>
+            <span className="text-sm text-muted-foreground">· {t("learn_page.suggested_path_sub")}</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {starterPath.map((topic, index) => (
               <div key={topic.slug} className="relative">
                 <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-secondary">
-                  चरण {index + 1}
+                  {t("learn_page.step", { n: index + 1 })}
                 </span>
                 <TopicCard topic={topic} variant="compact" />
               </div>
@@ -403,9 +405,9 @@ export function Learn() {
 
       {filteredTopics.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/40 px-6 py-14 text-center">
-          <p className="text-base font-medium text-foreground">कुनै विषय भेटिएन</p>
+          <p className="text-base font-medium text-foreground">{t("learn_page.no_topics")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            फरक शब्द वा श्रेणी छानेर फेरि प्रयास गर्नुहोस्।
+            {t("learn_page.no_topics_hint")}
           </p>
           <button
             type="button"
@@ -415,7 +417,7 @@ export function Learn() {
             }}
             className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-secondary hover:underline"
           >
-            सबै फिल्टर हटाउनुहोस्
+            {t("learn_page.clear_filters")}
           </button>
         </div>
       ) : isFiltering ? (
@@ -450,7 +452,7 @@ export function Learn() {
                     onClick={() => setActiveCategory(cat.id)}
                     className="text-sm font-semibold text-secondary hover:underline"
                   >
-                    यो श्रेणी मात्र हेर्नुहोस्
+                    {t("learn_page.view_category")}
                   </button>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

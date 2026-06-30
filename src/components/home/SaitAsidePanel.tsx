@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSait, fetchSaitYears, saitKeys } from "@/lib/api";
 import {
@@ -34,6 +35,7 @@ function resolveEntries(
 }
 
 export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Props) {
+  const { t } = useTranslation();
   const preferredYear = normalizeYear(defaultYear);
   const [year, setYear] = useState(preferredYear);
   const [category, setCategory] = useState<SaitCategoryId>("vivah");
@@ -50,7 +52,6 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
     [yearsQ.data?.years, category],
   );
 
-  // Snap to a year that actually has rows when the calendar year (e.g. 2082) has none.
   useEffect(() => {
     if (!yearsForCategory.length) return;
     setYear((current) => {
@@ -78,13 +79,13 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
     <div className="pn-aside-sait-panel">
       <div className="pn-aside-sait-year-row">
         <label className="pn-aside-sait-year-label" htmlFor="sait-bs-year">
-          वर्ष
+          {t("sait.year")}
         </label>
         <select
           id="sait-bs-year"
           className="pn-aside-sait-select"
           value={year}
-          aria-label="वर्ष"
+          aria-label={t("sait.year")}
           onChange={(e) => setYear(Number(e.target.value))}
         >
           {yearOptions.map((y) => (
@@ -95,7 +96,7 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
         </select>
       </div>
 
-      <div className="pn-aside-sait-cats" role="tablist" aria-label="साइत प्रकार">
+      <div className="pn-aside-sait-cats" role="tablist" aria-label={t("sait.categories_aria")}>
         {SAIT_CATEGORIES.map((cat) => (
           <button
             key={cat.id}
@@ -105,7 +106,7 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
             aria-selected={cat.id === category}
             onClick={() => setCategory(cat.id)}
           >
-            {cat.label}
+            {t(`sait.categories.${cat.id}`)}
           </button>
         ))}
       </div>
@@ -113,9 +114,9 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
       {saitQ.isLoading && !entries.length ? (
         <div className="pn-aside-tab-skel" />
       ) : !yearsForCategory.length ? (
-        <p className="pn-aside-tab-empty">साइत डाटा अहिले उपलब्ध छैन।</p>
+        <p className="pn-aside-tab-empty">{t("sait.no_data")}</p>
       ) : entries.length === 0 ? (
-        <p className="pn-aside-tab-empty">यस वर्ष र प्रकारका लागि साइत उपलब्ध छैन।</p>
+        <p className="pn-aside-tab-empty">{t("sait.no_entries")}</p>
       ) : (
         <ul className="pn-aside-sait-months">
           {entries.map(({ month, days }) => (

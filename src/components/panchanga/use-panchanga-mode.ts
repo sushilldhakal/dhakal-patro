@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 
 export type PanchangaDataMode = "udaya" | "instant";
 
@@ -29,24 +30,24 @@ export function usePanchangaMode(
   // back to the persisted preference.
   const [mode, setModeState] = useState<PanchangaDataMode>(() => {
     if (initial?.mode) return initial.mode;
-    const saved = localStorage.getItem(MODE_KEY);
+    const saved = getLocalStorageItem(MODE_KEY);
     return saved === "instant" ? "instant" : "udaya";
   });
 
   const [clock, setClockState] = useState(() => {
     if (initial?.clock) return initial.clock;
-    const saved = localStorage.getItem(CLOCK_KEY);
+    const saved = getLocalStorageItem(CLOCK_KEY);
     return saved ?? defaultClockForTimezone(defaultTimezone);
   });
 
   const setMode = useCallback(
     (next: PanchangaDataMode) => {
       setModeState(next);
-      localStorage.setItem(MODE_KEY, next);
+      setLocalStorageItem(MODE_KEY, next);
       if (next === "instant") {
         const nowClock = defaultClockForTimezone(defaultTimezone);
         setClockState(nowClock);
-        localStorage.setItem(CLOCK_KEY, nowClock);
+        setLocalStorageItem(CLOCK_KEY, nowClock);
       }
     },
     [defaultTimezone]
@@ -54,7 +55,7 @@ export function usePanchangaMode(
 
   const setClock = useCallback((next: string) => {
     setClockState(next);
-    localStorage.setItem(CLOCK_KEY, next);
+    setLocalStorageItem(CLOCK_KEY, next);
   }, []);
 
   return { mode, setMode, clock, setClock };

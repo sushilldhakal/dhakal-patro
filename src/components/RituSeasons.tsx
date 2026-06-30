@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Sprout, HelpCircle } from "lucide-react";
@@ -31,19 +32,18 @@ import { todayAdStringInTimezone } from "@/lib/zoned-time";
 const N = toNepaliDigits;
 const DAY = 86_400_000;
 
-const SEASONS = [
-  { ne: "वसन्त", en: "Spring", emoji: "🌸" }, // slot 0 — λ 0° (vernal equinox)
-  { ne: "ग्रीष्म", en: "Summer", emoji: "☀️" }, // slot 1 — λ 60°
-  { ne: "वर्षा", en: "Monsoon", emoji: "🌧️" }, // slot 2 — λ 120°
-  { ne: "शरद्", en: "Autumn", emoji: "🍂" }, // slot 3 — λ 180° (autumnal equinox)
-  { ne: "हेमन्त", en: "Pre-winter", emoji: "🌫️" }, // slot 4 — λ 240°
-  { ne: "शिशिर", en: "Winter", emoji: "❄️" }, // slot 5 — λ 300°
+const SEASON_KEYS = [
+  "spring",
+  "summer",
+  "monsoon",
+  "autumn",
+  "pre_winter",
+  "winter",
 ] as const;
 
-/** The cardinal astronomical event that anchors a boundary, where one applies. */
-const MARKERS: Record<number, { ne: string; en: string }> = {
-  0: { ne: "वसन्त विषुव", en: "Vernal equinox" }, // λ 0°
-  3: { ne: "शरद् विषुव", en: "Autumnal equinox" }, // λ 180°
+const MARKER_KEYS: Partial<Record<number, string>> = {
+  0: "ritu.vernal_equinox",
+  3: "ritu.autumnal_equinox",
 };
 
 const midnightUtcMs = (adStr: string) => Date.parse(`${adStr}T00:00:00Z`);
@@ -63,6 +63,7 @@ interface SeasonItem {
 }
 
 export function RituSeasons({ location }: { location: PanchangaLocation }) {
+  const { t } = useTranslation();
   const tz = resolveLocationTimezone(location);
   const todayAd = useMemo(() => todayAdStringInTimezone(new Date(), tz), [tz]);
 
@@ -109,41 +110,46 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
     });
   }, [seasonsQ.data, todayAd, tz]);
 
-  // southern hemisphere → opposite season (shift 3 slots / 180° of longitude)
   const flip = (slot: number) => (south ? (slot + 3) % 6 : slot);
-  const relLabel = (days: number) => (days <= 0 ? "" : days === 1 ? "भोलि" : `${N(days)} दिनपछि`);
+  const relLabel = (days: number) => {
+    if (days <= 0) return "";
+    if (days === 1) return t("ritu.tomorrow");
+    return t("ritu.days_after", { count: Number(N(days)) });
+  };
+
+  const seasonEmoji = ["🌸", "☀️", "🌧️", "🍂", "🌫️", "❄️"];
 
   return (
     <div className="sea-block">
       <div className="sea-head">
         <Sprout size={18} strokeWidth={1.8} />
-        <h2 className="sea-title">ऋतु</h2>
+        <h2 className="sea-title">{t("ritu.title")}</h2>
         <span className="sea-sub">
-          सायन ऋतु · विषुव–अयनान्त{location.label ? ` · ${location.label}` : ""}
-          {south && <span className="sea-flip"> · दक्षिणी गोलार्ध</span>}
+          {t("ritu.subtitle")}{location.label ? ` · ${location.label}` : ""}
+          {south && <span className="sea-flip">{t("ritu.southern")}</span>}
         </span>
         <Link to="/learn/$slug" params={{ slug: "ritu-drift" }} className="sea-why">
           <HelpCircle size={13} strokeWidth={2} aria-hidden />
-          ऋतु किन सर्छ?
+          {t("ritu.why_link")}
         </Link>
       </div>
 
       <div className="sea-grid">
         {seasons.map((item, i) => {
-          const s = SEASONS[flip(item.solarSlot)]!;
-          const marker = MARKERS[item.solarSlot];
+          const slot = flip(item.solarSlot);
+          const seasonKey = SEASON_KEYS[slot]!;
+          const markerKey = MARKER_KEYS[item.solarSlot];
           return (
             <div key={i} className={`sea-card ${item.isCurrent ? "current" : "upcoming"}`}>
               <span className="sea-eyebrow">
-                {item.isCurrent ? "चालू ऋतु · Current" : relLabel(item.daysUntil)}
+                {item.isCurrent ? t("ritu.current") : relLabel(item.daysUntil)}
               </span>
               <div className="sea-card-row">
                 <span className="sea-emoji" aria-hidden>
-                  {s.emoji}
+                  {seasonEmoji[slot]}
                 </span>
                 <span className="sea-name-wrap">
-                  <span className="sea-name">{s.ne}</span>
-                  <span className="sea-name-en">{s.en}</span>
+                  <span className="sea-name">{t(`ritu.${seasonKey}`)}</span>
                 </span>
                 <span className="sea-tile">
                   <span className="sea-tile-d">{N(item.startBs.day)}</span>
@@ -152,9 +158,9 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
               </div>
               <div className="sea-when">
                 <span className="sea-when-bs">
-                  {marker ? marker.ne : `सूर्य ${N(item.angle)}°`}
+                  {markerKey ? t(markerKey) : t("ritu.sun_deg", { deg: N(item.angle) })}
                 </span>
-                <span className="sea-when-ad mono">{fmtAd(item.startAd)} देखि</span>
+                <span className="sea-when-ad mono">{fmtAd(item.startAd)} {t("common.from")}</span>
               </div>
               {item.isCurrent && item.progress ? (
                 <>
