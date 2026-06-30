@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Flag, Sunrise, Sunset } from "lucide-react";
 import {
@@ -27,7 +28,7 @@ import {
   toNepaliDigits,
 } from "../lib/panchanga-format";
 import {
-  ASIDE_TABS,
+  ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
   type AsideTabId,
 } from "@/components/home/PanchangaAsideTabs";
@@ -45,10 +46,10 @@ function daysUntil(iso: string): number {
   return Math.ceil((target.getTime() - today.getTime()) / 86400000);
 }
 
-function relLabel(days: number): string {
-  if (days === 0) return "आज";
-  if (days === 1) return "भोलि";
-  return `${days} दिनपछि`;
+function relLabel(days: number, t: (key: string, opts?: { count?: number }) => string): string {
+  if (days === 0) return t("rel.today");
+  if (days === 1) return t("rel.tomorrow");
+  return t("rel.days_after", { count: days });
 }
 
 function PanchangaAside({
@@ -68,6 +69,7 @@ function PanchangaAside({
   loading: boolean;
   error: boolean;
 }) {
+  const { t } = useTranslation();
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
 
   const isSelectedToday = selectedAdDate === todayAd;
@@ -101,16 +103,16 @@ function PanchangaAside({
       <div className="pn-aside-panel">
         <div className="pn-aside-head">
           <h2 className="pn-aside-title">
-            {isSelectedToday ? "आजको पञ्चाङ्ग" : "पञ्चाङ्ग"}
+            {isSelectedToday ? t("panchanga.today_title") : t("panchanga.title")}
           </h2>
           <Link to="/panchanga" className="pn-aside-link">
-            Full detail →
+            {t("panchanga.full_detail")} →
           </Link>
         </div>
 
         {loading ? null : error ? (
           <div className="pn-aside-body">
-            <div className="pn-error-box">Could not load panchanga. Try again shortly.</div>
+            <div className="pn-error-box">{t("panchanga.error")}</div>
           </div>
         ) : (
           <div className="pn-aside-body">
@@ -119,13 +121,15 @@ function PanchangaAside({
               <div className="pn-hero-layout">
                 <div className="pn-hero-main">
                   <div className="pn-hero-eyebrow">
-                    {isSelectedToday ? "TODAY · आज" : (weekdayNe ?? "").toUpperCase()}
+                    {isSelectedToday
+                      ? `${t("panchanga.today_eyebrow").toUpperCase()} · ${t("today")}`
+                      : (weekdayNe ?? "").toUpperCase()}
                   </div>
                   <div className="pn-hero-date">{displayHeroDate}</div>
                   <div className="pn-hero-sub">
                     {weekdayNe}
                     {p?.bs_date && typeof p.bs_date === "object"
-                      ? `, वि.सं. ${toNepaliDigits(p.bs_date.year)}`
+                      ? `, ${t("panchanga.bs_era")} ${toNepaliDigits(p.bs_date.year)}`
                       : ""}
                   </div>
                   <div className="pn-hero-ad">{adDisplay}</div>
@@ -144,17 +148,17 @@ function PanchangaAside({
               </div>
             </div>
 
-            <div className="pn-aside-tabs" role="tablist" aria-label="पञ्चाङ्ग विवरण">
-              {ASIDE_TABS.map((t) => (
+            <div className="pn-aside-tabs" role="tablist" aria-label={t("panchanga.tabs_label")}>
+              {ASIDE_TAB_IDS.map((id) => (
                 <button
-                  key={t.id}
+                  key={id}
                   type="button"
                   role="tab"
-                  className={`pn-aside-tab${t.id === asideTab ? " active" : ""}`}
-                  aria-selected={t.id === asideTab}
-                  onClick={() => setAsideTab(t.id)}
+                  className={`pn-aside-tab${id === asideTab ? " active" : ""}`}
+                  aria-selected={id === asideTab}
+                  onClick={() => setAsideTab(id)}
                 >
-                  {t.label}
+                  {t(`panchanga.tabs.${id}`)}
                 </button>
               ))}
             </div>
@@ -185,21 +189,23 @@ function UpcomingHolidays({
   upcoming: Holiday[];
   location: PanchangaLocation;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="pn-holidays">
       <div className="pn-hol-head">
         <Flag size={18} strokeWidth={1.8} />
-        <h2 className="pn-hol-title">आगामी बिदा तथा पर्वहरू</h2>
-        <span className="pn-hol-sub">Upcoming holidays & festivals</span>
+        <h2 className="pn-hol-title">{t("holidays.upcoming")}</h2>
+        <span className="pn-hol-sub">{t("holidays.upcoming_sub")}</span>
         <Link to="/holidays" className="pn-aside-link">
-          View all →
+          {t("holidays.view_all")} →
         </Link>
       </div>
 
       <div className="pn-hol-list">
         {upcoming.length === 0 ? (
           <div style={{ padding: "16px", color: "var(--muted-foreground)", fontSize: "var(--fs-sm)" }}>
-            No upcoming holidays found.
+            {t("holidays.none")}
           </div>
         ) : (
           upcoming.map((h) => {
@@ -223,12 +229,12 @@ function UpcomingHolidays({
                   )}
                 </span>
                 <span className={`pn-badge ${type}`}>
-                  {h.is_public_holiday ? "बिदा" : "पर्व"}
+                  {h.is_public_holiday ? t("holidays.public") : t("holidays.festival")}
                 </span>
                 <span className="pn-hol-ad">
                   <span className="pn-hol-bs">{bsLabel}</span>
                   <span className="pn-hol-ad-line mono">{fmtAdFull(h.start_date)}</span>
-                  <span className="pn-hol-rel">{relLabel(days)}</span>
+                  <span className="pn-hol-rel">{relLabel(days, t)}</span>
                 </span>
               </Link>
             );
@@ -243,7 +249,7 @@ function UpcomingHolidays({
           <Sunrise size={16} strokeWidth={1.8} />
           <Sunset size={16} strokeWidth={1.8} />
         </span>
-        <span className="pn-sun-times-cta-text">सूर्य क्रान्ति — वार्षिक सूर्योदय–सूर्यास्त</span>
+        <span className="pn-sun-times-cta-text">{t("sun_times_cta")}</span>
         <ArrowRight size={14} className="pn-sun-times-cta-arrow" />
       </Link>
     </section>
@@ -251,6 +257,7 @@ function UpcomingHolidays({
 }
 
 export function Home() {
+  const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation();
   const { year: bsYear, month: bsMonth } = getCurrentBs();
   const todayAd = useMemo(
@@ -323,9 +330,7 @@ export function Home() {
         holidays={<UpcomingHolidays upcoming={upcomingHolidays} location={location} />}
       />
 
-      <p className="pn-note">
-        Powered by Swiss Ephemeris · Lahiri Ayanamsa · Kathmandu observer (27.72°N, 85.32°E)
-      </p>
+      <p className="pn-note">{t("footer_note")}</p>
     </main>
   );
 }

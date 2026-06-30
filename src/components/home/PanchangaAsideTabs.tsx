@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
 import { fetchFestivals, holidayKeys } from "@/lib/api";
@@ -15,12 +16,7 @@ import { MuhurtaAsidePanel } from "@/components/home/MuhurtaAsidePanel";
 
 export type AsideTabId = "panchanga" | "festivals" | "sait" | "muhurta";
 
-export const ASIDE_TABS: { id: AsideTabId; label: string }[] = [
-  { id: "panchanga", label: "पञ्चाङ्ग" },
-  { id: "festivals", label: "चाडपर्व" },
-  { id: "sait", label: "साइत" },
-  { id: "muhurta", label: "दैनिक मुहूर्त" },
-];
+export const ASIDE_TAB_IDS: AsideTabId[] = ["panchanga", "festivals", "sait", "muhurta"];
 
 function AsideEmpty({ children }: { children: ReactNode }) {
   return (
@@ -39,6 +35,7 @@ function FestivalsTab({
   monthDays: CalendarDay[];
   todayAd: string;
 }) {
+  const { t } = useTranslation();
   const festivalsQ = useQuery({
     queryKey: holidayKeys.festivals(bsYear, bsMonth),
     queryFn: () => fetchFestivals(bsYear, bsMonth),
@@ -60,7 +57,7 @@ function FestivalsTab({
   }
 
   if (!entries.length) {
-    return <AsideEmpty>यस महिनामा कुनै चाडपर्व छैन।</AsideEmpty>;
+    return <AsideEmpty>{t("panchanga.no_festivals_month")}</AsideEmpty>;
   }
 
   return (
@@ -73,10 +70,10 @@ function FestivalsTab({
 
         let countLabel: string | null = null;
         if (daysLeft != null) {
-          if (daysLeft === 0) countLabel = "आज";
-          else if (daysLeft === 1) countLabel = "भोलि";
+          if (daysLeft === 0) countLabel = t("rel.today");
+          else if (daysLeft === 1) countLabel = t("rel.tomorrow");
           else if (daysLeft > 1) countLabel = toNepaliDigits(daysLeft);
-          else if (daysLeft === -1) countLabel = "हिजो";
+          else if (daysLeft === -1) countLabel = t("rel.yesterday");
           else countLabel = toNepaliDigits(Math.abs(daysLeft));
         }
 
@@ -94,7 +91,7 @@ function FestivalsTab({
               <span className="pn-aside-fest-compact-count">
                 {countLabel}
                 {daysLeft != null && daysLeft > 1 ? (
-                  <span className="pn-aside-fest-compact-count-unit">दिन</span>
+                  <span className="pn-aside-fest-compact-count-unit">{t("rel.days_unit")}</span>
                 ) : null}
               </span>
             ) : null}

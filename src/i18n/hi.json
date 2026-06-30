@@ -1,0 +1,57 @@
+{
+  "app_name": "ढकाल पंचांग",
+  "brand_vedic": "वैदिक",
+  "brand_patro": "पंचांग",
+  "tagline": "नेपाली कैलेंडर और पंचांग",
+  "today": "आज",
+  "home": "होम",
+  "tithi": "तिथि",
+  "nakshatra": "नक्षत्र",
+  "nav": {
+    "surya_panchanga": "सूर्य पंचांग",
+    "suryakranti": "सूर्यक्रांति",
+    "chandrakranti": "दैनिक क्रांति",
+    "shanti_vidhi": "शांति विधि",
+    "avakahada_chakra": "अवकहडा चक्र",
+    "converter": "रूपांतरण",
+    "holidays": "छुट्टी और त्योहार",
+    "kundali": "कुंडली",
+    "learn": "सीखें"
+  },
+  "panchanga": {
+    "today_title": "आज का पंचांग",
+    "title": "पंचांग",
+    "full_detail": "पूर्ण विवरण",
+    "tabs_label": "पंचांग विवरण",
+    "today_eyebrow": "आज",
+    "bs_era": "वि.सं.",
+    "error": "पंचांग लोड नहीं हो सका। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+    "tabs": {
+      "panchanga": "पंचांग",
+      "festivals": "त्योहार",
+      "sait": "साइत",
+      "muhurta": "दैनिक मुहूर्त"
+    },
+    "no_festivals_month": "इस महीने कोई त्योहार नहीं है।"
+  },
+  "holidays": {
+    "upcoming": "आगामी छुट्टी और त्योहार",
+    "upcoming_sub": "आगामी छुट्टी और त्योहार",
+    "view_all": "सभी देखें",
+    "none": "कोई आगामी छुट्टी या त्योहार नहीं मिला।",
+    "public": "छुट्टी",
+    "festival": "त्योहार"
+  },
+  "rel": {
+    "today": "आज",
+    "tomorrow": "कल",
+    "yesterday": "कल",
+    "days_after": "{{count}} दिन बाद",
+    "days_unit": "दिन"
+  },
+  "sun_times_cta": "सूर्य क्रांति — वार्षिक सूर्योदय–सूर्यास्त",
+  "footer_note": "वैदिक पंचांग द्वारा संचालित · लाहिरी अयनांश · गणना समय पर डिफ़ॉल्ट स्थान काठमांडू",
+  "theme_toggle": "थीम बदलें",
+  "menu_open": "मेनू खोलें",
+  "language": "भाषा"
+}

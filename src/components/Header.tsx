@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   CalendarDays,
@@ -29,20 +30,21 @@ import {
 } from "@/components/ui/drawer";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AccountMenu } from "@/components/auth/AccountMenu";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const PANCHANGA_LINKS = [
-  { to: "/panchanga" as const, label: "Surya Panchanga", icon: Star },
-  { to: "/suryakranti" as const, label: "Suryakranti", icon: Sunrise },
-  { to: "/chandrakranti" as const, label: "दैनिक क्रान्ति", icon: Moon },
-  { to: "/shanti-vidhi" as const, label: "शान्ति विधि", icon: Flame },
-  { to: "/panchanga/avakahada-chakra" as const, label: "अवकहडा चक्र", icon: Grid3x3 },
+  { to: "/panchanga" as const, labelKey: "nav.surya_panchanga", icon: Star },
+  { to: "/suryakranti" as const, labelKey: "nav.suryakranti", icon: Sunrise },
+  { to: "/chandrakranti" as const, labelKey: "nav.chandrakranti", icon: Moon },
+  { to: "/shanti-vidhi" as const, labelKey: "nav.shanti_vidhi", icon: Flame },
+  { to: "/panchanga/avakahada-chakra" as const, labelKey: "nav.avakahada_chakra", icon: Grid3x3 },
 ] as const;
 
 const NAV = [
-  { to: "/converter" as const, label: "Converter", icon: ArrowLeftRight },
-  { to: "/holidays" as const, label: "Holidays", icon: PartyPopper },
-  { to: "/kundali" as const, label: "Kundali", icon: Sparkles },
-  { to: "/learn" as const, label: "Learn", icon: BookOpen },
+  { to: "/converter" as const, labelKey: "nav.converter", icon: ArrowLeftRight },
+  { to: "/holidays" as const, labelKey: "nav.holidays", icon: PartyPopper },
+  { to: "/kundali" as const, labelKey: "nav.kundali", icon: Sparkles },
+  { to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen },
 ] as const;
 
 const linkClass =
@@ -67,6 +69,7 @@ function isPanchangaRoute(pathname: string) {
 }
 
 function PanchangaNavDropdown() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isActive = isPanchangaRoute(pathname);
@@ -81,14 +84,14 @@ function PanchangaNavDropdown() {
           aria-haspopup="menu"
         >
           <Star className="w-4 h-4" />
-          Surya Panchanga
+          {t("nav.surya_panchanga")}
           <ChevronDown
             className={cn("w-3.5 h-3.5 opacity-60 transition-transform", open && "rotate-180")}
           />
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-52 p-1">
-        {PANCHANGA_LINKS.map(({ to, label, icon: Icon }) => (
+        {PANCHANGA_LINKS.map(({ to, labelKey, icon: Icon }) => (
           <Link
             key={to}
             to={to}
@@ -97,7 +100,7 @@ function PanchangaNavDropdown() {
             onClick={() => setOpen(false)}
           >
             <Icon className="w-4 h-4 shrink-0" />
-            {label}
+            {t(labelKey)}
           </Link>
         ))}
       </PopoverContent>
@@ -106,6 +109,7 @@ function PanchangaNavDropdown() {
 }
 
 function PanchangaNavGroup({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [expanded, setExpanded] = useState(() => isPanchangaRoute(pathname));
   const isActive = isPanchangaRoute(pathname);
@@ -119,14 +123,14 @@ function PanchangaNavGroup({ onNavigate }: { onNavigate?: () => void }) {
         aria-expanded={expanded}
       >
         <Star className="w-4 h-4 shrink-0" />
-        <span className="flex-1 text-left">Surya Panchanga</span>
+        <span className="flex-1 text-left">{t("nav.surya_panchanga")}</span>
         <ChevronDown
           className={cn("w-4 h-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
         />
       </button>
       {expanded ? (
         <div className="flex flex-col gap-0.5 pb-1">
-          {PANCHANGA_LINKS.map(({ to, label, icon: Icon }) => (
+          {PANCHANGA_LINKS.map(({ to, labelKey, icon: Icon }) => (
             <DrawerClose asChild key={to}>
               <Link
                 to={to}
@@ -135,7 +139,7 @@ function PanchangaNavGroup({ onNavigate }: { onNavigate?: () => void }) {
                 onClick={onNavigate}
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                {label}
+                {t(labelKey)}
               </Link>
             </DrawerClose>
           ))}
@@ -159,6 +163,8 @@ function BrandLogo({ size = 36, className }: { size?: number; className?: string
 }
 
 function BrandMark({ className }: { className?: string }) {
+  const { t } = useTranslation();
+
   return (
     <Link to="/" className={cn("flex items-center gap-2.5 group min-w-0", className)}>
       <BrandLogo
@@ -166,14 +172,15 @@ function BrandMark({ className }: { className?: string }) {
         className="shadow group-hover:shadow-primary/40 transition-shadow"
       />
       <span className="font-bold text-[15px] tracking-tight truncate">
-        <span className="text-secondary">Vedic</span>
-        <span className="text-foreground"> Patro</span>
+        <span className="text-secondary">{t("brand_vedic")}</span>
+        <span className="text-foreground"> {t("brand_patro")}</span>
       </span>
     </Link>
   );
 }
 
 function ThemeToggle({ className }: { className?: string }) {
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   return (
     <button
@@ -183,7 +190,7 @@ function ThemeToggle({ className }: { className?: string }) {
         "w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0",
         className,
       )}
-      aria-label="Toggle theme"
+      aria-label={t("theme_toggle")}
     >
       <Sun className="w-4 h-4 hidden dark:block" />
       <Moon className="w-4 h-4 dark:hidden" />
@@ -192,6 +199,7 @@ function ThemeToggle({ className }: { className?: string }) {
 }
 
 export function Header() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -202,7 +210,7 @@ export function Header() {
 
         <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
           <PanchangaNavDropdown />
-          {NAV.map(({ to, label, icon: Icon }) => (
+          {NAV.map(({ to, labelKey, icon: Icon }) => (
             <Link
               key={to}
               to={to}
@@ -210,12 +218,13 @@ export function Header() {
               activeProps={{ className: "active" }}
             >
               <Icon className="w-4 h-4" />
-              {label}
+              {t(labelKey)}
             </Link>
           ))}
         </nav>
 
         <div className="hidden lg:flex items-center gap-2">
+          <LanguageSwitcher />
           <ThemeToggle />
           <AccountMenu />
         </div>
@@ -225,7 +234,7 @@ export function Header() {
           <div className="flex justify-start">
             <Drawer direction="left" open={open} onOpenChange={setOpen}>
               <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0" aria-label="Open menu">
+                <Button variant="ghost" size="icon" className="shrink-0" aria-label={t("menu_open")}>
                   <Menu className="size-5" />
                 </Button>
               </DrawerTrigger>
@@ -235,10 +244,10 @@ export function Header() {
                     <BrandLogo size={36} className="rounded-[22%] shadow" />
                     <div>
                       <DrawerTitle className="text-base">
-                        <span className="text-secondary">Vedic</span>
-                        <span className="text-foreground"> Patro</span>
+                        <span className="text-secondary">{t("brand_vedic")}</span>
+                        <span className="text-foreground"> {t("brand_patro")}</span>
                       </DrawerTitle>
-                      <DrawerDescription>नेपाली पात्रो र पञ्चाङ्ग</DrawerDescription>
+                      <DrawerDescription>{t("tagline")}</DrawerDescription>
                     </div>
                   </div>
                 </DrawerHeader>
@@ -247,15 +256,15 @@ export function Header() {
                   <DrawerClose asChild>
                     <Link to="/" className={linkClass} activeProps={{ className: "active" }}>
                       <CalendarDays className="w-4 h-4 shrink-0" />
-                      Home
+                      {t("home")}
                     </Link>
                   </DrawerClose>
                   <PanchangaNavGroup onNavigate={() => setOpen(false)} />
-                  {NAV.map(({ to, label, icon: Icon }) => (
+                  {NAV.map(({ to, labelKey, icon: Icon }) => (
                     <DrawerClose asChild key={to}>
                       <Link to={to} className={linkClass} activeProps={{ className: "active" }}>
                         <Icon className="w-4 h-4 shrink-0" />
-                        {label}
+                        {t(labelKey)}
                       </Link>
                     </DrawerClose>
                   ))}
@@ -267,6 +276,7 @@ export function Header() {
           <BrandMark className="justify-center" />
 
           <div className="flex justify-end items-center gap-2">
+            <LanguageSwitcher />
             <ThemeToggle />
             <AccountMenu />
           </div>

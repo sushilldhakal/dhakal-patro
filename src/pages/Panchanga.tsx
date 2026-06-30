@@ -367,9 +367,6 @@ export function Panchanga() {
         slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "hora"]}
       />
 
-      <p className="mt-7 text-[11.5px] text-muted-foreground text-center">
-        पञ्चाङ्गका मानहरू Vedic Patro API बाट · Panchanga values from live API
-      </p>
     </div>
   );
 }

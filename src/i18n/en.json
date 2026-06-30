@@ -1,0 +1,57 @@
+{
+  "app_name": "Dhakal Patro",
+  "brand_vedic": "Vedic",
+  "brand_patro": "Patro",
+  "tagline": "Nepali calendar and Panchanga",
+  "today": "Today",
+  "home": "Home",
+  "tithi": "Tithi",
+  "nakshatra": "Nakshatra",
+  "nav": {
+    "surya_panchanga": "Surya Panchanga",
+    "suryakranti": "Suryakranti",
+    "chandrakranti": "Daily Transit",
+    "shanti_vidhi": "Shanti Vidhi",
+    "avakahada_chakra": "Avakahada Chakra",
+    "converter": "Converter",
+    "holidays": "Holidays",
+    "kundali": "Kundali",
+    "learn": "Learn"
+  },
+  "panchanga": {
+    "today_title": "Today's Panchanga",
+    "title": "Panchanga",
+    "full_detail": "Full detail",
+    "tabs_label": "Panchanga details",
+    "today_eyebrow": "TODAY",
+    "bs_era": "B.S.",
+    "error": "Could not load panchanga. Try again shortly.",
+    "tabs": {
+      "panchanga": "Panchanga",
+      "festivals": "Festivals",
+      "sait": "Sait",
+      "muhurta": "Daily Muhurta"
+    },
+    "no_festivals_month": "No festivals this month."
+  },
+  "holidays": {
+    "upcoming": "Upcoming Holidays & Festivals",
+    "upcoming_sub": "Upcoming holidays & festivals",
+    "view_all": "View all",
+    "none": "No upcoming holidays found.",
+    "public": "Holiday",
+    "festival": "Festival"
+  },
+  "rel": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday",
+    "days_after": "{{count}} days later",
+    "days_unit": "days"
+  },
+  "sun_times_cta": "Surya Kranti — Annual sunrise & sunset",
+  "footer_note": "Powered by Vedic Patro · Lahiri Ayanamsa · Default Location kathmandu at the time of calculation",
+  "theme_toggle": "Toggle theme",
+  "menu_open": "Open menu",
+  "language": "Language"
+}

@@ -1,0 +1,57 @@
+{
+  "app_name": "ढकाल पात्रो",
+  "brand_vedic": "वैदिक",
+  "brand_patro": "पात्रो",
+  "tagline": "नेपाली पात्रो र पञ्चाङ्ग",
+  "today": "आज",
+  "home": "गृहपृष्ठ",
+  "tithi": "तिथि",
+  "nakshatra": "नक्षत्र",
+  "nav": {
+    "surya_panchanga": "सूर्य पञ्चाङ्ग",
+    "suryakranti": "सूर्यक्रान्ति",
+    "chandrakranti": "दैनिक क्रान्ति",
+    "shanti_vidhi": "शान्ति विधि",
+    "avakahada_chakra": "अवकहडा चक्र",
+    "converter": "रूपान्तरण",
+    "holidays": "बिदा तथा पर्व",
+    "kundali": "कुण्डली",
+    "learn": "सिकाइ"
+  },
+  "panchanga": {
+    "today_title": "आजको पञ्चाङ्ग",
+    "title": "पञ्चाङ्ग",
+    "full_detail": "पूर्ण विवरण",
+    "tabs_label": "पञ्चाङ्ग विवरण",
+    "today_eyebrow": "आज",
+    "bs_era": "वि.सं.",
+    "error": "पञ्चाङ्ग लोड गर्न सकिएन। केही बेरपछि पुनः प्रयास गर्नुहोस्।",
+    "tabs": {
+      "panchanga": "पञ्चाङ्ग",
+      "festivals": "चाडपर्व",
+      "sait": "साइत",
+      "muhurta": "दैनिक मुहूर्त"
+    },
+    "no_festivals_month": "यस महिनामा कुनै चाडपर्व छैन।"
+  },
+  "holidays": {
+    "upcoming": "आगामी बिदा तथा पर्वहरू",
+    "upcoming_sub": "आगामी बिदा तथा पर्वहरू",
+    "view_all": "सबै हेर्नुहोस्",
+    "none": "कुनै आगामी बिदा वा पर्व फेला परेन।",
+    "public": "बिदा",
+    "festival": "पर्व"
+  },
+  "rel": {
+    "today": "आज",
+    "tomorrow": "भोलि",
+    "yesterday": "हिजो",
+    "days_after": "{{count}} दिनपछि",
+    "days_unit": "दिन"
+  },
+  "sun_times_cta": "सूर्य क्रान्ति — वार्षिक सूर्योदय–सूर्यास्त",
+  "footer_note": "वैदिक पात्रो द्वारा संचालित · लाहिरी अयनांश · गणना समयमा पूर्वनिर्धारित स्थान काठमाडौं",
+  "theme_toggle": "थिम परिवर्तन",
+  "menu_open": "मेनु खोल्नुहोस्",
+  "language": "भाषा"
+}
