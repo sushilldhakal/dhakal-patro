@@ -41,29 +41,13 @@ function injectGaSnippet(measurementId: string | undefined): Plugin {
   }
 }
 
-/** Load built CSS without blocking first paint (boot loader uses inline styles). */
-function asyncCss(): Plugin {
-  return {
-    name: "async-css",
-    transformIndexHtml: {
-      order: "post",
-      handler(html) {
-        return html.replace(
-          /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
-          '<link rel="preload" href="$1" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">\n    <noscript><link rel="stylesheet" href="$1"></noscript>',
-        )
-      },
-    },
-  }
-}
-
 export default defineConfig(({ mode, isSsrBuild }) => {
   const env = loadEnv(mode, process.cwd(), "")
   const gaId = env.VITE_GA_MEASUREMENT_ID
 
   return {
     base: "/",
-    plugins: [react(), tailwindcss(), ...(isSsrBuild ? [] : [injectGaSnippet(gaId), asyncCss()])],
+    plugins: [react(), tailwindcss(), ...(isSsrBuild ? [] : [injectGaSnippet(gaId)])],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
