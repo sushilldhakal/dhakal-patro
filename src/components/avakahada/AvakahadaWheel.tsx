@@ -44,6 +44,8 @@ const R = {
 } as const;
 
 const NAK_STEP = 360 / 27;
+/** Ring-name guides sit on a nakshatra boundary spoke — not at 286° (Śravaṇa mid). */
+const RING_GUIDE_DEG = 17 * NAK_STEP;
 
 const GANA_FILL: Record<Gana, string> = {
   देव: "var(--av-gana-dev)",
@@ -62,6 +64,13 @@ const ATTR_RINGS = [
 ] as const;
 
 type AttrRingId = (typeof ATTR_RINGS)[number]["id"];
+type HubRing = AttrRingId | "nakshatra" | "pada";
+
+type HubFocus = {
+  index: number;
+  ring: HubRing;
+  padaIndex?: number;
+};
 
 export type AvakahadaWheelRow = {
   index: number;
@@ -170,7 +179,7 @@ function RadialText({
       textAnchor="middle"
       dominantBaseline="central"
       className={className}
-      style={size ? { fontSize: size } : undefined}
+      style={{ ...(size ? { fontSize: size } : {}), pointerEvents: "none" }}
       transform={`rotate(${rot} ${x.toFixed(2)} ${y.toFixed(2)})`}
     >
       {children}
@@ -178,28 +187,97 @@ function RadialText({
   );
 }
 
-function HubDetail({ row }: { row: AvakahadaWheelRow }) {
-  const { t } = useTranslation();
+function hubRingLabel(ring: HubRing, t: (key: string) => string): string {
+  if (ring === "nakshatra") return t("avakahada.col_nakshatra");
+  if (ring === "pada") return t("avakahada.col_akshara");
+  return t(`avakahada.col_${ring}`);
+}
+
+function hubRingValue(
+  ring: HubRing,
+  row: AvakahadaWheelRow,
+  lang: string,
+  padaIndex?: number,
+): string {
+  if (ring === "nakshatra") return row.nakshatraLabel;
+  if (ring === "pada") return padaIndex != null ? (row.aksharas[padaIndex] ?? "") : "";
+  return attrValue(ring, row, lang);
+}
+
+function HubContent({ focus, row }: { focus: HubFocus; row: AvakahadaWheelRow }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
+  const { ring, padaIndex } = focus;
+  const label = hubRingLabel(ring, t);
+  const value = hubRingValue(ring, row, lang, padaIndex);
   const icon = findNakshatraIcon(row.en);
+
+  if (ring === "nakshatra") {
+    return (
+      <div className="av-wheel-hub-detail">
+        <div className="av-wheel-hub-icon">
+          {icon?.svg ? (
+            <span
+              className="inline-block h-full w-full [&>svg]:h-full [&>svg]:w-full [&_path]:fill-current"
+              aria-hidden
+              dangerouslySetInnerHTML={{ __html: icon.svg }}
+            />
+          ) : (
+            <span className="text-2xl font-bold text-secondary">{row.index}</span>
+          )}
+        </div>
+        <p className="av-wheel-hub-title">
+          {row.index}. {row.nakshatraLabel}
+        </p>
+        <dl className="av-wheel-hub-dl">
+          {ATTR_RINGS.map((attr) => (
+            <div key={attr.id}>
+              <dt>{t(`avakahada.col_${attr.id}`)}</dt>
+              <dd>{attrValue(attr.id, row, lang)}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="av-wheel-hub-vairi text-[9px] text-muted-foreground">
+          {t("avakahada.wheel_vairi", { yoni: row.vairiYoni })}
+        </p>
+      </div>
+    );
+  }
+
+  if (ring === "pada" && padaIndex != null) {
+    return (
+      <div className="av-wheel-hub-detail">
+        <p className="av-wheel-hub-ring-name">{label}</p>
+        <p className="av-wheel-hub-ring-value">{value}</p>
+        <p className="av-wheel-hub-ring-ref">
+          {t("avakahada.charan_title", {
+            n: String(padaIndex + 1),
+            rashi: localizeRashi(row.charanRashis[padaIndex]!, lang),
+          })}
+        </p>
+        <p className="av-wheel-hub-ring-ref">
+          {row.index}. {row.nakshatraLabel}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="av-wheel-hub-detail">
-      <div className="av-wheel-hub-icon">
-        {icon?.svg ? (
-          <span
-            className="inline-block h-full w-full [&>svg]:h-full [&>svg]:w-full [&_path]:fill-current"
-            aria-hidden
-            dangerouslySetInnerHTML={{ __html: icon.svg }}
-          />
-        ) : (
-          <span className="text-2xl font-bold text-secondary">{row.index}</span>
-        )}
-      </div>
-      <p className="av-wheel-hub-title">
+      <p className="av-wheel-hub-ring-name">{label}</p>
+      {ring === "gana" ? (
+        <span className={cn("av-wheel-gana-pill", `gana-${row.gana}`)}>{value}</span>
+      ) : (
+        <p className="av-wheel-hub-ring-value">{value}</p>
+      )}
+      <p className="av-wheel-hub-ring-ref">
         {row.index}. {row.nakshatraLabel}
       </p>
-      <p className="av-wheel-hub-vairi text-[9px] text-muted-foreground">
-        {t("avakahada.wheel_vairi", { yoni: row.vairiYoni })}
-      </p>
+      {ring === "yoni" ? (
+        <p className="av-wheel-hub-vairi text-[9px] text-muted-foreground">
+          {t("avakahada.wheel_vairi", { yoni: row.vairiYoni })}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -215,8 +293,8 @@ const ZOOM_STEP = 1.35;
 export function AvakahadaWheel({ highlighted }: Props) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
-  const [selected, setSelected] = useState<number | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
+  const [selected, setSelected] = useState<HubFocus | null>(null);
+  const [hovered, setHovered] = useState<HubFocus | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -277,7 +355,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
     [t],
   );
 
-  const activeIndex = selected ?? hovered;
+  const activeFocus = selected ?? hovered;
 
   const highlightSet = useMemo(
     () => new Set((highlighted ?? allRows).map((r) => r.index)),
@@ -286,11 +364,24 @@ export function AvakahadaWheel({ highlighted }: Props) {
   const hasFilter = highlighted !== undefined && highlighted.length < allRows.length;
 
   const activeRow = useMemo(
-    () => (activeIndex != null ? allRows.find((r) => r.index === activeIndex) : undefined),
-    [activeIndex, allRows],
+    () => (activeFocus != null ? allRows.find((r) => r.index === activeFocus.index) : undefined),
+    [activeFocus, allRows],
   );
 
-  const pickNak = (index: number) => setSelected((s) => (s === index ? null : index));
+  const pick = useCallback((focus: HubFocus) => {
+    setSelected((s) =>
+      s?.index === focus.index && s?.ring === focus.ring && s?.padaIndex === focus.padaIndex
+        ? null
+        : focus,
+    );
+  }, []);
+
+  const setHover = useCallback((focus: HubFocus | null) => {
+    setHovered(focus);
+  }, []);
+
+  const isSameFocus = (a: HubFocus | null | undefined, b: HubFocus) =>
+    a?.index === b.index && a?.ring === b.ring && a?.padaIndex === b.padaIndex;
 
   const nakLayers = useMemo(() => {
     const segs: React.ReactNode[] = [];
@@ -301,20 +392,39 @@ export function AvakahadaWheel({ highlighted }: Props) {
       const a0 = i * NAK_STEP;
       const a1 = (i + 1) * NAK_STEP;
       const mid = (a0 + a1) / 2;
-      const isActive = activeIndex === row.index;
+      const isActiveNak = activeFocus?.index === row.index;
       const isDim = hasFilter && !highlightSet.has(row.index);
 
       segs.push(
         <path
           key={`nak-${row.index}`}
           d={sectorPath(R.nakIn, R.nakOut, a0, a1)}
-          className={cn("av-wheel-seg-nak", i % 2 === 1 && "alt", isActive && "sel", isDim && "dim")}
+          className={cn(
+            "av-wheel-seg-nak",
+            i % 2 === 1 && "alt",
+            isActiveNak && activeFocus?.ring === "nakshatra" && "sel",
+            isDim && "dim",
+          )}
           style={{ fill: GANA_FILL[row.gana] }}
+        />,
+      );
+
+      hits.push(
+        <path
+          key={`hit-nak-${row.index}`}
+          d={sectorPath(R.nakIn, R.nakOut, a0, a1)}
+          className="av-wheel-hit"
+          onMouseEnter={() => setHover({ index: row.index, ring: "nakshatra" })}
+          onMouseLeave={() => setHover(null)}
+          onClick={() => pick({ index: row.index, ring: "nakshatra" })}
         />,
       );
 
       attrRings.forEach((ring) => {
         const val = attrValue(ring.id, row, lang);
+        const ringFocus: HubFocus = { index: row.index, ring: ring.id };
+        const isRingSel = isSameFocus(activeFocus, ringFocus);
+
         segs.push(
           <path
             key={`${ring.id}-${row.index}`}
@@ -323,9 +433,20 @@ export function AvakahadaWheel({ highlighted }: Props) {
               "av-wheel-seg-attr",
               ring.id,
               i % 2 === 1 && "alt",
-              isActive && "sel",
+              isActiveNak && "sel",
+              isRingSel && "ring-sel",
               isDim && "dim",
             )}
+          />,
+        );
+        hits.push(
+          <path
+            key={`hit-${ring.id}-${row.index}`}
+            d={sectorPath(ring.rIn, ring.rOut, a0, a1)}
+            className="av-wheel-hit"
+            onMouseEnter={() => setHover(ringFocus)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => pick(ringFocus)}
           />,
         );
         labels.push(
@@ -333,7 +454,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
             key={`${ring.id}-lbl-${row.index}`}
             deg={mid}
             r={(ring.rOut + ring.rIn) / 2}
-            className={cn("av-wheel-attr-val", ring.id, isActive && "sel")}
+            className={cn("av-wheel-attr-val", ring.id, isRingSel && "sel")}
             size={ring.id === "rashi" || ring.id === "yoni" ? 7 : 6.5}
           >
             {val}
@@ -345,28 +466,17 @@ export function AvakahadaWheel({ highlighted }: Props) {
         row.nakshatraLabel.length > 8 ? `${row.nakshatraLabel.slice(0, 7)}…` : row.nakshatraLabel;
 
       labels.push(
-        <RadialText deg={mid} r={278} className={cn("av-wheel-nak-idx", isActive && "sel")} size={8}>
+        <RadialText deg={mid} r={278} className={cn("av-wheel-nak-idx", isActiveNak && "sel")} size={8}>
           {row.index}
         </RadialText>,
-        <RadialText deg={mid} r={264} className={cn("av-wheel-nak-name", isActive && "sel")} size={9}>
+        <RadialText deg={mid} r={264} className={cn("av-wheel-nak-name", isActiveNak && "sel")} size={9}>
           {nakName}
         </RadialText>,
-      );
-
-      hits.push(
-        <path
-          key={`hit-${row.index}`}
-          d={sectorPath(R.nadiIn, R.nakOut, a0, a1)}
-          className="av-wheel-hit"
-          onMouseEnter={() => setHovered(row.index)}
-          onMouseLeave={() => setHovered(null)}
-          onClick={() => pickNak(row.index)}
-        />,
       );
     });
 
     return { segs, hits, labels };
-  }, [activeIndex, allRows, attrRings, hasFilter, highlightSet, lang]);
+  }, [activeFocus, allRows, attrRings, hasFilter, highlightSet, lang, pick, setHover]);
 
   const padaSegs = useMemo(() => {
     const step = 360 / 108;
@@ -377,11 +487,22 @@ export function AvakahadaWheel({ highlighted }: Props) {
         const a1 = (i + 1) * step;
         const mid = (a0 + a1) / 2;
         const isDim = hasFilter && !highlightSet.has(row.index);
+        const padaFocus: HubFocus = { index: row.index, ring: "pada", padaIndex: pi };
+        const isPadaSel = isSameFocus(activeFocus, padaFocus);
+
         return (
           <g key={`pada-${i}`}>
             <path
               d={sectorPath(R.padaIn, R.padaOut, a0, a1)}
-              className={cn("av-wheel-seg-pada", i % 2 === 1 && "alt", isDim && "dim")}
+              className={cn(
+                "av-wheel-seg-pada",
+                i % 2 === 1 && "alt",
+                isDim && "dim",
+                isPadaSel && "ring-sel",
+              )}
+              onMouseEnter={() => setHover(padaFocus)}
+              onMouseLeave={() => setHover(null)}
+              onClick={() => pick(padaFocus)}
             />
             <RadialText deg={mid} r={239} className="av-wheel-pada-akshar" size={7.5}>
               {akshara}
@@ -390,14 +511,14 @@ export function AvakahadaWheel({ highlighted }: Props) {
         );
       }),
     );
-  }, [hasFilter, highlightSet]);
+  }, [activeFocus, hasFilter, highlightSet, pick, setHover]);
 
   const ringGuides = useMemo(
     () =>
       attrRings.map((ring) => (
         <RadialText
           key={`guide-${ring.id}`}
-          deg={286}
+          deg={RING_GUIDE_DEG}
           r={(ring.rOut + ring.rIn) / 2}
           className="av-wheel-ring-guide"
           size={6}
@@ -488,8 +609,8 @@ export function AvakahadaWheel({ highlighted }: Props) {
 
           {padaSegs}
           {nakLayers.segs}
-          {nakLayers.labels}
           {ringGuides}
+          {nakLayers.labels}
 
           {Array.from({ length: 27 }, (_, i) => {
             const deg = i * NAK_STEP;
@@ -504,8 +625,8 @@ export function AvakahadaWheel({ highlighted }: Props) {
 
           <foreignObject x={CX - R.hub + 10} y={CY - R.hub + 10} width={R.hub * 2 - 20} height={R.hub * 2 - 20}>
             <div className="av-wheel-hub-inner">
-              {activeRow ? (
-                <HubDetail row={activeRow} />
+              {activeRow && activeFocus ? (
+                <HubContent focus={activeFocus} row={activeRow} />
               ) : (
                 <div className="av-wheel-hub-placeholder">
                   <p className="av-wheel-hub-placeholder-title">{t("avakahada.wheel_hub_title")}</p>

@@ -473,7 +473,7 @@
     "wheel_subtitle": "Outside to inside: nakshatra → name syllable (108 charans) → rashi → lord → varna → vashya → yoni → gana → nadi",
     "wheel_svg_aria": "27 nakshatra Avakahada chakra",
     "wheel_hub_title": "Avakahada",
-    "wheel_hub_hint": "Tap a nakshatra",
+    "wheel_hub_hint": "Tap a ring — nakshatra, syllable, rashi, varna, vashya, yoni, gana, nadi",
     "wheel_vairi": "Enemy yoni: {{yoni}}",
     "wheel_legend_gana": "Gana colors:",
     "wheel_legend_rings": "· 7 inner rings: rashi, lord, varna, vashya, yoni, gana, nadi",

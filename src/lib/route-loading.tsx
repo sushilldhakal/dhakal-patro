@@ -23,11 +23,18 @@ export function RouteLoadingProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [dataLoading, setDataLoading] = useState(isBrowser);
   const [suspenseLoading, setSuspenseLoading] = useState(false);
+  const [trackedPath, setTrackedPath] = useState(pathname);
 
-  useLayoutEffect(() => {
+  // Reset to "loading" synchronously DURING RENDER when the route changes, before
+  // children commit. Doing this in a layout effect instead runs AFTER the page's
+  // own useRouteLoading effect (parent effects fire last) and clobbers it back to
+  // true — which leaves the overlay stuck on same-route param navigation (e.g.
+  // /learn/$slug prev/next) where the page never remounts to re-assert false.
+  if (pathname !== trackedPath) {
+    setTrackedPath(pathname);
     setDataLoading(true);
     setSuspenseLoading(false);
-  }, [pathname]);
+  }
 
   const value = useMemo(
     () => ({ setDataLoading, setSuspenseLoading }),

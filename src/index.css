@@ -4936,7 +4936,8 @@
   fill: var(--w-pada, #0d2024);
   stroke: var(--w-sep-soft);
   stroke-width: 0.35;
-  pointer-events: none;
+  cursor: pointer;
+  transition: filter 0.15s ease;
 }
 
 .av-wheel-seg-pada.alt {
@@ -4955,8 +4956,19 @@
 }
 
 .av-wheel-seg-attr.sel {
-  fill: color-mix(in srgb, var(--w-accent, #e0795b) 18%, #1a1210);
-  stroke: color-mix(in srgb, var(--w-accent) 35%, transparent);
+  filter: brightness(1.15);
+}
+
+.av-wheel-seg-attr.ring-sel {
+  filter: brightness(1.28);
+  stroke: var(--w-accent, var(--color-danger, #e0795b));
+  stroke-width: 1.1;
+}
+
+.av-wheel-seg-pada.ring-sel {
+  filter: brightness(1.25);
+  stroke: var(--w-accent, var(--color-danger, #e0795b));
+  stroke-width: 1;
 }
 
 .av-wheel-seg-attr.gana.sel {
@@ -5110,6 +5122,26 @@
   font: 700 13px/1.2 var(--pn-font, var(--font-sans));
   color: var(--w-ink, #eaf3f1);
   margin: 0;
+}
+
+.av-wheel-hub-ring-name {
+  font: 700 11px/1.2 var(--pn-font, var(--font-sans));
+  color: var(--w-accent, var(--color-danger, #e0795b));
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.av-wheel-hub-ring-value {
+  font: 700 16px/1.2 var(--pn-font, var(--font-sans));
+  color: var(--w-ink, #eaf3f1);
+  margin: 2px 0 0;
+}
+
+.av-wheel-hub-ring-ref {
+  font: 500 9px/1.3 var(--pn-font, var(--font-sans));
+  color: var(--w-ink-faint, #84a3a2);
+  margin: 4px 0 0;
 }
 
 .av-wheel-hub-dl {
