@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { LEARN_TOPICS_BY_SLUG } from "@/lib/learn/learn-topics";
 
@@ -13,7 +14,9 @@ interface Props {
  * page to point interested users at the relevant Knowledge Center articles
  * without cluttering the page itself.
  */
-export function LearnMoreCard({ slugs, heading = "थप जान्नुहोस्", className }: Props) {
+export function LearnMoreCard({ slugs, heading, className }: Props) {
+  const { t } = useTranslation();
+  const resolvedHeading = heading ?? t("learn_more.default_heading");
   const topics = slugs
     .map((s) => LEARN_TOPICS_BY_SLUG[s])
     .filter((t): t is NonNullable<typeof t> => Boolean(t));
@@ -28,7 +31,7 @@ export function LearnMoreCard({ slugs, heading = "थप जान्नुह�
     >
       <div className="mb-3 flex items-center gap-2 text-secondary">
         <BookOpen className="h-4 w-4" />
-        <h2 className="text-sm font-semibold text-foreground">{heading}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{resolvedHeading}</h2>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {topics.map((t) => {

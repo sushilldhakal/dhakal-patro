@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,6 +19,7 @@ import {
 import { PageShell, PageHeader } from "../components/PageShell";
 import { useRouteLoading } from "@/lib/route-loading";
 import { BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR, getCurrentBs } from "../lib/bs-calendar";
+import { formatLocaleDigits } from "@/i18n/digits";
 import { cn } from "../lib/utils";
 
 type Tab = "holidays" | "festivals";
@@ -25,84 +27,98 @@ type Tab = "holidays" | "festivals";
 const holidayCol = createColumnHelper<Holiday>();
 const festivalCol = createColumnHelper<Festival>();
 
-const HOLIDAY_COLUMNS = [
-  holidayCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
-    id: "name_ne",
-    header: "Name (NE)",
-    cell: i => <span className="font-medium">{i.getValue()}</span>,
-  }),
-  holidayCol.accessor(r => r.name_en ?? "—", {
-    id: "name_en",
-    header: "Name (EN)",
-  }),
-  holidayCol.accessor("bs_start_date", {
-    header: "BS Date",
-    cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
-  }),
-  holidayCol.accessor("start_date", {
-    header: "AD Date",
-    cell: i => <span className="font-mono text-sm">{i.getValue()}</span>,
-  }),
-  holidayCol.accessor("duration_days", {
-    header: "Days",
-    cell: i => i.getValue() ?? 1,
-  }),
-  holidayCol.accessor("type", {
-    header: "Type",
-    cell: i => (
-      <span className="capitalize text-xs bg-muted px-2 py-0.5 rounded-full">
-        {i.getValue() ?? "—"}
-      </span>
-    ),
-  }),
-];
+function useHolidayColumns() {
+  const { t } = useTranslation();
+  return useMemo(
+    () => [
+      holidayCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
+        id: "name_ne",
+        header: t("holidays.col_name_ne"),
+        cell: i => <span className="font-medium">{i.getValue()}</span>,
+      }),
+      holidayCol.accessor(r => r.name_en ?? "—", {
+        id: "name_en",
+        header: t("holidays.col_name_en"),
+      }),
+      holidayCol.accessor("bs_start_date", {
+        header: t("holidays.col_bs_date"),
+        cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
+      }),
+      holidayCol.accessor("start_date", {
+        header: t("holidays.col_ad_date"),
+        cell: i => <span className="font-mono text-sm">{i.getValue()}</span>,
+      }),
+      holidayCol.accessor("duration_days", {
+        header: t("holidays.col_days"),
+        cell: i => i.getValue() ?? 1,
+      }),
+      holidayCol.accessor("type", {
+        header: t("holidays.col_type"),
+        cell: i => (
+          <span className="capitalize text-xs bg-muted px-2 py-0.5 rounded-full">
+            {i.getValue() ?? "—"}
+          </span>
+        ),
+      }),
+    ],
+    [t],
+  );
+}
 
-const FESTIVAL_COLUMNS = [
-  festivalCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
-    id: "name_ne",
-    header: "Name (NE)",
-    cell: i => <span className="font-medium">{i.getValue()}</span>,
-  }),
-  festivalCol.accessor(r => r.name_en ?? "—", {
-    id: "name_en",
-    header: "Name (EN)",
-  }),
-  festivalCol.accessor("bs_start_date", {
-    header: "BS Date",
-    cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
-  }),
-  festivalCol.accessor("start_date", {
-    header: "AD Date",
-    cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
-  }),
-  festivalCol.accessor("type", {
-    header: "Type",
-    cell: i => (
-      <span className="capitalize text-xs bg-muted px-2 py-0.5 rounded-full">
-        {i.getValue() ?? "—"}
-      </span>
-    ),
-  }),
-  festivalCol.accessor("is_public_holiday", {
-    header: "Gov't Holiday",
-    cell: i =>
-      i.getValue() ? (
-        <span className="text-xs text-destructive font-semibold flex items-center gap-1">
-          <Flag className="w-3 h-3" /> Yes
-        </span>
-      ) : null,
-  }),
-];
+function useFestivalColumns() {
+  const { t } = useTranslation();
+  return useMemo(
+    () => [
+      festivalCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
+        id: "name_ne",
+        header: t("holidays.col_name_ne"),
+        cell: i => <span className="font-medium">{i.getValue()}</span>,
+      }),
+      festivalCol.accessor(r => r.name_en ?? "—", {
+        id: "name_en",
+        header: t("holidays.col_name_en"),
+      }),
+      festivalCol.accessor("bs_start_date", {
+        header: t("holidays.col_bs_date"),
+        cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
+      }),
+      festivalCol.accessor("start_date", {
+        header: t("holidays.col_ad_date"),
+        cell: i => <span className="font-mono text-sm">{i.getValue()}</span>,
+      }),
+      festivalCol.accessor("type", {
+        header: t("holidays.col_type"),
+        cell: i => (
+          <span className="capitalize text-xs bg-muted px-2 py-0.5 rounded-full">
+            {i.getValue() ?? "—"}
+          </span>
+        ),
+      }),
+      festivalCol.accessor("is_public_holiday", {
+        header: t("holidays.col_govt"),
+        cell: i =>
+          i.getValue() ? (
+            <span className="text-xs text-destructive font-semibold flex items-center gap-1">
+              <Flag className="w-3 h-3" /> {t("common.yes")}
+            </span>
+          ) : null,
+      }),
+    ],
+    [t],
+  );
+}
 
 function DataTable<T>({
   data,
   columns,
   globalFilter,
+  emptyMessage,
 }: {
   data: T[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: any[];
   globalFilter: string;
+  emptyMessage: string;
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -148,7 +164,7 @@ function DataTable<T>({
           {table.getRowModel().rows.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="text-center py-8 text-muted-foreground">
-                No results found.
+                {emptyMessage}
               </td>
             </tr>
           ) : (
@@ -169,6 +185,9 @@ function DataTable<T>({
 }
 
 export function Holidays() {
+  const { t } = useTranslation();
+  const holidayColumns = useHolidayColumns();
+  const festivalColumns = useFestivalColumns();
   const init = getCurrentBs();
   const [year, setYear] = useState(init.year);
   const [tab, setTab] = useState<Tab>("holidays");
@@ -198,13 +217,13 @@ export function Holidays() {
     <PageShell>
       <PageHeader
         icon={<PartyPopper className="w-6 h-6 text-secondary" />}
-        title="Holidays & Festivals"
-        subtitle="Nepal public holidays and religious festivals for a BS year"
+        title={t("holidays.page_title")}
+        subtitle={t("holidays.page_subtitle")}
       />
 
       {/* Year picker */}
       <div className="flex items-center gap-3 flex-wrap">
-        <label className="text-sm font-medium text-muted-foreground">BS Year</label>
+        <label className="text-sm font-medium text-muted-foreground">{t("holidays.bs_year")}</label>
         <input
           type="number"
           value={year}
@@ -223,24 +242,24 @@ export function Holidays() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         {([
-          { id: "holidays", label: "Government Holidays", icon: Flag, count: holidays.length },
-          { id: "festivals", label: "All Festivals", icon: PartyPopper, count: festivals.length },
-        ] as const).map(t => (
+          { id: "holidays" as const, labelKey: "holidays.tab_holidays", icon: Flag, count: holidays.length },
+          { id: "festivals" as const, labelKey: "holidays.tab_festivals", icon: PartyPopper, count: festivals.length },
+        ]).map(tItem => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tItem.id}
+            onClick={() => setTab(tItem.id)}
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-              tab === t.id
+              tab === tItem.id
                 ? "border-secondary text-secondary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            <t.icon className="w-4 h-4" />
-            {t.label}
-            {t.count > 0 && (
+            <tItem.icon className="w-4 h-4" />
+            {t(tItem.labelKey)}
+            {tItem.count > 0 && (
               <span className="bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded-full">
-                {t.count}
+                {formatLocaleDigits(tItem.count)}
               </span>
             )}
           </button>
@@ -253,23 +272,33 @@ export function Holidays() {
         <input
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          placeholder="Search festivals..."
+          placeholder={t("holidays.search_placeholder")}
           className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
       </div>
 
       {error && (
         <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 text-sm">
-          Failed to load data. The API may need a moment to warm up.
+          {t("holidays.error")}
         </div>
       )}
 
       {!loading && !error && tab === "holidays" && (
-        <DataTable data={holidays} columns={HOLIDAY_COLUMNS} globalFilter={filter} />
+        <DataTable
+          data={holidays}
+          columns={holidayColumns}
+          globalFilter={filter}
+          emptyMessage={t("common.no_results")}
+        />
       )}
 
       {!loading && !error && tab === "festivals" && (
-        <DataTable data={festivals} columns={FESTIVAL_COLUMNS} globalFilter={filter} />
+        <DataTable
+          data={festivals}
+          columns={festivalColumns}
+          globalFilter={filter}
+          emptyMessage={t("common.no_results")}
+        />
       )}
     </PageShell>
   );

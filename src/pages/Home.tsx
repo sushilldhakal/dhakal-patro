@@ -27,6 +27,7 @@ import {
   formatHolidayBsDisplay,
   toNepaliDigits,
 } from "../lib/panchanga-format";
+import { formatLocaleDigits } from "@/i18n/digits";
 import {
   ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
@@ -46,10 +47,14 @@ function daysUntil(iso: string): number {
   return Math.ceil((target.getTime() - today.getTime()) / 86400000);
 }
 
-function relLabel(days: number, t: (key: string, opts?: { count?: number }) => string): string {
+function relLabel(
+  days: number,
+  t: (key: string, opts?: { count?: number }) => string,
+  lang: string,
+): string {
   if (days === 0) return t("rel.today");
   if (days === 1) return t("rel.tomorrow");
-  return t("rel.days_after", { count: days });
+  return t("rel.days_after", { count: Number(formatLocaleDigits(days, lang)) });
 }
 
 function PanchangaAside({
@@ -189,7 +194,7 @@ function UpcomingHolidays({
   upcoming: Holiday[];
   location: PanchangaLocation;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <section className="pn-holidays">
@@ -234,7 +239,7 @@ function UpcomingHolidays({
                 <span className="pn-hol-ad">
                   <span className="pn-hol-bs">{bsLabel}</span>
                   <span className="pn-hol-ad-line mono">{fmtAdFull(h.start_date)}</span>
-                  <span className="pn-hol-rel">{relLabel(days, t)}</span>
+                  <span className="pn-hol-rel">{relLabel(days, t, i18n.language)}</span>
                 </span>
               </Link>
             );

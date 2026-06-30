@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ArrowLeftRight, ArrowRight } from "lucide-react";
 import {
   fetchAdToBs, fetchBsToAd,
@@ -8,6 +9,7 @@ import {
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
 import { useRouteLoading } from "@/lib/route-loading";
+import { formatLocaleDigits } from "@/i18n/digits";
 import { StatCard } from "../components/StatCard";
 import { cn } from "../lib/utils";
 
@@ -16,6 +18,7 @@ function todayAd() {
 }
 
 export function Converter() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"ad-to-bs" | "bs-to-ad">("ad-to-bs");
   const [adInput, setAdInput] = useState(todayAd());
   const [bsInput, setBsInput] = useState("2083-02-01");
@@ -53,8 +56,8 @@ export function Converter() {
     <PageShell>
       <PageHeader
         icon={<ArrowLeftRight className="w-6 h-6 text-secondary" />}
-        title="Date Converter"
-        subtitle="Convert between Bikram Sambat (BS) and Gregorian (AD) calendars"
+        title={t("converter.title")}
+        subtitle={t("converter.subtitle")}
       />
 
       {/* Mode toggle */}
@@ -84,7 +87,7 @@ export function Converter() {
         {mode === "ad-to-bs" ? (
           <div className="flex flex-col gap-1 flex-1 min-w-44">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              AD Date
+              {t("converter.ad_date")}
             </label>
             <input
               type="date"
@@ -96,7 +99,7 @@ export function Converter() {
         ) : (
           <div className="flex flex-col gap-1 flex-1 min-w-44">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              BS Date (YYYY-MM-DD)
+              {t("converter.bs_date")}
             </label>
             <input
               type="text"
@@ -111,13 +114,13 @@ export function Converter() {
           type="submit"
           className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-5 py-2 rounded-lg text-sm font-semibold transition-colors"
         >
-          Convert
+          {t("converter.convert")}
         </button>
       </form>
 
       {error && (
         <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 text-sm">
-          Conversion failed. Please check the date format.
+          {t("converter.error")}
         </div>
       )}
 
@@ -130,12 +133,12 @@ export function Converter() {
             <span className="text-secondary">{adResult.bs_date}</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <StatCard label="BS Date" value={adResult.bs_date} highlight />
-            <StatCard label="BS Year" value={String(adResult.bs_year)} />
-            <StatCard label="BS Month" value={`${adResult.bs_month_name_ne} (${adResult.bs_month_name})`} />
-            <StatCard label="BS Day" value={String(adResult.bs_day)} />
-            <StatCard label="AD Date" value={adResult.ad_date} />
-            <StatCard label="Weekday" value={adResult.weekday} />
+            <StatCard label={t("converter.bs_date")} value={adResult.bs_date} highlight />
+            <StatCard label={t("converter.bs_year")} value={formatLocaleDigits(adResult.bs_year)} />
+            <StatCard label={t("converter.bs_month")} value={`${adResult.bs_month_name_ne} (${adResult.bs_month_name})`} />
+            <StatCard label={t("converter.bs_day")} value={formatLocaleDigits(adResult.bs_day)} />
+            <StatCard label={t("converter.ad_date")} value={adResult.ad_date} />
+            <StatCard label={t("converter.weekday")} value={adResult.weekday} />
           </div>
         </div>
       )}
@@ -149,12 +152,12 @@ export function Converter() {
             <span className="text-secondary">{bsResult.ad_date}</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <StatCard label="AD Date" value={bsResult.ad_date} highlight />
-            <StatCard label="BS Date" value={bsResult.bs_date} />
-            <StatCard label="BS Month" value={`${bsResult.bs_month_name_ne} (${bsResult.bs_month_name})`} />
-            <StatCard label="BS Day" value={String(bsResult.bs_day)} />
-            <StatCard label="BS Year" value={String(bsResult.bs_year)} />
-            <StatCard label="Weekday" value={bsResult.weekday} />
+            <StatCard label={t("converter.ad_date")} value={bsResult.ad_date} highlight />
+            <StatCard label={t("converter.bs_date")} value={bsResult.bs_date} />
+            <StatCard label={t("converter.bs_month")} value={`${bsResult.bs_month_name_ne} (${bsResult.bs_month_name})`} />
+            <StatCard label={t("converter.bs_day")} value={formatLocaleDigits(bsResult.bs_day)} />
+            <StatCard label={t("converter.bs_year")} value={formatLocaleDigits(bsResult.bs_year)} />
+            <StatCard label={t("converter.weekday")} value={bsResult.weekday} />
           </div>
         </div>
       )}

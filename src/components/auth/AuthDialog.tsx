@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +27,7 @@ export function AuthDialog({
   onOpenChange: (open: boolean) => void;
   initialMode?: Mode;
 }) {
+  const { t } = useTranslation();
   const { login, signup, loginWithGoogle } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
@@ -49,11 +51,11 @@ export function AuthDialog({
     setNotice(null);
 
     if (mode === "signup" && password !== confirm) {
-      setError("Passwords do not match");
+      setError(t("auth.passwords_mismatch"));
       return;
     }
     if ((mode === "signup" || mode === "login") && password.length < 8 && mode === "signup") {
-      setError("Password must be at least 8 characters");
+      setError(t("auth.password_min"));
       return;
     }
 
@@ -64,7 +66,7 @@ export function AuthDialog({
         onOpenChange(false);
       } else if (mode === "signup") {
         await signup(email.trim(), password);
-        setNotice("Account created! Check your email to verify your address.");
+        setNotice(t("auth.signup_notice"));
         // Close shortly after so the notice is seen.
         setTimeout(() => onOpenChange(false), 1200);
       } else {
@@ -72,7 +74,7 @@ export function AuthDialog({
         setNotice(msg);
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      setError(err instanceof ApiError ? err.message : t("auth.generic_error"));
     } finally {
       setBusy(false);
     }
@@ -86,7 +88,7 @@ export function AuthDialog({
         await loginWithGoogle(idToken);
         onOpenChange(false);
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : "Google sign-in failed");
+        setError(err instanceof ApiError ? err.message : t("auth.google_error"));
       } finally {
         setBusy(false);
       }
@@ -95,13 +97,13 @@ export function AuthDialog({
   );
 
   const title =
-    mode === "login" ? "Sign in" : mode === "signup" ? "Create account" : "Reset password";
+    mode === "login" ? t("auth.sign_in") : mode === "signup" ? t("auth.create_account") : t("auth.reset_password");
   const desc =
     mode === "login"
-      ? "Welcome back to Vedic Patro."
+      ? t("auth.sign_in_desc")
       : mode === "signup"
-        ? "Save your kundali profiles across devices."
-        : "We'll email you a link to set a new password.";
+        ? t("auth.signup_desc")
+        : t("auth.forgot_desc");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,7 +118,7 @@ export function AuthDialog({
             <GoogleSignInButton onCredential={onGoogle} onError={setError} />
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span className="h-px flex-1 bg-border" />
-              or
+              {t("auth.or")}
               <span className="h-px flex-1 bg-border" />
             </div>
           </div>
@@ -125,7 +127,7 @@ export function AuthDialog({
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <div className={fieldWrap}>
             <label className={labelClass} htmlFor="auth-email">
-              Email
+              {t("auth.email")}
             </label>
             <Input
               id="auth-email"
@@ -141,7 +143,7 @@ export function AuthDialog({
           {mode !== "forgot" && (
             <div className={fieldWrap}>
               <label className={labelClass} htmlFor="auth-password">
-                Password
+                {t("auth.password")}
               </label>
               <Input
                 id="auth-password"
@@ -150,7 +152,7 @@ export function AuthDialog({
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={mode === "signup" ? "At least 8 characters" : "••••••••"}
+                placeholder={mode === "signup" ? t("auth.password_hint") : "••••••••"}
               />
             </div>
           )}
@@ -158,7 +160,7 @@ export function AuthDialog({
           {mode === "signup" && (
             <div className={fieldWrap}>
               <label className={labelClass} htmlFor="auth-confirm">
-                Confirm password
+                {t("auth.confirm_password")}
               </label>
               <Input
                 id="auth-confirm"
@@ -176,12 +178,12 @@ export function AuthDialog({
 
           <Button type="submit" size="lg" disabled={busy} className="mt-1">
             {busy
-              ? "Please wait…"
+              ? t("auth.please_wait")
               : mode === "login"
-                ? "Sign in"
+                ? t("auth.sign_in")
                 : mode === "signup"
-                  ? "Create account"
-                  : "Send reset link"}
+                  ? t("auth.create_account")
+                  : t("auth.send_reset")}
           </Button>
         </form>
 
@@ -189,35 +191,35 @@ export function AuthDialog({
           {mode === "login" && (
             <>
               <button type="button" className="hover:text-foreground" onClick={() => reset("forgot")}>
-                Forgot your password?
+                {t("auth.forgot_password")}
               </button>
               <span>
-                New here?{" "}
+                {t("auth.new_here")}{" "}
                 <button
                   type="button"
                   className="font-medium text-secondary hover:underline"
                   onClick={() => reset("signup")}
                 >
-                  Create an account
+                  {t("auth.create_account")}
                 </button>
               </span>
             </>
           )}
           {mode === "signup" && (
             <span>
-              Already have an account?{" "}
+              {t("auth.already_have")}{" "}
               <button
                 type="button"
                 className="font-medium text-secondary hover:underline"
                 onClick={() => reset("login")}
               >
-                Sign in
+                {t("auth.sign_in")}
               </button>
             </span>
           )}
           {mode === "forgot" && (
             <button type="button" className="hover:text-foreground" onClick={() => reset("login")}>
-              Back to sign in
+              {t("auth.back_to_sign_in")}
             </button>
           )}
         </div>

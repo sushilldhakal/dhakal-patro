@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange, MapPin } from "lucide-react";
 import {
@@ -75,6 +76,7 @@ function fmtAdFull(d: Date): string {
 }
 
 export function Panchanga() {
+  const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
 
@@ -173,11 +175,9 @@ export function Panchanga() {
   const adDateLabel = data?.display?.gregorian_en ?? fmtAdFull(date);
 
   const titleSuffix =
-    isInstant && view === "day"
-      ? ` — ${toNepaliDigits(clock)} बजे`
-      : isInstant && view === "month"
-        ? ` — ${toNepaliDigits(clock)} बजे`
-        : "";
+    isInstant
+      ? ` — ${t("panchanga.at_time", { time: toNepaliDigits(clock) })}`
+      : "";
 
   const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
   const wheelData = udayaQuery.data ?? data;
@@ -190,19 +190,19 @@ export function Panchanga() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
         <div>
           <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
-            नेपाली पात्रो · पञ्चाङ्ग
+            {t("panchanga.eyebrow")}
             {isInstant && (
               <span className="ml-2 text-secondary normal-case tracking-normal font-semibold">
-                · समय-आधारित
+                · {t("panchanga.time_based")}
               </span>
             )}
           </div>
           <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
             {view === "month"
-              ? `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)} — मासिक पञ्चाङ्ग${titleSuffix}`
+              ? `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)} — ${t("panchanga.monthly_title")}${titleSuffix}`
               : isToday && !isInstant
-                ? "आजको पञ्चाङ्ग"
-                : `पञ्चाङ्ग विवरण${titleSuffix}`}
+                ? t("panchanga.today_title")
+                : `${t("panchanga.detail_title")}${titleSuffix}`}
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
             {view === "month" ? (
@@ -255,7 +255,7 @@ export function Panchanga() {
               )}
               onClick={() => switchView("month")}
             >
-              महिना
+              {t("panchanga.view_month")}
             </button>
             <button
               type="button"
@@ -269,7 +269,7 @@ export function Panchanga() {
               )}
               onClick={() => switchView("day")}
             >
-              दिन
+              {t("panchanga.view_day")}
             </button>
           </div>
         </div>
@@ -326,14 +326,14 @@ export function Panchanga() {
                   className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"
                 >
                   <CalendarRange className="w-4 h-4" />
-                  वर्षभरिको पञ्चाङ्ग हेर्नुहोस्
+                  {t("panchanga.year_link")}
                 </Link>
               </>
             )}
 
             {isError && (
               <div className="rounded-xl border border-destructive/20 bg-destructive/10 text-destructive p-4 text-sm">
-                Could not load panchanga. Check the date or try again.
+                {t("panchanga.error_load")}
               </div>
             )}
 
@@ -363,7 +363,7 @@ export function Panchanga() {
 
       <LearnMoreCard
         className="mt-7"
-        heading="पञ्चाङ्गका पाँच अङ्ग बुझ्नुहोस्"
+        heading={t("panchanga.learn_heading")}
         slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "hora"]}
       />
 

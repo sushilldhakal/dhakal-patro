@@ -1,10 +1,9 @@
 import type { CalendarDay, Festival, PanchangaDay } from "./api";
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
-
-const NEPALI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"] as const;
+import { formatLocaleDigits } from "@/i18n/digits";
 
 export function toNepaliDigits(value: string | number): string {
-  return String(value).replace(/\d/g, (d) => NEPALI_DIGITS[Number(d)] ?? d);
+  return formatLocaleDigits(value);
 }
 
 export function formatTimeShort(time?: string | null): string | undefined {

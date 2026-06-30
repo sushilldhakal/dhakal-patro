@@ -6,6 +6,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { Header } from "./components/Header";
+import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
 import { RouteLoadingProvider } from "./lib/route-loading";
@@ -34,6 +35,7 @@ const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPas
 const rootRoute = createRootRoute({
   component: () => (
     <RouteLoadingProvider>
+      <AnalyticsTracker />
       <div className="min-h-screen">
         <Header />
         <Outlet />

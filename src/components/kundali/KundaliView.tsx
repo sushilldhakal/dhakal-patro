@@ -31,7 +31,6 @@ import { D1Chart } from "@/components/kundali/D1Chart";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
-import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { buildBhavaChart } from "@/lib/bhava";
 import { navamsaRashiFromLongitude } from "@/lib/navamsa";
@@ -271,9 +270,6 @@ export function KundaliView({
     data?.date_bs ??
     `${bs.year}-${String(bs.month).padStart(2, "0")}-${String(bs.day).padStart(2, "0")}`;
   const dateAd = data?.date_ad ?? adDateStr;
-
-  const chartLoading = isLoading || dashaQ.isLoading || shadbalaQ.isLoading;
-  useRouteLoading(chartLoading);
 
   if (isError) {
     return (

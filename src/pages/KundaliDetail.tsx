@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Calendar, Clock, Globe, MapPin, Sparkles, User } from "lucide-react";
 import { listProfiles, type Profile } from "@/lib/auth/client";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -15,6 +16,7 @@ import {
   profileClock,
   profileLocation,
 } from "@/lib/kundali/profile-chart";
+import { useRouteLoading } from "@/lib/route-loading";
 
 const AYANAMSHA_KEY = "dhakalPatroAyanamshaMode";
 
@@ -42,6 +44,7 @@ function Field({
 }
 
 export function KundaliDetail() {
+  const { t } = useTranslation();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { profileId } = useParams({ strict: false }) as { profileId?: string };
 
@@ -71,12 +74,16 @@ export function KundaliDetail() {
   const location = useMemo(() => (profile ? profileLocation(profile) : null), [profile]);
   const clock = profile ? profileClock(profile) : "12:00";
 
+  // Page is ready once the profile list resolves; KundaliView shows its own
+  // inline chart-computing state after that.
+  useRouteLoading(authLoading || (isAuthenticated && isLoading));
+
   const backLink = (
     <Link
       to="/kundali"
       className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
     >
-      <ArrowLeft className="size-4" /> सबै कुण्डली · All profiles
+      <ArrowLeft className="size-4" /> {t("kundali.back_all")}
     </Link>
   );
 
@@ -84,7 +91,7 @@ export function KundaliDetail() {
     return (
       <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6">
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm text-muted-foreground">
-          लोड हुँदै… · Loading
+          {t("common.loading")}
         </div>
       </div>
     );
@@ -95,7 +102,7 @@ export function KundaliDetail() {
       <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 space-y-4">
         {backLink}
         <div className="rounded-xl border border-border bg-card px-5 py-12 text-center text-sm text-muted-foreground">
-          यो कुण्डली हेर्न लग-इन गर्नुहोस्।
+          {t("kundali.login_required")}
         </div>
       </div>
     );
@@ -106,9 +113,9 @@ export function KundaliDetail() {
       <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 space-y-4">
         {backLink}
         <div className="rounded-xl border border-border bg-card px-5 py-12 text-center">
-          <p className="text-sm font-medium text-foreground">प्रोफाइल भेटिएन</p>
+          <p className="text-sm font-medium text-foreground">{t("kundali.not_found")}</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            यो कुण्डली प्रोफाइल अवस्थित छैन वा हटाइएको छ।
+            {t("kundali.not_found_body")}
           </p>
         </div>
       </div>
@@ -146,21 +153,21 @@ export function KundaliDetail() {
             to="/kundali"
             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            <Sparkles className="size-4" /> अर्को कुण्डली
+            <Sparkles className="size-4" /> {t("kundali.other_kundali")}
           </Link>
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <Field icon={Calendar} label="जन्म मिति">
+          <Field icon={Calendar} label={t("kundali.birth_date")}>
             {dob}
           </Field>
-          <Field icon={Clock} label="समय">
+          <Field icon={Clock} label={t("kundali.time")}>
             {profile.birth_time || "—"}
           </Field>
-          <Field icon={MapPin} label="स्थान">
+          <Field icon={MapPin} label={t("kundali.place")}>
             {place}
           </Field>
-          <Field icon={Globe} label="समय क्षेत्र">
+          <Field icon={Globe} label={t("kundali.timezone")}>
             {profile.timezone || "—"}
           </Field>
         </div>
@@ -180,16 +187,16 @@ export function KundaliDetail() {
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center">
           <Clock className="mx-auto mb-3 h-7 w-7 text-muted-foreground" />
           <p className="text-sm font-medium text-foreground">
-            यो प्रोफाइलमा जन्म मिति अझै थपिएको छैन
+            {t("kundali.no_birth_title")}
           </p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            कुण्डली बनाउन जन्म मिति, समय र स्थान थप्नुहोस्।
+            {t("kundali.no_birth_body")}
           </p>
           <Link
             to="/kundali"
             className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-lg bg-secondary px-4 text-sm font-semibold text-secondary-foreground"
           >
-            प्रोफाइल सम्पादन गर्नुहोस्
+            {t("kundali.edit_profile")}
           </Link>
         </div>
       )}

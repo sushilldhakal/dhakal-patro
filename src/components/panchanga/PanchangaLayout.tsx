@@ -1,16 +1,21 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export function PanchangaSection({
+  titleKey,
   titleNe,
-  titleEn,
   children,
   className,
 }: {
-  titleNe: string;
-  titleEn: string;
+  titleKey?: string;
+  titleNe?: string;
+  titleEn?: string;
   children: React.ReactNode;
   className?: string;
 }) {
+  const { t } = useTranslation();
+  const title = titleKey ? t(titleKey) : (titleNe ?? "");
+
   return (
     <section
       className={cn(
@@ -19,10 +24,7 @@ export function PanchangaSection({
       )}
     >
       <header className="flex items-baseline gap-2.5 px-4 py-2.5 border-b border-border bg-secondary/[0.09] dark:bg-secondary/20">
-        <h2 className="text-sm font-bold m-0">{titleNe}</h2>
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          {titleEn}
-        </span>
+        <h2 className="text-sm font-bold m-0">{title}</h2>
       </header>
       {children}
     </section>
@@ -49,16 +51,19 @@ export function PanchangaRows({
 }
 
 export function PanchangaRow({
+  labelKey,
   label,
-  labelEn,
   children,
   oddBorder,
 }: {
-  label: string;
-  labelEn?: string;
+  labelKey?: string;
+  label?: string;
   children: React.ReactNode;
   oddBorder?: boolean;
 }) {
+  const { t } = useTranslation();
+  const displayLabel = labelKey ? t(labelKey) : (label ?? "");
+
   return (
     <div
       className={cn(
@@ -67,12 +72,7 @@ export function PanchangaRow({
       )}
     >
       <div className="flex flex-col text-[12.5px] font-semibold leading-snug">
-        {label}
-        {labelEn && (
-          <span className="text-[9.5px] font-medium uppercase tracking-wide text-muted-foreground">
-            {labelEn}
-          </span>
-        )}
+        {displayLabel}
       </div>
       <div className="text-[13px] font-medium leading-snug flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
         {children}
@@ -92,6 +92,7 @@ export function UptoValue({
   endTime?: string;
   badge?: string;
 }) {
+  const { t } = useTranslation();
   if (!name) return null;
   return (
     <div className="flex items-baseline gap-1.5 flex-wrap w-full">
@@ -104,7 +105,7 @@ export function UptoValue({
       )}
       {endTime && (
         <span className="text-[11.5px] font-mono font-semibold text-foreground whitespace-nowrap">
-          {endTime} सम्म
+          {endTime} {t("sections.until")}
         </span>
       )}
     </div>
@@ -120,7 +121,14 @@ export function TimingRange({
   end?: string;
   variant?: "good" | "bad" | "neutral";
 }) {
-  if (!start || !end) return <span className="text-muted-foreground text-xs">— छैन</span>;
+  const { t } = useTranslation();
+  if (!start || !end) {
+    return (
+      <span className="text-muted-foreground text-xs">
+        {t("sections.dash")} {t("sections.not_available")}
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
