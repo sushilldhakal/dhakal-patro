@@ -42,7 +42,7 @@ export function BsCalendarGrid({
   todayAd = TODAY_AD,
 }: Props) {
   const { t } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { lang, pick, digits } = useLocale();
   const firstDay = days[0];
   const startOffset = firstDay ? new Date(firstDay.date_ad).getDay() : 0;
 
@@ -57,9 +57,14 @@ export function BsCalendarGrid({
       <div className="pn-grid">
         {WEEKDAYS_NE.map((ne, i) => (
           <div key={ne} className={`pn-wk${i === 0 || i === 6 ? " weekend" : ""}`}>
-            <span className="pn-wk-ne pn-wk-long">{ne}</span>
-            <span className="pn-wk-ne pn-wk-short">{WEEKDAYS_SHORT[i]}</span>
-            <span className="pn-wk-en">{WEEKDAYS_EN[i]}</span>
+            {lang === "en" ? (
+              <span className="pn-wk-en">{WEEKDAYS_EN[i]}</span>
+            ) : (
+              <>
+                <span className="pn-wk-ne pn-wk-long">{ne}</span>
+                <span className="pn-wk-ne pn-wk-short">{WEEKDAYS_SHORT[i]}</span>
+              </>
+            )}
           </div>
         ))}
 

@@ -68,7 +68,7 @@ interface Props {
 }
 
 export function PlanetEventsPanel({ dateAd, location }: Props) {
-  const { pick, digits } = useLocale();
+  const { lang, pick, digits } = useLocale();
   const refDate = useMemo(() => new Date(`${dateAd}T12:00:00`), [dateAd]);
 
   const { data, isLoading, isError } = useQuery({
@@ -106,9 +106,9 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
     <div className="pg-events-card">
       <div className="pg-events-head">
         <h2 className="text-base font-bold m-0">{pick("आगामी ग्रह-गोचर", "Planetary events")}</h2>
-        <span className="text-[11.5px] text-muted-foreground">
-          {pick("Planetary events", "आगामी ग्रह-गोचर")}
-        </span>
+        {lang === "ne" && (
+          <span className="text-[11.5px] text-muted-foreground">Planetary events</span>
+        )}
       </div>
 
       {isLoading && (
@@ -135,7 +135,8 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
               <span className="pg-planet-names">
                 <span className="pg-planet-ne">{pick(e.ne, e.en)}</span>
                 <span className="pg-planet-en">
-                  {pick(e.en, e.ne)} · <span className="font-mono">{e.time}</span>
+                  {lang === "ne" ? `${e.en} · ` : ""}
+                  <span className="font-mono">{e.time}</span>
                 </span>
               </span>
               <span className="pg-planet-when font-mono">
