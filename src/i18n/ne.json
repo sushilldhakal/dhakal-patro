@@ -336,7 +336,8 @@
     "month_aria": "महिना",
     "year_aria": "वर्ष",
     "era_aria": "पात्रो युग",
-    "today_badge": "आज"
+    "today_badge": "आज",
+    "enrich_error": "तिथि र सूर्योदय लोड गर्न सकिएन — मितिहरू भने सही छन्।"
   },
   "aside": {
     "sunrise_sunset": "सूर्योदय / सूर्यास्त",

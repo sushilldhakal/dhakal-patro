@@ -27,6 +27,8 @@ import {
 } from "@/lib/local-calendar";
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { DayDetailModal } from "./DayDetailModal";
+import { useLocale } from "@/i18n/locale";
+import { toDevanagariDigits } from "@/i18n/digits";
 
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -63,6 +65,7 @@ export function CalendarView({
   onLoadingChange,
 }: Props) {
   const { t } = useTranslation();
+  const { lang, pick, digits } = useLocale();
   // "Today" follows the active location's timezone when provided, so opening the
   // patro lands on the correct local month/day rather than the browser's.
   const init = useMemo(() => {
@@ -94,13 +97,13 @@ export function CalendarView({
   const days = useMemo(() => {
     let result = localDays;
     if (holidayQ.data?.holidays) {
-      result = applyHolidaysToDays(result, holidayQ.data.holidays);
+      result = applyHolidaysToDays(result, holidayQ.data.holidays, lang);
     }
     if (monthQ.data?.calendar) {
       result = mergeEnrichedDays(result, monthQ.data.calendar);
     }
     return result;
-  }, [localDays, holidayQ.data, monthQ.data]);
+  }, [localDays, holidayQ.data, monthQ.data, lang]);
 
   useEffect(() => {
     onMonthContextChange?.({ year, month, days });
@@ -158,9 +161,7 @@ export function CalendarView({
   const calendarBlock = (
     <>
       {monthQ.isError && (
-        <div className="pn-warn-banner">
-          Tithi & sunrise could not be loaded — dates are still correct.
-        </div>
+        <div className="pn-warn-banner">{t("calendar.enrich_error")}</div>
       )}
 
       <BsCalendarGrid
@@ -192,11 +193,12 @@ export function CalendarView({
       <div className="pn-monthtitle">
         <div className="pn-eyebrow">{t("calendar.eyebrow")}</div>
         <h1 className="pn-h1">
-          {BS_MONTHS_NE[month - 1]}{" "}
-          <span className="pn-h1-yr">{year}</span>
+          {pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1])}{" "}
+          <span className="pn-h1-yr">{digits(year)}</span>
         </h1>
         <div className="pn-sub">
-          {BS_MONTH_NAMES[month - 1]} {year} · {adMonthSpan}
+          {pick(BS_MONTH_NAMES[month - 1], BS_MONTHS_NE[month - 1])}{" "}
+          {pick(String(year), toDevanagariDigits(year))} · {adMonthSpan}
         </div>
       </div>
 
@@ -213,7 +215,7 @@ export function CalendarView({
         >
           {BS_MONTH_NAMES.map((_: string, i: number) => (
             <option key={i} value={i + 1}>
-              {bsMonthLabel(i + 1)}
+              {bsMonthLabel(i + 1, lang)}
             </option>
           ))}
         </select>
@@ -230,7 +232,7 @@ export function CalendarView({
         >
           {BS_YEAR_OPTIONS.map((y) => (
             <option key={y} value={y}>
-              {y}
+              {digits(y)}
             </option>
           ))}
         </select>

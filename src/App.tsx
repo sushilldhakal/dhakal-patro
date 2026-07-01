@@ -22,8 +22,10 @@ const queryClient = new QueryClient({
 function LanguageBootstrap() {
   useEffect(() => {
     const stored = getLocalStorageItem("i18nextLng");
-    if (stored && stored !== i18n.language) {
-      void i18n.changeLanguage(stored);
+    // An explicit stored choice always wins — never let the browser locale
+    // override a preference the user picked, even when it equals the default.
+    if (stored === "en" || stored === "ne") {
+      if (stored !== i18n.language) void i18n.changeLanguage(stored);
       return;
     }
     const nav = navigator.language.split("-")[0];

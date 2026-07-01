@@ -138,6 +138,9 @@ export function getCurrentBs(): { year: number; month: number } {
   return { year: bs.year, month: bs.month }
 }
 
-export function bsMonthLabel(month: number): string {
-  return `${BS_MONTHS_NE[month - 1]} (${BS_MONTH_NAMES[month - 1]})`
+export function bsMonthLabel(month: number, lang?: string): string {
+  const isEn = (lang ?? "ne").slice(0, 2) === "en"
+  return isEn
+    ? `${BS_MONTH_NAMES[month - 1]} (${BS_MONTHS_NE[month - 1]})`
+    : `${BS_MONTHS_NE[month - 1]} (${BS_MONTH_NAMES[month - 1]})`
 }

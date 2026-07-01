@@ -99,11 +99,15 @@ export function mergeEnrichedDays(
 export function applyHolidaysToDays(
   days: CalendarDay[],
   holidays: Holiday[],
+  lang?: string,
 ): CalendarDay[] {
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
   const namesByDate = new Map<string, string[]>();
 
   for (const h of holidays) {
-    const name = h.name_ne ?? h.name_en ?? h.id;
+    const name = isEn
+      ? (h.name_en ?? h.name_ne ?? h.id)
+      : (h.name_ne ?? h.name_en ?? h.id);
     const existing = namesByDate.get(h.start_date) ?? [];
     const aliasKey = (h.name_ne ?? h.name_en ?? h.id).toLowerCase();
     const duplicate = existing.some((entry) => {
