@@ -8,8 +8,9 @@ import {
   bsToAD,
   getBSMonthLength,
 } from "@/lib/bs-calendar";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/i18n/locale";
 
 const BS_YEARS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -38,8 +39,11 @@ function fmtAdFull(d: Date): string {
 }
 
 export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
+  const { t } = useTranslation();
+  const { pick, digits } = useLocale();
   const bs = adToBS(date);
   const monthLen = getBSMonthLength(bs.year, bs.month);
+  const era = pick("वि.सं.", "BS");
 
   const step = (delta: number) => {
     const next = new Date(date);
@@ -53,7 +57,7 @@ export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
     <div className="flex items-center justify-between gap-3.5 flex-wrap rounded-xl bg-card px-4 py-3 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       <div className="flex flex-col gap-0.5">
         <span className="text-lg font-bold">
-          {BS_MONTHS_NE[bs.month - 1]} {toNepaliDigits(bs.day)}, {toNepaliDigits(bs.year)}
+          {pick(BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1])} {digits(bs.day)}, {digits(bs.year)}
         </span>
         <span className="text-xs font-medium font-mono text-muted-foreground">{fmtAdFull(date)}</span>
       </div>
@@ -69,7 +73,7 @@ export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
         >
           {BS_YEARS.map((y) => (
             <option key={y} value={y}>
-              वि.सं. {toNepaliDigits(y)}
+              {era} {digits(y)}
             </option>
           ))}
         </select>
@@ -85,7 +89,7 @@ export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
         >
           {BS_MONTHS_NE.map((ne, i) => (
             <option key={ne} value={i}>
-              {ne} · {BS_MONTH_NAMES[i]}
+              {pick(ne, BS_MONTH_NAMES[i])} · {pick(BS_MONTH_NAMES[i], ne)}
             </option>
           ))}
         </select>
@@ -100,7 +104,7 @@ export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
         >
           {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
             <option key={dd} value={dd}>
-              {toNepaliDigits(dd)} गते
+              {pick(`${digits(dd)} गते`, `${digits(dd)}`)}
             </option>
           ))}
         </select>
@@ -120,7 +124,7 @@ export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
               className="h-8 px-4 rounded-lg border-0 bg-secondary text-secondary-foreground text-[13.5px] font-semibold shadow-sm hover:brightness-105 active:translate-y-px transition"
               onClick={goToday}
             >
-              आज
+              {t("calendar.today_btn")}
             </button>
           )}
           <button
@@ -138,6 +142,7 @@ export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
 }
 
 export function QuickDateStrip({ date, onDateChange }: Props) {
+  const { pick, digits } = useLocale();
   const bs = adToBS(date);
   const monthLen = getBSMonthLength(bs.year, bs.month);
   const todayBs = adToBS(new Date());
@@ -188,7 +193,7 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
         >
           {BS_YEARS.map((y) => (
             <option key={y} value={y}>
-              {toNepaliDigits(y)}
+              {digits(y)}
             </option>
           ))}
         </select>
@@ -225,7 +230,7 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
             )}
             onClick={() => pickMonth(i)}
           >
-            {ne}
+            {pick(ne, BS_MONTH_NAMES[i])}
           </button>
         ))}
         <button
@@ -258,7 +263,7 @@ export function QuickDateStrip({ date, onDateChange }: Props) {
               )}
               onClick={() => onDateChange(bsToAD(bs.year, bs.month, dd))}
             >
-              {toNepaliDigits(dd)}
+              {digits(dd)}
             </button>
           );
         })}
