@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sunrise, Moon } from "lucide-react";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { getZonedTimeParts, minutesSinceMidnightInTimezone } from "@/lib/zoned-time";
+import { useLocale } from "@/i18n/locale";
 
 function parseTimeToMinutes(time?: string): number | null {
   if (!time) return null;
@@ -21,6 +21,7 @@ interface Props {
 }
 
 export function GhatiClock({ sunrise, sunset, timezone }: Props) {
+  const { pick, digits } = useLocale();
   const [now, setNow] = useState(() => new Date());
   const timeZone = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -63,27 +64,27 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
       />
 
       <div className="text-[10.5px] font-semibold tracking-[0.16em] text-[#f5f5f1]/55">
-        वैदिक समय · VEDIC TIME
+        {pick("वैदिक समय · VEDIC TIME", "VEDIC TIME")}
       </div>
       <div className="font-mono font-bold text-[44px] leading-none mt-3.5 tracking-tight tabular-nums">
-        {toNepaliDigits(pad2(gh))}
+        {digits(pad2(gh))}
         <span className="text-[#f5f5f1]/40">:</span>
-        {toNepaliDigits(pad2(pa))}
+        {digits(pad2(pa))}
         <span className="text-[#f5f5f1]/40">:</span>
-        <span className="text-[0.62em] text-[#f5f5f1]/65">{toNepaliDigits(pad2(vi))}</span>
+        <span className="text-[0.62em] text-[#f5f5f1]/65">{digits(pad2(vi))}</span>
       </div>
       <div className="text-[11px] font-semibold tracking-wide text-teal-300 mt-2">
-        घडी : पला : विपला
+        {pick("घडी : पला : विपला", "Ghati : Pala : Vipala")}
       </div>
 
       <div className="h-px bg-white/12 mx-5 my-3.5" />
 
       <div className="font-mono font-bold text-[30px] leading-none tabular-nums">
-        {toNepaliDigits(pad2(hh))}:{toNepaliDigits(pad2(mm))}
-        <span className="text-[0.62em] text-[#f5f5f1]/65">:{toNepaliDigits(pad2(ss))}</span>
+        {digits(pad2(hh))}:{digits(pad2(mm))}
+        <span className="text-[0.62em] text-[#f5f5f1]/65">:{digits(pad2(ss))}</span>
       </div>
       <div className="text-[11px] font-semibold tracking-wide text-[#f5f5f1]/50 mt-2">
-        घण्टा : मिनेट · GREGORIAN
+        {pick("घण्टा : मिनेट · GREGORIAN", "Hour : Minute · GREGORIAN")}
       </div>
 
       <div className="flex justify-center gap-4 mt-3.5 text-[12.5px] font-mono text-[#f5f5f1]/80">

@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 
 export function PanchangaSection({
   titleKey,
   titleNe,
+  titleEn,
   children,
   className,
 }: {
@@ -14,7 +16,10 @@ export function PanchangaSection({
   className?: string;
 }) {
   const { t } = useTranslation();
-  const title = titleKey ? t(titleKey) : (titleNe ?? "");
+  const { pick } = useLocale();
+  const title = titleKey
+    ? t(titleKey)
+    : pick(titleNe ?? titleEn ?? "", titleEn ?? titleNe ?? "");
 
   return (
     <section
