@@ -22,12 +22,12 @@ import {
   type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
-import { BS_MONTHS_NE, getCurrentBs } from "../lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, getCurrentBs } from "../lib/bs-calendar";
 import {
   formatHolidayBsDisplay,
-  toNepaliDigits,
 } from "../lib/panchanga-format";
 import { formatLocaleDigits } from "@/i18n/digits";
+import { useLocale } from "@/i18n/locale";
 import {
   ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
@@ -75,30 +75,38 @@ function PanchangaAside({
   error: boolean;
 }) {
   const { t } = useTranslation();
+  const { pick, digits } = useLocale();
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
 
   const isSelectedToday = selectedAdDate === todayAd;
 
-  const bsDisplay = p?.display?.bs_ne ?? p?.date_bs;
+  const bsDisplay = pick(p?.display?.bs_ne, undefined) ?? p?.date_bs;
   const adDisplay = p?.display?.gregorian_en ?? fmtAdFull(selectedAdDate);
-  const weekdayNe = p?.weekday ?? selectedDay?.weekday_ne ?? selectedDay?.weekday;
-  const tithi = p?.tithi?.name_ne ?? p?.tithi?.name ?? selectedDay?.tithi_ne ?? selectedDay?.tithi;
-  const paksha = p?.paksha?.label_ne ?? p?.paksha_ne;
+  const weekdayNe = pick(
+    p?.weekday ?? selectedDay?.weekday_ne ?? selectedDay?.weekday,
+    selectedDay?.weekday_en ?? p?.weekday ?? selectedDay?.weekday,
+  );
+  const tithi = pick(
+    p?.tithi?.name_ne ?? p?.tithi?.name ?? selectedDay?.tithi_ne ?? selectedDay?.tithi,
+    p?.tithi?.name ?? p?.tithi?.name_ne ?? selectedDay?.tithi ?? selectedDay?.tithi_ne,
+  );
+  const paksha = pick(p?.paksha?.label_ne ?? p?.paksha_ne, p?.paksha?.label_en ?? p?.paksha?.label_ne ?? p?.paksha_ne);
 
   const displayHeroDate = (() => {
     if (p?.bs_date && typeof p.bs_date === "object") {
-      return `${BS_MONTHS_NE[p.bs_date.month - 1]} ${toNepaliDigits(p.bs_date.day)}`;
+      const monthName = pick(BS_MONTHS_NE[p.bs_date.month - 1], BS_MONTH_NAMES[p.bs_date.month - 1]);
+      return `${monthName} ${digits(p.bs_date.day)}`;
     }
-    if (p?.display?.bs_ne) return toNepaliDigits(p.display.bs_ne);
-    if (p?.date_bs) return toNepaliDigits(p.date_bs);
-    return bsDisplay ? toNepaliDigits(bsDisplay) : "—";
+    if (p?.display?.bs_ne) return digits(p.display.bs_ne);
+    if (p?.date_bs) return digits(p.date_bs);
+    return bsDisplay ? digits(bsDisplay) : "—";
   })();
 
 
-  const topFestName =
-    p?.festivals?.[0]?.name_ne ??
-    p?.festivals?.[0]?.name_en ??
-    selectedDay?.festivals[0];
+  const topFestName = pick(
+    p?.festivals?.[0]?.name_ne ?? p?.festivals?.[0]?.name_en ?? selectedDay?.festivals[0],
+    p?.festivals?.[0]?.name_en ?? p?.festivals?.[0]?.name_ne ?? selectedDay?.festivals[0],
+  );
   const topFestIsPublic =
     p?.festivals?.[0]?.is_public_holiday ??
     (selectedDay ? false : false);
@@ -134,7 +142,7 @@ function PanchangaAside({
                   <div className="pn-hero-sub">
                     {weekdayNe}
                     {p?.bs_date && typeof p.bs_date === "object"
-                      ? `, ${t("panchanga.bs_era")} ${toNepaliDigits(p.bs_date.year)}`
+                      ? `, ${t("panchanga.bs_era")} ${digits(p.bs_date.year)}`
                       : ""}
                   </div>
                   <div className="pn-hero-ad">{adDisplay}</div>
@@ -195,6 +203,7 @@ function UpcomingHolidays({
   location: PanchangaLocation;
 }) {
   const { t, i18n } = useTranslation();
+  const { pick, digits } = useLocale();
 
   return (
     <section className="pn-holidays">
@@ -218,19 +227,21 @@ function UpcomingHolidays({
             const bsParts = (h.bs_start_date ?? "").split("-");
             const bsDay = bsParts[2] ? Number(bsParts[2]) : new Date(h.start_date).getDate();
             const bsMonthIdx = bsParts[1] ? Number(bsParts[1]) - 1 : 0;
-            const bsLabel = formatHolidayBsDisplay(h);
+            const bsLabel = formatHolidayBsDisplay(h, i18n.language);
             const type = h.is_public_holiday ? "public" : "festival";
 
             return (
               <Link key={h.id} to="/holidays" className="pn-hol-row">
                 <span className={`pn-datetile ${type}`}>
-                  <span className="pn-datetile-d">{toNepaliDigits(bsDay)}</span>
-                  <span className="pn-datetile-m">{BS_MONTHS_NE[bsMonthIdx] ?? ""}</span>
+                  <span className="pn-datetile-d">{digits(bsDay)}</span>
+                  <span className="pn-datetile-m">
+                    {pick(BS_MONTHS_NE[bsMonthIdx], BS_MONTH_NAMES[bsMonthIdx]) ?? ""}
+                  </span>
                 </span>
                 <span className="pn-hol-names">
-                  <span className="pn-hol-ne">{h.name_ne ?? h.name_en}</span>
+                  <span className="pn-hol-ne">{pick(h.name_ne ?? h.name_en, h.name_en ?? h.name_ne)}</span>
                   {h.name_en && h.name_ne && (
-                    <span className="pn-hol-en">{h.name_en}</span>
+                    <span className="pn-hol-en">{pick(h.name_en, h.name_ne)}</span>
                   )}
                 </span>
                 <span className={`pn-badge ${type}`}>

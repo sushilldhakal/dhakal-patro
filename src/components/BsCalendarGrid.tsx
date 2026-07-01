@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { CalendarDay } from "@/lib/api";
+import { useLocale } from "@/i18n/locale";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -41,6 +42,7 @@ export function BsCalendarGrid({
   todayAd = TODAY_AD,
 }: Props) {
   const { t } = useTranslation();
+  const { pick, digits } = useLocale();
   const firstDay = days[0];
   const startOffset = firstDay ? new Date(firstDay.date_ad).getDay() : 0;
 
@@ -75,9 +77,10 @@ export function BsCalendarGrid({
           const adDay = new Date(day.date_ad).getDate();
 
           const primaryNum = mode === "ad" ? adDay : day.day;
+          const weekdayShort = pick(day.weekday_ne, day.weekday_en ?? day.weekday_ne)?.split(" ")[0] ?? "";
           const secondaryLabel =
             mode === "ad"
-              ? `${day.weekday_ne?.split(" ")[0] ?? ""} ${day.day}`.trim()
+              ? `${weekdayShort} ${digits(day.day)}`.trim()
               : fmtAdShort(day.date_ad);
 
           const tintClass = isPublicHoliday ? " tint-red" : hasFestival ? " tint-teal" : "";
@@ -93,7 +96,7 @@ export function BsCalendarGrid({
             .join(" ");
 
           const mainFest = day.festivals[0];
-          const tithi = day.tithi_ne ?? day.tithi;
+          const tithi = pick(day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne);
 
           return (
             <button
@@ -106,7 +109,7 @@ export function BsCalendarGrid({
 
               <span className="pn-cell-stack">
                 <span className="pn-cell-head">
-                  <span className="pn-cell-num">{primaryNum}</span>
+                  <span className="pn-cell-num">{digits(primaryNum)}</span>
                   <span className="pn-cell-ad pn-cell-ad-desk">{secondaryLabel}</span>
                   <span className="pn-cell-ad pn-cell-ad-mob">{fmtAdCompact(day.date_ad)}</span>
                 </span>

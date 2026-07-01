@@ -285,7 +285,7 @@ function formatEventDateBsNepali(isoDate: string): string {
 /** BS date from YYYY-MM-DD (BS era), e.g. जेठ १५, वि.सं. २०८२. */
 export function formatBsIsoDateNepali(
   bsIso?: string | null,
-  opts?: { includeYear?: boolean }
+  opts?: { includeYear?: boolean; lang?: string }
 ): string | undefined {
   if (!bsIso) return undefined;
   const [ys, ms, ds] = bsIso.split("-");
@@ -293,21 +293,30 @@ export function formatBsIsoDateNepali(
   const month = Number(ms);
   const day = Number(ds);
   if (!month || !day) return undefined;
-  const label = `${BS_MONTHS_NE[month - 1]} ${toNepaliDigits(day)}`;
+  const isEn = (opts?.lang ?? "ne").slice(0, 2) === "en";
+  const months = isEn ? BS_MONTH_NAMES : BS_MONTHS_NE;
+  const era = isEn ? "BS" : "वि.सं.";
+  const label = `${months[month - 1]} ${formatLocaleDigits(day, opts?.lang)}`;
   if (opts?.includeYear === false || !year) return label;
-  return `${label}, वि.सं. ${toNepaliDigits(year)}`;
+  return `${label}, ${era} ${formatLocaleDigits(year, opts?.lang)}`;
 }
 
-export function formatHolidayBsDisplay(holiday: {
-  bs_start_date?: string;
-  start_date: string;
-}): string {
-  const fromApi = formatBsIsoDateNepali(holiday.bs_start_date);
+export function formatHolidayBsDisplay(
+  holiday: {
+    bs_start_date?: string;
+    start_date: string;
+  },
+  lang?: string,
+): string {
+  const fromApi = formatBsIsoDateNepali(holiday.bs_start_date, { lang });
   if (fromApi) return fromApi;
   const [y, m, d] = holiday.start_date.split("-").map(Number);
   if (!y || !m || !d) return "";
   const bs = adToBS(new Date(y, m - 1, d));
-  return `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.day)}, वि.सं. ${toNepaliDigits(bs.year)}`;
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
+  const months = isEn ? BS_MONTH_NAMES : BS_MONTHS_NE;
+  const era = isEn ? "BS" : "वि.सं.";
+  return `${months[bs.month - 1]} ${formatLocaleDigits(bs.day, lang)}, ${era} ${formatLocaleDigits(bs.year, lang)}`;
 }
 
 function getMoonTimeBlock(p: PanchangaDay, key: "moonrise" | "moonset"): MoonTimeBlock | undefined {

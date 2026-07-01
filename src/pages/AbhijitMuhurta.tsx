@@ -16,15 +16,16 @@ import {
 import { useRouteLoading } from "@/lib/route-loading";
 import {
   BS_MONTHS_NE,
+  BS_MONTH_NAMES,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
   getBSMonthLength,
   getCurrentBs,
 } from "@/lib/bs-calendar";
+import { useLocale } from "@/i18n/locale";
 import {
   computeAbhijitFromSunTimes,
   formatBsMonthDayPatro,
-  toNepaliDigits,
 } from "@/lib/panchanga-format";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
 
@@ -64,6 +65,7 @@ export function AbhijitMuhurta() {
   const yearProp = search.year;
   const monthProp = search.month;
   const { t } = useTranslation();
+  const { pick, digits } = useLocale();
   const { location, setLocation } = usePanchangaLocation();
   const current = getCurrentBs();
   const [year, setYear] = useState(() => yearProp ?? current.year);
@@ -112,7 +114,7 @@ export function AbhijitMuhurta() {
             {t("abhijit.title")}
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
-            {BS_MONTHS_NE[month - 1]} {toNepaliDigits(year)}
+            {pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1])} {digits(year)}
             {" · "}
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
@@ -130,7 +132,7 @@ export function AbhijitMuhurta() {
           >
             {BS_YEAR_OPTIONS.map((y) => (
               <option key={y} value={y}>
-                {y}
+                {digits(y)}
               </option>
             ))}
           </select>
@@ -142,7 +144,7 @@ export function AbhijitMuhurta() {
           >
             {BS_MONTHS_NE.map((name, i) => (
               <option key={name} value={i + 1}>
-                {name}
+                {pick(name, BS_MONTH_NAMES[i])}
               </option>
             ))}
           </select>
@@ -185,12 +187,12 @@ export function AbhijitMuhurta() {
                     className={isToday ? "today" : isUpcoming ? "upcoming" : ""}
                   >
                     <td>
-                      <span className="pn-abhijit-bs-day">{toNepaliDigits(day.day)}</span>
+                      <span className="pn-abhijit-bs-day">{digits(day.day)}</span>
                       <span className="pn-abhijit-bs-sub">
                         {formatBsMonthDayPatro(year, month, day.day)}
                       </span>
                     </td>
-                    <td>{day.weekday_ne ?? day.weekday}</td>
+                    <td>{pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday)}</td>
                     <td className="mono">{fmtAdShort(day.date_ad)}</td>
                     <td className="mono pn-abhijit-time">{abhijit.rangeDisplay}</td>
                     <td className="mono">{abhijit.noonDisplay ?? "—"}</td>
