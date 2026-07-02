@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EarthGlobeImage } from "./EarthGlobeImage";
@@ -259,8 +260,8 @@ export function SolarEclipseStudy() {
   const distLabel = d < 0.4 ? "नजिक · perigee" : d > 0.6 ? "टाढा · apogee" : "मध्यम";
 
   return (
-    <div className="tm-card pad-lg">
-      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg sol-svg" role="img">
+    <div className={tmCardPadLg}>
+      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg("sol")} role="img">
         <defs>
           <radialGradient id="sol-sun" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#fff6d8" />
@@ -300,32 +301,32 @@ export function SolarEclipseStudy() {
         <ObserverInset m={m} />
       </svg>
 
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">प्रकार</span>
-            <span className={"ed-ro-v" + (m.type === "total" || m.type === "annular" ? " amber" : "")}>{typeText}</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>प्रकार</span>
+            <span className={edRoV({ amber: m.type === "total" || m.type === "annular" })}>{typeText}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">सूर्य आवरण</span>
-            <span className="ed-ro-v mono">{fmt(Math.round(m.coverage * 100))}%</span>
+          <div className={edRo}>
+            <span className={edRoK}>सूर्य आवरण</span>
+            <span className={edRoV({ mono: true })}>{fmt(Math.round(m.coverage * 100))}%</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">चन्द्र दूरी</span>
-            <span className="ed-ro-v mono">{fmt(m.distanceKm.toLocaleString("en-US"))} km</span>
+          <div className={edRo}>
+            <span className={edRoK}>चन्द्र दूरी</span>
+            <span className={edRoV({ mono: true })}>{fmt(m.distanceKm.toLocaleString("en-US"))} km</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">अवस्था</span>
-            <span className="ed-ro-v">{distLabel}</span>
+          <div className={edRo}>
+            <span className={edRoK}>अवस्था</span>
+            <span className={edRoV()}>{distLabel}</span>
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">☾ छायाँ सर्दै — समय (पृथ्वीमाथि मार्ग)</span>
-          <div className="ed-scrub-wrap">
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>☾ छायाँ सर्दै — समय (पृथ्वीमाथि मार्ग)</span>
+          <div className={edScrubWrap}>
             <button
               type="button"
-              className="ed-playbtn"
+              className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
               title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
               aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
@@ -348,8 +349,8 @@ export function SolarEclipseStudy() {
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">⟺ चन्द्र दूरी — perigee (पूर्ण) ↔ apogee (वलयाकार)</span>
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>⟺ चन्द्र दूरी — perigee (पूर्ण) ↔ apogee (वलयाकार)</span>
           <input
             className="ed-scrub"
             type="range"
@@ -362,20 +363,20 @@ export function SolarEclipseStudy() {
           />
         </div>
 
-        <div className="ed-presets">
-          <button type="button" className="ed-preset" onClick={() => { setPlaying(false); setT(0.5); setD(0.12); }}>
+        <div className={edPresets}>
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setT(0.5); setD(0.12); }}>
             पूर्ण ग्रहण →
           </button>
-          <button type="button" className="ed-preset" onClick={() => { setPlaying(false); setT(0.5); setD(0.9); }}>
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setT(0.5); setD(0.9); }}>
             वलयाकार →
           </button>
-          <button type="button" className="ed-preset" onClick={() => { setPlaying(false); setT(0.78); setD(0.4); }}>
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setT(0.78); setD(0.4); }}>
             खण्डग्रास →
           </button>
         </div>
       </div>
 
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         सूर्यग्रहण सधैँ <b>अमावस्या</b> मा हुन्छ — चन्द्र सूर्य र पृथ्वीको बीचमा आउँदा त्यसको{" "}
         <span className="hl-amber">प्रच्छायाँ (umbra)</span> पृथ्वीको सानो भागमा पर्छ। चन्द्र नजिक
         (perigee) हुँदा प्रच्छायाँले पृथ्वी छुन्छ → <b>पूर्ण ग्रहण</b>; टाढा (apogee) हुँदा प्रच्छायाँ

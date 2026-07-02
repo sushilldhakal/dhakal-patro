@@ -1,4 +1,11 @@
 import { MoonPhaseDisc } from "@/components/tithi-mechanics/MoonPhaseDisc";
+import {
+  ssPhaseEn,
+  ssPhaseItem,
+  ssPhaseMoon,
+  ssPhaseNe,
+  ssPhasesList,
+} from "@/lib/learn-classes";
 import { useLocale } from "@/i18n/locale";
 
 const PHASES = [
@@ -16,17 +23,17 @@ const R = 26;
 export function MoonPhasesStrip() {
   const { lang, pick } = useLocale();
   return (
-    <div className="ss-phases">
-      <ol className="ss-phases-list">
+    <div>
+      <ol className={ssPhasesList}>
         {PHASES.map((p, i) => (
-          <li key={`${p.ne}-${i}`} className="ss-phase-item">
-            <svg viewBox={`0 0 ${R * 2 + 8} ${R * 2 + 8}`} className="ss-phase-moon" aria-hidden>
+          <li key={`${p.ne}-${i}`} className={ssPhaseItem}>
+            <svg viewBox={`0 0 ${R * 2 + 8} ${R * 2 + 8}`} className={ssPhaseMoon} aria-hidden>
               <g transform={`translate(${R + 4},${R + 4})`}>
                 <MoonPhaseDisc elongation={p.E} r={R} uid={`ss-mp-${i}`} />
               </g>
             </svg>
-            <span className="ss-phase-ne">{pick(p.ne, p.en)}</span>
-            {lang === "ne" && <span className="ss-phase-en">{p.en}</span>}
+            <span className={ssPhaseNe}>{pick(p.ne, p.en)}</span>
+            {lang === "ne" && <span className={ssPhaseEn}>{p.en}</span>}
           </li>
         ))}
       </ol>

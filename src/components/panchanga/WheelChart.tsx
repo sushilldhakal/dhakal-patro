@@ -14,6 +14,7 @@ import {
   WHEEL_RASHIS,
 } from "@/lib/wheel-data";
 import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
+import { wheelSvg, wheelSvgWrap } from "@/lib/wheel-classes";
 
 const DEG = Math.PI / 180;
 const CX = 500;
@@ -740,13 +741,13 @@ function WheelChartImpl({
 
   return (
     <div
-      className="w-svg-wrap"
+      className={wheelSvgWrap}
       ref={wrapRef}
       style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: dragRef.current ? "none" : "transform 0.12s ease-out" }}
     >
       <svg
         viewBox="42 42 916 916"
-        className={`w-svg${dragRef.current?.moved ? " dragging" : ""}`}
+        className={wheelSvg(!!dragRef.current?.moved)}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}

@@ -1,4 +1,5 @@
 import { findNakshatraIcon } from "@/lib/nakshatra-icons";
+import { nakshatraIcon } from "@/lib/learn-classes";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -32,7 +33,7 @@ export function NakshatraIcon({
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn("nakshatra-icon shrink-0", className)}
+      className={cn(nakshatraIcon, className)}
       role="img"
       aria-label={label}
     >

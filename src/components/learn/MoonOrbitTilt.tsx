@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EarthGlobeImage } from "./EarthGlobeImage";
@@ -207,7 +208,7 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
   );
 
   return (
-    <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg mot-svg" role="img">
+    <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg("mot")} role="img">
       <defs>
         <radialGradient id="mot-panel" cx="50%" cy="38%" r="78%">
           <stop offset="0%" stopColor="#15315c" />
@@ -414,7 +415,7 @@ export function MoonOrbitTiltStudy() {
           : "ग्रहण छैन";
 
   return (
-    <div className="tm-card pad-lg">
+    <div className={tmCardPadLg}>
       <MoonOrbitDiagram
         omega={model.omega}
         moonU={model.u}
@@ -422,32 +423,32 @@ export function MoonOrbitTiltStudy() {
         status={model.status}
         season={model.season}
       />
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">कक्ष झुकाव</span>
-            <span className="ed-ro-v mono">~{fmt(REAL_TILT.toFixed(1))}°</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>कक्ष झुकाव</span>
+            <span className={edRoV({ mono: true })}>~{fmt(REAL_TILT.toFixed(1))}°</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">चन्द्र चरण</span>
-            <span className="ed-ro-v">{model.phase}</span>
+          <div className={edRo}>
+            <span className={edRoK}>चन्द्र चरण</span>
+            <span className={edRoV()}>{model.phase}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">पात-चक्र</span>
-            <span className="ed-ro-v mono">{fmt(precT.toFixed(1))} / {fmt(NODAL_YEARS)} वर्ष</span>
+          <div className={edRo}>
+            <span className={edRoK}>पात-चक्र</span>
+            <span className={edRoV({ mono: true })}>{fmt(precT.toFixed(1))} / {fmt(NODAL_YEARS)} वर्ष</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">अवस्था</span>
-            <span className={"ed-ro-v" + (model.status !== "none" ? " amber" : "")}>{statusText}</span>
+          <div className={edRo}>
+            <span className={edRoK}>अवस्था</span>
+            <span className={edRoV({ amber: model.status !== "none" })}>{statusText}</span>
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">☉ वर्ष — सूर्य रेखा घुम्छ</span>
-          <div className="ed-scrub-wrap">
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>☉ वर्ष — सूर्य रेखा घुम्छ</span>
+          <div className={edScrubWrap}>
             <button
               type="button"
-              className="ed-playbtn"
+              className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
               title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
               aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
@@ -470,8 +471,8 @@ export function MoonOrbitTiltStudy() {
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">☊ पात-चक्र — {fmt(NODAL_YEARS)} वर्षे precession</span>
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>☊ पात-चक्र — {fmt(NODAL_YEARS)} वर्षे precession</span>
           <input
             className="ed-scrub"
             type="range"
@@ -484,20 +485,20 @@ export function MoonOrbitTiltStudy() {
           />
         </div>
 
-        <div className="ed-presets">
-          <button type="button" className="ed-preset" onClick={jumpNextEclipse}>
+        <div className={edPresets}>
+          <button type="button" className={edPreset()} onClick={jumpNextEclipse}>
             अर्को ग्रहण →
           </button>
           <button
             type="button"
-            className="ed-preset"
+            className={edPreset()}
             onClick={() => setPrecT((p) => (p + NODAL_YEARS / 4) % NODAL_YEARS)}
           >
             पात रेखा घुमाउनुहोस्
           </button>
         </div>
       </div>
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         पृथ्वीको बीचबाट गएको <span className="hl-amber">सूर्य–पृथ्वी (ग्रहण) रेखा</span> सूर्यसँगै वर्षमा
         एक फेरो घुम्छ। चन्द्रको कक्ष <b>~{fmt(5)}°</b> झुकेकाले धेरैजसो पूर्णिमामा चन्द्र यो रेखाभन्दा
         माथि/तल हुन्छ — ग्रहण <b>हुँदैन</b>। ग्रहण त्यतिबेला मात्र हुन्छ जब यो रेखा{" "}

@@ -13,7 +13,7 @@ import {
   rashiPayaFromBhava,
   yunjaFromNakIndex,
 } from "@/lib/janma-patrika-fields";
-import { nakshatraPadaFromLongitude, resolveJanmaNakshatra } from "@/lib/panchang-elements";
+import { nakshatraPadaFromLongitude } from "@/lib/panchang-elements";
 import { TATTVA_EN } from "@/lib/wheel-locale";
 import { RASHI_ELEM } from "@/lib/wheel-data";
 

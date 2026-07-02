@@ -11,6 +11,27 @@ import {
   tithiPaksha,
   WHEEL_TITHIS,
 } from "@/lib/tithi-wheel-data";
+import {
+  wheelDl,
+  wheelDlK,
+  wheelDlRow,
+  wheelDlV,
+  wheelDlVMono,
+  wheelPanel,
+  wheelPanelBody,
+  wheelPanelClose,
+  wheelPanelHead,
+  wheelPanelIco,
+  wheelPanelKind,
+  wheelPanelSub,
+  wheelPanelTitle,
+  wheelTip,
+  wheelTipKind,
+  wheelTipRow,
+  wheelTipTitle,
+  wheelSvg,
+  wheelSvgWrap,
+} from "@/lib/wheel-classes";
 
 const DEG = Math.PI / 180;
 const CX = 500;
@@ -203,12 +224,12 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
     if (hover.type === "tithi") {
       const t = WHEEL_TITHIS[hover.i]!;
       tipNode = (
-        <div className="w-tip show" style={{ left: tip.x, top: tip.y }}>
-          <div className="w-tip-kind">
+        <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
+          <div className={wheelTipKind}>
             {tithiPaksha(hover.i)} · {num(tithiNum(hover.i))}
           </div>
-          <div className="w-tip-title">{t.ne}</div>
-          <div className="w-tip-row">
+          <div className={wheelTipTitle}>{t.ne}</div>
+          <div className={wheelTipRow}>
             <span>चन्द्रकला</span>
             <b>{num(moonIllumination(hover.i * 12 + 6))}%</b>
           </div>
@@ -217,10 +238,10 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
     } else {
       const kd = KARANA_SEQ[hover.k]!;
       tipNode = (
-        <div className="w-tip show" style={{ left: tip.x, top: tip.y }}>
-          <div className="w-tip-kind">करण · {num(hover.k + 1)}</div>
-          <div className="w-tip-title">{kd.ne}</div>
-          <div className="w-tip-row">
+        <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
+          <div className={wheelTipKind}>करण · {num(hover.k + 1)}</div>
+          <div className={wheelTipTitle}>{kd.ne}</div>
+          <div className={wheelTipRow}>
             <span>प्रकार</span>
             <b>{kd.fixed ? "स्थिर करण" : "चर करण"}</b>
           </div>
@@ -236,51 +257,51 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
     const k1 = KARANA_SEQ[picked * 2 + 1]!;
     panel = (
       <>
-        <div className="w-panel-head">
-          <div className="w-panel-ico" style={{ display: "grid", placeItems: "center" }}>
+        <div className={wheelPanelHead}>
+          <div className={wheelPanelIco}>
             <svg viewBox="-18 -18 36 36" width="56" height="56">
               <MoonPhaseIcon elongation={picked * 12 + 6} r={15} />
             </svg>
           </div>
           <div>
-            <div className="w-panel-kind">
+            <div className={wheelPanelKind}>
               {tithiPaksha(picked)} · {num(tithiNum(picked))}
             </div>
-            <h2 className="w-panel-title">{t.ne}</h2>
-            <div className="w-panel-sub">{t.en}</div>
+            <h2 className={wheelPanelTitle}>{t.ne}</h2>
+            <div className={wheelPanelSub}>{t.en}</div>
           </div>
-          <button type="button" className="w-panel-close" onClick={() => setPicked(null)} aria-label="Close">
+          <button type="button" className={wheelPanelClose} onClick={() => setPicked(null)} aria-label="Close">
             ✕
           </button>
         </div>
-        <div className="w-panel-body">
-          <div className="w-dl">
-            <div className="w-dl-row">
-              <span className="w-dl-k">पक्ष</span>
-              <span className="w-dl-v">{tithiPaksha(picked)}</span>
+        <div className={wheelPanelBody}>
+          <div className={wheelDl}>
+            <div className={wheelDlRow}>
+              <span className={wheelDlK}>पक्ष</span>
+              <span className={wheelDlV}>{tithiPaksha(picked)}</span>
             </div>
-            <div className="w-dl-row">
-              <span className="w-dl-k">चन्द्रकला</span>
-              <span className="w-dl-v mono">{num(moonIllumination(picked * 12 + 6))}%</span>
+            <div className={wheelDlRow}>
+              <span className={wheelDlK}>चन्द्रकला</span>
+              <span className={wheelDlVMono}>{num(moonIllumination(picked * 12 + 6))}%</span>
             </div>
-            <div className="w-dl-row">
-              <span className="w-dl-k">करण १</span>
-              <span className="w-dl-v">
+            <div className={wheelDlRow}>
+              <span className={wheelDlK}>करण १</span>
+              <span className={wheelDlV}>
                 {k0.ne}{" "}
-                <span style={{ color: "var(--w-ink-dim)" }}>· {k0.fixed ? "स्थिर" : "चर"}</span>
+                <span className="text-[var(--w-ink-dim)]">· {k0.fixed ? "स्थिर" : "चर"}</span>
               </span>
             </div>
-            <div className="w-dl-row">
-              <span className="w-dl-k">करण २</span>
-              <span className="w-dl-v">
+            <div className={wheelDlRow}>
+              <span className={wheelDlK}>करण २</span>
+              <span className={wheelDlV}>
                 {k1.ne}{" "}
-                <span style={{ color: "var(--w-ink-dim)" }}>· {k1.fixed ? "स्थिर" : "चर"}</span>
+                <span className="text-[var(--w-ink-dim)]">· {k1.fixed ? "स्थिर" : "चर"}</span>
               </span>
             </div>
             {t.moon && (
-              <div className="w-dl-row">
-                <span className="w-dl-k">पर्व</span>
-                <span className="w-dl-v">{t.moon === "full" ? "पूर्णिमा" : "औंसी"}</span>
+              <div className={wheelDlRow}>
+                <span className={wheelDlK}>पर्व</span>
+                <span className={wheelDlV}>{t.moon === "full" ? "पूर्णिमा" : "औंसी"}</span>
               </div>
             )}
           </div>
@@ -290,10 +311,10 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
   }
 
   return (
-    <div className="w-svg-wrap" ref={wrapRef} onMouseMove={onMove}>
+    <div className={wheelSvgWrap} ref={wrapRef} onMouseMove={onMove}>
       <svg
         viewBox="0 0 1000 1000"
-        className="w-svg"
+        className={wheelSvg()}
         onPointerDown={onDown}
         onPointerMove={onDrag}
         onPointerUp={onUp}
@@ -336,12 +357,7 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
       </svg>
 
       {tipNode}
-      <div
-        className={`w-panel${picked !== null ? " open" : ""}`}
-        style={{ pointerEvents: picked !== null ? "auto" : "none" }}
-      >
-        {panel}
-      </div>
+      <div className={wheelPanel(picked !== null)}>{panel}</div>
     </div>
   );
 }

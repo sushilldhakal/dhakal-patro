@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchGochar, gocharKeys, type LocationParams } from "@/lib/api";
 import { formatClockNepali } from "@/lib/panchanga-format";
 import { useLocale } from "@/i18n/locale";
+import { patroCard } from "@/lib/patro-classes";
 
 const GRAHA_ORDER = [
   "sun",
@@ -103,9 +104,9 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
   }, [data, refDate]);
 
   return (
-    <div className="pg-events-card">
-      <div className="pg-events-head">
-        <h2 className="text-base font-bold m-0">{pick("आगामी ग्रह-गोचर", "Planetary events")}</h2>
+    <div className={patroCard + " p-3.5 px-4"}>
+      <div className="mb-2 flex flex-wrap items-baseline gap-2">
+        <h2 className="m-0 text-base font-bold">{pick("आगामी ग्रह-गोचर", "Planetary events")}</h2>
         {lang === "ne" && (
           <span className="text-[11.5px] text-muted-foreground">Planetary events</span>
         )}
@@ -128,18 +129,23 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
       )}
 
       {!isLoading && !isError && events.length > 0 && (
-        <div className="pg-planets">
+        <div className="flex flex-col">
           {events.map((e) => (
-            <div key={e.key} className="pg-planet-row">
-              <span className="pg-planet-sym">{e.symbol}</span>
-              <span className="pg-planet-names">
-                <span className="pg-planet-ne">{pick(e.ne, e.en)}</span>
-                <span className="pg-planet-en">
+            <div
+              key={e.key}
+              className="flex items-center gap-2.5 border-b border-border py-2 last:border-b-0"
+            >
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/11 text-[15px] text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] dark:text-[#7fd6db]">
+                {e.symbol}
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[13px] font-semibold">{pick(e.ne, e.en)}</span>
+                <span className="text-[11px] text-muted-foreground">
                   {lang === "ne" ? `${e.en} · ` : ""}
                   <span className="font-mono">{e.time}</span>
                 </span>
               </span>
-              <span className="pg-planet-when font-mono">
+              <span className="whitespace-nowrap font-mono text-[11.5px] font-semibold text-muted-foreground">
                 {e.rel <= 0
                   ? pick("आज", "Today")
                   : pick(`${digits(e.rel)} दिन`, `${digits(e.rel)}d`)}

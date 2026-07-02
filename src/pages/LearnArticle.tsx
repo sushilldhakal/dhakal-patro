@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
 import {
@@ -9,6 +10,14 @@ import {
   LEARN_TOPICS_BY_SLUG,
   adjacentTopics,
 } from "@/lib/learn/learn-topics";
+import {
+  tmHero,
+  tmHeroEyebrow,
+  tmHeroSub,
+  tmHeroTitle,
+  tmPageShell,
+  tmWrap,
+} from "@/lib/learn-classes";
 
 const LEGACY_ECLIPSE_SLUGS: Record<string, string> = {
   "lunar-eclipse": "eclipses",
@@ -56,15 +65,15 @@ export function LearnArticle() {
         <ArrowLeft className="h-4 w-4" /> {t("learn_page.eyebrow")}
       </Link>
 
-      <article className="tm-page rounded-2xl border border-border overflow-hidden">
-        <div className="tm-wrap">
-          <header className="tm-hero">
-            <div className="tm-hero-eyebrow">
+      <article className={cn(tmPageShell, "rounded-2xl border border-border overflow-hidden")}>
+        <div className={tmWrap}>
+          <header className={tmHero}>
+            <div className={tmHeroEyebrow}>
               {category ? `${pick(category.ne, category.en)} · ` : ""}
               {pick(topic.titleEn, topic.titleNe)}
             </div>
-            <h1 className="tm-hero-title">{pick(topic.titleNe, topic.titleEn)}</h1>
-            <p className="tm-hero-sub">{pick(topic.summary, topic.summaryEn)}</p>
+            <h1 className={tmHeroTitle}>{pick(topic.titleNe, topic.titleEn)}</h1>
+            <p className={tmHeroSub}>{pick(topic.summary, topic.summaryEn)}</p>
           </header>
 
           <Content />

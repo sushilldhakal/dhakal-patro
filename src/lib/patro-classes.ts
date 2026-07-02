@@ -1,5 +1,8 @@
 import { cn } from "./utils";
 
+/** Tabular monospace numerals (replaces legacy `.mono`). */
+export const patroMono = "font-num tabular-nums";
+
 /** Teal/yellow accent link used in aside panels and section headers. */
 export const patroAsideLink =
   "shrink-0 text-xs font-medium text-secondary no-underline whitespace-nowrap hover:underline";
@@ -114,3 +117,36 @@ export const patroSunRise =
 
 export const patroSunSet =
   "block text-[13px] font-semibold text-danger/90";
+
+export const patroCard =
+  "overflow-hidden rounded-xl bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]";
+
+export const patroSecBand =
+  "flex flex-wrap items-baseline gap-2.5 border-b border-border bg-secondary/[0.09] px-4 py-2.5 dark:bg-secondary/20";
+
+export const patroHeroPill =
+  "text-[11.5px] font-semibold leading-none whitespace-nowrap rounded-full border border-white/14 bg-white/8 px-2.5 py-1.5 text-[#f5f5f1]";
+
+export function patroHeroPillEv(kind: "public" | "festival") {
+  return cn(
+    patroHeroPill,
+    kind === "public" &&
+      "border-[rgba(255,120,120,0.35)] bg-[rgba(255,90,90,0.16)] text-[#ffb4b4]",
+    kind === "festival" &&
+      "border-[rgba(0,200,210,0.35)] bg-[rgba(0,170,180,0.18)] text-[#8fe3e8]",
+  );
+}
+
+export const patroWheelShell = "overflow-hidden rounded-2xl border border-border";
+
+export const GANA_PILL_CLASS: Record<string, string> = {
+  "देव": "bg-emerald-500/25 text-emerald-300",
+  "नर": "bg-sky-500/25 text-sky-300",
+  "राक्षस": "bg-rose-500/25 text-rose-300",
+};
+
+export const GANA_SWATCH_CLASS: Record<string, string> = {
+  "देव": "bg-[var(--av-gana-dev)]",
+  "नर": "bg-[var(--av-gana-nar)]",
+  "राक्षस": "bg-[var(--av-gana-rak)]",
+};

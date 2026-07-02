@@ -9,6 +9,20 @@ import {
 import { PADA_AKSHAR, RASHI_ELEM, RASHI_LORDS, WHEEL_RASHIS } from "@/lib/wheel-data";
 import { NAK_LORD_EN, TATTVA_EN } from "@/lib/wheel-locale";
 import { useLocale } from "@/i18n/locale";
+import {
+  learnRefCaption,
+  learnRefDeg,
+  learnRefEn,
+  learnRefHighlightRow,
+  learnRefNote,
+  learnRefPada,
+  learnRefSym,
+  learnRefSymNe,
+  learnRefTable,
+  learnRefWrap,
+  tmCardCap,
+} from "@/lib/learn-classes";
+import { cn } from "@/lib/utils";
 
 const GRAHA_ROWS = [
   { sym: "☉", ne: "सूर्य", en: "Sun", note: "आत्मा, पिता, अधिकार — राशि र सङ्क्रान्तिको माप", noteEn: "Soul, father, authority — measures rashi and sankranti" },
@@ -37,9 +51,9 @@ function RefTable({
   children: React.ReactNode;
 }) {
   return (
-    <div className="learn-ref-wrap">
-      <table className="learn-ref-table">
-        {caption && <caption className="learn-ref-caption">{caption}</caption>}
+    <div className={learnRefWrap}>
+      <table className={learnRefTable}>
+        {caption && <caption className={learnRefCaption}>{caption}</caption>}
         {children}
       </table>
     </div>
@@ -65,10 +79,10 @@ export function RashiReferenceTable() {
           <tr key={r.ne}>
             <td className="mono">{N(i + 1)}</td>
             <td>
-              <span className="learn-ref-sym">{r.sym}</span> {pick(r.ne, r.en)}
+              <span className={learnRefSym}>{r.sym}</span> {pick(r.ne, r.en)}
             </td>
-            <td className="learn-ref-en">{r.en}</td>
-            <td className="mono learn-ref-deg">
+            <td className={learnRefEn}>{r.en}</td>
+            <td className={cn("mono", learnRefDeg)}>
               {N(i * 30)}°–{N((i + 1) * 30)}°
             </td>
             <td>{pick(RASHI_LORDS[i], NAK_LORD_EN[RASHI_LORDS[i]] ?? RASHI_LORDS[i])}</td>
@@ -97,9 +111,9 @@ export function GrahaReferenceTable() {
           <tr key={g.ne}>
             <td className="mono">{N(i + 1)}</td>
             <td>
-              <span className="learn-ref-sym">{g.sym}</span> {pick(g.ne, g.en)}
+              <span className={learnRefSym}>{g.sym}</span> {pick(g.ne, g.en)}
             </td>
-            <td className="learn-ref-en">{g.en}</td>
+            <td className={learnRefEn}>{g.en}</td>
             <td>{pick(g.note, g.noteEn)}</td>
           </tr>
         ))}
@@ -134,14 +148,14 @@ export function NakshatraReferenceTable() {
             <tr key={nak.ne}>
               <td className="mono">{N(i + 1)}</td>
               <td>{pick(nak.ne, nak.en)}</td>
-              <td className="learn-ref-en">{nak.en}</td>
-              <td className="mono learn-ref-deg">
+              <td className={learnRefEn}>{nak.en}</td>
+              <td className={cn("mono", learnRefDeg)}>
                 {N(startDeg)}°{N(20)}′–{N(startDeg + 13)}°{N(20)}′
               </td>
               <td>{pick(nak.lord_ne, NAK_LORD_EN[nak.lord_ne] ?? nak.lord_ne)}</td>
-              <td className="learn-ref-sym-ne">{nak.sym_ne}</td>
+              <td className={learnRefSymNe}>{nak.sym_ne}</td>
               {padas.map((p, pi) => (
-                <td key={pi} className="learn-ref-pada">
+                <td key={pi} className={learnRefPada}>
                   {p}
                 </td>
               ))}
@@ -171,12 +185,12 @@ export function TithiReferenceTable() {
           const degStart = i * 12;
           const degEnd = (i + 1) * 12;
           return (
-            <tr key={`${t.ne}-${i}`} className={t.moon ? "learn-ref-highlight" : undefined}>
+            <tr key={`${t.ne}-${i}`} className={t.moon ? learnRefHighlightRow : undefined}>
               <td className="mono">{N(i + 1)}</td>
               <td>{pick(t.ne, t.en)}</td>
-              <td className="learn-ref-en">{t.en}</td>
+              <td className={learnRefEn}>{t.en}</td>
               <td>{pick(t.paksha, t.pakshaEn ? `${t.pakshaEn} Paksha` : t.paksha)}</td>
-              <td className="mono learn-ref-deg">
+              <td className={cn("mono", learnRefDeg)}>
                 {N(degStart)}°–{N(degEnd)}°
               </td>
             </tr>
@@ -203,7 +217,7 @@ export function YogaReferenceTable() {
           <tr key={y}>
             <td className="mono">{N(i + 1)}</td>
             <td>{pick(y, YOGA_EN[i] ?? y)}</td>
-            <td className="mono learn-ref-deg">
+            <td className={cn("mono", learnRefDeg)}>
               {N(i * 13)}°{N(20)}′–{N((i + 1) * 13)}°{N(20)}′
             </td>
           </tr>
@@ -230,7 +244,7 @@ export function KaranaReferenceTable() {
           </tr>
         </thead>
         <tbody>
-          <tr className="learn-ref-highlight">
+          <tr className={learnRefHighlightRow}>
             <td className="mono">{N(1)}</td>
             <td>{pick("किंस्तुघ्न", KARANA_EN["किंस्तुघ्न"] ?? "Kimstughna")}</td>
             <td>{pick("स्थिर", "Fixed")}</td>
@@ -254,7 +268,7 @@ export function KaranaReferenceTable() {
           ))}
         </tbody>
       </RefTable>
-      <p className="tm-card-cap learn-ref-note">
+      <p className={cn(tmCardCap, learnRefNote)}>
         {pick(
           "क्रम: किंस्तुघ्न → (बव…विष्टि)×८ → शकुनि → चतुष्पद → नाग → किंस्तुघ्न — जम्मा ६० करण/महिना।",
           "Order: Kimstughna → (Bava…Vishti)×8 → Shakuni → Chatushpada → Naga → Kimstughna — 60 karanas/month in all.",

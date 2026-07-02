@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { edSvg } from "@/lib/learn-classes";
 import { EarthGlobeImage, EARTH_AXIAL_TILT } from "./EarthGlobeImage";
 import { EclipticGridLayer } from "./EclipticGridLayer";
 import {
@@ -101,7 +102,7 @@ export function SunEarthMoonOrbit({ day, onDay, showEclipticGrid = true }: Props
     <svg
       ref={svgRef}
       viewBox={`0 0 ${SEM.W} ${SEM.H}`}
-      className={`ed-svg sem-svg${onDay ? " grab" : ""}`}
+      className={edSvg("sem", !!onDay)}
       onPointerDown={(e) => {
         if (!onDay) return;
         drag.current = true;

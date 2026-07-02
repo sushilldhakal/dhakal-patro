@@ -1,7 +1,7 @@
 import {
   AYANAMSHA_MODES,
   getAyanamshaModeInfo,
-  isApproximateMode,
+  matchesPanchangaAngas,
   type AyanamshaMode,
 } from "@/lib/ayanamsha";
 import { cn } from "@/lib/utils";
@@ -49,10 +49,10 @@ export function AyanamshaSelector({ mode, onModeChange }: Props) {
 
         <p className="text-[12px] text-muted-foreground leading-snug">
           {pick(current.labelNe, current.label)} — {pick(current.taglineNe, current.tagline)}
-          {isApproximateMode(mode) &&
+          {!matchesPanchangaAngas(mode) &&
             pick(
-              " · हाल लाहिरी-आधारित डेटाबाट अनुमानित गणना — राशि/नक्षत्रको सीमारेखामा सानो भिन्नता हुन सक्छ।",
-              " · Currently an approximate calculation from Lahiri-based data — small differences may occur at rashi/nakshatra boundaries.",
+              " · ग्रह, लग्न र नक्षत्र यसै अयनांशमा गणना हुन्छ; तिथि/योग/करण भने लाहिरीमा आधारित रहन्छन्।",
+              " · Grahas, lagna and nakshatra are computed in this ayanamsha; tithi/yoga/karana stay Lahiri-based.",
             )}
         </p>
       </div>

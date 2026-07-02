@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { RashiGlyph } from "./rashi-icons";
@@ -160,8 +161,8 @@ export function EquinoxPrecession() {
   const [psX, psY] = proj3(-model.poleVec[0], -model.poleVec[1], -model.poleVec[2], 0.42);
 
   return (
-    <div className="tm-card pad-lg">
-      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg" role="img" aria-label="अयन चलन — विषुव सर्ने चित्र">
+    <div className={tmCardPadLg}>
+      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg()} role="img" aria-label="अयन चलन — विषुव सर्ने चित्र">
         <defs>
           <radialGradient id="ep-earth" cx="42%" cy="38%" r="65%">
             <stop offset="0%" stopColor="#bfe3ff" />
@@ -253,32 +254,32 @@ export function EquinoxPrecession() {
         </g>
       </svg>
 
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">वर्ष</span>
-            <span className="ed-ro-v mono">{N(Math.round(year))} बि.सं.</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>वर्ष</span>
+            <span className={edRoV({ mono: true })}>{N(Math.round(year))} बि.सं.</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">विषुव अहिले</span>
-            <span className="ed-ro-v amber">{eqRashiNe} <span className="mono" style={{ fontSize: "0.85em" }}>{eqRashiEn}</span></span>
+          <div className={edRo}>
+            <span className={edRoK}>विषुव अहिले</span>
+            <span className={edRoV({ amber: true })}>{eqRashiNe} <span className="mono" style={{ fontSize: "0.85em" }}>{eqRashiEn}</span></span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">विषुव सरेको (बि.सं. ० देखि)</span>
-            <span className="ed-ro-v mono amber">{fmtDeg(model.sinceBs0)}</span>
+          <div className={edRo}>
+            <span className={edRoK}>विषुव सरेको (बि.सं. ० देखि)</span>
+            <span className={edRoV({ mono: true, amber: true })}>{fmtDeg(model.sinceBs0)}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">अयनांश (मेष ०° बाट)</span>
-            <span className="ed-ro-v mono">{model.ayanamsha < 0 ? `−${fmtDeg(-model.ayanamsha)}` : fmtDeg(model.ayanamsha)}</span>
+          <div className={edRo}>
+            <span className={edRoK}>अयनांश (मेष ०° बाट)</span>
+            <span className={edRoV({ mono: true })}>{model.ayanamsha < 0 ? `−${fmtDeg(-model.ayanamsha)}` : fmtDeg(model.ayanamsha)}</span>
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>
             ☉ वर्ष — अक्ष-चलनले विषुव सर्छ (बि.सं. {N(Y_MIN)} → {N(Y_MAX)}; एक पूरा फेरो ~{N(CYCLE)} वर्ष)
           </span>
-          <div className="ed-scrub-wrap">
-            <button type="button" className="ed-playbtn" onClick={() => setPlaying((p) => !p)}
+          <div className={edScrubWrap}>
+            <button type="button" className={edPlayBtn} onClick={() => setPlaying((p) => !p)}
               title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"} aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}>
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
@@ -288,13 +289,13 @@ export function EquinoxPrecession() {
           </div>
         </div>
 
-        <div className="ed-presets">
-          <button type="button" className="ed-preset" onClick={() => { setPlaying(false); setYear(0); }}>बि.सं. आरम्भ</button>
-          <button type="button" className="ed-preset" onClick={() => { setPlaying(false); setYear(nowBs); }}>↺ अहिले</button>
+        <div className={edPresets}>
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setYear(0); }}>बि.सं. आरम्भ</button>
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setYear(nowBs); }}>↺ अहिले</button>
         </div>
       </div>
 
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         बाहिरी <b>१२ राशि</b> ताराका सापेक्ष <span className="hl">स्थिर</span> छन् (निरयन)। पृथ्वीको अक्ष लट्टू
         झैँ घुम्दा <span className="hl-amber">वसन्त-विषुव (Point 0)</span> बिस्तारै राशिचक्रमा पछाडि सर्छ —
         प्रति ~{N(72)} वर्षमा १°। त्यसैले आज विषुव <b>{eqRashiNe}</b> मा छ, अनि सायन ऋतु निरयन महिनासँग

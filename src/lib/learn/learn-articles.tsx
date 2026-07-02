@@ -33,6 +33,23 @@ import {
 import { fetchPanchanga, panchangaKeys } from "@/lib/api";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { useLocale } from "@/i18n/locale";
+import { cn } from "@/lib/utils";
+import {
+  ssPhasesHeading,
+  tmCardCap,
+  tmCardPadLg,
+  tmFcard,
+  tmFormula,
+  tmKey,
+  tmKeys,
+  tmLede,
+  tmNote,
+  tmSecEn,
+  tmSecHead,
+  tmSecKicker,
+  tmSecTitle,
+  tmSection,
+} from "@/lib/learn-classes";
 
 const N = toNepaliDigits;
 
@@ -41,7 +58,7 @@ const N = toNepaliDigits;
 /* ------------------------------------------------------------------ */
 
 function Lede({ children }: { children: React.ReactNode }) {
-  return <p className="tm-lede">{children}</p>;
+  return <p className={tmLede}>{children}</p>;
 }
 
 function Section({
@@ -56,11 +73,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="tm-section">
-      <div className="tm-sec-head">
-        <span className="tm-sec-kicker">{kicker}</span>
-        <h3 className="tm-sec-title">{title}</h3>
-        {en && <span className="tm-sec-en">{en}</span>}
+    <section className={tmSection}>
+      <div className={tmSecHead}>
+        <span className={tmSecKicker}>{kicker}</span>
+        <h3 className={tmSecTitle}>{title}</h3>
+        {en && <span className={tmSecEn}>{en}</span>}
       </div>
       {children}
     </section>
@@ -69,9 +86,9 @@ function Section({
 
 function Keys({ items }: { items: { h: string; p: React.ReactNode }[] }) {
   return (
-    <div className="tm-keys">
+    <div className={tmKeys}>
       {items.map((k) => (
-        <div className="tm-key" key={k.h}>
+        <div className={tmKey} key={k.h}>
           <h4>{k.h}</h4>
           <p>{k.p}</p>
         </div>
@@ -81,7 +98,7 @@ function Keys({ items }: { items: { h: string; p: React.ReactNode }[] }) {
 }
 
 function Note({ children }: { children: React.ReactNode }) {
-  return <p className="tm-note">{children}</p>;
+  return <p className={tmNote}>{children}</p>;
 }
 
 /* ================================================================== */
@@ -141,8 +158,8 @@ export function AstronomyBasics() {
           पूर्ण आकाशलाई <b>{N(360)}°</b> मा बाँडेर “चन्द्र सूर्यभन्दा कति अगाडि छ” भन्ने
           प्रश्नको उत्तर दिइन्छ — तिथि, नक्षत्र र योग यही कोणबाट निकालिन्छ।
         </Lede>
-        <div className="tm-formula">
-          <div className="tm-fcard">
+        <div className={tmFormula}>
+          <div className={tmFcard}>
             <div className="big">
               {N(360)}
               <span className="u">°</span>
@@ -150,7 +167,7 @@ export function AstronomyBasics() {
             <div className="lbl">पूर्ण वृत्त</div>
             <div className="desc">आकाशको एक पूरा फेरो — सबै राशि र नक्षत्र यसैभित्र।</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">
               {N(12)}
               <span className="u">°</span>
@@ -158,7 +175,7 @@ export function AstronomyBasics() {
             <div className="lbl">१ तिथि</div>
             <div className="desc">चन्द्र–सूर्यको कोणीय दूरी — ३६०° ÷ ३० तिथि।</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">
               ~{N(13)}
               <span className="u">°२०′</span>
@@ -297,18 +314,18 @@ export function AstronomyBasics() {
           <b>degrees (°)</b>. The full sky is divided into <b>360°</b> to answer “how far ahead of
           the Sun is the Moon” — tithi, nakshatra and yoga are all derived from this angle.
         </Lede>
-        <div className="tm-formula">
-          <div className="tm-fcard">
+        <div className={tmFormula}>
+          <div className={tmFcard}>
             <div className="big">360<span className="u">°</span></div>
             <div className="lbl">Full circle</div>
             <div className="desc">One complete turn of the sky — all rashis and nakshatras within it.</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">12<span className="u">°</span></div>
             <div className="lbl">1 tithi</div>
             <div className="desc">The Moon–Sun angular gap — 360° ÷ 30 tithis.</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">~13<span className="u">°20′</span></div>
             <div className="lbl">1 nakshatra</div>
             <div className="desc">360° ÷ 27 nakshatras — the Moon's motion is measured on this scale.</div>
@@ -429,7 +446,7 @@ export function SolarSystem() {
           पृथ्वी आफ्नै अक्षमा <b>पश्चिमबाट पूर्वतर्फ</b> घुम्छ। एक पूरा घूर्णन पूरा गर्न करिब{" "}
           <b>{N(24)} घण्टा</b> लाग्छ। यही घूर्णनका कारण दिन र रात हुन्छन्।
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <EarthRotationDiagram />
         </div>
         <Keys
@@ -471,8 +488,8 @@ export function SolarSystem() {
           परावर्तित गरेर चम्किन्छ। <b>अमावस्या</b> मा चन्द्र देखिँदैन; <b>पूर्णिमा</b> मा
           पूरै चम्किन्छ — यिनै कलाहरूले पक्ष र तिथिको अनुभव गराउँछन्।
         </Lede>
-        <div className="tm-card pad-lg">
-          <p className="ss-phases-heading">मुख्य चरणहरू</p>
+        <div className={tmCardPadLg}>
+          <p className={ssPhasesHeading}>मुख्य चरणहरू</p>
           <MoonPhasesStrip />
         </div>
       </Section>
@@ -510,7 +527,7 @@ export function SolarSystem() {
           The Earth spins on its axis <b>from west to east</b>. One full rotation takes about{" "}
           <b>24 hours</b>. This rotation causes day and night.
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <EarthRotationDiagram />
         </div>
         <Keys
@@ -547,8 +564,8 @@ export function SolarSystem() {
           at the <b>full moon</b> it shines fully — these phases give us the sense of paksha and
           tithi.
         </Lede>
-        <div className="tm-card pad-lg">
-          <p className="ss-phases-heading">Main phases</p>
+        <div className={tmCardPadLg}>
+          <p className={ssPhasesHeading}>Main phases</p>
           <MoonPhasesStrip />
         </div>
       </Section>
@@ -805,8 +822,8 @@ export function TithiArticle() {
           ~{N(29.5)} दिन। तल तानेर वा चलाउनुहोस्।
         </Lede>
         <ElongationStudy />
-        <div className="tm-formula">
-          <div className="tm-fcard">
+        <div className={tmFormula}>
+          <div className={tmFcard}>
             <div className="big">
               {N(12)}
               <span className="u">°</span>
@@ -814,7 +831,7 @@ export function TithiArticle() {
             <div className="lbl">= १ तिथि</div>
             <div className="desc">३६०° ÷ ३० तिथि। हरेक १२° कोण पार गर्दा नयाँ तिथि सुरु हुन्छ।</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">
               ~{N(12)}
               <span className="u">°/दिन</span>
@@ -822,7 +839,7 @@ export function TithiArticle() {
             <div className="lbl">चन्द्रको औसत गति</div>
             <div className="desc">वास्तवमा १०.७°–१४.३° सम्म घटबढ हुन्छ — चन्द्र कक्षको आकारका कारण।</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">सूर्योदय</div>
             <div className="lbl">तिथि कहिले गनिन्छ?</div>
             <div className="desc">
@@ -847,8 +864,8 @@ export function TithiArticle() {
           and ~29.5 days to the next new moon. Drag or press play below.
         </Lede>
         <ElongationStudy />
-        <div className="tm-formula">
-          <div className="tm-fcard">
+        <div className={tmFormula}>
+          <div className={tmFcard}>
             <div className="big">
               12
               <span className="u">°</span>
@@ -856,7 +873,7 @@ export function TithiArticle() {
             <div className="lbl">= 1 tithi</div>
             <div className="desc">360° ÷ 30 tithis. Each 12° of angle crossed starts a new tithi.</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">
               ~12
               <span className="u">°/day</span>
@@ -864,7 +881,7 @@ export function TithiArticle() {
             <div className="lbl">Moon's average speed</div>
             <div className="desc">Actually varies 10.7°–14.3° — due to the shape of the Moon's orbit.</div>
           </div>
-          <div className="tm-fcard">
+          <div className={tmFcard}>
             <div className="big">Sunrise</div>
             <div className="lbl">When is the tithi counted?</div>
             <div className="desc">
@@ -893,9 +910,9 @@ export function TithiVriddhi() {
           तिथि–खण्डले <b>लगातार दुई सूर्योदय</b> समेट्छ। दुवै बिहान त्यही तिथि चलिरहेकाले
           पात्रोमा त्यो तिथि <span className="hl-amber">दुई दिन</span> देखिन्छ।
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <SunriseTimeline mode="vriddhi" />
-          <div className="tm-card-cap">
+          <div className={tmCardCap}>
             तृतीया खण्ड यति फराकिलो छ कि १० र ११ गते — दुवै सूर्योदय यसैभित्र परे। त्यसैले
             तृतीया दोहोरियो।
           </div>
@@ -909,9 +926,9 @@ export function TithiVriddhi() {
           tithi-segment spans <b>two consecutive sunrises</b>. Since the same tithi is running on
           both mornings, the calendar shows that tithi on <span className="hl-amber">two days</span>.
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <SunriseTimeline mode="vriddhi" />
-          <div className="tm-card-cap">
+          <div className={tmCardCap}>
             The Tritiya segment is so wide that both the 10th and 11th sunrises fall within it — so
             Tritiya repeats.
           </div>
@@ -931,9 +948,9 @@ export function TithiKshaya() {
           को तिथि–खण्ड <b>दुई सूर्योदयको बीचमै</b> पूरै सकिन्छ। कुनै पनि सूर्योदयमा त्यो तिथि
           नभेटिएकाले त्यो <span className="hl-amber">क्षय</span> भई पात्रोबाट हराउँछ।
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <SunriseTimeline mode="kshaya" />
-          <div className="tm-card-cap">
+          <div className={tmCardCap}>
             अष्टमी खण्ड साँघुरो भएर एक सूर्योदयदेखि अर्कोको बीचमै सकियो — कुनै बिहान अष्टमी परेन,
             त्यसैले त्यो क्षय भयो।
           </div>
@@ -948,9 +965,9 @@ export function TithiKshaya() {
           at no sunrise, it is <span className="hl-amber">skipped (kshaya)</span> and disappears
           from the calendar.
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <SunriseTimeline mode="kshaya" />
-          <div className="tm-card-cap">
+          <div className={tmCardCap}>
             The Ashtami segment is so narrow it ended between one sunrise and the next — no morning
             landed on Ashtami, so it was skipped.
           </div>
@@ -971,9 +988,9 @@ export function AdhikMaas() {
           <span className="hl">कुनै सङ्क्रान्ति पर्दैन</span> — त्यही महिना{" "}
           <span className="hl-amber">अधिक मास</span> कहलिन्छ र अघिल्लो महिनाको नाम दोहोरिन्छ।
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <AdhikMassDiagram />
-          <div className="tm-card-cap">
+          <div className={tmCardCap}>
             मेष सौर मासभित्रै दुई अमावस्या परे — बीचको चान्द्र मासमा सङ्क्रान्ति नपरेकाले त्यो
             “अधिक वैशाख” बन्यो; त्यसपछिको नियमित महिना “निज वैशाख”।
           </div>
@@ -995,9 +1012,9 @@ export function AdhikMaas() {
           <span className="hl">no sankranti</span> — that month is called an{" "}
           <span className="hl-amber">Adhik Maas</span> and repeats the previous month's name.
         </Lede>
-        <div className="tm-card pad-lg">
+        <div className={tmCardPadLg}>
           <AdhikMassDiagram />
-          <div className="tm-card-cap">
+          <div className={tmCardCap}>
             Two new moons fell within the Mesha solar month — because the lunar month between them
             had no sankranti, it became “Adhik Baisakh”; the regular month after it is “Nija Baisakh”.
           </div>
@@ -1650,7 +1667,7 @@ export function HoraArticle() {
             <HoraRing p={p} isToday timezone={timezone} />
           </div>
         ) : (
-          <div className="tm-card pad-lg flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
+          <div className={cn(tmCardPadLg, "flex min-h-[200px] items-center justify-center text-sm text-muted-foreground")}>
             लोड हुँदैछ…
           </div>
         )}
@@ -1689,7 +1706,7 @@ export function HoraArticle() {
             <HoraRing p={p} isToday timezone={timezone} />
           </div>
         ) : (
-          <div className="tm-card pad-lg flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
+          <div className={cn(tmCardPadLg, "flex min-h-[200px] items-center justify-center text-sm text-muted-foreground")}>
             Loading…
           </div>
         )}

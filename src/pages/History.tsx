@@ -16,6 +16,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  tmFcard,
+  tmHero,
+  tmHeroEyebrow,
+  tmHeroSub,
+  tmHeroTitle,
+  tmLede,
+  tmPageShell,
+  tmSecHead,
+  tmSecKicker,
+  tmSecTitle,
+  tmSection,
+  tmWrap,
+} from "@/lib/learn-classes";
 import { cn } from "@/lib/utils";
 import {
   HISTORY_ERA_NOTE,
@@ -32,7 +46,7 @@ function SectionBody({ section }: { section: HistorySection }) {
   return (
     <div className="flex flex-col gap-4">
       {section.paragraphs.map((paragraph, i) => (
-        <p key={i} className="tm-lede m-0">
+        <p key={i} className={cn(tmLede, "m-0")}>
           {paragraph}
         </p>
       ))}
@@ -48,10 +62,10 @@ function SectionBlock({
   className?: string;
 }) {
   return (
-    <section id={section.id} className={cn("tm-section scroll-mt-24", className)}>
-      <div className="tm-sec-head">
-        <span className="tm-sec-kicker">{section.kicker}</span>
-        <h2 className="tm-sec-title">{section.title}</h2>
+    <section id={section.id} className={cn(tmSection, "scroll-mt-24", className)}>
+      <div className={tmSecHead}>
+        <span className={tmSecKicker}>{section.kicker}</span>
+        <h2 className={tmSecTitle}>{section.title}</h2>
       </div>
       <SectionBody section={section} />
     </section>
@@ -94,14 +108,14 @@ export function History() {
         ज्ञानकेन्द्र
       </Link>
 
-      <article className="tm-page mt-4 rounded-2xl border border-border overflow-hidden">
-        <div className="tm-wrap">
-          <header className="tm-hero">
-            <div className="tm-hero-eyebrow">इतिहास · खगोलशास्त्र सम्पदा</div>
-            <h1 className="tm-hero-title">
+      <article className={cn(tmPageShell, "mt-4 rounded-2xl border border-border overflow-hidden")}>
+        <div className={tmWrap}>
+          <header className={tmHero}>
+            <div className={tmHeroEyebrow}>इतिहास · खगोलशास्त्र सम्पदा</div>
+            <h1 className={tmHeroTitle}>
               मयासुरको <b>सूर्य सिद्धान्त</b>
             </h1>
-            <p className="tm-hero-sub">
+            <p className={tmHeroSub}>
               ८,८०० वर्ष पुरानो वैदिक पञ्चाङ्ग परम्परा — {formatBbse(6778)} को ग्रहसंयोगदेखि युग
               चक्र, नक्षत्र स्थानान्तरण, र विश्वका पात्रोहरूमा प्रभावसम्म। सबै मिति BBSE वा
               वि.सं. मा प्रस्तुत।
@@ -121,7 +135,7 @@ export function History() {
 
           <div className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {HISTORY_MILESTONES.map((m) => (
-              <div key={m.label} className="tm-fcard text-center">
+              <div key={m.label} className={cn(tmFcard, "text-center")}>
                 <div className="big">{m.year}</div>
                 <div className="lbl">{m.label}</div>
               </div>
@@ -211,9 +225,9 @@ export function History() {
             </Accordion>
           </div>
 
-          <footer className="tm-section mt-16 rounded-xl border border-border bg-card/50 p-6 text-center">
+          <footer className={cn(tmSection, "mt-16 rounded-xl border border-border bg-card/50 p-6 text-center")}>
             <HistoryIcon className="mx-auto size-8 text-secondary" />
-            <p className="tm-lede mx-auto mt-4 max-w-xl text-center">
+            <p className={cn(tmLede, "mx-auto mt-4 max-w-xl text-center")}>
               यो पृष्ठ{" "}
               <a
                 href={HISTORY_SOURCE.url}

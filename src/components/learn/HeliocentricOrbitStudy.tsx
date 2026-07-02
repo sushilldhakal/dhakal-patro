@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { HeliocentricOrbitDiagram } from "./HeliocentricOrbitDiagram";
 import { useLocale } from "@/i18n/locale";
@@ -57,7 +58,7 @@ export function HeliocentricOrbitStudy() {
   const dayOfYear = Math.round((meanDeg / 360) * 365.25);
 
   return (
-    <div className="tm-card pad-lg">
+    <div className={tmCardPadLg}>
       <HeliocentricOrbitDiagram
         meanDeg={meanDeg}
         onMeanDeg={(v) => {
@@ -65,7 +66,7 @@ export function HeliocentricOrbitStudy() {
           setMeanDeg(v);
         }}
       />
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         {pick(
           <>
             सूर्य एउटा केन्द्रबिन्दु (focus) मा छ — पृथ्वी वास्तविक दीर्घवृत्तमा{" "}
@@ -82,31 +83,31 @@ export function HeliocentricOrbitStudy() {
           </>,
         )}
       </p>
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("माध्य कोण (वर्ष)", "Mean angle (year)")}</span>
-            <span className="ed-ro-v mono">{fmt(Math.round(meanDeg))}°</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("माध्य कोण (वर्ष)", "Mean angle (year)")}</span>
+            <span className={edRoV({ mono: true })}>{fmt(Math.round(meanDeg))}°</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("वर्षको दिन (लगभग)", "Day of year (approx)")}</span>
-            <span className="ed-ro-v mono">{fmt(dayOfYear)}</span>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("वर्षको दिन (लगभग)", "Day of year (approx)")}</span>
+            <span className={edRoV({ mono: true })}>{fmt(dayOfYear)}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("घटना · ऋतु", "Event · season")}</span>
-            <span className="ed-ro-v amber">{orbitEvent(meanDeg, isEn)}</span>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("घटना · ऋतु", "Event · season")}</span>
+            <span className={edRoV({ amber: true })}>{orbitEvent(meanDeg, isEn)}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("सूर्यदेखि दूरी", "Distance from Sun")}</span>
-            <span className="ed-ro-v mono">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("सूर्यदेखि दूरी", "Distance from Sun")}</span>
+            <span className={edRoV({ mono: true })}>
               {orbit.speed > 1.02 ? pick("नजिक · छिटो", "Near · fast") : orbit.speed < 0.98 ? pick("टाढा · ढिलो", "Far · slow") : pick("मध्यम", "Medium")}
             </span>
           </div>
         </div>
-        <div className="ed-scrub-wrap">
+        <div className={edScrubWrap}>
           <button
             type="button"
-            className="ed-playbtn"
+            className={edPlayBtn}
             onClick={() => setPlaying((p) => !p)}
             title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
             aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
@@ -127,19 +128,16 @@ export function HeliocentricOrbitStudy() {
             }}
           />
         </div>
-        <div className="ed-presets">
+        <div className={edPresets}>
           {ORBIT_MARKERS.map((m) => {
             const preset = ORBIT_PRESETS.find((p) => p.ne === m.ne)!;
             return (
               <button
                 key={m.ne}
                 type="button"
-                className={
-                  "ed-preset" +
-                  (Math.abs((((meanDeg - preset.meanDeg + 180) % 360) + 360) % 360 - 180) < 8
-                    ? " on"
-                    : "")
-                }
+                className={edPreset(
+                  Math.abs((((meanDeg - preset.meanDeg + 180) % 360) + 360) % 360 - 180) < 8,
+                )}
                 onClick={() => {
                   setPlaying(false);
                   setMeanDeg(preset.meanDeg);

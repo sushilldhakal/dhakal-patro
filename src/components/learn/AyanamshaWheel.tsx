@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
@@ -145,8 +146,8 @@ export function AyanamshaWheel() {
   const [labA, labAy] = polar(R_RIM - 26, arcMidLon);
 
   return (
-    <div className="tm-card pad-lg">
-      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg" role="img" aria-label="अयनांश चक्र">
+    <div className={tmCardPadLg}>
+      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg()} role="img" aria-label="अयनांश चक्र">
         <defs>
           <radialGradient id="ay-sun" cx="50%" cy="45%" r="60%">
             <stop offset="0%" stopColor="#fff6d8" />
@@ -290,37 +291,37 @@ export function AyanamshaWheel() {
         </g>
       </svg>
 
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">वर्ष</span>
-            <span className="ed-ro-v mono">{N(ceToBs(m.year))} बि.सं.</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>वर्ष</span>
+            <span className={edRoV({ mono: true })}>{N(ceToBs(m.year))} बि.सं.</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">प्रणाली</span>
-            <span className="ed-ro-v">{SYSTEMS[m.sys].ne}</span>
+          <div className={edRo}>
+            <span className={edRoK}>प्रणाली</span>
+            <span className={edRoV()}>{SYSTEMS[m.sys].ne}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">अयनांश</span>
-            <span className="ed-ro-v mono amber">{fmtDM(m.A)}</span>
+          <div className={edRo}>
+            <span className={edRoK}>अयनांश</span>
+            <span className={edRoV({ mono: true, amber: true })}>{fmtDM(m.A)}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">ग्रह राशि</span>
-            <span className={"ed-ro-v" + (differ ? " amber" : "")}>
+          <div className={edRo}>
+            <span className={edRoK}>ग्रह राशि</span>
+            <span className={edRoV({ amber: differ })}>
               {niRashi}
               {differ ? ` → ${saRashi}` : ""}
             </span>
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>
             ☉ वर्ष — अक्ष-चलनले विषुव बिन्दु सर्छ ({N(ceToBs(285))} → {N(ceToBs(2200))} बि.सं.)
           </span>
-          <div className="ed-scrub-wrap">
+          <div className={edScrubWrap}>
             <button
               type="button"
-              className="ed-playbtn"
+              className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
               title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
               aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
@@ -343,8 +344,8 @@ export function AyanamshaWheel() {
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">● ग्रह — निरयन देशान्तर (एउटै आकाश-स्थान, दुई पढाइ)</span>
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>● ग्रह — निरयन देशान्तर (एउटै आकाश-स्थान, दुई पढाइ)</span>
           <input
             className="ed-scrub"
             type="range"
@@ -357,12 +358,12 @@ export function AyanamshaWheel() {
           />
         </div>
 
-        <div className="ed-presets">
+        <div className={edPresets}>
           {(Object.keys(SYSTEMS) as SystemKey[]).map((k) => (
             <button
               key={k}
               type="button"
-              className={"ed-preset" + (sys === k ? " on" : "")}
+              className={edPreset(sys === k)}
               onClick={() => setSys(k)}
             >
               {SYSTEMS[k].ne}
@@ -370,7 +371,7 @@ export function AyanamshaWheel() {
           ))}
           <button
             type="button"
-            className="ed-preset"
+            className={edPreset()}
             onClick={() => {
               setPlaying(false);
               setYear(2026);
@@ -383,7 +384,7 @@ export function AyanamshaWheel() {
         </div>
       </div>
 
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         बाहिरी १२ <b>राशि</b> तारापुञ्जमा अडिएका छन् (<span className="hl">निरयन</span>)। पृथ्वीको अक्ष
         बिस्तारै घुम्दा (अयन चलन) <span className="hl-amber">वसन्त-विषुव</span> बिन्दु — सायन शून्य —
         ताराका सापेक्ष पछाडि सर्छ। यी दुई शून्यबीचको कोण नै <b>अयनांश</b> हो। एउटै ग्रह त्यसैले

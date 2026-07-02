@@ -1,0 +1,222 @@
+import { cn } from "./utils";
+
+/** Theme tokens + dark starfield (::before). Pair with tmPageShell. */
+export const tmPageShell =
+  "tm-page relative overflow-hidden text-[var(--tm-ink)] font-sans bg-card shadow-sm dark:bg-transparent dark:shadow-none";
+
+export const tmWrap =
+  "relative z-[1] mx-auto max-w-[1140px] px-6 pb-12 max-[720px]:px-3.5 max-[720px]:pb-8";
+
+export const tmHero = "py-12 pb-5 text-center";
+
+export const tmHeroEyebrow =
+  "text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tm-gold)]";
+
+export const tmHeroTitle =
+  "mt-3.5 text-[clamp(28px,4vw,44px)] font-bold leading-tight tracking-tight [&_b]:font-bold [&_b]:text-[var(--tm-teal)]";
+
+export const tmHeroSub =
+  "mx-auto mt-[18px] max-w-[660px] text-pretty text-base leading-relaxed text-[var(--tm-ink-dim)]";
+
+export const tmSection = "mt-14";
+
+export const tmSecHead =
+  "mb-2 flex flex-wrap items-baseline gap-3.5 max-[720px]:flex-col max-[720px]:gap-0.5";
+
+export const tmSecKicker =
+  "shrink-0 font-num text-[13px] font-bold tracking-wide text-[var(--tm-amber)]";
+
+export const tmSecTitle =
+  "m-0 text-[clamp(22px,3vw,30px)] font-bold leading-tight";
+
+export const tmSecEn =
+  "text-[13px] font-medium uppercase tracking-[0.1em] text-[var(--tm-ink-faint)]";
+
+export const tmLede =
+  "mt-3 max-w-[760px] text-pretty text-[15px] leading-relaxed text-[var(--tm-ink-dim)] [&_b]:font-semibold [&_b]:text-[var(--tm-ink)] [&_.hl]:font-semibold [&_.hl]:text-[var(--tm-teal)] [&_.hl-amber]:font-semibold [&_.hl-amber]:text-[var(--tm-amber)]";
+
+const tmCardBase =
+  "rounded-[14px] border border-[var(--tm-border)] bg-[var(--tm-card)] shadow-xs dark:shadow-[0_18px_50px_rgba(0,0,0,0.4)] dark:backdrop-blur-sm";
+
+export const tmCard = cn(tmCardBase, "mt-5 p-5");
+
+export const tmCardPadLg = cn(tmCardBase, "mt-5 p-3 pb-5");
+
+export const tmCardCap =
+  "mt-2 text-center text-[13px] font-medium leading-relaxed text-[var(--tm-ink-faint)]";
+
+export const tmFormula = "mt-5 flex flex-wrap gap-4";
+
+export const tmFcard = cn(
+  tmCardBase,
+  "min-w-[220px] flex-1 p-5 dark:shadow-none",
+  "[&_.big]:font-num [&_.big]:text-[34px] [&_.big]:font-bold [&_.big]:leading-none [&_.big]:text-[var(--tm-teal)]",
+  "[&_.big_.u]:text-base [&_.big_.u]:text-[var(--tm-ink-dim)]",
+  "[&_.lbl]:mt-2.5 [&_.lbl]:text-[13px] [&_.lbl]:font-semibold [&_.lbl]:text-[var(--tm-ink)]",
+  "[&_.desc]:mt-1 [&_.desc]:text-[13px] [&_.desc]:leading-relaxed [&_.desc]:text-[var(--tm-ink-dim)]",
+);
+
+export const tmKeys =
+  "mt-5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3.5";
+
+export const tmKey = cn(
+  tmCardBase,
+  "border-l-[3px] border-l-[var(--tm-amber)] p-4 px-[18px] dark:shadow-none",
+  "[&_h4]:m-0 [&_h4]:mb-1.5 [&_h4]:text-base [&_h4]:font-bold [&_h4]:text-[var(--tm-ink)]",
+  "[&_p]:m-0 [&_p]:text-[13.5px] [&_p]:leading-relaxed [&_p]:text-[var(--tm-ink-dim)]",
+);
+
+export const tmNote =
+  "mx-auto mt-8 max-w-[720px] text-center text-[12.5px] leading-relaxed text-[var(--tm-ink-faint)]";
+
+export const motSliderRow = "flex w-full flex-col gap-1.5";
+
+export const motSliderLabel =
+  "text-[11px] font-semibold tracking-wide text-[var(--tm-ink-faint)]";
+
+export const ssPhasesHeading =
+  "m-0 mb-4 text-center text-[15px] font-bold text-[var(--tm-ink)]";
+
+export const ssPhasesList =
+  "m-0 flex list-none flex-wrap justify-center gap-x-3 gap-y-[18px] p-0";
+
+export const ssPhaseItem =
+  "flex w-[108px] flex-col items-center gap-1.5 text-center";
+
+export const ssPhaseMoon = "block h-[72px] w-[72px]";
+
+export const ssPhaseNe =
+  "text-[13px] font-bold leading-tight text-[var(--tm-ink)]";
+
+export const ssPhaseEn =
+  "text-[11px] font-medium tracking-wide text-[var(--tm-ink-faint)]";
+
+export const tmAmLegend =
+  "mt-4 flex flex-wrap justify-center gap-[22px] [&_span]:inline-flex [&_span]:items-center [&_span]:gap-2 [&_span]:text-[13px] [&_span]:font-medium [&_span]:text-[var(--tm-ink-dim)]";
+
+export const tmLegAdhik =
+  "inline-block h-4 w-4 rounded border-[1.6px] border-[var(--tm-amber)] bg-[color-mix(in_srgb,var(--tm-amber)_28%,transparent)]";
+
+export const learnRefWrap =
+  "mt-5 overflow-x-auto rounded-[14px] border border-[var(--tm-border)] bg-[var(--tm-card)] shadow-xs [-webkit-overflow-scrolling:touch]";
+
+export const learnRefTable = cn(
+  "w-full min-w-[520px] border-collapse text-sm leading-snug",
+  "[&_th]:sticky [&_th]:top-0 [&_th]:z-[1] [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-[var(--tm-border)] [&_th]:bg-[color-mix(in_srgb,var(--tm-card)_92%,var(--tm-teal))] [&_th]:px-3 [&_th]:py-2.5 [&_th]:text-left [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide [&_th]:text-[var(--tm-ink-faint)]",
+  "[&_td]:border-b [&_td]:border-[color-mix(in_srgb,var(--tm-border)_70%,transparent)] [&_td]:px-3 [&_td]:py-2 [&_td]:align-top [&_td]:text-[var(--tm-ink-dim)]",
+  "[&_tbody_tr:hover_td]:bg-[color-mix(in_srgb,var(--tm-teal)_4%,transparent)]",
+  "[&_tbody_tr:last-child_td]:border-b-0",
+);
+
+export const learnRefCaption =
+  "border-b border-[var(--tm-border)] px-4 pb-2.5 pt-3.5 text-left text-[13px] font-semibold text-[var(--tm-ink-dim)] [caption-side:top]";
+
+export const learnRefHighlightRow =
+  "[&_td]:bg-[color-mix(in_srgb,var(--tm-amber)_8%,transparent)] [&_td]:font-medium [&_td]:text-[var(--tm-ink)]";
+
+export const learnRefSym = "mr-1 text-base opacity-90";
+
+export const learnRefEn = "whitespace-nowrap text-[13px] text-[var(--tm-ink-faint)]";
+
+export const learnRefDeg =
+  "whitespace-nowrap text-xs text-[var(--tm-amber)]";
+
+export const learnRefPada =
+  "whitespace-nowrap text-[13px] font-medium text-[var(--tm-teal)]";
+
+export const learnRefSymNe = "max-w-[120px] text-[13px]";
+
+export const learnRefNote = "mt-3 text-left";
+
+export const learnHero =
+  "rounded-3xl border border-border bg-gradient-to-br from-[color-mix(in_srgb,var(--card)_92%,var(--secondary)_8%)] to-card px-6 py-8 sm:px-10 sm:py-10";
+
+export const learnStatPill =
+  "inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--secondary)_25%,transparent)] bg-[color-mix(in_srgb,var(--secondary)_8%,var(--card))] px-4 py-2.5 text-sm font-semibold tracking-wide text-foreground";
+
+/* ── Interactive diagram controls (elongation / eclipse sliders) ── */
+
+export const edControls = "flex flex-col items-stretch gap-3.5 px-3.5 pb-1.5";
+
+export const edReadout =
+  "grid w-full grid-cols-2 items-start gap-x-[18px] gap-y-2.5 max-[720px]:gap-4 min-[560px]:grid-cols-4";
+
+export const edRo = "flex min-w-0 flex-col gap-0.5";
+
+export const edRoK =
+  "text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--tm-ink-faint)]";
+
+export function edRoV(opts?: { mono?: boolean; amber?: boolean }) {
+  return cn(
+    "min-h-[2.5em] text-lg font-bold leading-tight text-[var(--tm-ink)] [overflow-wrap:anywhere]",
+    opts?.mono && "font-num tabular-nums text-[var(--tm-teal)]",
+    opts?.amber && "text-[var(--tm-amber)]",
+  );
+}
+
+export const edScrubWrap =
+  "flex w-full shrink-0 items-center gap-3 box-border";
+
+export const edPlayBtn =
+  "grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full border border-[var(--tm-border)] bg-[color-mix(in_srgb,var(--tm-teal)_16%,transparent)] text-[15px] text-[var(--tm-ink)] hover:border-[var(--tm-teal)] hover:bg-[color-mix(in_srgb,var(--tm-teal)_26%,transparent)]";
+
+export const edPresets = "flex w-full flex-wrap gap-1.5";
+
+export function edPreset(active?: boolean) {
+  return cn(
+    "h-[30px] cursor-pointer rounded-full border border-[var(--tm-border)] bg-transparent px-3 text-[12.5px] font-semibold text-[var(--tm-ink-dim)] hover:border-[var(--tm-teal)] hover:text-[var(--tm-ink)]",
+    active &&
+      "border-transparent bg-primary font-bold text-primary-foreground dark:bg-[var(--tm-gold)] dark:text-[#1a1500]",
+  );
+}
+
+/** Interactive study diagram SVG shell (replaces `.ed-svg` + size variants). */
+export const edSvgBase =
+  "block h-auto w-full touch-none overflow-visible";
+
+export function edSvg(
+  variant?: "tithi" | "mot" | "sol" | "ecl" | "sem" | "ho",
+  grab?: boolean,
+) {
+  return cn(
+    edSvgBase,
+    variant === "tithi" && "min-h-[520px] max-h-[min(920px,88vh)]",
+    variant === "mot" && "min-h-[360px] max-h-[min(700px,82vh)]",
+    variant === "sol" && "min-h-[320px] max-h-[min(620px,78vh)]",
+    variant === "ecl" && "min-h-[320px] max-h-[min(640px,78vh)] rounded-[18px]",
+    variant === "sem" && "min-h-[300px]",
+    variant === "ho" && "min-h-[280px]",
+    grab && "cursor-grab active:cursor-grabbing",
+  );
+}
+
+export const tmDiagramSvg = "block h-auto w-full";
+
+export const ssRotSvg = "mx-auto block h-auto w-full max-w-[640px]";
+
+export const tmCal = "mt-[18px] flex flex-wrap items-stretch gap-2";
+
+export const tmCalCell =
+  "min-w-[116px] flex-1 rounded-xl border border-[var(--tm-border)] bg-[color-mix(in_srgb,var(--tm-teal)_8%,transparent)] px-3.5 py-3";
+
+export function tmCalCellDup(dup?: boolean) {
+  return cn(
+    tmCalCell,
+    dup && "border-[var(--tm-amber)] bg-[color-mix(in_srgb,var(--tm-amber)_16%,transparent)]",
+  );
+}
+
+export const tmCalGate =
+  "font-num text-xs font-semibold text-[var(--tm-ink-faint)]";
+
+export const tmCalTithi =
+  "mt-0.5 text-lg font-bold text-[var(--tm-ink)]";
+
+export const tmCalNo =
+  "mt-0.5 text-[11.5px] font-medium text-[var(--tm-ink-dim)]";
+
+export const tmCalGap =
+  "flex w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-[var(--tm-amber)] p-2 text-center opacity-90 [&_em]:text-[10px] [&_em]:font-semibold [&_em]:uppercase [&_em]:tracking-widest [&_em]:text-[var(--tm-ink-faint)] [&_em]:not-italic [&_span]:text-[13px] [&_span]:font-semibold [&_span]:text-[var(--tm-amber)]";
+
+export const nakshatraIcon =
+  "block shrink-0 text-foreground [&_.ax]:stroke-secondary dark:[&_.ax]:stroke-[var(--brand-yellow)] [&_.ax-f]:fill-secondary dark:[&_.ax-f]:fill-[var(--brand-yellow)] [&_.ax-f]:stroke-none [&_.fx]:fill-current [&_.fx]:stroke-none";

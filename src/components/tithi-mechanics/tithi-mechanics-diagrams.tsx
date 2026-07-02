@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { WHEEL_TITHIS, tithiNum } from "@/lib/tithi-wheel-data";
+import { tmAmLegend, tmCal, tmCalCellDup, tmCalGap, tmCalGate, tmCalNo, tmCalTithi, tmDiagramSvg, tmLegAdhik } from "@/lib/learn-classes";
 import { TmLegendDot, TmNewMoon, TmSun } from "./diagram-glyphs";
 
 function tName(band: number) {
@@ -100,7 +101,7 @@ export function SunriseTimeline({ mode }: { mode: "vriddhi" | "kshaya" }) {
 
   return (
     <div className="tm-tl">
-      <svg viewBox={`0 0 ${W} ${H}`} className="tm-tl-svg">
+      <svg viewBox={`0 0 ${W} ${H}`} className={tmDiagramSvg}>
         <line
           x1={padL - 6}
           y1={trackTop + trackH / 2}
@@ -120,28 +121,25 @@ export function SunriseTimeline({ mode }: { mode: "vriddhi" | "kshaya" }) {
         />
       </svg>
 
-      <div className="tm-cal">
+      <div className={tmCal}>
         {cal.map((c, i) => {
           const prevSame = i > 0 && cal[i - 1]!.band === c.band;
           const jump = i > 0 && c.band - cal[i - 1]!.band >= 2;
+          const dup = prevSame || (isVri && i < nDays - 1 && cal[i + 1]?.band === c.band);
           return (
             <Fragment key={i}>
               {jump && skipBand != null && (
-                <div className="tm-cal-gap">
+                <div className={tmCalGap}>
                   <span>
                     {fmt(tNo(skipBand))} {tName(skipBand).ne}
                   </span>
                   <em>क्षय · लोप</em>
                 </div>
               )}
-              <div
-                className={`tm-cal-cell${
-                  prevSame || (isVri && i < nDays - 1 && cal[i + 1]?.band === c.band) ? " dup" : ""
-                }`}
-              >
-                <div className="tm-cal-gate">{fmt(c.gate)} गते</div>
-                <div className="tm-cal-tithi">{tName(c.band).ne}</div>
-                <div className="tm-cal-no">
+              <div className={tmCalCellDup(dup)}>
+                <div className={tmCalGate}>{fmt(c.gate)} गते</div>
+                <div className={tmCalTithi}>{tName(c.band).ne}</div>
+                <div className={tmCalNo}>
                   {tName(c.band).paksha.split(" ")[0]} {fmt(tNo(c.band))}
                 </div>
               </div>
@@ -276,7 +274,7 @@ export function AdhikMassDiagram() {
 
   return (
     <div className="tm-am">
-      <svg viewBox={`0 0 ${W} ${H}`} className="tm-am-svg">
+      <svg viewBox={`0 0 ${W} ${H}`} className={tmDiagramSvg}>
         <text x={padL} y={34} className="tm-track-label">
           सौर मास{" "}
           <tspan className="tm-track-sub">· सूर्यको राशि प्रवेश (सङ्क्रान्ति) — हरेक ~३०.४ दिन</tspan>
@@ -291,7 +289,7 @@ export function AdhikMassDiagram() {
           <tspan className="tm-track-sub">· अमावस्यादेखि अमावस्या — हरेक ~२९.५ दिन</tspan>
         </text>
       </svg>
-      <div className="tm-am-legend">
+      <div className={tmAmLegend}>
         <span>
           <TmLegendDot kind="sun" /> सङ्क्रान्ति (सूर्य नयाँ राशिमा)
         </span>
@@ -299,7 +297,7 @@ export function AdhikMassDiagram() {
           <TmLegendDot kind="moon" /> अमावस्या (चान्द्र मासको आरम्भ)
         </span>
         <span>
-          <i className="tm-leg-adhik" /> सङ्क्रान्ति बिनाको चान्द्र मास = अधिक मास
+          <i className={tmLegAdhik} /> सङ्क्रान्ति बिनाको चान्द्र मास = अधिक मास
         </span>
       </div>
     </div>

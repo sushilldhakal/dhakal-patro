@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EclipseGeometry } from "./EclipseGeometry";
@@ -98,50 +99,43 @@ export function EclipseStudy() {
   const solarCount = events.filter((e) => e.kind === "solar").length;
 
   return (
-    <div className="tm-card pad-lg">
+    <div className={tmCardPadLg}>
       <EclipseGeometry u={u} omega={omega} omegaInertial={omegaInertial} earthLon={earthLon} />
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">दिन · चान्द्र महिना</span>
-            <span className="ed-ro-v mono">
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>दिन · चान्द्र महिना</span>
+            <span className={edRoV({ mono: true })}>
               {fmt(Math.round(t))} · {fmt(monthNo)}
             </span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">चन्द्र चरण</span>
-            <span className="ed-ro-v">{phaseName(g.E)}</span>
+          <div className={edRo}>
+            <span className={edRoK}>चन्द्र चरण</span>
+            <span className={edRoV()}>{phaseName(g.E)}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">पात कोण ☊</span>
-            <span className="ed-ro-v mono">{fmt(Math.round(omegaInertial))}°</span>
+          <div className={edRo}>
+            <span className={edRoK}>पात कोण ☊</span>
+            <span className={edRoV({ mono: true })}>{fmt(Math.round(omegaInertial))}°</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">पात-चक्र</span>
-            <span className="ed-ro-v mono">
+          <div className={edRo}>
+            <span className={edRoK}>पात-चक्र</span>
+            <span className={edRoV({ mono: true })}>
               {fmt(Math.round(precDays))} दिन · {fmt(Math.round(nodeCyclePct * 100))}%
             </span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">अवस्था</span>
-            <span
-              className={
-                "ed-ro-v" +
-                (status === "total" || status === "partial"
-                  ? " amber"
-                  : "")
-              }
-            >
+          <div className={edRo}>
+            <span className={edRoK}>अवस्था</span>
+            <span className={edRoV({ amber: status === "total" || status === "partial" })}>
               {statusText}
             </span>
           </div>
         </div>
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">☾ चन्द्र · पृथ्वी र चन्द्र (छिटो)</span>
-          <div className="ed-scrub-wrap">
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>☾ चन्द्र · पृथ्वी र चन्द्र (छिटो)</span>
+          <div className={edScrubWrap}>
             <button
               type="button"
-              className="ed-playbtn"
+              className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
               title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
               aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
@@ -163,12 +157,12 @@ export function EclipseStudy() {
             />
           </div>
         </div>
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">☊ राहु–केतु · पात-चक्र (ढिलो · घडीको दिशा)</span>
-          <div className="ed-scrub-wrap">
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>☊ राहु–केतु · पात-चक्र (ढिलो · घडीको दिशा)</span>
+          <div className={edScrubWrap}>
             <button
               type="button"
-              className="ed-playbtn"
+              className={edPlayBtn}
               onClick={() => setPlayingNodes((p) => !p)}
               title={playingNodes ? "रोक्नुहोस्" : "पात चलाउनुहोस्"}
               aria-label={playingNodes ? "रोक्नुहोस्" : "पात चलाउनुहोस्"}
@@ -190,16 +184,16 @@ export function EclipseStudy() {
             />
           </div>
         </div>
-        <div className="ed-presets">
-          <button type="button" className="ed-preset" onClick={() => jumpNext("lunar")}>
+        <div className={edPresets}>
+          <button type="button" className={edPreset()} onClick={() => jumpNext("lunar")}>
             अर्को चन्द्रग्रहण →
           </button>
-          <button type="button" className="ed-preset" onClick={() => jumpNext("solar")}>
+          <button type="button" className={edPreset()} onClick={() => jumpNext("solar")}>
             अर्को सूर्यग्रहण →
           </button>
           <button
             type="button"
-            className="ed-preset"
+            className={edPreset()}
             onClick={() => {
               setPlaying(false);
               setPlayingNodes(false);
@@ -211,7 +205,7 @@ export function EclipseStudy() {
           </button>
         </div>
       </div>
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         चन्द्रले ~{fmt(27)} दिनमा एक राशि पार गर्छ; <span className="hl-amber">राहु–केतु</span> भने आकाशमा
         बिस्तारै <b>घडीको दिशामा</b> घुम्छन् (~{fmt(19)}°/वर्ष, ~{fmt(19)} वर्षे पूरा चक्र) — चन्द्रभन्दा लगभग{" "}
         {fmt(250)} गुणा ढिलो। माथिको <b>☾</b> बटनले चन्द्र/पृथ्वी चलाउँछ; <b>☊</b> बटन वा स्लाइडरले मात्र पात

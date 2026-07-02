@@ -1,4 +1,6 @@
 import type { PanchangaDay } from "@/lib/api";
+import { HORA_PLANETS } from "@/lib/hora-data";
+import { buildHoraSchedule, horaTone } from "@/lib/hora-schedule";
 import {
   formatPakshaNepaliDisplay,
   getLagnaSpans,
@@ -74,12 +76,20 @@ export const TL_GRAHA_EN: Record<string, string> = {
 export interface TimelineRowData {
   label: string;
   en: string;
-  kind?: "choghadiya" | "lagna" | "graha";
+  kind?: "choghadiya" | "hora" | "lagna" | "graha";
   items: TimelineSegment[];
 }
 
 export interface ChoghadiyaSegment {
   name: string;
+  startG: number;
+  endG: number;
+  bad?: boolean;
+}
+
+export interface HoraSegment {
+  name: string;
+  nameEn: string;
   startG: number;
   endG: number;
   bad?: boolean;
@@ -115,6 +125,7 @@ export interface DayTimelineData {
   rows: TimelineRowData[];
   choghadiya: ChoghadiyaSegment[];
   badChoghadiya: ChoghadiyaSegment[];
+  hora: HoraSegment[];
 }
 
 type AngaBlock = {
@@ -335,6 +346,26 @@ function buildChoghadiyaFromApi(
   }));
 }
 
+function buildHoraTimelineSegments(
+  sunrise: string,
+  sunset: string,
+  sunriseMin: number,
+  jsWeekday: number,
+): HoraSegment[] {
+  const slots = buildHoraSchedule(sunrise, sunset, jsWeekday);
+  return slots.map((slot) => {
+    const startG = minutesToGhati(slot.startMin, sunriseMin);
+    const endG = Math.min(minutesToGhati(slot.endMin, sunriseMin), 60);
+    return {
+      name: slot.planetNe,
+      nameEn: HORA_PLANETS[slot.planet].en,
+      startG,
+      endG,
+      bad: horaTone(slot.planet) === "bad",
+    };
+  });
+}
+
 function buildChoghadiyaFallback(dayG: number, dow: number): ChoghadiyaSegment[] {
   const CHOGHADIYA = [
     { ne: "उद्वेग", bad: true },
@@ -413,6 +444,7 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
     apiChoghadiya?.length === 16
       ? buildChoghadiyaFromApi(apiChoghadiya)
       : buildChoghadiyaFallback(dayG, dow);
+  const hora = buildHoraTimelineSegments(sunrise ?? "", sunset ?? "", sunriseMin, dow);
   const lagnaSpans = (getLagnaSpans(p) ?? []) as LagnaSpanBlock[];
   const grahaSpashta = getPlanetRows(p).map(({ label, rashiNe, coords }) => ({
     label,
@@ -450,6 +482,17 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
           bad: c.bad,
         })),
       },
+      {
+        label: "होरा",
+        en: "Hora",
+        kind: "hora",
+        items: hora.map((h) => ({
+          name: h.name,
+          nameEn: h.nameEn,
+          endG: h.endG,
+          bad: h.bad,
+        })),
+      },
       ...(lagnaSpans.length > 0
         ? [
             {
@@ -473,6 +516,7 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
     ],
     choghadiya: cho,
     badChoghadiya: cho.filter((c) => c.bad),
+    hora,
   };
 }
 

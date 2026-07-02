@@ -4,8 +4,10 @@ import { toNepaliDigits } from "@/lib/panchanga-format";
 import { moonIllumination, WHEEL_TITHIS, tithiIndexFromElongation, tithiNum, tithiPaksha, tithiPakshaEn } from "@/lib/tithi-wheel-data";
 import { ElongationDiagram, EARTH_ARC_SYNODIC, earthOrbitDegFromElongation } from "./ElongationDiagram";
 import { SYNODIC_MONTH } from "@/components/learn/sun-earth-moon-math";
+import { cn } from "@/lib/utils";
 import { AdhikMassDiagram, SunriseTimeline } from "./tithi-mechanics-diagrams";
 import { useLocale } from "@/i18n/locale";
+import { tmCardCap, tmCardPadLg, tmFcard, tmFormula, tmHero, tmHeroEyebrow, tmHeroSub, tmHeroTitle, tmKey, tmKeys, tmLede, tmNote, tmPageShell, tmSecEn, tmSecHead, tmSecKicker, tmSecTitle, tmSection, tmWrap, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 
 const PRESETS = [
   { ne: "अमावस्या", en: "Amavasya", E: 354 },
@@ -44,45 +46,45 @@ export function ElongationStudy() {
   const siderealDays = 27.321661;
 
   return (
-    <div className="tm-card pad-lg">
+    <div className={tmCardPadLg}>
       <ElongationDiagram E={E} onE={(v) => { setPlaying(false); setE(v); }} />
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("कोणीय दूरी", "Elongation")}</span>
-            <span className="ed-ro-v mono">{fmt(Math.round(E))}°</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("कोणीय दूरी", "Elongation")}</span>
+            <span className={edRoV({ mono: true })}>{fmt(Math.round(E))}°</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("मास · पक्ष", "Month · Paksha")}</span>
-            <span className="ed-ro-v">{pick("असार", "Ashadh")} {paksha}</span>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("मास · पक्ष", "Month · Paksha")}</span>
+            <span className={edRoV()}>{pick("असार", "Ashadh")} {paksha}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("तिथि", "Tithi")}</span>
-            <span className="ed-ro-v amber">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("तिथि", "Tithi")}</span>
+            <span className={edRoV({ amber: true })}>
               {tithiLabel} · {fmt(tno)}
             </span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("चन्द्रकला", "Illumination")}</span>
-            <span className="ed-ro-v mono">{fmt(illum)}%</span>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("चन्द्रकला", "Illumination")}</span>
+            <span className={edRoV({ mono: true })}>{fmt(illum)}%</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("पृथ्वी सार · चान्द्र मास", "Earth arc · lunar month")}</span>
-            <span className="ed-ro-v mono">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("पृथ्वी सार · चान्द्र मास", "Earth arc · lunar month")}</span>
+            <span className={edRoV({ mono: true })}>
               {fmt(Math.round(earthArc))}° / ~{fmt(Math.round(EARTH_ARC_SYNODIC))}°
             </span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("नाक्षत्र vs चान्द्र मास", "Sidereal vs synodic month")}</span>
-            <span className="ed-ro-v amber">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("नाक्षत्र vs चान्द्र मास", "Sidereal vs synodic month")}</span>
+            <span className={edRoV({ amber: true })}>
               ~{fmt(Math.round(siderealDays))} {pick("दिन", "days")} vs ~{fmt(Math.round(SYNODIC_MONTH))} {pick("दिन", "days")}
             </span>
           </div>
         </div>
-        <div className="ed-scrub-wrap">
+        <div className={edScrubWrap}>
           <button
             type="button"
-            className="ed-playbtn"
+            className={edPlayBtn}
             onClick={() => setPlaying((p) => !p)}
             title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
             aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
@@ -103,15 +105,14 @@ export function ElongationStudy() {
             }}
           />
         </div>
-        <div className="ed-presets">
+        <div className={edPresets}>
           {PRESETS.map((p) => (
             <button
               key={p.ne}
               type="button"
-              className={
-                "ed-preset" +
-                (Math.abs((((E - p.E + 180) % 360) + 360) % 360 - 180) < 6 ? " on" : "")
-              }
+              className={edPreset(
+                Math.abs((((E - p.E + 180) % 360) + 360) % 360 - 180) < 6,
+              )}
               onClick={() => {
                 setPlaying(false);
                 setE(p.E);
@@ -128,26 +129,26 @@ export function ElongationStudy() {
 
 export function TithiMechanics() {
   return (
-    <div className="tm-page rounded-2xl border border-border overflow-hidden">
-      <div className="tm-wrap">
-        <header className="tm-hero">
-          <div className="tm-hero-eyebrow">पञ्चाङ्ग · तिथिको गणित</div>
-          <h2 className="tm-hero-title">
+    <div className={cn(tmPageShell, "rounded-2xl border border-border overflow-hidden")}>
+      <div className={tmWrap}>
+        <header className={tmHero}>
+          <div className={tmHeroEyebrow}>पञ्चाङ्ग · तिथिको गणित</div>
+          <h2 className={tmHeroTitle}>
             तिथि कसरी बन्छ — र किन कहिले <b>दोहोरिन्छ वा हराउँछ</b>
           </h2>
-          <p className="tm-hero-sub">
+          <p className={tmHeroSub}>
             एक तिथि भनेको चन्द्र र सूर्यबीचको <b>१२° कोणीय दूरी</b> हो। यो कोण फरक–फरक गतिमा
             बढ्ने हुनाले कहिलेकाहीँ एउटै तिथि दुई दिन पर्छ, कहिले एउटा तिथि नै छुट्छ, अनि चान्द्र
             र सौर मासको भिन्नताले अधिक मास जन्मन्छ।
           </p>
         </header>
 
-        <section className="tm-section">
-          <div className="tm-sec-head">
-            <span className="tm-sec-kicker">०१</span>
-            <h3 className="tm-sec-title">सूर्य · पृथ्वी · चन्द्र — तिथिको आधार</h3>
+        <section className={tmSection}>
+          <div className={tmSecHead}>
+            <span className={tmSecKicker}>०१</span>
+            <h3 className={tmSecTitle}>सूर्य · पृथ्वी · चन्द्र — तिथिको आधार</h3>
           </div>
-          <p className="tm-lede">
+          <p className={tmLede}>
             पृथ्वीबाट हेर्दा चन्द्रमा सूर्यभन्दा जति <span className="hl">कोणले अगाडि</span> पुग्छ,
             त्यही कोणले तिथि निर्धारण गर्छ। <b>०°</b> मा दुवै एकै दिशामा हुन्छन् —{" "}
             <span className="hl-amber">अमावस्या</span>। कोण बढ्दै <b>१८०°</b> पुग्दा चन्द्र ठ्याक्क
@@ -155,8 +156,8 @@ export function TithiMechanics() {
           </p>
           <ElongationStudy />
 
-          <div className="tm-formula">
-            <div className="tm-fcard">
+          <div className={tmFormula}>
+            <div className={tmFcard}>
               <div className="big">
                 {toNepaliDigits(12)}
                 <span className="u">°</span>
@@ -164,7 +165,7 @@ export function TithiMechanics() {
               <div className="lbl">= १ तिथि</div>
               <div className="desc">३६०° ÷ ३० तिथि। हरेक १२° कोण पार गर्दा नयाँ तिथि सुरु हुन्छ।</div>
             </div>
-            <div className="tm-fcard">
+            <div className={tmFcard}>
               <div className="big">
                 ~{toNepaliDigits(12)}
                 <span className="u">°/दिन</span>
@@ -174,7 +175,7 @@ export function TithiMechanics() {
                 तर वास्तवमा १०.७°–१४.३° सम्म घटबढ हुन्छ — चन्द्र कक्षको आकारका कारण।
               </div>
             </div>
-            <div className="tm-fcard">
+            <div className={tmFcard}>
               <div className="big">सूर्योदय</div>
               <div className="lbl">तिथि कहिले गनिन्छ?</div>
               <div className="desc">
@@ -185,81 +186,81 @@ export function TithiMechanics() {
           </div>
         </section>
 
-        <section className="tm-section">
-          <div className="tm-sec-head">
-            <span className="tm-sec-kicker">०२</span>
-            <h3 className="tm-sec-title">तिथि वृद्धि — एउटै तिथि दुई दिन</h3>
-            <span className="tm-sec-en">Repeated tithi</span>
+        <section className={tmSection}>
+          <div className={tmSecHead}>
+            <span className={tmSecKicker}>०२</span>
+            <h3 className={tmSecTitle}>तिथि वृद्धि — एउटै तिथि दुई दिन</h3>
+            <span className={tmSecEn}>Repeated tithi</span>
           </div>
-          <p className="tm-lede">
+          <p className={tmLede}>
             जब चन्द्र <span className="hl">मन्द गतिमा</span> (~१०.७°/दिन) हिँड्छ, एउटै १२° को
             तिथि–खण्डले <b>लगातार दुई सूर्योदय</b> समेट्छ। दुवै बिहान त्यही तिथि चलिरहेकाले
             पात्रोमा त्यो तिथि <span className="hl-amber">दुई दिन</span> देखिन्छ।
           </p>
-          <div className="tm-card pad-lg">
+          <div className={tmCardPadLg}>
             <SunriseTimeline mode="vriddhi" />
-            <div className="tm-card-cap">
+            <div className={tmCardCap}>
               तृतीया खण्ड यति फराकिलो छ कि १० र ११ गते — दुवै सूर्योदय यसैभित्र परे। त्यसैले
               तृतीया दोहोरियो।
             </div>
           </div>
         </section>
 
-        <section className="tm-section">
-          <div className="tm-sec-head">
-            <span className="tm-sec-kicker">०३</span>
-            <h3 className="tm-sec-title">तिथि क्षय — हराएको तिथि</h3>
-            <span className="tm-sec-en">Skipped tithi</span>
+        <section className={tmSection}>
+          <div className={tmSecHead}>
+            <span className={tmSecKicker}>०३</span>
+            <h3 className={tmSecTitle}>तिथि क्षय — हराएको तिथि</h3>
+            <span className={tmSecEn}>Skipped tithi</span>
           </div>
-          <p className="tm-lede">
+          <p className={tmLede}>
             उल्टो, जब चन्द्र <span className="hl">द्रुत गतिमा</span> (~१४.३°/दिन) हिँड्छ, कुनै १२° को
             तिथि–खण्ड <b>दुई सूर्योदयको बीचमै</b> पूरै सकिन्छ। कुनै पनि सूर्योदयमा त्यो तिथि
             नभेटिएकाले त्यो <span className="hl-amber">क्षय</span> भई पात्रोबाट हराउँछ।
           </p>
-          <div className="tm-card pad-lg">
+          <div className={tmCardPadLg}>
             <SunriseTimeline mode="kshaya" />
-            <div className="tm-card-cap">
+            <div className={tmCardCap}>
               अष्टमी खण्ड साँघुरो भएर एक सूर्योदयदेखि अर्कोको बीचमै सकियो — कुनै बिहान अष्टमी परेन,
               त्यसैले त्यो क्षय भयो।
             </div>
           </div>
         </section>
 
-        <section className="tm-section">
-          <div className="tm-sec-head">
-            <span className="tm-sec-kicker">०४</span>
-            <h3 className="tm-sec-title">अधिक मास — थपिने महिना</h3>
-            <span className="tm-sec-en">Extra month</span>
+        <section className={tmSection}>
+          <div className={tmSecHead}>
+            <span className={tmSecKicker}>०४</span>
+            <h3 className={tmSecTitle}>अधिक मास — थपिने महिना</h3>
+            <span className={tmSecEn}>Extra month</span>
           </div>
-          <p className="tm-lede">
+          <p className={tmLede}>
             एक <b>चान्द्र मास</b> (अमावस्यादेखि अमावस्या) ~२९.५ दिनको हुन्छ; एक <b>सौर मास</b> (सूर्य
             एक राशिमा रहने अवधि) ~३०.४ दिनको। चान्द्र मास छोटो भएकाले बेलाबेला एउटा चान्द्र
             मासभित्र <span className="hl">कुनै सङ्क्रान्ति पर्दैन</span> — त्यही महिना{" "}
             <span className="hl-amber">अधिक मास</span> कहलिन्छ र अघिल्लो महिनाको नाम दोहोरिन्छ।
           </p>
-          <div className="tm-card pad-lg">
+          <div className={tmCardPadLg}>
             <AdhikMassDiagram />
-            <div className="tm-card-cap">
+            <div className={tmCardCap}>
               यहाँ मेष सौर मासभित्रै दुई अमावस्या परे — बीचको चान्द्र मासमा कुनै सङ्क्रान्ति
               नपरेकाले त्यो “अधिक वैशाख” बन्यो; त्यसपछिको नियमित महिना “निज वैशाख”।
             </div>
           </div>
-          <div className="tm-keys">
-            <div className="tm-key">
+          <div className={tmKeys}>
+            <div className={tmKey}>
               <h4>~३२.५ महिनामा एकपटक</h4>
               <p>
                 यसरी जोडिँदै गएको फरक झन्डै हरेक तीन वर्षमा एक अधिक मास बनाउँछ, जसले चान्द्र र सौर
                 वर्षलाई मिलाउँछ।
               </p>
             </div>
-            <div className="tm-key">
+            <div className={tmKey}>
               <h4>अधिक र निज</h4>
               <p>
                 सङ्क्रान्ति बिनाको महिना “अधिक”, र त्यसपछि सङ्क्रान्ति परेको महिना “निज” (साँचो)
                 भनिन्छ — जस्तै अधिक जेठ अनि निज जेठ।
               </p>
             </div>
-            <div className="tm-key">
+            <div className={tmKey}>
               <h4>क्षय मास</h4>
               <p>
                 विरलै, एउटै चान्द्र मासमा दुई सङ्क्रान्ति परे त्यो महिना क्षय हुन्छ — अधिक मासको
@@ -269,7 +270,7 @@ export function TithiMechanics() {
           </div>
         </section>
 
-        <p className="tm-note">
+        <p className={tmNote}>
           टिप्पणी: माथिका अङ्क र गति अवधारणा बुझाउन सरलीकृत गरिएका हुन्। वास्तविक पात्रोमा
           चन्द्र–सूर्यको खास स्थिति गणना गर्न पञ्चाङ्ग इन्जिन प्रयोग गरिन्छ।
         </p>

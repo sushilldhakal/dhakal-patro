@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EarthGlobeImage } from "./EarthGlobeImage";
@@ -138,8 +139,8 @@ export function PrecessionCone() {
   }, { d: Infinity, s: POLE_STARS[0]! }).s;
 
   return (
-    <div className="tm-card pad-lg">
-      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className="ed-svg" role="img" aria-label="अयन चलन शंकु">
+    <div className={tmCardPadLg}>
+      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg()} role="img" aria-label="अयन चलन शंकु">
         <defs>
           <radialGradient id="pc-disk" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="color-mix(in srgb, var(--tm-gold) 30%, transparent)" />
@@ -255,32 +256,32 @@ export function PrecessionCone() {
         </g>
       </svg>
 
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">वर्ष</span>
-            <span className="ed-ro-v mono">{fmtYear(year)}</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>वर्ष</span>
+            <span className={edRoV({ mono: true })}>{fmtYear(year)}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">ध्रुव तारा</span>
-            <span className="ed-ro-v amber">{nearStar.ne}</span>
+          <div className={edRo}>
+            <span className={edRoK}>ध्रुव तारा</span>
+            <span className={edRoV({ amber: true })}>{nearStar.ne}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">विषुव → राशि</span>
-            <span className="ed-ro-v">{eqRashi}</span>
+          <div className={edRo}>
+            <span className={edRoK}>विषुव → राशि</span>
+            <span className={edRoV()}>{eqRashi}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">अक्ष झुकाव</span>
-            <span className="ed-ro-v mono">{N("23.5")}°</span>
+          <div className={edRo}>
+            <span className={edRoK}>अक्ष झुकाव</span>
+            <span className={edRoV({ mono: true })}>{N("23.5")}°</span>
           </div>
         </div>
 
-        <div className="mot-slider-row">
-          <span className="mot-slider-label">↻ अयन चलन — एक पूरा चक्र = {N("26,000")} वर्ष</span>
-          <div className="ed-scrub-wrap">
+        <div className={motSliderRow}>
+          <span className={motSliderLabel}>↻ अयन चलन — एक पूरा चक्र = {N("26,000")} वर्ष</span>
+          <div className={edScrubWrap}>
             <button
               type="button"
-              className="ed-playbtn"
+              className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
               title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
               aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
@@ -303,12 +304,12 @@ export function PrecessionCone() {
           </div>
         </div>
 
-        <div className="ed-presets">
+        <div className={edPresets}>
           {POLE_STARS.map((s) => (
             <button
               key={s.ne}
               type="button"
-              className={"ed-preset" + (s === nearStar ? " on" : "")}
+              className={edPreset(s === nearStar)}
               onClick={() => { setPlaying(false); setPhi(s.phi); }}
             >
               {s.ne} · {fmtYear(s.bs)}
@@ -317,7 +318,7 @@ export function PrecessionCone() {
         </div>
       </div>
 
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         पृथ्वीको अक्ष <b>{N("23.5")}°</b> झुकेरै रहन्छ तर लठ्ठाझैँ <span className="hl">क्रान्तिवृत्त ध्रुव</span>{" "}
         वरिपरि बिस्तारै घुम्छ — पूरा एक फेरो <b>~{N("26,000")} वर्ष</b>। त्यसैले उत्तर ध्रुवले
         फरक-फरक <span className="hl-amber">ध्रुव तारा</span> देखाउँछ — कुनै बेला थुबन, अहिले ध्रुव, र

@@ -14,6 +14,8 @@ import {
   rowMetaFromCharans,
 } from "@/lib/avakahada-locale";
 import { findNakshatraIcon } from "@/lib/nakshatra-icons";
+import { patroWheelShell, GANA_PILL_CLASS, GANA_SWATCH_CLASS } from "@/lib/patro-classes";
+import { wheelIconBtn } from "@/lib/wheel-classes";
 import { cn } from "@/lib/utils";
 
 const CX = 310;
@@ -214,8 +216,8 @@ function HubContent({ focus, row }: { focus: HubFocus; row: AvakahadaWheelRow })
 
   if (ring === "nakshatra") {
     return (
-      <div className="av-wheel-hub-detail">
-        <div className="av-wheel-hub-icon">
+      <div className="flex max-h-full flex-col items-center gap-1 overflow-y-auto px-0.5 py-1">
+        <div className="h-9 w-9 shrink-0 text-[var(--w-ink,#eaf3f1)]">
           {icon?.svg ? (
             <span
               className="inline-block h-full w-full [&>svg]:h-full [&>svg]:w-full [&_path]:fill-current"
@@ -226,18 +228,21 @@ function HubContent({ focus, row }: { focus: HubFocus; row: AvakahadaWheelRow })
             <span className="text-2xl font-bold text-secondary">{row.index}</span>
           )}
         </div>
-        <p className="av-wheel-hub-title">
+        <p className="m-0 text-[13px] font-bold leading-snug text-[var(--w-ink,#eaf3f1)]">
           {row.index}. {row.nakshatraLabel}
         </p>
-        <dl className="av-wheel-hub-dl">
+        <dl className="mt-1 w-full text-left text-[9px] leading-snug max-sm:text-[8px]">
           {ATTR_RINGS.map((attr) => (
-            <div key={attr.id}>
-              <dt>{t(`avakahada.col_${attr.id}`)}</dt>
-              <dd>{attrValue(attr.id, row, lang)}</dd>
+            <div
+              key={attr.id}
+              className="grid grid-cols-[52px_1fr] gap-1 border-b border-[color-mix(in_srgb,var(--w-sep-soft)_80%,transparent)] py-0.5 last:border-b-0 max-sm:grid-cols-[44px_1fr]"
+            >
+              <dt className="font-medium text-[var(--w-ink-faint,#84a3a2)]">{t(`avakahada.col_${attr.id}`)}</dt>
+              <dd className="m-0 font-semibold text-[var(--w-ink,#eaf3f1)]">{attrValue(attr.id, row, lang)}</dd>
             </div>
           ))}
         </dl>
-        <p className="av-wheel-hub-vairi text-[9px] text-muted-foreground">
+        <p className="text-[9px] text-muted-foreground">
           {t("avakahada.wheel_vairi", { yoni: row.vairiYoni })}
         </p>
       </div>
@@ -246,16 +251,18 @@ function HubContent({ focus, row }: { focus: HubFocus; row: AvakahadaWheelRow })
 
   if (ring === "pada" && padaIndex != null) {
     return (
-      <div className="av-wheel-hub-detail">
-        <p className="av-wheel-hub-ring-name">{label}</p>
-        <p className="av-wheel-hub-ring-value">{value}</p>
-        <p className="av-wheel-hub-ring-ref">
+      <div className="flex max-h-full flex-col items-center gap-1 overflow-y-auto px-0.5 py-1">
+        <p className="m-0 text-[11px] font-bold uppercase tracking-wide text-[var(--w-accent,var(--color-danger))]">
+          {label}
+        </p>
+        <p className="mt-0.5 text-base font-bold leading-snug text-[var(--w-ink,#eaf3f1)]">{value}</p>
+        <p className="mt-1 text-[9px] leading-snug text-[var(--w-ink-faint,#84a3a2)]">
           {t("avakahada.charan_title", {
             n: String(padaIndex + 1),
             rashi: localizeRashi(row.charanRashis[padaIndex]!, lang),
           })}
         </p>
-        <p className="av-wheel-hub-ring-ref">
+        <p className="mt-1 text-[9px] leading-snug text-[var(--w-ink-faint,#84a3a2)]">
           {row.index}. {row.nakshatraLabel}
         </p>
       </div>
@@ -263,18 +270,22 @@ function HubContent({ focus, row }: { focus: HubFocus; row: AvakahadaWheelRow })
   }
 
   return (
-    <div className="av-wheel-hub-detail">
-      <p className="av-wheel-hub-ring-name">{label}</p>
+    <div className="flex max-h-full flex-col items-center gap-1 overflow-y-auto px-0.5 py-1">
+      <p className="m-0 text-[11px] font-bold uppercase tracking-wide text-[var(--w-accent,var(--color-danger))]">
+        {label}
+      </p>
       {ring === "gana" ? (
-        <span className={cn("av-wheel-gana-pill", `gana-${row.gana}`)}>{value}</span>
+        <span className={cn("inline-block rounded-full px-1.5 text-[8px] font-bold", GANA_PILL_CLASS[row.gana])}>
+          {value}
+        </span>
       ) : (
-        <p className="av-wheel-hub-ring-value">{value}</p>
+        <p className="mt-0.5 text-base font-bold leading-snug text-[var(--w-ink,#eaf3f1)]">{value}</p>
       )}
-      <p className="av-wheel-hub-ring-ref">
+      <p className="mt-1 text-[9px] leading-snug text-[var(--w-ink-faint,#84a3a2)]">
         {row.index}. {row.nakshatraLabel}
       </p>
       {ring === "yoni" ? (
-        <p className="av-wheel-hub-vairi text-[9px] text-muted-foreground">
+        <p className="text-[9px] text-muted-foreground">
           {t("avakahada.wheel_vairi", { yoni: row.vairiYoni })}
         </p>
       ) : null}
@@ -540,17 +551,17 @@ export function AvakahadaWheel({ highlighted }: Props) {
   const ganas: Gana[] = ["देव", "नर", "राक्षस"];
 
   return (
-    <section className="av-wheel pn-wheel" aria-label={t("avakahada.wheel_aria")}>
-      <div className="av-wheel-head">
+    <section className={cn("av-wheel pn-wheel mt-2", patroWheelShell)} aria-label={t("avakahada.wheel_aria")}>
+      <div className="mb-3">
         <h2 className="text-lg font-bold text-foreground">{t("avakahada.wheel_title")}</h2>
         <p className="text-sm text-muted-foreground">{t("avakahada.wheel_subtitle")}</p>
       </div>
 
-      <div className="av-wheel-stage">
-        <div className="av-wheel-dock">
+      <div className="relative flex min-h-[min(92vw,680px)] flex-col rounded-2xl border border-[color-mix(in_srgb,#8fbfc1_28%,transparent)] bg-[radial-gradient(ellipse_at_50%_42%,var(--w-sky-0,#112c2a)_0%,var(--w-sky-2,#050c0d)_72%)] p-3 max-sm:min-h-[min(95vw,420px)] max-sm:p-1.5">
+        <div className="mb-2 flex shrink-0 items-center justify-end gap-1.5">
           <button
             type="button"
-            className="w-iconbtn"
+            className={wheelIconBtn}
             title={t("avakahada.wheel_zoom_in")}
             aria-label={t("avakahada.wheel_zoom_in")}
             onClick={() => handleZoom(zoom * ZOOM_STEP)}
@@ -559,7 +570,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
           </button>
           <button
             type="button"
-            className="w-iconbtn"
+            className={wheelIconBtn}
             title={t("avakahada.wheel_zoom_out")}
             aria-label={t("avakahada.wheel_zoom_out")}
             onClick={() => handleZoom(zoom / ZOOM_STEP)}
@@ -570,18 +581,24 @@ export function AvakahadaWheel({ highlighted }: Props) {
           {zoom !== 1 && (
             <button
               type="button"
-              className="w-iconbtn av-wheel-reset-btn"
+              className={cn(wheelIconBtn, "px-1.5 text-[9px]")}
               title={t("avakahada.wheel_zoom_reset")}
               onClick={resetView}
             >
               1:1
             </button>
           )}
-          <span className="av-wheel-zoom-val">{Math.round(zoom * 100)}%</span>
+          <span className="min-w-[42px] text-center text-[11px] font-semibold font-num text-[var(--w-ink-dim,#a7c4c3)]">
+            {Math.round(zoom * 100)}%
+          </span>
         </div>
 
         <div
-          className={cn("av-wheel-viewport", zoom > 1 && "pannable", isDragging && "dragging")}
+          className={cn(
+            "flex min-h-0 flex-1 touch-none items-center justify-center overflow-hidden",
+            zoom > 1 && "cursor-grab",
+            isDragging && "cursor-grabbing",
+          )}
           onWheel={onWheel}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -589,14 +606,14 @@ export function AvakahadaWheel({ highlighted }: Props) {
           onPointerCancel={endDrag}
         >
           <div
-            className="av-wheel-transform"
+            className="flex w-full justify-center will-change-transform"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: "center center",
               transition: isDragging ? "none" : "transform 0.12s ease-out",
             }}
           >
-        <svg viewBox="0 0 620 620" className="av-wheel-svg" role="img" aria-label={t("avakahada.wheel_svg_aria")}>
+        <svg viewBox="0 0 620 620" className="block h-auto w-full max-w-[660px] select-none" role="img" aria-label={t("avakahada.wheel_svg_aria")}>
           <defs>
             <radialGradient id="av-hub-glow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="var(--av-hub-center)" />
@@ -624,13 +641,17 @@ export function AvakahadaWheel({ highlighted }: Props) {
           <circle cx={CX} cy={CY} r={R.hub} fill="url(#av-hub-glow)" className="av-wheel-hub-ring" />
 
           <foreignObject x={CX - R.hub + 10} y={CY - R.hub + 10} width={R.hub * 2 - 20} height={R.hub * 2 - 20}>
-            <div className="av-wheel-hub-inner">
+            <div className="flex h-full w-full items-center justify-center overflow-hidden text-center">
               {activeRow && activeFocus ? (
                 <HubContent focus={activeFocus} row={activeRow} />
               ) : (
-                <div className="av-wheel-hub-placeholder">
-                  <p className="av-wheel-hub-placeholder-title">{t("avakahada.wheel_hub_title")}</p>
-                  <p className="av-wheel-hub-placeholder-sub">{t("avakahada.wheel_hub_hint")}</p>
+                <div>
+                  <p className="m-0 text-lg font-bold text-[var(--w-accent,var(--color-danger))]">
+                    {t("avakahada.wheel_hub_title")}
+                  </p>
+                  <p className="mt-1 text-[13px] font-semibold text-[var(--w-ink,#eaf3f1)]">
+                    {t("avakahada.wheel_hub_hint")}
+                  </p>
                 </div>
               )}
             </div>
@@ -640,18 +661,21 @@ export function AvakahadaWheel({ highlighted }: Props) {
         </div>
       </div>
 
-      <div className="av-wheel-legend">
-        <span className="av-wheel-legend-label">{t("avakahada.wheel_legend_gana")}</span>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3.5 gap-y-2.5 text-xs text-muted-foreground">
+        <span className="font-semibold text-foreground">{t("avakahada.wheel_legend_gana")}</span>
         {ganas.map((g) => (
-          <span key={g} className="av-wheel-legend-item">
-            <span className={cn("av-wheel-legend-swatch", `gana-${g}`)} aria-hidden />
+          <span key={g} className="inline-flex items-center gap-1.5">
+            <span
+              className={cn("h-3 w-3 rounded-[3px] border border-current/20", GANA_SWATCH_CLASS[g])}
+              aria-hidden
+            />
             {localizeGana(g, lang)}
           </span>
         ))}
-        <span className="av-wheel-legend-rings text-muted-foreground">{t("avakahada.wheel_legend_rings")}</span>
-        <span className="av-wheel-legend-rings text-muted-foreground">· {t("avakahada.wheel_pan_hint")}</span>
+        <span className="text-muted-foreground">{t("avakahada.wheel_legend_rings")}</span>
+        <span className="text-muted-foreground">· {t("avakahada.wheel_pan_hint")}</span>
         {hasFilter && (
-          <span className="av-wheel-legend-filter text-muted-foreground">
+          <span className="text-muted-foreground">
             {t("avakahada.wheel_legend_filter", { count: String(highlightSet.size) })}
           </span>
         )}

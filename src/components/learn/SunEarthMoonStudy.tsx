@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { useLocale } from "@/i18n/locale";
@@ -56,7 +57,7 @@ export function SunEarthMoonStudy() {
   const daysIntoLunarMonth = day - monthsDone * SYNODIC_MONTH;
 
   return (
-    <div className="tm-card pad-lg">
+    <div className={tmCardPadLg}>
       <SunEarthMoonOrbit
         day={day}
         onDay={(v) => {
@@ -64,46 +65,46 @@ export function SunEarthMoonStudy() {
           setDay(v);
         }}
       />
-      <div className="ed-controls">
-        <div className="ed-readout">
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("सौर महिना", "Solar month")}</span>
-            <span className="ed-ro-v">{BS_MONTHS[monthIdx]}</span>
+      <div className={edControls}>
+        <div className={edReadout}>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("सौर महिना", "Solar month")}</span>
+            <span className={edRoV()}>{BS_MONTHS[monthIdx]}</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("सूर्य राशि · नक्षत्र", "Sun sign · nakshatra")}</span>
-            <span className="ed-ro-v">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("सूर्य राशि · नक्षत्र", "Sun sign · nakshatra")}</span>
+            <span className={edRoV()}>
               {WHEEL_RASHIS[rashiIdx]!.sym} {pick(WHEEL_RASHIS[rashiIdx]!.ne, WHEEL_RASHIS[rashiIdx]!.en)} · {pick(NAKSHATRA_ICONS[nakIdx]!.ne, NAKSHATRA_ICONS[nakIdx]!.en)}
             </span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("सूर्य देशान्तर", "Sun longitude")}</span>
-            <span className="ed-ro-v mono">{fmt(Math.round(sunLon))}°</span>
+          <div className={edRo}>
+            <span className={edRoK}>{pick("सूर्य देशान्तर", "Sun longitude")}</span>
+            <span className={edRoV({ mono: true })}>{fmt(Math.round(sunLon))}°</span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("वर्षको दिन", "Day of year")}</span>
-            <span className="ed-ro-v mono">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("वर्षको दिन", "Day of year")}</span>
+            <span className={edRoV({ mono: true })}>
               {fmt(Math.round(day))} / {fmt(365)}
             </span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("चन्द्र कोण · पक्ष", "Moon angle · paksha")}</span>
-            <span className="ed-ro-v mono">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("चन्द्र कोण · पक्ष", "Moon angle · paksha")}</span>
+            <span className={edRoV({ mono: true })}>
               {fmt(Math.round(E))}° · {paksha}
             </span>
           </div>
-          <div className="ed-ro">
-            <span className="ed-ro-k">{pick("सकिएका चान्द्र महिना", "Lunar months done")}</span>
-            <span className="ed-ro-v amber">
+          <div className={edRo}>
+            <span className={edRoK}>{pick("सकिएका चान्द्र महिना", "Lunar months done")}</span>
+            <span className={edRoV({ amber: true })}>
               {fmt(monthsDone)} / ~{fmt(12)} · {fmt(Math.round(daysIntoLunarMonth))}{" "}
               {pick("दिन यो महिनाको", "days into this month")}
             </span>
           </div>
         </div>
-        <div className="ed-scrub-wrap">
+        <div className={edScrubWrap}>
           <button
             type="button"
-            className="ed-playbtn"
+            className={edPlayBtn}
             onClick={() => setPlaying((p) => !p)}
             title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
             aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
@@ -124,12 +125,12 @@ export function SunEarthMoonStudy() {
             }}
           />
         </div>
-        <div className="ed-presets">
+        <div className={edPresets}>
           {PRESETS.map((p) => (
             <button
               key={p.ne}
               type="button"
-              className={"ed-preset" + (Math.abs(day - p.day) < 4 ? " on" : "")}
+              className={edPreset(Math.abs(day - p.day) < 4)}
               onClick={() => {
                 setPlaying(false);
                 setDay(p.day);
@@ -140,7 +141,7 @@ export function SunEarthMoonStudy() {
           ))}
         </div>
       </div>
-      <p className="tm-card-cap">
+      <p className={tmCardCap}>
         {pick(
           <>
             बाहिरी {fmt(12)} राशि र {fmt(27)} नक्षत्रको ग्रिडले पृथ्वीबाट देखिने{" "}

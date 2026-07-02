@@ -17,12 +17,56 @@ import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WheelChart, type WheelHover, type WheelPick } from "./WheelChart";
 import { WheelPanel } from "./WheelPanel";
 import { useLocale } from "@/i18n/locale";
+import { patroSkel, patroWheelShell } from "@/lib/patro-classes";
+import {
+  wheelDock,
+  wheelDockGrp,
+  wheelDockLabel,
+  wheelDockSep,
+  wheelDockTodayBtn,
+  wheelDockVal,
+  wheelHead,
+  wheelHeadEyebrow,
+  wheelHeadSub,
+  wheelHeadTitle,
+  wheelIconBtn,
+  wheelLegend,
+  wheelLegendDot,
+  wheelLegendRow,
+  wheelScrub,
+  wheelStage,
+  wheelSvgWrap,
+  wheelTip,
+  wheelTipKind,
+  wheelTipRow,
+  wheelTipSym,
+  wheelTipTitle,
+} from "@/lib/wheel-classes";
+import { cn } from "@/lib/utils";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { NAK_LORD_EN } from "@/lib/wheel-locale";
 
 function bsMonthEnOf(ne: string): string {
   const i = BS_MONTHS_NE.indexOf(ne);
   return i >= 0 ? BS_MONTH_NAMES[i] : ne;
+}
+
+function WheelHead({
+  eyebrow,
+  title,
+  sub,
+}: {
+  eyebrow: React.ReactNode;
+  title: React.ReactNode;
+  sub: React.ReactNode;
+}) {
+  return (
+    <div className={wheelHead}>
+      <div className={wheelHeadEyebrow}>{eyebrow}</div>
+      <div className={wheelHeadTitle}>{title}</div>
+      <div className={wheelHeadSub}>{sub}</div>
+    </div>
+  );
 }
 
 interface Props {
@@ -50,19 +94,23 @@ function PanchangaWheelSkeleton({
   const locLabel = locationLabel ?? pick("काठमाडौं", "Kathmandu");
 
   return (
-    <div className="pn-wheel rounded-2xl border border-border overflow-hidden" aria-busy="true">
-      <div className="w-stage">
-        <div className="w-head">
-          <div className="w-head-eyebrow">{pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}</div>
-          <div className="w-head-title">
-            {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
-            <span className="yr">{num(bsYear)}</span>
-          </div>
-          <div className="w-head-sub">
-            {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))} {num(bsDay)} · {locLabel}
-          </div>
-        </div>
-        <div className="pn-chart-skel w-svg-wrap" style={{ minHeight: 420, margin: "0 auto" }} />
+    <div className={cn("pn-wheel", patroWheelShell)} aria-busy="true">
+      <div className={wheelStage}>
+        <WheelHead
+          eyebrow={pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
+          title={
+            <>
+              {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
+              <span className="yr">{num(bsYear)}</span>
+            </>
+          }
+          sub={
+            <>
+              {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))} {num(bsDay)} · {locLabel}
+            </>
+          }
+        />
+        <div className={cn(patroSkel, wheelSvgWrap)} style={{ minHeight: 420, margin: "0 auto" }} />
       </div>
     </div>
   );
@@ -230,28 +278,28 @@ function PanchangaWheelBody({
     if (hover.type === "nak") {
       const ic = NAKSHATRA_ICONS[hover.i]!;
       tipNode = (
-        <div className="w-tip show" style={{ left: tip.x, top: tip.y }}>
-          <div className="w-tip-kind">{pick("नक्षत्र", "Nakshatra")} · {num(hover.i + 1)}</div>
-          <div className="w-tip-title">{pick(ic.ne, ic.en)}</div>
-          <div className="w-tip-row">
+        <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
+          <div className={wheelTipKind}>{pick("नक्षत्र", "Nakshatra")} · {num(hover.i + 1)}</div>
+          <div className={wheelTipTitle}>{pick(ic.ne, ic.en)}</div>
+          <div className={wheelTipRow}>
             <span>{pick("स्वामी", "Lord")}</span>
             <b>{pick(ic.lord_ne, NAK_LORD_EN[ic.lord_ne] ?? ic.lord_ne)}</b>
           </div>
-          <div className="w-tip-sym">{ic.sym_ne}</div>
+          <div className={wheelTipSym}>{ic.sym_ne}</div>
         </div>
       );
     } else {
       const rs = WHEEL_RASHIS[hover.i]!;
       tipNode = (
-        <div className="w-tip show" style={{ left: tip.x, top: tip.y }}>
-          <div className="w-tip-kind">{pick("राशि", "Rashi")} · {num(hover.i + 1)}</div>
-          <div className="w-tip-title">
+        <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
+          <div className={wheelTipKind}>{pick("राशि", "Rashi")} · {num(hover.i + 1)}</div>
+          <div className={wheelTipTitle}>
             <span style={{ fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}>
               {rs.sym + "\uFE0E"}
             </span>{" "}
             {pick(rs.ne, rs.en)}
           </div>
-          <div className="w-tip-row">
+          <div className={wheelTipRow}>
             <span>{pick("महिना", "Month")}</span>
             <b>{pick(bsMonthNe, bsMonthEnOf(bsMonthNe))}</b>
           </div>
@@ -261,20 +309,24 @@ function PanchangaWheelBody({
   }
 
   return (
-    <div className="pn-wheel rounded-2xl border border-border overflow-hidden">
-      <div className="w-stage" ref={stageRef} onMouseMove={onStageMove}>
-        <div className="w-head">
-          <div className="w-head-eyebrow">{pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}</div>
-          <div className="w-head-title">
-            {isToday && !scrubPinned ? pick("आजको", "Today's") : ""}{" "}
-            {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
-            <span className="yr">{num(bsYear)}</span>
-          </div>
-          <div className="w-head-sub">
-            {pick(det.weekday.ne, det.weekday.en)}, {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))}{" "}
-            {num(bsDay)} · {pick(tithiNe, tithiEn)} · {locLabel}
-          </div>
-        </div>
+    <div className={cn("pn-wheel", patroWheelShell)}>
+      <div className={wheelStage} ref={stageRef} onMouseMove={onStageMove}>
+        <WheelHead
+          eyebrow={pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
+          title={
+            <>
+              {isToday && !scrubPinned ? pick("आजको", "Today's") : ""}{" "}
+              {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
+              <span className="yr">{num(bsYear)}</span>
+            </>
+          }
+          sub={
+            <>
+              {pick(det.weekday.ne, det.weekday.en)}, {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))}{" "}
+              {num(bsDay)} · {pick(tithiNe, tithiEn)} · {locLabel}
+            </>
+          }
+        />
 
         <WheelChart
           det={scrubDet}
@@ -303,29 +355,29 @@ function PanchangaWheelBody({
           onClose={() => setPicked(null)}
         />
 
-        <div className="w-legend">
-          <div className="w-legend-row">
-            <span className="w-legend-dot" style={{ background: "var(--w-accent)" }} />
+        <div className={wheelLegend}>
+          <div className={wheelLegendRow}>
+            <span className={wheelLegendDot} style={{ background: "var(--w-accent)" }} />
             {pick("लग्न · वर्तमान नक्षत्र · तिथि", "Lagna · current nakshatra · tithi")}
           </div>
-          <div className="w-legend-row">
-            <span className="w-legend-dot" style={{ background: "#f2a81d" }} />
+          <div className={wheelLegendRow}>
+            <span className={wheelLegendDot} style={{ background: "#f2a81d" }} />
             {pick("सूर्य राशि", "Sun sign")}
           </div>
-          <div className="w-legend-row">
-            <span className="w-legend-dot" style={{ background: "#d3dce4" }} />
+          <div className={wheelLegendRow}>
+            <span className={wheelLegendDot} style={{ background: "#d3dce4" }} />
             {pick("चन्द्र राशि", "Moon sign")}
           </div>
-          <div className="w-legend-row" style={{ opacity: 0.7, marginTop: 2 }}>
+          <div className={cn(wheelLegendRow, "mt-0.5 opacity-70")}>
             {pick("घुमाउन तान्नुहोस् · pinch to zoom", "drag to rotate · pinch to zoom")}
           </div>
         </div>
 
-        <div className="w-dock">
-          <div className="w-dock-grp">
-            <span className="w-dock-label">{pick("समय", "Time")}</span>
+        <div className={wheelDock}>
+          <div className={wheelDockGrp}>
+            <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
             <input
-              className="w-scrub"
+              className={wheelScrub}
               type="range"
               min="0"
               max="60"
@@ -334,14 +386,14 @@ function PanchangaWheelBody({
               style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
               onChange={(e) => handleScrubChange(+e.target.value)}
             />
-            <span className="w-dock-val">{num(scrubClock)}</span>
+            <span className={wheelDockVal}>{num(scrubClock)}</span>
           </div>
-          <div className="w-dock-sep" />
-          <div className="w-dock-grp">
+          <div className={wheelDockSep} />
+          <div className={wheelDockGrp}>
             {isToday && (
               <button
                 type="button"
-                className="w-dock-todaybtn"
+                className={wheelDockTodayBtn}
                 title={pick("अहिलेको समय", "Current time")}
                 onClick={snapToNow}
               >
@@ -350,7 +402,7 @@ function PanchangaWheelBody({
             )}
             <button
               type="button"
-              className="w-iconbtn"
+              className={wheelIconBtn}
               title={pick("उत्तर सिधा", "North up")}
               onClick={() => setSpin(0)}
             >
@@ -358,7 +410,7 @@ function PanchangaWheelBody({
             </button>
             <button
               type="button"
-              className="w-iconbtn"
+              className={wheelIconBtn}
               title="Zoom in"
               onClick={() => handleZoom(zoom * 1.4)}
             >
@@ -366,7 +418,7 @@ function PanchangaWheelBody({
             </button>
             <button
               type="button"
-              className="w-iconbtn"
+              className={wheelIconBtn}
               title="Zoom out"
               onClick={() => handleZoom(zoom / 1.4)}
             >
@@ -375,10 +427,9 @@ function PanchangaWheelBody({
             {zoom !== 1 && (
               <button
                 type="button"
-                className="w-iconbtn"
+                className={cn(wheelIconBtn, "px-1.5 text-[9px]")}
                 title="Reset zoom"
                 onClick={() => { handleZoom(1); setPan({ x: 0, y: 0 }); }}
-                style={{ fontSize: 9, padding: "0 6px" }}
               >
                 1:1
               </button>

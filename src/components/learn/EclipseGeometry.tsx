@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
 import { EarthGlobeImage } from "./EarthGlobeImage";
 import { MoonPhaseDisc } from "@/components/tithi-mechanics/MoonPhaseDisc";
@@ -190,7 +191,7 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
     <svg
       ref={svgRef}
       viewBox={`0 0 ${ECL.W} ${ECL.H}`}
-      className={`ed-svg ecl-svg${onU ? " grab" : ""}`}
+      className={edSvg("ecl", !!onU)}
       onPointerDown={(e) => {
         if (!onU) return;
         drag.current = true;

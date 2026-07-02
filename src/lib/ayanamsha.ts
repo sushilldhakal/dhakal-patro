@@ -53,37 +53,14 @@ export const AYANAMSHA_MODES: AyanamshaModeInfo[] = [
 ];
 
 /**
- * Degrees to ADD to a Lahiri-based sidereal longitude to express it under the
- * target ayanamsha. Raman and Krishnamurti both anchor at Swiss Ephemeris's
- * J1900 reference epoch (ayan_t0 = 21.0144° and 22.3639° respectively); since
- * all classical ayanamshas share the same lunisolar precession rate, their
- * offset from Lahiri (≈22.4610° at the same epoch, back-computed from
- * Lahiri's own t0=1956 definition) stays close to constant across centuries.
- * Nepal Panchang publications and True Chitrapaksha are both treated as
- * equal to Lahiri here: NPNS uses a Lahiri-equivalent ayanamsha, and True
- * Chitrapaksha's star-locked definition differs from Lahiri by well under an
- * arcminute in the current era.
+ * True when the mode's zodiac matches the API's panchanga angas, which are
+ * always computed in Lahiri (Nepal Panchang uses a Lahiri-equivalent
+ * ayanamsha). For other modes the graha/lagna longitudes come back shifted,
+ * so nakshatra-derived fields must be recomputed from the longitude instead
+ * of read from the Lahiri anga blocks.
  */
-const OFFSET_FROM_LAHIRI_DEG: Record<AyanamshaMode, number> = {
-  nepal: 0,
-  lahiri: 0,
-  raman: -1.4465,
-  kp: -0.0971,
-  true_citra: 0,
-};
-
-export function getAyanamshaOffsetDeg(mode: AyanamshaMode): number {
-  return OFFSET_FROM_LAHIRI_DEG[mode] ?? 0;
-}
-
-export function shiftSiderealLongitude(longitudeDeg: number, mode: AyanamshaMode): number {
-  const shifted = (longitudeDeg + getAyanamshaOffsetDeg(mode)) % 360;
-  return shifted < 0 ? shifted + 360 : shifted;
-}
-
-/** True for modes recomputed client-side from Lahiri-based data rather than fetched directly. */
-export function isApproximateMode(mode: AyanamshaMode): boolean {
-  return mode === "raman" || mode === "kp" || mode === "true_citra";
+export function matchesPanchangaAngas(mode: AyanamshaMode): boolean {
+  return mode === "nepal" || mode === "lahiri";
 }
 
 export function getAyanamshaModeInfo(mode: AyanamshaMode): AyanamshaModeInfo {

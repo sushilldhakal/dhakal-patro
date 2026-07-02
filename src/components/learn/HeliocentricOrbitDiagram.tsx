@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { edSvg } from "@/lib/learn-classes";
 import { EarthGlobeImage, EARTH_AXIAL_TILT } from "./EarthGlobeImage";
 import {
   ORBIT,
@@ -151,7 +152,7 @@ export function HeliocentricOrbitDiagram({
     <svg
       ref={svgRef}
       viewBox={`0 0 ${HO.W} ${HO.H}`}
-      className={`ed-svg ho-svg${onMeanDeg ? " grab" : ""}`}
+      className={edSvg("ho", !!onMeanDeg)}
       onPointerDown={(e) => {
         if (!onMeanDeg) return;
         drag.current = true;

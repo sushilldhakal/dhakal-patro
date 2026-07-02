@@ -11,6 +11,8 @@ import {
   type TimelineRowData,
 } from "./day-timeline-data";
 import { useLocale } from "@/i18n/locale";
+import { patroCard, patroSecBand, patroSkel } from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
 
 const W = 1000;
 const X0 = 96;
@@ -48,6 +50,7 @@ const TRACK_CLS: Record<string, string> = {
   योग: "yoga",
   करण: "karana",
   चौघडिया: "cho",
+  होरा: "hora",
   लग्न: "lagna",
 };
 
@@ -101,15 +104,17 @@ interface Props {
 function DayTimelineBand() {
   const { pick } = useLocale();
   return (
-    <div className="pg-sec-band pgx-band">
-      <h2>{pick("दिन-चक्र", "Day cycle")}</h2>
-      <span>{pick("पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise", "Full panchanga timeline · sunrise to sunrise")}</span>
-      <span className="pgx-legend">
-        <i className="pgx-key good" />
+    <div className={patroSecBand}>
+      <h2 className="m-0 text-sm font-bold">{pick("दिन-चक्र", "Day cycle")}</h2>
+      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        {pick("पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise", "Full panchanga timeline · sunrise to sunrise")}
+      </span>
+      <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-muted-foreground">
+        <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-success/34 not-italic" />
         {pick("शुभ", "Good")}
-        <i className="pgx-key bad" />
+        <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-danger/30 not-italic" />
         {pick("अशुभ", "Bad")}
-        <i className="pgx-key night" />
+        <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-secondary/22 not-italic" />
         {pick("रात", "Night")}
       </span>
     </div>
@@ -161,10 +166,10 @@ export function DayTimeline({
 
   if (loading || !p || !data) {
     return (
-      <div className="pg-sec pgx-card" aria-busy={loading || !data}>
+      <div className={cn(patroCard, "max-w-full")} aria-busy={loading || !data}>
         <DayTimelineBand />
-        <div className="pgx-scroll">
-          <div className="pn-chart-skel" style={{ minHeight: 320 }} />
+        <div className="w-full max-w-full overflow-hidden px-3 pt-3 pb-1">
+          <div className={cn(patroSkel, "w-full")} style={{ minHeight: 320 }} />
         </div>
       </div>
     );
@@ -184,7 +189,16 @@ export function DayTimeline({
               bad: c.bad,
               cut: false,
             }))
-          : segmentsFromRow(row);
+          : row.kind === "hora"
+            ? data.hora.map((h) => ({
+                ne: h.name,
+                en: h.nameEn,
+                fromG: h.startG,
+                toG: h.endG,
+                bad: h.bad,
+                cut: false,
+              }))
+            : segmentsFromRow(row);
       return { key: row.label, ne: row.label, en: row.en, cls, segs };
     });
 
@@ -212,13 +226,13 @@ export function DayTimeline({
   const trackY = (i: number) => T0 + i * TRACK;
 
   return (
-    <div className="pg-sec pgx-card">
+    <div className={cn(patroCard, "max-w-full")}>
       <DayTimelineBand />
 
-      <div className="pgx-scroll">
+      <div className="w-full max-w-full overflow-hidden px-3 pt-3 pb-1">
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="pgx-svg"
+          className="block h-auto w-full max-w-full"
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label="Full panchanga day chart"
@@ -307,7 +321,7 @@ export function DayTimeline({
                         nowG >= s.fromG &&
                         nowG < s.toG;
                       const segCls =
-                        tr.cls === "cho"
+                        tr.cls === "cho" || tr.cls === "hora"
                           ? s.bad
                             ? "pgx-seg cho-bad"
                             : "pgx-seg cho-good"
@@ -345,8 +359,8 @@ export function DayTimeline({
                       >
                         <title>{`${pick(tr.ne, tr.en)}: ${segText} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
                       </rect>
-                      {tr.cls === "cho" ? (
-                        w > 26 && (
+                      {tr.cls === "cho" || tr.cls === "hora" ? (
+                        w > 20 && (
                           <text
                             x={(x + x2) / 2}
                             y={y + BAND / 2 + 4}
@@ -392,7 +406,7 @@ export function DayTimeline({
 
           {tracks.map((tr, ti) => {
             const y = trackY(ti);
-            if (tr.cls === "cho") return null;
+            if (tr.cls === "cho" || tr.cls === "hora") return null;
             return (
               <g key={`${tr.key}-cuts`}>
                 {tr.segs.map((s, si) => {
@@ -445,22 +459,30 @@ export function DayTimeline({
       </div>
 
       {planets.length > 0 && (
-        <div className="pgx-grahas">
-          <div className="pgx-grahas-label">
-            <span className="ne">{pick("ग्रह", "Planets")}</span>
-            <span className="en">{getPlanetsAnchorLabel(p)}</span>
+        <div className="flex items-stretch gap-3 border-t border-border px-4 py-2.5 pb-3.5">
+          <div className="flex min-w-[86px] flex-col justify-center">
+            <span className="text-[12.5px] font-bold">{pick("ग्रह", "Planets")}</span>
+            <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground">
+              {getPlanetsAnchorLabel(p)}
+            </span>
           </div>
-          <div className="pgx-graha-row">
+          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
             {planets.map(({ label, rashiNe, coords }) => {
               const labelL = pick(label, TL_GRAHA_EN[label] ?? label);
               const rashiL = pick(rashiNe ?? "—", TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—");
               return (
-              <div key={label} className="pgx-graha" title={`${labelL} — ${rashiL} ${coords}`}>
-                <span className="pgx-graha-sym">{PLANET_SYM[label] ?? "★"}</span>
-                <span className="pgx-graha-name">
+              <div
+                key={label}
+                className="flex min-w-[86px] flex-col items-center gap-px rounded-lg bg-foreground/4 px-2.5 py-1.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
+                title={`${labelL} — ${rashiL} ${coords}`}
+              >
+                <span className="text-[13px] leading-none text-secondary dark:text-[#7fd6db]">
+                  {PLANET_SYM[label] ?? "★"}
+                </span>
+                <span className="inline-flex items-baseline gap-0.5 text-[11.5px] font-semibold whitespace-nowrap">
                   {labelL}–{rashiL}
                 </span>
-                <span className="pgx-graha-deg mono">{coords}</span>
+                <span className="mono text-xs font-medium text-muted-foreground">{coords}</span>
               </div>
               );
             })}

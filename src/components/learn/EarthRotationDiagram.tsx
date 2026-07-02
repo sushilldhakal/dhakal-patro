@@ -1,4 +1,5 @@
 import { EarthGlobeImage } from "./EarthGlobeImage";
+import { ssRotSvg } from "@/lib/learn-classes";
 import { useLocale } from "@/i18n/locale";
 
 const W = 640;
@@ -12,7 +13,7 @@ export function EarthRotationDiagram() {
   const fmt = (n: number) => digits(n);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="ss-rot-svg" aria-hidden>
+    <svg viewBox={`0 0 ${W} ${H}`} className={ssRotSvg} aria-hidden>
       <defs>
         <marker id="ss-rot-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
           <path d="M0,0 L7,3.5 L0,7 Z" className="ss-rot-arrow-head" />

@@ -28,6 +28,25 @@ import {
 } from "@/lib/hora-data";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import { useLocale } from "@/i18n/locale";
+import { patroWheelShell } from "@/lib/patro-classes";
+import {
+  horaCompassEn,
+  horaCompassNep,
+  horaGlowAmber,
+  horaGlowTeal,
+  horaGlowViolet,
+  horaGridBg,
+  horaHubDay,
+  horaHubNum,
+  horaHubRom,
+  horaHubRuler,
+  horaSeg,
+  horaSegText,
+  horaStage,
+  horaTheme,
+  horaTickline,
+} from "@/lib/hora-classes";
+import { cn } from "@/lib/utils";
 import { buildWheelDetail } from "@/lib/wheel-data";
 import { PlanetIcon } from "./hora/PlanetIcon";
 
@@ -86,10 +105,10 @@ function CompassMarker({ deg, nep, en }: { deg: number; nep: string; en: string 
   const [nx1, ny1] = horaPol(HORA_R_OUT0 + 14, deg);
   return (
     <g>
-      <text className="hora-compass-nep" x={x} y={y - 2} textAnchor="middle">
+      <text className={horaCompassNep} x={x} y={y - 2} textAnchor="middle">
         {nep}
       </text>
-      <text className="hora-compass-en" x={x} y={y + 15} textAnchor="middle">
+      <text className={horaCompassEn} x={x} y={y + 15} textAnchor="middle">
         {en}
       </text>
       <line
@@ -239,44 +258,46 @@ export function HoraRing({ p, isToday, timezone }: Props) {
   const num = (n: number | string) => digits(n);
 
   return (
-    <div className="pn-hora rounded-2xl border border-border overflow-hidden">
-      <div className="hora-stage">
-        <div className="hora-glow teal" />
-        <div className="hora-glow violet" />
-        <div className="hora-glow amber" />
-        <div className="hora-grid-bg" />
+    <div className={cn(horaTheme, patroWheelShell)}>
+      <div className={horaStage}>
+        <div className={horaGlowTeal} />
+        <div className={horaGlowViolet} />
+        <div className={horaGlowAmber} />
+        <div className={horaGridBg} />
 
-        <div className="hora-layout">
-          <div className="hora-intro">
-            <div className="hora-eyebrow">{pick("होरा · ग्रहीय होरा", "Hora · Planetary Hours")}</div>
-            <h2 className="hora-title">
+        <div className="relative z-[2] flex flex-col items-center gap-7 px-6 pt-8 pb-[100px] text-center max-sm:gap-5 max-sm:px-4 max-sm:pt-5 max-sm:pb-24">
+          <div className="w-full max-w-[640px]">
+            <div className="flex items-center justify-center gap-2.5 text-xs font-semibold uppercase tracking-[0.22em] text-secondary before:h-px before:w-[22px] before:bg-secondary/70 before:content-[''] dark:text-[var(--hora-yellow)] dark:before:bg-[var(--hora-yellow)]/70">
+              {pick("होरा · ग्रहीय होरा", "Hora · Planetary Hours")}
+            </div>
+            <h2 className="mt-3.5 text-[clamp(28px,4vw,40px)] font-bold leading-tight tracking-tight text-foreground dark:text-[var(--hora-ink)]">
               {pick("एक हप्ता,", "One week,")}
               <br />
-              <span className="hora-title-accent">{pick("निरन्तर होरा", "unbroken hora")}</span>
+              <span className="text-secondary dark:text-[var(--hora-yellow)]">{pick("निरन्तर होरा", "unbroken hora")}</span>
             </h2>
             {pick(
-              <p className="hora-lede">
+              <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed text-muted-foreground dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
                 हरेक वलय एउटै दिन हो — सात ग्रहले पालो–पालोमा शासन गर्ने चौबीस{" "}
                 <em>होरा</em>। सूर्योदयपछिको <em>पहिलो</em> होराको ग्रहले दिनको नाम दिन्छ। गणना
-                कहिल्यै रोकिँदैन: <span className="hora-deva">आइतबार</span>को अन्तिम होरा{" "}
-                <span className="hora-deva">सोम</span>मा गुड्छ र{" "}
-                <span className="hora-deva">सोमबार</span> खोल्छ। केन्द्रबाट बाहिरतिर —{" "}
-                <span className="hora-deva">आदित्य → शनि</span> — हप्ताभरि सर्पिल अनुसरण गर्नुहोस्।
+                कहिल्यै रोकिँदैन: <span>आइतबार</span>को अन्तिम होरा{" "}
+                <span>सोम</span>मा गुड्छ र{" "}
+                <span>सोमबार</span> खोल्छ। केन्द्रबाट बाहिरतिर —{" "}
+                <span>आदित्य → शनि</span> — हप्ताभरि सर्पिल अनुसरण गर्नुहोस्।
               </p>,
-              <p className="hora-lede">
+              <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed text-muted-foreground dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
                 Each ring is one day — twenty-four <em>horas</em> ruled in turn by the seven
                 planets. The planet of the <em>first</em> hora after sunrise gives the day its
                 name. The count never stops: the last hora of{" "}
-                <span className="hora-deva">Sunday</span> rolls into{" "}
-                <span className="hora-deva">Monday</span> and opens{" "}
-                <span className="hora-deva">Monday</span>. Follow the spiral from the centre
-                outward — <span className="hora-deva">Sun → Saturn</span> — across the week.
+                <span>Sunday</span> rolls into{" "}
+                <span>Monday</span> and opens{" "}
+                <span>Monday</span>. Follow the spiral from the centre
+                outward — <span>Sun → Saturn</span> — across the week.
               </p>,
             )}
           </div>
 
-          <div className="hora-ringwrap">
-            <svg viewBox="0 0 960 900" className="hora-ring-svg" preserveAspectRatio="xMidYMid meet">
+          <div className="relative mx-auto aspect-[960/900] w-full max-w-[640px]">
+            <svg viewBox="0 0 960 900" className="block h-full w-full" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="hora-hubSun" cx="42%" cy="38%" r="68%">
                   <stop offset="0%" stopColor="#ffe79a" />
@@ -315,7 +336,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                     <path
                       d={c.pathD}
                       fill={P.color}
-                      className="hora-seg"
+                      className={horaSeg}
                       style={{
                         opacity: passed ? 1 : 0.07,
                         filter: active
@@ -324,7 +345,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                       }}
                     />
                     <line
-                      className="hora-tickline"
+                      className={horaTickline}
                       x1={c.tick.x1}
                       y1={c.tick.y1}
                       x2={c.tick.x2}
@@ -332,7 +353,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                       opacity={0.3}
                     />
                     {c.label && (
-                      <g className="hora-segtext" style={{ opacity: passed ? 1 : 0 }}>
+                      <g className={horaSegText} style={{ opacity: passed ? 1 : 0 }}>
                         <text
                           textAnchor="middle"
                           fill={c.label.fill}
@@ -379,17 +400,17 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                 <circle cx={HORA_CX} cy={HORA_CY - 50} r={27} fill="url(#hora-hubSun)" />
               </g>
 
-              <text className="hora-hub-day" x={HORA_CX} y={HORA_CY + 2} textAnchor="middle">
+              <text className={horaHubDay} x={HORA_CX} y={HORA_CY + 2} textAnchor="middle">
                 {pick(week.day, week.en)}
               </text>
-              <text className="hora-hub-rom" x={HORA_CX} y={HORA_CY + 20} textAnchor="middle">
+              <text className={horaHubRom} x={HORA_CX} y={HORA_CY + 20} textAnchor="middle">
                 {pick(week.rom, ruler.en)}
               </text>
-              <text className="hora-hub-num" x={HORA_CX} y={HORA_CY + 42} textAnchor="middle">
+              <text className={horaHubNum} x={HORA_CX} y={HORA_CY + 42} textAnchor="middle">
                 HORĀ {horaPad(gii + 1)} / 24
               </text>
               <text
-                className="hora-hub-ruler"
+                className={horaHubRuler}
                 x={HORA_CX}
                 y={HORA_CY + 78}
                 textAnchor="middle"
@@ -404,33 +425,37 @@ export function HoraRing({ p, isToday, timezone }: Props) {
             </svg>
           </div>
 
-          <div className="hora-legend">
-            <div className="hora-legend-head">{pick("सात दिन · भित्र → बाहिर", "Seven days · inner → outer")}</div>
+          <div className="w-full max-w-[440px] text-left">
+            <div className="mb-2.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground dark:text-[var(--hora-ink-faint)]">
+              {pick("सात दिन · भित्र → बाहिर", "Seven days · inner → outer")}
+            </div>
             {HORA_WEEK.map((w, i) => {
               const P = HORA_PLANETS[w.ruler];
               return (
-                <div className="hora-lrow" key={w.day}>
-                  <span className="hora-lrow-ring">{i + 1}</span>
-                  <span className="hora-lrow-ico">
+                <div className="flex items-center gap-2.5 py-1.5" key={w.day}>
+                  <span className="w-5 shrink-0 text-center text-[10px] font-semibold font-num text-muted-foreground dark:text-[var(--hora-ink-faint)]">
+                    {i + 1}
+                  </span>
+                  <span className="grid h-[30px] w-[30px] shrink-0 place-items-center">
                     <PlanetIcon planet={w.ruler} size={30} />
                   </span>
-                  <span className="hora-lrow-names">
-                    <span className="hora-deva">{pick(w.day, w.en)}</span>
-                    <span className="hora-lrow-rom">
+                  <span className="flex min-w-0 flex-1 flex-col gap-px">
+                    <span className="font-semibold text-foreground dark:text-[var(--hora-ink)]">{pick(w.day, w.en)}</span>
+                    <span className="text-[10.5px] text-muted-foreground dark:text-[var(--hora-ink-faint)]">
                       {pick(`${w.rom} · ${HORA_DEVA[w.ruler]} ${P.nep}`, `${P.en} · ${P.nep}`)}
                     </span>
                   </span>
-                  <span className="hora-lrow-bar" style={{ background: P.color }} />
+                  <span className="h-[7px] w-[38px] shrink-0 rounded-full" style={{ background: P.color }} />
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="hora-controls">
+        <div className="absolute bottom-4 left-1/2 z-[5] flex w-[min(720px,calc(100%-32px))] -translate-x-1/2 items-center gap-3.5 rounded-full border border-border bg-card/95 px-3.5 py-2.5 shadow-md backdrop-blur-md dark:border-white/10 dark:bg-[rgba(13,16,22,0.82)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
           <button
             type="button"
-            className="hora-pp"
+            className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full border-0 bg-primary text-primary-foreground transition-[transform,filter] hover:brightness-105 active:translate-y-px active:scale-95 dark:bg-[var(--hora-yellow)] dark:text-[#1a1408] dark:hover:bg-[#ffe24a] dark:hover:brightness-100"
             aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
             onClick={() => {
               const next = !playing;
@@ -441,7 +466,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
             {playing ? <Pause size={18} /> : <Play size={18} />}
           </button>
           <div
-            className="hora-track"
+            className="relative flex h-8 flex-1 cursor-pointer touch-none items-center"
             ref={trackRef}
             onPointerDown={(e) => {
               draggingRef.current = true;
@@ -456,21 +481,31 @@ export function HoraRing({ p, isToday, timezone }: Props) {
               draggingRef.current = false;
             }}
           >
-            <div className="hora-ticks">
+            <div className="pointer-events-none absolute inset-x-0 h-[5px]">
               {Array.from({ length: HORA_NRINGS - 1 }, (_, i) => (
-                <i key={i} style={{ left: `${((i + 1) / HORA_NRINGS) * 100}%` }} />
+                <span
+                  key={i}
+                  className="absolute top-0 h-[5px] w-px bg-foreground/28 dark:bg-white/30"
+                  style={{ left: `${((i + 1) / HORA_NRINGS) * 100}%` }}
+                />
               ))}
             </div>
-            <div className="hora-rail">
-              <div className="hora-fill" style={{ width: `${prog * 100}%` }} />
+            <div className="absolute inset-x-0 h-[5px] overflow-hidden rounded-full bg-foreground/14 dark:bg-white/12">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#f6a623] to-secondary dark:to-[var(--hora-yellow)]"
+                style={{ width: `${prog * 100}%` }}
+              />
             </div>
-            <div className="hora-knob" style={{ left: `${prog * 100}%` }} />
+            <div
+              className="pointer-events-none absolute h-[13px] w-[13px] -translate-x-1/2 rounded-full border-2 border-secondary bg-card shadow-sm dark:border-0 dark:bg-white dark:shadow-[0_0_10px_rgba(255,215,10,0.8)]"
+              style={{ left: `${prog * 100}%` }}
+            />
           </div>
-          <div className="hora-readout">
+          <div className="min-w-0 shrink-0 text-right text-[11.5px] font-medium font-num tabular-nums text-muted-foreground dark:text-[var(--hora-ink-dim)] [&_b]:font-semibold [&_b]:text-foreground dark:[&_b]:text-white">
             <b>{pick(week.day, week.en)}</b> · {pick("होरा", "Hora")} {horaPad(gii + 1)} ·{" "}
             {pick(ruler.nep, ruler.en)}
             {isToday && (
-              <span className="hora-readout-ne">
+              <span className="text-muted-foreground/80 dark:text-[var(--hora-ink-faint)]">
                 {" "}
                 · {pick(HORA_DEVA[rulerKey], ruler.en)} · {num(gii + 1)}
               </span>

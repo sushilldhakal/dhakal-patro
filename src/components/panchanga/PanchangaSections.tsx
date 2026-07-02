@@ -47,6 +47,7 @@ import {
   TimingRange,
   UptoValue,
 } from "./PanchangaLayout";
+import { cn } from "@/lib/utils";
 
 type Anga = {
   name_ne?: string;
@@ -287,11 +288,14 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
 
 function BalamChips({ items, rashi = false }: { items: BalamChip[]; rashi?: boolean }) {
   return (
-    <div className="pg-chips">
+    <div className="mb-2.5 flex flex-wrap gap-1.5">
       {items.map((it, i) => (
-        <span key={`${it.name_ne ?? it.name}-${i}`} className="pg-chip">
+        <span
+          key={`${it.name_ne ?? it.name}-${i}`}
+          className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-1.5 text-[11.5px] font-semibold leading-none shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
+        >
           {rashi && it.number != null && (
-            <span className="pg-chip-sym">{rashiSymFromNumber(it.number)}</span>
+            <span className="text-[13px] leading-none">{rashiSymFromNumber(it.number)}</span>
           )}
           <span>{rashi ? formatRashiDisplayNe(it.name_ne) : it.name_ne}</span>
         </span>
@@ -299,6 +303,11 @@ function BalamChips({ items, rashi = false }: { items: BalamChip[]; rashi?: bool
     </div>
   );
 }
+
+const balamGrid = "grid grid-cols-1 min-[861px]:grid-cols-2";
+const balamCol = "border-b border-border px-4 py-3 pb-4";
+const balamColLeft = cn(balamCol, "min-[861px]:border-r min-[861px]:border-border");
+const balamHeading = "my-1.5 mb-2 text-[12.5px] font-medium text-muted-foreground [&_b]:font-bold [&_b]:text-foreground";
 
 export function BalamSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
@@ -309,9 +318,9 @@ export function BalamSection({ p }: { p: PanchangaDay }) {
 
   return (
     <PanchangaSection titleKey="sections.balam">
-      <div className="pg-balam">
-        <div className="pg-balam-col">
-          <h3 className="pg-balam-h">
+      <div className={balamGrid}>
+        <div className={balamColLeft}>
+          <h3 className={balamHeading}>
             {t("sections.auspicious_chandra")}
             {chandraTill ? (
               <>
@@ -321,11 +330,11 @@ export function BalamSection({ p }: { p: PanchangaDay }) {
             ) : null}
           </h3>
           <BalamChips items={chandra?.set1 ?? []} rashi />
-          <h3 className="pg-balam-h">{t("sections.until_sunrise")}</h3>
+          <h3 className={balamHeading}>{t("sections.until_sunrise")}</h3>
           <BalamChips items={chandra?.set2 ?? []} rashi />
         </div>
-        <div className="pg-balam-col">
-          <h3 className="pg-balam-h">
+        <div className={balamCol}>
+          <h3 className={balamHeading}>
             {t("sections.auspicious_tara")}
             {taraTill ? (
               <>
@@ -335,7 +344,7 @@ export function BalamSection({ p }: { p: PanchangaDay }) {
             ) : null}
           </h3>
           <BalamChips items={tara?.set1 ?? []} />
-          <h3 className="pg-balam-h">{t("sections.until_sunrise")}</h3>
+          <h3 className={balamHeading}>{t("sections.until_sunrise")}</h3>
           <BalamChips items={tara?.set2 ?? []} />
         </div>
       </div>
@@ -350,46 +359,55 @@ export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
 
   return (
     <PanchangaSection titleKey="sections.panchaka_lagna">
-      <div className="pg-balam">
-        <div className="pg-balam-col">
-          <h3 className="pg-balam-h">
+      <div className={balamGrid}>
+        <div className={balamColLeft}>
+          <h3 className={balamHeading}>
             <b>{t("sections.today_panchaka")}</b>
           </h3>
-          <div className="pg-mlist">
+          <div className="flex flex-col">
             {panchaka?.map((seg, i) => (
-              <div key={`pr-${i}`} className={`pg-mrow${seg.good ? " good" : ""}`}>
-                <span className="pg-mrow-name">{seg.name_ne ?? seg.name}</span>
-                <span className="pg-mrow-time font-mono">
+              <div
+                key={`pr-${i}`}
+                className={cn(
+                  "flex items-baseline justify-between gap-2.5 border-b border-dashed border-border py-1.5 text-[12.5px] font-medium last:border-b-0",
+                  seg.good && "font-semibold text-success",
+                )}
+              >
+                <span className="inline-flex items-baseline gap-1.5">{seg.name_ne ?? seg.name}</span>
+                <span className="whitespace-nowrap font-mono text-[11.5px] text-muted-foreground">
                   {formatTimeRangeShort(
                     seg.start_local_time_short ?? seg.start_local_time,
                     seg.end_local_time_short ?? seg.end_local_time
                   ) ?? "—"}
                 </span>
               </div>
-            )) ?? <span className="text-muted-foreground text-sm">—</span>}
+            )) ?? <span className="text-sm text-muted-foreground">—</span>}
           </div>
         </div>
-        <div className="pg-balam-col">
-          <h3 className="pg-balam-h">
+        <div className={balamCol}>
+          <h3 className={balamHeading}>
             <b>{t("sections.today_udaya_lagna")}</b>
           </h3>
-          <div className="pg-mlist">
+          <div className="flex flex-col">
             {lagna?.map((row, i) => (
-              <div key={`lagna-${i}`} className="pg-mrow lagna">
-                <span className="pg-mrow-name">
+              <div
+                key={`lagna-${i}`}
+                className="flex flex-wrap items-baseline justify-between gap-2.5 border-b border-dashed border-border py-1.5 text-[12.5px] font-medium last:border-b-0"
+              >
+                <span className="inline-flex items-baseline gap-1.5">
                   {row.number != null && (
-                    <span className="pg-chip-sym">{rashiSymFromNumber(row.number)}</span>
+                    <span className="text-[13px] leading-none">{rashiSymFromNumber(row.number)}</span>
                   )}
                   {formatRashiDisplayNe(row.name_ne ?? row.name)}
                 </span>
-                <span className="pg-mrow-time font-mono">
+                <span className="whitespace-nowrap font-mono text-[11.5px] text-muted-foreground">
                   {formatTimeRangeShort(
                     row.start_local_time_short ?? row.start_local_time,
                     row.end_local_time_short ?? row.end_local_time
                   ) ?? "—"}
                 </span>
                 {row.pushkara_navamsha?.length ? (
-                  <span className="pg-mrow-pushkara font-mono text-xs text-muted-foreground">
+                  <span className="w-full font-mono text-xs text-muted-foreground">
                     {t("sections.pushkara")}:{" "}
                     {row.pushkara_navamsha
                       .map((h) => formatShortClock(h.local_time_short ?? h.local_time))
@@ -398,7 +416,7 @@ export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
                   </span>
                 ) : null}
               </div>
-            )) ?? <span className="text-muted-foreground text-sm">—</span>}
+            )) ?? <span className="text-sm text-muted-foreground">—</span>}
           </div>
         </div>
       </div>

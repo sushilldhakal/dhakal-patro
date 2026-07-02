@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
+import { learnHero, learnStatPill } from "@/lib/learn-classes";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -245,7 +246,7 @@ export function Learn() {
 
   return (
     <PageShell className="space-y-8">
-      <section className="learn-hero rounded-3xl border border-border bg-card px-6 py-8 sm:px-10 sm:py-10">
+      <section className={learnHero}>
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-secondary/25 bg-secondary/8 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary">
@@ -260,11 +261,11 @@ export function Learn() {
               {t("learn_page.subtitle")}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <div className="learn-stat-pill">
+              <div className={learnStatPill}>
                 <GraduationCap className="h-4 w-4 text-secondary" />
                 <span>{t("learn_page.topics_count", { count: LEARN_TOPICS.length })}</span>
               </div>
-              <div className="learn-stat-pill">
+              <div className={learnStatPill}>
                 <Layers3 className="h-4 w-4 text-secondary" />
                 <span>{t("learn_page.categories_count", { count: LEARN_CATEGORIES.length })}</span>
               </div>

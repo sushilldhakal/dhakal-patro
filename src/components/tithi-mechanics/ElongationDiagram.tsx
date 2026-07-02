@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
 import { EarthGlobeImage, EARTH_AXIAL_TILT } from "@/components/learn/EarthGlobeImage";
 import { SYNODIC_MONTH, TROPICAL_YEAR } from "@/components/learn/sun-earth-moon-math";
@@ -234,7 +235,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
     <svg
       ref={svgRef}
       viewBox={ED_VB}
-      className={`ed-svg ed-svg-tithi${onE ? " grab" : ""}`}
+      className={edSvg("tithi", !!onE)}
       onPointerDown={(e) => {
         if (!onE) return;
         drag.current = true;
