@@ -5,6 +5,7 @@ import {
   type AyanamshaMode,
 } from "@/lib/ayanamsha";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 
 interface Props {
   mode: AyanamshaMode;
@@ -12,13 +13,14 @@ interface Props {
 }
 
 export function AyanamshaSelector({ mode, onModeChange }: Props) {
+  const { pick } = useLocale();
   const current = getAyanamshaModeInfo(mode);
 
   return (
     <div className="w-full rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-3.5 py-2.5 border-b border-border bg-secondary/[0.09] dark:bg-secondary/20">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          अयनांश
+          {pick("अयनांश", "Ayanamsha")}
         </span>
         <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
           Ayanamsha
@@ -40,15 +42,18 @@ export function AyanamshaSelector({ mode, onModeChange }: Props) {
                   : "border-border bg-background/40 dark:bg-background/20 text-foreground hover:bg-muted"
               )}
             >
-              {m.id === "nepal" ? `${m.labelNe} ⭐` : m.labelNe}
+              {m.id === "nepal" ? `${pick(m.labelNe, m.label)} ⭐` : pick(m.labelNe, m.label)}
             </button>
           ))}
         </div>
 
         <p className="text-[12px] text-muted-foreground leading-snug">
-          {current.labelNe} — {current.taglineNe}
+          {pick(current.labelNe, current.label)} — {pick(current.taglineNe, current.tagline)}
           {isApproximateMode(mode) &&
-            " · हाल लाहिरी-आधारित डेटाबाट अनुमानित गणना — राशि/नक्षत्रको सीमारेखामा सानो भिन्नता हुन सक्छ।"}
+            pick(
+              " · हाल लाहिरी-आधारित डेटाबाट अनुमानित गणना — राशि/नक्षत्रको सीमारेखामा सानो भिन्नता हुन सक्छ।",
+              " · Currently an approximate calculation from Lahiri-based data — small differences may occur at rashi/nakshatra boundaries.",
+            )}
         </p>
       </div>
     </div>

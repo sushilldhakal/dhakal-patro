@@ -4,8 +4,8 @@ import {
   pointsToSvg,
   polygonCentroid,
 } from "@/lib/kundali/north-indian-layout";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 
 const PLANET_ABBR_NE: Record<string, string> = {
   sun: "सू",
@@ -19,11 +19,22 @@ const PLANET_ABBR_NE: Record<string, string> = {
   ketu: "के",
 };
 
+const PLANET_ABBR_EN: Record<string, string> = {
+  sun: "Su", moon: "Mo", mars: "Ma", mercury: "Me", jupiter: "Ju",
+  venus: "Ve", saturn: "Sa", rahu: "Ra", ketu: "Ke",
+};
+
+const RASHI_EN = [
+  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
+  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
+];
+
 interface Props {
   houses: BhavaHouse[];
 }
 
 export function D1Chart({ houses }: Props) {
+  const { pick, digits } = useLocale();
   const byHouse = new Map(houses.map((h) => [h.house, h]));
 
   return (
@@ -75,7 +86,7 @@ export function D1Chart({ houses }: Props) {
                   house.isLagna ? "fill-secondary" : "fill-muted-foreground"
                 )}
               >
-                {toNepaliDigits(house.rashi)} {house.rashiNe}
+                {digits(house.rashi)} {pick(house.rashiNe, RASHI_EN[house.rashi - 1] ?? house.rashiNe)}
               </text>
             )}
             {planetLines.map((planet, i) => (
@@ -86,7 +97,7 @@ export function D1Chart({ houses }: Props) {
                 textAnchor="middle"
                 className="text-[13px] font-medium fill-foreground"
               >
-                {PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2)}
+                {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
               </text>
             ))}
           </g>
