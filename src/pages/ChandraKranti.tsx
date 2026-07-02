@@ -28,7 +28,7 @@ import {
   BS_SUPPORTED_END_YEAR,
   getCurrentBs,
 } from "@/lib/bs-calendar";
-import { toNepaliDigits, formatTimeShort, formatVedicPatroTime } from "@/lib/panchanga-format";
+import { formatTimeShort, formatVedicPatroTime } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import {
@@ -49,6 +49,7 @@ import {
   type ChandraKrantiSearch,
 } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 import {
   Accordion,
   AccordionContent,
@@ -70,7 +71,6 @@ import {
   buildLagnaMatrix,
 } from "@/lib/chandrakranti/month-patro-tables";
 
-const N = toNepaliDigits;
 const COL_SPAN = 13;
 
 const routeApi = getRouteApi("/chandrakranti");
@@ -135,9 +135,20 @@ function grahaTableNe(key: string, fallback?: string): string {
   return GRAHA_TABLE_NE[key] ?? fallback ?? key;
 }
 
+const GRAHA_TABLE_EN: Record<string, string> = {
+  sun: "Sun", moon: "Moon", mars: "Mars", mercury: "Mercury", jupiter: "Jupiter",
+  venus: "Venus", saturn: "Saturn", rahu: "Rahu", ketu: "Ketu",
+};
+
+function grahaTableEn(key: string, fallback?: string): string {
+  return GRAHA_TABLE_EN[key.toLowerCase()] ?? fallback ?? key;
+}
+
 type TransitEvent = {
   planetNe: string;
+  planetEn: string;
   labelNe: string;
+  labelEn: string;
   time?: string;
   sortKey: string;
 };
@@ -161,8 +172,9 @@ function phaseOf(day: CalendarDay): Phase | undefined {
   return undefined;
 }
 
-function pakshaShort(day: CalendarDay): string {
+function pakshaShort(day: CalendarDay, isEn = false): string {
   const p = phaseOf(day);
+  if (isEn) return p === "shukla" ? "Shukla" : p === "krishna" ? "Krishna" : "";
   return p === "shukla" ? "शुक्ल" : p === "krishna" ? "कृष्ण" : "";
 }
 
@@ -182,8 +194,9 @@ const LUNAR_MONTH_NE: Record<string, string> = {
   chaitra: "चैत्र", chait: "चैत्र", chaitya: "चैत्र",
 };
 
-function lunarMonthNe(en?: string): string | undefined {
+function lunarMonthNe(en?: string, isEn = false): string | undefined {
   if (!en) return undefined;
+  if (isEn) return en.charAt(0).toUpperCase() + en.slice(1);
   const key = en.toLowerCase().replace(/[^a-z]/g, "");
   return LUNAR_MONTH_NE[key] ?? en;
 }
@@ -195,11 +208,11 @@ type PakshaSegment = { key: string; label: string };
  * Prefers the pūrṇimānta layer (`lunar_calendar.purnimant`) — the reckoning Nepali
  * patro uses — and falls back to amānta or the flat `lunar_month`.
  */
-function pakshaSegmentOf(day: CalendarDay, adhikMonthEn?: string): PakshaSegment {
+function pakshaSegmentOf(day: CalendarDay, adhikMonthEn?: string, isEn = false): PakshaSegment {
   const lc = day.panchanga?.lunar_calendar;
   const layer = lc?.purnimant ?? lc?.amanta ?? day.panchanga?.lunar_month;
   const lunarEn = layer?.name;
-  const lunarNe = lunarMonthNe(lunarEn) ?? lunarEn ?? "";
+  const lunar = lunarMonthNe(lunarEn, isEn) ?? lunarEn ?? "";
   const isAdhik = layer?.is_adhik === true || layer?.type === "adhik";
   const adhikName = lc?.adhik_maas?.name ?? adhikMonthEn;
   const isShuddha =
@@ -207,12 +220,15 @@ function pakshaSegmentOf(day: CalendarDay, adhikMonthEn?: string): PakshaSegment
     Boolean(adhikName) &&
     Boolean(lunarEn) &&
     lunarEn!.toLowerCase() === adhikName!.toLowerCase();
-  const prefix = isAdhik ? "अधिक " : isShuddha ? "शुद्ध " : "";
+  const prefix = isAdhik ? (isEn ? "Adhik " : "अधिक ") : isShuddha ? (isEn ? "Shuddha " : "शुद्ध ") : "";
   const phase = phaseOf(day);
-  const phaseNe = phase === "shukla" ? "शुक्ल" : phase === "krishna" ? "कृष्ण" : "";
+  const phaseLabel = isEn
+    ? phase === "shukla" ? "Shukla" : phase === "krishna" ? "Krishna" : ""
+    : phase === "shukla" ? "शुक्ल" : phase === "krishna" ? "कृष्ण" : "";
+  const pakshaWord = isEn ? (phaseLabel ? " Paksha" : "") : "पक्ष";
   return {
-    key: `${prefix}${lunarNe}|${phase ?? ""}`,
-    label: `${prefix}${lunarNe} ${phaseNe}पक्ष`.trim(),
+    key: `${prefix}${lunar}|${phase ?? ""}`,
+    label: `${prefix}${lunar} ${phaseLabel}${pakshaWord}`.trim(),
   };
 }
 
@@ -239,48 +255,54 @@ function todayKey(): string {
  * as a full datetime ("2026-06-20 16:02"); we surface the clock part in
  * Nepali digits — e.g. "१६:०२ बजे".
  */
-function angaEnd(anga?: CalendarDayAnga): string | null {
+function angaEnd(anga: CalendarDayAnga | undefined, d: (v: string | number) => string, isEn: boolean): string | null {
   const t = formatTimeShort(anga?.end);
   if (!t) return null;
-  return `${N(t)} बजे`;
+  return isEn ? d(t) : `${d(t)} बजे`;
 }
 
-const KARTAVYA: Record<Phase, string> = {
-  krishna:
-    "कृष्ण पक्षमा चन्द्रमा क्रमशः क्षीण हुँदै जान्छ। श्राद्ध, तर्पण र पितृकार्य, संयमित आहार, जप र दान शुभ मानिन्छ। एकादशीमा व्रत र अमावस्यामा पितृ-तर्पण गरिन्छ; नयाँ मांगलिक कार्य प्रायः शुक्ल पक्षमा सारिन्छ।",
-  shukla:
-    "शुक्ल पक्षमा चन्द्रमा क्रमशः वृद्धि हुँदै जान्छ। विवाह, व्रतबन्ध, गृहप्रवेश, यात्रा र नयाँ कार्यारम्भ जस्ता मांगलिक कार्य शुभ मानिन्छन्। एकादशी व्रत र पूर्णिमामा सत्यनारायण पूजा/व्रत गरिन्छ।",
+const KARTAVYA: Record<Phase, { ne: string; en: string }> = {
+  krishna: {
+    ne: "कृष्ण पक्षमा चन्द्रमा क्रमशः क्षीण हुँदै जान्छ। श्राद्ध, तर्पण र पितृकार्य, संयमित आहार, जप र दान शुभ मानिन्छ। एकादशीमा व्रत र अमावस्यामा पितृ-तर्पण गरिन्छ; नयाँ मांगलिक कार्य प्रायः शुक्ल पक्षमा सारिन्छ।",
+    en: "During Krishna Paksha the Moon gradually wanes. Shraddha, tarpana and ancestral rites, moderate diet, japa and charity are considered auspicious. Ekadashi fasting and ancestral tarpana on Amavasya are observed; new auspicious ceremonies are usually moved to Shukla Paksha.",
+  },
+  shukla: {
+    ne: "शुक्ल पक्षमा चन्द्रमा क्रमशः वृद्धि हुँदै जान्छ। विवाह, व्रतबन्ध, गृहप्रवेश, यात्रा र नयाँ कार्यारम्भ जस्ता मांगलिक कार्य शुभ मानिन्छन्। एकादशी व्रत र पूर्णिमामा सत्यनारायण पूजा/व्रत गरिन्छ।",
+    en: "During Shukla Paksha the Moon gradually waxes. Auspicious ceremonies such as weddings, sacred-thread rites, house-warming, travel and new beginnings are considered favourable. Ekadashi fasting and Satyanarayan puja/fasting on the full moon are observed.",
+  },
 };
 
 const th = "whitespace-nowrap text-sm font-semibold text-muted-foreground";
 const subLine = "text-xs leading-tight text-muted-foreground";
 
 /** ग्रह उदयास्त सङ्केत — heliacal rising/setting + motion abbreviations. */
-const UDAYAST_LEGEND: { code: string; full: string; meaning: string }[] = [
-  { code: "व.उ.", full: "वक्र उदय", meaning: "ग्रह वक्र (उल्टो) अवस्थामा उदय भएको।" },
-  { code: "बु.मा.उ.", full: "बुध मार्गी उदय", meaning: "बुध मार्गी (सुल्टो) भएर उदय भएको।" },
-  { code: "वृ.व.उ.", full: "बृहस्पति वक्र उदय", meaning: "बृहस्पति (गुरु) वक्र अवस्थामा उदय भएको।" },
-  { code: "शु.मा.उ.", full: "शुक्र मार्गी उदय", meaning: "शुक्र मार्गी भएर उदय भएको।" },
-  { code: "श.मा.उ. ७अ.", full: "शनि मार्गी उदय, ७ अस्त", meaning: "शनि मार्गी भएर उदय भएको र ७ गते अस्त हुने।" },
+const UDAYAST_LEGEND: { code: string; full: string; fullEn: string; meaning: string; meaningEn: string }[] = [
+  { code: "व.उ.", full: "वक्र उदय", fullEn: "Retrograde rising", meaning: "ग्रह वक्र (उल्टो) अवस्थामा उदय भएको।", meaningEn: "The planet rises while retrograde (moving backward)." },
+  { code: "बु.मा.उ.", full: "बुध मार्गी उदय", fullEn: "Mercury direct rising", meaning: "बुध मार्गी (सुल्टो) भएर उदय भएको।", meaningEn: "Mercury rises while direct (moving forward)." },
+  { code: "वृ.व.उ.", full: "बृहस्पति वक्र उदय", fullEn: "Jupiter retrograde rising", meaning: "बृहस्पति (गुरु) वक्र अवस्थामा उदय भएको।", meaningEn: "Jupiter rises while retrograde." },
+  { code: "शु.मा.उ.", full: "शुक्र मार्गी उदय", fullEn: "Venus direct rising", meaning: "शुक्र मार्गी भएर उदय भएको।", meaningEn: "Venus rises while direct." },
+  { code: "श.मा.उ. ७अ.", full: "शनि मार्गी उदय, ७ अस्त", fullEn: "Saturn direct rising, sets on the 7th", meaning: "शनि मार्गी भएर उदय भएको र ७ गते अस्त हुने।", meaningEn: "Saturn rises while direct and sets on the 7th." },
 ];
 
 /** गोचर / पापशान्ति घर-स्थिति सङ्केत. */
-const GOCHAR_LEGEND: { code: string; meaning: string }[] = [
-  { code: "पापाशाः", meaning: "पापशान्ति — कुण्डलीका अशुभ (पाप) ग्रहहरूको स्थिति।" },
-  { code: "सू२", meaning: "सूर्य दोस्रो घर (भाव) मा रहेको।" },
-  { code: "२७सू३", meaning: "२७ गते सूर्य तेस्रो घरमा प्रवेश गर्ने।" },
-  { code: "म.१", meaning: "मंगल पहिलो घरमा रहेको।" },
-  { code: "श.९", meaning: "शनि नवौँ घरमा रहेको।" },
-  { code: "रा.५ के.११", meaning: "राहु पाँचौँ र केतु एघारौँ घरमा रहेको।" },
+const GOCHAR_LEGEND: { code: string; meaning: string; meaningEn: string }[] = [
+  { code: "पापाशाः", meaning: "पापशान्ति — कुण्डलीका अशुभ (पाप) ग्रहहरूको स्थिति।", meaningEn: "Papashanti — position of the malefic (papa) planets in the chart." },
+  { code: "सू२", meaning: "सूर्य दोस्रो घर (भाव) मा रहेको।", meaningEn: "The Sun is in the second house (bhava)." },
+  { code: "२७सू३", meaning: "२७ गते सूर्य तेस्रो घरमा प्रवेश गर्ने।", meaningEn: "The Sun enters the third house on the 27th." },
+  { code: "म.१", meaning: "मंगल पहिलो घरमा रहेको।", meaningEn: "Mars is in the first house." },
+  { code: "श.९", meaning: "शनि नवौँ घरमा रहेको।", meaningEn: "Saturn is in the ninth house." },
+  { code: "रा.५ के.११", meaning: "राहु पाँचौँ र केतु एघारौँ घरमा रहेको।", meaningEn: "Rahu is in the fifth and Ketu in the eleventh house." },
 ];
 
-/** Planet motion in Nepali from the gochar `motion` / `is_retrograde` flags. */
-function motionNe(g: { motion?: string; is_retrograde?: boolean }): { label: string; vakri: boolean } {
+/** Planet motion from the gochar `motion` / `is_retrograde` flags. */
+function motionNe(g: { motion?: string; is_retrograde?: boolean }): { label: string; labelEn: string; vakri: boolean } {
   const vakri = g.is_retrograde === true || /vakr|retro/i.test(g.motion ?? "");
-  return { label: vakri ? "वक्री" : "मार्गी", vakri };
+  return { label: vakri ? "वक्री" : "मार्गी", labelEn: vakri ? "Retrograde" : "Direct", vakri };
 }
 
 export function ChandraKranti() {
+  const { lang, pick, digits: dg } = useLocale();
+  const isEn = lang === "en";
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
 
@@ -380,14 +402,14 @@ export function ChandraKranti() {
     const out: Record<string, string> = {};
     let prevKey = "";
     for (const d of days) {
-      const seg = pakshaSegmentOf(d, adhikMonthEn);
+      const seg = pakshaSegmentOf(d, adhikMonthEn, isEn);
       if (seg.key !== prevKey) {
         out[d.date_ad] = seg.label;
         prevKey = seg.key;
       }
     }
     return out;
-  }, [days, adhikMonthEn]);
+  }, [days, adhikMonthEn, isEn]);
 
   // गोचर kundali + transit extraction are anchored to the month start so each
   // planet's `next_rashi_entry` covers the whole displayed month.
@@ -434,6 +456,7 @@ export function ChandraKranti() {
       if (bsDay == null) continue;
 
       const planetNe = grahaTableNe(ev.graha, ev.graha_ne);
+      const planetEn = grahaTableEn(ev.graha, ev.graha_ne);
       const isRashi = ev.level === "rashi";
       const isUdayast = ev.level === "udayast";
       const isMotion = ev.level === "motion";
@@ -449,6 +472,12 @@ export function ChandraKranti() {
         : rashiNeFromNakPada(ev.to_nakshatra, ev.to_pada);
       const labelNe =
         isMotion || isUdayast || isRashi ? baseLabel : embedRashi(baseLabel, rashiNe);
+      const labelEn =
+        isMotion || isUdayast
+          ? (ev.label_ne ?? "")
+          : isRashi
+          ? `→ ${ev.to_rashi ?? ev.to_rashi_ne ?? ""}`.trim()
+          : `${ev.to_nakshatra ?? ev.to_nakshatra_ne ?? ""}${ev.to_pada ? ` pada ${ev.to_pada}` : ""}`.trim();
       const timeRaw = ev.entry_time_local_short ?? ev.entry_time_local?.split(" ")[1];
       const time = timeRaw
         ? formatVedicPatroTime(timeRaw, sunriseByDate[rowDateAd]) ?? timeRaw
@@ -456,7 +485,9 @@ export function ChandraKranti() {
 
       (out[bsDay] ??= []).push({
         planetNe,
+        planetEn,
         labelNe,
+        labelEn,
         time,
         sortKey: ev.entry_time_utc ?? `${rowDateAd}T${timeRaw ?? "00:00"}`,
       });
@@ -480,9 +511,9 @@ export function ChandraKranti() {
         days,
         allDays,
         ingressQ.data?.events ?? [],
-        (d) => pakshaSegmentOf(d, adhikMonthEn),
+        (d) => pakshaSegmentOf(d, adhikMonthEn, isEn),
       ),
-    [days, allDays, ingressQ.data?.events, adhikMonthEn],
+    [days, allDays, ingressQ.data?.events, adhikMonthEn, isEn],
   );
   const papanshaLine = useMemo(() => {
     if (days.length === 0) return "";
@@ -508,13 +539,18 @@ export function ChandraKranti() {
     return out;
   }, [calcNotes]);
 
-  const ritu = useMemo(
-    () => allDays.find((d) => d.panchanga?.ritu_ne)?.panchanga?.ritu_ne,
-    [allDays],
-  );
+  const ritu = useMemo(() => {
+    const dp = allDays.find((d) => d.panchanga?.ritu_ne)?.panchanga;
+    if (!dp) return undefined;
+    return isEn ? ((dp as { ritu?: string }).ritu ?? dp.ritu_ne) : dp.ritu_ne;
+  }, [allDays, isEn]);
 
-  const monthLabel = `${BS_MONTHS_NE[month - 1]} (${BS_MONTH_NAMES[month - 1]})`;
-  const pakshaLabel = paksha === "krishna" ? "कृष्णपक्ष" : paksha === "shukla" ? "शुक्लपक्ष" : "पूरा महिना";
+  const monthLabel = isEn
+    ? `${BS_MONTH_NAMES[month - 1]} (${BS_MONTHS_NE[month - 1]})`
+    : `${BS_MONTHS_NE[month - 1]} (${BS_MONTH_NAMES[month - 1]})`;
+  const pakshaLabel = isEn
+    ? paksha === "krishna" ? "Krishna Paksha" : paksha === "shukla" ? "Shukla Paksha" : "Full month"
+    : paksha === "krishna" ? "कृष्णपक्ष" : paksha === "shukla" ? "शुक्लपक्ष" : "पूरा महिना";
   const atStart = year * 12 + (month - 1) <= BS_MIN_INDEX;
   const atEnd = year * 12 + (month - 1) >= BS_MAX_INDEX;
 
@@ -530,8 +566,11 @@ export function ChandraKranti() {
     <PageShell>
       <PageHeader
         icon={<Moon className="h-7 w-7 text-secondary" />}
-        title="दैनिक क्रान्ति"
-        subtitle="पक्ष अनुसार दैनिक पञ्चाङ्ग — तिथि, नक्षत्र, योग, करण, सूर्योदय/अस्त, पर्व र ग्रह गोचर।"
+        title={pick("दैनिक क्रान्ति", "Daily Kranti")}
+        subtitle={pick(
+          "पक्ष अनुसार दैनिक पञ्चाङ्ग — तिथि, नक्षत्र, योग, करण, सूर्योदय/अस्त, पर्व र ग्रह गोचर।",
+          "Daily panchanga by paksha — tithi, nakshatra, yoga, karana, sunrise/sunset, festivals and planetary transits.",
+        )}
       />
 
       {/* controls */}
@@ -541,7 +580,7 @@ export function ChandraKranti() {
             type="button"
             onClick={() => stepMonth(-1)}
             disabled={atStart}
-            aria-label="अघिल्लो महिना"
+            aria-label={pick("अघिल्लो महिना", "Previous month")}
             className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -550,40 +589,40 @@ export function ChandraKranti() {
             type="button"
             onClick={() => stepMonth(1)}
             disabled={atEnd}
-            aria-label="अर्को महिना"
+            aria-label={pick("अर्को महिना", "Next month")}
             className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
         <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          वर्ष (बि.सं.)
+          {pick("वर्ष (बि.सं.)", "Year (BS)")}
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
             className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
           >
             {Array.from({ length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 }, (_, i) => BS_SUPPORTED_START_YEAR + i).map((y) => (
-              <option key={y} value={y}>{N(y)}</option>
+              <option key={y} value={y}>{dg(y)}</option>
             ))}
           </select>
         </label>
         <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          महिना
+          {pick("महिना", "Month")}
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
             className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
           >
             {BS_MONTHS_NE.map((m, i) => (
-              <option key={m} value={i + 1}>{m}</option>
+              <option key={m} value={i + 1}>{pick(m, BS_MONTH_NAMES[i])}</option>
             ))}
           </select>
         </label>
         <div className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          पक्ष
+          {pick("पक्ष", "Paksha")}
           <div className="inline-flex overflow-hidden rounded-md border border-border">
-            {([["all", "पूरै"], ["krishna", "कृष्ण"], ["shukla", "शुक्ल"]] as const).map(([v, lbl]) => (
+            {([["all", pick("पूरै", "All")], ["krishna", pick("कृष्ण", "Krishna")], ["shukla", pick("शुक्ल", "Shukla")]] as const).map(([v, lbl]) => (
               <button
                 key={v}
                 type="button"
@@ -599,7 +638,7 @@ export function ChandraKranti() {
           </div>
         </div>
         <div className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          स्थान
+          {pick("स्थान", "Location")}
           <LocationSelector location={location} onLocationChange={setLocation} />
         </div>
         <button
@@ -611,7 +650,7 @@ export function ChandraKranti() {
           }}
           className="ml-auto flex h-9 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm text-foreground transition-colors hover:bg-muted"
         >
-          <CalendarDays className="h-4 w-4" /> आज
+          <CalendarDays className="h-4 w-4" /> {pick("आज", "Today")}
         </button>
       </div>
 
@@ -620,17 +659,25 @@ export function ChandraKranti() {
           {monthLabel} · {pakshaLabel}
         </h2>
         {monthQ.data?.year_bs ? (
-          <span className="text-sm text-muted-foreground">{N(monthQ.data.year_bs)} बि.सं.</span>
+          <span className="text-sm text-muted-foreground">{dg(monthQ.data.year_bs)} {pick("बि.सं.", "BS")}</span>
         ) : null}
-        {ritu ? <span className="text-sm text-muted-foreground">· ऋतु: {ritu}</span> : null}
+        {ritu ? <span className="text-sm text-muted-foreground">· {pick("ऋतु", "Ritu")}: {ritu}</span> : null}
         {allDays.length ? (
-          <span className="text-xs text-muted-foreground">· {N(days.length)} दिन</span>
+          <span className="text-xs text-muted-foreground">· {dg(days.length)} {pick("दिन", "days")}</span>
         ) : null}
       </div>
 
       {monthHasAdhik && adhik?.month_name ? (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          <span className="font-semibold">अधिक मास:</span> यस वर्ष <span className="font-semibold">अधिक {lunarMonthNe(adhik.month_name)}</span> मास परेको छ — त्यसैले यो महिनामा अधिक र शुद्ध पक्षहरू छुट्टाछुट्टै देखाइएका छन्। (अधिक मास = मलमास / पुरुषोत्तम मास; यसमा सङ्क्रान्ति पर्दैन।)
+          {pick(
+            <>
+              <span className="font-semibold">अधिक मास:</span> यस वर्ष <span className="font-semibold">अधिक {lunarMonthNe(adhik.month_name)}</span> मास परेको छ — त्यसैले यो महिनामा अधिक र शुद्ध पक्षहरू छुट्टाछुट्टै देखाइएका छन्। (अधिक मास = मलमास / पुरुषोत्तम मास; यसमा सङ्क्रान्ति पर्दैन।)
+            </>,
+            <>
+              <span className="font-semibold">Adhik Maas:</span> this year has an{" "}
+              <span className="font-semibold">Adhik {lunarMonthNe(adhik.month_name, true)}</span> month — so the adhik and shuddha pakshas are shown separately for this month. (Adhik Maas = Malamas / Purushottam Maas; it contains no sankranti.)
+            </>,
+          )}
         </div>
       ) : null}
 
@@ -641,35 +688,35 @@ export function ChandraKranti() {
           <Table className="w-full min-w-max text-sm">
             <TableHeader>
               <TableRow className="sticky top-0 z-10 bg-muted hover:bg-muted">
-                <TableHead className={cn(th, "w-9 px-1")} aria-label="विस्तार" />
-                <TableHead className={th}>गते · ता.</TableHead>
-                <TableHead className={th}>बा.</TableHead>
-                <TableHead className={th}>तिथि</TableHead>
-                <TableHead className={th}>नक्षत्र</TableHead>
-                <TableHead className={th}>योग</TableHead>
-                <TableHead className={th}>करण</TableHead>
-                <TableHead className={cn(th, "text-amber-600 dark:text-amber-400")}>सु.उ.</TableHead>
-                <TableHead className={cn(th, "text-indigo-600 dark:text-indigo-400")}>सु.अ.</TableHead>
-                <TableHead className={th}>सूर्य राशि</TableHead>
-                <TableHead className={th}>चन्द्र राशि</TableHead>
-                <TableHead className={th}>ग्रहचार / उदयास्त (बजे)</TableHead>
-                <TableHead className={th}>पर्व</TableHead>
+                <TableHead className={cn(th, "w-9 px-1")} aria-label={pick("विस्तार", "Expand")} />
+                <TableHead className={th}>{pick("गते · ता.", "Date")}</TableHead>
+                <TableHead className={th}>{pick("बा.", "Day")}</TableHead>
+                <TableHead className={th}>{pick("तिथि", "Tithi")}</TableHead>
+                <TableHead className={th}>{pick("नक्षत्र", "Nakshatra")}</TableHead>
+                <TableHead className={th}>{pick("योग", "Yoga")}</TableHead>
+                <TableHead className={th}>{pick("करण", "Karana")}</TableHead>
+                <TableHead className={cn(th, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
+                <TableHead className={cn(th, "text-indigo-600 dark:text-indigo-400")}>{pick("सु.अ.", "Set")}</TableHead>
+                <TableHead className={th}>{pick("सूर्य राशि", "Sun sign")}</TableHead>
+                <TableHead className={th}>{pick("चन्द्र राशि", "Moon sign")}</TableHead>
+                <TableHead className={th}>{pick("ग्रहचार / उदयास्त (बजे)", "Transits / rise-set")}</TableHead>
+                <TableHead className={th}>{pick("पर्व", "Festival")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {monthQ.isError ? (
-                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center text-muted-foreground">विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।</TableCell></TableRow>
+                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center text-muted-foreground">{pick("विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।", "Could not load details. Please try again.")}</TableCell></TableRow>
               ) : days.length === 0 ? (
-                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center text-muted-foreground">यो पक्षमा कुनै दिन भेटिएन।</TableCell></TableRow>
+                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center text-muted-foreground">{pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}</TableCell></TableRow>
               ) : (
                 days.map((d) => {
                   const det = d.panchanga;
-                  const tithiEnd = angaEnd(det?.tithi);
-                  const nakEnd = angaEnd(det?.nakshatra);
-                  const yogaEnd = angaEnd(det?.yoga);
-                  const karanaEnd = angaEnd(det?.karana);
-                  const sunRashi = det?.surya_rashi_ne;
-                  const moonRashi = det?.chandra_rashi_ne;
+                  const tithiEnd = angaEnd(det?.tithi, dg, isEn);
+                  const nakEnd = angaEnd(det?.nakshatra, dg, isEn);
+                  const yogaEnd = angaEnd(det?.yoga, dg, isEn);
+                  const karanaEnd = angaEnd(det?.karana, dg, isEn);
+                  const sunRashi = pick(det?.surya_rashi_ne, det?.surya_rashi);
+                  const moonRashi = pick(det?.chandra_rashi_ne, det?.chandra_rashi);
                   const dow = dowOf(d.date_ad);
                   const isSaturday = dow === 6;
                   const isToday = d.date_ad === nowKey;
@@ -697,7 +744,7 @@ export function ChandraKranti() {
                           type="button"
                           onClick={() => toggleDayExpand(d.date_ad)}
                           aria-expanded={isExpanded}
-                          aria-label={`${N(d.day)} गतेको लग्न र ग्रहस्पष्ट`}
+                          aria-label={pick(`${dg(d.day)} गतेको लग्न र ग्रहस्पष्ट`, `Lagna & planets for day ${dg(d.day)}`)}
                           className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                           <ChevronRight
@@ -708,29 +755,29 @@ export function ChandraKranti() {
                       <TableCell className="whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5">
                           {isToday ? <span className="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden /> : null}
-                          <span className={cn("font-semibold", isSaturday || hasFestival ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{N(d.day)}</span>
+                          <span className={cn("font-semibold", isSaturday || hasFestival ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{dg(d.day)}</span>
                         </span>
                         <span className="ml-1.5 text-xs text-muted-foreground">{fmtAd(d.date_ad)}</span>
                       </TableCell>
-                      <TableCell className={cn("whitespace-nowrap", isSaturday && "font-medium text-rose-600 dark:text-rose-400")}>{d.weekday_ne ?? d.weekday}</TableCell>
+                      <TableCell className={cn("whitespace-nowrap", isSaturday && "font-medium text-rose-600 dark:text-rose-400")}>{pick(d.weekday_ne ?? d.weekday, d.weekday_en ?? d.weekday)}</TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div><span className="text-muted-foreground">{pakshaShort(d)}</span> {d.tithi_ne ?? d.tithi ?? "—"}</div>
-                        {tithiEnd ? <div className={subLine}>{tithiEnd} सम्म</div> : null}
+                        <div><span className="text-muted-foreground">{pakshaShort(d, isEn)}</span> {pick(d.tithi_ne ?? d.tithi, d.tithi ?? d.tithi_ne) ?? "—"}</div>
+                        {tithiEnd ? <div className={subLine}>{pick(`${tithiEnd} सम्म`, `until ${tithiEnd}`)}</div> : null}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div>{d.nakshatra_ne ?? d.nakshatra ?? "—"}</div>
-                        {nakEnd ? <div className={subLine}>{nakEnd} सम्म</div> : null}
+                        <div>{pick(d.nakshatra_ne ?? d.nakshatra, d.nakshatra ?? d.nakshatra_ne) ?? "—"}</div>
+                        {nakEnd ? <div className={subLine}>{pick(`${nakEnd} सम्म`, `until ${nakEnd}`)}</div> : null}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div>{d.yoga_ne ?? d.yoga ?? "—"}</div>
-                        {yogaEnd ? <div className={subLine}>{yogaEnd} सम्म</div> : null}
+                        <div>{pick(d.yoga_ne ?? d.yoga, d.yoga ?? d.yoga_ne) ?? "—"}</div>
+                        {yogaEnd ? <div className={subLine}>{pick(`${yogaEnd} सम्म`, `until ${yogaEnd}`)}</div> : null}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div>{d.karana_ne ?? d.karana ?? "—"}</div>
-                        {karanaEnd ? <div className={subLine}>{karanaEnd} सम्म</div> : null}
+                        <div>{pick(d.karana_ne ?? d.karana, d.karana ?? d.karana_ne) ?? "—"}</div>
+                        {karanaEnd ? <div className={subLine}>{pick(`${karanaEnd} सम्म`, `until ${karanaEnd}`)}</div> : null}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-amber-600 dark:text-amber-400">{d.sunrise ? N(formatTimeShort(d.sunrise) ?? d.sunrise) : "—"}</TableCell>
-                      <TableCell className="whitespace-nowrap text-indigo-600 dark:text-indigo-400">{d.sunset ? N(formatTimeShort(d.sunset) ?? d.sunset) : "—"}</TableCell>
+                      <TableCell className="whitespace-nowrap text-amber-600 dark:text-amber-400">{d.sunrise ? dg(formatTimeShort(d.sunrise) ?? d.sunrise) : "—"}</TableCell>
+                      <TableCell className="whitespace-nowrap text-indigo-600 dark:text-indigo-400">{d.sunset ? dg(formatTimeShort(d.sunset) ?? d.sunset) : "—"}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         {sunRashi ?? "—"}
                         {det?.ayana_mark ? <sup className="ml-0.5 text-[10px] text-muted-foreground">{det.ayana_mark}</sup> : null}
@@ -741,10 +788,10 @@ export function ChandraKranti() {
                           <div className="space-y-0.5">
                             {transitsByBsDay[d.day]!.map((ev, i) => (
                               <div key={i} className="whitespace-nowrap text-sm leading-tight">
-                                <span className="text-foreground">{ev.labelNe}</span>{" "}
-                                <span className="text-secondary">{ev.planetNe}</span>
+                                <span className="text-foreground">{pick(ev.labelNe, ev.labelEn)}</span>{" "}
+                                <span className="text-secondary">{pick(ev.planetNe, ev.planetEn)}</span>
                                 {ev.time ? (
-                                  <span className="text-muted-foreground"> {N(ev.time)}</span>
+                                  <span className="text-muted-foreground"> {dg(ev.time)}</span>
                                 ) : null}
                               </div>
                             ))}
@@ -786,11 +833,14 @@ export function ChandraKranti() {
         <Accordion type="multiple" className="rounded-xl border border-border px-4">
           <AccordionItem value="lagna-month">
             <AccordionTrigger className="py-3 text-base font-semibold text-foreground hover:no-underline">
-              दैनिक लग्न आरम्भ समयतालिका (पूरा महिना)
+              {pick("दैनिक लग्न आरम्भ समयतालिका (पूरा महिना)", "Daily lagna start timetable (full month)")}
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
-                प्रत्येक गते सूर्योदयदेखि अर्को सूर्योदयसम्म कुन राशि कहिले लग्नमा आउँछ।
+                {pick(
+                  "प्रत्येक गते सूर्योदयदेखि अर्को सूर्योदयसम्म कुन राशि कहिले लग्नमा आउँछ।",
+                  "For each day, which rashi rises as the lagna and when, from sunrise to the next sunrise.",
+                )}
               </p>
               <div className="overflow-x-auto rounded-lg border border-border">
                 <MonthLagnaMatrix
@@ -805,11 +855,14 @@ export function ChandraKranti() {
           </AccordionItem>
           <AccordionItem value="graha-month">
             <AccordionTrigger className="py-3 text-base font-semibold text-foreground hover:no-underline">
-              उदयकालिक सूर्यादिग्रहस्पष्ट (पूरा महिना)
+              {pick("उदयकालिक सूर्यादिग्रहस्पष्ट (पूरा महिना)", "Planetary positions at sunrise (full month)")}
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
-                सूर्योदयको क्षणमा ग्रहहरूको राश्यादि स्थिति र दैनिक बेलान्तर।
+                {pick(
+                  "सूर्योदयको क्षणमा ग्रहहरूको राश्यादि स्थिति र दैनिक बेलान्तर।",
+                  "The planets' rashi positions at the moment of sunrise, and the daily time-difference.",
+                )}
               </p>
               <MonthGrahaSpashta
                 embedded
@@ -822,7 +875,7 @@ export function ChandraKranti() {
           </AccordionItem>
           <AccordionItem value="calc-notes">
             <AccordionTrigger className="py-3 text-base font-semibold text-foreground hover:no-underline">
-              गणना सूचना र विशेष दिनहरू
+              {pick("गणना सूचना र विशेष दिनहरू", "Calculation notes & special days")}
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <MonthCalcNotes
@@ -846,15 +899,15 @@ export function ChandraKranti() {
                 <div className="flex items-center gap-2 rounded-xl border border-border p-3">
                   <Sunrise className="h-5 w-5 text-amber-500" />
                   <div className="text-sm">
-                    <div className="text-sm text-muted-foreground">सूर्योदय</div>
-                    <div className="font-semibold text-foreground">{ref.sunrise ? N(formatTimeShort(ref.sunrise) ?? ref.sunrise) : "—"}</div>
+                    <div className="text-sm text-muted-foreground">{pick("सूर्योदय", "Sunrise")}</div>
+                    <div className="font-semibold text-foreground">{ref.sunrise ? dg(formatTimeShort(ref.sunrise) ?? ref.sunrise) : "—"}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 rounded-xl border border-border p-3">
                   <Sunset className="h-5 w-5 text-indigo-500" />
                   <div className="text-sm">
-                    <div className="text-sm text-muted-foreground">सूर्यास्त</div>
-                    <div className="font-semibold text-foreground">{ref.sunset ? N(formatTimeShort(ref.sunset) ?? ref.sunset) : "—"}</div>
+                    <div className="text-sm text-muted-foreground">{pick("सूर्यास्त", "Sunset")}</div>
+                    <div className="font-semibold text-foreground">{ref.sunset ? dg(formatTimeShort(ref.sunset) ?? ref.sunset) : "—"}</div>
                   </div>
                 </div>
               </div>
@@ -890,29 +943,29 @@ export function ChandraKranti() {
 
           {/* graha gochar / udayast */}
           <div className="rounded-xl border border-border p-4">
-            <h3 className="mb-2 text-sm font-semibold text-foreground">ग्रह गोचर र अर्को सङ्क्रान्ति</h3>
+            <h3 className="mb-2 text-sm font-semibold text-foreground">{pick("ग्रह गोचर र अर्को सङ्क्रान्ति", "Planetary transits & next sankranti")}</h3>
             {grahas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{gocharQ.isLoading ? "लोड हुँदैछ…" : "विवरण उपलब्ध छैन।"}</p>
+              <p className="text-sm text-muted-foreground">{gocharQ.isLoading ? pick("लोड हुँदैछ…", "Loading…") : pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
             ) : (
               <ul className="space-y-1.5 text-sm">
                 {grahas.map((g) => (
                   <li key={g.key} className="flex items-baseline justify-between gap-2">
                     <span className="text-foreground">
                       <span className="mr-1 text-secondary">{g.symbol}</span>
-                      {g.name_ne}
-                      <span className="ml-1 text-muted-foreground">{grahaRashiNe(g) ?? ""}</span>
+                      {pick(g.name_ne, g.name_vedic ?? g.name_ne)}
+                      <span className="ml-1 text-muted-foreground">{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
                     </span>
                     {g.next_pada_entry ? (
                       <span className="shrink-0 text-right text-sm text-muted-foreground">
-                        {g.next_pada_entry.label_ne}
+                        {pick(g.next_pada_entry.label_ne, g.next_pada_entry.to_rashi ?? g.next_pada_entry.label_ne)}
                         <br />
-                        {N(g.next_pada_entry.entry_time_local_short ?? g.next_pada_entry.entry_time_local ?? "")}
+                        {dg(g.next_pada_entry.entry_time_local_short ?? g.next_pada_entry.entry_time_local ?? "")}
                       </span>
                     ) : g.next_rashi_entry ? (
                       <span className="shrink-0 text-right text-sm text-muted-foreground">
-                        → {g.next_rashi_entry.to_rashi_ne ?? rashiEnToNe(g.next_rashi_entry.to_rashi) ?? g.next_rashi_entry.to_rashi}
+                        → {pick(g.next_rashi_entry.to_rashi_ne ?? rashiEnToNe(g.next_rashi_entry.to_rashi) ?? g.next_rashi_entry.to_rashi, g.next_rashi_entry.to_rashi ?? g.next_rashi_entry.to_rashi_ne)}
                         <br />
-                        {N(g.next_rashi_entry.entry_time_local)}
+                        {dg(g.next_rashi_entry.entry_time_local)}
                       </span>
                     ) : null}
                   </li>
@@ -924,16 +977,16 @@ export function ChandraKranti() {
           {/* kartavya */}
           <div className="rounded-xl border border-border bg-muted/30 p-4 md:col-span-2 xl:col-span-4">
             <h3 className="mb-2 text-sm font-semibold text-foreground">
-              {pakshaLabel} कर्तव्य
+              {pakshaLabel} {pick("कर्तव्य", "duties")}
             </h3>
             <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
               {paksha === "all" ? (
                 <>
-                  <p>{KARTAVYA.krishna}</p>
-                  <p>{KARTAVYA.shukla}</p>
+                  <p>{pick(KARTAVYA.krishna.ne, KARTAVYA.krishna.en)}</p>
+                  <p>{pick(KARTAVYA.shukla.ne, KARTAVYA.shukla.en)}</p>
                 </>
               ) : (
-                <p>{KARTAVYA[paksha]}</p>
+                <p>{pick(KARTAVYA[paksha].ne, KARTAVYA[paksha].en)}</p>
               )}
             </div>
           </div>
@@ -943,10 +996,13 @@ export function ChandraKranti() {
       <section className="rounded-xl border border-border">
         <header className="flex items-center gap-1.5 border-b border-border px-4 py-3">
           <Sparkles className="h-4 w-4 text-secondary" />
-          <h3 className="text-sm font-semibold text-foreground">ग्रह स्पष्ट, उदयास्त र गोचर सङ्केत</h3>
+          <h3 className="text-sm font-semibold text-foreground">{pick("ग्रह स्पष्ट, उदयास्त र गोचर सङ्केत", "Planet positions, rise-set & transit legend")}</h3>
           {gocharQ.data?.date_ad ? (
             <span className="ml-auto text-sm text-muted-foreground">
-              {formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad)} को स्थिति
+              {pick(
+                `${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad)} को स्थिति`,
+                `Position on ${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad)}`,
+              )}
             </span>
           ) : null}
         </header>
@@ -955,10 +1011,10 @@ export function ChandraKranti() {
           {/* live graha spashta (degree · kala · vikala) + motion */}
           <div className="md:col-span-2">
             <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              ग्रह स्पष्ट (अंश° कला′ विकला″)
+              {pick("ग्रह स्पष्ट (अंश° कला′ विकला″)", "Planet positions (deg° kala′ vikala″)")}
             </h4>
             {grahas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{gocharQ.isLoading ? "लोड हुँदैछ…" : "विवरण उपलब्ध छैन।"}</p>
+              <p className="text-sm text-muted-foreground">{gocharQ.isLoading ? pick("लोड हुँदैछ…", "Loading…") : pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
             ) : (
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-3 lg:grid-cols-4">
                 {grahas.map((g) => {
@@ -966,16 +1022,16 @@ export function ChandraKranti() {
                   return (
                     <div key={g.key} className="flex items-baseline gap-1.5 text-sm">
                       <span className="text-secondary">{g.symbol}</span>
-                      <span className="text-foreground">{g.name_ne}</span>
-                      <span className="text-muted-foreground">{grahaRashiNe(g) ?? ""}</span>
-                      {g.dms_in_rashi ? <span className="text-foreground">{N(g.dms_in_rashi)}</span> : null}
+                      <span className="text-foreground">{pick(g.name_ne, g.name_vedic ?? g.name_ne)}</span>
+                      <span className="text-muted-foreground">{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
+                      {g.dms_in_rashi ? <span className="text-foreground">{dg(g.dms_in_rashi)}</span> : null}
                       <span
                         className={cn(
                           "ml-auto shrink-0 rounded px-1.5 text-xs",
                           m.vakri ? "bg-rose-500/15 text-rose-600 dark:text-rose-300" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
                         )}
                       >
-                        {m.label}
+                        {pick(m.label, m.labelEn)}
                       </span>
                     </div>
                   );
@@ -983,14 +1039,17 @@ export function ChandraKranti() {
               </div>
             )}
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              प्रत्येक पक्षको आरम्भमा ग्रहहरूको स्पष्ट स्थान अंश°, कला′, विकला″ (र प्रति-विकला) मा दिइन्छ — जस्तै “१३ ६ २९ ४०” = १३ अंश ६ कला २९ विकला ४० प्रति-विकला। <span className="text-rose-600 dark:text-rose-300">वक्री</span> = उल्टो गति, <span className="text-emerald-600 dark:text-emerald-300">मार्गी</span> = सुल्टो गति।
+              {pick(
+                <>प्रत्येक पक्षको आरम्भमा ग्रहहरूको स्पष्ट स्थान अंश°, कला′, विकला″ (र प्रति-विकला) मा दिइन्छ — जस्तै “१३ ६ २९ ४०” = १३ अंश ६ कला २९ विकला ४० प्रति-विकला। <span className="text-rose-600 dark:text-rose-300">वक्री</span> = उल्टो गति, <span className="text-emerald-600 dark:text-emerald-300">मार्गी</span> = सुल्टो गति।</>,
+                <>At the start of each paksha, each planet's exact position is given in degrees°, kala′, vikala″ (and prati-vikala) — e.g. “13 6 29 40” = 13 deg 6 kala 29 vikala 40 prati-vikala. <span className="text-rose-600 dark:text-rose-300">Vakri</span> = retrograde (backward) motion, <span className="text-emerald-600 dark:text-emerald-300">Margi</span> = direct (forward) motion.</>,
+              )}
             </p>
           </div>
 
           {/* udayast symbol legend */}
           <div>
             <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              ग्रह उदयास्त सङ्केत
+              {pick("ग्रह उदयास्त सङ्केत", "Planet rise-set symbols")}
             </h4>
             <dl className="space-y-1.5">
               {UDAYAST_LEGEND.map((it) => (
@@ -999,7 +1058,7 @@ export function ChandraKranti() {
                     <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold text-secondary">{it.code}</span>
                   </dt>
                   <dd className="text-muted-foreground">
-                    <span className="text-foreground">{it.full}</span> — {it.meaning}
+                    <span className="text-foreground">{pick(it.full, it.fullEn)}</span> — {pick(it.meaning, it.meaningEn)}
                   </dd>
                 </div>
               ))}
@@ -1009,7 +1068,7 @@ export function ChandraKranti() {
           {/* gochar / papashanti house legend */}
           <div>
             <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              गोचर / पापशान्ति घर-सङ्केत
+              {pick("गोचर / पापशान्ति घर-सङ्केत", "Transit / Papashanti house symbols")}
             </h4>
             <dl className="space-y-1.5">
               {GOCHAR_LEGEND.map((it) => (
@@ -1017,12 +1076,15 @@ export function ChandraKranti() {
                   <dt className="w-20 shrink-0">
                     <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold text-secondary">{it.code}</span>
                   </dt>
-                  <dd className="text-muted-foreground">{it.meaning}</dd>
+                  <dd className="text-muted-foreground">{pick(it.meaning, it.meaningEn)}</dd>
                 </div>
               ))}
             </dl>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              <span className="font-semibold text-foreground">दशा कोष्ठक:</span> जन्म-समयमा बाँकी विंशोत्तरी दशाको वर्ष/महिना/दिन। <span className="font-semibold text-foreground">समय सुधार:</span> मुद्रणमा “उ” वा “०” जस्ता सङ्केतले शून्य अंश/कला जनाउँछ।
+              {pick(
+                <><span className="font-semibold text-foreground">दशा कोष्ठक:</span> जन्म-समयमा बाँकी विंशोत्तरी दशाको वर्ष/महिना/दिन। <span className="font-semibold text-foreground">समय सुधार:</span> मुद्रणमा “उ” वा “०” जस्ता सङ्केतले शून्य अंश/कला जनाउँछ।</>,
+                <><span className="font-semibold text-foreground">Dasha bracket:</span> the years/months/days of Vimshottari dasha remaining at birth. <span className="font-semibold text-foreground">Time correction:</span> in print, symbols like “u” or “0” indicate zero degrees/kala.</>,
+              )}
             </p>
           </div>
         </div>
