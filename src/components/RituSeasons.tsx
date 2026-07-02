@@ -11,6 +11,7 @@ import {
   type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
+import { cn } from "@/lib/utils";
 
 /**
  * ऋतु — the six traditional Nepali seasons, driven by the Sun's APPARENT TROPICAL
@@ -120,56 +121,81 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
   const seasonEmoji = ["🌸", "☀️", "🌧️", "🍂", "🌫️", "❄️"];
 
   return (
-    <div className="sea-block">
-      <div className="sea-head">
-        <Sprout size={18} strokeWidth={1.8} />
-        <h2 className="sea-title">{t("ritu.title")}</h2>
-        <span className="sea-sub">
+    <div className="mt-[22px]">
+      <div className="mb-3 flex flex-wrap items-baseline gap-2.5">
+        <Sprout className="self-center text-secondary dark:text-primary" size={18} strokeWidth={1.8} />
+        <h2 className="m-0 text-lg font-bold">{t("ritu.title")}</h2>
+        <span className="flex-1 text-xs font-medium text-muted-foreground">
           {t("ritu.subtitle")}{location.label ? ` · ${location.label}` : ""}
-          {south && <span className="sea-flip">{t("ritu.southern")}</span>}
+          {south && <span className="ml-1 font-semibold text-warning">{t("ritu.southern")}</span>}
         </span>
-        <Link to="/learn/$slug" params={{ slug: "ritu-drift" }} className="sea-why">
+        <Link
+          to="/learn/$slug"
+          params={{ slug: "ritu-drift" }}
+          className="inline-flex shrink-0 items-center gap-1 self-center whitespace-nowrap rounded-full border border-secondary/35 px-2.5 py-1 text-xs font-semibold text-secondary no-underline transition-colors hover:border-secondary/55 hover:bg-secondary/12 dark:border-primary/35 dark:text-primary dark:hover:border-primary/55 dark:hover:bg-primary/14"
+        >
           <HelpCircle size={13} strokeWidth={2} aria-hidden />
           {t("ritu.why_link")}
         </Link>
       </div>
 
-      <div className="sea-grid">
+      <div className="grid grid-cols-1 gap-3 min-[481px]:grid-cols-2 min-[821px]:grid-cols-3">
         {seasons.map((item, i) => {
           const slot = flip(item.solarSlot);
           const seasonKey = SEASON_KEYS[slot]!;
           const markerKey = MARKER_KEYS[item.solarSlot];
           return (
-            <div key={i} className={`sea-card ${item.isCurrent ? "current" : "upcoming"}`}>
-              <span className="sea-eyebrow">
+            <div
+              key={i}
+              className={cn(
+                "flex flex-col gap-2 rounded-xl bg-card p-3.5 shadow-xs shadow-ring-soft",
+                item.isCurrent &&
+                  "shadow-[0_0_0_1.5px_color-mix(in_srgb,var(--secondary)_38%,transparent)] dark:shadow-[0_0_0_1.5px_color-mix(in_srgb,var(--primary)_38%,transparent)]",
+              )}
+            >
+              <span
+                className={cn(
+                  "text-[9.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground",
+                  item.isCurrent && "text-secondary dark:text-primary",
+                )}
+              >
                 {item.isCurrent ? t("ritu.current") : relLabel(item.daysUntil)}
               </span>
-              <div className="sea-card-row">
-                <span className="sea-emoji" aria-hidden>
+              <div className="flex items-center gap-3">
+                <span className="shrink-0 text-[26px] leading-none" aria-hidden>
                   {seasonEmoji[slot]}
                 </span>
-                <span className="sea-name-wrap">
-                  <span className="sea-name">{t(`ritu.${seasonKey}`)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xl font-bold leading-tight">{t(`ritu.${seasonKey}`)}</span>
                 </span>
-                <span className="sea-tile">
-                  <span className="sea-tile-d">{dg(item.startBs.day)}</span>
-                  <span className="sea-tile-m">{item.startBs.monthName}</span>
+                <span className="flex h-[46px] w-[46px] shrink-0 flex-col items-center justify-center gap-px rounded-lg bg-secondary/13 text-accent dark:text-[#7fd6db]">
+                  <span className="text-[17px] font-bold leading-none font-num">{dg(item.startBs.day)}</span>
+                  <span className="text-[9.5px] font-semibold leading-none">{item.startBs.monthName}</span>
                 </span>
               </div>
-              <div className="sea-when">
-                <span className="sea-when-bs">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[13px] font-semibold">
                   {markerKey ? t(markerKey) : t("ritu.sun_deg", { deg: dg(item.angle) })}
                 </span>
-                <span className="sea-when-ad mono">{fmtAd(item.startAd)} {t("common.from")}</span>
+                <span className="mono text-xs font-medium text-muted-foreground">
+                  {fmtAd(item.startAd)} {t("common.from")}
+                </span>
               </div>
               {item.isCurrent && item.progress ? (
                 <>
-                  <div className="sea-progress" role="presentation">
-                    <div className="sea-progress-fill" style={{ width: `${item.progress.pct}%` }} />
+                  <div className="h-1.5 overflow-hidden rounded-full bg-foreground/10" role="presentation">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-secondary to-secondary/55 transition-[width] duration-400 ease-out dark:from-primary dark:to-primary/55"
+                      style={{ width: `${item.progress.pct}%` }}
+                    />
                   </div>
-                  <div className="sea-meta">
-                    <span>{dg(item.progress.elapsed)} / {dg(item.progress.total)} {pick("दिन", "days")}</span>
-                    <span className="mono">{dg(Math.round(item.progress.pct))}%</span>
+                  <div className="flex items-baseline justify-between gap-2 text-[11.5px] font-medium text-muted-foreground">
+                    <span>
+                      {dg(item.progress.elapsed)} / {dg(item.progress.total)} {pick("दिन", "days")}
+                    </span>
+                    <span className="mono text-xs font-semibold text-foreground">
+                      {dg(Math.round(item.progress.pct))}%
+                    </span>
                   </div>
                 </>
               ) : null}
@@ -179,7 +205,7 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
       </div>
 
       {south && (
-        <p className="sea-note">
+        <p className="mx-0.5 mt-2.5 text-[11.5px] font-medium leading-normal text-muted-foreground">
           {pick(
             "दक्षिणी गोलार्धमा ऋतु ६ महिना उल्टो हुन्छ — माथिका नाम तपाईंको स्थानको वास्तविक ऋतु अनुसार मिलाइएका छन् (विषुव/अयनान्तका मिति उही नै हुन्)।",
             "In the southern hemisphere the seasons are reversed by 6 months — the names above are matched to your location's actual season (the equinox/solstice dates stay the same).",

@@ -87,3 +87,30 @@ export function patroSlotBadge(tone: "good" | "bad" | "neutral") {
     tone === "neutral" && "bg-badge-neutral text-muted-foreground",
   );
 }
+
+export const patroSelect =
+  "h-8 cursor-pointer rounded-[var(--radius-lg)] border border-border bg-card px-2.5 text-[13px] font-medium text-foreground";
+
+export const patroNoteBox =
+  "mb-4 rounded-xl border border-border bg-secondary/8 p-3 text-[13px] leading-relaxed text-muted-foreground";
+
+export const patroErrorBox =
+  "rounded-lg border border-danger/30 bg-error-surface px-3 py-2.5 text-[13px] font-medium text-danger";
+
+export const patroSkel =
+  "block h-7 w-4/5 mx-auto rounded animate-pulse bg-foreground/5";
+
+export const patroAyanaNorth =
+  "mb-0.5 inline-block text-xs font-extrabold leading-none text-accent dark:text-[#7fd6db]";
+
+export const patroAyanaSouth =
+  "mb-0.5 inline-block text-xs font-extrabold leading-none text-danger opacity-95";
+
+export const patroDataTableWrap =
+  "overflow-x-auto rounded-[14px] border border-border bg-card";
+
+export const patroSunRise =
+  "block text-[13px] font-semibold text-accent dark:text-[#7fd6db]";
+
+export const patroSunSet =
+  "block text-[13px] font-semibold text-danger/90";

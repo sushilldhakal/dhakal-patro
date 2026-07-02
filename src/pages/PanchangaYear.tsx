@@ -15,6 +15,7 @@ import {
 } from "@/lib/bs-calendar";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { patroSelect } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
@@ -266,7 +267,7 @@ export function PanchangaYear() {
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
           <select
-            className="pn-select"
+            className={patroSelect}
             value={year}
             aria-label={t("common.bs_year")}
             onChange={(e) => handleYearChange(Number(e.target.value))}

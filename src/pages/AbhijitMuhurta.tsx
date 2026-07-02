@@ -28,6 +28,15 @@ import {
   formatBsMonthDayPatro,
 } from "@/lib/panchanga-format";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
+import {
+  patroDataTableWrap,
+  patroEmpty,
+  patroErrorBox,
+  patroNoteBox,
+  patroSelect,
+  patroSkel,
+} from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
 
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -125,7 +134,7 @@ export function AbhijitMuhurta() {
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
           <select
-            className="pn-select"
+            className={patroSelect}
             value={year}
             aria-label={t("abhijit.year_label")}
             onChange={(e) => setYear(Number(e.target.value))}
@@ -137,7 +146,7 @@ export function AbhijitMuhurta() {
             ))}
           </select>
           <select
-            className="pn-select"
+            className={patroSelect}
             value={month}
             aria-label={t("abhijit.month_label")}
             onChange={(e) => setMonth(Number(e.target.value))}
@@ -157,45 +166,62 @@ export function AbhijitMuhurta() {
         </div>
       </div>
 
-      <p className="pn-abhijit-note">{t("abhijit.note")}</p>
+      <p className={patroNoteBox}>{t("abhijit.note")}</p>
 
       {monthQ.isError ? (
-        <div className="pn-error-box">{t("abhijit.error")}</div>
+        <div className={patroErrorBox}>{t("abhijit.error")}</div>
       ) : monthQ.isLoading ? (
-        <div className="pn-aside-tab-skel" style={{ minHeight: 240 }} />
+        <div className={cn(patroSkel, "h-60 w-full rounded-lg")} />
       ) : rows.length === 0 ? (
-        <p className="pn-aside-tab-empty">{t("abhijit.none")}</p>
+        <p className={patroEmpty}>{t("abhijit.none")}</p>
       ) : (
-        <div className="pn-abhijit-table-wrap">
-          <table className="pn-abhijit-table">
+        <div className={patroDataTableWrap}>
+          <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr>
-                <th scope="col">{t("abhijit.col_day")}</th>
-                <th scope="col">{t("abhijit.col_weekday")}</th>
-                <th scope="col">{t("abhijit.col_ad")}</th>
-                <th scope="col">{t("abhijit.col_abhijit")}</th>
-                <th scope="col">{t("abhijit.col_noon")}</th>
+                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                  {t("abhijit.col_day")}
+                </th>
+                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                  {t("abhijit.col_weekday")}
+                </th>
+                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                  {t("abhijit.col_ad")}
+                </th>
+                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                  {t("abhijit.col_abhijit")}
+                </th>
+                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                  {t("abhijit.col_noon")}
+                </th>
               </tr>
             </thead>
             <tbody>
               {rows.map(({ day, abhijit }) => {
                 const isToday = day.date_ad === todayAd;
-                const isUpcoming = day.date_ad > todayAd;
                 return (
                   <tr
                     key={day.date_ad}
-                    className={isToday ? "today" : isUpcoming ? "upcoming" : ""}
+                    className={isToday ? "bg-secondary/12 dark:bg-primary/10" : undefined}
                   >
-                    <td>
-                      <span className="pn-abhijit-bs-day">{digits(day.day)}</span>
-                      <span className="pn-abhijit-bs-sub">
+                    <td className="border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
+                      <span className="block text-[15px] font-bold font-num">{digits(day.day)}</span>
+                      <span className="mt-0.5 block text-[11px] text-muted-foreground">
                         {formatBsMonthDayPatro(year, month, day.day)}
                       </span>
                     </td>
-                    <td>{pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday)}</td>
-                    <td className="mono">{fmtAdShort(day.date_ad)}</td>
-                    <td className="mono pn-abhijit-time">{abhijit.rangeDisplay}</td>
-                    <td className="mono">{abhijit.noonDisplay ?? "—"}</td>
+                    <td className="border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
+                      {pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday)}
+                    </td>
+                    <td className="mono border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
+                      {fmtAdShort(day.date_ad)}
+                    </td>
+                    <td className="mono border-b border-foreground/8 px-3 py-2.5 align-top font-bold text-secondary last:border-b-0 dark:text-primary">
+                      {abhijit.rangeDisplay}
+                    </td>
+                    <td className="mono border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
+                      {abhijit.noonDisplay ?? "—"}
+                    </td>
                   </tr>
                 );
               })}

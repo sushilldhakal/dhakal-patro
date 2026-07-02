@@ -86,15 +86,20 @@ export async function fetchEphemerisPanchangaDay(
   const normalized = normalizeEphemerisDay(raw);
 
   const dailyDetail = (daily.detail ?? {}) as Record<string, unknown>;
+  const instantDetail = (normalized.detail ?? {}) as Record<string, unknown>;
   const mergedDetail = {
-    ...(normalized.detail ?? {}),
     ...dailyDetail,
+    ...instantDetail,
     solar_corrections:
-      (normalized.detail as Record<string, unknown> | undefined)?.solar_corrections ??
-      dailyDetail.solar_corrections,
+      instantDetail.solar_corrections ?? dailyDetail.solar_corrections,
     lagna_spans:
       getLagnaSpans(normalized) ??
+      (instantDetail.lagna_spans as PanchangaDay["lagna_spans"]) ??
       (dailyDetail.lagna_spans as PanchangaDay["lagna_spans"]),
+    planets: instantDetail.planets ?? dailyDetail.planets,
+    planets_anchor: instantDetail.planets_anchor ?? dailyDetail.planets_anchor,
+    muhurta_now: instantDetail.muhurta_now ?? dailyDetail.muhurta_now,
+    instant_lagna: instantDetail.instant_lagna ?? dailyDetail.instant_lagna,
   };
 
   const merged: PanchangaDay = {

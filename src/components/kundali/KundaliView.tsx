@@ -38,7 +38,7 @@ import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { buildBhavaChart } from "@/lib/bhava";
 import { navamsaRashiFromLongitude } from "@/lib/navamsa";
 import { drekkanaRashiFromLongitude } from "@/lib/drekkana";
-import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-elements";
+import { nakshatraPadaFromLongitude, resolveJanmaNakshatra, yogaFromLongitudes } from "@/lib/panchang-elements";
 import { janmaAvakahadaFromLongitude } from "@/lib/avakahada-lagna";
 import { buildBirthPanchangaMeta } from "@/lib/birth-panchanga-meta";
 import { choghadiyaAtClock } from "@/components/panchanga/day-timeline-data";
@@ -140,7 +140,16 @@ function planetsFromPanchanga(p: PanchangaDay): PlanetCard[] {
 
     const lon = info.longitude;
     const rashiNum = lon != null ? Math.floor(lon / 30) + 1 : undefined;
-    const nakshatra = lon != null ? nakshatraPadaFromLongitude(lon) : undefined;
+    const nakshatra =
+      key === "moon" && p.mode === "ephemeris"
+        ? resolveJanmaNakshatra(
+            p,
+            detail?.nakshatra as { number?: number; name_ne?: string; progress?: number },
+            lon,
+          )
+        : lon != null
+          ? nakshatraPadaFromLongitude(lon)
+          : undefined;
 
     const rashi = info.rashi_ne ?? info.rashi_name ?? info.rashi ?? "—";
     const degrees =
@@ -239,6 +248,18 @@ export function KundaliView({
     return { ...rawLagna, rashiNum };
   }, [rawLagna]);
   const moon = useMemo(() => planets.find((p) => p.key === "moon"), [planets]);
+
+  const janmaNakshatra = useMemo(() => {
+    if (!data) return undefined;
+    const detail = getPanchangaDetail(data);
+    const moonLon = moon?.longitude;
+    return resolveJanmaNakshatra(
+      data,
+      detail?.nakshatra as { number?: number; name_ne?: string; progress?: number },
+      moonLon,
+    );
+  }, [data, moon]);
+
   const janmaAvakahada = useMemo(
     () =>
       moon?.longitude != null
@@ -248,9 +269,10 @@ export function KundaliView({
             moon.rashi,
             moon.rashiNum,
             lagna?.rashiNum,
+            janmaNakshatra,
           )
         : null,
-    [moon, lang, lagna?.rashiNum],
+    [moon, lang, lagna?.rashiNum, janmaNakshatra],
   );
 
   const birthPanchangaMeta = useMemo(() => {
@@ -316,7 +338,11 @@ export function KundaliView({
       data.karana?.name;
     const moonLon = planets.find((p) => p.key === "moon")?.longitude;
     const sunLon = planets.find((p) => p.key === "sun")?.longitude;
-    const nakshatra = moonLon != null ? nakshatraPadaFromLongitude(moonLon) : undefined;
+    const nakshatra = resolveJanmaNakshatra(
+      data,
+      detail?.nakshatra as { number?: number; name_ne?: string; progress?: number },
+      moonLon,
+    );
     const yoga = moonLon != null && sunLon != null ? yogaFromLongitudes(sunLon, moonLon) : undefined;
     return { tithiNe, tithiEn, vaaraNe, karanaNe, nakshatra, yoga };
   }, [data, planets]);

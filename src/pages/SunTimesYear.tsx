@@ -12,6 +12,7 @@ import {
   getCurrentBs,
 } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { patroAyanaNorth, patroAyanaSouth, patroSelect } from "@/lib/patro-classes";
 
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -52,7 +53,7 @@ export function SunTimesYear() {
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
           <select
-            className="pn-select"
+            className={patroSelect}
             value={year}
             aria-label={t("common.bs_year")}
             onChange={(e) => setYear(Number(e.target.value))}
@@ -72,32 +73,34 @@ export function SunTimesYear() {
         </div>
       </div>
 
-      <div className="pn-suryakranti-ayana-note">
-        <p className="pn-suryakranti-ayana-lead">
+      <div className="mb-4 rounded-xl border border-border bg-secondary/4 p-3.5 shadow-xs shadow-ring-soft">
+        <p className="m-0 mb-3 text-[13px] font-medium leading-relaxed text-muted-foreground [&_strong]:font-extrabold [&_strong]:text-foreground">
           <Trans i18nKey="sun_times.ayana_note" components={{ strong: <strong /> }} />
         </p>
-        <div className="pn-suryakranti-ayana-table-wrap">
-          <table className="pn-suryakranti-ayana-table">
+        <div className="mb-3 overflow-x-auto">
+          <table className="w-full border-collapse text-[13px] font-medium">
             <thead>
               <tr>
-                <th scope="col">{t("sun_times.col_ayana")}</th>
-                <th scope="col">{t("sun_times.col_sun_sign")}</th>
+                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold text-muted-foreground">
+                  {t("sun_times.col_ayana")}
+                </th>
+                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold text-muted-foreground">
+                  {t("sun_times.col_sun_sign")}
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>
-                  <span className="pn-sun-grid-ayana pn-sun-grid-ayana--north">उ</span>{" "}
-                  {t("sun_times.north_ayana")}
+                <td className="border-b border-border/80 px-2.5 py-2 align-middle">
+                  <span className={patroAyanaNorth}>उ</span> {t("sun_times.north_ayana")}
                 </td>
-                <td>{t("sun_times.north_signs")}</td>
+                <td className="border-b border-border/80 px-2.5 py-2 align-middle">{t("sun_times.north_signs")}</td>
               </tr>
               <tr>
-                <td>
-                  <span className="pn-sun-grid-ayana pn-sun-grid-ayana--south">द</span>{" "}
-                  {t("sun_times.south_ayana")}
+                <td className="px-2.5 py-2 align-middle">
+                  <span className={patroAyanaSouth}>द</span> {t("sun_times.south_ayana")}
                 </td>
-                <td>{t("sun_times.south_signs")}</td>
+                <td className="px-2.5 py-2 align-middle">{t("sun_times.south_signs")}</td>
               </tr>
             </tbody>
           </table>
@@ -105,9 +108,9 @@ export function SunTimesYear() {
         <Link
           to="/panchanga/year"
           search={{ year }}
-          className="pn-suryakranti-ayana-cta"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3.5 text-[13px] font-semibold text-foreground no-underline transition-colors hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary dark:hover:border-primary/35 dark:hover:bg-primary/10 dark:hover:text-primary"
         >
-          <CalendarRange className="w-4 h-4 shrink-0" />
+          <CalendarRange className="h-4 w-4 shrink-0" />
           {t("sun_times.year_wheel_link")}
         </Link>
       </div>

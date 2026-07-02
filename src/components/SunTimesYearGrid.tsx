@@ -31,6 +31,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import {
+  patroAyanaNorth,
+  patroAyanaSouth,
+  patroSkel,
+  patroSunRise,
+  patroSunSet,
+} from "@/lib/patro-classes";
 
 export type SunDayRow = {
   day: number;
@@ -105,8 +112,7 @@ function useMonthTableColumns() {
           return (
             <span
               className={cn(
-                "pn-sun-grid-ayana",
-                mark === "उ" ? "pn-sun-grid-ayana--north" : "pn-sun-grid-ayana--south",
+                mark === "उ" ? patroAyanaNorth : patroAyanaSouth,
               )}
               title={ayanaNe}
             >
@@ -182,7 +188,7 @@ function MonthSunDataTable({
                   key={col.id ?? ("accessorKey" in col ? String(col.accessorKey) : colIdx)}
                   className="px-3 py-3"
                 >
-                  <span className="pn-sun-grid-skel h-5" />
+                  <span className={cn(patroSkel, "h-5")} />
                 </TableCell>
               ))}
             </TableRow>
@@ -210,30 +216,35 @@ function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
 }) {
   const { t } = useTranslation();
   return (
-    <div className={cn("pn-sun-grid-head", hideHeader && "pn-sun-grid-head--legend-only")}>
+    <div
+      className={cn(
+        "flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 pt-3.5 pb-2.5",
+        hideHeader && "justify-end",
+      )}
+    >
       {!hideHeader ? (
-        <div className="pn-sun-grid-titles">
-          <h3 className="pn-sun-grid-title">{t("sun_times.grid_title")}</h3>
-          <span className="pn-sun-grid-sub">
+        <div>
+          <h3 className="m-0 text-[15px] font-bold">{t("sun_times.grid_title")}</h3>
+          <span className="mt-0.5 block text-[11.5px] font-medium text-muted-foreground">
             {t("sun_times.subtitle", { year: toNepaliDigits(bsYear) })} · {locationLabel}
           </span>
         </div>
       ) : null}
-      <div className="pn-sun-grid-legend">
-        <span className="pn-sun-grid-legend-item">
+      <div className="flex shrink-0 gap-3">
+        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
           <Sunrise className="size-4" strokeWidth={1.8} />
           {t("sun_times.col_sunrise")}
         </span>
-        <span className="pn-sun-grid-legend-item">
+        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
           <Sunset className="size-4" strokeWidth={1.8} />
           {t("sun_times.col_sunset")}
         </span>
-        <span className="pn-sun-grid-legend-item">
-          <span className="pn-sun-grid-ayana pn-sun-grid-ayana--north">उ</span>
+        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+          <span className={patroAyanaNorth}>उ</span>
           {t("sun_times.north_ayana")}
         </span>
-        <span className="pn-sun-grid-legend-item">
-          <span className="pn-sun-grid-ayana pn-sun-grid-ayana--south">द</span>
+        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+          <span className={patroAyanaSouth}>द</span>
           {t("sun_times.south_ayana")}
         </span>
       </div>
@@ -254,15 +265,25 @@ function SunTimesYearMatrix({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="pn-sun-grid-scroll">
-      <table className="pn-sun-grid" aria-label={`Sunrise and sunset grid for BS year ${bsYear}`}>
+    <div className="max-w-full overflow-x-auto overflow-y-visible overscroll-x-contain [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
+      <table
+        className="w-max min-w-full border-collapse table-fixed text-[13px] font-semibold font-num"
+        aria-label={`Sunrise and sunset grid for BS year ${bsYear}`}
+      >
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead scope="col" className="pn-sun-grid-corner">
+            <TableHead
+              scope="col"
+              className="sticky left-0 z-[2] w-12 min-w-12 border-r border-b border-border bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground"
+            >
               {t("sun_times.col_day")}
             </TableHead>
             {BS_MONTHS_NE.map((name) => (
-              <TableHead key={name} scope="col" className="pn-sun-grid-month">
+              <TableHead
+                key={name}
+                scope="col"
+                className="w-[72px] min-w-[72px] overflow-hidden border-b border-border px-1 py-2.5 text-center text-xs font-bold whitespace-nowrap text-ellipsis text-muted-foreground"
+              >
                 {name}
               </TableHead>
             ))}
@@ -273,7 +294,10 @@ function SunTimesYearMatrix({
             const day = rowIdx + 1;
             return (
               <TableRow key={day} className="hover:bg-transparent">
-                <TableHead scope="row" className="pn-sun-grid-day">
+                <TableHead
+                  scope="row"
+                  className="sticky left-0 z-[2] w-12 min-w-12 border-r border-b border-border/70 bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground"
+                >
                   {toNepaliDigits(day)}
                 </TableHead>
                 {Array.from({ length: 12 }, (_, colIdx) => {
@@ -281,7 +305,11 @@ function SunTimesYearMatrix({
                   const monthLen = getBSMonthLength(bsYear, month);
                   if (day > monthLen) {
                     return (
-                      <TableCell key={month} className="pn-sun-grid-cell empty" aria-hidden />
+                      <TableCell
+                        key={month}
+                        className="w-[72px] min-w-[72px] min-h-10 border-r border-b border-border/50 bg-surface-muted px-1 py-1.5 text-center align-middle leading-snug opacity-45"
+                        aria-hidden
+                      />
                     );
                   }
 
@@ -295,32 +323,29 @@ function SunTimesYearMatrix({
                     <TableCell
                       key={month}
                       className={cn(
-                        "pn-sun-grid-cell",
-                        isLoading && !cell && "loading",
+                        "w-[72px] min-w-[72px] min-h-10 border-r border-b border-border/50 px-1 py-1.5 text-center align-middle leading-snug",
+                        isLoading && !cell && "bg-surface-inset",
                       )}
                       title={title}
                     >
                       {isLoading && !cell ? (
-                        <span className="pn-sun-grid-skel" />
+                        <span className={patroSkel} />
                       ) : cell?.sunrise || cell?.sunset ? (
                         <>
                           {cell.ayanaMark ? (
                             <span
                               className={cn(
-                                "pn-sun-grid-ayana",
-                                cell.ayanaMark === "उ"
-                                  ? "pn-sun-grid-ayana--north"
-                                  : "pn-sun-grid-ayana--south",
+                                cell.ayanaMark === "उ" ? patroAyanaNorth : patroAyanaSouth,
                               )}
                               title={cell.ayanaNe}
                             >
                               {cell.ayanaMark}
                             </span>
                           ) : null}
-                          <span className="pn-sun-grid-rise">
+                          <span className={patroSunRise}>
                             {cell.sunriseDisplay ?? "—"}
                           </span>
-                          <span className="pn-sun-grid-set">
+                          <span className={patroSunSet}>
                             {cell.sunsetDisplay ?? "—"}
                           </span>
                         </>
@@ -429,14 +454,16 @@ export function SunTimesYearGrid({
 
   if (isError) {
     return (
-      <div className="pn-sun-grid-wrap">
-        <p className="pn-sun-grid-error">Could not load sunrise/sunset times for this location.</p>
+      <div className="mt-5 max-w-full overflow-hidden rounded-xl bg-card shadow-xs shadow-ring-soft">
+        <p className="m-0 px-4 py-3.5 text-xs font-medium text-muted-foreground">
+          Could not load sunrise/sunset times for this location.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="pn-sun-grid-wrap">
+    <div className="mt-5 max-w-full overflow-hidden rounded-xl bg-card shadow-xs shadow-ring-soft">
       <SunTimesLegend
         hideHeader={hideHeader}
         locationLabel={locationLabel}

@@ -16,15 +16,56 @@ export interface NakshatraPadaResult {
 /** Nakshatra + pada (1-4) from a sidereal Moon longitude. Ayanamsha-dependent. */
 export function nakshatraPadaFromLongitude(moonSiderealLonDeg: number): NakshatraPadaResult {
   const lon = ((moonSiderealLonDeg % 360) + 360) % 360;
-  const index = Math.floor(lon / NAKSHATRA_SPAN_DEG);
-  const withinNakshatra = lon % NAKSHATRA_SPAN_DEG;
-  const pada = Math.floor(withinNakshatra / PADA_SPAN_DEG) + 1;
+  const index = Math.min(Math.floor(lon / NAKSHATRA_SPAN_DEG), 26);
+  const withinNakshatra = lon - index * NAKSHATRA_SPAN_DEG;
+  const pada = Math.min(Math.floor(withinNakshatra / PADA_SPAN_DEG) + 1, 4);
   return {
     index,
     ne: NAKSHATRA_ICONS[index]?.ne ?? "—",
     pada,
     lordNe: NAKSHATRA_ICONS[index]?.lord_ne ?? "—",
   };
+}
+
+type NakshatraAnga = {
+  number?: number;
+  name_ne?: string;
+  name?: string;
+  progress?: number;
+  pada?: number;
+};
+
+/**
+ * Birth nakshatra + pada — prefer instant panchanga block (at-time API) over
+ * recomputing from planet longitude alone.
+ */
+export function resolveJanmaNakshatra(
+  p: { mode?: string; nakshatra?: NakshatraAnga },
+  detailNakshatra: NakshatraAnga | undefined,
+  moonSiderealLon?: number | null,
+): NakshatraPadaResult | undefined {
+  const block =
+    (p.mode === "ephemeris" ? p.nakshatra : undefined) ?? detailNakshatra ?? p.nakshatra;
+
+  if (block?.number != null && block.number >= 1 && block.number <= 27) {
+    const index = block.number - 1;
+    const progress = block.progress ?? 0;
+    const pada =
+      block.pada != null && block.pada >= 1 && block.pada <= 4
+        ? block.pada
+        : Math.min(Math.floor(progress * 4) + 1, 4);
+    return {
+      index,
+      ne: block.name_ne ?? NAKSHATRA_ICONS[index]?.ne ?? "—",
+      pada,
+      lordNe: NAKSHATRA_ICONS[index]?.lord_ne ?? "—",
+    };
+  }
+
+  if (moonSiderealLon != null) {
+    return nakshatraPadaFromLongitude(moonSiderealLon);
+  }
+  return undefined;
 }
 
 export interface YogaResult {

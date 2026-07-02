@@ -1,7 +1,6 @@
 import { AVAKAHADA, RASHI_META, type Gana, type Varna } from "@/lib/avakahada-data";
 import {
   localizeGana,
-  localizeNadi,
   localizeYoni,
   isEnglishLocale,
 } from "@/lib/avakahada-locale";
@@ -14,7 +13,7 @@ import {
   rashiPayaFromBhava,
   yunjaFromNakIndex,
 } from "@/lib/janma-patrika-fields";
-import { nakshatraPadaFromLongitude } from "@/lib/panchang-elements";
+import { nakshatraPadaFromLongitude, resolveJanmaNakshatra } from "@/lib/panchang-elements";
 import { TATTVA_EN } from "@/lib/wheel-locale";
 import { RASHI_ELEM } from "@/lib/wheel-data";
 
@@ -69,8 +68,8 @@ export type JanmaAvakahada = {
 export type LagnaAvakahada = JanmaAvakahada;
 
 /**
- * अवकहडा / जन्म पत्रीका गुण from चन्द्र longitude.
- * Paya, Yunja, Tara, Vashya follow Drik Panchang–style rules.
+ * अवकहडा / जन्म पत्रीका गुण from चन्द्र nakshatra at birth.
+ * Prefer resolved nakshatra+pada (panchanga API) over raw longitude floor math.
  */
 export function janmaAvakahadaFromLongitude(
   siderealLongitude: number,
@@ -81,8 +80,12 @@ export function janmaAvakahadaFromLongitude(
   chandraRashiNum?: number,
   /** लग्न राशि number (1–12) for राशि पाय. */
   lagnaRashiNum?: number,
+  /** When set, drives nakshatra+pada (and अक्षर) instead of longitude alone. */
+  resolvedNakshatra?: { index: number; ne: string; pada: number } | null,
 ): JanmaAvakahada | null {
-  const nak = nakshatraPadaFromLongitude(siderealLongitude);
+  const nak =
+    resolvedNakshatra ??
+    nakshatraPadaFromLongitude(siderealLongitude);
   const row = AVAKAHADA[nak.index];
   if (!row) return null;
 

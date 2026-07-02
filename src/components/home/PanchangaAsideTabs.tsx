@@ -81,7 +81,6 @@ function FestivalsTab({
           <li
             key={`${entry.bsDay}-${entry.name}`}
             className={patroFestRow({
-              publicHoliday: entry.isPublicHoliday,
               today: isToday,
               past: isPast,
             })}
