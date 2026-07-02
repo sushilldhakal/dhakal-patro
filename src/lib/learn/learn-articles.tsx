@@ -89,7 +89,8 @@ function Note({ children }: { children: React.ReactNode }) {
 /* ================================================================== */
 
 export function AstronomyBasics() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="आकाश कसरी देखिन्छ" en="What we see from Earth">
         <Lede>
@@ -255,12 +256,149 @@ export function AstronomyBasics() {
         यी आधार बुझिसकेपछि बाँकी लेखहरू सजिलो लाग्नेछ — प्रत्येकले माथिको एउटै भाषा (
         कोण, परिक्रमा, पृथ्वी–केन्द्रित दृष्टि) प्रयोग गर्छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="What the sky looks like" en="What we see from Earth">
+        <Lede>
+          In the night sky the <span className="hl">stars</span> are bright points like distant
+          suns. By day the <span className="hl-amber">Sun</span> is the brightest; at night the{" "}
+          <span className="hl">Moon</span> is the nearest celestial body — these three form the
+          basis of the Nepali patro and panchanga calculations.
+        </Lede>
+        <Keys
+          items={[
+            { h: "Horizon and zenith", p: "Where sky meets ground — the horizon; straight overhead — the zenith. Every celestial object appears on this dome of sky." },
+            { h: "Sun: east → west", p: "It's the Earth rotating, not the Sun moving, that makes the Sun appear to rise — a result of rotation, not revolution." },
+            { h: "Moon and stars", p: "The Moon reflects the Sun's light (it does not shine on its own); the stars shine by themselves." },
+          ]}
+        />
+      </Section>
+      <Section kicker="02" title="Rotation vs revolution" en="Rotation vs revolution">
+        <Lede>
+          Astronomy has <b>two different motions</b> — confusing them causes a lot of mix-ups.{" "}
+          <span className="hl">Rotation</span> = spinning on one's own axis (day–night).{" "}
+          <span className="hl-amber">Revolution</span> = orbiting around another body (year, month).
+        </Lede>
+        <Keys
+          items={[
+            { h: "Earth's rotation ≈ 24 hours", p: "One solar day — the time for the Sun to return to the same place." },
+            { h: "Earth's revolution ≈ 365 days", p: "One orbit around the Sun — this makes the year and seasons." },
+            { h: "Moon's revolution ≈ 29.5 days", p: "Around the Earth — tithi and paksha are based on this motion." },
+          ]}
+        />
+        <Note>
+          A later article covers these motions in detail with diagrams — but this distinction must
+          be clear first.
+        </Note>
+      </Section>
+      <Section kicker="03" title="Why degrees matter" en="Why degrees matter">
+        <Lede>
+          In the panchanga, the positions of the Sun, Moon and other planets are measured in{" "}
+          <b>degrees (°)</b>. The full sky is divided into <b>360°</b> to answer “how far ahead of
+          the Sun is the Moon” — tithi, nakshatra and yoga are all derived from this angle.
+        </Lede>
+        <div className="tm-formula">
+          <div className="tm-fcard">
+            <div className="big">360<span className="u">°</span></div>
+            <div className="lbl">Full circle</div>
+            <div className="desc">One complete turn of the sky — all rashis and nakshatras within it.</div>
+          </div>
+          <div className="tm-fcard">
+            <div className="big">12<span className="u">°</span></div>
+            <div className="lbl">1 tithi</div>
+            <div className="desc">The Moon–Sun angular gap — 360° ÷ 30 tithis.</div>
+          </div>
+          <div className="tm-fcard">
+            <div className="big">~13<span className="u">°20′</span></div>
+            <div className="lbl">1 nakshatra</div>
+            <div className="desc">360° ÷ 27 nakshatras — the Moon's motion is measured on this scale.</div>
+          </div>
+        </div>
+      </Section>
+      <Section kicker="04" title="Our viewpoint" en="Geocentric framing">
+        <Lede>
+          In reality the Earth orbits the Sun, but to build a calendar we use the viewpoint of{" "}
+          <span className="hl">what we see from Earth</span> (<b>geocentric</b>) — “which sign is
+          the Sun in today”, “how far the Moon has moved”. It is convenient and has been used for
+          thousands of years.
+        </Lede>
+        <Keys
+          items={[
+            { h: "The Sun's path (ecliptic)", p: "The Sun, Moon and planets appear in nearly the same band — this is the ecliptic." },
+            { h: "The zodiac", p: "This path split into 12 parts — Mesha to Meena; a sankranti = the Sun moving to the next sign." },
+            { h: "Heliocentric vs geocentric", p: "The real motion is Sun-centred; the patro calculation is Earth-centred — both correct, different purposes." },
+          ]}
+        />
+      </Section>
+      <Section kicker="05" title="12 rashis" en="Zodiac signs">
+        <Lede>
+          The Sun's path (ecliptic) is divided into <b>12 equal parts</b> — each a{" "}
+          <span className="hl-amber">30°</span> rashi. A sankranti = the Sun entering the next
+          sign; the BS months are also based on this solar sign.
+        </Lede>
+        <RashiReferenceTable />
+      </Section>
+      <Section kicker="06" title="Nine grahas" en="Nine grahas">
+        <Lede>
+          The panchanga and kundali use <b>9 grahas</b> (nava graha) — seven real bodies and two{" "}
+          <span className="hl">shadow points</span> (Rahu, Ketu). Every position is measured as an angle.
+        </Lede>
+        <GrahaReferenceTable />
+      </Section>
+      <Section kicker="07" title="27 nakshatras & padas" en="Lunar mansions & padas">
+        <Lede>
+          The Moon's path is divided into <b>27 nakshatras</b> (each <b>13°20′</b>). Each nakshatra
+          is further split into <b>4 padas</b> (3°20′ per pada) — this pada is used for the birth
+          name-syllable and the chart.
+        </Lede>
+        <NakshatraReferenceTable />
+      </Section>
+      <Section kicker="08" title="30 tithis" en="Lunar days">
+        <Lede>
+          Each time the Moon–Sun angle increases by <b>12°</b> a new tithi begins — Shukla Paksha
+          1–15 (to the full moon), Krishna Paksha 1–15 (to the new moon).
+        </Lede>
+        <TithiReferenceTable />
+      </Section>
+      <Section kicker="09" title="27 yogas" en="Yogas">
+        <Lede>
+          As the <b>sum of the Sun's and Moon's longitudes</b> increases, the 27 yogas form in turn
+          — from Vishkambha to Vaidhriti. Yoga is also checked for auspicious/inauspicious muhurtas.
+        </Lede>
+        <YogaReferenceTable />
+      </Section>
+      <Section kicker="10" title="11 karanas" en="Karanas">
+        <Lede>
+          <b>Half</b> of each tithi (= 6° of angle) is one karana — 60 karanas per month in all.
+          Only 11 names: 7 movable (recurring) and 4 fixed (once a month).
+        </Lede>
+        <KaranaReferenceTable />
+      </Section>
+      <Section kicker="11" title="What comes next" en="What comes next">
+        <Lede>
+          Now the core ideas are clear — <b>what we're looking at</b>, <b>how it's moving</b>, and{" "}
+          <b>why angles are counted</b>. In the next article, see the solar system, Earth's tilt,
+          the Moon's phases and the real orbits with diagrams.
+        </Lede>
+        <Keys
+          items={[
+            { h: "Solar system & lunar motion", p: "Earth's elliptical orbit, 23.5° tilt, the Moon's phases." },
+            { h: "Solar vs lunar calendar", p: "Why Vikram Samvat runs by aligning two clocks." },
+            { h: "The five limbs of panchanga", p: "Tithi, vaara, nakshatra, yoga, karana — how they arise from angles." },
+          ]}
+        />
+      </Section>
+      <Note>
+        Once these basics are understood, the rest of the articles will feel easy — each uses the
+        same language above (angle, revolution, Earth-centred view).
+      </Note>
+    </>,
   );
 }
 
 export function SolarSystem() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="सूर्य केन्द्र, पृथ्वी परिक्रमा" en="Heliocentric view">
         <Lede>
@@ -341,12 +479,90 @@ export function SolarSystem() {
       <Note>
         खगोलीय गतिको यही नियमितताले नै नेपाली पात्रोदेखि पञ्चाङ्गसम्मका सबै गणनाको जग बसाल्छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Sun at the centre, Earth orbiting" en="Heliocentric view">
+        <Lede>
+          In our solar system the Earth completes one orbit around the Sun in about{" "}
+          <b>365.25 days</b> — this revolution makes the <span className="hl">year</span>. Because
+          the Earth also spins tilted at 23.5°, the seasons change.
+        </Lede>
+        <HeliocentricOrbitStudy />
+      </Section>
+      <Section kicker="02" title="Lunar motion" en="Lunar motion">
+        <Lede>
+          The Moon completes one orbit of the Earth in about <b>27.3 days</b> (sidereal month), but
+          because the Sun also moves, one <b>new moon to the next</b> takes ~29.5 days (synodic
+          month). The interplay of these two motions determines the panchanga's tithi, nakshatra
+          and paksha.
+        </Lede>
+        <ElongationStudy />
+        <Keys
+          items={[
+            { h: "Sidereal month ~27.3 days", p: "The time for the Moon to return to the same star-cluster in the sky." },
+            { h: "Synodic month ~29.5 days", p: "From one new moon to the next — the basis of tithi calculation." },
+            { h: "Solar year ~365.25 days", p: "One full orbit of the Earth — seasons and the year come from this." },
+          ]}
+        />
+      </Section>
+      <Section kicker="03" title="Earth's rotation" en="Earth's Rotation">
+        <Lede>
+          The Earth spins on its axis <b>from west to east</b>. One full rotation takes about{" "}
+          <b>24 hours</b>. This rotation causes day and night.
+        </Lede>
+        <div className="tm-card pad-lg">
+          <EarthRotationDiagram />
+        </div>
+        <Keys
+          items={[
+            { h: "1 rotation ≈ 24 hours", p: "A solar day — the time for the Sun to reappear in the same place." },
+            { h: "The Sun appears to rise in the east", p: "This is due to Earth's rotation — it is the Earth turning, not the Sun." },
+            { h: "Sunrise and sunset times", p: "Vary by location — determined by longitude and time zone." },
+          ]}
+        />
+      </Section>
+      <Section kicker="04" title="Earth's axial tilt" en="Axial Tilt">
+        <Lede>
+          The Earth's axis is tilted about <b>23.5°</b>. This tilt produces the different seasons —
+          Nepal has six ṛtu:
+        </Lede>
+        <Keys
+          items={[
+            { h: "Vasanta (Spring)", p: "Warming up, days lengthening." },
+            { h: "Grishma (Summer)", p: "Longest day, high heat." },
+            { h: "Varsha (Monsoon)", p: "The monsoon — Nepal's main rainy season." },
+            { h: "Sharad (Autumn)", p: "Cooling, dry and clear skies." },
+            { h: "Hemanta (Pre-winter)", p: "Cold begins, nights lengthening." },
+            { h: "Shishira (Winter)", p: "Coldest, shortest days." },
+          ]}
+        />
+        <Note>
+          If the Earth's axis were not tilted, the change of seasons would be far smaller.
+        </Note>
+      </Section>
+      <Section kicker="05" title="Phases of the Moon" en="Phases of the Moon">
+        <Lede>
+          The Moon does not give off its own light. It shines by reflecting{" "}
+          <span className="hl">the Sun's light</span>. At the <b>new moon</b> the Moon is not seen;
+          at the <b>full moon</b> it shines fully — these phases give us the sense of paksha and
+          tithi.
+        </Lede>
+        <div className="tm-card pad-lg">
+          <p className="ss-phases-heading">Main phases</p>
+          <MoonPhasesStrip />
+        </div>
+      </Section>
+      <Note>
+        This very regularity of celestial motion is the foundation of every calculation from the
+        Nepali patro to the panchanga.
+      </Note>
+    </>,
   );
 }
 
 export function BsCalendar() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="दुई फरक घडी" en="Two different clocks">
         <Lede>
@@ -407,12 +623,75 @@ export function BsCalendar() {
         यसैकारण आउँदो वर्षको पात्रो पहिल्यै ठ्याक्क भन्न खगोलीय गणना (पञ्चाङ्ग) चाहिन्छ —
         महिनाको दिन–सङ्ख्या सूर्यको वास्तविक स्थितिले तय गर्छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Two different clocks" en="Two different clocks">
+        <Lede>
+          A <span className="hl-amber">solar calendar</span> is based on the Sun's position — it
+          matches the seasons. A <span className="hl">lunar calendar</span> is based on the Moon's
+          phases — it matches tithis and festivals. The Nepali Bikram Sambat is actually a{" "}
+          <b>luni-solar</b> calendar that runs by aligning both.
+        </Lede>
+      </Section>
+      <Section kicker="02" title="Why they differ" en="The 11-day gap">
+        <Lede>
+          12 lunar months = ~354 days, but the solar year = ~365 days. Each year about{" "}
+          <b>11 days</b> of difference accumulates. Without correcting this, festivals would drift
+          out of their seasons — so an <span className="hl-amber">Adhik Maas</span> is inserted
+          periodically.
+        </Lede>
+        <Keys
+          items={[
+            { h: "Solar", p: "Sun → seasons, sankranti, gate. The Gregorian calendar is purely solar." },
+            { h: "Lunar", p: "Moon → tithi, paksha, full/new moon. The Islamic calendar is purely lunar." },
+            { h: "Luni-solar", p: "A blend of both — BS and the Hindu calendar. Adhik Maas keeps the balance." },
+          ]}
+        />
+      </Section>
+      <Section kicker="03" title="Sun · Earth · Moon together" en="Both cycles, side by side">
+        <Lede>
+          Below, the Earth orbits the Sun (the year, divided into <b>12 solar months</b>) and the
+          Moon orbits the Earth (each loop a <b>lunar month</b>) — both revolve{" "}
+          <span className="hl">at once</span>; both also spin on their own axes (Earth daily, the
+          Moon once per orbit — which is why the same face of the Moon always shows). Press play or
+          drag — by the time the Earth completes a year the Moon has looped nearly 12 times, but
+          not exactly.
+        </Lede>
+        <SunEarthMoonStudy />
+      </Section>
+      <Section kicker="04" title="What is Bikram Sambat" en="Bikram Sambat">
+        <Lede>
+          Bikram Sambat (BS) is Nepal's official calendar, running about <b>56–57 years</b> ahead
+          of the Gregorian. It is a <span className="hl">luni-solar</span> calendar — the month
+          names come from the lunar month, while the month lengths are set by the Sun's sign motion.
+        </Lede>
+      </Section>
+      <Section kicker="05" title="How months form" en="Solar months">
+        <Lede>
+          The moment the Sun enters a new sign from the previous one is called a{" "}
+          <span className="hl-amber">sankranti</span>, and a new month begins that day. Since the
+          Sun stays in a sign 29 to 32 days, BS months are <b>29–32 days</b> long — and can differ
+          each year.
+        </Lede>
+        <Keys
+          items={[
+            { h: "Gate = solar day", p: "The day counted from the sankranti — Baisakh 1 when the Sun enters Mesha." },
+            { h: "Variable month length", p: "Because Earth's orbit is elliptical, the Sun's speed varies." },
+            { h: "New year in Baisakh", p: "Mesha Sankranti — usually falls around mid-April." },
+          ]}
+        />
+      </Section>
+      <Note>
+        This is why stating next year's calendar exactly in advance needs astronomical calculation
+        (panchanga) — the number of days in a month is set by the Sun's actual position.
+      </Note>
+    </>,
   );
 }
 
 export function CalendarDifferences() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="तीन पात्रो, तीन आधार" en="Three systems">
         <Lede>
@@ -435,7 +714,31 @@ export function CalendarDifferences() {
       <Note>
         यही कारण मितिको रूपान्तरण साधारण जोडघटाउले मिल्दैन — पञ्चाङ्ग गणना नै सही उत्तर हो।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Three calendars, three bases" en="Three systems">
+        <Lede>
+          The <b>Gregorian (AD)</b> is a purely solar calendar — fixed days per month. The{" "}
+          <b>Nepali (BS)</b> is luni-solar — the month is set by the Sun's sign. The <b>Vedic</b>{" "}
+          tradition has two streams: the civil Shaka Samvat (solar) and the panchanga-based
+          Vikram/Shalivahana (luni-solar).
+        </Lede>
+      </Section>
+      <Section kicker="02" title="Key differences" en="Key differences">
+        <Keys
+          items={[
+            { h: "Year count", p: "BS ≈ AD + 56/57; Shaka Samvat ≈ AD − 78." },
+            { h: "Year start", p: "Gregorian: Jan 1; BS: Baisakh (Mesha Sankranti); Vedic lunar: Chaitra Shukla Pratipada." },
+            { h: "Days per month", p: "Gregorian: fixed 28–31; BS: 29–32 by the Sun's motion." },
+            { h: "Adhik Maas", p: "None in the Gregorian; added ~every 3 years in BS/Vedic luni-solar." },
+          ]}
+        />
+      </Section>
+      <Note>
+        This is why date conversion cannot be done by simple addition/subtraction — panchanga
+        calculation is the correct answer.
+      </Note>
+    </>,
   );
 }
 
