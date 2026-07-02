@@ -203,7 +203,7 @@ function UpcomingHolidays({
   location: PanchangaLocation;
 }) {
   const { t, i18n } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { lang, pick, digits } = useLocale();
 
   return (
     <section className="pn-holidays">
@@ -240,8 +240,8 @@ function UpcomingHolidays({
                 </span>
                 <span className="pn-hol-names">
                   <span className="pn-hol-ne">{pick(h.name_ne ?? h.name_en, h.name_en ?? h.name_ne)}</span>
-                  {h.name_en && h.name_ne && (
-                    <span className="pn-hol-en">{pick(h.name_en, h.name_ne)}</span>
+                  {lang === "ne" && h.name_en && h.name_ne && (
+                    <span className="pn-hol-en">{h.name_en}</span>
                   )}
                 </span>
                 <span className={`pn-badge ${type}`}>

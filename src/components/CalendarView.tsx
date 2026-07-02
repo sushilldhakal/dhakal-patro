@@ -28,7 +28,6 @@ import {
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
-import { toDevanagariDigits } from "@/i18n/digits";
 
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -197,8 +196,7 @@ export function CalendarView({
           <span className="pn-h1-yr">{digits(year)}</span>
         </h1>
         <div className="pn-sub">
-          {pick(BS_MONTH_NAMES[month - 1], BS_MONTHS_NE[month - 1])}{" "}
-          {pick(String(year), toDevanagariDigits(year))} · {adMonthSpan}
+          {pick(`${BS_MONTH_NAMES[month - 1]} ${year} · `, "")}{adMonthSpan}
         </div>
       </div>
 

@@ -89,7 +89,7 @@ export function PanchangaDateNav({ date, onDateChange, centerSlot }: Props) {
         >
           {BS_MONTHS_NE.map((ne, i) => (
             <option key={ne} value={i}>
-              {pick(ne, BS_MONTH_NAMES[i])} · {pick(BS_MONTH_NAMES[i], ne)}
+              {pick(`${ne} · ${BS_MONTH_NAMES[i]}`, BS_MONTH_NAMES[i])}
             </option>
           ))}
         </select>
