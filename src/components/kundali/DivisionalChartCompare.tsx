@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocale } from "@/i18n/locale";
 import { D1Chart } from "@/components/kundali/D1Chart";
+import { GrahaDetailsList } from "@/components/kundali/GrahaDetailsList";
 import { buildBhavaChart, type BhavaHouse } from "@/lib/bhava";
 import {
   type ChartAnchor,
@@ -17,6 +18,7 @@ type PlanetInput = {
   key: string;
   labelNe: string;
   longitude?: number;
+  retrograde?: boolean;
 };
 
 type PanelConfig = {
@@ -73,16 +75,21 @@ function ChartSlot({
   houses,
   side,
   anchorOptions,
+  lagnaLongitude,
+  planets,
 }: {
   panel: PanelConfig;
   onPanelChange: (next: PanelConfig) => void;
   houses: BhavaHouse[];
   side: "left" | "right";
   anchorOptions: ChartAnchor[];
+  lagnaLongitude?: number;
+  planets: PlanetInput[];
 }) {
   const { pick } = useLocale();
   const varga = vargaOption(panel.division);
   const anchorLabel = CHART_ANCHOR_LABELS[panel.anchor];
+  const anchorLongitude = resolveAnchorLongitude(panel.anchor, lagnaLongitude, planets);
 
   return (
     <div className="flex flex-col gap-3 min-w-0">
@@ -154,6 +161,27 @@ function ChartSlot({
           </p>
         )}
       </div>
+
+      {anchorLongitude != null && houses.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 px-3.5 py-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {pick("नव ग्रह विवरण", "Graha details")}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {pick(anchorLabel.labelNe, anchorLabel.labelEn)}
+              <span className="mx-1 text-muted-foreground/50">·</span>
+              {varga.short}
+            </p>
+          </div>
+          <GrahaDetailsList
+            division={panel.division}
+            anchorLongitude={anchorLongitude}
+            lagnaLongitude={lagnaLongitude}
+            planets={planets}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -202,6 +230,8 @@ export function DivisionalChartCompare({
         houses={leftHouses}
         side="left"
         anchorOptions={anchorOptions}
+        lagnaLongitude={lagnaLongitude}
+        planets={planets}
       />
       <ChartSlot
         panel={safeRight}
@@ -209,6 +239,8 @@ export function DivisionalChartCompare({
         houses={rightHouses}
         side="right"
         anchorOptions={anchorOptions}
+        lagnaLongitude={lagnaLongitude}
+        planets={planets}
       />
     </div>
   );
