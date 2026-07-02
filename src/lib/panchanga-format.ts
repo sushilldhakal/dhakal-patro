@@ -811,6 +811,12 @@ export type InstantLagna = {
   name?: string;
   degree_in_rashi?: number;
   longitude?: number;
+  /** Ecliptic latitude (shara) — 0 for the lagna by definition. */
+  latitude?: number;
+  right_ascension?: number;
+  declination?: number;
+  /** Ascendant motion in degrees/day. */
+  speed?: number;
 };
 
 /** Birth-moment (ephemeris) or sunrise lagna block from the API. */

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   CalendarRange,
+  CircleDot,
   Flame,
   LayoutGrid,
   Scale,
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 export const KUNDALI_SECTIONS = [
   { id: "kundali-overview", labelKey: "kundali.nav_overview", icon: "overview" as const },
   { id: "kundali-charts", labelKey: "kundali.nav_charts_full", icon: "charts" as const },
+  { id: "kundali-graha", labelKey: "kundali.nav_graha_details", icon: "graha" as const },
   { id: "kundali-dasha", labelKey: "kundali.nav_dasha_full", icon: "dasha" as const },
   { id: "kundali-shadbala", labelKey: "kundali.nav_shadbala", icon: "shadbala" as const },
   { id: "kundali-shanti", labelKey: "kundali.nav_shanti_vidhi", icon: "shanti" as const },
@@ -25,6 +27,7 @@ export const DEFAULT_KUNDALI_SECTION: KundaliSectionId = "kundali-overview";
 const ICONS = {
   overview: Sparkles,
   charts: LayoutGrid,
+  graha: CircleDot,
   dasha: CalendarRange,
   shadbala: Scale,
   shanti: Flame,
@@ -33,8 +36,6 @@ const ICONS = {
 
 export function parseKundaliSectionFromHash(hash: string): KundaliSectionId {
   const id = hash.replace(/^#/, "");
-  // Graha details moved under the divisional charts — honor old deep links.
-  if (id === "kundali-graha") return "kundali-charts";
   return KUNDALI_SECTIONS.some((s) => s.id === id) ? (id as KundaliSectionId) : DEFAULT_KUNDALI_SECTION;
 }
 

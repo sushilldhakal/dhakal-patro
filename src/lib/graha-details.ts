@@ -192,6 +192,33 @@ export function kpSubLordFromLongitude(longitude: number): DashaLord {
   return DASHA_SEQUENCE[startIdx]!;
 }
 
+/** Combustion (asta) orbs from the Sun in degrees; retrograde Mercury/Venus shrink. */
+const COMBUST_ORBS: Partial<Record<GrahaKey, { direct: number; retro?: number }>> = {
+  moon: { direct: 12 },
+  mars: { direct: 17 },
+  mercury: { direct: 14, retro: 12 },
+  jupiter: { direct: 11 },
+  venus: { direct: 10, retro: 8 },
+  saturn: { direct: 15 },
+};
+
+/**
+ * Whether a graha is combust (asta) — within its orb of the Sun. Returns
+ * undefined for the Sun itself and the nodes, where combustion doesn't apply.
+ */
+export function isCombust(
+  graha: GrahaKey,
+  longitude: number,
+  sunLongitude: number,
+  retrograde?: boolean,
+): boolean | undefined {
+  const orb = COMBUST_ORBS[graha];
+  if (!orb) return undefined;
+  const diff = Math.abs(longitude - sunLongitude) % 360;
+  const elongation = diff > 180 ? 360 - diff : diff;
+  return elongation <= (retrograde && orb.retro != null ? orb.retro : orb.direct);
+}
+
 export interface LongitudeDmsParts {
   rashiNum: number;
   deg: number;
