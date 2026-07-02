@@ -32,6 +32,7 @@ import {
 } from "@/components/panchanga/use-panchanga-location";
 import { fetchPanchanga, panchangaKeys } from "@/lib/api";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
+import { useLocale } from "@/i18n/locale";
 
 const N = toNepaliDigits;
 
@@ -439,7 +440,8 @@ export function CalendarDifferences() {
 }
 
 export function WhatIsPanchang() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="पञ्चाङ्ग = पाँच अङ्ग" en="The five limbs">
         <Lede>
@@ -461,12 +463,35 @@ export function WhatIsPanchang() {
         यस ज्ञानकेन्द्रका छुट्टाछुट्टै लेखमा यी पाँचै अङ्ग कसरी गणना हुन्छन् भनेर विस्तारमा
         बुझाइएको छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Panchanga = five limbs" en="The five limbs">
+        <Lede>
+          The word “panchanga” comes from <b>pancha (five) + anga (limb)</b>. Five elements
+          describe each day's celestial state — together they determine auspicious/inauspicious
+          muhurtas, festivals and the daily calculation.
+        </Lede>
+        <Keys
+          items={[
+            { h: "1. Tithi", p: "The lunar day formed by the 12° angular gap between Moon and Sun." },
+            { h: "2. Vaara", p: "The seven weekdays — Sunday, Monday, Tuesday…" },
+            { h: "3. Nakshatra", p: "One of the 27 star-clusters the Moon occupies." },
+            { h: "4. Yoga", p: "The 27 yogas formed from the sum of the Sun's and Moon's longitudes." },
+            { h: "5. Karana", p: "Half of a tithi — two karanas per tithi." },
+          ]}
+        />
+      </Section>
+      <Note>
+        Separate articles in this knowledge center explain in detail how each of these five limbs
+        is calculated.
+      </Note>
+    </>,
   );
 }
 
 export function TithiArticle() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="तिथि = १२° कोणीय दूरी" en="12° of elongation">
         <Lede>
@@ -508,12 +533,56 @@ export function TithiArticle() {
         चन्द्रको गति स्थिर नभएकाले तिथिको लम्बाइ पनि स्थिर हुँदैन — कहिले एउटै तिथि दुई दिन
         (वृद्धि), कहिले बीचमै हराउँछ (क्षय)। ती छुट्टै लेखमा हेर्नुहोस्।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Tithi = 12° of elongation" en="12° of elongation">
+        <Lede>
+          Seen from Earth, the angle by which the Moon runs <span className="hl">ahead of the Sun</span>{" "}
+          determines the tithi. <b>0°</b> is the new moon (Amavasya), <b>180°</b> the full moon
+          (Purnima). In this diagram the Earth also moves <span className="hl-amber">~29°</span>{" "}
+          around the Sun (one lunar month) — so the Moon takes ~27 days to return to a nakshatra,
+          and ~29.5 days to the next new moon. Drag or press play below.
+        </Lede>
+        <ElongationStudy />
+        <div className="tm-formula">
+          <div className="tm-fcard">
+            <div className="big">
+              12
+              <span className="u">°</span>
+            </div>
+            <div className="lbl">= 1 tithi</div>
+            <div className="desc">360° ÷ 30 tithis. Each 12° of angle crossed starts a new tithi.</div>
+          </div>
+          <div className="tm-fcard">
+            <div className="big">
+              ~12
+              <span className="u">°/day</span>
+            </div>
+            <div className="lbl">Moon's average speed</div>
+            <div className="desc">Actually varies 10.7°–14.3° — due to the shape of the Moon's orbit.</div>
+          </div>
+          <div className="tm-fcard">
+            <div className="big">Sunrise</div>
+            <div className="lbl">When is the tithi counted?</div>
+            <div className="desc">
+              Whichever tithi is running at sunrise is taken as that day's tithi — this rule is
+              what creates vriddhi and kshaya.
+            </div>
+          </div>
+        </div>
+      </Section>
+      <Note>
+        Because the Moon's speed is not constant, the length of a tithi is not constant either —
+        sometimes one tithi spans two days (vriddhi), sometimes it is skipped entirely (kshaya).
+        See those in separate articles.
+      </Note>
+    </>,
   );
 }
 
 export function TithiVriddhi() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="एउटै तिथि दुई दिन" en="Repeated tithi">
         <Lede>
@@ -529,12 +598,29 @@ export function TithiVriddhi() {
           </div>
         </div>
       </Section>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="One tithi, two days" en="Repeated tithi">
+        <Lede>
+          When the Moon moves <span className="hl">slowly</span> (~10.7°/day), a single 12°
+          tithi-segment spans <b>two consecutive sunrises</b>. Since the same tithi is running on
+          both mornings, the calendar shows that tithi on <span className="hl-amber">two days</span>.
+        </Lede>
+        <div className="tm-card pad-lg">
+          <SunriseTimeline mode="vriddhi" />
+          <div className="tm-card-cap">
+            The Tritiya segment is so wide that both the 10th and 11th sunrises fall within it — so
+            Tritiya repeats.
+          </div>
+        </div>
+      </Section>
+    </>,
   );
 }
 
 export function TithiKshaya() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="हराएको तिथि" en="Skipped tithi">
         <Lede>
@@ -550,12 +636,30 @@ export function TithiKshaya() {
           </div>
         </div>
       </Section>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="A skipped tithi" en="Skipped tithi">
+        <Lede>
+          Conversely, when the Moon moves <span className="hl">fast</span> (~14.3°/day), a 12°
+          tithi-segment finishes entirely <b>between two sunrises</b>. Since that tithi is present
+          at no sunrise, it is <span className="hl-amber">skipped (kshaya)</span> and disappears
+          from the calendar.
+        </Lede>
+        <div className="tm-card pad-lg">
+          <SunriseTimeline mode="kshaya" />
+          <div className="tm-card-cap">
+            The Ashtami segment is so narrow it ended between one sunrise and the next — no morning
+            landed on Ashtami, so it was skipped.
+          </div>
+        </div>
+      </Section>
+    </>,
   );
 }
 
 export function AdhikMaas() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="थपिने महिना" en="Extra month">
         <Lede>
@@ -579,12 +683,37 @@ export function AdhikMaas() {
           ]}
         />
       </Section>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="The extra month" en="Extra month">
+        <Lede>
+          A <b>lunar month</b> is ~29.5 days; a <b>solar month</b> ~30.4 days. Because the lunar
+          month is shorter, occasionally a lunar month contains{" "}
+          <span className="hl">no sankranti</span> — that month is called an{" "}
+          <span className="hl-amber">Adhik Maas</span> and repeats the previous month's name.
+        </Lede>
+        <div className="tm-card pad-lg">
+          <AdhikMassDiagram />
+          <div className="tm-card-cap">
+            Two new moons fell within the Mesha solar month — because the lunar month between them
+            had no sankranti, it became “Adhik Baisakh”; the regular month after it is “Nija Baisakh”.
+          </div>
+        </div>
+        <Keys
+          items={[
+            { h: "Once in ~32.5 months", p: "The accumulating difference adds one adhik maas roughly every three years." },
+            { h: "Adhik and Nija", p: "The month with no sankranti is “Adhik”, the one after it “Nija” (true)." },
+            { h: "Kshaya maas", p: "Rarely, if one lunar month has two sankrantis, that month is dropped (kshaya)." },
+          ]}
+        />
+      </Section>
+    </>,
   );
 }
 
 export function Nakshatra() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="२७ तारापुञ्ज" en="27 lunar mansions">
         <Lede>
@@ -607,12 +736,36 @@ export function Nakshatra() {
           ]}
         />
       </Section>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="27 star-clusters" en="27 lunar mansions">
+        <Lede>
+          The Moon's path across the sky is divided into <b>27 equal parts</b>, each{" "}
+          <b>13°20′</b>. Whichever part the Moon is in is the <span className="hl-amber">nakshatra</span>{" "}
+          — from Ashwini to Revati.
+        </Lede>
+      </Section>
+      <Section kicker="02" title="Padas and calculation" en="Padas">
+        <Lede>
+          Each nakshatra is further divided into <b>four padas</b> (3°20′ each). The birth nakshatra
+          and pada set the rashi and name-syllable in the chart. Because nakshatra depends on{" "}
+          <span className="hl">ayanamsha</span>, tropical and sidereal calculations differ.
+        </Lede>
+        <Keys
+          items={[
+            { h: "13°20′ per nakshatra", p: "360° ÷ 27 — the Moon crosses ~1 nakshatra per lunar day." },
+            { h: "4 padas", p: "A quarter of each nakshatra — the basis of navamsha and name-syllable." },
+            { h: "Ruling planet", p: "Each nakshatra has one lord planet — the foundation of Vimshottari dasha." },
+          ]}
+        />
+      </Section>
+    </>,
   );
 }
 
 export function Yoga() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="सूर्य + चन्द्रको जोड" en="Sun + Moon longitude">
         <Lede>
@@ -627,12 +780,28 @@ export function Yoga() {
           तिथि–वार–नक्षत्रसँगै योग पनि हेरिन्छ।
         </Lede>
       </Section>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Sum of Sun + Moon" en="Sun + Moon longitude">
+        <Lede>
+          Yoga is the fourth limb of the panchanga. It is found by <b>adding the longitudes</b> of
+          the Sun and Moon — each time the sum increases by <b>13°20′</b> a new yoga begins. There
+          are <span className="hl-amber">27 yogas</span> in all — from Vishkambha to Vaidhriti.
+        </Lede>
+      </Section>
+      <Section kicker="02" title="Why it matters" en="Why it matters">
+        <Lede>
+          Some yogas are considered auspicious while others (such as Vyatipata, Vaidhriti) are
+          avoided. When choosing a muhurta, yoga is checked alongside tithi, vaara and nakshatra.
+        </Lede>
+      </Section>
+    </>,
   );
 }
 
 export function Karana() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="तिथिको आधा भाग" en="Half a tithi">
         <Lede>
@@ -648,12 +817,29 @@ export function Karana() {
           ]}
         />
       </Section>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Half a tithi" en="Half a tithi">
+        <Lede>
+          A karana is <b>half a tithi</b> — a <b>6° angular gap</b> between Moon and Sun. Since each
+          tithi contains two karanas, there are <span className="hl-amber">60 karanas</span> across
+          a month, but only <b>11</b> names — seven movable (repeating) and four fixed.
+        </Lede>
+        <Keys
+          items={[
+            { h: "7 movable karanas", p: "Bava, Balava, Kaulava… recur throughout the month." },
+            { h: "4 fixed karanas", p: "Shakuni, Chatushpada, Naga, Kimstughna — once each per month." },
+            { h: "Use in muhurta", p: "The Vishti (Bhadra) karana is inauspicious — auspicious work is avoided." },
+          ]}
+        />
+      </Section>
+    </>,
   );
 }
 
 export function Sankranti() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="राशि परिवर्तनको क्षण" en="Sun enters a sign">
         <Lede>
@@ -676,7 +862,29 @@ export function Sankranti() {
         अधिक मास पनि सङ्क्रान्तिमै निर्भर छ — जुन चान्द्र मासमा सङ्क्रान्ति पर्दैन, त्यो अधिक
         हुन्छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="The moment the sign changes" en="Sun enters a sign">
+        <Lede>
+          The exact moment the Sun enters a new sign from the previous one is called{" "}
+          <span className="hl-amber">Sankranti</span>. There are <b>12 sankrantis</b> a year, and
+          each marks the <span className="hl">first day of a new BS month</span>.
+        </Lede>
+      </Section>
+      <Section kicker="02" title="Notable ones" en="Notable ones">
+        <Keys
+          items={[
+            { h: "Mesha Sankranti", p: "Baisakh 1 — Nepali New Year." },
+            { h: "Makar Sankranti", p: "Maghe Sankranti — the festival when the Sun turns north (Uttarayana)." },
+            { h: "Basis of months", p: "Every sankranti = the start of a new solar month." },
+          ]}
+        />
+      </Section>
+      <Note>
+        Adhik Maas also depends on sankranti — the lunar month in which no sankranti falls becomes
+        the adhik (extra) month.
+      </Note>
+    </>,
   );
 }
 
