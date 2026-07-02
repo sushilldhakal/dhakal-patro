@@ -10,10 +10,12 @@ import {
 } from "@/lib/api";
 import { adToBS } from "@/lib/bs-calendar";
 import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
-import { formatMonthMoonEventDisplay, toNepaliDigits } from "@/lib/panchanga-format";
+import { formatMonthMoonEventDisplay } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 
 const WEEKDAYS_NE = ["आइत", "सोम", "मंगल", "बुध", "बिहि", "शुक्र", "शनि"];
+const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type PakshaPhase = "shukla" | "krishna";
 
@@ -23,14 +25,13 @@ function getPakshaPhase(day: CalendarDay): PakshaPhase | undefined {
   return undefined;
 }
 
-function formatTithiWithPaksha(day: CalendarDay): string {
-  const tithi = day.tithi_ne ?? day.tithi ?? "—";
+function formatTithiWithPaksha(day: CalendarDay, isEn: boolean): string {
+  const tithi = isEn ? (day.tithi ?? day.tithi_ne ?? "—") : (day.tithi_ne ?? day.tithi ?? "—");
+  const phase = getPakshaPhase(day);
   const pakshaLabel = (() => {
-    if (day.paksha_ne?.includes("शुक्ल")) return "शुक्ल";
-    if (day.paksha_ne?.includes("कृष्ण")) return "कृष्ण";
-    if (day.paksha_ne) return day.paksha_ne.replace(/\s*पक्ष$/, "");
-    if (day.paksha === "shukla") return "शुक्ल";
-    if (day.paksha === "krishna") return "कृष्ण";
+    if (phase === "shukla") return isEn ? "Shukla" : "शुक्ल";
+    if (phase === "krishna") return isEn ? "Krishna" : "कृष्ण";
+    if (!isEn && day.paksha_ne) return day.paksha_ne.replace(/\s*पक्ष$/, "");
     return undefined;
   })();
   if (!pakshaLabel) return tithi;
@@ -54,6 +55,8 @@ export function PanchangaMonthGrid({
   clock = "12:00",
   onLoadingChange,
 }: Props) {
+  const { lang, pick, digits } = useLocale();
+  const isEn = lang === "en";
   const bs = adToBS(date);
   const todayBs = adToBS(new Date());
   const isInstant = dataMode === "instant";
@@ -98,11 +101,11 @@ export function PanchangaMonthGrid({
     <div className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       {isInstant && (
         <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border bg-secondary/10">
-          प्रत्येक दिन{" "}
+          {pick("प्रत्येक दिन ", "Each day at ")}
           <span className="font-mono font-semibold text-foreground tabular-nums">
-            {toNepaliDigits(clock)}
+            {digits(clock)}
           </span>{" "}
-          बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)
+          {pick("बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)", "— tithi/nakshatra/yoga/karana (ephemeris mode)")}
         </div>
       )}
       <div className="grid grid-cols-7 gap-px bg-border border-b border-border">
@@ -111,10 +114,12 @@ export function PanchangaMonthGrid({
             key={ne}
             className="bg-foreground/[0.03] px-1.5 py-1.5 flex flex-col gap-0.5"
           >
-            <span className="text-[11px] font-semibold truncate">{ne}</span>
-            <span className="text-xs uppercase tracking-wider text-muted-foreground truncate">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][i]}
-            </span>
+            <span className="text-[11px] font-semibold truncate">{pick(ne, WEEKDAYS_EN[i])}</span>
+            {lang === "ne" && (
+              <span className="text-xs uppercase tracking-wider text-muted-foreground truncate">
+                {WEEKDAYS_EN[i]}
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -142,7 +147,7 @@ export function PanchangaMonthGrid({
                     "text-xs font-semibold truncate text-center w-full leading-tight m-0 ext-foreground",
                   )}
                 >
-                  {formatTithiWithPaksha(day)}
+                  {formatTithiWithPaksha(day, isEn)}
                 </p>
 
                 {/* Middle: sunrise · day · sunset */}
@@ -156,7 +161,7 @@ export function PanchangaMonthGrid({
                           )}
                         />
                         <span className="font-mono text-xs leading-none tabular-nums">
-                          {toNepaliDigits(day.sunrise)}
+                          {digits(day.sunrise)}
                         </span>
                       </>
                     ) : (
@@ -166,7 +171,7 @@ export function PanchangaMonthGrid({
 
                   <div className="flex flex-col items-center justify-center flex-1 min-w-0 px-0.5">
                     <span className="font-mono font-bold text-[22px] leading-none tabular-nums">
-                      {toNepaliDigits(day.day)}
+                      {digits(day.day)}
                     </span>
                     <span className="font-mono text-xs leading-none mt-0.5 text-foreground">
                       {ad.getDate()}
@@ -177,7 +182,7 @@ export function PanchangaMonthGrid({
                           "text-[8px] font-bold px-1 py-px rounded-full mt-0.5 g-secondary text-secondary-foreground",
                         )}
                       >
-                        आज
+                        {pick("आज", "Today")}
                       </span>
                     )}
                   </div>
@@ -191,7 +196,7 @@ export function PanchangaMonthGrid({
                           )}
                         />
                         <span className="font-mono text-xs leading-none tabular-nums">
-                          {toNepaliDigits(day.sunset)}
+                          {digits(day.sunset)}
                         </span>
                       </>
                     ) : (
@@ -210,14 +215,14 @@ export function PanchangaMonthGrid({
                       className="text-secondary dark:text-[var(--brand-yellow)]"
                     />
                     <span className="truncate font-medium text-center w-full">
-                      {day.nakshatra_ne ?? day.nakshatra ?? "—"}
+                      {pick(day.nakshatra_ne ?? day.nakshatra, day.nakshatra ?? day.nakshatra_ne) ?? "—"}
                     </span>
                   </span>
                   <span className={cn("truncate text-center")}>
-                    {day.yoga_ne ?? day.yoga ?? "—"}
+                    {pick(day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
                   </span>
                   <span className={cn("truncate text-center")}>
-                    {day.karana_ne ?? day.karana ?? "—"}
+                    {pick(day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
                   </span>
                 </div>
 

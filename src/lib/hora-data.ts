@@ -48,16 +48,17 @@ export interface HoraWeekDay {
   ruler: HoraPlanetKey;
   day: string;
   rom: string;
+  en: string;
 }
 
 export const HORA_WEEK: HoraWeekDay[] = [
-  { ruler: "ravi", day: "आइतबार", rom: "Āitabār" },
-  { ruler: "soma", day: "सोमबार", rom: "Sombār" },
-  { ruler: "mangala", day: "मङ्गलबार", rom: "Maṅgalbār" },
-  { ruler: "budha", day: "बुधबार", rom: "Budhabār" },
-  { ruler: "guru", day: "बिहीबार", rom: "Bihībār" },
-  { ruler: "shukra", day: "शुक्रबार", rom: "Śukrabār" },
-  { ruler: "shani", day: "शनिबार", rom: "Śanibār" },
+  { ruler: "ravi", day: "आइतबार", rom: "Āitabār", en: "Sunday" },
+  { ruler: "soma", day: "सोमबार", rom: "Sombār", en: "Monday" },
+  { ruler: "mangala", day: "मङ्गलबार", rom: "Maṅgalbār", en: "Tuesday" },
+  { ruler: "budha", day: "बुधबार", rom: "Budhabār", en: "Wednesday" },
+  { ruler: "guru", day: "बिहीबार", rom: "Bihībār", en: "Thursday" },
+  { ruler: "shukra", day: "शुक्रबार", rom: "Śukrabār", en: "Friday" },
+  { ruler: "shani", day: "शनिबार", rom: "Śanibār", en: "Saturday" },
 ];
 
 export const HORA_CX = 470;

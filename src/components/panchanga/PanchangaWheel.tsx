@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { PanchangaDay } from "@/lib/api";
 import { fetchPanchangaAtTime, panchangaKeys } from "@/lib/api";
-import { getPanchangaDetail, toNepaliDigits } from "@/lib/panchanga-format";
+import { getPanchangaDetail } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   buildWheelDetail,
@@ -16,6 +16,14 @@ import {
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WheelChart, type WheelHover, type WheelPick } from "./WheelChart";
 import { WheelPanel } from "./WheelPanel";
+import { useLocale } from "@/i18n/locale";
+import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
+import { NAK_LORD_EN } from "@/lib/wheel-locale";
+
+function bsMonthEnOf(ne: string): string {
+  const i = BS_MONTHS_NE.indexOf(ne);
+  return i >= 0 ? BS_MONTH_NAMES[i] : ne;
+}
 
 interface Props {
   p: PanchangaDay;
@@ -159,18 +167,17 @@ function PanchangaWheelImpl({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.date_ad, p.panchanga_date_ad]);
 
+  const { pick, digits } = useLocale();
   const stageRef = useRef<HTMLDivElement>(null);
-  const num = (n: number | string) => toNepaliDigits(n);
+  const num = (n: number | string) => digits(n);
   const scrubClock = gClock(scrubG, det.sunriseMin);
-  const tithiNe =
-    (scrubQ.data
-      ? ((getPanchangaDetail(scrubQ.data)?.tithi as { name_ne?: string } | undefined)
-          ?.name_ne ??
-        (scrubQ.data.tithi as { name_ne?: string } | undefined)?.name_ne)
-      : undefined) ??
-    det.tithi2[0]?.ne ??
-    "—";
-  const locLabel = locationLabel ?? p.location?.name ?? "काठमाडौं";
+  const scrubTithi = scrubQ.data
+    ? (getPanchangaDetail(scrubQ.data)?.tithi as { name_ne?: string; name?: string } | undefined) ??
+      (scrubQ.data.tithi as { name_ne?: string; name?: string } | undefined)
+    : undefined;
+  const tithiNe = scrubTithi?.name_ne ?? det.tithi2[0]?.ne ?? "—";
+  const tithiEn = scrubTithi?.name ?? det.tithi2[0]?.en ?? tithiNe;
+  const locLabel = locationLabel ?? p.location?.name ?? pick("काठमाडौं", "Kathmandu");
 
   const onStageMove = (e: React.MouseEvent) => {
     const r = stageRef.current?.getBoundingClientRect();
@@ -184,11 +191,11 @@ function PanchangaWheelImpl({
       const ic = NAKSHATRA_ICONS[hover.i]!;
       tipNode = (
         <div className="w-tip show" style={{ left: tip.x, top: tip.y }}>
-          <div className="w-tip-kind">नक्षत्र · {num(hover.i + 1)}</div>
-          <div className="w-tip-title">{ic.ne}</div>
+          <div className="w-tip-kind">{pick("नक्षत्र", "Nakshatra")} · {num(hover.i + 1)}</div>
+          <div className="w-tip-title">{pick(ic.ne, ic.en)}</div>
           <div className="w-tip-row">
-            <span>स्वामी</span>
-            <b>{ic.lord_ne}</b>
+            <span>{pick("स्वामी", "Lord")}</span>
+            <b>{pick(ic.lord_ne, NAK_LORD_EN[ic.lord_ne] ?? ic.lord_ne)}</b>
           </div>
           <div className="w-tip-sym">{ic.sym_ne}</div>
         </div>
@@ -197,16 +204,16 @@ function PanchangaWheelImpl({
       const rs = WHEEL_RASHIS[hover.i]!;
       tipNode = (
         <div className="w-tip show" style={{ left: tip.x, top: tip.y }}>
-          <div className="w-tip-kind">राशि · {num(hover.i + 1)}</div>
+          <div className="w-tip-kind">{pick("राशि", "Rashi")} · {num(hover.i + 1)}</div>
           <div className="w-tip-title">
             <span style={{ fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}>
               {rs.sym + "\uFE0E"}
             </span>{" "}
-            {rs.ne}
+            {pick(rs.ne, rs.en)}
           </div>
           <div className="w-tip-row">
-            <span>महिना</span>
-            <b>{bsMonthNe}</b>
+            <span>{pick("महिना", "Month")}</span>
+            <b>{pick(bsMonthNe, bsMonthEnOf(bsMonthNe))}</b>
           </div>
         </div>
       );
@@ -217,14 +224,15 @@ function PanchangaWheelImpl({
     <div className="pn-wheel rounded-2xl border border-border overflow-hidden">
       <div className="w-stage" ref={stageRef} onMouseMove={onStageMove}>
         <div className="w-head">
-          <div className="w-head-eyebrow">नेपाली पात्रो · पञ्चाङ्ग चक्र</div>
+          <div className="w-head-eyebrow">{pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}</div>
           <div className="w-head-title">
-            {isToday && !scrubPinned ? "आजको" : ""}{" "}
-            ग्रह–नक्षत्र · तिथि–करण चक्र{" "}
+            {isToday && !scrubPinned ? pick("आजको", "Today's") : ""}{" "}
+            {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
             <span className="yr">{num(bsYear)}</span>
           </div>
           <div className="w-head-sub">
-            {det.weekday.ne}, {bsMonthNe} {num(bsDay)} · {tithiNe} · {locLabel}
+            {pick(det.weekday.ne, det.weekday.en)}, {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))}{" "}
+            {num(bsDay)} · {pick(tithiNe, tithiEn)} · {locLabel}
           </div>
         </div>
 
@@ -258,24 +266,24 @@ function PanchangaWheelImpl({
         <div className="w-legend">
           <div className="w-legend-row">
             <span className="w-legend-dot" style={{ background: "var(--w-accent)" }} />
-            लग्न · वर्तमान नक्षत्र · तिथि
+            {pick("लग्न · वर्तमान नक्षत्र · तिथि", "Lagna · current nakshatra · tithi")}
           </div>
           <div className="w-legend-row">
             <span className="w-legend-dot" style={{ background: "#f2a81d" }} />
-            सूर्य राशि
+            {pick("सूर्य राशि", "Sun sign")}
           </div>
           <div className="w-legend-row">
             <span className="w-legend-dot" style={{ background: "#d3dce4" }} />
-            चन्द्र राशि
+            {pick("चन्द्र राशि", "Moon sign")}
           </div>
           <div className="w-legend-row" style={{ opacity: 0.7, marginTop: 2 }}>
-            घुमाउन तान्नुहोस् · pinch to zoom
+            {pick("घुमाउन तान्नुहोस् · pinch to zoom", "drag to rotate · pinch to zoom")}
           </div>
         </div>
 
         <div className="w-dock">
           <div className="w-dock-grp">
-            <span className="w-dock-label">समय</span>
+            <span className="w-dock-label">{pick("समय", "Time")}</span>
             <input
               className="w-scrub"
               type="range"
@@ -294,16 +302,16 @@ function PanchangaWheelImpl({
               <button
                 type="button"
                 className="w-dock-todaybtn"
-                title="अहिलेको समय"
+                title={pick("अहिलेको समय", "Current time")}
                 onClick={snapToNow}
               >
-                आज
+                {pick("आज", "Now")}
               </button>
             )}
             <button
               type="button"
               className="w-iconbtn"
-              title="उत्तर सिधा"
+              title={pick("उत्तर सिधा", "North up")}
               onClick={() => setSpin(0)}
             >
               ⟳

@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import type { PanchangaDay } from "@/lib/api";
-import { getPlanetRows, getPlanetsAnchorLabel, toNepaliDigits } from "@/lib/panchanga-format";
+import { getPlanetRows, getPlanetsAnchorLabel } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   buildDayTimelineData,
   dualTimeAtGhati,
+  CHOGHADIYA_EN,
+  TL_GRAHA_EN,
+  TL_RASHI_EN,
   type TimelineRowData,
 } from "./day-timeline-data";
+import { useLocale } from "@/i18n/locale";
 
 const W = 1000;
 const X0 = 96;
@@ -57,6 +61,7 @@ function clampX(x: number, pad: number) {
 
 interface ChartSegment {
   ne: string;
+  en: string;
   fromG: number;
   toG: number;
   bad?: boolean;
@@ -70,6 +75,7 @@ function segmentsFromRow(row: TimelineRowData): ChartSegment[] {
     const toG = it.endG != null ? Math.min(it.endG, 60) : 60;
     const seg: ChartSegment = {
       ne: it.name,
+      en: it.nameEn ?? it.name,
       fromG: prev,
       toG,
       bad: it.bad,
@@ -111,6 +117,7 @@ function minutesOnVedicChart(
 }
 
 export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock }: Props) {
+  const { pick, digits } = useLocale();
   const data = useMemo(() => buildDayTimelineData(p, dateAd), [p, dateAd]);
   const planets = useMemo(() => getPlanetRows(p), [p]);
   const timeZone = resolveTimeZone(p.location?.timezone, timezone);
@@ -132,6 +139,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
         row.kind === "choghadiya"
           ? data.choghadiya.map((c) => ({
               ne: c.name,
+              en: CHOGHADIYA_EN[c.name] ?? c.name,
               fromG: c.startG,
               toG: c.endG,
               bad: c.bad,
@@ -145,7 +153,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
   const tLabel = (g: number) => dualTimeAtGhati(g, data.sunriseMin).clock;
 
   let nowG: number | null = null;
-  let nowLabel = "अहिले";
+  let nowLabel = pick("अहिले", "Now");
   const anchorAd = p.panchanga_date_ad ?? p.date_ad ?? dateAd;
   const ephemerisNeedle = p.mode === "ephemeris";
   const chartMins = minutesOnVedicChart(p.query_instant_local, anchorAd ?? "", needleClock);
@@ -153,7 +161,9 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
   if (ephemerisNeedle && chartMins != null) {
     nowG = (chartMins - data.sunriseMin) / 24;
     if (nowG < 0) nowG += 60;
-    nowLabel = needleClock ? `${toNepaliDigits(needleClock)} बजे` : "छानिएको समय";
+    nowLabel = needleClock
+      ? pick(`${digits(needleClock)} बजे`, digits(needleClock))
+      : pick("छानिएको समय", "Chosen time");
   } else if (isToday) {
     const minsNow = minutesSinceMidnightInTimezone(now, timeZone);
     nowG = (minsNow - data.sunriseMin) / 24;
@@ -165,15 +175,15 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
   return (
     <div className="pg-sec pgx-card">
       <div className="pg-sec-band pgx-band">
-        <h2>दिन-चक्र</h2>
-        <span>पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise</span>
+        <h2>{pick("दिन-चक्र", "Day cycle")}</h2>
+        <span>{pick("पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise", "Full panchanga timeline · sunrise to sunrise")}</span>
         <span className="pgx-legend">
           <i className="pgx-key good" />
-          शुभ
+          {pick("शुभ", "Good")}
           <i className="pgx-key bad" />
-          अशुभ
+          {pick("अशुभ", "Bad")}
           <i className="pgx-key night" />
-          रात
+          {pick("रात", "Night")}
         </span>
       </div>
 
@@ -194,17 +204,17 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
           />
 
           <text x={X0 - 10} y={20} className="pgx-scale-label" textAnchor="end">
-            घण्टा
+            {pick("घण्टा", "Hour")}
           </text>
           <text x={X0 - 10} y={47} className="pgx-scale-label dim" textAnchor="end">
-            घडी
+            {pick("घडी", "Ghati")}
           </text>
           <line x1={X0} y1={30} x2={X1} y2={30} className="pg-tl-axis" />
           {data.civilHourTicks.map(({ hour, g }) => (
             <g key={`h-${hour}-${g}`}>
               <line x1={gx(g)} y1={30} x2={gx(g)} y2={24} className="pg-tl-tick" />
               <text x={gx(g)} y={18} className="pgx-hour" textAnchor="middle">
-                {toNepaliDigits(hour)}
+                {digits(hour)}
               </text>
             </g>
           ))}
@@ -212,7 +222,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
             <g key={`g-${g}`}>
               <line x1={gx(g)} y1={30} x2={gx(g)} y2={36} className="pg-tl-tick" />
               <text x={gx(g)} y={48} className="pgx-ghati" textAnchor="middle">
-                {toNepaliDigits(g)}
+                {digits(g)}
               </text>
             </g>
           ))}
@@ -245,10 +255,10 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
             return (
               <g key={tr.key}>
                 <text x={X0 - 10} y={y + BAND / 2 - 2} className="pg-tl-rowlabel" textAnchor="end">
-                  {tr.ne}
+                  {pick(tr.ne, tr.en)}
                 </text>
                 <text x={X0 - 10} y={y + BAND / 2 + 11} className="pg-tl-rowlabel-en" textAnchor="end">
-                  {tr.en}
+                  {pick(tr.en, "")}
                 </text>
                 <line
                   x1={X0}
@@ -276,9 +286,10 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
                           : `pgx-seg ${tr.cls}${si % 2 ? " alt" : ""}${isActiveLagna ? " active" : ""}`;
                   const midX = clampX((x + x2) / 2, 26);
                   const narrow = w < 64;
-                  const [mainName, paksha] = s.ne.includes(", ")
-                    ? [s.ne.split(", ")[0]!, s.ne.split(", ").slice(1).join(", ")]
-                    : [s.ne, ""];
+                  const segText = pick(s.ne, s.en);
+                  const [mainName, paksha] = segText.includes(", ")
+                    ? [segText.split(", ")[0]!, segText.split(", ").slice(1).join(", ")]
+                    : [segText, ""];
 
                   const clipId = `pgx-clip-${ti}-${si}`;
                   const labelY = y + BAND / 2 + 4.5;
@@ -304,7 +315,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
                         rx={4}
                         className={segCls}
                       >
-                        <title>{`${tr.ne}: ${s.ne} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
+                        <title>{`${pick(tr.ne, tr.en)}: ${segText} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
                       </rect>
                       {tr.cls === "cho" ? (
                         w > 26 && (
@@ -314,7 +325,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
                             className={`pgx-segname cho${s.bad ? " bad" : ""}`}
                             textAnchor="middle"
                           >
-                            {s.ne}
+                            {segText}
                           </text>
                         )
                       ) : (
@@ -361,7 +372,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
                   const x2 = gx(s.toG);
                   const time =
                     tr.cls === "lagna" && s.transitionLocal
-                      ? toNepaliDigits(s.transitionLocal)
+                      ? digits(s.transitionLocal)
                       : tLabel(s.toG);
                   const prevTime =
                     si > 0 && tr.segs[si - 1]?.cut
@@ -408,19 +419,23 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
       {planets.length > 0 && (
         <div className="pgx-grahas">
           <div className="pgx-grahas-label">
-            <span className="ne">ग्रह</span>
+            <span className="ne">{pick("ग्रह", "Planets")}</span>
             <span className="en">{getPlanetsAnchorLabel(p)}</span>
           </div>
           <div className="pgx-graha-row">
-            {planets.map(({ label, rashiNe, coords }) => (
-              <div key={label} className="pgx-graha" title={`${label} — ${rashiNe ?? ""} ${coords}`}>
+            {planets.map(({ label, rashiNe, coords }) => {
+              const labelL = pick(label, TL_GRAHA_EN[label] ?? label);
+              const rashiL = pick(rashiNe ?? "—", TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—");
+              return (
+              <div key={label} className="pgx-graha" title={`${labelL} — ${rashiL} ${coords}`}>
                 <span className="pgx-graha-sym">{PLANET_SYM[label] ?? "★"}</span>
                 <span className="pgx-graha-name">
-                  {label}–{rashiNe ?? "—"}
+                  {labelL}–{rashiL}
                 </span>
                 <span className="pgx-graha-deg mono">{coords}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

@@ -53,17 +53,33 @@ export const KAR_FIX_COLOR: Record<string, string> = {
 
 export const KAR_FIX_NAMES = ["शकुनि", "चतुष्पाद", "नाग", "किंस्तुघ्न"] as const;
 
+export const KARANA_EN: Record<string, string> = {
+  बव: "Bava",
+  बालव: "Balava",
+  कौलव: "Kaulava",
+  तैतिल: "Taitila",
+  गर: "Gara",
+  वणिज: "Vanija",
+  विष्टि: "Vishti",
+  शकुनि: "Shakuni",
+  चतुष्पाद: "Chatushpada",
+  नाग: "Naga",
+  किंस्तुघ्न: "Kimstughna",
+};
+
 export interface KaranaEntry {
   ne: string;
+  en: string;
   fixed: boolean;
 }
 
 export const KARANA_SEQ: KaranaEntry[] = (() => {
   const out: KaranaEntry[] = [];
+  const mk = (ne: string, fixed: boolean): KaranaEntry => ({ ne, en: KARANA_EN[ne] ?? ne, fixed });
   for (let k = 0; k < 60; k++) {
-    if (k === 0) out.push({ ne: "किंस्तुघ्न", fixed: true });
-    else if (k >= 57) out.push({ ne: KAR_FIX_NAMES[k - 57]!, fixed: true });
-    else out.push({ ne: KAR_MOV[(k - 1) % 7]!, fixed: false });
+    if (k === 0) out.push(mk("किंस्तुघ्न", true));
+    else if (k >= 57) out.push(mk(KAR_FIX_NAMES[k - 57]!, true));
+    else out.push(mk(KAR_MOV[(k - 1) % 7]!, false));
   }
   return out;
 })();
@@ -78,6 +94,10 @@ export function tithiNum(idx: number): number {
 
 export function tithiPaksha(idx: number): string {
   return idx < 15 ? "शुक्ल पक्ष" : "कृष्ण पक्ष";
+}
+
+export function tithiPakshaEn(idx: number): string {
+  return idx < 15 ? "Shukla Paksha" : "Krishna Paksha";
 }
 
 /** Tithi band index 0–29 from moon–sun elongation (degrees). */
