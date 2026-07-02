@@ -11,11 +11,11 @@ import {
   RELATION_LABELS,
   grahaDignity,
   kpSubLordFromLongitude,
-  longitudeDmsParts,
   naturalRelation,
   nakshatraLordKey,
   ownedRashis,
   rashiLordKey,
+  vargaDmsParts,
   type GrahaDignity,
   type GrahaKey,
   type GrahaRelation,
@@ -104,7 +104,7 @@ export function GrahaDetailsList({
         retrograde,
         vargaRashi,
         bhava: rashiToHouse(vargaRashi, anchorRashi),
-        dms: longitudeDmsParts(lon),
+        dms: vargaDmsParts(division, lon),
         nakshatraIndex: nak.index,
         pada: nak.pada,
         nakshatraLord: nakshatraLordKey(lon),
@@ -147,8 +147,7 @@ export function GrahaDetailsList({
           <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>
             {pick("ग्रह", "Graha")}
           </TableHead>
-          <TableHead className={th}>{pick("राशि", "Rashi")}</TableHead>
-          <TableHead className={th}>{pick("स्पष्ट", "Longitude")}</TableHead>
+          <TableHead className={th}>{pick("राशि / स्पष्ट", "Rashi / Longitude")}</TableHead>
           <TableHead className={cn(th, "text-center")}>{pick("भाव", "Bhava")}</TableHead>
           <TableHead className={th}>{pick("नक्षत्र (पद)", "Nakshatra (Pada)")}</TableHead>
           <TableHead className={th}>{pick("नक्षत्रेश / उप", "Lord / Sub")}</TableHead>
@@ -194,9 +193,6 @@ export function GrahaDetailsList({
                     </span>
                   )}
                 </span>
-              </TableCell>
-              <TableCell className={cn(td, "font-medium text-foreground")}>
-                {rashiName(row.vargaRashi)}
               </TableCell>
               <TableCell className={cn(td, "font-mono tabular-nums text-muted-foreground")}>
                 <span className="text-foreground font-semibold">
