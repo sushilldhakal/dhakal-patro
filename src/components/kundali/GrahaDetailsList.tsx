@@ -25,6 +25,14 @@ import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { nakshatraPadaFromLongitude } from "@/lib/panchang-elements";
 import { rashiNeFromNumber } from "@/lib/panchanga-format";
 import { vargaRashiFromLongitude, type VargaDivision } from "@/lib/vargas";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 export type GrahaPointInput = {
@@ -50,14 +58,8 @@ type Row = {
   rulesBhavas: number[];
 };
 
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <span className="inline-flex items-baseline gap-1 text-[11.5px] leading-snug">
-      <span className="text-muted-foreground/80 shrink-0">{label}</span>
-      <span className="font-semibold text-foreground">{value}</span>
-    </span>
-  );
-}
+const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
+const td = "px-2.5 py-2 text-[12.5px]";
 
 export type GrahaDetailsListProps = {
   division: VargaDivision;
@@ -137,103 +139,116 @@ export function GrahaDetailsList({
   const grahaName = (key: GrahaKey) => pick(GRAHA_NAME[key].ne, GRAHA_NAME[key].en);
   const rashiName = (rashi: number) =>
     pick(rashiNeFromNumber(rashi) ?? "—", RASHI_EN_NAMES[rashi - 1] ?? "—");
-  const bhavaList = (houses: number[]) => houses.map((h) => digits(h)).join(", ");
 
   return (
-    <ul className="flex flex-col divide-y divide-border/70">
-      {rows.map((row) => {
-        const name =
-          row.key === "lagna" ? pick("लग्न", "Lagna") : grahaName(row.key);
-        const nakName = pick(
-          NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—",
-          NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—",
-        );
-        return (
-          <li
-            key={row.key}
-            className={cn(
-              "flex flex-col gap-1.5 px-3.5 py-2.5",
-              row.retrograde && "bg-secondary/[0.05] dark:bg-secondary/10",
-            )}
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <span className="flex items-center gap-1.5">
-                <span className="text-[13px] font-bold text-foreground">{name}</span>
-                {row.retrograde && (
-                  <span
-                    className="inline-flex items-center gap-0.5 text-[9.5px] font-bold text-secondary bg-secondary/15 px-1.5 py-0.5 rounded-full"
-                    title={pick("वक्री", "Retrograde")}
-                  >
-                    <RotateCcw className="size-2.5" aria-hidden />
-                    {pick("वक्री", "Retro")}
-                  </span>
+    <Table>
+      <TableHeader>
+        <TableRow className="bg-muted/40 hover:bg-muted/40">
+          <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>
+            {pick("ग्रह", "Graha")}
+          </TableHead>
+          <TableHead className={th}>{pick("राशि", "Rashi")}</TableHead>
+          <TableHead className={th}>{pick("स्पष्ट", "Longitude")}</TableHead>
+          <TableHead className={cn(th, "text-center")}>{pick("भाव", "Bhava")}</TableHead>
+          <TableHead className={th}>{pick("नक्षत्र (पद)", "Nakshatra (Pada)")}</TableHead>
+          <TableHead className={th}>{pick("नक्षत्रेश / उप", "Lord / Sub")}</TableHead>
+          <TableHead className={th}>{pick("स्वामी", "Owner")}</TableHead>
+          <TableHead className={th}>{pick("सम्बन्ध", "Relationship")}</TableHead>
+          <TableHead className={th}>{pick("स्थिति", "Dignity")}</TableHead>
+          <TableHead className={th}>{pick("स्वामित्व", "Rules")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row, i) => {
+          const name = row.key === "lagna" ? pick("लग्न", "Lagna") : grahaName(row.key);
+          const nakName = pick(
+            NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—",
+            NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—",
+          );
+          const zebra = i % 2 === 1 && "bg-muted/20";
+          return (
+            <TableRow
+              key={row.key}
+              className={cn(zebra, row.retrograde && "bg-secondary/[0.06] dark:bg-secondary/10")}
+            >
+              {/* Sticky cell needs an opaque background so scrolled columns
+                  don't show through — blend the row tint into the card color. */}
+              <TableCell
+                className={cn(
+                  td,
+                  "sticky left-0 z-10 bg-card pl-3.5 font-semibold text-foreground",
+                  zebra && "bg-[color-mix(in_srgb,var(--muted)_20%,var(--card))]",
+                  row.retrograde &&
+                    "bg-[color-mix(in_srgb,var(--secondary)_6%,var(--card))] dark:bg-[color-mix(in_srgb,var(--secondary)_10%,var(--card))]",
                 )}
-              </span>
-              <span className="text-[12px] font-mono text-muted-foreground">
-                <span className="font-semibold text-foreground">
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {name}
+                  {row.retrograde && (
+                    <span
+                      className="inline-flex items-center gap-0.5 text-[9px] font-bold text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
+                      title={pick("वक्री", "Retrograde")}
+                    >
+                      <RotateCcw className="size-2.5" aria-hidden />
+                      {pick("वक्री", "R")}
+                    </span>
+                  )}
+                </span>
+              </TableCell>
+              <TableCell className={cn(td, "font-medium text-foreground")}>
+                {rashiName(row.vargaRashi)}
+              </TableCell>
+              <TableCell className={cn(td, "font-mono tabular-nums text-muted-foreground")}>
+                <span className="text-foreground font-semibold">
                   {digits(String(row.dms.deg).padStart(2, "0"))}°
-                </span>
-                <span className="mx-1 text-foreground font-sans font-semibold">
-                  {rashiName(row.dms.rashiNum)}
-                </span>
+                </span>{" "}
+                <span className="font-sans text-foreground">{rashiName(row.dms.rashiNum)}</span>{" "}
                 {digits(String(row.dms.min).padStart(2, "0"))}′{" "}
                 {digits(String(row.dms.sec).padStart(2, "0"))}″
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              <DetailItem
-                label={pick("राशि", "Rashi")}
-                value={rashiName(row.vargaRashi)}
-              />
-              <DetailItem label={pick("भाव", "Bhava")} value={digits(row.bhava)} />
-              <DetailItem
-                label={pick("नक्षत्र", "Nakshatra")}
-                value={`${nakName} · ${pick(`पद ${digits(row.pada)}`, `Pada ${digits(row.pada)}`)}`}
-              />
-              <DetailItem
-                label={pick("नक्षत्रेश / उप", "Lord / Sub")}
-                value={`${grahaName(row.nakshatraLord)} / ${grahaName(row.subLord)}`}
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              <DetailItem
-                label={pick("स्वामी", "Owner")}
-                value={
-                  row.ownerBhava != null
-                    ? pick(
-                        `${grahaName(row.ownerKey)} (भाव ${digits(row.ownerBhava)} मा)`,
-                        `${grahaName(row.ownerKey)} (in bhava ${digits(row.ownerBhava)})`,
-                      )
-                    : grahaName(row.ownerKey)
-                }
-              />
-              {row.relation && (
-                <DetailItem
-                  label={pick("सम्बन्ध", "Relationship")}
-                  value={pick(RELATION_LABELS[row.relation].ne, RELATION_LABELS[row.relation].en)}
-                />
-              )}
-              {row.dignity && (
-                <DetailItem
-                  label={pick("स्थिति", "Dignity")}
-                  value={pick(DIGNITY_LABELS[row.dignity].ne, DIGNITY_LABELS[row.dignity].en)}
-                />
-              )}
-              {row.rulesBhavas.length > 0 && (
-                <DetailItem
-                  label={pick("स्वामित्व", "Rules")}
-                  value={pick(
-                    `भाव ${bhavaList(row.rulesBhavas)}`,
-                    `Bhava ${bhavaList(row.rulesBhavas)}`,
-                  )}
-                />
-              )}
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+              </TableCell>
+              <TableCell className={cn(td, "text-center font-semibold text-foreground")}>
+                {digits(row.bhava)}
+              </TableCell>
+              <TableCell className={td}>
+                {nakName}
+                <span className="text-muted-foreground"> ({digits(row.pada)})</span>
+              </TableCell>
+              <TableCell className={td}>
+                {grahaName(row.nakshatraLord)}
+                <span className="text-muted-foreground/60 mx-1">/</span>
+                {grahaName(row.subLord)}
+              </TableCell>
+              <TableCell className={td}>
+                {grahaName(row.ownerKey)}
+                {row.ownerBhava != null && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    {pick(`(भाव ${digits(row.ownerBhava)})`, `(bhava ${digits(row.ownerBhava)})`)}
+                  </span>
+                )}
+              </TableCell>
+              <TableCell className={td}>
+                {row.relation
+                  ? pick(RELATION_LABELS[row.relation].ne, RELATION_LABELS[row.relation].en)
+                  : "—"}
+              </TableCell>
+              <TableCell className={td}>
+                {row.dignity
+                  ? pick(DIGNITY_LABELS[row.dignity].ne, DIGNITY_LABELS[row.dignity].en)
+                  : "—"}
+              </TableCell>
+              <TableCell className={td}>
+                {row.rulesBhavas.length > 0
+                  ? pick(
+                      `भाव ${row.rulesBhavas.map((h) => digits(h)).join(", ")}`,
+                      `Bhava ${row.rulesBhavas.map((h) => digits(h)).join(", ")}`,
+                    )
+                  : "—"}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
