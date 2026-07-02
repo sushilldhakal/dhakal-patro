@@ -28,10 +28,11 @@ import {
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
+import { patroSegBtn } from "@/lib/patro-classes";
 
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-  (_, i) => BS_SUPPORTED_START_YEAR + i
+  (_, i) => BS_SUPPORTED_START_YEAR + i,
 );
 
 export type CalendarMonthContext = {
@@ -46,9 +47,7 @@ interface Props {
   aside?: ReactNode;
   holidays?: ReactNode;
   showMonthHeader?: boolean;
-  /** Active location — drives per-day tithi/sunrise for the month grid. */
   location?: PanchangaLocation;
-  /** AD date (YYYY-MM-DD) considered "today", resolved for the location's timezone. */
   todayAd?: string;
   onLoadingChange?: (loading: boolean) => void;
 }
@@ -65,8 +64,6 @@ export function CalendarView({
 }: Props) {
   const { t } = useTranslation();
   const { lang, pick, digits } = useLocale();
-  // "Today" follows the active location's timezone when provided, so opening the
-  // patro lands on the correct local month/day rather than the browser's.
   const init = useMemo(() => {
     if (todayAd) {
       const bs = adToBS(new Date(`${todayAd}T12:00:00`));
@@ -160,7 +157,9 @@ export function CalendarView({
   const calendarBlock = (
     <>
       {monthQ.isError && (
-        <div className="pn-warn-banner">{t("calendar.enrich_error")}</div>
+        <div className="mb-3 rounded-xl border border-warning/25 bg-warning-surface px-3.5 py-2 text-sm font-medium text-warning">
+          {t("calendar.enrich_error")}
+        </div>
       )}
 
       <BsCalendarGrid
@@ -188,21 +187,24 @@ export function CalendarView({
   );
 
   const monthHeader = showMonthHeader ? (
-    <div className="pn-monthhead">
-      <div className="pn-monthtitle">
-        <div className="pn-eyebrow">{t("calendar.eyebrow")}</div>
-        <h1 className="pn-h1">
+    <div className="mb-4 mt-2 flex flex-wrap items-end justify-between gap-4 max-sm:px-2.5 max-sm:pt-3">
+      <div className="flex w-full flex-col items-start min-[1081px]:w-auto">
+        <div className="mb-1.5 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+          {t("calendar.eyebrow")}
+        </div>
+        <h1 className="m-0 text-[40px] font-bold leading-tight tracking-tight max-sm:text-[28px]">
           {pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1])}{" "}
-          <span className="pn-h1-yr">{digits(year)}</span>
+          <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
         </h1>
-        <div className="pn-sub">
-          {pick(`${BS_MONTH_NAMES[month - 1]} ${year} · `, "")}{adMonthSpan}
+        <div className="mt-1 text-sm text-muted-foreground">
+          {pick(`${BS_MONTH_NAMES[month - 1]} ${year} · `, "")}
+          {adMonthSpan}
         </div>
       </div>
 
-      <div className="pn-controls">
+      <div className="flex w-full flex-wrap items-center gap-2.5 min-[1081px]:w-auto">
         <select
-          className="pn-select"
+          className="h-8 cursor-pointer rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium text-foreground"
           value={month}
           aria-label={t("calendar.month_aria")}
           onChange={(e) => {
@@ -219,7 +221,7 @@ export function CalendarView({
         </select>
 
         <select
-          className="pn-select"
+          className="h-8 cursor-pointer rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium text-foreground"
           value={year}
           aria-label={t("calendar.year_aria")}
           onChange={(e) => {
@@ -235,22 +237,26 @@ export function CalendarView({
           ))}
         </select>
 
-        <div className="pn-navgroup">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
-            className="pn-iconbtn"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
             onClick={prev}
             disabled={month === 1 && year <= BS_SUPPORTED_START_YEAR}
             aria-label={t("calendar.prev_month")}
           >
             <ChevronLeft size={16} strokeWidth={1.8} />
           </button>
-          <button type="button" className="pn-todaybtn" onClick={goToday}>
+          <button
+            type="button"
+            className="h-8 cursor-pointer rounded-lg border-none bg-primary px-4 text-[13.5px] font-semibold text-primary-foreground shadow-xs transition-[filter,transform] hover:brightness-105 active:translate-y-px"
+            onClick={goToday}
+          >
             {t("calendar.today_btn")}
           </button>
           <button
             type="button"
-            className="pn-iconbtn"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
             onClick={nextMonth}
             disabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
             aria-label={t("calendar.next_month")}
@@ -259,14 +265,18 @@ export function CalendarView({
           </button>
         </div>
 
-        {isEnriching && <span className="pn-enrich-note">{t("common.enriching")}</span>}
+        {isEnriching && <span className="text-xs font-medium text-muted-foreground">{t("common.enriching")}</span>}
 
-        <div className="pn-seg" role="radiogroup" aria-label={t("calendar.era_aria")}>
+        <div
+          className="inline-flex gap-0.5 rounded-lg border border-border bg-card p-0.5"
+          role="radiogroup"
+          aria-label={t("calendar.era_aria")}
+        >
           <button
             type="button"
             role="radio"
             aria-checked={mode === "bs"}
-            className={`pn-seg-btn${mode === "bs" ? " on" : ""}`}
+            className={patroSegBtn(mode === "bs")}
             onClick={() => setMode("bs")}
           >
             {t("calendar.mode_bs")}
@@ -275,7 +285,7 @@ export function CalendarView({
             type="button"
             role="radio"
             aria-checked={mode === "ad"}
-            className={`pn-seg-btn${mode === "ad" ? " on" : ""}`}
+            className={patroSegBtn(mode === "ad")}
             onClick={() => setMode("ad")}
           >
             {t("calendar.mode_ad")}
@@ -291,12 +301,11 @@ export function CalendarView({
 
   if (aside || holidays) {
     return (
-      <div className="pn-layout">
-        <div className="pn-calendar-col">
-          {monthHeader}
-          {calendarBlock}
-        </div>
-        {aside ? <div className="pn-aside-col">{aside}</div> : null}
+      <div className="grid items-start gap-4 min-[1081px]:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] min-[1081px]:items-stretch min-[1081px]:gap-[15px] max-sm:gap-4">
+        <div className="min-w-0">{monthHeader}{calendarBlock}</div>
+        {aside ? (
+          <div className="flex h-0 min-h-full min-w-0 flex-col min-[1081px]:h-auto">{aside}</div>
+        ) : null}
         {holidays}
       </div>
     );

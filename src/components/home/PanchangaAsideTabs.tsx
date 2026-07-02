@@ -10,6 +10,8 @@ import {
   formatBsMonthDayPatro,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import { patroEmpty, patroFestRow } from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
 import { PanchangaVivaranPanel } from "@/components/home/PanchangaVivaranPanel";
 import { SaitAsidePanel } from "@/components/home/SaitAsidePanel";
 import { MuhurtaAsidePanel } from "@/components/home/MuhurtaAsidePanel";
@@ -19,9 +21,7 @@ export type AsideTabId = "panchanga" | "festivals" | "sait" | "muhurta";
 export const ASIDE_TAB_IDS: AsideTabId[] = ["panchanga", "festivals", "sait", "muhurta"];
 
 function AsideEmpty({ children }: { children: ReactNode }) {
-  return (
-    <p className="pn-aside-tab-empty">{children}</p>
-  );
+  return <p className={patroEmpty}>{children}</p>;
 }
 
 function FestivalsTab({
@@ -53,7 +53,7 @@ function FestivalsTab({
   );
 
   if (festivalsQ.isLoading && !entries.length) {
-    return <div className="pn-aside-tab-skel" />;
+    return <div className="h-40 animate-pulse rounded-md bg-muted" />;
   }
 
   if (!entries.length) {
@@ -61,7 +61,7 @@ function FestivalsTab({
   }
 
   return (
-    <ul className="pn-aside-fest-compact">
+    <ul className="m-0 list-none overflow-hidden rounded-lg bg-surface-inset p-0 shadow-ring-soft">
       {entries.map((entry) => {
         const festAd = adByBsDay.get(entry.bsDay);
         const daysLeft = festAd != null ? daysDiffFromAd(todayAd, festAd) : null;
@@ -80,18 +80,36 @@ function FestivalsTab({
         return (
           <li
             key={`${entry.bsDay}-${entry.name}`}
-            className={`pn-aside-fest-compact-row${entry.isPublicHoliday ? " public" : ""}${isToday ? " today" : ""}${isPast ? " past" : ""}`}
+            className={patroFestRow({
+              publicHoliday: entry.isPublicHoliday,
+              today: isToday,
+              past: isPast,
+            })}
             title={formatBsMonthDayPatro(bsYear, bsMonth, entry.bsDay)}
           >
-            <span className="pn-aside-fest-compact-day" aria-hidden>
+            <span className="font-num text-center text-[13px] font-bold leading-none text-muted-foreground" aria-hidden>
               {toNepaliDigits(entry.bsDay)}
             </span>
-            <span className="pn-aside-fest-compact-name">{entry.name}</span>
+            <span
+              className={cn(
+                "min-w-0 text-[12.5px] leading-snug font-semibold text-foreground",
+                entry.isPublicHoliday && "text-danger",
+                isToday && !entry.isPublicHoliday && "text-accent",
+              )}
+            >
+              {entry.name}
+            </span>
             {countLabel ? (
-              <span className="pn-aside-fest-compact-count">
+              <span
+                className={cn(
+                  "font-num inline-flex min-w-8 shrink-0 items-baseline justify-end gap-px text-xs font-bold text-accent",
+                  isPast && "text-[10px] font-semibold text-muted-foreground",
+                  isToday && "text-[10px] font-bold text-accent",
+                )}
+              >
                 {countLabel}
                 {daysLeft != null && daysLeft > 1 ? (
-                  <span className="pn-aside-fest-compact-count-unit">{t("rel.days_unit")}</span>
+                  <span className="text-[9px] font-semibold text-muted-foreground">{t("rel.days_unit")}</span>
                 ) : null}
               </span>
             ) : null}
@@ -130,21 +148,14 @@ export function PanchangaAsideTabPanel({
       <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} />
     ) : tab === "sait" ? (
       <SaitAsidePanel defaultYear={bsYear} />
-    ) : tab === "festivals" ? (
-      <div className="pn-aside-tab-skel" />
     ) : (
-      <div className="pn-aside-tab-skel" />
+      <div className="h-40 animate-pulse rounded-md bg-muted" />
     );
   }
 
   if (tab === "festivals") {
     return (
-      <FestivalsTab
-        bsYear={bsYear}
-        bsMonth={bsMonth}
-        monthDays={monthDays}
-        todayAd={todayAd}
-      />
+      <FestivalsTab bsYear={bsYear} bsMonth={bsMonth} monthDays={monthDays} todayAd={todayAd} />
     );
   }
 

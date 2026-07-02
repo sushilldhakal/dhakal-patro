@@ -46,12 +46,12 @@ export const KAR_MOV_COLOR: Record<string, string> = {
 
 export const KAR_FIX_COLOR: Record<string, string> = {
   शकुनि: "#a23351",
-  चतुष्पाद: "#c14d72",
+  चतुष्पद: "#c14d72",
   नाग: "#d76d92",
   किंस्तुघ्न: "#e3a7c0",
 };
 
-export const KAR_FIX_NAMES = ["शकुनि", "चतुष्पाद", "नाग", "किंस्तुघ्न"] as const;
+export const KAR_FIX_NAMES = ["शकुनि", "चतुष्पद", "नाग", "किंस्तुघ्न"] as const;
 
 export const KARANA_EN: Record<string, string> = {
   बव: "Bava",
@@ -62,7 +62,7 @@ export const KARANA_EN: Record<string, string> = {
   वणिज: "Vanija",
   विष्टि: "Vishti",
   शकुनि: "Shakuni",
-  चतुष्पाद: "Chatushpada",
+  चतुष्पद: "Chatushpada",
   नाग: "Naga",
   किंस्तुघ्न: "Kimstughna",
 };

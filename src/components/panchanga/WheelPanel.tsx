@@ -84,7 +84,7 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
               </span>
             </div>
             <div className="w-dl-row">
-              <span className="w-dl-k">{pick("पाद अक्षर", "Pada syllables")}</span>
+              <span className="w-dl-k">{pick("पद अक्षर", "Pada syllables")}</span>
               <span className="w-dl-v">{PADA_AKSHAR[sel.i]!.join(" · ")}</span>
             </div>
           </div>
@@ -142,8 +142,8 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
               <span className="w-dl-v">{pick(bsMonths[sel.i]?.ne ?? "", bsMonthEnOf(bsMonths[sel.i]?.ne ?? ""))}</span>
             </div>
             <div className="w-dl-row">
-              <span className="w-dl-k">{pick("पाद", "Padas")}</span>
-              <span className="w-dl-v mono">{pick(`${num(9)} पाद`, `${num(9)} padas`)}</span>
+              <span className="w-dl-k">{pick("पद", "Padas")}</span>
+              <span className="w-dl-v mono">{pick(`${num(9)} पद`, `${num(9)} padas`)}</span>
             </div>
           </div>
           <div className="w-panel-cons">

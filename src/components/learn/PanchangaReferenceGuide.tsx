@@ -111,7 +111,7 @@ export function GrahaReferenceTable() {
 export function NakshatraReferenceTable() {
   const { pick, digits: N } = useLocale();
   return (
-    <RefTable caption={pick("२७ नक्षत्र — प्रत्येक १३°२०′, चार पाद (३°२०′ प्रति पाद)", "27 Nakshatras — each 13°20′, four padas (3°20′ per pada)")}>
+    <RefTable caption={pick("२७ नक्षत्र — प्रत्येक १३°२०′, चार पद (३°२०′ प्रति पद)", "27 Nakshatras — each 13°20′, four padas (3°20′ per pada)")}>
       <thead>
         <tr>
           <th>#</th>
@@ -120,10 +120,10 @@ export function NakshatraReferenceTable() {
           <th>°</th>
           <th>{pick("स्वामी", "Lord")}</th>
           <th>{pick("चिह्न", "Symbol")}</th>
-          <th>{pick("पाद १", "Pada 1")}</th>
-          <th>{pick("पाद २", "Pada 2")}</th>
-          <th>{pick("पाद ३", "Pada 3")}</th>
-          <th>{pick("पाद ४", "Pada 4")}</th>
+          <th>{pick("पद १", "Pada 1")}</th>
+          <th>{pick("पद २", "Pada 2")}</th>
+          <th>{pick("पद ३", "Pada 3")}</th>
+          <th>{pick("पद ४", "Pada 4")}</th>
         </tr>
       </thead>
       <tbody>
@@ -256,7 +256,7 @@ export function KaranaReferenceTable() {
       </RefTable>
       <p className="tm-card-cap learn-ref-note">
         {pick(
-          "क्रम: किंस्तुघ्न → (बव…विष्टि)×८ → शकुनि → चतुष्पाद → नाग → किंस्तुघ्न — जम्मा ६० करण/महिना।",
+          "क्रम: किंस्तुघ्न → (बव…विष्टि)×८ → शकुनि → चतुष्पद → नाग → किंस्तुघ्न — जम्मा ६० करण/महिना।",
           "Order: Kimstughna → (Bava…Vishti)×8 → Shakuni → Chatushpada → Naga → Kimstughna — 60 karanas/month in all.",
         )}
       </p>

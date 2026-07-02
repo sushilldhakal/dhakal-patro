@@ -29,6 +29,8 @@ import {
   relativeDayLabel,
 } from "@/lib/panchanga-format";
 import { useLocale } from "@/i18n/locale";
+import { patroAsideLink } from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
 import { TL_GRAHA_EN, TL_RASHI_EN } from "@/components/panchanga/day-timeline-data";
 
 interface Props {
@@ -36,10 +38,13 @@ interface Props {
   bsYear: number;
   bsMonth: number;
   publicHolidayDates: Set<string>;
-  /** Active location — drives sunrise/muhurta/tithi so the modal matches the side panel & grid. */
   location?: PanchangaLocation;
   onClose: () => void;
 }
+
+const sectionTitle = "mb-2 text-sm font-bold";
+const metaCard = "rounded-lg border border-border bg-surface-inset p-2.5";
+const metaLabel = "mb-1 text-[10px] font-medium tracking-widest text-muted-foreground uppercase";
 
 function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
   const { pick } = useLocale();
@@ -48,10 +53,12 @@ function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
 
   return (
     <>
-      <h4 className="pn-daymodal-section-title">{pick("दिन विशेष", "Day highlights")}</h4>
-      <ul className="pn-daymodal-events">
+      <h4 className={sectionTitle}>{pick("दिन विशेष", "Day highlights")}</h4>
+      <ul className="m-0 list-none p-0">
         {labels.map((name) => (
-          <li key={name}>{name}</li>
+          <li key={name} className="border-b border-border py-2 text-sm font-medium last:border-b-0">
+            {name}
+          </li>
         ))}
       </ul>
     </>
@@ -65,15 +72,18 @@ function MuhurtaSection({ p }: { p: PanchangaDay }) {
 
   return (
     <>
-      <h4 className="pn-daymodal-section-title">{pick("मुहूर्त", "Muhurta")}</h4>
-      <div className="pn-daymodal-table" style={{ marginBottom: 16 }}>
+      <h4 className={sectionTitle}>{pick("मुहूर्त", "Muhurta")}</h4>
+      <div className="mb-4 overflow-hidden rounded-lg border border-border">
         {rows.map((row) => (
-          <div key={row.label} className="pn-daymodal-muhurta-row">
-            <span className={`pn-daymodal-muhurta-label${row.auspicious ? " auspicious" : ""}`}>
+          <div
+            key={row.label}
+            className="grid grid-cols-[1fr_auto] items-baseline gap-3 border-b border-border px-3 py-2.5 text-sm font-medium last:border-b-0"
+          >
+            <span className={cn("text-muted-foreground", row.auspicious && "text-success")}>
               {row.label}
               {row.auspicious ? " ✓" : ""}
             </span>
-            <span className="pn-daymodal-muhurta-val">{row.value}</span>
+            <span className="font-num text-right tabular-nums">{row.value}</span>
           </div>
         ))}
       </div>
@@ -88,19 +98,22 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
 
   return (
     <>
-      <h4 className="pn-daymodal-section-title">{pick("उदयकालिक स्पष्टग्रह", "Planets at sunrise")}</h4>
-      <div className="pn-daymodal-planets">
+      <h4 className={sectionTitle}>{pick("उदयकालिक स्पष्टग्रह", "Planets at sunrise")}</h4>
+      <div className="grid grid-cols-2 gap-2">
         {planets.map(({ label, rashiNe, coords }) => (
-          <div key={label} className="pn-daymodal-planet">
-            <div className="pn-daymodal-planet-name">
+          <div
+            key={label}
+            className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2 text-sm font-medium"
+          >
+            <div className="flex flex-col gap-0.5">
               <span>{pick(label, TL_GRAHA_EN[label] ?? label)}</span>
               {rashiNe && (
-                <span className="pn-daymodal-planet-rashi">
+                <span className="text-[11px] text-muted-foreground">
                   {pick(rashiNe, TL_RASHI_EN[rashiNe] ?? rashiNe)}
                 </span>
               )}
             </div>
-            <span className="pn-daymodal-planet-val">{coords}</span>
+            <span className="font-num text-right tabular-nums">{coords}</span>
           </div>
         ))}
       </div>
@@ -108,18 +121,17 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
   );
 }
 
-function PanchangaTable({
-  rows,
-}: {
-  rows: { label: string; value?: string | null }[];
-}) {
+function PanchangaTable({ rows }: { rows: { label: string; value?: string | null }[] }) {
   const visible = rows.filter((r) => r.value);
   if (!visible.length) return null;
   return (
-    <div className="pn-daymodal-table">
+    <div className="mb-4 overflow-hidden rounded-lg border border-border">
       {visible.map((row) => (
-        <div key={row.label} className="pn-daymodal-row">
-          <span className="pn-daymodal-row-label">{row.label}</span>
+        <div
+          key={row.label}
+          className="grid grid-cols-[88px_1fr] gap-3 border-b border-border px-3 py-2.5 text-sm font-medium last:border-b-0"
+        >
+          <span className="text-muted-foreground">{row.label}</span>
           <span>{row.value}</span>
         </div>
       ))}
@@ -138,27 +150,27 @@ function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
   if (!sunrise && !sunset && !moonrise && !moonset) return null;
 
   return (
-    <div className="pn-daymodal-sunrow">
+    <div className="mb-4 flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
       {sunrise && (
-        <span className="pn-daymodal-sunitem">
+        <span className="inline-flex items-center gap-1.5">
           <Sunrise size={16} strokeWidth={1.8} />
           <span>Sunrise {sunrise}</span>
         </span>
       )}
       {sunset && (
-        <span className="pn-daymodal-sunitem">
+        <span className="inline-flex items-center gap-1.5">
           <Sunset size={16} strokeWidth={1.8} />
           <span>Sunset {sunset}</span>
         </span>
       )}
       {moonrise && (
-        <span className="pn-daymodal-sunitem">
+        <span className="inline-flex items-center gap-1.5">
           <Moon size={16} strokeWidth={1.8} />
           <span>Moonrise {moonrise}</span>
         </span>
       )}
       {moonset && (
-        <span className="pn-daymodal-sunitem">
+        <span className="inline-flex items-center gap-1.5">
           <Moon size={16} strokeWidth={1.8} />
           <span>Moonset {moonset}</span>
         </span>
@@ -197,12 +209,12 @@ function DaySummary({
 
   return (
     <>
-      <p className="pn-daymodal-paksha">{formatPakshaTithiLine(p)}</p>
-      {nsSubtitle && <p className="pn-daymodal-ns">{nsSubtitle}</p>}
+      <p className="mb-1 text-sm font-semibold">{formatPakshaTithiLine(p)}</p>
+      {nsSubtitle && <p className="mb-3.5 text-sm font-medium text-muted-foreground">{nsSubtitle}</p>}
 
       <CelestialTimesRow p={p} day={day} />
 
-      <h4 className="pn-daymodal-section-title">Panchanga</h4>
+      <h4 className={sectionTitle}>Panchanga</h4>
       <PanchangaTable
         rows={[
           { label: pick("पक्ष", "Paksha"), value: pakshaDisplay },
@@ -215,10 +227,9 @@ function DaySummary({
       />
 
       <MuhurtaSection p={p} />
-
       <DinVisheshSection p={p} day={day} />
 
-      <button type="button" className="pn-daymodal-link" onClick={onFullPanchanga}>
+      <button type="button" className={cn(patroAsideLink, "mb-4 inline-block cursor-pointer border-none bg-transparent p-0 text-sm")} onClick={onFullPanchanga}>
         See full panchanga →
       </button>
     </>
@@ -242,9 +253,7 @@ function PanchangaFull({
   const nakshatra = (detail?.nakshatra ?? p.nakshatra) as Parameters<typeof formatAngaTransition>[0];
   const yoga = (detail?.yoga ?? p.yoga) as Parameters<typeof formatAngaTransition>[0];
   const karana = (detail?.karana ?? p.karana) as Parameters<typeof formatAngaTransition>[0];
-  const angaVal = (
-    anga: { name_ne?: string; name?: string } | null | undefined,
-  ) =>
+  const angaVal = (anga: { name_ne?: string; name?: string } | null | undefined) =>
     pick(
       formatAngaTransition(anga as Parameters<typeof formatAngaTransition>[0]) ?? anga?.name_ne,
       anga?.name ?? anga?.name_ne,
@@ -282,25 +291,25 @@ function PanchangaFull({
 
   return (
     <div>
-      <div className="pn-daymodal-grid2">
-        <div className="pn-daymodal-meta">
-          <div className="pn-daymodal-meta-label">{pick("वि.सं.", "BS")}</div>
-          <div className="pn-daymodal-meta-value">{bsLine}</div>
+      <div className="mb-4 grid grid-cols-2 gap-2.5">
+        <div className={metaCard}>
+          <div className={metaLabel}>{pick("वि.सं.", "BS")}</div>
+          <div className="text-sm font-semibold">{bsLine}</div>
         </div>
-        <div className="pn-daymodal-meta">
-          <div className="pn-daymodal-meta-label">{pick("इ.सन्", "AD")}</div>
-          <div className="pn-daymodal-meta-value">{formatAdShort(p, day.date_ad)}</div>
+        <div className={metaCard}>
+          <div className={metaLabel}>{pick("इ.सन्", "AD")}</div>
+          <div className="text-sm font-semibold">{formatAdShort(p, day.date_ad)}</div>
         </div>
         {formatShakaYear(p) && (
-          <div className="pn-daymodal-meta">
-            <div className="pn-daymodal-meta-label">{pick("शक संवत्", "Shaka Samvat")}</div>
-            <div className="pn-daymodal-meta-value">{formatShakaYear(p)}</div>
+          <div className={metaCard}>
+            <div className={metaLabel}>{pick("शक संवत्", "Shaka Samvat")}</div>
+            <div className="text-sm font-semibold">{formatShakaYear(p)}</div>
           </div>
         )}
         {formatNepalSambatDisplay(p) && (
-          <div className="pn-daymodal-meta">
-            <div className="pn-daymodal-meta-label">{pick("नेपाल संवत्", "Nepal Samvat")}</div>
-            <div className="pn-daymodal-meta-value">{formatNepalSambatDisplay(p)}</div>
+          <div className={metaCard}>
+            <div className={metaLabel}>{pick("नेपाल संवत्", "Nepal Samvat")}</div>
+            <div className="text-sm font-semibold">{formatNepalSambatDisplay(p)}</div>
           </div>
         )}
       </div>
@@ -317,21 +326,15 @@ function PanchangaFull({
           { label: pick("करण", "Karana"), value: angaVal(karana) },
           { label: pick("चन्द्रराशि", "Moon sign"), value: chandraNe },
           { label: pick("दिनमान", "Day length"), value: formatDinamaanShort(p) },
-          {
-            label: pick("सूर्योदय", "Sunrise"),
-            value: getSunriseDisplay(p) ?? formatClockNepali(day.sunrise),
-          },
-          {
-            label: pick("सूर्यास्त", "Sunset"),
-            value: getSunsetDisplay(p) ?? formatClockNepali(day.sunset),
-          },
+          { label: pick("सूर्योदय", "Sunrise"), value: getSunriseDisplay(p) ?? formatClockNepali(day.sunrise) },
+          { label: pick("सूर्यास्त", "Sunset"), value: getSunsetDisplay(p) ?? formatClockNepali(day.sunset) },
           { label: pick("चन्द्रोदय", "Moonrise"), value: getMoonriseDisplay(p) },
           { label: pick("चन्द्रास्त", "Moonset"), value: getMoonsetDisplay(p) },
         ]}
       />
 
       {dinVishesh.length > 0 && (
-        <p className="pn-daymodal-special">
+        <p className="mb-4 text-sm font-medium text-muted-foreground">
           {pick("दिन विशेष", "Day highlights")} : {dinVishesh.join(" · ")}
         </p>
       )}
@@ -358,9 +361,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
   }, [day]);
 
   const adDate = day ? new Date(day.date_ad) : null;
-  const daysDiff = adDate
-    ? Math.ceil((adDate.getTime() - Date.now()) / 86_400_000)
-    : null;
+  const daysDiff = adDate ? Math.ceil((adDate.getTime() - Date.now()) / 86_400_000) : null;
 
   return (
     <Dialog.Root
@@ -373,71 +374,84 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="pn-daymodal-overlay" />
-        <Dialog.Content className="pn-daymodal">
-          <div className="pn-daymodal-head">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm" />
+        <Dialog.Content
+          className={cn(
+            "fixed z-[51] flex max-h-[90vh] w-full flex-col bg-card text-foreground shadow-lg",
+            "inset-x-0 bottom-0 rounded-t-xl",
+            "sm:inset-[50%_auto_auto_50%] sm:max-h-[85vh] sm:w-[min(560px,calc(100vw-32px))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl",
+          )}
+        >
+          <div className="shrink-0 border-b border-border px-5 pt-5 pb-4">
             {showPanchanga ? (
-              <div className="pn-daymodal-head-row">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <button
                     type="button"
-                    className="pn-daymodal-back"
+                    className="mb-1 inline-flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 text-sm font-medium text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPanchanga(false)}
                   >
                     <ChevronLeft size={16} strokeWidth={1.8} />
                     Back
                   </button>
-                  <Dialog.Title className="pn-daymodal-title">{pick("पञ्चाङ्ग", "Panchanga")}</Dialog.Title>
+                  <Dialog.Title className="m-0 text-lg font-bold">{pick("पञ्चाङ्ग", "Panchanga")}</Dialog.Title>
                 </div>
-                <Dialog.Close className="pn-daymodal-close" aria-label="Close">
+                <Dialog.Close
+                  className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-surface-inset hover:text-foreground"
+                  aria-label="Close"
+                >
                   <X size={16} strokeWidth={1.8} />
                 </Dialog.Close>
               </div>
             ) : (
-              <div className="pn-daymodal-head-row">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   {daysDiff !== null && (
-                    <div className={`pn-daymodal-rel${daysDiff === 0 ? " today" : ""}`}>
+                    <div
+                      className={cn(
+                        "mb-1.5 text-xs font-semibold text-muted-foreground",
+                        daysDiff === 0 && "text-secondary dark:text-secondary",
+                      )}
+                    >
                       {relativeDayLabel(daysDiff)}
                     </div>
                   )}
-                  <Dialog.Title className="pn-daymodal-title">
+                  <Dialog.Title className="m-0 text-lg font-bold">
                     {q.data
                       ? formatBsTitle(q.data, day?.day, bsMonth, bsYear)
                       : `${day?.day ?? ""}`}
                   </Dialog.Title>
-                  <Dialog.Description className="pn-daymodal-ad">
-                    {day ? (q.data ? formatAdTitle(q.data, day.date_ad) : formatAdTitle({} as PanchangaDay, day.date_ad)) : null}
+                  <Dialog.Description className="mt-1 text-sm font-medium text-muted-foreground">
+                    {day
+                      ? q.data
+                        ? formatAdTitle(q.data, day.date_ad)
+                        : formatAdTitle({} as PanchangaDay, day.date_ad)
+                      : null}
                   </Dialog.Description>
                 </div>
-                <Dialog.Close className="pn-daymodal-close" aria-label="Close">
+                <Dialog.Close
+                  className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-surface-inset hover:text-foreground"
+                  aria-label="Close"
+                >
                   <X size={16} strokeWidth={1.8} />
                 </Dialog.Close>
               </div>
             )}
           </div>
 
-          <div className="pn-daymodal-body">
+          <div className="flex-1 overflow-y-auto px-5 pt-4 pb-5">
             {q.isLoading && (
-              <>
-                <div className="pn-daymodal-skel" style={{ width: "70%" }} />
-                <div className="pn-daymodal-skel" style={{ width: "50%" }} />
-                <div className="pn-daymodal-skel" style={{ width: "90%" }} />
-              </>
+              <div className="flex flex-col gap-2">
+                <div className="h-4 w-[70%] animate-pulse rounded bg-muted" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-[90%] animate-pulse rounded bg-muted" />
+              </div>
             )}
 
-            {q.isError && (
-              <p style={{ color: "var(--color-danger)", fontSize: "var(--fs-sm)" }}>
-                Failed to load day details.
-              </p>
-            )}
+            {q.isError && <p className="text-sm text-danger">Failed to load day details.</p>}
 
             {q.data && day && !showPanchanga && (
-              <DaySummary
-                p={q.data}
-                day={day}
-                onFullPanchanga={() => setShowPanchanga(true)}
-              />
+              <DaySummary p={q.data} day={day} onFullPanchanga={() => setShowPanchanga(true)} />
             )}
 
             {q.data && day && showPanchanga && (

@@ -171,7 +171,7 @@ export const LEARN_TOPICS: LearnTopic[] = [
     titleNe: "नक्षत्र",
     titleEn: "Nakshatra Explained",
     icon: Star,
-    summary: "आकाशका २७ तारापुञ्ज, पाद र चन्द्रको स्थानले के बुझाउँछ।",
+    summary: "आकाशका २७ तारापुञ्ज, पद र चन्द्रको स्थानले के बुझाउँछ।",
     summaryEn: "What the sky's 27 star-clusters, their padas and the Moon's position signify.",
     Content: Nakshatra,
   },

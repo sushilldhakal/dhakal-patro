@@ -18,6 +18,8 @@ import {
   getSunriseDisplay,
   getSunsetDisplay,
 } from "@/lib/panchanga-format";
+import { patroAsideLink } from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
 
 type AngaBlock = {
   name_ne?: string;
@@ -49,31 +51,27 @@ function AbhijitVivaranBlock({
   const abhijit = getAbhijitMuhurta(p);
 
   return (
-    <div className="pn-vivaran-block pn-vivaran-abhijit">
-      <div className="pn-vivaran-abhijit-head">
-        <div className="pn-vivaran-block-title">{t("abhijit.title")}</div>
-        <Link
-          to="/abhijit-muhurta"
-          search={{ year: bsYear, month: bsMonth }}
-          className="pn-aside-link shrink-0"
-        >
+    <div className="mt-2.5 border-t border-foreground/10 pt-2.5">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="text-[13px] font-bold text-secondary dark:text-secondary">{t("abhijit.title")}</div>
+        <Link to="/abhijit-muhurta" search={{ year: bsYear, month: bsMonth }} className={patroAsideLink}>
           {t("common.view_all")} →
         </Link>
       </div>
       {abhijit ? (
-        <div className="pn-vivaran-abhijit-row">
-          <span className="pn-vivaran-abhijit-label">{t("abhijit.today_window")}</span>
-          <span className="pn-vivaran-abhijit-val">
-            <span className="pn-vivaran-abhijit-time mono">{abhijit.rangeDisplay}</span>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="text-xs font-medium text-muted-foreground">{t("abhijit.today_window")}</span>
+          <span className="flex flex-wrap items-baseline justify-end gap-1.5">
+            <span className="mono text-sm font-semibold text-foreground">{abhijit.rangeDisplay}</span>
             {abhijit.noonDisplay ? (
-              <span className="pn-vivaran-abhijit-noon mono">
+              <span className="mono text-[11px] text-muted-foreground">
                 ({t("abhijit.noon_short")} {abhijit.noonDisplay})
               </span>
             ) : null}
           </span>
         </div>
       ) : (
-        <p className="pn-aside-tab-empty">{t("abhijit.unavailable")}</p>
+        <p className="m-0 py-5 text-center text-[13px] font-medium text-muted-foreground">{t("abhijit.unavailable")}</p>
       )}
     </div>
   );
@@ -93,10 +91,12 @@ function angaName(anga?: AngaBlock | null): string | undefined {
 
 function VivaranCell({ label, value, hint, wide, mono }: DetailCell) {
   return (
-    <div className={`pn-vivaran-cell${wide ? " wide" : ""}`}>
-      <div className="pn-vivaran-cell-label">{label}</div>
-      <div className={`pn-vivaran-cell-value${mono ? " mono" : ""}`}>{value ?? "—"}</div>
-      {hint ? <div className="pn-vivaran-cell-hint">{hint}</div> : null}
+    <div className={cn("min-w-0 rounded-lg bg-surface-inset p-2.5 shadow-ring-soft", wide && "col-span-2")}>
+      <div className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground uppercase">{label}</div>
+      <div className={cn("mt-1 text-[15px] leading-snug font-semibold text-foreground", mono && "mono text-[13.5px]")}>
+        {value ?? "—"}
+      </div>
+      {hint ? <div className="mt-0.5 text-[11px] leading-snug font-medium break-words text-muted-foreground">{hint}</div> : null}
     </div>
   );
 }
@@ -112,13 +112,12 @@ function buildPanchangaDetailCells(
   const karana = (detail?.karana ?? p.karana) as AngaBlock | undefined;
   const karanaHint = formatAngaPatroTransitionHint(karana);
 
-  const sunrise = getSunriseDisplay(p) ??
-    (selectedDay?.sunrise ? formatClockNepali(selectedDay.sunrise) : undefined);
-  const sunset = getSunsetDisplay(p) ??
-    (selectedDay?.sunset ? formatClockNepali(selectedDay.sunset) : undefined);
+  const sunrise =
+    getSunriseDisplay(p) ?? (selectedDay?.sunrise ? formatClockNepali(selectedDay.sunrise) : undefined);
+  const sunset =
+    getSunsetDisplay(p) ?? (selectedDay?.sunset ? formatClockNepali(selectedDay.sunset) : undefined);
   const moonrise =
-    getMoonriseDisplay(p) ??
-    (selectedDay ? formatMonthMoonEventDisplay(selectedDay, "moonrise") : undefined);
+    getMoonriseDisplay(p) ?? (selectedDay ? formatMonthMoonEventDisplay(selectedDay, "moonrise") : undefined);
 
   return [
     {
@@ -151,16 +150,16 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
 
   if (loading || !p) {
     return (
-      <section className="pn-vivaran">
-        <div className="pn-vivaran-angas">
+      <section className="rounded-lg bg-card shadow-ring-soft">
+        <div className="mb-2.5 grid grid-cols-2 gap-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="pn-vivaran-cell">
-              <div className="pn-mini-label">…</div>
-              <div className="pn-mini-skel" />
+            <div key={i} className="min-w-0 rounded-lg bg-surface-inset p-2.5 shadow-ring-soft">
+              <div className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground uppercase">…</div>
+              <div className="mt-1.5 h-[18px] animate-pulse rounded-full bg-muted-foreground/20" />
             </div>
           ))}
         </div>
-        <div className="pn-vivaran-skel" style={{ height: 120, marginTop: 10 }} />
+        <div className="mt-2.5 h-[120px] animate-pulse rounded-md bg-muted" />
       </section>
     );
   }
@@ -172,38 +171,51 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
   const belaantar = formatPatroBelaantar(solar?.belaantar);
 
   return (
-    <section className="pn-vivaran">
-      <div className="pn-vivaran-angas">
+    <section className="min-h-full rounded-lg bg-card shadow-ring-soft min-[1081px]:rounded-none min-[1081px]:shadow-none">
+      <div className="mb-2.5 grid grid-cols-2 gap-2">
         {cells.map((cell) => (
           <VivaranCell key={cell.label} {...cell} />
         ))}
       </div>
 
       {planets.length > 0 || deshaantar || belaantar ? (
-        <div className="pn-vivaran-block pn-vivaran-gochar">
-          <div className="pn-vivaran-block-title">{t("aside.gochar")}</div>
+        <div className="mt-2.5 border-t border-foreground/10 pt-2.5">
+          <div className="mb-1.5 text-[13px] font-bold text-foreground">{t("aside.gochar")}</div>
           {planets.length > 0 ? (
-            <div className="pn-gochar-grid">
+            <div className="grid grid-cols-3 gap-1.5">
               {planets.map(({ label, value }) => (
-                <div key={label} className="pn-gochar-chip">
-                  <span className="pn-gochar-chip-label">{label}</span>
-                  <span className="pn-gochar-chip-value">{value}</span>
+                <div
+                  key={label}
+                  className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark"
+                >
+                  <span className="shrink-0 text-[11px] leading-tight font-semibold text-foreground">{label}</span>
+                  <span className="mono min-w-0 truncate text-right text-[10.5px] font-semibold text-foreground">
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>
           ) : null}
           {deshaantar || belaantar ? (
-            <div className="pn-gochar-foot">
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5 border-t border-foreground/10 pt-2">
               {deshaantar ? (
-                <div className="pn-gochar-chip">
-                  <span className="pn-gochar-chip-label">{t("aside.suryakranti")}</span>
-                  <span className="pn-gochar-chip-value">{deshaantar}</span>
+                <div className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark">
+                  <span className="shrink-0 text-[11px] leading-tight font-semibold text-foreground">
+                    {t("aside.suryakranti")}
+                  </span>
+                  <span className="mono min-w-0 truncate text-right text-[10.5px] font-semibold text-foreground">
+                    {deshaantar}
+                  </span>
                 </div>
               ) : null}
               {belaantar ? (
-                <div className="pn-gochar-chip">
-                  <span className="pn-gochar-chip-label">{t("aside.belaantar")}</span>
-                  <span className="pn-gochar-chip-value">{belaantar}</span>
+                <div className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark">
+                  <span className="shrink-0 text-[11px] leading-tight font-semibold text-foreground">
+                    {t("aside.belaantar")}
+                  </span>
+                  <span className="mono min-w-0 truncate text-right text-[10.5px] font-semibold text-foreground">
+                    {belaantar}
+                  </span>
                 </div>
               ) : null}
             </div>

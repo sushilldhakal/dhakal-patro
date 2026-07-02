@@ -229,6 +229,21 @@ export function getSolarCorrections(p: PanchangaDay): SolarCorrections | undefin
   );
 }
 
+/** Signed minutes — धन (+) / ऋण (−) per Surya Panchanga convention. */
+export function signedSolarCorrectionMinutes(c?: SolarCorrection): number {
+  if (!c || c.minutes == null) return 0;
+  const total = c.minutes + (c.seconds ?? 0) / 60;
+  return c.sign === "rin" ? -total : total;
+}
+
+export function totalSolarCorrectionMinutes(solar?: SolarCorrections): number {
+  if (!solar) return 0;
+  return (
+    signedSolarCorrectionMinutes(solar.belaantar) +
+    signedSolarCorrectionMinutes(solar.deshaantar)
+  );
+}
+
 type RituBlock = { name_ne?: string; season?: string };
 
 export function getRituDisplayNe(p?: PanchangaDay | null): string | undefined {
@@ -439,6 +454,47 @@ export function formatAdShort(_p: PanchangaDay, dateAd: string): string {
 
 function titleizeWords(text: string): string {
   return text.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+}
+
+function tithiNameOnly(name: string | undefined): string | undefined {
+  if (!name) return undefined;
+  const stripped = name
+    .replace(/^(शुक्ल|कृष्ण)\s*/i, "")
+    .replace(/^(Shukla|Krishna)\s*/i, "")
+    .trim();
+  return stripped || name;
+}
+
+function pakshaShortFromPanchanga(p: PanchangaDay): { ne?: string; en?: string } {
+  const detail = getPanchangaDetail(p);
+  const paksha = detail?.paksha as { label_en?: string; label_ne?: string; name?: string } | undefined;
+  const labelNe = paksha?.label_ne ?? p.paksha?.label_ne ?? p.paksha_ne ?? "";
+  const labelEn = paksha?.label_en ?? p.paksha?.label_en ?? "";
+  const name = (paksha?.name ?? (typeof p.paksha === "string" ? p.paksha : "")).toLowerCase();
+
+  if (labelNe.includes("शुक्ल") || /shukla/i.test(labelEn) || name === "shukla") {
+    return { ne: "शुक्ल", en: "Shukla" };
+  }
+  if (labelNe.includes("कृष्ण") || /krishna/i.test(labelEn) || name === "krishna") {
+    return { ne: "कृष्ण", en: "Krishna" };
+  }
+  return {};
+}
+
+/** e.g. शुक्ल अष्टमी / Krishna Ashtami */
+export function formatTithiWithPaksha(p: PanchangaDay, lang: "ne" | "en" = "ne"): string | undefined {
+  const detail = getPanchangaDetail(p);
+  const tithi = (detail?.tithi ?? p.tithi) as AngaDetail | undefined;
+  const tithiNe = tithiNameOnly(tithi?.name_ne ?? p.tithi?.name_ne);
+  const tithiEn = tithiNameOnly(tithi?.name ?? p.tithi?.name);
+  const short = pakshaShortFromPanchanga(p);
+
+  if (lang === "en") {
+    if (short.en && tithiEn) return `${short.en} ${tithiEn}`;
+    return tithiEn ?? tithiNe;
+  }
+  if (short.ne && tithiNe) return `${short.ne} ${tithiNe}`;
+  return tithiNe ?? tithiEn;
 }
 
 export function formatPakshaTithiLine(p: PanchangaDay): string | undefined {
@@ -769,16 +825,27 @@ export function getInstantLagna(p: PanchangaDay): InstantLagna | undefined {
   return lagna;
 }
 
-/**
- * Sidereal lagna longitude aligned with displayed राशि + अंश.
- * Prefer (rashi − 1) × 30 + degree_in_rashi over the raw longitude field.
- */
+/** Sidereal lagna longitude — ephemeris `longitude` is the single source of truth. */
 export function resolveLagnaSiderealLongitude(lagna: InstantLagna): number | undefined {
-  const { number, degree_in_rashi, longitude } = lagna;
+  if (lagna.longitude != null) return lagna.longitude;
+  const { number, degree_in_rashi } = lagna;
   if (number != null && degree_in_rashi != null) {
     return (number - 1) * 30 + degree_in_rashi;
   }
-  return longitude;
+  return undefined;
+}
+
+/** राशि number (१–१२) and Nepali name derived from sidereal longitude. */
+export function lagnaRashiFromLongitude(longitude: number): {
+  rashiNum: number;
+  nameNe: string;
+  degreeInRashi: number;
+} {
+  const lon = ((longitude % 360) + 360) % 360;
+  const rashiNum = Math.floor(lon / 30) + 1;
+  const nameNe = rashiNeFromNumber(rashiNum) ?? "—";
+  const degreeInRashi = lon % 30;
+  return { rashiNum, nameNe, degreeInRashi };
 }
 
 export function getLagnaDisplay(
@@ -796,14 +863,25 @@ export function getLagnaDisplay(
     if (typeof top === "string") return { nameNe: top };
     return undefined;
   }
+
+  const longitude = resolveLagnaSiderealLongitude(lagna);
+  if (longitude != null) {
+    const { rashiNum, nameNe, degreeInRashi } = lagnaRashiFromLongitude(longitude);
+    return {
+      nameNe,
+      degree: toNepaliDigits(degreeInRashi.toFixed(1)),
+      degreeInRashi,
+      rashiNum,
+      longitude,
+    };
+  }
+
   const nameNe = lagna.name_ne ?? lagna.name;
   if (!nameNe) return undefined;
   const degreeInRashi = lagna.degree_in_rashi;
   const degree =
     degreeInRashi != null ? toNepaliDigits(degreeInRashi.toFixed(1)) : undefined;
-  const rashiNum = lagna.number ?? undefined;
-  const longitude = resolveLagnaSiderealLongitude(lagna);
-  return { nameNe, degree, degreeInRashi, rashiNum, longitude };
+  return { nameNe, degree, degreeInRashi, rashiNum: lagna.number, longitude: undefined };
 }
 
 function planetDegreeCells(info: PlanetDetail): string {

@@ -524,3 +524,23 @@ export function dualTimeAtGhati(
     clock: ghatiToCivilClockLabel(g, sunriseMin),
   };
 }
+
+/** चौघडिया segment active at a civil clock time (HH:MM) on this panchanga day. */
+export function choghadiyaAtClock(
+  p: PanchangaDay,
+  clock: string,
+  dateAd?: string,
+): { nameNe: string; nameEn?: string; quality: "शुभ" | "अशुभ" | "सामान्य" } | null {
+  const timeline = buildDayTimelineData(p, dateAd);
+  if (!timeline) return null;
+  const birthMin = parseTimeToMinutes(clock);
+  if (birthMin == null) return null;
+  const g = minutesToGhati(birthMin, timeline.sunriseMin);
+  const seg = timeline.choghadiya.find((c) => g >= c.startG && g < c.endG);
+  if (!seg) return null;
+  return {
+    nameNe: seg.name,
+    nameEn: CHOGHADIYA_EN[seg.name],
+    quality: choghadiyaQuality(seg.name, seg.bad),
+  };
+}

@@ -30,6 +30,42 @@
   --radius-lg: var(--radius-base);
   --radius-xl: calc(var(--radius-base) + 4px);
   --radius-2xl: 16px;
+  --font-num: var(--pn-num);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-surface-inset: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  --color-surface-muted: color-mix(in srgb, var(--foreground) 2.5%, var(--card));
+  --color-surface-hover: color-mix(in srgb, var(--secondary) 7%, var(--card));
+  --color-surface-today: color-mix(in srgb, var(--primary) 18%, var(--card));
+  --color-surface-today-hover: color-mix(in srgb, var(--primary) 26%, var(--card));
+  --color-surface-tint-danger: color-mix(in srgb, var(--color-danger) 7%, var(--card));
+  --color-surface-tint-teal: color-mix(in srgb, var(--brand-teal) 9%, var(--card));
+  --color-chip-public: color-mix(in srgb, var(--color-danger) 12%, var(--card));
+  --color-chip-festival: color-mix(in srgb, var(--brand-teal) 14%, var(--card));
+  --color-tab-active: color-mix(in srgb, var(--secondary) 12%, var(--card));
+  --color-tab-hover: color-mix(in srgb, var(--secondary) 6%, var(--card));
+  --color-warning-surface: color-mix(in srgb, var(--color-warning) 10%, var(--card));
+  --color-error-surface: color-mix(in srgb, var(--color-danger) 10%, var(--card));
+  --color-gochar-chip: color-mix(in srgb, #e8c4a8 28%, var(--card));
+  --color-gochar-chip-dark: color-mix(in srgb, #c4956a 18%, var(--muted));
+  --color-fest-today: color-mix(in srgb, var(--brand-teal) 8%, transparent);
+  --color-hol-tile-public: color-mix(in srgb, var(--color-danger) 11%, var(--card));
+  --color-hol-tile-festival: color-mix(in srgb, var(--brand-teal) 13%, var(--card));
+  --color-tone-best: color-mix(in srgb, var(--brand-teal) 12%, var(--card));
+  --color-tone-good: color-mix(in srgb, var(--brand-teal) 8%, var(--card));
+  --color-tone-neutral: color-mix(in srgb, var(--foreground) 4%, var(--card));
+  --color-tone-bad: color-mix(in srgb, var(--color-danger) 6%, var(--card));
+  --color-tone-worst: color-mix(in srgb, var(--color-danger) 10%, var(--card));
+  --color-slot-good: color-mix(in srgb, var(--brand-teal) 10%, var(--card));
+  --color-slot-bad: color-mix(in srgb, var(--color-danger) 8%, var(--card));
+  --color-slot-neutral: color-mix(in srgb, var(--foreground) 4%, var(--card));
+  --color-badge-good: color-mix(in srgb, var(--brand-teal) 16%, var(--card));
+  --color-badge-bad: color-mix(in srgb, var(--color-danger) 12%, var(--card));
+  --color-badge-neutral: color-mix(in srgb, var(--foreground) 8%, var(--card));
+  --color-pushkara-hit: color-mix(in srgb, var(--brand-teal) 10%, var(--card));
+  --color-overlay: color-mix(in srgb, var(--foreground) 35%, transparent);
+  --color-success: var(--color-success);
+  --shadow-ring-soft: 0 0 0 1px var(--pn-ring-soft);
 }
 
 :root {
@@ -691,6 +727,10 @@
     font-size: 6px;
     padding: 1px 3px;
   }
+  .pn-aside-scroll{
+    padding: 0 !important;
+    border: none !important;
+  }
 }
 
 /* ── Aside / panchanga ───────────────────────────────── */
@@ -852,7 +892,7 @@
   border-color: color-mix(in srgb, var(--brand-yellow) 22%, var(--border));
 }
 .pn-aside-scroll {
-  padding: 12px;
+  padding: 10px;
 }
 .pn-minis--tab {
   margin-bottom: 10px;

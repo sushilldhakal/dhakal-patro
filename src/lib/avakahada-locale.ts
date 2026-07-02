@@ -78,7 +78,7 @@ const GANA_NE_TO_EN: Record<Gana, string> = {
 };
 
 const NADI_NE_TO_EN: Record<Nadi, string> = {
-  आद्य: "Adya",
+  आध्य: "Adya",
   मध्य: "Madhya",
   अन्त्य: "Antya",
 };

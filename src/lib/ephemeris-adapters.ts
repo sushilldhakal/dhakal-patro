@@ -81,13 +81,36 @@ export async function fetchEphemerisPanchangaDay(
   options?: { ayanamsha?: string }
 ): Promise<PanchangaDay> {
   const raw = await fetchPanchangaAtTime(datetime, location, options);
-  const normalized = normalizeEphemerisDay(raw);
-
-  if (getLagnaSpans(normalized)?.length) {
-    return normalized;
-  }
-
   const anchor = raw.panchanga_date_ad ?? raw.date_ad ?? civilDateAd;
   const daily = await fetchPanchanga(anchor, "ad", location);
+  const normalized = normalizeEphemerisDay(raw);
+
+  const dailyDetail = (daily.detail ?? {}) as Record<string, unknown>;
+  const mergedDetail = {
+    ...(normalized.detail ?? {}),
+    ...dailyDetail,
+    solar_corrections:
+      (normalized.detail as Record<string, unknown> | undefined)?.solar_corrections ??
+      dailyDetail.solar_corrections,
+    lagna_spans:
+      getLagnaSpans(normalized) ??
+      (dailyDetail.lagna_spans as PanchangaDay["lagna_spans"]),
+  };
+
+  const merged: PanchangaDay = {
+    ...daily,
+    ...normalized,
+    sunrise: normalized.sunrise ?? daily.sunrise,
+    sunset: normalized.sunset ?? daily.sunset,
+    surya_rashi: normalized.surya_rashi ?? daily.surya_rashi,
+    surya_nakshatra: normalized.surya_nakshatra ?? daily.surya_nakshatra,
+    detail: mergedDetail as PanchangaDay["detail"],
+  };
+  merged.lagna_spans = getLagnaSpans(merged) ?? getLagnaSpans(normalized);
+
+  if (getLagnaSpans(merged)?.length) {
+    return normalizeEphemerisDay(merged);
+  }
+
   return mergeEphemerisWithDaily(raw, daily);
 }

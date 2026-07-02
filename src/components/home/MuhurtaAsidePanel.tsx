@@ -22,6 +22,13 @@ import {
   getUdayaLagna,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import {
+  patroEmpty,
+  patroMiniSubTab,
+  patroNavataraRow,
+  patroSlotBadge,
+  patroSlotRow,
+} from "@/lib/patro-classes";
 
 type MuhurtaSubTab = "tarabal" | "chandrabal" | "choghadiya" | "hora" | "pushkara";
 
@@ -66,33 +73,30 @@ function NavataraList({
 }) {
   const { t } = useTranslation();
   if (!rows.length) {
-    return <p className="pn-aside-tab-empty">{t("muhurta_aside.unavailable")}</p>;
+    return <p className={patroEmpty}>{t("muhurta_aside.unavailable")}</p>;
   }
 
   const moonRefKey = MOON_REF_KEY[moonRefKind];
 
   return (
-    <div className="pn-aside-navatara">
+    <div>
       {moonLabel && moonRefKey ? (
-        <p className="pn-aside-navatara-moon">
-          {t(moonRefKey)}: <strong>{moonLabel}</strong>
+        <p className="mb-2 text-[12.5px] font-semibold text-foreground">
+          {t(moonRefKey)}: <strong className="text-accent">{moonLabel}</strong>
         </p>
       ) : null}
-      <ul className="pn-aside-navatara-list">
+      <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
         {rows.map((row) => {
           const isMoon =
             highlightName != null
               ? row.name === highlightName
               : row.taraNum === 1 && row.name === moonLabel;
           return (
-            <li
-              key={row.name}
-              className={`pn-aside-navatara-row tone-${row.tone}${isMoon ? " current" : ""}`}
-            >
-              <span className="pn-aside-navatara-name">{row.name}</span>
-              <span className="pn-aside-navatara-meta">
+            <li key={row.name} className={patroNavataraRow(row.tone, isMoon)}>
+              <span className="text-xs font-bold leading-tight text-foreground">{row.name}</span>
+              <span className="text-[10.5px] leading-snug font-semibold text-muted-foreground">
                 {row.tara}
-                <span className="pn-aside-navatara-sep">/</span>
+                <span className="mx-1 opacity-55">/</span>
                 {row.quality}
               </span>
             </li>
@@ -109,13 +113,13 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
   const sunriseMin = parseTimeToMinutes(getSunrise(p));
 
   if (!timeline?.choghadiya.length || sunriseMin == null) {
-    return <p className="pn-aside-tab-empty">{t("muhurta_aside.choghadiya_unavailable")}</p>;
+    return <p className={patroEmpty}>{t("muhurta_aside.choghadiya_unavailable")}</p>;
   }
 
   const dayG = timeline.dayG;
 
   return (
-    <ul className="pn-aside-choghadiya-list">
+    <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
       {timeline.choghadiya.map((seg, i) => {
         const tone = choghadiyaTone(seg.name, seg.bad);
         const quality = choghadiyaQuality(seg.name, seg.bad);
@@ -124,14 +128,16 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
         return (
           <li
             key={`${seg.name}-${i}`}
-            className={`pn-aside-choghadiya-row ${tone}${seg.startG >= dayG && i === 8 ? " night-start" : ""}`}
+            className={patroSlotRow(tone, seg.startG >= dayG && i === 8)}
           >
-            <div className="pn-aside-slot-body">
-              <span className="pn-aside-choghadiya-phase">{phase}</span>
-              <span className="pn-aside-choghadiya-name">{seg.name}</span>
-              <span className="pn-aside-choghadiya-time mono">{range}</span>
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+              <span className="text-[9.5px] font-semibold tracking-wide text-muted-foreground uppercase">
+                {phase}
+              </span>
+              <span className="text-xs font-bold leading-tight">{seg.name}</span>
+              <span className="mono text-[10px] font-semibold whitespace-nowrap">{range}</span>
             </div>
-            <span className={`pn-aside-slot-badge ${tone}`}>{quality}</span>
+            <span className={patroSlotBadge(tone)}>{quality}</span>
           </li>
         );
       })}
@@ -145,28 +151,30 @@ function HoraList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
   const slots = buildHoraSchedule(getSunrise(p), getSunset(p), jsDay);
 
   if (!slots.length) {
-    return <p className="pn-aside-tab-empty">{t("muhurta_aside.hora_unavailable")}</p>;
+    return <p className={patroEmpty}>{t("muhurta_aside.hora_unavailable")}</p>;
   }
 
   return (
-    <ul className="pn-aside-hora-list">
+    <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
       {slots.map((slot, i) => {
         const start = formatClockNepali(formatMinutesClock(slot.startMin)) ?? formatMinutesClock(slot.startMin);
         const end = formatClockNepali(formatMinutesClock(slot.endMin)) ?? formatMinutesClock(slot.endMin);
         const quality = horaQuality(slot.planet);
         const tone = horaTone(slot.planet);
         return (
-          <li key={`${slot.phase}-${slot.index}-${i}`} className={`pn-aside-hora-row ${tone}`}>
-            <div className="pn-aside-slot-body">
-              <span className="pn-aside-hora-phase">{slot.phase}</span>
-              <span className="pn-aside-hora-name">{slot.planetNe}</span>
-              <span className="pn-aside-hora-time mono">
+          <li key={`${slot.phase}-${slot.index}-${i}`} className={patroSlotRow(tone)}>
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+              <span className="text-[9.5px] font-semibold tracking-wide text-muted-foreground uppercase">
+                {slot.phase}
+              </span>
+              <span className="text-xs font-bold leading-tight">{slot.planetNe}</span>
+              <span className="mono text-[10px] font-semibold whitespace-nowrap">
                 {toNepaliDigits(slot.index)}
-                <span className="pn-aside-hora-sep">·</span>
+                <span className="mx-0.5 opacity-50">·</span>
                 {start} – {end}
               </span>
             </div>
-            <span className={`pn-aside-slot-badge ${tone}`}>{quality}</span>
+            <span className={patroSlotBadge(tone)}>{quality}</span>
           </li>
         );
       })}
@@ -179,11 +187,11 @@ function PushkaraList({ p }: { p: PanchangaDay }) {
   const rows = getUdayaLagna(p);
 
   if (!rows?.length) {
-    return <p className="pn-aside-tab-empty">{t("muhurta_aside.pushkara_unavailable")}</p>;
+    return <p className={patroEmpty}>{t("muhurta_aside.pushkara_unavailable")}</p>;
   }
 
   return (
-    <ul className="pn-aside-pushkara-list">
+    <ul className="m-0 flex list-none flex-col gap-2 p-0">
       {rows.map((row, i) => {
         const range =
           formatTimeRangeShort(
@@ -192,23 +200,27 @@ function PushkaraList({ p }: { p: PanchangaDay }) {
           ) ?? "—";
         const hits = row.pushkara_navamsha ?? [];
         return (
-          <li key={`${row.name}-${i}`} className="pn-aside-pushkara-row">
-            <div className="pn-aside-pushkara-head">
-              <span className="pn-aside-pushkara-rashi">{row.name_ne ?? row.name}</span>
-              <span className="pn-aside-pushkara-range mono">{range}</span>
+          <li key={`${row.name}-${i}`} className="flex flex-col gap-1 rounded-md bg-surface-inset p-2.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[13px] font-bold text-foreground">{row.name_ne ?? row.name}</span>
+              <span className="mono text-xs font-semibold whitespace-nowrap text-muted-foreground">{range}</span>
             </div>
             {hits.length ? (
-              <div className="pn-aside-pushkara-hits">
-                <span className="pn-aside-pushkara-label">{t("muhurta_aside.pushkara_label")}</span>
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
+                <span className="text-[11.5px] font-semibold text-muted-foreground">
+                  {t("muhurta_aside.pushkara_label")}
+                </span>
                 {hits.map((hit, j) => (
-                  <span key={j} className="pn-aside-pushkara-hit mono">
-                    {formatClockNepali(hit.local_time_short ?? hit.local_time) ??
-                      hit.local_time_short}
+                  <span
+                    key={j}
+                    className="mono rounded-full bg-pushkara-hit px-1.5 py-0.5 text-xs font-bold text-accent"
+                  >
+                    {formatClockNepali(hit.local_time_short ?? hit.local_time) ?? hit.local_time_short}
                   </span>
                 ))}
               </div>
             ) : (
-              <span className="pn-aside-pushkara-none">—</span>
+              <span className="text-xs font-medium text-muted-foreground">—</span>
             )}
           </li>
         );
@@ -229,14 +241,14 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
   const chandra = buildChandraBalaTable(p);
 
   return (
-    <div className="pn-aside-muhurta-panel">
-      <div className="pn-aside-muhurta-subtabs" role="tablist" aria-label={t("muhurta_aside.tabs_label")}>
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-5 gap-1" role="tablist" aria-label={t("muhurta_aside.tabs_label")}>
         {SUB_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             role="tab"
-            className={`pn-aside-muhurta-subtab${subTab === tab.id ? " active" : ""}`}
+            className={patroMiniSubTab(subTab === tab.id)}
             aria-selected={subTab === tab.id}
             onClick={() => setSubTab(tab.id)}
           >
@@ -245,8 +257,8 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
         ))}
       </div>
 
-      <p className="pn-aside-muhurta-hint">
-        <Info size={13} strokeWidth={2} aria-hidden />
+      <p className="m-0 flex items-start gap-1.5 text-[11.5px] leading-snug font-medium text-muted-foreground">
+        <Info size={13} strokeWidth={2} className="mt-px shrink-0 opacity-75" aria-hidden />
         <span>{t(SUB_TAB_HINT_KEY[subTab])}</span>
       </p>
 

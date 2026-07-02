@@ -23,6 +23,7 @@ import {
   getLagnaDisplay,
   getPanchangaDetail,
   getVaaraNe,
+  formatTithiWithPaksha,
   rashiNeFromNumber,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
@@ -38,11 +39,13 @@ import { buildBhavaChart } from "@/lib/bhava";
 import { navamsaRashiFromLongitude } from "@/lib/navamsa";
 import { drekkanaRashiFromLongitude } from "@/lib/drekkana";
 import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-elements";
-import { lagnaAvakahadaFromLongitude } from "@/lib/avakahada-lagna";
+import { janmaAvakahadaFromLongitude } from "@/lib/avakahada-lagna";
+import { buildBirthPanchangaMeta } from "@/lib/birth-panchanga-meta";
+import { choghadiyaAtClock } from "@/components/panchanga/day-timeline-data";
 
-function LagnaTraitRow({ label, value }: { label: string; value: string }) {
+function DetailTraitRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline gap-1 min-w-[8.5rem] text-[13px] leading-snug">
+    <div className="flex items-baseline gap-1 min-w-[9rem] text-[13px] leading-snug">
       <span className="text-muted-foreground shrink-0">{label}</span>
       <span className="text-muted-foreground/40 shrink-0">:</span>
       <span className="font-semibold text-foreground">{value}</span>
@@ -235,12 +238,30 @@ export function KundaliView({
       (rawLagna.longitude != null ? Math.floor(rawLagna.longitude / 30) + 1 : undefined);
     return { ...rawLagna, rashiNum };
   }, [rawLagna]);
-  const lagnaAvakahada = useMemo(
+  const moon = useMemo(() => planets.find((p) => p.key === "moon"), [planets]);
+  const janmaAvakahada = useMemo(
     () =>
-      lagna?.longitude != null
-        ? lagnaAvakahadaFromLongitude(lagna.longitude, lang, lagna.nameNe)
+      moon?.longitude != null
+        ? janmaAvakahadaFromLongitude(
+            moon.longitude,
+            lang,
+            moon.rashi,
+            moon.rashiNum,
+            lagna?.rashiNum,
+          )
         : null,
-    [lagna, lang],
+    [moon, lang, lagna?.rashiNum],
+  );
+
+  const birthPanchangaMeta = useMemo(() => {
+    if (!data) return null;
+    const sun = planets.find((p) => p.key === "sun");
+    return buildBirthPanchangaMeta(data, clock, { sun });
+  }, [data, clock, planets]);
+
+  const choghadiyaAtBirth = useMemo(
+    () => (data ? choghadiyaAtClock(data, clock, data.date_ad ?? adDateStr) : null),
+    [data, clock, adDateStr],
   );
 
   const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
@@ -285,13 +306,19 @@ export function KundaliView({
   const panchangSummary = useMemo(() => {
     if (!data) return undefined;
     const detail = getPanchangaDetail(data);
-    const tithiNe = (detail?.tithi as { name_ne?: string } | undefined)?.name_ne ?? data.tithi?.name_ne;
+    const tithiNe = formatTithiWithPaksha(data, "ne");
+    const tithiEn = formatTithiWithPaksha(data, "en");
     const vaaraNe = getVaaraNe(data, data.weekday);
+    const karanaNe =
+      (detail?.karana as { name_ne?: string; name?: string } | undefined)?.name_ne ??
+      data.karana?.name_ne ??
+      (detail?.karana as { name?: string } | undefined)?.name ??
+      data.karana?.name;
     const moonLon = planets.find((p) => p.key === "moon")?.longitude;
     const sunLon = planets.find((p) => p.key === "sun")?.longitude;
     const nakshatra = moonLon != null ? nakshatraPadaFromLongitude(moonLon) : undefined;
     const yoga = moonLon != null && sunLon != null ? yogaFromLongitudes(sunLon, moonLon) : undefined;
-    return { tithiNe, vaaraNe, nakshatra, yoga };
+    return { tithiNe, tithiEn, vaaraNe, karanaNe, nakshatra, yoga };
   }, [data, planets]);
 
   const dasha = dashaQ.data;
@@ -369,50 +396,173 @@ export function KundaliView({
       </section>
       )}
 
-      {/* Panchang essentials + lagna highlight when profile view */}
-      {hideBirthSummary && lagna && (
+      {/* Unified birth panchanga + avakahada (profile view) */}
+      {hideBirthSummary && (panchangSummary || lagna) && (
         <div className="rounded-2xl border border-secondary/25 bg-gradient-to-br from-secondary/[0.08] to-card p-4 sm:p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)]">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                {pick("लग्न · Lagna", "Lagna")}
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
-                {lagna.nameNe}
-                {lagna.degree ? (
-                  <span className="text-lg sm:text-xl font-semibold text-muted-foreground font-mono">
-                    {lagna.degree}°
-                  </span>
-                ) : null}
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {pick("जन्म पञ्चाङ्ग", "Birth panchanga")}
+            </p>
             <span className="text-[11px] font-medium text-muted-foreground bg-card border border-border px-2.5 py-1 rounded-full shrink-0">
               {ayanamshaInfo.labelNe}
             </span>
           </div>
 
-          {lagnaAvakahada ? (
-            <div className="mt-3 pt-3 border-t border-border/70 flex flex-wrap gap-x-5 gap-y-2">
-              <LagnaTraitRow label={pick("गण", "Gana")} value={lagnaAvakahada.gana} />
-              <LagnaTraitRow label={pick("अक्षर", "Akshara")} value={lagnaAvakahada.akshara} />
-              <LagnaTraitRow label={pick("नाडी", "Nadi")} value={lagnaAvakahada.nadi} />
-              <LagnaTraitRow label={pick("आसन", "Asana")} value={lagnaAvakahada.asana} />
-              <LagnaTraitRow label={pick("योनी", "Yoni")} value={lagnaAvakahada.yoni} />
-              <LagnaTraitRow label={pick("जात", "Jati")} value={lagnaAvakahada.jati} />
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {panchangSummary?.tithiNe ? (
+              <DetailTraitRow
+                label={pick("तिथि", "Tithi")}
+                value={pick(panchangSummary.tithiNe, panchangSummary.tithiEn ?? panchangSummary.tithiNe)}
+              />
+            ) : null}
+            {panchangSummary?.nakshatra ? (
+              <DetailTraitRow
+                label={pick("नक्षत्र", "Nakshatra")}
+                value={`${panchangSummary.nakshatra.ne} · ${pick(`पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`)}`}
+              />
+            ) : null}
+            {panchangSummary?.yoga ? (
+              <DetailTraitRow label={pick("योग", "Yoga")} value={panchangSummary.yoga.ne} />
+            ) : null}
+            {panchangSummary?.karanaNe ? (
+              <DetailTraitRow label={pick("करण", "Karana")} value={panchangSummary.karanaNe} />
+            ) : null}
+            {choghadiyaAtBirth ? (
+              <DetailTraitRow
+                label={pick("चौघडिया", "Choghadiya")}
+                value={pick(
+                  `${choghadiyaAtBirth.nameNe} (${choghadiyaAtBirth.quality})`,
+                  `${choghadiyaAtBirth.nameEn ?? choghadiyaAtBirth.nameNe} (${
+                    choghadiyaAtBirth.quality === "शुभ"
+                      ? "auspicious"
+                      : choghadiyaAtBirth.quality === "अशुभ"
+                        ? "inauspicious"
+                        : "neutral"
+                  })`,
+                )}
+              />
+            ) : null}
+            {lagna ? (
+              <DetailTraitRow
+                label={pick("लग्न", "Lagna")}
+                value={`${lagna.nameNe}${lagna.degree ? ` ${lagna.degree}°` : ""}`}
+              />
+            ) : null}
+            {moon?.rashi ? (
+              <DetailTraitRow label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={moon.rashi} />
+            ) : null}
+            {birthPanchangaMeta?.sunriseNe ? (
+              <DetailTraitRow
+                label={pick("सूर्योदय", "Sunrise")}
+                value={birthPanchangaMeta.sunriseNe}
+              />
+            ) : null}
+            {birthPanchangaMeta?.sunsetNe ? (
+              <DetailTraitRow
+                label={pick("सूर्यास्त", "Sunset")}
+                value={birthPanchangaMeta.sunsetNe}
+              />
+            ) : null}
+            {birthPanchangaMeta?.ishtaKalaNe ? (
+              <DetailTraitRow
+                label={pick("इष्ट काल", "Ishta Kala")}
+                value={pick(
+                  birthPanchangaMeta.ishtaKalaNe,
+                  birthPanchangaMeta.ishtaKalaEn ?? birthPanchangaMeta.ishtaKalaNe,
+                )}
+              />
+            ) : null}
+            <DetailTraitRow
+              label={pick("अहोरात्र इष्ट काल", "Ahoratri Ishta Kala")}
+              value={pick(
+                birthPanchangaMeta?.ahoratriIshtaNe ?? "—",
+                birthPanchangaMeta?.ahoratriIshtaEn ?? "—",
+              )}
+            />
+            {birthPanchangaMeta?.vaaraNe ? (
+              <DetailTraitRow
+                label={pick("वार", "Weekday")}
+                value={pick(
+                  birthPanchangaMeta.vaaraNe,
+                  birthPanchangaMeta.vaaraEn ?? birthPanchangaMeta.vaaraNe,
+                )}
+              />
+            ) : null}
+            {birthPanchangaMeta?.suryaRashiNe ? (
+              <DetailTraitRow
+                label={pick("सूर्य राशि", "Sun sign")}
+                value={pick(
+                  birthPanchangaMeta.suryaRashiNe,
+                  birthPanchangaMeta.suryaRashiEn ?? birthPanchangaMeta.suryaRashiNe,
+                )}
+              />
+            ) : null}
+            {birthPanchangaMeta?.suryaNakshatra ? (
+              <DetailTraitRow
+                label={pick("सूर्य नक्षत्र", "Surya Nakshatra")}
+                value={
+                  birthPanchangaMeta.suryaNakshatra.pada != null
+                    ? pick(
+                        `${birthPanchangaMeta.suryaNakshatra.ne} · पद ${digits(birthPanchangaMeta.suryaNakshatra.pada)}`,
+                        `${birthPanchangaMeta.suryaNakshatra.en ?? birthPanchangaMeta.suryaNakshatra.ne} · Pada ${digits(birthPanchangaMeta.suryaNakshatra.pada)}`,
+                      )
+                    : pick(
+                        birthPanchangaMeta.suryaNakshatra.ne,
+                        birthPanchangaMeta.suryaNakshatra.en ?? birthPanchangaMeta.suryaNakshatra.ne,
+                      )
+                }
+              />
+            ) : null}
+          </div>
+
+          {janmaAvakahada ? (
+            <div className="mt-4 pt-4 border-t border-border/70">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                {pick("अवकहडा", "Avakahada")}
+                <span className="mx-1.5 font-normal text-muted-foreground/50">·</span>
+                <span className="normal-case tracking-normal font-semibold text-foreground">
+                  {janmaAvakahada.nakshatraNe}
+                  <span className="mx-1 text-muted-foreground/40">·</span>
+                  {pick(`पद ${digits(janmaAvakahada.pada)}`, `Pada ${digits(janmaAvakahada.pada)}`)}
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                <DetailTraitRow
+                  label={pick("राशि पाय", "Rashi Paya")}
+                  value={janmaAvakahada.rashiPaya}
+                />
+                <DetailTraitRow
+                  label={pick("नक्षत्र पाय", "Nakshatra Paya")}
+                  value={janmaAvakahada.nakshatraPaya}
+                />
+                <DetailTraitRow label={pick("तत्त्व", "Tattva")} value={janmaAvakahada.tattva} />
+                <DetailTraitRow label={pick("युञ्ज", "Yunja")} value={janmaAvakahada.yunja} />
+                <DetailTraitRow label={pick("वश्य", "Vashya")} value={janmaAvakahada.vashya} />
+                <DetailTraitRow label={pick("तारा", "Tara")} value={janmaAvakahada.tara} />
+                <DetailTraitRow label={pick("अक्षर", "Akshara")} value={janmaAvakahada.akshara} />
+                <DetailTraitRow label={pick("गण", "Gana")} value={janmaAvakahada.gana} />
+                <DetailTraitRow label={pick("नाडी", "Nadi")} value={janmaAvakahada.nadi} />
+                <DetailTraitRow label={pick("आसन", "Asana")} value={janmaAvakahada.asana} />
+                <DetailTraitRow label={pick("योनी", "Yoni")} value={janmaAvakahada.yoni} />
+                <DetailTraitRow label={pick("जात", "Jati")} value={janmaAvakahada.jati} />
+              </div>
             </div>
           ) : null}
         </div>
       )}
 
-      {panchangSummary && (
+      {panchangSummary && !hideBirthSummary && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatTile label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={planets.find((p) => p.key === "moon")?.rashi ?? "—"} />
           <StatTile
-            label={pick("नक्षत्र", "Nakshatra")}
+            label={pick("नक्षत्र (चन्द्र)", "Nakshatra (Moon)")}
             value={panchangSummary.nakshatra ? `${panchangSummary.nakshatra.ne}` : "—"}
-            sub={panchangSummary.nakshatra ? pick(`पाद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`) : undefined}
+            sub={panchangSummary.nakshatra ? pick(`पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`) : undefined}
           />
-          <StatTile label={pick("तिथि", "Tithi")} value={panchangSummary.tithiNe ?? "—"} />
+          <StatTile
+            label={pick("तिथि", "Tithi")}
+            value={pick(panchangSummary.tithiNe ?? "—", panchangSummary.tithiEn ?? panchangSummary.tithiNe ?? "—")}
+          />
           <StatTile label={pick("वार", "Day")} value={panchangSummary.vaaraNe ?? "—"} />
           <StatTile label={pick("योग", "Yoga")} value={panchangSummary.yoga?.ne ?? "—"} />
         </div>
@@ -457,7 +607,7 @@ export function KundaliView({
                     </p>
                     {planet.pada != null && (
                       <p className="text-[11px] text-muted-foreground">
-                        {pick(`पाद ${digits(planet.pada)}`, `Pada ${digits(planet.pada)}`)}
+                        {pick(`पद ${digits(planet.pada)}`, `Pada ${digits(planet.pada)}`)}
                       </p>
                     )}
                     {planet.nakshatresh && (

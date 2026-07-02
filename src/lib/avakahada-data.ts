@@ -1,8 +1,8 @@
 /**
  * अवकहडा चक्र — the classical naming / matching grid.
  *
- * 27 नक्षत्र × 4 चरण = 108 पाद. Each पाद carries a नामाक्षर (naming syllable) and
- * falls in one राशि (every राशि = 9 पाद = 2¼ नक्षत्र). From the राशि come the
+ * 27 नक्षत्र × 4 चरण = 108 पद. Each पद carries a नामाक्षर (naming syllable) and
+ * falls in one राशि (every राशि = 9 पद = 2¼ नक्षत्र). From the राशि come the
  * स्वामी, वर्ण and वश्य; from the नक्षत्र come the योनि, गण and नाडी. The वैरि-योनि
  * (enemy) and नाडी follow fixed rules, so they are derived rather than retyped.
  *
@@ -35,10 +35,10 @@ export const RASHI_META: Record<string, RashiMeta> = {
 };
 
 export type Gana = "देव" | "नर" | "राक्षस";
-export type Nadi = "आद्य" | "मध्य" | "अन्त्य";
+export type Nadi = "आध्य" | "मध्य" | "अन्त्य";
 
 /** नाडी repeats in a fixed 6-step zig-zag across the नक्षत्र sequence. */
-const NADI_CYCLE: Nadi[] = ["आद्य", "मध्य", "अन्त्य", "अन्त्य", "मध्य", "आद्य"];
+const NADI_CYCLE: Nadi[] = ["आध्य", "मध्य", "अन्त्य", "अन्त्य", "मध्य", "आध्य"];
 
 /** योनि → वैरि-योनि (natural-enemy) pairs. */
 const ENEMY: Record<string, string> = {
@@ -69,7 +69,7 @@ const RAW: RawNakshatra[] = [
   { ne: "आर्द्रा", en: "ardra", aksharas: ["कु", "घ", "ङ", "छ"], rashis: ["मिथुन", "मिथुन", "मिथुन", "मिथुन"], yoni: "श्वान", gana: "नर" },
   { ne: "पुनर्वसु", en: "punarvasu", aksharas: ["के", "को", "हा", "ही"], rashis: ["मिथुन", "मिथुन", "मिथुन", "कर्क"], yoni: "मार्जार", gana: "देव" },
   { ne: "पुष्य", en: "pushya", aksharas: ["हु", "हे", "हो", "डा"], rashis: ["कर्क", "कर्क", "कर्क", "कर्क"], yoni: "अज", gana: "देव" },
-  { ne: "आश्लेषा", en: "ashlesha", aksharas: ["डी", "डू", "डे", "डो"], rashis: ["कर्क", "कर्क", "कर्क", "कर्क"], yoni: "मार्जार", gana: "राक्षस" },
+  { ne: "आश्रेषा", en: "ashlesha", aksharas: ["डी", "डू", "डे", "डो"], rashis: ["कर्क", "कर्क", "कर्क", "कर्क"], yoni: "मार्जार", gana: "राक्षस" },
   { ne: "मघा", en: "magha", aksharas: ["मा", "मी", "मू", "मे"], rashis: ["सिंह", "सिंह", "सिंह", "सिंह"], yoni: "मूषक", gana: "राक्षस" },
   { ne: "पूर्वाफाल्गुनी", en: "purvaphalguni", aksharas: ["मो", "टा", "टी", "टू"], rashis: ["सिंह", "सिंह", "सिंह", "सिंह"], yoni: "मूषक", gana: "नर" },
   { ne: "उत्तराफाल्गुनी", en: "uttaraphalguni", aksharas: ["टे", "टो", "पा", "पी"], rashis: ["सिंह", "कन्या", "कन्या", "कन्या"], yoni: "गौ", gana: "नर" },
@@ -95,7 +95,7 @@ export interface NakshatraRow {
   ne: string;
   en: string;
   aksharas: string[];
-  /** distinct राशि the four पाद fall in (1 or 2). */
+  /** distinct राशि the four पद fall in (1 or 2). */
   rashis: string[];
   charanRashis: string[]; // राशि per चरण (length 4)
   yoni: string;

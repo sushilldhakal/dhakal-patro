@@ -12,6 +12,8 @@ import {
 } from "@/lib/sait-data";
 import { BS_MONTHS_NE } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { patroEmpty, patroSaitCat } from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
 
 type Props = {
   defaultYear?: number;
@@ -76,14 +78,14 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
   const yearOptions = yearsForCategory.length ? yearsForCategory : [year];
 
   return (
-    <div className="pn-aside-sait-panel">
-      <div className="pn-aside-sait-year-row">
-        <label className="pn-aside-sait-year-label" htmlFor="sait-bs-year">
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-2">
+        <label className="shrink-0 text-xs font-semibold text-muted-foreground" htmlFor="sait-bs-year">
           {t("sait.year")}
         </label>
         <select
           id="sait-bs-year"
-          className="pn-aside-sait-select"
+          className="h-8 min-w-0 flex-1 cursor-pointer rounded-md border border-border bg-card px-2.5 text-[13px] font-bold text-foreground font-num hover:border-secondary/35 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-secondary/45"
           value={year}
           aria-label={t("sait.year")}
           onChange={(e) => setYear(Number(e.target.value))}
@@ -96,13 +98,13 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
         </select>
       </div>
 
-      <div className="pn-aside-sait-cats" role="tablist" aria-label={t("sait.categories_aria")}>
+      <div className="flex flex-wrap gap-1" role="tablist" aria-label={t("sait.categories_aria")}>
         {SAIT_CATEGORIES.map((cat) => (
           <button
             key={cat.id}
             type="button"
             role="tab"
-            className={`pn-aside-sait-cat${cat.id === category ? " active" : ""}`}
+            className={patroSaitCat(cat.id === category)}
             aria-selected={cat.id === category}
             onClick={() => setCategory(cat.id)}
           >
@@ -112,24 +114,30 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
       </div>
 
       {saitQ.isLoading && !entries.length ? (
-        <div className="pn-aside-tab-skel" />
+        <div className="h-40 animate-pulse rounded-md bg-muted" />
       ) : !yearsForCategory.length ? (
-        <p className="pn-aside-tab-empty">{t("sait.no_data")}</p>
+        <p className={patroEmpty}>{t("sait.no_data")}</p>
       ) : entries.length === 0 ? (
-        <p className="pn-aside-tab-empty">{t("sait.no_entries")}</p>
+        <p className={patroEmpty}>{t("sait.no_entries")}</p>
       ) : (
-        <ul className="pn-aside-sait-months">
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {entries.map(({ month, days }) => (
-            <li key={month} className="pn-aside-sait-month-row">
-              <span className="pn-aside-sait-month-name">{BS_MONTHS_NE[month - 1]}:</span>
-              <span className="pn-aside-sait-days">
+            <li
+              key={month}
+              className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 rounded-md bg-surface-inset px-2.5 py-2 text-[13px] leading-snug"
+            >
+              <span className="shrink-0 text-[13px] font-bold text-foreground">{BS_MONTHS_NE[month - 1]}:</span>
+              <span className="font-num text-[13px] font-semibold text-foreground">
                 {days.map((day, i) => {
-                  const isHighlight =
-                    highlightMonth === month && highlightDay === day;
+                  const isHighlight = highlightMonth === month && highlightDay === day;
                   return (
                     <span key={day}>
                       {i > 0 ? ", " : ""}
-                      <span className={isHighlight ? "pn-aside-sait-day highlight" : "pn-aside-sait-day"}>
+                      <span
+                        className={cn(
+                          isHighlight && "font-extrabold text-accent underline underline-offset-2",
+                        )}
+                      >
                         {toNepaliDigits(day)}
                       </span>
                     </span>
