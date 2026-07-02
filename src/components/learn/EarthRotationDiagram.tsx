@@ -1,5 +1,5 @@
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EarthGlobeImage } from "./EarthGlobeImage";
+import { useLocale } from "@/i18n/locale";
 
 const W = 640;
 const H = 220;
@@ -8,7 +8,8 @@ const cy = H / 2 + 8;
 const r = 124;
 
 export function EarthRotationDiagram() {
-  const fmt = (n: number) => toNepaliDigits(n);
+  const { pick, digits } = useLocale();
+  const fmt = (n: number) => digits(n);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="ss-rot-svg" aria-hidden>
@@ -19,10 +20,10 @@ export function EarthRotationDiagram() {
       </defs>
 
       <text x={72} y={cy - 4} className="ss-rot-dir" textAnchor="middle">
-        पश्चिम
+        {pick("पश्चिम", "West")}
       </text>
       <text x={W - 72} y={cy - 4} className="ss-rot-dir" textAnchor="middle">
-        पूर्व
+        {pick("पूर्व", "East")}
       </text>
 
       <line x1={100} y1={cy} x2={W - 100} y2={cy} className="ss-rot-axis" />
@@ -36,7 +37,7 @@ export function EarthRotationDiagram() {
         markerEnd="url(#ss-rot-arrow)"
       />
       <text x={cx} y={cy + 72} className="ss-rot-label" textAnchor="middle">
-        ↻ पश्चिम → पूर्व · ~{fmt(24)} घण्टा
+        {pick("↻ पश्चिम → पूर्व", "↻ West → East")} · ~{fmt(24)} {pick("घण्टा", "hours")}
       </text>
     </svg>
   );
