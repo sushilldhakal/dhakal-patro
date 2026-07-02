@@ -26,16 +26,51 @@ function bsMonthEnOf(ne: string): string {
 }
 
 interface Props {
-  p: PanchangaDay;
+  p?: PanchangaDay;
   bsYear: number;
   bsMonthNe: string;
   bsDay: number;
   isToday?: boolean;
   timezone?: string;
   locationLabel?: string;
+  /** First load only — inline placeholder, not the full-page loader. */
+  loading?: boolean;
+  /** When true, only fetch at-time after the user moves the wheel time slider. */
+  atTimeScrubOnly?: boolean;
 }
 
-function PanchangaWheelImpl({
+function PanchangaWheelSkeleton({
+  bsYear,
+  bsMonthNe,
+  bsDay,
+  locationLabel,
+}: Pick<Props, "bsYear" | "bsMonthNe" | "bsDay" | "locationLabel">) {
+  const { pick, digits } = useLocale();
+  const num = (n: number | string) => digits(n);
+  const locLabel = locationLabel ?? pick("काठमाडौं", "Kathmandu");
+
+  return (
+    <div className="pn-wheel rounded-2xl border border-border overflow-hidden" aria-busy="true">
+      <div className="w-stage">
+        <div className="w-head">
+          <div className="w-head-eyebrow">{pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}</div>
+          <div className="w-head-title">
+            {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
+            <span className="yr">{num(bsYear)}</span>
+          </div>
+          <div className="w-head-sub">
+            {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))} {num(bsDay)} · {locLabel}
+          </div>
+        </div>
+        <div className="pn-chart-skel w-svg-wrap" style={{ minHeight: 420, margin: "0 auto" }} />
+      </div>
+    </div>
+  );
+}
+
+type WheelBodyProps = Omit<Props, "loading" | "p"> & { p: PanchangaDay };
+
+function PanchangaWheelBody({
   p,
   bsYear,
   bsMonthNe,
@@ -43,7 +78,8 @@ function PanchangaWheelImpl({
   isToday,
   timezone,
   locationLabel,
-}: Props) {
+  atTimeScrubOnly = false,
+}: WheelBodyProps & { atTimeScrubOnly?: boolean }) {
   const det: WheelDetail = useMemo(() => buildWheelDetail(p), [p]);
   const tz = resolveTimeZone(p?.location?.timezone, timezone);
   const [now, setNow] = useState(() => new Date());
@@ -108,11 +144,15 @@ function PanchangaWheelImpl({
     [anchorAd, debouncedScrubG, det.sunriseMin]
   );
 
+  const needsAtTime =
+    Boolean(anchorAd) &&
+    (scrubPinned || (isToday && !atTimeScrubOnly));
+
   const scrubQ = useQuery({
     queryKey: panchangaKeys.atTime(scrubDatetime, locationParams),
     queryFn: () => fetchPanchangaAtTime(scrubDatetime, locationParams),
     staleTime: 1000 * 60,
-    enabled: Boolean(anchorAd),
+    enabled: needsAtTime,
   });
 
   const scrubDet: WheelDetail = useMemo(
@@ -348,6 +388,21 @@ function PanchangaWheelImpl({
       </div>
     </div>
   );
+}
+
+function PanchangaWheelImpl(props: Props) {
+  const { loading = false, p, atTimeScrubOnly, ...rest } = props;
+  if (loading || !p) {
+    return (
+      <PanchangaWheelSkeleton
+        bsYear={rest.bsYear}
+        bsMonthNe={rest.bsMonthNe}
+        bsDay={rest.bsDay}
+        locationLabel={rest.locationLabel}
+      />
+    );
+  }
+  return <PanchangaWheelBody p={p} atTimeScrubOnly={atTimeScrubOnly} {...rest} />;
 }
 
 export const PanchangaWheel = memo(PanchangaWheelImpl);

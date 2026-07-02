@@ -1786,6 +1786,12 @@
   background: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
   animation: pn-pulse 1.2s ease-in-out infinite;
 }
+.pn-chart-skel {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--muted-foreground) 12%, var(--card));
+  animation: pn-pulse 1.2s ease-in-out infinite;
+}
 .pn-error-box {
   font: 500 var(--fs-sm) var(--pn-font);
   color: var(--color-danger);

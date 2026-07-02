@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Moon, Sunrise, SunMoon, Sunset } from "lucide-react";
 import type { PanchangaDataMode } from "@/components/panchanga/use-panchanga-mode";
 import {
@@ -44,7 +43,6 @@ interface Props {
   onPickDay: (d: Date) => void;
   dataMode?: PanchangaDataMode;
   clock?: string;
-  onLoadingChange?: (loading: boolean) => void;
 }
 
 export function PanchangaMonthGrid({
@@ -53,7 +51,6 @@ export function PanchangaMonthGrid({
   onPickDay,
   dataMode = "udaya",
   clock = "12:00",
-  onLoadingChange,
 }: Props) {
   const { lang, pick, digits } = useLocale();
   const isEn = lang === "en";
@@ -61,7 +58,7 @@ export function PanchangaMonthGrid({
   const todayBs = adToBS(new Date());
   const isInstant = dataMode === "instant";
 
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: isInstant
       ? panchangaKeys.monthAtClock(bs.year, bs.month, clock, locationParams)
       : panchangaKeys.month(bs.year, bs.month, locationParams),
@@ -70,11 +67,8 @@ export function PanchangaMonthGrid({
         clock: isInstant ? clock : undefined,
       }),
     staleTime: 1000 * 60 * 60,
+    placeholderData: keepPreviousData,
   });
-
-  useEffect(() => {
-    onLoadingChange?.(isLoading);
-  }, [isLoading, onLoadingChange]);
 
   const days = data?.calendar ?? [];
   const firstWeekday = days[0] ? new Date(days[0].date_ad).getDay() : 0;

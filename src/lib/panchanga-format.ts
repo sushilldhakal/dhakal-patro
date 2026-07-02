@@ -749,29 +749,61 @@ export function getPlanetsAnchorLabel(p: PanchangaDay): string {
   return anchor?.label_en ?? "उदयकालिक स्पष्टग्रह (सूर्योदय)";
 }
 
+export type InstantLagna = {
+  number?: number;
+  name_ne?: string;
+  name?: string;
+  degree_in_rashi?: number;
+  longitude?: number;
+};
+
+/** Birth-moment (ephemeris) or sunrise lagna block from the API. */
+export function getInstantLagna(p: PanchangaDay): InstantLagna | undefined {
+  const detail = getPanchangaDetail(p);
+  if (p.mode === "ephemeris") {
+    const instant = detail?.instant_lagna as InstantLagna | undefined;
+    if (instant) return instant;
+  }
+  const lagna = (detail?.lagna ?? p.lagna) as InstantLagna | string | undefined;
+  if (!lagna || typeof lagna === "string") return undefined;
+  return lagna;
+}
+
+/**
+ * Sidereal lagna longitude aligned with displayed राशि + अंश.
+ * Prefer (rashi − 1) × 30 + degree_in_rashi over the raw longitude field.
+ */
+export function resolveLagnaSiderealLongitude(lagna: InstantLagna): number | undefined {
+  const { number, degree_in_rashi, longitude } = lagna;
+  if (number != null && degree_in_rashi != null) {
+    return (number - 1) * 30 + degree_in_rashi;
+  }
+  return longitude;
+}
+
 export function getLagnaDisplay(
   p: PanchangaDay
-): { nameNe: string; degree?: string; longitude?: number } | undefined {
-  const detail = getPanchangaDetail(p);
-  const lagna = (
-    p.mode === "ephemeris"
-      ? (detail?.instant_lagna ?? p.lagna)
-      : detail?.lagna ?? p.lagna
-  ) as
-    | { name_ne?: string; name?: string; degree_in_rashi?: number; longitude?: number }
-    | string
-    | undefined;
-  if (!lagna) return undefined;
-  if (typeof lagna === "string") {
-    return { nameNe: lagna };
+): {
+  nameNe: string;
+  degree?: string;
+  degreeInRashi?: number;
+  rashiNum?: number;
+  longitude?: number;
+} | undefined {
+  const lagna = getInstantLagna(p);
+  if (!lagna) {
+    const top = p.lagna;
+    if (typeof top === "string") return { nameNe: top };
+    return undefined;
   }
   const nameNe = lagna.name_ne ?? lagna.name;
   if (!nameNe) return undefined;
+  const degreeInRashi = lagna.degree_in_rashi;
   const degree =
-    lagna.degree_in_rashi != null
-      ? toNepaliDigits(lagna.degree_in_rashi.toFixed(1))
-      : undefined;
-  return { nameNe, degree, longitude: lagna.longitude };
+    degreeInRashi != null ? toNepaliDigits(degreeInRashi.toFixed(1)) : undefined;
+  const rashiNum = lagna.number ?? undefined;
+  const longitude = resolveLagnaSiderealLongitude(lagna);
+  return { nameNe, degree, degreeInRashi, rashiNum, longitude };
 }
 
 function planetDegreeCells(info: PlanetDetail): string {

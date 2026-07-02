@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -19,6 +19,10 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import {
+  panchangaYearBulkKey,
+  seedYearPanchangaCache,
+} from "@/lib/panchanga-year-cache";
 
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -57,12 +61,14 @@ function adDateStrForDay(year: number, dayOfYear: number): string {
 }
 
 /**
- * How long to wait after the slider stops moving before kicking off the network
- * fetch for an as-yet-uncached day. Days already warmed in the React Query cache
- * render instantly while dragging (see liveData below); this debounce only gates
- * the request that fills in a cold day, so it can be short.
+ * Debounce before fetching a cold day over the network. Cached days render live
+ * via synchronous cache reads while the thumb moves.
  */
 const SCRUB_DEBOUNCE_MS = 90;
+/** Shorter debounce while dragging so uncached days start loading before release. */
+const SCRUB_FETCH_MS = 120;
+/** PanchangaYear never blocks the page with the route overlay while scrubbing. */
+const YEAR_ROUTE_LOADING = false;
 
 function initialYearFromSearch(searchYear?: number): number {
   if (
@@ -100,6 +106,7 @@ export function PanchangaYear() {
   // all queue up behind each other.
   const [queryDay, setQueryDay] = useState(dayOfYear);
   const [playing, setPlaying] = useState(false);
+  const [isScrubbing, setIsScrubbing] = useState(false);
 
   useEffect(() => {
     if (searchYear == null) return;
@@ -111,10 +118,57 @@ export function PanchangaYear() {
   const clampedDay = Math.min(dayOfYear, totalDays);
   const clampedQueryDay = Math.min(queryDay, totalDays);
 
+  const yearBulkQ = useQuery({
+    queryKey: panchangaYearBulkKey(year, location.params),
+    queryFn: () => seedYearPanchangaCache(year, location.params, queryClient),
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+
+  const yearFullyCached = yearBulkQ.isSuccess;
+
+  const prefetchDay = useCallback(
+    (day: number) => {
+      if (yearFullyCached || day < 1 || day > totalDays) return;
+      const dateStr = adDateStrForDay(year, day);
+      void queryClient.prefetchQuery({
+        queryKey: panchangaKeys.day(dateStr, "ad", location.params),
+        queryFn: () => fetchPanchanga(dateStr, "ad", location.params),
+        staleTime: 1000 * 60 * 30,
+      });
+    },
+    [yearFullyCached, year, totalDays, location.params, queryClient],
+  );
+
+  const prefetchAround = useCallback(
+    (centerDay: number, radius = 5) => {
+      for (let d = centerDay - radius; d <= centerDay + radius; d++) {
+        prefetchDay(d);
+      }
+    },
+    [prefetchDay],
+  );
+
+  const finishScrub = useCallback(() => {
+    setIsScrubbing(false);
+    setQueryDay(clampedDay);
+    prefetchAround(clampedDay);
+  }, [clampedDay, prefetchAround]);
+
   useEffect(() => {
-    const id = setTimeout(() => setQueryDay(dayOfYear), SCRUB_DEBOUNCE_MS);
+    const delay = isScrubbing ? SCRUB_FETCH_MS : SCRUB_DEBOUNCE_MS;
+    const id = setTimeout(() => setQueryDay(dayOfYear), delay);
     return () => clearTimeout(id);
-  }, [dayOfYear]);
+  }, [dayOfYear, isScrubbing]);
+
+  // Kick off fetch for the thumb day while dragging so the wheel can update
+  // before pointer-up when that day is not yet in the cache.
+  useEffect(() => {
+    if (!isScrubbing) return;
+    prefetchDay(clampedDay);
+  }, [isScrubbing, clampedDay, prefetchDay]);
 
   // Playback: advance one day per second, looping back to day 1 at year's end.
   useEffect(() => {
@@ -132,96 +186,47 @@ export function PanchangaYear() {
     [year, clampedQueryDay]
   );
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: panchangaKeys.day(debouncedDateStr, "ad", location.params),
     queryFn: () => fetchPanchanga(debouncedDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
+    enabled: !yearFullyCached,
   });
 
-  // The live day tracks the slider thumb exactly. If that day is already in the
-  // cache (the background warm-up below fills the whole year), read it straight
-  // out synchronously so the wheel re-renders for it on this very frame instead
-  // of waiting for the debounce + a fetch. Cold days fall back to whatever the
-  // debounced query last resolved, so the wheel holds steady rather than
-  // flickering until the new day loads.
   const liveDateStr = useMemo(
     () => adDateStrForDay(year, clampedDay),
     [year, clampedDay]
   );
-  const liveData = queryClient.getQueryData<PanchangaDay>(
+  const cachedLiveData = queryClient.getQueryData<PanchangaDay>(
     panchangaKeys.day(liveDateStr, "ad", location.params)
   );
 
-  const displayData = liveData ?? data;
-  const displayDay = liveData ? clampedDay : clampedQueryDay;
-  const displayDateStr = liveData ? liveDateStr : debouncedDateStr;
+  const { data: fetchingLiveData, isPlaceholderData: fetchingIsPlaceholder } = useQuery({
+    queryKey: panchangaKeys.day(liveDateStr, "ad", location.params),
+    queryFn: () => fetchPanchanga(liveDateStr, "ad", location.params),
+    staleTime: 1000 * 60 * 30,
+    enabled: isScrubbing && !cachedLiveData && !yearFullyCached,
+    placeholderData: keepPreviousData,
+  });
 
-  // Wheel header tracks the day actually shown in the wheel; the page heading
-  // tracks the live slider position for instant textual feedback.
+  const displayData =
+    cachedLiveData ??
+    (fetchingLiveData && !fetchingIsPlaceholder ? fetchingLiveData : undefined) ??
+    data;
+  const displayDateStr = cachedLiveData
+    ? liveDateStr
+    : fetchingLiveData && !fetchingIsPlaceholder
+      ? liveDateStr
+      : debouncedDateStr;
+
+  // Wheel header tracks the slider thumb; panchanga data may trail on cold days.
   const { month: bsMonth, day: bsDay } = useMemo(
-    () => bsMonthDayFromDayOfYear(year, displayDay),
-    [year, displayDay]
-  );
-  const { month: liveMonth, day: liveDay } = useMemo(
     () => bsMonthDayFromDayOfYear(year, clampedDay),
     [year, clampedDay]
   );
-
-  // Warm the cache for the immediate neighbours once the scrub settles, so
-  // small nudges right after a drag feel instant too.
-  useEffect(() => {
-    for (let d = clampedQueryDay - 3; d <= clampedQueryDay + 3; d++) {
-      if (d < 1 || d > totalDays || d === clampedQueryDay) continue;
-      const neighborDateStr = adDateStrForDay(year, d);
-      queryClient.prefetchQuery({
-        queryKey: panchangaKeys.day(neighborDateStr, "ad", location.params),
-        queryFn: () => fetchPanchanga(neighborDateStr, "ad", location.params),
-        staleTime: 1000 * 60 * 30,
-      });
-    }
-  }, [year, clampedQueryDay, totalDays, location.params, queryClient]);
-
-  // Slowly warm the whole year in the background, spiraling outward from
-  // wherever the scrub currently sits. The backend computes each day's
-  // panchanga on first request and caches it, so a day that's never been
-  // requested before can take well over a second - prefetching the rest of
-  // the year ahead of time means most drags land on an already-warm day.
-  useEffect(() => {
-    let cancelled = false;
-    const startDay = clampedQueryDay;
-    const order = Array.from({ length: totalDays }, (_, i) => i + 1).sort(
-      (a, b) => Math.abs(a - startDay) - Math.abs(b - startDay)
-    );
-
-    async function worker(queue: number[]) {
-      while (!cancelled && queue.length) {
-        const d = queue.shift();
-        if (d == null) return;
-        const dateStr = adDateStrForDay(year, d);
-        try {
-          await queryClient.prefetchQuery({
-            queryKey: panchangaKeys.day(dateStr, "ad", location.params),
-            queryFn: () => fetchPanchanga(dateStr, "ad", location.params),
-            staleTime: 1000 * 60 * 30,
-          });
-        } catch {
-          // Ignore - this is a best-effort cache warm, not a user-facing fetch.
-        }
-      }
-    }
-
-    const queue = [...order];
-    const WARM_CONCURRENCY = 3;
-    for (let i = 0; i < WARM_CONCURRENCY; i++) worker(queue);
-
-    return () => {
-      cancelled = true;
-    };
-    // Only re-sweep when the year or location changes, not on every scrub
-    // settle - the neighbour-prefetch effect above already covers that.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year, location.params, queryClient, totalDays]);
+  const { month: liveMonth, day: liveDay } = bsMonthDayFromDayOfYear(year, clampedDay);
+  const yearLoading = yearBulkQ.isFetching && !yearFullyCached;
 
   const effectiveTimezone = resolveTimeZone(displayData?.location?.timezone, location.params.timezone);
   const isToday = displayDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
@@ -233,7 +238,7 @@ export function PanchangaYear() {
     setQueryDay((d) => Math.min(d, daysInBsYear(nextYear)));
   }
 
-  useRouteLoading(!displayData && isLoading);
+  useRouteLoading(YEAR_ROUTE_LOADING);
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
@@ -291,6 +296,7 @@ export function PanchangaYear() {
             isToday={isToday}
             timezone={effectiveTimezone}
             locationLabel={locationLabel}
+            atTimeScrubOnly
           />
         )}
 
@@ -299,6 +305,25 @@ export function PanchangaYear() {
             {t("panchanga_year.error")}
           </div>
         )}
+
+        {yearLoading ? (
+          <div className="rounded-xl border border-border bg-card px-4 py-3">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <span className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                {t("panchanga_year.loading_year")}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full w-1/3 rounded-full bg-secondary animate-pulse" />
+            </div>
+          </div>
+        ) : yearFullyCached ? (
+          <p className="text-xs text-muted-foreground m-0 px-1">
+            {yearBulkQ.data?.fromPersistentCache
+              ? t("panchanga_year.year_from_cache")
+              : t("panchanga_year.year_ready")}
+          </p>
+        ) : null}
 
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between mb-2">
@@ -330,6 +355,10 @@ export function PanchangaYear() {
               max={totalDays}
               step={1}
               value={clampedDay}
+              onPointerDown={() => setIsScrubbing(true)}
+              onPointerUp={finishScrub}
+              onPointerCancel={finishScrub}
+              onLostPointerCapture={finishScrub}
               onChange={(e) => setDayOfYear(Number(e.target.value))}
             />
           </div>

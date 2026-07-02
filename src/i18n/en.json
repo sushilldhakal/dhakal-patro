@@ -188,9 +188,13 @@
     "nav_graha": "Planets",
     "nav_charts": "Charts",
     "nav_dasha": "Dasha",
+    "nav_dasha_full": "Vimshottari Dasha",
     "nav_shadbala": "Shadbala",
     "nav_shanti": "Shanti",
+    "nav_shanti_vidhi": "Shanti Vidhi",
     "nav_report": "Report",
+    "nav_analysis": "Astrological Analysis",
+    "submenu_title": "Analysis menu",
     "jump_to": "Jump to",
     "load_error": "Could not load kundali data. Check date and location, then try again.",
     "computing": "Computing chart…"
@@ -411,6 +415,9 @@
     "title": "Annual Panchanga wheel",
     "error": "Could not load panchanga for this date.",
     "scrub_label": "Scrub through the year",
+    "loading_year": "Loading year data…",
+    "year_from_cache": "Loaded from device cache",
+    "year_ready": "Full year cached — slide freely",
     "play": "Play",
     "pause": "Pause",
     "play_title": "Play one day per second"

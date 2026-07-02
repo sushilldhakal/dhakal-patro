@@ -142,7 +142,6 @@ function buildPanchangaDetailCells(
       label: t("aside.karana"),
       value: angaName(karana),
       hint: karanaHint,
-      wide: Boolean(karanaHint && karanaHint.length > 18),
     },
   ];
 }

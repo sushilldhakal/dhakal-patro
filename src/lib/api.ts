@@ -90,6 +90,8 @@ export const panchangaKeys = {
     ["panchanga", "nepal", date, locationCacheKey(location)] as const,
   month: (year: number, month: number, location?: LocationParams, full = true) =>
     ["panchanga", "month", year, month, locationCacheKey(location), full ? "full" : "lite"] as const,
+  year: (year: number, location?: LocationParams, full = true) =>
+    ["panchanga", "year", year, locationCacheKey(location), full ? "full" : "lite"] as const,
   monthAtClock: (
     year: number,
     month: number,
@@ -375,6 +377,30 @@ export const fetchMonthCalendar = async (
   return {
     ...data,
     calendar: data.calendar.map(normalizeMonthDay),
+  };
+};
+
+export const fetchYearCalendar = async (
+  year: number,
+  location?: LocationParams,
+  options?: { full?: boolean },
+): Promise<YearCalendar> => {
+  const full = options?.full !== false;
+  const params = new URLSearchParams();
+  if (full) params.set("full", "true");
+  const qs = params.toString();
+  const path = appendLocation(
+    `/panchanga/year/${year}${qs ? `?${qs}` : ""}`,
+    location,
+  );
+  const data = await get<YearCalendar & { calendar: RawMonthDay[]; months: Array<MonthCalendar & { calendar: RawMonthDay[] }> }>(path);
+  return {
+    ...data,
+    calendar: data.calendar.map(normalizeMonthDay),
+    months: data.months.map((month) => ({
+      ...month,
+      calendar: month.calendar.map(normalizeMonthDay),
+    })),
   };
 };
 
@@ -931,6 +957,14 @@ export interface MonthCalendar {
   month_length: number;
   mode?: "ephemeris" | "udaya";
   clock?: string;
+  calendar: CalendarDay[];
+}
+
+export interface YearCalendar {
+  year_bs: number;
+  year_length: number;
+  location?: PanchangaDay["location"];
+  months: MonthCalendar[];
   calendar: CalendarDay[];
 }
 

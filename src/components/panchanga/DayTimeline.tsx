@@ -88,12 +88,32 @@ function segmentsFromRow(row: TimelineRowData): ChartSegment[] {
 }
 
 interface Props {
-  p: PanchangaDay;
+  p?: PanchangaDay;
   dateAd?: string;
   isToday?: boolean;
   timezone?: string;
   /** HH:MM — show needle at this clock on the vedic day chart (ephemeris mode). */
   needleClock?: string;
+  /** First load only — inline placeholder, not the full-page loader. */
+  loading?: boolean;
+}
+
+function DayTimelineBand() {
+  const { pick } = useLocale();
+  return (
+    <div className="pg-sec-band pgx-band">
+      <h2>{pick("दिन-चक्र", "Day cycle")}</h2>
+      <span>{pick("पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise", "Full panchanga timeline · sunrise to sunrise")}</span>
+      <span className="pgx-legend">
+        <i className="pgx-key good" />
+        {pick("शुभ", "Good")}
+        <i className="pgx-key bad" />
+        {pick("अशुभ", "Bad")}
+        <i className="pgx-key night" />
+        {pick("रात", "Night")}
+      </span>
+    </div>
+  );
 }
 
 function minutesOnVedicChart(
@@ -116,11 +136,21 @@ function minutesOnVedicChart(
   return hh * 60 + mm;
 }
 
-export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock }: Props) {
+export function DayTimeline({
+  p,
+  dateAd,
+  isToday = false,
+  timezone,
+  needleClock,
+  loading = false,
+}: Props) {
   const { pick, digits } = useLocale();
-  const data = useMemo(() => buildDayTimelineData(p, dateAd), [p, dateAd]);
-  const planets = useMemo(() => getPlanetRows(p), [p]);
-  const timeZone = resolveTimeZone(p.location?.timezone, timezone);
+  const data = useMemo(
+    () => (p ? buildDayTimelineData(p, dateAd) : null),
+    [p, dateAd],
+  );
+  const planets = useMemo(() => (p ? getPlanetRows(p) : []), [p]);
+  const timeZone = resolveTimeZone(p?.location?.timezone, timezone);
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -129,7 +159,16 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
     return () => clearInterval(id);
   }, [isToday]);
 
-  if (!data) return null;
+  if (loading || !p || !data) {
+    return (
+      <div className="pg-sec pgx-card" aria-busy={loading || !data}>
+        <DayTimelineBand />
+        <div className="pgx-scroll">
+          <div className="pn-chart-skel" style={{ minHeight: 320 }} />
+        </div>
+      </div>
+    );
+  }
 
   const tracks = data.rows
     .filter((row) => row.kind !== "graha")
@@ -174,18 +213,7 @@ export function DayTimeline({ p, dateAd, isToday = false, timezone, needleClock 
 
   return (
     <div className="pg-sec pgx-card">
-      <div className="pg-sec-band pgx-band">
-        <h2>{pick("दिन-चक्र", "Day cycle")}</h2>
-        <span>{pick("पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise", "Full panchanga timeline · sunrise to sunrise")}</span>
-        <span className="pgx-legend">
-          <i className="pgx-key good" />
-          {pick("शुभ", "Good")}
-          <i className="pgx-key bad" />
-          {pick("अशुभ", "Bad")}
-          <i className="pgx-key night" />
-          {pick("रात", "Night")}
-        </span>
-      </div>
+      <DayTimelineBand />
 
       <div className="pgx-scroll">
         <svg

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange, MapPin } from "lucide-react";
@@ -55,6 +55,9 @@ import {
 import { useRouteLoading } from "@/lib/route-loading";
 import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 
+/** Panchanga scrubs date/time in-place; never block the whole page with the route overlay. */
+const PANCHANGA_ROUTE_LOADING = false;
+
 type ViewMode = "day" | "month";
 
 const routeApi = getRouteApi("/panchanga");
@@ -93,10 +96,6 @@ export function Panchanga() {
     const saved = getLocalStorageItem("dhakalPatroPanchView");
     return saved === "month" ? "month" : "day";
   });
-  const [monthGridLoading, setMonthGridLoading] = useState(
-    () => (search.view ?? getLocalStorageItem("dhakalPatroPanchView")) === "month",
-  );
-
   const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
   const { mode: dataMode, setMode: setDataMode, clock, setClock } =
     usePanchangaMode(timezoneForMode, { mode: search.mode, clock: search.time });
@@ -108,7 +107,6 @@ export function Panchanga() {
 
   const switchView = (v: ViewMode) => {
     setView(v);
-    if (v === "month") setMonthGridLoading(true);
     setLocalStorageItem("dhakalPatroPanchView", v);
   };
 
@@ -149,6 +147,7 @@ export function Panchanga() {
     queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
     enabled: view === "day",
+    placeholderData: keepPreviousData,
   });
 
   const instantQuery = useQuery({
@@ -156,11 +155,19 @@ export function Panchanga() {
     queryFn: () => fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params),
     staleTime: 1000 * 60 * 5,
     enabled: isInstant,
+    placeholderData: keepPreviousData,
   });
 
   const activeQuery = isInstant ? instantQuery : udayaQuery;
-  const { data, isLoading, isError } = activeQuery;
+  const { data, isError } = activeQuery;
   const ephemeris = isEphemerisPanchanga(data);
+
+  const timelineQuery = isInstant ? instantQuery : udayaQuery;
+  const timelineData = timelineQuery.data;
+  const showTimelineSkeleton = timelineQuery.isLoading && !timelineData;
+
+  const wheelData = udayaQuery.data;
+  const showWheelSkeleton = udayaQuery.isLoading && !wheelData;
 
   const sunrise = data ? getSunrise(data) : undefined;
   const sunset = data ? getSunset(data) : undefined;
@@ -181,10 +188,8 @@ export function Panchanga() {
       : "";
 
   const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
-  const wheelData = udayaQuery.data ?? data;
-  const pageLoading = view === "day" ? isLoading : monthGridLoading;
 
-  useRouteLoading(pageLoading);
+  useRouteLoading(PANCHANGA_ROUTE_LOADING);
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
@@ -284,7 +289,6 @@ export function Panchanga() {
             locationParams={location.params}
             dataMode={dataMode}
             clock={clock}
-            onLoadingChange={setMonthGridLoading}
             onPickDay={(d) => {
               setDate(d);
               switchView("day");
@@ -301,9 +305,10 @@ export function Panchanga() {
               <EphemerisModeBanner p={data} clock={clock} />
             )}
 
-            {data && (
+            {(timelineData || showTimelineSkeleton) && (
               <DayTimeline
-                p={data}
+                p={timelineData}
+                loading={showTimelineSkeleton}
                 dateAd={chartAd}
                 isToday={isToday && !ephemeris}
                 timezone={effectiveTimezone}
@@ -311,10 +316,11 @@ export function Panchanga() {
               />
             )}
 
-            {wheelData && (
+            {(wheelData || showWheelSkeleton) && (
               <>
                 <PanchangaWheel
                   p={wheelData}
+                  loading={showWheelSkeleton}
                   bsYear={bs.year}
                   bsMonthNe={bs.monthName}
                   bsDay={bs.day}
@@ -322,13 +328,15 @@ export function Panchanga() {
                   timezone={effectiveTimezone}
                   locationLabel={locationLabel}
                 />
-                <Link
-                  to="/panchanga/year"
-                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"
-                >
-                  <CalendarRange className="w-4 h-4" />
-                  {t("panchanga.year_link")}
-                </Link>
+                {wheelData ? (
+                  <Link
+                    to="/panchanga/year"
+                    className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"
+                  >
+                    <CalendarRange className="w-4 h-4" />
+                    {t("panchanga.year_link")}
+                  </Link>
+                ) : null}
               </>
             )}
 

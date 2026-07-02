@@ -38,7 +38,17 @@ import { buildBhavaChart } from "@/lib/bhava";
 import { navamsaRashiFromLongitude } from "@/lib/navamsa";
 import { drekkanaRashiFromLongitude } from "@/lib/drekkana";
 import { nakshatraPadaFromLongitude, yogaFromLongitudes } from "@/lib/panchang-elements";
+import { lagnaAvakahadaFromLongitude } from "@/lib/avakahada-lagna";
 
+function LagnaTraitRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline gap-1 min-w-[8.5rem] text-[13px] leading-snug">
+      <span className="text-muted-foreground shrink-0">{label}</span>
+      <span className="text-muted-foreground/40 shrink-0">:</span>
+      <span className="font-semibold text-foreground">{value}</span>
+    </div>
+  );
+}
 function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-xl border border-border/80 bg-card px-3.5 py-3 min-w-0 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_5%,transparent)]">
@@ -221,9 +231,18 @@ export function KundaliView({
   const lagna = useMemo(() => {
     if (!rawLagna) return undefined;
     const rashiNum =
-      rawLagna.longitude != null ? Math.floor(rawLagna.longitude / 30) + 1 : undefined;
-    return { ...rawLagna, rashiNum, longitude: rawLagna.longitude };
+      rawLagna.rashiNum ??
+      (rawLagna.longitude != null ? Math.floor(rawLagna.longitude / 30) + 1 : undefined);
+    return { ...rawLagna, rashiNum };
   }, [rawLagna]);
+  const lagnaAvakahada = useMemo(
+    () =>
+      lagna?.longitude != null
+        ? lagnaAvakahadaFromLongitude(lagna.longitude, lang, lagna.nameNe)
+        : null,
+    [lagna, lang],
+  );
+
   const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, locationParams?.timezone);
   const locationLabel = data?.location?.name ?? locationLabelProp;
@@ -352,35 +371,36 @@ export function KundaliView({
 
       {/* Panchang essentials + lagna highlight when profile view */}
       {hideBirthSummary && lagna && (
-        <div className="rounded-2xl border border-secondary/25 bg-gradient-to-br from-secondary/[0.08] to-card p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)]">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
+        <div className="rounded-2xl border border-secondary/25 bg-gradient-to-br from-secondary/[0.08] to-card p-4 sm:p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 {pick("लग्न · Lagna", "Lagna")}
               </p>
-              <p className="text-3xl font-bold text-foreground leading-tight">
+              <p className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
                 {lagna.nameNe}
-                {lagna.degree && (
-                  <span className="text-lg font-normal text-muted-foreground ml-2 font-mono">
+                {lagna.degree ? (
+                  <span className="text-lg sm:text-xl font-semibold text-muted-foreground font-mono">
                     {lagna.degree}°
                   </span>
-                )}
+                ) : null}
               </p>
             </div>
-            <span className="text-[11px] font-medium text-muted-foreground bg-card border border-border px-2.5 py-1 rounded-full">
+            <span className="text-[11px] font-medium text-muted-foreground bg-card border border-border px-2.5 py-1 rounded-full shrink-0">
               {ayanamshaInfo.labelNe}
             </span>
           </div>
-          <div className="flex flex-wrap gap-2 mt-4">
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
-              <MapPin className="w-3.5 h-3.5 shrink-0" />
-              {locationLabel}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/80 px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
-              <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              {digits(clock)}
-            </span>
-          </div>
+
+          {lagnaAvakahada ? (
+            <div className="mt-3 pt-3 border-t border-border/70 flex flex-wrap gap-x-5 gap-y-2">
+              <LagnaTraitRow label={pick("गण", "Gana")} value={lagnaAvakahada.gana} />
+              <LagnaTraitRow label={pick("अक्षर", "Akshara")} value={lagnaAvakahada.akshara} />
+              <LagnaTraitRow label={pick("नाडी", "Nadi")} value={lagnaAvakahada.nadi} />
+              <LagnaTraitRow label={pick("आसन", "Asana")} value={lagnaAvakahada.asana} />
+              <LagnaTraitRow label={pick("योनी", "Yoni")} value={lagnaAvakahada.yoni} />
+              <LagnaTraitRow label={pick("जात", "Jati")} value={lagnaAvakahada.jati} />
+            </div>
+          ) : null}
         </div>
       )}
 

@@ -28,6 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { adToBS } from "@/lib/bs-calendar";
 import {
   parseBirthDate,
   profileClock,
@@ -44,28 +45,46 @@ function loadSavedAyanamshaMode(): AyanamshaMode {
   return AYANAMSHA_MODES.some((m) => m.id === saved) ? (saved as AyanamshaMode) : "nepal";
 }
 
-function MetaTile({
+function MetaItem({
   icon: Icon,
   label,
   value,
+  sub,
   mono,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  sub?: string;
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-border/80 bg-background/60 dark:bg-background/40 px-3.5 py-3 min-w-0">
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-        <Icon className="size-3 shrink-0 opacity-70" />
+    <div className="flex min-w-[6.75rem] flex-col justify-center gap-0 px-2.5 py-2 sm:min-w-[7.25rem] sm:px-3">
+      <div className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Icon className="size-2.5 shrink-0 opacity-70" />
         {label}
       </div>
-      <p className={cn("text-sm font-semibold text-foreground leading-snug break-words", mono && "font-mono")}>
+      <p className={cn("text-[13px] font-semibold text-foreground leading-tight break-words", mono && "font-mono text-xs")}>
         {value}
       </p>
+      {sub ? <p className="text-[11px] leading-tight text-muted-foreground mt-0.5">{sub}</p> : null}
     </div>
   );
+}
+
+function formatAdDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function formatBsDate(d: Date): string {
+  const bs = adToBS(d);
+  const y = String(bs.year).padStart(4, "0");
+  const m = String(bs.month).padStart(2, "0");
+  const day = String(bs.day).padStart(2, "0");
+  return `${toNepaliDigits(y)}-${toNepaliDigits(m)}-${toNepaliDigits(day)} BS`;
 }
 
 export function KundaliDetail() {
@@ -100,6 +119,17 @@ export function KundaliDetail() {
   const birthDate = useMemo(() => (profile ? parseBirthDate(profile) : null), [profile]);
   const location = useMemo(() => (profile ? profileLocation(profile) : null), [profile]);
   const clock = profile ? profileClock(profile) : "12:00";
+
+  const birthDateMeta = useMemo(() => {
+    if (!profile?.birth_date) return { value: "—", sub: undefined as string | undefined };
+    const era = profile.birth_era ?? "bs";
+    const stored = `${toNepaliDigits(profile.birth_date)} ${era.toUpperCase()}`;
+    if (!birthDate) return { value: stored, sub: undefined };
+    if (era === "ad") {
+      return { value: stored, sub: formatBsDate(birthDate) };
+    }
+    return { value: stored, sub: formatAdDate(birthDate) };
+  }, [profile, birthDate]);
 
   useRouteLoading(authLoading || (isAuthenticated && isLoading));
 
@@ -149,9 +179,6 @@ export function KundaliDetail() {
 
   if (!profile) return null;
 
-  const dob = profile.birth_date
-    ? `${toNepaliDigits(profile.birth_date)} ${(profile.birth_era ?? "bs").toUpperCase()}`
-    : "—";
   const place = profile.location_label || profile.city || "—";
   const birthTime = profile.birth_time ? toNepaliDigits(profile.birth_time) : "—";
   const canShowChart = Boolean(birthDate && location);
@@ -174,50 +201,40 @@ export function KundaliDetail() {
         </div>
       </div>
 
-      {/* Page title */}
-      <header className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-2">
-          {t("kundali.detail_eyebrow")}
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-secondary/15 ring-1 ring-secondary/25">
-            <User className="size-7 text-secondary" />
+      {/* Page title + birth facts on one row */}
+      <header className="mb-5 rounded-xl border border-border bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)] overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 sm:px-4">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary/15 ring-1 ring-secondary/25 sm:size-10">
+              <User className="size-4 text-secondary sm:size-[1.125rem]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-0.5">
+                {t("kundali.title")}
+              </p>
+              <h1 className="text-lg sm:text-xl font-bold leading-tight tracking-tight text-foreground m-0 flex flex-wrap items-center gap-1.5">
+                {profile.full_name}
+                {profile.is_default && (
+                  <Star className="size-3.5 text-secondary fill-secondary/30 sm:size-4" aria-hidden />
+                )}
+              </h1>
+              {profile.gender ? (
+                <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{profile.gender}</p>
+              ) : null}
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="text-[clamp(1.75rem,4vw,2.25rem)] font-bold leading-tight tracking-tight text-foreground m-0 flex flex-wrap items-center gap-2">
-              {profile.full_name}
-              {profile.is_default && (
-                <Star className="size-5 text-secondary fill-secondary/30" aria-hidden />
-              )}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              {profile.gender && (
-                <span className="capitalize">{profile.gender}</span>
-              )}
-              {profile.gender && place !== "—" && <span aria-hidden>·</span>}
-              {place !== "—" && (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="size-3.5 shrink-0" />
-                  {place}
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-      </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,17rem)_1fr] gap-6 xl:gap-8 items-start">
-        {/* Sidebar */}
-        <aside className="xl:sticky xl:top-[5.5rem] flex flex-col gap-4 order-2 xl:order-1">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              {t("kundali.title")}
-            </p>
-            <div className="grid grid-cols-2 xl:grid-cols-1 gap-2">
-              <MetaTile icon={Calendar} label={t("kundali.birth_date")} value={dob} />
-              <MetaTile icon={Clock} label={t("kundali.time")} value={birthTime} mono />
-              <MetaTile icon={MapPin} label={t("kundali.place")} value={place} />
-              <MetaTile
+          <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto border-t border-border lg:border-t-0">
+            <div className="flex min-w-max divide-x divide-border">
+              <MetaItem
+                icon={Calendar}
+                label={t("kundali.birth_date")}
+                value={birthDateMeta.value}
+                sub={birthDateMeta.sub}
+              />
+              <MetaItem icon={Clock} label={t("kundali.time")} value={birthTime} mono />
+              <MetaItem icon={MapPin} label={t("kundali.place")} value={place} />
+              <MetaItem
                 icon={Globe}
                 label={t("kundali.timezone")}
                 value={profile.timezone || "—"}
@@ -225,10 +242,15 @@ export function KundaliDetail() {
               />
             </div>
           </div>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,15.5rem)_1fr] gap-6 xl:gap-8 items-start">
+        {/* Sidebar */}
+        <aside className="xl:sticky xl:top-[5.5rem] flex flex-col gap-4 order-2 xl:order-1">
+          {canShowChart && <KundaliSectionNav className="hidden xl:block" />}
 
           <AyanamshaSelector mode={ayanamshaMode} onModeChange={setAyanamshaMode} />
-
-          {canShowChart && <KundaliSectionNav className="hidden xl:block" />}
         </aside>
 
         {/* Main chart */}
