@@ -295,7 +295,12 @@ export function KundaliView({
     () =>
       planets
         .filter((p) => p.longitude != null)
-        .map((p) => ({ key: p.key, labelNe: p.label, longitude: p.longitude })),
+        .map((p) => ({
+          key: p.key,
+          labelNe: p.label,
+          longitude: p.longitude,
+          retrograde: p.retrograde,
+        })),
     [planets],
   );
 
@@ -585,67 +590,6 @@ export function KundaliView({
           </PanchangaSection>
         </div>
       )}
-
-      {/* Nava Graha */}
-      {showSection("kundali-graha") && planets.length > 0 ? (
-        <div id="kundali-graha" className="scroll-mt-24">
-        <PanchangaSection titleNe="नव ग्रह" titleEn="Nava Graha">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4">
-            {planets.map((planet) => (
-              <div
-                key={planet.key}
-                className={cn(
-                  "rounded-xl border border-border bg-card px-4 py-3.5 flex items-start justify-between gap-3 min-h-[5.5rem] transition-colors",
-                  planet.retrograde && "border-secondary/30 bg-secondary/[0.04] dark:bg-secondary/10"
-                )}
-              >
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="flex items-start gap-2">
-                    <p className="text-[12px] font-semibold text-muted-foreground leading-snug">
-                      {planet.label}
-                    </p>
-                    {planet.retrograde && (
-                      <span className="text-[9.5px] text-secondary font-bold bg-secondary/15 dark:text-secondary px-1.5 py-0.5 rounded-full shrink-0">
-                        {pick("वक्री", "Retro")}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-lg font-bold text-foreground leading-tight">{planet.rashi}</p>
-                  {planet.degrees && (
-                    <p className="text-xs font-mono text-muted-foreground">{planet.degrees}</p>
-                  )}
-                </div>
-                {planet.nakshatra && (
-                  <div className="flex flex-col items-end text-right shrink-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                      {pick("नक्षत्र", "Nakshatra")}
-                    </p>
-                    <p className="text-sm font-semibold text-foreground leading-tight">
-                      {planet.nakshatra}
-                    </p>
-                    {planet.pada != null && (
-                      <p className="text-[11px] text-muted-foreground">
-                        {pick(`पद ${digits(planet.pada)}`, `Pada ${digits(planet.pada)}`)}
-                      </p>
-                    )}
-                    {planet.nakshatresh && (
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        <span className="text-muted-foreground/70">{pick("नक्षत्रेश: ", "Lord: ")}</span>
-                        <span className="font-semibold text-foreground">{planet.nakshatresh}</span>
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </PanchangaSection>
-        </div>
-      ) : showSection("kundali-graha") ? (
-        <p className="text-muted-foreground text-sm">{pick("यो मितिको लागि ग्रह डाटा उपलब्ध छैन।", "No planetary data available for this date.")}</p>
-      ) : null}
-
-
 
       {showSection("kundali-dasha") && dasha && (
         <div id="kundali-dasha" className="scroll-mt-24">
