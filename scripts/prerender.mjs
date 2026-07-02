@@ -68,3 +68,7 @@ console.log(`\nPrerender complete: ${ok} ok, ${failed} failed`);
 if (failed > 0) {
   process.exit(1);
 }
+
+// SSR bundle imports App code (QueryClient, i18n, etc.) that keeps the event loop
+// alive; without this, `npm run build` never returns and CI deploy hangs after prerender.
+process.exit(0);
