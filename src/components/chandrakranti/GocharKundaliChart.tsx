@@ -11,6 +11,7 @@ import {
 } from "@/lib/kundali/north-indian-layout";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
+import { useLocale } from "@/i18n/locale";
 
 type GrahaRow = GocharGraha & { key: string };
 
@@ -35,19 +36,20 @@ export function GocharKundaliChart({
   loading,
   className,
 }: Props) {
+  const { pick } = useLocale();
   const planetsByRashi = buildPlanetsByRashi(grahas);
   const dateLabel = formatGocharBsLabel(dateBs, dateAd);
 
   return (
     <div className={cn("rounded-xl border border-border p-4", className)}>
       <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-        <Sparkles className="h-4 w-4 text-secondary" /> गोचर कुण्डली
+        <Sparkles className="h-4 w-4 text-secondary" /> {pick("गोचर कुण्डली", "Transit Chart")}
       </h3>
 
       <div className="mb-3 space-y-2">
         <div className="rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5">
           <p className="font-mono text-base font-medium leading-relaxed text-foreground">
-            {papanshaLine || "पापाशाः—"}
+            {papanshaLine || pick("पापाशाः—", "Papashah —")}
           </p>
         </div>
         {gapanshaLine ? (
@@ -60,15 +62,15 @@ export function GocharKundaliChart({
       </div>
 
       {loading ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">लोड हुँदैछ…</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{pick("लोड हुँदैछ…", "Loading…")}</p>
       ) : grahas.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">विवरण उपलब्ध छैन।</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
       ) : (
         <svg
           viewBox="0 0 300 300"
           className="mx-auto h-auto w-full max-w-[300px] text-foreground"
           role="img"
-          aria-label="गोचर कुण्डली"
+          aria-label={pick("गोचर कुण्डली", "Transit chart")}
         >
           <rect
             x="0"
@@ -121,7 +123,7 @@ export function GocharKundaliChart({
       )}
 
       {dateLabel ? (
-        <p className="mt-2 text-center text-sm text-muted-foreground">{dateLabel} को स्थिति</p>
+        <p className="mt-2 text-center text-sm text-muted-foreground">{pick(`${dateLabel} को स्थिति`, `Position on ${dateLabel}`)}</p>
       ) : null}
     </div>
   );

@@ -20,6 +20,16 @@ export const RASHI_COLUMNS_NE = [
   "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
 ] as const;
 
+export const RASHI_COLUMNS_EN = [
+  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
+  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
+] as const;
+
+const GRAHA_EN_BY_KEY: Record<string, string> = {
+  sun: "Sun", moon: "Moon", mars: "Mars", mercury: "Mercury", jupiter: "Jupiter",
+  venus: "Venus", saturn: "Saturn", rahu: "Rahu", ketu: "Ketu",
+};
+
 export const PATRO_PLANET_KEYS = [
   "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu",
 ] as const;
@@ -39,6 +49,7 @@ export type LagnaMatrixRow = {
   day: number;
   dateAd: string;
   weekdayNe?: string;
+  weekdayEn?: string;
   sunrise?: string;
   /** Rashi number 1–12 → formatted patro clock */
   times: Record<number, string | undefined>;
@@ -48,8 +59,9 @@ export type GrahaSpashtaRow = {
   day: number;
   dateAd: string;
   weekdayNe?: string;
+  weekdayEn?: string;
   planets: Partial<
-    Record<(typeof PATRO_PLANET_KEYS)[number], { rashiNe: string; coords: string }>
+    Record<(typeof PATRO_PLANET_KEYS)[number], { rashiNe: string; rashiEn?: string; coords: string }>
   >;
   belaantar?: string;
 };
@@ -60,6 +72,7 @@ export type CalcNote = {
   day: number;
   dateAd: string;
   text: string;
+  textEn?: string;
   kind: CalcNoteKind;
 };
 
@@ -134,7 +147,8 @@ export function buildLagnaMatrix(days: CalendarDay[]): LagnaMatrixRow[] {
       day: day.day,
       dateAd: day.date_ad,
       weekdayNe: day.weekday_ne ?? day.weekday,
-      sunrise: day.sunrise ? toNepaliDigits(formatTimeShort(day.sunrise) ?? day.sunrise) : undefined,
+      weekdayEn: day.weekday_en ?? day.weekday,
+      sunrise: day.sunrise ? (formatTimeShort(day.sunrise) ?? day.sunrise) : undefined,
       times,
     };
   });
@@ -153,6 +167,7 @@ export function buildGrahaSpashtaMatrix(days: CalendarDay[]): GrahaSpashtaRow[] 
         if (!rashiNe) continue;
         planets[key] = {
           rashiNe,
+          rashiEn: RASHI_COLUMNS_EN[RASHI_COLUMNS_NE.indexOf(rashiNe as (typeof RASHI_COLUMNS_NE)[number])] ?? rashiNe,
           coords: planetDegreeCells(info),
         };
       }
@@ -162,6 +177,7 @@ export function buildGrahaSpashtaMatrix(days: CalendarDay[]): GrahaSpashtaRow[] 
       day: day.day,
       dateAd: day.date_ad,
       weekdayNe: day.weekday_ne ?? day.weekday,
+      weekdayEn: day.weekday_en ?? day.weekday,
       planets,
       belaantar,
     };
@@ -182,6 +198,7 @@ export function buildCalcNotes(
       day: day.day,
       dateAd,
       text: `पक्ष परिवर्तन — ${label}`,
+      textEn: `Paksha change — ${label}`,
       kind: "paksha_boundary",
     });
   }
@@ -194,11 +211,14 @@ export function buildCalcNotes(
         formatTimeShort(span.start_hours_clock);
       if (!raw || !isLateNightPatroTime(raw, day.sunrise)) continue;
       const rashiNe = span.name_ne ?? rashiNeFromNumber(span.number);
+      const rashiEn = span.name ??
+        (span.number ? RASHI_COLUMNS_EN[span.number - 1] : undefined);
       const clock = formatVedicPatroTime(raw, day.sunrise);
       notes.push({
         day: day.day,
         dateAd: day.date_ad,
         text: `${rashiNe ?? "लग्न"} आरम्भ ${clock} बजे (२४:०० पछिको समय)`,
+        textEn: `${rashiEn ?? "Lagna"} starts at ${clock} (post-24:00)`,
         kind: "late_night",
       });
     }
@@ -214,23 +234,30 @@ export function buildCalcNotes(
       ? formatVedicPatroTime(timeRaw, day.sunrise) ?? toNepaliDigits(timeRaw)
       : undefined;
     const grahaNe = ev.graha_ne ?? ev.graha;
+    const grahaEn = GRAHA_EN_BY_KEY[ev.graha?.toLowerCase()] ?? ev.graha ?? grahaNe;
+    const timeSuffixNe = timeNe ? ` (${timeNe} बजे)` : "";
+    const timeSuffixEn = timeNe ? ` (${timeNe})` : "";
 
     if (ev.level === "udayast" || ev.level === "motion") {
       const label = ev.label_ne ?? (ev.level === "motion" ? "गति परिवर्तन" : "उदयास्त");
+      const labelEn = ev.label_ne ?? (ev.level === "motion" ? "Motion change" : "Rise/Set");
       notes.push({
         day: day.day,
         dateAd: dateKey,
-        text: `${grahaNe} — ${label}${timeNe ? ` (${timeNe} बजे)` : ""}`,
+        text: `${grahaNe} — ${label}${timeSuffixNe}`,
+        textEn: `${grahaEn} — ${labelEn}${timeSuffixEn}`,
         kind: ev.level === "motion" ? "motion" : "udayast",
       });
       continue;
     }
 
     const label = ev.label_ne ?? `${ev.to_nakshatra_ne ?? ""} ${ev.to_pada_ne ?? ""}`.trim();
+    const labelEn = `${ev.to_nakshatra ?? ev.to_rashi ?? ""}${ev.to_pada ? ` pada ${ev.to_pada}` : ""}`.trim() || label;
     notes.push({
       day: day.day,
       dateAd: dateKey,
-      text: `${grahaNe} — ${label}${timeNe ? ` (${timeNe} बजे)` : ""}`,
+      text: `${grahaNe} — ${label}${timeSuffixNe}`,
+      textEn: `${grahaEn} — ${labelEn}${timeSuffixEn}`,
       kind: "ingress",
     });
   }

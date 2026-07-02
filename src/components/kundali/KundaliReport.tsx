@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocale } from "@/i18n/locale";
 import {
   ChevronDown,
   CircleAlert,
@@ -164,24 +165,25 @@ function SectionCard({ section }: { section: ReportSection }) {
 }
 
 function MetaStrip({ meta }: { meta: ReportMeta }) {
+  const { pick } = useLocale();
   const cells: { label: string; value: string; sub?: string }[] = [
-    { label: "लग्न · Lagna", value: `${meta.lagna.name_ne} (${meta.lagna.name_en})` },
+    { label: pick("लग्न · Lagna", "Lagna"), value: pick(`${meta.lagna.name_ne} (${meta.lagna.name_en})`, meta.lagna.name_en) },
     {
-      label: "नक्षत्र · Nakshatra",
+      label: pick("नक्षत्र · Nakshatra", "Nakshatra"),
       value: meta.nakshatra
-        ? `${meta.nakshatra.name_ne}`
-        : `${meta.moon_sign.name_ne}`,
+        ? pick(meta.nakshatra.name_ne, meta.nakshatra.name_en)
+        : pick(meta.moon_sign.name_ne, meta.moon_sign.name_en),
       sub: meta.nakshatra
         ? `${meta.nakshatra.name_en} · pada ${meta.nakshatra.pada}`
         : "Moon sign",
     },
     {
-      label: "सूर्य · Sun",
-      value: `${meta.sun_sign.name_ne}`,
+      label: pick("सूर्य · Sun", "Sun"),
+      value: pick(meta.sun_sign.name_ne, meta.sun_sign.name_en),
       sub: meta.sun_sign.name_en,
     },
     {
-      label: "महादशा · Mahadasha",
+      label: pick("महादशा · Mahadasha", "Mahadasha"),
       value: meta.mahadasha
         ? `${meta.mahadasha.lord_ne}${
             meta.mahadasha.antardasha ? ` / ${meta.mahadasha.antardasha}` : ""

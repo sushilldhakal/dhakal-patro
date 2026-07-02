@@ -26,8 +26,8 @@ import {
   horaTextArc,
   type HoraPlanetKey,
 } from "@/lib/hora-data";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
+import { useLocale } from "@/i18n/locale";
 import { buildWheelDetail } from "@/lib/wheel-data";
 import { PlanetIcon } from "./hora/PlanetIcon";
 
@@ -105,6 +105,7 @@ function CompassMarker({ deg, nep, en }: { deg: number; nep: string; en: string 
 }
 
 export function HoraRing({ p, isToday, timezone }: Props) {
+  const { pick, digits } = useLocale();
   const det = useMemo(() => buildWheelDetail(p), [p]);
   const tz = resolveTimeZone(p?.location?.timezone, timezone);
   const [now, setNow] = useState(() => new Date());
@@ -235,7 +236,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
     return () => cancelAnimationFrame(frame);
   }, [playing, save]);
 
-  const num = (n: number | string) => toNepaliDigits(n);
+  const num = (n: number | string) => digits(n);
 
   return (
     <div className="pn-hora rounded-2xl border border-border overflow-hidden">
@@ -247,20 +248,31 @@ export function HoraRing({ p, isToday, timezone }: Props) {
 
         <div className="hora-layout">
           <div className="hora-intro">
-            <div className="hora-eyebrow">होरा · ग्रहीय होरा</div>
+            <div className="hora-eyebrow">{pick("होरा · ग्रहीय होरा", "Hora · Planetary Hours")}</div>
             <h2 className="hora-title">
-              एक हप्ता,
+              {pick("एक हप्ता,", "One week,")}
               <br />
-              <span className="hora-title-accent">निरन्तर होरा</span>
+              <span className="hora-title-accent">{pick("निरन्तर होरा", "unbroken hora")}</span>
             </h2>
-            <p className="hora-lede">
-              हरेक वलय एउटै दिन हो — सात ग्रहले पालो–पालोमा शासन गर्ने चौबीस{" "}
-              <em>होरा</em>। सूर्योदयपछिको <em>पहिलो</em> होराको ग्रहले दिनको नाम दिन्छ। गणना
-              कहिल्यै रोकिँदैन: <span className="hora-deva">आइतबार</span>को अन्तिम होरा{" "}
-              <span className="hora-deva">सोम</span>मा गुड्छ र{" "}
-              <span className="hora-deva">सोमबार</span> खोल्छ। केन्द्रबाट बाहिरतिर —{" "}
-              <span className="hora-deva">आदित्य → शनि</span> — हप्ताभरि सर्पिल अनुसरण गर्नुहोस्।
-            </p>
+            {pick(
+              <p className="hora-lede">
+                हरेक वलय एउटै दिन हो — सात ग्रहले पालो–पालोमा शासन गर्ने चौबीस{" "}
+                <em>होरा</em>। सूर्योदयपछिको <em>पहिलो</em> होराको ग्रहले दिनको नाम दिन्छ। गणना
+                कहिल्यै रोकिँदैन: <span className="hora-deva">आइतबार</span>को अन्तिम होरा{" "}
+                <span className="hora-deva">सोम</span>मा गुड्छ र{" "}
+                <span className="hora-deva">सोमबार</span> खोल्छ। केन्द्रबाट बाहिरतिर —{" "}
+                <span className="hora-deva">आदित्य → शनि</span> — हप्ताभरि सर्पिल अनुसरण गर्नुहोस्।
+              </p>,
+              <p className="hora-lede">
+                Each ring is one day — twenty-four <em>horas</em> ruled in turn by the seven
+                planets. The planet of the <em>first</em> hora after sunrise gives the day its
+                name. The count never stops: the last hora of{" "}
+                <span className="hora-deva">Sunday</span> rolls into{" "}
+                <span className="hora-deva">Monday</span> and opens{" "}
+                <span className="hora-deva">Monday</span>. Follow the spiral from the centre
+                outward — <span className="hora-deva">Sun → Saturn</span> — across the week.
+              </p>,
+            )}
           </div>
 
           <div className="hora-ringwrap">
@@ -368,10 +380,10 @@ export function HoraRing({ p, isToday, timezone }: Props) {
               </g>
 
               <text className="hora-hub-day" x={HORA_CX} y={HORA_CY + 2} textAnchor="middle">
-                {week.day}
+                {pick(week.day, week.en)}
               </text>
               <text className="hora-hub-rom" x={HORA_CX} y={HORA_CY + 20} textAnchor="middle">
-                {week.rom}
+                {pick(week.rom, ruler.en)}
               </text>
               <text className="hora-hub-num" x={HORA_CX} y={HORA_CY + 42} textAnchor="middle">
                 HORĀ {horaPad(gii + 1)} / 24
@@ -383,7 +395,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                 textAnchor="middle"
                 fill={ruler.color}
               >
-                {HORA_DEVA[rulerKey]}
+                {pick(HORA_DEVA[rulerKey], ruler.en)}
               </text>
 
               <circle cx={mx} cy={my} r={15} fill="#ffd70a" opacity={0.5} filter="url(#hora-markGlow)" />
@@ -393,7 +405,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
           </div>
 
           <div className="hora-legend">
-            <div className="hora-legend-head">सात दिन · भित्र → बाहिर</div>
+            <div className="hora-legend-head">{pick("सात दिन · भित्र → बाहिर", "Seven days · inner → outer")}</div>
             {HORA_WEEK.map((w, i) => {
               const P = HORA_PLANETS[w.ruler];
               return (
@@ -403,9 +415,9 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                     <PlanetIcon planet={w.ruler} size={30} />
                   </span>
                   <span className="hora-lrow-names">
-                    <span className="hora-deva">{w.day}</span>
+                    <span className="hora-deva">{pick(w.day, w.en)}</span>
                     <span className="hora-lrow-rom">
-                      {w.rom} · {HORA_DEVA[w.ruler]} {P.nep}
+                      {pick(`${w.rom} · ${HORA_DEVA[w.ruler]} ${P.nep}`, `${P.en} · ${P.nep}`)}
                     </span>
                   </span>
                   <span className="hora-lrow-bar" style={{ background: P.color }} />
@@ -419,7 +431,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
           <button
             type="button"
             className="hora-pp"
-            aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
             onClick={() => {
               const next = !playing;
               setPlaying(next);
@@ -455,11 +467,12 @@ export function HoraRing({ p, isToday, timezone }: Props) {
             <div className="hora-knob" style={{ left: `${prog * 100}%` }} />
           </div>
           <div className="hora-readout">
-            <b>{week.day}</b> · होरा {horaPad(gii + 1)} · {ruler.nep}
+            <b>{pick(week.day, week.en)}</b> · {pick("होरा", "Hora")} {horaPad(gii + 1)} ·{" "}
+            {pick(ruler.nep, ruler.en)}
             {isToday && (
               <span className="hora-readout-ne">
                 {" "}
-                · {HORA_DEVA[rulerKey]} · {num(gii + 1)}
+                · {pick(HORA_DEVA[rulerKey], ruler.en)} · {num(gii + 1)}
               </span>
             )}
           </div>

@@ -4,8 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Sprout, HelpCircle } from "lucide-react";
 import { adToBS } from "@/lib/bs-calendar";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { fetchTropicalSeasons, seasonsKeys } from "@/lib/api";
+import { useLocale } from "@/i18n/locale";
 import {
   resolveLocationTimezone,
   type PanchangaLocation,
@@ -29,7 +29,6 @@ import { todayAdStringInTimezone } from "@/lib/zoned-time";
  * Sun's position is global; only which season that position *feels* like flips.
  */
 
-const N = toNepaliDigits;
 const DAY = 86_400_000;
 
 const SEASON_KEYS = [
@@ -64,6 +63,7 @@ interface SeasonItem {
 
 export function RituSeasons({ location }: { location: PanchangaLocation }) {
   const { t } = useTranslation();
+  const { pick, digits: dg } = useLocale();
   const tz = resolveLocationTimezone(location);
   const todayAd = useMemo(() => todayAdStringInTimezone(new Date(), tz), [tz]);
 
@@ -114,7 +114,7 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
   const relLabel = (days: number) => {
     if (days <= 0) return "";
     if (days === 1) return t("ritu.tomorrow");
-    return t("ritu.days_after", { count: Number(N(days)) });
+    return t("ritu.days_after", { count: Number(dg(days)) });
   };
 
   const seasonEmoji = ["🌸", "☀️", "🌧️", "🍂", "🌫️", "❄️"];
@@ -152,13 +152,13 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
                   <span className="sea-name">{t(`ritu.${seasonKey}`)}</span>
                 </span>
                 <span className="sea-tile">
-                  <span className="sea-tile-d">{N(item.startBs.day)}</span>
+                  <span className="sea-tile-d">{dg(item.startBs.day)}</span>
                   <span className="sea-tile-m">{item.startBs.monthName}</span>
                 </span>
               </div>
               <div className="sea-when">
                 <span className="sea-when-bs">
-                  {markerKey ? t(markerKey) : t("ritu.sun_deg", { deg: N(item.angle) })}
+                  {markerKey ? t(markerKey) : t("ritu.sun_deg", { deg: dg(item.angle) })}
                 </span>
                 <span className="sea-when-ad mono">{fmtAd(item.startAd)} {t("common.from")}</span>
               </div>
@@ -168,8 +168,8 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
                     <div className="sea-progress-fill" style={{ width: `${item.progress.pct}%` }} />
                   </div>
                   <div className="sea-meta">
-                    <span>{N(item.progress.elapsed)} / {N(item.progress.total)} दिन</span>
-                    <span className="mono">{N(Math.round(item.progress.pct))}%</span>
+                    <span>{dg(item.progress.elapsed)} / {dg(item.progress.total)} {pick("दिन", "days")}</span>
+                    <span className="mono">{dg(Math.round(item.progress.pct))}%</span>
                   </div>
                 </>
               ) : null}
@@ -180,8 +180,10 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
 
       {south && (
         <p className="sea-note">
-          दक्षिणी गोलार्धमा ऋतु ६ महिना उल्टो हुन्छ — माथिका नाम तपाईंको स्थानको
-          वास्तविक ऋतु अनुसार मिलाइएका छन् (विषुव/अयनान्तका मिति उही नै हुन्)।
+          {pick(
+            "दक्षिणी गोलार्धमा ऋतु ६ महिना उल्टो हुन्छ — माथिका नाम तपाईंको स्थानको वास्तविक ऋतु अनुसार मिलाइएका छन् (विषुव/अयनान्तका मिति उही नै हुन्)।",
+            "In the southern hemisphere the seasons are reversed by 6 months — the names above are matched to your location's actual season (the equinox/solstice dates stay the same).",
+          )}
         </p>
       )}
     </div>

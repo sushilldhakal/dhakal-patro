@@ -10,16 +10,66 @@ import {
   getSunset,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import { KARANA_EN } from "@/lib/tithi-wheel-data";
+
+/** Devanagari rashi names → English, for the timeline graha row. */
+export const TL_RASHI_EN: Record<string, string> = {
+  मेष: "Mesha",
+  वृष: "Vrishabha",
+  वृषभ: "Vrishabha",
+  मिथुन: "Mithuna",
+  कर्कट: "Karka",
+  कर्क: "Karka",
+  सिंह: "Simha",
+  कन्या: "Kanya",
+  तुला: "Tula",
+  वृश्चिक: "Vrishchika",
+  धनु: "Dhanu",
+  मकर: "Makara",
+  कुम्भ: "Kumbha",
+  मीन: "Meena",
+};
 
 export interface TimelineSegment {
   name: string;
+  /** English variant of `name` for the English locale. */
+  nameEn?: string;
   endG?: number | null;
   bad?: boolean;
   /** Wall-clock label at segment end (used for lagna transitions). */
   transitionLocal?: string;
   /** Planet name above rashi (ग्रह स्थिति row). */
   subLabel?: string;
+  /** English variant of `subLabel`. */
+  subLabelEn?: string;
 }
+
+/** Choghadiya muhurta names (Nepali → English). */
+export const CHOGHADIYA_EN: Record<string, string> = {
+  उद्वेग: "Udvega",
+  चर: "Chara",
+  लाभ: "Labha",
+  अमृत: "Amrita",
+  काल: "Kala",
+  शुभ: "Shubha",
+  रोग: "Roga",
+};
+
+/** Devanagari graha names → English, for the timeline graha row. */
+export const TL_GRAHA_EN: Record<string, string> = {
+  सूर्य: "Sun",
+  चन्द्र: "Moon",
+  चन्द्रमा: "Moon",
+  मंगल: "Mars",
+  मङ्गल: "Mars",
+  बुध: "Mercury",
+  बृहस्पति: "Jupiter",
+  गुरु: "Jupiter",
+  शुक्र: "Venus",
+  शनि: "Saturn",
+  राहु: "Rahu",
+  केतु: "Ketu",
+};
 
 export interface TimelineRowData {
   label: string;
@@ -194,13 +244,14 @@ function angaSegments(anga?: AngaBlock | null): TimelineSegment[] {
   const items: TimelineSegment[] = [];
   const endG = ghatiFromBlock(anga);
 
-  items.push({ name: current, endG: endG ?? null });
+  items.push({ name: current, nameEn: anga.name ?? anga.name_ne ?? current, endG: endG ?? null });
 
   const next = anga.next;
   if (next?.name_ne || next?.name) {
     const nextEndG = ghatiFromBlock(next);
     items.push({
       name: next.name_ne ?? next.name ?? "",
+      nameEn: next.name ?? next.name_ne ?? "",
       endG: nextEndG ?? null,
     });
 
@@ -209,6 +260,7 @@ function angaSegments(anga?: AngaBlock | null): TimelineSegment[] {
       const thirdEndG = ghatiFromBlock(third);
       items.push({
         name: third.name_ne ?? third.name ?? "",
+        nameEn: third.name ?? third.name_ne ?? "",
         endG: thirdEndG != null && thirdEndG < 60 ? thirdEndG : null,
       });
     }
@@ -222,7 +274,8 @@ function karanaSegments(anga?: AngaBlock | null): TimelineSegment[] {
   if (items.length >= 2) {
     const second = items[1];
     if (second && second.endG != null && second.endG < 60) {
-      items.push({ name: nextKaranaNe(second.name), endG: null });
+      const ne = nextKaranaNe(second.name);
+      items.push({ name: ne, nameEn: KARANA_EN[ne] ?? ne, endG: null });
     }
   }
   return items;
@@ -239,6 +292,7 @@ function lagnaSegments(spans?: LagnaSpanBlock[] | null): TimelineSegment[] {
   if (!spans?.length) return [];
   return spans.map((span, index) => ({
     name: span.name_ne ?? span.name ?? "",
+    nameEn: span.name ?? span.name_ne ?? "",
     endG: index < spans.length - 1 ? ghatiFromBlock(span) : null,
     transitionLocal:
       index < spans.length - 1 ? lagnaLocalClock(span.end_local_time) : undefined,
@@ -255,15 +309,18 @@ function grahaSegments(planets: GrahaSpashtaItem[]): TimelineSegment[] {
   return list.map((p, i) => ({
     name: p.coords!,
     subLabel: `${p.label}-${p.rashiNe}`,
+    subLabelEn: `${TL_GRAHA_EN[p.label] ?? p.label}-${TL_RASHI_EN[p.rashiNe ?? ""] ?? p.rashiNe ?? ""}`,
     endG: i < n - 1 ? ((i + 1) / n) * 60 : null,
   }));
 }
 
 function tithiSegments(tithi: AngaBlock | undefined, p: PanchangaDay): TimelineSegment[] {
   const paksha = formatPakshaNepaliDisplay(p);
+  const pakshaEn = /कृष्ण/.test(paksha ?? "") ? "Krishna Paksha" : /शुक्ल/.test(paksha ?? "") ? "Shukla Paksha" : "";
   return angaSegments(tithi).map((seg, i) => ({
     ...seg,
     name: i === 0 && paksha ? `${seg.name}, ${paksha}` : seg.name,
+    nameEn: i === 0 && pakshaEn ? `${seg.nameEn ?? seg.name}, ${pakshaEn}` : (seg.nameEn ?? seg.name),
   }));
 }
 

@@ -89,8 +89,8 @@ export interface WheelGraha {
 export interface WheelDetail {
   sunriseMin: number;
   grahas: WheelGraha[];
-  tithi2: { ne: string }[];
-  weekday: { ne: string };
+  tithi2: { ne: string; en: string }[];
+  weekday: { ne: string; en: string };
 }
 
 export interface WheelTweaks {
@@ -462,23 +462,45 @@ export function buildWheelDetail(p: PanchangaDay): WheelDetail {
 
   const tithi = (detail?.tithi ?? p.tithi) as { name_ne?: string; name?: string } | undefined;
   const tithiNe = tithi?.name_ne ?? tithi?.name ?? "—";
+  const tithiEn = tithi?.name ?? tithi?.name_ne ?? "—";
 
   const weekdayRaw = p.weekday ?? detail?.weekday;
   let weekdayNe = "—";
+  let weekdayEn = "—";
   if (typeof weekdayRaw === "string") {
     weekdayNe = weekdayRaw;
+    weekdayEn = WEEKDAY_NE_TO_EN[weekdayRaw] ?? weekdayRaw;
   } else if (weekdayRaw && typeof weekdayRaw === "object") {
-    const w = weekdayRaw as { ne?: string; name_ne?: string };
+    const w = weekdayRaw as { ne?: string; name_ne?: string; en?: string; name_english?: string };
     weekdayNe = w.name_ne ?? w.ne ?? "—";
+    weekdayEn = w.name_english ?? w.en ?? WEEKDAY_NE_TO_EN[weekdayNe] ?? weekdayNe;
   }
 
   return {
     sunriseMin: sunriseMinutes(p),
     grahas,
-    tithi2: [{ ne: tithiNe }],
-    weekday: { ne: weekdayNe },
+    tithi2: [{ ne: tithiNe, en: tithiEn }],
+    weekday: { ne: weekdayNe, en: weekdayEn },
   };
 }
+
+const WEEKDAY_NE_TO_EN: Record<string, string> = {
+  आइतबार: "Sunday",
+  आइतवार: "Sunday",
+  सोमबार: "Monday",
+  सोमवार: "Monday",
+  मंगलबार: "Tuesday",
+  मंगलवार: "Tuesday",
+  मङ्गलबार: "Tuesday",
+  बुधबार: "Wednesday",
+  बुधवार: "Wednesday",
+  बिहीबार: "Thursday",
+  बिहीवार: "Thursday",
+  शुक्रबार: "Friday",
+  शुक्रवार: "Friday",
+  शनिबार: "Saturday",
+  शनिवार: "Saturday",
+};
 
 export function bsMonthsForWheel() {
   return BS_MONTHS_NE.map((ne) => ({ ne }));

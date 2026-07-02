@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/i18n/locale";
 import { Clock, Flame, MapPin } from "lucide-react";
 import {
   fetchShadbala,
@@ -13,7 +14,7 @@ import {
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
-import { adToBS, BS_MONTHS_NE } from "@/lib/bs-calendar";
+import { adToBS, BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import {
   buildAtTimeDatetime,
   fetchEphemerisPanchangaDay,
@@ -51,11 +52,14 @@ function StatTile({ label, value, sub }: { label: string; value: string; sub?: s
 }
 
 function ChartPanel({ titleNe, titleEn, houses }: { titleNe: string; titleEn: string; houses: ReturnType<typeof buildBhavaChart> }) {
+  const { lang, pick } = useLocale();
   return (
     <div className="rounded-2xl border border-border bg-card p-4 flex flex-col items-center gap-3 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
       <div className="text-center w-full border-b border-border/60 pb-2">
-        <p className="text-sm font-bold text-foreground">{titleNe}</p>
-        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-0.5">{titleEn}</p>
+        <p className="text-sm font-bold text-foreground">{pick(titleNe, titleEn)}</p>
+        {lang === "ne" ? (
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-0.5">{titleEn}</p>
+        ) : null}
       </div>
       <D1Chart houses={houses} />
     </div>
@@ -78,8 +82,9 @@ const PLANET_ORDER = [
   "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu",
 ];
 
-function formatBsDateNe(iso: string): string {
+function formatBsDateNe(iso: string, isEn = false): string {
   const bs = adToBS(new Date(iso));
+  if (isEn) return `${bs.day} ${BS_MONTH_NAMES[bs.month - 1]} ${bs.year}`;
   return `${toNepaliDigits(bs.day)} ${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)}`;
 }
 
@@ -183,6 +188,7 @@ export function KundaliView({
   hideBirthSummary = false,
 }: KundaliViewProps) {
   const { t } = useTranslation();
+  const { lang, pick, digits } = useLocale();
   const adDateStr = toAdStr(date);
   const bs = adToBS(date);
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
@@ -301,7 +307,7 @@ export function KundaliView({
         <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
           <div className="flex-1 px-5 py-4 border-b lg:border-b-0 border-border bg-secondary/[0.09] dark:bg-secondary/20">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              जन्म समय · Birth moment
+              {pick("जन्म समय · Birth moment", "Birth moment")}
             </p>
             <p className="text-2xl font-bold text-foreground font-[family-name:var(--pn-num)] leading-tight">
               {dateBs}
@@ -315,7 +321,7 @@ export function KundaliView({
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
                 <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                {toNepaliDigits(clock)}
+                {digits(clock)}
               </span>
             </div>
           </div>
@@ -324,7 +330,7 @@ export function KundaliView({
             <div className="flex-1 px-5 py-4 flex flex-col justify-center min-w-[200px]">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  लग्न · Lagna
+                  {pick("लग्न · Lagna", "Lagna")}
                 </p>
                 <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
                   {ayanamshaInfo.labelNe}
@@ -350,7 +356,7 @@ export function KundaliView({
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                लग्न · Lagna
+                {pick("लग्न · Lagna", "Lagna")}
               </p>
               <p className="text-3xl font-bold text-foreground leading-tight">
                 {lagna.nameNe}
@@ -372,7 +378,7 @@ export function KundaliView({
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/80 px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
               <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              {toNepaliDigits(clock)}
+              {digits(clock)}
             </span>
           </div>
         </div>
@@ -380,15 +386,15 @@ export function KundaliView({
 
       {panchangSummary && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatTile label="राशि (चन्द्र)" value={planets.find((p) => p.key === "moon")?.rashi ?? "—"} />
+          <StatTile label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={planets.find((p) => p.key === "moon")?.rashi ?? "—"} />
           <StatTile
-            label="नक्षत्र"
+            label={pick("नक्षत्र", "Nakshatra")}
             value={panchangSummary.nakshatra ? `${panchangSummary.nakshatra.ne}` : "—"}
-            sub={panchangSummary.nakshatra ? `पाद ${toNepaliDigits(panchangSummary.nakshatra.pada)}` : undefined}
+            sub={panchangSummary.nakshatra ? pick(`पाद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`) : undefined}
           />
-          <StatTile label="तिथि" value={panchangSummary.tithiNe ?? "—"} />
-          <StatTile label="वार" value={panchangSummary.vaaraNe ?? "—"} />
-          <StatTile label="योग" value={panchangSummary.yoga?.ne ?? "—"} />
+          <StatTile label={pick("तिथि", "Tithi")} value={panchangSummary.tithiNe ?? "—"} />
+          <StatTile label={pick("वार", "Day")} value={panchangSummary.vaaraNe ?? "—"} />
+          <StatTile label={pick("योग", "Yoga")} value={panchangSummary.yoga?.ne ?? "—"} />
         </div>
       )}
 
@@ -412,7 +418,7 @@ export function KundaliView({
                     </p>
                     {planet.retrograde && (
                       <span className="text-[9.5px] text-secondary font-bold bg-secondary/15 dark:text-secondary px-1.5 py-0.5 rounded-full shrink-0">
-                        वक्री
+                        {pick("वक्री", "Retro")}
                       </span>
                     )}
                   </div>
@@ -424,19 +430,19 @@ export function KundaliView({
                 {planet.nakshatra && (
                   <div className="flex flex-col items-end text-right shrink-0">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                      नक्षत्र
+                      {pick("नक्षत्र", "Nakshatra")}
                     </p>
                     <p className="text-sm font-semibold text-foreground leading-tight">
                       {planet.nakshatra}
                     </p>
                     {planet.pada != null && (
                       <p className="text-[11px] text-muted-foreground">
-                        पाद {toNepaliDigits(planet.pada)}
+                        {pick(`पाद ${digits(planet.pada)}`, `Pada ${digits(planet.pada)}`)}
                       </p>
                     )}
                     {planet.nakshatresh && (
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        <span className="text-muted-foreground/70">नक्षत्रेश: </span>
+                        <span className="text-muted-foreground/70">{pick("नक्षत्रेश: ", "Lord: ")}</span>
                         <span className="font-semibold text-foreground">{planet.nakshatresh}</span>
                       </p>
                     )}
@@ -448,7 +454,7 @@ export function KundaliView({
         </PanchangaSection>
         </div>
       ) : (
-        <p className="text-muted-foreground text-sm">यो मितिको लागि ग्रह डाटा उपलब्ध छैन।</p>
+        <p className="text-muted-foreground text-sm">{pick("यो मितिको लागि ग्रह डाटा उपलब्ध छैन।", "No planetary data available for this date.")}</p>
       )}
 
       {/* Charts */}
@@ -477,26 +483,26 @@ export function KundaliView({
           <div className="p-4 space-y-4">
             <div className="grid sm:grid-cols-2 gap-3">
               <StatTile
-                label="महादशा सुरु (जन्मकालीन)"
+                label={pick("महादशा सुरु (जन्मकालीन)", "Mahadasha at birth")}
                 value={dasha.mahadasha_lord_ne}
-                sub={`बाँकी अवधि: ${dasha.balance_label}`}
+                sub={pick(`बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
               />
             </div>
             <div className="overflow-x-auto rounded-xl border border-border">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted-foreground text-[11px] uppercase tracking-wide bg-muted/40">
-                    <th className="py-2 px-3 font-semibold">दशा</th>
-                    <th className="py-2 px-3 font-semibold">सुरु</th>
-                    <th className="py-2 px-3 font-semibold">अन्त्य</th>
+                    <th className="py-2 px-3 font-semibold">{pick("दशा", "Dasha")}</th>
+                    <th className="py-2 px-3 font-semibold">{pick("सुरु", "Start")}</th>
+                    <th className="py-2 px-3 font-semibold">{pick("अन्त्य", "End")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {dasha.sequence.map((period, i) => (
                     <tr key={i} className={cn("border-t border-border", i % 2 === 1 && "bg-muted/20")}>
                       <td className="py-2 px-3 font-medium text-foreground">{period.lord_ne}</td>
-                      <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.start)}</td>
-                      <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.end)}</td>
+                      <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.start, lang === "en")}</td>
+                      <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.end, lang === "en")}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -519,7 +525,10 @@ export function KundaliView({
           <div className="p-4">
             <div className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground">
               <Flame className="h-4 w-4 text-secondary" />
-              यस कुण्डलीको दशा र ग्रहबल अनुसार सुझाव गरिएको नवग्रह शान्ति।
+              {pick(
+                "यस कुण्डलीको दशा र ग्रहबल अनुसार सुझाव गरिएको नवग्रह शान्ति।",
+                "Navagraha Shanti suggested from this chart's dasha and planetary strength.",
+              )}
             </div>
             <ShantiVidhiPanel
               vimshottari={dashaQ.data}

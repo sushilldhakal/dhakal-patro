@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/i18n/locale";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -96,6 +97,7 @@ function TopicCard({
   variant?: "default" | "featured" | "compact";
 }) {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   const Icon = topic.icon;
   const category = categoryForTopic(topic);
   const meta = CATEGORY_META[topic.category];
@@ -118,16 +120,16 @@ function TopicCard({
                 meta.chip,
               )}
             >
-              {category.ne}
+              {pick(category.ne, category.en)}
             </span>
           )}
         </div>
         <h3 className="text-xl font-bold leading-snug text-foreground">
-          {topic.titleNe}
+          {pick(topic.titleNe, topic.titleEn)}
         </h3>
-        <p className="mt-1 text-sm font-medium text-muted-foreground">{topic.titleEn}</p>
+        <p className="mt-1 text-sm font-medium text-muted-foreground">{pick(topic.titleEn, "")}</p>
         <p className="mt-3 flex-1 text-base leading-relaxed text-foreground/80">
-          {topic.summary}
+          {pick(topic.summary, topic.summaryEn)}
         </p>
         <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
           {t("learn_page.read_start")}
@@ -149,10 +151,10 @@ function TopicCard({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-base font-semibold text-foreground">
-            {topic.titleNe}
+            {pick(topic.titleNe, topic.titleEn)}
           </span>
           <span className="block truncate text-sm text-muted-foreground">
-            {topic.titleEn}
+            {pick(topic.titleEn, "")}
           </span>
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
@@ -180,18 +182,18 @@ function TopicCard({
               meta.chip,
             )}
           >
-            {category.ne}
+            {pick(category.ne, category.en)}
           </span>
         )}
       </div>
       <div>
-        <h3 className="text-lg font-bold leading-snug text-foreground">{topic.titleNe}</h3>
+        <h3 className="text-lg font-bold leading-snug text-foreground">{pick(topic.titleNe, topic.titleEn)}</h3>
         <p className="mt-1 text-sm font-medium text-muted-foreground">
-          {topic.titleEn}
+          {pick(topic.titleEn, "")}
         </p>
       </div>
       <p className="flex-1 text-base leading-relaxed text-foreground/80">
-        {topic.summary}
+        {pick(topic.summary, topic.summaryEn)}
       </p>
       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
         {t("learn_page.read_detail")}
@@ -203,6 +205,7 @@ function TopicCard({
 
 export function Learn() {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   useRouteLoading(false);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -368,7 +371,7 @@ export function Learn() {
                 )}
               >
                 <MetaIcon className="h-3.5 w-3.5" />
-                {cat.ne}
+                {pick(cat.ne, cat.en)}
                 <span className="opacity-70">({count})</span>
               </button>
             );
@@ -441,7 +444,7 @@ export function Learn() {
                       <CatIcon className="h-5 w-5" />
                     </span>
                     <div>
-                      <h2 className="text-2xl font-bold text-foreground">{cat.ne}</h2>
+                      <h2 className="text-2xl font-bold text-foreground">{pick(cat.ne, cat.en)}</h2>
                       <p className="text-sm text-muted-foreground">
                         {cat.en} · {topics.length} articles
                       </p>

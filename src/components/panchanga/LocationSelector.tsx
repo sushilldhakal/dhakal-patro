@@ -13,6 +13,7 @@ import {
   ComboboxTrigger,
 } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 import {
   cityToLocation,
   coordsToLocation,
@@ -52,11 +53,12 @@ function LocationPickerPanel({
   onPickCity: (city: City) => void;
   onUseCurrentLocation: () => void;
 }) {
+  const { pick } = useLocale();
   return (
     <>
       <ComboboxInput
         showTrigger={false}
-        placeholder="सहर खोज्नुहोस् · search city"
+        placeholder={pick("सहर खोज्नुहोस् · search city", "Search city")}
         className="w-full"
       />
 
@@ -74,7 +76,7 @@ function LocationPickerPanel({
           ) : (
             <Crosshair data-icon="inline-start" />
           )}
-          मेरो स्थान प्रयोग गर्नुहोस्
+          {pick("मेरो स्थान प्रयोग गर्नुहोस्", "Use my location")}
         </Button>
       </div>
 
@@ -86,10 +88,10 @@ function LocationPickerPanel({
 
       <ComboboxEmpty className="py-3 text-xs">
         {debouncedQuery.length < 2
-          ? "कम्तीमा २ अक्षर टाइप गर्नुहोस्"
+          ? pick("कम्तीमा २ अक्षर टाइप गर्नुहोस्", "Type at least 2 characters")
           : isSearching
-            ? "खोज्दै…"
-            : "कुनै सहर भेटिएन"}
+            ? pick("खोज्दै…", "Searching…")
+            : pick("कुनै सहर भेटिएन", "No city found")}
       </ComboboxEmpty>
 
       <ComboboxList className="max-h-60">
@@ -121,6 +123,7 @@ export function LocationSelector({
   className,
   compact = false,
 }: Props) {
+  const { pick } = useLocale();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -156,7 +159,7 @@ export function LocationSelector({
 
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setGeoError("जियोलोकेसन उपलब्ध छैन");
+      setGeoError(pick("जियोलोकेसन उपलब्ध छैन", "Geolocation unavailable"));
       return;
     }
     setGeoLoading(true);
@@ -173,11 +176,11 @@ export function LocationSelector({
       (err) => {
         setGeoLoading(false);
         if (err.code === err.PERMISSION_DENIED) {
-          setGeoError("अनुमति अस्वीकृत — सहर खोज्नुहोस्");
+          setGeoError(pick("अनुमति अस्वीकृत — सहर खोज्नुहोस्", "Permission denied — search for a city"));
         } else if (err.code === err.TIMEOUT) {
-          setGeoError("समय सकियो — पुन: प्रयास गर्नुहोस्");
+          setGeoError(pick("समय सकियो — पुन: प्रयास गर्नुहोस्", "Timed out — please try again"));
         } else {
-          setGeoError("स्थान पत्ता लागेन");
+          setGeoError(pick("स्थान पत्ता लागेन", "Location not found"));
         }
       },
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
@@ -236,7 +239,7 @@ export function LocationSelector({
                 "w-full max-w-[12.5rem] justify-between gap-1 font-semibold",
                 className
               )}
-              title="स्थान छान्नुहोस्"
+              title={pick("स्थान छान्नुहोस्", "Choose location")}
             />
           }
         >
