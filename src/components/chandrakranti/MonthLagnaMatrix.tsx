@@ -1,7 +1,8 @@
 import type { LagnaMatrixRow } from "@/lib/chandrakranti/month-patro-tables";
-import { RASHI_COLUMNS_NE } from "@/lib/chandrakranti/month-patro-tables";
-import { rashiSymFromNumber, toNepaliDigits } from "@/lib/panchanga-format";
+import { RASHI_COLUMNS_NE, RASHI_COLUMNS_EN } from "@/lib/chandrakranti/month-patro-tables";
+import { rashiSymFromNumber } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 import {
   Table,
   TableBody,
@@ -25,17 +26,18 @@ type Props = {
 };
 
 export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: Props) {
+  const { pick, digits } = useLocale();
   const table = (
       <Table>
         <TableHeader>
           <TableRow className="sticky top-0 z-10 bg-muted hover:bg-muted">
-            <TableHead className={cn(th, "sticky left-0 z-20 bg-muted pl-3 text-left")}>गते</TableHead>
-            <TableHead className={cn(th, "text-left")}>बा.</TableHead>
-            <TableHead className={cn(th, "text-amber-600 dark:text-amber-400")}>सु.उ.</TableHead>
+            <TableHead className={cn(th, "sticky left-0 z-20 bg-muted pl-3 text-left")}>{pick("गते", "Date")}</TableHead>
+            <TableHead className={cn(th, "text-left")}>{pick("बा.", "Day")}</TableHead>
+            <TableHead className={cn(th, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
             {RASHI_COLUMNS_NE.map((rne, i) => (
               <TableHead key={rne} className={cn(th, "min-w-[3.75rem] text-center")}>
                 <span className="block text-secondary">{rashiSymFromNumber(i + 1)}</span>
-                <span>{rne}</span>
+                <span>{pick(rne, RASHI_COLUMNS_EN[i])}</span>
               </TableHead>
             ))}
           </TableRow>
@@ -44,13 +46,13 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
           {loading ? (
             <TableRow>
               <TableCell colSpan={15} className="py-8 text-center text-sm text-muted-foreground">
-                लोड हुँदैछ…
+                {pick("लोड हुँदैछ…", "Loading…")}
               </TableCell>
             </TableRow>
           ) : empty || rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={15} className="py-8 text-center text-sm text-muted-foreground">
-                यो पक्षमा कुनै दिन भेटिएन।
+                {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
               </TableCell>
             </TableRow>
           ) : (
@@ -68,13 +70,13 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
                       isToday && "bg-secondary/15",
                     )}
                   >
-                    {toNepaliDigits(row.day)}
+                    {digits(row.day)}
                   </TableCell>
                   <TableCell className={cn(td, "text-left text-muted-foreground")}>
-                    {row.weekdayNe ?? "—"}
+                    {pick(row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
                   </TableCell>
                   <TableCell className={cn(td, "text-amber-600 dark:text-amber-400")}>
-                    {row.sunrise ?? "—"}
+                    {row.sunrise ? digits(row.sunrise) : "—"}
                   </TableCell>
                   {RASHI_COLUMNS_NE.map((_, i) => {
                     const num = i + 1;
@@ -104,6 +106,7 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
       titleNe="दैनिक लग्न आरम्भ समयतालिका"
       titleEn="Daily Lagna (Ascendant) Start Time Table"
       subtitle="प्रत्येक गते सूर्योदयदेखि अर्को सूर्योदयसम्म कुन राशि कहिले लग्नमा आउँछ — समय सूर्योदयभन्दा अगाडि भए २४ घण्टा थपिएको देखाइन्छ।"
+      subtitleEn="For each day, which rashi rises as the lagna and when, from sunrise to the next sunrise — times before sunrise are shown with 24 hours added."
     >
       {table}
     </PatroTableShell>

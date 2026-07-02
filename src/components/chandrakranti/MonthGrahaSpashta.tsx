@@ -2,10 +2,11 @@ import {
   PATRO_PLANET_KEYS,
   PATRO_PLANET_NE,
   RASHI_COLUMNS_NE,
+  RASHI_COLUMNS_EN,
   type GrahaSpashtaRow,
 } from "@/lib/chandrakranti/month-patro-tables";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 import {
   Table,
   TableBody,
@@ -19,6 +20,11 @@ import { PatroTableShell } from "./PatroTableShell";
 const th = "whitespace-nowrap px-2 py-2.5 text-sm font-semibold text-muted-foreground";
 const td = "whitespace-nowrap px-2 py-2 text-sm";
 
+const PLANET_EN: Record<string, string> = {
+  sun: "Sun", moon: "Moon", mars: "Mars", mercury: "Mercury", jupiter: "Jupiter",
+  venus: "Venus", saturn: "Saturn", rahu: "Rahu",
+};
+
 type Props = {
   rows: GrahaSpashtaRow[];
   todayKey?: string;
@@ -27,46 +33,48 @@ type Props = {
   embedded?: boolean;
 };
 
-function formatPlanetCell(cell?: { rashiNe: string; coords: string }): string {
+function formatPlanetCell(cell: { rashiNe: string; rashiEn?: string; coords: string } | undefined, isEn: boolean): string {
   if (!cell) return "—";
-  return `${cell.rashiNe} ${cell.coords}`;
+  return `${isEn ? (cell.rashiEn ?? cell.rashiNe) : cell.rashiNe} ${cell.coords}`;
 }
 
 export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: Props) {
+  const { lang, pick, digits } = useLocale();
+  const isEn = lang === "en";
   const table = (
       <Table>
         <TableHeader>
           <TableRow className="sticky top-0 z-10 bg-muted hover:bg-muted">
-            <TableHead className={cn(th, "sticky left-0 z-20 bg-muted pl-3 text-left")}>गते</TableHead>
-            <TableHead className={cn(th, "text-left")}>बा.</TableHead>
+            <TableHead className={cn(th, "sticky left-0 z-20 bg-muted pl-3 text-left")}>{pick("गते", "Date")}</TableHead>
+            <TableHead className={cn(th, "text-left")}>{pick("बा.", "Day")}</TableHead>
             {PATRO_PLANET_KEYS.map((key) => (
               <TableHead key={key} className={cn(th, "min-w-[5.5rem] text-center")}>
-                {PATRO_PLANET_NE[key]}
+                {pick(PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
               </TableHead>
             ))}
-            <TableHead className={cn(th, "min-w-[4.5rem] text-center")}>बेलान्तर</TableHead>
+            <TableHead className={cn(th, "min-w-[4.5rem] text-center")}>{pick("बेलान्तर", "Belaantar")}</TableHead>
           </TableRow>
           <TableRow className="bg-muted/60 hover:bg-muted/60">
             <TableHead colSpan={2} className="sticky left-0 z-20 bg-muted/60" />
             {PATRO_PLANET_KEYS.map((key) => (
               <TableHead key={`sub-${key}`} className={cn(th, "text-center font-normal")}>
-                रा|अं|क|वि
+                {pick("रा|अं|क|वि", "Ra|Deg|Ka|Vi")}
               </TableHead>
             ))}
-            <TableHead className={cn(th, "text-center font-normal")}>समय सुधार</TableHead>
+            <TableHead className={cn(th, "text-center font-normal")}>{pick("समय सुधार", "Time corr.")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
               <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
-                लोड हुँदैछ…
+                {pick("लोड हुँदैछ…", "Loading…")}
               </TableCell>
             </TableRow>
           ) : empty || rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
-                यो पक्षमा कुनै दिन भेटिएन।
+                {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
               </TableCell>
             </TableRow>
           ) : (
@@ -85,17 +93,17 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
                       isToday && "bg-secondary/15",
                     )}
                   >
-                    {toNepaliDigits(row.day)}
+                    {digits(row.day)}
                   </TableCell>
                   <TableCell className={cn(td, "text-muted-foreground")}>
-                    {row.weekdayNe ?? "—"}
+                    {pick(row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
                   </TableCell>
                   {PATRO_PLANET_KEYS.map((key) => (
                     <TableCell
                       key={key}
                       className={cn(td, "text-center font-mono tabular-nums")}
                     >
-                      {formatPlanetCell(row.planets[key])}
+                      {formatPlanetCell(row.planets[key], isEn)}
                     </TableCell>
                   ))}
                   <TableCell className={cn(td, "text-center font-mono tabular-nums")}>
@@ -111,9 +119,18 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
 
   const footnote = (
     <p className="border-t border-border px-4 py-2 text-sm leading-relaxed text-muted-foreground">
-      राशिहरू: {RASHI_COLUMNS_NE.join(", ")}। प्रत्येक ग्रहको कोष्ठकमा{" "}
-      <span className="font-mono">राशि अंश|कला|विकला</span> — जस्तै{" "}
-      <span className="font-mono text-foreground">वृष १३|६|२९</span> = वृष राशि, १३ अंश ६ कला २९ विकला।
+      {pick(
+        <>
+          राशिहरू: {RASHI_COLUMNS_NE.join(", ")}। प्रत्येक ग्रहको कोष्ठकमा{" "}
+          <span className="font-mono">राशि अंश|कला|विकला</span> — जस्तै{" "}
+          <span className="font-mono text-foreground">वृष १३|६|२९</span> = वृष राशि, १३ अंश ६ कला २९ विकला।
+        </>,
+        <>
+          Signs: {RASHI_COLUMNS_EN.join(", ")}. Each planet's bracket shows{" "}
+          <span className="font-mono">sign deg|kala|vikala</span> — e.g.{" "}
+          <span className="font-mono text-foreground">Vrishabha 13|6|29</span> = Vrishabha sign, 13 deg 6 kala 29 vikala.
+        </>,
+      )}
     </p>
   );
 
@@ -131,6 +148,7 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
       titleNe="उदयकालिक सूर्यादिग्रहस्पष्ट"
       titleEn="Sunrise Planetary Positions (Graha Spashta)"
       subtitle="सूर्योदयको क्षणमा ग्रहहरूको राश्यादि स्थिति (राशि, अंश|कला|विकला) र दैनिक बेलान्तर।"
+      subtitleEn="The planets' rashi positions (sign, deg|kala|vikala) at the moment of sunrise, and the daily belaantar."
     >
       {table}
       {footnote}

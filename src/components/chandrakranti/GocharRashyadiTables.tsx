@@ -9,8 +9,8 @@ import {
   type RashyadiRowKey,
   type RashyadiSegment,
 } from "@/lib/chandrakranti/rashyadi";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 
 type GrahaRow = GocharGraha & { key: string };
 
@@ -34,6 +34,7 @@ export function GocharRashyadiTable({
   loading,
   className,
 }: TableProps) {
+  const { pick, digits } = useLocale();
   const planets =
     kundaliGrahas &&
     kundaliDateAd &&
@@ -45,7 +46,7 @@ export function GocharRashyadiTable({
   if (loading) {
     return (
       <div className={cn("flex h-full min-h-[280px] items-center justify-center rounded-xl border border-border p-4", className)}>
-        <p className="text-sm text-muted-foreground">लोड हुँदैछ…</p>
+        <p className="text-sm text-muted-foreground">{pick("लोड हुँदैछ…", "Loading…")}</p>
       </div>
     );
   }
@@ -58,13 +59,13 @@ export function GocharRashyadiTable({
           {segment.labelNe}
           {segment.bsDay != null ? (
             <span className="ml-1.5 text-sm text-muted-foreground">
-              ({toNepaliDigits(segment.bsDay)} गते)
+              ({digits(segment.bsDay)}{pick(" गते", "")})
             </span>
           ) : null}
         </p>
         {segment.moonRashiNe ? (
           <p className="mt-1 text-sm text-muted-foreground">
-            च.रा.: <span className="font-medium text-foreground">{segment.moonRashiNe}</span>
+            {pick("च.रा.", "Moon")}: <span className="font-medium text-foreground">{segment.moonRashiNe}</span>
           </p>
         ) : null}
       </div>
@@ -86,7 +87,7 @@ export function GocharRashyadiTable({
         <tbody>
           <tr className="border-b border-border/60">
             <td className="px-1 py-2 text-center text-base font-semibold text-muted-foreground">
-              {toNepaliDigits(segment.pakshaDayCount)}
+              {digits(segment.pakshaDayCount)}
             </td>
             {RASHYADI_PLANET_KEYS.map((key) => (
               <td key={`${segment.id}-hdr-${key}`} className="px-1 py-2" />
@@ -113,7 +114,10 @@ export function GocharRashyadiTable({
         </tbody>
       </table>
       <p className="border-t border-border/60 px-3 py-1.5 text-xs text-muted-foreground">
-        अं=अंश · ग=कला · वि=विकला · प्र=तटपरा · त्र=प्रतितत्परा
+        {pick(
+          "अं=अंश · ग=कला · वि=विकला · प्र=तटपरा · त्र=प्रतितत्परा",
+          "Deg=degree · Ka=kala · Vi=vikala · Pr=prati-tatpara · Tr=prati-vikala",
+        )}
       </p>
     </div>
   );
