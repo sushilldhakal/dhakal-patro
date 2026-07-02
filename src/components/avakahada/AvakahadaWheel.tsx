@@ -490,10 +490,10 @@ export function AvakahadaWheel({ highlighted }: Props) {
         row.nakshatraLabel.length > 8 ? `${row.nakshatraLabel.slice(0, 7)}…` : row.nakshatraLabel;
 
       labels.push(
-        <RadialText deg={mid} r={278} className={avWheelNakIdx(isActiveNak)} size={8}>
+        <RadialText key={`nak-idx-${row.index}`} deg={mid} r={278} className={avWheelNakIdx(isActiveNak)} size={8}>
           {row.index}
         </RadialText>,
-        <RadialText deg={mid} r={264} className={avWheelNakName(isActiveNak)} size={9}>
+        <RadialText key={`nak-name-${row.index}`} deg={mid} r={264} className={avWheelNakName(isActiveNak)} size={9}>
           {nakName}
         </RadialText>,
       );
