@@ -1192,7 +1192,8 @@ export function Sankranti() {
 }
 
 export function Eclipses() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="चन्द्रग्रहण — पृथ्वीको छायाँमा चन्द्र" en="Lunar eclipse: Earth's shadow">
         <Lede>
@@ -1270,7 +1271,87 @@ export function Eclipses() {
         हरेक महिना हुँदैन। सूर्यग्रहणमा चन्द्रको छायाँ सानो हुनाले पृथ्वीको सीमित पट्टीबाट मात्र
         देखिन्छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Lunar eclipse — Moon in Earth's shadow" en="Lunar eclipse: Earth's shadow">
+        <Lede>
+          A lunar eclipse always occurs at the <b>full moon</b> — when the Sun, Earth and Moon line
+          up and the Earth's <span className="hl">shadow</span> falls on the Moon. The Moon can look
+          red (“blood moon”) because Earth's atmosphere bends red light onto it.
+        </Lede>
+      </Section>
+      <Section kicker="02" title="Sun–Earth–Moon & Rahu–Ketu" en="Shadow geometry & the nodes">
+        <Lede>
+          The Sun's light casts an <span className="hl">umbra</span> and <span className="hl">penumbra</span>{" "}
+          cone behind the Earth. Press <b>▶ play</b> below — the Earth moves on the ecliptic, the
+          Moon cycles quickly; the <b>☊ node-cycle</b> button rotates only Rahu–Ketu slowly. An
+          eclipse happens only when a full/new moon falls near the <b>node line</b> — roughly twice
+          a year.
+        </Lede>
+        <EclipseStudy />
+      </Section>
+      <Section kicker="03" title="The 5° tilted orbit, eclipse line & 18.6-year nodal cycle" en="The tilted orbit, the eclipse line & 18.6-year nodal cycle">
+        <Lede>
+          The <b>3-D</b> diagram below shows the <span className="hl">ecliptic plane</span> (the
+          Sun's path) and the Moon's orbit tilted <span className="hl-amber">~5°</span> above it.
+          The <span className="hl-amber">Sun–Earth line</span> runs through the centre of the Earth.
+          Press <b>▶ play</b> — this line turns with the Sun; an eclipse happens only when it reaches{" "}
+          <b>Rahu or Ketu</b> and a moon (full/new) is there. The lower slider rotates the node line
+          on its <b>~18.6-year</b> cycle.
+        </Lede>
+        <MoonOrbitTiltStudy />
+      </Section>
+      <Section kicker="04" title="Lunar eclipse — types & safety" en="Lunar types & safety">
+        <Lede>
+          The Moon's orbit is tilted <b>~5°</b> to Earth's, so at most full moons the Moon is above
+          or below the shadow. An eclipse happens only when the full moon falls near{" "}
+          <span className="hl-amber">Rahu–Ketu (the nodes)</span>.
+        </Lede>
+        <Keys
+          items={[
+            { h: "Total eclipse", p: "The Moon fully inside Earth's dark shadow (umbra)." },
+            { h: "Partial", p: "Only part of the Moon in the shadow." },
+            { h: "Penumbral eclipse", p: "The Moon only in the penumbra — appears slightly dimmed." },
+            { h: "Safe to the naked eye", p: "Unlike a solar eclipse — a lunar eclipse can be viewed directly." },
+          ]}
+        />
+      </Section>
+      <Section kicker="05" title="Solar eclipse — Earth in the Moon's shadow" en="Solar eclipse: Moon's shadow">
+        <Lede>
+          A solar eclipse always occurs at the <b>new moon</b> — when the Moon comes exactly between
+          the Sun and Earth and <span className="hl">covers</span> the Sun. Because the Moon's
+          shadow falls on only a small part of the Earth, the eclipse is seen from a limited region.
+        </Lede>
+      </Section>
+      <Section kicker="06" title="The Moon's shadow cones & the path on Earth" en="Shadow cones: umbra, antumbra & penumbra">
+        <Lede>
+          In the diagram below, the Sun's light casts a small dark <span className="hl">umbra</span>{" "}
+          cone and a wide <span className="hl">penumbra</span> behind the Moon. Press <b>▶ play</b>{" "}
+          — the Moon's shadow sweeps across the Earth; that is the{" "}
+          <span className="hl-amber">path of totality</span>. The lower slider changes the Moon's
+          distance (perigee ↔ apogee) — see how a <b>total</b> eclipse occurs when the umbra reaches
+          Earth and an <b>annular</b> one when it falls short.
+        </Lede>
+        <SolarEclipseStudy />
+      </Section>
+      <Section kicker="07" title="Solar eclipse — types & safety" en="Solar types & safety">
+        <Keys
+          items={[
+            { h: "Total", p: "When the Moon is near, the umbra touches Earth — the Sun is fully covered, day turns dark and the corona appears." },
+            { h: "Annular", p: "When the Moon is far the umbra falls short — the antumbra reaches Earth and the Sun's edge looks like a “ring of fire”." },
+            { h: "Partial", p: "From the large penumbra region only part of the Sun appears covered." },
+            { h: "⚠ Never look with the naked eye", p: "Use eclipse glasses or projection only — permanent eye damage can result." },
+          ]}
+        />
+      </Section>
+      <Note>
+        Rahu–Ketu are not physical bodies in the sky — they are two mathematical points where the
+        Moon's orbit crosses the Sun's path (ecliptic). These nodes rotate slowly (one loop in
+        ~18.6 years), so the eclipse seasons also drift. A new/full moon causes an eclipse only when
+        it falls near Rahu–Ketu — which is why it doesn't happen every month. In a solar eclipse the
+        Moon's shadow is small, so it is seen only from a limited strip of the Earth.
+      </Note>
+    </>,
   );
 }
 
@@ -1280,7 +1361,8 @@ export const LunarEclipse = Eclipses;
 export const SolarEclipse = Eclipses;
 
 export function Ayanamsha() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="सायन र निरयन — एउटै आकाश, दुई शून्य" en="Tropical vs sidereal zero">
         <Lede>
@@ -1333,12 +1415,66 @@ export function Ayanamsha() {
         पश्चिमी ज्योतिष प्रायः <b>सायन</b> चलाउँछ, नेपाली–वैदिक वैदिक ज्योतिष <b>निरयन</b>। यस एपको
         कुण्डली पृष्ठमा तपाईं आफैँ अयनांश प्रणाली रोज्न सक्नुहुन्छ र फरक आफ्नै आँखाले हेर्न सक्नुहुन्छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Tropical vs sidereal — one sky, two zeros" en="Tropical vs sidereal zero">
+        <Lede>
+          Where do you start the <b>zero degree</b> of the zodiac? There are two answers.{" "}
+          <span className="hl-amber">Tropical (sayana)</span> takes the <b>vernal equinox</b> — the
+          day the Sun crosses the equator heading north — as zero, so it stays anchored to the{" "}
+          <b>seasons</b>. <span className="hl">Sidereal (nirayana)</span> takes the actual{" "}
+          <b>star-cluster</b> (the start of Mesha) as zero. The angular gap between these two zeros
+          is the <b>ayanamsha</b>.
+        </Lede>
+      </Section>
+      <Section kicker="02" title="The ayanamsha wheel" en="Interactive: the precessing equinox">
+        <Lede>
+          In the wheel below the outer <b>12 signs are fixed to the star-clusters</b> (sidereal).
+          Press <b>▶ play</b> — as the years advance, Earth's axial precession drags the{" "}
+          <span className="hl-amber">tropical zero (☉ equinox)</span> backward relative to the
+          stars; the growing <span className="hl-amber">amber wedge</span> is the ayanamsha. The
+          lower slider moves a single <span className="hl">planet</span> — see how the same sky
+          position reads as a different sign in sidereal vs tropical.
+        </Lede>
+        <AyanamshaWheel />
+      </Section>
+      <Section kicker="03" title="Why it drifts — precession" en="Precession of the equinoxes">
+        <Lede>
+          The Earth does not spin perfectly upright — like a spinning top its axis slowly{" "}
+          <span className="hl">wobbles</span> in a large circle. One full loop takes about{" "}
+          <b>25,800 years</b>, i.e. the equinox point moves back about <b>50.3″</b> per year (1°
+          every <b>~72 years</b>). So the ayanamsha grows year by year — today about <b>24°</b> in
+          Lahiri.
+        </Lede>
+        <PrecessionCone />
+      </Section>
+      <Section kicker="04" title="Three main systems" en="Lahiri · Raman · KP">
+        <Lede>
+          Because there is disagreement over exactly which star to count the sidereal zero from,
+          different systems exist — the core difference is only a few degrees/arc-minutes, but if a
+          planet sits at a sign boundary that small gap can <span className="hl">change the sign</span>{" "}
+          itself. Use the buttons above the wheel to switch systems and see the difference.
+        </Lede>
+        <Keys
+          items={[
+            { h: "Lahiri", p: "India's official system (Chitra-paksha) — the default in most panchangas; ~24° today." },
+            { h: "Raman", p: "Popularised by B. V. Raman — about 1.3° less than Lahiri." },
+            { h: "Krishnamurti (KP)", p: "The K. S. Krishnamurti system — a tiny amount (~6′) less than Lahiri; used in fine prediction." },
+          ]}
+        />
+      </Section>
+      <Note>
+        Western astrology mostly uses <b>tropical</b>, Nepali–Vedic astrology uses <b>sidereal</b>.
+        On this app's kundali page you can pick the ayanamsha system yourself and see the difference
+        with your own eyes.
+      </Note>
+    </>,
   );
 }
 
 export function RituDrift() {
-  return (
+  const { pick } = useLocale();
+  return pick(
     <>
       <Section kicker="०१" title="ऋतु सायन, महिना निरयन" en="Seasons are tropical, months are sidereal">
         <Lede>
@@ -1409,7 +1545,79 @@ export function RituDrift() {
         पश्चिमी ज्योतिष प्रायः <b>सायन</b> (ऋतु-केन्द्रित) चलाउँछ, नेपाली–वैदिक वैदिक ज्योतिष{" "}
         <b>निरयन</b> (तारा-केन्द्रित)। अयनांशको गहिराइ <Link to="/learn/$slug" params={{ slug: "ayanamsha" }} className="hl">अयनांश</Link> लेखमा छ।
       </Note>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="Seasons are tropical, months are sidereal" en="Seasons are tropical, months are sidereal">
+        <Lede>
+          The same Sun is measured from <b>two different zeros</b>. The{" "}
+          <span className="hl-amber">ṛtu (season)</span> is measured by the <b>tropical</b> zodiac
+          — zero degree is the <b>vernal equinox</b> (the moment the Sun crosses the equator heading
+          north), so the seasons stay anchored to the equinoxes and solstices. But the BS{" "}
+          <span className="hl">months</span> are measured by the <b>sidereal</b> zodiac — zero is
+          the true <b>Mesha star-cluster</b>, and the first day of a month is the <b>sankranti</b>{" "}
+          (the moment the Sun enters a new sign). The angle between these two zeros is the{" "}
+          <b>ayanamsha</b> — today ~<b>24°</b>.
+        </Lede>
+        <EquinoxPrecession />
+      </Section>
+      <Section kicker="02" title="Why it drifts — precession" en="Why it drifts: precession">
+        <Lede>
+          The Earth wobbles slowly on its axis like a spinning top. One full loop takes ~<b>25,800
+          years</b>, i.e. the equinox point moves back ~<b>50.3″</b> per year — exactly <b>1°</b>{" "}
+          every ~<b>72 years</b>. Since the Sun moves ~<b>1°</b> per day, this <b>1° ≈ 1 day</b>. So
+          relative to the sidereal months, the season drifts{" "}
+          <span className="hl-amber">by 1 day every ~72 years</span>.
+        </Lede>
+        <PrecessionCone />
+      </Section>
+      <Section kicker="03" title="The trade-off — you cannot fix both" en="The trade-off: you cannot fix both">
+        <Lede>
+          The months and the seasons <b>cannot</b> both be kept aligned forever, because one is
+          fixed relative to a star and the other relative to the equinox. You must choose one — and
+          the other slowly drifts.
+        </Lede>
+        <Keys
+          items={[
+            {
+              h: "Anchor months to signs (current practice)",
+              p: (
+                <>
+                  Baisakh always starts at Mesha Sankranti — the chart, nakshatra and planet-signs
+                  stay <b>fixed relative to the stars</b>. But the season drifts ~<b>1 day every 72
+                  years</b> (a full month in ~2,160 years) relative to the sidereal zodiac — after
+                  many centuries Baisakh may fall in a different season than spring.
+                </>
+              ),
+            },
+            {
+              h: "Anchor months to seasons (tropical correction)",
+              p: (
+                <>
+                  Baisakh always stays at the vernal equinox — the season <b>never drifts</b>. But
+                  in exchange the <b>star-cluster behind each sign shifts</b> — the chart, planet
+                  signs, nakshatra and birth-chart all begin to differ at ~1° / 72 years; a star in
+                  Mesha today would be read in a different sign later.
+                </>
+              ),
+            },
+          ]}
+        />
+      </Section>
+      <Section kicker="04" title="What this patro does" en="What this patro does">
+        <Lede>
+          This patro shows <b>both</b> — the month/gate is computed by{" "}
+          <span className="hl">sidereal sankranti</span> (stars fixed), while the home-page{" "}
+          <span className="hl-amber">ṛtu strip is tropical</span> (equinox–solstice), so the season
+          stays with the real weather. That's why Baisakh may not line up exactly with spring —
+          that's not a bug, it's the effect of precession.
+        </Lede>
+      </Section>
+      <Note>
+        Western astrology mostly uses <b>tropical</b> (season-centred), Nepali–Vedic astrology uses{" "}
+        <b>sidereal</b> (star-centred). The depth of ayanamsha is in the{" "}
+        <Link to="/learn/$slug" params={{ slug: "ayanamsha" }} className="hl">Ayanamsha</Link> article.
+      </Note>
+    </>,
   );
 }
 
@@ -1426,8 +1634,9 @@ export function HoraArticle() {
   });
   const p = panchangaQ.data;
   const timezone = resolveTimeZone(p?.location?.timezone, location.params.timezone);
+  const { pick } = useLocale();
 
-  return (
+  return pick(
     <>
       <Section kicker="०१" title="दिनका चौबीस होरा" en="Planetary hours">
         <Lede>
@@ -1466,6 +1675,45 @@ export function HoraArticle() {
           सर्छ हेर्नुहोस्।
         </Lede>
       </Section>
-    </>
+    </>,
+    <>
+      <Section kicker="01" title="The day's twenty-four horas" en="Planetary hours">
+        <Lede>
+          Each day is divided into <b>twenty-four horas</b> (planetary hours) — from sunrise to the
+          next sunrise. Each hora is ruled in turn by the <span className="hl-amber">seven
+          planets</span> (Sun, Venus, Mercury, Moon, Saturn, Jupiter, Mars). The lord of the{" "}
+          <b>first hora</b> after sunrise gives the <span className="hl">day its name</span>.
+        </Lede>
+        {p ? (
+          <div className="mt-5">
+            <HoraRing p={p} isToday timezone={timezone} />
+          </div>
+        ) : (
+          <div className="tm-card pad-lg flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
+            Loading…
+          </div>
+        )}
+      </Section>
+
+      <Section kicker="02" title="How to read it" en="How to read it">
+        <Keys
+          items={[
+            { h: "Ring = one day", p: "The inner ring is Sunday, the outer Saturday — seven rings, seven days." },
+            { h: "Hora order", p: "Twenty-four horas within each ring; planets cycle Sun → Saturn." },
+            { h: "Lord of the day", p: "The planet of the first hora at sunrise = that day's lord (vaara)." },
+            { h: "Unbroken count", p: "Sunday's last hora rolls into Monday — it never stops." },
+          ]}
+        />
+      </Section>
+
+      <Section kicker="03" title="Why it matters" en="Why it matters">
+        <Lede>
+          A hora is checked when choosing a muhurta for auspicious work — e.g. a{" "}
+          <b>Mercury/Jupiter</b> hora for travel or business, a <b>Saturn</b> hora for steady work.
+          The wheel above is centred on the current hora; move the slider or press play to see how
+          the hora shifts across the week.
+        </Lede>
+      </Section>
+    </>,
   );
 }
