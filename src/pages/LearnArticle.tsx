@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/i18n/locale";
 import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
@@ -16,6 +17,7 @@ const LEGACY_ECLIPSE_SLUGS: Record<string, string> = {
 
 export function LearnArticle() {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   useRouteLoading(false);
   const { slug } = useParams({ strict: false }) as { slug?: string };
 
@@ -58,11 +60,11 @@ export function LearnArticle() {
         <div className="tm-wrap">
           <header className="tm-hero">
             <div className="tm-hero-eyebrow">
-              {category ? `${category.ne} · ` : ""}
-              {topic.titleEn}
+              {category ? `${pick(category.ne, category.en)} · ` : ""}
+              {pick(topic.titleEn, topic.titleNe)}
             </div>
-            <h1 className="tm-hero-title">{topic.titleNe}</h1>
-            <p className="tm-hero-sub">{topic.summary}</p>
+            <h1 className="tm-hero-title">{pick(topic.titleNe, topic.titleEn)}</h1>
+            <p className="tm-hero-sub">{pick(topic.summary, topic.summaryEn)}</p>
           </header>
 
           <Content />
@@ -80,7 +82,7 @@ export function LearnArticle() {
                     {t("learn_page.prev")}
                   </span>
                   <span className="block truncate text-sm font-medium text-foreground">
-                    {prev.titleNe}
+                    {pick(prev.titleNe, prev.titleEn)}
                   </span>
                 </span>
               </Link>
@@ -98,7 +100,7 @@ export function LearnArticle() {
                     {t("learn_page.next")}
                   </span>
                   <span className="block truncate text-sm font-medium text-foreground">
-                    {next.titleNe}
+                    {pick(next.titleNe, next.titleEn)}
                   </span>
                 </span>
                 <ArrowRight className="h-4 w-4 shrink-0 text-secondary" />
