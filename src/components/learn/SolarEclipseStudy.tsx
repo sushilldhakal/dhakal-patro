@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { edBodyLabel, edScrub, hoEarthGroup, solAntumbra, solCorona, solEyeFrame, solEyeMoon, solEyeRim, solEyeSky, solEyeSun, solEyeTitle, solLegendLabel, solLight, solMoon, solMoonLabel, solPenumbra, solRay, solSpotAnti, solSpotPen, solSpotUmbra, solSunGlow, solUmbra } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -127,7 +129,7 @@ function ConeScene({ m }: { m: Model }) {
         y1={AXIS_Y + r0 * Math.sin(a)}
         x2={SUN_X + r1 * Math.cos(a)}
         y2={AXIS_Y + r1 * Math.sin(a)}
-        className="sol-ray"
+        className={solRay}
       />
     );
   });
@@ -137,26 +139,26 @@ function ConeScene({ m }: { m: Model }) {
       {/* sunlight tint from Sun toward Earth */}
       <path
         d={`M${SUN_X},${AXIS_Y - SUN_R} L${XR},${AXIS_Y - SUN_R - 36} L${XR},${AXIS_Y + SUN_R + 36} L${SUN_X},${AXIS_Y + SUN_R} Z`}
-        className="sol-light"
+        className={solLight}
       />
 
       {/* shadow cones (penumbra under, then umbra/antumbra) */}
-      <path d={penPath} className="sol-penumbra" />
-      {antumbraPath && <path d={antumbraPath} className="sol-antumbra" />}
-      {umbraPath && <path d={umbraPath} className="sol-umbra" />}
+      <path d={penPath} className={solPenumbra} />
+      {antumbraPath && <path d={antumbraPath} className={solAntumbra} />}
+      {umbraPath && <path d={umbraPath} className={solUmbra} />}
 
       {/* Sun */}
-      <circle cx={SUN_X} cy={AXIS_Y} r={SUN_R + 26} className="sol-sun-glow" />
+      <circle cx={SUN_X} cy={AXIS_Y} r={SUN_R + 26} className={solSunGlow} />
       {sunRays}
       <circle cx={SUN_X} cy={AXIS_Y} r={SUN_R} fill="url(#sol-sun)" />
-      <text x={SUN_X} y={AXIS_Y + SUN_R + 34} className="ed-body-label" textAnchor="middle">
+      <text x={SUN_X} y={AXIS_Y + SUN_R + 34} className={edBodyLabel} textAnchor="middle">
         सूर्य
       </text>
 
       {/* Earth */}
-      <g className="ho-earth-group" transform={`translate(${EARTH_X} ${AXIS_Y})`}>
+      <g className={hoEarthGroup} transform={`translate(${EARTH_X} ${AXIS_Y})`}>
         <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName="sol-earth-glow" glowPad={10} />
-        <text y={EARTH_R + 30} className="ed-body-label" textAnchor="middle">
+        <text y={EARTH_R + 30} className={edBodyLabel} textAnchor="middle">
           पृथ्वी
         </text>
       </g>
@@ -164,20 +166,20 @@ function ConeScene({ m }: { m: Model }) {
       {/* shadow spot painted on Earth's surface */}
       {spotOnEarth && (
         <>
-          <ellipse cx={subX + 6} cy={moonY} rx={spotR + 26} ry={spotR + 18} className="sol-spot-pen" />
+          <ellipse cx={subX + 6} cy={moonY} rx={spotR + 26} ry={spotR + 18} className={solSpotPen} />
           <ellipse
             cx={subX + 6}
             cy={moonY}
             rx={spotR}
             ry={spotR * 0.74}
-            className={type === "annular" ? "sol-spot-anti" : "sol-spot-umbra"}
+            className={type === "annular" ? solSpotAnti : solSpotUmbra}
           />
         </>
       )}
 
       {/* Moon (drawn last so it sits in front, casting the cone) */}
-      <circle cx={MOON_X} cy={moonY} r={MOON_R} className="sol-moon" />
-      <text x={MOON_X} y={moonY - MOON_R - 12} className="sol-moon-label" textAnchor="middle">
+      <circle cx={MOON_X} cy={moonY} r={MOON_R} className={solMoon} />
+      <text x={MOON_X} y={moonY - MOON_R - 12} className={solMoonLabel} textAnchor="middle">
         चन्द्र
       </text>
     </>
@@ -206,20 +208,20 @@ function ObserverInset({ m }: { m: Model }) {
 
   return (
     <g>
-      <rect x={x0} y={y0} width={w} height={h} rx={16} className="sol-eye-frame" />
-      <text x={cx} y={y0 + 26} className="sol-eye-title" textAnchor="middle">
+      <rect x={x0} y={y0} width={w} height={h} rx={16} className={solEyeFrame} />
+      <text x={cx} y={y0 + 26} className={solEyeTitle} textAnchor="middle">
         पृथ्वीबाट देखिने दृश्य
       </text>
       <clipPath id="sol-eye-clip">
         <circle cx={cx} cy={cy + 8} r={sky} />
       </clipPath>
       <g clipPath="url(#sol-eye-clip)">
-        <circle cx={cx} cy={cy + 8} r={sky} className="sol-eye-sky" />
-        {type === "total" && <circle cx={cx} cy={cy + 8} r={RS * 1.7} className="sol-corona" />}
-        <circle cx={cx} cy={cy + 8} r={RS} className="sol-eye-sun" />
-        <circle cx={moonCx} cy={cy + 8} r={rM} className="sol-eye-moon" />
+        <circle cx={cx} cy={cy + 8} r={sky} className={solEyeSky} />
+        {type === "total" && <circle cx={cx} cy={cy + 8} r={RS * 1.7} className={solCorona} />}
+        <circle cx={cx} cy={cy + 8} r={RS} className={solEyeSun} />
+        <circle cx={moonCx} cy={cy + 8} r={rM} className={solEyeMoon} />
       </g>
-      <circle cx={cx} cy={cy + 8} r={sky} className="sol-eye-rim" />
+      <circle cx={cx} cy={cy + 8} r={sky} className={solEyeRim} />
       <text x={cx} y={y0 + h - 12} className={`sol-eye-status ${type}`} textAnchor="middle">
         {typeText} · {fmt(Math.round(coverage * 100))}%
       </text>
@@ -289,13 +291,13 @@ export function SolarEclipseStudy() {
         <ConeScene m={m} />
 
         {/* legend (top-left empty sky) */}
-        <g className="sol-legend" transform="translate(30 26)">
-          <rect x={0} y={0} width={26} height={15} className="sol-umbra" />
-          <text x={34} y={12} className="sol-legend-label">प्रच्छाया (umbra) — पूर्ण</text>
-          <rect x={0} y={26} width={26} height={15} className="sol-antumbra" />
-          <text x={34} y={38} className="sol-legend-label">वलयच्छाया (antumbra) — वलयाकार</text>
-          <rect x={0} y={52} width={26} height={15} className="sol-penumbra" />
-          <text x={34} y={64} className="sol-legend-label">उपछाया (penumbra) — खण्डग्रास</text>
+        <g transform="translate(30 26)">
+          <rect x={0} y={0} width={26} height={15} className={solUmbra} />
+          <text x={34} y={12} className={solLegendLabel}>प्रच्छाया (umbra) — पूर्ण</text>
+          <rect x={0} y={26} width={26} height={15} className={solAntumbra} />
+          <text x={34} y={38} className={solLegendLabel}>वलयच्छाया (antumbra) — वलयाकार</text>
+          <rect x={0} y={52} width={26} height={15} className={solPenumbra} />
+          <text x={34} y={64} className={solLegendLabel}>उपछाया (penumbra) — खण्डग्रास</text>
         </g>
 
         <ObserverInset m={m} />
@@ -334,7 +336,7 @@ export function SolarEclipseStudy() {
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
             <input
-              className="ed-scrub"
+              className={edScrub}
               type="range"
               min={0}
               max={1}
@@ -352,7 +354,7 @@ export function SolarEclipseStudy() {
         <div className={motSliderRow}>
           <span className={motSliderLabel}>⟺ चन्द्र दूरी — perigee (पूर्ण) ↔ apogee (वलयाकार)</span>
           <input
-            className="ed-scrub"
+            className={edScrub}
             type="range"
             min={0}
             max={1}
@@ -378,10 +380,10 @@ export function SolarEclipseStudy() {
 
       <p className={tmCardCap}>
         सूर्यग्रहण सधैँ <b>अमावस्या</b> मा हुन्छ — चन्द्र सूर्य र पृथ्वीको बीचमा आउँदा त्यसको{" "}
-        <span className="hl-amber">प्रच्छायाँ (umbra)</span> पृथ्वीको सानो भागमा पर्छ। चन्द्र नजिक
+        <span className={cn("hl-amber")}>प्रच्छायाँ (umbra)</span> पृथ्वीको सानो भागमा पर्छ। चन्द्र नजिक
         (perigee) हुँदा प्रच्छायाँले पृथ्वी छुन्छ → <b>पूर्ण ग्रहण</b>; टाढा (apogee) हुँदा प्रच्छायाँ
-        अपुग हुन्छ र <span className="hl">वलयच्छायाँ (antumbra)</span> पुग्छ → <b>वलयाकार “आगोको
-        औँठी”</b>। फराकिलो <span className="hl">उपछायाँ</span> ले ठूलो क्षेत्रमा खण्डग्रास दिन्छ।
+        अपुग हुन्छ र <span className={cn("hl")}>वलयच्छायाँ (antumbra)</span> पुग्छ → <b>वलयाकार “आगोको
+        औँठी”</b>। फराकिलो <span className={cn("hl")}>उपछायाँ</span> ले ठूलो क्षेत्रमा खण्डग्रास दिन्छ।
         समय स्लाइडरले छायाँलाई पृथ्वीमाथि सार्छ — त्यही नै पूर्णताको मार्ग हो।
       </p>
     </div>

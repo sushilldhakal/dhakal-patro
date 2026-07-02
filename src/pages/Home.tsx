@@ -27,7 +27,7 @@ import { formatHolidayBsDisplay } from "../lib/panchanga-format";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
-import { patroAsideLink, patroAsideTab, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
+import { patroAsideLink, patroAsideTab, patroHeroDeco, patroHeroGrid, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
 import {
   ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
@@ -128,8 +128,8 @@ function PanchangaAside({
           </div>
         ) : (
           <div className="flex flex-col gap-3 min-[1081px]:min-h-0 min-[1081px]:flex-1 min-[1081px]:gap-0 min-[1081px]:overflow-hidden">
-            <div className="pn-hero-deco relative isolate overflow-hidden rounded-xl bg-[#07080d] p-[22px] text-[#f5f5f1] shadow-lg shrink-0 min-[1081px]:rounded-none min-[1081px]:p-5 min-[1081px]:shadow-none">
-              <div className="pn-hero-grid" />
+            <div className={cn(patroHeroDeco, "rounded-xl bg-[#07080d] p-[22px] text-[#f5f5f1] shadow-lg shrink-0 min-[1081px]:rounded-none min-[1081px]:p-5 min-[1081px]:shadow-none")}>
+              <div className={patroHeroGrid} />
               <div className="flex items-start justify-between gap-3.5">
                 <div className="min-w-0 flex-1">
                   <div className="text-[10.5px] font-semibold tracking-[0.16em] text-[rgba(245,245,241,0.55)]">

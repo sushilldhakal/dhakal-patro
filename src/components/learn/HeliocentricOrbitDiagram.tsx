@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useMemo, useRef } from "react";
+import { edBodyLabel, edRay, hoCalloutNe, hoEarthGroup, hoEquator, hoFocusAphelion, hoFocusLabel, hoFocusLine, hoMarkerDetail, hoMarkerDot, hoMarkerNe, hoMarkerTag, hoNorthPole, hoOrbitDir, hoOrbitEllipse, hoOrbitGuide, hoPoleAxis, hoPoleLabel, hoSunRay, hoSweep, hoTiltArc, hoTiltRef } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { EarthGlobeImage, EARTH_AXIAL_TILT } from "./EarthGlobeImage";
@@ -138,7 +140,7 @@ export function HeliocentricOrbitDiagram({
             y1={ORBIT.cy + r0 * Math.sin(a)}
             x2={ORBIT.cx + r1 * Math.cos(a)}
             y2={ORBIT.cy + r1 * Math.sin(a)}
-            className="ed-ray"
+            className={edRay}
           />
         );
       }),
@@ -194,29 +196,29 @@ export function HeliocentricOrbitDiagram({
         cy={ORBIT.cy}
         rx={ORBIT.a}
         ry={ORBIT_B}
-        className="ho-orbit-ellipse ho-orbit-guide"
+        className={cn(hoOrbitEllipse, hoOrbitGuide)}
         transform={`rotate(0 ${centerX} ${ORBIT.cy})`}
       />
-      <path d={ellipsePath} className="ho-orbit-ellipse" fill="none" />
+      <path d={ellipsePath} className={hoOrbitEllipse} fill="none" />
 
       <line
         x1={ORBIT.cx}
         y1={ORBIT.cy}
         x2={peri.ex}
         y2={peri.ey}
-        className="ho-focus-line"
+        className={hoFocusLine}
       />
       <line
         x1={ORBIT.cx}
         y1={ORBIT.cy}
         x2={aphe.ex}
         y2={aphe.ey}
-        className="ho-focus-line ho-focus-aphelion"
+        className={cn(hoFocusLine, hoFocusAphelion)}
       />
       <text
         x={(ORBIT.cx + peri.ex) / 2}
         y={(ORBIT.cy + peri.ey) / 2 - 10}
-        className="ho-focus-label"
+        className={hoFocusLabel}
         textAnchor="middle"
       >
         उपसौर (नजिक)
@@ -224,7 +226,7 @@ export function HeliocentricOrbitDiagram({
       <text
         x={(ORBIT.cx + aphe.ex) / 2}
         y={(ORBIT.cy + aphe.ey) / 2 - 10}
-        className="ho-focus-label"
+        className={hoFocusLabel}
         textAnchor="middle"
       >
         अपसौर (टाढा)
@@ -235,15 +237,15 @@ export function HeliocentricOrbitDiagram({
         const { lx, anchor, lines } = markerLabelLayout(pos, m.nu);
         return (
           <g key={m.nu}>
-            <circle cx={pos.ex} cy={pos.ey} r={5} className="ho-marker-dot" />
-            <text x={lx} y={lines.ne} className="ho-marker-ne" textAnchor={anchor}>
+            <circle cx={pos.ex} cy={pos.ey} r={5} className={hoMarkerDot} />
+            <text x={lx} y={lines.ne} className={hoMarkerNe} textAnchor={anchor}>
               {m.ne}
             </text>
-            <text x={lx} y={lines.detail} className="ho-marker-detail" textAnchor={anchor}>
+            <text x={lx} y={lines.detail} className={hoMarkerDetail} textAnchor={anchor}>
               {m.detail}
             </text>
             {"tag" in lines && m.tag ? (
-              <text x={lx} y={lines.tag!} className="ho-marker-tag" textAnchor={anchor}>
+              <text x={lx} y={lines.tag!} className={hoMarkerTag} textAnchor={anchor}>
                 {m.tag}
               </text>
             ) : null}
@@ -251,41 +253,41 @@ export function HeliocentricOrbitDiagram({
         );
       })}
 
-      {sweepPath && <path d={sweepPath} className="ho-sweep" fill="none" />}
+      {sweepPath && <path d={sweepPath} className={hoSweep} fill="none" />}
 
-      <text x={HO.W / 2} y={HO.H - 22} className="ho-orbit-dir" textAnchor="middle">
+      <text x={HO.W / 2} y={HO.H - 22} className={hoOrbitDir} textAnchor="middle">
         ↺ वामावर्त (वास्तविक दिशा)
       </text>
 
-      <line x1={ex} y1={ey} x2={ORBIT.cx} y2={ORBIT.cy} className="ho-sun-ray" />
+      <line x1={ex} y1={ey} x2={ORBIT.cx} y2={ORBIT.cy} className={hoSunRay} />
       <circle cx={ORBIT.cx} cy={ORBIT.cy} r={HO.sunR + 36} fill="url(#ho-sunglow)" />
       {rays}
       <circle cx={ORBIT.cx} cy={ORBIT.cy} r={HO.sunR} fill="url(#ho-sun)" />
-      <text x={ORBIT.cx} y={ORBIT.cy + HO.sunR + 28} className="ed-body-label" textAnchor="middle">
+      <text x={ORBIT.cx} y={ORBIT.cy + HO.sunR + 28} className={edBodyLabel} textAnchor="middle">
         सूर्य (केन्द्रबिन्दु)
       </text>
 
-      <g className="ho-earth-group" transform={`translate(${ex} ${ey})`}>
+      <g className={hoEarthGroup} transform={`translate(${ex} ${ey})`}>
         <EarthGlobeImage cx={0} cy={0} r={HO.earthR} glow />
         <line
           x1={-eqUx * eqHalf}
           y1={-eqUy * eqHalf}
           x2={eqUx * eqHalf}
           y2={eqUy * eqHalf}
-          className="ho-equator"
+          className={hoEquator}
         />
-        <line x1={0} y1={0} x2={0} y2={-HO.earthR * 0.55} className="ho-tilt-ref" />
-        <path d={tiltArcPathAtOrigin(HO.earthR * 0.55, lean)} className="ho-tilt-arc" fill="none" />
-        <line x1={southX} y1={southY} x2={northX} y2={northY} className="ho-pole-axis" />
-        <circle cx={northX} cy={northY} r={5} className="ho-north-pole" />
+        <line x1={0} y1={0} x2={0} y2={-HO.earthR * 0.55} className={hoTiltRef} />
+        <path d={tiltArcPathAtOrigin(HO.earthR * 0.55, lean)} className={hoTiltArc} fill="none" />
+        <line x1={southX} y1={southY} x2={northX} y2={northY} className={hoPoleAxis} />
+        <circle cx={northX} cy={northY} r={5} className={hoNorthPole} />
         <text
           x={northX + axisUx * 14 + eqUx * 6}
           y={northY + axisUy * 14 + eqUy * 6}
-          className="ho-pole-label"
+          className={hoPoleLabel}
         >
           उत्तर · {fmt(TILT)}°
         </text>
-        <text y={HO.earthR + 24} className="ed-body-label" textAnchor="middle">
+        <text y={HO.earthR + 24} className={edBodyLabel} textAnchor="middle">
           पृथ्वी
         </text>
       </g>
@@ -293,7 +295,7 @@ export function HeliocentricOrbitDiagram({
       <g
         transform={`translate(${ex + sunUx * 72},${ey + sunUy * 72})`}
       >
-        <text className="ho-callout-ne" textAnchor="middle" y={-6}>
+        <text className={hoCalloutNe} textAnchor="middle" y={-6}>
           गति: {speedLabel}
         </text>
       </g>

@@ -1,3 +1,4 @@
+import { edMoonDisk, edMoonHalo, edMoonLit, edMoonNew, edMoonRim } from "@/lib/diagram-classes";
 import {
   isFullMoonElongation,
   isNewMoonElongation,
@@ -44,12 +45,12 @@ export function MoonPhaseDisc({ elongation, r, uid = "mpd" }: MoonPhaseDiscProps
         </clipPath>
       </defs>
 
-      {!isNew && <circle cx={0} cy={0} r={r + 1.2} className="ed-moon-halo" />}
+      {!isNew && <circle cx={0} cy={0} r={r + 1.2} className={edMoonHalo} />}
 
       {isNew ? (
-        <circle cx={0} cy={0} r={r} fill={`url(#${darkId})`} className="ed-moon-new" strokeWidth={1} />
+        <circle cx={0} cy={0} r={r} fill={`url(#${darkId})`} className={edMoonNew} strokeWidth={1} />
       ) : (
-        <circle cx={0} cy={0} r={r} fill={`url(#${baseId})`} className="ed-moon-disk" strokeWidth={1} />
+        <circle cx={0} cy={0} r={r} fill={`url(#${baseId})`} className={edMoonDisk} strokeWidth={1} />
       )}
 
       {!isNew && (
@@ -62,16 +63,16 @@ export function MoonPhaseDisc({ elongation, r, uid = "mpd" }: MoonPhaseDiscProps
       )}
 
       {isFull ? (
-        <circle cx={0} cy={0} r={r} fill={`url(#${litId})`} className="ed-moon-lit" />
+        <circle cx={0} cy={0} r={r} fill={`url(#${litId})`} className={edMoonLit} />
       ) : (
         !isNew &&
         e > 1.5 &&
         e < 358.5 && (
-          <path d={moonPhaseLitPath(elongation, r)} fill={`url(#${litId})`} className="ed-moon-lit" />
+          <path d={moonPhaseLitPath(elongation, r)} fill={`url(#${litId})`} className={edMoonLit} />
         )
       )}
 
-      <circle cx={0} cy={0} r={r} fill="none" className="ed-moon-rim" strokeWidth={isNew ? 0.8 : 1} />
+      <circle cx={0} cy={0} r={r} fill="none" className={edMoonRim} strokeWidth={isNew ? 0.8 : 1} />
     </g>
   );
 }

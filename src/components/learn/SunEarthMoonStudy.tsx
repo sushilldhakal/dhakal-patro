@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
+import { edScrub } from "@/lib/diagram-classes";
 import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
@@ -112,7 +114,7 @@ export function SunEarthMoonStudy() {
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
           <input
-            className="ed-scrub"
+            className={edScrub}
             type="range"
             min={0}
             max={TROPICAL_YEAR}
@@ -145,19 +147,19 @@ export function SunEarthMoonStudy() {
         {pick(
           <>
             बाहिरी {fmt(12)} राशि र {fmt(27)} नक्षत्रको ग्रिडले पृथ्वीबाट देखिने{" "}
-            <span className="hl-amber">सूर्यको स्थिति</span> देखाउँछ — सूर्य नयाँ राशि वा नक्षत्रमा
+            <span className={cn("hl-amber")}>सूर्यको स्थिति</span> देखाउँछ — सूर्य नयाँ राशि वा नक्षत्रमा
             प्रवेश गर्दा ग्रिड सीमा पार हुन्छ (सङ्क्रान्ति)। पृथ्वीले सूर्यको १ फेरो (~{fmt(365)}{" "}
             दिन) लगाउँदा चन्द्रले ~{fmt(12)}.{fmt(4)} फेरो लगाउँछ — त्यसैले १२ चान्द्र महिना सकिँदा
-            वर्ष ~{fmt(11)} दिन बाँकी रहन्छ, जसले <span className="hl-amber">अधिक मास</span>{" "}
+            वर्ष ~{fmt(11)} दिन बाँकी रहन्छ, जसले <span className={cn("hl-amber")}>अधिक मास</span>{" "}
             जन्माउँछ।
           </>,
           <>
             The outer grid of {fmt(12)} rashis and {fmt(27)} nakshatras shows the{" "}
-            <span className="hl-amber">Sun's position</span> as seen from Earth — when the Sun
+            <span className={cn("hl-amber")}>Sun's position</span> as seen from Earth — when the Sun
             enters a new rashi or nakshatra it crosses a grid boundary (sankranti). While the Earth
             makes 1 orbit of the Sun (~{fmt(365)} days) the Moon makes ~{fmt(12)}.{fmt(4)} orbits —
             so after 12 lunar months about {fmt(11)} days of the year remain, which gives rise to{" "}
-            <span className="hl-amber">Adhika Masa</span>.
+            <span className={cn("hl-amber")}>Adhika Masa</span>.
           </>,
         )}
       </p>

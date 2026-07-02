@@ -1,4 +1,5 @@
 import { useMemo, useRef } from "react";
+import { eclAxis, eclBloodGlow, eclBloodTint, eclBodyLabel, eclEclipticRing, eclMoonEclipsed, eclNodeArrow, eclNodeArrowHead, eclNodeCallout, eclNodeDot, eclNodeLine, eclNodeSym, eclNodeTitle, eclPanelBg, eclPenumbra, eclPlaneCaption, eclRay, eclStatusSub, eclSunDisc, eclTiltNote, eclUmbraShape } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
@@ -53,12 +54,12 @@ function NodeCallout({
   const tx = side === "left" ? px - 118 : px + 118;
   const ty = side === "left" ? py - 62 : py + 62;
   return (
-    <g className="ecl-node-callout">
-      <line x1={tx} y1={ty + 10} x2={px} y2={py} className="ecl-node-arrow" markerEnd="url(#ecl-node-arrow)" />
-      <text x={tx} y={ty} className="ecl-node-title" textAnchor="middle">
+    <g className={eclNodeCallout}>
+      <line x1={tx} y1={ty + 10} x2={px} y2={py} className={eclNodeArrow} markerEnd="url(#ecl-node-arrow)" />
+      <text x={tx} y={ty} className={eclNodeTitle} textAnchor="middle">
         {label}
       </text>
-      <text x={tx} y={ty + 30} className="ecl-node-sym" textAnchor="middle">
+      <text x={tx} y={ty + 30} className={eclNodeSym} textAnchor="middle">
         {sym}
       </text>
     </g>
@@ -155,7 +156,7 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
         y1={sun.y + r0 * Math.sin(a)}
         x2={sun.x + r1 * Math.cos(a)}
         y2={sun.y + r1 * Math.sin(a)}
-        className="ecl-ray"
+        className={eclRay}
       />
     );
   });
@@ -163,13 +164,13 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
   const moonGroup = (
     <g
       transform={`translate(${g.sx} ${g.sy}) rotate(${moonRot})`}
-      className={status === "total" ? "ecl-moon-eclipsed" : ""}
+      className={status === "total" ? eclMoonEclipsed : undefined}
     >
       {(status === "total" || status === "partial") && (
-        <circle cx={0} cy={0} r={ECL.moonR + 4} className="ecl-blood-glow" />
+        <circle cx={0} cy={0} r={ECL.moonR + 4} className={eclBloodGlow} />
       )}
       <MoonPhaseDisc elongation={status === "total" ? 178 : g.E} r={ECL.moonR} uid="ecl-moon" />
-      {status === "total" && <circle cx={0} cy={0} r={ECL.moonR} className="ecl-blood-tint" />}
+      {status === "total" && <circle cx={0} cy={0} r={ECL.moonR} className={eclBloodTint} />}
     </g>
   );
 
@@ -224,7 +225,7 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
           <stop offset="100%" stopColor="#11151b" stopOpacity={0.55} />
         </linearGradient>
         <marker id="ecl-node-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-          <path d="M0,0 L9,4.5 L0,9 Z" className="ecl-node-arrow-head" />
+          <path d="M0,0 L9,4.5 L0,9 Z" className={eclNodeArrowHead} />
         </marker>
         <clipPath id="ecl-panel-clip">
           <rect x={8} y={8} width={ECL.W - 16} height={ECL.H - 16} rx={18} />
@@ -232,18 +233,18 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
       </defs>
 
       <g clipPath="url(#ecl-panel-clip)">
-        <rect x={0} y={0} width={ECL.W} height={ECL.H} className="ecl-panel-bg" />
+        <rect x={0} y={0} width={ECL.W} height={ECL.H} className={eclPanelBg} />
 
         {/* Sun at centre */}
         <circle cx={sun.x} cy={sun.y} r={ECL.sunR + 30} fill="url(#ecl-sunglow)" />
         {rays}
-        <circle cx={sun.x} cy={sun.y} r={ECL.sunR} fill="url(#ecl-sun)" className="ecl-sun-disc" />
-        <text x={sun.x} y={sun.y + ECL.sunR + 28} className="ecl-body-label" textAnchor="middle">
+        <circle cx={sun.x} cy={sun.y} r={ECL.sunR} fill="url(#ecl-sun)" className={eclSunDisc} />
+        <text x={sun.x} y={sun.y + ECL.sunR + 28} className={eclBodyLabel} textAnchor="middle">
           सूर्य
         </text>
 
         {/* Earth's orbital path around the Sun (क्रान्तिवृत्त) */}
-        <path d={earthOrbit} className="ecl-ecliptic-ring" fill="none" />
+        <path d={earthOrbit} className={eclEclipticRing} fill="none" />
 
         {/* राहु–केतु रेखा — through Earth's centre */}
         <line
@@ -251,14 +252,14 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
           y1={nodeLine.a.y}
           x2={nodeLine.b.x}
           y2={nodeLine.b.y}
-          className="ecl-node-line"
+          className={eclNodeLine}
         />
 
         {/* Moon orbit — below the ecliptic plane */}
         {moonOrbit.below}
 
         {/* Sun–Earth line */}
-        <line x1={sun.x} y1={sun.y} x2={earth.x} y2={earth.y} className="ecl-axis" />
+        <line x1={sun.x} y1={sun.y} x2={earth.x} y2={earth.y} className={eclAxis} />
 
         {showShadow && (
           <>
@@ -266,14 +267,14 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
               d={`M ${shadowCone.topP.x} ${shadowCone.topP.y}
                   L ${shadowCone.tipP.x} ${shadowCone.tipP.y}
                   L ${shadowCone.botP.x} ${shadowCone.botP.y} Z`}
-              className="ecl-penumbra"
+              className={eclPenumbra}
             />
             <path
               d={`M ${shadowCone.topU.x} ${shadowCone.topU.y}
                   L ${shadowCone.tipU.x} ${shadowCone.tipU.y}
                   L ${shadowCone.botU.x} ${shadowCone.botU.y} Z`}
               fill="url(#ecl-umbra)"
-              className="ecl-umbra-shape"
+              className={eclUmbraShape}
             />
           </>
         )}
@@ -287,8 +288,8 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
 
         {moonOrbit.above}
 
-        <circle cx={asc.x} cy={asc.y} r={7} className="ecl-node-dot" />
-        <circle cx={desc.x} cy={desc.y} r={7} className="ecl-node-dot" />
+        <circle cx={asc.x} cy={asc.y} r={7} className={eclNodeDot} />
+        <circle cx={desc.x} cy={desc.y} r={7} className={eclNodeDot} />
 
         <NodeCallout
           px={asc.x}
@@ -307,14 +308,14 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
 
         {moonAbove && moonGroup}
 
-        <text x={earth.x} y={earth.y + ECL.earthR + 30} className="ecl-body-label" textAnchor="middle">
+        <text x={earth.x} y={earth.y + ECL.earthR + 30} className={eclBodyLabel} textAnchor="middle">
           पृथ्वी
         </text>
 
-        <text x={ECL.W / 2} y={ECL.H - 52} className="ecl-plane-caption" textAnchor="middle">
+        <text x={ECL.W / 2} y={ECL.H - 52} className={eclPlaneCaption} textAnchor="middle">
           क्रान्तिवृत्त — पृथ्वीको सूर्याङ्को कक्ष (ठोस वृत्त)
         </text>
-        <text x={ECL.W / 2} y={ECL.H - 28} className="ecl-tilt-note" textAnchor="middle">
+        <text x={ECL.W / 2} y={ECL.H - 28} className={eclTiltNote} textAnchor="middle">
           चन्द्र-कक्ष ~{fmt(5)}° झुकेको (टुट्टेदार) · राहु–केतु घडीको दिशामा ~{fmt(19)} वर्षे चक्र
         </text>
       </g>
@@ -326,7 +327,7 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
         >
           {statusLabel}
         </text>
-        <text textAnchor="end" y={26} className="ecl-status-sub">
+        <text textAnchor="end" y={26} className={eclStatusSub}>
           अक्षांश β = {fmt(Math.abs(realBeta(g.betaDeg)).toFixed(1))}° · कोण {fmt(Math.round(g.E))}°
         </text>
       </g>

@@ -1,4 +1,5 @@
 import { EarthGlobeImage } from "./EarthGlobeImage";
+import { ssRotArrowHead, ssRotAxis, ssRotCurve, ssRotDir, ssRotLabel, ssRotPole } from "@/lib/diagram-classes";
 import { ssRotSvg } from "@/lib/learn-classes";
 import { useLocale } from "@/i18n/locale";
 
@@ -16,28 +17,28 @@ export function EarthRotationDiagram() {
     <svg viewBox={`0 0 ${W} ${H}`} className={ssRotSvg} aria-hidden>
       <defs>
         <marker id="ss-rot-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-          <path d="M0,0 L7,3.5 L0,7 Z" className="ss-rot-arrow-head" />
+          <path d="M0,0 L7,3.5 L0,7 Z" className={ssRotArrowHead} />
         </marker>
       </defs>
 
-      <text x={72} y={cy - 4} className="ss-rot-dir" textAnchor="middle">
+      <text x={72} y={cy - 4} className={ssRotDir} textAnchor="middle">
         {pick("पश्चिम", "West")}
       </text>
-      <text x={W - 72} y={cy - 4} className="ss-rot-dir" textAnchor="middle">
+      <text x={W - 72} y={cy - 4} className={ssRotDir} textAnchor="middle">
         {pick("पूर्व", "East")}
       </text>
 
-      <line x1={100} y1={cy} x2={W - 100} y2={cy} className="ss-rot-axis" />
+      <line x1={100} y1={cy} x2={W - 100} y2={cy} className={ssRotAxis} />
 
       <EarthGlobeImage cx={cx} cy={cy} r={r} glow glowClassName="ss-rot-glow" glowPad={10} />
-      <line x1={cx} y1={cy - r - 6} x2={cx} y2={cy + r + 6} className="ss-rot-pole" />
+      <line x1={cx} y1={cy - r - 6} x2={cx} y2={cy + r + 6} className={ssRotPole} />
       <path
         d={`M ${cx - 38} ${cy + 44} A 46 46 0 1 1 ${cx + 38} ${cy + 44}`}
-        className="ss-rot-curve"
+        className={ssRotCurve}
         fill="none"
         markerEnd="url(#ss-rot-arrow)"
       />
-      <text x={cx} y={cy + 72} className="ss-rot-label" textAnchor="middle">
+      <text x={cx} y={cy + 72} className={ssRotLabel} textAnchor="middle">
         {pick("↻ पश्चिम → पूर्व", "↻ West → East")} · ~{fmt(24)} {pick("घण्टा", "hours")}
       </text>
     </svg>

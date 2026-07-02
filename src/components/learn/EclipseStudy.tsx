@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -143,7 +145,7 @@ export function EclipseStudy() {
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
             <input
-              className="ed-scrub"
+              className={edScrub}
               type="range"
               min={0}
               max={RANGE}
@@ -170,7 +172,7 @@ export function EclipseStudy() {
               {playingNodes ? <Pause size={16} /> : <Play size={16} />}
             </button>
             <input
-              className="ed-scrub"
+              className={edScrub}
               type="range"
               min={0}
               max={ECLIPSE_YEAR}
@@ -206,7 +208,7 @@ export function EclipseStudy() {
         </div>
       </div>
       <p className={tmCardCap}>
-        चन्द्रले ~{fmt(27)} दिनमा एक राशि पार गर्छ; <span className="hl-amber">राहु–केतु</span> भने आकाशमा
+        चन्द्रले ~{fmt(27)} दिनमा एक राशि पार गर्छ; <span className={cn("hl-amber")}>राहु–केतु</span> भने आकाशमा
         बिस्तारै <b>घडीको दिशामा</b> घुम्छन् (~{fmt(19)}°/वर्ष, ~{fmt(19)} वर्षे पूरा चक्र) — चन्द्रभन्दा लगभग{" "}
         {fmt(250)} गुणा ढिलो। माथिको <b>☾</b> बटनले चन्द्र/पृथ्वी चलाउँछ; <b>☊</b> बटन वा स्लाइडरले मात्र पात
         रेखा सार्छ। ग्रहण तब हुन्छ जब पूर्णिमा/अमावस्या पात रेखा नजिक पर्छ — वर्षमा झन्डै दुई पटक (

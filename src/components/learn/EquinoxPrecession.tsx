@@ -1,4 +1,7 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { patroMono } from "@/lib/patro-classes";
+import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -262,7 +265,7 @@ export function EquinoxPrecession() {
           </div>
           <div className={edRo}>
             <span className={edRoK}>विषुव अहिले</span>
-            <span className={edRoV({ amber: true })}>{eqRashiNe} <span className="mono" style={{ fontSize: "0.85em" }}>{eqRashiEn}</span></span>
+            <span className={edRoV({ amber: true })}>{eqRashiNe} <span className={cn(patroMono)} style={{ fontSize: "0.85em" }}>{eqRashiEn}</span></span>
           </div>
           <div className={edRo}>
             <span className={edRoK}>विषुव सरेको (बि.सं. ० देखि)</span>
@@ -283,7 +286,7 @@ export function EquinoxPrecession() {
               title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"} aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}>
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
-            <input className="ed-scrub" type="range" min={Y_MIN} max={Y_MAX} step={1} value={Math.round(year)}
+            <input className={edScrub} type="range" min={Y_MIN} max={Y_MAX} step={1} value={Math.round(year)}
               style={{ "--fill": `${((year - Y_MIN) / (Y_MAX - Y_MIN)) * 100}%` } as React.CSSProperties}
               onChange={(e) => { setPlaying(false); setYear(+e.target.value); }} />
           </div>
@@ -296,8 +299,8 @@ export function EquinoxPrecession() {
       </div>
 
       <p className={tmCardCap}>
-        बाहिरी <b>१२ राशि</b> ताराका सापेक्ष <span className="hl">स्थिर</span> छन् (निरयन)। पृथ्वीको अक्ष लट्टू
-        झैँ घुम्दा <span className="hl-amber">वसन्त-विषुव (Point 0)</span> बिस्तारै राशिचक्रमा पछाडि सर्छ —
+        बाहिरी <b>१२ राशि</b> ताराका सापेक्ष <span className={cn("hl")}>स्थिर</span> छन् (निरयन)। पृथ्वीको अक्ष लट्टू
+        झैँ घुम्दा <span className={cn("hl-amber")}>वसन्त-विषुव (Point 0)</span> बिस्तारै राशिचक्रमा पछाडि सर्छ —
         प्रति ~{N(72)} वर्षमा १°। त्यसैले आज विषुव <b>{eqRashiNe}</b> मा छ, अनि सायन ऋतु निरयन महिनासँग
         बिस्तारै फरक पर्दै जान्छ।
       </p>

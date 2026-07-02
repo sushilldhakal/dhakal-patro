@@ -15,6 +15,31 @@ import {
 } from "@/lib/wheel-data";
 import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 import { wheelSvg, wheelSvgWrap } from "@/lib/wheel-classes";
+import {
+  wDaytick,
+  wHit,
+  wKarLbl,
+  wLabel,
+  wLagnaCap,
+  wLagnaLine,
+  wMonthGreg,
+  wMonthNe,
+  wNakName,
+  wOrbit,
+  wPadaAkshar,
+  wPlanetGlow,
+  wPlanetName,
+  wRashiGlyph,
+  wRashiName,
+  wRashiRay,
+  wRimCircle,
+  wSegNak,
+  wSegNow,
+  wSegPada,
+  wSegRashi,
+  wTwName,
+  wYogaLbl,
+} from "@/lib/wheel-svg-classes";
 
 const DEG = Math.PI / 180;
 const CX = 500;
@@ -172,7 +197,7 @@ function WheelChartImpl({
         <path
           key={`ns${i}`}
           d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
-          className={`w-seg-nak${i % 2 ? " alt" : ""}${isHot ? " hot" : ""}${isSel ? " sel" : ""}`}
+          className={wSegNak({ alt: i % 2 === 1, hot: isHot, sel: isSel })}
         />
       );
       nakDecor.push(
@@ -180,7 +205,7 @@ function WheelChartImpl({
           key={`ni${i}`}
           L={Lm}
           r={(R.nakIn + R.nakOut) / 2}
-          cls={`w-nak-name${isSel || isHot ? " sel" : ""}`}
+          cls={wNakName(isSel || isHot)}
           spin={spin}
         >
           {ico.ne}
@@ -201,7 +226,7 @@ function WheelChartImpl({
         <path
           key={`rs${i}`}
           d={arcSeg(L0, L1, R.rashiIn, R.rashiOut)}
-          className={`w-seg-rashi${i % 2 ? " alt" : ""}${isHot ? " hot" : ""}${isSel ? " sel" : ""}`}
+          className={wSegRashi({ alt: i % 2 === 1, hot: isHot, sel: isSel })}
         />
       );
       const [gx, gy] = pol(Lm, R.rashiGlyph);
@@ -212,12 +237,12 @@ function WheelChartImpl({
             y={gy}
             textAnchor="middle"
             dominantBaseline="central"
-            className="w-rashi-glyph"
+            className={wRashiGlyph}
             style={{ fontSize: 27, fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
           >
             {rs.sym + "\uFE0E"}
           </text>
-          <RingLabel L={Lm} r={R.rashiName} cls={`w-rashi-name${isSel || isHot ? " sel" : ""}`} spin={spin}>
+          <RingLabel L={Lm} r={R.rashiName} cls={wRashiName(isSel || isHot)} spin={spin}>
             {rs.ne}
           </RingLabel>
         </g>
@@ -234,9 +259,9 @@ function WheelChartImpl({
           <g key={`pc${i}`}>
             <path
               d={arcSeg(L0, L1, R.padaIn, R.padaOut)}
-              className={`w-seg-pada${Math.floor(i / 4) % 2 ? " alt" : ""}`}
+              className={wSegPada(Math.floor(i / 4) % 2 === 1)}
             />
-            <RingLabel L={Lm} r={R.padaNum} cls="w-pada-akshar" spin={spin}>
+            <RingLabel L={Lm} r={R.padaNum} cls={wPadaAkshar} spin={spin}>
               {PADA_AKSHAR[Math.floor(i / 4)]![i % 4]}
             </RingLabel>
           </g>
@@ -260,7 +285,7 @@ function WheelChartImpl({
               y1={y1}
               x2={x2}
               y2={y2}
-              className={`w-daytick${major ? " major" : ""}`}
+              className={wDaytick(major)}
             />
           );
         }
@@ -275,7 +300,7 @@ function WheelChartImpl({
         <path
           key={`hn${i}`}
           d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
-          className="w-hit"
+          className={wHit}
           onMouseEnter={() => onHover({ type: "nak", i })}
           onMouseLeave={onLeave}
           onClick={() => onPick({ type: "nak", i })}
@@ -289,7 +314,7 @@ function WheelChartImpl({
         <path
           key={`hr${i}`}
           d={arcSeg(L0, L1, R.rashiIn, R.rashiOut)}
-          className="w-hit"
+          className={wHit}
           onMouseEnter={() => onHover({ type: "rashi", i })}
           onMouseLeave={onLeave}
           onClick={() => onPick({ type: "rashi", i })}
@@ -302,13 +327,13 @@ function WheelChartImpl({
       const [x1, y1] = pol(i * 30, 12);
       const [x2, y2] = pol(i * 30, R.rimOuter - 2);
       rashiRays.push(
-        <line key={`ray${i}`} x1={x1} y1={y1} x2={x2} y2={y2} className="w-rashi-ray" />
+        <line key={`ray${i}`} x1={x1} y1={y1} x2={x2} y2={y2} className={wRashiRay} />
       );
     }
 
     const gregLabels: React.ReactNode[] = tw.show_greg
       ? GREG_NE.map((m, i) => (
-          <RingLabel key={`g${i}`} L={(i - 3) * 30 + 5} r={R.gregMid} cls="w-month-greg" spin={spin}>
+          <RingLabel key={`g${i}`} L={(i - 3) * 30 + 5} r={R.gregMid} cls={wMonthGreg} spin={spin}>
             {m}
           </RingLabel>
         ))
@@ -333,7 +358,7 @@ function WheelChartImpl({
       <path
         key="nowwedge"
         d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
-        className="w-seg-now"
+        className={wSegNow}
         style={{ pointerEvents: "none" }}
       />
     );
@@ -343,7 +368,7 @@ function WheelChartImpl({
       <path
         key="nowwedge-rashi"
         d={arcSeg(rL0, rL1, R.rashiIn, R.rashiOut)}
-        className="w-seg-now"
+        className={wSegNow}
         style={{ pointerEvents: "none" }}
       />
     );
@@ -353,21 +378,21 @@ function WheelChartImpl({
       <path
         key="nowwedge-month"
         d={arcSeg(mL0, mL1, R.bsIn, R.bsOut)}
-        className="w-seg-now"
+        className={wSegNow}
         style={{ pointerEvents: "none" }}
       />
     );
     const [lx, ly] = pol(moonLon, R.bsOut - 2);
-    markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className="w-lagna-line" />);
+    markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className={wLagnaLine} />);
     markerNodes.push(
       <g key="moon-cap" transform={`rotate(${-(moonLon + spin)} ${CX} ${CY})`}>
-        <circle cx={CX} cy={CY - (R.bsOut - 2)} r="3.4" className="w-lagna-cap" />
+        <circle cx={CX} cy={CY - (R.bsOut - 2)} r="3.4" className={wLagnaCap} />
         <text
           x={CX}
           y={CY - (R.bsOut + 5)}
           textAnchor="middle"
           dominantBaseline="central"
-          className="w-label"
+          className={wLabel}
           style={{ fontSize: 14, fill: "#f9c800", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
           transform={
             normDeg(moonLon + spin) > 90 && normDeg(moonLon + spin) < 270
@@ -391,7 +416,7 @@ function WheelChartImpl({
 
     // Separator circles (karana/pada and tithi/rashi boundaries are drawn by the main rim-circle list below)
     innerRings.push(
-      <circle key="ir-yoga-i" cx={CX} cy={CY} r={R_YOGA_I} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />,
+      <circle key="ir-yoga-i" cx={CX} cy={CY} r={R_YOGA_I} className={wRimCircle} strokeWidth="0.8" opacity="0.5" />,
     );
 
     // Yoga ring — 27 segments × (360/27)° each. Anchored at −sun so the segment
@@ -430,7 +455,7 @@ function WheelChartImpl({
           key={`yog-lbl-${y}`}
           L={Lm}
           r={(R_YOGA_I + R_YOGA_O) / 2}
-          cls={`w-yoga-lbl${isCur ? " sel" : ""}`}
+          cls={wYogaLbl(isCur)}
           spin={spin}
           size={isCur ? 7 : 5.5}
         >
@@ -464,7 +489,7 @@ function WheelChartImpl({
           key={`kar-lbl-${k}`}
           L={Lm}
           r={(R_KAR_I + R_KAR_O) / 2}
-          cls={`w-kar-lbl${isCur ? " sel" : ""}`}
+          cls={wKarLbl(isCur)}
           spin={spin}
           size={isCur ? 9 : 7.5}
         >
@@ -498,7 +523,7 @@ function WheelChartImpl({
           <RingLabel
             L={Lm}
             r={(R_TIT_I + R_TIT_O) / 2}
-            cls={`w-tw-name${isCur ? " sel" : ""}`}
+            cls={wTwName(isCur)}
             spin={spin}
             size={isCur ? 12 : 9.5}
           >
@@ -569,7 +594,7 @@ function WheelChartImpl({
     );
 
     [44, 70, 96, 120, 150, 178, 204, 216].forEach((r, k) =>
-      core.push(<circle key={`orb${k}`} cx={CX} cy={CY} r={r * ORBIT_SCALE} className="w-orbit" />)
+      core.push(<circle key={`orb${k}`} cx={CX} cy={CY} r={r * ORBIT_SCALE} className={wOrbit} />)
     );
 
     det.grahas.forEach((g, i) => {
@@ -581,7 +606,7 @@ function WheelChartImpl({
       // Ambient glow
       core.push(
         <circle key={`pg${i}`} cx={px} cy={py} r={rad + 6} fill={meta.color}
-          className="w-planet-glow" style={{ pointerEvents: "none" }} />
+          className={wPlanetGlow} style={{ pointerEvents: "none" }} />
       );
 
       // Sun: radiating spikes
@@ -641,7 +666,7 @@ function WheelChartImpl({
       // Name label
       core.push(
         <text key={`pn${i}`} x={px} y={py + rad + 9} textAnchor="middle"
-          className="w-planet-name" style={{ pointerEvents: "none" }}>
+          className={wPlanetName} style={{ pointerEvents: "none" }}>
           {g.ne}
         </text>
       );
@@ -662,7 +687,7 @@ function WheelChartImpl({
             key={`b${i}`}
             L={i * 30 + 15}
             r={R.bsMid}
-            cls={`w-month-ne${tw.show_today && i === sunRashiIdx ? " now" : ""}`}
+            cls={wMonthNe(tw.show_today && i === sunRashiIdx)}
             spin={spin}
           >
             {m.ne}
@@ -753,11 +778,11 @@ function WheelChartImpl({
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        <circle cx={CX} cy={CY} r={R.bsOut} className="w-rim-circle" strokeWidth="1.4" />
+        <circle cx={CX} cy={CY} r={R.bsOut} className={wRimCircle} strokeWidth="1.4" />
         {[R.bsIn, R.nakOut, R.nakIn, R.padaIn, R_KAR_I, R.rashiOut, R.rashiIn].map((r, k) => (
-          <circle key={`rc${k}`} cx={CX} cy={CY} r={r} className="w-rim-circle" strokeWidth="0.8" opacity="0.55" />
+          <circle key={`rc${k}`} cx={CX} cy={CY} r={r} className={wRimCircle} strokeWidth="0.8" opacity="0.55" />
         ))}
-        <circle cx={CX} cy={CY} r={R.core} className="w-rim-circle" strokeWidth="1.1" opacity="0.7" />
+        <circle cx={CX} cy={CY} r={R.core} className={wRimCircle} strokeWidth="1.1" opacity="0.7" />
 
         {rashiSegs}
         {nakSegs}

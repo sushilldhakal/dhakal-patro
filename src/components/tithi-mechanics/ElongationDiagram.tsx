@@ -1,4 +1,5 @@
 import { useMemo, useRef } from "react";
+import { edArc, edArcCap, edArcVal, edAxis, edBodyLabel, edCurband, edDeglabel, edDegtick, edEarthOrbitArrow, edEarthOrbitLabel, edEarthSolarOrbit, edEndEn, edEndNe, edLens, edOrbit, edOrbitDir, edOrbitDirArrow, edOrbitDirLabel, edRay, edRing, edRmline, edTiltCap, edTiltEq, edTiltLabel, edTiltPole, edTiltRim, hoEarthGroup } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
@@ -120,7 +121,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
           y1={i0y}
           x2={i1x}
           y2={i1y}
-          className="ed-degtick"
+          className={edDegtick}
           strokeWidth={isMajor ? 1.3 : 0.8}
           opacity={isMajor ? 0.9 : 0.5}
         />
@@ -132,7 +133,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
             key={`dl${d}`}
             x={tx}
             y={ty}
-            className="ed-deglabel"
+            className={edDeglabel}
             textAnchor="middle"
             dominantBaseline="central"
           >
@@ -152,7 +153,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
     const [lx, ly] = edPos(E0, ED.R, earthX, earthY);
     cells.push(
       <g key={`lens${i}`} transform={`translate(${lx},${ly}) rotate(${-ang0 + 90})`}>
-        <ellipse cx={0} cy={0} rx={4.6} ry={13} className="ed-lens" />
+        <ellipse cx={0} cy={0} rx={4.6} ry={13} className={edLens} />
       </g>
     );
     const [nx, ny] = edPos(Emid, ED.ringIn - 22, earthX, earthY);
@@ -170,7 +171,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
     );
     if (isCur) {
       const [hx, hy] = edPos(Emid, ED.R, earthX, earthY);
-      cells.push(<circle key={`cur${i}`} cx={hx} cy={hy} r={21} className="ed-curband" />);
+      cells.push(<circle key={`cur${i}`} cx={hx} cy={hy} r={21} className={edCurband} />);
     }
   }
 
@@ -199,7 +200,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         y1={ED.sunY + r0 * Math.sin(a)}
         x2={ED.sunX + r1 * Math.cos(a)}
         y2={ED.sunY + r1 * Math.sin(a)}
-        className="ed-ray"
+        className={edRay}
       />
     );
   });
@@ -261,7 +262,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
           refY="4"
           orient="auto"
         >
-          <path d="M0,0 L8,4 L0,8 Z" className="ed-orbit-dir-arrow" />
+          <path d="M0,0 L8,4 L0,8 Z" className={edOrbitDirArrow} />
         </marker>
         <marker
           id="ed-earth-orbit-arrow"
@@ -271,7 +272,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
           refY="3.5"
           orient="auto"
         >
-          <path d="M0,0 L7,3.5 L0,7 Z" className="ed-earth-orbit-arrow" />
+          <path d="M0,0 L7,3.5 L0,7 Z" className={edEarthOrbitArrow} />
         </marker>
         <radialGradient id="ed-sun" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#fff6d8" />
@@ -285,25 +286,25 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         </radialGradient>
       </defs>
 
-      <path d={earthSolarPath} className="ed-earth-solar-orbit" fill="none" markerEnd="url(#ed-earth-orbit-arrow)" />
+      <path d={earthSolarPath} className={edEarthSolarOrbit} fill="none" markerEnd="url(#ed-earth-orbit-arrow)" />
       {!compact && (
         <text
           x={earthArcLabelX}
           y={earthArcLabelY - 10}
-          className="ed-earth-orbit-label"
+          className={edEarthOrbitLabel}
           textAnchor="middle"
         >
           पृथ्वी ~{fmt(Math.round(EARTH_ARC_SYNODIC))}° / चान्द्र मास
         </text>
       )}
 
-      <line x1={ED.sunX} y1={ED.sunY} x2={earthX} y2={earthY} className="ed-axis" />
-      <circle cx={earthX} cy={earthY} r={ED.R} className="ed-orbit" />
-      <circle cx={earthX} cy={earthY} r={ED.ringIn} className="ed-ring" />
-      <circle cx={earthX} cy={earthY} r={ED.ringOut} className="ed-ring" />
+      <line x1={ED.sunX} y1={ED.sunY} x2={earthX} y2={earthY} className={edAxis} />
+      <circle cx={earthX} cy={earthY} r={ED.R} className={edOrbit} />
+      <circle cx={earthX} cy={earthY} r={ED.ringIn} className={edRing} />
+      <circle cx={earthX} cy={earthY} r={ED.ringOut} className={edRing} />
 
-      <path d={orbitDirPath} className="ed-orbit-dir" fill="none" markerEnd="url(#ed-orbit-arrow)" />
-      <text x={earthX} y={earthY - ED.R - 18} className="ed-orbit-dir-label" textAnchor="middle">
+      <path d={orbitDirPath} className={edOrbitDir} fill="none" markerEnd="url(#ed-orbit-arrow)" />
+      <text x={earthX} y={earthY - ED.R - 18} className={edOrbitDirLabel} textAnchor="middle">
         ↺ वामावर्त · चन्द्र
       </text>
 
@@ -331,36 +332,36 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         </text>
       )}
 
-      <path d={sweepArc} className="ed-arc" fill="none" />
-      <circle cx={capx} cy={capy} r={4} className="ed-arc-cap" />
+      <path d={sweepArc} className={edArc} fill="none" />
+      <circle cx={capx} cy={capy} r={4} className={edArcCap} />
       <text
         x={arcLabelX}
         y={arcLabelY}
-        className="ed-arc-val"
+        className={edArcVal}
         textAnchor="middle"
         dominantBaseline="central"
       >
         {fmt(Math.round(E))}°
       </text>
 
-      <line x1={earthX} y1={earthY} x2={mx} y2={my} className="ed-rmline" />
+      <line x1={earthX} y1={earthY} x2={mx} y2={my} className={edRmline} />
 
       <circle cx={ED.sunX} cy={ED.sunY} r={ED.sunR + 34} fill="url(#ed-sunglow)" />
       {rays}
       <circle cx={ED.sunX} cy={ED.sunY} r={ED.sunR} fill="url(#ed-sun)" />
-      <text x={ED.sunX} y={ED.sunY + ED.sunR + 30} className="ed-body-label" textAnchor="middle">
+      <text x={ED.sunX} y={ED.sunY + ED.sunR + 30} className={edBodyLabel} textAnchor="middle">
         सूर्य
       </text>
 
-      <g className="ho-earth-group" transform={`translate(${earthX - ED.earthX0} ${earthY - ED.earthY0})`}>
+      <g className={hoEarthGroup} transform={`translate(${earthX - ED.earthX0} ${earthY - ED.earthY0})`}>
         <EarthGlobeImage cx={ED.earthX0} cy={ED.earthY0} r={ED.earthR} />
-        <circle cx={ED.earthX0} cy={ED.earthY0} r={ED.earthR} fill="none" className="ed-tilt-rim" strokeWidth={1} />
+        <circle cx={ED.earthX0} cy={ED.earthY0} r={ED.earthR} fill="none" className={edTiltRim} strokeWidth={1} />
         <line
           x1={ED.earthX0 - eqUx * eqHalf}
           y1={ED.earthY0 - eqUy * eqHalf}
           x2={ED.earthX0 + eqUx * eqHalf}
           y2={ED.earthY0 + eqUy * eqHalf}
-          className="ed-tilt-eq"
+          className={edTiltEq}
           strokeWidth={1}
           strokeDasharray="3 3"
         />
@@ -369,15 +370,15 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
           y1={ED.earthY0 - axUy * ED.earthR * 1.05}
           x2={ED.earthX0 + axUx * ED.earthR * 1.5}
           y2={ED.earthY0 + axUy * ED.earthR * 1.5}
-          className="ed-tilt-pole"
+          className={edTiltPole}
           strokeWidth={2.2}
           strokeLinecap="round"
         />
-        <circle cx={ED.earthX0 + axUx * ED.earthR} cy={ED.earthY0 + axUy * ED.earthR} r={4} className="ed-tilt-cap" />
-        <text x={ED.earthX0 + axUx * ED.earthR * 1.5 + 8} y={ED.earthY0 + axUy * ED.earthR * 1.5 - 2} textAnchor="start" className="ed-tilt-label">
+        <circle cx={ED.earthX0 + axUx * ED.earthR} cy={ED.earthY0 + axUy * ED.earthR} r={4} className={edTiltCap} />
+        <text x={ED.earthX0 + axUx * ED.earthR * 1.5 + 8} y={ED.earthY0 + axUy * ED.earthR * 1.5 - 2} textAnchor="start" className={edTiltLabel}>
           अक्ष {fmt(EARTH_AXIAL_TILT)}°
         </text>
-        <text x={ED.earthX0} y={ED.earthY0 + ED.earthR + 22} className="ed-body-label" textAnchor="middle">
+        <text x={ED.earthX0} y={ED.earthY0 + ED.earthR + 22} className={edBodyLabel} textAnchor="middle">
           पृथ्वी
         </text>
       </g>
@@ -386,16 +387,16 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         <MoonPhaseDisc elongation={E} r={ED.moonR} uid="ed-moon" />
       </g>
 
-      <text x={amX - 14} y={amY - 30} className="ed-end ne" textAnchor="middle">
+      <text x={amX - 14} y={amY - 30} className={edEndNe()} textAnchor="middle">
         अमावस्या
       </text>
-      <text x={amX - 14} y={amY - 12} className="ed-end en" textAnchor="middle">
+      <text x={amX - 14} y={amY - 12} className={edEndEn()} textAnchor="middle">
         ०°
       </text>
-      <text x={puX + 16} y={puY - 30} className="ed-end ne" textAnchor="middle">
+      <text x={puX + 16} y={puY - 30} className={edEndNe()} textAnchor="middle">
         पूर्णिमा
       </text>
-      <text x={puX + 16} y={puY - 12} className="ed-end en" textAnchor="middle">
+      <text x={puX + 16} y={puY - 12} className={edEndEn()} textAnchor="middle">
         १८०°
       </text>
     </svg>

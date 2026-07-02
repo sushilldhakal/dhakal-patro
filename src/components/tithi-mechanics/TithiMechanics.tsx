@@ -4,7 +4,9 @@ import { toNepaliDigits } from "@/lib/panchanga-format";
 import { moonIllumination, WHEEL_TITHIS, tithiIndexFromElongation, tithiNum, tithiPaksha, tithiPakshaEn } from "@/lib/tithi-wheel-data";
 import { ElongationDiagram, EARTH_ARC_SYNODIC, earthOrbitDegFromElongation } from "./ElongationDiagram";
 import { SYNODIC_MONTH } from "@/components/learn/sun-earth-moon-math";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
+import { edScrub } from "@/lib/diagram-classes";
+;
 import { AdhikMassDiagram, SunriseTimeline } from "./tithi-mechanics-diagrams";
 import { useLocale } from "@/i18n/locale";
 import { tmCardCap, tmCardPadLg, tmFcard, tmFormula, tmHero, tmHeroEyebrow, tmHeroSub, tmHeroTitle, tmKey, tmKeys, tmLede, tmNote, tmPageShell, tmSecEn, tmSecHead, tmSecKicker, tmSecTitle, tmSection, tmWrap, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
@@ -92,7 +94,7 @@ export function ElongationStudy() {
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
           <input
-            className="ed-scrub"
+            className={edScrub}
             type="range"
             min={0}
             max={360}
@@ -149,36 +151,36 @@ export function TithiMechanics() {
             <h3 className={tmSecTitle}>सूर्य · पृथ्वी · चन्द्र — तिथिको आधार</h3>
           </div>
           <p className={tmLede}>
-            पृथ्वीबाट हेर्दा चन्द्रमा सूर्यभन्दा जति <span className="hl">कोणले अगाडि</span> पुग्छ,
+            पृथ्वीबाट हेर्दा चन्द्रमा सूर्यभन्दा जति <span className={cn("hl")}>कोणले अगाडि</span> पुग्छ,
             त्यही कोणले तिथि निर्धारण गर्छ। <b>०°</b> मा दुवै एकै दिशामा हुन्छन् —{" "}
-            <span className="hl-amber">अमावस्या</span>। कोण बढ्दै <b>१८०°</b> पुग्दा चन्द्र ठ्याक्क
-            विपरीत — <span className="hl-amber">पूर्णिमा</span>। तल मुनको गोलो तानेर वा चलाउनुहोस्।
+            <span className={cn("hl-amber")}>अमावस्या</span>। कोण बढ्दै <b>१८०°</b> पुग्दा चन्द्र ठ्याक्क
+            विपरीत — <span className={cn("hl-amber")}>पूर्णिमा</span>। तल मुनको गोलो तानेर वा चलाउनुहोस्।
           </p>
           <ElongationStudy />
 
           <div className={tmFormula}>
             <div className={tmFcard}>
-              <div className="big">
+              <div className={cn("big")}>
                 {toNepaliDigits(12)}
-                <span className="u">°</span>
+                <span className={cn("u")}>°</span>
               </div>
-              <div className="lbl">= १ तिथि</div>
-              <div className="desc">३६०° ÷ ३० तिथि। हरेक १२° कोण पार गर्दा नयाँ तिथि सुरु हुन्छ।</div>
+              <div className={cn("lbl")}>= १ तिथि</div>
+              <div className={cn("desc")}>३६०° ÷ ३० तिथि। हरेक १२° कोण पार गर्दा नयाँ तिथि सुरु हुन्छ।</div>
             </div>
             <div className={tmFcard}>
-              <div className="big">
+              <div className={cn("big")}>
                 ~{toNepaliDigits(12)}
-                <span className="u">°/दिन</span>
+                <span className={cn("u")}>°/दिन</span>
               </div>
-              <div className="lbl">चन्द्रको औसत गति</div>
-              <div className="desc">
+              <div className={cn("lbl")}>चन्द्रको औसत गति</div>
+              <div className={cn("desc")}>
                 तर वास्तवमा १०.७°–१४.३° सम्म घटबढ हुन्छ — चन्द्र कक्षको आकारका कारण।
               </div>
             </div>
             <div className={tmFcard}>
-              <div className="big">सूर्योदय</div>
-              <div className="lbl">तिथि कहिले गनिन्छ?</div>
-              <div className="desc">
+              <div className={cn("big")}>सूर्योदय</div>
+              <div className={cn("lbl")}>तिथि कहिले गनिन्छ?</div>
+              <div className={cn("desc")}>
                 जुन तिथि <b>सूर्योदयमा</b> चलिरहेको हुन्छ, त्यही दिनको तिथि मानिन्छ — यही नियमले
                 वृद्धि र क्षय जन्माउँछ।
               </div>
@@ -193,9 +195,9 @@ export function TithiMechanics() {
             <span className={tmSecEn}>Repeated tithi</span>
           </div>
           <p className={tmLede}>
-            जब चन्द्र <span className="hl">मन्द गतिमा</span> (~१०.७°/दिन) हिँड्छ, एउटै १२° को
+            जब चन्द्र <span className={cn("hl")}>मन्द गतिमा</span> (~१०.७°/दिन) हिँड्छ, एउटै १२° को
             तिथि–खण्डले <b>लगातार दुई सूर्योदय</b> समेट्छ। दुवै बिहान त्यही तिथि चलिरहेकाले
-            पात्रोमा त्यो तिथि <span className="hl-amber">दुई दिन</span> देखिन्छ।
+            पात्रोमा त्यो तिथि <span className={cn("hl-amber")}>दुई दिन</span> देखिन्छ।
           </p>
           <div className={tmCardPadLg}>
             <SunriseTimeline mode="vriddhi" />
@@ -213,9 +215,9 @@ export function TithiMechanics() {
             <span className={tmSecEn}>Skipped tithi</span>
           </div>
           <p className={tmLede}>
-            उल्टो, जब चन्द्र <span className="hl">द्रुत गतिमा</span> (~१४.३°/दिन) हिँड्छ, कुनै १२° को
+            उल्टो, जब चन्द्र <span className={cn("hl")}>द्रुत गतिमा</span> (~१४.३°/दिन) हिँड्छ, कुनै १२° को
             तिथि–खण्ड <b>दुई सूर्योदयको बीचमै</b> पूरै सकिन्छ। कुनै पनि सूर्योदयमा त्यो तिथि
-            नभेटिएकाले त्यो <span className="hl-amber">क्षय</span> भई पात्रोबाट हराउँछ।
+            नभेटिएकाले त्यो <span className={cn("hl-amber")}>क्षय</span> भई पात्रोबाट हराउँछ।
           </p>
           <div className={tmCardPadLg}>
             <SunriseTimeline mode="kshaya" />
@@ -235,8 +237,8 @@ export function TithiMechanics() {
           <p className={tmLede}>
             एक <b>चान्द्र मास</b> (अमावस्यादेखि अमावस्या) ~२९.५ दिनको हुन्छ; एक <b>सौर मास</b> (सूर्य
             एक राशिमा रहने अवधि) ~३०.४ दिनको। चान्द्र मास छोटो भएकाले बेलाबेला एउटा चान्द्र
-            मासभित्र <span className="hl">कुनै सङ्क्रान्ति पर्दैन</span> — त्यही महिना{" "}
-            <span className="hl-amber">अधिक मास</span> कहलिन्छ र अघिल्लो महिनाको नाम दोहोरिन्छ।
+            मासभित्र <span className={cn("hl")}>कुनै सङ्क्रान्ति पर्दैन</span> — त्यही महिना{" "}
+            <span className={cn("hl-amber")}>अधिक मास</span> कहलिन्छ र अघिल्लो महिनाको नाम दोहोरिन्छ।
           </p>
           <div className={tmCardPadLg}>
             <AdhikMassDiagram />

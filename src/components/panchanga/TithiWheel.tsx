@@ -32,6 +32,15 @@ import {
   wheelSvg,
   wheelSvgWrap,
 } from "@/lib/wheel-classes";
+import {
+  wCoreSep,
+  wHit,
+  wOrbit,
+  wRimCircle,
+  wTwName,
+  wTwNum,
+  wTwPaksha,
+} from "@/lib/wheel-svg-classes";
 
 const DEG = Math.PI / 180;
 const CX = 500;
@@ -167,7 +176,7 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
       <path
         key={`kh${k}`}
         d={arcSeg(L0, L1, R.karIn, R.karOut)}
-        className="w-hit"
+        className={wHit}
         onMouseEnter={() => setHover({ type: "kar", k })}
         onMouseLeave={() => setHover(null)}
       />
@@ -191,13 +200,13 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
         <g transform={`translate(${ix},${iy})`}>
           <MoonPhaseIcon elongation={Em} r={14.5} />
         </g>
-        <RingLabel L={Lm} r={R.tnum} cls="w-tw-num" spin={spin}>
+        <RingLabel L={Lm} r={R.tnum} cls={wTwNum(isCur || isSel)} spin={spin}>
           {num(tithiNum(i))}
         </RingLabel>
         <RingLabel
           L={Lm}
           r={R.tname}
-          cls={`w-tw-name${isCur || isSel ? " sel" : ""}`}
+          cls={wTwName(isCur || isSel)}
           spin={spin}
           size={i === 14 || i === 29 ? 12.5 : 11}
         >
@@ -209,7 +218,7 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
       <path
         key={`th${i}`}
         d={arcSeg(mapElongation(i * 12), mapElongation(i * 12 + 12), R.bandIn, R.bandOut)}
-        className="w-hit"
+        className={wHit}
         onMouseEnter={() => setHover({ type: "tithi", i })}
         onMouseLeave={() => setHover(null)}
         onClick={() => setPicked(picked === i ? null : i)}
@@ -320,10 +329,10 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        <circle cx={CX} cy={CY} r={R.rim} className="w-rim-circle" strokeWidth="1.2" />
-        <circle cx={CX} cy={CY} r={R.karIn} className="w-rim-circle" strokeWidth="0.7" opacity="0.5" />
-        <circle cx={CX} cy={CY} r={R.bandIn} className="w-rim-circle" strokeWidth="0.8" opacity="0.5" />
-        <circle cx={CX} cy={CY} r={R.orbit} className="w-orbit" />
+        <circle cx={CX} cy={CY} r={R.rim} className={wRimCircle} strokeWidth="1.2" />
+        <circle cx={CX} cy={CY} r={R.karIn} className={wRimCircle} strokeWidth="0.7" opacity="0.5" />
+        <circle cx={CX} cy={CY} r={R.bandIn} className={wRimCircle} strokeWidth="0.8" opacity="0.5" />
+        <circle cx={CX} cy={CY} r={R.orbit} className={wOrbit} />
 
         {karSegs}
         {tithiCells}
@@ -332,7 +341,7 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
         <g transform={`translate(${mx},${my})`}>
           <MoonPhaseIcon elongation={curE} r={12} />
         </g>
-        <line x1={CX} y1={CY} x2={mx} y2={my} className="w-core-sep" style={{ opacity: 0.5 }} />
+        <line x1={CX} y1={CY} x2={mx} y2={my} className={wCoreSep} style={{ opacity: 0.5 }} />
         <circle cx={CX} cy={CY} r={R.earth} fill="#1f6f63" />
         <circle cx={CX} cy={CY} r={R.earth} fill="none" stroke="#9fe0c8" strokeWidth="1.2" opacity="0.5" />
         <text
@@ -348,10 +357,10 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
         {karHits}
         {tithiHits}
 
-        <RingLabel L={92} r={R.bandIn - 22} cls="w-tw-paksha" spin={spin}>
+        <RingLabel L={92} r={R.bandIn - 22} cls={wTwPaksha} spin={spin}>
           शुक्ल पक्ष
         </RingLabel>
-        <RingLabel L={268} r={R.bandIn - 22} cls="w-tw-paksha" spin={spin}>
+        <RingLabel L={268} r={R.bandIn - 22} cls={wTwPaksha} spin={spin}>
           कृष्ण पक्ष
         </RingLabel>
       </svg>

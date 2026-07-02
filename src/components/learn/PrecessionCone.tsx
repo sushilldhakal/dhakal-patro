@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -289,7 +291,7 @@ export function PrecessionCone() {
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
             <input
-              className="ed-scrub"
+              className={edScrub}
               type="range"
               min={0}
               max={TAU}
@@ -319,10 +321,10 @@ export function PrecessionCone() {
       </div>
 
       <p className={tmCardCap}>
-        पृथ्वीको अक्ष <b>{N("23.5")}°</b> झुकेरै रहन्छ तर लठ्ठाझैँ <span className="hl">क्रान्तिवृत्त ध्रुव</span>{" "}
+        पृथ्वीको अक्ष <b>{N("23.5")}°</b> झुकेरै रहन्छ तर लठ्ठाझैँ <span className={cn("hl")}>क्रान्तिवृत्त ध्रुव</span>{" "}
         वरिपरि बिस्तारै घुम्छ — पूरा एक फेरो <b>~{N("26,000")} वर्ष</b>। त्यसैले उत्तर ध्रुवले
-        फरक-फरक <span className="hl-amber">ध्रुव तारा</span> देखाउँछ — कुनै बेला थुबन, अहिले ध्रुव, र
-        ~१३,७८४ बि.सं. मा अभिजित। ऋतु-आधारित <span className="hl-amber">विषुव रेखा</span> राशिचक्रमा
+        फरक-फरक <span className={cn("hl-amber")}>ध्रुव तारा</span> देखाउँछ — कुनै बेला थुबन, अहिले ध्रुव, र
+        ~१३,७८४ बि.सं. मा अभिजित। ऋतु-आधारित <span className={cn("hl-amber")}>विषुव रेखा</span> राशिचक्रमा
         घुम्दै जान्छ — यही{" "}
         <b>अयन चलन</b> ले माथिको अयनांश खाँडो बढाउँछ।
       </p>

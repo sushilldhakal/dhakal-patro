@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -18,7 +18,13 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { AYANAMSHA_MODES, type AyanamshaMode } from "@/lib/ayanamsha";
 import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { KundaliView } from "@/components/kundali/KundaliView";
-import { KundaliSectionNav, KUNDALI_SECTIONS } from "@/components/kundali/KundaliSectionNav";
+import {
+  DEFAULT_KUNDALI_SECTION,
+  KundaliSectionNav,
+  parseKundaliSectionFromHash,
+  setKundaliSectionHash,
+  type KundaliSectionId,
+} from "@/components/kundali/KundaliSectionNav";
 import { ProfileForm, profileToInput } from "@/components/auth/ProfileForm";
 import {
   Dialog,
@@ -98,6 +104,27 @@ export function KundaliDetail() {
   const setAyanamshaMode = (next: AyanamshaMode) => {
     setAyanamshaModeState(next);
     localStorage.setItem(AYANAMSHA_KEY, next);
+  };
+
+  const [section, setSection] = useState<KundaliSectionId>(() =>
+    typeof window !== "undefined"
+      ? parseKundaliSectionFromHash(window.location.hash)
+      : DEFAULT_KUNDALI_SECTION,
+  );
+
+  useEffect(() => {
+    const syncFromHash = () => setSection(parseKundaliSectionFromHash(window.location.hash));
+    if (!window.location.hash) {
+      setKundaliSectionHash(DEFAULT_KUNDALI_SECTION);
+      setSection(DEFAULT_KUNDALI_SECTION);
+    }
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
+  }, []);
+
+  const navigateSection = (id: KundaliSectionId) => {
+    setKundaliSectionHash(id);
+    setSection(id);
   };
 
   const {
@@ -248,13 +275,29 @@ export function KundaliDetail() {
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,15.5rem)_1fr] gap-6 xl:gap-8 items-start">
         {/* Sidebar */}
         <aside className="xl:sticky xl:top-[5.5rem] flex flex-col gap-4 order-2 xl:order-1">
-          {canShowChart && <KundaliSectionNav className="hidden xl:block" />}
+          {canShowChart && (
+            <KundaliSectionNav
+              className="hidden xl:block"
+              activeId={section}
+              onNavigate={navigateSection}
+            />
+          )}
 
           <AyanamshaSelector mode={ayanamshaMode} onModeChange={setAyanamshaMode} />
         </aside>
 
         {/* Main chart */}
         <div className="min-w-0 order-1 xl:order-2">
+          {canShowChart && (
+            <div className="mb-4 xl:hidden">
+              <KundaliSectionNav
+                activeId={section}
+                onNavigate={navigateSection}
+                variant="horizontal"
+              />
+            </div>
+          )}
+
           {canShowChart ? (
             <KundaliView
               date={birthDate!}
@@ -263,6 +306,7 @@ export function KundaliDetail() {
               locationLabel={location!.label}
               ayanamshaMode={ayanamshaMode}
               hideBirthSummary
+              section={section}
             />
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
@@ -274,22 +318,6 @@ export function KundaliDetail() {
               <Button className="mt-6 gap-1.5" onClick={() => setEditOpen(true)}>
                 <Pencil className="size-4" /> {t("kundali.edit_profile")}
               </Button>
-            </div>
-          )}
-
-          {canShowChart && (
-            <div className="mt-4 xl:hidden overflow-x-auto">
-              <div className="flex gap-2 pb-1 min-w-max">
-                {KUNDALI_SECTIONS.map(({ id, labelKey }) => (
-                  <a
-                    key={id}
-                    href={`#${id}`}
-                    className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  >
-                    {t(labelKey)}
-                  </a>
-                ))}
-              </div>
             </div>
           )}
         </div>

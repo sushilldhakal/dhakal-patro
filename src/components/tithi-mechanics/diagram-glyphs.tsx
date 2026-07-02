@@ -8,14 +8,14 @@ export function TmSun({ x, y, r = 11 }: { x: number; y: number; r?: number }) {
         y1={y + (r + 1.5) * Math.sin(a)}
         x2={x + (r + 5) * Math.cos(a)}
         y2={y + (r + 5) * Math.sin(a)}
-        className="tm-sunray"
+        className={tmSunray}
       />
     );
   });
   return (
     <g>
       {rays}
-      <circle cx={x} cy={y} r={r} className="tm-sundot" />
+      <circle cx={x} cy={y} r={r} className={tmSundot} />
     </g>
   );
 }
@@ -23,7 +23,7 @@ export function TmSun({ x, y, r = 11 }: { x: number; y: number; r?: number }) {
 export function TmNewMoon({ x, y, r = 9 }: { x: number; y: number; r?: number }) {
   return (
     <g>
-      <circle cx={x} cy={y} r={r} className="tm-newmoon" />
+      <circle cx={x} cy={y} r={r} className={tmNewmoon} />
       <circle
         cx={x}
         cy={y}
@@ -44,3 +44,4 @@ export function TmLegendDot({ kind }: { kind: "sun" | "moon" }) {
     </svg>
   );
 }
+import { tmNewmoon, tmSundot, tmSunray } from "@/lib/diagram-classes";

@@ -35,6 +35,7 @@ import {
 import { resolveTimeZone } from "@/lib/zoned-time";
 import { cn } from "@/lib/utils";
 import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartCompare";
+import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
@@ -178,6 +179,8 @@ export interface KundaliViewProps {
   showShanti?: boolean;
   /** Hide the birth-moment hero (profile page shows birth facts in sidebar). */
   hideBirthSummary?: boolean;
+  /** Profile page: show only this section (tab-style). Omit to show all sections. */
+  section?: KundaliSectionId;
 }
 
 /**
@@ -196,6 +199,7 @@ export function KundaliView({
   ayanamshaMode,
   showShanti = true,
   hideBirthSummary = false,
+  section,
 }: KundaliViewProps) {
   const { t } = useTranslation();
   const { lang, pick, digits } = useLocale();
@@ -322,6 +326,8 @@ export function KundaliView({
 
   const dasha = dashaQ.data;
 
+  const showSection = (id: KundaliSectionId) => section == null || section === id;
+
   const dateBs =
     data?.date_bs ??
     `${bs.year}-${String(bs.month).padStart(2, "0")}-${String(bs.day).padStart(2, "0")}`;
@@ -345,7 +351,7 @@ export function KundaliView({
   }
 
   return (
-    <div className="space-y-6">
+    <div className={section ? undefined : "space-y-6"}>
       {/* Birth summary — anonymous / generator flow only */}
       {!hideBirthSummary && (
         <section className="rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
@@ -396,7 +402,7 @@ export function KundaliView({
       )}
 
       {/* Unified birth panchanga + avakahada (profile view) */}
-      {hideBirthSummary && (panchangSummary || lagna) && (
+      {showSection("kundali-overview") && hideBirthSummary && (panchangSummary || lagna) && (
         <div className="rounded-2xl border border-secondary/25 bg-gradient-to-br from-secondary/[0.08] to-card p-4 sm:p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)]">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -568,7 +574,7 @@ export function KundaliView({
       )}
 
 
-      {(lagna?.longitude != null || moon?.longitude != null) && (
+      {showSection("kundali-charts") && (lagna?.longitude != null || moon?.longitude != null) && (
         <div id="kundali-charts" className="scroll-mt-24">
           <PanchangaSection titleNe="कुण्डली चक्र" titleEn="Divisional Charts">
             <DivisionalChartCompare
@@ -581,7 +587,7 @@ export function KundaliView({
       )}
 
       {/* Nava Graha */}
-      {planets.length > 0 ? (
+      {showSection("kundali-graha") && planets.length > 0 ? (
         <div id="kundali-graha" className="scroll-mt-24">
         <PanchangaSection titleNe="नव ग्रह" titleEn="Nava Graha">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4">
@@ -635,13 +641,13 @@ export function KundaliView({
           </div>
         </PanchangaSection>
         </div>
-      ) : (
+      ) : showSection("kundali-graha") ? (
         <p className="text-muted-foreground text-sm">{pick("यो मितिको लागि ग्रह डाटा उपलब्ध छैन।", "No planetary data available for this date.")}</p>
-      )}
+      ) : null}
 
 
 
-      {dasha && (
+      {showSection("kundali-dasha") && dasha && (
         <div id="kundali-dasha" className="scroll-mt-24">
         <PanchangaSection titleNe="विंशोत्तरी दशा" titleEn="Vimshottari Dasha">
           <div className="p-4 space-y-4">
@@ -677,13 +683,27 @@ export function KundaliView({
         </div>
       )}
 
-      {shadbalaQ.data && (
+      {showSection("kundali-dasha") && !dasha && dashaQ.isLoading && (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
+          <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
+          {pick("दशा गणना हुँदै…", "Computing dasha…")}
+        </div>
+      )}
+
+      {showSection("kundali-shadbala") && shadbalaQ.data && (
         <div id="kundali-shadbala" className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
           <ShadbalaCard data={shadbalaQ.data} />
         </div>
       )}
 
-      {showShanti && (
+      {showSection("kundali-shadbala") && !shadbalaQ.data && shadbalaQ.isLoading && (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
+          <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
+          {pick("षड्बल गणना हुँदै…", "Computing shadbala…")}
+        </div>
+      )}
+
+      {showSection("kundali-shanti") && showShanti && (
         <div id="kundali-shanti" className="scroll-mt-24">
         <PanchangaSection titleNe="शान्ति विधि" titleEn="Navagraha Shanti">
           <div className="p-4">
@@ -704,6 +724,7 @@ export function KundaliView({
         </div>
       )}
 
+      {showSection("kundali-report") && (
       <div id="kundali-report" className="scroll-mt-24">
       <KundaliReport
         key={`${atTimeDatetime}|${locationCacheKey(locationParams)}|${ayanamshaMode}`}
@@ -713,6 +734,7 @@ export function KundaliView({
         disabled={isLoading || isError}
       />
       </div>
+      )}
     </div>
   );
 }

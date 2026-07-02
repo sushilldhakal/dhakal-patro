@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useMemo } from "react";
+import { semEclipticGrid, semGridNakLine, semGridNakSeg, semGridRashiLine, semGridRashiSeg } from "@/lib/diagram-classes";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WHEEL_RASHIS } from "@/lib/wheel-data";
 import {
@@ -55,7 +57,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
       const deg = i * 30;
       const { x0, y0, x1, y1 } = radialLine(deg, SEM.sunR + 8, SEM_GRID.lineOut);
       rashiLines.push(
-        <line key={`rg-${i}`} x1={x0} y1={y0} x2={x1} y2={y1} className="sem-grid-rashi-line" />,
+        <line key={`rg-${i}`} x1={x0} y1={y0} x2={x1} y2={y1} className={semGridRashiLine} />,
       );
     }
 
@@ -75,7 +77,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
       const deg = i * NAKSHATRA_SPAN_DEG;
       const { x0, y0, x1, y1 } = radialLine(deg, SEM_GRID.rashiOut, SEM_GRID.lineOut);
       nakLines.push(
-        <line key={`ng-${i}`} x1={x0} y1={y0} x2={x1} y2={y1} className="sem-grid-nak-line" />,
+        <line key={`ng-${i}`} x1={x0} y1={y0} x2={x1} y2={y1} className={semGridNakLine} />,
       );
     }
 
@@ -119,14 +121,14 @@ export function EclipticGridLayer({ sunLon }: Props) {
   });
 
   return (
-    <g className="sem-ecliptic-grid" aria-hidden>
+    <g className={semEclipticGrid} aria-hidden>
       {grid.rashiArcs}
       {grid.nakArcs}
       {grid.rashiLines}
       {grid.nakLines}
       <path
         d={semArc(curRashi * 30, (curRashi + 1) * 30, SEM_GRID.rashiIn, SEM_GRID.rashiOut)}
-        className="sem-grid-rashi-seg cur"
+        className={cn(semGridRashiSeg, "cur")}
       />
       <path
         d={semArc(
@@ -135,7 +137,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
           SEM_GRID.nakIn,
           SEM_GRID.nakOut,
         )}
-        className="sem-grid-nak-seg cur"
+        className={cn(semGridNakSeg, "cur")}
       />
       {rashiLabels}
       {nakLabels}

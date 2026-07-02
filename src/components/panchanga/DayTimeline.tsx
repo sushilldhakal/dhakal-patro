@@ -11,8 +11,38 @@ import {
   type TimelineRowData,
 } from "./day-timeline-data";
 import { useLocale } from "@/i18n/locale";
-import { patroCard, patroSecBand, patroSkel } from "@/lib/patro-classes";
+import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
+import {
+  pgTlAxis,
+  pgTlEventTimeMoon,
+  pgTlMoonEmoji,
+  pgTlRowlabel,
+  pgTlRowlabelEn,
+  pgTlRowline,
+  pgTlSunDisc,
+  pgTlSunHorizon,
+  pgTlTick,
+  pgTlVgridMajor,
+  pgxArrow,
+  pgxArrowBound,
+  pgxGhati,
+  pgxHour,
+  pgxMoonline,
+  pgxNightwash,
+  pgxNowLine,
+  pgxNowPill,
+  pgxNowText,
+  pgxPaksha,
+  pgxScaleLabelDim,
+  pgxSeg,
+  pgxSegname,
+  pgxSegnameCho,
+  pgxSegnameSm,
+  pgxSunhair,
+  pgxSunline,
+  pgxTimeLagna,
+} from "@/lib/timeline-classes";
 
 const W = 1000;
 const X0 = 96;
@@ -105,7 +135,7 @@ function DayTimelineBand() {
   const { pick } = useLocale();
   return (
     <div className={patroSecBand}>
-      <h2 className="m-0 text-sm font-bold">{pick("दिन-चक्र", "Day cycle")}</h2>
+      <h2 className={cn("m-0", "text-sm", "font-bold")}>{pick("दिन-चक्र", "Day cycle")}</h2>
       <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         {pick("पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise", "Full panchanga timeline · sunrise to sunrise")}
       </span>
@@ -168,7 +198,7 @@ export function DayTimeline({
     return (
       <div className={cn(patroCard, "max-w-full")} aria-busy={loading || !data}>
         <DayTimelineBand />
-        <div className="w-full max-w-full overflow-hidden px-3 pt-3 pb-1">
+        <div className={cn("w-full", "max-w-full", "overflow-hidden", "px-3", "pt-3", "pb-1")}>
           <div className={cn(patroSkel, "w-full")} style={{ minHeight: 320 }} />
         </div>
       </div>
@@ -229,10 +259,10 @@ export function DayTimeline({
     <div className={cn(patroCard, "max-w-full")}>
       <DayTimelineBand />
 
-      <div className="w-full max-w-full overflow-hidden px-3 pt-3 pb-1">
+      <div className={cn("w-full", "max-w-full", "overflow-hidden", "px-3", "pt-3", "pb-1")}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="block h-auto w-full max-w-full"
+          className={cn("block", "h-auto", "w-full", "max-w-full")}
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label="Full panchanga day chart"
@@ -242,35 +272,35 @@ export function DayTimeline({
             y={RULER_H - 8}
             width={X1 - gx(data.dayG)}
             height={H - RULER_H + 2}
-            className="pgx-nightwash"
+            className={pgxNightwash}
           />
 
-          <text x={X0 - 10} y={20} className="pgx-scale-label" textAnchor="end">
+          <text x={X0 - 10} y={20} className={pgxScaleLabelDim()} textAnchor="end">
             {pick("घण्टा", "Hour")}
           </text>
-          <text x={X0 - 10} y={47} className="pgx-scale-label dim" textAnchor="end">
+          <text x={X0 - 10} y={47} className={pgxScaleLabelDim(true)} textAnchor="end">
             {pick("घडी", "Ghati")}
           </text>
-          <line x1={X0} y1={30} x2={X1} y2={30} className="pg-tl-axis" />
+          <line x1={X0} y1={30} x2={X1} y2={30} className={pgTlAxis} />
           {data.civilHourTicks.map(({ hour, g }) => (
             <g key={`h-${hour}-${g}`}>
-              <line x1={gx(g)} y1={30} x2={gx(g)} y2={24} className="pg-tl-tick" />
-              <text x={gx(g)} y={18} className="pgx-hour" textAnchor="middle">
+              <line x1={gx(g)} y1={30} x2={gx(g)} y2={24} className={pgTlTick} />
+              <text x={gx(g)} y={18} className={pgxHour} textAnchor="middle">
                 {digits(hour)}
               </text>
             </g>
           ))}
           {GHATI_TICKS.map((g) => (
             <g key={`g-${g}`}>
-              <line x1={gx(g)} y1={30} x2={gx(g)} y2={36} className="pg-tl-tick" />
-              <text x={gx(g)} y={48} className="pgx-ghati" textAnchor="middle">
+              <line x1={gx(g)} y1={30} x2={gx(g)} y2={36} className={pgTlTick} />
+              <text x={gx(g)} y={48} className={pgxGhati} textAnchor="middle">
                 {digits(g)}
               </text>
             </g>
           ))}
 
-          <line x1={X0} y1={SUNLINE_Y} x2={X1} y2={SUNLINE_Y} className="pgx-sunline" />
-          <line x1={X0} y1={T0 - 1} x2={X1} y2={T0 - 1} className="pgx-moonline" />
+          <line x1={X0} y1={SUNLINE_Y} x2={X1} y2={SUNLINE_Y} className={pgxSunline} />
+          <line x1={X0} y1={T0 - 1} x2={X1} y2={T0 - 1} className={pgxMoonline} />
           <EventMarker g={0} sunriseMin={data.sunriseMin} kind="sunrise" anchor="start" />
           <EventMarker g={data.dayG} sunriseMin={data.sunriseMin} kind="sunset" anchor="middle" />
           {data.moonsetG != null && (
@@ -288,7 +318,7 @@ export function DayTimeline({
               y1={T0}
               x2={gx(g)}
               y2={H - 4}
-              className="pgx-sunhair"
+              className={pgxSunhair}
             />
           ))}
 
@@ -296,10 +326,10 @@ export function DayTimeline({
             const y = trackY(ti);
             return (
               <g key={tr.key}>
-                <text x={X0 - 10} y={y + BAND / 2 - 2} className="pg-tl-rowlabel" textAnchor="end">
+                <text x={X0 - 10} y={y + BAND / 2 - 2} className={pgTlRowlabel} textAnchor="end">
                   {pick(tr.ne, tr.en)}
                 </text>
-                <text x={X0 - 10} y={y + BAND / 2 + 11} className="pg-tl-rowlabel-en" textAnchor="end">
+                <text x={X0 - 10} y={y + BAND / 2 + 11} className={pgTlRowlabelEn} textAnchor="end">
                   {pick(tr.en, "")}
                 </text>
                 <line
@@ -307,25 +337,24 @@ export function DayTimeline({
                   y1={y + BAND}
                   x2={X1}
                   y2={y + BAND}
-                  className={`pg-tl-rowline pg-tl-rowline-${ti % 7}`}
+                  className={pgTlRowline(ti)}
                 />
 
                 {tr.segs.map((s, si) => {
                   const x = gx(s.fromG);
                   const x2 = gx(s.toG);
                   const w = x2 - x;
-                      const isActiveLagna =
-                        ephemerisNeedle &&
-                        tr.cls === "lagna" &&
-                        nowG != null &&
-                        nowG >= s.fromG &&
-                        nowG < s.toG;
-                      const segCls =
-                        tr.cls === "cho" || tr.cls === "hora"
-                          ? s.bad
-                            ? "pgx-seg cho-bad"
-                            : "pgx-seg cho-good"
-                          : `pgx-seg ${tr.cls}${si % 2 ? " alt" : ""}${isActiveLagna ? " active" : ""}`;
+                  const isActiveLagna =
+                    ephemerisNeedle &&
+                    tr.cls === "lagna" &&
+                    nowG != null &&
+                    nowG >= s.fromG &&
+                    nowG < s.toG;
+                  const segCls = pgxSeg(tr.cls, {
+                    alt: tr.cls !== "cho" && tr.cls !== "hora" && si % 2 === 1,
+                    active: isActiveLagna,
+                    bad: s.bad,
+                  });
                   const midX = clampX((x + x2) / 2, 26);
                   const narrow = w < 64;
                   const segText = pick(s.ne, s.en);
@@ -364,7 +393,7 @@ export function DayTimeline({
                           <text
                             x={(x + x2) / 2}
                             y={y + BAND / 2 + 4}
-                            className={`pgx-segname cho${s.bad ? " bad" : ""}`}
+                            className={pgxSegnameCho(s.bad)}
                             textAnchor="middle"
                           >
                             {segText}
@@ -375,13 +404,13 @@ export function DayTimeline({
                           <text
                             x={midX}
                             y={labelY}
-                            className={narrow ? "pgx-segname pgx-segname-sm" : "pgx-segname"}
+                            className={narrow ? cn(pgxSegname, pgxSegnameSm) : pgxSegname}
                             textAnchor="middle"
                             clipPath={`url(#${clipId})`}
                           >
                             {mainName}
                             {!narrow && paksha ? (
-                              <tspan className="pgx-paksha">{` · ${paksha}`}</tspan>
+                              <tspan className={pgxPaksha}>{` · ${paksha}`}</tspan>
                             ) : null}
                           </text>
                         )
@@ -400,7 +429,7 @@ export function DayTimeline({
               y1={T0}
               x2={gx(g)}
               y2={H - 4}
-              className="pg-tl-vgrid-major"
+              className={pgTlVgridMajor}
             />
           ))}
 
@@ -427,7 +456,7 @@ export function DayTimeline({
                       <text
                         x={clampX(x2, 22)}
                         y={y + BAND + 16}
-                        className={tr.cls === "lagna" ? "pgx-time lagna" : "pgx-time"}
+                        className={pgxTimeLagna(tr.cls === "lagna")}
                         textAnchor="middle"
                       >
                         {time}
@@ -440,17 +469,17 @@ export function DayTimeline({
           })}
 
           {nowG != null && nowG >= 0 && nowG <= 60 && (
-            <g className="pgx-now">
-              <line x1={gx(nowG)} y1={RULER_H - 6} x2={gx(nowG)} y2={H - 4} />
+            <g>
+              <line x1={gx(nowG)} y1={RULER_H - 6} x2={gx(nowG)} y2={H - 4} className={pgxNowLine} />
               <rect
                 x={clampX(gx(nowG), 30) - 48}
                 y={RULER_H - 22}
                 width={100}
                 height={17}
                 rx={9}
-                className="pgx-now-pill"
+                className={pgxNowPill}
               />
-              <text x={clampX(gx(nowG), 30)} y={RULER_H - 10} textAnchor="middle" className="pgx-now-text">
+              <text x={clampX(gx(nowG), 30)} y={RULER_H - 10} textAnchor="middle" className={pgxNowText}>
                 {nowLabel} {tLabel(nowG)}
               </text>
             </g>
@@ -459,14 +488,14 @@ export function DayTimeline({
       </div>
 
       {planets.length > 0 && (
-        <div className="flex items-stretch gap-3 border-t border-border px-4 py-2.5 pb-3.5">
+        <div className={cn("flex", "items-stretch", "gap-3", "border-t", "border-border", "px-4", "py-2.5", "pb-3.5")}>
           <div className="flex min-w-[86px] flex-col justify-center">
             <span className="text-[12.5px] font-bold">{pick("ग्रह", "Planets")}</span>
             <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground">
               {getPlanetsAnchorLabel(p)}
             </span>
           </div>
-          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+          <div className={cn("flex", "min-w-0", "flex-1", "flex-wrap", "gap-1.5")}>
             {planets.map(({ label, rashiNe, coords }) => {
               const labelL = pick(label, TL_GRAHA_EN[label] ?? label);
               const rashiL = pick(rashiNe ?? "—", TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—");
@@ -482,7 +511,7 @@ export function DayTimeline({
                 <span className="inline-flex items-baseline gap-0.5 text-[11.5px] font-semibold whitespace-nowrap">
                   {labelL}–{rashiL}
                 </span>
-                <span className="mono text-xs font-medium text-muted-foreground">{coords}</span>
+                <span className={cn(patroMono, "text-xs font-medium text-muted-foreground")}>{coords}</span>
               </div>
               );
             })}
@@ -498,12 +527,12 @@ function TransitionArrow({ x2, y }: { x2: number; y: number }) {
   const rowY = y + BAND;
 
   return (
-    <g className="pgx-arrow">
+    <g className={pgxArrow}>
       <line x1={x2 - 14} y1={rowY} x2={x2 - 5} y2={rowY} />
       <path d={`M ${x2 - 6} ${rowY - 3.6} L ${x2 - 1.5} ${rowY} L ${x2 - 6} ${rowY + 3.6} z`} />
       <line x1={x2 + 14} y1={rowY} x2={x2 + 5} y2={rowY} />
       <path d={`M ${x2 + 6} ${rowY - 3.6} L ${x2 + 1.5} ${rowY} L ${x2 + 6} ${rowY + 3.6} z`} />
-      <line className="pgx-arrow-bound" x1={x2} y1={rowY - 5} x2={x2} y2={rowY + 5} />
+      <line className={pgxArrowBound} x1={x2} y1={rowY - 5} x2={x2} y2={rowY + 5} />
     </g>
   );
 }
@@ -516,8 +545,8 @@ function SunHalfIcon({ x, y, variant }: { x: number; y: number; variant: "rise" 
 
   return (
     <g aria-hidden>
-      <line x1={x - SUN_R - 3} y1={y} x2={x + SUN_R + 3} y2={y} className="pg-tl-sun-horizon" />
-      <path d={arc} className="pg-tl-sun-disc" />
+      <line x1={x - SUN_R - 3} y1={y} x2={x + SUN_R + 3} y2={y} className={pgTlSunHorizon} />
+      <path d={arc} className={pgTlSunDisc} />
     </g>
   );
 }
@@ -549,7 +578,7 @@ function EventMarker({
           x={x}
           y={MOON_EMOJI_Y}
           textAnchor="middle"
-          className="pg-tl-moon-emoji"
+          className={pgTlMoonEmoji}
           dominantBaseline="central"
           aria-hidden
         >
@@ -560,7 +589,7 @@ function EventMarker({
         x={labelX}
         y={isSun ? MARKER_TIME_Y : MOON_TIME_Y}
         textAnchor={anchor}
-        className={isSun ? "pg-tl-event-time" : "pg-tl-event-time moon"}
+        className={pgTlEventTimeMoon(!isSun)}
       >
         {clock}
       </text>

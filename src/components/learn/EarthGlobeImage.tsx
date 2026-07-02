@@ -1,4 +1,5 @@
 import { memo, useId } from "react";
+import { earthGlobeObject, earthGlobeRim } from "@/lib/diagram-classes";
 import earthRotatingUrl from "@/assets/earth_rotating.svg?url";
 
 /** Mean obliquity of the ecliptic (Earth's axial tilt). */
@@ -52,12 +53,12 @@ export const EarthGlobeImage = memo(function EarthGlobeImage({
           width={d}
           height={d}
           transform={`rotate(${tilt} ${cx} ${cy})`}
-          className="earth-globe-object"
+          className={earthGlobeObject}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
         />
       </g>
-      <circle cx={cx} cy={cy} r={r} fill="none" className="earth-globe-rim" />
+      <circle cx={cx} cy={cy} r={r} fill="none" className={earthGlobeRim} />
     </>
   );
 });

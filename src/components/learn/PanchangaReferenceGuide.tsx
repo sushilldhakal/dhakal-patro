@@ -1,4 +1,5 @@
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
+import { patroMono } from "@/lib/patro-classes";
 import {
   KAR_FIX_NAMES,
   KAR_MOV,
@@ -77,12 +78,12 @@ export function RashiReferenceTable() {
       <tbody>
         {WHEEL_RASHIS.map((r, i) => (
           <tr key={r.ne}>
-            <td className="mono">{N(i + 1)}</td>
+            <td className={patroMono}>{N(i + 1)}</td>
             <td>
               <span className={learnRefSym}>{r.sym}</span> {pick(r.ne, r.en)}
             </td>
             <td className={learnRefEn}>{r.en}</td>
-            <td className={cn("mono", learnRefDeg)}>
+            <td className={cn(patroMono, learnRefDeg)}>
               {N(i * 30)}°–{N((i + 1) * 30)}°
             </td>
             <td>{pick(RASHI_LORDS[i], NAK_LORD_EN[RASHI_LORDS[i]] ?? RASHI_LORDS[i])}</td>
@@ -109,7 +110,7 @@ export function GrahaReferenceTable() {
       <tbody>
         {GRAHA_ROWS.map((g, i) => (
           <tr key={g.ne}>
-            <td className="mono">{N(i + 1)}</td>
+            <td className={patroMono}>{N(i + 1)}</td>
             <td>
               <span className={learnRefSym}>{g.sym}</span> {pick(g.ne, g.en)}
             </td>
@@ -146,10 +147,10 @@ export function NakshatraReferenceTable() {
           const startDeg = i * 13;
           return (
             <tr key={nak.ne}>
-              <td className="mono">{N(i + 1)}</td>
+              <td className={patroMono}>{N(i + 1)}</td>
               <td>{pick(nak.ne, nak.en)}</td>
               <td className={learnRefEn}>{nak.en}</td>
-              <td className={cn("mono", learnRefDeg)}>
+              <td className={cn(patroMono, learnRefDeg)}>
                 {N(startDeg)}°{N(20)}′–{N(startDeg + 13)}°{N(20)}′
               </td>
               <td>{pick(nak.lord_ne, NAK_LORD_EN[nak.lord_ne] ?? nak.lord_ne)}</td>
@@ -186,11 +187,11 @@ export function TithiReferenceTable() {
           const degEnd = (i + 1) * 12;
           return (
             <tr key={`${t.ne}-${i}`} className={t.moon ? learnRefHighlightRow : undefined}>
-              <td className="mono">{N(i + 1)}</td>
+              <td className={patroMono}>{N(i + 1)}</td>
               <td>{pick(t.ne, t.en)}</td>
               <td className={learnRefEn}>{t.en}</td>
               <td>{pick(t.paksha, t.pakshaEn ? `${t.pakshaEn} Paksha` : t.paksha)}</td>
-              <td className={cn("mono", learnRefDeg)}>
+              <td className={cn(patroMono, learnRefDeg)}>
                 {N(degStart)}°–{N(degEnd)}°
               </td>
             </tr>
@@ -215,9 +216,9 @@ export function YogaReferenceTable() {
       <tbody>
         {WHEEL_YOGAS.map((y, i) => (
           <tr key={y}>
-            <td className="mono">{N(i + 1)}</td>
+            <td className={patroMono}>{N(i + 1)}</td>
             <td>{pick(y, YOGA_EN[i] ?? y)}</td>
-            <td className={cn("mono", learnRefDeg)}>
+            <td className={cn(patroMono, learnRefDeg)}>
               {N(i * 13)}°{N(20)}′–{N((i + 1) * 13)}°{N(20)}′
             </td>
           </tr>
@@ -245,14 +246,14 @@ export function KaranaReferenceTable() {
         </thead>
         <tbody>
           <tr className={learnRefHighlightRow}>
-            <td className="mono">{N(1)}</td>
+            <td className={patroMono}>{N(1)}</td>
             <td>{pick("किंस्तुघ्न", KARANA_EN["किंस्तुघ्न"] ?? "Kimstughna")}</td>
             <td>{pick("स्थिर", "Fixed")}</td>
             <td>{pick("शुक्ल प्रतिपदाको पहिलो आधा — वर्षमा एक पटक", "First half of Shukla Pratipada — once a year")}</td>
           </tr>
           {charRows.map((k, i) => (
             <tr key={k.ne}>
-              <td className="mono">{N(i + 2)}</td>
+              <td className={patroMono}>{N(i + 2)}</td>
               <td>{pick(k.ne, KARANA_EN[k.ne] ?? k.ne)}{k.ne === "विष्टि" ? pick(" (भद्रा)", " (Bhadra)") : ""}</td>
               <td>{k.type}</td>
               <td>{pick("महिनाभरि बारम्बार दोहोरिन्छ", "Repeats throughout the month")}</td>
@@ -260,7 +261,7 @@ export function KaranaReferenceTable() {
           ))}
           {sthiraRows.slice(1).map((k, i) => (
             <tr key={k.ne}>
-              <td className="mono">{N(i + 9)}</td>
+              <td className={patroMono}>{N(i + 9)}</td>
               <td>{pick(k.ne, KARANA_EN[k.ne] ?? k.ne)}</td>
               <td>{k.type}</td>
               <td>{pick("महिनामा एक–एक पटक — कृष्ण चतुर्दशी, औंसी, शुक्ल प्रतिपदा, पूर्णिमा", "Once each per month — Krishna Chaturdashi, Amavasya, Shukla Pratipada, Purnima")}</td>

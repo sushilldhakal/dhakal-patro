@@ -1,4 +1,26 @@
 import { Fragment } from "react";
+import {
+  tmAdhikNote,
+  tmAdhikRing,
+  tmAxis,
+  tmBand,
+  tmBandName,
+  tmBandNo,
+  tmDate,
+  tmDateSub,
+  tmLunarBand,
+  tmSegName,
+  tmSegSym,
+  tmSegTag,
+  tmSolarBand,
+  tmSunline,
+  tmTlCap,
+  tmTrackLabel,
+  tmTrackSub,
+  tmTravel,
+  tmTravelHead,
+  tmVline,
+} from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { WHEEL_TITHIS, tithiNum } from "@/lib/tithi-wheel-data";
 import { tmAmLegend, tmCal, tmCalCellDup, tmCalGap, tmCalGate, tmCalNo, tmCalTithi, tmDiagramSvg, tmLegAdhik } from "@/lib/learn-classes";
@@ -59,12 +81,12 @@ export function SunriseTimeline({ mode }: { mode: "vriddhi" | "kshaya" }) {
           y={trackTop}
           width={x1 - x0}
           height={trackH}
-          className={`tm-band${b % 2 ? " alt" : ""}${isDup ? " dup" : ""}${isSkip ? " skip" : ""}`}
+          className={tmBand({ alt: b % 2 === 1, dup: isDup, skip: isSkip })}
         />
         <text
           x={(x0 + x1) / 2}
           y={trackTop + 25}
-          className={`tm-band-no${isDup || isSkip ? " hot" : ""}`}
+          className={tmBandNo(isDup || isSkip)}
           textAnchor="middle"
         >
           {fmt(tNo(b))}
@@ -72,7 +94,7 @@ export function SunriseTimeline({ mode }: { mode: "vriddhi" | "kshaya" }) {
         <text
           x={(x0 + x1) / 2}
           y={trackTop + 45}
-          className={`tm-band-name${isDup || isSkip ? " hot" : ""}`}
+          className={tmBandName(isDup || isSkip)}
           textAnchor="middle"
         >
           {tName(b).ne}
@@ -85,12 +107,12 @@ export function SunriseTimeline({ mode }: { mode: "vriddhi" | "kshaya" }) {
     const x = mapE(e);
     return (
       <g key={`s${i}`}>
-        <line x1={x} y1={trackTop - 22} x2={x} y2={trackTop + trackH + 10} className="tm-sunline" />
+        <line x1={x} y1={trackTop - 22} x2={x} y2={trackTop + trackH + 10} className={tmSunline} />
         <TmSun x={x} y={trackTop - 34} r={10} />
-        <text x={x} y={trackTop + trackH + 30} className="tm-date" textAnchor="middle">
+        <text x={x} y={trackTop + trackH + 30} className={tmDate} textAnchor="middle">
           {fmt(startGate + i)} गते
         </text>
-        <text x={x} y={trackTop + trackH + 46} className="tm-date-sub" textAnchor="middle">
+        <text x={x} y={trackTop + trackH + 46} className={tmDateSub} textAnchor="middle">
           सूर्योदय
         </text>
       </g>
@@ -100,24 +122,24 @@ export function SunriseTimeline({ mode }: { mode: "vriddhi" | "kshaya" }) {
   const cal = sun.map((_, i) => ({ gate: startGate + i, band: sunBand[i]! }));
 
   return (
-    <div className="tm-tl">
+    <div>
       <svg viewBox={`0 0 ${W} ${H}`} className={tmDiagramSvg}>
         <line
           x1={padL - 6}
           y1={trackTop + trackH / 2}
           x2={W - padR + 6}
           y2={trackTop + trackH / 2}
-          className="tm-axis"
+          className={tmAxis}
         />
         {bands}
         {marks}
-        <text x={padL - 2} y={36} className="tm-tl-cap">
+        <text x={padL - 2} y={36} className={tmTlCap}>
           चन्द्रको कोणीय यात्रा — {fmt(rate)}°/दिन ({isVri ? "मन्द" : "द्रुत"})
         </text>
-        <line x1={padL} y1={52} x2={W - padR} y2={52} className="tm-travel" />
+        <line x1={padL} y1={52} x2={W - padR} y2={52} className={tmTravel} />
         <polygon
           points={`${W - padR},52 ${W - padR - 11},47 ${W - padR - 11},57`}
-          className="tm-travel-head"
+          className={tmTravelHead}
         />
       </svg>
 
@@ -192,11 +214,11 @@ export function AdhikMassDiagram() {
     const x1 = x(sankr[i + 1]!);
     solarSegs.push(
       <g key={`sol${i}`}>
-        <rect x={x0} y={solarY} width={x1 - x0} height={bandH} className="tm-solar-band" rx={6} />
-        <text x={(x0 + x1) / 2} y={solarY + 22} className="tm-seg-sym" textAnchor="middle">
+        <rect x={x0} y={solarY} width={x1 - x0} height={bandH} className={tmSolarBand} rx={6} />
+        <text x={(x0 + x1) / 2} y={solarY + 22} className={tmSegSym} textAnchor="middle">
           {rashiSym[i]}
         </text>
-        <text x={(x0 + x1) / 2} y={solarY + 40} className="tm-seg-name" textAnchor="middle">
+        <text x={(x0 + x1) / 2} y={solarY + 40} className={tmSegName()} textAnchor="middle">
           {rashi[i]} सौर मास
         </text>
       </g>
@@ -216,13 +238,13 @@ export function AdhikMassDiagram() {
           y={lunarY}
           width={x1 - x0}
           height={bandH}
-          className={`tm-lunar-band${isAdhik ? " adhik" : ""}`}
+          className={tmLunarBand(isAdhik)}
           rx={6}
         />
         <text
           x={(x0 + x1) / 2}
           y={lunarY + 21}
-          className={`tm-seg-name${isAdhik ? " adhik" : ""}`}
+          className={tmSegName(isAdhik)}
           textAnchor="middle"
         >
           {lbl.ne}
@@ -230,7 +252,7 @@ export function AdhikMassDiagram() {
         <text
           x={(x0 + x1) / 2}
           y={lunarY + 39}
-          className={`tm-seg-tag${isAdhik ? " adhik" : ""}`}
+          className={tmSegTag(isAdhik)}
           textAnchor="middle"
         >
           {isAdhik ? "सङ्क्रान्ति रहित" : "चान्द्र मास"}
@@ -241,7 +263,7 @@ export function AdhikMassDiagram() {
 
   const sankrMarks = sankr.map((d, i) => (
     <g key={`sk${i}`}>
-      <line x1={x(d)} y1={solarY - 24} x2={x(d)} y2={lunarY + bandH + 10} className="tm-vline" />
+      <line x1={x(d)} y1={solarY - 24} x2={x(d)} y2={lunarY + bandH + 10} className={tmVline} />
       <TmSun x={x(d)} y={solarY - 34} r={10} />
     </g>
   ));
@@ -257,7 +279,7 @@ export function AdhikMassDiagram() {
     const cx1 = x(amav[adhik + 1]!);
     callout = (
       <g>
-        <text x={(cx0 + cx1) / 2} y={lunarY - 12} className="tm-adhik-note" textAnchor="middle">
+        <text x={(cx0 + cx1) / 2} y={lunarY - 12} className={tmAdhikNote} textAnchor="middle">
           ↓ अधिक मास
         </text>
         <rect
@@ -265,7 +287,7 @@ export function AdhikMassDiagram() {
           y={lunarY - 4}
           width={cx1 - cx0}
           height={bandH + 8}
-          className="tm-adhik-ring"
+          className={tmAdhikRing}
           rx={8}
         />
       </g>
@@ -273,20 +295,20 @@ export function AdhikMassDiagram() {
   }
 
   return (
-    <div className="tm-am">
+    <div>
       <svg viewBox={`0 0 ${W} ${H}`} className={tmDiagramSvg}>
-        <text x={padL} y={34} className="tm-track-label">
+        <text x={padL} y={34} className={tmTrackLabel}>
           सौर मास{" "}
-          <tspan className="tm-track-sub">· सूर्यको राशि प्रवेश (सङ्क्रान्ति) — हरेक ~३०.४ दिन</tspan>
+          <tspan className={tmTrackSub}>· सूर्यको राशि प्रवेश (सङ्क्रान्ति) — हरेक ~३०.४ दिन</tspan>
         </text>
         {solarSegs}
         {sankrMarks}
         {callout}
         {lunarSegs}
         {amavMarks}
-        <text x={padL} y={lunarY + bandH + 56} className="tm-track-label">
+        <text x={padL} y={lunarY + bandH + 56} className={tmTrackLabel}>
           चान्द्र मास{" "}
-          <tspan className="tm-track-sub">· अमावस्यादेखि अमावस्या — हरेक ~२९.५ दिन</tspan>
+          <tspan className={tmTrackSub}>· अमावस्यादेखि अमावस्या — हरेक ~२९.५ दिन</tspan>
         </text>
       </svg>
       <div className={tmAmLegend}>

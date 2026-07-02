@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -329,7 +331,7 @@ export function AyanamshaWheel() {
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
             <input
-              className="ed-scrub"
+              className={edScrub}
               type="range"
               min={285}
               max={2200}
@@ -347,7 +349,7 @@ export function AyanamshaWheel() {
         <div className={motSliderRow}>
           <span className={motSliderLabel}>● ग्रह — निरयन देशान्तर (एउटै आकाश-स्थान, दुई पढाइ)</span>
           <input
-            className="ed-scrub"
+            className={edScrub}
             type="range"
             min={0}
             max={359}
@@ -385,8 +387,8 @@ export function AyanamshaWheel() {
       </div>
 
       <p className={tmCardCap}>
-        बाहिरी १२ <b>राशि</b> तारापुञ्जमा अडिएका छन् (<span className="hl">निरयन</span>)। पृथ्वीको अक्ष
-        बिस्तारै घुम्दा (अयन चलन) <span className="hl-amber">वसन्त-विषुव</span> बिन्दु — सायन शून्य —
+        बाहिरी १२ <b>राशि</b> तारापुञ्जमा अडिएका छन् (<span className={cn("hl")}>निरयन</span>)। पृथ्वीको अक्ष
+        बिस्तारै घुम्दा (अयन चलन) <span className={cn("hl-amber")}>वसन्त-विषुव</span> बिन्दु — सायन शून्य —
         ताराका सापेक्ष पछाडि सर्छ। यी दुई शून्यबीचको कोण नै <b>अयनांश</b> हो। एउटै ग्रह त्यसैले
         निरयनमा <b>{niRashi}</b>
         {differ ? <> भए पनि सायनमा <b>{saRashi}</b></> : <> र सायनमा पनि <b>{saRashi}</b></>} मा पर्न

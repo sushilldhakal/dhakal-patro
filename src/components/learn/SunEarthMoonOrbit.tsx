@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { useMemo, useRef } from "react";
+import { edBodyLabel, hoEarthGroup, hoEquator, hoOrbitDir, hoPoleAxis, semEarthGlow, semMoonOrbit, semMoonOrbitGuide, semOrbit, semOrbitGuide, semRadiusLine, semSunLonMarker, semSunLonRay, semTidalMarker } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { EarthGlobeImage, EARTH_AXIAL_TILT } from "./EarthGlobeImage";
@@ -144,9 +146,9 @@ export function SunEarthMoonOrbit({ day, onDay, showEclipticGrid = true }: Props
         cy={SEM.cy}
         rx={SEM.earthOrbitA}
         ry={SEM_EARTH_ORBIT_B}
-        className="sem-orbit sem-orbit-guide"
+        className={cn(semOrbit, semOrbitGuide)}
       />
-      <path d={earthEllipsePath} className="sem-orbit" fill="none" />
+      <path d={earthEllipsePath} className={semOrbit} fill="none" />
 
       <g transform={`translate(${ex} ${ey}) rotate(${-sunDir})`}>
         <ellipse
@@ -154,49 +156,49 @@ export function SunEarthMoonOrbit({ day, onDay, showEclipticGrid = true }: Props
           cy={0}
           rx={SEM.moonOrbitA}
           ry={SEM_MOON_ORBIT_B}
-          className="sem-moon-orbit sem-moon-orbit-guide"
+          className={cn(semMoonOrbit, semMoonOrbitGuide)}
         />
-        <path d={moonEllipsePath} className="sem-moon-orbit" fill="none" />
+        <path d={moonEllipsePath} className={semMoonOrbit} fill="none" />
         {moonTicks}
       </g>
 
-      <line x1={SEM.cx} y1={SEM.cy} x2={ex} y2={ey} className="sem-radius-line" />
+      <line x1={SEM.cx} y1={SEM.cy} x2={ex} y2={ey} className={semRadiusLine} />
 
       <circle cx={SEM.cx} cy={SEM.cy} r={SEM.sunR + 30} fill="url(#sem-sunglow)" />
       <circle cx={SEM.cx} cy={SEM.cy} r={SEM.sunR} fill="url(#sem-sun)" />
-      <text x={SEM.cx} y={SEM.cy + SEM.sunR + 26} className="ed-body-label" textAnchor="middle">
+      <text x={SEM.cx} y={SEM.cy + SEM.sunR + 26} className={edBodyLabel} textAnchor="middle">
         सूर्य
       </text>
 
-      <g className="sem-earth-group ho-earth-group" transform={`translate(${ex} ${ey})`}>
-        <EarthGlobeImage cx={0} cy={0} r={SEM.earthR} glow glowClassName="sem-earth-glow" glowPad={8} />
+      <g className={hoEarthGroup} transform={`translate(${ex} ${ey})`}>
+        <EarthGlobeImage cx={0} cy={0} r={SEM.earthR} glow glowClassName={semEarthGlow} glowPad={8} />
         <line
           x1={-eqUx * eqHalf}
           y1={-eqUy * eqHalf}
           x2={eqUx * eqHalf}
           y2={eqUy * eqHalf}
-          className="ho-equator"
+          className={hoEquator}
         />
-        <line x1={southX} y1={southY} x2={northX} y2={northY} className="ho-pole-axis" />
-        <text y={SEM.earthR + 22} className="ed-body-label" textAnchor="middle">
+        <line x1={southX} y1={southY} x2={northX} y2={northY} className={hoPoleAxis} />
+        <text y={SEM.earthR + 22} className={edBodyLabel} textAnchor="middle">
           पृथ्वी
         </text>
       </g>
 
       <circle cx={mx} cy={my} r={SEM.moonR} fill="url(#sem-moon)" />
-      <circle cx={tlX} cy={tlY} r={2.4} className="sem-tidal-marker" />
+      <circle cx={tlX} cy={tlY} r={2.4} className={semTidalMarker} />
 
       {showEclipticGrid && (() => {
         const [sunMx, sunMy] = pol(SEM.cx, SEM.cy, (SEM_GRID.rashiIn + SEM_GRID.nakOut) / 2, sunLon);
         return (
-          <g className="sem-sun-lon-indicator">
-            <line x1={SEM.cx} y1={SEM.cy} x2={sunMx} y2={sunMy} className="sem-sun-lon-ray" />
-            <circle cx={sunMx} cy={sunMy} r={5.5} className="sem-sun-lon-marker" />
+          <g>
+            <line x1={SEM.cx} y1={SEM.cy} x2={sunMx} y2={sunMy} className={semSunLonRay} />
+            <circle cx={sunMx} cy={sunMy} r={5.5} className={semSunLonMarker} />
           </g>
         );
       })()}
 
-      <text x={SEM.cx} y={SEM.H - 18} className="ho-orbit-dir" textAnchor="middle">
+      <text x={SEM.cx} y={SEM.H - 18} className={hoOrbitDir} textAnchor="middle">
         ↺ वामावर्त — पृथ्वी १ वर्षमा १ फेरो, चन्द्र सोही समयमा ~{fmt(12)}.{fmt(4)} फेरो
       </text>
     </svg>

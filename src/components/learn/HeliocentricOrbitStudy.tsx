@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { edScrub } from "@/lib/diagram-classes";
 import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { HeliocentricOrbitDiagram } from "./HeliocentricOrbitDiagram";
@@ -115,7 +116,7 @@ export function HeliocentricOrbitStudy() {
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
           <input
-            className="ed-scrub"
+            className={edScrub}
             type="range"
             min={0}
             max={360}
