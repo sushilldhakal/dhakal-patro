@@ -108,5 +108,6 @@ export const ORBIT_MARKERS = [
 
 export const ORBIT_PRESETS = ORBIT_MARKERS.map((m) => ({
   ne: m.ne,
+  en: m.en,
   meanDeg: meanFromTrue(m.nu),
 }));

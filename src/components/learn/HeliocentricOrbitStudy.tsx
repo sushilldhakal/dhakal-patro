@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import { toNepaliDigits } from "@/lib/panchanga-format";
 import { HeliocentricOrbitDiagram } from "./HeliocentricOrbitDiagram";
+import { useLocale } from "@/i18n/locale";
 import {
   ORBIT_MARKERS,
   ORBIT_PRESETS,
@@ -18,25 +18,27 @@ function nearestPreset(meanDeg: number): OrbitPresetWithDiff {
   }, { ...ORBIT_PRESETS[0], diff: Infinity });
 }
 
-function seasonLabel(meanDeg: number): string {
+function seasonLabel(meanDeg: number, isEn: boolean): string {
   const { nuDeg } = orbitFromMeanAnomaly(meanDeg);
-  if (nuDeg < 45 || nuDeg >= 315) return "हिम ऋतु";
-  if (nuDeg < 135) return "वसंत ऋतु";
-  if (nuDeg < 225) return "ग्रीष्म ऋतु";
-  return "शरद ऋतु";
+  if (nuDeg < 45 || nuDeg >= 315) return isEn ? "Winter" : "हिम ऋतु";
+  if (nuDeg < 135) return isEn ? "Spring" : "वसंत ऋतु";
+  if (nuDeg < 225) return isEn ? "Summer" : "ग्रीष्म ऋतु";
+  return isEn ? "Autumn" : "शरद ऋतु";
 }
 
-function orbitEvent(meanDeg: number): string {
+function orbitEvent(meanDeg: number, isEn: boolean): string {
   const near = nearestPreset(meanDeg);
-  if (near.diff < 10) return near.ne;
-  return seasonLabel(meanDeg);
+  if (near.diff < 10) return isEn ? near.en : near.ne;
+  return seasonLabel(meanDeg, isEn);
 }
 
 export function HeliocentricOrbitStudy() {
+  const { lang, pick, digits } = useLocale();
+  const isEn = lang === "en";
   const [meanDeg, setMeanDeg] = useState(() => meanFromTrue(180));
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);
-  const fmt = (n: number) => toNepaliDigits(n);
+  const fmt = (n: number) => digits(n);
 
   useEffect(() => {
     if (!playing) return;
@@ -64,29 +66,40 @@ export function HeliocentricOrbitStudy() {
         }}
       />
       <p className="tm-card-cap">
-        सूर्य एउटा केन्द्रबिन्दु (focus) मा छ — पृथ्वी वास्तविक दीर्घवृत्तमा{" "}
-        <b>वामावर्त</b> घुम्छ। नजिक हुँदा छिटो (उपसौर / हिमतिर), टाढा हुँदा ढिलो (अपसौर /
-        ग्रीष्मतिर) — यसैले केही महिनामा दिन छिटो बित्छ। ध्रुव {fmt(23.5)}° ढल्किएकाले
-        सङ्क्रान्तिमा लामो/छोटो दिन र विषुवमा बराबर दिन–रात हुन्छ।
+        {pick(
+          <>
+            सूर्य एउटा केन्द्रबिन्दु (focus) मा छ — पृथ्वी वास्तविक दीर्घवृत्तमा{" "}
+            <b>वामावर्त</b> घुम्छ। नजिक हुँदा छिटो (उपसौर / हिमतिर), टाढा हुँदा ढिलो (अपसौर /
+            ग्रीष्मतिर) — यसैले केही महिनामा दिन छिटो बित्छ। ध्रुव {fmt(23.5)}° ढल्किएकाले
+            सङ्क्रान्तिमा लामो/छोटो दिन र विषुवमा बराबर दिन–रात हुन्छ।
+          </>,
+          <>
+            The Sun sits at one focus — the Earth orbits the true ellipse{" "}
+            <b>counter-clockwise</b>. Faster when near (perihelion / around winter), slower when
+            far (aphelion / around summer) — which is why some months pass more quickly. Because
+            the pole is tilted {fmt(23.5)}°, solstices give long/short days and equinoxes give
+            equal day and night.
+          </>,
+        )}
       </p>
       <div className="ed-controls">
         <div className="ed-readout">
           <div className="ed-ro">
-            <span className="ed-ro-k">माध्य कोण (वर्ष)</span>
+            <span className="ed-ro-k">{pick("माध्य कोण (वर्ष)", "Mean angle (year)")}</span>
             <span className="ed-ro-v mono">{fmt(Math.round(meanDeg))}°</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">वर्षको दिन (लगभग)</span>
+            <span className="ed-ro-k">{pick("वर्षको दिन (लगभग)", "Day of year (approx)")}</span>
             <span className="ed-ro-v mono">{fmt(dayOfYear)}</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">घटना · ऋतु</span>
-            <span className="ed-ro-v amber">{orbitEvent(meanDeg)}</span>
+            <span className="ed-ro-k">{pick("घटना · ऋतु", "Event · season")}</span>
+            <span className="ed-ro-v amber">{orbitEvent(meanDeg, isEn)}</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">सूर्यदेखि दूरी</span>
+            <span className="ed-ro-k">{pick("सूर्यदेखि दूरी", "Distance from Sun")}</span>
             <span className="ed-ro-v mono">
-              {orbit.speed > 1.02 ? "नजिक · छिटो" : orbit.speed < 0.98 ? "टाढा · ढिलो" : "मध्यम"}
+              {orbit.speed > 1.02 ? pick("नजिक · छिटो", "Near · fast") : orbit.speed < 0.98 ? pick("टाढा · ढिलो", "Far · slow") : pick("मध्यम", "Medium")}
             </span>
           </div>
         </div>
@@ -95,8 +108,8 @@ export function HeliocentricOrbitStudy() {
             type="button"
             className="ed-playbtn"
             onClick={() => setPlaying((p) => !p)}
-            title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-            aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+            title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
@@ -132,7 +145,7 @@ export function HeliocentricOrbitStudy() {
                   setMeanDeg(preset.meanDeg);
                 }}
               >
-                {m.ne}
+                {pick(m.ne, m.en)}
               </button>
             );
           })}

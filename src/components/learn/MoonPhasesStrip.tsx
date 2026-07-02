@@ -1,4 +1,5 @@
 import { MoonPhaseDisc } from "@/components/tithi-mechanics/MoonPhaseDisc";
+import { useLocale } from "@/i18n/locale";
 
 const PHASES = [
   { ne: "अमावस्या", en: "Amavasya", E: 0 },
@@ -13,6 +14,7 @@ const PHASES = [
 const R = 26;
 
 export function MoonPhasesStrip() {
+  const { lang, pick } = useLocale();
   return (
     <div className="ss-phases">
       <ol className="ss-phases-list">
@@ -23,8 +25,8 @@ export function MoonPhasesStrip() {
                 <MoonPhaseDisc elongation={p.E} r={R} uid={`ss-mp-${i}`} />
               </g>
             </svg>
-            <span className="ss-phase-ne">{p.ne}</span>
-            <span className="ss-phase-en">{p.en}</span>
+            <span className="ss-phase-ne">{pick(p.ne, p.en)}</span>
+            {lang === "ne" && <span className="ss-phase-en">{p.en}</span>}
           </li>
         ))}
       </ol>

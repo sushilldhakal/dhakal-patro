@@ -1,23 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { moonIllumination, WHEEL_TITHIS, tithiIndexFromElongation, tithiNum, tithiPaksha } from "@/lib/tithi-wheel-data";
+import { moonIllumination, WHEEL_TITHIS, tithiIndexFromElongation, tithiNum, tithiPaksha, tithiPakshaEn } from "@/lib/tithi-wheel-data";
 import { ElongationDiagram, EARTH_ARC_SYNODIC, earthOrbitDegFromElongation } from "./ElongationDiagram";
 import { SYNODIC_MONTH } from "@/components/learn/sun-earth-moon-math";
 import { AdhikMassDiagram, SunriseTimeline } from "./tithi-mechanics-diagrams";
+import { useLocale } from "@/i18n/locale";
 
 const PRESETS = [
-  { ne: "अमावस्या", E: 354 },
-  { ne: "शुक्ल अष्टमी", E: 90 },
-  { ne: "पूर्णिमा", E: 174 },
-  { ne: "कृष्ण अष्टमी", E: 270 },
+  { ne: "अमावस्या", en: "Amavasya", E: 354 },
+  { ne: "शुक्ल अष्टमी", en: "Shukla Ashtami", E: 90 },
+  { ne: "पूर्णिमा", en: "Purnima", E: 174 },
+  { ne: "कृष्ण अष्टमी", en: "Krishna Ashtami", E: 270 },
 ];
 
 export function ElongationStudy() {
+  const { pick, digits } = useLocale();
   const [E, setE] = useState(87);
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);
-  const fmt = (n: number) => toNepaliDigits(n);
+  const fmt = (n: number) => digits(n);
 
   useEffect(() => {
     if (!playing) return;
@@ -34,10 +36,10 @@ export function ElongationStudy() {
 
   const idx = tithiIndexFromElongation(E);
   const t = WHEEL_TITHIS[idx]!;
-  const paksha = tithiPaksha(idx);
+  const paksha = pick(tithiPaksha(idx), tithiPakshaEn(idx));
   const tno = tithiNum(idx);
   const illum = moonIllumination(E);
-  const tithiLabel = t.moon === "full" ? "पूर्णिमा" : t.moon === "new" ? "औंसी" : t.ne;
+  const tithiLabel = t.moon === "full" ? pick("पूर्णिमा", "Purnima") : t.moon === "new" ? pick("औंसी", "Aunsi") : pick(t.ne, t.en);
   const earthArc = earthOrbitDegFromElongation(E);
   const siderealDays = 27.321661;
 
@@ -47,33 +49,33 @@ export function ElongationStudy() {
       <div className="ed-controls">
         <div className="ed-readout">
           <div className="ed-ro">
-            <span className="ed-ro-k">कोणीय दूरी</span>
+            <span className="ed-ro-k">{pick("कोणीय दूरी", "Elongation")}</span>
             <span className="ed-ro-v mono">{fmt(Math.round(E))}°</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">मास · पक्ष</span>
-            <span className="ed-ro-v">असार {paksha}</span>
+            <span className="ed-ro-k">{pick("मास · पक्ष", "Month · Paksha")}</span>
+            <span className="ed-ro-v">{pick("असार", "Ashadh")} {paksha}</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">तिथि</span>
+            <span className="ed-ro-k">{pick("तिथि", "Tithi")}</span>
             <span className="ed-ro-v amber">
               {tithiLabel} · {fmt(tno)}
             </span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">चन्द्रकला</span>
+            <span className="ed-ro-k">{pick("चन्द्रकला", "Illumination")}</span>
             <span className="ed-ro-v mono">{fmt(illum)}%</span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">पृथ्वी सार · चान्द्र मास</span>
+            <span className="ed-ro-k">{pick("पृथ्वी सार · चान्द्र मास", "Earth arc · lunar month")}</span>
             <span className="ed-ro-v mono">
               {fmt(Math.round(earthArc))}° / ~{fmt(Math.round(EARTH_ARC_SYNODIC))}°
             </span>
           </div>
           <div className="ed-ro">
-            <span className="ed-ro-k">नाक्षत्र vs चान्द्र मास</span>
+            <span className="ed-ro-k">{pick("नाक्षत्र vs चान्द्र मास", "Sidereal vs synodic month")}</span>
             <span className="ed-ro-v amber">
-              ~{fmt(Math.round(siderealDays))} दिन vs ~{fmt(Math.round(SYNODIC_MONTH))} दिन
+              ~{fmt(Math.round(siderealDays))} {pick("दिन", "days")} vs ~{fmt(Math.round(SYNODIC_MONTH))} {pick("दिन", "days")}
             </span>
           </div>
         </div>
@@ -82,8 +84,8 @@ export function ElongationStudy() {
             type="button"
             className="ed-playbtn"
             onClick={() => setPlaying((p) => !p)}
-            title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-            aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+            title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
@@ -115,7 +117,7 @@ export function ElongationStudy() {
                 setE(p.E);
               }}
             >
-              {p.ne}
+              {pick(p.ne, p.en)}
             </button>
           ))}
         </div>
