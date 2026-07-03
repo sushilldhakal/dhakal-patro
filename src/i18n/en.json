@@ -44,6 +44,11 @@
         "description": "Nepal public holidays, festivals and special observance days.",
         "keywords": "Nepal holidays, public holidays, festivals"
       },
+      "ritu": {
+        "title": "Ritu — Tropical Seasons | Vedic Patro",
+        "description": "Six sāyana seasons by equinox and solstice for your location — वसन्त, ग्रीष्म, वर्षा, शरद्, हेमन्त, शिशिर.",
+        "keywords": "Ritu, Nepali seasons, equinox, solstice, tropical seasons"
+      },
       "kundali": {
         "title": "Janma Kundali | Vedic Patro",
         "description": "Generate birth chart — lagna, planets, dasha and detailed kundali report.",
@@ -329,6 +334,7 @@
     "signup_notice": "Account created! Check your email to verify your address.",
     "generic_error": "Something went wrong. Try again.",
     "google_error": "Google sign-in failed",
+    "continue_with_google": "Continue with Google",
     "facebook_error": "Facebook sign-in failed",
     "facebook_load_error": "Could not load Facebook sign-in",
     "facebook_cancelled": "Facebook sign-in was cancelled",
@@ -401,6 +407,9 @@
   },
   "calendar": {
     "eyebrow": "Nepali Patro · B.S.",
+    "brand_eyebrow": "Nepali Patro",
+    "patro_mode_aria": "Patro type",
+    "mode_panchanga": "Panchanga",
     "today_btn": "Today",
     "mode_bs": "B.S.",
     "mode_ad": "A.D.",
@@ -621,7 +630,15 @@
     "sat_long": "Saturday"
   },
   "sun_times_cta": "Surya Kranti — Annual sunrise & sunset",
-  "footer_note": "Powered by Vedic Patro · Lahiri Ayanamsa · Default Location kathmandu at the time of calculation",
+  "home_quick": {
+    "holidays_desc": "Public holidays & festivals",
+    "converter_desc": "BS ↔ AD dates",
+    "suryakranti_desc": "Annual sunrise & sunset",
+    "panchanga_year_desc": "Tithi, nakshatra & graha through the year",
+    "ritu_desc": "Sāyana seasons · equinox & solstice",
+    "ritu_see_all": "See all seasons"
+  },
+  "footer_note": "Powered by Vedic Patro · Nepal Panchanga · Default location Kathmandu at time of calculation",
   "theme_toggle": "Toggle theme",
   "theme_light": "Light",
   "theme_dark": "Dark",

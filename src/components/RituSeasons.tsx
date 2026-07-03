@@ -7,6 +7,12 @@ import { adToBS } from "@/lib/bs-calendar";
 import { fetchTropicalSeasons, seasonsKeys } from "@/lib/api";
 import { useLocale } from "@/i18n/locale";
 import {
+  RITU_MARKER_KEYS,
+  RITU_SEASON_EMOJI,
+  RITU_SEASON_KEYS,
+  displayRituSlot,
+} from "@/lib/ritu-display";
+import {
   resolveLocationTimezone,
   type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
@@ -32,20 +38,6 @@ import { cn } from "@/lib/utils";
 
 const DAY = 86_400_000;
 
-const SEASON_KEYS = [
-  "spring",
-  "summer",
-  "monsoon",
-  "autumn",
-  "pre_winter",
-  "winter",
-] as const;
-
-const MARKER_KEYS: Partial<Record<number, string>> = {
-  0: "ritu.vernal_equinox",
-  3: "ritu.autumnal_equinox",
-};
-
 const midnightUtcMs = (adStr: string) => Date.parse(`${adStr}T00:00:00Z`);
 /** A Date whose UTC calendar day equals the given civil date string. */
 const civilNoon = (adStr: string) => new Date(`${adStr}T12:00:00Z`);
@@ -62,7 +54,13 @@ interface SeasonItem {
   progress: { elapsed: number; total: number; pct: number } | null;
 }
 
-export function RituSeasons({ location }: { location: PanchangaLocation }) {
+export function RituSeasons({
+  location,
+  showHeader = true,
+}: {
+  location: PanchangaLocation;
+  showHeader?: boolean;
+}) {
   const { t } = useTranslation();
   const { pick, digits: dg } = useLocale();
   const tz = resolveLocationTimezone(location);
@@ -111,39 +109,52 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
     });
   }, [seasonsQ.data, todayAd, tz]);
 
-  const flip = (slot: number) => (south ? (slot + 3) % 6 : slot);
   const relLabel = (days: number) => {
     if (days <= 0) return "";
     if (days === 1) return t("ritu.tomorrow");
     return t("ritu.days_after", { count: Number(dg(days)) });
   };
 
-  const seasonEmoji = ["🌸", "☀️", "🌧️", "🍂", "🌫️", "❄️"];
-
   return (
-    <div className="mt-[22px]">
-      <div className="mb-3 flex flex-wrap items-baseline gap-2.5">
-        <Sprout className="self-center text-secondary dark:text-primary" size={18} strokeWidth={1.8} />
-        <h2 className="m-0 text-lg font-bold">{t("ritu.title")}</h2>
-        <span className="flex-1 text-xs font-medium text-muted-foreground">
-          {t("ritu.subtitle")}{location.label ? ` · ${location.label}` : ""}
-          {south && <span className="ml-1 font-semibold text-warning">{t("ritu.southern")}</span>}
-        </span>
-        <Link
-          to="/learn/$slug"
-          params={{ slug: "ritu-drift" }}
-          className="inline-flex shrink-0 items-center gap-1 self-center whitespace-nowrap rounded-full border border-secondary/35 px-2.5 py-1 text-xs font-semibold text-secondary no-underline transition-colors hover:border-secondary/55 hover:bg-secondary/12 dark:border-primary/35 dark:text-primary dark:hover:border-primary/55 dark:hover:bg-primary/14"
-        >
-          <HelpCircle size={13} strokeWidth={2} aria-hidden />
-          {t("ritu.why_link")}
-        </Link>
-      </div>
+    <div className={showHeader ? "mt-[22px]" : undefined}>
+      {showHeader ? (
+        <div className="mb-3 flex flex-wrap items-baseline gap-2.5">
+          <Sprout className="self-center text-secondary dark:text-primary" size={18} strokeWidth={1.8} />
+          <h2 className="m-0 text-lg font-bold">{t("ritu.title")}</h2>
+          <span className="flex-1 text-xs font-medium text-muted-foreground">
+            {t("ritu.subtitle")}{location.label ? ` · ${location.label}` : ""}
+            {south && <span className="ml-1 font-semibold text-warning">{t("ritu.southern")}</span>}
+          </span>
+          <Link
+            to="/learn/$slug"
+            params={{ slug: "ritu-drift" }}
+            className="inline-flex shrink-0 items-center gap-1 self-center whitespace-nowrap rounded-full border border-secondary/35 px-2.5 py-1 text-xs font-semibold text-secondary no-underline transition-colors hover:border-secondary/55 hover:bg-secondary/12 dark:border-primary/35 dark:text-primary dark:hover:border-primary/55 dark:hover:bg-primary/14"
+          >
+            <HelpCircle size={13} strokeWidth={2} aria-hidden />
+            {t("ritu.why_link")}
+          </Link>
+        </div>
+      ) : (
+        <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+          {south ? (
+            <span className="text-xs font-semibold text-warning">{t("ritu.southern")}</span>
+          ) : null}
+          <Link
+            to="/learn/$slug"
+            params={{ slug: "ritu-drift" }}
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-secondary/35 px-2.5 py-1 text-xs font-semibold text-secondary no-underline transition-colors hover:border-secondary/55 hover:bg-secondary/12 dark:border-primary/35 dark:text-primary dark:hover:border-primary/55 dark:hover:bg-primary/14"
+          >
+            <HelpCircle size={13} strokeWidth={2} aria-hidden />
+            {t("ritu.why_link")}
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 min-[481px]:grid-cols-2 min-[821px]:grid-cols-3">
         {seasons.map((item, i) => {
-          const slot = flip(item.solarSlot);
-          const seasonKey = SEASON_KEYS[slot]!;
-          const markerKey = MARKER_KEYS[item.solarSlot];
+          const slot = displayRituSlot(item.solarSlot, south);
+          const seasonKey = RITU_SEASON_KEYS[slot]!;
+          const markerKey = RITU_MARKER_KEYS[item.solarSlot];
           return (
             <div
               key={i}
@@ -163,7 +174,7 @@ export function RituSeasons({ location }: { location: PanchangaLocation }) {
               </span>
               <div className="flex items-center gap-3">
                 <span className="shrink-0 text-[26px] leading-none" aria-hidden>
-                  {seasonEmoji[slot]}
+                  {RITU_SEASON_EMOJI[seasonKey]}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-xl font-bold leading-tight">{t(`ritu.${seasonKey}`)}</span>

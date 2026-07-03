@@ -142,6 +142,20 @@ export function parseFacebookLoginButton(container: HTMLElement): void {
   ensureInitialized().XFBML?.parse(container);
 }
 
+/** Open the Facebook Login dialog (not_authorized / unknown). */
+export function facebookLogin(): Promise<FacebookAuthResponse> {
+  return loadFacebookSdk().then(
+    () =>
+      new Promise((resolve, reject) => {
+        try {
+          ensureInitialized().login(resolve, { scope: "public_profile,email" });
+        } catch (err) {
+          reject(err);
+        }
+      }),
+  );
+}
+
 export function facebookAccessToken(response: FacebookAuthResponse): string | undefined {
   if (response.status !== "connected") return undefined;
   return response.authResponse?.accessToken;

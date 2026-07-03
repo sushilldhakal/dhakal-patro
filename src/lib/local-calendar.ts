@@ -55,6 +55,76 @@ export function buildLocalMonthDays(year: number, month: number): CalendarDay[] 
   return days;
 }
 
+export function shiftBsMonth(
+  year: number,
+  month: number,
+  delta: number,
+): { year: number; month: number } {
+  let m = month + delta;
+  let y = year;
+  while (m < 1) {
+    m += 12;
+    y -= 1;
+  }
+  while (m > 12) {
+    m -= 12;
+    y += 1;
+  }
+  return { year: y, month: m };
+}
+
+/** Full 6-week grid: trailing days from previous BS month + current + leading from next. */
+export function buildCalendarGridDays(
+  year: number,
+  month: number,
+  enriched?: {
+    prev?: CalendarDay[];
+    current?: CalendarDay[];
+    next?: CalendarDay[];
+  },
+): CalendarDay[] {
+  const currentLocal = buildLocalMonthDays(year, month);
+  const first = currentLocal[0];
+  if (!first) return currentLocal;
+
+  const startOffset = new Date(`${first.date_ad}T12:00:00`).getDay();
+  const prevBs = shiftBsMonth(year, month, -1);
+  const nextBs = shiftBsMonth(year, month, 1);
+
+  const prevLocal = buildLocalMonthDays(prevBs.year, prevBs.month);
+  const leading: CalendarDay[] = prevLocal.slice(-startOffset).map((d) => ({
+    ...d,
+    outsideMonth: true,
+  }));
+
+  const current: CalendarDay[] = currentLocal.map((d) => ({
+    ...d,
+    outsideMonth: false,
+  }));
+
+  const totalCells = Math.ceil((startOffset + current.length) / 7) * 7;
+  const trailingCount = totalCells - startOffset - current.length;
+  const nextLocal = buildLocalMonthDays(nextBs.year, nextBs.month);
+  const trailing: CalendarDay[] = nextLocal.slice(0, trailingCount).map((d) => ({
+    ...d,
+    outsideMonth: true,
+  }));
+
+  let grid: CalendarDay[] = [...leading, ...current, ...trailing];
+
+  if (enriched?.prev?.length) {
+    grid = mergeEnrichedDays(grid, enriched.prev);
+  }
+  if (enriched?.current?.length) {
+    grid = mergeEnrichedDays(grid, enriched.current);
+  }
+  if (enriched?.next?.length) {
+    grid = mergeEnrichedDays(grid, enriched.next);
+  }
+
+  return grid;
+}
+
 export function getLocalMonthMeta(year: number, month: number) {
   const monthLength = getBSMonthLength(year, month);
   const monthStartAd = formatAdIso(bsToAD(year, month, 1));

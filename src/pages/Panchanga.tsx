@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link, getRouteApi } from "@tanstack/react-router";
@@ -7,8 +7,7 @@ import {
   fetchPanchanga,
   panchangaKeys,
 } from "@/lib/api";
-import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
-import { getBsMonthAdSpanLabel } from "@/lib/local-calendar";
+import { adToBS } from "@/lib/bs-calendar";
 import {
   buildAtTimeDatetime,
   chartDateAd,
@@ -17,13 +16,11 @@ import {
 } from "@/lib/ephemeris-adapters";
 import { getSunrise, getSunset, toNepaliDigits } from "@/lib/panchanga-format";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
-import { cn } from "@/lib/utils";
-import { PanchangaDateNav, QuickDateStrip } from "@/components/panchanga/PanchangaDateNav";
+import { PanchangaDateNav } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
-import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
 import { PanchangaModeControls } from "@/components/panchanga/PanchangaModeControls";
@@ -53,12 +50,9 @@ import {
   SunMoonSection,
 } from "@/components/panchanga/PanchangaSections";
 import { useRouteLoading } from "@/lib/route-loading";
-import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 
 /** Panchanga scrubs date/time in-place; never block the whole page with the route overlay. */
 const PANCHANGA_ROUTE_LOADING = false;
-
-type ViewMode = "day" | "month";
 
 const routeApi = getRouteApi("/panchanga");
 
@@ -91,11 +85,6 @@ export function Panchanga() {
   const [date, setDate] = useState(() =>
     search.date ? parseAdStr(search.date) : new Date()
   );
-  const [view, setView] = useState<ViewMode>(() => {
-    if (search.view) return search.view;
-    const saved = getLocalStorageItem("dhakalPatroPanchView");
-    return saved === "month" ? "month" : "day";
-  });
   const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
   const { mode: dataMode, setMode: setDataMode, clock, setClock } =
     usePanchangaMode(timezoneForMode, { mode: search.mode, clock: search.time });
@@ -105,11 +94,6 @@ export function Panchanga() {
   const isInstant = dataMode === "instant";
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
 
-  const switchView = (v: ViewMode) => {
-    setView(v);
-    setLocalStorageItem("dhakalPatroPanchView", v);
-  };
-
   // Mirror the current selection into the URL so the address bar always reflects
   // what's on screen and stays copy-paste shareable. `time` is only meaningful
   // in instant mode. `replace` keeps date/time scrubbing out of the back stack.
@@ -117,14 +101,13 @@ export function Panchanga() {
     const desired: PanchangaSearch = {
       ...locationToSearch(location),
       date: adDateStr,
-      view,
       mode: dataMode,
       ...(isInstant ? { time: clock } : {}),
     };
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, adDateStr, view, dataMode, isInstant, clock, search, navigate]);
+  }, [location, adDateStr, dataMode, isInstant, clock, search, navigate]);
 
   // Adopt URL changes that originate outside our own writes — primarily the
   // browser back/forward buttons. This effect deliberately subscribes page state
@@ -133,7 +116,6 @@ export function Panchanga() {
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (search.date && search.date !== adDateStr) setDate(parseAdStr(search.date));
-    if (search.view && search.view !== view) setView(search.view);
     if (search.mode && search.mode !== dataMode) setDataMode(search.mode);
     if (search.time && search.time !== clock) setClock(search.time);
     const loc = searchToLocation(search);
@@ -146,7 +128,6 @@ export function Panchanga() {
     queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
     queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
     staleTime: 1000 * 60 * 30,
-    enabled: view === "day",
     placeholderData: keepPreviousData,
   });
 
@@ -174,11 +155,6 @@ export function Panchanga() {
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
 
-  const adMonthSpan = useMemo(
-    () => getBsMonthAdSpanLabel(bs.year, bs.month),
-    [bs.year, bs.month]
-  );
-
   const locationLabel = data?.location?.name ?? location.label;
   const adDateLabel = data?.display?.gregorian_en ?? fmtAdFull(date);
 
@@ -204,26 +180,14 @@ export function Panchanga() {
             )}
           </div>
           <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
-            {view === "month"
-              ? `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)} — ${t("panchanga.monthly_title")}${titleSuffix}`
-              : isToday && !isInstant
-                ? t("panchanga.today_title")
-                : `${t("panchanga.detail_title")}${titleSuffix}`}
+            {isToday && !isInstant
+              ? t("panchanga.today_title")
+              : `${t("panchanga.detail_title")}${titleSuffix}`}
           </h1>
           <div className="text-sm text-muted-foreground mt-1">
-            {view === "month" ? (
-              <>
-                {bs.monthName} {bs.year}
-                {" · "}
-                {adMonthSpan}
-              </>
-            ) : (
-              <>
-                {bs.monthName} {bs.day}, {bs.year}
-                {" · "}
-                {adDateLabel}
-              </>
-            )}
+            {bs.monthName} {bs.day}, {bs.year}
+            {" · "}
+            {adDateLabel}
             {" · "}
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
@@ -245,130 +209,80 @@ export function Panchanga() {
             location={location}
             onLocationChange={setLocation}
           />
-          <div
-            className="inline-flex p-0.5 gap-0.5 border border-border rounded-lg bg-card"
-            role="tablist"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === "month"}
-              className={cn(
-                "h-[26px] px-3 rounded-[calc(var(--radius-lg)-2px)] border-0 text-[12.5px] font-semibold cursor-pointer transition-colors",
-                view === "month"
-                  ? "bg-secondary text-secondary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => switchView("month")}
-            >
-              {t("panchanga.view_month")}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === "day"}
-              className={cn(
-                "h-[26px] px-3 rounded-[calc(var(--radius-lg)-2px)] border-0 text-[12.5px] font-semibold cursor-pointer transition-colors",
-                view === "day"
-                  ? "bg-secondary text-secondary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => switchView("day")}
-            >
-              {t("panchanga.view_day")}
-            </button>
-          </div>
         </div>
       </div>
 
-      {view === "month" ? (
-        <div className="flex flex-col gap-4">
-          <QuickDateStrip date={date} onDateChange={setDate} />
-          <PanchangaMonthGrid
-            date={date}
-            locationParams={location.params}
-            dataMode={dataMode}
-            clock={clock}
-            onPickDay={(d) => {
-              setDate(d);
-              switchView("day");
-            }}
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_330px] gap-5 items-start">
-          <div className="flex flex-col gap-4 min-w-0">
-            <PanchangaDateNav date={date} onDateChange={setDate} />
-            <QuickDateStrip date={date} onDateChange={setDate} />
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_330px] gap-5 items-start">
+        <div className="flex flex-col gap-4 min-w-0">
+          <PanchangaDateNav date={date} onDateChange={setDate} />
 
-            {ephemeris && data && (
-              <EphemerisModeBanner p={data} clock={clock} />
-            )}
+          {ephemeris && data && (
+            <EphemerisModeBanner p={data} clock={clock} />
+          )}
 
-            {(timelineData || showTimelineSkeleton) && (
-              <DayTimeline
-                p={timelineData}
-                loading={showTimelineSkeleton}
-                dateAd={chartAd}
-                isToday={isToday && !ephemeris}
+          {(timelineData || showTimelineSkeleton) && (
+            <DayTimeline
+              p={timelineData}
+              loading={showTimelineSkeleton}
+              dateAd={chartAd}
+              isToday={isToday && !ephemeris}
+              timezone={effectiveTimezone}
+              needleClock={ephemeris ? clock : undefined}
+            />
+          )}
+
+          {(wheelData || showWheelSkeleton) && (
+            <>
+              <PanchangaWheel
+                p={wheelData}
+                loading={showWheelSkeleton}
+                bsYear={bs.year}
+                bsMonthNe={bs.monthName}
+                bsDay={bs.day}
+                isToday={isToday}
                 timezone={effectiveTimezone}
-                needleClock={ephemeris ? clock : undefined}
+                locationLabel={locationLabel}
               />
-            )}
+              {wheelData ? (
+                <Link
+                  to="/panchanga/year"
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"
+                >
+                  <CalendarRange className="w-4 h-4" />
+                  {t("panchanga.year_link")}
+                </Link>
+              ) : null}
+            </>
+          )}
 
-            {(wheelData || showWheelSkeleton) && (
-              <>
-                <PanchangaWheel
-                  p={wheelData}
-                  loading={showWheelSkeleton}
-                  bsYear={bs.year}
-                  bsMonthNe={bs.monthName}
-                  bsDay={bs.day}
-                  isToday={isToday}
-                  timezone={effectiveTimezone}
-                  locationLabel={locationLabel}
-                />
-                {wheelData ? (
-                  <Link
-                    to="/panchanga/year"
-                    className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"
-                  >
-                    <CalendarRange className="w-4 h-4" />
-                    {t("panchanga.year_link")}
-                  </Link>
-                ) : null}
-              </>
-            )}
+          {isError && (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/10 text-destructive p-4 text-sm">
+              {t("panchanga.error_load")}
+            </div>
+          )}
 
-            {isError && (
-              <div className="rounded-xl border border-destructive/20 bg-destructive/10 text-destructive p-4 text-sm">
-                {t("panchanga.error_load")}
-              </div>
-            )}
-
-            {data && (
-              <>
-                <SunMoonSection p={data} />
-                <PanchangCoreSection p={data} />
-                <SamvatSection p={data} />
-                <RashiSection p={data} />
-                <BalamSection p={data} />
-                <PanchakaLagnaSection p={data} />
-                <RituSection p={data} />
-                <MuhurtaTimingsSection p={data} />
-                <DinVisheshSection p={data} />
-                <FestivalsSection p={data} />
-              </>
-            )}
-          </div>
-
-          <aside className="flex flex-col gap-4 xl:sticky xl:top-[76px]">
-            <GhatiClock sunrise={sunrise} sunset={sunset} timezone={effectiveTimezone} />
-            {ephemeris && data && <MuhurtaNowPanel p={data} clock={clock} />}
-            <PlanetEventsPanel dateAd={chartAd} location={location.params} />
-          </aside>
+          {data && (
+            <>
+              <SunMoonSection p={data} />
+              <PanchangCoreSection p={data} />
+              <SamvatSection p={data} />
+              <RashiSection p={data} />
+              <BalamSection p={data} />
+              <PanchakaLagnaSection p={data} />
+              <RituSection p={data} />
+              <MuhurtaTimingsSection p={data} />
+              <DinVisheshSection p={data} />
+              <FestivalsSection p={data} />
+            </>
+          )}
         </div>
-      )}
+
+        <aside className="flex flex-col gap-4 xl:sticky xl:top-[76px]">
+          <GhatiClock sunrise={sunrise} sunset={sunset} timezone={effectiveTimezone} />
+          {ephemeris && data && <MuhurtaNowPanel p={data} clock={clock} />}
+          <PlanetEventsPanel dateAd={chartAd} location={location.params} />
+        </aside>
+      </div>
 
       <LearnMoreCard
         className="mt-7"

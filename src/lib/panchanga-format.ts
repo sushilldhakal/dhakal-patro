@@ -1,5 +1,8 @@
 import type { CalendarDay, Festival, PanchangaDay } from "./api";
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
+import { GRAHA_NAME, nakshatraLordKey } from "@/lib/graha-details";
+import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
+import { nakshatraPadaFromLongitude } from "@/lib/panchang-elements";
 import { formatLocaleDigits } from "@/i18n/digits";
 
 export function toNepaliDigits(value: string | number): string {
@@ -408,6 +411,46 @@ export function formatMonthMoonEventDisplay(day: {
   return `${formatEventDateBsNepali(eventDate)} · ${timeNe}`;
 }
 
+/** Month patro grid — clock only (no BS date prefix when moon event is next/prior civil day). */
+export function formatMonthMoonTimeOnly(day: {
+  moonrise?: string;
+  moonset?: string;
+}, key: "moonrise" | "moonset"): string | undefined {
+  const time = key === "moonrise" ? day.moonrise : day.moonset;
+  if (!time) return undefined;
+  return formatClockNepali(time);
+}
+
+export function getMonthDayChandraRashi(
+  day: CalendarDay,
+  lang: "ne" | "en" | "hi",
+): string | undefined {
+  const moon = day.panchanga?.planets?.moon;
+  const moonRashiNe =
+    moon?.rashi_ne ??
+    (moon?.rashi_no != null ? rashiNeFromNumber(moon.rashi_no) : undefined);
+  const moonRashiEn = moon?.rashi ?? moon?.rashi_name;
+
+  const ne =
+    day.chandra_rashi_ne ??
+    day.panchanga?.chandra_rashi_ne ??
+    moonRashiNe ??
+    day.chandra_rashi ??
+    day.panchanga?.chandra_rashi ??
+    moonRashiEn;
+  const en =
+    day.chandra_rashi ??
+    day.panchanga?.chandra_rashi ??
+    moonRashiEn ??
+    day.chandra_rashi_ne ??
+    day.panchanga?.chandra_rashi_ne ??
+    moonRashiNe;
+
+  const raw = lang === "en" ? en : ne;
+  if (!raw) return undefined;
+  return lang === "en" ? raw : formatRashiDisplayNe(raw) ?? raw;
+}
+
 export function getMoonriseDisplay(p: PanchangaDay): string | undefined {
   return formatMoonEventDisplay(p, "moonrise");
 }
@@ -792,6 +835,42 @@ type PlanetDetail = {
   dms_in_rashi?: string;
 };
 
+export type PlanetRow = {
+  label: string;
+  rashiNe?: string;
+  coords: string;
+  nakshatraNe?: string;
+  nakshatraEn?: string;
+  pada?: number;
+  nakshatraLordNe?: string;
+  nakshatraLordEn?: string;
+};
+
+function planetSiderealLongitude(info: PlanetDetail): number | undefined {
+  if (info.longitude != null) return info.longitude;
+  if (info.rashi != null && info.deg_in_rashi != null) {
+    return (info.rashi - 1) * 30 + info.deg_in_rashi;
+  }
+  return undefined;
+}
+
+function planetNakshatraFields(info: PlanetDetail): Pick<
+  PlanetRow,
+  "nakshatraNe" | "nakshatraEn" | "pada" | "nakshatraLordNe" | "nakshatraLordEn"
+> {
+  const lon = planetSiderealLongitude(info);
+  if (lon == null) return {};
+  const nak = nakshatraPadaFromLongitude(lon);
+  const lord = nakshatraLordKey(lon);
+  return {
+    nakshatraNe: nak.ne,
+    nakshatraEn: NAKSHATRA_ICONS[nak.index]?.en,
+    pada: nak.pada,
+    nakshatraLordNe: GRAHA_NAME[lord].ne,
+    nakshatraLordEn: GRAHA_NAME[lord].en,
+  };
+}
+
 export function getPlanetsAnchorLabel(p: PanchangaDay): string {
   const detail = getPanchangaDetail(p);
   const anchor = (detail?.planets_anchor ?? p.planets_anchor) as
@@ -904,7 +983,7 @@ function planetDegreeCells(info: PlanetDetail): string {
   return "—";
 }
 
-export function getPlanetRows(p: PanchangaDay): { label: string; rashiNe?: string; coords: string }[] {
+export function getPlanetRows(p: PanchangaDay): PlanetRow[] {
   const detail = getPanchangaDetail(p);
   const planets = (detail?.planets ?? p.planets) as Record<string, PlanetDetail | string> | undefined;
   if (!planets) return [];
@@ -921,7 +1000,7 @@ export function getPlanetRows(p: PanchangaDay): { label: string; rashiNe?: strin
       }
       const rashiNe = info.rashi_ne ?? rashiNeFromNumber(info.rashi);
       const coords = planetDegreeCells(info);
-      return { label, rashiNe, coords };
+      return { label, rashiNe, coords, ...planetNakshatraFields(info) };
     });
 }
 

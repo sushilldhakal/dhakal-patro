@@ -8,8 +8,7 @@ import {
   type LocationParams,
 } from "@/lib/api";
 import { adToBS } from "@/lib/bs-calendar";
-import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
-import { formatMonthMoonEventDisplay } from "@/lib/panchanga-format";
+import { formatMonthMoonTimeOnly, getMonthDayChandraRashi } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 
@@ -173,7 +172,7 @@ export function PanchangaMonthGrid({
                     {isToday && (
                       <span
                         className={cn(
-                          "text-[8px] font-bold px-1 py-px rounded-full mt-0.5 g-secondary text-secondary-foreground",
+                          "text-[8px] font-bold px-1 py-px rounded-full mt-0.5 g-secondary text-danger",
                         )}
                       >
                         {pick("आज", "Today")}
@@ -199,18 +198,10 @@ export function PanchangaMonthGrid({
                   </div>
                 </div>
 
-                {/* Bottom: nakshatra · yoga · karana */}
+                {/* Bottom: rashi · yoga · karana */}
                 <div className="grid grid-cols-3 gap-0.5 text-xs leading-tight min-w-0 w-full">
-                  <span className="flex flex-col items-center gap-0.5 min-w-0">
-                    <NakshatraIcon
-                      name={day.nakshatra_ne ?? day.nakshatra}
-                      size={20}
-                      strokeWidth={1.8}
-                      className="text-secondary dark:text-[var(--brand-yellow)]"
-                    />
-                    <span className="truncate font-medium text-center w-full">
-                      {pick(day.nakshatra_ne ?? day.nakshatra, day.nakshatra ?? day.nakshatra_ne) ?? "—"}
-                    </span>
+                  <span className="truncate text-center font-semibold text-secondary dark:text-[var(--brand-yellow)]">
+                    {getMonthDayChandraRashi(day, lang) ?? "—"}
                   </span>
                   <span className={cn("truncate text-center")}>
                     {pick(day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
@@ -224,13 +215,13 @@ export function PanchangaMonthGrid({
                   <span className="inline-flex items-center gap-0.5 min-w-0">
                     <SunMoon className="w-4 h-4 shrink-0 text-foreground" />
                     <span className="font-mono text-xs leading-none tabular-nums truncate">
-                      {formatMonthMoonEventDisplay(day, "moonrise") ?? "—"}
+                      {formatMonthMoonTimeOnly(day, "moonrise") ?? "—"}
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-0.5 min-w-0">
                     <Moon className="w-4 h-4 shrink-0 text-foreground" />
                     <span className="font-mono text-xs leading-none tabular-nums truncate">
-                      {formatMonthMoonEventDisplay(day, "moonset") ?? "—"}
+                      {formatMonthMoonTimeOnly(day, "moonset") ?? "—"}
                     </span>
                   </span>
                 </div>

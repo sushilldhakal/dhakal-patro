@@ -41,10 +41,7 @@ export function BsCalendarGrid({
 }: Props) {
   const { t } = useTranslation();
   const { lang, pick, digits } = useLocale();
-  const firstDay = days[0];
-  const startOffset = firstDay ? new Date(firstDay.date_ad).getDay() : 0;
-
-  const cells: (CalendarDay | null)[] = [...Array<null>(startOffset).fill(null), ...days];
+  const cells: (CalendarDay | null)[] = [...days];
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
@@ -88,11 +85,12 @@ export function BsCalendarGrid({
           }
 
           const col = i % 7;
+          const isOutside = day.outsideMonth === true;
           const isToday = day.date_ad === todayAd;
           const isSelected = day.date_ad === selectedAdDate && !isToday;
           const isWeekend = col === 0 || col === 6;
-          const isPublicHoliday = publicHolidayDates.has(day.date_ad);
-          const hasFestival = day.festivals.length > 0 && !isPublicHoliday;
+          const isPublicHoliday = !isOutside && publicHolidayDates.has(day.date_ad);
+          const hasFestival = !isOutside && day.festivals.length > 0 && !isPublicHoliday;
           const adDay = new Date(day.date_ad).getDate();
 
           const primaryNum = mode === "ad" ? adDay : day.day;
@@ -110,8 +108,9 @@ export function BsCalendarGrid({
               className={cn(
                 "relative flex min-h-[104px] min-w-0 flex-col justify-between gap-1.5 border-none bg-card p-2.5 text-left text-foreground transition-colors",
                 "max-md:min-h-12 max-md:items-center max-md:justify-start max-md:gap-0 max-md:p-1 max-md:text-center",
+                isOutside && "bg-surface-muted/90 hover:bg-surface-hover",
                 isToday && "bg-surface-today hover:bg-surface-today-hover",
-                !isToday && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
+                !isToday && !isOutside && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
                 isSelected && "shadow-[inset_0_0_0_2px_var(--ring)]",
                 isPublicHoliday && "bg-surface-tint-danger",
                 hasFestival && "bg-surface-tint-teal",
@@ -129,31 +128,47 @@ export function BsCalendarGrid({
                   <span
                     className={cn(
                       "font-num text-2xl font-semibold leading-none tracking-tight max-md:text-base max-md:leading-tight",
-                      (isWeekend || isPublicHoliday) && "text-danger",
+                      isOutside && "text-muted-foreground/75",
+                      !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
                     )}
                   >
                     {digits(primaryNum)}
                   </span>
-                  <span className="font-num ml-auto text-[10.5px] font-medium whitespace-nowrap text-muted-foreground max-md:hidden">
+                  <span
+                    className={cn(
+                      "font-num ml-auto text-[10.5px] font-medium whitespace-nowrap max-md:hidden",
+                      isOutside ? "text-muted-foreground/65" : "text-muted-foreground",
+                    )}
+                  >
                     {secondaryLabel}
                   </span>
-                  <span className="font-num hidden text-[8px] leading-tight text-muted-foreground max-md:block">
+                  <span
+                    className={cn(
+                      "font-num hidden text-[8px] leading-tight max-md:block",
+                      isOutside ? "text-muted-foreground/65" : "text-muted-foreground",
+                    )}
+                  >
                     {fmtAdCompact(day.date_ad)}
                   </span>
                 </span>
 
                 {tithi ? (
-                  <span className="inline-flex max-w-full items-center gap-1 overflow-hidden text-[11px] font-medium text-ellipsis whitespace-nowrap text-muted-foreground max-md:hidden">
+                  <span
+                    className={cn(
+                      "inline-flex max-w-full items-center gap-1 overflow-hidden text-[11px] font-medium text-ellipsis whitespace-nowrap max-md:hidden",
+                      isOutside ? "text-muted-foreground/60" : "text-muted-foreground",
+                    )}
+                  >
                     {tithi}
                   </span>
-                ) : isEnriching ? (
+                ) : isEnriching && !isOutside ? (
                   <span
                     className="inline-block h-2 w-10 animate-pulse rounded-full bg-muted-foreground/25 max-md:hidden"
                     aria-hidden
                   />
                 ) : null}
 
-                {mainFest && (
+                {mainFest && !isOutside && (
                   <span
                     className={cn(
                       "max-w-full truncate rounded-full px-2 py-1 text-[10.5px] font-semibold leading-none max-md:hidden",

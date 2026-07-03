@@ -488,30 +488,60 @@ export function DayTimeline({
       </div>
 
       {planets.length > 0 && (
-        <div className={cn("flex", "items-stretch", "gap-3", "border-t", "border-border", "px-4", "py-2.5", "pb-3.5")}>
-          <div className="flex min-w-[86px] flex-col justify-center">
-            <span className="text-[12.5px] font-bold">{pick("ग्रह", "Planets")}</span>
-            <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground">
+        <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-[12.5px] font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
+            <span className="text-[11px] font-medium leading-snug text-muted-foreground">
               {getPlanetsAnchorLabel(p)}
             </span>
           </div>
-          <div className={cn("flex", "min-w-0", "flex-1", "flex-wrap", "gap-1.5")}>
-            {planets.map(({ label, rashiNe, coords }) => {
+          <div className="grid grid-cols-2 min-[380px]:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
+            {planets.map(
+              ({
+                label,
+                rashiNe,
+                coords,
+                nakshatraNe,
+                nakshatraEn,
+                pada,
+                nakshatraLordNe,
+                nakshatraLordEn,
+              }) => {
               const labelL = pick(label, TL_GRAHA_EN[label] ?? label);
               const rashiL = pick(rashiNe ?? "—", TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—");
+              const nakName = pick(nakshatraNe, nakshatraEn ?? nakshatraNe);
+              const padaLabel =
+                pada != null
+                  ? pick(`पद ${digits(pada)}`, `Pada ${digits(pada)}`)
+                  : undefined;
+              const lordL = pick(nakshatraLordNe, nakshatraLordEn ?? nakshatraLordNe);
+              const nakLine =
+                nakName && padaLabel ? `${nakName} · ${padaLabel}` : nakName ?? undefined;
               return (
               <div
                 key={label}
-                className="flex min-w-[86px] flex-col items-center gap-px rounded-lg bg-foreground/4 px-2.5 py-1.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
-                title={`${labelL} — ${rashiL} ${coords}`}
+                className="flex w-full flex-col items-center gap-0.5 rounded-lg bg-foreground/4 px-2 py-1.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
+                title={[labelL, rashiL, coords, nakLine, lordL].filter(Boolean).join(" · ")}
               >
                 <span className="text-[13px] leading-none text-secondary dark:text-[#7fd6db]">
                   {PLANET_SYM[label] ?? "★"}
                 </span>
-                <span className="inline-flex items-baseline gap-0.5 text-[11.5px] font-semibold whitespace-nowrap">
-                  {labelL}–{rashiL}
+                <span className="inline-flex max-w-full items-baseline justify-center gap-0.5 text-center text-[11px] font-semibold leading-tight">
+                  <span className="truncate">{labelL}</span>
+                  <span className="shrink-0">–{rashiL}</span>
                 </span>
-                <span className={cn(patroMono, "text-xs font-medium text-muted-foreground")}>{coords}</span>
+                <span className={cn(patroMono, "text-[10.5px] font-medium text-muted-foreground tabular-nums")}>{coords}</span>
+                {nakLine ? (
+                  <span className="max-w-full truncate text-center text-[10px] leading-tight text-muted-foreground">
+                    {nakLine}
+                  </span>
+                ) : null}
+                {lordL ? (
+                  <span className="text-center text-[10px] leading-tight text-muted-foreground/90">
+                    {pick("नक्षत्रेश ", "Lord ")}
+                    {lordL}
+                  </span>
+                ) : null}
               </div>
               );
             })}

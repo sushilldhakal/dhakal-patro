@@ -333,8 +333,21 @@ function parsePakshaNeShort(label?: string): string | undefined {
   return undefined;
 }
 
+function resolveNestedChandraRashi(nested?: CalendarDay["panchanga"]) {
+  const raw = nested?.chandra_rashi;
+  if (raw && typeof raw === "object") {
+    const obj = raw as { name?: string; name_ne?: string };
+    return { en: obj.name, ne: obj.name_ne ?? nested?.chandra_rashi_ne };
+  }
+  return {
+    en: typeof raw === "string" ? raw : undefined,
+    ne: nested?.chandra_rashi_ne,
+  };
+}
+
 function normalizeMonthDay(day: RawMonthDay): CalendarDay {
   const nested = day.panchanga;
+  const nestedRashi = resolveNestedChandraRashi(nested);
   const paksha =
     day.paksha ??
     parsePakshaName(nested?.paksha) ??
@@ -355,6 +368,8 @@ function normalizeMonthDay(day: RawMonthDay): CalendarDay {
     moonrise_local: day.moonrise_local,
     moonset: day.moonset ?? nested?.moon?.set,
     moonset_local: day.moonset_local,
+    chandra_rashi: day.chandra_rashi ?? nestedRashi.en,
+    chandra_rashi_ne: day.chandra_rashi_ne ?? nestedRashi.ne,
   };
 }
 
@@ -424,6 +439,8 @@ export const holidayKeys = {
     month != null
       ? (["festivals", year, month] as const)
       : (["festivals", year] as const),
+  upcoming: (days = 90, limit = 15, holidaysOnly = false) =>
+    ["festivals", "upcoming", days, limit, holidaysOnly] as const,
 };
 
 export const fetchHolidays = (year: number) =>
@@ -433,6 +450,32 @@ export const fetchFestivals = (year: number, month?: number) => {
   const params = new URLSearchParams({ year: String(year), era: "bs" });
   if (month != null) params.set("month", String(month));
   return get<FestivalsResponse>(`/nepal/festivals?${params}`);
+};
+
+/** Festival with countdown, as returned by /nepal/festivals/upcoming. */
+export interface UpcomingFestival extends Festival {
+  days_until: number;
+}
+
+export interface UpcomingFestivalsResponse {
+  from: string;
+  days: number;
+  count: number;
+  festivals: UpcomingFestival[];
+}
+
+/** Next festivals from today (observer TZ), across the BS-year boundary. */
+export const fetchUpcomingFestivals = (
+  days = 90,
+  limit = 15,
+  holidaysOnly = false
+) => {
+  const params = new URLSearchParams({
+    days: String(days),
+    limit: String(limit),
+  });
+  if (holidaysOnly) params.set("holidays_only", "true");
+  return get<UpcomingFestivalsResponse>(`/nepal/festivals/upcoming?${params}`);
 };
 
 // ─── Sait (auspicious dates) ──────────────────────────────────────────────────
@@ -1083,6 +1126,8 @@ export interface CalendarDay {
   yoga_ne?: string;
   karana?: string;
   karana_ne?: string;
+  chandra_rashi?: string;
+  chandra_rashi_ne?: string;
   sunrise?: string;
   sunset?: string;
   aayan?: string;
@@ -1097,6 +1142,8 @@ export interface CalendarDay {
   panchanga?: CalendarDayDetail;
   mode?: "ephemeris";
   query_instant?: string;
+  /** Leading/trailing cells from adjacent BS months in the home grid. */
+  outsideMonth?: boolean;
 }
 
 export interface PatroMonth {

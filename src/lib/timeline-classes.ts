@@ -90,7 +90,7 @@ export const pgxNowText =
   "fill-white text-xs font-semibold [font-family:var(--font-sans)]";
 
 export const pgTlVgridMajor =
-  "pointer-events-none stroke-[color-mix(in_srgb,var(--foreground)_28%,var(--border))] [stroke-width:1] [stroke-dasharray:3_4] stroke-opacity-40 dark:stroke-[color-mix(in_srgb,var(--foreground)_38%,var(--border))]";
+  "pointer-events-none stroke-[color-mix(in_srgb,#0000007a_28%,#d1d1d157)] dark:stroke-[color-mix(in_srgb,#ffffff55_28%,#04253e50)] [stroke-width:1] [stroke-dasharray:3_4]";
 
 export const pgTlAxis =
   "stroke-foreground stroke-opacity-45 [stroke-width:1.2]";

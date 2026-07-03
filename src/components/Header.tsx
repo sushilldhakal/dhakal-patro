@@ -4,8 +4,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   CalendarDays,
   Star,
-  ArrowLeftRight,
-  PartyPopper,
   Sparkles,
   BookOpen,
   Sun,
@@ -46,11 +44,7 @@ const JYOTISH_LINKS = [
   { to: "/jyotish/kundali-milan" as const, labelKey: "nav.jyotish_kundali_milan", icon: Heart },
 ] as const;
 
-const NAV = [
-  { to: "/converter" as const, labelKey: "nav.converter", icon: ArrowLeftRight },
-  { to: "/holidays" as const, labelKey: "nav.holidays", icon: PartyPopper },
-  { to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen },
-] as const;
+const NAV = [{ to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen }] as const;
 
 const linkClass =
   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";

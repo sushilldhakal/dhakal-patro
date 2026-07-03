@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   fetchMonthCalendar,
@@ -15,15 +16,22 @@ import {
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
   adToBS,
+  bsToAD,
   getCurrentBs,
   bsMonthLabel,
 } from "@/lib/bs-calendar";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { LocationSelector } from "@/components/panchanga/LocationSelector";
+import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
+import { locationToSearch } from "@/lib/url-state";
+import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 import {
   applyHolidaysToDays,
+  buildCalendarGridDays,
   buildLocalMonthDays,
   getBsMonthAdSpanLabel,
   mergeEnrichedDays,
+  shiftBsMonth,
 } from "@/lib/local-calendar";
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { DayDetailModal } from "./DayDetailModal";
@@ -34,6 +42,40 @@ const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
   (_, i) => BS_SUPPORTED_START_YEAR + i,
 );
+
+type HomePatroView = "calendar" | "panchanga";
+export type { HomePatroView };
+export const HOME_PATRO_VIEW_KEY = "dhakalPatroHomePatroView";
+
+export function loadHomePatroView(): HomePatroView {
+  const saved = getLocalStorageItem(HOME_PATRO_VIEW_KEY);
+  return saved === "panchanga" ? "panchanga" : "calendar";
+}
+
+function anchorDateForBsMonth(
+  year: number,
+  month: number,
+  days: CalendarDay[],
+  todayAd: string | undefined,
+): Date {
+  if (todayAd) {
+    const bs = adToBS(new Date(`${todayAd}T12:00:00`));
+    if (bs.year === year && bs.month === month) {
+      return new Date(`${todayAd}T12:00:00`);
+    }
+  }
+  const first = days.find((d) => d.day === 1) ?? days[0];
+  if (first?.date_ad) return new Date(`${first.date_ad}T12:00:00`);
+  const ad = bsToAD(year, month, 1);
+  return new Date(ad.getFullYear(), ad.getMonth(), ad.getDate(), 12, 0, 0, 0);
+}
+
+function toAdStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 export type CalendarMonthContext = {
   year: number;
@@ -47,7 +89,12 @@ interface Props {
   aside?: ReactNode;
   holidays?: ReactNode;
   showMonthHeader?: boolean;
+  /** Home: toggle between BS calendar and monthly panchanga patro. */
+  enablePatroToggle?: boolean;
+  patroView?: HomePatroView;
+  onPatroViewChange?: (view: HomePatroView) => void;
   location?: PanchangaLocation;
+  onLocationChange?: (location: PanchangaLocation) => void;
   todayAd?: string;
   onLoadingChange?: (loading: boolean) => void;
 }
@@ -58,11 +105,16 @@ export function CalendarView({
   aside,
   holidays,
   showMonthHeader = true,
+  enablePatroToggle = false,
+  patroView: patroViewProp,
+  onPatroViewChange,
   location,
+  onLocationChange,
   todayAd,
   onLoadingChange,
 }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { lang, pick, digits } = useLocale();
   const init = useMemo(() => {
     if (todayAd) {
@@ -75,13 +127,48 @@ export function CalendarView({
   const [month, setMonth] = useState(init.month);
   const [selected, setSelected] = useState<CalendarDay | null>(null);
   const [mode, setMode] = useState<"bs" | "ad">("bs");
+  const [internalPatroView, setInternalPatroView] = useState<HomePatroView>(() =>
+    enablePatroToggle ? loadHomePatroView() : "calendar",
+  );
+  const patroView = patroViewProp ?? internalPatroView;
+  const isPanchangaPatro = enablePatroToggle && patroView === "panchanga";
+
+  const switchPatroView = (next: HomePatroView) => {
+    if (patroViewProp === undefined) setInternalPatroView(next);
+    onPatroViewChange?.(next);
+    if (enablePatroToggle) setLocalStorageItem(HOME_PATRO_VIEW_KEY, next);
+    setSelected(null);
+    onDaySelect?.(null);
+  };
 
   const localDays = useMemo(() => buildLocalMonthDays(year, month), [year, month]);
+  const prevBs = useMemo(() => shiftBsMonth(year, month, -1), [year, month]);
+  const nextBs = useMemo(() => shiftBsMonth(year, month, 1), [year, month]);
   const adMonthSpan = useMemo(() => getBsMonthAdSpanLabel(year, month), [year, month]);
+
+  const canFetchPrev =
+    prevBs.year >= BS_SUPPORTED_START_YEAR && prevBs.year <= BS_SUPPORTED_END_YEAR;
+  const canFetchNext =
+    nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
+
   const monthQ = useQuery({
     queryKey: panchangaKeys.month(year, month, location?.params),
     queryFn: () => fetchMonthCalendar(year, month, location?.params),
     staleTime: 1000 * 60 * 60,
+  });
+
+  const prevMonthQ = useQuery({
+    queryKey: panchangaKeys.month(prevBs.year, prevBs.month, location?.params),
+    queryFn: () => fetchMonthCalendar(prevBs.year, prevBs.month, location?.params),
+    staleTime: 1000 * 60 * 60,
+    enabled: canFetchPrev && !isPanchangaPatro,
+  });
+
+  const nextMonthQ = useQuery({
+    queryKey: panchangaKeys.month(nextBs.year, nextBs.month, location?.params),
+    queryFn: () => fetchMonthCalendar(nextBs.year, nextBs.month, location?.params),
+    staleTime: 1000 * 60 * 60,
+    enabled: canFetchNext && !isPanchangaPatro,
   });
 
   const holidayQ = useQuery({
@@ -90,7 +177,7 @@ export function CalendarView({
     staleTime: 1000 * 60 * 60,
   });
 
-  const days = useMemo(() => {
+  const monthDays = useMemo(() => {
     let result = localDays;
     if (holidayQ.data?.holidays) {
       result = applyHolidaysToDays(result, holidayQ.data.holidays, lang);
@@ -101,9 +188,31 @@ export function CalendarView({
     return result;
   }, [localDays, holidayQ.data, monthQ.data, lang]);
 
+  const gridDays = useMemo(() => {
+    if (isPanchangaPatro) return monthDays;
+    let grid = buildCalendarGridDays(year, month, {
+      prev: prevMonthQ.data?.calendar,
+      current: monthDays,
+      next: nextMonthQ.data?.calendar,
+    });
+    if (holidayQ.data?.holidays) {
+      grid = applyHolidaysToDays(grid, holidayQ.data.holidays, lang);
+    }
+    return grid;
+  }, [
+    isPanchangaPatro,
+    year,
+    month,
+    monthDays,
+    prevMonthQ.data?.calendar,
+    nextMonthQ.data?.calendar,
+    holidayQ.data?.holidays,
+    lang,
+  ]);
+
   useEffect(() => {
-    onMonthContextChange?.({ year, month, days });
-  }, [year, month, days, onMonthContextChange]);
+    onMonthContextChange?.({ year, month, days: monthDays });
+  }, [year, month, monthDays, onMonthContextChange]);
 
   const publicHolidayDates = useMemo(
     () =>
@@ -117,14 +226,40 @@ export function CalendarView({
 
   const isEnriching = monthQ.isFetching && !monthQ.data;
 
+  const panchangaGridDate = useMemo(
+    () => anchorDateForBsMonth(year, month, monthDays, todayAd),
+    [year, month, monthDays, todayAd],
+  );
+
   useEffect(() => {
     onLoadingChange?.(monthQ.isLoading || holidayQ.isLoading);
   }, [monthQ.isLoading, holidayQ.isLoading, onLoadingChange]);
 
   function selectDay(day: CalendarDay) {
+    if (isPanchangaPatro && location) {
+      navigate({
+        to: "/panchanga",
+        search: {
+          ...locationToSearch(location),
+          date: day.date_ad,
+        },
+      });
+      return;
+    }
     const next = selected?.date_ad === day.date_ad ? null : day;
     setSelected(next);
     onDaySelect?.(next);
+  }
+
+  function goToPanchangaDay(d: Date) {
+    if (!location) return;
+    navigate({
+      to: "/panchanga",
+      search: {
+        ...locationToSearch(location),
+        date: toAdStr(d),
+      },
+    });
   }
 
   function prev() {
@@ -154,7 +289,13 @@ export function CalendarView({
     onDaySelect?.(null);
   }
 
-  const calendarBlock = (
+  const calendarBlock = isPanchangaPatro ? (
+    <PanchangaMonthGrid
+      date={panchangaGridDate}
+      locationParams={location?.params}
+      onPickDay={goToPanchangaDay}
+    />
+  ) : (
     <>
       {monthQ.isError && (
         <div className="mb-3 rounded-xl border border-warning/25 bg-warning-surface px-3.5 py-2 text-sm font-medium text-warning">
@@ -163,7 +304,7 @@ export function CalendarView({
       )}
 
       <BsCalendarGrid
-        days={days}
+        days={gridDays}
         publicHolidayDates={publicHolidayDates}
         selectedAdDate={selected?.date_ad}
         onSelectDay={selectDay}
@@ -189,9 +330,41 @@ export function CalendarView({
   const monthHeader = showMonthHeader ? (
     <div className="mb-4 mt-2 flex flex-wrap items-end justify-between gap-4 max-sm:px-2.5 max-sm:pt-3">
       <div className="flex w-full flex-col items-start min-[1081px]:w-auto">
-        <div className="mb-1.5 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-          {t("calendar.eyebrow")}
-        </div>
+        {enablePatroToggle ? (
+          <div className="mb-1.5 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              {t("calendar.brand_eyebrow")}
+            </span>
+            <div
+              className="inline-flex gap-0.5 rounded-lg border border-border bg-card p-0.5"
+              role="radiogroup"
+              aria-label={t("calendar.patro_mode_aria")}
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={patroView === "calendar"}
+                className={patroSegBtn(patroView === "calendar")}
+                onClick={() => switchPatroView("calendar")}
+              >
+                {t("calendar.mode_bs")}
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={patroView === "panchanga"}
+                className={patroSegBtn(patroView === "panchanga")}
+                onClick={() => switchPatroView("panchanga")}
+              >
+                {t("calendar.mode_panchanga")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-1.5 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            {t("calendar.eyebrow")}
+          </div>
+        )}
         <h1 className="m-0 text-[40px] font-bold leading-tight tracking-tight max-sm:text-[28px]">
           {pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1])}{" "}
           <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
@@ -199,10 +372,26 @@ export function CalendarView({
         <div className="mt-1 text-sm text-muted-foreground">
           {pick(`${BS_MONTH_NAMES[month - 1]} ${year} · `, "")}
           {adMonthSpan}
+          {isPanchangaPatro ? (
+            <span className="ml-1 font-medium text-muted-foreground">
+              · {t("panchanga.monthly_title")}
+            </span>
+          ) : null}
         </div>
       </div>
 
-      <div className="flex w-full flex-wrap items-center gap-2.5 min-[1081px]:w-auto">
+      <div className="flex w-full flex-col items-stretch gap-2 min-[1081px]:w-auto min-[1081px]:items-end">
+        {location && onLocationChange ? (
+          <div className="flex w-full justify-end">
+            <LocationSelector
+              compact
+              location={location}
+              onLocationChange={onLocationChange}
+            />
+          </div>
+        ) : null}
+
+        <div className="flex w-full flex-wrap items-center gap-2.5 min-[1081px]:justify-end">
         <select
           className="h-8 cursor-pointer rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium text-foreground"
           value={month}
@@ -265,8 +454,11 @@ export function CalendarView({
           </button>
         </div>
 
-        {isEnriching && <span className="text-xs font-medium text-muted-foreground">{t("common.enriching")}</span>}
+        {isEnriching && !isPanchangaPatro && (
+          <span className="text-xs font-medium text-muted-foreground">{t("common.enriching")}</span>
+        )}
 
+        {!isPanchangaPatro ? (
         <div
           className="inline-flex gap-0.5 rounded-lg border border-border bg-card p-0.5"
           role="radiogroup"
@@ -291,6 +483,8 @@ export function CalendarView({
             {t("calendar.mode_ad")}
           </button>
         </div>
+        ) : null}
+        </div>
       </div>
     </div>
   ) : null;
@@ -300,6 +494,16 @@ export function CalendarView({
   }
 
   if (aside || holidays) {
+    if (isPanchangaPatro) {
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="min-w-0 w-full">{monthHeader}{calendarBlock}</div>
+          {aside ? <div className="min-w-0 w-full max-sm:px-2.5">{aside}</div> : null}
+          {holidays}
+        </div>
+      );
+    }
+
     return (
       <div className="grid items-start gap-4 min-[1081px]:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] min-[1081px]:items-stretch min-[1081px]:gap-[15px] max-sm:gap-4">
         <div className="min-w-0">{monthHeader}{calendarBlock}</div>
