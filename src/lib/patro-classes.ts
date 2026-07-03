@@ -151,7 +151,13 @@ export const GANA_SWATCH_CLASS: Record<string, string> = {
   "राक्षस": "bg-[var(--av-gana-rak)]",
 };
 
-/** Home hero glow shell — pair with `@keyframes pn-drift` in `index.css`. */
+export const patroHeroMonthOverlay =
+  "pointer-events-none absolute inset-0 bg-gradient-to-br from-black/72 via-black/42 to-black/28";
+
+export const patroHeroMonthShell =
+  "relative isolate overflow-hidden bg-cover bg-center bg-no-repeat";
+
+/** @deprecated use patroHeroMonthShell — kept for any legacy dark hero usage */
 export const patroHeroDeco = cn(
   "relative isolate overflow-hidden",
   "before:pointer-events-none before:absolute before:-z-10 before:rounded-full before:blur-[46px]",

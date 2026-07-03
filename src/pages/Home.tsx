@@ -19,7 +19,8 @@ import { todayAdStringInTimezone } from "@/lib/zoned-time";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, getCurrentBs } from "../lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
-import { patroAsideLink, patroAsideTab, patroHeroDeco, patroHeroGrid, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
+import { patroAsideLink, patroAsideTab, patroHeroMonthOverlay, patroHeroMonthShell, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
+import { bsMonthArtUrl } from "@/lib/month-art";
 import {
   ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
@@ -85,6 +86,10 @@ function PanchangaAside({
   );
   const topFestIsPublic = p?.festivals?.[0]?.is_public_holiday ?? false;
   const isBelow = placement === "below";
+  const heroBsMonth =
+    (p?.bs_date && typeof p.bs_date === "object" ? p.bs_date.month : undefined) ??
+    monthContext.month;
+  const heroMonthArt = bsMonthArtUrl(heroBsMonth);
 
   return (
     <aside
@@ -144,13 +149,15 @@ function PanchangaAside({
           >
             <div
               className={cn(
-                patroHeroDeco,
-                "shrink-0 rounded-xl bg-[#07080d] p-[22px] text-[#f5f5f1] shadow-lg",
+                patroHeroMonthShell,
+                "shrink-0 rounded-xl p-[22px] text-[#f5f5f1] shadow-lg",
                 isBelow ? "mx-4 mt-4 lg:mx-0 lg:mt-0 lg:w-[min(100%,22rem)] lg:rounded-none lg:shadow-none" : "min-[1081px]:rounded-none min-[1081px]:p-5 min-[1081px]:shadow-none",
                 !isBelow && "min-[1081px]:rounded-none",
               )}
+              style={{ backgroundImage: `url(${heroMonthArt})` }}
             >
-              <div className={patroHeroGrid} />
+              <div className={patroHeroMonthOverlay} aria-hidden />
+              <div className="relative z-10">
               <div className="flex items-start justify-between gap-3.5">
                 <div className="min-w-0 flex-1">
                   <div className="text-[10.5px] font-semibold tracking-[0.16em] text-[rgba(245,245,241,0.55)]">
@@ -182,6 +189,7 @@ function PanchangaAside({
                     )}
                   </div>
                 ) : null}
+              </div>
               </div>
             </div>
 
