@@ -46,15 +46,21 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children, ssr = false }: { children: ReactNode; ssr?: boolean }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(!ssr && isBrowser);
+  /** Bumped on logout so late apiMe() responses cannot restore a stale session. */
+  const authEpoch = useRef(0);
 
   const refreshUser = useCallback(async () => {
+    const epoch = authEpoch.current;
     if (!tokenStore.access && !tokenStore.refresh) {
       setUser(null);
       return;
     }
     try {
-      setUser(await apiMe());
+      const me = await apiMe();
+      if (epoch !== authEpoch.current) return;
+      setUser(me);
     } catch {
+      if (epoch !== authEpoch.current) return;
       setUser(null);
     }
   }, []);
@@ -78,24 +84,40 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
+    authEpoch.current += 1;
+    const epoch = authEpoch.current;
     tokenStore.set(await apiLogin(email, password));
-    setUser(await apiMe());
+    const me = await apiMe();
+    if (epoch !== authEpoch.current) return;
+    setUser(me);
   }, []);
 
   const signup = useCallback(async (email: string, password: string) => {
+    authEpoch.current += 1;
+    const epoch = authEpoch.current;
     tokenStore.set(await apiSignup(email, password));
-    setUser(await apiMe());
+    const me = await apiMe();
+    if (epoch !== authEpoch.current) return;
+    setUser(me);
   }, []);
 
   const loginWithGoogle = useCallback(async (idToken: string) => {
+    authEpoch.current += 1;
+    const epoch = authEpoch.current;
     tokenStore.set(await apiGoogle(idToken));
-    setUser(await apiMe());
+    const me = await apiMe();
+    if (epoch !== authEpoch.current) return;
+    setUser(me);
   }, []);
 
   const loginWithFacebook = useCallback(async (accessToken: string) => {
+    authEpoch.current += 1;
+    const epoch = authEpoch.current;
     clearFacebookAutoLoginSkip();
     tokenStore.set(await apiFacebook(accessToken));
-    setUser(await apiMe());
+    const me = await apiMe();
+    if (epoch !== authEpoch.current) return;
+    setUser(me);
   }, []);
 
   const facebookBootstrapDone = useRef(false);
@@ -126,9 +148,10 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
   }, [ssr, loading, user, loginWithFacebook]);
 
   const logout = useCallback(async () => {
+    authEpoch.current += 1;
     skipFacebookAutoLogin();
-    await Promise.all([apiLogout(), facebookLogout()]);
     setUser(null);
+    await Promise.all([apiLogout(), facebookLogout()]);
   }, []);
 
   const value = useMemo<AuthContextValue>(

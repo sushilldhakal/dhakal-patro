@@ -188,19 +188,31 @@ export function shouldSkipFacebookAutoLogin(): boolean {
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | void> {
+  return Promise.race([
+    promise,
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, ms);
+    }),
+  ]);
+}
+
 /** Disconnect this app from the visitor's Facebook session in the browser. */
 export function facebookLogout(): Promise<void> {
   if (!facebookSignInEnabled) return Promise.resolve();
-  return loadFacebookSdk()
-    .then(
-      () =>
-        new Promise<void>((resolve) => {
-          try {
-            ensureInitialized().logout(() => resolve());
-          } catch {
-            resolve();
-          }
-        }),
-    )
-    .catch(() => undefined);
+  return withTimeout(
+    loadFacebookSdk()
+      .then(
+        () =>
+          new Promise<void>((resolve) => {
+            try {
+              ensureInitialized().logout(() => resolve());
+            } catch {
+              resolve();
+            }
+          }),
+      )
+      .catch(() => undefined),
+    2_000,
+  ).then(() => undefined);
 }

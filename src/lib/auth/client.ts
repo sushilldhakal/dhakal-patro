@@ -170,13 +170,14 @@ export async function apiFacebook(accessToken: string): Promise<TokenPair> {
 
 export async function apiLogout(): Promise<void> {
   const refresh_token = tokenStore.refresh;
+  // Clear locally first so the UI and in-flight requests see a signed-out session.
+  tokenStore.clear();
   if (refresh_token) {
     await raw("/auth/logout", {
       method: "POST",
       body: JSON.stringify({ refresh_token }),
     }).catch(() => undefined);
   }
-  tokenStore.clear();
 }
 
 export const apiMe = () => authFetch<AuthUser>("/auth/me");
