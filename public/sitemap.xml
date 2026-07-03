@@ -76,6 +76,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.vedicpatro.com/panchak-patro</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.vedicpatro.com/learn/astronomy-basics</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

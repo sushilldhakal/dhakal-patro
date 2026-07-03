@@ -46,6 +46,7 @@ const ROUTES = [
   { path: "/learn/history", changefreq: "monthly", priority: "0.6" },
   { path: "/suryakranti", changefreq: "weekly", priority: "0.7" },
   { path: "/abhijit-muhurta", changefreq: "weekly", priority: "0.7" },
+  { path: "/panchak-patro", changefreq: "monthly", priority: "0.7" },
   ...LEARN_SLUGS.map((slug) => ({
     path: `/learn/${slug}`,
     changefreq: "monthly",

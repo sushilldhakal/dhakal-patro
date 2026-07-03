@@ -79,6 +79,11 @@
         "description": "Abhijit muhurta and auspicious time calculation.",
         "keywords": "Abhijit muhurta, auspicious time"
       },
+      "panchak_patro": {
+        "title": "Panchak Patro | Vedic Patro",
+        "description": "Annual Panchak windows, prohibited acts, and Panchak types per Vedic jyotish.",
+        "keywords": "Panchak, Panchak patro, Panchaka rahita, muhurta"
+      },
       "account": {
         "title": "Account | Vedic Patro",
         "description": "User account settings.",
@@ -420,6 +425,38 @@
     "col_abhijit": "Abhijit Muhurta",
     "col_noon": "Solar noon"
   },
+  "panchak": {
+    "title": "Panchak Patro {{year}}",
+    "subtitle": "Panchak periods and muhurta details based on Vedic jyotish and Surya Siddhanta",
+    "intro": "Panchak is the roughly five-day span while the Moon transits the last half of Dhanishta, Shatabhisha, Purva Bhadrapada, Uttara Bhadrapada, and Revati. Many traditions advise avoiding certain acts during Panchak, believing work done then may repeat fivefold.",
+    "back_home": "Back to home",
+    "year_label": "B.S. year",
+    "periods_title": "Panchak windows for B.S. {{year}}",
+    "period_label": "Panchak {{n}}",
+    "start_date": "Start",
+    "end_date": "End",
+    "duration": "Duration",
+    "no_data": "Panchak details for B.S. {{year}} are not available yet.",
+    "prohibited_title": "Acts discouraged during Panchak",
+    "prohibited": {
+      "south_travel": "Travel south",
+      "south_travel_desc": "Avoiding the direction of Yama (south)",
+      "roof": "Roofing a house",
+      "roof_desc": "Placing the roof on a new house",
+      "bed": "Weaving a bed or cot",
+      "bed_desc": "Weaving or constructing a bed/cot (charpai)",
+      "fuel": "Gathering firewood or grass",
+      "fuel_desc": "Stockpiling fuel or fodder",
+      "last_rites": "Last rites",
+      "last_rites_desc": "Performing cremation or final funeral rites"
+    },
+    "learn_title": "Understanding Panchak",
+    "what_title": "What is Panchak?",
+    "what_body": "Panchak is the five-day lunar window through five special nakshatras (second half of Dhanishta through Revati). Travel south, gathering grass or firewood, and roofing a home are commonly avoided.",
+    "rahita_title": "Why Panchaka-rahita muhurta matters",
+    "rahita_body": "Scheduling auspicious rites (vivaha, mundana, etc.) in Panchaka-rahita windows keeps them outside these inauspicious spans so the work may proceed smoothly.",
+    "types_title": "Types of Panchak by start weekday"
+  },
   "calendar": {
     "eyebrow": "Nepali Patro · B.S.",
     "brand_eyebrow": "Nepali Patro",
@@ -652,6 +689,11 @@
     "panchanga_year_desc": "Tithi, nakshatra & graha through the year",
     "abhijit_muhurta_desc": "Daily auspicious Abhijit muhurta window",
     "chandrakranti_desc": "Moon & graha transits",
+    "panchak_patro_desc": "Annual Panchak windows",
+    "kundali_build_title": "Birth Kundali",
+    "kundali_build_desc": "Lagna, grahas, dasha & shadbala",
+    "kundali_milan_title": "Kundali Milan",
+    "kundali_milan_desc": "Ashtakuta guna matching",
     "ritu_desc": "Sāyana seasons · equinox & solstice",
     "ritu_see_all": "See all seasons"
   },

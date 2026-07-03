@@ -5,9 +5,10 @@ import { User, LogOut, UserCircle, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { importWithRetry } from "@/lib/lazy-route";
 
 const LazyAuthDialog = lazy(() =>
-  import("./AuthDialog").then((m) => ({ default: m.AuthDialog })),
+  importWithRetry(() => import("./AuthDialog")).then((m) => ({ default: m.AuthDialog })),
 );
 
 export function AccountMenu() {

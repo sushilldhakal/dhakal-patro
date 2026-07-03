@@ -25,7 +25,6 @@ interface Props {
   publicHolidayDates: Set<string>;
   selectedAdDate?: string;
   onSelectDay?: (day: CalendarDay) => void;
-  mode?: "bs" | "ad";
   isEnriching?: boolean;
   todayAd?: string;
 }
@@ -35,7 +34,6 @@ export function BsCalendarGrid({
   publicHolidayDates,
   selectedAdDate,
   onSelectDay,
-  mode = "bs",
   isEnriching = false,
   todayAd = TODAY_AD,
 }: Props) {
@@ -91,12 +89,6 @@ export function BsCalendarGrid({
           const isWeekend = col === 0 || col === 6;
           const isPublicHoliday = !isOutside && publicHolidayDates.has(day.date_ad);
           const hasFestival = !isOutside && day.festivals.length > 0 && !isPublicHoliday;
-          const adDay = new Date(day.date_ad).getDate();
-
-          const primaryNum = mode === "ad" ? adDay : day.day;
-          const weekdayShort = pick(day.weekday_ne, day.weekday_en ?? day.weekday_ne)?.split(" ")[0] ?? "";
-          const secondaryLabel =
-            mode === "ad" ? `${weekdayShort} ${digits(day.day)}`.trim() : fmtAdShort(day.date_ad);
 
           const mainFest = day.festivals[0];
           const tithi = pick(day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne);
@@ -132,7 +124,7 @@ export function BsCalendarGrid({
                       !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
                     )}
                   >
-                    {digits(primaryNum)}
+                    {digits(day.day)}
                   </span>
                   <span
                     className={cn(
@@ -140,7 +132,7 @@ export function BsCalendarGrid({
                       isOutside ? "text-muted-foreground/65" : "text-muted-foreground",
                     )}
                   >
-                    {secondaryLabel}
+                    {fmtAdShort(day.date_ad)}
                   </span>
                   <span
                     className={cn(

@@ -32,6 +32,7 @@ const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
 const AbhijitMuhurta = lazyRoute(() => import("./pages/AbhijitMuhurta"), "AbhijitMuhurta");
+const PanchakPatro = lazyRoute(() => import("./pages/PanchakPatro"), "PanchakPatro");
 const History = lazyRoute(() => import("./pages/History"), "History");
 const Account = lazyRoute(() => import("./pages/Account"), "Account");
 const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail");
@@ -101,6 +102,18 @@ const abhijitMuhurtaRoute = createRoute({
   },
   component: AbhijitMuhurta,
 });
+const panchakPatroRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/panchak-patro",
+  validateSearch: (search: Record<string, unknown>): { year?: number } => {
+    const parse = (raw: unknown) => {
+      const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : undefined;
+      return Number.isFinite(n) ? n : undefined;
+    };
+    return { year: parse(search.year) };
+  },
+  component: PanchakPatro,
+});
 const sunTimesLegacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sun-times",
@@ -133,6 +146,7 @@ const routeTree = rootRoute.addChildren([
   learnArticleRoute,
   suryakrantiRoute,
   abhijitMuhurtaRoute,
+  panchakPatroRoute,
   sunTimesLegacyRoute,
   historyRoute,
   historyLegacyRoute,
@@ -143,9 +157,29 @@ const routeTree = rootRoute.addChildren([
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+/** Recovery screen for route errors — bilingual, no i18n dependency. */
+function RouteErrorFallback() {
+  return (
+    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
+      <p className="text-lg font-semibold text-foreground">केही गडबड भयो</p>
+      <p className="text-sm text-muted-foreground">
+        Something went wrong. Reloading usually fixes this.
+      </p>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+      >
+        फेरि लोड गर्नुहोस् / Reload
+      </button>
+    </div>
+  );
+}
+
 export function createAppRouter(history?: RouterHistory) {
   return createRouter({
     routeTree,
+    defaultErrorComponent: RouteErrorFallback,
     ...(history ? { history } : {}),
     ...(basepath ? { basepath } : {}),
   });

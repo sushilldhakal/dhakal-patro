@@ -5,6 +5,42 @@ type ModuleLoader = () => Promise<Record<string, ComponentType<unknown>>>;
 
 const eagerCache = new Map<string, ComponentType<unknown>>();
 
+const RELOAD_FLAG = "chunk-reload-at";
+
+/**
+ * Import a code-split chunk, reloading the page once if the fetch fails.
+ * After a redeploy, clients holding the previous HTML request hashed chunk
+ * URLs that no longer exist; a reload picks up the fresh manifest. The
+ * timestamp guard stops a reload loop when the import is genuinely broken.
+ */
+export function importWithRetry<M>(loader: () => Promise<M>): Promise<M> {
+  return loader().then(
+    (mod) => {
+      try {
+        sessionStorage.removeItem(RELOAD_FLAG);
+      } catch {
+        /* storage unavailable */
+      }
+      return mod;
+    },
+    (err: unknown) => {
+      let lastReload = 0;
+      try {
+        lastReload = Number(sessionStorage.getItem(RELOAD_FLAG) ?? 0);
+        if (Date.now() - lastReload > 30_000) {
+          sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+          window.location.reload();
+          // Keep the route suspended while the reload happens.
+          return new Promise<never>(() => {});
+        }
+      } catch {
+        /* storage unavailable — fall through to the error boundary */
+      }
+      throw err;
+    },
+  );
+}
+
 /**
  * Route code-splitting for the client. During SSR prerender, modules are
  * preloaded in entry-server and resolved synchronously from eagerCache.
@@ -26,7 +62,7 @@ export function lazyRoute<
   }
 
   const Lazy = lazy(() =>
-    loader().then((mod) => ({ default: mod[exportName] as ComponentType<unknown> })),
+    importWithRetry(loader).then((mod) => ({ default: mod[exportName] as ComponentType<unknown> })),
   ) as LazyExoticComponent<ComponentType<unknown>>;
 
   return function LazyRoute() {

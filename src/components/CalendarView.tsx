@@ -127,7 +127,6 @@ export function CalendarView({
   const [year, setYear] = useState(init.year);
   const [month, setMonth] = useState(init.month);
   const [selected, setSelected] = useState<CalendarDay | null>(null);
-  const [mode, setMode] = useState<"bs" | "ad">("bs");
   const [internalPatroView, setInternalPatroView] = useState<HomePatroView>(() =>
     enablePatroToggle ? loadHomePatroView() : "calendar",
   );
@@ -342,7 +341,6 @@ export function CalendarView({
         publicHolidayDates={publicHolidayDates}
         selectedAdDate={selected?.date_ad}
         onSelectDay={selectDay}
-        mode={mode}
         isEnriching={isEnriching}
         todayAd={todayAd}
       />
@@ -491,33 +489,6 @@ export function CalendarView({
         {isEnriching && !isPanchangaPatro && (
           <span className="text-xs font-medium text-muted-foreground">{t("common.enriching")}</span>
         )}
-
-        {!isPanchangaPatro ? (
-        <div
-          className="inline-flex gap-0.5 rounded-lg border border-border bg-card p-0.5"
-          role="radiogroup"
-          aria-label={t("calendar.era_aria")}
-        >
-          <button
-            type="button"
-            role="radio"
-            aria-checked={mode === "bs"}
-            className={patroSegBtn(mode === "bs")}
-            onClick={() => setMode("bs")}
-          >
-            {t("calendar.mode_bs")}
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={mode === "ad"}
-            className={patroSegBtn(mode === "ad")}
-            onClick={() => setMode("ad")}
-          >
-            {t("calendar.mode_ad")}
-          </button>
-        </div>
-        ) : null}
         </div>
       </div>
     </div>
