@@ -26,7 +26,21 @@ const normalize = (p: string) => p.replace(/\/+$/, "") || "/";
 const ssrPath = root.getAttribute("data-ssr-path");
 
 if (ssrPath && normalize(ssrPath) === normalize(window.location.pathname)) {
-  hydrateRoot(root, app);
+  // Prerendered pages contain date-dependent content (today's BS date,
+  // calendar grid, countdowns) that will mismatch when the user visits on a
+  // different day than the build. React 19 recovers automatically; we silence
+  // the console noise from those expected mismatches.
+  hydrateRoot(root, app, {
+    onRecoverableError(error) {
+      if (
+        import.meta.env.DEV &&
+        error instanceof Error &&
+        !error.message.includes("418")
+      ) {
+        console.error(error);
+      }
+    },
+  });
 } else {
   root.innerHTML = "";
   createRoot(root).render(app);
