@@ -1,11 +1,15 @@
 import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { useLocale, type Lang } from "@/i18n/locale";
+import { useLocale } from "@/i18n/locale";
+import { formatZonedBsMoment } from "@/lib/bs-calendar";
 import {
   DASHA_LORD_EN,
   DASHA_LORD_NE,
+  breakdownDashaDuration,
   formatDashaDuration,
+  formatDashaDurationParts,
   subdivideDasha,
+  type DashaLord,
   type DashaSpan,
 } from "@/lib/dasha";
 import { cn } from "@/lib/utils";
@@ -20,50 +24,52 @@ const LEVEL_LABELS: { ne: string; en: string }[] = [
 
 const MAX_LEVEL = LEVEL_LABELS.length - 1;
 
-const WEEKDAY_NE = [
-  "आइतबार", "सोमबार", "मङ्गलबार", "बुधबार", "बिहीबार", "शुक्रबार", "शनिबार",
-];
+const LORD_GLYPH: Record<DashaLord, string> = {
+  sun: "☉",
+  moon: "☽",
+  mars: "♂",
+  mercury: "☿",
+  jupiter: "♃",
+  venus: "♀",
+  saturn: "♄",
+  rahu: "☊",
+  ketu: "☋",
+};
 
-const GREG_NE = [
-  "जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन",
-  "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर",
-];
+const LORD_ACCENT: Record<DashaLord, string> = {
+  sun: "border-amber-500/35 bg-amber-500/[0.08]",
+  moon: "border-slate-400/35 bg-slate-400/[0.08]",
+  mars: "border-red-500/35 bg-red-500/[0.08]",
+  mercury: "border-emerald-500/35 bg-emerald-500/[0.08]",
+  jupiter: "border-yellow-600/35 bg-yellow-600/[0.08]",
+  venus: "border-pink-500/35 bg-pink-500/[0.08]",
+  saturn: "border-violet-500/35 bg-violet-500/[0.08]",
+  rahu: "border-neutral-500/35 bg-neutral-500/[0.08]",
+  ketu: "border-orange-600/35 bg-orange-600/[0.08]",
+};
 
-/** "November 4, 2019, Monday at 06:37" localized to the chart's timezone. */
-function formatMoment(date: Date, lang: Lang, timeZone?: string, digits?: (v: string | number) => string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(date);
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
-  const month = Number(get("month"));
-  const day = get("day");
-  const year = get("year");
-  const weekdayShort = get("weekday");
-  const time = `${get("hour")}:${get("minute")}`;
-  const weekdayIdx = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekdayShort);
+const LORD_DOT: Record<DashaLord, string> = {
+  sun: "bg-amber-500",
+  moon: "bg-slate-400",
+  mars: "bg-red-500",
+  mercury: "bg-emerald-500",
+  jupiter: "bg-yellow-600",
+  venus: "bg-pink-500",
+  saturn: "bg-violet-500",
+  rahu: "bg-neutral-500",
+  ketu: "bg-orange-600",
+};
 
-  if (lang === "en") {
-    const monthEn = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
-    ][month - 1];
-    const weekdayEn = [
-      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-    ][weekdayIdx];
-    return `${monthEn} ${day}, ${year}, ${weekdayEn} at ${time}`;
-  }
-  const d = digits ?? String;
-  return `${GREG_NE[month - 1]} ${d(day)}, ${d(year)}, ${WEEKDAY_NE[weekdayIdx] ?? ""} ${d(time)}`;
+function formatMoment(
+  date: Date,
+  lang: string,
+  timeZone?: string,
+  digits?: (v: string | number) => string,
+): string {
+  return formatZonedBsMoment(date, { lang, timeZone, digits });
 }
 
-function lordName(lord: DashaSpan["lord"], lang: Lang): string {
+function lordName(lord: DashaLord, lang: string): string {
   return lang === "en" ? DASHA_LORD_EN[lord] : DASHA_LORD_NE[lord];
 }
 
@@ -78,16 +84,121 @@ function MomentLine({ label, value }: { label: string; value: string }) {
   );
 }
 
+function TimelineDot({
+  running,
+  level,
+  lord,
+}: {
+  running: boolean;
+  level: number;
+  lord: DashaLord;
+}) {
+  const size =
+    level === 0 ? "size-3.5 -left-[8px]" : level === 1 ? "size-2.5 -left-[6px]" : "size-2 -left-[5px]";
+
+  return (
+    <span
+      className={cn(
+        "absolute top-[1.125rem] z-10 rounded-full border-2 border-background shadow-sm",
+        size,
+        running ? "bg-secondary ring-2 ring-secondary/35" : LORD_DOT[lord],
+      )}
+      aria-hidden
+    />
+  );
+}
+
+function SpanProgress({ start, end, now, running }: { start: Date; end: Date; now: number; running: boolean }) {
+  if (!running) return null;
+  const total = end.getTime() - start.getTime();
+  const pct = total > 0 ? Math.min(100, Math.max(0, ((now - start.getTime()) / total) * 100)) : 0;
+  return (
+    <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted/60">
+      <div
+        className="h-full rounded-full bg-secondary transition-[width] duration-500"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
+const DURATION_COLS = [
+  { ne: "अवधि (BS)", en: "Duration (BS)" },
+  { ne: "वर्ष", en: "Years" },
+  { ne: "मास", en: "Months" },
+  { ne: "दिन", en: "Days" },
+  { ne: "योग", en: "Yoga" },
+] as const;
+
+function DashaDurationGrid({
+  start,
+  end,
+  lang,
+  pick,
+  digits,
+}: {
+  start: Date;
+  end: Date;
+  lang: string;
+  pick: (ne: string, en: string) => string;
+  digits: (v: string | number) => string;
+}) {
+  const ms = end.getTime() - start.getTime();
+  const parts = breakdownDashaDuration(ms);
+  const locale = lang === "en" ? "en" : "ne";
+  const avadhi = formatDashaDurationParts(parts, locale);
+  const values = [
+    avadhi,
+    parts.years,
+    parts.months,
+    parts.days,
+    parts.yogas,
+  ] as const;
+
+  return (
+    <div className="mt-2 overflow-x-auto pl-[22px]">
+      <table className="w-full min-w-[280px] border-collapse text-[10.5px]">
+        <thead>
+          <tr>
+            {DURATION_COLS.map((col) => (
+              <th
+                key={col.ne}
+                className="border border-border/50 bg-muted/30 px-1.5 py-1 text-left font-semibold text-[9px] uppercase tracking-wide text-muted-foreground"
+              >
+                {pick(col.ne, col.en)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {values.map((value, i) => (
+              <td
+                key={DURATION_COLS[i]!.ne}
+                className="border border-border/50 px-1.5 py-1 font-medium tabular-nums text-foreground/90"
+              >
+                {digits(value)}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function DashaNode({
   span,
   level,
   now,
   timeZone,
+  isLast,
 }: {
   span: DashaSpan;
   level: number;
   now: number;
   timeZone?: string;
+  isLast?: boolean;
 }) {
   const { lang, pick, digits } = useLocale();
   const [open, setOpen] = useState(false);
@@ -101,70 +212,113 @@ function DashaNode({
 
   const duration = formatDashaDuration(span.end.getTime() - span.start.getTime(), lang);
   const levelLabel = pick(LEVEL_LABELS[level]!.ne, LEVEL_LABELS[level]!.en);
+  const accent = LORD_ACCENT[span.lord];
 
   return (
-    <li className={cn(level > 0 && "border-l border-border/70 pl-3")}>
-      <button
-        type="button"
-        onClick={() => expandable && setOpen((v) => !v)}
-        disabled={!expandable}
-        aria-expanded={expandable ? open : undefined}
+    <li
+      className={cn(
+        "relative",
+        level === 0 ? "pb-4" : "pb-2",
+        level > 0 && "ml-1",
+      )}
+    >
+      {/* spine segment */}
+      <span
         className={cn(
-          "w-full rounded-lg px-2.5 py-2 text-left transition-colors",
-          expandable && "hover:bg-muted/50",
-          running && "bg-secondary/[0.07] dark:bg-secondary/10",
+          "absolute top-0 bottom-0 border-l-2",
+          level === 0 ? "-left-px border-border/80" : "left-0 border-border/50",
+          isLast && !open && "bottom-auto h-[1.125rem]",
+        )}
+        aria-hidden
+      />
+      <TimelineDot running={running} level={level} lord={span.lord} />
+
+      <article
+        className={cn(
+          "ml-5 overflow-hidden rounded-xl border transition-colors",
+          level === 0 ? "shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_4%,transparent)]" : "",
+          accent,
+          running && "border-secondary/40 ring-1 ring-secondary/20",
         )}
       >
-        <span className="flex items-center gap-2">
-          {expandable ? (
-            <ChevronRight
-              className={cn(
-                "size-3.5 shrink-0 text-muted-foreground transition-transform",
-                open && "rotate-90",
-              )}
-              aria-hidden
-            />
-          ) : (
-            <span className="w-3.5 shrink-0" />
+        <button
+          type="button"
+          onClick={() => expandable && setOpen((v) => !v)}
+          disabled={!expandable}
+          aria-expanded={expandable ? open : undefined}
+          className={cn(
+            "w-full px-3 py-2.5 text-left transition-colors",
+            expandable && "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]",
           )}
-          <span className="text-[13px] font-bold text-foreground">
-            {lordName(span.lord, lang)}
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            {levelLabel}
-            <span className="mx-1 text-muted-foreground/50">·</span>
-            {digits(duration)}
-          </span>
-          {running && (
-            <span className="ml-auto shrink-0 rounded-full bg-secondary/15 px-2 py-0.5 text-[9.5px] font-bold text-secondary">
-              {pick("चालु दशा", "Running Dasha")}
+        >
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {expandable ? (
+              <ChevronRight
+                className={cn(
+                  "size-3.5 shrink-0 text-muted-foreground transition-transform",
+                  open && "rotate-90",
+                )}
+                aria-hidden
+              />
+            ) : (
+              <span className="w-3.5 shrink-0" aria-hidden />
+            )}
+            <span className="text-base leading-none opacity-80" aria-hidden>
+              {LORD_GLYPH[span.lord]}
             </span>
-          )}
-        </span>
-        <span className="mt-1 block space-y-0.5 pl-[22px]">
-          <MomentLine
-            label={pick("सुरु", "Begin")}
-            value={formatMoment(span.start, lang, timeZone, digits)}
-          />
-          <MomentLine
-            label={pick("अन्त्य", "End")}
-            value={formatMoment(span.end, lang, timeZone, digits)}
-          />
-        </span>
-      </button>
-      {children && (
-        <ul className="mt-1 mb-2 ml-4 flex flex-col gap-1">
-          {children.map((child, i) => (
-            <DashaNode
-              key={`${child.lord}-${i}`}
-              span={child}
-              level={level + 1}
-              now={now}
-              timeZone={timeZone}
+            <span className="text-[13px] font-bold text-foreground">{lordName(span.lord, lang)}</span>
+            <span className="text-[11px] text-muted-foreground">
+              {levelLabel}
+              <span className="mx-1 text-muted-foreground/50">·</span>
+              {digits(duration)}
+            </span>
+            {running && (
+              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-[9.5px] font-bold text-secondary">
+                {pick("चालु दशा", "Running")}
+              </span>
+            )}
+          </span>
+
+          <span className="mt-2 block space-y-0.5 pl-[22px]">
+            <MomentLine
+              label={pick("सुरु", "Begin")}
+              value={formatMoment(span.start, lang, timeZone, digits)}
             />
-          ))}
-        </ul>
-      )}
+            <MomentLine
+              label={pick("अन्त्य", "End")}
+              value={formatMoment(span.end, lang, timeZone, digits)}
+            />
+          </span>
+
+          <DashaDurationGrid
+            start={span.start}
+            end={span.end}
+            lang={lang}
+            pick={pick}
+            digits={digits}
+          />
+
+          <SpanProgress start={span.start} end={span.end} now={now} running={running} />
+        </button>
+
+        {/* Accordion panel — nested sub-periods */}
+        {children && (
+          <div className="border-t border-border/50 bg-card/40 px-2 pb-2 pt-1">
+            <ul className="relative ml-3 flex flex-col gap-0">
+              {children.map((child, i) => (
+                <DashaNode
+                  key={`${child.lord}-${child.start.getTime()}-${i}`}
+                  span={child}
+                  level={level + 1}
+                  now={now}
+                  timeZone={timeZone}
+                  isLast={i === children.length - 1}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
+      </article>
     </li>
   );
 }
@@ -177,9 +331,8 @@ export type DashaTreeProps = {
 };
 
 /**
- * Expandable Vimshottari hierarchy: Maha → Antar → Pratyantar → Sukshma →
- * Prana dashas, subdivided on demand. The running period at each level is
- * highlighted.
+ * Vimshottari dasha as a vertical timeline. Each row is an accordion card on
+ * the spine; expand to reveal Antar → Pratyantar → Sukshma → Prana sub-periods.
  */
 export function DashaTree({ mahadashas, timeZone }: DashaTreeProps) {
   const { lang, pick, digits } = useLocale();
@@ -189,12 +342,44 @@ export function DashaTree({ mahadashas, timeZone }: DashaTreeProps) {
     (m) => m.start.getTime() <= now && now < m.end.getTime(),
   );
 
+  const timelineStart = mahadashas[0]?.start;
+  const timelineEnd = mahadashas[mahadashas.length - 1]?.end;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {timelineStart && timelineEnd && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground">
+          <span>
+            <span className="font-semibold uppercase tracking-wide text-[9.5px]">
+              {pick("सुरु", "From")}
+            </span>{" "}
+            <span className="font-medium text-foreground/80">
+              {formatMoment(timelineStart, lang, timeZone, digits)}
+            </span>
+          </span>
+          <span className="hidden sm:inline text-muted-foreground/40">→</span>
+          <span>
+            <span className="font-semibold uppercase tracking-wide text-[9.5px]">
+              {pick("अन्त्य", "To")}
+            </span>{" "}
+            <span className="font-medium text-foreground/80">
+              {formatMoment(timelineEnd, lang, timeZone, digits)}
+            </span>
+          </span>
+        </div>
+      )}
+
       {running && (
-        <div className="rounded-xl border border-secondary/25 bg-secondary/[0.06] dark:bg-secondary/10 px-4 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="relative overflow-hidden rounded-xl border border-secondary/30 bg-secondary/[0.06] px-4 py-3 dark:bg-secondary/10">
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-secondary"
+            aria-hidden
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2 pl-2">
             <p className="text-sm font-bold text-foreground">
+              <span className="mr-1.5 opacity-80" aria-hidden>
+                {LORD_GLYPH[running.lord]}
+              </span>
               {lordName(running.lord, lang)}
               <span className="mx-1.5 font-normal text-muted-foreground">·</span>
               {pick("महादशा", "Maha Dasha")}
@@ -203,7 +388,7 @@ export function DashaTree({ mahadashas, timeZone }: DashaTreeProps) {
               {pick("चालु दशा", "Running Dasha")}
             </span>
           </div>
-          <div className="mt-1.5 space-y-0.5">
+          <div className="mt-1.5 space-y-0.5 pl-2">
             <MomentLine
               label={pick("सुरु", "Begin")}
               value={formatMoment(running.start, lang, timeZone, digits)}
@@ -213,7 +398,16 @@ export function DashaTree({ mahadashas, timeZone }: DashaTreeProps) {
               value={formatMoment(running.end, lang, timeZone, digits)}
             />
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12px]">
+          <div className="mt-2 pl-2">
+            <DashaDurationGrid
+              start={running.start}
+              end={running.end}
+              lang={lang}
+              pick={pick}
+              digits={digits}
+            />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 pl-2 text-[12px]">
             <p>
               <span className="text-muted-foreground">{pick("कुल", "Total")} — </span>
               <span className="font-semibold text-foreground">
@@ -227,14 +421,22 @@ export function DashaTree({ mahadashas, timeZone }: DashaTreeProps) {
               </span>
             </p>
           </div>
+          <SpanProgress start={running.start} end={running.end} now={now} running />
         </div>
       )}
 
-      <ul className="flex flex-col gap-1">
+      <ol className="relative m-0 list-none pl-3">
         {mahadashas.map((span, i) => (
-          <DashaNode key={`${span.lord}-${i}`} span={span} level={0} now={now} timeZone={timeZone} />
+          <DashaNode
+            key={`${span.lord}-${span.start.getTime()}-${i}`}
+            span={span}
+            level={0}
+            now={now}
+            timeZone={timeZone}
+            isLast={i === mahadashas.length - 1}
+          />
         ))}
-      </ul>
+      </ol>
     </div>
   );
 }

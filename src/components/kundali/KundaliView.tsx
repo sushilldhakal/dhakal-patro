@@ -14,7 +14,7 @@ import {
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
-import { adToBS } from "@/lib/bs-calendar";
+import { formatBsDateLong } from "@/lib/bs-calendar";
 import {
   buildAtTimeDatetime,
   fetchEphemerisPanchangaDay,
@@ -225,7 +225,6 @@ export function KundaliView({
   const { t } = useTranslation();
   const { lang, pick, digits } = useLocale();
   const adDateStr = toAdStr(date);
-  const bs = adToBS(date);
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
 
   const { data, isLoading, isError } = useQuery({
@@ -443,10 +442,10 @@ export function KundaliView({
 
   const showSection = (id: KundaliSectionId) => section == null || section === id;
 
-  const dateBs =
-    data?.date_bs ??
-    `${bs.year}-${String(bs.month).padStart(2, "0")}-${String(bs.day).padStart(2, "0")}`;
-  const dateAd = data?.date_ad ?? adDateStr;
+  const birthBsLabel = useMemo(
+    () => formatBsDateLong(date, lang, digits),
+    [date, lang, digits],
+  );
 
   if (isError) {
     return (
@@ -476,9 +475,8 @@ export function KundaliView({
               {pick("जन्म समय · Birth moment", "Birth moment")}
             </p>
             <p className="text-2xl font-bold text-foreground font-[family-name:var(--pn-num)] leading-tight">
-              {dateBs}
+              {birthBsLabel}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">{dateAd}</p>
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />

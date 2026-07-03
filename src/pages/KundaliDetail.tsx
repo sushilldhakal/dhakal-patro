@@ -34,7 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { adToBS } from "@/lib/bs-calendar";
+import { formatBsDateLong } from "@/lib/bs-calendar";
 import {
   parseBirthDate,
   profileClock,
@@ -78,19 +78,8 @@ function MetaItem({
   );
 }
 
-function formatAdDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 function formatBsDate(d: Date): string {
-  const bs = adToBS(d);
-  const y = String(bs.year).padStart(4, "0");
-  const m = String(bs.month).padStart(2, "0");
-  const day = String(bs.day).padStart(2, "0");
-  return `${toNepaliDigits(y)}-${toNepaliDigits(m)}-${toNepaliDigits(day)} BS`;
+  return formatBsDateLong(d, "ne", toNepaliDigits);
 }
 
 export function KundaliDetail() {
@@ -149,13 +138,14 @@ export function KundaliDetail() {
 
   const birthDateMeta = useMemo(() => {
     if (!profile?.birth_date) return { value: "—", sub: undefined as string | undefined };
-    const era = profile.birth_era ?? "bs";
-    const stored = `${toNepaliDigits(profile.birth_date)} ${era.toUpperCase()}`;
-    if (!birthDate) return { value: stored, sub: undefined };
-    if (era === "ad") {
-      return { value: stored, sub: formatBsDate(birthDate) };
+    if (!birthDate) {
+      const era = profile.birth_era ?? "bs";
+      return {
+        value: `${toNepaliDigits(profile.birth_date)} ${era.toUpperCase()}`,
+        sub: undefined,
+      };
     }
-    return { value: stored, sub: formatAdDate(birthDate) };
+    return { value: formatBsDate(birthDate), sub: undefined };
   }, [profile, birthDate]);
 
   useRouteLoading(authLoading || (isAuthenticated && isLoading));

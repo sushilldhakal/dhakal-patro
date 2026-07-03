@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/lib/auth/AuthContext";
 import { apiForgotPassword, ApiError } from "@/lib/auth/client";
 import { GoogleSignInButton, googleSignInEnabled } from "./GoogleSignInButton";
+import { FacebookSignInButton, facebookSignInEnabled } from "./FacebookSignInButton";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -28,7 +29,7 @@ export function AuthDialog({
   initialMode?: Mode;
 }) {
   const { t } = useTranslation();
-  const { login, signup, loginWithGoogle } = useAuth();
+  const { login, signup, loginWithGoogle, loginWithFacebook } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -93,8 +94,26 @@ export function AuthDialog({
         setBusy(false);
       }
     },
-    [loginWithGoogle, onOpenChange],
+    [loginWithGoogle, onOpenChange, t],
   );
+
+  const onFacebook = useCallback(
+    async (accessToken: string) => {
+      setError(null);
+      setBusy(true);
+      try {
+        await loginWithFacebook(accessToken);
+        onOpenChange(false);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : t("auth.facebook_error"));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [loginWithFacebook, onOpenChange, t],
+  );
+
+  const socialEnabled = googleSignInEnabled || facebookSignInEnabled;
 
   const title =
     mode === "login" ? t("auth.sign_in") : mode === "signup" ? t("auth.create_account") : t("auth.reset_password");
@@ -113,10 +132,19 @@ export function AuthDialog({
           <DialogDescription>{desc}</DialogDescription>
         </DialogHeader>
 
-        {mode !== "forgot" && googleSignInEnabled && (
-          <div className="flex flex-col gap-3">
-            <GoogleSignInButton onCredential={onGoogle} onError={setError} />
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        {mode !== "forgot" && socialEnabled && (
+          <div className="flex flex-col items-center gap-3">
+            {googleSignInEnabled && (
+              <GoogleSignInButton onCredential={onGoogle} onError={setError} />
+            )}
+            {facebookSignInEnabled && (
+              <FacebookSignInButton
+                onAccessToken={onFacebook}
+                onError={setError}
+                disabled={busy}
+              />
+            )}
+            <div className="flex w-full items-center gap-3 text-xs text-muted-foreground">
               <span className="h-px flex-1 bg-border" />
               {t("auth.or")}
               <span className="h-px flex-1 bg-border" />

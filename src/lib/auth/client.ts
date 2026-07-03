@@ -159,6 +159,15 @@ export async function apiGoogle(idToken: string): Promise<TokenPair> {
   return res.json();
 }
 
+export async function apiFacebook(accessToken: string): Promise<TokenPair> {
+  const res = await raw("/auth/facebook", {
+    method: "POST",
+    body: JSON.stringify({ access_token: accessToken }),
+  });
+  if (!res.ok) throw new ApiError(res.status, await parseError(res));
+  return res.json();
+}
+
 export async function apiLogout(): Promise<void> {
   const refresh_token = tokenStore.refresh;
   if (refresh_token) {

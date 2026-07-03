@@ -145,3 +145,87 @@ export function bsMonthLabel(month: number, lang?: string): string {
     ? BS_MONTH_NAMES[month - 1]
     : `${BS_MONTHS_NE[month - 1]} (${BS_MONTH_NAMES[month - 1]})`
 }
+
+const WEEKDAY_FULL_NE = [
+  "आइतबार", "सोमबार", "मङ्गलबार", "बुधबार", "बिहीबार", "शुक्रबार", "शनिबार",
+] as const
+
+const WEEKDAY_FULL_EN = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+] as const
+
+type ZonedParts = {
+  year: number
+  month: number
+  day: number
+  weekday: number
+  hour: string
+  minute: string
+}
+
+/** Civil date + clock in an IANA timezone (for BS conversion). */
+export function getZonedParts(date: Date, timeZone?: string): ZonedParts {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date)
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ""
+  const weekdayIdx = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"))
+  return {
+    year: Number(get("year")),
+    month: Number(get("month")),
+    day: Number(get("day")),
+    weekday: weekdayIdx >= 0 ? weekdayIdx : 0,
+    hour: get("hour"),
+    minute: get("minute"),
+  }
+}
+
+/** Long BS date label, e.g. असार १५, २०८३ or Ashadh 15, 2083. */
+export function formatBsDateLong(
+  date: Date,
+  lang?: string,
+  digits?: (v: string | number) => string,
+): string {
+  const bs = adToBS(date)
+  const d = digits ?? String
+  const isEn = (lang ?? "ne").slice(0, 2) === "en"
+  if (isEn) {
+    return `${BS_MONTH_NAMES[bs.month - 1]} ${bs.day}, ${bs.year}`
+  }
+  return `${BS_MONTHS_NE[bs.month - 1]} ${d(bs.day)}, ${d(bs.year)}`
+}
+
+/**
+ * Zoned instant as BS calendar date + weekday + clock.
+ * e.g. असार ४, २०७६, सोमबार ०६:३७
+ */
+export function formatZonedBsMoment(
+  date: Date,
+  options?: {
+    lang?: string
+    timeZone?: string
+    digits?: (v: string | number) => string
+  },
+): string {
+  const { lang = "ne", timeZone, digits = String } = options ?? {}
+  const z = getZonedParts(date, timeZone)
+  const bs = adToBS(new Date(z.year, z.month - 1, z.day))
+  const time = `${z.hour}:${z.minute}`
+  const isEn = lang.slice(0, 2) === "en"
+
+  if (isEn) {
+    const monthEn = BS_MONTH_NAMES[bs.month - 1]
+    const weekdayEn = WEEKDAY_FULL_EN[z.weekday] ?? ""
+    return `${monthEn} ${bs.day}, ${bs.year}, ${weekdayEn} at ${time}`
+  }
+  const monthNe = BS_MONTHS_NE[bs.month - 1]
+  const weekdayNe = WEEKDAY_FULL_NE[z.weekday] ?? ""
+  return `${monthNe} ${digits(bs.day)}, ${digits(bs.year)}, ${weekdayNe} ${digits(time)}`
+}

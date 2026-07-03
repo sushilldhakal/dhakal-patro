@@ -103,6 +103,48 @@ export function subdivideDasha(span: DashaSpan): DashaSpan[] {
   });
 }
 
+const MONTH_DAYS = 30.4369;
+/** Sub-day unit: 1 yoga ≈ 53m 20s (1/27 of a civil day). */
+const YOGA_MS = 86400000 / 27;
+
+export interface DashaDurationParts {
+  years: number;
+  months: number;
+  days: number;
+  yogas: number;
+}
+
+/** Vimshottari-style breakdown: years, months, days, and sub-day yogas. */
+export function breakdownDashaDuration(ms: number): DashaDurationParts {
+  const totalDays = ms / 86400000;
+  const years = Math.floor(totalDays / YEAR_DAYS);
+  const remDaysAfterYears = totalDays - years * YEAR_DAYS;
+  const months = Math.floor(remDaysAfterYears / MONTH_DAYS);
+  const remDaysAfterMonths = remDaysAfterYears - months * MONTH_DAYS;
+  const days = Math.round(remDaysAfterMonths);
+  const accountedMs = (years * YEAR_DAYS + months * MONTH_DAYS + days) * 86400000;
+  const remMs = Math.max(0, ms - accountedMs);
+  const yogas = remMs >= YOGA_MS / 2 ? Math.round(remMs / YOGA_MS) : 0;
+  return { years, months, days, yogas };
+}
+
+/** Long duration label for अवधि (BS) column. */
+export function formatDashaDurationParts(
+  parts: DashaDurationParts,
+  lang: "ne" | "en",
+): string {
+  const chunks: string[] = [];
+  const unit =
+    lang === "en"
+      ? { y: "y", m: "m", d: "d", yog: "yoga" }
+      : { y: " वर्ष", m: " मास", d: " दिन", yog: " योग" };
+  if (parts.years > 0) chunks.push(`${parts.years}${unit.y}`);
+  if (parts.months > 0) chunks.push(`${parts.months}${unit.m}`);
+  if (parts.days > 0 || chunks.length === 0) chunks.push(`${parts.days}${unit.d}`);
+  if (parts.yogas > 0) chunks.push(`${parts.yogas}${unit.yog}`);
+  return chunks.join(lang === "en" ? " " : "");
+}
+
 /** Compact duration label: "16y 11m", "3m 12d", "103d", "18h". */
 export function formatDashaDuration(ms: number, lang: "ne" | "en"): string {
   const days = ms / 86400000;
@@ -147,16 +189,7 @@ function addYears(date: Date, years: number): Date {
 }
 
 function formatYearsLabel(years: number): string {
-  const totalDays = Math.round(years * YEAR_DAYS);
-  const y = Math.floor(totalDays / YEAR_DAYS);
-  const remDaysAfterYears = totalDays - Math.round(y * YEAR_DAYS);
-  const m = Math.floor(remDaysAfterYears / 30.4369);
-  const d = Math.round(remDaysAfterYears - m * 30.4369);
-  const parts: string[] = [];
-  if (y > 0) parts.push(`${y} वर्ष`);
-  if (m > 0) parts.push(`${m} महिना`);
-  if (d > 0 || parts.length === 0) parts.push(`${d} दिन`);
-  return parts.join(" ");
+  return formatDashaDurationParts(breakdownDashaDuration(years * YEAR_DAYS), "ne");
 }
 
 /**

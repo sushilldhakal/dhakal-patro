@@ -151,7 +151,13 @@
     "password_min": "पासवर्ड कम से कम ८ अक्षर का होना चाहिए",
     "signup_notice": "खाता बन गया! ईमेल सत्यापन के लिए इनबॉक्स देखें।",
     "generic_error": "कुछ गलत हो गया। पुनः प्रयास करें।",
-    "google_error": "गूगल साइन-इन विफल"
+    "google_error": "गूगल साइन-इन विफल",
+    "facebook_error": "फेसबुक साइन-इन विफल",
+    "facebook_load_error": "फेसबुक साइन-इन लोड नहीं हो सका",
+    "facebook_cancelled": "फेसबुक साइन-इन रद्द किया गया",
+    "facebook_not_authorized": "साइन इन के लिए फेसबुक में ईमेल अनुमति दें",
+    "facebook_checking": "फेसबुक जाँच हो रही है…",
+    "continue_with_facebook": "फेसबुक से जारी रखें"
   },
   "sections": {
     "sun_moon": "सूर्योदय और चंद्रोदय",

@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  apiFacebook,
   apiGoogle,
   apiLogin,
   apiLogout,
@@ -17,6 +18,11 @@ import {
   type AuthUser,
 } from "./client";
 import { isBrowser } from "@/lib/browser";
+import {
+  facebookAccessToken,
+  facebookSignInEnabled,
+  getFacebookLoginStatus,
+} from "./facebook-sdk";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -25,6 +31,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithFacebook: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -80,6 +87,31 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
     setUser(await apiMe());
   }, []);
 
+  const loginWithFacebook = useCallback(async (accessToken: string) => {
+    tokenStore.set(await apiFacebook(accessToken));
+    setUser(await apiMe());
+  }, []);
+
+  // Facebook: on page load, check if the visitor is already connected to our app.
+  useEffect(() => {
+    if (ssr || !isBrowser || !facebookSignInEnabled || loading || user) return;
+
+    let cancelled = false;
+    getFacebookLoginStatus()
+      .then((response) => {
+        if (cancelled) return;
+        const token = facebookAccessToken(response);
+        if (token) {
+          return loginWithFacebook(token);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ssr, loading, user, loginWithFacebook]);
+
   const logout = useCallback(async () => {
     await apiLogout();
     setUser(null);
@@ -93,10 +125,11 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
       login,
       signup,
       loginWithGoogle,
+      loginWithFacebook,
       logout,
       refreshUser,
     }),
-    [user, loading, login, signup, loginWithGoogle, logout, refreshUser]
+    [user, loading, login, signup, loginWithGoogle, loginWithFacebook, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -328,7 +328,13 @@
     "password_min": "Password must be at least 8 characters",
     "signup_notice": "Account created! Check your email to verify your address.",
     "generic_error": "Something went wrong. Try again.",
-    "google_error": "Google sign-in failed"
+    "google_error": "Google sign-in failed",
+    "facebook_error": "Facebook sign-in failed",
+    "facebook_load_error": "Could not load Facebook sign-in",
+    "facebook_cancelled": "Facebook sign-in was cancelled",
+    "facebook_not_authorized": "Allow email access in Facebook to sign in",
+    "facebook_checking": "Checking Facebook…",
+    "continue_with_facebook": "Continue with Facebook"
   },
   "sections": {
     "sun_moon": "Sunrise & Moonrise",
