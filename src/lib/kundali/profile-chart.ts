@@ -42,3 +42,22 @@ export function profileLocation(
 export function profileClock(p: Profile, fallback = "12:00"): string {
   return p.birth_time && /^\d{1,2}:\d{2}/.test(p.birth_time) ? p.birth_time : fallback;
 }
+
+export function formatProfileAdDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Panchanga query inputs from a saved profile. */
+export function profileChartParams(p: Profile) {
+  const date = parseBirthDate(p);
+  if (!date) return null;
+  return {
+    date,
+    adDate: formatProfileAdDate(date),
+    clock: profileClock(p),
+    location: profileLocation(p),
+  };
+}
