@@ -37,6 +37,7 @@ import { resolveTimeZone } from "@/lib/zoned-time";
 import { cn } from "@/lib/utils";
 import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartCompare";
 import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
+import { UpagrahaTable, type UpagrahaInput } from "@/components/kundali/UpagrahaTable";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
@@ -332,6 +333,15 @@ export function KundaliView({
     }
     return out;
   }, [planets]);
+
+  const upagrahas = useMemo<UpagrahaInput[]>(() => {
+    if (!data) return [];
+    const detail = getPanchangaDetail(data);
+    const block = (detail?.upagrahas ?? (data as { upagrahas?: unknown }).upagrahas) as
+      | UpagrahaInput[]
+      | undefined;
+    return Array.isArray(block) ? block : [];
+  }, [data]);
 
   const astroLagna = useMemo<GrahaAstroPoint | undefined>(() => {
     if (lagna?.longitude == null) return undefined;
@@ -637,6 +647,15 @@ export function KundaliView({
         <div id="kundali-graha" className="scroll-mt-24">
           <PanchangaSection titleNe="ग्रह विवरण" titleEn="Graha Details">
             <GrahaAstroTable planets={astroPlanets} lagna={astroLagna} />
+          </PanchangaSection>
+        </div>
+      )}
+
+      {/* Upagraha — shadow points for the birth instant */}
+      {showSection("kundali-upagraha") && upagrahas.length > 0 && (
+        <div id="kundali-upagraha" className="scroll-mt-24">
+          <PanchangaSection titleNe="उपग्रह" titleEn="Upagraha">
+            <UpagrahaTable upagrahas={upagrahas} />
           </PanchangaSection>
         </div>
       )}
