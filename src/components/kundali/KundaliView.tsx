@@ -20,6 +20,7 @@ import {
   fetchEphemerisPanchangaDay,
 } from "@/lib/ephemeris-adapters";
 import {
+  getInstantLagna,
   getLagnaDisplay,
   getPanchangaDetail,
   getVaaraNe,
@@ -35,6 +36,7 @@ import {
 import { resolveTimeZone } from "@/lib/zoned-time";
 import { cn } from "@/lib/utils";
 import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartCompare";
+import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
@@ -106,6 +108,10 @@ type PlanetCard = {
   nakshatra?: string;
   pada?: number;
   nakshatresh?: string;
+  latitude?: number;
+  rightAscension?: number;
+  declination?: number;
+  speed?: number;
 };
 
 type RawPlanet = PlanetInfo & {
@@ -113,6 +119,10 @@ type RawPlanet = PlanetInfo & {
   is_retrograde?: boolean;
   deg_in_rashi?: number;
   dms_in_rashi?: string;
+  latitude?: number;
+  right_ascension?: number;
+  declination?: number;
+  speed?: number;
 };
 
 function planetsFromPanchanga(p: PanchangaDay, preferLongitudeNakshatra = false): PlanetCard[] {
@@ -160,6 +170,10 @@ function planetsFromPanchanga(p: PanchangaDay, preferLongitudeNakshatra = false)
       nakshatra: nakshatra?.ne,
       pada: nakshatra?.pada,
       nakshatresh: nakshatra?.lordNe,
+      latitude: info.latitude,
+      rightAscension: info.right_ascension,
+      declination: info.declination,
+      speed: info.speed,
     };
   });
 }
@@ -303,6 +317,33 @@ export function KundaliView({
         })),
     [planets],
   );
+
+  const astroPlanets = useMemo(() => {
+    const out: Partial<Record<string, GrahaAstroPoint>> = {};
+    for (const p of planets) {
+      out[p.key] = {
+        longitude: p.longitude,
+        retrograde: p.retrograde,
+        latitude: p.latitude,
+        rightAscension: p.rightAscension,
+        declination: p.declination,
+        speed: p.speed,
+      };
+    }
+    return out;
+  }, [planets]);
+
+  const astroLagna = useMemo<GrahaAstroPoint | undefined>(() => {
+    if (lagna?.longitude == null) return undefined;
+    const instant = data ? getInstantLagna(data) : undefined;
+    return {
+      longitude: lagna.longitude,
+      latitude: instant?.latitude,
+      rightAscension: instant?.right_ascension,
+      declination: instant?.declination,
+      speed: instant?.speed,
+    };
+  }, [lagna, data]);
 
   const panchangSummary = useMemo(() => {
     if (!data) return undefined;
@@ -587,6 +628,15 @@ export function KundaliView({
               planets={chartPlanets}
               rashiNeFromNumber={rashiNeFromNumber}
             />
+          </PanchangaSection>
+        </div>
+      )}
+
+      {/* Graha details — astronomical readout for the birth instant (D1) */}
+      {showSection("kundali-graha") && planets.length > 0 && (
+        <div id="kundali-graha" className="scroll-mt-24">
+          <PanchangaSection titleNe="ग्रह विवरण" titleEn="Graha Details">
+            <GrahaAstroTable planets={astroPlanets} lagna={astroLagna} />
           </PanchangaSection>
         </div>
       )}

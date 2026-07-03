@@ -1,4 +1,5 @@
 import { DASHA_SEQUENCE, DASHA_YEARS, type DashaLord } from "@/lib/dasha";
+import { vargaRashiFromLongitude, type VargaDivision } from "@/lib/vargas";
 
 /** Nine grahas keyed the same way as the API planet blocks. */
 export type GrahaKey =
@@ -191,6 +192,33 @@ export function kpSubLordFromLongitude(longitude: number): DashaLord {
   return DASHA_SEQUENCE[startIdx]!;
 }
 
+/** Combustion (asta) orbs from the Sun in degrees; retrograde Mercury/Venus shrink. */
+const COMBUST_ORBS: Partial<Record<GrahaKey, { direct: number; retro?: number }>> = {
+  moon: { direct: 12 },
+  mars: { direct: 17 },
+  mercury: { direct: 14, retro: 12 },
+  jupiter: { direct: 11 },
+  venus: { direct: 10, retro: 8 },
+  saturn: { direct: 15 },
+};
+
+/**
+ * Whether a graha is combust (asta) — within its orb of the Sun. Returns
+ * undefined for the Sun itself and the nodes, where combustion doesn't apply.
+ */
+export function isCombust(
+  graha: GrahaKey,
+  longitude: number,
+  sunLongitude: number,
+  retrograde?: boolean,
+): boolean | undefined {
+  const orb = COMBUST_ORBS[graha];
+  if (!orb) return undefined;
+  const diff = Math.abs(longitude - sunLongitude) % 360;
+  const elongation = diff > 180 ? 360 - diff : diff;
+  return elongation <= (retrograde && orb.retro != null ? orb.retro : orb.direct);
+}
+
 export interface LongitudeDmsParts {
   rashiNum: number;
   deg: number;
@@ -198,14 +226,43 @@ export interface LongitudeDmsParts {
   sec: number;
 }
 
-/** Degrees • minutes • seconds inside the occupied rashi. */
-export function longitudeDmsParts(longitude: number): LongitudeDmsParts {
-  const lon = ((longitude % 360) + 360) % 360;
-  const rashiNum = Math.floor(lon / 30) + 1;
-  let totalSec = Math.round((lon % 30) * 3600);
+function dmsFromDegInSign(rashiNum: number, degInSign: number): LongitudeDmsParts {
+  let totalSec = Math.round(degInSign * 3600);
   if (totalSec >= 30 * 3600) totalSec = 30 * 3600 - 1;
   const deg = Math.floor(totalSec / 3600);
   const min = Math.floor((totalSec % 3600) / 60);
   const sec = totalSec % 60;
   return { rashiNum, deg, min, sec };
+}
+
+/** Degrees • minutes • seconds inside the occupied rashi. */
+export function longitudeDmsParts(longitude: number): LongitudeDmsParts {
+  const lon = ((longitude % 360) + 360) % 360;
+  return dmsFromDegInSign(Math.floor(lon / 30) + 1, lon % 30);
+}
+
+/** Trimsamsa degree bands within a sign (odd / even signs). */
+const D30_BANDS_ODD: [number, number][] = [[0, 5], [5, 10], [10, 18], [18, 25], [25, 30]];
+const D30_BANDS_EVEN: [number, number][] = [[0, 5], [5, 12], [12, 20], [20, 25], [25, 30]];
+
+/**
+ * Varga spashta: the sign a longitude maps to in a divisional chart plus its
+ * degrees within that varga sign (position inside the division segment scaled
+ * to 30°). For D1 this is the plain rashi longitude.
+ */
+export function vargaDmsParts(division: VargaDivision, longitude: number): LongitudeDmsParts {
+  const lon = ((longitude % 360) + 360) % 360;
+  if (division === 1) return longitudeDmsParts(lon);
+  const rashiNum = vargaRashiFromLongitude(division, lon);
+  const d = lon % 30;
+  let frac: number;
+  if (division === 30) {
+    const bands = Math.floor(lon / 30) % 2 === 0 ? D30_BANDS_ODD : D30_BANDS_EVEN;
+    const band = bands.find(([from, to]) => d >= from && d < to) ?? bands[bands.length - 1]!;
+    frac = (d - band[0]) / (band[1] - band[0]);
+  } else {
+    const seg = 30 / division;
+    frac = (d % seg) / seg;
+  }
+  return dmsFromDegInSign(rashiNum, Math.min(frac * 30, 30 - 1e-9));
 }
