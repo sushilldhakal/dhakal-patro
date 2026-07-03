@@ -1,8 +1,18 @@
+import { Fragment, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import type {
   ShadbalaPlanet,
   ShadbalaResponse,
   ShadbalaStatus,
 } from "@/lib/api";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 const STATUS_ORDER: ShadbalaStatus[] = [
@@ -21,14 +31,38 @@ const STATUS_STYLES: Record<ShadbalaStatus, string> = {
   Weak: "bg-destructive/15 text-destructive border-destructive/30",
 };
 
-const BALA_ROWS: { key: keyof ShadbalaPlanet["breakdown"]; label: string }[] = [
-  { key: "sthana", label: "Sthana Bala" },
-  { key: "dig", label: "Dig Bala" },
-  { key: "kala", label: "Kala Bala" },
-  { key: "cheshta", label: "Cheshta Bala" },
-  { key: "naisargika", label: "Naisargika Bala" },
-  { key: "drik", label: "Drik Bala" },
+/** Classical display order for the matrix columns. */
+const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
+
+const STHANA_SUBS: { key: string; label: string }[] = [
+  { key: "uchcha", label: "Uchcha" },
+  { key: "saptavargaja", label: "Sapta Vargiya" },
+  { key: "oja_yugma", label: "Oja Yugma" },
+  { key: "kendradi", label: "Kendradi" },
+  { key: "drekkana", label: "Drekkana" },
 ];
+
+const KALA_SUBS: { key: string; label: string }[] = [
+  { key: "nathonnatha", label: "Nata Unnata" },
+  { key: "paksha", label: "Paksha" },
+  { key: "tribhaga", label: "Tri Bhaga" },
+  { key: "varshadhipati", label: "Varshadhipati" },
+  { key: "masadhipati", label: "Masadhipati" },
+  { key: "varadhipati", label: "Varadhipati" },
+  { key: "horadhipati", label: "Horadhipati" },
+  { key: "ayana", label: "Ayana" },
+  { key: "yuddha", label: "Yuddha" },
+];
+
+const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
+const td = "px-2.5 py-1.5 text-[12.5px]";
+const num = "text-right font-mono tabular-nums";
+
+function fmt(value: number | undefined, digits = 2): string {
+  if (value == null) return "—";
+  const abs = Math.abs(value).toFixed(digits);
+  return value < 0 ? `−${abs}` : abs;
+}
 
 function StatusBadge({ status }: { status: ShadbalaStatus }) {
   return (
@@ -60,8 +94,77 @@ function GlanceTile({
   );
 }
 
+type MatrixRowProps = {
+  label: string;
+  planets: ShadbalaPlanet[];
+  value: (p: ShadbalaPlanet) => string | React.ReactNode;
+  bold?: boolean;
+  expandable?: boolean;
+  open?: boolean;
+  onToggle?: () => void;
+  sub?: boolean;
+};
+
+function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, sub }: MatrixRowProps) {
+  const labelCell = (
+    <TableCell
+      className={cn(
+        td,
+        "sticky left-0 z-10 bg-card whitespace-nowrap",
+        sub ? "pl-8 text-muted-foreground" : "pl-3.5 font-semibold text-foreground",
+      )}
+    >
+      {expandable ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="inline-flex items-center gap-1 font-semibold text-foreground hover:text-secondary transition-colors"
+        >
+          <ChevronRight
+            className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-90")}
+            aria-hidden
+          />
+          {label}
+        </button>
+      ) : (
+        label
+      )}
+    </TableCell>
+  );
+
+  return (
+    <TableRow className={cn(sub && "bg-muted/20")}>
+      {labelCell}
+      {planets.map((p) => (
+        <TableCell
+          key={p.key}
+          className={cn(td, num, bold ? "font-semibold text-foreground" : sub ? "text-muted-foreground" : "text-foreground/90")}
+        >
+          {value(p)}
+        </TableCell>
+      ))}
+    </TableRow>
+  );
+}
+
 export function ShadbalaCard({ data }: { data: ShadbalaResponse }) {
   const { planets, summary } = data;
+  const [openSthana, setOpenSthana] = useState(false);
+  const [openKala, setOpenKala] = useState(false);
+
+  // Classical column order; rank derives from the ratio ordering.
+  const ordered = PLANET_ORDER
+    .map((key) => planets.find((p) => p.key === key))
+    .filter((p): p is ShadbalaPlanet => p != null);
+  const rankByKey = new Map(
+    [...planets]
+      .sort((a, b) => b.ratio - a.ratio)
+      .map((p, i) => [p.key, i + 1]),
+  );
+
+  const hasSubs = ordered.some((p) => p.sub_balas != null);
+  const hasPhala = ordered.some((p) => p.ishta_phala != null);
 
   return (
     <div className="space-y-6">
@@ -130,111 +233,131 @@ export function ShadbalaCard({ data }: { data: ShadbalaResponse }) {
         </div>
       </div>
 
-      {/* Planet strength table */}
+      {/* All planets in one matrix */}
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-2">Planet strength table</h4>
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted-foreground text-[11px] uppercase tracking-wide bg-muted/40">
-                <th className="py-2 px-3 font-semibold">Planet</th>
-                <th className="py-2 px-3 font-semibold text-right">Total Virupas</th>
-                <th className="py-2 px-3 font-semibold text-right">Rupas</th>
-                <th className="py-2 px-3 font-semibold text-right">Required</th>
-                <th className="py-2 px-3 font-semibold text-right">Ratio</th>
-                <th className="py-2 px-3 font-semibold">Status</th>
-                <th className="py-2 px-3 font-semibold">Top Bala</th>
-                <th className="py-2 px-3 font-semibold">Weakest Bala</th>
-              </tr>
-            </thead>
-            <tbody>
-              {planets.map((p) => (
-                <tr key={p.key} className="border-t border-border">
-                  <td className="py-2 px-3 font-medium text-foreground">{p.name}</td>
-                  <td className="py-2 px-3 text-right tabular-nums text-foreground">
-                    {p.total_virupas.toFixed(2)}
-                  </td>
-                  <td className="py-2 px-3 text-right tabular-nums text-muted-foreground">
-                    {p.rupas.toFixed(2)}
-                  </td>
-                  <td className="py-2 px-3 text-right tabular-nums text-muted-foreground">
-                    {p.required.toFixed(2)}
-                  </td>
-                  <td className="py-2 px-3 text-right tabular-nums font-semibold text-foreground">
-                    {p.ratio.toFixed(2)}x
-                  </td>
-                  <td className="py-2 px-3">
-                    <StatusBadge status={p.status} />
-                  </td>
-                  <td className="py-2 px-3 text-muted-foreground">{p.top_bala}</td>
-                  <td className="py-2 px-3 text-muted-foreground">{p.weakest_bala}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Sorted by ratio so every planet is judged against its own classical
-          requirement, not only by raw Virupas.
-        </p>
-      </div>
-
-      {/* Per-planet breakdown */}
-      <div>
-        <h4 className="text-sm font-semibold text-foreground mb-2">
-          Planetary Shadbala Scores
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {planets.map((p) => (
-            <div key={p.key} className="bg-card border border-border rounded-xl p-4">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div>
-                  <p className="text-base font-bold text-foreground">
-                    {p.name}{" "}
-                    <span className="text-sm font-normal text-muted-foreground">
+        <h4 className="text-sm font-semibold text-foreground mb-2">Shadbala table</h4>
+        <div className="rounded-xl border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>Bala</TableHead>
+                {ordered.map((p) => (
+                  <TableHead key={p.key} className={cn(th, "text-right min-w-[5.25rem]")}>
+                    <span className="block leading-tight">{p.name}</span>
+                    <span className="block text-[10px] font-medium normal-case text-muted-foreground/80">
                       {p.name_ne}
                     </span>
-                  </p>
-                  <StatusBadge status={p.status} />
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-foreground tabular-nums leading-none">
-                    {p.total_virupas.toFixed(2)}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Virupas ({p.rupas.toFixed(2)} Rupas)
-                  </p>
-                </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground mb-2.5">
-                Required: {p.required.toFixed(2)} Virupas
-              </p>
-              <div className="space-y-1.5">
-                {BALA_ROWS.map((row) => {
-                  const value = p.breakdown[row.key];
-                  const pct = Math.max(0, Math.min(100, (value / 120) * 100));
-                  return (
-                    <div key={row.key}>
-                      <div className="flex items-center justify-between text-xs mb-0.5">
-                        <span className="text-muted-foreground">{row.label}</span>
-                        <span className="tabular-nums font-medium text-foreground">
-                          {value.toFixed(2)}
-                          <span className="text-muted-foreground/70"> V</span>
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-secondary"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <MatrixRow
+                label="Relative Rank"
+                planets={ordered}
+                value={(p) => String(rankByKey.get(p.key) ?? "—")}
+                bold
+              />
+              <MatrixRow
+                label="Sthana"
+                planets={ordered}
+                value={(p) => fmt(p.breakdown.sthana)}
+                expandable={hasSubs}
+                open={openSthana}
+                onToggle={() => setOpenSthana((v) => !v)}
+              />
+              {openSthana && (
+                <Fragment>
+                  {STHANA_SUBS.map((row) => (
+                    <MatrixRow
+                      key={row.key}
+                      label={row.label}
+                      planets={ordered}
+                      value={(p) => fmt(p.sub_balas?.sthana?.[row.key])}
+                      sub
+                    />
+                  ))}
+                </Fragment>
+              )}
+              <MatrixRow label="Disha" planets={ordered} value={(p) => fmt(p.breakdown.dig)} />
+              <MatrixRow
+                label="Kala"
+                planets={ordered}
+                value={(p) => fmt(p.breakdown.kala)}
+                expandable={hasSubs}
+                open={openKala}
+                onToggle={() => setOpenKala((v) => !v)}
+              />
+              {openKala && (
+                <Fragment>
+                  {KALA_SUBS.map((row) => (
+                    <MatrixRow
+                      key={row.key}
+                      label={row.label}
+                      planets={ordered}
+                      value={(p) => fmt(p.sub_balas?.kala?.[row.key])}
+                      sub
+                    />
+                  ))}
+                </Fragment>
+              )}
+              <MatrixRow label="Chesta" planets={ordered} value={(p) => fmt(p.breakdown.cheshta)} />
+              <MatrixRow
+                label="Naisargika"
+                planets={ordered}
+                value={(p) => fmt(p.breakdown.naisargika)}
+              />
+              <MatrixRow label="Drishti" planets={ordered} value={(p) => fmt(p.breakdown.drik)} />
+              <MatrixRow
+                label="Total Pinda"
+                planets={ordered}
+                value={(p) => fmt(p.total_virupas)}
+                bold
+              />
+              <MatrixRow label="Rupas" planets={ordered} value={(p) => fmt(p.rupas)} />
+              <MatrixRow
+                label="Min. Require"
+                planets={ordered}
+                value={(p) => fmt(p.required / 60)}
+              />
+              <MatrixRow
+                label="Strength Ratio"
+                planets={ordered}
+                value={(p) => fmt(p.ratio, 4)}
+                bold
+              />
+              {hasPhala && (
+                <Fragment>
+                  <MatrixRow
+                    label="Ishta Phala"
+                    planets={ordered}
+                    value={(p) => fmt(p.ishta_phala)}
+                  />
+                  <MatrixRow
+                    label="Kashta Phala"
+                    planets={ordered}
+                    value={(p) => fmt(p.kashta_phala)}
+                  />
+                </Fragment>
+              )}
+              <TableRow>
+                <TableCell className={cn(td, "sticky left-0 z-10 bg-card pl-3.5 font-semibold text-foreground")}>
+                  Status
+                </TableCell>
+                {ordered.map((p) => (
+                  <TableCell key={p.key} className={cn(td, "text-right")}>
+                    <StatusBadge status={p.status} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Virupas per bala; expand Sthana and Kala for their component
+          strengths. Rank and Strength Ratio judge each planet against its own
+          classical requirement.
+        </p>
       </div>
     </div>
   );
