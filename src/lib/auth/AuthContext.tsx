@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -19,9 +20,13 @@ import {
 } from "./client";
 import { isBrowser } from "@/lib/browser";
 import {
+  clearFacebookAutoLoginSkip,
   facebookAccessToken,
+  facebookLogout,
   facebookSignInEnabled,
   getFacebookLoginStatus,
+  shouldSkipFacebookAutoLogin,
+  skipFacebookAutoLogin,
 } from "./facebook-sdk";
 
 interface AuthContextValue {
@@ -88,18 +93,26 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
   }, []);
 
   const loginWithFacebook = useCallback(async (accessToken: string) => {
+    clearFacebookAutoLoginSkip();
     tokenStore.set(await apiFacebook(accessToken));
     setUser(await apiMe());
   }, []);
 
-  // Facebook: on page load, check if the visitor is already connected to our app.
+  const facebookBootstrapDone = useRef(false);
+
+  // Facebook silent sign-in — only once on first page load, not after logout.
   useEffect(() => {
-    if (ssr || !isBrowser || !facebookSignInEnabled || loading || user) return;
+    if (ssr || !isBrowser || !facebookSignInEnabled || loading) return;
+    if (facebookBootstrapDone.current) return;
+    facebookBootstrapDone.current = true;
+
+    if (user || shouldSkipFacebookAutoLogin()) return;
+    if (tokenStore.access || tokenStore.refresh) return;
 
     let cancelled = false;
     getFacebookLoginStatus()
       .then((response) => {
-        if (cancelled) return;
+        if (cancelled || user) return;
         const token = facebookAccessToken(response);
         if (token) {
           return loginWithFacebook(token);
@@ -113,7 +126,8 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
   }, [ssr, loading, user, loginWithFacebook]);
 
   const logout = useCallback(async () => {
-    await apiLogout();
+    skipFacebookAutoLogin();
+    await Promise.all([apiLogout(), facebookLogout()]);
     setUser(null);
   }, []);
 

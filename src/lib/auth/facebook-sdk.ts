@@ -25,6 +25,7 @@ interface FacebookSDK {
     callback: (response: FacebookAuthResponse) => void,
     options?: { scope?: string },
   ) => void;
+  logout: (callback?: () => void) => void;
   XFBML?: { parse: (node?: HTMLElement) => void };
 }
 
@@ -144,4 +145,48 @@ export function parseFacebookLoginButton(container: HTMLElement): void {
 export function facebookAccessToken(response: FacebookAuthResponse): string | undefined {
   if (response.status !== "connected") return undefined;
   return response.authResponse?.accessToken;
+}
+
+const SKIP_FB_AUTO_LOGIN_KEY = "dhakalPatroSkipFbAutoLogin";
+
+/** Set after an explicit app logout so FB connected state does not re-sign-in. */
+export function skipFacebookAutoLogin(): void {
+  try {
+    sessionStorage.setItem(SKIP_FB_AUTO_LOGIN_KEY, "1");
+  } catch {
+    /* private browsing */
+  }
+}
+
+export function clearFacebookAutoLoginSkip(): void {
+  try {
+    sessionStorage.removeItem(SKIP_FB_AUTO_LOGIN_KEY);
+  } catch {
+    /* private browsing */
+  }
+}
+
+export function shouldSkipFacebookAutoLogin(): boolean {
+  try {
+    return sessionStorage.getItem(SKIP_FB_AUTO_LOGIN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Disconnect this app from the visitor's Facebook session in the browser. */
+export function facebookLogout(): Promise<void> {
+  if (!facebookSignInEnabled) return Promise.resolve();
+  return loadFacebookSdk()
+    .then(
+      () =>
+        new Promise<void>((resolve) => {
+          try {
+            ensureInitialized().logout(() => resolve());
+          } catch {
+            resolve();
+          }
+        }),
+    )
+    .catch(() => undefined);
 }

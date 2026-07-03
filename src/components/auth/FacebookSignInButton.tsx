@@ -7,6 +7,7 @@ import {
   loadFacebookSdk,
   parseFacebookLoginButton,
   setFacebookLoginStatusHandler,
+  shouldSkipFacebookAutoLogin,
 } from "@/lib/auth/facebook-sdk";
 import { cn } from "@/lib/utils";
 
@@ -68,9 +69,15 @@ export function FacebookSignInButton({
     return () => setFacebookLoginStatusHandler(null);
   }, [t]);
 
-  // Initial FB.getLoginStatus on mount (page-load / dialog-open check).
+  // Initial FB.getLoginStatus on mount — skip silent sign-in right after logout.
   useEffect(() => {
     if (!facebookSignInEnabled || !checkStatus) {
+      setChecking(false);
+      setShowButton(true);
+      return;
+    }
+
+    if (shouldSkipFacebookAutoLogin()) {
       setChecking(false);
       setShowButton(true);
       return;
