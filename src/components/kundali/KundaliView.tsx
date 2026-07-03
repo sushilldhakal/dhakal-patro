@@ -14,7 +14,7 @@ import {
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
-import { adToBS, BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
+import { adToBS } from "@/lib/bs-calendar";
 import {
   buildAtTimeDatetime,
   fetchEphemerisPanchangaDay,
@@ -28,7 +28,6 @@ import {
   getVaaraNe,
   formatTithiWithPaksha,
   rashiNeFromNumber,
-  toNepaliDigits,
 } from "@/lib/panchanga-format";
 import {
   getAyanamshaModeInfo,
@@ -36,11 +35,17 @@ import {
   type AyanamshaMode,
 } from "@/lib/ayanamsha";
 import { resolveTimeZone } from "@/lib/zoned-time";
-import { cn } from "@/lib/utils";
 import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartCompare";
 import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
 import { UpagrahaTable, type UpagrahaInput } from "@/components/kundali/UpagrahaTable";
 import { YogaList } from "@/components/kundali/YogaList";
+import { DashaTree } from "@/components/kundali/DashaTree";
+import {
+  DASHA_YEARS,
+  DASHA_YEAR_MS,
+  dashaLordFromString,
+  type DashaSpan,
+} from "@/lib/dasha";
 import { computeKundaliYogas } from "@/lib/kundali-yogas";
 import type { GrahaKey } from "@/lib/graha-details";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
@@ -89,12 +94,6 @@ const PLANET_LABELS: Record<string, string> = {
 const PLANET_ORDER = [
   "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu",
 ];
-
-function formatBsDateNe(iso: string, isEn = false): string {
-  const bs = adToBS(new Date(iso));
-  if (isEn) return `${bs.day} ${BS_MONTH_NAMES[bs.month - 1]} ${bs.year}`;
-  return `${toNepaliDigits(bs.day)} ${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.year)}`;
-}
 
 function toAdStr(d: Date): string {
   const y = d.getFullYear();
@@ -412,6 +411,24 @@ export function KundaliView({
 
   const dasha = dashaQ.data;
 
+  const mahadashaSpans = useMemo<DashaSpan[]>(() => {
+    if (!dasha?.sequence?.length) return [];
+    const spans: DashaSpan[] = [];
+    dasha.sequence.forEach((period, i) => {
+      const lord = dashaLordFromString(period.lord) ?? dashaLordFromString(period.lord_ne);
+      if (!lord) return;
+      const end = new Date(period.end);
+      // The birth mahadasha entry carries only the balance — restore the full
+      // span so its sub-periods subdivide from the true beginning.
+      const start =
+        i === 0
+          ? new Date(end.getTime() - DASHA_YEARS[lord] * DASHA_YEAR_MS)
+          : new Date(period.start);
+      spans.push({ lord, start, end });
+    });
+    return spans;
+  }, [dasha]);
+
   const showSection = (id: KundaliSectionId) => section == null || section === id;
 
   const dateBs =
@@ -710,26 +727,7 @@ export function KundaliView({
                 sub={pick(`बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
               />
             </div>
-            <div className="overflow-x-auto rounded-xl border border-border">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-muted-foreground text-[11px] uppercase tracking-wide bg-muted/40">
-                    <th className="py-2 px-3 font-semibold">{pick("दशा", "Dasha")}</th>
-                    <th className="py-2 px-3 font-semibold">{pick("सुरु", "Start")}</th>
-                    <th className="py-2 px-3 font-semibold">{pick("अन्त्य", "End")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dasha.sequence.map((period, i) => (
-                    <tr key={i} className={cn("border-t border-border", i % 2 === 1 && "bg-muted/20")}>
-                      <td className="py-2 px-3 font-medium text-foreground">{period.lord_ne}</td>
-                      <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.start, lang === "en")}</td>
-                      <td className="py-2 px-3 text-muted-foreground">{formatBsDateNe(period.end, lang === "en")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DashaTree mahadashas={mahadashaSpans} timeZone={effectiveTimezone} />
           </div>
         </PanchangaSection>
         </div>

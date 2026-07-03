@@ -57,6 +57,74 @@ const NE_TO_LORD: Record<string, DashaLord> = {
 const NAKSHATRA_SPAN_DEG = 360 / 27;
 const YEAR_DAYS = 365.2425;
 
+export const DASHA_YEAR_MS = YEAR_DAYS * 86400000;
+
+export const DASHA_LORD_EN: Record<DashaLord, string> = {
+  ketu: "Ketu",
+  venus: "Shukra",
+  sun: "Surya",
+  moon: "Chandra",
+  mars: "Mangal",
+  rahu: "Rahu",
+  jupiter: "Guru",
+  saturn: "Shani",
+  mercury: "Budha",
+};
+
+/** Resolve a DashaLord from an API `lord` key or Nepali name. */
+export function dashaLordFromString(value?: string): DashaLord | undefined {
+  if (!value) return undefined;
+  const key = value.toLowerCase() as DashaLord;
+  if (DASHA_YEARS[key] != null) return key;
+  return NE_TO_LORD[value];
+}
+
+/** One dasha period at any level of the Vimshottari hierarchy. */
+export interface DashaSpan {
+  lord: DashaLord;
+  start: Date;
+  end: Date;
+}
+
+/**
+ * Sub-periods of a Vimshottari span: nine parts proportional to the dasha
+ * years, starting from the span's own lord. Works at every level —
+ * maha→antar, antar→pratyantar, pratyantar→sukshma, sukshma→prana.
+ */
+export function subdivideDasha(span: DashaSpan): DashaSpan[] {
+  const total = span.end.getTime() - span.start.getTime();
+  const startIdx = DASHA_SEQUENCE.indexOf(span.lord);
+  let cursor = span.start.getTime();
+  return DASHA_SEQUENCE.map((_, i) => {
+    const lord = DASHA_SEQUENCE[(startIdx + i) % DASHA_SEQUENCE.length]!;
+    const start = cursor;
+    cursor += (total * DASHA_YEARS[lord]) / 120;
+    return { lord, start: new Date(start), end: new Date(cursor) };
+  });
+}
+
+/** Compact duration label: "16y 11m", "3m 12d", "103d", "18h". */
+export function formatDashaDuration(ms: number, lang: "ne" | "en"): string {
+  const days = ms / 86400000;
+  const unit =
+    lang === "en"
+      ? { y: "y", m: "m", d: "d", h: "h", sep: " " }
+      : { y: " वर्ष", m: " महिना", d: " दिन", h: " घण्टा", sep: " " };
+  if (days >= 360) {
+    const years = ms / DASHA_YEAR_MS;
+    const y = Math.floor(years);
+    const m = Math.floor((years - y) * 12);
+    return m > 0 ? `${y}${unit.y}${unit.sep}${m}${unit.m}` : `${y}${unit.y}`;
+  }
+  if (days >= 60) {
+    const m = Math.floor(days / 30.44);
+    const d = Math.round(days - m * 30.44);
+    return d > 0 ? `${m}${unit.m}${unit.sep}${d}${unit.d}` : `${m}${unit.m}`;
+  }
+  if (days >= 2) return `${Math.round(days)}${unit.d}`;
+  return `${Math.round(ms / 3600000)}${unit.h}`;
+}
+
 export interface DashaPeriod {
   lord: DashaLord;
   lordNe: string;
