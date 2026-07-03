@@ -306,6 +306,16 @@ export function KundaliView({
     [data, clock, adDateStr],
   );
 
+  const shadbalaChart = useMemo(() => {
+    if (!lagna?.rashiNum) return undefined;
+    const planetLongitudes: Record<string, number> = {};
+    for (const p of planets) {
+      if (p.longitude != null) planetLongitudes[p.key] = p.longitude;
+    }
+    if (Object.keys(planetLongitudes).length < 7) return undefined;
+    return { lagnaRashi: lagna.rashiNum, planetLongitudes };
+  }, [lagna?.rashiNum, planets]);
+
   const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, locationParams?.timezone);
   const locationLabel = data?.location?.name ?? locationLabelProp;
@@ -742,7 +752,7 @@ export function KundaliView({
 
       {showSection("kundali-shadbala") && shadbalaQ.data && (
         <div id="kundali-shadbala" className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
-          <ShadbalaCard data={shadbalaQ.data} />
+          <ShadbalaCard data={shadbalaQ.data} chart={shadbalaChart} />
         </div>
       )}
 
