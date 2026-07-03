@@ -513,7 +513,7 @@ export function CalendarView({
       <div className="grid items-start gap-4 min-[1081px]:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] min-[1081px]:items-stretch min-[1081px]:gap-[15px] max-sm:gap-4">
         <div className="min-w-0">{monthHeader}{calendarBlock}</div>
         {aside ? (
-          <div className="flex h-0 min-h-full min-w-0 flex-col min-[1081px]:h-auto">{aside}</div>
+          <div className="flex min-w-0 flex-col min-[1081px]:min-h-full">{aside}</div>
         ) : null}
         {holidays}
       </div>
