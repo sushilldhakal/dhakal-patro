@@ -1365,7 +1365,14 @@ export function buildMonthFestivalEntries(
 
   return Array.from(byDay.entries())
     .sort(([a], [b]) => a - b)
-    .flatMap(([, entries]) => entries);
+    .map(([bsDay, entries]) => {
+      if (entries.length === 1) return entries[0]!;
+      return {
+        bsDay,
+        name: entries.map((entry) => entry.name).join(", "),
+        isPublicHoliday: entries.some((entry) => entry.isPublicHoliday),
+      };
+    });
 }
 
 export function getEventNames(p: PanchangaDay, dayFestivals: string[]): string[] {

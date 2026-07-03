@@ -79,7 +79,7 @@ function FestivalsTab({
 
         return (
           <li
-            key={`${entry.bsDay}-${entry.name}`}
+            key={entry.bsDay}
             className={patroFestRow({
               today: isToday,
               past: isPast,
