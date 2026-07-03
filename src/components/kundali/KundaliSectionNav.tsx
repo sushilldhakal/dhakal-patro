@@ -8,6 +8,7 @@ import {
   Scale,
   ScrollText,
   Sparkles,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ export const KUNDALI_SECTIONS = [
   { id: "kundali-charts", labelKey: "kundali.nav_charts_full", icon: "charts" as const },
   { id: "kundali-graha", labelKey: "kundali.nav_graha_details", icon: "graha" as const },
   { id: "kundali-upagraha", labelKey: "kundali.nav_upagraha", icon: "upagraha" as const },
+  { id: "kundali-yoga", labelKey: "kundali.nav_yoga", icon: "yoga" as const },
   { id: "kundali-dasha", labelKey: "kundali.nav_dasha_full", icon: "dasha" as const },
   { id: "kundali-shadbala", labelKey: "kundali.nav_shadbala", icon: "shadbala" as const },
   { id: "kundali-shanti", labelKey: "kundali.nav_shanti_vidhi", icon: "shanti" as const },
@@ -31,6 +33,7 @@ const ICONS = {
   charts: LayoutGrid,
   graha: CircleDot,
   upagraha: MoonStar,
+  yoga: Star,
   dasha: CalendarRange,
   shadbala: Scale,
   shanti: Flame,
