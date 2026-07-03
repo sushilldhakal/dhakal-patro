@@ -3,6 +3,7 @@ import {
   CalendarRange,
   CircleDot,
   Flame,
+  Grid3x3,
   Home,
   LayoutGrid,
   MoonStar,
@@ -27,6 +28,12 @@ export const KUNDALI_SECTIONS = [
     icon: "bhava" as const,
     parentId: "kundali-shadbala" as const,
   },
+  {
+    id: "kundali-ashtakavarga",
+    labelKey: "kundali.nav_ashtakavarga",
+    icon: "ashtakavarga" as const,
+    parentId: "kundali-shadbala" as const,
+  },
   { id: "kundali-shanti", labelKey: "kundali.nav_shanti_vidhi", icon: "shanti" as const },
   { id: "kundali-report", labelKey: "kundali.nav_analysis", icon: "analysis" as const },
 ] as const;
@@ -44,6 +51,7 @@ const ICONS = {
   dasha: CalendarRange,
   shadbala: Scale,
   bhava: Home,
+  ashtakavarga: Grid3x3,
   shanti: Flame,
   analysis: ScrollText,
 } as const;
