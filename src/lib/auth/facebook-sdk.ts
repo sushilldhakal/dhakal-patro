@@ -1,5 +1,5 @@
 const APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
-const API_VERSION = "v21.0";
+const API_VERSION = "v25.0";
 
 /** Whether Facebook sign-in is configured (app ID present). */
 export const facebookSignInEnabled = Boolean(APP_ID);
