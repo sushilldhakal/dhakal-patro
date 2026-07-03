@@ -5,10 +5,7 @@ import type {
   ShadbalaResponse,
   ShadbalaStatus,
 } from "@/lib/api";
-import {
-  BHAVA_BALA_REFERENCE_VIRUPAS,
-  computeBhavaBala,
-} from "@/lib/bhava-bala";
+import { computeBhavaBala, planetRulershipBhavaPercent } from "@/lib/bhava-bala";
 import {
   computeYuddhaBala,
   yuddhaVirupasForPlanet,
@@ -59,12 +56,7 @@ const KALA_SUBS: { key: string; label: string }[] = [
   { key: "varadhipati", label: "Varadhipati" },
   { key: "horadhipati", label: "Horadhipati" },
   { key: "ayana", label: "Ayana" },
-  { key: "yuddha", label: "Yuddha" },
 ];
-
-const HOUSE_LABELS = [
-  "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII",
-] as const;
 
 const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
 const td = "px-2.5 py-1.5 text-[12.5px]";
@@ -170,7 +162,7 @@ export function ShadbalaCard({
   chart,
 }: {
   data: ShadbalaResponse;
-  /** Birth-chart context for Yuddha and Bhava Bala (client-side classical extensions). */
+  /** Birth-chart context for Yuddha and Bhava (%) rows. */
   chart?: ShadbalaChartContext;
 }) {
   const { planets, summary } = data;
@@ -205,9 +197,7 @@ export function ShadbalaCard({
     [chart, planets],
   );
 
-  const hasYuddhaActivity =
-    yuddha.wars.length > 0 ||
-    ordered.some((p) => (yuddha.byPlanet[p.key] ?? 0) !== 0);
+  const hasYuddhaActivity = yuddha.wars.length > 0;
 
   return (
     <div className="space-y-6">
@@ -322,6 +312,15 @@ export function ShadbalaCard({
               )}
               <MatrixRow label="Disha" planets={ordered} value={(p) => fmt(p.breakdown.dig)} />
               <MatrixRow
+                label="Yuddha"
+                planets={ordered}
+                value={(p) =>
+                  chart
+                    ? fmt(yuddhaVirupasForPlanet(p, yuddha))
+                    : fmt(p.sub_balas?.kala?.yuddha ?? 0)
+                }
+              />
+              <MatrixRow
                 label="Kala"
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.kala)}
@@ -336,11 +335,7 @@ export function ShadbalaCard({
                       key={row.key}
                       label={row.label}
                       planets={ordered}
-                      value={(p) =>
-                        row.key === "yuddha" && chart
-                          ? fmt(yuddhaVirupasForPlanet(p, yuddha))
-                          : fmt(p.sub_balas?.kala?.[row.key])
-                      }
+                      value={(p) => fmt(p.sub_balas?.kala?.[row.key])}
                       sub
                     />
                   ))}
@@ -371,6 +366,17 @@ export function ShadbalaCard({
                 value={(p) => fmt(p.ratio, 4)}
                 bold
               />
+              {bhavaBala && (
+                <MatrixRow
+                  label="Bhava (in %)"
+                  planets={ordered}
+                  value={(p) => {
+                    const pct = planetRulershipBhavaPercent(p.key, bhavaBala);
+                    return pct != null ? `${pct.toFixed(1)}%` : "—";
+                  }}
+                  bold
+                />
+              )}
               {hasPhala && (
                 <Fragment>
                   <MatrixRow
@@ -399,18 +405,18 @@ export function ShadbalaCard({
           </Table>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Virupas per bala; expand Sthana and Kala for their component
-          strengths. Rank and Strength Ratio judge each planet against its own
-          classical requirement.
-          {chart && (
+          Virupas per bala; expand Sthana and Kala for component strengths.
+          Yuddha (planetary war) is computed when two tara grahas are within 1°
+          — most charts show 0.00 because wars are rare.
+          {bhavaBala && (
             <>
               {" "}
-              Yuddha (planetary war) is computed when two tara grahas are within
-              1°; most charts show 0.00 because wars are rare.
+              Bhava (in %) is the mean house-strength of bhavas ruled by each
+              planet; see the Bhava Bala submenu for the full house table.
             </>
           )}
         </p>
-        {hasYuddhaActivity && yuddha.wars.length > 0 && (
+        {hasYuddhaActivity && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
             Graha Yuddha detected:{" "}
             {yuddha.wars
@@ -423,72 +429,6 @@ export function ShadbalaCard({
           </p>
         )}
       </div>
-
-      {bhavaBala && (
-        <div>
-          <h4 className="text-sm font-semibold text-foreground mb-1">Bhava Bala — House Strength</h4>
-          <p className="text-xs text-muted-foreground mb-2">
-            Bhavadhipati (lord&apos;s Shadbala) + Bhava Dig + Bhava Drishti.
-            Whole-sign houses; {BHAVA_BALA_REFERENCE_VIRUPAS} virupas (7 rupas) = 100%.
-          </p>
-
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <GlanceTile label="Strongest house">
-              <p className="text-lg font-bold text-foreground">
-                House {HOUSE_LABELS[bhavaBala.strongest.house - 1]}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Lord {bhavaBala.strongest.lordName} · {bhavaBala.strongest.percent.toFixed(1)}%
-              </p>
-            </GlanceTile>
-            <GlanceTile label="Weakest house">
-              <p className="text-lg font-bold text-foreground">
-                House {HOUSE_LABELS[bhavaBala.weakest.house - 1]}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Lord {bhavaBala.weakest.lordName} · {bhavaBala.weakest.percent.toFixed(1)}%
-              </p>
-            </GlanceTile>
-          </div>
-
-          <div className="rounded-xl border border-border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className={cn(th, "pl-3.5")}>House</TableHead>
-                  <TableHead className={cn(th, "text-right")}>Lord</TableHead>
-                  <TableHead className={cn(th, "text-right")}>Bhavadhipati</TableHead>
-                  <TableHead className={cn(th, "text-right")}>Dig</TableHead>
-                  <TableHead className={cn(th, "text-right")}>Drishti</TableHead>
-                  <TableHead className={cn(th, "text-right")}>Total</TableHead>
-                  <TableHead className={cn(th, "text-right")}>Rupas</TableHead>
-                  <TableHead className={cn(th, "text-right")}>Bhava (%)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bhavaBala.houses.map((h) => (
-                  <TableRow key={h.house}>
-                    <TableCell className={cn(td, "font-semibold pl-3.5")}>
-                      {HOUSE_LABELS[h.house - 1]}
-                    </TableCell>
-                    <TableCell className={cn(td, "text-right")}>{h.lordName}</TableCell>
-                    <TableCell className={cn(td, num)}>{fmt(h.bhavadhipati)}</TableCell>
-                    <TableCell className={cn(td, num)}>{fmt(h.dig)}</TableCell>
-                    <TableCell className={cn(td, num)}>{fmt(h.drishti)}</TableCell>
-                    <TableCell className={cn(td, num, "font-semibold")}>
-                      {fmt(h.totalVirupas)}
-                    </TableCell>
-                    <TableCell className={cn(td, num)}>{fmt(h.rupas)}</TableCell>
-                    <TableCell className={cn(td, num, "font-semibold")}>
-                      {h.percent.toFixed(1)}%
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

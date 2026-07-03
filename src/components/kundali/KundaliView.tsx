@@ -50,6 +50,7 @@ import { computeKundaliYogas } from "@/lib/kundali-yogas";
 import type { GrahaKey } from "@/lib/graha-details";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
+import { BhavaBalaCard } from "@/components/kundali/BhavaBalaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
@@ -762,6 +763,24 @@ export function KundaliView({
           {pick("षड्बल गणना हुँदै…", "Computing shadbala…")}
         </div>
       )}
+
+      {showSection("kundali-bhava-bala") && shadbalaQ.data && shadbalaChart && (
+        <div
+          id="kundali-bhava-bala"
+          className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
+        >
+          <BhavaBalaCard shadbala={shadbalaQ.data} chart={shadbalaChart} />
+        </div>
+      )}
+
+      {showSection("kundali-bhava-bala") &&
+        (!shadbalaQ.data || !shadbalaChart) &&
+        (shadbalaQ.isLoading || isLoading) && (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
+            <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
+            {pick("भाव बल गणना हुँदै…", "Computing bhava bala…")}
+          </div>
+        )}
 
       {showSection("kundali-shanti") && showShanti && (
         <div id="kundali-shanti" className="scroll-mt-24">

@@ -168,3 +168,13 @@ export function computeBhavaBala(
     weakest: sorted[sorted.length - 1]!,
   };
 }
+
+/** Mean Bhava (%) across houses this graha rules (for the Shadbala matrix row). */
+export function planetRulershipBhavaPercent(
+  planetKey: string,
+  result: BhavaBalaResult,
+): number | null {
+  const ruled = result.houses.filter((h) => h.lordKey === planetKey);
+  if (ruled.length === 0) return null;
+  return ruled.reduce((s, h) => s + h.percent, 0) / ruled.length;
+}
