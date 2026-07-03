@@ -1,4 +1,4 @@
-import type { CalendarDay, Holiday } from "./api";
+import type { CalendarDay, Festival, Holiday } from "./api";
 import {
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
@@ -165,16 +165,17 @@ export function mergeEnrichedDays(
   });
 }
 
-/** Attach holiday/festival names from the yearly holidays list (lighter than full month API). */
+/** Attach festival/holiday names from a yearly list (lighter than full month API). */
 export function applyHolidaysToDays(
   days: CalendarDay[],
-  holidays: Holiday[],
+  holidays: Array<Holiday | Festival>,
   lang?: string,
 ): CalendarDay[] {
   const isEn = (lang ?? "ne").slice(0, 2) === "en";
   const namesByDate = new Map<string, string[]>();
 
   for (const h of holidays) {
+    if (!h.start_date) continue;
     const name = isEn
       ? (h.name_en ?? h.name_ne ?? h.id)
       : (h.name_ne ?? h.name_en ?? h.id);

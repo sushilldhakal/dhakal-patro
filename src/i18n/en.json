@@ -277,6 +277,9 @@
     "total_guna": "Total Guna Milan",
     "guna": "Guna",
     "nadi_dosha_advisory_title": "Nadi Dosha — further analysis advised",
+    "dosha_analysis_title": "Dosha analysis",
+    "dosha_present": "Dosha present",
+    "dosha_absent": "No dosha",
     "notes_title": "Ashtakuta notes"
   },
   "converter": {
@@ -647,6 +650,8 @@
     "converter_desc": "BS ↔ AD dates",
     "suryakranti_desc": "Annual sunrise & sunset",
     "panchanga_year_desc": "Tithi, nakshatra & graha through the year",
+    "abhijit_muhurta_desc": "Daily auspicious Abhijit muhurta window",
+    "chandrakranti_desc": "Moon & graha transits",
     "ritu_desc": "Sāyana seasons · equinox & solstice",
     "ritu_see_all": "See all seasons"
   },

@@ -233,8 +233,8 @@ export function Holidays() {
           className="w-28 bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
         <span className="text-xs text-muted-foreground">
-          {holidaysQ.data?.gregorian_range
-            ? `(${holidaysQ.data.gregorian_range.start} – ${holidaysQ.data.gregorian_range.end})`
+          {(tab === "holidays" ? holidaysQ.data : festivalsQ.data)?.gregorian_range
+            ? `(${(tab === "holidays" ? holidaysQ.data : festivalsQ.data)!.gregorian_range!.start} – ${(tab === "holidays" ? holidaysQ.data : festivalsQ.data)!.gregorian_range!.end})`
             : ""}
         </span>
       </div>

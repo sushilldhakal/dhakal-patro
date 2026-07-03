@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   fetchMonthCalendar,
-  fetchHolidays,
+  fetchFestivals,
   panchangaKeys,
   holidayKeys,
   type CalendarDay,
+  type Festival,
 } from "@/lib/api";
 import {
   BS_MONTH_NAMES,
@@ -130,6 +131,7 @@ export function CalendarView({
   const [internalPatroView, setInternalPatroView] = useState<HomePatroView>(() =>
     enablePatroToggle ? loadHomePatroView() : "calendar",
   );
+  const lastMonthContextKey = useRef("");
   const patroView = patroViewProp ?? internalPatroView;
   const isPanchangaPatro = enablePatroToggle && patroView === "panchanga";
 
@@ -171,22 +173,48 @@ export function CalendarView({
     enabled: canFetchNext && !isPanchangaPatro,
   });
 
-  const holidayQ = useQuery({
-    queryKey: holidayKeys.holidays(year),
-    queryFn: () => fetchHolidays(year),
-    staleTime: 1000 * 60 * 60,
+  const festivalYears = useMemo(
+    () => [...new Set([year, prevBs.year, nextBs.year])].sort((a, b) => a - b),
+    [year, prevBs.year, nextBs.year],
+  );
+
+  const festivalQueries = useQueries({
+    queries: festivalYears.map((bsYear) => ({
+      queryKey: holidayKeys.festivals(bsYear),
+      queryFn: () => fetchFestivals(bsYear),
+      staleTime: 1000 * 60 * 60,
+    })),
   });
+
+  /** Stable tick — `useQueries` returns a new array ref every render. */
+  const festivalDataTick = festivalQueries
+    .map((q) => `${q.dataUpdatedAt ?? 0}:${q.status}`)
+    .join("|");
+
+  const yearFestivals = useMemo(() => {
+    const byKey = new Map<string, Festival>();
+    for (const query of festivalQueries) {
+      for (const festival of query.data?.festivals ?? []) {
+        if (!festival.start_date) continue;
+        byKey.set(`${festival.id}:${festival.start_date}`, festival);
+      }
+    }
+    return [...byKey.values()];
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- festivalQueries ref is unstable; festivalDataTick tracks data
+  }, [festivalDataTick]);
+
+  const festivalsLoading = festivalQueries.some((q) => q.isLoading);
 
   const monthDays = useMemo(() => {
     let result = localDays;
-    if (holidayQ.data?.holidays) {
-      result = applyHolidaysToDays(result, holidayQ.data.holidays, lang);
+    if (yearFestivals.length) {
+      result = applyHolidaysToDays(result, yearFestivals, lang);
     }
     if (monthQ.data?.calendar) {
       result = mergeEnrichedDays(result, monthQ.data.calendar);
     }
     return result;
-  }, [localDays, holidayQ.data, monthQ.data, lang]);
+  }, [localDays, yearFestivals, monthQ.data, lang]);
 
   const gridDays = useMemo(() => {
     if (isPanchangaPatro) return monthDays;
@@ -195,8 +223,8 @@ export function CalendarView({
       current: monthDays,
       next: nextMonthQ.data?.calendar,
     });
-    if (holidayQ.data?.holidays) {
-      grid = applyHolidaysToDays(grid, holidayQ.data.holidays, lang);
+    if (yearFestivals.length) {
+      grid = applyHolidaysToDays(grid, yearFestivals, lang);
     }
     return grid;
   }, [
@@ -206,25 +234,31 @@ export function CalendarView({
     monthDays,
     prevMonthQ.data?.calendar,
     nextMonthQ.data?.calendar,
-    holidayQ.data?.holidays,
+    yearFestivals,
     lang,
   ]);
 
   useEffect(() => {
-    onMonthContextChange?.({ year, month, days: monthDays });
-  }, [year, month, monthDays, onMonthContextChange]);
+    if (!onMonthContextChange) return;
+    const first = monthDays[0]?.date_ad ?? "";
+    const last = monthDays.at(-1)?.date_ad ?? "";
+    const key = `${year}|${month}|${monthDays.length}|${first}|${last}|${festivalDataTick}|${monthQ.dataUpdatedAt ?? 0}`;
+    if (lastMonthContextKey.current === key) return;
+    lastMonthContextKey.current = key;
+    onMonthContextChange({ year, month, days: monthDays });
+  }, [year, month, monthDays, festivalDataTick, monthQ.dataUpdatedAt, onMonthContextChange]);
 
   const publicHolidayDates = useMemo(
     () =>
       new Set<string>(
-        (holidayQ.data?.holidays ?? [])
-          .filter((h) => h.is_public_holiday)
-          .map((h) => h.start_date),
+        yearFestivals
+          .filter((f) => f.is_public_holiday && f.start_date)
+          .map((f) => f.start_date as string),
       ),
-    [holidayQ.data],
+    [yearFestivals],
   );
 
-  const isEnriching = monthQ.isFetching && !monthQ.data;
+  const isEnriching = (monthQ.isFetching && !monthQ.data) || festivalsLoading;
 
   const panchangaGridDate = useMemo(
     () => anchorDateForBsMonth(year, month, monthDays, todayAd),
@@ -232,8 +266,8 @@ export function CalendarView({
   );
 
   useEffect(() => {
-    onLoadingChange?.(monthQ.isLoading || holidayQ.isLoading);
-  }, [monthQ.isLoading, holidayQ.isLoading, onLoadingChange]);
+    onLoadingChange?.(monthQ.isLoading || festivalsLoading);
+  }, [monthQ.isLoading, festivalsLoading, onLoadingChange]);
 
   function selectDay(day: CalendarDay) {
     if (isPanchangaPatro && location) {

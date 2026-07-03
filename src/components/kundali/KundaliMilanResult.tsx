@@ -130,6 +130,41 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
         ) : null}
       </section>
 
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <h3 className="text-sm font-semibold text-foreground mb-4">{t("milan.dosha_analysis_title")}</h3>
+        <ul className="divide-y divide-border/70">
+          {result.doshaAnalysis.map((dosha) => (
+            <li
+              key={dosha.id}
+              className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0"
+            >
+              <span className="text-sm font-medium text-foreground">
+                {en ? (
+                  dosha.labelEn
+                ) : (
+                  <>
+                    {dosha.labelNe}{" "}
+                    <span className="text-muted-foreground font-normal">
+                      ({dosha.labelEn.replace(" Dosha", "")})
+                    </span>
+                  </>
+                )}
+              </span>
+              <span
+                className={cn(
+                  "text-sm font-semibold shrink-0",
+                  dosha.present
+                    ? "text-destructive"
+                    : "text-emerald-600 dark:text-emerald-400",
+                )}
+              >
+                {dosha.present ? t("milan.dosha_present") : t("milan.dosha_absent")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section className="rounded-2xl border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>

@@ -248,7 +248,9 @@ export function Home() {
     days: [],
   }));
   const handleMonthContextChange = useCallback((ctx: CalendarMonthContext) => {
-    setMonthContext(ctx);
+    setMonthContext((prev) =>
+      prev.year === ctx.year && prev.month === ctx.month && prev.days === ctx.days ? prev : ctx,
+    );
   }, []);
   const selectedAdDate = selectedDay?.date_ad ?? todayAd;
 
@@ -293,7 +295,11 @@ export function Home() {
         }
         holidays={
           <section className="col-span-full mt-2 max-sm:px-2.5">
-            <HomeQuickLinks location={location} />
+            <HomeQuickLinks
+              location={location}
+              bsYear={monthContext.year}
+              bsMonth={monthContext.month}
+            />
           </section>
         }
       />

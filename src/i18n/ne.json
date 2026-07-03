@@ -277,6 +277,9 @@
     "total_guna": "कुल गुण मिलन",
     "guna": "गुण",
     "nadi_dosha_advisory_title": "नाडी दोष — थप विश्लेषण सिफारिस",
+    "dosha_analysis_title": "दोष विश्लेषण",
+    "dosha_present": "दोष उपस्थित",
+    "dosha_absent": "दोष छैन",
     "notes_title": "अष्टकूट सूचना"
   },
   "converter": {
@@ -647,6 +650,8 @@
     "converter_desc": "वि.सं. ↔ ई.सं. मिति",
     "suryakranti_desc": "वार्षिक सूर्योदय–सूर्यास्त",
     "panchanga_year_desc": "तिथि, नक्षत्र र ग्रहस्थिति चक्र",
+    "abhijit_muhurta_desc": "दैनिक शुभ अभिजित् मुहूर्त समय",
+    "chandrakranti_desc": "चन्द्र र ग्रह क्रान्ति",
     "ritu_desc": "सायन ऋतु · विषुव–अयनान्त",
     "ritu_see_all": "सबै ऋतु हेर्नुहोस्"
   },

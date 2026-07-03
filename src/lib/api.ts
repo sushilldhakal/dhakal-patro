@@ -1189,6 +1189,7 @@ export interface HolidaysResponse {
 export interface FestivalsResponse {
   bs_year?: number;
   era: string;
+  gregorian_range?: { start: string; end: string };
   count: number;
   festivals: Festival[];
 }

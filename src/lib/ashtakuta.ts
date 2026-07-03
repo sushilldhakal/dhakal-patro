@@ -2,16 +2,17 @@ import {
   AVAKAHADA,
   RASHI_META,
   type Gana,
+  type Nadi,
   type Varna,
 } from "@/lib/avakahada-data";
 import {
   localizeGana,
+  localizeNadi,
   localizeVarna,
   localizeYoni,
   isEnglishLocale,
 } from "@/lib/avakahada-locale";
 import { janmaTaraFromNakIndex } from "@/lib/janma-patrika-fields";
-import { nadiPatrikaFromNakIndex } from "@/lib/janma-patrika-fields";
 import type { NakshatraPadaResult } from "@/lib/panchang-elements";
 
 export type KutaId =
@@ -43,6 +44,13 @@ export interface KutaRow {
   infoNe: string;
 }
 
+export interface MilanDoshaRow {
+  id: "nadi" | "bhakuta" | "gana" | "tara" | "yoni" | "varna";
+  labelEn: string;
+  labelNe: string;
+  present: boolean;
+}
+
 export interface AshtakutaResult {
   kutas: KutaRow[];
   totalObtained: number;
@@ -55,6 +63,8 @@ export interface AshtakutaResult {
   nadiDoshaAdvisory?: string;
   nadiDoshaAdvisoryNe?: string;
   bhakutaUnfavorable: boolean;
+  /** Per-kuta dosha flags for दोष विश्लेषण panel. */
+  doshaAnalysis: MilanDoshaRow[];
   notes: string[];
   notesNe: string[];
 }
@@ -333,18 +343,40 @@ function vashyaPoints(boyRashi: number, girlRashi: number): number {
   return VASHYA_POINTS[boyV]?.[girlV] ?? 0;
 }
 
+function ashtakootNadiFromNakIndex(nakIndex: number, lang?: string): string {
+  const nadi = AVAKAHADA[nakIndex]?.nadi;
+  if (!nadi) return "—";
+  return isEnglishLocale(lang) ? localizeNadi(nadi, lang) : nadi;
+}
+
+function ashtakootNadiNe(nakIndex: number): Nadi | undefined {
+  return AVAKAHADA[nakIndex]?.nadi;
+}
+
+function taraCountFromTo(fromNak: number, toNak: number): number {
+  if (fromNak === toNak) return 27;
+  return ((toNak - fromNak + 27) % 27) + 1;
+}
+
+function taraRemainderFromTo(fromNak: number, toNak: number): number {
+  const rem = taraCountFromTo(fromNak, toNak) % 9;
+  return rem === 0 ? 9 : rem;
+}
+
+/** Saravali / Maitreya: malefic taras are Vipat (3), Pratyak (5), Vadha (7). */
+function isTaraMalefic(fromNak: number, toNak: number): boolean {
+  const rem = taraRemainderFromTo(fromNak, toNak);
+  return rem === 3 || rem === 5 || rem === 7;
+}
+
 function taraPoints(boyNak: number, girlNak: number, boyPada: number, girlPada: number): number {
-  let count: number;
-  if (boyNak === girlNak) {
-    if (boyPada !== girlPada) return 3;
-    count = 27;
-  } else {
-    count = ((boyNak - girlNak + 27) % 27) + 1;
-  }
-  while (count > 9) count -= 9;
-  if ([2, 4, 6, 8, 9].includes(count)) return 3;
-  if ([3, 7].includes(count)) return 1.5;
-  return 0;
+  if (boyNak === girlNak && boyPada !== girlPada) return 3;
+
+  const maleBoyToGirl = isTaraMalefic(boyNak, girlNak);
+  const maleGirlToBoy = isTaraMalefic(girlNak, boyNak);
+  if (!maleBoyToGirl && !maleGirlToBoy) return 3;
+  if (maleBoyToGirl && maleGirlToBoy) return 0;
+  return 1.5;
 }
 
 function yoniPoints(boyYoni: string, girlYoni: string): number {
@@ -366,17 +398,15 @@ function ganaPoints(boyGana: Gana, girlGana: Gana): number {
 }
 
 function bhakutaPoints(boyRashi: number, girlRashi: number): number {
-  const diff = (boyRashi - girlRashi + 12) % 12;
-  if (diff === 0) return 0;
-  if (diff === 1 || diff === 7) return 7;
-  if (diff === 3 || diff === 11) return 7;
-  if (diff === 4 || diff === 10) return 7;
-  return 0;
+  /** Maitreya / Saravali Rasi Koota: 7 for 1/3/4/7/10/11, else 0. */
+  const pos = ((girlRashi - boyRashi + 12) % 12) + 1;
+  return [1, 3, 4, 7, 10, 11].includes(pos) ? 7 : 0;
 }
 
 function nadiPoints(boyNak: number, girlNak: number): number {
-  const boyNadi = boyNak % 3;
-  const girlNadi = girlNak % 3;
+  const boyNadi = ashtakootNadiNe(boyNak);
+  const girlNadi = ashtakootNadiNe(girlNak);
+  if (!boyNadi || !girlNadi) return 0;
   return boyNadi === girlNadi ? 0 : 8;
 }
 
@@ -406,8 +436,8 @@ function buildNadiDoshaAdvisory(
   score: number,
   bhakutaUnfavorable: boolean,
 ): { en: string; ne: string } {
-  const nadiEn = nadiPatrikaFromNakIndex(nakIndex, "en");
-  const nadiNe = nadiPatrikaFromNakIndex(nakIndex, "ne");
+  const nadiEn = ashtakootNadiFromNakIndex(nakIndex, "en");
+  const nadiNe = ashtakootNadiFromNakIndex(nakIndex, "ne");
   const scoreStr = formatGunaScore(score);
   const compatEn = gunaCompatibilityPhrase(score, bhakutaUnfavorable, "en");
   const compatNe = gunaCompatibilityPhrase(score, bhakutaUnfavorable, "ne");
@@ -418,6 +448,18 @@ function buildNadiDoshaAdvisory(
     ne:
       `कुल गुण मिलन: ${scoreStr}/३६ (${compatNe})। तर दुवै कुण्डली एउटै नाडी (${nadiNe}) मा पर्छन्, जसले परम्परागत अष्टकूट अनुसार नाडी दोष बनाउँछ। विभिन्न परम्पराले नाडी दोषलाई फरक तरिकाले हेर्छन्; धेरै ज्योतिषीहरू मिलन अस्वीकार गर्नुअघि शिथिल नियम जाँच्छन् — जस्तै एउटै नक्षत्र तर फरक पाद, चन्द्र बल, नवांश मिलान, ग्रह दृष्टि र अन्य शमनकारी कारक। यो दोष शिथिल वा न्यूनीकरण भएको छ कि छैन भनेर थप कुण्डली विश्लेषण सिफारिस गरिन्छ।`,
   };
+}
+
+function buildDoshaAnalysis(kutas: KutaRow[]): MilanDoshaRow[] {
+  const pts = (id: KutaId) => kutas.find((k) => k.id === id)!.obtained;
+  return [
+    { id: "nadi", labelEn: "Nadi Dosha", labelNe: "नाडी दोष", present: pts("nadi") === 0 },
+    { id: "bhakuta", labelEn: "Bhakoot Dosha", labelNe: "भकूट दोष", present: pts("bhakuta") === 0 },
+    { id: "gana", labelEn: "Gana Dosha", labelNe: "गण दोष", present: pts("gana") === 0 },
+    { id: "tara", labelEn: "Tara Dosha", labelNe: "तारा दोष", present: pts("tara") === 0 },
+    { id: "yoni", labelEn: "Yoni Dosha", labelNe: "योनि दोष", present: pts("yoni") === 0 },
+    { id: "varna", labelEn: "Varna Dosha", labelNe: "वर्ण दोष", present: pts("varna") === 0 },
+  ];
 }
 
 function recommendationFromScore(
@@ -579,8 +621,8 @@ export function computeAshtakuta(
       id: "nadi",
       max: 8,
       obtained: nadiPoints(boy.nakshatra.index, girl.nakshatra.index),
-      boyValue: nadiPatrikaFromNakIndex(boy.nakshatra.index, lang),
-      girlValue: nadiPatrikaFromNakIndex(girl.nakshatra.index, lang),
+      boyValue: ashtakootNadiFromNakIndex(boy.nakshatra.index, lang),
+      girlValue: ashtakootNadiFromNakIndex(girl.nakshatra.index, lang),
       areaOfLife: KUTA_META.nadi.areaEn,
       areaOfLifeNe: KUTA_META.nadi.areaNe,
       info: KUTA_META.nadi.infoEn,
@@ -620,6 +662,7 @@ export function computeAshtakuta(
     nadiDosha,
     nadiDoshaAdvisory: nadiAdvisory?.en,
     nadiDoshaAdvisoryNe: nadiAdvisory?.ne,
+    doshaAnalysis: buildDoshaAnalysis(kutas),
     notes,
     notesNe,
   };

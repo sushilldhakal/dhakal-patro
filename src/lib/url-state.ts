@@ -109,6 +109,21 @@ export function locationToSearch(loc: PanchangaLocation): LocationSearch {
   return out;
 }
 
+/** Shareable `/chandrakranti` search — location + BS month on screen. */
+export function buildChandraKrantiSearch(
+  loc: PanchangaLocation,
+  year: number,
+  month: number,
+  paksha: NonNullable<ChandraKrantiSearch["paksha"]> = "all",
+): ChandraKrantiSearch {
+  return {
+    ...locationToSearch(loc),
+    year,
+    month,
+    paksha,
+  };
+}
+
 /**
  * Reconstruct a location from search params, or `undefined` when the URL
  * carries no location (so callers can fall back to the stored preference).

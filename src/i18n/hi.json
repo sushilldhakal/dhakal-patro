@@ -211,6 +211,8 @@
     "converter_desc": "BS ↔ AD तिथि",
     "suryakranti_desc": "वार्षिक सूर्योदय–सूर्यास्त",
     "panchanga_year_desc": "तिथि, नक्षत्र और ग्रह स्थिति चक्र",
+    "abhijit_muhurta_desc": "दैनिक शुभ अभिजित मुहूर्त समय",
+    "chandrakranti_desc": "चंद्र और ग्रह क्रांति",
     "ritu_desc": "सायन ऋतु · विषुव–अयनान्त",
     "ritu_see_all": "सभी ऋतु देखें"
   },
