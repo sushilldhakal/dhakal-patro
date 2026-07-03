@@ -2,41 +2,76 @@ import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { moonIllumination, WHEEL_TITHIS, tithiIndexFromElongation, tithiNum, tithiPaksha, tithiPakshaEn } from "@/lib/tithi-wheel-data";
-import { ElongationDiagram, EARTH_ARC_SYNODIC, earthOrbitDegFromElongation } from "./ElongationDiagram";
+import { ElongationDiagram, EARTH_ARC_SYNODIC, earthOrbitDegFromLunarDay } from "./ElongationDiagram";
 import { SYNODIC_MONTH } from "@/components/learn/sun-earth-moon-math";
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 import { edScrub } from "@/lib/diagram-classes";
-;
 import { AdhikMassDiagram, SunriseTimeline } from "./tithi-mechanics-diagrams";
 import { useLocale } from "@/i18n/locale";
 import { tmCardCap, tmCardPadLg, tmFcard, tmFormula, tmHero, tmHeroEyebrow, tmHeroSub, tmHeroTitle, tmKey, tmKeys, tmLede, tmNote, tmPageShell, tmSecEn, tmSecHead, tmSecKicker, tmSecTitle, tmSection, tmWrap, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 
 const PRESETS = [
-  { ne: "अमावस्या", en: "Amavasya", E: 354 },
-  { ne: "शुक्ल अष्टमी", en: "Shukla Ashtami", E: 90 },
-  { ne: "पूर्णिमा", en: "Purnima", E: 174 },
-  { ne: "कृष्ण अष्टमी", en: "Krishna Ashtami", E: 270 },
+  { ne: "औंसी", en: "Amavasya", day: 0 },
+  { ne: "शुक्ल अष्टमी", en: "Shukla Ashtami", day: (90 / 360) * SYNODIC_MONTH },
+  { ne: "पूर्णिमा", en: "Purnima", day: (174 / 360) * SYNODIC_MONTH },
+  { ne: "कृष्ण अष्टमी", en: "Krishna Ashtami", day: (270 / 360) * SYNODIC_MONTH },
 ];
 
-export function ElongationStudy() {
+/** One simulated day per second — full two-month run ~60 s. */
+const LUNAR_DAYS_PER_SEC = 1;
+
+function elongationFromLunarDay(day: number): number {
+  return ((day % SYNODIC_MONTH) / SYNODIC_MONTH) * 360;
+}
+
+function lunarDayFromElongation(E: number, monthStart: number): number {
+  return monthStart + ((((E % 360) + 360) % 360) / 360) * SYNODIC_MONTH;
+}
+
+/** ~30 fps — smooth motion without React choking on 60 full SVG rebuilds/sec. */
+const ANIM_FRAME_MS = 33;
+
+export interface ElongationStudyProps {
+  /** How many synodic months to play before looping (default 2 for solar-system). */
+  animMonths?: number;
+  /** Dashed Earth guide arc span in lunar months (default matches animMonths). */
+  earthPathMonths?: number;
+}
+
+export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationStudyProps) {
+  const pathMonths = earthPathMonths ?? animMonths;
   const { pick, digits } = useLocale();
-  const [E, setE] = useState(87);
+  const [lunarDay, setLunarDay] = useState((87 / 360) * SYNODIC_MONTH);
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);
+  const animDayRef = useRef(lunarDay);
   const fmt = (n: number) => digits(n);
+  const animSpan = SYNODIC_MONTH * animMonths;
+  const E = elongationFromLunarDay(lunarDay);
+  const lunarMonthNum = Math.floor(lunarDay / SYNODIC_MONTH) + 1;
+  const dayInMonth = lunarDay % SYNODIC_MONTH;
+
+  useEffect(() => {
+    animDayRef.current = lunarDay;
+  }, [lunarDay]);
 
   useEffect(() => {
     if (!playing) return;
     let last = performance.now();
+    let lastPaint = last;
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setE((prev) => (prev + dt * 26) % 360);
+      animDayRef.current = (animDayRef.current + dt * LUNAR_DAYS_PER_SEC) % animSpan;
+      if (now - lastPaint >= ANIM_FRAME_MS) {
+        lastPaint = now;
+        setLunarDay(animDayRef.current);
+      }
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
-  }, [playing]);
+  }, [playing, animSpan]);
 
   const idx = tithiIndexFromElongation(E);
   const t = WHEEL_TITHIS[idx]!;
@@ -44,14 +79,42 @@ export function ElongationStudy() {
   const tno = tithiNum(idx);
   const illum = moonIllumination(E);
   const tithiLabel = t.moon === "full" ? pick("पूर्णिमा", "Purnima") : t.moon === "new" ? pick("औंसी", "Aunsi") : pick(t.ne, t.en);
-  const earthArc = earthOrbitDegFromElongation(E);
-  const siderealDays = 27.321661;
+  const earthArc = earthOrbitDegFromLunarDay(lunarDay);
+  const monthStart = Math.floor(lunarDay / SYNODIC_MONTH) * SYNODIC_MONTH;
 
   return (
     <div className={tmCardPadLg}>
-      <ElongationDiagram E={E} onE={(v) => { setPlaying(false); setE(v); }} />
+      <ElongationDiagram
+        E={E}
+        lunarDay={lunarDay}
+        earthPathMonths={pathMonths}
+        onE={(v) => {
+          setPlaying(false);
+          setLunarDay(lunarDayFromElongation(v, monthStart));
+        }}
+      />
       <div className={edControls}>
         <div className={edReadout}>
+          {animMonths > 1 && (
+            <div className={edRo}>
+              <span className={edRoK}>{pick("कुल दिन (२ चान्द्र मास)", "Total days (2 lunar months)")}</span>
+              <span className={edRoV({ mono: true })}>
+                {fmt(Math.round(lunarDay * 10) / 10)} / ~{fmt(Math.round(animSpan))}
+              </span>
+            </div>
+          )}
+          <div className={edRo}>
+            <span className={edRoK}>
+              {animMonths > 1
+                ? pick("चान्द्र महिना · दिन", "Lunar month · day")
+                : pick("चान्द्र महिनाको दिन", "Day of lunar month")}
+            </span>
+            <span className={edRoV({ amber: animMonths > 1 && lunarMonthNum === 2 })}>
+              {animMonths > 1
+                ? `${fmt(lunarMonthNum)} · ${fmt(Math.round(dayInMonth * 10) / 10)} / ~${fmt(Math.round(SYNODIC_MONTH))}`
+                : `${fmt(Math.round(lunarDay * 10) / 10)} / ~${fmt(Math.round(SYNODIC_MONTH))}`}
+            </span>
+          </div>
           <div className={edRo}>
             <span className={edRoK}>{pick("कोणीय दूरी", "Elongation")}</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(E))}°</span>
@@ -71,15 +134,9 @@ export function ElongationStudy() {
             <span className={edRoV({ mono: true })}>{fmt(illum)}%</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("पृथ्वी सार · चान्द्र मास", "Earth arc · lunar month")}</span>
+            <span className={edRoK}>{pick("पृथ्वी सार", "Earth arc")}</span>
             <span className={edRoV({ mono: true })}>
-              {fmt(Math.round(earthArc))}° / ~{fmt(Math.round(EARTH_ARC_SYNODIC))}°
-            </span>
-          </div>
-          <div className={edRo}>
-            <span className={edRoK}>{pick("नाक्षत्र vs चान्द्र मास", "Sidereal vs synodic month")}</span>
-            <span className={edRoV({ amber: true })}>
-              ~{fmt(Math.round(siderealDays))} {pick("दिन", "days")} vs ~{fmt(Math.round(SYNODIC_MONTH))} {pick("दिन", "days")}
+              {fmt(Math.round(earthArc))}° / ~{fmt(Math.round(EARTH_ARC_SYNODIC * pathMonths))}°
             </span>
           </div>
         </div>
@@ -97,13 +154,13 @@ export function ElongationStudy() {
             className={edScrub}
             type="range"
             min={0}
-            max={360}
-            step={0.5}
-            value={E}
-            style={{ "--fill": `${(E / 360) * 100}%` } as React.CSSProperties}
+            max={animSpan}
+            step={0.05}
+            value={lunarDay}
+            style={{ "--fill": `${(lunarDay / animSpan) * 100}%` } as React.CSSProperties}
             onChange={(e) => {
               setPlaying(false);
-              setE(+e.target.value);
+              setLunarDay(+e.target.value);
             }}
           />
         </div>
@@ -112,17 +169,27 @@ export function ElongationStudy() {
             <button
               key={p.ne}
               type="button"
-              className={edPreset(
-                Math.abs((((E - p.E + 180) % 360) + 360) % 360 - 180) < 6,
-              )}
+              className={edPreset(Math.abs(lunarDay - p.day) < 0.8 || Math.abs(lunarDay - (p.day + SYNODIC_MONTH)) < 0.8)}
               onClick={() => {
                 setPlaying(false);
-                setE(p.E);
+                setLunarDay(p.day);
               }}
             >
               {pick(p.ne, p.en)}
             </button>
           ))}
+          {animMonths > 1 && (
+            <button
+              type="button"
+              className={edPreset(Math.abs(lunarDay - SYNODIC_MONTH) < 0.8)}
+              onClick={() => {
+                setPlaying(false);
+                setLunarDay(SYNODIC_MONTH);
+              }}
+            >
+              {pick("२-रो औंसी", "Month 2 Amavasya")}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -153,10 +220,10 @@ export function TithiMechanics() {
           <p className={tmLede}>
             पृथ्वीबाट हेर्दा चन्द्रमा सूर्यभन्दा जति <span className={cn("hl")}>कोणले अगाडि</span> पुग्छ,
             त्यही कोणले तिथि निर्धारण गर्छ। <b>०°</b> मा दुवै एकै दिशामा हुन्छन् —{" "}
-            <span className={cn("hl-amber")}>अमावस्या</span>। कोण बढ्दै <b>१८०°</b> पुग्दा चन्द्र ठ्याक्क
+            <span className={cn("hl-amber")}>औंसी</span>। कोण बढ्दै <b>१८०°</b> पुग्दा चन्द्र ठ्याक्क
             विपरीत — <span className={cn("hl-amber")}>पूर्णिमा</span>। तल मुनको गोलो तानेर वा चलाउनुहोस्।
           </p>
-          <ElongationStudy />
+          <ElongationStudy animMonths={1} />
 
           <div className={tmFormula}>
             <div className={tmFcard}>
@@ -235,7 +302,7 @@ export function TithiMechanics() {
             <span className={tmSecEn}>Extra month</span>
           </div>
           <p className={tmLede}>
-            एक <b>चान्द्र मास</b> (अमावस्यादेखि अमावस्या) ~२९.५ दिनको हुन्छ; एक <b>सौर मास</b> (सूर्य
+            एक <b>चान्द्र मास</b> (औंसीदेखि औंसी) ~२९.५ दिनको हुन्छ; एक <b>सौर मास</b> (सूर्य
             एक राशिमा रहने अवधि) ~३०.४ दिनको। चान्द्र मास छोटो भएकाले बेलाबेला एउटा चान्द्र
             मासभित्र <span className={cn("hl")}>कुनै सङ्क्रान्ति पर्दैन</span> — त्यही महिना{" "}
             <span className={cn("hl-amber")}>अधिक मास</span> कहलिन्छ र अघिल्लो महिनाको नाम दोहोरिन्छ।
@@ -243,7 +310,7 @@ export function TithiMechanics() {
           <div className={tmCardPadLg}>
             <AdhikMassDiagram />
             <div className={tmCardCap}>
-              यहाँ मेष सौर मासभित्रै दुई अमावस्या परे — बीचको चान्द्र मासमा कुनै सङ्क्रान्ति
+              यहाँ मेष सौर मासभित्रै दुई औंसी परे — बीचको चान्द्र मासमा कुनै सङ्क्रान्ति
               नपरेकाले त्यो “अधिक वैशाख” बन्यो; त्यसपछिको नियमित महिना “निज वैशाख”।
             </div>
           </div>

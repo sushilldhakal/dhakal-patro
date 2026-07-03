@@ -197,7 +197,7 @@ export function PrecessionCone() {
 
         {/* Earth */}
         <g transform={`translate(${CX} ${CY})`}>
-          <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName="ho-earth-glow" glowPad={8} />
+          <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowPad={8} />
         </g>
 
         {/* equator ring front half */}

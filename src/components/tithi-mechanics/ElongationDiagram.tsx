@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { edArc, edArcCap, edArcVal, edAxis, edBodyLabel, edCurband, edDeglabel, edDegtick, edEarthOrbitArrow, edEarthOrbitLabel, edEarthSolarOrbit, edEndEn, edEndNe, edLens, edOrbit, edOrbitDir, edOrbitDirArrow, edOrbitDirLabel, edRay, edRing, edRmline, edTiltCap, edTiltEq, edTiltLabel, edTiltPole, edTiltRim, hoEarthGroup } from "@/lib/diagram-classes";
+import { edArc, edArcCap, edArcVal, edAxis, edBodyLabel, edCurband, edDeglabel, edDegtick, edEarthOrbitArrow, edEarthOrbitLabel, edEarthSolarOrbit, edEndEn, edEndNe, edLens, edOrbit, edOrbitDir, edOrbitDirArrow, edOrbitDirLabel, edPakshaOn, edRay, edRing, edRmline, edTiltCap, edTiltEq, edTiltLabel, edTiltPole, edTiltRim, edTnumCur, hoEarthGroup } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
@@ -24,7 +24,7 @@ const ED = {
   sunX: 110,
   sunY: 520,
   sunR: 66,
-  /** Earth at अमावस्या (E = 0) — baseline for the lunar-month arc. */
+  /** Earth at औंसी (E = 0) — baseline for the lunar-month arc. */
   earthX0: 710,
   earthY0: 520,
   earthR: 60,
@@ -38,6 +38,9 @@ const ED = {
 const ED_VB = `${-ED.padL} ${-ED.padT} ${ED.W + ED.padL + ED.padR} ${ED.H + ED.padT + ED.padB}`;
 
 const SUN_EARTH_D = ED.earthX0 - ED.sunX;
+const MAX_SWEEP_PTS = 40;
+const MAX_EARTH_TRAVEL_PTS = 32;
+const ARC_R = ED.ringOut + 36;
 /** Earth travels this many degrees around the Sun during one synodic month (~29.5 d). */
 export const EARTH_ARC_SYNODIC = (360 * SYNODIC_MONTH) / TROPICAL_YEAR;
 
@@ -45,8 +48,18 @@ export function earthOrbitDegFromElongation(E: number): number {
   return (E / 360) * EARTH_ARC_SYNODIC;
 }
 
+/** Earth’s heliocentric arc (°) after `day` elapsed synodic days (may span multiple months). */
+export function earthOrbitDegFromLunarDay(day: number): number {
+  return (day / SYNODIC_MONTH) * EARTH_ARC_SYNODIC;
+}
+
 export function earthPosFromElongation(E: number): [number, number] {
   const a = earthOrbitDegFromElongation(E) * RAD;
+  return [ED.sunX + SUN_EARTH_D * Math.cos(a), ED.sunY - SUN_EARTH_D * Math.sin(a)];
+}
+
+export function earthPosFromLunarDay(day: number): [number, number] {
+  const a = earthOrbitDegFromLunarDay(day) * RAD;
   return [ED.sunX + SUN_EARTH_D * Math.cos(a), ED.sunY - SUN_EARTH_D * Math.sin(a)];
 }
 
@@ -63,34 +76,125 @@ const edPos = (E: number, r: number, ex: number, ey: number): [number, number] =
   return [ex + r * Math.cos(a), ey - r * Math.sin(a)];
 };
 
+function buildMoonSweepPath(d0: number, d1: number, arcR: number): string {
+  if (d1 <= d0) return "";
+  const pts: string[] = [];
+  const steps = MAX_SWEEP_PTS;
+  for (let i = 0; i <= steps; i++) {
+    const d = d0 + (i / steps) * (d1 - d0);
+    const e = ((d % SYNODIC_MONTH) / SYNODIC_MONTH) * 360;
+    const [ex, ey] = earthPosFromLunarDay(d);
+    const [x, y] = edPos(e, arcR, ex, ey);
+    pts.push((i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1));
+  }
+  return pts.join(" ");
+}
+
+type SweepCache = {
+  elapsedDay: number;
+  completeMonths: number;
+  completed: { d: string; opacity: number }[];
+};
+
+function getSweepSegmentsCached(
+  elapsedDay: number,
+  arcR: number,
+  cache: SweepCache,
+): { d: string; opacity: number }[] {
+  const completeMonths = Math.floor(elapsedDay / SYNODIC_MONTH);
+
+  if (elapsedDay < cache.elapsedDay - 0.25) {
+    cache.completeMonths = 0;
+    cache.completed = [];
+  }
+
+  while (cache.completeMonths < completeMonths) {
+    const m = cache.completeMonths;
+    const path = buildMoonSweepPath(m * SYNODIC_MONTH, (m + 1) * SYNODIC_MONTH, arcR);
+    if (path) cache.completed.push({ d: path, opacity: 0.5 });
+    cache.completeMonths++;
+  }
+
+  if (cache.completeMonths > completeMonths) {
+    cache.completed = cache.completed.slice(0, completeMonths);
+    cache.completeMonths = completeMonths;
+  }
+
+  const partialStart = completeMonths * SYNODIC_MONTH;
+  const segments = [...cache.completed];
+  if (elapsedDay > partialStart + 0.02) {
+    const path = buildMoonSweepPath(partialStart, elapsedDay, arcR);
+    if (path) segments.push({ d: path, opacity: 1 });
+  }
+
+  cache.elapsedDay = elapsedDay;
+  return segments;
+}
+
+function buildEarthTraveledPath(elapsedDay: number): string {
+  if (elapsedDay <= 0) return "";
+  const pts: string[] = [];
+  const steps = MAX_EARTH_TRAVEL_PTS;
+  for (let i = 0; i <= steps; i++) {
+    const day = (i / steps) * elapsedDay;
+    const a = earthOrbitDegFromLunarDay(day) * RAD;
+    const x = ED.sunX + SUN_EARTH_D * Math.cos(a);
+    const y = ED.sunY - SUN_EARTH_D * Math.sin(a);
+    pts.push((i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1));
+  }
+  return pts.join(" ");
+}
+
+const SUN_RAYS = Array.from({ length: 16 }, (_, k) => {
+  const a = (k / 16) * Math.PI * 2;
+  const r0 = ED.sunR + 3;
+  const r1 = ED.sunR + (k % 2 ? 12 : 20);
+  return { a, r0, r1 };
+});
+
 interface Props {
   E?: number;
+  /** Elapsed synodic days (unwrapped) — keeps Earth moving across multiple lunar months. */
+  lunarDay?: number;
+  /** How many lunar months of Earth arc to draw (default 1). */
+  earthPathMonths?: number;
   onE?: (v: number) => void;
   compact?: boolean;
   month?: string;
 }
 
-export function ElongationDiagram({ E = 87, onE, compact, month = "असार" }: Props) {
+export function ElongationDiagram({
+  E: EProp = 87,
+  lunarDay,
+  earthPathMonths = 1,
+  onE,
+  compact,
+  month = "असार",
+}: Props) {
   const fmt = (n: number) => toNepaliDigits(n);
+  const elapsedDay = lunarDay ?? (EProp / 360) * SYNODIC_MONTH;
+  const E = lunarDay != null ? ((elapsedDay % SYNODIC_MONTH) / SYNODIC_MONTH) * 360 : EProp;
   const curPaksha = (((E % 360) + 360) % 360) < 180 ? "शुक्ल" : "कृष्ण";
   const idx = tithiIndexFromElongation(E);
-  const [earthX, earthY] = earthPosFromElongation(E);
-  const earthArc = earthOrbitDegFromElongation(E);
+  const [earthX, earthY] = earthPosFromLunarDay(elapsedDay);
+  const earthArc = earthOrbitDegFromLunarDay(elapsedDay);
   const [mx, my] = edPos(E, ED.R, earthX, earthY);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef(false);
+  const sweepCacheRef = useRef<SweepCache>({ elapsedDay: -1, completeMonths: 0, completed: [] });
 
+  const earthArcSpan = EARTH_ARC_SYNODIC * earthPathMonths;
   const earthSolarPath = useMemo(() => {
     const pts: string[] = [];
-    const steps = 28;
+    const steps = Math.max(28, Math.round(28 * earthPathMonths));
     for (let i = 0; i <= steps; i++) {
-      const a = (i / steps) * EARTH_ARC_SYNODIC * RAD;
+      const a = (i / steps) * earthArcSpan * RAD;
       const x = ED.sunX + SUN_EARTH_D * Math.cos(a);
       const y = ED.sunY - SUN_EARTH_D * Math.sin(a);
       pts.push((i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1));
     }
     return pts.join(" ");
-  }, []);
+  }, [earthArcSpan, earthPathMonths]);
 
   const eFromEvt = (e: React.PointerEvent) => {
     const svg = svgRef.current;
@@ -100,7 +204,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
     const py = ((e.clientY - r.top) / r.height) * (ED.H + ED.padT + ED.padB) - ED.padT;
     let guess = E;
     for (let i = 0; i < 4; i++) {
-      const [ex, ey] = earthPosFromElongation(guess);
+      const [ex, ey] = earthPosFromLunarDay(elapsedDay);
       const moonAng = Math.atan2(-(py - ey), px - ex) / RAD;
       guess = ((moonAng - sunDirFromEarth(ex, ey)) % 360 + 360) % 360;
     }
@@ -162,7 +266,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         key={`tn${i}`}
         x={nx}
         y={ny}
-        className={`ed-tnum${isCur ? " cur" : ""}`}
+        className={edTnumCur(isCur)}
         textAnchor="middle"
         dominantBaseline="central"
       >
@@ -175,35 +279,11 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
     }
   }
 
-  const arcR = ED.ringOut + 36;
-  const arcPts: string[] = [];
-  for (let e = 0; e <= E; e += 2) {
-    const [ex, ey] = earthPosFromElongation(e);
-    const [x, y] = edPos(e, arcR, ex, ey);
-    arcPts.push((e === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1));
-  }
-  {
-    const [x, y] = edPos(E, arcR, earthX, earthY);
-    arcPts.push("L" + x.toFixed(1) + "," + y.toFixed(1));
-  }
-  const sweepArc = arcPts.join(" ");
+  const arcR = ARC_R;
+  const sweepSegments = getSweepSegmentsCached(elapsedDay, arcR, sweepCacheRef.current);
   const [capx, capy] = edPos(E, arcR, earthX, earthY);
 
-  const rays = Array.from({ length: 16 }, (_, k) => {
-    const a = (k / 16) * Math.PI * 2;
-    const r0 = ED.sunR + 3;
-    const r1 = ED.sunR + (k % 2 ? 12 : 20);
-    return (
-      <line
-        key={`ray${k}`}
-        x1={ED.sunX + r0 * Math.cos(a)}
-        y1={ED.sunY + r0 * Math.sin(a)}
-        x2={ED.sunX + r1 * Math.cos(a)}
-        y2={ED.sunY + r1 * Math.sin(a)}
-        className={edRay}
-      />
-    );
-  });
+  const earthTraveledPath = buildEarthTraveledPath(elapsedDay);
 
   const [shuklaX, shuklaY] = edPos(90, ED.degR + 20, earthX, earthY);
   const [krishnaX, krishnaY] = edPos(270, ED.degR + 20, earthX, earthY);
@@ -287,6 +367,15 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
       </defs>
 
       <path d={earthSolarPath} className={edEarthSolarOrbit} fill="none" markerEnd="url(#ed-earth-orbit-arrow)" />
+      {earthTraveledPath && (
+        <path
+          d={earthTraveledPath}
+          className={edEarthSolarOrbit}
+          fill="none"
+          opacity={0.95}
+          strokeWidth={2.4}
+        />
+      )}
       {!compact && (
         <text
           x={earthArcLabelX}
@@ -294,7 +383,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
           className={edEarthOrbitLabel}
           textAnchor="middle"
         >
-          पृथ्वी ~{fmt(Math.round(EARTH_ARC_SYNODIC))}° / चान्द्र मास
+          पृथ्वी ~{fmt(Math.round(earthArcSpan))}° / {fmt(earthPathMonths)} चान्द्र मास
         </text>
       )}
 
@@ -315,7 +404,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         <text
           x={shuklaX}
           y={shuklaY}
-          className={`ed-paksha${curPaksha === "शुक्ल" ? " on" : ""}`}
+          className={edPakshaOn(curPaksha === "शुक्ल")}
           textAnchor="middle"
         >
           {month} शुक्ल पक्ष
@@ -325,14 +414,16 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
         <text
           x={krishnaX}
           y={krishnaY}
-          className={`ed-paksha${curPaksha === "कृष्ण" ? " on" : ""}`}
+          className={edPakshaOn(curPaksha === "कृष्ण")}
           textAnchor="middle"
         >
           {month} कृष्ण पक्ष
         </text>
       )}
 
-      <path d={sweepArc} className={edArc} fill="none" />
+      {sweepSegments.map((seg, i) => (
+        <path key={`sweep${i}`} d={seg.d} className={edArc} fill="none" opacity={seg.opacity} />
+      ))}
       <circle cx={capx} cy={capy} r={4} className={edArcCap} />
       <text
         x={arcLabelX}
@@ -347,7 +438,16 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
       <line x1={earthX} y1={earthY} x2={mx} y2={my} className={edRmline} />
 
       <circle cx={ED.sunX} cy={ED.sunY} r={ED.sunR + 34} fill="url(#ed-sunglow)" />
-      {rays}
+      {SUN_RAYS.map((ray, k) => (
+        <line
+          key={`ray${k}`}
+          x1={ED.sunX + ray.r0 * Math.cos(ray.a)}
+          y1={ED.sunY + ray.r0 * Math.sin(ray.a)}
+          x2={ED.sunX + ray.r1 * Math.cos(ray.a)}
+          y2={ED.sunY + ray.r1 * Math.sin(ray.a)}
+          className={edRay}
+        />
+      ))}
       <circle cx={ED.sunX} cy={ED.sunY} r={ED.sunR} fill="url(#ed-sun)" />
       <text x={ED.sunX} y={ED.sunY + ED.sunR + 30} className={edBodyLabel} textAnchor="middle">
         सूर्य
@@ -388,7 +488,7 @@ export function ElongationDiagram({ E = 87, onE, compact, month = "असार"
       </g>
 
       <text x={amX - 14} y={amY - 30} className={edEndNe()} textAnchor="middle">
-        अमावस्या
+        औंसी
       </text>
       <text x={amX - 14} y={amY - 12} className={edEndEn()} textAnchor="middle">
         ०°

@@ -1,5 +1,5 @@
 import { EarthGlobeImage } from "./EarthGlobeImage";
-import { ssRotArrowHead, ssRotAxis, ssRotCurve, ssRotDir, ssRotLabel, ssRotPole } from "@/lib/diagram-classes";
+import { ssRotArrowHead, ssRotAxis, ssRotCurve, ssRotDir, ssRotGlow, ssRotLabel, ssRotPole } from "@/lib/diagram-classes";
 import { ssRotSvg } from "@/lib/learn-classes";
 import { useLocale } from "@/i18n/locale";
 
@@ -30,7 +30,7 @@ export function EarthRotationDiagram() {
 
       <line x1={100} y1={cy} x2={W - 100} y2={cy} className={ssRotAxis} />
 
-      <EarthGlobeImage cx={cx} cy={cy} r={r} glow glowClassName="ss-rot-glow" glowPad={10} />
+      <EarthGlobeImage cx={cx} cy={cy} r={r} glow glowClassName={ssRotGlow} glowPad={10} />
       <line x1={cx} y1={cy - r - 6} x2={cx} y2={cy + r + 6} className={ssRotPole} />
       <path
         d={`M ${cx - 38} ${cy + 44} A 46 46 0 1 1 ${cx + 38} ${cy + 44}`}

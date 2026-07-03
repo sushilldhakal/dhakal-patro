@@ -308,7 +308,7 @@ export function AdhikMassDiagram() {
         {amavMarks}
         <text x={padL} y={lunarY + bandH + 56} className={tmTrackLabel}>
           चान्द्र मास{" "}
-          <tspan className={tmTrackSub}>· अमावस्यादेखि अमावस्या — हरेक ~२९.५ दिन</tspan>
+          <tspan className={tmTrackSub}>· औंसीदेखि औंसी — हरेक ~२९.५ दिन</tspan>
         </text>
       </svg>
       <div className={tmAmLegend}>
@@ -316,7 +316,7 @@ export function AdhikMassDiagram() {
           <TmLegendDot kind="sun" /> सङ्क्रान्ति (सूर्य नयाँ राशिमा)
         </span>
         <span>
-          <TmLegendDot kind="moon" /> अमावस्या (चान्द्र मासको आरम्भ)
+          <TmLegendDot kind="moon" /> औंसी (चान्द्र मासको आरम्भ)
         </span>
         <span>
           <i className={tmLegAdhik} /> सङ्क्रान्ति बिनाको चान्द्र मास = अधिक मास

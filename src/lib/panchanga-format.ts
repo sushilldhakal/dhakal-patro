@@ -451,6 +451,25 @@ export function getMonthDayChandraRashi(
   return lang === "en" ? raw : formatRashiDisplayNe(raw) ?? raw;
 }
 
+export function getMonthDayNakshatra(
+  day: CalendarDay,
+  lang: "ne" | "en" | "hi",
+): string | undefined {
+  const ne =
+    day.nakshatra_ne ??
+    day.panchanga?.nakshatra?.name_ne ??
+    day.nakshatra ??
+    day.panchanga?.nakshatra?.name;
+  const en =
+    day.nakshatra ??
+    day.panchanga?.nakshatra?.name ??
+    day.nakshatra_ne ??
+    day.panchanga?.nakshatra?.name_ne;
+
+  const raw = lang === "en" ? en : ne;
+  return raw || undefined;
+}
+
 export function getMoonriseDisplay(p: PanchangaDay): string | undefined {
   return formatMoonEventDisplay(p, "moonrise");
 }

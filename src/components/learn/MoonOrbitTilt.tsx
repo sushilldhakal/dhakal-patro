@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { edBodyLabel, edScrub, hoEarthGroup, motBaseDot, motEarthLabel, motHeightPost, motLegendLabel, motMoon, motMoonEclipsing, motMoonLabel, motMoonSubmerged, motNode, motNodeDot, motNodeLabel, motNodeLine, motNodeTrack, motOrbit, motPlaneFace, motPlaneLabel, motPlaneRim, motSeasonBanner, motShadowDot, motShadowLabel, motSunLabel, motTiltArc, motTiltLabel, motTiltRef } from "@/lib/diagram-classes";
+import { edBodyLabel, edScrub, hoEarthGroup, motBaseDot, motEarthGlow, motEarthLabel, motEclipseBannerType, motEclipseGlowType, motHeightPost, motLegendLabel, motMoon, motMoonEclipsing, motMoonHaloDir, motMoonLabel, motMoonSubmerged, motNode, motNodeDot, motNodeLabel, motNodeLine, motNodeTrack, motOrbit, motPlaneFace, motPlaneLabel, motPlaneRim, motSeasonBanner, motShadowDot, motShadowLabel, motSunBeamAligned, motSunLabel, motSunLineAligned, motSunOutlineAligned, motTiltArc, motTiltLabel, motTiltRef } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -37,6 +37,8 @@ const YEAR_DAYS = 365.2422;
 const NODAL_YEARS = 18.6;
 const YEAR_RANGE = 400; // scrub span for the annual Sun motion (days)
 const NODE0 = 120;
+/** Simulated days advanced per real second when ▶ play is on. */
+const PLAYBACK_DAYS_PER_SEC = 26 / 3;
 
 const fmt = (n: string | number) => toNepaliDigits(n);
 const norm360 = (a: number) => ((a % 360) + 360) % 360;
@@ -130,7 +132,7 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
           y1={a.y}
           x2={b.x}
           y2={b.y}
-          className={`mot-orbit ${isAbove ? "above" : "below"}${node ? " cross" : ""}`}
+          className={motOrbit(isAbove ? (node ? "cross" : "above") : "below")}
         />
       );
       (isAbove ? above : below).push(seg);
@@ -193,8 +195,20 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
         transform={`translate(${moon.x} ${moon.y})`}
       className={cn(eclipsing && motMoonEclipsing, !moonAbove && motMoonSubmerged)}
       >
-        {eclipsing && <circle cx={0} cy={0} r={MOON_R + 7} className={`mot-eclipse-glow ${status}`} />}
-        <circle cx={0} cy={0} r={MOON_R + 3} className={`mot-moon-halo ${moonAbove ? "up" : "down"}`} />
+        {eclipsing && (
+          <circle
+            cx={0}
+            cy={0}
+            r={MOON_R + 7}
+            className={motEclipseGlowType(status === "lunar" ? "lunar" : "solar")}
+          />
+        )}
+        <circle
+          cx={0}
+          cy={0}
+          r={MOON_R + 3}
+          className={motMoonHaloDir(moonAbove ? "up" : "down")}
+        />
         <circle
           cx={0}
           cy={0}
@@ -279,7 +293,7 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
 
         {/* Earth — sits across the plane; its lower half is tinted by the near plane */}
         <g className={hoEarthGroup} transform={`translate(${CX} ${CY})`}>
-          <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName="mot-earth-glow" glowPad={10} />
+          <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName={motEarthGlow} glowPad={10} />
         </g>
 
         {/* ── ecliptic plane: NEAR half (in front of Earth + below-orbit) ── */}
@@ -329,9 +343,9 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
 
         {/* Sun–Earth–shadow axis — crimson, drawn last so nothing occludes it */}
         <g>
-          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-beam${season ? " aligned" : ""}`} />
-          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-outline${season ? " aligned" : ""}`} />
-          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={`mot-sun-line${season ? " aligned" : ""}`} />
+          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={motSunBeamAligned(!!season)} />
+          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={motSunOutlineAligned(!!season)} />
+          <line x1={sun.x} y1={sun.y} x2={shadow.x} y2={shadow.y} className={motSunLineAligned(!!season)} />
           <circle cx={shadow.x} cy={shadow.y} r={11} className={motShadowDot} />
           <text x={shadow.x} y={shadow.y - 18} className={motShadowLabel} textAnchor="middle">
             छायाँ
@@ -340,13 +354,18 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
 
         {/* eclipse banner */}
         {eclipsing && (
-          <text x={CX} y={48} className={`mot-eclipse-banner ${status}`} textAnchor="middle">
+          <text
+            x={CX}
+            y={48}
+            className={motEclipseBannerType(status === "lunar" ? "lunar" : "solar")}
+            textAnchor="middle"
+          >
             {status === "lunar" ? "● चन्द्रग्रहण — चन्द्र पृथ्वीको छायाँमा" : "● सूर्यग्रहण — चन्द्र सूर्य–पृथ्वी बीचमा"}
           </text>
         )}
         {!eclipsing && season && (
           <text x={CX} y={48} className={motSeasonBanner} textAnchor="middle">
-            ग्रहण ऋतु — पात रेखा सूर्यसँग मिल्यो (पूर्णिमा/अमावस्या कुर्नुहोस्)
+            ग्रहण ऋतु — पात रेखा सूर्यसँग मिल्यो (पूर्णिमा/औंसी कुर्नुहोस्)
           </text>
         )}
       </g>
@@ -366,7 +385,7 @@ export function MoonOrbitTiltStudy() {
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setDayT((p) => (p + dt * 26) % YEAR_RANGE);
+      setDayT((p) => (p + dt * PLAYBACK_DAYS_PER_SEC) % YEAR_RANGE);
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
@@ -386,7 +405,7 @@ export function MoonOrbitTiltStudy() {
     else if (atNode && angDiff(E, 0) < 15) status = "solar";
     const season = angDiff(omega, sunLon) < 13 || angDiff(omega, sunLon + 180) < 13;
     const phase =
-      angDiff(E, 180) < 12 ? "पूर्णिमा" : angDiff(E, 0) < 12 ? "अमावस्या" : E < 180 ? "शुक्ल पक्ष" : "कृष्ण पक्ष";
+      angDiff(E, 180) < 12 ? "पूर्णिमा" : angDiff(E, 0) < 12 ? "औंसी" : E < 180 ? "शुक्ल पक्ष" : "कृष्ण पक्ष";
     return { sunLon, omega, u, status, season, phase };
   }, [dayT, precT]);
 
@@ -504,7 +523,7 @@ export function MoonOrbitTiltStudy() {
         पृथ्वीको बीचबाट गएको <span className={cn("hl-amber")}>सूर्य–पृथ्वी (ग्रहण) रेखा</span> सूर्यसँगै वर्षमा
         एक फेरो घुम्छ। चन्द्रको कक्ष <b>~{fmt(5)}°</b> झुकेकाले धेरैजसो पूर्णिमामा चन्द्र यो रेखाभन्दा
         माथि/तल हुन्छ — ग्रहण <b>हुँदैन</b>। ग्रहण त्यतिबेला मात्र हुन्छ जब यो रेखा{" "}
-        <span className={cn("hl")}>राहु वा केतु</span> मा पुग्छ र त्यहीँ चन्द्र (पूर्णिमा/अमावस्या) पर्छ।
+        <span className={cn("hl")}>राहु वा केतु</span> मा पुग्छ र त्यहीँ चन्द्र (पूर्णिमा/औंसी) पर्छ।
         तल्लो स्लाइडरले पात रेखालाई <b>{fmt(NODAL_YEARS)} वर्षे</b> चक्रमा घुमाउँछ — त्यसैले ग्रहण ऋतु
         हरेक वर्ष सर्दै जान्छ।
       </p>

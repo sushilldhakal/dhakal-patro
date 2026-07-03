@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { edMoonDisk, edMoonHalo, edMoonLit, edMoonNew, edMoonRim } from "@/lib/diagram-classes";
 import {
   isFullMoonElongation,
@@ -7,14 +8,18 @@ import {
 } from "@/lib/moon-phase-svg";
 
 interface MoonPhaseDiscProps {
-  /** Moon–sun elongation in degrees (0° अमावस्या, 180° पूर्णिमा). */
+  /** Moon–sun elongation in degrees (0° औंसी, 180° पूर्णिमा). */
   elongation: number;
   r: number;
   /** Unique id prefix for SVG defs (required when multiple instances). */
   uid?: string;
 }
 
-export function MoonPhaseDisc({ elongation, r, uid = "mpd" }: MoonPhaseDiscProps) {
+export const MoonPhaseDisc = memo(function MoonPhaseDisc({
+  elongation,
+  r,
+  uid = "mpd",
+}: MoonPhaseDiscProps) {
   const e = normElongation(elongation);
   const isNew = isNewMoonElongation(elongation);
   const isFull = isFullMoonElongation(elongation);
@@ -75,4 +80,4 @@ export function MoonPhaseDisc({ elongation, r, uid = "mpd" }: MoonPhaseDiscProps
       <circle cx={0} cy={0} r={r} fill="none" className={edMoonRim} strokeWidth={isNew ? 0.8 : 1} />
     </g>
   );
-}
+});

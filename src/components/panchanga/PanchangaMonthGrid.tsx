@@ -8,7 +8,7 @@ import {
   type LocationParams,
 } from "@/lib/api";
 import { adToBS } from "@/lib/bs-calendar";
-import { formatMonthMoonTimeOnly, getMonthDayChandraRashi } from "@/lib/panchanga-format";
+import { formatMonthMoonTimeOnly, getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 
@@ -79,7 +79,7 @@ export function PanchangaMonthGrid({
     const isSel = day.day === bs.day;
     const isKrishna = phase === "krishna";
     return cn(
-      "relative min-h-[132px] p-1.5 text-left cursor-pointer flex flex-col gap-1 transition-colors border-0",
+      "relative min-h-[140px] p-1.5 text-left cursor-pointer flex flex-col gap-1 transition-colors border-0",
       isKrishna
         ? "bg-background text-foreground dark:text-foreground dark:bg-background"
         : "bg-white text-foreground dark:text-foreground dark:bg-background",
@@ -119,7 +119,7 @@ export function PanchangaMonthGrid({
 
       <div className="grid grid-cols-7 gap-px bg-border">
           {blanks.map((b) => (
-            <div key={`b-${b}`} className="min-h-[132px] bg-foreground/[0.025]" />
+            <div key={`b-${b}`} className="min-h-[140px] bg-foreground/[0.025]" />
           ))}
           {days.map((day) => {
             const ad = new Date(day.date_ad);
@@ -141,6 +141,11 @@ export function PanchangaMonthGrid({
                   )}
                 >
                   {formatTithiWithPaksha(day, isEn)}
+                </p>
+
+                {/* Nakshatra */}
+                <p className="m-0 text-[11px] font-semibold truncate text-center w-full leading-tight text-secondary dark:text-[var(--brand-yellow)]">
+                  {getMonthDayNakshatra(day, lang) ?? "—"}
                 </p>
 
                 {/* Middle: sunrise · day · sunset */}

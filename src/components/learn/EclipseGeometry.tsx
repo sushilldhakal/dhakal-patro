@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { eclAxis, eclBloodGlow, eclBloodTint, eclBodyLabel, eclEclipticRing, eclMoonEclipsed, eclNodeArrow, eclNodeArrowHead, eclNodeCallout, eclNodeDot, eclNodeLine, eclNodeSym, eclNodeTitle, eclPanelBg, eclPenumbra, eclPlaneCaption, eclRay, eclStatusSub, eclSunDisc, eclTiltNote, eclUmbraShape } from "@/lib/diagram-classes";
+import { eclAxis, eclBloodGlow, eclBloodTint, eclBodyLabel, eclEarthGlow, eclEclipticRing, eclMoonEclipsed, eclMoonOrbit, eclNodeArrow, eclNodeArrowHead, eclNodeCallout, eclNodeDot, eclNodeLine, eclNodeSym, eclNodeTitle, eclPanelBg, eclPenumbra, eclPlaneCaption, eclRay, eclStatusFor, eclStatusSub, eclSunDisc, eclTiltNote, eclUmbraShape } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
@@ -102,7 +102,7 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
           y1={a.sy}
           x2={b.sx}
           y2={b.sy}
-          className={`ecl-moon-orbit ${isAbove ? "above" : "below"}`}
+          className={eclMoonOrbit(isAbove)}
         />
       );
       (isAbove ? above : below).push(seg);
@@ -283,7 +283,7 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
 
         {/* Earth on its orbit — rotating globe */}
         <g transform={`translate(${earth.x} ${earth.y})`}>
-          <EarthGlobeImage cx={0} cy={0} r={ECL.earthR} glow glowClassName="ecl-earth-glow" glowPad={8} />
+          <EarthGlobeImage cx={0} cy={0} r={ECL.earthR} glow glowClassName={eclEarthGlow} glowPad={8} />
         </g>
 
         {moonOrbit.above}
@@ -323,7 +323,10 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
       <g transform={`translate(${ECL.W - 30} 40)`}>
         <text
           textAnchor="end"
-          className={`ecl-status ecl-status-${status === "none" ? (solar ? "solar" : "none") : status}`}
+          className={eclStatusFor(
+            status === "none" ? "none" : status,
+            status === "none" && solar,
+          )}
         >
           {statusLabel}
         </text>

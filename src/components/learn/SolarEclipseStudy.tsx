@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { edBodyLabel, edScrub, hoEarthGroup, solAntumbra, solCorona, solEyeFrame, solEyeMoon, solEyeRim, solEyeSky, solEyeSun, solEyeTitle, solLegendLabel, solLight, solMoon, solMoonLabel, solPenumbra, solRay, solSpotAnti, solSpotPen, solSpotUmbra, solSunGlow, solUmbra } from "@/lib/diagram-classes";
+import { edBodyLabel, edScrub, hoEarthGroup, solAntumbra, solBannerType, solCorona, solEarthGlow, solEyeFrame, solEyeMoon, solEyeRim, solEyeSky, solEyeStatus, solEyeSun, solEyeTitle, solLegendLabel, solLight, solMoon, solMoonLabel, solPenumbra, solRay, solSpotAnti, solSpotPen, solSpotUmbra, solSunGlow, solUmbra } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { EarthGlobeImage } from "./EarthGlobeImage";
 
 /**
- * Solar-eclipse geometry: the Moon (at अमावस्या / new moon) passes between the
+ * Solar-eclipse geometry: the Moon (at औंसी / new moon) passes between the
  * Sun and Earth and drops its shadow onto Earth. The umbra cone only just
  * reaches Earth — when the Moon is near (perigee) the umbra touches the surface
  * → a TOTAL eclipse; when it is far (apogee) the umbra falls short and the
@@ -157,7 +157,7 @@ function ConeScene({ m }: { m: Model }) {
 
       {/* Earth */}
       <g className={hoEarthGroup} transform={`translate(${EARTH_X} ${AXIS_Y})`}>
-        <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName="sol-earth-glow" glowPad={10} />
+        <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName={solEarthGlow} glowPad={10} />
         <text y={EARTH_R + 30} className={edBodyLabel} textAnchor="middle">
           पृथ्वी
         </text>
@@ -222,7 +222,14 @@ function ObserverInset({ m }: { m: Model }) {
         <circle cx={moonCx} cy={cy + 8} r={rM} className={solEyeMoon} />
       </g>
       <circle cx={cx} cy={cy + 8} r={sky} className={solEyeRim} />
-      <text x={cx} y={y0 + h - 12} className={`sol-eye-status ${type}`} textAnchor="middle">
+      <text
+        x={cx}
+        y={y0 + h - 12}
+        className={solEyeStatus(
+          type === "total" || type === "annular" ? type : "default",
+        )}
+        textAnchor="middle"
+      >
         {typeText} · {fmt(Math.round(coverage * 100))}%
       </text>
     </g>
@@ -279,7 +286,7 @@ export function SolarEclipseStudy() {
         </defs>
 
         {m.type !== "none" && (
-          <text x={VB.W / 2} y={40} className={`sol-banner ${m.type}`} textAnchor="middle">
+          <text x={VB.W / 2} y={40} className={solBannerType(m.type)} textAnchor="middle">
             {m.type === "total"
               ? "● पूर्ण सूर्यग्रहण — प्रच्छायाँ पृथ्वीमा"
               : m.type === "annular"
@@ -379,7 +386,7 @@ export function SolarEclipseStudy() {
       </div>
 
       <p className={tmCardCap}>
-        सूर्यग्रहण सधैँ <b>अमावस्या</b> मा हुन्छ — चन्द्र सूर्य र पृथ्वीको बीचमा आउँदा त्यसको{" "}
+        सूर्यग्रहण सधैँ <b>औंसी</b> मा हुन्छ — चन्द्र सूर्य र पृथ्वीको बीचमा आउँदा त्यसको{" "}
         <span className={cn("hl-amber")}>प्रच्छायाँ (umbra)</span> पृथ्वीको सानो भागमा पर्छ। चन्द्र नजिक
         (perigee) हुँदा प्रच्छायाँले पृथ्वी छुन्छ → <b>पूर्ण ग्रहण</b>; टाढा (apogee) हुँदा प्रच्छायाँ
         अपुग हुन्छ र <span className={cn("hl")}>वलयच्छायाँ (antumbra)</span> पुग्छ → <b>वलयाकार “आगोको

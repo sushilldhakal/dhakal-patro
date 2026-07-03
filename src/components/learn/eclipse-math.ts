@@ -93,7 +93,7 @@ export interface MoonGeo {
   zEc: number;
   sx: number;
   sy: number;
-  /** Elongation 0°=new(अमावस्या) … 180°=full(पूर्णिमा). */
+  /** Elongation 0°=new(औंसी) … 180°=full(पूर्णिमा). */
   E: number;
   betaDeg: number;
   radial: number;

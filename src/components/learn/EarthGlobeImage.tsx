@@ -1,5 +1,5 @@
 import { memo, useId } from "react";
-import { earthGlobeObject, earthGlobeRim } from "@/lib/diagram-classes";
+import { earthGlobeObject, earthGlobeRim, hoEarthGlow } from "@/lib/diagram-classes";
 import earthRotatingUrl from "@/assets/earth_rotating.svg?url";
 
 /** Mean obliquity of the ecliptic (Earth's axial tilt). */
@@ -28,7 +28,7 @@ export const EarthGlobeImage = memo(function EarthGlobeImage({
   cy,
   r,
   glow = false,
-  glowClassName = "ho-earth-glow",
+  glowClassName = hoEarthGlow,
   glowPad = 14,
   tilt = EARTH_AXIAL_TILT,
 }: Props) {

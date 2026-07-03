@@ -214,6 +214,17 @@ export function eclStatusNone() {
   return cn(eclStatus, "fill-[var(--tm-ink-faint)]");
 }
 
+export function eclStatusFor(
+  status: "total" | "partial" | "penumbral" | "none",
+  solar?: boolean,
+) {
+  if (status === "total") return eclStatusTotal();
+  if (status === "partial") return eclStatusPartial();
+  if (status === "penumbral") return eclStatusPenumbral();
+  if (solar) return eclStatusSolar();
+  return eclStatusNone();
+}
+
 // ── Moon orbit tilt (mot-*) ─────────────────────────────────────
 
 export const motPlaneFace = "stroke-none";

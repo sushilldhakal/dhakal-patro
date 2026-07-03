@@ -222,7 +222,7 @@ export const LEARN_TOPICS: LearnTopic[] = [
     titleEn: "Solar & Lunar Eclipses",
     icon: Eclipse,
     summary:
-      "राहु–केतु, पात रेखा, चन्द्रग्रहण (पूर्णिमा) र सूर्यग्रहण (अमावस्या) — प्रकार, चित्र र सावधानी।",
+      "राहु–केतु, पात रेखा, चन्द्रग्रहण (पूर्णिमा) र सूर्यग्रहण (औंसी) — प्रकार, चित्र र सावधानी।",
     summaryEn:
       "Rahu–Ketu, the node line, lunar eclipses (full moon) and solar eclipses (new moon) — types, diagrams and precautions.",
     Content: Eclipses,

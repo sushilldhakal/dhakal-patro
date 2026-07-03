@@ -1,6 +1,5 @@
-import { cn } from "@/lib/utils";
 import { useMemo } from "react";
-import { semEclipticGrid, semGridNakLine, semGridNakSeg, semGridRashiLine, semGridRashiSeg } from "@/lib/diagram-classes";
+import { semEclipticGrid, semGridNakLabelCur, semGridNakLine, semGridNakSegVariant, semGridRashiLabelCur, semGridRashiLine, semGridRashiSegVariant } from "@/lib/diagram-classes";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WHEEL_RASHIS } from "@/lib/wheel-data";
 import {
@@ -48,7 +47,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
         <path
           key={`ra-${i}`}
           d={semArc(L0, L1, SEM_GRID.rashiIn, SEM_GRID.rashiOut)}
-          className={`sem-grid-rashi-seg${i % 2 ? " alt" : ""}`}
+          className={semGridRashiSegVariant({ alt: i % 2 === 1 })}
         />,
       );
     }
@@ -68,7 +67,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
         <path
           key={`na-${i}`}
           d={semArc(L0, L1, SEM_GRID.nakIn, SEM_GRID.nakOut)}
-          className={`sem-grid-nak-seg${i % 2 ? " alt" : ""}`}
+          className={semGridNakSegVariant({ alt: i % 2 === 1 })}
         />,
       );
     }
@@ -93,7 +92,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
         key={`rl-${i}`}
         x={lx}
         y={ly}
-        className={`sem-grid-rashi-label${i === curRashi ? " cur" : ""}`}
+        className={semGridRashiLabelCur(i === curRashi)}
         textAnchor="middle"
         dominantBaseline="central"
       >
@@ -111,7 +110,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
         key={`nl-${i}`}
         x={lx}
         y={ly}
-        className={`sem-grid-nak-label${i === curNak ? " cur" : ""}`}
+        className={semGridNakLabelCur(i === curNak)}
         textAnchor="middle"
         dominantBaseline="central"
       >
@@ -128,7 +127,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
       {grid.nakLines}
       <path
         d={semArc(curRashi * 30, (curRashi + 1) * 30, SEM_GRID.rashiIn, SEM_GRID.rashiOut)}
-        className={cn(semGridRashiSeg, "cur")}
+        className={semGridRashiSegVariant({ cur: true })}
       />
       <path
         d={semArc(
@@ -137,7 +136,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
           SEM_GRID.nakIn,
           SEM_GRID.nakOut,
         )}
-        className={cn(semGridNakSeg, "cur")}
+        className={semGridNakSegVariant({ cur: true })}
       />
       {rashiLabels}
       {nakLabels}

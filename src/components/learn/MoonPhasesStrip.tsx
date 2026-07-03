@@ -9,13 +9,13 @@ import {
 import { useLocale } from "@/i18n/locale";
 
 const PHASES = [
-  { ne: "अमावस्या", en: "Amavasya", E: 0 },
+  { ne: "औंसी", en: "Amavasya", E: 0 },
   { ne: "शुक्ल पक्षको चन्द्र", en: "Shukla paksha", E: 45 },
   { ne: "प्रथम चौथी", en: "First quarter", E: 90 },
   { ne: "पूर्णिमा", en: "Purnima", E: 180 },
   { ne: "कृष्ण पक्षको चन्द्र", en: "Krishna paksha", E: 225 },
   { ne: "अन्तिम चौथी", en: "Last quarter", E: 270 },
-  { ne: "पुनः अमावस्या", en: "Punah amavasya", E: 354 },
+  { ne: "पुनः औंसी", en: "Punah amavasya", E: 354 },
 ] as const;
 
 const R = 26;

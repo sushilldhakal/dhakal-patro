@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useMemo, useRef } from "react";
-import { edBodyLabel, hoEarthGroup, hoEquator, hoOrbitDir, hoPoleAxis, semEarthGlow, semMoonOrbit, semMoonOrbitGuide, semOrbit, semOrbitGuide, semRadiusLine, semSunLonMarker, semSunLonRay, semTidalMarker } from "@/lib/diagram-classes";
+import { edBodyLabel, hoEarthGroup, hoEquator, hoOrbitDir, hoPoleAxis, semEarthGlow, semMoonLabelKey, semMoonOrbit, semMoonOrbitGuide, semOrbit, semOrbitGuide, semRadiusLine, semSunLonMarker, semSunLonRay, semTidalMarker } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { EarthGlobeImage, EARTH_AXIAL_TILT } from "./EarthGlobeImage";
@@ -91,7 +91,7 @@ export function SunEarthMoonOrbit({ day, onDay, showEclipticGrid = true }: Props
         key={`mn-${k}`}
         x={tx}
         y={ty}
-        className={`sem-moon-label${isNew || isFull ? " key" : ""}`}
+        className={semMoonLabelKey(isNew || isFull)}
         textAnchor="middle"
         dominantBaseline="central"
       >

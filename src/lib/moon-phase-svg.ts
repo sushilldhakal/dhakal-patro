@@ -14,7 +14,7 @@ export function isFullMoonElongation(E: number): boolean {
   return e >= 170 && e <= 190;
 }
 
-/** Fraction of disc lit (0 = अमावस्या, 1 = पूर्णिमा). */
+/** Fraction of disc lit (0 = औंसी, 1 = पूर्णिमा). */
 export function moonLitFraction(E: number): number {
   const e = normElongation(E);
   return (1 - Math.cos(e * DEG)) / 2;
