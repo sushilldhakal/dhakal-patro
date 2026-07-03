@@ -160,5 +160,8 @@ export const PRERENDER_PATHS: string[] = [
   "/learn/history",
   "/suryakranti",
   "/abhijit-muhurta",
+  "/account",
+  "/verify-email",
+  "/reset-password",
   ...LEARN_TOPICS.map((t) => `/learn/${t.slug}`),
 ];

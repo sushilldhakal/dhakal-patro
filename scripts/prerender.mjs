@@ -35,7 +35,10 @@ function inject(templateHtml, pathname, appHtml, headHtml) {
     throw new Error("Could not find closing #root in index.html");
   }
 
-  html = html.slice(0, afterOpen) + appHtml + html.slice(closeIdx);
+  // data-ssr-path lets the client detect when this file was served as the SPA
+  // fallback for a different URL (see the boot-loader script in index.html).
+  const rootOpenTagged = `<div id="root" data-ssr-path="${pathname}">`;
+  html = html.slice(0, rootIdx) + rootOpenTagged + appHtml + html.slice(closeIdx);
   return html;
 }
 

@@ -31,7 +31,8 @@
     <title>Vedic Patro — Nepali Calendar & Panchanga</title>
   </head>
   <body>
-    <div id="root">
+    <div id="root"></div>
+    <template id="boot-loader-tpl">
       <div
         id="app-boot-loader"
         style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#f8f6f0;color:#6e7a79;font-family:system-ui,sans-serif"
@@ -47,7 +48,27 @@
         />
         <span style="font-size:14px">लोड हुँदैछ…</span>
       </div>
-    </div>
+    </template>
+    <script>
+      // Runs before first paint. The server falls back to another route's
+      // prerendered HTML for paths without their own file (e.g. /kundali/:id),
+      // which used to flash the home page until React took over. When the
+      // baked-in route (data-ssr-path, set by scripts/prerender.mjs) doesn't
+      // match the URL — or #root is empty, as in dev — show the boot loader
+      // instead of the wrong page.
+      (function () {
+        var root = document.getElementById("root");
+        var tpl = document.getElementById("boot-loader-tpl");
+        if (!root || !tpl) return;
+        var ssrPath = root.getAttribute("data-ssr-path");
+        var norm = function (p) {
+          return p.replace(/\/+$/, "") || "/";
+        };
+        if (!ssrPath || norm(ssrPath) !== norm(location.pathname)) {
+          root.innerHTML = tpl.innerHTML;
+        }
+      })();
+    </script>
     <script type="module" src="/src/entry-client.tsx"></script>
   </body>
 </html>
