@@ -536,6 +536,11 @@ export interface ShadbalaBreakdown {
   drik: number;
 }
 
+export interface ShadbalaSubBalas {
+  sthana: Record<string, number>;
+  kala: Record<string, number>;
+}
+
 export interface ShadbalaPlanet {
   key: string;
   name: string;
@@ -548,6 +553,10 @@ export interface ShadbalaPlanet {
   top_bala: string;
   weakest_bala: string;
   breakdown: ShadbalaBreakdown;
+  /** Component virupas within sthana and kala (newer API). */
+  sub_balas?: ShadbalaSubBalas;
+  ishta_phala?: number;
+  kashta_phala?: number;
 }
 
 export interface ShadbalaSummaryRef {
