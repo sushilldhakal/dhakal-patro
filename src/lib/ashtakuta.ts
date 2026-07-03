@@ -51,6 +51,9 @@ export interface AshtakutaResult {
   recommendationLabel: string;
   recommendationLabelNe: string;
   nadiDosha: boolean;
+  /** Nuanced Nadi Dosha note when nadi kuta is 0 — separate from guna score verdict. */
+  nadiDoshaAdvisory?: string;
+  nadiDoshaAdvisoryNe?: string;
   bhakutaUnfavorable: boolean;
   notes: string[];
   notesNe: string[];
@@ -377,19 +380,50 @@ function nadiPoints(boyNak: number, girlNak: number): number {
   return boyNadi === girlNadi ? 0 : 8;
 }
 
+function formatGunaScore(score: number): string {
+  return Number.isInteger(score) ? String(score) : score.toFixed(1).replace(/\.0$/, "");
+}
+
+function gunaCompatibilityPhrase(
+  score: number,
+  bhakutaUnfavorable: boolean,
+  lang?: string,
+): string {
+  const en = isEnglishLocale(lang);
+  if (!bhakutaUnfavorable) {
+    if (score >= 31) return en ? "Excellent compatibility" : "उत्कृष्ट मिलान";
+    if (score >= 21) return en ? "Good compatibility" : "राम्रो मिलान";
+    if (score >= 17) return en ? "Moderate compatibility" : "मध्यम मिलान";
+    return en ? "Low compatibility" : "कमजोर मिलान";
+  }
+  if (score >= 26) return en ? "Good compatibility" : "राम्रो मिलान";
+  if (score >= 21) return en ? "Moderate compatibility" : "मध्यम मिलान";
+  return en ? "Low compatibility" : "कमजोर मिलान";
+}
+
+function buildNadiDoshaAdvisory(
+  nakIndex: number,
+  score: number,
+  bhakutaUnfavorable: boolean,
+): { en: string; ne: string } {
+  const nadiEn = nadiPatrikaFromNakIndex(nakIndex, "en");
+  const nadiNe = nadiPatrikaFromNakIndex(nakIndex, "ne");
+  const scoreStr = formatGunaScore(score);
+  const compatEn = gunaCompatibilityPhrase(score, bhakutaUnfavorable, "en");
+  const compatNe = gunaCompatibilityPhrase(score, bhakutaUnfavorable, "ne");
+
+  return {
+    en:
+      `Overall Guna Milan: ${scoreStr}/36 (${compatEn}). However, both charts belong to the same Nadi (${nadiEn}), resulting in Nadi Dosha according to traditional Ashtakoota matching. Different traditions treat Nadi Dosha differently; many astrologers check cancellation rules—such as same nakshatra but different padas, strength of the Moon, Navamsa compatibility, planetary aspects, and other mitigating factors—before advising against a union. Additional horoscope analysis is recommended to determine whether this dosha is cancelled or mitigated.`,
+    ne:
+      `कुल गुण मिलन: ${scoreStr}/३६ (${compatNe})। तर दुवै कुण्डली एउटै नाडी (${nadiNe}) मा पर्छन्, जसले परम्परागत अष्टकूट अनुसार नाडी दोष बनाउँछ। विभिन्न परम्पराले नाडी दोषलाई फरक तरिकाले हेर्छन्; धेरै ज्योतिषीहरू मिलन अस्वीकार गर्नुअघि शिथिल नियम जाँच्छन् — जस्तै एउटै नक्षत्र तर फरक पाद, चन्द्र बल, नवांश मिलान, ग्रह दृष्टि र अन्य शमनकारी कारक। यो दोष शिथिल वा न्यूनीकरण भएको छ कि छैन भनेर थप कुण्डली विश्लेषण सिफारिस गरिन्छ।`,
+  };
+}
+
 function recommendationFromScore(
   score: number,
   bhakutaUnfavorable: boolean,
-  nadiDosha: boolean,
 ): Pick<AshtakutaResult, "recommendation" | "recommendationLabel" | "recommendationLabelNe"> {
-  if (nadiDosha) {
-    return {
-      recommendation: "inauspicious",
-      recommendationLabel: "Union is NOT Recommended due to Nadi Dosha",
-      recommendationLabelNe: "नाडी दोषका कारण मिलन सिफारिस योग्य छैन",
-    };
-  }
-
   if (!bhakutaUnfavorable) {
     if (score >= 31) {
       return {
@@ -558,19 +592,22 @@ export function computeAshtakuta(
   const bhakutaUnfavorable = kutas.find((k) => k.id === "bhakuta")!.obtained === 0;
   const nadiDosha = kutas.find((k) => k.id === "nadi")!.obtained === 0;
 
-  const rec = recommendationFromScore(totalObtained, bhakutaUnfavorable, nadiDosha);
+  const rec = recommendationFromScore(totalObtained, bhakutaUnfavorable);
+  const nadiAdvisory = nadiDosha
+    ? buildNadiDoshaAdvisory(boy.nakshatra.index, totalObtained, bhakutaUnfavorable)
+    : null;
 
   const notes = [
     "In Ashta-Kuta system of match making, the maximum number of Gunas are 36. If total Gunas between the couple are between 31 and 36 (both inclusive) then the union is excellent, Gunas between 21 and 30 (both inclusive) are very good, Gunas between 17 and 20 (both inclusive) are middling and Gunas between 0 and 16 (both inclusive) are inauspicious.",
     "It is also opined that the above grouping is applicable when Bhakuta Kuta is favorable. If Bhakuta Kuta is unfavorable then union is never excellent, Gunas between 26 and 29 (both inclusive) are very good, Gunas between 21 and 25 (both inclusive) are middling and Gunas between 0 and 20 (both inclusive) are inauspicious.",
-    "It should be noted that Nadi Kuta is given supreme priority during match making. If Nadi Kuta is unfavorable then a match with 28 Gunas is also considered inauspicious.",
+    "Nadi Kuta carries high importance in many Ashtakuta traditions. When both partners share the same Nadi, Nadi Dosha is noted—but schools differ on whether this alone forbids marriage. Cancellation and mitigation are often considered (e.g. different padas, Moon strength, Navamsa, aspects). Consult a qualified astrologer for a full judgment.",
     "Note - Mangal Dosha which is also known as Kuja Dosha is NOT considered while Ashtakuta match making. If Mangal Dosha is present then both Vara and Kanya should have Mangal Dosha. It is advised not to perform match making between Mangalik and Non-Mangalik couple.",
   ];
 
   const notesNe = [
     "अष्टकूट मिलनमा अधिकतम ३६ गुण हुन्छन्। ३१ देखि ३६ सम्म उत्कृष्ट, २१ देखि ३० सम्म अत्यन्त राम्रो, १७ देखि २० सम्म मध्यम र ० देखि १६ सम्म अशुभ मानिन्छ।",
     "भकूट कूट अनुकूल नभएमा माथिको वर्गीकरण लागू हुँदैन — २६–२९ अत्यन्त राम्रो, २१–२५ मध्यम, ०–२० अशुभ।",
-    "नाडी कूटलाई सर्वोच्च प्राथमिकता दिइन्छ। नाडी दोष भए २८ गुण भए पनि मिलन अशुभ मानिन्छ।",
+    "धेरै परम्परामा नाडी कूटलाई विशेष महत्त्व दिइन्छ। दुवै पक्षको नाडी एकै भए नाडी दोष देखिन्छ, तर यसले मात्रै मिलन रोक्छ भन्ने सबै मान्दैनन् — शिथिल/शमन (फरक पाद, चन्द्र बल, नवांश, दृष्टि आदि) पनि हेर्न सकिन्छ। पूर्ण निर्णयका लागि योग्य ज्योतिषीसँग परामर्श गर्नुहोस्।",
     "अष्टकूट मिलनमा मंगल दोष विचार गरिँदैन। मंगल दोष भए दुवै पक्षमा हुनुपर्छ; मंगलीक र अ-मंगलीकबीच मिलन नगर्न सल्लाह दिइन्छ।",
   ];
 
@@ -581,6 +618,8 @@ export function computeAshtakuta(
     ...rec,
     bhakutaUnfavorable,
     nadiDosha,
+    nadiDoshaAdvisory: nadiAdvisory?.en,
+    nadiDoshaAdvisoryNe: nadiAdvisory?.ne,
     notes,
     notesNe,
   };

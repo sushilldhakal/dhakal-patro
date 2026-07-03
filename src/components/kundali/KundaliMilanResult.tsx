@@ -117,6 +117,17 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
             <span className="font-semibold">{girlName}</span>
           </span>
         </div>
+        {(result.nadiDoshaAdvisory || result.nadiDoshaAdvisoryNe) ? (
+          <div
+            className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm leading-relaxed text-foreground"
+            role="note"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-1.5">
+              {t("milan.nadi_dosha_advisory_title")}
+            </p>
+            <p>{en ? result.nadiDoshaAdvisory : result.nadiDoshaAdvisoryNe}</p>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-border bg-card overflow-hidden">
