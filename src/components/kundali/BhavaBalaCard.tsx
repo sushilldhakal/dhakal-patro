@@ -70,7 +70,7 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaResult }) {
           Bhava Bala — House Strength (Virupas)
         </h3>
         <p className="text-xs text-muted-foreground">
-          Bhavadhipati (lord&apos;s Shadbala) + Bhava Dig + Bhava Drishti.
+          Bhavadhipati (lord&apos;s Shadbala) + Bhava Disha + Bhava Drishti.
           Whole-sign houses; {BHAVA_BALA_REFERENCE_VIRUPAS} virupas (7 rupas) = 100%.
         </p>
       </div>
@@ -101,9 +101,9 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaResult }) {
               <TableHead className={cn(th, "pl-3.5")}>House</TableHead>
               <TableHead className={cn(th, "text-right")}>Lord</TableHead>
               <TableHead className={cn(th, "text-right")}>Bhavadhipati</TableHead>
-              <TableHead className={cn(th, "text-right")}>Dig</TableHead>
+              <TableHead className={cn(th, "text-right")}>Disha</TableHead>
               <TableHead className={cn(th, "text-right")}>Drishti</TableHead>
-              <TableHead className={cn(th, "text-right")}>Total</TableHead>
+              <TableHead className={cn(th, "text-right")}>Total Pinda</TableHead>
               <TableHead className={cn(th, "text-right")}>Rupas</TableHead>
               <TableHead className={cn(th, "text-right")}>Bhava (%)</TableHead>
             </TableRow>
@@ -116,12 +116,12 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaResult }) {
                 </TableCell>
                 <TableCell className={cn(td, "text-right")}>{h.lordName}</TableCell>
                 <TableCell className={cn(td, num)}>{fmt(h.bhavadhipati)}</TableCell>
-                <TableCell className={cn(td, num)}>{fmt(h.dig)}</TableCell>
+                <TableCell className={cn(td, num)}>{fmt(h.disha)}</TableCell>
                 <TableCell className={cn(td, num)}>{fmt(h.drishti)}</TableCell>
                 <TableCell className={cn(td, num, "font-semibold")}>
-                  {fmt(h.totalVirupas)}
+                  {fmt(h.totalPinda)}
                 </TableCell>
-                <TableCell className={cn(td, num)}>{fmt(h.rupas)}</TableCell>
+                <TableCell className={cn(td, num, "font-semibold")}>{fmt(h.rupas)}</TableCell>
                 <TableCell className={cn(td, num, "font-semibold")}>
                   {h.percent.toFixed(1)}%
                 </TableCell>

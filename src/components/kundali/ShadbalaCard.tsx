@@ -56,6 +56,7 @@ const KALA_SUBS: { key: string; label: string }[] = [
   { key: "varadhipati", label: "Varadhipati" },
   { key: "horadhipati", label: "Horadhipati" },
   { key: "ayana", label: "Ayana" },
+  { key: "yuddha", label: "Yuddha" },
 ];
 
 const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
@@ -312,15 +313,6 @@ export function ShadbalaCard({
               )}
               <MatrixRow label="Disha" planets={ordered} value={(p) => fmt(p.breakdown.dig)} />
               <MatrixRow
-                label="Yuddha"
-                planets={ordered}
-                value={(p) =>
-                  chart
-                    ? fmt(yuddhaVirupasForPlanet(p, yuddha))
-                    : fmt(p.sub_balas?.kala?.yuddha ?? 0)
-                }
-              />
-              <MatrixRow
                 label="Kala"
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.kala)}
@@ -335,7 +327,11 @@ export function ShadbalaCard({
                       key={row.key}
                       label={row.label}
                       planets={ordered}
-                      value={(p) => fmt(p.sub_balas?.kala?.[row.key])}
+                      value={(p) =>
+                        row.key === "yuddha" && chart
+                          ? fmt(yuddhaVirupasForPlanet(p, yuddha))
+                          : fmt(p.sub_balas?.kala?.[row.key])
+                      }
                       sub
                     />
                   ))}
@@ -405,9 +401,9 @@ export function ShadbalaCard({
           </Table>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Virupas per bala; expand Sthana and Kala for component strengths.
-          Yuddha (planetary war) is computed when two tara grahas are within 1°
-          — most charts show 0.00 because wars are rare.
+          Virupas per bala; expand Sthana and Kala for component strengths
+          (Yuddha under Kala). Yuddha is computed when two tara grahas are
+          within 1° — most charts show 0.00 because wars are rare.
           {bhavaBala && (
             <>
               {" "}

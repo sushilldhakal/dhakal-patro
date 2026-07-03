@@ -12,9 +12,10 @@ export type BhavaBalaHouse = {
   lordKey: GrahaKey;
   lordName: string;
   bhavadhipati: number;
-  dig: number;
+  disha: number;
   drishti: number;
   totalVirupas: number;
+  totalPinda: number;
   rupas: number;
   percent: number;
 };
@@ -123,7 +124,7 @@ const LORD_LABEL: Record<string, string> = {
 };
 
 /**
- * Bhava Bala = Bhavadhipati + Bhava Dig + Bhava Drishti (B.V. Raman Ch. IX).
+ * Bhava Bala = Bhavadhipati + Bhava Disha + Bhava Drishti (B.V. Raman Ch. IX).
  * Uses whole-sign houses and planet Shadbala totals from the API.
  */
 export function computeBhavaBala(
@@ -143,9 +144,9 @@ export function computeBhavaBala(
     const madhya = bhavaMadhyaLongitude(lagnaRashi, house);
     const lordKey = rashiLordKey(rashiFromLon(madhya));
     const bhavadhipati = virupasByKey.get(lordKey) ?? 0;
-    const dig = bhavaDigBala(house, madhya);
+    const disha = bhavaDigBala(house, madhya);
     const drishti = bhavaDrishtiBala(madhya, planetLongitudes, moonPaksha);
-    const totalVirupas = bhavadhipati + dig + drishti;
+    const totalVirupas = bhavadhipati + disha + drishti;
 
     houses.push({
       house,
@@ -153,9 +154,10 @@ export function computeBhavaBala(
       lordKey,
       lordName: LORD_LABEL[lordKey] ?? lordKey,
       bhavadhipati,
-      dig,
+      disha,
       drishti,
       totalVirupas,
+      totalPinda: totalVirupas,
       rupas: totalVirupas / 60,
       percent: (totalVirupas / BHAVA_BALA_REFERENCE_VIRUPAS) * 100,
     });
