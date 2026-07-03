@@ -40,6 +40,7 @@ const ROUTES = [
   { path: "/converter", changefreq: "monthly", priority: "0.8" },
   { path: "/holidays", changefreq: "weekly", priority: "0.8" },
   { path: "/kundali", changefreq: "monthly", priority: "0.7" },
+  { path: "/jyotish/kundali-milan", changefreq: "monthly", priority: "0.7" },
   { path: "/learn", changefreq: "weekly", priority: "0.8" },
   { path: "/learn/history", changefreq: "monthly", priority: "0.6" },
   { path: "/suryakranti", changefreq: "weekly", priority: "0.7" },

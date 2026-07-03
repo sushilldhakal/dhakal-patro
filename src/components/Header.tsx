@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Sunrise,
   Grid3x3,
+  Heart,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "../lib/utils";
@@ -40,10 +41,14 @@ const PANCHANGA_LINKS = [
   { to: "/panchanga/avakahada-chakra" as const, labelKey: "nav.avakahada_chakra", icon: Grid3x3 },
 ] as const;
 
+const JYOTISH_LINKS = [
+  { to: "/kundali" as const, labelKey: "nav.jyotish_kundali", icon: Sparkles },
+  { to: "/jyotish/kundali-milan" as const, labelKey: "nav.jyotish_kundali_milan", icon: Heart },
+] as const;
+
 const NAV = [
   { to: "/converter" as const, labelKey: "nav.converter", icon: ArrowLeftRight },
   { to: "/holidays" as const, labelKey: "nav.holidays", icon: PartyPopper },
-  { to: "/kundali" as const, labelKey: "nav.kundali", icon: Sparkles },
   { to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen },
 ] as const;
 
@@ -66,6 +71,91 @@ function isPanchangaRoute(pathname: string) {
     pathname === "/suryakranti" || pathname === "/sun-times" ||
     pathname === "/abhijit-muhurta" ||
     pathname === "/chandrakranti"
+  );
+}
+
+function isJyotishRoute(pathname: string) {
+  return pathname === "/kundali" || pathname.startsWith("/kundali/") || pathname.startsWith("/jyotish/");
+}
+
+function JyotishNavDropdown() {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isActive = isJyotishRoute(pathname);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(desktopLinkClass, isActive && "active")}
+          aria-expanded={open}
+          aria-haspopup="menu"
+        >
+          <Sparkles className="w-4 h-4" />
+          {t("nav.jyotish")}
+          <ChevronDown
+            className={cn("w-3.5 h-3.5 opacity-60 transition-transform", open && "rotate-180")}
+          />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="center" className="w-52 p-1">
+        {JYOTISH_LINKS.map(({ to, labelKey, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            className={desktopSubLinkClass}
+            activeProps={{ className: "active" }}
+            onClick={() => setOpen(false)}
+          >
+            <Icon className="w-4 h-4 shrink-0" />
+            {t(labelKey)}
+          </Link>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function JyotishNavGroup({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [expanded, setExpanded] = useState(() => isJyotishRoute(pathname));
+  const isActive = isJyotishRoute(pathname);
+
+  return (
+    <div>
+      <button
+        type="button"
+        className={cn(linkClass, "w-full", isActive && "text-foreground")}
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        <Sparkles className="w-4 h-4 shrink-0" />
+        <span className="flex-1 text-left">{t("nav.jyotish")}</span>
+        <ChevronDown
+          className={cn("w-4 h-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
+        />
+      </button>
+      {expanded ? (
+        <div className="flex flex-col gap-0.5 pb-1">
+          {JYOTISH_LINKS.map(({ to, labelKey, icon: Icon }) => (
+            <DrawerClose asChild key={to}>
+              <Link
+                to={to}
+                className={subLinkClass}
+                activeProps={{ className: "active" }}
+                onClick={onNavigate}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {t(labelKey)}
+              </Link>
+            </DrawerClose>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -235,6 +325,7 @@ function NavMenuContent({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
       </DrawerClose>
       <PanchangaNavGroup onNavigate={onNavigate} />
+      <JyotishNavGroup onNavigate={onNavigate} />
       {NAV.map(({ to, labelKey, icon: Icon }) => (
         <DrawerClose asChild key={to}>
           <Link to={to} className={linkClass} activeProps={{ className: "active" }} onClick={onNavigate}>
@@ -279,6 +370,7 @@ export function Header() {
 
         <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
           <PanchangaNavDropdown />
+          <JyotishNavDropdown />
           {NAV.map(({ to, labelKey, icon: Icon }) => (
             <Link
               key={to}

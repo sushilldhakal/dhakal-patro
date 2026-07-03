@@ -49,6 +49,11 @@
         "description": "Generate birth chart — lagna, planets, dasha and detailed kundali report.",
         "keywords": "Kundali, birth chart, horoscope calculator"
       },
+      "kundali_milan": {
+        "title": "Kundali Milan — Ashtakuta Match | Vedic Patro",
+        "description": "Boy and girl kundali milan using Ashtakuta — eight kuta gunas, Nadi dosha and marriage compatibility.",
+        "keywords": "Kundali milan, guna milan, ashtakuta, marriage compatibility, nadi dosha"
+      },
       "learn": {
         "title": "Learn Panchanga & Astrology | Vedic Patro",
         "description": "Educational articles on Tithi, Nakshatra, Panchanga, calendars and Kundali.",
@@ -101,6 +106,9 @@
     "avakahada_chakra": "Avakahada Chakra",
     "converter": "Converter",
     "holidays": "Holidays",
+    "jyotish": "Jyotish",
+    "jyotish_kundali": "Kundali",
+    "jyotish_kundali_milan": "Kundali Milan",
     "kundali": "Kundali",
     "learn": "Learn",
     "abhijit_muhurta": "Abhijit Muhurta"
@@ -157,7 +165,7 @@
     "pick_time": "Pick time"
   },
   "kundali": {
-    "eyebrow": "Nepali Patro · Birth Kundali",
+    "eyebrow": "Nepali Patro · Jyotish · Birth Kundali",
     "title": "Birth Kundali",
     "subtitle_auth": "Select your profile — view kundali, dasha and shanti vidhi.",
     "subtitle_anon": "Rashi, graha and dasha details by birth date, time and place",
@@ -206,6 +214,39 @@
     "jump_to": "Jump to",
     "load_error": "Could not load kundali data. Check date and location, then try again.",
     "computing": "Computing chart…"
+  },
+  "milan": {
+    "eyebrow": "Nepali Patro · Jyotish · Kundali Milan",
+    "title": "Kundali Milan",
+    "subtitle": "Ashtakuta marriage compatibility — compare Vara (boy) and Kanya (girl) birth charts across eight gunas (36 points max).",
+    "match": "Match Kundali",
+    "error": "Could not compute milan. Check birth details and try again.",
+    "no_moon": "Moon position unavailable for one or both charts.",
+    "vara_title": "Birth Details of Vara (Boy)",
+    "kanya_title": "Birth Details of Kanya (Girl)",
+    "vara_details": "Birth Details of Vara",
+    "kanya_details": "Birth Details of Kanya",
+    "name": "Name",
+    "boy": "Boy",
+    "girl": "Girl",
+    "boy_placeholder": "Boy's name",
+    "girl_placeholder": "Girl's name",
+    "date_of_birth": "Date of Birth",
+    "time_of_birth": "Time of Birth",
+    "city": "City Name",
+    "region": "State / Region",
+    "country": "Country Name",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "timezone": "Olson Timezone",
+    "ayanamsha": "Ayanamsha",
+    "moon_sign": "Janmarashi (Moonsign)",
+    "nakshatra": "Nakshatra (Birthstar)",
+    "pada": "Pada",
+    "lunar_longitude": "Lunar Longitude",
+    "total_guna": "Total Guna Milan",
+    "guna": "Guna",
+    "notes_title": "Ashtakuta notes"
   },
   "converter": {
     "title": "Date Converter",
