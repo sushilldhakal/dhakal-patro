@@ -13,13 +13,7 @@ export const wheelHeadSub =
   "mt-1.5 font-num text-[12.5px] font-medium text-[var(--w-ink-dim)]";
 
 export const wheelDock =
-  "flex w-full items-center gap-3.5 rounded-xl border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-3 py-2.5 text-[var(--w-ink)] shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur-md max-[720px]:gap-2 max-[720px]:px-2.5 max-[720px]:py-2 max-[480px]:gap-1.5 max-[480px]:px-2 max-[480px]:py-1.5";
-
-export const wheelControlsShell =
-  "absolute bottom-3 left-3 right-3 z-[22] flex flex-col gap-2 max-[480px]:bottom-2 max-[480px]:left-2 max-[480px]:right-2";
-
-export const wheelResetBtn =
-  "flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-4 text-[13px] font-semibold text-[var(--w-ink)] shadow-[0_8px_24px_rgba(0,0,0,0.45)] backdrop-blur-md transition-[border-color,transform] hover:border-[var(--w-accent)] active:translate-y-px max-[480px]:h-9 max-[480px]:text-xs";
+  "absolute bottom-[18px] left-1/2 z-[22] flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 items-center gap-3.5 rounded-full border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-4 py-2.5 text-[var(--w-ink)] shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur-md max-[720px]:gap-2 max-[720px]:px-2.5 max-[720px]:py-1.5 max-[480px]:gap-1.5 max-[480px]:px-2 max-[480px]:py-1";
 
 export const wheelDockGrp =
   "flex items-center gap-2 max-[720px]:gap-1.5 max-[480px]:gap-1";
@@ -42,7 +36,7 @@ export const wheelDockTodayBtn =
   "h-[30px] shrink-0 cursor-pointer rounded-full border-none bg-[var(--w-accent)] px-4 text-[12.5px] font-bold text-[#1a1205] active:translate-y-px max-[720px]:h-7 max-[720px]:px-2.5 max-[720px]:text-[11px] max-[480px]:h-6 max-[480px]:px-2 max-[480px]:text-[10.5px]";
 
 export const wheelLegend =
-  "pointer-events-none absolute bottom-[calc(1rem+6.5rem)] left-4 z-20 flex flex-col gap-1.5 max-[720px]:hidden";
+  "pointer-events-none absolute bottom-[18px] left-4 z-20 flex flex-col gap-1.5 max-[720px]:hidden";
 
 export const wheelLegendRow =
   "flex items-center gap-1.5 text-[11px] font-medium text-[var(--w-ink-dim)]";
@@ -130,6 +124,15 @@ export const wheelStage = cn(
   wheelStageStars,
 );
 
+export const wheelStageExpanded = cn(
+  wheelStage,
+  "h-[100dvh] min-h-0 max-w-none",
+  "max-[720px]:h-[100dvh] max-[720px]:min-h-0",
+);
+
+export const wheelExpandedShell =
+  "fixed inset-0 z-[120] max-w-none overflow-hidden rounded-none border-0 shadow-none";
+
 export const wheelSvgWrap =
   "absolute inset-0 z-[1] grid touch-none place-items-center";
 
@@ -142,4 +145,19 @@ export function wheelSvg(dragging?: boolean) {
 
 /** Range input in wheel dock — pair with `.wheel-scrub` for thumb pseudo-elements. */
 export const wheelScrub =
-  "wheel-scrub h-2 min-w-[64px] flex-1 cursor-pointer touch-pan-x select-none [-webkit-tap-highlight-color:transparent] max-[480px]:h-1.5";
+  "wheel-scrub h-2 w-[168px] shrink cursor-pointer touch-pan-x select-none [-webkit-tap-highlight-color:transparent] max-[720px]:w-[88px] max-[480px]:w-[72px] max-[480px]:h-1.5";
+
+/** Year-view day scrub — vertical track on the right inside the wheel stage. */
+export const wheelYearScrubShell =
+  "absolute right-3 top-1/2 z-[22] flex h-[var(--w-year-span,min(72vh,720px))] max-h-[calc(100%-4.5rem)] -translate-y-1/2 flex-col items-center gap-2 rounded-full border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-2 py-3 text-[var(--w-ink)] shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur-md max-[720px]:right-2 max-[720px]:max-h-[calc(100%-5rem)] max-[720px]:gap-1.5 max-[720px]:px-1.5 max-[720px]:py-2 max-[480px]:right-1.5 max-[480px]:max-h-[calc(100%-5.5rem)]";
+
+export const wheelYearScrubLabel =
+  "shrink-0 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--w-ink-dim)] max-[480px]:hidden";
+
+export const wheelYearScrub =
+  "wheel-year-scrub min-h-0 w-2 flex-1 cursor-pointer touch-none select-none [-webkit-tap-highlight-color:transparent] max-[480px]:w-1.5";
+
+export const wheelYearScrubCount =
+  "shrink-0 font-num text-[10px] font-semibold tabular-nums leading-tight text-center text-[var(--w-ink)] max-[480px]:text-[9px] [&_.dim]:font-medium [&_.dim]:text-[var(--w-ink-dim)]";
+
+export const wheelYearScrubPlayBtn = cn(wheelIconBtn, "max-[480px]:h-6 max-[480px]:w-6");

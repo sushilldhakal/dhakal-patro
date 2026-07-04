@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, MapPin, Pause, Play } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 import { fetchPanchanga, panchangaKeys, type PanchangaDay } from "@/lib/api";
 import {
   BS_MONTHS_NE,
@@ -158,6 +158,8 @@ export function PanchangaYear() {
     prefetchAround(clampedDay);
   }, [clampedDay, prefetchAround]);
 
+  const togglePlaying = useCallback(() => setPlaying((p) => !p), []);
+
   useEffect(() => {
     const delay = isScrubbing ? SCRUB_FETCH_MS : SCRUB_DEBOUNCE_MS;
     const id = setTimeout(() => setQueryDay(dayOfYear), delay);
@@ -298,6 +300,15 @@ export function PanchangaYear() {
             timezone={effectiveTimezone}
             locationLabel={locationLabel}
             atTimeScrubOnly
+            yearScrub={{
+              day: clampedDay,
+              totalDays,
+              playing,
+              onPlayToggle: togglePlaying,
+              onDayChange: setDayOfYear,
+              onScrubStart: () => setIsScrubbing(true),
+              onScrubEnd: finishScrub,
+            }}
           />
         )}
 
@@ -325,45 +336,6 @@ export function PanchangaYear() {
               : t("panchanga_year.year_ready")}
           </p>
         ) : null}
-
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
-              {t("panchanga_year.scrub_label")}
-            </span>
-            <span className="text-sm font-mono font-semibold tabular-nums">
-              {toNepaliDigits(clampedDay)} / {toNepaliDigits(totalDays)}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setPlaying((p) => !p)}
-              aria-label={playing ? t("panchanga_year.pause") : t("panchanga_year.play")}
-              title={playing ? t("panchanga_year.pause") : t("panchanga_year.play_title")}
-              className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
-            >
-              {playing ? (
-                <Pause className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4 translate-x-[1px]" />
-              )}
-            </button>
-            <input
-              type="range"
-              className="w-full"
-              min={1}
-              max={totalDays}
-              step={1}
-              value={clampedDay}
-              onPointerDown={() => setIsScrubbing(true)}
-              onPointerUp={finishScrub}
-              onPointerCancel={finishScrub}
-              onLostPointerCapture={finishScrub}
-              onChange={(e) => setDayOfYear(Number(e.target.value))}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

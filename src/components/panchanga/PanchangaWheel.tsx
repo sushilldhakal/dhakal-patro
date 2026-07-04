@@ -1,12 +1,15 @@
+import { useTranslation } from "react-i18next";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createPortal } from "react-dom";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Fullscreen, Minimize2, Pause, Play } from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
 import { fetchPanchangaAtTime, panchangaKeys } from "@/lib/api";
 import { getPanchangaDetail } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   buildWheelDetail,
-  buildWheelMarkersFromDetail,
+  buildWheelMarkers,
   DEFAULT_WHEEL_TWEAKS,
   gClock,
   scrubGToDatetime,
@@ -19,15 +22,14 @@ import { WheelPanel } from "./WheelPanel";
 import { useLocale } from "@/i18n/locale";
 import { patroSkel, patroWheelShell } from "@/lib/patro-classes";
 import {
-  wheelControlsShell,
   wheelDock,
   wheelDockGrp,
   wheelDockLabel,
   wheelDockSep,
   wheelDockTimeGrp,
   wheelDockTodayBtn,
-  wheelResetBtn,
   wheelDockVal,
+  wheelExpandedShell,
   wheelHead,
   wheelHeadEyebrow,
   wheelHeadSub,
@@ -38,12 +40,18 @@ import {
   wheelLegendRow,
   wheelScrub,
   wheelStage,
+  wheelStageExpanded,
   wheelSvgWrap,
   wheelTip,
   wheelTipKind,
   wheelTipRow,
   wheelTipSym,
   wheelTipTitle,
+  wheelYearScrub,
+  wheelYearScrubCount,
+  wheelYearScrubLabel,
+  wheelYearScrubPlayBtn,
+  wheelYearScrubShell,
 } from "@/lib/wheel-classes";
 import { cn } from "@/lib/utils";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
@@ -52,6 +60,64 @@ import { NAK_LORD_EN } from "@/lib/wheel-locale";
 function bsMonthEnOf(ne: string): string {
   const i = BS_MONTHS_NE.indexOf(ne);
   return i >= 0 ? BS_MONTH_NAMES[i] : ne;
+}
+
+const wheelDockIcon = "h-3.5 w-3.5 max-[480px]:h-3 max-[480px]:w-3";
+
+export type YearWheelScrub = {
+  day: number;
+  totalDays: number;
+  playing: boolean;
+  onPlayToggle: () => void;
+  onDayChange: (day: number) => void;
+  onScrubStart: () => void;
+  onScrubEnd: () => void;
+};
+
+function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
+  const { t } = useTranslation();
+  const { pick, digits } = useLocale();
+  const { day, totalDays, playing, onPlayToggle, onDayChange, onScrubStart, onScrubEnd } = scrub;
+  const num = (n: number) => digits(n);
+  const fillPct = totalDays <= 1 ? 100 : ((day - 1) / (totalDays - 1)) * 100;
+
+  return (
+    <div className={wheelYearScrubShell}>
+      <span className={wheelYearScrubLabel}>{pick("वर्ष", "Year")}</span>
+      <button
+        type="button"
+        className={cn(wheelYearScrubPlayBtn, "shrink-0")}
+        onClick={onPlayToggle}
+        aria-label={playing ? t("panchanga_year.pause") : t("panchanga_year.play")}
+        title={playing ? t("panchanga_year.pause") : t("panchanga_year.play_title")}
+      >
+        {playing ? (
+          <Pause className={wheelDockIcon} strokeWidth={2} aria-hidden />
+        ) : (
+          <Play className={cn(wheelDockIcon, "translate-x-[1px]")} strokeWidth={2} aria-hidden />
+        )}
+      </button>
+      <input
+        type="range"
+        className={wheelYearScrub}
+        min={1}
+        max={totalDays}
+        step={1}
+        value={day}
+        aria-label={t("panchanga_year.scrub_label")}
+        style={{ "--fill": `${fillPct}%` } as React.CSSProperties}
+        onPointerDown={onScrubStart}
+        onPointerUp={onScrubEnd}
+        onPointerCancel={onScrubEnd}
+        onLostPointerCapture={onScrubEnd}
+        onChange={(e) => onDayChange(Number(e.target.value))}
+      />
+      <span className={wheelYearScrubCount}>
+        {num(day)}
+        <span className="dim">/{num(totalDays)}</span>
+      </span>
+    </div>
+  );
 }
 
 function WheelHead({
@@ -84,6 +150,8 @@ interface Props {
   loading?: boolean;
   /** When true, only fetch at-time after the user moves the wheel time slider. */
   atTimeScrubOnly?: boolean;
+  /** Year view: vertical day scrub + autoplay on the right inside the wheel. */
+  yearScrub?: YearWheelScrub;
 }
 
 function PanchangaWheelSkeleton({
@@ -130,7 +198,8 @@ function PanchangaWheelBody({
   timezone,
   locationLabel,
   atTimeScrubOnly = false,
-}: WheelBodyProps & { atTimeScrubOnly?: boolean }) {
+  yearScrub,
+}: WheelBodyProps & { atTimeScrubOnly?: boolean; yearScrub?: YearWheelScrub }) {
   const det: WheelDetail = useMemo(() => buildWheelDetail(p), [p]);
   const tz = resolveTimeZone(p?.location?.timezone, timezone);
   const [now, setNow] = useState(() => new Date());
@@ -142,6 +211,35 @@ function PanchangaWheelBody({
   const [hover, setHover] = useState<WheelHover | null>(null);
   const [tip, setTip] = useState({ x: 0, y: 0 });
   const [scrubPinned, setScrubPinned] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const expandedHistoryRef = useRef(false);
+  const ignorePopRef = useRef(false);
+
+  const setExpandedMode = useCallback((next: boolean) => {
+    if (next) {
+      if (!expandedHistoryRef.current) {
+        window.history.pushState({ panchangaWheelExpanded: true }, "");
+        expandedHistoryRef.current = true;
+      }
+      setExpanded(true);
+      return;
+    }
+    setExpanded(false);
+    if (expandedHistoryRef.current) {
+      expandedHistoryRef.current = false;
+      ignorePopRef.current = true;
+      window.history.back();
+    }
+  }, []);
+
+  const toggleExpanded = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setExpandedMode(!expanded);
+    },
+    [expanded, setExpandedMode],
+  );
 
   const handleZoom = useCallback((z: number) => {
     const next = Math.max(0.55, Math.min(14, z));
@@ -171,7 +269,7 @@ function PanchangaWheelBody({
   const [debouncedScrubG, setDebouncedScrubG] = useState(scrubG);
 
   useEffect(() => {
-    const id = setTimeout(() => setDebouncedScrubG(scrubG), 280);
+    const id = setTimeout(() => setDebouncedScrubG(scrubG), 400);
     return () => clearTimeout(id);
   }, [scrubG]);
 
@@ -195,32 +293,25 @@ function PanchangaWheelBody({
     [anchorAd, debouncedScrubG, det.sunriseMin]
   );
 
+  const scrubbing =
+    scrubPinned || Math.abs(scrubG - (isToday && !scrubPinned ? nowG : 0)) > 0.05;
+
   const needsAtTime =
     Boolean(anchorAd) &&
-    (scrubPinned || (isToday && !atTimeScrubOnly));
+    (scrubbing || (isToday && !atTimeScrubOnly));
 
   const scrubQ = useQuery({
     queryKey: panchangaKeys.atTime(scrubDatetime, locationParams),
     queryFn: () => fetchPanchangaAtTime(scrubDatetime, locationParams),
     staleTime: 1000 * 60,
+    placeholderData: keepPreviousData,
     enabled: needsAtTime,
   });
 
-  const scrubDet: WheelDetail = useMemo(
-    () => (scrubQ.data ? buildWheelDetail(scrubQ.data) : det),
-    [scrubQ.data, det]
-  );
-
-  const scrubLagnaLon = useMemo(() => {
-    if (!scrubQ.data) return null;
-    const detail = getPanchangaDetail(scrubQ.data);
-    const instant = detail?.instant_lagna as { longitude?: number } | undefined;
-    return instant?.longitude ?? null;
-  }, [scrubQ.data]);
-
+  /** Smooth scrub from daily udaya data (lagna spans, tithi end, sunrise planets). */
   const markers = useMemo(
-    () => buildWheelMarkersFromDetail(scrubDet, scrubLagnaLon),
-    [scrubDet, scrubLagnaLon]
+    () => buildWheelMarkers(p, det, scrubG),
+    [p, det, scrubG]
   );
 
   const handleScrubChange = useCallback((g: number) => {
@@ -267,8 +358,50 @@ function PanchangaWheelBody({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.date_ad, p.panchanga_date_ad]);
 
+  useEffect(() => {
+    if (!expanded) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpandedMode(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [expanded, setExpandedMode]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      if (ignorePopRef.current) {
+        ignorePopRef.current = false;
+        return;
+      }
+      expandedHistoryRef.current = false;
+      setExpanded(false);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   const { pick, digits } = useLocale();
   const stageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!yearScrub) return;
+    const el = stageRef.current;
+    if (!el) return;
+    const sync = () => {
+      const { width, height } = el.getBoundingClientRect();
+      const diameter = Math.min(width, height);
+      el.style.setProperty("--w-year-span", `${Math.round(diameter * 0.92)}px`);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [yearScrub, expanded]);
   const num = (n: number | string) => digits(n);
   const scrubClock = gClock(scrubG, det.sunriseMin);
   const scrubTithi = scrubQ.data
@@ -320,9 +453,18 @@ function PanchangaWheelBody({
     }
   }
 
-  return (
-    <div className={cn("pn-wheel", patroWheelShell)}>
-      <div className={wheelStage} ref={stageRef} onMouseMove={onStageMove}>
+  const wheelNode = (
+    <div
+      className={cn(
+        "pn-wheel",
+        expanded ? wheelExpandedShell : patroWheelShell,
+      )}
+    >
+      <div
+        className={cn(wheelStage, expanded && wheelStageExpanded)}
+        ref={stageRef}
+        onMouseMove={onStageMove}
+      >
         <WheelHead
           eyebrow={pick("पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
           title={
@@ -341,7 +483,7 @@ function PanchangaWheelBody({
         />
 
         <WheelChart
-          det={scrubDet}
+          det={det}
           markers={markers}
           spin={spin}
           tw={DEFAULT_WHEEL_TWEAKS}
@@ -385,69 +527,96 @@ function PanchangaWheelBody({
           </div>
         </div>
 
-        <div className={wheelControlsShell}>
-          <button
-            type="button"
-            className={wheelResetBtn}
-            onClick={resetToSunrise}
-          >
-            <span aria-hidden>⟳</span>
-            {pick("उत्तर सिधा · जुम रिसेट · सूर्योदय", "North up · reset zoom · sunrise")}
-          </button>
-
-          <div className={wheelDock}>
-            <div className={cn(wheelDockTimeGrp, "min-w-0 flex-1")}>
-              <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
-              <input
-                className={wheelScrub}
-                type="range"
-                min="0"
-                max="60"
-                step="0.25"
-                value={scrubG}
-                style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
-                onChange={(e) => handleScrubChange(+e.target.value)}
-              />
-              <span className={wheelDockVal}>{num(scrubClock)}</span>
-            </div>
-            <div className={wheelDockSep} />
-            <div className={cn(wheelDockGrp, "shrink-0")}>
-              {isToday && (
-                <button
-                  type="button"
-                  className={wheelDockTodayBtn}
-                  title={pick("अहिलेको समय", "Current time")}
-                  onClick={snapToNow}
-                >
-                  {pick("आज", "Now")}
-                </button>
+        <div className={wheelDock}>
+          <div className={wheelDockTimeGrp}>
+            <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
+            <input
+              className={wheelScrub}
+              type="range"
+              min="0"
+              max="60"
+              step="0.25"
+              value={scrubG}
+              style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
+              onChange={(e) => handleScrubChange(+e.target.value)}
+            />
+            <span className={wheelDockVal}>{num(scrubClock)}</span>
+          </div>
+          <div className={wheelDockSep} />
+          <div className={cn(wheelDockGrp, "shrink-0")}>
+            {isToday && (
+              <button
+                type="button"
+                className={wheelDockTodayBtn}
+                title={pick("अहिलेको समय", "Current time")}
+                onClick={snapToNow}
+              >
+                {pick("आज", "Now")}
+              </button>
+            )}
+            <button
+              type="button"
+              className={wheelIconBtn}
+              title={pick("उत्तर सिधा · जुम रिसेट · सूर्योदय", "North up · reset zoom · sunrise")}
+              onClick={resetToSunrise}
+            >
+              ⟳
+            </button>
+            <button
+              type="button"
+              className={wheelIconBtn}
+              title={pick("जुम इन", "Zoom in")}
+              onClick={() => handleZoom(zoom * 1.4)}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              className={wheelIconBtn}
+              title={pick("जुम आउट", "Zoom out")}
+              onClick={() => handleZoom(zoom / 1.4)}
+            >
+              −
+            </button>
+            <button
+              type="button"
+              className={wheelIconBtn}
+              title={
+                expanded
+                  ? pick("सामान्य दृश्य", "Exit full width")
+                  : pick("पूर्ण चौडाइ", "Full width view")
+              }
+              aria-pressed={expanded}
+              onClick={toggleExpanded}
+            >
+              {expanded ? (
+                <Minimize2 className={wheelDockIcon} strokeWidth={2} aria-hidden />
+              ) : (
+                <Fullscreen className={wheelDockIcon} strokeWidth={2} aria-hidden />
               )}
-              <button
-                type="button"
-                className={wheelIconBtn}
-                title={pick("जुम इन", "Zoom in")}
-                onClick={() => handleZoom(zoom * 1.4)}
-              >
-                +
-              </button>
-              <button
-                type="button"
-                className={wheelIconBtn}
-                title={pick("जुम आउट", "Zoom out")}
-                onClick={() => handleZoom(zoom / 1.4)}
-              >
-                −
-              </button>
-            </div>
+            </button>
           </div>
         </div>
+
+        {yearScrub && <WheelYearScrub scrub={yearScrub} />}
       </div>
+    </div>
+  );
+
+  return (
+    <div
+      className={cn(
+        expanded &&
+          "min-h-[min(90vh,960px)] max-[720px]:min-h-[520px]",
+      )}
+    >
+      {expanded ? createPortal(wheelNode, document.body) : wheelNode}
     </div>
   );
 }
 
 function PanchangaWheelImpl(props: Props) {
-  const { loading = false, p, atTimeScrubOnly, ...rest } = props;
+  const { loading = false, p, atTimeScrubOnly, yearScrub, ...rest } = props;
   if (loading || !p) {
     return (
       <PanchangaWheelSkeleton
@@ -458,7 +627,14 @@ function PanchangaWheelImpl(props: Props) {
       />
     );
   }
-  return <PanchangaWheelBody p={p} atTimeScrubOnly={atTimeScrubOnly} {...rest} />;
+  return (
+    <PanchangaWheelBody
+      p={p}
+      atTimeScrubOnly={atTimeScrubOnly}
+      yearScrub={yearScrub}
+      {...rest}
+    />
+  );
 }
 
 export const PanchangaWheel = memo(PanchangaWheelImpl);

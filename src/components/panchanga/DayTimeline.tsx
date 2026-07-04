@@ -127,6 +127,8 @@ interface Props {
   timezone?: string;
   /** HH:MM — show needle at this clock on the vedic day chart (ephemeris mode). */
   needleClock?: string;
+  /** When false, hide the time needle until the user picks a time. */
+  showNeedle?: boolean;
   /** First load only — inline placeholder, not the full-page loader. */
   loading?: boolean;
 }
@@ -156,6 +158,10 @@ function minutesOnVedicChart(
   anchorDateAd: string,
   needleClock: string | undefined
 ): number | null {
+  if (needleClock) {
+    const [hh, mm] = needleClock.split(":").map(Number);
+    if (!Number.isNaN(hh) && !Number.isNaN(mm)) return hh * 60 + mm;
+  }
   if (queryInstantLocal) {
     const [datePart, timePart] = queryInstantLocal.split(" ");
     if (!timePart) return null;
@@ -165,10 +171,7 @@ function minutesOnVedicChart(
     if (datePart === anchorDateAd) return mins;
     return 24 * 60 + mins;
   }
-  if (!needleClock) return null;
-  const [hh, mm] = needleClock.split(":").map(Number);
-  if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
-  return hh * 60 + mm;
+  return null;
 }
 
 export function DayTimeline({
@@ -177,6 +180,7 @@ export function DayTimeline({
   isToday = false,
   timezone,
   needleClock,
+  showNeedle = true,
   loading = false,
 }: Props) {
   const { pick, digits, isEnglish, lang } = useLocale();
@@ -241,13 +245,13 @@ export function DayTimeline({
   const ephemerisNeedle = p.mode === "ephemeris";
   const chartMins = minutesOnVedicChart(p.query_instant_local, anchorAd ?? "", needleClock);
 
-  if (ephemerisNeedle && chartMins != null) {
+  if (showNeedle && ephemerisNeedle && chartMins != null) {
     nowG = (chartMins - data.sunriseMin) / 24;
     if (nowG < 0) nowG += 60;
     nowLabel = needleClock
       ? pick(`${digits(needleClock)} बजे`, digits(needleClock))
       : pick("छानिएको समय", "Chosen time");
-  } else if (isToday) {
+  } else if (showNeedle && isToday) {
     const minsNow = minutesSinceMidnightInTimezone(now, timeZone);
     nowG = (minsNow - data.sunriseMin) / 24;
     if (nowG < 0) nowG += 60;

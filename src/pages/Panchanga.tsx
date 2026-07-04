@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link, getRouteApi } from "@tanstack/react-router";
@@ -83,6 +83,7 @@ export function Panchanga() {
   );
   const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
   const { clock, setClock } = usePanchangaClock(timezoneForMode, { clock: search.time });
+  const [clockUserAdjusted, setClockUserAdjusted] = useState(false);
 
   const adDateStr = toAdStr(date);
   const bs = adToBS(date);
@@ -152,6 +153,18 @@ export function Panchanga() {
   const clockSyncedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
+    setClockUserAdjusted(false);
+  }, [adDateStr]);
+
+  const handleClockChange = useCallback(
+    (next: string) => {
+      setClockUserAdjusted(true);
+      setClock(next);
+    },
+    [setClock],
+  );
+
+  useEffect(() => {
     const syncKey = `${adDateStr}|${locationCacheKey(location.params)}`;
     if (clockSyncedKeyRef.current === syncKey) return;
 
@@ -181,7 +194,7 @@ export function Panchanga() {
             onDateChange={setDate}
             todayAd={todayAd}
             clock={clock}
-            onClockChange={setClock}
+            onClockChange={handleClockChange}
             toolbar={
               <LocationSelector
                 compact
@@ -202,6 +215,7 @@ export function Panchanga() {
               isToday={isToday}
               timezone={effectiveTimezone}
               needleClock={clock}
+              showNeedle={clockUserAdjusted}
             />
           )}
 

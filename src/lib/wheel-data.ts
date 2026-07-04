@@ -213,6 +213,76 @@ function ghatiFromLagnaSpan(span: LagnaSpan): number | null {
   );
 }
 
+type TithiLike = {
+  end_ghati_clock?: string;
+  end_hours_clock?: string;
+  end?: string;
+  progress?: number;
+};
+
+function getTithiBlock(p: PanchangaDay): TithiLike | undefined {
+  const detail = getPanchangaDetail(p);
+  return (detail?.tithi ?? p.tithi) as TithiLike | undefined;
+}
+
+/** Ghati from sunrise when only simplified `tithi.end` local stamp is available (year bulk). */
+function ghatiFromTithiEndStamp(
+  stamp: string | undefined,
+  anchorDateAd: string,
+  sunriseMin: number,
+): number | null {
+  if (!stamp || !anchorDateAd) return null;
+  const m = stamp.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const [, endDate, eh, em] = m;
+  const endMinutes = Number(eh) * 60 + Number(em);
+  const dayOffset =
+    endDate! > anchorDateAd ? 1 : endDate! < anchorDateAd ? -1 : 0;
+  const totalMin = dayOffset * 1440 + endMinutes - sunriseMin;
+  if (totalMin <= 0) return null;
+  return totalMin / 24;
+}
+
+function resolveTithiEndGhati(p: PanchangaDay, sunriseMin: number): number | null {
+  const tithi = getTithiBlock(p);
+  if (!tithi) return null;
+  const anchor = p.date_ad ?? p.panchanga_date_ad ?? "";
+  return (
+    parseHoursClockToGhati(tithi.end_hours_clock) ??
+    parseGhatiClock(tithi.end_ghati_clock) ??
+    ghatiFromTithiEndStamp(tithi.end, anchor, sunriseMin)
+  );
+}
+
+function maxElongRateWithinBand(elong0: number, gMax = 60): number {
+  const band = Math.floor(elong0 / 12);
+  const boundary = (band + 1) * 12;
+  const headroom = boundary - elong0 - 0.15;
+  if (headroom <= 0) return 0;
+  return headroom / gMax;
+}
+
+/**
+ * Vriddhi / repeated-u daya days: the calendar still names this tithi even when
+ * the astronomical slice ends right after sunrise (or after next sunrise).
+ */
+function shouldHoldUdayaTithiAllDay(elong0: number, gEnd: number | null): boolean {
+  if (gEnd != null && gEnd >= 60) return true;
+  const band = Math.floor(elong0 / 12);
+  const nearBandEnd = elong0 >= band * 12 + 10;
+  if (gEnd != null && gEnd < 2 && nearBandEnd) return true;
+  return false;
+}
+
+function elongationWithinBand(elong0: number, g: number): number {
+  const band = Math.floor(elong0 / 12);
+  const bandStart = band * 12 + 0.4;
+  const bandEnd = (band + 1) * 12 - 0.35;
+  const startE = Math.max(bandStart, Math.min(elong0, bandEnd - 0.5));
+  const t = Math.max(0, Math.min(1, g / 60));
+  return startE + t * (bandEnd - startE);
+}
+
 function rashiIndexFromNe(nameNe?: string | null): number | null {
   const rashi = rashiFromNe(nameNe);
   if (!rashi) return null;
@@ -283,12 +353,11 @@ const MEAN_MOTION_PER_DAY = [
  * and produces spurious extra tithi/nakshatra transitions while scrubbing.
  *
  * Instead of a flat mean rate, we calibrate the sun-moon elongation's
- * local rate against the API's authoritative `tithi.end_ghati_clock` (the
- * exact ghati when today's tithi ends) whenever it's available, so the
- * tithi/karana boundary we draw lands at the same instant the rest of the
- * app (e.g. the day timeline) reports — the flat mean rate alone can drift
- * by an hour or more since the moon's true angular speed varies with its
- * orbital position.
+ * local rate against the API's authoritative tithi end (ghati/hours clock, or
+ * simplified `tithi.end` stamp from year bulk) whenever it's available.
+ * Vriddhi / repeated-u daya days (end past next sunrise, or a tail slice
+ * right after sunrise) keep the udaya tithi band highlighted for the full
+ * vedic day so the wheel matches the calendar tithi.
  */
 function moonLonAtG(p: PanchangaDay, det: WheelDetail, g: number): number {
   const moon = det.grahas[1];
@@ -299,18 +368,28 @@ function moonLonAtG(p: PanchangaDay, det: WheelDetail, g: number): number {
 
   const sun0 = grahaLon(sun);
   const elong0 = normDeg(moon0 - sun0);
-  const detail = getPanchangaDetail(p);
-  const tithi = (detail?.tithi ?? p.tithi) as { end_ghati_clock?: string } | undefined;
-  const gEnd = parseGhatiClock(tithi?.end_ghati_clock);
+  const band = Math.floor(elong0 / 12);
+  const gEnd = resolveTithiEndGhati(p, det.sunriseMin);
+  const holdAllDay = shouldHoldUdayaTithiAllDay(elong0, gEnd);
 
-  let elongRate = (MEAN_MOTION_PER_DAY[1] - MEAN_MOTION_PER_DAY[0]) / 60; // deg/ghati fallback
-  if (gEnd != null && gEnd > 0.25) {
-    const boundary = (Math.floor(elong0 / 12) + 1) * 12;
-    elongRate = (boundary - elong0) / gEnd;
+  const sunAtG = normDeg(sun0 + (g / 60) * MEAN_MOTION_PER_DAY[0]);
+
+  if (holdAllDay) {
+    return normDeg(sunAtG + elongationWithinBand(elong0, g));
   }
 
-  const sunLonAtGVal = normDeg(sun0 + (g / 60) * MEAN_MOTION_PER_DAY[0]);
-  return normDeg(sunLonAtGVal + elong0 + elongRate * g);
+  let elongRate = (MEAN_MOTION_PER_DAY[1] - MEAN_MOTION_PER_DAY[0]) / 60;
+  const boundary = (band + 1) * 12;
+
+  if (gEnd != null && gEnd > 0.25 && gEnd < 60) {
+    elongRate = (boundary - elong0) / gEnd;
+  } else if (gEnd != null && gEnd >= 60) {
+    elongRate = maxElongRateWithinBand(elong0);
+  } else {
+    elongRate = Math.min(elongRate, maxElongRateWithinBand(elong0));
+  }
+
+  return normDeg(sunAtG + elong0 + elongRate * g);
 }
 
 function grahaLonAtG(
