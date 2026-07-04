@@ -89,3 +89,17 @@ export function coordsToLocation(lat: number, lon: number, timezone?: string): P
     },
   };
 }
+
+/** API uses "custom" for lat/lon queries — keep the user's chosen label instead. */
+const GENERIC_API_LOCATION_NAMES = new Set(["custom"]);
+
+export function displayLocationLabel(
+  location: PanchangaLocation,
+  apiName?: string | null,
+): string {
+  const name = apiName?.trim();
+  if (name && !GENERIC_API_LOCATION_NAMES.has(name.toLowerCase())) {
+    return name;
+  }
+  return location.label;
+}

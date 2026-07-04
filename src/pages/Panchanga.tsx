@@ -28,7 +28,7 @@ import {
   EphemerisModeBanner,
   MuhurtaNowPanel,
 } from "@/components/panchanga/MuhurtaNowPanel";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { usePanchangaLocation, displayLocationLabel } from "@/components/panchanga/use-panchanga-location";
 import { usePanchangaClock } from "@/components/panchanga/use-panchanga-mode";
 import {
   locationToSearch,
@@ -145,7 +145,7 @@ export function Panchanga() {
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
 
-  const locationLabel = data?.location?.name ?? location.label;
+  const locationLabel = displayLocationLabel(location, data?.location?.name);
   const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
   const todayAd = todayAdStringInTimezone(new Date(), effectiveTimezone);
 
@@ -234,6 +234,7 @@ export function Panchanga() {
               {wheelData ? (
                 <Link
                   to="/panchanga/year"
+                  search={{ ...locationToSearch(location), year: bs.year }}
                   className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/10 hover:text-secondary"
                 >
                   <CalendarRange className="h-4 w-4" />

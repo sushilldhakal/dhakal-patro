@@ -10,6 +10,7 @@ import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-tim
 import {
   buildWheelDetail,
   buildWheelMarkers,
+  buildWheelMarkersAtTime,
   DEFAULT_WHEEL_TWEAKS,
   gClock,
   scrubGToDatetime,
@@ -308,10 +309,22 @@ function PanchangaWheelBody({
     enabled: needsAtTime,
   });
 
-  /** Smooth scrub from daily udaya data (lagna spans, tithi end, sunrise planets). */
+  /**
+   * The exact-moment `/panchanga/at-time` payload is only trustworthy when the
+   * at-time query is actually driving the current view (`needsAtTime`) AND the
+   * data belongs to the settled datetime rather than a leftover from a previous
+   * scrub/day (`!isPlaceholderData`). A disabled query keeps its last `data`, so
+   * without this guard the wheel would freeze on stale markers when the day
+   * changes via the year-view autoplay / day slider (and would lag the time
+   * slider during the debounced refetch). When the guard fails we fall back to
+   * the live sunrise-extrapolated estimate, which tracks `p`/`scrubG` instantly.
+   */
+  const atTimeData =
+    needsAtTime && !scrubQ.isPlaceholderData ? scrubQ.data : undefined;
+
   const markers = useMemo(
-    () => buildWheelMarkers(p, det, scrubG),
-    [p, det, scrubG]
+    () => (atTimeData ? buildWheelMarkersAtTime(atTimeData) : buildWheelMarkers(p, det, scrubG)),
+    [atTimeData, p, det, scrubG]
   );
 
   const handleScrubChange = useCallback((g: number) => {
@@ -404,9 +417,9 @@ function PanchangaWheelBody({
   }, [yearScrub, expanded]);
   const num = (n: number | string) => digits(n);
   const scrubClock = gClock(scrubG, det.sunriseMin);
-  const scrubTithi = scrubQ.data
-    ? (getPanchangaDetail(scrubQ.data)?.tithi as { name_ne?: string; name?: string } | undefined) ??
-      (scrubQ.data.tithi as { name_ne?: string; name?: string } | undefined)
+  const scrubTithi = atTimeData
+    ? (getPanchangaDetail(atTimeData)?.tithi as { name_ne?: string; name?: string } | undefined) ??
+      (atTimeData.tithi as { name_ne?: string; name?: string } | undefined)
     : undefined;
   const tithiNe = scrubTithi?.name_ne ?? det.tithi2[0]?.ne ?? "—";
   const tithiEn = scrubTithi?.name ?? det.tithi2[0]?.en ?? tithiNe;

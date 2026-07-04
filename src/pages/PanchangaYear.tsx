@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { fetchPanchanga, panchangaKeys, type PanchangaDay } from "@/lib/api";
 import {
@@ -19,7 +19,17 @@ import { patroSelect } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import {
+  displayLocationLabel,
+  usePanchangaLocation,
+} from "@/components/panchanga/use-panchanga-location";
+import {
+  locationToSearch,
+  sameLocationParams,
+  sameSearch,
+  searchToLocation,
+  type PanchangaYearSearch,
+} from "@/lib/url-state";
 import {
   panchangaYearBulkKey,
   seedYearPanchangaCache,
@@ -71,6 +81,8 @@ const SCRUB_FETCH_MS = 120;
 /** PanchangaYear never blocks the page with the route overlay while scrubbing. */
 const YEAR_ROUTE_LOADING = false;
 
+const routeApi = getRouteApi("/panchanga/year");
+
 function initialYearFromSearch(searchYear?: number): number {
   if (
     searchYear != null &&
@@ -82,22 +94,14 @@ function initialYearFromSearch(searchYear?: number): number {
   return getCurrentBs().year;
 }
 
-function readYearFromLocationSearch(search: unknown): number | undefined {
-  const raw = (search as { year?: unknown } | undefined)?.year;
-  const year = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : undefined;
-  if (year == null || !Number.isFinite(year)) return undefined;
-  return year;
-}
-
 export function PanchangaYear() {
   const { t } = useTranslation();
-  const { location, setLocation } = usePanchangaLocation();
-  const searchYear = useRouterState({
-    select: (state) => readYearFromLocationSearch(state.location.search),
-  });
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const queryClient = useQueryClient();
   const todayBs = useMemo(() => adToBS(new Date()), []);
-  const [year, setYear] = useState(() => initialYearFromSearch(searchYear));
+  const [year, setYear] = useState(() => initialYearFromSearch(search.year));
   const [dayOfYear, setDayOfYear] = useState(() =>
     dayOfYearFromBs(todayBs.year, todayBs.month, todayBs.day)
   );
@@ -110,10 +114,26 @@ export function PanchangaYear() {
   const [isScrubbing, setIsScrubbing] = useState(false);
 
   useEffect(() => {
-    if (searchYear == null) return;
-    const next = initialYearFromSearch(searchYear);
-    setYear((current) => (current === next ? current : next));
-  }, [searchYear]);
+    const desired: PanchangaYearSearch = {
+      ...locationToSearch(location),
+      year,
+    };
+    if (!sameSearch(desired, search)) {
+      navigate({ search: desired, replace: true });
+    }
+  }, [location, year, search, navigate]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (search.year != null) {
+      const next = initialYearFromSearch(search.year);
+      setYear((current) => (current === next ? current : next));
+    }
+    const loc = searchToLocation(search);
+    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const totalDays = useMemo(() => daysInBsYear(year), [year]);
   const clampedDay = Math.min(dayOfYear, totalDays);
@@ -233,7 +253,7 @@ export function PanchangaYear() {
 
   const effectiveTimezone = resolveTimeZone(displayData?.location?.timezone, location.params.timezone);
   const isToday = displayDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
-  const locationLabel = displayData?.location?.name ?? location.label;
+  const locationLabel = displayLocationLabel(location, displayData?.location?.name);
 
   function handleYearChange(nextYear: number) {
     setYear(nextYear);

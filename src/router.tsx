@@ -15,6 +15,7 @@ import { RouteLoadingProvider } from "./lib/route-loading";
 import {
   validateChandraKrantiSearch,
   validatePanchangaSearch,
+  validatePanchangaYearSearch,
 } from "./lib/url-state";
 
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
@@ -61,12 +62,7 @@ const panchangaRoute = createRoute({
 const panchangaYearRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/panchanga/year",
-  validateSearch: (search: Record<string, unknown>): { year?: number } => {
-    const raw = search.year;
-    const year =
-      typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : undefined;
-    return Number.isFinite(year) ? { year } : {};
-  },
+  validateSearch: validatePanchangaYearSearch,
   component: PanchangaYear,
 });
 const avakahadaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/avakahada-chakra", component: AvakahadaChakra });

@@ -442,6 +442,33 @@ export function buildWheelMarkersFromDetail(
   return { lagnaLon, sunLon, moonLon, moonNak, planetLons };
 }
 
+function lagnaLongitudeFromPanchanga(p: PanchangaDay): number | undefined {
+  const detail = getPanchangaDetail(p);
+  const lagna = (detail?.lagna ?? p.lagna) as
+    | { name?: string; name_ne?: string; degree_in_rashi?: number; longitude?: number }
+    | undefined;
+  if (!lagna) return undefined;
+  const lon = planetLongitude({
+    longitude: lagna.longitude,
+    rashi_ne: lagna.name_ne,
+    deg_in_rashi: lagna.degree_in_rashi,
+  });
+  return lon ?? undefined;
+}
+
+/**
+ * Markers straight from an exact-moment panchanga response (e.g. the
+ * `/panchanga/at-time` scrub query) — the sun/moon/planet longitudes are the
+ * API's own, so the tithi/karana/nakshatra rings always land on the same
+ * band as the reported panchanga for that instant. Use this whenever exact
+ * data is available; fall back to `buildWheelMarkers`'s extrapolation only
+ * while that data hasn't loaded yet.
+ */
+export function buildWheelMarkersAtTime(p: PanchangaDay): WheelMarkers {
+  const det = buildWheelDetail(p);
+  return buildWheelMarkersFromDetail(det, lagnaLongitudeFromPanchanga(p));
+}
+
 /** @deprecated Use buildWheelMarkersFromDetail with API at-time scrub data. */
 export function buildWheelMarkers(
   p: PanchangaDay,

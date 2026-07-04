@@ -52,6 +52,10 @@ export interface ChandraKrantiSearch extends LocationSearch {
   paksha?: "all" | "krishna" | "shukla";
 }
 
+export interface PanchangaYearSearch extends LocationSearch {
+  year?: number;
+}
+
 function toNum(v: unknown): number | undefined {
   if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
   if (typeof v === "string" && v.trim() !== "") {
@@ -199,6 +203,17 @@ export function validateChandraKrantiSearch(
     search.paksha === "shukla"
   ) {
     out.paksha = search.paksha;
+  }
+  return out;
+}
+
+export function validatePanchangaYearSearch(
+  search: Record<string, unknown>,
+): PanchangaYearSearch {
+  const out: PanchangaYearSearch = { ...validateLocationSearch(search) };
+  const year = toInt(search.year);
+  if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
+    out.year = year;
   }
   return out;
 }
