@@ -221,9 +221,15 @@ export function PanchangaYear() {
     () => adDateStrForDay(year, clampedDay),
     [year, clampedDay]
   );
-  const cachedLiveData = queryClient.getQueryData<PanchangaDay>(
-    panchangaKeys.day(liveDateStr, "ad", location.params)
-  );
+  // Read from the bulk query's own day map first: it's held by an observed,
+  // long-lived query, so it survives the `gcTime` eviction that clears the
+  // individually seeded `panchangaKeys.day` entries after a few idle minutes
+  // (which used to freeze the wheel until a page refresh re-seeded them).
+  const cachedLiveData =
+    yearBulkQ.data?.days.get(liveDateStr) ??
+    queryClient.getQueryData<PanchangaDay>(
+      panchangaKeys.day(liveDateStr, "ad", location.params)
+    );
 
   const { data: fetchingLiveData, isPlaceholderData: fetchingIsPlaceholder } = useQuery({
     queryKey: panchangaKeys.day(liveDateStr, "ad", location.params),

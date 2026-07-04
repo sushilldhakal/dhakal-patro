@@ -21,6 +21,7 @@ function seedDayRow(
   day: CalendarDay,
   location: LocationParams | undefined,
   queryClient: QueryClient,
+  days: Map<string, PanchangaDay>,
 ): boolean {
   const embedded = day.panchanga as PanchangaDay | undefined;
   if (!embedded) return false;
@@ -35,6 +36,7 @@ function seedDayRow(
     },
   };
   queryClient.setQueryData(panchangaKeys.day(dateAd, "ad", location), seeded);
+  days.set(dateAd, seeded);
   return true;
 }
 
@@ -42,18 +44,26 @@ function seedFromPayload(
   payload: YearCalendar,
   location: LocationParams | undefined,
   queryClient: QueryClient,
-): number {
-  let daysSeeded = 0;
+): { daysSeeded: number; days: Map<string, PanchangaDay> } {
+  const days = new Map<string, PanchangaDay>();
   for (const day of payload.calendar) {
-    if (seedDayRow(day, location, queryClient)) daysSeeded += 1;
+    seedDayRow(day, location, queryClient, days);
   }
-  return daysSeeded;
+  return { daysSeeded: days.size, days };
 }
 
 export type YearCacheSeedResult = {
   daysSeeded: number;
   /** Loaded from browser IndexedDB — no network request. */
   fromPersistentCache: boolean;
+  /**
+   * Every day of the year keyed by AD date. Held on the (observed, long-lived)
+   * bulk query so the wheel always has data to read — the individually seeded
+   * `panchangaKeys.day` entries have no observers and React Query garbage-
+   * collects them after `gcTime`, which would otherwise freeze the wheel a few
+   * minutes after load.
+   */
+  days: Map<string, PanchangaDay>;
 };
 
 /**
@@ -70,12 +80,12 @@ export async function seedYearPanchangaCache(
 
   const persisted = await readPersistedYear(storageKey);
   if (persisted) {
-    const daysSeeded = seedFromPayload(persisted, location, queryClient);
-    return { daysSeeded, fromPersistentCache: true };
+    const { daysSeeded, days } = seedFromPayload(persisted, location, queryClient);
+    return { daysSeeded, fromPersistentCache: true, days };
   }
 
   const payload = await fetchYearCalendar(year, location, { full: true });
   void writePersistedYear(storageKey, payload);
-  const daysSeeded = seedFromPayload(payload, location, queryClient);
-  return { daysSeeded, fromPersistentCache: false };
+  const { daysSeeded, days } = seedFromPayload(payload, location, queryClient);
+  return { daysSeeded, fromPersistentCache: false, days };
 }
