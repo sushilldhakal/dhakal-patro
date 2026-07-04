@@ -157,6 +157,19 @@ export function getBsMonthAdSpanLabel(year: number, month: number): string {
     : `${start.toLocaleString("en", { month: "short" })}–${fmt(end)}`;
 }
 
+/** Day span for header, e.g. असार १ – ३२ */
+export function getBsMonthRangeLabel(
+  year: number,
+  month: number,
+  lang = "ne",
+  digitFn: (value: string | number) => string = String,
+): string {
+  const { month_name, month_name_ne, month_length } = getLocalMonthMeta(year, month);
+  const isEn = lang.slice(0, 2) === "en";
+  const monthLabel = isEn ? month_name : month_name_ne;
+  return `${monthLabel} ${digitFn(1)} – ${digitFn(month_length)}`;
+}
+
 /** Overlay server panchanga/festival data onto local days (matched by AD date). */
 export function mergeEnrichedDays(
   localDays: CalendarDay[],

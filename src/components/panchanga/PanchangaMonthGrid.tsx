@@ -89,9 +89,9 @@ export function PanchangaMonthGrid({
   };
 
   return (
-    <div className="rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+    <div className="overflow-hidden rounded-xl border border-border bg-muted shadow-sm shadow-ring-soft">
       {isInstant && (
-        <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border bg-secondary/10">
+        <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border">
           {pick("प्रत्येक दिन ", "Each day at ")}
           <span className="font-mono font-semibold text-foreground tabular-nums">
             {digits(clock)}
@@ -99,11 +99,11 @@ export function PanchangaMonthGrid({
           {pick("बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)", "— tithi/nakshatra/yoga/karana (ephemeris mode)")}
         </div>
       )}
-      <div className="grid grid-cols-7 gap-px bg-border border-b border-border">
+      <div className="grid grid-cols-7 gap-px  border-b border-border">
         {WEEKDAYS_NE.map((ne, i) => (
           <div
             key={ne}
-            className="bg-foreground/[0.03] px-1.5 py-1.5 flex flex-col gap-0.5"
+            className="bg-background px-1.5 py-1.5 flex flex-col gap-0.5"
           >
             <span className="text-[11px] font-semibold truncate">{pick(ne, WEEKDAYS_EN[i])}</span>
             {lang === "ne" && (
@@ -115,9 +115,9 @@ export function PanchangaMonthGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-border">
+      <div className="grid grid-cols-7 gap-px ">
           {blanks.map((b) => (
-            <div key={`b-${b}`} className="min-h-[118px] bg-foreground/[0.025]" />
+            <div key={`b-${b}`} className="min-h-[118px] bg-muted" />
           ))}
           {days.map((day) => {
             const ad = new Date(day.date_ad);

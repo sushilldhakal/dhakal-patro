@@ -84,7 +84,7 @@
   --brand-blue: #0b565a;
   --brand-blue-pressed: #084548;
   --off-white: #f8f6f2;
-
+  
   /* Legacy aliases used across components */
   --brand-yellow: var(--brand-gold);
   --brand-yellow-pressed: var(--brand-gold-pressed);

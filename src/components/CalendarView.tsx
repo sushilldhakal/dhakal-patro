@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   fetchMonthCalendar,
   fetchFestivals,
@@ -12,14 +11,11 @@ import {
   type Festival,
 } from "@/lib/api";
 import {
-  BS_MONTH_NAMES,
-  BS_MONTHS_NE,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
   adToBS,
   bsToAD,
   getCurrentBs,
-  bsMonthLabel,
 } from "@/lib/bs-calendar";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
@@ -30,11 +26,11 @@ import {
   applyHolidaysToDays,
   buildCalendarGridDays,
   buildLocalMonthDays,
-  getBsMonthAdSpanLabel,
   mergeEnrichedDays,
   shiftBsMonth,
 } from "@/lib/local-calendar";
 import { BsCalendarGrid } from "./BsCalendarGrid";
+import { BsMonthHeaderTitle } from "./BsMonthHeaderTitle";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
 import { patroSegBtn } from "@/lib/patro-classes";
@@ -114,7 +110,7 @@ export function CalendarView({
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { lang, pick, digits } = useLocale();
+  const { lang } = useLocale();
   const init = useMemo(() => {
     if (todayAd) {
       const bs = adToBS(new Date(`${todayAd}T12:00:00`));
@@ -143,7 +139,6 @@ export function CalendarView({
   const localDays = useMemo(() => buildLocalMonthDays(year, month), [year, month]);
   const prevBs = useMemo(() => shiftBsMonth(year, month, -1), [year, month]);
   const nextBs = useMemo(() => shiftBsMonth(year, month, 1), [year, month]);
-  const adMonthSpan = useMemo(() => getBsMonthAdSpanLabel(year, month), [year, month]);
 
   const canFetchPrev =
     prevBs.year >= BS_SUPPORTED_START_YEAR && prevBs.year <= BS_SUPPORTED_END_YEAR;
@@ -366,133 +361,83 @@ export function CalendarView({
     </>
   );
 
+  const patroModeBlock = enablePatroToggle ? (
+    <div
+      className="inline-flex shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5"
+      role="radiogroup"
+      aria-label={t("calendar.patro_mode_aria")}
+    >
+      <button
+        type="button"
+        role="radio"
+        aria-checked={patroView === "calendar"}
+        className={patroSegBtn(patroView === "calendar")}
+        onClick={() => switchPatroView("calendar")}
+      >
+        {t("calendar.mode_bs")}
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={patroView === "panchanga"}
+        className={patroSegBtn(patroView === "panchanga")}
+        onClick={() => switchPatroView("panchanga")}
+      >
+        {t("calendar.mode_panchanga")}
+      </button>
+    </div>
+  ) : (
+    <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground sm:text-right">
+      {t("calendar.eyebrow")}
+    </div>
+  );
+
+  function changeMonth(nextMonth: number) {
+    setMonth(nextMonth);
+    setSelected(null);
+    onDaySelect?.(null);
+  }
+
+  function changeYear(nextYear: number) {
+    setYear(nextYear);
+    setSelected(null);
+    onDaySelect?.(null);
+  }
+
   const monthHeader = showMonthHeader ? (
-    <div className="mb-4 mt-2 flex flex-wrap items-end justify-between gap-4 max-sm:px-2.5 max-sm:pt-3">
-      <div className="flex w-full flex-col items-start min-[1081px]:w-auto">
-        {enablePatroToggle ? (
-          <div className="mb-1.5 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-              {t("calendar.brand_eyebrow")}
-            </span>
-            <div
-              className="inline-flex gap-0.5 rounded-lg border border-border bg-card p-0.5"
-              role="radiogroup"
-              aria-label={t("calendar.patro_mode_aria")}
-            >
-              <button
-                type="button"
-                role="radio"
-                aria-checked={patroView === "calendar"}
-                className={patroSegBtn(patroView === "calendar")}
-                onClick={() => switchPatroView("calendar")}
-              >
-                {t("calendar.mode_bs")}
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={patroView === "panchanga"}
-                className={patroSegBtn(patroView === "panchanga")}
-                onClick={() => switchPatroView("panchanga")}
-              >
-                {t("calendar.mode_panchanga")}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="mb-1.5 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            {t("calendar.eyebrow")}
-          </div>
-        )}
-        <h1 className="m-0 text-[40px] font-bold leading-tight tracking-tight max-sm:text-[28px]">
-          {pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1])}{" "}
-          <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
-        </h1>
-        <div className="mt-1 text-sm text-muted-foreground">
-          {pick(`${BS_MONTH_NAMES[month - 1]} ${year} · `, "")}
-          {adMonthSpan}
-          {isPanchangaPatro ? (
-            <span className="ml-1 font-medium text-muted-foreground">
-              · {t("panchanga.monthly_title")}
-            </span>
-          ) : null}
-        </div>
+    <div className="mb-4 mt-2 flex items-start justify-between gap-3 max-sm:px-2.5 max-sm:pt-3">
+      <div className="min-w-0 flex-1">
+        <BsMonthHeaderTitle
+          year={year}
+          month={month}
+          yearOptions={BS_YEAR_OPTIONS}
+          todayAd={todayAd}
+          onToday={goToday}
+          todayAriaLabel={t("calendar.today_btn")}
+          onMonthChange={changeMonth}
+          onYearChange={changeYear}
+          monthAriaLabel={t("calendar.month_aria")}
+          yearAriaLabel={t("calendar.year_aria")}
+          onPrev={prev}
+          onNext={nextMonth}
+          prevDisabled={month === 1 && year <= BS_SUPPORTED_START_YEAR}
+          nextDisabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
+          prevAriaLabel={t("calendar.prev_month")}
+          nextAriaLabel={t("calendar.next_month")}
+          panchangaSubtitle={isPanchangaPatro ? `· ${t("panchanga.monthly_title")}` : undefined}
+        />
       </div>
 
-      <div className="flex w-full flex-col items-stretch gap-2 min-[1081px]:w-auto min-[1081px]:items-end">
+      <div className="flex shrink-0 flex-col items-end gap-2 pt-0.5">
+        {patroModeBlock}
         {location && onLocationChange ? (
-          <div className="flex w-full justify-end">
-            <LocationSelector
-              compact
-              location={location}
-              onLocationChange={onLocationChange}
-            />
-          </div>
+          <LocationSelector
+            compact
+            location={location}
+            onLocationChange={onLocationChange}
+            className="w-auto max-w-[11rem] sm:max-w-[12.5rem]"
+          />
         ) : null}
-
-        <div className="flex w-full flex-wrap items-center gap-2.5 min-[1081px]:justify-end">
-        <select
-          className="h-8 cursor-pointer rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium text-foreground"
-          value={month}
-          aria-label={t("calendar.month_aria")}
-          onChange={(e) => {
-            setMonth(Number(e.target.value));
-            setSelected(null);
-            onDaySelect?.(null);
-          }}
-        >
-          {BS_MONTH_NAMES.map((_: string, i: number) => (
-            <option key={i} value={i + 1}>
-              {bsMonthLabel(i + 1, lang)}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="h-8 cursor-pointer rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium text-foreground"
-          value={year}
-          aria-label={t("calendar.year_aria")}
-          onChange={(e) => {
-            setYear(Number(e.target.value));
-            setSelected(null);
-            onDaySelect?.(null);
-          }}
-        >
-          {BS_YEAR_OPTIONS.map((y) => (
-            <option key={y} value={y}>
-              {digits(y)}
-            </option>
-          ))}
-        </select>
-
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
-            onClick={prev}
-            disabled={month === 1 && year <= BS_SUPPORTED_START_YEAR}
-            aria-label={t("calendar.prev_month")}
-          >
-            <ChevronLeft size={16} strokeWidth={1.8} />
-          </button>
-          <button
-            type="button"
-            className="h-8 cursor-pointer rounded-lg border-none bg-primary px-4 text-[13.5px] font-semibold text-primary-foreground shadow-xs transition-[filter,transform] hover:brightness-105 active:translate-y-px"
-            onClick={goToday}
-          >
-            {t("calendar.today_btn")}
-          </button>
-          <button
-            type="button"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
-            onClick={nextMonth}
-            disabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
-            aria-label={t("calendar.next_month")}
-          >
-            <ChevronRight size={16} strokeWidth={1.8} />
-          </button>
-        </div>
-        </div>
       </div>
     </div>
   ) : null;

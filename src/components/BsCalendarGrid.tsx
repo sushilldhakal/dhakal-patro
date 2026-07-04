@@ -43,8 +43,8 @@ export function BsCalendarGrid({
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
-    <div className="overflow-hidden rounded-xl bg-card shadow-sm shadow-ring-soft max-md:rounded-none max-md:border-t max-md:border-b max-md:border-border max-md:shadow-none">
-      <div className="grid grid-cols-7 gap-px bg-border">
+    <div className="overflow-hidden rounded-xl border border-border bg-muted shadow-sm shadow-ring-soft max-md:rounded-none max-md:shadow-none">
+      <div className="grid grid-cols-7 gap-px">
         {WEEKDAYS_NE.map((ne, i) => {
           const weekend = i === 0 || i === 6;
           return (

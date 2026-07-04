@@ -139,11 +139,8 @@ export function getCurrentBs(): { year: number; month: number } {
 }
 
 export function bsMonthLabel(month: number, lang?: string): string {
-  const isEn = (lang ?? "ne").slice(0, 2) === "en"
-  // English mode stays purely English; Nepali mode keeps the romanized hint.
-  return isEn
-    ? BS_MONTH_NAMES[month - 1]
-    : `${BS_MONTHS_NE[month - 1]} (${BS_MONTH_NAMES[month - 1]})`
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
+  return isEn ? BS_MONTH_NAMES[month - 1] : BS_MONTHS_NE[month - 1];
 }
 
 const WEEKDAY_FULL_NE = [

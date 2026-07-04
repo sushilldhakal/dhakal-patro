@@ -257,7 +257,7 @@ function BrandMark({ className }: { className?: string }) {
         className="shadow group-hover:shadow-primary/40 transition-shadow"
       />
       <span className="font-bold text-[15px] tracking-tight truncate">
-        <span className="text-secondary">{t("brand_vedic")}</span>
+        <span className="text-secondary dark:text-primary">{t("brand_vedic")}</span>
         <span className="text-foreground"> {t("brand_patro")}</span>
       </span>
     </Link>

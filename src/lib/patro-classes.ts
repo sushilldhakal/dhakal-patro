@@ -37,6 +37,54 @@ export function patroSaitCat(active: boolean) {
   );
 }
 
+export const patroMonthNavShell =
+  "inline-flex w-max max-w-full shrink-0 flex-nowrap items-center gap-1 sm:gap-1.5";
+
+export const patroMonthNavDivider =
+  "flex items-center gap-1 border-l border-border pl-1.5 sm:gap-1.5 sm:pl-2";
+
+export const patroMonthSelect =
+  "h-8 min-w-0 max-w-[9.5rem] cursor-pointer rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium text-foreground sm:max-w-none";
+
+export const patroMonthYearSelect =
+  "h-8 w-[5.25rem] cursor-pointer rounded-lg border border-border bg-card px-2.5 text-[13px] font-medium text-foreground";
+
+export const patroMonthNavBtn =
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40";
+
+export const patroMonthTodayBtn =
+  "h-8 cursor-pointer rounded-lg border-none bg-primary px-3.5 text-[13px] font-semibold text-primary-foreground shadow-xs transition-[filter,transform] hover:brightness-105 active:translate-y-px sm:px-4 sm:text-[13.5px]";
+
+export const patroMonthChipShell =
+  "flex w-[3.25rem] shrink-0 flex-col overflow-hidden rounded-[10px] border border-border bg-card shadow-sm";
+
+export const patroMonthChipButton =
+  "cursor-pointer transition-[filter,transform,box-shadow] hover:brightness-[1.03] hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+export const patroMonthChipHead =
+  "bg-secondary px-1 py-1.5 text-center text-[10px] font-bold leading-none tracking-wide text-secondary-foreground";
+
+export const patroMonthChipDay =
+  "flex min-h-[2.25rem] items-center justify-center bg-card py-1 text-[1.625rem] font-bold leading-none text-foreground";
+
+export const patroMonthRangeNav =
+  "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-1 py-1 shadow-xs sm:gap-2";
+
+export const patroMonthRangeLabel =
+  "min-w-0 px-1 text-[13px] font-medium leading-snug text-foreground sm:text-sm";
+
+export const patroMonthRangeRow =
+  "inline-flex max-w-full items-center gap-0.5 sm:gap-1";
+
+export const patroMonthRangeCompactLabel =
+  "min-w-0 whitespace-nowrap text-[11px] font-medium leading-none text-muted-foreground sm:text-xs";
+
+export const patroMonthRangeCompactTrigger =
+  "cursor-pointer rounded px-0.5 transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+export const patroMonthRangeCompactBtn =
+  "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border/70 bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40";
+
 export function patroSegBtn(active: boolean) {
   return cn(
     "h-[26px] cursor-pointer rounded-[calc(var(--radius-lg)-2px)] border-none px-3 text-xs font-semibold transition-colors",
