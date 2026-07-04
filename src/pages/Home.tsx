@@ -16,7 +16,7 @@ import {
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, bsToAD, getCurrentBs } from "../lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsToAD, getCurrentBs } from "../lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroAsideLink, patroAsideTab, patroHeroMonthOverlay, patroHeroMonthShell, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
@@ -76,6 +76,7 @@ function PanchangaAside({
 
   const contextDay =
     selectedDay ??
+    monthContext.days.find((d) => d.date_ad === selectedAdDate) ??
     monthContext.days.find((d) => d.day === 1) ??
     monthContext.days[0] ??
     null;
@@ -291,7 +292,15 @@ export function Home() {
     );
   }, []);
   const monthStartAd = useMemo(() => monthStartAdDate(monthContext), [monthContext]);
-  const asideAdDate = selectedDay?.date_ad ?? monthStartAd;
+  const viewingCurrentBsMonth = useMemo(() => {
+    const todayBs = adToBS(new Date(`${todayAd}T12:00:00`));
+    return monthContext.year === todayBs.year && monthContext.month === todayBs.month;
+  }, [monthContext.year, monthContext.month, todayAd]);
+  const asideAdDate = useMemo(() => {
+    if (selectedDay?.date_ad) return selectedDay.date_ad;
+    if (viewingCurrentBsMonth) return todayAd;
+    return monthStartAd;
+  }, [selectedDay, viewingCurrentBsMonth, todayAd, monthStartAd]);
 
   const panchangaQ = useQuery({
     queryKey: panchangaKeys.day(asideAdDate, "ad", location.params),

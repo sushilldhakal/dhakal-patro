@@ -92,10 +92,14 @@ export function buildCalendarGridDays(
   const nextBs = shiftBsMonth(year, month, 1);
 
   const prevLocal = buildLocalMonthDays(prevBs.year, prevBs.month);
-  const leading: CalendarDay[] = prevLocal.slice(-startOffset).map((d) => ({
-    ...d,
-    outsideMonth: true,
-  }));
+  // slice(-0) is slice(0) in JS — returns the whole array, not zero elements
+  const leading: CalendarDay[] =
+    startOffset > 0
+      ? prevLocal.slice(-startOffset).map((d) => ({
+          ...d,
+          outsideMonth: true,
+        }))
+      : [];
 
   const current: CalendarDay[] = currentLocal.map((d) => ({
     ...d,
