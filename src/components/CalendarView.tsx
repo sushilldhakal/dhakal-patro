@@ -97,7 +97,6 @@ interface Props {
   location?: PanchangaLocation;
   onLocationChange?: (location: PanchangaLocation) => void;
   todayAd?: string;
-  onLoadingChange?: (loading: boolean) => void;
 }
 
 export function CalendarView({
@@ -112,7 +111,6 @@ export function CalendarView({
   location,
   onLocationChange,
   todayAd,
-  onLoadingChange,
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -263,10 +261,6 @@ export function CalendarView({
     () => anchorDateForBsMonth(year, month, monthDays, todayAd),
     [year, month, monthDays, todayAd],
   );
-
-  useEffect(() => {
-    onLoadingChange?.(monthQ.isLoading || festivalsLoading);
-  }, [monthQ.isLoading, festivalsLoading, onLoadingChange]);
 
   function selectDay(day: CalendarDay) {
     if (isPanchangaPatro && location) {

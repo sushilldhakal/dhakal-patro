@@ -248,7 +248,6 @@ export function Home() {
     [location],
   );
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
-  const [calendarLoading, setCalendarLoading] = useState(false);
   const [patroView, setPatroView] = useState<HomePatroView>(loadHomePatroView);
   const [monthContext, setMonthContext] = useState<CalendarMonthContext>(() => ({
     year: bsYear,
@@ -273,9 +272,7 @@ export function Home() {
     setLocalStorageItem(HOME_PATRO_VIEW_KEY, view);
   }, []);
 
-  const pageLoading = calendarLoading || panchangaQ.isLoading;
-
-  useRouteLoading(pageLoading);
+  useRouteLoading(panchangaQ.isLoading);
 
   return (
     <main className="mx-auto max-w-[1400px] px-4 pb-12 pt-4 max-sm:px-0 max-sm:pb-16 max-sm:pt-0">
@@ -288,7 +285,6 @@ export function Home() {
         onPatroViewChange={handlePatroViewChange}
         onDaySelect={setSelectedDay}
         onMonthContextChange={handleMonthContextChange}
-        onLoadingChange={setCalendarLoading}
         aside={
           <PanchangaAside
             placement={patroView === "panchanga" ? "below" : "sidebar"}
