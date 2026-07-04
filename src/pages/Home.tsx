@@ -126,15 +126,13 @@ function PanchangaAside({
     <aside
       className={cn(
         "flex flex-col gap-3 bg-transparent",
-        isBelow ? "w-full" : "min-h-0 flex-1 min-[1081px]:h-full min-[1081px]:gap-0",
+        isBelow ? "w-full" : "min-[1081px]:gap-0",
       )}
     >
       <div
         className={cn(
           "flex flex-col gap-3",
-          isBelow
-            ? "overflow-hidden rounded-xl"
-            : "min-[1081px]:min-h-0 min-[1081px]:flex-1 min-[1081px]:gap-0 min-[1081px]:overflow-hidden",
+          isBelow ? "rounded-xl" : "min-[1081px]:gap-0",
         )}
       >
         <div
@@ -156,7 +154,7 @@ function PanchangaAside({
           <div
             className={cn(
               "flex flex-col gap-3",
-              !isBelow && "min-[1081px]:min-h-0 min-[1081px]:flex-1 min-[1081px]:gap-0 min-[1081px]:overflow-hidden",
+              !isBelow && "min-[1081px]:gap-0",
             )}
           >
             <div
@@ -175,7 +173,7 @@ function PanchangaAside({
               "flex flex-col gap-3",
               isBelow
                 ? "lg:flex-row lg:items-stretch"
-                : "min-[1081px]:min-h-0 min-[1081px]:flex-1 min-[1081px]:gap-0 min-[1081px]:overflow-hidden",
+                : "min-[1081px]:gap-0",
             )}
           >
             <div
@@ -224,7 +222,7 @@ function PanchangaAside({
               </div>
             </div>
 
-            <div className={cn("flex min-w-0 flex-1 flex-col bg-card", isBelow && "min-h-0")}>
+            <div className="flex min-w-0 flex-1 flex-col bg-card">
             <div
               className="grid shrink-0 grid-cols-4 gap-1.5 border-b border-border px-2.5 py-2.5"
               role="tablist"
@@ -244,13 +242,7 @@ function PanchangaAside({
               ))}
             </div>
 
-            <div
-              className={cn(
-                "min-h-0 flex-1 overflow-y-auto overscroll-contain p-2.5 [-webkit-overflow-scrolling:touch] [scrollbar-color:color-mix(in_srgb,var(--muted-foreground)_35%,transparent)_transparent] [scrollbar-width:thin] max-md:border-none max-md:p-0",
-                isBelow && "max-h-[28rem] lg:max-h-none",
-              )}
-              role="tabpanel"
-            >
+            <div className="p-2.5 max-md:border-none max-md:p-0" role="tabpanel">
               <PanchangaAsideTabPanel
                 tab={asideTab}
                 p={activeP}

@@ -1,4 +1,4 @@
-import type { PanchangaDay } from "@/lib/api";
+import type { ApiHoraSlot, PanchangaDay } from "@/lib/api";
 import {
   formatPakshaNepaliDisplay,
   getLagnaSpans,

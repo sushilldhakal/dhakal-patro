@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
-import type { ApiHoraSlot, NavataraRow, PanchangaDay } from "@/lib/api";
+import type { ApiHoraSlot, NavataraRow, PanchangaDay, UdayaLagnaRow } from "@/lib/api";
+import { useLocale } from "@/i18n/locale";
 import {
   buildDayTimelineData,
   choghadiyaQuality,
@@ -163,48 +164,48 @@ function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
 
 function PushkaraList({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   const rows = getUdayaLagna(p);
 
   if (!rows?.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.pushkara_unavailable")}</p>;
   }
 
+  const pushkaraLabel = pick("पुष्कर", "Pushkara");
+
   return (
-    <ul className="m-0 flex list-none flex-col gap-2 p-0">
-      {rows.map((row, i) => {
-        const range =
-          formatTimeRangeShort(
-            row.start_local_time_short ?? row.start_local_time,
-            row.end_local_time_short ?? row.end_local_time,
-          ) ?? "—";
-        const hits = row.pushkara_navamsha ?? [];
-        return (
-          <li key={`${row.name}-${i}`} className="flex flex-col gap-1 rounded-md bg-surface-inset p-2.5">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-[13px] font-bold text-foreground">{row.name_ne ?? row.name}</span>
-              <span className="mono text-xs font-semibold whitespace-nowrap text-muted-foreground">{range}</span>
-            </div>
-            {hits.length ? (
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
-                <span className="text-[11.5px] font-semibold text-muted-foreground">
-                  {t("muhurta_aside.pushkara_label")}
-                </span>
-                {hits.map((hit, j) => (
-                  <span
-                    key={j}
-                    className="mono rounded-full bg-pushkara-hit px-1.5 py-0.5 text-xs font-bold text-accent"
-                  >
-                    {formatClockNepali(hit.local_time_short ?? hit.local_time) ?? hit.local_time_short}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <span className="text-xs font-medium text-muted-foreground">—</span>
-            )}
-          </li>
-        );
-      })}
+    <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
+      {rows.map((row, i) => (
+        <PushkaraSlot key={`${row.name}-${i}`} row={row} pushkaraLabel={pushkaraLabel} />
+      ))}
     </ul>
+  );
+}
+
+function PushkaraSlot({ row, pushkaraLabel }: { row: UdayaLagnaRow; pushkaraLabel: string }) {
+  const hits = row.pushkara_navamsha ?? [];
+  const times = hits
+    .map((hit) => formatClockNepali(hit.local_time_short ?? hit.local_time) ?? hit.local_time_short)
+    .filter(Boolean)
+    .join(", ");
+  const range =
+    formatTimeRangeShort(
+      row.start_local_time_short ?? row.start_local_time,
+      row.end_local_time_short ?? row.end_local_time,
+    ) ?? "—";
+  const hasPushkara = hits.length > 0;
+
+  return (
+    <li className={patroNavataraRow(hasPushkara ? "good" : "neutral")}>
+      <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
+        {row.name_ne ?? row.name}
+      </span>
+      <span className="mono w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+        {hasPushkara ? times : range}
+        <span className="mx-1 opacity-55">/</span>
+        {hasPushkara ? pushkaraLabel : "—"}
+      </span>
+    </li>
   );
 }
 
