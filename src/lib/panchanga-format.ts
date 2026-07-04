@@ -1221,14 +1221,46 @@ export type MonthFestivalEntry = {
   isPublicHoliday?: boolean;
 };
 
-const NOTABLE_TITHI_NE = new Set([
+/** Bare lunar phases — tithi markers, not चाडपर्व unless named (e.g. कुशे औंसी). */
+const BARE_LUNAR_PHASE_NE = new Set(["पूर्णिमा", "औंसी"]);
+
+const TITHI_NAMES_NE = new Set([
+  "प्रतिपदा",
+  "द्वितीया",
+  "तृतीया",
   "चतुर्थी",
+  "पञ्चमी",
+  "षष्ठी",
+  "सप्तमी",
   "अष्टमी",
+  "नवमी",
+  "दशमी",
   "एकादशी",
   "द्वादशी",
+  "त्रयोदशी",
+  "चतुर्दशी",
   "पूर्णिमा",
   "औंसी",
-  "औंसी",
+]);
+
+const TITHI_NAMES_EN = new Set([
+  "pratipada",
+  "dwitiya",
+  "tritiya",
+  "chaturthi",
+  "panchami",
+  "shashthi",
+  "saptami",
+  "ashtami",
+  "navami",
+  "dashami",
+  "ekadashi",
+  "dwadashi",
+  "trayodashi",
+  "chaturdashi",
+  "purnima",
+  "amavasya",
+  "aunsi",
 ]);
 
 function parseBsDayInMonth(
@@ -1247,23 +1279,6 @@ function parseBsDayInMonth(
   return null;
 }
 
-function pakshaShortNe(day: CalendarDay): string | undefined {
-  const label = day.paksha_ne ?? day.paksha ?? "";
-  if (label.includes("शुक्ल")) return "शुक्ल";
-  if (label.includes("कृष्ण")) return "कृष्ण";
-  return undefined;
-}
-
-function tithiPatroLabel(day: CalendarDay): string | undefined {
-  const tithi = day.tithi_ne ?? day.tithi;
-  if (!tithi || !NOTABLE_TITHI_NE.has(tithi)) return undefined;
-  if (tithi === "पूर्णिमा") return "पूर्णिमा";
-  if (tithi === "औंसी" || tithi === "औंसी") return "औंसी";
-  const paksha = pakshaShortNe(day);
-  if (paksha) return `${paksha} ${tithi}`;
-  return tithi;
-}
-
 function hasDevanagari(text: string): boolean {
   return /[\u0900-\u097F]/.test(text);
 }
@@ -1275,6 +1290,22 @@ function normalizeFestKey(name: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9\u0900-\u097F]+/g, " ")
     .trim();
+}
+
+function isTithiOnlyLabel(name: string): boolean {
+  const trimmed = name.trim();
+  if (BARE_LUNAR_PHASE_NE.has(trimmed) || TITHI_NAMES_NE.has(trimmed)) return true;
+
+  const pakshaNe = trimmed.match(/^(शुक्ल|कृष्ण)\s+(.+)$/);
+  if (pakshaNe && TITHI_NAMES_NE.has(pakshaNe[2]!)) return true;
+
+  const key = normalizeFestKey(trimmed);
+  if (TITHI_NAMES_EN.has(key) || key === "full moon" || key === "new moon") return true;
+
+  const pakshaEn = key.match(/^(shukla|krishna)\s+(.+)$/);
+  if (pakshaEn && TITHI_NAMES_EN.has(pakshaEn[2]!)) return true;
+
+  return false;
 }
 
 /** Map any festival label to a stable alias id for deduplication. */
@@ -1312,11 +1343,6 @@ function dedupeDayFestivalNames(names: string[], aliasIndex: Map<string, string>
   return Array.from(byAlias.values());
 }
 
-function entryCoversTithi(entryName: string, tithiLabel: string): boolean {
-  const tithiCore = tithiLabel.replace(/^(शुक्ल|कृष्ण)\s+/, "");
-  return entryName.includes(tithiCore) || entryName.includes(tithiLabel);
-}
-
 /** Month-wide चाडपर्व list for the patro-style aside tab. */
 export function buildMonthFestivalEntries(
   bsYear: number,
@@ -1335,7 +1361,7 @@ export function buildMonthFestivalEntries(
     opts?: { isPublicHoliday?: boolean; alias?: string },
   ) => {
     const trimmed = name.trim();
-    if (!trimmed) return false;
+    if (!trimmed || isTithiOnlyLabel(trimmed)) return false;
     const alias = opts?.alias ?? resolveFestivalAlias(trimmed, aliasIndex);
     const dayClaims = claimed.get(bsDay) ?? new Set<string>();
     if (dayClaims.has(alias)) return false;
@@ -1373,35 +1399,6 @@ export function buildMonthFestivalEntries(
     const names = dedupeDayFestivalNames(day.festivals ?? [], aliasIndex);
     for (const name of names) {
       add(day.day, name);
-    }
-  }
-
-  let prevTithiLabel: string | undefined;
-  for (const day of days) {
-    if (day.day === 1) {
-      prevTithiLabel = undefined;
-      continue;
-    }
-
-    const dayEntries = byDay.get(day.day) ?? [];
-    const hasNamedFest = dayEntries.some(
-      (entry) => !entry.name.endsWith("संक्रान्ति"),
-    );
-    if (hasNamedFest) {
-      prevTithiLabel = undefined;
-      continue;
-    }
-
-    const tithiLabel = tithiPatroLabel(day);
-    if (!tithiLabel) {
-      prevTithiLabel = undefined;
-      continue;
-    }
-    if (tithiLabel === prevTithiLabel) continue;
-    if (dayEntries.some((entry) => entryCoversTithi(entry.name, tithiLabel))) continue;
-
-    if (add(day.day, tithiLabel, { alias: `tithi:${day.day}:${tithiLabel}` })) {
-      prevTithiLabel = tithiLabel;
     }
   }
 

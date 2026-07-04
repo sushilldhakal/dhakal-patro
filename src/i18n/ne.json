@@ -172,7 +172,9 @@
     "mode_instant": "समय",
     "mode_instant_title": "क्षणिक समय — तोकिएको घण्टामा चलिरहेको तिथि/नक्षत्र",
     "clock_label": "घण्टा",
-    "pick_time": "समय छान्नुहोस्"
+    "pick_time": "समय छान्नुहोस्",
+    "hour_aria": "घण्टा",
+    "minute_aria": "मिनेट"
   },
   "kundali": {
     "eyebrow": "नेपाली पात्रो · ज्योतिष · जन्म कुण्डली",
@@ -467,8 +469,11 @@
     "mode_ad": "ई.सं.",
     "prev_month": "अघिल्लो महिना",
     "next_month": "अर्को महिना",
+    "prev_day": "अघिल्लो दिन",
+    "next_day": "अर्को दिन",
     "month_aria": "महिना",
     "year_aria": "वर्ष",
+    "day_aria": "गते",
     "era_aria": "पात्रो युग",
     "today_badge": "आज",
     "enrich_error": "तिथि र सूर्योदय लोड गर्न सकिएन — मितिहरू भने सही छन्।"

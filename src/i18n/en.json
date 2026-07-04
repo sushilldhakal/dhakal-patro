@@ -172,7 +172,9 @@
     "mode_instant": "Time",
     "mode_instant_title": "Instant time — tithi/nakshatra at selected hour",
     "clock_label": "Clock",
-    "pick_time": "Pick time"
+    "pick_time": "Pick time",
+    "hour_aria": "Hour",
+    "minute_aria": "Minute"
   },
   "kundali": {
     "eyebrow": "Nepali Patro · Jyotish · Birth Kundali",
@@ -467,8 +469,11 @@
     "mode_ad": "A.D.",
     "prev_month": "Previous month",
     "next_month": "Next month",
+    "prev_day": "Previous day",
+    "next_day": "Next day",
     "month_aria": "Month",
     "year_aria": "Year",
+    "day_aria": "Day",
     "era_aria": "Calendar era",
     "today_badge": "Today",
     "enrich_error": "Tithi & sunrise could not be loaded — dates are still correct."

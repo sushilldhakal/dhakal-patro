@@ -3,7 +3,9 @@ import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel } from "@/lib/bs-cal
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { getBsMonthAdSpanCompact } from "@/lib/local-calendar";
-import { BsNativeSelect } from "@/components/BsNativeSelect";
+import { toNepaliDigits } from "@/lib/panchanga-format";
+import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
+import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
 import {
   patroMonthChipButton,
   patroMonthChipDay,
@@ -31,6 +33,14 @@ interface Props {
   prevAriaLabel: string;
   nextAriaLabel: string;
   panchangaSubtitle?: string;
+  day?: number;
+  dayOptions?: BsNativeSelectOption[];
+  onDayChange?: (day: number) => void;
+  dayAriaLabel?: string;
+  clock?: string;
+  onClockChange?: (clock: string) => void;
+  hourAriaLabel?: string;
+  minuteAriaLabel?: string;
 }
 
 function chipMonthLabel(month: number, lang: string): string {
@@ -58,6 +68,14 @@ export function BsMonthHeaderTitle({
   prevAriaLabel,
   nextAriaLabel,
   panchangaSubtitle,
+  day,
+  dayOptions,
+  onDayChange,
+  dayAriaLabel,
+  clock,
+  onClockChange,
+  hourAriaLabel,
+  minuteAriaLabel,
 }: Props) {
   const { lang, pick, digits } = useLocale();
 
@@ -67,6 +85,8 @@ export function BsMonthHeaderTitle({
 
   const monthTitle = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
   const adMonthCompact = getBsMonthAdSpanCompact(year, month);
+  const chipDay = day ?? todayBs.day;
+  const chipMonth = day != null ? month : todayBs.month;
   const monthOptions = BS_MONTH_NAMES.map((_: string, i: number) => ({
     value: i + 1,
     label: bsMonthLabel(i + 1, lang),
@@ -75,6 +95,19 @@ export function BsMonthHeaderTitle({
     value: y,
     label: digits(y),
   }));
+  const { hour, minute } = clock ? parseClockParts(clock) : { hour: 0, minute: 0 };
+  const hourOptions = Array.from({ length: 24 }, (_, i) => ({
+    value: i,
+    label: toNepaliDigits(String(i).padStart(2, "0")),
+  }));
+  const minuteOptions = Array.from({ length: 60 }, (_, i) => ({
+    value: i,
+    label: toNepaliDigits(String(i).padStart(2, "0")),
+  }));
+
+  const setClockPart = (nextHour: number, nextMinute: number) => {
+    onClockChange?.(formatClockParts(nextHour, nextMinute));
+  };
 
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -85,8 +118,8 @@ export function BsMonthHeaderTitle({
         aria-label={todayAriaLabel}
         title={todayAriaLabel}
       >
-        <div className={patroMonthChipHead}>{chipMonthLabel(todayBs.month, lang)}</div>
-        <div className={patroMonthChipDay}>{digits(todayBs.day)}</div>
+        <div className={patroMonthChipHead}>{chipMonthLabel(chipMonth, lang)}</div>
+        <div className={patroMonthChipDay}>{digits(chipDay)}</div>
       </button>
 
       <div className="flex min-w-0 flex-col gap-1">
@@ -109,6 +142,16 @@ export function BsMonthHeaderTitle({
             <ChevronLeft size={14} strokeWidth={2} />
           </button>
 
+          {dayOptions && onDayChange && dayAriaLabel ? (
+            <BsNativeSelect
+              className="w-[3.25rem] sm:w-[3.5rem]"
+              value={day ?? dayOptions[0]?.value ?? 1}
+              options={dayOptions}
+              ariaLabel={dayAriaLabel}
+              onChange={onDayChange}
+            />
+          ) : null}
+
           <BsNativeSelect
             className="w-[4.75rem] sm:w-[5.25rem]"
             value={month}
@@ -124,6 +167,25 @@ export function BsMonthHeaderTitle({
             ariaLabel={yearAriaLabel}
             onChange={onYearChange}
           />
+
+          {clock && onClockChange && hourAriaLabel && minuteAriaLabel ? (
+            <>
+              <BsNativeSelect
+                className="w-[3.25rem] sm:w-[3.5rem]"
+                value={hour}
+                options={hourOptions}
+                ariaLabel={hourAriaLabel}
+                onChange={(nextHour) => setClockPart(nextHour, minute)}
+              />
+              <BsNativeSelect
+                className="w-[3.25rem] sm:w-[3.5rem]"
+                value={minute}
+                options={minuteOptions}
+                ariaLabel={minuteAriaLabel}
+                onChange={(nextMinute) => setClockPart(hour, nextMinute)}
+              />
+            </>
+          ) : null}
 
           <button
             type="button"

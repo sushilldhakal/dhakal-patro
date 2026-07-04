@@ -424,7 +424,6 @@ export function CalendarView({
           nextDisabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
           prevAriaLabel={t("calendar.prev_month")}
           nextAriaLabel={t("calendar.next_month")}
-          panchangaSubtitle={isPanchangaPatro ? `· ${t("panchanga.monthly_title")}` : undefined}
         />
       </div>
 

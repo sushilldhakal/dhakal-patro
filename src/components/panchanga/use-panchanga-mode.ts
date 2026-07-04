@@ -3,7 +3,6 @@ import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 
 export type PanchangaDataMode = "udaya" | "instant";
 
-const MODE_KEY = "dhakalPatroPanchDataMode";
 const CLOCK_KEY = "dhakalPatroPanchClock";
 
 function pad2(n: number) {
@@ -19,44 +18,45 @@ export function defaultClockForTimezone(timezone: string): string {
   }).formatToParts(new Date());
   const h = parts.find((p) => p.type === "hour")?.value ?? "12";
   const m = parts.find((p) => p.type === "minute")?.value ?? "00";
-  return `${pad2(Number(h) % 24)}:${m}`;
+  return formatClockParts(Number(h) % 24, Number(m));
 }
 
-export function usePanchangaMode(
-  defaultTimezone: string,
-  initial?: { mode?: PanchangaDataMode; clock?: string }
-) {
-  // URL-supplied mode/clock (shared link) seed first render; otherwise we fall
-  // back to the persisted preference.
-  const [mode, setModeState] = useState<PanchangaDataMode>(() => {
-    if (initial?.mode) return initial.mode;
-    const saved = getLocalStorageItem(MODE_KEY);
-    return saved === "instant" ? "instant" : "udaya";
-  });
+export function parseClockParts(clock: string): { hour: number; minute: number } {
+  const [h, m] = clock.split(":");
+  const hour = Number(h);
+  const minute = Number(m);
+  return {
+    hour: Number.isFinite(hour) ? Math.min(23, Math.max(0, hour)) : 0,
+    minute: Number.isFinite(minute) ? Math.min(59, Math.max(0, minute)) : 0,
+  };
+}
 
+export function formatClockParts(hour: number, minute: number): string {
+  return `${pad2(hour)}:${pad2(minute)}`;
+}
+
+export function usePanchangaClock(
+  defaultTimezone: string,
+  initial?: { clock?: string },
+) {
   const [clock, setClockState] = useState(() => {
     if (initial?.clock) return initial.clock;
     const saved = getLocalStorageItem(CLOCK_KEY);
     return saved ?? defaultClockForTimezone(defaultTimezone);
   });
 
-  const setMode = useCallback(
-    (next: PanchangaDataMode) => {
-      setModeState(next);
-      setLocalStorageItem(MODE_KEY, next);
-      if (next === "instant") {
-        const nowClock = defaultClockForTimezone(defaultTimezone);
-        setClockState(nowClock);
-        setLocalStorageItem(CLOCK_KEY, nowClock);
-      }
-    },
-    [defaultTimezone]
-  );
-
   const setClock = useCallback((next: string) => {
     setClockState(next);
     setLocalStorageItem(CLOCK_KEY, next);
   }, []);
 
-  return { mode, setMode, clock, setClock };
+  return { clock, setClock };
+}
+
+/** @deprecated Use usePanchangaClock — mode toggle removed from panchanga page. */
+export function usePanchangaMode(
+  defaultTimezone: string,
+  initial?: { mode?: PanchangaDataMode; clock?: string },
+) {
+  return usePanchangaClock(defaultTimezone, { clock: initial?.clock });
 }

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link, getRouteApi } from "@tanstack/react-router";
-import { CalendarRange, MapPin } from "lucide-react";
+import { CalendarRange } from "lucide-react";
 import {
   fetchPanchanga,
+  locationCacheKey,
   panchangaKeys,
 } from "@/lib/api";
 import { adToBS } from "@/lib/bs-calendar";
@@ -14,7 +15,7 @@ import {
   fetchEphemerisPanchangaDay,
   isEphemerisPanchanga,
 } from "@/lib/ephemeris-adapters";
-import { getSunrise, getSunset, toNepaliDigits } from "@/lib/panchanga-format";
+import { formatTimeShort, getSunrise, getSunset } from "@/lib/panchanga-format";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { PanchangaDateNav } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
@@ -23,13 +24,12 @@ import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
-import { PanchangaModeControls } from "@/components/panchanga/PanchangaModeControls";
 import {
   EphemerisModeBanner,
   MuhurtaNowPanel,
 } from "@/components/panchanga/MuhurtaNowPanel";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { usePanchangaMode } from "@/components/panchanga/use-panchanga-mode";
+import { usePanchangaClock } from "@/components/panchanga/use-panchanga-mode";
 import {
   locationToSearch,
   sameLocationParams,
@@ -69,10 +69,6 @@ function parseAdStr(s: string): Date {
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
-function fmtAdFull(d: Date): string {
-  return d.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
-}
-
 export function Panchanga() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
@@ -86,37 +82,26 @@ export function Panchanga() {
     search.date ? parseAdStr(search.date) : new Date()
   );
   const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
-  const { mode: dataMode, setMode: setDataMode, clock, setClock } =
-    usePanchangaMode(timezoneForMode, { mode: search.mode, clock: search.time });
+  const { clock, setClock } = usePanchangaClock(timezoneForMode, { clock: search.time });
 
   const adDateStr = toAdStr(date);
   const bs = adToBS(date);
-  const isInstant = dataMode === "instant";
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
 
-  // Mirror the current selection into the URL so the address bar always reflects
-  // what's on screen and stays copy-paste shareable. `time` is only meaningful
-  // in instant mode. `replace` keeps date/time scrubbing out of the back stack.
   useEffect(() => {
     const desired: PanchangaSearch = {
       ...locationToSearch(location),
       date: adDateStr,
-      mode: dataMode,
-      ...(isInstant ? { time: clock } : {}),
+      time: clock,
     };
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, adDateStr, dataMode, isInstant, clock, search, navigate]);
+  }, [location, adDateStr, clock, search, navigate]);
 
-  // Adopt URL changes that originate outside our own writes — primarily the
-  // browser back/forward buttons. This effect deliberately subscribes page state
-  // to the router (an external system), so the setState calls are intended; the
-  // value guards keep it from fighting the mirror above.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (search.date && search.date !== adDateStr) setDate(parseAdStr(search.date));
-    if (search.mode && search.mode !== dataMode) setDataMode(search.mode);
     if (search.time && search.time !== clock) setClock(search.time);
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
@@ -135,99 +120,88 @@ export function Panchanga() {
     queryKey: panchangaKeys.atTime(atTimeDatetime, location.params),
     queryFn: () => fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params),
     staleTime: 1000 * 60 * 5,
-    enabled: isInstant,
     placeholderData: keepPreviousData,
   });
 
-  const activeQuery = isInstant ? instantQuery : udayaQuery;
-  const { data, isError } = activeQuery;
+  const { data, isError } = instantQuery;
   const ephemeris = isEphemerisPanchanga(data);
-
-  const timelineQuery = isInstant ? instantQuery : udayaQuery;
-  const timelineData = timelineQuery.data;
-  const showTimelineSkeleton = timelineQuery.isLoading && !timelineData;
+  const timelineData = instantQuery.data;
+  const showTimelineSkeleton = instantQuery.isLoading && !timelineData;
 
   const wheelData = udayaQuery.data;
   const showWheelSkeleton = udayaQuery.isLoading && !wheelData;
 
-  const sunrise = data ? getSunrise(data) : undefined;
-  const sunset = data ? getSunset(data) : undefined;
+  const sunrise = udayaQuery.data
+    ? getSunrise(udayaQuery.data)
+    : data
+      ? getSunrise(data)
+      : undefined;
+  const sunset = udayaQuery.data
+    ? getSunset(udayaQuery.data)
+    : data
+      ? getSunset(data)
+      : undefined;
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
 
   const locationLabel = data?.location?.name ?? location.label;
-  const adDateLabel = data?.display?.gregorian_en ?? fmtAdFull(date);
-
-  const titleSuffix =
-    isInstant
-      ? ` — ${t("panchanga.at_time", { time: toNepaliDigits(clock) })}`
-      : "";
-
   const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
+  const todayAd = todayAdStringInTimezone(new Date(), effectiveTimezone);
+
+  const hadUrlTimeRef = useRef(Boolean(search.time));
+  const clockSyncedKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const syncKey = `${adDateStr}|${locationCacheKey(location.params)}`;
+    if (clockSyncedKeyRef.current === syncKey) return;
+
+    const sunrise = formatTimeShort(
+      udayaQuery.data ? getSunrise(udayaQuery.data) : undefined,
+    );
+    if (!sunrise) return;
+
+    if (hadUrlTimeRef.current && clockSyncedKeyRef.current === null) {
+      hadUrlTimeRef.current = false;
+      clockSyncedKeyRef.current = syncKey;
+      return;
+    }
+
+    clockSyncedKeyRef.current = syncKey;
+    setClock(sunrise);
+  }, [adDateStr, location.params, udayaQuery.data, setClock]);
 
   useRouteLoading(PANCHANGA_ROUTE_LOADING);
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
-        <div>
-          <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
-            {t("panchanga.eyebrow")}
-            {isInstant && (
-              <span className="ml-2 text-secondary normal-case tracking-normal font-semibold">
-                · {t("panchanga.time_based")}
-              </span>
-            )}
-          </div>
-          <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
-            {isToday && !isInstant
-              ? t("panchanga.today_title")
-              : `${t("panchanga.detail_title")}${titleSuffix}`}
-          </h1>
-          <div className="text-sm text-muted-foreground mt-1">
-            {bs.monthName} {bs.day}, {bs.year}
-            {" · "}
-            {adDateLabel}
-            {" · "}
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {locationLabel}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
-          <PanchangaModeControls
-            mode={dataMode}
-            onModeChange={setDataMode}
+    <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-sm:px-0 max-sm:pb-16 max-sm:pt-0">
+      <div className="mt-2 grid grid-cols-1 items-start gap-x-5 gap-y-4 max-sm:px-2.5 max-sm:pt-3 xl:grid-cols-[1fr_330px]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <PanchangaDateNav
+            date={date}
+            onDateChange={setDate}
+            todayAd={todayAd}
             clock={clock}
             onClockChange={setClock}
+            toolbar={
+              <LocationSelector
+                compact
+                location={location}
+                onLocationChange={setLocation}
+                className="w-full sm:w-auto sm:max-w-[12.5rem]"
+              />
+            }
           />
-          <LocationSelector
-            compact
-            className="shrink-0"
-            location={location}
-            onLocationChange={setLocation}
-          />
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_330px] gap-5 items-start">
-        <div className="flex flex-col gap-4 min-w-0">
-          <PanchangaDateNav date={date} onDateChange={setDate} />
-
-          {ephemeris && data && (
-            <EphemerisModeBanner p={data} clock={clock} />
-          )}
+          {ephemeris && data && <EphemerisModeBanner p={data} clock={clock} />}
 
           {(timelineData || showTimelineSkeleton) && (
             <DayTimeline
               p={timelineData}
               loading={showTimelineSkeleton}
               dateAd={chartAd}
-              isToday={isToday && !ephemeris}
+              isToday={isToday}
               timezone={effectiveTimezone}
-              needleClock={ephemeris ? clock : undefined}
+              needleClock={clock}
             />
           )}
 
@@ -246,9 +220,9 @@ export function Panchanga() {
               {wheelData ? (
                 <Link
                   to="/panchanga/year"
-                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary/10 hover:text-secondary transition-colors self-start"
+                  className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/10 hover:text-secondary"
                 >
-                  <CalendarRange className="w-4 h-4" />
+                  <CalendarRange className="h-4 w-4" />
                   {t("panchanga.year_link")}
                 </Link>
               ) : null}
@@ -256,7 +230,7 @@ export function Panchanga() {
           )}
 
           {isError && (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/10 text-destructive p-4 text-sm">
+            <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
               {t("panchanga.error_load")}
             </div>
           )}
@@ -277,7 +251,7 @@ export function Panchanga() {
           )}
         </div>
 
-        <aside className="flex flex-col gap-4 xl:sticky xl:top-[76px]">
+        <aside className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-[76px]">
           <GhatiClock sunrise={sunrise} sunset={sunset} timezone={effectiveTimezone} />
           {ephemeris && data && <MuhurtaNowPanel p={data} clock={clock} />}
           <PlanetEventsPanel dateAd={chartAd} location={location.params} />
@@ -285,11 +259,10 @@ export function Panchanga() {
       </div>
 
       <LearnMoreCard
-        className="mt-7"
+        className="mt-7 max-sm:px-2.5"
         heading={t("panchanga.learn_heading")}
         slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "hora"]}
       />
-
     </div>
   );
 }
