@@ -1283,6 +1283,7 @@ export interface PanchangaDay {
   surya_nakshatra?: SuryaNakshatra;
   chandrabalam?: BalamBlock;
   tarabalam?: BalamBlock;
+  hora?: import("@/components/panchanga/day-timeline-data").ApiHoraSlot[];
   panchaka_rahita?: PanchakaSegment[];
   udaya_lagna?: UdayaLagnaRow[];
   ritu?: { name_ne?: string; season?: string } | string;

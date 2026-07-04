@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
+import { getBsMonthAdSpanCompact } from "@/lib/local-calendar";
 import { BsNativeSelect } from "@/components/BsNativeSelect";
 import {
   patroMonthChipButton,
@@ -65,6 +66,7 @@ export function BsMonthHeaderTitle({
   );
 
   const monthTitle = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
+  const adMonthCompact = getBsMonthAdSpanCompact(year, month);
   const monthOptions = BS_MONTH_NAMES.map((_: string, i: number) => ({
     value: i + 1,
     label: bsMonthLabel(i + 1, lang),
@@ -91,6 +93,9 @@ export function BsMonthHeaderTitle({
         <h1 className="m-0 text-[1.375rem] font-bold leading-none tracking-tight sm:text-[1.625rem] lg:text-[1.875rem]">
           {monthTitle}{" "}
           <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+          <span className="ml-1.5 text-[11px] font-medium lowercase text-muted-foreground sm:text-xs">
+            {adMonthCompact}
+          </span>
         </h1>
 
         <div className={patroMonthNavShell}>

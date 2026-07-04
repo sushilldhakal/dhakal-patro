@@ -360,7 +360,7 @@ export type ApiHoraSlot = {
 
 export function getApiHora(p: PanchangaDay): ApiHoraSlot[] {
   const detail = getPanchangaDetail(p);
-  const block = detail?.hora as ApiHoraSlot[] | undefined;
+  const block = (detail?.hora ?? p.hora) as ApiHoraSlot[] | undefined;
   return Array.isArray(block) ? block : [];
 }
 

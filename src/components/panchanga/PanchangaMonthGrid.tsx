@@ -11,8 +11,8 @@ import { getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-f
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 
-const WEEKDAYS_NE = ["आइत", "सोम", "मंगल", "बुध", "बिहि", "शुक्र", "शनि"];
-const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
+const WEEKDAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 type PakshaPhase = "shukla" | "krishna";
 
@@ -100,19 +100,24 @@ export function PanchangaMonthGrid({
         </div>
       )}
       <div className="grid grid-cols-7 gap-px  border-b border-border">
-        {WEEKDAYS_NE.map((ne, i) => (
-          <div
-            key={ne}
-            className="bg-background px-1.5 py-1.5 flex flex-col gap-0.5"
-          >
-            <span className="text-[11px] font-semibold truncate">{pick(ne, WEEKDAYS_EN[i])}</span>
-            {lang === "ne" && (
-              <span className="text-xs uppercase tracking-wider text-muted-foreground truncate">
-                {WEEKDAYS_EN[i]}
+        {WEEKDAYS_NE.map((ne, i) => {
+          const weekend = i === 0 || i === 6;
+          return (
+            <div
+              key={ne}
+              className="flex min-w-0 items-center justify-center bg-background px-1 py-1.5"
+            >
+              <span
+                className={cn(
+                  "truncate text-center text-[10px] font-semibold leading-tight sm:text-[11px]",
+                  weekend && "text-danger",
+                )}
+              >
+                {pick(ne, WEEKDAYS_EN[i])}
               </span>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-7 gap-px ">

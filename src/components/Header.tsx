@@ -358,7 +358,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="max-w-[1400px] py-4 mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+      <div className="max-w-[1400px] py-4 mx-auto px-4 h-16 flex items-center gap-3">
         {/* Desktop — brand left, nav center, theme right */}
         <BrandMark className="hidden lg:flex" />
 

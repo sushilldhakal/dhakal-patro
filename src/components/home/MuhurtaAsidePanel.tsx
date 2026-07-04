@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
-import type { PanchangaDay } from "@/lib/api";
+import type { BalamBlock, PanchangaDay } from "@/lib/api";
 import {
   buildDayTimelineData,
   choghadiyaQuality,
@@ -11,16 +11,20 @@ import {
 import { getApiHora } from "@/components/panchanga/day-timeline-data";
 import {
   formatClockNepali,
+  formatRashiDisplayNe,
+  formatShortClock,
   formatTimeRangeShort,
+  getChandrabalam,
   getPanchangaDetail,
   getSunrise,
+  getTarabalam,
   getUdayaLagna,
+  rashiSymFromNumber,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
 import {
   patroEmpty,
   patroMiniSubTab,
-  patroNavataraRow,
   patroSlotBadge,
   patroSlotRow,
 } from "@/lib/patro-classes";
@@ -43,32 +47,6 @@ const SUB_TAB_HINT_KEY: Record<MuhurtaSubTab, string> = {
   pushkara: "muhurta_aside.hint_pushkara",
 };
 
-const MOON_REF_KEY: Partial<Record<MuhurtaSubTab, string>> = {
-  tarabal: "muhurta_aside.moon_ref_tarabal",
-  chandrabal: "muhurta_aside.moon_ref_chandrabal",
-};
-
-/** Server navatara row from the daily payload's detail.navatara block. */
-type NavataraEntry = {
-  name: string;
-  nameEn?: string;
-  tara: string;
-  taraEn?: string;
-  quality: string;
-  tone: "best" | "good" | "neutral" | "bad" | "worst";
-  taraNum: number;
-};
-
-type NavataraBlock = {
-  tarabala?: { moonLabel: string | null; rows: NavataraEntry[] };
-  chandrabala?: { moonLabel: string | null; rows: NavataraEntry[] };
-};
-
-function getNavatara(p: PanchangaDay): NavataraBlock {
-  const detail = getPanchangaDetail(p);
-  return (detail?.navatara as NavataraBlock | undefined) ?? {};
-}
-
 function parseTimeToMinutes(time?: string | null): number | null {
   if (!time) return null;
   const m = time.match(/(\d{1,2}):(\d{2})/);
@@ -76,51 +54,102 @@ function parseTimeToMinutes(time?: string | null): number | null {
   return Number(m[1]) * 60 + Number(m[2]);
 }
 
-function NavataraList({
+function BalamAsideList({
+  block,
   moonLabel,
-  rows,
-  moonRefKind,
-  highlightName,
+  moonRefKey,
+  rashi = false,
 }: {
+  block: BalamBlock | undefined;
   moonLabel: string | null;
-  rows: NavataraEntry[];
-  moonRefKind: "tarabal" | "chandrabal";
-  highlightName?: string | null;
+  moonRefKey: string;
+  rashi?: boolean;
 }) {
   const { t } = useTranslation();
-  if (!rows.length) {
+  const set1 = block?.set1 ?? [];
+  const set2 = block?.set2 ?? [];
+  const till = formatShortClock(block?.till?.end_local_time_short ?? block?.till?.end_local_time);
+
+  if (!set1.length && !set2.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.unavailable")}</p>;
   }
 
-  const moonRefKey = MOON_REF_KEY[moonRefKind];
-
   return (
-    <div>
-      {moonLabel && moonRefKey ? (
-        <p className="mb-2 text-[12.5px] font-semibold text-foreground">
+    <div className="flex flex-col gap-3">
+      {moonLabel ? (
+        <p className="m-0 text-[12.5px] font-semibold text-foreground">
           {t(moonRefKey)}: <strong className="text-accent">{moonLabel}</strong>
         </p>
       ) : null}
-      <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
-        {rows.map((row) => {
-          const isMoon =
-            highlightName != null
-              ? row.name === highlightName
-              : row.taraNum === 1 && row.name === moonLabel;
-          return (
-            <li key={row.name} className={patroNavataraRow(row.tone, isMoon)}>
-              <span className="text-xs font-bold leading-tight text-foreground">{row.name}</span>
-              <span className="text-[10.5px] leading-snug font-semibold text-muted-foreground">
-                {row.tara}
-                <span className="mx-1 opacity-55">/</span>
-                {row.quality}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+
+      {set1.length ? (
+        <div>
+          <h3 className="my-0 mb-2 text-[11.5px] font-medium text-muted-foreground">
+            {rashi ? t("sections.auspicious_chandra") : t("sections.auspicious_tara")}
+            {till ? (
+              <>
+                {" "}
+                — <span className="font-mono">{till}</span> {t("sections.until")}
+              </>
+            ) : null}
+          </h3>
+          <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
+            {set1.map((item, i) => (
+              <li
+                key={`${item.name_ne ?? item.name}-${i}`}
+                className="flex items-center gap-1.5 rounded-md bg-surface-inset px-2 py-1.5"
+              >
+                {rashi && item.number != null ? (
+                  <span className="text-[13px] leading-none">{rashiSymFromNumber(item.number)}</span>
+                ) : null}
+                <span className="text-xs font-bold leading-tight text-foreground">
+                  {rashi ? formatRashiDisplayNe(item.name_ne) : item.name_ne}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {set2.length ? (
+        <div>
+          <h3 className="my-0 mb-2 text-[11.5px] font-medium text-muted-foreground">
+            {t("sections.until_sunrise")}
+          </h3>
+          <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
+            {set2.map((item, i) => (
+              <li
+                key={`${item.name_ne ?? item.name}-next-${i}`}
+                className="flex items-center gap-1.5 rounded-md bg-surface-inset px-2 py-1.5"
+              >
+                {rashi && item.number != null ? (
+                  <span className="text-[13px] leading-none">{rashiSymFromNumber(item.number)}</span>
+                ) : null}
+                <span className="text-xs font-bold leading-tight text-foreground">
+                  {rashi ? formatRashiDisplayNe(item.name_ne) : item.name_ne}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function moonNakshatraLabel(p: PanchangaDay): string | null {
+  const detail = getPanchangaDetail(p);
+  const nak = (detail?.nakshatra ?? p.nakshatra) as { name_ne?: string; name?: string } | undefined;
+  return nak?.name_ne ?? nak?.name ?? null;
+}
+
+function moonRashiLabel(p: PanchangaDay): string | null {
+  const detail = getPanchangaDetail(p);
+  const rashi = (detail?.chandra_rashi ?? p.chandra_rashi) as
+    | { name_ne?: string; name?: string }
+    | undefined;
+  const label = rashi?.name_ne ?? rashi?.name;
+  return label ? formatRashiDisplayNe(label) : null;
 }
 
 function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
@@ -250,9 +279,8 @@ type Props = {
 export function MuhurtaAsidePanel({ p, dateAd }: Props) {
   const { t } = useTranslation();
   const [subTab, setSubTab] = useState<MuhurtaSubTab>("tarabal");
-  const navatara = getNavatara(p);
-  const tara = navatara.tarabala ?? { moonLabel: null, rows: [] };
-  const chandra = navatara.chandrabala ?? { moonLabel: null, rows: [] };
+  const tarabalam = getTarabalam(p);
+  const chandrabalam = getChandrabalam(p);
 
   return (
     <div className="flex flex-col gap-2">
@@ -278,19 +306,18 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
 
       <div role="tabpanel">
         {subTab === "tarabal" ? (
-          <NavataraList
-            moonLabel={tara.moonLabel}
-            rows={tara.rows}
-            moonRefKind="tarabal"
-            highlightName={tara.moonLabel}
+          <BalamAsideList
+            block={tarabalam}
+            moonLabel={moonNakshatraLabel(p)}
+            moonRefKey="muhurta_aside.moon_ref_tarabal"
           />
         ) : null}
         {subTab === "chandrabal" ? (
-          <NavataraList
-            moonLabel={chandra.moonLabel}
-            rows={chandra.rows}
-            moonRefKind="chandrabal"
-            highlightName={chandra.moonLabel}
+          <BalamAsideList
+            block={chandrabalam}
+            moonLabel={moonRashiLabel(p)}
+            moonRefKey="muhurta_aside.moon_ref_chandrabal"
+            rashi
           />
         ) : null}
         {subTab === "choghadiya" ? <ChoghadiyaList p={p} dateAd={dateAd} /> : null}

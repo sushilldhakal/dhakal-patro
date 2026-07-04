@@ -9,15 +9,8 @@ const WEEKDAYS_SHORT = ["आइत", "सोम", "मंगल", "बुध", "
 
 const TODAY_AD = new Date().toISOString().split("T")[0];
 
-function fmtAdShort(iso: string): string {
-  const d = new Date(iso + "T12:00:00");
-  return d.toLocaleString("en", { month: "short", day: "numeric" });
-}
-
-function fmtAdCompact(iso: string): string {
-  const d = new Date(iso + "T12:00:00");
-  const month = d.toLocaleString("en", { month: "short" }).toLowerCase();
-  return `${month} ${d.getDate()}`;
+function fmtAdDay(iso: string): number {
+  return new Date(iso + "T12:00:00").getDate();
 }
 
 interface Props {
@@ -132,7 +125,7 @@ export function BsCalendarGrid({
                       isOutside ? "text-muted-foreground/65" : "text-muted-foreground",
                     )}
                   >
-                    {fmtAdShort(day.date_ad)}
+                    {digits(fmtAdDay(day.date_ad))}
                   </span>
                   <span
                     className={cn(
@@ -140,7 +133,7 @@ export function BsCalendarGrid({
                       isOutside ? "text-muted-foreground/65" : "text-muted-foreground",
                     )}
                   >
-                    {fmtAdCompact(day.date_ad)}
+                    {digits(fmtAdDay(day.date_ad))}
                   </span>
                 </span>
 

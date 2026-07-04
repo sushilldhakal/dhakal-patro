@@ -157,6 +157,19 @@ export function getBsMonthAdSpanLabel(year: number, month: number): string {
     : `${start.toLocaleString("en", { month: "short" })}–${fmt(end)}`;
 }
 
+/** Compact AD month hint for header, e.g. sep/oct or jun */
+export function getBsMonthAdSpanCompact(year: number, month: number): string {
+  const { month_start_ad, month_end_ad } = getLocalMonthMeta(year, month);
+  const start = new Date(`${month_start_ad}T12:00:00`);
+  const end = new Date(`${month_end_ad}T12:00:00`);
+  const startKey = start.getFullYear() * 12 + start.getMonth();
+  const endKey = end.getFullYear() * 12 + end.getMonth();
+  const fmt = (d: Date) =>
+    d.toLocaleString("en", { month: "short" }).replace(/\./g, "").toLowerCase();
+  if (startKey === endKey) return fmt(start);
+  return `${fmt(start)}/${fmt(end)}`;
+}
+
 /** Day span for header, e.g. असार १ – ३२ */
 export function getBsMonthRangeLabel(
   year: number,
