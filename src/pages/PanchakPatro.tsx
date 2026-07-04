@@ -17,6 +17,7 @@ import { BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR } from "@/lib/bs-calenda
 import { useLocale } from "@/i18n/locale";
 import { isEnglishLocale } from "@/lib/avakahada-locale";
 import { patroNoteBox, patroSelect } from "@/lib/patro-classes";
+import { useRouteLoading } from "@/lib/route-loading";
 import { cn } from "@/lib/utils";
 
 function fmtAdShort(iso: string): string {
@@ -93,6 +94,8 @@ export function PanchakPatro() {
   const { digits } = useLocale();
   const lang = i18n.language;
   const en = isEnglishLocale(lang);
+
+  useRouteLoading(false);
 
   const year =
     search.year != null && PANCHAK_PATRO_YEARS.includes(search.year)

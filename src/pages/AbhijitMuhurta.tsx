@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearch } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, MapPin, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, Sparkles, Sun } from "lucide-react";
 import {
   fetchMonthCalendar,
   panchangaKeys,
   type CalendarDay,
 } from "@/lib/api";
+import { PageShell } from "@/components/PageShell";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import {
+  displayLocationLabel,
   resolveLocationTimezone,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
@@ -19,6 +21,7 @@ import {
   BS_MONTH_NAMES,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
+  adToBS,
   getBSMonthLength,
   getCurrentBs,
 } from "@/lib/bs-calendar";
@@ -26,13 +29,19 @@ import { useLocale } from "@/i18n/locale";
 import {
   computeAbhijitFromSunTimes,
   formatBsMonthDayPatro,
+  formatClockNepali,
 } from "@/lib/panchanga-format";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
 import {
-  patroDataTableWrap,
+  locationToSearch,
+  sameLocationParams,
+  sameSearch,
+  searchToLocation,
+  type AbhijitSearch,
+} from "@/lib/url-state";
+import {
   patroEmpty,
   patroErrorBox,
-  patroNoteBox,
   patroSelect,
   patroSkel,
 } from "@/lib/patro-classes";
@@ -43,19 +52,41 @@ const BS_YEAR_OPTIONS = Array.from(
   (_, i) => BS_SUPPORTED_START_YEAR + i,
 );
 
+const routeApi = getRouteApi("/abhijit-muhurta");
+
+type AbhijitRow = {
+  day: CalendarDay;
+  abhijit: NonNullable<ReturnType<typeof computeAbhijitFromSunTimes>>;
+};
+
 function fmtAdShort(iso: string): string {
   const d = new Date(`${iso}T12:00:00`);
   return d.toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function initialYearFromSearch(searchYear?: number): number {
+  if (
+    searchYear != null &&
+    searchYear >= BS_SUPPORTED_START_YEAR &&
+    searchYear <= BS_SUPPORTED_END_YEAR
+  ) {
+    return searchYear;
+  }
+  return getCurrentBs().year;
+}
+
+function initialMonthFromSearch(searchMonth?: number): number {
+  if (searchMonth != null && searchMonth >= 1 && searchMonth <= 12) {
+    return searchMonth;
+  }
+  return getCurrentBs().month;
 }
 
 function buildRows(
   days: CalendarDay[],
   bsYear: number,
   bsMonth: number,
-): {
-  day: CalendarDay;
-  abhijit: NonNullable<ReturnType<typeof computeAbhijitFromSunTimes>>;
-}[] {
+): AbhijitRow[] {
   const monthLen = getBSMonthLength(bsYear, bsMonth);
   const byDay = new Map(days.map((d) => [d.day, d]));
 
@@ -66,27 +97,123 @@ function buildRows(
     const abhijit = computeAbhijitFromSunTimes(day.sunrise, day.sunset);
     if (!abhijit) return null;
     return { day, abhijit };
-  }).filter((row): row is NonNullable<typeof row> => row != null);
+  }).filter((row): row is AbhijitRow => row != null);
+}
+
+function AbhijitDayCard({
+  row,
+  isToday,
+}: {
+  row: AbhijitRow;
+  isToday: boolean;
+}) {
+  const { t } = useTranslation();
+  const { pick, digits } = useLocale();
+  const { day, abhijit } = row;
+  const adDay = new Date(`${day.date_ad}T12:00:00`).getDate();
+  const sunrise = formatClockNepali(day.sunrise) ?? day.sunrise ?? "—";
+  const sunset = formatClockNepali(day.sunset) ?? day.sunset ?? "—";
+  const weekday = pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
+
+  return (
+    <article
+      className={cn(
+        "group flex min-h-[132px] flex-col rounded-xl border bg-card p-2.5 shadow-xs transition-colors sm:min-h-[140px] sm:p-3",
+        isToday
+          ? "border-secondary/50 bg-secondary/10 ring-2 ring-secondary/30 dark:border-primary/40 dark:bg-primary/10 dark:ring-primary/25"
+          : "border-border hover:border-secondary/30 hover:bg-muted/20 dark:hover:border-primary/30",
+      )}
+    >
+      <div className="mb-1 flex items-center justify-between gap-1">
+        <span className="truncate text-[10px] font-semibold text-muted-foreground sm:text-[11px]">
+          {weekday}
+        </span>
+        {isToday ? (
+          <span className="shrink-0 rounded-full bg-secondary/20 px-1.5 py-px text-[8px] font-bold uppercase text-secondary dark:bg-primary/20 dark:text-primary">
+            {t("abhijit.jump_today")}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mb-2 flex items-baseline justify-center gap-1.5">
+        <span className="font-num text-[22px] font-bold leading-none tabular-nums sm:text-2xl">
+          {digits(day.day)}
+        </span>
+        <span className="font-num text-[11px] text-muted-foreground tabular-nums">/{digits(adDay)}</span>
+      </div>
+
+      <div className="mt-auto space-y-1.5">
+        <p className="mono m-0 text-center text-[11px] font-bold leading-tight text-secondary sm:text-xs dark:text-primary">
+          {abhijit.rangeDisplay}
+        </p>
+        <p className="m-0 text-center text-[9px] text-muted-foreground sm:text-[10px]">
+          {t("abhijit.col_noon")}{" "}
+          <span className="mono font-medium text-foreground">{abhijit.noonDisplay ?? "—"}</span>
+        </p>
+        <p className="mono m-0 truncate text-center text-[9px] text-muted-foreground sm:text-[10px]">
+          ↑{sunrise} · ↓{sunset}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function AbhijitMonthGrid({
+  rows,
+  todayAd,
+}: {
+  rows: AbhijitRow[];
+  todayAd: string;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8">
+      {rows.map((row) => (
+        <AbhijitDayCard
+          key={row.day.date_ad}
+          row={row}
+          isToday={row.day.date_ad === todayAd}
+        />
+      ))}
+    </div>
+  );
 }
 
 export function AbhijitMuhurta() {
-  const search = useSearch({ strict: false }) as { year?: number; month?: number };
-  const yearProp = search.year;
-  const monthProp = search.month;
   const { t } = useTranslation();
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
   const { pick, digits } = useLocale();
-  const { location, setLocation } = usePanchangaLocation();
-  const current = getCurrentBs();
-  const [year, setYear] = useState(() => yearProp ?? current.year);
-  const [month, setMonth] = useState(() => monthProp ?? current.month);
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const todayBs = useMemo(() => adToBS(new Date()), []);
+  const [year, setYear] = useState(() => initialYearFromSearch(search.year));
+  const [month, setMonth] = useState(() => initialMonthFromSearch(search.month));
 
   useEffect(() => {
-    if (yearProp != null) setYear(yearProp);
-  }, [yearProp]);
+    const desired: AbhijitSearch = {
+      ...locationToSearch(location),
+      year,
+      month,
+    };
+    if (!sameSearch(desired, search)) {
+      navigate({ search: desired, replace: true });
+    }
+  }, [location, year, month, search, navigate]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (monthProp != null) setMonth(monthProp);
-  }, [monthProp]);
+    if (search.year != null) {
+      const next = initialYearFromSearch(search.year);
+      setYear((current) => (current === next ? current : next));
+    }
+    if (search.month != null) {
+      const next = initialMonthFromSearch(search.month);
+      setMonth((current) => (current === next ? current : next));
+    }
+    const loc = searchToLocation(search);
+    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const todayAd = useMemo(
     () => todayAdStringInTimezone(new Date(), resolveLocationTimezone(location)),
@@ -105,34 +232,57 @@ export function AbhijitMuhurta() {
     [monthQ.data?.calendar, year, month],
   );
 
+  const todayRow = useMemo(
+    () => rows.find(({ day }) => day.date_ad === todayAd) ?? null,
+    [rows, todayAd],
+  );
+
+  const locationLabel = displayLocationLabel(location);
+  const monthLabel = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
+  const viewingTodayMonth = year === todayBs.year && month === todayBs.month;
+
   useRouteLoading(monthQ.isLoading);
 
+  function goToToday() {
+    setYear(todayBs.year);
+    setMonth(todayBs.month);
+  }
+
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16 overflow-x-hidden">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
+    <PageShell className="pb-16 space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-1.5"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t("abhijit.back_home")}
           </Link>
-          <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
-            <Sparkles className="w-7 h-7 text-secondary shrink-0" />
+          <h1 className="text-[clamp(1.75rem,4vw,2.125rem)] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
+            <Sparkles className="w-7 h-7 text-secondary shrink-0 dark:text-primary" />
             {t("abhijit.title")}
           </h1>
-          <div className="text-sm text-muted-foreground mt-1">
-            {pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1])} {digits(year)}
-            {" · "}
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {location.label}
-            </span>
+          <p className="text-sm text-muted-foreground mt-1.5 max-w-xl leading-relaxed">
+            {t("abhijit.subtitle")}
+          </p>
+          <div className="text-sm text-muted-foreground mt-2 inline-flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            {locationLabel}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
+        <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto lg:justify-end">
+          {!viewingTodayMonth ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground shadow-xs hover:bg-muted/50 transition-colors"
+              onClick={goToToday}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              {t("abhijit.jump_today")}
+            </button>
+          ) : null}
           <select
             className={patroSelect}
             value={year}
@@ -166,69 +316,79 @@ export function AbhijitMuhurta() {
         </div>
       </div>
 
-      <p className={patroNoteBox}>{t("abhijit.note")}</p>
+      {todayRow ? (
+        <section className="relative overflow-hidden rounded-2xl border border-secondary/30 bg-linear-to-br from-secondary/15 via-card to-card p-5 sm:p-6 shadow-xs dark:border-primary/30 dark:from-primary/15">
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-secondary/10 blur-2xl dark:bg-primary/10" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-secondary dark:text-primary mb-1">
+                {t("abhijit.today_hero")}
+              </p>
+              <p className="text-sm text-muted-foreground mb-2">
+                {formatBsMonthDayPatro(year, month, todayRow.day.day)}
+                {" · "}
+                {pick(
+                  todayRow.day.weekday_ne ?? todayRow.day.weekday,
+                  todayRow.day.weekday_en ?? todayRow.day.weekday,
+                )}
+              </p>
+              <p className="mono text-[clamp(1.5rem,5vw,2rem)] font-bold text-foreground leading-tight">
+                {todayRow.abhijit.rangeDisplay}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t("abhijit.col_noon")}:{" "}
+                <span className="mono font-semibold text-foreground">
+                  {todayRow.abhijit.noonDisplay ?? "—"}
+                </span>
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-background/60 px-4 py-3 text-sm backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Sun className="w-4 h-4 shrink-0 text-amber-500" />
+                <span>
+                  {t("abhijit.sun_context", {
+                    sunrise:
+                      formatClockNepali(todayRow.day.sunrise) ?? todayRow.day.sunrise ?? "—",
+                    sunset:
+                      formatClockNepali(todayRow.day.sunset) ?? todayRow.day.sunset ?? "—",
+                  })}
+                </span>
+              </div>
+              <p className="mono text-xs text-muted-foreground">{fmtAdShort(todayRow.day.date_ad)}</p>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <div className="rounded-xl border border-border bg-muted/20 px-4 py-3.5 text-[13px] leading-relaxed text-muted-foreground">
+        <div className="flex gap-2.5">
+          <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-secondary dark:text-primary" />
+          <p className="m-0">{t("abhijit.note")}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-bold text-foreground m-0">
+          {t("abhijit.month_heading")} — {monthLabel} {digits(year)}
+        </h2>
+        {!monthQ.isLoading && rows.length > 0 ? (
+          <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+            {t("abhijit.days_count", { count: rows.length })}
+          </span>
+        ) : null}
+      </div>
 
       {monthQ.isError ? (
         <div className={patroErrorBox}>{t("abhijit.error")}</div>
       ) : monthQ.isLoading ? (
-        <div className={cn(patroSkel, "h-60 w-full rounded-lg")} />
+        <div className={cn(patroSkel, "h-60 w-full rounded-2xl")} />
       ) : rows.length === 0 ? (
         <p className={patroEmpty}>{t("abhijit.none")}</p>
       ) : (
-        <div className={patroDataTableWrap}>
-          <table className="w-full border-collapse text-[13px]">
-            <thead>
-              <tr>
-                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-                  {t("abhijit.col_day")}
-                </th>
-                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-                  {t("abhijit.col_weekday")}
-                </th>
-                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-                  {t("abhijit.col_ad")}
-                </th>
-                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-                  {t("abhijit.col_abhijit")}
-                </th>
-                <th scope="col" className="border-b border-foreground/8 bg-foreground/4 px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-                  {t("abhijit.col_noon")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ day, abhijit }) => {
-                const isToday = day.date_ad === todayAd;
-                return (
-                  <tr
-                    key={day.date_ad}
-                    className={isToday ? "bg-secondary/12 dark:bg-primary/10" : undefined}
-                  >
-                    <td className="border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
-                      <span className="block text-[15px] font-bold font-num">{digits(day.day)}</span>
-                      <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                        {formatBsMonthDayPatro(year, month, day.day)}
-                      </span>
-                    </td>
-                    <td className="border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
-                      {pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday)}
-                    </td>
-                    <td className="mono border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
-                      {fmtAdShort(day.date_ad)}
-                    </td>
-                    <td className="mono border-b border-foreground/8 px-3 py-2.5 align-top font-bold text-secondary last:border-b-0 dark:text-primary">
-                      {abhijit.rangeDisplay}
-                    </td>
-                    <td className="mono border-b border-foreground/8 px-3 py-2.5 align-top last:border-b-0">
-                      {abhijit.noonDisplay ?? "—"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="rounded-2xl border border-border bg-muted/15 p-3 sm:p-4">
+          <AbhijitMonthGrid rows={rows} todayAd={todayAd} />
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

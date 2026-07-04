@@ -225,7 +225,8 @@
     "submenu_title": "Kundali menu",
     "jump_to": "Jump to",
     "load_error": "Could not load kundali data. Check date and location, then try again.",
-    "computing": "Computing chart…"
+    "computing": "Computing chart…",
+    "section_unavailable": "This section could not be computed for this chart."
   },
   "milan": {
     "eyebrow": "Nepali Patro · Jyotish · Kundali Milan",
@@ -411,6 +412,12 @@
   },
   "abhijit": {
     "title": "Abhijit Muhurta",
+    "subtitle": "Monthly auspicious Abhijit muhurta — the 8th daytime muhurta between sunrise and sunset",
+    "today_hero": "Today's Abhijit Muhurta",
+    "month_heading": "Month at a glance",
+    "days_count": "{{count}} days",
+    "jump_today": "Today",
+    "sun_context": "🌅 {{sunrise}} · 🌇 {{sunset}}",
     "today_window": "Today's window",
     "noon_short": "noon",
     "unavailable": "Abhijit muhurta is not available for this day.",
@@ -425,7 +432,10 @@
     "col_weekday": "Weekday",
     "col_ad": "A.D.",
     "col_abhijit": "Abhijit Muhurta",
-    "col_noon": "Solar noon"
+    "col_noon": "Solar noon",
+    "col_sunrise": "Sunrise",
+    "col_sunset": "Sunset",
+    "col_muhurta": "Muhurta"
   },
   "panchak": {
     "title": "Panchak Patro {{year}}",

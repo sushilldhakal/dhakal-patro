@@ -13,6 +13,7 @@ import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
 import { RouteLoadingProvider } from "./lib/route-loading";
 import {
+  validateAbhijitSearch,
   validateChandraKrantiSearch,
   validatePanchangaSearch,
   validatePanchangaYearSearch,
@@ -89,13 +90,7 @@ const suryakrantiRoute = createRoute({
 const abhijitMuhurtaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/abhijit-muhurta",
-  validateSearch: (search: Record<string, unknown>): { year?: number; month?: number } => {
-    const parse = (raw: unknown) => {
-      const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : undefined;
-      return Number.isFinite(n) ? n : undefined;
-    };
-    return { year: parse(search.year), month: parse(search.month) };
-  },
+  validateSearch: validateAbhijitSearch,
   component: AbhijitMuhurta,
 });
 const panchakPatroRoute = createRoute({

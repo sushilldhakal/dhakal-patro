@@ -56,6 +56,11 @@ export interface PanchangaYearSearch extends LocationSearch {
   year?: number;
 }
 
+export interface AbhijitSearch extends LocationSearch {
+  year?: number;
+  month?: number;
+}
+
 function toNum(v: unknown): number | undefined {
   if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
   if (typeof v === "string" && v.trim() !== "") {
@@ -215,5 +220,16 @@ export function validatePanchangaYearSearch(
   if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
     out.year = year;
   }
+  return out;
+}
+
+export function validateAbhijitSearch(search: Record<string, unknown>): AbhijitSearch {
+  const out: AbhijitSearch = { ...validateLocationSearch(search) };
+  const year = toInt(search.year);
+  if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
+    out.year = year;
+  }
+  const month = toInt(search.month);
+  if (month != null && month >= 1 && month <= 12) out.month = month;
   return out;
 }

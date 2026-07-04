@@ -556,21 +556,33 @@ export function KundaliView({
         </div>
       )}
 
-      {showSection("kundali-bhava-bala") && detail.bhavaBala && (
+      {showSection("kundali-bhava-bala") && (
         <div
           id="kundali-bhava-bala"
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
-          <BhavaBalaCard data={detail.bhavaBala} />
+          {detail.bhavaBala ? (
+            <BhavaBalaCard data={detail.bhavaBala} />
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              {t("kundali.section_unavailable")}
+            </p>
+          )}
         </div>
       )}
 
-      {showSection("kundali-ashtakavarga") && detail.ashtakavarga && (
+      {showSection("kundali-ashtakavarga") && (
         <div
           id="kundali-ashtakavarga"
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
-          <AshtakavargaCard data={detail.ashtakavarga} />
+          {detail.ashtakavarga ? (
+            <AshtakavargaCard data={detail.ashtakavarga} />
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              {t("kundali.section_unavailable")}
+            </p>
+          )}
         </div>
       )}
 
