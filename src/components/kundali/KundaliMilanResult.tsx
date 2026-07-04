@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { AshtakutaResult, KutaRow } from "@/lib/ashtakuta";
+import type { AshtakutaResult, KutaRow } from "@/lib/api";
 import { isEnglishLocale } from "@/lib/avakahada-locale";
 import {
   Table,

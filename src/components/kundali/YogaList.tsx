@@ -1,6 +1,6 @@
 import { Check, Info, Minus } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
-import type { KundaliYogaResult } from "@/lib/kundali-yogas";
+import type { KundaliYoga } from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-mu
 const td = "px-2.5 py-2 text-[12.5px]";
 
 export type YogaListProps = {
-  yogas: KundaliYogaResult[];
+  yogas: KundaliYoga[];
 };
 
 /**

@@ -2,71 +2,52 @@ import { useMemo, useState } from "react";
 import { useLocale } from "@/i18n/locale";
 import { D1Chart } from "@/components/kundali/D1Chart";
 import { GrahaDetailsList } from "@/components/kundali/GrahaDetailsList";
+import type { VargaCharts } from "@/lib/api";
 import { buildBhavaChart, type BhavaHouse } from "@/lib/bhava";
 import {
   type ChartAnchor,
   CHART_ANCHOR_LABELS,
   GRAHA_ANCHOR_ORDER,
-  type VargaDivision,
   VARGA_OPTIONS,
   vargaOption,
-  vargaRashiFromLongitude,
-} from "@/lib/vargas";
+} from "@/lib/varga-display";
+import { GRAHA_NAME } from "@/lib/graha-details";
 import { cn } from "@/lib/utils";
-
-type PlanetInput = {
-  key: string;
-  labelNe: string;
-  longitude?: number;
-  retrograde?: boolean;
-};
 
 type PanelConfig = {
   anchor: ChartAnchor;
-  division: VargaDivision;
+  division: number;
 };
-
-function resolveAnchorLongitude(
-  anchor: ChartAnchor,
-  lagnaLongitude: number | undefined,
-  planets: PlanetInput[],
-): number | undefined {
-  if (anchor === "lagna") return lagnaLongitude;
-  return planets.find((p) => p.key === anchor)?.longitude;
-}
 
 function buildDivisionalHouses(
   { anchor, division }: PanelConfig,
-  lagnaLongitude: number | undefined,
-  planets: PlanetInput[],
+  vargaCharts: VargaCharts,
   rashiNeFromNumber: (rashi?: number) => string | undefined,
 ): BhavaHouse[] {
-  const anchorLon = resolveAnchorLongitude(anchor, lagnaLongitude, planets);
-  if (anchorLon == null) return [];
+  const entries = vargaCharts.entries[String(division)] ?? [];
+  const anchorEntry = entries.find((e) => e.key === anchor);
+  if (!anchorEntry) return [];
 
-  const lagnaRashi = vargaRashiFromLongitude(division, anchorLon);
-  const planetRashis = planets
-    .filter((p) => p.longitude != null)
-    .map((p) => ({
-      key: p.key,
-      labelNe: p.labelNe,
-      rashi: vargaRashiFromLongitude(division, p.longitude!),
+  const planetRashis = entries
+    .filter((e) => e.key !== "lagna")
+    .map((e) => ({
+      key: e.key,
+      labelNe: GRAHA_NAME[e.key as keyof typeof GRAHA_NAME]?.ne ?? e.key,
+      rashi: e.vargaRashi,
     }));
 
-  return buildBhavaChart(lagnaRashi, planetRashis, rashiNeFromNumber);
+  return buildBhavaChart(anchorEntry.vargaRashi, planetRashis, rashiNeFromNumber);
 }
 
-function useAnchorOptions(lagnaLongitude: number | undefined, planets: PlanetInput[]) {
+function useAnchorOptions(vargaCharts: VargaCharts) {
   return useMemo(() => {
     const options: ChartAnchor[] = [];
-    if (lagnaLongitude != null) options.push("lagna");
+    if (vargaCharts.points.lagna) options.push("lagna");
     for (const key of GRAHA_ANCHOR_ORDER) {
-      if (planets.some((p) => p.key === key && p.longitude != null)) {
-        options.push(key);
-      }
+      if (vargaCharts.points[key]) options.push(key);
     }
     return options;
-  }, [lagnaLongitude, planets]);
+  }, [vargaCharts]);
 }
 
 function ChartSlot({
@@ -75,21 +56,19 @@ function ChartSlot({
   houses,
   side,
   anchorOptions,
-  lagnaLongitude,
-  planets,
+  vargaCharts,
 }: {
   panel: PanelConfig;
   onPanelChange: (next: PanelConfig) => void;
   houses: BhavaHouse[];
   side: "left" | "right";
   anchorOptions: ChartAnchor[];
-  lagnaLongitude?: number;
-  planets: PlanetInput[];
+  vargaCharts: VargaCharts;
 }) {
   const { pick } = useLocale();
   const varga = vargaOption(panel.division);
   const anchorLabel = CHART_ANCHOR_LABELS[panel.anchor];
-  const anchorLongitude = resolveAnchorLongitude(panel.anchor, lagnaLongitude, planets);
+  const hasAnchor = Boolean(vargaCharts.points[panel.anchor]);
 
   return (
     <div className="flex flex-col gap-3 min-w-0">
@@ -128,10 +107,7 @@ function ChartSlot({
             className="h-9 rounded-lg border border-border bg-card px-2.5 text-sm font-medium text-foreground"
             value={panel.division}
             onChange={(e) =>
-              onPanelChange({
-                ...panel,
-                division: Number(e.target.value) as VargaDivision,
-              })
+              onPanelChange({ ...panel, division: Number(e.target.value) })
             }
           >
             {VARGA_OPTIONS.map((opt) => (
@@ -162,7 +138,7 @@ function ChartSlot({
         )}
       </div>
 
-      {anchorLongitude != null && houses.length > 0 && (
+      {hasAnchor && houses.length > 0 && (
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
           <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 px-3.5 py-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -176,9 +152,8 @@ function ChartSlot({
           </div>
           <GrahaDetailsList
             division={panel.division}
-            anchorLongitude={anchorLongitude}
-            lagnaLongitude={lagnaLongitude}
-            planets={planets}
+            anchorKey={panel.anchor}
+            vargaCharts={vargaCharts}
           />
         </div>
       )}
@@ -187,21 +162,19 @@ function ChartSlot({
 }
 
 export type DivisionalChartCompareProps = {
-  lagnaLongitude?: number;
-  planets: PlanetInput[];
+  vargaCharts: VargaCharts;
   rashiNeFromNumber: (rashi?: number) => string | undefined;
   defaultLeft?: PanelConfig;
   defaultRight?: PanelConfig;
 };
 
 export function DivisionalChartCompare({
-  lagnaLongitude,
-  planets,
+  vargaCharts,
   rashiNeFromNumber,
   defaultLeft = { anchor: "lagna", division: 1 },
   defaultRight = { anchor: "moon", division: 9 },
 }: DivisionalChartCompareProps) {
-  const anchorOptions = useAnchorOptions(lagnaLongitude, planets);
+  const anchorOptions = useAnchorOptions(vargaCharts);
   const [left, setLeft] = useState<PanelConfig>(defaultLeft);
   const [right, setRight] = useState<PanelConfig>(defaultRight);
 
@@ -211,13 +184,13 @@ export function DivisionalChartCompare({
     : { ...right, anchor: anchorOptions[1] ?? anchorOptions[0] ?? "moon" };
 
   const leftHouses = useMemo(
-    () => buildDivisionalHouses(safeLeft, lagnaLongitude, planets, rashiNeFromNumber),
-    [safeLeft, lagnaLongitude, planets, rashiNeFromNumber],
+    () => buildDivisionalHouses(safeLeft, vargaCharts, rashiNeFromNumber),
+    [safeLeft, vargaCharts, rashiNeFromNumber],
   );
 
   const rightHouses = useMemo(
-    () => buildDivisionalHouses(safeRight, lagnaLongitude, planets, rashiNeFromNumber),
-    [safeRight, lagnaLongitude, planets, rashiNeFromNumber],
+    () => buildDivisionalHouses(safeRight, vargaCharts, rashiNeFromNumber),
+    [safeRight, vargaCharts, rashiNeFromNumber],
   );
 
   if (anchorOptions.length === 0) return null;
@@ -230,8 +203,7 @@ export function DivisionalChartCompare({
         houses={leftHouses}
         side="left"
         anchorOptions={anchorOptions}
-        lagnaLongitude={lagnaLongitude}
-        planets={planets}
+        vargaCharts={vargaCharts}
       />
       <ChartSlot
         panel={safeRight}
@@ -239,8 +211,7 @@ export function DivisionalChartCompare({
         houses={rightHouses}
         side="right"
         anchorOptions={anchorOptions}
-        lagnaLongitude={lagnaLongitude}
-        planets={planets}
+        vargaCharts={vargaCharts}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Heart, LogIn, Plus, UserPlus } from "lucide-react";
@@ -9,15 +9,16 @@ import {
   type MilanProfilePickerHandle,
 } from "@/components/kundali/MilanProfilePicker";
 import { KundaliMilanResult } from "@/components/kundali/KundaliMilanResult";
-import { computeAshtakuta } from "@/lib/ashtakuta";
-import { AYANAMSHA_MODES, type AyanamshaMode } from "@/lib/ayanamsha";
-import { buildAtTimeDatetime, fetchEphemerisPanchangaDay } from "@/lib/ephemeris-adapters";
-import { ayanamshaLabel, buildMilanPersonInput, moonDataFromPanchanga } from "@/lib/kundali/milan-person";
+import { AYANAMSHA_MODES, getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
+import { buildAtTimeDatetime } from "@/lib/ephemeris-adapters";
 import { profileChartParams } from "@/lib/kundali/profile-chart";
-import { getPanchangaDetail } from "@/lib/panchanga-format";
-import { resolveJanmaNakshatra } from "@/lib/panchang-elements";
 import { useLocale } from "@/i18n/locale";
-import { locationCacheKey, type PanchangaDay } from "@/lib/api";
+import {
+  fetchKundaliMilan,
+  milanKeys,
+  type MilanPerson,
+  type MilanPersonQuery,
+} from "@/lib/api";
 import type { Profile } from "@/lib/auth/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { AuthDialog } from "@/components/auth/AuthDialog";
@@ -34,6 +35,11 @@ const AYANAMSHA_KEY = "dhakalPatroAyanamshaMode";
 function loadSavedAyanamshaMode(): AyanamshaMode {
   const saved = typeof localStorage !== "undefined" ? localStorage.getItem(AYANAMSHA_KEY) : null;
   return AYANAMSHA_MODES.some((m) => m.id === saved) ? (saved as AyanamshaMode) : "lahiri";
+}
+
+function ayanamshaLabel(mode: AyanamshaMode, lang?: string): string {
+  const info = getAyanamshaModeInfo(mode);
+  return (lang ?? "ne").startsWith("en") ? info.label : info.labelNe;
 }
 
 function formatAdDateLong(d: Date, locale: string): string {
@@ -65,27 +71,30 @@ function formatLonDms(deg: number): string {
   return `${d}° ${String(m).padStart(2, "0")}′ ${String(s).padStart(2, "0")}″ ${hemi}`;
 }
 
+/** Birth query params (datetime + place) for the milan endpoint. */
+function milanQueryFromProfile(profile: Profile): MilanPersonQuery | null {
+  const chart = profileChartParams(profile);
+  if (!chart) return null;
+  return {
+    datetime: buildAtTimeDatetime(chart.adDate, chart.clock),
+    lat: chart.location.params.lat,
+    lon: chart.location.params.lon,
+    timezone: chart.location.params.timezone,
+  };
+}
+
 interface BirthDetailsTableProps {
   role: "boy" | "girl";
   profile: Profile;
-  panchanga?: PanchangaDay;
+  person?: MilanPerson;
   ayanamsha: AyanamshaMode;
   lang: string;
 }
 
-function BirthDetailsTable({ role, profile, panchanga, ayanamsha, lang }: BirthDetailsTableProps) {
+function BirthDetailsTable({ role, profile, person, ayanamsha, lang }: BirthDetailsTableProps) {
   const { t } = useTranslation();
   const en = lang.startsWith("en");
   const chart = profileChartParams(profile);
-  const moon = panchanga ? moonDataFromPanchanga(panchanga, ayanamsha) : null;
-  const detail = panchanga ? getPanchangaDetail(panchanga) : undefined;
-  const nak = panchanga
-    ? resolveJanmaNakshatra(
-        panchanga,
-        detail?.nakshatra as { number?: number; name_ne?: string; pada?: number } | undefined,
-        moon?.longitude,
-      )
-    : undefined;
 
   const rows: { label: string; value: string }[] = [
     { label: t("milan.name"), value: profile.full_name || "—" },
@@ -119,17 +128,16 @@ function BirthDetailsTable({ role, profile, panchanga, ayanamsha, lang }: BirthD
       : `${ayanamshaLabel(ayanamsha, lang)} / चित्रपक्ष`,
   });
 
-  if (moon) {
-    rows.push({ label: t("milan.moon_sign"), value: moon.rashiNe });
-  }
-  if (nak) {
+  if (person) {
+    rows.push({
+      label: t("milan.moon_sign"),
+      value: en ? person.moonRashiEn : person.moonRashiNe,
+    });
     rows.push({
       label: t("milan.nakshatra"),
-      value: `${nak.ne} (${nak.index + 1}) · ${t("milan.pada")} ${nak.pada}`,
+      value: `${en ? person.nakshatraEn : person.nakshatraNe} (${person.nakshatraIndex + 1}) · ${t("milan.pada")} ${person.pada}`,
     });
-  }
-  if (moon) {
-    rows.push({ label: t("milan.lunar_longitude"), value: moon.longitude.toFixed(2) });
+    rows.push({ label: t("milan.lunar_longitude"), value: person.moonLongitude.toFixed(2) });
   }
 
   return (
@@ -153,25 +161,6 @@ function BirthDetailsTable({ role, profile, panchanga, ayanamsha, lang }: BirthD
   );
 }
 
-function useProfilePanchanga(profile: Profile | null, ayanamsha: AyanamshaMode, enabled: boolean) {
-  const chart = profile ? profileChartParams(profile) : null;
-  const datetime = chart ? buildAtTimeDatetime(chart.adDate, chart.clock) : "";
-
-  return useQuery({
-    queryKey: [
-      "milan",
-      "panchanga",
-      profile?.id,
-      datetime,
-      chart ? locationCacheKey(chart.location.params) : "none",
-      ayanamsha,
-    ],
-    queryFn: () =>
-      fetchEphemerisPanchangaDay(datetime, chart!.adDate, chart!.location.params, { ayanamsha }),
-    enabled: enabled && !!chart,
-  });
-}
-
 export function KundaliMilan() {
   const { t } = useTranslation();
   const { lang } = useLocale();
@@ -191,25 +180,31 @@ export function KundaliMilan() {
   useRouteLoading(authLoading);
 
   const ready = isAuthenticated && !!boyProfile && !!girlProfile;
-  const boyChart = boyProfile ? profileChartParams(boyProfile) : null;
-  const girlChart = girlProfile ? profileChartParams(girlProfile) : null;
-  const hasValidCharts = !!boyChart && !!girlChart;
+  const boyQueryParams = boyProfile ? milanQueryFromProfile(boyProfile) : null;
+  const girlQueryParams = girlProfile ? milanQueryFromProfile(girlProfile) : null;
+  const hasValidCharts = !!boyQueryParams && !!girlQueryParams;
+  const milanLang = lang.startsWith("en") ? "en" : "ne";
 
-  const boyQuery = useProfilePanchanga(boyProfile, ayanamsha, ready && hasValidCharts);
-  const girlQuery = useProfilePanchanga(girlProfile, ayanamsha, ready && hasValidCharts);
+  // The full ashtakuta match — including each side's moon rashi/nakshatra —
+  // is computed by the API from the two birth moments.
+  const milanQ = useQuery({
+    queryKey:
+      boyQueryParams && girlQueryParams
+        ? milanKeys.match(boyQueryParams, girlQueryParams, ayanamsha, milanLang)
+        : ["kundali", "milan", "idle"],
+    queryFn: () =>
+      fetchKundaliMilan(boyQueryParams!, girlQueryParams!, {
+        ayanamsha,
+        lang: milanLang,
+      }),
+    enabled: ready && hasValidCharts,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const result = useMemo(() => {
-    if (!boyQuery.data || !girlQuery.data || !boyProfile || !girlProfile) return null;
-    const boyPerson = buildMilanPersonInput(boyProfile.full_name, boyQuery.data, ayanamsha);
-    const girlPerson = buildMilanPersonInput(girlProfile.full_name, girlQuery.data, ayanamsha);
-    if (!boyPerson || !girlPerson) return null;
-    return computeAshtakuta(boyPerson, girlPerson, lang);
-  }, [boyQuery.data, girlQuery.data, boyProfile, girlProfile, ayanamsha, lang]);
-
-  const loading = ready && hasValidCharts && (boyQuery.isLoading || girlQuery.isLoading);
-  const error = ready && hasValidCharts && (boyQuery.isError || girlQuery.isError);
-  const missingBirth =
-    ready && boyProfile && girlProfile && (!boyChart || !girlChart);
+  const loading = ready && hasValidCharts && milanQ.isLoading;
+  const error = ready && hasValidCharts && milanQ.isError;
+  const missingBirth = ready && boyProfile && girlProfile && !hasValidCharts;
+  const milan = milanQ.data;
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
@@ -289,37 +284,31 @@ export function KundaliMilan() {
                 </div>
               ) : null}
 
-              {!missingBirth && !loading && !error && boyQuery.data && girlQuery.data ? (
+              {!missingBirth && !loading && !error && milan ? (
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-4 lg:grid-cols-2">
                     <BirthDetailsTable
                       role="boy"
                       profile={boyProfile}
-                      panchanga={boyQuery.data}
+                      person={milan.boy}
                       ayanamsha={ayanamsha}
                       lang={lang}
                     />
                     <BirthDetailsTable
                       role="girl"
                       profile={girlProfile}
-                      panchanga={girlQuery.data}
+                      person={milan.girl}
                       ayanamsha={ayanamsha}
                       lang={lang}
                     />
                   </div>
 
-                  {result ? (
-                    <KundaliMilanResult
-                      boyName={boyProfile.full_name}
-                      girlName={girlProfile.full_name}
-                      result={result}
-                      lang={lang}
-                    />
-                  ) : (
-                    <div className="rounded-xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
-                      {t("milan.no_moon")}
-                    </div>
-                  )}
+                  <KundaliMilanResult
+                    boyName={boyProfile.full_name}
+                    girlName={girlProfile.full_name}
+                    result={milan.result}
+                    lang={lang}
+                  />
                 </div>
               ) : null}
             </>

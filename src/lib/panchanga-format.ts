@@ -1,8 +1,7 @@
 import type { CalendarDay, Festival, PanchangaDay } from "./api";
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
-import { GRAHA_NAME, nakshatraLordKey } from "@/lib/graha-details";
+import { GRAHA_NAME } from "@/lib/graha-details";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { nakshatraPadaFromLongitude } from "@/lib/panchang-elements";
 import { formatLocaleDigits } from "@/i18n/digits";
 
 export function toNepaliDigits(value: string | number): string {
@@ -852,6 +851,13 @@ type PlanetDetail = {
   rashi_ne?: string;
   deg_in_rashi?: number;
   dms_in_rashi?: string;
+  nakshatra?: {
+    number?: number;
+    name?: string;
+    name_ne?: string;
+    pada?: number;
+    lord?: string;
+  };
 };
 
 export type PlanetRow = {
@@ -865,28 +871,20 @@ export type PlanetRow = {
   nakshatraLordEn?: string;
 };
 
-function planetSiderealLongitude(info: PlanetDetail): number | undefined {
-  if (info.longitude != null) return info.longitude;
-  if (info.rashi != null && info.deg_in_rashi != null) {
-    return (info.rashi - 1) * 30 + info.deg_in_rashi;
-  }
-  return undefined;
-}
-
 function planetNakshatraFields(info: PlanetDetail): Pick<
   PlanetRow,
   "nakshatraNe" | "nakshatraEn" | "pada" | "nakshatraLordNe" | "nakshatraLordEn"
 > {
-  const lon = planetSiderealLongitude(info);
-  if (lon == null) return {};
-  const nak = nakshatraPadaFromLongitude(lon);
-  const lord = nakshatraLordKey(lon);
+  // Nakshatra placement is computed by the API and shipped on each planet.
+  const nak = info.nakshatra;
+  if (!nak?.number) return {};
+  const lord = nak.lord as keyof typeof GRAHA_NAME | undefined;
   return {
-    nakshatraNe: nak.ne,
-    nakshatraEn: NAKSHATRA_ICONS[nak.index]?.en,
+    nakshatraNe: nak.name_ne ?? NAKSHATRA_ICONS[nak.number - 1]?.ne,
+    nakshatraEn: nak.name ?? NAKSHATRA_ICONS[nak.number - 1]?.en,
     pada: nak.pada,
-    nakshatraLordNe: GRAHA_NAME[lord].ne,
-    nakshatraLordEn: GRAHA_NAME[lord].en,
+    nakshatraLordNe: lord ? GRAHA_NAME[lord]?.ne : undefined,
+    nakshatraLordEn: lord ? GRAHA_NAME[lord]?.en : undefined,
   };
 }
 

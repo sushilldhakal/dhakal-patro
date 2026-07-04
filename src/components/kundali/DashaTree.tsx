@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
+import { dashaExpandKeys, fetchDashaChildren, type DashaTreeNode } from "@/lib/api";
 import { formatZonedBsMoment } from "@/lib/bs-calendar";
 import {
   DASHA_LORD_EN,
@@ -8,7 +10,6 @@ import {
   breakdownDashaDuration,
   formatDashaDuration,
   formatDashaDurationParts,
-  subdivideDasha,
   type DashaLord,
   type DashaSpan,
 } from "@/lib/dasha";
@@ -187,6 +188,18 @@ function DashaDurationGrid({
   );
 }
 
+/** Span with the pre-computed children the API embedded (down to pratyantar). */
+type SpanWithChildren = DashaSpan & { childNodes?: DashaTreeNode[] };
+
+function toSpan(node: DashaTreeNode): SpanWithChildren {
+  return {
+    lord: (node.lord as DashaLord) ?? "ketu",
+    start: new Date(node.start),
+    end: new Date(node.end),
+    childNodes: node.children,
+  };
+}
+
 function DashaNode({
   span,
   level,
@@ -194,7 +207,7 @@ function DashaNode({
   timeZone,
   isLast,
 }: {
-  span: DashaSpan;
+  span: SpanWithChildren;
   level: number;
   now: number;
   timeZone?: string;
@@ -205,10 +218,24 @@ function DashaNode({
 
   const running = span.start.getTime() <= now && now < span.end.getTime();
   const expandable = level < MAX_LEVEL;
-  const children = useMemo(
-    () => (open && expandable ? subdivideDasha(span) : null),
-    [open, expandable, span],
-  );
+
+  // Deeper levels than the API embeds are fetched on demand — the sub-period
+  // proportions are Vimshottari rules and stay server-side.
+  const needsFetch = open && expandable && !span.childNodes;
+  const startIso = span.start.toISOString();
+  const endIso = span.end.toISOString();
+  const childQ = useQuery({
+    queryKey: dashaExpandKeys.span(span.lord, startIso, endIso),
+    queryFn: () => fetchDashaChildren(span.lord, startIso, endIso),
+    enabled: needsFetch,
+    staleTime: Infinity,
+  });
+
+  const children = useMemo<SpanWithChildren[] | null>(() => {
+    if (!open || !expandable) return null;
+    const nodes = span.childNodes ?? childQ.data?.children;
+    return nodes ? nodes.map(toSpan) : null;
+  }, [open, expandable, span.childNodes, childQ.data]);
 
   const duration = formatDashaDuration(span.end.getTime() - span.start.getTime(), lang);
   const levelLabel = pick(LEVEL_LABELS[level]!.ne, LEVEL_LABELS[level]!.en);
@@ -324,8 +351,8 @@ function DashaNode({
 }
 
 export type DashaTreeProps = {
-  /** Full-span mahadashas in chronological order. */
-  mahadashas: DashaSpan[];
+  /** Server-computed mahadasha tree (full spans, antar/pratyantar embedded). */
+  tree: DashaTreeNode[];
   /** IANA timezone of the chart's place, for begin/end display. */
   timeZone?: string;
 };
@@ -334,9 +361,10 @@ export type DashaTreeProps = {
  * Vimshottari dasha as a vertical timeline. Each row is an accordion card on
  * the spine; expand to reveal Antar → Pratyantar → Sukshma → Prana sub-periods.
  */
-export function DashaTree({ mahadashas, timeZone }: DashaTreeProps) {
+export function DashaTree({ tree, timeZone }: DashaTreeProps) {
   const { lang, pick, digits } = useLocale();
   const [now] = useState(() => Date.now());
+  const mahadashas = useMemo(() => tree.map(toSpan), [tree]);
 
   const running = mahadashas.find(
     (m) => m.start.getTime() <= now && now < m.end.getTime(),

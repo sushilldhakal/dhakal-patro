@@ -1,30 +1,17 @@
 import { useMemo } from "react";
 import { RotateCcw } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
+import type { VargaChartEntry, VargaCharts } from "@/lib/api";
 import { rashiToHouse } from "@/lib/bhava";
-import type { DashaLord } from "@/lib/dasha";
 import {
   DIGNITY_LABELS,
-  GRAHA_DETAIL_ORDER,
   GRAHA_NAME,
   RASHI_EN_NAMES,
   RELATION_LABELS,
-  grahaDignity,
-  kpSubLordFromLongitude,
-  naturalRelation,
-  nakshatraLordKey,
-  ownedRashis,
-  rashiLordKey,
-  vargaDmsParts,
-  type GrahaDignity,
   type GrahaKey,
-  type GrahaRelation,
-  type LongitudeDmsParts,
 } from "@/lib/graha-details";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { nakshatraPadaFromLongitude } from "@/lib/panchang-elements";
 import { rashiNeFromNumber } from "@/lib/panchanga-format";
-import { vargaRashiFromLongitude, type VargaDivision } from "@/lib/vargas";
 import {
   Table,
   TableBody,
@@ -35,26 +22,9 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-export type GrahaPointInput = {
-  key: string;
-  longitude?: number;
-  retrograde?: boolean;
-};
-
-type Row = {
-  key: "lagna" | GrahaKey;
-  retrograde?: boolean;
-  vargaRashi: number;
+type Row = VargaChartEntry & {
   bhava: number;
-  dms: LongitudeDmsParts;
-  nakshatraIndex: number;
-  pada: number;
-  nakshatraLord: DashaLord;
-  subLord: DashaLord;
-  ownerKey: GrahaKey;
   ownerBhava?: number;
-  relation?: GrahaRelation;
-  dignity?: GrahaDignity;
   rulesBhavas: number[];
 };
 
@@ -62,81 +32,52 @@ const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-mu
 const td = "px-2.5 py-2 text-[12.5px]";
 
 export type GrahaDetailsListProps = {
-  division: VargaDivision;
-  /** Longitude of this chart's house-1 anchor (lagna / chandra / …). */
-  anchorLongitude: number;
-  /** True lagna longitude — rendered as the first row when available. */
-  lagnaLongitude?: number;
-  planets: GrahaPointInput[];
+  division: number;
+  /** Key of this chart's house-1 anchor (lagna / moon / …). */
+  anchorKey: string;
+  /** Server-computed varga placements for every point. */
+  vargaCharts: VargaCharts;
 };
 
 /**
- * Detailed graha table for one divisional chart: varga sign + D1 longitude
- * (deg • rashi • min • sec), nakshatra pada with lord / KP sub-lord, bhava
- * placement, sign owner with its bhava, relationship, dignity and rulership —
- * for Lagna plus all nine grahas. Retrograde grahas carry a ↺ badge.
+ * Detailed graha table for one divisional chart. All jyotish values (varga
+ * sign, DMS, nakshatra pada with lord / KP sub-lord, owner, relationship,
+ * dignity) come from the API — only the whole-sign house arrangement relative
+ * to the chosen anchor is applied here.
  */
 export function GrahaDetailsList({
   division,
-  anchorLongitude,
-  lagnaLongitude,
-  planets,
+  anchorKey,
+  vargaCharts,
 }: GrahaDetailsListProps) {
   const { pick, digits } = useLocale();
 
   const rows = useMemo<Row[]>(() => {
-    const anchorRashi = vargaRashiFromLongitude(division, anchorLongitude);
-    const lonByKey = new Map<string, number>();
-    for (const p of planets) {
-      if (p.longitude != null) lonByKey.set(p.key, p.longitude);
-    }
-    const bhavaOf = (lon: number) =>
-      rashiToHouse(vargaRashiFromLongitude(division, lon), anchorRashi);
+    const entries = vargaCharts.entries[String(division)] ?? [];
+    const anchorEntry = entries.find((e) => e.key === anchorKey);
+    if (!anchorEntry) return [];
+    const anchorRashi = anchorEntry.vargaRashi;
+    const byKey = new Map(entries.map((e) => [e.key, e]));
 
-    const build = (key: "lagna" | GrahaKey, lon: number, retrograde?: boolean): Row => {
-      const vargaRashi = vargaRashiFromLongitude(division, lon);
-      const nak = nakshatraPadaFromLongitude(lon);
-      const ownerKey = rashiLordKey(vargaRashi);
-      const ownerLon = lonByKey.get(ownerKey);
-      const isGraha = key !== "lagna";
+    return entries.map((entry) => {
+      const owner = byKey.get(entry.ownerKey);
+      const rules = vargaCharts.ownedRashis[entry.key] ?? [];
       return {
-        key,
-        retrograde,
-        vargaRashi,
-        bhava: rashiToHouse(vargaRashi, anchorRashi),
-        dms: vargaDmsParts(division, lon),
-        nakshatraIndex: nak.index,
-        pada: nak.pada,
-        nakshatraLord: nakshatraLordKey(lon),
-        subLord: kpSubLordFromLongitude(lon),
-        ownerKey,
-        ownerBhava: ownerLon != null ? bhavaOf(ownerLon) : undefined,
-        relation: isGraha ? naturalRelation(key, ownerKey) : undefined,
-        dignity: isGraha
-          ? grahaDignity(key, vargaRashi, division === 1 ? lon % 30 : undefined)
-          : undefined,
-        rulesBhavas: isGraha
-          ? ownedRashis(key)
-              .map((rashi) => rashiToHouse(rashi, anchorRashi))
-              .sort((a, b) => a - b)
-          : [],
+        ...entry,
+        bhava: rashiToHouse(entry.vargaRashi, anchorRashi),
+        ownerBhava: owner ? rashiToHouse(owner.vargaRashi, anchorRashi) : undefined,
+        rulesBhavas:
+          entry.key !== "lagna"
+            ? rules.map((rashi) => rashiToHouse(rashi, anchorRashi)).sort((a, b) => a - b)
+            : [],
       };
-    };
-
-    const out: Row[] = [];
-    if (lagnaLongitude != null) out.push(build("lagna", lagnaLongitude));
-    for (const key of GRAHA_DETAIL_ORDER) {
-      const lon = lonByKey.get(key);
-      if (lon != null) {
-        out.push(build(key, lon, planets.find((p) => p.key === key)?.retrograde));
-      }
-    }
-    return out;
-  }, [division, anchorLongitude, lagnaLongitude, planets]);
+    });
+  }, [division, anchorKey, vargaCharts]);
 
   if (rows.length === 0) return null;
 
-  const grahaName = (key: GrahaKey) => pick(GRAHA_NAME[key].ne, GRAHA_NAME[key].en);
+  const grahaName = (key: string) =>
+    pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
   const rashiName = (rashi: number) =>
     pick(rashiNeFromNumber(rashi) ?? "—", RASHI_EN_NAMES[rashi - 1] ?? "—");
 

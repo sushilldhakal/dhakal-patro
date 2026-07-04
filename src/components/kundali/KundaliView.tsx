@@ -4,50 +4,35 @@ import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { Clock, Flame, MapPin } from "lucide-react";
 import {
-  fetchShadbala,
-  fetchVimshottari,
-  kundaliKeys,
+  fetchKundaliDetail,
+  kundaliDetailKeys,
   locationCacheKey,
-  shadbalaKeys,
-  vimshottariKeys,
+  type BilingualValue,
+  type KundaliDetailResponse,
   type LocationParams,
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
 import { formatBsDateLong } from "@/lib/bs-calendar";
-import {
-  buildAtTimeDatetime,
-  fetchEphemerisPanchangaDay,
-} from "@/lib/ephemeris-adapters";
+import { buildAtTimeDatetime, normalizeEphemerisDay } from "@/lib/ephemeris-adapters";
 import {
   getInstantLagna,
   getLagnaDisplay,
   getPanchangaDetail,
-  getSunrise,
-  getSunset,
+  getSunriseDisplay,
+  getSunsetDisplay,
+  getSuryaRashi,
   getVaaraNe,
   formatTithiWithPaksha,
   rashiNeFromNumber,
 } from "@/lib/panchanga-format";
-import {
-  getAyanamshaModeInfo,
-  matchesPanchangaAngas,
-  type AyanamshaMode,
-} from "@/lib/ayanamsha";
+import { getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
 import { resolveTimeZone } from "@/lib/zoned-time";
 import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartCompare";
 import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
-import { UpagrahaTable, type UpagrahaInput } from "@/components/kundali/UpagrahaTable";
+import { UpagrahaTable } from "@/components/kundali/UpagrahaTable";
 import { YogaList } from "@/components/kundali/YogaList";
 import { DashaTree } from "@/components/kundali/DashaTree";
-import {
-  DASHA_YEARS,
-  DASHA_YEAR_MS,
-  dashaLordFromString,
-  type DashaSpan,
-} from "@/lib/dasha";
-import { computeKundaliYogas } from "@/lib/kundali-yogas";
-import type { GrahaKey } from "@/lib/graha-details";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { BhavaBalaCard } from "@/components/kundali/BhavaBalaCard";
@@ -55,10 +40,9 @@ import { AshtakavargaCard } from "@/components/kundali/AshtakavargaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
-import { nakshatraPadaFromLongitude, resolveJanmaNakshatra, yogaFromLongitudes } from "@/lib/panchang-elements";
-import { janmaAvakahadaFromLongitude } from "@/lib/avakahada-lagna";
-import { buildBirthPanchangaMeta } from "@/lib/birth-panchanga-meta";
-import { choghadiyaAtClock } from "@/components/panchanga/day-timeline-data";
+import { formatGhadiPalaVipala } from "@/lib/birth-panchanga-meta";
+import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
+import { WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 
 function DetailTraitRow({ label, value }: { label: string; value: string }) {
   return (
@@ -81,108 +65,33 @@ function StatTile({ label, value, sub }: { label: string; value: string; sub?: s
   );
 }
 
-const PLANET_LABELS: Record<string, string> = {
-  sun: "☀️ Sun (सूर्य)",
-  moon: "🌙 Moon (चन्द्र)",
-  mars: "♂️ Mars (मंगल)",
-  mercury: "☿ Mercury (बुध)",
-  jupiter: "♃ Jupiter (बृहस्पति)",
-  venus: "♀ Venus (शुक्र)",
-  saturn: "♄ Saturn (शनि)",
-  rahu: "☊ Rahu (राहु)",
-  ketu: "☋ Ketu (केतु)",
-};
-
-const PLANET_ORDER = [
-  "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu",
-];
-
-function toAdStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-type PlanetCard = {
-  key: string;
-  label: string;
-  rashi: string;
-  rashiNum?: number;
-  degrees?: string;
-  retrograde?: boolean;
-  longitude?: number;
-  nakshatra?: string;
-  pada?: number;
-  nakshatresh?: string;
-  latitude?: number;
-  rightAscension?: number;
-  declination?: number;
-  speed?: number;
-};
-
 type RawPlanet = PlanetInfo & {
   rashi_name?: string;
   is_retrograde?: boolean;
-  deg_in_rashi?: number;
-  dms_in_rashi?: string;
   latitude?: number;
   right_ascension?: number;
   declination?: number;
   speed?: number;
 };
 
-function planetsFromPanchanga(p: PanchangaDay, preferLongitudeNakshatra = false): PlanetCard[] {
+/** Astronomical extras per graha from the at-time panchanga planet block. */
+function astroPointsFromPanchanga(p: PanchangaDay): Partial<Record<string, GrahaAstroPoint>> {
   const detail = getPanchangaDetail(p);
   const planets = (detail?.planets ?? p.planets) as Record<string, RawPlanet | string> | undefined;
-  if (!planets) return [];
-
-  return PLANET_ORDER.filter((key) => key in planets).map((key) => {
-    const info = planets[key];
-    if (typeof info === "string") {
-      return { key, label: PLANET_LABELS[key] ?? key, rashi: info };
-    }
-
-    const lon = info.longitude;
-    const rashiNum = lon != null ? Math.floor(lon / 30) + 1 : undefined;
-    const nakshatra =
-      key === "moon" && p.mode === "ephemeris" && !preferLongitudeNakshatra
-        ? resolveJanmaNakshatra(
-            p,
-            detail?.nakshatra as { number?: number; name_ne?: string; progress?: number },
-            lon,
-          )
-        : lon != null
-          ? nakshatraPadaFromLongitude(lon)
-          : undefined;
-
-    const rashi = info.rashi_ne ?? info.rashi_name ?? info.rashi ?? "—";
-    const degrees =
-      info.dms_in_rashi ??
-      (info.deg_in_rashi != null
-        ? `${info.deg_in_rashi.toFixed(1)}°`
-        : info.degrees != null
-          ? `${info.degrees.toFixed(1)}°`
-          : lon != null
-            ? `${(lon % 30).toFixed(1)}°`
-            : undefined);
-    return {
-      key,
-      label: PLANET_LABELS[key] ?? key,
-      rashi,
-      rashiNum,
-      degrees,
+  if (!planets) return {};
+  const out: Partial<Record<string, GrahaAstroPoint>> = {};
+  for (const [key, info] of Object.entries(planets)) {
+    if (typeof info === "string") continue;
+    out[key] = {
+      longitude: info.longitude,
       retrograde: info.is_retrograde ?? info.retrograde,
-      longitude: lon,
-      nakshatra: nakshatra?.ne,
-      pada: nakshatra?.pada,
-      nakshatresh: nakshatra?.lordNe,
       latitude: info.latitude,
       rightAscension: info.right_ascension,
       declination: info.declination,
       speed: info.speed,
     };
-  });
+  }
+  return out;
 }
 
 export interface KundaliViewProps {
@@ -204,13 +113,18 @@ export interface KundaliViewProps {
   section?: KundaliSectionId;
 }
 
+function toAdStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 /**
- * Full birth-chart view for a single applied birth moment: birth summary,
- * panchang essentials, Nava Graha, divisional charts, Vimshottari dasha,
- * Shadbala, the interpretation report, and (optionally) Navagraha Shanti.
- *
- * Self-contained — fetches its own panchanga / dasha / shadbala from the
- * provided inputs. Used inline on /kundali (anonymous) and on /kundali/$id.
+ * Full birth-chart view for a single applied birth moment. Everything is
+ * computed by the API's /kundali/detail endpoint — panchanga, divisional
+ * charts, yogas, dasha tree, shadbala, bhava bala, ashtakavarga, avakahada —
+ * so this component (and any future mobile client) only renders.
  */
 export function KundaliView({
   date,
@@ -227,161 +141,70 @@ export function KundaliView({
   const adDateStr = toAdStr(date);
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: kundaliKeys.atTime(atTimeDatetime, locationParams, ayanamshaMode),
+  const detailQ = useQuery({
+    queryKey: kundaliDetailKeys.atTime(atTimeDatetime, locationParams, ayanamshaMode),
     queryFn: () =>
-      fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, locationParams, {
-        ayanamsha: ayanamshaMode,
-      }),
+      fetchKundaliDetail(atTimeDatetime, locationParams, { ayanamsha: ayanamshaMode }),
     staleTime: 1000 * 60 * 5,
   });
 
-  const dashaQ = useQuery({
-    queryKey: vimshottariKeys.atTime(atTimeDatetime, locationParams, ayanamshaMode),
-    queryFn: () =>
-      fetchVimshottari(atTimeDatetime, locationParams, { ayanamsha: ayanamshaMode }),
-    staleTime: 1000 * 60 * 5,
-    enabled: Boolean(atTimeDatetime),
-  });
+  const detail: KundaliDetailResponse | undefined = detailQ.data;
+  const isLoading = detailQ.isLoading;
+  const isError = detailQ.isError;
 
-  const shadbalaQ = useQuery({
-    queryKey: shadbalaKeys.atTime(atTimeDatetime, locationParams),
-    queryFn: () => fetchShadbala(atTimeDatetime, locationParams),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  // Non-Lahiri modes shift graha longitudes while the API's anga blocks stay
-  // Lahiri — derive nakshatra fields from the longitudes in that case.
-  const lahiriAngas = matchesPanchangaAngas(ayanamshaMode);
-  const planets = useMemo(
-    () => (data ? planetsFromPanchanga(data, !lahiriAngas) : []),
-    [data, lahiriAngas],
+  const data = useMemo(
+    () => (detail?.panchanga ? normalizeEphemerisDay(detail.panchanga) : undefined),
+    [detail],
   );
+
   const rawLagna = data ? getLagnaDisplay(data) : undefined;
   const lagna = useMemo(() => {
     if (!rawLagna) return undefined;
-    const rashiNum =
-      rawLagna.rashiNum ??
-      (rawLagna.longitude != null ? Math.floor(rawLagna.longitude / 30) + 1 : undefined);
+    const rashiNum = rawLagna.rashiNum ?? detail?.lagnaRashi ?? undefined;
     return { ...rawLagna, rashiNum };
-  }, [rawLagna]);
-  const moon = useMemo(() => planets.find((p) => p.key === "moon"), [planets]);
+  }, [rawLagna, detail?.lagnaRashi]);
+
+  const d1Rows = useMemo(
+    () => detail?.vargaCharts.entries["1"] ?? [],
+    [detail],
+  );
+  const moonRow = useMemo(() => d1Rows.find((r) => r.key === "moon"), [d1Rows]);
+  const sunRow = useMemo(() => d1Rows.find((r) => r.key === "sun"), [d1Rows]);
 
   const janmaNakshatra = useMemo(() => {
-    if (!data) return undefined;
-    const moonLon = moon?.longitude;
-    if (!lahiriAngas && moonLon != null) {
-      return nakshatraPadaFromLongitude(moonLon);
-    }
-    const detail = getPanchangaDetail(data);
-    return resolveJanmaNakshatra(
-      data,
-      detail?.nakshatra as { number?: number; name_ne?: string; progress?: number },
-      moonLon,
-    );
-  }, [data, moon, lahiriAngas]);
-
-  const janmaAvakahada = useMemo(
-    () =>
-      moon?.longitude != null
-        ? janmaAvakahadaFromLongitude(
-            moon.longitude,
-            lang,
-            moon.rashi,
-            moon.rashiNum,
-            lagna?.rashiNum,
-            janmaNakshatra,
-          )
-        : null,
-    [moon, lang, lagna?.rashiNum, janmaNakshatra],
-  );
-
-  const birthPanchangaMeta = useMemo(() => {
-    if (!data) return null;
-    const sun = planets.find((p) => p.key === "sun");
-    return buildBirthPanchangaMeta(data, clock, { sun });
-  }, [data, clock, planets]);
-
-  const choghadiyaAtBirth = useMemo(
-    () => (data ? choghadiyaAtClock(data, clock, data.date_ad ?? adDateStr) : null),
-    [data, clock, adDateStr],
-  );
-
-  const shadbalaChart = useMemo(() => {
-    if (!lagna?.rashiNum) return undefined;
-    const planetLongitudes: Record<string, number> = {};
-    for (const p of planets) {
-      if (p.longitude != null) planetLongitudes[p.key] = p.longitude;
-    }
-    if (Object.keys(planetLongitudes).length < 7) return undefined;
-    return { lagnaRashi: lagna.rashiNum, planetLongitudes };
-  }, [lagna?.rashiNum, planets]);
-
-  const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
-  const effectiveTimezone = resolveTimeZone(data?.location?.timezone, locationParams?.timezone);
-  const locationLabel = data?.location?.name ?? locationLabelProp;
-
-  const chartPlanets = useMemo(
-    () =>
-      planets
-        .filter((p) => p.longitude != null)
-        .map((p) => ({
-          key: p.key,
-          labelNe: p.label,
-          longitude: p.longitude,
-          retrograde: p.retrograde,
-        })),
-    [planets],
-  );
-
-  const astroPlanets = useMemo(() => {
-    const out: Partial<Record<string, GrahaAstroPoint>> = {};
-    for (const p of planets) {
-      out[p.key] = {
-        longitude: p.longitude,
-        retrograde: p.retrograde,
-        latitude: p.latitude,
-        rightAscension: p.rightAscension,
-        declination: p.declination,
-        speed: p.speed,
-      };
-    }
-    return out;
-  }, [planets]);
-
-  const upagrahas = useMemo<UpagrahaInput[]>(() => {
-    if (!data) return [];
-    const detail = getPanchangaDetail(data);
-    const block = (detail?.upagrahas ?? (data as { upagrahas?: unknown }).upagrahas) as
-      | UpagrahaInput[]
-      | undefined;
-    return Array.isArray(block) ? block : [];
-  }, [data]);
-
-  const yogas = useMemo(() => {
-    if (!data || lagna?.rashiNum == null) return [];
-    const longitudes: Partial<Record<GrahaKey, number>> = {};
-    for (const p of planets) {
-      if (p.longitude != null) longitudes[p.key as GrahaKey] = p.longitude;
-    }
-    const toMin = (t?: string) => {
-      const m = t?.match(/(\d{1,2}):(\d{2})/);
-      return m ? Number(m[1]) * 60 + Number(m[2]) : undefined;
+    const meta = detail?.birthMeta.moonNakshatra;
+    const index = meta?.index ?? moonRow?.nakshatraIndex;
+    const pada = meta?.pada ?? moonRow?.pada;
+    if (index == null || pada == null) return undefined;
+    return {
+      index,
+      pada,
+      ne: NAKSHATRA_ICONS[index]?.ne ?? "—",
+      en: NAKSHATRA_ICONS[index]?.en ?? "—",
     };
-    const birthMin = toMin(clock);
-    const sunriseMin = toMin(getSunrise(data));
-    const sunsetMin = toMin(getSunset(data));
-    const isDayBirth =
-      birthMin != null && sunriseMin != null && sunsetMin != null
-        ? birthMin >= sunriseMin && birthMin < sunsetMin
-        : undefined;
-    return computeKundaliYogas({
-      lagnaRashi: lagna.rashiNum,
-      planetLongitudes: longitudes,
-      isDayBirth,
-      gulikaLongitude: upagrahas.find((u) => u.key === "gulika")?.longitude,
-    });
-  }, [data, lagna, planets, upagrahas, clock]);
+  }, [detail, moonRow]);
+
+  const moonRashiLabel = useMemo(() => {
+    if (!moonRow) return undefined;
+    return pick(
+      rashiNeFromNumber(moonRow.vargaRashi) ?? "—",
+      rashiNeFromNumber(moonRow.vargaRashi) ?? "—",
+    );
+  }, [moonRow, pick]);
+
+  const pickBi = (v?: BilingualValue | null) => (v ? pick(v.ne, v.en) : "—");
+  const janmaAvakahada = detail?.avakahada ?? null;
+
+  const birthMeta = detail?.birthMeta;
+  const ishtaKalaLabel = birthMeta?.ishtaKala
+    ? formatGhadiPalaVipala(birthMeta.ishtaKala, lang)
+    : undefined;
+  const ahoratriIshtaLabel = birthMeta?.ahoratriIshtaKala
+    ? formatGhadiPalaVipala(birthMeta.ahoratriIshtaKala, lang)
+    : undefined;
+  const choghadiyaAtBirth = birthMeta?.choghadiyaAtBirth ?? null;
+
+  const astroPlanets = useMemo(() => (data ? astroPointsFromPanchanga(data) : {}), [data]);
 
   const astroLagna = useMemo<GrahaAstroPoint | undefined>(() => {
     if (lagna?.longitude == null) return undefined;
@@ -397,48 +220,46 @@ export function KundaliView({
 
   const panchangSummary = useMemo(() => {
     if (!data) return undefined;
-    const detail = getPanchangaDetail(data);
+    const pDetail = getPanchangaDetail(data);
     const tithiNe = formatTithiWithPaksha(data, "ne");
     const tithiEn = formatTithiWithPaksha(data, "en");
     const vaaraNe = getVaaraNe(data, data.weekday);
     const karanaNe =
-      (detail?.karana as { name_ne?: string; name?: string } | undefined)?.name_ne ??
+      (pDetail?.karana as { name_ne?: string; name?: string } | undefined)?.name_ne ??
       data.karana?.name_ne ??
-      (detail?.karana as { name?: string } | undefined)?.name ??
+      (pDetail?.karana as { name?: string } | undefined)?.name ??
       data.karana?.name;
-    const moonLon = planets.find((p) => p.key === "moon")?.longitude;
-    const sunLon = planets.find((p) => p.key === "sun")?.longitude;
-    const nakshatra =
-      !lahiriAngas && moonLon != null
-        ? nakshatraPadaFromLongitude(moonLon)
-        : resolveJanmaNakshatra(
-            data,
-            detail?.nakshatra as { number?: number; name_ne?: string; progress?: number },
-            moonLon,
-          );
-    const yoga = moonLon != null && sunLon != null ? yogaFromLongitudes(sunLon, moonLon) : undefined;
-    return { tithiNe, tithiEn, vaaraNe, karanaNe, nakshatra, yoga };
-  }, [data, planets, lahiriAngas]);
+    const yogaIndex = detail?.birthMeta.yoga?.index;
+    const yoga = yogaIndex != null ? { index: yogaIndex, ne: WHEEL_YOGAS[yogaIndex] ?? "—" } : undefined;
+    return { tithiNe, tithiEn, vaaraNe, karanaNe, nakshatra: janmaNakshatra, yoga };
+  }, [data, detail, janmaNakshatra]);
 
-  const dasha = dashaQ.data;
+  const suryaMeta = useMemo(() => {
+    if (!data) return undefined;
+    const suryaRashi = getSuryaRashi(data);
+    return {
+      rashiNe: suryaRashi?.name_ne,
+      rashiEn: suryaRashi?.name,
+      nakshatra: sunRow
+        ? {
+            ne: NAKSHATRA_ICONS[sunRow.nakshatraIndex]?.ne ?? "—",
+            en: NAKSHATRA_ICONS[sunRow.nakshatraIndex]?.en,
+            pada: sunRow.pada,
+          }
+        : undefined,
+    };
+  }, [data, sunRow]);
 
-  const mahadashaSpans = useMemo<DashaSpan[]>(() => {
-    if (!dasha?.sequence?.length) return [];
-    const spans: DashaSpan[] = [];
-    dasha.sequence.forEach((period, i) => {
-      const lord = dashaLordFromString(period.lord) ?? dashaLordFromString(period.lord_ne);
-      if (!lord) return;
-      const end = new Date(period.end);
-      // The birth mahadasha entry carries only the balance — restore the full
-      // span so its sub-periods subdivide from the true beginning.
-      const start =
-        i === 0
-          ? new Date(end.getTime() - DASHA_YEARS[lord] * DASHA_YEAR_MS)
-          : new Date(period.start);
-      spans.push({ lord, start, end });
-    });
-    return spans;
-  }, [dasha]);
+  const vaaraEn = useMemo(() => {
+    if (!data) return undefined;
+    const pDetail = getPanchangaDetail(data);
+    return (pDetail?.vaara as { name_english?: string } | undefined)?.name_english ?? data.weekday;
+  }, [data]);
+
+  const dasha = detail?.dasha ?? undefined;
+  const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
+  const effectiveTimezone = resolveTimeZone(data?.location?.timezone, locationParams?.timezone);
+  const locationLabel = data?.location?.name ?? locationLabelProp;
 
   const showSection = (id: KundaliSectionId) => section == null || section === id;
 
@@ -455,7 +276,7 @@ export function KundaliView({
     );
   }
 
-  if (!data) {
+  if (!detail || !data) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
         <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
@@ -536,7 +357,7 @@ export function KundaliView({
             {panchangSummary?.nakshatra ? (
               <DetailTraitRow
                 label={pick("नक्षत्र", "Nakshatra")}
-                value={`${panchangSummary.nakshatra.ne} · ${pick(`पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`)}`}
+                value={`${pick(panchangSummary.nakshatra.ne, panchangSummary.nakshatra.en)} · ${pick(`पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`)}`}
               />
             ) : null}
             {panchangSummary?.yoga ? (
@@ -566,69 +387,47 @@ export function KundaliView({
                 value={`${lagna.nameNe}${lagna.degree ? ` ${lagna.degree}°` : ""}`}
               />
             ) : null}
-            {moon?.rashi ? (
-              <DetailTraitRow label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={moon.rashi} />
+            {moonRashiLabel ? (
+              <DetailTraitRow label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={moonRashiLabel} />
             ) : null}
-            {birthPanchangaMeta?.sunriseNe ? (
+            {getSunriseDisplay(data) ? (
               <DetailTraitRow
                 label={pick("सूर्योदय", "Sunrise")}
-                value={birthPanchangaMeta.sunriseNe}
+                value={getSunriseDisplay(data) ?? "—"}
               />
             ) : null}
-            {birthPanchangaMeta?.sunsetNe ? (
+            {getSunsetDisplay(data) ? (
               <DetailTraitRow
                 label={pick("सूर्यास्त", "Sunset")}
-                value={birthPanchangaMeta.sunsetNe}
+                value={getSunsetDisplay(data) ?? "—"}
               />
             ) : null}
-            {birthPanchangaMeta?.ishtaKalaNe ? (
-              <DetailTraitRow
-                label={pick("इष्ट काल", "Ishta Kala")}
-                value={pick(
-                  birthPanchangaMeta.ishtaKalaNe,
-                  birthPanchangaMeta.ishtaKalaEn ?? birthPanchangaMeta.ishtaKalaNe,
-                )}
-              />
+            {ishtaKalaLabel ? (
+              <DetailTraitRow label={pick("इष्ट काल", "Ishta Kala")} value={ishtaKalaLabel} />
             ) : null}
             <DetailTraitRow
               label={pick("अहोरात्र इष्ट काल", "Ahoratri Ishta Kala")}
-              value={pick(
-                birthPanchangaMeta?.ahoratriIshtaNe ?? "—",
-                birthPanchangaMeta?.ahoratriIshtaEn ?? "—",
-              )}
+              value={ahoratriIshtaLabel ?? "—"}
             />
-            {birthPanchangaMeta?.vaaraNe ? (
+            {panchangSummary?.vaaraNe ? (
               <DetailTraitRow
                 label={pick("वार", "Weekday")}
-                value={pick(
-                  birthPanchangaMeta.vaaraNe,
-                  birthPanchangaMeta.vaaraEn ?? birthPanchangaMeta.vaaraNe,
-                )}
+                value={pick(panchangSummary.vaaraNe, vaaraEn ?? panchangSummary.vaaraNe)}
               />
             ) : null}
-            {birthPanchangaMeta?.suryaRashiNe ? (
+            {suryaMeta?.rashiNe ? (
               <DetailTraitRow
                 label={pick("सूर्य राशि", "Sun sign")}
-                value={pick(
-                  birthPanchangaMeta.suryaRashiNe,
-                  birthPanchangaMeta.suryaRashiEn ?? birthPanchangaMeta.suryaRashiNe,
-                )}
+                value={pick(suryaMeta.rashiNe, suryaMeta.rashiEn ?? suryaMeta.rashiNe)}
               />
             ) : null}
-            {birthPanchangaMeta?.suryaNakshatra ? (
+            {suryaMeta?.nakshatra ? (
               <DetailTraitRow
                 label={pick("सूर्य नक्षत्र", "Surya Nakshatra")}
-                value={
-                  birthPanchangaMeta.suryaNakshatra.pada != null
-                    ? pick(
-                        `${birthPanchangaMeta.suryaNakshatra.ne} · पद ${digits(birthPanchangaMeta.suryaNakshatra.pada)}`,
-                        `${birthPanchangaMeta.suryaNakshatra.en ?? birthPanchangaMeta.suryaNakshatra.ne} · Pada ${digits(birthPanchangaMeta.suryaNakshatra.pada)}`,
-                      )
-                    : pick(
-                        birthPanchangaMeta.suryaNakshatra.ne,
-                        birthPanchangaMeta.suryaNakshatra.en ?? birthPanchangaMeta.suryaNakshatra.ne,
-                      )
-                }
+                value={pick(
+                  `${suryaMeta.nakshatra.ne} · पद ${digits(suryaMeta.nakshatra.pada)}`,
+                  `${suryaMeta.nakshatra.en ?? suryaMeta.nakshatra.ne} · Pada ${digits(suryaMeta.nakshatra.pada)}`,
+                )}
               />
             ) : null}
           </div>
@@ -639,7 +438,7 @@ export function KundaliView({
                 {pick("अवकहडा", "Avakahada")}
                 <span className="mx-1.5 font-normal text-muted-foreground/50">·</span>
                 <span className="normal-case tracking-normal font-semibold text-foreground">
-                  {janmaAvakahada.nakshatraNe}
+                  {pickBi(janmaAvakahada.nakshatra)}
                   <span className="mx-1 text-muted-foreground/40">·</span>
                   {pick(`पद ${digits(janmaAvakahada.pada)}`, `Pada ${digits(janmaAvakahada.pada)}`)}
                 </span>
@@ -647,22 +446,22 @@ export function KundaliView({
               <div className="flex flex-wrap gap-x-5 gap-y-2">
                 <DetailTraitRow
                   label={pick("राशि पाय", "Rashi Paya")}
-                  value={janmaAvakahada.rashiPaya}
+                  value={pickBi(janmaAvakahada.rashiPaya)}
                 />
                 <DetailTraitRow
                   label={pick("नक्षत्र पाय", "Nakshatra Paya")}
-                  value={janmaAvakahada.nakshatraPaya}
+                  value={pickBi(janmaAvakahada.nakshatraPaya)}
                 />
-                <DetailTraitRow label={pick("तत्त्व", "Tattva")} value={janmaAvakahada.tattva} />
-                <DetailTraitRow label={pick("युञ्ज", "Yunja")} value={janmaAvakahada.yunja} />
-                <DetailTraitRow label={pick("वश्य", "Vashya")} value={janmaAvakahada.vashya} />
-                <DetailTraitRow label={pick("तारा", "Tara")} value={janmaAvakahada.tara} />
-                <DetailTraitRow label={pick("अक्षर", "Akshara")} value={janmaAvakahada.akshara} />
-                <DetailTraitRow label={pick("गण", "Gana")} value={janmaAvakahada.gana} />
-                <DetailTraitRow label={pick("नाडी", "Nadi")} value={janmaAvakahada.nadi} />
-                <DetailTraitRow label={pick("आसन", "Asana")} value={janmaAvakahada.asana} />
-                <DetailTraitRow label={pick("योनी", "Yoni")} value={janmaAvakahada.yoni} />
-                <DetailTraitRow label={pick("जात", "Jati")} value={janmaAvakahada.jati} />
+                <DetailTraitRow label={pick("तत्त्व", "Tattva")} value={pickBi(janmaAvakahada.tattva)} />
+                <DetailTraitRow label={pick("युञ्ज", "Yunja")} value={pickBi(janmaAvakahada.yunja)} />
+                <DetailTraitRow label={pick("वश्य", "Vashya")} value={pickBi(janmaAvakahada.vashya)} />
+                <DetailTraitRow label={pick("तारा", "Tara")} value={pickBi(janmaAvakahada.tara)} />
+                <DetailTraitRow label={pick("अक्षर", "Akshara")} value={pickBi(janmaAvakahada.akshara)} />
+                <DetailTraitRow label={pick("गण", "Gana")} value={pickBi(janmaAvakahada.gana)} />
+                <DetailTraitRow label={pick("नाडी", "Nadi")} value={pickBi(janmaAvakahada.nadi)} />
+                <DetailTraitRow label={pick("आसन", "Asana")} value={pickBi(janmaAvakahada.asana)} />
+                <DetailTraitRow label={pick("योनी", "Yoni")} value={pickBi(janmaAvakahada.yoni)} />
+                <DetailTraitRow label={pick("जात", "Jati")} value={pickBi(janmaAvakahada.jati)} />
               </div>
             </div>
           ) : null}
@@ -671,10 +470,10 @@ export function KundaliView({
 
       {panchangSummary && !hideBirthSummary && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatTile label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={planets.find((p) => p.key === "moon")?.rashi ?? "—"} />
+          <StatTile label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={moonRashiLabel ?? "—"} />
           <StatTile
             label={pick("नक्षत्र (चन्द्र)", "Nakshatra (Moon)")}
-            value={panchangSummary.nakshatra ? `${panchangSummary.nakshatra.ne}` : "—"}
+            value={panchangSummary.nakshatra ? pick(panchangSummary.nakshatra.ne, panchangSummary.nakshatra.en) : "—"}
             sub={panchangSummary.nakshatra ? pick(`पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`) : undefined}
           />
           <StatTile
@@ -687,12 +486,11 @@ export function KundaliView({
       )}
 
 
-      {showSection("kundali-charts") && (lagna?.longitude != null || moon?.longitude != null) && (
+      {showSection("kundali-charts") && d1Rows.length > 0 && (
         <div id="kundali-charts" className="scroll-mt-24">
           <PanchangaSection titleNe="कुण्डली चक्र" titleEn="Divisional Charts">
             <DivisionalChartCompare
-              lagnaLongitude={lagna?.longitude}
-              planets={chartPlanets}
+              vargaCharts={detail.vargaCharts}
               rashiNeFromNumber={rashiNeFromNumber}
             />
           </PanchangaSection>
@@ -700,28 +498,33 @@ export function KundaliView({
       )}
 
       {/* Graha details — astronomical readout for the birth instant (D1) */}
-      {showSection("kundali-graha") && planets.length > 0 && (
+      {showSection("kundali-graha") && d1Rows.length > 0 && (
         <div id="kundali-graha" className="scroll-mt-24">
           <PanchangaSection titleNe="ग्रह विवरण" titleEn="Graha Details">
-            <GrahaAstroTable planets={astroPlanets} lagna={astroLagna} />
+            <GrahaAstroTable
+              planets={astroPlanets}
+              lagna={astroLagna}
+              d1Rows={d1Rows}
+              combustion={detail.combustion}
+            />
           </PanchangaSection>
         </div>
       )}
 
       {/* Upagraha — shadow points for the birth instant */}
-      {showSection("kundali-upagraha") && upagrahas.length > 0 && (
+      {showSection("kundali-upagraha") && detail.upagrahas.length > 0 && (
         <div id="kundali-upagraha" className="scroll-mt-24">
           <PanchangaSection titleNe="उपग्रह" titleEn="Upagraha">
-            <UpagrahaTable upagrahas={upagrahas} />
+            <UpagrahaTable upagrahas={detail.upagrahas} />
           </PanchangaSection>
         </div>
       )}
 
       {/* Kundali yogas — classical combinations detected in this chart */}
-      {showSection("kundali-yoga") && yogas.length > 0 && (
+      {showSection("kundali-yoga") && detail.yogas.length > 0 && (
         <div id="kundali-yoga" className="scroll-mt-24">
           <PanchangaSection titleNe="कुण्डली योग" titleEn="Kundali Yoga">
-            <YogaList yogas={yogas} />
+            <YogaList yogas={detail.yogas} />
           </PanchangaSection>
         </div>
       )}
@@ -737,67 +540,39 @@ export function KundaliView({
                 sub={pick(`बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
               />
             </div>
-            <DashaTree mahadashas={mahadashaSpans} timeZone={effectiveTimezone} />
+            <DashaTree tree={dasha.tree} timeZone={effectiveTimezone} />
           </div>
         </PanchangaSection>
         </div>
       )}
 
-      {showSection("kundali-dasha") && !dasha && dashaQ.isLoading && (
-        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
-          <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
-          {pick("दशा गणना हुँदै…", "Computing dasha…")}
-        </div>
-      )}
-
-      {showSection("kundali-shadbala") && shadbalaQ.data && (
+      {showSection("kundali-shadbala") && (
         <div id="kundali-shadbala" className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
-          <ShadbalaCard data={shadbalaQ.data} chart={shadbalaChart} />
+          <ShadbalaCard
+            data={detail.shadbala}
+            yuddha={detail.yuddha}
+            bhavaBala={detail.bhavaBala}
+          />
         </div>
       )}
 
-      {showSection("kundali-shadbala") && !shadbalaQ.data && shadbalaQ.isLoading && (
-        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
-          <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
-          {pick("षड्बल गणना हुँदै…", "Computing shadbala…")}
-        </div>
-      )}
-
-      {showSection("kundali-bhava-bala") && shadbalaQ.data && shadbalaChart && (
+      {showSection("kundali-bhava-bala") && detail.bhavaBala && (
         <div
           id="kundali-bhava-bala"
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
-          <BhavaBalaCard shadbala={shadbalaQ.data} chart={shadbalaChart} />
+          <BhavaBalaCard data={detail.bhavaBala} />
         </div>
       )}
 
-      {showSection("kundali-bhava-bala") &&
-        (!shadbalaQ.data || !shadbalaChart) &&
-        (shadbalaQ.isLoading || isLoading) && (
-          <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
-            <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
-            {pick("भाव बल गणना हुँदै…", "Computing bhava bala…")}
-          </div>
-        )}
-
-      {showSection("kundali-ashtakavarga") && shadbalaChart && (
+      {showSection("kundali-ashtakavarga") && detail.ashtakavarga && (
         <div
           id="kundali-ashtakavarga"
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
-          <AshtakavargaCard chart={shadbalaChart} />
+          <AshtakavargaCard data={detail.ashtakavarga} />
         </div>
       )}
-
-      {showSection("kundali-ashtakavarga") &&
-        !shadbalaChart &&
-        (isLoading || shadbalaQ.isLoading) && (
-          <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
-            <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
-            {pick("अष्टकवर्ग गणना हुँदै…", "Computing ashtakavarga…")}
-          </div>
-        )}
 
       {showSection("kundali-shanti") && showShanti && (
         <div id="kundali-shanti" className="scroll-mt-24">
@@ -811,9 +586,9 @@ export function KundaliView({
               )}
             </div>
             <ShantiVidhiPanel
-              vimshottari={dashaQ.data}
-              shadbala={shadbalaQ.data}
-              isError={dashaQ.isError && shadbalaQ.isError}
+              vimshottari={dasha}
+              shadbala={detail.shadbala}
+              isError={isError}
             />
           </div>
         </PanchangaSection>
