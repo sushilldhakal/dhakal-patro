@@ -330,14 +330,27 @@ export function CalendarView({
         </div>
       )}
 
-      <BsCalendarGrid
-        days={gridDays}
-        publicHolidayDates={publicHolidayDates}
-        selectedAdDate={selected?.date_ad}
-        onSelectDay={selectDay}
-        isEnriching={isEnriching}
-        todayAd={todayAd}
-      />
+      <div className="relative" aria-busy={isEnriching}>
+        {isEnriching && (
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center px-3 pt-2"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="rounded-full border border-border/80 bg-card/95 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
+              {t("common.enriching")}
+            </span>
+          </div>
+        )}
+        <BsCalendarGrid
+          days={gridDays}
+          publicHolidayDates={publicHolidayDates}
+          selectedAdDate={selected?.date_ad}
+          onSelectDay={selectDay}
+          isEnriching={isEnriching}
+          todayAd={todayAd}
+        />
+      </div>
 
       <DayDetailModal
         day={selected}
@@ -479,10 +492,6 @@ export function CalendarView({
             <ChevronRight size={16} strokeWidth={1.8} />
           </button>
         </div>
-
-        {isEnriching && !isPanchangaPatro && (
-          <span className="text-xs font-medium text-muted-foreground">{t("common.enriching")}</span>
-        )}
         </div>
       </div>
     </div>

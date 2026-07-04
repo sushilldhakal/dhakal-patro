@@ -152,7 +152,7 @@ export const GANA_SWATCH_CLASS: Record<string, string> = {
 };
 
 export const patroHeroMonthOverlay =
-  "pointer-events-none absolute inset-0 bg-gradient-to-br from-black/72 via-black/42 to-black/28";
+  "pointer-events-none absolute inset-0 z-[1] bg-gradient-to-br from-black/82 via-black/55 to-black/40";
 
 export const patroHeroMonthShell =
   "relative isolate overflow-hidden bg-cover bg-center bg-no-repeat";
