@@ -8,7 +8,7 @@ import i18n from "./i18n/index";
 import { router } from "./router.tsx";
 import { AuthProvider } from "./lib/auth/AuthContext";
 import { getLocalStorageItem, isBrowser } from "./lib/browser";
-import { normalizeLang } from "./i18n/locale";
+import { syncDocumentLang } from "./lib/fonts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,11 +18,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-function syncDocumentLang(lang: string) {
-  if (!isBrowser) return;
-  document.documentElement.lang = normalizeLang(lang);
-}
 
 /** Apply stored language after hydration. Default stays Nepali when nothing is saved. */
 function LanguageBootstrap() {

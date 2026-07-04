@@ -5,9 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Oxanium", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Oxanium", ui-sans-serif, system-ui, sans-serif;
-  --font-ne: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-en: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -110,8 +111,9 @@
   --color-danger: var(--brand-vermilion);
   --color-info: var(--brand-blue);
 
-  --font-sans: "Oxanium", ui-sans-serif, system-ui, sans-serif;
-  --font-ne: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-en: "Oxanium", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
 
   --fs-xs: 12px;
@@ -164,7 +166,7 @@
   --ring: var(--brand-saffron);
   --sidebar-accent: var(--brand-saffron);
 
-  --pn-font: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  --pn-font: "Mukta", ui-sans-serif, system-ui, sans-serif;
   --pn-num: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
   --pn-ring-soft: color-mix(in srgb, var(--brand-gold) 28%, transparent);
 
@@ -214,16 +216,16 @@
     border-color: var(--border);
   }
 
-  html[lang="ne"] {
-    --pn-font: var(--font-ne);
-    --font-sans: var(--font-ne);
-    --font-heading: var(--font-ne);
+  html[lang="en"] {
+    --pn-font: var(--font-en);
+    --font-sans: var(--font-en);
+    --font-heading: var(--font-en);
   }
 
-  html[lang="en"] {
-    --pn-font: "Oxanium", ui-sans-serif, system-ui, sans-serif;
-    --font-sans: "Oxanium", ui-sans-serif, system-ui, sans-serif;
-    --font-heading: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  html:not([lang="en"]) {
+    --pn-font: "Mukta", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
+    --font-heading: "Mukta", ui-sans-serif, system-ui, sans-serif;
   }
 
   body {
@@ -240,8 +242,9 @@
   }
 }
 
-.font-num {
-  font-family: var(--pn-num);
+.font-num,
+.font-mono {
+  font-family: var(--pn-num) !important;
   font-variant-numeric: tabular-nums;
 }
 
@@ -388,7 +391,12 @@
     radial-gradient(1.4px 1.4px at 84% 64%, rgba(233, 243, 241, 0.45), transparent);
 }
 
-/* Study diagram range sliders — thumb styling only */
+/* Native select overlay — iOS wheel picker on tap */
+.patro-native-select {
+  -webkit-tap-highlight-color: transparent;
+  font-size: 16px;
+}
+
 .ed-scrub {
   -webkit-appearance: none;
   appearance: none;

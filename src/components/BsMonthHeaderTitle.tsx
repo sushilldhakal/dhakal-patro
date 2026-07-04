@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
+import { BsNativeSelect } from "@/components/BsNativeSelect";
 import {
   patroMonthChipButton,
   patroMonthChipDay,
@@ -64,6 +65,14 @@ export function BsMonthHeaderTitle({
   );
 
   const monthTitle = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
+  const monthOptions = BS_MONTH_NAMES.map((_: string, i: number) => ({
+    value: i + 1,
+    label: bsMonthLabel(i + 1, lang),
+  }));
+  const yearSelectOptions = yearOptions.map((y) => ({
+    value: y,
+    label: digits(y),
+  }));
 
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -95,31 +104,21 @@ export function BsMonthHeaderTitle({
             <ChevronLeft size={14} strokeWidth={2} />
           </button>
 
-          <select
-            className="h-7 w-[4.75rem] shrink-0 cursor-pointer rounded-md border border-border bg-card px-1.5 text-[11px] font-medium text-foreground sm:w-[5.25rem] sm:text-xs"
+          <BsNativeSelect
+            className="w-[4.75rem] sm:w-[5.25rem]"
             value={month}
-            aria-label={monthAriaLabel}
-            onChange={(e) => onMonthChange(Number(e.target.value))}
-          >
-            {BS_MONTH_NAMES.map((_: string, i: number) => (
-              <option key={i} value={i + 1}>
-                {bsMonthLabel(i + 1, lang)}
-              </option>
-            ))}
-          </select>
+            options={monthOptions}
+            ariaLabel={monthAriaLabel}
+            onChange={onMonthChange}
+          />
 
-          <select
-            className="h-7 w-[4rem] shrink-0 cursor-pointer rounded-md border border-border bg-card px-1.5 text-[11px] font-medium text-foreground sm:w-[4.5rem] sm:text-xs"
+          <BsNativeSelect
+            className="w-[4rem] sm:w-[4.5rem]"
             value={year}
-            aria-label={yearAriaLabel}
-            onChange={(e) => onYearChange(Number(e.target.value))}
-          >
-            {yearOptions.map((y) => (
-              <option key={y} value={y}>
-                {digits(y)}
-              </option>
-            ))}
-          </select>
+            options={yearSelectOptions}
+            ariaLabel={yearAriaLabel}
+            onChange={onYearChange}
+          />
 
           <button
             type="button"

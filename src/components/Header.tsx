@@ -254,7 +254,7 @@ function BrandMark({ className }: { className?: string }) {
     <Link to="/" className={cn("flex items-center gap-2.5 group min-w-0", className)}>
       <BrandLogo
         size={42}
-        className="shadow group-hover:shadow-primary/40 transition-shadow"
+        className=""
       />
       <span className="font-bold text-[15px] tracking-tight truncate">
         <span className="text-secondary dark:text-primary">{t("brand_vedic")}</span>

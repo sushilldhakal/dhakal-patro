@@ -2,8 +2,12 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import "./index.css";
 import "./i18n/index";
+import i18n from "./i18n/index";
+import { syncDocumentLang } from "./lib/fonts";
 import { initAnalytics } from "./lib/analytics";
 import App from "./App";
+
+syncDocumentLang(i18n.language);
 
 initAnalytics();
 
