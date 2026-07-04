@@ -8,17 +8,12 @@ import {
   choghadiyaTone,
   ghatiToCivilClockLabel,
 } from "@/components/panchanga/day-timeline-data";
-import {
-  buildChandraBalaTable,
-  buildTaraBalaTable,
-  type NavataraEntry,
-} from "@/lib/navatara-bala";
-import { buildHoraSchedule, formatMinutesClock, horaQuality, horaTone } from "@/lib/hora-schedule";
+import { getApiHora } from "@/components/panchanga/day-timeline-data";
 import {
   formatClockNepali,
   formatTimeRangeShort,
+  getPanchangaDetail,
   getSunrise,
-  getSunset,
   getUdayaLagna,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
@@ -52,6 +47,27 @@ const MOON_REF_KEY: Partial<Record<MuhurtaSubTab, string>> = {
   tarabal: "muhurta_aside.moon_ref_tarabal",
   chandrabal: "muhurta_aside.moon_ref_chandrabal",
 };
+
+/** Server navatara row from the daily payload's detail.navatara block. */
+type NavataraEntry = {
+  name: string;
+  nameEn?: string;
+  tara: string;
+  taraEn?: string;
+  quality: string;
+  tone: "best" | "good" | "neutral" | "bad" | "worst";
+  taraNum: number;
+};
+
+type NavataraBlock = {
+  tarabala?: { moonLabel: string | null; rows: NavataraEntry[] };
+  chandrabala?: { moonLabel: string | null; rows: NavataraEntry[] };
+};
+
+function getNavatara(p: PanchangaDay): NavataraBlock {
+  const detail = getPanchangaDetail(p);
+  return (detail?.navatara as NavataraBlock | undefined) ?? {};
+}
 
 function parseTimeToMinutes(time?: string | null): number | null {
   if (!time) return null;
@@ -145,10 +161,9 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
   );
 }
 
-function HoraList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
+function HoraList({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const jsDay = new Date(`${dateAd}T12:00:00`).getDay();
-  const slots = buildHoraSchedule(getSunrise(p), getSunset(p), jsDay);
+  const slots = getApiHora(p);
 
   if (!slots.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.hora_unavailable")}</p>;
@@ -157,24 +172,22 @@ function HoraList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
   return (
     <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
       {slots.map((slot, i) => {
-        const start = formatClockNepali(formatMinutesClock(slot.startMin)) ?? formatMinutesClock(slot.startMin);
-        const end = formatClockNepali(formatMinutesClock(slot.endMin)) ?? formatMinutesClock(slot.endMin);
-        const quality = horaQuality(slot.planet);
-        const tone = horaTone(slot.planet);
+        const start = formatClockNepali(slot.start_local_time_short) ?? slot.start_local_time_short;
+        const end = formatClockNepali(slot.end_local_time_short) ?? slot.end_local_time_short;
         return (
-          <li key={`${slot.phase}-${slot.index}-${i}`} className={patroSlotRow(tone)}>
+          <li key={`${slot.phase}-${slot.index}-${i}`} className={patroSlotRow(slot.tone)}>
             <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
               <span className="text-[9.5px] font-semibold tracking-wide text-muted-foreground uppercase">
-                {slot.phase}
+                {slot.phase_ne}
               </span>
-              <span className="text-xs font-bold leading-tight">{slot.planetNe}</span>
+              <span className="text-xs font-bold leading-tight">{slot.planet_ne}</span>
               <span className="mono text-[10px] font-semibold whitespace-nowrap">
                 {toNepaliDigits(slot.index)}
                 <span className="mx-0.5 opacity-50">·</span>
                 {start} – {end}
               </span>
             </div>
-            <span className={patroSlotBadge(tone)}>{quality}</span>
+            <span className={patroSlotBadge(slot.tone)}>{slot.quality_ne}</span>
           </li>
         );
       })}
@@ -237,8 +250,9 @@ type Props = {
 export function MuhurtaAsidePanel({ p, dateAd }: Props) {
   const { t } = useTranslation();
   const [subTab, setSubTab] = useState<MuhurtaSubTab>("tarabal");
-  const tara = buildTaraBalaTable(p);
-  const chandra = buildChandraBalaTable(p);
+  const navatara = getNavatara(p);
+  const tara = navatara.tarabala ?? { moonLabel: null, rows: [] };
+  const chandra = navatara.chandrabala ?? { moonLabel: null, rows: [] };
 
   return (
     <div className="flex flex-col gap-2">
@@ -280,7 +294,7 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
           />
         ) : null}
         {subTab === "choghadiya" ? <ChoghadiyaList p={p} dateAd={dateAd} /> : null}
-        {subTab === "hora" ? <HoraList p={p} dateAd={dateAd} /> : null}
+        {subTab === "hora" ? <HoraList p={p} /> : null}
         {subTab === "pushkara" ? <PushkaraList p={p} /> : null}
       </div>
     </div>

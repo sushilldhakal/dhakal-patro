@@ -1,15 +1,12 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import type {
+  BhavaBalaData,
   ShadbalaPlanet,
   ShadbalaResponse,
   ShadbalaStatus,
+  YuddhaData,
 } from "@/lib/api";
-import { computeBhavaBala, planetRulershipBhavaPercent } from "@/lib/bhava-bala";
-import {
-  computeYuddhaBala,
-  yuddhaVirupasForPlanet,
-} from "@/lib/shadbala-yuddha";
 import {
   Table,
   TableBody,
@@ -69,10 +66,12 @@ function fmt(value: number | undefined, digits = 2): string {
   return value < 0 ? `−${abs}` : abs;
 }
 
-export type ShadbalaChartContext = {
-  lagnaRashi: number;
-  planetLongitudes: Record<string, number>;
-};
+/** Yuddha virupas for display — API sub-bala value overlaid with the war table. */
+function yuddhaVirupasForPlanet(planet: ShadbalaPlanet, yuddha: YuddhaData): number {
+  const api = planet.sub_balas?.kala?.yuddha;
+  if (api != null && api !== 0) return api;
+  return yuddha.byPlanet[planet.key] ?? 0;
+}
 
 function StatusBadge({ status }: { status: ShadbalaStatus }) {
   return (
@@ -160,11 +159,14 @@ function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, su
 
 export function ShadbalaCard({
   data,
-  chart,
+  yuddha,
+  bhavaBala,
 }: {
   data: ShadbalaResponse;
-  /** Birth-chart context for Yuddha and Bhava (%) rows. */
-  chart?: ShadbalaChartContext;
+  /** Server-computed Graha Yuddha for the birth chart. */
+  yuddha?: YuddhaData;
+  /** Server-computed Bhava Bala (for the Bhava % row). */
+  bhavaBala?: BhavaBalaData | null;
 }) {
   const { planets, summary } = data;
   const [openSthana, setOpenSthana] = useState(false);
@@ -182,23 +184,7 @@ export function ShadbalaCard({
   const hasSubs = ordered.some((p) => p.sub_balas != null);
   const hasPhala = ordered.some((p) => p.ishta_phala != null);
 
-  const yuddha = useMemo(
-    () =>
-      chart
-        ? computeYuddhaBala(planets, chart.planetLongitudes)
-        : { wars: [], byPlanet: {} },
-    [chart, planets],
-  );
-
-  const bhavaBala = useMemo(
-    () =>
-      chart
-        ? computeBhavaBala(chart.lagnaRashi, planets, chart.planetLongitudes)
-        : null,
-    [chart, planets],
-  );
-
-  const hasYuddhaActivity = yuddha.wars.length > 0;
+  const hasYuddhaActivity = (yuddha?.wars.length ?? 0) > 0;
 
   return (
     <div className="space-y-6">
@@ -328,7 +314,7 @@ export function ShadbalaCard({
                       label={row.label}
                       planets={ordered}
                       value={(p) =>
-                        row.key === "yuddha" && chart
+                        row.key === "yuddha" && yuddha
                           ? fmt(yuddhaVirupasForPlanet(p, yuddha))
                           : fmt(p.sub_balas?.kala?.[row.key])
                       }
@@ -367,7 +353,7 @@ export function ShadbalaCard({
                   label="Bhava (in %)"
                   planets={ordered}
                   value={(p) => {
-                    const pct = planetRulershipBhavaPercent(p.key, bhavaBala);
+                    const pct = bhavaBala.rulershipPercent[p.key];
                     return pct != null ? `${pct.toFixed(1)}%` : "—";
                   }}
                   bold
@@ -412,7 +398,7 @@ export function ShadbalaCard({
             </>
           )}
         </p>
-        {hasYuddhaActivity && (
+        {hasYuddhaActivity && yuddha && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
             Graha Yuddha detected:{" "}
             {yuddha.wars

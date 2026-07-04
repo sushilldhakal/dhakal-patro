@@ -645,6 +645,349 @@ export const fetchShadbala = (datetime: string, location?: LocationParams) =>
     )
   );
 
+// ─── Kundali detail — full server-computed jyotish payload ───────────────────
+// All astrology math (vargas, ashtakavarga, bhava bala, yuddha, yogas,
+// avakahada, dasha tree, birth kalas) is computed by the API; the client
+// only renders these blocks.
+
+export interface DmsParts {
+  rashiNum: number;
+  deg: number;
+  min: number;
+  sec: number;
+}
+
+export type GrahaRelation = "self" | "friend" | "enemy" | "neutral";
+
+export type GrahaDignity =
+  | "exalted"
+  | "moolatrikona"
+  | "own"
+  | "friend_house"
+  | "neutral_house"
+  | "enemy_house"
+  | "debilitated";
+
+export interface VargaChartEntry {
+  key: string;
+  vargaRashi: number;
+  dms: DmsParts;
+  nakshatraIndex: number;
+  pada: number;
+  nakshatraLord: string;
+  subLord: string;
+  ownerKey: string;
+  relation: GrahaRelation | null;
+  dignity: GrahaDignity | null;
+  retrograde?: boolean;
+}
+
+export interface VargaCharts {
+  divisions: number[];
+  points: Record<string, { longitude: number; retrograde?: boolean }>;
+  /** Keyed by division as a string ("1", "9", …). */
+  entries: Record<string, VargaChartEntry[]>;
+  ownedRashis: Record<string, number[]>;
+}
+
+export interface AshtakavargaSignRow {
+  rashi: number;
+  rashiEn: string;
+  rashiNe: string;
+  bindus: Record<string, number>;
+  sarvashtaka: number;
+}
+
+export interface ShodhyaPindaRow {
+  target: string;
+  rashiPinda: number;
+  grahaPinda: number;
+  shodhyaPinda: number;
+}
+
+export interface AshtakavargaData {
+  raw: AshtakavargaSignRow[];
+  reduced: AshtakavargaSignRow[];
+  shodhyaPinda: ShodhyaPindaRow[];
+  signs: Record<string, number>;
+}
+
+export interface BhavaBalaHouse {
+  house: number;
+  madhyaLongitude: number;
+  lordKey: string;
+  lordName: string;
+  bhavadhipati: number;
+  disha: number;
+  drishti: number;
+  totalVirupas: number;
+  totalPinda: number;
+  rupas: number;
+  percent: number;
+}
+
+export interface BhavaBalaData {
+  houses: BhavaBalaHouse[];
+  strongest: BhavaBalaHouse;
+  weakest: BhavaBalaHouse;
+  /** Mean house-strength % across houses ruled by each graha. */
+  rulershipPercent: Record<string, number>;
+  referenceVirupas: number;
+}
+
+export interface YuddhaWar {
+  winner: string;
+  loser: string;
+  yuddhaVirupas: number;
+  separationDeg: number;
+}
+
+export interface YuddhaData {
+  wars: YuddhaWar[];
+  byPlanet: Record<string, number>;
+}
+
+export interface KundaliYoga {
+  key: string;
+  nameEn: string;
+  nameNe: string;
+  nature: "auspicious" | "inauspicious";
+  present: boolean;
+  descEn: string;
+  descNe: string;
+}
+
+export interface BilingualValue {
+  ne: string;
+  en: string;
+}
+
+export interface JanmaAvakahadaData {
+  nakshatra: BilingualValue;
+  nakshatraIndex: number;
+  pada: number;
+  rashiPaya: BilingualValue;
+  nakshatraPaya: BilingualValue;
+  tattva: BilingualValue;
+  yunja: BilingualValue;
+  vashya: BilingualValue;
+  tara: BilingualValue;
+  gana: BilingualValue;
+  akshara: BilingualValue;
+  nadi: BilingualValue;
+  asana: BilingualValue;
+  yoni: BilingualValue;
+  jati: BilingualValue;
+}
+
+export interface GhadiPalaVipala {
+  ghadi: number;
+  pala: number;
+  vipala: number;
+}
+
+export interface KundaliBirthMeta {
+  birthClock: string;
+  isDayBirth: boolean | null;
+  ishtaKala: GhadiPalaVipala | null;
+  ahoratriIshtaKala: GhadiPalaVipala | null;
+  choghadiyaAtBirth: {
+    nameNe: string;
+    nameEn?: string;
+    quality: "शुभ" | "अशुभ" | "सामान्य";
+    bad: boolean;
+  } | null;
+  solarCorrectionMinutes: number;
+  moonNakshatra: { index: number; number: number; pada: number } | null;
+  yoga: { index: number; number: number } | null;
+}
+
+export interface DashaTreeNode {
+  lord: string;
+  lord_ne: string;
+  start: string;
+  end: string;
+  children?: DashaTreeNode[];
+}
+
+export interface DashaTreeResponse extends VimshottariResponse {
+  tree: DashaTreeNode[];
+  tree_depth: number;
+}
+
+export interface UpagrahaDetailRow {
+  key: string;
+  name?: string;
+  name_ne?: string;
+  longitude: number;
+  dms: DmsParts;
+  nakshatraIndex: number;
+  pada: number;
+  nakshatraLord: string;
+}
+
+export interface KundaliDetailResponse {
+  panchanga: PanchangaDay;
+  shadbala: ShadbalaResponse;
+  dasha: DashaTreeResponse | null;
+  yuddha: YuddhaData;
+  bhavaBala: BhavaBalaData | null;
+  ashtakavarga: AshtakavargaData | null;
+  yogas: KundaliYoga[];
+  vargaCharts: VargaCharts;
+  upagrahas: UpagrahaDetailRow[];
+  avakahada: JanmaAvakahadaData | null;
+  birthMeta: KundaliBirthMeta;
+  combustion: Record<string, boolean | null>;
+  lagnaRashi: number | null;
+  ayanamsha: string;
+  location?: Record<string, unknown>;
+  birth_instant: string;
+}
+
+export const kundaliDetailKeys = {
+  atTime: (datetime: string, location?: LocationParams, ayanamsha?: string) =>
+    ["kundali", "detail", datetime, locationCacheKey(location), ayanamsha ?? "lahiri"] as const,
+};
+
+export const fetchKundaliDetail = (
+  datetime: string,
+  location?: LocationParams,
+  options?: { ayanamsha?: string }
+) => {
+  const params = new URLSearchParams();
+  params.set("datetime", datetime);
+  if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  return get<KundaliDetailResponse>(
+    appendLocation(`/kundali/detail?${params.toString()}`, location)
+  );
+};
+
+export const dashaExpandKeys = {
+  span: (lord: string, start: string, end: string) =>
+    ["dasha", "expand", lord, start, end] as const,
+};
+
+export const fetchDashaChildren = (lord: string, start: string, end: string) => {
+  const params = new URLSearchParams({ lord, start, end });
+  return get<{ lord: string; children: DashaTreeNode[] }>(
+    `/kundali/dasha/expand?${params.toString()}`
+  );
+};
+
+// ─── Kundali milan (ashtakuta) — server-computed ─────────────────────────────
+
+export type KutaId =
+  | "varna"
+  | "vashya"
+  | "tara"
+  | "yoni"
+  | "maitri"
+  | "gana"
+  | "bhakuta"
+  | "nadi";
+
+export interface KutaRow {
+  id: KutaId;
+  max: number;
+  obtained: number;
+  boyValue: string;
+  girlValue: string;
+  areaOfLife: string;
+  areaOfLifeNe: string;
+  info: string;
+  infoNe: string;
+}
+
+export interface MilanDoshaRow {
+  id: "nadi" | "bhakuta" | "gana" | "tara" | "yoni" | "varna";
+  labelEn: string;
+  labelNe: string;
+  present: boolean;
+}
+
+export interface AshtakutaResult {
+  kutas: KutaRow[];
+  totalObtained: number;
+  totalMax: 36;
+  recommendation: "excellent" | "very_good" | "middling" | "inauspicious";
+  recommendationLabel: string;
+  recommendationLabelNe: string;
+  nadiDosha: boolean;
+  nadiDoshaAdvisory?: string | null;
+  nadiDoshaAdvisoryNe?: string | null;
+  bhakutaUnfavorable: boolean;
+  doshaAnalysis: MilanDoshaRow[];
+  notes: string[];
+  notesNe: string[];
+}
+
+export interface MilanPerson {
+  moonLongitude: number;
+  moonRashiNum: number;
+  moonRashiNe: string;
+  moonRashiEn: string;
+  nakshatraIndex: number;
+  nakshatraNe: string;
+  nakshatraEn: string;
+  pada: number;
+  birth_instant: string;
+  location?: Record<string, unknown>;
+}
+
+export interface KundaliMilanResponse {
+  result: AshtakutaResult;
+  boy: MilanPerson;
+  girl: MilanPerson;
+  ayanamsha: string;
+  lang: string;
+}
+
+export interface MilanPersonQuery {
+  datetime: string;
+  lat?: number;
+  lon?: number;
+  timezone?: string;
+}
+
+export const milanKeys = {
+  match: (
+    boy: MilanPersonQuery,
+    girl: MilanPersonQuery,
+    ayanamsha?: string,
+    lang?: string
+  ) =>
+    [
+      "kundali",
+      "milan",
+      boy.datetime,
+      `${boy.lat ?? ""},${boy.lon ?? ""},${boy.timezone ?? ""}`,
+      girl.datetime,
+      `${girl.lat ?? ""},${girl.lon ?? ""},${girl.timezone ?? ""}`,
+      ayanamsha ?? "lahiri",
+      lang ?? "ne",
+    ] as const,
+};
+
+export const fetchKundaliMilan = (
+  boy: MilanPersonQuery,
+  girl: MilanPersonQuery,
+  options?: { ayanamsha?: string; lang?: string }
+) => {
+  const params = new URLSearchParams();
+  params.set("boy_datetime", boy.datetime);
+  params.set("girl_datetime", girl.datetime);
+  if (boy.lat != null) params.set("boy_lat", String(boy.lat));
+  if (boy.lon != null) params.set("boy_lon", String(boy.lon));
+  if (boy.timezone) params.set("boy_timezone", boy.timezone);
+  if (girl.lat != null) params.set("girl_lat", String(girl.lat));
+  if (girl.lon != null) params.set("girl_lon", String(girl.lon));
+  if (girl.timezone) params.set("girl_timezone", girl.timezone);
+  if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  if (options?.lang) params.set("lang", options.lang);
+  return get<KundaliMilanResponse>(`/kundali/milan?${params.toString()}`);
+};
+
 // ─── Kundali interpretation report (streamed, deterministic) ──────────────────
 
 /** How strongly the supporting factors agree for one insight. */

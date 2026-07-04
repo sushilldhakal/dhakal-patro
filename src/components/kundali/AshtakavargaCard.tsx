@@ -1,14 +1,8 @@
-import { useMemo } from "react";
-import type { ShadbalaChartContext } from "@/components/kundali/ShadbalaCard";
-import {
-  ASHTAKAVARGA_TARGET_LABEL,
-  ASHTAKAVARGA_TARGETS,
-  computeAshtakavarga,
-  type AshtakavargaSignRow,
-  type ShodhyaPindaRow,
-} from "@/lib/ashtakavarga";
-import { RASHI_EN_NAMES } from "@/lib/graha-details";
-import { rashiNeFromNumber } from "@/lib/panchanga-format";
+import type {
+  AshtakavargaData,
+  AshtakavargaSignRow,
+  ShodhyaPindaRow,
+} from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -18,6 +12,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+
+/** Matrix column order + labels (display only — scores come from the API). */
+const ASHTAKAVARGA_TARGETS = [
+  "lagna", "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn",
+] as const;
+
+const ASHTAKAVARGA_TARGET_LABEL: Record<
+  (typeof ASHTAKAVARGA_TARGETS)[number],
+  { en: string; ne: string; short: string }
+> = {
+  lagna: { en: "Lagna", ne: "लग्न", short: "Lg" },
+  sun: { en: "Sun", ne: "सूर्य", short: "Su" },
+  moon: { en: "Moon", ne: "चन्द्र", short: "Ch" },
+  mars: { en: "Mars", ne: "मंगल", short: "Ma" },
+  mercury: { en: "Mercury", ne: "बुध", short: "Bu" },
+  jupiter: { en: "Jupiter", ne: "बृहस्पति", short: "Gu" },
+  venus: { en: "Venus", ne: "शुक्र", short: "Ve" },
+  saturn: { en: "Saturn", ne: "शनि", short: "Sa" },
+};
 
 const th = "h-9 px-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap";
 const td = "px-2 py-1.5 text-[12px]";
@@ -170,21 +183,7 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
   );
 }
 
-export function AshtakavargaCard({ chart }: { chart: ShadbalaChartContext }) {
-  const rashiNames = useMemo(
-    () =>
-      RASHI_EN_NAMES.map((en, i) => ({
-        en,
-        ne: rashiNeFromNumber(i + 1) ?? en,
-      })),
-    [],
-  );
-
-  const data = useMemo(
-    () => computeAshtakavarga(chart.lagnaRashi, chart.planetLongitudes, rashiNames),
-    [chart, rashiNames],
-  );
-
+export function AshtakavargaCard({ data }: { data: AshtakavargaData }) {
   return (
     <div className="space-y-8">
       <div>

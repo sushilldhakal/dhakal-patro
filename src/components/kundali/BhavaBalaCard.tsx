@@ -1,12 +1,5 @@
-import { useMemo } from "react";
 import { useLocale } from "@/i18n/locale";
-import type { ShadbalaResponse } from "@/lib/api";
-import {
-  BHAVA_BALA_REFERENCE_VIRUPAS,
-  computeBhavaBala,
-  type BhavaBalaHouse,
-  type BhavaBalaResult,
-} from "@/lib/bhava-bala";
+import type { BhavaBalaData, BhavaBalaHouse } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import {
   Table,
@@ -17,7 +10,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { ShadbalaChartContext } from "@/components/kundali/ShadbalaCard";
 
 const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
 const td = "px-2.5 py-1.5 text-[12.5px]";
@@ -51,22 +43,11 @@ function GlanceTile({
   );
 }
 
-export function BhavaBalaCard({
-  shadbala,
-  chart,
-}: {
-  shadbala: ShadbalaResponse;
-  chart: ShadbalaChartContext;
-}) {
-  const bhavaBala = useMemo(
-    () => computeBhavaBala(chart.lagnaRashi, shadbala.planets, chart.planetLongitudes),
-    [chart, shadbala.planets],
-  );
-
-  return <BhavaBalaTable data={bhavaBala} />;
+export function BhavaBalaCard({ data }: { data: BhavaBalaData }) {
+  return <BhavaBalaTable data={data} />;
 }
 
-export function BhavaBalaTable({ data }: { data: BhavaBalaResult }) {
+export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
   const { pick, digits } = useLocale();
 
   const houseLabel = (house: number) =>
@@ -79,7 +60,7 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaResult }) {
     <>
       <p className="text-lg font-bold text-foreground">{houseLabel(h.house)}</p>
       <p className="text-xs text-muted-foreground mt-0.5">
-        {pick("स्वामी", "Lord")} {lordLabel(h.lordKey)}
+        {pick("स्वामी", "Lord")} {lordLabel(h.lordKey as GrahaKey)}
         <span className="mx-1 text-muted-foreground/50">·</span>
         {digits(h.percent.toFixed(1))}%
       </p>
@@ -94,8 +75,8 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaResult }) {
         </h3>
         <p className="text-xs text-muted-foreground">
           {pick(
-            `भावाधिपति (स्वामीको षड्बल) + भाव दिशा + भाव दृष्टि। समपूर्ण राशि भाव; ${digits(BHAVA_BALA_REFERENCE_VIRUPAS)} विरुप (७ रूप) = १००%।`,
-            `Bhavadhipati (lord's Shadbala) + Bhava Disha + Bhava Drishti. Whole-sign houses; ${BHAVA_BALA_REFERENCE_VIRUPAS} virupas (7 rupas) = 100%.`,
+            `भावाधिपति (स्वामीको षड्बल) + भाव दिशा + भाव दृष्टि। समपूर्ण राशि भाव; ${digits(data.referenceVirupas)} विरुप (७ रूप) = १००%।`,
+            `Bhavadhipati (lord's Shadbala) + Bhava Disha + Bhava Drishti. Whole-sign houses; ${data.referenceVirupas} virupas (7 rupas) = 100%.`,
           )}
         </p>
       </div>
@@ -135,7 +116,7 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaResult }) {
                 <TableCell className={cn(td, "font-semibold pl-3.5")}>
                   {houseLabel(h.house)}
                 </TableCell>
-                <TableCell className={cn(td, "text-right")}>{lordLabel(h.lordKey)}</TableCell>
+                <TableCell className={cn(td, "text-right")}>{lordLabel(h.lordKey as GrahaKey)}</TableCell>
                 <TableCell className={cn(td, num)}>{fmtNum(h.bhavadhipati, digits)}</TableCell>
                 <TableCell className={cn(td, num)}>{fmtNum(h.disha, digits)}</TableCell>
                 <TableCell className={cn(td, num)}>{fmtNum(h.drishti, digits)}</TableCell>

@@ -1,6 +1,4 @@
 import type { PanchangaDay } from "@/lib/api";
-import { HORA_PLANETS } from "@/lib/hora-data";
-import { buildHoraSchedule, horaTone } from "@/lib/hora-schedule";
 import {
   formatPakshaNepaliDisplay,
   getLagnaSpans,
@@ -161,9 +159,6 @@ type LagnaSpanBlock = {
   end_ghati_clock?: string;
   end_hours_clock?: string;
 };
-
-const CHO_DAY_START = [0, 3, 6, 2, 5, 1, 4];
-const CHO_NIGHT_START = [5, 1, 4, 0, 3, 6, 2];
 
 /** Repeating karana cycle (Nepali names). */
 const KARANA_CYCLE_NE = ["बव", "बालव", "कौलव", "तैतिल", "गर", "वणिज", "विष्टि"];
@@ -346,61 +341,40 @@ function buildChoghadiyaFromApi(
   }));
 }
 
-function buildHoraTimelineSegments(
-  sunrise: string,
-  sunset: string,
-  sunriseMin: number,
-  jsWeekday: number,
-): HoraSegment[] {
-  const slots = buildHoraSchedule(sunrise, sunset, jsWeekday);
-  return slots.map((slot) => {
-    const startG = minutesToGhati(slot.startMin, sunriseMin);
-    const endG = Math.min(minutesToGhati(slot.endMin, sunriseMin), 60);
-    return {
-      name: slot.planetNe,
-      nameEn: HORA_PLANETS[slot.planet].en,
-      startG,
-      endG,
-      bad: horaTone(slot.planet) === "bad",
-    };
-  });
+/** Server hora slot from the daily payload's detail.hora block. */
+export type ApiHoraSlot = {
+  index: number;
+  phase: "day" | "night";
+  phase_ne: string;
+  planet: string;
+  planet_ne: string;
+  planet_en: string;
+  quality_ne: "शुभ" | "अशुभ";
+  tone: "good" | "bad";
+  bad: boolean;
+  start_local_time_short: string;
+  end_local_time_short: string;
+  start_g: number;
+  end_g: number;
+};
+
+export function getApiHora(p: PanchangaDay): ApiHoraSlot[] {
+  const detail = getPanchangaDetail(p);
+  const block = detail?.hora as ApiHoraSlot[] | undefined;
+  return Array.isArray(block) ? block : [];
 }
 
-function buildChoghadiyaFallback(dayG: number, dow: number): ChoghadiyaSegment[] {
-  const CHOGHADIYA = [
-    { ne: "उद्वेग", bad: true },
-    { ne: "चर" },
-    { ne: "लाभ" },
-    { ne: "अमृत" },
-    { ne: "काल", bad: true },
-    { ne: "शुभ" },
-    { ne: "रोग", bad: true },
-  ] as const;
-  const segments: ChoghadiyaSegment[] = [];
-  const dSeg = dayG / 8;
-  const nSeg = (60 - dayG) / 8;
-  for (let i = 0; i < 8; i++) {
-    const c = CHOGHADIYA[(CHO_DAY_START[dow] + i) % 7]!;
-    segments.push({
-      name: c.ne,
-      startG: i * dSeg,
-      endG: (i + 1) * dSeg,
-      bad: Boolean("bad" in c && c.bad),
-    });
-  }
-  for (let i = 0; i < 8; i++) {
-    const c = CHOGHADIYA[(CHO_NIGHT_START[dow] + i) % 7]!;
-    segments.push({
-      name: c.ne,
-      startG: dayG + i * nSeg,
-      endG: dayG + (i + 1) * nSeg,
-      bad: Boolean("bad" in c && c.bad),
-    });
-  }
-  return segments;
+function buildHoraTimelineSegments(p: PanchangaDay): HoraSegment[] {
+  return getApiHora(p).map((slot) => ({
+    name: slot.planet_ne,
+    nameEn: slot.planet_en,
+    startG: slot.start_g,
+    endG: Math.min(slot.end_g, 60),
+    bad: slot.bad,
+  }));
 }
 
-export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimelineData | null {
+export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTimelineData | null {
   const detail = getPanchangaDetail(p);
   const sunrise = getSunrise(p);
   const sunset = getSunset(p);
@@ -426,12 +400,6 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
   const weekdayNe = vaara.name_ne ?? p.weekday ?? "—";
   const weekdayEn = vaara.name_english ?? p.weekday ?? "—";
 
-  let dow = vaara.number;
-  if (dow == null && dateAd) {
-    dow = new Date(dateAd + "T12:00:00").getDay();
-  }
-  dow = dow ?? 0;
-
   const tithi = (detail?.tithi ?? p.tithi) as AngaBlock | undefined;
   const nakshatra = (detail?.nakshatra ?? p.nakshatra) as AngaBlock | undefined;
   const yoga = (detail?.yoga ?? p.yoga) as AngaBlock | undefined;
@@ -440,11 +408,9 @@ export function buildDayTimelineData(p: PanchangaDay, dateAd?: string): DayTimel
   const apiChoghadiya = detail?.choghadiya as
     | Array<{ name_ne: string; start_g: number; end_g: number; bad?: boolean }>
     | undefined;
-  const cho =
-    apiChoghadiya?.length === 16
-      ? buildChoghadiyaFromApi(apiChoghadiya)
-      : buildChoghadiyaFallback(dayG, dow);
-  const hora = buildHoraTimelineSegments(sunrise ?? "", sunset ?? "", sunriseMin, dow);
+  // Both choghadiya and hora come pre-computed from the API daily payload.
+  const cho = apiChoghadiya?.length ? buildChoghadiyaFromApi(apiChoghadiya) : [];
+  const hora = buildHoraTimelineSegments(p);
   const lagnaSpans = (getLagnaSpans(p) ?? []) as LagnaSpanBlock[];
   const grahaSpashta = getPlanetRows(p).map(({ label, rashiNe, coords }) => ({
     label,
@@ -566,25 +532,5 @@ export function dualTimeAtGhati(
     ghati: ghatiShortLabel(g),
     ghatiLong: ghatiShortLabelLong(g),
     clock: ghatiToCivilClockLabel(g, sunriseMin),
-  };
-}
-
-/** चौघडिया segment active at a civil clock time (HH:MM) on this panchanga day. */
-export function choghadiyaAtClock(
-  p: PanchangaDay,
-  clock: string,
-  dateAd?: string,
-): { nameNe: string; nameEn?: string; quality: "शुभ" | "अशुभ" | "सामान्य" } | null {
-  const timeline = buildDayTimelineData(p, dateAd);
-  if (!timeline) return null;
-  const birthMin = parseTimeToMinutes(clock);
-  if (birthMin == null) return null;
-  const g = minutesToGhati(birthMin, timeline.sunriseMin);
-  const seg = timeline.choghadiya.find((c) => g >= c.startG && g < c.endG);
-  if (!seg) return null;
-  return {
-    nameNe: seg.name,
-    nameEn: CHOGHADIYA_EN[seg.name],
-    quality: choghadiyaQuality(seg.name, seg.bad),
   };
 }
