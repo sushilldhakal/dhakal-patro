@@ -3,6 +3,7 @@ import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
 import { GRAHA_NAME } from "@/lib/graha-details";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { formatLocaleDigits } from "@/i18n/digits";
+import { pickLocale } from "@/i18n/locale";
 
 export function toNepaliDigits(value: string | number): string {
   return formatLocaleDigits(value);
@@ -913,17 +914,23 @@ function planetNakshatraFields(info: PlanetDetail): Pick<
   };
 }
 
-export function getPlanetsAnchorLabel(p: PanchangaDay): string {
+export function getPlanetsAnchorLabel(p: PanchangaDay, lang?: string): string {
   const detail = getPanchangaDetail(p);
   const anchor = (detail?.planets_anchor ?? p.planets_anchor) as
     | { label_ne?: string; label_en?: string; local_time?: string }
     | undefined;
-  if (anchor?.label_ne) {
-    return anchor.local_time
-      ? `${anchor.label_ne} (${toNepaliDigits(anchor.local_time)})`
-      : anchor.label_ne;
-  }
-  return anchor?.label_en ?? "उदयकालिक स्पष्टग्रह (सूर्योदय)";
+  const fallbackNe = "उदयकालिक स्पष्टग्रह (सूर्योदय)";
+  const fallbackEn = "Planets at sunrise";
+  const label = anchor?.label_ne || anchor?.label_en
+    ? pickLocale(
+        lang,
+        anchor.label_ne ?? anchor.label_en ?? fallbackNe,
+        anchor.label_en ?? anchor.label_ne ?? fallbackEn,
+      )
+    : pickLocale(lang, fallbackNe, fallbackEn);
+  return anchor?.local_time
+    ? `${label} (${toNepaliDigits(anchor.local_time)})`
+    : label;
 }
 
 export type InstantLagna = {
@@ -1025,9 +1032,27 @@ function planetDegreeCells(info: PlanetDetail): string {
   return "—";
 }
 
-export function getPlanetRows(p: PanchangaDay): PlanetRow[] {
+function isInstantPlanetsMode(p: PanchangaDay): boolean {
   const detail = getPanchangaDetail(p);
-  const planets = (detail?.planets ?? p.planets) as Record<string, PlanetDetail | string> | undefined;
+  const anchor = (detail?.planets_anchor ?? p.planets_anchor) as { type?: string } | undefined;
+  return p.mode === "ephemeris" || anchor?.type === "instant";
+}
+
+function resolvePlanetsRecord(
+  p: PanchangaDay,
+): Record<string, PlanetDetail | string> | undefined {
+  const detail = getPanchangaDetail(p);
+  const fromDetail = detail?.planets as Record<string, PlanetDetail | string> | undefined;
+  const fromTop = p.planets as Record<string, PlanetDetail | string> | undefined;
+  if (isInstantPlanetsMode(p)) {
+    // At-time payloads historically kept sunrise positions at the top level.
+    return fromDetail ?? fromTop;
+  }
+  return fromDetail ?? fromTop;
+}
+
+export function getPlanetRows(p: PanchangaDay): PlanetRow[] {
+  const planets = resolvePlanetsRecord(p);
   if (!planets) return [];
 
   const order = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu"];
@@ -1058,10 +1083,7 @@ export function formatPlanetGocharLine(info: PlanetDetail): string {
 export function getPlanetGocharLines(
   p: PanchangaDay,
 ): { label: string; value: string }[] {
-  const detail = getPanchangaDetail(p);
-  const planets = (detail?.planets ?? p.planets) as
-    | Record<string, PlanetDetail | string>
-    | undefined;
+  const planets = resolvePlanetsRecord(p);
   if (!planets) return [];
 
   const order = [

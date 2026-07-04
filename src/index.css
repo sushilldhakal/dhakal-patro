@@ -306,6 +306,19 @@
   cursor: grab;
   box-shadow: 0 0 12px var(--w-accent-soft);
 }
+@media (max-width: 720px) {
+  .pn-wheel .wheel-scrub::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+    border-width: 2px;
+  }
+}
+@media (max-width: 480px) {
+  .pn-wheel .wheel-scrub::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+}
 .pn-wheel .wheel-scrub:active::-webkit-slider-thumb {
   cursor: grabbing;
   transform: scale(1.1);
@@ -317,7 +330,19 @@
   background: var(--w-accent);
   border: 3px solid var(--w-surface);
   cursor: grab;
-  box-sizing: border-box;
+}
+@media (max-width: 720px) {
+  .pn-wheel .wheel-scrub::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-width: 2px;
+  }
+}
+@media (max-width: 480px) {
+  .pn-wheel .wheel-scrub::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 /* ── Hora ring card (Design 6) ───────────────────────────── */

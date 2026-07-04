@@ -11,6 +11,7 @@ import {
   tithiPaksha,
   WHEEL_TITHIS,
 } from "@/lib/tithi-wheel-data";
+import { useLocale } from "@/i18n/locale";
 import {
   wheelDl,
   wheelDlK,
@@ -102,6 +103,7 @@ interface TithiWheelProps {
 }
 
 export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
+  const { pick, isEnglish } = useLocale();
   const curIdx = tithiIndexFromPanchanga(p);
   const curE = curIdx * 12 + 6;
 
@@ -277,9 +279,9 @@ export function TithiWheel({ p, num, spin, onSpin }: TithiWheelProps) {
               {tithiPaksha(picked)} · {num(tithiNum(picked))}
             </div>
             <h2 className={wheelPanelTitle}>{t.ne}</h2>
-            <div className={wheelPanelSub}>{t.en}</div>
+            {isEnglish ? <div className={wheelPanelSub}>{t.en}</div> : null}
           </div>
-          <button type="button" className={wheelPanelClose} onClick={() => setPicked(null)} aria-label="Close">
+          <button type="button" className={wheelPanelClose} onClick={() => setPicked(null)} aria-label={pick("बन्द", "Close")}>
             ✕
           </button>
         </div>

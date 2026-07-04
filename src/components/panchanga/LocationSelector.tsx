@@ -58,7 +58,7 @@ function LocationPickerPanel({
     <>
       <ComboboxInput
         showTrigger={false}
-        placeholder={pick("सहर खोज्नुहोस् · search city", "Search city")}
+        placeholder={pick("सहर खोज्नुहोस्", "Search city")}
         className="w-full"
       />
 

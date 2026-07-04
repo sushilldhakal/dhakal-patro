@@ -13,26 +13,36 @@ export const wheelHeadSub =
   "mt-1.5 font-num text-[12.5px] font-medium text-[var(--w-ink-dim)]";
 
 export const wheelDock =
-  "absolute bottom-[18px] left-1/2 z-[22] flex -translate-x-1/2 items-center gap-3.5 rounded-full border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-4 py-2.5 text-[var(--w-ink)] shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur-md";
+  "flex w-full items-center gap-3.5 rounded-xl border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-3 py-2.5 text-[var(--w-ink)] shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur-md max-[720px]:gap-2 max-[720px]:px-2.5 max-[720px]:py-2 max-[480px]:gap-1.5 max-[480px]:px-2 max-[480px]:py-1.5";
 
-export const wheelDockGrp = "flex items-center gap-2";
+export const wheelControlsShell =
+  "absolute bottom-3 left-3 right-3 z-[22] flex flex-col gap-2 max-[480px]:bottom-2 max-[480px]:left-2 max-[480px]:right-2";
 
-export const wheelDockSep = "h-[26px] w-px bg-[var(--w-surface-border)]";
+export const wheelResetBtn =
+  "flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-4 text-[13px] font-semibold text-[var(--w-ink)] shadow-[0_8px_24px_rgba(0,0,0,0.45)] backdrop-blur-md transition-[border-color,transform] hover:border-[var(--w-accent)] active:translate-y-px max-[480px]:h-9 max-[480px]:text-xs";
+
+export const wheelDockGrp =
+  "flex items-center gap-2 max-[720px]:gap-1.5 max-[480px]:gap-1";
+
+export const wheelDockTimeGrp = cn(wheelDockGrp, "min-w-0");
+
+export const wheelDockSep =
+  "h-[26px] w-px shrink-0 bg-[var(--w-surface-border)] max-[720px]:h-5 max-[480px]:h-4";
 
 export const wheelIconBtn =
-  "grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-[var(--w-surface-border)] bg-transparent text-sm text-[var(--w-ink)] transition-colors hover:border-[var(--w-accent)]";
+  "grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-[var(--w-surface-border)] bg-transparent text-sm text-[var(--w-ink)] transition-colors hover:border-[var(--w-accent)] max-[720px]:h-7 max-[720px]:w-7 max-[720px]:text-xs max-[480px]:h-6 max-[480px]:w-6 max-[480px]:text-[11px]";
 
 export const wheelDockLabel =
-  "whitespace-nowrap text-[11px] font-medium text-[var(--w-ink-dim)]";
+  "whitespace-nowrap text-[11px] font-medium text-[var(--w-ink-dim)] max-[720px]:hidden";
 
 export const wheelDockVal =
-  "min-w-[58px] text-center font-num text-[12.5px] font-semibold tabular-nums text-[var(--w-ink)]";
+  "min-w-[58px] shrink-0 text-center font-num text-[12.5px] font-semibold tabular-nums text-[var(--w-ink)] max-[720px]:min-w-[44px] max-[720px]:text-[11px] max-[480px]:min-w-[38px] max-[480px]:text-[10.5px]";
 
 export const wheelDockTodayBtn =
-  "h-[30px] cursor-pointer rounded-full border-none bg-[var(--w-accent)] px-4 text-[12.5px] font-bold text-[#1a1205] active:translate-y-px";
+  "h-[30px] shrink-0 cursor-pointer rounded-full border-none bg-[var(--w-accent)] px-4 text-[12.5px] font-bold text-[#1a1205] active:translate-y-px max-[720px]:h-7 max-[720px]:px-2.5 max-[720px]:text-[11px] max-[480px]:h-6 max-[480px]:px-2 max-[480px]:text-[10.5px]";
 
 export const wheelLegend =
-  "pointer-events-none absolute bottom-[18px] left-4 z-20 flex flex-col gap-1.5 max-[720px]:hidden";
+  "pointer-events-none absolute bottom-[calc(1rem+6.5rem)] left-4 z-20 flex flex-col gap-1.5 max-[720px]:hidden";
 
 export const wheelLegendRow =
   "flex items-center gap-1.5 text-[11px] font-medium text-[var(--w-ink-dim)]";
@@ -132,4 +142,4 @@ export function wheelSvg(dragging?: boolean) {
 
 /** Range input in wheel dock — pair with `.wheel-scrub` for thumb pseudo-elements. */
 export const wheelScrub =
-  "wheel-scrub h-2 w-[168px] max-[720px]:w-[110px] cursor-pointer touch-pan-x select-none [-webkit-tap-highlight-color:transparent]";
+  "wheel-scrub h-2 min-w-[64px] flex-1 cursor-pointer touch-pan-x select-none [-webkit-tap-highlight-color:transparent] max-[480px]:h-1.5";

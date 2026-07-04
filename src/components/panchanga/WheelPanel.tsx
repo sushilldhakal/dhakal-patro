@@ -42,7 +42,7 @@ interface WheelPanelProps {
 }
 
 export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
-  const { pick } = useLocale();
+  const { pick, isEnglish } = useLocale();
   let body: React.ReactNode = null;
 
   if (sel?.type === "nak") {
@@ -73,9 +73,9 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
           <div>
             <div className={wheelPanelKind}>{pick("नक्षत्र", "Nakshatra")} · {num(sel.i + 1)}</div>
             <h2 className={wheelPanelTitle}>{pick(ico.ne, ico.en)}</h2>
-            <div className={wheelPanelSub}>{pick(ico.en, ico.ne)}</div>
+            {isEnglish ? <div className={wheelPanelSub}>{ico.en}</div> : null}
           </div>
-          <button type="button" className={wheelPanelClose} onClick={onClose} aria-label="Close">
+          <button type="button" className={wheelPanelClose} onClick={onClose} aria-label={pick("बन्द", "Close")}>
             ✕
           </button>
         </div>
@@ -84,7 +84,7 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
             <div className={wheelDlRow}>
               <span className={wheelDlK}>{pick("स्वामी ग्रह", "Lord planet")}</span>
               <span className={wheelDlV}>
-                {pick(`${ico.lord_ne} · ${LORD_EN[ico.lord_ne] ?? ico.lord_ne}`, LORD_EN[ico.lord_ne] ?? ico.lord_ne)}
+                {pick(ico.lord_ne, LORD_EN[ico.lord_ne] ?? ico.lord_ne)}
               </span>
             </div>
             <div className={wheelDlRow}>
@@ -133,9 +133,9 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
           <div>
             <div className={wheelPanelKind}>{pick("राशि", "Rashi")} · {num(sel.i + 1)}</div>
             <h2 className={wheelPanelTitle}>{pick(rs.ne, rs.en)}</h2>
-            <div className={wheelPanelSub}>{pick(rs.en, rs.ne)}</div>
+            {isEnglish ? <div className={wheelPanelSub}>{rs.en}</div> : null}
           </div>
-          <button type="button" className={wheelPanelClose} onClick={onClose} aria-label="Close">
+          <button type="button" className={wheelPanelClose} onClick={onClose} aria-label={pick("बन्द", "Close")}>
             ✕
           </button>
         </div>

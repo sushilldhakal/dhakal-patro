@@ -66,6 +66,10 @@ export function mergeEphemerisWithDaily(
       ...instantDetail,
       lagna_spans: lagnaSpans,
       udaya_lagna: lagnaSpans,
+      planets: instantDetail.planets ?? dailyDetail.planets,
+      planets_anchor: instantDetail.planets_anchor ?? dailyDetail.planets_anchor,
+      muhurta_now: instantDetail.muhurta_now ?? dailyDetail.muhurta_now,
+      instant_lagna: instantDetail.instant_lagna ?? dailyDetail.instant_lagna,
     } as PanchangaDay["detail"],
   });
 }
@@ -87,6 +91,13 @@ export async function fetchEphemerisPanchangaDay(
 
   const dailyDetail = (daily.detail ?? {}) as Record<string, unknown>;
   const instantDetail = (normalized.detail ?? {}) as Record<string, unknown>;
+  const instantPlanets = (instantDetail.planets ?? normalized.planets) as
+    | PanchangaDay["planets"]
+    | undefined;
+  const instantPlanetsAnchor = (instantDetail.planets_anchor ??
+    normalized.planets_anchor ??
+    dailyDetail.planets_anchor) as PanchangaDay["planets_anchor"];
+
   const mergedDetail = {
     ...dailyDetail,
     ...instantDetail,
@@ -96,8 +107,8 @@ export async function fetchEphemerisPanchangaDay(
       getLagnaSpans(normalized) ??
       (instantDetail.lagna_spans as PanchangaDay["lagna_spans"]) ??
       (dailyDetail.lagna_spans as PanchangaDay["lagna_spans"]),
-    planets: instantDetail.planets ?? dailyDetail.planets,
-    planets_anchor: instantDetail.planets_anchor ?? dailyDetail.planets_anchor,
+    planets: instantPlanets ?? dailyDetail.planets,
+    planets_anchor: instantPlanetsAnchor,
     muhurta_now: instantDetail.muhurta_now ?? dailyDetail.muhurta_now,
     instant_lagna: instantDetail.instant_lagna ?? dailyDetail.instant_lagna,
   };
@@ -105,6 +116,8 @@ export async function fetchEphemerisPanchangaDay(
   const merged: PanchangaDay = {
     ...daily,
     ...normalized,
+    planets: instantPlanets ?? normalized.planets ?? daily.planets,
+    planets_anchor: instantPlanetsAnchor,
     sunrise: normalized.sunrise ?? daily.sunrise,
     sunset: normalized.sunset ?? daily.sunset,
     surya_rashi: normalized.surya_rashi ?? daily.surya_rashi,

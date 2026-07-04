@@ -19,11 +19,14 @@ import { WheelPanel } from "./WheelPanel";
 import { useLocale } from "@/i18n/locale";
 import { patroSkel, patroWheelShell } from "@/lib/patro-classes";
 import {
+  wheelControlsShell,
   wheelDock,
   wheelDockGrp,
   wheelDockLabel,
   wheelDockSep,
+  wheelDockTimeGrp,
   wheelDockTodayBtn,
+  wheelResetBtn,
   wheelDockVal,
   wheelHead,
   wheelHeadEyebrow,
@@ -97,7 +100,7 @@ function PanchangaWheelSkeleton({
     <div className={cn("pn-wheel", patroWheelShell)} aria-busy="true">
       <div className={wheelStage}>
         <WheelHead
-          eyebrow={pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
+          eyebrow={pick("पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
           title={
             <>
               {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
@@ -229,8 +232,17 @@ function PanchangaWheelBody({
     setScrubPinned(false);
     setSpin(0);
     setPan({ x: 0, y: 0 });
+    handleZoom(1);
     setScrubG(nowG);
-  }, [nowG]);
+  }, [nowG, handleZoom]);
+
+  const resetToSunrise = useCallback(() => {
+    setScrubPinned(true);
+    setSpin(0);
+    setPan({ x: 0, y: 0 });
+    handleZoom(1);
+    setScrubG(0);
+  }, [handleZoom]);
 
   useEffect(() => {
     if (!isToday) return;
@@ -312,7 +324,7 @@ function PanchangaWheelBody({
     <div className={cn("pn-wheel", patroWheelShell)}>
       <div className={wheelStage} ref={stageRef} onMouseMove={onStageMove}>
         <WheelHead
-          eyebrow={pick("नेपाली पात्रो · पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
+          eyebrow={pick("पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
           title={
             <>
               {isToday && !scrubPinned ? pick("आजको", "Today's") : ""}{" "}
@@ -369,71 +381,64 @@ function PanchangaWheelBody({
             {pick("चन्द्र राशि", "Moon sign")}
           </div>
           <div className={cn(wheelLegendRow, "mt-0.5 opacity-70")}>
-            {pick("घुमाउन तान्नुहोस् · pinch to zoom", "drag to rotate · pinch to zoom")}
+            {pick("घुमाउन तान्नुहोस् · जुम गर्नुहोस्", "Drag to rotate · pinch to zoom")}
           </div>
         </div>
 
-        <div className={wheelDock}>
-          <div className={wheelDockGrp}>
-            <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
-            <input
-              className={wheelScrub}
-              type="range"
-              min="0"
-              max="60"
-              step="0.25"
-              value={scrubG}
-              style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
-              onChange={(e) => handleScrubChange(+e.target.value)}
-            />
-            <span className={wheelDockVal}>{num(scrubClock)}</span>
-          </div>
-          <div className={wheelDockSep} />
-          <div className={wheelDockGrp}>
-            {isToday && (
+        <div className={wheelControlsShell}>
+          <button
+            type="button"
+            className={wheelResetBtn}
+            onClick={resetToSunrise}
+          >
+            <span aria-hidden>⟳</span>
+            {pick("उत्तर सिधा · जुम रिसेट · सूर्योदय", "North up · reset zoom · sunrise")}
+          </button>
+
+          <div className={wheelDock}>
+            <div className={cn(wheelDockTimeGrp, "min-w-0 flex-1")}>
+              <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
+              <input
+                className={wheelScrub}
+                type="range"
+                min="0"
+                max="60"
+                step="0.25"
+                value={scrubG}
+                style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
+                onChange={(e) => handleScrubChange(+e.target.value)}
+              />
+              <span className={wheelDockVal}>{num(scrubClock)}</span>
+            </div>
+            <div className={wheelDockSep} />
+            <div className={cn(wheelDockGrp, "shrink-0")}>
+              {isToday && (
+                <button
+                  type="button"
+                  className={wheelDockTodayBtn}
+                  title={pick("अहिलेको समय", "Current time")}
+                  onClick={snapToNow}
+                >
+                  {pick("आज", "Now")}
+                </button>
+              )}
               <button
                 type="button"
-                className={wheelDockTodayBtn}
-                title={pick("अहिलेको समय", "Current time")}
-                onClick={snapToNow}
+                className={wheelIconBtn}
+                title={pick("जुम इन", "Zoom in")}
+                onClick={() => handleZoom(zoom * 1.4)}
               >
-                {pick("आज", "Now")}
+                +
               </button>
-            )}
-            <button
-              type="button"
-              className={wheelIconBtn}
-              title={pick("उत्तर सिधा", "North up")}
-              onClick={() => setSpin(0)}
-            >
-              ⟳
-            </button>
-            <button
-              type="button"
-              className={wheelIconBtn}
-              title="Zoom in"
-              onClick={() => handleZoom(zoom * 1.4)}
-            >
-              +
-            </button>
-            <button
-              type="button"
-              className={wheelIconBtn}
-              title="Zoom out"
-              onClick={() => handleZoom(zoom / 1.4)}
-            >
-              −
-            </button>
-            {zoom !== 1 && (
               <button
                 type="button"
-                className={cn(wheelIconBtn, "px-1.5 text-[9px]")}
-                title="Reset zoom"
-                onClick={() => { handleZoom(1); setPan({ x: 0, y: 0 }); }}
+                className={wheelIconBtn}
+                title={pick("जुम आउट", "Zoom out")}
+                onClick={() => handleZoom(zoom / 1.4)}
               >
-                1:1
+                −
               </button>
-            )}
+            </div>
           </div>
         </div>
       </div>

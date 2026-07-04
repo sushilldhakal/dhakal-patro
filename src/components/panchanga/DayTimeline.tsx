@@ -137,7 +137,7 @@ function DayTimelineBand() {
     <div className={patroSecBand}>
       <h2 className={cn("m-0", "text-sm", "font-bold")}>{pick("दिन-चक्र", "Day cycle")}</h2>
       <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {pick("पूर्ण पञ्चाङ्ग रेखा · sunrise to sunrise", "Full panchanga timeline · sunrise to sunrise")}
+        {pick("पूर्ण पञ्चाङ्ग रेखा · सूर्योदयदेखि सूर्योदय", "Full panchanga timeline · sunrise to sunrise")}
       </span>
       <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-muted-foreground">
         <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-success/34 not-italic" />
@@ -179,7 +179,7 @@ export function DayTimeline({
   needleClock,
   loading = false,
 }: Props) {
-  const { pick, digits } = useLocale();
+  const { pick, digits, isEnglish, lang } = useLocale();
   const data = useMemo(
     () => (p ? buildDayTimelineData(p, dateAd) : null),
     [p, dateAd],
@@ -265,7 +265,7 @@ export function DayTimeline({
           className={cn("block", "h-auto", "w-full", "max-w-full")}
           preserveAspectRatio="xMidYMid meet"
           role="img"
-          aria-label="Full panchanga day chart"
+          aria-label={pick("पूर्ण दिन पञ्चाङ्ग चित्र", "Full panchanga day chart")}
         >
           <rect
             x={gx(data.dayG)}
@@ -329,9 +329,11 @@ export function DayTimeline({
                 <text x={X0 - 10} y={y + BAND / 2 - 2} className={pgTlRowlabel} textAnchor="end">
                   {pick(tr.ne, tr.en)}
                 </text>
-                <text x={X0 - 10} y={y + BAND / 2 + 11} className={pgTlRowlabelEn} textAnchor="end">
-                  {pick(tr.en, "")}
-                </text>
+                {isEnglish ? (
+                  <text x={X0 - 10} y={y + BAND / 2 + 11} className={pgTlRowlabelEn} textAnchor="end">
+                    {tr.en}
+                  </text>
+                ) : null}
                 <line
                   x1={X0}
                   y1={y + BAND}
@@ -492,7 +494,7 @@ export function DayTimeline({
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[12.5px] font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
             <span className="text-[11px] font-medium leading-snug text-muted-foreground">
-              {getPlanetsAnchorLabel(p)}
+              {getPlanetsAnchorLabel(p, lang)}
             </span>
           </div>
           <div className="grid grid-cols-2 min-[380px]:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
@@ -538,8 +540,7 @@ export function DayTimeline({
                 ) : null}
                 {lordL ? (
                   <span className="text-center text-[10px] leading-tight text-muted-foreground/90">
-                    {pick("नक्षत्रेश ", "Lord ")}
-                    {lordL}
+                    {pick("नक्षत्रेश", "Lord")} {lordL}
                   </span>
                 ) : null}
               </div>

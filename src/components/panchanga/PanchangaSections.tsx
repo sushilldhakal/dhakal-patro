@@ -48,6 +48,7 @@ import {
   UptoValue,
 } from "./PanchangaLayout";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 
 type Anga = {
   name_ne?: string;
@@ -68,11 +69,16 @@ function angaEndTime(anga?: Anga | null): string | undefined {
 }
 
 function AngaCell({ anga }: { anga?: Anga | null }) {
+  const { pick } = useLocale();
   if (!anga) return <span className="text-muted-foreground">—</span>;
+  const name = pick(anga.name_ne ?? anga.name ?? "—", anga.name ?? anga.name_ne ?? "—");
+  const nextName = anga.next?.name_ne ?? anga.next?.name;
   return (
     <>
-      <UptoValue name={anga.name_ne ?? anga.name} endTime={angaEndTime(anga)} />
-      {anga.next?.name_ne && <UptoValue name={anga.next.name_ne} />}
+      <UptoValue name={name} endTime={angaEndTime(anga)} />
+      {nextName ? (
+        <UptoValue name={pick(nextName, anga.next?.name ?? anga.next?.name_ne ?? nextName)} />
+      ) : null}
     </>
   );
 }
@@ -354,6 +360,7 @@ export function BalamSection({ p }: { p: PanchangaDay }) {
 
 export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   const panchaka = getPanchakaRahita(p);
   const lagna = getUdayaLagna(p);
 
@@ -373,7 +380,9 @@ export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
                   seg.good && "font-semibold text-success",
                 )}
               >
-                <span className="inline-flex items-baseline gap-1.5">{seg.name_ne ?? seg.name}</span>
+                <span className="inline-flex items-baseline gap-1.5">
+                  {pick(seg.name_ne ?? seg.name ?? "—", seg.name ?? seg.name_ne ?? "—")}
+                </span>
                 <span className="whitespace-nowrap font-mono text-[11.5px] text-muted-foreground">
                   {formatTimeRangeShort(
                     seg.start_local_time_short ?? seg.start_local_time,
@@ -425,10 +434,15 @@ export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
 }
 
 export function RituSection({ p }: { p: PanchangaDay }) {
+  const { pick, isEnglish } = useLocale();
   const detail = getPanchangaDetail(p);
-  const aayan = (detail?.aayan as { name_ne?: string } | undefined)?.name_ne ??
-    p.aayan?.name_ne ??
-    p.aayan?.name;
+  const aayanNe =
+    (detail?.aayan as { name_ne?: string; name?: string } | undefined)?.name_ne ??
+    p.aayan?.name_ne;
+  const aayanEn =
+    (detail?.aayan as { name?: string; name_ne?: string } | undefined)?.name ??
+    p.aayan?.name ??
+    aayanNe;
 
   return (
     <PanchangaSection titleKey="sections.ritu_ayana">
@@ -436,15 +450,15 @@ export function RituSection({ p }: { p: PanchangaDay }) {
         <PanchangaRow labelKey="sections.ritu" oddBorder>
           <span>☀</span>
           <span className="font-semibold">{getRituDisplayNe(p) ?? "—"}</span>
-          {getRituSeason(p) && (
+          {isEnglish && getRituSeason(p) ? (
             <span className="text-xs text-muted-foreground">({getRituSeason(p)})</span>
-          )}
+          ) : null}
         </PanchangaRow>
         <PanchangaRow labelKey="sections.dinamana">
           <span className="font-mono font-semibold">{formatDinamaanShort(p) ?? "—"}</span>
         </PanchangaRow>
         <PanchangaRow labelKey="sections.ayana" oddBorder>
-          <span className="font-semibold">{aayan ?? "—"}</span>
+          <span className="font-semibold">{pick(aayanNe ?? aayanEn ?? "—", aayanEn ?? aayanNe ?? "—")}</span>
         </PanchangaRow>
         <PanchangaRow labelKey="tithi">
           <span className="font-semibold text-sm">{formatAngaTransition(detail?.tithi as Anga) ?? "—"}</span>
@@ -519,6 +533,7 @@ export function DinVisheshSection({ p }: { p: PanchangaDay }) {
 
 export function PlanetsPanel({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
+  const { lang } = useLocale();
   const planets = getPlanetRows(p);
   const lagna = getLagnaDisplay(p);
   if (!planets.length && !lagna) return null;
@@ -539,7 +554,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
     <div className="rounded-xl bg-card p-4 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       <div className="flex items-baseline gap-2 mb-2">
         <h2 className="text-base font-bold m-0">{t("sections.planet_positions")}</h2>
-        <span className="text-[11.5px] text-muted-foreground">{getPlanetsAnchorLabel(p)}</span>
+        <span className="text-[11.5px] text-muted-foreground">{getPlanetsAnchorLabel(p, lang)}</span>
       </div>
       <div className="flex flex-col">
         {lagna && (
@@ -583,6 +598,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
 }
 
 export function FestivalsSection({ p }: { p: PanchangaDay }) {
+  const { pick } = useLocale();
   const festivals = p.festivals ?? [];
   if (!festivals.length) return null;
 
@@ -598,7 +614,7 @@ export function FestivalsSection({ p }: { p: PanchangaDay }) {
                 : "text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
             }
           >
-            {f.name_ne ?? f.name_en ?? f.name}
+            {pick(f.name_ne ?? f.name ?? "", f.name_en ?? f.name ?? f.name_ne ?? "")}
           </span>
         ))}
       </div>

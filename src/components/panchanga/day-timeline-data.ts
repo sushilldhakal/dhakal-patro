@@ -458,7 +458,7 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
         ? [
             {
               label: "ग्रह",
-              en: "Udayakal",
+              en: "Planets at sunrise",
               kind: "graha" as const,
               items: grahaSegments(grahaSpashta),
             },

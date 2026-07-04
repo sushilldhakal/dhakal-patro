@@ -64,7 +64,7 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
       />
 
       <div className="text-[10.5px] font-semibold tracking-[0.16em] text-[#f5f5f1]/55">
-        {pick("वैदिक समय · VEDIC TIME", "VEDIC TIME")}
+        {pick("वैदिक समय", "Vedic time")}
       </div>
       <div className="font-mono font-bold text-[44px] leading-none mt-3.5 tracking-tight tabular-nums">
         {digits(pad2(gh))}
@@ -84,7 +84,7 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
         <span className="text-[0.62em] text-[#f5f5f1]/65">:{digits(pad2(ss))}</span>
       </div>
       <div className="text-[11px] font-semibold tracking-wide text-[#f5f5f1]/50 mt-2">
-        {pick("घण्टा : मिनेट · GREGORIAN", "Hour : Minute · GREGORIAN")}
+        {pick("घण्टा : मिनेट", "Hour : Minute")}
       </div>
 
       <div className="flex justify-center gap-4 mt-3.5 text-[12.5px] font-mono text-[#f5f5f1]/80">
