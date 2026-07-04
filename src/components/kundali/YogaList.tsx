@@ -48,7 +48,12 @@ export function YogaList({ yogas }: YogaListProps) {
                 yoga.present && "bg-secondary/[0.06] dark:bg-secondary/10",
               )}
             >
-              <TableCell className={cn(td, "pl-3.5")}>
+              <TableCell
+                className={cn(
+                  td,
+                  "pl-3.5 w-full max-w-0 whitespace-normal align-top sm:max-w-[420px]",
+                )}
+              >
                 <span className="flex items-center gap-1.5 font-semibold text-foreground">
                   <Info
                     className="size-3.5 shrink-0 text-muted-foreground/60"
@@ -56,7 +61,7 @@ export function YogaList({ yogas }: YogaListProps) {
                   />
                   {pick(yoga.nameNe, yoga.nameEn)}
                 </span>
-                <span className="mt-0.5 block pl-5 text-[11px] leading-snug text-muted-foreground">
+                <span className="mt-0.5 block pl-5 text-[11px] leading-snug text-muted-foreground break-words">
                   {desc}
                 </span>
               </TableCell>
