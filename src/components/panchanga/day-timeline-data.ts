@@ -2,6 +2,7 @@ import type { PanchangaDay } from "@/lib/api";
 import {
   formatPakshaNepaliDisplay,
   getLagnaSpans,
+  getHoraSlots,
   getMoonrise,
   getMoonset,
   getPanchangaDetail,
@@ -341,27 +342,11 @@ function buildChoghadiyaFromApi(
   }));
 }
 
-/** Server hora slot from the daily payload's detail.hora block. */
-export type ApiHoraSlot = {
-  index: number;
-  phase: "day" | "night";
-  phase_ne: string;
-  planet: string;
-  planet_ne: string;
-  planet_en: string;
-  quality_ne: "शुभ" | "अशुभ";
-  tone: "good" | "bad";
-  bad: boolean;
-  start_local_time_short: string;
-  end_local_time_short: string;
-  start_g: number;
-  end_g: number;
-};
+/** Server hora slot from the daily panchanga payload. */
+export type { ApiHoraSlot };
 
 export function getApiHora(p: PanchangaDay): ApiHoraSlot[] {
-  const detail = getPanchangaDetail(p);
-  const block = (detail?.hora ?? p.hora) as ApiHoraSlot[] | undefined;
-  return Array.isArray(block) ? block : [];
+  return getHoraSlots(p);
 }
 
 function buildHoraTimelineSegments(p: PanchangaDay): HoraSegment[] {

@@ -114,7 +114,7 @@ const NAVATARA_TONE_BG: Record<Tone, string> = {
 
 export function patroNavataraRow(tone: Tone, current?: boolean) {
   return cn(
-    "flex min-w-0 flex-col gap-0.5 rounded-md p-1.5",
+    "flex min-w-0 flex-col items-center gap-0.5 rounded-md p-1.5 text-center",
     NAVATARA_TONE_BG[tone] ?? "bg-surface-inset",
     current && "shadow-[inset_0_0_0_1.5px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
   );

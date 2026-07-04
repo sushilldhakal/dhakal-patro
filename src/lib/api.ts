@@ -1186,6 +1186,41 @@ export interface BalamBlock {
   set2?: BalamChip[];
 }
 
+export type NavataraTone = "best" | "good" | "neutral" | "bad" | "worst";
+
+export interface NavataraRow {
+  index: number;
+  name: string;
+  name_en?: string;
+  tara: string;
+  quality: string;
+  tone: NavataraTone;
+  tara_num: number;
+}
+
+export interface NavataraTableBlock {
+  moon_index: number;
+  moon_label: string;
+  moon_label_en?: string;
+  rows: NavataraRow[];
+}
+
+export interface ApiHoraSlot {
+  index: number;
+  phase: "day" | "night";
+  phase_ne: string;
+  planet: string;
+  planet_ne: string;
+  planet_en: string;
+  quality_ne: "शुभ" | "अशुभ";
+  tone: "good" | "bad";
+  bad: boolean;
+  start_local_time_short: string;
+  end_local_time_short: string;
+  start_g: number;
+  end_g: number;
+}
+
 export interface PanchakaSegment {
   name?: string;
   name_ne?: string;
@@ -1283,7 +1318,17 @@ export interface PanchangaDay {
   surya_nakshatra?: SuryaNakshatra;
   chandrabalam?: BalamBlock;
   tarabalam?: BalamBlock;
-  hora?: import("@/components/panchanga/day-timeline-data").ApiHoraSlot[];
+  tarabala_table?: NavataraTableBlock;
+  chandrabala_table?: NavataraTableBlock;
+  hora?: ApiHoraSlot[];
+  hora_day?: ApiHoraSlot[];
+  choghadiya?: Array<{
+    name_ne: string;
+    start_g: number;
+    end_g: number;
+    bad?: boolean;
+    phase?: string;
+  }>;
   panchaka_rahita?: PanchakaSegment[];
   udaya_lagna?: UdayaLagnaRow[];
   ritu?: { name_ne?: string; season?: string } | string;

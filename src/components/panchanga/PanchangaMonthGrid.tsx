@@ -79,6 +79,7 @@ export function PanchangaMonthGrid({
     const isKrishna = phase === "krishna";
     return cn(
       "relative min-h-[118px] p-1.5 text-left cursor-pointer flex flex-col gap-0.5 transition-colors border-0",
+      "max-md:min-h-[100px] max-md:gap-px max-md:p-1",
       isKrishna
         ? "bg-background text-foreground dark:text-foreground dark:bg-background"
         : "bg-white text-foreground dark:text-foreground dark:bg-background",
@@ -122,7 +123,7 @@ export function PanchangaMonthGrid({
 
       <div className="grid grid-cols-7 gap-px ">
           {blanks.map((b) => (
-            <div key={`b-${b}`} className="min-h-[118px] bg-muted" />
+            <div key={`b-${b}`} className="min-h-[118px] bg-muted max-md:min-h-[100px]" />
           ))}
           {days.map((day) => {
             const ad = new Date(day.date_ad);
@@ -137,41 +138,41 @@ export function PanchangaMonthGrid({
                 className={cellClass(day, phase)}
                 onClick={() => onPickDay(ad)}
               >
-                {/* Top: tithi + nakshatra */}
-                <p className="text-xs font-semibold truncate text-center w-full leading-tight m-0 text-foreground">
+                {/* Top: tithi — always visible; wraps on narrow cells */}
+                <p className="m-0 w-full text-center text-[9px] font-semibold leading-snug text-foreground line-clamp-2 sm:text-xs sm:line-clamp-1 sm:truncate">
                   {formatTithiWithPaksha(day, isEn)}
                 </p>
-                <p className="m-0 text-[11px] font-semibold truncate text-center w-full leading-tight text-panchang dark:text-accent">
+                <p className="m-0 hidden w-full truncate text-center text-[11px] font-semibold leading-tight text-panchang dark:text-accent sm:block">
                   {getMonthDayNakshatra(day, lang) ?? "—"}
                 </p>
 
                 {/* Middle: sunrise · day · sunset */}
-                <div className="flex items-center justify-between gap-1 min-w-0 flex-1 py-0.5">
-                  <span className="w-[28%] min-w-0 shrink-0 font-mono text-[11px] leading-none tabular-nums text-muted-foreground">
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-1 py-0.5 max-md:flex-none max-md:justify-center">
+                  <span className="w-[28%] min-w-0 shrink-0 font-mono text-[11px] leading-none tabular-nums text-muted-foreground max-md:hidden">
                     {day.sunrise ? digits(day.sunrise) : "—"}
                   </span>
 
-                  <div className="flex flex-col items-center justify-center flex-1 min-w-0 px-0.5">
-                    <span className="font-mono font-bold text-[22px] leading-none tabular-nums">
+                  <div className="flex min-w-0 flex-1 flex-col items-center justify-center px-0.5 max-md:flex-none">
+                    <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-[22px]">
                       {digits(day.day)}
                     </span>
-                    <span className="font-mono text-[11px] leading-none mt-0.5 text-muted-foreground">
+                    <span className="mt-0.5 font-mono text-[10px] leading-none text-muted-foreground sm:text-[11px]">
                       {ad.getDate()}
                     </span>
                     {isToday && (
-                      <span className="text-[8px] font-bold px-1 py-px rounded-full mt-0.5 text-danger">
+                      <span className="mt-0.5 rounded-full px-1 py-px text-[7px] font-bold text-danger sm:text-[8px]">
                         {pick("आज", "Today")}
                       </span>
                     )}
                   </div>
 
-                  <span className="w-[28%] min-w-0 shrink-0 text-right font-mono text-[11px] leading-none tabular-nums text-muted-foreground">
+                  <span className="w-[28%] min-w-0 shrink-0 text-right font-mono text-[11px] leading-none tabular-nums text-muted-foreground max-md:hidden">
                     {day.sunset ? digits(day.sunset) : "—"}
                   </span>
                 </div>
 
-                {/* Bottom: rashi · yoga · karana */}
-                <div className="grid grid-cols-3 gap-0.5 text-[11px] leading-tight min-w-0 w-full">
+                {/* Bottom: rashi · yoga · karana — desktop only */}
+                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-[11px] leading-tight max-md:hidden">
                   <span className="truncate text-center font-semibold text-panchang dark:text-accent">
                     {getMonthDayChandraRashi(day, lang) ?? "—"}
                   </span>
@@ -186,7 +187,8 @@ export function PanchangaMonthGrid({
                 {day.festivals[0] && (
                   <span
                     className={cn(
-                      "max-w-full truncate text-xs font-semibold px-1 py-0.5 rounded-full self-start",
+                      "max-w-full truncate rounded-full px-1 py-0.5 text-xs font-semibold self-start",
+                      "max-md:w-full max-md:self-center max-md:py-px max-md:text-[7px] max-md:leading-tight",
                       "bg-chip-festival text-panchang dark:text-accent"
                     )}
                   >

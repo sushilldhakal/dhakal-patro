@@ -125,7 +125,7 @@ function PanchangaAside({
   return (
     <aside
       className={cn(
-        "flex flex-col gap-3 max-sm:px-2.5",
+        "flex flex-col gap-3 bg-transparent",
         isBelow ? "w-full" : "min-h-0 flex-1 min-[1081px]:h-full min-[1081px]:gap-0",
       )}
     >
@@ -133,13 +133,13 @@ function PanchangaAside({
         className={cn(
           "flex flex-col gap-3",
           isBelow
-            ? "overflow-hidden rounded-xl bg-card shadow-sm shadow-ring-soft"
-            : "min-[1081px]:min-h-0 min-[1081px]:flex-1 min-[1081px]:gap-0 min-[1081px]:overflow-hidden min-[1081px]:rounded-xl min-[1081px]:bg-card min-[1081px]:shadow-sm min-[1081px]:shadow-ring-soft",
+            ? "overflow-hidden rounded-xl"
+            : "min-[1081px]:min-h-0 min-[1081px]:flex-1 min-[1081px]:gap-0 min-[1081px]:overflow-hidden",
         )}
       >
         <div
           className={cn(
-            "flex items-baseline gap-2.5 px-4 pt-3.5 pb-3",
+            "flex items-baseline gap-2.5 pt-3.5 pb-3 bg-transparent",
             !isBelow && "min-[1081px]:shrink-0 min-[1081px]:border-b min-[1081px]:border-border",
             isBelow && "border-b border-border",
           )}
@@ -224,7 +224,7 @@ function PanchangaAside({
               </div>
             </div>
 
-            <div className={cn("flex min-w-0 flex-1 flex-col", isBelow && "min-h-0")}>
+            <div className={cn("flex min-w-0 flex-1 flex-col bg-card", isBelow && "min-h-0")}>
             <div
               className="grid shrink-0 grid-cols-4 gap-1.5 border-b border-border px-2.5 py-2.5"
               role="tablist"

@@ -769,6 +769,31 @@ export function getTarabalam(p: PanchangaDay) {
   return (detail?.tarabalam ?? p.tarabalam) as import("@/lib/api").BalamBlock | undefined;
 }
 
+export function getTarabalaTable(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  return (p.tarabala_table ?? detail?.tarabala_table) as import("@/lib/api").NavataraTableBlock | undefined;
+}
+
+export function getChandrabalamTable(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  return (p.chandrabala_table ?? detail?.chandrabala_table) as
+    | import("@/lib/api").NavataraTableBlock
+    | undefined;
+}
+
+export function getHoraSlots(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const block = (p.hora ?? detail?.hora) as import("@/lib/api").ApiHoraSlot[] | undefined;
+  return Array.isArray(block) ? block : [];
+}
+
+export function getHoraDaySlots(p: PanchangaDay) {
+  const detail = getPanchangaDetail(p);
+  const block = (p.hora_day ?? detail?.hora_day) as import("@/lib/api").ApiHoraSlot[] | undefined;
+  if (Array.isArray(block) && block.length) return block;
+  return getHoraSlots(p).filter((slot) => slot.phase === "day");
+}
+
 export function getPanchakaRahita(p: PanchangaDay) {
   const detail = getPanchangaDetail(p);
   const rows = (detail?.panchaka_rahita ?? p.panchaka_rahita) as
@@ -1202,7 +1227,7 @@ const NOTABLE_TITHI_NE = new Set([
   "एकादशी",
   "द्वादशी",
   "पूर्णिमा",
-  "अमावास्या",
+  "औंसी",
   "औंसी",
 ]);
 
@@ -1233,7 +1258,7 @@ function tithiPatroLabel(day: CalendarDay): string | undefined {
   const tithi = day.tithi_ne ?? day.tithi;
   if (!tithi || !NOTABLE_TITHI_NE.has(tithi)) return undefined;
   if (tithi === "पूर्णिमा") return "पूर्णिमा";
-  if (tithi === "अमावास्या" || tithi === "औंसी") return "अमावास्या";
+  if (tithi === "औंसी" || tithi === "औंसी") return "औंसी";
   const paksha = pakshaShortNe(day);
   if (paksha) return `${paksha} ${tithi}`;
   return tithi;
@@ -1403,7 +1428,7 @@ export function getEventNames(p: PanchangaDay, dayFestivals: string[]): string[]
 
 export function getShraddhaLabel(tithiNameNe?: string | null): string | undefined {
   if (!tithiNameNe) return undefined;
-  if (tithiNameNe === "पूर्णिमा" || tithiNameNe === "अमावास्या") return undefined;
+  if (tithiNameNe === "पूर्णिमा" || tithiNameNe === "औंसी") return undefined;
   return `${tithiNameNe} श्राद्ध`;
 }
 
@@ -1418,7 +1443,7 @@ export function getDinVisheshLabels(p: PanchangaDay, dayFestivals: string[]): st
   } | undefined;
 
   if (markers?.is_purnima && !labels.includes("पूर्णिमा")) labels.push("पूर्णिमा");
-  if (markers?.is_amavasya && !labels.includes("अमावास्या")) labels.push("अमावास्या");
+  if (markers?.is_amavasya && !labels.includes("औंसी")) labels.push("औंसी");
   if (markers?.is_ekadashi && !labels.includes("एकादशी")) labels.push("एकादशी");
 
   const tithiNe =

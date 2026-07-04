@@ -92,7 +92,7 @@ export function BsCalendarGrid({
               type="button"
               className={cn(
                 "relative flex min-h-[104px] min-w-0 flex-col justify-between gap-1.5 border-none bg-card p-2.5 text-left text-foreground transition-colors",
-                "max-md:min-h-12 max-md:items-center max-md:justify-start max-md:gap-0 max-md:p-1 max-md:text-center",
+                "max-md:min-h-[5rem] max-md:items-center max-md:justify-start max-md:gap-0.5 max-md:p-1 max-md:text-center",
                 isOutside && "bg-surface-muted/90 hover:bg-surface-hover",
                 isToday && "bg-surface-today hover:bg-surface-today-hover",
                 !isToday && !isOutside && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
@@ -140,7 +140,7 @@ export function BsCalendarGrid({
                 {tithi ? (
                   <span
                     className={cn(
-                      "inline-flex max-w-full items-center gap-1 overflow-hidden text-[11px] font-medium text-ellipsis whitespace-nowrap max-md:hidden",
+                      "block w-full max-w-full text-center text-[8px] font-medium leading-snug line-clamp-2 md:text-[11px] md:truncate md:line-clamp-none md:whitespace-nowrap",
                       isOutside ? "text-muted-foreground/60" : "text-muted-foreground",
                     )}
                   >
@@ -148,7 +148,7 @@ export function BsCalendarGrid({
                   </span>
                 ) : isEnriching && !isOutside ? (
                   <span
-                    className="inline-block h-2 w-10 animate-pulse rounded-full bg-muted-foreground/25 max-md:hidden"
+                    className="mx-auto inline-block h-1.5 w-8 animate-pulse rounded-full bg-muted-foreground/25 md:hidden"
                     aria-hidden
                   />
                 ) : null}
@@ -156,7 +156,8 @@ export function BsCalendarGrid({
                 {mainFest && !isOutside && (
                   <span
                     className={cn(
-                      "max-w-full truncate rounded-full px-2 py-1 text-[10.5px] font-semibold leading-none max-md:hidden",
+                      "max-w-full truncate rounded-full px-2 py-1 text-[10.5px] font-semibold leading-none",
+                      "max-md:w-full max-md:px-1 max-md:py-px max-md:text-[7px] max-md:leading-tight",
                       isPublicHoliday
                         ? "bg-chip-public text-danger"
                         : "bg-chip-festival text-accent dark:text-accent",

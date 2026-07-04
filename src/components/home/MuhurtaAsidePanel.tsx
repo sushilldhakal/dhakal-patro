@@ -1,32 +1,26 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
-import type { BalamBlock, PanchangaDay } from "@/lib/api";
+import type { ApiHoraSlot, NavataraRow, PanchangaDay } from "@/lib/api";
 import {
   buildDayTimelineData,
   choghadiyaQuality,
   choghadiyaTone,
   ghatiToCivilClockLabel,
 } from "@/components/panchanga/day-timeline-data";
-import { getApiHora } from "@/components/panchanga/day-timeline-data";
 import {
   formatClockNepali,
-  formatRashiDisplayNe,
-  formatShortClock,
   formatTimeRangeShort,
-  getChandrabalam,
-  getPanchangaDetail,
+  getChandrabalamTable,
+  getHoraDaySlots,
   getSunrise,
-  getTarabalam,
+  getTarabalaTable,
   getUdayaLagna,
-  rashiSymFromNumber,
-  toNepaliDigits,
 } from "@/lib/panchanga-format";
 import {
   patroEmpty,
   patroMiniSubTab,
-  patroSlotBadge,
-  patroSlotRow,
+  patroNavataraRow,
 } from "@/lib/patro-classes";
 
 type MuhurtaSubTab = "tarabal" | "chandrabal" | "choghadiya" | "hora" | "pushkara";
@@ -54,102 +48,49 @@ function parseTimeToMinutes(time?: string | null): number | null {
   return Number(m[1]) * 60 + Number(m[2]);
 }
 
-function BalamAsideList({
-  block,
+function NavataraAsideList({
   moonLabel,
+  moonIdx,
   moonRefKey,
-  rashi = false,
+  rows,
 }: {
-  block: BalamBlock | undefined;
   moonLabel: string | null;
+  moonIdx: number | null;
   moonRefKey: string;
-  rashi?: boolean;
+  rows: NavataraRow[];
 }) {
   const { t } = useTranslation();
-  const set1 = block?.set1 ?? [];
-  const set2 = block?.set2 ?? [];
-  const till = formatShortClock(block?.till?.end_local_time_short ?? block?.till?.end_local_time);
 
-  if (!set1.length && !set2.length) {
+  if (!rows.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.unavailable")}</p>;
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div>
       {moonLabel ? (
-        <p className="m-0 text-[12.5px] font-semibold text-foreground">
+        <p className="m-0 mb-2 text-[12.5px] font-semibold text-foreground">
           {t(moonRefKey)}: <strong className="text-accent">{moonLabel}</strong>
         </p>
       ) : null}
-
-      {set1.length ? (
-        <div>
-          <h3 className="my-0 mb-2 text-[11.5px] font-medium text-muted-foreground">
-            {rashi ? t("sections.auspicious_chandra") : t("sections.auspicious_tara")}
-            {till ? (
-              <>
-                {" "}
-                — <span className="font-mono">{till}</span> {t("sections.until")}
-              </>
-            ) : null}
-          </h3>
-          <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
-            {set1.map((item, i) => (
-              <li
-                key={`${item.name_ne ?? item.name}-${i}`}
-                className="flex items-center gap-1.5 rounded-md bg-surface-inset px-2 py-1.5"
-              >
-                {rashi && item.number != null ? (
-                  <span className="text-[13px] leading-none">{rashiSymFromNumber(item.number)}</span>
-                ) : null}
-                <span className="text-xs font-bold leading-tight text-foreground">
-                  {rashi ? formatRashiDisplayNe(item.name_ne) : item.name_ne}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {set2.length ? (
-        <div>
-          <h3 className="my-0 mb-2 text-[11.5px] font-medium text-muted-foreground">
-            {t("sections.until_sunrise")}
-          </h3>
-          <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
-            {set2.map((item, i) => (
-              <li
-                key={`${item.name_ne ?? item.name}-next-${i}`}
-                className="flex items-center gap-1.5 rounded-md bg-surface-inset px-2 py-1.5"
-              >
-                {rashi && item.number != null ? (
-                  <span className="text-[13px] leading-none">{rashiSymFromNumber(item.number)}</span>
-                ) : null}
-                <span className="text-xs font-bold leading-tight text-foreground">
-                  {rashi ? formatRashiDisplayNe(item.name_ne) : item.name_ne}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
+        {rows.map((row) => {
+          const isMoon = moonIdx != null && row.index === moonIdx;
+          return (
+            <li key={row.name} className={patroNavataraRow(row.tone, isMoon)}>
+              <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
+                {row.name}
+              </span>
+              <span className="w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+                {row.tara}
+                <span className="mx-1 opacity-55">/</span>
+                {row.quality}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
-}
-
-function moonNakshatraLabel(p: PanchangaDay): string | null {
-  const detail = getPanchangaDetail(p);
-  const nak = (detail?.nakshatra ?? p.nakshatra) as { name_ne?: string; name?: string } | undefined;
-  return nak?.name_ne ?? nak?.name ?? null;
-}
-
-function moonRashiLabel(p: PanchangaDay): string | null {
-  const detail = getPanchangaDetail(p);
-  const rashi = (detail?.chandra_rashi ?? p.chandra_rashi) as
-    | { name_ne?: string; name?: string }
-    | undefined;
-  const label = rashi?.name_ne ?? rashi?.name;
-  return label ? formatRashiDisplayNe(label) : null;
 }
 
 function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
@@ -161,28 +102,22 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
     return <p className={patroEmpty}>{t("muhurta_aside.choghadiya_unavailable")}</p>;
   }
 
-  const dayG = timeline.dayG;
-
   return (
-    <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
+    <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
       {timeline.choghadiya.map((seg, i) => {
         const tone = choghadiyaTone(seg.name, seg.bad);
         const quality = choghadiyaQuality(seg.name, seg.bad);
-        const phase = seg.startG < dayG ? t("muhurta_aside.phase_day") : t("muhurta_aside.phase_night");
         const range = `${ghatiToCivilClockLabel(seg.startG, sunriseMin)} – ${ghatiToCivilClockLabel(seg.endG, sunriseMin)}`;
         return (
-          <li
-            key={`${seg.name}-${i}`}
-            className={patroSlotRow(tone, seg.startG >= dayG && i === 8)}
-          >
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-              <span className="text-[9.5px] font-semibold tracking-wide text-muted-foreground uppercase">
-                {phase}
-              </span>
-              <span className="text-xs font-bold leading-tight">{seg.name}</span>
-              <span className="mono text-[10px] font-semibold whitespace-nowrap">{range}</span>
-            </div>
-            <span className={patroSlotBadge(tone)}>{quality}</span>
+          <li key={`${seg.name}-${i}`} className={patroNavataraRow(tone === "good" ? "good" : tone === "bad" ? "bad" : "neutral")}>
+            <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
+              {seg.name}
+            </span>
+            <span className="mono w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+              {range}
+              <span className="mx-1 opacity-55">/</span>
+              {quality}
+            </span>
           </li>
         );
       })}
@@ -192,35 +127,37 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
 
 function HoraList({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const slots = getApiHora(p);
+  const slots = getHoraDaySlots(p);
 
   if (!slots.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.hora_unavailable")}</p>;
   }
 
   return (
-    <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0">
-      {slots.map((slot, i) => {
-        const start = formatClockNepali(slot.start_local_time_short) ?? slot.start_local_time_short;
-        const end = formatClockNepali(slot.end_local_time_short) ?? slot.end_local_time_short;
-        return (
-          <li key={`${slot.phase}-${slot.index}-${i}`} className={patroSlotRow(slot.tone)}>
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-              <span className="text-[9.5px] font-semibold tracking-wide text-muted-foreground uppercase">
-                {slot.phase_ne}
-              </span>
-              <span className="text-xs font-bold leading-tight">{slot.planet_ne}</span>
-              <span className="mono text-[10px] font-semibold whitespace-nowrap">
-                {toNepaliDigits(slot.index)}
-                <span className="mx-0.5 opacity-50">·</span>
-                {start} – {end}
-              </span>
-            </div>
-            <span className={patroSlotBadge(slot.tone)}>{slot.quality_ne}</span>
-          </li>
-        );
-      })}
+    <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
+      {slots.map((slot, i) => (
+        <HoraSlot key={`${slot.phase}-${slot.index}-${i}`} slot={slot} />
+      ))}
     </ul>
+  );
+}
+
+function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
+  const start = formatClockNepali(slot.start_local_time_short) ?? slot.start_local_time_short;
+  const end = formatClockNepali(slot.end_local_time_short) ?? slot.end_local_time_short;
+  const tone = slot.tone === "bad" ? "bad" : "good";
+
+  return (
+    <li className={patroNavataraRow(tone)}>
+      <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
+        {slot.planet_ne}
+      </span>
+      <span className="mono w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+        {start} – {end}
+        <span className="mx-1 opacity-55">/</span>
+        {slot.quality_ne}
+      </span>
+    </li>
   );
 }
 
@@ -279,8 +216,8 @@ type Props = {
 export function MuhurtaAsidePanel({ p, dateAd }: Props) {
   const { t } = useTranslation();
   const [subTab, setSubTab] = useState<MuhurtaSubTab>("tarabal");
-  const tarabalam = getTarabalam(p);
-  const chandrabalam = getChandrabalam(p);
+  const tara = getTarabalaTable(p);
+  const chandra = getChandrabalamTable(p);
 
   return (
     <div className="flex flex-col gap-2">
@@ -306,18 +243,19 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
 
       <div role="tabpanel">
         {subTab === "tarabal" ? (
-          <BalamAsideList
-            block={tarabalam}
-            moonLabel={moonNakshatraLabel(p)}
+          <NavataraAsideList
+            moonLabel={tara?.moon_label ?? null}
+            moonIdx={tara?.moon_index ?? null}
             moonRefKey="muhurta_aside.moon_ref_tarabal"
+            rows={tara?.rows ?? []}
           />
         ) : null}
         {subTab === "chandrabal" ? (
-          <BalamAsideList
-            block={chandrabalam}
-            moonLabel={moonRashiLabel(p)}
+          <NavataraAsideList
+            moonLabel={chandra?.moon_label ?? null}
+            moonIdx={chandra?.moon_index ?? null}
             moonRefKey="muhurta_aside.moon_ref_chandrabal"
-            rashi
+            rows={chandra?.rows ?? []}
           />
         ) : null}
         {subTab === "choghadiya" ? <ChoghadiyaList p={p} dateAd={dateAd} /> : null}

@@ -147,7 +147,7 @@ export function tithiIndexFromPanchanga(p: PanchangaDay): number {
   const nameNe = normalizeTithiName(raw);
 
   if (/पूर्णिमा|purnima/i.test(nameNe)) return 14;
-  if (/औंसी|अमावास्या|aunsi|amavasya/i.test(nameNe)) return 29;
+  if (/औंसी|औंसी|aunsi|amavasya/i.test(nameNe)) return 29;
 
   const krishna = isKrishnaPaksha(p);
   const rangeStart = krishna ? 15 : 0;
