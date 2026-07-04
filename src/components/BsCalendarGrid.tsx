@@ -166,7 +166,7 @@ export function BsCalendarGrid({
                       "max-w-full truncate rounded-full px-2 py-1 text-[10.5px] font-semibold leading-none max-md:hidden",
                       isPublicHoliday
                         ? "bg-chip-public text-danger"
-                        : "bg-chip-festival text-accent dark:text-[#7fd6db]",
+                        : "bg-chip-festival text-accent dark:text-accent",
                     )}
                   >
                     {mainFest}

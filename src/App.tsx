@@ -8,6 +8,7 @@ import i18n from "./i18n/index";
 import { router } from "./router.tsx";
 import { AuthProvider } from "./lib/auth/AuthContext";
 import { getLocalStorageItem, isBrowser } from "./lib/browser";
+import { normalizeLang } from "./i18n/locale";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,20 +19,25 @@ const queryClient = new QueryClient({
   },
 });
 
-/** Apply stored / browser language after hydration to avoid SSR mismatch. */
+function syncDocumentLang(lang: string) {
+  if (!isBrowser) return;
+  document.documentElement.lang = normalizeLang(lang);
+}
+
+/** Apply stored language after hydration. Default stays Nepali when nothing is saved. */
 function LanguageBootstrap() {
   useEffect(() => {
     const stored = getLocalStorageItem("i18nextLng");
-    // An explicit stored choice always wins — never let the browser locale
-    // override a preference the user picked, even when it equals the default.
     if (stored === "en" || stored === "ne") {
       if (stored !== i18n.language) void i18n.changeLanguage(stored);
-      return;
     }
-    const nav = navigator.language.split("-")[0];
-    if ((nav === "en" || nav === "ne") && nav !== i18n.language) {
-      void i18n.changeLanguage(nav);
-    }
+    syncDocumentLang(i18n.language);
+
+    const onLanguageChanged = (lang: string) => syncDocumentLang(lang);
+    i18n.on("languageChanged", onLanguageChanged);
+    return () => {
+      i18n.off("languageChanged", onLanguageChanged);
+    };
   }, []);
   return null;
 }
@@ -50,7 +56,7 @@ export function AppProviders({
 }) {
   return (
     <HelmetProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
         <QueryClientProvider client={queryClient}>
           <AuthProvider ssr={ssr}>
             {!ssr && isBrowser ? <LanguageBootstrap /> : null}

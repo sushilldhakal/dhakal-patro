@@ -523,7 +523,7 @@ export function DayTimeline({
                 className="flex w-full flex-col items-center gap-0.5 rounded-lg bg-foreground/4 px-2 py-1.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
                 title={[labelL, rashiL, coords, nakLine, lordL].filter(Boolean).join(" · ")}
               >
-                <span className="text-[13px] leading-none text-secondary dark:text-[#7fd6db]">
+                <span className="text-[13px] leading-none text-secondary dark:text-accent">
                   {PLANET_SYM[label] ?? "★"}
                 </span>
                 <span className="inline-flex max-w-full items-baseline justify-center gap-0.5 text-center text-[11px] font-semibold leading-tight">

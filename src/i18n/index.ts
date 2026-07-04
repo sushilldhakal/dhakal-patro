@@ -5,7 +5,7 @@ import ne from "./ne.json";
 import en from "./en.json";
 
 // Fixed default locale for first paint (matches SSR prerender). LanguageBootstrap
-// in App.tsx applies localStorage / navigator preference after hydration.
+// in App.tsx applies a saved localStorage choice after hydration; otherwise Nepali.
 void i18n.use(initReactI18next).init({
   resources: {
     ne: { translation: ne },

@@ -73,7 +73,7 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
         <span className="text-[#f5f5f1]/40">:</span>
         <span className="text-[0.62em] text-[#f5f5f1]/65">{digits(pad2(vi))}</span>
       </div>
-      <div className="text-[11px] font-semibold tracking-wide text-teal-300 mt-2">
+      <div className="text-[11px] font-semibold tracking-wide text-panchang mt-2">
         {pick("घडी : पला : विपला", "Ghati : Pala : Vipala")}
       </div>
 

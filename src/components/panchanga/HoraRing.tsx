@@ -419,8 +419,8 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                 {pick(HORA_DEVA[rulerKey], ruler.en)}
               </text>
 
-              <circle cx={mx} cy={my} r={15} fill="#ffd70a" opacity={0.5} filter="url(#hora-markGlow)" />
-              <circle cx={mx} cy={my} r={10} fill="none" stroke="#ffd70a" strokeWidth="2.4" />
+              <circle cx={mx} cy={my} r={15} fill="var(--brand-gold)" opacity={0.5} filter="url(#hora-markGlow)" />
+              <circle cx={mx} cy={my} r={10} fill="none" stroke="var(--brand-gold)" strokeWidth="2.4" />
               <circle cx={mx} cy={my} r={6} fill="#fff" />
             </svg>
           </div>

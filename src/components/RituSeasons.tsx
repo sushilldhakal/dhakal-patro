@@ -179,7 +179,7 @@ export function RituSeasons({
                 <span className="min-w-0 flex-1">
                   <span className="block text-xl font-bold leading-tight">{t(`ritu.${seasonKey}`)}</span>
                 </span>
-                <span className="flex h-[46px] w-[46px] shrink-0 flex-col items-center justify-center gap-px rounded-lg bg-secondary/13 text-accent dark:text-[#7fd6db]">
+                <span className="flex h-[46px] w-[46px] shrink-0 flex-col items-center justify-center gap-px rounded-lg bg-secondary/13 text-accent dark:text-accent">
                   <span className="text-[17px] font-bold leading-none font-num">{dg(item.startBs.day)}</span>
                   <span className="text-[9.5px] font-semibold leading-none">{item.startBs.monthName}</span>
                 </span>

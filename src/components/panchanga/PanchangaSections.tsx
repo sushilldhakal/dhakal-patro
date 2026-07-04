@@ -151,7 +151,7 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
             <NakshatraIcon
               name={nakshatra?.name_ne ?? nakshatra?.name}
               size={32}
-              className="text-secondary dark:text-[var(--brand-yellow)]"
+              className="text-panchang dark:text-accent"
             />
             <AngaCell anga={nakshatra} />
           </span>
@@ -507,7 +507,7 @@ export function DinVisheshSection({ p }: { p: PanchangaDay }) {
         {labels.map((label) => (
           <span
             key={label}
-            className="text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-teal-300 border border-secondary/20"
+            className="text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
           >
             {label}
           </span>
@@ -544,7 +544,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
       <div className="flex flex-col">
         {lagna && (
           <div className="flex items-center gap-3 py-2 border-b border-border">
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] bg-secondary/11 text-secondary dark:text-teal-300 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
               ASC
             </span>
             <div className="flex-1 min-w-0">
@@ -563,7 +563,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
             key={label}
             className="flex items-center gap-3 py-2 border-b border-border last:border-0"
           >
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] bg-secondary/11 text-secondary dark:text-teal-300 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
               {symbols[label] ?? "★"}
             </span>
             <div className="flex-1 min-w-0">
@@ -595,7 +595,7 @@ export function FestivalsSection({ p }: { p: PanchangaDay }) {
             className={
               f.is_public_holiday
                 ? "text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20"
-                : "text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-teal-300 border border-secondary/20"
+                : "text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
             }
           >
             {f.name_ne ?? f.name_en ?? f.name}

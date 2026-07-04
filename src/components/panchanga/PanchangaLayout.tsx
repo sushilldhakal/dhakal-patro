@@ -104,7 +104,7 @@ export function UptoValue({
       {sym && <span className="text-[13px] shrink-0">{sym}</span>}
       <span className="font-semibold">{name}</span>
       {badge && (
-        <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary dark:text-teal-300">
+        <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary dark:text-accent">
           {badge}
         </span>
       )}

@@ -321,7 +321,7 @@ export function Home() {
         onMonthContextChange={handleMonthContextChange}
         aside={
           <PanchangaAside
-            placement={patroView === "panchanga" ? "below" : "sidebar"}
+            placement="sidebar"
             selectedDay={selectedDay}
             selectedAdDate={asideAdDate}
             todayAd={todayAd}

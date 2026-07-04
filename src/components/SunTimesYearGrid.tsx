@@ -124,12 +124,12 @@ function useMonthTableColumns() {
       monthCol.accessor("sunriseDisplay", {
         header: () => (
           <span className="inline-flex items-center gap-1.5">
-            <Sunrise className="size-4 text-orange-500" />
+            <Sunrise className="size-4 text-primary" />
             {t("sun_times.col_sunrise")}
           </span>
         ),
         cell: (info) => (
-          <span className="font-mono text-base tabular-nums text-orange-600 dark:text-[#7fd6db]">
+          <span className="font-mono text-base tabular-nums text-primary dark:text-accent">
             {info.getValue() ?? "—"}
           </span>
         ),

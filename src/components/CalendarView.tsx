@@ -502,21 +502,11 @@ export function CalendarView({
   }
 
   if (aside || holidays) {
-    if (isPanchangaPatro) {
-      return (
-        <div className="flex flex-col gap-4">
-          <div className="min-w-0 w-full">{monthHeader}{calendarBlock}</div>
-          {aside ? <div className="min-w-0 w-full max-sm:px-2.5">{aside}</div> : null}
-          {holidays}
-        </div>
-      );
-    }
-
     return (
       <div className="grid items-start gap-4 min-[1081px]:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] min-[1081px]:items-stretch min-[1081px]:gap-[15px] max-sm:gap-4">
         <div className="min-w-0">{monthHeader}{calendarBlock}</div>
         {aside ? (
-          <div className="flex min-w-0 flex-col min-[1081px]:min-h-full">{aside}</div>
+          <div className="flex min-w-0 flex-col min-[1081px]:min-h-full max-sm:px-2.5">{aside}</div>
         ) : null}
         {holidays}
       </div>

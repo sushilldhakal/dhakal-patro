@@ -36,7 +36,7 @@ const QUICK_LINK_ICON_STROKE = 1.75;
 const quickLinkCardClass =
   "group flex aspect-square w-[calc((100%-1.5rem)/3)] max-w-[7.25rem] shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-2.5 py-3.5 text-center no-underline transition-[border-color,background-color,transform] duration-200 hover:border-secondary/35 hover:bg-tab-hover active:scale-[0.98] sm:w-[calc((100%-2.25rem)/4)] sm:max-w-[8rem] md:w-[calc((100%-3rem)/5)] lg:max-w-none lg:w-[calc((100%-5.25rem)/8)]";
 
-const quickLinkIconClass = "shrink-0 text-danger dark:text-[#e8957a]";
+const quickLinkIconClass = "shrink-0 text-danger dark:text-danger";
 
 function QuickLinkCard({
   label,

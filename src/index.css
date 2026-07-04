@@ -5,8 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Oxanium", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Oxanium", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  --font-ne: "Mukta", ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -35,65 +36,82 @@
   --color-danger: var(--color-danger);
   --color-surface-inset: color-mix(in srgb, var(--foreground) 3%, var(--card));
   --color-surface-muted: color-mix(in srgb, var(--foreground) 2.5%, var(--card));
-  --color-surface-hover: color-mix(in srgb, var(--secondary) 7%, var(--card));
-  --color-surface-today: color-mix(in srgb, var(--primary) 18%, var(--card));
-  --color-surface-today-hover: color-mix(in srgb, var(--primary) 26%, var(--card));
+  --color-surface-hover: color-mix(in srgb, var(--brand-saffron) 7%, var(--card));
+  --color-surface-today: color-mix(in srgb, var(--brand-vermilion) 14%, var(--card));
+  --color-surface-today-hover: color-mix(in srgb, var(--brand-vermilion) 22%, var(--card));
   --color-surface-tint-danger: color-mix(in srgb, var(--color-danger) 7%, var(--card));
-  --color-surface-tint-teal: color-mix(in srgb, var(--brand-teal) 9%, var(--card));
+  --color-surface-tint-teal: color-mix(in srgb, var(--brand-green) 9%, var(--card));
   --color-chip-public: color-mix(in srgb, var(--color-danger) 12%, var(--card));
-  --color-chip-festival: color-mix(in srgb, var(--brand-teal) 14%, var(--card));
-  --color-tab-active: color-mix(in srgb, var(--secondary) 12%, var(--card));
-  --color-tab-hover: color-mix(in srgb, var(--secondary) 6%, var(--card));
+  --color-chip-festival: color-mix(in srgb, var(--brand-green) 14%, var(--card));
+  --color-tab-active: color-mix(in srgb, var(--brand-saffron) 12%, var(--card));
+  --color-tab-hover: color-mix(in srgb, var(--brand-saffron) 6%, var(--card));
   --color-warning-surface: color-mix(in srgb, var(--color-warning) 10%, var(--card));
   --color-error-surface: color-mix(in srgb, var(--color-danger) 10%, var(--card));
-  --color-gochar-chip: color-mix(in srgb, #e8c4a8 28%, var(--card));
-  --color-gochar-chip-dark: color-mix(in srgb, #c4956a 18%, var(--muted));
-  --color-fest-today: color-mix(in srgb, var(--brand-teal) 8%, transparent);
+  --color-gochar-chip: color-mix(in srgb, var(--brand-gold) 28%, var(--card));
+  --color-gochar-chip-dark: color-mix(in srgb, var(--brand-gold) 18%, var(--muted));
+  --color-fest-today: color-mix(in srgb, var(--brand-vermilion) 8%, transparent);
   --color-hol-tile-public: color-mix(in srgb, var(--color-danger) 11%, var(--card));
-  --color-hol-tile-festival: color-mix(in srgb, var(--brand-teal) 13%, var(--card));
-  --color-tone-best: color-mix(in srgb, var(--brand-teal) 12%, var(--card));
-  --color-tone-good: color-mix(in srgb, var(--brand-teal) 8%, var(--card));
+  --color-hol-tile-festival: color-mix(in srgb, var(--brand-green) 13%, var(--card));
+  --color-tone-best: color-mix(in srgb, var(--brand-green) 12%, var(--card));
+  --color-tone-good: color-mix(in srgb, var(--brand-green) 8%, var(--card));
   --color-tone-neutral: color-mix(in srgb, var(--foreground) 4%, var(--card));
   --color-tone-bad: color-mix(in srgb, var(--color-danger) 6%, var(--card));
   --color-tone-worst: color-mix(in srgb, var(--color-danger) 10%, var(--card));
-  --color-slot-good: color-mix(in srgb, var(--brand-teal) 10%, var(--card));
+  --color-slot-good: color-mix(in srgb, var(--brand-green) 10%, var(--card));
   --color-slot-bad: color-mix(in srgb, var(--color-danger) 8%, var(--card));
   --color-slot-neutral: color-mix(in srgb, var(--foreground) 4%, var(--card));
-  --color-badge-good: color-mix(in srgb, var(--brand-teal) 16%, var(--card));
+  --color-badge-good: color-mix(in srgb, var(--brand-green) 16%, var(--card));
   --color-badge-bad: color-mix(in srgb, var(--color-danger) 12%, var(--card));
   --color-badge-neutral: color-mix(in srgb, var(--foreground) 8%, var(--card));
-  --color-pushkara-hit: color-mix(in srgb, var(--brand-teal) 10%, var(--card));
+  --color-pushkara-hit: color-mix(in srgb, var(--brand-green) 10%, var(--card));
+  --color-panchang: var(--brand-green);
   --color-overlay: color-mix(in srgb, var(--foreground) 35%, transparent);
   --color-success: var(--color-success);
   --shadow-ring-soft: 0 0 0 1px var(--pn-ring-soft);
 }
 
 :root {
-  --brand-yellow: #ffd70a;
-  --brand-yellow-pressed: #e6c109;
-  --brand-teal: #00696f;
-  --brand-teal-pressed: #00565b;
-  --brand-teal-deep: #003d40;
+  /* Vedic Patro palette */
+  --brand-saffron: #d97706;
+  --brand-saffron-bright: #e67e22;
+  --brand-saffron-pressed: #b45309;
+  --brand-vermilion: #c62828;
+  --brand-vermilion-pressed: #9e1f1f;
+  --brand-gold: #d4a017;
+  --brand-gold-pressed: #b8860b;
+  --brand-green: #2e7d32;
+  --brand-green-pressed: #1b5e20;
+  --brand-blue: #0b565a;
+  --brand-blue-pressed: #084548;
+  --off-white: #f8f6f2;
 
-  --parchment: #e9e0c9;
-  --parchment-card: #f1ead8;
-  --parchment-border: #dccaa3;
-  --ink: #000000;
-  --ink-muted: #503f30;
-  --silver: #d1d1d1;
-  --slate-input: #5e5e5e;
+  /* Legacy aliases used across components */
+  --brand-yellow: var(--brand-gold);
+  --brand-yellow-pressed: var(--brand-gold-pressed);
+  --brand-teal: var(--brand-green);
+  --brand-teal-pressed: var(--brand-green-pressed);
+  --brand-teal-deep: var(--brand-blue-pressed);
 
-  --midnight: #18191a;
-  --midnight-card: #1d2123;
-  --midnight-popover: #0c1217;
-  --foam: #f5f5f1;
+  --parchment: var(--off-white);
+  --parchment-card: #ffffff;
+  --parchment-border: color-mix(in srgb, var(--brand-gold) 32%, var(--off-white));
+  --ink: #1a1410;
+  --ink-muted: #5c4a3a;
+  --silver: color-mix(in srgb, var(--brand-gold) 22%, #d8d4cc);
+  --slate-input: #4a4540;
 
-  --color-success: #059862;
-  --color-warning: #b45309;
-  --color-danger: #E0795B;
-  --color-info: var(--brand-teal);
+  --midnight: #082628;
+  --midnight-card: #0b3d40;
+  --midnight-popover: #061f21;
+  --foam: var(--off-white);
 
-  --font-sans: "Oxanium", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --color-success: var(--brand-green);
+  --color-warning: var(--brand-saffron-bright);
+  --color-danger: var(--brand-vermilion);
+  --color-info: var(--brand-blue);
+
+  --font-sans: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  --font-ne: "Mukta", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
 
   --fs-xs: 12px;
@@ -125,33 +143,33 @@
   --motion-spring-interactive: cubic-bezier(0.34, 1.3, 0.64, 1);
   --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
 
-  --background: var(--parchment);
+  --background: var(--off-white);
   --foreground: var(--ink);
   --card: var(--parchment-card);
   --card-foreground: var(--ink);
   --popover: var(--parchment-card);
   --popover-foreground: var(--ink);
-  --primary: var(--brand-yellow);
-  --primary-foreground: var(--ink);
-  --secondary: var(--brand-teal);
+  --primary: var(--brand-saffron);
+  --primary-foreground: #ffffff;
+  --secondary: var(--brand-blue);
   --secondary-foreground: #ffffff;
-  --muted: #b8d2d3;
-  --muted-foreground: var(--ink);
-  --accent: #007a80;
-  --accent-foreground: #ffffff;
+  --muted: color-mix(in srgb, var(--brand-gold) 18%, var(--off-white));
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--brand-gold);
+  --accent-foreground: var(--ink);
   --destructive: var(--color-danger);
   --destructive-foreground: #ffffff;
   --border: var(--silver);
   --input: var(--slate-input);
-  --ring: var(--brand-teal);
-  --sidebar-accent: var(--brand-yellow);
+  --ring: var(--brand-saffron);
+  --sidebar-accent: var(--brand-saffron);
 
-  --pn-font: "Oxanium", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
-  --pn-num: "Fira Code", "Noto Sans Devanagari", ui-monospace, monospace;
-  --pn-ring-soft: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --pn-font: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  --pn-num: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+  --pn-ring-soft: color-mix(in srgb, var(--brand-gold) 28%, transparent);
 
-  --chart-4: #6c625a;
-  --chart-5: #cf8400;
+  --chart-4: var(--brand-blue);
+  --chart-5: var(--brand-saffron-bright);
 }
 
 .dark {
@@ -161,23 +179,26 @@
   --card-foreground: var(--foam);
   --popover: var(--midnight-popover);
   --popover-foreground: var(--foam);
-  --primary: var(--brand-teal);
+  --primary: var(--brand-saffron-bright);
   --primary-foreground: #ffffff;
-  --secondary: var(--brand-yellow);
-  --secondary-foreground: var(--ink);
-  --muted: #6b4c2e;
-  --muted-foreground: #c8c8c4;
-  --accent: #25556b;
-  --accent-foreground: #e8dfd8;
-  --destructive: #803139;
+  --secondary: var(--brand-blue);
+  --secondary-foreground: #ffffff;
+  --muted: color-mix(in srgb, var(--brand-blue) 45%, var(--midnight));
+  --muted-foreground: color-mix(in srgb, var(--foam) 72%, transparent);
+  --accent: var(--brand-gold);
+  --accent-foreground: var(--ink);
+  --destructive: var(--brand-vermilion);
   --destructive-foreground: #ffffff;
-  --border: #04253e;
-  --input: #303030;
-  --ring: var(--brand-yellow);
-  --sidebar-accent: var(--brand-yellow);
+  --border: color-mix(in srgb, var(--brand-blue) 55%, var(--midnight-card));
+  --input: color-mix(in srgb, var(--foam) 18%, var(--midnight-card));
+  --ring: var(--brand-gold);
+  --sidebar-accent: var(--brand-saffron-bright);
 
-  --chart-4: #9c4e1f;
-  --chart-5: #1c5d80;
+  --parchment-border: color-mix(in srgb, var(--brand-gold) 24%, var(--midnight-card));
+  --silver: color-mix(in srgb, var(--brand-gold) 18%, var(--midnight-card));
+
+  --chart-4: var(--brand-gold);
+  --chart-5: var(--brand-saffron-bright);
 
   --shadow-xs: 0px 2px 3px 0px hsl(0 0% 10.196% / 0.09);
   --shadow-sm: 0px 2px 3px 0px hsl(0 0% 10.196% / 0.18),
@@ -192,6 +213,19 @@
   * {
     border-color: var(--border);
   }
+
+  html[lang="ne"] {
+    --pn-font: var(--font-ne);
+    --font-sans: var(--font-ne);
+    --font-heading: var(--font-ne);
+  }
+
+  html[lang="en"] {
+    --pn-font: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+    --font-heading: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+  }
+
   body {
     background: var(--background);
     color: var(--foreground);
@@ -223,17 +257,17 @@
 /* ── Panchanga Chakra (cosmic wheel) ─────────────────────── */
 .pn-wheel {
   --pn-font: var(--font-sans);
-  --pn-num: "Fira Code", "Noto Sans Devanagari", ui-monospace, monospace;
+  --pn-num: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
   --pn-ring-soft: color-mix(in srgb, #8fbfc1 18%, transparent);
   --w-sky-0: #112c2a;
   --w-sky-1: #0a1a1b;
   --w-sky-2: #050c0d;
   --w-surface: #0b1416;
   --w-surface-border: color-mix(in srgb, #8fbfc1 28%, transparent);
-  --w-band: color-mix(in srgb, var(--brand-teal, #2d8a86) 30%, #0a1618);
-  --w-band-alt: color-mix(in srgb, var(--brand-teal, #2d8a86) 44%, #0b181a);
-  --w-rashi: color-mix(in srgb, var(--brand-teal, #2d8a86) 22%, #091315);
-  --w-rashi-alt: color-mix(in srgb, var(--brand-teal, #2d8a86) 34%, #0a1518);
+  --w-band: color-mix(in srgb, var(--brand-green) 30%, #0a1618);
+  --w-band-alt: color-mix(in srgb, var(--brand-green) 44%, #0b181a);
+  --w-rashi: color-mix(in srgb, var(--brand-green) 22%, #091315);
+  --w-rashi-alt: color-mix(in srgb, var(--brand-green) 34%, #0a1518);
   --w-pada: #0d2024;
   --w-pada-alt: #112a2f;
   --w-sep: color-mix(in srgb, #8fbfc1 42%, transparent);
@@ -242,8 +276,8 @@
   --w-ink: #eaf3f1;
   --w-ink-dim: #a7c4c3;
   --w-ink-faint: #84a3a2;
-  --w-accent: var(--color-danger, #E0795B);
-  --w-accent-soft: color-mix(in srgb, var(--color-danger, #E0795B) 22%, transparent);
+  --w-accent: var(--brand-vermilion);
+  --w-accent-soft: color-mix(in srgb, var(--brand-vermilion) 22%, transparent);
   color: var(--w-ink);
 }
 
@@ -288,14 +322,14 @@
   --hora-ink: var(--foreground);
   --hora-ink-dim: color-mix(in srgb, var(--muted-foreground) 88%, transparent);
   --hora-ink-faint: color-mix(in srgb, var(--muted-foreground) 72%, transparent);
-  --hora-yellow: var(--brand-teal);
+  --hora-yellow: var(--brand-gold);
 }
 .dark .hora-theme,
 .dark .hora-theme {
-  --hora-ink: #eef1f7;
-  --hora-ink-dim: rgba(236, 240, 247, 0.62);
-  --hora-ink-faint: rgba(236, 240, 247, 0.4);
-  --hora-yellow: var(--brand-yellow, #ffd70a);
+  --hora-ink: var(--foam);
+  --hora-ink-dim: color-mix(in srgb, var(--foam) 62%, transparent);
+  --hora-ink-faint: color-mix(in srgb, var(--foam) 40%, transparent);
+  --hora-yellow: var(--brand-gold);
 }
 
 @keyframes hora-drift {
@@ -311,28 +345,28 @@
   --tm-ink: var(--foreground);
   --tm-ink-dim: color-mix(in srgb, var(--muted-foreground) 90%, transparent);
   --tm-ink-faint: color-mix(in srgb, var(--muted-foreground) 75%, transparent);
-  --tm-ring: color-mix(in srgb, var(--brand-teal) 45%, transparent);
-  --tm-ring-soft: color-mix(in srgb, var(--brand-teal) 14%, transparent);
-  --tm-teal: var(--brand-teal);
-  --tm-amber: var(--color-warning);
-  --tm-gold: var(--brand-teal);
+  --tm-ring: color-mix(in srgb, var(--brand-green) 45%, transparent);
+  --tm-ring-soft: color-mix(in srgb, var(--brand-green) 14%, transparent);
+  --tm-teal: var(--brand-green);
+  --tm-amber: var(--brand-saffron-bright);
+  --tm-gold: var(--brand-gold);
   --tm-card: var(--card);
   --tm-border: var(--border);
 }
 .dark .tm-page {
-  --tm-sky-0: #112c2a;
-  --tm-sky-1: #0a1a1b;
-  --tm-sky-2: #050c0d;
-  --tm-ink: #eaf3f1;
-  --tm-ink-dim: color-mix(in srgb, #a7c4c3 78%, transparent);
-  --tm-ink-faint: color-mix(in srgb, #84a3a2 60%, transparent);
-  --tm-ring: color-mix(in srgb, #6fd4d2 50%, transparent);
-  --tm-ring-soft: color-mix(in srgb, #6fd4d2 16%, transparent);
-  --tm-teal: #5fd0cf;
-  --tm-amber: #e0795b;
-  --tm-gold: #ffd70a;
-  --tm-card: color-mix(in srgb, #0d1c1e 86%, transparent);
-  --tm-border: color-mix(in srgb, #6fd4d2 18%, transparent);
+  --tm-sky-0: #0b3d40;
+  --tm-sky-1: #082628;
+  --tm-sky-2: #061f21;
+  --tm-ink: var(--foam);
+  --tm-ink-dim: color-mix(in srgb, var(--foam) 78%, transparent);
+  --tm-ink-faint: color-mix(in srgb, var(--foam) 60%, transparent);
+  --tm-ring: color-mix(in srgb, var(--brand-green) 50%, transparent);
+  --tm-ring-soft: color-mix(in srgb, var(--brand-green) 16%, transparent);
+  --tm-teal: var(--brand-green);
+  --tm-amber: var(--brand-saffron-bright);
+  --tm-gold: var(--brand-gold);
+  --tm-card: color-mix(in srgb, var(--midnight-card) 86%, transparent);
+  --tm-border: color-mix(in srgb, var(--brand-gold) 18%, transparent);
   background:
     radial-gradient(1100px 760px at 72% 12%, var(--tm-sky-0) 0%, var(--tm-sky-1) 46%, var(--tm-sky-2) 100%),
     var(--tm-sky-2);
@@ -383,9 +417,9 @@
 
 /* ── Avakahada Chakra wheel ───────────────────────────────── */
 .av-wheel {
-  --av-gana-dev: color-mix(in srgb, #059862 38%, #0b181a);
-  --av-gana-nar: color-mix(in srgb, #0ea5e9 32%, #0b181a);
-  --av-gana-rak: color-mix(in srgb, #e11d48 28%, #0b181a);
+  --av-gana-dev: color-mix(in srgb, var(--brand-green) 38%, #0b181a);
+  --av-gana-nar: color-mix(in srgb, var(--brand-blue) 32%, #0b181a);
+  --av-gana-rak: color-mix(in srgb, var(--brand-vermilion) 28%, #0b181a);
   --av-hub-center: #0f2224;
   --av-hub-edge: #091315;
 }

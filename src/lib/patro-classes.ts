@@ -104,7 +104,7 @@ export const patroSkel =
   "block h-7 w-4/5 mx-auto rounded animate-pulse bg-foreground/5";
 
 export const patroAyanaNorth =
-  "mb-0.5 inline-block text-xs font-extrabold leading-none text-accent dark:text-[#7fd6db]";
+  "mb-0.5 inline-block text-xs font-extrabold leading-none text-accent dark:text-accent";
 
 export const patroAyanaSouth =
   "mb-0.5 inline-block text-xs font-extrabold leading-none text-danger opacity-95";
@@ -113,7 +113,7 @@ export const patroDataTableWrap =
   "overflow-x-auto rounded-[14px] border border-border bg-card";
 
 export const patroSunRise =
-  "block text-[13px] font-semibold text-accent dark:text-[#7fd6db]";
+  "block text-[13px] font-semibold text-accent dark:text-accent";
 
 export const patroSunSet =
   "block text-[13px] font-semibold text-danger/90";
