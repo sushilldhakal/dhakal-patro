@@ -242,10 +242,12 @@ export function DayTimeline({
   let nowG: number | null = null;
   let nowLabel = pick("अहिले", "Now");
   const anchorAd = p.panchanga_date_ad ?? p.date_ad ?? dateAd;
-  const ephemerisNeedle = p.mode === "ephemeris";
   const chartMins = minutesOnVedicChart(p.query_instant_local, anchorAd ?? "", needleClock);
 
-  if (showNeedle && ephemerisNeedle && chartMins != null) {
+  // The needle follows the chosen clock whatever the day's data mode is: the
+  // chart is now always the civil date's udaya (sunrise-to-sunrise) day so it
+  // stays aligned with the wheel, and the picked time just overlays a marker.
+  if (showNeedle && chartMins != null) {
     nowG = (chartMins - data.sunriseMin) / 24;
     if (nowG < 0) nowG += 60;
     nowLabel = needleClock
@@ -351,7 +353,6 @@ export function DayTimeline({
                   const x2 = gx(s.toG);
                   const w = x2 - x;
                   const isActiveLagna =
-                    ephemerisNeedle &&
                     tr.cls === "lagna" &&
                     nowG != null &&
                     nowG >= s.fromG &&

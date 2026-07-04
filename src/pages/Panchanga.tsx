@@ -126,8 +126,6 @@ export function Panchanga() {
 
   const { data, isError } = instantQuery;
   const ephemeris = isEphemerisPanchanga(data);
-  const timelineData = instantQuery.data;
-  const showTimelineSkeleton = instantQuery.isLoading && !timelineData;
 
   const wheelData = udayaQuery.data;
   const showWheelSkeleton = udayaQuery.isLoading && !wheelData;
@@ -207,11 +205,16 @@ export function Panchanga() {
 
           {ephemeris && data && <EphemerisModeBanner p={data} clock={clock} />}
 
-          {(timelineData || showTimelineSkeleton) && (
+          {/* Timeline shares the wheel's udaya (sunrise-to-sunrise) day for the
+              viewed civil date so the two never disagree. Feeding it the
+              ephemeris at-time day instead made a near-sunrise time (e.g. the
+              default clock) roll to the previous vedic day, desyncing it from
+              the wheel. The chosen time is overlaid as the needle. */}
+          {(wheelData || showWheelSkeleton) && (
             <DayTimeline
-              p={timelineData}
-              loading={showTimelineSkeleton}
-              dateAd={chartAd}
+              p={wheelData}
+              loading={showWheelSkeleton}
+              dateAd={adDateStr}
               isToday={isToday}
               timezone={effectiveTimezone}
               needleClock={clock}
