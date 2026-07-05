@@ -61,3 +61,41 @@ export const horaHubNum =
 
 export const horaHubRuler =
   "text-2xl font-bold [font-family:var(--pn-font)]";
+
+/** Fixed overlay above the ring — day / hora / lord (stable width, no flicker). */
+export const horaStatusBar =
+  "pointer-events-none absolute top-2 left-1/2 z-10 grid w-[min(300px,calc(100%-3rem))] -translate-x-1/2 grid-cols-3 gap-1 rounded-xl border border-border/80 bg-card/92 px-3 py-2.5 text-center shadow-sm backdrop-blur-md dark:border-white/12 dark:bg-[rgba(13,16,22,0.88)]";
+
+export const horaStatusLabel =
+  "block text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground dark:text-[var(--hora-ink-faint)]";
+
+export const horaStatusVal =
+  "mt-0.5 block truncate text-[13px] font-bold leading-tight text-foreground dark:text-[var(--hora-ink)]";
+
+/** Fullscreen shell — portaled to document.body. */
+export const horaExpandedShell =
+  "fixed inset-0 z-[120] max-w-none overflow-hidden rounded-none border-0 shadow-none";
+
+/** Vertical play / scrub rail on the right edge of the stage. */
+export const horaControlRail = cn(
+  "absolute right-2 top-1/2 z-[22] flex w-11 -translate-y-1/2 flex-col items-center gap-2",
+  "h-[min(72vh,calc(100%-4rem))] max-h-[calc(100dvh-6rem)]",
+  "rounded-full border border-border bg-card/95 px-1.5 py-3 shadow-md backdrop-blur-md",
+  "dark:border-white/10 dark:bg-[rgba(13,16,22,0.88)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)]",
+  "max-sm:right-1.5 max-sm:w-10 max-sm:px-1 max-sm:py-2",
+);
+
+export const horaControlBtn = cn(
+  "grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full border border-border bg-background text-foreground transition-colors",
+  "hover:border-secondary/40 hover:bg-muted dark:border-white/15 dark:hover:border-[var(--hora-yellow)]/50",
+  "max-sm:h-8 max-sm:w-8",
+);
+
+export const horaPlayBtn = cn(
+  horaControlBtn,
+  "border-0 bg-primary text-primary-foreground hover:bg-primary/90 hover:brightness-105",
+  "dark:bg-[var(--hora-yellow)] dark:text-[#1a1408] dark:hover:bg-[#ffe24a]",
+);
+
+export const horaVerticalScrub =
+  "hora-vertical-scrub min-h-0 w-2 flex-1 cursor-pointer touch-none select-none [-webkit-tap-highlight-color:transparent] max-sm:w-1.5";

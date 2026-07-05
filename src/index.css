@@ -431,6 +431,62 @@
   100% { transform: translate(24px, 18px) scale(1.06); }
 }
 
+.hora-theme .hora-vertical-scrub {
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    to top,
+    var(--brand-gold) 0%,
+    var(--brand-gold) var(--fill, 50%),
+    color-mix(in srgb, var(--foreground) 14%, transparent) var(--fill, 50%)
+  );
+  outline: none;
+}
+.dark .hora-theme .hora-vertical-scrub {
+  background: linear-gradient(
+    to top,
+    var(--hora-yellow) 0%,
+    var(--hora-yellow) var(--fill, 50%),
+    color-mix(in srgb, var(--foam) 18%, transparent) var(--fill, 50%)
+  );
+}
+.hora-theme .hora-vertical-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--brand-gold);
+  border: 2px solid var(--card);
+  cursor: grab;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--brand-gold) 55%, transparent);
+}
+.dark .hora-theme .hora-vertical-scrub::-webkit-slider-thumb {
+  background: var(--hora-yellow);
+  border-color: #1a1408;
+}
+.hora-theme .hora-vertical-scrub:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.06);
+}
+.hora-theme .hora-vertical-scrub::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--brand-gold);
+  border: 2px solid var(--card);
+  cursor: grab;
+}
+.dark .hora-theme .hora-vertical-scrub::-moz-range-thumb {
+  background: var(--hora-yellow);
+  border-color: #1a1408;
+}
+
 /* ── Tithi mechanics (calendar embed) ────────────────────── */
 .tm-page {
   --tm-sky-0: var(--parchment-card);
