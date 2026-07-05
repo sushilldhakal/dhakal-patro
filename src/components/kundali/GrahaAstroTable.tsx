@@ -53,7 +53,7 @@ function signedFixed(value: number | undefined, digits: (v: string) => string): 
 /**
  * Astronomical graha table (D1): longitude with nakshatra/lord, raw sidereal
  * longitude, shara (ecliptic latitude), right ascension, kranti (declination)
- * and daily speed — with retrograde (R) and combust (C) flags. The jyotish
+ * and daily speed — retrograde/combust badges inline on the graha column.
  * columns come straight from the API's D1 varga rows.
  */
 export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAstroTableProps) {
@@ -86,14 +86,8 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
     <Table>
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
-          <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>
-            {pick("ग्रह", "Graha")}
-          </TableHead>
-          <TableHead className={cn(th, "text-center")} title={pick("वक्री", "Retrograde")}>
-            R
-          </TableHead>
-          <TableHead className={cn(th, "text-center")} title={pick("अस्त (सूर्य सामीप्य)", "Combust")}>
-            C
+          <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5 normal-case")}>
+            {pick("ग्रह / वक्री / अस्त", "Graha / R / C")}
           </TableHead>
           <TableHead className={th}>{pick("स्पष्ट", "Longitude")}</TableHead>
           <TableHead className={th}>{pick("नक्षत्र / स्वामी", "Nakshatra / Swami")}</TableHead>
@@ -119,27 +113,31 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
                   td,
                   "sticky left-0 z-10 bg-card pl-3.5 font-semibold text-foreground",
                   zebra && "bg-[color-mix(in_srgb,var(--muted)_20%,var(--card))]",
+                  row.retrograde &&
+                    "bg-[color-mix(in_srgb,var(--secondary)_6%,var(--card))] dark:bg-[color-mix(in_srgb,var(--secondary)_10%,var(--card))]",
                 )}
               >
-                {name}
-              </TableCell>
-              <TableCell className={cn(td, "text-center")}>
-                {row.retrograde ? (
-                  <span title={pick("वक्री", "Retrograde")} className="inline-flex text-secondary">
-                    <RotateCcw className="size-3.5" aria-label={pick("वक्री", "Retrograde")} />
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground/40">—</span>
-                )}
-              </TableCell>
-              <TableCell className={cn(td, "text-center")}>
-                {row.combust ? (
-                  <span title={pick("अस्त", "Combust")} className="inline-flex text-destructive">
-                    <Flame className="size-3.5" aria-label={pick("अस्त", "Combust")} />
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground/40">—</span>
-                )}
+                <span className="inline-flex flex-wrap items-center gap-1.5">
+                  {name}
+                  {row.retrograde && (
+                    <span
+                      className="inline-flex items-center gap-0.5 text-[9px] font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
+                      title={pick("वक्री", "Retrograde")}
+                    >
+                      <RotateCcw className="size-2.5" aria-hidden />
+                      {pick("वक्री", "R")}
+                    </span>
+                  )}
+                  {row.combust && (
+                    <span
+                      className="inline-flex items-center gap-0.5 text-[9px] font-bold normal-case text-destructive bg-destructive/10 px-1 py-0.5 rounded-full"
+                      title={pick("अस्त (सूर्य सामीप्य)", "Combust")}
+                    >
+                      <Flame className="size-2.5" aria-hidden />
+                      {pick("अस्त", "C")}
+                    </span>
+                  )}
+                </span>
               </TableCell>
               <TableCell className={cn(td, "font-mono tabular-nums text-muted-foreground")}>
                 <span className="text-foreground font-semibold">

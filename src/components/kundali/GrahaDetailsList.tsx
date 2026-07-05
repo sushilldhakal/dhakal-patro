@@ -126,7 +126,7 @@ export function GrahaDetailsList({
                   {name}
                   {row.retrograde && (
                     <span
-                      className="inline-flex items-center gap-0.5 text-[9px] font-bold text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
+                      className="inline-flex items-center gap-0.5 text-[9px] font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
                       title={pick("वक्री", "Retrograde")}
                     >
                       <RotateCcw className="size-2.5" aria-hidden />
