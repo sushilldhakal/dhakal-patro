@@ -23,6 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "../lib/utils";
+import {
+  patroStickyHeadCell,
+  patroStickyHeadCorner,
+  patroStickyHeadRow,
+} from "@/lib/patro-classes";
 import { findNakshatraIcon } from "@/lib/nakshatra-icons";
 import {
   AVAKAHADA,
@@ -249,8 +254,8 @@ export function AvakahadaChakra() {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const stickyHead = "sticky top-0 left-0 z-30 bg-muted/60";
-  const stickyHeadCell = "sticky top-0 z-10 bg-muted/60";
+  const stickyHead = patroStickyHeadCorner;
+  const stickyHeadCell = patroStickyHeadCell;
   const stickyCell = "sticky left-0 z-10 bg-background";
   const rows = table.getRowModel().rows;
 
@@ -280,7 +285,7 @@ export function AvakahadaChakra() {
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id} className="sticky top-0 z-10 bg-muted/60 hover:bg-muted/60">
+              <TableRow key={hg.id} className={cn(patroStickyHeadRow, "bg-muted/60 hover:bg-muted/60")}>
                 {hg.headers.map((h, i) => {
                   const canSort = h.column.getCanSort();
                   const sorted = h.column.getIsSorted();
@@ -290,7 +295,7 @@ export function AvakahadaChakra() {
                       onClick={canSort ? h.column.getToggleSortingHandler() : undefined}
                       className={cn(
                         "whitespace-nowrap font-semibold text-muted-foreground",
-                        i === 0 ? stickyHead : stickyHeadCell,
+                        i === 0 ? cn(stickyHead, "bg-muted/60") : cn(stickyHeadCell, "bg-muted/60"),
                         canSort && "cursor-pointer select-none hover:text-foreground",
                       )}
                     >

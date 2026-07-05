@@ -12,10 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PatroTableShell } from "./PatroTableShell";
+import {
+  patroStickyHeadCell,
+  patroStickyHeadCorner,
+  patroStickyHeadRow,
+} from "@/lib/patro-classes";
 
 const th = "whitespace-nowrap px-2 py-2.5 text-sm font-semibold text-muted-foreground";
-const stickyHeadCorner = "sticky top-0 left-0 z-30 bg-muted pl-3 text-left";
-const stickyHeadCell = "sticky top-0 z-10 bg-muted";
 const td = "whitespace-nowrap px-2 py-2 text-center font-mono text-sm tabular-nums";
 
 type Props = {
@@ -32,12 +35,12 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
   const table = (
       <Table>
         <TableHeader>
-          <TableRow className="sticky top-0 z-10 bg-muted hover:bg-muted">
-            <TableHead className={cn(th, stickyHeadCorner)}>{pick("गते", "Date")}</TableHead>
-            <TableHead className={cn(th, stickyHeadCell, "text-left")}>{pick("बा.", "Day")}</TableHead>
-            <TableHead className={cn(th, stickyHeadCell, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
+          <TableRow className={patroStickyHeadRow}>
+            <TableHead className={cn(th, patroStickyHeadCorner, "pl-3 text-left")}>{pick("गते", "Date")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "text-left")}>{pick("बा.", "Day")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
             {RASHI_COLUMNS_NE.map((rne, i) => (
-              <TableHead key={rne} className={cn(th, stickyHeadCell, "min-w-[3.75rem] text-center")}>
+              <TableHead key={rne} className={cn(th, patroStickyHeadCell, "min-w-[3.75rem] text-center")}>
                 <span className="block text-secondary">{rashiSymFromNumber(i + 1)}</span>
                 <span>{pick(rne, RASHI_COLUMNS_EN[i])}</span>
               </TableHead>

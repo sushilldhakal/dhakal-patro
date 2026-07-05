@@ -16,12 +16,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PatroTableShell } from "./PatroTableShell";
+import {
+  patroStickyHeadCell,
+  patroStickyHeadCorner,
+  patroStickyHeadRow,
+  patroStickySubHeadCell,
+  patroStickySubHeadCorner,
+} from "@/lib/patro-classes";
 
 const th = "whitespace-nowrap px-2 py-2.5 text-sm font-semibold text-muted-foreground";
-const stickyHeadCorner = "sticky top-0 left-0 z-30 bg-muted pl-3 text-left";
-const stickyHeadCell = "sticky top-0 z-10 bg-muted";
-const stickySubCorner = "sticky top-10 left-0 z-30 bg-muted/60";
-const stickySubCell = "sticky top-10 z-10 bg-muted/60";
 const td = "whitespace-nowrap px-2 py-2 text-sm";
 
 const PLANET_EN: Record<string, string> = {
@@ -48,24 +51,24 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
   const table = (
       <Table>
         <TableHeader>
-          <TableRow className="sticky top-0 z-10 bg-muted hover:bg-muted">
-            <TableHead className={cn(th, stickyHeadCorner)}>{pick("गते", "Date")}</TableHead>
-            <TableHead className={cn(th, stickyHeadCell, "text-left")}>{pick("बा.", "Day")}</TableHead>
+          <TableRow className={patroStickyHeadRow}>
+            <TableHead className={cn(th, patroStickyHeadCorner, "pl-3 text-left")}>{pick("गते", "Date")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "text-left")}>{pick("बा.", "Day")}</TableHead>
             {PATRO_PLANET_KEYS.map((key) => (
-              <TableHead key={key} className={cn(th, stickyHeadCell, "min-w-[5.5rem] text-center")}>
+              <TableHead key={key} className={cn(th, patroStickyHeadCell, "min-w-[5.5rem] text-center")}>
                 {pick(PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
               </TableHead>
             ))}
-            <TableHead className={cn(th, stickyHeadCell, "min-w-[4.5rem] text-center")}>{pick("बेलान्तर", "Belaantar")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "min-w-[4.5rem] text-center")}>{pick("बेलान्तर", "Belaantar")}</TableHead>
           </TableRow>
           <TableRow className="bg-muted/60 hover:bg-muted/60">
-            <TableHead colSpan={2} className={stickySubCorner} />
+            <TableHead colSpan={2} className={patroStickySubHeadCorner} />
             {PATRO_PLANET_KEYS.map((key) => (
-              <TableHead key={`sub-${key}`} className={cn(th, stickySubCell, "text-center font-normal")}>
+              <TableHead key={`sub-${key}`} className={cn(th, patroStickySubHeadCell, "text-center font-normal")}>
                 {pick("रा|अं|क|वि", "Ra|Deg|Ka|Vi")}
               </TableHead>
             ))}
-            <TableHead className={cn(th, stickySubCell, "text-center font-normal")}>{pick("समय सुधार", "Time corr.")}</TableHead>
+            <TableHead className={cn(th, patroStickySubHeadCell, "text-center font-normal")}>{pick("समय सुधार", "Time corr.")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

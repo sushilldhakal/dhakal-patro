@@ -48,6 +48,10 @@ import {
   searchToLocation,
   type ChandraKrantiSearch,
 } from "@/lib/url-state";
+import {
+  patroStickyHeadCell,
+  patroStickyHeadRow,
+} from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 import {
@@ -273,9 +277,7 @@ const KARTAVYA: Record<Phase, { ne: string; en: string }> = {
 };
 
 const th = "whitespace-nowrap text-sm font-semibold text-muted-foreground";
-const stickyHeadCell = "sticky top-0 z-10 bg-muted";
 const subLine = "text-xs leading-tight text-muted-foreground";
-const pakshaSegLabel = "text-sm font-bold text-teal-900 dark:text-amber-300";
 
 /** ग्रह उदयास्त सङ्केत — heliacal rising/setting + motion abbreviations. */
 const UDAYAST_LEGEND: { code: string; full: string; fullEn: string; meaning: string; meaningEn: string }[] = [
@@ -689,20 +691,20 @@ export function ChandraKranti() {
         <div className="w-full overflow-x-auto rounded-xl border border-border">
           <Table className="w-full min-w-max text-sm">
             <TableHeader>
-              <TableRow className="sticky top-0 z-10 bg-muted hover:bg-muted">
-                <TableHead className={cn(th, stickyHeadCell, "w-9 px-1")} aria-label={pick("विस्तार", "Expand")} />
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("गते · ता.", "Date")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("बा.", "Day")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("तिथि", "Tithi")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("नक्षत्र", "Nakshatra")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("योग", "Yoga")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("करण", "Karana")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell, "text-indigo-600 dark:text-indigo-400")}>{pick("सु.अ.", "Set")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("सूर्य राशि", "Sun sign")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("चन्द्र राशि", "Moon sign")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("ग्रहचार / उदयास्त (बजे)", "Transits / rise-set")}</TableHead>
-                <TableHead className={cn(th, stickyHeadCell)}>{pick("पर्व", "Festival")}</TableHead>
+              <TableRow className={patroStickyHeadRow}>
+                <TableHead className={cn(th, patroStickyHeadCell, "w-9 px-1")} aria-label={pick("विस्तार", "Expand")} />
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("गते · ता.", "Date")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("बा.", "Day")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("तिथि", "Tithi")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("नक्षत्र", "Nakshatra")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("योग", "Yoga")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("करण", "Karana")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell, "text-indigo-600 dark:text-indigo-400")}>{pick("सु.अ.", "Set")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("सूर्य राशि", "Sun sign")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("चन्द्र राशि", "Moon sign")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("ग्रहचार / उदयास्त (बजे)", "Transits / rise-set")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("पर्व", "Festival")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -729,7 +731,7 @@ export function ChandraKranti() {
                     <Fragment key={d.date_ad}>
                     {segLabel ? (
                       <TableRow className="bg-muted/70 hover:bg-muted/70">
-                        <TableCell colSpan={COL_SPAN} className={cn("py-2.5", pakshaSegLabel)}>
+                        <TableCell colSpan={COL_SPAN} className="py-2.5 text-sm font-bold text-secondary">
                           {segLabel}
                         </TableCell>
                       </TableRow>
