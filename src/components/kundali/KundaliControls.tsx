@@ -17,8 +17,11 @@ const BS_YEARS = Array.from(
   (_, i) => BS_SUPPORTED_START_YEAR + i
 );
 
-const AD_START_YEAR = 1943;
-const AD_END_YEAR = 2030;
+// Kept fully inside the BS 1700–2200 window every AD year here maps into
+// (BS 1700 starts 1643-04-09; BS 2200 ends 2144-04-15) — so every date this
+// dropdown can produce is one bsToAD/adToBS already computes correctly.
+const AD_START_YEAR = 1644;
+const AD_END_YEAR = 2143;
 const AD_YEARS = Array.from(
   { length: AD_END_YEAR - AD_START_YEAR + 1 },
   (_, i) => AD_START_YEAR + i
