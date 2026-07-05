@@ -243,6 +243,7 @@
       "factors_based": "Based on {{count}} factor",
       "factors_based_plural": "Based on {{count}} factors",
       "idle_hint": "Generate a full personality, career, relationship, health, dasha-timing and yoga reading — each insight weighed for confidence.",
+      "loaded_from_cache": "Loaded from saved report — birth date, time and location unchanged.",
       "error_generic": "Could not generate the report.",
       "meta_lagna": "Lagna",
       "meta_nakshatra": "Nakshatra",

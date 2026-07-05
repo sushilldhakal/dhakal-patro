@@ -7,7 +7,6 @@ import {
   Loader2,
   RefreshCw,
   ScrollText,
-  Sparkles,
 } from "lucide-react";
 import {
   streamKundaliReport,
@@ -267,6 +266,7 @@ export function KundaliReport({
     total: 0,
   });
   const [error, setError] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -279,40 +279,54 @@ export function KundaliReport({
     setSections([]);
     setProgress({ done: 0, total: 0 });
     setError(null);
+    setFromCache(false);
   }, [lang]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const generate = useCallback(() => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setStatus("streaming");
-    setMeta(null);
-    setSections([]);
-    setProgress({ done: 0, total: 0 });
-    setError(null);
+  const generate = useCallback(
+    (force = false) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setStatus("streaming");
+      setMeta(null);
+      setSections([]);
+      setProgress({ done: 0, total: 0 });
+      setError(null);
+      setFromCache(false);
 
-    streamKundaliReport(
-      datetime,
-      location,
-      { ayanamsha, lang },
-      (record) => {
-        if (record.kind === "meta") {
-          setMeta(record);
-        } else if (record.kind === "section") {
-          setSections((prev) => [...prev, record]);
-          setProgress({ done: record.index + 1, total: record.total });
-        } else if (record.kind === "done") {
-          setStatus("done");
-        }
-      },
-      controller.signal
-    ).catch((err: unknown) => {
-      if (controller.signal.aborted) return;
-      setError(err instanceof Error ? err.message : t("kundali.report.error_generic"));
-      setStatus("error");
-    });
-  }, [datetime, location, ayanamsha, lang, t]);
+      streamKundaliReport(
+        datetime,
+        location,
+        { ayanamsha, lang, force },
+        (record) => {
+          if (record.kind === "meta") {
+            setMeta(record);
+          } else if (record.kind === "section") {
+            setSections((prev) => [...prev, record]);
+            setProgress({ done: record.index + 1, total: record.total });
+          } else if (record.kind === "done") {
+            setStatus("done");
+          }
+        },
+        controller.signal
+      )
+        .then(({ fromCache: cached }) => {
+          if (!controller.signal.aborted) setFromCache(cached);
+        })
+        .catch((err: unknown) => {
+          if (controller.signal.aborted) return;
+          setError(err instanceof Error ? err.message : t("kundali.report.error_generic"));
+          setStatus("error");
+        });
+    },
+    [datetime, location, ayanamsha, lang, t]
+  );
+
+  useEffect(() => {
+    if (disabled) return;
+    generate(false);
+  }, [datetime, location, ayanamsha, lang, disabled, generate]);
 
   const streaming = status === "streaming";
 
@@ -333,7 +347,7 @@ export function KundaliReport({
             {(status === "done" || status === "error") && (
               <button
                 type="button"
-                onClick={generate}
+                onClick={() => generate(true)}
                 disabled={disabled}
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
               >
@@ -341,16 +355,11 @@ export function KundaliReport({
                 {t("kundali.report.regenerate")}
               </button>
             )}
-            {status === "idle" && (
-              <button
-                type="button"
-                onClick={generate}
-                disabled={disabled}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90 disabled:opacity-50"
-              >
-                <Sparkles className="h-4 w-4" />
-                {t("kundali.report.generate")}
-              </button>
+            {status === "idle" && !disabled && (
+              <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("kundali.report.streaming_reading")}
+              </span>
             )}
             {streaming && (
               <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
@@ -394,7 +403,13 @@ export function KundaliReport({
           </div>
         )}
 
-        {status === "idle" && (
+        {fromCache && status === "done" && (
+          <p className="text-[11px] font-medium text-muted-foreground">
+            {t("kundali.report.loaded_from_cache")}
+          </p>
+        )}
+
+        {status === "idle" && disabled && (
           <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
             <ScrollText className="h-5 w-5 shrink-0" />
             {t("kundali.report.idle_hint")}

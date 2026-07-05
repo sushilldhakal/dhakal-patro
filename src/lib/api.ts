@@ -1070,14 +1070,15 @@ export type ReportRecord =
 export async function streamKundaliReport(
   datetime: string,
   location: LocationParams | undefined,
-  options: { ayanamsha?: string; lang?: string } | undefined,
+  options: { ayanamsha?: string; lang?: string; force?: boolean } | undefined,
   onRecord: (record: ReportRecord) => void,
   signal?: AbortSignal
-): Promise<void> {
+): Promise<{ fromCache: boolean }> {
   const params = new URLSearchParams();
   params.set("datetime", datetime);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
   if (options?.lang) params.set("lang", options.lang);
+  if (options?.force) params.set("force", "true");
   const path = appendLocation(`/kundali/report?${params.toString()}`, location);
 
   const res = await fetch(`${BASE}${path}`, {
@@ -1087,6 +1088,8 @@ export async function streamKundaliReport(
   if (!res.ok || !res.body) {
     throw new Error(`API ${res.status}: ${path}`);
   }
+
+  const fromCache = res.headers.get("X-Report-Cache") === "hit";
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -1112,6 +1115,8 @@ export async function streamKundaliReport(
     flush(decoder.decode(value, { stream: true }));
   }
   flush(decoder.decode(), true);
+
+  return { fromCache };
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
