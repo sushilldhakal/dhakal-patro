@@ -564,7 +564,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
 
   return (
     <section className={cn(avWheelTheme, "pn-wheel mt-2", patroWheelShell)} aria-label={t("avakahada.wheel_aria")}>
-      <div className="mb-3">
+      <div className="mb-3 px-4 pt-4">
         <h2 className="text-lg font-bold text-foreground">{t("avakahada.wheel_title")}</h2>
         <p className="text-sm text-muted-foreground">{t("avakahada.wheel_subtitle")}</p>
       </div>
