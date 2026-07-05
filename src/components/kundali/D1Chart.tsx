@@ -1,6 +1,7 @@
 import type { BhavaHouse } from "@/lib/bhava";
 import {
   NI_HOUSE_POLYGONS,
+  planetGridLayout,
   pointsToSvg,
   polygonCentroid,
 } from "@/lib/kundali/north-indian-layout";
@@ -89,17 +90,30 @@ export function D1Chart({ houses }: Props) {
                 {digits(house.rashi)} {pick(house.rashiNe, RASHI_EN[house.rashi - 1] ?? house.rashiNe)}
               </text>
             )}
-            {planetLines.map((planet, i) => (
-              <text
-                key={planet.key}
-                x={cx}
-                y={cy + i * 17}
-                textAnchor="middle"
-                className="text-[13px] font-medium fill-foreground"
-              >
-                {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
-              </text>
-            ))}
+            {(() => {
+              if (!hasPlanets) return null;
+              const layout = planetGridLayout(points, planetLines.length);
+              return planetLines.map((planet, i) => {
+                const row = Math.floor(i / layout.columns);
+                const rowStart = row * layout.columns;
+                const itemsInRow = Math.min(layout.columns, planetLines.length - rowStart);
+                const col = i - rowStart;
+                const x = cx + (col - (itemsInRow - 1) / 2) * layout.colGap;
+                const y = cy + row * layout.rowGap;
+                return (
+                  <text
+                    key={planet.key}
+                    x={x}
+                    y={y}
+                    textAnchor="middle"
+                    style={{ fontSize: `${layout.fontSize}px` }}
+                    className="font-medium fill-foreground"
+                  >
+                    {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
+                  </text>
+                );
+              });
+            })()}
           </g>
         );
       })}

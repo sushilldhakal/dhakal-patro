@@ -46,3 +46,62 @@ export function polygonCentroid(points: Point[]): Point {
 export function pointsToSvg(points: Point[]): string {
   return points.map((p) => p.join(",")).join(" ");
 }
+
+function polygonBounds(points: Point[]) {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  return {
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+  };
+}
+
+export interface HouseGridLayout {
+  /** Planet abbreviations per row (last row may hold fewer). */
+  columns: number;
+  rows: number;
+  /** px — shrinks as more planets need to fit. */
+  fontSize: number;
+  /** Horizontal distance between column centers, px. */
+  colGap: number;
+  /** Vertical distance between row baselines, px. */
+  rowGap: number;
+}
+
+/**
+ * Row-first grid for the planet abbreviations inside one house, sized to
+ * that house's own polygon shape. A crowded house wraps to more rows and
+ * shrinks its font instead of stacking planets past the polygon edge (or
+ * off the SVG canvas) where they'd be clipped and invisible.
+ */
+export function planetGridLayout(points: Point[], count: number): HouseGridLayout {
+  if (count <= 0) return { columns: 0, rows: 0, fontSize: 13, colGap: 0, rowGap: 0 };
+
+  const { width, height } = polygonBounds(points);
+  const isKite = Math.abs(width - height) < 1; // houses 1,4,7,10: square bounding box
+  const isWide = width > height; // e.g. houses 2,6,8,12: wide-short triangles
+
+  // Conservative usable box for planet text below the rashi label — kites
+  // have the most room; narrow triangles trade width for height and vice
+  // versa, so favouring the right number of columns per shape matters more
+  // than an exact polygon-inscribed fit.
+  const safeWidth = width * (isKite ? 0.62 : 0.55);
+  const safeHeight = isKite ? 85 : isWide ? 40 : 100;
+
+  const idealColumns = isKite ? 3 : isWide ? 3 : 2;
+  const columns = Math.min(count, idealColumns);
+  const rows = Math.ceil(count / columns);
+
+  const PITCH_RATIO = 1.3; // label pitch ≈ 1.3 × font size, incl. gap
+  const fontFromWidth = safeWidth / columns / PITCH_RATIO;
+  const fontFromHeight = safeHeight / rows / PITCH_RATIO;
+  const fontSize = Math.max(7, Math.min(13, fontFromWidth, fontFromHeight));
+
+  return {
+    columns,
+    rows,
+    fontSize,
+    colGap: fontSize * PITCH_RATIO,
+    rowGap: fontSize * PITCH_RATIO,
+  };
+}
