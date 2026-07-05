@@ -751,7 +751,7 @@ export interface KundaliYoga {
   key: string;
   nameEn: string;
   nameNe: string;
-  nature: "auspicious" | "inauspicious";
+  nature: "auspicious" | "inauspicious" | "mixed" | "caution";
   present: boolean;
   descEn: string;
   descNe: string;

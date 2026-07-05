@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { ChevronRight } from "lucide-react";
+import { useLocale } from "@/i18n/locale";
 import type {
   BhavaBalaData,
   ShadbalaPlanet,
@@ -7,6 +8,7 @@ import type {
   ShadbalaStatus,
   YuddhaData,
 } from "@/lib/api";
+import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import {
   Table,
   TableBody,
@@ -36,35 +38,44 @@ const STATUS_STYLES: Record<ShadbalaStatus, string> = {
 /** Classical display order for the matrix columns. */
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
-const STHANA_SUBS: { key: string; label: string }[] = [
-  { key: "uchcha", label: "Uchcha" },
-  { key: "saptavargaja", label: "Sapta Vargiya" },
-  { key: "oja_yugma", label: "Oja Yugma" },
-  { key: "kendradi", label: "Kendradi" },
-  { key: "drekkana", label: "Drekkana" },
+const STHANA_SUBS: { key: string; ne: string; en: string }[] = [
+  { key: "uchcha", ne: "उच्च", en: "Uchcha" },
+  { key: "saptavargaja", ne: "सप्त वर्गीय", en: "Sapta Vargiya" },
+  { key: "oja_yugma", ne: "ओज युग्म", en: "Oja Yugma" },
+  { key: "kendradi", ne: "केन्द्रादि", en: "Kendradi" },
+  { key: "drekkana", ne: "द्रेक्काण", en: "Drekkana" },
 ];
 
-const KALA_SUBS: { key: string; label: string }[] = [
-  { key: "nathonnatha", label: "Nata Unnata" },
-  { key: "paksha", label: "Paksha" },
-  { key: "tribhaga", label: "Tri Bhaga" },
-  { key: "varshadhipati", label: "Varshadhipati" },
-  { key: "masadhipati", label: "Masadhipati" },
-  { key: "varadhipati", label: "Varadhipati" },
-  { key: "horadhipati", label: "Horadhipati" },
-  { key: "ayana", label: "Ayana" },
-  { key: "yuddha", label: "Yuddha" },
+const KALA_SUBS: { key: string; ne: string; en: string }[] = [
+  { key: "nathonnatha", ne: "नता उन्नत", en: "Nata Unnata" },
+  { key: "paksha", ne: "पक्ष", en: "Paksha" },
+  { key: "tribhaga", ne: "त्रि भाग", en: "Tri Bhaga" },
+  { key: "varshadhipati", ne: "वर्षाधिपति", en: "Varshadhipati" },
+  { key: "masadhipati", ne: "मासाधिपति", en: "Masadhipati" },
+  { key: "varadhipati", ne: "वाराधिपति", en: "Varadhipati" },
+  { key: "horadhipati", ne: "होराधिपति", en: "Horadhipati" },
+  { key: "ayana", ne: "अयन", en: "Ayana" },
+  { key: "yuddha", ne: "युद्ध", en: "Yuddha" },
 ];
 
 const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
 const td = "px-2.5 py-1.5 text-[12.5px]";
 const num = "text-right font-mono tabular-nums";
 
-function fmt(value: number | undefined, digits = 2): string {
+function fmt(value: number | undefined, digits: (v: string | number) => string, places = 2): string {
   if (value == null) return "—";
-  const abs = Math.abs(value).toFixed(digits);
-  return value < 0 ? `−${abs}` : abs;
+  const abs = Math.abs(value).toFixed(places);
+  const signed = value < 0 ? `−${abs}` : abs;
+  return digits(signed);
 }
+
+const STATUS_LABEL: Record<ShadbalaStatus, { ne: string; en: string }> = {
+  Exceptional: { ne: "उत्कृष्ट", en: "Exceptional" },
+  Strong: { ne: "बलियो", en: "Strong" },
+  Adequate: { ne: "पर्याप्त", en: "Adequate" },
+  Borderline: { ne: "सीमान्त", en: "Borderline" },
+  Weak: { ne: "कमजोर", en: "Weak" },
+};
 
 /** Yuddha virupas for display — API sub-bala value overlaid with the war table. */
 function yuddhaVirupasForPlanet(planet: ShadbalaPlanet, yuddha: YuddhaData): number {
@@ -73,7 +84,14 @@ function yuddhaVirupasForPlanet(planet: ShadbalaPlanet, yuddha: YuddhaData): num
   return yuddha.byPlanet[planet.key] ?? 0;
 }
 
-function StatusBadge({ status }: { status: ShadbalaStatus }) {
+function StatusBadge({
+  status,
+  pick,
+}: {
+  status: ShadbalaStatus;
+  pick: <T>(ne: T, en: T) => T;
+}) {
+  const label = pick(STATUS_LABEL[status].ne, STATUS_LABEL[status].en);
   return (
     <span
       className={cn(
@@ -81,7 +99,7 @@ function StatusBadge({ status }: { status: ShadbalaStatus }) {
         STATUS_STYLES[status]
       )}
     >
-      {status}
+      {label}
     </span>
   );
 }
@@ -168,9 +186,16 @@ export function ShadbalaCard({
   /** Server-computed Bhava Bala (for the Bhava % row). */
   bhavaBala?: BhavaBalaData | null;
 }) {
+  const { pick, digits } = useLocale();
   const { planets, summary } = data;
   const [openSthana, setOpenSthana] = useState(false);
   const [openKala, setOpenKala] = useState(false);
+
+  const planetName = (p: ShadbalaPlanet) => pick(p.name_ne, p.name);
+  const grahaName = (key: string) => {
+    const g = GRAHA_NAME[key as GrahaKey];
+    return g ? pick(g.ne, g.en) : key;
+  };
 
   const ordered = PLANET_ORDER
     .map((key) => planets.find((p) => p.key === key))
@@ -183,56 +208,75 @@ export function ShadbalaCard({
 
   const hasSubs = ordered.some((p) => p.sub_balas != null);
   const hasPhala = ordered.some((p) => p.ishta_phala != null);
-
   const hasYuddhaActivity = (yuddha?.wars.length ?? 0) > 0;
+
+  const rowLabel = (ne: string, en: string) => pick(ne, en);
 
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-          Shadbala — Planetary Strength (Virupas)
+          {pick("षड्बल — ग्रह शक्ति (विरुप)", "Shadbala — Planetary Strength (Virupas)")}
         </h3>
-        <p className="text-xs text-muted-foreground mb-3">{data.method}</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          {pick(
+            "पाराशरी षड्बल (लाहिरी निरयण, Swiss Ephemeris)",
+            data.method,
+          )}
+        </p>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <GlanceTile label="Strongest planet">
-            <p className="text-lg font-bold text-foreground">{summary.strongest.name}</p>
+          <GlanceTile label={pick("सबैभन्दा बलियो ग्रह", "Strongest planet")}>
+            <p className="text-lg font-bold text-foreground">
+              {pick(summary.strongest.name_ne, summary.strongest.name)}
+            </p>
             <div className="mt-1 flex items-center gap-2">
-              <StatusBadge status={summary.strongest.status} />
+              <StatusBadge status={summary.strongest.status} pick={pick} />
               <span className="text-xs text-muted-foreground">
-                {summary.strongest.ratio.toFixed(2)}x required
+                {pick(
+                  `${digits(summary.strongest.ratio.toFixed(2))}× आवश्यक`,
+                  `${summary.strongest.ratio.toFixed(2)}x required`,
+                )}
               </span>
             </div>
           </GlanceTile>
 
-          <GlanceTile label="Weakest planet">
-            <p className="text-lg font-bold text-foreground">{summary.weakest.name}</p>
+          <GlanceTile label={pick("सबैभन्दा कमजोर ग्रह", "Weakest planet")}>
+            <p className="text-lg font-bold text-foreground">
+              {pick(summary.weakest.name_ne, summary.weakest.name)}
+            </p>
             <div className="mt-1 flex items-center gap-2">
-              <StatusBadge status={summary.weakest.status} />
+              <StatusBadge status={summary.weakest.status} pick={pick} />
               <span className="text-xs text-muted-foreground">
-                {summary.weakest.ratio.toFixed(2)}x required
+                {pick(
+                  `${digits(summary.weakest.ratio.toFixed(2))}× आवश्यक`,
+                  `${summary.weakest.ratio.toFixed(2)}x required`,
+                )}
               </span>
             </div>
           </GlanceTile>
 
-          <GlanceTile label="Average Rupas">
+          <GlanceTile label={pick("औसत रूप", "Average Rupas")}>
             <p className="text-2xl font-bold text-foreground tabular-nums">
-              {summary.average_rupas.toFixed(2)}
+              {digits(summary.average_rupas.toFixed(2))}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {summary.average_virupas.toFixed(2)} Virupas
+              {digits(summary.average_virupas.toFixed(2))}{" "}
+              {pick("विरुप", "Virupas")}
             </p>
           </GlanceTile>
 
-          <GlanceTile label="Planets meeting threshold">
+          <GlanceTile label={pick("न्यूनतम पूरा गर्ने ग्रह", "Planets meeting threshold")}>
             <p className="text-2xl font-bold text-foreground tabular-nums">
-              {summary.meeting_threshold}
+              {digits(summary.meeting_threshold)}
               <span className="text-sm font-medium text-muted-foreground">
                 {" "}
-                / {summary.total_planets}
+                / {digits(summary.total_planets)}
               </span>
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Adequate or stronger</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {pick("पर्याप्त वा बलियो", "Adequate or stronger")}
+            </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {STATUS_ORDER.map((s) => (
                 <span
@@ -244,7 +288,8 @@ export function ShadbalaCard({
                       : "border-border text-muted-foreground/60"
                   )}
                 >
-                  {s} {summary.counts[s]}
+                  {pick(STATUS_LABEL[s].ne, STATUS_LABEL[s].en)}{" "}
+                  {digits(summary.counts[s])}
                 </span>
               ))}
             </div>
@@ -253,33 +298,34 @@ export function ShadbalaCard({
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-2">Shadbala table</h4>
+        <h4 className="text-sm font-semibold text-foreground mb-2">
+          {pick("षड्बल तालिका", "Shadbala table")}
+        </h4>
         <div className="rounded-xl border border-border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>Bala</TableHead>
+                <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>
+                  {pick("बल", "Bala")}
+                </TableHead>
                 {ordered.map((p) => (
                   <TableHead key={p.key} className={cn(th, "text-right min-w-[5.25rem]")}>
-                    <span className="block leading-tight">{p.name}</span>
-                    <span className="block text-[10px] font-medium normal-case text-muted-foreground/80">
-                      {p.name_ne}
-                    </span>
+                    {planetName(p)}
                   </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               <MatrixRow
-                label="Relative Rank"
+                label={rowLabel("सापेक्ष क्रम", "Relative Rank")}
                 planets={ordered}
-                value={(p) => String(rankByKey.get(p.key) ?? "—")}
+                value={(p) => digits(String(rankByKey.get(p.key) ?? "—"))}
                 bold
               />
               <MatrixRow
-                label="Sthana"
+                label={rowLabel("स्थान", "Sthana")}
                 planets={ordered}
-                value={(p) => fmt(p.breakdown.sthana)}
+                value={(p) => fmt(p.breakdown.sthana, digits)}
                 expandable={hasSubs}
                 open={openSthana}
                 onToggle={() => setOpenSthana((v) => !v)}
@@ -289,19 +335,23 @@ export function ShadbalaCard({
                   {STHANA_SUBS.map((row) => (
                     <MatrixRow
                       key={row.key}
-                      label={row.label}
+                      label={pick(row.ne, row.en)}
                       planets={ordered}
-                      value={(p) => fmt(p.sub_balas?.sthana?.[row.key])}
+                      value={(p) => fmt(p.sub_balas?.sthana?.[row.key], digits)}
                       sub
                     />
                   ))}
                 </Fragment>
               )}
-              <MatrixRow label="Disha" planets={ordered} value={(p) => fmt(p.breakdown.dig)} />
               <MatrixRow
-                label="Kala"
+                label={rowLabel("दिशा", "Disha")}
                 planets={ordered}
-                value={(p) => fmt(p.breakdown.kala)}
+                value={(p) => fmt(p.breakdown.dig, digits)}
+              />
+              <MatrixRow
+                label={rowLabel("काल", "Kala")}
+                planets={ordered}
+                value={(p) => fmt(p.breakdown.kala, digits)}
                 expandable={hasSubs}
                 open={openKala}
                 onToggle={() => setOpenKala((v) => !v)}
@@ -311,50 +361,62 @@ export function ShadbalaCard({
                   {KALA_SUBS.map((row) => (
                     <MatrixRow
                       key={row.key}
-                      label={row.label}
+                      label={pick(row.ne, row.en)}
                       planets={ordered}
                       value={(p) =>
                         row.key === "yuddha" && yuddha
-                          ? fmt(yuddhaVirupasForPlanet(p, yuddha))
-                          : fmt(p.sub_balas?.kala?.[row.key])
+                          ? fmt(yuddhaVirupasForPlanet(p, yuddha), digits)
+                          : fmt(p.sub_balas?.kala?.[row.key], digits)
                       }
                       sub
                     />
                   ))}
                 </Fragment>
               )}
-              <MatrixRow label="Chesta" planets={ordered} value={(p) => fmt(p.breakdown.cheshta)} />
               <MatrixRow
-                label="Naisargika"
+                label={rowLabel("चेष्टा", "Chesta")}
                 planets={ordered}
-                value={(p) => fmt(p.breakdown.naisargika)}
+                value={(p) => fmt(p.breakdown.cheshta, digits)}
               />
-              <MatrixRow label="Drishti" planets={ordered} value={(p) => fmt(p.breakdown.drik)} />
               <MatrixRow
-                label="Total Pinda"
+                label={rowLabel("नैसर्गिक", "Naisargika")}
                 planets={ordered}
-                value={(p) => fmt(p.total_virupas)}
+                value={(p) => fmt(p.breakdown.naisargika, digits)}
+              />
+              <MatrixRow
+                label={rowLabel("दृष्टि", "Drishti")}
+                planets={ordered}
+                value={(p) => fmt(p.breakdown.drik, digits)}
+              />
+              <MatrixRow
+                label={rowLabel("कुल पिण्ड", "Total Pinda")}
+                planets={ordered}
+                value={(p) => fmt(p.total_virupas, digits)}
                 bold
               />
-              <MatrixRow label="Rupas" planets={ordered} value={(p) => fmt(p.rupas)} />
               <MatrixRow
-                label="Min. Require"
+                label={rowLabel("रूप", "Rupas")}
                 planets={ordered}
-                value={(p) => fmt(p.required / 60)}
+                value={(p) => fmt(p.rupas, digits)}
               />
               <MatrixRow
-                label="Strength Ratio"
+                label={rowLabel("न्यूनतम आवश्यक", "Min. Require")}
                 planets={ordered}
-                value={(p) => fmt(p.ratio, 4)}
+                value={(p) => fmt(p.required / 60, digits)}
+              />
+              <MatrixRow
+                label={rowLabel("शक्ति अनुपात", "Strength Ratio")}
+                planets={ordered}
+                value={(p) => fmt(p.ratio, digits, 4)}
                 bold
               />
               {bhavaBala && (
                 <MatrixRow
-                  label="Bhava (in %)"
+                  label={rowLabel("भाव (% मा)", "Bhava (in %)")}
                   planets={ordered}
                   value={(p) => {
                     const pct = bhavaBala.rulershipPercent[p.key];
-                    return pct != null ? `${pct.toFixed(1)}%` : "—";
+                    return pct != null ? `${digits(pct.toFixed(1))}%` : "—";
                   }}
                   bold
                 />
@@ -362,24 +424,24 @@ export function ShadbalaCard({
               {hasPhala && (
                 <Fragment>
                   <MatrixRow
-                    label="Ishta Phala"
+                    label={rowLabel("इष्ट फल", "Ishta Phala")}
                     planets={ordered}
-                    value={(p) => fmt(p.ishta_phala)}
+                    value={(p) => fmt(p.ishta_phala, digits)}
                   />
                   <MatrixRow
-                    label="Kashta Phala"
+                    label={rowLabel("कष्ट फल", "Kashta Phala")}
                     planets={ordered}
-                    value={(p) => fmt(p.kashta_phala)}
+                    value={(p) => fmt(p.kashta_phala, digits)}
                   />
                 </Fragment>
               )}
               <TableRow>
                 <TableCell className={cn(td, "sticky left-0 z-10 bg-card pl-3.5 font-semibold text-foreground")}>
-                  Status
+                  {pick("स्थिति", "Status")}
                 </TableCell>
                 {ordered.map((p) => (
                   <TableCell key={p.key} className={cn(td, "text-right")}>
-                    <StatusBadge status={p.status} />
+                    <StatusBadge status={p.status} pick={pick} />
                   </TableCell>
                 ))}
               </TableRow>
@@ -387,24 +449,29 @@ export function ShadbalaCard({
           </Table>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Virupas per bala; expand Sthana and Kala for component strengths
-          (Yuddha under Kala). Yuddha is computed when two tara grahas are
-          within 1° — most charts show 0.00 because wars are rare.
+          {pick(
+            "प्रत्येक बलका विरुप; स्थान र काल विस्तार गर्नुहोस् (काल अन्तर्गत युद्ध)। दुई tara graha १° भित्र हुँदा युद्ध गणना हुन्छ — धेरैजसो कुण्डलीमा ०.०० देखिन्छ किनभने युद्ध दुर्लभ हुन्छ।",
+            "Virupas per bala; expand Sthana and Kala for component strengths (Yuddha under Kala). Yuddha is computed when two tara grahas are within 1° — most charts show 0.00 because wars are rare.",
+          )}
           {bhavaBala && (
             <>
               {" "}
-              Bhava (in %) is the mean house-strength of bhavas ruled by each
-              planet; see the Bhava Bala submenu for the full house table.
+              {pick(
+                "भाव (%) ले प्रत्येक ग्रहले शासन गर्ने भावको औसत शक्ति देखाउँछ; पूर्ण तालिकाका लागि भाव बल हेर्नुहोस्।",
+                "Bhava (in %) is the mean house-strength of bhavas ruled by each planet; see the Bhava Bala submenu for the full house table.",
+              )}
             </>
           )}
         </p>
         {hasYuddhaActivity && yuddha && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-            Graha Yuddha detected:{" "}
+            {pick("ग्रह युद्ध भयो:", "Graha Yuddha detected:")}{" "}
             {yuddha.wars
-              .map(
-                (w) =>
-                  `${w.winner} defeats ${w.loser} (${fmt(w.yuddhaVirupas)} virupas, ${w.separationDeg.toFixed(2)}° apart)`,
+              .map((w) =>
+                pick(
+                  `${grahaName(w.winner)} ले ${grahaName(w.loser)} लाई पराजित (${fmt(w.yuddhaVirupas, digits)} virup, ${digits(w.separationDeg.toFixed(2))}° को दूरी)`,
+                  `${grahaName(w.winner)} defeats ${grahaName(w.loser)} (${fmt(w.yuddhaVirupas, digits)} virupas, ${w.separationDeg.toFixed(2)}° apart)`,
+                ),
               )
               .join("; ")}
             .

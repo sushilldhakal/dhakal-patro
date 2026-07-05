@@ -71,10 +71,20 @@ export function YogaList({ yogas }: YogaListProps) {
                     "inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
                     yoga.nature === "auspicious"
                       ? "bg-secondary/15 text-secondary"
-                      : "bg-destructive/10 text-destructive",
+                      : yoga.nature === "mixed"
+                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                        : yoga.nature === "caution"
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-destructive/10 text-destructive",
                   )}
                 >
-                  {yoga.nature === "auspicious" ? pick("शुभ", "Auspicious") : pick("अशुभ", "Inauspicious")}
+                  {yoga.nature === "auspicious"
+                    ? pick("शुभ", "Auspicious")
+                    : yoga.nature === "mixed"
+                      ? pick("मिश्र", "Mixed")
+                      : yoga.nature === "caution"
+                        ? pick("सावधानी", "Caution")
+                        : pick("अशुभ", "Inauspicious")}
                 </span>
               </TableCell>
               <TableCell className={cn(td, "pr-3.5 whitespace-nowrap align-top")}>
