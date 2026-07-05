@@ -187,6 +187,19 @@ export function patroHeroPillEv(kind: "public" | "festival") {
 
 export const patroWheelShell = "overflow-hidden rounded-2xl border border-border";
 
+/** Sticky table header cells — sit below the sticky site navbar (`--site-header-height`). */
+export const patroStickyHeadRow =
+  "sticky z-40 bg-muted hover:bg-muted top-[var(--site-header-height)]";
+export const patroStickyHeadCell =
+  "sticky z-40 bg-muted top-[var(--site-header-height)]";
+export const patroStickyHeadCorner =
+  "sticky z-50 bg-muted left-0 top-[var(--site-header-height)]";
+/** Second sticky row (e.g. graha sub-headers) below the first header row. */
+export const patroStickySubHeadCell =
+  "sticky z-40 bg-muted/60 top-[calc(var(--site-header-height)+2.5rem)]";
+export const patroStickySubHeadCorner =
+  "sticky z-50 bg-muted/60 left-0 top-[calc(var(--site-header-height)+2.5rem)]";
+
 export const GANA_PILL_CLASS: Record<string, string> = {
   "देव": "bg-emerald-500/25 text-emerald-300",
   "नर": "bg-sky-500/25 text-sky-300",
