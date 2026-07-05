@@ -1039,6 +1039,7 @@ export interface ReportMeta {
     ends?: string;
     antardasha?: string;
     antardasha_en?: string;
+    antardasha_ne?: string;
     antardasha_ends?: string;
     window?: [string, string];
   } | null;
@@ -1069,13 +1070,14 @@ export type ReportRecord =
 export async function streamKundaliReport(
   datetime: string,
   location: LocationParams | undefined,
-  options: { ayanamsha?: string } | undefined,
+  options: { ayanamsha?: string; lang?: string } | undefined,
   onRecord: (record: ReportRecord) => void,
   signal?: AbortSignal
 ): Promise<void> {
   const params = new URLSearchParams();
   params.set("datetime", datetime);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  if (options?.lang) params.set("lang", options.lang);
   const path = appendLocation(`/kundali/report?${params.toString()}`, location);
 
   const res = await fetch(`${BASE}${path}`, {

@@ -45,7 +45,8 @@ import {
 } from "@/lib/timeline-classes";
 
 const W = 1000;
-const X0 = 96;
+/** Left inset for row labels + start of the ghati grid (~26px tighter than before). */
+const X0 = 70;
 const X1 = 994;
 const RULER_H = 58;
 const MOON_BAND_H = 20;
@@ -202,7 +203,7 @@ export function DayTimeline({
     return (
       <div className={cn(patroCard, "max-w-full")} aria-busy={loading || !data}>
         <DayTimelineBand />
-        <div className={cn("w-full", "max-w-full", "overflow-hidden", "px-3", "pt-3", "pb-1")}>
+        <div className={cn("w-full", "max-w-full", "overflow-hidden", "pl-1", "pr-2", "pt-3", "pb-1")}>
           <div className={cn(patroSkel, "w-full")} style={{ minHeight: 320 }} />
         </div>
       </div>
@@ -265,11 +266,11 @@ export function DayTimeline({
     <div className={cn(patroCard, "max-w-full")}>
       <DayTimelineBand />
 
-      <div className={cn("w-full", "max-w-full", "overflow-hidden", "px-3", "pt-3", "pb-1")}>
+        <div className={cn("w-full", "max-w-full", "overflow-hidden", "pl-1", "pr-2", "pt-3", "pb-1")}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className={cn("block", "h-auto", "w-full", "max-w-full")}
-          preserveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="xMinYMid meet"
           role="img"
           aria-label={pick("पूर्ण दिन पञ्चाङ्ग चित्र", "Full panchanga day chart")}
         >
@@ -335,7 +336,7 @@ export function DayTimeline({
                 <text x={X0 - 10} y={y + BAND / 2 - 2} className={pgTlRowlabel} textAnchor="end">
                   {pick(tr.ne, tr.en)}
                 </text>
-                {isEnglish ? (
+                {!isEnglish ? (
                   <text x={X0 - 10} y={y + BAND / 2 + 11} className={pgTlRowlabelEn} textAnchor="end">
                     {tr.en}
                   </text>

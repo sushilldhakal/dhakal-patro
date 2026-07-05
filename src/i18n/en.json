@@ -226,7 +226,32 @@
     "jump_to": "Jump to",
     "load_error": "Could not load kundali data. Check date and location, then try again.",
     "computing": "Computing chart…",
-    "section_unavailable": "This section could not be computed for this chart."
+    "section_unavailable": "This section could not be computed for this chart.",
+    "report": {
+      "title": "Astrological Analysis",
+      "intro": "A comprehensive, balanced reading computed <1>deterministically</1> from your chart — D1, D9, Shadbala, yogas and the running dasha. Every section shows a <2>confidence indicator</2>: when the factors agree it reads as a stronger tendency; when they conflict it is flagged mixed or conditional.",
+      "regenerate": "Regenerate",
+      "generate": "Generate report",
+      "streaming_progress": "Writing {{done}}/{{total}}…",
+      "streaming_reading": "Reading the chart…",
+      "confidence_label": "Confidence:",
+      "confidence_title": "Confidence: {{label}} — how strongly the chart factors agree",
+      "confidence_strong": "Strong",
+      "confidence_moderate": "Moderate",
+      "confidence_mixed": "Mixed / conditional",
+      "confidence_tentative": "Tentative",
+      "factors_based": "Based on {{count}} factor",
+      "factors_based_plural": "Based on {{count}} factors",
+      "idle_hint": "Generate a full personality, career, relationship, health, dasha-timing and yoga reading — each insight weighed for confidence.",
+      "error_generic": "Could not generate the report.",
+      "meta_lagna": "Lagna",
+      "meta_nakshatra": "Nakshatra",
+      "meta_sun": "Sun",
+      "meta_mahadasha": "Mahadasha",
+      "meta_moon_sign": "Moon sign",
+      "meta_pada": "pada {{pada}}",
+      "meta_antar_ends": "antar ends {{date}}"
+    }
   },
   "milan": {
     "eyebrow": "Nepali Patro · Jyotish · Kundali Milan",

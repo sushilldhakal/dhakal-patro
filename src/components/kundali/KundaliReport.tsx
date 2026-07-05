@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocale } from "@/i18n/locale";
+import { Trans, useTranslation } from "react-i18next";
 import {
   ChevronDown,
   CircleAlert,
@@ -17,36 +17,36 @@ import {
   type ReportMeta,
   type ReportSection,
 } from "@/lib/api";
+import { useLocale } from "@/i18n/locale";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { cn } from "@/lib/utils";
 
 type Status = "idle" | "streaming" | "done" | "error";
 
-const CONFIDENCE_STYLE: Record<
+function useConfidenceLabels(): Record<
   ReportConfidence,
-  { label: string; labelNe: string; cls: string }
-> = {
-  strong: {
-    label: "Strong",
-    labelNe: "बलियो",
-    cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
-  },
-  moderate: {
-    label: "Moderate",
-    labelNe: "मध्यम",
-    cls: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
-  },
-  mixed: {
-    label: "Mixed / conditional",
-    labelNe: "मिश्रित",
-    cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
-  },
-  tentative: {
-    label: "Tentative",
-    labelNe: "अनिश्चित",
-    cls: "bg-muted text-muted-foreground border-border",
-  },
-};
+  { label: string; cls: string }
+> {
+  const { t } = useTranslation();
+  return {
+    strong: {
+      label: t("kundali.report.confidence_strong"),
+      cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    },
+    moderate: {
+      label: t("kundali.report.confidence_moderate"),
+      cls: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
+    },
+    mixed: {
+      label: t("kundali.report.confidence_mixed"),
+      cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+    },
+    tentative: {
+      label: t("kundali.report.confidence_tentative"),
+      cls: "bg-muted text-muted-foreground border-border",
+    },
+  };
+}
 
 function ConfidenceBadge({
   level,
@@ -55,7 +55,9 @@ function ConfidenceBadge({
   level: ReportConfidence;
   className?: string;
 }) {
-  const s = CONFIDENCE_STYLE[level];
+  const { t } = useTranslation();
+  const styles = useConfidenceLabels();
+  const s = styles[level];
   return (
     <span
       className={cn(
@@ -63,7 +65,7 @@ function ConfidenceBadge({
         s.cls,
         className
       )}
-      title={`Confidence: ${s.label} — how strongly the chart factors agree`}
+      title={t("kundali.report.confidence_title", { label: s.label })}
     >
       <span
         className="h-1.5 w-1.5 rounded-full bg-current opacity-70"
@@ -74,10 +76,11 @@ function ConfidenceBadge({
   );
 }
 
-/** Collapsible "why this grade" — the factors the confidence weighed. */
 function FactorList({ factors }: { factors?: string[] }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   if (!factors || factors.length === 0) return null;
+  const count = factors.length;
   return (
     <div className="mt-2">
       <button
@@ -86,7 +89,9 @@ function FactorList({ factors }: { factors?: string[] }) {
         className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
         <Info className="h-3 w-3" />
-        Based on {factors.length} factor{factors.length > 1 ? "s" : ""}
+        {t(count === 1 ? "kundali.report.factors_based" : "kundali.report.factors_based_plural", {
+          count,
+        })}
         <ChevronDown
           className={cn("h-3 w-3 transition-transform", open && "rotate-180")}
         />
@@ -104,11 +109,24 @@ function FactorList({ factors }: { factors?: string[] }) {
   );
 }
 
+/** Prefer Nepali label when the API sends "English (नेपाली)" pairs. */
+function localizeItemLabel(label: string, isEnglish: boolean): string {
+  if (isEnglish) return label;
+  const paired = label.match(/^(.+?) \(([^)]+)\)$/);
+  if (paired) return paired[2].trim();
+  const house = label.match(/^House (\d+) \(([^)]+)\)$/i);
+  if (house) return `${house[2]} भाव`;
+  return label;
+}
+
 function ItemCard({ item }: { item: ReportItem }) {
+  const { isEnglish } = useLocale();
   return (
     <div className="rounded-lg border border-border bg-background/40 dark:bg-background/20 p-3">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-foreground">{item.label}</p>
+        <p className="text-sm font-semibold text-foreground">
+          {localizeItemLabel(item.label, isEnglish)}
+        </p>
         <ConfidenceBadge level={item.confidence} />
       </div>
       <p className="text-[13px] leading-relaxed text-muted-foreground">{item.text}</p>
@@ -118,6 +136,8 @@ function ItemCard({ item }: { item: ReportItem }) {
 }
 
 function SectionCard({ section }: { section: ReportSection }) {
+  const { pick, isEnglish } = useLocale();
+  const title = pick(section.title_ne, section.title_en);
   const isGrid = section.id === "planet_by_planet" || section.id === "house_by_house";
   return (
     <div
@@ -127,10 +147,12 @@ function SectionCard({ section }: { section: ReportSection }) {
       )}
     >
       <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-        <h3 className="text-base font-bold text-foreground">{section.title_ne}</h3>
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          {section.title_en}
-        </span>
+        <h3 className="text-base font-bold text-foreground">{title}</h3>
+        {isEnglish && (
+          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            {section.title_en}
+          </span>
+        )}
         {section.confidence && (
           <ConfidenceBadge level={section.confidence} className="ml-auto" />
         )}
@@ -165,33 +187,44 @@ function SectionCard({ section }: { section: ReportSection }) {
 }
 
 function MetaStrip({ meta }: { meta: ReportMeta }) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
+  const { pick, isEnglish } = useLocale();
   const cells: { label: string; value: string; sub?: string }[] = [
-    { label: pick("लग्न · Lagna", "Lagna"), value: pick(`${meta.lagna.name_ne} (${meta.lagna.name_en})`, meta.lagna.name_en) },
     {
-      label: pick("नक्षत्र · Nakshatra", "Nakshatra"),
+      label: t("kundali.report.meta_lagna"),
+      value: pick(`${meta.lagna.name_ne} (${meta.lagna.name_en})`, meta.lagna.name_en),
+    },
+    {
+      label: t("kundali.report.meta_nakshatra"),
       value: meta.nakshatra
         ? pick(meta.nakshatra.name_ne, meta.nakshatra.name_en)
         : pick(meta.moon_sign.name_ne, meta.moon_sign.name_en),
       sub: meta.nakshatra
-        ? `${meta.nakshatra.name_en} · pada ${meta.nakshatra.pada}`
-        : "Moon sign",
+        ? isEnglish
+          ? `${meta.nakshatra.name_en} · ${t("kundali.report.meta_pada", { pada: meta.nakshatra.pada })}`
+          : t("kundali.report.meta_pada", { pada: meta.nakshatra.pada })
+        : t("kundali.report.meta_moon_sign"),
     },
     {
-      label: pick("सूर्य · Sun", "Sun"),
+      label: t("kundali.report.meta_sun"),
       value: pick(meta.sun_sign.name_ne, meta.sun_sign.name_en),
-      sub: meta.sun_sign.name_en,
+      sub: isEnglish ? meta.sun_sign.name_en : undefined,
     },
     {
-      label: pick("महादशा · Mahadasha", "Mahadasha"),
+      label: t("kundali.report.meta_mahadasha"),
       value: meta.mahadasha
-        ? `${meta.mahadasha.lord_ne}${
-            meta.mahadasha.antardasha ? ` / ${meta.mahadasha.antardasha}` : ""
+        ? `${pick(meta.mahadasha.lord_ne, meta.mahadasha.lord_en)}${
+            meta.mahadasha.antardasha
+              ? ` / ${pick(
+                  meta.mahadasha.antardasha_ne ?? meta.mahadasha.antardasha,
+                  meta.mahadasha.antardasha_en ?? meta.mahadasha.antardasha
+                )}`
+              : ""
           }`
         : "—",
       sub:
         meta.mahadasha && meta.mahadasha.antardasha_ends
-          ? `antar ends ${meta.mahadasha.antardasha_ends}`
+          ? t("kundali.report.meta_antar_ends", { date: meta.mahadasha.antardasha_ends })
           : undefined,
     },
   ];
@@ -224,6 +257,8 @@ export function KundaliReport({
   ayanamsha?: string;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const [status, setStatus] = useState<Status>("idle");
   const [meta, setMeta] = useState<ReportMeta | null>(null);
   const [sections, setSections] = useState<ReportSection[]>([]);
@@ -234,11 +269,18 @@ export function KundaliReport({
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // This component is remounted (via a `key` on the chart inputs) whenever the
-  // birth moment changes, so its state resets naturally — no stale report is
-  // ever shown for a different chart. Here we only abort any in-flight stream
-  // when the component goes away.
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- locale switch should drop stale report text */
+  useEffect(() => {
+    abortRef.current?.abort();
+    setStatus("idle");
+    setMeta(null);
+    setSections([]);
+    setProgress({ done: 0, total: 0 });
+    setError(null);
+  }, [lang]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const generate = useCallback(() => {
     abortRef.current?.abort();
@@ -253,7 +295,7 @@ export function KundaliReport({
     streamKundaliReport(
       datetime,
       location,
-      ayanamsha ? { ayanamsha } : undefined,
+      { ayanamsha, lang },
       (record) => {
         if (record.kind === "meta") {
           setMeta(record);
@@ -267,25 +309,25 @@ export function KundaliReport({
       controller.signal
     ).catch((err: unknown) => {
       if (controller.signal.aborted) return;
-      setError(err instanceof Error ? err.message : "Could not generate the report.");
+      setError(err instanceof Error ? err.message : t("kundali.report.error_generic"));
       setStatus("error");
     });
-  }, [datetime, location, ayanamsha]);
+  }, [datetime, location, ayanamsha, lang, t]);
 
   const streaming = status === "streaming";
 
   return (
-    <PanchangaSection titleNe="ज्योतिष विश्लेषण" titleEn="AI-Free Astrology Report">
+    <PanchangaSection titleKey="kundali.report.title">
       <div className="space-y-4 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-            A comprehensive, balanced reading computed{" "}
-            <span className="font-medium text-foreground">deterministically</span> from
-            your chart — D1, D9, Shadbala, yogas and the running dasha. Every section
-            shows a{" "}
-            <span className="font-medium text-foreground">confidence indicator</span>:
-            when the factors agree it reads as a stronger tendency; when they conflict
-            it is flagged mixed or conditional.
+            <Trans
+              i18nKey="kundali.report.intro"
+              components={{
+                1: <span className="font-medium text-foreground" />,
+                2: <span className="font-medium text-foreground" />,
+              }}
+            />
           </p>
           <div className="flex shrink-0 items-center gap-2">
             {(status === "done" || status === "error") && (
@@ -296,7 +338,7 @@ export function KundaliReport({
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
               >
                 <RefreshCw className="h-4 w-4" />
-                Regenerate
+                {t("kundali.report.regenerate")}
               </button>
             )}
             {status === "idle" && (
@@ -307,24 +349,26 @@ export function KundaliReport({
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/90 disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4" />
-                Generate report
+                {t("kundali.report.generate")}
               </button>
             )}
             {streaming && (
               <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {progress.total
-                  ? `Writing ${progress.done}/${progress.total}…`
-                  : "Reading the chart…"}
+                  ? t("kundali.report.streaming_progress", {
+                      done: progress.done,
+                      total: progress.total,
+                    })
+                  : t("kundali.report.streaming_reading")}
               </span>
             )}
           </div>
         </div>
 
-        {/* Confidence legend */}
         {(streaming || status === "done") && (
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-            <span className="font-medium">Confidence:</span>
+            <span className="font-medium">{t("kundali.report.confidence_label")}</span>
             {(["strong", "moderate", "mixed", "tentative"] as ReportConfidence[]).map(
               (lvl) => (
                 <ConfidenceBadge key={lvl} level={lvl} />
@@ -353,8 +397,7 @@ export function KundaliReport({
         {status === "idle" && (
           <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
             <ScrollText className="h-5 w-5 shrink-0" />
-            Generate a full personality, career, relationship, health, dasha-timing and
-            yoga reading — each insight weighed for confidence.
+            {t("kundali.report.idle_hint")}
           </div>
         )}
 
