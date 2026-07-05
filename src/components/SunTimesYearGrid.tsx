@@ -170,9 +170,9 @@ function MonthSunDataTable({
     <Table className="text-base">
       <TableHeader className="bg-muted/50">
         {table.getHeaderGroups().map((hg) => (
-          <TableRow key={hg.id}>
+          <TableRow key={hg.id} className="sticky top-0 z-10 bg-muted/50 hover:bg-muted/50">
             {hg.headers.map((h) => (
-              <TableHead key={h.id} className="px-3 py-3 text-sm font-semibold">
+              <TableHead key={h.id} className="sticky top-0 z-10 bg-muted/50 px-3 py-3 text-sm font-semibold">
                 {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
               </TableHead>
             ))}
@@ -274,7 +274,7 @@ function SunTimesYearMatrix({
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="col"
-              className="sticky left-0 z-[2] w-12 min-w-12 border-r border-b border-border bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground"
+              className="sticky top-0 left-0 z-[4] w-12 min-w-12 border-r border-b border-border bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground"
             >
               {t("sun_times.col_day")}
             </TableHead>
@@ -282,7 +282,7 @@ function SunTimesYearMatrix({
               <TableHead
                 key={name}
                 scope="col"
-                className="w-[72px] min-w-[72px] overflow-hidden border-b border-border px-1 py-2.5 text-center text-xs font-bold whitespace-nowrap text-ellipsis text-muted-foreground"
+                className="sticky top-0 z-[3] w-[72px] min-w-[72px] overflow-hidden border-b border-border bg-card px-1 py-2.5 text-center text-xs font-bold whitespace-nowrap text-ellipsis text-muted-foreground"
               >
                 {name}
               </TableHead>
