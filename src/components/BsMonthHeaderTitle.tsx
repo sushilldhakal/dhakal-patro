@@ -1,8 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel } from "@/lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel, bsToAD } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
-import { getBsMonthAdSpanCompact } from "@/lib/local-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
@@ -84,7 +83,14 @@ export function BsMonthHeaderTitle({
   );
 
   const monthTitle = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
-  const adMonthCompact = getBsMonthAdSpanCompact(year, month);
+  const adDayEnglish =
+    day != null
+      ? bsToAD(year, month, day).toLocaleDateString("en", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : null;
   const chipDay = day ?? todayBs.day;
   const chipMonth = day != null ? month : todayBs.month;
   const monthOptions = BS_MONTH_NAMES.map((_: string, i: number) => ({
@@ -126,9 +132,11 @@ export function BsMonthHeaderTitle({
         <h1 className="m-0 text-[1.375rem] font-bold leading-none tracking-tight sm:text-[1.625rem] lg:text-[1.875rem]">
           {monthTitle}{" "}
           <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
-          <span className="ml-1.5 text-[11px] font-medium lowercase text-muted-foreground sm:text-xs">
-            {adMonthCompact}
-          </span>
+          {adDayEnglish ? (
+            <span className="ml-1.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
+              {adDayEnglish}
+            </span>
+          ) : null}
         </h1>
 
         <div className={patroMonthNavShell}>
