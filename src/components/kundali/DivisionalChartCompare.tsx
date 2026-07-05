@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useLocale } from "@/i18n/locale";
 import { D1Chart } from "@/components/kundali/D1Chart";
 import { GrahaDetailsList } from "@/components/kundali/GrahaDetailsList";
+import { BhavaTable } from "@/components/kundali/BhavaTable";
 import type { VargaCharts } from "@/lib/api";
 import { buildBhavaChart, type BhavaHouse } from "@/lib/bhava";
 import {
@@ -69,6 +70,7 @@ function ChartSlot({
   const varga = vargaOption(panel.division);
   const anchorLabel = CHART_ANCHOR_LABELS[panel.anchor];
   const hasAnchor = Boolean(vargaCharts.points[panel.anchor]);
+  const [tab, setTab] = useState<"graha" | "bhava">("graha");
 
   return (
     <div className="flex flex-col gap-3 min-w-0">
@@ -140,21 +142,52 @@ function ChartSlot({
 
       {hasAnchor && houses.length > 0 && (
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 px-3.5 py-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {pick("नव ग्रह विवरण", "Graha details")}
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 px-3.5 py-2.5">
+            <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5">
+              <button
+                type="button"
+                onClick={() => setTab("graha")}
+                className={cn(
+                  "px-3 py-1 rounded-[calc(var(--radius-lg)-2px)] text-[11px] font-semibold transition-colors",
+                  tab === "graha"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {pick("ग्रह", "Graha")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("bhava")}
+                className={cn(
+                  "px-3 py-1 rounded-[calc(var(--radius-lg)-2px)] text-[11px] font-semibold transition-colors",
+                  tab === "bhava"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {pick("भाव", "Bhava")}
+              </button>
+            </div>
             <p className="text-[11px] text-muted-foreground">
               {pick(anchorLabel.labelNe, anchorLabel.labelEn)}
               <span className="mx-1 text-muted-foreground/50">·</span>
               {varga.short}
             </p>
           </div>
-          <GrahaDetailsList
-            division={panel.division}
-            anchorKey={panel.anchor}
-            vargaCharts={vargaCharts}
-          />
+          {tab === "graha" ? (
+            <GrahaDetailsList
+              division={panel.division}
+              anchorKey={panel.anchor}
+              vargaCharts={vargaCharts}
+            />
+          ) : (
+            <BhavaTable
+              division={panel.division}
+              anchorKey={panel.anchor}
+              vargaCharts={vargaCharts}
+            />
+          )}
         </div>
       )}
     </div>
