@@ -402,9 +402,7 @@ export function KundaliView({
                 value={getSunsetDisplay(data) ?? "—"}
               />
             ) : null}
-            {ishtaKalaLabel ? (
-              <DetailTraitRow label={pick("इष्ट काल", "Ishta Kala")} value={ishtaKalaLabel} />
-            ) : null}
+            <DetailTraitRow label={pick("इष्ट काल", "Ishta Kala")} value={ishtaKalaLabel ?? "—"} />
             <DetailTraitRow
               label={pick("अहोरात्र इष्ट काल", "Ahoratri Ishta Kala")}
               value={ahoratriIshtaLabel ?? "—"}
