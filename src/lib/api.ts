@@ -813,6 +813,9 @@ export interface DashaTreeNode {
 export interface DashaTreeResponse extends VimshottariResponse {
   tree: DashaTreeNode[];
   tree_depth: number;
+  system?: string;
+  cycle_years?: number;
+  tribhaga?: number;
 }
 
 export interface UpagrahaDetailRow {
@@ -830,6 +833,8 @@ export interface KundaliDetailResponse {
   panchanga: PanchangaDay;
   shadbala: ShadbalaResponse;
   dasha: DashaTreeResponse | null;
+  tribhagiDasha: DashaTreeResponse | null;
+  yoginiDasha: DashaTreeResponse | null;
   yuddha: YuddhaData;
   bhavaBala: BhavaBalaData | null;
   ashtakavarga: AshtakavargaData | null;
@@ -864,13 +869,20 @@ export const fetchKundaliDetail = (
 };
 
 export const dashaExpandKeys = {
-  span: (lord: string, start: string, end: string) =>
-    ["dasha", "expand", lord, start, end] as const,
+  span: (lord: string, start: string, end: string, system = "vimshottari") =>
+    ["dasha", "expand", lord, start, end, system] as const,
 };
 
-export const fetchDashaChildren = (lord: string, start: string, end: string) => {
-  const params = new URLSearchParams({ lord, start, end });
-  return get<{ lord: string; children: DashaTreeNode[] }>(
+export type DashaSystem = "vimshottari" | "tribhagi" | "yogini";
+
+export const fetchDashaChildren = (
+  lord: string,
+  start: string,
+  end: string,
+  system: DashaSystem = "vimshottari",
+) => {
+  const params = new URLSearchParams({ lord, start, end, system });
+  return get<{ lord: string; system: string; children: DashaTreeNode[] }>(
     `/kundali/dasha/expand?${params.toString()}`
   );
 };

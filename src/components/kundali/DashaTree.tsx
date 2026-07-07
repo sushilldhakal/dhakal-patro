@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
-import { dashaExpandKeys, fetchDashaChildren, type DashaTreeNode } from "@/lib/api";
+import { dashaExpandKeys, fetchDashaChildren, type DashaSystem, type DashaTreeNode } from "@/lib/api";
 import { formatZonedBsMoment } from "@/lib/bs-calendar";
 import {
   DASHA_LORD_EN,
@@ -49,6 +49,28 @@ const LORD_ACCENT: Record<DashaLord, string> = {
   ketu: "border-orange-600/35 bg-orange-600/[0.08]",
 };
 
+const YOGINI_ACCENT: Record<string, string> = {
+  mangala: "border-rose-500/35 bg-rose-500/[0.08]",
+  pingala: "border-orange-500/35 bg-orange-500/[0.08]",
+  dhanya: "border-amber-500/35 bg-amber-500/[0.08]",
+  bhramari: "border-yellow-600/35 bg-yellow-600/[0.08]",
+  bhadrika: "border-lime-600/35 bg-lime-600/[0.08]",
+  ulka: "border-cyan-500/35 bg-cyan-500/[0.08]",
+  siddha: "border-sky-500/35 bg-sky-500/[0.08]",
+  sankata: "border-violet-500/35 bg-violet-500/[0.08]",
+};
+
+const YOGINI_DOT: Record<string, string> = {
+  mangala: "bg-rose-500",
+  pingala: "bg-orange-500",
+  dhanya: "bg-amber-500",
+  bhramari: "bg-yellow-600",
+  bhadrika: "bg-lime-600",
+  ulka: "bg-cyan-500",
+  siddha: "bg-sky-500",
+  sankata: "bg-violet-500",
+};
+
 const LORD_DOT: Record<DashaLord, string> = {
   sun: "bg-amber-500",
   moon: "bg-slate-400",
@@ -61,6 +83,16 @@ const LORD_DOT: Record<DashaLord, string> = {
   ketu: "bg-orange-600",
 };
 
+function lordAccent(lord: string, system: DashaSystem): string {
+  if (system === "yogini") return YOGINI_ACCENT[lord] ?? "border-border/50 bg-muted/20";
+  return LORD_ACCENT[(lord as DashaLord) in LORD_ACCENT ? (lord as DashaLord) : "ketu"];
+}
+
+function lordDot(lord: string, system: DashaSystem): string {
+  if (system === "yogini") return YOGINI_DOT[lord] ?? "bg-muted-foreground";
+  return LORD_DOT[(lord as DashaLord) in LORD_DOT ? (lord as DashaLord) : "ketu"];
+}
+
 function formatMoment(
   date: Date,
   lang: string,
@@ -68,10 +100,6 @@ function formatMoment(
   digits?: (v: string | number) => string,
 ): string {
   return formatZonedBsMoment(date, { lang, timeZone, digits });
-}
-
-function lordName(lord: DashaLord, lang: string): string {
-  return lang === "en" ? DASHA_LORD_EN[lord] : DASHA_LORD_NE[lord];
 }
 
 function MomentLine({ label, value }: { label: string; value: string }) {
@@ -89,10 +117,12 @@ function TimelineDot({
   running,
   level,
   lord,
+  system,
 }: {
   running: boolean;
   level: number;
-  lord: DashaLord;
+  lord: string;
+  system: DashaSystem;
 }) {
   const size =
     level === 0 ? "size-3.5 -left-[8px]" : level === 1 ? "size-2.5 -left-[6px]" : "size-2 -left-[5px]";
@@ -102,7 +132,7 @@ function TimelineDot({
       className={cn(
         "absolute top-[1.125rem] z-10 rounded-full border-2 border-background shadow-sm",
         size,
-        running ? "bg-secondary ring-2 ring-secondary/35" : LORD_DOT[lord],
+        running ? "bg-secondary ring-2 ring-secondary/35" : lordDot(lord, system),
       )}
       aria-hidden
     />
@@ -189,15 +219,22 @@ function DashaDurationGrid({
 }
 
 /** Span with the pre-computed children the API embedded (down to pratyantar). */
-type SpanWithChildren = DashaSpan & { childNodes?: DashaTreeNode[] };
+type SpanWithChildren = DashaSpan & { childNodes?: DashaTreeNode[]; lordNe: string };
 
 function toSpan(node: DashaTreeNode): SpanWithChildren {
   return {
     lord: (node.lord as DashaLord) ?? "ketu",
+    lordNe: node.lord_ne,
     start: new Date(node.start),
     end: new Date(node.end),
     childNodes: node.children,
   };
+}
+
+function displayLordName(span: SpanWithChildren, lang: string, system: DashaSystem): string {
+  if (system === "yogini") return span.lordNe;
+  const lord = span.lord as DashaLord;
+  return lang === "en" ? DASHA_LORD_EN[lord] ?? span.lordNe : DASHA_LORD_NE[lord] ?? span.lordNe;
 }
 
 function DashaNode({
@@ -206,27 +243,29 @@ function DashaNode({
   now,
   timeZone,
   isLast,
+  system,
+  maxLevel,
 }: {
   span: SpanWithChildren;
   level: number;
   now: number;
   timeZone?: string;
   isLast?: boolean;
+  system: DashaSystem;
+  maxLevel: number;
 }) {
   const { lang, pick, digits } = useLocale();
   const [open, setOpen] = useState(false);
 
   const running = span.start.getTime() <= now && now < span.end.getTime();
-  const expandable = level < MAX_LEVEL;
+  const expandable = level < maxLevel;
 
-  // Deeper levels than the API embeds are fetched on demand — the sub-period
-  // proportions are Vimshottari rules and stay server-side.
   const needsFetch = open && expandable && !span.childNodes;
   const startIso = span.start.toISOString();
   const endIso = span.end.toISOString();
   const childQ = useQuery({
-    queryKey: dashaExpandKeys.span(span.lord, startIso, endIso),
-    queryFn: () => fetchDashaChildren(span.lord, startIso, endIso),
+    queryKey: dashaExpandKeys.span(span.lord, startIso, endIso, system),
+    queryFn: () => fetchDashaChildren(span.lord, startIso, endIso, system),
     enabled: needsFetch,
     staleTime: Infinity,
   });
@@ -239,7 +278,8 @@ function DashaNode({
 
   const duration = formatDashaDuration(span.end.getTime() - span.start.getTime(), lang);
   const levelLabel = pick(LEVEL_LABELS[level]!.ne, LEVEL_LABELS[level]!.en);
-  const accent = LORD_ACCENT[span.lord];
+  const accent = lordAccent(span.lord, system);
+  const glyph = system === "yogini" ? "◆" : LORD_GLYPH[span.lord as DashaLord] ?? "●";
 
   return (
     <li
@@ -258,7 +298,7 @@ function DashaNode({
         )}
         aria-hidden
       />
-      <TimelineDot running={running} level={level} lord={span.lord} />
+      <TimelineDot running={running} level={level} lord={span.lord} system={system} />
 
       <article
         className={cn(
@@ -291,9 +331,11 @@ function DashaNode({
               <span className="w-3.5 shrink-0" aria-hidden />
             )}
             <span className="text-base leading-none opacity-80" aria-hidden>
-              {LORD_GLYPH[span.lord]}
+              {glyph}
             </span>
-            <span className="text-[13px] font-bold text-foreground">{lordName(span.lord, lang)}</span>
+            <span className="text-[13px] font-bold text-foreground">
+              {displayLordName(span, lang, system)}
+            </span>
             <span className="text-[11px] text-muted-foreground">
               {levelLabel}
               <span className="mx-1 text-muted-foreground/50">·</span>
@@ -340,6 +382,8 @@ function DashaNode({
                   now={now}
                   timeZone={timeZone}
                   isLast={i === children.length - 1}
+                  system={system}
+                  maxLevel={maxLevel}
                 />
               ))}
             </ul>
@@ -355,13 +399,24 @@ export type DashaTreeProps = {
   tree: DashaTreeNode[];
   /** IANA timezone of the chart's place, for begin/end display. */
   timeZone?: string;
+  system?: DashaSystem;
+  /** Deepest expandable level index (0 = maha only). Default: full Vimshottari depth. */
+  maxLevel?: number;
+  /** Yogini full-cycle length in years (for cycle badge). */
+  cycleYears?: number;
 };
 
 /**
- * Vimshottari dasha as a vertical timeline. Each row is an accordion card on
- * the spine; expand to reveal Antar → Pratyantar → Sukshma → Prana sub-periods.
+ * Dasha timeline. Each row is an accordion card on the spine; expand to reveal
+ * antar and deeper sub-periods.
  */
-export function DashaTree({ tree, timeZone }: DashaTreeProps) {
+export function DashaTree({
+  tree,
+  timeZone,
+  system = "vimshottari",
+  maxLevel = MAX_LEVEL,
+  cycleYears,
+}: DashaTreeProps) {
   const { lang, pick, digits } = useLocale();
   const [now] = useState(() => Date.now());
   const mahadashas = useMemo(() => tree.map(toSpan), [tree]);
@@ -372,6 +427,10 @@ export function DashaTree({ tree, timeZone }: DashaTreeProps) {
 
   const timelineStart = mahadashas[0]?.start;
   const timelineEnd = mahadashas[mahadashas.length - 1]?.end;
+  const yoginiCycle =
+    running && cycleYears
+      ? Math.floor((running.start.getTime() - (timelineStart?.getTime() ?? running.start.getTime())) / (cycleYears * 365.2425 * 86400000)) + 1
+      : null;
 
   return (
     <div className="space-y-5">
@@ -406,15 +465,22 @@ export function DashaTree({ tree, timeZone }: DashaTreeProps) {
           <div className="flex flex-wrap items-center justify-between gap-2 pl-2">
             <p className="text-sm font-bold text-foreground">
               <span className="mr-1.5 opacity-80" aria-hidden>
-                {LORD_GLYPH[running.lord]}
+                {system === "yogini" ? "◆" : LORD_GLYPH[running.lord as DashaLord] ?? "●"}
               </span>
-              {lordName(running.lord, lang)}
+              {displayLordName(running, lang, system)}
               <span className="mx-1.5 font-normal text-muted-foreground">·</span>
               {pick("महादशा", "Maha Dasha")}
             </p>
-            <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-[10px] font-bold text-secondary">
-              {pick("चालु दशा", "Running Dasha")}
-            </span>
+            <div className="flex items-center gap-2">
+              {yoginiCycle ? (
+                <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  {pick(`चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
+                </span>
+              ) : null}
+              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-[10px] font-bold text-secondary">
+                {pick("चालु दशा", "Running Dasha")}
+              </span>
+            </div>
           </div>
           <div className="mt-1.5 space-y-0.5 pl-2">
             <MomentLine
@@ -462,6 +528,8 @@ export function DashaTree({ tree, timeZone }: DashaTreeProps) {
             now={now}
             timeZone={timeZone}
             isLast={i === mahadashas.length - 1}
+            system={system}
+            maxLevel={maxLevel}
           />
         ))}
       </ol>

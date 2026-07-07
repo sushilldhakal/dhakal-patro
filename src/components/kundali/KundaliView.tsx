@@ -32,7 +32,7 @@ import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartComp
 import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
 import { UpagrahaTable } from "@/components/kundali/UpagrahaTable";
 import { YogaList } from "@/components/kundali/YogaList";
-import { DashaTree } from "@/components/kundali/DashaTree";
+import { DashaSystemPanel } from "@/components/kundali/DashaSystemPanel";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { BhavaBalaCard } from "@/components/kundali/BhavaBalaCard";
@@ -41,6 +41,7 @@ import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { formatGhadiPalaVipala } from "@/lib/birth-panchanga-meta";
+import { RASHI_EN_NAMES } from "@/lib/graha-details";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 
@@ -256,7 +257,33 @@ export function KundaliView({
     return (pDetail?.vaara as { name_english?: string } | undefined)?.name_english ?? data.weekday;
   }, [data]);
 
+  const navamshaLagnaLabel = useMemo(() => {
+    const d9 = detail?.vargaCharts?.entries?.["9"];
+    const lagnaRow = d9?.find((row) => row.key === "lagna");
+    if (!lagnaRow?.vargaRashi) return undefined;
+    const ne = rashiNeFromNumber(lagnaRow.vargaRashi) ?? "—";
+    const en = RASHI_EN_NAMES[lagnaRow.vargaRashi - 1] ?? ne;
+    return { ne, en };
+  }, [detail]);
+
+  const aayanLabel = useMemo(() => {
+    if (!data) return undefined;
+    const pDetail = getPanchangaDetail(data);
+    const aayan = pDetail?.aayan as { name_ne?: string; name?: string } | undefined;
+    const topAayan = data.aayan;
+    const ne =
+      aayan?.name_ne ??
+      (typeof topAayan === "object" && topAayan ? topAayan.name_ne : undefined);
+    const en =
+      aayan?.name ??
+      (typeof topAayan === "object" && topAayan ? topAayan.name : undefined) ??
+      ne;
+    return ne ? { ne, en: en ?? ne } : undefined;
+  }, [data]);
+
   const dasha = detail?.dasha ?? undefined;
+  const tribhagiDasha = detail?.tribhagiDasha ?? undefined;
+  const yoginiDasha = detail?.yoginiDasha ?? undefined;
   const ayanamshaInfo = getAyanamshaModeInfo(ayanamshaMode);
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, locationParams?.timezone);
   const locationLabel = data?.location?.name ?? locationLabelProp;
@@ -387,6 +414,12 @@ export function KundaliView({
                 value={`${lagna.nameNe}${lagna.degree ? ` ${lagna.degree}°` : ""}`}
               />
             ) : null}
+            {navamshaLagnaLabel ? (
+              <DetailTraitRow
+                label={pick("नवांश लग्न", "Navamsha Lagna")}
+                value={pick(navamshaLagnaLabel.ne, navamshaLagnaLabel.en)}
+              />
+            ) : null}
             {moonRashiLabel ? (
               <DetailTraitRow label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={moonRashiLabel} />
             ) : null}
@@ -411,6 +444,12 @@ export function KundaliView({
               <DetailTraitRow
                 label={pick("वार", "Weekday")}
                 value={pick(panchangSummary.vaaraNe, vaaraEn ?? panchangSummary.vaaraNe)}
+              />
+            ) : null}
+            {aayanLabel ? (
+              <DetailTraitRow
+                label={pick("अयन", "Ayana")}
+                value={pick(aayanLabel.ne, aayanLabel.en)}
               />
             ) : null}
             {suryaMeta?.rashiNe ? (
@@ -527,18 +566,16 @@ export function KundaliView({
         </div>
       )}
 
-      {showSection("kundali-dasha") && dasha && (
+      {showSection("kundali-dasha") && (dasha || tribhagiDasha || yoginiDasha) && (
         <div id="kundali-dasha" className="scroll-mt-24">
-        <PanchangaSection titleNe="विंशोत्तरी दशा" titleEn="Vimshottari Dasha">
-          <div className="p-4 space-y-4">
-            <div className="grid sm:grid-cols-2 gap-3">
-              <StatTile
-                label={pick("महादशा सुरु (जन्मकालीन)", "Mahadasha at birth")}
-                value={dasha.mahadasha_lord_ne}
-                sub={pick(`बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
-              />
-            </div>
-            <DashaTree tree={dasha.tree} timeZone={effectiveTimezone} />
+        <PanchangaSection titleNe="दशा" titleEn="Dasha">
+          <div className="p-4">
+            <DashaSystemPanel
+              vimshottari={dasha}
+              tribhagi={tribhagiDasha}
+              yogini={yoginiDasha}
+              timeZone={effectiveTimezone}
+            />
           </div>
         </PanchangaSection>
         </div>
