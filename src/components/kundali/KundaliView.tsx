@@ -534,7 +534,7 @@ export function KundaliView({
         </div>
       )}
 
-      {/* Graha details — astronomical readout for the birth instant (D1) */}
+      {/* Graha details — astronomical readout for the birth instant (D1), with upagraha (shadow points) as a separate table in the same section */}
       {showSection("kundali-graha") && d1Rows.length > 0 && (
         <div id="kundali-graha" className="scroll-mt-24">
           <PanchangaSection titleNe="ग्रह विवरण" titleEn="Graha Details">
@@ -544,15 +544,14 @@ export function KundaliView({
               d1Rows={d1Rows}
               combustion={detail.combustion}
             />
-          </PanchangaSection>
-        </div>
-      )}
-
-      {/* Upagraha — shadow points for the birth instant */}
-      {showSection("kundali-upagraha") && detail.upagrahas.length > 0 && (
-        <div id="kundali-upagraha" className="scroll-mt-24">
-          <PanchangaSection titleNe="उपग्रह" titleEn="Upagraha">
-            <UpagrahaTable upagrahas={detail.upagrahas} />
+            {detail.upagrahas.length > 0 && (
+              <div className="border-t border-border">
+                <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {pick("उपग्रह", "Upagraha")}
+                </p>
+                <UpagrahaTable upagrahas={detail.upagrahas} />
+              </div>
+            )}
           </PanchangaSection>
         </div>
       )}
