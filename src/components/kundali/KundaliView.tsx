@@ -523,7 +523,7 @@ export function KundaliView({
       )}
 
 
-      {showSection("kundali-charts") && d1Rows.length > 0 && (
+      {showSection("kundali-overview") && d1Rows.length > 0 && (
         <div id="kundali-charts" className="scroll-mt-24">
           <PanchangaSection titleNe="कुण्डली चक्र" titleEn="Divisional Charts">
             <DivisionalChartCompare

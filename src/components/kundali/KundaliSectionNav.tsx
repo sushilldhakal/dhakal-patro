@@ -5,7 +5,6 @@ import {
   Flame,
   Grid3x3,
   Home,
-  LayoutGrid,
   Scale,
   ScrollText,
   Sparkles,
@@ -15,12 +14,6 @@ import { cn } from "@/lib/utils";
 
 export const KUNDALI_SECTIONS = [
   { id: "kundali-overview", labelKey: "kundali.nav_overview", icon: "overview" as const },
-  {
-    id: "kundali-charts",
-    labelKey: "kundali.nav_charts_full",
-    icon: "charts" as const,
-    parentId: "kundali-overview" as const,
-  },
   { id: "kundali-graha", labelKey: "kundali.nav_graha_details", icon: "graha" as const },
   { id: "kundali-yoga", labelKey: "kundali.nav_yoga", icon: "yoga" as const },
   { id: "kundali-dasha", labelKey: "kundali.nav_dasha", icon: "dasha" as const },
@@ -47,7 +40,6 @@ export const DEFAULT_KUNDALI_SECTION: KundaliSectionId = "kundali-overview";
 
 const ICONS = {
   overview: Sparkles,
-  charts: LayoutGrid,
   graha: CircleDot,
   yoga: Star,
   dasha: CalendarRange,
