@@ -187,18 +187,26 @@ export function patroHeroPillEv(kind: "public" | "festival") {
 
 export const patroWheelShell = "overflow-hidden rounded-2xl border border-border";
 
-/** Sticky table header cells — sit below the sticky site navbar (`--site-header-height`). */
-export const patroStickyHeadRow =
-  "sticky z-40 bg-muted hover:bg-muted top-[var(--site-header-height)]";
-export const patroStickyHeadCell =
-  "sticky z-40 bg-muted top-[var(--site-header-height)]";
-export const patroStickyHeadCorner =
-  "sticky z-50 bg-muted left-0 top-[var(--site-header-height)]";
-/** Second sticky row (e.g. graha sub-headers) below the first header row. */
-export const patroStickySubHeadCell =
-  "sticky z-40 bg-muted/60 top-[calc(var(--site-header-height)+2.5rem)]";
-export const patroStickySubHeadCorner =
-  "sticky z-50 bg-muted/60 left-0 top-[calc(var(--site-header-height)+2.5rem)]";
+/**
+ * Table header row/cell styling. NOTE: these are intentionally NOT
+ * `position: sticky` to the page (top offset). Every one of these tables
+ * lives inside an `overflow-x-auto` wrapper (needed for horizontal scroll
+ * on narrow screens), and per the CSS overflow spec, `overflow-x: auto`
+ * forces `overflow-y` to compute as `auto` too — which makes that wrapper
+ * the sticky positioning's scrolling ancestor instead of the page. Since
+ * the wrapper never actually scrolls internally (the page scrolls, not the
+ * div), a page-pinned header computed relative to it renders at the wrong
+ * offset and overlaps into the table body (verified: it lands on top of
+ * the first data row, hiding its text). Left-0 stickiness for frozen first
+ * columns is unaffected (that axis's scrolling ancestor genuinely does
+ * scroll) and is kept below.
+ */
+export const patroStickyHeadRow = "bg-muted hover:bg-muted";
+export const patroStickyHeadCell = "bg-muted";
+export const patroStickyHeadCorner = "sticky z-50 bg-muted left-0";
+/** Second header row (e.g. graha sub-headers) below the first header row. */
+export const patroStickySubHeadCell = "bg-muted/60";
+export const patroStickySubHeadCorner = "sticky z-50 bg-muted/60 left-0";
 
 export const GANA_PILL_CLASS: Record<string, string> = {
   "देव": "bg-emerald-500/25 text-emerald-300",

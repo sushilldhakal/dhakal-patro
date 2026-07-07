@@ -267,7 +267,7 @@ function SunTimesYearMatrix({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="max-w-full overflow-x-auto overflow-y-visible overscroll-x-contain [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
+    <div className="max-w-full overflow-x-auto overscroll-x-contain [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
       <table
         className="w-max min-w-full border-collapse table-fixed text-[13px] font-semibold font-num"
         aria-label={`Sunrise and sunset grid for BS year ${bsYear}`}
@@ -276,7 +276,7 @@ function SunTimesYearMatrix({
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="col"
-              className="sticky left-0 z-[4] w-12 min-w-12 border-r border-b border-border bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground top-[var(--site-header-height)]"
+              className="sticky left-0 z-[4] w-12 min-w-12 border-r border-b border-border bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground"
             >
               {t("sun_times.col_day")}
             </TableHead>
@@ -284,7 +284,7 @@ function SunTimesYearMatrix({
               <TableHead
                 key={name}
                 scope="col"
-                className="sticky z-[3] w-[72px] min-w-[72px] overflow-hidden border-b border-border bg-card px-1 py-2.5 text-center text-xs font-bold whitespace-nowrap text-ellipsis text-muted-foreground top-[var(--site-header-height)]"
+                className="w-[72px] min-w-[72px] overflow-hidden border-b border-border bg-card px-1 py-2.5 text-center text-xs font-bold whitespace-nowrap text-ellipsis text-muted-foreground"
               >
                 {name}
               </TableHead>
@@ -397,7 +397,7 @@ function SunTimesYearAccordion({
                 </span>
               </span>
             </AccordionTrigger>
-            <AccordionContent className="px-0" stickyContent>
+            <AccordionContent className="px-0">
               <MonthSunDataTable rows={rows} isLoading={isLoading} />
             </AccordionContent>
           </AccordionItem>
