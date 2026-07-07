@@ -170,11 +170,11 @@ function MonthSunDataTable({
 
   return (
     <Table className="text-base">
-      <TableHeader className="bg-muted/50">
+      <TableHeader className="bg-muted">
         {table.getHeaderGroups().map((hg) => (
-          <TableRow key={hg.id} className={cn(patroStickyHeadRow, "bg-muted/50 hover:bg-muted/50")}>
+          <TableRow key={hg.id} className={cn(patroStickyHeadRow, "hover:bg-muted")}>
             {hg.headers.map((h) => (
-              <TableHead key={h.id} className={cn(patroStickyHeadCell, "bg-muted/50 px-3 py-3 text-sm font-semibold")}>
+              <TableHead key={h.id} className={cn(patroStickyHeadCell, "px-3 py-3 text-sm font-semibold")}>
                 {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
               </TableHead>
             ))}
@@ -397,7 +397,7 @@ function SunTimesYearAccordion({
                 </span>
               </span>
             </AccordionTrigger>
-            <AccordionContent className="px-0">
+            <AccordionContent className="px-0" stickyContent>
               <MonthSunDataTable rows={rows} isLoading={isLoading} />
             </AccordionContent>
           </AccordionItem>

@@ -56,12 +56,24 @@ function AccordionTrigger({
 function AccordionContent({
   className,
   children,
+  stickyContent = false,
   ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Content>) {
+}: React.ComponentProps<typeof AccordionPrimitive.Content> & {
+  /** Set when this panel contains a sticky element (e.g. a sticky table
+   * header) — `overflow-hidden` (needed for the slide animation) makes any
+   * `position: sticky` descendant unable to stick to the page scroll at all,
+   * since it becomes the nearest clipping ancestor. Opting out trades a
+   * brief visual overflow during the ~200ms expand/collapse animation for a
+   * sticky header that actually works while the panel is open. */
+  stickyContent?: boolean
+}) {
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
+      className={cn(
+        "text-sm data-open:animate-accordion-down data-closed:animate-accordion-up",
+        stickyContent ? "overflow-visible" : "overflow-hidden"
+      )}
       {...props}
     >
       <div
