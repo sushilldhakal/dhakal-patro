@@ -460,9 +460,12 @@ export interface SunYearResponse {
   months: SunYearMonth[];
 }
 
+// Bump when year sun-times payload logic changes (invalidates React Query + IDB).
+export const SUN_YEAR_DATA_VERSION = 14;
+
 export const sunYearKeys = {
   year: (year: number, location?: LocationParams) =>
-    ["sun-times", "year", year, locationCacheKey(location)] as const,
+    ["sun-times", "year", SUN_YEAR_DATA_VERSION, year, locationCacheKey(location)] as const,
 };
 
 export const fetchYearSunTimes = (year: number, location?: LocationParams) =>
