@@ -14,7 +14,7 @@ import { lazyRoute } from "./lib/lazy-route";
 import { RouteLoadingProvider } from "./lib/route-loading";
 import {
   validateAbhijitSearch,
-  validateChandraKrantiSearch,
+  validateDainikKrantiSearch,
   validatePanchangaSearch,
   validatePanchangaYearSearch,
 } from "./lib/url-state";
@@ -22,7 +22,7 @@ import {
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
 const PanchangaYear = lazyRoute(() => import("./pages/PanchangaYear"), "PanchangaYear");
 const AvakahadaChakra = lazyRoute(() => import("./pages/AvakahadaChakra"), "AvakahadaChakra");
-const ChandraKranti = lazyRoute(() => import("./pages/ChandraKranti"), "ChandraKranti");
+const DainikKranti = lazyRoute(() => import("./pages/DainikKranti"), "DainikKranti");
 const ShantiVidhi = lazyRoute(() => import("./pages/ShantiVidhi"), "ShantiVidhi");
 const Converter = lazyRoute(() => import("./pages/Converter"), "Converter");
 const Holidays = lazyRoute(() => import("./pages/Holidays"), "Holidays");
@@ -67,11 +67,29 @@ const panchangaYearRoute = createRoute({
   component: PanchangaYear,
 });
 const avakahadaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/avakahada-chakra", component: AvakahadaChakra });
-const chandraKrantiRoute = createRoute({
+const dainikKrantiRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dainikkranti",
+  validateSearch: validateDainikKrantiSearch,
+  component: DainikKranti,
+});
+const chandraKrantiLegacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/chandrakranti",
-  validateSearch: validateChandraKrantiSearch,
-  component: ChandraKranti,
+  validateSearch: validateDainikKrantiSearch,
+  component: function ChandraKrantiLegacyRedirect() {
+    const search = chandraKrantiLegacyRoute.useSearch();
+    return <Navigate to="/dainikkranti" search={search} replace />;
+  },
+});
+const dainikKrantiNeLegacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/दैनिकक्रान्ति",
+  validateSearch: validateDainikKrantiSearch,
+  component: function DainikKrantiNeLegacyRedirect() {
+    const search = dainikKrantiNeLegacyRoute.useSearch();
+    return <Navigate to="/dainikkranti" search={search} replace />;
+  },
 });
 const shantiVidhiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/shanti-vidhi", component: ShantiVidhi });
 const converterRoute = createRoute({ getParentRoute: () => rootRoute, path: "/converter", component: Converter });
@@ -127,7 +145,9 @@ const routeTree = rootRoute.addChildren([
   panchangaRoute,
   panchangaYearRoute,
   avakahadaRoute,
-  chandraKrantiRoute,
+  dainikKrantiRoute,
+  chandraKrantiLegacyRoute,
+  dainikKrantiNeLegacyRoute,
   shantiVidhiRoute,
   converterRoute,
   holidaysRoute,

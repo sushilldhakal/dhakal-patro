@@ -10,7 +10,7 @@
   "nav": {
     "surya_panchanga": "सूर्य पंचांग",
     "suryakranti": "सूर्यक्रांति",
-    "chandrakranti": "दैनिक क्रांति",
+    "dainikkranti": "दैनिक क्रांति",
     "shanti_vidhi": "शांति विधि",
     "avakahada_chakra": "अवकहडा चक्र",
     "converter": "रूपांतरण",
@@ -213,7 +213,7 @@
     "suryakranti_desc": "वार्षिक सूर्योदय–सूर्यास्त",
     "panchanga_year_desc": "तिथि, नक्षत्र और ग्रह स्थिति चक्र",
     "abhijit_muhurta_desc": "दैनिक शुभ अभिजित मुहूर्त समय",
-    "chandrakranti_desc": "चंद्र और ग्रह क्रांति",
+    "dainikkranti_desc": "चंद्र और ग्रह क्रांति",
     "kundali_build_title": "जन्म कुंडली निर्माण",
     "kundali_build_desc": "लग्न, ग्रह, दशा और षड्बल",
     "kundali_milan_title": "कुंडली मिलान",

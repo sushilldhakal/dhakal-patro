@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { type ReactNode } from "react";
 import { useCurrentRitu } from "@/lib/ritu-display";
-import { buildChandraKrantiSearch } from "@/lib/url-state";
+import { buildDainikKrantiSearch } from "@/lib/url-state";
 import { defaultPanchakPatroYear } from "@/lib/panchak/panchak-patro-data";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { useLocale } from "@/i18n/locale";
@@ -96,10 +96,10 @@ function ChandrKrantiQuickLink({
 
   return (
     <QuickLinkCard
-      to="/chandrakranti"
-      search={buildChandraKrantiSearch(location, bsYear, bsMonth)}
+      to="/dainikkranti"
+      search={buildDainikKrantiSearch(location, bsYear, bsMonth)}
       icon={Moon}
-      label={t("nav.chandrakranti")}
+      label={t("nav.dainikkranti")}
     />
   );
 }

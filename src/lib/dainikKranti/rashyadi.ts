@@ -1,5 +1,5 @@
 import type { GocharGraha, PlanetInfo } from "@/lib/api";
-import { rashiNoFromGraha } from "@/lib/chandrakranti/gochar-display";
+import { rashiNoFromGraha } from "@/lib/dainikKranti/gochar-display";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
 /** Gochar spashta table — चन्द्र बाहेक (दैनिक च.रा. कोलमबाट)। */

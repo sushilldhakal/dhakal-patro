@@ -4,7 +4,7 @@ import {
   RASHI_COLUMNS_NE,
   RASHI_COLUMNS_EN,
   type GrahaSpashtaRow,
-} from "@/lib/chandrakranti/month-patro-tables";
+} from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 import {

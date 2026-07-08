@@ -35,7 +35,7 @@ const ROUTES = [
   { path: "/panchanga", changefreq: "daily", priority: "0.9" },
   { path: "/panchanga/year", changefreq: "weekly", priority: "0.7" },
   { path: "/panchanga/avakahada-chakra", changefreq: "monthly", priority: "0.6" },
-  { path: "/chandrakranti", changefreq: "weekly", priority: "0.8" },
+  { path: "/dainikkranti", changefreq: "weekly", priority: "0.8" },
   { path: "/shanti-vidhi", changefreq: "monthly", priority: "0.6" },
   { path: "/converter", changefreq: "monthly", priority: "0.8" },
   { path: "/holidays", changefreq: "weekly", priority: "0.8" },

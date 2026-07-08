@@ -1,11 +1,9 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import {
-  ChevronLeft,
   ChevronRight,
-  CalendarDays,
-  Moon,
   Sparkles,
   Sunrise,
   Sunset,
@@ -30,7 +28,8 @@ import {
 } from "@/lib/bs-calendar";
 import { formatTimeShort, formatVedicPatroTime } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
-import { PageShell, PageHeader } from "@/components/PageShell";
+import { PageShell } from "@/components/PageShell";
+import { BsMonthHeaderTitle } from "@/components/BsMonthHeaderTitle";
 import {
   Table,
   TableBody,
@@ -46,9 +45,10 @@ import {
   sameLocationParams,
   sameSearch,
   searchToLocation,
-  type ChandraKrantiSearch,
+  type DainikKrantiSearch,
 } from "@/lib/url-state";
 import {
+  patroSegBtn,
   patroStickyHeadCell,
   patroStickyHeadRow,
 } from "@/lib/patro-classes";
@@ -60,24 +60,24 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { DayPatroExpandPanel } from "@/components/chandrakranti/DayPatroExpandPanel";
-import { GocharKundaliChart } from "@/components/chandrakranti/GocharKundaliChart";
-import { GocharRashyadiTable } from "@/components/chandrakranti/GocharRashyadiTables";
-import { buildRashyadiRangeTables } from "@/lib/chandrakranti/rashyadi-segments";
-import { buildGapanshaLine, buildPapanshaDisplayLine } from "@/lib/chandrakranti/gapansha";
-import { grahaRashiNe, formatGocharBsLabel } from "@/lib/chandrakranti/gochar-display";
-import { MonthLagnaMatrix } from "@/components/chandrakranti/MonthLagnaMatrix";
-import { MonthGrahaSpashta } from "@/components/chandrakranti/MonthGrahaSpashta";
-import { MonthCalcNotes } from "@/components/chandrakranti/MonthCalcNotes";
+import { DayPatroExpandPanel } from "@/components/dainikKranti/DayPatroExpandPanel";
+import { GocharKundaliChart } from "@/components/dainikKranti/GocharKundaliChart";
+import { GocharRashyadiTable } from "@/components/dainikKranti/GocharRashyadiTables";
+import { buildRashyadiRangeTables } from "@/lib/dainikKranti/rashyadi-segments";
+import { buildGapanshaLine, buildPapanshaDisplayLine } from "@/lib/dainikKranti/gapansha";
+import { grahaRashiNe, formatGocharBsLabel } from "@/lib/dainikKranti/gochar-display";
+import { MonthLagnaMatrix } from "@/components/dainikKranti/MonthLagnaMatrix";
+import { MonthGrahaSpashta } from "@/components/dainikKranti/MonthGrahaSpashta";
+import { MonthCalcNotes } from "@/components/dainikKranti/MonthCalcNotes";
 import {
   buildCalcNotes,
   buildGrahaSpashtaMatrix,
   buildLagnaMatrix,
-} from "@/lib/chandrakranti/month-patro-tables";
+} from "@/lib/dainikKranti/month-patro-tables";
 
 const COL_SPAN = 13;
 
-const routeApi = getRouteApi("/chandrakranti");
+const routeApi = getRouteApi("/dainikkranti");
 
 type Phase = "krishna" | "shukla";
 type PakshaFilter = Phase | "all";
@@ -304,7 +304,8 @@ function motionNe(g: { motion?: string; is_retrograde?: boolean }): { label: str
   return { label: vakri ? "वक्री" : "मार्गी", labelEn: vakri ? "Retrograde" : "Direct", vakri };
 }
 
-export function ChandraKranti() {
+export function DainikKranti() {
+  const { t } = useTranslation();
   const { lang, pick, digits: dg } = useLocale();
   const isEn = lang === "en";
   const search = routeApi.useSearch();
@@ -318,10 +319,18 @@ export function ChandraKranti() {
   const [paksha, setPaksha] = useState<PakshaFilter>(() => search.paksha ?? "all");
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const nowKey = useMemo(() => todayKey(), []);
+  const yearOptions = useMemo(
+    () =>
+      Array.from(
+        { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
+        (_, i) => BS_SUPPORTED_START_YEAR + i,
+      ),
+    [],
+  );
 
   // Mirror the selection into the URL so the view stays copy-paste shareable.
   useEffect(() => {
-    const desired: ChandraKrantiSearch = {
+    const desired: DainikKrantiSearch = {
       ...locationToSearch(location),
       year,
       month,
@@ -558,6 +567,12 @@ export function ChandraKranti() {
   const atStart = year * 12 + (month - 1) <= BS_MIN_INDEX;
   const atEnd = year * 12 + (month - 1) >= BS_MAX_INDEX;
 
+  const goToday = () => {
+    const c = getCurrentBs();
+    setYear(c.year);
+    setMonth(c.month);
+  };
+
   const pageLoading =
     monthQ.isLoading ||
     specialQ.isLoading ||
@@ -568,107 +583,81 @@ export function ChandraKranti() {
 
   return (
     <PageShell>
-      <PageHeader
-        icon={<Moon className="h-7 w-7 text-secondary" />}
-        title={pick("दैनिक क्रान्ति", "Daily Kranti")}
-        subtitle={pick(
-          "पक्ष अनुसार दैनिक पञ्चाङ्ग — तिथि, नक्षत्र, योग, करण, सूर्योदय/अस्त, पर्व र ग्रह गोचर।",
-          "Daily panchanga by paksha — tithi, nakshatra, yoga, karana, sunrise/sunset, festivals and planetary transits.",
-        )}
-      />
-
-      {/* controls */}
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card/40 p-4">
-        <div className="flex items-end gap-1">
-          <button
-            type="button"
-            onClick={() => stepMonth(-1)}
-            disabled={atStart}
-            aria-label={pick("अघिल्लो महिना", "Previous month")}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => stepMonth(1)}
-            disabled={atEnd}
-            aria-label={pick("अर्को महिना", "Next month")}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <BsMonthHeaderTitle
+            year={year}
+            month={month}
+            yearOptions={yearOptions}
+            todayAd={nowKey}
+            onToday={goToday}
+            todayAriaLabel={t("calendar.today_btn")}
+            onMonthChange={setMonth}
+            onYearChange={setYear}
+            monthAriaLabel={t("calendar.month_aria")}
+            yearAriaLabel={t("calendar.year_aria")}
+            onPrev={() => stepMonth(-1)}
+            onNext={() => stepMonth(1)}
+            prevDisabled={atStart}
+            nextDisabled={atEnd}
+            prevAriaLabel={t("calendar.prev_month")}
+            nextAriaLabel={t("calendar.next_month")}
+          />
         </div>
-        <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          {pick("वर्ष (बि.सं.)", "Year (BS)")}
-          <select
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+
+        <div className="flex shrink-0 flex-col items-end gap-2 pt-0.5">
+          <div
+            className="inline-flex shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5"
+            role="radiogroup"
+            aria-label={t("calendar.paksha_aria")}
           >
-            {Array.from({ length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 }, (_, i) => BS_SUPPORTED_START_YEAR + i).map((y) => (
-              <option key={y} value={y}>{dg(y)}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          {pick("महिना", "Month")}
-          <select
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
-          >
-            {BS_MONTHS_NE.map((m, i) => (
-              <option key={m} value={i + 1}>{pick(m, BS_MONTH_NAMES[i])}</option>
-            ))}
-          </select>
-        </label>
-        <div className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          {pick("पक्ष", "Paksha")}
-          <div className="inline-flex overflow-hidden rounded-md border border-border">
-            {([["all", pick("पूरै", "All")], ["krishna", pick("कृष्ण", "Krishna")], ["shukla", pick("शुक्ल", "Shukla")]] as const).map(([v, lbl]) => (
+            {(
+              [
+                ["all", t("calendar.paksha_all")],
+                ["krishna", t("calendar.paksha_krishna")],
+                ["shukla", t("calendar.paksha_shukla")],
+              ] as const
+            ).map(([value, label]) => (
               <button
-                key={v}
+                key={value}
                 type="button"
-                onClick={() => setPaksha(v)}
-                className={cn(
-                  "px-3 py-1.5 text-sm transition-colors",
-                  paksha === v ? "bg-secondary text-primary" : "bg-background text-muted-foreground hover:bg-muted",
-                )}
+                role="radio"
+                aria-checked={paksha === value}
+                className={patroSegBtn(paksha === value)}
+                onClick={() => setPaksha(value)}
               >
-                {lbl}
+                {label}
               </button>
             ))}
           </div>
+          <LocationSelector
+            compact
+            location={location}
+            onLocationChange={setLocation}
+            className="w-auto max-w-[11rem] sm:max-w-[12.5rem]"
+          />
         </div>
-        <div className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          {pick("स्थान", "Location")}
-          <LocationSelector location={location} onLocationChange={setLocation} />
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            const c = getCurrentBs();
-            setYear(c.year);
-            setMonth(c.month);
-          }}
-          className="ml-auto flex h-9 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm text-foreground transition-colors hover:bg-muted"
-        >
-          <CalendarDays className="h-4 w-4" /> {pick("आज", "Today")}
-        </button>
       </div>
 
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="text-lg font-bold text-foreground">
-          {monthLabel} · {pakshaLabel}
-        </h2>
-        {monthQ.data?.year_bs ? (
-          <span className="text-sm text-muted-foreground">{dg(monthQ.data.year_bs)} {pick("बि.सं.", "BS")}</span>
-        ) : null}
-        {ritu ? <span className="text-sm text-muted-foreground">· {pick("ऋतु", "Ritu")}: {ritu}</span> : null}
-        {allDays.length ? (
-          <span className="text-xs text-muted-foreground">· {dg(days.length)} {pick("दिन", "days")}</span>
-        ) : null}
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="text-lg font-bold text-foreground">
+            {monthLabel} · {pakshaLabel}
+          </h2>
+          {monthQ.data?.year_bs ? (
+            <span className="text-sm text-muted-foreground">{dg(monthQ.data.year_bs)} {pick("बि.सं.", "BS")}</span>
+          ) : null}
+          {ritu ? <span className="text-sm text-muted-foreground">· {pick("ऋतु", "Ritu")}: {ritu}</span> : null}
+          {allDays.length ? (
+            <span className="text-xs text-muted-foreground">· {dg(days.length)} {pick("दिन", "days")}</span>
+          ) : null}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {pick(
+            "पक्ष अनुसार दैनिक पञ्चाङ्ग — तिथि, नक्षत्र, योग, करण, सूर्योदय/अस्त, पर्व र ग्रह गोचर।",
+            "Daily panchanga by paksha — tithi, nakshatra, yoga, karana, sunrise/sunset, festivals and planetary transits.",
+          )}
+        </p>
       </div>
 
       {monthHasAdhik && adhik?.month_name ? (
@@ -1097,4 +1086,4 @@ export function ChandraKranti() {
   );
 }
 
-export default ChandraKranti;
+export default DainikKranti;

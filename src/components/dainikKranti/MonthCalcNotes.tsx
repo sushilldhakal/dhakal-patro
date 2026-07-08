@@ -1,4 +1,4 @@
-import type { CalcNote } from "@/lib/chandrakranti/month-patro-tables";
+import type { CalcNote } from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
 import { PatroTableShell } from "./PatroTableShell";
 import { useLocale } from "@/i18n/locale";

@@ -35,7 +35,7 @@ const PANCHANGA_LINKS = [
   { to: "/panchanga" as const, labelKey: "nav.surya_panchanga", icon: Star },
   { to: "/suryakranti" as const, labelKey: "nav.suryakranti", icon: Sunrise },
   { to: "/abhijit-muhurta" as const, labelKey: "nav.abhijit_muhurta", icon: Sparkles },
-  { to: "/chandrakranti" as const, labelKey: "nav.chandrakranti", icon: Moon },
+  { to: "/dainikkranti" as const, labelKey: "nav.dainikkranti", icon: Moon },
   { to: "/panchanga/avakahada-chakra" as const, labelKey: "nav.avakahada_chakra", icon: Grid3x3 },
 ] as const;
 
@@ -64,7 +64,10 @@ function isPanchangaRoute(pathname: string) {
     pathname.startsWith("/panchanga/") ||
     pathname === "/suryakranti" || pathname === "/sun-times" ||
     pathname === "/abhijit-muhurta" ||
-    pathname === "/chandrakranti"
+    pathname === "/dainikkranti" ||
+    pathname === "/chandrakranti" ||
+    pathname === "/दैनिकक्रान्ति" ||
+    decodeURIComponent(pathname) === "/दैनिकक्रान्ति"
   );
 }
 

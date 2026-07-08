@@ -3,7 +3,7 @@ import {
   buildPlanetsByRashi,
   formatGocharBsLabel,
   RASHI_NE,
-} from "@/lib/chandrakranti/gochar-display";
+} from "@/lib/dainikKranti/gochar-display";
 import {
   GOCHAR_RASHI_TO_HOUSE,
   NI_HOUSE_POLYGONS,

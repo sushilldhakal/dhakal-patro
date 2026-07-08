@@ -24,10 +24,10 @@
         "description": "27 nakshatras — name syllables, rashi, lord, varna, vashya, yoni, gana and nadi.",
         "keywords": "Avakahada chakra, naming syllables, nakshatra"
       },
-      "chandrakranti": {
-        "title": "Chandra Kranti | Vedic Patro",
-        "description": "Moon sign transits, Gochar kundali and daily lunar positions.",
-        "keywords": "Chandra kranti, moon transit, gochar"
+      "dainikkranti": {
+        "title": "Daily Transit | Vedic Patro",
+        "description": "Daily graha transit, Gochar kundali and rashi changes.",
+        "keywords": "daily transit, gochar, planet transit, moon sign"
       },
       "shanti_vidhi": {
         "title": "Shanti Vidhi | Vedic Patro",
@@ -111,7 +111,7 @@
   "nav": {
     "surya_panchanga": "Surya Panchanga",
     "suryakranti": "Suryakranti",
-    "chandrakranti": "Daily Transit",
+    "dainikkranti": "Daily Transit",
     "shanti_vidhi": "Shanti Vidhi",
     "avakahada_chakra": "Avakahada Chakra",
     "converter": "Converter",
@@ -511,7 +511,11 @@
     "day_aria": "Day",
     "era_aria": "Calendar era",
     "today_badge": "Today",
-    "enrich_error": "Tithi & sunrise could not be loaded — dates are still correct."
+    "enrich_error": "Tithi & sunrise could not be loaded — dates are still correct.",
+    "paksha_aria": "Paksha",
+    "paksha_all": "All",
+    "paksha_krishna": "Krishna",
+    "paksha_shukla": "Shukla"
   },
   "aside": {
     "sunrise_sunset": "Sunrise / Sunset",
@@ -728,7 +732,7 @@
     "suryakranti_desc": "Annual sunrise & sunset",
     "panchanga_year_desc": "Tithi, nakshatra & graha through the year",
     "abhijit_muhurta_desc": "Daily auspicious Abhijit muhurta window",
-    "chandrakranti_desc": "Moon & graha transits",
+    "dainikkranti_desc": "Moon & graha transits",
     "panchak_patro_desc": "Annual Panchak windows",
     "kundali_build_title": "Birth Kundali",
     "kundali_build_desc": "Lagna, grahas, dasha & shadbala",

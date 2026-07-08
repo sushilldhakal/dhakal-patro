@@ -7,7 +7,7 @@ import {
   type CalcNote,
   type GrahaSpashtaRow,
   type LagnaMatrixRow,
-} from "@/lib/chandrakranti/month-patro-tables";
+} from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 

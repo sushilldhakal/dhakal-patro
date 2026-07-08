@@ -43,7 +43,7 @@ export interface PanchangaSearch extends LocationSearch {
   time?: string;
 }
 
-export interface ChandraKrantiSearch extends LocationSearch {
+export interface DainikKrantiSearch extends LocationSearch {
   /** Bikram Sambat year. */
   year?: number;
   /** Bikram Sambat month, 1-12. */
@@ -118,13 +118,13 @@ export function locationToSearch(loc: PanchangaLocation): LocationSearch {
   return out;
 }
 
-/** Shareable `/chandrakranti` search — location + BS month on screen. */
-export function buildChandraKrantiSearch(
+/** Shareable `/dainikkranti` search — location + BS month on screen. */
+export function buildDainikKrantiSearch(
   loc: PanchangaLocation,
   year: number,
   month: number,
-  paksha: NonNullable<ChandraKrantiSearch["paksha"]> = "all",
-): ChandraKrantiSearch {
+  paksha: NonNullable<DainikKrantiSearch["paksha"]> = "all",
+): DainikKrantiSearch {
   return {
     ...locationToSearch(loc),
     year,
@@ -192,10 +192,10 @@ export function validatePanchangaSearch(search: Record<string, unknown>): Pancha
   return out;
 }
 
-export function validateChandraKrantiSearch(
+export function validateDainikKrantiSearch(
   search: Record<string, unknown>
-): ChandraKrantiSearch {
-  const out: ChandraKrantiSearch = { ...validateLocationSearch(search) };
+): DainikKrantiSearch {
+  const out: DainikKrantiSearch = { ...validateLocationSearch(search) };
   const year = toInt(search.year);
   if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
     out.year = year;

@@ -1,5 +1,5 @@
-import type { LagnaMatrixRow } from "@/lib/chandrakranti/month-patro-tables";
-import { RASHI_COLUMNS_NE, RASHI_COLUMNS_EN } from "@/lib/chandrakranti/month-patro-tables";
+import type { LagnaMatrixRow } from "@/lib/dainikKranti/month-patro-tables";
+import { RASHI_COLUMNS_NE, RASHI_COLUMNS_EN } from "@/lib/dainikKranti/month-patro-tables";
 import { rashiSymFromNumber } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";

@@ -1,5 +1,5 @@
 import type { CalendarDay, GocharIngressEvent, PlanetInfo } from "@/lib/api";
-import { RASHI_NE } from "@/lib/chandrakranti/gochar-display";
+import { RASHI_NE } from "@/lib/dainikKranti/gochar-display";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import {
   GRAHA_KEY_TO_TRANSIT_ABBREV,
