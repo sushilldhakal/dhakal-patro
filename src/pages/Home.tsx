@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { VedicPatroLoader } from "../components/VedicPatroLoader";
 import {
   fetchPanchanga,
   panchangaKeys,
@@ -58,8 +58,7 @@ function PanchangaAside({
   todayAd,
   monthContext,
   p,
-  initialLoading,
-  refetching,
+  loading,
   error,
   placement = "sidebar",
 }: {
@@ -68,8 +67,8 @@ function PanchangaAside({
   todayAd: string;
   monthContext: CalendarMonthContext;
   p?: PanchangaDay;
-  initialLoading: boolean;
-  refetching: boolean;
+  /** True while the panchanga for the selected date/location is in flight. */
+  loading: boolean;
   error: boolean;
   placement?: "sidebar" | "below";
 }) {
@@ -145,30 +144,24 @@ function PanchangaAside({
             isBelow && "border-b border-border",
           )}
         >
-          <h2 className="m-0 flex flex-1 items-center gap-2 text-lg font-bold">
+          <h2 className="m-0 flex-1 text-lg font-bold">
             {isSelectedToday ? t("panchanga.today_title") : t("panchanga.title")}
-            {(refetching || initialLoading) && (
-              <Loader2
-                className="size-4 shrink-0 animate-spin text-muted-foreground"
-                aria-label={t("common.loading")}
-              />
-            )}
           </h2>
           <Link to="/panchanga" className={patroAsideLink}>
             {t("panchanga.full_detail")} →
           </Link>
         </div>
 
-        {initialLoading ? (
+        {loading ? (
           <div
             className={cn(
-              "flex items-center justify-center py-16",
-              !isBelow && "min-[1081px]:py-24",
+              "flex items-center justify-center py-14",
+              !isBelow && "min-[1081px]:py-20",
             )}
             role="status"
             aria-live="polite"
           >
-            <Loader2 className="size-8 animate-spin text-muted-foreground" aria-label={t("common.loading")} />
+            <VedicPatroLoader size={84} />
           </div>
         ) : error && !activeP ? (
           <div
@@ -272,7 +265,7 @@ function PanchangaAside({
                 bsMonth={monthContext.month}
                 monthDays={monthContext.days}
                 todayAd={todayAd}
-                loading={initialLoading}
+                loading={loading}
               />
             </div>
             </div>
@@ -327,9 +320,12 @@ export function Home() {
   }, []);
 
   const asideInitialLoading = panchangaQ.isLoading && !panchangaQ.data;
-  // keepPreviousData keeps `isLoading` false on a location/date change, so use
-  // `isFetching` to surface a spinner while stale data is being refreshed.
-  const asideRefetching = panchangaQ.isFetching && !asideInitialLoading;
+  // keepPreviousData keeps `isLoading` false on a location/date change and
+  // leaves the previous city's data on screen — confusing for the user. While
+  // the query is showing placeholder (previous-key) data mid-fetch, swap the
+  // panel body for the loader instead.
+  const asideLoading =
+    asideInitialLoading || (panchangaQ.isFetching && panchangaQ.isPlaceholderData);
   useRouteLoading(asideInitialLoading);
 
   return (
@@ -351,8 +347,7 @@ export function Home() {
             todayAd={todayAd}
             monthContext={monthContext}
             p={panchangaQ.data}
-            initialLoading={asideInitialLoading}
-            refetching={asideRefetching}
+            loading={asideLoading}
             error={panchangaQ.isError}
           />
         }

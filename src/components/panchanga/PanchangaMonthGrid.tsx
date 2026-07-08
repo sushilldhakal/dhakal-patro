@@ -10,6 +10,7 @@ import { adToBS } from "@/lib/bs-calendar";
 import { getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
+import { VedicPatroLoader } from "@/components/VedicPatroLoader";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -58,7 +59,7 @@ export function PanchangaMonthGrid({
 
   // Udaya mode renders only lite row fields (tithi/yoga/karana/sun times), so
   // fetch `full=false` and skip the heavy embedded per-day panchanga block.
-  const { data } = useQuery({
+  const { data, isFetching, isPlaceholderData } = useQuery({
     queryKey: isInstant
       ? panchangaKeys.monthAtClock(bs.year, bs.month, clock, locationParams)
       : panchangaKeys.month(bs.year, bs.month, locationParams, false),
@@ -74,6 +75,9 @@ export function PanchangaMonthGrid({
   const days = data?.calendar ?? [];
   const firstWeekday = days[0] ? new Date(days[0].date_ad).getDay() : 0;
   const blanks = Array.from({ length: firstWeekday }, (_, i) => i);
+  // keepPreviousData leaves the previous month/location's rows visible while
+  // refetching — cover them with the loader so the user knows data is stale.
+  const isLoadingFresh = isFetching && (isPlaceholderData || !data);
 
   const cellClass = (day: CalendarDay, phase: PakshaPhase | undefined) => {
     const isToday =
@@ -93,7 +97,24 @@ export function PanchangaMonthGrid({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-muted shadow-sm shadow-ring-soft">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-xl border border-border bg-muted shadow-sm shadow-ring-soft",
+        // No rows yet (first fetch for this location) — reserve space so the
+        // loader overlay isn't clipped by a collapsed grid.
+        days.length === 0 && "min-h-[420px]",
+      )}
+      aria-busy={isLoadingFresh}
+    >
+      {isLoadingFresh && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-[2px]"
+          role="status"
+          aria-live="polite"
+        >
+          <VedicPatroLoader size={88} />
+        </div>
+      )}
       {isInstant && (
         <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border">
           {pick("प्रत्येक दिन ", "Each day at ")}

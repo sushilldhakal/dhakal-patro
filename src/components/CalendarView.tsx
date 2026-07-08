@@ -31,6 +31,7 @@ import {
 } from "@/lib/local-calendar";
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { BsMonthHeaderTitle } from "./BsMonthHeaderTitle";
+import { VedicPatroLoader } from "./VedicPatroLoader";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
 import { patroSegBtn } from "@/lib/patro-classes";
@@ -331,13 +332,11 @@ export function CalendarView({
       <div className="relative" aria-busy={isEnriching}>
         {isEnriching && (
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center px-3 pt-2"
+            className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/70 backdrop-blur-[2px]"
             role="status"
             aria-live="polite"
           >
-            <span className="rounded-full border border-border/80 bg-card/95 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
-              {t("common.enriching")}
-            </span>
+            <VedicPatroLoader size={88} label={t("common.enriching")} />
           </div>
         )}
         <BsCalendarGrid
