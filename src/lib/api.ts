@@ -431,6 +431,43 @@ export const fetchYearCalendar = async (
   };
 };
 
+// ─── Year sun times (सूर्यक्रान्ति) ───────────────────────────────────────────
+// Slim per-day payload (sunrise/sunset/ayana only) — ~4 KB for a whole year
+// and served from the API's year cache in milliseconds.
+
+export interface SunYearDay {
+  day: number;
+  date_ad: string;
+  sunrise?: string;
+  sunset?: string;
+  aayan?: string;
+  aayan_ne?: string;
+  ayana_mark?: "उ" | "द";
+}
+
+export interface SunYearMonth {
+  month_bs: number;
+  month_name: string;
+  month_name_ne: string;
+  month_start_ad: string;
+  month_length: number;
+  calendar: SunYearDay[];
+}
+
+export interface SunYearResponse {
+  year_bs: number;
+  location?: PanchangaDay["location"];
+  months: SunYearMonth[];
+}
+
+export const sunYearKeys = {
+  year: (year: number, location?: LocationParams) =>
+    ["sun-times", "year", year, locationCacheKey(location)] as const,
+};
+
+export const fetchYearSunTimes = (year: number, location?: LocationParams) =>
+  get<SunYearResponse>(appendLocation(`/panchanga/year/${year}/sun`, location));
+
 export const fetchCalendarHeader = (year: number, month: number) =>
   get<CalendarHeader>(`/calendar/header/${year}/${month}`);
 

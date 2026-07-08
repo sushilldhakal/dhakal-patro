@@ -85,6 +85,8 @@ const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "
 const suryakrantiRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/suryakranti",
+  // Shareable: ?year=<bs> plus location (city / lat+lon+tz+place).
+  validateSearch: validatePanchangaYearSearch,
   component: SunTimesYear,
 });
 const abhijitMuhurtaRoute = createRoute({

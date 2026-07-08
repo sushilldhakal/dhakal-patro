@@ -9,9 +9,9 @@ import {
 } from "@tanstack/react-table";
 import { Sunrise, Sunset } from "lucide-react";
 import {
-  fetchYearCalendar,
-  panchangaKeys,
-  type CalendarDay,
+  fetchYearSunTimes,
+  sunYearKeys,
+  type SunYearDay,
   type LocationParams,
 } from "@/lib/api";
 import { BS_MONTHS_NE, getBSMonthLength, getCurrentBs } from "@/lib/bs-calendar";
@@ -53,13 +53,13 @@ export type SunDayRow = {
 
 type SunCell = SunDayRow;
 
-function resolveAyanaMark(day: CalendarDay): { mark?: "उ" | "द"; label?: string } {
+function resolveAyanaMark(day: SunYearDay): { mark?: "उ" | "द"; label?: string } {
   if (!day.ayana_mark) return {};
   return { mark: day.ayana_mark, label: day.aayan_ne ?? day.aayan };
 }
 
 function buildYearGrid(
-  months: (CalendarDay[] | undefined)[],
+  months: (SunYearDay[] | undefined)[],
 ): Map<string, SunCell> {
   const grid = new Map<string, SunCell>();
 
@@ -423,9 +423,11 @@ export function SunTimesYearGrid({
   hideHeader = false,
   onLoadingChange,
 }: Props) {
+  // Slim सूर्यक्रान्ति payload (~4 KB/year, ms from the API's year cache)
+  // instead of the full year calendar build.
   const yearQuery = useQuery({
-    queryKey: panchangaKeys.year(bsYear, locationParams, false),
-    queryFn: () => fetchYearCalendar(bsYear, locationParams, { full: false }),
+    queryKey: sunYearKeys.year(bsYear, locationParams),
+    queryFn: () => fetchYearSunTimes(bsYear, locationParams),
     staleTime: 1000 * 60 * 60 * 24,
   });
 

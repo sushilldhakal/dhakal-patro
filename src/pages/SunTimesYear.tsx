@@ -1,11 +1,18 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { Trans, useTranslation } from "react-i18next";
 import { ArrowLeft, CalendarRange, MapPin } from "lucide-react";
 import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
 import { useRouteLoading } from "@/lib/route-loading";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import {
+  locationToSearch,
+  sameLocationParams,
+  sameSearch,
+  searchToLocation,
+  type PanchangaYearSearch,
+} from "@/lib/url-state";
 import {
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
@@ -19,13 +26,51 @@ const BS_YEAR_OPTIONS = Array.from(
   (_, i) => BS_SUPPORTED_START_YEAR + i,
 );
 
+const routeApi = getRouteApi("/suryakranti");
+
+function initialYearFromSearch(searchYear?: number): number {
+  if (
+    searchYear != null &&
+    searchYear >= BS_SUPPORTED_START_YEAR &&
+    searchYear <= BS_SUPPORTED_END_YEAR
+  ) {
+    return searchYear;
+  }
+  return getCurrentBs().year;
+}
+
 export function SunTimesYear() {
   const { t } = useTranslation();
-  const { location, setLocation } = usePanchangaLocation();
-  const [year, setYear] = useState(() => getCurrentBs().year);
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const [year, setYear] = useState(() => initialYearFromSearch(search.year));
   const [gridLoading, setGridLoading] = useState(true);
 
   useRouteLoading(gridLoading);
+
+  // Keep the URL shareable: year + location always encoded in search params.
+  useEffect(() => {
+    const desired: PanchangaYearSearch = {
+      ...locationToSearch(location),
+      year,
+    };
+    if (!sameSearch(desired, search)) {
+      navigate({ search: desired, replace: true });
+    }
+  }, [location, year, search, navigate]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (search.year != null) {
+      const next = initialYearFromSearch(search.year);
+      setYear((current) => (current === next ? current : next));
+    }
+    const loc = searchToLocation(search);
+    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16 overflow-x-hidden">
