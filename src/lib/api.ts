@@ -58,6 +58,8 @@ export interface City {
   country: string;
   population: number;
   timezone: string;
+  admin1?: string | null;
+  admin1_name?: string | null;
 }
 
 export interface CitiesSearchResponse {
@@ -67,14 +69,18 @@ export interface CitiesSearchResponse {
 }
 
 export const cityKeys = {
-  search: (q: string) => ["cities", "search", q] as const,
+  search: (q: string, country?: string) => ["cities", "search", q, country ?? "all"] as const,
   popular: () => ["cities", "popular"] as const,
 };
 
-export const searchCities = (q: string, limit = 10) =>
-  get<CitiesSearchResponse>(
-    `/nepal/cities/search?q=${encodeURIComponent(q)}&limit=${limit}`
-  );
+export const searchCities = (q: string, limit = 15, country?: string) => {
+  const params = new URLSearchParams({
+    q,
+    limit: String(limit),
+  });
+  if (country) params.set("country", country);
+  return get<CitiesSearchResponse>(`/nepal/cities/search?${params.toString()}`);
+};
 
 export const fetchPopularCities = () =>
   get<{ count: number; cities: City[] }>("/nepal/cities/popular");

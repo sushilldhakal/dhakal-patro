@@ -32,6 +32,8 @@ function cityLabel(city: City): string {
 }
 
 function cityItemLabel(city: City): string {
+  const region = city.admin1_name ?? city.admin1;
+  if (region) return `${cityLabel(city)}, ${region}, ${city.country}`;
   return `${cityLabel(city)}, ${city.country}`;
 }
 
@@ -58,7 +60,7 @@ function LocationPickerPanel({
     <>
       <ComboboxInput
         showTrigger={false}
-        placeholder={pick("सहर खोज्नुहोस्", "Search city")}
+        placeholder={pick("नेपालको सहर खोज्नुहोस्", "Search a city in Nepal")}
         className="w-full"
       />
 
@@ -141,8 +143,8 @@ export function LocationSelector({
   }, [query]);
 
   const { data: searchData, isFetching: isSearching } = useQuery({
-    queryKey: cityKeys.search(debouncedQuery),
-    queryFn: () => searchCities(debouncedQuery),
+    queryKey: cityKeys.search(debouncedQuery, "NP"),
+    queryFn: () => searchCities(debouncedQuery, 15, "NP"),
     enabled: debouncedQuery.length >= 2 && open,
     staleTime: 60_000,
   });

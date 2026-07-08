@@ -41,7 +41,7 @@ export function CityAutocomplete({
     setLoading(true);
     const t = setTimeout(async () => {
       try {
-        const res = await searchCities(query.trim(), 8);
+        const res = await searchCities(query.trim(), 8, "NP");
         if (active) setResults(res.cities);
       } catch {
         if (active) setResults([]);
