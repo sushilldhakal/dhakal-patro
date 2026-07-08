@@ -183,7 +183,7 @@ function MonthSunDataTable({
       </TableHeader>
       <TableBody>
         {isLoading && rows.every((r) => !r.sunrise && !r.sunset) ? (
-          Array.from({ length: 6 }).map((_, i) => (
+          Array.from({ length: rows.length }).map((_, i) => (
             <TableRow key={i}>
               {columns.map((col, colIdx) => (
                 <TableCell
@@ -379,9 +379,10 @@ function SunTimesYearAccordion({
 
   return (
     <Accordion
+      key={isLoading ? "loading" : `ready-${bsYear}`}
       type="single"
       collapsible
-      defaultValue={`month-${currentMonth}`}
+      defaultValue={isLoading ? undefined : `month-${currentMonth}`}
       className="px-3 pb-3"
     >
       {BS_MONTHS_NE.map((name, idx) => {

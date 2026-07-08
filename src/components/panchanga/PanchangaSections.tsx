@@ -38,6 +38,7 @@ import {
   rashiSymFromNumber,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import type { BalamChip } from "@/lib/api";
 import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
 import {
@@ -181,12 +182,16 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
 }
 
 export function SamvatSection({ p }: { p: PanchangaDay }) {
+  const { pick } = useLocale();
   const detail = getPanchangaDetail(p);
   const bs = (detail?.bs_date ?? p.bs_date) as
     | { year?: number; month_name_ne?: string; day?: number }
     | undefined;
   const ns = formatNepalSambatDisplay(p);
   const shaka = formatShakaYear(p);
+  const samvatsara = bs?.year
+    ? resolveSamvatsaraForBsYear(bs.year, p.samvatsara)
+    : undefined;
 
   return (
     <PanchangaSection titleKey="sections.samvat">
@@ -196,6 +201,11 @@ export function SamvatSection({ p }: { p: PanchangaDay }) {
             {bs?.year && bs.month_name_ne && bs.day
               ? `${toNepaliDigits(bs.year)} ${bs.month_name_ne} ${toNepaliDigits(bs.day)}`
               : (p.display?.bs_ne ?? "—")}
+          </span>
+        </PanchangaRow>
+        <PanchangaRow labelKey="sections.samvatsara">
+          <span className="font-semibold">
+            {samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : "—"}
           </span>
         </PanchangaRow>
         <PanchangaRow labelKey="sections.shaka">

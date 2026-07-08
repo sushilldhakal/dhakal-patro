@@ -1360,6 +1360,14 @@ export interface PanchangaDay {
   date_bs?: string;
   date_ad?: string;
   bs_date?: { year: number; month: number; day: number; month_name_ne?: string };
+  samvatsara?: {
+    key: string;
+    name_en: string;
+    name_ne: string;
+    cycle: number;
+    deity: string;
+    index: number;
+  };
   display?: { bs_ne?: string; gregorian_en?: string; ns_ne?: string };
   weekday?: string;
   sunrise?: { local_time_short?: string } | string;

@@ -22,6 +22,7 @@ import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroAsideLink, patroAsideTab, patroHeroMonthOverlay, patroHeroMonthShell, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
 import { bsMonthArtUrl } from "@/lib/month-art";
+import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import {
   ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
@@ -121,6 +122,12 @@ function PanchangaAside({
     activeP?.festivals?.[0]?.name_en ?? activeP?.festivals?.[0]?.name_ne ?? contextDay?.festivals[0],
   );
   const topFestIsPublic = activeP?.festivals?.[0]?.is_public_holiday ?? false;
+  const bsYearForSamvatsara =
+    activeP?.bs_date && typeof activeP.bs_date === "object"
+      ? activeP.bs_date.year
+      : monthContext.year;
+  const samvatsara = resolveSamvatsaraForBsYear(bsYearForSamvatsara, activeP?.samvatsara);
+  const samvatsaraLabel = samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : undefined;
   const isBelow = placement === "below";
   const heroMonthArt = bsMonthArtUrl(monthContext.month);
 
@@ -215,6 +222,9 @@ function PanchangaAside({
                     {activeP?.bs_date && typeof activeP.bs_date === "object"
                       ? `, ${t("panchanga.bs_era")} ${digits(activeP.bs_date.year)}`
                       : `, ${t("panchanga.bs_era")} ${digits(monthContext.year)}`}
+                    {samvatsaraLabel ? (
+                      <span className="text-[rgba(245,245,241,0.72)]"> · {samvatsaraLabel}</span>
+                    ) : null}
                   </div>
                   <div className="mono mt-1.5 text-xs font-medium text-[rgba(245,245,241,0.55)]">
                     {adDisplay}
