@@ -56,13 +56,16 @@ export function PanchangaMonthGrid({
   const todayBs = adToBS(new Date());
   const isInstant = dataMode === "instant";
 
+  // Udaya mode renders only lite row fields (tithi/yoga/karana/sun times), so
+  // fetch `full=false` and skip the heavy embedded per-day panchanga block.
   const { data } = useQuery({
     queryKey: isInstant
       ? panchangaKeys.monthAtClock(bs.year, bs.month, clock, locationParams)
-      : panchangaKeys.month(bs.year, bs.month, locationParams),
+      : panchangaKeys.month(bs.year, bs.month, locationParams, false),
     queryFn: () =>
       fetchMonthCalendar(bs.year, bs.month, locationParams, {
         clock: isInstant ? clock : undefined,
+        full: isInstant ? undefined : false,
       }),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,

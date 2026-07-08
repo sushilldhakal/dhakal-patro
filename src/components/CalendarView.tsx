@@ -145,22 +145,25 @@ export function CalendarView({
   const canFetchNext =
     nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
 
+  // Lite month rows (`full=false`): the grid only renders day/tithi/festival
+  // basics and DayDetailModal fetches its own single-day detail, so skipping
+  // the embedded per-day panchanga cuts the payload ~10× and the server work.
   const monthQ = useQuery({
-    queryKey: panchangaKeys.month(year, month, location?.params),
-    queryFn: () => fetchMonthCalendar(year, month, location?.params),
+    queryKey: panchangaKeys.month(year, month, location?.params, false),
+    queryFn: () => fetchMonthCalendar(year, month, location?.params, { full: false }),
     staleTime: 1000 * 60 * 60,
   });
 
   const prevMonthQ = useQuery({
-    queryKey: panchangaKeys.month(prevBs.year, prevBs.month, location?.params),
-    queryFn: () => fetchMonthCalendar(prevBs.year, prevBs.month, location?.params),
+    queryKey: panchangaKeys.month(prevBs.year, prevBs.month, location?.params, false),
+    queryFn: () => fetchMonthCalendar(prevBs.year, prevBs.month, location?.params, { full: false }),
     staleTime: 1000 * 60 * 60,
     enabled: canFetchPrev && !isPanchangaPatro,
   });
 
   const nextMonthQ = useQuery({
-    queryKey: panchangaKeys.month(nextBs.year, nextBs.month, location?.params),
-    queryFn: () => fetchMonthCalendar(nextBs.year, nextBs.month, location?.params),
+    queryKey: panchangaKeys.month(nextBs.year, nextBs.month, location?.params, false),
+    queryFn: () => fetchMonthCalendar(nextBs.year, nextBs.month, location?.params, { full: false }),
     staleTime: 1000 * 60 * 60,
     enabled: canFetchNext && !isPanchangaPatro,
   });

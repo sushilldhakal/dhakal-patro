@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import {
   fetchPanchanga,
   panchangaKeys,
@@ -58,6 +59,7 @@ function PanchangaAside({
   monthContext,
   p,
   initialLoading,
+  refetching,
   error,
   placement = "sidebar",
 }: {
@@ -67,6 +69,7 @@ function PanchangaAside({
   monthContext: CalendarMonthContext;
   p?: PanchangaDay;
   initialLoading: boolean;
+  refetching: boolean;
   error: boolean;
   placement?: "sidebar" | "below";
 }) {
@@ -142,15 +145,32 @@ function PanchangaAside({
             isBelow && "border-b border-border",
           )}
         >
-          <h2 className="m-0 flex-1 text-lg font-bold">
+          <h2 className="m-0 flex flex-1 items-center gap-2 text-lg font-bold">
             {isSelectedToday ? t("panchanga.today_title") : t("panchanga.title")}
+            {(refetching || initialLoading) && (
+              <Loader2
+                className="size-4 shrink-0 animate-spin text-muted-foreground"
+                aria-label={t("common.loading")}
+              />
+            )}
           </h2>
           <Link to="/panchanga" className={patroAsideLink}>
             {t("panchanga.full_detail")} →
           </Link>
         </div>
 
-        {initialLoading ? null : error && !activeP ? (
+        {initialLoading ? (
+          <div
+            className={cn(
+              "flex items-center justify-center py-16",
+              !isBelow && "min-[1081px]:py-24",
+            )}
+            role="status"
+            aria-live="polite"
+          >
+            <Loader2 className="size-8 animate-spin text-muted-foreground" aria-label={t("common.loading")} />
+          </div>
+        ) : error && !activeP ? (
           <div
             className={cn(
               "flex flex-col gap-3",
@@ -307,6 +327,9 @@ export function Home() {
   }, []);
 
   const asideInitialLoading = panchangaQ.isLoading && !panchangaQ.data;
+  // keepPreviousData keeps `isLoading` false on a location/date change, so use
+  // `isFetching` to surface a spinner while stale data is being refreshed.
+  const asideRefetching = panchangaQ.isFetching && !asideInitialLoading;
   useRouteLoading(asideInitialLoading);
 
   return (
@@ -329,6 +352,7 @@ export function Home() {
             monthContext={monthContext}
             p={panchangaQ.data}
             initialLoading={asideInitialLoading}
+            refetching={asideRefetching}
             error={panchangaQ.isError}
           />
         }
