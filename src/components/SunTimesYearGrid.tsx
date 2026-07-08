@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   createColumnHelper,
   flexRender,
@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import { Sunrise, Sunset } from "lucide-react";
 import {
-  fetchMonthCalendar,
+  fetchYearCalendar,
   panchangaKeys,
   type CalendarDay,
   type LocationParams,
@@ -423,28 +423,23 @@ export function SunTimesYearGrid({
   hideHeader = false,
   onLoadingChange,
 }: Props) {
-  const monthQueries = useQueries({
-    queries: Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      return {
-        queryKey: panchangaKeys.month(bsYear, month, locationParams, false),
-        queryFn: () => fetchMonthCalendar(bsYear, month, locationParams, { full: false }),
-        staleTime: 1000 * 60 * 60,
-      };
-    }),
+  const yearQuery = useQuery({
+    queryKey: panchangaKeys.year(bsYear, locationParams, false),
+    queryFn: () => fetchYearCalendar(bsYear, locationParams, { full: false }),
+    staleTime: 1000 * 60 * 60 * 24,
   });
 
-  const isLoading = monthQueries.some((q) => q.isLoading);
-  const isError = monthQueries.every((q) => q.isError);
+  const isLoading = yearQuery.isLoading;
+  const isError = yearQuery.isError;
 
   useEffect(() => {
     onLoadingChange?.(isLoading);
   }, [isLoading, onLoadingChange]);
 
   const grid = useMemo(() => {
-    const monthDays = monthQueries.map((q) => q.data?.calendar);
-    return buildYearGrid(monthDays);
-  }, [monthQueries]);
+    const monthDays = yearQuery.data?.months.map((month) => month.calendar);
+    return buildYearGrid(monthDays ?? []);
+  }, [yearQuery.data]);
 
   const maxDay = useMemo(() => {
     let max = 30;
