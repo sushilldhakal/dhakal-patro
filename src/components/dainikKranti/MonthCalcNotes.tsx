@@ -1,7 +1,20 @@
+import { useMemo } from "react";
 import type { CalcNote } from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
 import { PatroTableShell } from "./PatroTableShell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useLocale } from "@/i18n/locale";
+import {
+  patroStickyHeadCell,
+  patroStickyHeadRow,
+} from "@/lib/patro-classes";
 
 const UDAYAST_LEGEND: { code: string; full: string; fullEn: string; meaning: string; meaningEn: string }[] = [
   { code: "व.उ.", full: "वक्र उदय", fullEn: "Retrograde rising", meaning: "ग्रह वक्र (उल्टो) अवस्थामा उदय भएको।", meaningEn: "The planet rises while retrograde (moving backward)." },
@@ -27,44 +40,124 @@ const KIND_LABEL_EN: Record<CalcNote["kind"], string> = {
   paksha_boundary: "Paksha boundary",
 };
 
+const KIND_ORDER: Record<CalcNote["kind"], number> = {
+  paksha_boundary: 0,
+  late_night: 1,
+  ingress: 2,
+  udayast: 3,
+  motion: 4,
+};
+
+type DayGroup = {
+  day: number;
+  dateAd: string;
+  notes: CalcNote[];
+};
+
 type Props = {
   notes: CalcNote[];
   loading?: boolean;
   embedded?: boolean;
 };
 
+function KindBadge({ kind }: { kind: CalcNote["kind"] }) {
+  const { pick } = useLocale();
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none sm:text-[11px]",
+        kind === "late_night" && "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+        kind === "ingress" && "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300",
+        kind === "paksha_boundary" && "bg-muted text-muted-foreground",
+        kind === "udayast" && "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+        kind === "motion" && "bg-rose-500/15 text-rose-700 dark:text-rose-300",
+      )}
+    >
+      {pick(KIND_LABEL[kind], KIND_LABEL_EN[kind])}
+    </span>
+  );
+}
+
+const th = "h-9 whitespace-nowrap px-2.5 text-left text-xs font-semibold text-muted-foreground";
+const td = "px-2.5 py-2 align-top text-sm";
+
 export function MonthCalcNotes({ notes, loading, embedded }: Props) {
   const { pick, digits } = useLocale();
-  const notesList = loading ? (
+
+  const groups = useMemo(() => {
+    const byDate = new Map<string, DayGroup>();
+    for (const note of notes) {
+      const existing = byDate.get(note.dateAd);
+      if (existing) {
+        existing.notes.push(note);
+      } else {
+        byDate.set(note.dateAd, {
+          day: note.day,
+          dateAd: note.dateAd,
+          notes: [note],
+        });
+      }
+    }
+    return [...byDate.values()]
+      .sort((a, b) => a.day - b.day || a.dateAd.localeCompare(b.dateAd))
+      .map((group) => ({
+        ...group,
+        notes: [...group.notes].sort(
+          (a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.text.localeCompare(b.text),
+        ),
+      }));
+  }, [notes]);
+
+  const notesTable = loading ? (
     <p className="px-4 py-8 text-center text-sm text-muted-foreground">{pick("लोड हुँदैछ…", "Loading…")}</p>
-  ) : notes.length === 0 ? (
+  ) : groups.length === 0 ? (
     <p className="px-4 py-8 text-center text-sm text-muted-foreground">
       {pick("यस महिनामा विशेष गणना सूचना छैन।", "No special calculation notes this month.")}
     </p>
   ) : (
-    <ul className="divide-y divide-border">
-      {notes.map((note) => (
-        <li
-          key={`${note.dateAd}-${note.kind}-${note.text}`}
-          className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5 text-sm"
-        >
-          <span className="shrink-0 font-semibold text-secondary">
-            {digits(note.day)}
-          </span>
-          <span
-            className={cn(
-              "shrink-0 rounded px-2 py-0.5 text-xs font-semibold sm:text-sm",
-              note.kind === "late_night" && "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-              note.kind === "ingress" && "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300",
-              note.kind === "paksha_boundary" && "bg-muted text-muted-foreground",
-            )}
-          >
-            {pick(KIND_LABEL[note.kind], KIND_LABEL_EN[note.kind])}
-          </span>
-          <span className="text-foreground">{pick(note.text, note.textEn ?? note.text)}</span>
-        </li>
-      ))}
-    </ul>
+    <div className="overflow-x-auto">
+      <Table className="w-full min-w-[28rem] text-sm">
+        <TableHeader>
+          <TableRow className={patroStickyHeadRow}>
+            <TableHead className={cn(th, patroStickyHeadCell, "w-14")}>
+              {pick("गते", "Date")}
+            </TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell)}>
+              {pick("सूचना", "Notes")}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {groups.map((group) => (
+            <TableRow key={group.dateAd}>
+              <TableCell className={cn(td, "w-14 font-bold tabular-nums text-secondary")}>
+                {digits(group.day)}
+              </TableCell>
+              <TableCell className={td}>
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  {group.notes.map((note, i) => (
+                    <span
+                      key={`${note.kind}-${note.text}`}
+                      className="inline-flex max-w-full flex-wrap items-baseline gap-1"
+                    >
+                      {i > 0 ? (
+                        <span className="text-muted-foreground/50" aria-hidden>
+                          ·
+                        </span>
+                      ) : null}
+                      <KindBadge kind={note.kind} />
+                      <span className="text-foreground">
+                        {pick(note.text, note.textEn ?? note.text)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 
   const legend = (
@@ -110,7 +203,7 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
   if (embedded) {
     return (
       <div>
-        {notesList}
+        {notesTable}
         {legend}
       </div>
     );
@@ -124,7 +217,7 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
         subtitle="ग्रह सङ्क्रान्ति, २४:०० पछिको लग्न/ग्रहचार, र अधिक/शुद्ध पक्ष सीमाहरू — जन्मकुण्डली र विधि समयका लागि ध्यान दिनुपर्ने दिनहरू।"
         subtitleEn="Planetary sankrantis, post-24:00 lagna/transits, and adhik/shuddha paksha boundaries — days to note for birth-chart and ritual timing."
       >
-        {notesList}
+        {notesTable}
       </PatroTableShell>
       {legend}
     </div>
