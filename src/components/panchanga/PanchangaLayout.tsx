@@ -150,9 +150,9 @@ export function PanchangaTableBody({
 /** @deprecated use PanchangaQuadRow */
 export function PanchangaRows({
   children,
-  twoCol = false,
 }: {
   children: React.ReactNode;
+  /** @deprecated ignored — use PanchangaQuadRow */
   twoCol?: boolean;
 }) {
   return <PanchangaTableBody>{children}</PanchangaTableBody>;

@@ -50,8 +50,6 @@ import {
   DenseListTable,
   PanchangaFullRow,
   PanchangaQuadRow,
-  PanchangaRow,
-  PanchangaRows,
   PanchangaSection,
   PanchangaSubBlock,
   PanchangaTableBody,
@@ -238,7 +236,7 @@ export function SunMoonSection({ p }: { p: PanchangaDay }) {
 }
 
 /** @deprecated use SunMoonSamvatSection */
-export function SamvatSection({ p }: { p: PanchangaDay }) {
+export function SamvatSection(_props: { p: PanchangaDay }) {
   return null;
 }
 
@@ -686,10 +684,8 @@ export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
 
 function NivasDirectionValue({
   segment,
-  lang,
 }: {
   segment?: NivasShoolSegment | null;
-  lang: "ne" | "en" | "hi";
 }) {
   const { pick } = useLocale();
   if (!segment) return <span className="text-muted-foreground">—</span>;
@@ -699,13 +695,11 @@ function NivasDirectionValue({
 
 function NivasTimedSegments({
   segments,
-  lang,
   showSubtitle = false,
   showSymbol = false,
   showGuna = false,
 }: {
   segments?: NivasShoolSegment[];
-  lang: "ne" | "en" | "hi";
   showSubtitle?: boolean;
   showSymbol?: boolean;
   showGuna?: boolean;
@@ -765,7 +759,6 @@ function NivasTimedSegments({
 }
 
 export function NivasShoolSection({ p }: { p: PanchangaDay }) {
-  const { lang } = useLocale();
   const ns = getNivasShool(p);
   if (!ns) return null;
 
@@ -781,27 +774,25 @@ export function NivasShoolSection({ p }: { p: PanchangaDay }) {
             children: (
               <NivasTimedSegments
                 segments={ns.homahuti?.segments}
-                lang={lang}
                 showSymbol
               />
             ),
           }}
           right={{
             labelKey: "sections.disha_shool",
-            children: <NivasDirectionValue segment={disha} lang={lang} />,
+            children: <NivasDirectionValue segment={disha} />,
           }}
         />
         <PanchangaQuadRow
           left={{
             labelKey: "sections.rahu_vasa",
-            children: <NivasDirectionValue segment={rahu} lang={lang} />,
+            children: <NivasDirectionValue segment={rahu} />,
           }}
           right={{
             labelKey: "sections.agnivasa",
             children: (
               <NivasTimedSegments
                 segments={ns.agnivasa?.segments}
-                lang={lang}
                 showSubtitle
               />
             ),
@@ -811,13 +802,13 @@ export function NivasShoolSection({ p }: { p: PanchangaDay }) {
           left={{
             labelKey: "sections.chandra_vasa",
             children: (
-              <NivasTimedSegments segments={ns.chandra_vasa?.segments} lang={lang} />
+              <NivasTimedSegments segments={ns.chandra_vasa?.segments} />
             ),
           }}
           right={{
             labelKey: "sections.shivavasa",
             children: (
-              <NivasTimedSegments segments={ns.shivavasa?.segments} lang={lang} />
+              <NivasTimedSegments segments={ns.shivavasa?.segments} />
             ),
           }}
         />
@@ -828,7 +819,6 @@ export function NivasShoolSection({ p }: { p: PanchangaDay }) {
               children: (
                 <NivasTimedSegments
                   segments={ns.bhadravasa.segments}
-                  lang={lang}
                   showSubtitle
                 />
               ),
@@ -838,7 +828,6 @@ export function NivasShoolSection({ p }: { p: PanchangaDay }) {
               children: (
                 <NivasTimedSegments
                   segments={ns.kumbha_chakra?.segments}
-                  lang={lang}
                   showGuna
                 />
               ),
@@ -851,7 +840,6 @@ export function NivasShoolSection({ p }: { p: PanchangaDay }) {
               children: (
                 <NivasTimedSegments
                   segments={ns.kumbha_chakra?.segments}
-                  lang={lang}
                   showGuna
                 />
               ),
