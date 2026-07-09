@@ -601,6 +601,41 @@ export function RituSection({ p }: { p: PanchangaDay }) {
   );
 }
 
+function MuhurtaTimingValue({
+  value,
+  variant,
+}: {
+  value: string;
+  variant: "good" | "bad";
+}) {
+  const lines = value.split("\n").filter(Boolean);
+  if (lines.length === 1 && lines[0].includes(" – ") && !lines[0].includes("सम्म")) {
+    const [start, end] = lines[0].split(" – ");
+    return (
+      <TimingRange
+        start={start}
+        end={end?.split(" (")[0]}
+        variant={variant}
+      />
+    );
+  }
+  return (
+    <div
+      className={
+        variant === "good"
+          ? "flex flex-col gap-1 text-emerald-800 dark:text-emerald-300"
+          : "flex flex-col gap-1 text-rose-800 dark:text-rose-300"
+      }
+    >
+      {lines.map((line) => (
+        <span key={line} className="text-[13px] font-medium leading-snug">
+          {line}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
   const rows = getMuhurtaRows(p);
@@ -618,11 +653,7 @@ export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
             <PanchangaTableBody>
               {good.map((row) => (
                 <PanchangaFullRow key={row.label} label={row.label}>
-                  <TimingRange
-                    start={row.value.split(" – ")[0]}
-                    end={row.value.split(" – ")[1]?.split(" (")[0]}
-                    variant="good"
-                  />
+                  <MuhurtaTimingValue value={row.value} variant="good" />
                 </PanchangaFullRow>
               ))}
             </PanchangaTableBody>
@@ -632,11 +663,7 @@ export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
             <PanchangaTableBody>
               {bad.map((row) => (
                 <PanchangaFullRow key={row.label} label={row.label}>
-                  <TimingRange
-                    start={row.value.split(" – ")[0]}
-                    end={row.value.split(" – ")[1]}
-                    variant="bad"
-                  />
+                  <MuhurtaTimingValue value={row.value} variant="bad" />
                 </PanchangaFullRow>
               ))}
             </PanchangaTableBody>
@@ -653,11 +680,7 @@ export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
           <PanchangaTableBody>
             {good.map((row) => (
               <PanchangaFullRow key={row.label} label={row.label}>
-                <TimingRange
-                  start={row.value.split(" – ")[0]}
-                  end={row.value.split(" – ")[1]?.split(" (")[0]}
-                  variant="good"
-                />
+                <MuhurtaTimingValue value={row.value} variant="good" />
               </PanchangaFullRow>
             ))}
           </PanchangaTableBody>
@@ -668,11 +691,7 @@ export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
           <PanchangaTableBody>
             {bad.map((row) => (
               <PanchangaFullRow key={row.label} label={row.label}>
-                <TimingRange
-                  start={row.value.split(" – ")[0]}
-                  end={row.value.split(" – ")[1]}
-                  variant="bad"
-                />
+                <MuhurtaTimingValue value={row.value} variant="bad" />
               </PanchangaFullRow>
             ))}
           </PanchangaTableBody>
@@ -758,8 +777,14 @@ function NivasTimedSegments({
   );
 }
 
-export function NivasShoolSection({ p }: { p: PanchangaDay }) {
-  const ns = getNivasShool(p);
+export function NivasShoolSection({
+  p,
+  fallback,
+}: {
+  p: PanchangaDay;
+  fallback?: PanchangaDay | null;
+}) {
+  const ns = getNivasShool(p) ?? (fallback ? getNivasShool(fallback) : undefined);
   if (!ns) return null;
 
   const disha = ns.disha_shool;

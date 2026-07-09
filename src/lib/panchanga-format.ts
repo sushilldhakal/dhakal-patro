@@ -1208,12 +1208,65 @@ type MuhurtaWindow = {
   is_auspicious?: boolean;
 };
 
+type MuhurtaTimingSegment = {
+  start_local_time_short?: string;
+  end_local_time_short?: string;
+  until_full_night?: boolean;
+  spans_midnight?: boolean;
+  subtitle_en?: string;
+  subtitle_ne?: string;
+};
+
+type MuhurtaTimingEntry = {
+  key?: string;
+  name_en?: string;
+  name_ne?: string;
+  is_auspicious?: boolean;
+  segments?: MuhurtaTimingSegment[];
+};
+
 type MuhurtaDetail = {
   rahu_kalam?: MuhurtaWindow;
   yamaganda?: MuhurtaWindow;
   gulika?: MuhurtaWindow;
   abhijit?: MuhurtaWindow;
+  auspicious_timings?: MuhurtaTimingEntry[];
+  inauspicious_timings?: MuhurtaTimingEntry[];
 };
+
+function formatMuhurtaSegment(seg: MuhurtaTimingSegment): string {
+  const start = seg.start_local_time_short
+    ? toNepaliDigits(formatTimeShort(seg.start_local_time_short) ?? seg.start_local_time_short)
+    : undefined;
+  const end = seg.end_local_time_short
+    ? toNepaliDigits(formatTimeShort(seg.end_local_time_short) ?? seg.end_local_time_short)
+    : undefined;
+  const subtitle = seg.subtitle_ne ?? seg.subtitle_en;
+  if (start && end) {
+    return subtitle ? `${subtitle} ${start} – ${end}` : `${start} – ${end}`;
+  }
+  if (start && seg.until_full_night) {
+    return `${start} देखि सम्पूर्ण रातसम्म`;
+  }
+  if (end && !start) {
+    return subtitle ? `${subtitle} ${end} सम्म` : `${end} सम्म`;
+  }
+  return start ?? end ?? "—";
+}
+
+function formatMuhurtaTimingEntry(
+  entry: MuhurtaTimingEntry,
+): { label: string; value: string; auspicious?: boolean } | null {
+  const segments = entry.segments?.filter(Boolean);
+  if (!segments?.length) return null;
+  const label = entry.name_ne || entry.name_en || entry.key || "—";
+  const value = segments.map((seg) => formatMuhurtaSegment(seg)).join("\n");
+  return {
+    label,
+    value,
+    auspicious: entry.is_auspicious,
+  };
+}
 
 function formatMuhurtaRange(start?: string, end?: string): string | undefined {
   if (!start || !end) return undefined;
@@ -1293,6 +1346,16 @@ export function getMuhurtaRows(p: PanchangaDay): {
   const detail = getPanchangaDetail(p);
   const m = (detail?.muhurta ?? p.muhurta) as MuhurtaDetail | undefined;
   if (!m) return [];
+
+  if (m.auspicious_timings?.length || m.inauspicious_timings?.length) {
+    const good = (m.auspicious_timings ?? [])
+      .map((entry) => formatMuhurtaTimingEntry(entry))
+      .filter((row): row is NonNullable<typeof row> => Boolean(row));
+    const bad = (m.inauspicious_timings ?? [])
+      .map((entry) => formatMuhurtaTimingEntry(entry))
+      .filter((row): row is NonNullable<typeof row> => Boolean(row));
+    return [...good, ...bad];
+  }
 
   const rows: { label: string; value: string; auspicious?: boolean }[] = [];
 

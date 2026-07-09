@@ -60,12 +60,15 @@ export function mergeEphemerisWithDaily(
   return normalizeEphemerisDay({
     ...daily,
     ...instant,
+    nivas_shool: instant.nivas_shool ?? daily.nivas_shool,
     lagna_spans: lagnaSpans,
     detail: {
       ...dailyDetail,
       ...instantDetail,
       lagna_spans: lagnaSpans,
       udaya_lagna: lagnaSpans,
+      nivas_shool:
+        instantDetail.nivas_shool ?? dailyDetail.nivas_shool ?? daily.nivas_shool,
       planets: instantDetail.planets ?? dailyDetail.planets,
       planets_anchor: instantDetail.planets_anchor ?? dailyDetail.planets_anchor,
       muhurta_now: instantDetail.muhurta_now ?? dailyDetail.muhurta_now,

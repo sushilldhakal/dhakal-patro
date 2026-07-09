@@ -9,6 +9,14 @@ const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const API_VERSION = import.meta.env.VITE_API_VERSION ?? "v1";
 const DATA_BASE = `${BASE}/${API_VERSION}`;
 
+/**
+ * Bumps with backend `CACHE_PAYLOAD_VERSION` (nepali-holiday-api). Appended as
+ * `cv=` on panchanga URLs so Cloudflare edge keys change on engine deploys
+ * without a manual purge.
+ */
+export const PANCHANGA_CACHE_VERSION =
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "20";
+
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;
 /** Versioned base for public, cacheable data endpoints. */
@@ -57,6 +65,12 @@ function appendLocation(path: string, location?: LocationParams): string {
   return `${path}${path.includes("?") ? "&" : "?"}${qs}`;
 }
 
+/** Append engine cache version for CDN-safe panchanga GET URLs. */
+function withPanchangaCacheVersion(path: string): string {
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}cv=${PANCHANGA_CACHE_VERSION}`;
+}
+
 export interface City {
   id: number;
   name: string;
@@ -99,7 +113,7 @@ export const panchangaKeys = {
   today: (location?: LocationParams) =>
     ["panchanga", "today", locationCacheKey(location)] as const,
   day: (date: string, era: string, location?: LocationParams) =>
-    ["panchanga", "day", date, era, locationCacheKey(location)] as const,
+    ["panchanga", "day", PANCHANGA_CACHE_VERSION, date, era, locationCacheKey(location)] as const,
   nepalDay: (date: string, location?: LocationParams) =>
     ["panchanga", "nepal", date, locationCacheKey(location)] as const,
   month: (year: number, month: number, location?: LocationParams, full = true) =>
@@ -114,7 +128,7 @@ export const panchangaKeys = {
   ) =>
     ["panchanga", "month", "clock", year, month, clock, locationCacheKey(location)] as const,
   atTime: (datetime: string, location?: LocationParams) =>
-    ["panchanga", "at-time", datetime, locationCacheKey(location)] as const,
+    ["panchanga", "at-time", PANCHANGA_CACHE_VERSION, datetime, locationCacheKey(location)] as const,
   header: (year: number, month: number, location?: LocationParams) =>
     ["calendar", "header", year, month, locationCacheKey(location)] as const,
 };
@@ -122,7 +136,12 @@ export const panchangaKeys = {
 export const fetchTodayPanchanga = (location?: LocationParams) => {
   const today = new Date().toISOString().split("T")[0];
   return get<PanchangaDay>(
-    appendLocation(`/panchanga/${today}?era=ad&festivals=true&detail=true`, location)
+    appendLocation(
+      withPanchangaCacheVersion(
+        `/panchanga/${today}?era=ad&festivals=true&detail=true`,
+      ),
+      location,
+    ),
   );
 };
 
@@ -132,7 +151,12 @@ export const fetchPanchanga = (
   location?: LocationParams
 ) =>
   get<PanchangaDay>(
-    appendLocation(`/panchanga/${date}?era=${era}&festivals=true&detail=true`, location)
+    appendLocation(
+      withPanchangaCacheVersion(
+        `/panchanga/${date}?era=${era}&festivals=true&detail=true`,
+      ),
+      location,
+    ),
   );
 
 export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =>
@@ -149,7 +173,10 @@ export const fetchPanchangaAtTime = (
   params.set("datetime", datetime);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
   return get<PanchangaDay>(
-    appendLocation(`/panchanga/at-time?${params.toString()}`, location)
+    appendLocation(
+      withPanchangaCacheVersion(`/panchanga/at-time?${params.toString()}`),
+      location,
+    ),
   );
 };
 

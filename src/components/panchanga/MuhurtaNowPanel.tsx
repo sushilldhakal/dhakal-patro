@@ -55,13 +55,13 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
               key={key}
               className={cn(
                 "flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-sm",
-                active ? "bg-secondary/20 text-secondary-foreground" : "bg-muted/40"
+                active ? "bg-secondary/20 text-secondary" : "bg-muted/40"
               )}
             >
               <span>
                 <span className="font-semibold">{pick(label, labelEn)}</span>
               </span>
-              <span className="text-right shrink-0">
+              <span className="text-right shrink-0 font-semibold">
                 {active ? (
                   <span className="text-xs font-bold uppercase tracking-wide text-secondary">
                     {pick("सक्रिय", "Active")}

@@ -262,7 +262,7 @@ export function Panchanga() {
               <BalamSection p={data} />
               <PanchakaLagnaSection p={data} />
               <MuhurtaTimingsSection p={data} />
-              <NivasShoolSection p={data} />
+              <NivasShoolSection p={data} fallback={wheelData} />
               <DinVisheshSection p={data} />
               <FestivalsSection p={data} />
             </div>
