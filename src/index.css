@@ -5,8 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-devanagari);
+  --font-heading: var(--font-devanagari);
   --font-en: "Oxanium", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
   --color-background: var(--background);
@@ -111,8 +112,9 @@
   --color-danger: var(--brand-vermilion);
   --color-info: var(--brand-blue);
 
-  --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-devanagari);
+  --font-heading: var(--font-devanagari);
   --font-en: "Oxanium", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
 
@@ -166,7 +168,7 @@
   --ring: var(--brand-saffron);
   --sidebar-accent: var(--brand-saffron);
 
-  --pn-font: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --pn-font: var(--font-devanagari);
   --pn-num: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
   --pn-ring-soft: color-mix(in srgb, var(--brand-gold) 28%, transparent);
 
@@ -223,9 +225,9 @@
   }
 
   html:not([lang="en"]) {
-    --pn-font: "Mukta", ui-sans-serif, system-ui, sans-serif;
-    --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
-    --font-heading: "Mukta", ui-sans-serif, system-ui, sans-serif;
+    --pn-font: var(--font-devanagari);
+    --font-sans: var(--font-devanagari);
+    --font-heading: var(--font-devanagari);
   }
 
   body {

@@ -30,6 +30,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLocale } from "@/i18n/locale";
 
 const PANCHANGA_LINKS = [
   { to: "/panchanga" as const, labelKey: "nav.surya_panchanga", icon: Star },
@@ -356,11 +357,15 @@ function DrawerBrandHeader() {
 
 export function Header() {
   const { t } = useTranslation();
+  const { lang } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tabletOpen, setTabletOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+    <header
+      lang={lang}
+      className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md"
+    >
       <div className="max-w-[1400px] py-4 mx-auto px-4 h-16 flex items-center gap-3">
         {/* Desktop — brand left, nav center, theme right */}
         <BrandMark className="hidden lg:flex" />

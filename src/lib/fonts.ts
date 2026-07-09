@@ -5,7 +5,7 @@ const OXANIUM_FONT_ID = "oxanium-font";
 const OXANIUM_HREF =
   "https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&display=swap";
 
-/** Load Oxanium only for English UI; Nepali stays on Mukta. */
+/** Load Oxanium only for English UI; Nepali uses Noto Sans Devanagari + Mukta. */
 export function ensureLocaleFonts(lang: string) {
   if (!isBrowser) return;
 
