@@ -137,7 +137,7 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="text-[13px] font-semibold">{pick(e.ne, e.en)}</span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[13px] text-muted-foreground font-semibold">
                   <span className="font-mono">{e.time}</span>
                 </span>
               </span>
