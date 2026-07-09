@@ -1,4 +1,4 @@
-import type { CalendarDay, Festival, PanchangaDay } from "./api";
+import type { CalendarDay, Festival, NivasShoolBlock, PanchangaDay } from "./api";
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
 import { GRAHA_NAME } from "@/lib/graha-details";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
@@ -247,11 +247,26 @@ export function totalSolarCorrectionMinutes(solar?: SolarCorrections): number {
   );
 }
 
-type RituBlock = { name_ne?: string; season?: string };
+type RituBlock = { name?: string; name_ne?: string; season?: string };
+type AayanBlock = { name?: string; name_ne?: string };
+type DurationBlock = {
+  label_en?: string;
+  label_ne?: string;
+  label_en_full?: string;
+  label_ne_full?: string;
+  hours?: number;
+  minutes?: number;
+  seconds?: number;
+};
+
+function getDetailValue<T>(p: PanchangaDay, key: string): T | undefined {
+  const detail = getPanchangaDetail(p);
+  return (detail?.[key] ?? (p as Record<string, unknown>)[key]) as T | undefined;
+}
 
 export function getRituDisplayNe(p?: PanchangaDay | null): string | undefined {
   if (!p) return undefined;
-  const ritu = getPanchangaDetail(p)?.ritu as RituBlock | undefined;
+  const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
   if (ritu?.name_ne) return ritu.name_ne;
   if (typeof p.ritu === "object" && p.ritu?.name_ne) return p.ritu.name_ne;
   return p.ritu_ne;
@@ -259,10 +274,48 @@ export function getRituDisplayNe(p?: PanchangaDay | null): string | undefined {
 
 export function getRituSeason(p?: PanchangaDay | null): string | undefined {
   if (!p) return undefined;
-  const ritu = getPanchangaDetail(p)?.ritu as RituBlock | undefined;
+  const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
   if (ritu?.season) return ritu.season;
   if (typeof p.ritu === "object" && p.ritu?.season) return p.ritu.season;
   return undefined;
+}
+
+export function getRituPauranik(p?: PanchangaDay | null): RituBlock | undefined {
+  if (!p) return undefined;
+  return getDetailValue<RituBlock>(p, "ritu_pauranik");
+}
+
+export function getRituVedic(p?: PanchangaDay | null): RituBlock | undefined {
+  if (!p) return undefined;
+  return getDetailValue<RituBlock>(p, "ritu_vedic") ?? getDetailValue<RituBlock>(p, "ritu");
+}
+
+export function getAayanPauranik(p?: PanchangaDay | null): AayanBlock | undefined {
+  if (!p) return undefined;
+  return getDetailValue<AayanBlock>(p, "aayan_pauranik");
+}
+
+export function getAayanVedic(p?: PanchangaDay | null): AayanBlock | undefined {
+  if (!p) return undefined;
+  return getDetailValue<AayanBlock>(p, "aayan_vedic") ?? getDetailValue<AayanBlock>(p, "aayan");
+}
+
+export function formatRituLabel(
+  ritu: RituBlock | undefined,
+  lang: "ne" | "en" | "hi",
+): string | undefined {
+  if (!ritu) return undefined;
+  const name = pickLocale(lang, ritu.name_ne ?? ritu.name ?? "", ritu.name ?? ritu.name_ne ?? "");
+  if (lang === "en" && ritu.season) return `${name} (${ritu.season})`;
+  return name;
+}
+
+export function formatAayanLabel(
+  aayan: AayanBlock | undefined,
+  lang: "ne" | "en" | "hi",
+): string | undefined {
+  if (!aayan) return undefined;
+  return pickLocale(lang, aayan.name_ne ?? aayan.name ?? "", aayan.name ?? aayan.name_ne ?? "");
 }
 
 export function formatSolarCorrectionDisplay(c?: SolarCorrection): string | undefined {
@@ -644,12 +697,50 @@ export function formatNepalSambatFull(p: PanchangaDay): string | undefined {
 }
 
 export function formatDinamaanShort(p: PanchangaDay): string | undefined {
-  const detail = getPanchangaDetail(p);
-  const dm = (detail?.dinamaan ?? p.dinamaan) as { hours?: number; minutes?: number; label_ne?: string } | undefined;
-  if (dm?.hours != null && dm.minutes != null) {
-    return toNepaliDigits(`${dm.hours}:${String(dm.minutes).padStart(2, "0")}`);
+  return formatDurationFull(p, "dinamaan");
+}
+
+export function formatRatrimanaFull(p: PanchangaDay): string | undefined {
+  return formatDurationFull(p, "ratrimana");
+}
+
+export function formatDurationFull(
+  p: PanchangaDay,
+  field: "dinamaan" | "ratrimana",
+  lang: "ne" | "en" | "hi" = "ne",
+): string | undefined {
+  const dm = getDetailValue<DurationBlock>(p, field);
+  if (!dm) return undefined;
+  if (lang === "en") {
+    return (
+      dm.label_en_full ??
+      (dm.hours != null && dm.minutes != null && dm.seconds != null
+        ? `${dm.hours} Hours ${dm.minutes} Mins ${String(dm.seconds).padStart(2, "0")} Secs`
+        : dm.label_en)
+    );
   }
-  return dm?.label_ne ?? p.dinamaan?.label_ne;
+  return (
+    dm.label_ne_full ??
+    (dm.hours != null && dm.minutes != null && dm.seconds != null
+      ? `${toNepaliDigits(dm.hours)} घण्टा ${toNepaliDigits(dm.minutes)} मिनेट ${toNepaliDigits(String(dm.seconds).padStart(2, "0"))} सेकेन्ड`
+      : dm.label_ne)
+  );
+}
+
+export function formatMadhyahnaDisplay(
+  p: PanchangaDay,
+  lang: "ne" | "en" | "hi" = "ne",
+): string | undefined {
+  const block = getDetailValue<{ local_time_short?: string; local_time?: string }>(p, "madhyahna");
+  const time = block?.local_time_short ?? block?.local_time;
+  const short = formatTimeShort(time);
+  if (!short) return undefined;
+  if (lang !== "en") return toNepaliDigits(short);
+  const [hStr, mStr] = short.split(":");
+  let h = Number(hStr);
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${mStr} ${ampm}`;
 }
 
 const RASHI_NE = [
@@ -1495,4 +1586,9 @@ export function festivalRelLabelNepali(daysDiff: number): string {
   if (daysDiff > 1) return `${toNepaliDigits(daysDiff)} दिन`;
   if (daysDiff === -1) return "हिजो";
   return `${toNepaliDigits(Math.abs(daysDiff))} दिन अघि`;
+}
+
+export function getNivasShool(p: PanchangaDay): NivasShoolBlock | undefined {
+  const detail = getPanchangaDetail(p);
+  return (detail?.nivas_shool ?? p.nivas_shool) as NivasShoolBlock | undefined;
 }

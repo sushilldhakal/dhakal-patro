@@ -1,8 +1,9 @@
 import type { PanchangaDay } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import {
-  formatAngaTransition,
-  formatDinamaanShort,
+  formatAayanLabel,
+  formatDurationFull,
+  formatMadhyahnaDisplay,
   formatNepalSambatDisplay,
   formatPakshaNepaliDisplay,
   formatShakaYear,
@@ -12,8 +13,11 @@ import {
   getMuhurtaRows,
   getMoonriseDisplay,
   getMoonsetDisplay,
-  getRituDisplayNe,
-  getRituSeason,
+  getAayanPauranik,
+  getAayanVedic,
+  getRituPauranik,
+  getRituVedic,
+  formatRituLabel,
   getPanchangaDetail,
   getLagnaDisplay,
   getPlanetRows,
@@ -35,16 +39,23 @@ import {
   getUdayaLagna,
   formatShortClock,
   formatTimeRangeShort,
-  rashiSymFromNumber,
+  getNivasShool,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import type { NivasShoolSegment } from "@/lib/api";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import type { BalamChip } from "@/lib/api";
-import { NakshatraIcon } from "@/components/nakshatra/NakshatraIcon";
 import {
+  DenseListRow,
+  DenseListTable,
+  PanchangaFullRow,
+  PanchangaQuadRow,
   PanchangaRow,
   PanchangaRows,
   PanchangaSection,
+  PanchangaSubBlock,
+  PanchangaTableBody,
+  PairedTimingTable,
   TimingRange,
   UptoValue,
 } from "./PanchangaLayout";
@@ -93,56 +104,142 @@ function AngaCell({ anga }: { anga?: Anga | null }) {
   );
 }
 
-export function SunMoonSection({ p }: { p: PanchangaDay }) {
+export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
+  const { pick } = useLocale();
   const solar = getSolarCorrections(p);
   const belaantar = formatSolarCorrectionDisplay(solar?.belaantar);
   const deshaantar = formatSolarCorrectionDisplay(solar?.deshaantar);
+  const detail = getPanchangaDetail(p);
+  const bs = (detail?.bs_date ?? p.bs_date) as
+    | { year?: number; month_name_ne?: string; day?: number }
+    | undefined;
+  const ns = formatNepalSambatDisplay(p);
+  const shaka = formatShakaYear(p);
+  const samvatsara = bs?.year
+    ? resolveSamvatsaraForBsYear(bs.year, p.samvatsara)
+    : undefined;
+  const pakshaLabel =
+    (detail?.paksha as { label_ne?: string } | undefined)?.label_ne ??
+    p.paksha?.label_ne ??
+    "—";
 
   return (
-    <PanchangaSection titleKey="sections.sun_moon">
-      <PanchangaRows>
-        <PanchangaRow labelKey="sections.sunrise" oddBorder>
-          <span>🌅</span>
-          <span className="font-mono font-semibold text-foreground">
-            {getSunriseDisplay(p) ?? "—"}
-          </span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.sunset">
-          <span>🌇</span>
-          <span className="font-mono font-semibold text-foreground">
-            {getSunsetDisplay(p) ?? "—"}
-          </span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.moonrise" oddBorder>
-          <span>🌒</span>
-          <span className="font-mono font-semibold text-foreground">
-            {getMoonriseDisplay(p) ?? "—"}
-          </span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.moonset">
-          <span>🌘</span>
-          <span className="font-mono font-semibold text-foreground">
-            {getMoonsetDisplay(p) ?? "—"}
-          </span>
-        </PanchangaRow>
+    <PanchangaSection titleKey="sections.sun_moon_samvat">
+      <PanchangaTableBody>
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.sunrise",
+            children: (
+              <>
+                <span>🌅</span>
+                <span className="font-mono font-semibold">{getSunriseDisplay(p) ?? "—"}</span>
+              </>
+            ),
+          }}
+          right={{
+            labelKey: "sections.vikram",
+            children: (
+              <span className="font-semibold">
+                {bs?.year && bs.month_name_ne && bs.day
+                  ? `${toNepaliDigits(bs.year)} ${bs.month_name_ne} ${toNepaliDigits(bs.day)}`
+                  : (p.display?.bs_ne ?? "—")}
+              </span>
+            ),
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.sunset",
+            children: (
+              <>
+                <span>🌇</span>
+                <span className="font-mono font-semibold">{getSunsetDisplay(p) ?? "—"}</span>
+              </>
+            ),
+          }}
+          right={{
+            labelKey: "sections.samvatsara",
+            children: (
+              <span className="font-semibold">
+                {samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : "—"}
+              </span>
+            ),
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.moonrise",
+            children: (
+              <>
+                <span>🌒</span>
+                <span className="font-mono font-semibold">{getMoonriseDisplay(p) ?? "—"}</span>
+              </>
+            ),
+          }}
+          right={{
+            labelKey: "sections.shaka",
+            children: (
+              <span className="font-semibold">{shaka ? toNepaliDigits(shaka) : "—"}</span>
+            ),
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.moonset",
+            children: (
+              <>
+                <span>🌘</span>
+                <span className="font-mono font-semibold">{getMoonsetDisplay(p) ?? "—"}</span>
+              </>
+            ),
+          }}
+          right={{
+            labelKey: "sections.nepal_sambat",
+            children: <span className="font-semibold">{ns ?? "—"}</span>,
+          }}
+        />
         {belaantar ? (
-          <PanchangaRow labelKey="sections.equation_of_time" oddBorder>
-            <span className="font-mono font-semibold text-foreground">{belaantar}</span>
-          </PanchangaRow>
-        ) : null}
+          <PanchangaQuadRow
+            left={{
+              labelKey: "sections.equation_of_time",
+              children: <span className="font-mono font-semibold">{belaantar}</span>,
+            }}
+            right={{
+              labelKey: "sections.paksha",
+              children: <span className="font-semibold">{pakshaLabel}</span>,
+            }}
+          />
+        ) : (
+          <PanchangaQuadRow
+            left={{
+              labelKey: "sections.paksha",
+              children: <span className="font-semibold">{pakshaLabel}</span>,
+            }}
+          />
+        )}
         {deshaantar ? (
-          <PanchangaRow labelKey="sections.longitude_correction">
-            <span className="font-mono font-semibold text-foreground">{deshaantar}</span>
-          </PanchangaRow>
+          <PanchangaFullRow labelKey="sections.longitude_correction">
+            <span className="font-mono font-semibold">{deshaantar}</span>
+          </PanchangaFullRow>
         ) : null}
-      </PanchangaRows>
+      </PanchangaTableBody>
       {solar?.ishtakaal_note_ne ? (
-        <p className="text-[11px] text-muted-foreground mt-2 mb-0 leading-snug px-0.5">
+        <p className="border-t border-border px-4 py-2 text-[11px] text-muted-foreground m-0 leading-snug">
           {solar.ishtakaal_note_ne}
         </p>
       ) : null}
     </PanchangaSection>
   );
+}
+
+/** @deprecated use SunMoonSamvatSection */
+export function SunMoonSection({ p }: { p: PanchangaDay }) {
+  return <SunMoonSamvatSection p={p} />;
+}
+
+/** @deprecated use SunMoonSamvatSection */
+export function SamvatSection({ p }: { p: PanchangaDay }) {
+  return null;
 }
 
 export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
@@ -158,79 +255,31 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
 
   return (
     <PanchangaSection titleKey="sections.panchang_core">
-      <PanchangaRows>
-        <PanchangaRow labelKey="tithi" oddBorder>
-          <AngaCell anga={tithi} />
-        </PanchangaRow>
-        <PanchangaRow labelKey="nakshatra">
-          <span className="inline-flex items-center gap-2.5 flex-wrap">
-            <NakshatraIcon
-              name={nakshatra?.name_ne ?? nakshatra?.name}
-              size={32}
-              className="text-panchang dark:text-accent"
-            />
-            <AngaCell anga={nakshatra} />
-          </span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.yoga" oddBorder>
-          <AngaCell anga={yoga} />
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.karana">
-          <AngaCell anga={karana} />
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.weekday" oddBorder>
-          <span className="font-semibold">{getVaaraNe(p, p.weekday) ?? "—"}</span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.paksha">
-          <span>{pakshaSym}</span>
-          <span className="font-semibold">{paksha ?? "—"}</span>
-        </PanchangaRow>
-      </PanchangaRows>
-    </PanchangaSection>
-  );
-}
-
-export function SamvatSection({ p }: { p: PanchangaDay }) {
-  const { pick } = useLocale();
-  const detail = getPanchangaDetail(p);
-  const bs = (detail?.bs_date ?? p.bs_date) as
-    | { year?: number; month_name_ne?: string; day?: number }
-    | undefined;
-  const ns = formatNepalSambatDisplay(p);
-  const shaka = formatShakaYear(p);
-  const samvatsara = bs?.year
-    ? resolveSamvatsaraForBsYear(bs.year, p.samvatsara)
-    : undefined;
-
-  return (
-    <PanchangaSection titleKey="sections.samvat">
-      <PanchangaRows>
-        <PanchangaRow labelKey="sections.vikram" oddBorder>
-          <span className="font-semibold">
-            {bs?.year && bs.month_name_ne && bs.day
-              ? `${toNepaliDigits(bs.year)} ${bs.month_name_ne} ${toNepaliDigits(bs.day)}`
-              : (p.display?.bs_ne ?? "—")}
-          </span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.samvatsara">
-          <span className="font-semibold">
-            {samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : "—"}
-          </span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.shaka">
-          <span className="font-semibold">{shaka ? toNepaliDigits(shaka) : "—"}</span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.nepal_sambat" oddBorder>
-          <span className="font-semibold">{ns ?? "—"}</span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.paksha">
-          <span className="font-semibold">
-            {(detail?.paksha as { label_ne?: string } | undefined)?.label_ne ??
-              p.paksha?.label_ne ??
-              "—"}
-          </span>
-        </PanchangaRow>
-      </PanchangaRows>
+      <PanchangaTableBody>
+        <PanchangaQuadRow
+          left={{ labelKey: "tithi", children: <AngaCell anga={tithi} /> }}
+          right={{ labelKey: "nakshatra", children: <AngaCell anga={nakshatra} /> }}
+        />
+        <PanchangaQuadRow
+          left={{ labelKey: "sections.yoga", children: <AngaCell anga={yoga} /> }}
+          right={{ labelKey: "sections.karana", children: <AngaCell anga={karana} /> }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.weekday",
+            children: <span className="font-semibold">{getVaaraNe(p, p.weekday) ?? "—"}</span>,
+          }}
+          right={{
+            labelKey: "sections.paksha",
+            children: (
+              <>
+                <span>{pakshaSym}</span>
+                <span className="font-semibold">{paksha ?? "—"}</span>
+              </>
+            ),
+          }}
+        />
+      </PanchangaTableBody>
     </PanchangaSection>
   );
 }
@@ -253,65 +302,98 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
 
   return (
     <PanchangaSection titleKey="sections.rashi_pada">
-      <PanchangaRows>
-        <PanchangaRow labelKey="sections.moon_sign" oddBorder>
-          <div className="flex flex-col gap-1 w-full">
-            {moonSpans.length > 0 ? (
-              moonSpans.map((span, i) => (
-                <UptoValue
-                  key={`moon-rashi-${i}`}
-                  sym={rashiSymFromNumber(span.number)}
-                  name={formatRashiDisplayNe(span.name_ne)}
-                  endTime={formatSpanEndTime(span)}
-                />
-              ))
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
+      <PanchangaTableBody>
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.moon_sign",
+            children:
+              moonSpans.length > 0 ? (
+                <div className="flex flex-col gap-0 w-full">
+                  {moonSpans.map((span, i) => (
+                    <span key={`moon-rashi-${i}`} className="inline-flex flex-wrap items-baseline gap-x-1.5">
+                      <span className="font-semibold">{formatRashiDisplayNe(span.name_ne)}</span>
+                      {formatSpanEndTime(span) ? (
+                        <span className="text-[11px] font-mono font-semibold text-foreground whitespace-nowrap">
+                          {formatSpanEndTime(span)} {t("sections.until")}
+                        </span>
+                      ) : null}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              ),
+          }}
+          right={{
+            labelKey: "sections.sun_sign",
+            children:
+              suryaRashi?.name_ne || suryaRashi?.name ? (
+                <span className="font-semibold">
+                  {formatRashiDisplayNe(suryaRashi.name_ne ?? suryaRashi.name)}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              ),
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.sun_nakshatra",
+            children:
+              suryaNak?.name_ne || suryaNak?.name ? (
+                <span className="font-semibold">{suryaNak.name_ne ?? suryaNak.name}</span>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              ),
+          }}
+          right={{
+            labelKey: "sections.pada",
+            children:
+              padaSpans && padaSpans.length > 0 ? (
+                <span className="text-[11px] text-muted-foreground">
+                  {toNepaliDigits(padaSpans.length)} {t("sections.pada_transitions")}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              ),
+          }}
+        />
+      </PanchangaTableBody>
+      {padaSpans && padaSpans.length > 0 ? (
+        <PanchangaSubBlock title={t("sections.pada_detail")}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[0, 1].map((col) => {
+              const mid = Math.ceil(padaSpans.length / 2);
+              const slice = col === 0 ? padaSpans.slice(0, mid) : padaSpans.slice(mid);
+              if (!slice.length) return null;
+              return (
+                <DenseListTable key={`pada-col-${col}`}>
+                  {slice.map((span, i) => (
+                    <DenseListRow
+                      key={`pada-${col}-${i}`}
+                      label={
+                        span.nakshatra_name_ne
+                          ? `${span.nakshatra_name_ne} — ${span.pada_ne ?? toNepaliDigits(span.pada ?? "")} ${t("sections.pada_unit")}`
+                          : "—"
+                      }
+                      time={
+                        formatSpanEndTime(span)
+                          ? `${formatSpanEndTime(span)} ${t("sections.until")}`
+                          : undefined
+                      }
+                    />
+                  ))}
+                </DenseListTable>
+              );
+            })}
           </div>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.pada">
-          <div className="flex flex-col gap-1 w-full">
-            {padaSpans && padaSpans.length > 0 ? (
-              padaSpans.map((span, i) => (
-                <UptoValue
-                  key={`pada-${i}`}
-                  name={
-                    span.nakshatra_name_ne
-                      ? `${span.nakshatra_name_ne} — ${span.pada_ne ?? toNepaliDigits(span.pada ?? "")} ${t("sections.pada_unit")}`
-                      : undefined
-                  }
-                  endTime={formatSpanEndTime(span)}
-                />
-              ))
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </div>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.sun_sign" oddBorder>
-          {suryaRashi?.name_ne || suryaRashi?.name ? (
-            <UptoValue
-              sym={rashiSymFromNumber(suryaRashi.number)}
-              name={formatRashiDisplayNe(suryaRashi.name_ne ?? suryaRashi.name)}
-            />
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.sun_nakshatra">
-          {suryaNak?.name_ne || suryaNak?.name ? (
-            <UptoValue name={suryaNak.name_ne ?? suryaNak.name} />
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </PanchangaRow>
-      </PanchangaRows>
+        </PanchangaSubBlock>
+      ) : null}
     </PanchangaSection>
   );
 }
 
-function BalamChips({ items, rashi = false }: { items: BalamChip[]; rashi?: boolean }) {
+function BalamChips({ items }: { items: BalamChip[] }) {
   return (
     <div className="mb-2.5 flex flex-wrap gap-1.5">
       {items.map((it, i) => (
@@ -319,20 +401,18 @@ function BalamChips({ items, rashi = false }: { items: BalamChip[]; rashi?: bool
           key={`${it.name_ne ?? it.name}-${i}`}
           className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-1.5 text-[11.5px] font-semibold leading-none shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
         >
-          {rashi && it.number != null && (
-            <span className="text-[13px] leading-none">{rashiSymFromNumber(it.number)}</span>
-          )}
-          <span>{rashi ? formatRashiDisplayNe(it.name_ne) : it.name_ne}</span>
+          <span>{formatRashiDisplayNe(it.name_ne)}</span>
         </span>
       ))}
     </div>
   );
 }
 
-const balamGrid = "grid grid-cols-1 min-[861px]:grid-cols-2";
-const balamCol = "border-b border-border px-4 py-3 pb-4";
-const balamColLeft = cn(balamCol, "min-[861px]:border-r min-[861px]:border-border");
-const balamHeading = "my-1.5 mb-2 text-[12.5px] font-medium text-muted-foreground [&_b]:font-bold [&_b]:text-foreground";
+const splitPanelGrid = "grid grid-cols-1 sm:grid-cols-2";
+const splitPanelCol = "px-4 py-3 border-b border-border sm:border-b-0 sm:py-2.5";
+const splitPanelColLeft = cn(splitPanelCol, "sm:border-r sm:border-border");
+const splitPanelHeading =
+  "mb-2 text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground [&_b]:font-bold [&_b]:normal-case [&_b]:tracking-normal [&_b]:text-foreground";
 
 export function BalamSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
@@ -343,33 +423,33 @@ export function BalamSection({ p }: { p: PanchangaDay }) {
 
   return (
     <PanchangaSection titleKey="sections.balam">
-      <div className={balamGrid}>
-        <div className={balamColLeft}>
-          <h3 className={balamHeading}>
+      <div className={splitPanelGrid}>
+        <div className={splitPanelColLeft}>
+          <h3 className={splitPanelHeading}>
             {t("sections.auspicious_chandra")}
             {chandraTill ? (
               <>
                 {" "}
-                — <span className="font-mono">{chandraTill}</span> {t("sections.until")}
+                — <span className="font-mono normal-case">{chandraTill}</span> {t("sections.until")}
               </>
             ) : null}
           </h3>
-          <BalamChips items={chandra?.set1 ?? []} rashi />
-          <h3 className={balamHeading}>{t("sections.until_sunrise")}</h3>
-          <BalamChips items={chandra?.set2 ?? []} rashi />
+          <BalamChips items={chandra?.set1 ?? []} />
+          <h3 className={cn(splitPanelHeading, "mt-3")}>{t("sections.until_sunrise")}</h3>
+          <BalamChips items={chandra?.set2 ?? []} />
         </div>
-        <div className={balamCol}>
-          <h3 className={balamHeading}>
+        <div className={splitPanelCol}>
+          <h3 className={splitPanelHeading}>
             {t("sections.auspicious_tara")}
             {taraTill ? (
               <>
                 {" "}
-                — <span className="font-mono">{taraTill}</span> {t("sections.until")}
+                — <span className="font-mono normal-case">{taraTill}</span> {t("sections.until")}
               </>
             ) : null}
           </h3>
           <BalamChips items={tara?.set1 ?? []} />
-          <h3 className={balamHeading}>{t("sections.until_sunrise")}</h3>
+          <h3 className={cn(splitPanelHeading, "mt-3")}>{t("sections.until_sunrise")}</h3>
           <BalamChips items={tara?.set2 ?? []} />
         </div>
       </div>
@@ -380,153 +460,406 @@ export function BalamSection({ p }: { p: PanchangaDay }) {
 export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
   const { pick } = useLocale();
-  const panchaka = getPanchakaRahita(p);
-  const lagna = getUdayaLagna(p);
+  const panchaka = getPanchakaRahita(p) ?? [];
+  const lagna = getUdayaLagna(p) ?? [];
+  const rowCount = Math.max(panchaka.length, lagna.length);
+
+  if (!rowCount) return null;
+
+  const rows = Array.from({ length: rowCount }, (_, i) => {
+    const pr = panchaka[i];
+    const lg = lagna[i];
+    return {
+      left: pr
+        ? {
+            label: pick(pr.name_ne ?? pr.name ?? "—", pr.name ?? pr.name_ne ?? "—"),
+            time:
+              formatTimeRangeShort(
+                pr.start_local_time_short ?? pr.start_local_time,
+                pr.end_local_time_short ?? pr.end_local_time,
+              ) ?? undefined,
+            highlight: pr.good,
+          }
+        : undefined,
+      right: lg
+        ? {
+            label: formatRashiDisplayNe(lg.name_ne ?? lg.name),
+            time:
+              formatTimeRangeShort(
+                lg.start_local_time_short ?? lg.start_local_time,
+                lg.end_local_time_short ?? lg.end_local_time,
+              ) ?? undefined,
+            note: lg.pushkara_navamsha?.length
+              ? `${t("sections.pushkara")}: ${lg.pushkara_navamsha
+                  .map((h) => formatShortClock(h.local_time_short ?? h.local_time))
+                  .filter(Boolean)
+                  .join(", ")}`
+              : undefined,
+          }
+        : undefined,
+    };
+  });
 
   return (
     <PanchangaSection titleKey="sections.panchaka_lagna">
-      <div className={balamGrid}>
-        <div className={balamColLeft}>
-          <h3 className={balamHeading}>
-            <b>{t("sections.today_panchaka")}</b>
-          </h3>
-          <div className="flex flex-col">
-            {panchaka?.map((seg, i) => (
-              <div
-                key={`pr-${i}`}
-                className={cn(
-                  "flex items-baseline justify-between gap-2.5 border-b border-dashed border-border py-1.5 text-[12.5px] font-medium last:border-b-0",
-                  seg.good && "font-semibold text-success",
-                )}
-              >
-                <span className="inline-flex items-baseline gap-1.5">
-                  {pick(seg.name_ne ?? seg.name ?? "—", seg.name ?? seg.name_ne ?? "—")}
-                </span>
-                <span className="whitespace-nowrap font-mono text-[11.5px] text-muted-foreground">
-                  {formatTimeRangeShort(
-                    seg.start_local_time_short ?? seg.start_local_time,
-                    seg.end_local_time_short ?? seg.end_local_time
-                  ) ?? "—"}
-                </span>
-              </div>
-            )) ?? <span className="text-sm text-muted-foreground">—</span>}
-          </div>
-        </div>
-        <div className={balamCol}>
-          <h3 className={balamHeading}>
-            <b>{t("sections.today_udaya_lagna")}</b>
-          </h3>
-          <div className="flex flex-col">
-            {lagna?.map((row, i) => (
-              <div
-                key={`lagna-${i}`}
-                className="flex flex-wrap items-baseline justify-between gap-2.5 border-b border-dashed border-border py-1.5 text-[12.5px] font-medium last:border-b-0"
-              >
-                <span className="inline-flex items-baseline gap-1.5">
-                  {row.number != null && (
-                    <span className="text-[13px] leading-none">{rashiSymFromNumber(row.number)}</span>
-                  )}
-                  {formatRashiDisplayNe(row.name_ne ?? row.name)}
-                </span>
-                <span className="whitespace-nowrap font-mono text-[11.5px] text-muted-foreground">
-                  {formatTimeRangeShort(
-                    row.start_local_time_short ?? row.start_local_time,
-                    row.end_local_time_short ?? row.end_local_time
-                  ) ?? "—"}
-                </span>
-                {row.pushkara_navamsha?.length ? (
-                  <span className="w-full font-mono text-xs text-muted-foreground">
-                    {t("sections.pushkara")}:{" "}
-                    {row.pushkara_navamsha
-                      .map((h) => formatShortClock(h.local_time_short ?? h.local_time))
-                      .filter(Boolean)
-                      .join(", ")}
-                  </span>
-                ) : null}
-              </div>
-            )) ?? <span className="text-sm text-muted-foreground">—</span>}
-          </div>
-        </div>
-      </div>
+      <PairedTimingTable
+        leftTitle={t("sections.today_panchaka")}
+        rightTitle={t("sections.today_udaya_lagna")}
+        rows={rows}
+      />
     </PanchangaSection>
   );
 }
 
+function DualValueDisplay({
+  pauranikLabel,
+  vedicLabel,
+  differs,
+}: {
+  pauranikLabel?: string;
+  vedicLabel?: string;
+  differs?: boolean;
+}) {
+  const showStrike =
+    differs ??
+    (pauranikLabel != null && vedicLabel != null && pauranikLabel !== vedicLabel);
+
+  if (!pauranikLabel && !vedicLabel) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {showStrike && pauranikLabel ? (
+        <span className="line-through text-muted-foreground font-medium">{pauranikLabel}</span>
+      ) : null}
+      <span className="font-semibold">{vedicLabel ?? pauranikLabel}</span>
+    </div>
+  );
+}
+
 export function RituSection({ p }: { p: PanchangaDay }) {
-  const { pick, isEnglish } = useLocale();
-  const detail = getPanchangaDetail(p);
-  const aayanNe =
-    (detail?.aayan as { name_ne?: string; name?: string } | undefined)?.name_ne ??
-    p.aayan?.name_ne;
-  const aayanEn =
-    (detail?.aayan as { name?: string; name_ne?: string } | undefined)?.name ??
-    p.aayan?.name ??
-    aayanNe;
+  const { lang } = useLocale();
+  const rituPauranik = getRituPauranik(p);
+  const rituVedic = getRituVedic(p);
+  const aayanPauranik = getAayanPauranik(p);
+  const aayanVedic = getAayanVedic(p);
 
   return (
     <PanchangaSection titleKey="sections.ritu_ayana">
-      <PanchangaRows>
-        <PanchangaRow labelKey="sections.ritu" oddBorder>
-          <span>☀</span>
-          <span className="font-semibold">{getRituDisplayNe(p) ?? "—"}</span>
-          {isEnglish && getRituSeason(p) ? (
-            <span className="text-xs text-muted-foreground">({getRituSeason(p)})</span>
-          ) : null}
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.dinamana">
-          <span className="font-mono font-semibold">{formatDinamaanShort(p) ?? "—"}</span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="sections.ayana" oddBorder>
-          <span className="font-semibold">{pick(aayanNe ?? aayanEn ?? "—", aayanEn ?? aayanNe ?? "—")}</span>
-        </PanchangaRow>
-        <PanchangaRow labelKey="tithi">
-          <span className="font-semibold text-sm">{formatAngaTransition(detail?.tithi as Anga) ?? "—"}</span>
-        </PanchangaRow>
-      </PanchangaRows>
+      <PanchangaTableBody>
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.ritu",
+            children: (
+              <DualValueDisplay
+                pauranikLabel={formatRituLabel(rituPauranik, lang)}
+                vedicLabel={formatRituLabel(rituVedic, lang)}
+                differs={rituPauranik?.name !== rituVedic?.name}
+              />
+            ),
+          }}
+          right={{
+            labelKey: "sections.ayana",
+            children: (
+              <DualValueDisplay
+                pauranikLabel={formatAayanLabel(aayanPauranik, lang)}
+                vedicLabel={formatAayanLabel(aayanVedic, lang)}
+                differs={aayanPauranik?.name !== aayanVedic?.name}
+              />
+            ),
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.dinamana",
+            children: (
+              <span className="font-mono font-semibold">
+                {formatDurationFull(p, "dinamaan", lang) ?? "—"}
+              </span>
+            ),
+          }}
+          right={{
+            labelKey: "sections.ratrimana",
+            children: (
+              <span className="font-mono font-semibold">
+                {formatDurationFull(p, "ratrimana", lang) ?? "—"}
+              </span>
+            ),
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.madhyahna",
+            children: (
+              <span className="font-mono font-semibold">
+                {formatMadhyahnaDisplay(p, lang) ?? "—"}
+              </span>
+            ),
+          }}
+        />
+      </PanchangaTableBody>
     </PanchangaSection>
   );
 }
 
 export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
+  const { t } = useTranslation();
   const rows = getMuhurtaRows(p);
   const good = rows.filter((r) => r.auspicious);
   const bad = rows.filter((r) => !r.auspicious);
 
   if (!rows.length) return null;
 
+  if (good.length > 0 && bad.length > 0) {
+    return (
+      <PanchangaSection titleKey="sections.muhurta_timings">
+        <div className={splitPanelGrid}>
+          <div className={splitPanelColLeft}>
+            <h3 className={splitPanelHeading}>{t("sections.auspicious_timings")}</h3>
+            <PanchangaTableBody>
+              {good.map((row) => (
+                <PanchangaFullRow key={row.label} label={row.label}>
+                  <TimingRange
+                    start={row.value.split(" – ")[0]}
+                    end={row.value.split(" – ")[1]?.split(" (")[0]}
+                    variant="good"
+                  />
+                </PanchangaFullRow>
+              ))}
+            </PanchangaTableBody>
+          </div>
+          <div className={splitPanelCol}>
+            <h3 className={splitPanelHeading}>{t("sections.inauspicious_timings")}</h3>
+            <PanchangaTableBody>
+              {bad.map((row) => (
+                <PanchangaFullRow key={row.label} label={row.label}>
+                  <TimingRange
+                    start={row.value.split(" – ")[0]}
+                    end={row.value.split(" – ")[1]}
+                    variant="bad"
+                  />
+                </PanchangaFullRow>
+              ))}
+            </PanchangaTableBody>
+          </div>
+        </div>
+      </PanchangaSection>
+    );
+  }
+
   return (
     <>
       {good.length > 0 && (
         <PanchangaSection titleKey="sections.auspicious_timings">
-          <PanchangaRows>
-            {good.map((row, i) => (
-              <PanchangaRow key={row.label} label={row.label} oddBorder={i % 2 === 0}>
+          <PanchangaTableBody>
+            {good.map((row) => (
+              <PanchangaFullRow key={row.label} label={row.label}>
                 <TimingRange
                   start={row.value.split(" – ")[0]}
                   end={row.value.split(" – ")[1]?.split(" (")[0]}
                   variant="good"
                 />
-              </PanchangaRow>
+              </PanchangaFullRow>
             ))}
-          </PanchangaRows>
+          </PanchangaTableBody>
         </PanchangaSection>
       )}
       {bad.length > 0 && (
         <PanchangaSection titleKey="sections.inauspicious_timings">
-          <PanchangaRows>
-            {bad.map((row, i) => (
-              <PanchangaRow key={row.label} label={row.label} oddBorder={i % 2 === 0}>
+          <PanchangaTableBody>
+            {bad.map((row) => (
+              <PanchangaFullRow key={row.label} label={row.label}>
                 <TimingRange
                   start={row.value.split(" – ")[0]}
                   end={row.value.split(" – ")[1]}
                   variant="bad"
                 />
-              </PanchangaRow>
+              </PanchangaFullRow>
             ))}
-          </PanchangaRows>
+          </PanchangaTableBody>
         </PanchangaSection>
       )}
     </>
+  );
+}
+
+function NivasDirectionValue({
+  segment,
+  lang,
+}: {
+  segment?: NivasShoolSegment | null;
+  lang: "ne" | "en" | "hi";
+}) {
+  const { pick } = useLocale();
+  if (!segment) return <span className="text-muted-foreground">—</span>;
+  const name = pick(segment.name_ne ?? segment.name_en ?? "—", segment.name_en ?? segment.name_ne ?? "—");
+  return <span className="font-semibold">{name}</span>;
+}
+
+function NivasTimedSegments({
+  segments,
+  lang,
+  showSubtitle = false,
+  showSymbol = false,
+  showGuna = false,
+}: {
+  segments?: NivasShoolSegment[];
+  lang: "ne" | "en" | "hi";
+  showSubtitle?: boolean;
+  showSymbol?: boolean;
+  showGuna?: boolean;
+}) {
+  const { t } = useTranslation();
+  const { pick } = useLocale();
+  if (!segments?.length) return <span className="text-muted-foreground">—</span>;
+
+  return (
+    <div className="flex flex-col gap-1 min-w-0">
+      {segments.map((seg, idx) => {
+        const name = pick(seg.name_ne ?? seg.name_en ?? "—", seg.name_en ?? seg.name_ne ?? "—");
+        const subtitle = showSubtitle
+          ? pick(seg.subtitle_ne ?? seg.subtitle_en ?? "", seg.subtitle_en ?? seg.subtitle_ne ?? "")
+          : "";
+        const endTime = seg.end_local_time_short
+          ? toNepaliDigits(formatTimeShort(seg.end_local_time_short) ?? seg.end_local_time_short)
+          : undefined;
+        const gunaLabel =
+          showGuna && seg.is_auspicious !== undefined
+            ? seg.is_auspicious
+              ? t("sections.nivas_auspicious")
+              : t("sections.nivas_inauspicious")
+            : undefined;
+        const fromTime = seg.start_local_time_short
+          ? toNepaliDigits(formatTimeShort(seg.start_local_time_short) ?? seg.start_local_time_short)
+          : undefined;
+
+        return (
+          <div key={`${name}-${idx}`} className="min-w-0">
+            {fromTime && !endTime ? (
+              <span className="font-semibold">
+                {subtitle ? `${name} (${subtitle})` : name}
+                {" "}
+                <span className="text-[11px] font-mono font-semibold text-foreground">
+                  {t("sections.nivas_from")} {fromTime} {t("sections.nivas_to_full_night")}
+                </span>
+              </span>
+            ) : (
+              <UptoValue
+                sym={showSymbol ? seg.symbol : undefined}
+                name={subtitle ? `${name} (${subtitle})` : name}
+                endTime={endTime}
+                badge={gunaLabel}
+              />
+            )}
+            {seg.until_full_night && idx === segments.length - 1 && segments.length > 1 && !endTime ? (
+              <span className="text-[11px] font-mono font-semibold text-foreground">
+                {t("sections.nivas_to_full_night")}
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function NivasShoolSection({ p }: { p: PanchangaDay }) {
+  const { lang } = useLocale();
+  const ns = getNivasShool(p);
+  if (!ns) return null;
+
+  const disha = ns.disha_shool;
+  const rahu = ns.rahu_vasa;
+
+  return (
+    <PanchangaSection titleKey="sections.nivas_shool">
+      <PanchangaTableBody>
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.homahuti",
+            children: (
+              <NivasTimedSegments
+                segments={ns.homahuti?.segments}
+                lang={lang}
+                showSymbol
+              />
+            ),
+          }}
+          right={{
+            labelKey: "sections.disha_shool",
+            children: <NivasDirectionValue segment={disha} lang={lang} />,
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.rahu_vasa",
+            children: <NivasDirectionValue segment={rahu} lang={lang} />,
+          }}
+          right={{
+            labelKey: "sections.agnivasa",
+            children: (
+              <NivasTimedSegments
+                segments={ns.agnivasa?.segments}
+                lang={lang}
+                showSubtitle
+              />
+            ),
+          }}
+        />
+        <PanchangaQuadRow
+          left={{
+            labelKey: "sections.chandra_vasa",
+            children: (
+              <NivasTimedSegments segments={ns.chandra_vasa?.segments} lang={lang} />
+            ),
+          }}
+          right={{
+            labelKey: "sections.shivavasa",
+            children: (
+              <NivasTimedSegments segments={ns.shivavasa?.segments} lang={lang} />
+            ),
+          }}
+        />
+        {ns.bhadravasa?.active ? (
+          <PanchangaQuadRow
+            left={{
+              labelKey: "sections.bhadravasa",
+              children: (
+                <NivasTimedSegments
+                  segments={ns.bhadravasa.segments}
+                  lang={lang}
+                  showSubtitle
+                />
+              ),
+            }}
+            right={{
+              labelKey: "sections.kumbha_chakra",
+              children: (
+                <NivasTimedSegments
+                  segments={ns.kumbha_chakra?.segments}
+                  lang={lang}
+                  showGuna
+                />
+              ),
+            }}
+          />
+        ) : (
+          <PanchangaQuadRow
+            left={{
+              labelKey: "sections.kumbha_chakra",
+              children: (
+                <NivasTimedSegments
+                  segments={ns.kumbha_chakra?.segments}
+                  lang={lang}
+                  showGuna
+                />
+              ),
+            }}
+          />
+        )}
+      </PanchangaTableBody>
+    </PanchangaSection>
   );
 }
 

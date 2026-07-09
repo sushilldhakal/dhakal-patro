@@ -334,7 +334,7 @@ export function DayTimeline({
             return (
               <g key={tr.key}>
                 <text x={X0 - 10} y={y + BAND / 2 - 2} className={pgTlRowlabel} textAnchor="end">
-                  {pick(tr.ne, tr.en)}
+                  {tr.ne}
                 </text>
                 {!isEnglish ? (
                   <text x={X0 - 10} y={y + BAND / 2 + 11} className={pgTlRowlabelEn} textAnchor="end">

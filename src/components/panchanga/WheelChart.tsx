@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { MoonPhaseIcon } from "./MoonPhaseIcon";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { getBSMonthLength } from "@/lib/bs-calendar";
@@ -155,6 +155,12 @@ function WheelChartImpl({
   /** Active pointer positions for pinch-to-zoom. */
   const ptrRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinchRef = useRef<{ dist: number; zoom0: number } | null>(null);
+  /**
+   * Graha the alignment needle points at (0..8 in GRAHA order). Defaults to
+   * the Moon; tapping a planet moves the needle to it so you can read which
+   * rashi / nakshatra that planet falls in.
+   */
+  const [lineTarget, setLineTarget] = useState(1);
 
   const pol = useCallback(
     (L: number, r: number): [number, number] => {
@@ -382,10 +388,15 @@ function WheelChartImpl({
         style={{ pointerEvents: "none" }}
       />
     );
-    const [lx, ly] = pol(moonLon, R.bsOut - 2);
-    markerNodes.push(<line key="moon-line" x1={CX} y1={CY} x2={lx} y2={ly} className={wLagnaLine} />);
+    // Alignment needle — points at the selected graha (Moon by default) so its
+    // rashi/nakshatra alignment is readable out at the rim. Falls back to the
+    // Moon if the target longitude is missing.
+    const targetLon = planetLons[lineTarget] ?? moonLon;
+    const targetSym = det.grahas[lineTarget]?.sym ?? "☾︎";
+    const [lx, ly] = pol(targetLon, R.bsOut - 2);
+    markerNodes.push(<line key="target-line" x1={CX} y1={CY} x2={lx} y2={ly} className={wLagnaLine} />);
     markerNodes.push(
-      <g key="moon-cap" transform={`rotate(${-(moonLon + spin)} ${CX} ${CY})`}>
+      <g key="target-cap" transform={`rotate(${-(targetLon + spin)} ${CX} ${CY})`}>
         <circle cx={CX} cy={CY - (R.bsOut - 2)} r="3.4" className={wLagnaCap} />
         <text
           x={CX}
@@ -395,12 +406,12 @@ function WheelChartImpl({
           className={wLabel}
           style={{ fontSize: 14, fill: "#f9c800", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
           transform={
-            normDeg(moonLon + spin) > 90 && normDeg(moonLon + spin) < 270
+            normDeg(targetLon + spin) > 90 && normDeg(targetLon + spin) < 270
               ? `rotate(180 ${CX} ${CY - (R.bsOut + 5)})`
               : undefined
           }
         >
-          {"☾︎"}
+          {targetSym}
         </text>
       </g>
     );
@@ -670,6 +681,23 @@ function WheelChartImpl({
           {g.ne}
         </text>
       );
+
+      // Transparent tap target — moves the alignment needle to this graha.
+      // stopPropagation on pointer-down so tapping a planet never starts a spin.
+      core.push(
+        <circle
+          key={`hit${i}`}
+          cx={px}
+          cy={py}
+          r={rad + 7}
+          fill="transparent"
+          style={{ cursor: "pointer" }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => setLineTarget(i)}
+        >
+          <title>{g.ne}</title>
+        </circle>
+      );
     });
 
     // Earth at center
@@ -696,7 +724,7 @@ function WheelChartImpl({
       : [];
 
     return { markerNodes, innerRings, core, bsLabels };
-  }, [markers, det, spin, tw, moonNak, moonLon, sunLon, planetLons, pol, arcSeg]);
+  }, [markers, det, spin, tw, moonNak, moonLon, sunLon, planetLons, lineTarget, pol, arcSeg]);
 
   const angleAt = (e: React.PointerEvent) => {
     const r = wrapRef.current!.getBoundingClientRect();

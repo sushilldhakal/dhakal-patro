@@ -3,11 +3,19 @@
 // VITE_API_BASE_URL for a split host (e.g. http://localhost:8080 in dev).
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-/** Shared API base URL — also used by the auth client. */
+// Public, cacheable data endpoints live under a version segment (…/api/v1/…) so
+// a backend engine bump (v1 → v2) becomes a brand-new CDN object — no Cloudflare
+// purge needed. Auth/profile calls stay on the unversioned API_BASE.
+const API_VERSION = import.meta.env.VITE_API_VERSION ?? "v1";
+const DATA_BASE = `${BASE}/${API_VERSION}`;
+
+/** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;
+/** Versioned base for public, cacheable data endpoints. */
+export const API_DATA_BASE = DATA_BASE;
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${DATA_BASE}${path}`);
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
   return res.json();
 }
@@ -1139,7 +1147,7 @@ export async function streamKundaliReport(
   if (options?.force) params.set("force", "true");
   const path = appendLocation(`/kundali/report?${params.toString()}`, location);
 
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${DATA_BASE}${path}`, {
     signal,
     headers: { Accept: "application/x-ndjson" },
   });
@@ -1311,6 +1319,37 @@ export interface UdayaLagnaRow {
   pushkara_navamsha?: PushkaraNavamshaHit[];
 }
 
+export interface NivasShoolDirection {
+  direction_key?: string;
+  name_en?: string;
+  name_ne?: string;
+}
+
+export interface NivasShoolSegment extends NivasShoolDirection {
+  key?: string;
+  symbol?: string;
+  name_en?: string;
+  name_ne?: string;
+  subtitle_en?: string;
+  subtitle_ne?: string;
+  is_auspicious?: boolean;
+  end_local_time_short?: string;
+  until_full_night?: boolean;
+  start_local_time_short?: string;
+  loka?: string;
+}
+
+export interface NivasShoolBlock {
+  homahuti?: { current?: NivasShoolSegment; segments?: NivasShoolSegment[] };
+  disha_shool?: NivasShoolDirection & { auspicious_directions?: NivasShoolDirection[] };
+  rahu_vasa?: NivasShoolDirection;
+  agnivasa?: { current?: NivasShoolSegment; segments?: NivasShoolSegment[] };
+  shivavasa?: { current?: NivasShoolSegment; segments?: NivasShoolSegment[] };
+  chandra_vasa?: { current?: NivasShoolSegment; segments?: NivasShoolSegment[] };
+  bhadravasa?: { active?: boolean; segments?: NivasShoolSegment[] };
+  kumbha_chakra?: { current?: NivasShoolSegment; segments?: NivasShoolSegment[] };
+}
+
 export interface MuhurtaNowBlock {
   active?: boolean;
   start_time?: string;
@@ -1404,8 +1443,10 @@ export interface PanchangaDay {
   }>;
   panchaka_rahita?: PanchakaSegment[];
   udaya_lagna?: UdayaLagnaRow[];
-  ritu?: { name_ne?: string; season?: string } | string;
+  ritu?: { name?: string; name_ne?: string; season?: string } | string;
   ritu_ne?: string;
+  ritu_pauranik?: { name?: string; name_ne?: string; season?: string };
+  ritu_vedic?: { name?: string; name_ne?: string; season?: string };
   lagna?: { name?: string; name_ne?: string; degree_in_rashi?: number; longitude?: number };
   lagna_spans?: LagnaSpan[];
   detail?: {
@@ -1420,8 +1461,28 @@ export interface PanchangaDay {
     }>;
     [key: string]: unknown;
   };
-  dinamaan?: { label_en?: string; label_ne?: string };
+  dinamaan?: {
+    label_en?: string;
+    label_ne?: string;
+    label_en_full?: string;
+    label_ne_full?: string;
+    hours?: number;
+    minutes?: number;
+    seconds?: number;
+  };
+  ratrimana?: {
+    label_en?: string;
+    label_ne?: string;
+    label_en_full?: string;
+    label_ne_full?: string;
+    hours?: number;
+    minutes?: number;
+    seconds?: number;
+  };
+  madhyahna?: { local_time_short?: string; local_time?: string };
   aayan?: { name?: string; name_ne?: string };
+  aayan_pauranik?: { name?: string; name_ne?: string };
+  aayan_vedic?: { name?: string; name_ne?: string };
   lahiri_ayanamsa?: { degrees?: number };
   festivals?: Festival[];
   is_public_holiday?: boolean;
@@ -1433,6 +1494,7 @@ export interface PanchangaDay {
     yamaganda?: { start_time?: string; end_time?: string };
     gulika?: { start_time?: string; end_time?: string };
   };
+  nivas_shool?: NivasShoolBlock;
   planets?: Record<string, PlanetInfo | string>;
 }
 

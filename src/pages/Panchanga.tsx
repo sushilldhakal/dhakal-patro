@@ -41,13 +41,13 @@ import {
   DinVisheshSection,
   FestivalsSection,
   MuhurtaTimingsSection,
+  NivasShoolSection,
   PanchangCoreSection,
   BalamSection,
   PanchakaLagnaSection,
   RashiSection,
   RituSection,
-  SamvatSection,
-  SunMoonSection,
+  SunMoonSamvatSection,
 } from "@/components/panchanga/PanchangaSections";
 import { useRouteLoading } from "@/lib/route-loading";
 
@@ -254,18 +254,18 @@ export function Panchanga() {
           )}
 
           {data && (
-            <>
-              <SunMoonSection p={data} />
+            <div className="flex flex-col gap-3">
+              <SunMoonSamvatSection p={data} />
               <PanchangCoreSection p={data} />
-              <SamvatSection p={data} />
               <RashiSection p={data} />
+              <RituSection p={data} />
               <BalamSection p={data} />
               <PanchakaLagnaSection p={data} />
-              <RituSection p={data} />
               <MuhurtaTimingsSection p={data} />
+              <NivasShoolSection p={data} />
               <DinVisheshSection p={data} />
               <FestivalsSection p={data} />
-            </>
+            </div>
           )}
         </div>
 
