@@ -103,6 +103,7 @@ export async function fetchEphemerisPanchangaDay(
     ...instantDetail,
     solar_corrections:
       instantDetail.solar_corrections ?? dailyDetail.solar_corrections,
+    nivas_shool: instantDetail.nivas_shool ?? dailyDetail.nivas_shool ?? daily.nivas_shool,
     lagna_spans:
       getLagnaSpans(normalized) ??
       (instantDetail.lagna_spans as PanchangaDay["lagna_spans"]) ??
@@ -116,6 +117,7 @@ export async function fetchEphemerisPanchangaDay(
   const merged: PanchangaDay = {
     ...daily,
     ...normalized,
+    nivas_shool: normalized.nivas_shool ?? daily.nivas_shool,
     planets: instantPlanets ?? normalized.planets ?? daily.planets,
     planets_anchor: instantPlanetsAnchor,
     sunrise: normalized.sunrise ?? daily.sunrise,

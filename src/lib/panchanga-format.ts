@@ -1589,6 +1589,5 @@ export function festivalRelLabelNepali(daysDiff: number): string {
 }
 
 export function getNivasShool(p: PanchangaDay): NivasShoolBlock | undefined {
-  const detail = getPanchangaDetail(p);
-  return (detail?.nivas_shool ?? p.nivas_shool) as NivasShoolBlock | undefined;
+  return getDetailValue<NivasShoolBlock>(p, "nivas_shool");
 }
