@@ -51,16 +51,19 @@ import {
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 
-type Anga = {
+type AngaEnd = {
   name_ne?: string;
   name?: string;
   end_local_time?: string;
   end_ghati_clock?: string;
   end_hours_clock?: string;
-  next?: { name_ne?: string; name?: string };
 };
 
-function angaEndTime(anga?: Anga | null): string | undefined {
+type Anga = AngaEnd & {
+  next?: AngaEnd;
+};
+
+function angaEndTime(anga?: AngaEnd | null): string | undefined {
   if (!anga) return undefined;
   const t =
     formatTimeShort(anga.end_local_time) ??
@@ -73,12 +76,18 @@ function AngaCell({ anga }: { anga?: Anga | null }) {
   const { pick } = useLocale();
   if (!anga) return <span className="text-muted-foreground">—</span>;
   const name = pick(anga.name_ne ?? anga.name ?? "—", anga.name ?? anga.name_ne ?? "—");
-  const nextName = anga.next?.name_ne ?? anga.next?.name;
+  const next = anga.next;
+  const nextName = next?.name_ne ?? next?.name;
   return (
     <>
       <UptoValue name={name} endTime={angaEndTime(anga)} />
       {nextName ? (
-        <UptoValue name={pick(nextName, anga.next?.name ?? anga.next?.name_ne ?? nextName)} />
+        // The next anga now carries its own end time — on a kshaya-tithi day
+        // this is where the skipped tithi's ending shows (e.g. प्रतिपदा … सम्म).
+        <UptoValue
+          name={pick(nextName, next?.name ?? next?.name_ne ?? nextName)}
+          endTime={angaEndTime(next)}
+        />
       ) : null}
     </>
   );
