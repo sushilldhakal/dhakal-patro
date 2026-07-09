@@ -39,7 +39,14 @@ export function YogaList({ yogas }: YogaListProps) {
       </TableHeader>
       <TableBody>
         {yogas.map((yoga, i) => {
-          const desc = pick(yoga.descNe, yoga.descEn);
+          const desc = pick(
+            yoga.descNe?.trim() ? yoga.descNe : yoga.descEn,
+            yoga.descEn,
+          );
+          const name = pick(
+            yoga.nameNe?.trim() ? yoga.nameNe : yoga.nameEn,
+            yoga.nameEn,
+          );
           return (
             <TableRow
               key={yoga.key}
@@ -51,7 +58,7 @@ export function YogaList({ yogas }: YogaListProps) {
               <TableCell
                 className={cn(
                   td,
-                  "pl-3.5 w-full max-w-0 whitespace-normal align-top sm:max-w-[420px]",
+                  "pl-3.5 min-w-[11rem] max-w-[min(100%,28rem)] whitespace-normal align-top",
                 )}
               >
                 <span className="flex items-center gap-1.5 font-semibold text-foreground">
@@ -59,7 +66,7 @@ export function YogaList({ yogas }: YogaListProps) {
                     className="size-3.5 shrink-0 text-muted-foreground/60"
                     aria-hidden
                   />
-                  {pick(yoga.nameNe, yoga.nameEn)}
+                  {name}
                 </span>
                 <span className="mt-0.5 block pl-5 text-[11px] leading-snug text-muted-foreground break-words">
                   {desc}
