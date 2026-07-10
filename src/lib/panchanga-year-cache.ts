@@ -1,8 +1,6 @@
-import type { QueryClient } from "@tanstack/react-query";
 import {
   fetchYearCalendar,
   locationCacheKey,
-  panchangaKeys,
   type CalendarDay,
   type LocationParams,
   type PanchangaDay,
@@ -19,8 +17,6 @@ export const panchangaYearBulkKey = (year: number, location?: LocationParams) =>
 
 function seedDayRow(
   day: CalendarDay,
-  location: LocationParams | undefined,
-  queryClient: QueryClient,
   days: Map<string, PanchangaDay>,
 ): boolean {
   const embedded = day.panchanga as PanchangaDay | undefined;
@@ -35,19 +31,20 @@ function seedDayRow(
       sunset: day.sunset,
     },
   };
-  queryClient.setQueryData(panchangaKeys.day(dateAd, "ad", location), seeded);
+  // Intentionally NOT written to `panchangaKeys.day`: the wheel payload is
+  // trimmed to wheel-only state, so seeding the shared day cache would starve
+  // the full daily / timeline pages (same key) of muhurta/hora/etc. The year
+  // wheel reads straight from this Map instead.
   days.set(dateAd, seeded);
   return true;
 }
 
 function seedFromPayload(
   payload: YearCalendar,
-  location: LocationParams | undefined,
-  queryClient: QueryClient,
 ): { daysSeeded: number; days: Map<string, PanchangaDay> } {
   const days = new Map<string, PanchangaDay>();
   for (const day of payload.calendar) {
-    seedDayRow(day, location, queryClient, days);
+    seedDayRow(day, days);
   }
   return { daysSeeded: days.size, days };
 }
@@ -58,10 +55,8 @@ export type YearCacheSeedResult = {
   fromPersistentCache: boolean;
   /**
    * Every day of the year keyed by AD date. Held on the (observed, long-lived)
-   * bulk query so the wheel always has data to read — the individually seeded
-   * `panchangaKeys.day` entries have no observers and React Query garbage-
-   * collects them after `gcTime`, which would otherwise freeze the wheel a few
-   * minutes after load.
+   * bulk query so the wheel always has data to read directly, independent of
+   * React Query's per-day `gcTime` eviction.
    */
   days: Map<string, PanchangaDay>;
 };
@@ -73,19 +68,18 @@ export type YearCacheSeedResult = {
 export async function seedYearPanchangaCache(
   year: number,
   location: LocationParams | undefined,
-  queryClient: QueryClient,
 ): Promise<YearCacheSeedResult> {
   const locKey = locationCacheKey(location);
   const storageKey = yearCacheStorageKey(year, locKey);
 
   const persisted = await readPersistedYear(storageKey);
   if (persisted) {
-    const { daysSeeded, days } = seedFromPayload(persisted, location, queryClient);
+    const { daysSeeded, days } = seedFromPayload(persisted);
     return { daysSeeded, fromPersistentCache: true, days };
   }
 
-  const payload = await fetchYearCalendar(year, location, { full: true });
+  const payload = await fetchYearCalendar(year, location, { wheel: true });
   void writePersistedYear(storageKey, payload);
-  const { daysSeeded, days } = seedFromPayload(payload, location, queryClient);
+  const { daysSeeded, days } = seedFromPayload(payload);
   return { daysSeeded, fromPersistentCache: false, days };
 }

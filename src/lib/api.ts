@@ -445,23 +445,28 @@ export const fetchMonthCalendar = async (
 export const fetchYearCalendar = async (
   year: number,
   location?: LocationParams,
-  options?: { full?: boolean },
+  options?: { full?: boolean; wheel?: boolean },
 ): Promise<YearCalendar> => {
-  const full = options?.full !== false;
   const params = new URLSearchParams();
-  if (full) params.set("full", "true");
+  if (options?.wheel) {
+    // Slim year-wheel payload: days once in `calendar` with wheel-only state,
+    // `months` metadata only (no duplicated per-day grids). ~90% smaller.
+    params.set("wheel", "true");
+  } else if (options?.full !== false) {
+    params.set("full", "true");
+  }
   const qs = params.toString();
   const path = appendLocation(
     `/panchanga/year/${year}${qs ? `?${qs}` : ""}`,
     location,
   );
-  const data = await get<YearCalendar & { calendar: RawMonthDay[]; months: Array<MonthCalendar & { calendar: RawMonthDay[] }> }>(path);
+  const data = await get<YearCalendar & { calendar: RawMonthDay[]; months: Array<MonthCalendar & { calendar?: RawMonthDay[] }> }>(path);
   return {
     ...data,
     calendar: data.calendar.map(normalizeMonthDay),
-    months: data.months.map((month) => ({
+    months: (data.months ?? []).map((month) => ({
       ...month,
-      calendar: month.calendar.map(normalizeMonthDay),
+      calendar: (month.calendar ?? []).map(normalizeMonthDay),
     })),
   };
 };

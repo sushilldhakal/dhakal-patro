@@ -2,7 +2,7 @@ import type { YearCalendar } from "@/lib/api";
 import { isBrowser } from "@/lib/browser";
 
 /** Bump to invalidate all persisted year wheels after payload shape changes. */
-const STORAGE_VERSION = 1;
+const STORAGE_VERSION = 2;
 /** Keep cached years for 30 days — panchanga rules rarely change mid-month. */
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const DB_NAME = "vedicpatro-year-cache";
