@@ -53,7 +53,10 @@ export interface DainikKrantiSearch extends LocationSearch {
 }
 
 export interface PanchangaYearSearch extends LocationSearch {
+  /** Range start / currently-active BS year. */
   year?: number;
+  /** Range end (inclusive) BS year. Omitted / equal to `year` ⇒ single year. */
+  to?: number;
 }
 
 export interface AbhijitSearch extends LocationSearch {
@@ -219,6 +222,15 @@ export function validatePanchangaYearSearch(
   const year = toInt(search.year);
   if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
     out.year = year;
+  }
+  const to = toInt(search.to);
+  if (
+    to != null &&
+    to >= BS_SUPPORTED_START_YEAR &&
+    to <= BS_SUPPORTED_END_YEAR &&
+    (out.year == null || to >= out.year)
+  ) {
+    out.to = to;
   }
   return out;
 }
