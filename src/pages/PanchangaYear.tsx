@@ -169,6 +169,20 @@ export function PanchangaYear() {
   const clampedDay = Math.min(dayOfYear, totalDays);
   const clampedQueryDay = Math.min(queryDay, totalDays);
 
+  // A continuous day index across the whole range, so the wheel's day slider
+  // rolls straight from one year's last day into the next year's first.
+  const rangeDayIndex = useMemo(() => {
+    const offsets: number[] = [];
+    let acc = 0;
+    for (let y = rangeStart; y <= rangeEnd; y++) {
+      offsets.push(acc);
+      acc += daysInBsYear(y);
+    }
+    return { offsets, total: acc };
+  }, [rangeStart, rangeEnd]);
+  const activeIndex = year - rangeStart;
+  const globalDay = (rangeDayIndex.offsets[activeIndex] ?? 0) + clampedDay;
+
   const yearBulkQ = useQuery({
     queryKey: panchangaYearBulkKey(year, location.params),
     queryFn: () => seedYearPanchangaCache(year, location.params),
@@ -359,6 +373,25 @@ export function PanchangaYear() {
     [rangeStart, rangeEnd],
   );
 
+  // Map a global (range-wide) day index from the slider back to (year, day),
+  // switching the active year on the fly as the thumb crosses a year boundary.
+  const handleGlobalDayChange = useCallback(
+    (globalDayValue: number) => {
+      const g = Math.min(Math.max(1, globalDayValue), rangeDayIndex.total);
+      let idx = rangeDayIndex.offsets.length - 1;
+      for (let i = 0; i < rangeDayIndex.offsets.length; i++) {
+        const end = rangeDayIndex.offsets[i]! + daysInBsYear(rangeStart + i);
+        if (g <= end) {
+          idx = i;
+          break;
+        }
+      }
+      setActiveYear(rangeStart + idx);
+      setDayOfYear(g - rangeDayIndex.offsets[idx]!);
+    },
+    [rangeDayIndex, rangeStart],
+  );
+
   function handleRangeStartChange(nextStart: number) {
     const start = clampYear(nextStart);
     setRangeStart(start);
@@ -481,13 +514,22 @@ export function PanchangaYear() {
             locationLabel={locationLabel}
             atTimeScrubOnly
             yearScrub={{
-              day: clampedDay,
-              totalDays,
+              day: globalDay,
+              totalDays: rangeDayIndex.total,
               playing,
               onPlayToggle: togglePlaying,
-              onDayChange: setDayOfYear,
+              onDayChange: handleGlobalDayChange,
               onScrubStart: () => setIsScrubbing(true),
               onScrubEnd: finishScrub,
+              ...(rangeSpan > 1 && {
+                yearLabel: toNepaliDigits(year),
+                dayInYear: clampedDay,
+                daysInYear: totalDays,
+                onPrevYear: () => goToYear(year - 1),
+                onNextYear: () => goToYear(year + 1),
+                canPrevYear: year > rangeStart,
+                canNextYear: year < rangeEnd,
+              }),
             }}
           />
         )}

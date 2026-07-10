@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Fullscreen, Minimize2, Pause, Play } from "lucide-react";
+import { Fullscreen, Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
 import { fetchPanchangaAtTime, panchangaKeys } from "@/lib/api";
 import { getPanchangaDetail } from "@/lib/panchanga-format";
@@ -66,25 +66,64 @@ function bsMonthEnOf(ne: string): string {
 const wheelDockIcon = "h-3.5 w-3.5 max-[480px]:h-3 max-[480px]:w-3";
 
 export type YearWheelScrub = {
+  /** Global day index across the whole range (single year ⇒ 1..365). */
   day: number;
+  /** Total days across the whole range. */
   totalDays: number;
   playing: boolean;
   onPlayToggle: () => void;
+  /** Receives the global day index; the page maps it back to (year, day). */
   onDayChange: (day: number) => void;
   onScrubStart: () => void;
   onScrubEnd: () => void;
+  /** Multi-year range context — enables prev/next-year buttons + label. */
+  yearLabel?: string;
+  dayInYear?: number;
+  daysInYear?: number;
+  onPrevYear?: () => void;
+  onNextYear?: () => void;
+  canPrevYear?: boolean;
+  canNextYear?: boolean;
 };
 
 function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
   const { t } = useTranslation();
   const { pick, digits } = useLocale();
-  const { day, totalDays, playing, onPlayToggle, onDayChange, onScrubStart, onScrubEnd } = scrub;
+  const {
+    day,
+    totalDays,
+    playing,
+    onPlayToggle,
+    onDayChange,
+    onScrubStart,
+    onScrubEnd,
+    yearLabel,
+    dayInYear,
+    daysInYear,
+    onPrevYear,
+    onNextYear,
+    canPrevYear,
+    canNextYear,
+  } = scrub;
   const num = (n: number) => digits(n);
   const fillPct = totalDays <= 1 ? 100 : ((day - 1) / (totalDays - 1)) * 100;
+  const hasRange = onPrevYear != null || onNextYear != null;
 
   return (
     <div className={wheelYearScrubShell}>
       <span className={wheelYearScrubLabel}>{pick("वर्ष", "Year")}</span>
+      {hasRange && (
+        <button
+          type="button"
+          className={cn(wheelYearScrubPlayBtn, "shrink-0")}
+          onClick={onPrevYear}
+          disabled={!canPrevYear}
+          aria-label={pick("अघिल्लो वर्ष", "Previous year")}
+          title={pick("अघिल्लो वर्ष", "Previous year")}
+        >
+          <SkipBack className={wheelDockIcon} strokeWidth={2} aria-hidden />
+        </button>
+      )}
       <button
         type="button"
         className={cn(wheelYearScrubPlayBtn, "shrink-0")}
@@ -98,6 +137,18 @@ function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
           <Play className={cn(wheelDockIcon, "translate-x-[1px]")} strokeWidth={2} aria-hidden />
         )}
       </button>
+      {hasRange && (
+        <button
+          type="button"
+          className={cn(wheelYearScrubPlayBtn, "shrink-0")}
+          onClick={onNextYear}
+          disabled={!canNextYear}
+          aria-label={pick("अर्को वर्ष", "Next year")}
+          title={pick("अर्को वर्ष", "Next year")}
+        >
+          <SkipForward className={wheelDockIcon} strokeWidth={2} aria-hidden />
+        </button>
+      )}
       <input
         type="range"
         className={wheelYearScrub}
@@ -114,8 +165,18 @@ function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
         onChange={(e) => onDayChange(Number(e.target.value))}
       />
       <span className={wheelYearScrubCount}>
-        {num(day)}
-        <span className="dim">/{num(totalDays)}</span>
+        {yearLabel != null && dayInYear != null && daysInYear != null ? (
+          <>
+            <span className="dim">{yearLabel} · </span>
+            {num(dayInYear)}
+            <span className="dim">/{num(daysInYear)}</span>
+          </>
+        ) : (
+          <>
+            {num(day)}
+            <span className="dim">/{num(totalDays)}</span>
+          </>
+        )}
       </span>
     </div>
   );
