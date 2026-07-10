@@ -245,19 +245,22 @@ export function DayTimeline({
   const anchorAd = p.panchanga_date_ad ?? p.date_ad ?? dateAd;
   const chartMins = minutesOnVedicChart(p.query_instant_local, anchorAd ?? "", needleClock);
 
-  // The needle follows the chosen clock whatever the day's data mode is: the
-  // chart is now always the civil date's udaya (sunrise-to-sunrise) day so it
-  // stays aligned with the wheel, and the picked time just overlays a marker.
-  if (showNeedle && chartMins != null) {
-    nowG = (chartMins - data.sunriseMin) / 24;
+  // The needle overlays a marker on the civil date's udaya (sunrise-to-sunrise)
+  // day so it stays aligned with the wheel. Priority: an explicitly chosen
+  // clock pins the needle; otherwise on today it tracks the live current time
+  // ("अहिले"); otherwise it falls back to the ephemeris query instant.
+  if (showNeedle && needleClock) {
+    nowG = (chartMins! - data.sunriseMin) / 24;
     if (nowG < 0) nowG += 60;
-    nowLabel = needleClock
-      ? pick(`${digits(needleClock)} बजे`, digits(needleClock))
-      : pick("छानिएको समय", "Chosen time");
+    nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
   } else if (showNeedle && isToday) {
     const minsNow = minutesSinceMidnightInTimezone(now, timeZone);
     nowG = (minsNow - data.sunriseMin) / 24;
     if (nowG < 0) nowG += 60;
+  } else if (showNeedle && chartMins != null) {
+    nowG = (chartMins - data.sunriseMin) / 24;
+    if (nowG < 0) nowG += 60;
+    nowLabel = pick("छानिएको समय", "Chosen time");
   }
 
   const trackY = (i: number) => T0 + i * TRACK;
