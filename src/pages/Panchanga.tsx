@@ -29,7 +29,10 @@ import {
   MuhurtaNowPanel,
 } from "@/components/panchanga/MuhurtaNowPanel";
 import { usePanchangaLocation, displayLocationLabel } from "@/components/panchanga/use-panchanga-location";
-import { usePanchangaClock } from "@/components/panchanga/use-panchanga-mode";
+import {
+  defaultClockForTimezone,
+  usePanchangaClock,
+} from "@/components/panchanga/use-panchanga-mode";
 import {
   locationToSearch,
   sameLocationParams,
@@ -162,10 +165,24 @@ export function Panchanga() {
     [setClock],
   );
 
+  // Seed the chosen time once per date/location. When the viewed date is today,
+  // open at the current wall-clock time in that place so the दिन-चक्र needle and
+  // the wheel point at "now" without the user having to scrub. Other days fall
+  // back to that day's sunrise. A manual pick (clockUserAdjusted) is preserved.
   useEffect(() => {
     const syncKey = `${adDateStr}|${locationCacheKey(location.params)}`;
     if (clockSyncedKeyRef.current === syncKey) return;
+    if (clockUserAdjusted) return;
 
+    if (isToday) {
+      clockSyncedKeyRef.current = syncKey;
+      hadUrlTimeRef.current = false;
+      setClock(defaultClockForTimezone(effectiveTimezone));
+      return;
+    }
+
+    // Non-today: honor an explicitly shared time on the very first load, then
+    // default a subsequent day/location change to that day's sunrise.
     const sunrise = formatTimeShort(
       udayaQuery.data ? getSunrise(udayaQuery.data) : undefined,
     );
@@ -179,7 +196,15 @@ export function Panchanga() {
 
     clockSyncedKeyRef.current = syncKey;
     setClock(sunrise);
-  }, [adDateStr, location.params, udayaQuery.data, setClock]);
+  }, [
+    adDateStr,
+    location.params,
+    isToday,
+    effectiveTimezone,
+    clockUserAdjusted,
+    udayaQuery.data,
+    setClock,
+  ]);
 
   useRouteLoading(PANCHANGA_ROUTE_LOADING);
 
@@ -209,7 +234,8 @@ export function Panchanga() {
               viewed civil date so the two never disagree. Feeding it the
               ephemeris at-time day instead made a near-sunrise time (e.g. the
               default clock) roll to the previous vedic day, desyncing it from
-              the wheel. The chosen time is overlaid as the needle. */}
+              the wheel. On today the needle tracks the live current time; once
+              the user scrubs, it pins to their chosen time. */}
           {(wheelData || showWheelSkeleton) && (
             <DayTimeline
               p={wheelData}
@@ -217,8 +243,8 @@ export function Panchanga() {
               dateAd={adDateStr}
               isToday={isToday}
               timezone={effectiveTimezone}
-              needleClock={clock}
-              showNeedle={clockUserAdjusted}
+              needleClock={clockUserAdjusted ? clock : undefined}
+              showNeedle={clockUserAdjusted || isToday}
             />
           )}
 
