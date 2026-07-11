@@ -73,6 +73,11 @@ export const SAIT_DATA: Partial<Record<number, SaitYearData>> = {
       10: [4, 25],
       11: [1, 6, 8, 9, 13, 22, 23, 28],
     },
+    "griha-aarambha": {
+      8: [3],
+      9: [27],
+      11: [26],
+    },
   },
   2082: {
     vivah: {
@@ -86,6 +91,12 @@ export const SAIT_DATA: Partial<Record<number, SaitYearData>> = {
       1: [5, 19, 24],
       11: [7, 14, 15],
       12: [6, 15],
+    },
+    "griha-aarambha": {
+      4: [26],
+      7: [21],
+      8: [11, 19, 20],
+      11: [14],
     },
   },
   2083: {
