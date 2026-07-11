@@ -322,6 +322,100 @@ export function BsMonthHeaderTitle({
     ? `${digits(day)} ${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`
     : `${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`;
 
+  const titleBlock = (
+    <h1 className="m-0 min-w-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
+      <span className="max-md:inline-block max-md:max-w-full max-md:truncate">
+        {monthTitle}{" "}
+        <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+      </span>
+      {samvatsaraLabel ? (
+        <span className="ml-1 hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
+          {samvatsaraLabel}
+        </span>
+      ) : null}
+      {adDayEnglish ? (
+        <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
+          {adDayEnglish}
+        </span>
+      ) : adMonthRangeEnglish ? (
+        <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
+          {adMonthRangeEnglish}
+        </span>
+      ) : null}
+    </h1>
+  );
+
+  const drawerBlock = mobileDateTimeDrawer ? (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex h-[30px] w-max max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-2 text-[11px] font-medium text-foreground"
+          aria-label={
+            showTime
+              ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
+              : pick("मिति बदल्नुहोस्", "Change date")
+          }
+        >
+          <CalendarClock className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
+          <span className="truncate font-num">{mobileSummary}</span>
+          <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
+        </button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>
+            {showTime ? pick("मिति र समय", "Date & time") : pick("मिति", "Date")}
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className="flex flex-col gap-5 px-4 pb-2">
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              {pick("मिति", "Date")}
+            </p>
+            <div className={cn(patroMonthNavShell, "w-full justify-center")}>
+              <MonthNavControls {...navProps} showTime={false} spacious />
+            </div>
+          </div>
+          {showTime && hourAriaLabel && minuteAriaLabel ? (
+            <div>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {pick("समय", "Time")}
+              </p>
+              <div className={cn(patroMonthNavShell, "w-full justify-center")}>
+                <BsNativeSelect
+                  className="w-[4rem]"
+                  value={hour}
+                  options={hourOptions}
+                  ariaLabel={hourAriaLabel}
+                  onChange={(nextHour) => setClockPart(nextHour, minute)}
+                />
+                <span className="px-0.5 font-num text-sm font-semibold text-muted-foreground">:</span>
+                <BsNativeSelect
+                  className="w-[4rem]"
+                  value={minute}
+                  options={minuteOptions}
+                  ariaLabel={minuteAriaLabel}
+                  onChange={(nextMinute) => setClockPart(hour, nextMinute)}
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
+        <DrawerFooter>
+          <DrawerClose asChild>
+            <button
+              type="button"
+              className="h-10 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground"
+            >
+              {pick("भयो", "Done")}
+            </button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  ) : null;
+
   return (
     <div className="flex min-w-0 items-start gap-1.5 sm:gap-3">
       <button
@@ -335,121 +429,45 @@ export function BsMonthHeaderTitle({
         <div className={patroMonthChipDay}>{digits(chipDay)}</div>
       </button>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:gap-1">
-        <div className="flex min-w-0 items-start gap-2 md:items-center md:gap-3">
-          <h1 className="m-0 min-w-0 flex-1 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
-            <span className="max-md:inline-block max-md:max-w-full max-md:truncate">
-              {monthTitle}{" "}
-              <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
-            </span>
-            {samvatsaraLabel ? (
-              <span className="ml-1 hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
-                {samvatsaraLabel}
-              </span>
+      <div className="@container/month-head min-w-0 flex-1">
+        {/* Mobile: 2 columns (title+picker | toggle/location); wraps to 1 column when tight */}
+        <div className="flex flex-wrap items-start gap-x-2 gap-y-1.5 md:hidden">
+          <div className="flex min-w-0 flex-1 basis-[calc(100%-6.75rem)] flex-col gap-1 @[240px]/month-head:basis-auto">
+            {titleBlock}
+            {drawerBlock}
+            {!mobileDateTimeDrawer ? (
+              <div className={patroMonthNavShell}>
+                <MonthNavControls {...navProps} />
+              </div>
             ) : null}
-            {adDayEnglish ? (
-              <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
-                {adDayEnglish}
-              </span>
-            ) : adMonthRangeEnglish ? (
-              <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
-                {adMonthRangeEnglish}
-              </span>
+            {panchangaSubtitle ? (
+              <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
             ) : null}
-          </h1>
-
+          </div>
           {mobileToolbar ? (
-            <div className="flex shrink-0 flex-col items-end gap-1 self-start md:hidden">
+            <div className="flex shrink-0 basis-[6.25rem] flex-col items-end gap-1 @[240px]/month-head:basis-auto">
               {mobileToolbar}
             </div>
           ) : null}
-
-          <div
-            className={cn(
-              patroMonthNavShell,
-              mobileDateTimeDrawer ? "hidden md:inline-flex md:shrink-0" : "inline-flex md:shrink-0",
-            )}
-          >
-            <MonthNavControls {...navProps} />
-          </div>
         </div>
 
-        {mobileDateTimeDrawer ? (
-          <Drawer>
-            <DrawerTrigger asChild>
-              <button
-                type="button"
-                className="flex h-[30px] w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border border-border bg-card px-2 text-left text-[11px] font-medium text-foreground md:hidden"
-                aria-label={
-                  showTime
-                    ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
-                    : pick("मिति बदल्नुहोस्", "Change date")
-                }
-              >
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <CalendarClock className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
-                  <span className="truncate font-num">{mobileSummary}</span>
-                </span>
-                <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
-              </button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader className="text-left">
-                <DrawerTitle>
-                  {showTime ? pick("मिति र समय", "Date & time") : pick("मिति", "Date")}
-                </DrawerTitle>
-              </DrawerHeader>
-              <div className="flex flex-col gap-5 px-4 pb-2">
-                <div>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {pick("मिति", "Date")}
-                  </p>
-                  <div className={cn(patroMonthNavShell, "w-full justify-center")}>
-                    <MonthNavControls {...navProps} showTime={false} spacious />
-                  </div>
-                </div>
-                {showTime && hourAriaLabel && minuteAriaLabel ? (
-                  <div>
-                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      {pick("समय", "Time")}
-                    </p>
-                    <div className={cn(patroMonthNavShell, "w-full justify-center")}>
-                      <BsNativeSelect
-                        className="w-[4rem]"
-                        value={hour}
-                        options={hourOptions}
-                        ariaLabel={hourAriaLabel}
-                        onChange={(nextHour) => setClockPart(nextHour, minute)}
-                      />
-                      <span className="px-0.5 font-num text-sm font-semibold text-muted-foreground">:</span>
-                      <BsNativeSelect
-                        className="w-[4rem]"
-                        value={minute}
-                        options={minuteOptions}
-                        ariaLabel={minuteAriaLabel}
-                        onChange={(nextMinute) => setClockPart(hour, nextMinute)}
-                      />
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-              <DrawerFooter>
-                <DrawerClose asChild>
-                  <button
-                    type="button"
-                    className="h-10 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground"
-                  >
-                    {pick("भयो", "Done")}
-                  </button>
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-        ) : null}
-
-        {panchangaSubtitle ? (
-          <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
-        ) : null}
+        {/* Desktop */}
+        <div className="hidden flex-col gap-0.5 sm:gap-1 md:flex">
+          <div className="flex min-w-0 items-center gap-3">
+            {titleBlock}
+            <div
+              className={cn(
+                patroMonthNavShell,
+                mobileDateTimeDrawer ? "inline-flex shrink-0" : "inline-flex shrink-0",
+              )}
+            >
+              <MonthNavControls {...navProps} />
+            </div>
+          </div>
+          {panchangaSubtitle ? (
+            <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
+          ) : null}
+        </div>
       </div>
     </div>
   );
