@@ -137,7 +137,7 @@ export function BsMonthHeaderTitle({
   };
 
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
       <button
         type="button"
         className={cn(patroMonthChipShell, patroMonthChipButton)}
@@ -149,19 +149,23 @@ export function BsMonthHeaderTitle({
         <div className={patroMonthChipDay}>{digits(chipDay)}</div>
       </button>
 
-      <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="m-0 text-[1rem] font-bold leading-none tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
-          {monthTitle}{" "}
-          <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+      <div className="flex min-w-0 flex-col gap-0.5 sm:gap-1">
+        <h1 className="m-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
+          <span className="max-md:inline-block max-md:max-w-full max-md:truncate">
+            {monthTitle}{" "}
+            <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+          </span>
           {samvatsaraLabel ? (
-            <span className="ml-1.5 text-[0.92em] font-semibold text-foreground/90">{samvatsaraLabel}</span>
+            <span className="ml-1 hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
+              {samvatsaraLabel}
+            </span>
           ) : null}
           {adDayEnglish ? (
-            <span className="ml-1.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
+            <span className="ml-1 hidden text-[11px] font-medium text-muted-foreground sm:inline sm:text-xs">
               {adDayEnglish}
             </span>
           ) : adMonthRangeEnglish ? (
-            <span className="ml-1.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
+            <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
               {adMonthRangeEnglish}
             </span>
           ) : null}
@@ -180,7 +184,7 @@ export function BsMonthHeaderTitle({
 
           {dayOptions && onDayChange && dayAriaLabel ? (
             <BsNativeSelect
-              className="w-[3.25rem] sm:w-[3.5rem]"
+              className="w-[2.75rem] sm:w-[3.5rem]"
               value={day ?? dayOptions[0]?.value ?? 1}
               options={dayOptions}
               ariaLabel={dayAriaLabel}
@@ -189,7 +193,7 @@ export function BsMonthHeaderTitle({
           ) : null}
 
           <BsNativeSelect
-            className="w-[4.75rem] sm:w-[5.25rem]"
+            className="w-[3.25rem] sm:w-[5.25rem]"
             value={month}
             options={monthOptions}
             ariaLabel={monthAriaLabel}
@@ -197,7 +201,7 @@ export function BsMonthHeaderTitle({
           />
 
           <BsNativeSelect
-            className="w-[4rem] sm:w-[4.5rem]"
+            className="w-[2.875rem] sm:w-[4.5rem]"
             value={year}
             options={yearSelectOptions}
             ariaLabel={yearAriaLabel}
@@ -207,14 +211,14 @@ export function BsMonthHeaderTitle({
           {clock && onClockChange && hourAriaLabel && minuteAriaLabel ? (
             <>
               <BsNativeSelect
-                className="w-[3.25rem] sm:w-[3.5rem]"
+                className="w-[2.75rem] sm:w-[3.5rem]"
                 value={hour}
                 options={hourOptions}
                 ariaLabel={hourAriaLabel}
                 onChange={(nextHour) => setClockPart(nextHour, minute)}
               />
               <BsNativeSelect
-                className="w-[3.25rem] sm:w-[3.5rem]"
+                className="w-[2.75rem] sm:w-[3.5rem]"
                 value={minute}
                 options={minuteOptions}
                 ariaLabel={minuteAriaLabel}

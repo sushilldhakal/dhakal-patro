@@ -425,7 +425,7 @@ export function CalendarView({
   }
 
   const monthHeader = showMonthHeader ? (
-    <div className="mb-4 mt-2 flex items-start justify-between gap-3 max-sm:px-2.5 max-sm:pt-3">
+    <div className="mb-4 mt-2 flex flex-col gap-2 max-sm:px-2.5 max-sm:pt-3 md:flex-row md:items-start md:justify-between md:gap-3">
       <div className="min-w-0 flex-1">
         <BsMonthHeaderTitle
           year={year}
@@ -447,14 +447,14 @@ export function CalendarView({
         />
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-2 pt-0.5">
+      <div className="flex w-full shrink-0 flex-row items-center justify-end gap-2 md:w-auto md:flex-col md:items-end md:pt-0.5">
         {patroModeBlock}
         {location && onLocationChange ? (
           <LocationSelector
             compact
             location={location}
             onLocationChange={onLocationChange}
-            className="w-auto max-w-[11rem] sm:max-w-[12.5rem]"
+            className="min-w-0 w-auto max-w-[8.5rem] sm:max-w-[12.5rem]"
           />
         ) : null}
       </div>
