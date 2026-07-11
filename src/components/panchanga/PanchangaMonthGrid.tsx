@@ -214,7 +214,7 @@ export function PanchangaMonthGrid({
                     className={cn(
                       "max-w-full truncate rounded-full px-1 py-0.5 text-xs font-semibold self-start",
                       "max-md:w-full max-md:self-center max-md:py-px max-md:text-[7px] max-md:leading-tight",
-                      "bg-chip-festival text-panchang dark:text-accent"
+                      "text-panchang text-foreground dark:text-accent"
                     )}
                   >
                     {day.festivals[0]}
