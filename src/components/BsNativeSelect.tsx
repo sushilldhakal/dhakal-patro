@@ -39,7 +39,7 @@ export function BsNativeSelect({
         ))}
       </select>
       <span
-        className="pointer-events-none flex h-7 w-full min-w-0 items-center justify-between gap-1 rounded-md border border-border bg-card px-1.5 text-[11px] font-medium text-foreground sm:text-xs"
+        className="pointer-events-none flex h-6 w-full min-w-0 items-center justify-between gap-0.5 rounded-md border border-border bg-card px-1 text-[10px] font-medium text-foreground sm:h-7 sm:gap-1 sm:px-1.5 sm:text-xs"
         aria-hidden
       >
         <span className="truncate">{selected?.label ?? "—"}</span>
