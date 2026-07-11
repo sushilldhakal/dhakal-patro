@@ -342,11 +342,11 @@ export function BsMonthHeaderTitle({
         </span>
       ) : null}
       {adDayEnglish ? (
-        <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
+        <span className="block text-[10px] font-medium text-muted-foreground sm:text-xs">
           {adDayEnglish}
         </span>
       ) : adMonthRangeEnglish ? (
-        <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
+        <span className="block text-[10px] font-medium text-muted-foreground sm:text-xs">
           {adMonthRangeEnglish}
         </span>
       ) : null}
@@ -438,8 +438,8 @@ export function BsMonthHeaderTitle({
       </button>
 
       <div className="@container/month-head min-w-0 flex-1">
-        {/* Mobile: 2 columns (title+picker | toolbar); 1 column when container is very narrow */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 max-[280px]:grid-cols-1 md:hidden">
+        {/* Mobile only (<768px): 2 columns (title+picker | toolbar) */}
+        <div className="hidden max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-start max-md:gap-x-2 max-md:gap-y-1.5 max-[280px]:max-md:grid-cols-1">
           <div className="col-start-1 row-start-1 flex min-w-0 flex-col gap-1">
             {titleBlock}
           </div>
@@ -461,18 +461,11 @@ export function BsMonthHeaderTitle({
           </div>
         </div>
 
-        {/* Desktop */}
-        <div className="hidden flex-col gap-0.5 sm:gap-1 md:flex">
-          <div className="flex min-w-0 items-center gap-3">
-            {titleBlock}
-            <div
-              className={cn(
-                patroMonthNavShell,
-                mobileDateTimeDrawer ? "inline-flex shrink-0" : "inline-flex shrink-0",
-              )}
-            >
-              <MonthNavControls {...navProps} />
-            </div>
+        {/* Desktop (md+): title, then nav row — same as before mobile drawer work */}
+        <div className="hidden min-w-0 flex-col gap-0.5 sm:gap-1 md:flex">
+          {titleBlock}
+          <div className={patroMonthNavShell}>
+            <MonthNavControls {...navProps} />
           </div>
           {panchangaSubtitle ? (
             <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
