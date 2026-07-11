@@ -126,7 +126,7 @@ export function AuthDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{desc}</DialogDescription>
@@ -135,7 +135,7 @@ export function AuthDialog({
         {mode !== "forgot" && socialEnabled && (
           <div className="flex flex-col items-center gap-3">
             {googleSignInEnabled && (
-              <GoogleSignInButton onCredential={onGoogle} onError={setError} />
+              <GoogleSignInButton onCredential={onGoogle} onError={setError} disabled={busy} />
             )}
             {facebookSignInEnabled && (
               <FacebookSignInButton

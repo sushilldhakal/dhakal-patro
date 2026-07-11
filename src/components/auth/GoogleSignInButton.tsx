@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { socialSignInButtonClass } from "./social-sign-in-styles";
@@ -64,6 +64,24 @@ function ensureGsiInitialized(onCredential: (idToken: string) => void, locale: s
   return true;
 }
 
+function clampButtonWidth(width: number): number {
+  return Math.max(200, Math.min(400, Math.floor(width)));
+}
+
+function useTouchPreferred(): boolean {
+  const [touchPreferred, setTouchPreferred] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse), (hover: none)");
+    const update = () => setTouchPreferred(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  return touchPreferred;
+}
+
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>
@@ -89,29 +107,49 @@ function GoogleIcon({ className }: { className?: string }) {
 
 /**
  * Theme-aware label (i18n) with a transparent Google button overlay for the OAuth click.
+ * On touch devices the native Google button is shown directly — invisible iframe overlays
+ * are unreliable inside modals on mobile browsers.
  */
 export function GoogleSignInButton({
   onCredential,
   onError,
+  disabled = false,
 }: {
   onCredential: (idToken: string) => void;
   onError?: (message: string) => void;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const { lang } = useLocale();
   const gsiLocale = lang === "en" ? "en" : "ne";
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const gsiRef = useRef<HTMLDivElement>(null);
   const isDark = useIsDarkTheme();
+  const touchPreferred = useTouchPreferred();
   const onCredentialRef = useRef(onCredential);
+  const [buttonWidth, setButtonWidth] = useState(300);
   onCredentialRef.current = onCredential;
 
   useEffect(() => {
-    if (!CLIENT_ID || !overlayRef.current || isDark === undefined) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => setButtonWidth(clampButtonWidth(el.clientWidth || 300));
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!CLIENT_ID || !gsiRef.current) return;
     let cancelled = false;
+    const theme = isDark ? "filled_black" : "outline";
 
     loadGsi(gsiLocale)
       .then(() => {
-        if (cancelled || !overlayRef.current) return;
+        if (cancelled || !gsiRef.current) return;
         if (
           !ensureGsiInitialized((token) => {
             onCredentialRef.current(token);
@@ -119,15 +157,15 @@ export function GoogleSignInButton({
         ) {
           return;
         }
-        overlayRef.current.innerHTML = "";
-        window.google!.accounts!.id!.renderButton(overlayRef.current, {
+        gsiRef.current.innerHTML = "";
+        window.google!.accounts!.id!.renderButton(gsiRef.current, {
           type: "standard",
-          theme: isDark ? "filled_black" : "outline",
+          theme,
           size: "large",
           text: "continue_with",
           shape: "pill",
           logo_alignment: "left",
-          width: 300,
+          width: buttonWidth,
           locale: gsiLocale,
         });
       })
@@ -136,28 +174,49 @@ export function GoogleSignInButton({
     return () => {
       cancelled = true;
     };
-  }, [gsiLocale, isDark, onError, t]);
+  }, [gsiLocale, isDark, buttonWidth, onError, t]);
 
   if (!CLIENT_ID) return null;
 
+  if (touchPreferred) {
+    return (
+      <div
+        ref={containerRef}
+        className={cn(
+          "flex w-full max-w-[300px] justify-center",
+          disabled && "pointer-events-none opacity-50",
+        )}
+      >
+        <div
+          ref={gsiRef}
+          className="min-h-10 w-full [&>div]:!mx-auto [&_iframe]:pointer-events-auto"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
+      ref={containerRef}
       className={cn(
-        "relative flex h-10 w-[300px] max-w-full items-center justify-center gap-2 overflow-hidden rounded-full",
+        "relative flex h-10 w-full max-w-[300px] items-center justify-center gap-2 rounded-full",
         socialSignInButtonClass,
+        disabled && "pointer-events-none opacity-50",
       )}
     >
       <GoogleIcon className="size-4 shrink-0" />
       <span className="pointer-events-none text-sm font-medium">
         {isDark === undefined ? "…" : t("auth.continue_with_google")}
       </span>
-      {isDark !== undefined && (
-        <div
-          ref={overlayRef}
-          className="absolute inset-0 z-10 opacity-[0.01] [&_div]:!h-full [&_div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full"
-          aria-hidden
-        />
-      )}
+      <div
+        ref={gsiRef}
+        className={cn(
+          "absolute inset-0 z-20 cursor-pointer opacity-0",
+          "pointer-events-auto touch-manipulation",
+          "[&_div]:!h-full [&_div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full [&_iframe]:pointer-events-auto",
+        )}
+        aria-hidden
+      />
     </div>
   );
 }
