@@ -82,6 +82,11 @@ export const SAIT_DATA: Partial<Record<number, SaitYearData>> = {
       10: [21, 22, 27],
       11: [8, 12, 13, 14, 25, 26, 27, 28, 30],
     },
+    bratabandha: {
+      1: [5, 19, 24],
+      11: [7, 14, 15],
+      12: [6, 15],
+    },
   },
   2083: {
     vivah: {
@@ -94,7 +99,7 @@ export const SAIT_DATA: Partial<Record<number, SaitYearData>> = {
     bratabandha: {
       1: [20, 21, 23],
       3: [10],
-      10: [21, 23, 25],
+      10: [25],
       11: [10, 13, 26],
       12: [3, 4, 10, 25, 28],
     },
