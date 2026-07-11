@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,15 @@ import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import {
   patroMonthChipButton,
   patroMonthChipDay,
@@ -41,6 +50,8 @@ interface Props {
   onClockChange?: (clock: string) => void;
   hourAriaLabel?: string;
   minuteAriaLabel?: string;
+  /** Panchanga: on viewports below md, open date/time pickers in a bottom sheet. */
+  mobileDateTimeDrawer?: boolean;
 }
 
 function chipMonthLabel(month: number, lang: string): string {
@@ -48,6 +59,141 @@ function chipMonthLabel(month: number, lang: string): string {
     return BS_MONTH_NAMES[month - 1].slice(0, 3).toUpperCase();
   }
   return BS_MONTHS_NE[month - 1];
+}
+
+type NavControlsProps = {
+  day?: number;
+  dayOptions?: BsNativeSelectOption[];
+  onDayChange?: (day: number) => void;
+  dayAriaLabel?: string;
+  month: number;
+  monthOptions: BsNativeSelectOption[];
+  monthAriaLabel: string;
+  onMonthChange: (month: number) => void;
+  year: number;
+  yearSelectOptions: BsNativeSelectOption[];
+  yearAriaLabel: string;
+  onYearChange: (year: number) => void;
+  hour: number;
+  minute: number;
+  hourOptions: BsNativeSelectOption[];
+  minuteOptions: BsNativeSelectOption[];
+  hourAriaLabel?: string;
+  minuteAriaLabel?: string;
+  onClockPart: (hour: number, minute: number) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  prevDisabled: boolean;
+  nextDisabled: boolean;
+  prevAriaLabel: string;
+  nextAriaLabel: string;
+  showTime: boolean;
+  /** comfortable widths inside the mobile drawer */
+  spacious?: boolean;
+};
+
+function MonthNavControls({
+  day,
+  dayOptions,
+  onDayChange,
+  dayAriaLabel,
+  month,
+  monthOptions,
+  monthAriaLabel,
+  onMonthChange,
+  year,
+  yearSelectOptions,
+  yearAriaLabel,
+  onYearChange,
+  hour,
+  minute,
+  hourOptions,
+  minuteOptions,
+  hourAriaLabel,
+  minuteAriaLabel,
+  onClockPart,
+  onPrev,
+  onNext,
+  prevDisabled,
+  nextDisabled,
+  prevAriaLabel,
+  nextAriaLabel,
+  showTime,
+  spacious = false,
+}: NavControlsProps) {
+  const dayW = spacious ? "w-[3.75rem]" : "w-[2.75rem] sm:w-[3.5rem]";
+  const monthW = spacious ? "w-[5.75rem]" : "w-[3.25rem] sm:w-[5.25rem]";
+  const yearW = spacious ? "w-[4.5rem]" : "w-[2.875rem] sm:w-[4.5rem]";
+  const timeW = spacious ? "w-[3.75rem]" : "w-[2.75rem] sm:w-[3.5rem]";
+
+  return (
+    <>
+      <button
+        type="button"
+        className={patroMonthRangeCompactBtn}
+        onClick={onPrev}
+        disabled={prevDisabled}
+        aria-label={prevAriaLabel}
+      >
+        <ChevronLeft size={14} strokeWidth={2} />
+      </button>
+
+      {dayOptions && onDayChange && dayAriaLabel ? (
+        <BsNativeSelect
+          className={dayW}
+          value={day ?? dayOptions[0]?.value ?? 1}
+          options={dayOptions}
+          ariaLabel={dayAriaLabel}
+          onChange={onDayChange}
+        />
+      ) : null}
+
+      <BsNativeSelect
+        className={monthW}
+        value={month}
+        options={monthOptions}
+        ariaLabel={monthAriaLabel}
+        onChange={onMonthChange}
+      />
+
+      <BsNativeSelect
+        className={yearW}
+        value={year}
+        options={yearSelectOptions}
+        ariaLabel={yearAriaLabel}
+        onChange={onYearChange}
+      />
+
+      {showTime && hourAriaLabel && minuteAriaLabel ? (
+        <>
+          <BsNativeSelect
+            className={timeW}
+            value={hour}
+            options={hourOptions}
+            ariaLabel={hourAriaLabel}
+            onChange={(nextHour) => onClockPart(nextHour, minute)}
+          />
+          <BsNativeSelect
+            className={timeW}
+            value={minute}
+            options={minuteOptions}
+            ariaLabel={minuteAriaLabel}
+            onChange={(nextMinute) => onClockPart(hour, nextMinute)}
+          />
+        </>
+      ) : null}
+
+      <button
+        type="button"
+        className={patroMonthRangeCompactBtn}
+        onClick={onNext}
+        disabled={nextDisabled}
+        aria-label={nextAriaLabel}
+      >
+        <ChevronRight size={14} strokeWidth={2} />
+      </button>
+    </>
+  );
 }
 
 export function BsMonthHeaderTitle({
@@ -76,6 +222,7 @@ export function BsMonthHeaderTitle({
   onClockChange,
   hourAriaLabel,
   minuteAriaLabel,
+  mobileDateTimeDrawer = false,
 }: Props) {
   const { lang, pick, digits } = useLocale();
 
@@ -94,8 +241,6 @@ export function BsMonthHeaderTitle({
           year: "numeric",
         })
       : null;
-  // Gregorian span a BS month covers (usually two English months, e.g. Asar →
-  // "Jul/Aug 2026"). Shown on the landing page where no single day is selected.
   const adMonthRangeEnglish = (() => {
     if (day != null) return null;
     const start = bsToAD(year, month, 1);
@@ -131,10 +276,47 @@ export function BsMonthHeaderTitle({
     value: i,
     label: toNepaliDigits(String(i).padStart(2, "0")),
   }));
+  const showTime = Boolean(clock && onClockChange && hourAriaLabel && minuteAriaLabel);
 
   const setClockPart = (nextHour: number, nextMinute: number) => {
     onClockChange?.(formatClockParts(nextHour, nextMinute));
   };
+
+  const navProps: NavControlsProps = {
+    day,
+    dayOptions,
+    onDayChange,
+    dayAriaLabel,
+    month,
+    monthOptions,
+    monthAriaLabel,
+    onMonthChange,
+    year,
+    yearSelectOptions,
+    yearAriaLabel,
+    onYearChange,
+    hour,
+    minute,
+    hourOptions,
+    minuteOptions,
+    hourAriaLabel,
+    minuteAriaLabel,
+    onClockPart: setClockPart,
+    onPrev,
+    onNext,
+    prevDisabled,
+    nextDisabled,
+    prevAriaLabel,
+    nextAriaLabel,
+    showTime,
+  };
+
+  const clockSummary = showTime
+    ? `${toNepaliDigits(String(hour).padStart(2, "0"))}:${toNepaliDigits(String(minute).padStart(2, "0"))}`
+    : null;
+  const mobileSummary = day != null
+    ? `${digits(day)} ${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`
+    : `${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`;
 
   return (
     <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
@@ -227,15 +409,13 @@ export function BsMonthHeaderTitle({
             </>
           ) : null}
 
-          <button
-            type="button"
-            className={patroMonthRangeCompactBtn}
-            onClick={onNext}
-            disabled={nextDisabled}
-            aria-label={nextAriaLabel}
-          >
-            <ChevronRight size={14} strokeWidth={2} />
-          </button>
+        <div
+          className={cn(
+            patroMonthNavShell,
+            mobileDateTimeDrawer && showTime && "hidden md:inline-flex",
+          )}
+        >
+          <MonthNavControls {...navProps} />
         </div>
 
         {panchangaSubtitle ? (
