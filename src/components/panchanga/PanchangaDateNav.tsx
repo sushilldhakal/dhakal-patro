@@ -104,10 +104,11 @@ export function PanchangaDateNav({
           hourAriaLabel={t("panchanga.hour_aria")}
           minuteAriaLabel={t("panchanga.minute_aria")}
           mobileDateTimeDrawer
+          mobileToolbar={toolbar}
         />
       </div>
       {toolbar ? (
-        <div className="flex w-full shrink-0 flex-col gap-2 md:w-auto md:items-end md:pt-0.5">
+        <div className="hidden shrink-0 flex-col gap-2 md:flex md:w-auto md:items-end md:pt-0.5">
           {toolbar}
         </div>
       ) : null}

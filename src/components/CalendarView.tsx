@@ -368,49 +368,72 @@ export function CalendarView({
   const nextPatroView: HomePatroView = patroView === "calendar" ? "panchanga" : "calendar";
   const nextPatroLabel = t(nextPatroView === "panchanga" ? "calendar.mode_panchanga" : "calendar.mode_bs");
 
-  const patroModeBlock = enablePatroToggle ? (
-    <>
-      {/* Mobile: single toggle showing the mode you can switch to. */}
+  const patroModeMobileBtn = enablePatroToggle ? (
+    <button
+      type="button"
+      className="inline-flex h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold text-muted-foreground transition-colors hover:text-foreground active:bg-muted"
+      onClick={() => switchPatroView(nextPatroView)}
+      aria-label={t("calendar.patro_mode_switch")}
+    >
+      <ArrowLeftRight className="size-3.5" aria-hidden />
+      {nextPatroLabel}
+    </button>
+  ) : null;
+
+  const patroModeDesktop = enablePatroToggle ? (
+    <div
+      className="hidden shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5 md:inline-flex"
+      role="radiogroup"
+      aria-label={t("calendar.patro_mode_aria")}
+    >
       <button
         type="button"
-        className="inline-flex h-[30px] shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground active:bg-muted sm:hidden"
-        onClick={() => switchPatroView(nextPatroView)}
-        aria-label={t("calendar.patro_mode_switch")}
+        role="radio"
+        aria-checked={patroView === "calendar"}
+        className={patroSegBtn(patroView === "calendar")}
+        onClick={() => switchPatroView("calendar")}
       >
-        <ArrowLeftRight className="size-3.5" aria-hidden />
-        {nextPatroLabel}
+        {t("calendar.mode_bs")}
       </button>
-
-      {/* Desktop: segmented control with both modes visible. */}
-      <div
-        className="hidden shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5 sm:inline-flex"
-        role="radiogroup"
-        aria-label={t("calendar.patro_mode_aria")}
+      <button
+        type="button"
+        role="radio"
+        aria-checked={patroView === "panchanga"}
+        className={patroSegBtn(patroView === "panchanga")}
+        onClick={() => switchPatroView("panchanga")}
       >
-        <button
-          type="button"
-          role="radio"
-          aria-checked={patroView === "calendar"}
-          className={patroSegBtn(patroView === "calendar")}
-          onClick={() => switchPatroView("calendar")}
-        >
-          {t("calendar.mode_bs")}
-        </button>
-        <button
-          type="button"
-          role="radio"
-          aria-checked={patroView === "panchanga"}
-          className={patroSegBtn(patroView === "panchanga")}
-          onClick={() => switchPatroView("panchanga")}
-        >
-          {t("calendar.mode_panchanga")}
-        </button>
-      </div>
-    </>
+        {t("calendar.mode_panchanga")}
+      </button>
+    </div>
   ) : (
-    <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground sm:text-right">
+    <div className="hidden text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground md:block md:text-right">
       {t("calendar.eyebrow")}
     </div>
+  );
+
+  const locationControl =
+    location && onLocationChange ? (
+      <LocationSelector
+        compact
+        location={location}
+        onLocationChange={onLocationChange}
+        className="h-[30px] min-w-0 w-auto max-w-[5.75rem] shrink-0 px-2 md:h-8 md:max-w-[12.5rem]"
+      />
+    ) : null;
+
+  const mobileHeaderToolbar =
+    patroModeMobileBtn || locationControl ? (
+      <>
+        {patroModeMobileBtn}
+        {locationControl}
+      </>
+    ) : undefined;
+
+  const headerToolbarDesktop = (
+    <>
+      {patroModeDesktop}
+      {locationControl}
+    </>
   );
 
   function changeMonth(nextMonth: number) {
@@ -451,19 +474,12 @@ export function CalendarView({
           prevAriaLabel={t("calendar.prev_month")}
           nextAriaLabel={t("calendar.next_month")}
           mobileDateTimeDrawer
+          mobileToolbar={mobileHeaderToolbar}
         />
       </div>
 
-      <div className="flex w-full shrink-0 flex-row items-center justify-end gap-2 max-md:px-0 md:w-auto md:flex-col md:items-end md:pt-0.5">
-        {patroModeBlock}
-        {location && onLocationChange ? (
-          <LocationSelector
-            compact
-            location={location}
-            onLocationChange={onLocationChange}
-            className="min-w-0 w-auto max-w-[8.5rem] sm:max-w-[12.5rem]"
-          />
-        ) : null}
+      <div className="hidden shrink-0 flex-row items-center justify-end gap-2 md:flex md:w-auto md:flex-col md:items-end md:pt-0.5">
+        {headerToolbarDesktop}
       </div>
     </div>
   ) : null;

@@ -1,4 +1,5 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import type { ReactNode } from "react";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,8 @@ interface Props {
   minuteAriaLabel?: string;
   /** Below md: hide inline nav and open date (and time when set) in a bottom sheet. */
   mobileDateTimeDrawer?: boolean;
+  /** Below md: sit beside the drawer trigger (location, mode toggle, etc.). */
+  mobileToolbar?: ReactNode;
 }
 
 function chipMonthLabel(month: number, lang: string): string {
@@ -223,6 +226,7 @@ export function BsMonthHeaderTitle({
   hourAriaLabel,
   minuteAriaLabel,
   mobileDateTimeDrawer = false,
+  mobileToolbar,
 }: Props) {
   const { lang, pick, digits } = useLocale();
 
@@ -366,23 +370,28 @@ export function BsMonthHeaderTitle({
 
         {mobileDateTimeDrawer ? (
           <Drawer>
-            <DrawerTrigger asChild>
-              <button
-                type="button"
-                className="flex w-full max-w-full items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-2 text-left text-[12px] font-medium text-foreground md:hidden"
-                aria-label={
-                  showTime
-                    ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
-                    : pick("मिति बदल्नुहोस्", "Change date")
-                }
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <CalendarClock className="size-4 shrink-0 text-secondary" strokeWidth={2} />
-                  <span className="truncate font-num">{mobileSummary}</span>
-                </span>
-                <ChevronDown className="size-4 shrink-0 opacity-50" strokeWidth={2} />
-              </button>
-            </DrawerTrigger>
+            <div className="flex w-full min-w-0 items-center gap-1.5 md:hidden">
+              <DrawerTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-[30px] min-w-0 flex-1 items-center justify-between gap-1.5 rounded-lg border border-border bg-card px-2 text-left text-[11px] font-medium text-foreground"
+                  aria-label={
+                    showTime
+                      ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
+                      : pick("मिति बदल्नुहोस्", "Change date")
+                  }
+                >
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <CalendarClock className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
+                    <span className="truncate font-num">{mobileSummary}</span>
+                  </span>
+                  <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
+                </button>
+              </DrawerTrigger>
+              {mobileToolbar ? (
+                <div className="flex shrink-0 items-center gap-1.5">{mobileToolbar}</div>
+              ) : null}
+            </div>
             <DrawerContent>
               <DrawerHeader className="text-left">
                 <DrawerTitle>
