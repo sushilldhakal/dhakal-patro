@@ -5,6 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Extra-small breakpoint (min-width). Tailwind ships sm/md/lg/xl/2xl but no
+     xs, so `xs:` did nothing before this. Set to 400px so it fires on large
+     phones (iPhone 14 Pro Max = 430px) and up — not just tablets. Remember it's
+     mobile-first: `xs:text-[1.5rem]` applies from 400px UPWARD (desktop too),
+     so pair it with `md:`/`lg:` overrides to keep the bump phone-only. Also
+     enables `max-xs:` (< 400px) for the smallest phones. */
+  --breakpoint-xs: 25rem;
   --font-devanagari: "Noto Sans Devanagari", "Mukta", ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-devanagari);
   --font-heading: var(--font-devanagari);

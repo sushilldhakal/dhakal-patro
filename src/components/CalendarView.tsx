@@ -35,6 +35,7 @@ import { VedicPatroLoader } from "./VedicPatroLoader";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
 import { patroSegBtn } from "@/lib/patro-classes";
+import { ArrowLeftRight } from "lucide-react";
 
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -363,31 +364,48 @@ export function CalendarView({
     </>
   );
 
+  const nextPatroView: HomePatroView = patroView === "calendar" ? "panchanga" : "calendar";
+  const nextPatroLabel = t(nextPatroView === "panchanga" ? "calendar.mode_panchanga" : "calendar.mode_bs");
+
   const patroModeBlock = enablePatroToggle ? (
-    <div
-      className="inline-flex shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5"
-      role="radiogroup"
-      aria-label={t("calendar.patro_mode_aria")}
-    >
+    <>
+      {/* Mobile: single toggle showing the mode you can switch to. */}
       <button
         type="button"
-        role="radio"
-        aria-checked={patroView === "calendar"}
-        className={patroSegBtn(patroView === "calendar")}
-        onClick={() => switchPatroView("calendar")}
+        className="inline-flex h-[30px] shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground active:bg-muted sm:hidden"
+        onClick={() => switchPatroView(nextPatroView)}
+        aria-label={t("calendar.patro_mode_switch")}
       >
-        {t("calendar.mode_bs")}
+        <ArrowLeftRight className="size-3.5" aria-hidden />
+        {nextPatroLabel}
       </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={patroView === "panchanga"}
-        className={patroSegBtn(patroView === "panchanga")}
-        onClick={() => switchPatroView("panchanga")}
+
+      {/* Desktop: segmented control with both modes visible. */}
+      <div
+        className="hidden shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5 sm:inline-flex"
+        role="radiogroup"
+        aria-label={t("calendar.patro_mode_aria")}
       >
-        {t("calendar.mode_panchanga")}
-      </button>
-    </div>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={patroView === "calendar"}
+          className={patroSegBtn(patroView === "calendar")}
+          onClick={() => switchPatroView("calendar")}
+        >
+          {t("calendar.mode_bs")}
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={patroView === "panchanga"}
+          className={patroSegBtn(patroView === "panchanga")}
+          onClick={() => switchPatroView("panchanga")}
+        >
+          {t("calendar.mode_panchanga")}
+        </button>
+      </div>
+    </>
   ) : (
     <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground sm:text-right">
       {t("calendar.eyebrow")}

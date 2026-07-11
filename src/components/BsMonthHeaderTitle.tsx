@@ -150,7 +150,7 @@ export function BsMonthHeaderTitle({
       </button>
 
       <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="m-0 text-[1.375rem] font-bold leading-none tracking-tight sm:text-[1.625rem] lg:text-[1.875rem]">
+        <h1 className="m-0 text-[1rem] font-bold leading-none tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
           {monthTitle}{" "}
           <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
           {samvatsaraLabel ? (

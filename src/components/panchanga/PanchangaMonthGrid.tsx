@@ -87,7 +87,7 @@ export function PanchangaMonthGrid({
     const isKrishna = phase === "krishna";
     return cn(
       "relative min-h-[118px] p-1.5 text-left cursor-pointer flex flex-col gap-0.5 transition-colors border-0",
-      "max-md:min-h-[100px] max-md:gap-px max-md:p-1",
+      "max-md:min-h-[150px] max-md:gap-px max-md:p-1",
       isKrishna
         ? "bg-background text-foreground dark:text-foreground dark:bg-background"
         : "bg-white text-foreground dark:text-foreground dark:bg-background",
@@ -148,12 +148,10 @@ export function PanchangaMonthGrid({
 
       <div className="grid grid-cols-7 gap-px ">
           {blanks.map((b) => (
-            <div key={`b-${b}`} className="min-h-[118px] bg-muted max-md:min-h-[100px]" />
+            <div key={`b-${b}`} className="min-h-[118px] bg-muted max-md:min-h-[150px]" />
           ))}
           {days.map((day) => {
             const ad = new Date(day.date_ad);
-            const isToday =
-              day.day === todayBs.day && bs.month === todayBs.month && bs.year === todayBs.year;
             const phase = getPakshaPhase(day);
 
             return (
@@ -164,47 +162,50 @@ export function PanchangaMonthGrid({
                 onClick={() => onPickDay(ad)}
               >
                 {/* Top: tithi — always visible; wraps on narrow cells */}
-                <p className="m-0 w-full text-center text-[9px] font-semibold leading-snug text-foreground line-clamp-2 sm:text-xs sm:line-clamp-1 sm:truncate">
+                <p className="m-0 w-full text-center text-[10px] font-semibold leading-snug text-foreground line-clamp-2 max-md:line-clamp-none sm:text-xs sm:line-clamp-1 sm:truncate">
                   {formatTithiWithPaksha(day, isEn)}
                 </p>
-                <p className="m-0 hidden w-full truncate text-center text-[11px] font-semibold leading-tight text-panchang dark:text-accent sm:block">
+                <p className="m-0 w-full text-center text-[10px] font-semibold leading-tight text-panchang dark:text-accent sm:truncate sm:text-[11px]">
                   {getMonthDayNakshatra(day, lang) ?? "—"}
                 </p>
 
                 {/* Middle: sunrise · day · sunset */}
-                <div className="flex min-w-0 flex-1 items-center justify-between gap-1 py-0.5 max-md:flex-none max-md:justify-center">
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-1 py-0.5 max-md:flex-none max-md:flex-col max-md:justify-center max-md:gap-0.5">
                   <span className="w-[28%] min-w-0 shrink-0 font-mono text-[11px] leading-none tabular-nums text-muted-foreground max-md:hidden">
                     {day.sunrise ? digits(day.sunrise) : "—"}
                   </span>
 
                   <div className="flex min-w-0 flex-1 flex-col items-center justify-center px-0.5 max-md:flex-none">
-                    <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-[22px]">
-                      {digits(day.day)}
-                    </span>
-                    <span className="mt-0.5 font-mono text-[10px] leading-none text-muted-foreground sm:text-[11px]">
-                      {ad.getDate()}
-                    </span>
-                    {isToday && (
-                      <span className="mt-0.5 rounded-full px-1 py-px text-[7px] font-bold text-danger sm:text-[8px]">
-                        {pick("आज", "Today")}
+                    <div className="flex flex-col items-center max-md:flex-row max-md:items-baseline max-md:gap-1">
+                      <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-[22px]">
+                        {digits(day.day)}
                       </span>
-                    )}
+                      <span className="mt-0.5 font-mono text-[10px] leading-none text-muted-foreground sm:text-[11px] max-md:mt-0">
+                        {ad.getDate()}
+                      </span>
+                    </div>
                   </div>
 
                   <span className="w-[28%] min-w-0 shrink-0 text-right font-mono text-[11px] leading-none tabular-nums text-muted-foreground max-md:hidden">
                     {day.sunset ? digits(day.sunset) : "—"}
                   </span>
+
+                  {/* Mobile-only sunrise/sunset — stacked when space is tight */}
+                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold leading-tight tabular-nums text-muted-foreground max-md:flex">
+                    <span className="whitespace-nowrap">{day.sunrise ? digits(day.sunrise) : "—"}</span>
+                    <span className="whitespace-nowrap">{day.sunset ? digits(day.sunset) : "—"}</span>
+                  </div>
                 </div>
 
-                {/* Bottom: rashi · yoga · karana — desktop only */}
-                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-[11px] leading-tight max-md:hidden">
-                  <span className="truncate text-center font-semibold text-panchang dark:text-accent">
+                {/* Bottom: rashi · yoga · karana */}
+                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-[11px] font-bold leading-tight sm:text-[11px] max-md:grid-cols-1 max-md:gap-px">
+                  <span className="text-center font-bold text-panchang dark:text-accent sm:truncate">
                     {getMonthDayChandraRashi(day, lang) ?? "—"}
                   </span>
-                  <span className="truncate text-center">
+                  <span className="text-center font-bold sm:truncate">
                     {pick(day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
                   </span>
-                  <span className="truncate text-center">
+                  <span className="text-center font-bold sm:truncate">
                     {pick(day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
                   </span>
                 </div>
@@ -213,7 +214,7 @@ export function PanchangaMonthGrid({
                   <span
                     className={cn(
                       "max-w-full truncate rounded-full px-1 py-0.5 text-xs font-semibold self-start",
-                      "max-md:w-full max-md:self-center max-md:py-px max-md:text-[7px] max-md:leading-tight",
+                      "max-md:w-full max-md:self-center max-md:py-px max-md:text-[8px] max-md:leading-tight",
                       "text-panchang text-foreground dark:text-accent"
                     )}
                   >

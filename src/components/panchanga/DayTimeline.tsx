@@ -269,10 +269,10 @@ export function DayTimeline({
     <div className={cn(patroCard, "max-w-full")}>
       <DayTimelineBand />
 
-        <div className={cn("w-full", "max-w-full", "overflow-hidden", "pl-1", "pr-2", "pt-3", "pb-1")}>
+        <div className={cn("w-full", "max-w-full", "overflow-x-auto", "overscroll-x-contain", "pl-1", "pr-2", "pt-3", "pb-1")}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className={cn("block", "h-auto", "w-full", "max-w-full")}
+          className={cn("block", "h-auto", "w-full", "min-w-[1024px]")}
           preserveAspectRatio="xMinYMid meet"
           role="img"
           aria-label={pick("पूर्ण दिन पञ्चाङ्ग चित्र", "Full panchanga day chart")}
