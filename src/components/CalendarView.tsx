@@ -431,13 +431,7 @@ export function CalendarView({
       />
     ) : null;
 
-  const mobileHeaderToolbar =
-    patroModeMobileBtn || locationControlMobile ? (
-      <>
-        {patroModeMobileBtn}
-        {locationControlMobile}
-      </>
-    ) : undefined;
+  const mobileHeaderToolbar = patroModeMobileBtn ?? undefined;
 
   const headerToolbarDesktop = (
     <>
@@ -485,6 +479,7 @@ export function CalendarView({
           nextAriaLabel={t("calendar.next_month")}
           mobileDateTimeDrawer
           mobileToolbar={mobileHeaderToolbar}
+          mobileToolbarLower={locationControlMobile ?? undefined}
         />
       </div>
 

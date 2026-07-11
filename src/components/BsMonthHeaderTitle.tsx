@@ -54,8 +54,10 @@ interface Props {
   minuteAriaLabel?: string;
   /** Below md: hide inline nav and open date (and time when set) in a bottom sheet. */
   mobileDateTimeDrawer?: boolean;
-  /** Below md: stacked top-right beside the title — toggle on title row, location below. */
+  /** Below md: top-right on row 1 (toggle on home, location on panchanga). */
   mobileToolbar?: ReactNode;
+  /** Below md: bottom-right on row 2 (location on home, under toggle). */
+  mobileToolbarLower?: ReactNode;
 }
 
 function chipMonthLabel(month: number, lang: string): string {
@@ -228,6 +230,7 @@ export function BsMonthHeaderTitle({
   minuteAriaLabel,
   mobileDateTimeDrawer = false,
   mobileToolbar,
+  mobileToolbarLower,
 }: Props) {
   const { lang, pick, digits } = useLocale();
 
@@ -330,24 +333,39 @@ export function BsMonthHeaderTitle({
         : `${digits(day)} ${monthTitle}`
       : mobileSummary;
 
+  const titleLine = (
+    <>
+      {monthTitle}{" "}
+      <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+    </>
+  );
+  const subtitleLine = adDayEnglish ?? adMonthRangeEnglish;
+
+  const mobileTitleBlock = (
+    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[0.875rem] font-bold leading-tight tracking-tight">
+      <span className="min-w-0">{titleLine}</span>
+      {samvatsaraLabel ? (
+        <span className="shrink-0 text-[0.92em] font-semibold text-foreground/90">{samvatsaraLabel}</span>
+      ) : null}
+      {subtitleLine ? (
+        <span className="min-w-0 text-[10px] font-medium leading-snug text-muted-foreground">
+          {subtitleLine}
+        </span>
+      ) : null}
+    </h1>
+  );
+
   const titleBlock = (
     <h1 className="m-0 min-w-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
-      <span className="max-md:inline-block max-md:max-w-full max-md:truncate">
-        {monthTitle}{" "}
-        <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
-      </span>
+      <span>{titleLine}</span>
       {samvatsaraLabel ? (
         <span className="ml-1 hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
           {samvatsaraLabel}
         </span>
       ) : null}
-      {adDayEnglish ? (
-        <span className="block text-[10px] font-medium text-muted-foreground sm:text-xs">
-          {adDayEnglish}
-        </span>
-      ) : adMonthRangeEnglish ? (
-        <span className="block text-[10px] font-medium text-muted-foreground sm:text-xs">
-          {adMonthRangeEnglish}
+      {subtitleLine ? (
+        <span className="mt-0.5 block text-[10px] font-medium text-muted-foreground sm:text-xs">
+          {subtitleLine}
         </span>
       ) : null}
     </h1>
@@ -438,17 +456,15 @@ export function BsMonthHeaderTitle({
       </button>
 
       <div className="@container/month-head min-w-0 flex-1">
-        {/* Mobile only (<768px): 2 columns (title+picker | toolbar) */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 max-[280px]:grid-cols-1 md:hidden">
-          <div className="col-start-1 row-start-1 flex min-w-0 flex-col gap-1">
-            {titleBlock}
-          </div>
+        {/* Mobile only (<768px): row1 title|toolbar, row2 picker|toolbarLower */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 md:hidden">
+          <div className="col-start-1 row-start-1 min-w-0">{mobileTitleBlock}</div>
           {mobileToolbar ? (
-            <div className="col-start-2 row-start-1 flex shrink-0 flex-col items-end gap-1 self-start max-[280px]:col-start-1 max-[280px]:row-start-3 max-[280px]:w-full max-[280px]:flex-row max-[280px]:justify-end">
+            <div className="col-start-2 row-start-1 flex shrink-0 items-start justify-end self-start">
               {mobileToolbar}
             </div>
           ) : null}
-          <div className="col-start-1 row-start-2 flex min-w-0 flex-col gap-1 max-[280px]:row-start-2">
+          <div className="col-start-1 row-start-2 flex min-w-0 flex-col gap-1">
             {drawerBlock}
             {!mobileDateTimeDrawer ? (
               <div className={patroMonthNavShell}>
@@ -459,6 +475,11 @@ export function BsMonthHeaderTitle({
               <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
             ) : null}
           </div>
+          {mobileToolbarLower ? (
+            <div className="col-start-2 row-start-2 flex shrink-0 items-end justify-end self-start">
+              {mobileToolbarLower}
+            </div>
+          ) : null}
         </div>
 
         {/* Desktop (md+): title, then nav row — same as before mobile drawer work */}
