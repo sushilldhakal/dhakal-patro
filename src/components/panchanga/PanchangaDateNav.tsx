@@ -103,7 +103,7 @@ export function PanchangaDateNav({
           onClockChange={onClockChange}
           hourAriaLabel={t("panchanga.hour_aria")}
           minuteAriaLabel={t("panchanga.minute_aria")}
-          mobileDateTimeDrawer={Boolean(clock && onClockChange)}
+          mobileDateTimeDrawer
         />
       </div>
       {toolbar ? (

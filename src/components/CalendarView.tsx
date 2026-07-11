@@ -429,7 +429,7 @@ export function CalendarView({
     <div
       className={cn(
         patroMdRail,
-        "mb-4 mt-2 flex flex-col gap-2 max-md:px-3 max-md:pt-3 md:flex-row md:items-start md:justify-between md:gap-3 md:px-0 md:pt-0",
+        "mb-4 mt-2 flex flex-col gap-2 max-md:pt-3 md:flex-row md:items-start md:justify-between md:gap-3 md:pt-0",
       )}
     >
       <div className="min-w-0 flex-1">
@@ -450,6 +450,7 @@ export function CalendarView({
           nextDisabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
           prevAriaLabel={t("calendar.prev_month")}
           nextAriaLabel={t("calendar.next_month")}
+          mobileDateTimeDrawer
         />
       </div>
 

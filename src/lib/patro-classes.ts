@@ -37,9 +37,9 @@ export function patroSaitCat(active: boolean) {
   );
 }
 
-/** Below md: cap at 768px and center; md+: span the parent column. */
+/** Below md: inset from viewport edges (max 768px rail); md+: span the parent column. */
 export const patroMdRail =
-  "w-full max-md:max-w-[768px] max-md:mx-auto md:max-w-none";
+  "mx-auto box-border w-full max-md:max-w-[min(768px,calc(100%-2rem))] md:max-w-none";
 
 export const patroMonthNavShell =
   "inline-flex w-max max-w-full shrink-0 flex-nowrap items-center gap-0.5 max-md:gap-0.5 sm:gap-1.5";

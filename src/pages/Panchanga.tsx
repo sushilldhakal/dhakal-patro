@@ -210,7 +210,7 @@ export function Panchanga() {
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-md:px-0 max-md:pb-16 max-md:pt-0">
-      <div className="mt-2 grid grid-cols-1 items-start gap-x-5 gap-y-4 max-md:px-3 max-md:pt-3 xl:grid-cols-[1fr_330px]">
+      <div className="mt-2 grid grid-cols-1 items-start gap-x-5 gap-y-4 max-md:pt-3 xl:grid-cols-[1fr_330px]">
         <div className="flex min-w-0 flex-col gap-4">
           <PanchangaDateNav
             date={date}

@@ -50,7 +50,7 @@ interface Props {
   onClockChange?: (clock: string) => void;
   hourAriaLabel?: string;
   minuteAriaLabel?: string;
-  /** Panchanga: on viewports below md, open date/time pickers in a bottom sheet. */
+  /** Below md: hide inline nav and open date (and time when set) in a bottom sheet. */
   mobileDateTimeDrawer?: boolean;
 }
 
@@ -357,22 +357,24 @@ export function BsMonthHeaderTitle({
           <div
             className={cn(
               patroMonthNavShell,
-              mobileDateTimeDrawer && showTime
-                ? "hidden md:inline-flex md:shrink-0"
-                : "inline-flex md:shrink-0",
+              mobileDateTimeDrawer ? "hidden md:inline-flex md:shrink-0" : "inline-flex md:shrink-0",
             )}
           >
             <MonthNavControls {...navProps} />
           </div>
         </div>
 
-        {mobileDateTimeDrawer && showTime ? (
+        {mobileDateTimeDrawer ? (
           <Drawer>
             <DrawerTrigger asChild>
               <button
                 type="button"
                 className="flex w-full max-w-full items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-2 text-left text-[12px] font-medium text-foreground md:hidden"
-                aria-label={pick("मिति र समय बदल्नुहोस्", "Change date and time")}
+                aria-label={
+                  showTime
+                    ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
+                    : pick("मिति बदल्नुहोस्", "Change date")
+                }
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <CalendarClock className="size-4 shrink-0 text-secondary" strokeWidth={2} />
@@ -383,7 +385,9 @@ export function BsMonthHeaderTitle({
             </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader className="text-left">
-                <DrawerTitle>{pick("मिति र समय", "Date & time")}</DrawerTitle>
+                <DrawerTitle>
+                  {showTime ? pick("मिति र समय", "Date & time") : pick("मिति", "Date")}
+                </DrawerTitle>
               </DrawerHeader>
               <div className="flex flex-col gap-5 px-4 pb-2">
                 <div>
@@ -394,28 +398,30 @@ export function BsMonthHeaderTitle({
                     <MonthNavControls {...navProps} showTime={false} spacious />
                   </div>
                 </div>
-                <div>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {pick("समय", "Time")}
-                  </p>
-                  <div className={cn(patroMonthNavShell, "w-full justify-center")}>
-                    <BsNativeSelect
-                      className="w-[4rem]"
-                      value={hour}
-                      options={hourOptions}
-                      ariaLabel={hourAriaLabel!}
-                      onChange={(nextHour) => setClockPart(nextHour, minute)}
-                    />
-                    <span className="px-0.5 font-num text-sm font-semibold text-muted-foreground">:</span>
-                    <BsNativeSelect
-                      className="w-[4rem]"
-                      value={minute}
-                      options={minuteOptions}
-                      ariaLabel={minuteAriaLabel!}
-                      onChange={(nextMinute) => setClockPart(hour, nextMinute)}
-                    />
+                {showTime && hourAriaLabel && minuteAriaLabel ? (
+                  <div>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      {pick("समय", "Time")}
+                    </p>
+                    <div className={cn(patroMonthNavShell, "w-full justify-center")}>
+                      <BsNativeSelect
+                        className="w-[4rem]"
+                        value={hour}
+                        options={hourOptions}
+                        ariaLabel={hourAriaLabel}
+                        onChange={(nextHour) => setClockPart(nextHour, minute)}
+                      />
+                      <span className="px-0.5 font-num text-sm font-semibold text-muted-foreground">:</span>
+                      <BsNativeSelect
+                        className="w-[4rem]"
+                        value={minute}
+                        options={minuteOptions}
+                        ariaLabel={minuteAriaLabel}
+                        onChange={(nextMinute) => setClockPart(hour, nextMinute)}
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : null}
               </div>
               <DrawerFooter>
                 <DrawerClose asChild>
