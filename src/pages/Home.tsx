@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { VedicPatroLoader } from "../components/VedicPatroLoader";
 import {
   fetchPanchanga,
   panchangaKeys,
@@ -103,6 +102,17 @@ function PanchangaAside({
     activeP?.paksha?.label_en ?? activeP?.paksha?.label_ne ?? activeP?.paksha_ne ?? contextDay?.paksha,
   );
 
+  // Local BS date for the selected AD day — lets the hero paint a real date
+  // instantly (and in the prerendered HTML) without waiting for the panchanga
+  // API. Improves LCP: the hero is the largest element on the home page.
+  const fallbackBs = useMemo(() => {
+    try {
+      return adToBS(new Date(`${selectedAdDate}T12:00:00`));
+    } catch {
+      return null;
+    }
+  }, [selectedAdDate]);
+
   const displayHeroDate = (() => {
     if (activeP?.bs_date && typeof activeP.bs_date === "object") {
       const monthName = pick(BS_MONTHS_NE[activeP.bs_date.month - 1], BS_MONTH_NAMES[activeP.bs_date.month - 1]);
@@ -114,7 +124,12 @@ function PanchangaAside({
     }
     if (activeP?.display?.bs_ne) return digits(activeP.display.bs_ne);
     if (activeP?.date_bs) return digits(activeP.date_bs);
-    return bsDisplay ? digits(bsDisplay) : "—";
+    if (bsDisplay) return digits(bsDisplay);
+    if (fallbackBs) {
+      const monthName = pick(BS_MONTHS_NE[fallbackBs.month - 1], BS_MONTH_NAMES[fallbackBs.month - 1]);
+      return `${monthName} ${digits(fallbackBs.day)}`;
+    }
+    return "—";
   })();
 
   const topFestName = pick(
@@ -159,43 +174,17 @@ function PanchangaAside({
           </Link>
         </div>
 
-        {loading ? (
-          <div
-            className={cn(
-              "flex items-center justify-center py-14",
-              !isBelow && "min-[1081px]:py-20",
-            )}
-            role="status"
-            aria-live="polite"
-          >
-            <VedicPatroLoader size={84} />
-          </div>
-        ) : error && !activeP ? (
-          <div
-            className={cn(
-              "flex flex-col gap-3",
-              !isBelow && "min-[1081px]:gap-0",
-            )}
-          >
-            <div
-              className={cn(
-                "rounded-lg border border-danger/20 bg-error-surface p-3.5 text-sm font-medium text-danger",
-                !isBelow && "min-[1081px]:m-4",
-                isBelow && "m-4",
-              )}
-            >
-              {t("panchanga.error")}
-            </div>
-          </div>
-        ) : (
-          <div
-            className={cn(
-              "flex flex-col gap-3",
-              isBelow
-                ? "lg:flex-row lg:items-stretch"
-                : "min-[1081px]:gap-0",
-            )}
-          >
+        {/* Hero always renders from local BS data (no API wait) so it paints
+            as the LCP element immediately; the detail panel below shows its own
+            loading skeletons / error while the panchanga API is in flight. */}
+        <div
+          className={cn(
+            "flex flex-col gap-3",
+            isBelow
+              ? "lg:flex-row lg:items-stretch"
+              : "min-[1081px]:gap-0",
+          )}
+        >
             <div
               className={cn(
                 patroHeroMonthShell,
@@ -266,21 +255,26 @@ function PanchangaAside({
             </div>
 
             <div className="p-2.5 max-md:border-none max-md:p-0" role="tabpanel">
-              <PanchangaAsideTabPanel
-                tab={asideTab}
-                p={activeP}
-                selectedDay={contextDay}
-                selectedAdDate={selectedAdDate}
-                bsYear={monthContext.year}
-                bsMonth={monthContext.month}
-                monthDays={monthContext.days}
-                todayAd={todayAd}
-                loading={loading}
-              />
+              {error && !activeP ? (
+                <div className="rounded-lg border border-danger/20 bg-error-surface p-3.5 text-sm font-medium text-danger">
+                  {t("panchanga.error")}
+                </div>
+              ) : (
+                <PanchangaAsideTabPanel
+                  tab={asideTab}
+                  p={activeP}
+                  selectedDay={contextDay}
+                  selectedAdDate={selectedAdDate}
+                  bsYear={monthContext.year}
+                  bsMonth={monthContext.month}
+                  monthDays={monthContext.days}
+                  todayAd={todayAd}
+                  loading={loading}
+                />
+              )}
             </div>
             </div>
-          </div>
-        )}
+        </div>
       </div>
     </aside>
   );
