@@ -15,7 +15,7 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
  * without a manual purge.
  */
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "21";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "22";
 
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;
@@ -432,7 +432,7 @@ export const fetchMonthCalendar = async (
   if (options?.clock) params.set("clock", options.clock);
   const qs = params.toString();
   const path = appendLocation(
-    `/panchanga/${year}/${month}${qs ? `?${qs}` : ""}`,
+    withPanchangaCacheVersion(`/panchanga/${year}/${month}${qs ? `?${qs}` : ""}`),
     location
   );
   const data = await get<MonthCalendar & { calendar: RawMonthDay[] }>(path);
@@ -457,7 +457,7 @@ export const fetchYearCalendar = async (
   }
   const qs = params.toString();
   const path = appendLocation(
-    `/panchanga/year/${year}${qs ? `?${qs}` : ""}`,
+    withPanchangaCacheVersion(`/panchanga/year/${year}${qs ? `?${qs}` : ""}`),
     location,
   );
   const data = await get<YearCalendar & { calendar: RawMonthDay[]; months: Array<MonthCalendar & { calendar?: RawMonthDay[] }> }>(path);
@@ -521,7 +521,7 @@ export const patroKeys = {
 };
 
 export const fetchPatroMonth = (year: number, month: number) =>
-  get<PatroMonth>(`/nepal/patro/${year}/${month}`);
+  get<PatroMonth>(withPanchangaCacheVersion(`/nepal/patro/${year}/${month}`));
 
 // ─── Holidays & Festivals ─────────────────────────────────────────────────────
 
@@ -536,12 +536,12 @@ export const holidayKeys = {
 };
 
 export const fetchHolidays = (year: number) =>
-  get<HolidaysResponse>(`/nepal/holidays?year=${year}&era=bs`);
+  get<HolidaysResponse>(withPanchangaCacheVersion(`/nepal/holidays?year=${year}&era=bs`));
 
 export const fetchFestivals = (year: number, month?: number) => {
   const params = new URLSearchParams({ year: String(year), era: "bs" });
   if (month != null) params.set("month", String(month));
-  return get<FestivalsResponse>(`/nepal/festivals?${params}`);
+  return get<FestivalsResponse>(withPanchangaCacheVersion(`/nepal/festivals?${params}`));
 };
 
 /** Festival with countdown, as returned by /nepal/festivals/upcoming. */

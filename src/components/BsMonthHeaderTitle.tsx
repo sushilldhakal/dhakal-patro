@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel, bsToAD } from "@/lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
@@ -94,6 +94,24 @@ export function BsMonthHeaderTitle({
           year: "numeric",
         })
       : null;
+  // Gregorian span a BS month covers (usually two English months, e.g. Asar →
+  // "Jul/Aug 2026"). Shown on the landing page where no single day is selected.
+  const adMonthRangeEnglish = (() => {
+    if (day != null) return null;
+    const start = bsToAD(year, month, 1);
+    const end = bsToAD(year, month, getBSMonthLength(year, month));
+    const startMonth = start.toLocaleDateString("en", { month: "short" });
+    const endMonth = end.toLocaleDateString("en", { month: "short" });
+    const startYear = start.getFullYear();
+    const endYear = end.getFullYear();
+    if (startMonth === endMonth && startYear === endYear) {
+      return `${startMonth} ${startYear}`;
+    }
+    if (startYear === endYear) {
+      return `${startMonth}/${endMonth} ${startYear}`;
+    }
+    return `${startMonth} ${startYear}/${endMonth} ${endYear}`;
+  })();
   const chipDay = day ?? todayBs.day;
   const chipMonth = day != null ? month : todayBs.month;
   const monthOptions = BS_MONTH_NAMES.map((_: string, i: number) => ({
@@ -141,6 +159,10 @@ export function BsMonthHeaderTitle({
           {adDayEnglish ? (
             <span className="ml-1.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
               {adDayEnglish}
+            </span>
+          ) : adMonthRangeEnglish ? (
+            <span className="ml-1.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
+              {adMonthRangeEnglish}
             </span>
           ) : null}
         </h1>
