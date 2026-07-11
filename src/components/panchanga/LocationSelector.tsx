@@ -31,10 +31,35 @@ function cityLabel(city: City): string {
   return city.ascii_name || city.name;
 }
 
-function cityItemLabel(city: City): string {
+// Resolve a 2-letter ISO country code to a readable, localized name
+// ("NP" → "Nepal" / "नेपाल") via the built-in Intl API. Cached per locale;
+// falls back to the raw code if the runtime lacks the region data.
+const countryNameCache = new Map<string, Intl.DisplayNames | null>();
+
+function countryName(code: string | undefined | null, lang: string): string {
+  if (!code) return "";
+  const locale = lang === "ne" ? "ne" : "en";
+  if (!countryNameCache.has(locale)) {
+    try {
+      countryNameCache.set(locale, new Intl.DisplayNames([locale], { type: "region" }));
+    } catch {
+      countryNameCache.set(locale, null);
+    }
+  }
+  const dn = countryNameCache.get(locale);
+  const upper = code.toUpperCase();
+  try {
+    return dn?.of(upper) ?? upper;
+  } catch {
+    return upper;
+  }
+}
+
+function cityItemLabel(city: City, lang: string): string {
   const region = city.admin1_name ?? city.admin1;
-  if (region) return `${cityLabel(city)}, ${region}, ${city.country}`;
-  return `${cityLabel(city)}, ${city.country}`;
+  const country = countryName(city.country, lang);
+  if (region) return `${cityLabel(city)}, ${region}, ${country}`;
+  return `${cityLabel(city)}, ${country}`;
 }
 
 function LocationPickerPanel({
@@ -55,7 +80,7 @@ function LocationPickerPanel({
   onPickCity: (city: City) => void;
   onUseCurrentLocation: () => void;
 }) {
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   return (
     <>
       <ComboboxInput
@@ -109,7 +134,7 @@ function LocationPickerPanel({
             >
               <span className="font-semibold block">{name}</span>
               <span className="text-[11px] text-muted-foreground">
-                {cityItemLabel(city)}
+                {cityItemLabel(city, lang)}
               </span>
             </ComboboxItem>
           );
@@ -125,7 +150,7 @@ export function LocationSelector({
   className,
   compact = false,
 }: Props) {
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -228,7 +253,7 @@ export function LocationSelector({
         onValueChange={(city) => {
           if (city) pickCity(city);
         }}
-        itemToStringValue={cityItemLabel}
+        itemToStringValue={(city: City) => cityItemLabel(city, lang)}
         isItemEqualToValue={(a, b) => a.id === b.id}
         {...comboboxSearchProps}
       >
@@ -272,7 +297,7 @@ export function LocationSelector({
         onValueChange={(city) => {
           if (city) pickCity(city);
         }}
-        itemToStringValue={cityItemLabel}
+        itemToStringValue={(city: City) => cityItemLabel(city, lang)}
         isItemEqualToValue={(a, b) => a.id === b.id}
         {...comboboxSearchProps}
       >
