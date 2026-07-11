@@ -211,6 +211,16 @@ function minutesToGhati(minutes: number, sunriseMin: number): number {
   return Math.min(g, 60);
 }
 
+/** Ghati for the "now" needle on a sunrise-to-sunrise chart; null before today's sunrise. */
+export function needleGhatiOnVedicChart(
+  civilMins: number,
+  sunriseMin: number
+): number | null {
+  if (civilMins < sunriseMin) return null;
+  const g = (civilMins - sunriseMin) / 24;
+  return g <= 60 ? g : null;
+}
+
 function computeGMin(sunriseMin: number): number {
   const sunriseHourFloor = Math.floor(sunriseMin / 60) * 60;
   return (sunriseHourFloor - sunriseMin) / 24;

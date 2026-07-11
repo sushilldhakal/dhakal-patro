@@ -5,6 +5,7 @@ import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-tim
 import {
   buildDayTimelineData,
   dualTimeAtGhati,
+  needleGhatiOnVedicChart,
   CHOGHADIYA_EN,
   TL_GRAHA_EN,
   TL_RASHI_EN,
@@ -249,18 +250,19 @@ export function DayTimeline({
   // day so it stays aligned with the wheel. Priority: an explicitly chosen
   // clock pins the needle; otherwise on today it tracks the live current time
   // ("अहिले"); otherwise it falls back to the ephemeris query instant.
-  if (showNeedle && needleClock) {
-    nowG = (chartMins! - data.sunriseMin) / 24;
-    if (nowG < 0) nowG += 60;
-    nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
+  if (showNeedle && needleClock && chartMins != null) {
+    nowG = needleGhatiOnVedicChart(chartMins, data.sunriseMin);
+    if (nowG != null) {
+      nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
+    }
   } else if (showNeedle && isToday) {
     const minsNow = minutesSinceMidnightInTimezone(now, timeZone);
-    nowG = (minsNow - data.sunriseMin) / 24;
-    if (nowG < 0) nowG += 60;
+    nowG = needleGhatiOnVedicChart(minsNow, data.sunriseMin);
   } else if (showNeedle && chartMins != null) {
-    nowG = (chartMins - data.sunriseMin) / 24;
-    if (nowG < 0) nowG += 60;
-    nowLabel = pick("छानिएको समय", "Chosen time");
+    nowG = needleGhatiOnVedicChart(chartMins, data.sunriseMin);
+    if (nowG != null) {
+      nowLabel = pick("छानिएको समय", "Chosen time");
+    }
   }
 
   const trackY = (i: number) => T0 + i * TRACK;
