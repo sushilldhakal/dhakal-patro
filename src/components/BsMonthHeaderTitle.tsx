@@ -23,6 +23,7 @@ import {
   patroMonthChipShell,
   patroMonthNavShell,
   patroMonthRangeCompactBtn,
+  patroMobilePickerBtn,
 } from "@/lib/patro-classes";
 
 interface Props {
@@ -321,6 +322,13 @@ export function BsMonthHeaderTitle({
   const mobileSummary = day != null
     ? `${digits(day)} ${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`
     : `${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`;
+  /** Picker chip: omit year when the title already shows it (panchanga day view). */
+  const mobilePickerLabel =
+    day != null
+      ? clockSummary
+        ? `${digits(day)} ${monthTitle} · ${clockSummary}`
+        : `${digits(day)} ${monthTitle}`
+      : mobileSummary;
 
   const titleBlock = (
     <h1 className="m-0 min-w-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
@@ -350,7 +358,7 @@ export function BsMonthHeaderTitle({
       <DrawerTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-[30px] w-max max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-2 text-[11px] font-medium text-foreground"
+          className={patroMobilePickerBtn}
           aria-label={
             showTime
               ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
@@ -358,7 +366,7 @@ export function BsMonthHeaderTitle({
           }
         >
           <CalendarClock className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
-          <span className="truncate font-num">{mobileSummary}</span>
+          <span className="min-w-0 truncate font-num">{mobilePickerLabel}</span>
           <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
         </button>
       </DrawerTrigger>
@@ -430,10 +438,17 @@ export function BsMonthHeaderTitle({
       </button>
 
       <div className="@container/month-head min-w-0 flex-1">
-        {/* Mobile: 2 columns (title+picker | toggle/location); wraps to 1 column when tight */}
-        <div className="flex flex-wrap items-start gap-x-2 gap-y-1.5 md:hidden">
-          <div className="flex min-w-0 flex-1 basis-[calc(100%-6.75rem)] flex-col gap-1 @[240px]/month-head:basis-auto">
+        {/* Mobile: 2 columns (title+picker | toolbar); 1 column when container is very narrow */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 max-[280px]:grid-cols-1 md:hidden">
+          <div className="col-start-1 row-start-1 flex min-w-0 flex-col gap-1">
             {titleBlock}
+          </div>
+          {mobileToolbar ? (
+            <div className="col-start-2 row-start-1 flex shrink-0 flex-col items-end gap-1 self-start max-[280px]:col-start-1 max-[280px]:row-start-3 max-[280px]:w-full max-[280px]:flex-row max-[280px]:justify-end">
+              {mobileToolbar}
+            </div>
+          ) : null}
+          <div className="col-start-1 row-start-2 flex min-w-0 flex-col gap-1 max-[280px]:row-start-2">
             {drawerBlock}
             {!mobileDateTimeDrawer ? (
               <div className={patroMonthNavShell}>
@@ -444,11 +459,6 @@ export function BsMonthHeaderTitle({
               <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
             ) : null}
           </div>
-          {mobileToolbar ? (
-            <div className="flex shrink-0 basis-[6.25rem] flex-col items-end gap-1 @[240px]/month-head:basis-auto">
-              {mobileToolbar}
-            </div>
-          ) : null}
         </div>
 
         {/* Desktop */}

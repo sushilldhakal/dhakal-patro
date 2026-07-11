@@ -41,6 +41,10 @@ export function patroSaitCat(active: boolean) {
 export const patroMdRail =
   "mx-auto box-border w-full max-md:max-w-[min(768px,calc(100%-2rem))] md:max-w-none";
 
+/** Compact date/time drawer trigger — content-sized, capped so toolbar fits beside it. */
+export const patroMobilePickerBtn =
+  "inline-flex h-[30px] w-max max-w-[min(100%,10.5rem)] shrink-0 items-center gap-1 rounded-lg border border-border bg-card px-2 text-[11px] font-medium text-foreground";
+
 export const patroMonthNavShell =
   "inline-flex w-max max-w-full shrink-0 flex-nowrap items-center gap-0.5 max-md:gap-0.5 sm:gap-1.5";
 

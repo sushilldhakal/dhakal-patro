@@ -223,7 +223,7 @@ export function Panchanga() {
                 compact
                 location={location}
                 onLocationChange={setLocation}
-                className="h-[30px] min-w-0 w-auto max-w-[7.25rem] shrink-0 px-2 md:h-8 md:max-w-[12.5rem]"
+                className="h-[30px] min-w-0 w-auto max-w-[6.5rem] shrink-0 px-2 md:h-8 md:max-w-[12.5rem]"
               />
             }
           />
