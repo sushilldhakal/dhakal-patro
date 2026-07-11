@@ -71,7 +71,7 @@ export function PanchangaDateNav({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between",
+        "flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-3",
         className,
       )}
     >
@@ -101,10 +101,11 @@ export function PanchangaDateNav({
           onClockChange={onClockChange}
           hourAriaLabel={t("panchanga.hour_aria")}
           minuteAriaLabel={t("panchanga.minute_aria")}
+          mobileDateTimeDrawer={Boolean(clock && onClockChange)}
         />
       </div>
       {toolbar ? (
-        <div className="flex shrink-0 flex-col items-stretch gap-2 pt-0.5 sm:items-end">
+        <div className="flex w-full shrink-0 flex-col gap-2 md:w-auto md:items-end md:pt-0.5">
           {toolbar}
         </div>
       ) : null}

@@ -38,7 +38,7 @@ export function patroSaitCat(active: boolean) {
 }
 
 export const patroMonthNavShell =
-  "inline-flex w-max max-w-full shrink-0 flex-nowrap items-center gap-1 sm:gap-1.5";
+  "inline-flex w-max max-w-full shrink-0 flex-nowrap items-center gap-0.5 max-md:gap-0.5 sm:gap-1.5";
 
 export const patroMonthNavDivider =
   "flex items-center gap-1 border-l border-border pl-1.5 sm:gap-1.5 sm:pl-2";
@@ -56,16 +56,16 @@ export const patroMonthTodayBtn =
   "h-8 cursor-pointer rounded-lg border-none bg-primary px-3.5 text-[13px] font-semibold text-primary-foreground shadow-xs transition-[filter,transform] hover:brightness-105 active:translate-y-px sm:px-4 sm:text-[13.5px]";
 
 export const patroMonthChipShell =
-  "flex w-[3.25rem] shrink-0 flex-col overflow-hidden rounded-[10px] border border-border bg-card shadow-sm";
+  "flex w-[2.5rem] shrink-0 flex-col overflow-hidden rounded-[8px] border border-border bg-card shadow-sm sm:w-[3.25rem] sm:rounded-[10px]";
 
 export const patroMonthChipButton =
   "cursor-pointer transition-[filter,transform,box-shadow] hover:brightness-[1.03] hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 export const patroMonthChipHead =
-  "bg-secondary px-1 py-1.5 text-center text-[10px] font-bold leading-none tracking-wide text-secondary-foreground";
+  "truncate bg-secondary px-0.5 py-0.5 text-center text-[8px] font-bold leading-none tracking-wide text-secondary-foreground sm:px-1 sm:py-1.5 sm:text-[10px]";
 
 export const patroMonthChipDay =
-  "flex min-h-[2.25rem] items-center justify-center bg-card py-1 text-[1.625rem] font-bold leading-none text-foreground";
+  "flex min-h-[1.75rem] items-center justify-center bg-card py-0.5 text-[1.125rem] font-bold leading-none text-foreground sm:min-h-[2.25rem] sm:py-1 sm:text-[1.625rem]";
 
 /** Decorative calendar "body" line — month chip without a day numeral. */
 export const patroMonthChipLine =
@@ -90,7 +90,7 @@ export const patroMonthRangeCompactTrigger =
   "cursor-pointer rounded px-0.5 transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export const patroMonthRangeCompactBtn =
-  "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border/70 bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40";
+  "flex h-5 w-5 max-md:h-5 max-md:w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-md border border-border/70 bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40";
 
 export function patroSegBtn(active: boolean) {
   return cn(
