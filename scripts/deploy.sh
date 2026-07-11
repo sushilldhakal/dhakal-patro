@@ -27,10 +27,10 @@ elif [[ -f .env ]] && grep -q '^VITE_GA_MEASUREMENT_ID=' .env; then
 fi
 env "${BUILD_ENV[@]}" npm run build
 
-if grep -q 'googletagmanager.com/gtag/js' dist/index.html 2>/dev/null; then
-  echo "==> Google Analytics tag present in build"
+if grep -q 'analytics.ts' dist/index.html 2>/dev/null || grep -q 'Google tag' dist/index.html 2>/dev/null; then
+  echo "==> Google Analytics hook present in build"
 else
-  echo "WARNING: Google Analytics tag missing from dist/index.html." >&2
+  echo "WARNING: Google Analytics hook missing from dist/index.html." >&2
   echo "         Set VITE_GA_MEASUREMENT_ID in server .env or GitHub Actions secrets." >&2
 fi
 
@@ -41,6 +41,7 @@ sudo rsync -a --delete dist/ "${WEB_ROOT}/"
 echo "==> Verifying published build"
 test -f "${WEB_ROOT}/index.html" || { echo "index.html missing after publish" >&2; exit 1; }
 test -f "${WEB_ROOT}/robots.txt" || { echo "robots.txt missing after publish" >&2; exit 1; }
+test -f "${WEB_ROOT}/llms.txt" || { echo "llms.txt missing after publish" >&2; exit 1; }
 
 if systemctl is-active --quiet nginx 2>/dev/null; then
   echo "==> Reloading nginx"

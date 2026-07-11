@@ -8,3 +8,7 @@ Disallow: /kundali/
 Disallow: /api/
 
 Sitemap: https://www.vedicpatro.com/sitemap.xml
+
+# LLM / AI crawlers — site overview and key links
+# https://llmstxt.org/
+# llms.txt: https://www.vedicpatro.com/llms.txt

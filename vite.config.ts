@@ -11,30 +11,9 @@ function injectGaSnippet(measurementId: string | undefined): Plugin {
         return html.replace(/\s*<!-- @ga-snippet -->\s*/, "\n")
       }
 
-      const snippet = `<!-- Google tag (gtag.js) — deferred after idle -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      (function () {
-        var id = "${measurementId}";
-        function loadGtag() {
-          var s = document.createElement("script");
-          s.async = true;
-          s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
-          s.onload = function () {
-            gtag("js", new Date());
-            gtag("config", id, { send_page_view: false });
-            window.dispatchEvent(new Event("gtag-ready"));
-          };
-          document.head.appendChild(s);
-        }
-        if ("requestIdleCallback" in window) {
-          requestIdleCallback(loadGtag, { timeout: 3000 });
-        } else {
-          window.addEventListener("load", loadGtag, { once: true });
-        }
-      })();
-    </script>`
+      // GA loads from src/lib/analytics.ts after first user interaction (or a
+      // delayed fallback) so Lighthouse and first paint are not blocked.
+      const snippet = `<!-- Google tag (gtag.js) — loaded on interaction via analytics.ts -->`
 
       return html.replace("<!-- @ga-snippet -->", snippet)
     },

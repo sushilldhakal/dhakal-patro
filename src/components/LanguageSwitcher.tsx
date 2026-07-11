@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { ensureEnglishBundle } from "@/i18n";
 
 export function LanguageSwitcher({ className }: { className?: string }) {
   const { i18n: i18nInstance, t, ready } = useTranslation();
@@ -7,7 +8,11 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const isNepali = lang !== "en";
 
   const toggle = () => {
-    void i18nInstance.changeLanguage(isNepali ? "en" : "ne");
+    if (isNepali) {
+      void ensureEnglishBundle().then(() => i18nInstance.changeLanguage("en"));
+      return;
+    }
+    void i18nInstance.changeLanguage("ne");
   };
 
   const label = isNepali ? t("switch_to_english") : t("switch_to_nepali");

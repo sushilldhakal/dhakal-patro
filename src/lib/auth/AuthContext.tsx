@@ -21,11 +21,7 @@ import {
 import { isBrowser } from "@/lib/browser";
 import {
   clearFacebookAutoLoginSkip,
-  facebookAccessToken,
   facebookLogout,
-  facebookSignInEnabled,
-  getFacebookLoginStatus,
-  shouldSkipFacebookAutoLogin,
   skipFacebookAutoLogin,
 } from "./facebook-sdk";
 
@@ -119,33 +115,6 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
     if (epoch !== authEpoch.current) return;
     setUser(me);
   }, []);
-
-  const facebookBootstrapDone = useRef(false);
-
-  // Facebook silent sign-in — only once on first page load, not after logout.
-  useEffect(() => {
-    if (ssr || !isBrowser || !facebookSignInEnabled || loading) return;
-    if (facebookBootstrapDone.current) return;
-    facebookBootstrapDone.current = true;
-
-    if (user || shouldSkipFacebookAutoLogin()) return;
-    if (tokenStore.access || tokenStore.refresh) return;
-
-    let cancelled = false;
-    getFacebookLoginStatus()
-      .then((response) => {
-        if (cancelled || user) return;
-        const token = facebookAccessToken(response);
-        if (token) {
-          return loginWithFacebook(token);
-        }
-      })
-      .catch(() => undefined);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [ssr, loading, user, loginWithFacebook]);
 
   const logout = useCallback(async () => {
     authEpoch.current += 1;
