@@ -161,3 +161,11 @@ export const wheelYearScrubCount =
   "shrink-0 font-num text-[10px] font-semibold tabular-nums leading-tight text-center text-[var(--w-ink)] max-[480px]:text-[9px] [&_.dim]:font-medium [&_.dim]:text-[var(--w-ink-dim)]";
 
 export const wheelYearScrubPlayBtn = cn(wheelIconBtn, "max-[480px]:h-6 max-[480px]:w-6");
+
+/** Active rewind/forward button — tinted when that direction is playing. */
+export const wheelYearScrubBtnActive =
+  "border-[var(--w-accent)] text-[var(--w-accent)] bg-[color-mix(in_srgb,var(--w-accent)_18%,transparent)]";
+
+/** Current playback-speed badge (e.g. 8×) shown while autoplaying. */
+export const wheelYearScrubSpeed =
+  "shrink-0 font-num text-[10px] font-bold leading-none tabular-nums text-[var(--w-accent)] tracking-tight max-[480px]:text-[9px]";

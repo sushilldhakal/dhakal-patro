@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Fullscreen, Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { FastForward, Fullscreen, Minimize2, Pause, Play, Rewind } from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
 import { fetchPanchangaAtTime, panchangaKeys } from "@/lib/api";
 import { getPanchangaDetail } from "@/lib/panchanga-format";
@@ -49,10 +49,12 @@ import {
   wheelTipSym,
   wheelTipTitle,
   wheelYearScrub,
+  wheelYearScrubBtnActive,
   wheelYearScrubCount,
   wheelYearScrubLabel,
   wheelYearScrubPlayBtn,
   wheelYearScrubShell,
+  wheelYearScrubSpeed,
 } from "@/lib/wheel-classes";
 import { cn } from "@/lib/utils";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
@@ -70,20 +72,24 @@ export type YearWheelScrub = {
   day: number;
   /** Total days across the whole range. */
   totalDays: number;
-  playing: boolean;
-  onPlayToggle: () => void;
+  /** Autoplay direction: -1 backward, 0 paused, 1 forward. */
+  direction: -1 | 0 | 1;
+  /** Autoplay speed multiplier while playing: 1 | 2 | 4 | 8. */
+  speed: number;
+  /** Play/step forward — repeated presses ramp 1×→2×→4×→8×. */
+  onForward: () => void;
+  /** Play/step backward — repeated presses ramp 1×→2×→4×→8×. */
+  onBackward: () => void;
+  /** Stop playback (resets speed). */
+  onPause: () => void;
   /** Receives the global day index; the page maps it back to (year, day). */
   onDayChange: (day: number) => void;
   onScrubStart: () => void;
   onScrubEnd: () => void;
-  /** Multi-year range context — enables prev/next-year buttons + label. */
+  /** Multi-year range context — shows the active year + day-in-year label. */
   yearLabel?: string;
   dayInYear?: number;
   daysInYear?: number;
-  onPrevYear?: () => void;
-  onNextYear?: () => void;
-  canPrevYear?: boolean;
-  canNextYear?: boolean;
 };
 
 function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
@@ -92,42 +98,47 @@ function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
   const {
     day,
     totalDays,
-    playing,
-    onPlayToggle,
+    direction,
+    speed,
+    onForward,
+    onBackward,
+    onPause,
     onDayChange,
     onScrubStart,
     onScrubEnd,
     yearLabel,
     dayInYear,
     daysInYear,
-    onPrevYear,
-    onNextYear,
-    canPrevYear,
-    canNextYear,
   } = scrub;
   const num = (n: number) => digits(n);
   const fillPct = totalDays <= 1 ? 100 : ((day - 1) / (totalDays - 1)) * 100;
-  const hasRange = onPrevYear != null || onNextYear != null;
+  const playing = direction !== 0;
+  const speedTitle = (base: string) =>
+    playing ? `${base} · ${num(speed)}×` : base;
 
   return (
     <div className={wheelYearScrubShell}>
       <span className={wheelYearScrubLabel}>{pick("वर्ष", "Year")}</span>
-      {hasRange && (
-        <button
-          type="button"
-          className={cn(wheelYearScrubPlayBtn, "shrink-0")}
-          onClick={onPrevYear}
-          disabled={!canPrevYear}
-          aria-label={pick("अघिल्लो वर्ष", "Previous year")}
-          title={pick("अघिल्लो वर्ष", "Previous year")}
-        >
-          <SkipBack className={wheelDockIcon} strokeWidth={2} aria-hidden />
-        </button>
-      )}
+      {/* Rewind — press repeatedly to accelerate backward (2×/4×/8×). */}
+      <button
+        type="button"
+        className={cn(
+          wheelYearScrubPlayBtn,
+          "shrink-0",
+          direction === -1 && wheelYearScrubBtnActive,
+        )}
+        onClick={onBackward}
+        aria-label={pick("पछाडि", "Rewind")}
+        aria-pressed={direction === -1}
+        title={speedTitle(pick("पछाडि चलाउनुहोस्", "Play backward"))}
+      >
+        <Rewind className={wheelDockIcon} strokeWidth={2} aria-hidden />
+      </button>
+      {/* Center: play forward when paused, pause when playing. */}
       <button
         type="button"
         className={cn(wheelYearScrubPlayBtn, "shrink-0")}
-        onClick={onPlayToggle}
+        onClick={playing ? onPause : onForward}
         aria-label={playing ? t("panchanga_year.pause") : t("panchanga_year.play")}
         title={playing ? t("panchanga_year.pause") : t("panchanga_year.play_title")}
       >
@@ -137,18 +148,27 @@ function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
           <Play className={cn(wheelDockIcon, "translate-x-[1px]")} strokeWidth={2} aria-hidden />
         )}
       </button>
-      {hasRange && (
-        <button
-          type="button"
-          className={cn(wheelYearScrubPlayBtn, "shrink-0")}
-          onClick={onNextYear}
-          disabled={!canNextYear}
-          aria-label={pick("अर्को वर्ष", "Next year")}
-          title={pick("अर्को वर्ष", "Next year")}
-        >
-          <SkipForward className={wheelDockIcon} strokeWidth={2} aria-hidden />
-        </button>
-      )}
+      {/* Fast-forward — press repeatedly to accelerate forward (2×/4×/8×). */}
+      <button
+        type="button"
+        className={cn(
+          wheelYearScrubPlayBtn,
+          "shrink-0",
+          direction === 1 && wheelYearScrubBtnActive,
+        )}
+        onClick={onForward}
+        aria-label={pick("अगाडि", "Fast forward")}
+        aria-pressed={direction === 1}
+        title={speedTitle(pick("अगाडि चलाउनुहोस्", "Play forward"))}
+      >
+        <FastForward className={wheelDockIcon} strokeWidth={2} aria-hidden />
+      </button>
+      <span
+        className={cn(wheelYearScrubSpeed, !playing && "opacity-0")}
+        aria-hidden={!playing}
+      >
+        {num(speed)}×
+      </span>
       <input
         type="range"
         className={wheelYearScrub}

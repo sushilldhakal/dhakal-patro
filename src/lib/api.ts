@@ -15,7 +15,7 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
  * without a manual purge.
  */
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "22";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "24";
 
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;
@@ -469,6 +469,14 @@ export const fetchYearCalendar = async (
     location,
   );
   const data = await get<YearCalendar & { calendar: RawMonthDay[]; months: Array<MonthCalendar & { calendar?: RawMonthDay[] }> }>(path);
+  // The wheel reads only each day's nested `panchanga` block (see seedDayRow), so
+  // normalizing — which reconstructs the ~20 flat per-day fields the server just
+  // trimmed away — would re-bloat the payload before it's parsed/persisted and
+  // burn CPU over 365 days for nothing. Skip it for the wheel; keep it for the
+  // (fuller) default shape whose consumers rely on the flat fields.
+  if (options?.wheel) {
+    return { ...data, calendar: data.calendar as CalendarDay[], months: data.months ?? [] };
+  }
   return {
     ...data,
     calendar: data.calendar.map(normalizeMonthDay),

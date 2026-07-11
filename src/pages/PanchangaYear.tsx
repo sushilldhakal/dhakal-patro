@@ -137,7 +137,13 @@ export function PanchangaYear() {
   // otherwise every day crossed while dragging fires its own request and they
   // all queue up behind each other.
   const [queryDay, setQueryDay] = useState(dayOfYear);
-  const [playing, setPlaying] = useState(false);
+  // Autoplay: direction (-1 back, 0 paused, 1 forward) + speed multiplier.
+  // Pressing forward/back repeatedly ramps the speed 1×→2×→4×→8× (like a media
+  // player's fast-forward / rewind), until the user pauses.
+  const [play, setPlay] = useState<{ dir: -1 | 0 | 1; speed: number }>({
+    dir: 0,
+    speed: 1,
+  });
   const [isScrubbing, setIsScrubbing] = useState(false);
 
   useEffect(() => {
@@ -263,7 +269,22 @@ export function PanchangaYear() {
     prefetchAround(clampedDay);
   }, [clampedDay, prefetchAround]);
 
-  const togglePlaying = useCallback(() => setPlaying((p) => !p), []);
+  const MAX_PLAY_SPEED = 8;
+  const stepForward = useCallback(() => {
+    setPlay((p) =>
+      p.dir === 1
+        ? { dir: 1, speed: Math.min(p.speed * 2, MAX_PLAY_SPEED) }
+        : { dir: 1, speed: 1 },
+    );
+  }, []);
+  const stepBackward = useCallback(() => {
+    setPlay((p) =>
+      p.dir === -1
+        ? { dir: -1, speed: Math.min(p.speed * 2, MAX_PLAY_SPEED) }
+        : { dir: -1, speed: 1 },
+    );
+  }, []);
+  const pausePlay = useCallback(() => setPlay({ dir: 0, speed: 1 }), []);
 
   useEffect(() => {
     const delay = isScrubbing ? SCRUB_FETCH_MS : SCRUB_DEBOUNCE_MS;
@@ -278,27 +299,52 @@ export function PanchangaYear() {
     prefetchDay(clampedDay);
   }, [isScrubbing, clampedDay, prefetchDay]);
 
-  // Playback: one day/second. At year end, roll into the next year of the range
-  // (already preloaded) for a continuous multi-year animation; on the final year
-  // of the range, loop back to its day 1. `setTimeout` re-arms each tick, so the
-  // callback always reads the current day/year.
+  // Playback: base ~one day/second, divided by the speed multiplier (2×/4×/8×).
+  // Forward rolls off a year's last day into the next range year (preloaded) for
+  // a continuous multi-year animation, wrapping the whole range at the ends;
+  // backward mirrors it. `setTimeout` re-arms each tick, so the callback always
+  // reads the current day/year/speed.
+  const PLAY_BASE_MS = 900;
   useEffect(() => {
-    if (!playing) return;
+    if (play.dir === 0) return;
+    const tick = Math.max(70, Math.round(PLAY_BASE_MS / play.speed));
     const id = setTimeout(() => {
-      if (dayOfYear >= totalDays) {
-        if (year < rangeEnd) {
+      if (play.dir === 1) {
+        if (dayOfYear < totalDays) {
+          setDayOfYear(dayOfYear + 1);
+        } else if (year < rangeEnd) {
           setActiveYear(year + 1);
           setDayOfYear(1);
           setQueryDay(1);
-        } else {
+        } else if (rangeStart < year) {
+          // End of a multi-year range → wrap to its first year.
+          setActiveYear(rangeStart);
           setDayOfYear(1);
+          setQueryDay(1);
+        } else {
+          setDayOfYear(1); // single year → loop
         }
       } else {
-        setDayOfYear(dayOfYear + 1);
+        if (dayOfYear > 1) {
+          setDayOfYear(dayOfYear - 1);
+        } else if (year > rangeStart) {
+          const prevLen = daysInBsYear(year - 1);
+          setActiveYear(year - 1);
+          setDayOfYear(prevLen);
+          setQueryDay(prevLen);
+        } else if (rangeEnd > year) {
+          // Start of a multi-year range → wrap to its last year's last day.
+          const lastLen = daysInBsYear(rangeEnd);
+          setActiveYear(rangeEnd);
+          setDayOfYear(lastLen);
+          setQueryDay(lastLen);
+        } else {
+          setDayOfYear(totalDays); // single year → loop
+        }
       }
-    }, 1000);
+    }, tick);
     return () => clearTimeout(id);
-  }, [playing, dayOfYear, totalDays, year, rangeEnd]);
+  }, [play, dayOfYear, totalDays, year, rangeEnd, rangeStart]);
 
   // The debounced day drives the actual network subscription: it only changes
   // once dragging settles, so we never fire a request per crossed day.
@@ -516,8 +562,11 @@ export function PanchangaYear() {
             yearScrub={{
               day: globalDay,
               totalDays: rangeDayIndex.total,
-              playing,
-              onPlayToggle: togglePlaying,
+              direction: play.dir,
+              speed: play.speed,
+              onForward: stepForward,
+              onBackward: stepBackward,
+              onPause: pausePlay,
               onDayChange: handleGlobalDayChange,
               onScrubStart: () => setIsScrubbing(true),
               onScrubEnd: finishScrub,
@@ -525,10 +574,6 @@ export function PanchangaYear() {
                 yearLabel: toNepaliDigits(year),
                 dayInYear: clampedDay,
                 daysInYear: totalDays,
-                onPrevYear: () => goToYear(year - 1),
-                onNextYear: () => goToYear(year + 1),
-                canPrevYear: year > rangeStart,
-                canNextYear: year < rangeEnd,
               }),
             }}
           />
