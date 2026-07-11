@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { BsMonthHeaderTitle } from "@/components/BsMonthHeaderTitle";
 import { cn } from "@/lib/utils";
+import { patroMdRail } from "@/lib/patro-classes";
 
 const BS_YEARS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -71,6 +72,7 @@ export function PanchangaDateNav({
   return (
     <div
       className={cn(
+        patroMdRail,
         "flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-3",
         className,
       )}

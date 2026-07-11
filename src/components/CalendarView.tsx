@@ -34,7 +34,8 @@ import { BsMonthHeaderTitle } from "./BsMonthHeaderTitle";
 import { VedicPatroLoader } from "./VedicPatroLoader";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
-import { patroSegBtn } from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
+import { patroMdRail, patroSegBtn } from "@/lib/patro-classes";
 import { ArrowLeftRight } from "lucide-react";
 
 const BS_YEAR_OPTIONS = Array.from(
@@ -425,7 +426,12 @@ export function CalendarView({
   }
 
   const monthHeader = showMonthHeader ? (
-    <div className="mb-4 mt-2 flex flex-col gap-2 max-sm:px-2.5 max-sm:pt-3 md:flex-row md:items-start md:justify-between md:gap-3">
+    <div
+      className={cn(
+        patroMdRail,
+        "mb-4 mt-2 flex flex-col gap-2 max-md:px-3 max-md:pt-3 md:flex-row md:items-start md:justify-between md:gap-3 md:px-0 md:pt-0",
+      )}
+    >
       <div className="min-w-0 flex-1">
         <BsMonthHeaderTitle
           year={year}
@@ -447,7 +453,7 @@ export function CalendarView({
         />
       </div>
 
-      <div className="flex w-full shrink-0 flex-row items-center justify-end gap-2 md:w-auto md:flex-col md:items-end md:pt-0.5">
+      <div className="flex w-full shrink-0 flex-row items-center justify-end gap-2 max-md:px-0 md:w-auto md:flex-col md:items-end md:pt-0.5">
         {patroModeBlock}
         {location && onLocationChange ? (
           <LocationSelector

@@ -333,7 +333,7 @@ export function Home() {
   useRouteLoading(asideInitialLoading);
 
   return (
-    <main className="mx-auto max-w-[1400px] px-4 pb-12 pt-4 max-sm:px-0 max-sm:pb-16 max-sm:pt-0">
+    <main className="mx-auto max-w-[1400px] px-4 pb-12 pt-4 max-md:px-0 max-md:pb-16 max-md:pt-0">
       <CalendarView
         location={location}
         onLocationChange={setLocation}

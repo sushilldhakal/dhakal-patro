@@ -11,7 +11,7 @@ import {
   type TimelineRowData,
 } from "./day-timeline-data";
 import { useLocale } from "@/i18n/locale";
-import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
+import { patroCard, patroMdRail, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import {
   pgTlAxis,
@@ -201,7 +201,7 @@ export function DayTimeline({
 
   if (loading || !p || !data) {
     return (
-      <div className={cn(patroCard, "max-w-full")} aria-busy={loading || !data}>
+      <div className={cn(patroCard, patroMdRail)} aria-busy={loading || !data}>
         <DayTimelineBand />
         <div className={cn("w-full", "max-w-full", "overflow-hidden", "pl-1", "pr-2", "pt-3", "pb-1")}>
           <div className={cn(patroSkel, "w-full")} style={{ minHeight: 320 }} />
@@ -266,7 +266,7 @@ export function DayTimeline({
   const trackY = (i: number) => T0 + i * TRACK;
 
   return (
-    <div className={cn(patroCard, "max-w-full")}>
+    <div className={cn(patroCard, patroMdRail)}>
       <DayTimelineBand />
 
         <div className={cn("w-full", "max-w-full", "overflow-x-auto", "overscroll-x-contain", "pl-1", "pr-2", "pt-3", "pb-1")}>

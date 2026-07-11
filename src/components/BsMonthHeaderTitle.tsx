@@ -332,26 +332,39 @@ export function BsMonthHeaderTitle({
       </button>
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:gap-1">
-        <h1 className="m-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
-          <span className="max-md:inline-block max-md:max-w-full max-md:truncate">
-            {monthTitle}{" "}
-            <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
-          </span>
-          {samvatsaraLabel ? (
-            <span className="ml-1 hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
-              {samvatsaraLabel}
+        <div className="flex min-w-0 flex-col gap-0.5 md:flex-row md:items-center md:gap-3">
+          <h1 className="m-0 min-w-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
+            <span className="max-md:inline-block max-md:max-w-full max-md:truncate">
+              {monthTitle}{" "}
+              <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
             </span>
-          ) : null}
-          {adDayEnglish ? (
-            <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
-              {adDayEnglish}
-            </span>
-          ) : adMonthRangeEnglish ? (
-            <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
-              {adMonthRangeEnglish}
-            </span>
-          ) : null}
-        </h1>
+            {samvatsaraLabel ? (
+              <span className="ml-1 hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
+                {samvatsaraLabel}
+              </span>
+            ) : null}
+            {adDayEnglish ? (
+              <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
+                {adDayEnglish}
+              </span>
+            ) : adMonthRangeEnglish ? (
+              <span className="block text-[10px] font-medium text-muted-foreground sm:ml-1.5 sm:inline sm:text-xs">
+                {adMonthRangeEnglish}
+              </span>
+            ) : null}
+          </h1>
+
+          <div
+            className={cn(
+              patroMonthNavShell,
+              mobileDateTimeDrawer && showTime
+                ? "hidden md:inline-flex md:shrink-0"
+                : "inline-flex md:shrink-0",
+            )}
+          >
+            <MonthNavControls {...navProps} />
+          </div>
+        </div>
 
         {mobileDateTimeDrawer && showTime ? (
           <Drawer>
@@ -417,15 +430,6 @@ export function BsMonthHeaderTitle({
             </DrawerContent>
           </Drawer>
         ) : null}
-
-        <div
-          className={cn(
-            patroMonthNavShell,
-            mobileDateTimeDrawer && showTime && "hidden md:inline-flex",
-          )}
-        >
-          <MonthNavControls {...navProps} />
-        </div>
 
         {panchangaSubtitle ? (
           <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
