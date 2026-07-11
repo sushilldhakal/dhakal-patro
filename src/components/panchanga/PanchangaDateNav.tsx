@@ -70,35 +70,43 @@ export function PanchangaDateNav({
   }));
 
   return (
-    <div className={cn(patroMdRail, "md:flex md:items-start md:justify-between md:gap-3", className)}>
-      <BsMonthHeaderTitle
-        year={bs.year}
-        month={bs.month}
-        day={bs.day}
-        dayOptions={dayOptions}
-        onDayChange={(nextDay) => pickBsDate(onDateChange, bs.year, bs.month, nextDay)}
-        dayAriaLabel={t("calendar.day_aria")}
-        yearOptions={BS_YEARS}
-        todayAd={todayAd}
-        onToday={() => onDateChange(todayAd ? new Date(`${todayAd}T12:00:00`) : new Date())}
-        todayAriaLabel={t("calendar.today_btn")}
-        onMonthChange={(nextMonth) => pickBsDate(onDateChange, bs.year, nextMonth, bs.day)}
-        onYearChange={(nextYear) => pickBsDate(onDateChange, nextYear, bs.month, bs.day)}
-        monthAriaLabel={t("calendar.month_aria")}
-        yearAriaLabel={t("calendar.year_aria")}
-        onPrev={() => stepDay(-1)}
-        onNext={() => stepDay(1)}
-        prevDisabled={atMinDay}
-        nextDisabled={atMaxDay}
-        prevAriaLabel={t("calendar.prev_day")}
-        nextAriaLabel={t("calendar.next_day")}
-        clock={clock}
-        onClockChange={onClockChange}
-        hourAriaLabel={t("panchanga.hour_aria")}
-        minuteAriaLabel={t("panchanga.minute_aria")}
-        mobileDateTimeDrawer
-        mobileToolbar={toolbar}
-      />
+    <div
+      className={cn(
+        patroMdRail,
+        "flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-3",
+        className,
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <BsMonthHeaderTitle
+          year={bs.year}
+          month={bs.month}
+          day={bs.day}
+          dayOptions={dayOptions}
+          onDayChange={(nextDay) => pickBsDate(onDateChange, bs.year, bs.month, nextDay)}
+          dayAriaLabel={t("calendar.day_aria")}
+          yearOptions={BS_YEARS}
+          todayAd={todayAd}
+          onToday={() => onDateChange(todayAd ? new Date(`${todayAd}T12:00:00`) : new Date())}
+          todayAriaLabel={t("calendar.today_btn")}
+          onMonthChange={(nextMonth) => pickBsDate(onDateChange, bs.year, nextMonth, bs.day)}
+          onYearChange={(nextYear) => pickBsDate(onDateChange, nextYear, bs.month, bs.day)}
+          monthAriaLabel={t("calendar.month_aria")}
+          yearAriaLabel={t("calendar.year_aria")}
+          onPrev={() => stepDay(-1)}
+          onNext={() => stepDay(1)}
+          prevDisabled={atMinDay}
+          nextDisabled={atMaxDay}
+          prevAriaLabel={t("calendar.prev_day")}
+          nextAriaLabel={t("calendar.next_day")}
+          clock={clock}
+          onClockChange={onClockChange}
+          hourAriaLabel={t("panchanga.hour_aria")}
+          minuteAriaLabel={t("panchanga.minute_aria")}
+          mobileDateTimeDrawer
+          mobileToolbar={toolbar}
+        />
+      </div>
       {toolbar ? (
         <div className="hidden shrink-0 flex-col gap-2 md:flex md:w-auto md:items-end md:pt-0.5">
           {toolbar}
