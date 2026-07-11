@@ -116,17 +116,24 @@ export const panchangaKeys = {
     ["panchanga", "day", PANCHANGA_CACHE_VERSION, date, era, locationCacheKey(location)] as const,
   nepalDay: (date: string, location?: LocationParams) =>
     ["panchanga", "nepal", date, locationCacheKey(location)] as const,
-  month: (year: number, month: number, location?: LocationParams, full = true) =>
-    ["panchanga", "month", year, month, locationCacheKey(location), full ? "full" : "lite"] as const,
+  month: (
+    year: number,
+    month: number,
+    location?: LocationParams,
+    full = true,
+    excludeInternational = false,
+  ) =>
+    ["panchanga", "month", year, month, locationCacheKey(location), full ? "full" : "lite", excludeInternational ? "nointl" : "intl"] as const,
   year: (year: number, location?: LocationParams, full = true) =>
     ["panchanga", "year", year, locationCacheKey(location), full ? "full" : "lite"] as const,
   monthAtClock: (
     year: number,
     month: number,
     clock: string,
-    location?: LocationParams
+    location?: LocationParams,
+    excludeInternational = false,
   ) =>
-    ["panchanga", "month", "clock", year, month, clock, locationCacheKey(location)] as const,
+    ["panchanga", "month", "clock", year, month, clock, locationCacheKey(location), excludeInternational ? "nointl" : "intl"] as const,
   atTime: (datetime: string, location?: LocationParams) =>
     ["panchanga", "at-time", PANCHANGA_CACHE_VERSION, datetime, locationCacheKey(location)] as const,
   header: (year: number, month: number, location?: LocationParams) =>
@@ -424,12 +431,13 @@ export const fetchMonthCalendar = async (
   year: number,
   month: number,
   location?: LocationParams,
-  options?: { clock?: string; full?: boolean }
+  options?: { clock?: string; full?: boolean; excludeInternational?: boolean }
 ): Promise<MonthCalendar> => {
   const full = options?.full !== false;
   const params = new URLSearchParams();
   if (full) params.set("full", "true");
   if (options?.clock) params.set("clock", options.clock);
+  if (options?.excludeInternational) params.set("exclude_international", "true");
   const qs = params.toString();
   const path = appendLocation(
     withPanchangaCacheVersion(`/panchanga/${year}/${month}${qs ? `?${qs}` : ""}`),

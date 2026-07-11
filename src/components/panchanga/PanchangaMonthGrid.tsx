@@ -61,12 +61,13 @@ export function PanchangaMonthGrid({
   // fetch `full=false` and skip the heavy embedded per-day panchanga block.
   const { data, isFetching, isPlaceholderData } = useQuery({
     queryKey: isInstant
-      ? panchangaKeys.monthAtClock(bs.year, bs.month, clock, locationParams)
-      : panchangaKeys.month(bs.year, bs.month, locationParams, false),
+      ? panchangaKeys.monthAtClock(bs.year, bs.month, clock, locationParams, true)
+      : panchangaKeys.month(bs.year, bs.month, locationParams, false, true),
     queryFn: () =>
       fetchMonthCalendar(bs.year, bs.month, locationParams, {
         clock: isInstant ? clock : undefined,
         full: isInstant ? undefined : false,
+        excludeInternational: true,
       }),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
