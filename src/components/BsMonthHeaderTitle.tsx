@@ -53,7 +53,7 @@ interface Props {
   minuteAriaLabel?: string;
   /** Below md: hide inline nav and open date (and time when set) in a bottom sheet. */
   mobileDateTimeDrawer?: boolean;
-  /** Below md: sit beside the drawer trigger (location, mode toggle, etc.). */
+  /** Below md: stacked top-right beside the title — toggle on title row, location below. */
   mobileToolbar?: ReactNode;
 }
 
@@ -323,7 +323,7 @@ export function BsMonthHeaderTitle({
     : `${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`;
 
   return (
-    <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
+    <div className="flex min-w-0 items-start gap-1.5 sm:gap-3">
       <button
         type="button"
         className={cn(patroMonthChipShell, patroMonthChipButton)}
@@ -336,8 +336,8 @@ export function BsMonthHeaderTitle({
       </button>
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:gap-1">
-        <div className="flex min-w-0 flex-col gap-0.5 md:flex-row md:items-center md:gap-3">
-          <h1 className="m-0 min-w-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
+        <div className="flex min-w-0 items-start gap-2 md:items-center md:gap-3">
+          <h1 className="m-0 min-w-0 flex-1 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
             <span className="max-md:inline-block max-md:max-w-full max-md:truncate">
               {monthTitle}{" "}
               <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
@@ -358,6 +358,12 @@ export function BsMonthHeaderTitle({
             ) : null}
           </h1>
 
+          {mobileToolbar ? (
+            <div className="flex shrink-0 flex-col items-end gap-1 self-start md:hidden">
+              {mobileToolbar}
+            </div>
+          ) : null}
+
           <div
             className={cn(
               patroMonthNavShell,
@@ -370,28 +376,23 @@ export function BsMonthHeaderTitle({
 
         {mobileDateTimeDrawer ? (
           <Drawer>
-            <div className="flex w-full min-w-0 items-center gap-1.5 md:hidden">
-              <DrawerTrigger asChild>
-                <button
-                  type="button"
-                  className="flex h-[30px] min-w-0 flex-1 items-center justify-between gap-1.5 rounded-lg border border-border bg-card px-2 text-left text-[11px] font-medium text-foreground"
-                  aria-label={
-                    showTime
-                      ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
-                      : pick("मिति बदल्नुहोस्", "Change date")
-                  }
-                >
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <CalendarClock className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
-                    <span className="truncate font-num">{mobileSummary}</span>
-                  </span>
-                  <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
-                </button>
-              </DrawerTrigger>
-              {mobileToolbar ? (
-                <div className="flex shrink-0 items-center gap-1.5">{mobileToolbar}</div>
-              ) : null}
-            </div>
+            <DrawerTrigger asChild>
+              <button
+                type="button"
+                className="flex h-[30px] w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border border-border bg-card px-2 text-left text-[11px] font-medium text-foreground md:hidden"
+                aria-label={
+                  showTime
+                    ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
+                    : pick("मिति बदल्नुहोस्", "Change date")
+                }
+              >
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <CalendarClock className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
+                  <span className="truncate font-num">{mobileSummary}</span>
+                </span>
+                <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
+              </button>
+            </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader className="text-left">
                 <DrawerTitle>

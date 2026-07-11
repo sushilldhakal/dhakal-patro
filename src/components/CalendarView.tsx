@@ -411,28 +411,38 @@ export function CalendarView({
     </div>
   );
 
-  const locationControl =
+  const locationControlMobile =
     location && onLocationChange ? (
       <LocationSelector
         compact
         location={location}
         onLocationChange={onLocationChange}
-        className="h-[30px] min-w-0 w-auto max-w-[5.75rem] shrink-0 px-2 md:h-8 md:max-w-[12.5rem]"
+        className="h-[30px] min-w-0 w-auto max-w-[7.25rem] shrink-0 px-2"
+      />
+    ) : null;
+
+  const locationControlDesktop =
+    location && onLocationChange ? (
+      <LocationSelector
+        compact
+        location={location}
+        onLocationChange={onLocationChange}
+        className="h-8 min-w-0 w-auto max-w-[12.5rem]"
       />
     ) : null;
 
   const mobileHeaderToolbar =
-    patroModeMobileBtn || locationControl ? (
+    patroModeMobileBtn || locationControlMobile ? (
       <>
         {patroModeMobileBtn}
-        {locationControl}
+        {locationControlMobile}
       </>
     ) : undefined;
 
   const headerToolbarDesktop = (
     <>
       {patroModeDesktop}
-      {locationControl}
+      {locationControlDesktop}
     </>
   );
 
