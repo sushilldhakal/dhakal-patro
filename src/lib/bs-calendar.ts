@@ -12,6 +12,13 @@ export const BS_MONTHS_NE = [
 
 export const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+export const WEEKDAYS_SHORT_NE = ["आइत", "सोम", "मंगल", "बुध", "बिही", "शुक्र", "शनि"] as const
+
+const AD_MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+] as const
+
 export type BikramSambatDate = {
   year: number
   month: number
@@ -197,6 +204,36 @@ export function formatBsDateLong(
     return `${BS_MONTH_NAMES[bs.month - 1]} ${bs.day}, ${bs.year}`
   }
   return `${BS_MONTHS_NE[bs.month - 1]} ${d(bs.day)}, ${d(bs.year)}`
+}
+
+/**
+ * Compact weekday + BS month/day + AD short for element span cards.
+ * e.g. सोम असार ३१ · Jun १४ / Mon Ashadh 31 · Jun 14
+ */
+export function formatBsAdStamp(
+  iso: string,
+  options?: {
+    lang?: string
+    timeZone?: string
+    digits?: (v: string | number) => string
+  },
+): { weekday: string; bsMonthDay: string; adShort: string; label: string } {
+  const { lang = "ne", timeZone, digits = String } = options ?? {}
+  const z = getZonedParts(new Date(iso), timeZone)
+  const bs = adToBS(new Date(z.year, z.month - 1, z.day))
+  const isEn = lang.slice(0, 2) === "en"
+  const weekday = isEn
+    ? (WEEKDAYS_SHORT[z.weekday] ?? "")
+    : (WEEKDAYS_SHORT_NE[z.weekday] ?? "")
+  const month = isEn ? BS_MONTH_NAMES[bs.month - 1] : BS_MONTHS_NE[bs.month - 1]
+  const bsMonthDay = `${month} ${digits(bs.day)}`
+  const adShort = `${AD_MONTHS_SHORT[z.month - 1]} ${digits(z.day)}`
+  return {
+    weekday,
+    bsMonthDay,
+    adShort,
+    label: `${weekday} ${bsMonthDay} · ${adShort}`,
+  }
 }
 
 /**

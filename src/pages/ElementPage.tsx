@@ -6,7 +6,7 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
-import { adToBS, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import { adToBS, bsToAD, formatBsAdStamp, getBSMonthLength } from "@/lib/bs-calendar";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -16,6 +16,7 @@ import {
   fetchElementDay,
   fetchElementSpans,
   type ElementSpan,
+  type ElementStamp,
 } from "@/lib/api";
 
 function toAdStr(d: Date): string {
@@ -39,10 +40,47 @@ function parseHHMM(s?: string | null): number | null {
 
 /* ── span (begin→end) view ─────────────────────────────────────────────── */
 
-function SpanList({ spans }: { spans: ElementSpan[] }) {
-  const { pick, digits } = useLocale();
-  const stamp = (s: ElementSpan["begins"]) =>
-    `${digits(s.time_label)} · ${s.weekday} ${digits(s.date_label)}`;
+function SpanBoundary({
+  label,
+  stamp,
+  tone,
+  timeZone,
+}: {
+  label: string;
+  stamp: ElementStamp;
+  tone: "begin" | "end";
+  timeZone?: string;
+}) {
+  const { digits, lang } = useLocale();
+  const { weekday, bsMonthDay, adShort } = formatBsAdStamp(stamp.iso, {
+    lang,
+    timeZone,
+    digits,
+  });
+  const shell =
+    tone === "begin"
+      ? "rounded-md bg-success/10 px-2 py-1.5"
+      : "rounded-md bg-danger/10 px-2 py-1.5";
+  const labelCls = tone === "begin" ? "font-semibold text-success" : "font-semibold text-danger";
+
+  return (
+    <div className={cn("flex flex-col gap-0.5", shell)}>
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className={labelCls}>{label}</span>
+        <span className="font-num tabular-nums text-foreground">{digits(stamp.time_label)}</span>
+      </div>
+      <p className="m-0 font-num text-sm font-semibold leading-snug text-foreground md:text-base">
+        <span>
+          {weekday} {bsMonthDay}
+        </span>
+        <span className="font-medium text-muted-foreground"> · {adShort}</span>
+      </p>
+    </div>
+  );
+}
+
+function SpanList({ spans, timeZone }: { spans: ElementSpan[]; timeZone?: string }) {
+  const { pick } = useLocale();
   return (
     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {spans.map((s, i) => (
@@ -55,15 +93,19 @@ function SpanList({ spans }: { spans: ElementSpan[] }) {
               </span>
             ) : null}
           </div>
-          <div className="flex flex-col gap-1 text-xs">
-            <span className="flex items-center justify-between gap-2 rounded-md bg-success/10 px-2 py-1">
-              <span className="font-semibold text-success">{pick("आरम्भ", "Begins")}</span>
-              <span className="font-num tabular-nums text-foreground">{stamp(s.begins)}</span>
-            </span>
-            <span className="flex items-center justify-between gap-2 rounded-md bg-danger/10 px-2 py-1">
-              <span className="font-semibold text-danger">{pick("अन्त्य", "Ends")}</span>
-              <span className="font-num tabular-nums text-foreground">{stamp(s.ends)}</span>
-            </span>
+          <div className="flex flex-col gap-1.5">
+            <SpanBoundary
+              label={pick("आरम्भ", "Begins")}
+              stamp={s.begins}
+              tone="begin"
+              timeZone={timeZone}
+            />
+            <SpanBoundary
+              label={pick("अन्त्य", "Ends")}
+              stamp={s.ends}
+              tone="end"
+              timeZone={timeZone}
+            />
           </div>
         </div>
       ))}
@@ -241,33 +283,35 @@ export function ElementPage() {
 
   return (
     <PageShell>
-      <PageHeader
-        icon={<Sparkles className="h-6 w-6 text-secondary" />}
-        title={pick(meta.ne, meta.en)}
-        subtitle={pick(meta.blurbNe, meta.blurbEn)}
-      />
+      <div className="space-y-3">
+        <PanchangaBrowseHeader
+          mode={isSpan ? "month" : "day"}
+          year={isSpan ? bs.year : tbs.year}
+          month={isSpan ? bs.month : tbs.month}
+          day={isSpan ? undefined : tbs.day}
+          onMonthChange={(m) => (isSpan ? setBs({ ...bs, month: m }) : setTableDate(tbs.year, m, tbs.day))}
+          onYearChange={(y) => (isSpan ? setBs({ ...bs, year: y }) : setTableDate(y, tbs.month, tbs.day))}
+          onSelectDate={(y, m, d) => (isSpan ? setBs({ year: y, month: m }) : setTableDate(y, m, d))}
+          onPrev={() => (isSpan ? stepMonth(-1) : stepDay(-1))}
+          onNext={() => (isSpan ? stepMonth(1) : stepDay(1))}
+          onToday={goToday}
+          todayAd={todayAd}
+          location={location}
+          onLocationChange={setLocation}
+        />
 
-      <PanchangaBrowseHeader
-        mode={isSpan ? "month" : "day"}
-        year={isSpan ? bs.year : tbs.year}
-        month={isSpan ? bs.month : tbs.month}
-        day={isSpan ? undefined : tbs.day}
-        onMonthChange={(m) => (isSpan ? setBs({ ...bs, month: m }) : setTableDate(tbs.year, m, tbs.day))}
-        onYearChange={(y) => (isSpan ? setBs({ ...bs, year: y }) : setTableDate(y, tbs.month, tbs.day))}
-        onSelectDate={(y, m, d) => (isSpan ? setBs({ year: y, month: m }) : setTableDate(y, m, d))}
-        onPrev={() => (isSpan ? stepMonth(-1) : stepDay(-1))}
-        onNext={() => (isSpan ? stepMonth(1) : stepDay(1))}
-        onToday={goToday}
-        todayAd={todayAd}
-        location={location}
-        onLocationChange={setLocation}
-      />
+        <PageHeader
+          icon={<Sparkles className="h-6 w-6 text-secondary" />}
+          title={pick(meta.ne, meta.en)}
+          subtitle={pick(meta.blurbNe, meta.blurbEn)}
+        />
+      </div>
 
       {isSpan ? (
         spanQuery.isLoading && !spanQuery.data ? (
           <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
         ) : spanQuery.data ? (
-          <SpanList spans={spanQuery.data.spans} />
+          <SpanList spans={spanQuery.data.spans} timeZone={spanQuery.data.timezone} />
         ) : (
           <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
         )
