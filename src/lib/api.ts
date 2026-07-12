@@ -155,6 +155,8 @@ export const panchangaKeys = {
     ["panchanga", "month", "clock", year, month, clock, locationCacheKey(location), excludeInternational ? "nointl" : "intl"] as const,
   atTime: (datetime: string, location?: LocationParams) =>
     ["panchanga", "at-time", PANCHANGA_CACHE_VERSION, datetime, locationCacheKey(location)] as const,
+  civil: (date: string, location?: LocationParams) =>
+    ["panchanga", "civil", PANCHANGA_CACHE_VERSION, date, locationCacheKey(location)] as const,
   header: (year: number, month: number, location?: LocationParams) =>
     ["calendar", "header", year, month, locationCacheKey(location)] as const,
 };
@@ -189,6 +191,68 @@ export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =
   get<PanchangaDay>(
     appendLocation(`/nepal/panchanga/${dateAd}?era=ad`, location)
   );
+
+/** Civil-day (midnight→midnight) timeline — minutes-from-midnight positions. */
+export interface CivilTimelineSeg {
+  name_ne?: string | null;
+  name?: string | null;
+  end_min: number;
+}
+export interface CivilTimelineBand {
+  name_ne?: string | null;
+  bad?: boolean;
+  start_min: number;
+  end_min: number;
+}
+export interface CivilTimelineHora {
+  planet_ne?: string | null;
+  planet_en?: string | null;
+  bad?: boolean;
+  start_min: number;
+  end_min: number;
+}
+export interface CivilTimelineLagna {
+  name_ne?: string | null;
+  name?: string | null;
+  start_min: number;
+  end_min: number;
+}
+export interface CivilTimeline {
+  anchor: "civil";
+  date_ad: string;
+  sunrise_min: number;
+  sunset_min: number | null;
+  moonrise_min: number | null;
+  moonset_min: number | null;
+  weekday_ne?: string | null;
+  weekday_en?: string | null;
+  paksha_ne?: string | null;
+  rows: {
+    tithi: CivilTimelineSeg[];
+    nakshatra: CivilTimelineSeg[];
+    yoga: CivilTimelineSeg[];
+    karana: CivilTimelineSeg[];
+  };
+  choghadiya: CivilTimelineBand[];
+  hora: CivilTimelineHora[];
+  lagna: CivilTimelineLagna[];
+  planets?: PanchangaDay["planets"];
+  planets_anchor?: unknown;
+}
+
+export const fetchCivilTimeline = (
+  date: string,
+  era: "bs" | "ad" = "ad",
+  location?: LocationParams,
+) =>
+  get<{ civil_timeline: CivilTimeline }>(
+    appendLocation(
+      withPanchangaCacheVersion(
+        `/panchanga/${date}?era=${era}&detail=false&civil=true`,
+      ),
+      location,
+    ),
+  ).then((r) => r.civil_timeline);
 
 export const fetchPanchangaAtTime = (
   datetime: string,

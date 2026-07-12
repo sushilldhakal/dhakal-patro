@@ -7,6 +7,8 @@ import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
+import { BsDateTimePicker } from "@/components/panchanga/BsDateTimePicker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Drawer,
   DrawerClose,
@@ -49,6 +51,8 @@ interface Props {
   dayOptions?: BsNativeSelectOption[];
   onDayChange?: (day: number) => void;
   dayAriaLabel?: string;
+  /** Combined year+month+day setter — enables the calendar popover date picker. */
+  onSelectDate?: (year: number, month: number, day: number) => void;
   clock?: string;
   onClockChange?: (clock: string) => void;
   hourAriaLabel?: string;
@@ -225,6 +229,7 @@ export function BsMonthHeaderTitle({
   dayOptions,
   onDayChange,
   dayAriaLabel,
+  onSelectDate,
   clock,
   onClockChange,
   hourAriaLabel,
@@ -333,6 +338,83 @@ export function BsMonthHeaderTitle({
         ? `${digits(day)} ${monthTitle} · ${clockSummary}`
         : `${digits(day)} ${monthTitle}`
       : mobileSummary;
+  /**
+   * Below sm (<640px): drop the month token (the title row already shows it).
+   * Day view keeps the day + time; month view (home) falls back to the month.
+   */
+  const mobilePickerLabelCompact =
+    day != null
+      ? `${digits(day)}${clockSummary ? ` · ${clockSummary}` : ""}`
+      : `${monthTitle}${clockSummary ? ` · ${clockSummary}` : ""}`;
+
+  // Day views (panchanga) get a proper calendar + 12h time popover; month
+  // views (home) keep the select-based nav / bottom sheet.
+  const useCalendarPicker = day != null;
+  const selectDate =
+    onSelectDate ??
+    ((y: number, m: number, d: number) => {
+      if (y !== year) onYearChange(y);
+      else if (m !== month) onMonthChange(m);
+      else onDayChange?.(d);
+    });
+
+  const calendarControl = (stepCls: string, wrapperCls?: string) => (
+    <div className={cn("flex min-w-0 items-center gap-1", wrapperCls)}>
+      <button
+        type="button"
+        className={stepCls}
+        onClick={onPrev}
+        disabled={prevDisabled}
+        aria-label={prevAriaLabel}
+      >
+        <ChevronLeft size={15} strokeWidth={2} />
+      </button>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={patroMobilePickerBtn}
+            aria-label={
+              showTime
+                ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
+                : pick("मिति बदल्नुहोस्", "Change date")
+            }
+          >
+            <CalendarClock className="hidden size-3.5 shrink-0 text-secondary sm:block" strokeWidth={2} />
+            <span className="min-w-0 truncate font-num sm:hidden">{mobilePickerLabelCompact}</span>
+            <span className="hidden min-w-0 truncate font-num sm:inline">{mobilePickerLabel}</span>
+            <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" sideOffset={6} className="w-[17.5rem]">
+          <BsDateTimePicker
+            year={year}
+            month={month}
+            day={day ?? 1}
+            yearOptions={yearOptions}
+            todayAd={todayAd}
+            onSelectDate={selectDate}
+            monthAriaLabel={monthAriaLabel}
+            yearAriaLabel={yearAriaLabel}
+            clock={clock}
+            onClockChange={onClockChange}
+            hourAriaLabel={hourAriaLabel}
+            minuteAriaLabel={minuteAriaLabel}
+            showTime={showTime}
+          />
+        </PopoverContent>
+      </Popover>
+      <button
+        type="button"
+        className={stepCls}
+        onClick={onNext}
+        disabled={nextDisabled}
+        aria-label={nextAriaLabel}
+      >
+        <ChevronRight size={15} strokeWidth={2} />
+      </button>
+    </div>
+  );
 
   const titleLine = (
     <>
@@ -384,8 +466,9 @@ export function BsMonthHeaderTitle({
               : pick("मिति बदल्नुहोस्", "Change date")
           }
         >
-          <CalendarClock className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
-          <span className="min-w-0 truncate font-num">{mobilePickerLabel}</span>
+          <CalendarClock className="hidden size-3.5 shrink-0 text-secondary sm:block" strokeWidth={2} />
+          <span className="min-w-0 truncate font-num sm:hidden">{mobilePickerLabelCompact}</span>
+          <span className="hidden min-w-0 truncate font-num sm:inline">{mobilePickerLabel}</span>
           <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
         </button>
       </DrawerTrigger>
@@ -465,11 +548,15 @@ export function BsMonthHeaderTitle({
               {mobileToolbar}
             </div>
           ) : null}
-          <div className="col-start-1 row-start-2 flex min-w-0 flex-col gap-1">
-            {mobileDateTimeDrawer ? (
+          <div className="col-start-1 row-start-2 -mt-1 flex min-w-0 flex-col gap-1">
+            {useCalendarPicker ? (
+              // Prev/next arrows flank the calendar+time popover, so the day can
+              // be stepped without opening the picker — mirrors the md+ nav row.
+              calendarControl(patroMobileStepBtn, "-mt-[5px]")
+            ) : mobileDateTimeDrawer ? (
               // Prev/next arrows flank the date picker so the month/day can be
               // stepped without opening the sheet — mirrors the md+ nav row.
-              <div className="flex min-w-0 items-center gap-1">
+              <div className="-mt-[5px] flex min-w-0 items-center gap-1">
                 <button
                   type="button"
                   className={patroMobileStepBtn}
@@ -509,9 +596,13 @@ export function BsMonthHeaderTitle({
         {/* Desktop (md+): title, then nav row — same as before mobile drawer work */}
         <div className="hidden min-w-0 flex-col gap-0.5 sm:gap-1 md:flex">
           {titleBlock}
-          <div className={patroMonthNavShell}>
-            <MonthNavControls {...navProps} />
-          </div>
+          {useCalendarPicker ? (
+            <div className={patroMonthNavShell}>{calendarControl(patroMonthRangeCompactBtn)}</div>
+          ) : (
+            <div className={patroMonthNavShell}>
+              <MonthNavControls {...navProps} />
+            </div>
+          )}
           {panchangaSubtitle ? (
             <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
           ) : null}

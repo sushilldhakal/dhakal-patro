@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import type { PanchangaDay } from "@/lib/api";
+import type { CivilTimeline, PanchangaDay } from "@/lib/api";
 import { getPlanetRows, getPlanetsAnchorLabel } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
+  buildCivilTimelineData,
   buildDayTimelineData,
   dualTimeAtGhati,
   needleGhatiOnVedicChart,
@@ -18,8 +19,6 @@ import {
   pgTlAxis,
   pgTlEventTimeMoon,
   pgTlMoonEmoji,
-  pgTlRowlabel,
-  pgTlRowlabelEn,
   pgTlRowline,
   pgTlSunDisc,
   pgTlSunHorizon,
@@ -133,23 +132,79 @@ interface Props {
   showNeedle?: boolean;
   /** First load only — inline placeholder, not the full-page loader. */
   loading?: boolean;
+  /** Day boundary: "ahoratra" = sunrise→sunrise (default), "din-raat" = midnight→midnight. */
+  mode?: DayCycleMode;
+  onModeChange?: (mode: DayCycleMode) => void;
+  /** Civil (midnight→midnight) timeline — only used in din-raat mode. */
+  civil?: CivilTimeline;
+  civilLoading?: boolean;
 }
 
-function DayTimelineBand() {
+export type DayCycleMode = "ahoratra" | "din-raat";
+
+function DayCycleToggle({
+  mode,
+  onModeChange,
+}: {
+  mode: DayCycleMode;
+  onModeChange?: (mode: DayCycleMode) => void;
+}) {
   const { pick } = useLocale();
+  const options: Array<{ value: DayCycleMode; ne: string; en: string }> = [
+    { value: "ahoratra", ne: "अहोरात्र", en: "Ahoratra" },
+    { value: "din-raat", ne: "दिन-रात", en: "Din-raat" },
+  ];
+  return (
+    <div className="inline-flex overflow-hidden rounded-md border border-border" role="radiogroup" aria-label={pick("दिन सीमा", "Day boundary")}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={mode === o.value}
+          onClick={() => onModeChange?.(o.value)}
+          className={cn(
+            "px-2 py-0.5 text-[11px] font-semibold transition-colors",
+            mode === o.value
+              ? "bg-primary text-primary-foreground"
+              : "bg-card text-muted-foreground hover:bg-surface-hover",
+          )}
+        >
+          {pick(o.ne, o.en)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function DayTimelineBand({
+  mode,
+  onModeChange,
+}: {
+  mode: DayCycleMode;
+  onModeChange?: (mode: DayCycleMode) => void;
+}) {
+  const { pick } = useLocale();
+  const subtitle =
+    mode === "din-raat"
+      ? pick("पूर्ण पञ्चाङ्ग रेखा · मध्यरातदेखि मध्यरात", "Full panchanga timeline · midnight to midnight")
+      : pick("पूर्ण पञ्चाङ्ग रेखा · सूर्योदयदेखि सूर्योदय", "Full panchanga timeline · sunrise to sunrise");
   return (
     <div className={patroSecBand}>
       <h2 className={cn("m-0", "text-sm", "font-bold")}>{pick("दिन-चक्र", "Day cycle")}</h2>
       <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {pick("पूर्ण पञ्चाङ्ग रेखा · सूर्योदयदेखि सूर्योदय", "Full panchanga timeline · sunrise to sunrise")}
+        {subtitle}
       </span>
-      <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-muted-foreground">
-        <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-success/34 not-italic" />
-        {pick("शुभ", "Good")}
-        <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-danger/30 not-italic" />
-        {pick("अशुभ", "Bad")}
-        <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-secondary/22 not-italic" />
-        {pick("रात", "Night")}
+      <span className="ml-auto inline-flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] font-medium normal-case tracking-normal text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-success/34 not-italic" />
+          {pick("शुभ", "Good")}
+          <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-danger/30 not-italic" />
+          {pick("अशुभ", "Bad")}
+          <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-secondary/22 not-italic" />
+          {pick("रात", "Night")}
+        </span>
+        <DayCycleToggle mode={mode} onModeChange={onModeChange} />
       </span>
     </div>
   );
@@ -184,12 +239,17 @@ export function DayTimeline({
   needleClock,
   showNeedle = true,
   loading = false,
+  mode = "ahoratra",
+  onModeChange,
+  civil,
+  civilLoading = false,
 }: Props) {
-  const { pick, digits, isEnglish, lang } = useLocale();
-  const data = useMemo(
-    () => (p ? buildDayTimelineData(p, dateAd) : null),
-    [p, dateAd],
-  );
+  const { pick, digits, lang } = useLocale();
+  const isCivil = mode === "din-raat";
+  const data = useMemo(() => {
+    if (isCivil) return civil ? buildCivilTimelineData(civil) : null;
+    return p ? buildDayTimelineData(p, dateAd) : null;
+  }, [isCivil, civil, p, dateAd]);
   const planets = useMemo(() => (p ? getPlanetRows(p) : []), [p]);
   const timeZone = resolveTimeZone(p?.location?.timezone, timezone);
 
@@ -200,10 +260,11 @@ export function DayTimeline({
     return () => clearInterval(id);
   }, [isToday]);
 
-  if (loading || !p || !data) {
+  const busy = loading || (isCivil ? civilLoading || !civil : !p) || !data;
+  if (busy) {
     return (
-      <div className={cn(patroCard, patroMdRail)} aria-busy={loading || !data}>
-        <DayTimelineBand />
+      <div className={cn(patroCard, patroMdRail)} aria-busy={busy}>
+        <DayTimelineBand mode={mode} onModeChange={onModeChange} />
         <div className={cn("w-full", "max-w-full", "overflow-hidden", "pl-1", "pr-2", "pt-3", "pb-1")}>
           <div className={cn(patroSkel, "w-full")} style={{ minHeight: 320 }} />
         </div>
@@ -243,14 +304,30 @@ export function DayTimeline({
 
   let nowG: number | null = null;
   let nowLabel = pick("अहिले", "Now");
-  const anchorAd = p.panchanga_date_ad ?? p.date_ad ?? dateAd;
-  const chartMins = minutesOnVedicChart(p.query_instant_local, anchorAd ?? "", needleClock);
+  const anchorAd = p?.panchanga_date_ad ?? p?.date_ad ?? dateAd;
+  const chartMins = minutesOnVedicChart(p?.query_instant_local, anchorAd ?? "", needleClock);
 
-  // The needle overlays a marker on the civil date's udaya (sunrise-to-sunrise)
-  // day so it stays aligned with the wheel. Priority: an explicitly chosen
-  // clock pins the needle; otherwise on today it tracks the live current time
-  // ("अहिले"); otherwise it falls back to the ephemeris query instant.
-  if (showNeedle && needleClock && chartMins != null) {
+  if (isCivil) {
+    // Civil axis: position = minutes-from-midnight / 24 (no sunrise offset).
+    let mins: number | null = null;
+    if (showNeedle && needleClock) {
+      const [hh, mm] = needleClock.split(":").map(Number);
+      if (!Number.isNaN(hh) && !Number.isNaN(mm)) {
+        mins = hh * 60 + mm;
+        nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
+      }
+    } else if (showNeedle && isToday) {
+      mins = minutesSinceMidnightInTimezone(now, timeZone);
+    } else if (showNeedle && chartMins != null) {
+      mins = chartMins % (24 * 60);
+      nowLabel = pick("छानिएको समय", "Chosen time");
+    }
+    if (mins != null) nowG = Math.max(0, Math.min(60, mins / 24));
+  } else if (showNeedle && needleClock && chartMins != null) {
+    // The needle overlays a marker on the civil date's udaya (sunrise-to-sunrise)
+    // day so it stays aligned with the wheel. Priority: an explicitly chosen
+    // clock pins the needle; otherwise on today it tracks the live current time
+    // ("अहिले"); otherwise it falls back to the ephemeris query instant.
     nowG = needleGhatiOnVedicChart(chartMins, data.sunriseMin);
     if (nowG != null) {
       nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
@@ -267,32 +344,43 @@ export function DayTimeline({
 
   const trackY = (i: number) => T0 + i * TRACK;
 
+  const nightBands = data.nightBands ?? [[data.dayG, 60]];
+  const sunriseG = isCivil ? data.sunriseG ?? 0 : 0;
+  const sunsetG = isCivil ? data.sunsetG ?? data.dayG : data.dayG;
+  const hairlineGs = isCivil ? [sunriseG, sunsetG] : [0, data.dayG, 60];
+
   return (
     <div className={cn(patroCard, patroMdRail)}>
-      <DayTimelineBand />
+      <DayTimelineBand mode={mode} onModeChange={onModeChange} />
 
+      <div className="relative">
         <div className={cn("w-full", "max-w-full", "overflow-x-auto", "overscroll-x-contain", "pl-1", "pr-2", "pt-3", "pb-1")}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className={cn("block", "h-auto", "w-full", "min-w-[1024px]")}
+          className={cn("block", "h-auto", "w-full", "min-w-[768px]")}
           preserveAspectRatio="xMinYMid meet"
           role="img"
           aria-label={pick("पूर्ण दिन पञ्चाङ्ग चित्र", "Full panchanga day chart")}
         >
-          <rect
-            x={gx(data.dayG)}
-            y={RULER_H - 8}
-            width={X1 - gx(data.dayG)}
-            height={H - RULER_H + 2}
-            className={pgxNightwash}
-          />
+          {nightBands.map(([a, b], i) => (
+            <rect
+              key={`night-${i}`}
+              x={gx(a)}
+              y={RULER_H - 8}
+              width={Math.max(0, gx(b) - gx(a))}
+              height={H - RULER_H + 2}
+              className={pgxNightwash}
+            />
+          ))}
 
-          <text x={X0 - 10} y={20} className={pgxScaleLabelDim()} textAnchor="end">
+          <text x={X0 - 10} y={isCivil ? 34 : 20} className={pgxScaleLabelDim()} textAnchor="end">
             {pick("घण्टा", "Hour")}
           </text>
-          <text x={X0 - 10} y={47} className={pgxScaleLabelDim(true)} textAnchor="end">
-            {pick("घडी", "Ghati")}
-          </text>
+          {!isCivil && (
+            <text x={X0 - 10} y={47} className={pgxScaleLabelDim(true)} textAnchor="end">
+              {pick("घडी", "Ghati")}
+            </text>
+          )}
           <line x1={X0} y1={30} x2={X1} y2={30} className={pgTlAxis} />
           {data.civilHourTicks.map(({ hour, g }) => (
             <g key={`h-${hour}-${g}`}>
@@ -302,28 +390,31 @@ export function DayTimeline({
               </text>
             </g>
           ))}
-          {GHATI_TICKS.map((g) => (
-            <g key={`g-${g}`}>
-              <line x1={gx(g)} y1={30} x2={gx(g)} y2={36} className={pgTlTick} />
-              <text x={gx(g)} y={48} className={pgxGhati} textAnchor="middle">
-                {digits(g)}
-              </text>
-            </g>
-          ))}
+          {!isCivil &&
+            GHATI_TICKS.map((g) => (
+              <g key={`g-${g}`}>
+                <line x1={gx(g)} y1={30} x2={gx(g)} y2={36} className={pgTlTick} />
+                <text x={gx(g)} y={48} className={pgxGhati} textAnchor="middle">
+                  {digits(g)}
+                </text>
+              </g>
+            ))}
 
           <line x1={X0} y1={SUNLINE_Y} x2={X1} y2={SUNLINE_Y} className={pgxSunline} />
           <line x1={X0} y1={T0 - 1} x2={X1} y2={T0 - 1} className={pgxMoonline} />
-          <EventMarker g={0} sunriseMin={data.sunriseMin} kind="sunrise" anchor="start" />
-          <EventMarker g={data.dayG} sunriseMin={data.sunriseMin} kind="sunset" anchor="middle" />
+          <EventMarker g={sunriseG} sunriseMin={data.sunriseMin} kind="sunrise" anchor={isCivil ? "middle" : "start"} />
+          <EventMarker g={sunsetG} sunriseMin={data.sunriseMin} kind="sunset" anchor="middle" />
           {data.moonsetG != null && (
             <EventMarker g={data.moonsetG} sunriseMin={data.sunriseMin} kind="moonset" anchor="middle" />
           )}
           {data.moonriseG != null && (
             <EventMarker g={data.moonriseG} sunriseMin={data.sunriseMin} kind="moonrise" anchor="middle" />
           )}
-          <EventMarker g={60} sunriseMin={data.sunriseMin} kind="next-sunrise" anchor="end" />
+          {!isCivil && (
+            <EventMarker g={60} sunriseMin={data.sunriseMin} kind="next-sunrise" anchor="end" />
+          )}
 
-          {[0, data.dayG, 60].map((g) => (
+          {hairlineGs.map((g) => (
             <line
               key={`hair-${g}`}
               x1={gx(g)}
@@ -338,14 +429,6 @@ export function DayTimeline({
             const y = trackY(ti);
             return (
               <g key={tr.key}>
-                <text x={X0 - 10} y={y + BAND / 2 - 2} className={pgTlRowlabel} textAnchor="end">
-                  {tr.ne}
-                </text>
-                {!isEnglish ? (
-                  <text x={X0 - 10} y={y + BAND / 2 + 11} className={pgTlRowlabelEn} textAnchor="end">
-                    {tr.en}
-                  </text>
-                ) : null}
                 <line
                   x1={X0}
                   y1={y + BAND}
@@ -498,6 +581,31 @@ export function DayTimeline({
             </g>
           )}
         </svg>
+        </div>
+
+        {/* Frozen row-label column: stays put while the chart scrolls sideways
+            so each line stays identifiable. Transparent above the tracks so the
+            घण्टा/घडी scale keeps scrolling; only the track rows get an opaque
+            backing. Positioned by % of the SVG height, so it tracks the chart's
+            scaling on every screen size. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1 top-3 bottom-1 z-10 w-[52px] sm:w-[62px]"
+        >
+          <div
+            className="absolute inset-x-0 bottom-0 border-r border-border bg-card shadow-[3px_0_6px_-3px_color-mix(in_srgb,var(--foreground)_28%,transparent)]"
+            style={{ top: `${(T0 / H) * 100}%` }}
+          />
+          {tracks.map((tr, ti) => (
+            <span
+              key={tr.key}
+              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-[10px] font-bold leading-none text-foreground [font-family:var(--font-sans)] sm:text-[11px]"
+              style={{ top: `${((trackY(ti) + BAND / 2) / H) * 100}%` }}
+            >
+              {tr.ne}
+            </span>
+          ))}
+        </div>
       </div>
 
       {planets.length > 0 && (

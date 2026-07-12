@@ -1,4 +1,4 @@
-import type { ApiHoraSlot, PanchangaDay } from "@/lib/api";
+import type { ApiHoraSlot, CivilTimeline, PanchangaDay } from "@/lib/api";
 import {
   formatPakshaNepaliDisplay,
   getLagnaSpans,
@@ -107,6 +107,12 @@ export interface GrahaSpashtaItem {
 }
 
 export interface DayTimelineData {
+  /** "sunrise" = ghati 0–60 from sunrise (default); "civil" = midnight→midnight. */
+  mode?: "sunrise" | "civil";
+  /** Civil mode: sunrise/sunset positions on the 0–60 axis, and night bands. */
+  sunriseG?: number;
+  sunsetG?: number;
+  nightBands?: Array<[number, number]>;
   dayG: number;
   gMin: number;
   gMax: number;
@@ -477,6 +483,120 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
     ],
     choghadiya: cho,
     badChoghadiya: cho.filter((c) => c.bad),
+    hora,
+  };
+}
+
+/** Minutes-from-midnight → position on the shared 0–60 axis (1440 min = 60). */
+function minToG(min: number): number {
+  return Math.max(0, Math.min(60, min / 24));
+}
+
+/**
+ * Civil-day (midnight→midnight) timeline built from the backend `civil_timeline`
+ * block. Reuses the same 0–60 axis as the sunrise chart by treating position as
+ * `minutes / 24`, so `dualTimeAtGhati(g, 0)` yields civil clock labels directly.
+ */
+export function buildCivilTimelineData(civil: CivilTimeline): DayTimelineData {
+  const sunriseG = minToG(civil.sunrise_min);
+  const sunsetG = civil.sunset_min != null ? minToG(civil.sunset_min) : 60;
+  const pakshaNe = civil.paksha_ne ?? "";
+  const pakshaEn = /कृष्ण/.test(pakshaNe) ? "Krishna Paksha" : /शुक्ल/.test(pakshaNe) ? "Shukla Paksha" : "";
+
+  const angaItems = (
+    segs: CivilTimeline["rows"]["tithi"],
+    opts?: { paksha?: boolean; karana?: boolean },
+  ): TimelineSegment[] => {
+    const items: TimelineSegment[] = segs.map((s, i) => ({
+      name:
+        opts?.paksha && i === 0 && pakshaNe
+          ? `${s.name_ne ?? s.name ?? ""}, ${pakshaNe}`
+          : s.name_ne ?? s.name ?? "",
+      nameEn:
+        opts?.paksha && i === 0 && pakshaEn
+          ? `${s.name ?? s.name_ne ?? ""}, ${pakshaEn}`
+          : s.name ?? s.name_ne ?? "",
+      endG: minToG(s.end_min),
+    }));
+    const last = items[items.length - 1];
+    if (last) {
+      // A segment that reaches the end of the day is open-ended (fills to 24:00).
+      if (last.endG != null && last.endG >= 59.9) {
+        last.endG = null;
+      } else if (opts?.karana && last.endG != null) {
+        // Karana chain stops short of midnight — continue the fixed cycle.
+        const ne = nextKaranaNe(last.name);
+        items.push({ name: ne, nameEn: KARANA_EN[ne] ?? ne, endG: null });
+      }
+    }
+    return items;
+  };
+
+  const choghadiya: ChoghadiyaSegment[] = civil.choghadiya.map((c) => ({
+    name: c.name_ne ?? "",
+    startG: minToG(c.start_min),
+    endG: minToG(c.end_min),
+    bad: Boolean(c.bad),
+  }));
+  const hora: HoraSegment[] = civil.hora.map((h) => ({
+    name: h.planet_ne ?? "",
+    nameEn: h.planet_en ?? h.planet_ne ?? "",
+    startG: minToG(h.start_min),
+    endG: minToG(h.end_min),
+    bad: Boolean(h.bad),
+  }));
+
+  const lagnaItems: TimelineSegment[] = civil.lagna.map((s, i, arr) => ({
+    name: s.name_ne ?? s.name ?? "",
+    nameEn: s.name ?? s.name_ne ?? "",
+    endG: i < arr.length - 1 ? minToG(s.end_min) : null,
+    transitionLocal:
+      i < arr.length - 1 ? ghatiToCivilClockLabel(minToG(s.end_min), 0) : undefined,
+  }));
+
+  // Civil hours 0…24 across the axis (0–60), every 3h for a clean ruler.
+  const civilHourTicks: CivilHourTick[] = Array.from({ length: 9 }, (_, i) => ({
+    hour: i * 3,
+    g: i * 3 * 2.5,
+  }));
+
+  const rows: TimelineRowData[] = [
+    { label: "तिथि", en: "Tithi", items: angaItems(civil.rows.tithi, { paksha: true }) },
+    { label: "नक्षत्र", en: "Nakshatra", items: angaItems(civil.rows.nakshatra) },
+    { label: "योग", en: "Yoga", items: angaItems(civil.rows.yoga) },
+    { label: "करण", en: "Karana", items: angaItems(civil.rows.karana, { karana: true }) },
+    { label: "चौघडिया", en: civil.weekday_en ?? "", kind: "choghadiya", items: [] },
+    { label: "होरा", en: "Hora", kind: "hora", items: [] },
+    ...(lagnaItems.length > 0
+      ? [{ label: "लग्न", en: "Lagna", kind: "lagna" as const, items: lagnaItems }]
+      : []),
+  ];
+
+  return {
+    mode: "civil",
+    sunriseG,
+    sunsetG,
+    nightBands: [
+      [0, sunriseG],
+      [sunsetG, 60],
+    ],
+    dayG: sunsetG,
+    gMin: 0,
+    gMax: 60,
+    moonriseG: civil.moonrise_min != null ? minToG(civil.moonrise_min) : null,
+    moonsetG: civil.moonset_min != null ? minToG(civil.moonset_min) : null,
+    weekdayNe: civil.weekday_ne ?? "—",
+    weekdayEn: civil.weekday_en ?? "—",
+    sunriseMin: 0,
+    sunriseLabel: ghatiToCivilClockLabel(sunriseG, 0),
+    sunsetLabel: civil.sunset_min != null ? ghatiToCivilClockLabel(sunsetG, 0) : "",
+    moonriseLabel: null,
+    moonsetLabel: null,
+    grahaSpashta: [],
+    civilHourTicks,
+    rows,
+    choghadiya,
+    badChoghadiya: choghadiya.filter((c) => c.bad),
     hora,
   };
 }

@@ -1,16 +1,16 @@
 /** BS month hero art — 1 = बैशाख … 12 = चैत्र. */
-import month1 from "@/assets/month/1.jpg";
-import month2 from "@/assets/month/2.jpg";
-import month3 from "@/assets/month/3.jpg";
-import month4 from "@/assets/month/4.jpg";
-import month5 from "@/assets/month/5.jpg";
-import month6 from "@/assets/month/6.jpg";
-import month7 from "@/assets/month/7.jpg";
-import month8 from "@/assets/month/8.jpg";
-import month9 from "@/assets/month/9.jpg";
-import month10 from "@/assets/month/10.jpg";
-import month11 from "@/assets/month/11.jpg";
-import month12 from "@/assets/month/12.jpg";
+import month1 from "@/assets/month/1.avif";
+import month2 from "@/assets/month/2.avif";
+import month3 from "@/assets/month/3.avif";
+import month4 from "@/assets/month/4.avif";
+import month5 from "@/assets/month/5.avif";
+import month6 from "@/assets/month/6.avif";
+import month7 from "@/assets/month/7.avif";
+import month8 from "@/assets/month/8.avif";
+import month9 from "@/assets/month/9.avif";
+import month10 from "@/assets/month/10.avif";
+import month11 from "@/assets/month/11.avif";
+import month12 from "@/assets/month/12.avif";
 
 const BS_MONTH_ART: Record<number, string> = {
   1: month1,

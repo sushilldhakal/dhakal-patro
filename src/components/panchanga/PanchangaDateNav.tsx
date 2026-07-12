@@ -84,6 +84,7 @@ export function PanchangaDateNav({
           day={bs.day}
           dayOptions={dayOptions}
           onDayChange={(nextDay) => pickBsDate(onDateChange, bs.year, bs.month, nextDay)}
+          onSelectDate={(y, m, d) => pickBsDate(onDateChange, y, m, d)}
           dayAriaLabel={t("calendar.day_aria")}
           yearOptions={BS_YEARS}
           todayAd={todayAd}

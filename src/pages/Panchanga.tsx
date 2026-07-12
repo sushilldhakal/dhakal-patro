@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange } from "lucide-react";
 import {
+  fetchCivilTimeline,
   fetchPanchanga,
   locationCacheKey,
   panchangaKeys,
@@ -19,7 +20,7 @@ import { formatTimeShort, getSunrise, getSunset } from "@/lib/panchanga-format";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { PanchangaDateNav } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
-import { DayTimeline } from "@/components/panchanga/DayTimeline";
+import { DayTimeline, type DayCycleMode } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
@@ -124,6 +125,17 @@ export function Panchanga() {
     queryKey: panchangaKeys.atTime(atTimeDatetime, location.params),
     queryFn: () => fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params),
     staleTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
+  });
+
+  // दिन-चक्र day boundary: sunrise→sunrise (default) vs midnight→midnight.
+  // The civil timeline is fetched lazily, only when din-raat is active.
+  const [dayCycleMode, setDayCycleMode] = useState<DayCycleMode>("ahoratra");
+  const civilQuery = useQuery({
+    queryKey: panchangaKeys.civil(adDateStr, location.params),
+    queryFn: () => fetchCivilTimeline(adDateStr, "ad", location.params),
+    enabled: dayCycleMode === "din-raat",
+    staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
 
@@ -245,6 +257,10 @@ export function Panchanga() {
               timezone={effectiveTimezone}
               needleClock={clockUserAdjusted ? clock : undefined}
               showNeedle={clockUserAdjusted || isToday}
+              mode={dayCycleMode}
+              onModeChange={setDayCycleMode}
+              civil={civilQuery.data}
+              civilLoading={civilQuery.isLoading}
             />
           )}
 
