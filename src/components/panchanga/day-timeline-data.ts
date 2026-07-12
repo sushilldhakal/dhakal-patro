@@ -1,6 +1,7 @@
 import type { ApiHoraSlot, CivilTimeline, PanchangaDay } from "@/lib/api";
 import {
   formatPakshaNepaliDisplay,
+  getInauspiciousWindows,
   getLagnaSpans,
   getHoraSlots,
   getMoonrise,
@@ -11,7 +12,8 @@ import {
   getSunset,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
-import { KARANA_EN } from "@/lib/tithi-wheel-data";
+import { KARANA_EN, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
+import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 
 /** Devanagari rashi names → English, for the timeline graha row. */
 export const TL_RASHI_EN: Record<string, string> = {
@@ -30,6 +32,80 @@ export const TL_RASHI_EN: Record<string, string> = {
   कुम्भ: "Kumbha",
   मीन: "Meena",
 };
+
+/**
+ * Devanagari → English for tithi / nakshatra / yoga / karana names. The daily
+ * payload's `name` field is not always Latin (some blocks — especially the
+ * `next` transitions — only carry `name_ne`), which left English mode showing
+ * Devanagari in the timeline. These curated maps guarantee a Latin label; the
+ * resolver falls back to any Latin `name` from the API, then the Nepali text.
+ */
+function normNe(s: string): string {
+  return s
+    .replace(/पक्ष/g, "")
+    .replace(/शुक्ल|कृष्ण/g, "")
+    .replace(/[\s,·]+/g, "")
+    .trim();
+}
+
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const TITHI_NE_EN: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const t of WHEEL_TITHIS) m[normNe(t.ne)] = t.en;
+  m[normNe("अमावस्या")] = "Amavasya";
+  m[normNe("औंसी")] = "Aunsi";
+  m[normNe("पूर्णिमा")] = "Purnima";
+  return m;
+})();
+
+const NAK_NE_EN: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const n of NAKSHATRA_ICONS) m[normNe(n.ne)] = titleCase(n.en);
+  return m;
+})();
+
+const YOGA_EN_LIST = [
+  "Vishkambha", "Priti", "Ayushman", "Saubhagya", "Shobhana",
+  "Atiganda", "Sukarma", "Dhriti", "Shula", "Ganda",
+  "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra",
+  "Siddhi", "Vyatipata", "Variyana", "Parigha", "Shiva",
+  "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma",
+  "Indra", "Vaidhriti",
+] as const;
+
+const YOGA_NE_EN: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  WHEEL_YOGAS.forEach((ne, i) => {
+    m[normNe(ne)] = YOGA_EN_LIST[i] ?? ne;
+  });
+  return m;
+})();
+
+const KARANA_NE_EN: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const [ne, en] of Object.entries(KARANA_EN)) m[normNe(ne)] = en;
+  return m;
+})();
+
+/** Resolve an English label from a Devanagari name: curated map → Latin API name → Nepali. */
+type EnResolver = (ne: string, apiEn?: string | null) => string;
+
+function makeResolver(map: Record<string, string>): EnResolver {
+  return (ne, apiEn) => {
+    const hit = map[normNe(ne)];
+    if (hit) return hit;
+    if (apiEn && /[A-Za-z]/.test(apiEn)) return apiEn;
+    return ne;
+  };
+}
+
+const tithiEnOf = makeResolver(TITHI_NE_EN);
+const nakEnOf = makeResolver(NAK_NE_EN);
+const yogaEnOf = makeResolver(YOGA_NE_EN);
+const karanaEnOf = makeResolver(KARANA_NE_EN);
 
 export interface TimelineSegment {
   name: string;
@@ -75,7 +151,7 @@ export const TL_GRAHA_EN: Record<string, string> = {
 export interface TimelineRowData {
   label: string;
   en: string;
-  kind?: "choghadiya" | "hora" | "lagna" | "graha";
+  kind?: "choghadiya" | "hora" | "lagna" | "graha" | "ashubha";
   items: TimelineSegment[];
 }
 
@@ -92,6 +168,22 @@ export interface HoraSegment {
   startG: number;
   endG: number;
   bad?: boolean;
+}
+
+/**
+ * Inauspicious (अशुभ) span on the 0–60 ghati axis. Overlapping source windows
+ * (Rahu / Yamaganda / Gulika / Baana / Dur Muhurtam …) are merged into a single
+ * band so labels never collide; `name` is the lone window when there is only one
+ * contributor, otherwise a generic "अशुभ". `detail*` lists every contributor for
+ * the hover tooltip.
+ */
+export interface AshubhaSegment {
+  name: string;
+  nameEn: string;
+  detailNe: string;
+  detailEn: string;
+  startG: number;
+  endG: number;
 }
 
 export interface CivilHourTick {
@@ -131,6 +223,7 @@ export interface DayTimelineData {
   choghadiya: ChoghadiyaSegment[];
   badChoghadiya: ChoghadiyaSegment[];
   hora: HoraSegment[];
+  ashubha: AshubhaSegment[];
 }
 
 type AngaBlock = {
@@ -217,6 +310,123 @@ function minutesToGhati(minutes: number, sunriseMin: number): number {
   return Math.min(g, 60);
 }
 
+/** Parse a local wall-clock ("HH:MM", "HH:MM:SS", or "HH:MM AM/PM") to minutes. */
+function clockToMinutes(raw?: string | null): number | null {
+  if (!raw) return null;
+  const m = raw.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?/);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = Number(m[2]);
+  if (Number.isNaN(h) || Number.isNaN(min)) return null;
+  const mer = m[3]?.toLowerCase();
+  if (mer === "pm" && h < 12) h += 12;
+  if (mer === "am" && h === 12) h = 0;
+  return h * 60 + min;
+}
+
+/**
+ * The five doshas shown on the Panchang-Shuddhi (अशुभ) row, keyed by the backend
+ * dosha key and relabelled to match the drikpanchang chart. Any other
+ * inauspicious timing (yamaganda, gulika, baana, ganda moola, …) is excluded.
+ */
+const SHUDDHI_DOSHAS: Record<string, { ne: string; en: string }> = {
+  tithi: { ne: "तिथि", en: "Tithi" },
+  tithi_randhra: { ne: "तिथि रन्ध्र", en: "Tithi Randhra" },
+  varjyam: { ne: "नक्षत्र विष", en: "Nakshatra Visha" },
+  rahu_kalam: { ne: "राहु", en: "Rahu" },
+  bhadra: { ne: "करण", en: "Karana" },
+};
+
+/**
+ * Convert raw inauspicious windows (local clock ranges) into ashubha segments on
+ * the shared 0–60 axis. `toG` maps minutes-from-midnight to a ghati position
+ * (sunrise-relative for ahoratra, `min/24` for civil). Degenerate/zero-length
+ * or sunrise-straddling windows are dropped so the row stays clean.
+ */
+function buildAshubhaSegments(
+  windows: ReturnType<typeof getInauspiciousWindows>,
+  toG: (minutes: number) => number,
+): AshubhaSegment[] {
+  // 1) Convert each window to a position on the 0–60 axis. `tillFullNight`
+  //    windows run to the next sunrise (g = 60); midnight-spanning windows are
+  //    handled by `toG`, which wraps pre-sunrise clocks past 60 back to 0–60.
+  //    Only the five Panchang-Shuddhi doshas are shown, relabelled per drik.
+  const parsed: { s: number; e: number; ne: string; en: string }[] = [];
+  for (const w of windows) {
+    const label = SHUDDHI_DOSHAS[w.key];
+    if (!label) continue;
+    const sMin = clockToMinutes(w.start);
+    if (sMin == null) continue;
+    const startG = toG(sMin);
+    if (startG < 0 || startG > 60) continue;
+    let endG: number;
+    if (w.tillFullNight) {
+      endG = 60;
+    } else {
+      const eMin = clockToMinutes(w.end);
+      if (eMin == null) continue;
+      endG = toG(eMin);
+      if (endG < startG) endG = 60; // window carried past the axis end
+    }
+    endG = Math.min(endG, 60);
+    if (endG <= startG) continue;
+    parsed.push({ s: startG, e: endG, ne: label.ne, en: label.en });
+  }
+
+  if (!parsed.length) return [];
+
+  // 2) Panchang-shuddhi sweep line: cut the axis at every window boundary, then
+  //    for each elementary slice record the *set* of doshas active there. This
+  //    yields drikpanchang-style contiguous bands where band 4 might be
+  //    "तिथि, राहु" and band 6 "करण, तिथि" — the overlap is spelled out per band.
+  const bounds = new Set<number>();
+  for (const iv of parsed) {
+    bounds.add(Number(iv.s.toFixed(3)));
+    bounds.add(Number(iv.e.toFixed(3)));
+  }
+  const pts = [...bounds].sort((a, b) => a - b);
+
+  const slices: { s: number; e: number; ne: string[]; en: string[] }[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const s = pts[i]!;
+    const e = pts[i + 1]!;
+    if (e - s < 0.02) continue;
+    const mid = (s + e) / 2;
+    const ne: string[] = [];
+    const en: string[] = [];
+    for (const iv of parsed) {
+      if (iv.s <= mid && mid < iv.e && !ne.includes(iv.ne)) {
+        ne.push(iv.ne);
+        en.push(iv.en);
+      }
+    }
+    if (!ne.length) continue;
+    slices.push({ s, e, ne, en });
+  }
+
+  // 3) Merge neighbouring slices that carry the identical dosha set.
+  const sameSet = (a: string[], b: string[]) =>
+    a.length === b.length && a.every((x) => b.includes(x));
+  const merged: { s: number; e: number; ne: string[]; en: string[] }[] = [];
+  for (const sl of slices) {
+    const last = merged[merged.length - 1];
+    if (last && Math.abs(last.e - sl.s) < 0.02 && sameSet(last.ne, sl.ne)) {
+      last.e = sl.e;
+    } else {
+      merged.push({ s: sl.s, e: sl.e, ne: [...sl.ne], en: [...sl.en] });
+    }
+  }
+
+  return merged.map((m) => ({
+    name: m.ne.join(", "),
+    nameEn: m.en.join(", "),
+    detailNe: m.ne.join(", "),
+    detailEn: m.en.join(", "),
+    startG: m.s,
+    endG: m.e,
+  }));
+}
+
 /** Ghati for the "now" needle on a sunrise-to-sunrise chart; null before today's sunrise. */
 export function needleGhatiOnVedicChart(
   civilMins: number,
@@ -259,7 +469,10 @@ function nextKaranaNe(name: string): string {
  * Build timeline segments from API anga block.
  * Uses end_hours_clock / end_ghati_clock (sunrise-relative), not naive local-time compare.
  */
-function angaSegments(anga?: AngaBlock | null): TimelineSegment[] {
+function angaSegments(
+  anga?: AngaBlock | null,
+  toEn: EnResolver = (ne, apiEn) => apiEn ?? ne,
+): TimelineSegment[] {
   if (!anga) return [];
   const current = anga.name_ne ?? anga.name;
   if (!current) return [];
@@ -267,23 +480,25 @@ function angaSegments(anga?: AngaBlock | null): TimelineSegment[] {
   const items: TimelineSegment[] = [];
   const endG = ghatiFromBlock(anga);
 
-  items.push({ name: current, nameEn: anga.name ?? anga.name_ne ?? current, endG: endG ?? null });
+  items.push({ name: current, nameEn: toEn(current, anga.name), endG: endG ?? null });
 
   const next = anga.next;
   if (next?.name_ne || next?.name) {
     const nextEndG = ghatiFromBlock(next);
+    const nextNe = next.name_ne ?? next.name ?? "";
     items.push({
-      name: next.name_ne ?? next.name ?? "",
-      nameEn: next.name ?? next.name_ne ?? "",
+      name: nextNe,
+      nameEn: toEn(nextNe, next.name),
       endG: nextEndG ?? null,
     });
 
     const third = next.next;
     if (third?.name_ne || third?.name) {
       const thirdEndG = ghatiFromBlock(third);
+      const thirdNe = third.name_ne ?? third.name ?? "";
       items.push({
-        name: third.name_ne ?? third.name ?? "",
-        nameEn: third.name ?? third.name_ne ?? "",
+        name: thirdNe,
+        nameEn: toEn(thirdNe, third.name),
         endG: thirdEndG != null && thirdEndG < 60 ? thirdEndG : null,
       });
     }
@@ -293,7 +508,7 @@ function angaSegments(anga?: AngaBlock | null): TimelineSegment[] {
 }
 
 function karanaSegments(anga?: AngaBlock | null): TimelineSegment[] {
-  const items = angaSegments(anga);
+  const items = angaSegments(anga, karanaEnOf);
   if (items.length >= 2) {
     const second = items[1];
     if (second && second.endG != null && second.endG < 60) {
@@ -340,7 +555,7 @@ function grahaSegments(planets: GrahaSpashtaItem[]): TimelineSegment[] {
 function tithiSegments(tithi: AngaBlock | undefined, p: PanchangaDay): TimelineSegment[] {
   const paksha = formatPakshaNepaliDisplay(p);
   const pakshaEn = /कृष्ण/.test(paksha ?? "") ? "Krishna Paksha" : /शुक्ल/.test(paksha ?? "") ? "Shukla Paksha" : "";
-  return angaSegments(tithi).map((seg, i) => ({
+  return angaSegments(tithi, tithiEnOf).map((seg, i) => ({
     ...seg,
     name: i === 0 && paksha ? `${seg.name}, ${paksha}` : seg.name,
     nameEn: i === 0 && pakshaEn ? `${seg.nameEn ?? seg.name}, ${pakshaEn}` : (seg.nameEn ?? seg.name),
@@ -412,6 +627,9 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
   // Both choghadiya and hora come pre-computed from the API daily payload.
   const cho = apiChoghadiya?.length ? buildChoghadiyaFromApi(apiChoghadiya) : [];
   const hora = buildHoraTimelineSegments(p);
+  const ashubha = buildAshubhaSegments(getInauspiciousWindows(p), (min) =>
+    minutesToGhati(min, sunriseMin),
+  );
   const lagnaSpans = (getLagnaSpans(p) ?? []) as LagnaSpanBlock[];
   const grahaSpashta = getPlanetRows(p).map(({ label, rashiNe, coords }) => ({
     label,
@@ -436,8 +654,8 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
     civilHourTicks: buildCivilHourTicks(sunriseMin, gMin, gMax),
     rows: [
       { label: "तिथि", en: "Tithi", items: tithiSegments(tithi, p) },
-      { label: "नक्षत्र", en: "Nakshatra", items: angaSegments(nakshatra) },
-      { label: "योग", en: "Yoga", items: angaSegments(yoga) },
+      { label: "नक्षत्र", en: "Nakshatra", items: angaSegments(nakshatra, nakEnOf) },
+      { label: "योग", en: "Yoga", items: angaSegments(yoga, yogaEnOf) },
       { label: "करण", en: "Karana", items: karanaSegments(karana) },
       {
         label: "चौघडिया",
@@ -470,6 +688,9 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
             },
           ]
         : []),
+      ...(ashubha.length > 0
+        ? [{ label: "अशुभ", en: "Ashubha", kind: "ashubha" as const, items: [] }]
+        : []),
       ...(grahaSpashta.length > 0
         ? [
             {
@@ -484,6 +705,7 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
     choghadiya: cho,
     badChoghadiya: cho.filter((c) => c.bad),
     hora,
+    ashubha,
   };
 }
 
@@ -497,7 +719,10 @@ function minToG(min: number): number {
  * block. Reuses the same 0–60 axis as the sunrise chart by treating position as
  * `minutes / 24`, so `dualTimeAtGhati(g, 0)` yields civil clock labels directly.
  */
-export function buildCivilTimelineData(civil: CivilTimeline): DayTimelineData {
+export function buildCivilTimelineData(
+  civil: CivilTimeline,
+  p?: PanchangaDay,
+): DayTimelineData {
   const sunriseG = minToG(civil.sunrise_min);
   const sunsetG = civil.sunset_min != null ? minToG(civil.sunset_min) : 60;
   const pakshaNe = civil.paksha_ne ?? "";
@@ -505,19 +730,18 @@ export function buildCivilTimelineData(civil: CivilTimeline): DayTimelineData {
 
   const angaItems = (
     segs: CivilTimeline["rows"]["tithi"],
-    opts?: { paksha?: boolean; karana?: boolean },
+    opts?: { paksha?: boolean; karana?: boolean; toEn?: EnResolver },
   ): TimelineSegment[] => {
-    const items: TimelineSegment[] = segs.map((s, i) => ({
-      name:
-        opts?.paksha && i === 0 && pakshaNe
-          ? `${s.name_ne ?? s.name ?? ""}, ${pakshaNe}`
-          : s.name_ne ?? s.name ?? "",
-      nameEn:
-        opts?.paksha && i === 0 && pakshaEn
-          ? `${s.name ?? s.name_ne ?? ""}, ${pakshaEn}`
-          : s.name ?? s.name_ne ?? "",
-      endG: minToG(s.end_min),
-    }));
+    const toEn: EnResolver = opts?.toEn ?? ((ne, apiEn) => apiEn ?? ne);
+    const items: TimelineSegment[] = segs.map((s, i) => {
+      const ne = s.name_ne ?? s.name ?? "";
+      const en = toEn(ne, s.name);
+      return {
+        name: opts?.paksha && i === 0 && pakshaNe ? `${ne}, ${pakshaNe}` : ne,
+        nameEn: opts?.paksha && i === 0 && pakshaEn ? `${en}, ${pakshaEn}` : en,
+        endG: minToG(s.end_min),
+      };
+    });
     const last = items[items.length - 1];
     if (last) {
       // A segment that reaches the end of the day is open-ended (fills to 24:00).
@@ -560,15 +784,22 @@ export function buildCivilTimelineData(civil: CivilTimeline): DayTimelineData {
     g: i * 3 * 2.5,
   }));
 
+  const ashubha = p
+    ? buildAshubhaSegments(getInauspiciousWindows(p), (min) => minToG(min))
+    : [];
+
   const rows: TimelineRowData[] = [
-    { label: "तिथि", en: "Tithi", items: angaItems(civil.rows.tithi, { paksha: true }) },
-    { label: "नक्षत्र", en: "Nakshatra", items: angaItems(civil.rows.nakshatra) },
-    { label: "योग", en: "Yoga", items: angaItems(civil.rows.yoga) },
-    { label: "करण", en: "Karana", items: angaItems(civil.rows.karana, { karana: true }) },
+    { label: "तिथि", en: "Tithi", items: angaItems(civil.rows.tithi, { paksha: true, toEn: tithiEnOf }) },
+    { label: "नक्षत्र", en: "Nakshatra", items: angaItems(civil.rows.nakshatra, { toEn: nakEnOf }) },
+    { label: "योग", en: "Yoga", items: angaItems(civil.rows.yoga, { toEn: yogaEnOf }) },
+    { label: "करण", en: "Karana", items: angaItems(civil.rows.karana, { karana: true, toEn: karanaEnOf }) },
     { label: "चौघडिया", en: civil.weekday_en ?? "", kind: "choghadiya", items: [] },
     { label: "होरा", en: "Hora", kind: "hora", items: [] },
     ...(lagnaItems.length > 0
       ? [{ label: "लग्न", en: "Lagna", kind: "lagna" as const, items: lagnaItems }]
+      : []),
+    ...(ashubha.length > 0
+      ? [{ label: "अशुभ", en: "Ashubha", kind: "ashubha" as const, items: [] }]
       : []),
   ];
 
@@ -598,6 +829,7 @@ export function buildCivilTimelineData(civil: CivilTimeline): DayTimelineData {
     choghadiya,
     badChoghadiya: choghadiya.filter((c) => c.bad),
     hora,
+    ashubha,
   };
 }
 

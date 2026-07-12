@@ -36,6 +36,9 @@ const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYe
 const AbhijitMuhurta = lazyRoute(() => import("./pages/AbhijitMuhurta"), "AbhijitMuhurta");
 const PanchakPatro = lazyRoute(() => import("./pages/PanchakPatro"), "PanchakPatro");
 const History = lazyRoute(() => import("./pages/History"), "History");
+const PanchangaDetailsHub = lazyRoute(() => import("./pages/PanchangaDetailsHub"), "PanchangaDetailsHub");
+const ElementPage = lazyRoute(() => import("./pages/ElementPage"), "ElementPage");
+const SaitPage = lazyRoute(() => import("./pages/SaitPage"), "SaitPage");
 const Account = lazyRoute(() => import("./pages/Account"), "Account");
 const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail");
 const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPassword");
@@ -136,6 +139,9 @@ const historyLegacyRoute = createRoute({
   path: "/history",
   component: () => <Navigate to="/learn/history" replace />,
 });
+const panchangaDetailsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/details", component: PanchangaDetailsHub });
+const elementRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/element/$name", component: ElementPage });
+const saitRoute = createRoute({ getParentRoute: () => rootRoute, path: "/sait/$category", component: SaitPage });
 const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/account", component: Account });
 const verifyEmailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 const resetPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
@@ -163,6 +169,9 @@ const routeTree = rootRoute.addChildren([
   sunTimesLegacyRoute,
   historyRoute,
   historyLegacyRoute,
+  panchangaDetailsRoute,
+  elementRoute,
+  saitRoute,
   accountRoute,
   verifyEmailRoute,
   resetPasswordRoute,

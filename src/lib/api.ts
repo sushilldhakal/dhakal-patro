@@ -694,6 +694,151 @@ export const fetchSaitYears = () => get<{ years: number[] }>("/nepal/sait/years"
 export const fetchSait = (year: number, category: string) =>
   get<SaitResponse>(`/nepal/sait/${year}/${category}`);
 
+export interface SaitAboutCategory {
+  id: string;
+  label_ne: string;
+  label_en: string;
+  description_ne?: string;
+  description_en?: string;
+  requires_birth_date?: boolean;
+  source?: string;
+  method?: { ne?: string; en?: string };
+}
+export interface SaitAboutResponse {
+  source: string;
+  method: { ne?: string; en?: string };
+  categories: SaitAboutCategory[];
+}
+
+export const fetchSaitAbout = () => get<SaitAboutResponse>("/nepal/sait/about");
+export const fetchSaitAboutCategory = (category: string) =>
+  get<SaitAboutCategory>(`/nepal/sait/${category}/about`);
+
+// ─── Panchanga elements (per-element addressable pages) ───────────────────────
+
+export type ElementKind = "span" | "table";
+
+export interface ElementInfo {
+  id: string;
+  label_ne: string;
+  label_en: string;
+  kind: ElementKind;
+}
+
+/** A boundary instant — machine ISO plus pre-formatted display strings. */
+export interface ElementStamp {
+  iso: string;
+  weekday: string;
+  date_label: string;
+  time_label: string;
+  display: string;
+}
+
+export interface ElementSpan {
+  number: number;
+  name: string;
+  name_ne: string;
+  begins: ElementStamp;
+  ends: ElementStamp;
+  paksha?: string;
+  progress?: number;
+}
+
+export interface ElementSpansResponse {
+  element: string;
+  kind: "span";
+  label_ne: string;
+  label_en: string;
+  timezone: string;
+  window: { start: string; end: string };
+  spans: ElementSpan[];
+}
+
+export interface ElementMonthDay {
+  date_ad: string;
+  bs_day: number;
+  weekday_ne?: string;
+  weekday_en?: string;
+  sunrise?: string;
+  sunset?: string;
+  data: unknown;
+}
+
+export interface ElementMonthResponse {
+  element: string;
+  kind: ElementKind;
+  label_ne: string;
+  label_en: string;
+  bs_year: number;
+  bs_month: number;
+  start_ad: string;
+  days: ElementMonthDay[];
+}
+
+export interface ElementDayResponse {
+  element: string;
+  kind: ElementKind;
+  label_ne: string;
+  label_en: string;
+  date_ad: string;
+  sunrise?: string;
+  sunset?: string;
+  data: unknown;
+}
+
+export const elementKeys = {
+  list: () => ["element", "list"] as const,
+  spans: (name: string, start: string, end: string, location?: LocationParams) =>
+    ["element", "spans", name, start, end, locationCacheKey(location)] as const,
+  month: (name: string, bsYear: number, bsMonth: number, location?: LocationParams) =>
+    ["element", "month", name, bsYear, bsMonth, locationCacheKey(location)] as const,
+  day: (name: string, date: string, location?: LocationParams) =>
+    ["element", "day", name, date, locationCacheKey(location)] as const,
+};
+
+export const fetchElements = () =>
+  get<{ elements: ElementInfo[] }>(withPanchangaCacheVersion("/panchanga/elements")).then(
+    (r) => r.elements,
+  );
+
+export const fetchElementSpans = (
+  name: string,
+  range: { start: string; end: string } | { bsYear: number; bsMonth: number },
+  location?: LocationParams,
+) => {
+  const query =
+    "bsYear" in range
+      ? `bs_year=${range.bsYear}&bs_month=${range.bsMonth}`
+      : `start=${range.start}&end=${range.end}`;
+  return get<ElementSpansResponse>(
+    appendLocation(
+      withPanchangaCacheVersion(`/panchanga/element/${name}/spans?${query}`),
+      location,
+    ),
+  );
+};
+
+export const fetchElementMonth = (
+  name: string,
+  bsYear: number,
+  bsMonth: number,
+  location?: LocationParams,
+) =>
+  get<ElementMonthResponse>(
+    appendLocation(
+      withPanchangaCacheVersion(`/panchanga/element/${name}/month/${bsYear}/${bsMonth}`),
+      location,
+    ),
+  );
+
+export const fetchElementDay = (name: string, dateAd: string, location?: LocationParams) =>
+  get<ElementDayResponse>(
+    appendLocation(
+      withPanchangaCacheVersion(`/panchanga/element/${name}/day/${dateAd}?era=ad`),
+      location,
+    ),
+  );
+
 // ─── Convertor ────────────────────────────────────────────────────────────────
 
 export const convertorKeys = {

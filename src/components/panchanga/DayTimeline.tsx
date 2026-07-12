@@ -37,6 +37,7 @@ import {
   pgxScaleLabelDim,
   pgxSeg,
   pgxSegname,
+  pgxSegnameBad,
   pgxSegnameCho,
   pgxSegnameSm,
   pgxSunhair,
@@ -83,6 +84,7 @@ const TRACK_CLS: Record<string, string> = {
   चौघडिया: "cho",
   होरा: "hora",
   लग्न: "lagna",
+  अशुभ: "ashubha",
 };
 
 function gx(g: number) {
@@ -101,6 +103,28 @@ interface ChartSegment {
   bad?: boolean;
   cut?: boolean;
   transitionLocal?: string;
+  detailNe?: string;
+  detailEn?: string;
+  lane?: number;
+  laneCount?: number;
+}
+
+/** Greedy interval partition: assign each segment the first lane free at its start. */
+function assignLanes(segs: ChartSegment[]): ChartSegment[] {
+  const laneEnds: number[] = [];
+  for (const seg of segs) {
+    let lane = laneEnds.findIndex((end) => seg.fromG >= end - 0.001);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(seg.toG);
+    } else {
+      laneEnds[lane] = seg.toG;
+    }
+    seg.lane = lane;
+  }
+  const laneCount = Math.max(1, laneEnds.length);
+  for (const seg of segs) seg.laneCount = laneCount;
+  return segs;
 }
 
 function segmentsFromRow(row: TimelineRowData): ChartSegment[] {
@@ -247,7 +271,7 @@ export function DayTimeline({
   const { pick, digits, lang } = useLocale();
   const isCivil = mode === "din-raat";
   const data = useMemo(() => {
-    if (isCivil) return civil ? buildCivilTimelineData(civil) : null;
+    if (isCivil) return civil ? buildCivilTimelineData(civil, p) : null;
     return p ? buildDayTimelineData(p, dateAd) : null;
   }, [isCivil, civil, p, dateAd]);
   const planets = useMemo(() => (p ? getPlanetRows(p) : []), [p]);
@@ -295,7 +319,20 @@ export function DayTimeline({
                 bad: h.bad,
                 cut: false,
               }))
-            : segmentsFromRow(row);
+            : row.kind === "ashubha"
+              ? assignLanes(
+                  data.ashubha.map((a) => ({
+                    ne: a.name,
+                    en: a.nameEn,
+                    fromG: a.startG,
+                    toG: a.endG,
+                    bad: true,
+                    cut: false,
+                    detailNe: a.detailNe,
+                    detailEn: a.detailEn,
+                  })),
+                )
+              : segmentsFromRow(row);
       return { key: row.label, ne: row.label, en: row.en, cls, segs };
     });
 
@@ -458,8 +495,16 @@ export function DayTimeline({
                     ? [segText.split(", ")[0]!, segText.split(", ").slice(1).join(", ")]
                     : [segText, ""];
 
+                  // Overlapping अशुभ windows are split into vertical lanes so their
+                  // number badges never sit on top of one another.
+                  const laneCount = tr.cls === "ashubha" ? Math.max(1, s.laneCount ?? 1) : 1;
+                  const laneGap = laneCount > 1 ? 1.5 : 0;
+                  const laneH = BAND / laneCount;
+                  const bandY = tr.cls === "ashubha" ? y + (s.lane ?? 0) * laneH : y;
+                  const bandH = tr.cls === "ashubha" ? laneH - laneGap : BAND;
+
                   const clipId = `pgx-clip-${ti}-${si}`;
-                  const labelY = y + BAND / 2 + 4.5;
+                  const labelY = bandY + bandH / 2 + Math.min(4, bandH / 3);
 
                   return (
                     <g key={si}>
@@ -467,22 +512,22 @@ export function DayTimeline({
                         <clipPath id={clipId}>
                           <rect
                             x={x + 1}
-                            y={y}
+                            y={bandY}
                             width={Math.max(0, w - 2)}
-                            height={BAND}
+                            height={bandH}
                             rx={4}
                           />
                         </clipPath>
                       </defs>
                       <rect
                         x={x + 1}
-                        y={y}
+                        y={bandY}
                         width={Math.max(0, w - 2)}
-                        height={BAND}
+                        height={bandH}
                         rx={4}
                         className={segCls}
                       >
-                        <title>{`${pick(tr.ne, tr.en)}: ${segText} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
+                        <title>{`${pick(tr.ne, tr.en)}: ${s.detailNe ? pick(s.detailNe, s.detailEn ?? s.detailNe) : segText} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
                       </rect>
                       {tr.cls === "cho" || tr.cls === "hora" ? (
                         w > 20 && (
@@ -493,6 +538,23 @@ export function DayTimeline({
                             textAnchor="middle"
                           >
                             {segText}
+                          </text>
+                        )
+                      ) : tr.cls === "ashubha" ? (
+                        w >= 9 && (
+                          <text
+                            x={clampX((x + x2) / 2, 8)}
+                            y={labelY}
+                            className={
+                              laneCount > 2
+                                ? cn(pgxSegnameBad, "text-[8px]")
+                                : laneCount > 1
+                                  ? cn(pgxSegnameBad, "text-[9px]")
+                                  : pgxSegnameBad
+                            }
+                            textAnchor="middle"
+                          >
+                            {digits(si + 1)}
                           </text>
                         )
                       ) : (
@@ -607,6 +669,29 @@ export function DayTimeline({
           ))}
         </div>
       </div>
+
+      {data.ashubha.length > 0 && (
+        <div className="flex flex-col gap-1.5 border-t border-border px-4 py-3">
+          <span className="text-[12.5px] font-bold leading-tight text-[var(--color-danger)]">
+            {pick("अशुभ समय", "Inauspicious periods")}
+          </span>
+          <ol className="flex flex-col gap-1">
+            {data.ashubha.map((a, i) => (
+              <li key={`${a.startG}-${i}`} className="flex items-baseline gap-1.5 leading-snug">
+                <span className="inline-flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full bg-[var(--color-danger)] px-1 text-[10px] font-bold text-white">
+                  {digits(i + 1)}
+                </span>
+                <span className="text-[11.5px] font-semibold">
+                  {pick(a.detailNe, a.detailEn)}
+                </span>
+                <span className="ml-auto shrink-0 pl-2 font-mono text-[10.5px] text-muted-foreground">
+                  {tLabel(a.startG)} – {tLabel(a.endG)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       {p && planets.length > 0 && (
         <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>

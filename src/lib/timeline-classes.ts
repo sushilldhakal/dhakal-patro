@@ -44,6 +44,7 @@ const PG_SEG: Record<string, string> = {
     "fill-[color-mix(in_srgb,var(--secondary)_28%,var(--card))] stroke-secondary [stroke-width:1.5]",
   "cho-good": "fill-[color-mix(in_srgb,var(--color-success)_13%,var(--card))]",
   "cho-bad": "fill-[color-mix(in_srgb,var(--color-danger)_13%,var(--card))]",
+  ashubha: "fill-[color-mix(in_srgb,var(--color-danger)_22%,var(--card))]",
 };
 
 export function pgxSeg(
@@ -66,6 +67,10 @@ export const pgxSegnameSm =
 export function pgxSegnameCho(bad?: boolean) {
   return cn(pgxSegname, "text-[11px]", bad && "fill-[var(--color-danger)]");
 }
+
+/** Inauspicious (अशुभ) band label — danger-tinted, slightly smaller. */
+export const pgxSegnameBad =
+  "fill-[var(--color-danger)] text-[11px] font-semibold [font-family:var(--font-sans)]";
 
 export const pgxPaksha =
   "fill-muted-foreground text-[10.5px] font-medium [font-family:var(--font-sans)]";

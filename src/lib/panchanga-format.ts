@@ -1338,6 +1338,77 @@ export function getAbhijitMuhurta(p: PanchangaDay): AbhijitMuhurtaInfo | null {
   return computeAbhijitFromSunTimes(getSunrise(p), getSunset(p));
 }
 
+export interface InauspiciousWindow {
+  /** Dosha key, e.g. "rahu_kalam", "bhadra", "varjyam", "tithi", "tithi_randhra". */
+  key: string;
+  nameNe: string;
+  nameEn: string;
+  /** Local wall-clock start/end, e.g. "10:30" or "10:30 AM". */
+  start: string;
+  end: string;
+  /** Segment runs from `start` through the rest of the night to next sunrise. */
+  tillFullNight?: boolean;
+}
+
+/**
+ * Raw inauspicious day-periods (Rahu Kaal, Yamaganda, Gulika, plus any
+ * `inauspicious_timings` segments like Varjyam / Dur Muhurtam) with their
+ * local clock ranges — used by the day-cycle timeline's अशुभ row. Unlike
+ * {@link getMuhurtaRows} this returns machine-parseable times, not display
+ * strings.
+ */
+export function getInauspiciousWindows(p: PanchangaDay): InauspiciousWindow[] {
+  const detail = getPanchangaDetail(p);
+  const m = (detail?.muhurta ?? p.muhurta) as MuhurtaDetail | undefined;
+  if (!m) return [];
+
+  const out: InauspiciousWindow[] = [];
+  const pushWin = (
+    key: string,
+    ne: string,
+    en: string,
+    w?: { start_time?: string; end_time?: string },
+  ) => {
+    if (w?.start_time && w?.end_time) {
+      out.push({ key, nameNe: ne, nameEn: en, start: w.start_time, end: w.end_time });
+    }
+  };
+
+  pushWin("rahu_kalam", "राहु", "Rahu", m.rahu_kalam);
+  pushWin("yamaganda", "यमगण्ड", "Yamaganda", m.yamaganda);
+  pushWin("gulika", "गुलिक", "Gulika", m.gulika);
+
+  for (const entry of m.inauspicious_timings ?? []) {
+    const key = entry.key || "ashubha";
+    const ne = entry.name_ne || entry.name_en || entry.key || "अशुभ";
+    const en = entry.name_en || entry.name_ne || entry.key || "Ashubha";
+    for (const seg of entry.segments ?? []) {
+      if (!seg.start_local_time_short) continue;
+      if (seg.until_full_night && !seg.end_local_time_short) {
+        // Runs to next sunrise — no explicit end time.
+        out.push({
+          key,
+          nameNe: ne,
+          nameEn: en,
+          start: seg.start_local_time_short,
+          end: "",
+          tillFullNight: true,
+        });
+      } else if (seg.end_local_time_short) {
+        out.push({
+          key,
+          nameNe: ne,
+          nameEn: en,
+          start: seg.start_local_time_short,
+          end: seg.end_local_time_short,
+        });
+      }
+    }
+  }
+
+  return out;
+}
+
 export function getMuhurtaRows(p: PanchangaDay): {
   label: string;
   value: string;
