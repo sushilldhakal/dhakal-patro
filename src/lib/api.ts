@@ -109,6 +109,23 @@ export const searchCities = (q: string, limit = 15, country?: string) => {
 export const fetchPopularCities = () =>
   get<{ count: number; cities: City[] }>("/nepal/cities/popular");
 
+export interface NearestCityResponse {
+  lat: number;
+  lon: number;
+  city: City;
+}
+
+/**
+ * Snap raw GPS coordinates to the nearest named city in the GeoNames DB. The
+ * backend always returns a city (no distance limit), so "use my location" can
+ * resolve to a named place even when the point is far from any town.
+ */
+export const fetchNearestCity = (lat: number, lon: number, country?: string) => {
+  const params = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+  if (country) params.set("country", country);
+  return get<NearestCityResponse>(`/nepal/cities/nearest?${params.toString()}`);
+};
+
 // ─── Panchanga ────────────────────────────────────────────────────────────────
 
 export const panchangaKeys = {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Crosshair, Loader2, MapPin } from "lucide-react";
-import { cityKeys, searchCities, type City } from "@/lib/api";
+import { cityKeys, fetchNearestCity, searchCities, type City } from "@/lib/api";
 import {
   NEPAL_NEAREST_MAX_KM,
   nearestNepalCity,
@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 import {
   cityToLocation,
-  coordsToLocation,
   type PanchangaLocation,
 } from "./use-panchanga-location";
 
@@ -206,15 +205,24 @@ export function LocationSelector({
     setGeoLoading(true);
     setGeoError(null);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { latitude: lat, longitude: lon } = pos.coords;
-        // Inside Nepal, snap to the nearest district HQ for a named location;
-        // elsewhere keep the raw coordinates.
+        // Always resolve to a named city — never raw coordinates. Inside Nepal
+        // snap to the nearest district HQ (curated, works offline); elsewhere
+        // ask the backend for the nearest GeoNames city, which has no distance
+        // limit, so even a city 200 km away is used instead of bare lat/lon.
         const nearest = nearestNepalCity(lat, lon);
-        if (nearest.distanceKm <= NEPAL_NEAREST_MAX_KM) {
+        try {
+          if (nearest.distanceKm <= NEPAL_NEAREST_MAX_KM) {
+            onLocationChange(cityToLocation(nepalCityToCity(nearest.city, lang)));
+          } else {
+            const { city } = await fetchNearestCity(lat, lon);
+            onLocationChange(cityToLocation(city));
+          }
+        } catch {
+          // Backend unreachable (offline): still snap to a named city — the
+          // nearest district HQ — rather than falling back to raw coordinates.
           onLocationChange(cityToLocation(nepalCityToCity(nearest.city, lang)));
-        } else {
-          onLocationChange(coordsToLocation(lat, lon));
         }
         setQuery("");
         setDebouncedQuery("");
