@@ -39,6 +39,7 @@ const History = lazyRoute(() => import("./pages/History"), "History");
 const Account = lazyRoute(() => import("./pages/Account"), "Account");
 const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail");
 const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPassword");
+const GoogleSignIn = lazyRoute(() => import("./pages/GoogleSignIn"), "GoogleSignIn");
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -139,6 +140,14 @@ const historyLegacyRoute = createRoute({
 const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/account", component: Account });
 const verifyEmailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 const resetPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
+const googleSignInRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/auth/google",
+  validateSearch: (search: Record<string, unknown>): { returnTo?: string } => ({
+    returnTo: typeof search.returnTo === "string" ? search.returnTo : undefined,
+  }),
+  component: GoogleSignIn,
+});
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -166,6 +175,7 @@ const routeTree = rootRoute.addChildren([
   accountRoute,
   verifyEmailRoute,
   resetPasswordRoute,
+  googleSignInRoute,
 ]);
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");

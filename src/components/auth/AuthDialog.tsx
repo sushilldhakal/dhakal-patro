@@ -29,7 +29,7 @@ export function AuthDialog({
   initialMode?: Mode;
 }) {
   const { t } = useTranslation();
-  const { login, signup, loginWithGoogle, loginWithFacebook } = useAuth();
+  const { login, signup, loginWithFacebook } = useAuth();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,22 +81,6 @@ export function AuthDialog({
     }
   }
 
-  const onGoogle = useCallback(
-    async (idToken: string) => {
-      setError(null);
-      setBusy(true);
-      try {
-        await loginWithGoogle(idToken);
-        onOpenChange(false);
-      } catch (err) {
-        setError(err instanceof ApiError ? err.message : t("auth.google_error"));
-      } finally {
-        setBusy(false);
-      }
-    },
-    [loginWithGoogle, onOpenChange, t],
-  );
-
   const onFacebook = useCallback(
     async (accessToken: string) => {
       setError(null);
@@ -125,7 +109,7 @@ export function AuthDialog({
         : t("auth.forgot_desc");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -135,7 +119,10 @@ export function AuthDialog({
         {mode !== "forgot" && socialEnabled && (
           <div className="flex flex-col items-center gap-3">
             {googleSignInEnabled && (
-              <GoogleSignInButton onCredential={onGoogle} onError={setError} disabled={busy} />
+              <GoogleSignInButton
+                disabled={busy}
+                onLaunch={() => onOpenChange(false)}
+              />
             )}
             {facebookSignInEnabled && (
               <FacebookSignInButton

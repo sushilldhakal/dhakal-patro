@@ -1,86 +1,11 @@
-import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocale } from "@/i18n/locale";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { googleSignInEnabled, safeReturnTo } from "@/lib/auth/google-sign-in";
 import { socialSignInButtonClass } from "./social-sign-in-styles";
-import { useIsDarkTheme } from "./useIsDarkTheme";
 import { cn } from "@/lib/utils";
 
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-/** Whether Google sign-in is configured (client ID present). */
-export const googleSignInEnabled = Boolean(CLIENT_ID);
-
-interface GoogleAccountsId {
-  initialize: (config: {
-    client_id: string;
-    callback: (r: { credential?: string }) => void;
-    locale?: string;
-  }) => void;
-  renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
-}
-
-declare global {
-  interface Window {
-    google?: { accounts?: { id?: GoogleAccountsId } };
-  }
-}
-
-const gsiPromises = new Map<string, Promise<void>>();
-let gsiInitializedKey: string | null = null;
-
-function loadGsi(locale: string): Promise<void> {
-  const cached = gsiPromises.get(locale);
-  if (cached) return cached;
-
-  const promise = new Promise<void>((resolve, reject) => {
-    if (window.google?.accounts?.id) return resolve();
-    const script = document.createElement("script");
-    script.src = `https://accounts.google.com/gsi/client?hl=${locale}`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Google sign-in"));
-    document.head.appendChild(script);
-  });
-  gsiPromises.set(locale, promise);
-  return promise;
-}
-
-function ensureGsiInitialized(onCredential: (idToken: string) => void, locale: string) {
-  const id = window.google?.accounts?.id;
-  if (!id || !CLIENT_ID) return false;
-
-  const key = `${CLIENT_ID}:${locale}`;
-  if (gsiInitializedKey !== key) {
-    id.initialize({
-      client_id: CLIENT_ID,
-      locale,
-      callback: (res) => {
-        if (res.credential) onCredential(res.credential);
-      },
-    });
-    gsiInitializedKey = key;
-  }
-  return true;
-}
-
-function clampButtonWidth(width: number): number {
-  return Math.max(200, Math.min(400, Math.floor(width)));
-}
-
-function useTouchPreferred(): boolean {
-  const [touchPreferred, setTouchPreferred] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(pointer: coarse), (hover: none)");
-    const update = () => setTouchPreferred(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  return touchPreferred;
-}
+export { googleSignInEnabled };
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -106,117 +31,44 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 /**
- * Theme-aware label (i18n) with a transparent Google button overlay for the OAuth click.
- * On touch devices the native Google button is shown directly — invisible iframe overlays
- * are unreliable inside modals on mobile browsers.
+ * Launcher for Google sign-in from the auth dialog.
+ * Navigates to a dedicated page so the GSI iframe is not trapped inside Radix modal layers.
  */
 export function GoogleSignInButton({
-  onCredential,
-  onError,
+  returnTo,
   disabled = false,
+  onLaunch,
 }: {
-  onCredential: (idToken: string) => void;
-  onError?: (message: string) => void;
+  returnTo?: string;
   disabled?: boolean;
+  onLaunch?: () => void;
 }) {
   const { t } = useTranslation();
-  const { lang } = useLocale();
-  const gsiLocale = lang === "en" ? "en" : "ne";
-  const containerRef = useRef<HTMLDivElement>(null);
-  const gsiRef = useRef<HTMLDivElement>(null);
-  const isDark = useIsDarkTheme();
-  const touchPreferred = useTouchPreferred();
-  const onCredentialRef = useRef(onCredential);
-  const [buttonWidth, setButtonWidth] = useState(300);
-  onCredentialRef.current = onCredential;
+  const navigate = useNavigate();
+  const location = useRouterState({ select: (s) => s.location });
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+  if (!googleSignInEnabled) return null;
 
-    const update = () => setButtonWidth(clampButtonWidth(el.clientWidth || 300));
-    update();
-
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!CLIENT_ID || !gsiRef.current) return;
-    let cancelled = false;
-    const theme = isDark ? "filled_black" : "outline";
-
-    loadGsi(gsiLocale)
-      .then(() => {
-        if (cancelled || !gsiRef.current) return;
-        if (
-          !ensureGsiInitialized((token) => {
-            onCredentialRef.current(token);
-          }, gsiLocale)
-        ) {
-          return;
-        }
-        gsiRef.current.innerHTML = "";
-        window.google!.accounts!.id!.renderButton(gsiRef.current, {
-          type: "standard",
-          theme,
-          size: "large",
-          text: "continue_with",
-          shape: "pill",
-          logo_alignment: "left",
-          width: buttonWidth,
-          locale: gsiLocale,
-        });
-      })
-      .catch(() => onError?.(t("auth.google_error")));
-
-    return () => {
-      cancelled = true;
-    };
-  }, [gsiLocale, isDark, buttonWidth, onError, t]);
-
-  if (!CLIENT_ID) return null;
-
-  if (touchPreferred) {
-    return (
-      <div
-        ref={containerRef}
-        className={cn(
-          "flex w-full max-w-[300px] justify-center",
-          disabled && "pointer-events-none opacity-50",
-        )}
-      >
-        <div
-          ref={gsiRef}
-          className="min-h-10 w-full [&>div]:!mx-auto [&_iframe]:pointer-events-auto"
-        />
-      </div>
-    );
-  }
+  const handleClick = () => {
+    onLaunch?.();
+    const fallback = `${location.pathname}${location.searchStr}`;
+    navigate({
+      to: "/auth/google",
+      search: { returnTo: safeReturnTo(returnTo ?? fallback) },
+    });
+  };
 
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "relative flex h-10 w-full max-w-[300px] items-center justify-center gap-2 rounded-full",
-        socialSignInButtonClass,
-        disabled && "pointer-events-none opacity-50",
-      )}
+    <Button
+      type="button"
+      variant="outline"
+      size="lg"
+      disabled={disabled}
+      onClick={handleClick}
+      className={cn(socialSignInButtonClass, disabled && "pointer-events-none opacity-50")}
     >
       <GoogleIcon className="size-4 shrink-0" />
-      <span className="pointer-events-none text-sm font-medium">
-        {isDark === undefined ? "…" : t("auth.continue_with_google")}
-      </span>
-      <div
-        ref={gsiRef}
-        className={cn(
-          "absolute inset-0 z-20 cursor-pointer opacity-0",
-          "pointer-events-auto touch-manipulation",
-          "[&_div]:!h-full [&_div]:!w-full [&_iframe]:!h-full [&_iframe]:!w-full [&_iframe]:pointer-events-auto",
-        )}
-        aria-hidden
-      />
-    </div>
+      {t("auth.continue_with_google")}
+    </Button>
   );
 }
