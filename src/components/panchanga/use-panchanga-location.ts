@@ -68,10 +68,27 @@ export function cityToLocation(city: {
   name: string;
   country: string;
   timezone?: string;
+  lat?: number;
+  lon?: number;
+  local?: boolean;
 }): PanchangaLocation {
   const name = city.ascii_name || city.name;
+  const label = `${name}, ${city.country}`;
+  // Curated Nepal entries have no backend city_id — drive the panchanga from
+  // their coordinates + timezone instead.
+  if (city.local && city.lat != null && city.lon != null) {
+    return {
+      label,
+      params: {
+        city: name,
+        lat: city.lat,
+        lon: city.lon,
+        timezone: city.timezone ?? "Asia/Kathmandu",
+      },
+    };
+  }
   return {
-    label: `${name}, ${city.country}`,
+    label,
     params: {
       city_id: city.id,
       ...(city.timezone ? { timezone: city.timezone } : {}),

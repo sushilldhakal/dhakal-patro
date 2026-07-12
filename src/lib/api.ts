@@ -82,6 +82,8 @@ export interface City {
   timezone: string;
   admin1?: string | null;
   admin1_name?: string | null;
+  /** Curated Nepal entry — location is built from lat/lon, not a backend city_id. */
+  local?: boolean;
 }
 
 export interface CitiesSearchResponse {
