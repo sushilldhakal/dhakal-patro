@@ -356,15 +356,15 @@ export function BsMonthHeaderTitle({
   );
 
   const titleBlock = (
-    <h1 className="m-0 min-w-0 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
-      <span>{titleLine}</span>
+    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
+      <span className="min-w-0">{titleLine}</span>
       {samvatsaraLabel ? (
-        <span className="ml-1 hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
+        <span className="hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
           {samvatsaraLabel}
         </span>
       ) : null}
       {subtitleLine ? (
-        <span className="mt-0.5 block text-[10px] font-medium text-muted-foreground sm:text-xs">
+        <span className="text-[10px] font-medium text-muted-foreground sm:text-xs">
           {subtitleLine}
         </span>
       ) : null}
