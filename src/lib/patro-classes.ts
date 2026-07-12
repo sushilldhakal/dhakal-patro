@@ -73,7 +73,7 @@ export const patroMonthChipHead =
   "truncate bg-secondary px-0.5 py-0.5 text-center text-[8px] font-bold leading-none tracking-wide text-secondary-foreground sm:px-1 sm:py-1.5 sm:text-[10px]";
 
 export const patroMonthChipDay =
-  "flex min-h-[1.75rem] items-center justify-center bg-card py-0.5 text-[1.125rem] font-bold leading-none text-foreground sm:min-h-[2.25rem] sm:py-1 sm:text-[1.625rem]";
+  "flex min-h-[1.5rem] items-center justify-center bg-card pb-0.5 text-[1.125rem] font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-[1.625rem]";
 
 /** Decorative calendar "body" line — month chip without a day numeral. */
 export const patroMonthChipLine =
