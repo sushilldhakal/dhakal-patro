@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Crosshair, Loader2, MapPin } from "lucide-react";
 import { cityKeys, searchCities, type City } from "@/lib/api";
+import {
+  NEPAL_NEAREST_MAX_KM,
+  nearestNepalCity,
+  nepalCityToCity,
+  searchNepalCities,
+} from "@/lib/cities/nepal-cities";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -85,7 +91,7 @@ function LocationPickerPanel({
     <>
       <ComboboxInput
         showTrigger={false}
-        placeholder={pick("नेपालको सहर खोज्नुहोस्", "Search a city in Nepal")}
+        placeholder={pick("सहर खोज्नुहोस्", "Search a city")}
         className="w-full"
       />
 
@@ -168,13 +174,21 @@ export function LocationSelector({
   }, [query]);
 
   const { data: searchData, isFetching: isSearching } = useQuery({
-    queryKey: cityKeys.search(debouncedQuery, "NP"),
-    queryFn: () => searchCities(debouncedQuery, 15, "NP"),
+    queryKey: cityKeys.search(debouncedQuery),
+    queryFn: () => searchCities(debouncedQuery, 15),
     enabled: debouncedQuery.length >= 2 && open,
     staleTime: 60_000,
   });
 
-  const results = searchData?.cities ?? [];
+  // Nepal comes from the curated local list; other countries from the backend
+  // (its vague NP entries are dropped so Nepal is shown only once, cleanly).
+  const results = useMemo<City[]>(() => {
+    const nepal = searchNepalCities(debouncedQuery).map((c) => nepalCityToCity(c, lang));
+    const world = (searchData?.cities ?? []).filter(
+      (c) => c.country?.toUpperCase() !== "NP",
+    );
+    return [...nepal, ...world];
+  }, [debouncedQuery, lang, searchData]);
 
   const pickCity = (city: City) => {
     onLocationChange(cityToLocation(city));
@@ -194,7 +208,14 @@ export function LocationSelector({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude: lat, longitude: lon } = pos.coords;
-        onLocationChange(coordsToLocation(lat, lon));
+        // Inside Nepal, snap to the nearest district HQ for a named location;
+        // elsewhere keep the raw coordinates.
+        const nearest = nearestNepalCity(lat, lon);
+        if (nearest.distanceKm <= NEPAL_NEAREST_MAX_KM) {
+          onLocationChange(cityToLocation(nepalCityToCity(nearest.city, lang)));
+        } else {
+          onLocationChange(coordsToLocation(lat, lon));
+        }
         setQuery("");
         setDebouncedQuery("");
         setOpen(false);

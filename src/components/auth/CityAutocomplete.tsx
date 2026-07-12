@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchCities, type City } from "@/lib/api";
+import { nepalCityToCity, searchNepalCities } from "@/lib/cities/nepal-cities";
+import { useLocale } from "@/i18n/locale";
 
 export interface CitySelection {
   city: string;
@@ -22,6 +24,7 @@ export function CityAutocomplete({
   onSelect: (sel: CitySelection) => void;
   placeholder?: string;
 }) {
+  const { lang } = useLocale();
   const [query, setQuery] = useState(value ?? "");
   const [results, setResults] = useState<City[]>([]);
   const [open, setOpen] = useState(false);
@@ -39,12 +42,15 @@ export function CityAutocomplete({
     }
     let active = true;
     setLoading(true);
+    // Nepal from the curated local list; other countries from the backend.
+    const nepal = searchNepalCities(query.trim()).map((c) => nepalCityToCity(c, lang));
     const t = setTimeout(async () => {
       try {
-        const res = await searchCities(query.trim(), 8, "NP");
-        if (active) setResults(res.cities);
+        const res = await searchCities(query.trim(), 8);
+        const world = res.cities.filter((c) => c.country?.toUpperCase() !== "NP");
+        if (active) setResults([...nepal, ...world]);
       } catch {
-        if (active) setResults([]);
+        if (active) setResults(nepal);
       } finally {
         if (active) setLoading(false);
       }
@@ -53,7 +59,7 @@ export function CityAutocomplete({
       active = false;
       clearTimeout(t);
     };
-  }, [query]);
+  }, [query, lang]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
