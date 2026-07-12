@@ -608,7 +608,7 @@ export function DayTimeline({
         </div>
       </div>
 
-      {planets.length > 0 && (
+      {p && planets.length > 0 && (
         <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[12.5px] font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
