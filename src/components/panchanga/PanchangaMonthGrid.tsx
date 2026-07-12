@@ -131,7 +131,7 @@ export function PanchangaMonthGrid({
           return (
             <div
               key={ne}
-              className="flex min-w-0 items-center justify-center bg-background px-1 py-1.5"
+              className="flex min-w-0 items-center justify-center bg-background px-1 py-1.5 min-h-[40px]"
             >
               <span
                 className={cn(

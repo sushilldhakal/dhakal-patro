@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
@@ -12,9 +12,25 @@ import {
 } from "@/lib/panchanga-format";
 import { patroEmpty, patroFestRow } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
+import { importWithRetry } from "@/lib/lazy-route";
 import { PanchangaVivaranPanel } from "@/components/home/PanchangaVivaranPanel";
-import { SaitAsidePanel } from "@/components/home/SaitAsidePanel";
-import { MuhurtaAsidePanel } from "@/components/home/MuhurtaAsidePanel";
+
+// Secondary tabs — only mount when the user selects them, so keep their code
+// (and the heavy timeline/sait data they pull in) out of the eager home bundle.
+const SaitAsidePanel = lazy(() =>
+  importWithRetry(() => import("@/components/home/SaitAsidePanel")).then((m) => ({
+    default: m.SaitAsidePanel,
+  })),
+);
+const MuhurtaAsidePanel = lazy(() =>
+  importWithRetry(() => import("@/components/home/MuhurtaAsidePanel")).then((m) => ({
+    default: m.MuhurtaAsidePanel,
+  })),
+);
+
+function TabFallback() {
+  return <div className="h-40 animate-pulse rounded-md bg-muted" />;
+}
 
 export type AsideTabId = "panchanga" | "festivals" | "sait" | "muhurta";
 
@@ -146,9 +162,11 @@ export function PanchangaAsideTabPanel({
     return tab === "panchanga" ? (
       <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} />
     ) : tab === "sait" ? (
-      <SaitAsidePanel defaultYear={bsYear} />
+      <Suspense fallback={<TabFallback />}>
+        <SaitAsidePanel defaultYear={bsYear} />
+      </Suspense>
     ) : (
-      <div className="h-40 animate-pulse rounded-md bg-muted" />
+      <TabFallback />
     );
   }
 
@@ -160,11 +178,13 @@ export function PanchangaAsideTabPanel({
 
   if (tab === "sait") {
     return (
-      <SaitAsidePanel
-        defaultYear={bsYear}
-        highlightMonth={bsMonth}
-        highlightDay={selectedDay?.day}
-      />
+      <Suspense fallback={<TabFallback />}>
+        <SaitAsidePanel
+          defaultYear={bsYear}
+          highlightMonth={bsMonth}
+          highlightDay={selectedDay?.day}
+        />
+      </Suspense>
     );
   }
 
@@ -181,7 +201,11 @@ export function PanchangaAsideTabPanel({
         />
       );
     case "muhurta":
-      return <MuhurtaAsidePanel p={p} dateAd={selectedAdDate} />;
+      return (
+        <Suspense fallback={<TabFallback />}>
+          <MuhurtaAsidePanel p={p} dateAd={selectedAdDate} />
+        </Suspense>
+      );
     default:
       return null;
   }

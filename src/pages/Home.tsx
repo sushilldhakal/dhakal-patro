@@ -28,6 +28,7 @@ import {
   type AsideTabId,
 } from "@/components/home/PanchangaAsideTabs";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
+import { HeroMonthArt } from "@/components/home/HeroMonthArt";
 
 function fmtAdIso(d: Date): string {
   const y = d.getFullYear();
@@ -192,8 +193,8 @@ function PanchangaAside({
                 isBelow ? "mx-4 mt-4 lg:mx-0 lg:mt-0 lg:w-[min(100%,22rem)] lg:rounded-none lg:shadow-none" : "min-[1081px]:rounded-none min-[1081px]:p-5 min-[1081px]:shadow-none",
                 !isBelow && "min-[1081px]:rounded-none",
               )}
-              style={{ backgroundImage: `url(${heroMonthArt})` }}
             >
+              <HeroMonthArt src={heroMonthArt} />
               <div className={patroHeroMonthOverlay} aria-hidden />
               <div className="relative z-10">
               <div className="flex items-start justify-between gap-3.5">
