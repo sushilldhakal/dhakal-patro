@@ -87,7 +87,7 @@ export function PanchangaBrowseHeader({
     <div
       className={cn(
         patroMdRail,
-        "mb-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-3",
+        "flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-3",
       )}
     >
       <div className="min-w-0 flex-1">
