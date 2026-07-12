@@ -106,7 +106,7 @@ export function BsCalendarGrid({
                 {tithi ? (
                   <span
                     className={cn(
-                      "min-w-0 flex-1 truncate text-left text-sm font-semibold md:text-sm md:font-medium pt-1",
+                      "min-w-0 flex-1 truncate text-left text-xs font-semibold md:font-medium pt-1",
                       isOutside ? "" : "",
                     )}
                   >
@@ -122,7 +122,7 @@ export function BsCalendarGrid({
                 )}
                 <span
                   className={cn(
-                    "font-num shrink-0 text-right text-sm font-semibold md:text-sm md:font-medium pt-1",
+                    "font-num shrink-0 text-right text-xs font-semibold md:font-medium pt-1",
                     isOutside ? "" : "",
                   )}
                 >
@@ -133,13 +133,13 @@ export function BsCalendarGrid({
               {/* Center: BS day number */}
               <span className="flex flex-1 flex-col items-center justify-center gap-0.5">
                 {isToday && (
-                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-sm font-bold leading-none tracking-wide text-secondary-foreground max-md:px-1 max-md:text-sm">
+                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide text-secondary-foreground max-md:px-1">
                     {t("calendar.today_badge")}
                   </span>
                 )}
                 <span
                   className={cn(
-                    "font-num text-md font-semibold leading-none tracking-tight max-md:text-sm",
+                    "font-num text-3xl font-semibold leading-none tracking-tight max-md:text-2xl",
                     isOutside && "",
                     !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
                   )}
@@ -152,8 +152,8 @@ export function BsCalendarGrid({
               {mainFest && !isOutside ? (
                 <span
                   className={cn(
-                    "w-full truncate text-center text-sm font-semibold leading-tight md:text-sm",
-                    "max-md:whitespace-normal max-md:line-clamp-2 max-md:text-sm max-md:leading-[1.15]",
+                    "w-full truncate text-center text-xs font-semibold leading-tight",
+                    "max-md:whitespace-normal max-md:line-clamp-2 max-md:leading-[1.15]",
                     isPublicHoliday ? "text-danger" : "text-foreground",
                   )}
                 >

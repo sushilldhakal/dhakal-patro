@@ -64,18 +64,6 @@ const SUN_R = 6;
 
 const GHATI_TICKS = Array.from({ length: 16 }, (_, i) => i * 4);
 
-const PLANET_SYM: Record<string, string> = {
-  सूर्य: "☉",
-  चन्द्र: "☽",
-  मंगल: "♂",
-  बुध: "☿",
-  बृहस्पति: "♃",
-  शुक्र: "♀",
-  शनि: "♄",
-  राहु: "☊",
-  केतु: "☋",
-};
-
 const TRACK_CLS: Record<string, string> = {
   तिथि: "tithi",
   नक्षत्र: "nak",
