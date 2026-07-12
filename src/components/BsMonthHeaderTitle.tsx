@@ -457,7 +457,7 @@ export function BsMonthHeaderTitle({
 
       <div className="@container/month-head min-w-0 flex-1">
         {/* Mobile only (<768px): row1 title|toolbar, row2 picker|toolbarLower */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 md:hidden">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 md:hidden">
           <div className="col-start-1 row-start-1 min-w-0">{mobileTitleBlock}</div>
           {mobileToolbar ? (
             <div className="col-start-2 row-start-1 flex shrink-0 items-start justify-end self-start">
