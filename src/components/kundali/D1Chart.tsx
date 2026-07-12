@@ -83,7 +83,7 @@ export function D1Chart({ houses }: Props) {
                 y={cy - (hasPlanets ? 12 : 0)}
                 textAnchor="middle"
                 className={cn(
-                  "text-[10px] font-semibold",
+                  "text-sm font-semibold",
                   house.isLagna ? "fill-secondary" : "fill-muted-foreground"
                 )}
               >

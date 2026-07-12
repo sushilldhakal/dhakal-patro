@@ -57,7 +57,7 @@ export function AccountMenu() {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-foreground">{user.email}</p>
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <p className="flex items-center gap-1 text-xs">
               {user.is_verified ? (
                 <>
                   <BadgeCheck className="size-3 text-emerald-500" /> {t("account_page.verified")}
@@ -72,7 +72,7 @@ export function AccountMenu() {
         <Link
           to="/account"
           onClick={() => setMenuOpen(false)}
-          className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-muted hover:text-foreground"
         >
           <UserCircle className="size-4" />
           {t("account_page.my_profiles")}
@@ -83,7 +83,7 @@ export function AccountMenu() {
             setMenuOpen(false);
             void logout();
           }}
-          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-muted hover:text-foreground"
         >
           <LogOut className="size-4" />
           {t("account_page.sign_out")}

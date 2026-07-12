@@ -78,7 +78,7 @@ function NepaliDayButton({ day, modifiers, className, ...props }: DayButtonProps
     >
       <span className="text-sm font-semibold leading-none">{bs.day}</span>
       <span className={cn(
-        "text-[0.6rem] leading-none opacity-50",
+        "text-sm leading-none opacity-50",
         modifiers.selected && "opacity-80",
       )}>
         {adDay}

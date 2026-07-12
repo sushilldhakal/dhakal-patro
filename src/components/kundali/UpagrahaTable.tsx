@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const td = "px-2.5 py-2 text-[12.5px]";
+const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
+const td = "px-2.5 py-2 text-sm";
 
 export type UpagrahaTableProps = {
   upagrahas: UpagrahaDetailRow[];
@@ -56,7 +56,7 @@ export function UpagrahaTable({ upagrahas }: UpagrahaTableProps) {
               <TableCell className={cn(td, "pl-3.5 font-semibold text-foreground")}>
                 {name}
               </TableCell>
-              <TableCell className={cn(td, "font-mono tabular-nums text-muted-foreground")}>
+              <TableCell className={cn(td, "font-mono tabular-nums")}>
                 <span className="text-foreground font-semibold">
                   {digits(String(row.dms.deg).padStart(2, "0"))}°
                 </span>{" "}
@@ -66,7 +66,7 @@ export function UpagrahaTable({ upagrahas }: UpagrahaTableProps) {
               </TableCell>
               <TableCell className={td}>
                 {nakName} {digits(row.pada)}
-                <span className="text-muted-foreground">, {grahaName(row.nakshatraLord)}</span>
+                <span>, {grahaName(row.nakshatraLord)}</span>
               </TableCell>
               <TableCell className={cn(td, "text-right pr-3.5 font-mono tabular-nums")}>
                 {digits(row.longitude.toFixed(2))}

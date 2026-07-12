@@ -121,7 +121,7 @@ export function RituSeasons({
         <div className="mb-3 flex flex-wrap items-baseline gap-2.5">
           <Sprout className="self-center text-secondary dark:text-primary" size={18} strokeWidth={1.8} />
           <h2 className="m-0 text-lg font-bold">{t("ritu.title")}</h2>
-          <span className="flex-1 text-xs font-medium text-muted-foreground">
+          <span className="flex-1 text-xs font-medium">
             {t("ritu.subtitle")}{location.label ? ` · ${location.label}` : ""}
             {south && <span className="ml-1 font-semibold text-warning">{t("ritu.southern")}</span>}
           </span>
@@ -166,29 +166,29 @@ export function RituSeasons({
             >
               <span
                 className={cn(
-                  "text-[9.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground",
+                  "text-sm font-bold uppercase tracking-[0.08em]",
                   item.isCurrent && "text-secondary dark:text-primary",
                 )}
               >
                 {item.isCurrent ? t("ritu.current") : relLabel(item.daysUntil)}
               </span>
               <div className="flex items-center gap-3">
-                <span className="shrink-0 text-[26px] leading-none" aria-hidden>
+                <span className="shrink-0 text-lg leading-none" aria-hidden>
                   {RITU_SEASON_EMOJI[seasonKey]}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-xl font-bold leading-tight">{t(`ritu.${seasonKey}`)}</span>
                 </span>
                 <span className="flex h-[46px] w-[46px] shrink-0 flex-col items-center justify-center gap-px rounded-lg bg-secondary/13 text-accent dark:text-accent">
-                  <span className="text-[17px] font-bold leading-none font-num">{dg(item.startBs.day)}</span>
-                  <span className="text-[9.5px] font-semibold leading-none">{item.startBs.monthName}</span>
+                  <span className="text-md font-bold leading-none font-num">{dg(item.startBs.day)}</span>
+                  <span className="text-sm font-semibold leading-none">{item.startBs.monthName}</span>
                 </span>
               </div>
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[13px] font-semibold">
+                <span className="text-sm font-semibold">
                   {markerKey ? t(markerKey) : t("ritu.sun_deg", { deg: dg(item.angle) })}
                 </span>
-                <span className="mono text-xs font-medium text-muted-foreground">
+                <span className="mono text-xs font-medium">
                   {fmtAd(item.startAd)} {t("common.from")}
                 </span>
               </div>
@@ -200,7 +200,7 @@ export function RituSeasons({
                       style={{ width: `${item.progress.pct}%` }}
                     />
                   </div>
-                  <div className="flex items-baseline justify-between gap-2 text-[11.5px] font-medium text-muted-foreground">
+                  <div className="flex items-baseline justify-between gap-2 text-sm font-medium">
                     <span>
                       {dg(item.progress.elapsed)} / {dg(item.progress.total)} {pick("दिन", "days")}
                     </span>
@@ -216,7 +216,7 @@ export function RituSeasons({
       </div>
 
       {south && (
-        <p className="mx-0.5 mt-2.5 text-[11.5px] font-medium leading-normal text-muted-foreground">
+        <p className="mx-0.5 mt-2.5 text-sm font-medium leading-normal">
           {pick(
             "दक्षिणी गोलार्धमा ऋतु ६ महिना उल्टो हुन्छ — माथिका नाम तपाईंको स्थानको वास्तविक ऋतु अनुसार मिलाइएका छन् (विषुव/अयनान्तका मिति उही नै हुन्)।",
             "In the southern hemisphere the seasons are reversed by 6 months — the names above are matched to your location's actual season (the equinox/solstice dates stay the same).",

@@ -48,16 +48,16 @@ const JYOTISH_LINKS = [
 const NAV = [{ to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen }] as const;
 
 const linkClass =
-  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 const subLinkClass =
-  "flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 const desktopLinkClass =
-  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted [&.active]:text-secondary [&.active]:bg-secondary/10";
+  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:text-foreground hover:bg-muted [&.active]:text-secondary [&.active]:bg-secondary/10";
 
 const desktopSubLinkClass =
-  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 function isPanchangaRoute(pathname: string) {
   return (
@@ -258,9 +258,8 @@ function BrandMark({ className }: { className?: string }) {
     <Link to="/" className={cn("flex items-center gap-2.5 group min-w-0", className)}>
       <BrandLogo
         size={42}
-        className=""
       />
-      <span className="font-bold text-[15px] tracking-tight truncate">
+      <span className="font-bold text-md tracking-tight truncate">
         <span className="text-secondary dark:text-primary">{t("brand_vedic")}</span>
         <span className="text-foreground"> {t("brand_patro")}</span>
       </span>
@@ -279,8 +278,8 @@ function ThemeToggle({ className, showLabel }: { className?: string; showLabel?:
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
         showLabel
-          ? "flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
-          : "w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0",
+          ? "flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-semibold hover:bg-muted hover:text-foreground transition-colors shrink-0"
+          : "w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:text-foreground hover:bg-muted transition-colors shrink-0",
         className,
       )}
       aria-label={t("theme_toggle")}

@@ -83,7 +83,7 @@ function angaEndTime(anga?: AngaEnd | null): string | undefined {
 
 function AngaCell({ anga }: { anga?: Anga | null }) {
   const { pick } = useLocale();
-  if (!anga) return <span className="text-muted-foreground">—</span>;
+  if (!anga) return <span>—</span>;
   const name = pick(anga.name_ne ?? anga.name ?? "—", anga.name ?? anga.name_ne ?? "—");
   const next = anga.next;
   const nextName = next?.name_ne ?? next?.name;
@@ -222,7 +222,7 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
         ) : null}
       </PanchangaTableBody>
       {solar?.ishtakaal_note_ne ? (
-        <p className="border-t border-border px-4 py-2 text-[11px] text-muted-foreground m-0 leading-snug">
+        <p className="border-t border-border px-4 py-2 text-sm m-0 leading-snug">
           {solar.ishtakaal_note_ne}
         </p>
       ) : null}
@@ -311,7 +311,7 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
                     <span key={`moon-rashi-${i}`} className="inline-flex flex-wrap items-baseline gap-x-1.5">
                       <span className="font-semibold">{formatRashiDisplayNe(span.name_ne)}</span>
                       {formatSpanEndTime(span) ? (
-                        <span className="text-[11px] font-mono font-semibold text-foreground whitespace-nowrap">
+                        <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap">
                           {formatSpanEndTime(span)} {t("sections.until")}
                         </span>
                       ) : null}
@@ -319,7 +319,7 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
                   ))}
                 </div>
               ) : (
-                <span className="text-muted-foreground">—</span>
+                <span>—</span>
               ),
           }}
           right={{
@@ -330,7 +330,7 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
                   {formatRashiDisplayNe(suryaRashi.name_ne ?? suryaRashi.name)}
                 </span>
               ) : (
-                <span className="text-muted-foreground">—</span>
+                <span>—</span>
               ),
           }}
         />
@@ -341,18 +341,18 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
               suryaNak?.name_ne || suryaNak?.name ? (
                 <span className="font-semibold">{suryaNak.name_ne ?? suryaNak.name}</span>
               ) : (
-                <span className="text-muted-foreground">—</span>
+                <span>—</span>
               ),
           }}
           right={{
             labelKey: "sections.pada",
             children:
               padaSpans && padaSpans.length > 0 ? (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-sm">
                   {toNepaliDigits(padaSpans.length)} {t("sections.pada_transitions")}
                 </span>
               ) : (
-                <span className="text-muted-foreground">—</span>
+                <span>—</span>
               ),
           }}
         />
@@ -397,7 +397,7 @@ function BalamChips({ items }: { items: BalamChip[] }) {
       {items.map((it, i) => (
         <span
           key={`${it.name_ne ?? it.name}-${i}`}
-          className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-1.5 text-[11.5px] font-semibold leading-none shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
+          className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-1.5 text-sm font-semibold leading-none shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
         >
           <span>{formatRashiDisplayNe(it.name_ne)}</span>
         </span>
@@ -410,7 +410,7 @@ const splitPanelGrid = "grid grid-cols-1 sm:grid-cols-2";
 const splitPanelCol = "px-4 py-3 border-b border-border sm:border-b-0 sm:py-2.5";
 const splitPanelColLeft = cn(splitPanelCol, "sm:border-r sm:border-border");
 const splitPanelHeading =
-  "mb-2 text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground [&_b]:font-bold [&_b]:normal-case [&_b]:tracking-normal [&_b]:text-foreground";
+  "mb-2 text-sm font-semibold uppercase tracking-wide [&_b]:font-bold [&_b]:normal-case [&_b]:tracking-normal [&_b]:text-foreground";
 
 export function BalamSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
@@ -523,13 +523,13 @@ function DualValueDisplay({
     (pauranikLabel != null && vedicLabel != null && pauranikLabel !== vedicLabel);
 
   if (!pauranikLabel && !vedicLabel) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span>—</span>;
   }
 
   return (
     <div className="flex flex-col gap-0.5">
       {showStrike && pauranikLabel ? (
-        <span className="line-through text-muted-foreground font-medium">{pauranikLabel}</span>
+        <span className="line-through font-medium">{pauranikLabel}</span>
       ) : null}
       <span className="font-semibold">{vedicLabel ?? pauranikLabel}</span>
     </div>
@@ -628,7 +628,7 @@ function MuhurtaTimingValue({
       }
     >
       {lines.map((line) => (
-        <span key={line} className="text-[13px] font-medium leading-snug">
+        <span key={line} className="text-sm font-medium leading-snug">
           {line}
         </span>
       ))}
@@ -707,7 +707,7 @@ function NivasDirectionValue({
   segment?: NivasShoolSegment | null;
 }) {
   const { pick } = useLocale();
-  if (!segment) return <span className="text-muted-foreground">—</span>;
+  if (!segment) return <span>—</span>;
   const name = pick(segment.name_ne ?? segment.name_en ?? "—", segment.name_en ?? segment.name_ne ?? "—");
   return <span className="font-semibold">{name}</span>;
 }
@@ -725,7 +725,7 @@ function NivasTimedSegments({
 }) {
   const { t } = useTranslation();
   const { pick } = useLocale();
-  if (!segments?.length) return <span className="text-muted-foreground">—</span>;
+  if (!segments?.length) return <span>—</span>;
 
   return (
     <div className="flex flex-col gap-1 min-w-0">
@@ -753,7 +753,7 @@ function NivasTimedSegments({
               <span className="font-semibold">
                 {subtitle ? `${name} (${subtitle})` : name}
                 {" "}
-                <span className="text-[11px] font-mono font-semibold text-foreground">
+                <span className="text-sm font-mono font-semibold text-foreground">
                   {t("sections.nivas_from")} {fromTime} {t("sections.nivas_to_full_night")}
                 </span>
               </span>
@@ -766,7 +766,7 @@ function NivasTimedSegments({
               />
             )}
             {seg.until_full_night && idx === segments.length - 1 && segments.length > 1 && !endTime ? (
-              <span className="text-[11px] font-mono font-semibold text-foreground">
+              <span className="text-sm font-mono font-semibold text-foreground">
                 {t("sections.nivas_to_full_night")}
               </span>
             ) : null}
@@ -886,7 +886,7 @@ export function DinVisheshSection({ p }: { p: PanchangaDay }) {
         {labels.map((label) => (
           <span
             key={label}
-            className="text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
+            className="text-sm font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
           >
             {label}
           </span>
@@ -919,20 +919,20 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
     <div className="rounded-xl bg-card p-4 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       <div className="flex items-baseline gap-2 mb-2">
         <h2 className="text-base font-bold m-0">{t("sections.planet_positions")}</h2>
-        <span className="text-[11.5px] text-muted-foreground">{getPlanetsAnchorLabel(p, lang)}</span>
+        <span className="text-sm">{getPlanetsAnchorLabel(p, lang)}</span>
       </div>
       <div className="flex flex-col">
         {lagna && (
           <div className="flex items-center gap-3 py-2 border-b border-border">
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-md bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
               ASC
             </span>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-semibold">{t("sections.lagna")}</div>
-              <div className="text-[11px] text-muted-foreground">{lagna.nameNe}</div>
+              <div className="text-sm font-semibold">{t("sections.lagna")}</div>
+              <div className="text-sm">{lagna.nameNe}</div>
             </div>
             {lagna.degree && (
-              <span className="font-mono text-[11.5px] font-semibold text-foreground whitespace-nowrap">
+              <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">
                 {lagna.degree}°
               </span>
             )}
@@ -943,16 +943,16 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
             key={label}
             className="flex items-center gap-3 py-2 border-b border-border last:border-0"
           >
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-md bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
               {symbols[label] ?? "★"}
             </span>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-semibold">{label}</div>
+              <div className="text-sm font-semibold">{label}</div>
               {rashiNe && (
-                <div className="text-[11px] text-muted-foreground">{rashiNe}</div>
+                <div className="text-sm">{rashiNe}</div>
               )}
             </div>
-            <span className="font-mono text-[11.5px] font-semibold text-foreground whitespace-nowrap">
+            <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">
               {coords}
             </span>
           </div>
@@ -975,8 +975,8 @@ export function FestivalsSection({ p }: { p: PanchangaDay }) {
             key={f.id}
             className={
               f.is_public_holiday
-                ? "text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20"
-                : "text-[11.5px] font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
+                ? "text-sm font-semibold px-2.5 py-1.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20"
+                : "text-sm font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
             }
           >
             {pick(f.name_ne ?? f.name ?? "", f.name_en ?? f.name ?? f.name_ne ?? "")}

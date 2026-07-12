@@ -53,25 +53,25 @@ function AbhijitVivaranBlock({
   return (
     <div className="mt-2.5 border-t border-foreground/10 pt-2.5">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="text-[13px] font-bold text-secondary dark:text-secondary">{t("abhijit.title")}</div>
+        <div className="text-sm font-bold text-secondary dark:text-secondary">{t("abhijit.title")}</div>
         <Link to="/abhijit-muhurta" search={{ year: bsYear, month: bsMonth }} className={patroAsideLink}>
           {t("common.view_all")} →
         </Link>
       </div>
       {abhijit ? (
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <span className="text-xs font-medium text-muted-foreground">{t("abhijit.today_window")}</span>
+          <span className="text-xs font-medium">{t("abhijit.today_window")}</span>
           <span className="flex flex-wrap items-baseline justify-end gap-1.5">
             <span className="mono text-sm font-semibold text-foreground">{abhijit.rangeDisplay}</span>
             {abhijit.noonDisplay ? (
-              <span className="mono text-[11px] text-muted-foreground">
+              <span className="mono text-sm">
                 ({t("abhijit.noon_short")} {abhijit.noonDisplay})
               </span>
             ) : null}
           </span>
         </div>
       ) : (
-        <p className="m-0 py-5 text-center text-[13px] font-medium text-muted-foreground">{t("abhijit.unavailable")}</p>
+        <p className="m-0 py-5 text-center text-sm font-medium">{t("abhijit.unavailable")}</p>
       )}
     </div>
   );
@@ -92,11 +92,11 @@ function angaName(anga?: AngaBlock | null): string | undefined {
 function VivaranCell({ label, value, hint, wide, mono }: DetailCell) {
   return (
     <div className={cn("min-w-0 rounded-lg bg-surface-inset p-2.5 shadow-ring-soft", wide && "col-span-2")}>
-      <div className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground uppercase">{label}</div>
-      <div className={cn("mt-1 text-[15px] leading-snug font-semibold text-foreground", mono && "mono text-[13.5px]")}>
+      <div className="text-sm font-medium tracking-[0.12em] uppercase">{label}</div>
+      <div className={cn("mt-1 text-md leading-snug font-semibold text-foreground", mono && "mono text-sm")}>
         {value ?? "—"}
       </div>
-      {hint ? <div className="mt-0.5 text-[11px] leading-snug font-medium break-words text-muted-foreground">{hint}</div> : null}
+      {hint ? <div className="mt-0.5 text-sm leading-snug font-medium break-words">{hint}</div> : null}
     </div>
   );
 }
@@ -154,7 +154,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
         <div className="mb-2.5 grid grid-cols-2 gap-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="min-w-0 rounded-lg bg-surface-inset p-2.5 shadow-ring-soft">
-              <div className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground uppercase">…</div>
+              <div className="text-sm font-medium tracking-[0.12em] uppercase">…</div>
               <div className="mt-1.5 h-[18px] animate-pulse rounded-full bg-muted-foreground/20" />
             </div>
           ))}
@@ -180,7 +180,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
 
       {planets.length > 0 || deshaantar || belaantar ? (
         <div className="mt-2.5 border-t border-foreground/10 pt-2.5">
-          <div className="mb-1.5 text-[13px] font-bold text-foreground">{t("aside.gochar")}</div>
+          <div className="mb-1.5 text-sm font-bold text-foreground">{t("aside.gochar")}</div>
           {planets.length > 0 ? (
             <div className="grid grid-cols-3 gap-1.5">
               {planets.map(({ label, value }) => (
@@ -188,8 +188,8 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
                   key={label}
                   className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark"
                 >
-                  <span className="shrink-0 text-[11px] leading-tight font-semibold text-foreground">{label}</span>
-                  <span className="mono min-w-0 truncate text-right text-[10.5px] font-semibold text-foreground">
+                  <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">{label}</span>
+                  <span className="mono min-w-0 truncate text-right text-sm font-semibold text-foreground">
                     {value}
                   </span>
                 </div>
@@ -200,20 +200,20 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
             <div className="mt-1.5 grid grid-cols-2 gap-1.5 border-t border-foreground/10 pt-2">
               {deshaantar ? (
                 <div className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark">
-                  <span className="shrink-0 text-[11px] leading-tight font-semibold text-foreground">
+                  <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
                     {t("aside.suryakranti")}
                   </span>
-                  <span className="mono min-w-0 truncate text-right text-[10.5px] font-semibold text-foreground">
+                  <span className="mono min-w-0 truncate text-right text-sm font-semibold text-foreground">
                     {deshaantar}
                   </span>
                 </div>
               ) : null}
               {belaantar ? (
                 <div className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark">
-                  <span className="shrink-0 text-[11px] leading-tight font-semibold text-foreground">
+                  <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
                     {t("aside.belaantar")}
                   </span>
-                  <span className="mono min-w-0 truncate text-right text-[10.5px] font-semibold text-foreground">
+                  <span className="mono min-w-0 truncate text-right text-sm font-semibold text-foreground">
                     {belaantar}
                   </span>
                 </div>

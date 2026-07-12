@@ -24,7 +24,7 @@ import {
   patroStickySubHeadCorner,
 } from "@/lib/patro-classes";
 
-const th = "whitespace-nowrap px-2 py-2.5 text-sm font-semibold text-muted-foreground";
+const th = "whitespace-nowrap px-2 py-2.5 text-sm font-semibold";
 const td = "whitespace-nowrap px-2 py-2 text-sm";
 
 const PLANET_EN: Record<string, string> = {
@@ -74,13 +74,13 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={11} className="py-8 text-center text-sm">
                 {pick("लोड हुँदैछ…", "Loading…")}
               </TableCell>
             </TableRow>
           ) : empty || rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={11} className="py-8 text-center text-sm">
                 {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
               </TableCell>
             </TableRow>
@@ -102,7 +102,7 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
                   >
                     {digits(row.day)}
                   </TableCell>
-                  <TableCell className={cn(td, "text-muted-foreground")}>
+                  <TableCell className={cn(td, "")}>
                     {pick(row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
                   </TableCell>
                   {PATRO_PLANET_KEYS.map((key) => (
@@ -125,7 +125,7 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
   );
 
   const footnote = (
-    <p className="border-t border-border px-4 py-2 text-sm leading-relaxed text-muted-foreground">
+    <p className="border-t border-border px-4 py-2 text-sm leading-relaxed">
       {pick(
         <>
           राशिहरू: {RASHI_COLUMNS_NE.join(", ")}। प्रत्येक ग्रहको कोष्ठकमा{" "}

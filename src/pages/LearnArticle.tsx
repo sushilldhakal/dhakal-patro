@@ -40,7 +40,7 @@ export function LearnArticle() {
     return (
       <PageShell>
         <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <p className="text-muted-foreground">{t("learn_page.topic_not_found")}</p>
+          <p>{t("learn_page.topic_not_found")}</p>
           <Link
             to="/learn"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-secondary"
@@ -60,7 +60,7 @@ export function LearnArticle() {
     <PageShell>
       <Link
         to="/learn"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> {t("learn_page.eyebrow")}
       </Link>
@@ -87,7 +87,7 @@ export function LearnArticle() {
               >
                 <ArrowLeft className="h-4 w-4 shrink-0 text-secondary" />
                 <span className="min-w-0">
-                  <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <span className="block text-sm uppercase tracking-wide">
                     {t("learn_page.prev")}
                   </span>
                   <span className="block truncate text-sm font-medium text-foreground">
@@ -105,7 +105,7 @@ export function LearnArticle() {
                 className="group flex flex-1 items-center justify-end gap-2 rounded-xl border border-border bg-card p-3 text-right transition-colors hover:border-secondary/60"
               >
                 <span className="min-w-0">
-                  <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <span className="block text-sm uppercase tracking-wide">
                     {t("learn_page.next")}
                   </span>
                   <span className="block truncate text-sm font-medium text-foreground">

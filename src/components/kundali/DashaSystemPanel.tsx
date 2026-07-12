@@ -70,10 +70,10 @@ export function DashaSystemPanel({
             aria-selected={active === tab.id}
             onClick={() => setActive(tab.id)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-colors",
+              "rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
               active === tab.id
                 ? "bg-card text-foreground shadow-sm ring-1 ring-border/60"
-                : "text-muted-foreground hover:text-foreground",
+                : "hover:text-foreground",
             )}
           >
             {pick(tab.labelNe, tab.labelEn)}
@@ -84,13 +84,13 @@ export function DashaSystemPanel({
       {dasha ? (
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-border/80 bg-card px-3.5 py-3 min-w-0 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_5%,transparent)]">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 truncate">
+            <p className="text-sm font-semibold uppercase tracking-wider mb-1 truncate">
               {pick("महादशा सुरु (जन्मकालीन)", "Mahadasha at birth")}
             </p>
             <p className="text-base font-bold text-foreground leading-tight">
               {dasha.mahadasha_lord_ne}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs mt-0.5">
               {pick(`बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
             </p>
           </div>
@@ -106,7 +106,7 @@ export function DashaSystemPanel({
           cycleYears={current.id === "yogini" ? yogini?.cycle_years : undefined}
         />
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm">
           {pick("दशा विवरण उपलब्ध छैन।", "Dasha details are not available.")}
         </p>
       )}

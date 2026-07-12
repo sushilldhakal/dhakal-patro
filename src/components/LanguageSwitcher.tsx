@@ -23,7 +23,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       onClick={toggle}
       disabled={!ready}
       className={cn(
-        "h-9 px-2.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0 disabled:opacity-60",
+        "h-9 px-2.5 rounded-lg border border-border bg-card text-xs font-semibold hover:text-foreground hover:bg-muted transition-colors shrink-0 disabled:opacity-60",
         className,
       )}
       aria-label={label}

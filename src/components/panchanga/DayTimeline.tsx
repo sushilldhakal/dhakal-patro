@@ -188,10 +188,10 @@ function DayCycleToggle({
           aria-checked={mode === o.value}
           onClick={() => onModeChange?.(o.value)}
           className={cn(
-            "px-2 py-0.5 text-[11px] font-semibold transition-colors",
+            "px-2 py-0.5 text-sm font-semibold transition-colors",
             mode === o.value
               ? "bg-primary text-primary-foreground"
-              : "bg-card text-muted-foreground hover:bg-surface-hover",
+              : "bg-card hover:bg-surface-hover",
           )}
         >
           {pick(o.ne, o.en)}
@@ -216,10 +216,10 @@ function DayTimelineBand({
   return (
     <div className={patroSecBand}>
       <h2 className={cn("m-0", "text-sm", "font-bold")}>{pick("दिन-चक्र", "Day cycle")}</h2>
-      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      <span className="text-sm font-medium uppercase tracking-wider">
         {subtitle}
       </span>
-      <span className="ml-auto inline-flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] font-medium normal-case tracking-normal text-muted-foreground">
+      <span className="ml-auto inline-flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm font-medium normal-case tracking-normal">
         <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-success/34 not-italic" />
           {pick("शुभ", "Good")}
@@ -547,9 +547,9 @@ export function DayTimeline({
                             y={labelY}
                             className={
                               laneCount > 2
-                                ? cn(pgxSegnameBad, "text-[8px]")
+                                ? cn(pgxSegnameBad, "text-sm")
                                 : laneCount > 1
-                                  ? cn(pgxSegnameBad, "text-[9px]")
+                                  ? cn(pgxSegnameBad, "text-sm")
                                   : pgxSegnameBad
                             }
                             textAnchor="middle"
@@ -661,7 +661,7 @@ export function DayTimeline({
           {tracks.map((tr, ti) => (
             <span
               key={tr.key}
-              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-[10px] font-bold leading-none text-foreground [font-family:var(--font-sans)] sm:text-[11px]"
+              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-sm font-bold leading-none text-foreground [font-family:var(--font-sans)] sm:text-sm"
               style={{ top: `${((trackY(ti) + BAND / 2) / H) * 100}%` }}
             >
               {tr.ne}
@@ -672,19 +672,19 @@ export function DayTimeline({
 
       {data.ashubha.length > 0 && (
         <div className="flex flex-col gap-1.5 border-t border-border px-4 py-3">
-          <span className="text-[12.5px] font-bold leading-tight text-[var(--color-danger)]">
+          <span className="text-sm font-bold leading-tight text-[var(--color-danger)]">
             {pick("अशुभ समय", "Inauspicious periods")}
           </span>
           <ol className="flex flex-col gap-1">
             {data.ashubha.map((a, i) => (
               <li key={`${a.startG}-${i}`} className="flex items-baseline gap-1.5 leading-snug">
-                <span className="inline-flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full bg-[var(--color-danger)] px-1 text-[10px] font-bold text-white">
+                <span className="inline-flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full bg-[var(--color-danger)] px-1 text-sm font-bold text-white">
                   {digits(i + 1)}
                 </span>
-                <span className="text-[11.5px] font-semibold">
+                <span className="text-sm font-semibold">
                   {pick(a.detailNe, a.detailEn)}
                 </span>
-                <span className="ml-auto shrink-0 pl-2 font-mono text-[10.5px] text-muted-foreground">
+                <span className="ml-auto shrink-0 pl-2 font-mono text-sm font-semibold">
                   {tLabel(a.startG)} – {tLabel(a.endG)}
                 </span>
               </li>
@@ -696,8 +696,8 @@ export function DayTimeline({
       {p && planets.length > 0 && (
         <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>
           <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-[12.5px] font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
-            <span className="text-[11px] font-medium leading-snug text-muted-foreground">
+            <span className="text-sm font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
+            <span className="text-sm font-medium leading-snug">
               {getPlanetsAnchorLabel(p, lang)}
             </span>
           </div>
@@ -729,21 +729,18 @@ export function DayTimeline({
                 className="flex w-full flex-col items-center gap-0.5 rounded-lg bg-foreground/4 px-2 py-1.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
                 title={[labelL, rashiL, coords, nakLine, lordL].filter(Boolean).join(" · ")}
               >
-                <span className="text-[13px] leading-none text-secondary dark:text-accent">
-                  {PLANET_SYM[label] ?? "★"}
-                </span>
-                <span className="inline-flex max-w-full items-baseline justify-center gap-0.5 text-center text-[11px] font-semibold leading-tight">
+                <span className="inline-flex max-w-full items-baseline justify-center gap-0.5 text-center text-sm font-semibold leading-tight">
                   <span className="truncate">{labelL}</span>
                   <span className="shrink-0">–{rashiL}</span>
                 </span>
-                <span className={cn(patroMono, "text-[10.5px] font-medium text-muted-foreground tabular-nums")}>{coords}</span>
+                <span className={cn(patroMono, "text-sm font-semibold tabular-nums")}>{coords}</span>
                 {nakLine ? (
-                  <span className="max-w-full truncate text-center text-[10px] leading-tight text-muted-foreground">
+                  <span className="max-w-full truncate text-center text-sm leading-tight">
                     {nakLine}
                   </span>
                 ) : null}
                 {lordL ? (
-                  <span className="text-center text-[10px] leading-tight text-muted-foreground/90">
+                  <span className="text-center text-sm leading-tight">
                     {pick("नक्षत्रेश", "Lord")} {lordL}
                   </span>
                 ) : null}

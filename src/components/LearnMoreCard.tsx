@@ -51,7 +51,7 @@ export function LearnMoreCard({ slugs, heading, className }: Props) {
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                 {pick(t.titleNe, t.titleEn)}
               </span>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
             </Link>
           );
         })}

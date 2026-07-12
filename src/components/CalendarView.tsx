@@ -371,7 +371,7 @@ export function CalendarView({
   const patroModeMobileBtn = enablePatroToggle ? (
     <button
       type="button"
-      className="inline-flex h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold text-muted-foreground transition-colors hover:text-foreground active:bg-muted"
+      className="inline-flex h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-semibold transition-colors hover:text-foreground active:bg-muted"
       onClick={() => switchPatroView(nextPatroView)}
       aria-label={t("calendar.patro_mode_switch")}
     >
@@ -406,7 +406,7 @@ export function CalendarView({
       </button>
     </div>
   ) : (
-    <div className="hidden text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground md:block md:text-right">
+    <div className="hidden text-xs font-medium uppercase tracking-[0.12em] md:block md:text-right">
       {t("calendar.eyebrow")}
     </div>
   );

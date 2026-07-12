@@ -425,13 +425,13 @@ export function BsMonthHeaderTitle({
   const subtitleLine = adDayEnglish ?? adMonthRangeEnglish;
 
   const mobileTitleBlock = (
-    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[0.875rem] font-bold leading-tight tracking-tight">
+    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm font-bold leading-tight tracking-tight">
       <span className="min-w-0">{titleLine}</span>
       {samvatsaraLabel ? (
-        <span className="shrink-0 text-[0.92em] font-semibold text-foreground/90">{samvatsaraLabel}</span>
+        <span className="shrink-0 text-sm font-semibold text-foreground/90">{samvatsaraLabel}</span>
       ) : null}
       {subtitleLine ? (
-        <span className="min-w-0 text-[10px] font-medium leading-snug text-muted-foreground">
+        <span className="min-w-0 text-sm font-medium leading-snug">
           {subtitleLine}
         </span>
       ) : null}
@@ -439,15 +439,15 @@ export function BsMonthHeaderTitle({
   );
 
   const titleBlock = (
-    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[0.875rem] font-bold leading-tight tracking-tight sm:text-[1.5em] lg:text-[1.875rem]">
+    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm font-bold leading-tight tracking-tight text-md">
       <span className="min-w-0">{titleLine}</span>
       {samvatsaraLabel ? (
-        <span className="hidden text-[0.92em] font-semibold text-foreground/90 sm:inline">
+        <span className="hidden text-sm font-semibold text-foreground/90 sm:inline">
           {samvatsaraLabel}
         </span>
       ) : null}
       {subtitleLine ? (
-        <span className="text-[10px] font-medium text-muted-foreground sm:text-xs">
+        <span className="text-sm font-medium sm:text-xs">
           {subtitleLine}
         </span>
       ) : null}
@@ -480,7 +480,7 @@ export function BsMonthHeaderTitle({
         </DrawerHeader>
         <div className="flex flex-col gap-5 px-4 pb-2">
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.14em]">
               {pick("मिति", "Date")}
             </p>
             <div className={cn(patroMonthNavShell, "w-full justify-center")}>
@@ -489,7 +489,7 @@ export function BsMonthHeaderTitle({
           </div>
           {showTime && hourAriaLabel && minuteAriaLabel ? (
             <div>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.14em]">
                 {pick("समय", "Time")}
               </p>
               <div className={cn(patroMonthNavShell, "w-full justify-center")}>
@@ -500,7 +500,7 @@ export function BsMonthHeaderTitle({
                   ariaLabel={hourAriaLabel}
                   onChange={(nextHour) => setClockPart(nextHour, minute)}
                 />
-                <span className="px-0.5 font-num text-sm font-semibold text-muted-foreground">:</span>
+                <span className="px-0.5 font-num text-sm font-semibold">:</span>
                 <BsNativeSelect
                   className="w-[4rem]"
                   value={minute}
@@ -583,7 +583,7 @@ export function BsMonthHeaderTitle({
               </div>
             )}
             {panchangaSubtitle ? (
-              <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
+              <p className="m-0 text-sm font-medium leading-none">{panchangaSubtitle}</p>
             ) : null}
           </div>
           {mobileToolbarLower ? (
@@ -604,7 +604,7 @@ export function BsMonthHeaderTitle({
             </div>
           )}
           {panchangaSubtitle ? (
-            <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
+            <p className="m-0 text-sm font-medium leading-none">{panchangaSubtitle}</p>
           ) : null}
         </div>
       </div>

@@ -63,7 +63,7 @@ function QuickLinkCard({
             aria-hidden
           />
         ) : null)}
-      <span className="w-full min-w-0 px-0.5 text-xs font-bold leading-snug text-foreground sm:text-[13px] line-clamp-2">
+      <span className="w-full min-w-0 px-0.5 text-xs font-bold leading-snug text-foreground sm:text-sm line-clamp-2">
         {label}
       </span>
     </Link>
@@ -118,7 +118,7 @@ function RituQuickLink({ location }: { location: PanchangaLocation }) {
         loading ? (
           <Sprout size={QUICK_LINK_ICON_SIZE} strokeWidth={QUICK_LINK_ICON_STROKE} className={quickLinkIconClass} aria-hidden />
         ) : current?.emoji ? (
-          <span className="text-[1.75rem] leading-none" aria-hidden>
+          <span className="text-md leading-none" aria-hidden>
             {current.emoji}
           </span>
         ) : (

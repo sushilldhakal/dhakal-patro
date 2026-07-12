@@ -9,7 +9,7 @@ import { CEREMONY_META, ELEMENT_META } from "@/lib/panchanga-elements";
 
 function SectionTitle({ ne, en }: { ne: string; en: string }) {
   const { pick } = useLocale();
-  return <h2 className="mb-2 mt-6 text-sm font-bold uppercase tracking-wider text-muted-foreground">{pick(ne, en)}</h2>;
+  return <h2 className="mb-2 mt-6 text-sm font-bold uppercase tracking-wider">{pick(ne, en)}</h2>;
 }
 
 export function PanchangaDetailsHub() {
@@ -25,8 +25,8 @@ export function PanchangaDetailsHub() {
       params={params}
       className={cn(patroCard, "flex flex-col gap-0.5 p-3 transition-colors hover:bg-surface-hover")}
     >
-      <span className="text-[14px] font-bold text-foreground">{pick(ne, en)}</span>
-      <span className="text-[11.5px] text-muted-foreground">{pick(blurbNe, blurbEn)}</span>
+      <span className="text-sm font-bold text-foreground">{pick(ne, en)}</span>
+      <span className="text-sm">{pick(blurbNe, blurbEn)}</span>
     </Link>
   );
 

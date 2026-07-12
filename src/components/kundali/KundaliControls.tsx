@@ -43,7 +43,7 @@ const AD_MONTHS = [
 ];
 
 const selectClass =
-  "h-9 min-w-0 flex-1 px-2.5 rounded-lg border border-border bg-card text-foreground text-[13px] font-medium cursor-pointer";
+  "h-9 min-w-0 flex-1 px-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium cursor-pointer";
 
 function getADMonthLength(year: number, month: number): number {
   return new Date(year, month, 0).getDate();
@@ -99,10 +99,10 @@ export function KundaliControls({
             key={e}
             type="button"
             className={cn(
-              "h-8 px-3 rounded-[calc(var(--radius-lg)-2px)] border-0 text-[12.5px] font-semibold cursor-pointer transition-colors",
+              "h-8 px-3 rounded-[calc(var(--radius-lg)-2px)] border-0 text-sm font-semibold cursor-pointer transition-colors",
               era === e
                 ? "bg-secondary text-secondary-foreground"
-                : "bg-transparent text-muted-foreground hover:text-foreground"
+                : "bg-transparent hover:text-foreground"
             )}
             onClick={() => onEraChange(e)}
           >
@@ -195,13 +195,13 @@ export function KundaliControls({
         </>
       )}
 
-      <label className="inline-flex items-center gap-1.5 h-9 shrink-0 px-2.5 rounded-lg border border-border bg-card text-[13px] font-medium text-foreground min-w-[7.5rem]">
-        <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+      <label className="inline-flex items-center gap-1.5 h-9 shrink-0 px-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground min-w-[7.5rem]">
+        <Clock className="w-3.5 h-3.5 shrink-0" />
         <input
           type="time"
           value={clock}
           onChange={(e) => onClockChange(e.target.value)}
-          className="bg-transparent border-0 p-0 m-0 w-full text-[13px] font-mono font-semibold text-foreground focus:outline-none focus:ring-0"
+          className="bg-transparent border-0 p-0 m-0 w-full text-sm font-mono font-semibold text-foreground focus:outline-none focus:ring-0"
           aria-label="Birth time"
         />
       </label>

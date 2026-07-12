@@ -33,8 +33,8 @@ const ASHTAKAVARGA_TARGET_LABEL: Record<
   saturn: { en: "Saturn", ne: "शनि", shortEn: "Sa", shortNe: "श" },
 };
 
-const th = "h-9 px-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap";
-const td = "px-2 py-1.5 text-[12px]";
+const th = "h-9 px-2 text-sm font-semibold uppercase tracking-wide whitespace-nowrap";
+const td = "px-2 py-1.5 text-sm";
 const num = "text-right font-mono tabular-nums";
 
 function AshtakavargaMatrix({
@@ -181,10 +181,10 @@ export function AshtakavargaCard({ data }: { data: AshtakavargaData }) {
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+        <h3 className="text-sm font-semibold uppercase tracking-wide mb-1">
           {pick("अष्टकवर्ग", "Ashtakavarga")}
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs">
           {pick(
             "पाराशरी बिन्दु तालिका प्रति राशि। सर्व* ले सात ग्रहको योग जोड्छ (लग्न बाहेक)। शोध्य चартमा त्रिकोण र एकाधिपत्य शोधन लागू हुन्छ।",
             "Parashari bindu tables per rashi. Sarv* sums the seven grahas (excludes Lagna). Reduced charts apply Trikona then Ekadhipatya Shodhana.",

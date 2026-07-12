@@ -46,7 +46,7 @@ export function GocharRashyadiTable({
   if (loading) {
     return (
       <div className={cn("flex h-full min-h-[280px] items-center justify-center rounded-xl border border-border p-4", className)}>
-        <p className="text-sm text-muted-foreground">{pick("लोड हुँदैछ…", "Loading…")}</p>
+        <p className="text-sm">{pick("लोड हुँदैछ…", "Loading…")}</p>
       </div>
     );
   }
@@ -58,13 +58,13 @@ export function GocharRashyadiTable({
         <p className="mt-0.5 text-base font-medium text-foreground">
           {segment.labelNe}
           {segment.bsDay != null ? (
-            <span className="ml-1.5 text-sm text-muted-foreground">
+            <span className="ml-1.5 text-sm">
               ({digits(segment.bsDay)}{pick(" गते", "")})
             </span>
           ) : null}
         </p>
         {segment.moonRashiNe ? (
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm">
             {pick("च.रा.", "Moon")}: <span className="font-medium text-foreground">{segment.moonRashiNe}</span>
           </p>
         ) : null}
@@ -86,7 +86,7 @@ export function GocharRashyadiTable({
         </thead>
         <tbody>
           <tr className="border-b border-border/60">
-            <td className="px-1 py-2 text-center text-base font-semibold text-muted-foreground">
+            <td className="px-1 py-2 text-center text-base font-semibold">
               {digits(segment.pakshaDayCount)}
             </td>
             {RASHYADI_PLANET_KEYS.map((key) => (
@@ -95,7 +95,7 @@ export function GocharRashyadiTable({
           </tr>
           {RASHYADI_ROW_KEYS.map((rowKey) => (
             <tr key={rowKey} className="border-b border-border/60 last:border-0">
-              <td className="whitespace-nowrap px-1 py-2 text-center text-sm font-semibold text-muted-foreground">
+              <td className="whitespace-nowrap px-1 py-2 text-center text-sm font-semibold">
                 {rowLabelFor(segment, rowKey)}
               </td>
               {RASHYADI_PLANET_KEYS.map((key) => {
@@ -113,7 +113,7 @@ export function GocharRashyadiTable({
           ))}
         </tbody>
       </table>
-      <p className="border-t border-border/60 px-3 py-1.5 text-xs text-muted-foreground">
+      <p className="border-t border-border/60 px-3 py-1.5 text-xs">
         {pick(
           "अं=अंश · ग=कला · वि=विकला · प्र=तटपरा · त्र=प्रतितत्परा",
           "Deg=degree · Ka=kala · Vi=vikala · Pr=prati-tatpara · Tr=prati-vikala",

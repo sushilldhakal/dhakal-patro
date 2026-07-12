@@ -102,7 +102,7 @@ export function History() {
     <PageShell className="max-w-[1200px]">
       <Link
         to="/learn"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
         ज्ञानकेन्द्र
@@ -129,7 +129,7 @@ export function History() {
             >
               <Video className="size-4 text-destructive" />
               {HISTORY_SOURCE.title}
-              <ExternalLink className="size-3.5 text-muted-foreground" />
+              <ExternalLink className="size-3.5" />
             </a>
           </header>
 
@@ -142,7 +142,7 @@ export function History() {
             ))}
           </div>
 
-          <div className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card/50 px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:gap-6">
+          <div className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card/50 px-4 py-3 text-sm sm:flex-row sm:gap-6">
             <p className="m-0">
               <span className="font-semibold text-foreground">BBSE</span>
               {" — "}
@@ -162,7 +162,7 @@ export function History() {
               className="sticky top-20 self-start rounded-xl border border-border bg-card/60 p-3 backdrop-blur-sm"
               aria-label="विषयसूची"
             >
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 px-2 text-sm font-semibold uppercase tracking-wider">
                 विषयसूची
               </p>
               <ul className="flex flex-col gap-0.5">
@@ -174,7 +174,7 @@ export function History() {
                         "block rounded-lg px-2.5 py-2 text-sm leading-snug transition-colors",
                         activeId === section.id
                           ? "bg-secondary/10 font-medium text-secondary"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          : "hover:bg-muted hover:text-foreground",
                       )}
                     >
                       <span className="mr-1.5 font-mono text-xs opacity-70">
@@ -209,7 +209,7 @@ export function History() {
                 <AccordionItem key={section.id} value={section.id} className="border-border">
                   <AccordionTrigger className="py-3 text-left hover:no-underline">
                     <span className="flex flex-col gap-0.5 pr-2">
-                      <span className="text-xs font-mono text-muted-foreground">
+                      <span className="text-xs font-mono">
                         {section.kicker}
                       </span>
                       <span className="text-base font-semibold text-foreground">

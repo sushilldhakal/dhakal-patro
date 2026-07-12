@@ -19,10 +19,10 @@ export function AyanamshaSelector({ mode, onModeChange }: Props) {
   return (
     <div className="w-full rounded-xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-3.5 py-2.5 border-b border-border bg-secondary/[0.09] dark:bg-secondary/20">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-sm font-semibold uppercase tracking-wider">
           {pick("अयनांश", "Ayanamsha")}
         </span>
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
+        <span className="text-sm font-medium uppercase tracking-wider">
           Ayanamsha
         </span>
       </div>
@@ -36,7 +36,7 @@ export function AyanamshaSelector({ mode, onModeChange }: Props) {
               title={m.tagline}
               onClick={() => onModeChange(m.id)}
               className={cn(
-                "h-8 px-3 rounded-lg border text-[12.5px] font-medium transition-colors",
+                "h-8 px-3 rounded-lg border text-sm font-medium transition-colors",
                 mode === m.id
                   ? "border-secondary bg-secondary text-secondary-foreground"
                   : "border-border bg-background/40 dark:bg-background/20 text-foreground hover:bg-muted"
@@ -47,7 +47,7 @@ export function AyanamshaSelector({ mode, onModeChange }: Props) {
           ))}
         </div>
 
-        <p className="text-[12px] text-muted-foreground leading-snug">
+        <p className="text-sm leading-snug">
           {pick(current.labelNe, current.label)} — {pick(current.taglineNe, current.tagline)}
           {!matchesPanchangaAngas(mode) &&
             pick(

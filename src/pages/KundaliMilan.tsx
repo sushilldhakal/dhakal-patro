@@ -151,7 +151,7 @@ function BirthDetailsTable({ role, profile, person, ayanamsha, lang }: BirthDeta
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.label}>
-              <TableCell className="text-muted-foreground w-[40%]">{row.label}</TableCell>
+              <TableCell className="w-[40%]">{row.label}</TableCell>
               <TableCell className="font-medium">{row.value}</TableCell>
             </TableRow>
           ))}
@@ -210,14 +210,14 @@ export function KundaliMilan() {
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
       <div className="mb-4 mt-2 flex items-start justify-between gap-3">
         <div>
-          <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+          <div className="text-xs font-medium uppercase tracking-[0.12em] mb-1.5">
             {t("milan.eyebrow")}
           </div>
-          <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
+          <h1 className="text-xl font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
             <Heart className="w-7 h-7 text-secondary shrink-0" />
             {t("milan.title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+          <p className="text-sm mt-1 max-w-2xl">
             {isAuthenticated ? t("milan.subtitle_auth") : t("milan.login_required")}
           </p>
         </div>
@@ -229,7 +229,7 @@ export function KundaliMilan() {
       </div>
 
       {authLoading ? (
-        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm">
           {t("common.loading")}
         </div>
       ) : !isAuthenticated ? (
@@ -238,7 +238,7 @@ export function KundaliMilan() {
             <Heart className="h-7 w-7 text-secondary" />
           </div>
           <h2 className="text-xl font-bold text-foreground">{t("milan.login_prompt_title")}</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-md text-sm">
             {t("milan.login_prompt_body")}
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -252,7 +252,7 @@ export function KundaliMilan() {
         </section>
       ) : (
         <div className="flex flex-col gap-6">
-          <p className="text-sm text-muted-foreground">{t("milan.profile_hint")}</p>
+          <p className="text-sm">{t("milan.profile_hint")}</p>
 
           <MilanProfilePicker
             ref={pickerRef}
@@ -273,7 +273,7 @@ export function KundaliMilan() {
               ) : null}
 
               {loading ? (
-                <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm">
                   {t("common.loading")}
                 </div>
               ) : null}
@@ -313,7 +313,7 @@ export function KundaliMilan() {
               ) : null}
             </>
           ) : (
-            <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-8 text-center text-sm text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-8 text-center text-sm">
               {t("milan.need_two_profiles")}
             </div>
           )}

@@ -65,10 +65,10 @@ function KindBadge({ kind }: { kind: CalcNote["kind"] }) {
   return (
     <span
       className={cn(
-        "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none sm:text-[11px]",
+        "shrink-0 rounded px-1.5 py-0.5 text-sm font-semibold leading-none sm:text-sm",
         kind === "late_night" && "bg-amber-500/15 text-amber-700 dark:text-amber-300",
         kind === "ingress" && "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300",
-        kind === "paksha_boundary" && "bg-muted text-muted-foreground",
+        kind === "paksha_boundary" && "bg-muted",
         kind === "udayast" && "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
         kind === "motion" && "bg-rose-500/15 text-rose-700 dark:text-rose-300",
       )}
@@ -78,7 +78,7 @@ function KindBadge({ kind }: { kind: CalcNote["kind"] }) {
   );
 }
 
-const th = "h-9 whitespace-nowrap px-2.5 text-left text-xs font-semibold text-muted-foreground";
+const th = "h-9 whitespace-nowrap px-2.5 text-left text-xs font-semibold";
 const td = "px-2.5 py-2 align-top text-sm";
 
 export function MonthCalcNotes({ notes, loading, embedded }: Props) {
@@ -109,9 +109,9 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
   }, [notes]);
 
   const notesTable = loading ? (
-    <p className="px-4 py-8 text-center text-sm text-muted-foreground">{pick("लोड हुँदैछ…", "Loading…")}</p>
+    <p className="px-4 py-8 text-center text-sm">{pick("लोड हुँदैछ…", "Loading…")}</p>
   ) : groups.length === 0 ? (
-    <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+    <p className="px-4 py-8 text-center text-sm">
       {pick("यस महिनामा विशेष गणना सूचना छैन।", "No special calculation notes this month.")}
     </p>
   ) : (
@@ -141,7 +141,7 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
                       className="inline-flex max-w-full flex-wrap items-baseline gap-1"
                     >
                       {i > 0 ? (
-                        <span className="text-muted-foreground/50" aria-hidden>
+                        <span aria-hidden>
                           ·
                         </span>
                       ) : null}
@@ -162,7 +162,7 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
 
   const legend = (
     <section className={cn(!embedded && "rounded-xl border border-border p-4", embedded && "mt-4 border-t border-border pt-4")}>
-      <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide">
         {pick("ग्रह उदयास्त सङ्केत", "Planet rise-set symbols")}
       </h4>
       <dl className="space-y-1.5">
@@ -173,13 +173,13 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
                 {it.code}
               </span>
             </dt>
-            <dd className="text-muted-foreground">
+            <dd>
               <span className="text-foreground">{pick(it.full, it.fullEn)}</span> — {pick(it.meaning, it.meaningEn)}
             </dd>
           </div>
         ))}
       </dl>
-      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-4 text-sm leading-relaxed">
         {pick(
           <>
             <span className="font-semibold text-foreground">दशा कोष्ठक:</span> जन्म-समयमा बाँकी

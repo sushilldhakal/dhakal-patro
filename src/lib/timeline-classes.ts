@@ -4,16 +4,16 @@ export const pgxNightwash =
   "fill-[color-mix(in_srgb,var(--brand-teal)_7%,transparent)] dark:fill-[color-mix(in_srgb,var(--foreground)_8%,transparent)]";
 
 export const pgxScaleLabel =
-  "fill-muted-foreground text-[11px] font-semibold [font-family:var(--font-sans)]";
+  "fill-muted-foreground text-sm font-semibold [font-family:var(--font-sans)]";
 
 export function pgxScaleLabelDim(dim?: boolean) {
   return cn(pgxScaleLabel, dim && "opacity-75");
 }
 
-export const pgxHour = "fill-foreground font-mono text-[11px] font-semibold";
+export const pgxHour = "fill-foreground font-mono text-sm font-semibold";
 
 export const pgxGhati =
-  "fill-muted-foreground font-mono text-[10px] font-medium";
+  "fill-muted-foreground font-mono text-sm font-medium";
 
 export const pgxSunline = "stroke-border [stroke-width:1]";
 
@@ -59,21 +59,21 @@ export function pgxSeg(
 }
 
 export const pgxSegname =
-  "fill-foreground text-[12.5px] font-semibold [font-family:var(--font-sans)]";
+  "fill-foreground text-sm font-semibold [font-family:var(--font-sans)]";
 
 export const pgxSegnameSm =
-  "fill-foreground text-[10px] font-semibold tracking-tight [font-family:var(--font-sans)]";
+  "fill-foreground text-sm font-semibold tracking-tight [font-family:var(--font-sans)]";
 
 export function pgxSegnameCho(bad?: boolean) {
-  return cn(pgxSegname, "text-[11px]", bad && "fill-[var(--color-danger)]");
+  return cn(pgxSegname, "text-sm", bad && "fill-[var(--color-danger)]");
 }
 
 /** Inauspicious (अशुभ) band label — danger-tinted, slightly smaller. */
 export const pgxSegnameBad =
-  "fill-[var(--color-danger)] text-[11px] font-semibold [font-family:var(--font-sans)]";
+  "fill-[var(--color-danger)] text-sm font-semibold [font-family:var(--font-sans)]";
 
 export const pgxPaksha =
-  "fill-muted-foreground text-[10.5px] font-medium [font-family:var(--font-sans)]";
+  "fill-muted-foreground text-sm font-medium [font-family:var(--font-sans)]";
 
 export const pgxArrow =
   "[&_line]:stroke-[var(--brand-teal)] [&_line]:[stroke-width:1.6] [&_line]:stroke-round [&_path]:fill-[var(--brand-teal)] dark:[&_line]:stroke-[var(--brand-yellow)] dark:[&_path]:fill-[var(--brand-yellow)]";
@@ -109,10 +109,10 @@ export const pgTlSunDisc =
 export const pgTlSunHorizon =
   "stroke-[color-mix(in_srgb,var(--color-warning)_55%,var(--muted-foreground))] [stroke-width:1] stroke-round";
 
-export const pgTlMoonEmoji = "text-[15px]";
+export const pgTlMoonEmoji = "text-md";
 
 export const pgTlEventTime =
-  "fill-[var(--color-warning)] font-mono text-[10.5px] font-semibold";
+  "fill-[var(--color-warning)] font-mono text-sm font-semibold";
 
 export function pgTlEventTimeMoon(moon?: boolean) {
   return cn(pgTlEventTime, moon && "fill-muted-foreground");
@@ -122,7 +122,7 @@ export const pgTlRowlabel =
   "fill-foreground text-xs font-bold [font-family:var(--font-sans)]";
 
 export const pgTlRowlabelEn =
-  "fill-muted-foreground text-[10px] font-semibold uppercase tracking-wide [font-family:var(--font-sans)]";
+  "fill-muted-foreground text-sm font-semibold uppercase tracking-wide [font-family:var(--font-sans)]";
 
 const ROW_LINES = [
   "stroke-[color-mix(in_srgb,var(--brand-teal)_22%,transparent)]",

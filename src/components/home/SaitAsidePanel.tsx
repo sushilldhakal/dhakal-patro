@@ -80,12 +80,12 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2">
-        <label className="shrink-0 text-xs font-semibold text-muted-foreground" htmlFor="sait-bs-year">
+        <label className="shrink-0 text-xs font-semibold" htmlFor="sait-bs-year">
           {t("sait.year")}
         </label>
         <select
           id="sait-bs-year"
-          className="h-8 min-w-0 flex-1 cursor-pointer rounded-md border border-border bg-card px-2.5 text-[13px] font-bold text-foreground font-num hover:border-secondary/35 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-secondary/45"
+          className="h-8 min-w-0 flex-1 cursor-pointer rounded-md border border-border bg-card px-2.5 text-sm font-bold text-foreground font-num hover:border-secondary/35 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-secondary/45"
           value={year}
           aria-label={t("sait.year")}
           onChange={(e) => setYear(Number(e.target.value))}
@@ -124,10 +124,10 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
           {entries.map(({ month, days }) => (
             <li
               key={month}
-              className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 rounded-md bg-surface-inset px-2.5 py-2 text-[13px] leading-snug"
+              className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 rounded-md bg-surface-inset px-2.5 py-2 text-sm leading-snug"
             >
-              <span className="shrink-0 text-[13px] font-bold text-foreground">{BS_MONTHS_NE[month - 1]}:</span>
-              <span className="font-num text-[13px] font-semibold text-foreground">
+              <span className="shrink-0 text-sm font-bold text-foreground">{BS_MONTHS_NE[month - 1]}:</span>
+              <span className="font-num text-sm font-semibold text-foreground">
                 {days.map((day, i) => {
                   const isHighlight = highlightMonth === month && highlightDay === day;
                   return (

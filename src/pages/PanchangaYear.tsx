@@ -474,15 +474,15 @@ export function PanchangaYear() {
         <div>
           <Link
             to="/panchanga"
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-1.5"
+            className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t("panchanga_year.back")}
           </Link>
-          <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
+          <h1 className="text-xl font-bold leading-tight tracking-tight m-0">
             {t("panchanga_year.title")}
           </h1>
-          <div className="text-sm text-muted-foreground mt-1">
+          <div className="text-sm mt-1">
             {BS_MONTHS_NE[liveMonth - 1]} {toNepaliDigits(liveDay)}, {toNepaliDigits(year)}
             {" · "}
             <span className="inline-flex items-center gap-1">
@@ -498,13 +498,13 @@ export function PanchangaYear() {
                 onClick={() => goToYear(year - 1)}
                 disabled={year <= rangeStart}
                 aria-label={pick("अघिल्लो वर्ष", "Previous year")}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <span className="px-1.5 text-sm font-semibold tabular-nums">
                 {toNepaliDigits(year)}
-                <span className="ml-1 text-[11px] font-medium text-muted-foreground">
+                <span className="ml-1 text-sm font-medium">
                   {toNepaliDigits(year - rangeStart + 1)}/{toNepaliDigits(rangeSpan)}
                 </span>
               </span>
@@ -513,7 +513,7 @@ export function PanchangaYear() {
                 onClick={() => goToYear(year + 1)}
                 disabled={year >= rangeEnd}
                 aria-label={pick("अर्को वर्ष", "Next year")}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -523,7 +523,7 @@ export function PanchangaYear() {
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
           <div className="inline-flex items-center gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="text-xs font-medium">
               {pick("दायरा", "Range")}
             </span>
             <select
@@ -538,7 +538,7 @@ export function PanchangaYear() {
                 </option>
               ))}
             </select>
-            <span className="text-muted-foreground">–</span>
+            <span>–</span>
             <select
               className={patroSelect}
               value={rangeEnd}
@@ -602,7 +602,7 @@ export function PanchangaYear() {
         {yearLoading ? (
           <div className="rounded-xl border border-border bg-card px-4 py-3">
             <div className="flex items-center justify-between gap-3 mb-2">
-              <span className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
+              <span className="text-xs font-medium uppercase tracking-[0.1em]">
                 {t("panchanga_year.loading_year")}
               </span>
             </div>
@@ -611,7 +611,7 @@ export function PanchangaYear() {
             </div>
           </div>
         ) : yearFullyCached ? (
-          <p className="text-xs text-muted-foreground m-0 px-1">
+          <p className="text-xs m-0 px-1">
             {rangeSpan > 1
               ? readyCount >= rangeSpan
                 ? pick(

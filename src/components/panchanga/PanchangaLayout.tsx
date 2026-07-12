@@ -45,7 +45,7 @@ function QuadLabel({ children, className }: { children: React.ReactNode; classNa
   return (
     <div
       className={cn(
-        "text-[11.5px] font-semibold leading-snug text-muted-foreground pt-0.5",
+        "text-sm font-semibold leading-snug pt-0.5",
         className,
       )}
     >
@@ -58,7 +58,7 @@ function QuadValue({ children, className }: { children: React.ReactNode; classNa
   return (
     <div
       className={cn(
-        "text-[13px] font-medium leading-snug flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0",
+        "text-sm font-medium leading-snug flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0",
         className,
       )}
     >
@@ -202,16 +202,16 @@ export function UptoValue({
       )}
     >
       <span className="inline-flex items-baseline gap-1.5 min-w-0">
-        {sym && <span className="text-[13px] shrink-0">{sym}</span>}
+        {sym && <span className="text-sm shrink-0">{sym}</span>}
         <span className="font-semibold">{name}</span>
         {badge && (
-          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary dark:text-accent">
+          <span className="text-sm font-semibold px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary dark:text-accent">
             {badge}
           </span>
         )}
       </span>
       {endTime && (
-        <span className="text-[11px] font-mono font-semibold text-foreground whitespace-nowrap shrink-0">
+        <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap shrink-0">
           {endTime} {t("sections.until")}
         </span>
       )}
@@ -231,7 +231,7 @@ export function TimingRange({
   const { t } = useTranslation();
   if (!start || !end) {
     return (
-      <span className="text-muted-foreground text-xs">
+      <span className="text-xs">
         {t("sections.dash")} {t("sections.not_available")}
       </span>
     );
@@ -239,7 +239,7 @@ export function TimingRange({
   return (
     <span
       className={cn(
-        "font-mono text-[12px] font-semibold",
+        "font-mono text-sm font-semibold",
         variant === "good" && "text-[var(--color-success)]",
         variant === "bad" && "text-destructive",
         variant === "neutral" && "text-foreground",
@@ -281,17 +281,17 @@ export function DenseListRow({
   return (
     <div
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 px-2.5 py-1 text-[12px] leading-snug",
+        "grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 px-2.5 py-1 text-sm leading-snug",
         highlight && "font-semibold text-success",
         className,
       )}
     >
       <span className="min-w-0 truncate">{label}</span>
-      <span className="shrink-0 font-mono text-[11px] font-semibold text-foreground tabular-nums">
+      <span className="shrink-0 font-mono text-sm font-semibold text-foreground tabular-nums">
         {time ?? "—"}
       </span>
       {note ? (
-        <span className="col-span-2 text-[10.5px] font-mono font-medium text-foreground/90 -mt-0.5 pb-0.5">
+        <span className="col-span-2 text-sm font-mono font-medium text-foreground/90 -mt-0.5 pb-0.5">
           {note}
         </span>
       ) : null}
@@ -311,7 +311,7 @@ export function PanchangaSubBlock({
 }) {
   return (
     <div className={cn("border-b border-border px-4 py-2 last:border-b-0", className)}>
-      <p className="m-0 mb-1.5 text-[11px] font-semibold text-muted-foreground">{title}</p>
+      <p className="m-0 mb-1.5 text-sm font-semibold">{title}</p>
       {children}
     </div>
   );
@@ -331,8 +331,8 @@ export function PairedTimingTable({
   }>;
 }) {
   return (
-    <div className="text-[12px]">
-      <div className="hidden sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto] sm:gap-x-2 border-b border-border bg-secondary/[0.06] px-3 py-1.5 text-[10.5px] font-semibold text-muted-foreground">
+    <div className="text-sm">
+      <div className="hidden sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto] sm:gap-x-2 border-b border-border bg-secondary/[0.06] px-3 py-1.5 text-sm font-semibold">
         <span className="col-span-2">{leftTitle}</span>
         <span className="col-span-2 border-l border-border/60 pl-2">{rightTitle}</span>
       </div>
@@ -394,7 +394,7 @@ function PairedTimingCell({
       )}
     >
       {showTitleOnMobile ? (
-        <span className="mb-0.5 block text-[10px] font-semibold text-muted-foreground sm:hidden">
+        <span className="mb-0.5 block text-sm font-semibold sm:hidden">
           {title}
         </span>
       ) : null}
@@ -403,9 +403,9 @@ function PairedTimingCell({
           {label}
         </span>
         <div className="shrink-0 text-right">
-          <div className="font-mono text-[11px] font-semibold text-foreground tabular-nums leading-snug">{time}</div>
+          <div className="font-mono text-sm font-semibold text-foreground tabular-nums leading-snug">{time}</div>
           {note ? (
-            <div className="mt-0.5 max-w-[9.5rem] text-[10.5px] font-mono font-medium text-foreground/90 leading-tight">
+            <div className="mt-0.5 max-w-[9.5rem] text-sm font-mono font-medium text-foreground/90 leading-tight">
               {note}
             </div>
           ) : null}

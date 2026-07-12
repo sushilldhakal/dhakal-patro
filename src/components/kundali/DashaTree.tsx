@@ -104,8 +104,8 @@ function formatMoment(
 
 function MomentLine({ label, value }: { label: string; value: string }) {
   return (
-    <p className="text-[11.5px] leading-snug text-muted-foreground">
-      <span className="inline-block w-14 shrink-0 font-semibold uppercase tracking-wide text-[9.5px] text-muted-foreground/70">
+    <p className="text-sm leading-snug">
+      <span className="inline-block w-14 shrink-0 font-semibold uppercase tracking-wide text-sm">
         {label}
       </span>
       <span className="font-medium text-foreground/80">{value}</span>
@@ -188,13 +188,13 @@ function DashaDurationGrid({
 
   return (
     <div className="mt-2 overflow-x-auto pl-[22px]">
-      <table className="w-full min-w-[280px] border-collapse text-[10.5px]">
+      <table className="w-full min-w-[280px] border-collapse text-sm">
         <thead>
           <tr>
             {DURATION_COLS.map((col) => (
               <th
                 key={col.ne}
-                className="border border-border/50 bg-muted/30 px-1.5 py-1 text-left font-semibold text-[9px] uppercase tracking-wide text-muted-foreground"
+                className="border border-border/50 bg-muted/30 px-1.5 py-1 text-left font-semibold text-sm uppercase tracking-wide"
               >
                 {pick(col.ne, col.en)}
               </th>
@@ -322,7 +322,7 @@ function DashaNode({
             {expandable ? (
               <ChevronRight
                 className={cn(
-                  "size-3.5 shrink-0 text-muted-foreground transition-transform",
+                  "size-3.5 shrink-0 transition-transform",
                   open && "rotate-90",
                 )}
                 aria-hidden
@@ -333,16 +333,16 @@ function DashaNode({
             <span className="text-base leading-none opacity-80" aria-hidden>
               {glyph}
             </span>
-            <span className="text-[13px] font-bold text-foreground">
+            <span className="text-sm font-bold text-foreground">
               {displayLordName(span, lang, system)}
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-sm">
               {levelLabel}
-              <span className="mx-1 text-muted-foreground/50">·</span>
+              <span className="mx-1">·</span>
               {digits(duration)}
             </span>
             {running && (
-              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-[9.5px] font-bold text-secondary">
+              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-bold text-secondary">
                 {pick("चालु दशा", "Running")}
               </span>
             )}
@@ -435,18 +435,18 @@ export function DashaTree({
   return (
     <div className="space-y-5">
       {timelineStart && timelineEnd && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm">
           <span>
-            <span className="font-semibold uppercase tracking-wide text-[9.5px]">
+            <span className="font-semibold uppercase tracking-wide text-sm">
               {pick("सुरु", "From")}
             </span>{" "}
             <span className="font-medium text-foreground/80">
               {formatMoment(timelineStart, lang, timeZone, digits)}
             </span>
           </span>
-          <span className="hidden sm:inline text-muted-foreground/40">→</span>
+          <span className="hidden sm:inline">→</span>
           <span>
-            <span className="font-semibold uppercase tracking-wide text-[9.5px]">
+            <span className="font-semibold uppercase tracking-wide text-sm">
               {pick("अन्त्य", "To")}
             </span>{" "}
             <span className="font-medium text-foreground/80">
@@ -468,16 +468,16 @@ export function DashaTree({
                 {system === "yogini" ? "◆" : LORD_GLYPH[running.lord as DashaLord] ?? "●"}
               </span>
               {displayLordName(running, lang, system)}
-              <span className="mx-1.5 font-normal text-muted-foreground">·</span>
+              <span className="mx-1.5 font-normal">·</span>
               {pick("महादशा", "Maha Dasha")}
             </p>
             <div className="flex items-center gap-2">
               {yoginiCycle ? (
-                <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
                   {pick(`चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
                 </span>
               ) : null}
-              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-[10px] font-bold text-secondary">
+              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-bold text-secondary">
                 {pick("चालु दशा", "Running Dasha")}
               </span>
             </div>
@@ -501,15 +501,15 @@ export function DashaTree({
               digits={digits}
             />
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 pl-2 text-[12px]">
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 pl-2 text-sm">
             <p>
-              <span className="text-muted-foreground">{pick("कुल", "Total")} — </span>
+              <span>{pick("कुल", "Total")} — </span>
               <span className="font-semibold text-foreground">
                 {digits(formatDashaDuration(running.end.getTime() - running.start.getTime(), lang))}
               </span>
             </p>
             <p>
-              <span className="text-muted-foreground">{pick("बाँकी", "Left")} — </span>
+              <span>{pick("बाँकी", "Left")} — </span>
               <span className="font-semibold text-foreground">
                 {digits(formatDashaDuration(running.end.getTime() - now, lang))}
               </span>

@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const td = "px-2.5 py-2 text-[12.5px]";
+const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
+const td = "px-2.5 py-2 text-sm";
 
 export type YogaListProps = {
   yogas: KundaliYoga[];
@@ -63,25 +63,25 @@ export function YogaList({ yogas }: YogaListProps) {
               >
                 <span className="flex items-center gap-1.5 font-semibold text-foreground">
                   <Info
-                    className="size-3.5 shrink-0 text-muted-foreground/60"
+                    className="size-3.5 shrink-0"
                     aria-hidden
                   />
                   {name}
                 </span>
-                <span className="mt-0.5 block pl-5 text-[11px] leading-snug text-muted-foreground break-words">
+                <span className="mt-0.5 block pl-5 text-sm leading-snug break-words">
                   {desc}
                 </span>
               </TableCell>
               <TableCell className={cn(td, "whitespace-nowrap align-top")}>
                 <span
                   className={cn(
-                    "inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
+                    "inline-flex rounded-full px-2 py-0.5 text-sm font-semibold",
                     yoga.nature === "auspicious"
                       ? "bg-secondary/15 text-secondary"
                       : yoga.nature === "mixed"
                         ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
                         : yoga.nature === "caution"
-                          ? "bg-muted text-muted-foreground"
+                          ? "bg-muted"
                           : "bg-destructive/10 text-destructive",
                   )}
                 >
@@ -101,7 +101,7 @@ export function YogaList({ yogas }: YogaListProps) {
                     {pick("छ", "Present")}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
                     <Minus className="size-3.5" aria-hidden />
                     {pick("छैन", "Absent")}
                   </span>

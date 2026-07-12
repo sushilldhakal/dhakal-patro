@@ -62,9 +62,9 @@ export function GocharKundaliChart({
       </div>
 
       {loading ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{pick("लोड हुँदैछ…", "Loading…")}</p>
+        <p className="py-8 text-center text-sm">{pick("लोड हुँदैछ…", "Loading…")}</p>
       ) : grahas.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
+        <p className="py-8 text-center text-sm">{pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
       ) : (
         <svg
           viewBox="0 0 300 300"
@@ -96,7 +96,7 @@ export function GocharKundaliChart({
                     x={cx}
                     y={cy - 6}
                     textAnchor="middle"
-                    className="fill-foreground text-[13px] font-semibold"
+                    className="fill-foreground text-sm font-semibold"
                   >
                     {planetLine}
                   </text>
@@ -105,7 +105,7 @@ export function GocharKundaliChart({
                   x={cx}
                   y={cy + (planetLine ? 14 : 4)}
                   textAnchor="middle"
-                  className="fill-foreground/80 text-[13px] font-medium"
+                  className="fill-foreground/80 text-sm font-medium"
                 >
                   {rashiNe}
                 </text>
@@ -123,7 +123,7 @@ export function GocharKundaliChart({
       )}
 
       {dateLabel ? (
-        <p className="mt-2 text-center text-sm text-muted-foreground">{pick(`${dateLabel} को स्थिति`, `Position on ${dateLabel}`)}</p>
+        <p className="mt-2 text-center text-sm">{pick(`${dateLabel} को स्थिति`, `Position on ${dateLabel}`)}</p>
       ) : null}
     </div>
   );

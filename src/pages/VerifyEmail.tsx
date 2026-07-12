@@ -38,7 +38,7 @@ export function VerifyEmail() {
         <>
           <CheckCircle2 className="size-12 text-emerald-500" />
           <h1 className="mt-4 text-xl font-bold text-foreground">Email verified</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm">
             Your account is now fully active.
           </p>
           <Button asChild className="mt-6">
@@ -50,7 +50,7 @@ export function VerifyEmail() {
         <>
           <XCircle className="size-12 text-destructive" />
           <h1 className="mt-4 text-xl font-bold text-foreground">Verification failed</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{message}</p>
+          <p className="mt-1 text-sm">{message}</p>
           <Button asChild variant="outline" className="mt-6">
             <Link to="/account">Back to account</Link>
           </Button>

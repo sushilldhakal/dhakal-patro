@@ -70,7 +70,7 @@ export function Converter() {
               "px-5 py-2.5 text-sm font-semibold transition-colors flex items-center gap-2",
               mode === m
                 ? "bg-secondary text-secondary-foreground"
-                : "text-muted-foreground hover:bg-muted"
+                : "hover:bg-muted"
             )}
           >
             {m === "ad-to-bs" ? (
@@ -86,7 +86,7 @@ export function Converter() {
       <form onSubmit={handleSubmit} className="flex items-end gap-3 flex-wrap">
         {mode === "ad-to-bs" ? (
           <div className="flex flex-col gap-1 flex-1 min-w-44">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <label className="text-xs font-semibold uppercase tracking-wide">
               {t("converter.ad_date")}
             </label>
             <input
@@ -98,7 +98,7 @@ export function Converter() {
           </div>
         ) : (
           <div className="flex flex-col gap-1 flex-1 min-w-44">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <label className="text-xs font-semibold uppercase tracking-wide">
               {t("converter.bs_date")}
             </label>
             <input
@@ -129,7 +129,7 @@ export function Converter() {
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-2xl font-bold text-foreground">
             <span className="text-secondary">{adResult.ad_date}</span>
-            <ArrowRight className="w-5 h-5 text-muted-foreground" />
+            <ArrowRight className="w-5 h-5" />
             <span className="text-secondary">{adResult.bs_date}</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -148,7 +148,7 @@ export function Converter() {
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-2xl font-bold text-foreground">
             <span className="text-secondary">{bsResult.bs_date}</span>
-            <ArrowRight className="w-5 h-5 text-muted-foreground" />
+            <ArrowRight className="w-5 h-5" />
             <span className="text-secondary">{bsResult.ad_date}</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

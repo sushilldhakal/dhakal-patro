@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const td = "px-2.5 py-2 text-[12.5px]";
+const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
+const td = "px-2.5 py-2 text-sm";
 
 export type BhavaTableProps = {
   division: number;
@@ -87,7 +87,7 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
               >
                 {digits(row.house)}
                 {row.badge && (
-                  <span className="ml-1 text-[10px] font-semibold text-muted-foreground">
+                  <span className="ml-1 text-sm font-semibold">
                     ({row.badge})
                   </span>
                 )}
@@ -99,7 +99,7 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
               </TableCell>
               <TableCell className={td}>{row.owner ? grahaName(row.owner) : "—"}</TableCell>
               <TableCell className={td}>{rashiName(row.rashi)}</TableCell>
-              <TableCell className={cn(td, "text-muted-foreground")}>
+              <TableCell className={cn(td, "")}>
                 {quality ? pick(quality.ne, quality.en) : "—"}
               </TableCell>
               <TableCell className={td}>

@@ -66,14 +66,14 @@ function MetaItem({
 }) {
   return (
     <div className="flex min-w-[6.75rem] flex-col justify-center gap-0 px-2.5 py-2 sm:min-w-[7.25rem] sm:px-3">
-      <div className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="flex items-center gap-1 text-sm font-semibold uppercase tracking-wider">
         <Icon className="size-2.5 shrink-0 opacity-70" />
         {label}
       </div>
-      <p className={cn("text-[13px] font-semibold text-foreground leading-tight break-words", mono && "font-mono text-xs")}>
+      <p className={cn("text-sm font-semibold text-foreground leading-tight break-words", mono && "font-mono text-xs")}>
         {value}
       </p>
-      {sub ? <p className="text-[11px] leading-tight text-muted-foreground mt-0.5">{sub}</p> : null}
+      {sub ? <p className="text-sm leading-tight mt-0.5">{sub}</p> : null}
     </div>
   );
 }
@@ -153,7 +153,7 @@ export function KundaliDetail() {
   const backLink = (
     <Link
       to="/kundali"
-      className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" /> {t("kundali.back_all")}
     </Link>
@@ -162,7 +162,7 @@ export function KundaliDetail() {
   if (authLoading || (isAuthenticated && isLoading)) {
     return (
       <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6">
-        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-16 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-16 text-center text-sm">
           {t("common.loading")}
         </div>
       </div>
@@ -173,7 +173,7 @@ export function KundaliDetail() {
     return (
       <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 space-y-4">
         {backLink}
-        <div className="rounded-xl border border-border bg-card px-5 py-12 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-border bg-card px-5 py-12 text-center text-sm">
           {t("kundali.login_required")}
         </div>
       </div>
@@ -186,7 +186,7 @@ export function KundaliDetail() {
         {backLink}
         <div className="rounded-xl border border-border bg-card px-5 py-12 text-center">
           <p className="text-sm font-medium text-foreground">{t("kundali.not_found")}</p>
-          <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+          <p className="mx-auto mt-1 max-w-md text-sm">
             {t("kundali.not_found_body")}
           </p>
         </div>
@@ -208,7 +208,7 @@ export function KundaliDetail() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/kundali"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
           >
             <Sparkles className="size-4" /> {t("kundali.other_kundali")}
           </Link>
@@ -226,7 +226,7 @@ export function KundaliDetail() {
               <User className="size-4 text-secondary sm:size-[1.125rem]" />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-0.5">
+              <p className="text-sm font-semibold uppercase tracking-[0.1em] mb-0.5">
                 {t("kundali.title")}
               </p>
               <h1 className="text-lg sm:text-xl font-bold leading-tight tracking-tight text-foreground m-0 flex flex-wrap items-center gap-1.5">
@@ -236,7 +236,7 @@ export function KundaliDetail() {
                 )}
               </h1>
               {profile.gender ? (
-                <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{profile.gender}</p>
+                <p className="text-sm mt-0.5 capitalize">{profile.gender}</p>
               ) : null}
             </div>
           </div>
@@ -300,9 +300,9 @@ export function KundaliDetail() {
             />
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
-              <Clock className="mx-auto mb-4 size-10 text-muted-foreground/70" />
+              <Clock className="mx-auto mb-4 size-10" />
               <p className="text-base font-semibold text-foreground">{t("kundali.no_birth_title")}</p>
-              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              <p className="mx-auto mt-2 max-w-md text-sm">
                 {t("kundali.no_birth_body")}
               </p>
               <Button className="mt-6 gap-1.5" onClick={() => setEditOpen(true)}>

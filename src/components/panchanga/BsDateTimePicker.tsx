@@ -182,7 +182,7 @@ export function BsDateTimePicker({
           <div
             key={wd}
             className={cn(
-              "flex h-5 items-center justify-center text-[9px] font-semibold uppercase tracking-tight text-muted-foreground",
+              "flex h-5 items-center justify-center text-sm font-semibold uppercase tracking-tight",
               (i === 0 || i === 6) && "text-danger/80",
             )}
           >
@@ -208,7 +208,7 @@ export function BsDateTimePicker({
               aria-label={`${digits(d)}`}
               aria-pressed={isSelected}
               className={cn(
-                "font-num flex h-8 items-center justify-center rounded-md text-[13px] font-semibold tabular-nums transition-colors",
+                "font-num flex h-8 items-center justify-center rounded-md text-sm font-semibold tabular-nums transition-colors",
                 !isSelected && "hover:bg-surface-hover",
                 !isSelected && isWeekend && "text-danger",
                 !isSelected && !isWeekend && "text-foreground",
@@ -225,7 +225,7 @@ export function BsDateTimePicker({
       {/* Time picker — 12 hour with AM/PM */}
       {showTime && hourAriaLabel && minuteAriaLabel ? (
         <div className="flex flex-col gap-1.5 border-t border-border pt-2.5">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <span className="text-sm font-semibold uppercase tracking-[0.14em]">
             {pick("समय", "Time")}
           </span>
           <div className="flex items-center gap-1.5">
@@ -236,7 +236,7 @@ export function BsDateTimePicker({
               ariaLabel={hourAriaLabel}
               onChange={(h) => setTime(h, minute, meridiem)}
             />
-            <span className="font-num text-sm font-semibold text-muted-foreground">:</span>
+            <span className="font-num text-sm font-semibold">:</span>
             <BsNativeSelect
               className="w-[3.5rem]"
               value={minute}
@@ -252,10 +252,10 @@ export function BsDateTimePicker({
                   onClick={() => setTime(hour12, minute, mer)}
                   aria-pressed={meridiem === mer}
                   className={cn(
-                    "px-2.5 py-1 text-[11px] font-bold transition-colors",
+                    "px-2.5 py-1 text-sm font-bold transition-colors",
                     meridiem === mer
                       ? "bg-secondary text-secondary-foreground"
-                      : "bg-card text-muted-foreground hover:bg-surface-hover",
+                      : "bg-card hover:bg-surface-hover",
                   )}
                 >
                   {mer}
@@ -271,7 +271,7 @@ export function BsDateTimePicker({
         <button
           type="button"
           onClick={goDraftToday}
-          className="h-8 flex-1 rounded-md border border-border bg-card text-[12px] font-semibold text-foreground transition-colors hover:bg-surface-hover"
+          className="h-8 flex-1 rounded-md border border-border bg-card text-sm font-semibold text-foreground transition-colors hover:bg-surface-hover"
         >
           {pick("आज", "Today")}
         </button>
@@ -279,7 +279,7 @@ export function BsDateTimePicker({
           <button
             type="button"
             onClick={commit}
-            className="h-8 flex-1 rounded-md bg-secondary text-[12px] font-semibold text-secondary-foreground"
+            className="h-8 flex-1 rounded-md bg-secondary text-sm font-semibold text-secondary-foreground"
           >
             {pick("भयो", "Done")}
           </button>

@@ -206,7 +206,7 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
         id: "vairi",
         header: t("avakahada.col_vairi_yoni"),
         accessorKey: "vairiYoni",
-        cell: (c) => <span className="whitespace-nowrap text-muted-foreground">{c.getValue<string>()}</span>,
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
       },
       {
         id: "gana",
@@ -267,12 +267,12 @@ export function AvakahadaChakra() {
         subtitle={t("avakahada.subtitle")}
       />
 
-      <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+      <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
         {t("avakahada.abhijit_note")}
       </p>
 
       <div className="relative max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
         <Input
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
@@ -294,7 +294,7 @@ export function AvakahadaChakra() {
                       key={h.id}
                       onClick={canSort ? h.column.getToggleSortingHandler() : undefined}
                       className={cn(
-                        "whitespace-nowrap font-semibold text-muted-foreground",
+                        "whitespace-nowrap font-semibold",
                         i === 0 ? cn(stickyHead, "bg-muted/60") : cn(stickyHeadCell, "bg-muted/60"),
                         canSort && "cursor-pointer select-none hover:text-foreground",
                       )}
@@ -319,7 +319,7 @@ export function AvakahadaChakra() {
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={columns.length} className="py-8 text-center">
                   {t("avakahada.no_results")}
                 </TableCell>
               </TableRow>
@@ -350,27 +350,27 @@ export function AvakahadaChakra() {
             <h3 className="mb-2 text-sm font-semibold text-foreground">{t("avakahada.name_groups")}</h3>
             <ul className="space-y-1.5 text-sm">
               {MANGLI_VARGAS.map((v) => (
-                <li key={v.varga} className="flex items-center gap-2 text-muted-foreground">
+                <li key={v.varga} className="flex items-center gap-2">
                   <span className="font-medium text-foreground">{localizeVarga(v.varga, lang)}</span>
                   <span className="text-xs">⚔</span>
                   <span className="font-medium text-foreground">{localizeVarga(v.shatru, lang)}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-muted-foreground">{t("avakahada.bhoomadosha_note")}</p>
+            <p className="mt-3 text-xs">{t("avakahada.bhoomadosha_note")}</p>
           </div>
           <div className="rounded-xl border border-border p-4">
             <h3 className="mb-2 text-sm font-semibold text-foreground">{t("avakahada.shloka")}</h3>
             <div className="space-y-3">
               {BHAUMA_DOSHA_SHLOKAS.map((s, i) => (
-                <p key={i} className="text-sm leading-relaxed text-muted-foreground">
+                <p key={i} className="text-sm leading-relaxed">
                   {s}
                 </p>
               ))}
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{t("avakahada.footnote")}</p>
+        <p className="text-xs">{t("avakahada.footnote")}</p>
       </section>
     </PageShell>
   );

@@ -37,11 +37,11 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-      <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1">
+      <div className="text-xs font-medium uppercase tracking-[0.12em] mb-1">
         {pick("क्षणिक मुहूर्त", "Muhurta now")}
       </div>
       {instantLabel && (
-        <p className="text-sm text-muted-foreground mb-3 m-0">
+        <p className="text-sm mb-3 m-0">
           {pick(`${digits(instantTime)} बजेको अवस्था`, `Status at ${digits(instantTime)}`)}
         </p>
       )}
@@ -67,7 +67,7 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
                     {pick("सक्रिय", "Active")}
                   </span>
                 ) : (
-                  <span className="text-xs text-muted-foreground font-mono tabular-nums">
+                  <span className="text-xs font-mono tabular-nums">
                     {range ?? "—"}
                   </span>
                 )}
@@ -89,7 +89,7 @@ export function EphemerisModeBanner({ p, clock }: Props) {
       <p className="m-0 font-semibold text-foreground">
         {pick("समय-आधारित पञ्चाङ्ग", "Ephemeris mode")}
       </p>
-      <p className="m-0 mt-1 text-foreground text-[13px] leading-relaxed">
+      <p className="m-0 mt-1 text-foreground text-sm leading-relaxed">
         {time ? (
           pick(
             <>

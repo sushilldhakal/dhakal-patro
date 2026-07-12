@@ -30,7 +30,7 @@ const GRAHA_GRID =
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+    <p className="mb-2 text-xs font-semibold uppercase tracking-wide sm:text-sm">
       {children}
     </p>
   );
@@ -55,7 +55,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   key={rne}
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-1.5 py-1.5 text-center sm:px-2"
                 >
-                  <div className="text-xs font-medium leading-tight text-muted-foreground sm:text-sm">
+                  <div className="text-xs font-medium leading-tight sm:text-sm">
                     {pick(rne, RASHI_COLUMNS_EN[i])}
                   </div>
                   <div
@@ -86,7 +86,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-2.5 py-2"
                 >
                   <div className="text-sm font-semibold text-foreground">{pick(PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}</div>
-                  <div className="mt-0.5 break-words font-mono text-xs tabular-nums text-muted-foreground sm:text-sm">
+                  <div className="mt-0.5 break-words font-mono text-xs tabular-nums sm:text-sm">
                     <span className="text-foreground">{isEn ? (cell.rashiEn ?? cell.rashiNe) : cell.rashiNe}</span> {cell.coords}
                   </div>
                 </div>
@@ -105,7 +105,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
       ) : null}
 
       {notes.length > 0 ? (
-        <ul className="w-full min-w-0 space-y-1.5 text-sm text-muted-foreground">
+        <ul className="w-full min-w-0 space-y-1.5 text-sm">
           {notes.map((n) => (
             <li key={`${n.kind}-${n.text}`} className="break-words">
               <span className="font-medium text-foreground">{pick(n.text, n.textEn ?? n.text)}</span>

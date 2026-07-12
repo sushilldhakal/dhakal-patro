@@ -52,7 +52,7 @@ export function ResetPassword() {
       <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center px-4 text-center">
         <CheckCircle2 className="size-12 text-emerald-500" />
         <h1 className="mt-4 text-xl font-bold text-foreground">Password updated</h1>
-        <p className="mt-1 text-sm text-muted-foreground">You can now sign in with your new password.</p>
+        <p className="mt-1 text-sm">You can now sign in with your new password.</p>
       </div>
     );
   }
@@ -60,10 +60,10 @@ export function ResetPassword() {
   return (
     <div className="mx-auto flex min-h-[50vh] max-w-md flex-col justify-center px-4">
       <h1 className="text-xl font-bold text-foreground">Set a new password</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Choose a strong password for your account.</p>
+      <p className="mt-1 text-sm">Choose a strong password for your account.</p>
 
       {token === null ? (
-        <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mt-6 flex items-center gap-2 text-sm">
           <Loader2 className="size-4 animate-spin" /> Loading…
         </div>
       ) : (
@@ -99,7 +99,7 @@ export function ResetPassword() {
           <Button type="submit" size="lg" disabled={busy} className="mt-1">
             {busy ? "Updating…" : "Update password"}
           </Button>
-          <Link to="/" className="text-center text-sm text-muted-foreground hover:text-foreground">
+          <Link to="/" className="text-center text-sm hover:text-foreground">
             Back to home
           </Link>
         </form>

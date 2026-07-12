@@ -62,7 +62,7 @@ export function ShantiVidhi() {
         <header className="flex items-center gap-1.5 border-b border-border px-4 py-3">
           <UserSearch className="h-4 w-4 text-secondary" />
           <h2 className="text-sm font-semibold text-foreground">{t("shanti_vidhi.birth_section")}</h2>
-          <span className="ml-auto text-[11px] text-muted-foreground">{t("shanti_vidhi.birth_meta")}</span>
+          <span className="ml-auto text-sm">{t("shanti_vidhi.birth_meta")}</span>
         </header>
 
         <div className="space-y-4 p-4">

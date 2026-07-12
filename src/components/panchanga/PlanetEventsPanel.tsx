@@ -110,17 +110,17 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
       </div>
 
       {isLoading && (
-        <div className="px-4 py-6 text-sm text-muted-foreground">{pick("लोड हुँदै…", "Loading…")}</div>
+        <div className="px-4 py-6 text-sm">{pick("लोड हुँदै…", "Loading…")}</div>
       )}
 
       {isError && (
-        <div className="px-4 py-6 text-sm text-muted-foreground">
+        <div className="px-4 py-6 text-sm">
           {pick("ग्रह-गोचर लोड गर्न सकिएन।", "Could not load planetary events.")}
         </div>
       )}
 
       {!isLoading && !isError && events.length === 0 && (
-        <div className="px-4 py-6 text-sm text-muted-foreground">
+        <div className="px-4 py-6 text-sm">
           {pick("कुनै आगामी गोचर छैन।", "No upcoming transits.")}
         </div>
       )}
@@ -132,16 +132,16 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
               key={e.key}
               className="flex items-center gap-2.5 border-b border-border py-2 last:border-b-0"
             >
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/11 text-[15px] text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] dark:text-accent">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/11 text-md text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] dark:text-accent">
                 {e.symbol}
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[13px] font-semibold">{pick(e.ne, e.en)}</span>
-                <span className="text-[13px] text-muted-foreground font-semibold">
+                <span className="text-sm font-semibold">{pick(e.ne, e.en)}</span>
+                <span className="text-sm font-semibold">
                   <span className="font-mono">{e.time}</span>
                 </span>
               </span>
-              <span className="whitespace-nowrap font-mono text-[11.5px] font-semibold text-muted-foreground">
+              <span className="whitespace-nowrap font-mono text-sm font-semibold">
                 {e.rel <= 0
                   ? pick("आज", "Today")
                   : pick(`${digits(e.rel)} दिन`, `${digits(e.rel)}d`)}

@@ -46,13 +46,13 @@ export function BsCalendarGrid({
               className="flex min-w-0 flex-col gap-px bg-surface-inset px-3 py-2 max-md:items-center max-md:px-0 max-md:py-1"
             >
               {lang === "en" ? (
-                <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{WEEKDAYS_EN[i]}</span>
+                <span className="text-xs font-medium uppercase tracking-widest">{WEEKDAYS_EN[i]}</span>
               ) : (
                 <>
                   <span className={cn("text-sm font-semibold max-md:hidden", weekend && "text-danger")}>{ne}</span>
                   <span
                     className={cn(
-                      "hidden text-center text-[12px] font-bold leading-tight tracking-tight max-md:block",
+                      "hidden text-center text-sm font-bold leading-tight tracking-tight max-md:block",
                       weekend && "text-danger",
                     )}
                   >
@@ -106,8 +106,8 @@ export function BsCalendarGrid({
                 {tithi ? (
                   <span
                     className={cn(
-                      "min-w-0 flex-1 truncate text-left text-[11px] font-semibold md:text-[12px] md:font-medium pt-1",
-                      isOutside ? "text-muted-foreground/60" : "text-muted-foreground",
+                      "min-w-0 flex-1 truncate text-left text-sm font-semibold md:text-sm md:font-medium pt-1",
+                      isOutside ? "" : "",
                     )}
                   >
                     {tithi}
@@ -122,8 +122,8 @@ export function BsCalendarGrid({
                 )}
                 <span
                   className={cn(
-                    "font-num shrink-0 text-right text-[10px] font-semibold md:text-[12px] md:font-medium pt-1",
-                    isOutside ? "text-muted-foreground/65" : "text-muted-foreground",
+                    "font-num shrink-0 text-right text-sm font-semibold md:text-sm md:font-medium pt-1",
+                    isOutside ? "" : "",
                   )}
                 >
                   {digits(fmtAdDay(day.date_ad))}
@@ -133,14 +133,14 @@ export function BsCalendarGrid({
               {/* Center: BS day number */}
               <span className="flex flex-1 flex-col items-center justify-center gap-0.5">
                 {isToday && (
-                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-bold leading-none tracking-wide text-secondary-foreground max-md:px-1 max-md:text-[8px]">
+                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-sm font-bold leading-none tracking-wide text-secondary-foreground max-md:px-1 max-md:text-sm">
                     {t("calendar.today_badge")}
                   </span>
                 )}
                 <span
                   className={cn(
-                    "font-num text-[1.75rem] font-semibold leading-none tracking-tight max-md:text-[1.5rem]",
-                    isOutside && "text-muted-foreground/75",
+                    "font-num text-md font-semibold leading-none tracking-tight max-md:text-sm",
+                    isOutside && "",
                     !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
                   )}
                 >
@@ -152,8 +152,8 @@ export function BsCalendarGrid({
               {mainFest && !isOutside ? (
                 <span
                   className={cn(
-                    "w-full truncate text-center text-[9px] font-semibold leading-tight md:text-[10.5px]",
-                    "max-md:whitespace-normal max-md:line-clamp-2 max-md:text-[9.5px] max-md:leading-[1.15]",
+                    "w-full truncate text-center text-sm font-semibold leading-tight md:text-sm",
+                    "max-md:whitespace-normal max-md:line-clamp-2 max-md:text-sm max-md:leading-[1.15]",
                     isPublicHoliday ? "text-danger" : "text-foreground",
                   )}
                 >

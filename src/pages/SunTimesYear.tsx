@@ -78,15 +78,15 @@ export function SunTimesYear() {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-1.5"
+            className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t("common.back_home")}
           </Link>
-          <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0">
+          <h1 className="text-xl font-bold leading-tight tracking-tight m-0">
             {t("sun_times.title")}
           </h1>
-          <div className="text-sm text-muted-foreground mt-1">
+          <div className="text-sm mt-1">
             {t("sun_times.subtitle", { year: toNepaliDigits(year) })}
             {" · "}
             <span className="inline-flex items-center gap-1">
@@ -119,17 +119,17 @@ export function SunTimesYear() {
       </div>
 
       <div className="mb-4 rounded-xl border border-border bg-secondary/4 p-3.5 shadow-xs shadow-ring-soft">
-        <p className="m-0 mb-3 text-[13px] font-medium leading-relaxed text-muted-foreground [&_strong]:font-extrabold [&_strong]:text-foreground">
+        <p className="m-0 mb-3 text-sm font-medium leading-relaxed [&_strong]:font-extrabold [&_strong]:text-foreground">
           <Trans i18nKey="sun_times.ayana_note" components={{ strong: <strong /> }} />
         </p>
         <div className="mb-3 overflow-x-auto">
-          <table className="w-full border-collapse text-[13px] font-medium">
+          <table className="w-full border-collapse text-sm font-medium">
             <thead>
               <tr>
-                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold text-muted-foreground">
+                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold">
                   {t("sun_times.col_ayana")}
                 </th>
-                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold text-muted-foreground">
+                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold">
                   {t("sun_times.col_sun_sign")}
                 </th>
               </tr>
@@ -153,7 +153,7 @@ export function SunTimesYear() {
         <Link
           to="/panchanga/year"
           search={{ year }}
-          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3.5 text-[13px] font-semibold text-foreground no-underline transition-colors hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary dark:hover:border-primary/35 dark:hover:bg-primary/10 dark:hover:text-primary"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3.5 text-sm font-semibold text-foreground no-underline transition-colors hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary dark:hover:border-primary/35 dark:hover:bg-primary/10 dark:hover:text-primary"
         >
           <CalendarRange className="h-4 w-4 shrink-0" />
           {t("sun_times.year_wheel_link")}

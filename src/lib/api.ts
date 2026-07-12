@@ -686,13 +686,14 @@ export interface SaitResponse {
 
 export const saitKeys = {
   years: () => ["sait", "years"] as const,
-  entries: (year: number, category: string) => ["sait", year, category] as const,
+  entries: (year: number, category: string, location?: LocationParams) =>
+    ["sait", year, category, locationCacheKey(location)] as const,
 };
 
 export const fetchSaitYears = () => get<{ years: number[] }>("/nepal/sait/years");
 
-export const fetchSait = (year: number, category: string) =>
-  get<SaitResponse>(`/nepal/sait/${year}/${category}`);
+export const fetchSait = (year: number, category: string, location?: LocationParams) =>
+  get<SaitResponse>(appendLocation(`/nepal/sait/${year}/${category}`, location));
 
 export interface SaitAboutCategory {
   id: string;

@@ -21,7 +21,7 @@ import type { ShadbalaResponse, VimshottariResponse } from "@/lib/api";
 import { NAVAGRAHA_SHANTI, getGrahaShanti } from "@/lib/shanti/navagraha-shanti";
 import { useLocale } from "@/i18n/locale";
 
-const th = "whitespace-nowrap text-xs font-semibold text-muted-foreground";
+const th = "whitespace-nowrap text-xs font-semibold";
 
 /** Graha name (English / Vedic) → NAVAGRAHA_SHANTI key. */
 const LORD_KEY: Record<string, string> = {
@@ -54,7 +54,7 @@ function InfoTile({
     <div className="flex items-start gap-2.5 rounded-lg border border-border bg-card/40 p-3">
       <div className="mt-0.5 text-secondary">{icon}</div>
       <div className="min-w-0">
-        <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+        <div className="text-sm font-medium uppercase tracking-wide">{label}</div>
         <div className="text-sm font-semibold text-foreground">{value}</div>
       </div>
     </div>
@@ -76,14 +76,14 @@ function RecommendationCard({
   const graha = grahaKey ? getGrahaShanti(grahaKey) : undefined;
   return (
     <div className="rounded-xl border border-border bg-card/40 p-4">
-      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{heading}</div>
+      <div className="text-sm font-medium uppercase tracking-wide">{heading}</div>
       {graha ? (
         <>
           <div className="mt-1 flex items-center gap-2">
             <span className="text-xl" style={{ color: graha.colorHex }}>{graha.symbol}</span>
             <span className="text-lg font-bold text-foreground">{pick(graha.nameNe, graha.nameEn)}</span>
           </div>
-          {detailNe ? <p className="mt-0.5 text-xs text-muted-foreground">{detailNe}</p> : null}
+          {detailNe ? <p className="mt-0.5 text-xs">{detailNe}</p> : null}
           <button
             type="button"
             onClick={() => onSelect(graha.key)}
@@ -93,7 +93,7 @@ function RecommendationCard({
           </button>
         </>
       ) : (
-        <p className="mt-1 text-sm text-muted-foreground">—</p>
+        <p className="mt-1 text-sm">—</p>
       )}
     </div>
   );
@@ -185,7 +185,7 @@ export function ShantiVidhiPanel({
           />
         </div>
       )}
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
+      <p className="text-sm leading-relaxed">
         {pick(
           "गणना जन्म समयको ग्रहस्थिति (विंशोत्तरी महादशा) र ग्रह बल (षड्बल) मा आधारित छ। यो सामान्य मार्गदर्शन हो — विधिवत् उपायका लागि योग्य ज्योतिषीसँग परामर्श गर्नुहोस्।",
           "The calculation is based on the birth-time planetary positions (Vimshottari mahadasha) and planetary strength (Shadbala). This is general guidance — consult a qualified astrologer for formal remedies.",
@@ -231,13 +231,13 @@ export function ShantiVidhiPanel({
           </span>
           <div className="flex-1">
             <h2 className="text-lg font-bold text-foreground">{pick(`${graha.nameNe} शान्ति`, `${graha.nameEn} Shanti`)}</h2>
-            <p className="text-xs text-muted-foreground">{pick(graha.nameEn, graha.nameNe)}</p>
+            <p className="text-xs">{pick(graha.nameEn, graha.nameNe)}</p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1">
               <CalendarDays className="h-3.5 w-3.5" /> {pick(graha.vaaraNe, graha.vaaraEn)}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1">
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: graha.colorHex }} />
               {pick(graha.colorNe, graha.colorEn)}
             </span>
@@ -247,9 +247,9 @@ export function ShantiVidhiPanel({
         <div className="space-y-5 p-5">
           {/* mantra + japa */}
           <div className="rounded-xl border border-border bg-muted/30 p-4">
-            <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{pick("बीज मन्त्र", "Beeja Mantra")}</div>
+            <div className="mb-1 text-sm font-medium uppercase tracking-wide">{pick("बीज मन्त्र", "Beeja Mantra")}</div>
             <p className="text-lg font-semibold leading-relaxed text-foreground">{graha.beejMantra}</p>
-            <p className="mt-1.5 text-sm text-muted-foreground">
+            <p className="mt-1.5 text-sm">
               {pick(
                 <>जप संख्या: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> पटक</>,
                 <>Japa count: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> times</>,
@@ -259,8 +259,8 @@ export function ShantiVidhiPanel({
 
           {/* tiles */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <InfoTile icon={<TreePine className="h-4 w-4" />} label={pick("समिधा (हवन काठ)", "Samidha (homa wood)")} value={pick(<>{graha.samidhaNe} <span className="font-normal text-muted-foreground">· {graha.samidhaEn}</span></>, <>{graha.samidhaEn}</>)} />
-            <InfoTile icon={<Gem className="h-4 w-4" />} label={pick("रत्न", "Gem")} value={pick(<>{graha.gemNe} <span className="font-normal text-muted-foreground">· {graha.gemEn}</span></>, <>{graha.gemEn}</>)} />
+            <InfoTile icon={<TreePine className="h-4 w-4" />} label={pick("समिधा (हवन काठ)", "Samidha (homa wood)")} value={pick(<>{graha.samidhaNe} <span className="font-normal">· {graha.samidhaEn}</span></>, <>{graha.samidhaEn}</>)} />
+            <InfoTile icon={<Gem className="h-4 w-4" />} label={pick("रत्न", "Gem")} value={pick(<>{graha.gemNe} <span className="font-normal">· {graha.gemEn}</span></>, <>{graha.gemEn}</>)} />
             <InfoTile icon={<Sparkles className="h-4 w-4" />} label={pick("धातु", "Metal")} value={pick(graha.metalNe, graha.metalEn)} />
             <InfoTile icon={<Flame className="h-4 w-4" />} label={pick("अधिदेवता", "Deity")} value={pick(graha.adhidevataNe, graha.adhidevataEn)} />
           </div>
@@ -279,7 +279,7 @@ export function ShantiVidhiPanel({
             </div>
           </div>
 
-          <p className="rounded-lg border border-border bg-card/30 p-3 text-sm leading-relaxed text-muted-foreground">
+          <p className="rounded-lg border border-border bg-card/30 p-3 text-sm leading-relaxed">
             <span className="font-semibold text-foreground">{pick("उपयोग:", "Use:")}</span> {pick(graha.remedyNe, graha.remedyEn)}
           </p>
         </div>
@@ -313,21 +313,21 @@ export function ShantiVidhiPanel({
                     <span className="mr-1.5" style={{ color: g.colorHex }}>{g.symbol}</span>
                     {pick(g.nameNe, g.nameEn)}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">{pick(g.vaaraNe, g.vaaraEn)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{pick(g.vaaraNe, g.vaaraEn)}</TableCell>
                   <TableCell className="whitespace-nowrap">{g.beejMantra}</TableCell>
                   <TableCell className="whitespace-nowrap">{digits(g.japa)}</TableCell>
                   <TableCell className="whitespace-nowrap">{pick(g.samidhaNe, g.samidhaEn)}</TableCell>
                   <TableCell className="whitespace-nowrap">{pick(g.gemNe, g.gemEn)}</TableCell>
                   <TableCell className="whitespace-nowrap">{pick(g.metalNe, g.metalEn)}</TableCell>
                   <TableCell className="max-w-56">
-                    <span className="text-xs text-muted-foreground">{pick(g.daan, g.daanEn).join(", ")}</span>
+                    <span className="text-xs">{pick(g.daan, g.daanEn).join(", ")}</span>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
-        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-sm leading-relaxed">
           {pick(
             "सूचना: माथिका विवरण शास्त्रीय नवग्रह शान्ति परम्परामा आधारित छन्। रत्नधारण वा विधिवत् हवन गर्नुअघि योग्य ज्योतिषी/पुरोहितसँग परामर्श गर्नुहोस्।",
             "Note: the details above are based on the classical Navagraha Shanti tradition. Consult a qualified astrologer/priest before wearing gems or performing a formal homa.",

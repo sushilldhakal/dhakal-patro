@@ -27,7 +27,7 @@ export function PageHeader({
       <div className="mt-0.5">{icon}</div>
       <div>
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-sm mt-0.5">{subtitle}</p>}
       </div>
     </div>
   );

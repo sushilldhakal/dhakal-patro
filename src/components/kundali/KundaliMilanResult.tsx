@@ -45,7 +45,7 @@ function KutaDetailPanel({
       <p className="font-semibold text-foreground mb-2">
         {label ? (en ? label.en : label.ne) : kuta.id} {en ? "Kuta Details" : "कूट विवरण"}
       </p>
-      <p className="text-muted-foreground mb-3">
+      <p className="mb-3">
         {en ? label?.en : label?.ne} {en ? "Kuta Points" : "कूट अङ्क"}:{" "}
         <span className="font-semibold text-foreground">
           {formatObtained(kuta.obtained)}/{kuta.max}
@@ -53,15 +53,15 @@ function KutaDetailPanel({
       </p>
       <div className="grid gap-2 sm:grid-cols-2 mb-3">
         <div className="rounded-md bg-card px-3 py-2 border border-border/60">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{boyName}</p>
+          <p className="text-sm uppercase tracking-wider">{boyName}</p>
           <p className="font-semibold">{kuta.boyValue}</p>
         </div>
         <div className="rounded-md bg-card px-3 py-2 border border-border/60">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{girlName}</p>
+          <p className="text-sm uppercase tracking-wider">{girlName}</p>
           <p className="font-semibold">{kuta.girlValue}</p>
         </div>
       </div>
-      <p className="text-muted-foreground leading-relaxed">{en ? kuta.info : kuta.infoNe}</p>
+      <p className="leading-relaxed">{en ? kuta.info : kuta.infoNe}</p>
     </div>
   );
 }
@@ -92,7 +92,7 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
       <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wider">
               {t("milan.total_guna")}
             </p>
             <p className={cn("text-2xl font-bold mt-1", recClass)}>
@@ -102,18 +102,18 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
           <div className="text-right">
             <p className="text-4xl font-bold tabular-nums text-foreground">
               {formatObtained(result.totalObtained)}
-              <span className="text-lg text-muted-foreground font-medium"> / {result.totalMax}</span>
+              <span className="text-lg font-medium"> / {result.totalMax}</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("milan.guna")}</p>
+            <p className="text-xs mt-0.5">{t("milan.guna")}</p>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-3 text-sm">
           <span className="rounded-full border border-border px-3 py-1">
-            <span className="text-muted-foreground">{t("milan.boy")}:</span>{" "}
+            <span>{t("milan.boy")}:</span>{" "}
             <span className="font-semibold">{boyName}</span>
           </span>
           <span className="rounded-full border border-border px-3 py-1">
-            <span className="text-muted-foreground">{t("milan.girl")}:</span>{" "}
+            <span>{t("milan.girl")}:</span>{" "}
             <span className="font-semibold">{girlName}</span>
           </span>
         </div>
@@ -144,7 +144,7 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
                 ) : (
                   <>
                     {dosha.labelNe}{" "}
-                    <span className="text-muted-foreground font-normal">
+                    <span className="font-normal">
                       ({dosha.labelEn.replace(" Dosha", "")})
                     </span>
                   </>
@@ -190,7 +190,7 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
                   >
                     <TableCell className="py-2">
                       <ChevronRight
-                        className={cn("size-4 text-muted-foreground transition-transform", isOpen && "rotate-90")}
+                        className={cn("size-4 transition-transform", isOpen && "rotate-90")}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{label ? (en ? label.en : label.ne) : kuta.id}</TableCell>
@@ -200,7 +200,7 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
                     </TableCell>
                     <TableCell>{kuta.boyValue}</TableCell>
                     <TableCell>{kuta.girlValue}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell>
                       {en ? kuta.areaOfLife : kuta.areaOfLifeNe}
                     </TableCell>
                   </TableRow>
@@ -216,14 +216,14 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
             })}
           </TableBody>
         </Table>
-        <p className="px-4 py-2 text-[11px] text-muted-foreground border-t border-border">
+        <p className="px-4 py-2 text-sm border-t border-border">
           *{en ? "Max — Maximum Point · Obt — Obtained Point" : "अधिकतम — अधिकतम अङ्क · प्राप्त — प्राप्त अङ्क"}
         </p>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5">
         <h3 className="text-sm font-semibold text-foreground mb-3">{t("milan.notes_title")}</h3>
-        <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed list-disc pl-5">
+        <ul className="space-y-2 text-sm leading-relaxed list-disc pl-5">
           {(en ? result.notes : result.notesNe).map((note) => (
             <li key={note.slice(0, 40)}>{note}</li>
           ))}

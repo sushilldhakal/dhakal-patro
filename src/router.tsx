@@ -184,7 +184,7 @@ function RouteErrorFallback() {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
       <p className="text-lg font-semibold text-foreground">केही गडबड भयो</p>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm">
         Something went wrong. Reloading usually fixes this.
       </p>
       <button

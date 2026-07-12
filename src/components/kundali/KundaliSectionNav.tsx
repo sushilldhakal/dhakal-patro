@@ -93,14 +93,14 @@ export function KundaliSectionNav({
                   isChild ? "pl-8 pr-3" : "px-3",
                   active
                     ? "bg-secondary/12 text-secondary ring-1 ring-secondary/25"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    : "hover:bg-muted hover:text-foreground",
                 )
               : cn(
                   "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs whitespace-nowrap",
                   isChild && "ml-3 border-dashed",
                   active
                     ? "border-secondary/40 bg-secondary/12 text-secondary"
-                    : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
+                    : "border-border bg-card hover:bg-muted hover:text-foreground",
                 ),
           )}
           aria-current={active ? "page" : undefined}
@@ -130,7 +130,7 @@ export function KundaliSectionNav({
       )}
       aria-label={t("kundali.jump_to")}
     >
-      <p className="border-b border-border px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="border-b border-border px-4 py-3 text-sm font-semibold uppercase tracking-wider">
         {t("kundali.submenu_title")}
       </p>
       <ul className="flex flex-col gap-1 p-2">{items}</ul>

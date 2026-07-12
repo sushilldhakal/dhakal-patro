@@ -28,7 +28,7 @@ export const edOrbitDir =
 export const edOrbitDirArrow = "fill-[var(--tm-teal)]";
 
 export const edOrbitDirLabel =
-  "fill-[var(--tm-teal)] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-teal)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const edAxis =
   "stroke-[color-mix(in_srgb,var(--tm-gold)_42%,transparent)] [stroke-width:1.2] [stroke-dasharray:2_6]";
@@ -43,7 +43,7 @@ export const edEarthOrbitArrow =
   "fill-[color-mix(in_srgb,var(--tm-amber)_70%,transparent)]";
 
 export const edEarthOrbitLabel =
-  "fill-[color-mix(in_srgb,var(--tm-amber)_80%,var(--tm-ink-faint))] text-[11px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[color-mix(in_srgb,var(--tm-amber)_80%,var(--tm-ink-faint))] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const edRing =
   "fill-none stroke-[color-mix(in_srgb,var(--tm-teal)_36%,transparent)] [stroke-width:1.4]";
@@ -51,13 +51,13 @@ export const edRing =
 export const edDegtick = "stroke-[var(--tm-gold)]";
 
 export const edDeglabel =
-  "fill-[var(--tm-gold)] font-num text-[15px] font-bold";
+  "fill-[var(--tm-gold)] font-num text-md font-bold";
 
 export const edLens =
   "fill-[var(--tm-amber)] stroke-[color-mix(in_srgb,#000_30%,transparent)] [stroke-width:0.5]";
 
 export const edTnum =
-  "fill-[var(--tm-ink-faint)] font-num text-[13px] font-semibold";
+  "fill-[var(--tm-ink-faint)] font-num text-sm font-semibold";
 
 export const edCurband =
   "fill-none stroke-[var(--tm-gold)] [stroke-width:2]";
@@ -69,7 +69,7 @@ export const edArcCap =
   "fill-[color-mix(in_srgb,var(--tm-teal)_8%,var(--tm-card))] dark:fill-[#e7eef0]";
 
 export const edArcVal =
-  "fill-[var(--tm-teal)] font-num text-[30px] font-bold";
+  "fill-[var(--tm-teal)] font-num text-xl font-bold";
 
 export const edRmline =
   "stroke-[color-mix(in_srgb,var(--tm-ink)_40%,transparent)] [stroke-width:1]";
@@ -78,7 +78,7 @@ export const edRay =
   "stroke-[#ffce5a] [stroke-width:2.4] stroke-round opacity-80";
 
 export const edBodyLabel =
-  "fill-[var(--tm-ink-dim)] text-[15px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-dim)] text-md font-semibold [font-family:var(--pn-font)]";
 
 export const edTiltLabel =
   "fill-foreground text-sm font-semibold [font-family:var(--pn-font)] dark:fill-white";
@@ -98,7 +98,7 @@ export const edPaksha =
   "fill-[var(--tm-ink-faint)] text-sm font-semibold tracking-wide [font-family:var(--pn-font)]";
 
 export function edEndNe() {
-  return "fill-[var(--tm-gold)] text-[19px] font-bold [font-family:var(--pn-font)]";
+  return "fill-[var(--tm-gold)] text-md font-bold [font-family:var(--pn-font)]";
 }
 
 export function edEndEn() {
@@ -142,7 +142,7 @@ export const eclBodyLabel =
   "fill-[color-mix(in_srgb,var(--tm-ink)_72%,transparent)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const eclPlaneCaption =
-  "fill-[color-mix(in_srgb,var(--tm-ink)_58%,transparent)] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[color-mix(in_srgb,var(--tm-ink)_58%,transparent)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const eclNodeDot =
   "fill-[var(--tm-ink)] stroke-[var(--tm-card)] [stroke-width:2]";
@@ -159,10 +159,10 @@ export const eclNodeArrowHead =
   "fill-[color-mix(in_srgb,var(--tm-ink)_70%,transparent)]";
 
 export const eclNodeTitle =
-  "fill-[color-mix(in_srgb,var(--tm-ink)_88%,transparent)] text-[15px] font-bold [font-family:var(--pn-font)]";
+  "fill-[color-mix(in_srgb,var(--tm-ink)_88%,transparent)] text-md font-bold [font-family:var(--pn-font)]";
 
 export const eclNodeSym =
-  "fill-[var(--tm-amber)] text-[28px] font-extrabold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-amber)] text-lg font-extrabold [font-family:var(--pn-font)]";
 
 export const eclEarthGlow =
   "fill-[color-mix(in_srgb,var(--tm-teal)_12%,transparent)]";
@@ -177,10 +177,10 @@ export const eclMoonEclipsed =
   "[filter:drop-shadow(0_0_6px_color-mix(in_srgb,#e0473a_60%,transparent))]";
 
 export const eclStatus =
-  "text-[22px] font-extrabold [font-family:var(--pn-font)]";
+  "text-lg font-extrabold [font-family:var(--pn-font)]";
 
 export const eclStatusSub =
-  "fill-[var(--tm-ink-faint)] font-num text-[13px] font-semibold";
+  "fill-[var(--tm-ink-faint)] font-num text-sm font-semibold";
 
 export const eclTiltNote =
   "fill-[var(--tm-ink-faint)] text-xs font-medium [font-family:var(--pn-font)]";
@@ -281,10 +281,10 @@ export const motMoonSubmerged = "opacity-50";
 export const motMoonHalo = "fill-transparent";
 
 export const motMoonLabel =
-  "fill-[#d4e4ee] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[#d4e4ee] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const motLegendLabel =
-  "fill-[#9fb6d8] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[#9fb6d8] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const motSunBeam =
   "stroke-[color-mix(in_srgb,#ff4d6a_36%,transparent)] [stroke-width:34] stroke-round";
@@ -307,10 +307,10 @@ export const motMoonEclipsing =
   "[filter:drop-shadow(0_0_7px_color-mix(in_srgb,#e0473a_55%,transparent))]";
 
 export const motEclipseBanner =
-  "text-[21px] font-extrabold [font-family:var(--pn-font)]";
+  "text-lg font-extrabold [font-family:var(--pn-font)]";
 
 export const motSeasonBanner =
-  "fill-[#d4e4ee] text-[17px] font-bold [font-family:var(--pn-font)]";
+  "fill-[#d4e4ee] text-md font-bold [font-family:var(--pn-font)]";
 
 export function motOrbit(variant: "above" | "below" | "cross") {
   const m = {
@@ -390,13 +390,13 @@ export const solAntumbra =
 export const solUmbra = "fill-[color-mix(in_srgb,#11151b_88%,transparent)]";
 
 export const solLegendLabel =
-  "fill-[var(--tm-ink-faint)] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const solMoon =
   "fill-[#2b2f36] stroke-[color-mix(in_srgb,#fff_45%,transparent)] [stroke-width:1.5]";
 
 export const solMoonLabel =
-  "fill-[var(--tm-ink-dim)] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const solEarthGlow =
   "fill-[color-mix(in_srgb,var(--tm-teal)_18%,transparent)]";
@@ -410,7 +410,7 @@ export const solSpotAnti =
   "fill-[color-mix(in_srgb,#11151b_46%,transparent)] stroke-[#ffd24a] [stroke-width:1.5]";
 
 export const solBanner =
-  "text-[21px] font-extrabold [font-family:var(--pn-font)]";
+  "text-lg font-extrabold [font-family:var(--pn-font)]";
 
 export const solEyeFrame =
   "fill-[var(--tm-card)] stroke-[var(--tm-border)] [stroke-width:1.5]";
@@ -430,7 +430,7 @@ export const solEyeRim =
   "fill-none stroke-[var(--tm-border)] [stroke-width:2]";
 
 const SOL_EYE_STATUS =
-  "fill-[var(--tm-ink-dim)] text-[15px] font-bold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-dim)] text-md font-bold [font-family:var(--pn-font)]";
 
 export function solBannerType(type: "total" | "annular" | "partial") {
   const m = {
@@ -462,10 +462,10 @@ export const hoFocusAphelion =
   "stroke-[color-mix(in_srgb,var(--tm-teal)_40%,transparent)]";
 
 export const hoFocusLabel =
-  "fill-[var(--tm-ink-faint)] text-[11px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const hoOrbitDir =
-  "fill-[var(--tm-teal)] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-teal)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const hoMarkerDot =
   "fill-[var(--tm-teal)] stroke-[var(--tm-card)] [stroke-width:2]";
@@ -477,10 +477,10 @@ export const hoMarkerDetail =
   "fill-[var(--tm-ink-dim)] text-xs font-semibold [font-family:var(--pn-font)]";
 
 export const hoMarkerTag =
-  "fill-[var(--tm-amber)] text-[11px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-amber)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const hoMarkerEn =
-  "fill-[var(--tm-ink-faint)] text-[11px] font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]";
 
 export const hoSweep =
   "stroke-[var(--tm-amber)] [stroke-width:2.8] stroke-round opacity-[0.85]";
@@ -518,10 +518,10 @@ export const hoPoleLabel =
   "fill-[var(--tm-amber)] text-xs font-semibold [font-family:var(--pn-font)]";
 
 export const hoCalloutNe =
-  "fill-[var(--tm-ink)] text-[13px] font-bold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink)] text-sm font-bold [font-family:var(--pn-font)]";
 
 export const hoCalloutSub =
-  "fill-[var(--tm-ink-faint)] font-num text-[11px] font-semibold";
+  "fill-[var(--tm-ink-faint)] font-num text-sm font-semibold";
 
 // ── Earth globe ─────────────────────────────────────────────────
 
@@ -564,7 +564,7 @@ export const semMonthTick =
   "stroke-[var(--tm-gold)] [stroke-width:1] opacity-[0.75]";
 
 export const semMonthLabel =
-  "fill-[var(--tm-ink-faint)] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const semMoonOrbit =
   "fill-none stroke-[color-mix(in_srgb,var(--tm-teal)_32%,transparent)] [stroke-width:1.1] [stroke-dasharray:3_4]";
@@ -573,7 +573,7 @@ export const semMoonOrbitGuide =
   "stroke-[color-mix(in_srgb,var(--tm-teal)_18%,transparent)] [stroke-width:0.9] [stroke-dasharray:2_6] opacity-50";
 
 export const semMoonLabel =
-  "fill-[var(--tm-ink-faint)] font-num text-[10px] font-semibold";
+  "fill-[var(--tm-ink-faint)] font-num text-sm font-semibold";
 
 export const semRadiusLine =
   "stroke-[color-mix(in_srgb,var(--tm-ink)_16%,transparent)] [stroke-width:1] [stroke-dasharray:2_6]";
@@ -593,7 +593,7 @@ export const semGridNakLine =
   "stroke-[color-mix(in_srgb,var(--tm-teal)_22%,transparent)] [stroke-width:0.65] [stroke-dasharray:2_4]";
 
 export const semGridRashiLabel =
-  "fill-[var(--tm-ink-faint)] text-[11px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const semGridNakLabel =
   "fill-[color-mix(in_srgb,var(--tm-teal)_75%,var(--tm-ink-faint))] text-[8.5px] font-semibold [font-family:var(--pn-font)]";
@@ -627,7 +627,7 @@ export function semMoonLabelKey(key?: boolean) {
   return cn(
     semMoonLabel,
     key &&
-      "fill-[var(--tm-teal)] text-[10.5px] font-bold [font-family:var(--pn-font)]",
+      "fill-[var(--tm-teal)] text-sm font-bold [font-family:var(--pn-font)]",
   );
 }
 
@@ -678,10 +678,10 @@ export const tmNewmoon =
 export const tmDate = "fill-[var(--tm-ink)] font-num text-sm font-bold";
 
 export const tmDateSub =
-  "fill-[var(--tm-ink-faint)] text-[11px] font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]";
 
 export const tmTlCap =
-  "fill-[var(--tm-ink-dim)] text-[13px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const tmTravel =
   "stroke-[color-mix(in_srgb,var(--tm-ink)_30%,transparent)] [stroke-width:1.4]";
@@ -690,16 +690,16 @@ export const tmTravelHead =
   "fill-[color-mix(in_srgb,var(--tm-ink)_40%,transparent)]";
 
 export const tmTrackLabel =
-  "fill-[var(--tm-ink)] text-[15px] font-bold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink)] text-md font-bold [font-family:var(--pn-font)]";
 
 export const tmTrackSub =
-  "fill-[var(--tm-ink-faint)] text-[12.5px] font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]";
 
 export const tmSolarBand =
   "fill-[color-mix(in_srgb,var(--tm-gold)_16%,transparent)] stroke-[color-mix(in_srgb,var(--tm-gold)_42%,transparent)] [stroke-width:1.2]";
 
 export const tmSegSym =
-  "fill-[var(--tm-gold)] text-[17px] font-normal [font-family:var(--pn-font)]";
+  "fill-[var(--tm-gold)] text-md font-normal [font-family:var(--pn-font)]";
 
 export const tmVline =
   "stroke-[color-mix(in_srgb,var(--tm-gold)_45%,transparent)] [stroke-width:1] [stroke-dasharray:3_4]";
@@ -730,7 +730,7 @@ export function tmBandNo(hot?: boolean) {
 
 export function tmBandName(hot?: boolean) {
   return cn(
-    "fill-[var(--tm-ink-dim)] text-[13px] font-semibold [font-family:var(--pn-font)]",
+    "fill-[var(--tm-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]",
     hot && "fill-[var(--tm-amber)]",
   );
 }
@@ -752,7 +752,7 @@ export function tmSegName(adhik?: boolean) {
 
 export function tmSegTag(adhik?: boolean) {
   return cn(
-    "fill-[var(--tm-ink-faint)] text-[11px] font-medium [font-family:var(--pn-font)]",
+    "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]",
     adhik &&
       "fill-[color-mix(in_srgb,var(--tm-amber)_80%,white_10%)] font-semibold",
   );

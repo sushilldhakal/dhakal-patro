@@ -47,9 +47,9 @@ import { WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 
 function DetailTraitRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline gap-1 min-w-[9rem] text-[13px] leading-snug">
-      <span className="text-muted-foreground shrink-0">{label}</span>
-      <span className="text-muted-foreground/40 shrink-0">:</span>
+    <div className="flex items-baseline gap-1 min-w-[9rem] text-sm leading-snug">
+      <span className="shrink-0">{label}</span>
+      <span className="shrink-0">:</span>
       <span className="font-semibold text-foreground">{value}</span>
     </div>
   );
@@ -57,11 +57,11 @@ function DetailTraitRow({ label, value }: { label: string; value: string }) {
 function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-xl border border-border/80 bg-card px-3.5 py-3 min-w-0 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_5%,transparent)]">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 truncate">
+      <p className="text-sm font-semibold uppercase tracking-wider mb-1 truncate">
         {label}
       </p>
       <p className="text-base font-bold text-foreground leading-tight">{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+      {sub && <p className="text-xs mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -305,8 +305,8 @@ export function KundaliView({
 
   if (!detail || !data) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
-        <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground animate-pulse" />
+      <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm">
+        <Clock className="mx-auto mb-3 h-8 w-8 animate-pulse" />
         {t("kundali.computing")}
       </div>
     );
@@ -319,20 +319,20 @@ export function KundaliView({
         <section className="rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
         <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
           <div className="flex-1 px-5 py-4 border-b lg:border-b-0 border-border bg-secondary/[0.09] dark:bg-secondary/20">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+            <p className="text-sm font-semibold uppercase tracking-wider mb-1.5">
               {pick("जन्म समय · Birth moment", "Birth moment")}
             </p>
             <p className="text-2xl font-bold text-foreground font-[family-name:var(--pn-num)] leading-tight">
               {birthBsLabel}
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
                 {locationLabel}
                 {effectiveTimezone ? ` · ${effectiveTimezone}` : ""}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
-                <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <Clock className="w-3.5 h-3.5 shrink-0" />
                 {digits(clock)}
               </span>
             </div>
@@ -341,17 +341,17 @@ export function KundaliView({
           {lagna && (
             <div className="flex-1 px-5 py-4 flex flex-col justify-center min-w-[200px]">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="text-sm font-semibold uppercase tracking-wider">
                   {pick("लग्न · Lagna", "Lagna")}
                 </p>
-                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
+                <span className="text-sm font-medium bg-muted px-2 py-0.5 rounded-full shrink-0">
                   {ayanamshaInfo.labelNe}
                 </span>
               </div>
               <p className="text-2xl font-bold text-foreground">
                 {lagna.nameNe}
                 {lagna.degree && (
-                  <span className="text-base font-normal text-muted-foreground ml-2 font-mono">
+                  <span className="text-base font-normal ml-2 font-mono">
                     {lagna.degree}°
                   </span>
                 )}
@@ -366,10 +366,10 @@ export function KundaliView({
       {showSection("kundali-overview") && hideBirthSummary && (panchangSummary || lagna) && (
         <div className="rounded-2xl border border-secondary/25 bg-gradient-to-br from-secondary/[0.08] to-card p-4 sm:p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)]">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-sm font-semibold uppercase tracking-wider">
               {pick("जन्म पञ्चाङ्ग", "Birth panchanga")}
             </p>
-            <span className="text-[11px] font-medium text-muted-foreground bg-card border border-border px-2.5 py-1 rounded-full shrink-0">
+            <span className="text-sm font-medium bg-card border border-border px-2.5 py-1 rounded-full shrink-0">
               {ayanamshaInfo.labelNe}
             </span>
           </div>
@@ -471,12 +471,12 @@ export function KundaliView({
 
           {janmaAvakahada ? (
             <div className="mt-4 pt-4 border-t border-border/70">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              <p className="text-sm font-semibold uppercase tracking-wider mb-2">
                 {pick("अवकहडा", "Avakahada")}
-                <span className="mx-1.5 font-normal text-muted-foreground/50">·</span>
+                <span className="mx-1.5 font-normal">·</span>
                 <span className="normal-case tracking-normal font-semibold text-foreground">
                   {pickBi(janmaAvakahada.nakshatra)}
-                  <span className="mx-1 text-muted-foreground/40">·</span>
+                  <span className="mx-1">·</span>
                   {pick(`पद ${digits(janmaAvakahada.pada)}`, `Pada ${digits(janmaAvakahada.pada)}`)}
                 </span>
               </p>
@@ -546,7 +546,7 @@ export function KundaliView({
             />
             {detail.upagrahas.length > 0 && (
               <div className="border-t border-border">
-                <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider">
                   {pick("उपग्रह", "Upagraha")}
                 </p>
                 <UpagrahaTable upagrahas={detail.upagrahas} />
@@ -598,7 +598,7 @@ export function KundaliView({
           {detail.bhavaBala ? (
             <BhavaBalaCard data={detail.bhavaBala} />
           ) : (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-8 text-center text-sm">
               {t("kundali.section_unavailable")}
             </p>
           )}
@@ -613,7 +613,7 @@ export function KundaliView({
           {detail.ashtakavarga ? (
             <AshtakavargaCard data={detail.ashtakavarga} />
           ) : (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-8 text-center text-sm">
               {t("kundali.section_unavailable")}
             </p>
           )}
@@ -624,7 +624,7 @@ export function KundaliView({
         <div id="kundali-shanti" className="scroll-mt-24">
         <PanchangaSection titleNe="शान्ति विधि" titleEn="Navagraha Shanti">
           <div className="p-4">
-            <div className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div className="mb-3 flex items-center gap-1.5 text-sm">
               <Flame className="h-4 w-4 text-secondary" />
               {pick(
                 "यस कुण्डलीको दशा र ग्रहबल अनुसार सुझाव गरिएको नवग्रह शान्ति।",

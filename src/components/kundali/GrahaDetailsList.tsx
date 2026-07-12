@@ -28,8 +28,8 @@ type Row = VargaChartEntry & {
   rulesBhavas: number[];
 };
 
-const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const td = "px-2.5 py-2 text-[12.5px]";
+const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
+const td = "px-2.5 py-2 text-sm";
 
 export type GrahaDetailsListProps = {
   division: number;
@@ -126,7 +126,7 @@ export function GrahaDetailsList({
                   {name}
                   {row.retrograde && (
                     <span
-                      className="inline-flex items-center gap-0.5 text-[9px] font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
+                      className="inline-flex items-center gap-0.5 text-sm font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
                       title={pick("वक्री", "Retrograde")}
                     >
                       <RotateCcw className="size-2.5" aria-hidden />
@@ -135,7 +135,7 @@ export function GrahaDetailsList({
                   )}
                 </span>
               </TableCell>
-              <TableCell className={cn(td, "font-mono tabular-nums text-muted-foreground")}>
+              <TableCell className={cn(td, "font-mono tabular-nums")}>
                 <span className="text-foreground font-semibold">
                   {digits(String(row.dms.deg).padStart(2, "0"))}°
                 </span>{" "}
@@ -148,17 +148,17 @@ export function GrahaDetailsList({
               </TableCell>
               <TableCell className={td}>
                 {nakName}
-                <span className="text-muted-foreground"> ({digits(row.pada)})</span>
+                <span> ({digits(row.pada)})</span>
               </TableCell>
               <TableCell className={td}>
                 {grahaName(row.nakshatraLord)}
-                <span className="text-muted-foreground/60 mx-1">/</span>
+                <span className="mx-1">/</span>
                 {grahaName(row.subLord)}
               </TableCell>
               <TableCell className={td}>
                 {grahaName(row.ownerKey)}
                 {row.ownerBhava != null && (
-                  <span className="text-muted-foreground">
+                  <span>
                     {" "}
                     {pick(`(भाव ${digits(row.ownerBhava)})`, `(bhava ${digits(row.ownerBhava)})`)}
                   </span>

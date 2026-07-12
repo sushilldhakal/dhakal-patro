@@ -143,7 +143,7 @@ function DataTable<T>({
                   key={h.id}
                   onClick={h.column.getToggleSortingHandler()}
                   className={cn(
-                    "text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap",
+                    "text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap",
                     h.column.getCanSort() && "cursor-pointer select-none hover:text-foreground"
                   )}
                 >
@@ -163,7 +163,7 @@ function DataTable<T>({
         <tbody>
           {table.getRowModel().rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="text-center py-8 text-muted-foreground">
+              <td colSpan={columns.length} className="text-center py-8">
                 {emptyMessage}
               </td>
             </tr>
@@ -223,7 +223,7 @@ export function Holidays() {
 
       {/* Year picker */}
       <div className="flex items-center gap-3 flex-wrap">
-        <label className="text-sm font-medium text-muted-foreground">{t("holidays.bs_year")}</label>
+        <label className="text-sm font-medium">{t("holidays.bs_year")}</label>
         <input
           type="number"
           value={year}
@@ -232,7 +232,7 @@ export function Holidays() {
           onChange={e => setYear(Number(e.target.value))}
           className="w-28 bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs">
           {(tab === "holidays" ? holidaysQ.data : festivalsQ.data)?.gregorian_range
             ? `(${(tab === "holidays" ? holidaysQ.data : festivalsQ.data)!.gregorian_range!.start} – ${(tab === "holidays" ? holidaysQ.data : festivalsQ.data)!.gregorian_range!.end})`
             : ""}
@@ -252,13 +252,13 @@ export function Holidays() {
               "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
               tab === tItem.id
                 ? "border-secondary text-secondary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                : "border-transparent hover:text-foreground"
             )}
           >
             <tItem.icon className="w-4 h-4" />
             {t(tItem.labelKey)}
             {tItem.count > 0 && (
-              <span className="bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded-full">
+              <span className="bg-muted text-xs px-1.5 py-0.5 rounded-full">
                 {formatLocaleDigits(tItem.count)}
               </span>
             )}
@@ -268,7 +268,7 @@ export function Holidays() {
 
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" />
         <input
           value={filter}
           onChange={e => setFilter(e.target.value)}

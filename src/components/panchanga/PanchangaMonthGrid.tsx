@@ -117,7 +117,7 @@ export function PanchangaMonthGrid({
         </div>
       )}
       {isInstant && (
-        <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border">
+        <div className="px-3 py-2 text-xs border-b border-border">
           {pick("प्रत्येक दिन ", "Each day at ")}
           <span className="font-mono font-semibold text-foreground tabular-nums">
             {digits(clock)}
@@ -135,7 +135,7 @@ export function PanchangaMonthGrid({
             >
               <span
                 className={cn(
-                  "truncate text-center text-[10px] font-semibold leading-tight sm:text-[11px]",
+                  "truncate text-center text-sm font-semibold leading-tight sm:text-sm",
                   weekend && "text-danger",
                 )}
               >
@@ -162,43 +162,43 @@ export function PanchangaMonthGrid({
                 onClick={() => onPickDay(ad)}
               >
                 {/* Top: tithi — always visible; wraps on narrow cells */}
-                <p className="m-0 w-full text-center text-[10px] font-semibold leading-snug text-foreground line-clamp-2 max-md:line-clamp-none sm:text-xs sm:line-clamp-1 sm:truncate">
+                <p className="m-0 w-full text-center text-sm font-semibold leading-snug text-foreground line-clamp-2 max-md:line-clamp-none sm:text-xs sm:line-clamp-1 sm:truncate">
                   {formatTithiWithPaksha(day, isEn)}
                 </p>
-                <p className="m-0 w-full text-center text-[10px] font-semibold leading-tight text-panchang dark:text-accent sm:truncate sm:text-[11px]">
+                <p className="m-0 w-full text-center text-sm font-semibold leading-tight text-panchang dark:text-accent sm:truncate sm:text-sm">
                   {getMonthDayNakshatra(day, lang) ?? "—"}
                 </p>
 
                 {/* Middle: sunrise · day · sunset */}
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-1 py-0.5 max-md:flex-none max-md:flex-col max-md:justify-center max-md:gap-0.5">
-                  <span className="w-[28%] min-w-0 shrink-0 font-mono text-[11px] leading-none tabular-nums text-muted-foreground max-md:hidden">
+                  <span className="w-[28%] min-w-0 shrink-0 font-mono text-sm leading-none tabular-nums max-md:hidden">
                     {day.sunrise ? digits(day.sunrise) : "—"}
                   </span>
 
                   <div className="flex min-w-0 flex-1 flex-col items-center justify-center px-0.5 max-md:flex-none">
                     <div className="flex flex-col items-center max-md:flex-row max-md:items-baseline max-md:gap-1">
-                      <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-[22px]">
+                      <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-lg">
                         {digits(day.day)}
                       </span>
-                      <span className="mt-0.5 font-mono text-[10px] leading-none text-muted-foreground sm:text-[11px] max-md:mt-0">
+                      <span className="mt-0.5 font-mono text-sm leading-none sm:text-sm max-md:mt-0">
                         {ad.getDate()}
                       </span>
                     </div>
                   </div>
 
-                  <span className="w-[28%] min-w-0 shrink-0 text-right font-mono text-[11px] leading-none tabular-nums text-muted-foreground max-md:hidden">
+                  <span className="w-[28%] min-w-0 shrink-0 text-right font-mono text-sm leading-none tabular-nums max-md:hidden">
                     {day.sunset ? digits(day.sunset) : "—"}
                   </span>
 
                   {/* Mobile-only sunrise/sunset — stacked when space is tight */}
-                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold leading-tight tabular-nums text-muted-foreground max-md:flex">
+                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-mono text-sm font-bold leading-tight tabular-nums max-md:flex">
                     <span className="whitespace-nowrap">{day.sunrise ? digits(day.sunrise) : "—"}</span>
                     <span className="whitespace-nowrap">{day.sunset ? digits(day.sunset) : "—"}</span>
                   </div>
                 </div>
 
                 {/* Bottom: rashi · yoga · karana */}
-                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-[11px] font-bold leading-tight sm:text-[11px] max-md:grid-cols-1 max-md:gap-px">
+                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-sm font-bold leading-tight sm:text-sm max-md:grid-cols-1 max-md:gap-px">
                   <span className="text-center font-bold text-panchang dark:text-accent sm:truncate">
                     {getMonthDayChandraRashi(day, lang) ?? "—"}
                   </span>
@@ -214,7 +214,7 @@ export function PanchangaMonthGrid({
                   <span
                     className={cn(
                       "max-w-full truncate rounded-full px-1 py-0.5 text-xs font-semibold self-start",
-                      "max-md:w-full max-md:self-center max-md:py-px max-md:text-[8px] max-md:leading-tight",
+                      "max-md:w-full max-md:self-center max-md:py-px max-md:text-sm max-md:leading-tight",
                       "text-panchang text-foreground dark:text-accent"
                     )}
                   >

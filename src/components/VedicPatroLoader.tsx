@@ -26,7 +26,7 @@ export function VedicPatroLoader({
         className="shrink-0 rounded-[22%] shadow-md"
         aria-hidden
       />
-      {shown ? <p className="text-sm text-muted-foreground">{shown}</p> : null}
+      {shown ? <p className="text-sm">{shown}</p> : null}
     </div>
   );
 }

@@ -51,34 +51,34 @@ export const wLabel =
   "fill-[var(--w-ink)] font-semibold [font-family:var(--pn-font)]";
 
 export const wMonthGreg =
-  "fill-[var(--w-ink-faint)] text-[13px] font-semibold tracking-[0.04em] [font-family:var(--pn-font)]";
+  "fill-[var(--w-ink-faint)] text-sm font-semibold tracking-[0.04em] [font-family:var(--pn-font)]";
 
 export function wMonthNe(now?: boolean) {
   return cn(
     "fill-[var(--w-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]",
-    now && "fill-[var(--w-accent)] text-[15px] font-extrabold",
+    now && "fill-[var(--w-accent)] text-md font-extrabold",
   );
 }
 
 export function wNakName(sel?: boolean) {
   return cn(
-    "fill-[var(--w-ink)] text-[13px] font-semibold [font-family:var(--pn-font)]",
+    "fill-[var(--w-ink)] text-sm font-semibold [font-family:var(--pn-font)]",
     sel && "fill-[var(--w-accent)]",
   );
 }
 
 export function wRashiName(sel?: boolean) {
   return cn(
-    "fill-[var(--w-ink)] text-[13px] font-semibold [font-family:var(--pn-font)]",
+    "fill-[var(--w-ink)] text-sm font-semibold [font-family:var(--pn-font)]",
     sel && "fill-[var(--w-accent)]",
   );
 }
 
 export const wPadaNum =
-  "fill-[var(--w-ink-dim)] text-[9px] font-medium [font-family:var(--pn-num)]";
+  "fill-[var(--w-ink-dim)] text-sm font-medium [font-family:var(--pn-num)]";
 
 export const wPadaAkshar =
-  "fill-[var(--w-ink-dim)] text-[10px] font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--w-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const wRashiRay =
   "stroke-[var(--w-sep-soft)] [stroke-width:0.9] opacity-90 pointer-events-none";
@@ -88,14 +88,14 @@ export const wCoreSep =
 
 export function wTwNum(sel?: boolean) {
   return cn(
-    "fill-[var(--w-ink-faint)] text-[10px] font-semibold [font-family:var(--pn-num)]",
+    "fill-[var(--w-ink-faint)] text-sm font-semibold [font-family:var(--pn-num)]",
     sel && "fill-[var(--w-accent)]",
   );
 }
 
 export function wTwName(sel?: boolean) {
   return cn(
-    "fill-[var(--w-ink)] text-[11px] font-semibold [font-family:var(--pn-font)] [paint-order:stroke_fill] stroke-[rgba(0,0,0,0.55)] [stroke-width:0.4px]",
+    "fill-[var(--w-ink)] text-sm font-semibold [font-family:var(--pn-font)] [paint-order:stroke_fill] stroke-[rgba(0,0,0,0.55)] [stroke-width:0.4px]",
     sel && "fill-[var(--w-accent)] stroke-[rgba(0,0,0,0.7)]",
   );
 }
@@ -105,20 +105,20 @@ export const wTwPaksha =
 
 export function wKarLbl(sel?: boolean) {
   return cn(
-    "fill-[rgba(0,0,0,0.82)] text-[10px] font-bold [font-family:var(--pn-font)] [paint-order:stroke_fill] stroke-[rgba(255,255,255,0.55)] [stroke-width:0.4px]",
+    "fill-[rgba(0,0,0,0.82)] text-sm font-bold [font-family:var(--pn-font)] [paint-order:stroke_fill] stroke-[rgba(255,255,255,0.55)] [stroke-width:0.4px]",
     sel && "fill-[var(--w-accent)] stroke-[rgba(0,0,0,0.55)]",
   );
 }
 
 export function wYogaLbl(sel?: boolean) {
   return cn(
-    "fill-[#b09dd4] text-[10px] font-semibold [font-family:var(--pn-font)]",
+    "fill-[#b09dd4] text-sm font-semibold [font-family:var(--pn-font)]",
     sel && "fill-[#e0d0ff]",
   );
 }
 
 export const wYear =
-  "fill-[var(--w-accent)] text-[22px] font-bold tracking-[0.02em] [font-family:var(--pn-num)]";
+  "fill-[var(--w-accent)] text-lg font-bold tracking-[0.02em] [font-family:var(--pn-num)]";
 
 export const wRashiGlyph = "fill-[var(--w-ink)] font-normal";
 

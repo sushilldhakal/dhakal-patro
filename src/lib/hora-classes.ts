@@ -48,16 +48,16 @@ export const horaCompassNep =
   "fill-[rgba(236,240,247,0.78)] text-xs font-normal italic [font-family:var(--pn-font)]";
 
 export const horaCompassEn =
-  "fill-[var(--hora-ink-faint)] text-[10px] font-semibold uppercase tracking-[0.14em] [font-family:var(--pn-font)]";
+  "fill-[var(--hora-ink-faint)] text-sm font-semibold uppercase tracking-[0.14em] [font-family:var(--pn-font)]";
 
 export const horaHubDay =
   "fill-[var(--hora-ink)] text-base font-semibold [font-family:var(--pn-font)]";
 
 export const horaHubRom =
-  "fill-[var(--hora-ink-faint)] text-[9px] font-semibold uppercase tracking-[0.18em] [font-family:var(--pn-font)]";
+  "fill-[var(--hora-ink-faint)] text-sm font-semibold uppercase tracking-[0.18em] [font-family:var(--pn-font)]";
 
 export const horaHubNum =
-  "fill-[var(--hora-ink-faint)] font-num text-[10px] font-medium tracking-widest [font-family:var(--pn-num)]";
+  "fill-[var(--hora-ink-faint)] font-num text-sm font-medium tracking-widest [font-family:var(--pn-num)]";
 
 export const horaHubRuler =
   "text-2xl font-bold [font-family:var(--pn-font)]";
@@ -67,10 +67,10 @@ export const horaStatusBar =
   "pointer-events-none absolute top-2 left-1/2 z-10 grid w-[min(300px,calc(100%-3rem))] -translate-x-1/2 grid-cols-3 gap-1 rounded-xl border border-border/80 bg-card/92 px-3 py-2.5 text-center shadow-sm backdrop-blur-md dark:border-white/12 dark:bg-[rgba(13,16,22,0.88)]";
 
 export const horaStatusLabel =
-  "block text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground dark:text-[var(--hora-ink-faint)]";
+  "block text-sm font-semibold uppercase tracking-[0.14em] dark:text-[var(--hora-ink-faint)]";
 
 export const horaStatusVal =
-  "mt-0.5 block truncate text-[13px] font-bold leading-tight text-foreground dark:text-[var(--hora-ink)]";
+  "mt-0.5 block truncate text-sm font-bold leading-tight text-foreground dark:text-[var(--hora-ink)]";
 
 /** Fullscreen shell — portaled to document.body. */
 export const horaExpandedShell =

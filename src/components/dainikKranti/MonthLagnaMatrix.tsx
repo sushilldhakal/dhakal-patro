@@ -18,7 +18,7 @@ import {
   patroStickyHeadRow,
 } from "@/lib/patro-classes";
 
-const th = "whitespace-nowrap px-2 py-2.5 text-sm font-semibold text-muted-foreground";
+const th = "whitespace-nowrap px-2 py-2.5 text-sm font-semibold";
 const td = "whitespace-nowrap px-2 py-2 text-center font-mono text-sm tabular-nums";
 
 type Props = {
@@ -50,13 +50,13 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={15} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={15} className="py-8 text-center text-sm">
                 {pick("लोड हुँदैछ…", "Loading…")}
               </TableCell>
             </TableRow>
           ) : empty || rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={15} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={15} className="py-8 text-center text-sm">
                 {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
               </TableCell>
             </TableRow>
@@ -77,7 +77,7 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
                   >
                     {digits(row.day)}
                   </TableCell>
-                  <TableCell className={cn(td, "text-left text-muted-foreground")}>
+                  <TableCell className={cn(td, "text-left")}>
                     {pick(row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
                   </TableCell>
                   <TableCell className={cn(td, "text-amber-600 dark:text-amber-400")}>

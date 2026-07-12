@@ -199,12 +199,12 @@ function PanchangaAside({
               <div className="relative z-10">
               <div className="flex items-start justify-between gap-3.5">
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10.5px] font-semibold tracking-[0.16em] text-[rgba(245,245,241,0.55)]">
+                  <div className="text-sm font-semibold tracking-[0.16em] text-[rgba(245,245,241,0.55)]">
                     {isSelectedToday
                       ? `${t("panchanga.today_eyebrow").toUpperCase()} · ${t("today")}`
                       : (weekdayNe ?? "").toUpperCase()}
                   </div>
-                  <div className="mt-2.5 text-4xl font-bold leading-tight min-[1081px]:mt-2 min-[1081px]:text-[30px]">
+                  <div className="mt-2.5 text-4xl font-bold leading-tight min-[1081px]:mt-2 min-[1081px]:text-xl">
                     {displayHeroDate}
                   </div>
                   <div className="mt-0.5 text-sm font-medium text-[rgba(245,245,241,0.85)]">
@@ -367,7 +367,7 @@ export function Home() {
         }
       />
 
-      <p className="mt-7 text-center text-[11.5px] text-muted-foreground max-sm:px-2.5">{t("footer_note")}</p>
+      <p className="mt-7 text-center text-sm max-sm:px-2.5">{t("footer_note")}</p>
     </main>
   );
 }

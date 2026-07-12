@@ -56,7 +56,7 @@ export const KundaliProfilePicker = forwardRef<
 
   if (profiles === null) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-6 text-sm">
         <Loader2 className="size-4 animate-spin" /> Loading your profiles…
       </div>
     );
@@ -71,7 +71,7 @@ export const KundaliProfilePicker = forwardRef<
       {profiles.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center">
           <p className="text-sm font-medium text-foreground">No profiles yet</p>
-          <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+          <p className="mx-auto mt-1 max-w-md text-sm">
             Add your birth date, time and place to generate and save a kundali.
           </p>
           <Button className="mt-4" onClick={() => setDialog({ mode: "add" })}>
@@ -152,14 +152,14 @@ function ProfileCard({
             <span className="truncate">{p.full_name}</span>
             {p.is_default && <Star className="size-3.5 shrink-0 text-secondary" />}
           </div>
-          {p.gender && <span className="text-xs capitalize text-muted-foreground">{p.gender}</span>}
+          {p.gender && <span className="text-xs capitalize">{p.gender}</span>}
         </div>
         <Button variant="ghost" size="icon-sm" title="Edit profile" onClick={onEdit}>
           <Pencil className="size-4" />
         </Button>
       </div>
 
-      <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+      <div className="flex flex-col gap-1.5 text-xs">
         <Row icon={Clock} label="DOB">{dob}{p.birth_time ? ` · ${p.birth_time}` : ""}</Row>
         <Row icon={MapPin} label="Place">{place}</Row>
         <Row icon={Navigation} label="Lat/Long">{latLon}</Row>

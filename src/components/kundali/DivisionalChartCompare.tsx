@@ -81,7 +81,7 @@ function ChartSlot({
         )}
       >
         <label className="flex flex-col gap-1 min-w-[7.5rem] flex-1">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-sm font-semibold uppercase tracking-wider">
             {pick("आधार", "Anchor")}
           </span>
           <select
@@ -102,7 +102,7 @@ function ChartSlot({
           </select>
         </label>
         <label className="flex flex-col gap-1 min-w-[9rem] flex-1">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-sm font-semibold uppercase tracking-wider">
             {pick("वर्ग", "Chart")}
           </span>
           <select
@@ -125,16 +125,16 @@ function ChartSlot({
         <div className="text-center w-full border-b border-border/60 pb-2">
           <p className="text-sm font-bold text-foreground">
             {pick(anchorLabel.labelNe, anchorLabel.labelEn)}
-            <span className="text-muted-foreground font-normal mx-1.5">·</span>
+            <span className="font-normal mx-1.5">·</span>
             {varga.short}
-            <span className="text-muted-foreground font-normal mx-1">—</span>
+            <span className="font-normal mx-1">—</span>
             {pick(varga.labelNe, varga.labelEn)}
           </p>
         </div>
         {houses.length > 0 ? (
           <D1Chart houses={houses} />
         ) : (
-          <p className="text-sm text-muted-foreground py-8">
+          <p className="text-sm py-8">
             {pick("चक्र बनाउन डाटा अपुग।", "Not enough data for this chart.")}
           </p>
         )}
@@ -148,10 +148,10 @@ function ChartSlot({
                 type="button"
                 onClick={() => setTab("graha")}
                 className={cn(
-                  "px-3 py-1 rounded-[calc(var(--radius-lg)-2px)] text-[11px] font-semibold transition-colors",
+                  "px-3 py-1 rounded-[calc(var(--radius-lg)-2px)] text-sm font-semibold transition-colors",
                   tab === "graha"
                     ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    : "hover:text-foreground",
                 )}
               >
                 {pick("ग्रह", "Graha")}
@@ -160,18 +160,18 @@ function ChartSlot({
                 type="button"
                 onClick={() => setTab("bhava")}
                 className={cn(
-                  "px-3 py-1 rounded-[calc(var(--radius-lg)-2px)] text-[11px] font-semibold transition-colors",
+                  "px-3 py-1 rounded-[calc(var(--radius-lg)-2px)] text-sm font-semibold transition-colors",
                   tab === "bhava"
                     ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    : "hover:text-foreground",
                 )}
               >
                 {pick("भाव", "Bhava")}
               </button>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-sm">
               {pick(anchorLabel.labelNe, anchorLabel.labelEn)}
-              <span className="mx-1 text-muted-foreground/50">·</span>
+              <span className="mx-1">·</span>
               {varga.short}
             </p>
           </div>

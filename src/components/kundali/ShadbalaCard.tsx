@@ -58,8 +58,8 @@ const KALA_SUBS: { key: string; ne: string; en: string }[] = [
   { key: "yuddha", ne: "युद्ध", en: "Yuddha" },
 ];
 
-const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const td = "px-2.5 py-1.5 text-[12.5px]";
+const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
+const td = "px-2.5 py-1.5 text-sm";
 const num = "text-right font-mono tabular-nums";
 
 function fmt(value: number | undefined, digits: (v: string | number) => string, places = 2): string {
@@ -95,7 +95,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-sm font-semibold",
         STATUS_STYLES[status]
       )}
     >
@@ -113,7 +113,7 @@ function GlanceTile({
 }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+      <p className="text-sm font-semibold uppercase tracking-wide mb-1.5">
         {label}
       </p>
       {children}
@@ -138,7 +138,7 @@ function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, su
       className={cn(
         td,
         "sticky left-0 z-10 bg-card whitespace-nowrap",
-        sub ? "pl-8 text-muted-foreground" : "pl-3.5 font-semibold text-foreground",
+        sub ? "pl-8" : "pl-3.5 font-semibold text-foreground",
       )}
     >
       {expandable ? (
@@ -149,7 +149,7 @@ function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, su
           className="inline-flex items-center gap-1 font-semibold text-foreground hover:text-secondary transition-colors"
         >
           <ChevronRight
-            className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-90")}
+            className={cn("size-3.5 transition-transform", open && "rotate-90")}
             aria-hidden
           />
           {label}
@@ -166,7 +166,7 @@ function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, su
       {planets.map((p) => (
         <TableCell
           key={p.key}
-          className={cn(td, num, bold ? "font-semibold text-foreground" : sub ? "text-muted-foreground" : "text-foreground/90")}
+          className={cn(td, num, bold ? "font-semibold text-foreground" : sub ? "" : "text-foreground/90")}
         >
           {value(p)}
         </TableCell>
@@ -215,10 +215,10 @@ export function ShadbalaCard({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+        <h3 className="text-sm font-semibold uppercase tracking-wide mb-1">
           {pick("षड्बल — ग्रह शक्ति (विरुप)", "Shadbala — Planetary Strength (Virupas)")}
         </h3>
-        <p className="text-xs text-muted-foreground mb-3">
+        <p className="text-xs mb-3">
           {pick(
             "पाराशरी षड्बल (लाहिरी निरयण, Swiss Ephemeris)",
             data.method,
@@ -232,7 +232,7 @@ export function ShadbalaCard({
             </p>
             <div className="mt-1 flex items-center gap-2">
               <StatusBadge status={summary.strongest.status} pick={pick} />
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs">
                 {pick(
                   `${digits(summary.strongest.ratio.toFixed(2))}× आवश्यक`,
                   `${summary.strongest.ratio.toFixed(2)}x required`,
@@ -247,7 +247,7 @@ export function ShadbalaCard({
             </p>
             <div className="mt-1 flex items-center gap-2">
               <StatusBadge status={summary.weakest.status} pick={pick} />
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs">
                 {pick(
                   `${digits(summary.weakest.ratio.toFixed(2))}× आवश्यक`,
                   `${summary.weakest.ratio.toFixed(2)}x required`,
@@ -260,7 +260,7 @@ export function ShadbalaCard({
             <p className="text-2xl font-bold text-foreground tabular-nums">
               {digits(summary.average_rupas.toFixed(2))}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs mt-0.5">
               {digits(summary.average_virupas.toFixed(2))}{" "}
               {pick("विरुप", "Virupas")}
             </p>
@@ -269,12 +269,12 @@ export function ShadbalaCard({
           <GlanceTile label={pick("न्यूनतम पूरा गर्ने ग्रह", "Planets meeting threshold")}>
             <p className="text-2xl font-bold text-foreground tabular-nums">
               {digits(summary.meeting_threshold)}
-              <span className="text-sm font-medium text-muted-foreground">
+              <span className="text-sm font-medium">
                 {" "}
                 / {digits(summary.total_planets)}
               </span>
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs mt-0.5">
               {pick("पर्याप्त वा बलियो", "Adequate or stronger")}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -282,10 +282,10 @@ export function ShadbalaCard({
                 <span
                   key={s}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
+                    "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-sm font-medium",
                     summary.counts[s] > 0
                       ? STATUS_STYLES[s]
-                      : "border-border text-muted-foreground/60"
+                      : "border-border"
                   )}
                 >
                   {pick(STATUS_LABEL[s].ne, STATUS_LABEL[s].en)}{" "}
@@ -448,7 +448,7 @@ export function ShadbalaCard({
             </TableBody>
           </Table>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-xs mt-2">
           {pick(
             "प्रत्येक बलका विरुप; स्थान र काल विस्तार गर्नुहोस् (काल अन्तर्गत युद्ध)। दुई tara graha १° भित्र हुँदा युद्ध गणना हुन्छ — धेरैजसो कुण्डलीमा ०.०० देखिन्छ किनभने युद्ध दुर्लभ हुन्छ।",
             "Virupas per bala; expand Sthana and Kala for component strengths (Yuddha under Kala). Yuddha is computed when two tara grahas are within 1° — most charts show 0.00 because wars are rare.",

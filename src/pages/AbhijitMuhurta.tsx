@@ -125,32 +125,32 @@ function AbhijitDayCard({
       )}
     >
       <div className="mb-1 flex items-center justify-between gap-1">
-        <span className="truncate text-[10px] font-semibold text-muted-foreground sm:text-[11px]">
+        <span className="truncate text-sm font-semibold sm:text-sm">
           {weekday}
         </span>
         {isToday ? (
-          <span className="shrink-0 rounded-full bg-secondary/20 px-1.5 py-px text-[8px] font-bold uppercase text-secondary dark:bg-primary/20 dark:text-primary">
+          <span className="shrink-0 rounded-full bg-secondary/20 px-1.5 py-px text-sm font-bold uppercase text-secondary dark:bg-primary/20 dark:text-primary">
             {t("abhijit.jump_today")}
           </span>
         ) : null}
       </div>
 
       <div className="mb-2 flex items-baseline justify-center gap-1.5">
-        <span className="font-num text-[22px] font-bold leading-none tabular-nums sm:text-2xl">
+        <span className="font-num text-lg font-bold leading-none tabular-nums sm:text-2xl">
           {digits(day.day)}
         </span>
-        <span className="font-num text-[11px] text-muted-foreground tabular-nums">/{digits(adDay)}</span>
+        <span className="font-num text-sm tabular-nums">/{digits(adDay)}</span>
       </div>
 
       <div className="mt-auto space-y-1.5">
-        <p className="mono m-0 text-center text-[11px] font-bold leading-tight text-secondary sm:text-xs dark:text-primary">
+        <p className="mono m-0 text-center text-sm font-bold leading-tight text-secondary sm:text-xs dark:text-primary">
           {abhijit.rangeDisplay}
         </p>
-        <p className="m-0 text-center text-[9px] text-muted-foreground sm:text-[10px]">
+        <p className="m-0 text-center text-sm sm:text-sm">
           {t("abhijit.col_noon")}{" "}
           <span className="mono font-medium text-foreground">{abhijit.noonDisplay ?? "—"}</span>
         </p>
-        <p className="mono m-0 truncate text-center text-[9px] text-muted-foreground sm:text-[10px]">
+        <p className="mono m-0 truncate text-center text-sm sm:text-sm">
           ↑{sunrise} · ↓{sunset}
         </p>
       </div>
@@ -254,7 +254,7 @@ export function AbhijitMuhurta() {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-2"
+            className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t("abhijit.back_home")}
@@ -263,10 +263,10 @@ export function AbhijitMuhurta() {
             <Sparkles className="w-7 h-7 text-secondary shrink-0 dark:text-primary" />
             {t("abhijit.title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5 max-w-xl leading-relaxed">
+          <p className="text-sm mt-1.5 max-w-xl leading-relaxed">
             {t("abhijit.subtitle")}
           </p>
-          <div className="text-sm text-muted-foreground mt-2 inline-flex items-center gap-1">
+          <div className="text-sm mt-2 inline-flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5 shrink-0" />
             {locationLabel}
           </div>
@@ -321,10 +321,10 @@ export function AbhijitMuhurta() {
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-secondary/10 blur-2xl dark:bg-primary/10" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-secondary dark:text-primary mb-1">
+              <p className="text-sm font-bold uppercase tracking-[0.08em] text-secondary dark:text-primary mb-1">
                 {t("abhijit.today_hero")}
               </p>
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="text-sm mb-2">
                 {formatBsMonthDayPatro(year, month, todayRow.day.day)}
                 {" · "}
                 {pick(
@@ -335,7 +335,7 @@ export function AbhijitMuhurta() {
               <p className="mono text-[clamp(1.5rem,5vw,2rem)] font-bold text-foreground leading-tight">
                 {todayRow.abhijit.rangeDisplay}
               </p>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm">
                 {t("abhijit.col_noon")}:{" "}
                 <span className="mono font-semibold text-foreground">
                   {todayRow.abhijit.noonDisplay ?? "—"}
@@ -343,7 +343,7 @@ export function AbhijitMuhurta() {
               </p>
             </div>
             <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-background/60 px-4 py-3 text-sm backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex items-center gap-2">
                 <Sun className="w-4 h-4 shrink-0 text-amber-500" />
                 <span>
                   {t("abhijit.sun_context", {
@@ -354,13 +354,13 @@ export function AbhijitMuhurta() {
                   })}
                 </span>
               </div>
-              <p className="mono text-xs text-muted-foreground">{fmtAdShort(todayRow.day.date_ad)}</p>
+              <p className="mono text-xs">{fmtAdShort(todayRow.day.date_ad)}</p>
             </div>
           </div>
         </section>
       ) : null}
 
-      <div className="rounded-xl border border-border bg-muted/20 px-4 py-3.5 text-[13px] leading-relaxed text-muted-foreground">
+      <div className="rounded-xl border border-border bg-muted/20 px-4 py-3.5 text-sm leading-relaxed">
         <div className="flex gap-2.5">
           <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-secondary dark:text-primary" />
           <p className="m-0">{t("abhijit.note")}</p>
@@ -372,7 +372,7 @@ export function AbhijitMuhurta() {
           {t("abhijit.month_heading")} — {monthLabel} {digits(year)}
         </h2>
         {!monthQ.isLoading && rows.length > 0 ? (
-          <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+          <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-sm font-semibold">
             {t("abhijit.days_count", { count: rows.length })}
           </span>
         ) : null}

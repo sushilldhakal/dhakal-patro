@@ -530,9 +530,9 @@ export function HoraRing({ p, isToday, timezone }: Props) {
         />
       </div>
 
-      <span className="shrink-0 text-center font-num text-[9px] font-semibold tabular-nums leading-tight text-muted-foreground dark:text-[var(--hora-ink-faint)]">
+      <span className="shrink-0 text-center font-num text-sm font-semibold tabular-nums leading-tight dark:text-[var(--hora-ink-faint)]">
         {num(gr + 1)}
-        <span className="text-muted-foreground/70 dark:text-[var(--hora-ink-faint)]/70">/7</span>
+        <span className="dark:text-[var(--hora-ink-faint)]/70">/7</span>
       </span>
     </div>
   );
@@ -565,14 +565,14 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                   </span>
                 </h2>
                 {pick(
-                  <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed text-muted-foreground dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
+                  <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
                     हरेक वलय एउटै दिन हो — सात ग्रहले पालो–पालोमा शासन गर्ने चौबीस{" "}
                     <em>होरा</em>। सूर्योदयपछिको <em>पहिलो</em> होराको ग्रहले दिनको नाम दिन्छ। गणना
                     कहिल्यै रोकिँदैन: <span>आइतबार</span>को अन्तिम होरा <span>सोम</span>मा गुड्छ र{" "}
                     <span>सोमबार</span> खोल्छ। केन्द्रबाट बाहिरतिर — <span>आदित्य → शनि</span> —
                     हप्ताभरि सर्पिल अनुसरण गर्नुहोस्।
                   </p>,
-                  <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed text-muted-foreground dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
+                  <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
                     Each ring is one day — twenty-four <em>horas</em> ruled in turn by the seven
                     planets. The planet of the <em>first</em> hora after sunrise gives the day its
                     name. The count never stops: the last hora of <span>Sunday</span> rolls into{" "}
@@ -586,14 +586,14 @@ export function HoraRing({ p, isToday, timezone }: Props) {
             {ringNode}
 
             <div className="w-full max-w-[440px] text-left">
-              <div className="mb-2.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground dark:text-[var(--hora-ink-faint)]">
+              <div className="mb-2.5 text-center text-sm font-semibold uppercase tracking-[0.18em] dark:text-[var(--hora-ink-faint)]">
                 {pick("सात दिन · भित्र → बाहिर", "Seven days · inner → outer")}
               </div>
               {HORA_WEEK.map((w, i) => {
                 const P = HORA_PLANETS[w.ruler];
                 return (
                   <div className="flex items-center gap-2.5 py-1.5" key={w.day}>
-                    <span className="w-5 shrink-0 text-center text-[10px] font-semibold font-num text-muted-foreground dark:text-[var(--hora-ink-faint)]">
+                    <span className="w-5 shrink-0 text-center text-sm font-semibold font-num dark:text-[var(--hora-ink-faint)]">
                       {i + 1}
                     </span>
                     <span className="grid h-[30px] w-[30px] shrink-0 place-items-center">
@@ -603,7 +603,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                       <span className="font-semibold text-foreground dark:text-[var(--hora-ink)]">
                         {pick(w.day, w.en)}
                       </span>
-                      <span className="text-[10.5px] text-muted-foreground dark:text-[var(--hora-ink-faint)]">
+                      <span className="text-sm dark:text-[var(--hora-ink-faint)]">
                         {pick(`${w.rom} · ${HORA_DEVA[w.ruler]} ${P.nep}`, `${P.en} · ${P.nep}`)}
                       </span>
                     </span>

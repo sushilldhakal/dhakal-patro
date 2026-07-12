@@ -102,12 +102,12 @@ function FestivalsTab({
             })}
             title={formatBsMonthDayPatro(bsYear, bsMonth, entry.bsDay)}
           >
-            <span className="font-num text-center text-[13px] font-bold leading-none text-muted-foreground" aria-hidden>
+            <span className="font-num text-center text-sm font-bold leading-none" aria-hidden>
               {toNepaliDigits(entry.bsDay)}
             </span>
             <span
               className={cn(
-                "min-w-0 text-[12.5px] leading-snug font-semibold text-foreground",
+                "min-w-0 text-sm leading-snug font-semibold text-foreground",
                 entry.isPublicHoliday && "text-danger",
                 isToday && !entry.isPublicHoliday && "text-accent",
               )}
@@ -118,13 +118,13 @@ function FestivalsTab({
               <span
                 className={cn(
                   "font-num inline-flex min-w-8 shrink-0 items-baseline justify-end gap-px text-xs font-bold text-accent",
-                  isPast && "text-[10px] font-semibold text-muted-foreground",
-                  isToday && "text-[10px] font-bold text-accent",
+                  isPast && "text-sm font-semibold",
+                  isToday && "text-sm font-bold text-accent",
                 )}
               >
                 {countLabel}
                 {daysLeft != null && daysLeft > 1 ? (
-                  <span className="text-[9px] font-semibold text-muted-foreground">{t("rel.days_unit")}</span>
+                  <span className="text-sm font-semibold">{t("rel.days_unit")}</span>
                 ) : null}
               </span>
             ) : null}

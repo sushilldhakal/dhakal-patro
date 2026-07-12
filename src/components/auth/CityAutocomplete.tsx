@@ -87,7 +87,7 @@ export function CityAutocomplete({
   return (
     <div ref={boxRef} className="relative">
       <div className="relative">
-        <MapPin className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <MapPin className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
         <Input
           value={query}
           onChange={(e) => {
@@ -99,7 +99,7 @@ export function CityAutocomplete({
           className="pl-8"
         />
         {loading && (
-          <Loader2 className="absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
+          <Loader2 className="absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 animate-spin" />
         )}
       </div>
       {open && results.length > 0 && (
@@ -109,7 +109,7 @@ export function CityAutocomplete({
               <button
                 type="button"
                 onClick={() => pick(c)}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground"
               >
                 <MapPin className="size-3.5 shrink-0" />
                 <span className="truncate">

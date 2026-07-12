@@ -17,13 +17,13 @@ export function StatCard({ label, value, sub, className, highlight }: Props) {
         className
       )}
     >
-      <span className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+      <span className="text-sm font-semibold uppercase tracking-wider">
         {label}
       </span>
       <span className="text-base font-semibold text-foreground leading-snug">
-        {value ?? <span className="text-muted-foreground">—</span>}
+        {value ?? <span>—</span>}
       </span>
-      {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
+      {sub && <span className="text-xs">{sub}</span>}
     </div>
   );
 }

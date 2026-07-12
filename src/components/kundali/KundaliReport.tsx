@@ -42,7 +42,7 @@ function useConfidenceLabels(): Record<
     },
     tentative: {
       label: t("kundali.report.confidence_tentative"),
-      cls: "bg-muted text-muted-foreground border-border",
+      cls: "bg-muted border-border",
     },
   };
 }
@@ -60,7 +60,7 @@ function ConfidenceBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold leading-none",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm font-semibold leading-none",
         s.cls,
         className
       )}
@@ -85,7 +85,7 @@ function FactorList({ factors }: { factors?: string[] }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-1 text-sm font-medium hover:text-foreground transition-colors"
       >
         <Info className="h-3 w-3" />
         {t(count === 1 ? "kundali.report.factors_based" : "kundali.report.factors_based_plural", {
@@ -98,7 +98,7 @@ function FactorList({ factors }: { factors?: string[] }) {
       {open && (
         <ul className="mt-1.5 space-y-1 border-l-2 border-border pl-3">
           {factors.map((f, i) => (
-            <li key={i} className="text-[11.5px] leading-snug text-muted-foreground">
+            <li key={i} className="text-sm leading-snug">
               {f}
             </li>
           ))}
@@ -128,7 +128,7 @@ function ItemCard({ item }: { item: ReportItem }) {
         </p>
         <ConfidenceBadge level={item.confidence} />
       </div>
-      <p className="text-[13px] leading-relaxed text-muted-foreground">{item.text}</p>
+      <p className="text-sm leading-relaxed">{item.text}</p>
       <FactorList factors={item.factors} />
     </div>
   );
@@ -148,7 +148,7 @@ function SectionCard({ section }: { section: ReportSection }) {
       <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
         <h3 className="text-base font-bold text-foreground">{title}</h3>
         {isEnglish && (
-          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          <span className="text-sm font-medium uppercase tracking-wider">
             {section.title_en}
           </span>
         )}
@@ -160,7 +160,7 @@ function SectionCard({ section }: { section: ReportSection }) {
       {section.body.length > 0 && (
         <div className="space-y-2">
           {section.body.map((p, i) => (
-            <p key={i} className="text-[13.5px] leading-relaxed text-muted-foreground">
+            <p key={i} className="text-sm leading-relaxed">
               {p}
             </p>
           ))}
@@ -234,11 +234,11 @@ function MetaStrip({ meta }: { meta: ReportMeta }) {
           key={c.label}
           className="rounded-lg border border-border bg-background/50 px-3 py-2"
         >
-          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="mb-0.5 text-sm font-semibold uppercase tracking-wide">
             {c.label}
           </p>
           <p className="text-sm font-bold leading-tight text-foreground">{c.value}</p>
-          {c.sub && <p className="mt-0.5 text-[10.5px] text-muted-foreground">{c.sub}</p>}
+          {c.sub && <p className="mt-0.5 text-sm">{c.sub}</p>}
         </div>
       ))}
     </div>
@@ -334,7 +334,7 @@ export function KundaliReport({
     <PanchangaSection titleKey="kundali.report.title">
       <div className="space-y-4 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+          <p className="max-w-2xl text-sm leading-relaxed">
             <Trans
               i18nKey="kundali.report.intro"
               components={{
@@ -356,13 +356,13 @@ export function KundaliReport({
               </button>
             )}
             {status === "idle" && !disabled && (
-              <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
+              <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {t("kundali.report.streaming_reading")}
               </span>
             )}
             {streaming && (
-              <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
+              <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {progress.total
                   ? t("kundali.report.streaming_progress", {
@@ -376,7 +376,7 @@ export function KundaliReport({
         </div>
 
         {(streaming || status === "done") && (
-          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="font-medium">{t("kundali.report.confidence_label")}</span>
             {(["strong", "moderate", "mixed", "tentative"] as ReportConfidence[]).map(
               (lvl) => (
@@ -404,20 +404,20 @@ export function KundaliReport({
         )}
 
         {fromCache && status === "done" && (
-          <p className="text-[11px] font-medium text-muted-foreground">
+          <p className="text-sm font-medium">
             {t("kundali.report.loaded_from_cache")}
           </p>
         )}
 
         {status === "idle" && disabled && (
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm">
             <ScrollText className="h-5 w-5 shrink-0" />
             {t("kundali.report.idle_hint")}
           </div>
         )}
 
         {meta && (status === "done" || streaming) && (
-          <p className="border-t border-border pt-3 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="border-t border-border pt-3 text-sm leading-relaxed">
             {meta.disclaimer} · {meta.method}.
           </p>
         )}

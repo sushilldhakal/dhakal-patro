@@ -8,12 +8,15 @@ import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
 import { adToBS } from "@/lib/bs-calendar";
 import { useRouteLoading } from "@/lib/route-loading";
+import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { CEREMONY_META } from "@/lib/panchanga-elements";
 import { fetchSait, fetchSaitAboutCategory, saitKeys } from "@/lib/api";
 
 export function SaitPage() {
   const { category } = useParams({ strict: false }) as { category?: string };
   const { pick, digits, lang } = useLocale();
+  const { location, setLocation } = usePanchangaLocation();
   const meta = CEREMONY_META.find((c) => c.id === category);
 
   const todayBs = adToBS(new Date());
@@ -27,8 +30,8 @@ export function SaitPage() {
   });
 
   const datesQuery = useQuery({
-    queryKey: saitKeys.entries(year, category ?? ""),
-    queryFn: () => fetchSait(year, category!),
+    queryKey: saitKeys.entries(year, category ?? "", location.params),
+    queryFn: () => fetchSait(year, category!, location.params),
     enabled: Boolean(category),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
@@ -62,14 +65,14 @@ export function SaitPage() {
         <div className={cn(patroCard, "mb-4 flex gap-2.5 border-l-2 border-secondary p-3.5")}>
           <Info className="mt-0.5 size-4 shrink-0 text-secondary" />
           <div className="flex flex-col gap-1">
-            <p className="text-[13px] leading-relaxed text-foreground">{method}</p>
+            <p className="text-sm leading-relaxed text-foreground">{method}</p>
             {about?.source ? (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-sm">
                 {pick("स्रोत", "Source")}: {about.source}
               </p>
             ) : null}
             {about?.requires_birth_date ? (
-              <p className="text-[11px] font-medium text-danger">
+              <p className="text-sm font-medium text-danger">
                 {pick("यसका लागि शिशुको जन्म मिति आवश्यक पर्दछ।", "Requires the child's birth date.")}
               </p>
             ) : null}
@@ -77,29 +80,37 @@ export function SaitPage() {
         </div>
       ) : null}
 
-      {/* Year navigator */}
-      <div className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
-        <button type="button" onClick={() => setYear((y) => y - 1)} className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover" aria-label={pick("अघिल्लो वर्ष", "Previous year")}>
-          <ChevronLeft size={18} />
-        </button>
-        <span className="text-sm font-bold text-foreground">{pick(`वि.सं. ${digits(year)}`, `BS ${digits(year)}`)}</span>
-        <button type="button" onClick={() => setYear((y) => y + 1)} className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover" aria-label={pick("अर्को वर्ष", "Next year")}>
-          <ChevronRight size={18} />
-        </button>
+      {/* Year navigator + location */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
+          <button type="button" onClick={() => setYear((y) => y - 1)} className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover" aria-label={pick("अघिल्लो वर्ष", "Previous year")}>
+            <ChevronLeft size={18} />
+          </button>
+          <span className="min-w-[6rem] text-center text-sm font-bold text-foreground">{pick(`वि.सं. ${digits(year)}`, `BS ${digits(year)}`)}</span>
+          <button type="button" onClick={() => setYear((y) => y + 1)} className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover" aria-label={pick("अर्को वर्ष", "Next year")}>
+            <ChevronRight size={18} />
+          </button>
+        </div>
+        <LocationSelector
+          compact
+          location={location}
+          onLocationChange={setLocation}
+          className="ml-auto h-9 min-w-0 w-auto max-w-[12.5rem]"
+        />
       </div>
 
       {datesQuery.isLoading && !datesQuery.data ? (
-        <p className="text-sm text-muted-foreground">{pick("लोड हुँदै…", "Loading…")}</p>
+        <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
       ) : datesQuery.data && datesQuery.data.months.length > 0 ? (
         <div className="flex flex-col gap-2">
           {datesQuery.data.months.map((m) => (
             <div key={m.month} className={cn(patroCard, "flex flex-col gap-1.5 p-3 sm:flex-row sm:items-center sm:gap-3")}>
-              <span className="w-24 shrink-0 text-[13px] font-bold text-foreground">
+              <span className="w-24 shrink-0 text-sm font-bold text-foreground">
                 {lang === "en" ? `Month ${digits(m.month)}` : m.month_name_ne}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {m.days.map((d) => (
-                  <span key={d} className="font-num inline-flex h-7 min-w-7 items-center justify-center rounded-md bg-success/12 px-1.5 text-[12.5px] font-semibold text-success-foreground tabular-nums dark:text-success">
+                  <span key={d} className="font-num inline-flex h-7 min-w-7 items-center justify-center rounded-md bg-success/12 px-1.5 text-sm font-semibold text-success-foreground tabular-nums dark:text-success">
                     {digits(d)}
                   </span>
                 ))}
@@ -108,10 +119,10 @@ export function SaitPage() {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">{pick("यस वर्षका लागि साइत सूची उपलब्ध छैन।", "No auspicious dates listed for this year.")}</p>
+        <p className="text-sm">{pick("यस वर्षका लागि साइत सूची उपलब्ध छैन।", "No auspicious dates listed for this year.")}</p>
       )}
 
-      <p className="mt-6 text-[12px] text-muted-foreground">
+      <p className="mt-6 text-sm">
         <Link to="/panchanga/details" className="text-primary underline">
           {pick("← सबै शुभ मुहूर्त", "← All ceremonies")}
         </Link>

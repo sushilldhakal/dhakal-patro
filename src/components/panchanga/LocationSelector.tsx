@@ -113,7 +113,7 @@ function LocationPickerPanel({
       </div>
 
       {geoError && (
-        <p className="text-[11.5px] text-destructive px-2 pb-1" role="alert">
+        <p className="text-sm text-destructive px-2 pb-1" role="alert">
           {geoError}
         </p>
       )}
@@ -138,7 +138,7 @@ function LocationPickerPanel({
               className={cn(selected && "bg-secondary/20")}
             >
               <span className="font-semibold block">{name}</span>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-sm">
                 {cityItemLabel(city, lang)}
               </span>
             </ComboboxItem>
@@ -300,7 +300,7 @@ export function LocationSelector({
           }
         >
           <span className="inline-flex items-center gap-1.5 min-w-0">
-            <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
+            <MapPin className="size-3.5 shrink-0" />
             <span className="truncate">{labelMain}</span>
           </span>
         </ComboboxTrigger>
@@ -339,7 +339,7 @@ export function LocationSelector({
           }
         >
           <span className="inline-flex items-center gap-2 min-w-0">
-            <MapPin className="size-4 shrink-0 text-muted-foreground" />
+            <MapPin className="size-4 shrink-0" />
             <span className="truncate">{location.label}</span>
           </span>
         </ComboboxTrigger>

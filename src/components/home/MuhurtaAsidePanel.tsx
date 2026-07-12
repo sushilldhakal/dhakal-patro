@@ -69,7 +69,7 @@ function NavataraAsideList({
   return (
     <div>
       {moonLabel ? (
-        <p className="m-0 mb-2 text-[12.5px] font-semibold text-foreground">
+        <p className="m-0 mb-2 text-sm font-semibold text-foreground">
           {t(moonRefKey)}: <strong className="text-accent">{moonLabel}</strong>
         </p>
       ) : null}
@@ -81,7 +81,7 @@ function NavataraAsideList({
               <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
                 {row.name}
               </span>
-              <span className="w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+              <span className="w-full text-center text-sm font-semibold leading-snug">
                 {row.tara}
                 <span className="mx-1 opacity-55">/</span>
                 {row.quality}
@@ -114,7 +114,7 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
             <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
               {seg.name}
             </span>
-            <span className="mono w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+            <span className="mono w-full text-center text-sm font-semibold leading-snug">
               {range}
               <span className="mx-1 opacity-55">/</span>
               {quality}
@@ -153,7 +153,7 @@ function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
       <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
         {slot.planet_ne}
       </span>
-      <span className="mono w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+      <span className="mono w-full text-center text-sm font-semibold leading-snug">
         {start} – {end}
         <span className="mx-1 opacity-55">/</span>
         {slot.quality_ne}
@@ -200,7 +200,7 @@ function PushkaraSlot({ row, pushkaraLabel }: { row: UdayaLagnaRow; pushkaraLabe
       <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
         {row.name_ne ?? row.name}
       </span>
-      <span className="mono w-full text-center text-[10.5px] font-semibold leading-snug text-muted-foreground">
+      <span className="mono w-full text-center text-sm font-semibold leading-snug">
         {hasPushkara ? times : range}
         <span className="mx-1 opacity-55">/</span>
         {hasPushkara ? pushkaraLabel : "—"}
@@ -237,7 +237,7 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
         ))}
       </div>
 
-      <p className="m-0 flex items-start gap-1.5 text-[11.5px] leading-snug font-medium text-muted-foreground">
+      <p className="m-0 flex items-start gap-1.5 text-sm leading-snug font-medium">
         <Info size={13} strokeWidth={2} className="mt-px shrink-0 opacity-75" aria-hidden />
         <span>{t(SUB_TAB_HINT_KEY[subTab])}</span>
       </p>

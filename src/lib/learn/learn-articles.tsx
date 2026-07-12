@@ -1667,7 +1667,7 @@ export function HoraArticle() {
             <HoraRing p={p} isToday timezone={timezone} />
           </div>
         ) : (
-          <div className={cn(tmCardPadLg, "flex min-h-[200px] items-center justify-center text-sm text-muted-foreground")}>
+          <div className={cn(tmCardPadLg, "flex min-h-[200px] items-center justify-center text-sm")}>
             लोड हुँदैछ…
           </div>
         )}
@@ -1706,7 +1706,7 @@ export function HoraArticle() {
             <HoraRing p={p} isToday timezone={timezone} />
           </div>
         ) : (
-          <div className={cn(tmCardPadLg, "flex min-h-[200px] items-center justify-center text-sm text-muted-foreground")}>
+          <div className={cn(tmCardPadLg, "flex min-h-[200px] items-center justify-center text-sm")}>
             Loading…
           </div>
         )}

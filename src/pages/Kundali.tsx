@@ -30,14 +30,14 @@ export function Kundali() {
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
       <div className="mb-4 mt-2 flex items-start justify-between gap-3">
         <div>
-          <div className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
+          <div className="text-xs font-medium uppercase tracking-[0.12em] mb-1.5">
             {t("kundali.eyebrow")}
           </div>
-          <h1 className="text-[34px] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
+          <h1 className="text-xl font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
             <Sparkles className="w-7 h-7 text-secondary shrink-0" />
             {t("kundali.title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm mt-1">
             {isAuthenticated ? t("kundali.subtitle_auth") : t("kundali.login_required")}
           </p>
         </div>
@@ -49,7 +49,7 @@ export function Kundali() {
       </div>
 
       {authLoading ? (
-        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm">
           {t("common.loading")}
         </div>
       ) : !isAuthenticated ? (
@@ -60,7 +60,7 @@ export function Kundali() {
           <h2 className="text-xl font-bold text-foreground">
             {t("kundali.login_prompt_title")}
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-md text-sm">
             {t("kundali.login_prompt_body")}
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -74,7 +74,7 @@ export function Kundali() {
         </section>
       ) : (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm">
             {t("kundali.profile_hint")}
           </p>
           <KundaliProfilePicker

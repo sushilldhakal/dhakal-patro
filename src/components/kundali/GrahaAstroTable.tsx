@@ -41,8 +41,8 @@ type Row = GrahaAstroPoint &
     combust?: boolean;
   };
 
-const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const td = "px-2.5 py-2 text-[12.5px]";
+const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
+const td = "px-2.5 py-2 text-sm";
 
 function signedFixed(value: number | undefined, digits: (v: string) => string): string {
   if (value == null) return "—";
@@ -121,7 +121,7 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
                   {name}
                   {row.retrograde && (
                     <span
-                      className="inline-flex items-center gap-0.5 text-[9px] font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
+                      className="inline-flex items-center gap-0.5 text-sm font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
                       title={pick("वक्री", "Retrograde")}
                     >
                       <RotateCcw className="size-2.5" aria-hidden />
@@ -130,7 +130,7 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
                   )}
                   {row.combust && (
                     <span
-                      className="inline-flex items-center gap-0.5 text-[9px] font-bold normal-case text-destructive bg-destructive/10 px-1 py-0.5 rounded-full"
+                      className="inline-flex items-center gap-0.5 text-sm font-bold normal-case text-destructive bg-destructive/10 px-1 py-0.5 rounded-full"
                       title={pick("अस्त (सूर्य सामीप्य)", "Combust")}
                     >
                       <Flame className="size-2.5" aria-hidden />
@@ -139,7 +139,7 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
                   )}
                 </span>
               </TableCell>
-              <TableCell className={cn(td, "font-mono tabular-nums text-muted-foreground")}>
+              <TableCell className={cn(td, "font-mono tabular-nums")}>
                 <span className="text-foreground font-semibold">
                   {digits(String(row.dms.deg).padStart(2, "0"))}°
                 </span>{" "}
@@ -149,7 +149,7 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
               </TableCell>
               <TableCell className={td}>
                 {nakName} {digits(row.pada)}
-                <span className="text-muted-foreground">, {grahaName(row.nakshatraLord)}</span>
+                <span>, {grahaName(row.nakshatraLord)}</span>
               </TableCell>
               <TableCell className={cn(td, "text-right font-mono tabular-nums")}>
                 {digits(row.lon.toFixed(2))}

@@ -128,7 +128,7 @@ function TopicCard({
         <h3 className="text-xl font-bold leading-snug text-foreground">
           {pick(topic.titleNe, topic.titleEn)}
         </h3>
-        <p className="mt-1 text-sm font-medium text-muted-foreground">{pick(topic.titleEn, "")}</p>
+        <p className="mt-1 text-sm font-medium">{pick(topic.titleEn, "")}</p>
         <p className="mt-3 flex-1 text-base leading-relaxed text-foreground/80">
           {pick(topic.summary, topic.summaryEn)}
         </p>
@@ -154,11 +154,11 @@ function TopicCard({
           <span className="block truncate text-base font-semibold text-foreground">
             {pick(topic.titleNe, topic.titleEn)}
           </span>
-          <span className="block truncate text-sm text-muted-foreground">
+          <span className="block truncate text-sm">
             {pick(topic.titleEn, "")}
           </span>
         </span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
+        <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
       </Link>
     );
   }
@@ -189,7 +189,7 @@ function TopicCard({
       </div>
       <div>
         <h3 className="text-lg font-bold leading-snug text-foreground">{pick(topic.titleNe, topic.titleEn)}</h3>
-        <p className="mt-1 text-sm font-medium text-muted-foreground">
+        <p className="mt-1 text-sm font-medium">
           {pick(topic.titleEn, "")}
         </p>
       </div>
@@ -277,7 +277,7 @@ export function Learn() {
               {t("learn_page.search_label")}
             </label>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2" />
               <Input
                 id="learn-search"
                 value={query}
@@ -289,7 +289,7 @@ export function Learn() {
                 <button
                   type="button"
                   onClick={() => setQuery("")}
-                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md transition-colors hover:bg-muted/40 hover:text-foreground"
                   aria-label={t("common.clear_search")}
                 >
                   <X className="h-4 w-4" />
@@ -304,7 +304,7 @@ export function Learn() {
         <section>
           <div className="mb-5">
             <h2 className="text-xl font-bold text-foreground sm:text-2xl">{t("learn_page.featured_title")}</h2>
-            <p className="mt-1 text-base text-muted-foreground">
+            <p className="mt-1 text-base">
               {t("learn_page.featured_sub")}
             </p>
           </div>
@@ -325,13 +325,13 @@ export function Learn() {
             <HistoryIcon className="h-6 w-6" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-secondary">
+            <div className="text-sm font-semibold uppercase tracking-wide text-secondary">
               {t("learn_page.history_eyebrow")}
             </div>
             <h2 className="mt-0.5 text-lg font-bold text-foreground sm:text-xl">
               {t("learn_page.history_title")}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm">
               {t("learn_page.history_desc")}
             </p>
           </div>
@@ -351,7 +351,7 @@ export function Learn() {
               "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
               activeCategory === "all"
                 ? "border-secondary bg-secondary text-secondary-foreground"
-                : "border-border bg-card text-muted-foreground hover:border-secondary/40 hover:text-foreground",
+                : "border-border bg-card hover:border-secondary/40 hover:text-foreground",
             )}
           >
             {t("common.all")}
@@ -368,7 +368,7 @@ export function Learn() {
                   "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
                   activeCategory === cat.id
                     ? "border-secondary bg-secondary text-secondary-foreground"
-                    : "border-border bg-card text-muted-foreground hover:border-secondary/40 hover:text-foreground",
+                    : "border-border bg-card hover:border-secondary/40 hover:text-foreground",
                 )}
               >
                 <MetaIcon className="h-3.5 w-3.5" />
@@ -379,7 +379,7 @@ export function Learn() {
           })}
         </div>
         {isFiltering && (
-          <p className="text-base text-muted-foreground">
+          <p className="text-base">
             {t("learn_page.results_count", { count: filteredTopics.length })}
           </p>
         )}
@@ -392,7 +392,7 @@ export function Learn() {
             <h2 className="text-lg font-bold text-foreground sm:text-xl">
               {t("learn_page.starter_path")}
             </h2>
-            <span className="text-sm text-muted-foreground">· {t("learn_page.suggested_path_sub")}</span>
+            <span className="text-sm">· {t("learn_page.suggested_path_sub")}</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {starterPath.map((topic, index) => (
@@ -410,7 +410,7 @@ export function Learn() {
       {filteredTopics.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/40 px-6 py-14 text-center">
           <p className="text-base font-medium text-foreground">{t("learn_page.no_topics")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm">
             {t("learn_page.no_topics_hint")}
           </p>
           <button
@@ -446,7 +446,7 @@ export function Learn() {
                     </span>
                     <div>
                       <h2 className="text-2xl font-bold text-foreground">{pick(cat.ne, cat.en)}</h2>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm">
                         {cat.en} · {topics.length} articles
                       </p>
                     </div>

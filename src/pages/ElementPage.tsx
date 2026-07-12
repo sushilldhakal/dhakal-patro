@@ -1,18 +1,14 @@
 import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
-import {
-  adToBS,
-  bsMonthLabel,
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-} from "@/lib/bs-calendar";
+import { adToBS, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
 import { useRouteLoading } from "@/lib/route-loading";
 import { ELEMENT_BY_ID } from "@/lib/panchanga-elements";
 import {
@@ -48,26 +44,25 @@ function SpanList({ spans }: { spans: ElementSpan[] }) {
   const stamp = (s: ElementSpan["begins"]) =>
     `${digits(s.time_label)} · ${s.weekday} ${digits(s.date_label)}`;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {spans.map((s, i) => (
-        <div
-          key={`${s.name}-${i}`}
-          className={cn(patroCard, "flex flex-col gap-1.5 p-3 sm:flex-row sm:items-center sm:justify-between")}
-        >
-          <div className="flex items-baseline gap-2">
-            <span className="text-[15px] font-bold text-foreground">{pick(s.name_ne, s.name)}</span>
+        <div key={`${s.name}-${i}`} className={cn(patroCard, "flex flex-col gap-2 p-3")}>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-base font-bold text-foreground">{pick(s.name_ne, s.name)}</span>
             {s.paksha ? (
-              <span className="text-[11px] font-medium text-muted-foreground">
+              <span className="text-xs font-medium">
                 {pick(s.paksha === "shukla" ? "शुक्ल" : "कृष्ण", s.paksha)}
               </span>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[12px]">
-            <span className="text-muted-foreground">
-              <span className="font-semibold text-success">{pick("आरम्भ", "Begins")}</span> {stamp(s.begins)}
+          <div className="flex flex-col gap-1 text-xs">
+            <span className="flex items-center justify-between gap-2 rounded-md bg-success/10 px-2 py-1">
+              <span className="font-semibold text-success">{pick("आरम्भ", "Begins")}</span>
+              <span className="font-num tabular-nums text-foreground">{stamp(s.begins)}</span>
             </span>
-            <span className="text-muted-foreground">
-              <span className="font-semibold text-danger">{pick("अन्त्य", "Ends")}</span> {stamp(s.ends)}
+            <span className="flex items-center justify-between gap-2 rounded-md bg-danger/10 px-2 py-1">
+              <span className="font-semibold text-danger">{pick("अन्त्य", "Ends")}</span>
+              <span className="font-num tabular-nums text-foreground">{stamp(s.ends)}</span>
             </span>
           </div>
         </div>
@@ -101,21 +96,21 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
     return (
       <div className="flex flex-col gap-2">
         {anchor ? (
-          <p className="text-[12px] font-medium text-muted-foreground">
+          <p className="text-sm font-medium">
             {pick("चन्द्र राशि", "Moon sign")}: <span className="font-bold text-foreground">{anchor}</span>
           </p>
         ) : null}
-        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((r, i) => {
             const good = r.tone === "good" || r.quality === "शुभ";
             const bad = r.tone === "bad" || r.quality === "अशुभ";
             return (
               <div
                 key={i}
-                className={cn("flex items-center justify-between rounded-lg px-3 py-1.5 text-[12.5px]", toneClass(good, bad))}
+                className={cn("flex items-center justify-between rounded-lg px-3 py-1.5 text-sm", toneClass(good, bad))}
               >
                 <span className="font-semibold">{pick(String(r.name ?? ""), String(r.name_en ?? r.name ?? ""))}</span>
-                <span className="text-[11px] opacity-90">
+                <span className="text-sm opacity-90">
                   {pick(String(r.tara ?? ""), String(r.tara ?? ""))}
                   {r.quality ? ` · ${pick(String(r.quality), String(r.quality))}` : ""}
                 </span>
@@ -131,10 +126,10 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
   if (Array.isArray(data)) {
     const rows = data as AnyRow[];
     if (rows.length === 0) {
-      return <p className="text-[13px] text-muted-foreground">{pick("यस दिनका लागि विवरण छैन।", "No entries for this day.")}</p>;
+      return <p className="text-sm">{pick("यस दिनका लागि विवरण छैन।", "No entries for this day.")}</p>;
     }
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((it, i) => {
           const label = pick(
             String(it.name_ne ?? it.planet_ne ?? it.lagna_ne ?? it.name ?? it.lagna ?? "—"),
@@ -154,17 +149,17 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
           return (
             <div
               key={i}
-              className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-[13px]", toneClass(good, bad))}
+              className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm", toneClass(good, bad))}
             >
               <span className="flex items-center gap-1.5 font-semibold">
                 {label}
                 {hasPushkara ? (
-                  <span className="rounded-full bg-secondary/20 px-1.5 py-px text-[9px] font-bold text-secondary dark:text-accent">
+                  <span className="rounded-full bg-secondary/20 px-1.5 py-px text-sm font-bold text-secondary dark:text-accent">
                     {pick("पुष्कर", "Pushkara")}
                   </span>
                 ) : null}
               </span>
-              {time ? <span className="font-num tabular-nums text-[12px] opacity-90">{time}</span> : null}
+              {time ? <span className="font-num tabular-nums text-sm opacity-90">{time}</span> : null}
             </div>
           );
         })}
@@ -172,28 +167,31 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
     );
   }
 
-  return <p className="text-[13px] text-muted-foreground">{pick("विवरण उपलब्ध छैन।", "No data available.")}</p>;
+  return <p className="text-sm">{pick("विवरण उपलब्ध छैन।", "No data available.")}</p>;
 }
 
 /* ── page ───────────────────────────────────────────────────────────────── */
 
 export function ElementPage() {
   const { name } = useParams({ strict: false }) as { name?: string };
-  const { pick, digits } = useLocale();
-  const { location } = usePanchangaLocation();
+  const { pick } = useLocale();
+  const { location, setLocation } = usePanchangaLocation();
   const meta = name ? ELEMENT_BY_ID[name] : undefined;
 
   const today = new Date();
+  const todayAd = toAdStr(today);
   const todayBs = adToBS(today);
-  const [bs, setBs] = useState({ year: todayBs.year, month: todayBs.month });
-  const [dayAd, setDayAd] = useState(() => toAdStr(today));
-
   const isSpan = meta?.kind === "span";
+
+  // span → browse by BS month; table → browse by BS day.
+  const [bs, setBs] = useState({ year: todayBs.year, month: todayBs.month });
+  const [tbs, setTbs] = useState({ year: todayBs.year, month: todayBs.month, day: todayBs.day });
+  const dayAd = toAdStr(bsToAD(tbs.year, tbs.month, tbs.day));
 
   const spanQuery = useQuery({
     queryKey: elementKeys.month(name ?? "", bs.year, bs.month, location.params),
     queryFn: () => fetchElementSpans(name!, { bsYear: bs.year, bsMonth: bs.month }, location.params),
-    enabled: Boolean(name) && isSpan,
+    enabled: Boolean(name) && Boolean(meta) && isSpan,
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -201,7 +199,7 @@ export function ElementPage() {
   const dayQuery = useQuery({
     queryKey: elementKeys.day(name ?? "", dayAd, location.params),
     queryFn: () => fetchElementDay(name!, dayAd, location.params),
-    enabled: Boolean(name) && !isSpan,
+    enabled: Boolean(name) && Boolean(meta) && !isSpan,
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -215,25 +213,30 @@ export function ElementPage() {
     return (
       <PageShell>
         <PageHeader icon={<Sparkles className="h-6 w-6 text-secondary" />} title={pick("अज्ञात तत्त्व", "Unknown element")} />
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm">
           <Link to="/panchanga/details" className="text-primary underline">{pick("पञ्चाङ्ग विवरणमा फर्कनुहोस्", "Back to panchanga details")}</Link>
         </p>
       </PageShell>
     );
   }
 
+  const setTableDate = (y: number, m: number, d: number) =>
+    setTbs({ year: y, month: m, day: Math.min(d, getBSMonthLength(y, m)) });
   const stepMonth = (delta: number) => {
     let m = bs.month + delta;
     let y = bs.year;
     if (m < 1) { m = 12; y -= 1; }
     if (m > 12) { m = 1; y += 1; }
-    if (y < BS_SUPPORTED_START_YEAR || y > BS_SUPPORTED_END_YEAR) return;
     setBs({ year: y, month: m });
   };
   const stepDay = (delta: number) => {
-    const d = new Date(`${dayAd}T12:00:00`);
+    const d = bsToAD(tbs.year, tbs.month, tbs.day);
     d.setDate(d.getDate() + delta);
-    setDayAd(toAdStr(d));
+    setTbs(adToBS(d));
+  };
+  const goToday = () => {
+    setBs({ year: todayBs.year, month: todayBs.month });
+    setTbs({ year: todayBs.year, month: todayBs.month, day: todayBs.day });
   };
 
   return (
@@ -244,44 +247,32 @@ export function ElementPage() {
         subtitle={pick(meta.blurbNe, meta.blurbEn)}
       />
 
-      {/* Range / date navigator */}
-      <div className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
-        <button
-          type="button"
-          onClick={() => (isSpan ? stepMonth(-1) : stepDay(-1))}
-          className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover"
-          aria-label={pick("अघिल्लो", "Previous")}
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <span className="text-sm font-bold text-foreground">
-          {isSpan
-            ? `${bsMonthLabel(bs.month, undefined)} ${digits(bs.year)}`
-            : (() => {
-                const b = adToBS(new Date(`${dayAd}T12:00:00`));
-                return `${digits(b.day)} ${bsMonthLabel(b.month, undefined)} ${digits(b.year)}`;
-              })()}
-        </span>
-        <button
-          type="button"
-          onClick={() => (isSpan ? stepMonth(1) : stepDay(1))}
-          className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover"
-          aria-label={pick("अर्को", "Next")}
-        >
-          <ChevronRight size={18} />
-        </button>
-      </div>
+      <PanchangaBrowseHeader
+        mode={isSpan ? "month" : "day"}
+        year={isSpan ? bs.year : tbs.year}
+        month={isSpan ? bs.month : tbs.month}
+        day={isSpan ? undefined : tbs.day}
+        onMonthChange={(m) => (isSpan ? setBs({ ...bs, month: m }) : setTableDate(tbs.year, m, tbs.day))}
+        onYearChange={(y) => (isSpan ? setBs({ ...bs, year: y }) : setTableDate(y, tbs.month, tbs.day))}
+        onSelectDate={(y, m, d) => (isSpan ? setBs({ year: y, month: m }) : setTableDate(y, m, d))}
+        onPrev={() => (isSpan ? stepMonth(-1) : stepDay(-1))}
+        onNext={() => (isSpan ? stepMonth(1) : stepDay(1))}
+        onToday={goToday}
+        todayAd={todayAd}
+        location={location}
+        onLocationChange={setLocation}
+      />
 
       {isSpan ? (
         spanQuery.isLoading && !spanQuery.data ? (
-          <p className="text-sm text-muted-foreground">{pick("लोड हुँदै…", "Loading…")}</p>
+          <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
         ) : spanQuery.data ? (
           <SpanList spans={spanQuery.data.spans} />
         ) : (
           <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
         )
       ) : dayQuery.isLoading && !dayQuery.data ? (
-        <p className="text-sm text-muted-foreground">{pick("लोड हुँदै…", "Loading…")}</p>
+        <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
       ) : dayQuery.data ? (
         <div className={cn(patroCard, "p-3.5")}>
           <TableView data={dayQuery.data.data} sunrise={dayQuery.data.sunrise} />
@@ -290,7 +281,7 @@ export function ElementPage() {
         <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
       )}
 
-      <p className="mt-6 text-[12px] text-muted-foreground">
+      <p className="mt-6 text-sm">
         <Link to="/panchanga/details" className="text-primary underline">
           {pick("← सबै पञ्चाङ्ग तत्त्वहरू", "← All panchanga elements")}
         </Link>

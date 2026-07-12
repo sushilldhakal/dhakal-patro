@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-const th = "h-9 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
-const td = "px-2.5 py-1.5 text-[12.5px]";
+const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
+const td = "px-2.5 py-1.5 text-sm";
 const num = "text-right font-mono tabular-nums";
 
 function fmtNum(
@@ -35,7 +35,7 @@ function GlanceTile({
 }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+      <p className="text-sm font-semibold uppercase tracking-wide mb-1.5">
         {label}
       </p>
       {children}
@@ -59,9 +59,9 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
   const houseSummary = (h: BhavaBalaHouse) => (
     <>
       <p className="text-lg font-bold text-foreground">{houseLabel(h.house)}</p>
-      <p className="text-xs text-muted-foreground mt-0.5">
+      <p className="text-xs mt-0.5">
         {pick("स्वामी", "Lord")} {lordLabel(h.lordKey as GrahaKey)}
-        <span className="mx-1 text-muted-foreground/50">·</span>
+        <span className="mx-1">·</span>
         {digits(h.percent.toFixed(1))}%
       </p>
     </>
@@ -70,10 +70,10 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+        <h3 className="text-sm font-semibold uppercase tracking-wide mb-1">
           {pick("भाव बल — भाव शक्ति (विरुप)", "Bhava Bala — House Strength (Virupas)")}
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs">
           {pick(
             `भावाधिपति (स्वामीको षड्बल) + भाव दिशा + भाव दृष्टि। समपूर्ण राशि भाव; ${digits(data.referenceVirupas)} विरुप (७ रूप) = १००%।`,
             `Bhavadhipati (lord's Shadbala) + Bhava Disha + Bhava Drishti. Whole-sign houses; ${data.referenceVirupas} virupas (7 rupas) = 100%.`,

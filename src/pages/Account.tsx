@@ -70,7 +70,7 @@ export function Account() {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">{t("account_page.title")}</h1>
-        <p className="text-sm text-muted-foreground">{user.email}</p>
+        <p className="text-sm">{user.email}</p>
       </header>
 
       {!user.is_verified && (
@@ -120,10 +120,10 @@ export function Account() {
         />
       ) : loading ? (
         <div className="flex justify-center py-10">
-          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          <Loader2 className="size-5 animate-spin" />
         </div>
       ) : profiles.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm">
           {t("account_page.no_profiles")}
         </div>
       ) : (
@@ -142,7 +142,7 @@ export function Account() {
                     </span>
                   )}
                 </div>
-                <p className="truncate text-sm text-muted-foreground">
+                <p className="truncate text-sm">
                   {[p.location_label || p.city, p.birth_date && `${p.birth_date}${p.birth_time ? " " + p.birth_time : ""}`]
                     .filter(Boolean)
                     .join(" · ") || t("account_page.no_birth_details")}

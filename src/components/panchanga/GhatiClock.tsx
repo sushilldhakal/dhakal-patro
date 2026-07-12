@@ -63,31 +63,31 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
         style={{ background: "radial-gradient(circle, rgba(255,215,10,0.20), transparent 70%)" }}
       />
 
-      <div className="text-[10.5px] font-semibold tracking-[0.16em] text-[#f5f5f1]/55">
+      <div className="text-sm font-semibold tracking-[0.16em] text-[#f5f5f1]/55">
         {pick("वैदिक समय", "Vedic time")}
       </div>
-      <div className="font-mono font-bold text-[44px] leading-none mt-3.5 tracking-tight tabular-nums">
+      <div className="font-mono font-bold text-5xl leading-none mt-3.5 tracking-tight tabular-nums">
         {digits(pad2(gh))}
         <span className="text-[#f5f5f1]/40">:</span>
         {digits(pad2(pa))}
         <span className="text-[#f5f5f1]/40">:</span>
-        <span className="text-[0.62em] text-[#f5f5f1]/65">{digits(pad2(vi))}</span>
+        <span className="text-sm text-[#f5f5f1]/65">{digits(pad2(vi))}</span>
       </div>
-      <div className="text-[11px] font-semibold tracking-wide text-panchang mt-2">
+      <div className="text-sm font-semibold tracking-wide text-panchang mt-2">
         {pick("घडी : पला : विपला", "Ghati : Pala : Vipala")}
       </div>
 
       <div className="h-px bg-white/12 mx-5 my-3.5" />
 
-      <div className="font-mono font-bold text-[30px] leading-none tabular-nums">
+      <div className="font-mono font-bold text-xl leading-none tabular-nums">
         {digits(pad2(hh))}:{digits(pad2(mm))}
-        <span className="text-[0.62em] text-[#f5f5f1]/65">:{digits(pad2(ss))}</span>
+        <span className="text-sm text-[#f5f5f1]/65">:{digits(pad2(ss))}</span>
       </div>
-      <div className="text-[11px] font-semibold tracking-wide text-[#f5f5f1]/50 mt-2">
+      <div className="text-sm font-semibold tracking-wide text-[#f5f5f1]/50 mt-2">
         {pick("घण्टा : मिनेट", "Hour : Minute")}
       </div>
 
-      <div className="flex justify-center gap-4 mt-3.5 text-[12.5px] font-mono text-[#f5f5f1]/80">
+      <div className="flex justify-center gap-4 mt-3.5 text-sm font-mono text-[#f5f5f1]/80">
         {sunrise && (
           <span className="inline-flex items-center gap-1.5">
             <Sunrise className="w-3.5 h-3.5" />

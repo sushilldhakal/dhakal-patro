@@ -53,7 +53,7 @@ function PanchakPeriodCard({
           {t("panchak.period_label", { n: digits(index + 1) })}
         </h3>
         {variety ? (
-          <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+          <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-sm font-semibold text-amber-800 dark:text-amber-300">
             {en ? variety.labelEn : variety.labelNe}
           </span>
         ) : null}
@@ -61,26 +61,26 @@ function PanchakPeriodCard({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-border/70 bg-muted/20 px-3.5 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-1.5">
             {t("panchak.start_date")}
           </p>
           <p className="text-sm font-semibold text-foreground leading-snug">
             {digits(bsStart)}, {en ? period.start.timeEn : period.start.timeNe}
           </p>
-          <p className="mono mt-1 text-xs text-muted-foreground">{fmtAdShort(period.start.ad)}</p>
+          <p className="mono mt-1 text-xs">{fmtAdShort(period.start.ad)}</p>
         </div>
         <div className="rounded-xl border border-border/70 bg-muted/20 px-3.5 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-1.5">
             {t("panchak.end_date")}
           </p>
           <p className="text-sm font-semibold text-foreground leading-snug">
             {digits(bsEnd)}, {en ? period.end.timeEn : period.end.timeNe}
           </p>
-          <p className="mono mt-1 text-xs text-muted-foreground">{fmtAdShort(period.end.ad)}</p>
+          <p className="mono mt-1 text-xs">{fmtAdShort(period.end.ad)}</p>
         </div>
       </div>
 
-      <p className="mt-3 text-xs font-medium text-muted-foreground">
+      <p className="mt-3 text-xs font-medium">
         {t("panchak.duration")}:{" "}
         <span className="text-foreground">{en ? period.durationEn : period.durationNe}</span>
       </p>
@@ -116,7 +116,7 @@ export function PanchakPatro() {
     <PageShell className="pb-16">
       <Link
         to="/"
-        className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground mb-2"
+        className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-2"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         {t("panchak.back_home")}
@@ -132,7 +132,7 @@ export function PanchakPatro() {
 
       {PANCHAK_PATRO_YEARS.length > 1 ? (
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="panchak-year" className="text-sm font-medium text-muted-foreground">
+          <label htmlFor="panchak-year" className="text-sm font-medium">
             {t("panchak.year_label")}
           </label>
           <select
@@ -159,7 +159,7 @@ export function PanchakPatro() {
       ) : null}
 
       {!periods?.length ? (
-        <p className="text-sm text-muted-foreground">{t("panchak.no_data", { year: digits(year) })}</p>
+        <p className="text-sm">{t("panchak.no_data", { year: digits(year) })}</p>
       ) : (
         <section className="space-y-3">
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -180,7 +180,7 @@ export function PanchakPatro() {
           {prohibited.map(({ titleKey, descKey }) => (
             <li key={titleKey} className="border-b border-border/60 pb-3 last:border-0 last:pb-0">
               <p className="text-sm font-semibold text-foreground">{t(titleKey)}</p>
-              <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{t(descKey)}</p>
+              <p className="text-sm mt-0.5 leading-relaxed">{t(descKey)}</p>
             </li>
           ))}
         </ul>
@@ -191,12 +191,12 @@ export function PanchakPatro() {
 
         <div>
           <h3 className="text-sm font-semibold text-foreground mb-1">{t("panchak.what_title")}</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">{t("panchak.what_body")}</p>
+          <p className="text-sm leading-relaxed">{t("panchak.what_body")}</p>
         </div>
 
         <div>
           <h3 className="text-sm font-semibold text-foreground mb-1">{t("panchak.rahita_title")}</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">{t("panchak.rahita_body")}</p>
+          <p className="text-sm leading-relaxed">{t("panchak.rahita_body")}</p>
         </div>
 
         <div>
@@ -205,7 +205,7 @@ export function PanchakPatro() {
             {PANCHAK_VARIETIES.map((v) => (
               <li key={v.id} className="text-sm leading-relaxed">
                 <span className="font-semibold text-foreground">{en ? v.labelEn : v.labelNe}</span>
-                <span className="text-muted-foreground"> — {en ? v.noteEn : v.noteNe}</span>
+                <span> — {en ? v.noteEn : v.noteNe}</span>
               </li>
             ))}
           </ul>

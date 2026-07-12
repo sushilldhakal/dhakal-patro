@@ -81,7 +81,7 @@ export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
 
     if (profiles === null) {
       return (
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-6 text-sm">
           <Loader2 className="size-4 animate-spin" /> {t("common.loading")}
         </div>
       );
@@ -100,7 +100,7 @@ export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
         <>
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center">
             <p className="text-sm font-medium text-foreground">{t("milan.no_profiles_title")}</p>
-            <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+            <p className="mx-auto mt-1 max-w-md text-sm">
               {t("milan.no_profiles_body")}
             </p>
             <Button className="mt-4" onClick={() => setFormDialog({ mode: "add" })}>
@@ -187,10 +187,10 @@ function RoleSlot({
           "border-border bg-muted/10 hover:border-secondary/50 hover:bg-secondary/[0.04]",
         )}
       >
-        <UserRound className="size-8 text-muted-foreground/60" />
+        <UserRound className="size-8" />
         <span className="text-sm font-semibold text-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground">{emptyLabel}</span>
-        <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+        <span className="text-xs">{emptyLabel}</span>
+        <ChevronRight className="size-4" aria-hidden />
       </button>
     );
   }
@@ -204,7 +204,7 @@ function RoleSlot({
     <div className={cn("rounded-2xl border p-4 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]", accent)}>
       <div className="mb-2 flex items-start justify-between gap-2">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="text-sm font-semibold uppercase tracking-wide">{label}</p>
           <p className="mt-0.5 flex items-center gap-1.5 text-base font-bold text-foreground">
             <span className="truncate">{profile.full_name}</span>
             {profile.is_default ? <Star className="size-3.5 shrink-0 text-secondary" /> : null}
@@ -216,7 +216,7 @@ function RoleSlot({
           </Button>
         ) : null}
       </div>
-      <div className="space-y-1 text-xs text-muted-foreground">
+      <div className="space-y-1 text-xs">
         <p className="flex items-center gap-1.5">
           <Clock className="size-3 shrink-0" />
           {dob}
@@ -282,12 +282,12 @@ function RolePickerDialog({
                       <span className="truncate">{p.full_name}</span>
                       {p.is_default ? <Star className="size-3 shrink-0 text-secondary" /> : null}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    <p className="mt-0.5 truncate text-xs">
                       {dob}
                       {p.birth_time ? ` · ${p.birth_time}` : ""} · {place}
                     </p>
                     {blocked ? (
-                      <p className="mt-1 text-[10px] text-amber-600 dark:text-amber-400">
+                      <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
                         {t("milan.already_other_role")}
                       </p>
                     ) : null}

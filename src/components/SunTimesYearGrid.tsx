@@ -110,7 +110,7 @@ function useMonthTableColumns() {
         cell: (info) => {
           const mark = info.getValue();
           const ayanaNe = info.row.original.ayanaNe;
-          if (!mark) return <span className="text-muted-foreground">—</span>;
+          if (!mark) return <span>—</span>;
           return (
             <span
               className={cn(
@@ -226,26 +226,26 @@ function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
     >
       {!hideHeader ? (
         <div>
-          <h3 className="m-0 text-[15px] font-bold">{t("sun_times.grid_title")}</h3>
-          <span className="mt-0.5 block text-[11.5px] font-medium text-muted-foreground">
+          <h3 className="m-0 text-md font-bold">{t("sun_times.grid_title")}</h3>
+          <span className="mt-0.5 block text-sm font-medium">
             {t("sun_times.subtitle", { year: toNepaliDigits(bsYear) })} · {locationLabel}
           </span>
         </div>
       ) : null}
       <div className="flex shrink-0 gap-3">
-        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-sm font-medium">
           <Sunrise className="size-4" strokeWidth={1.8} />
           {t("sun_times.col_sunrise")}
         </span>
-        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-sm font-medium">
           <Sunset className="size-4" strokeWidth={1.8} />
           {t("sun_times.col_sunset")}
         </span>
-        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-sm font-medium">
           <span className={patroAyanaNorth}>उ</span>
           {t("sun_times.north_ayana")}
         </span>
-        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-sm font-medium">
           <span className={patroAyanaSouth}>द</span>
           {t("sun_times.south_ayana")}
         </span>
@@ -269,14 +269,14 @@ function SunTimesYearMatrix({
   return (
     <div className="max-w-full overflow-x-auto overscroll-x-contain [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
       <table
-        className="w-max min-w-full border-collapse table-fixed text-[13px] font-semibold font-num"
+        className="w-max min-w-full border-collapse table-fixed text-sm font-semibold font-num"
         aria-label={`Sunrise and sunset grid for BS year ${bsYear}`}
       >
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="col"
-              className="sticky left-0 z-[4] w-12 min-w-12 border-r border-b border-border bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground"
+              className="sticky left-0 z-[4] w-12 min-w-12 border-r border-b border-border bg-card px-2.5 py-2 text-center text-sm font-bold"
             >
               {t("sun_times.col_day")}
             </TableHead>
@@ -284,7 +284,7 @@ function SunTimesYearMatrix({
               <TableHead
                 key={name}
                 scope="col"
-                className="w-[72px] min-w-[72px] overflow-hidden border-b border-border bg-card px-1 py-2.5 text-center text-xs font-bold whitespace-nowrap text-ellipsis text-muted-foreground"
+                className="w-[72px] min-w-[72px] overflow-hidden border-b border-border bg-card px-1 py-2.5 text-center text-xs font-bold whitespace-nowrap text-ellipsis"
               >
                 {name}
               </TableHead>
@@ -298,7 +298,7 @@ function SunTimesYearMatrix({
               <TableRow key={day} className="hover:bg-transparent">
                 <TableHead
                   scope="row"
-                  className="sticky left-0 z-[2] w-12 min-w-12 border-r border-b border-border/70 bg-card px-2.5 py-2 text-center text-[13px] font-bold text-muted-foreground"
+                  className="sticky left-0 z-[2] w-12 min-w-12 border-r border-b border-border/70 bg-card px-2.5 py-2 text-center text-sm font-bold"
                 >
                   {toNepaliDigits(day)}
                 </TableHead>
@@ -393,7 +393,7 @@ function SunTimesYearAccordion({
             <AccordionTrigger className="px-1 text-base font-semibold hover:no-underline">
               <span>
                 {name}
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                <span className="ml-2 text-sm font-normal">
                   {t("sun_times.days_count", { count: toNepaliDigits(getBSMonthLength(bsYear, month)) })}
                 </span>
               </span>
@@ -455,7 +455,7 @@ export function SunTimesYearGrid({
   if (isError) {
     return (
       <div className="mt-5 max-w-full overflow-hidden rounded-xl bg-card shadow-xs shadow-ring-soft">
-        <p className="m-0 px-4 py-3.5 text-xs font-medium text-muted-foreground">
+        <p className="m-0 px-4 py-3.5 text-xs font-medium">
           Could not load sunrise/sunset times for this location.
         </p>
       </div>

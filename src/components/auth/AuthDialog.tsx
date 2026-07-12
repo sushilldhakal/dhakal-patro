@@ -144,7 +144,7 @@ export function AuthDialog({
                 disabled={busy}
               />
             )}
-            <div className="flex w-full items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex w-full items-center gap-3 text-xs">
               <span className="h-px flex-1 bg-border" />
               {t("auth.or")}
               <span className="h-px flex-1 bg-border" />
@@ -215,7 +215,7 @@ export function AuthDialog({
           </Button>
         </form>
 
-        <div className="flex flex-col gap-1 text-center text-sm text-muted-foreground">
+        <div className="flex flex-col gap-1 text-center text-sm">
           {mode === "login" && (
             <>
               <button type="button" className="hover:text-foreground" onClick={() => reset("forgot")}>

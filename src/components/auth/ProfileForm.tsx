@@ -142,7 +142,7 @@ export function ProfileForm({
           }
         />
         {form.country && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs">
             {form.country}
             {form.timezone ? ` · ${form.timezone}` : ""}
           </p>
