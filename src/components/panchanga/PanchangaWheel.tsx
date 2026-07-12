@@ -2,7 +2,18 @@ import { useTranslation } from "react-i18next";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { FastForward, Fullscreen, Minimize2, Pause, Play, Rewind } from "lucide-react";
+import {
+  Clock,
+  FastForward,
+  Fullscreen,
+  Minimize2,
+  Pause,
+  Play,
+  Rewind,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
 import { fetchPanchangaAtTime, panchangaKeys } from "@/lib/api";
 import { getPanchangaDetail } from "@/lib/panchanga-format";
@@ -24,6 +35,7 @@ import { useLocale } from "@/i18n/locale";
 import { patroSkel, patroWheelShell } from "@/lib/patro-classes";
 import {
   wheelDock,
+  wheelDockEditInput,
   wheelDockGrp,
   wheelDockLabel,
   wheelDockSep,
@@ -48,12 +60,7 @@ import {
   wheelTipRow,
   wheelTipSym,
   wheelTipTitle,
-  wheelYearScrub,
   wheelYearScrubBtnActive,
-  wheelYearScrubCount,
-  wheelYearScrubLabel,
-  wheelYearScrubPlayBtn,
-  wheelYearScrubShell,
   wheelYearScrubSpeed,
 } from "@/lib/wheel-classes";
 import { cn } from "@/lib/utils";
@@ -84,6 +91,8 @@ export type YearWheelScrub = {
   onPause: () => void;
   /** Receives the global day index; the page maps it back to (year, day). */
   onDayChange: (day: number) => void;
+  /** Jump straight to a day-in-year (1-based) within the active year; pauses playback. */
+  onJumpDay: (dayInYear: number) => void;
   onScrubStart: () => void;
   onScrubEnd: () => void;
   /** Multi-year range context — shows the active year + day-in-year label. */
@@ -92,41 +101,21 @@ export type YearWheelScrub = {
   daysInYear?: number;
 };
 
-function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
+/** Year-view playback controls (rewind / play-pause / fast-forward) for the dock. */
+function WheelYearPlayback({ scrub }: { scrub: YearWheelScrub }) {
   const { t } = useTranslation();
   const { pick, digits } = useLocale();
-  const {
-    day,
-    totalDays,
-    direction,
-    speed,
-    onForward,
-    onBackward,
-    onPause,
-    onDayChange,
-    onScrubStart,
-    onScrubEnd,
-    yearLabel,
-    dayInYear,
-    daysInYear,
-  } = scrub;
+  const { direction, speed, onForward, onBackward, onPause } = scrub;
   const num = (n: number) => digits(n);
-  const fillPct = totalDays <= 1 ? 100 : ((day - 1) / (totalDays - 1)) * 100;
   const playing = direction !== 0;
-  const speedTitle = (base: string) =>
-    playing ? `${base} · ${num(speed)}×` : base;
+  const speedTitle = (base: string) => (playing ? `${base} · ${num(speed)}×` : base);
 
   return (
-    <div className={wheelYearScrubShell}>
-      <span className={wheelYearScrubLabel}>{pick("वर्ष", "Year")}</span>
+    <div className={cn(wheelDockGrp, "shrink-0")}>
       {/* Rewind — press repeatedly to accelerate backward (2×/4×/8×). */}
       <button
         type="button"
-        className={cn(
-          wheelYearScrubPlayBtn,
-          "shrink-0",
-          direction === -1 && wheelYearScrubBtnActive,
-        )}
+        className={cn(wheelIconBtn, direction === -1 && wheelYearScrubBtnActive)}
         onClick={onBackward}
         aria-label={pick("पछाडि", "Rewind")}
         aria-pressed={direction === -1}
@@ -137,7 +126,7 @@ function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
       {/* Center: play forward when paused, pause when playing. */}
       <button
         type="button"
-        className={cn(wheelYearScrubPlayBtn, "shrink-0")}
+        className={wheelIconBtn}
         onClick={playing ? onPause : onForward}
         aria-label={playing ? t("panchanga_year.pause") : t("panchanga_year.play")}
         title={playing ? t("panchanga_year.pause") : t("panchanga_year.play_title")}
@@ -151,11 +140,7 @@ function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
       {/* Fast-forward — press repeatedly to accelerate forward (2×/4×/8×). */}
       <button
         type="button"
-        className={cn(
-          wheelYearScrubPlayBtn,
-          "shrink-0",
-          direction === 1 && wheelYearScrubBtnActive,
-        )}
+        className={cn(wheelIconBtn, direction === 1 && wheelYearScrubBtnActive)}
         onClick={onForward}
         aria-label={pick("अगाडि", "Fast forward")}
         aria-pressed={direction === 1}
@@ -163,40 +148,8 @@ function WheelYearScrub({ scrub }: { scrub: YearWheelScrub }) {
       >
         <FastForward className={wheelDockIcon} strokeWidth={2} aria-hidden />
       </button>
-      <span
-        className={cn(wheelYearScrubSpeed, !playing && "opacity-0")}
-        aria-hidden={!playing}
-      >
+      <span className={cn(wheelYearScrubSpeed, !playing && "opacity-0")} aria-hidden={!playing}>
         {num(speed)}×
-      </span>
-      <input
-        type="range"
-        className={wheelYearScrub}
-        min={1}
-        max={totalDays}
-        step={1}
-        value={day}
-        aria-label={t("panchanga_year.scrub_label")}
-        style={{ "--fill": `${fillPct}%` } as React.CSSProperties}
-        onPointerDown={onScrubStart}
-        onPointerUp={onScrubEnd}
-        onPointerCancel={onScrubEnd}
-        onLostPointerCapture={onScrubEnd}
-        onChange={(e) => onDayChange(Number(e.target.value))}
-      />
-      <span className={wheelYearScrubCount}>
-        {yearLabel != null && dayInYear != null && daysInYear != null ? (
-          <>
-            <span className="dim">{yearLabel} · </span>
-            {num(dayInYear)}
-            <span className="dim">/{num(daysInYear)}</span>
-          </>
-        ) : (
-          <>
-            {num(day)}
-            <span className="dim">/{num(totalDays)}</span>
-          </>
-        )}
       </span>
     </div>
   );
@@ -294,6 +247,9 @@ function PanchangaWheelBody({
   const [tip, setTip] = useState({ x: 0, y: 0 });
   const [scrubPinned, setScrubPinned] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showYearTime, setShowYearTime] = useState(false);
+  const [editingDay, setEditingDay] = useState(false);
+  const [editingTime, setEditingTime] = useState(false);
   const expandedHistoryRef = useRef(false);
   const ignorePopRef = useRef(false);
 
@@ -413,6 +369,32 @@ function PanchangaWheelBody({
     setScrubPinned(true);
   }, []);
 
+  // Commit an edited "HH:MM" clock value → convert to a g-offset from sunrise
+  // (mirrors the nowG math) and pin the wheel to that moment of the same day.
+  const commitTimeEdit = useCallback(
+    (value: string) => {
+      setEditingTime(false);
+      const [hh, mm] = value.split(":").map(Number);
+      if (hh == null || mm == null || Number.isNaN(hh) || Number.isNaN(mm)) return;
+      const mins = hh * 60 + mm;
+      let g = (mins - det.sunriseMin) / 24;
+      g = ((g % 60) + 60) % 60;
+      handleScrubChange(g);
+    },
+    [det.sunriseMin, handleScrubChange],
+  );
+
+  const commitDayEdit = useCallback(
+    (value: string) => {
+      setEditingDay(false);
+      if (!yearScrub) return;
+      const n = Number(value);
+      if (!Number.isFinite(n)) return;
+      yearScrub.onJumpDay(Math.round(n));
+    },
+    [yearScrub],
+  );
+
   const snapToNow = useCallback(() => {
     setScrubPinned(false);
     setSpin(0);
@@ -481,21 +463,6 @@ function PanchangaWheelBody({
 
   const { pick, digits } = useLocale();
   const stageRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!yearScrub) return;
-    const el = stageRef.current;
-    if (!el) return;
-    const sync = () => {
-      const { width, height } = el.getBoundingClientRect();
-      const diameter = Math.min(width, height);
-      el.style.setProperty("--w-year-span", `${Math.round(diameter * 0.92)}px`);
-    };
-    sync();
-    const ro = new ResizeObserver(sync);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [yearScrub, expanded]);
   const num = (n: number | string) => digits(n);
   const scrubClock = gClock(scrubG, det.sunriseMin);
   const scrubTithi = atTimeData
@@ -622,77 +589,218 @@ function PanchangaWheelBody({
         </div>
 
         <div className={wheelDock}>
-          <div className={wheelDockTimeGrp}>
-            <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
-            <input
-              className={wheelScrub}
-              type="range"
-              min="0"
-              max="60"
-              step="0.25"
-              value={scrubG}
-              style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
-              onChange={(e) => handleScrubChange(+e.target.value)}
-            />
-            <span className={wheelDockVal}>{num(scrubClock)}</span>
-          </div>
-          <div className={wheelDockSep} />
-          <div className={cn(wheelDockGrp, "shrink-0")}>
-            {isToday && (
-              <button
-                type="button"
-                className={wheelDockTodayBtn}
-                title={pick("अहिलेको समय", "Current time")}
-                onClick={snapToNow}
-              >
-                {pick("आज", "Now")}
-              </button>
-            )}
-            <button
-              type="button"
-              className={wheelIconBtn}
-              title={pick("उत्तर सिधा · जुम रिसेट · सूर्योदय", "North up · reset zoom · sunrise")}
-              onClick={resetToSunrise}
-            >
-              ⟳
-            </button>
-            <button
-              type="button"
-              className={wheelIconBtn}
-              title={pick("जुम इन", "Zoom in")}
-              onClick={() => handleZoom(zoom * 1.4)}
-            >
-              +
-            </button>
-            <button
-              type="button"
-              className={wheelIconBtn}
-              title={pick("जुम आउट", "Zoom out")}
-              onClick={() => handleZoom(zoom / 1.4)}
-            >
-              −
-            </button>
-            <button
-              type="button"
-              className={wheelIconBtn}
-              title={
-                expanded
-                  ? pick("सामान्य दृश्य", "Exit full width")
-                  : pick("पूर्ण चौडाइ", "Full width view")
-              }
-              aria-pressed={expanded}
-              onClick={toggleExpanded}
-            >
-              {expanded ? (
-                <Minimize2 className={wheelDockIcon} strokeWidth={2} aria-hidden />
-              ) : (
-                <Fullscreen className={wheelDockIcon} strokeWidth={2} aria-hidden />
-              )}
-            </button>
-          </div>
+          {yearScrub ? (
+            <>
+              <WheelYearPlayback scrub={yearScrub} />
+              <div className={wheelDockSep} />
+              <div className={cn(wheelDockGrp, "min-w-0 justify-center")}>
+                {editingDay ? (
+                  <span className={cn(wheelDockVal, "inline-flex min-w-0 items-center gap-1")}>
+                    {yearScrub.yearLabel != null && (
+                      <span className="text-[var(--w-ink-dim)]">{yearScrub.yearLabel} · </span>
+                    )}
+                    <input
+                      type="number"
+                      autoFocus
+                      defaultValue={yearScrub.dayInYear ?? yearScrub.day}
+                      min={1}
+                      max={yearScrub.daysInYear ?? yearScrub.totalDays}
+                      aria-label={pick("दिन जानुहोस्", "Jump to day")}
+                      className={cn(wheelDockEditInput, "w-[54px] max-[720px]:w-[44px]")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitDayEdit((e.target as HTMLInputElement).value);
+                        else if (e.key === "Escape") setEditingDay(false);
+                      }}
+                      onBlur={(e) => commitDayEdit(e.target.value)}
+                    />
+                    <span className="text-[var(--w-ink-dim)]">
+                      /{num(yearScrub.daysInYear ?? yearScrub.totalDays)}
+                    </span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className={cn(wheelDockVal, "min-w-0 cursor-pointer whitespace-nowrap")}
+                    title={pick("दिन जानुहोस्", "Jump to day")}
+                    onClick={() => {
+                      yearScrub.onPause();
+                      setEditingDay(true);
+                    }}
+                  >
+                    {yearScrub.yearLabel != null &&
+                    yearScrub.dayInYear != null &&
+                    yearScrub.daysInYear != null ? (
+                      <>
+                        <span className="text-[var(--w-ink-dim)]">{yearScrub.yearLabel} · </span>
+                        {num(yearScrub.dayInYear)}
+                        <span className="text-[var(--w-ink-dim)]">/{num(yearScrub.daysInYear)}</span>
+                      </>
+                    ) : (
+                      <>
+                        {num(yearScrub.day)}
+                        <span className="text-[var(--w-ink-dim)]">/{num(yearScrub.totalDays)}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                {editingTime ? (
+                  <input
+                    type="time"
+                    autoFocus
+                    defaultValue={scrubClock}
+                    aria-label={pick("समय", "Time")}
+                    className={cn(wheelDockEditInput, "w-[94px] max-[720px]:w-[80px]")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitTimeEdit((e.target as HTMLInputElement).value);
+                      else if (e.key === "Escape") setEditingTime(false);
+                    }}
+                    onBlur={(e) => commitTimeEdit(e.target.value)}
+                  />
+                ) : showYearTime ? (
+                  <button
+                    type="button"
+                    className={cn(wheelDockVal, "cursor-pointer whitespace-nowrap")}
+                    title={pick("समय बदल्नुहोस्", "Edit time")}
+                    onClick={() => {
+                      yearScrub.onPause();
+                      setEditingTime(true);
+                    }}
+                  >
+                    {num(scrubClock)}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={wheelIconBtn}
+                    title={pick("समय हेर्नुहोस्", "Show / edit time")}
+                    onClick={() => {
+                      yearScrub.onPause();
+                      setShowYearTime(true);
+                      setEditingTime(true);
+                    }}
+                  >
+                    <Clock className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                  </button>
+                )}
+              </div>
+              <div className={wheelDockSep} />
+              <div className={cn(wheelDockGrp, "shrink-0")}>
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={pick("रिलोड · जुम रिसेट · सूर्योदय", "Reload · reset zoom · sunrise")}
+                  onClick={resetToSunrise}
+                >
+                  <RotateCcw className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={pick("जुम इन", "Zoom in")}
+                  onClick={() => handleZoom(zoom * 1.4)}
+                >
+                  <ZoomIn className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={pick("जुम आउट", "Zoom out")}
+                  onClick={() => handleZoom(zoom / 1.4)}
+                >
+                  <ZoomOut className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={
+                    expanded
+                      ? pick("सामान्य दृश्य", "Exit full width")
+                      : pick("पूर्ण चौडाइ", "Full width view")
+                  }
+                  aria-pressed={expanded}
+                  onClick={toggleExpanded}
+                >
+                  {expanded ? (
+                    <Minimize2 className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                  ) : (
+                    <Fullscreen className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                  )}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={wheelDockTimeGrp}>
+                <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
+                <input
+                  className={wheelScrub}
+                  type="range"
+                  min="0"
+                  max="60"
+                  step="0.25"
+                  value={scrubG}
+                  style={{ "--fill": `${(scrubG / 60) * 100}%` } as React.CSSProperties}
+                  onChange={(e) => handleScrubChange(+e.target.value)}
+                />
+                <span className={wheelDockVal}>{num(scrubClock)}</span>
+              </div>
+              <div className={wheelDockSep} />
+              <div className={cn(wheelDockGrp, "shrink-0")}>
+                {isToday && (
+                  <button
+                    type="button"
+                    className={wheelDockTodayBtn}
+                    title={pick("अहिलेको समय", "Current time")}
+                    onClick={snapToNow}
+                  >
+                    {pick("आज", "Now")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={pick("उत्तर सिधा · जुम रिसेट · सूर्योदय", "North up · reset zoom · sunrise")}
+                  onClick={resetToSunrise}
+                >
+                  ⟳
+                </button>
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={pick("जुम इन", "Zoom in")}
+                  onClick={() => handleZoom(zoom * 1.4)}
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={pick("जुम आउट", "Zoom out")}
+                  onClick={() => handleZoom(zoom / 1.4)}
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  className={wheelIconBtn}
+                  title={
+                    expanded
+                      ? pick("सामान्य दृश्य", "Exit full width")
+                      : pick("पूर्ण चौडाइ", "Full width view")
+                  }
+                  aria-pressed={expanded}
+                  onClick={toggleExpanded}
+                >
+                  {expanded ? (
+                    <Minimize2 className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                  ) : (
+                    <Fullscreen className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
-
-        {yearScrub && <WheelYearScrub scrub={yearScrub} />}
       </div>
     </div>
   );

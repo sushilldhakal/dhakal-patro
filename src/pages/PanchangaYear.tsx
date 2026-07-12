@@ -269,6 +269,19 @@ export function PanchangaYear() {
     prefetchAround(clampedDay);
   }, [clampedDay, prefetchAround]);
 
+  // Jump straight to a day-in-year (from the editable dock readout): pause any
+  // autoplay, clamp to the active year's length, and fetch that day.
+  const jumpToDay = useCallback(
+    (dayInYear: number) => {
+      const clamped = Math.min(Math.max(1, Math.round(dayInYear)), totalDays);
+      setPlay({ dir: 0, speed: 1 });
+      setDayOfYear(clamped);
+      setQueryDay(clamped);
+      prefetchAround(clamped);
+    },
+    [totalDays, prefetchAround],
+  );
+
   const MAX_PLAY_SPEED = 8;
   const stepForward = useCallback(() => {
     setPlay((p) =>
@@ -568,6 +581,7 @@ export function PanchangaYear() {
               onBackward: stepBackward,
               onPause: pausePlay,
               onDayChange: handleGlobalDayChange,
+              onJumpDay: jumpToDay,
               onScrubStart: () => setIsScrubbing(true),
               onScrubEnd: finishScrub,
               ...(rangeSpan > 1 && {

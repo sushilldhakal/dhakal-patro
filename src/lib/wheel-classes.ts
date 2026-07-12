@@ -32,6 +32,10 @@ export const wheelDockLabel =
 export const wheelDockVal =
   "min-w-[58px] shrink-0 text-center font-num text-[12.5px] font-semibold tabular-nums text-[var(--w-ink)] max-[720px]:min-w-[44px] max-[720px]:text-[11px] max-[480px]:min-w-[38px] max-[480px]:text-[10.5px]";
 
+/** Inline editable field inside the dock (jump-to-day / jump-to-time). */
+export const wheelDockEditInput =
+  "rounded-md border border-[var(--w-accent)] bg-[color-mix(in_srgb,var(--w-surface)_92%,#112c2a)] px-1.5 py-0.5 text-center font-num text-[12.5px] font-semibold tabular-nums text-[var(--w-ink)] outline-none [color-scheme:dark] max-[720px]:text-[11px] max-[480px]:text-[10.5px]";
+
 export const wheelDockTodayBtn =
   "h-[30px] shrink-0 cursor-pointer rounded-full border-none bg-[var(--w-accent)] px-4 text-[12.5px] font-bold text-[#1a1205] active:translate-y-px max-[720px]:h-7 max-[720px]:px-2.5 max-[720px]:text-[11px] max-[480px]:h-6 max-[480px]:px-2 max-[480px]:text-[10.5px]";
 
@@ -146,21 +150,6 @@ export function wheelSvg(dragging?: boolean) {
 /** Range input in wheel dock — pair with `.wheel-scrub` for thumb pseudo-elements. */
 export const wheelScrub =
   "wheel-scrub h-2 w-[168px] shrink cursor-pointer touch-pan-x select-none [-webkit-tap-highlight-color:transparent] max-[720px]:w-[88px] max-[480px]:w-[72px] max-[480px]:h-1.5";
-
-/** Year-view day scrub — vertical track on the right inside the wheel stage. */
-export const wheelYearScrubShell =
-  "absolute right-3 top-1/2 z-[22] flex h-[var(--w-year-span,min(72vh,720px))] max-h-[calc(100%-4.5rem)] -translate-y-1/2 flex-col items-center gap-2 rounded-full border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-2 py-3 text-[var(--w-ink)] shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur-md max-[720px]:right-2 max-[720px]:max-h-[calc(100%-5rem)] max-[720px]:gap-1.5 max-[720px]:px-1.5 max-[720px]:py-2 max-[480px]:right-1.5 max-[480px]:max-h-[calc(100%-5.5rem)]";
-
-export const wheelYearScrubLabel =
-  "shrink-0 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--w-ink-dim)] max-[480px]:hidden";
-
-export const wheelYearScrub =
-  "wheel-year-scrub min-h-0 w-2 flex-1 cursor-pointer touch-none select-none [-webkit-tap-highlight-color:transparent] max-[480px]:w-1.5";
-
-export const wheelYearScrubCount =
-  "shrink-0 font-num text-[10px] font-semibold tabular-nums leading-tight text-center text-[var(--w-ink)] max-[480px]:text-[9px] [&_.dim]:font-medium [&_.dim]:text-[var(--w-ink-dim)]";
-
-export const wheelYearScrubPlayBtn = cn(wheelIconBtn, "max-[480px]:h-6 max-[480px]:w-6");
 
 /** Active rewind/forward button — tinted when that direction is playing. */
 export const wheelYearScrubBtnActive =
