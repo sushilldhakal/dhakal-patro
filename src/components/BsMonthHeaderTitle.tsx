@@ -24,6 +24,7 @@ import {
   patroMonthNavShell,
   patroMonthRangeCompactBtn,
   patroMobilePickerBtn,
+  patroMobileStepBtn,
 } from "@/lib/patro-classes";
 
 interface Props {
@@ -465,12 +466,35 @@ export function BsMonthHeaderTitle({
             </div>
           ) : null}
           <div className="col-start-1 row-start-2 flex min-w-0 flex-col gap-1">
-            {drawerBlock}
-            {!mobileDateTimeDrawer ? (
+            {mobileDateTimeDrawer ? (
+              // Prev/next arrows flank the date picker so the month/day can be
+              // stepped without opening the sheet — mirrors the md+ nav row.
+              <div className="flex min-w-0 items-center gap-1">
+                <button
+                  type="button"
+                  className={patroMobileStepBtn}
+                  onClick={onPrev}
+                  disabled={prevDisabled}
+                  aria-label={prevAriaLabel}
+                >
+                  <ChevronLeft size={15} strokeWidth={2} />
+                </button>
+                {drawerBlock}
+                <button
+                  type="button"
+                  className={patroMobileStepBtn}
+                  onClick={onNext}
+                  disabled={nextDisabled}
+                  aria-label={nextAriaLabel}
+                >
+                  <ChevronRight size={15} strokeWidth={2} />
+                </button>
+              </div>
+            ) : (
               <div className={patroMonthNavShell}>
                 <MonthNavControls {...navProps} />
               </div>
-            ) : null}
+            )}
             {panchangaSubtitle ? (
               <p className="m-0 text-[11px] font-medium leading-none text-muted-foreground">{panchangaSubtitle}</p>
             ) : null}
