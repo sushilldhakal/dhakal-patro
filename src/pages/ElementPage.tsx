@@ -11,6 +11,7 @@ import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-locat
 import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
 import { useRouteLoading } from "@/lib/route-loading";
 import { ELEMENT_BY_ID } from "@/lib/panchanga-elements";
+import { ELEMENT_DESCRIPTIONS } from "@/lib/panchanga-element-descriptions";
 import {
   elementKeys,
   fetchElementDay,
@@ -212,6 +213,38 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
   return <p className="text-sm">{pick("विवरण उपलब्ध छैन।", "No data available.")}</p>;
 }
 
+/* ── description (what it is · how it's calculated · what it means) ──────── */
+
+function ElementDescription({ elementId }: { elementId: string }) {
+  const { pick } = useLocale();
+  const desc = ELEMENT_DESCRIPTIONS[elementId];
+  if (!desc) return null;
+
+  const blocks: { titleNe: string; titleEn: string; body: { ne: string; en: string } }[] = [
+    { titleNe: "यो के हो", titleEn: "What it is", body: desc.what },
+    { titleNe: "कसरी गणना गरिन्छ", titleEn: "How it's calculated", body: desc.how },
+    { titleNe: "यसको अर्थ", titleEn: "What it means", body: desc.meaning },
+  ];
+
+  return (
+    <section className={cn(patroCard, "mt-6 p-4")} aria-label={pick("विवरण", "About")}>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-secondary">
+        {pick("बारेमा", "About")}
+      </h2>
+      <div className="flex flex-col gap-4">
+        {blocks.map((b) => (
+          <div key={b.titleEn} className="flex flex-col gap-1">
+            <h3 className="text-sm font-bold text-foreground">{pick(b.titleNe, b.titleEn)}</h3>
+            <p className="m-0 text-sm leading-relaxed text-muted-foreground">
+              {pick(b.body.ne, b.body.en)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ── page ───────────────────────────────────────────────────────────────── */
 
 export function ElementPage() {
@@ -329,6 +362,8 @@ export function ElementPage() {
       ) : (
         <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
       )}
+
+      <ElementDescription elementId={meta.id} />
 
       <p className="mt-6 text-sm">
         <Link to="/panchanga/details" className="text-primary underline">

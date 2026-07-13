@@ -15,7 +15,7 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
  * without a manual purge.
  */
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "24";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "25";
 
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;

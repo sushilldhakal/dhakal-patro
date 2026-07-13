@@ -322,14 +322,18 @@ function clockToMinutes(raw?: string | null): number | null {
 }
 
 /**
- * The five doshas shown on the Panchang-Shuddhi (अशुभ) row, keyed by the backend
+ * The doshas shown on the Panchang-Shuddhi (अशुभ) row, keyed by the backend
  * dosha key and relabelled to match the drikpanchang chart. Any other
  * inauspicious timing (yamaganda, gulika, baana, ganda moola, …) is excluded.
+ * Covers the Visha Ghati of each panchanga element: तिथि विष (tithi),
+ * नक्षत्र विष (varjyam), योग विष (yoga), and करण / भद्रा (bhadra).
  */
 const SHUDDHI_DOSHAS: Record<string, { ne: string; en: string }> = {
   tithi: { ne: "तिथि", en: "Tithi" },
   tithi_randhra: { ne: "तिथि रन्ध्र", en: "Tithi Randhra" },
+  visha_tithi: { ne: "तिथि विष", en: "Tithi Visha" },
   varjyam: { ne: "नक्षत्र विष", en: "Nakshatra Visha" },
+  visha_yoga: { ne: "योग विष", en: "Yoga Visha" },
   rahu_kalam: { ne: "राहु", en: "Rahu" },
   bhadra: { ne: "करण", en: "Karana" },
 };
