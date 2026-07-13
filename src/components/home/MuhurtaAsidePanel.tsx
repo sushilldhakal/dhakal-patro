@@ -237,7 +237,7 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
         ))}
       </div>
 
-      <p className="m-0 flex items-start gap-1.5 text-sm leading-snug font-medium">
+      <p className="m-0 flex items-start gap-1.5 text-sm leading-snug text-base">
         <Info size={13} strokeWidth={2} className="mt-px shrink-0 opacity-75" aria-hidden />
         <span>{t(SUB_TAB_HINT_KEY[subTab])}</span>
       </p>

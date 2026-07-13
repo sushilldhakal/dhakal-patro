@@ -1224,7 +1224,7 @@ export function Eclipses() {
           सूर्यको उज्यालोले पृथ्वीपछाडि <span className="hl">प्रच्छायाँ (umbra)</span> र{" "}
           <span className="hl">उपछायाँ (penumbra)</span> को शंकु बनाउँछ। तल{" "}
           <b>▶ चलाउनुहोस्</b> — पृथ्वी क्रान्तिवृत्तमा घुम्छ, चन्द्र छिटो चर्किन्छ;{" "}
-          <b>☊ पात-चक्र</b> बटनले मात्र राहु–केतु ढिलो घुमाउँछ। ग्रहण त्यतिबेला मात्र हुन्छ जब
+          <b>पात-चक्र</b> बटनले मात्र राहु–केतु ढिलो घुमाउँछ। ग्रहण त्यतिबेला मात्र हुन्छ जब
           पूर्णिमा/औंसी <b>पात रेखा</b> नजिक पर्छ — वर्षमा झन्डै दुई पटक मात्र।
         </Lede>
         <EclipseStudy />
@@ -1301,7 +1301,7 @@ export function Eclipses() {
         <Lede>
           The Sun's light casts an <span className="hl">umbra</span> and <span className="hl">penumbra</span>{" "}
           cone behind the Earth. Press <b>▶ play</b> below — the Earth moves on the ecliptic, the
-          Moon cycles quickly; the <b>☊ node-cycle</b> button rotates only Rahu–Ketu slowly. An
+          Moon cycles quickly; the <b>node-cycle</b> button rotates only Rahu–Ketu slowly. An
           eclipse happens only when a full/new moon falls near the <b>node line</b> — roughly twice
           a year.
         </Lede>
@@ -1394,7 +1394,7 @@ export function Ayanamsha() {
       <Section kicker="०२" title="अयनांश चक्र" en="Interactive: the precessing equinox">
         <Lede>
           तलको चक्रमा बाहिरी <b>१२ राशि तारापुञ्जमा अडिएका</b> छन् (निरयन)। <b>▶ चलाउनुहोस्</b> —
-          वर्ष अघि बढ्दा पृथ्वीको अक्ष-चलनले <span className="hl-amber">सायन शून्य (☉ विषुव)</span>{" "}
+          वर्ष अघि बढ्दा पृथ्वीको अक्ष-चलनले <span className="hl-amber">सायन शून्य (विषुव)</span>{" "}
           लाई ताराका सापेक्ष पछाडि सार्छ; बढ्दै जाने <span className="hl-amber">अम्बर खाँडो</span> नै
           अयनांश हो। तल्लो स्लाइडरले एउटै <span className="hl">ग्रह</span> लाई सार्छ — हेर्नुहोस्
           कसरी त्यही आकाश-स्थान निरयन र सायनमा फरक राशिमा पढिन्छ।
@@ -1448,7 +1448,7 @@ export function Ayanamsha() {
         <Lede>
           In the wheel below the outer <b>12 signs are fixed to the star-clusters</b> (sidereal).
           Press <b>▶ play</b> — as the years advance, Earth's axial precession drags the{" "}
-          <span className="hl-amber">tropical zero (☉ equinox)</span> backward relative to the
+          <span className="hl-amber">tropical zero (equinox)</span> backward relative to the
           stars; the growing <span className="hl-amber">amber wedge</span> is the ayanamsha. The
           lower slider moves a single <span className="hl">planet</span> — see how the same sky
           position reads as a different sign in sidereal vs tropical.

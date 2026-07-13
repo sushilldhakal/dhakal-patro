@@ -132,9 +132,6 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
               key={e.key}
               className="flex items-center gap-2.5 border-b border-border py-2 last:border-b-0"
             >
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/11 text-md text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] dark:text-accent">
-                {e.symbol}
-              </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="text-sm font-semibold">{pick(e.ne, e.en)}</span>
                 <span className="text-sm font-semibold">

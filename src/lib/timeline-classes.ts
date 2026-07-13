@@ -10,10 +10,10 @@ export function pgxScaleLabelDim(dim?: boolean) {
   return cn(pgxScaleLabel, dim && "opacity-75");
 }
 
-export const pgxHour = "fill-foreground font-mono text-sm font-semibold";
+export const pgxHour = "fill-foreground font-mono text-xs font-semibold";
 
 export const pgxGhati =
-  "fill-muted-foreground font-mono text-sm font-medium";
+  "fill-muted-foreground font-mono text-xs";
 
 export const pgxSunline = "stroke-border [stroke-width:1]";
 
@@ -65,7 +65,7 @@ export const pgxSegnameSm =
   "fill-foreground text-sm font-semibold tracking-tight [font-family:var(--font-sans)]";
 
 export function pgxSegnameCho(bad?: boolean) {
-  return cn(pgxSegname, "text-sm", bad && "fill-[var(--color-danger)]");
+  return cn(pgxSegname, "text-xs", bad && "fill-[var(--color-danger)]");
 }
 
 /** Inauspicious (अशुभ) band label — danger-tinted, slightly smaller. */
@@ -73,7 +73,7 @@ export const pgxSegnameBad =
   "fill-[var(--color-danger)] text-sm font-semibold [font-family:var(--font-sans)]";
 
 export const pgxPaksha =
-  "fill-muted-foreground text-sm font-medium [font-family:var(--font-sans)]";
+  "fill-muted-foreground text-sm text-base [font-family:var(--font-sans)]";
 
 export const pgxArrow =
   "[&_line]:stroke-[var(--brand-teal)] [&_line]:[stroke-width:1.6] [&_line]:stroke-round [&_path]:fill-[var(--brand-teal)] dark:[&_line]:stroke-[var(--brand-yellow)] dark:[&_path]:fill-[var(--brand-yellow)]";
@@ -81,7 +81,7 @@ export const pgxArrow =
 export const pgxArrowBound =
   "stroke-[var(--brand-teal)] [stroke-width:1.3] opacity-100 dark:stroke-[var(--brand-yellow)]";
 
-export const pgxTime = "fill-foreground font-mono text-xs font-medium";
+export const pgxTime = "fill-foreground font-mono text-xs";
 
 export function pgxTimeLagna(lagna?: boolean) {
   return cn(pgxTime, lagna && "opacity-90");
@@ -109,10 +109,10 @@ export const pgTlSunDisc =
 export const pgTlSunHorizon =
   "stroke-[color-mix(in_srgb,var(--color-warning)_55%,var(--muted-foreground))] [stroke-width:1] stroke-round";
 
-export const pgTlMoonEmoji = "text-md";
+export const pgTlMoonEmoji = "text-base";
 
 export const pgTlEventTime =
-  "fill-[var(--color-warning)] font-mono text-sm font-semibold";
+  "fill-[var(--color-warning)] font-mono text-xs font-semibold";
 
 export function pgTlEventTimeMoon(moon?: boolean) {
   return cn(pgTlEventTime, moon && "fill-muted-foreground");

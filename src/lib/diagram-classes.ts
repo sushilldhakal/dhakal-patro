@@ -51,7 +51,7 @@ export const edRing =
 export const edDegtick = "stroke-[var(--tm-gold)]";
 
 export const edDeglabel =
-  "fill-[var(--tm-gold)] font-num text-md font-bold";
+  "fill-[var(--tm-gold)] font-num text-base font-bold";
 
 export const edLens =
   "fill-[var(--tm-amber)] stroke-[color-mix(in_srgb,#000_30%,transparent)] [stroke-width:0.5]";
@@ -78,7 +78,7 @@ export const edRay =
   "stroke-[#ffce5a] [stroke-width:2.4] stroke-round opacity-80";
 
 export const edBodyLabel =
-  "fill-[var(--tm-ink-dim)] text-md font-semibold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-dim)] text-base font-semibold [font-family:var(--pn-font)]";
 
 export const edTiltLabel =
   "fill-foreground text-sm font-semibold [font-family:var(--pn-font)] dark:fill-white";
@@ -98,11 +98,11 @@ export const edPaksha =
   "fill-[var(--tm-ink-faint)] text-sm font-semibold tracking-wide [font-family:var(--pn-font)]";
 
 export function edEndNe() {
-  return "fill-[var(--tm-gold)] text-md font-bold [font-family:var(--pn-font)]";
+  return "fill-[var(--tm-gold)] text-base font-bold [font-family:var(--pn-font)]";
 }
 
 export function edEndEn() {
-  return "fill-[var(--tm-ink-faint)] font-num text-xs font-medium tracking-widest";
+  return "fill-[var(--tm-ink-faint)] font-num text-xs text-base tracking-widest";
 }
 
 export const edScrub =
@@ -159,7 +159,7 @@ export const eclNodeArrowHead =
   "fill-[color-mix(in_srgb,var(--tm-ink)_70%,transparent)]";
 
 export const eclNodeTitle =
-  "fill-[color-mix(in_srgb,var(--tm-ink)_88%,transparent)] text-md font-bold [font-family:var(--pn-font)]";
+  "fill-[color-mix(in_srgb,var(--tm-ink)_88%,transparent)] text-base font-bold [font-family:var(--pn-font)]";
 
 export const eclNodeSym =
   "fill-[var(--tm-amber)] text-lg font-extrabold [font-family:var(--pn-font)]";
@@ -183,7 +183,7 @@ export const eclStatusSub =
   "fill-[var(--tm-ink-faint)] font-num text-sm font-semibold";
 
 export const eclTiltNote =
-  "fill-[var(--tm-ink-faint)] text-xs font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-xs text-base [font-family:var(--pn-font)]";
 
 export function eclMoonOrbit(above?: boolean) {
   return cn(
@@ -310,7 +310,7 @@ export const motEclipseBanner =
   "text-lg font-extrabold [font-family:var(--pn-font)]";
 
 export const motSeasonBanner =
-  "fill-[#d4e4ee] text-md font-bold [font-family:var(--pn-font)]";
+  "fill-[#d4e4ee] text-base font-bold [font-family:var(--pn-font)]";
 
 export function motOrbit(variant: "above" | "below" | "cross") {
   const m = {
@@ -430,7 +430,7 @@ export const solEyeRim =
   "fill-none stroke-[var(--tm-border)] [stroke-width:2]";
 
 const SOL_EYE_STATUS =
-  "fill-[var(--tm-ink-dim)] text-md font-bold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-dim)] text-base font-bold [font-family:var(--pn-font)]";
 
 export function solBannerType(type: "total" | "annular" | "partial") {
   const m = {
@@ -480,7 +480,7 @@ export const hoMarkerTag =
   "fill-[var(--tm-amber)] text-sm font-semibold [font-family:var(--pn-font)]";
 
 export const hoMarkerEn =
-  "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm text-base [font-family:var(--pn-font)]";
 
 export const hoSweep =
   "stroke-[var(--tm-amber)] [stroke-width:2.8] stroke-round opacity-[0.85]";
@@ -678,7 +678,7 @@ export const tmNewmoon =
 export const tmDate = "fill-[var(--tm-ink)] font-num text-sm font-bold";
 
 export const tmDateSub =
-  "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm text-base [font-family:var(--pn-font)]";
 
 export const tmTlCap =
   "fill-[var(--tm-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]";
@@ -690,16 +690,16 @@ export const tmTravelHead =
   "fill-[color-mix(in_srgb,var(--tm-ink)_40%,transparent)]";
 
 export const tmTrackLabel =
-  "fill-[var(--tm-ink)] text-md font-bold [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink)] text-base font-bold [font-family:var(--pn-font)]";
 
 export const tmTrackSub =
-  "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--tm-ink-faint)] text-sm text-base [font-family:var(--pn-font)]";
 
 export const tmSolarBand =
   "fill-[color-mix(in_srgb,var(--tm-gold)_16%,transparent)] stroke-[color-mix(in_srgb,var(--tm-gold)_42%,transparent)] [stroke-width:1.2]";
 
 export const tmSegSym =
-  "fill-[var(--tm-gold)] text-md font-normal [font-family:var(--pn-font)]";
+  "fill-[var(--tm-gold)] text-base font-normal [font-family:var(--pn-font)]";
 
 export const tmVline =
   "stroke-[color-mix(in_srgb,var(--tm-gold)_45%,transparent)] [stroke-width:1] [stroke-dasharray:3_4]";
@@ -752,7 +752,7 @@ export function tmSegName(adhik?: boolean) {
 
 export function tmSegTag(adhik?: boolean) {
   return cn(
-    "fill-[var(--tm-ink-faint)] text-sm font-medium [font-family:var(--pn-font)]",
+    "fill-[var(--tm-ink-faint)] text-sm text-base [font-family:var(--pn-font)]",
     adhik &&
       "fill-[color-mix(in_srgb,var(--tm-amber)_80%,white_10%)] font-semibold",
   );

@@ -226,26 +226,26 @@ function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
     >
       {!hideHeader ? (
         <div>
-          <h3 className="m-0 text-md font-bold">{t("sun_times.grid_title")}</h3>
-          <span className="mt-0.5 block text-sm font-medium">
+          <h3 className="m-0 text-base font-bold">{t("sun_times.grid_title")}</h3>
+          <span className="mt-0.5 block text-sm text-base">
             {t("sun_times.subtitle", { year: toNepaliDigits(bsYear) })} · {locationLabel}
           </span>
         </div>
       ) : null}
       <div className="flex shrink-0 gap-3">
-        <span className="inline-flex items-center gap-1 text-sm font-medium">
+        <span className="inline-flex items-center gap-1 text-sm text-base">
           <Sunrise className="size-4" strokeWidth={1.8} />
           {t("sun_times.col_sunrise")}
         </span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium">
+        <span className="inline-flex items-center gap-1 text-sm text-base">
           <Sunset className="size-4" strokeWidth={1.8} />
           {t("sun_times.col_sunset")}
         </span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium">
+        <span className="inline-flex items-center gap-1 text-sm text-base">
           <span className={patroAyanaNorth}>उ</span>
           {t("sun_times.north_ayana")}
         </span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium">
+        <span className="inline-flex items-center gap-1 text-sm text-base">
           <span className={patroAyanaSouth}>द</span>
           {t("sun_times.south_ayana")}
         </span>
@@ -455,7 +455,7 @@ export function SunTimesYearGrid({
   if (isError) {
     return (
       <div className="mt-5 max-w-full overflow-hidden rounded-xl bg-card shadow-xs shadow-ring-soft">
-        <p className="m-0 px-4 py-3.5 text-xs font-medium">
+        <p className="m-0 px-4 py-3.5 text-xs text-base">
           Could not load sunrise/sunset times for this location.
         </p>
       </div>

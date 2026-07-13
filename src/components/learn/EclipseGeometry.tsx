@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { eclAxis, eclBloodGlow, eclBloodTint, eclBodyLabel, eclEarthGlow, eclEclipticRing, eclMoonEclipsed, eclMoonOrbit, eclNodeArrow, eclNodeArrowHead, eclNodeCallout, eclNodeDot, eclNodeLine, eclNodeSym, eclNodeTitle, eclPanelBg, eclPenumbra, eclPlaneCaption, eclRay, eclStatusFor, eclStatusSub, eclSunDisc, eclTiltNote, eclUmbraShape } from "@/lib/diagram-classes";
+import { eclAxis, eclBloodGlow, eclBloodTint, eclBodyLabel, eclEarthGlow, eclEclipticRing, eclMoonEclipsed, eclMoonOrbit, eclNodeArrow, eclNodeArrowHead, eclNodeCallout, eclNodeDot, eclNodeLine, eclNodeTitle, eclPanelBg, eclPenumbra, eclPlaneCaption, eclRay, eclStatusFor, eclStatusSub, eclSunDisc, eclTiltNote, eclUmbraShape } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
@@ -42,13 +42,11 @@ function NodeCallout({
   px,
   py,
   label,
-  sym,
   side,
 }: {
   px: number;
   py: number;
   label: string;
-  sym: string;
   side: "left" | "right";
 }) {
   const tx = side === "left" ? px - 118 : px + 118;
@@ -58,9 +56,6 @@ function NodeCallout({
       <line x1={tx} y1={ty + 10} x2={px} y2={py} className={eclNodeArrow} markerEnd="url(#ecl-node-arrow)" />
       <text x={tx} y={ty} className={eclNodeTitle} textAnchor="middle">
         {label}
-      </text>
-      <text x={tx} y={ty + 30} className={eclNodeSym} textAnchor="middle">
-        {sym}
       </text>
     </g>
   );
@@ -295,14 +290,12 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
           px={asc.x}
           py={asc.y}
           label="राहु · उत्तरी पात"
-          sym="☊"
           side={asc.x < earth.x ? "left" : "right"}
         />
         <NodeCallout
           px={desc.x}
           py={desc.y}
           label="केतु · दक्षिणी पात"
-          sym="☋"
           side={desc.x < earth.x ? "left" : "right"}
         />
 

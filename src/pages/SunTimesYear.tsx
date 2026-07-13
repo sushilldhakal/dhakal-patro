@@ -78,7 +78,7 @@ export function SunTimesYear() {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-1.5"
+            className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t("common.back_home")}
@@ -119,11 +119,11 @@ export function SunTimesYear() {
       </div>
 
       <div className="mb-4 rounded-xl border border-border bg-secondary/4 p-3.5 shadow-xs shadow-ring-soft">
-        <p className="m-0 mb-3 text-sm font-medium leading-relaxed [&_strong]:font-extrabold [&_strong]:text-foreground">
+        <p className="m-0 mb-3 text-sm text-base leading-relaxed [&_strong]:font-extrabold [&_strong]:text-foreground">
           <Trans i18nKey="sun_times.ayana_note" components={{ strong: <strong /> }} />
         </p>
         <div className="mb-3 overflow-x-auto">
-          <table className="w-full border-collapse text-sm font-medium">
+          <table className="w-full border-collapse text-sm text-base">
             <thead>
               <tr>
                 <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold">

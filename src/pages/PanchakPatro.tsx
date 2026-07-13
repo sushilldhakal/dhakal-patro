@@ -80,7 +80,7 @@ function PanchakPeriodCard({
         </div>
       </div>
 
-      <p className="mt-3 text-xs font-medium">
+      <p className="mt-3 text-xs text-base">
         {t("panchak.duration")}:{" "}
         <span className="text-foreground">{en ? period.durationEn : period.durationNe}</span>
       </p>
@@ -116,7 +116,7 @@ export function PanchakPatro() {
     <PageShell className="pb-16">
       <Link
         to="/"
-        className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-2"
+        className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-2"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         {t("panchak.back_home")}
@@ -132,7 +132,7 @@ export function PanchakPatro() {
 
       {PANCHAK_PATRO_YEARS.length > 1 ? (
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="panchak-year" className="text-sm font-medium">
+          <label htmlFor="panchak-year" className="text-sm text-base">
             {t("panchak.year_label")}
           </label>
           <select

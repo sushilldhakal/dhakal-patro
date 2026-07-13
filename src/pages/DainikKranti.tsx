@@ -752,7 +752,7 @@ export function DainikKranti() {
                         </span>
                         <span className="ml-1.5 text-xs">{fmtAd(d.date_ad)}</span>
                       </TableCell>
-                      <TableCell className={cn("whitespace-nowrap", isSaturday && "font-medium text-rose-600 dark:text-rose-400")}>{pick(d.weekday_ne ?? d.weekday, d.weekday_en ?? d.weekday)}</TableCell>
+                      <TableCell className={cn("whitespace-nowrap", isSaturday && "text-base text-rose-600 dark:text-rose-400")}>{pick(d.weekday_ne ?? d.weekday, d.weekday_en ?? d.weekday)}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div><span>{pakshaShort(d, isEn)}</span> {pick(d.tithi_ne ?? d.tithi, d.tithi ?? d.tithi_ne) ?? "—"}</div>
                         {tithiEnd ? <div className={subLine}>{pick(`${tithiEnd} सम्म`, `until ${tithiEnd}`)}</div> : null}
@@ -944,7 +944,6 @@ export function DainikKranti() {
                 {grahas.map((g) => (
                   <li key={g.key} className="flex items-baseline justify-between gap-2">
                     <span className="text-foreground">
-                      <span className="mr-1 text-secondary">{g.symbol}</span>
                       {pick(g.name_ne, g.name_vedic ?? g.name_ne)}
                       <span className="ml-1">{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
                     </span>
@@ -1014,7 +1013,6 @@ export function DainikKranti() {
                   const m = motionNe(g);
                   return (
                     <div key={g.key} className="flex items-baseline gap-1.5 text-sm">
-                      <span className="text-secondary">{g.symbol}</span>
                       <span className="text-foreground">{pick(g.name_ne, g.name_vedic ?? g.name_ne)}</span>
                       <span>{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
                       {g.dms_in_rashi ? <span className="text-foreground">{dg(g.dms_in_rashi)}</span> : null}

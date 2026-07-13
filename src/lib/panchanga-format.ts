@@ -749,8 +749,8 @@ const RASHI_NE = [
 ] as const;
 
 export const RASHI_SYM = [
-  "♈", "♉", "♊", "♋", "♌", "♍",
-  "♎", "♏", "♐", "♑", "♒", "♓",
+  "", "", "", "", "", "",
+  "", "", "", "", "", "",
 ] as const;
 
 const RASHI_DISPLAY_NE: Record<string, string> = {

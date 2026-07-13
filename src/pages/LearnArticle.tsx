@@ -43,7 +43,7 @@ export function LearnArticle() {
           <p>{t("learn_page.topic_not_found")}</p>
           <Link
             to="/learn"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-secondary"
+            className="inline-flex items-center gap-1.5 text-sm text-base text-secondary"
           >
             <ArrowLeft className="h-4 w-4" /> {t("learn_page.back_hub")}
           </Link>
@@ -60,7 +60,7 @@ export function LearnArticle() {
     <PageShell>
       <Link
         to="/learn"
-        className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-sm text-base transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> {t("learn_page.eyebrow")}
       </Link>
@@ -90,7 +90,7 @@ export function LearnArticle() {
                   <span className="block text-sm uppercase tracking-wide">
                     {t("learn_page.prev")}
                   </span>
-                  <span className="block truncate text-sm font-medium text-foreground">
+                  <span className="block truncate text-sm text-base text-foreground">
                     {pick(prev.titleNe, prev.titleEn)}
                   </span>
                 </span>
@@ -108,7 +108,7 @@ export function LearnArticle() {
                   <span className="block text-sm uppercase tracking-wide">
                     {t("learn_page.next")}
                   </span>
-                  <span className="block truncate text-sm font-medium text-foreground">
+                  <span className="block truncate text-sm text-base text-foreground">
                     {pick(next.titleNe, next.titleEn)}
                   </span>
                 </span>
@@ -122,7 +122,7 @@ export function LearnArticle() {
           <div className="mt-6 text-center">
             <Link
               to="/learn"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-secondary"
+              className="inline-flex items-center gap-1.5 text-sm text-base text-secondary"
             >
               <BookOpen className="h-4 w-4" /> {t("learn_page.all_topics")}
             </Link>

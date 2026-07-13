@@ -260,9 +260,6 @@ type LagnaSpanBlock = {
   end_hours_clock?: string;
 };
 
-/** Repeating karana cycle (Nepali names). */
-const KARANA_CYCLE_NE = ["बव", "बालव", "कौलव", "तैतिल", "गर", "वणिज", "विष्टि"];
-
 const G_MAX_PAD = 2.5;
 
 function parseTimeToMinutes(time?: string | null): number | null {
@@ -458,11 +455,38 @@ function buildCivilHourTicks(
   return ticks;
 }
 
-function nextKaranaNe(name: string): string {
+type KaranaName = { ne: string; en: string };
+
+/**
+ * Canonical "next karana" transitions covering the 7 movable *and* 4 fixed
+ * karanas. A lunar month ends with the fixed sequence
+ * विष्टि → शकुनि → चतुष्पाद → नाग → किमस्तुघ्न, so predicting the segment after a
+ * fixed karana must NOT fall back into the movable cycle. Keys include both
+ * backend and wheel spelling variants (चतुष्पाद/चतुष्पद, किमस्तुघ्न/किंस्तुघ्न).
+ */
+const KARANA_NEXT: Record<string, KaranaName> = {
+  "बव": { ne: "बालव", en: "Balava" },
+  "बालव": { ne: "कौलव", en: "Kaulava" },
+  "कौलव": { ne: "तैतिल", en: "Taitila" },
+  "तैतिल": { ne: "गर", en: "Gara" },
+  "गर": { ne: "वणिज", en: "Vanija" },
+  "वणिज": { ne: "विष्टि", en: "Vishti" },
+  "विष्टि": { ne: "बव", en: "Bava" },
+  "शकुनि": { ne: "चतुष्पाद", en: "Chatushpada" },
+  "चतुष्पाद": { ne: "नाग", en: "Naga" },
+  "चतुष्पद": { ne: "नाग", en: "Naga" },
+  "नाग": { ne: "किमस्तुघ्न", en: "Kimstughna" },
+  "किमस्तुघ्न": { ne: "बव", en: "Bava" },
+  "किंस्तुघ्न": { ne: "बव", en: "Bava" },
+};
+
+function nextKarana(name: string): KaranaName {
   const norm = name.trim();
-  const idx = KARANA_CYCLE_NE.findIndex((k) => k === norm || norm.includes(k));
-  if (idx >= 0) return KARANA_CYCLE_NE[(idx + 1) % KARANA_CYCLE_NE.length]!;
-  return "कौलव";
+  if (KARANA_NEXT[norm]) return KARANA_NEXT[norm];
+  for (const key of Object.keys(KARANA_NEXT)) {
+    if (norm.includes(key)) return KARANA_NEXT[key]!;
+  }
+  return { ne: "कौलव", en: "Kaulava" };
 }
 
 /**
@@ -512,8 +536,8 @@ function karanaSegments(anga?: AngaBlock | null): TimelineSegment[] {
   if (items.length >= 2) {
     const second = items[1];
     if (second && second.endG != null && second.endG < 60) {
-      const ne = nextKaranaNe(second.name);
-      items.push({ name: ne, nameEn: KARANA_EN[ne] ?? ne, endG: null });
+      const nk = nextKarana(second.name);
+      items.push({ name: nk.ne, nameEn: nk.en, endG: null });
     }
   }
   return items;
@@ -748,9 +772,10 @@ export function buildCivilTimelineData(
       if (last.endG != null && last.endG >= 59.9) {
         last.endG = null;
       } else if (opts?.karana && last.endG != null) {
-        // Karana chain stops short of midnight — continue the fixed cycle.
-        const ne = nextKaranaNe(last.name);
-        items.push({ name: ne, nameEn: KARANA_EN[ne] ?? ne, endG: null });
+        // Karana chain stops short of midnight — continue with the correct
+        // successor (handles the month-end fixed karanas, not just movable).
+        const nk = nextKarana(last.name);
+        items.push({ name: nk.ne, nameEn: nk.en, endG: null });
       }
     }
     return items;

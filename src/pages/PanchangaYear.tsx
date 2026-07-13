@@ -474,7 +474,7 @@ export function PanchangaYear() {
         <div>
           <Link
             to="/panchanga"
-            className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-1.5"
+            className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t("panchanga_year.back")}
@@ -504,7 +504,7 @@ export function PanchangaYear() {
               </button>
               <span className="px-1.5 text-sm font-semibold tabular-nums">
                 {toNepaliDigits(year)}
-                <span className="ml-1 text-sm font-medium">
+                <span className="ml-1 text-sm text-base">
                   {toNepaliDigits(year - rangeStart + 1)}/{toNepaliDigits(rangeSpan)}
                 </span>
               </span>
@@ -523,7 +523,7 @@ export function PanchangaYear() {
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
           <div className="inline-flex items-center gap-1.5">
-            <span className="text-xs font-medium">
+            <span className="text-xs text-base">
               {pick("दायरा", "Range")}
             </span>
             <select
@@ -602,7 +602,7 @@ export function PanchangaYear() {
         {yearLoading ? (
           <div className="rounded-xl border border-border bg-card px-4 py-3">
             <div className="flex items-center justify-between gap-3 mb-2">
-              <span className="text-xs font-medium uppercase tracking-[0.1em]">
+              <span className="text-xs text-base uppercase tracking-[0.1em]">
                 {t("panchanga_year.loading_year")}
               </span>
             </div>

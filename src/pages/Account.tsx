@@ -83,7 +83,7 @@ export function Account() {
             <button
               type="button"
               disabled={resent}
-              className="mt-1 font-medium text-amber-700 hover:underline disabled:opacity-60 dark:text-amber-300"
+              className="mt-1 text-base text-amber-700 hover:underline disabled:opacity-60 dark:text-amber-300"
               onClick={async () => {
                 await apiResendVerification();
                 setResent(true);
@@ -135,9 +135,9 @@ export function Account() {
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="truncate font-medium text-foreground">{p.full_name}</p>
+                  <p className="truncate text-base text-foreground">{p.full_name}</p>
                   {p.is_default && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary/15 px-2 py-0.5 text-xs font-medium text-secondary">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary/15 px-2 py-0.5 text-xs text-base text-secondary">
                       <Star className="size-3" /> {t("account_page.default")}
                     </span>
                   )}

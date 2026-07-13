@@ -204,10 +204,10 @@ function DayTimelineBand({
   return (
     <div className={patroSecBand}>
       <h2 className={cn("m-0", "text-sm", "font-bold")}>{pick("दिन-चक्र", "Day cycle")}</h2>
-      <span className="text-sm font-medium uppercase tracking-wider">
+      <span className="text-sm text-base uppercase tracking-wider">
         {subtitle}
       </span>
-      <span className="ml-auto inline-flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm font-medium normal-case tracking-normal">
+      <span className="ml-auto inline-flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-base normal-case tracking-normal">
         <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-success/34 not-italic" />
           {pick("शुभ", "Good")}
@@ -685,7 +685,7 @@ export function DayTimeline({
         <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-sm font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
-            <span className="text-sm font-medium leading-snug">
+            <span className="text-sm text-base leading-snug">
               {getPlanetsAnchorLabel(p, lang)}
             </span>
           </div>

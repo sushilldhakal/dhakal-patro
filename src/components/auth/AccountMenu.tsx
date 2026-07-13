@@ -56,7 +56,7 @@ export function AccountMenu() {
             <UserCircle className="size-5" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">{user.email}</p>
+            <p className="truncate text-sm text-base text-foreground">{user.email}</p>
             <p className="flex items-center gap-1 text-xs">
               {user.is_verified ? (
                 <>

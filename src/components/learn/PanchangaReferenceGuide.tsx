@@ -17,7 +17,6 @@ import {
   learnRefHighlightRow,
   learnRefNote,
   learnRefPada,
-  learnRefSym,
   learnRefSymNe,
   learnRefTable,
   learnRefWrap,
@@ -26,15 +25,15 @@ import {
 import { cn } from "@/lib/utils";
 
 const GRAHA_ROWS = [
-  { sym: "☉", ne: "सूर्य", en: "Sun", note: "आत्मा, पिता, अधिकार — राशि र सङ्क्रान्तिको माप", noteEn: "Soul, father, authority — measures rashi and sankranti" },
-  { sym: "☾", ne: "चन्द्र", en: "Moon", note: "मन, माता — तिथि, नक्षत्र, पक्ष", noteEn: "Mind, mother — tithi, nakshatra, paksha" },
-  { sym: "♂", ne: "मंगल", en: "Mars", note: "साहस, भाइ — मङ्गलवार, होरा", noteEn: "Courage, siblings — Tuesday, hora" },
-  { sym: "☿", ne: "बुध", en: "Mercury", note: "बुद्धि, वाणी — बुधवार", noteEn: "Intellect, speech — Wednesday" },
-  { sym: "♃", ne: "बृहस्पति", en: "Jupiter", note: "गुरु, ज्ञान — बिहीवार", noteEn: "Teacher, knowledge — Thursday" },
-  { sym: "♀", ne: "शुक्र", en: "Venus", note: "प्रेम, सौन्दर्य — शुक्रवार", noteEn: "Love, beauty — Friday" },
-  { sym: "♄", ne: "शनि", en: "Saturn", note: "कर्म, धैर्य — शनिवार", noteEn: "Karma, patience — Saturday" },
-  { sym: "☊", ne: "राहु", en: "Rahu", note: "छाया ग्रह — ग्रहण, अप्रत्याशित परिवर्तन", noteEn: "Shadow planet — eclipses, sudden change" },
-  { sym: "☋", ne: "केतु", en: "Ketu", note: "छाया ग्रह — मोक्ष, आध्यात्म", noteEn: "Shadow planet — moksha, spirituality" },
+  { ne: "सूर्य", en: "Sun", note: "आत्मा, पिता, अधिकार — राशि र सङ्क्रान्तिको माप", noteEn: "Soul, father, authority — measures rashi and sankranti" },
+  { ne: "चन्द्र", en: "Moon", note: "मन, माता — तिथि, नक्षत्र, पक्ष", noteEn: "Mind, mother — tithi, nakshatra, paksha" },
+  { ne: "मंगल", en: "Mars", note: "साहस, भाइ — मङ्गलवार, होरा", noteEn: "Courage, siblings — Tuesday, hora" },
+  { ne: "बुध", en: "Mercury", note: "बुद्धि, वाणी — बुधवार", noteEn: "Intellect, speech — Wednesday" },
+  { ne: "बृहस्पति", en: "Jupiter", note: "गुरु, ज्ञान — बिहीवार", noteEn: "Teacher, knowledge — Thursday" },
+  { ne: "शुक्र", en: "Venus", note: "प्रेम, सौन्दर्य — शुक्रवार", noteEn: "Love, beauty — Friday" },
+  { ne: "शनि", en: "Saturn", note: "कर्म, धैर्य — शनिवार", noteEn: "Karma, patience — Saturday" },
+  { ne: "राहु", en: "Rahu", note: "छाया ग्रह — ग्रहण, अप्रत्याशित परिवर्तन", noteEn: "Shadow planet — eclipses, sudden change" },
+  { ne: "केतु", en: "Ketu", note: "छाया ग्रह — मोक्ष, आध्यात्म", noteEn: "Shadow planet — moksha, spirituality" },
 ] as const;
 
 const YOGA_EN = [
@@ -79,9 +78,7 @@ export function RashiReferenceTable() {
         {WHEEL_RASHIS.map((r, i) => (
           <tr key={r.ne}>
             <td className={patroMono}>{N(i + 1)}</td>
-            <td>
-              <span className={learnRefSym}>{r.sym}</span> {pick(r.ne, r.en)}
-            </td>
+            <td>{pick(r.ne, r.en)}</td>
             <td className={learnRefEn}>{r.en}</td>
             <td className={cn(patroMono, learnRefDeg)}>
               {N(i * 30)}°–{N((i + 1) * 30)}°
@@ -111,9 +108,7 @@ export function GrahaReferenceTable() {
         {GRAHA_ROWS.map((g, i) => (
           <tr key={g.ne}>
             <td className={patroMono}>{N(i + 1)}</td>
-            <td>
-              <span className={learnRefSym}>{g.sym}</span> {pick(g.ne, g.en)}
-            </td>
+            <td>{pick(g.ne, g.en)}</td>
             <td className={learnRefEn}>{g.en}</td>
             <td>{pick(g.note, g.noteEn)}</td>
           </tr>

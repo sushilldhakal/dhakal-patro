@@ -72,7 +72,7 @@ export function SaitPage() {
               </p>
             ) : null}
             {about?.requires_birth_date ? (
-              <p className="text-sm font-medium text-danger">
+              <p className="text-sm text-base text-danger">
                 {pick("यसका लागि शिशुको जन्म मिति आवश्यक पर्दछ।", "Requires the child's birth date.")}
               </p>
             ) : null}

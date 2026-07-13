@@ -48,16 +48,16 @@ const JYOTISH_LINKS = [
 const NAV = [{ to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen }] as const;
 
 const linkClass =
-  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-base transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 const subLinkClass =
-  "flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm text-base transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 const desktopLinkClass =
-  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:text-foreground hover:bg-muted [&.active]:text-secondary [&.active]:bg-secondary/10";
+  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-base transition-colors hover:text-foreground hover:bg-muted [&.active]:text-secondary [&.active]:bg-secondary/10";
 
 const desktopSubLinkClass =
-  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-base hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 function isPanchangaRoute(pathname: string) {
   return (
@@ -259,7 +259,7 @@ function BrandMark({ className }: { className?: string }) {
       <BrandLogo
         size={42}
       />
-      <span className="font-bold text-md tracking-tight truncate">
+      <span className="font-bold text-base tracking-tight truncate">
         <span className="text-secondary dark:text-primary">{t("brand_vedic")}</span>
         <span className="text-foreground"> {t("brand_patro")}</span>
       </span>
@@ -299,11 +299,11 @@ function MenuPreferences() {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-foreground">{t("language")}</span>
+        <span className="text-sm text-base text-foreground">{t("language")}</span>
         <LanguageSwitcher />
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-foreground">{t("theme_toggle")}</span>
+        <span className="text-sm text-base text-foreground">{t("theme_toggle")}</span>
         <ThemeToggle showLabel />
       </div>
     </div>

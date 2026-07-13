@@ -16,7 +16,7 @@ import { FacebookSignInButton, facebookSignInEnabled } from "./FacebookSignInBut
 
 type Mode = "login" | "signup" | "forgot";
 
-const labelClass = "text-sm font-medium text-foreground";
+const labelClass = "text-sm text-base text-foreground";
 const fieldWrap = "flex flex-col gap-1.5";
 
 export function AuthDialog({
@@ -225,7 +225,7 @@ export function AuthDialog({
                 {t("auth.new_here")}{" "}
                 <button
                   type="button"
-                  className="font-medium text-secondary hover:underline"
+                  className="text-base text-secondary hover:underline"
                   onClick={() => reset("signup")}
                 >
                   {t("auth.create_account")}
@@ -238,7 +238,7 @@ export function AuthDialog({
               {t("auth.already_have")}{" "}
               <button
                 type="button"
-                className="font-medium text-secondary hover:underline"
+                className="text-base text-secondary hover:underline"
                 onClick={() => reset("login")}
               >
                 {t("auth.sign_in")}

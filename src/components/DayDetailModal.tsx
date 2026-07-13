@@ -44,7 +44,7 @@ interface Props {
 
 const sectionTitle = "mb-2 text-sm font-bold";
 const metaCard = "rounded-lg border border-border bg-surface-inset p-2.5";
-const metaLabel = "mb-1 text-sm font-medium tracking-widest uppercase";
+const metaLabel = "mb-1 text-sm text-base tracking-widest uppercase";
 
 function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
   const { pick } = useLocale();
@@ -56,7 +56,7 @@ function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
       <h4 className={sectionTitle}>{pick("दिन विशेष", "Day highlights")}</h4>
       <ul className="m-0 list-none p-0">
         {labels.map((name) => (
-          <li key={name} className="border-b border-border py-2 text-sm font-medium last:border-b-0">
+          <li key={name} className="border-b border-border py-2 text-sm text-base last:border-b-0">
             {name}
           </li>
         ))}
@@ -77,7 +77,7 @@ function MuhurtaSection({ p }: { p: PanchangaDay }) {
         {rows.map((row) => (
           <div
             key={row.label}
-            className="grid grid-cols-[1fr_auto] items-baseline gap-3 border-b border-border px-3 py-2.5 text-sm font-medium last:border-b-0"
+            className="grid grid-cols-[1fr_auto] items-baseline gap-3 border-b border-border px-3 py-2.5 text-sm text-base last:border-b-0"
           >
             <span className={cn("", row.auspicious && "text-success")}>
               {row.label}
@@ -103,7 +103,7 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
         {planets.map(({ label, rashiNe, coords }) => (
           <div
             key={label}
-            className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2 text-sm font-medium"
+            className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2 text-sm text-base"
           >
             <div className="flex flex-col gap-0.5">
               <span>{pick(label, TL_GRAHA_EN[label] ?? label)}</span>
@@ -129,7 +129,7 @@ function PanchangaTable({ rows }: { rows: { label: string; value?: string | null
       {visible.map((row) => (
         <div
           key={row.label}
-          className="grid grid-cols-[88px_1fr] gap-3 border-b border-border px-3 py-2.5 text-sm font-medium last:border-b-0"
+          className="grid grid-cols-[88px_1fr] gap-3 border-b border-border px-3 py-2.5 text-sm text-base last:border-b-0"
         >
           <span>{row.label}</span>
           <span>{row.value}</span>
@@ -150,7 +150,7 @@ function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
   if (!sunrise && !sunset && !moonrise && !moonset) return null;
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-4 text-sm font-medium">
+    <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-base">
       {sunrise && (
         <span className="inline-flex items-center gap-1.5">
           <Sunrise size={16} strokeWidth={1.8} />
@@ -210,7 +210,7 @@ function DaySummary({
   return (
     <>
       <p className="mb-1 text-sm font-semibold">{formatPakshaTithiLine(p)}</p>
-      {nsSubtitle && <p className="mb-3.5 text-sm font-medium">{nsSubtitle}</p>}
+      {nsSubtitle && <p className="mb-3.5 text-sm text-base">{nsSubtitle}</p>}
 
       <CelestialTimesRow p={p} day={day} />
 
@@ -334,7 +334,7 @@ function PanchangaFull({
       />
 
       {dinVishesh.length > 0 && (
-        <p className="mb-4 text-sm font-medium">
+        <p className="mb-4 text-sm text-base">
           {pick("दिन विशेष", "Day highlights")} : {dinVishesh.join(" · ")}
         </p>
       )}
@@ -388,7 +388,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
                 <div>
                   <button
                     type="button"
-                    className="mb-1 inline-flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 text-sm font-medium hover:text-foreground"
+                    className="mb-1 inline-flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 text-sm text-base hover:text-foreground"
                     onClick={() => setShowPanchanga(false)}
                   >
                     <ChevronLeft size={16} strokeWidth={1.8} />
@@ -421,7 +421,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
                       ? formatBsTitle(q.data, day?.day, bsMonth, bsYear)
                       : `${day?.day ?? ""}`}
                   </Dialog.Title>
-                  <Dialog.Description className="mt-1 text-sm font-medium">
+                  <Dialog.Description className="mt-1 text-sm text-base">
                     {day
                       ? q.data
                         ? formatAdTitle(q.data, day.date_ad)

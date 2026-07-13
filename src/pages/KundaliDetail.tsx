@@ -153,7 +153,7 @@ export function KundaliDetail() {
   const backLink = (
     <Link
       to="/kundali"
-      className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-foreground"
+      className="inline-flex items-center gap-1.5 text-sm text-base transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" /> {t("kundali.back_all")}
     </Link>
@@ -185,7 +185,7 @@ export function KundaliDetail() {
       <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 space-y-4">
         {backLink}
         <div className="rounded-xl border border-border bg-card px-5 py-12 text-center">
-          <p className="text-sm font-medium text-foreground">{t("kundali.not_found")}</p>
+          <p className="text-sm text-base text-foreground">{t("kundali.not_found")}</p>
           <p className="mx-auto mt-1 max-w-md text-sm">
             {t("kundali.not_found_body")}
           </p>
@@ -208,7 +208,7 @@ export function KundaliDetail() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/kundali"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm text-base transition-colors hover:bg-muted hover:text-foreground"
           >
             <Sparkles className="size-4" /> {t("kundali.other_kundali")}
           </Link>

@@ -253,7 +253,7 @@ function HubContent({ focus, row }: { focus: HubFocus; row: AvakahadaWheelRow })
               key={attr.id}
               className="grid grid-cols-[52px_1fr] gap-1 border-b border-[color-mix(in_srgb,var(--w-sep-soft)_80%,transparent)] py-0.5 last:border-b-0 max-sm:grid-cols-[44px_1fr]"
             >
-              <dt className="font-medium text-[var(--w-ink-faint,#84a3a2)]">{t(`avakahada.col_${attr.id}`)}</dt>
+              <dt className="text-base text-[var(--w-ink-faint,#84a3a2)]">{t(`avakahada.col_${attr.id}`)}</dt>
               <dd className="m-0 font-semibold text-[var(--w-ink,#eaf3f1)]">{attrValue(attr.id, row, lang)}</dd>
             </div>
           ))}

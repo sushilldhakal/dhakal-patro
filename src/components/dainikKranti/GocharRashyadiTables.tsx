@@ -55,7 +55,7 @@ export function GocharRashyadiTable({
     <div className={cn("flex h-full flex-col overflow-x-auto rounded-xl border border-border bg-muted/15", className)}>
       <div className="border-b border-border bg-muted/40 px-3 py-2.5">
         <p className="text-sm font-semibold leading-snug text-secondary">{segment.versionNe}</p>
-        <p className="mt-0.5 text-base font-medium text-foreground">
+        <p className="mt-0.5 text-base text-base text-foreground">
           {segment.labelNe}
           {segment.bsDay != null ? (
             <span className="ml-1.5 text-sm">
@@ -65,7 +65,7 @@ export function GocharRashyadiTable({
         </p>
         {segment.moonRashiNe ? (
           <p className="mt-1 text-sm">
-            {pick("च.रा.", "Moon")}: <span className="font-medium text-foreground">{segment.moonRashiNe}</span>
+            {pick("च.रा.", "Moon")}: <span className="text-base text-foreground">{segment.moonRashiNe}</span>
           </p>
         ) : null}
       </div>
@@ -103,7 +103,7 @@ export function GocharRashyadiTable({
                 return (
                   <td
                     key={`${segment.id}-${key}-${rowKey}`}
-                    className="px-1 py-2 text-center font-mono text-base font-medium tabular-nums text-foreground"
+                    className="px-1 py-2 text-center font-mono text-base text-base tabular-nums text-foreground"
                   >
                     {row ? rashyadiCellValue(row, rowKey) : "—"}
                   </td>

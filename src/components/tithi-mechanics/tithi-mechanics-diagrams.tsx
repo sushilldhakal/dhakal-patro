@@ -185,7 +185,7 @@ export function AdhikMassDiagram() {
 
   const sankr = [0, SOLAR, SOLAR * 2, SOLAR * 3];
   const rashi = ["मेष", "वृषभ", "मिथुन"];
-  const rashiSym = ["♈", "♉", "♊"];
+  const rashiSym = ["", "", ""];
   const amav = [0.6, 0.6 + SYN, 0.6 + SYN * 2, 0.6 + SYN * 3];
 
   const solarY = 78;

@@ -152,7 +152,7 @@ function BirthDetailsTable({ role, profile, person, ayanamsha, lang }: BirthDeta
           {rows.map((row) => (
             <TableRow key={row.label}>
               <TableCell className="w-[40%]">{row.label}</TableCell>
-              <TableCell className="font-medium">{row.value}</TableCell>
+              <TableCell className="text-base">{row.value}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -210,7 +210,7 @@ export function KundaliMilan() {
     <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
       <div className="mb-4 mt-2 flex items-start justify-between gap-3">
         <div>
-          <div className="text-xs font-medium uppercase tracking-[0.12em] mb-1.5">
+          <div className="text-xs text-base uppercase tracking-[0.12em] mb-1.5">
             {t("milan.eyebrow")}
           </div>
           <h1 className="text-xl font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">

@@ -279,7 +279,7 @@ export function EquinoxPrecession() {
 
         <div className={motSliderRow}>
           <span className={motSliderLabel}>
-            ☉ वर्ष — अक्ष-चलनले विषुव सर्छ (बि.सं. {N(Y_MIN)} → {N(Y_MAX)}; एक पूरा फेरो ~{N(CYCLE)} वर्ष)
+            वर्ष — अक्ष-चलनले विषुव सर्छ (बि.सं. {N(Y_MIN)} → {N(Y_MAX)}; एक पूरा फेरो ~{N(CYCLE)} वर्ष)
           </span>
           <div className={edScrubWrap}>
             <button type="button" className={edPlayBtn} onClick={() => setPlaying((p) => !p)}

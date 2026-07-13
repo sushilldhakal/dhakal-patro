@@ -99,7 +99,7 @@ export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
       return (
         <>
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center">
-            <p className="text-sm font-medium text-foreground">{t("milan.no_profiles_title")}</p>
+            <p className="text-sm text-base text-foreground">{t("milan.no_profiles_title")}</p>
             <p className="mx-auto mt-1 max-w-md text-sm">
               {t("milan.no_profiles_body")}
             </p>

@@ -344,7 +344,7 @@ export function KundaliView({
                 <p className="text-sm font-semibold uppercase tracking-wider">
                   {pick("लग्न · Lagna", "Lagna")}
                 </p>
-                <span className="text-sm font-medium bg-muted px-2 py-0.5 rounded-full shrink-0">
+                <span className="text-sm text-base bg-muted px-2 py-0.5 rounded-full shrink-0">
                   {ayanamshaInfo.labelNe}
                 </span>
               </div>
@@ -369,7 +369,7 @@ export function KundaliView({
             <p className="text-sm font-semibold uppercase tracking-wider">
               {pick("जन्म पञ्चाङ्ग", "Birth panchanga")}
             </p>
-            <span className="text-sm font-medium bg-card border border-border px-2.5 py-1 rounded-full shrink-0">
+            <span className="text-sm text-base bg-card border border-border px-2.5 py-1 rounded-full shrink-0">
               {ayanamshaInfo.labelNe}
             </span>
           </div>

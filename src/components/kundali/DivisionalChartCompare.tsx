@@ -85,7 +85,7 @@ function ChartSlot({
             {pick("आधार", "Anchor")}
           </span>
           <select
-            className="h-9 rounded-lg border border-border bg-card px-2.5 text-sm font-medium text-foreground"
+            className="h-9 rounded-lg border border-border bg-card px-2.5 text-sm text-base text-foreground"
             value={panel.anchor}
             onChange={(e) =>
               onPanelChange({ ...panel, anchor: e.target.value as ChartAnchor })
@@ -106,7 +106,7 @@ function ChartSlot({
             {pick("वर्ग", "Chart")}
           </span>
           <select
-            className="h-9 rounded-lg border border-border bg-card px-2.5 text-sm font-medium text-foreground"
+            className="h-9 rounded-lg border border-border bg-card px-2.5 text-sm text-base text-foreground"
             value={panel.division}
             onChange={(e) =>
               onPanelChange({ ...panel, division: Number(e.target.value) })

@@ -34,7 +34,7 @@ function useHolidayColumns() {
       holidayCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
         id: "name_ne",
         header: t("holidays.col_name_ne"),
-        cell: i => <span className="font-medium">{i.getValue()}</span>,
+        cell: i => <span className="text-base">{i.getValue()}</span>,
       }),
       holidayCol.accessor(r => r.name_en ?? "—", {
         id: "name_en",
@@ -72,7 +72,7 @@ function useFestivalColumns() {
       festivalCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
         id: "name_ne",
         header: t("holidays.col_name_ne"),
-        cell: i => <span className="font-medium">{i.getValue()}</span>,
+        cell: i => <span className="text-base">{i.getValue()}</span>,
       }),
       festivalCol.accessor(r => r.name_en ?? "—", {
         id: "name_en",
@@ -223,7 +223,7 @@ export function Holidays() {
 
       {/* Year picker */}
       <div className="flex items-center gap-3 flex-wrap">
-        <label className="text-sm font-medium">{t("holidays.bs_year")}</label>
+        <label className="text-sm text-base">{t("holidays.bs_year")}</label>
         <input
           type="number"
           value={year}
@@ -249,7 +249,7 @@ export function Holidays() {
             key={tItem.id}
             onClick={() => setTab(tItem.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+              "flex items-center gap-2 px-4 py-2.5 text-sm text-base border-b-2 -mb-px transition-colors",
               tab === tItem.id
                 ? "border-secondary text-secondary"
                 : "border-transparent hover:text-foreground"

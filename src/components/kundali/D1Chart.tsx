@@ -107,7 +107,7 @@ export function D1Chart({ houses }: Props) {
                     y={y}
                     textAnchor="middle"
                     style={{ fontSize: `${layout.fontSize}px` }}
-                    className="font-medium fill-foreground"
+                    className="text-base fill-foreground"
                   >
                     {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
                   </text>

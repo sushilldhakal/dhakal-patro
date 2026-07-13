@@ -56,7 +56,7 @@ export const wMonthGreg =
 export function wMonthNe(now?: boolean) {
   return cn(
     "fill-[var(--w-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]",
-    now && "fill-[var(--w-accent)] text-md font-extrabold",
+    now && "fill-[var(--w-accent)] text-base font-extrabold",
   );
 }
 
@@ -75,7 +75,7 @@ export function wRashiName(sel?: boolean) {
 }
 
 export const wPadaNum =
-  "fill-[var(--w-ink-dim)] text-sm font-medium [font-family:var(--pn-num)]";
+  "fill-[var(--w-ink-dim)] text-sm text-base [font-family:var(--pn-num)]";
 
 export const wPadaAkshar =
   "fill-[var(--w-ink-dim)] text-sm font-semibold [font-family:var(--pn-font)]";
@@ -133,4 +133,4 @@ export const wOrbit =
 export const wPlanetGlow = "blur-[5px] opacity-55";
 
 export const wPlanetName =
-  "fill-[var(--w-ink-dim)] text-[8.5px] font-medium [font-family:var(--pn-font)]";
+  "fill-[var(--w-ink-dim)] text-[8.5px] text-base [font-family:var(--pn-font)]";

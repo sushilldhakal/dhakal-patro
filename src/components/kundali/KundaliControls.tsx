@@ -43,7 +43,7 @@ const AD_MONTHS = [
 ];
 
 const selectClass =
-  "h-9 min-w-0 flex-1 px-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium cursor-pointer";
+  "h-9 min-w-0 flex-1 px-2.5 rounded-lg border border-border bg-card text-foreground text-sm text-base cursor-pointer";
 
 function getADMonthLength(year: number, month: number): number {
   return new Date(year, month, 0).getDate();
@@ -195,7 +195,7 @@ export function KundaliControls({
         </>
       )}
 
-      <label className="inline-flex items-center gap-1.5 h-9 shrink-0 px-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground min-w-[7.5rem]">
+      <label className="inline-flex items-center gap-1.5 h-9 shrink-0 px-2.5 rounded-lg border border-border bg-card text-sm text-base text-foreground min-w-[7.5rem]">
         <Clock className="w-3.5 h-3.5 shrink-0" />
         <input
           type="time"

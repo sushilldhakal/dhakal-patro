@@ -199,7 +199,7 @@ export const NODE_START = 30;
 export const ECL_RANGE_DAYS = ECLIPSE_YEAR;
 /** Nodal precession: ~0.05°/day (vs Moon ~13°/day). */
 export const NODE_DEG_PER_DAY = 360 / ECLIPSE_YEAR;
-/** Simulated days advanced per real second when ☊ पात-चक्र play is on (slow). */
+/** Simulated days advanced per real second when the पात-चक्र play is on (slow). */
 export const NODE_PLAY_SPEED = 1;
 
 export function moonLonFromDay(t: number): number {

@@ -118,7 +118,7 @@ function RituQuickLink({ location }: { location: PanchangaLocation }) {
         loading ? (
           <Sprout size={QUICK_LINK_ICON_SIZE} strokeWidth={QUICK_LINK_ICON_STROKE} className={quickLinkIconClass} aria-hidden />
         ) : current?.emoji ? (
-          <span className="text-md leading-none" aria-hidden>
+          <span className="text-base leading-none" aria-hidden>
             {current.emoji}
           </span>
         ) : (

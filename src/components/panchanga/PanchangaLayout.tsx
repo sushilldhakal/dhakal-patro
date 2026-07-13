@@ -58,7 +58,7 @@ function QuadValue({ children, className }: { children: React.ReactNode; classNa
   return (
     <div
       className={cn(
-        "text-sm font-medium leading-snug flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0",
+        "text-sm text-base leading-snug flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0",
         className,
       )}
     >
@@ -291,7 +291,7 @@ export function DenseListRow({
         {time ?? "—"}
       </span>
       {note ? (
-        <span className="col-span-2 text-sm font-mono font-medium text-foreground/90 -mt-0.5 pb-0.5">
+        <span className="col-span-2 text-sm font-mono text-base text-foreground/90 -mt-0.5 pb-0.5">
           {note}
         </span>
       ) : null}
@@ -399,13 +399,13 @@ function PairedTimingCell({
         </span>
       ) : null}
       <div className="flex items-start justify-between gap-2">
-        <span className={cn("min-w-0 font-medium leading-snug", highlight && "font-semibold text-success")}>
+        <span className={cn("min-w-0 text-base leading-snug", highlight && "font-semibold text-success")}>
           {label}
         </span>
         <div className="shrink-0 text-right">
           <div className="font-mono text-sm font-semibold text-foreground tabular-nums leading-snug">{time}</div>
           {note ? (
-            <div className="mt-0.5 max-w-[9.5rem] text-sm font-mono font-medium text-foreground/90 leading-tight">
+            <div className="mt-0.5 max-w-[9.5rem] text-sm font-mono text-base text-foreground/90 leading-tight">
               {note}
             </div>
           ) : null}

@@ -57,7 +57,7 @@ export const horaHubRom =
   "fill-[var(--hora-ink-faint)] text-sm font-semibold uppercase tracking-[0.18em] [font-family:var(--pn-font)]";
 
 export const horaHubNum =
-  "fill-[var(--hora-ink-faint)] font-num text-sm font-medium tracking-widest [font-family:var(--pn-num)]";
+  "fill-[var(--hora-ink-faint)] font-num text-sm text-base tracking-widest [font-family:var(--pn-num)]";
 
 export const horaHubRuler =
   "text-2xl font-bold [font-family:var(--pn-font)]";

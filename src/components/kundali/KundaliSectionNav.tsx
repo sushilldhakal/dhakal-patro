@@ -86,7 +86,7 @@ export function KundaliSectionNav({
           type="button"
           onClick={() => onNavigate(id)}
           className={cn(
-            "font-medium transition-colors",
+            "text-base transition-colors",
             variant === "sidebar"
               ? cn(
                   "flex w-full items-center gap-2.5 rounded-xl py-2.5 text-sm text-left",

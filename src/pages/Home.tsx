@@ -207,7 +207,7 @@ function PanchangaAside({
                   <div className="mt-2.5 text-4xl font-bold leading-tight min-[1081px]:mt-2 min-[1081px]:text-xl">
                     {displayHeroDate}
                   </div>
-                  <div className="mt-0.5 text-sm font-medium text-[rgba(245,245,241,0.85)]">
+                  <div className="mt-0.5 text-sm text-base text-[rgba(245,245,241,0.85)]">
                     {weekdayNe}
                     {activeP?.bs_date && typeof activeP.bs_date === "object"
                       ? `, ${t("panchanga.bs_era")} ${digits(activeP.bs_date.year)}`
@@ -216,7 +216,7 @@ function PanchangaAside({
                       <span className="text-[rgba(245,245,241,0.72)]"> · {samvatsaraLabel}</span>
                     ) : null}
                   </div>
-                  <div className="mono mt-1.5 text-xs font-medium text-[rgba(245,245,241,0.55)]">
+                  <div className="mono mt-1.5 text-xs text-base text-[rgba(245,245,241,0.55)]">
                     {adDisplay}
                   </div>
                 </div>
@@ -257,7 +257,7 @@ function PanchangaAside({
 
             <div className="p-2.5 max-md:border-none max-md:p-0" role="tabpanel">
               {error && !activeP ? (
-                <div className="rounded-lg border border-danger/20 bg-error-surface p-3.5 text-sm font-medium text-danger">
+                <div className="rounded-lg border border-danger/20 bg-error-surface p-3.5 text-sm text-base text-danger">
                   {t("panchanga.error")}
                 </div>
               ) : (

@@ -318,7 +318,7 @@ export function AyanamshaWheel() {
 
         <div className={motSliderRow}>
           <span className={motSliderLabel}>
-            ☉ वर्ष — अक्ष-चलनले विषुव बिन्दु सर्छ ({N(ceToBs(285))} → {N(ceToBs(2200))} बि.सं.)
+            वर्ष — अक्ष-चलनले विषुव बिन्दु सर्छ ({N(ceToBs(285))} → {N(ceToBs(2200))} बि.सं.)
           </span>
           <div className={edScrubWrap}>
             <button

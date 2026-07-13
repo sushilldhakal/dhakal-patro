@@ -134,7 +134,7 @@ function NakshatraCell({ row, lang }: { row: Row; lang: string }) {
           <span className="text-xs">{row.index}</span>
         )}
       </span>
-      <span className="whitespace-nowrap font-medium text-foreground">
+      <span className="whitespace-nowrap text-base text-foreground">
         {row.index}. {label}
       </span>
     </div>
@@ -164,7 +164,7 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
                   n: String(i + 1),
                   rashi: localizeRashi(row.original.charanRashis[i]!, lang),
                 })}
-                className="inline-flex min-w-7 items-center justify-center rounded-md border border-border bg-card px-1.5 py-0.5 font-medium text-foreground"
+                className="inline-flex min-w-7 items-center justify-center rounded-md border border-border bg-card px-1.5 py-0.5 text-base text-foreground"
               >
                 {a}
               </span>
@@ -215,7 +215,7 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
         cell: ({ getValue }) => {
           const g = getValue<Gana>();
           return (
-            <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", ganaTone[g])}>
+            <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs text-base", ganaTone[g])}>
               {localizeGana(g, lang)}
             </span>
           );
@@ -351,9 +351,9 @@ export function AvakahadaChakra() {
             <ul className="space-y-1.5 text-sm">
               {MANGLI_VARGAS.map((v) => (
                 <li key={v.varga} className="flex items-center gap-2">
-                  <span className="font-medium text-foreground">{localizeVarga(v.varga, lang)}</span>
+                  <span className="text-base text-foreground">{localizeVarga(v.varga, lang)}</span>
                   <span className="text-xs">⚔</span>
-                  <span className="font-medium text-foreground">{localizeVarga(v.shatru, lang)}</span>
+                  <span className="text-base text-foreground">{localizeVarga(v.shatru, lang)}</span>
                 </li>
               ))}
             </ul>

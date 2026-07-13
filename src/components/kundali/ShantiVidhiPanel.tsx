@@ -54,7 +54,7 @@ function InfoTile({
     <div className="flex items-start gap-2.5 rounded-lg border border-border bg-card/40 p-3">
       <div className="mt-0.5 text-secondary">{icon}</div>
       <div className="min-w-0">
-        <div className="text-sm font-medium uppercase tracking-wide">{label}</div>
+        <div className="text-sm text-base uppercase tracking-wide">{label}</div>
         <div className="text-sm font-semibold text-foreground">{value}</div>
       </div>
     </div>
@@ -76,18 +76,17 @@ function RecommendationCard({
   const graha = grahaKey ? getGrahaShanti(grahaKey) : undefined;
   return (
     <div className="rounded-xl border border-border bg-card/40 p-4">
-      <div className="text-sm font-medium uppercase tracking-wide">{heading}</div>
+      <div className="text-sm text-base uppercase tracking-wide">{heading}</div>
       {graha ? (
         <>
           <div className="mt-1 flex items-center gap-2">
-            <span className="text-xl" style={{ color: graha.colorHex }}>{graha.symbol}</span>
             <span className="text-lg font-bold text-foreground">{pick(graha.nameNe, graha.nameEn)}</span>
           </div>
           {detailNe ? <p className="mt-0.5 text-xs">{detailNe}</p> : null}
           <button
             type="button"
             onClick={() => onSelect(graha.key)}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-secondary bg-secondary/10 px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:bg-secondary/20"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-secondary bg-secondary/10 px-3 py-1.5 text-sm text-base text-secondary transition-colors hover:bg-secondary/20"
           >
             <ArrowDownToLine className="h-3.5 w-3.5" /> {pick(`${graha.nameNe} शान्ति हेर्नुहोस्`, `View ${graha.nameEn} shanti`)}
           </button>
@@ -208,9 +207,6 @@ export function ShantiVidhiPanel({
                   : "border-border bg-card/30 text-foreground hover:bg-muted",
               )}
             >
-              <span className="text-xl leading-none" style={{ color: active ? undefined : g.colorHex }}>
-                {g.symbol}
-              </span>
               <span className="text-xs font-semibold">{pick(g.nameNe, g.nameEn)}</span>
             </button>
           );
@@ -224,11 +220,10 @@ export function ShantiVidhiPanel({
           style={{ background: `linear-gradient(90deg, ${graha.colorHex}1f, transparent)` }}
         >
           <span
-            className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl text-white shadow"
+            className="flex w-1.5 self-stretch rounded-full shadow"
             style={{ backgroundColor: graha.colorHex }}
-          >
-            {graha.symbol}
-          </span>
+            aria-hidden
+          />
           <div className="flex-1">
             <h2 className="text-lg font-bold text-foreground">{pick(`${graha.nameNe} शान्ति`, `${graha.nameEn} Shanti`)}</h2>
             <p className="text-xs">{pick(graha.nameEn, graha.nameNe)}</p>
@@ -247,7 +242,7 @@ export function ShantiVidhiPanel({
         <div className="space-y-5 p-5">
           {/* mantra + japa */}
           <div className="rounded-xl border border-border bg-muted/30 p-4">
-            <div className="mb-1 text-sm font-medium uppercase tracking-wide">{pick("बीज मन्त्र", "Beeja Mantra")}</div>
+            <div className="mb-1 text-sm text-base uppercase tracking-wide">{pick("बीज मन्त्र", "Beeja Mantra")}</div>
             <p className="text-lg font-semibold leading-relaxed text-foreground">{graha.beejMantra}</p>
             <p className="mt-1.5 text-sm">
               {pick(
@@ -310,7 +305,6 @@ export function ShantiVidhiPanel({
                   onClick={() => setSelectedKey(g.key)}
                 >
                   <TableCell className="whitespace-nowrap font-semibold text-foreground">
-                    <span className="mr-1.5" style={{ color: g.colorHex }}>{g.symbol}</span>
                     {pick(g.nameNe, g.nameEn)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{pick(g.vaaraNe, g.vaaraEn)}</TableCell>

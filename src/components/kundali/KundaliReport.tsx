@@ -85,7 +85,7 @@ function FactorList({ factors }: { factors?: string[] }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 text-sm font-medium hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-base hover:text-foreground transition-colors"
       >
         <Info className="h-3 w-3" />
         {t(count === 1 ? "kundali.report.factors_based" : "kundali.report.factors_based_plural", {
@@ -148,7 +148,7 @@ function SectionCard({ section }: { section: ReportSection }) {
       <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
         <h3 className="text-base font-bold text-foreground">{title}</h3>
         {isEnglish && (
-          <span className="text-sm font-medium uppercase tracking-wider">
+          <span className="text-sm text-base uppercase tracking-wider">
             {section.title_en}
           </span>
         )}
@@ -338,8 +338,8 @@ export function KundaliReport({
             <Trans
               i18nKey="kundali.report.intro"
               components={{
-                1: <span className="font-medium text-foreground" />,
-                2: <span className="font-medium text-foreground" />,
+                1: <span className="text-base text-foreground" />,
+                2: <span className="text-base text-foreground" />,
               }}
             />
           </p>
@@ -349,7 +349,7 @@ export function KundaliReport({
                 type="button"
                 onClick={() => generate(true)}
                 disabled={disabled}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm text-base text-foreground transition-colors hover:bg-muted disabled:opacity-50"
               >
                 <RefreshCw className="h-4 w-4" />
                 {t("kundali.report.regenerate")}
@@ -377,7 +377,7 @@ export function KundaliReport({
 
         {(streaming || status === "done") && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="font-medium">{t("kundali.report.confidence_label")}</span>
+            <span className="text-base">{t("kundali.report.confidence_label")}</span>
             {(["strong", "moderate", "mixed", "tentative"] as ReportConfidence[]).map(
               (lvl) => (
                 <ConfidenceBadge key={lvl} level={lvl} />
@@ -404,7 +404,7 @@ export function KundaliReport({
         )}
 
         {fromCache && status === "done" && (
-          <p className="text-sm font-medium">
+          <p className="text-sm text-base">
             {t("kundali.report.loaded_from_cache")}
           </p>
         )}

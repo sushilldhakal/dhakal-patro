@@ -269,7 +269,7 @@ export function ShadbalaCard({
           <GlanceTile label={pick("न्यूनतम पूरा गर्ने ग्रह", "Planets meeting threshold")}>
             <p className="text-2xl font-bold text-foreground tabular-nums">
               {digits(summary.meeting_threshold)}
-              <span className="text-sm font-medium">
+              <span className="text-sm text-base">
                 {" "}
                 / {digits(summary.total_planets)}
               </span>
@@ -282,7 +282,7 @@ export function ShadbalaCard({
                 <span
                   key={s}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-sm font-medium",
+                    "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-sm text-base",
                     summary.counts[s] > 0
                       ? STATUS_STYLES[s]
                       : "border-border"

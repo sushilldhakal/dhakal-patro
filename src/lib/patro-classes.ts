@@ -5,10 +5,10 @@ export const patroMono = "font-num tabular-nums";
 
 /** Teal/yellow accent link used in aside panels and section headers. */
 export const patroAsideLink =
-  "shrink-0 text-xs font-medium text-secondary no-underline whitespace-nowrap hover:underline";
+  "shrink-0 text-xs text-base text-secondary no-underline whitespace-nowrap hover:underline";
 
 export const patroEmpty =
-  "m-0 py-5 text-center text-sm font-medium";
+  "m-0 py-5 text-center text-sm text-base";
 
 export function patroAsideTab(active: boolean) {
   return cn(
@@ -43,7 +43,7 @@ export const patroMdRail =
 
 /** Compact date/time drawer trigger — content-sized, capped so toolbar fits beside it. */
 export const patroMobilePickerBtn =
-  "inline-flex h-[30px] w-max max-w-[min(100%,10.5rem)] shrink-0 items-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-medium text-foreground";
+  "inline-flex h-[30px] w-max max-w-[min(100%,10.5rem)] shrink-0 items-center gap-1 rounded-lg border border-border bg-card px-2 text-sm text-base text-foreground";
 
 /** Prev/next step buttons flanking the mobile date picker — matches its chip. */
 export const patroMobileStepBtn =
@@ -56,10 +56,10 @@ export const patroMonthNavDivider =
   "flex items-center gap-1 border-l border-border pl-1.5 sm:gap-1.5 sm:pl-2";
 
 export const patroMonthSelect =
-  "h-8 min-w-0 max-w-[9.5rem] cursor-pointer rounded-lg border border-border bg-card px-2.5 text-sm font-medium text-foreground sm:max-w-none";
+  "h-8 min-w-0 max-w-[9.5rem] cursor-pointer rounded-lg border border-border bg-card px-2.5 text-sm text-base text-foreground sm:max-w-none";
 
 export const patroMonthYearSelect =
-  "h-8 w-[5.25rem] cursor-pointer rounded-lg border border-border bg-card px-2.5 text-sm font-medium text-foreground";
+  "h-8 w-[5.25rem] cursor-pointer rounded-lg border border-border bg-card px-2.5 text-sm text-base text-foreground";
 
 export const patroMonthNavBtn =
   "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40";
@@ -74,10 +74,10 @@ export const patroMonthChipButton =
   "cursor-pointer transition-[filter,transform,box-shadow] hover:brightness-[1.03] hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 export const patroMonthChipHead =
-  "truncate bg-secondary px-0.5 py-0.5 text-center text-sm font-bold leading-none tracking-wide text-secondary-foreground sm:px-1 sm:py-1.5 sm:text-sm";
+  "truncate bg-secondary px-0.5 py-0.5 text-center text-sm font-bold leading-none tracking-wide text-secondary-foreground max-[512px]:text-xs sm:px-1 sm:py-1.5";
 
 export const patroMonthChipDay =
-  "flex min-h-sm items-center justify-center bg-card pb-0.5 text-sm font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-md";
+  "flex min-h-sm items-center justify-center bg-card pb-0.5 text-sm font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-base";
 
 /** Decorative calendar "body" line — month chip without a day numeral. */
 export const patroMonthChipLine =
@@ -90,13 +90,13 @@ export const patroMonthRangeNav =
   "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-1 py-1 shadow-xs sm:gap-2";
 
 export const patroMonthRangeLabel =
-  "min-w-0 px-1 text-sm font-medium leading-snug text-foreground sm:text-sm";
+  "min-w-0 px-1 text-sm text-base leading-snug text-foreground sm:text-sm";
 
 export const patroMonthRangeRow =
   "inline-flex max-w-full items-center gap-0.5 sm:gap-1";
 
 export const patroMonthRangeCompactLabel =
-  "min-w-0 whitespace-nowrap text-sm font-medium leading-none sm:text-xs";
+  "min-w-0 whitespace-nowrap text-sm text-base leading-none sm:text-xs";
 
 export const patroMonthRangeCompactTrigger =
   "cursor-pointer rounded px-0.5 transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -159,13 +159,13 @@ export function patroSlotBadge(tone: "good" | "bad" | "neutral") {
 }
 
 export const patroSelect =
-  "h-8 cursor-pointer rounded-[var(--radius-lg)] border border-border bg-card px-2.5 text-sm font-medium text-foreground";
+  "h-8 cursor-pointer rounded-[var(--radius-lg)] border border-border bg-card px-2.5 text-sm text-base text-foreground";
 
 export const patroNoteBox =
   "mb-4 rounded-xl border border-border bg-secondary/8 p-3 text-sm leading-relaxed";
 
 export const patroErrorBox =
-  "rounded-lg border border-danger/30 bg-error-surface px-3 py-2.5 text-sm font-medium text-danger";
+  "rounded-lg border border-danger/30 bg-error-surface px-3 py-2.5 text-sm text-base text-danger";
 
 export const patroSkel =
   "block h-7 w-4/5 mx-auto rounded animate-pulse bg-foreground/5";

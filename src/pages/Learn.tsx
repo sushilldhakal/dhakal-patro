@@ -128,7 +128,7 @@ function TopicCard({
         <h3 className="text-xl font-bold leading-snug text-foreground">
           {pick(topic.titleNe, topic.titleEn)}
         </h3>
-        <p className="mt-1 text-sm font-medium">{pick(topic.titleEn, "")}</p>
+        <p className="mt-1 text-sm text-base">{pick(topic.titleEn, "")}</p>
         <p className="mt-3 flex-1 text-base leading-relaxed text-foreground/80">
           {pick(topic.summary, topic.summaryEn)}
         </p>
@@ -189,7 +189,7 @@ function TopicCard({
       </div>
       <div>
         <h3 className="text-lg font-bold leading-snug text-foreground">{pick(topic.titleNe, topic.titleEn)}</h3>
-        <p className="mt-1 text-sm font-medium">
+        <p className="mt-1 text-sm text-base">
           {pick(topic.titleEn, "")}
         </p>
       </div>
@@ -409,7 +409,7 @@ export function Learn() {
 
       {filteredTopics.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/40 px-6 py-14 text-center">
-          <p className="text-base font-medium text-foreground">{t("learn_page.no_topics")}</p>
+          <p className="text-base text-base text-foreground">{t("learn_page.no_topics")}</p>
           <p className="mt-1 text-sm">
             {t("learn_page.no_topics_hint")}
           </p>

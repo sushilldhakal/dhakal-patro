@@ -102,7 +102,7 @@ export function History() {
     <PageShell className="max-w-[1200px]">
       <Link
         to="/learn"
-        className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-sm text-base transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
         ज्ञानकेन्द्र
@@ -125,7 +125,7 @@ export function History() {
               href={HISTORY_SOURCE.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-secondary/50 hover:bg-secondary/5"
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-sm text-base text-foreground transition-colors hover:border-secondary/50 hover:bg-secondary/5"
             >
               <Video className="size-4 text-destructive" />
               {HISTORY_SOURCE.title}
@@ -173,7 +173,7 @@ export function History() {
                       className={cn(
                         "block rounded-lg px-2.5 py-2 text-sm leading-snug transition-colors",
                         activeId === section.id
-                          ? "bg-secondary/10 font-medium text-secondary"
+                          ? "bg-secondary/10 text-base text-secondary"
                           : "hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -233,7 +233,7 @@ export function History() {
                 href={HISTORY_SOURCE.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-secondary underline-offset-2 hover:underline"
+                className="text-base text-secondary underline-offset-2 hover:underline"
               >
                 वृत्तचित्र
               </a>{" "}
@@ -242,7 +242,7 @@ export function History() {
             </p>
             <Link
               to="/learn"
-              className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-secondary"
+              className="mt-5 inline-flex items-center gap-1.5 text-sm text-base text-secondary"
             >
               <BookOpen className="size-4" />
               ज्ञानकेन्द्रमा फर्कनुहोस्

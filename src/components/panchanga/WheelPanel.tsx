@@ -20,7 +20,6 @@ import {
   wheelPanelClose,
   wheelPanelCons,
   wheelPanelConsTxt,
-  wheelPanelGlyph,
   wheelPanelHead,
   wheelPanelIco,
   wheelPanelKind,
@@ -124,12 +123,6 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
     body = (
       <>
         <div className={wheelPanelHead}>
-          <div
-            className={wheelPanelGlyph}
-            style={{ fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
-          >
-            {rs.sym + "\uFE0E"}
-          </div>
           <div>
             <div className={wheelPanelKind}>{pick("राशि", "Rashi")} · {num(sel.i + 1)}</div>
             <h2 className={wheelPanelTitle}>{pick(rs.ne, rs.en)}</h2>

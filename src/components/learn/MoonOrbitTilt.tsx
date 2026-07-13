@@ -319,14 +319,14 @@ function MoonOrbitDiagram({ omega, moonU, sunLon, status, season }: DiagramProps
 
         {/* nodes — the two points where the tilted orbit pierces the plane */}
         {[
-          { p: asc, ne: "राहु", sym: "☊", dy: -20 },
-          { p: desc, ne: "केतु", sym: "☋", dy: 32 },
+          { p: asc, ne: "राहु", dy: -20 },
+          { p: desc, ne: "केतु", dy: 32 },
         ].map((n) => (
           <g key={n.ne}>
             <circle cx={n.p.x} cy={n.p.y} r={11} className={motNode} />
             <circle cx={n.p.x} cy={n.p.y} r={4} className={motNodeDot} />
             <text x={n.p.x} y={n.p.y + n.dy} className={motNodeLabel} textAnchor="middle">
-              {n.ne} {n.sym}
+              {n.ne}
             </text>
           </g>
         ))}
@@ -465,7 +465,7 @@ export function MoonOrbitTiltStudy() {
         </div>
 
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>☉ वर्ष — सूर्य रेखा घुम्छ</span>
+          <span className={motSliderLabel}>वर्ष — सूर्य रेखा घुम्छ</span>
           <div className={edScrubWrap}>
             <button
               type="button"
@@ -493,7 +493,7 @@ export function MoonOrbitTiltStudy() {
         </div>
 
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>☊ पात-चक्र — {fmt(NODAL_YEARS)} वर्षे precession</span>
+          <span className={motSliderLabel}>पात-चक्र — {fmt(NODAL_YEARS)} वर्षे precession</span>
           <input
             className={edScrub}
             type="range"

@@ -148,7 +148,7 @@ function AbhijitDayCard({
         </p>
         <p className="m-0 text-center text-sm sm:text-sm">
           {t("abhijit.col_noon")}{" "}
-          <span className="mono font-medium text-foreground">{abhijit.noonDisplay ?? "—"}</span>
+          <span className="mono text-base text-foreground">{abhijit.noonDisplay ?? "—"}</span>
         </p>
         <p className="mono m-0 truncate text-center text-sm sm:text-sm">
           ↑{sunrise} · ↓{sunset}
@@ -254,7 +254,7 @@ export function AbhijitMuhurta() {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-1 text-xs font-medium hover:text-foreground mb-2"
+            className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t("abhijit.back_home")}

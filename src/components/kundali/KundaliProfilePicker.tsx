@@ -70,7 +70,7 @@ export const KundaliProfilePicker = forwardRef<
     <>
       {profiles.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center">
-          <p className="text-sm font-medium text-foreground">No profiles yet</p>
+          <p className="text-sm text-base text-foreground">No profiles yet</p>
           <p className="mx-auto mt-1 max-w-md text-sm">
             Add your birth date, time and place to generate and save a kundali.
           </p>
@@ -191,7 +191,7 @@ function Row({
   return (
     <div className="flex items-start gap-1.5">
       <Icon className="mt-0.5 size-3.5 shrink-0 opacity-70" />
-      <span className="shrink-0 font-medium text-foreground/70">{label}:</span>
+      <span className="shrink-0 text-base text-foreground/70">{label}:</span>
       <span className="min-w-0 break-words text-foreground">{children}</span>
     </div>
   );

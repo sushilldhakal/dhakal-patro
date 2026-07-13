@@ -529,7 +529,7 @@ function DualValueDisplay({
   return (
     <div className="flex flex-col gap-0.5">
       {showStrike && pauranikLabel ? (
-        <span className="line-through font-medium">{pauranikLabel}</span>
+        <span className="line-through text-base">{pauranikLabel}</span>
       ) : null}
       <span className="font-semibold">{vedicLabel ?? pauranikLabel}</span>
     </div>
@@ -628,7 +628,7 @@ function MuhurtaTimingValue({
       }
     >
       {lines.map((line) => (
-        <span key={line} className="text-sm font-medium leading-snug">
+        <span key={line} className="text-sm text-base leading-snug">
           {line}
         </span>
       ))}
@@ -715,12 +715,10 @@ function NivasDirectionValue({
 function NivasTimedSegments({
   segments,
   showSubtitle = false,
-  showSymbol = false,
   showGuna = false,
 }: {
   segments?: NivasShoolSegment[];
   showSubtitle?: boolean;
-  showSymbol?: boolean;
   showGuna?: boolean;
 }) {
   const { t } = useTranslation();
@@ -759,7 +757,6 @@ function NivasTimedSegments({
               </span>
             ) : (
               <UptoValue
-                sym={showSymbol ? seg.symbol : undefined}
                 name={subtitle ? `${name} (${subtitle})` : name}
                 endTime={endTime}
                 badge={gunaLabel}
@@ -799,7 +796,6 @@ export function NivasShoolSection({
             children: (
               <NivasTimedSegments
                 segments={ns.homahuti?.segments}
-                showSymbol
               />
             ),
           }}
@@ -903,18 +899,6 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
   const lagna = getLagnaDisplay(p);
   if (!planets.length && !lagna) return null;
 
-  const symbols: Record<string, string> = {
-    सूर्य: "☉",
-    चन्द्र: "☽",
-    मंगल: "♂",
-    बुध: "☿",
-    बृहस्पति: "♃",
-    शुक्र: "♀",
-    शनि: "♄",
-    राहु: "☊",
-    केतु: "☋",
-  };
-
   return (
     <div className="rounded-xl bg-card p-4 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
       <div className="flex items-baseline gap-2 mb-2">
@@ -924,7 +908,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
       <div className="flex flex-col">
         {lagna && (
           <div className="flex items-center gap-3 py-2 border-b border-border">
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-md bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-base bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
               ASC
             </span>
             <div className="flex-1 min-w-0">
@@ -943,9 +927,6 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
             key={label}
             className="flex items-center gap-3 py-2 border-b border-border last:border-0"
           >
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-md bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
-              {symbols[label] ?? "★"}
-            </span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold">{label}</div>
               {rashiNe && (

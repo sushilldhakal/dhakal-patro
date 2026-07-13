@@ -69,7 +69,7 @@ const GRAHA_KEYS = [
   "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu",
 ] as const;
 
-const GRAHA_SYMS = ["☉", "☾", "♂", "☿", "♃", "♀", "♄", "☊", "☋"] as const;
+const GRAHA_SYMS = ["", "", "", "", "", "", "", "", ""] as const;
 const GRAHA_NE = ["सूर्य", "चन्द्र", "मंगल", "बुध", "बृहस्पति", "शुक्र", "शनि", "राहु", "केतु"] as const;
 
 export interface WheelRashi {

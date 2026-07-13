@@ -48,7 +48,7 @@ export function LearnMoreCard({ slugs, heading, className }: Props) {
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
                 <Icon className="h-4 w-4" />
               </span>
-              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+              <span className="min-w-0 flex-1 truncate text-sm text-base text-foreground">
                 {pick(t.titleNe, t.titleEn)}
               </span>
               <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />

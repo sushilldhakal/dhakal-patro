@@ -116,7 +116,7 @@ export function EclipseStudy() {
             <span className={edRoV()}>{phaseName(g.E)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>पात कोण ☊</span>
+            <span className={edRoK}>पात कोण</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(omegaInertial))}°</span>
           </div>
           <div className={edRo}>
@@ -133,7 +133,7 @@ export function EclipseStudy() {
           </div>
         </div>
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>☾ चन्द्र · पृथ्वी र चन्द्र (छिटो)</span>
+          <span className={motSliderLabel}>चन्द्र · पृथ्वी र चन्द्र (छिटो)</span>
           <div className={edScrubWrap}>
             <button
               type="button"
@@ -160,7 +160,7 @@ export function EclipseStudy() {
           </div>
         </div>
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>☊ राहु–केतु · पात-चक्र (ढिलो · घडीको दिशा)</span>
+          <span className={motSliderLabel}>राहु–केतु · पात-चक्र (ढिलो · घडीको दिशा)</span>
           <div className={edScrubWrap}>
             <button
               type="button"
@@ -210,7 +210,7 @@ export function EclipseStudy() {
       <p className={tmCardCap}>
         चन्द्रले ~{fmt(27)} दिनमा एक राशि पार गर्छ; <span className={cn("hl-amber")}>राहु–केतु</span> भने आकाशमा
         बिस्तारै <b>घडीको दिशामा</b> घुम्छन् (~{fmt(19)}°/वर्ष, ~{fmt(19)} वर्षे पूरा चक्र) — चन्द्रभन्दा लगभग{" "}
-        {fmt(250)} गुणा ढिलो। माथिको <b>☾</b> बटनले चन्द्र/पृथ्वी चलाउँछ; <b>☊</b> बटन वा स्लाइडरले मात्र पात
+        {fmt(250)} गुणा ढिलो। माथिको <b>चन्द्र</b> बटनले चन्द्र/पृथ्वी चलाउँछ; <b>पात-चक्र</b> बटन वा स्लाइडरले मात्र पात
         रेखा सार्छ। ग्रहण तब हुन्छ जब पूर्णिमा/औंसी पात रेखा नजिक पर्छ — वर्षमा झन्डै दुई पटक (
         {fmt(lunarCount)} चन्द्र, {fmt(solarCount)} सूर्य यस चक्रमा)।
         {next ? ` अर्को ग्रहण ~${fmt(Math.max(0, Math.round(next.t - t)))} दिनमा।` : ""}

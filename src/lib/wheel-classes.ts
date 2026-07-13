@@ -10,7 +10,7 @@ export const wheelHeadTitle =
   "mt-1.5 text-lg font-bold leading-tight text-[var(--w-ink)] max-[720px]:text-xl [&_.yr]:font-num [&_.yr]:text-[var(--w-accent)]";
 
 export const wheelHeadSub =
-  "mt-1.5 font-num text-sm font-medium text-[var(--w-ink-dim)]";
+  "mt-1.5 font-num text-sm text-base text-[var(--w-ink-dim)]";
 
 export const wheelDock =
   "absolute bottom-[18px] left-1/2 z-[22] flex w-max max-w-[calc(100%-1rem)] -translate-x-1/2 items-center gap-3.5 rounded-full border border-[var(--w-surface-border)] bg-[color-mix(in_srgb,var(--w-surface)_94%,#112c2a)] px-4 py-2.5 text-[var(--w-ink)] shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur-md max-[720px]:gap-2 max-[720px]:px-2.5 max-[720px]:py-1.5 max-[480px]:gap-1.5 max-[480px]:px-2 max-[480px]:py-1";
@@ -27,7 +27,7 @@ export const wheelIconBtn =
   "grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-[var(--w-surface-border)] bg-transparent text-sm text-[var(--w-ink)] transition-colors hover:border-[var(--w-accent)] max-[720px]:h-7 max-[720px]:w-7 max-[720px]:text-xs max-[480px]:h-6 max-[480px]:w-6 max-[480px]:text-sm";
 
 export const wheelDockLabel =
-  "whitespace-nowrap text-sm font-medium text-[var(--w-ink-dim)] max-[720px]:hidden";
+  "whitespace-nowrap text-sm text-base text-[var(--w-ink-dim)] max-[720px]:hidden";
 
 export const wheelDockVal =
   "min-w-[58px] shrink-0 text-center font-num text-sm font-semibold tabular-nums text-[var(--w-ink)] max-[720px]:min-w-[44px] max-[720px]:text-sm max-[480px]:min-w-[38px] max-[480px]:text-sm";
@@ -43,7 +43,7 @@ export const wheelLegend =
   "pointer-events-none absolute bottom-[18px] left-4 z-20 flex flex-col gap-1.5 max-[720px]:hidden";
 
 export const wheelLegendRow =
-  "flex items-center gap-1.5 text-sm font-medium text-[var(--w-ink-dim)]";
+  "flex items-center gap-1.5 text-sm text-base text-[var(--w-ink-dim)]";
 
 export const wheelLegendDot = "h-2 w-2 shrink-0 rounded-full";
 
@@ -61,7 +61,7 @@ export const wheelTipTitle =
   "mt-0.5 text-base font-bold leading-tight text-[var(--w-ink)]";
 
 export const wheelTipRow =
-  "mt-1 flex justify-between gap-3 text-xs font-medium text-[var(--w-ink-dim)] [&_b]:font-semibold [&_b]:text-[var(--w-ink)]";
+  "mt-1 flex justify-between gap-3 text-xs text-base text-[var(--w-ink-dim)] [&_b]:font-semibold [&_b]:text-[var(--w-ink)]";
 
 export const wheelTipSym =
   "mt-1 text-sm font-normal text-[var(--w-ink-dim)]";
@@ -89,7 +89,7 @@ export const wheelPanelTitle =
   "m-0 mt-0.5 text-2xl font-bold leading-tight text-[var(--w-ink)]";
 
 export const wheelPanelSub =
-  "mt-1 font-num text-xs font-medium text-[var(--w-ink-dim)]";
+  "mt-1 font-num text-xs text-base text-[var(--w-ink-dim)]";
 
 export const wheelPanelClose =
   "ml-auto grid h-[30px] w-[30px] shrink-0 cursor-pointer place-items-center rounded-lg border border-[var(--w-surface-border)] bg-transparent text-base leading-none text-[var(--w-ink-dim)] hover:border-[var(--w-accent)] hover:text-[var(--w-ink)]";
@@ -102,7 +102,7 @@ export const wheelDlRow =
   "flex justify-between gap-3.5 border-b border-[var(--pn-ring-soft)] py-2.5 last:border-b-0";
 
 export const wheelDlK =
-  "text-xs font-medium text-[var(--w-ink-dim)]";
+  "text-xs text-base text-[var(--w-ink-dim)]";
 
 export const wheelDlV =
   "whitespace-nowrap text-right text-sm font-semibold text-[var(--w-ink)]";
@@ -113,7 +113,7 @@ export const wheelPanelCons =
   "mt-3.5 flex items-center gap-3.5 rounded-lg bg-black/22 p-3.5";
 
 export const wheelPanelConsTxt =
-  "w-full font-num text-sm font-medium leading-normal text-[var(--w-ink-dim)] [&_b]:mb-0.5 [&_b]:block [&_b]:text-xs [&_b]:font-semibold [&_b]:text-[var(--w-ink)]";
+  "w-full font-num text-sm text-base leading-normal text-[var(--w-ink-dim)] [&_b]:mb-0.5 [&_b]:block [&_b]:text-xs [&_b]:font-semibold [&_b]:text-[var(--w-ink)]";
 
 /* ── Wheel stage / SVG shell (`.pn-wheel` vars stay on parent) ── */
 

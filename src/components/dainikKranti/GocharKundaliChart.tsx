@@ -48,13 +48,13 @@ export function GocharKundaliChart({
 
       <div className="mb-3 space-y-2">
         <div className="rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5">
-          <p className="font-mono text-base font-medium leading-relaxed text-foreground">
+          <p className="font-mono text-base text-base leading-relaxed text-foreground">
             {papanshaLine || pick("पापाशाः—", "Papashah —")}
           </p>
         </div>
         {gapanshaLine ? (
           <div className="rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5">
-            <p className="font-mono text-base font-medium leading-relaxed text-foreground">
+            <p className="font-mono text-base text-base leading-relaxed text-foreground">
               {gapanshaLine}
             </p>
           </div>
@@ -105,7 +105,7 @@ export function GocharKundaliChart({
                   x={cx}
                   y={cy + (planetLine ? 14 : 4)}
                   textAnchor="middle"
-                  className="fill-foreground/80 text-sm font-medium"
+                  className="fill-foreground/80 text-sm text-base"
                 >
                   {rashiNe}
                 </text>

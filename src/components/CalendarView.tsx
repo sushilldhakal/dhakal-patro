@@ -326,7 +326,7 @@ export function CalendarView({
   ) : (
     <>
       {monthQ.isError && (
-        <div className="mb-3 rounded-xl border border-warning/25 bg-warning-surface px-3.5 py-2 text-sm font-medium text-warning">
+        <div className="mb-3 rounded-xl border border-warning/25 bg-warning-surface px-3.5 py-2 text-sm text-base text-warning">
           {t("calendar.enrich_error")}
         </div>
       )}
@@ -406,7 +406,7 @@ export function CalendarView({
       </button>
     </div>
   ) : (
-    <div className="hidden text-xs font-medium uppercase tracking-[0.12em] md:block md:text-right">
+    <div className="hidden text-xs text-base uppercase tracking-[0.12em] md:block md:text-right">
       {t("calendar.eyebrow")}
     </div>
   );

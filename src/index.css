@@ -12,11 +12,11 @@
      so pair it with `md:`/`lg:` overrides to keep the bump phone-only. Also
      enables `max-xs:` (< 400px) for the smallest phones. */
   --breakpoint-xs: 25rem;
-  --font-devanagari: "Noto Sans Devanagari", "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: "Mukta", sans-serif;
   --font-sans: var(--font-devanagari);
   --font-heading: var(--font-devanagari);
-  --font-en: "Oxanium", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-en: "Mukta", sans-serif;
+  --font-mono: "Fira Code", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -44,8 +44,8 @@
   /* Global text scale — the ONLY font sizes used across the app. Prefer the
      named utilities (text-xs … text-4xl); avoid arbitrary text-[Npx] values.
      text-xs is for the smallest labels; use up to text-4xl for headings. */
-  --text-xs: 0.75rem; /* 12px */
-  --text-xs--line-height: calc(1 / 0.75);
+  --text-xs: 0.675rem; /* 10.8px — tiny labels for small mobile devices */
+  --text-xs--line-height: calc(0.85 / 0.675);
   --text-sm: 0.875rem; /* 14px */
   --text-sm--line-height: calc(1.25 / 0.875);
   --text-base: 1rem; /* 16px */
@@ -138,20 +138,14 @@
   --color-danger: var(--brand-vermilion);
   --color-info: var(--brand-blue);
 
-  --font-devanagari: "Noto Sans Devanagari", "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: "Mukta", sans-serif;
   --font-sans: var(--font-devanagari);
   --font-heading: var(--font-devanagari);
-  --font-en: "Oxanium", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-en: "Mukta", sans-serif;
+  --font-mono: "Fira Code", monospace;
 
-  --fs-xs: 12px;
-  --fs-sm: 13px;
-  --fs-base: 14px;
-  --fs-md: 16px;
-  --fs-lg: 18px;
-  --fs-xl: 24px;
-  --fs-2xl: 30px;
-  --fs-3xl: 36px;
+  /* Typography is driven entirely by the Tailwind text scale (--text-xs …
+     --text-4xl in @theme). Base body text = --text-sm (14px). */
 
   --tracking-tight: -0.01em;
   --tracking-eyebrow: 0.12em;
@@ -195,7 +189,7 @@
   --sidebar-accent: var(--brand-saffron);
 
   --pn-font: var(--font-devanagari);
-  --pn-num: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+  --pn-num: "Fira Code", monospace;
   --pn-ring-soft: color-mix(in srgb, var(--brand-gold) 28%, transparent);
 
   --chart-4: var(--brand-blue);
@@ -260,7 +254,7 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--pn-font);
-    font-size: var(--fs-base);
+    font-size: var(--text-sm);
     line-height: 1.5;
     transition: background var(--motion-slow) var(--easing-standard);
     -webkit-font-smoothing: antialiased;
@@ -288,7 +282,7 @@
 /* ── Panchanga Chakra (cosmic wheel) ─────────────────────── */
 .pn-wheel {
   --pn-font: var(--font-sans);
-  --pn-num: "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+  --pn-num: "Fira Code", monospace;
   --pn-ring-soft: color-mix(in srgb, #8fbfc1 18%, transparent);
   --w-sky-0: #112c2a;
   --w-sky-1: #0a1a1b;

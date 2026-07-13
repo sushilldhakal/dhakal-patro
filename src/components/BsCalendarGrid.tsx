@@ -46,10 +46,10 @@ export function BsCalendarGrid({
               className="flex min-w-0 flex-col gap-px bg-surface-inset px-3 py-2 max-md:items-center max-md:px-0 max-md:py-1"
             >
               {lang === "en" ? (
-                <span className="text-xs font-medium uppercase tracking-widest">{WEEKDAYS_EN[i]}</span>
+                <span className="text-xs text-base uppercase tracking-widest">{WEEKDAYS_EN[i]}</span>
               ) : (
                 <>
-                  <span className={cn("text-sm font-semibold max-md:hidden", weekend && "text-danger")}>{ne}</span>
+                  <span className={cn("text-base font-semibold max-md:hidden", weekend && "text-danger")}>{ne}</span>
                   <span
                     className={cn(
                       "hidden text-center text-sm font-bold leading-tight tracking-tight max-md:block",
@@ -106,7 +106,7 @@ export function BsCalendarGrid({
                 {tithi ? (
                   <span
                     className={cn(
-                      "min-w-0 flex-1 truncate text-left text-xs font-semibold md:font-medium pt-1",
+                      "min-w-0 flex-1 truncate text-left text-xs font-semibold md:text-base pt-1",
                       isOutside ? "" : "",
                     )}
                   >
@@ -122,7 +122,7 @@ export function BsCalendarGrid({
                 )}
                 <span
                   className={cn(
-                    "font-num shrink-0 text-right text-xs font-semibold md:font-medium pt-1",
+                    "font-num shrink-0 text-right text-xs font-semibold md:text-base pt-1",
                     isOutside ? "" : "",
                   )}
                 >

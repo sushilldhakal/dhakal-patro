@@ -96,7 +96,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
         textAnchor="middle"
         dominantBaseline="central"
       >
-        {r.sym} {r.ne}
+        {r.ne}
       </text>
     );
   });

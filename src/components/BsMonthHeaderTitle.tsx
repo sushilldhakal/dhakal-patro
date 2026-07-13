@@ -431,7 +431,7 @@ export function BsMonthHeaderTitle({
         <span className="shrink-0 text-sm font-semibold text-foreground/90">{samvatsaraLabel}</span>
       ) : null}
       {subtitleLine ? (
-        <span className="min-w-0 text-sm font-medium leading-snug">
+        <span className="min-w-0 text-sm text-base leading-snug">
           {subtitleLine}
         </span>
       ) : null}
@@ -439,15 +439,15 @@ export function BsMonthHeaderTitle({
   );
 
   const titleBlock = (
-    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm font-bold leading-tight tracking-tight text-md">
+    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xl font-bold leading-tight tracking-tight text-base">
       <span className="min-w-0">{titleLine}</span>
       {samvatsaraLabel ? (
-        <span className="hidden text-sm font-semibold text-foreground/90 sm:inline">
+        <span className="hidden text-xl font-semibold text-foreground/90 sm:inline">
           {samvatsaraLabel}
         </span>
       ) : null}
       {subtitleLine ? (
-        <span className="text-sm font-medium sm:text-xs">
+        <span className="text-sm text-base sm:text-xs">
           {subtitleLine}
         </span>
       ) : null}
@@ -583,7 +583,7 @@ export function BsMonthHeaderTitle({
               </div>
             )}
             {panchangaSubtitle ? (
-              <p className="m-0 text-sm font-medium leading-none">{panchangaSubtitle}</p>
+              <p className="m-0 text-sm text-base leading-none">{panchangaSubtitle}</p>
             ) : null}
           </div>
           {mobileToolbarLower ? (
@@ -604,7 +604,7 @@ export function BsMonthHeaderTitle({
             </div>
           )}
           {panchangaSubtitle ? (
-            <p className="m-0 text-sm font-medium leading-none">{panchangaSubtitle}</p>
+            <p className="m-0 text-sm text-base leading-none">{panchangaSubtitle}</p>
           ) : null}
         </div>
       </div>

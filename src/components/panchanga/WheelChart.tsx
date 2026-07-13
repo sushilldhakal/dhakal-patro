@@ -244,9 +244,9 @@ function WheelChartImpl({
             textAnchor="middle"
             dominantBaseline="central"
             className={wRashiGlyph}
-            style={{ fontSize: 27, fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
+            style={{ fontSize: 27 }}
           >
-            {rs.sym + "\uFE0E"}
+            {rs.sym}
           </text>
           <RingLabel L={Lm} r={R.rashiName} cls={wRashiName(isSel || isHot)} spin={spin}>
             {rs.ne}
@@ -392,7 +392,7 @@ function WheelChartImpl({
     // rashi/nakshatra alignment is readable out at the rim. Falls back to the
     // Moon if the target longitude is missing.
     const targetLon = planetLons[lineTarget] ?? moonLon;
-    const targetSym = det.grahas[lineTarget]?.sym ?? "☾︎";
+    const targetSym = det.grahas[lineTarget]?.sym ?? "";
     const [lx, ly] = pol(targetLon, R.bsOut - 2);
     markerNodes.push(<line key="target-line" x1={CX} y1={CY} x2={lx} y2={ly} className={wLagnaLine} />);
     markerNodes.push(
@@ -404,7 +404,7 @@ function WheelChartImpl({
           textAnchor="middle"
           dominantBaseline="central"
           className={wLabel}
-          style={{ fontSize: 14, fill: "#f9c800", fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}
+          style={{ fontSize: 14, fill: "#f9c800" }}
           transform={
             normDeg(targetLon + spin) > 90 && normDeg(targetLon + spin) < 270
               ? `rotate(180 ${CX} ${CY - (R.bsOut + 5)})`

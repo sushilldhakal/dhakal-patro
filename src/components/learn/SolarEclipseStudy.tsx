@@ -331,7 +331,7 @@ export function SolarEclipseStudy() {
         </div>
 
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>☾ छायाँ सर्दै — समय (पृथ्वीमाथि मार्ग)</span>
+          <span className={motSliderLabel}>छायाँ सर्दै — समय (पृथ्वीमाथि मार्ग)</span>
           <div className={edScrubWrap}>
             <button
               type="button"

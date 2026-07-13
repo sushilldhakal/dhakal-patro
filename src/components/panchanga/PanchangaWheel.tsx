@@ -500,9 +500,6 @@ function PanchangaWheelBody({
         <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
           <div className={wheelTipKind}>{pick("राशि", "Rashi")} · {num(hover.i + 1)}</div>
           <div className={wheelTipTitle}>
-            <span style={{ fontFamily: '"Noto Sans Symbols 2", "Segoe UI Symbol", serif' }}>
-              {rs.sym + "\uFE0E"}
-            </span>{" "}
             {pick(rs.ne, rs.en)}
           </div>
           <div className={wheelTipRow}>

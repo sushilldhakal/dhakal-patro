@@ -69,7 +69,7 @@ export function ResetPassword() {
       ) : (
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground" htmlFor="new-password">
+            <label className="text-sm text-base text-foreground" htmlFor="new-password">
               New password
             </label>
             <Input
@@ -83,7 +83,7 @@ export function ResetPassword() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground" htmlFor="confirm-password">
+            <label className="text-sm text-base text-foreground" htmlFor="confirm-password">
               Confirm password
             </label>
             <Input

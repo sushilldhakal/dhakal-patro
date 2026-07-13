@@ -102,7 +102,7 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
           <div className="text-right">
             <p className="text-4xl font-bold tabular-nums text-foreground">
               {formatObtained(result.totalObtained)}
-              <span className="text-lg font-medium"> / {result.totalMax}</span>
+              <span className="text-lg text-base"> / {result.totalMax}</span>
             </p>
             <p className="text-xs mt-0.5">{t("milan.guna")}</p>
           </div>
@@ -138,7 +138,7 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
               key={dosha.id}
               className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0"
             >
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm text-base text-foreground">
                 {en ? (
                   dosha.labelEn
                 ) : (
@@ -193,7 +193,7 @@ export function KundaliMilanResult({ boyName, girlName, result, lang }: Props) {
                         className={cn("size-4 transition-transform", isOpen && "rotate-90")}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{label ? (en ? label.en : label.ne) : kuta.id}</TableCell>
+                    <TableCell className="text-base">{label ? (en ? label.en : label.ne) : kuta.id}</TableCell>
                     <TableCell className="text-center tabular-nums">{kuta.max}</TableCell>
                     <TableCell className="text-center tabular-nums font-semibold">
                       {formatObtained(kuta.obtained)}

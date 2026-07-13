@@ -134,7 +134,7 @@ export function GoogleSignInButton({
       className="flex h-10 w-[300px] max-w-full items-center justify-center"
     >
       {!ready && (
-        <span className="text-sm font-medium">
+        <span className="text-sm text-base">
           {t("auth.continue_with_google")}
         </span>
       )}

@@ -73,7 +73,7 @@ function SpanBoundary({
         <span>
           {weekday} {bsMonthDay}
         </span>
-        <span className="font-medium text-muted-foreground"> · {adShort}</span>
+        <span className="text-base text-muted-foreground"> · {adShort}</span>
       </p>
     </div>
   );
@@ -88,7 +88,7 @@ function SpanList({ spans, timeZone }: { spans: ElementSpan[]; timeZone?: string
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-base font-bold text-foreground">{pick(s.name_ne, s.name)}</span>
             {s.paksha ? (
-              <span className="text-xs font-medium">
+              <span className="text-xs text-base">
                 {pick(s.paksha === "shukla" ? "शुक्ल" : "कृष्ण", s.paksha)}
               </span>
             ) : null}
@@ -138,7 +138,7 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
     return (
       <div className="flex flex-col gap-2">
         {anchor ? (
-          <p className="text-sm font-medium">
+          <p className="text-sm text-base">
             {pick("चन्द्र राशि", "Moon sign")}: <span className="font-bold text-foreground">{anchor}</span>
           </p>
         ) : null}

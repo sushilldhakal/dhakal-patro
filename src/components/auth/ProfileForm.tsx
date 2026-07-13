@@ -10,7 +10,7 @@ import {
   type ProfileInput,
 } from "@/lib/auth/client";
 
-const labelClass = "text-sm font-medium text-foreground";
+const labelClass = "text-sm text-base text-foreground";
 const fieldWrap = "flex flex-col gap-1.5";
 
 /** Blank profile, used when adding a new one. */

@@ -25,18 +25,6 @@ const LEVEL_LABELS: { ne: string; en: string }[] = [
 
 const MAX_LEVEL = LEVEL_LABELS.length - 1;
 
-const LORD_GLYPH: Record<DashaLord, string> = {
-  sun: "☉",
-  moon: "☽",
-  mars: "♂",
-  mercury: "☿",
-  jupiter: "♃",
-  venus: "♀",
-  saturn: "♄",
-  rahu: "☊",
-  ketu: "☋",
-};
-
 const LORD_ACCENT: Record<DashaLord, string> = {
   sun: "border-amber-500/35 bg-amber-500/[0.08]",
   moon: "border-slate-400/35 bg-slate-400/[0.08]",
@@ -108,7 +96,7 @@ function MomentLine({ label, value }: { label: string; value: string }) {
       <span className="inline-block w-14 shrink-0 font-semibold uppercase tracking-wide text-sm">
         {label}
       </span>
-      <span className="font-medium text-foreground/80">{value}</span>
+      <span className="text-base text-foreground/80">{value}</span>
     </p>
   );
 }
@@ -206,7 +194,7 @@ function DashaDurationGrid({
             {values.map((value, i) => (
               <td
                 key={DURATION_COLS[i]!.ne}
-                className="border border-border/50 px-1.5 py-1 font-medium tabular-nums text-foreground/90"
+                className="border border-border/50 px-1.5 py-1 text-base tabular-nums text-foreground/90"
               >
                 {digits(value)}
               </td>
@@ -279,7 +267,6 @@ function DashaNode({
   const duration = formatDashaDuration(span.end.getTime() - span.start.getTime(), lang);
   const levelLabel = pick(LEVEL_LABELS[level]!.ne, LEVEL_LABELS[level]!.en);
   const accent = lordAccent(span.lord, system);
-  const glyph = system === "yogini" ? "◆" : LORD_GLYPH[span.lord as DashaLord] ?? "●";
 
   return (
     <li
@@ -330,9 +317,6 @@ function DashaNode({
             ) : (
               <span className="w-3.5 shrink-0" aria-hidden />
             )}
-            <span className="text-base leading-none opacity-80" aria-hidden>
-              {glyph}
-            </span>
             <span className="text-sm font-bold text-foreground">
               {displayLordName(span, lang, system)}
             </span>
@@ -440,7 +424,7 @@ export function DashaTree({
             <span className="font-semibold uppercase tracking-wide text-sm">
               {pick("सुरु", "From")}
             </span>{" "}
-            <span className="font-medium text-foreground/80">
+            <span className="text-base text-foreground/80">
               {formatMoment(timelineStart, lang, timeZone, digits)}
             </span>
           </span>
@@ -449,7 +433,7 @@ export function DashaTree({
             <span className="font-semibold uppercase tracking-wide text-sm">
               {pick("अन्त्य", "To")}
             </span>{" "}
-            <span className="font-medium text-foreground/80">
+            <span className="text-base text-foreground/80">
               {formatMoment(timelineEnd, lang, timeZone, digits)}
             </span>
           </span>
@@ -464,9 +448,6 @@ export function DashaTree({
           />
           <div className="flex flex-wrap items-center justify-between gap-2 pl-2">
             <p className="text-sm font-bold text-foreground">
-              <span className="mr-1.5 opacity-80" aria-hidden>
-                {system === "yogini" ? "◆" : LORD_GLYPH[running.lord as DashaLord] ?? "●"}
-              </span>
               {displayLordName(running, lang, system)}
               <span className="mx-1.5 font-normal">·</span>
               {pick("महादशा", "Maha Dasha")}

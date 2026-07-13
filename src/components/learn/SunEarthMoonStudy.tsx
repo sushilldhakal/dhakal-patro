@@ -76,7 +76,7 @@ export function SunEarthMoonStudy() {
           <div className={edRo}>
             <span className={edRoK}>{pick("सूर्य राशि · नक्षत्र", "Sun sign · nakshatra")}</span>
             <span className={edRoV()}>
-              {WHEEL_RASHIS[rashiIdx]!.sym} {pick(WHEEL_RASHIS[rashiIdx]!.ne, WHEEL_RASHIS[rashiIdx]!.en)} · {pick(NAKSHATRA_ICONS[nakIdx]!.ne, NAKSHATRA_ICONS[nakIdx]!.en)}
+              {pick(WHEEL_RASHIS[rashiIdx]!.ne, WHEEL_RASHIS[rashiIdx]!.en)} · {pick(NAKSHATRA_ICONS[nakIdx]!.ne, NAKSHATRA_ICONS[nakIdx]!.en)}
             </span>
           </div>
           <div className={edRo}>
