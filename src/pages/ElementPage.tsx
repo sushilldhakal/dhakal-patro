@@ -283,7 +283,16 @@ export function ElementPage() {
 
   return (
     <PageShell>
-      <div className="space-y-3">
+      <div className="space-y-3 ">
+    <div className="flex items-center justify-center relative left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] -mt-8 mb-8 bg-secondary py-8 text-accent dark:bg-background dark:text-secondary">
+    <PageHeader
+          icon={<Sparkles className="h-6 w-6 text-accent item-center dark:text-secondary" />}
+          title={pick(meta.ne, meta.en)}
+          subtitle={pick(meta.blurbNe, meta.blurbEn)}
+        />
+      
+      </div>
+    
         <PanchangaBrowseHeader
           mode={isSpan ? "month" : "day"}
           year={isSpan ? bs.year : tbs.year}
@@ -300,11 +309,7 @@ export function ElementPage() {
           onLocationChange={setLocation}
         />
 
-        <PageHeader
-          icon={<Sparkles className="h-6 w-6 text-secondary" />}
-          title={pick(meta.ne, meta.en)}
-          subtitle={pick(meta.blurbNe, meta.blurbEn)}
-        />
+       
       </div>
 
       {isSpan ? (

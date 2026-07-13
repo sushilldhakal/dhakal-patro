@@ -26,7 +26,7 @@ export function PageHeader({
     <div className="flex items-start gap-3">
       <div className="mt-0.5">{icon}</div>
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+        <h1 className="text-2xl font-bold">{title}</h1>
         {subtitle && <p className="text-sm mt-0.5">{subtitle}</p>}
       </div>
     </div>

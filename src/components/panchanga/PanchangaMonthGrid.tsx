@@ -171,7 +171,7 @@ export function PanchangaMonthGrid({
 
                 {/* Middle: sunrise · day · sunset */}
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-1 py-0.5 max-md:flex-none max-md:flex-col max-md:justify-center max-md:gap-0.5">
-                  <span className="w-[28%] min-w-0 shrink-0 font-mono text-sm leading-none tabular-nums max-md:hidden">
+                  <span className="w-[28%] min-w-0 shrink-0 font-mono text-xs leading-none tabular-nums max-md:hidden">
                     {day.sunrise ? digits(day.sunrise) : "—"}
                   </span>
 
@@ -180,13 +180,13 @@ export function PanchangaMonthGrid({
                       <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-lg">
                         {digits(day.day)}
                       </span>
-                      <span className="mt-0.5 font-mono text-sm leading-none sm:text-sm max-md:mt-0">
+                      <span className="mt-0.5 font-mono text-xs leading-none sm:text-xs max-md:mt-0">
                         {ad.getDate()}
                       </span>
                     </div>
                   </div>
 
-                  <span className="w-[28%] min-w-0 shrink-0 text-right font-mono text-sm leading-none tabular-nums max-md:hidden">
+                  <span className="w-[28%] min-w-0 shrink-0 text-right font-mono text-xs leading-none tabular-nums max-md:hidden">
                     {day.sunset ? digits(day.sunset) : "—"}
                   </span>
 
