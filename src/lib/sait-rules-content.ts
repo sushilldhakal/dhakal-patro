@@ -63,6 +63,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       { ne: "नक्षत्र — भरणी, कृत्तिका, मघा, विशाखा र ज्येष्ठा बाहेक सबै शुभ नक्षत्र।", en: "Nakṣatra — all except Bharaṇī, Kṛttikā, Maghā, Viśākhā, Jyeṣṭhā." },
       { ne: "वार — मंगलबार र शनिबार वर्जित; दिनको समय (सूर्योदय–सूर्यास्त) मात्र।", en: "Vāra — Tuesday & Saturday barred; daytime only (sunrise→sunset)." },
       { ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन।", en: "Graha — Jupiter & Venus must be udaya (not combust)." },
+      { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
+      { ne: "संक्रान्ति र ग्रहण (±३ दिन) वर्जित; दुर्मुहूर्त परेको अवधि मात्र छाडिन्छ (पूरै दिन होइन)।", en: "Sankrānti and eclipse (±3 days) barred; Dur-muhūrta skips only the affected period (not the whole day)." },
       { ne: "दोष — दग्धा, शून्य र मंगल/राहुको लत्ता परेको दिन वर्जित।", en: "Doṣa — Dagdha, Śūnya, and Mars/Rāhu Latta days excluded." },
     ],
   },
