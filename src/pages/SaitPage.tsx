@@ -11,13 +11,23 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { CEREMONY_META } from "@/lib/panchanga-elements";
-import { fetchSait, fetchSaitAboutCategory, saitKeys } from "@/lib/api";
+import { isMuhurtaSaitCategory } from "@/lib/sait-data";
+import { SaitRulesSection } from "@/components/sait/SaitRulesSection";
+import { SaitDayCard } from "@/components/sait/SaitDayCard";
+import {
+  fetchSait,
+  fetchSaitAboutCategory,
+  fetchSaitDetail,
+  saitDetailKey,
+  saitKeys,
+} from "@/lib/api";
 
 export function SaitPage() {
   const { category } = useParams({ strict: false }) as { category?: string };
   const { pick, digits, lang } = useLocale();
   const { location, setLocation } = usePanchangaLocation();
   const meta = CEREMONY_META.find((c) => c.id === category);
+  const isMuhurta = category ? isMuhurtaSaitCategory(category) : false;
 
   const todayBs = adToBS(new Date());
   const [year, setYear] = useState(todayBs.year);
@@ -29,15 +39,26 @@ export function SaitPage() {
     staleTime: Infinity,
   });
 
-  const datesQuery = useQuery({
-    queryKey: saitKeys.entries(year, category ?? "", location.params),
-    queryFn: () => fetchSait(year, category!, location.params),
-    enabled: Boolean(category),
+  // Lagna-based ceremonies get the full per-day muhūrta detail (like vivāha);
+  // the deterministic Vās ceremonies (rudri / agni) only have a month/day list.
+  const detailQuery = useQuery({
+    queryKey: saitDetailKey(year, category ?? "", location.params),
+    queryFn: () => fetchSaitDetail(year, category!, location.params),
+    enabled: Boolean(category) && isMuhurta,
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
   });
 
-  useRouteLoading(Boolean(meta) && datesQuery.isLoading && !datesQuery.data);
+  const datesQuery = useQuery({
+    queryKey: saitKeys.entries(year, category ?? "", location.params),
+    queryFn: () => fetchSait(year, category!, location.params),
+    enabled: Boolean(category) && !isMuhurta,
+    staleTime: 1000 * 60 * 60,
+    placeholderData: keepPreviousData,
+  });
+
+  const activeQuery = isMuhurta ? detailQuery : datesQuery;
+  useRouteLoading(Boolean(meta) && activeQuery.isLoading && !activeQuery.data);
 
   if (!meta) {
     return (
@@ -51,7 +72,7 @@ export function SaitPage() {
   }
 
   const about = aboutQuery.data;
-  const method = about?.method ? pick(about.method.ne ?? "", about.method.en ?? "") : "";
+  const days = detailQuery.data?.days ?? [];
 
   return (
     <PageShell>
@@ -61,18 +82,24 @@ export function SaitPage() {
         subtitle={about ? pick(about.description_ne ?? "", about.description_en ?? "") : undefined}
       />
 
-      {method ? (
-        <div className={cn(patroCard, "mb-4 flex gap-2.5 border-l-2 border-secondary p-3.5")}>
+      {/* How the dates for this ceremony are computed (per-ceremony rules). */}
+      <SaitRulesSection
+        method={about?.method}
+        rules={about?.rules}
+        engineVersion={detailQuery.data?.engine_version}
+      />
+
+      {about?.source || about?.requires_birth_date ? (
+        <div className={cn(patroCard, "flex gap-2.5 border-l-2 border-secondary p-3.5")}>
           <Info className="mt-0.5 size-4 shrink-0 text-secondary" />
           <div className="flex flex-col gap-1">
-            <p className="text-sm leading-relaxed text-foreground">{method}</p>
             {about?.source ? (
-              <p className="text-sm">
+              <p className="text-sm text-foreground">
                 {pick("स्रोत", "Source")}: {about.source}
               </p>
             ) : null}
             {about?.requires_birth_date ? (
-              <p className="text-sm text-base text-danger">
+              <p className="text-sm text-danger">
                 {pick("यसका लागि शिशुको जन्म मिति आवश्यक पर्दछ।", "Requires the child's birth date.")}
               </p>
             ) : null}
@@ -81,7 +108,7 @@ export function SaitPage() {
       ) : null}
 
       {/* Year navigator + location */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
           <button type="button" onClick={() => setYear((y) => y - 1)} className="flex size-8 items-center justify-center rounded-md hover:bg-surface-hover" aria-label={pick("अघिल्लो वर्ष", "Previous year")}>
             <ChevronLeft size={18} />
@@ -99,7 +126,27 @@ export function SaitPage() {
         />
       </div>
 
-      {datesQuery.isLoading && !datesQuery.data ? (
+      {isMuhurta ? (
+        detailQuery.isLoading && !detailQuery.data ? (
+          <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+        ) : days.length > 0 ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              {pick(
+                `वि.सं. ${digits(year)} मा ${digits(days.length)} शुभ दिन।`,
+                `${digits(days.length)} auspicious days in BS ${digits(year)}.`,
+              )}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {days.map((d) => (
+                <SaitDayCard key={`${d.bs_month}-${d.bs_day}`} d={d} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm">{pick("यस वर्ष कुनै शुभ मुहूर्त छैन।", "No auspicious muhūrta this year.")}</p>
+        )
+      ) : datesQuery.isLoading && !datesQuery.data ? (
         <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
       ) : datesQuery.data && datesQuery.data.months.length > 0 ? (
         <div className="flex flex-col gap-2">

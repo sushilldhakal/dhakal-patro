@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSait, fetchSaitYears, saitKeys } from "@/lib/api";
 import {
   clampSaitYear,
-  getSaitMonthEntries,
-  mergeSaitYears,
-  pickNearestSaitYear,
   SAIT_CATEGORIES,
+  SAIT_YEARS,
   type SaitCategoryId,
 } from "@/lib/sait-data";
 import { BS_MONTHS_NE } from "@/lib/bs-calendar";
@@ -25,23 +23,15 @@ function normalizeYear(year?: number): number {
   return clampSaitYear(year);
 }
 
-function resolveEntries(
-  apiMonths: { month: number; days: number[] }[] | undefined,
-  year: number,
-  category: SaitCategoryId,
-): { month: number; days: number[] }[] {
-  if (apiMonths?.length) {
-    return apiMonths.map((entry) => ({ month: entry.month, days: entry.days }));
-  }
-  return getSaitMonthEntries(year, category);
-}
-
 export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Props) {
   const { t } = useTranslation();
   const preferredYear = normalizeYear(defaultYear);
   const [year, setYear] = useState(preferredYear);
   const [category, setCategory] = useState<SaitCategoryId>("vivah");
 
+  // Available years come from the API (computed range). The pure BS-year list is
+  // only a picker fallback while that request is in flight — never a source of
+  // dates (every date below is fetched from the API for the selected year).
   const yearsQ = useQuery({
     queryKey: saitKeys.years(),
     queryFn: fetchSaitYears,
@@ -49,33 +39,23 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
     retry: 1,
   });
 
-  const yearsForCategory = useMemo(
-    () => mergeSaitYears(yearsQ.data?.years, category),
-    [yearsQ.data?.years, category],
+  const yearOptions = useMemo(
+    () => (yearsQ.data?.years?.length ? yearsQ.data.years : SAIT_YEARS),
+    [yearsQ.data?.years],
   );
-
-  useEffect(() => {
-    if (!yearsForCategory.length) return;
-    setYear((current) => {
-      if (yearsForCategory.includes(current)) return current;
-      return pickNearestSaitYear(preferredYear, yearsForCategory);
-    });
-  }, [category, preferredYear, yearsForCategory]);
 
   const saitQ = useQuery({
     queryKey: saitKeys.entries(year, category),
     queryFn: () => fetchSait(year, category),
     staleTime: 1000 * 60 * 60,
     retry: 1,
-    enabled: yearsForCategory.length === 0 || yearsForCategory.includes(year),
   });
 
   const entries = useMemo(
-    () => resolveEntries(saitQ.data?.months, year, category),
-    [saitQ.data?.months, year, category],
+    () =>
+      (saitQ.data?.months ?? []).map((entry) => ({ month: entry.month, days: entry.days })),
+    [saitQ.data?.months],
   );
-
-  const yearOptions = yearsForCategory.length ? yearsForCategory : [year];
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -115,7 +95,7 @@ export function SaitAsidePanel({ defaultYear, highlightMonth, highlightDay }: Pr
 
       {saitQ.isLoading && !entries.length ? (
         <div className="h-40 animate-pulse rounded-md bg-muted" />
-      ) : !yearsForCategory.length ? (
+      ) : saitQ.isError ? (
         <p className={patroEmpty}>{t("sait.no_data")}</p>
       ) : entries.length === 0 ? (
         <p className={patroEmpty}>{t("sait.no_entries")}</p>
