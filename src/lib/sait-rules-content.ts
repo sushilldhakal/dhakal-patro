@@ -76,8 +76,11 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     method: MUHURTA_INTRO,
     rules: [
       { ne: "सूर्य राशि — मेष, कर्कट, तुला, वृश्चिक, धनु, मकर, कुम्भ (वास्तु अनुकूल); अधिकमास वर्जित।", en: "Sun-sign — Meṣa, Karka, Tulā, Vṛśchika, Dhanu, Makara, Kumbha (Vāstu-facing); Adhik-māsa barred." },
-      { ne: "तिथि — १,२,३,५,७,१०,११,१२,१३; रिक्ता (४,९,१४) र अमावस्या वर्जित।", en: "Tithi — 1,2,3,5,7,10,11,12,13; rikta (4,9,14) and Amāvasyā out." },
-      { ne: "नक्षत्र — स्थिर/मृदु निर्माण नक्षत्रहरू (रोहिणी, मृगशिरा, उत्तरा त्रय, हस्त, चित्रा, स्वाती, अनुराधा, श्रवण, धनिष्ठा आदि)।", en: "Nakṣatra — the fixed/gentle construction nakṣatras (Rohiṇī, Mṛgaśira, the three Uttarās, Hasta, Chitrā, Svātī, Anurādhā, Śravaṇa, Dhaniṣṭhā, etc.)." },
+      { ne: "तिथि — २,३,५,७,१०,११,१२ मात्र; प्रतिपदा, त्रयोदशी, रिक्ता (४,९,१४) र अमावस्या वर्जित।", en: "Tithi — only 2,3,5,7,10,11,12; Pratipadā, Trayodaśī, rikta (4,9,14) and Amāvasyā out." },
+      { ne: "नक्षत्र — शास्त्रीय वास्तु नक्षत्र मात्र: रोहिणी, मृगशिरा, पुनर्वसु, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — only the classical Vāstu nakṣatras: Rohiṇī, Mṛgaśira, Punarvasu, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, U.Bhādrapada, Revatī." },
+      { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
+      { ne: "लग्न — स्थिर (वृष, सिंह, वृश्चिक, कुम्भ) प्राथमिकता, द्विस्वभाव स्वीकार्य; चर लग्न वर्जित — भवन स्थिर रहोस्।", en: "Lagna — fixed (Vṛṣa, Siṃha, Vṛśchika, Kumbha) preferred, dual accepted; movable lagnas barred — so the building is stable." },
+      { ne: "दुर्मुहूर्त परेको अवधि छाडिन्छ (पूरै दिन होइन); संक्रान्ति (साधारण ±६ घण्टा, प्रमुख ±१६ घण्टा) र ग्रहणको दिन वर्जित।", en: "Dur-muhūrta skips only the affected period (not the whole day); Sankrānti (ordinary ±6h, cardinal ±16h) and the eclipse day are barred." },
       { ne: "निर्माणकार्य चातुर्मासमा रोकिँदैन — त्यसैले चातुर्मास वर्जित छैन।", en: "Construction is not paused during Chaturmāsa, so it is not barred here." },
     ],
   },
