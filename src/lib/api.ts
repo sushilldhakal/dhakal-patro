@@ -17,6 +17,14 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
 export const PANCHANGA_CACHE_VERSION =
   import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "25";
 
+/**
+ * Sait listings are CDN-cached too. Appended as `sv=` so a change in the sait
+ * source/engine (e.g. official → computed) mints fresh Cloudflare objects
+ * instead of serving the stale cached listing. Bump when the sait engine changes.
+ */
+export const SAIT_CACHE_VERSION =
+  import.meta.env.VITE_SAIT_CACHE_VERSION ?? "2";
+
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;
 /** Versioned base for public, cacheable data endpoints. */
@@ -69,6 +77,12 @@ function appendLocation(path: string, location?: LocationParams): string {
 function withPanchangaCacheVersion(path: string): string {
   const sep = path.includes("?") ? "&" : "?";
   return `${path}${sep}cv=${PANCHANGA_CACHE_VERSION}`;
+}
+
+/** Append the sait cache version so CDN-cached sait URLs refresh on engine changes. */
+function withSaitCacheVersion(path: string): string {
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}sv=${SAIT_CACHE_VERSION}`;
 }
 
 export interface City {
@@ -687,13 +701,15 @@ export interface SaitResponse {
 export const saitKeys = {
   years: () => ["sait", "years"] as const,
   entries: (year: number, category: string, location?: LocationParams) =>
-    ["sait", year, category, locationCacheKey(location)] as const,
+    ["sait", SAIT_CACHE_VERSION, year, category, locationCacheKey(location)] as const,
 };
 
 export const fetchSaitYears = () => get<{ years: number[] }>("/nepal/sait/years");
 
 export const fetchSait = (year: number, category: string, location?: LocationParams) =>
-  get<SaitResponse>(appendLocation(`/nepal/sait/${year}/${category}`, location));
+  get<SaitResponse>(
+    withSaitCacheVersion(appendLocation(`/nepal/sait/${year}/${category}`, location)),
+  );
 
 export interface SaitAboutCategory {
   id: string;
