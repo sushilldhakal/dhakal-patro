@@ -10,7 +10,8 @@ import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-locat
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { SaitRulesSection } from "@/components/sait/SaitRulesSection";
 import { SaitDayCard } from "@/components/sait/SaitDayCard";
-import { fetchSaitAboutCategory, fetchSaitDetail, saitDetailKey } from "@/lib/api";
+import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
+import { fetchSaitDetail, saitDetailKey } from "@/lib/api";
 
 export function MarriageSait() {
   const { pick, digits } = useLocale();
@@ -18,13 +19,9 @@ export function MarriageSait() {
   const todayBs = adToBS(new Date());
   const [year, setYear] = useState(todayBs.year);
 
-  // The rules and method text come from the backend about endpoint — the same
-  // single source of truth every /sait/{category} page uses.
-  const aboutQuery = useQuery({
-    queryKey: ["sait", "about", "vivah"],
-    queryFn: () => fetchSaitAboutCategory("vivah"),
-    staleTime: Infinity,
-  });
+  // The explanation + rules live in the frontend so they always render, with no
+  // dependency on a backend deploy. Same content every /sait page uses.
+  const content = SAIT_RULES_CONTENT.vivah;
 
   const detailQuery = useQuery({
     queryKey: saitDetailKey(year, "vivah", location.params),
@@ -35,7 +32,6 @@ export function MarriageSait() {
 
   useRouteLoading(detailQuery.isLoading && !detailQuery.data);
 
-  const about = aboutQuery.data;
   const days = detailQuery.data?.days ?? [];
 
   return (
@@ -50,8 +46,8 @@ export function MarriageSait() {
       />
 
       <SaitRulesSection
-        method={about?.method}
-        rules={about?.rules}
+        method={content.method}
+        rules={content.rules}
         engineVersion={detailQuery.data?.engine_version}
       />
 

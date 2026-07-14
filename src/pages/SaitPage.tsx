@@ -11,16 +11,11 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { CEREMONY_META } from "@/lib/panchanga-elements";
-import { isMuhurtaSaitCategory } from "@/lib/sait-data";
+import { isMuhurtaSaitCategory, type SaitCategoryId } from "@/lib/sait-data";
+import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
 import { SaitRulesSection } from "@/components/sait/SaitRulesSection";
 import { SaitDayCard } from "@/components/sait/SaitDayCard";
-import {
-  fetchSait,
-  fetchSaitAboutCategory,
-  fetchSaitDetail,
-  saitDetailKey,
-  saitKeys,
-} from "@/lib/api";
+import { fetchSait, fetchSaitDetail, saitDetailKey, saitKeys } from "@/lib/api";
 
 export function SaitPage() {
   const { category } = useParams({ strict: false }) as { category?: string };
@@ -28,16 +23,10 @@ export function SaitPage() {
   const { location, setLocation } = usePanchangaLocation();
   const meta = CEREMONY_META.find((c) => c.id === category);
   const isMuhurta = category ? isMuhurtaSaitCategory(category) : false;
+  const content = meta ? SAIT_RULES_CONTENT[meta.id as SaitCategoryId] : undefined;
 
   const todayBs = adToBS(new Date());
   const [year, setYear] = useState(todayBs.year);
-
-  const aboutQuery = useQuery({
-    queryKey: ["sait", "about", category ?? ""],
-    queryFn: () => fetchSaitAboutCategory(category!),
-    enabled: Boolean(category),
-    staleTime: Infinity,
-  });
 
   // Lagna-based ceremonies get the full per-day muhūrta detail (like vivāha);
   // the deterministic Vās ceremonies (rudri / agni) only have a month/day list.
@@ -60,7 +49,7 @@ export function SaitPage() {
   const activeQuery = isMuhurta ? detailQuery : datesQuery;
   useRouteLoading(Boolean(meta) && activeQuery.isLoading && !activeQuery.data);
 
-  if (!meta) {
+  if (!meta || !content) {
     return (
       <PageShell>
         <PageHeader icon={<CalendarHeart className="h-6 w-6 text-secondary" />} title={pick("अज्ञात मुहूर्त", "Unknown ceremony")} />
@@ -71,7 +60,6 @@ export function SaitPage() {
     );
   }
 
-  const about = aboutQuery.data;
   const days = detailQuery.data?.days ?? [];
 
   return (
@@ -79,31 +67,22 @@ export function SaitPage() {
       <PageHeader
         icon={<CalendarHeart className="h-6 w-6 text-secondary" />}
         title={pick(`${meta.ne} साइत`, `${meta.en} muhurta`)}
-        subtitle={about ? pick(about.description_ne ?? "", about.description_en ?? "") : undefined}
+        subtitle={pick(content.description.ne, content.description.en)}
       />
 
       {/* How the dates for this ceremony are computed (per-ceremony rules). */}
       <SaitRulesSection
-        method={about?.method}
-        rules={about?.rules}
+        method={content.method}
+        rules={content.rules}
         engineVersion={detailQuery.data?.engine_version}
       />
 
-      {about?.source || about?.requires_birth_date ? (
+      {content.requiresBirthDate ? (
         <div className={cn(patroCard, "flex gap-2.5 border-l-2 border-secondary p-3.5")}>
           <Info className="mt-0.5 size-4 shrink-0 text-secondary" />
-          <div className="flex flex-col gap-1">
-            {about?.source ? (
-              <p className="text-sm text-foreground">
-                {pick("स्रोत", "Source")}: {about.source}
-              </p>
-            ) : null}
-            {about?.requires_birth_date ? (
-              <p className="text-sm text-danger">
-                {pick("यसका लागि शिशुको जन्म मिति आवश्यक पर्दछ।", "Requires the child's birth date.")}
-              </p>
-            ) : null}
-          </div>
+          <p className="text-sm text-danger">
+            {pick("यसका लागि शिशुको जन्म मिति आवश्यक पर्दछ।", "Requires the child's birth date.")}
+          </p>
         </div>
       ) : null}
 
