@@ -39,6 +39,7 @@ const History = lazyRoute(() => import("./pages/History"), "History");
 const PanchangaDetailsHub = lazyRoute(() => import("./pages/PanchangaDetailsHub"), "PanchangaDetailsHub");
 const ElementPage = lazyRoute(() => import("./pages/ElementPage"), "ElementPage");
 const SaitPage = lazyRoute(() => import("./pages/SaitPage"), "SaitPage");
+const MarriageSait = lazyRoute(() => import("./pages/MarriageSait"), "MarriageSait");
 const Account = lazyRoute(() => import("./pages/Account"), "Account");
 const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail");
 const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPassword");
@@ -142,6 +143,7 @@ const historyLegacyRoute = createRoute({
 const panchangaDetailsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/details", component: PanchangaDetailsHub });
 const elementRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/element/$name", component: ElementPage });
 const saitRoute = createRoute({ getParentRoute: () => rootRoute, path: "/sait/$category", component: SaitPage });
+const marriageSaitRoute = createRoute({ getParentRoute: () => rootRoute, path: "/vivah-sait", component: MarriageSait });
 const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/account", component: Account });
 const verifyEmailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 const resetPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
@@ -172,6 +174,7 @@ const routeTree = rootRoute.addChildren([
   panchangaDetailsRoute,
   elementRoute,
   saitRoute,
+  marriageSaitRoute,
   accountRoute,
   verifyEmailRoute,
   resetPasswordRoute,

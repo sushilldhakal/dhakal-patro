@@ -23,7 +23,7 @@ export const PANCHANGA_CACHE_VERSION =
  * instead of serving the stale cached listing. Bump when the sait engine changes.
  */
 export const SAIT_CACHE_VERSION =
-  import.meta.env.VITE_SAIT_CACHE_VERSION ?? "4";
+  import.meta.env.VITE_SAIT_CACHE_VERSION ?? "5";
 
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;
@@ -709,6 +709,49 @@ export const fetchSaitYears = () => get<{ years: number[] }>("/nepal/sait/years"
 export const fetchSait = (year: number, category: string, location?: LocationParams) =>
   get<SaitResponse>(
     withSaitCacheVersion(appendLocation(`/nepal/sait/${year}/${category}`, location)),
+  );
+
+/** Per-day muhūrta reason for each qualifying day (why it was selected). */
+export interface SaitDetailDay {
+  bs_month: number;
+  bs_day: number;
+  bs_month_name_ne: string;
+  gregorian: string;
+  weekday_en: string;
+  weekday_ne: string;
+  window_start: string;
+  window_end: string;
+  tithi_num: number;
+  tithi_en: string;
+  tithi_ne: string;
+  paksha: string;
+  paksha_ne: string;
+  nakshatra_num: number;
+  nakshatra_en: string;
+  nakshatra_ne: string;
+  yoga_en: string;
+  yoga_ne: string;
+  karana_en: string;
+  karana_ne: string;
+  lagna_en: string;
+  lunar_month_en: string | null;
+  lunar_month_ne: string | null;
+}
+
+export interface SaitDetailResponse {
+  bs_year: number;
+  category: string;
+  category_label_ne: string;
+  engine_version?: string;
+  days: SaitDetailDay[];
+}
+
+export const saitDetailKey = (year: number, category: string, location?: LocationParams) =>
+  ["sait", "detail", SAIT_CACHE_VERSION, year, category, locationCacheKey(location)] as const;
+
+export const fetchSaitDetail = (year: number, category: string, location?: LocationParams) =>
+  get<SaitDetailResponse>(
+    withSaitCacheVersion(appendLocation(`/nepal/sait/${year}/${category}/detail`, location)),
   );
 
 export interface SaitAboutCategory {

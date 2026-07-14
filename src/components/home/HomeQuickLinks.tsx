@@ -5,6 +5,7 @@ import {
   CalendarRange,
   Grid3x3,
   Heart,
+  HeartHandshake,
   LayoutGrid,
   Moon,
   PartyPopper,
@@ -30,6 +31,7 @@ const QUICK_LINKS = [
   { to: "/panchanga/details" as const, labelKey: "nav.panchanga_details", icon: LayoutGrid },
   { to: "/panchanga/avakahada-chakra" as const, labelKey: "nav.avakahada_chakra", icon: Grid3x3 },
   { to: "/abhijit-muhurta" as const, labelKey: "nav.abhijit_muhurta", icon: Sparkles },
+  { to: "/vivah-sait" as const, labelKey: "nav.vivah_sait", icon: HeartHandshake },
   { to: "/kundali" as const, labelKey: "home_quick.kundali_build_title", icon: Sparkles },
   { to: "/jyotish/kundali-milan" as const, labelKey: "home_quick.kundali_milan_title", icon: Heart },
 ] as const satisfies { to: string; labelKey: string; icon: LucideIcon }[];
