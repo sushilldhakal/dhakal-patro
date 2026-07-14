@@ -754,6 +754,10 @@ export const fetchSaitDetail = (year: number, category: string, location?: Locat
     withSaitCacheVersion(appendLocation(`/nepal/sait/${year}/${category}/detail`, location)),
   );
 
+export interface SaitRuleItem {
+  ne: string;
+  en: string;
+}
 export interface SaitAboutCategory {
   id: string;
   label_ne: string;
@@ -763,6 +767,8 @@ export interface SaitAboutCategory {
   requires_birth_date?: boolean;
   source?: string;
   method?: { ne?: string; en?: string };
+  /** Classical rules the engine applies for this ceremony (per-category). */
+  rules?: SaitRuleItem[];
 }
 export interface SaitAboutResponse {
   source: string;
