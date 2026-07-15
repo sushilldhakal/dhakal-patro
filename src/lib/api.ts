@@ -23,7 +23,7 @@ export const PANCHANGA_CACHE_VERSION =
  * instead of serving the stale cached listing. Bump when the sait engine changes.
  */
 export const SAIT_CACHE_VERSION =
-  import.meta.env.VITE_SAIT_CACHE_VERSION ?? "9";
+  import.meta.env.VITE_SAIT_CACHE_VERSION ?? "10";
 
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;

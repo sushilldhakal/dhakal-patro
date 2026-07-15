@@ -95,9 +95,11 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       { ne: "महिना — माघ, फागुन, चैत, वैशाख, ज्येष्ठ, मंसिर मात्र; अधिकमास र चातुर्मास वर्जित।", en: "Month — only Māgha, Phālguna, Chaitra, Vaiśākha, Jyeṣṭha, Mārgaśīrṣa; Adhik-māsa & Chaturmāsa barred." },
       { ne: "सूर्यबल — सूर्य मिथुन, वृश्चिक वा मीनमा हुनुहुँदैन (मलमास तुल्य)।", en: "Surya Bala — Sun not in Mithuna, Vṛśchika or Mīna (Malamas-like)." },
       { ne: "तिथि — शुक्ल पक्षका वृद्धि तिथि २,३,५,७,१०,११,१३ मात्र।", en: "Tithi — only the śukla-pakṣa growth tithis 2,3,5,7,10,11,13." },
-      { ne: "नक्षत्र — स्थिर/मृदु: रोहिणी, मृगशिरा, उत्तराफाल्गुनी, चित्रा, अनुराधा, उत्तराषाढा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — sthira/mṛdu: Rohiṇī, Mṛgaśira, U.Phalgunī, Chitrā, Anurādhā, U.Aṣāḍhā, U.Bhādrapada, Revatī." },
+      { ne: "नक्षत्र — स्थिर/मृदु ८ नक्षत्र: रोहिणी, मृगशिरा, उत्तराफाल्गुनी, चित्रा, अनुराधा, उत्तराषाढा, उत्तरभाद्रपदा, रेवती। (कुनै वर्षमा १२ भन्दा कम दिन भए हस्त, स्वाती, श्रवण, धनिष्ठा पनि थपिन्छन्।)", en: "Nakṣatra — the conservative 8 (sthira/mṛdu): Rohiṇī, Mṛgaśira, U.Phalgunī, Chitrā, Anurādhā, U.Aṣāḍhā, U.Bhādrapada, Revatī. (If a year has fewer than 12 days, Hasta, Svātī, Śravaṇa & Dhaniṣṭhā are also admitted.)" },
+      { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
       { ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन; चन्द्रमा लग्नबाट २/४/५/८/९/१२ भावमा हुनुहुँदैन।", en: "Graha — Jupiter & Venus must be udaya; Moon not in the 2/4/5/8/9/12 house from the lagna." },
-      { ne: "दोष — दग्धा, शून्य र मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु) परेको दिन वर्जित।", en: "Doṣa — Dagdha, Śūnya, and malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu) excluded." },
+      { ne: "लग्न — स्थिर र द्विस्वभाव लग्न मात्र स्वीकार्य; चर लग्न वर्जित।", en: "Lagna — only fixed (sthira) and dual (dvisvabhāva) ascendants accepted; movable ascendants rejected." },
+      { ne: "दोष — दग्धा, शून्य, मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु), दुर्मुहूर्त (अवधि मात्र), संक्रान्ति र ग्रहणको दिन वर्जित।", en: "Doṣa — Dagdha, Śūnya, malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu), Dur-muhūrta (period only), Sankrānti and the eclipse day excluded." },
     ],
   },
   "byaparik-pratisthan": {
