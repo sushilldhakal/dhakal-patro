@@ -29,7 +29,13 @@ const MuhurtaAsidePanel = lazy(() =>
 );
 
 function TabFallback() {
-  return <div className="h-40 animate-pulse rounded-md bg-muted" />;
+  return (
+    <div className="flex flex-col gap-2.5" aria-hidden>
+      <div className="h-3 w-1/3 animate-pulse rounded-md bg-muted" />
+      <div className="h-24 animate-pulse rounded-xl bg-muted" />
+      <div className="h-16 animate-pulse rounded-xl bg-muted" />
+    </div>
+  );
 }
 
 export type AsideTabId = "panchanga" | "festivals" | "sait" | "muhurta";
@@ -37,7 +43,11 @@ export type AsideTabId = "panchanga" | "festivals" | "sait" | "muhurta";
 export const ASIDE_TAB_IDS: AsideTabId[] = ["panchanga", "festivals", "sait", "muhurta"];
 
 function AsideEmpty({ children }: { children: ReactNode }) {
-  return <p className={patroEmpty}>{children}</p>;
+  return (
+    <div className="flex min-h-[10rem] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface-inset/60 px-4">
+      <p className={cn(patroEmpty, "py-0")}>{children}</p>
+    </div>
+  );
 }
 
 function FestivalsTab({
@@ -69,7 +79,7 @@ function FestivalsTab({
   );
 
   if (festivalsQ.isLoading && !entries.length) {
-    return <div className="h-40 animate-pulse rounded-md bg-muted" />;
+    return <TabFallback />;
   }
 
   if (!entries.length) {
@@ -77,7 +87,7 @@ function FestivalsTab({
   }
 
   return (
-    <ul className="m-0 list-none overflow-hidden rounded-lg bg-surface-inset p-0 shadow-ring-soft">
+    <ul className="m-0 list-none overflow-hidden rounded-xl border border-border/70 bg-surface-inset p-0">
       {entries.map((entry) => {
         const festAd = adByBsDay.get(entry.bsDay);
         const daysLeft = festAd != null ? daysDiffFromAd(todayAd, festAd) : null;
@@ -102,7 +112,13 @@ function FestivalsTab({
             })}
             title={formatBsMonthDayPatro(bsYear, bsMonth, entry.bsDay)}
           >
-            <span className="font-num text-center text-sm font-bold leading-none" aria-hidden>
+            <span
+              className={cn(
+                "font-num flex size-8 items-center justify-center justify-self-center rounded-lg text-sm font-bold leading-none",
+                isToday ? "bg-secondary/15 text-secondary" : "bg-card text-foreground",
+              )}
+              aria-hidden
+            >
               {toNepaliDigits(entry.bsDay)}
             </span>
             <span
@@ -163,7 +179,7 @@ export function PanchangaAsideTabPanel({
       <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} />
     ) : tab === "sait" ? (
       <Suspense fallback={<TabFallback />}>
-        <SaitAsidePanel defaultYear={bsYear} />
+        <SaitAsidePanel year={bsYear} month={bsMonth} />
       </Suspense>
     ) : (
       <TabFallback />
@@ -180,8 +196,8 @@ export function PanchangaAsideTabPanel({
     return (
       <Suspense fallback={<TabFallback />}>
         <SaitAsidePanel
-          defaultYear={bsYear}
-          highlightMonth={bsMonth}
+          year={bsYear}
+          month={bsMonth}
           highlightDay={selectedDay?.day}
         />
       </Suspense>

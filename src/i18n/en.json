@@ -577,6 +577,8 @@
     "categories_aria": "Sait type",
     "no_data": "Sait data is not available yet.",
     "no_entries": "No sait for this year and type.",
+    "no_month_dates": "No auspicious dates this month. View the full list, or change the month to see other months.",
+    "see_all": "See all dates",
     "categories": {
       "vivah": "Marriage",
       "bratabandha": "Bratabandha",

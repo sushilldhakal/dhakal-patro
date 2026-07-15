@@ -754,6 +754,23 @@ export const fetchSaitDetail = (year: number, category: string, location?: Locat
     withSaitCacheVersion(appendLocation(`/nepal/sait/${year}/${category}/detail`, location)),
   );
 
+/** Auspicious days for EVERY ceremony type in one BS month (home-page list). The
+ * server computes only that month. `categories` maps category id → BS days. */
+export interface SaitMonthAllResponse {
+  bs_year: number;
+  bs_month: number;
+  month_name_ne: string;
+  categories: Record<string, number[]>;
+}
+
+export const saitMonthAllKey = (year: number, month: number, location?: LocationParams) =>
+  ["sait", "month-all", SAIT_CACHE_VERSION, year, month, locationCacheKey(location)] as const;
+
+export const fetchSaitMonthAll = (year: number, month: number, location?: LocationParams) =>
+  get<SaitMonthAllResponse>(
+    withSaitCacheVersion(appendLocation(`/nepal/sait/${year}/month/${month}`, location)),
+  );
+
 export interface SaitRuleItem {
   ne: string;
   en: string;

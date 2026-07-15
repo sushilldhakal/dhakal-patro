@@ -12,10 +12,11 @@ export const patroEmpty =
 
 export function patroAsideTab(active: boolean) {
   return cn(
-    "min-h-[2.75em] min-w-0 cursor-pointer rounded-md border px-1.5 py-2 text-xs font-semibold leading-snug text-balance transition-colors",
+    "relative min-h-9 min-w-0 flex-1 cursor-pointer rounded-none border-0 bg-transparent px-1.5 py-2.5 text-xs font-semibold leading-snug text-balance shadow-none transition-colors",
+    "after:pointer-events-none after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors",
     active
-      ? "border-secondary/25 bg-tab-active font-bold text-foreground shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)] dark:border-primary/20 dark:bg-primary/10"
-      : "border-transparent bg-transparent hover:bg-tab-hover hover:text-foreground",
+      ? "bg-tab-active/70 font-bold text-foreground after:bg-secondary dark:bg-primary/10 dark:after:bg-primary"
+      : "text-muted-foreground after:bg-transparent hover:bg-tab-hover hover:text-foreground",
   );
 }
 
@@ -115,7 +116,7 @@ export function patroSegBtn(active: boolean) {
 
 export function patroFestRow(opts: { today?: boolean; past?: boolean }) {
   return cn(
-    "grid min-h-9 grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 border-b border-border/70 px-2 py-1.5 last:border-b-0",
+    "grid min-h-10 grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-border/60 px-2.5 py-2 last:border-b-0",
     opts.today && "bg-fest-today",
     opts.past && "opacity-55",
   );

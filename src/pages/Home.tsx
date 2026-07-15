@@ -29,6 +29,7 @@ import {
 } from "@/components/home/PanchangaAsideTabs";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { HeroMonthArt } from "@/components/home/HeroMonthArt";
+import { Button } from "@/components/ui/button";
 
 function fmtAdIso(d: Date): string {
   const y = d.getFullYear();
@@ -235,43 +236,54 @@ function PanchangaAside({
               </div>
             </div>
 
-            <div className="flex min-w-0 flex-1 flex-col bg-card">
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-card min-[1081px]:rounded-none">
             <div
-              className="grid shrink-0 grid-cols-4 gap-1.5 border-b border-border px-2.5 py-2.5"
+              className="grid shrink-0 grid-cols-4 border-b border-border bg-surface-muted"
               role="tablist"
               aria-label={t("panchanga.tabs_label")}
             >
               {ASIDE_TAB_IDS.map((id) => (
-                <button
+                <Button
                   key={id}
-                  type="button"
                   role="tab"
-                  className={patroAsideTab(id === asideTab)}
+                  variant="ghost"
+                  size="sm"
+                  className={cn(patroAsideTab(id === asideTab), "h-auto w-full rounded-none text-md p-0")}
                   aria-selected={id === asideTab}
                   onClick={() => setAsideTab(id)}
                 >
                   {t(`panchanga.tabs.${id}`)}
-                </button>
+                </Button>
               ))}
             </div>
 
-            <div className="p-2.5 max-md:border-none max-md:p-0" role="tabpanel">
+            <div
+              className="min-h-[12rem] flex-1 bg-gradient-to-b from-surface-muted/40 to-card p-3 max-md:p-3"
+              role="tabpanel"
+            >
               {error && !activeP ? (
-                <div className="rounded-lg border border-danger/20 bg-error-surface p-3.5 text-sm text-base text-danger">
-                  {t("panchanga.error")}
+                <div className="flex h-full min-h-[10rem] flex-col items-center justify-center gap-2 rounded-xl border border-danger/25 bg-error-surface px-4 py-6 text-center">
+                  <span className="inline-flex size-8 items-center justify-center rounded-full bg-danger/10 text-sm font-bold text-danger">
+                    !
+                  </span>
+                  <p className="m-0 text-sm leading-relaxed text-danger">
+                    {t("panchanga.error")}
+                  </p>
                 </div>
               ) : (
-                <PanchangaAsideTabPanel
-                  tab={asideTab}
-                  p={activeP}
-                  selectedDay={contextDay}
-                  selectedAdDate={selectedAdDate}
-                  bsYear={monthContext.year}
-                  bsMonth={monthContext.month}
-                  monthDays={monthContext.days}
-                  todayAd={todayAd}
-                  loading={loading}
-                />
+                <div className="animate-in fade-in-0 duration-200">
+                  <PanchangaAsideTabPanel
+                    tab={asideTab}
+                    p={activeP}
+                    selectedDay={contextDay}
+                    selectedAdDate={selectedAdDate}
+                    bsYear={monthContext.year}
+                    bsMonth={monthContext.month}
+                    monthDays={monthContext.days}
+                    todayAd={todayAd}
+                    loading={loading}
+                  />
+                </div>
               )}
             </div>
             </div>
