@@ -73,8 +73,9 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       ne: "घर निर्माण आरम्भ (जग हाल्ने) का लागि शुभ मिति — भवन निर्माणको मंगलमय शुरुवात।",
       en: "Auspicious dates to begin house construction (laying the foundation).",
     },
-    method: MUHURTA_INTRO,
+    method: DAYTIME_INTRO,
     rules: [
+      { ne: "समय — शिलान्यास (जग हाल्ने) दिनको समयमा मात्र (सूर्योदय–सूर्यास्त)।", en: "Time — foundation-laying is a daytime rite (sunrise→sunset only)." },
       { ne: "सूर्य राशि — मेष, कर्कट, तुला, वृश्चिक, धनु, मकर, कुम्भ (वास्तु अनुकूल); अधिकमास वर्जित।", en: "Sun-sign — Meṣa, Karka, Tulā, Vṛśchika, Dhanu, Makara, Kumbha (Vāstu-facing); Adhik-māsa barred." },
       { ne: "तिथि — २,३,५,७,१०,११,१२ मात्र; प्रतिपदा, त्रयोदशी, रिक्ता (४,९,१४) र अमावस्या वर्जित।", en: "Tithi — only 2,3,5,7,10,11,12; Pratipadā, Trayodaśī, rikta (4,9,14) and Amāvasyā out." },
       { ne: "नक्षत्र — शास्त्रसम्मत निर्माण नक्षत्रहरूको निश्चित सूची: रोहिणी, मृगशिरा, पुनर्वसु, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — a fixed list of the śāstra-sanctioned construction nakṣatras: Rohiṇī, Mṛgaśira, Punarvasu, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, U.Bhādrapada, Revatī." },
