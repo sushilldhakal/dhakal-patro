@@ -159,8 +159,10 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     rules: [
       { ne: "महिना — अधिकमास बाहेक सबै मास; रिक्ता र अमावस्या वर्जित।", en: "Month — all months except Adhik-māsa; rikta & Amāvasyā out." },
       { ne: "तिथि — शुक्ल २,३,५,७,१०,१३,१५ वा कृष्ण २,३,५,७,१०,१३; अष्टमी वर्जित।", en: "Tithi — śukla 2,3,5,7,10,13,15 or kṛṣṇa 2,3,5,7,10,13; Aṣṭamī out." },
-      { ne: "नक्षत्र — मृदु/चर/स्थिर/क्षिप्र १६ नक्षत्र।", en: "Nakṣatra — the 16 gentle/movable/fixed/short nakṣatras." },
-      { ne: "वार — सोम, बुध, बिहि, शुक्र मात्र; लग्न मेष, वृश्चिक, मीन बाहेक; दिनको समय मात्र।", en: "Vāra — Mon/Wed/Thu/Fri only; lagna any except Meṣa/Vṛśchika/Mīna; daytime only." },
+      { ne: "नक्षत्र — निश्चित सूची: अश्विनी, रोहिणी, मृगशिरा, पुनर्वसु, पुष्य, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, शतभिषा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — the fixed list: Aśvinī, Rohiṇī, Mṛgaśira, Punarvasu, Puṣya, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā, U.Bhādrapada, Revatī." },
+      { ne: "वार — सोम, बुध, बिहि, शुक्र मात्र; दिनको समय (सूर्योदय–सूर्यास्त) मात्र।", en: "Vāra — Mon/Wed/Thu/Fri only; daytime (sunrise→sunset) only." },
+      { ne: "लग्न — मेष, वृश्चिक र मीन बाहेक सबै लग्न स्वीकार्य (उमेर विण्डोले पहिले नै सूची घटाउने भएकाले उदार राखिएको)।", en: "Lagna — all ascendants except Meṣa, Vṛśchika and Mīna (kept broad, since the age window already thins the set)." },
+      { ne: "दोष — व्यतीपात/वैधृति योग, विष्टि (भद्रा) करण, दुर्मुहूर्त (अवधि मात्र) र ग्रहणको दिन वर्जित।", en: "Doṣa — Vyatīpāta/Vaidhṛti yoga, Viṣṭi (Bhadrā) karaṇa, Dur-muhūrta (period only) and the eclipse day excluded." },
       { ne: "यसको सटीक मिति शिशुको जन्ममितिमा भर पर्छ (५–८ महिनाको उमेर); सूचीले उपयुक्त दिन देखाउँछ।", en: "The exact date depends on the child's birth (5–8 month window); the list shows the suitable days." },
     ],
   },
