@@ -17,20 +17,20 @@ import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 
 /** Devanagari rashi names → English, for the timeline graha row. */
 export const TL_RASHI_EN: Record<string, string> = {
-  मेष: "Mesha",
-  वृष: "Vrishabha",
-  वृषभ: "Vrishabha",
-  मिथुन: "Mithuna",
-  कर्कट: "Karka",
-  कर्क: "Karka",
-  सिंह: "Simha",
-  कन्या: "Kanya",
-  तुला: "Tula",
-  वृश्चिक: "Vrishchika",
-  धनु: "Dhanu",
-  मकर: "Makara",
-  कुम्भ: "Kumbha",
-  मीन: "Meena",
+  मेष: "Aries",
+  वृष: "Taurus",
+  वृषभ: "Taurus",
+  मिथुन: "Gemini",
+  कर्कट: "Cancer",
+  कर्क: "Cancer",
+  सिंह: "Leo",
+  कन्या: "Virgo",
+  तुला: "Libra",
+  वृश्चिक: "Scorpio",
+  धनु: "Sagittarius",
+  मकर: "Capricorn",
+  कुम्भ: "Aquarius",
+  मीन: "Pisces",
 };
 
 /**
@@ -55,7 +55,7 @@ function titleCase(s: string): string {
 const TITHI_NE_EN: Record<string, string> = (() => {
   const m: Record<string, string> = {};
   for (const t of WHEEL_TITHIS) m[normNe(t.ne)] = t.en;
-  m[normNe("अमावस्या")] = "Amavasya";
+  m[normNe("अमावस्या")] = "Aaushi";
   m[normNe("औंसी")] = "Aunsi";
   m[normNe("पूर्णिमा")] = "Purnima";
   return m;
@@ -341,7 +341,7 @@ const SHUDDHI_DOSHAS: Record<string, { ne: string; en: string }> = {
 /**
  * Convert raw inauspicious windows (local clock ranges) into ashubha segments on
  * the shared 0–60 axis. `toG` maps minutes-from-midnight to a ghati position
- * (sunrise-relative for ahoratra, `min/24` for civil). Degenerate/zero-length
+ * (sunrise-relative for Day-Night, `min/24` for civil). Degenerate/zero-length
  * or sunrise-straddling windows are dropped so the row stays clean.
  */
 function buildAshubhaSegments(

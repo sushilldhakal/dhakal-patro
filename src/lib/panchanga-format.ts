@@ -1,9 +1,9 @@
 import type { CalendarDay, Festival, NivasShoolBlock, PanchangaDay } from "./api";
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
-import { GRAHA_NAME } from "@/lib/graha-details";
+import { GRAHA_NAME, RASHI_EN_NAMES, type GrahaKey } from "@/lib/graha-details";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { formatLocaleDigits } from "@/i18n/digits";
-import { pickLocale } from "@/i18n/locale";
+import { normalizeLang, pickLocale } from "@/i18n/locale";
 
 export function toNepaliDigits(value: string | number): string {
   return formatLocaleDigits(value);
@@ -46,9 +46,13 @@ type AngaDetail = {
   next?: { name_ne?: string; name?: string; end_ghati_clock?: string; end_local_time?: string };
 };
 
-export function formatAngaTransition(anga?: AngaDetail | null): string | undefined {
+export function formatAngaTransition(
+  anga?: AngaDetail | null,
+  lang?: string,
+): string | undefined {
   if (!anga) return undefined;
-  const current = anga.name_ne ?? anga.name;
+  const isEn = normalizeLang(lang) === "en";
+  const current = pickLocale(lang, anga.name_ne ?? anga.name, anga.name ?? anga.name_ne);
   if (!current) return undefined;
 
   const endTime =
@@ -56,18 +60,30 @@ export function formatAngaTransition(anga?: AngaDetail | null): string | undefin
     formatTimeShort(anga.end_hours_clock) ??
     formatGhatiEnd(anga.end_ghati_clock);
 
-  const next = anga.next?.name_ne ?? anga.next?.name;
+  const next = pickLocale(
+    lang,
+    anga.next?.name_ne ?? anga.next?.name,
+    anga.next?.name ?? anga.next?.name_ne,
+  );
   if (!next) return current;
-  if (!endTime) return `${current}, पछि ${next}`;
+  if (!endTime) {
+    return isEn ? `${current}, then ${next}` : `${current}, पछि ${next}`;
+  }
 
   const nextEnd =
     formatTimeShort(anga.next?.end_local_time) ??
     formatGhatiEnd(anga.next?.end_ghati_clock);
+  const endDisp = formatLocaleDigits(endTime, lang);
+  const nextEndDisp = nextEnd ? formatLocaleDigits(nextEnd, lang) : undefined;
 
-  if (nextEnd) {
-    return `${current}, ${toNepaliDigits(endTime)} बजेपछि ${next}, ${toNepaliDigits(nextEnd)} बजेउप्रान्त गर`;
+  if (nextEndDisp) {
+    return isEn
+      ? `${current}, after ${endDisp} ${next}, then ${nextEndDisp} onwards`
+      : `${current}, ${endDisp} बजेपछि ${next}, ${nextEndDisp} बजेउप्रान्त गर`;
   }
-  return `${current}, ${toNepaliDigits(endTime)} बजेपछि ${next}`;
+  return isEn
+    ? `${current}, after ${endDisp} ${next}`
+    : `${current}, ${endDisp} बजेपछि ${next}`;
 }
 
 type AngaPatro = {
@@ -78,17 +94,6 @@ type AngaPatro = {
   end_ghati_clock?: string;
   next?: AngaPatro;
 };
-
-function patroAngaEndClock(anga: AngaPatro): string | undefined {
-  const t =
-    formatTimeShort(anga.end_local_time) ??
-    formatTimeShort(anga.end_hours_clock) ??
-    formatGhatiEnd(anga.end_ghati_clock);
-  if (!t) return undefined;
-  const [hh, mm] = t.split(":");
-  if (!hh || !mm) return toNepaliDigits(t);
-  return toNepaliDigits(`${hh.padStart(2, "0")}:${mm.padStart(2, "0")}`);
-}
 
 function angaEndsNextDay(anga: AngaPatro): boolean {
   if (anga.end_hours_clock) {
@@ -109,21 +114,38 @@ function angaEndsNextDay(anga: AngaPatro): boolean {
   return false;
 }
 
+function patroAngaEndClockLocalized(anga: AngaPatro, lang?: string): string | undefined {
+  const t =
+    formatTimeShort(anga.end_local_time) ??
+    formatTimeShort(anga.end_hours_clock) ??
+    formatGhatiEnd(anga.end_ghati_clock);
+  if (!t) return undefined;
+  const [hh, mm] = t.split(":");
+  if (!hh || !mm) return formatLocaleDigits(t, lang);
+  return formatLocaleDigits(`${hh.padStart(2, "0")}:${mm.padStart(2, "0")}`, lang);
+}
+
 /** Patro sidebar — शुक्ल त्रयोदशी•००:४३ बाट शुक्ल चतुर्दशी(अर्को दिन) */
-export function formatAngaPatroChain(anga?: AngaPatro | null): string | undefined {
+export function formatAngaPatroChain(
+  anga?: AngaPatro | null,
+  lang?: string,
+): string | undefined {
   if (!anga) return undefined;
-  const first = anga.name_ne ?? anga.name;
+  const isEn = normalizeLang(lang) === "en";
+  const first = pickLocale(lang, anga.name_ne ?? anga.name, anga.name ?? anga.name_ne);
   if (!first) return undefined;
   let result = first;
   let node: AngaPatro | undefined = anga;
   while (node?.next) {
-    const end = patroAngaEndClock(node);
+    const end = patroAngaEndClockLocalized(node, lang);
     const nextNode: AngaPatro = node.next;
-    const nextName = nextNode.name_ne ?? nextNode.name ?? "";
+    const nextName =
+      pickLocale(lang, nextNode.name_ne ?? nextNode.name, nextNode.name ?? nextNode.name_ne) ?? "";
     if (!end || !nextName) break;
     const isLast = !nextNode.next;
-    const dayNote = isLast && angaEndsNextDay(node) ? "(अर्को दिन)" : "";
-    result += `•${end} बाट ${nextName}${dayNote}`;
+    const dayNote =
+      isLast && angaEndsNextDay(node) ? (isEn ? " (next day)" : "(अर्को दिन)") : "";
+    result += isEn ? `•from ${end} ${nextName}${dayNote}` : `•${end} बाट ${nextName}${dayNote}`;
     node = nextNode;
   }
   return result;
@@ -132,9 +154,10 @@ export function formatAngaPatroChain(anga?: AngaPatro | null): string | undefine
 /** Transition tail only — •००:४३ बाट शुक्ल चतुर्दशी(अर्को दिन) */
 export function formatAngaPatroTransitionHint(
   anga?: AngaPatro | null,
+  lang?: string,
 ): string | undefined {
-  const full = formatAngaPatroChain(anga);
-  const name = anga?.name_ne ?? anga?.name;
+  const full = formatAngaPatroChain(anga, lang);
+  const name = pickLocale(lang, anga?.name_ne ?? anga?.name, anga?.name ?? anga?.name_ne);
   if (!full || !name || full === name) return undefined;
   if (full.startsWith(name)) return full.slice(name.length);
   return full;
@@ -272,6 +295,16 @@ export function getRituDisplayNe(p?: PanchangaDay | null): string | undefined {
   return p.ritu_ne;
 }
 
+/** Locale-aware ritu label (Nepali name / English season or name). */
+export function getRituDisplay(p?: PanchangaDay | null, lang?: string): string | undefined {
+  if (!p) return undefined;
+  const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
+  const top = typeof p.ritu === "object" ? p.ritu : undefined;
+  const ne = ritu?.name_ne ?? top?.name_ne ?? p.ritu_ne;
+  const en = ritu?.name ?? top?.name ?? ritu?.season ?? top?.season ?? ne;
+  return pickLocale(lang, ne, en);
+}
+
 export function getRituSeason(p?: PanchangaDay | null): string | undefined {
   if (!p) return undefined;
   const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
@@ -345,12 +378,14 @@ function addDaysIso(isoDate: string, days: number): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-/** BS date label for a civil (AD) calendar day, e.g. जेठ २९. */
-function formatEventDateBsNepali(isoDate: string): string {
+/** BS date label for a civil (AD) calendar day, e.g. जेठ २९ / Jestha 29. */
+function formatEventDateBs(isoDate: string, lang?: string): string {
   const [y, m, d] = isoDate.split("-").map(Number);
-  if (!y || !m || !d) return toNepaliDigits(isoDate);
+  if (!y || !m || !d) return formatLocaleDigits(isoDate, lang);
   const bs = adToBS(new Date(y, m - 1, d));
-  return `${BS_MONTHS_NE[bs.month - 1]} ${toNepaliDigits(bs.day)}`;
+  const isEn = normalizeLang(lang) === "en";
+  const monthName = isEn ? BS_MONTH_NAMES[bs.month - 1] : BS_MONTHS_NE[bs.month - 1];
+  return `${monthName} ${formatLocaleDigits(bs.day, lang)}`;
 }
 
 /** BS date from YYYY-MM-DD (BS era), e.g. जेठ १५, वि.सं. २०८२. */
@@ -433,35 +468,45 @@ export function resolveMoonEventAdDate(
   return eventDate ?? dayDate;
 }
 
-/** Always show AD date + time — moonrise/moonset often fall on the next civil date. */
-export function formatMoonEventDisplay(p: PanchangaDay, key: "moonrise" | "moonset"): string | undefined {
+/** Always show BS date + time — moonrise/moonset often fall on the next civil date. */
+export function formatMoonEventDisplay(
+  p: PanchangaDay,
+  key: "moonrise" | "moonset",
+  lang?: string,
+): string | undefined {
   const block = getMoonTimeBlock(p, key);
   if (!block?.local_time_short) return undefined;
-  const time = formatClockNepali(block.local_time_short);
+  const short = formatTimeShort(block.local_time_short) ?? block.local_time_short;
+  const time = formatLocaleDigits(short, lang);
   const eventDate = resolveMoonEventAdDate(p, key, block);
   if (!time) return undefined;
   if (!eventDate) return time;
-  return `${formatEventDateBsNepali(eventDate)} · ${time}`;
+  return `${formatEventDateBs(eventDate, lang)} · ${time}`;
 }
 
-export function formatMonthMoonEventDisplay(day: {
-  date_ad: string;
-  sunrise?: string;
-  moonrise?: string;
-  moonrise_local?: string;
-  moonset?: string;
-  moonset_local?: string;
-}, key: "moonrise" | "moonset"): string | undefined {
+export function formatMonthMoonEventDisplay(
+  day: {
+    date_ad: string;
+    sunrise?: string;
+    moonrise?: string;
+    moonrise_local?: string;
+    moonset?: string;
+    moonset_local?: string;
+  },
+  key: "moonrise" | "moonset",
+  lang?: string,
+): string | undefined {
   const time = key === "moonrise" ? day.moonrise : day.moonset;
   if (!time) return undefined;
   const local = key === "moonrise" ? day.moonrise_local : day.moonset_local;
   const block: MoonTimeBlock = { local_time_short: time, local };
   const pseudo = { date_ad: day.date_ad, sunrise: day.sunrise } as PanchangaDay;
   const eventDate = resolveMoonEventAdDate(pseudo, key, block);
-  const timeNe = formatClockNepali(time);
-  if (!timeNe) return undefined;
-  if (!eventDate) return timeNe;
-  return `${formatEventDateBsNepali(eventDate)} · ${timeNe}`;
+  const short = formatTimeShort(time) ?? time;
+  const timeLabel = formatLocaleDigits(short, lang);
+  if (!timeLabel) return undefined;
+  if (!eventDate) return timeLabel;
+  return `${formatEventDateBs(eventDate, lang)} · ${timeLabel}`;
 }
 
 /** Month patro grid — clock only (no BS date prefix when moon event is next/prior civil day). */
@@ -523,12 +568,12 @@ export function getMonthDayNakshatra(
   return raw || undefined;
 }
 
-export function getMoonriseDisplay(p: PanchangaDay): string | undefined {
-  return formatMoonEventDisplay(p, "moonrise");
+export function getMoonriseDisplay(p: PanchangaDay, lang?: string): string | undefined {
+  return formatMoonEventDisplay(p, "moonrise", lang);
 }
 
-export function getMoonsetDisplay(p: PanchangaDay): string | undefined {
-  return formatMoonEventDisplay(p, "moonset");
+export function getMoonsetDisplay(p: PanchangaDay, lang?: string): string | undefined {
+  return formatMoonEventDisplay(p, "moonset", lang);
 }
 
 export function getVaaraNe(p: PanchangaDay, fallback?: string): string | undefined {
@@ -594,6 +639,69 @@ function pakshaShortFromPanchanga(p: PanchangaDay): { ne?: string; en?: string }
     return { ne: "कृष्ण", en: "Krishna" };
   }
   return {};
+}
+
+/** Lunar month Devanagari → English (for paksha labels like "श्रावण शुक्ल पक्ष"). */
+const LUNAR_MONTH_NE_TO_EN: Record<string, string> = {
+  चैत्र: "Chaitra",
+  वैशाख: "Vaishakha",
+  ज्येष्ठ: "Jyeshtha",
+  जेष्ठ: "Jyeshtha",
+  आषाढ: "Ashadha",
+  अषाढ: "Ashadha",
+  श्रावण: "Shravana",
+  साउन: "Shravana",
+  भाद्रपद: "Bhadrapada",
+  भाद्र: "Bhadra",
+  भदौ: "Bhadra",
+  आश्विन: "Ashvina",
+  असोज: "Ashvina",
+  कार्तिक: "Kartika",
+  मार्गशीर्ष: "Margashirsha",
+  मार्ग: "Margashirsha",
+  पौष: "Pausha",
+  पुष: "Pausha",
+  माघ: "Magha",
+  फाल्गुन: "Phalguna",
+  फागुन: "Phalguna",
+};
+
+/**
+ * Locale-aware paksha label. Converts Nepali month+paksha strings
+ * (e.g. "श्रावण शुक्ल पक्ष") to English ("Shravana Shukla Paksha") when needed.
+ */
+export function formatPakshaLabel(
+  p: PanchangaDay | undefined,
+  lang?: string,
+  fallbackNe?: string | null,
+  fallbackEn?: string | null,
+): string | undefined {
+  const detail = p ? getPanchangaDetail(p) : undefined;
+  const paksha = detail?.paksha as { label_en?: string; label_ne?: string } | undefined;
+  const ne =
+    paksha?.label_ne ?? p?.paksha?.label_ne ?? p?.paksha_ne ?? fallbackNe ?? undefined;
+  const enRaw =
+    paksha?.label_en ?? p?.paksha?.label_en ?? fallbackEn ?? undefined;
+
+  if (normalizeLang(lang) !== "en") return ne ?? enRaw;
+
+  // Prefer a clean Latin label from the API.
+  if (enRaw && !/[\u0900-\u097F]/.test(enRaw)) return enRaw;
+
+  if (!ne) return enRaw;
+  let out = ne;
+  for (const [n, e] of Object.entries(LUNAR_MONTH_NE_TO_EN)) {
+    out = out.replaceAll(n, e);
+  }
+  out = out
+    .replace(/शुक्ल\s*पक्ष/g, "Shukla Paksha")
+    .replace(/कृष्ण\s*पक्ष/g, "Krishna Paksha")
+    .replace(/शुक्ल/g, "Shukla")
+    .replace(/कृष्ण/g, "Krishna")
+    .replace(/पक्ष/g, "Paksha")
+    .replace(/\s+/g, " ")
+    .trim();
+  return out || enRaw;
 }
 
 /** e.g. शुक्ल अष्टमी / Krishna Ashtami */
@@ -800,6 +908,54 @@ export function formatRashiDisplayNe(nameNe?: string): string | undefined {
   return RASHI_DISPLAY_NE[nameNe] ?? nameNe;
 }
 
+/** Western zodiac names for English UI (Mesha → Aries, etc.). */
+const RASHI_NE_TO_WESTERN: Record<string, string> = {
+  मेष: "Aries",
+  वृष: "Taurus",
+  वृषभ: "Taurus",
+  मिथुन: "Gemini",
+  कर्कट: "Cancer",
+  कर्क: "Cancer",
+  सिंह: "Leo",
+  कन्या: "Virgo",
+  तुला: "Libra",
+  वृश्चिक: "Scorpio",
+  धनु: "Sagittarius",
+  मकर: "Capricorn",
+  कुम्भ: "Aquarius",
+  मीन: "Pisces",
+};
+
+const RASHI_EN_TO_WESTERN: Record<string, string> = {
+  Mesha: "Aries",
+  Vrishabha: "Taurus",
+  Mithuna: "Gemini",
+  Karka: "Cancer",
+  Karkata: "Cancer",
+  Simha: "Leo",
+  Kanya: "Virgo",
+  Tula: "Libra",
+  Vrishchika: "Scorpio",
+  Dhanu: "Sagittarius",
+  Makara: "Capricorn",
+  Kumbha: "Aquarius",
+  Meena: "Pisces",
+};
+
+/** Locale-aware rashi label: Devanagari for ne, Western zodiac for en. */
+export function formatRashiDisplay(
+  nameNe?: string,
+  nameEn?: string,
+  lang?: string,
+): string | undefined {
+  if (normalizeLang(lang) === "en") {
+    const raw = nameEn ?? nameNe;
+    if (!raw) return undefined;
+    return RASHI_EN_TO_WESTERN[raw] ?? RASHI_NE_TO_WESTERN[raw] ?? raw;
+  }
+  return formatRashiDisplayNe(nameNe ?? nameEn);
+}
+
 type SpanEndBlock = {
   end_local_time_short?: string;
   end_local_time?: string;
@@ -949,18 +1105,6 @@ export function longitudeToPlanetCells(longitude: number): string {
   return [rashi, ...longitudeToDegreeCells(longitude).split("|")].join("|");
 }
 
-const PLANET_LABELS: Record<string, string> = {
-  sun: "सूर्य",
-  moon: "चन्द्र",
-  mars: "मंगल",
-  mercury: "बुध",
-  jupiter: "बृहस्पति",
-  venus: "शुक्र",
-  saturn: "शनि",
-  rahu: "राहु",
-  ketu: "केतु",
-};
-
 type PlanetDetail = {
   longitude?: number;
   rashi?: number;
@@ -978,8 +1122,12 @@ type PlanetDetail = {
 };
 
 export type PlanetRow = {
+  key: string;
+  /** Nepali label (kept for timeline maps keyed by Devanagari). */
   label: string;
+  labelEn: string;
   rashiNe?: string;
+  rashiEn?: string;
   coords: string;
   nakshatraNe?: string;
   nakshatraEn?: string;
@@ -987,6 +1135,16 @@ export type PlanetRow = {
   nakshatraLordNe?: string;
   nakshatraLordEn?: string;
 };
+
+function planetLabelPair(key: string): { label: string; labelEn: string } {
+  const g = GRAHA_NAME[key as GrahaKey];
+  return { label: g?.ne ?? key, labelEn: g?.en ?? key };
+}
+
+function rashiEnFromNumber(rashi?: number): string | undefined {
+  if (rashi == null || rashi < 1 || rashi > 12) return undefined;
+  return RASHI_EN_NAMES[rashi - 1];
+}
 
 function planetNakshatraFields(info: PlanetDetail): Pick<
   PlanetRow,
@@ -1151,14 +1309,15 @@ export function getPlanetRows(p: PanchangaDay): PlanetRow[] {
   return order
     .filter((key) => key in planets)
     .map((key) => {
-      const label = PLANET_LABELS[key] ?? key;
+      const { label, labelEn } = planetLabelPair(key);
       const info = planets[key];
       if (typeof info === "string") {
-        return { label, coords: info };
+        return { key, label, labelEn, coords: info };
       }
       const rashiNe = info.rashi_ne ?? rashiNeFromNumber(info.rashi);
+      const rashiEn = info.rashi_name ?? rashiEnFromNumber(info.rashi) ?? info.rashi_ne;
       const coords = planetDegreeCells(info);
-      return { label, rashiNe, coords, ...planetNakshatraFields(info) };
+      return { key, label, labelEn, rashiNe, rashiEn, coords, ...planetNakshatraFields(info) };
     });
 }
 
@@ -1173,6 +1332,7 @@ export function formatPlanetGocharLine(info: PlanetDetail): string {
 
 export function getPlanetGocharLines(
   p: PanchangaDay,
+  lang?: string,
 ): { label: string; value: string }[] {
   const planets = resolvePlanetsRecord(p);
   if (!planets) return [];
@@ -1192,7 +1352,8 @@ export function getPlanetGocharLines(
   return order
     .filter((key) => key in planets)
     .map((key) => {
-      const label = PLANET_LABELS[key] ?? key;
+      const { label: ne, labelEn: en } = planetLabelPair(key);
+      const label = pickLocale(lang, ne, en);
       const info = planets[key];
       if (typeof info === "string") {
         return { label, value: info };
@@ -1234,33 +1395,51 @@ type MuhurtaDetail = {
   inauspicious_timings?: MuhurtaTimingEntry[];
 };
 
-function formatMuhurtaSegment(seg: MuhurtaTimingSegment): string {
+function formatMuhurtaSegment(seg: MuhurtaTimingSegment, lang?: string): string {
+  const isEn = normalizeLang(lang) === "en";
   const start = seg.start_local_time_short
-    ? toNepaliDigits(formatTimeShort(seg.start_local_time_short) ?? seg.start_local_time_short)
+    ? formatLocaleDigits(
+        formatTimeShort(seg.start_local_time_short) ?? seg.start_local_time_short,
+        lang,
+      )
     : undefined;
   const end = seg.end_local_time_short
-    ? toNepaliDigits(formatTimeShort(seg.end_local_time_short) ?? seg.end_local_time_short)
+    ? formatLocaleDigits(
+        formatTimeShort(seg.end_local_time_short) ?? seg.end_local_time_short,
+        lang,
+      )
     : undefined;
-  const subtitle = seg.subtitle_ne ?? seg.subtitle_en;
+  const subtitle = pickLocale(lang, seg.subtitle_ne ?? seg.subtitle_en, seg.subtitle_en ?? seg.subtitle_ne);
   if (start && end) {
     return subtitle ? `${subtitle} ${start} – ${end}` : `${start} – ${end}`;
   }
   if (start && seg.until_full_night) {
-    return `${start} देखि सम्पूर्ण रातसम्म`;
+    return isEn ? `${start} through the night` : `${start} देखि सम्पूर्ण रातसम्म`;
   }
   if (end && !start) {
-    return subtitle ? `${subtitle} ${end} सम्म` : `${end} सम्म`;
+    return isEn
+      ? subtitle
+        ? `${subtitle} until ${end}`
+        : `until ${end}`
+      : subtitle
+        ? `${subtitle} ${end} सम्म`
+        : `${end} सम्म`;
   }
   return start ?? end ?? "—";
 }
 
 function formatMuhurtaTimingEntry(
   entry: MuhurtaTimingEntry,
+  lang?: string,
 ): { label: string; value: string; auspicious?: boolean } | null {
   const segments = entry.segments?.filter(Boolean);
   if (!segments?.length) return null;
-  const label = entry.name_ne || entry.name_en || entry.key || "—";
-  const value = segments.map((seg) => formatMuhurtaSegment(seg)).join("\n");
+  const label = pickLocale(
+    lang,
+    entry.name_ne || entry.name_en || entry.key || "—",
+    entry.name_en || entry.name_ne || entry.key || "—",
+  );
+  const value = segments.map((seg) => formatMuhurtaSegment(seg, lang)).join("\n");
   return {
     label,
     value,
@@ -1409,7 +1588,10 @@ export function getInauspiciousWindows(p: PanchangaDay): InauspiciousWindow[] {
   return out;
 }
 
-export function getMuhurtaRows(p: PanchangaDay): {
+export function getMuhurtaRows(
+  p: PanchangaDay,
+  lang?: string,
+): {
   label: string;
   value: string;
   auspicious?: boolean;
@@ -1420,31 +1602,34 @@ export function getMuhurtaRows(p: PanchangaDay): {
 
   if (m.auspicious_timings?.length || m.inauspicious_timings?.length) {
     const good = (m.auspicious_timings ?? [])
-      .map((entry) => formatMuhurtaTimingEntry(entry))
+      .map((entry) => formatMuhurtaTimingEntry(entry, lang))
       .filter((row): row is NonNullable<typeof row> => Boolean(row));
     const bad = (m.inauspicious_timings ?? [])
-      .map((entry) => formatMuhurtaTimingEntry(entry))
+      .map((entry) => formatMuhurtaTimingEntry(entry, lang))
       .filter((row): row is NonNullable<typeof row> => Boolean(row));
     return [...good, ...bad];
   }
 
   const rows: { label: string; value: string; auspicious?: boolean }[] = [];
+  const isEn = normalizeLang(lang) === "en";
 
   const rahu = formatMuhurtaRange(m.rahu_kalam?.start_time, m.rahu_kalam?.end_time);
-  if (rahu) rows.push({ label: "राहु काल", value: rahu });
+  if (rahu) rows.push({ label: isEn ? "Rahu Kaal" : "राहु काल", value: rahu });
 
   const yama = formatMuhurtaRange(m.yamaganda?.start_time, m.yamaganda?.end_time);
-  if (yama) rows.push({ label: "यमगण्ड", value: yama });
+  if (yama) rows.push({ label: isEn ? "Yamaganda" : "यमगण्ड", value: yama });
 
   const gulika = formatMuhurtaRange(m.gulika?.start_time, m.gulika?.end_time);
-  if (gulika) rows.push({ label: "गुलिक काल", value: gulika });
+  if (gulika) rows.push({ label: isEn ? "Gulika Kaal" : "गुलिक काल", value: gulika });
 
   const abhijit = getAbhijitMuhurta(p);
   if (abhijit) {
     rows.push({
-      label: "अभिजित् मुहूर्त",
+      label: isEn ? "Abhijit Muhurta" : "अभिजित् मुहूर्त",
       value: abhijit.noonDisplay
-        ? `${abhijit.rangeDisplay} (मध्यान्ह ${abhijit.noonDisplay})`
+        ? isEn
+          ? `${abhijit.rangeDisplay} (noon ${abhijit.noonDisplay})`
+          : `${abhijit.rangeDisplay} (मध्यान्ह ${abhijit.noonDisplay})`
         : abhijit.rangeDisplay,
       auspicious: m?.abhijit?.is_auspicious ?? true,
     });
@@ -1506,7 +1691,7 @@ const TITHI_NAMES_EN = new Set([
   "trayodashi",
   "chaturdashi",
   "purnima",
-  "amavasya",
+  "Aaushi",
   "aunsi",
 ]);
 
@@ -1572,20 +1757,31 @@ function resolveFestivalAlias(name: string, aliasIndex: Map<string, string>): st
   return aliasIndex.get(normalizeFestKey(name)) ?? `name:${normalizeFestKey(name)}`;
 }
 
-function preferNepaliName(current: string, candidate: string): string {
-  if (hasDevanagari(candidate) && !hasDevanagari(current)) return candidate;
+function preferLocalizedName(current: string, candidate: string, preferNe: boolean): string {
+  if (preferNe) {
+    if (hasDevanagari(candidate) && !hasDevanagari(current)) return candidate;
+    return current;
+  }
+  if (!hasDevanagari(candidate) && hasDevanagari(current)) return candidate;
   return current;
 }
 
 /** Collapse Nepali + English duplicates on the same calendar day. */
-function dedupeDayFestivalNames(names: string[], aliasIndex: Map<string, string>): string[] {
+function dedupeDayFestivalNames(
+  names: string[],
+  aliasIndex: Map<string, string>,
+  preferNe: boolean,
+): string[] {
   const byAlias = new Map<string, string>();
   for (const name of names) {
     const trimmed = name.trim();
     if (!trimmed) continue;
     const alias = resolveFestivalAlias(trimmed, aliasIndex);
     const existing = byAlias.get(alias);
-    byAlias.set(alias, existing ? preferNepaliName(existing, trimmed) : trimmed);
+    byAlias.set(
+      alias,
+      existing ? preferLocalizedName(existing, trimmed, preferNe) : trimmed,
+    );
   }
   return Array.from(byAlias.values());
 }
@@ -1596,8 +1792,12 @@ export function buildMonthFestivalEntries(
   bsMonth: number,
   days: CalendarDay[],
   apiFestivals: Festival[] = [],
+  lang?: string,
 ): MonthFestivalEntry[] {
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
+  const preferNe = !isEn;
   const monthNe = BS_MONTHS_NE[bsMonth - 1];
+  const monthEn = BS_MONTH_NAMES[bsMonth - 1];
   const aliasIndex = buildFestivalAliasIndex(apiFestivals);
   const byDay = new Map<number, MonthFestivalEntry[]>();
   const claimed = new Map<number, Set<string>>();
@@ -1616,7 +1816,7 @@ export function buildMonthFestivalEntries(
     const list = byDay.get(bsDay) ?? [];
     const existing = list.find((entry) => resolveFestivalAlias(entry.name, aliasIndex) === alias);
     if (existing) {
-      existing.name = preferNepaliName(existing.name, trimmed);
+      existing.name = preferLocalizedName(existing.name, trimmed, preferNe);
       existing.isPublicHoliday ||= opts?.isPublicHoliday;
       dayClaims.add(alias);
       claimed.set(bsDay, dayClaims);
@@ -1630,12 +1830,16 @@ export function buildMonthFestivalEntries(
     return true;
   };
 
-  add(1, `${monthNe} संक्रान्ति`, { alias: `sankranti:${bsMonth}` });
+  add(1, isEn ? `${monthEn} Sankranti` : `${monthNe} संक्रान्ति`, {
+    alias: `sankranti:${bsMonth}`,
+  });
 
   for (const festival of apiFestivals) {
     const bsDay = parseBsDayInMonth(festival, bsYear, bsMonth);
     if (bsDay == null) continue;
-    const name = festival.name_ne ?? festival.name_en ?? festival.name ?? festival.id;
+    const name = isEn
+      ? (festival.name_en ?? festival.name_ne ?? festival.name ?? festival.id)
+      : (festival.name_ne ?? festival.name_en ?? festival.name ?? festival.id);
     add(bsDay, name, {
       isPublicHoliday: festival.is_public_holiday,
       alias: `fest:${festival.id}`,
@@ -1643,7 +1847,7 @@ export function buildMonthFestivalEntries(
   }
 
   for (const day of days) {
-    const names = dedupeDayFestivalNames(day.festivals ?? [], aliasIndex);
+    const names = dedupeDayFestivalNames(day.festivals ?? [], aliasIndex, preferNe);
     for (const name of names) {
       add(day.day, name);
     }
@@ -1661,8 +1865,19 @@ export function buildMonthFestivalEntries(
     });
 }
 
-export function getEventNames(p: PanchangaDay, dayFestivals: string[]): string[] {
-  const fromApi = (p.festivals ?? []).map((f) => f.name_ne ?? f.name_en ?? f.name ?? "").filter(Boolean);
+export function getEventNames(
+  p: PanchangaDay,
+  dayFestivals: string[],
+  lang?: string,
+): string[] {
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
+  const fromApi = (p.festivals ?? [])
+    .map((f) =>
+      isEn
+        ? (f.name_en ?? f.name_ne ?? f.name ?? "")
+        : (f.name_ne ?? f.name_en ?? f.name ?? ""),
+    )
+    .filter(Boolean);
   const merged = [...fromApi];
   for (const f of dayFestivals) {
     if (!merged.includes(f)) merged.push(f);
@@ -1670,30 +1885,50 @@ export function getEventNames(p: PanchangaDay, dayFestivals: string[]): string[]
   return merged;
 }
 
-export function getShraddhaLabel(tithiNameNe?: string | null): string | undefined {
+export function getShraddhaLabel(tithiNameNe?: string | null, lang?: string): string | undefined {
   if (!tithiNameNe) return undefined;
   if (tithiNameNe === "पूर्णिमा" || tithiNameNe === "औंसी") return undefined;
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
+  if (isEn) {
+    // Keep the Nepali tithi token when we lack an English map; callers pass localized day festivals.
+    return `${tithiNameNe} Shraddha`;
+  }
   return `${tithiNameNe} श्राद्ध`;
 }
 
-export function getDinVisheshLabels(p: PanchangaDay, dayFestivals: string[]): string[] {
+export function getDinVisheshLabels(
+  p: PanchangaDay,
+  dayFestivals: string[],
+  lang?: string,
+): string[] {
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
   const detail = getPanchangaDetail(p);
-  const labels = getEventNames(p, dayFestivals);
+  const labels = getEventNames(p, dayFestivals, lang);
 
   const markers = detail?.markers as {
     is_purnima?: boolean;
-    is_amavasya?: boolean;
+    is_Aaushi?: boolean;
     is_ekadashi?: boolean;
   } | undefined;
 
-  if (markers?.is_purnima && !labels.includes("पूर्णिमा")) labels.push("पूर्णिमा");
-  if (markers?.is_amavasya && !labels.includes("औंसी")) labels.push("औंसी");
-  if (markers?.is_ekadashi && !labels.includes("एकादशी")) labels.push("एकादशी");
+  const purnima = isEn ? "Purnima" : "पूर्णिमा";
+  const aaushi = isEn ? "Amavasya" : "औंसी";
+  const ekadashi = isEn ? "Ekadashi" : "एकादशी";
+
+  if (markers?.is_purnima && !labels.includes(purnima) && !labels.includes("पूर्णिमा")) {
+    labels.push(purnima);
+  }
+  if (markers?.is_Aaushi && !labels.includes(aaushi) && !labels.includes("औंसी")) {
+    labels.push(aaushi);
+  }
+  if (markers?.is_ekadashi && !labels.includes(ekadashi) && !labels.includes("एकादशी")) {
+    labels.push(ekadashi);
+  }
 
   const tithiNe =
     (detail?.tithi as { name_ne?: string } | undefined)?.name_ne ??
     p.tithi?.name_ne;
-  const shraddha = getShraddhaLabel(tithiNe);
+  const shraddha = getShraddhaLabel(tithiNe, lang);
   if (shraddha && !labels.some((label) => label.includes(tithiNe ?? ""))) {
     labels.push(shraddha);
   }

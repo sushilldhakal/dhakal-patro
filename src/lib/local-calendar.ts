@@ -191,7 +191,14 @@ export function mergeEnrichedDays(
   const byDate = new Map(enrichedDays.map((d) => [d.date_ad, d]));
   return localDays.map((local) => {
     const remote = byDate.get(local.date_ad);
-    return remote ? { ...local, ...remote, day: local.day } : local;
+    if (!remote) return local;
+    // Keep grid lead/trail flags — remote month payloads never set outsideMonth.
+    return {
+      ...local,
+      ...remote,
+      day: local.day,
+      outsideMonth: local.outsideMonth,
+    };
   });
 }
 
@@ -203,18 +210,23 @@ export function applyHolidaysToDays(
 ): CalendarDay[] {
   const isEn = (lang ?? "ne").slice(0, 2) === "en";
   const namesByDate = new Map<string, string[]>();
+  /** All known aliases for holidays on a date (ne/en/id) — used to drop duplicates. */
+  const aliasesByDate = new Map<string, Set<string>>();
 
   for (const h of holidays) {
     if (!h.start_date) continue;
+    const fallbackName = "name" in h ? h.name : undefined;
     const name = isEn
-      ? (h.name_en ?? h.name_ne ?? h.id)
-      : (h.name_ne ?? h.name_en ?? h.id);
+      ? (h.name_en ?? h.name_ne ?? fallbackName ?? h.id)
+      : (h.name_ne ?? h.name_en ?? fallbackName ?? h.id);
     const existing = namesByDate.get(h.start_date) ?? [];
-    const aliasKey = (h.name_ne ?? h.name_en ?? h.id).toLowerCase();
-    const duplicate = existing.some((entry) => {
-      const entryKey = entry.toLowerCase();
-      return entryKey === aliasKey || entry === name;
-    });
+    const aliases = aliasesByDate.get(h.start_date) ?? new Set<string>();
+    for (const alias of [h.name_ne, h.name_en, fallbackName, h.id, name]) {
+      if (alias) aliases.add(alias.toLowerCase());
+    }
+    aliasesByDate.set(h.start_date, aliases);
+
+    const duplicate = existing.some((entry) => aliases.has(entry.toLowerCase()) || entry === name);
     if (!duplicate) existing.push(name);
     namesByDate.set(h.start_date, existing);
   }
@@ -222,10 +234,10 @@ export function applyHolidaysToDays(
   return days.map((day) => {
     const extra = namesByDate.get(day.date_ad);
     if (!extra?.length) return day;
-    const merged = [...(day.festivals ?? [])];
-    for (const name of extra) {
-      if (!merged.includes(name)) merged.push(name);
-    }
-    return { ...day, festivals: merged };
+    const aliases = aliasesByDate.get(day.date_ad) ?? new Set<string>();
+    // Prefer localized holiday-API names; strip month-calendar festival strings
+    // that are the same event (often Nepali-only) so English isn't buried.
+    const fromDay = (day.festivals ?? []).filter((f) => !aliases.has(f.toLowerCase()));
+    return { ...day, festivals: [...extra, ...fromDay] };
   });
 }

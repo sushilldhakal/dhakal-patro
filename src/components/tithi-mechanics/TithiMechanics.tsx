@@ -11,7 +11,7 @@ import { useLocale } from "@/i18n/locale";
 import { tmCardCap, tmCardPadLg, tmFcard, tmFormula, tmHero, tmHeroEyebrow, tmHeroSub, tmHeroTitle, tmKey, tmKeys, tmLede, tmNote, tmPageShell, tmSecEn, tmSecHead, tmSecKicker, tmSecTitle, tmSection, tmWrap, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 
 const PRESETS = [
-  { ne: "औंसी", en: "Amavasya", day: 0 },
+  { ne: "औंसी", en: "Aaushi", day: 0 },
   { ne: "शुक्ल अष्टमी", en: "Shukla Ashtami", day: (90 / 360) * SYNODIC_MONTH },
   { ne: "पूर्णिमा", en: "Purnima", day: (174 / 360) * SYNODIC_MONTH },
   { ne: "कृष्ण अष्टमी", en: "Krishna Ashtami", day: (270 / 360) * SYNODIC_MONTH },
@@ -187,7 +187,7 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
                 setLunarDay(SYNODIC_MONTH);
               }}
             >
-              {pick("२-रो औंसी", "Month 2 Amavasya")}
+              {pick("२-रो औंसी", "Month 2 Aaushi")}
             </button>
           )}
         </div>

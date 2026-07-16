@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ensureEnglishBundle } from "@/i18n";
+import { setStoredLanguage } from "@/lib/user-preferences";
 
 export function LanguageSwitcher({ className }: { className?: string }) {
   const { i18n: i18nInstance, t, ready } = useTranslation();
@@ -9,9 +10,11 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   const toggle = () => {
     if (isNepali) {
+      setStoredLanguage("en");
       void ensureEnglishBundle().then(() => i18nInstance.changeLanguage("en"));
       return;
     }
+    setStoredLanguage("ne");
     void i18nInstance.changeLanguage("ne");
   };
 

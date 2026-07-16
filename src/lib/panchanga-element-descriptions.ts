@@ -32,7 +32,7 @@ export const ELEMENT_DESCRIPTIONS: Record<string, ElementDescription> = {
     },
     meaning: {
       ne: "तिथिले धेरैजसो चाडपर्व, व्रत (एकादशी, पूर्णिमा, औंसी) र मुहूर्त निर्धारण गर्छ। शुक्ल पक्ष (बढ्दो) १–१५ पूर्णिमातर्फ, कृष्ण पक्ष (घट्दो) १–१५ औंसीतर्फ जान्छ।",
-      en: "The tithi governs most festivals, fasts (Ekadashi, Purnima, Amavasya) and muhurta selection. Shukla paksha (waxing) tithis 1–15 lead to the full moon; Krishna paksha (waning) tithis 1–15 lead to the new moon.",
+      en: "The tithi governs most festivals, fasts (Ekadashi, Purnima, Aaushi) and muhurta selection. Shukla paksha (waxing) tithis 1–15 lead to the full moon; Krishna paksha (waning) tithis 1–15 lead to the new moon.",
     },
   },
   nakshatra: {
@@ -70,7 +70,7 @@ export const ELEMENT_DESCRIPTIONS: Record<string, ElementDescription> = {
     },
     how: {
       ne: "प्रत्येक तिथि (१२° अन्तर) लाई ६°–६° का दुई भागमा बाँडिन्छ; प्रत्येक भाग एक करण। ७ चर करण चक्रमा घुम्छन्, ४ स्थिर करण औंसीवरिपरि रहन्छन्।",
-      en: "Each tithi (12° of elongation) is split into two 6° halves, and each half is a karana. The 7 movable karanas cycle round, while the 4 fixed karanas are anchored around the new moon (Amavasya).",
+      en: "Each tithi (12° of elongation) is split into two 6° halves, and each half is a karana. The 7 movable karanas cycle round, while the 4 fixed karanas are anchored around the new moon (Aaushi).",
     },
     meaning: {
       ne: "करणले तिथिभित्रको समय झन् सूक्ष्म बनाउँछ। विष्टि (भद्रा) करण शुभ कार्यका लागि अशुभ मानिन्छ; स्थिर करण (शकुनि, चतुष्पद, नाग, किंस्तुघ्न) भारी हुन्छन्।",

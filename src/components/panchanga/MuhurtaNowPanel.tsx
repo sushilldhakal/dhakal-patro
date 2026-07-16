@@ -93,29 +93,27 @@ export function EphemerisModeBanner({ p, clock }: Props) {
         {time ? (
           pick(
             <>
-              <span className="font-mono tabular-nums">{digits(time)}</span> बजे चलिरहेको
-              तिथि/नक्षत्र/योग/करण।
+              <span className="font-mono tabular-nums">{digits(time)}</span> बजेको वास्तविक
+              ग्रहस्थितिअनुसार तिथि, नक्षत्र, योग र करण। आकाशगङ्गाका ग्रहहरूको सटीक गणनामा
+              आधारित भएकाले मुद्रित सिद्धान्तिक पात्रोसँग केही मात्रामा नमिल्न सक्छ।
             </>,
             <>
-              Tithi / nakshatra / yoga / karana running at{" "}
-              <span className="font-mono tabular-nums">{digits(time)}</span>.
+              Tithi, nakshatra, yoga and karana from the actual planetary positions at{" "}
+              <span className="font-mono tabular-nums">{digits(time)}</span>. Based on precise
+              sky calculations, so it may differ slightly from printed theoretical patros.
             </>,
           )
         ) : (
           pick(
-            "तोकिएको समयमा चलिरहेको तिथि/नक्षत्र/योग/करण।",
-            "Tithi / nakshatra / yoga / karana running at the chosen time.",
+            "तोकिएको समयको वास्तविक ग्रहस्थितिअनुसार तिथि, नक्षत्र, योग र करण। आकाशगङ्गाका ग्रहहरूको सटीक गणनामा आधारित भएकाले मुद्रित सिद्धान्तिक पात्रोसँग केही मात्रामा नमिल्न सक्छ।",
+            "Tithi, nakshatra, yoga and karana from the actual planetary positions at the chosen time. Based on precise sky calculations, so it may differ slightly from printed theoretical patros.",
           )
         )}
         {civil &&
           pick(
             " यो समय आजको सूर्योदय अघि भएकाले हिजोको वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।",
             " This time is before today's sunrise, so the previous Vedic day's panchanga is shown.",
-          )}{" "}
-        {pick(
-          "ग्रहको स्पष्ट (दृक) डिग्री — मुद्रित सिद्धान्तिक पात्रोसँग मिल्दैन।",
-          "Planetary degrees are drik (apparent) — they differ from printed theoretical patros.",
-        )}
+          )}
       </p>
     </div>
   );

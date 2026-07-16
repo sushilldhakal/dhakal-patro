@@ -193,7 +193,7 @@ export const patroSecBand =
   "flex flex-wrap items-baseline gap-2.5 border-b border-border bg-secondary/[0.09] px-4 py-2.5 dark:bg-secondary/20";
 
 export const patroHeroPill =
-  "text-sm font-semibold leading-none whitespace-nowrap rounded-full border border-white/14 bg-white/8 px-2.5 py-1.5 text-[#f5f5f1]";
+  "text-sm font-semibold leading-none whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-2.5 py-1.5 text-white";
 
 export function patroHeroPillEv(kind: "public" | "festival") {
   return cn(

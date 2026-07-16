@@ -42,13 +42,16 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     method: MUHURTA_INTRO,
     rules: [
       { ne: "महिना — विवाहका लागि शास्त्रसम्मत चन्द्रमास मात्र (मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ, आषाढ); अधिकमास र चातुर्मास वर्जित।", en: "Month — only the śāstra vivāha lunar months (Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha, Āṣāḍha); Adhik-māsa & Chaturmāsa barred." },
+      { ne: "सौर मास — सूर्य मेष, वृष, मिथुन, वृश्चिक, मकर वा कुम्भ राशिमा हुनुपर्छ (शास्त्रले पहिले सौर मास हेर्छ)।", en: "Solar month — the Sun must be in Meṣa, Vṛṣabha, Mithuna, Vṛśchika, Makara or Kumbha (the śāstra checks the Sun-sign first)." },
       { ne: "तिथि — शुभ तिथि मात्र (२,३,५,७,१०,११,१३); रिक्ता (४,९,१४), अष्टमी, षष्ठी, अमावस्या, पूर्णिमा वर्जित।", en: "Tithi — only śubha tithis (2,3,5,7,10,11,13); rikta (4,9,14), Aṣṭamī, Ṣaṣṭhī, Amāvasyā, Pūrṇimā out." },
       { ne: "नक्षत्र — शास्त्रीय विवाह नक्षत्र मात्र: रोहिणी, मृगशिरा, मघा, उत्तराफाल्गुनी, हस्त, स्वाती, अनुराधा, मूल, उत्तराषाढा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — the classical 11: Rohiṇī, Mṛgaśira, Maghā, U.Phalgunī, Hasta, Svātī, Anurādhā, Mūla, U.Aṣāḍhā, U.Bhādrapada, Revatī." },
       { ne: "योग — नवै अशुभ योग (विष्कुम्भ, अतिगण्ड, शूल, गण्ड, व्याघात, वज्र, व्यतीपात, परिघ, वैधृति) वर्जित।", en: "Yoga — all nine aśubha yogas (Viṣkambha, Atigaṇḍa, Śūla, Gaṇḍa, Vyāghāta, Vajra, Vyatīpāta, Parigha, Vaidhṛti) barred." },
       { ne: "करण — विष्टि (भद्रा) र चार स्थिर करण (शकुनि, चतुष्पाद, नाग, किंस्तुघ्न) वर्जित।", en: "Karaṇa — Viṣṭi (Bhadrā) and the four fixed karaṇas (Śakuni, Catuṣpāda, Nāga, Kiṃstughna) barred." },
       { ne: "वार — मंगलबार र शनिबार वर्जित।", en: "Vāra — Tuesday and Saturday barred." },
       { ne: "दोष — दग्धा, शून्य, भद्रा र मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु) परेको दिन पूरै त्याज्य; गोधूलिले पनि छुट दिँदैन।", en: "Doṣa — Dagdha, Śūnya, Bhadrā, and malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu) scrub the whole day; no Godhūli rescue." },
-      { ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन; संक्रान्तिको सन्निकट समय र ग्रहण ±३ दिन वर्जित।", en: "Graha — Jupiter & Venus must be udaya (not combust); Sankrānti buffers and eclipse ±3 days excluded." },
+      { ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन, न त बाल्य/वृद्ध (उदय वा अस्तको सन्निकट कमजोर); संक्रान्तिको सन्निकट समय र ग्रहण ±३ दिन वर्जित।", en: "Graha — Jupiter & Venus must be udaya — neither combust nor bāla/vṛddha (weak just after rising or before setting); Sankrānti buffers and eclipse ±3 days excluded." },
+      { ne: "सिंहस्थ गुरु — बृहस्पति सिंह राशिमा रहेको सम्पूर्ण अवधि विवाह वर्जित।", en: "Simhastha Guru — marriage is barred for the whole transit of Jupiter through Siṃha (Leo)." },
+      { ne: "क्षय पक्ष — एउटै पक्षमा दुई तिथि क्षय भई १३ तिथिको पक्ष बन्यो भने (अतिनिन्द्य) पूरै अवधि वर्जित; यसलाई अरू कुनै शुभ योगले पनि काट्दैन।", en: "Kṣaya Pakṣa — if a fortnight loses two tithis and becomes a 13-tithi pakṣa (atinindya), the whole period is barred; no other favourable factor overrides it." },
     ],
   },
   bratabandha: {

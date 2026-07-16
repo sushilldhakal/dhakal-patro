@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchGochar, gocharKeys, type LocationParams } from "@/lib/api";
 import { formatClockNepali } from "@/lib/panchanga-format";
+import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { useLocale } from "@/i18n/locale";
 import { patroCard } from "@/lib/patro-classes";
 
@@ -15,19 +16,7 @@ const GRAHA_ORDER = [
   "saturn",
   "rahu",
   "ketu",
-] as const;
-
-const GRAHA_EN: Record<string, string> = {
-  sun: "Surya",
-  moon: "Chandra",
-  mars: "Mangal",
-  mercury: "Budha",
-  jupiter: "Guru",
-  venus: "Shukra",
-  saturn: "Shani",
-  rahu: "Rahu",
-  ketu: "Ketu",
-};
+] as const satisfies readonly GrahaKey[];
 
 const RASHI_EN_NE: Record<string, string> = {
   Mesha: "मेष",
@@ -87,7 +76,7 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
       const rashi = rashiNe(entry.to_rashi);
       const time = formatClockNepali(localTimePart(entry.entry_time_local)) ?? "—";
       const rel = daysUntil(entry.entry_time_local, refDate);
-      const enName = g.name_vedic ?? GRAHA_EN[key] ?? key;
+      const enName = GRAHA_NAME[key].en;
       return {
         key,
         symbol: g.symbol,

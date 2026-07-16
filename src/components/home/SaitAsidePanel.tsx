@@ -4,8 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { fetchSaitMonthAll, saitMonthAllKey } from "@/lib/api";
 import { SAIT_CATEGORIES } from "@/lib/sait-data";
-import { BS_MONTHS_NE } from "@/lib/bs-calendar";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
+import { useLocale } from "@/i18n/locale";
 import { patroEmpty } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,7 @@ type Props = {
  */
 export function SaitAsidePanel({ year, month, highlightDay }: Props) {
   const { t } = useTranslation();
+  const { pick, digits } = useLocale();
 
   const saitQ = useQuery({
     queryKey: saitMonthAllKey(year, month),
@@ -36,7 +37,7 @@ export function SaitAsidePanel({ year, month, highlightDay }: Props) {
   });
 
   const cats = saitQ.data?.categories;
-  const monthName = BS_MONTHS_NE[month - 1];
+  const monthName = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
   const anyDates = cats ? Object.values(cats).some((d) => d.length > 0) : false;
 
   return (
@@ -74,7 +75,7 @@ export function SaitAsidePanel({ year, month, highlightDay }: Props) {
                                   hl && "font-extrabold text-accent underline underline-offset-2",
                                 )}
                               >
-                                {toNepaliDigits(day)}
+                                {digits(day)}
                               </span>
                             </span>
                           );

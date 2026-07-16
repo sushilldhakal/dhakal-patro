@@ -2,8 +2,37 @@
 <html lang="ne">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Apply stored theme before first paint (next-themes storageKey = "theme").
+      // Default: light. If the user chose dark/system, restore it immediately.
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var dark = false;
+          if (stored === "dark") dark = true;
+          else if (stored === "system") {
+            dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          }
+          // No key / "light" → light (matches ThemeProvider defaultTheme).
+          var root = document.documentElement;
+          if (dark) {
+            root.classList.add("dark");
+            root.style.colorScheme = "dark";
+            root.style.background = "#082628";
+          } else {
+            root.classList.remove("dark");
+            root.style.colorScheme = "light";
+            root.style.background = "#f8f6f2";
+          }
+          var lang = localStorage.getItem("i18nextLng");
+          if (lang && lang.slice(0, 2) === "en") root.lang = "en";
+          else root.lang = "ne";
+        } catch (_) {}
+      })();
+    </script>
     <style>
       html{background:#f8f6f2;color-scheme:light}
+      html.dark{background:#082628;color-scheme:dark}
     </style>
     <!-- @ga-snippet -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -65,6 +94,24 @@
         };
         if (!ssrPath || norm(ssrPath) !== norm(location.pathname)) {
           root.innerHTML = tpl.innerHTML;
+          // Match boot loader colors / label to stored theme & language.
+          try {
+            var stored = localStorage.getItem("theme");
+            var dark =
+              stored === "dark" ||
+              (stored === "system" &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches);
+            var loader = document.getElementById("app-boot-loader");
+            if (loader && dark) {
+              loader.style.background = "#082628";
+              loader.style.color = "#c8c4b8";
+            }
+            var lang = localStorage.getItem("i18nextLng");
+            var label = loader && loader.querySelector("span");
+            if (label && lang && lang.slice(0, 2) === "en") {
+              label.textContent = "Loading…";
+            }
+          } catch (_) {}
         }
       })();
     </script>

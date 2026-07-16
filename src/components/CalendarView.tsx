@@ -205,11 +205,13 @@ export function CalendarView({
 
   const monthDays = useMemo(() => {
     let result = localDays;
-    if (yearFestivals.length) {
-      result = applyHolidaysToDays(result, yearFestivals, lang);
-    }
+    // Merge month panchanga first, then overlay localized festival names so
+    // English isn't overwritten by Nepali strings from the month calendar API.
     if (monthQ.data?.calendar) {
       result = mergeEnrichedDays(result, monthQ.data.calendar);
+    }
+    if (yearFestivals.length) {
+      result = applyHolidaysToDays(result, yearFestivals, lang);
     }
     return result;
   }, [localDays, yearFestivals, monthQ.data, lang]);

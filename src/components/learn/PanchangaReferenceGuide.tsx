@@ -259,7 +259,7 @@ export function KaranaReferenceTable() {
               <td className={patroMono}>{N(i + 9)}</td>
               <td>{pick(k.ne, KARANA_EN[k.ne] ?? k.ne)}</td>
               <td>{k.type}</td>
-              <td>{pick("महिनामा एक–एक पटक — कृष्ण चतुर्दशी, औंसी, शुक्ल प्रतिपदा, पूर्णिमा", "Once each per month — Krishna Chaturdashi, Amavasya, Shukla Pratipada, Purnima")}</td>
+              <td>{pick("महिनामा एक–एक पटक — कृष्ण चतुर्दशी, औंसी, शुक्ल प्रतिपदा, पूर्णिमा", "Once each per month — Krishna Chaturdashi, Aaushi, Shukla Pratipada, Purnima")}</td>
             </tr>
           ))}
         </tbody>

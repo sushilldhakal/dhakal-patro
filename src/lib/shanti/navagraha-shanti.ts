@@ -43,7 +43,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "sun",
     nameNe: "सूर्य",
-    nameEn: "Surya (Sun)",
+    nameEn: "Sun",
     symbol: "",
     vaaraNe: "आइतबार",
     vaaraEn: "Sunday",
@@ -68,7 +68,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "moon",
     nameNe: "चन्द्र",
-    nameEn: "Chandra (Moon)",
+    nameEn: "Moon",
     symbol: "",
     vaaraNe: "सोमबार",
     vaaraEn: "Monday",
@@ -93,7 +93,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "mars",
     nameNe: "मंगल",
-    nameEn: "Mangal (Mars)",
+    nameEn: "Mars",
     symbol: "",
     vaaraNe: "मंगलबार",
     vaaraEn: "Tuesday",
@@ -118,7 +118,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "mercury",
     nameNe: "बुध",
-    nameEn: "Budha (Mercury)",
+    nameEn: "Mercury",
     symbol: "",
     vaaraNe: "बुधबार",
     vaaraEn: "Wednesday",
@@ -143,7 +143,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "jupiter",
     nameNe: "गुरु (बृहस्पति)",
-    nameEn: "Guru (Jupiter)",
+    nameEn: "Jupiter",
     symbol: "",
     vaaraNe: "बिहिबार",
     vaaraEn: "Thursday",
@@ -168,7 +168,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "venus",
     nameNe: "शुक्र",
-    nameEn: "Shukra (Venus)",
+    nameEn: "Venus",
     symbol: "",
     vaaraNe: "शुक्रबार",
     vaaraEn: "Friday",
@@ -193,7 +193,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "saturn",
     nameNe: "शनि",
-    nameEn: "Shani (Saturn)",
+    nameEn: "Saturn",
     symbol: "",
     vaaraNe: "शनिबार",
     vaaraEn: "Saturday",
@@ -218,7 +218,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "rahu",
     nameNe: "राहु",
-    nameEn: "Rahu (North Node)",
+    nameEn: "Rahu",
     symbol: "",
     vaaraNe: "शनिबार",
     vaaraEn: "Saturday",
@@ -243,7 +243,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
   {
     key: "ketu",
     nameNe: "केतु",
-    nameEn: "Ketu (South Node)",
+    nameEn: "Ketu",
     symbol: "",
     vaaraNe: "मंगलबार",
     vaaraEn: "Tuesday",

@@ -13,6 +13,7 @@ import {
   formatDinamaanShort,
   formatNepalSambatDisplay,
   formatNepalSambatSubtitle,
+  formatPakshaLabel,
   formatPakshaNepaliDisplay,
   formatPakshaTithiLine,
   formatShakaYear,
@@ -31,7 +32,7 @@ import {
 import { useLocale } from "@/i18n/locale";
 import { patroAsideLink } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
-import { TL_GRAHA_EN, TL_RASHI_EN } from "@/components/panchanga/day-timeline-data";
+import { TL_RASHI_EN } from "@/components/panchanga/day-timeline-data";
 
 interface Props {
   day: CalendarDay | null;
@@ -47,8 +48,8 @@ const metaCard = "rounded-lg border border-border bg-surface-inset p-2.5";
 const metaLabel = "mb-1 text-sm text-base tracking-widest uppercase";
 
 function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
-  const { pick } = useLocale();
-  const labels = getDinVisheshLabels(p, day.festivals);
+  const { pick, lang } = useLocale();
+  const labels = getDinVisheshLabels(p, day.festivals, lang);
   if (!labels.length) return null;
 
   return (
@@ -66,8 +67,8 @@ function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
 }
 
 function MuhurtaSection({ p }: { p: PanchangaDay }) {
-  const { pick } = useLocale();
-  const rows = getMuhurtaRows(p);
+  const { pick, lang } = useLocale();
+  const rows = getMuhurtaRows(p, lang);
   if (!rows.length) return null;
 
   return (
@@ -100,16 +101,16 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
     <>
       <h4 className={sectionTitle}>{pick("उदयकालिक स्पष्टग्रह", "Planets at sunrise")}</h4>
       <div className="grid grid-cols-2 gap-2">
-        {planets.map(({ label, rashiNe, coords }) => (
+        {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords }) => (
           <div
-            key={label}
+            key={key}
             className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2 text-sm text-base"
           >
             <div className="flex flex-col gap-0.5">
-              <span>{pick(label, TL_GRAHA_EN[label] ?? label)}</span>
-              {rashiNe && (
+              <span>{pick(label, labelEn)}</span>
+              {(rashiNe || rashiEn) && (
                 <span className="text-sm">
-                  {pick(rashiNe, TL_RASHI_EN[rashiNe] ?? rashiNe)}
+                  {pick(rashiNe ?? "", rashiEn ?? TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "")}
                 </span>
               )}
             </div>
@@ -140,12 +141,13 @@ function PanchangaTable({ rows }: { rows: { label: string; value?: string | null
 }
 
 function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
+  const { lang } = useLocale();
   const sunrise =
     getSunriseDisplay(p) ?? (day.sunrise ? formatClockNepali(day.sunrise) : undefined);
   const sunset =
     getSunsetDisplay(p) ?? (day.sunset ? formatClockNepali(day.sunset) : undefined);
-  const moonrise = getMoonriseDisplay(p);
-  const moonset = getMoonsetDisplay(p);
+  const moonrise = getMoonriseDisplay(p, lang);
+  const moonset = getMoonsetDisplay(p, lang);
 
   if (!sunrise && !sunset && !moonrise && !moonset) return null;
 
@@ -188,7 +190,7 @@ function DaySummary({
   day: CalendarDay;
   onFullPanchanga: () => void;
 }) {
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   const detail = getPanchangaDetail(p);
   const tithi = (detail?.tithi ?? p.tithi) as Parameters<typeof formatAngaTransition>[0];
   const nakshatra = (detail?.nakshatra ?? p.nakshatra) as Parameters<typeof formatAngaTransition>[0];
@@ -199,12 +201,10 @@ function DaySummary({
     neFallback?: string,
     enFallback?: string,
   ) =>
-    pick(
-      formatAngaTransition(anga as Parameters<typeof formatAngaTransition>[0]) ?? anga?.name_ne ?? neFallback,
-      anga?.name ?? anga?.name_ne ?? enFallback ?? neFallback,
-    );
+    formatAngaTransition(anga as Parameters<typeof formatAngaTransition>[0], lang) ??
+    pick(anga?.name_ne ?? neFallback, anga?.name ?? anga?.name_ne ?? enFallback ?? neFallback);
   const vaara = pick(getVaaraNe(p, day.weekday_ne ?? day.weekday), day.weekday_en ?? day.weekday);
-  const pakshaDisplay = pick(formatPakshaNepaliDisplay(p), p.paksha?.label_en ?? formatPakshaNepaliDisplay(p));
+  const pakshaDisplay = formatPakshaLabel(p, lang) ?? pick(formatPakshaNepaliDisplay(p), p.paksha?.label_en ?? formatPakshaNepaliDisplay(p));
   const nsSubtitle = formatNepalSambatSubtitle(p);
 
   return (
@@ -247,19 +247,17 @@ function PanchangaFull({
   bsYear: number;
   bsMonth: number;
 }) {
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   const detail = getPanchangaDetail(p);
   const tithi = (detail?.tithi ?? p.tithi) as Parameters<typeof formatAngaTransition>[0];
   const nakshatra = (detail?.nakshatra ?? p.nakshatra) as Parameters<typeof formatAngaTransition>[0];
   const yoga = (detail?.yoga ?? p.yoga) as Parameters<typeof formatAngaTransition>[0];
   const karana = (detail?.karana ?? p.karana) as Parameters<typeof formatAngaTransition>[0];
   const angaVal = (anga: { name_ne?: string; name?: string } | null | undefined) =>
-    pick(
-      formatAngaTransition(anga as Parameters<typeof formatAngaTransition>[0]) ?? anga?.name_ne,
-      anga?.name ?? anga?.name_ne,
-    );
+    formatAngaTransition(anga as Parameters<typeof formatAngaTransition>[0], lang) ??
+    pick(anga?.name_ne, anga?.name ?? anga?.name_ne);
   const vaara = pick(getVaaraNe(p, day.weekday_ne ?? day.weekday), day.weekday_en ?? day.weekday);
-  const paksha = pick(
+  const paksha = formatPakshaLabel(p, lang) ?? pick(
     formatPakshaNepaliDisplay(p) ??
       (detail?.paksha as { label_ne?: string } | undefined)?.label_ne ??
       p.paksha?.label_ne ??
@@ -287,7 +285,7 @@ function PanchangaFull({
     ? `${bs.month_name} ${bs.day}, ${bs.year}`
     : formatBsTitle(p, day.day, bsMonth, bsYear);
 
-  const dinVishesh = getDinVisheshLabels(p, day.festivals);
+  const dinVishesh = getDinVisheshLabels(p, day.festivals, lang);
 
   return (
     <div>
@@ -328,8 +326,8 @@ function PanchangaFull({
           { label: pick("दिनमान", "Day length"), value: formatDinamaanShort(p) },
           { label: pick("सूर्योदय", "Sunrise"), value: getSunriseDisplay(p) ?? formatClockNepali(day.sunrise) },
           { label: pick("सूर्यास्त", "Sunset"), value: getSunsetDisplay(p) ?? formatClockNepali(day.sunset) },
-          { label: pick("चन्द्रोदय", "Moonrise"), value: getMoonriseDisplay(p) },
-          { label: pick("चन्द्रास्त", "Moonset"), value: getMoonsetDisplay(p) },
+          { label: pick("चन्द्रोदय", "Moonrise"), value: getMoonriseDisplay(p, lang) },
+          { label: pick("चन्द्रास्त", "Moonset"), value: getMoonsetDisplay(p, lang) },
         ]}
       />
 

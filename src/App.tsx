@@ -7,8 +7,15 @@ import { useTranslation } from "react-i18next";
 import i18n, { ensureEnglishBundle } from "./i18n/index";
 import { router } from "./router.tsx";
 import { AuthProvider } from "./lib/auth/AuthContext";
-import { getLocalStorageItem, isBrowser } from "./lib/browser";
+import { isBrowser } from "./lib/browser";
 import { syncDocumentLang } from "./lib/fonts";
+import {
+  getStoredLanguage,
+  setStoredLanguage,
+  THEME_STORAGE_KEY,
+  type StoredLang,
+} from "./lib/user-preferences";
+import { normalizeLang } from "./i18n/locale";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,19 +26,28 @@ const queryClient = new QueryClient({
   },
 });
 
-/** Apply stored language after hydration. Default stays Nepali when nothing is saved. */
+/**
+ * Restore language from localStorage after hydration.
+ * First visit → Nepali. After the user switches, keep that choice until they change it again.
+ */
 function LanguageBootstrap() {
   useEffect(() => {
-    const stored = getLocalStorageItem("i18nextLng");
-    if (stored === "en" || stored === "ne") {
-      if (stored !== i18n.language) {
-        const apply = stored === "en" ? ensureEnglishBundle().then(() => i18n.changeLanguage(stored)) : i18n.changeLanguage(stored);
-        void apply;
+    const stored = getStoredLanguage();
+    const applyStored = async () => {
+      if (!stored) return;
+      if (stored === "en") await ensureEnglishBundle();
+      if (normalizeLang(i18n.language) !== stored) {
+        await i18n.changeLanguage(stored);
       }
-    }
-    syncDocumentLang(i18n.language);
+    };
+    void applyStored();
+    syncDocumentLang(stored ?? i18n.language);
 
-    const onLanguageChanged = (lang: string) => syncDocumentLang(lang);
+    const onLanguageChanged = (lang: string) => {
+      const next = normalizeLang(lang) as StoredLang;
+      setStoredLanguage(next);
+      syncDocumentLang(next);
+    };
     i18n.on("languageChanged", onLanguageChanged);
     return () => {
       i18n.off("languageChanged", onLanguageChanged);
@@ -54,7 +70,13 @@ export function AppProviders({
 }) {
   return (
     <HelmetProvider>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem
+        storageKey={THEME_STORAGE_KEY}
+        disableTransitionOnChange
+      >
         <QueryClientProvider client={queryClient}>
           <AuthProvider ssr={ssr}>
             {!ssr && isBrowser ? <LanguageBootstrap /> : null}

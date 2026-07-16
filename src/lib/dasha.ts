@@ -29,14 +29,14 @@ export const DASHA_LORD_NE: Record<DashaLord, string> = {
 
 export const DASHA_LORD_EN: Record<DashaLord, string> = {
   ketu: "Ketu",
-  venus: "Shukra",
-  sun: "Surya",
-  moon: "Chandra",
-  mars: "Mangal",
+  venus: "Venus",
+  sun: "Sun",
+  moon: "Moon",
+  mars: "Mars",
   rahu: "Rahu",
-  jupiter: "Guru",
-  saturn: "Shani",
-  mercury: "Budha",
+  jupiter: "Jupiter",
+  saturn: "Saturn",
+  mercury: "Mercury",
 };
 
 /** One dasha period at any level of the Vimshottari hierarchy. */

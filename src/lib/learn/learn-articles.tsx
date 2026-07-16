@@ -858,7 +858,7 @@ export function TithiArticle() {
       <Section kicker="01" title="Tithi = 12° of elongation" en="12° of elongation">
         <Lede>
           Seen from Earth, the angle by which the Moon runs <span className="hl">ahead of the Sun</span>{" "}
-          determines the tithi. <b>0°</b> is the new moon (Amavasya), <b>180°</b> the full moon
+          determines the tithi. <b>0°</b> is the new moon (Aaushi), <b>180°</b> the full moon
           (Purnima). In this diagram the Earth also moves <span className="hl-amber">~29°</span>{" "}
           around the Sun (one lunar month) — so the Moon takes ~27 days to return to a nakshatra,
           and ~29.5 days to the next new moon. Drag or press play below.

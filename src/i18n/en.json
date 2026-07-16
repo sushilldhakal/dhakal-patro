@@ -2,7 +2,7 @@
   "app_name": "Dhakal Patro",
   "seo": {
     "site_keywords": "Nepali calendar, Panchanga, Kundali, Tithi, Nakshatra, Vedic astrology, BS AD converter",
-    "default_description": "Nepali calendar, Surya Panchanga, Tithi, Nakshatra, holidays and Kundali — Vedic Patro.",
+    "default_description": "Nepali calendar, daily Panchanga, Tithi, Nakshatra, holidays and Kundali — Vedic Patro.",
     "routes": {
       "home": {
         "title": "Nepali Calendar & Panchanga | Vedic Patro",
@@ -10,7 +10,7 @@
         "keywords": "Nepali calendar, Panchanga, Nepali patro, Tithi, Nakshatra"
       },
       "panchanga": {
-        "title": "Today's Surya Panchanga | Vedic Patro",
+        "title": "Today's Panchanga | Vedic Patro",
         "description": "Daily Nepali Panchanga with Tithi, Nakshatra, Yoga, Karana, sunrise, sunset and muhurta.",
         "keywords": "Panchanga, Tithi, Nakshatra, Yoga, Karana, daily panchang"
       },
@@ -46,7 +46,7 @@
       },
       "ritu": {
         "title": "Ritu — Tropical Seasons | Vedic Patro",
-        "description": "Six sāyana seasons by equinox and solstice for your location — वसन्त, ग्रीष्म, वर्षा, शरद्, हेमन्त, शिशिर.",
+        "description": "Six tropical seasons by equinox and solstice for your location — Spring, Summer, Monsoon, Autumn, Pre-winter, Winter.",
         "keywords": "Ritu, Nepali seasons, equinox, solstice, tropical seasons"
       },
       "kundali": {
@@ -70,9 +70,9 @@
         "keywords": "Nepali calendar history"
       },
       "suryakranti": {
-        "title": "Surya Kranti | Vedic Patro",
+        "title": "Sun Times | Vedic Patro",
         "description": "Annual solar transits, sunrise and sunset times.",
-        "keywords": "Surya kranti, sankranti, sunrise times"
+        "keywords": "sunrise sunset, sankranti, sun times"
       },
       "abhijit_muhurta": {
         "title": "Abhijit Muhurta | Vedic Patro",
@@ -109,8 +109,8 @@
   "tithi": "Tithi",
   "nakshatra": "Nakshatra",
   "nav": {
-    "surya_panchanga": "Surya Panchanga",
-    "suryakranti": "Suryakranti",
+    "surya_panchanga": "Daily Panchanga",
+    "suryakranti": "Sun Times",
     "dainikkranti": "Daily Transit",
     "shanti_vidhi": "Shanti Vidhi",
     "avakahada_chakra": "Avakahada Chakra",
@@ -411,15 +411,15 @@
     "shaka": "Shaka",
     "nepal_sambat": "Nepal Sambat",
     "rashi_pada": "Rashi & Nakshatra Pada",
-    "moon_sign": "Moonsign",
+    "moon_sign": "Moon sign",
     "pada": "Pada",
-    "sun_sign": "Sunsign",
-    "sun_nakshatra": "Surya Nakshatra",
+    "sun_sign": "Sun sign",
+    "sun_nakshatra": "Sun's nakshatra",
     "pada_unit": "pada",
     "pada_transitions": "transitions",
     "pada_detail": "Nakshatra pada detail",
-    "balam": "Chandrabalam & Tarabalam",
-    "auspicious_chandra": "Auspicious Chandrabalam",
+    "balam": "Moon strength & Star strength",
+    "auspicious_chandra": "Auspicious Moon strength",
     "auspicious_tara": "Auspicious Tarabalam",
     "until": "until",
     "until_sunrise": "then until tomorrow's sunrise",
@@ -442,7 +442,7 @@
     "rahu_vasa": "Rahu Vasa",
     "agnivasa": "Agnivasa",
     "bhadravasa": "Bhadravasa",
-    "chandra_vasa": "Chandra Vasa",
+    "chandra_vasa": "Moon's abode",
     "shivavasa": "Shivavasa",
     "kumbha_chakra": "Kumbha Chakra",
     "nivas_auspicious": "Auspicious",
@@ -547,13 +547,13 @@
     "yoga": "Yoga",
     "karana": "Karana",
     "gochar": "Planet transit",
-    "suryakranti": "Suryakranti",
+    "suryakranti": "Sun Times",
     "belaantar": "Belaantar"
   },
   "muhurta_aside": {
     "tabs_label": "Daily Muhurta",
     "tarabal": "Tarabal",
-    "chandrabal": "Chandrabala",
+    "chandrabal": "Moon strength",
     "choghadiya": "Choghadiya",
     "hora": "Hora",
     "pushkara": "Pushkara",
@@ -591,9 +591,9 @@
     }
   },
   "sun_times": {
-    "title": "Suryakranti",
+    "title": "Sun Times",
     "subtitle": "Annual sunrise & sunset · B.S. {{year}}",
-    "ayana_note": "Each day's <strong>उ</strong> or <strong>द</strong> mark is set by the Sun's sign at sunrise — not by the whole month. It changes twice a year at sankranti (Cancer and Capricorn).",
+    "ayana_note": "Each day's <strong>N</strong> or <strong>S</strong> mark is set by the Sun's sign at sunrise — not by the whole month. It changes twice a year at sankranti (Cancer and Capricorn).",
     "col_ayana": "Ayana",
     "col_sun_sign": "Sun sign (at sunrise)",
     "north_ayana": "Uttarayana",
@@ -605,7 +605,7 @@
     "col_ayana_short": "Ayana",
     "col_sunrise": "Sunrise",
     "col_sunset": "Sunset",
-    "grid_title": "Suryakranti",
+    "grid_title": "Sun Times",
     "days_count": "{{count}} days"
   },
   "panchanga_year": {
@@ -749,7 +749,7 @@
     "fri_long": "Friday",
     "sat_long": "Saturday"
   },
-  "sun_times_cta": "Surya Kranti — Annual sunrise & sunset",
+  "sun_times_cta": "Sun Times — Annual sunrise & sunset",
   "home_quick": {
     "holidays_desc": "Public holidays & festivals",
     "converter_desc": "BS ↔ AD dates",

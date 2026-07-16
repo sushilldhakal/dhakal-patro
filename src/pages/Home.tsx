@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { patroAsideLink, patroAsideTab, patroHeroMonthOverlay, patroHeroMonthShell, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
 import { bsMonthArtUrl } from "@/lib/month-art";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
+import { formatPakshaLabel } from "@/lib/panchanga-format";
 import {
   ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
@@ -75,7 +76,7 @@ function PanchangaAside({
   placement?: "sidebar" | "below";
 }) {
   const { t } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { pick, digits, lang } = useLocale();
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
 
   const contextDay =
@@ -99,9 +100,11 @@ function PanchangaAside({
     activeP?.tithi?.name_ne ?? activeP?.tithi?.name ?? contextDay?.tithi_ne ?? contextDay?.tithi,
     activeP?.tithi?.name ?? activeP?.tithi?.name_ne ?? contextDay?.tithi ?? contextDay?.tithi_ne,
   );
-  const paksha = pick(
-    activeP?.paksha?.label_ne ?? activeP?.paksha_ne ?? contextDay?.paksha_ne,
-    activeP?.paksha?.label_en ?? activeP?.paksha?.label_ne ?? activeP?.paksha_ne ?? contextDay?.paksha,
+  const paksha = formatPakshaLabel(
+    activeP,
+    lang,
+    contextDay?.paksha_ne,
+    contextDay?.paksha,
   );
 
   // Local BS date for the selected AD day — lets the hero paint a real date
@@ -190,34 +193,34 @@ function PanchangaAside({
             <div
               className={cn(
                 patroHeroMonthShell,
-                "shrink-0 rounded-xl p-[22px] text-[#f5f5f1] shadow-lg",
+                "shrink-0 rounded-xl p-[22px] text-white shadow-lg",
                 isBelow ? "mx-4 mt-4 lg:mx-0 lg:mt-0 lg:w-[min(100%,22rem)] lg:rounded-none lg:shadow-none" : "min-[1081px]:rounded-none min-[1081px]:p-5 min-[1081px]:shadow-none",
                 !isBelow && "min-[1081px]:rounded-none",
               )}
             >
               <HeroMonthArt src={heroMonthArt} />
               <div className={patroHeroMonthOverlay} aria-hidden />
-              <div className="relative z-10">
+              <div className="relative z-10 text-white">
               <div className="flex items-start justify-between gap-3.5">
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold tracking-[0.16em] text-[rgba(245,245,241,0.55)]">
+                  <div className="text-sm font-semibold tracking-[0.16em] text-white/70">
                     {isSelectedToday
-                      ? `${t("panchanga.today_eyebrow").toUpperCase()} · ${t("today")}`
+                      ? t("panchanga.today_eyebrow").toUpperCase()
                       : (weekdayNe ?? "").toUpperCase()}
                   </div>
-                  <div className="mt-2.5 text-4xl font-bold leading-tight min-[1081px]:mt-2 min-[1081px]:text-xl">
+                  <div className="mt-2.5 text-4xl font-bold leading-tight text-white min-[1081px]:mt-2 min-[1081px]:text-xl">
                     {displayHeroDate}
                   </div>
-                  <div className="mt-0.5 text-sm text-base text-[rgba(245,245,241,0.85)]">
+                  <div className="mt-0.5 text-sm text-white/90">
                     {weekdayNe}
                     {activeP?.bs_date && typeof activeP.bs_date === "object"
                       ? `, ${t("panchanga.bs_era")} ${digits(activeP.bs_date.year)}`
                       : `, ${t("panchanga.bs_era")} ${digits(monthContext.year)}`}
                     {samvatsaraLabel ? (
-                      <span className="text-[rgba(245,245,241,0.72)]"> · {samvatsaraLabel}</span>
+                      <span className="text-white/75"> · {samvatsaraLabel}</span>
                     ) : null}
                   </div>
-                  <div className="mono mt-1.5 text-xs text-base text-[rgba(245,245,241,0.55)]">
+                  <div className="mt-1.5 text-xs text-white/70">
                     {adDisplay}
                   </div>
                 </div>
@@ -238,7 +241,7 @@ function PanchangaAside({
 
             <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-card min-[1081px]:rounded-none">
             <div
-              className="grid shrink-0 grid-cols-4 border-b border-border bg-surface-muted"
+              className="grid shrink-0 grid-cols-3 border-b border-border bg-surface-muted"
               role="tablist"
               aria-label={t("panchanga.tabs_label")}
             >
@@ -279,8 +282,6 @@ function PanchangaAside({
                     selectedAdDate={selectedAdDate}
                     bsYear={monthContext.year}
                     bsMonth={monthContext.month}
-                    monthDays={monthContext.days}
-                    todayAd={todayAd}
                     loading={loading}
                   />
                 </div>

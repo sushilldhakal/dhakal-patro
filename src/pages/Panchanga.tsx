@@ -129,12 +129,12 @@ export function Panchanga() {
   });
 
   // दिन-चक्र day boundary: sunrise→sunrise (default) vs midnight→midnight.
-  // The civil timeline is fetched lazily, only when din-raat is active.
-  const [dayCycleMode, setDayCycleMode] = useState<DayCycleMode>("ahoratra");
+  // The civil timeline is fetched lazily, only when Calendar Day is active.
+  const [dayCycleMode, setDayCycleMode] = useState<DayCycleMode>("Day-Night");
   const civilQuery = useQuery({
     queryKey: panchangaKeys.civil(adDateStr, location.params),
     queryFn: () => fetchCivilTimeline(adDateStr, "ad", location.params),
-    enabled: dayCycleMode === "din-raat",
+    enabled: dayCycleMode === "Calendar Day",
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });

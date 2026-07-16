@@ -5,6 +5,7 @@ import {
   formatDurationFull,
   formatMadhyahnaDisplay,
   formatNepalSambatDisplay,
+  formatPakshaLabel,
   formatPakshaNepaliDisplay,
   formatShakaYear,
   formatTimeShort,
@@ -27,7 +28,7 @@ import {
   getSunriseDisplay,
   getSunsetDisplay,
   getVaaraNe,
-  formatRashiDisplayNe,
+  formatRashiDisplay,
   formatSpanEndTime,
   getChandrabalam,
   getChandraRashiSpans,
@@ -103,23 +104,20 @@ function AngaCell({ anga }: { anga?: Anga | null }) {
 }
 
 export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
-  const { pick } = useLocale();
+  const { pick, lang, digits } = useLocale();
   const solar = getSolarCorrections(p);
   const belaantar = formatSolarCorrectionDisplay(solar?.belaantar);
   const deshaantar = formatSolarCorrectionDisplay(solar?.deshaantar);
   const detail = getPanchangaDetail(p);
   const bs = (detail?.bs_date ?? p.bs_date) as
-    | { year?: number; month_name_ne?: string; day?: number }
+    | { year?: number; month_name_ne?: string; month_name?: string; day?: number }
     | undefined;
   const ns = formatNepalSambatDisplay(p);
   const shaka = formatShakaYear(p);
   const samvatsara = bs?.year
     ? resolveSamvatsaraForBsYear(bs.year, p.samvatsara)
     : undefined;
-  const pakshaLabel =
-    (detail?.paksha as { label_ne?: string } | undefined)?.label_ne ??
-    p.paksha?.label_ne ??
-    "—";
+  const pakshaLabel = formatPakshaLabel(p, lang) ?? "—";
 
   return (
     <PanchangaSection titleKey="sections.sun_moon_samvat">
@@ -138,8 +136,8 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
             labelKey: "sections.vikram",
             children: (
               <span className="font-semibold">
-                {bs?.year && bs.month_name_ne && bs.day
-                  ? `${toNepaliDigits(bs.year)} ${bs.month_name_ne} ${toNepaliDigits(bs.day)}`
+                {bs?.year && bs.day && (bs.month_name_ne || bs.month_name)
+                  ? `${digits(bs.year)} ${pick(bs.month_name_ne ?? bs.month_name ?? "", bs.month_name ?? bs.month_name_ne ?? "")} ${digits(bs.day)}`
                   : (p.display?.bs_ne ?? "—")}
               </span>
             ),
@@ -170,14 +168,14 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
             children: (
               <>
                 <span>🌒</span>
-                <span className="font-mono font-semibold">{getMoonriseDisplay(p) ?? "—"}</span>
+                <span className="font-mono font-semibold">{getMoonriseDisplay(p, lang) ?? "—"}</span>
               </>
             ),
           }}
           right={{
             labelKey: "sections.shaka",
             children: (
-              <span className="font-semibold">{shaka ? toNepaliDigits(shaka) : "—"}</span>
+              <span className="font-semibold">{shaka ? digits(shaka) : "—"}</span>
             ),
           }}
         />
@@ -187,7 +185,7 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
             children: (
               <>
                 <span>🌘</span>
-                <span className="font-mono font-semibold">{getMoonsetDisplay(p) ?? "—"}</span>
+                <span className="font-mono font-semibold">{getMoonsetDisplay(p, lang) ?? "—"}</span>
               </>
             ),
           }}
@@ -284,18 +282,19 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
 
 export function RashiSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
+  const { pick, lang, digits } = useLocale();
   const detail = getPanchangaDetail(p);
   const moonRashiSpans = getChandraRashiSpans(p);
   const padaSpans = getNakshatraPadaSpans(p);
   const suryaRashi = getSuryaRashi(p);
   const suryaNak = getSuryaNakshatra(p);
 
-  const fallbackMoon = (detail?.chandra_rashi as { name_ne?: string; number?: number } | undefined) ??
+  const fallbackMoon = (detail?.chandra_rashi as { name_ne?: string; name?: string; number?: number } | undefined) ??
     p.chandra_rashi;
   const moonSpans =
     moonRashiSpans ??
-    (fallbackMoon?.name_ne
-      ? [{ name_ne: fallbackMoon.name_ne, number: fallbackMoon.number }]
+    (fallbackMoon?.name_ne || fallbackMoon?.name
+      ? [{ name_ne: fallbackMoon.name_ne, name: fallbackMoon.name, number: fallbackMoon.number }]
       : []);
 
   return (
@@ -309,7 +308,9 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
                 <div className="flex flex-col gap-0 w-full">
                   {moonSpans.map((span, i) => (
                     <span key={`moon-rashi-${i}`} className="inline-flex flex-wrap items-baseline gap-x-1.5">
-                      <span className="font-semibold">{formatRashiDisplayNe(span.name_ne)}</span>
+                      <span className="font-semibold">
+                        {formatRashiDisplay(span.name_ne, span.name, lang)}
+                      </span>
                       {formatSpanEndTime(span) ? (
                         <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap">
                           {formatSpanEndTime(span)} {t("sections.until")}
@@ -327,7 +328,7 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
             children:
               suryaRashi?.name_ne || suryaRashi?.name ? (
                 <span className="font-semibold">
-                  {formatRashiDisplayNe(suryaRashi.name_ne ?? suryaRashi.name)}
+                  {formatRashiDisplay(suryaRashi.name_ne, suryaRashi.name, lang)}
                 </span>
               ) : (
                 <span>—</span>
@@ -339,7 +340,9 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
             labelKey: "sections.sun_nakshatra",
             children:
               suryaNak?.name_ne || suryaNak?.name ? (
-                <span className="font-semibold">{suryaNak.name_ne ?? suryaNak.name}</span>
+                <span className="font-semibold">
+                  {pick(suryaNak.name_ne ?? suryaNak.name, suryaNak.name ?? suryaNak.name_ne)}
+                </span>
               ) : (
                 <span>—</span>
               ),
@@ -349,7 +352,7 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
             children:
               padaSpans && padaSpans.length > 0 ? (
                 <span className="text-sm">
-                  {toNepaliDigits(padaSpans.length)} {t("sections.pada_transitions")}
+                  {digits(padaSpans.length)} {t("sections.pada_transitions")}
                 </span>
               ) : (
                 <span>—</span>
@@ -366,21 +369,31 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
               if (!slice.length) return null;
               return (
                 <DenseListTable key={`pada-col-${col}`}>
-                  {slice.map((span, i) => (
-                    <DenseListRow
-                      key={`pada-${col}-${i}`}
-                      label={
-                        span.nakshatra_name_ne
-                          ? `${span.nakshatra_name_ne} — ${span.pada_ne ?? toNepaliDigits(span.pada ?? "")} ${t("sections.pada_unit")}`
-                          : "—"
-                      }
-                      time={
-                        formatSpanEndTime(span)
-                          ? `${formatSpanEndTime(span)} ${t("sections.until")}`
-                          : undefined
-                      }
-                    />
-                  ))}
+                  {slice.map((span, i) => {
+                    const nakName = pick(
+                      span.nakshatra_name_ne ?? span.nakshatra_name ?? "",
+                      span.nakshatra_name ?? span.nakshatra_name_ne ?? "",
+                    );
+                    const padaLabel = pick(
+                      span.pada_ne ?? digits(span.pada ?? ""),
+                      String(span.pada ?? span.pada_ne ?? ""),
+                    );
+                    return (
+                      <DenseListRow
+                        key={`pada-${col}-${i}`}
+                        label={
+                          nakName
+                            ? `${nakName} — ${padaLabel} ${t("sections.pada_unit")}`
+                            : "—"
+                        }
+                        time={
+                          formatSpanEndTime(span)
+                            ? `${formatSpanEndTime(span)} ${t("sections.until")}`
+                            : undefined
+                        }
+                      />
+                    );
+                  })}
                 </DenseListTable>
               );
             })}
@@ -392,6 +405,7 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
 }
 
 function BalamChips({ items }: { items: BalamChip[] }) {
+  const { lang } = useLocale();
   return (
     <div className="mb-2.5 flex flex-wrap gap-1.5">
       {items.map((it, i) => (
@@ -399,7 +413,7 @@ function BalamChips({ items }: { items: BalamChip[] }) {
           key={`${it.name_ne ?? it.name}-${i}`}
           className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-1.5 text-sm font-semibold leading-none shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
         >
-          <span>{formatRashiDisplayNe(it.name_ne)}</span>
+          <span>{formatRashiDisplay(it.name_ne, it.name, lang)}</span>
         </span>
       ))}
     </div>
@@ -457,7 +471,7 @@ export function BalamSection({ p }: { p: PanchangaDay }) {
 
 export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   const panchaka = getPanchakaRahita(p) ?? [];
   const lagna = getUdayaLagna(p) ?? [];
   const rowCount = Math.max(panchaka.length, lagna.length);
@@ -481,7 +495,7 @@ export function PanchakaLagnaSection({ p }: { p: PanchangaDay }) {
         : undefined,
       right: lg
         ? {
-            label: formatRashiDisplayNe(lg.name_ne ?? lg.name),
+            label: formatRashiDisplay(lg.name_ne, lg.name, lang) ?? "—",
             time:
               formatTimeRangeShort(
                 lg.start_local_time_short ?? lg.start_local_time,
@@ -638,7 +652,8 @@ function MuhurtaTimingValue({
 
 export function MuhurtaTimingsSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const rows = getMuhurtaRows(p);
+  const { lang } = useLocale();
+  const rows = getMuhurtaRows(p, lang);
   const good = rows.filter((r) => r.auspicious);
   const bad = rows.filter((r) => !r.auspicious);
 
@@ -873,7 +888,8 @@ export function NivasShoolSection({
 }
 
 export function DinVisheshSection({ p }: { p: PanchangaDay }) {
-  const labels = getDinVisheshLabels(p, []);
+  const { lang } = useLocale();
+  const labels = getDinVisheshLabels(p, [], lang);
   if (!labels.length) return null;
 
   return (
@@ -894,7 +910,7 @@ export function DinVisheshSection({ p }: { p: PanchangaDay }) {
 
 export function PlanetsPanel({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const { lang } = useLocale();
+  const { lang, pick } = useLocale();
   const planets = getPlanetRows(p);
   const lagna = getLagnaDisplay(p);
   if (!planets.length && !lagna) return null;
@@ -913,7 +929,9 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
             </span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold">{t("sections.lagna")}</div>
-              <div className="text-sm">{lagna.nameNe}</div>
+              <div className="text-sm">
+                {formatRashiDisplay(lagna.nameNe, undefined, lang) ?? lagna.nameNe}
+              </div>
             </div>
             {lagna.degree && (
               <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">
@@ -922,15 +940,17 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
             )}
           </div>
         )}
-        {planets.map(({ label, rashiNe, coords }) => (
+        {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords }) => (
           <div
-            key={label}
+            key={key}
             className="flex items-center gap-3 py-2 border-b border-border last:border-0"
           >
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold">{label}</div>
-              {rashiNe && (
-                <div className="text-sm">{rashiNe}</div>
+              <div className="text-sm font-semibold">{pick(label, labelEn)}</div>
+              {(rashiNe || rashiEn) && (
+                <div className="text-sm">
+                  {formatRashiDisplay(rashiNe, rashiEn, lang) ?? pick(rashiNe ?? "", rashiEn ?? "")}
+                </div>
               )}
             </div>
             <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">

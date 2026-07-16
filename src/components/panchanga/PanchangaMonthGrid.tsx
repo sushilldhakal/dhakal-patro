@@ -162,10 +162,10 @@ export function PanchangaMonthGrid({
                 onClick={() => onPickDay(ad)}
               >
                 {/* Top: tithi — always visible; wraps on narrow cells */}
-                <p className="m-0 w-full text-center text-sm font-semibold leading-snug text-foreground line-clamp-2 max-md:line-clamp-none sm:text-xs sm:line-clamp-1 sm:truncate">
+                <p className="m-0 w-full text-center text-xs font-semibold leading-snug text-foreground line-clamp-2 max-md:line-clamp-none sm:text-xs sm:line-clamp-1 sm:truncate">
                   {formatTithiWithPaksha(day, isEn)}
                 </p>
-                <p className="m-0 w-full text-center text-sm font-semibold leading-tight text-panchang dark:text-accent sm:truncate sm:text-sm">
+                <p className="m-0 w-full text-center text-xs font-semibold leading-tight text-panchang dark:text-accent sm:truncate sm:text-xs">
                   {getMonthDayNakshatra(day, lang) ?? "—"}
                 </p>
 
@@ -198,7 +198,7 @@ export function PanchangaMonthGrid({
                 </div>
 
                 {/* Bottom: rashi · yoga · karana */}
-                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-sm font-bold leading-tight sm:text-sm max-md:grid-cols-1 max-md:gap-px">
+                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-xs font-bold leading-tight sm:text-xs max-md:grid-cols-1 max-md:gap-px">
                   <span className="text-center font-bold text-panchang dark:text-accent sm:truncate">
                     {getMonthDayChandraRashi(day, lang) ?? "—"}
                   </span>
@@ -210,7 +210,7 @@ export function PanchangaMonthGrid({
                   </span>
                 </div>
 
-                {day.festivals[0] && (
+                {/* {day.festivals[0] && (
                   <span
                     className={cn(
                       "max-w-full truncate rounded-full px-1 py-0.5 text-xs font-semibold self-start",
@@ -220,7 +220,7 @@ export function PanchangaMonthGrid({
                   >
                     {day.festivals[0]}
                   </span>
-                )}
+                )} */}
               </button>
             );
           })}

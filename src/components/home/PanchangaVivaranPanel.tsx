@@ -12,12 +12,13 @@ import {
   getMoonriseDisplay,
   getPanchangaDetail,
   getPlanetGocharLines,
-  getRituDisplayNe,
+  getRituDisplay,
   getRituSeason,
   getSolarCorrections,
   getSunriseDisplay,
   getSunsetDisplay,
 } from "@/lib/panchanga-format";
+import { useLocale } from "@/i18n/locale";
 import { patroAsideLink } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 
@@ -85,8 +86,9 @@ type DetailCell = {
   mono?: boolean;
 };
 
-function angaName(anga?: AngaBlock | null): string | undefined {
-  return anga?.name_ne ?? anga?.name;
+function angaName(anga: AngaBlock | null | undefined, lang: string): string | undefined {
+  if (!anga) return undefined;
+  return lang === "en" ? anga.name ?? anga.name_ne : anga.name_ne ?? anga.name;
 }
 
 function VivaranCell({ label, value, hint, wide, mono }: DetailCell) {
@@ -104,20 +106,22 @@ function VivaranCell({ label, value, hint, wide, mono }: DetailCell) {
 function buildPanchangaDetailCells(
   p: PanchangaDay,
   t: TFunction,
+  lang: string,
   selectedDay?: CalendarDay | null,
 ): DetailCell[] {
   const detail = getPanchangaDetail(p);
   const nakshatra = (detail?.nakshatra ?? p.nakshatra) as AngaBlock | undefined;
   const yoga = (detail?.yoga ?? p.yoga) as AngaBlock | undefined;
   const karana = (detail?.karana ?? p.karana) as AngaBlock | undefined;
-  const karanaHint = formatAngaPatroTransitionHint(karana);
+  const karanaHint = formatAngaPatroTransitionHint(karana, lang);
 
   const sunrise =
     getSunriseDisplay(p) ?? (selectedDay?.sunrise ? formatClockNepali(selectedDay.sunrise) : undefined);
   const sunset =
     getSunsetDisplay(p) ?? (selectedDay?.sunset ? formatClockNepali(selectedDay.sunset) : undefined);
   const moonrise =
-    getMoonriseDisplay(p) ?? (selectedDay ? formatMonthMoonEventDisplay(selectedDay, "moonrise") : undefined);
+    getMoonriseDisplay(p, lang) ??
+    (selectedDay ? formatMonthMoonEventDisplay(selectedDay, "moonrise", lang) : undefined);
 
   return [
     {
@@ -126,20 +130,20 @@ function buildPanchangaDetailCells(
       mono: true,
     },
     { label: t("aside.moonrise"), value: moonrise ?? t("sections.dash"), mono: true },
-    { label: t("aside.ritu"), value: getRituDisplayNe(p), hint: getRituSeason(p) },
+    { label: t("aside.ritu"), value: getRituDisplay(p, lang), hint: getRituSeason(p) },
     {
       label: t("aside.nakshatra"),
-      value: angaName(nakshatra),
-      hint: formatAngaPatroTransitionHint(nakshatra),
+      value: angaName(nakshatra, lang),
+      hint: formatAngaPatroTransitionHint(nakshatra, lang),
     },
     {
       label: t("aside.yoga"),
-      value: angaName(yoga),
-      hint: formatAngaPatroTransitionHint(yoga),
+      value: angaName(yoga, lang),
+      hint: formatAngaPatroTransitionHint(yoga, lang),
     },
     {
       label: t("aside.karana"),
-      value: angaName(karana),
+      value: angaName(karana, lang),
       hint: karanaHint,
     },
   ];
@@ -147,6 +151,7 @@ function buildPanchangaDetailCells(
 
 export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading }: Props) {
   const { t } = useTranslation();
+  const { lang } = useLocale();
 
   if (loading || !p) {
     return (
@@ -164,8 +169,8 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
     );
   }
 
-  const cells = buildPanchangaDetailCells(p, t, selectedDay);
-  const planets = getPlanetGocharLines(p);
+  const cells = buildPanchangaDetailCells(p, t, lang, selectedDay);
+  const planets = getPlanetGocharLines(p, lang);
   const solar = getSolarCorrections(p);
   const deshaantar = formatPatroDeshaantar(solar?.deshaantar);
   const belaantar = formatPatroBelaantar(solar?.belaantar);

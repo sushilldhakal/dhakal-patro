@@ -8,7 +8,6 @@ import {
   dualTimeAtGhati,
   needleGhatiOnVedicChart,
   CHOGHADIYA_EN,
-  TL_GRAHA_EN,
   TL_RASHI_EN,
   type TimelineRowData,
 } from "./day-timeline-data";
@@ -54,7 +53,8 @@ const MOON_BAND_H = 20;
 const SUN_H = 28;
 /** Moon events sit above the sun row, just under the घडी ruler. */
 const MOON_EMOJI_Y = RULER_H + 5;
-const MOON_TIME_Y = RULER_H + 16;
+/** Keep a few px under the emoji so rise/set times don't collide with the icon. */
+const MOON_TIME_Y = RULER_H + 23;
 const T0 = RULER_H + MOON_BAND_H + SUN_H + 6;
 const TRACK = 58;
 const BAND = 34;
@@ -144,15 +144,15 @@ interface Props {
   showNeedle?: boolean;
   /** First load only — inline placeholder, not the full-page loader. */
   loading?: boolean;
-  /** Day boundary: "ahoratra" = sunrise→sunrise (default), "din-raat" = midnight→midnight. */
+  /** Day boundary: "Day-Night" = sunrise→sunrise (default), "Calendar Day" = midnight→midnight. */
   mode?: DayCycleMode;
   onModeChange?: (mode: DayCycleMode) => void;
-  /** Civil (midnight→midnight) timeline — only used in din-raat mode. */
+  /** Civil (midnight→midnight) timeline — only used in Calendar Day mode. */
   civil?: CivilTimeline;
   civilLoading?: boolean;
 }
 
-export type DayCycleMode = "ahoratra" | "din-raat";
+export type DayCycleMode = "Day-Night" | "Calendar Day";
 
 function DayCycleToggle({
   mode,
@@ -163,8 +163,8 @@ function DayCycleToggle({
 }) {
   const { pick } = useLocale();
   const options: Array<{ value: DayCycleMode; ne: string; en: string }> = [
-    { value: "ahoratra", ne: "अहोरात्र", en: "Ahoratra" },
-    { value: "din-raat", ne: "दिन-रात", en: "Din-raat" },
+    { value: "Day-Night", ne: "अहोरात्र", en: "Day-Night" },
+    { value: "Calendar Day", ne: "दिन-रात", en: "Calendar Day" },
   ];
   return (
     <div className="inline-flex overflow-hidden rounded-md border border-border" role="radiogroup" aria-label={pick("दिन सीमा", "Day boundary")}>
@@ -198,7 +198,7 @@ function DayTimelineBand({
 }) {
   const { pick } = useLocale();
   const subtitle =
-    mode === "din-raat"
+    mode === "Calendar Day"
       ? pick("पूर्ण पञ्चाङ्ग रेखा · मध्यरातदेखि मध्यरात", "Full panchanga timeline · midnight to midnight")
       : pick("पूर्ण पञ्चाङ्ग रेखा · सूर्योदयदेखि सूर्योदय", "Full panchanga timeline · sunrise to sunrise");
   return (
@@ -251,13 +251,13 @@ export function DayTimeline({
   needleClock,
   showNeedle = true,
   loading = false,
-  mode = "ahoratra",
+  mode = "Day-Night",
   onModeChange,
   civil,
   civilLoading = false,
 }: Props) {
   const { pick, digits, lang } = useLocale();
-  const isCivil = mode === "din-raat";
+  const isCivil = mode === "Calendar Day";
   const data = useMemo(() => {
     if (isCivil) return civil ? buildCivilTimelineData(civil, p) : null;
     return p ? buildDayTimelineData(p, dateAd) : null;
@@ -649,7 +649,7 @@ export function DayTimeline({
           {tracks.map((tr, ti) => (
             <span
               key={tr.key}
-              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-sm font-bold leading-none text-foreground [font-family:var(--font-sans)] sm:text-sm"
+              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-sm font-bold leading-none text-foreground [font-family:Mukta,sans-serif] sm:text-sm"
               style={{ top: `${((trackY(ti) + BAND / 2) / H) * 100}%` }}
             >
               {tr.ne}
@@ -672,7 +672,7 @@ export function DayTimeline({
                 <span className="text-sm font-semibold">
                   {pick(a.detailNe, a.detailEn)}
                 </span>
-                <span className="ml-auto shrink-0 pl-2 font-mono text-sm font-semibold">
+                <span className="ml-auto shrink-0 pl-2 text-sm font-semibold [font-family:Mukta,sans-serif]">
                   {tLabel(a.startG)} – {tLabel(a.endG)}
                 </span>
               </li>
@@ -692,8 +692,11 @@ export function DayTimeline({
           <div className="grid grid-cols-2 min-[380px]:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
             {planets.map(
               ({
+                key: planetKey,
                 label,
+                labelEn,
                 rashiNe,
+                rashiEn,
                 coords,
                 nakshatraNe,
                 nakshatraEn,
@@ -701,8 +704,11 @@ export function DayTimeline({
                 nakshatraLordNe,
                 nakshatraLordEn,
               }) => {
-              const labelL = pick(label, TL_GRAHA_EN[label] ?? label);
-              const rashiL = pick(rashiNe ?? "—", TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—");
+              const labelL = pick(label, labelEn);
+              const rashiL = pick(
+                rashiNe ?? "—",
+                rashiEn ?? TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—",
+              );
               const nakName = pick(nakshatraNe, nakshatraEn ?? nakshatraNe);
               const padaLabel =
                 pada != null
@@ -713,7 +719,7 @@ export function DayTimeline({
                 nakName && padaLabel ? `${nakName} · ${padaLabel}` : nakName ?? undefined;
               return (
               <div
-                key={label}
+                key={planetKey}
                 className="flex w-full flex-col items-center gap-0.5 rounded-lg bg-foreground/4 px-2 py-1.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]"
                 title={[labelL, rashiL, coords, nakLine, lordL].filter(Boolean).join(" · ")}
               >

@@ -5,6 +5,7 @@ import type { ApiHoraSlot, NavataraRow, PanchangaDay, UdayaLagnaRow } from "@/li
 import { useLocale } from "@/i18n/locale";
 import {
   buildDayTimelineData,
+  CHOGHADIYA_EN,
   choghadiyaQuality,
   choghadiyaTone,
   ghatiToCivilClockLabel,
@@ -18,6 +19,8 @@ import {
   getTarabalaTable,
   getUdayaLagna,
 } from "@/lib/panchanga-format";
+import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { formatNavataraQuality, formatNavataraTara } from "@/lib/navatara-bala";
 import {
   patroEmpty,
   patroMiniSubTab,
@@ -51,16 +54,19 @@ function parseTimeToMinutes(time?: string | null): number | null {
 
 function NavataraAsideList({
   moonLabel,
+  moonLabelEn,
   moonIdx,
   moonRefKey,
   rows,
 }: {
   moonLabel: string | null;
+  moonLabelEn?: string | null;
   moonIdx: number | null;
   moonRefKey: string;
   rows: NavataraRow[];
 }) {
   const { t } = useTranslation();
+  const { pick, lang } = useLocale();
 
   if (!rows.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.unavailable")}</p>;
@@ -68,9 +74,12 @@ function NavataraAsideList({
 
   return (
     <div>
-      {moonLabel ? (
+      {moonLabel || moonLabelEn ? (
         <p className="m-0 mb-2 text-sm font-semibold text-foreground">
-          {t(moonRefKey)}: <strong className="text-accent">{moonLabel}</strong>
+          {t(moonRefKey)}:{" "}
+          <strong className="text-accent">
+            {pick(moonLabel ?? moonLabelEn ?? "", moonLabelEn ?? moonLabel ?? "")}
+          </strong>
         </p>
       ) : null}
       <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
@@ -79,12 +88,12 @@ function NavataraAsideList({
           return (
             <li key={row.name} className={patroNavataraRow(row.tone, isMoon)}>
               <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-                {row.name}
+                {pick(row.name, row.name_en ?? row.name)}
               </span>
-              <span className="w-full text-center text-sm font-semibold leading-snug">
-                {row.tara}
+              <span className="w-full text-center text-xs font-semibold leading-snug">
+                {formatNavataraTara(row.tara, lang)}
                 <span className="mx-1 opacity-55">/</span>
-                {row.quality}
+                {formatNavataraQuality(row.quality, lang)}
               </span>
             </li>
           );
@@ -96,6 +105,7 @@ function NavataraAsideList({
 
 function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   const timeline = buildDayTimelineData(p, dateAd);
   const sunriseMin = parseTimeToMinutes(getSunrise(p));
 
@@ -107,17 +117,19 @@ function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
     <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
       {timeline.choghadiya.map((seg, i) => {
         const tone = choghadiyaTone(seg.name, seg.bad);
-        const quality = choghadiyaQuality(seg.name, seg.bad);
+        const qualityNe = choghadiyaQuality(seg.name, seg.bad);
+        const qualityEn =
+          tone === "good" ? "Good" : tone === "bad" ? "Inauspicious" : "Neutral";
         const range = `${ghatiToCivilClockLabel(seg.startG, sunriseMin)} – ${ghatiToCivilClockLabel(seg.endG, sunriseMin)}`;
         return (
           <li key={`${seg.name}-${i}`} className={patroNavataraRow(tone === "good" ? "good" : tone === "bad" ? "bad" : "neutral")}>
             <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-              {seg.name}
+              {pick(seg.name, CHOGHADIYA_EN[seg.name] ?? seg.name)}
             </span>
-            <span className="mono w-full text-center text-sm font-semibold leading-snug">
+            <span className="mono w-full text-center text-xs font-semibold leading-snug">
               {range}
               <span className="mx-1 opacity-55">/</span>
-              {quality}
+              {pick(qualityNe, qualityEn)}
             </span>
           </li>
         );
@@ -144,6 +156,7 @@ function HoraList({ p }: { p: PanchangaDay }) {
 }
 
 function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
+  const { pick } = useLocale();
   const start = formatClockNepali(slot.start_local_time_short) ?? slot.start_local_time_short;
   const end = formatClockNepali(slot.end_local_time_short) ?? slot.end_local_time_short;
   const tone = slot.tone === "bad" ? "bad" : "good";
@@ -151,12 +164,15 @@ function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
   return (
     <li className={patroNavataraRow(tone)}>
       <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-        {slot.planet_ne}
+        {pick(
+          slot.planet_ne,
+          GRAHA_NAME[slot.planet as GrahaKey]?.en ?? slot.planet_en ?? slot.planet ?? slot.planet_ne,
+        )}
       </span>
-      <span className="mono w-full text-center text-sm font-semibold leading-snug">
+      <span className="mono w-full text-center text-xs font-semibold leading-snug">
         {start} – {end}
         <span className="mx-1 opacity-55">/</span>
-        {slot.quality_ne}
+        {pick(slot.quality_ne, slot.tone === "bad" ? "Inauspicious" : "Auspicious")}
       </span>
     </li>
   );
@@ -183,6 +199,7 @@ function PushkaraList({ p }: { p: PanchangaDay }) {
 }
 
 function PushkaraSlot({ row, pushkaraLabel }: { row: UdayaLagnaRow; pushkaraLabel: string }) {
+  const { pick } = useLocale();
   const hits = row.pushkara_navamsha ?? [];
   const times = hits
     .map((hit) => formatClockNepali(hit.local_time_short ?? hit.local_time) ?? hit.local_time_short)
@@ -198,9 +215,9 @@ function PushkaraSlot({ row, pushkaraLabel }: { row: UdayaLagnaRow; pushkaraLabe
   return (
     <li className={patroNavataraRow(hasPushkara ? "good" : "neutral")}>
       <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-        {row.name_ne ?? row.name}
+        {pick(row.name_ne ?? row.name, row.name ?? row.name_ne)}
       </span>
-      <span className="mono w-full text-center text-sm font-semibold leading-snug">
+      <span className="mono w-full text-center text-xs font-semibold leading-snug">
         {hasPushkara ? times : range}
         <span className="mx-1 opacity-55">/</span>
         {hasPushkara ? pushkaraLabel : "—"}
@@ -246,6 +263,7 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
         {subTab === "tarabal" ? (
           <NavataraAsideList
             moonLabel={tara?.moon_label ?? null}
+            moonLabelEn={tara?.moon_label_en ?? null}
             moonIdx={tara?.moon_index ?? null}
             moonRefKey="muhurta_aside.moon_ref_tarabal"
             rows={tara?.rows ?? []}
@@ -254,6 +272,7 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
         {subTab === "chandrabal" ? (
           <NavataraAsideList
             moonLabel={chandra?.moon_label ?? null}
+            moonLabelEn={chandra?.moon_label_en ?? null}
             moonIdx={chandra?.moon_index ?? null}
             moonRefKey="muhurta_aside.moon_ref_chandrabal"
             rows={chandra?.rows ?? []}

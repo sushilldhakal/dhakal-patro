@@ -268,7 +268,7 @@ function angaEnd(anga: CalendarDayAnga | undefined, d: (v: string | number) => s
 const KARTAVYA: Record<Phase, { ne: string; en: string }> = {
   krishna: {
     ne: "कृष्ण पक्षमा चन्द्रमा क्रमशः क्षीण हुँदै जान्छ। श्राद्ध, तर्पण र पितृकार्य, संयमित आहार, जप र दान शुभ मानिन्छ। एकादशीमा व्रत र औंसीमा पितृ-तर्पण गरिन्छ; नयाँ मांगलिक कार्य प्रायः शुक्ल पक्षमा सारिन्छ।",
-    en: "During Krishna Paksha the Moon gradually wanes. Shraddha, tarpana and ancestral rites, moderate diet, japa and charity are considered auspicious. Ekadashi fasting and ancestral tarpana on Amavasya are observed; new auspicious ceremonies are usually moved to Shukla Paksha.",
+    en: "During Krishna Paksha the Moon gradually wanes. Shraddha, tarpana and ancestral rites, moderate diet, japa and charity are considered auspicious. Ekadashi fasting and ancestral tarpana on Aaushi are observed; new auspicious ceremonies are usually moved to Shukla Paksha.",
   },
   shukla: {
     ne: "शुक्ल पक्षमा चन्द्रमा क्रमशः वृद्धि हुँदै जान्छ। विवाह, व्रतबन्ध, गृहप्रवेश, यात्रा र नयाँ कार्यारम्भ जस्ता मांगलिक कार्य शुभ मानिन्छन्। एकादशी व्रत र पूर्णिमामा सत्यनारायण पूजा/व्रत गरिन्छ।",
@@ -944,7 +944,7 @@ export function DainikKranti() {
                 {grahas.map((g) => (
                   <li key={g.key} className="flex items-baseline justify-between gap-2">
                     <span className="text-foreground">
-                      {pick(g.name_ne, g.name_vedic ?? g.name_ne)}
+                      {pick(g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}
                       <span className="ml-1">{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
                     </span>
                     {g.next_pada_entry ? (
@@ -1013,7 +1013,7 @@ export function DainikKranti() {
                   const m = motionNe(g);
                   return (
                     <div key={g.key} className="flex items-baseline gap-1.5 text-sm">
-                      <span className="text-foreground">{pick(g.name_ne, g.name_vedic ?? g.name_ne)}</span>
+                      <span className="text-foreground">{pick(g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}</span>
                       <span>{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
                       {g.dms_in_rashi ? <span className="text-foreground">{dg(g.dms_in_rashi)}</span> : null}
                       <span

@@ -105,7 +105,7 @@ export function tithiIndexFromElongation(E: number): number {
   return Math.floor((((E % 360) + 360) % 360) / 12);
 }
 
-/** Map moon–sun elongation E to wheel longitude (0° Amavasya at bottom). */
+/** Map moon–sun elongation E to wheel longitude (0° Aaushi at bottom). */
 export function mapElongation(E: number): number {
   const e = ((E % 360) + 360) % 360;
   return e <= 180 ? 180 - e : 540 - e;
@@ -147,7 +147,7 @@ export function tithiIndexFromPanchanga(p: PanchangaDay): number {
   const nameNe = normalizeTithiName(raw);
 
   if (/पूर्णिमा|purnima/i.test(nameNe)) return 14;
-  if (/औंसी|औंसी|aunsi|amavasya/i.test(nameNe)) return 29;
+  if (/औंसी|औंसी|aunsi|Aaushi/i.test(nameNe)) return 29;
 
   const krishna = isKrishnaPaksha(p);
   const rangeStart = krishna ? 15 : 0;
