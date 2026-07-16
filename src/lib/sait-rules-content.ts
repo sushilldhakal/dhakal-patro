@@ -455,8 +455,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "अधिकमास (मलमास) — वास्तुकर्म (घर निर्माण) वर्जित; मलिम्लुच चल्दा शिलान्यास हुँदैन।",
         en: "Adhik-māsa (Malmāsa) — vāstu karma (house construction) is barred; no foundation-laying during malimluca.",
         source: {
-          ne: "धर्मसिन्धु — मलमासे वर्ज्यानि (काशीनाथ उपाध्याय)",
-          en: "Dharma Sindhu — Malmāse Varjyāni (Kāśīnātha Upādhyāya)",
+          ne: "धर्मसिन्धु १ — मलमासे वर्ज्यानि (प्रथम परिच्छेद)",
+          en: "Dharma Sindhu 1 — Malmāse Varjyāni (Prathama Pariccheda)",
         },
         shloka:
           "उपाकर्मोत्सर्जने अष्टकाश्राद्धानि गृहप्रवेशचूडामौञ्जीबंधविवाहास्तीर्थादि-यात्रा वास्तुकर्मैतान्यधिवर्ज्यानि ।",
@@ -494,9 +494,10 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "तिथि — प्रतिपदा (१), रिक्ता (४,९,१४) र अमावस्या मात्र वर्जित; बाँकी सबै (पूर्णिमासहित) ग्राह्य। विवाहजस्तो कडा संस्कार नभएकाले तिथि उदार।",
         en: "Tithi — only Pratipadā (1), rikta (4,9,14) and Amāvasyā are barred; all the rest (Pūrṇimā included) are allowed. The gate is lenient — a house-start is not a marriage-grade saṃskāra.",
         source: {
-          ne: "मुहूर्त चिन्तामणि — वास्तु प्रकरण अध्याय १२, श्लोक १८",
-          en: "Muhūrta Chintāmaṇi — Vāstu prakaraṇa ch. 12, verse 18",
+          ne: "मुहूर्त चिन्तामणि १२.१८ (वास्तु प्रकरण)",
+          en: "Muhūrta Chintāmaṇi 12.18 (Vāstu Prakaraṇa)",
         },
+        shloka: MC_GP_TITHI_SHLOKA,
         gloss: {
           ne: "शास्त्रीय निषेधमा आइत/मंगल, रिक्ता (४,९,१४), पर्व (८,१४,१५), औंसी र प्रतिपदा पर्छन्। हाम्रो उदार नियम: प्रतिपदा, रिक्ता र अमावस्या मात्र वर्जित — बाँकी ग्राह्य (शास्त्रबाट प्रेरित भएर प्रणालीले यसरी लागू गर्छ)।",
           en: "The classical prohibition covers Sunday/Tuesday, rikta (4,9,14), parva (8,14,15), Amāvasyā and Pratipadā. Our lenient gate: only Pratipadā, rikta and Amāvasyā are barred — the rest qualify (inspired by the śāstra, applied this way by the system).",
@@ -510,7 +511,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
           ne: "मुहूर्त चिन्तामणि — वास्तु प्रकरण अध्याय १२, श्लोक १५ (आचार्य श्रीराम / राम दैवज्ञ)",
           en: "Muhūrta Chintāmaṇi — Vāstu prakaraṇa ch. 12, verse 15 (Ācārya Śrīrāma / Rāma Daivajña)",
         },
-        shloka: "मृदुकुध्रुववारुणमारुतधनिष्ठाकरतिष्यैः । गृहमारम्भणं शुभदं...",
+        shloka: "मृदुकुध्रुववारुणमारुतधनिष्ठाकरतिष्यैः । गृहमारम्भणं शुभदं… ॥",
         gloss: {
           ne: "श्लोकअनुसार: मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), कु/रोहिणी, ध्रुव (तीन उत्तरा), वारुण (शतभिषा), मारुत (स्वाती), धनिष्ठा, कर (हस्त), तिष्य (पुष्य)। पुनर्वसु र श्रवण नेपाली पञ्चाङ्ग तथा अन्य वास्तु परम्परामा ग्राह्य मानिएकाले प्रणालीले पनि स्वीकार गर्छ — यी दुई उक्त श्लोकबाट लिइएका होइनन्।",
           en: "From the verse: Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Ku/Rohiṇī, Dhruva (the three Uttarās), Vāruṇa (Śatabhiṣā), Māruta (Svātī), Dhaniṣṭhā, Kara (Hasta), Tiṣya (Puṣya). Punarvasu and Śravaṇa are accepted because Nepali panchāṅga and other vāstu traditions admit them — they are not taken from this quoted verse.",
@@ -520,7 +521,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "vara",
         ne: "वार — शास्त्रीय सूचीमा मंगलबार र शनिबार वर्जित; अन्य सबै वार ग्राह्य।",
         en: "Vāra — in the classical list, Tuesday and Saturday are barred; all other weekdays are acceptable.",
-        source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi" },
+        source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि १२.१८", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi 12.18" },
         shloka: "वर्ज्या रविभौमरिताः पर्वामाप्रतिपदोऽपि गृहचक्रे । क्षितितनयदिवसवारो न शुभकृदिति यदि पितामहोक्ते ।",
         gloss: {
           ne: "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार हुन् — गृहचक्रमा (भवन निर्माण) रवि, मंगलवार र पर्व, अमावस्या, प्रतिपदा वर्जित। यद्यपि यहाँ रविवार पनि निषेधमा उल्लिखित छ, नेपाली परम्परा र प्रणालीको व्यावहारिक नियममा आइतवार स्वीकार्य मानिएको छ; मंगल र शनि मात्र वर्जित।",
