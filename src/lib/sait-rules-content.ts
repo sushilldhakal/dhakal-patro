@@ -23,6 +23,36 @@ const MC_1_34_GLOSS: BilingualText = {
   en: "Birth star/month/tithi, Vyatīpāta, Bhadrā (Viṣṭi), Vaidhṛti, Amāvasyā, parental-death days, a fortnight with two lost tithis (13-day pakṣa), Adhik-māsa and related defects are barred as mahā-doṣa for auspicious rites.",
 };
 
+/** Muhūrta Chintāmaṇi 2.36 — Agni-vāsa (abode of fire) for havana/homa. */
+const MC_2_36_AGNIVASA_SHLOKA =
+  "संका तिथिवारयुता कृताप्तशेषा गुणैर्भुवि वह्निवासः । सौख्याय होमे शशिपुत्रमेशे प्राणार्थनाशौ दिवि भूतले च ॥ ३६ ॥";
+
+const MC_2_36_AGNIVASA_GLOSS: BilingualText = {
+  ne: "तिथि र वार जोडेर निकालिएको शेषबाट अग्निको वास थाहा हुन्छ — अग्नि पृथ्वीमा (भू) रहे होम सुखदायी; आकाश (दिवि) वा पाताल (भूतल) मा रहे प्राण र धनको हानि हुन्छ।",
+  en: "From the remainder of (tithi + vāra) the abode of Agni is found — with the fire on Earth (bhū) the homa brings happiness; in Heaven (divi) or the nether world (bhūtala) it causes loss of life and wealth.",
+};
+
+/** Muhūrta Chintāmaṇi 1.3 — presiding deities (lords) of the tithis. */
+const MC_1_3_TITHISHA_SHLOKA =
+  "तिथ्यीश वह्निर्द्द्वौ गौरी गणेशोऽहिगुहो रविः । शिवो दुर्गांतको विश्वे हरिः कामः शिवः शशी ॥ ३ ॥";
+
+const MC_1_3_TITHISHA_GLOSS: BilingualText = {
+  ne: "तिथिका अधिपति देवता क्रमशः — अष्टमी र चतुर्दशीका अधिपति शिव हुन्, त्यसैले यी तिथि शिव आराधनाका लागि स्वाभाविक अनुकूल मानिन्छन्।",
+  en: "The presiding deities of the tithis in order — Aṣṭamī and Chaturdaśī are ruled by Śiva, so these tithis are held naturally suited to Śiva worship.",
+};
+
+/**
+ * Muhūrta Chintāmaṇi 2.36 (commentary/expansion) — for Nitya (regular) and
+ * Naimittika (occasional) rites the Agni-vāsa check is not strictly mandatory.
+ */
+const MC_2_36_NITYA_SHLOKA =
+  "नित्ये नैमित्तिके कार्ये न चाब्दे मुनिभिः स्मृतः । संस्कारेषु विचारोऽस्य न कार्यो नापि वैष्णवे ॥";
+
+const MC_2_36_NITYA_GLOSS: BilingualText = {
+  ne: "मुनिहरूका अनुसार नित्य र नैमित्तिक कर्म (जस्तै सामान्य रुद्राभिषेक), वार्षिक अनुष्ठान, संस्कार तथा वैष्णव कार्यमा यस अग्निवासको विचार अनिवार्य छैन।",
+  en: "Per the sages, for Nitya (regular) and Naimittika (occasional) rites — such as a general Rudrābhiṣeka — for annual observances, saṃskāras and Vaiṣṇava acts, this Agni-vāsa need not be strictly considered.",
+};
+
 /**
  * One rule the engine applies. `ne`/`en` are the plain-language rule; the
  * optional `source` (short citation), `shloka` (Sanskrit verse, Devanāgarī) and
@@ -549,9 +579,28 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     rules: [
       { ne: "शिववास सूत्र — पूर्ण तिथि (१–३०) मा (२×तिथि+५) लाई ७ ले भाग गर्दा शेष १/२/३ (कैलाश/गौरी/नन्दी) भए शुभ।", en: "Śiva-vāsa — on the absolute tithi (1–30), (2×tithi+5) mod 7 ∈ {1,2,3} (Kailāsa/Gaurī/Nandi) is auspicious." },
       { ne: "सभा, भोजन, क्रीडा, श्मशान (शेष ४/५/६/०) वर्जित; अमावस्या वर्जित।", en: "Sabhā, Bhojana, Krīḍā, Śmaśāna (remainders 4/5/6/0) avoided; Amāvasyā excluded." },
-      { ne: "अग्निवास सूत्र — हवनका लागि अग्नि पृथ्वीमा हुनुपर्छ: (तिथि+वार) लाई ४ ले भाग गर्दा शेष २/३ भए शुभ।", en: "Agni-vāsa — for the homa the fire must be on Earth: (tithi+vāra) mod 4 ∈ {2,3} is auspicious." },
+      {
+        ne: "अग्निवास सूत्र — हवनका लागि अग्नि पृथ्वीमा हुनुपर्छ: (तिथि+वार) लाई ४ ले भाग गर्दा शेष २/३ भए शुभ।",
+        en: "Agni-vāsa — for the homa the fire must be on Earth: (tithi+vāra) mod 4 ∈ {2,3} is auspicious.",
+        source: { ne: "मुहूर्त चिन्तामणि २.३६", en: "Muhūrta Chintāmaṇi 2.36" },
+        shloka: MC_2_36_AGNIVASA_SHLOKA,
+        gloss: MC_2_36_AGNIVASA_GLOSS,
+      },
+      {
+        ne: "नित्य/नैमित्तिक कर्म (सामान्य रुद्राभिषेक) मा अग्निवासको विचार अनिवार्य छैन — मुनिमत।",
+        en: "For Nitya/Naimittika rites (a general Rudrābhiṣeka) the Agni-vāsa check is not strictly mandatory — per the sages.",
+        source: { ne: "मुहूर्त चिन्तामणि २.३६ (भाष्य)", en: "Muhūrta Chintāmaṇi 2.36 (comm.)" },
+        shloka: MC_2_36_NITYA_SHLOKA,
+        gloss: MC_2_36_NITYA_GLOSS,
+      },
       { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
-      { ne: "अष्टमी/चतुर्दशी तिथि र श्रावण/कार्तिक महिना विशेष उत्तम (वरीयता मात्र, अनिवार्य होइन); चन्द्र/तारा बल जातक-सापेक्ष।", en: "Aṣṭamī/Chaturdaśī tithi and the Śrāvaṇa/Kārtika months are especially favoured (a preference, not a gate); Chandra/Tārā Bala is native-specific." },
+      {
+        ne: "अष्टमी/चतुर्दशी तिथि र श्रावण/कार्तिक महिना विशेष उत्तम (वरीयता मात्र, अनिवार्य होइन); चन्द्र/तारा बल जातक-सापेक्ष।",
+        en: "Aṣṭamī/Chaturdaśī tithi and the Śrāvaṇa/Kārtika months are especially favoured (a preference, not a gate); Chandra/Tārā Bala is native-specific.",
+        source: { ne: "मुहूर्त चिन्तामणि १.३", en: "Muhūrta Chintāmaṇi 1.3" },
+        shloka: MC_1_3_TITHISHA_SHLOKA,
+        gloss: MC_1_3_TITHISHA_GLOSS,
+      },
       { ne: "यो दिनको सूर्योदय पञ्चाङ्गमा गणना हुन्छ — लग्न विण्डो आवश्यक पर्दैन।", en: "Evaluated on the day's sunrise panchāṅga — no lagna window is needed." },
     ],
   },
