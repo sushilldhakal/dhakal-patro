@@ -580,8 +580,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       { ne: "शिववास सूत्र — पूर्ण तिथि (१–३०) मा (२×तिथि+५) लाई ७ ले भाग गर्दा शेष १/२/३ (कैलाश/गौरी/नन्दी) भए शुभ।", en: "Śiva-vāsa — on the absolute tithi (1–30), (2×tithi+5) mod 7 ∈ {1,2,3} (Kailāsa/Gaurī/Nandi) is auspicious." },
       { ne: "सभा, भोजन, क्रीडा, श्मशान (शेष ४/५/६/०) वर्जित; अमावस्या वर्जित।", en: "Sabhā, Bhojana, Krīḍā, Śmaśāna (remainders 4/5/6/0) avoided; Amāvasyā excluded." },
       {
-        ne: "अग्निवास सूत्र — हवनका लागि अग्नि पृथ्वीमा हुनुपर्छ: (तिथि+वार) लाई ४ ले भाग गर्दा शेष २/३ भए शुभ।",
-        en: "Agni-vāsa — for the homa the fire must be on Earth: (tithi+vāra) mod 4 ∈ {2,3} is auspicious.",
+        ne: "अग्निवास सूत्र — हवनका लागि अग्नि पृथ्वीमा हुनुपर्छ: (तिथि + वार + १) लाई ४ ले भाग गर्दा शेष ० वा ३ भए शुभ (शेष १ स्वर्ग, २ पाताल — अशुभ)।",
+        en: "Agni-vāsa — for the homa the fire must be on Earth: (tithi + vāra + 1) mod 4 ∈ {0,3} is auspicious (remainder 1 = Heaven, 2 = Pātāla — inauspicious).",
         source: { ne: "मुहूर्त चिन्तामणि २.३६", en: "Muhūrta Chintāmaṇi 2.36" },
         shloka: MC_2_36_AGNIVASA_SHLOKA,
         gloss: MC_2_36_AGNIVASA_GLOSS,
@@ -614,9 +614,23 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       en: "These dates are computed by our own system. This sāit is not lagna-based — for each day the Agni-vāsa formula below is applied to the tithi and weekday.",
     },
     rules: [
-      { ne: "अग्निवास सूत्र — (तिथि+वार) लाई ४ ले भाग गर्दा शेष २ वा ३ भए अग्नि पृथ्वी/पातालमा — हवनका लागि शुभ।", en: "Agni-vāsa — when (tithi+vāra) mod 4 ∈ {2,3}, Agni resides on Earth/Pātāla — auspicious for havan." },
+      {
+        ne: "अग्निवास सूत्र — (तिथि + वार + १) लाई ४ ले भाग गर्दा शेष ० वा ३ आए अग्नि पृथ्वी (भूमि) मा हुन्छ, जुन हवनका लागि शुभ मानिन्छ।",
+        en: "Agni-vāsa — (tithi + vāra + 1) mod 4: a remainder of 0 or 3 puts Agni on Earth (Bhūmi), which is auspicious for havan.",
+        source: { ne: "मुहूर्त चिन्तामणि २.३६", en: "Muhūrta Chintāmaṇi 2.36" },
+        shloka: MC_2_36_AGNIVASA_SHLOKA,
+        gloss: MC_2_36_AGNIVASA_GLOSS,
+      },
+      { ne: "शेष १ आए अग्नि स्वर्गमा (प्राणनाश) र शेष २ आए पातालमा (धननाश) — दुवै अशुभ मानिन्छ।", en: "Remainder 1 puts Agni in Heaven (loss of life) and remainder 2 in Pātāla (loss of wealth) — both inauspicious." },
       { ne: "पूर्ण तिथि (शुक्ल १–१५, कृष्ण १६–३०) र वार (आइत=१ … शनि=७) मा गणना।", en: "Computed on the absolute tithi (śukla 1–15, kṛṣṇa 16–30) and vāra (Sun=1 … Sat=7)." },
-      { ne: "यो दिनको तिथि–वारमा आधारित छ — लग्न विण्डो आवश्यक पर्दैन।", en: "Based on the day's tithi–vāra — no lagna window is needed." },
+      {
+        ne: "नित्य, नैमित्तिक र आब्दिक (वार्षिक) कर्ममा अग्निवासको विचार अनिवार्य छैन — यो मुख्यतः काम्य कर्मका लागि हो; उपनयन/विवाह जस्ता संस्कारमा पनि अनिवार्य छैन।",
+        en: "For Nitya, Naimittika and Ābdika (annual) rites the Agni-vāsa check is not mandatory — it applies mainly to Kāmya (desire-driven) rites; major saṃskāras such as Upanayana/marriage also do not strictly require it.",
+        source: { ne: "मुहूर्त चिन्तामणि २.३६ (भाष्य)", en: "Muhūrta Chintāmaṇi 2.36 (comm.)" },
+        shloka: MC_2_36_NITYA_SHLOKA,
+        gloss: MC_2_36_NITYA_GLOSS,
+      },
+      { ne: "अग्निवास तिथि र वारबाट मात्र गणना हुन्छ (यो प्रणालीको गणना विधि हो, श्लोकको छुट्टै नियम होइन)।", en: "Agni-vāsa is computed from the tithi and vāra alone (our system's method, not a separate clause of the verse)." },
     ],
   },
   annaprasan: {
