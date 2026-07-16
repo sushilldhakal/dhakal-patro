@@ -468,7 +468,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       {
         ne: "समय — शिलान्यास (जग हाल्ने) दिनको समयमा मात्र (सूर्योदय–सूर्यास्त)।",
         en: "Time — foundation-laying is a daytime rite (sunrise→sunset only).",
-        source: { ne: "मुहूर्त चिन्तामणि (वास्तु — दिवाकाल निर्देश)", en: "Muhūrta Chintāmaṇi (Vāstu — daytime instruction)" },
+        source: { ne: "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · दिवाकाल निर्देश)", en: "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · daytime instruction)" },
         gloss: {
           ne: "मुहूर्त चिन्तामणिले शिलान्यास रात्रिमा नगरी दिवाकालमा गर्न निर्देश गर्छ। प्रणालीले यसलाई सूर्योदय–सूर्यास्तसम्मको स्क्यानका रूपमा लागू गर्छ।",
           en: "Muhūrta Chintāmaṇi directs that foundation-laying be done in daytime, not at night. The system applies this as a sunrise→sunset scan.",
@@ -542,7 +542,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "yoga",
         ne: "योग — व्यतीपात र वैधृति योग वर्जित।",
         en: "Yoga — Vyatīpāta & Vaidhṛti yoga barred.",
-        source: { ne: "मुहूर्त चिन्तामणि अध्याय १, श्लोक ३४", en: "Muhūrta Chintāmaṇi ch. 1, verse 34" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)" },
         shloka:
           "जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ । न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥",
         gloss: {
@@ -554,7 +554,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "karana",
         ne: "करण — विष्टि (भद्रा) करण वर्जित।",
         en: "Karaṇa — Viṣṭi (Bhadrā) karaṇa barred.",
-        source: { ne: "मुहूर्त चिन्तामणि अध्याय १, श्लोक ३४", en: "Muhūrta Chintāmaṇi ch. 1, verse 34" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)" },
         shloka:
           "जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ । न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥",
         gloss: {
@@ -566,7 +566,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "lagna",
         ne: "लग्न — स्थिर (वृष, सिंह, वृश्चिक, कुम्भ) प्राथमिकता, द्विस्वभाव स्वीकार्य; चर लग्न वर्जित — भवन स्थिर रहोस्।",
         en: "Lagna — fixed (Vṛṣa, Siṃha, Vṛśchika, Kumbha) preferred, dual accepted; movable lagnas barred — so the building is stable.",
-        source: { ne: "मुहूर्त चिन्तामणि (वसिष्ठ मत) ", en: "Muhūrta Chintāmaṇi (Vasiṣṭha's view)" },
+        source: { ne: "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · वसिष्ठ)", en: "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · Vasiṣṭha)" },
         shloka:
           "स्थिरलग्ने गृहं कार्यं चरं च न कदाचन । द्विस्वभावं भवेच्छस्तं लग्नदोषविवर्जितम् ॥",
         gloss: {
@@ -590,9 +590,10 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "दुर्मुहूर्त परेको अवधि छाडिन्छ (पूरै दिन होइन); संक्रान्ति (साधारण ±६ घण्टा, प्रमुख ±१६ घण्टा) र ग्रहणको दिन वर्जित।",
         en: "Dur-muhūrta skips only the affected period (not the whole day); Sankrānti (ordinary ±6h, cardinal ±16h) and the eclipse day are barred.",
         source: {
-          ne: "मुहूर्त चिन्तामणि · दिननिर्णय (संक्रान्ति·ग्रहण) — प्रणालीको व्यावहारिक लागू",
-          en: "Muhūrta Chintāmaṇi · Dinanirṇaya (Sankrānti · eclipse) — practical system application",
+          ne: "मुहूर्त चिन्तामणि — ग्रहण १.३२ · दुर्मुहूर्त १.३७–४० (शुभाशुभ प्रकरण)",
+          en: "Muhūrta Chintāmaṇi — eclipse 1.32 · Dur-muhūrta 1.37–40 (Śubhāśubha Prakaraṇa)",
         },
+        shloka: MC_GP_GRAHANA_SHLOKA,
         gloss: {
           ne: "शास्त्रमा संक्रान्ति आसपासको अवधि त्याज्य मानिएको छ (संस्करणअनुसार घटी फरक हुन सक्छ)। प्रणालीले त्यसलाई व्यावहारिक रूपमा साधारण ±६ र प्रमुख ±१६ घण्टाको सुरक्षा अवधिका रूपमा लागू गर्छ; दुर्मुहूर्त घडी र ग्रहणको दिन पनि छाडिन्छ।",
           en: "Classically, time around Sankrānti is rejected (ghaṭī values vary by edition). The system applies this practically as ±6h ordinary and ±16h cardinal buffers; Dur-muhūrta slices and the eclipse day are also skipped.",
