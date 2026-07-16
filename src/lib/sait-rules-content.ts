@@ -120,6 +120,24 @@ const MC_GP_NAK_GLOSS: BilingualText = {
   en: "Gṛha-praveśa is auspicious in the Mṛdu, Dhruva (fixed), Miśra, Kṣipra (Laghu) and Chara nakṣatra classes.",
 };
 
+/** Muhūrta Chintāmaṇi 12 (Vāstu, quoting Vasiṣṭha) — fixed lagna for house works. */
+const MC_GP_LAGNA_SHLOKA =
+  "स्थिरलग्ने गृहं कार्यं चरं च न कदाचन । द्विस्वभावं भवेच्छस्तं लग्नदोषविवर्जितम् ॥";
+
+const MC_GP_LAGNA_GLOSS: BilingualText = {
+  ne: "गृहनिर्माण र प्रवेश सधैं स्थिर लग्नमा गर्नुपर्छ, चर लग्नमा कहिल्यै होइन; द्विस्वभाव लग्न अन्य दोषरहित भए स्वीकार्य। (वसिष्ठ-वचन)",
+  en: "Construction and entry should always be done in a fixed (sthira) lagna, never in a movable (chara) one; a dual (dvisvabhāva) sign is acceptable if free of other defects. (attributed to Sage Vasiṣṭha)",
+};
+
+/** Muhūrta Chintāmaṇi 1.32 — avoid the days around an eclipse for auspicious work. */
+const MC_GP_GRAHANA_SHLOKA =
+  "सर्वस्मिन्विधुपापयुक्तनलवाधर्चे निशार्धाटीत्र्यंशं वै कुनवांशकं ग्रहणतः पूर्वं दिनानां त्रयम् ।";
+
+const MC_GP_GRAHANA_GLOSS: BilingualText = {
+  ne: "ग्रहण (सूर्य/चन्द्र) को अगाडि–पछाडिको अवधि — सामान्यतः तीन दिन — शुभ कार्यका लागि वर्ज्य।",
+  en: "The period around an eclipse (solar/lunar) — typically three days before and after — is barred for auspicious work.",
+};
+
 /**
  * One rule the engine applies. `ne`/`en` are the plain-language rule; the
  * optional `source` (short citation), `shloka` (Sanskrit verse, Devanāgarī) and
@@ -643,8 +661,20 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
           en: "When Jupiter or Venus is combust (asta), bāla, vṛddha or during malimluca, auspicious works are barred. Seven days before setting is vṛddha; seven days after rising is bāla — the medium rule. The system applies the same combust and bāla/vṛddha filter to gṛha-praveśa.",
         },
       },
-      { ne: "लग्न — स्थिर र द्विस्वभाव लग्न मात्र स्वीकार्य; चर लग्न वर्जित।", en: "Lagna — only fixed (sthira) and dual (dvisvabhāva) ascendants accepted; movable ascendants rejected." },
-      { ne: "दोष — दग्धा, शून्य, मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु), दुर्मुहूर्त (अवधि मात्र), संक्रान्ति र ग्रहणको दिन वर्जित।", en: "Doṣa — Dagdha, Śūnya, malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu), Dur-muhūrta (period only), Sankrānti and the eclipse day excluded." },
+      {
+        ne: "लग्न — स्थिर र द्विस्वभाव लग्न मात्र स्वीकार्य; चर लग्न वर्जित।",
+        en: "Lagna — only fixed (sthira) and dual (dvisvabhāva) ascendants accepted; movable ascendants rejected.",
+        source: { ne: "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · वसिष्ठ-वचन)", en: "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · Vasiṣṭha)" },
+        shloka: MC_GP_LAGNA_SHLOKA,
+        gloss: MC_GP_LAGNA_GLOSS,
+      },
+      {
+        ne: "दोष — दग्धा, शून्य, मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु), दुर्मुहूर्त (अवधि मात्र), संक्रान्ति र ग्रहणको दिन वर्जित।",
+        en: "Doṣa — Dagdha, Śūnya, malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu), Dur-muhūrta (period only), Sankrānti and the eclipse day excluded.",
+        source: { ne: "मुहूर्त चिन्तामणि — ग्रहण १.३२, दग्धा १.८, शून्य १.१०, महादोष १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi — eclipse 1.32, Dagdha 1.8, Śūnya 1.10, mahā-doṣa 1.34 (Śubhāśubha Prakaraṇa)" },
+        shloka: MC_GP_GRAHANA_SHLOKA,
+        gloss: MC_GP_GRAHANA_GLOSS,
+      },
     ],
   },
   "byaparik-pratisthan": {
