@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, HeartHandshake, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, HeartHandshake } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
