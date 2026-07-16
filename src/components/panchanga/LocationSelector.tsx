@@ -33,7 +33,7 @@ interface Props {
 }
 
 function cityLabel(city: City): string {
-  return city.ascii_name || city.name;
+  return city.name || city.ascii_name;
 }
 
 // Resolve a 2-letter ISO country code to a readable, localized name

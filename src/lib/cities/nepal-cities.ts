@@ -155,15 +155,15 @@ export function nepalCityLabel(city: NepalCity, lang: string): string {
 /**
  * Adapt a curated Nepal city to the shared `City` shape so it flows through the
  * same combobox/rendering as backend results. Marked `local` so the location is
- * built from lat/lon (not a backend city_id), and localized up front so the
- * generic label helpers show the right language.
+ * built from lat/lon (not a backend city_id). Keep `ascii_name` English so API
+ * resolve never receives Devanagari; `name` is locale-aware for display.
  */
 export function nepalCityToCity(city: NepalCity, lang: string): City {
-  const label = nepalCityLabel(city, lang);
+  const en = nepalCityEnglishLabel(city);
   return {
     id: city.id,
-    name: label,
-    ascii_name: label,
+    name: nepalCityLabel(city, lang),
+    ascii_name: en,
     lat: city.lat,
     lon: city.lon,
     country: "NP",

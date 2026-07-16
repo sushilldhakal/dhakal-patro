@@ -59,14 +59,21 @@ export function locationCacheKey(location?: LocationParams): string {
 function appendLocation(path: string, location?: LocationParams): string {
   if (!location) return path;
   const params = new URLSearchParams();
+  const cityLooksNepali =
+    !!location.city && /[\u0900-\u097F]/.test(location.city);
+  // Prefer city_id. If a stored preference has Devanagari `city=` (from an older
+  // Nepali UI pick) but also has coords, use coords — GeoNames can't resolve नेपाली.
   if (location.city_id != null) {
     params.set("city_id", String(location.city_id));
-  } else if (location.city) {
+  } else if (location.city && !cityLooksNepali) {
     params.set("city", location.city);
-  } else {
+  } else if (location.lat != null || location.lon != null) {
     if (location.lat != null) params.set("lat", String(location.lat));
     if (location.lon != null) params.set("lon", String(location.lon));
     if (location.timezone) params.set("timezone", location.timezone);
+  } else if (location.city) {
+    // Last resort: send as-is (may 400 if Devanagari with no coords).
+    params.set("city", location.city);
   }
   const qs = params.toString();
   if (!qs) return path;

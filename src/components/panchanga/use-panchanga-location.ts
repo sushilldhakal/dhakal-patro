@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LocationParams } from "@/lib/api";
 import { getLocalStorageItem, isBrowser, setLocalStorageItem } from "@/lib/browser";
+import { NEPAL_CITIES, nepalCityEnglishLabel } from "@/lib/cities/nepal-cities";
 
 const STORAGE_KEY = "dhakalPatroLocation";
 
@@ -23,6 +24,45 @@ export function resolveLocationTimezone(location: PanchangaLocation): string {
   return location.params.timezone ?? "Asia/Kathmandu";
 }
 
+function hasDevanagari(value: string): boolean {
+  return /[\u0900-\u097F]/.test(value);
+}
+
+/**
+ * Older Nepali-UI picks stored `city=सिरहा` which GeoNames cannot resolve.
+ * Rewrite those prefs to lat/lon (or drop the bad city name when coords exist).
+ */
+function healStoredLocation(loc: PanchangaLocation): PanchangaLocation {
+  const { params } = loc;
+  if (!params.city || !hasDevanagari(params.city)) return loc;
+
+  if (params.lat != null && params.lon != null) {
+    return {
+      ...loc,
+      params: {
+        lat: params.lat,
+        lon: params.lon,
+        timezone: params.timezone ?? "Asia/Kathmandu",
+      },
+    };
+  }
+
+  const needle = params.city.trim();
+  const match = NEPAL_CITIES.find(
+    (c) => c.name_ne === needle || c.name_ne.startsWith(needle) || needle.startsWith(c.name_ne.split(" ")[0]!),
+  );
+  if (!match) return loc;
+
+  return {
+    label: `${nepalCityEnglishLabel(match)}, NP`,
+    params: {
+      lat: match.lat,
+      lon: match.lon,
+      timezone: "Asia/Kathmandu",
+    },
+  };
+}
+
 function readStoredLocation(): PanchangaLocation {
   if (!isBrowser) return DEFAULT_PANCHANGA_LOCATION;
   try {
@@ -30,7 +70,11 @@ function readStoredLocation(): PanchangaLocation {
     if (!raw) return DEFAULT_PANCHANGA_LOCATION;
     const parsed = JSON.parse(raw) as PanchangaLocation;
     if (!parsed?.label || !parsed?.params) return DEFAULT_PANCHANGA_LOCATION;
-    return parsed;
+    const healed = healStoredLocation(parsed);
+    if (healed !== parsed) {
+      setLocalStorageItem(STORAGE_KEY, JSON.stringify(healed));
+    }
+    return healed;
   } catch {
     return DEFAULT_PANCHANGA_LOCATION;
   }
@@ -72,15 +116,15 @@ export function cityToLocation(city: {
   lon?: number;
   local?: boolean;
 }): PanchangaLocation {
-  const name = city.ascii_name || city.name;
-  const label = `${name}, ${city.country}`;
+  const displayName = city.name || city.ascii_name;
+  const label = `${displayName}, ${city.country}`;
   // Curated Nepal entries have no backend city_id — drive the panchanga from
-  // their coordinates + timezone instead.
+  // their coordinates + timezone. Do not send `city=` (especially Devanagari):
+  // GeoNames resolve only matches English/ascii names.
   if (city.local && city.lat != null && city.lon != null) {
     return {
       label,
       params: {
-        city: name,
         lat: city.lat,
         lon: city.lon,
         timezone: city.timezone ?? "Asia/Kathmandu",
