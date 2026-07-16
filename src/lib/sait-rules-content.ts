@@ -532,7 +532,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "graha",
         ne: "ग्रह — गुरु र शुक्र अस्त, बाल्य वा वृद्ध हुनुहुँदैन (धर्मसिन्धुले वास्तुकर्ममा यही नियम लगाउँछ)।",
         en: "Graha — Jupiter & Venus must not be combust (ast), bāla or vṛddha (Dharma Sindhu applies this to vāstu karma).",
-        source: { ne: "धर्मसिन्धु (वास्तुकर्म)", en: "Dharma Sindhu (vāstu karma)" },
+        source: { ne: "धर्मसिन्धु १ (प्रथम परिच्छेद · शुक्रास्त) · मुहूर्त चिन्तामणि १.४७", en: "Dharma Sindhu 1 (Prathama Pariccheda · Śukrāsta) · Muhūrta Chintāmaṇi 1.47" },
         shloka: "अस्ते च गुरौ शुक्रे बाले वृद्धे मलिम्लुचे।",
         gloss: {
           ne: "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष। प्रणालीले वास्तुकर्ममा पनि यही बाल्य/वृद्ध र अस्त फिल्टर लागू गर्छ।",
@@ -579,9 +579,9 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "lagna-strength",
         ne: "लग्न बल र ग्रह योग — सूर्य सप्तम, बुध चतुर्थ, शुक्र तृतीय र गुरु लग्नमा भए शत–शत वर्ष स्थायित्व।",
         en: "Lagna strength & planetary yoga — Sun in 7th, Mercury in 4th, Venus in 3rd and Jupiter in lagna ensure hundred-hundred years' stability.",
-        source: { ne: "मुहूर्त चिन्तामणि (आचार्य श्रीराम)", en: "Muhūrta Chintāmaṇi (Ācārya Śrīrāma)" },
+        source: { ne: "मुहूर्त चिन्तामणि १२.२२ (वास्तु प्रकरण · आचार्य श्रीराम)", en: "Muhūrta Chintāmaṇi 12.22 (Vāstu Prakaraṇa · Ācārya Śrīrāma)" },
         shloka:
-          "लग्ने सुरेज्ये सप्तमगे च सूर्ये बुधे चतुर्थे भृगुजे त्रिजेऽर्के। शतं भवेत्तत्र गृहस्य चायुस्तथापरं वर्षशतं वदन्ति ॥",
+          "लग्ने सुरेज्ये सप्तमगे च सूर्ये बुधे चतुर्थे भृगुजे त्रिजेऽर्के। शतं भवेत्तत्र गृहस्य चायुस्तथापरं वर्षशतं वदन्ति ॥ २२ ॥",
         gloss: {
           ne: "गुरु लग्नमा, सूर्य सप्तममा, बुध चतुर्थमा र शुक्र तृतीयमा हुँदा त्यस गृहको आयु सय वर्ष; तथा अर्को सय वर्ष भनिन्छ (अर्थात् शत–शत = दुई सय)। शास्त्रीय योगले गृहको दीर्घायु र समृद्धि सुनिश्चित गर्छ।",
           en: "When Jupiter is in lagna, Sun in the 7th, Mercury in the 4th and Venus in the 3rd, that house's lifespan is one hundred years; and another hundred years is said (i.e. hundred-hundred = two hundred). This classical yoga ensures the house's longevity and prosperity.",
@@ -604,8 +604,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "निर्माणकार्य चातुर्मासमा रोकिँदैन — त्यसैले चातुर्मास वर्जित छैन।",
         en: "Construction is not paused during Chaturmāsa, so it is not barred here.",
         source: {
-          ne: "धर्मसिन्धु — मलमासे वर्ज्यानि प्रकरण (निषेध सूचीको सीमा)",
-          en: "Dharma Sindhu — Malmāse Varjyāni section (scope of the ban list)",
+          ne: "धर्मसिन्धु १ — मलमासे वर्ज्यानि (प्रथम परिच्छेद · निषेध सूचीको सीमा)",
+          en: "Dharma Sindhu 1 — Malmāse Varjyāni (Prathama Pariccheda · scope of the ban list)",
         },
         gloss: {
           ne: "धर्मसिन्धुले चातुर्मासमा निर्माण रोक्न स्पष्ट निषेध गरेको छैन — चातुर्मास विशेष गरी विवाह, ब्रतबन्ध, प्रतिष्ठा जस्ता संस्कारमा कडा हेरिन्छ। प्रणालीले वास्तुकर्ममा चातुर्मास फिल्टर लगाउँदैन; नयाँ गृहप्रवेशमा भने चातुर्मास/अधिकमास विचार गरिन्छ।",
