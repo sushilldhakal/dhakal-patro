@@ -54,6 +54,39 @@ const MC_2_36_NITYA_GLOSS: BilingualText = {
 };
 
 /**
+ * Muhūrta Chintāmaṇi 5.16 (Saṃskāra Prakaraṇa) — annaprāśana month/age,
+ * nakṣatra class, barred tithis and barred weekdays in a single verse.
+ */
+const MC_5_16_SHLOKA =
+  "युग्ममासे पुंसोऽयुग्मे स्त्रीणां मृदुलघुचरस्थिरोडुषु । रिक्तानन्दाष्टमीदर्शद्वादशीार्ककुजार्किभिर्विना ॥ १६ ॥";
+
+const MC_5_16_GLOSS: BilingualText = {
+  ne: "बालकको अन्नप्रासन सम महिना (जन्मपछि ६,८,१०,१२) मा र बालिकाको विषम महिना (५,७,९,११) मा; मृदु, लघु, चर र स्थिर वर्गका नक्षत्रमा; रिक्ता (४,९,१४), नन्द (१,६,११), अष्टमी, अमावस्या र द्वादशी बाहेक; आइत (अर्क), मंगल (कुज) र शनि (अर्कि) बाहेकका वारमा।",
+  en: "A boy's annaprāśana falls in an even month after birth (6,8,10,12) and a girl's in an odd month (5,7,9,11); in Mṛdu, Laghu, Chara and Sthira nakṣatras; excluding Rikta (4,9,14), Nanda (1,6,11), Aṣṭamī, Amāvasyā and Dvādaśī; and avoiding Sun (Arka), Tue (Kuja) and Sat (Arki).",
+};
+
+/** Muhūrta Chintāmaṇi 5.17 — lagna-śuddhi (planetary placement) for annaprāśana. */
+const MC_5_17_SHLOKA =
+  "केन्द्रत्रिकोणायगतैः शुभैः खेटैः खशून्यगे । पापैरुपचयस्थैश्च लग्नेन्दुमृतिषष्ठगैः ॥ १७ ॥";
+
+const MC_5_17_GLOSS: BilingualText = {
+  ne: "शुभ ग्रह केन्द्र (१,४,७,१०), त्रिकोण (५,९) वा आय (११) मा; दशम भाव (ख) रिक्त; पाप ग्रह उपचय (३,६,११) मा; चन्द्रमा लग्न (१), षष्ठ वा अष्टम (मृत्यु) मा नहोस् — यस्तो लग्नशुद्धि आदर्श।",
+  en: "Benefics in a kendra (1,4,7,10), trikoṇa (5,9) or the 11th (āya); the 10th house (kha) empty; malefics in the upachaya houses (3,6,11); and the Moon NOT in the 1st (lagna), 6th or 8th (mṛtyu) — such lagna-śuddhi is ideal.",
+};
+
+/**
+ * Muhūrta Chintāmaṇi 5 (commentary on 46–47) — time-bound saṃskāras are
+ * exempt from the Guru/Śukra combustion (asta) doṣa.
+ */
+const MC_5_ASTA_CONTEXT =
+  "सीमन्त-जातकर्म-नामकरण-अन्नप्राशनादिकं कर्म गुरु-शुक्रास्तादावपि कार्यम् ।";
+
+const MC_5_ASTA_GLOSS: BilingualText = {
+  ne: "सीमन्त, जातकर्म, नामकरण, अन्नप्रासन आदि काल-सापेक्ष (नित्य) संस्कार गुरु वा शुक्र अस्त भएको बेला पनि गर्न सकिन्छ — यी अस्त-दोषका अपवाद हुन्।",
+  en: "Sīmanta, Jātakarma, Nāmakaraṇa, Annaprāśana and similar time-bound (nitya) saṃskāras may be performed even when Jupiter or Venus is combust (asta) — they are exceptions to the asta-doṣa.",
+};
+
+/**
  * One rule the engine applies. `ne`/`en` are the plain-language rule; the
  * optional `source` (short citation), `shloka` (Sanskrit verse, Devanāgarī) and
  * `gloss` (a bilingual translation of the verse) let a rule cite the classical
@@ -641,13 +674,42 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     method: DAYTIME_INTRO,
     requiresBirthDate: true,
     rules: [
-      { ne: "महिना — अधिकमास बाहेक सबै मास; रिक्ता र अमावस्या वर्जित।", en: "Month — all months except Adhik-māsa; rikta & Amāvasyā out." },
-      { ne: "तिथि — शुक्ल २,३,५,७,१०,१३,१५ वा कृष्ण २,३,५,७,१०,१३; अष्टमी वर्जित।", en: "Tithi — śukla 2,3,5,7,10,13,15 or kṛṣṇa 2,3,5,7,10,13; Aṣṭamī out." },
-      { ne: "नक्षत्र — निश्चित सूची: अश्विनी, रोहिणी, मृगशिरा, पुनर्वसु, पुष्य, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, शतभिषा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — the fixed list: Aśvinī, Rohiṇī, Mṛgaśira, Punarvasu, Puṣya, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā, U.Bhādrapada, Revatī." },
-      { ne: "वार — सोम, बुध, बिहि, शुक्र मात्र; दिनको समय (सूर्योदय–सूर्यास्त) मात्र।", en: "Vāra — Mon/Wed/Thu/Fri only; daytime (sunrise→sunset) only." },
-      { ne: "लग्न — मेष, वृश्चिक र मीन बाहेक सबै लग्न स्वीकार्य (उमेर विण्डोले पहिले नै सूची घटाउने भएकाले उदार राखिएको)।", en: "Lagna — all ascendants except Meṣa, Vṛśchika and Mīna (kept broad, since the age window already thins the set)." },
-      { ne: "दोष — व्यतीपात/वैधृति योग, विष्टि (भद्रा) करण, दुर्मुहूर्त (अवधि मात्र) र ग्रहणको दिन वर्जित।", en: "Doṣa — Vyatīpāta/Vaidhṛti yoga, Viṣṭi (Bhadrā) karaṇa, Dur-muhūrta (period only) and the eclipse day excluded." },
-      { ne: "यसको सटीक मिति शिशुको जन्ममितिमा भर पर्छ (५–८ महिनाको उमेर); सूचीले उपयुक्त दिन देखाउँछ।", en: "The exact date depends on the child's birth (5–8 month window); the list shows the suitable days." },
+      {
+        ne: "महिना/उमेर — अन्नप्रासनको मुख्य आधार शिशुको जन्मपछिको चन्द्रमहिना हो: बालकलाई सम महिना (६,८,१०,१२) र बालिकालाई विषम महिना (५,७,९,११)। अधिकमासमा संस्कार नगर्ने परम्परा मानिन्छ।",
+        en: "Month/age — annaprāśana is governed by the child's age in lunar months after birth: even months (6,8,10,12) for a boy and odd months (5,7,9,11) for a girl. By tradition it is not performed in Adhik-māsa.",
+        source: { ne: "मुहूर्त चिन्तामणि ५.१६", en: "Muhūrta Chintāmaṇi 5.16" },
+        shloka: MC_5_16_SHLOKA,
+        gloss: MC_5_16_GLOSS,
+      },
+      {
+        ne: "तिथि — शुभ तिथि २,३,५,७,१०,१३ र पूर्णिमा (शुक्ल १५); नन्द (१,६,११), रिक्ता (४,९,१४), अष्टमी (८), द्वादशी (१२) र अमावस्या वर्ज्य।",
+        en: "Tithi — the śubha tithis 2,3,5,7,10,13 and Pūrṇimā (śukla 15); Nanda (1,6,11), Rikta (4,9,14), Aṣṭamī (8), Dvādaśī (12) and Amāvasyā are barred.",
+        source: { ne: "मुहूर्त चिन्तामणि ५.१६", en: "Muhūrta Chintāmaṇi 5.16" },
+      },
+      {
+        ne: "नक्षत्र — मृदु, लघु, चर र स्थिर वर्गका १६ नक्षत्र: अश्विनी, रोहिणी, मृगशिरा, पुनर्वसु, पुष्य, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, शतभिषा, उत्तरभाद्रपदा, रेवती।",
+        en: "Nakṣatra — the 16 Mṛdu/Laghu/Chara/Sthira stars: Aśvinī, Rohiṇī, Mṛgaśira, Punarvasu, Puṣya, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā, U.Bhādrapada, Revatī.",
+        source: { ne: "मुहूर्त चिन्तामणि ५.१६", en: "Muhūrta Chintāmaṇi 5.16" },
+      },
+      { ne: "वार — सोम, बुध, बिहि, शुक्र मात्र (आइत, मंगल, शनि वर्ज्य)।", en: "Vāra — Mon/Wed/Thu/Fri only (Sun, Tue, Sat barred)." },
+      {
+        ne: "लग्नशुद्धि — शुभ ग्रह केन्द्र/त्रिकोण/आय (११) मा, पाप ग्रह उपचय (३,६,११) मा, दशम भाव रिक्त, चन्द्रमा लग्न/षष्ठ/अष्टममा नहोस् — शास्त्रीय आदर्श। सामान्य पात्रोमा मेष, वृश्चिक र मीन लग्न मात्र वर्ज्य; पूर्ण ग्रह-लग्नशुद्धि जातक-सापेक्ष।",
+        en: "Lagna-śuddhi — benefics in kendra/trikoṇa/11th, malefics in the upachaya (3,6,11), the 10th empty, and the Moon not in the 1st/6th/8th — the classical ideal. The general calendar applies only the sign bar (Meṣa, Vṛśchika, Mīna), since full graha-lagna-śuddhi is native-specific.",
+        source: { ne: "मुहूर्त चिन्तामणि ५.१७", en: "Muhūrta Chintāmaṇi 5.17" },
+        shloka: MC_5_17_SHLOKA,
+        gloss: MC_5_17_GLOSS,
+      },
+      {
+        ne: "गुरु/शुक्र अस्त — अन्नप्रासन काल-सापेक्ष (नित्य) संस्कार भएकाले गुरु वा शुक्र अस्त भए पनि गर्न बाधा छैन।",
+        en: "Guru/Śukra asta — as a time-bound (nitya) saṃskāra, annaprāśana is not barred by the combustion of Jupiter or Venus.",
+        source: { ne: "मुहूर्त चिन्तामणि ५ (श्लोक ४६–४७ भाष्य)", en: "Muhūrta Chintāmaṇi 5 (comm. on 46–47)" },
+        shloka: MC_5_ASTA_CONTEXT,
+        gloss: MC_5_ASTA_GLOSS,
+      },
+      { ne: "जन्मतारा — शिशुको जन्मनक्षत्रबाट १, १०, १९, २५ औं तारा वर्ज्य (जातक-सापेक्ष; सामान्य सूचीमा लागू गरिएको छैन)।", en: "Janma-tārā — the 1st, 10th, 19th and 25th tārā from the child's birth star are avoided (native-specific; not applied in the general list)." },
+      { ne: "सुरक्षा दोष — व्यतीपात/वैधृति योग, विष्टि (भद्रा) करण, दुर्मुहूर्त (अवधि मात्र) र ग्रहणको दिन हटाइन्छ (सामान्य मुहूर्त सुरक्षा; उद्धृत श्लोकको अंश होइन)।", en: "Safeguard doṣas — Vyatīpāta/Vaidhṛti yoga, Viṣṭi (Bhadrā) karaṇa, Dur-muhūrta (period only) and the eclipse day are removed (general muhūrta safeguards, not part of the cited verses)." },
+      { ne: "दिनको समय — गणना सूर्योदयदेखि सूर्यास्तसम्म गरिन्छ (प्रणालीको विधि; श्लोकको छुट्टै नियम होइन)।", en: "Daytime — computed from sunrise to sunset (our system's method, not a separate clause of the verses)." },
+      { ne: "यसको सटीक मिति शिशुको जन्ममितिमा भर पर्छ (उमेर विण्डो); सूचीले उपयुक्त दिन देखाउँछ।", en: "The exact date depends on the child's birth (the age window); the list shows the suitable days." },
     ],
   },
 };
