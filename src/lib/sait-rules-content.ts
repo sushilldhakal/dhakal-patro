@@ -316,7 +316,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       {
         ne: "काल — सूर्य उत्तरायण राशिमा हुनुपर्छ (मकरदेखि मिथुन: माघ–असार); चातुर्मास र अधिकमास वर्जित।",
         en: "Season — Sun in an Uttarāyaṇa rāśi (Makara→Mithuna: Māgha–Āṣāḍha); Chaturmāsa & Adhik-māsa barred.",
-        source: { ne: "मुहूर्त चिन्तामणि (उपनयन)", en: "Muhūrta Chintāmaṇi (Upanayana)" },
+        source: { ne: "मुहूर्त चिन्तामणि ५.३९ (संस्कार प्रकरण)", en: "Muhūrta Chintāmaṇi 5.39 (Saṃskāra Prakaraṇa)" },
         shloka: "माघफल्गुनवैशाखज्येष्ठाषाढेषु शोभनम्। उदीच्यगेऽर्के विप्राणां सति चन्द्रे च शुद्धितः॥",
         gloss: {
           ne: "माघ, फाल्गुन, वैशाख, ज्येष्ठ र आषाढमा शुभ; सूर्य उत्तरतिर (उत्तरायण) हुँदा। अधिकमास र चातुर्मास वर्जित।",
@@ -327,7 +327,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "tithi",
         ne: "तिथि — शुक्ल २,३,५,१०,११,१२ वा कृष्ण २,३,५।",
         en: "Tithi — śukla 2,3,5,10,11,12 or kṛṣṇa 2,3,5.",
-        source: { ne: "मुहूर्त चिन्तामणि (उपनयन तिथि)", en: "Muhūrta Chintāmaṇi (Upanayana tithi)" },
+        source: { ne: "मुहूर्त चिन्तामणि ५.४० (संस्कार प्रकरण)", en: "Muhūrta Chintāmaṇi 5.40 (Saṃskāra Prakaraṇa)" },
         shloka: "दशैकादशी द्वादशी द्वितीया तृतीया पञ्चमी दशमीषु।",
         gloss: {
           ne: "दशमी, एकादशी, द्वादशी, द्वितीया, तृतीया र पञ्चमी — उपनयनका शुभ तिथि।",
@@ -338,7 +338,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "galagraha",
         ne: "गलग्रह तिथि — १,४,७,८,९,१३,१४,१५ (पूर्णिमा/अमावस्या) वर्जित।",
         en: "Galagraha tithis — 1,4,7,8,9,13,14,15 (Pūrṇimā/Amāvasyā) barred.",
-        source: { ne: "मुहूर्त चिन्तामणि (गलग्रह)", en: "Muhūrta Chintāmaṇi (Galagraha)" },
+        source: { ne: "मुहूर्त चिन्तामणि ५ (संस्कार प्रकरण · भाष्य)", en: "Muhūrta Chintāmaṇi 5 (Saṃskāra Prakaraṇa, comm.)" },
+        shloka: "… गलग्रहास्तिथयो ज्ञेयाः ।",
         gloss: {
           ne: "प्रतिपदा, चतुर्थी, सप्तमी, अष्टमी, नवमी, त्रयोदशी, चतुर्दशी र पूर्णिमा/अमावस्या — गलग्रह दोषले उपनयनमा वर्जित।",
           en: "Pratipadā, Caturthī, Saptamī, Aṣṭamī, Navamī, Trayodaśī, Caturdaśī and Pūrṇimā/Amāvasyā are barred as Galagraha defects for Upanayana.",
@@ -347,7 +348,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       {
         ne: "नक्षत्र — तलको परम्परा मोड अनुसार: शास्त्रीय उपनयन (क्षिप्र/ध्रुव/चर/मृदु + मघा/मूल), नेपाली पञ्चाङ्ग (भरणी/कृत्तिका/मघा/विशाखा/ज्येष्ठा बाहेक), वा उदार (मघा पनि स्वीकार्य)।",
         en: "Nakṣatra — per tradition mode below: Classical Upanayana (Kṣipra/Dhruva/Cara/Mṛdu + Maghā/Mūla), Nepali Panchāṅga (all except Bharaṇī/Kṛttikā/Maghā/Viśākhā/Jyeṣṭhā), or Liberal (Maghā also allowed).",
-        source: { ne: "मुहूर्त चिन्तामणि (उपनयन नक्षत्र)", en: "Muhūrta Chintāmaṇi (Upanayana nakṣatra)" },
+        source: { ne: "मुहूर्त चिन्तामणि ५.३९–४० (संस्कार प्रकरण)", en: "Muhūrta Chintāmaṇi 5.39–40 (Saṃskāra Prakaraṇa)" },
         shloka: "हस्ताश्विपुष्यमृगसौम्यमघोत्तरात्रयं सौम्यमैत्रं मूलं चरं च खलु पुष्यपुनर्वसू च।",
         gloss: {
           ne: "शास्त्रले हस्त, अश्विनी, पुष्य, मृगशिरा, पुनर्वसु, मघा, तीन उत्तरा, मूल र चर नक्षत्र आदि — करिब १९ नक्षत्रलाई शुभ मान्छ (शास्त्रीय मोड)।",
@@ -369,7 +370,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "time-window",
         ne: "समय — सूर्योदय–मध्याह्न मात्र (अपराह्न/रात्रि वर्जित)।",
         en: "Time — sunrise→madhyāhna only (aparāhna/night rejected).",
-        source: { ne: "मुहूर्त चिन्तामणि (उपनयन काल)", en: "Muhūrta Chintāmaṇi (Upanayana time)" },
+        source: { ne: "मुहूर्त चिन्तामणि ५ (संस्कार प्रकरण · भाष्य)", en: "Muhūrta Chintāmaṇi 5 (Saṃskāra Prakaraṇa, comm.)" },
         shloka: "उपनयनमपराह्वे न कार्यम्।",
         gloss: {
           ne: "उपनयन अपराह्नमा गर्नु हुँदैन — पूर्वाह्न वा मध्याह्न मात्र।",
@@ -380,7 +381,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "graha",
         ne: "ग्रह — गुरु र शुक्र अस्त, बाल्य वा वृद्ध हुनुहुँदैन।",
         en: "Graha — Jupiter & Venus must be udaya — neither combust nor bāla/vṛddha.",
-        source: { ne: "धर्मसिन्धु (शुक्रास्त-वर्ज्य)", en: "Dharma Sindhu (Śukra-asta-varjya)" },
+        source: { ne: "धर्मसिन्धु — शुक्रास्तादि वर्ज्याणि (प्रथम परिच्छेद)", en: "Dharma Sindhu — Śukrāstādi Varjyāṇi (Prathama Pariccheda)" },
         shloka: "अस्ते च गुरौ शुक्रे बाले वृद्धे मलिम्लुचे।",
         gloss: {
           ne: "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष।",
@@ -413,7 +414,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "karana",
         ne: "करण — विष्टि (भद्रा) वर्जित।",
         en: "Karaṇa — Viṣṭi (Bhadrā) barred.",
-        source: { ne: "मुहूर्त चिन्तामणि १.३४ · १.४३", en: "Muhūrta Chintāmaṇi 1.34 · 1.43" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ · १.४३ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 · 1.43 (Śubhāśubha Prakaraṇa)" },
         shloka: MC_1_34_SHLOKA,
         gloss: {
           ne: "यस श्लोकमा उल्लिखित 'भद्रा' ले विष्टि करण जनाउँछ। प्रणालीले सम्पूर्ण विष्टि करणलाई वर्जित मान्छ।",
@@ -423,7 +424,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       {
         ne: "संक्रान्ति र ग्रहण (±३ दिन) वर्जित; दुर्मुहूर्त परेको अवधि मात्र छाडिन्छ (पूरै दिन होइन)।",
         en: "Sankrānti and eclipse (±3 days) barred; Dur-muhūrta skips only the affected period (not the whole day).",
-        source: { ne: "मुहूर्त चिन्तामणि (संक्रान्ति·ग्रहण·दुर्मुहूर्त)", en: "Muhūrta Chintāmaṇi (Sankrānti · eclipse · Dur-muhūrta)" },
+        source: { ne: "मुहूर्त चिन्तामणि — ग्रहण १.३२, दुर्मुहूर्त १.३७–४० (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi — eclipse 1.32, Dur-muhūrta 1.37–40 (Śubhāśubha Prakaraṇa)" },
+        shloka: MC_GP_GRAHANA_SHLOKA,
         gloss: {
           ne: "संक्रान्ति र ग्रहणका वरिपरिको समय त्याज्य; दुर्मुहूर्त भनेको केवल त्यो घडी छाडिन्छ — दिन पूरै होइन।",
           en: "Time around Sankrānti and eclipse is rejected; Dur-muhūrta drops only the affected clock slice — not the whole day.",
@@ -433,7 +435,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "dosha",
         ne: "दोष — दग्धा, शून्य र मंगल/राहुको लत्ता परेको दिन वर्जित।",
         en: "Doṣa — Dagdha, Śūnya, and Mars/Rāhu Latta days excluded.",
-        source: { ne: "मुहूर्त चिन्तामणि (दग्धा·शून्य·लत्ता)", en: "Muhūrta Chintāmaṇi (Dagdha · Śūnya · Latta)" },
+        source: { ne: "मुहूर्त चिन्तामणि — लत्ता ६.१९, दग्धा १.८, शून्य १.१० (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi — Latta 6.19, Dagdha 1.8, Śūnya 1.10 (Śubhāśubha Prakaraṇa)" },
         shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु... लत्ताख्याः",
         gloss: {
           ne: "दग्धा र शून्य तिथि दोष, तथा मंगल/राहुको लत्ताले नक्षत्र बिग्रेको दिन — दिन-शुद्धि अन्तर्गत हटाइन्छ।",
