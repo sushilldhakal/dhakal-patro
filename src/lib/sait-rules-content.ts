@@ -187,8 +187,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "month",
         ne: "महिना — विवाहका लागि शास्त्रसम्मत चन्द्रमास मात्र (मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ, आषाढ); अधिकमास र चातुर्मास वर्जित।",
         en: "Month — only the śāstra vivāha lunar months (Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha, Āṣāḍha); Adhik-māsa & Chaturmāsa barred.",
-        source: { ne: "मुहूर्त चिन्तामणि ६ (श्लोक १४ भाष्य)", en: "Muhūrta Chintāmaṇi 6 (comm. on 14)" },
-        shloka: "मृग-माघ-फाल्गुन-वैशाख-ज्येष्ठ-आषाढेषु... विवाहः शुभः",
+        source: { ne: "मुहूर्त चिन्तामणि ६.१ (विवाह प्रकरण)", en: "Muhūrta Chintāmaṇi 6.1 (Vivāha Prakaraṇa)" },
+        shloka: "मृगमाघफल्गुनवैशाखज्येष्ठाषाढेषु शोभनम् ।",
         gloss: {
           ne: "मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ र आषाढमा विवाह शुभ हुन्छ।",
           en: "In Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha and Āṣāḍha, marriage is auspicious.",
@@ -198,8 +198,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "solar-month",
         ne: "सौर मास — सूर्य मेष, वृष, मिथुन, वृश्चिक, मकर वा कुम्भ राशिमा हुनुपर्छ (शास्त्रले पहिले सौर मास हेर्छ)।",
         en: "Solar month — the Sun must be in Meṣa, Vṛṣabha, Mithuna, Vṛśchika, Makara or Kumbha (the śāstra checks the Sun-sign first).",
-        source: { ne: "मुहूर्त चिन्तामणि ६.१४", en: "Muhūrta Chintāmaṇi 6.14" },
-        shloka: "मेषवृषमिथुनवृश्चिकमकरकुम्भे स्थिते सवितरि... विवाहः शुभः ॥",
+        source: { ne: "मुहूर्त चिन्तामणि ६.१ (विवाह प्रकरण)", en: "Muhūrta Chintāmaṇi 6.1 (Vivāha Prakaraṇa)" },
+        shloka: "मेषवृषमिथुनवृश्चिकमकरकुम्भे स्थिते सवितरि ॥",
         gloss: {
           ne: "सूर्य मेष, वृष, मिथुन, वृश्चिक, मकर वा कुम्भमा रहँदा विवाह शुभ हुन्छ।",
           en: "Marriage is auspicious when the Sun stands in Meṣa, Vṛṣabha, Mithuna, Vṛśchika, Makara or Kumbha.",
@@ -209,7 +209,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "tithi",
         ne: "तिथि — शुभ तिथि मात्र (२,३,५,७,१०,११,१३); रिक्ता (४,९,१४), अष्टमी, षष्ठी, अमावस्या, पूर्णिमा वर्जित।",
         en: "Tithi — only śubha tithis (2,3,5,7,10,11,13); rikta (4,9,14), Aṣṭamī, Ṣaṣṭhī, Amāvasyā, Pūrṇimā out.",
-        source: { ne: "मुहूर्त चिन्तामणि १.३६", en: "Muhūrta Chintāmaṇi 1.36" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३६ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.36 (Śubhāśubha Prakaraṇa)" },
         shloka: "चतुर्थी षष्ठी अष्टमी नवमी द्वादशी चतुर्दशी एताः पक्षरन्ध्रसंज्ञिस्ततियो ज्ञेयाः ।",
         gloss: {
           ne: "चतुर्थी, षष्ठी, अष्टमी, नवमी, द्वादशी र चतुर्दशी — पक्षरन्ध्र तिथि हुन् (वर्जित)।",
@@ -220,7 +220,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "nakshatra",
         ne: "नक्षत्र — शास्त्रीय विवाह नक्षत्र मात्र: रोहिणी, मृगशिरा, मघा, उत्तराफाल्गुनी, हस्त, स्वाती, अनुराधा, मूल, उत्तराषाढा, उत्तरभाद्रपदा, रेवती।",
         en: "Nakṣatra — the classical 11: Rohiṇī, Mṛgaśira, Maghā, U.Phalgunī, Hasta, Svātī, Anurādhā, Mūla, U.Aṣāḍhā, U.Bhādrapada, Revatī.",
-        source: { ne: "मुहूर्त चिन्तामणि ६.५५", en: "Muhūrta Chintāmaṇi 6.55" },
+        source: { ne: "मुहूर्त चिन्तामणि ६.५५ (विवाह प्रकरण)", en: "Muhūrta Chintāmaṇi 6.55 (Vivāha Prakaraṇa)" },
         shloka: "मृगशीर्षहस्तमूलानुराधा मघारोहिणी रेवती । उत्तरात्रयस्वात्यः स्युर्विवाहे दश सप्त च ॥",
         gloss: {
           ne: "मृगशिरा, हस्त, मूल, अनुराधा, मघा, रोहिणी, रेवती, तीन उत्तरा र स्वाती — विवाहका नक्षत्र हुन्।",
@@ -231,7 +231,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "yoga",
         ne: "योग — नवै अशुभ योग (विष्कुम्भ, अतिगण्ड, शूल, गण्ड, व्याघात, वज्र, व्यतीपात, परिघ, वैधृति) वर्जित।",
         en: "Yoga — all nine aśubha yogas (Viṣkambha, Atigaṇḍa, Śūla, Gaṇḍa, Vyāghāta, Vajra, Vyatīpāta, Parigha, Vaidhṛti) barred.",
-        source: { ne: "मुहूर्त चिन्तामणि १.३४", en: "Muhūrta Chintāmaṇi 1.34" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)" },
         shloka: MC_1_34_SHLOKA,
         gloss: MC_1_34_GLOSS,
       },
@@ -239,7 +239,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "karana",
         ne: "करण — विष्टि (भद्रा) र चार स्थिर करण (शकुनि, चतुष्पाद, नाग, किंस्तुघ्न) वर्जित।",
         en: "Karaṇa — Viṣṭi (Bhadrā) and the four fixed karaṇas (Śakuni, Catuṣpāda, Nāga, Kiṃstughna) barred.",
-        source: { ne: "मुहूर्त चिन्तामणि १.४३", en: "Muhūrta Chintāmaṇi 1.43" },
+        source: { ne: "मुहूर्त चिन्तामणि १.४३ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.43 (Śubhāśubha Prakaraṇa)" },
         shloka: "शुक्ले पूर्वार्धोऽष्टम्यर्कैकदश्या चतुर्ध्या परार्धं । कृष्णेऽन्त्यार्धं स्यात्तृतीयादशम्योः पूर्वभागे सप्तमीशम्भुतिथ्योः ॥",
         gloss: {
           ne: "अष्टमी, पूर्णिमा, चतुर्थी, एकादशी, तृतीया, दशमी, सप्तमी र चतुर्दशीका भद्रा (विष्टि) पर्ने भाग वर्जित।",
@@ -251,6 +251,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "वार — मंगलबार र शनिबार वर्जित।",
         en: "Vāra — Tuesday and Saturday barred.",
         source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi" },
+        shloka: "क्षितितनयदिवसवारो न शुभकृदिति यदि पितामहोक्ते ।",
         gloss: {
           ne: "बृहत्संहिता (१.४) अनुसार ब्रह्माले नै मंगलबारलाई अशुभ भनेका; शनि र मंगल 'क्रूर वार' हुन् — मुहूर्त चिन्तामणिले विवाहका लागि सोम, बुध, बिहीबार र शुक्रबार मात्र प्रशस्त मानेको छ (रवि-कुज-शनि विशेष त्याज्य)।",
           en: "Per the Bṛhat Saṃhitā (1.4), Brahmā himself declared Tuesday inauspicious; Saturday and Tuesday are 'krūra vāra' — the Muhūrta Chintāmaṇi admits only Mon, Wed, Thu and Fri for marriage (Ravi-Kuja-Śani especially avoided).",
@@ -260,7 +261,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "dosha",
         ne: "दोष — दग्धा, शून्य, भद्रा र मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु) परेको दिन पूरै त्याज्य; गोधूलिले पनि छुट दिँदैन।",
         en: "Doṣa — Dagdha, Śūnya, Bhadrā, and malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu) scrub the whole day; no Godhūli rescue.",
-        source: { ne: "मुहूर्त चिन्तामणि ६.५९", en: "Muhūrta Chintāmaṇi 6.59" },
+        source: { ne: "मुहूर्त चिन्तामणि ६.१९ (विवाह प्रकरण · लत्ता)", en: "Muhūrta Chintāmaṇi 6.19 (Vivāha Prakaraṇa · Latta)" },
         shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु... लत्ताख्याः",
         gloss: {
           ne: "लत्ता दोष — ग्रहले आफ्नो स्थानबाट निश्चित नक्षत्रलाई 'लात हान्छ'; त्यस्तो दिन त्याज्य।",
@@ -271,7 +272,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "graha",
         ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन, न त बाल्य/वृद्ध (उदय वा अस्तको सन्निकट कमजोर); संक्रान्तिको सन्निकट समय र ग्रहण ±३ दिन वर्जित।",
         en: "Graha — Jupiter & Venus must be udaya — neither combust nor bāla/vṛddha (weak just after rising or before setting); Sankrānti buffers and eclipse ±3 days excluded.",
-        source: { ne: "धर्मसिन्धु (शुक्रास्त-वर्ज्य)", en: "Dharma Sindhu (Śukra-asta-varjya)" },
+        source: { ne: "धर्मसिन्धु १ (प्रथम परिच्छेद)", en: "Dharma Sindhu 1 (Prathama Pariccheda)" },
         shloka: "तत्रास्तात्प्राक् सप्ताहं वार्धक्यम् । उदयोत्तरं सप्ताहं बाल्यमिति मध्यमः पक्षः ॥",
         gloss: {
           ne: "अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष।",
@@ -282,7 +283,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "simhastha",
         ne: "सिंहस्थ गुरु — बृहस्पति सिंह राशिमा रहेको सम्पूर्ण अवधि विवाह वर्जित।",
         en: "Simhastha Guru — marriage is barred for the whole transit of Jupiter through Siṃha (Leo).",
-        source: { ne: "धर्मसिन्धु (सिंहस्थ-वर्ज्य)", en: "Dharma Sindhu (Simhastha-varjya)" },
+        source: { ne: "धर्मसिन्धु १ (प्रथम परिच्छेद · सिंहस्थ)", en: "Dharma Sindhu 1 (Prathama Pariccheda · Simhastha)" },
         shloka: "मघानक्षत्रगते सिंहाशगते च गुरौ सर्वदेशेषु सर्वमाङ्गलिककर्मणां निषेधः ॥",
         gloss: {
           ne: "बृहस्पति मघा नक्षत्र वा सिंह राशिमा हुँदा सबै देशमा सम्पूर्ण मांगलिक कर्म निषेध।",
@@ -293,7 +294,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "kshaya-paksha",
         ne: "क्षय पक्ष — एउटै पक्षमा दुई तिथि क्षय भई १३ तिथिको पक्ष बन्यो भने (अतिनिन्द्य) पूरै अवधि वर्जित; यसलाई अरू कुनै शुभ योगले पनि काट्दैन।",
         en: "Kṣaya Pakṣa — if a fortnight loses two tithis and becomes a 13-tithi pakṣa (atinindya), the whole period is barred; no other favourable factor overrides it.",
-        source: { ne: "मुहूर्त चिन्तामणि १ (श्लोक ४८ भाष्य)", en: "Muhūrta Chintāmaṇi 1 (comm. on 48)" },
+        source: { ne: "मुहूर्त चिन्तामणि १.४८ भाष्य (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.48 comm. (Śubhāśubha Prakaraṇa)" },
         shloka: "त्रयोदश दिने पक्षे यस्मिन् पक्षे तिथिक्षयद्वयम् ... पक्षे विनष्टे सकलं विनष्टमित्याहुराचार्याः समस्ताः ॥",
         gloss: {
           ne: "दुई तिथि क्षय भई १३ दिनको पक्ष बन्दा 'पक्ष नष्ट भए सबै नष्ट' भनी सबै आचार्य भन्छन्।",
@@ -390,7 +391,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "simhastha",
         ne: "सिंहस्थ गुरु — बृहस्पति सिंह राशिमा रहेको अवधि वर्जित (नेपाली समुदायले नमान्ने भए बन्द गर्न सकिन्छ)।",
         en: "Simhastha Guru — Jupiter in Siṃha (Leo) barred (toggle off if your community does not enforce it).",
-        source: { ne: "धर्मसिन्धु (सिंहस्थ-वर्ज्य)", en: "Dharma Sindhu (Simhastha-varjya)" },
+        source: { ne: "धर्मसिन्धु १ (प्रथम परिच्छेद · सिंहस्थ)", en: "Dharma Sindhu 1 (Prathama Pariccheda · Simhastha)" },
         shloka: "मघानक्षत्रगते सिंहाशगते च गुरौ सर्वदेशेषु सर्वमाङ्गलिककर्मणां निषेधः ॥",
         gloss: {
           ne: "बृहस्पति मघा नक्षत्र वा सिंह राशिमा हुँदा सबै देशमा सम्पूर्ण मांगलिक कर्म निषेध।",
@@ -401,7 +402,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "yoga",
         ne: "योग — व्यतीपात र वैधृति वर्जित।",
         en: "Yoga — Vyatīpāta & Vaidhṛti barred.",
-        source: { ne: "मुहूर्त चिन्तामणि १.३४", en: "Muhūrta Chintāmaṇi 1.34" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)" },
         shloka: MC_1_34_SHLOKA,
         gloss: {
           ne: "यस श्लोकमा व्यतीपात, भद्रा र वैधृति लगायत शुभकार्यमा त्याज्य दोषहरूको उल्लेख छ। शास्त्रीय आधारमा हाम्रो प्रणालीले यसमध्ये व्यतीपात र वैधृतिलाई योगदोषका रूपमा लागू गर्छ।",
@@ -647,7 +648,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       {
         ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।",
         en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred.",
-        source: { ne: "मुहूर्त चिन्तामणि १.३४", en: "Muhūrta Chintāmaṇi 1.34" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)" },
         shloka: MC_1_34_SHLOKA,
         gloss: MC_1_34_GLOSS,
       },
