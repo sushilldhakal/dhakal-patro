@@ -96,6 +96,13 @@ export function SaitPage() {
   const activeQuery = isMuhurta ? detailQuery : datesQuery;
   useRouteLoading(Boolean(meta) && activeQuery.isLoading && !activeQuery.data);
 
+  // Total auspicious days for the summary line — for muhūrta categories it is
+  // the per-day window count; for the deterministic Vās categories (rudri /
+  // agni) it is the sum of the month-grouped day pills.
+  const totalCount = isMuhurta
+    ? (detailQuery.data?.days?.length ?? 0)
+    : (datesQuery.data?.months?.reduce((sum, m) => sum + m.days.length, 0) ?? 0);
+
   if (!meta || !content) {
     return (
       <PageShell>
@@ -127,6 +134,7 @@ export function SaitPage() {
       nakshatraMode={isBratabandha ? nakshatraMode : null}
       onNakshatraModeChange={isBratabandha ? setNakshatraMode : undefined}
       days={isMuhurta ? (detailQuery.data?.days ?? []) : []}
+      count={totalCount}
       loading={activeQuery.isLoading && !activeQuery.data}
       notice={
         content.requiresBirthDate ? (

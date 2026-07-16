@@ -30,6 +30,8 @@ interface Props {
   nakshatraMode?: BratabandhaNakshatraMode | null;
   onNakshatraModeChange?: (mode: BratabandhaNakshatraMode) => void;
   days?: SaitDetailDay[];
+  /** Total auspicious days for the summary line; falls back to days.length. */
+  count?: number;
   loading: boolean;
   notice?: React.ReactNode;
   children?: React.ReactNode;
@@ -67,6 +69,7 @@ export function SaitCeremonyLayout({
   nakshatraMode = null,
   onNakshatraModeChange,
   days = [],
+  count,
   loading,
   notice,
   children,
@@ -88,11 +91,12 @@ export function SaitCeremonyLayout({
     return [...map.entries()].sort(([a], [b]) => a - b);
   }, [days]);
 
-  const defaultCount = (count: number, y: number) => ({
-    ne: `वि.सं. ${digits(y)} मा ${digits(count)} शुभ दिन`,
-    en: `${digits(count)} auspicious days in BS ${digits(y)}`,
+  const defaultCount = (n: number, y: number) => ({
+    ne: `वि.सं. ${digits(y)} मा ${digits(n)} शुभ दिन`,
+    en: `${digits(n)} auspicious days in BS ${digits(y)}`,
   });
-  const countText = (countLabel ?? defaultCount)(days.length, year);
+  const displayCount = count ?? days.length;
+  const countText = (countLabel ?? defaultCount)(displayCount, year);
 
   let cardIndex = 0;
 
@@ -170,12 +174,6 @@ export function SaitCeremonyLayout({
           </button>
         </div>
 
-        {!loading && !children && days.length > 0 ? (
-          <span className="text-sm text-muted-foreground">
-            {pick(countText.ne, countText.en)}
-          </span>
-        ) : null}
-
         <div className="ml-auto flex min-w-0 items-center gap-1.5">
           <LocationSelector
             compact
@@ -185,6 +183,12 @@ export function SaitCeremonyLayout({
           />
         </div>
       </div>
+
+      {!loading && displayCount > 0 ? (
+        <p className="m-0 text-sm text-muted-foreground">
+          {pick(countText.ne, countText.en)}
+        </p>
+      ) : null}
 
       {notice}
 
