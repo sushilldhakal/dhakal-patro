@@ -543,12 +543,15 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       en: "Auspicious dates for the Rudri recitation and homa in worship of Śiva.",
     },
     method: {
-      ne: "यी मितिहरू हाम्रो आफ्नै प्रणालीले गणना गर्छ। यो साइत लग्नमा आधारित होइन — प्रत्येक दिनको तिथिबाट तलको शिववास सूत्र लगाएर शुभ दिन निकालिन्छ।",
-      en: "These dates are computed by our own system. This sāit is not lagna-based — for each day the Śiva-vāsa formula below is applied to the tithi.",
+      ne: "यी मितिहरू हाम्रो आफ्नै प्रणालीले गणना गर्छ। यो साइत लग्नमा आधारित होइन — रुद्री हवनसहित हुने भएकाले प्रत्येक दिनको तिथिबाट शिववास र तिथि-वारबाट अग्निवास दुवै हेरी शुभ दिन निकालिन्छ।",
+      en: "These dates are computed by our own system. This sāit is not lagna-based — since Rudri includes a homa, each day is judged by BOTH the Śiva-vāsa formula (deity's abode) and the Agni-vāsa formula (fire's abode).",
     },
     rules: [
       { ne: "शिववास सूत्र — पूर्ण तिथि (१–३०) मा (२×तिथि+५) लाई ७ ले भाग गर्दा शेष १/२/३ (कैलाश/गौरी/नन्दी) भए शुभ।", en: "Śiva-vāsa — on the absolute tithi (1–30), (2×tithi+5) mod 7 ∈ {1,2,3} (Kailāsa/Gaurī/Nandi) is auspicious." },
       { ne: "सभा, भोजन, क्रीडा, श्मशान (शेष ४/५/६/०) वर्जित; अमावस्या वर्जित।", en: "Sabhā, Bhojana, Krīḍā, Śmaśāna (remainders 4/5/6/0) avoided; Amāvasyā excluded." },
+      { ne: "अग्निवास सूत्र — हवनका लागि अग्नि पृथ्वीमा हुनुपर्छ: (तिथि+वार) लाई ४ ले भाग गर्दा शेष २/३ भए शुभ।", en: "Agni-vāsa — for the homa the fire must be on Earth: (tithi+vāra) mod 4 ∈ {2,3} is auspicious." },
+      { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
+      { ne: "अष्टमी/चतुर्दशी तिथि र श्रावण/कार्तिक महिना विशेष उत्तम (वरीयता मात्र, अनिवार्य होइन); चन्द्र/तारा बल जातक-सापेक्ष।", en: "Aṣṭamī/Chaturdaśī tithi and the Śrāvaṇa/Kārtika months are especially favoured (a preference, not a gate); Chandra/Tārā Bala is native-specific." },
       { ne: "यो दिनको सूर्योदय पञ्चाङ्गमा गणना हुन्छ — लग्न विण्डो आवश्यक पर्दैन।", en: "Evaluated on the day's sunrise panchāṅga — no lagna window is needed." },
     ],
   },
