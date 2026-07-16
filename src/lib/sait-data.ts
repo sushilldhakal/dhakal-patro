@@ -3,7 +3,7 @@
  *
  * There are NO hardcoded sāit dates here. Every listing shown in the app —
  * home-page Sāit tab, the per-ceremony pages and the vivāha page — is computed
- * on demand from the Swiss Ephemeris via the API (`/nepal/sait/...`). This file
+ * on demand from JPL (NASA's Jet Propulsion Laboratory) via the API (`/nepal/sait/...`). This file
  * only holds the category list and pure (computed) year helpers.
  */
 import {

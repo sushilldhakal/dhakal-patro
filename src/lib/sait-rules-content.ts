@@ -14,23 +14,50 @@ export interface BilingualText {
   en: string;
 }
 
+/** Muhūrta Chintāmaṇi 1.34 — mahā-doṣa list (Vyatīpāta, Bhadrā/Viṣṭi, Vaidhṛti, …). */
+const MC_1_34_SHLOKA =
+  "जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ । न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥ ३४ ॥";
+
+const MC_1_34_GLOSS: BilingualText = {
+  ne: "जन्म नक्षत्र/मास/तिथि, व्यतीपात, भद्रा (विष्टि), वैधृति, अमावस्या, पितृ-मृत्यु दिन, दुई तिथि क्षय भएको पक्ष (१३ दिनको पक्ष), अधिकमास आदि वर्ज्य — शुभ कार्यमा महादोष।",
+  en: "Birth star/month/tithi, Vyatīpāta, Bhadrā (Viṣṭi), Vaidhṛti, Amāvasyā, parental-death days, a fortnight with two lost tithis (13-day pakṣa), Adhik-māsa and related defects are barred as mahā-doṣa for auspicious rites.",
+};
+
+/**
+ * One rule the engine applies. `ne`/`en` are the plain-language rule; the
+ * optional `source` (short citation), `shloka` (Sanskrit verse, Devanāgarī) and
+ * `gloss` (a bilingual translation of the verse) let a rule cite the classical
+ * text it comes from. Only vivāha carries shlokas today.
+ */
+export interface SaitRuleEntry extends BilingualText {
+  /**
+   * Stable id matching the backend's `muhurta_engine.TOGGLEABLE_RULE_IDS`. When
+   * present, the rule can be switched off on the page and the engine recomputes
+   * the dates without it. Rules without an id are always applied.
+   */
+  id?: string;
+  source?: BilingualText;
+  shloka?: string;
+  gloss?: BilingualText;
+}
+
 export interface SaitContent {
   description: BilingualText;
   /** The "text line" explaining how the dates are calculated (intro paragraph). */
   method: BilingualText;
   /** The classical rules the engine applies for this ceremony. */
-  rules: BilingualText[];
+  rules: SaitRuleEntry[];
   requiresBirthDate?: boolean;
 }
 
 const MUHURTA_INTRO: BilingualText = {
-  ne: "यी मितिहरू हाम्रो आफ्नै प्रणालीले स्विस एफेमेरिसबाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि अर्को सूर्योदयसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका शास्त्रीय नियमहरू लगाइन्छ। कुनै एक शुद्ध लग्न विण्डो भेटिए मात्र दिन प्रकाशित हुन्छ।",
-  en: "These dates are computed by our own system from the Swiss Ephemeris — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to the next sunrise, then applies the classical rules below. A day is published only if at least one clean lagna window survives.",
+  ne: "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि अर्को सूर्योदयसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका शास्त्रीय नियमहरू लगाइन्छ। कुनै एक शुद्ध लग्न विण्डो भेटिए मात्र दिन प्रकाशित हुन्छ।",
+  en: "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to the next sunrise, then applies the classical rules below. A day is published only if at least one clean lagna window survives.",
 };
 
 const DAYTIME_INTRO: BilingualText = {
-  ne: "यी मितिहरू हाम्रो आफ्नै प्रणालीले स्विस एफेमेरिसबाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि सूर्यास्तसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका नियमहरू लगाइन्छ। दिनको शुद्ध मुहूर्त भेटिए मात्र दिन प्रकाशित हुन्छ।",
-  en: "These dates are computed by our own system from the Swiss Ephemeris — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to sunset, then applies the rules below. A day is published only if a clean daytime muhūrta survives.",
+  ne: "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि सूर्यास्तसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका नियमहरू लगाइन्छ। दिनको शुद्ध मुहूर्त भेटिए मात्र दिन प्रकाशित हुन्छ।",
+  en: "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to sunset, then applies the rules below. A day is published only if a clean daytime muhūrta survives.",
 };
 
 export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
@@ -41,17 +68,123 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     },
     method: MUHURTA_INTRO,
     rules: [
-      { ne: "महिना — विवाहका लागि शास्त्रसम्मत चन्द्रमास मात्र (मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ, आषाढ); अधिकमास र चातुर्मास वर्जित।", en: "Month — only the śāstra vivāha lunar months (Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha, Āṣāḍha); Adhik-māsa & Chaturmāsa barred." },
-      { ne: "सौर मास — सूर्य मेष, वृष, मिथुन, वृश्चिक, मकर वा कुम्भ राशिमा हुनुपर्छ (शास्त्रले पहिले सौर मास हेर्छ)।", en: "Solar month — the Sun must be in Meṣa, Vṛṣabha, Mithuna, Vṛśchika, Makara or Kumbha (the śāstra checks the Sun-sign first)." },
-      { ne: "तिथि — शुभ तिथि मात्र (२,३,५,७,१०,११,१३); रिक्ता (४,९,१४), अष्टमी, षष्ठी, अमावस्या, पूर्णिमा वर्जित।", en: "Tithi — only śubha tithis (2,3,5,7,10,11,13); rikta (4,9,14), Aṣṭamī, Ṣaṣṭhī, Amāvasyā, Pūrṇimā out." },
-      { ne: "नक्षत्र — शास्त्रीय विवाह नक्षत्र मात्र: रोहिणी, मृगशिरा, मघा, उत्तराफाल्गुनी, हस्त, स्वाती, अनुराधा, मूल, उत्तराषाढा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — the classical 11: Rohiṇī, Mṛgaśira, Maghā, U.Phalgunī, Hasta, Svātī, Anurādhā, Mūla, U.Aṣāḍhā, U.Bhādrapada, Revatī." },
-      { ne: "योग — नवै अशुभ योग (विष्कुम्भ, अतिगण्ड, शूल, गण्ड, व्याघात, वज्र, व्यतीपात, परिघ, वैधृति) वर्जित।", en: "Yoga — all nine aśubha yogas (Viṣkambha, Atigaṇḍa, Śūla, Gaṇḍa, Vyāghāta, Vajra, Vyatīpāta, Parigha, Vaidhṛti) barred." },
-      { ne: "करण — विष्टि (भद्रा) र चार स्थिर करण (शकुनि, चतुष्पाद, नाग, किंस्तुघ्न) वर्जित।", en: "Karaṇa — Viṣṭi (Bhadrā) and the four fixed karaṇas (Śakuni, Catuṣpāda, Nāga, Kiṃstughna) barred." },
-      { ne: "वार — मंगलबार र शनिबार वर्जित।", en: "Vāra — Tuesday and Saturday barred." },
-      { ne: "दोष — दग्धा, शून्य, भद्रा र मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु) परेको दिन पूरै त्याज्य; गोधूलिले पनि छुट दिँदैन।", en: "Doṣa — Dagdha, Śūnya, Bhadrā, and malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu) scrub the whole day; no Godhūli rescue." },
-      { ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन, न त बाल्य/वृद्ध (उदय वा अस्तको सन्निकट कमजोर); संक्रान्तिको सन्निकट समय र ग्रहण ±३ दिन वर्जित।", en: "Graha — Jupiter & Venus must be udaya — neither combust nor bāla/vṛddha (weak just after rising or before setting); Sankrānti buffers and eclipse ±3 days excluded." },
-      { ne: "सिंहस्थ गुरु — बृहस्पति सिंह राशिमा रहेको सम्पूर्ण अवधि विवाह वर्जित।", en: "Simhastha Guru — marriage is barred for the whole transit of Jupiter through Siṃha (Leo)." },
-      { ne: "क्षय पक्ष — एउटै पक्षमा दुई तिथि क्षय भई १३ तिथिको पक्ष बन्यो भने (अतिनिन्द्य) पूरै अवधि वर्जित; यसलाई अरू कुनै शुभ योगले पनि काट्दैन।", en: "Kṣaya Pakṣa — if a fortnight loses two tithis and becomes a 13-tithi pakṣa (atinindya), the whole period is barred; no other favourable factor overrides it." },
+      {
+        id: "month",
+        ne: "महिना — विवाहका लागि शास्त्रसम्मत चन्द्रमास मात्र (मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ, आषाढ); अधिकमास र चातुर्मास वर्जित।",
+        en: "Month — only the śāstra vivāha lunar months (Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha, Āṣāḍha); Adhik-māsa & Chaturmāsa barred.",
+        source: { ne: "मुहूर्त चिन्तामणि ६ (श्लोक १४ भाष्य)", en: "Muhūrta Chintāmaṇi 6 (comm. on 14)" },
+        shloka: "मृग-माघ-फाल्गुन-वैशाख-ज्येष्ठ-आषाढेषु... विवाहः शुभः",
+        gloss: {
+          ne: "मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ र आषाढमा विवाह शुभ हुन्छ।",
+          en: "In Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha and Āṣāḍha, marriage is auspicious.",
+        },
+      },
+      {
+        id: "solar-month",
+        ne: "सौर मास — सूर्य मेष, वृष, मिथुन, वृश्चिक, मकर वा कुम्भ राशिमा हुनुपर्छ (शास्त्रले पहिले सौर मास हेर्छ)।",
+        en: "Solar month — the Sun must be in Meṣa, Vṛṣabha, Mithuna, Vṛśchika, Makara or Kumbha (the śāstra checks the Sun-sign first).",
+        source: { ne: "मुहूर्त चिन्तामणि ६.१४", en: "Muhūrta Chintāmaṇi 6.14" },
+        shloka: "मेषवृषमिथुनवृश्चिकमकरकुम्भे स्थिते सवितरि... विवाहः शुभः ॥",
+        gloss: {
+          ne: "सूर्य मेष, वृष, मिथुन, वृश्चिक, मकर वा कुम्भमा रहँदा विवाह शुभ हुन्छ।",
+          en: "Marriage is auspicious when the Sun stands in Meṣa, Vṛṣabha, Mithuna, Vṛśchika, Makara or Kumbha.",
+        },
+      },
+      {
+        id: "tithi",
+        ne: "तिथि — शुभ तिथि मात्र (२,३,५,७,१०,११,१३); रिक्ता (४,९,१४), अष्टमी, षष्ठी, अमावस्या, पूर्णिमा वर्जित।",
+        en: "Tithi — only śubha tithis (2,3,5,7,10,11,13); rikta (4,9,14), Aṣṭamī, Ṣaṣṭhī, Amāvasyā, Pūrṇimā out.",
+        source: { ne: "मुहूर्त चिन्तामणि १.३६", en: "Muhūrta Chintāmaṇi 1.36" },
+        shloka: "चतुर्थी षष्ठी अष्टमी नवमी द्वादशी चतुर्दशी एताः पक्षरन्ध्रसंज्ञिस्ततियो ज्ञेयाः ।",
+        gloss: {
+          ne: "चतुर्थी, षष्ठी, अष्टमी, नवमी, द्वादशी र चतुर्दशी — पक्षरन्ध्र तिथि हुन् (वर्जित)।",
+          en: "The 4th, 6th, 8th, 9th, 12th and 14th are the Pakṣa-randhra tithis (and are barred).",
+        },
+      },
+      {
+        id: "nakshatra",
+        ne: "नक्षत्र — शास्त्रीय विवाह नक्षत्र मात्र: रोहिणी, मृगशिरा, मघा, उत्तराफाल्गुनी, हस्त, स्वाती, अनुराधा, मूल, उत्तराषाढा, उत्तरभाद्रपदा, रेवती।",
+        en: "Nakṣatra — the classical 11: Rohiṇī, Mṛgaśira, Maghā, U.Phalgunī, Hasta, Svātī, Anurādhā, Mūla, U.Aṣāḍhā, U.Bhādrapada, Revatī.",
+        source: { ne: "मुहूर्त चिन्तामणि ६.५५", en: "Muhūrta Chintāmaṇi 6.55" },
+        shloka: "मृगशीर्षहस्तमूलानुराधा मघारोहिणी रेवती । उत्तरात्रयस्वात्यः स्युर्विवाहे दश सप्त च ॥",
+        gloss: {
+          ne: "मृगशिरा, हस्त, मूल, अनुराधा, मघा, रोहिणी, रेवती, तीन उत्तरा र स्वाती — विवाहका नक्षत्र हुन्।",
+          en: "Mṛgaśira, Hasta, Mūla, Anurādhā, Maghā, Rohiṇī, Revatī, the three Uttarās and Svātī are the marriage stars.",
+        },
+      },
+      {
+        id: "yoga",
+        ne: "योग — नवै अशुभ योग (विष्कुम्भ, अतिगण्ड, शूल, गण्ड, व्याघात, वज्र, व्यतीपात, परिघ, वैधृति) वर्जित।",
+        en: "Yoga — all nine aśubha yogas (Viṣkambha, Atigaṇḍa, Śūla, Gaṇḍa, Vyāghāta, Vajra, Vyatīpāta, Parigha, Vaidhṛti) barred.",
+        source: { ne: "मुहूर्त चिन्तामणि १.३४", en: "Muhūrta Chintāmaṇi 1.34" },
+        shloka: MC_1_34_SHLOKA,
+        gloss: MC_1_34_GLOSS,
+      },
+      {
+        id: "karana",
+        ne: "करण — विष्टि (भद्रा) र चार स्थिर करण (शकुनि, चतुष्पाद, नाग, किंस्तुघ्न) वर्जित।",
+        en: "Karaṇa — Viṣṭi (Bhadrā) and the four fixed karaṇas (Śakuni, Catuṣpāda, Nāga, Kiṃstughna) barred.",
+        source: { ne: "मुहूर्त चिन्तामणि १.४३", en: "Muhūrta Chintāmaṇi 1.43" },
+        shloka: "शुक्ले पूर्वार्धोऽष्टम्यर्कैकदश्या चतुर्ध्या परार्धं । कृष्णेऽन्त्यार्धं स्यात्तृतीयादशम्योः पूर्वभागे सप्तमीशम्भुतिथ्योः ॥",
+        gloss: {
+          ne: "अष्टमी, पूर्णिमा, चतुर्थी, एकादशी, तृतीया, दशमी, सप्तमी र चतुर्दशीका भद्रा (विष्टि) पर्ने भाग वर्जित।",
+          en: "Defines the portions of the 8th, 15th, 4th, 11th, 3rd, 10th, 7th and 14th tithis occupied by Bhadrā (Viṣṭi), which must be barred.",
+        },
+      },
+      {
+        id: "vara",
+        ne: "वार — मंगलबार र शनिबार वर्जित।",
+        en: "Vāra — Tuesday and Saturday barred.",
+        source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi" },
+        gloss: {
+          ne: "बृहत्संहिता (१.४) अनुसार ब्रह्माले नै मंगलबारलाई अशुभ भनेका; शनि र मंगल 'क्रूर वार' हुन् — मुहूर्त चिन्तामणिले विवाहका लागि सोम, बुध, बिहीबार र शुक्रबार मात्र प्रशस्त मानेको छ (रवि-कुज-शनि विशेष त्याज्य)।",
+          en: "Per the Bṛhat Saṃhitā (1.4), Brahmā himself declared Tuesday inauspicious; Saturday and Tuesday are 'krūra vāra' — the Muhūrta Chintāmaṇi admits only Mon, Wed, Thu and Fri for marriage (Ravi-Kuja-Śani especially avoided).",
+        },
+      },
+      {
+        id: "dosha",
+        ne: "दोष — दग्धा, शून्य, भद्रा र मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु) परेको दिन पूरै त्याज्य; गोधूलिले पनि छुट दिँदैन।",
+        en: "Doṣa — Dagdha, Śūnya, Bhadrā, and malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu) scrub the whole day; no Godhūli rescue.",
+        source: { ne: "मुहूर्त चिन्तामणि ६.५९", en: "Muhūrta Chintāmaṇi 6.59" },
+        shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु... लत्ताख्याः",
+        gloss: {
+          ne: "लत्ता दोष — ग्रहले आफ्नो स्थानबाट निश्चित नक्षत्रलाई 'लात हान्छ'; त्यस्तो दिन त्याज्य।",
+          en: "Defines the Latta defect, where a planet 'kicks' specific nakṣatras from its position — such days are scrubbed.",
+        },
+      },
+      {
+        id: "graha",
+        ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन, न त बाल्य/वृद्ध (उदय वा अस्तको सन्निकट कमजोर); संक्रान्तिको सन्निकट समय र ग्रहण ±३ दिन वर्जित।",
+        en: "Graha — Jupiter & Venus must be udaya — neither combust nor bāla/vṛddha (weak just after rising or before setting); Sankrānti buffers and eclipse ±3 days excluded.",
+        source: { ne: "धर्मसिन्धु (शुक्रास्त-वर्ज्य)", en: "Dharma Sindhu (Śukra-asta-varjya)" },
+        shloka: "तत्रास्तात्प्राक् सप्ताहं वार्धक्यम् । उदयोत्तरं सप्ताहं बाल्यमिति मध्यमः पक्षः ॥",
+        gloss: {
+          ne: "अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष।",
+          en: "Seven days before setting is old age (vṛddha); seven days after rising is infancy (bāla) — the medium rule.",
+        },
+      },
+      {
+        id: "simhastha",
+        ne: "सिंहस्थ गुरु — बृहस्पति सिंह राशिमा रहेको सम्पूर्ण अवधि विवाह वर्जित।",
+        en: "Simhastha Guru — marriage is barred for the whole transit of Jupiter through Siṃha (Leo).",
+        source: { ne: "धर्मसिन्धु (सिंहस्थ-वर्ज्य)", en: "Dharma Sindhu (Simhastha-varjya)" },
+        shloka: "मघानक्षत्रगते सिंहाशगते च गुरौ सर्वदेशेषु सर्वमाङ्गलिककर्मणां निषेधः ॥",
+        gloss: {
+          ne: "बृहस्पति मघा नक्षत्र वा सिंह राशिमा हुँदा सबै देशमा सम्पूर्ण मांगलिक कर्म निषेध।",
+          en: "When Jupiter is in Maghā nakṣatra or the sign Siṃha, all auspicious rites are prohibited in every region.",
+        },
+      },
+      {
+        id: "kshaya-paksha",
+        ne: "क्षय पक्ष — एउटै पक्षमा दुई तिथि क्षय भई १३ तिथिको पक्ष बन्यो भने (अतिनिन्द्य) पूरै अवधि वर्जित; यसलाई अरू कुनै शुभ योगले पनि काट्दैन।",
+        en: "Kṣaya Pakṣa — if a fortnight loses two tithis and becomes a 13-tithi pakṣa (atinindya), the whole period is barred; no other favourable factor overrides it.",
+        source: { ne: "मुहूर्त चिन्तामणि १ (श्लोक ४८ भाष्य)", en: "Muhūrta Chintāmaṇi 1 (comm. on 48)" },
+        shloka: "त्रयोदश दिने पक्षे यस्मिन् पक्षे तिथिक्षयद्वयम् ... पक्षे विनष्टे सकलं विनष्टमित्याहुराचार्याः समस्ताः ॥",
+        gloss: {
+          ne: "दुई तिथि क्षय भई १३ दिनको पक्ष बन्दा 'पक्ष नष्ट भए सबै नष्ट' भनी सबै आचार्य भन्छन्।",
+          en: "In a 13-day fortnight where two tithis are lost, 'when the pakṣa is destroyed, all is destroyed,' say all the Ācāryas.",
+        },
+      },
     ],
   },
   bratabandha: {
@@ -59,16 +192,138 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       ne: "उपनयन (ब्रतबन्ध) संस्कारका लागि शुभ मिति — बालकको विद्यारम्भ र यज्ञोपवीत धारणका शुभ दिन।",
       en: "Auspicious dates for the Upanayana (Bratabandha) sacred-thread rite marking the start of a boy's formal study.",
     },
-    method: DAYTIME_INTRO,
+    method: {
+      ne: "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि मध्याह्नसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका उपनयन नियमहरू लगाइन्छ। मध्याह्नअघि शुद्ध मुहूर्त भेटिए मात्र दिन प्रकाशित हुन्छ।",
+      en: "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to madhyāhna, then applies the Upanayana rules below. A day is published only if a clean pre-noon muhūrta survives.",
+    },
     rules: [
-      { ne: "काल — गुरु उत्तरायणमा हुनुपर्छ (सूर्य मकरदेखि मिथुनसम्म: माघ–असार); चातुर्मास र अधिकमास वर्जित।", en: "Season — Sun in an Uttarāyaṇa rāśi (Makara→Mithuna: Māgha–Āṣāḍha); Chaturmāsa & Adhik-māsa barred." },
-      { ne: "तिथि — शुक्ल २,३,५,१०,११,१२ वा कृष्ण २,३,५; रिक्ता र अमावस्या वर्जित।", en: "Tithi — śukla 2,3,5,10,11,12 or kṛṣṇa 2,3,5; rikta & Amāvasyā out." },
-      { ne: "नक्षत्र — भरणी, कृत्तिका, मघा, विशाखा र ज्येष्ठा बाहेक सबै शुभ नक्षत्र।", en: "Nakṣatra — all except Bharaṇī, Kṛttikā, Maghā, Viśākhā, Jyeṣṭhā." },
-      { ne: "वार — मंगलबार र शनिबार वर्जित; दिनको समय (सूर्योदय–सूर्यास्त) मात्र।", en: "Vāra — Tuesday & Saturday barred; daytime only (sunrise→sunset)." },
-      { ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन।", en: "Graha — Jupiter & Venus must be udaya (not combust)." },
-      { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
-      { ne: "संक्रान्ति र ग्रहण (±३ दिन) वर्जित; दुर्मुहूर्त परेको अवधि मात्र छाडिन्छ (पूरै दिन होइन)।", en: "Sankrānti and eclipse (±3 days) barred; Dur-muhūrta skips only the affected period (not the whole day)." },
-      { ne: "दोष — दग्धा, शून्य र मंगल/राहुको लत्ता परेको दिन वर्जित।", en: "Doṣa — Dagdha, Śūnya, and Mars/Rāhu Latta days excluded." },
+      {
+        ne: "काल — सूर्य उत्तरायण राशिमा हुनुपर्छ (मकरदेखि मिथुन: माघ–असार); चातुर्मास र अधिकमास वर्जित।",
+        en: "Season — Sun in an Uttarāyaṇa rāśi (Makara→Mithuna: Māgha–Āṣāḍha); Chaturmāsa & Adhik-māsa barred.",
+        source: { ne: "मुहूर्त चिन्तामणि (उपनयन)", en: "Muhūrta Chintāmaṇi (Upanayana)" },
+        shloka: "माघफल्गुनवैशाखज्येष्ठाषाढेषु शोभनम्। उदीच्यगेऽर्के विप्राणां सति चन्द्रे च शुद्धितः॥",
+        gloss: {
+          ne: "माघ, फाल्गुन, वैशाख, ज्येष्ठ र आषाढमा शुभ; सूर्य उत्तरतिर (उत्तरायण) हुँदा। अधिकमास र चातुर्मास वर्जित।",
+          en: "Auspicious in Māgha, Phālguna, Vaiśākha, Jyeṣṭha and Āṣāḍha when the Sun is in the northern course (Uttarāyaṇa). Adhik-māsa and Chaturmāsa are barred.",
+        },
+      },
+      {
+        id: "tithi",
+        ne: "तिथि — शुक्ल २,३,५,१०,११,१२ वा कृष्ण २,३,५।",
+        en: "Tithi — śukla 2,3,5,10,11,12 or kṛṣṇa 2,3,5.",
+        source: { ne: "मुहूर्त चिन्तामणि (उपनयन तिथि)", en: "Muhūrta Chintāmaṇi (Upanayana tithi)" },
+        shloka: "दशैकादशी द्वादशी द्वितीया तृतीया पञ्चमी दशमीषु।",
+        gloss: {
+          ne: "दशमी, एकादशी, द्वादशी, द्वितीया, तृतीया र पञ्चमी — उपनयनका शुभ तिथि।",
+          en: "Daśamī, Ekādaśī, Dvādaśī, Dvitīyā, Tṛtīyā and Pañcamī are the favourable Upanayana tithis.",
+        },
+      },
+      {
+        id: "galagraha",
+        ne: "गलग्रह तिथि — १,४,७,८,९,१३,१४,१५ (पूर्णिमा/अमावस्या) वर्जित।",
+        en: "Galagraha tithis — 1,4,7,8,9,13,14,15 (Pūrṇimā/Amāvasyā) barred.",
+        source: { ne: "मुहूर्त चिन्तामणि (गलग्रह)", en: "Muhūrta Chintāmaṇi (Galagraha)" },
+        gloss: {
+          ne: "प्रतिपदा, चतुर्थी, सप्तमी, अष्टमी, नवमी, त्रयोदशी, चतुर्दशी र पूर्णिमा/अमावस्या — गलग्रह दोषले उपनयनमा वर्जित।",
+          en: "Pratipadā, Caturthī, Saptamī, Aṣṭamī, Navamī, Trayodaśī, Caturdaśī and Pūrṇimā/Amāvasyā are barred as Galagraha defects for Upanayana.",
+        },
+      },
+      {
+        ne: "नक्षत्र — तलको परम्परा मोड अनुसार: शास्त्रीय उपनयन (क्षिप्र/ध्रुव/चर/मृदु + मघा/मूल), नेपाली पञ्चाङ्ग (भरणी/कृत्तिका/मघा/विशाखा/ज्येष्ठा बाहेक), वा उदार (मघा पनि स्वीकार्य)।",
+        en: "Nakṣatra — per tradition mode below: Classical Upanayana (Kṣipra/Dhruva/Cara/Mṛdu + Maghā/Mūla), Nepali Panchāṅga (all except Bharaṇī/Kṛttikā/Maghā/Viśākhā/Jyeṣṭhā), or Liberal (Maghā also allowed).",
+        source: { ne: "मुहूर्त चिन्तामणि (उपनयन नक्षत्र)", en: "Muhūrta Chintāmaṇi (Upanayana nakṣatra)" },
+        shloka: "हस्ताश्विपुष्यमृगसौम्यमघोत्तरात्रयं सौम्यमैत्रं मूलं चरं च खलु पुष्यपुनर्वसू च।",
+        gloss: {
+          ne: "शास्त्रले हस्त, अश्विनी, पुष्य, मृगशिरा, पुनर्वसु, मघा, तीन उत्तरा, मूल र चर नक्षत्र आदि — करिब १९ नक्षत्रलाई शुभ मान्छ (शास्त्रीय मोड)।",
+          en: "The śāstra favours Hasta, Aśvinī, Puṣya, Mṛgaśira, Punarvasu, Maghā, the three Uttarās, Mūla and the cara stars — about 19 nakṣatras (Classical mode).",
+        },
+      },
+      {
+        id: "vara",
+        ne: "वार — सोम, बुध, बिहि, शुक्र मात्र (मंगलबार र शनिबार वर्जित)।",
+        en: "Vāra — Mon, Wed, Thu, Fri only (Tuesday & Saturday barred).",
+        source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi" },
+        shloka: "रविवारबुधगुरुशुक्रसोमवारेषु क्षितितनयदिवसवारो न शुभकृदिति यदि पितामहोक्ते।",
+        gloss: {
+          ne: "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार हुन् — ब्रतबन्धमा वर्जित। रविवार, बुधवार, गुरुवार, शुक्रवार र सोमवार शुभ।",
+          en: "Per Pitāmaha (Brahmā), Tuesday is not auspicious; Saturday and Tuesday are krūra vāra — barred for Bratabandha. Sunday, Wednesday, Thursday, Friday and Monday are auspicious.",
+        },
+      },
+      {
+        id: "time-window",
+        ne: "समय — सूर्योदय–मध्याह्न मात्र (अपराह्न/रात्रि वर्जित)।",
+        en: "Time — sunrise→madhyāhna only (aparāhna/night rejected).",
+        source: { ne: "मुहूर्त चिन्तामणि (उपनयन काल)", en: "Muhūrta Chintāmaṇi (Upanayana time)" },
+        shloka: "उपनयनमपराह्वे न कार्यम्।",
+        gloss: {
+          ne: "उपनयन अपराह्नमा गर्नु हुँदैन — पूर्वाह्न वा मध्याह्न मात्र।",
+          en: "Upanayana must not be done in the afternoon — only forenoon or midday.",
+        },
+      },
+      {
+        id: "graha",
+        ne: "ग्रह — गुरु र शुक्र अस्त, बाल्य वा वृद्ध हुनुहुँदैन।",
+        en: "Graha — Jupiter & Venus must be udaya — neither combust nor bāla/vṛddha.",
+        source: { ne: "धर्मसिन्धु (शुक्रास्त-वर्ज्य)", en: "Dharma Sindhu (Śukra-asta-varjya)" },
+        shloka: "अस्ते च गुरौ शुक्रे बाले वृद्धे मलिम्लुचे।",
+        gloss: {
+          ne: "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष।",
+          en: "When Jupiter or Venus is combust (asta), bāla (infant), vṛddha (old) or during malimluca, auspicious works are barred. Seven days before setting is vṛddha; seven days after rising is bāla — the medium rule.",
+        },
+      },
+      {
+        id: "simhastha",
+        ne: "सिंहस्थ गुरु — बृहस्पति सिंह राशिमा रहेको अवधि वर्जित (नेपाली समुदायले नमान्ने भए बन्द गर्न सकिन्छ)।",
+        en: "Simhastha Guru — Jupiter in Siṃha (Leo) barred (toggle off if your community does not enforce it).",
+        source: { ne: "धर्मसिन्धु (सिंहस्थ-वर्ज्य)", en: "Dharma Sindhu (Simhastha-varjya)" },
+        shloka: "मघानक्षत्रगते सिंहाशगते च गुरौ सर्वदेशेषु सर्वमाङ्गलिककर्मणां निषेधः ॥",
+        gloss: {
+          ne: "बृहस्पति मघा नक्षत्र वा सिंह राशिमा हुँदा सबै देशमा सम्पूर्ण मांगलिक कर्म निषेध।",
+          en: "When Jupiter is in Maghā nakṣatra or the sign Siṃha, all auspicious rites are prohibited in every region.",
+        },
+      },
+      {
+        id: "yoga",
+        ne: "योग — व्यतीपात र वैधृति वर्जित।",
+        en: "Yoga — Vyatīpāta & Vaidhṛti barred.",
+        source: { ne: "मुहूर्त चिन्तामणि १.३४", en: "Muhūrta Chintāmaṇi 1.34" },
+        shloka: MC_1_34_SHLOKA,
+        gloss: {
+          ne: "यस श्लोकमा व्यतीपात, भद्रा र वैधृति लगायत शुभकार्यमा त्याज्य दोषहरूको उल्लेख छ। शास्त्रीय आधारमा हाम्रो प्रणालीले यसमध्ये व्यतीपात र वैधृतिलाई योगदोषका रूपमा लागू गर्छ।",
+          en: "This verse lists several defects to avoid in auspicious work, including Vyatīpāta, Bhadrā and Vaidhṛti. On that classical basis, our system applies Vyatīpāta and Vaidhṛti as yoga defects.",
+        },
+      },
+      {
+        id: "karana",
+        ne: "करण — विष्टि (भद्रा) वर्जित।",
+        en: "Karaṇa — Viṣṭi (Bhadrā) barred.",
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ · १.४३", en: "Muhūrta Chintāmaṇi 1.34 · 1.43" },
+        shloka: MC_1_34_SHLOKA,
+        gloss: {
+          ne: "यस श्लोकमा उल्लिखित 'भद्रा' ले विष्टि करण जनाउँछ। प्रणालीले सम्पूर्ण विष्टि करणलाई वर्जित मान्छ।",
+          en: "The word 'Bhadrā' in this verse denotes Viṣṭi karaṇa. The system treats the entire Viṣṭi karaṇa as barred.",
+        },
+      },
+      {
+        ne: "संक्रान्ति र ग्रहण (±३ दिन) वर्जित; दुर्मुहूर्त परेको अवधि मात्र छाडिन्छ (पूरै दिन होइन)।",
+        en: "Sankrānti and eclipse (±3 days) barred; Dur-muhūrta skips only the affected period (not the whole day).",
+        source: { ne: "मुहूर्त चिन्तामणि (संक्रान्ति·ग्रहण·दुर्मुहूर्त)", en: "Muhūrta Chintāmaṇi (Sankrānti · eclipse · Dur-muhūrta)" },
+        gloss: {
+          ne: "संक्रान्ति र ग्रहणका वरिपरिको समय त्याज्य; दुर्मुहूर्त भनेको केवल त्यो घडी छाडिन्छ — दिन पूरै होइन।",
+          en: "Time around Sankrānti and eclipse is rejected; Dur-muhūrta drops only the affected clock slice — not the whole day.",
+        },
+      },
+      {
+        id: "dosha",
+        ne: "दोष — दग्धा, शून्य र मंगल/राहुको लत्ता परेको दिन वर्जित।",
+        en: "Doṣa — Dagdha, Śūnya, and Mars/Rāhu Latta days excluded.",
+        source: { ne: "मुहूर्त चिन्तामणि (दग्धा·शून्य·लत्ता)", en: "Muhūrta Chintāmaṇi (Dagdha · Śūnya · Latta)" },
+        shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु... लत्ताख्याः",
+        gloss: {
+          ne: "दग्धा र शून्य तिथि दोष, तथा मंगल/राहुको लत्ताले नक्षत्र बिग्रेको दिन — दिन-शुद्धि अन्तर्गत हटाइन्छ।",
+          en: "Dagdha and Śūnya tithi defects, and days whose nakṣatra is struck by Mars/Rāhu Latta, are scrubbed under day-śuddhi.",
+        },
+      },
     ],
   },
   "griha-aarambha": {
@@ -78,14 +333,165 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     },
     method: DAYTIME_INTRO,
     rules: [
-      { ne: "समय — शिलान्यास (जग हाल्ने) दिनको समयमा मात्र (सूर्योदय–सूर्यास्त)।", en: "Time — foundation-laying is a daytime rite (sunrise→sunset only)." },
-      { ne: "सूर्य राशि — मेष, कर्कट, तुला, वृश्चिक, धनु, मकर, कुम्भ (वास्तु अनुकूल); अधिकमास वर्जित।", en: "Sun-sign — Meṣa, Karka, Tulā, Vṛśchika, Dhanu, Makara, Kumbha (Vāstu-facing); Adhik-māsa barred." },
-      { ne: "तिथि — २,३,५,७,१०,११,१२ मात्र; प्रतिपदा, त्रयोदशी, रिक्ता (४,९,१४) र अमावस्या वर्जित।", en: "Tithi — only 2,3,5,7,10,11,12; Pratipadā, Trayodaśī, rikta (4,9,14) and Amāvasyā out." },
-      { ne: "नक्षत्र — शास्त्रसम्मत निर्माण नक्षत्रहरूको निश्चित सूची: रोहिणी, मृगशिरा, पुनर्वसु, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — a fixed list of the śāstra-sanctioned construction nakṣatras: Rohiṇī, Mṛgaśira, Punarvasu, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, U.Bhādrapada, Revatī." },
-      { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
-      { ne: "लग्न — स्थिर (वृष, सिंह, वृश्चिक, कुम्भ) प्राथमिकता, द्विस्वभाव स्वीकार्य; चर लग्न वर्जित — भवन स्थिर रहोस्।", en: "Lagna — fixed (Vṛṣa, Siṃha, Vṛśchika, Kumbha) preferred, dual accepted; movable lagnas barred — so the building is stable." },
-      { ne: "दुर्मुहूर्त परेको अवधि छाडिन्छ (पूरै दिन होइन); संक्रान्ति (साधारण ±६ घण्टा, प्रमुख ±१६ घण्टा) र ग्रहणको दिन वर्जित।", en: "Dur-muhūrta skips only the affected period (not the whole day); Sankrānti (ordinary ±6h, cardinal ±16h) and the eclipse day are barred." },
-      { ne: "निर्माणकार्य चातुर्मासमा रोकिँदैन — त्यसैले चातुर्मास वर्जित छैन।", en: "Construction is not paused during Chaturmāsa, so it is not barred here." },
+      {
+        ne: "अधिकमास (मलमास) — वास्तुकर्म (घर निर्माण) वर्जित; मलिम्लुच चल्दा शिलान्यास हुँदैन।",
+        en: "Adhik-māsa (Malmāsa) — vāstu karma (house construction) is barred; no foundation-laying during malimluca.",
+        source: {
+          ne: "धर्मसिन्धु — मलमासे वर्ज्यानि (काशीनाथ उपाध्याय)",
+          en: "Dharma Sindhu — Malmāse Varjyāni (Kāśīnātha Upādhyāya)",
+        },
+        shloka:
+          "उपाकर्मोत्सर्जने अष्टकाश्राद्धानि गृहप्रवेशचूडामौञ्जीबंधविवाहास्तीर्थादि-यात्रा वास्तुकर्मैतान्यधिवर्ज्यानि ।",
+        gloss: {
+          ne: "उपाकर्म, उत्सर्जन, अष्टका श्राद्ध, गृहप्रवेश, चूडाकर्म, ब्रतबन्ध (मौञ्जीबन्धन), विवाह, तीर्थयात्रा र वास्तुकर्म — यी सबै मलमासमा निषेध। गुरु–शुक्र अस्त/बाल्य/वृद्ध र मलिम्लुच हुँदा वास्तुकर्म त्याज्य।",
+          en: "Upākarma, utsarjana, aṣṭakā-śrāddha, gṛha-praveśa, cūḍākarma, bratabandha (mauñjī-bandhana), vivāha, tīrtha-yātrā and vāstu karma — all barred in Malmāsa. When Guru/Śukra are combust, bāla or vṛddha, and malimluca runs, vāstu karma is prohibited.",
+        },
+      },
+      {
+        ne: "समय — शिलान्यास (जग हाल्ने) दिनको समयमा मात्र (सूर्योदय–सूर्यास्त)।",
+        en: "Time — foundation-laying is a daytime rite (sunrise→sunset only).",
+        source: { ne: "मुहूर्त चिन्तामणि (वास्तु — दिवाकाल निर्देश)", en: "Muhūrta Chintāmaṇi (Vāstu — daytime instruction)" },
+        gloss: {
+          ne: "मुहूर्त चिन्तामणिले शिलान्यास रात्रिमा नगरी दिवाकालमा गर्न निर्देश गर्छ। प्रणालीले यसलाई सूर्योदय–सूर्यास्तसम्मको स्क्यानका रूपमा लागू गर्छ।",
+          en: "Muhūrta Chintāmaṇi directs that foundation-laying be done in daytime, not at night. The system applies this as a sunrise→sunset scan.",
+        },
+      },
+      {
+        id: "solar-month",
+        ne: "सूर्य राशि — मेष, वृष, सिंह, वृश्चिक, मकर वा कुम्भ (वसिष्ठ मत)।",
+        en: "Sun-sign — Meṣa, Vṛṣabha, Siṃha, Vṛśchika, Makara or Kumbha (Vasiṣṭha’s view).",
+        source: {
+          ne: "मुहूर्त चिन्तामणि — वास्तु १२.१६ · वसिष्ठ मत (व्याख्या)",
+          en: "Muhūrta Chintāmaṇi — Vāstu 12.16 · Vasiṣṭha’s view (commentary)",
+        },
+        shloka:
+          "चैत्रेऽर्के मेषगे लाभो ज्येष्ठे वृषगते मृतिः । भाद्रे सिंहाशगे लाभः कार्त्तिके तुळगे मृतिः ॥ मृगशीर्षे वृश्चिकगे मृतिः पौषे मकरगे धनम् । माघे कुम्भगते लाभः फाल्गुने मीनगे मृतिः ॥",
+        gloss: {
+          ne: "यो वसिष्ठ मत प्रणालीको मुख्य आधार हो — मेष, वृष, सिंह, वृश्चिक, मकर, कुम्भमा सूर्य हुँदा गृह आरम्भ धन–सुखप्रद। अध्याय १२ श्लोक १६ ले सामान्य सूर्य-फल भन्छ («चैत्रेऽर्के मेषगे लाभो… माघे कुम्भगते लाभः…»); त्यहाँ वृष/वृश्चिकलाई सामान्यतया त्यागिएको भए तापनि चिन्तामणिकै व्याख्यामा वसिष्ठ (र मन्थर आदि) ले यी ६ राशि अत्यन्त शुभ मानेका छन् — हाम्रो सूची त्यसैमा आधारित।",
+          en: "Vasiṣṭha’s verse is the system’s main basis — Sun in Meṣa, Vṛṣabha, Siṃha, Vṛśchika, Makara or Kumbha makes starting a house wealth- and comfort-giving. Ch. 12 verse 16 states general Sun-fruits («caitre’rke meṣage lābho… māghe kumbhagate lābhaḥ…»); though Vṛṣabha/Vṛśchika are often dropped in that general fruit scheme, Chintāmaṇi’s own commentary cites Vasiṣṭha (and Manthara et al.) favouring these six signs — our list follows that.",
+        },
+      },
+      {
+        id: "tithi",
+        ne: "तिथि — प्रतिपदा (१), रिक्ता (४,९,१४) र अमावस्या मात्र वर्जित; बाँकी सबै (पूर्णिमासहित) ग्राह्य। विवाहजस्तो कडा संस्कार नभएकाले तिथि उदार।",
+        en: "Tithi — only Pratipadā (1), rikta (4,9,14) and Amāvasyā are barred; all the rest (Pūrṇimā included) are allowed. The gate is lenient — a house-start is not a marriage-grade saṃskāra.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि — वास्तु प्रकरण अध्याय १२, श्लोक १८",
+          en: "Muhūrta Chintāmaṇi — Vāstu prakaraṇa ch. 12, verse 18",
+        },
+        gloss: {
+          ne: "शास्त्रीय निषेधमा आइत/मंगल, रिक्ता (४,९,१४), पर्व (८,१४,१५), औंसी र प्रतिपदा पर्छन्। हाम्रो उदार नियम: प्रतिपदा, रिक्ता र अमावस्या मात्र वर्जित — बाँकी ग्राह्य (शास्त्रबाट प्रेरित भएर प्रणालीले यसरी लागू गर्छ)।",
+          en: "The classical prohibition covers Sunday/Tuesday, rikta (4,9,14), parva (8,14,15), Amāvasyā and Pratipadā. Our lenient gate: only Pratipadā, rikta and Amāvasyā are barred — the rest qualify (inspired by the śāstra, applied this way by the system).",
+        },
+      },
+      {
+        id: "nakshatra",
+        ne: "नक्षत्र — मृदु/ध्रुव/चर/क्षिप्र श्रेणी: रोहिणी, मृगशिरा, पुनर्वसु, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, उत्तरभाद्रपदा, रेवती।",
+        en: "Nakṣatra — mṛdu/dhruva/cara/kṣipra set: Rohiṇī, Mṛgaśira, Punarvasu, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, U.Bhādrapada, Revatī.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि — वास्तु प्रकरण अध्याय १२, श्लोक १५ (आचार्य श्रीराम / राम दैवज्ञ)",
+          en: "Muhūrta Chintāmaṇi — Vāstu prakaraṇa ch. 12, verse 15 (Ācārya Śrīrāma / Rāma Daivajña)",
+        },
+        shloka: "मृदुकुध्रुववारुणमारुतधनिष्ठाकरतिष्यैः । गृहमारम्भणं शुभदं...",
+        gloss: {
+          ne: "श्लोकअनुसार: मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), कु/रोहिणी, ध्रुव (तीन उत्तरा), वारुण (शतभिषा), मारुत (स्वाती), धनिष्ठा, कर (हस्त), तिष्य (पुष्य)। पुनर्वसु र श्रवण नेपाली पञ्चाङ्ग तथा अन्य वास्तु परम्परामा ग्राह्य मानिएकाले प्रणालीले पनि स्वीकार गर्छ — यी दुई उक्त श्लोकबाट लिइएका होइनन्।",
+          en: "From the verse: Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Ku/Rohiṇī, Dhruva (the three Uttarās), Vāruṇa (Śatabhiṣā), Māruta (Svātī), Dhaniṣṭhā, Kara (Hasta), Tiṣya (Puṣya). Punarvasu and Śravaṇa are accepted because Nepali panchāṅga and other vāstu traditions admit them — they are not taken from this quoted verse.",
+        },
+      },
+      {
+        id: "vara",
+        ne: "वार — शास्त्रीय सूचीमा मंगलबार र शनिबार वर्जित; अन्य सबै वार ग्राह्य।",
+        en: "Vāra — in the classical list, Tuesday and Saturday are barred; all other weekdays are acceptable.",
+        source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi" },
+        shloka: "वर्ज्या रविभौमरिताः पर्वामाप्रतिपदोऽपि गृहचक्रे । क्षितितनयदिवसवारो न शुभकृदिति यदि पितामहोक्ते ।",
+        gloss: {
+          ne: "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार हुन् — गृहचक्रमा (भवन निर्माण) रवि, मंगलवार र पर्व, अमावस्या, प्रतिपदा वर्जित। यद्यपि यहाँ रविवार पनि निषेधमा उल्लिखित छ, नेपाली परम्परा र प्रणालीको व्यावहारिक नियममा आइतवार स्वीकार्य मानिएको छ; मंगल र शनि मात्र वर्जित।",
+          en: "Per Pitāmaha (Brahmā), Tuesday is inauspicious; Saturn and Mars are krūra vāras — in gṛha-cakra (house construction) Sunday, Tuesday, parva, Amāvasyā and Pratipadā are barred. Though Sunday is also mentioned in the prohibition, in Nepali tradition and the system's practical rule, Sunday is accepted; only Tuesday and Saturday are barred.",
+        },
+      },
+      {
+        id: "graha",
+        ne: "ग्रह — गुरु र शुक्र अस्त, बाल्य वा वृद्ध हुनुहुँदैन (धर्मसिन्धुले वास्तुकर्ममा यही नियम लगाउँछ)।",
+        en: "Graha — Jupiter & Venus must not be combust (ast), bāla or vṛddha (Dharma Sindhu applies this to vāstu karma).",
+        source: { ne: "धर्मसिन्धु (वास्तुकर्म)", en: "Dharma Sindhu (vāstu karma)" },
+        shloka: "अस्ते च गुरौ शुक्रे बाले वृद्धे मलिम्लुचे।",
+        gloss: {
+          ne: "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष। प्रणालीले वास्तुकर्ममा पनि यही बाल्य/वृद्ध र अस्त फिल्टर लागू गर्छ।",
+          en: "When Jupiter or Venus is combust (asta), bāla, vṛddha or during malimluca, auspicious works are barred. Seven days before setting is vṛddha; seven days after rising is bāla — the medium rule. The system applies the same combust and bāla/vṛddha filter to vāstu karma.",
+        },
+      },
+      {
+        id: "yoga",
+        ne: "योग — व्यतीपात र वैधृति योग वर्जित।",
+        en: "Yoga — Vyatīpāta & Vaidhṛti yoga barred.",
+        source: { ne: "मुहूर्त चिन्तामणि अध्याय १, श्लोक ३४", en: "Muhūrta Chintāmaṇi ch. 1, verse 34" },
+        shloka:
+          "जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ । न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥",
+        gloss: {
+          ne: "यस श्लोकमा व्यतीपात, भद्रा र वैधृति लगायत शुभकार्यमा त्याज्य दोषहरूको उल्लेख गरिएको छ। शास्त्रीय आधारमा हाम्रो प्रणालीले यसमध्ये व्यतीपात र वैधृतिलाई योगदोषका रूपमा लागू गर्छ।",
+          en: "This verse lists several defects to avoid in auspicious work, including Vyatīpāta, Bhadrā and Vaidhṛti. On that classical basis, our system applies Vyatīpāta and Vaidhṛti as yoga defects.",
+        },
+      },
+      {
+        id: "karana",
+        ne: "करण — विष्टि (भद्रा) करण वर्जित।",
+        en: "Karaṇa — Viṣṭi (Bhadrā) karaṇa barred.",
+        source: { ne: "मुहूर्त चिन्तामणि अध्याय १, श्लोक ३४", en: "Muhūrta Chintāmaṇi ch. 1, verse 34" },
+        shloka:
+          "जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ । न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥",
+        gloss: {
+          ne: "यस श्लोकमा उल्लिखित 'भद्रा' ले विष्टि करण जनाउँछ। प्रणालीले सम्पूर्ण विष्टि करणलाई वर्जित मान्छ।",
+          en: "The word 'Bhadrā' in this verse denotes Viṣṭi karaṇa. The system treats the entire Viṣṭi karaṇa as barred.",
+        },
+      },
+      {
+        id: "lagna",
+        ne: "लग्न — स्थिर (वृष, सिंह, वृश्चिक, कुम्भ) प्राथमिकता, द्विस्वभाव स्वीकार्य; चर लग्न वर्जित — भवन स्थिर रहोस्।",
+        en: "Lagna — fixed (Vṛṣa, Siṃha, Vṛśchika, Kumbha) preferred, dual accepted; movable lagnas barred — so the building is stable.",
+        source: { ne: "मुहूर्त चिन्तामणि (वसिष्ठ मत) ", en: "Muhūrta Chintāmaṇi (Vasiṣṭha's view)" },
+        shloka:
+          "स्थिरलग्ने गृहं कार्यं चरं च न कदाचन । द्विस्वभावं भवेच्छस्तं लग्नदोषविवर्जितम् ॥",
+        gloss: {
+          ne: "स्थिर लग्नमा गृहकार्य गर्नुपर्छ; चर लग्न कहिल्यै छनोट गर्नु हुँदैन। द्विस्वभाव लग्न स्वीकार्य हुन्छ यदि लग्न दोषबाट रहित छ भने। वास्तुशास्त्रीय परम्पराअनुसार स्थिर लग्नमा जग हाल्दा भवनको स्थिरता बढ्ने मानिन्छ। प्रणालीले चर लग्न त्याग्छ; द्विस्वभाव स्वीकार्य राख्छ।",
+          en: "House construction should be done in a fixed lagna; movable lagna must never be chosen. Dual-natured lagna is acceptable if free from lagna defects. Per vāstu tradition, a fixed lagna is favoured for the building's stability. The system drops movable lagnas and keeps dual (dvisvabhāva) acceptable.",
+        },
+      },
+      {
+        id: "lagna-strength",
+        ne: "लग्न बल र ग्रह योग — सूर्य सप्तम, बुध चतुर्थ, शुक्र तृतीय र गुरु लग्नमा भए शत–शत वर्ष स्थायित्व।",
+        en: "Lagna strength & planetary yoga — Sun in 7th, Mercury in 4th, Venus in 3rd and Jupiter in lagna ensure hundred-hundred years' stability.",
+        source: { ne: "मुहूर्त चिन्तामणि (आचार्य श्रीराम)", en: "Muhūrta Chintāmaṇi (Ācārya Śrīrāma)" },
+        shloka:
+          "लग्ने सुरेज्ये सप्तमगे च सूर्ये बुधे चतुर्थे भृगुजे त्रिजेऽर्के। शतं भवेत्तत्र गृहस्य चायुस्तथापरं वर्षशतं वदन्ति ॥",
+        gloss: {
+          ne: "गुरु लग्नमा, सूर्य सप्तममा, बुध चतुर्थमा र शुक्र तृतीयमा हुँदा त्यस गृहको आयु सय वर्ष; तथा अर्को सय वर्ष भनिन्छ (अर्थात् शत–शत = दुई सय)। शास्त्रीय योगले गृहको दीर्घायु र समृद्धि सुनिश्चित गर्छ।",
+          en: "When Jupiter is in lagna, Sun in the 7th, Mercury in the 4th and Venus in the 3rd, that house's lifespan is one hundred years; and another hundred years is said (i.e. hundred-hundred = two hundred). This classical yoga ensures the house's longevity and prosperity.",
+        },
+      },
+      {
+        ne: "दुर्मुहूर्त परेको अवधि छाडिन्छ (पूरै दिन होइन); संक्रान्ति (साधारण ±६ घण्टा, प्रमुख ±१६ घण्टा) र ग्रहणको दिन वर्जित।",
+        en: "Dur-muhūrta skips only the affected period (not the whole day); Sankrānti (ordinary ±6h, cardinal ±16h) and the eclipse day are barred.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि · दिननिर्णय (संक्रान्ति·ग्रहण) — प्रणालीको व्यावहारिक लागू",
+          en: "Muhūrta Chintāmaṇi · Dinanirṇaya (Sankrānti · eclipse) — practical system application",
+        },
+        gloss: {
+          ne: "शास्त्रमा संक्रान्ति आसपासको अवधि त्याज्य मानिएको छ (संस्करणअनुसार घटी फरक हुन सक्छ)। प्रणालीले त्यसलाई व्यावहारिक रूपमा साधारण ±६ र प्रमुख ±१६ घण्टाको सुरक्षा अवधिका रूपमा लागू गर्छ; दुर्मुहूर्त घडी र ग्रहणको दिन पनि छाडिन्छ।",
+          en: "Classically, time around Sankrānti is rejected (ghaṭī values vary by edition). The system applies this practically as ±6h ordinary and ±16h cardinal buffers; Dur-muhūrta slices and the eclipse day are also skipped.",
+        },
+      },
+      {
+        ne: "निर्माणकार्य चातुर्मासमा रोकिँदैन — त्यसैले चातुर्मास वर्जित छैन।",
+        en: "Construction is not paused during Chaturmāsa, so it is not barred here.",
+        source: {
+          ne: "धर्मसिन्धु — मलमासे वर्ज्यानि प्रकरण (निषेध सूचीको सीमा)",
+          en: "Dharma Sindhu — Malmāse Varjyāni section (scope of the ban list)",
+        },
+        gloss: {
+          ne: "धर्मसिन्धुले चातुर्मासमा निर्माण रोक्न स्पष्ट निषेध गरेको छैन — चातुर्मास विशेष गरी विवाह, ब्रतबन्ध, प्रतिष्ठा जस्ता संस्कारमा कडा हेरिन्छ। प्रणालीले वास्तुकर्ममा चातुर्मास फिल्टर लगाउँदैन; नयाँ गृहप्रवेशमा भने चातुर्मास/अधिकमास विचार गरिन्छ।",
+          en: "Dharma Sindhu does not explicitly ban continuing construction in Chaturmāsa — that season is strict mainly for vivāha, bratabandha and pratiṣṭhā. The system does not apply a Chaturmāsa filter to vāstu construction; new gṛha-praveśa still weighs Chaturmāsa/Adhik-māsa.",
+        },
+      },
     ],
   },
   "griha-pravesh": {
@@ -100,7 +506,16 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       { ne: "तिथि — शुक्ल पक्षका वृद्धि तिथि २,३,५,७,१०,११,१३ मात्र।", en: "Tithi — only the śukla-pakṣa growth tithis 2,3,5,7,10,11,13." },
       { ne: "नक्षत्र — स्थिर/मृदु ८ नक्षत्र: रोहिणी, मृगशिरा, उत्तराफाल्गुनी, चित्रा, अनुराधा, उत्तराषाढा, उत्तरभाद्रपदा, रेवती। (कुनै वर्षमा १२ भन्दा कम दिन भए हस्त, स्वाती, श्रवण, धनिष्ठा पनि थपिन्छन्।)", en: "Nakṣatra — the conservative 8 (sthira/mṛdu): Rohiṇī, Mṛgaśira, U.Phalgunī, Chitrā, Anurādhā, U.Aṣāḍhā, U.Bhādrapada, Revatī. (If a year has fewer than 12 days, Hasta, Svātī, Śravaṇa & Dhaniṣṭhā are also admitted.)" },
       { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
-      { ne: "ग्रह — गुरु र शुक्र अस्त हुनुहुँदैन; चन्द्रमा लग्नबाट २/४/५/८/९/१२ भावमा हुनुहुँदैन।", en: "Graha — Jupiter & Venus must be udaya; Moon not in the 2/4/5/8/9/12 house from the lagna." },
+      {
+        ne: "ग्रह — गुरु र शुक्र अस्त, बाल्य वा वृद्ध हुनुहुँदैन (धर्मसिन्धुले वास्तुकर्ममा यही नियम लगाउँछ); चन्द्रमा लग्नबाट २/४/५/८/९/१२ भावमा हुनुहुँदैन।",
+        en: "Graha — Jupiter & Venus must not be combust (ast), bāla or vṛddha (Dharma Sindhu applies this to vāstu karma); Moon not in the 2/4/5/8/9/12 house from the lagna.",
+        source: { ne: "धर्मसिन्धु (वास्तुकर्म)", en: "Dharma Sindhu (vāstu karma)" },
+        shloka: "अस्ते च गुरौ शुक्रे बाले वृद्धे मलिम्लुचे।",
+        gloss: {
+          ne: "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष। प्रणालीले गृहप्रवेशमा पनि यही बाल्य/वृद्ध र अस्त फिल्टर लागू गर्छ।",
+          en: "When Jupiter or Venus is combust (asta), bāla, vṛddha or during malimluca, auspicious works are barred. Seven days before setting is vṛddha; seven days after rising is bāla — the medium rule. The system applies the same combust and bāla/vṛddha filter to gṛha-praveśa.",
+        },
+      },
       { ne: "लग्न — स्थिर र द्विस्वभाव लग्न मात्र स्वीकार्य; चर लग्न वर्जित।", en: "Lagna — only fixed (sthira) and dual (dvisvabhāva) ascendants accepted; movable ascendants rejected." },
       { ne: "दोष — दग्धा, शून्य, मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु), दुर्मुहूर्त (अवधि मात्र), संक्रान्ति र ग्रहणको दिन वर्जित।", en: "Doṣa — Dagdha, Śūnya, malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu), Dur-muhūrta (period only), Sankrānti and the eclipse day excluded." },
     ],

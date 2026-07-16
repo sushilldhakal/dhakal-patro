@@ -220,7 +220,7 @@ export function ShadbalaCard({
         </h3>
         <p className="text-xs mb-3">
           {pick(
-            "पाराशरी षड्बल (लाहिरी निरयण, Swiss Ephemeris)",
+            "पाराशरी षड्बल (लाहिरी निरयण, जेपीएल)",
             data.method,
           )}
         </p>

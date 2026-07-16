@@ -23,7 +23,7 @@ export const PANCHANGA_CACHE_VERSION =
  * instead of serving the stale cached listing. Bump when the sait engine changes.
  */
 export const SAIT_CACHE_VERSION =
-  import.meta.env.VITE_SAIT_CACHE_VERSION ?? "13";
+  import.meta.env.VITE_SAIT_CACHE_VERSION ?? "14";
 
 /** Unversioned base — used by the auth client (/auth, /profiles). */
 export const API_BASE = BASE;
@@ -741,6 +741,7 @@ export interface SaitDetailDay {
   karana_en: string;
   karana_ne: string;
   lagna_en: string;
+  lagna_ne?: string;
   lunar_month_en: string | null;
   lunar_month_ne: string | null;
 }
@@ -750,16 +751,57 @@ export interface SaitDetailResponse {
   category: string;
   category_label_ne: string;
   engine_version?: string;
+  /** Community rule ids the engine dropped for this response (echoed back). */
+  excluded_rules?: string[];
+  /** Bratabandha only — classical | nepali | liberal. */
+  nakshatra_mode?: string | null;
   days: SaitDetailDay[];
 }
 
-export const saitDetailKey = (year: number, category: string, location?: LocationParams) =>
-  ["sait", "detail", SAIT_CACHE_VERSION, year, category, locationCacheKey(location)] as const;
+/** Normalise an exclude list into a stable comma string (sorted, deduped). */
+const excludeParam = (excludeRules?: string[]) =>
+  excludeRules && excludeRules.length > 0
+    ? [...new Set(excludeRules)].sort().join(",")
+    : "";
 
-export const fetchSaitDetail = (year: number, category: string, location?: LocationParams) =>
-  get<SaitDetailResponse>(
-    withSaitCacheVersion(appendLocation(`/nepal/sait/${year}/${category}/detail`, location)),
-  );
+export type BratabandhaNakshatraMode = "classical" | "nepali" | "liberal";
+
+export const saitDetailKey = (
+  year: number,
+  category: string,
+  location?: LocationParams,
+  excludeRules?: string[],
+  nakshatraMode?: string | null,
+) =>
+  [
+    "sait",
+    "detail",
+    SAIT_CACHE_VERSION,
+    year,
+    category,
+    locationCacheKey(location),
+    excludeParam(excludeRules),
+    nakshatraMode && nakshatraMode !== "classical" ? nakshatraMode : "",
+  ] as const;
+
+export const fetchSaitDetail = (
+  year: number,
+  category: string,
+  location?: LocationParams,
+  excludeRules?: string[],
+  nakshatraMode?: string | null,
+) => {
+  const exclude = excludeParam(excludeRules);
+  let path = appendLocation(`/nepal/sait/${year}/${category}/detail`, location);
+  const params = new URLSearchParams();
+  if (exclude) params.set("exclude", exclude);
+  if (nakshatraMode && nakshatraMode !== "classical") {
+    params.set("nakshatra_mode", nakshatraMode);
+  }
+  const qs = params.toString();
+  if (qs) path = `${path}${path.includes("?") ? "&" : "?"}${qs}`;
+  return get<SaitDetailResponse>(withSaitCacheVersion(path));
+};
 
 /** Auspicious days for EVERY ceremony type in one BS month (home-page list). The
  * server computes only that month. `categories` maps category id → BS days. */

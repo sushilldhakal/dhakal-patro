@@ -1,59 +1,207 @@
-import { Info, ScrollText } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Info, Loader2, ScrollText } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
-import { patroCard } from "@/lib/patro-classes";
+import { Switch } from "@/components/ui/switch";
 
 export interface SaitRule {
+  /** Stable id matching the engine's toggleable rules; when set the rule can be switched off. */
+  id?: string;
   ne: string;
   en: string;
+  source?: { ne: string; en: string };
+  /** Sanskrit verse (Devanāgarī) the rule derives from. */
+  shloka?: string;
+  gloss?: { ne: string; en: string };
 }
 
 /**
- * "How this list is generated" — the per-ceremony method paragraph plus the
- * classical rule list the engine actually applies. Rendered on every sāit
- * page so each ceremony explains how its dates are computed, exactly as the
- * vivāha page does. `method` and `rules` come from the backend
- * `/nepal/sait/{category}/about` endpoint (single source of truth).
+ * Classical method + rules for a ceremony. Collapsed by default so the date
+ * list stays primary; opens for readers who want the śāstra rationale.
+ * Rules render as a responsive card grid (up to 4 per row on large screens).
+ *
+ * When `onToggleRule` is supplied, each rule that carries an `id` gets a switch:
+ * turning it off asks the engine to recompute the dates without that rule, so a
+ * community that keeps only a handpicked subset still gets a matching list.
  */
 export function SaitRulesSection({
   method,
   rules,
   engineVersion,
+  defaultOpen = false,
+  enabledRuleIds,
+  onToggleRule,
+  busy = false,
 }: {
   method?: { ne?: string; en?: string } | null;
   rules?: SaitRule[] | null;
   engineVersion?: string;
+  defaultOpen?: boolean;
+  /** Ids currently applied. A toggleable rule not listed here is treated as ON. */
+  enabledRuleIds?: Set<string> | null;
+  onToggleRule?: (id: string, enabled: boolean) => void;
+  /** Show a recomputing indicator while a custom-rule fetch is in flight. */
+  busy?: boolean;
 }) {
-  const { pick } = useLocale();
+  const { pick, digits } = useLocale();
+  const [open, setOpen] = useState(defaultOpen);
   const intro = method ? pick(method.ne ?? "", method.en ?? "") : "";
   if (!intro && (!rules || rules.length === 0)) return null;
 
+  const ruleCount = rules?.length ?? 0;
+  const togglingEnabled = Boolean(onToggleRule);
+  const offCount = togglingEnabled
+    ? (rules ?? []).filter((r) => r.id && !(enabledRuleIds?.has(r.id) ?? true)).length
+    : 0;
+
   return (
-    <div className={cn(patroCard, "flex flex-col gap-3 border-l-2 border-secondary p-4")}>
-      <div className="flex items-center gap-2">
-        <ScrollText className="size-4 shrink-0 text-secondary" />
-        <h2 className="text-base font-bold text-foreground">
-          {pick("यो सूची कसरी बन्छ", "How this list is generated")}
-        </h2>
+    <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-hover"
+      >
+        <ScrollText className="size-4 shrink-0 text-secondary" aria-hidden />
+        <span className="min-w-0 flex-1">
+          <span className="block text-base font-bold text-foreground">
+            {pick("यो सूची कसरी बन्छ", "How this list is generated")}
+          </span>
+          <span className="mt-0.5 block text-sm text-muted-foreground">
+            {offCount > 0
+              ? pick(
+                  `${digits(ruleCount)} मध्ये ${digits(offCount)} नियम हटाइएको`,
+                  `${digits(offCount)} of ${digits(ruleCount)} rules switched off`,
+                )
+              : togglingEnabled
+                ? pick(
+                    `${digits(ruleCount)} शास्त्रीय नियम · आफ्नो परम्परा अनुसार अफ गर्न मिल्ने`,
+                    `${digits(ruleCount)} classical rules · switch off any your tradition skips`,
+                  )
+                : pick(
+                    `${digits(ruleCount)} शास्त्रीय नियम · स्रोतसहित`,
+                    `${digits(ruleCount)} classical rules · with sources`,
+                  )}
+          </span>
+        </span>
+        {busy ? (
+          <Loader2 className="size-4 shrink-0 animate-spin text-secondary" aria-hidden />
+        ) : null}
+        <ChevronDown
+          className={cn(
+            "size-5 shrink-0 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180",
+          )}
+          aria-hidden
+        />
+      </button>
+
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-out",
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="space-y-4 border-t border-border px-4 py-4">
+            {intro ? (
+              <p className="m-0 max-w-4xl text-sm leading-relaxed text-foreground/90">
+                {intro}
+              </p>
+            ) : null}
+
+            {togglingEnabled ? (
+              <p className="m-0 flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
+                <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                {pick(
+                  "आफ्नो समुदायले नमान्ने नियम स्विच अफ गर्नुहोस् — मिति तुरुन्तै पुनः गणना हुन्छन्। अधिकमास, ग्रहण, संक्रान्ति जस्ता खगोलीय रक्षाहरू सधैँ लागू हुन्छन्।",
+                  "Switch off a rule your community doesn't follow — the dates recompute. Astronomical safeguards (Adhik-māsa, eclipse, Sankrānti) always apply.",
+                )}
+              </p>
+            ) : null}
+
+            {rules && rules.length > 0 ? (
+              <ol className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {rules.map((r, i) => {
+                  const toggleable = Boolean(r.id && togglingEnabled);
+                  const enabled = r.id ? (enabledRuleIds?.has(r.id) ?? true) : true;
+                  const off = toggleable && !enabled;
+                  return (
+                    <li
+                      key={r.id ?? i}
+                      className={cn(
+                        "flex h-full flex-col gap-2 rounded-lg border p-3.5 transition-colors",
+                        off
+                          ? "border-dashed border-border bg-surface-inset/40"
+                          : "border-border bg-surface-inset",
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="font-num flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary/15 text-xs font-bold text-secondary">
+                          {digits(i + 1)}
+                        </span>
+                        <p
+                          className={cn(
+                            "m-0 flex-1 text-sm font-semibold leading-snug",
+                            off ? "text-muted-foreground" : "text-foreground",
+                          )}
+                        >
+                          {pick(r.ne, r.en)}
+                        </p>
+                        {toggleable ? (
+                          <Switch
+                            size="sm"
+                            checked={enabled}
+                            onCheckedChange={(v) => r.id && onToggleRule?.(r.id, v)}
+                            aria-label={pick("यो नियम लागू गर्ने", "Apply this rule")}
+                            className="mt-0.5 shrink-0"
+                          />
+                        ) : null}
+                      </div>
+
+                      {r.shloka || r.source || r.gloss ? (
+                        <div
+                          className={cn(
+                            "mt-auto flex flex-col gap-1.5 border-t border-border pt-2.5",
+                            off && "opacity-60",
+                          )}
+                        >
+                          {r.source ? (
+                            <p className="m-0 text-sm font-semibold text-muted-foreground">
+                              {pick(r.source.ne, r.source.en)}
+                            </p>
+                          ) : null}
+                          {r.shloka ? (
+                            <p
+                              lang="sa"
+                              className="m-0 text-base italic leading-relaxed text-foreground"
+                            >
+                              {r.shloka}
+                            </p>
+                          ) : null}
+                          {r.gloss ? (
+                            <p className="m-0 text-sm leading-relaxed text-muted-foreground">
+                              {pick(r.gloss.ne, r.gloss.en)}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : null}
+
+            {engineVersion ? (
+              <p className="m-0 flex items-center gap-1.5 text-xs pt-4 text-muted-foreground">
+                <Info className="size-3.5" aria-hidden />
+                {pick("मुहूर्त इन्जिन संस्करण", "Muhūrta engine")} {engineVersion}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </div>
-      {intro ? <p className="text-sm leading-relaxed text-foreground">{intro}</p> : null}
-      {rules && rules.length > 0 ? (
-        <ul className="flex flex-col gap-1.5">
-          {rules.map((r, i) => (
-            <li key={i} className="flex gap-2 text-sm leading-relaxed text-foreground">
-              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-secondary" aria-hidden />
-              <span>{pick(r.ne, r.en)}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {engineVersion ? (
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Info className="size-3.5" />
-          {pick("मुहूर्त इन्जिन संस्करण", "Muhūrta engine")} {engineVersion}
-        </p>
-      ) : null}
-    </div>
+    </section>
   );
 }
 

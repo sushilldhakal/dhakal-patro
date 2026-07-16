@@ -942,6 +942,23 @@ const RASHI_EN_TO_WESTERN: Record<string, string> = {
   Meena: "Pisces",
 };
 
+/** English rāśi → Devanagari (API often sends only lagna_en). */
+const RASHI_EN_TO_NE: Record<string, string> = {
+  Mesha: "मेष",
+  Vrishabha: "वृष",
+  Mithuna: "मिथुन",
+  Karka: "कर्कट",
+  Karkata: "कर्कट",
+  Simha: "सिंह",
+  Kanya: "कन्या",
+  Tula: "तुला",
+  Vrishchika: "वृश्चिक",
+  Dhanu: "धनु",
+  Makara: "मकर",
+  Kumbha: "कुम्भ",
+  Meena: "मीन",
+};
+
 /** Locale-aware rashi label: Devanagari for ne, Western zodiac for en. */
 export function formatRashiDisplay(
   nameNe?: string,
@@ -953,7 +970,8 @@ export function formatRashiDisplay(
     if (!raw) return undefined;
     return RASHI_EN_TO_WESTERN[raw] ?? RASHI_NE_TO_WESTERN[raw] ?? raw;
   }
-  return formatRashiDisplayNe(nameNe ?? nameEn);
+  const ne = nameNe ?? (nameEn ? RASHI_EN_TO_NE[nameEn] : undefined) ?? nameEn;
+  return formatRashiDisplayNe(ne);
 }
 
 type SpanEndBlock = {
