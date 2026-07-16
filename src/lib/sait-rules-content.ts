@@ -339,7 +339,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "गलग्रह तिथि — १,४,७,८,९,१३,१४,१५ (पूर्णिमा/अमावस्या) वर्जित।",
         en: "Galagraha tithis — 1,4,7,8,9,13,14,15 (Pūrṇimā/Amāvasyā) barred.",
         source: { ne: "मुहूर्त चिन्तामणि ५ (संस्कार प्रकरण · भाष्य)", en: "Muhūrta Chintāmaṇi 5 (Saṃskāra Prakaraṇa, comm.)" },
-        shloka: "… गलग्रहास्तिथयो ज्ञेयाः ।",
+        shloka:
+          "प्रतिपच्च चतुर्थी च सप्तम्यष्टमी तथा । नवमी च त्रयोदश्योश्चतुर्दश्योश्च पूर्णिमा ॥ अमावस्या तथा प्रोक्ता गलग्रहास्तिथयो ज्ञेयाः ।",
         gloss: {
           ne: "प्रतिपदा, चतुर्थी, सप्तमी, अष्टमी, नवमी, त्रयोदशी, चतुर्दशी र पूर्णिमा/अमावस्या — गलग्रह दोषले उपनयनमा वर्जित।",
           en: "Pratipadā, Caturthī, Saptamī, Aṣṭamī, Navamī, Trayodaśī, Caturdaśī and Pūrṇimā/Amāvasyā are barred as Galagraha defects for Upanayana.",
@@ -455,8 +456,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "अधिकमास (मलमास) — वास्तुकर्म (घर निर्माण) वर्जित; मलिम्लुच चल्दा शिलान्यास हुँदैन।",
         en: "Adhik-māsa (Malmāsa) — vāstu karma (house construction) is barred; no foundation-laying during malimluca.",
         source: {
-          ne: "धर्मसिन्धु — मलमासे वर्ज्यानि (काशीनाथ उपाध्याय)",
-          en: "Dharma Sindhu — Malmāse Varjyāni (Kāśīnātha Upādhyāya)",
+          ne: "धर्मसिन्धु १ — मलमासे वर्ज्यानि (प्रथम परिच्छेद)",
+          en: "Dharma Sindhu 1 — Malmāse Varjyāni (Prathama Pariccheda)",
         },
         shloka:
           "उपाकर्मोत्सर्जने अष्टकाश्राद्धानि गृहप्रवेशचूडामौञ्जीबंधविवाहास्तीर्थादि-यात्रा वास्तुकर्मैतान्यधिवर्ज्यानि ।",
@@ -468,7 +469,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       {
         ne: "समय — शिलान्यास (जग हाल्ने) दिनको समयमा मात्र (सूर्योदय–सूर्यास्त)।",
         en: "Time — foundation-laying is a daytime rite (sunrise→sunset only).",
-        source: { ne: "मुहूर्त चिन्तामणि (वास्तु — दिवाकाल निर्देश)", en: "Muhūrta Chintāmaṇi (Vāstu — daytime instruction)" },
+        source: { ne: "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · दिवाकाल निर्देश)", en: "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · daytime instruction)" },
         gloss: {
           ne: "मुहूर्त चिन्तामणिले शिलान्यास रात्रिमा नगरी दिवाकालमा गर्न निर्देश गर्छ। प्रणालीले यसलाई सूर्योदय–सूर्यास्तसम्मको स्क्यानका रूपमा लागू गर्छ।",
           en: "Muhūrta Chintāmaṇi directs that foundation-laying be done in daytime, not at night. The system applies this as a sunrise→sunset scan.",
@@ -494,9 +495,10 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "तिथि — प्रतिपदा (१), रिक्ता (४,९,१४) र अमावस्या मात्र वर्जित; बाँकी सबै (पूर्णिमासहित) ग्राह्य। विवाहजस्तो कडा संस्कार नभएकाले तिथि उदार।",
         en: "Tithi — only Pratipadā (1), rikta (4,9,14) and Amāvasyā are barred; all the rest (Pūrṇimā included) are allowed. The gate is lenient — a house-start is not a marriage-grade saṃskāra.",
         source: {
-          ne: "मुहूर्त चिन्तामणि — वास्तु प्रकरण अध्याय १२, श्लोक १८",
-          en: "Muhūrta Chintāmaṇi — Vāstu prakaraṇa ch. 12, verse 18",
+          ne: "मुहूर्त चिन्तामणि १२.१८ (वास्तु प्रकरण)",
+          en: "Muhūrta Chintāmaṇi 12.18 (Vāstu Prakaraṇa)",
         },
+        shloka: MC_GP_TITHI_SHLOKA,
         gloss: {
           ne: "शास्त्रीय निषेधमा आइत/मंगल, रिक्ता (४,९,१४), पर्व (८,१४,१५), औंसी र प्रतिपदा पर्छन्। हाम्रो उदार नियम: प्रतिपदा, रिक्ता र अमावस्या मात्र वर्जित — बाँकी ग्राह्य (शास्त्रबाट प्रेरित भएर प्रणालीले यसरी लागू गर्छ)।",
           en: "The classical prohibition covers Sunday/Tuesday, rikta (4,9,14), parva (8,14,15), Amāvasyā and Pratipadā. Our lenient gate: only Pratipadā, rikta and Amāvasyā are barred — the rest qualify (inspired by the śāstra, applied this way by the system).",
@@ -510,17 +512,17 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
           ne: "मुहूर्त चिन्तामणि — वास्तु प्रकरण अध्याय १२, श्लोक १५ (आचार्य श्रीराम / राम दैवज्ञ)",
           en: "Muhūrta Chintāmaṇi — Vāstu prakaraṇa ch. 12, verse 15 (Ācārya Śrīrāma / Rāma Daivajña)",
         },
-        shloka: "मृदुकुध्रुववारुणमारुतधनिष्ठाकरतिष्यैः । गृहमारम्भणं शुभदं...",
+        shloka: "मृदुकुध्रुववारुणमारुतधनिष्ठाकरतिष्यैः । गृहमारम्भणं शुभदं खातविधेर्वास्तुपूजा च ॥ १५ ॥",
         gloss: {
-          ne: "श्लोकअनुसार: मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), कु/रोहिणी, ध्रुव (तीन उत्तरा), वारुण (शतभिषा), मारुत (स्वाती), धनिष्ठा, कर (हस्त), तिष्य (पुष्य)। पुनर्वसु र श्रवण नेपाली पञ्चाङ्ग तथा अन्य वास्तु परम्परामा ग्राह्य मानिएकाले प्रणालीले पनि स्वीकार गर्छ — यी दुई उक्त श्लोकबाट लिइएका होइनन्।",
-          en: "From the verse: Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Ku/Rohiṇī, Dhruva (the three Uttarās), Vāruṇa (Śatabhiṣā), Māruta (Svātī), Dhaniṣṭhā, Kara (Hasta), Tiṣya (Puṣya). Punarvasu and Śravaṇa are accepted because Nepali panchāṅga and other vāstu traditions admit them — they are not taken from this quoted verse.",
+          ne: "श्लोकअनुसार: मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), कु/रोहिणी, ध्रुव (तीन उत्तरा), वारुण (शतभिषा), मारुत (स्वाती), धनिष्ठा, कर (हस्त), तिष्य (पुष्य) — यी १३ नक्षत्रमा गृहारम्भ 'शुभद' (सुखदायी)। श्लोकको उत्तरार्धले खात (जग खन्ने) र वास्तुपूजा पनि यिनै नक्षत्रमा शुभ भन्छ। पुनर्वसु र श्रवण नेपाली पञ्चाङ्ग तथा अन्य वास्तु परम्परामा ग्राह्य मानिएकाले प्रणालीले पनि स्वीकार गर्छ — यी दुई उक्त श्लोकबाट लिइएका होइनन्।",
+          en: "From the verse: Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Ku/Rohiṇī, Dhruva (the three Uttarās), Vāruṇa (Śatabhiṣā), Māruta (Svātī), Dhaniṣṭhā, Kara (Hasta), Tiṣya (Puṣya) — house-start in these 13 stars is 'śubhada' (giver of happiness). The verse's second half adds that foundation-digging (khāta) and the Vāstu Pūjā are likewise auspicious in these stars. Punarvasu and Śravaṇa are accepted because Nepali panchāṅga and other vāstu traditions admit them — they are not taken from this quoted verse.",
         },
       },
       {
         id: "vara",
         ne: "वार — शास्त्रीय सूचीमा मंगलबार र शनिबार वर्जित; अन्य सबै वार ग्राह्य।",
         en: "Vāra — in the classical list, Tuesday and Saturday are barred; all other weekdays are acceptable.",
-        source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi" },
+        source: { ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि १२.१८", en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi 12.18" },
         shloka: "वर्ज्या रविभौमरिताः पर्वामाप्रतिपदोऽपि गृहचक्रे । क्षितितनयदिवसवारो न शुभकृदिति यदि पितामहोक्ते ।",
         gloss: {
           ne: "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार हुन् — गृहचक्रमा (भवन निर्माण) रवि, मंगलवार र पर्व, अमावस्या, प्रतिपदा वर्जित। यद्यपि यहाँ रविवार पनि निषेधमा उल्लिखित छ, नेपाली परम्परा र प्रणालीको व्यावहारिक नियममा आइतवार स्वीकार्य मानिएको छ; मंगल र शनि मात्र वर्जित।",
@@ -531,7 +533,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "graha",
         ne: "ग्रह — गुरु र शुक्र अस्त, बाल्य वा वृद्ध हुनुहुँदैन (धर्मसिन्धुले वास्तुकर्ममा यही नियम लगाउँछ)।",
         en: "Graha — Jupiter & Venus must not be combust (ast), bāla or vṛddha (Dharma Sindhu applies this to vāstu karma).",
-        source: { ne: "धर्मसिन्धु (वास्तुकर्म)", en: "Dharma Sindhu (vāstu karma)" },
+        source: { ne: "धर्मसिन्धु १ (प्रथम परिच्छेद · शुक्रास्त) · मुहूर्त चिन्तामणि १.४७", en: "Dharma Sindhu 1 (Prathama Pariccheda · Śukrāsta) · Muhūrta Chintāmaṇi 1.47" },
         shloka: "अस्ते च गुरौ शुक्रे बाले वृद्धे मलिम्लुचे।",
         gloss: {
           ne: "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष। प्रणालीले वास्तुकर्ममा पनि यही बाल्य/वृद्ध र अस्त फिल्टर लागू गर्छ।",
@@ -542,7 +544,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "yoga",
         ne: "योग — व्यतीपात र वैधृति योग वर्जित।",
         en: "Yoga — Vyatīpāta & Vaidhṛti yoga barred.",
-        source: { ne: "मुहूर्त चिन्तामणि अध्याय १, श्लोक ३४", en: "Muhūrta Chintāmaṇi ch. 1, verse 34" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)" },
         shloka:
           "जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ । न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥",
         gloss: {
@@ -554,7 +556,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "karana",
         ne: "करण — विष्टि (भद्रा) करण वर्जित।",
         en: "Karaṇa — Viṣṭi (Bhadrā) karaṇa barred.",
-        source: { ne: "मुहूर्त चिन्तामणि अध्याय १, श्लोक ३४", en: "Muhūrta Chintāmaṇi ch. 1, verse 34" },
+        source: { ne: "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)" },
         shloka:
           "जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ । न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥",
         gloss: {
@@ -566,7 +568,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "lagna",
         ne: "लग्न — स्थिर (वृष, सिंह, वृश्चिक, कुम्भ) प्राथमिकता, द्विस्वभाव स्वीकार्य; चर लग्न वर्जित — भवन स्थिर रहोस्।",
         en: "Lagna — fixed (Vṛṣa, Siṃha, Vṛśchika, Kumbha) preferred, dual accepted; movable lagnas barred — so the building is stable.",
-        source: { ne: "मुहूर्त चिन्तामणि (वसिष्ठ मत) ", en: "Muhūrta Chintāmaṇi (Vasiṣṭha's view)" },
+        source: { ne: "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · वसिष्ठ)", en: "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · Vasiṣṭha)" },
         shloka:
           "स्थिरलग्ने गृहं कार्यं चरं च न कदाचन । द्विस्वभावं भवेच्छस्तं लग्नदोषविवर्जितम् ॥",
         gloss: {
@@ -578,9 +580,9 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         id: "lagna-strength",
         ne: "लग्न बल र ग्रह योग — सूर्य सप्तम, बुध चतुर्थ, शुक्र तृतीय र गुरु लग्नमा भए शत–शत वर्ष स्थायित्व।",
         en: "Lagna strength & planetary yoga — Sun in 7th, Mercury in 4th, Venus in 3rd and Jupiter in lagna ensure hundred-hundred years' stability.",
-        source: { ne: "मुहूर्त चिन्तामणि (आचार्य श्रीराम)", en: "Muhūrta Chintāmaṇi (Ācārya Śrīrāma)" },
+        source: { ne: "मुहूर्त चिन्तामणि १२.२२ (वास्तु प्रकरण · आचार्य श्रीराम)", en: "Muhūrta Chintāmaṇi 12.22 (Vāstu Prakaraṇa · Ācārya Śrīrāma)" },
         shloka:
-          "लग्ने सुरेज्ये सप्तमगे च सूर्ये बुधे चतुर्थे भृगुजे त्रिजेऽर्के। शतं भवेत्तत्र गृहस्य चायुस्तथापरं वर्षशतं वदन्ति ॥",
+          "लग्ने सुरेज्ये सप्तमगे च सूर्ये बुधे चतुर्थे भृगुजे त्रिजेऽर्के। शतं भवेत्तत्र गृहस्य चायुस्तथापरं वर्षशतं वदन्ति ॥ २२ ॥",
         gloss: {
           ne: "गुरु लग्नमा, सूर्य सप्तममा, बुध चतुर्थमा र शुक्र तृतीयमा हुँदा त्यस गृहको आयु सय वर्ष; तथा अर्को सय वर्ष भनिन्छ (अर्थात् शत–शत = दुई सय)। शास्त्रीय योगले गृहको दीर्घायु र समृद्धि सुनिश्चित गर्छ।",
           en: "When Jupiter is in lagna, Sun in the 7th, Mercury in the 4th and Venus in the 3rd, that house's lifespan is one hundred years; and another hundred years is said (i.e. hundred-hundred = two hundred). This classical yoga ensures the house's longevity and prosperity.",
@@ -590,9 +592,10 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "दुर्मुहूर्त परेको अवधि छाडिन्छ (पूरै दिन होइन); संक्रान्ति (साधारण ±६ घण्टा, प्रमुख ±१६ घण्टा) र ग्रहणको दिन वर्जित।",
         en: "Dur-muhūrta skips only the affected period (not the whole day); Sankrānti (ordinary ±6h, cardinal ±16h) and the eclipse day are barred.",
         source: {
-          ne: "मुहूर्त चिन्तामणि · दिननिर्णय (संक्रान्ति·ग्रहण) — प्रणालीको व्यावहारिक लागू",
-          en: "Muhūrta Chintāmaṇi · Dinanirṇaya (Sankrānti · eclipse) — practical system application",
+          ne: "मुहूर्त चिन्तामणि — ग्रहण १.३२ · दुर्मुहूर्त १.३७–४० (शुभाशुभ प्रकरण)",
+          en: "Muhūrta Chintāmaṇi — eclipse 1.32 · Dur-muhūrta 1.37–40 (Śubhāśubha Prakaraṇa)",
         },
+        shloka: MC_GP_GRAHANA_SHLOKA,
         gloss: {
           ne: "शास्त्रमा संक्रान्ति आसपासको अवधि त्याज्य मानिएको छ (संस्करणअनुसार घटी फरक हुन सक्छ)। प्रणालीले त्यसलाई व्यावहारिक रूपमा साधारण ±६ र प्रमुख ±१६ घण्टाको सुरक्षा अवधिका रूपमा लागू गर्छ; दुर्मुहूर्त घडी र ग्रहणको दिन पनि छाडिन्छ।",
           en: "Classically, time around Sankrānti is rejected (ghaṭī values vary by edition). The system applies this practically as ±6h ordinary and ±16h cardinal buffers; Dur-muhūrta slices and the eclipse day are also skipped.",
@@ -602,8 +605,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "निर्माणकार्य चातुर्मासमा रोकिँदैन — त्यसैले चातुर्मास वर्जित छैन।",
         en: "Construction is not paused during Chaturmāsa, so it is not barred here.",
         source: {
-          ne: "धर्मसिन्धु — मलमासे वर्ज्यानि प्रकरण (निषेध सूचीको सीमा)",
-          en: "Dharma Sindhu — Malmāse Varjyāni section (scope of the ban list)",
+          ne: "धर्मसिन्धु १ — मलमासे वर्ज्यानि (प्रथम परिच्छेद · निषेध सूचीको सीमा)",
+          en: "Dharma Sindhu 1 — Malmāse Varjyāni (Prathama Pariccheda · scope of the ban list)",
         },
         gloss: {
           ne: "धर्मसिन्धुले चातुर्मासमा निर्माण रोक्न स्पष्ट निषेध गरेको छैन — चातुर्मास विशेष गरी विवाह, ब्रतबन्ध, प्रतिष्ठा जस्ता संस्कारमा कडा हेरिन्छ। प्रणालीले वास्तुकर्ममा चातुर्मास फिल्टर लगाउँदैन; नयाँ गृहप्रवेशमा भने चातुर्मास/अधिकमास विचार गरिन्छ।",

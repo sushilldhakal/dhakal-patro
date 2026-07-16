@@ -111,26 +111,13 @@ export function SaitPage() {
     ? (detailQuery.data?.days?.length ?? 0)
     : (datesQuery.data?.months?.reduce((sum, m) => sum + m.days.length, 0) ?? 0);
 
-  // Native (profile-based) personalisation. Selecting a profile sets the
-  // location to its birth place and overlays a per-day Chandra/Tārā Bala verdict.
+  // Native (profile-based) personalisation. The profile only supplies the birth
+  // chart (janma Moon) — the viewing location stays whatever the user has chosen,
+  // since they may be planning from somewhere other than their birth place.
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const birth = selectedProfile ? profileChartParams(selectedProfile) : null;
   const birthDatetime = birth ? `${birth.adDate}T${birth.clock}` : "";
   const birthTz = selectedProfile?.timezone ?? "Asia/Kathmandu";
-
-  const handleSelectProfile = (p: Profile | null) => {
-    setSelectedProfile(p);
-    if (p && p.latitude != null && p.longitude != null) {
-      setLocation({
-        label: p.location_label || p.city || pick("जन्म स्थान", "Birth place"),
-        params: {
-          lat: p.latitude,
-          lon: p.longitude,
-          ...(p.timezone ? { timezone: p.timezone } : {}),
-        },
-      });
-    }
-  };
 
   const personalizeQuery = useQuery({
     queryKey: saitPersonalizeKey(year, category ?? "", location.params, birthDatetime, birthTz),
@@ -153,7 +140,7 @@ export function SaitPage() {
     <>
       <SaitProfilePicker
         selectedId={selectedProfile?.id ?? null}
-        onSelect={handleSelectProfile}
+        onSelect={setSelectedProfile}
       />
       {selectedProfile && personalizeQuery.data ? (
         <SuitabilityLegend counts={personalizeQuery.data.counts} />

@@ -34,25 +34,12 @@ export function MarriageSait() {
 
   useRouteLoading(detailQuery.isLoading && !detailQuery.data);
 
-  // Native (profile-based) personalisation — same as the generic sait pages.
+  // Native (profile-based) personalisation — the profile supplies only the birth
+  // chart; the viewing location stays whatever the user has chosen.
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const birth = selectedProfile ? profileChartParams(selectedProfile) : null;
   const birthDatetime = birth ? `${birth.adDate}T${birth.clock}` : "";
   const birthTz = selectedProfile?.timezone ?? "Asia/Kathmandu";
-
-  const handleSelectProfile = (p: Profile | null) => {
-    setSelectedProfile(p);
-    if (p && p.latitude != null && p.longitude != null) {
-      setLocation({
-        label: p.location_label || p.city || pick("जन्म स्थान", "Birth place"),
-        params: {
-          lat: p.latitude,
-          lon: p.longitude,
-          ...(p.timezone ? { timezone: p.timezone } : {}),
-        },
-      });
-    }
-  };
 
   const personalizeQuery = useQuery({
     queryKey: saitPersonalizeKey(year, "vivah", location.params, birthDatetime, birthTz),
@@ -74,7 +61,7 @@ export function MarriageSait() {
     <>
       <SaitProfilePicker
         selectedId={selectedProfile?.id ?? null}
-        onSelect={handleSelectProfile}
+        onSelect={setSelectedProfile}
       />
       {selectedProfile && personalizeQuery.data ? (
         <SuitabilityLegend counts={personalizeQuery.data.counts} />
