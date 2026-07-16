@@ -3,13 +3,23 @@ import { useLocale } from "@/i18n/locale";
 import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { formatRashiDisplay } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
-import type { SaitDetailDay } from "@/lib/api";
+import type { SaitDetailDay, SaitSuitability } from "@/lib/api";
+import { SUITABILITY_STYLE } from "@/lib/sait-suitability";
+import { SuitabilityBadge } from "@/components/sait/sait-suitability";
 
 /**
  * One qualifying muhūrta day: the representative clean window plus the
  * panchāṅga that made the day survive the rules.
  */
-export function SaitDayCard({ d, index = 0 }: { d: SaitDetailDay; index?: number }) {
+export function SaitDayCard({
+  d,
+  index = 0,
+  suitability,
+}: {
+  d: SaitDetailDay;
+  index?: number;
+  suitability?: SaitSuitability;
+}) {
   const { pick, digits, lang } = useLocale();
   const overnight = d.window_end < d.window_start;
   const monthLabel = pick(
@@ -40,9 +50,15 @@ export function SaitDayCard({ d, index = 0 }: { d: SaitDetailDay; index?: number
       className={cn(
         "flex flex-col rounded-xl border border-border bg-card p-4",
         "animate-in fade-in fill-mode-both",
+        suitability ? SUITABILITY_STYLE[suitability].ring : null,
       )}
       style={{ animationDelay: `${Math.min(index, 12) * 30}ms` }}
     >
+      {suitability ? (
+        <div className="flex justify-end pb-1.5">
+          <SuitabilityBadge suitability={suitability} />
+        </div>
+      ) : null}
       <div className="flex items-stretch gap-3 pb-3">
         <div className="flex min-w-[4.25rem] flex-col items-center justify-center rounded-lg bg-surface-inset px-2 py-2.5">
           <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-secondary">

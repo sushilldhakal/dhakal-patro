@@ -803,6 +803,66 @@ export const fetchSaitDetail = (
   return get<SaitDetailResponse>(withSaitCacheVersion(path));
 };
 
+/** Native (profile-based) verdict overlaid on the general listing. */
+export type SaitSuitability = "favourable" | "neutral" | "avoid";
+
+export interface SaitPersonalizeDay {
+  bs_month: number;
+  bs_day: number;
+  suitability: SaitSuitability;
+  tara_num: number;
+  tara_tone: string;
+  tara_ne: string;
+  chandra_num: number;
+  chandra_tone: string;
+  moon_house: number;
+  transit_nakshatra_ne: string;
+  transit_nakshatra_en: string;
+  transit_rashi_ne: string;
+  transit_rashi_en: string;
+}
+
+export interface SaitPersonalizeResponse {
+  bs_year: number;
+  category: string;
+  janma: { nakshatra: number; rashi: number };
+  counts: { favourable: number; neutral: number; avoid: number };
+  days: SaitPersonalizeDay[];
+}
+
+export const saitPersonalizeKey = (
+  year: number,
+  category: string,
+  location: LocationParams | undefined,
+  birthDatetime: string,
+  birthTz: string,
+) =>
+  [
+    "sait",
+    "personalize",
+    SAIT_CACHE_VERSION,
+    year,
+    category,
+    locationCacheKey(location),
+    birthDatetime,
+    birthTz,
+  ] as const;
+
+/** Annotate the year's general dates with a native verdict from a birth moment.
+ * `birthDatetime` is a naive local ISO (`YYYY-MM-DDTHH:MM`) read in `birthTz`. */
+export const fetchSaitPersonalize = (
+  year: number,
+  category: string,
+  location: LocationParams | undefined,
+  birthDatetime: string,
+  birthTz: string,
+) => {
+  let path = appendLocation(`/nepal/sait/${year}/${category}/personalize`, location);
+  const params = new URLSearchParams({ birth: birthDatetime, birth_tz: birthTz });
+  path = `${path}${path.includes("?") ? "&" : "?"}${params.toString()}`;
+  return get<SaitPersonalizeResponse>(path);
+};
+
 /** Auspicious days for EVERY ceremony type in one BS month (home-page list). The
  * server computes only that month. `categories` maps category id → BS days. */
 export interface SaitMonthAllResponse {

@@ -13,13 +13,21 @@ import { CEREMONY_META } from "@/lib/panchanga-elements";
 import { isMuhurtaSaitCategory, type SaitCategoryId } from "@/lib/sait-data";
 import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
 import { SaitCeremonyLayout } from "@/components/sait/SaitCeremonyLayout";
+import { SaitProfilePicker } from "@/components/sait/SaitProfilePicker";
+import { SuitabilityLegend } from "@/components/sait/sait-suitability";
+import { SUITABILITY_STYLE } from "@/lib/sait-suitability";
 import {
   fetchSait,
   fetchSaitDetail,
+  fetchSaitPersonalize,
   saitDetailKey,
   saitKeys,
+  saitPersonalizeKey,
   type BratabandhaNakshatraMode,
+  type SaitSuitability,
 } from "@/lib/api";
+import type { Profile } from "@/lib/auth/client";
+import { profileChartParams } from "@/lib/kundali/profile-chart";
 
 export function SaitPage() {
   const { category } = useParams({ strict: false }) as { category?: string };
@@ -103,6 +111,56 @@ export function SaitPage() {
     ? (detailQuery.data?.days?.length ?? 0)
     : (datesQuery.data?.months?.reduce((sum, m) => sum + m.days.length, 0) ?? 0);
 
+  // Native (profile-based) personalisation. Selecting a profile sets the
+  // location to its birth place and overlays a per-day Chandra/Tārā Bala verdict.
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const birth = selectedProfile ? profileChartParams(selectedProfile) : null;
+  const birthDatetime = birth ? `${birth.adDate}T${birth.clock}` : "";
+  const birthTz = selectedProfile?.timezone ?? "Asia/Kathmandu";
+
+  const handleSelectProfile = (p: Profile | null) => {
+    setSelectedProfile(p);
+    if (p && p.latitude != null && p.longitude != null) {
+      setLocation({
+        label: p.location_label || p.city || pick("जन्म स्थान", "Birth place"),
+        params: {
+          lat: p.latitude,
+          lon: p.longitude,
+          ...(p.timezone ? { timezone: p.timezone } : {}),
+        },
+      });
+    }
+  };
+
+  const personalizeQuery = useQuery({
+    queryKey: saitPersonalizeKey(year, category ?? "", location.params, birthDatetime, birthTz),
+    queryFn: () =>
+      fetchSaitPersonalize(year, category!, location.params, birthDatetime, birthTz),
+    enabled: Boolean(category) && Boolean(selectedProfile) && Boolean(birthDatetime),
+    staleTime: 1000 * 60 * 60,
+    placeholderData: keepPreviousData,
+  });
+
+  const suitabilityByDay = useMemo(() => {
+    const map = new Map<string, SaitSuitability>();
+    for (const d of personalizeQuery.data?.days ?? []) {
+      map.set(`${d.bs_month}-${d.bs_day}`, d.suitability);
+    }
+    return map;
+  }, [personalizeQuery.data]);
+
+  const profileControl = (
+    <>
+      <SaitProfilePicker
+        selectedId={selectedProfile?.id ?? null}
+        onSelect={handleSelectProfile}
+      />
+      {selectedProfile && personalizeQuery.data ? (
+        <SuitabilityLegend counts={personalizeQuery.data.counts} />
+      ) : null}
+    </>
+  );
+
   if (!meta || !content) {
     return (
       <PageShell>
@@ -135,6 +193,8 @@ export function SaitPage() {
       onNakshatraModeChange={isBratabandha ? setNakshatraMode : undefined}
       days={isMuhurta ? (detailQuery.data?.days ?? []) : []}
       count={totalCount}
+      profileControl={profileControl}
+      suitabilityByDay={suitabilityByDay}
       loading={activeQuery.isLoading && !activeQuery.data}
       notice={
         content.requiresBirthDate ? (
@@ -176,14 +236,31 @@ export function SaitPage() {
                   {lang === "en" ? `Month ${digits(m.month)}` : m.month_name_ne}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  {m.days.map((d) => (
-                    <span
-                      key={d}
-                      className="font-num inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-success/12 px-2 text-sm font-semibold text-success-foreground tabular-nums dark:text-success"
-                    >
-                      {digits(d)}
-                    </span>
-                  ))}
+                  {m.days.map((d) => {
+                    const verdict = suitabilityByDay.get(`${m.month}-${d}`);
+                    const style = verdict ? SUITABILITY_STYLE[verdict] : null;
+                    return (
+                      <span
+                        key={d}
+                        title={
+                          verdict
+                            ? pick(
+                                `${selectedProfile?.full_name ?? ""}: ${style!.ne}`,
+                                `${selectedProfile?.full_name ?? ""}: ${style!.en}`,
+                              )
+                            : undefined
+                        }
+                        className={cn(
+                          "font-num inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-semibold tabular-nums",
+                          style
+                            ? cn(style.pill, style.ring)
+                            : "bg-success/12 text-success-foreground dark:text-success",
+                        )}
+                      >
+                        {digits(d)}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             ))}
