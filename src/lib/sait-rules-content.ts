@@ -339,7 +339,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "गलग्रह तिथि — १,४,७,८,९,१३,१४,१५ (पूर्णिमा/अमावस्या) वर्जित।",
         en: "Galagraha tithis — 1,4,7,8,9,13,14,15 (Pūrṇimā/Amāvasyā) barred.",
         source: { ne: "मुहूर्त चिन्तामणि ५ (संस्कार प्रकरण · भाष्य)", en: "Muhūrta Chintāmaṇi 5 (Saṃskāra Prakaraṇa, comm.)" },
-        shloka: "… गलग्रहास्तिथयो ज्ञेयाः ।",
+        shloka:
+          "प्रतिपच्च चतुर्थी च सप्तम्यष्टमी तथा । नवमी च त्रयोदश्योश्चतुर्दश्योश्च पूर्णिमा ॥ अमावस्या तथा प्रोक्ता गलग्रहास्तिथयो ज्ञेयाः ।",
         gloss: {
           ne: "प्रतिपदा, चतुर्थी, सप्तमी, अष्टमी, नवमी, त्रयोदशी, चतुर्दशी र पूर्णिमा/अमावस्या — गलग्रह दोषले उपनयनमा वर्जित।",
           en: "Pratipadā, Caturthī, Saptamī, Aṣṭamī, Navamī, Trayodaśī, Caturdaśī and Pūrṇimā/Amāvasyā are barred as Galagraha defects for Upanayana.",
