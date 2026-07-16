@@ -8,7 +8,7 @@ import { SaitRulesSection, type SaitRule } from "@/components/sait/SaitRulesSect
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
 import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
-import type { BratabandhaNakshatraMode, SaitDetailDay } from "@/lib/api";
+import type { BratabandhaNakshatraMode, SaitDetailDay, SaitSuitability } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { patroMonthNavBtn } from "@/lib/patro-classes";
 
@@ -32,6 +32,10 @@ interface Props {
   days?: SaitDetailDay[];
   /** Total auspicious days for the summary line; falls back to days.length. */
   count?: number;
+  /** Profile picker + legend, shown below the year/location row. */
+  profileControl?: React.ReactNode;
+  /** Native verdict per `${bs_month}-${bs_day}`, overlaid on the day cards. */
+  suitabilityByDay?: Map<string, SaitSuitability>;
   loading: boolean;
   notice?: React.ReactNode;
   children?: React.ReactNode;
@@ -70,6 +74,8 @@ export function SaitCeremonyLayout({
   onNakshatraModeChange,
   days = [],
   count,
+  profileControl,
+  suitabilityByDay,
   loading,
   notice,
   children,
@@ -190,6 +196,12 @@ export function SaitCeremonyLayout({
         </p>
       ) : null}
 
+      {profileControl ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-inset p-3">
+          {profileControl}
+        </div>
+      ) : null}
+
       {notice}
 
       <section aria-busy={loading} className="space-y-6">
@@ -229,6 +241,7 @@ export function SaitCeremonyLayout({
                         key={`${d.bs_month}-${d.bs_day}-${d.window_start}`}
                         d={d}
                         index={i}
+                        suitability={suitabilityByDay?.get(`${d.bs_month}-${d.bs_day}`)}
                       />
                     );
                   })}
