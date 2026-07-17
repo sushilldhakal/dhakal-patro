@@ -1,7 +1,6 @@
-import { ChevronLeft, ChevronRight, HeartHandshake } from "lucide-react";
+import { ChevronLeft, ChevronRight, HeartHandshake, MapPin } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { SaitDayCard } from "@/components/sait/SaitDayCard";
 import { SaitRulesSection, type SaitRule } from "@/components/sait/SaitRulesSection";
@@ -17,8 +16,11 @@ interface Props {
   subtitle: string;
   year: number;
   onYearChange: (year: number) => void;
-  location: PanchangaLocation;
-  onLocationChange: (loc: PanchangaLocation) => void;
+  // Sāit is computed at a single national reference (see SAIT_REFERENCE_LOCATION
+  // on the backend), so these are accepted for compatibility but no longer drive
+  // the dates — the page shows a fixed "Nepal (standard)" reference instead.
+  location?: PanchangaLocation;
+  onLocationChange?: (loc: PanchangaLocation) => void;
   method?: { ne?: string; en?: string } | null;
   rules?: SaitRule[] | null;
   engineVersion?: string;
@@ -62,8 +64,6 @@ export function SaitCeremonyLayout({
   subtitle,
   year,
   onYearChange,
-  location,
-  onLocationChange,
   method,
   rules,
   engineVersion,
@@ -180,13 +180,15 @@ export function SaitCeremonyLayout({
           </button>
         </div>
 
-        <div className="ml-auto flex min-w-0 items-center gap-1.5">
-          <LocationSelector
-            compact
-            location={location}
-            onLocationChange={onLocationChange}
-            className="h-9 min-w-0 w-auto max-w-[13rem]"
-          />
+        <div
+          className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-sm text-muted-foreground"
+          title={pick(
+            "साइत नेपाल मानक सन्दर्भअनुसार गणना गरिन्छ — स्थानअनुसार मिति फेरिँदैन।",
+            "Sāit is computed for the Nepal standard reference — dates do not change by city.",
+          )}
+        >
+          <MapPin className="size-4 shrink-0 text-secondary" aria-hidden />
+          {pick("नेपाल (मानक)", "Nepal (standard)")}
         </div>
       </div>
 
