@@ -30,6 +30,7 @@ import {
 } from "@/components/home/PanchangaAsideTabs";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { HeroMonthArt } from "@/components/home/HeroMonthArt";
+import { PanchangaDirectory } from "@/components/panchanga/PanchangaDirectory";
 import { Button } from "@/components/ui/button";
 
 function fmtAdIso(d: Date): string {
@@ -376,6 +377,7 @@ export function Home() {
               bsYear={monthContext.year}
               bsMonth={monthContext.month}
             />
+            <PanchangaDirectory className="mt-8" />
           </section>
         }
       />

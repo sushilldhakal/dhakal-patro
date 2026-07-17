@@ -71,8 +71,8 @@ export function AuthDialog({
         // Close shortly after so the notice is seen.
         setTimeout(() => onOpenChange(false), 1200);
       } else {
-        const msg = await apiForgotPassword(email.trim());
-        setNotice(msg);
+        await apiForgotPassword(email.trim());
+        setNotice(t("auth.forgot_notice"));
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("auth.generic_error"));

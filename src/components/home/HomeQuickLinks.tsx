@@ -5,8 +5,6 @@ import {
   CalendarRange,
   Grid3x3,
   Heart,
-  HeartHandshake,
-  LayoutGrid,
   Moon,
   PartyPopper,
   Sparkles,
@@ -24,33 +22,38 @@ import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 
 const QUICK_LINKS = [
-  { to: "/holidays" as const, labelKey: "nav.holidays", icon: PartyPopper },
-  { to: "/converter" as const, labelKey: "nav.converter", icon: ArrowLeftRight },
-  { to: "/suryakranti" as const, labelKey: "nav.suryakranti", icon: Sunrise },
-  { to: "/panchanga/year" as const, labelKey: "panchanga_year.title", icon: CalendarRange },
-  { to: "/panchanga/details" as const, labelKey: "nav.panchanga_details", icon: LayoutGrid },
-  { to: "/panchanga/avakahada-chakra" as const, labelKey: "nav.avakahada_chakra", icon: Grid3x3 },
-  { to: "/abhijit-muhurta" as const, labelKey: "nav.abhijit_muhurta", icon: Sparkles },
-  { to: "/vivah-sait" as const, labelKey: "nav.vivah_sait", icon: HeartHandshake },
-  { to: "/kundali" as const, labelKey: "home_quick.kundali_build_title", icon: Sparkles },
-  { to: "/jyotish/kundali-milan" as const, labelKey: "home_quick.kundali_milan_title", icon: Heart },
-] as const satisfies { to: string; labelKey: string; icon: LucideIcon }[];
+  { group: "patro", to: "/holidays" as const, labelKey: "nav.holidays", icon: PartyPopper },
+  { group: "patro", to: "/converter" as const, labelKey: "nav.converter", icon: ArrowLeftRight },
+  { group: "patro", to: "/suryakranti" as const, labelKey: "nav.suryakranti", icon: Sunrise },
+  { group: "patro", to: "/panchanga/year" as const, labelKey: "panchanga_year.title", icon: CalendarRange },
+  { group: "jyotish", to: "/panchanga/avakahada-chakra" as const, labelKey: "nav.avakahada_chakra", icon: Grid3x3 },
+  { group: "jyotish", to: "/abhijit-muhurta" as const, labelKey: "nav.abhijit_muhurta", icon: Sparkles },
+  { group: "jyotish", to: "/kundali" as const, labelKey: "home_quick.kundali_build_title", icon: Sparkles },
+  { group: "jyotish", to: "/jyotish/kundali-milan" as const, labelKey: "home_quick.kundali_milan_title", icon: Heart },
+] as const satisfies {
+  group: "patro" | "jyotish";
+  to: string;
+  labelKey: string;
+  icon: LucideIcon;
+}[];
 
 const QUICK_LINK_ICON_SIZE = 28;
 const QUICK_LINK_ICON_STROKE = 1.75;
 
-const quickLinkCardClass =
+export const quickLinkCardClass =
   "group flex aspect-square w-[calc((100%-1.5rem)/3)] max-w-[7.25rem] shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-2.5 py-3.5 text-center no-underline transition-[border-color,background-color,transform] duration-200 hover:border-secondary/35 hover:bg-tab-hover active:scale-[0.98] sm:w-[calc((100%-2.25rem)/4)] sm:max-w-[8rem] md:w-[calc((100%-3rem)/5)] lg:max-w-none lg:w-[calc((100%-5.25rem)/8)]";
 
-const quickLinkIconClass = "shrink-0 text-danger dark:text-danger";
+export const quickLinkIconClass = "shrink-0 text-danger dark:text-danger";
 
-function QuickLinkCard({
+export function QuickLinkCard({
   label,
+  description,
   icon: Icon,
   iconNode,
   ...linkProps
 }: {
   label: string;
+  description?: string;
   icon?: LucideIcon;
   iconNode?: ReactNode;
 } & Omit<LinkProps, "className" | "children">) {
@@ -68,7 +71,29 @@ function QuickLinkCard({
       <span className="w-full min-w-0 px-0.5 text-xs font-bold leading-snug text-foreground sm:text-sm line-clamp-2">
         {label}
       </span>
+      {description ? (
+        <span className="w-full min-w-0 text-[0.68rem] leading-snug text-muted-foreground line-clamp-2">
+          {description}
+        </span>
+      ) : null}
     </Link>
+  );
+}
+
+function LinkCategory({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <h2 className="mb-3 text-center text-sm font-bold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h2>
+      <div className="flex flex-wrap items-stretch justify-center gap-3">{children}</div>
+    </section>
   );
 }
 
@@ -143,20 +168,29 @@ export function HomeQuickLinks({
   className?: string;
 }) {
   const { t } = useTranslation();
+  const { pick } = useLocale();
 
   return (
     <div
       className={cn(
-        "flex flex-wrap items-stretch justify-center gap-3",
+        "space-y-8",
         className,
       )}
     >
-      {QUICK_LINKS.map(({ to, labelKey, icon }) => (
-        <QuickLinkCard key={to} to={to} icon={icon} label={t(labelKey)} />
-      ))}
-      <ChandrKrantiQuickLink location={location} bsYear={bsYear} bsMonth={bsMonth} />
-      <PanchakPatroQuickLink />
-      <RituQuickLink location={location} />
+      <LinkCategory title={pick("पात्रो तथा मिति", "Patro & dates")}>
+        {QUICK_LINKS.filter(({ group }) => group === "patro").map(({ to, labelKey, icon }) => (
+          <QuickLinkCard key={to} to={to} icon={icon} label={t(labelKey)} />
+        ))}
+        <ChandrKrantiQuickLink location={location} bsYear={bsYear} bsMonth={bsMonth} />
+        <PanchakPatroQuickLink />
+        <RituQuickLink location={location} />
+      </LinkCategory>
+
+      <LinkCategory title={pick("ज्योतिष तथा मुहूर्त", "Jyotish & muhurta")}>
+        {QUICK_LINKS.filter(({ group }) => group === "jyotish").map(({ to, labelKey, icon }) => (
+          <QuickLinkCard key={to} to={to} icon={icon} label={t(labelKey)} />
+        ))}
+      </LinkCategory>
     </div>
   );
 }

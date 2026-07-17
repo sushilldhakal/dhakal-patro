@@ -381,6 +381,7 @@
     "passwords_mismatch": "Passwords do not match",
     "password_min": "Password must be at least 8 characters",
     "signup_notice": "Account created! Check your email to verify your address.",
+    "forgot_notice": "If that email exists, a reset link has been sent",
     "generic_error": "Something went wrong. Try again.",
     "google_error": "Google sign-in failed",
     "continue_with_google": "Continue with Google",
