@@ -188,7 +188,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "महिना — विवाहका लागि शास्त्रसम्मत चन्द्रमास मात्र (मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ, आषाढ); अधिकमास र चातुर्मास वर्जित।",
         en: "Month — only the śāstra vivāha lunar months (Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha, Āṣāḍha); Adhik-māsa & Chaturmāsa barred.",
         source: { ne: "मुहूर्त चिन्तामणि ६.१ (विवाह प्रकरण)", en: "Muhūrta Chintāmaṇi 6.1 (Vivāha Prakaraṇa)" },
-        shloka: "मृगमाघफल्गुनवैशाखज्येष्ठाषाढेषु शोभनम् ।",
+        shloka: "मृगमाघफल्गुनवैशाखज्येष्ठाषाढेषु शोभनम् । मेषवृषमिथुनवृश्चिकमकरकुम्भे स्थिते सवितरि ॥ १ ॥ [६८०]",
         gloss: {
           ne: "मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ र आषाढमा विवाह शुभ हुन्छ।",
           en: "In Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha and Āṣāḍha, marriage is auspicious.",
@@ -262,7 +262,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "दोष — दग्धा, शून्य, भद्रा र मलेफिक लत्ता (सूर्य/मंगल/शनि/राहु/केतु) परेको दिन पूरै त्याज्य; गोधूलिले पनि छुट दिँदैन।",
         en: "Doṣa — Dagdha, Śūnya, Bhadrā, and malefic Latta (Sun/Mars/Saturn/Rāhu/Ketu) scrub the whole day; no Godhūli rescue.",
         source: { ne: "मुहूर्त चिन्तामणि ६.१९ (विवाह प्रकरण · लत्ता)", en: "Muhūrta Chintāmaṇi 6.19 (Vivāha Prakaraṇa · Latta)" },
-        shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु... लत्ताख्याः",
+        shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु द्वादशसु च। सूर्यादीनां पुरः पश्चाल्लत्ताख्याः स्युरमी क्रमात् ॥ १९ ॥ [७३७]",
         gloss: {
           ne: "लत्ता दोष — ग्रहले आफ्नो स्थानबाट निश्चित नक्षत्रलाई 'लात हान्छ'; त्यस्तो दिन त्याज्य।",
           en: "Defines the Latta defect, where a planet 'kicks' specific nakṣatras from its position — such days are scrubbed.",
@@ -295,7 +295,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "क्षय पक्ष — एउटै पक्षमा दुई तिथि क्षय भई १३ तिथिको पक्ष बन्यो भने (अतिनिन्द्य) पूरै अवधि वर्जित; यसलाई अरू कुनै शुभ योगले पनि काट्दैन।",
         en: "Kṣaya Pakṣa — if a fortnight loses two tithis and becomes a 13-tithi pakṣa (atinindya), the whole period is barred; no other favourable factor overrides it.",
         source: { ne: "मुहूर्त चिन्तामणि १.४८ भाष्य (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi 1.48 comm. (Śubhāśubha Prakaraṇa)" },
-        shloka: "त्रयोदश दिने पक्षे यस्मिन् पक्षे तिथिक्षयद्वयम् ... पक्षे विनष्टे सकलं विनष्टमित्याहुराचार्याः समस्ताः ॥",
+        shloka: "त्रयोदशदिने पक्षे यस्मिन् पक्षे तिथिक्षयद्वयम् स त्रयोदशादिनात्मकः पक्षोतिनिन्द्यः। तदुक्तं ज्योतिर्निबन्धे— पक्षस्य मध्ये द्वितिथी पतेतां तदा भवेद्रौरवकालयोगः। पक्षे विनष्टे सकलं विनष्टमित्याहुराचार्याः समस्ताः ॥ [३७६]",
         gloss: {
           ne: "दुई तिथि क्षय भई १३ दिनको पक्ष बन्दा 'पक्ष नष्ट भए सबै नष्ट' भनी सबै आचार्य भन्छन्।",
           en: "In a 13-day fortnight where two tithis are lost, 'when the pakṣa is destroyed, all is destroyed,' say all the Ācāryas.",
@@ -437,7 +437,7 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "दोष — दग्धा, शून्य र मंगल/राहुको लत्ता परेको दिन वर्जित।",
         en: "Doṣa — Dagdha, Śūnya, and Mars/Rāhu Latta days excluded.",
         source: { ne: "मुहूर्त चिन्तामणि — लत्ता ६.१९, दग्धा १.८, शून्य १.१० (शुभाशुभ प्रकरण)", en: "Muhūrta Chintāmaṇi — Latta 6.19, Dagdha 1.8, Śūnya 1.10 (Śubhāśubha Prakaraṇa)" },
-        shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु... लत्ताख्याः",
+        shloka: "सप्ताष्टबाणनगाब्धिभूतवेदेषु द्वादशसु च। सूर्यादीनां पुरः पश्चाल्लत्ताख्याः स्युरमी क्रमात् ॥ १९ ॥ [७३७]",
         gloss: {
           ne: "दग्धा र शून्य तिथि दोष, तथा मंगल/राहुको लत्ताले नक्षत्र बिग्रेको दिन — दिन-शुद्धि अन्तर्गत हटाइन्छ।",
           en: "Dagdha and Śūnya tithi defects, and days whose nakṣatra is struck by Mars/Rāhu Latta, are scrubbed under day-śuddhi.",
