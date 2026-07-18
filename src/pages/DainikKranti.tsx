@@ -1,8 +1,9 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
+  ChevronDown,
   ChevronRight,
   Sparkles,
   Sunrise,
@@ -73,6 +74,9 @@ import {
   buildCalcNotes,
   buildGrahaSpashtaMatrix,
   buildLagnaMatrix,
+  type CalcNote,
+  type GrahaSpashtaRow,
+  type LagnaMatrixRow,
 } from "@/lib/dainikKranti/month-patro-tables";
 
 const COL_SPAN = 13;
@@ -302,6 +306,193 @@ const GOCHAR_LEGEND: { code: string; meaning: string; meaningEn: string }[] = [
 function motionNe(g: { motion?: string; is_retrograde?: boolean }): { label: string; labelEn: string; vakri: boolean } {
   const vakri = g.is_retrograde === true || /vakr|retro/i.test(g.motion ?? "");
   return { label: vakri ? "वक्री" : "मार्गी", labelEn: vakri ? "Retrograde" : "Direct", vakri };
+}
+
+function CardField({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: ReactNode;
+  sub?: string | null;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="text-xs text-base">{label}</div>
+      <div className="text-sm text-foreground">{value}</div>
+      {sub ? <div className="text-xs leading-tight text-base">{sub}</div> : null}
+    </div>
+  );
+}
+
+/**
+ * Mobile (<md) card for one day — replaces the horizontally-scrolling table
+ * row. The advanced लग्न / ग्रहस्पष्ट / notes data lives in a per-card
+ * expandable so it's available without a wide table.
+ */
+function DayPatroCard({
+  day,
+  isToday,
+  isExpanded,
+  onToggle,
+  transits,
+  lagna,
+  graha,
+  notes,
+}: {
+  day: CalendarDay;
+  isToday: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
+  transits: TransitEvent[] | undefined;
+  lagna?: LagnaMatrixRow;
+  graha?: GrahaSpashtaRow;
+  notes?: CalcNote[];
+}) {
+  const { pick, lang, digits: dg } = useLocale();
+  const isEn = lang === "en";
+  const det = day.panchanga;
+  const tithiEnd = angaEnd(det?.tithi, dg, isEn);
+  const nakEnd = angaEnd(det?.nakshatra, dg, isEn);
+  const yogaEnd = angaEnd(det?.yoga, dg, isEn);
+  const karanaEnd = angaEnd(det?.karana, dg, isEn);
+  const sunRashi = pick(det?.surya_rashi_ne, det?.surya_rashi);
+  const moonRashi = pick(det?.chandra_rashi_ne, det?.chandra_rashi);
+  const isSaturday = dowOf(day.date_ad) === 6;
+  const hasFestival = (day.festivals?.length ?? 0) > 0;
+  const hasExtra = Boolean(lagna || graha || (notes?.length ?? 0) > 0);
+  const dayColor =
+    isSaturday || hasFestival ? "text-rose-600 dark:text-rose-400" : "text-foreground";
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border bg-card p-3.5 shadow-xs",
+        isToday
+          ? "border-secondary/60 bg-secondary/10"
+          : hasFestival
+          ? "border-rose-500/30 bg-rose-500/5"
+          : "border-border",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-baseline gap-2">
+          <span className={cn("font-num text-2xl font-bold leading-none", dayColor)}>{dg(day.day)}</span>
+          <div className="flex flex-col leading-tight">
+            <span className={cn("text-sm font-semibold", isSaturday && "text-rose-600 dark:text-rose-400")}>
+              {pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday)}
+            </span>
+            <span className="text-xs text-base">{fmtAd(day.date_ad)}</span>
+          </div>
+        </div>
+        {isToday ? (
+          <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+            {pick("आज", "Today")}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
+        <CardField
+          label={pick("तिथि", "Tithi")}
+          value={
+            <>
+              <span>{pakshaShort(day, isEn)}</span> {pick(day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne) ?? "—"}
+            </>
+          }
+          sub={tithiEnd ? pick(`${tithiEnd} सम्म`, `until ${tithiEnd}`) : null}
+        />
+        <CardField
+          label={pick("नक्षत्र", "Nakshatra")}
+          value={pick(day.nakshatra_ne ?? day.nakshatra, day.nakshatra ?? day.nakshatra_ne) ?? "—"}
+          sub={nakEnd ? pick(`${nakEnd} सम्म`, `until ${nakEnd}`) : null}
+        />
+        <CardField
+          label={pick("योग", "Yoga")}
+          value={pick(day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
+          sub={yogaEnd ? pick(`${yogaEnd} सम्म`, `until ${yogaEnd}`) : null}
+        />
+        <CardField
+          label={pick("करण", "Karana")}
+          value={pick(day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
+          sub={karanaEnd ? pick(`${karanaEnd} सम्म`, `until ${karanaEnd}`) : null}
+        />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-lg bg-muted/40 p-2.5">
+        <CardField
+          label={pick("सूर्योदय", "Sunrise")}
+          value={
+            <span className="text-amber-600 dark:text-amber-400">
+              {day.sunrise ? dg(formatTimeShort(day.sunrise) ?? day.sunrise) : "—"}
+            </span>
+          }
+        />
+        <CardField
+          label={pick("सूर्यास्त", "Sunset")}
+          value={
+            <span className="text-indigo-600 dark:text-indigo-400">
+              {day.sunset ? dg(formatTimeShort(day.sunset) ?? day.sunset) : "—"}
+            </span>
+          }
+        />
+        <CardField
+          label={pick("सूर्य राशि", "Sun sign")}
+          value={
+            <>
+              {sunRashi ?? "—"}
+              {det?.ayana_mark ? <sup className="ml-0.5 text-xs">{det.ayana_mark}</sup> : null}
+            </>
+          }
+        />
+        <CardField label={pick("चन्द्र राशि", "Moon sign")} value={moonRashi ?? "—"} />
+      </div>
+
+      {(transits?.length ?? 0) > 0 ? (
+        <div className="mt-3">
+          <div className="text-xs text-base">{pick("ग्रहचार / उदयास्त", "Transits / rise-set")}</div>
+          <div className="mt-1 space-y-0.5">
+            {transits!.map((ev, i) => (
+              <div key={i} className="text-sm leading-tight">
+                <span className="text-foreground">{pick(ev.labelNe, ev.labelEn)}</span>{" "}
+                <span className="text-secondary">{pick(ev.planetNe, ev.planetEn)}</span>
+                {ev.time ? <span> {dg(ev.time)}</span> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {hasFestival ? (
+        <div className="mt-3 rounded-lg bg-rose-500/5 px-2.5 py-2">
+          <div className="text-xs text-base">{pick("पर्व", "Festival")}</div>
+          <div className="text-sm text-rose-600 dark:text-rose-300">{day.festivals.join(" · ")}</div>
+        </div>
+      ) : null}
+
+      {hasExtra ? (
+        <>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={isExpanded}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background/60 py-2 text-sm font-semibold text-secondary transition-colors hover:bg-muted"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
+            {isExpanded
+              ? pick("विवरण लुकाउनुहोस्", "Hide details")
+              : pick("लग्न · ग्रहस्पष्ट · थप विवरण", "Lagna · planets & more")}
+          </button>
+          {isExpanded ? (
+            <div className="mt-1 border-t border-border">
+              <DayPatroExpandPanel lagna={lagna} graha={graha} notes={notes} />
+            </div>
+          ) : null}
+        </>
+      ) : null}
+    </div>
+  );
 }
 
 export function DainikKranti() {
@@ -699,8 +890,42 @@ export function DainikKranti() {
 
       <div className="flex w-full flex-col gap-8">
         <div className="w-full min-w-0 space-y-4">
-        {/* daily table */}
-        <div className="w-full overflow-x-auto rounded-xl border border-border">
+        {/* mobile (<md): one card per day, wide table replaced to avoid horizontal scroll */}
+        <div className="space-y-3 md:hidden">
+          {monthQ.isError ? (
+            <div className="rounded-xl border border-border py-8 text-center text-sm">
+              {pick("विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।", "Could not load details. Please try again.")}
+            </div>
+          ) : days.length === 0 ? (
+            <div className="rounded-xl border border-border py-8 text-center text-sm">
+              {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
+            </div>
+          ) : (
+            days.map((d) => {
+              const segLabel = headerByDate[d.date_ad];
+              return (
+                <Fragment key={d.date_ad}>
+                  {segLabel ? (
+                    <h3 className="px-0.5 pt-2 text-sm font-bold text-secondary">{segLabel}</h3>
+                  ) : null}
+                  <DayPatroCard
+                    day={d}
+                    isToday={d.date_ad === nowKey}
+                    isExpanded={expandedDays.has(d.date_ad)}
+                    onToggle={() => toggleDayExpand(d.date_ad)}
+                    transits={transitsByBsDay[d.day]}
+                    lagna={lagnaByDate[d.date_ad]}
+                    graha={grahaByDate[d.date_ad]}
+                    notes={notesByDate[d.date_ad]}
+                  />
+                </Fragment>
+              );
+            })
+          )}
+        </div>
+
+        {/* desktop (md+): full daily table */}
+        <div className="hidden w-full overflow-x-auto rounded-xl border border-border md:block">
           <Table className="w-full min-w-max text-sm">
             <TableHeader>
               <TableRow className={patroStickyHeadRow}>
