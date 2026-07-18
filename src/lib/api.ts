@@ -823,6 +823,18 @@ export interface SaitShuddhi {
   planets: SaitShuddhiPlanet[];
 }
 
+/** Kumbha Chakra limb for a gṛha-praveśa entry day (Sun→day nakṣatra count). */
+export interface SaitKumbha {
+  count: number;
+  sun_nakshatra: number;
+  zone: string;
+  zone_ne: string;
+  zone_en: string;
+  effect_ne: string;
+  effect_en: string;
+  tone: SaitShuddhiTone;
+}
+
 export interface SaitPersonalizeDay {
   bs_month: number;
   bs_day: number;
@@ -835,6 +847,8 @@ export interface SaitPersonalizeDay {
   moon_house: number;
   /** Graha Śuddhi (bratabandha, griha-aarambha); null for other ceremonies. */
   shuddhi?: SaitShuddhi | null;
+  /** Kumbha Chakra (griha-pravesh); null for other ceremonies. */
+  kumbha?: SaitKumbha | null;
   transit_nakshatra_ne: string;
   transit_nakshatra_en: string;
   transit_rashi_ne: string;
