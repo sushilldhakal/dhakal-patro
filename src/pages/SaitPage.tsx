@@ -119,11 +119,12 @@ export function SaitPage() {
   const birth = selectedProfile ? profileChartParams(selectedProfile) : null;
   const birthDatetime = birth ? `${birth.adDate}T${birth.clock}` : "";
   const birthTz = selectedProfile?.timezone ?? "Asia/Kathmandu";
+  const gender = selectedProfile?.gender ?? "";
 
   const personalizeQuery = useQuery({
-    queryKey: saitPersonalizeKey(year, category ?? "", location.params, birthDatetime, birthTz),
+    queryKey: saitPersonalizeKey(year, category ?? "", location.params, birthDatetime, birthTz, gender),
     queryFn: () =>
-      fetchSaitPersonalize(year, category!, location.params, birthDatetime, birthTz),
+      fetchSaitPersonalize(year, category!, location.params, birthDatetime, birthTz, gender),
     enabled: Boolean(category) && Boolean(selectedProfile) && Boolean(birthDatetime),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
