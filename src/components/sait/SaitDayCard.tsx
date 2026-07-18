@@ -1,4 +1,4 @@
-import { Clock3 } from "lucide-react";
+import { Clock3, Compass } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
 import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { formatRashiDisplay } from "@/lib/panchanga-format";
@@ -58,6 +58,7 @@ export function SaitDayCard({
 }) {
   const { pick, digits, lang } = useLocale();
   const shuddhi = personalize?.shuddhi ?? null;
+  const kumbha = personalize?.kumbha ?? null;
   const overnight = d.window_end < d.window_start;
   const monthLabel = pick(
     d.bs_month_name_ne,
@@ -160,6 +161,31 @@ export function SaitDayCard({
             {pick(SHUDDHI_SUMMARY[shuddhi.tone].ne, SHUDDHI_SUMMARY[shuddhi.tone].en)}
             <span className="ml-1 font-normal text-muted-foreground">
               {pick("(जन्मराशिबाट भाव)", "(house from janma rāśi)")}
+            </span>
+          </p>
+        </div>
+      ) : null}
+
+      {kumbha ? (
+        <div className="mt-3 border-t border-border pt-2.5">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+              <Compass className="size-3.5 shrink-0 opacity-80" aria-hidden />
+              {pick("कुम्भ चक्र", "Kumbha Chakra")}
+            </span>
+            <span
+              className={cn(
+                "inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold",
+                SHUDDHI_TONE_CHIP[kumbha.tone],
+              )}
+            >
+              {pick(kumbha.zone_ne, kumbha.zone_en)}
+            </span>
+          </div>
+          <p className={cn("m-0 mt-1.5 text-xs font-semibold", SHUDDHI_TONE_TEXT[kumbha.tone])}>
+            {pick(kumbha.effect_ne, kumbha.effect_en)}
+            <span className="ml-1 font-normal text-muted-foreground">
+              {pick("(सूर्यदेखि गणना)", "(counted from the Sun)")}
             </span>
           </p>
         </div>
