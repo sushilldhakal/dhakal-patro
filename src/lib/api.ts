@@ -835,6 +835,25 @@ export interface SaitKumbha {
   tone: SaitShuddhiTone;
 }
 
+/** Agni-mukha — the graha that receives the oblation (agni-jurne). */
+export interface SaitAgniMukha {
+  count: number;
+  sun_nakshatra: number;
+  planet: string;
+  planet_ne: string;
+  planet_en: string;
+  benefic: boolean;
+  tone: SaitShuddhiTone;
+}
+
+/** Annaprāśana age-month check (needs the child's birth date + gender). */
+export interface SaitAnnaMonth {
+  ordinal_month: number;
+  gender: "male" | "female";
+  matches: boolean;
+  tone: SaitShuddhiTone;
+}
+
 export interface SaitPersonalizeDay {
   bs_month: number;
   bs_day: number;
@@ -849,6 +868,10 @@ export interface SaitPersonalizeDay {
   shuddhi?: SaitShuddhi | null;
   /** Kumbha Chakra (griha-pravesh); null for other ceremonies. */
   kumbha?: SaitKumbha | null;
+  /** Agni-mukha (agni-jurne); null for other ceremonies. */
+  agni_mukha?: SaitAgniMukha | null;
+  /** Annaprāśana age-month (annaprasan, when gender+birth known); else null. */
+  anna_month?: SaitAnnaMonth | null;
   transit_nakshatra_ne: string;
   transit_nakshatra_en: string;
   transit_rashi_ne: string;
@@ -869,6 +892,7 @@ export const saitPersonalizeKey = (
   location: LocationParams | undefined,
   birthDatetime: string,
   birthTz: string,
+  gender?: string | null,
 ) =>
   [
     "sait",
@@ -879,6 +903,7 @@ export const saitPersonalizeKey = (
     locationCacheKey(location),
     birthDatetime,
     birthTz,
+    gender ?? "",
   ] as const;
 
 /** Annotate the year's general dates with a native verdict from a birth moment.
@@ -889,9 +914,11 @@ export const fetchSaitPersonalize = (
   location: LocationParams | undefined,
   birthDatetime: string,
   birthTz: string,
+  gender?: string | null,
 ) => {
   let path = appendLocation(`/nepal/sait/${year}/${category}/personalize`, location);
   const params = new URLSearchParams({ birth: birthDatetime, birth_tz: birthTz });
+  if (gender) params.set("gender", gender);
   path = `${path}${path.includes("?") ? "&" : "?"}${params.toString()}`;
   return get<SaitPersonalizeResponse>(path);
 };
