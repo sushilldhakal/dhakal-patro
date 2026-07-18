@@ -3,7 +3,7 @@ import { useLocale } from "@/i18n/locale";
 import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { formatRashiDisplay } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
-import type { SaitDetailDay, SaitSuitability } from "@/lib/api";
+import type { SaitDetailDay, SaitPersonalizeDay, SaitSuitability } from "@/lib/api";
 import { SUITABILITY_STYLE } from "@/lib/sait-suitability";
 import { SuitabilityBadge } from "@/components/sait/sait-suitability";
 
@@ -11,16 +11,37 @@ import { SuitabilityBadge } from "@/components/sait/sait-suitability";
  * One qualifying muhūrta day: the representative clean window plus the
  * panchāṅga that made the day survive the rules.
  */
+/** Guru Śuddhi tone → localized ordinal-house reason line (bratabandha). */
+const GURU_TONE_LABEL: Record<
+  NonNullable<SaitPersonalizeDay["guru_tone"]>,
+  { ne: string; en: string }
+> = {
+  good: { ne: "शुभ", en: "auspicious" },
+  shanti: { ne: "शान्ति आवश्यक", en: "needs śānti" },
+  avoid: { ne: "त्याज्य", en: "avoid" },
+};
+
 export function SaitDayCard({
   d,
   index = 0,
   suitability,
+  personalize,
 }: {
   d: SaitDetailDay;
   index?: number;
   suitability?: SaitSuitability;
+  personalize?: SaitPersonalizeDay;
 }) {
   const { pick, digits, lang } = useLocale();
+  const guruTone = personalize?.guru_tone;
+  const guruHouse = personalize?.guru_house;
+  const guruNote =
+    guruTone && guruHouse
+      ? pick(
+          `गुरु जन्मराशिबाट ${digits(guruHouse)} भावमा — ${GURU_TONE_LABEL[guruTone].ne}`,
+          `Jupiter in house ${digits(guruHouse)} from the Moon — ${GURU_TONE_LABEL[guruTone].en}`,
+        )
+      : null;
   const overnight = d.window_end < d.window_start;
   const monthLabel = pick(
     d.bs_month_name_ne,
@@ -98,6 +119,21 @@ export function SaitDayCard({
           </div>
         ))}
       </dl>
+
+      {guruNote ? (
+        <p
+          className={cn(
+            "m-0 mt-3 border-t border-border pt-2.5 text-xs font-semibold",
+            guruTone === "good"
+              ? "text-success dark:text-success"
+              : guruTone === "shanti"
+                ? "text-warning"
+                : "text-danger",
+          )}
+        >
+          {guruNote}
+        </p>
+      ) : null}
     </article>
   );
 }

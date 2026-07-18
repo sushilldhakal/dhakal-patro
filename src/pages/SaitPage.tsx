@@ -24,6 +24,7 @@ import {
   saitKeys,
   saitPersonalizeKey,
   type BratabandhaNakshatraMode,
+  type SaitPersonalizeDay,
   type SaitSuitability,
 } from "@/lib/api";
 import type { Profile } from "@/lib/auth/client";
@@ -136,6 +137,16 @@ export function SaitPage() {
     return map;
   }, [personalizeQuery.data]);
 
+  // Full per-day annotation (keyed the same way) so the muhūrta cards can show
+  // the reason — e.g. bratabandha's Guru Śuddhi house — not just the verdict.
+  const personalizeByDay = useMemo(() => {
+    const map = new Map<string, SaitPersonalizeDay>();
+    for (const d of personalizeQuery.data?.days ?? []) {
+      map.set(`${d.bs_month}-${d.bs_day}`, d);
+    }
+    return map;
+  }, [personalizeQuery.data]);
+
   const profileControl = (
     <>
       <SaitProfilePicker
@@ -182,6 +193,7 @@ export function SaitPage() {
       count={totalCount}
       profileControl={profileControl}
       suitabilityByDay={suitabilityByDay}
+      personalizeByDay={personalizeByDay}
       loading={activeQuery.isLoading && !activeQuery.data}
       notice={
         content.requiresBirthDate ? (
