@@ -816,6 +816,12 @@ export interface SaitPersonalizeDay {
   chandra_num: number;
   chandra_tone: string;
   moon_house: number;
+  /** Guru Śuddhi (bratabandha only): Jupiter's house from the janma rāśi. */
+  guru_house?: number | null;
+  guru_tone?: "good" | "shanti" | "avoid" | null;
+  guru_rashi?: number | null;
+  guru_rashi_ne?: string | null;
+  guru_rashi_en?: string | null;
   transit_nakshatra_ne: string;
   transit_nakshatra_en: string;
   transit_rashi_ne: string;

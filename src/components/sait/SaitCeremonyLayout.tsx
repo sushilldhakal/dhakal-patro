@@ -8,7 +8,12 @@ import { SaitRulesSection, type SaitRule } from "@/components/sait/SaitRulesSect
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
 import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
-import type { BratabandhaNakshatraMode, SaitDetailDay, SaitSuitability } from "@/lib/api";
+import type {
+  BratabandhaNakshatraMode,
+  SaitDetailDay,
+  SaitPersonalizeDay,
+  SaitSuitability,
+} from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { patroMonthNavBtn } from "@/lib/patro-classes";
 
@@ -36,6 +41,8 @@ interface Props {
   profileControl?: React.ReactNode;
   /** Native verdict per `${bs_month}-${bs_day}`, overlaid on the day cards. */
   suitabilityByDay?: Map<string, SaitSuitability>;
+  /** Full per-day annotation (same key) for the card's reason line. */
+  personalizeByDay?: Map<string, SaitPersonalizeDay>;
   loading: boolean;
   notice?: React.ReactNode;
   children?: React.ReactNode;
@@ -76,6 +83,7 @@ export function SaitCeremonyLayout({
   count,
   profileControl,
   suitabilityByDay,
+  personalizeByDay,
   loading,
   notice,
   children,
@@ -242,6 +250,7 @@ export function SaitCeremonyLayout({
                         d={d}
                         index={i}
                         suitability={suitabilityByDay?.get(`${d.bs_month}-${d.bs_day}`)}
+                        personalize={personalizeByDay?.get(`${d.bs_month}-${d.bs_day}`)}
                       />
                     );
                   })}
