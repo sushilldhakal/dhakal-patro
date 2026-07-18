@@ -20,6 +20,7 @@ import { PageShell, PageHeader } from "../components/PageShell";
 import { useRouteLoading } from "@/lib/route-loading";
 import { BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR, getCurrentBs } from "../lib/bs-calendar";
 import { formatLocaleDigits } from "@/i18n/digits";
+import { useLocale } from "@/i18n/locale";
 import { cn } from "../lib/utils";
 
 type Tab = "holidays" | "festivals";
@@ -29,16 +30,13 @@ const festivalCol = createColumnHelper<Festival>();
 
 function useHolidayColumns() {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   return useMemo(
     () => [
-      holidayCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
-        id: "name_ne",
-        header: t("holidays.col_name_ne"),
+      holidayCol.accessor(r => pick(r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
+        id: "name",
+        header: t("holidays.col_name"),
         cell: i => <span className="text-base">{i.getValue()}</span>,
-      }),
-      holidayCol.accessor(r => r.name_en ?? "—", {
-        id: "name_en",
-        header: t("holidays.col_name_en"),
       }),
       holidayCol.accessor("bs_start_date", {
         header: t("holidays.col_bs_date"),
@@ -61,22 +59,19 @@ function useHolidayColumns() {
         ),
       }),
     ],
-    [t],
+    [t, pick],
   );
 }
 
 function useFestivalColumns() {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   return useMemo(
     () => [
-      festivalCol.accessor(r => r.name_ne ?? r.name_en ?? "—", {
-        id: "name_ne",
-        header: t("holidays.col_name_ne"),
+      festivalCol.accessor(r => pick(r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
+        id: "name",
+        header: t("holidays.col_name"),
         cell: i => <span className="text-base">{i.getValue()}</span>,
-      }),
-      festivalCol.accessor(r => r.name_en ?? "—", {
-        id: "name_en",
-        header: t("holidays.col_name_en"),
       }),
       festivalCol.accessor("bs_start_date", {
         header: t("holidays.col_bs_date"),
@@ -104,7 +99,7 @@ function useFestivalColumns() {
           ) : null,
       }),
     ],
-    [t],
+    [t, pick],
   );
 }
 

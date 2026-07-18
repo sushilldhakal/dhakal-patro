@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Sprout, HelpCircle } from "lucide-react";
-import { adToBS } from "@/lib/bs-calendar";
+import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
 import { fetchTropicalSeasons, seasonsKeys } from "@/lib/api";
 import { useLocale } from "@/i18n/locale";
 import {
@@ -47,7 +47,7 @@ const fmtAd = (adStr: string) =>
 interface SeasonItem {
   solarSlot: number;
   angle: number;
-  startBs: { day: number; monthName: string };
+  startBs: { day: number; month: number };
   startAd: string;
   isCurrent: boolean;
   daysUntil: number;
@@ -100,7 +100,7 @@ export function RituSeasons({
       return {
         solarSlot: b.slot,
         angle: b.angle,
-        startBs: { day: bs.day, monthName: bs.monthName },
+        startBs: { day: bs.day, month: bs.month },
         startAd,
         isCurrent: b.is_current,
         daysUntil: Math.round((midnightUtcMs(startAd) - todayMid) / DAY),
@@ -112,7 +112,7 @@ export function RituSeasons({
   const relLabel = (days: number) => {
     if (days <= 0) return "";
     if (days === 1) return t("ritu.tomorrow");
-    return t("ritu.days_after", { count: Number(dg(days)) });
+    return t("ritu.days_after", { count: days, days: dg(days) });
   };
 
   return (
@@ -181,12 +181,16 @@ export function RituSeasons({
                 </span>
                 <span className="flex h-[46px] w-[46px] shrink-0 flex-col items-center justify-center gap-px rounded-lg bg-secondary/13 text-accent dark:text-accent">
                   <span className="text-base font-bold leading-none font-num">{dg(item.startBs.day)}</span>
-                  <span className="text-sm font-semibold leading-none">{item.startBs.monthName}</span>
+                  <span className="text-sm font-semibold leading-none">
+                    {pick(BS_MONTHS_NE[item.startBs.month - 1], BS_MONTH_NAMES[item.startBs.month - 1])}
+                  </span>
                 </span>
               </div>
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-semibold">
-                  {markerKey ? t(markerKey) : t("ritu.sun_deg", { deg: dg(item.angle) })}
+                  {markerKey
+                    ? `${t(markerKey)} · ${t("ritu.sun_deg", { deg: dg(item.angle) })}`
+                    : t("ritu.sun_deg", { deg: dg(item.angle) })}
                 </span>
                 <span className="mono text-xs text-base">
                   {fmtAd(item.startAd)} {t("common.from")}
