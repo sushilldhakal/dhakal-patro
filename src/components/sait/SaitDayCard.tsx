@@ -3,7 +3,13 @@ import { useLocale } from "@/i18n/locale";
 import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { formatRashiDisplay } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
-import type { SaitDetailDay, SaitPersonalizeDay, SaitSuitability } from "@/lib/api";
+import type {
+  SaitDetailDay,
+  SaitPersonalizeDay,
+  SaitShuddhiPlanet,
+  SaitShuddhiTone,
+  SaitSuitability,
+} from "@/lib/api";
 import { SUITABILITY_STYLE } from "@/lib/sait-suitability";
 import { SuitabilityBadge } from "@/components/sait/sait-suitability";
 
@@ -11,14 +17,32 @@ import { SuitabilityBadge } from "@/components/sait/sait-suitability";
  * One qualifying muhūrta day: the representative clean window plus the
  * panchāṅga that made the day survive the rules.
  */
-/** Guru Śuddhi tone → localized ordinal-house reason line (bratabandha). */
-const GURU_TONE_LABEL: Record<
-  NonNullable<SaitPersonalizeDay["guru_tone"]>,
+const SHUDDHI_PLANET_LABEL: Record<
+  SaitShuddhiPlanet["planet"],
   { ne: string; en: string }
 > = {
-  good: { ne: "शुभ", en: "auspicious" },
+  sun: { ne: "सूर्य", en: "Sun" },
+  moon: { ne: "चन्द्र", en: "Moon" },
+  guru: { ne: "गुरु", en: "Jupiter" },
+  shukra: { ne: "शुक्र", en: "Venus" },
+};
+
+const SHUDDHI_TONE_TEXT: Record<SaitShuddhiTone, string> = {
+  good: "text-success dark:text-success",
+  shanti: "text-warning",
+  avoid: "text-danger",
+};
+
+const SHUDDHI_TONE_CHIP: Record<SaitShuddhiTone, string> = {
+  good: "bg-success/12 text-success-foreground dark:text-success",
+  shanti: "bg-warning/15 text-warning",
+  avoid: "bg-danger/12 text-danger",
+};
+
+const SHUDDHI_SUMMARY: Record<SaitShuddhiTone, { ne: string; en: string }> = {
+  good: { ne: "ग्रह शुद्ध — शुभ", en: "Grahas strong — auspicious" },
   shanti: { ne: "शान्ति आवश्यक", en: "needs śānti" },
-  avoid: { ne: "त्याज्य", en: "avoid" },
+  avoid: { ne: "त्याज्य ग्रहस्थिति", en: "weak graha — avoid" },
 };
 
 export function SaitDayCard({
@@ -33,15 +57,7 @@ export function SaitDayCard({
   personalize?: SaitPersonalizeDay;
 }) {
   const { pick, digits, lang } = useLocale();
-  const guruTone = personalize?.guru_tone;
-  const guruHouse = personalize?.guru_house;
-  const guruNote =
-    guruTone && guruHouse
-      ? pick(
-          `गुरु जन्मराशिबाट ${digits(guruHouse)} भावमा — ${GURU_TONE_LABEL[guruTone].ne}`,
-          `Jupiter in house ${digits(guruHouse)} from the Moon — ${GURU_TONE_LABEL[guruTone].en}`,
-        )
-      : null;
+  const shuddhi = personalize?.shuddhi ?? null;
   const overnight = d.window_end < d.window_start;
   const monthLabel = pick(
     d.bs_month_name_ne,
@@ -120,19 +136,33 @@ export function SaitDayCard({
         ))}
       </dl>
 
-      {guruNote ? (
-        <p
-          className={cn(
-            "m-0 mt-3 border-t border-border pt-2.5 text-xs font-semibold",
-            guruTone === "good"
-              ? "text-success dark:text-success"
-              : guruTone === "shanti"
-                ? "text-warning"
-                : "text-danger",
-          )}
-        >
-          {guruNote}
-        </p>
+      {shuddhi && shuddhi.planets.length > 0 ? (
+        <div className="mt-3 border-t border-border pt-2.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground">
+              {pick("ग्रह शुद्धि", "Graha Śuddhi")}
+            </span>
+            {shuddhi.planets.map((p) => (
+              <span
+                key={p.planet}
+                title={pick(p.rashi_ne, p.rashi_en)}
+                className={cn(
+                  "font-num inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums",
+                  SHUDDHI_TONE_CHIP[p.tone],
+                )}
+              >
+                {pick(SHUDDHI_PLANET_LABEL[p.planet].ne, SHUDDHI_PLANET_LABEL[p.planet].en)}
+                <span>{digits(p.house)}</span>
+              </span>
+            ))}
+          </div>
+          <p className={cn("m-0 mt-1.5 text-xs font-semibold", SHUDDHI_TONE_TEXT[shuddhi.tone])}>
+            {pick(SHUDDHI_SUMMARY[shuddhi.tone].ne, SHUDDHI_SUMMARY[shuddhi.tone].en)}
+            <span className="ml-1 font-normal text-muted-foreground">
+              {pick("(जन्मराशिबाट भाव)", "(house from janma rāśi)")}
+            </span>
+          </p>
+        </div>
       ) : null}
     </article>
   );

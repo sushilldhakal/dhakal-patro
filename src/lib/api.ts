@@ -806,6 +806,23 @@ export const fetchSaitDetail = (
 /** Native (profile-based) verdict overlaid on the general listing. */
 export type SaitSuitability = "favourable" | "neutral" | "avoid";
 
+export type SaitShuddhiTone = "good" | "shanti" | "avoid";
+
+/** One planet's Graha Śuddhi: its house from the native's janma rāśi. */
+export interface SaitShuddhiPlanet {
+  planet: "sun" | "moon" | "guru" | "shukra";
+  house: number;
+  tone: SaitShuddhiTone;
+  rashi_ne: string;
+  rashi_en: string;
+}
+
+/** Graha Śuddhi over the ceremony's relevant planets (bratabandha, griha-aarambha). */
+export interface SaitShuddhi {
+  tone: SaitShuddhiTone;
+  planets: SaitShuddhiPlanet[];
+}
+
 export interface SaitPersonalizeDay {
   bs_month: number;
   bs_day: number;
@@ -816,12 +833,8 @@ export interface SaitPersonalizeDay {
   chandra_num: number;
   chandra_tone: string;
   moon_house: number;
-  /** Guru Śuddhi (bratabandha only): Jupiter's house from the janma rāśi. */
-  guru_house?: number | null;
-  guru_tone?: "good" | "shanti" | "avoid" | null;
-  guru_rashi?: number | null;
-  guru_rashi_ne?: string | null;
-  guru_rashi_en?: string | null;
+  /** Graha Śuddhi (bratabandha, griha-aarambha); null for other ceremonies. */
+  shuddhi?: SaitShuddhi | null;
   transit_nakshatra_ne: string;
   transit_nakshatra_en: string;
   transit_rashi_ne: string;
