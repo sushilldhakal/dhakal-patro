@@ -581,6 +581,54 @@ export function DainikKranti() {
 
   useRouteLoading(pageLoading);
 
+  // Paksha filter + location controls are shared between the desktop header
+  // (md+, right column) and the mobile drawer header slots (below md), so the
+  // month/year picker matches the home page: a bottom sheet on mobile.
+  const pakshaToggle = (
+    <div
+      className="inline-flex shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5"
+      role="radiogroup"
+      aria-label={t("calendar.paksha_aria")}
+    >
+      {(
+        [
+          ["all", t("calendar.paksha_all")],
+          ["krishna", t("calendar.paksha_krishna")],
+          ["shukla", t("calendar.paksha_shukla")],
+        ] as const
+      ).map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          role="radio"
+          aria-checked={paksha === value}
+          className={patroSegBtn(paksha === value)}
+          onClick={() => setPaksha(value)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const locationControlDesktop = (
+    <LocationSelector
+      compact
+      location={location}
+      onLocationChange={setLocation}
+      className="w-auto max-w-[11rem] sm:max-w-[12.5rem]"
+    />
+  );
+
+  const locationControlMobile = (
+    <LocationSelector
+      compact
+      location={location}
+      onLocationChange={setLocation}
+      className="h-[30px] min-w-0 w-auto max-w-[7.25rem] shrink-0 px-2"
+    />
+  );
+
   return (
     <PageShell>
       <div className="mb-1 flex items-start justify-between gap-3">
@@ -602,40 +650,15 @@ export function DainikKranti() {
             nextDisabled={atEnd}
             prevAriaLabel={t("calendar.prev_month")}
             nextAriaLabel={t("calendar.next_month")}
+            mobileDateTimeDrawer
+            mobileToolbar={pakshaToggle}
+            mobileToolbarLower={locationControlMobile}
           />
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-2 pt-0.5">
-          <div
-            className="inline-flex shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5"
-            role="radiogroup"
-            aria-label={t("calendar.paksha_aria")}
-          >
-            {(
-              [
-                ["all", t("calendar.paksha_all")],
-                ["krishna", t("calendar.paksha_krishna")],
-                ["shukla", t("calendar.paksha_shukla")],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={paksha === value}
-                className={patroSegBtn(paksha === value)}
-                onClick={() => setPaksha(value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <LocationSelector
-            compact
-            location={location}
-            onLocationChange={setLocation}
-            className="w-auto max-w-[11rem] sm:max-w-[12.5rem]"
-          />
+        <div className="hidden shrink-0 flex-col items-end gap-2 pt-0.5 md:flex">
+          {pakshaToggle}
+          {locationControlDesktop}
         </div>
       </div>
 
