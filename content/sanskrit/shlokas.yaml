@@ -530,3 +530,86 @@ shlokas:
     language: sanskrit
     text: |
       न कुर्यान्मङ्गलं विष्ट्यां जीवितार्थी कदाचन ॥ [३७१]
+
+  # ---------------------------------------------------------------------------
+  # MUHŪRTA / SĀIT ŚLOKAS — AGNI-JURNE (AGNI-VĀSA / HAVANA)
+  # File: src/lib/sait-rules-content.ts  (SAIT_RULES_CONTENT."agni-jurne")
+  # ---------------------------------------------------------------------------
+
+  - id: agni_vasa_236
+    title: सैका तिथिवारयुता कृताप्ता
+    category: vivah
+    source: sait/agni-jurne (Agni-vāsa formula)
+    citation: Muhūrta Chintāmaṇi 2.36 [४५८] (Agnyādhāna Prakaraṇa)
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      सैका तिथिवारयुता कृताप्ता शेषे गुणेऽग्ने भुवि वह्निवासः ।
+      सौख्याय होमे शशिगुग्मशेषे प्राणार्थनाशौ दिवि भूतले च ॥ ३६ ॥ [४५८]
+
+  - id: agni_vasa_phala_piyushadhara
+    title: तिथिवारयुतिः सैका वेदभक्तावशेषकात्
+    category: vivah
+    source: sait/agni-jurne (remainder → abode → fruit)
+    citation: Muhūrta Chintāmaṇi 2.36 · Pīyūṣadhārā [४५८]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      तिथिवारयुतिः सैका वेदभक्तावशेषकात् ।
+      निवासोऽग्नेर्व्यौम्नि रूपे वित्तप्राणविनाशकः ॥
+      पाताले द्विकशेषेण धनसंचयनाशकः ।
+      गुणवेदावशेषेण भूमौ विपुलसौख्यदः ॥ [४५८]
+
+  # ---------------------------------------------------------------------------
+  # MUHŪRTA / SĀIT ŚLOKAS — ANNAPRĀŚANA
+  # File: src/lib/sait-rules-content.ts  (SAIT_RULES_CONTENT.annaprasan)
+  # ---------------------------------------------------------------------------
+
+  - id: annaprasan_516
+    title: युग्ममासे पुंसोऽयुग्मे स्त्रीणां
+    category: vivah
+    source: sait/annaprasan (month / tithi / nakṣatra / vāra)
+    citation: Muhūrta Chintāmaṇi 5.16 (Saṃskāra Prakaraṇa)
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      युग्ममासे पुंसोऽयुग्मे स्त्रीणां मृदुलघुचरस्थिरोडुषु ।
+      रिक्तानन्दाष्टमीदर्शद्वादशीार्ककुजार्किभिर्विना ॥ १६ ॥
+
+  - id: annaprasan_517
+    title: केन्द्रत्रिकोणायगतैः शुभैः
+    category: vivah
+    source: sait/annaprasan (lagna-śuddhi)
+    citation: Muhūrta Chintāmaṇi 5.17 (Saṃskāra Prakaraṇa)
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      केन्द्रत्रिकोणायगतैः शुभैः खेटैः खशून्यगे ।
+      पापैरुपचयस्थैश्च लग्नेन्दुमृतिषष्ठगैः ॥ १७ ॥
+
+  - id: annaprasan_janmatara
+    title: जन्मार्क्षमासतिथयो व्यतिपातभद्रा
+    category: vivah
+    source: sait/annaprasan (janma-tārā 1/10/19/25)
+    citation: Muhūrta Chintāmaṇi 1.34 [२८४]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      जन्मार्क्षमासतिथयो व्यतिपातभद्रा वैधृत्यमापितृदिनानि तिथिक्षयद्वौ ।
+      न्यूनार्द्धिमासकुलिकप्रहराधपाता विष्कम्भमृद्व्यतिगतित्रयमेव वर्ज्यम् ॥ ३४ ॥
+
+  - id: annaprasan_purvahna
+    title: पूर्वाह्णे दैवकृत्यं स्यान्मध्याह्ने मानुषं तथा
+    category: vivah
+    source: sait/annaprasan (daytime / pūrvāhṇa)
+    citation: Muhūrta Chintāmaṇi · Pīyūṣadhārā [६८२]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      पूर्वाह्णे दैवकृत्यं स्यान्मध्याह्ने मानुषं तथा ॥ [६८२]
