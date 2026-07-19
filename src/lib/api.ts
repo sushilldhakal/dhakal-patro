@@ -468,6 +468,144 @@ export const fetchGocharIngress = (
   );
 };
 
+// ─── Graha detail (sthiti / asta / vakri) + eclipses ──────────────────────────
+
+/** One row of the daily sphuta table — a graha or लग्न. */
+export interface GrahaSthitiRow {
+  graha: string;
+  name_ne: string;
+  name_vedic: string;
+  symbol: string;
+  /** `21° कन्या 53′ 14″` — degree in sign with Nepali rashi name. */
+  rekhamsha: string;
+  rashi_ne: string;
+  nakshatra: string;
+  nakshatra_ne: string;
+  pada: number;
+  pada_ne: string;
+  nakshatra_lord_ne: string;
+  sub_lord_ne: string;
+  full_degree: number;
+  /** `04° द. 45′ 02″` — signed ecliptic latitude (शर), north/south. */
+  shara: string;
+  shara_deg: number;
+  speed_deg_day: number;
+  is_retrograde: boolean;
+  is_combust: boolean;
+  right_ascension: number;
+  declination: number;
+}
+
+export interface GrahaSthitiResponse {
+  date_ad: string;
+  date_bs: string;
+  timezone: string;
+  sunrise_local: string;
+  location?: Record<string, unknown>;
+  rows: GrahaSthitiRow[];
+}
+
+/** One yearly heliacal udaya/asta (rising/setting) event. */
+export interface GrahaAstaEvent {
+  graha: string;
+  graha_ne: string;
+  event?: "udaya" | "asta";
+  hemisphere?: "east" | "west";
+  is_retrograde?: boolean;
+  motion_ne?: string;
+  label_ne?: string;
+  entry_time_local?: string;
+  entry_time_local_short?: string;
+  entry_date_ad?: string;
+  entry_date_bs?: string | null;
+}
+
+export interface GrahaAstaResponse {
+  bs_year: number;
+  gregorian_range: { start: string; end: string };
+  grahas: string[];
+  events: GrahaAstaEvent[];
+}
+
+/** One yearly वक्री/मार्गी motion-station event. */
+export interface GrahaVakriEvent {
+  graha: string;
+  graha_ne: string;
+  motion?: string;
+  is_retrograde?: boolean;
+  label_ne?: string;
+  entry_time_local?: string;
+  entry_time_local_short?: string;
+  entry_date_ad?: string;
+  entry_date_bs?: string | null;
+}
+
+export interface GrahaVakriResponse {
+  bs_year: number;
+  gregorian_range: { start: string; end: string };
+  grahas: string[];
+  events: GrahaVakriEvent[];
+}
+
+/** One eclipse (solar or lunar) within a BS year. */
+export interface EclipseEvent {
+  kind: "solar" | "lunar";
+  type: string;
+  type_ne: string;
+  type_en: string;
+  max_utc: string;
+  max_local: string;
+  date_ad: string;
+  date_bs: string | null;
+  visible: boolean;
+  begin_local?: string | null;
+  end_local?: string | null;
+  penumbral_begin_local?: string | null;
+  penumbral_end_local?: string | null;
+}
+
+export interface EclipseYearResponse {
+  bs_year: number;
+  kind: "solar" | "lunar";
+  gregorian_range: { start: string; end: string };
+  events: EclipseEvent[];
+}
+
+export const grahaDetailKeys = {
+  sthiti: (dateAd: string, location?: LocationParams) =>
+    ["graha", "sthiti", dateAd, locationCacheKey(location)] as const,
+  asta: (bsYear: number, location?: LocationParams) =>
+    ["graha", "asta", bsYear, locationCacheKey(location)] as const,
+  vakri: (bsYear: number, location?: LocationParams) =>
+    ["graha", "vakri", bsYear, locationCacheKey(location)] as const,
+  eclipse: (kind: "solar" | "lunar", bsYear: number, location?: LocationParams) =>
+    ["graha", "eclipse", kind, bsYear, locationCacheKey(location)] as const,
+};
+
+export const fetchGrahaSthiti = (dateAd: string, location?: LocationParams) =>
+  get<GrahaSthitiResponse>(
+    appendLocation(`/nepal/graha-sthiti/${dateAd}?era=ad`, location),
+  );
+
+export const fetchGrahaAstaYear = (bsYear: number, location?: LocationParams) =>
+  get<GrahaAstaResponse>(
+    appendLocation(`/nepal/graha-asta/year/${bsYear}`, location),
+  );
+
+export const fetchGrahaVakriYear = (bsYear: number, location?: LocationParams) =>
+  get<GrahaVakriResponse>(
+    appendLocation(`/nepal/graha-vakri/year/${bsYear}`, location),
+  );
+
+export const fetchEclipseYear = (
+  kind: "solar" | "lunar",
+  bsYear: number,
+  location?: LocationParams,
+) =>
+  get<EclipseYearResponse>(
+    appendLocation(`/nepal/eclipse/${kind}/year/${bsYear}`, location),
+  );
+
 type RawMonthDay = CalendarDay;
 
 function parsePakshaName(label?: string): string | undefined {

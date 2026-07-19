@@ -1,7 +1,11 @@
 import {
   CalendarClock,
+  Eclipse,
   HeartHandshake,
   MoonStar,
+  Orbit,
+  RotateCcw,
+  Sunrise,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -62,8 +66,53 @@ function DirectoryCard({
   );
 }
 
-/** Categorized link grid: transition elements → daily tables → shubha muhurta. */
+/** Standalone graha-detail pages (positions, combustion, retrograde, eclipses). */
+const GRAHA_PAGES = [
+  {
+    to: "/panchanga/graha-sthiti" as const,
+    ne: "ग्रह स्थिति",
+    en: "Planetary positions",
+    blurbNe: "नौ ग्रह र लग्नको दैनिक स्थिति",
+    blurbEn: "Daily positions of 9 grahas + lagna",
+    icon: Orbit,
+  },
+  {
+    to: "/panchanga/graha-asta" as const,
+    ne: "ग्रह अस्त",
+    en: "Heliacal set",
+    blurbNe: "वर्षभरका उदय–अस्त क्षण",
+    blurbEn: "Yearly rising & setting",
+    icon: Sunrise,
+  },
+  {
+    to: "/panchanga/graha-vakri" as const,
+    ne: "ग्रह वक्री",
+    en: "Retrograde",
+    blurbNe: "वर्षभरका वक्री–मार्गी क्षण",
+    blurbEn: "Yearly retrograde stations",
+    icon: RotateCcw,
+  },
+  {
+    to: "/panchanga/chandra-grahan" as const,
+    ne: "चन्द्र ग्रहण",
+    en: "Lunar eclipse",
+    blurbNe: "वर्षका चन्द्र ग्रहण",
+    blurbEn: "The year's lunar eclipses",
+    icon: MoonStar,
+  },
+  {
+    to: "/panchanga/surya-grahan" as const,
+    ne: "सूर्य ग्रहण",
+    en: "Solar eclipse",
+    blurbNe: "वर्षका सूर्य ग्रहण",
+    blurbEn: "The year's solar eclipses",
+    icon: Eclipse,
+  },
+];
+
+/** Categorized link grid: transition elements → graha detail → daily tables → shubha muhurta. */
 export function PanchangaDirectory({ className }: { className?: string }) {
+  const { pick } = useLocale();
   const spans = ELEMENT_META.filter((e) => e.kind === "span");
   const tables = ELEMENT_META.filter((e) => e.kind === "table");
 
@@ -81,6 +130,19 @@ export function PanchangaDirectory({ className }: { className?: string }) {
             blurbNe={e.blurbNe}
             blurbEn={e.blurbEn}
             icon={MoonStar}
+          />
+        ))}
+      </div>
+
+      <SectionTitle ne="ग्रह विवरण" en="Planet details" />
+      <div className="flex flex-wrap items-stretch justify-center gap-3">
+        {GRAHA_PAGES.map((g) => (
+          <QuickLinkCard
+            key={g.to}
+            to={g.to}
+            icon={g.icon}
+            label={pick(g.ne, g.en)}
+            description={pick(g.blurbNe, g.blurbEn)}
           />
         ))}
       </div>
