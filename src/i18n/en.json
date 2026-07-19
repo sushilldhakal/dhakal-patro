@@ -98,6 +98,31 @@
         "title": "Reset Password | Vedic Patro",
         "description": "Set a new password.",
         "keywords": ""
+      },
+      "graha_sthiti": {
+        "title": "Planetary Positions | Vedic Patro",
+        "description": "Daily sphuta of the nine grahas and the ascendant — sign, nakshatra, pada, lord/sub-lord, speed, right ascension and declination.",
+        "keywords": "planetary positions, graha sphuta, planet longitude, ascendant, nakshatra"
+      },
+      "graha_asta": {
+        "title": "Heliacal Rising & Setting | Vedic Patro",
+        "description": "Yearly udaya / asta (combustion) moments for Mercury, Venus, Mars, Jupiter and Saturn.",
+        "keywords": "combustion, heliacal setting, tara asta, planet rising"
+      },
+      "graha_vakri": {
+        "title": "Retrograde Motion | Vedic Patro",
+        "description": "Yearly vakri / margi (retrograde and direct) stations for Mercury, Venus, Mars, Jupiter and Saturn.",
+        "keywords": "retrograde, vakri, margi, mercury retrograde"
+      },
+      "surya_grahan": {
+        "title": "Solar Eclipse | Vedic Patro",
+        "description": "The year's solar eclipses, their type and visibility from Nepal.",
+        "keywords": "solar eclipse, eclipse, surya grahan, sutaka"
+      },
+      "chandra_grahan": {
+        "title": "Lunar Eclipse | Vedic Patro",
+        "description": "The year's lunar eclipses, their type and visibility from Nepal.",
+        "keywords": "lunar eclipse, eclipse, chandra grahan, blood moon"
       }
     }
   },

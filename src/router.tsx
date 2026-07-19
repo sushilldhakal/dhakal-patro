@@ -38,6 +38,11 @@ const PanchakPatro = lazyRoute(() => import("./pages/PanchakPatro"), "PanchakPat
 const History = lazyRoute(() => import("./pages/History"), "History");
 const PanchangaDetailsHub = lazyRoute(() => import("./pages/PanchangaDetailsHub"), "PanchangaDetailsHub");
 const ElementPage = lazyRoute(() => import("./pages/ElementPage"), "ElementPage");
+const GrahaSthiti = lazyRoute(() => import("./pages/GrahaSthiti"), "GrahaSthiti");
+const GrahaAsta = lazyRoute(() => import("./pages/GrahaAsta"), "GrahaAsta");
+const GrahaVakri = lazyRoute(() => import("./pages/GrahaVakri"), "GrahaVakri");
+const SuryaGrahan = lazyRoute(() => import("./pages/EclipsePage"), "SuryaGrahan");
+const ChandraGrahan = lazyRoute(() => import("./pages/EclipsePage"), "ChandraGrahan");
 const SaitPage = lazyRoute(() => import("./pages/SaitPage"), "SaitPage");
 const MarriageSait = lazyRoute(() => import("./pages/MarriageSait"), "MarriageSait");
 const Account = lazyRoute(() => import("./pages/Account"), "Account");
@@ -142,6 +147,11 @@ const historyLegacyRoute = createRoute({
 });
 const panchangaDetailsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/details", component: PanchangaDetailsHub });
 const elementRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/element/$name", component: ElementPage });
+const grahaSthitiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/graha-sthiti", component: GrahaSthiti });
+const grahaAstaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/graha-asta", component: GrahaAsta });
+const grahaVakriRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/graha-vakri", component: GrahaVakri });
+const suryaGrahanRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/surya-grahan", component: SuryaGrahan });
+const chandraGrahanRoute = createRoute({ getParentRoute: () => rootRoute, path: "/panchanga/chandra-grahan", component: ChandraGrahan });
 const saitRoute = createRoute({ getParentRoute: () => rootRoute, path: "/sait/$category", component: SaitPage });
 const marriageSaitRoute = createRoute({ getParentRoute: () => rootRoute, path: "/vivah-sait", component: MarriageSait });
 const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/account", component: Account });
@@ -173,6 +183,11 @@ const routeTree = rootRoute.addChildren([
   historyLegacyRoute,
   panchangaDetailsRoute,
   elementRoute,
+  grahaSthitiRoute,
+  grahaAstaRoute,
+  grahaVakriRoute,
+  suryaGrahanRoute,
+  chandraGrahanRoute,
   saitRoute,
   marriageSaitRoute,
   accountRoute,
