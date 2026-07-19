@@ -36,6 +36,7 @@ import { DashaSystemPanel } from "@/components/kundali/DashaSystemPanel";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { BhavaBalaCard } from "@/components/kundali/BhavaBalaCard";
+import { VimshopakaCard } from "@/components/kundali/VimshopakaCard";
 import { AshtakavargaCard } from "@/components/kundali/AshtakavargaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
@@ -612,6 +613,21 @@ export function KundaliView({
         >
           {detail.ashtakavarga ? (
             <AshtakavargaCard data={detail.ashtakavarga} />
+          ) : (
+            <p className="py-8 text-center text-sm">
+              {t("kundali.section_unavailable")}
+            </p>
+          )}
+        </div>
+      )}
+
+      {showSection("kundali-vimshopaka") && (
+        <div
+          id="kundali-vimshopaka"
+          className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
+        >
+          {detail.vimshopaka && detail.vimshopaka.classifications.length > 0 ? (
+            <VimshopakaCard data={detail.vimshopaka} />
           ) : (
             <p className="py-8 text-center text-sm">
               {t("kundali.section_unavailable")}

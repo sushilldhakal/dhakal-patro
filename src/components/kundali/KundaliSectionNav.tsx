@@ -30,6 +30,12 @@ export const KUNDALI_SECTIONS = [
     icon: "ashtakavarga" as const,
     parentId: "kundali-shadbala" as const,
   },
+  {
+    id: "kundali-vimshopaka",
+    labelKey: "kundali.nav_vimshopaka",
+    icon: "vimshopaka" as const,
+    parentId: "kundali-shadbala" as const,
+  },
   { id: "kundali-shanti", labelKey: "kundali.nav_shanti_vidhi", icon: "shanti" as const },
   { id: "kundali-report", labelKey: "kundali.nav_analysis", icon: "analysis" as const },
 ] as const;
@@ -46,6 +52,7 @@ const ICONS = {
   shadbala: Scale,
   bhava: Home,
   ashtakavarga: Grid3x3,
+  vimshopaka: Grid3x3,
   shanti: Flame,
   analysis: ScrollText,
 } as const;

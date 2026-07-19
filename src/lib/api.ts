@@ -1566,6 +1566,31 @@ export interface UpagrahaDetailRow {
   nakshatraLord: string;
 }
 
+/** Vimshopaka Bala — 20-point divisional strength. */
+export type VimshopakaGrade = "full" | "mediocre" | "little" | "incapable";
+
+export interface VimshopakaClassification {
+  key: string;
+  label: string;
+  label_ne: string;
+  divisions: number[];
+}
+
+export interface VimshopakaPlanet {
+  key: string;
+  name: string;
+  name_ne: string;
+  /** classification key → { score (0–20), grade }. */
+  scores: Record<string, { score: number; grade: VimshopakaGrade }>;
+}
+
+export interface VimshopakaData {
+  classifications: VimshopakaClassification[];
+  planets: VimshopakaPlanet[];
+  max_score: number;
+  method: string;
+}
+
 export interface KundaliDetailResponse {
   panchanga: PanchangaDay;
   shadbala: ShadbalaResponse;
@@ -1574,6 +1599,7 @@ export interface KundaliDetailResponse {
   yoginiDasha: DashaTreeResponse | null;
   yuddha: YuddhaData;
   bhavaBala: BhavaBalaData | null;
+  vimshopaka: VimshopakaData | null;
   ashtakavarga: AshtakavargaData | null;
   yogas: KundaliYoga[];
   vargaCharts: VargaCharts;
