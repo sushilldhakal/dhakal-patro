@@ -20,11 +20,10 @@ import {
   type GrahaVakriEvent,
 } from "@/lib/api";
 
-const GRAHA_ORDER = ["mercury", "venus", "moon", "mars", "jupiter", "saturn"];
+const GRAHA_ORDER = ["mercury", "venus", "mars", "jupiter", "saturn"];
 const GRAHA_NE: Record<string, string> = {
   mercury: "बुध",
   venus: "शुक्र",
-  moon: "चन्द्र",
   mars: "मङ्गल",
   jupiter: "बृहस्पति",
   saturn: "शनि",
@@ -32,7 +31,6 @@ const GRAHA_NE: Record<string, string> = {
 const GRAHA_EN: Record<string, string> = {
   mercury: "Mercury",
   venus: "Venus",
-  moon: "Moon",
   mars: "Mars",
   jupiter: "Jupiter",
   saturn: "Saturn",
@@ -129,9 +127,7 @@ export function GrahaVakri() {
                     events.map((ev, i) => <EventRow key={i} ev={ev} />)
                   ) : (
                     <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                      {g === "moon"
-                        ? pick("चन्द्रमा कहिल्यै वक्री हुँदैन।", "The Moon is never retrograde.")
-                        : pick("यस वर्ष वक्री हुँदैन।", "No retrograde this year.")}
+                      {pick("यस वर्ष वक्री हुँदैन।", "No retrograde this year.")}
                     </p>
                   )}
                 </div>

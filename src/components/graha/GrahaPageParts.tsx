@@ -59,16 +59,16 @@ export function GrahaYearHeader({
     <div
       className={cn(
         patroMdRail,
-        "flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3",
+        "flex flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2",
       )}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 shrink items-center gap-2">
         <button
           type="button"
           aria-label={pick("अघिल्लो वर्ष", "Previous year")}
           onClick={() => onYearChange(clamp(year - 1))}
           disabled={year <= BS_SUPPORTED_START_YEAR}
-          className="grid h-8 w-8 place-items-center rounded-full border border-border bg-card text-foreground disabled:opacity-40"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground disabled:opacity-40"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -89,7 +89,7 @@ export function GrahaYearHeader({
           aria-label={pick("अर्को वर्ष", "Next year")}
           onClick={() => onYearChange(clamp(year + 1))}
           disabled={year >= BS_SUPPORTED_END_YEAR}
-          className="grid h-8 w-8 place-items-center rounded-full border border-border bg-card text-foreground disabled:opacity-40"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground disabled:opacity-40"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -97,13 +97,13 @@ export function GrahaYearHeader({
           <button
             type="button"
             onClick={() => onYearChange(currentYear)}
-            className="ml-1 rounded-full border border-border bg-card px-3 py-1 text-sm font-semibold text-foreground"
+            className="ml-1 shrink-0 rounded-full border border-border bg-card px-3 py-1 text-sm font-semibold text-foreground"
           >
             {pick("यो वर्ष", "This year")}
           </button>
         ) : null}
       </div>
-      <div className="shrink-0">
+      <div className="min-w-0 shrink">
         <LocationSelector
           compact
           location={location}
