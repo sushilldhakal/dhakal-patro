@@ -34,16 +34,16 @@ export const GRAHA_PAGE_DESCRIPTIONS: Record<string, GrahaPageDescription> = {
   },
   "graha-asta": {
     what: {
-      ne: "ग्रह अस्त (उदय–अस्त) भनेको ग्रह सूर्यको प्रखर किरणमा लुकेर आकाशमा नदेखिने अवस्था हो। ग्रह सूर्यभन्दा निश्चित कोणभन्दा नजिक पुग्दा अस्त (combust) हुन्छ र टाढा हुँदा पुनः उदय हुन्छ। यो पृष्ठमा वर्षभरका बुध, शुक्र, मङ्गल, बृहस्पति र शनिका उदय–अस्त क्षण देखाइन्छ।",
-      en: "Graha asta (heliacal rising & setting) is when a planet is lost in the Sun's glare and invisible in the sky. A planet becomes asta (combust) when it comes within a set angle of the Sun and rises again (udaya) when it moves away. This page lists the udaya/asta moments through the year for Mercury, Venus, Mars, Jupiter and Saturn.",
+      ne: "ग्रह अस्त भनेको ग्रह सूर्यको प्रखर किरणमा लुकेर आकाशमा नदेखिने अवस्था हो। ग्रह सूर्यभन्दा निश्चित कोणभन्दा नजिक पुग्दा अस्त (combust) हुन्छ र टाढा हुँदा पुनः उदय हुन्छ। यो पृष्ठमा वर्षभरका बुध, शुक्र, मङ्गल, बृहस्पति र शनिका अस्त अवधि, र चन्द्रमाको हरेक महिनाको 'चन्द्र तारा अस्त' (अमावस्या नजिकको अस्त) देखाइन्छ।",
+      en: "Graha asta is when a planet is lost in the Sun's glare and invisible in the sky. A planet becomes asta (combust) when it comes within a set angle of the Sun and rises again (udaya) when it moves away. This page lists the yearly asta windows for Mercury, Venus, Mars, Jupiter and Saturn, plus the Moon's monthly 'Chandra Tara Asta' (combustion near the new moon).",
     },
     how: {
-      ne: "प्रत्येक ग्रहको सूर्यसँगको निरयन कोणीय अन्तर (elongation) गणना गरिन्छ। जब यो अन्तर सूर्य सिद्धान्तको ग्रह-विशेष सीमा (जस्तै बृहस्पति ~११°, शुक्र ~१०°) भन्दा तल झर्छ तब ग्रह अस्त हुन्छ; माथि उठ्दा उदय। सीमा पार गर्ने ठ्याक्कै क्षण द्विखण्डन (bisection) विधिबाट पत्ता लगाइन्छ। पूर्व/पश्चिम आकाशका आधारमा 'पूर्वमा' वा 'पश्चिममा' सङ्केत गरिन्छ।",
-      en: "Each planet's sidereal elongation from the Sun is computed. When that separation drops below the Surya-Siddhanta graha-specific threshold (e.g. Jupiter ~11°, Venus ~10°) the planet becomes asta; when it rises above, udaya. The exact crossing instant is found by bisection. The morning (पूर्व) or evening (पश्चिम) sky is indicated by which side of the Sun the planet lies on.",
+      ne: "ग्रहका लागि सूर्यसँगको निरयन कोणीय अन्तर (elongation) गणना गरिन्छ; यो अन्तर सूर्य सिद्धान्तको ग्रह-विशेष सीमा (बृहस्पति ~११°, शुक्र ~१०°) भन्दा तल झर्दा अस्त, माथि उठ्दा उदय हुन्छ। चन्द्र तारा अस्त हरेक अमावस्या वरिपरि हुन्छ — चन्द्रमा सूर्यबाट १३° भित्र आउने दिनहरूमा अस्त मानिन्छ; अवधि पहिलो दिनको चन्द्रोदयदेखि अन्तिम दिनको चन्द्रास्तसम्म रहन्छ।",
+      en: "For planets, the sidereal elongation from the Sun is computed; when it drops below the Surya-Siddhanta graha-specific threshold (Jupiter ~11°, Venus ~10°) the planet is asta, and udaya when it rises above. Chandra Tara Asta recurs at every new moon — the Moon counts as combust on the days it lies within 13° of the Sun, with the window running from that first day's moonrise to the last day's moonset.",
     },
     meaning: {
-      ne: "अस्त अवस्थाका ग्रहको बल घट्छ, त्यसैले विवाह, व्रतबन्ध जस्ता शुभ कार्यमा गुरु र शुक्र अस्त हुँदा मुहूर्त वर्जित मानिन्छ। उदय भएपछि ग्रह पुनः बलियो र शुभ मानिन्छ।",
-      en: "A combust planet is considered weak, so auspicious rites such as marriage and bratabandha are barred when Jupiter or Venus is asta (Guru/Shukra Tara Asta). Once a planet rises again it is regarded as strong and auspicious.",
+      ne: "अस्त अवस्थाका ग्रहको बल घट्छ, त्यसैले विवाह, व्रतबन्ध जस्ता शुभ कार्यमा गुरु र शुक्र अस्त हुँदा मुहूर्त वर्जित मानिन्छ। चन्द्र तारा अस्तलाई पनि केही शुभकार्यमा वर्जित गरिन्छ। उदय भएपछि ग्रह पुनः बलियो र शुभ मानिन्छ।",
+      en: "A combust planet is considered weak, so auspicious rites such as marriage and bratabandha are barred when Jupiter or Venus is asta (Guru/Shukra Tara Asta). Chandra Tara Asta is likewise avoided for some auspicious work. Once a body rises again it is regarded as strong and auspicious.",
     },
   },
   "graha-vakri": {

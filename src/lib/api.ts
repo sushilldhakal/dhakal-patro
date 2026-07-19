@@ -505,26 +505,31 @@ export interface GrahaSthitiResponse {
   rows: GrahaSthitiRow[];
 }
 
-/** One yearly heliacal udaya/asta (rising/setting) event. */
-export interface GrahaAstaEvent {
+/** A localized timestamp for an asta period boundary. */
+export interface AstaStamp {
+  iso: string;
+  date_ad: string;
+  date_bs: string | null;
+  time_short: string;
+}
+
+/** One combustion (asta) period — moon Tara Asta or a planet's asta window. */
+export interface GrahaAstaPeriod {
   graha: string;
   graha_ne: string;
-  event?: "udaya" | "asta";
-  hemisphere?: "east" | "west";
-  is_retrograde?: boolean;
-  motion_ne?: string;
-  label_ne?: string;
-  entry_time_local?: string;
-  entry_time_local_short?: string;
-  entry_date_ad?: string;
-  entry_date_bs?: string | null;
+  /** null until the moon rises / period opens before the year (open_start). */
+  start: AstaStamp | null;
+  end: AstaStamp | null;
+  duration_days: number | null;
+  /** "east" (morning/पूर्व) or "west" (evening/पश्चिम) for planets; null for the moon. */
+  hemisphere?: "east" | "west" | null;
 }
 
 export interface GrahaAstaResponse {
   bs_year: number;
   gregorian_range: { start: string; end: string };
   grahas: string[];
-  events: GrahaAstaEvent[];
+  periods: GrahaAstaPeriod[];
 }
 
 /** One yearly वक्री/मार्गी motion-station event. */
