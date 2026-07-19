@@ -176,7 +176,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
   const belaantar = formatPatroBelaantar(solar?.belaantar);
 
   return (
-    <section className="min-h-full rounded-lg bg-card shadow-ring-soft min-[1081px]:rounded-none min-[1081px]:shadow-none">
+    <section className="min-h-full rounded-lg bg-card">
       <div className="mb-2.5 grid grid-cols-2 gap-2">
         {cells.map((cell) => (
           <VivaranCell key={cell.label} {...cell} />
@@ -184,7 +184,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
       </div>
 
       {planets.length > 0 || deshaantar || belaantar ? (
-        <div className="mt-2.5 border-t border-foreground/10 pt-2.5">
+        <div className="mt-2.5 border-t border-foreground/10">
           <div className="mb-1.5 text-sm font-bold text-foreground">{t("aside.gochar")}</div>
           {planets.length > 0 ? (
             <div className="grid grid-cols-3 gap-1.5">

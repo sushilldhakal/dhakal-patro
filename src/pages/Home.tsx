@@ -262,11 +262,11 @@ function PanchangaAside({
             </div>
 
             <div
-              className="min-h-[12rem] flex-1 bg-gradient-to-b from-surface-muted/40 to-card p-3 max-md:p-3"
+              className="min-h-[12rem] flex-1 to-card p-3 max-md:p-3"
               role="tabpanel"
             >
               {error && !activeP ? (
-                <div className="flex h-full min-h-[10rem] flex-col items-center justify-center gap-2 rounded-xl border border-danger/25 bg-error-surface px-4 py-6 text-center">
+                <div className="flex h-full min-h-[10rem] flex-col items-center justify-center gap-2 rounded-xl bg-error-surface px-4 py-6 text-center">
                   <span className="inline-flex size-8 items-center justify-center rounded-full bg-danger/10 text-sm font-bold text-danger">
                     !
                   </span>
