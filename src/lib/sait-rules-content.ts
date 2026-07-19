@@ -692,20 +692,75 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
     },
     method: DAYTIME_INTRO,
     rules: [
-      { ne: "महिना — अधिकमास बाहेक सबै चन्द्रमास (चातुर्मास पनि स्वीकार्य); संक्रान्तिको दिन वर्जित।", en: "Month — all lunar months except Adhik-māsa (Chaturmāsa is allowed); the Sankrānti day is barred." },
-      { ne: "तिथि — दुवै पक्षका २,३,५,७,१०,११,१३; पूर्णिमा पनि स्वीकार्य।", en: "Tithi — 2,3,5,7,10,11,13 of both pakṣas; Pūrṇimā also accepted." },
-      { ne: "नक्षत्र — व्यापारका लागि उपयुक्त निश्चित सूची: अश्विनी, रोहिणी, मृगशिरा, पुनर्वसु, पुष्य, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, शतभिषा, उत्तरभाद्रपदा, रेवती।", en: "Nakṣatra — a fixed list of trade-favourable nakṣatras: Aśvinī, Rohiṇī, Mṛgaśira, Punarvasu, Puṣya, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā, U.Bhādrapada, Revatī." },
+      {
+        ne: "महिना — अधिकमास बाहेक सबै चन्द्रमास (चातुर्मास पनि स्वीकार्य); संक्रान्तिको दिन वर्जित।",
+        en: "Month — all lunar months except Adhik-māsa (Chaturmāsa is allowed); the Sankrānti day is barred.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि १.४७ · १.१८ (शुभाशुभ प्रकरण)",
+          en: "Muhūrta Chintāmaṇi 1.47 · 1.18 (Śubhāśubha Prakaraṇa)",
+        },
+        shloka:
+          "वृद्धत्वस्तशिशुत्वइज्यसितयोर्योनाधिमासे तथा ॥ ४७ ॥ [३३८]  विवाहादिषु कार्येषु नाड्यः षोडश षोडश ॥ [२७२]",
+        gloss: {
+          ne: "अधिमास (मलमास) मा नयाँ व्यापार वा भवनारम्भ जस्ता कार्य वर्जित। संक्रान्तिको अघिल्लो र पछिल्लो १६–१६ घडी (कुल ३२ घडी / संक्रान्तिको दिन) सबै शुभ कार्यका लागि त्याज्य — प्रणालीले संक्रान्तिको दिन नै वर्जित गर्छ।",
+          en: "Adhimāsa (Malmāsa) bars new trade and building rites. Around Sankrānti, 16 nāḍīs before and after (32 nāḍīs / the Sankrānti day) are barred for auspicious work — the system excludes the Sankrānti day itself.",
+        },
+      },
+      {
+        ne: "तिथि — दुवै पक्षका २,३,५,७,१०,११,१३; पूर्णिमा पनि स्वीकार्य।",
+        en: "Tithi — 2,3,5,7,10,11,13 of both pakṣas; Pūrṇimā also accepted.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि १.४ · १.३६ (शुभाशुभ प्रकरण)",
+          en: "Muhūrta Chintāmaṇi 1.4 · 1.36 (Śubhāśubha Prakaraṇa)",
+        },
+        shloka:
+          "नंदा भद्रा च जया च रिक्ता पूर्णेति तिथ्योऽशुभमध्यशस्ताः ॥ [२८५]  चतुर्थी षष्ठी अष्टमी नवमी द्वादशी चतुर्दशी एताः पक्षरन्ध्रसंज्ञिस्ततियो ज्ञेयाः ॥ [३१०]",
+        gloss: {
+          ne: "रिक्ता (४,९,१४) शुभ कार्यमा अशुभ; पक्षरन्ध्र (४,६,८,९,१२,१४) पनि त्याज्य। यी कटाउँदा २,३,५,७,१०,११,१३ र पूर्णिमा (१५) मात्र बाँकी रहन्छन् — यही प्रणालीको तिथि सूची हो।",
+          en: "Riktā (4,9,14) are inauspicious for śubha work; Pakṣa-randhra (4,6,8,9,12,14) are likewise dropped. What remains are 2,3,5,7,10,11,13 and Pūrṇimā (15) — the system's tithi list.",
+        },
+      },
+      {
+        ne: "नक्षत्र — व्यापारका लागि उपयुक्त निश्चित सूची: अश्विनी, रोहिणी, मृगशिरा, पुनर्वसु, पुष्य, उत्तराफाल्गुनी, हस्त, चित्रा, स्वाती, अनुराधा, उत्तराषाढा, श्रवण, धनिष्ठा, शतभिषा, उत्तरभाद्रपदा, रेवती।",
+        en: "Nakṣatra — a fixed list of trade-favourable nakṣatras: Aśvinī, Rohiṇī, Mṛgaśira, Punarvasu, Puṣya, U.Phalgunī, Hasta, Chitrā, Svātī, Anurādhā, U.Aṣāḍhā, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā, U.Bhādrapada, Revatī.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि २.१७ (नक्षत्र प्रकरणम्)",
+          en: "Muhūrta Chintāmaṇi 2.17 (Nakṣatra Prakaraṇam)",
+        },
+        shloka:
+          "पूर्वाद्वित्रयकृशानुपार्यमभे केन्द्रत्रिकोणे शुभैः षट्त्र्यायप्रयवश्विभैर्विना घटतनुं स्रग्विक्रयः सत्तिथौ । रिक्ताभौमघटालमन्विना च विपणिसैंन्ध्रुवक्षिप्रमै- लग्ने चन्द्रसिते व्ययाष्टरहितैः पापैः शुभैद्र्व्यार्यखे ॥ १७ ॥ [३४२]",
+        gloss: {
+          ne: "व्यापार (स्रग्विक्रय / विपणि) का लागि ध्रुव (रोहिणी, तीन उत्तरा), मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), क्षिप्र (हस्त, अश्विनी, पुष्य) र चर (स्वाती, पुनर्वसु, श्रवण, धनिष्ठा, शतभिषा) — जम्मा १६ नक्षत्र शुभ। श्लोकमै रिक्ता र भौम (मंगलवार) पनि निषेधमा उल्लिखित छन्।",
+          en: "For trade (srag-vikraya / vipaṇi) the auspicious stars are Dhruva (Rohiṇī, the three Uttarās), Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Kṣipra (Hasta, Aśvinī, Puṣya) and Chara (Svātī, Punarvasu, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā) — 16 in all. The same verse also names Riktā and Bhauma (Tuesday) among the prohibitions.",
+        },
+      },
       {
         ne: "वार — सोम, बुध, बिहि, शुक्र मात्र (आइत/मंगल/शनि वर्जित)।",
         en: "Vāra — only Mon/Wed/Thu/Fri (Sun/Tue/Sat barred).",
-        source: { ne: "बृहत्संहिता १.४", en: "Bṛhat Saṃhitā 1.4" },
+        source: {
+          ne: "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि २.१७",
+          en: "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi 2.17",
+        },
         shloka: "क्षितितनयदिवसवारो न शुभकृदिति यदि पितामहोक्ते ।",
         gloss: {
-          ne: "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार — व्यापार आरम्भमा आइत/मंगल/शनि त्यागी सोम, बुध, बिहीबार र शुक्रबार लिइन्छ।",
-          en: "Per Pitāmaha (Brahmā), Tuesday is inauspicious; Saturn and Mars are krūra vāra — for a business opening Sun/Tue/Sat are dropped, keeping Mon, Wed, Thu and Fri.",
+          ne: "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार — व्यापार आरम्भमा आइत/मंगल/शनि त्यागी सोम, बुध, बिहीबार र शुक्रबार लिइन्छ। मुहूर्त चिन्तामणि २.१७ ले पनि भौम (मंगलवार) निषेध गर्छ।",
+          en: "Per Pitāmaha (Brahmā), Tuesday is inauspicious; Saturn and Mars are krūra vāra — for a business opening Sun/Tue/Sat are dropped, keeping Mon, Wed, Thu and Fri. Muhūrta Chintāmaṇi 2.17 likewise bars Bhauma (Tuesday).",
         },
       },
-      { ne: "लग्न — स्थिर र द्विस्वभाव लग्न मात्र स्वीकार्य; चर लग्न वर्जित।", en: "Lagna — only fixed (sthira) and dual (dvisvabhāva) ascendants accepted; movable rejected." },
+      {
+        ne: "लग्न — स्थिर र द्विस्वभाव लग्न मात्र स्वीकार्य; चर लग्न वर्जित।",
+        en: "Lagna — only fixed (sthira) and dual (dvisvabhāva) ascendants accepted; movable rejected.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि २.१७ (नक्षत्र प्रकरणम् · लग्न निर्देश)",
+          en: "Muhūrta Chintāmaṇi 2.17 (Nakṣatra Prakaraṇam · lagna instruction)",
+        },
+        shloka:
+          "रिक्ताभौमघटालमन्विना च विपणिसैंन्ध्रुवक्षिप्रमै- लग्ने चन्द्रसिते व्ययाष्टरहितैः पापैः शुभैद्र्व्यार्यखे ॥ १७ ॥ [३४२]",
+        gloss: {
+          ne: "श्लोकले 'घट' (कुम्भ) लग्न र त्यसको नवांशलाई 'विना' भन्दै निषेध गर्छ। व्यापार टिकिरहोस् भन्नका लागि स्थिर लग्न (वृष, सिंह, वृश्चिक) र द्विस्वभाव लग्न (मिथुन, कन्या, धनु, मीन) उत्तम; चर लग्न (मेष, कर्कट, तुला, मकर) चलायमान भएकाले वर्जित। प्रणालीले स्थिर/द्विस्वभाव मात्र स्वीकार्छ।",
+          en: "The verse explicitly bars 'ghaṭa' (Kumbha) lagna and its navāṃśa with 'vinā' (except). For lasting trade, fixed lagnas (Vṛṣabha, Siṃha, Vṛśchika) and dual ones (Mithuna, Kanyā, Dhanu, Mīna) are preferred; movable lagnas (Meṣa, Karkaṭa, Tulā, Makara) bring instability and are barred. The system accepts only sthira/dvisvabhāva.",
+        },
+      },
       {
         ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।",
         en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred.",
@@ -720,7 +775,20 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         shloka: MC_GP_GRAHANA_SHLOKA,
         gloss: MC_GP_GRAHANA_GLOSS,
       },
-      { ne: "ग्रह — व्यापार आरम्भ अन्य संस्कारभन्दा उदार भएकाले गुरु/शुक्र उदय अनिवार्य छैन; दिनको समय (सूर्योदय–सूर्यास्त) मात्र।", en: "Graha — business opening is more lenient than other rites, so Guru/Śukra udaya is NOT required; daytime only (sunrise→sunset)." },
+      {
+        ne: "ग्रह — व्यापार आरम्भ अन्य संस्कारभन्दा उदार भएकाले गुरु/शुक्र उदय अनिवार्य छैन; दिनको समय (सूर्योदय–सूर्यास्त) मात्र।",
+        en: "Graha — business opening is more lenient than other rites, so Guru/Śukra udaya is NOT required; daytime only (sunrise→sunset).",
+        source: {
+          ne: "मुहूर्त चिन्तामणि १.४६–४७ (शुभाशुभ प्रकरण)",
+          en: "Muhūrta Chintāmaṇi 1.46–47 (Śubhāśubha Prakaraṇa)",
+        },
+        shloka:
+          "वाप्यारामडागतडागकूपभवनारम्भप्रतिष्ठे व्रता- रम्भोत्सर्गवधूप्रवेशनमहादानानि सोमाष्टके ॥ ४६ ॥  वृद्धत्वस्तशिशुत्वइज्यसितयोर्योनाधिमासे तथा ॥ ४७ ॥ [३३८]",
+        gloss: {
+          ne: "श्लोक ४६–४७ ले गुरु/शुक्र अस्त वा मलमासमा त्याग्नुपर्ने कार्य सूची दिन्छ — विवाह, व्रतबन्ध, भवनारम्भ, प्रतिष्ठा आदि। त्यस निषेध सूचीमा 'विपणि' (व्यापार आरम्भ) उल्लेख छैन, त्यसैले गुरु–शुक्र उदय अनिवार्य मानिँदैन — अन्य संस्कारभन्दा उदार। समय भने दिवाकाल (सूर्योदय–सूर्यास्त) मा सीमित छ।",
+          en: "Verses 46–47 list rites barred when Guru/Śukra are combust or during Malmāsa — vivāha, bratabandha, building-start, pratiṣṭhā, etc. 'Vipaṇi' (opening a shop/trade) is not on that prohibition list, so Guru/Śukra udaya is not mandatory — more lenient than other saṃskāras. Timing is still limited to daytime (sunrise→sunset).",
+        },
+      },
     ],
   },
   "rudri-jurne": {
@@ -733,8 +801,34 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
       en: "These dates are computed by our own system. This sāit is not lagna-based — since Rudri includes a homa, each day is judged by BOTH the Śiva-vāsa formula (deity's abode) and the Agni-vāsa formula (fire's abode).",
     },
     rules: [
-      { ne: "शिववास सूत्र — पूर्ण तिथि (१–३०) मा (२×तिथि+५) लाई ७ ले भाग गर्दा शेष १/२/३ (कैलाश/गौरी/नन्दी) भए शुभ।", en: "Śiva-vāsa — on the absolute tithi (1–30), (2×tithi+5) mod 7 ∈ {1,2,3} (Kailāsa/Gaurī/Nandi) is auspicious." },
-      { ne: "सभा, भोजन, क्रीडा, श्मशान (शेष ४/५/६/०) वर्जित; अमावस्या वर्जित।", en: "Sabhā, Bhojana, Krīḍā, Śmaśāna (remainders 4/5/6/0) avoided; Amāvasyā excluded." },
+      {
+        ne: "शिववास सूत्र — पूर्ण तिथि (१–३०) मा (२×तिथि+५) लाई ७ ले भाग गर्दा शेष १/२/३ (कैलाश/गौरी/नन्दी) भए शुभ।",
+        en: "Śiva-vāsa — on the absolute tithi (1–30), (2×tithi+5) mod 7 ∈ {1,2,3} (Kailāsa/Gaurī/Nandi) is auspicious.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि / धर्मसिन्धु (शिववास सूत्र)",
+          en: "Muhūrta Chintāmaṇi / Dharma Sindhu (Śiva-vāsa formula)",
+        },
+        shloka:
+          "पक्षस्य द्विगुणीं तिथिं पञ्चभिस्तु समन्वितम्। सप्तभिस्तु हरेद्भागं शेषं शिवनिवासकम् ॥ [३३८]",
+        gloss: {
+          ne: "वर्तमान तिथिलाई २ ले गुणा गरी ५ जोड्ने; योगफललाई ७ ले भाग गर्दा आउने शेषले शिवको निवास जनाउँछ। शेष १ कैलाश, २ गौरी-सन्निधि, ३ वृषभारूढ/नन्दी — तीनै अत्यन्त/शुभ। गणना सूर्योदयकालीन तिथिमा गरिन्छ।",
+          en: "Double the current tithi and add 5; divide by 7 — the remainder is Śiva's abode. Remainder 1 = Kailāsa, 2 = with Gaurī, 3 = mounted on the bull/Nandi — all three auspicious. Computed on the sunrise tithi.",
+        },
+      },
+      {
+        ne: "सभा, भोजन, क्रीडा, श्मशान (शेष ४/५/६/०) वर्जित; अमावस्या वर्जित।",
+        en: "Sabhā, Bhojana, Krīḍā, Śmaśāna (remainders 4/5/6/0) avoided; Amāvasyā excluded.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि / धर्मसिन्धु (शिववास फल · अमावस्या)",
+          en: "Muhūrta Chintāmaṇi / Dharma Sindhu (Śiva-vāsa fruits · Amāvasyā)",
+        },
+        shloka:
+          "पक्षस्य द्विगुणीं तिथिं पञ्चभिस्तु समन्वितम्। सप्तभिस्तु हरेद्भागं शेषं शिवनिवासकम् ॥ [३३८]",
+        gloss: {
+          ne: "शेष ४ सभा (सन्तानकष्ट), ५ भोजन (धनहानि), ६ क्रीडा (रोग/कष्ट), ० वा ७ श्मशान (मृत्युतुल्य अमङ्गल) — सबै वर्जित। अमावस्या (औंसी) रुद्रीका लागि सधैं त्याज्य।",
+          en: "Remainder 4 = Sabhā (progeny trouble), 5 = Bhojana (wealth loss), 6 = Krīḍā (illness), 0 or 7 = Śmaśāna (death-like inauspiciousness) — all barred. Amāvasyā is always excluded for Rudri.",
+        },
+      },
       {
         ne: "अग्निवास सूत्र — हवनका लागि अग्नि पृथ्वीमा हुनुपर्छ: (तिथि + वार + १) लाई ४ ले भाग गर्दा शेष ० वा ३ भए शुभ (शेष १ स्वर्ग, २ पाताल — अशुभ)।",
         en: "Agni-vāsa — for the homa the fire must be on Earth: (tithi + vāra + 1) mod 4 ∈ {0,3} is auspicious (remainder 1 = Heaven, 2 = Pātāla — inauspicious).",
@@ -749,7 +843,20 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         shloka: MC_2_36_NITYA_SHLOKA,
         gloss: MC_2_36_NITYA_GLOSS,
       },
-      { ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।", en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred." },
+      {
+        ne: "योग/करण — व्यतीपात र वैधृति योग तथा विष्टि (भद्रा) करण वर्जित।",
+        en: "Yoga/Karaṇa — Vyatīpāta & Vaidhṛti yoga and Viṣṭi (Bhadrā) karaṇa barred.",
+        source: {
+          ne: "मुहूर्त चिन्तामणि · धर्मसिन्धु (महादोष · भद्रा)",
+          en: "Muhūrta Chintāmaṇi · Dharma Sindhu (mahā-doṣa · Bhadrā)",
+        },
+        shloka:
+          "व्यतीपाते तथा पाते… वर्जयेच्छुभम् ॥ [३६२]  न कुर्यान्मङ्गलं विष्ट्यां जीवितार्थी कदाचन ॥ [३७१]",
+        gloss: {
+          ne: "व्यतीपात र वैधृति (पात) सबै शुभ कार्यमा महादोष। भद्रा (विष्टि करण) मा मङ्गलकार्य नगर्ने — अभिषेकले कार्यको नाश गर्छ भन्ने शास्त्रीय चेतावनी।",
+          en: "Vyatīpāta and Vaidhṛti (Pāta) are mahā-doṣa for all auspicious rites. Never do a maṅgala act in Viṣṭi (Bhadrā) — abhiṣeka in that karaṇa destroys the work.",
+        },
+      },
       {
         ne: "अष्टमी/चतुर्दशी तिथि र श्रावण/कार्तिक महिना विशेष उत्तम (वरीयता मात्र, अनिवार्य होइन); चन्द्र/तारा बल जातक-सापेक्ष।",
         en: "Aṣṭamī/Chaturdaśī tithi and the Śrāvaṇa/Kārtika months are especially favoured (a preference, not a gate); Chandra/Tārā Bala is native-specific.",
@@ -757,7 +864,18 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         shloka: MC_1_3_TITHISHA_SHLOKA,
         gloss: MC_1_3_TITHISHA_GLOSS,
       },
-      { ne: "यो दिनको सूर्योदय पञ्चाङ्गमा गणना हुन्छ — लग्न विण्डो आवश्यक पर्दैन।", en: "Evaluated on the day's sunrise panchāṅga — no lagna window is needed." },
+      {
+        ne: "यो दिनको सूर्योदय पञ्चाङ्गमा गणना हुन्छ — लग्न विण्डो आवश्यक पर्दैन।",
+        en: "Evaluated on the day's sunrise panchāṅga — no lagna window is needed.",
+        source: {
+          ne: "शिववास गणना विधि (सूर्योदय तिथि)",
+          en: "Śiva-vāsa method (sunrise tithi)",
+        },
+        gloss: {
+          ne: "शिववास दिनको सूर्योदयकालीन तिथिमा आधारित हुन्छ। विवाह/व्रतबन्ध जस्तो विशेष लग्न विण्डो चाहिँदैन — शिववास अनुकूल भएको दिनभरि रुद्री गर्न सकिन्छ।",
+          en: "Śiva-vāsa is based on the day's sunrise tithi. No special lagna window (as for vivāha/bratabandha) is required — Rudri may be done throughout a day when Śiva-vāsa is favourable.",
+        },
+      },
     ],
   },
   "agni-jurne": {

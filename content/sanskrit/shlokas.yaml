@@ -403,3 +403,130 @@ shlokas:
     language: sanskrit
     text: |
       मृदुकुध्रुववारुणमारुतधनिष्ठाकरतिष्यैः । गृहमारम्भणं शुभदं...
+
+  # ---------------------------------------------------------------------------
+  # MUHŪRTA / SĀIT ŚLOKAS — BYĀPĀRIK PRATIṢṬHĀN (BUSINESS / SHOP OPENING)
+  # File: src/lib/sait-rules-content.ts  (SAIT_RULES_CONTENT."byaparik-pratisthan")
+  # ---------------------------------------------------------------------------
+
+  - id: byaparik_nakshatra_217
+    title: पूर्वाद्वित्रयकृशानुपार्यमभे
+    category: vivah
+    source: sait/byaparik-pratisthan (nakṣatra / trade rule)
+    citation: Muhūrta Chintāmaṇi 2.17 [३४२] (Nakṣatra Prakaraṇam)
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      पूर्वाद्वित्रयकृशानुपार्यमभे केन्द्रत्रिकोणे शुभैः
+      षट्त्र्यायप्रयवश्विभैर्विना घटतनुं स्रग्विक्रयः सत्तिथौ ।
+      रिक्ताभौमघटालमन्विना च विपणिसैंन्ध्रुवक्षिप्रमै-
+      लग्ने चन्द्रसिते व्ययाष्टरहितैः पापैः शुभैद्र्व्यार्यखे ॥ १७ ॥ [३४२]
+
+  - id: byaparik_rikta_tithi
+    title: नंदा भद्रा च जया च रिक्ता
+    category: vivah
+    source: sait/byaparik-pratisthan (riktā tithi rule)
+    citation: Muhūrta Chintāmaṇi 1.4 [२८५]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      नंदा भद्रा च जया च रिक्ता पूर्णेति तिथ्योऽशुभमध्यशस्ताः ॥ [२८५]
+
+  - id: byaparik_paksharandhra
+    title: चतुर्थी षष्ठी अष्टमी नवमी द्वादशी चतुर्दशी
+    category: vivah
+    source: sait/byaparik-pratisthan (pakṣa-randhra tithi rule)
+    citation: Muhūrta Chintāmaṇi 1.36 [३१०]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      चतुर्थी षष्ठी अष्टमी नवमी द्वादशी चतुर्दशी एताः पक्षरन्ध्रसंज्ञिस्ततियो ज्ञेयाः ॥ [३१०]
+
+  - id: byaparik_adhimasa
+    title: वृद्धत्वस्तशिशुत्वइज्यसितयोर्योनाधिमासे
+    category: vivah
+    source: sait/byaparik-pratisthan (Adhik-māsa rule)
+    citation: Muhūrta Chintāmaṇi 1.47 [३३८]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      वृद्धत्वस्तशिशुत्वइज्यसितयोर्योनाधिमासे तथा ॥ ४७ ॥ [३३८]
+
+  - id: byaparik_sankranti
+    title: विवाहादिषु कार्येषु नाड्यः षोडश षोडश
+    category: vivah
+    source: sait/byaparik-pratisthan (Sankrānti rule)
+    citation: Muhūrta Chintāmaṇi 1.18 [२७२]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      विवाहादिषु कार्येषु नाड्यः षोडश षोडश ॥ [२७२]
+
+  - id: byaparik_lagna_217
+    title: रिक्ताभौमघटालमन्विना च विपणि
+    category: vivah
+    source: sait/byaparik-pratisthan (lagna rule)
+    citation: Muhūrta Chintāmaṇi 2.17 [३४२] (lagna / Kumbha bar)
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      रिक्ताभौमघटालमन्विना च विपणिसैंन्ध्रुवक्षिप्रमै-
+      लग्ने चन्द्रसिते व्ययाष्टरहितैः पापैः शुभैद्र्व्यार्यखे ॥ १७ ॥ [३४२]
+
+  - id: byaparik_graha_146_147
+    title: वाप्यारामडागतडागकूपभवनारम्भप्रतिष्ठे
+    category: vivah
+    source: sait/byaparik-pratisthan (Guru/Śukra leniency)
+    citation: Muhūrta Chintāmaṇi 1.46–47 [३३८]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      वाप्यारामडागतडागकूपभवनारम्भप्रतिष्ठे व्रता-
+      रम्भोत्सर्गवधूप्रवेशनमहादानानि सोमाष्टके ॥ ४६ ॥
+      वृद्धत्वस्तशिशुत्वइज्यसितयोर्योनाधिमासे तथा ॥ ४७ ॥ [३३८]
+
+  # ---------------------------------------------------------------------------
+  # MUHŪRTA / SĀIT ŚLOKAS — RUDRI / RUDRĀBHĪṢEKA (ŚIVA-VĀSA)
+  # File: src/lib/sait-rules-content.ts  (SAIT_RULES_CONTENT."rudri-jurne")
+  # ---------------------------------------------------------------------------
+
+  - id: rudri_shiva_vasa_formula
+    title: पक्षस्य द्विगुणीं तिथिं पञ्चभिस्तु समन्वितम्
+    category: vivah
+    source: sait/rudri-jurne (Śiva-vāsa formula)
+    citation: Muhūrta Chintāmaṇi / Dharma Sindhu [३३८]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      पक्षस्य द्विगुणीं तिथिं पञ्चभिस्तु समन्वितम्।
+      सप्तभिस्तु हरेद्भागं शेषं शिवनिवासकम् ॥ [३३८]
+
+  - id: rudri_vyatipata
+    title: व्यतीपाते तथा पाते वर्जयेच्छुभम्
+    category: vivah
+    source: sait/rudri-jurne (Vyatīpāta / Vaidhṛti)
+    citation: Muhūrta Chintāmaṇi / Dharma Sindhu [३६२]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      व्यतीपाते तथा पाते… वर्जयेच्छुभम् ॥ [३६२]
+
+  - id: rudri_bhadra_vishti
+    title: न कुर्यान्मङ्गलं विष्ट्यां जीवितार्थी कदाचन
+    category: vivah
+    source: sait/rudri-jurne (Bhadrā / Viṣṭi)
+    citation: Dharma Sindhu / Muhūrta tradition [३७१]
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      न कुर्यान्मङ्गलं विष्ट्यां जीवितार्थी कदाचन ॥ [३७१]
