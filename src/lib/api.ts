@@ -587,19 +587,31 @@ export const grahaDetailKeys = {
     ["graha", "eclipse", kind, bsYear, locationCacheKey(location)] as const,
 };
 
+/**
+ * Cache-buster for the graha detail endpoints. Appended as `gv=` so a change
+ * in an endpoint's response shape mints a fresh CDN object instead of serving
+ * the previous deploy's stale payload. Bump when a graha response shape changes.
+ */
+const GRAHA_CACHE_VERSION = "2";
+
+function withGrahaCacheVersion(path: string): string {
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}gv=${GRAHA_CACHE_VERSION}`;
+}
+
 export const fetchGrahaSthiti = (dateAd: string, location?: LocationParams) =>
   get<GrahaSthitiResponse>(
-    appendLocation(`/nepal/graha-sthiti/${dateAd}?era=ad`, location),
+    appendLocation(withGrahaCacheVersion(`/nepal/graha-sthiti/${dateAd}?era=ad`), location),
   );
 
 export const fetchGrahaAstaYear = (bsYear: number, location?: LocationParams) =>
   get<GrahaAstaResponse>(
-    appendLocation(`/nepal/graha-asta/year/${bsYear}`, location),
+    appendLocation(withGrahaCacheVersion(`/nepal/graha-asta/year/${bsYear}`), location),
   );
 
 export const fetchGrahaVakriYear = (bsYear: number, location?: LocationParams) =>
   get<GrahaVakriResponse>(
-    appendLocation(`/nepal/graha-vakri/year/${bsYear}`, location),
+    appendLocation(withGrahaCacheVersion(`/nepal/graha-vakri/year/${bsYear}`), location),
   );
 
 export const fetchEclipseYear = (
@@ -608,7 +620,7 @@ export const fetchEclipseYear = (
   location?: LocationParams,
 ) =>
   get<EclipseYearResponse>(
-    appendLocation(`/nepal/eclipse/${kind}/year/${bsYear}`, location),
+    appendLocation(withGrahaCacheVersion(`/nepal/eclipse/${kind}/year/${bsYear}`), location),
   );
 
 type RawMonthDay = CalendarDay;
