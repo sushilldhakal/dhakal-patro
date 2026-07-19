@@ -17,7 +17,8 @@ import { cn } from "@/lib/utils";
 import {
   fetchGrahaAstaYear,
   grahaDetailKeys,
-  type GrahaAstaEvent,
+  type AstaStamp,
+  type GrahaAstaPeriod,
 } from "@/lib/api";
 
 const GRAHA_ORDER = ["mercury", "venus", "moon", "mars", "jupiter", "saturn"];
@@ -38,32 +39,53 @@ const GRAHA_EN: Record<string, string> = {
   saturn: "Saturn",
 };
 
-function EventRow({ ev }: { ev: GrahaAstaEvent }) {
+function StampLine({
+  label,
+  stamp,
+  tone,
+}: {
+  label: string;
+  stamp: AstaStamp | null;
+  tone: "asta" | "udaya";
+}) {
   const { pick, digits } = useLocale();
-  const isAsta = ev.event === "asta";
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm odd:bg-foreground/[0.03]">
-      <span className="flex items-center gap-1.5">
-        <span
-          className={cn(
-            "inline-block h-2 w-2 rounded-full",
-            isAsta ? "bg-danger" : "bg-success",
-          )}
-        />
-        <span className={cn("font-semibold", isAsta ? "text-danger" : "text-success")}>
-          {pick(isAsta ? "अस्त" : "उदय", isAsta ? "Set" : "Rise")}
-        </span>
-        <span className="text-muted-foreground">{ev.label_ne ? digits(ev.label_ne) : ""}</span>
+    <div className="flex items-baseline justify-between gap-2">
+      <span className={cn("font-semibold", tone === "asta" ? "text-danger" : "text-success")}>
+        {label}
       </span>
-      <span className="text-right">
-        <span className="font-num tabular-nums text-foreground">
-          {ev.entry_date_bs ? digits(ev.entry_date_bs) : ""}
-        </span>
-        <span className="text-muted-foreground">
-          {" "}
-          · {ev.entry_time_local_short ? digits(ev.entry_time_local_short) : ""}
-        </span>
+      <span className="text-right font-num tabular-nums text-foreground">
+        {stamp ? (
+          <>
+            {stamp.date_bs ? digits(stamp.date_bs) : digits(stamp.date_ad)}
+            <span className="text-muted-foreground"> · {digits(stamp.time_short)}</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">{pick("वर्ष बाहिर", "outside year")}</span>
+        )}
       </span>
+    </div>
+  );
+}
+
+function PeriodCard({ period }: { period: GrahaAstaPeriod }) {
+  const { pick, digits } = useLocale();
+  const hemi =
+    period.hemisphere === "east"
+      ? pick("पूर्वमा (बिहान)", "East (morning)")
+      : period.hemisphere === "west"
+        ? pick("पश्चिममा (साँझ)", "West (evening)")
+        : null;
+  return (
+    <div className="flex flex-col gap-1.5 rounded-lg border border-border/70 bg-foreground/[0.02] p-2.5 text-sm">
+      <StampLine label={pick("अस्त आरम्भ", "Asta begins")} stamp={period.start} tone="asta" />
+      <StampLine label={pick("उदय (अन्त्य)", "Udaya (ends)")} stamp={period.end} tone="udaya" />
+      <div className="flex items-baseline justify-between gap-2 border-t border-border/60 pt-1 text-xs text-muted-foreground">
+        <span>{hemi}</span>
+        {period.duration_days != null ? (
+          <span>{pick(`${digits(period.duration_days)} दिन`, `${period.duration_days} days`)}</span>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -83,11 +105,11 @@ export function GrahaAsta() {
 
   useRouteLoading(query.isLoading && !query.data);
 
-  const byGraha = new Map<string, GrahaAstaEvent[]>();
+  const byGraha = new Map<string, GrahaAstaPeriod[]>();
   for (const g of GRAHA_ORDER) byGraha.set(g, []);
-  for (const ev of query.data?.events ?? []) {
-    if (!byGraha.has(ev.graha)) byGraha.set(ev.graha, []);
-    byGraha.get(ev.graha)!.push(ev);
+  for (const p of query.data?.periods ?? []) {
+    if (!byGraha.has(p.graha)) byGraha.set(p.graha, []);
+    byGraha.get(p.graha)!.push(p);
   }
 
   return (
@@ -95,9 +117,9 @@ export function GrahaAsta() {
       <GrahaBanner
         icon={<Sunrise className="h-6 w-6 text-accent dark:text-secondary" />}
         ne="ग्रह अस्त"
-        en="Heliacal rising & setting"
-        blurbNe="वर्षभरका ग्रह उदय–अस्त क्षण"
-        blurbEn="Yearly udaya / asta (combustion) moments"
+        en="Heliacal combustion"
+        blurbNe="वर्षभरका ग्रह अस्त र चन्द्र तारा अस्त अवधि"
+        blurbEn="Yearly asta (combustion) windows incl. Moon Tara Asta"
       />
 
       <div className="space-y-3">
@@ -115,27 +137,31 @@ export function GrahaAsta() {
       ) : query.data ? (
         <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {GRAHA_ORDER.map((g) => {
-            const events = byGraha.get(g) ?? [];
+            const periods = byGraha.get(g) ?? [];
+            const isMoon = g === "moon";
             return (
               <div key={g} className={cn(patroCard, "flex flex-col")}>
                 <div className="flex items-baseline justify-between gap-2 border-b border-border bg-secondary/[0.09] px-3 py-2 dark:bg-secondary/20">
                   <span className="text-base font-bold text-foreground">
                     {pick(GRAHA_NE[g], GRAHA_EN[g])}
+                    {isMoon ? (
+                      <span className="ml-1 text-xs font-normal text-muted-foreground">
+                        {pick("(तारा अस्त)", "(Tara Asta)")}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {events.length
-                      ? pick(`${events.length} घटना`, `${events.length} events`)
-                      : pick("कुनै घटना छैन", "no events")}
+                    {periods.length
+                      ? pick(`${periods.length} पटक`, `${periods.length}×`)
+                      : pick("छैन", "none")}
                   </span>
                 </div>
-                <div className="flex flex-col gap-0.5 p-2">
-                  {events.length ? (
-                    events.map((ev, i) => <EventRow key={i} ev={ev} />)
+                <div className="flex flex-col gap-2 p-2">
+                  {periods.length ? (
+                    periods.map((p, i) => <PeriodCard key={i} period={p} />)
                   ) : (
                     <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                      {g === "moon"
-                        ? pick("चन्द्रमा सूर्यसमीप अस्त हुँदैन।", "The Moon does not undergo heliacal combustion.")
-                        : pick("यस वर्ष कुनै उदय–अस्त छैन।", "No rise/set this year.")}
+                      {pick("यस वर्ष अस्त छैन।", "No asta this year.")}
                     </p>
                   )}
                 </div>
