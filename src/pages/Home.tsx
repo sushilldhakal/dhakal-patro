@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import {
   fetchPanchanga,
+  fetchSaitMonthAll,
   panchangaKeys,
+  saitMonthAllKey,
   type CalendarDay,
   type PanchangaDay,
 } from "../lib/api";
@@ -28,6 +30,7 @@ import {
   PanchangaAsideTabPanel,
   type AsideTabId,
 } from "@/components/home/PanchangaAsideTabs";
+import { prefetchAsidePanels } from "@/components/home/aside-prefetch";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { HeroMonthArt } from "@/components/home/HeroMonthArt";
 import { PanchangaDirectory } from "@/components/panchanga/PanchangaDirectory";
@@ -332,6 +335,40 @@ export function Home() {
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
+
+  // Silently warm the साइत and दैनिक मुहूर्त aside tabs in the background once
+  // the home page is idle: prefetch their code-split chunks and the sait month
+  // data into the query cache. The muhurta panel derives everything from the
+  // already-loaded panchanga day, so it only needs its chunk. Runs off the main
+  // thread (requestIdleCallback) so it never competes with the initial render.
+  const queryClient = useQueryClient();
+  const prefetchYear = monthContext.year;
+  const prefetchMonth = monthContext.month;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let cancelled = false;
+    const run = () => {
+      if (cancelled) return;
+      prefetchAsidePanels();
+      void queryClient.prefetchQuery({
+        queryKey: saitMonthAllKey(prefetchYear, prefetchMonth),
+        queryFn: () => fetchSaitMonthAll(prefetchYear, prefetchMonth),
+        staleTime: 1000 * 60 * 60,
+      });
+    };
+    const ric = (window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }).requestIdleCallback;
+    const handle = ric ? ric(run, { timeout: 2500 }) : window.setTimeout(run, 1200);
+    return () => {
+      cancelled = true;
+      const cic = (window as unknown as {
+        cancelIdleCallback?: (h: number) => void;
+      }).cancelIdleCallback;
+      if (ric && cic) cic(handle);
+      else window.clearTimeout(handle);
+    };
+  }, [queryClient, prefetchYear, prefetchMonth]);
 
   const handlePatroViewChange = useCallback((view: HomePatroView) => {
     setPatroView(view);
