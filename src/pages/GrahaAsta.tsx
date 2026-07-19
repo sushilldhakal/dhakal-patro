@@ -50,15 +50,20 @@ function StampLine({
 }) {
   const { pick, digits } = useLocale();
   return (
-    <div className="flex items-baseline justify-between gap-2">
+    <div className="flex items-start justify-between gap-2">
       <span className={cn("font-semibold", tone === "asta" ? "text-danger" : "text-success")}>
         {label}
       </span>
-      <span className="text-right font-num tabular-nums text-foreground">
+      <span className="text-right font-num tabular-nums text-foreground font-semibold">
         {stamp ? (
           <>
-            {stamp.date_bs ? digits(stamp.date_bs) : digits(stamp.date_ad)}
-            <span className="text-muted-foreground"> · {digits(stamp.time_short)}</span>
+            <span className="block">
+              {stamp.date_bs ? digits(stamp.date_bs) : digits(stamp.date_ad)}
+              <span className="text-muted-foreground"> · {digits(stamp.time_short)}</span>
+            </span>
+            {stamp.date_bs ? (
+              <span className="block text-xs text-muted-foreground">{stamp.date_ad}</span>
+            ) : null}
           </>
         ) : (
           <span className="text-muted-foreground">{pick("वर्ष बाहिर", "outside year")}</span>
@@ -135,12 +140,15 @@ export function GrahaAsta() {
       {query.isLoading && !query.data ? (
         <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
       ) : query.data ? (
-        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-2 columns-1 gap-3 sm:columns-2 lg:columns-3">
           {GRAHA_ORDER.map((g) => {
             const periods = byGraha.get(g) ?? [];
             const isMoon = g === "moon";
             return (
-              <div key={g} className={cn(patroCard, "flex flex-col")}>
+              <div
+                key={g}
+                className={cn(patroCard, "mb-3 flex break-inside-avoid flex-col")}
+              >
                 <div className="flex items-baseline justify-between gap-2 border-b border-border bg-secondary/[0.09] px-3 py-2 dark:bg-secondary/20">
                   <span className="text-base font-bold text-foreground">
                     {pick(GRAHA_NE[g], GRAHA_EN[g])}

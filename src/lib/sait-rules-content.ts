@@ -470,6 +470,8 @@ export const SAIT_RULES_CONTENT: Record<SaitCategoryId, SaitContent> = {
         ne: "समय — शिलान्यास (जग हाल्ने) दिनको समयमा मात्र (सूर्योदय–सूर्यास्त)।",
         en: "Time — foundation-laying is a daytime rite (sunrise→sunset only).",
         source: { ne: "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · दिवाकाल निर्देश)", en: "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · daytime instruction)" },
+        shloka:
+          "भौमार्कवाररहितैस्तिथिभिश्च शिष्टै- रिक्ताममानुजपितृन् विरजैस्तु विष्टिम् । नक्तं च विद्धमपहाय सुलग्नयोगै- स्तद्वद्विधाय खननादि गृहारम्भणम् ॥ १८ ॥ [९३४]",
         gloss: {
           ne: "मुहूर्त चिन्तामणिले शिलान्यास रात्रिमा नगरी दिवाकालमा गर्न निर्देश गर्छ। प्रणालीले यसलाई सूर्योदय–सूर्यास्तसम्मको स्क्यानका रूपमा लागू गर्छ।",
           en: "Muhūrta Chintāmaṇi directs that foundation-laying be done in daytime, not at night. The system applies this as a sunrise→sunset scan.",

@@ -40,7 +40,7 @@ function EventRow({ ev }: { ev: GrahaVakriEvent }) {
   const { pick, digits } = useLocale();
   const isVakri = ev.is_retrograde === true || ev.motion === "Vakri";
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm odd:bg-foreground/[0.03]">
+    <div className="flex items-center font-semibold justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm odd:bg-foreground/[0.03]">
       <span className="flex items-center gap-1.5">
         <span className={cn(isVakri ? "text-danger" : "text-success")}>
           {isVakri ? "↺" : "→"}
@@ -107,11 +107,11 @@ export function GrahaVakri() {
       {query.isLoading && !query.data ? (
         <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
       ) : query.data ? (
-        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-2 columns-1 gap-3 sm:columns-2 lg:columns-3">
           {GRAHA_ORDER.map((g) => {
             const events = byGraha.get(g) ?? [];
             return (
-              <div key={g} className={cn(patroCard, "flex flex-col")}>
+              <div key={g} className={cn(patroCard, "mb-3 flex break-inside-avoid flex-col")}>
                 <div className="flex items-baseline justify-between gap-2 border-b border-border bg-secondary/[0.09] px-3 py-2 dark:bg-secondary/20">
                   <span className="text-base font-bold text-foreground">
                     {pick(GRAHA_NE[g], GRAHA_EN[g])}

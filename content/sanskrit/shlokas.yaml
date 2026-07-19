@@ -367,6 +367,20 @@ shlokas:
     text: |
       उपाकर्मोत्सर्जने अष्टकाश्राद्धानि गृहप्रवेशचूडामौञ्जीबंधविवाहास्तीर्थादि-यात्रा वास्तुकर्मैतान्यधिवर्ज्यानि ।
 
+  - id: griha_daytime_naktam
+    title: भौमार्कवाररहितैस्तिथिभिश्च शिष्टैः
+    category: grihapravesh
+    source: sait/griha-aarambha (daytime / दिवाकाल rule)
+    citation: Muhūrta Chintāmaṇi 12.18 [९३४] (Vāstu Prakaraṇa · daytime instruction)
+    location: src/lib/sait-rules-content.ts
+    meter:
+    language: sanskrit
+    text: |
+      भौमार्कवाररहितैस्तिथिभिश्च शिष्टै-
+      रिक्ताममानुजपितृन् विरजैस्तु विष्टिम् ।
+      नक्तं च विद्धमपहाय सुलग्नयोगै-
+      स्तद्वद्विधाय खननादि गृहारम्भणम् ॥ १८ ॥ [९३४]
+
   - id: griha_solar_month_meshe_vrishe
     title: मेषे वृषे च सिंहे च वृश्चिके
     category: grihapravesh
