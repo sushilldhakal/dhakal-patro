@@ -75,10 +75,10 @@ export const patroMonthChipButton =
   "cursor-pointer transition-[filter,transform,box-shadow] hover:brightness-[1.03] hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 export const patroMonthChipHead =
-  "truncate bg-secondary px-0.5 py-0.5 text-center text-sm font-bold leading-none tracking-wide text-secondary-foreground max-[512px]:text-xs sm:px-1 sm:py-1.5";
+  "truncate bg-secondary px-0.5 py-1.5 text-center text-sm font-bold leading-none tracking-wide text-secondary-foreground max-[512px]:text-xs sm:px-1 sm:py-1.5";
 
 export const patroMonthChipDay =
-  "flex min-h-sm items-center justify-center bg-card pb-0.5 text-sm font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-base";
+  "flex min-h-md items-center justify-center bg-card pb-1 pt-1 text-sm font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-base";
 
 /** Decorative calendar "body" line — month chip without a day numeral. */
 export const patroMonthChipLine =
