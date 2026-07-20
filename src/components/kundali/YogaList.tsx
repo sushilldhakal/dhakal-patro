@@ -1,4 +1,4 @@
-import { Check, Info, Minus } from "lucide-react";
+import { Check, Info } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
 import type { KundaliYoga } from "@/lib/api";
 import {
@@ -25,8 +25,9 @@ export type YogaListProps = {
  */
 export function YogaList({ yogas }: YogaListProps) {
   const { pick } = useLocale();
+  const present = yogas.filter((y) => y.present);
 
-  if (yogas.length === 0) return null;
+  if (present.length === 0) return null;
 
   return (
     <Table>
@@ -38,7 +39,7 @@ export function YogaList({ yogas }: YogaListProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {yogas.map((yoga, i) => {
+        {present.map((yoga, i) => {
           const desc = pick(
             yoga.descNe?.trim() ? yoga.descNe : yoga.descEn,
             yoga.descEn,
@@ -52,7 +53,7 @@ export function YogaList({ yogas }: YogaListProps) {
               key={yoga.key}
               className={cn(
                 i % 2 === 1 && "bg-muted/20",
-                yoga.present && "bg-secondary/[0.06] dark:bg-secondary/10",
+                "bg-secondary/[0.06] dark:bg-secondary/10",
               )}
             >
               <TableCell
@@ -95,17 +96,10 @@ export function YogaList({ yogas }: YogaListProps) {
                 </span>
               </TableCell>
               <TableCell className={cn(td, "pr-3.5 whitespace-nowrap align-top")}>
-                {yoga.present ? (
-                  <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                    <Check className="size-3.5 text-secondary" aria-hidden />
-                    {pick("छ", "Present")}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1">
-                    <Minus className="size-3.5" aria-hidden />
-                    {pick("छैन", "Absent")}
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                  <Check className="size-3.5 text-secondary" aria-hidden />
+                  {pick("छ", "Present")}
+                </span>
               </TableCell>
             </TableRow>
           );

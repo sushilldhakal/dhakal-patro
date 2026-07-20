@@ -557,8 +557,8 @@ export function KundaliView({
         </div>
       )}
 
-      {/* Kundali yogas — classical combinations detected in this chart */}
-      {showSection("kundali-yoga") && detail.yogas.length > 0 && (
+      {/* Kundali yogas — only yogas formed in this chart */}
+      {showSection("kundali-yoga") && detail.yogas.some((y) => y.present) && (
         <div id="kundali-yoga" className="scroll-mt-24">
           <PanchangaSection titleNe="कुण्डली योग" titleEn="Kundali Yoga">
             <YogaList yogas={detail.yogas} />
