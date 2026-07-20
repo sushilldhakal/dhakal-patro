@@ -32,7 +32,10 @@ import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartComp
 import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
 import { UpagrahaTable } from "@/components/kundali/UpagrahaTable";
 import { YogaList } from "@/components/kundali/YogaList";
-import { YogaReferenceCatalog } from "@/components/kundali/YogaReferenceCatalog";
+import {
+  YogaReferenceCatalog,
+  ENGINE_KEY_TO_REF_ID,
+} from "@/components/kundali/YogaReferenceCatalog";
 import { DashaSystemPanel } from "@/components/kundali/DashaSystemPanel";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
@@ -208,6 +211,17 @@ export function KundaliView({
   const choghadiyaAtBirth = birthMeta?.choghadiyaAtBirth ?? null;
 
   const astroPlanets = useMemo(() => (data ? astroPointsFromPanchanga(data) : {}), [data]);
+
+  // 162-reference ids that are formed in this chart — hidden from the reference
+  // catalog so a present yoga only shows in the "कुण्डली योग" table above it.
+  const presentRefIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const y of detail?.yogas ?? []) {
+      const refId = ENGINE_KEY_TO_REF_ID[y.key];
+      if (y.present && refId) ids.add(refId);
+    }
+    return ids;
+  }, [detail]);
 
   const astroLagna = useMemo<GrahaAstroPoint | undefined>(() => {
     if (lagna?.longitude == null) return undefined;
@@ -558,13 +572,15 @@ export function KundaliView({
         </div>
       )}
 
-      {/* Kundali yogas — those formed in this chart, plus the full reference catalog */}
+      {/* Kundali yogas — those formed in this chart; the reference catalog below
+          lists the rest of Raman's 162 (the absent ones), with present ones removed
+          so no combination appears twice. */}
       {showSection("kundali-yoga") && (
         <div id="kundali-yoga" className="scroll-mt-24">
           <PanchangaSection titleNe="कुण्डली योग" titleEn="Kundali Yoga">
             {detail.yogas.some((y) => y.present) && <YogaList yogas={detail.yogas} />}
             <div className="px-3.5 pb-3.5">
-              <YogaReferenceCatalog />
+              <YogaReferenceCatalog excludeIds={presentRefIds} />
             </div>
           </PanchangaSection>
         </div>
