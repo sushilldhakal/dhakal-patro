@@ -137,7 +137,10 @@ function ItemCard({ item }: { item: ReportItem }) {
 function SectionCard({ section }: { section: ReportSection }) {
   const { pick, isEnglish } = useLocale();
   const title = pick(section.title_ne, section.title_en);
-  const isGrid = section.id === "planet_by_planet" || section.id === "house_by_house";
+  const isGrid =
+    section.id === "planet_by_planet" ||
+    section.id === "house_by_house" ||
+    section.id === "divisional_charts";
   return (
     <div
       className={cn(
