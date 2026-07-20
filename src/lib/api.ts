@@ -1498,8 +1498,11 @@ export interface KundaliYoga {
 export interface YogaReferenceEntry {
   yogaId: string;
   name: string;
+  nameNe: string;
   definition: string;
+  definitionNe: string;
   result: string;
+  resultNe: string;
   source: string;
   part: string;
 }

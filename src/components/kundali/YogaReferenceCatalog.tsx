@@ -46,12 +46,9 @@ export function YogaReferenceCatalog() {
     if (!entries) return [];
     const q = query.trim().toLowerCase();
     if (!q) return entries;
-    return entries.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        e.yogaId.toLowerCase().includes(q) ||
-        e.definition.toLowerCase().includes(q) ||
-        e.result.toLowerCase().includes(q),
+    return entries.filter((e) =>
+      [e.name, e.nameNe, e.yogaId, e.definition, e.definitionNe, e.result, e.resultNe]
+        .some((v) => v.toLowerCase().includes(q)),
     );
   }, [entries, query]);
 
@@ -127,13 +124,13 @@ export function YogaReferenceCatalog() {
                           {e.yogaId}
                         </TableCell>
                         <TableCell className={cn(td, "whitespace-nowrap font-semibold text-foreground")}>
-                          {e.name}
+                          {pick(e.nameNe?.trim() ? e.nameNe : e.name, e.name)}
                         </TableCell>
                         <TableCell className={cn(td, "min-w-[14rem] whitespace-normal leading-snug")}>
-                          {e.definition}
+                          {pick(e.definitionNe?.trim() ? e.definitionNe : e.definition, e.definition)}
                         </TableCell>
                         <TableCell className={cn(td, "min-w-[12rem] whitespace-normal pr-3.5 leading-snug")}>
-                          {e.result}
+                          {pick(e.resultNe?.trim() ? e.resultNe : e.result, e.result)}
                         </TableCell>
                       </TableRow>
                     ))}
