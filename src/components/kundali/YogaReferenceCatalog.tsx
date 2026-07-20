@@ -106,7 +106,8 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
     if (!q) return available;
     return available.filter((e) =>
       [e.name, e.nameNe, e.yogaId, e.definition, e.definitionNe, e.result, e.resultNe]
-        .some((v) => v.toLowerCase().includes(q)),
+        // Guard: an older API payload may lack the Nepali fields (undefined).
+        .some((v) => (v ?? "").toLowerCase().includes(q)),
     );
   }, [available, query]);
 

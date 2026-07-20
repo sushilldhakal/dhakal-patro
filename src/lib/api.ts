@@ -1514,9 +1514,19 @@ export interface YogaReferenceResponse {
   combinations: YogaReferenceEntry[];
 }
 
+/**
+ * Version of the yoga-reference payload. Bump whenever the catalog data or its
+ * shape changes so the CDN mints a fresh object instead of serving a stale
+ * response (the endpoint is cached ~1 day). v2 added the Nepali fields.
+ */
+export const YOGA_REFERENCE_VERSION =
+  import.meta.env.VITE_YOGA_REFERENCE_VERSION ?? "2";
+
 /** The full 162-combination reference catalog (Raman, Part I). CDN-cached. */
 export function fetchYogaReference(): Promise<YogaReferenceResponse> {
-  return get<YogaReferenceResponse>("/kundali/yogas/reference");
+  return get<YogaReferenceResponse>(
+    `/kundali/yogas/reference?v=${YOGA_REFERENCE_VERSION}`,
+  );
 }
 
 export interface BilingualValue {
