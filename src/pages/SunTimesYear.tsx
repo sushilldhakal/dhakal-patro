@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { Trans, useTranslation } from "react-i18next";
-import { ArrowLeft, CalendarRange, MapPin } from "lucide-react";
+import { ArrowLeft, CalendarRange } from "lucide-react";
 import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
+import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
 import { useRouteLoading } from "@/lib/route-loading";
-import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
   locationToSearch,
@@ -19,12 +19,7 @@ import {
   getCurrentBs,
 } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { patroAyanaNorth, patroAyanaSouth, patroSelect } from "@/lib/patro-classes";
-
-const BS_YEAR_OPTIONS = Array.from(
-  { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-  (_, i) => BS_SUPPORTED_START_YEAR + i,
-);
+import { patroAyanaNorth, patroAyanaSouth } from "@/lib/patro-classes";
 
 const routeApi = getRouteApi("/suryakranti");
 
@@ -44,6 +39,7 @@ export function SunTimesYear() {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const currentBs = getCurrentBs();
   const [year, setYear] = useState(() => initialYearFromSearch(search.year));
   const [gridLoading, setGridLoading] = useState(true);
 
@@ -73,52 +69,32 @@ export function SunTimesYear() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16 overflow-x-hidden">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
-        <div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-1.5"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t("common.back_home")}
-          </Link>
-          <h1 className="text-xl font-bold leading-tight tracking-tight m-0">
-            {t("sun_times.title")}
-          </h1>
-          <div className="text-sm mt-1">
-            {t("sun_times.subtitle", { year: toNepaliDigits(year) })}
-            {" · "}
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {location.label}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
-          <select
-            className={patroSelect}
-            value={year}
-            aria-label={t("common.bs_year")}
-            onChange={(e) => setYear(Number(e.target.value))}
-          >
-            {BS_YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-          <LocationSelector
-            compact
-            className="shrink-0"
-            location={location}
-            onLocationChange={setLocation}
-          />
-        </div>
+    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16 overflow-x-hidden space-y-4">
+      <div>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-1.5"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          {t("common.back_home")}
+        </Link>
+        <h1 className="text-xl font-bold leading-tight tracking-tight m-0">
+          {t("sun_times.title")}
+        </h1>
+        <p className="text-sm mt-1 m-0">
+          {t("sun_times.subtitle", { year: toNepaliDigits(year) })}
+        </p>
       </div>
 
-      <div className="mb-4 rounded-xl border border-border bg-secondary/4 p-3.5 shadow-xs shadow-ring-soft">
+      <GrahaYearHeader
+        year={year}
+        onYearChange={setYear}
+        currentYear={currentBs.year}
+        location={location}
+        onLocationChange={setLocation}
+      />
+
+      <div className="rounded-xl border border-border bg-secondary/4 p-3.5 shadow-xs shadow-ring-soft">
         <p className="m-0 mb-3 text-sm text-base leading-relaxed [&_strong]:font-extrabold [&_strong]:text-foreground">
           <Trans i18nKey="sun_times.ayana_note" components={{ strong: <strong /> }} />
         </p>

@@ -1,7 +1,10 @@
-import { Link, useSearch } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft, CalendarClock } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
+import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
+import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
   defaultPanchakPatroYear,
   getPanchakPatroForYear,
@@ -13,12 +16,21 @@ import {
   panchakVarietyFromStartAd,
 } from "@/lib/panchak/panchak-types";
 import { formatBsMonthDayPatro } from "@/lib/panchanga-format";
-import { BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR } from "@/lib/bs-calendar";
+import { getCurrentBs } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { isEnglishLocale } from "@/lib/avakahada-locale";
-import { patroNoteBox, patroSelect } from "@/lib/patro-classes";
+import { patroNoteBox } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
+import {
+  locationToSearch,
+  sameLocationParams,
+  sameSearch,
+  searchToLocation,
+  type PanchangaYearSearch,
+} from "@/lib/url-state";
 import { cn } from "@/lib/utils";
+
+const routeApi = getRouteApi("/panchak-patro");
 
 function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
   const d = new Date(`${iso}T12:00:00`);
@@ -93,11 +105,14 @@ function PanchakPeriodCard({
 }
 
 export function PanchakPatro() {
-  const search = useSearch({ strict: false }) as { year?: number };
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
   const { t, i18n } = useTranslation();
   const { digits } = useLocale();
   const lang = i18n.language;
   const en = isEnglishLocale(lang);
+  const currentBs = getCurrentBs();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
 
   useRouteLoading(false);
 
@@ -105,6 +120,24 @@ export function PanchakPatro() {
     search.year != null && PANCHAK_PATRO_YEARS.includes(search.year)
       ? search.year
       : defaultPanchakPatroYear();
+
+  useEffect(() => {
+    const desired: PanchangaYearSearch = {
+      ...locationToSearch(location),
+      year,
+    };
+    if (!sameSearch(desired, search)) {
+      navigate({ search: desired, replace: true });
+    }
+  }, [location, year, search, navigate]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const loc = searchToLocation(search);
+    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const periods = getPanchakPatroForYear(year);
 
@@ -117,50 +150,38 @@ export function PanchakPatro() {
   ] as const;
 
   return (
-    <PageShell className="pb-16">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-2"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        {t("panchak.back_home")}
-      </Link>
+    <PageShell className="pb-16 space-y-4">
+      <div>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-2"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          {t("panchak.back_home")}
+        </Link>
 
-      <PageHeader
-        icon={<CalendarClock className="h-7 w-7 text-secondary shrink-0" />}
-        title={t("panchak.title", { year: digits(year) })}
-        subtitle={t("panchak.subtitle")}
+        <PageHeader
+          icon={<CalendarClock className="h-7 w-7 text-secondary shrink-0" />}
+          title={t("panchak.title", { year: digits(year) })}
+          subtitle={t("panchak.subtitle")}
+        />
+      </div>
+
+      <GrahaYearHeader
+        year={year}
+        onYearChange={(next) =>
+          navigate({
+            search: { ...locationToSearch(location), year: next },
+            replace: true,
+          })
+        }
+        currentYear={currentBs.year}
+        yearOptions={PANCHAK_PATRO_YEARS}
+        location={location}
+        onLocationChange={setLocation}
       />
 
       <p className={cn(patroNoteBox, "text-sm leading-relaxed")}>{t("panchak.intro")}</p>
-
-      {PANCHAK_PATRO_YEARS.length > 1 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="panchak-year" className="text-sm text-base">
-            {t("panchak.year_label")}
-          </label>
-          <select
-            id="panchak-year"
-            className={patroSelect}
-            value={year}
-            onChange={(e) => {
-              const next = Number(e.target.value);
-              window.location.href = `/panchak-patro?year=${next}`;
-            }}
-          >
-            {Array.from(
-              { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-              (_, i) => BS_SUPPORTED_START_YEAR + i,
-            )
-              .filter((y) => PANCHAK_PATRO_YEARS.includes(y))
-              .map((y) => (
-                <option key={y} value={y}>
-                  {digits(y)}
-                </option>
-              ))}
-          </select>
-        </div>
-      ) : null}
 
       {!periods?.length ? (
         <p className="text-sm">{t("panchak.no_data", { year: digits(year) })}</p>

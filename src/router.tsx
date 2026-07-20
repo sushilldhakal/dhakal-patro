@@ -125,13 +125,7 @@ const abhijitMuhurtaRoute = createRoute({
 const panchakPatroRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/panchak-patro",
-  validateSearch: (search: Record<string, unknown>): { year?: number } => {
-    const parse = (raw: unknown) => {
-      const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : undefined;
-      return Number.isFinite(n) ? n : undefined;
-    };
-    return { year: parse(search.year) };
-  },
+  validateSearch: validatePanchangaYearSearch,
   component: PanchakPatro,
 });
 const sunTimesLegacyRoute = createRoute({

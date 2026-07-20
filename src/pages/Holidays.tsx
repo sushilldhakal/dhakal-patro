@@ -17,8 +17,9 @@ import {
   type Holiday, type Festival,
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
 import { useRouteLoading } from "@/lib/route-loading";
-import { BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR, getCurrentBs } from "../lib/bs-calendar";
+import { getCurrentBs } from "../lib/bs-calendar";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "../lib/utils";
@@ -183,8 +184,8 @@ export function Holidays() {
   const { t } = useTranslation();
   const holidayColumns = useHolidayColumns();
   const festivalColumns = useFestivalColumns();
-  const init = getCurrentBs();
-  const [year, setYear] = useState(init.year);
+  const currentBs = getCurrentBs();
+  const [year, setYear] = useState(currentBs.year);
   const [tab, setTab] = useState<Tab>("holidays");
   const [filter, setFilter] = useState("");
 
@@ -206,6 +207,8 @@ export function Holidays() {
   const holidays = holidaysQ.data?.holidays ?? [];
   const festivals = festivalsQ.data?.festivals ?? [];
 
+  const gregorianRange = (tab === "holidays" ? holidaysQ.data : festivalsQ.data)?.gregorian_range;
+
   useRouteLoading(loading);
 
   return (
@@ -216,23 +219,17 @@ export function Holidays() {
         subtitle={t("holidays.page_subtitle")}
       />
 
-      {/* Year picker */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <label className="text-sm text-base">{t("holidays.bs_year")}</label>
-        <input
-          type="number"
-          value={year}
-          min={BS_SUPPORTED_START_YEAR}
-          max={BS_SUPPORTED_END_YEAR}
-          onChange={e => setYear(Number(e.target.value))}
-          className="w-28 bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-        />
-        <span className="text-xs">
-          {(tab === "holidays" ? holidaysQ.data : festivalsQ.data)?.gregorian_range
-            ? `(${(tab === "holidays" ? holidaysQ.data : festivalsQ.data)!.gregorian_range!.start} – ${(tab === "holidays" ? holidaysQ.data : festivalsQ.data)!.gregorian_range!.end})`
-            : ""}
-        </span>
-      </div>
+      <GrahaYearHeader
+        year={year}
+        onYearChange={setYear}
+        currentYear={currentBs.year}
+      />
+
+      {gregorianRange ? (
+        <p className="m-0 -mt-2 text-xs">
+          ({gregorianRange.start} – {gregorianRange.end})
+        </p>
+      ) : null}
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">

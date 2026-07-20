@@ -2,16 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, CalendarDays, MapPin, Sparkles, Sun } from "lucide-react";
+import { ArrowLeft, Sparkles, Sun } from "lucide-react";
 import {
   fetchMonthCalendar,
   panchangaKeys,
   type CalendarDay,
 } from "@/lib/api";
 import { PageShell } from "@/components/PageShell";
-import { LocationSelector } from "@/components/panchanga/LocationSelector";
+import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
 import {
-  displayLocationLabel,
   resolveLocationTimezone,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
@@ -42,15 +41,9 @@ import {
 import {
   patroEmpty,
   patroErrorBox,
-  patroSelect,
   patroSkel,
 } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
-
-const BS_YEAR_OPTIONS = Array.from(
-  { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-  (_, i) => BS_SUPPORTED_START_YEAR + i,
-);
 
 const routeApi = getRouteApi("/abhijit-muhurta");
 
@@ -241,9 +234,7 @@ export function AbhijitMuhurta() {
     [rows, todayAd],
   );
 
-  const locationLabel = displayLocationLabel(location);
   const monthLabel = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
-  const viewingTodayMonth = year === todayBs.year && month === todayBs.month;
 
   useRouteLoading(monthQ.isLoading);
 
@@ -252,73 +243,53 @@ export function AbhijitMuhurta() {
     setMonth(todayBs.month);
   }
 
+  function stepMonth(delta: number) {
+    const idx = year * 12 + (month - 1) + delta;
+    const nextYear = Math.floor(idx / 12);
+    const nextMonth = (idx % 12) + 1;
+    if (nextYear < BS_SUPPORTED_START_YEAR || nextYear > BS_SUPPORTED_END_YEAR) return;
+    setYear(nextYear);
+    setMonth(nextMonth);
+  }
+
+  function selectMonth(y: number, m: number) {
+    setYear(y);
+    setMonth(m);
+  }
+
   return (
     <PageShell className="pb-16 space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t("abhijit.back_home")}
-          </Link>
-          <h1 className="text-[clamp(1.75rem,4vw,2.125rem)] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
-            <Sparkles className="w-7 h-7 text-secondary shrink-0 dark:text-primary" />
-            {t("abhijit.title")}
-          </h1>
-          <p className="text-sm mt-1.5 max-w-xl leading-relaxed">
-            {t("abhijit.subtitle")}
-          </p>
-          <div className="text-sm mt-2 inline-flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            {locationLabel}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto lg:justify-end">
-          {!viewingTodayMonth ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground shadow-xs hover:bg-muted/50 transition-colors"
-              onClick={goToToday}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              {t("abhijit.jump_today")}
-            </button>
-          ) : null}
-          <select
-            className={patroSelect}
-            value={year}
-            aria-label={t("abhijit.year_label")}
-            onChange={(e) => setYear(Number(e.target.value))}
-          >
-            {BS_YEAR_OPTIONS.map((y) => (
-              <option key={y} value={y}>
-                {digits(y)}
-              </option>
-            ))}
-          </select>
-          <select
-            className={patroSelect}
-            value={month}
-            aria-label={t("abhijit.month_label")}
-            onChange={(e) => setMonth(Number(e.target.value))}
-          >
-            {BS_MONTHS_NE.map((name, i) => (
-              <option key={name} value={i + 1}>
-                {pick(name, BS_MONTH_NAMES[i])}
-              </option>
-            ))}
-          </select>
-          <LocationSelector
-            compact
-            className="shrink-0"
-            location={location}
-            onLocationChange={setLocation}
-          />
-        </div>
+      <div>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-2"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          {t("abhijit.back_home")}
+        </Link>
+        <h1 className="text-[clamp(1.75rem,4vw,2.125rem)] font-bold leading-tight tracking-tight m-0 flex items-center gap-2.5">
+          <Sparkles className="w-7 h-7 text-secondary shrink-0 dark:text-primary" />
+          {t("abhijit.title")}
+        </h1>
+        <p className="text-sm mt-1.5 max-w-xl leading-relaxed">
+          {t("abhijit.subtitle")}
+        </p>
       </div>
+
+      <PanchangaBrowseHeader
+        mode="month"
+        year={year}
+        month={month}
+        onMonthChange={(m) => setMonth(m)}
+        onYearChange={(y) => setYear(y)}
+        onSelectDate={(y, m) => selectMonth(y, m)}
+        onPrev={() => stepMonth(-1)}
+        onNext={() => stepMonth(1)}
+        onToday={goToToday}
+        todayAd={todayAd}
+        location={location}
+        onLocationChange={setLocation}
+      />
 
       {todayRow ? (
         <section className="relative overflow-hidden rounded-2xl border border-secondary/30 bg-linear-to-br from-secondary/15 via-card to-card p-5 sm:p-6 shadow-xs dark:border-primary/30 dark:from-primary/15">
