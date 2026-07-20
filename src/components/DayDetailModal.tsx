@@ -352,7 +352,7 @@ function PanchangaFull({
 }
 
 export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Props) {
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   const [showPanchanga, setShowPanchanga] = useState(false);
   const dateAd = day?.date_ad ?? "";
 

@@ -314,7 +314,7 @@ export function KundaliReport({
         .then(({ fromCache: cached }) => {
           if (!controller.signal.aborted) setFromCache(cached);
         })
-        .catch((err: unknown) => {
+        .catch(() => {
           if (controller.signal.aborted) return;
           setError(t("kundali.report.error_generic"));
           setStatus("error");

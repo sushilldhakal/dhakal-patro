@@ -32,6 +32,7 @@ import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartComp
 import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
 import { UpagrahaTable } from "@/components/kundali/UpagrahaTable";
 import { YogaList } from "@/components/kundali/YogaList";
+import { YogaReferenceCatalog } from "@/components/kundali/YogaReferenceCatalog";
 import { DashaSystemPanel } from "@/components/kundali/DashaSystemPanel";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
@@ -557,11 +558,14 @@ export function KundaliView({
         </div>
       )}
 
-      {/* Kundali yogas — only yogas formed in this chart */}
-      {showSection("kundali-yoga") && detail.yogas.some((y) => y.present) && (
+      {/* Kundali yogas — those formed in this chart, plus the full reference catalog */}
+      {showSection("kundali-yoga") && (
         <div id="kundali-yoga" className="scroll-mt-24">
           <PanchangaSection titleNe="कुण्डली योग" titleEn="Kundali Yoga">
-            <YogaList yogas={detail.yogas} />
+            {detail.yogas.some((y) => y.present) && <YogaList yogas={detail.yogas} />}
+            <div className="px-3.5 pb-3.5">
+              <YogaReferenceCatalog />
+            </div>
           </PanchangaSection>
         </div>
       )}

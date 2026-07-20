@@ -1494,6 +1494,28 @@ export interface KundaliYoga {
   descNe: string;
 }
 
+/** One row of the static B. V. Raman combinations catalog. */
+export interface YogaReferenceEntry {
+  yogaId: string;
+  name: string;
+  definition: string;
+  result: string;
+  source: string;
+  part: string;
+}
+
+export interface YogaReferenceResponse {
+  source: string;
+  part: string;
+  count: number;
+  combinations: YogaReferenceEntry[];
+}
+
+/** The full 162-combination reference catalog (Raman, Part I). CDN-cached. */
+export function fetchYogaReference(): Promise<YogaReferenceResponse> {
+  return get<YogaReferenceResponse>("/kundali/yogas/reference");
+}
+
 export interface BilingualValue {
   ne: string;
   en: string;

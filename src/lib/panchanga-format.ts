@@ -305,7 +305,7 @@ export function getRituDisplay(p?: PanchangaDay | null, lang?: string): string |
   return pickLocale(lang, ne, en);
 }
 
-export function getRituSeason(p?: PanchangaDay | null, lang: "ne" | "en" | "hi" = "en"): string | undefined {
+export function getRituSeason(p?: PanchangaDay | null, lang?: string): string | undefined {
   if (!p) return undefined;
   const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
   const season =
@@ -328,7 +328,7 @@ export function getRituSeason(p?: PanchangaDay | null, lang: "ne" | "en" | "hi" 
 export function formatAdTitle(
   _p: PanchangaDay,
   dateAd: string,
-  lang: "ne" | "en" | "hi" = "en",
+  lang?: string,
 ): string {
   const d = new Date(dateAd.includes("T") ? dateAd : `${dateAd}T12:00:00`);
   if (Number.isNaN(d.getTime())) return dateAd;
@@ -339,7 +339,7 @@ export function formatAdTitle(
 export function formatAdShort(
   _p: PanchangaDay,
   dateAd: string,
-  lang: "ne" | "en" | "hi" = "en",
+  lang?: string,
 ): string {
   const d = new Date(dateAd.includes("T") ? dateAd : `${dateAd}T12:00:00`);
   if (Number.isNaN(d.getTime())) return dateAd;
@@ -1974,7 +1974,7 @@ export function getDinVisheshLabels(
   return labels;
 }
 
-export function relativeDayLabel(daysDiff: number, lang: "ne" | "en" | "hi" = "en"): string {
+export function relativeDayLabel(daysDiff: number, lang?: string): string {
   if (normalizeLang(lang) !== "en") return festivalRelLabelNepali(daysDiff);
   if (daysDiff === 0) return "Today";
   if (daysDiff > 0) return `${daysDiff} Days left`;

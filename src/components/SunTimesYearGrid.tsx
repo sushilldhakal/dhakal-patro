@@ -424,6 +424,7 @@ export function SunTimesYearGrid({
   hideHeader = false,
   onLoadingChange,
 }: Props) {
+  const { t } = useTranslation();
   // Slim सूर्यक्रान्ति payload (~4 KB/year, ms from the API's year cache)
   // instead of the full year calendar build.
   const yearQuery = useQuery({
