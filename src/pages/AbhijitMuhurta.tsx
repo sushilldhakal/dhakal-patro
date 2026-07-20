@@ -59,9 +59,13 @@ type AbhijitRow = {
   abhijit: NonNullable<ReturnType<typeof computeAbhijitFromSunTimes>>;
 };
 
-function fmtAdShort(iso: string): string {
+function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
   const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString(lang === "en" ? "en-US" : "ne-NP", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function initialYearFromSearch(searchYear?: number): number {
@@ -182,7 +186,7 @@ export function AbhijitMuhurta() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { pick, digits } = useLocale();
+  const { pick, digits, lang } = useLocale();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const todayBs = useMemo(() => adToBS(new Date()), []);
   const [year, setYear] = useState(() => initialYearFromSearch(search.year));
@@ -354,7 +358,7 @@ export function AbhijitMuhurta() {
                   })}
                 </span>
               </div>
-              <p className="mono text-xs">{fmtAdShort(todayRow.day.date_ad)}</p>
+              <p className="mono text-xs">{fmtAdShort(todayRow.day.date_ad, lang)}</p>
             </div>
           </div>
         </section>

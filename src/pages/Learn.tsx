@@ -447,7 +447,7 @@ export function Learn() {
                     <div>
                       <h2 className="text-2xl font-bold text-foreground">{pick(cat.ne, cat.en)}</h2>
                       <p className="text-sm">
-                        {cat.en} · {topics.length} articles
+                        {pick(cat.ne, cat.en)} · {t("learn_page.articles_count", { count: topics.length })}
                       </p>
                     </div>
                   </div>

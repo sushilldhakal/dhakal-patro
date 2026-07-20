@@ -247,9 +247,10 @@ export function BsMonthHeaderTitle({
   const monthTitle = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
   const samvatsara = resolveSamvatsaraForBsYear(year);
   const samvatsaraLabel = samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : undefined;
+  const adLocale = lang === "en" ? "en-US" : "ne-NP";
   const adDayEnglish =
     day != null
-      ? bsToAD(year, month, day).toLocaleDateString("en", {
+      ? bsToAD(year, month, day).toLocaleDateString(adLocale, {
           day: "numeric",
           month: "short",
           year: "numeric",
@@ -259,17 +260,18 @@ export function BsMonthHeaderTitle({
     if (day != null) return null;
     const start = bsToAD(year, month, 1);
     const end = bsToAD(year, month, getBSMonthLength(year, month));
-    const startMonth = start.toLocaleDateString("en", { month: "short" });
-    const endMonth = end.toLocaleDateString("en", { month: "short" });
+    const startMonth = start.toLocaleDateString(adLocale, { month: "short" });
+    const endMonth = end.toLocaleDateString(adLocale, { month: "short" });
     const startYear = start.getFullYear();
     const endYear = end.getFullYear();
+    const yearLabel = (y: number) => (lang === "en" ? String(y) : digits(y));
     if (startMonth === endMonth && startYear === endYear) {
-      return `${startMonth} ${startYear}`;
+      return `${startMonth} ${yearLabel(startYear)}`;
     }
     if (startYear === endYear) {
-      return `${startMonth}/${endMonth} ${startYear}`;
+      return `${startMonth}/${endMonth} ${yearLabel(startYear)}`;
     }
-    return `${startMonth} ${startYear}/${endMonth} ${endYear}`;
+    return `${startMonth} ${yearLabel(startYear)}/${endMonth} ${yearLabel(endYear)}`;
   })();
   const chipDay = day ?? todayBs.day;
   const chipMonth = day != null ? month : todayBs.month;

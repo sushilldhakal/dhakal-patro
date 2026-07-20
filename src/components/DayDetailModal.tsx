@@ -22,6 +22,7 @@ import {
   getMoonsetDisplay,
   getPanchangaDetail,
   getRituDisplayNe,
+  getRituDisplay,
   getMuhurtaRows,
   getPlanetRows,
   getSunriseDisplay,
@@ -141,7 +142,7 @@ function PanchangaTable({ rows }: { rows: { label: string; value?: string | null
 }
 
 function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
-  const { lang } = useLocale();
+  const { lang, pick } = useLocale();
   const sunrise =
     getSunriseDisplay(p) ?? (day.sunrise ? formatClockNepali(day.sunrise) : undefined);
   const sunset =
@@ -156,25 +157,33 @@ function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
       {sunrise && (
         <span className="inline-flex items-center gap-1.5">
           <Sunrise size={16} strokeWidth={1.8} />
-          <span>Sunrise {sunrise}</span>
+          <span>
+            {pick("सूर्योदय", "Sunrise")} {sunrise}
+          </span>
         </span>
       )}
       {sunset && (
         <span className="inline-flex items-center gap-1.5">
           <Sunset size={16} strokeWidth={1.8} />
-          <span>Sunset {sunset}</span>
+          <span>
+            {pick("सूर्यास्त", "Sunset")} {sunset}
+          </span>
         </span>
       )}
       {moonrise && (
         <span className="inline-flex items-center gap-1.5">
           <Moon size={16} strokeWidth={1.8} />
-          <span>Moonrise {moonrise}</span>
+          <span>
+            {pick("चन्द्रोदय", "Moonrise")} {moonrise}
+          </span>
         </span>
       )}
       {moonset && (
         <span className="inline-flex items-center gap-1.5">
           <Moon size={16} strokeWidth={1.8} />
-          <span>Moonset {moonset}</span>
+          <span>
+            {pick("चन्द्रास्त", "Moonset")} {moonset}
+          </span>
         </span>
       )}
     </div>
@@ -214,7 +223,7 @@ function DaySummary({
 
       <CelestialTimesRow p={p} day={day} />
 
-      <h4 className={sectionTitle}>Panchanga</h4>
+      <h4 className={sectionTitle}>{pick("पञ्चाङ्ग", "Panchanga")}</h4>
       <PanchangaTable
         rows={[
           { label: pick("पक्ष", "Paksha"), value: pakshaDisplay },
@@ -230,7 +239,7 @@ function DaySummary({
       <DinVisheshSection p={p} day={day} />
 
       <button type="button" className={cn(patroAsideLink, "mb-4 inline-block cursor-pointer border-none bg-transparent p-0 text-sm")} onClick={onFullPanchanga}>
-        See full panchanga →
+        {pick("पूर्ण पञ्चाङ्ग हेर्नुहोस् →", "See full panchanga →")}
       </button>
     </>
   );
@@ -272,7 +281,7 @@ function PanchangaFull({
       p.chandra_rashi?.name ??
       p.chandra_rashi?.name_ne,
   );
-  const ritu = pick(getRituDisplayNe(p), (p.ritu as { season?: string } | undefined)?.season ?? getRituDisplayNe(p));
+  const ritu = pick(getRituDisplayNe(p), getRituDisplay(p, "en") ?? getRituDisplayNe(p));
   const aayan = pick(
     (detail?.aayan as { name_ne?: string } | undefined)?.name_ne ?? p.aayan?.name_ne ?? p.aayan?.name,
     p.aayan?.name ?? p.aayan?.name_ne,
@@ -296,7 +305,7 @@ function PanchangaFull({
         </div>
         <div className={metaCard}>
           <div className={metaLabel}>{pick("इ.सन्", "AD")}</div>
-          <div className="text-sm font-semibold">{formatAdShort(p, day.date_ad)}</div>
+          <div className="text-sm font-semibold">{formatAdShort(p, day.date_ad, lang)}</div>
         </div>
         {formatShakaYear(p) && (
           <div className={metaCard}>
@@ -390,13 +399,13 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
                     onClick={() => setShowPanchanga(false)}
                   >
                     <ChevronLeft size={16} strokeWidth={1.8} />
-                    Back
+                    {pick("फर्कनुहोस्", "Back")}
                   </button>
                   <Dialog.Title className="m-0 text-lg font-bold">{pick("पञ्चाङ्ग", "Panchanga")}</Dialog.Title>
                 </div>
                 <Dialog.Close
                   className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card hover:bg-surface-inset hover:text-foreground"
-                  aria-label="Close"
+                  aria-label={pick("बन्द", "Close")}
                 >
                   <X size={16} strokeWidth={1.8} />
                 </Dialog.Close>
@@ -411,7 +420,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
                         daysDiff === 0 && "text-secondary dark:text-secondary",
                       )}
                     >
-                      {relativeDayLabel(daysDiff)}
+                      {relativeDayLabel(daysDiff, lang)}
                     </div>
                   )}
                   <Dialog.Title className="m-0 text-lg font-bold">
@@ -422,14 +431,14 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
                   <Dialog.Description className="mt-1 text-sm text-base">
                     {day
                       ? q.data
-                        ? formatAdTitle(q.data, day.date_ad)
-                        : formatAdTitle({} as PanchangaDay, day.date_ad)
+                        ? formatAdTitle(q.data, day.date_ad, lang)
+                        : formatAdTitle({} as PanchangaDay, day.date_ad, lang)
                       : null}
                   </Dialog.Description>
                 </div>
                 <Dialog.Close
                   className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card hover:bg-surface-inset hover:text-foreground"
-                  aria-label="Close"
+                  aria-label={pick("बन्द", "Close")}
                 >
                   <X size={16} strokeWidth={1.8} />
                 </Dialog.Close>
@@ -446,7 +455,11 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
               </div>
             )}
 
-            {q.isError && <p className="text-sm text-danger">Failed to load day details.</p>}
+            {q.isError && (
+              <p className="text-sm text-danger">
+                {pick("दिन विवरण लोड गर्न सकिएन।", "Failed to load day details.")}
+              </p>
+            )}
 
             {q.data && day && !showPanchanga && (
               <DaySummary p={q.data} day={day} onFullPanchanga={() => setShowPanchanga(true)} />

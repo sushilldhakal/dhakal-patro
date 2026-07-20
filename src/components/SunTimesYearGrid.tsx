@@ -270,7 +270,7 @@ function SunTimesYearMatrix({
     <div className="max-w-full overflow-x-auto overscroll-x-contain [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
       <table
         className="w-max min-w-full border-collapse table-fixed text-sm font-semibold font-num"
-        aria-label={`Sunrise and sunset grid for BS year ${bsYear}`}
+        aria-label={t("sun_times.grid_aria", { year: bsYear })}
       >
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -456,7 +456,7 @@ export function SunTimesYearGrid({
     return (
       <div className="mt-5 max-w-full overflow-hidden rounded-xl bg-card shadow-xs shadow-ring-soft">
         <p className="m-0 px-4 py-3.5 text-xs text-base">
-          Could not load sunrise/sunset times for this location.
+          {t("sun_times.load_error")}
         </p>
       </div>
     );

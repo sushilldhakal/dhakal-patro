@@ -57,7 +57,7 @@ export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
         setProfiles(list);
         return list;
       } catch (e) {
-        setError(e instanceof Error ? e.message : t("account.load_error"));
+        setError(t("account_page.load_error"));
         setProfiles([]);
         return [];
       }
@@ -175,6 +175,7 @@ function RoleSlot({
   onPick: () => void;
   onEdit?: () => void;
 }) {
+  const { t } = useTranslation();
   const accent = role === "boy" ? "border-sky-500/30 bg-sky-500/[0.06]" : "border-pink-500/30 bg-pink-500/[0.06]";
 
   if (!profile) {
@@ -211,7 +212,7 @@ function RoleSlot({
           </p>
         </div>
         {onEdit ? (
-          <Button variant="ghost" size="icon-sm" title="Edit" onClick={onEdit}>
+          <Button variant="ghost" size="icon-sm" title={t("account_page.edit")} onClick={onEdit}>
             <Pencil className="size-3.5" />
           </Button>
         ) : null}

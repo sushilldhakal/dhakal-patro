@@ -49,9 +49,13 @@ function monthStartAdDate(ctx: CalendarMonthContext): string {
   return fmtAdIso(bsToAD(ctx.year, ctx.month, 1));
 }
 
-function fmtAdFull(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
+function fmtAdFull(iso: string, lang: "ne" | "en"): string {
+  const d = new Date(iso.includes("T") ? iso : `${iso}T12:00:00`);
+  return d.toLocaleDateString(lang === "en" ? "en-US" : "ne-NP", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 function panchangaMatchesAd(p: PanchangaDay | undefined, ad: string): boolean {
@@ -95,7 +99,10 @@ function PanchangaAside({
   const isSelectedToday = selectedAdDate === todayAd;
 
   const bsDisplay = pick(activeP?.display?.bs_ne, undefined) ?? activeP?.date_bs;
-  const adDisplay = activeP?.display?.gregorian_en ?? fmtAdFull(selectedAdDate);
+  const adDisplay =
+    lang === "en"
+      ? (activeP?.display?.gregorian_en ?? fmtAdFull(selectedAdDate, lang))
+      : fmtAdFull(selectedAdDate, lang);
   const weekdayNe = pick(
     activeP?.weekday ?? contextDay?.weekday_ne ?? contextDay?.weekday,
     contextDay?.weekday_en ?? activeP?.weekday ?? contextDay?.weekday,

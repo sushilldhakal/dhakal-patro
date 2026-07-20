@@ -9,6 +9,7 @@ import {
 } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 
@@ -28,18 +29,18 @@ const AD_YEARS = Array.from(
 );
 
 const AD_MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  { en: "January", ne: "जनवरी" },
+  { en: "February", ne: "फेब्रुअरी" },
+  { en: "March", ne: "मार्च" },
+  { en: "April", ne: "अप्रिल" },
+  { en: "May", ne: "मे" },
+  { en: "June", ne: "जुन" },
+  { en: "July", ne: "जुलाई" },
+  { en: "August", ne: "अगस्ट" },
+  { en: "September", ne: "सेप्टेम्बर" },
+  { en: "October", ne: "अक्टोबर" },
+  { en: "November", ne: "नोभेम्बर" },
+  { en: "December", ne: "डिसेम्बर" },
 ];
 
 const selectClass =
@@ -70,6 +71,7 @@ export function KundaliControls({
   location,
   onLocationChange,
 }: Props) {
+  const { pick } = useLocale();
   const bs = adToBS(date);
   const adYear = date.getFullYear();
   const adMonth = date.getMonth() + 1;
@@ -92,7 +94,7 @@ export function KundaliControls({
       <div
         className="inline-flex shrink-0 p-0.5 gap-0.5 border border-border rounded-lg bg-card"
         role="group"
-        aria-label="Era"
+        aria-label={pick("संवत्", "Era")}
       >
         {(["bs", "ad"] as const).map((e) => (
           <button
@@ -116,7 +118,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={bs.year}
-            aria-label="Year"
+            aria-label={pick("वर्ष", "Year")}
             onChange={(e) => pickBs(Number(e.target.value), bs.month, bs.day)}
           >
             {BS_YEARS.map((y) => (
@@ -129,7 +131,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={bs.month - 1}
-            aria-label="Month"
+            aria-label={pick("महिना", "Month")}
             onChange={(e) => pickBs(bs.year, Number(e.target.value) + 1, bs.day)}
           >
             {BS_MONTHS_NE.map((ne, i) => (
@@ -142,7 +144,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={bs.day}
-            aria-label="Day"
+            aria-label={pick("दिन", "Day")}
             onChange={(e) => pickBs(bs.year, bs.month, Number(e.target.value))}
           >
             {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
@@ -157,7 +159,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={adYear}
-            aria-label="Year"
+            aria-label={pick("वर्ष", "Year")}
             onChange={(e) => pickAd(Number(e.target.value), adMonth, adDay)}
           >
             {AD_YEARS.map((y) => (
@@ -170,12 +172,12 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={adMonth - 1}
-            aria-label="Month"
+            aria-label={pick("महिना", "Month")}
             onChange={(e) => pickAd(adYear, Number(e.target.value) + 1, adDay)}
           >
-            {AD_MONTHS.map((name, i) => (
-              <option key={name} value={i}>
-                {name}
+            {AD_MONTHS.map((m, i) => (
+              <option key={m.en} value={i}>
+                {pick(m.ne, m.en)}
               </option>
             ))}
           </select>
@@ -183,7 +185,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={adDay}
-            aria-label="Day"
+            aria-label={pick("दिन", "Day")}
             onChange={(e) => pickAd(adYear, adMonth, Number(e.target.value))}
           >
             {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
@@ -202,7 +204,7 @@ export function KundaliControls({
           value={clock}
           onChange={(e) => onClockChange(e.target.value)}
           className="bg-transparent border-0 p-0 m-0 w-full text-sm font-mono font-semibold text-foreground focus:outline-none focus:ring-0"
-          aria-label="Birth time"
+          aria-label={pick("जन्म समय", "Birth time")}
         />
       </label>
 

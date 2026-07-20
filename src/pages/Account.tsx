@@ -39,7 +39,7 @@ export function Account() {
     try {
       setProfiles(await listProfiles());
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("account_page.load_error"));
+      setError(t("account_page.load_error"));
     } finally {
       setLoading(false);
     }

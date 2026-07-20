@@ -925,7 +925,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
         {lagna && (
           <div className="flex items-center gap-3 py-2 border-b border-border">
             <span className="w-8 h-8 rounded-lg flex items-center justify-center text-base bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
-              ASC
+              {pick("लग्न", "ASC")}
             </span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold">{t("sections.lagna")}</div>

@@ -305,12 +305,46 @@ export function getRituDisplay(p?: PanchangaDay | null, lang?: string): string |
   return pickLocale(lang, ne, en);
 }
 
-export function getRituSeason(p?: PanchangaDay | null): string | undefined {
+export function getRituSeason(p?: PanchangaDay | null, lang: "ne" | "en" | "hi" = "en"): string | undefined {
   if (!p) return undefined;
   const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
-  if (ritu?.season) return ritu.season;
-  if (typeof p.ritu === "object" && p.ritu?.season) return p.ritu.season;
-  return undefined;
+  const season =
+    ritu?.season ??
+    (typeof p.ritu === "object" ? p.ritu?.season : undefined);
+  if (!season) return undefined;
+  if (normalizeLang(lang) === "en") return season;
+  const SEASON_NE: Record<string, string> = {
+    Spring: "वसन्त",
+    Summer: "ग्रीष्म",
+    Autumn: "शरद्",
+    Fall: "शरद्",
+    Winter: "हिउँद",
+    Monsoon: "वर्षा",
+    Rainy: "वर्षा",
+  };
+  return SEASON_NE[season] ?? undefined;
+}
+
+export function formatAdTitle(
+  _p: PanchangaDay,
+  dateAd: string,
+  lang: "ne" | "en" | "hi" = "en",
+): string {
+  const d = new Date(dateAd.includes("T") ? dateAd : `${dateAd}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return dateAd;
+  const locale = normalizeLang(lang) === "en" ? "en-US" : "ne-NP";
+  return d.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+}
+
+export function formatAdShort(
+  _p: PanchangaDay,
+  dateAd: string,
+  lang: "ne" | "en" | "hi" = "en",
+): string {
+  const d = new Date(dateAd.includes("T") ? dateAd : `${dateAd}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return dateAd;
+  const locale = normalizeLang(lang) === "en" ? "en-US" : "ne-NP";
+  return d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
 }
 
 export function getRituPauranik(p?: PanchangaDay | null): RituBlock | undefined {
@@ -596,20 +630,6 @@ export function formatBsTitle(p: PanchangaDay, fallbackDay?: number, fallbackMon
     return `${BS_MONTH_NAMES[fallbackMonth - 1]} ${fallbackDay}, ${fallbackYear}${weekdayEn ? `, ${weekdayEn}` : ""}`;
   }
   return p.display?.bs_ne ?? p.date_bs ?? "—";
-}
-
-export function formatAdTitle(p: PanchangaDay, dateAd: string): string {
-  if (p.display?.gregorian_en) {
-    const d = new Date(dateAd);
-    return d.toLocaleDateString("en", { day: "2-digit", month: "long", year: "numeric" });
-  }
-  const d = new Date(dateAd);
-  return d.toLocaleDateString("en", { day: "2-digit", month: "long", year: "numeric" });
-}
-
-export function formatAdShort(_p: PanchangaDay, dateAd: string): string {
-  const d = new Date(dateAd);
-  return d.toLocaleDateString("en", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function titleizeWords(text: string): string {
@@ -1954,7 +1974,8 @@ export function getDinVisheshLabels(
   return labels;
 }
 
-export function relativeDayLabel(daysDiff: number): string {
+export function relativeDayLabel(daysDiff: number, lang: "ne" | "en" | "hi" = "en"): string {
+  if (normalizeLang(lang) !== "en") return festivalRelLabelNepali(daysDiff);
   if (daysDiff === 0) return "Today";
   if (daysDiff > 0) return `${daysDiff} Days left`;
   return `${Math.abs(daysDiff)} Days before`;
@@ -1970,7 +1991,7 @@ export function daysDiffFromAd(fromAd: string, toAd: string): number {
 export function festivalRelLabelNepali(daysDiff: number): string {
   if (daysDiff === 0) return "आज";
   if (daysDiff === 1) return "भोलि";
-  if (daysDiff > 1) return `${toNepaliDigits(daysDiff)} दिन`;
+  if (daysDiff > 1) return `${toNepaliDigits(daysDiff)} दिन बाँकी`;
   if (daysDiff === -1) return "हिजो";
   return `${toNepaliDigits(Math.abs(daysDiff))} दिन अघि`;
 }

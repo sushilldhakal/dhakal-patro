@@ -469,7 +469,7 @@ export function ShadbalaCard({
             {yuddha.wars
               .map((w) =>
                 pick(
-                  `${grahaName(w.winner)} ले ${grahaName(w.loser)} लाई पराजित (${fmt(w.yuddhaVirupas, digits)} virup, ${digits(w.separationDeg.toFixed(2))}° को दूरी)`,
+                  `${grahaName(w.winner)} ले ${grahaName(w.loser)} लाई पराजित (${fmt(w.yuddhaVirupas, digits)} विरुप, ${digits(w.separationDeg.toFixed(2))}° को दूरी)`,
                   `${grahaName(w.winner)} defeats ${grahaName(w.loser)} (${fmt(w.yuddhaVirupas, digits)} virupas, ${w.separationDeg.toFixed(2)}° apart)`,
                 ),
               )

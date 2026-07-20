@@ -321,7 +321,7 @@ export function KundaliView({
         <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
           <div className="flex-1 px-5 py-4 border-b lg:border-b-0 border-border bg-secondary/[0.09] dark:bg-secondary/20">
             <p className="text-sm font-semibold uppercase tracking-wider mb-1.5">
-              {pick("जन्म समय · Birth moment", "Birth moment")}
+              {pick("जन्म समय", "Birth moment")}
             </p>
             <p className="text-2xl font-bold text-foreground font-[family-name:var(--pn-num)] leading-tight">
               {birthBsLabel}
@@ -343,7 +343,7 @@ export function KundaliView({
             <div className="flex-1 px-5 py-4 flex flex-col justify-center min-w-[200px]">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <p className="text-sm font-semibold uppercase tracking-wider">
-                  {pick("लग्न · Lagna", "Lagna")}
+                  {pick("लग्न", "Lagna")}
                 </p>
                 <span className="text-sm text-base bg-muted px-2 py-0.5 rounded-full shrink-0">
                   {ayanamshaInfo.labelNe}

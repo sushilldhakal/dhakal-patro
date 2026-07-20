@@ -4,6 +4,7 @@ import {
   useImperativeHandle,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { Sparkles, Star, Pencil, Loader2, MapPin, Clock, Navigation, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +33,7 @@ export const KundaliProfilePicker = forwardRef<
   KundaliProfilePickerHandle,
   { selectedId?: string | null; onSelect: (profile: Profile) => void }
 >(function KundaliProfilePicker({ selectedId, onSelect }, ref) {
+  const { t } = useTranslation();
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +45,8 @@ export const KundaliProfilePicker = forwardRef<
       const list = await listProfiles();
       setProfiles(list);
       return list;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load your profiles");
+    } catch {
+      setError(t("account_page.load_error"));
       setProfiles([]);
       return [];
     }
@@ -52,12 +54,13 @@ export const KundaliProfilePicker = forwardRef<
 
   useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   if (profiles === null) {
     return (
       <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-6 text-sm">
-        <Loader2 className="size-4 animate-spin" /> Loading your profiles…
+        <Loader2 className="size-4 animate-spin" /> {t("kundali.loading_profiles")}
       </div>
     );
   }
@@ -70,12 +73,10 @@ export const KundaliProfilePicker = forwardRef<
     <>
       {profiles.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center">
-          <p className="text-sm text-base text-foreground">No profiles yet</p>
-          <p className="mx-auto mt-1 max-w-md text-sm">
-            Add your birth date, time and place to generate and save a kundali.
-          </p>
+          <p className="text-sm text-base text-foreground">{t("kundali.no_profiles_yet")}</p>
+          <p className="mx-auto mt-1 max-w-md text-sm">{t("kundali.no_profiles_hint")}</p>
           <Button className="mt-4" onClick={() => setDialog({ mode: "add" })}>
-            <Sparkles className="size-4" /> Add your first profile
+            <Sparkles className="size-4" /> {t("kundali.first_profile")}
           </Button>
         </div>
       ) : (
@@ -95,10 +96,10 @@ export const KundaliProfilePicker = forwardRef<
       <Dialog open={dialog !== null} onOpenChange={(o) => !o && setDialog(null)}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{dialog?.mode === "edit" ? "Edit profile" : "Add profile"}</DialogTitle>
-            <DialogDescription>
-              Name, date of birth, time, place and gender — used to generate the kundali.
-            </DialogDescription>
+            <DialogTitle>
+              {dialog?.mode === "edit" ? t("kundali.edit_profile") : t("kundali.add_profile")}
+            </DialogTitle>
+            <DialogDescription>{t("kundali.form_hint")}</DialogDescription>
           </DialogHeader>
           {dialog && (
             <ProfileForm
@@ -132,12 +133,21 @@ function ProfileCard({
   onView: () => void;
   onEdit: () => void;
 }) {
+  const { t } = useTranslation();
   const place = p.location_label || p.city || "—";
   const dob = p.birth_date ? `${p.birth_date} ${(p.birth_era ?? "bs").toUpperCase()}` : "—";
   const latLon =
     p.latitude != null && p.longitude != null
       ? `${p.latitude.toFixed(4)}, ${p.longitude.toFixed(4)}`
       : "—";
+  const genderLabel =
+    p.gender === "male"
+      ? t("profile.male")
+      : p.gender === "female"
+        ? t("profile.female")
+        : p.gender === "other"
+          ? t("profile.other")
+          : p.gender;
 
   return (
     <div
@@ -152,18 +162,27 @@ function ProfileCard({
             <span className="truncate">{p.full_name}</span>
             {p.is_default && <Star className="size-3.5 shrink-0 text-secondary" />}
           </div>
-          {p.gender && <span className="text-xs capitalize">{p.gender}</span>}
+          {genderLabel && <span className="text-xs">{genderLabel}</span>}
         </div>
-        <Button variant="ghost" size="icon-sm" title="Edit profile" onClick={onEdit}>
+        <Button variant="ghost" size="icon-sm" title={t("kundali.edit_profile")} onClick={onEdit}>
           <Pencil className="size-4" />
         </Button>
       </div>
 
       <div className="flex flex-col gap-1.5 text-xs">
-        <Row icon={Clock} label="DOB">{dob}{p.birth_time ? ` · ${p.birth_time}` : ""}</Row>
-        <Row icon={MapPin} label="Place">{place}</Row>
-        <Row icon={Navigation} label="Lat/Long">{latLon}</Row>
-        <Row icon={Globe} label="Timezone">{p.timezone || "—"}</Row>
+        <Row icon={Clock} label={t("kundali.dob")}>
+          {dob}
+          {p.birth_time ? ` · ${p.birth_time}` : ""}
+        </Row>
+        <Row icon={MapPin} label={t("kundali.place")}>
+          {place}
+        </Row>
+        <Row icon={Navigation} label={t("kundali.lat_long")}>
+          {latLon}
+        </Row>
+        <Row icon={Globe} label={t("kundali.timezone")}>
+          {p.timezone || "—"}
+        </Row>
       </div>
 
       <Button
@@ -173,7 +192,7 @@ function ProfileCard({
         className="mt-auto w-full"
       >
         <Sparkles className="size-3.5" />
-        {active ? "Viewing kundali" : "View kundali"}
+        {active ? t("kundali.viewing_kundali") : t("kundali.view_kundali")}
       </Button>
     </div>
   );

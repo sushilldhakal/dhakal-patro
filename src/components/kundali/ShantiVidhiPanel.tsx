@@ -23,6 +23,14 @@ import { useLocale } from "@/i18n/locale";
 
 const th = "whitespace-nowrap text-xs font-semibold";
 
+const SHADBALA_STATUS_NE: Record<string, string> = {
+  Exceptional: "उत्कृष्ट",
+  Strong: "बलियो",
+  Adequate: "पर्याप्त",
+  Borderline: "सीमान्त",
+  Weak: "कमजोर",
+};
+
 /** Graha name (English / Vedic) → NAVAGRAHA_SHANTI key. */
 const LORD_KEY: Record<string, string> = {
   sun: "sun", surya: "sun",
@@ -175,7 +183,7 @@ export function ShantiVidhiPanel({
             detailNe={
               weakest
                 ? pick(
-                    `${weakest.name_ne}: बल ${(weakest.ratio * 100).toFixed(0)}% (${weakest.status}) — बल बढाउन शान्ति गर्नुहोस्।`,
+                    `${weakest.name_ne}: बल ${(weakest.ratio * 100).toFixed(0)}% (${SHADBALA_STATUS_NE[weakest.status] ?? weakest.status}) — बल बढाउन शान्ति गर्नुहोस्।`,
                     `${weakest.name ?? weakest.name_ne}: strength ${(weakest.ratio * 100).toFixed(0)}% (${weakest.status}) — do shanti to strengthen it.`,
                   )
                 : undefined
@@ -254,8 +262,8 @@ export function ShantiVidhiPanel({
 
           {/* tiles */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <InfoTile icon={<TreePine className="h-4 w-4" />} label={pick("समिधा (हवन काठ)", "Samidha (homa wood)")} value={pick(<>{graha.samidhaNe} <span className="font-normal">· {graha.samidhaEn}</span></>, <>{graha.samidhaEn}</>)} />
-            <InfoTile icon={<Gem className="h-4 w-4" />} label={pick("रत्न", "Gem")} value={pick(<>{graha.gemNe} <span className="font-normal">· {graha.gemEn}</span></>, <>{graha.gemEn}</>)} />
+            <InfoTile icon={<TreePine className="h-4 w-4" />} label={pick("समिधा (हवन काठ)", "Samidha (homa wood)")} value={pick(graha.samidhaNe, graha.samidhaEn)} />
+            <InfoTile icon={<Gem className="h-4 w-4" />} label={pick("रत्न", "Gem")} value={pick(graha.gemNe, graha.gemEn)} />
             <InfoTile icon={<Sparkles className="h-4 w-4" />} label={pick("धातु", "Metal")} value={pick(graha.metalNe, graha.metalEn)} />
             <InfoTile icon={<Flame className="h-4 w-4" />} label={pick("अधिदेवता", "Deity")} value={pick(graha.adhidevataNe, graha.adhidevataEn)} />
           </div>

@@ -41,7 +41,7 @@ export function UpagrahaTable({ upagrahas }: UpagrahaTableProps) {
           <TableHead className={cn(th, "pl-3.5")}>{pick("उपग्रह", "Upagraha")}</TableHead>
           <TableHead className={th}>{pick("स्पष्ट", "Longitude")}</TableHead>
           <TableHead className={th}>{pick("नक्षत्र / स्वामी", "Nakshatra / Swami")}</TableHead>
-          <TableHead className={cn(th, "text-right pr-3.5")}>{pick("Raw L.", "Raw L.")}</TableHead>
+          <TableHead className={cn(th, "text-right pr-3.5")}>{pick("कच्चा देशान्तर", "Raw L.")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

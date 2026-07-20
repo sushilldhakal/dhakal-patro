@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityAutocomplete } from "@/components/auth/CityAutocomplete";
 import { formatDateInput, formatTimeInput } from "@/lib/birth-date";
+import { useLocale } from "@/i18n/locale";
 import {
   createProfile,
   updateProfile,
@@ -62,6 +64,8 @@ export function ProfileForm({
   onCancel: () => void;
   onSaved: (saved: Profile) => void;
 }) {
+  const { t } = useTranslation();
+  const { pick } = useLocale();
   const [form, setForm] = useState<ProfileInput>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +77,7 @@ export function ProfileForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.full_name.trim()) {
-      setError("Name is required");
+      setError(t("profile.name_required"));
       return;
     }
     setBusy(true);
@@ -88,8 +92,8 @@ export function ProfileForm({
         ? await updateProfile(existing.id, payload)
         : await createProfile(payload);
       onSaved(saved);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+    } catch {
+      setError(t("profile.save_failed"));
     } finally {
       setBusy(false);
     }
@@ -99,34 +103,34 @@ export function ProfileForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className={fieldWrap}>
-          <label className={labelClass}>Full name *</label>
+          <label className={labelClass}>{t("profile.full_name")}</label>
           <Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} required />
         </div>
         <div className={fieldWrap}>
-          <label className={labelClass}>Phone</label>
+          <label className={labelClass}>{t("profile.phone")}</label>
           <Input value={form.phone ?? ""} onChange={(e) => set("phone", e.target.value)} placeholder="+977…" />
         </div>
         <div className={fieldWrap}>
-          <label className={labelClass}>Email</label>
+          <label className={labelClass}>{t("profile.email")}</label>
           <Input type="email" value={form.email ?? ""} onChange={(e) => set("email", e.target.value)} />
         </div>
         <div className={fieldWrap}>
-          <label className={labelClass}>Gender</label>
+          <label className={labelClass}>{t("profile.gender")}</label>
           <select
             value={form.gender ?? ""}
             onChange={(e) => set("gender", e.target.value)}
             className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
           >
             <option value="">—</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
+            <option value="male">{t("profile.male")}</option>
+            <option value="female">{t("profile.female")}</option>
+            <option value="other">{t("profile.other")}</option>
           </select>
         </div>
       </div>
 
       <div className={fieldWrap}>
-        <label className={labelClass}>City / birth place</label>
+        <label className={labelClass}>{t("profile.city_birth_place")}</label>
         <CityAutocomplete
           value={form.location_label || form.city}
           onSelect={(sel) =>
@@ -151,34 +155,34 @@ export function ProfileForm({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className={fieldWrap}>
-          <label className={labelClass}>Birth date</label>
+          <label className={labelClass}>{t("profile.birth_date")}</label>
           <Input
             value={form.birth_date ?? ""}
             onChange={(e) => set("birth_date", formatDateInput(e.target.value))}
-            placeholder="YYYY-MM-DD"
+            placeholder={pick("वर्ष-महिना-दिन", "YYYY-MM-DD")}
             inputMode="numeric"
             maxLength={10}
           />
         </div>
         <div className={fieldWrap}>
-          <label className={labelClass}>Birth time</label>
+          <label className={labelClass}>{t("profile.birth_time")}</label>
           <Input
             value={form.birth_time ?? ""}
             onChange={(e) => set("birth_time", formatTimeInput(e.target.value))}
-            placeholder="HH:MM"
+            placeholder={pick("घण्टा:मिनेट", "HH:MM")}
             inputMode="numeric"
             maxLength={5}
           />
         </div>
         <div className={fieldWrap}>
-          <label className={labelClass}>Calendar</label>
+          <label className={labelClass}>{t("profile.calendar")}</label>
           <select
             value={form.birth_era ?? "bs"}
             onChange={(e) => set("birth_era", e.target.value)}
             className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
           >
-            <option value="bs">Bikram Sambat</option>
-            <option value="ad">Gregorian (AD)</option>
+            <option value="bs">{t("profile.calendar_bs")}</option>
+            <option value="ad">{t("profile.calendar_ad")}</option>
           </select>
         </div>
       </div>
@@ -190,17 +194,21 @@ export function ProfileForm({
           onChange={(e) => set("is_default", e.target.checked)}
           className="size-4 accent-[var(--secondary)]"
         />
-        Set as default profile
+        {t("profile.set_default")}
       </label>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button type="submit" disabled={busy}>
-          {busy ? "Saving…" : existing ? "Save changes" : "Create profile"}
+          {busy
+            ? t("common.saving")
+            : existing
+              ? t("profile.save_changes")
+              : t("profile.create_profile")}
         </Button>
       </div>
     </form>

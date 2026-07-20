@@ -197,14 +197,13 @@ const routeTree = rootRoute.addChildren([
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-/** Recovery screen for route errors — bilingual, no i18n dependency. */
+/** Recovery screen for route errors — bilingual. */
 function RouteErrorFallback() {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
       <p className="text-lg font-semibold text-foreground">केही गडबड भयो</p>
-      <p className="text-sm">
-        Something went wrong. Reloading usually fixes this.
-      </p>
+      <p className="text-sm">केही गडबड भयो। पुनः लोड गर्दा प्रायः ठीक हुन्छ।</p>
+      <p className="text-sm text-muted-foreground">Something went wrong. Reloading usually fixes this.</p>
       <button
         type="button"
         onClick={() => window.location.reload()}

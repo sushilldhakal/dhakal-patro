@@ -91,9 +91,9 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
           </TableHead>
           <TableHead className={th}>{pick("स्पष्ट", "Longitude")}</TableHead>
           <TableHead className={th}>{pick("नक्षत्र / स्वामी", "Nakshatra / Swami")}</TableHead>
-          <TableHead className={cn(th, "text-right")}>{pick("Raw L.", "Raw L.")}</TableHead>
+          <TableHead className={cn(th, "text-right")}>{pick("कच्चा देशान्तर", "Raw L.")}</TableHead>
           <TableHead className={cn(th, "text-right")}>{pick("शर (अक्षांश)", "Latitude / Shara")}</TableHead>
-          <TableHead className={cn(th, "text-right")}>{pick("विषुवांश (RA)", "Right Ascension")}</TableHead>
+          <TableHead className={cn(th, "text-right")}>{pick("विषुवांश", "Right Ascension")}</TableHead>
           <TableHead className={cn(th, "text-right")}>{pick("क्रान्ति", "Declination / Kranti")}</TableHead>
           <TableHead className={cn(th, "text-right")}>{pick("गति °/दिन", "Speed deg/day")}</TableHead>
         </TableRow>

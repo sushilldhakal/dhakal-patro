@@ -18,13 +18,14 @@ export interface CitySelection {
 export function CityAutocomplete({
   value,
   onSelect,
-  placeholder = "Search a city…",
+  placeholder,
 }: {
   value?: string | null;
   onSelect: (sel: CitySelection) => void;
   placeholder?: string;
 }) {
-  const { lang } = useLocale();
+  const { lang, pick: localePick } = useLocale();
+  const resolvedPlaceholder = placeholder ?? localePick("सहर खोज्नुहोस्…", "Search a city…");
   const [query, setQuery] = useState(value ?? "");
   const [results, setResults] = useState<City[]>([]);
   const [open, setOpen] = useState(false);
@@ -69,8 +70,8 @@ export function CityAutocomplete({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  function pick(city: City) {
-    const name = city.ascii_name || city.name;
+  function selectCity(city: City) {
+    const name = localePick(city.name || city.ascii_name, city.ascii_name || city.name);
     const label = `${name}, ${city.country}`;
     setQuery(label);
     setOpen(false);
@@ -95,7 +96,7 @@ export function CityAutocomplete({
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           className="pl-8"
         />
         {loading && (
@@ -108,12 +109,12 @@ export function CityAutocomplete({
             <li key={c.id}>
               <button
                 type="button"
-                onClick={() => pick(c)}
+                onClick={() => selectCity(c)}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground"
               >
                 <MapPin className="size-3.5 shrink-0" />
                 <span className="truncate">
-                  {c.ascii_name || c.name}, {c.country}
+                  {localePick(c.name || c.ascii_name, c.ascii_name || c.name)}, {c.country}
                 </span>
               </button>
             </li>

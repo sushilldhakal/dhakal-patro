@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { apiForgotPassword, ApiError } from "@/lib/auth/client";
+import { apiForgotPassword } from "@/lib/auth/client";
 import { GoogleSignInButton, googleSignInEnabled } from "./GoogleSignInButton";
 import { FacebookSignInButton, facebookSignInEnabled } from "./FacebookSignInButton";
 
@@ -74,8 +74,8 @@ export function AuthDialog({
         await apiForgotPassword(email.trim());
         setNotice(t("auth.forgot_notice"));
       }
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : t("auth.generic_error"));
+    } catch {
+      setError(t("auth.generic_error"));
     } finally {
       setBusy(false);
     }
@@ -88,8 +88,8 @@ export function AuthDialog({
       try {
         await loginWithGoogle(idToken);
         onOpenChange(false);
-      } catch (err) {
-        setError(err instanceof ApiError ? err.message : t("auth.google_error"));
+      } catch {
+        setError(t("auth.google_error"));
       } finally {
         setBusy(false);
       }
@@ -104,8 +104,8 @@ export function AuthDialog({
       try {
         await loginWithFacebook(accessToken);
         onOpenChange(false);
-      } catch (err) {
-        setError(err instanceof ApiError ? err.message : t("auth.facebook_error"));
+      } catch {
+        setError(t("auth.facebook_error"));
       } finally {
         setBusy(false);
       }
@@ -164,7 +164,7 @@ export function AuthDialog({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={t("auth.email_placeholder")}
             />
           </div>
 

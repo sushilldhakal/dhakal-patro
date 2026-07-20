@@ -22,9 +22,6 @@ export function AyanamshaSelector({ mode, onModeChange }: Props) {
         <span className="text-sm font-semibold uppercase tracking-wider">
           {pick("अयनांश", "Ayanamsha")}
         </span>
-        <span className="text-sm text-base uppercase tracking-wider">
-          Ayanamsha
-        </span>
       </div>
 
       <div className="px-3.5 py-3 space-y-2.5">
@@ -33,7 +30,7 @@ export function AyanamshaSelector({ mode, onModeChange }: Props) {
             <button
               key={m.id}
               type="button"
-              title={m.tagline}
+              title={pick(m.taglineNe, m.tagline)}
               onClick={() => onModeChange(m.id)}
               className={cn(
                 "h-8 px-3 rounded-lg border text-sm text-base transition-colors",

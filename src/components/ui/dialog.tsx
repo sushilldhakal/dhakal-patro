@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -13,6 +14,7 @@ function DialogContent({
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
+  const { pick } = useLocale();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
@@ -28,7 +30,7 @@ function DialogContent({
         {children}
         <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <X className="size-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{pick("बन्द", "Close")}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

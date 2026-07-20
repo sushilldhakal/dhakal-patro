@@ -166,7 +166,14 @@
     "from": "देखि",
     "day": "दिन",
     "days": "दिन",
-    "enriching": "तिथि लोड हुँदै…"
+    "enriching": "तिथि लोड हुँदै…",
+    "cancel": "रद्द",
+    "close": "बन्द",
+    "save": "सुरक्षित गर्नुहोस्",
+    "saving": "सुरक्षित गर्दै…",
+    "create": "बनाउनुहोस्",
+    "route_error_body": "केही गडबड भयो। पुनः लोड गर्दा प्रायः ठीक हुन्छ।",
+    "reload": "फेरि लोड गर्नुहोस्"
   },
   "panchanga": {
     "today_title": "आजको पञ्चाङ्ग",
@@ -201,7 +208,8 @@
     "clock_label": "घण्टा",
     "pick_time": "समय छान्नुहोस्",
     "hour_aria": "घण्टा",
-    "minute_aria": "मिनेट"
+    "minute_aria": "मिनेट",
+    "day_load_error": "दिन विवरण लोड गर्न सकिएन।"
   },
   "kundali": {
     "eyebrow": "नेपाली पात्रो · ज्योतिष · जन्म कुण्डली",
@@ -230,7 +238,7 @@
     "timezone": "समय क्षेत्र",
     "no_birth_title": "यो प्रोफाइलमा जन्म मिति अझै थपिएको छैन",
     "no_birth_body": "कुण्डली बनाउन जन्म मिति, समय र स्थान थप्नुहोस्।",
-    "edit_profile": "प्रोफाइल सम्पदन गर्नुहोस्",
+    "edit_profile": "प्रोफाइल सम्पादन गर्नुहोस्",
     "detail_eyebrow": "जन्म कुण्डली · सुरक्षित प्रोफाइल",
     "nav_graha": "ग्रह",
     "nav_graha_full": "नव ग्रह",
@@ -278,7 +286,16 @@
       "meta_moon_sign": "चन्द्र राशि",
       "meta_pada": "चरण {{pada}}",
       "meta_antar_ends": "अन्तर समाप्त {{date}}"
-    }
+    },
+    "view_kundali": "कुण्डली हेर्नुहोस्",
+    "viewing_kundali": "कुण्डली हेर्दै",
+    "first_profile": "पहिलो प्रोफाइल थप्नुहोस्",
+    "no_profiles_yet": "अहिलेसम्म कुनै प्रोफाइल छैन",
+    "no_profiles_hint": "कुण्डली बनाउन र सुरक्षित राख्न जन्म मिति, समय र स्थान थप्नुहोस्।",
+    "form_hint": "नाम, जन्म मिति, समय, स्थान र लिङ्ग — कुण्डली बनाउन प्रयोग हुन्छ।",
+    "dob": "जन्म मिति",
+    "lat_long": "अक्षांश/देशान्तर",
+    "loading_profiles": "प्रोफाइल लोड हुँदै…"
   },
   "milan": {
     "eyebrow": "नेपाली पात्रो · ज्योतिष · कुण्डली मिलन",
@@ -417,7 +434,24 @@
     "facebook_cancelled": "फेसबुक लग-इन रद्द भयो",
     "facebook_not_authorized": "साइन इन गर्न फेसबुकमा इमेल अनुमति दिनुहोस्",
     "facebook_checking": "फेसबुक जाँच गर्दै…",
-    "continue_with_facebook": "फेसबुकबाट जारी राख्नुहोस्"
+    "continue_with_facebook": "फेसबुकबाट जारी राख्नुहोस्",
+    "email_placeholder": "you@example.com",
+    "reset_invalid_link": "यो रिसेट लिङ्क अमान्य छ वा म्याद सकिएको छ।",
+    "reset_failed": "रिसेट असफल भयो।",
+    "reset_done_title": "पासवर्ड अपडेट भयो",
+    "reset_done_body": "अब नयाँ पासवर्डले लग-इन गर्न सक्नुहुन्छ।",
+    "reset_page_title": "नयाँ पासवर्ड सेट गर्नुहोस्",
+    "reset_page_desc": "आफ्नो खाताका लागि बलियो पासवर्ड छान्नुहोस्।",
+    "new_password": "नयाँ पासवर्ड",
+    "update_password": "पासवर्ड अपडेट गर्नुहोस्",
+    "updating": "अपडेट गर्दै…",
+    "verify_missing_token": "यो प्रमाणीकरण लिङ्कमा टोकन छैन।",
+    "verify_failed": "प्रमाणीकरण असफल भयो।",
+    "verify_ok_title": "इमेल प्रमाणित भयो",
+    "verify_ok_body": "तपाईंको खाता अब पूर्ण सक्रिय छ।",
+    "verify_fail_title": "प्रमाणीकरण असफल",
+    "go_to_account": "मेरो खातामा जानुहोस्",
+    "back_to_account": "खातामा फर्कनुहोस्"
   },
   "sections": {
     "sun_moon": "सूर्योदय र चन्द्रोदय",
@@ -634,7 +668,9 @@
     "col_sunrise": "सूर्योदय",
     "col_sunset": "सूर्यास्त",
     "grid_title": "सूर्य क्रान्ति",
-    "days_count": "{{count}} दिन"
+    "days_count": "{{count}} दिन",
+    "load_error": "यस स्थानका लागि सूर्योदय/सूर्यास्त समय लोड गर्न सकिएन।",
+    "grid_aria": "वि.सं. {{year}} को सूर्योदय–सूर्यास्त तालिका"
   },
   "panchanga_year": {
     "back": "दिन हेराइमा फर्कनुहोस्",
@@ -683,7 +719,7 @@
     "read_start": "पढ्न सुरु गर्नुहोस्",
     "read_detail": "विस्तृत पढ्नुहोस्",
     "articles_count": "{{count}} लेख",
-    "suggested_path_sub": "Suggested path"
+    "suggested_path_sub": "सुझाव गरिएको बाटो"
   },
   "avakahada": {
     "title": "अवकहडा चक्र",
@@ -733,7 +769,7 @@
     "no_birth_details": "जन्म विवरण छैन",
     "default": "पूर्वनिर्धारित",
     "make_default": "पूर्वनिर्धारित बनाउनुहोस्",
-    "edit": "सम्पदन",
+    "edit": "सम्पादन",
     "delete": "मेटाउनुहोस्",
     "delete_confirm": "यो प्रोफाइल मेटाउने?",
     "load_error": "प्रोफाइल लोड गर्न सकिएन",
@@ -800,5 +836,26 @@
   "menu_open": "मेनु खोल्नुहोस्",
   "language": "भाषा",
   "switch_to_nepali": "नेपाली",
-  "switch_to_english": "English"
+  "switch_to_english": "English",
+  "profile": {
+    "name_required": "नाम आवश्यक छ",
+    "save_failed": "सुरक्षित गर्न सकिएन",
+    "full_name": "पूरा नाम *",
+    "phone": "फोन",
+    "email": "इमेल",
+    "gender": "लिङ्ग",
+    "male": "पुरुष",
+    "female": "महिला",
+    "other": "अन्य",
+    "city_birth_place": "सहर / जन्मस्थान",
+    "search_city": "सहर खोज्नुहोस्…",
+    "birth_date": "जन्म मिति",
+    "birth_time": "जन्म समय",
+    "calendar": "पात्रो",
+    "calendar_bs": "विक्रम संवत्",
+    "calendar_ad": "ग्रेगोरियन (ई.सं.)",
+    "set_default": "पूर्वनिर्धारित प्रोफाइल बनाउनुहोस्",
+    "save_changes": "परिवर्तन सुरक्षित गर्नुहोस्",
+    "create_profile": "प्रोफाइल बनाउनुहोस्"
+  }
 }

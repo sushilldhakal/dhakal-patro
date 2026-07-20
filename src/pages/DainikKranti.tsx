@@ -240,10 +240,10 @@ function pakshaSegmentOf(day: CalendarDay, adhikMonthEn?: string, isEn = false):
   };
 }
 
-function fmtAd(dateAd: string): string {
+function fmtAd(dateAd: string, isEn: boolean): string {
   const d = new Date(`${dateAd}T00:00:00`);
   if (Number.isNaN(d.getTime())) return dateAd;
-  return d.toLocaleDateString("en", { day: "numeric", month: "short" });
+  return d.toLocaleDateString(isEn ? "en-US" : "ne-NP", { day: "numeric", month: "short" });
 }
 
 /** Day-of-week index from an AD date string (0 = Sunday … 6 = Saturday). */
@@ -383,7 +383,7 @@ function DayPatroCard({
             <span className={cn("text-sm font-semibold", isSaturday && "text-rose-600 dark:text-rose-400")}>
               {pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday)}
             </span>
-            <span className="text-xs text-base">{fmtAd(day.date_ad)}</span>
+            <span className="text-xs text-base">{fmtAd(day.date_ad, isEn)}</span>
           </div>
         </div>
         {isToday ? (
@@ -751,7 +751,7 @@ export function DainikKranti() {
 
   const monthLabel = isEn
     ? `${BS_MONTH_NAMES[month - 1]} (${BS_MONTHS_NE[month - 1]})`
-    : `${BS_MONTHS_NE[month - 1]} (${BS_MONTH_NAMES[month - 1]})`;
+    : BS_MONTHS_NE[month - 1];
   const pakshaLabel = isEn
     ? paksha === "krishna" ? "Krishna Paksha" : paksha === "shukla" ? "Shukla Paksha" : "Full month"
     : paksha === "krishna" ? "कृष्णपक्ष" : paksha === "shukla" ? "शुक्लपक्ष" : "पूरा महिना";
@@ -998,7 +998,7 @@ export function DainikKranti() {
                           {isToday ? <span className="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden /> : null}
                           <span className={cn("font-semibold", isSaturday || hasFestival ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{dg(d.day)}</span>
                         </span>
-                        <span className="ml-1.5 text-xs">{fmtAd(d.date_ad)}</span>
+                        <span className="ml-1.5 text-xs">{fmtAd(d.date_ad, isEn)}</span>
                       </TableCell>
                       <TableCell className={cn("whitespace-nowrap", isSaturday && "text-base text-rose-600 dark:text-rose-400")}>{pick(d.weekday_ne ?? d.weekday, d.weekday_en ?? d.weekday)}</TableCell>
                       <TableCell className="whitespace-nowrap">
@@ -1240,8 +1240,8 @@ export function DainikKranti() {
           {gocharQ.data?.date_ad ? (
             <span className="ml-auto text-sm">
               {pick(
-                `${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad)} को स्थिति`,
-                `Position on ${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad)}`,
+                `${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad, false)} को स्थिति`,
+                `Position on ${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad, true)}`,
               )}
             </span>
           ) : null}

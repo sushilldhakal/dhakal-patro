@@ -41,8 +41,12 @@ const DAY = 86_400_000;
 const midnightUtcMs = (adStr: string) => Date.parse(`${adStr}T00:00:00Z`);
 /** A Date whose UTC calendar day equals the given civil date string. */
 const civilNoon = (adStr: string) => new Date(`${adStr}T12:00:00Z`);
-const fmtAd = (adStr: string) =>
-  civilNoon(adStr).toLocaleDateString("en", { day: "numeric", month: "short", timeZone: "UTC" });
+const fmtAd = (adStr: string, lang: "ne" | "en") =>
+  civilNoon(adStr).toLocaleDateString(lang === "en" ? "en-US" : "ne-NP", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
 
 interface SeasonItem {
   solarSlot: number;
@@ -62,7 +66,7 @@ export function RituSeasons({
   showHeader?: boolean;
 }) {
   const { t } = useTranslation();
-  const { pick, digits: dg } = useLocale();
+  const { pick, digits: dg, lang } = useLocale();
   const tz = resolveLocationTimezone(location);
   const todayAd = useMemo(() => todayAdStringInTimezone(new Date(), tz), [tz]);
 
@@ -193,7 +197,7 @@ export function RituSeasons({
                     : t("ritu.sun_deg", { deg: dg(item.angle) })}
                 </span>
                 <span className="mono text-xs text-base">
-                  {fmtAd(item.startAd)} {t("common.from")}
+                  {fmtAd(item.startAd, lang)} {t("common.from")}
                 </span>
               </div>
               {item.isCurrent && item.progress ? (

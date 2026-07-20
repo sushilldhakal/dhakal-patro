@@ -166,7 +166,14 @@
     "from": "from",
     "day": "day",
     "days": "days",
-    "enriching": "Loading tithi…"
+    "enriching": "Loading tithi…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "saving": "Saving…",
+    "create": "Create",
+    "route_error_body": "Something went wrong. Reloading usually fixes this.",
+    "reload": "Reload"
   },
   "panchanga": {
     "today_title": "Today's Panchanga",
@@ -201,7 +208,8 @@
     "clock_label": "Clock",
     "pick_time": "Pick time",
     "hour_aria": "Hour",
-    "minute_aria": "Minute"
+    "minute_aria": "Minute",
+    "day_load_error": "Failed to load day details."
   },
   "kundali": {
     "eyebrow": "Nepali Patro · Jyotish · Birth Kundali",
@@ -278,7 +286,16 @@
       "meta_moon_sign": "Moon sign",
       "meta_pada": "pada {{pada}}",
       "meta_antar_ends": "antar ends {{date}}"
-    }
+    },
+    "view_kundali": "View kundali",
+    "viewing_kundali": "Viewing kundali",
+    "first_profile": "Add your first profile",
+    "no_profiles_yet": "No profiles yet",
+    "no_profiles_hint": "Add your birth date, time and place to generate and save a kundali.",
+    "form_hint": "Name, date of birth, time, place and gender — used to generate the kundali.",
+    "dob": "DOB",
+    "lat_long": "Lat/Long",
+    "loading_profiles": "Loading your profiles…"
   },
   "milan": {
     "eyebrow": "Nepali Patro · Jyotish · Kundali Milan",
@@ -417,7 +434,24 @@
     "facebook_cancelled": "Facebook sign-in was cancelled",
     "facebook_not_authorized": "Allow email access in Facebook to sign in",
     "facebook_checking": "Checking Facebook…",
-    "continue_with_facebook": "Continue with Facebook"
+    "continue_with_facebook": "Continue with Facebook",
+    "email_placeholder": "you@example.com",
+    "reset_invalid_link": "This reset link is invalid or has expired.",
+    "reset_failed": "Reset failed.",
+    "reset_done_title": "Password updated",
+    "reset_done_body": "You can now sign in with your new password.",
+    "reset_page_title": "Set a new password",
+    "reset_page_desc": "Choose a strong password for your account.",
+    "new_password": "New password",
+    "update_password": "Update password",
+    "updating": "Updating…",
+    "verify_missing_token": "This verification link is missing its token.",
+    "verify_failed": "Verification failed.",
+    "verify_ok_title": "Email verified",
+    "verify_ok_body": "Your account is now fully active.",
+    "verify_fail_title": "Verification failed",
+    "go_to_account": "Go to my account",
+    "back_to_account": "Back to account"
   },
   "sections": {
     "sun_moon": "Sunrise & Moonrise",
@@ -634,7 +668,9 @@
     "col_sunrise": "Sunrise",
     "col_sunset": "Sunset",
     "grid_title": "Sun Times",
-    "days_count": "{{count}} days"
+    "days_count": "{{count}} days",
+    "load_error": "Could not load sunrise/sunset times for this location.",
+    "grid_aria": "Sunrise and sunset grid for BS year {{year}}"
   },
   "panchanga_year": {
     "back": "Back to day view",
@@ -800,5 +836,26 @@
   "menu_open": "Open menu",
   "language": "Language",
   "switch_to_nepali": "नेपाली",
-  "switch_to_english": "English"
+  "switch_to_english": "English",
+  "profile": {
+    "name_required": "Name is required",
+    "save_failed": "Failed to save",
+    "full_name": "Full name *",
+    "phone": "Phone",
+    "email": "Email",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "city_birth_place": "City / birth place",
+    "search_city": "Search a city…",
+    "birth_date": "Birth date",
+    "birth_time": "Birth time",
+    "calendar": "Calendar",
+    "calendar_bs": "Bikram Sambat",
+    "calendar_ad": "Gregorian (AD)",
+    "set_default": "Set as default profile",
+    "save_changes": "Save changes",
+    "create_profile": "Create profile"
+  }
 }

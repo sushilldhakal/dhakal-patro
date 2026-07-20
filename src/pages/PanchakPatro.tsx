@@ -20,9 +20,13 @@ import { patroNoteBox, patroSelect } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
 import { cn } from "@/lib/utils";
 
-function fmtAdShort(iso: string): string {
+function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
   const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString(lang === "en" ? "en-US" : "ne-NP", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function PanchakPeriodCard({
@@ -67,7 +71,7 @@ function PanchakPeriodCard({
           <p className="text-sm font-semibold text-foreground leading-snug">
             {digits(bsStart)}, {en ? period.start.timeEn : period.start.timeNe}
           </p>
-          <p className="mono mt-1 text-xs">{fmtAdShort(period.start.ad)}</p>
+          <p className="mono mt-1 text-xs">{fmtAdShort(period.start.ad, en ? "en" : "ne")}</p>
         </div>
         <div className="rounded-xl border border-border/70 bg-muted/20 px-3.5 py-3">
           <p className="text-sm font-semibold uppercase tracking-wider mb-1.5">
@@ -76,7 +80,7 @@ function PanchakPeriodCard({
           <p className="text-sm font-semibold text-foreground leading-snug">
             {digits(bsEnd)}, {en ? period.end.timeEn : period.end.timeNe}
           </p>
-          <p className="mono mt-1 text-xs">{fmtAdShort(period.end.ad)}</p>
+          <p className="mono mt-1 text-xs">{fmtAdShort(period.end.ad, en ? "en" : "ne")}</p>
         </div>
       </div>
 

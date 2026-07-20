@@ -191,7 +191,7 @@ function MetaStrip({ meta }: { meta: ReportMeta }) {
   const cells: { label: string; value: string; sub?: string }[] = [
     {
       label: t("kundali.report.meta_lagna"),
-      value: pick(`${meta.lagna.name_ne} (${meta.lagna.name_en})`, meta.lagna.name_en),
+      value: pick(meta.lagna.name_ne, meta.lagna.name_en),
     },
     {
       label: t("kundali.report.meta_nakshatra"),
@@ -316,7 +316,7 @@ export function KundaliReport({
         })
         .catch((err: unknown) => {
           if (controller.signal.aborted) return;
-          setError(err instanceof Error ? err.message : t("kundali.report.error_generic"));
+          setError(t("kundali.report.error_generic"));
           setStatus("error");
         });
     },

@@ -130,7 +130,7 @@ function buildPanchangaDetailCells(
       mono: true,
     },
     { label: t("aside.moonrise"), value: moonrise ?? t("sections.dash"), mono: true },
-    { label: t("aside.ritu"), value: getRituDisplay(p, lang), hint: getRituSeason(p) },
+    { label: t("aside.ritu"), value: getRituDisplay(p, lang), hint: getRituSeason(p, lang) },
     {
       label: t("aside.nakshatra"),
       value: angaName(nakshatra, lang),

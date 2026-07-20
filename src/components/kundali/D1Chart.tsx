@@ -43,7 +43,7 @@ export function D1Chart({ houses }: Props) {
       viewBox="0 0 300 300"
       className="w-full h-auto max-w-[340px] mx-auto"
       role="img"
-      aria-label="North Indian kundali chart"
+      aria-label={pick("उत्तर भारतीय कुण्डली चक्र", "North Indian kundali chart")}
     >
       <rect
         x="0"
