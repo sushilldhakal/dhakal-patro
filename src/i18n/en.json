@@ -263,7 +263,7 @@
     "section_unavailable": "This section could not be computed for this chart.",
     "report": {
       "title": "Astrological Analysis",
-      "intro": "A comprehensive, balanced reading computed <1>deterministically</1> from your chart — D1, D9, Shadbala, yogas and the running dasha. Every section shows a <2>confidence indicator</2>: when the factors agree it reads as a stronger tendency; when they conflict it is flagged mixed or conditional.",
+      "intro": "A simple, balanced reading built <1>automatically</1> from your birth date, time and place — your nature, career, relationships, health, timing and yogas, in plain language. Each section shows <2>how dependable</2> it is: when the signs agree it reads as strong; when they conflict it is flagged as mixed.",
       "regenerate": "Regenerate",
       "generate": "Generate report",
       "streaming_progress": "Writing {{done}}/{{total}}…",
