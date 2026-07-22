@@ -18,6 +18,15 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--", "--port", "4199", "--strictPort"],
       "port": 4199
+    },
+    {
+      "name": "dhakal-patro-mobile-web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/sushildhakal/Desktop/calender-patro/dhakal-patro-mobile && npx expo start --web --port 8082"
+      ],
+      "port": 8082
     }
   ]
 }
