@@ -113,7 +113,7 @@ const converterRoute = createRoute({ getParentRoute: () => panchangaShellRoute, 
 const holidaysRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/holidays", component: Holidays });
 const rituRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/ritu", component: Ritu });
 const kundaliRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/kundali", component: Kundali });
-const kundaliDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/kundali/$profileId", component: KundaliDetail });
+const kundaliDetailRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/kundali/$profileId", component: KundaliDetail });
 const kundaliMilanRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/jyotish/kundali-milan", component: KundaliMilan });
 const learnRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn", component: Learn });
 const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/$slug", component: LearnArticle });
@@ -170,6 +170,7 @@ const routeTree = rootRoute.addChildren([
     holidaysRoute,
     rituRoute,
     kundaliRoute,
+    kundaliDetailRoute,
     kundaliMilanRoute,
     suryakrantiRoute,
     abhijitMuhurtaRoute,
@@ -187,7 +188,6 @@ const routeTree = rootRoute.addChildren([
   chandraKrantiLegacyRoute,
   dainikKrantiNeLegacyRoute,
   shantiVidhiRoute,
-  kundaliDetailRoute,
   learnRoute,
   learnArticleRoute,
   sunTimesLegacyRoute,

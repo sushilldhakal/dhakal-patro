@@ -10,6 +10,7 @@ const SIDEBAR_ROUTE_PATTERNS: RegExp[] = [
   /^\/panchanga\/avakahada-chakra$/,
   /^\/abhijit-muhurta$/,
   /^\/kundali$/,
+  /^\/kundali\//,
   /^\/jyotish\/kundali-milan$/,
   /^\/panchanga\/details$/,
   /^\/panchanga\/element\//,

@@ -469,7 +469,7 @@ export function PanchangaYear() {
   useRouteLoading(YEAR_ROUTE_LOADING);
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
+    <div className="max-w-[1400px] mx-auto py-6 pb-16">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 mt-2">
         <div>
           <Link

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { LogIn, Plus, Sparkles, UserPlus } from "lucide-react";
@@ -10,6 +10,7 @@ import {
 import { useAuth } from "@/lib/auth/AuthContext";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { PageShell } from "@/components/PageShell";
+import { preloadPanchangaRoute } from "@/lib/panchanga-route-preload";
 import { useRouteLoading } from "@/lib/route-loading";
 
 export function Kundali() {
@@ -26,6 +27,12 @@ export function Kundali() {
   const pickerRef = useRef<KundaliProfilePickerHandle>(null);
 
   useRouteLoading(authLoading);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      preloadPanchangaRoute("/kundali/preload");
+    }
+  }, [isAuthenticated]);
 
   return (
     <PageShell className="space-y-0 pb-16">
@@ -81,9 +88,10 @@ export function Kundali() {
           <KundaliProfilePicker
             ref={pickerRef}
             selectedId={null}
-            onSelect={(p) =>
-              navigate({ to: "/kundali/$profileId", params: { profileId: p.id } })
-            }
+            onSelect={(p) => {
+              preloadPanchangaRoute(`/kundali/${p.id}`);
+              navigate({ to: "/kundali/$profileId", params: { profileId: p.id } });
+            }}
           />
         </div>
       )}

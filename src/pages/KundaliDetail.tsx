@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -13,8 +13,9 @@ import {
   Star,
   User,
 } from "lucide-react";
-import { listProfiles, type Profile } from "@/lib/auth/client";
+import { type Profile } from "@/lib/auth/client";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { PROFILES_QUERY_KEY, useProfilesQuery } from "@/lib/kundali/profiles-query";
 import { AYANAMSHA_MODES, type AyanamshaMode } from "@/lib/ayanamsha";
 import { AyanamshaSelector } from "@/components/kundali/AyanamshaSelector";
 import { KundaliView } from "@/components/kundali/KundaliView";
@@ -25,6 +26,7 @@ import {
   setKundaliSectionHash,
   type KundaliSectionId,
 } from "@/components/kundali/KundaliSectionNav";
+import { PageShell } from "@/components/PageShell";
 import { ProfileForm, profileToInput } from "@/components/auth/ProfileForm";
 import {
   Dialog,
@@ -120,12 +122,7 @@ export function KundaliDetail() {
     data: profiles,
     isLoading,
     isError,
-  } = useQuery({
-    queryKey: ["profiles"],
-    queryFn: listProfiles,
-    enabled: isAuthenticated,
-    staleTime: 1000 * 60,
-  });
+  } = useProfilesQuery(isAuthenticated);
 
   const profile = useMemo<Profile | undefined>(
     () => profiles?.find((p) => p.id === profileId),
@@ -148,7 +145,9 @@ export function KundaliDetail() {
     return { value: formatBsDate(birthDate), sub: undefined };
   }, [profile, birthDate]);
 
-  useRouteLoading(authLoading || (isAuthenticated && isLoading));
+  useRouteLoading(authLoading);
+
+  const profilesPending = isAuthenticated && isLoading && !profiles;
 
   const backLink = (
     <Link
@@ -159,30 +158,30 @@ export function KundaliDetail() {
     </Link>
   );
 
-  if (authLoading || (isAuthenticated && isLoading)) {
+  if (authLoading || profilesPending) {
     return (
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6">
+      <PageShell className="pb-16">
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-16 text-center text-sm">
           {t("common.loading")}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 space-y-4">
+      <PageShell className="space-y-4 pb-16">
         {backLink}
         <div className="rounded-xl border border-border bg-card px-5 py-12 text-center text-sm">
           {t("kundali.login_required")}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (isError || (!isLoading && !profile)) {
     return (
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 space-y-4">
+      <PageShell className="space-y-4 pb-16">
         {backLink}
         <div className="rounded-xl border border-border bg-card px-5 py-12 text-center">
           <p className="text-sm text-base text-foreground">{t("kundali.not_found")}</p>
@@ -190,7 +189,7 @@ export function KundaliDetail() {
             {t("kundali.not_found_body")}
           </p>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
@@ -201,9 +200,9 @@ export function KundaliDetail() {
   const canShowChart = Boolean(birthDate && location);
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-20">
+    <PageShell className="space-y-6 pb-20">
       {/* Top bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         {backLink}
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -219,7 +218,7 @@ export function KundaliDetail() {
       </div>
 
       {/* Page title + birth facts on one row */}
-      <header className="mb-5 rounded-xl border border-border bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)] overflow-hidden">
+      <header className="rounded-xl border border-border bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)] overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
           <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 sm:px-4">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary/15 ring-1 ring-secondary/25 sm:size-10">
@@ -262,56 +261,37 @@ export function KundaliDetail() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,15.5rem)_1fr] gap-6 xl:gap-8 items-start">
-        {/* Sidebar */}
-        <aside className="xl:sticky xl:top-[5.5rem] flex flex-col gap-4 order-2 xl:order-1">
-          {canShowChart && (
-            <KundaliSectionNav
-              className="hidden xl:block"
-              activeId={section}
-              onNavigate={navigateSection}
-            />
-          )}
-
+      {canShowChart ? (
+        <>
           <AyanamshaSelector mode={ayanamshaMode} onModeChange={setAyanamshaMode} />
-        </aside>
-
-        {/* Main chart */}
-        <div className="min-w-0 order-1 xl:order-2">
-          {canShowChart && (
-            <div className="mb-4 xl:hidden">
-              <KundaliSectionNav
-                activeId={section}
-                onNavigate={navigateSection}
-                variant="horizontal"
-              />
-            </div>
-          )}
-
-          {canShowChart ? (
-            <KundaliView
-              date={birthDate!}
-              clock={clock}
-              locationParams={location!.params}
-              locationLabel={location!.label}
-              ayanamshaMode={ayanamshaMode}
-              hideBirthSummary
-              section={section}
-            />
-          ) : (
-            <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
-              <Clock className="mx-auto mb-4 size-10" />
-              <p className="text-base font-semibold text-foreground">{t("kundali.no_birth_title")}</p>
-              <p className="mx-auto mt-2 max-w-md text-sm">
-                {t("kundali.no_birth_body")}
-              </p>
-              <Button className="mt-6 gap-1.5" onClick={() => setEditOpen(true)}>
-                <Pencil className="size-4" /> {t("kundali.edit_profile")}
-              </Button>
-            </div>
-          )}
+          <KundaliSectionNav
+            className="min-[992px]:hidden"
+            activeId={section}
+            onNavigate={navigateSection}
+            variant="horizontal"
+          />
+          <KundaliView
+            date={birthDate!}
+            clock={clock}
+            locationParams={location!.params}
+            locationLabel={location!.label}
+            ayanamshaMode={ayanamshaMode}
+            hideBirthSummary
+            section={section}
+          />
+        </>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
+          <Clock className="mx-auto mb-4 size-10" />
+          <p className="text-base font-semibold text-foreground">{t("kundali.no_birth_title")}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm">
+            {t("kundali.no_birth_body")}
+          </p>
+          <Button className="mt-6 gap-1.5" onClick={() => setEditOpen(true)}>
+            <Pencil className="size-4" /> {t("kundali.edit_profile")}
+          </Button>
         </div>
-      </div>
+      )}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-xl">
@@ -325,12 +305,12 @@ export function KundaliDetail() {
             onCancel={() => setEditOpen(false)}
             onSaved={async () => {
               setEditOpen(false);
-              await queryClient.invalidateQueries({ queryKey: ["profiles"] });
+              await queryClient.invalidateQueries({ queryKey: PROFILES_QUERY_KEY });
             }}
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }
 

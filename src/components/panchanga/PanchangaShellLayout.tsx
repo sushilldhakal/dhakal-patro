@@ -16,7 +16,7 @@ const SIDEBAR_CLASS =
 export function PanchangaShellLayout() {
   return (
     <PanchangaShellContext.Provider value={true}>
-      <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-[1600px] px-4 py-8">
         <div className="flex items-start gap-6">
           <PanchangaSidebarNav className={SIDEBAR_CLASS} />
           <div className={cn("min-w-0 flex-1")}>

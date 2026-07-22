@@ -12,6 +12,7 @@ const PATH_LOADERS: { match: RegExp; load: () => Promise<unknown> }[] = [
   { match: /^\/panchanga\/avakahada-chakra$/, load: () => import("../pages/AvakahadaChakra") },
   { match: /^\/abhijit-muhurta$/, load: () => import("../pages/AbhijitMuhurta") },
   { match: /^\/kundali$/, load: () => import("../pages/Kundali") },
+  { match: /^\/kundali\//, load: () => import("../pages/KundaliDetail") },
   { match: /^\/jyotish\/kundali-milan$/, load: () => import("../pages/KundaliMilan") },
   { match: /^\/panchanga\/details$/, load: () => import("../pages/PanchangaDetailsHub") },
   { match: /^\/panchanga\/element\//, load: () => import("../pages/ElementPage") },

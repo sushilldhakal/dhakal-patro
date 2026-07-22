@@ -1,9 +1,5 @@
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Star, Pencil, Loader2, MapPin, Clock, Navigation, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ProfileForm, EMPTY_PROFILE, profileToInput } from "@/components/auth/ProfileForm";
-import { listProfiles, type Profile } from "@/lib/auth/client";
+import { type Profile } from "@/lib/auth/client";
+import { PROFILES_QUERY_KEY, useProfilesQuery } from "@/lib/kundali/profiles-query";
+import { preloadPanchangaRoute } from "@/lib/panchanga-route-preload";
 import { cn } from "@/lib/utils";
 
 export interface KundaliProfilePickerHandle {
@@ -34,30 +32,13 @@ export const KundaliProfilePicker = forwardRef<
   { selectedId?: string | null; onSelect: (profile: Profile) => void }
 >(function KundaliProfilePicker({ selectedId, onSelect }, ref) {
   const { t } = useTranslation();
-  const [profiles, setProfiles] = useState<Profile[] | null>(null);
+  const queryClient = useQueryClient();
+  const { data: profiles, isLoading, isError } = useProfilesQuery();
   const [dialog, setDialog] = useState<DialogState>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({ openAdd: () => setDialog({ mode: "add" }) }), []);
 
-  async function load(): Promise<Profile[]> {
-    try {
-      const list = await listProfiles();
-      setProfiles(list);
-      return list;
-    } catch {
-      setError(t("account_page.load_error"));
-      setProfiles([]);
-      return [];
-    }
-  }
-
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
-  }, []);
-
-  if (profiles === null) {
+  if (isLoading && !profiles) {
     return (
       <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-6 text-sm">
         <Loader2 className="size-4 animate-spin" /> {t("kundali.loading_profiles")}
@@ -65,13 +46,19 @@ export const KundaliProfilePicker = forwardRef<
     );
   }
 
-  if (error) {
-    return <p className="rounded-xl border border-border bg-card px-4 py-4 text-sm text-destructive">{error}</p>;
+  if (isError) {
+    return (
+      <p className="rounded-xl border border-border bg-card px-4 py-4 text-sm text-destructive">
+        {t("account_page.load_error")}
+      </p>
+    );
   }
+
+  const list = profiles ?? [];
 
   return (
     <>
-      {profiles.length === 0 ? (
+      {list.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-10 text-center">
           <p className="text-sm text-base text-foreground">{t("kundali.no_profiles_yet")}</p>
           <p className="mx-auto mt-1 max-w-md text-sm">{t("kundali.no_profiles_hint")}</p>
@@ -81,13 +68,14 @@ export const KundaliProfilePicker = forwardRef<
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {profiles.map((p) => (
+          {list.map((p) => (
             <ProfileCard
               key={p.id}
               profile={p}
               active={p.id === selectedId}
               onView={() => onSelect(p)}
               onEdit={() => setDialog({ mode: "edit", profile: p })}
+              onPrefetch={() => preloadPanchangaRoute(`/kundali/${p.id}`)}
             />
           ))}
         </div>
@@ -110,8 +98,7 @@ export const KundaliProfilePicker = forwardRef<
                 const wasEditingSelected =
                   dialog.mode === "edit" && dialog.profile.id === selectedId;
                 setDialog(null);
-                await load();
-                // View the new profile, or re-render the one we just edited.
+                await queryClient.invalidateQueries({ queryKey: PROFILES_QUERY_KEY });
                 if (dialog.mode === "add" || wasEditingSelected) onSelect(saved);
               }}
             />
@@ -127,11 +114,13 @@ function ProfileCard({
   active,
   onView,
   onEdit,
+  onPrefetch,
 }: {
   profile: Profile;
   active: boolean;
   onView: () => void;
   onEdit: () => void;
+  onPrefetch: () => void;
 }) {
   const { t } = useTranslation();
   const place = p.location_label || p.city || "—";
@@ -155,6 +144,8 @@ function ProfileCard({
         "flex flex-col gap-3 rounded-xl border p-4 transition-colors",
         active ? "border-secondary bg-secondary/5 ring-1 ring-secondary/40" : "border-border bg-card"
       )}
+      onMouseEnter={onPrefetch}
+      onFocus={onPrefetch}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
