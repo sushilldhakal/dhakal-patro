@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { buildJsonLd, resolvePageSeo, SITE_NAME } from "@/lib/seo";
+import { buildJsonLd, OG_IMAGE_URL, resolvePageSeo, SITE_NAME } from "@/lib/seo";
 import { isBrowser } from "@/lib/browser";
 
 /**
@@ -14,7 +14,7 @@ export function RouteSeo() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const meta = resolvePageSeo(pathname, t, i18n.language);
-  const jsonLd = buildJsonLd(meta);
+  const jsonLd = buildJsonLd(meta, pathname, t);
   const htmlLang = i18n.language?.startsWith("en") ? "en" : "ne";
 
   return (
@@ -36,10 +36,14 @@ export function RouteSeo() {
       <meta property="og:description" content={meta.description} />
       <meta property="og:url" content={meta.canonical} />
       <meta property="og:locale" content={htmlLang === "ne" ? "ne_NP" : "en_US"} />
+      <meta property="og:image" content={OG_IMAGE_URL} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
 
-      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={meta.title} />
       <meta name="twitter:description" content={meta.description} />
+      <meta name="twitter:image" content={OG_IMAGE_URL} />
 
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
     </Helmet>

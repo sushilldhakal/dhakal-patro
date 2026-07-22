@@ -9,6 +9,7 @@ import {
   type MilanProfilePickerHandle,
 } from "@/components/kundali/MilanProfilePicker";
 import { KundaliMilanResult } from "@/components/kundali/KundaliMilanResult";
+import { PageShell } from "@/components/PageShell";
 import { AYANAMSHA_MODES, getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
 import { buildAtTimeDatetime } from "@/lib/ephemeris-adapters";
 import { profileChartParams } from "@/lib/kundali/profile-chart";
@@ -207,7 +208,7 @@ export function KundaliMilan() {
   const milan = milanQ.data;
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16">
+    <PageShell className="space-y-0 pb-16">
       <div className="mb-4 mt-2 flex items-start justify-between gap-3">
         <div>
           <div className="text-xs text-base uppercase tracking-[0.12em] mb-1.5">
@@ -326,6 +327,6 @@ export function KundaliMilan() {
         onOpenChange={setAuthOpen}
         initialMode={authMode}
       />
-    </div>
+    </PageShell>
   );
 }

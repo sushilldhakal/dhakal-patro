@@ -1,5 +1,4 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { PageHeader } from "@/components/PageShell";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { useLocale } from "@/i18n/locale";
@@ -22,7 +21,7 @@ const DEFAULT_BS_YEAR_OPTIONS = Array.from(
   (_, i) => BS_SUPPORTED_START_YEAR + i,
 );
 
-/** Secondary-band banner reused as the graha-page hero (matches ElementPage). */
+/** Contained page hero — stays within the content column (sidebar-aware). */
 export function GrahaBanner({
   icon,
   ne,
@@ -38,9 +37,29 @@ export function GrahaBanner({
 }) {
   const { pick } = useLocale();
   return (
-    <div className="flex items-center justify-center relative left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] -mt-8 mb-8 bg-secondary py-8 text-accent dark:bg-background dark:text-secondary">
-      <PageHeader icon={icon} title={pick(ne, en)} subtitle={pick(blurbNe, blurbEn)} />
-    </div>
+    <header
+      className={cn(
+        patroCard,
+        "rounded-2xl border border-border/80 bg-gradient-to-br from-secondary/10 via-card to-card px-5 py-5 dark:from-secondary/12",
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary/15 text-secondary ring-1 ring-secondary/20 [&_svg]:size-6"
+          aria-hidden
+        >
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl">
+            {pick(ne, en)}
+          </h1>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            {pick(blurbNe, blurbEn)}
+          </p>
+        </div>
+      </div>
+    </header>
   );
 }
 

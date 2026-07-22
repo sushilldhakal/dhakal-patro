@@ -81,7 +81,7 @@ import {
 
 const COL_SPAN = 13;
 
-const routeApi = getRouteApi("/dainikkranti");
+const routeApi = getRouteApi("/panchanga-shell/dainikkranti");
 
 type Phase = "krishna" | "shukla";
 type PakshaFilter = Phase | "all";

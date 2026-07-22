@@ -87,7 +87,7 @@ const SCRUB_FETCH_MS = 120;
 /** PanchangaYear never blocks the page with the route overlay while scrubbing. */
 const YEAR_ROUTE_LOADING = false;
 
-const routeApi = getRouteApi("/panchanga/year");
+const routeApi = getRouteApi("/panchanga-shell/panchanga/year");
 
 function initialYearFromSearch(searchYear?: number): number {
   if (

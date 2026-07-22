@@ -24,6 +24,7 @@ import { DayTimeline, type DayCycleMode } from "@/components/panchanga/DayTimeli
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
+import { SeoContentSection } from "@/components/seo/SeoContentSection";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
 import {
   EphemerisModeBanner,
@@ -323,6 +324,8 @@ export function Panchanga() {
         heading={t("panchanga.learn_heading")}
         slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "hora"]}
       />
+
+      <SeoContentSection route="panchanga" />
     </div>
   );
 }

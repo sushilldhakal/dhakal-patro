@@ -4,12 +4,17 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { VedicPatroLoader } from "@/components/VedicPatroLoader";
 import { isBrowser } from "@/lib/browser";
+import {
+  isPanchangaShellNavigation,
+  shouldShowPanchangaSidebar,
+} from "@/lib/panchanga-sidebar-routes";
 
 type RouteLoadingContextValue = {
   setDataLoading: (loading: boolean) => void;
@@ -24,15 +29,18 @@ export function RouteLoadingProvider({ children }: { children: ReactNode }) {
   const [dataLoading, setDataLoading] = useState(isBrowser);
   const [suspenseLoading, setSuspenseLoading] = useState(false);
   const [trackedPath, setTrackedPath] = useState(pathname);
+  const prevPathRef = useRef(pathname);
 
   // Reset to "loading" synchronously DURING RENDER when the route changes, before
-  // children commit. Doing this in a layout effect instead runs AFTER the page's
-  // own useRouteLoading effect (parent effects fire last) and clobbers it back to
-  // true — which leaves the overlay stuck on same-route param navigation (e.g.
-  // /learn/$slug prev/next) where the page never remounts to re-assert false.
+  // children commit. Skip the blanket overlay for panchanga-shell hops — the
+  // sidebar stays mounted and pages report their own fetch state.
   if (pathname !== trackedPath) {
+    const from = prevPathRef.current;
+    prevPathRef.current = pathname;
     setTrackedPath(pathname);
-    setDataLoading(true);
+    if (!isPanchangaShellNavigation(from, pathname)) {
+      setDataLoading(true);
+    }
     setSuspenseLoading(false);
   }
 
@@ -42,21 +50,18 @@ export function RouteLoadingProvider({ children }: { children: ReactNode }) {
   );
 
   const isLoading = dataLoading || suspenseLoading;
+  const showOverlay = isLoading && !shouldShowPanchangaSidebar(pathname);
 
   return (
     <RouteLoadingContext.Provider value={value}>
       {children}
-      {/* Always mounted, toggled via `hidden`. Conditionally mounting this as a
-          trailing sibling races with route children swapping in the same commit
-          and can throw "removeChild ... not a child of this node" during
-          navigation; keeping it mounted avoids that reconciliation crash. */}
       <div
-        hidden={!isLoading}
+        hidden={!showOverlay}
         className="fixed inset-x-0 top-16 bottom-0 z-40 flex items-center justify-center bg-background"
-        aria-busy={isLoading}
+        aria-busy={showOverlay}
         aria-live="polite"
       >
-        {isLoading ? <VedicPatroLoader /> : null}
+        {showOverlay ? <VedicPatroLoader /> : null}
       </div>
     </RouteLoadingContext.Provider>
   );
@@ -79,12 +84,15 @@ export function useRouteLoading(loading: boolean) {
 /** Suspense fallback for lazy route chunks — pairs with RouteLoadingProvider overlay. */
 export function RouteSuspenseFallback() {
   const ctx = useContext(RouteLoadingContext);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     if (!ctx) return;
+    // Panchanga shell routes prefetch on hover; avoid blanketing sidebar + header.
+    if (shouldShowPanchangaSidebar(pathname)) return;
     ctx.setSuspenseLoading(true);
     return () => ctx.setSuspenseLoading(false);
-  }, [ctx]);
+  }, [ctx, pathname]);
 
   return null;
 }

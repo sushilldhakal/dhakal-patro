@@ -4,6 +4,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { ArrowLeft, CalendarRange } from "lucide-react";
 import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
 import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
+import { PageShell } from "@/components/PageShell";
 import { useRouteLoading } from "@/lib/route-loading";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
@@ -21,7 +22,7 @@ import {
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { patroAyanaNorth, patroAyanaSouth } from "@/lib/patro-classes";
 
-const routeApi = getRouteApi("/suryakranti");
+const routeApi = getRouteApi("/panchanga-shell/suryakranti");
 
 function initialYearFromSearch(searchYear?: number): number {
   if (
@@ -69,7 +70,7 @@ export function SunTimesYear() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-7 py-6 pb-16 overflow-x-hidden space-y-4">
+    <PageShell className="space-y-4 overflow-x-hidden pb-16">
       <div>
         <Link
           to="/"
@@ -143,6 +144,6 @@ export function SunTimesYear() {
         hideHeader
         onLoadingChange={setGridLoading}
       />
-    </div>
+    </PageShell>
   );
 }

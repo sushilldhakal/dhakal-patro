@@ -8,6 +8,7 @@ import {
   type ConvertAdToBs, type ConvertBsToAd,
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { SeoContentSection } from "../components/seo/SeoContentSection";
 import { useRouteLoading } from "@/lib/route-loading";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { useLocale } from "@/i18n/locale";
@@ -173,6 +174,8 @@ export function Converter() {
           </div>
         </div>
       )}
+
+      <SeoContentSection route="converter" />
     </PageShell>
   );
 }

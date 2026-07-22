@@ -17,6 +17,7 @@ import {
   type Holiday, type Festival,
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { SeoContentSection } from "../components/seo/SeoContentSection";
 import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
 import { useRouteLoading } from "@/lib/route-loading";
 import { getCurrentBs } from "../lib/bs-calendar";
@@ -292,6 +293,8 @@ export function Holidays() {
           emptyMessage={t("common.no_results")}
         />
       )}
+
+      <SeoContentSection route="holidays" />
     </PageShell>
   );
 }

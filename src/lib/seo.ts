@@ -3,6 +3,8 @@ import { LEARN_TOPICS, LEARN_TOPICS_BY_SLUG } from "@/lib/learn/learn-topics";
 export const SITE_NAME = "Vedic Patro";
 export const SITE_URL = "https://www.vedicpatro.com";
 
+export const OG_IMAGE_URL = `${SITE_URL}/og-image.jpg`;
+
 export interface PageSeoMeta {
   title: string;
   description: string;
@@ -12,7 +14,34 @@ export interface PageSeoMeta {
   type: "website" | "article";
 }
 
-type TFunc = (key: string) => string;
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
+type TFunc = (key: string, opts?: Record<string, unknown>) => string;
+
+const DEVANAGARI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
+
+function toDevanagariDigits(value: number): string {
+  return String(value).replace(/\d/g, (d) => DEVANAGARI_DIGITS[Number(d)]!);
+}
+
+/**
+ * Interpolation values for SEO strings: {{adYear}}, {{bsYear}}, {{bsYearNe}}.
+ * Bikram Sambat new year (Baisakh 1) falls around April 13–14; close enough
+ * for title keywords — prerendered pages refresh the year on each deploy.
+ */
+export function seoYearVars(now: Date = new Date()): Record<string, string> {
+  const adYear = now.getFullYear();
+  const afterNewYear = now.getMonth() > 3 || (now.getMonth() === 3 && now.getDate() >= 14);
+  const bsYear = adYear + (afterNewYear ? 57 : 56);
+  return {
+    adYear: String(adYear),
+    bsYear: String(bsYear),
+    bsYearNe: toDevanagariDigits(bsYear),
+  };
+}
 
 const ROUTE_SEO_KEYS: Record<string, string> = {
   "/": "seo.routes.home",
@@ -57,6 +86,7 @@ export function resolvePageSeo(pathname: string, t: TFunc, _lang: string): PageS
   const normalized = pathname.replace(/\/$/, "") || "/";
   const canonical = `${SITE_URL}${normalized}`;
   const noindex = isNoindexPath(normalized);
+  const years = seoYearVars();
 
   const learnMatch = normalized.match(/^\/learn\/([^/]+)$/);
   if (learnMatch && learnMatch[1] !== "history") {
@@ -65,7 +95,7 @@ export function resolvePageSeo(pathname: string, t: TFunc, _lang: string): PageS
       return {
         title: `${topic.titleEn} | ${SITE_NAME}`,
         description: topic.summary,
-        keywords: t("seo.site_keywords"),
+        keywords: t("seo.site_keywords", years),
         canonical,
         noindex,
         type: "article",
@@ -75,11 +105,11 @@ export function resolvePageSeo(pathname: string, t: TFunc, _lang: string): PageS
 
   const routeKey = ROUTE_SEO_KEYS[normalized];
   if (routeKey) {
-    const keywords = t(`${routeKey}.keywords`);
+    const keywords = t(`${routeKey}.keywords`, years);
     return {
-      title: t(`${routeKey}.title`),
-      description: t(`${routeKey}.description`),
-      keywords: keywords || t("seo.site_keywords"),
+      title: t(`${routeKey}.title`, years),
+      description: t(`${routeKey}.description`, years),
+      keywords: keywords || t("seo.site_keywords", years),
       canonical,
       noindex,
       type: "website",
@@ -87,34 +117,133 @@ export function resolvePageSeo(pathname: string, t: TFunc, _lang: string): PageS
   }
 
   return {
-    title: t("seo.routes.home.title"),
-    description: t("seo.default_description"),
-    keywords: t("seo.site_keywords"),
+    title: t("seo.routes.home.title", years),
+    description: t("seo.default_description", years),
+    keywords: t("seo.site_keywords", years),
     canonical,
     noindex,
     type: "website",
   };
 }
 
-export function buildJsonLd(meta: PageSeoMeta): Record<string, unknown> {
-  if (meta.type === "article") {
-    return {
-      "@context": "https://schema.org",
+/** Routes that render a visible FAQ section; JSON-LD FAQPage uses the same strings. */
+const FAQ_ROUTES: Record<string, string> = {
+  "/converter": "seo_faq.converter",
+  "/panchanga": "seo_faq.panchanga",
+  "/holidays": "seo_faq.holidays",
+};
+
+export function getRouteFaqs(pathname: string, t: TFunc): FaqItem[] {
+  const normalized = pathname.replace(/\/$/, "") || "/";
+  const key = FAQ_ROUTES[normalized];
+  if (!key) return [];
+  const years = seoYearVars();
+  const items: FaqItem[] = [];
+  for (let i = 0; i < 8; i += 1) {
+    const q = t(`${key}.items.${i}.q`, years);
+    const a = t(`${key}.items.${i}.a`, years);
+    // i18next returns the key itself when a translation is missing.
+    if (!q || !a || q.startsWith("seo_faq.") || a.startsWith("seo_faq.")) break;
+    items.push({ q, a });
+  }
+  return items;
+}
+
+/** Page title without the "| Vedic Patro" branding suffix, for breadcrumb labels. */
+function shortTitle(title: string): string {
+  return title.split("|")[0]!.trim();
+}
+
+function buildBreadcrumbs(pathname: string, meta: PageSeoMeta, t: TFunc): Record<string, unknown> | null {
+  const normalized = pathname.replace(/\/$/, "") || "/";
+  if (normalized === "/") return null;
+
+  const segments = normalized.split("/").filter(Boolean);
+  const items: { name: string; url: string }[] = [{ name: SITE_NAME, url: `${SITE_URL}/` }];
+  let prefix = "";
+  for (const segment of segments) {
+    prefix += `/${segment}`;
+    const routeKey = ROUTE_SEO_KEYS[prefix];
+    const isLast = prefix === normalized;
+    const name = isLast
+      ? shortTitle(meta.title)
+      : routeKey
+        ? shortTitle(t(`${routeKey}.title`, seoYearVars()))
+        : segment;
+    items.push({ name, url: `${SITE_URL}${prefix}` });
+  }
+
+  return {
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+}
+
+export function buildJsonLd(meta: PageSeoMeta, pathname: string, t: TFunc): Record<string, unknown> {
+  const normalized = pathname.replace(/\/$/, "") || "/";
+  const graph: Record<string, unknown>[] = [];
+
+  if (normalized === "/") {
+    graph.push(
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        name: SITE_NAME,
+        alternateName: ["वैदिक पात्रो", "Vedic Patro", "Nepali Patro"],
+        description: meta.description,
+        url: `${SITE_URL}/`,
+        inLanguage: ["ne", "en"],
+        publisher: { "@id": `${SITE_URL}/#organization` },
+      },
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: SITE_NAME,
+        url: `${SITE_URL}/`,
+        logo: OG_IMAGE_URL,
+      },
+    );
+  } else if (meta.type === "article") {
+    graph.push({
       "@type": "Article",
       headline: meta.title,
       description: meta.description,
       url: meta.canonical,
+      image: OG_IMAGE_URL,
       publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
-    };
+    });
+  } else {
+    graph.push({
+      "@type": "WebPage",
+      name: shortTitle(meta.title),
+      description: meta.description,
+      url: meta.canonical,
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      inLanguage: ["ne", "en"],
+    });
   }
 
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: SITE_NAME,
-    description: meta.description,
-    url: meta.canonical,
-  };
+  const breadcrumbs = buildBreadcrumbs(pathname, meta, t);
+  if (breadcrumbs) graph.push(breadcrumbs);
+
+  const faqs = getRouteFaqs(pathname, t);
+  if (faqs.length > 0) {
+    graph.push({
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    });
+  }
+
+  return { "@context": "https://schema.org", "@graph": graph };
 }
 
 function escapeHtml(value: string): string {
@@ -128,7 +257,7 @@ function escapeHtml(value: string): string {
 /** Static head tags injected at prerender time (Nepali default locale). */
 export function buildHeadHtml(pathname: string, t: TFunc): string {
   const meta = resolvePageSeo(pathname, t, "ne");
-  const jsonLd = JSON.stringify(buildJsonLd(meta)).replace(/</g, "\\u003c");
+  const jsonLd = JSON.stringify(buildJsonLd(meta, pathname, t)).replace(/</g, "\\u003c");
 
   const lines = [
     `<title>${escapeHtml(meta.title)}</title>`,
@@ -144,9 +273,13 @@ export function buildHeadHtml(pathname: string, t: TFunc): string {
     `<meta property="og:description" content="${escapeHtml(meta.description)}" />`,
     `<meta property="og:url" content="${escapeHtml(meta.canonical)}" />`,
     `<meta property="og:locale" content="ne_NP" />`,
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta property="og:image" content="${escapeHtml(OG_IMAGE_URL)}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(meta.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(meta.description)}" />`,
+    `<meta name="twitter:image" content="${escapeHtml(OG_IMAGE_URL)}" />`,
     `<script type="application/ld+json">${jsonLd}</script>`,
   ];
 

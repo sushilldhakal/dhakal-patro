@@ -3,6 +3,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
+import { GrahaBanner } from "@/components/graha/GrahaPageParts";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
@@ -316,34 +317,29 @@ export function ElementPage() {
 
   return (
     <PageShell>
-      <div className="space-y-3 ">
-    <div className="flex items-center justify-center relative left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] -mt-8 mb-8 bg-secondary py-8 text-accent dark:bg-background dark:text-secondary">
-    <PageHeader
-          icon={<Sparkles className="h-6 w-6 text-accent item-center dark:text-secondary" />}
-          title={pick(meta.ne, meta.en)}
-          subtitle={pick(meta.blurbNe, meta.blurbEn)}
-        />
-      
-      </div>
-    
-        <PanchangaBrowseHeader
-          mode={isSpan ? "month" : "day"}
-          year={isSpan ? bs.year : tbs.year}
-          month={isSpan ? bs.month : tbs.month}
-          day={isSpan ? undefined : tbs.day}
-          onMonthChange={(m) => (isSpan ? setBs({ ...bs, month: m }) : setTableDate(tbs.year, m, tbs.day))}
-          onYearChange={(y) => (isSpan ? setBs({ ...bs, year: y }) : setTableDate(y, tbs.month, tbs.day))}
-          onSelectDate={(y, m, d) => (isSpan ? setBs({ year: y, month: m }) : setTableDate(y, m, d))}
-          onPrev={() => (isSpan ? stepMonth(-1) : stepDay(-1))}
-          onNext={() => (isSpan ? stepMonth(1) : stepDay(1))}
-          onToday={goToday}
-          todayAd={todayAd}
-          location={location}
-          onLocationChange={setLocation}
-        />
+      <GrahaBanner
+        icon={<Sparkles className="size-6" />}
+        ne={meta.ne}
+        en={meta.en}
+        blurbNe={meta.blurbNe}
+        blurbEn={meta.blurbEn}
+      />
 
-       
-      </div>
+      <PanchangaBrowseHeader
+        mode={isSpan ? "month" : "day"}
+        year={isSpan ? bs.year : tbs.year}
+        month={isSpan ? bs.month : tbs.month}
+        day={isSpan ? undefined : tbs.day}
+        onMonthChange={(m) => (isSpan ? setBs({ ...bs, month: m }) : setTableDate(tbs.year, m, tbs.day))}
+        onYearChange={(y) => (isSpan ? setBs({ ...bs, year: y }) : setTableDate(y, tbs.month, tbs.day))}
+        onSelectDate={(y, m, d) => (isSpan ? setBs({ year: y, month: m }) : setTableDate(y, m, d))}
+        onPrev={() => (isSpan ? stepMonth(-1) : stepDay(-1))}
+        onNext={() => (isSpan ? stepMonth(1) : stepDay(1))}
+        onToday={goToday}
+        todayAd={todayAd}
+        location={location}
+        onLocationChange={setLocation}
+      />
 
       {isSpan ? (
         spanQuery.isLoading && !spanQuery.data ? (

@@ -54,9 +54,12 @@ const ROUTES = [
   })),
 ];
 
+const lastmod = new Date().toISOString().slice(0, 10);
+
 const urls = ROUTES.map(
   (r) => `  <url>
     <loc>${SITE}${r.path}</loc>
+    <lastmod>${lastmod}</lastmod>
     <changefreq>${r.changefreq}</changefreq>
     <priority>${r.priority}</priority>
   </url>`,

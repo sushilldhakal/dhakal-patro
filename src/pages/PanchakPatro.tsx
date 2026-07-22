@@ -30,7 +30,7 @@ import {
 } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
 
-const routeApi = getRouteApi("/panchak-patro");
+const routeApi = getRouteApi("/panchanga-shell/panchak-patro");
 
 function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
   const d = new Date(`${iso}T12:00:00`);

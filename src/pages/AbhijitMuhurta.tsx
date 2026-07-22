@@ -45,7 +45,7 @@ import {
 } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 
-const routeApi = getRouteApi("/abhijit-muhurta");
+const routeApi = getRouteApi("/panchanga-shell/abhijit-muhurta");
 
 type AbhijitRow = {
   day: CalendarDay;

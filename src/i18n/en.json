@@ -5,14 +5,14 @@
     "default_description": "Nepali calendar, daily Panchanga, Tithi, Nakshatra, holidays and Kundali — Vedic Patro.",
     "routes": {
       "home": {
-        "title": "Nepali Calendar & Panchanga | Vedic Patro",
-        "description": "Daily Nepali Panchanga, Tithi, Nakshatra, BS/AD calendar, public holidays and Janma Kundali.",
-        "keywords": "Nepali calendar, Panchanga, Nepali patro, Tithi, Nakshatra"
+        "title": "Nepali Calendar {{adYear}} — Nepali Patro {{bsYear}}, Tithi & Holidays | Vedic Patro",
+        "description": "Nepali calendar {{adYear}} (Bikram Sambat {{bsYear}}) with today's date and tithi, daily panchanga, Nepal public holidays and festivals, BS–AD date converter and free janma kundali.",
+        "keywords": "Nepali calendar, nepali calendar {{adYear}}, nepali patro, nepali patro {{bsYear}}, today's nepali date, panchanga, Nepali date today"
       },
       "panchanga": {
-        "title": "Today's Panchanga | Vedic Patro",
-        "description": "Daily Nepali Panchanga with Tithi, Nakshatra, Yoga, Karana, sunrise, sunset and muhurta.",
-        "keywords": "Panchanga, Tithi, Nakshatra, Yoga, Karana, daily panchang"
+        "title": "Today's Nepali Panchang — Tithi, Nakshatra, Rashi | Vedic Patro",
+        "description": "Today's Nepali panchanga: tithi, nakshatra, yoga, karana, moon sign, sunrise–sunset and auspicious muhurta, with precise astronomical timings.",
+        "keywords": "today's panchang, aajako tithi, nepali panchang, tithi today, nakshatra, yoga, karana, moon sign today"
       },
       "panchanga_year": {
         "title": "Yearly Panchanga Wheel | Vedic Patro",
@@ -35,14 +35,14 @@
         "keywords": "Shanti vidhi, Vedic remedies"
       },
       "converter": {
-        "title": "BS / AD Date Converter | Vedic Patro",
-        "description": "Convert between Bikram Sambat and Gregorian dates.",
-        "keywords": "date converter, BS AD, Nepali date"
+        "title": "Nepali Date Converter — BS to AD, AD to BS | Vedic Patro",
+        "description": "Convert Nepali dates instantly: Bikram Sambat (BS) to English (AD) and AD to BS. Accurate results for birth dates, documents and official use.",
+        "keywords": "nepali date converter, bs to ad converter, ad to bs, nepali to english date, english to nepali date, bikram sambat converter"
       },
       "holidays": {
-        "title": "Nepal Public Holidays & Festivals | Vedic Patro",
-        "description": "Nepal public holidays, festivals and special observance days.",
-        "keywords": "Nepal holidays, public holidays, festivals"
+        "title": "Nepal Public Holidays {{adYear}} ({{bsYear}} BS) — Festivals | Vedic Patro",
+        "description": "Complete list of Nepal public holidays {{adYear}} / {{bsYear}} BS with dates — Dashain, Tihar, Chhath, national days and other observances.",
+        "keywords": "nepal holidays {{adYear}}, nepal public holidays, dashain {{adYear}} date, tihar {{adYear}}, nepali festivals, holidays in nepal"
       },
       "ritu": {
         "title": "Ritu — Tropical Seasons | Vedic Patro",
@@ -50,9 +50,9 @@
         "keywords": "Ritu, Nepali seasons, equinox, solstice, tropical seasons"
       },
       "kundali": {
-        "title": "Janma Kundali | Vedic Patro",
-        "description": "Generate birth chart — lagna, planets, dasha and detailed kundali report.",
-        "keywords": "Kundali, birth chart, horoscope calculator"
+        "title": "Free Kundali Online — Nepali Birth Chart | Vedic Patro",
+        "description": "Generate your free janma kundali from birth date, time and place — lagna, planetary positions, dasha, nakshatra and a detailed Vedic report.",
+        "keywords": "free kundali, kundali online, nepali kundali, janma kundali, birth chart nepal, vedic horoscope"
       },
       "kundali_milan": {
         "title": "Kundali Milan — Ashtakuta Match | Vedic Patro",
@@ -857,5 +857,88 @@
     "set_default": "Set as default profile",
     "save_changes": "Save changes",
     "create_profile": "Create profile"
+  },
+  "seo_faq": {
+    "section_title": "Frequently Asked Questions",
+    "converter": {
+      "intro": [
+        "This Nepali date converter switches instantly between Bikram Sambat (BS) and Gregorian (AD) dates. It is the fastest way to verify a birth date, fill in citizenship, passport or academic documents, and align the Nepali and English calendars.",
+        "Bikram Sambat is Nepal's official calendar, running about 56 years and 8 months ahead of the Gregorian calendar. Because the length of each Nepali month changes from year to year, accurate conversion needs the official calendar tables — which is exactly what this tool uses."
+      ],
+      "items": [
+        {
+          "q": "How many years apart are BS and AD dates?",
+          "a": "Bikram Sambat runs about 56 years 8 months ahead of the Gregorian calendar. For example, AD {{adYear}} corresponds to BS {{bsYear}}. The Nepali new year starts on Baisakh 1 (mid-April)."
+        },
+        {
+          "q": "How do I convert a Nepali date to English?",
+          "a": "Choose BS → AD mode above and pick the year, month and day — the English date, weekday and full details appear instantly. AD → BS works the same way in reverse."
+        },
+        {
+          "q": "How accurate is this converter?",
+          "a": "Conversions are based on the official Nepali calendar month tables, so results are reliable for birth dates, documents and official use."
+        },
+        {
+          "q": "How many days are in a Nepali month?",
+          "a": "Nepali months have 29 to 32 days, and the count can differ each year because months are set by the sun's zodiac transition (sankranti)."
+        },
+        {
+          "q": "Which years can I convert?",
+          "a": "All commonly used BS/AD years are supported — from historical dates to upcoming years."
+        }
+      ]
+    },
+    "panchanga": {
+      "intro": [
+        "The panchanga is the heart of the Vedic calendar — its five limbs (tithi, vara, nakshatra, yoga and karana) describe the religious and astrological character of each day. This page shows today's tithi, moon sign, sunrise–sunset, moonrise and auspicious times in full detail.",
+        "Calculations are based on astronomical ephemeris positions, so tithi start and end times are accurate to the minute. Use the daily panchanga to plan fasts, pujas, shraddha and auspicious ceremonies."
+      ],
+      "items": [
+        {
+          "q": "How do I find today's tithi?",
+          "a": "Today's tithi, nakshatra, yoga and karana are shown automatically on this page. A tithi is defined by the sun–moon angular distance, so it can change mid-day; the exact start and end times are listed too."
+        },
+        {
+          "q": "What are the five limbs of the panchanga?",
+          "a": "Tithi, vara (weekday), nakshatra, yoga and karana — together these five make up the panchanga, and festivals and auspicious times are set from them."
+        },
+        {
+          "q": "What are tithi vriddhi and tithi kshaya?",
+          "a": "When the same tithi spans two sunrises it is vriddhi (repeated); when a tithi touches no sunrise it is kshaya (skipped). This is why the Nepali calendar sometimes repeats or skips a tithi."
+        },
+        {
+          "q": "Which location is this panchanga calculated for?",
+          "a": "By default it follows Kathmandu sunrise; if you allow location access, timings adjust to your own city's sunrise and sunset."
+        },
+        {
+          "q": "What is an auspicious muhurta (sait)?",
+          "a": "A muhurta is a window when the panchanga limbs align favourably — weddings, bratabandha and house-warming are traditionally timed to it. Abhijit muhurta and daily sait are available in this patro."
+        }
+      ]
+    },
+    "holidays": {
+      "intro": [
+        "Nepal public holidays {{bsYear}} BS ({{adYear}}) — the complete dated list of festivals and national days including Dashain, Tihar, Chhath, Lhosar, Eid and Christmas. Use it to plan leave, office schedules and travel.",
+        "Festivals based on lunar tithis fall on different English dates each year; the dates here follow standard panchanga calculations."
+      ],
+      "items": [
+        {
+          "q": "When is Dashain this year?",
+          "a": "Dashain (Vijaya Dashami) falls in the bright fortnight of Ashwin — the exact dates this year, from Ghatasthapana to Kojagrat Purnima, are in the list above."
+        },
+        {
+          "q": "Which day is the weekly holiday in Nepal?",
+          "a": "Saturday is Nepal's weekly public holiday. Most government offices are open Sunday through Friday."
+        },
+        {
+          "q": "Why do festival dates change every year?",
+          "a": "Most Nepali festivals follow lunar tithis — the alignment between tithis and Gregorian dates shifts each year, so the AD date of a festival moves."
+        },
+        {
+          "q": "What calculation is this holiday list based on?",
+          "a": "Festival and holiday dates are computed from the standard Kathmandu panchanga, which applies throughout Nepal."
+        }
+      ]
+    }
   }
 }
