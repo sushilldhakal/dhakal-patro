@@ -1,0 +1,91 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import { Home, Star, Sparkles, Moon, BookOpen } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useLocale } from "@/i18n/locale";
+
+type Tab = {
+  to: string;
+  icon: LucideIcon;
+  ne: string;
+  en: string;
+  /** Whether this tab is the active section for a given pathname. */
+  match: (pathname: string) => boolean;
+};
+
+// Home · Panchanga · Kundali · Dainik Kranti · Learn — the five primary
+// destinations. Kept in sync with the hamburger nav in Header.tsx.
+const TABS: Tab[] = [
+  { to: "/", icon: Home, ne: "गृह", en: "Home", match: (p) => p === "/" },
+  {
+    to: "/panchanga",
+    icon: Star,
+    ne: "पञ्चाङ्ग",
+    en: "Panchanga",
+    match: (p) =>
+      p === "/panchanga" ||
+      p.startsWith("/panchanga/") ||
+      p === "/suryakranti" ||
+      p === "/abhijit-muhurta",
+  },
+  {
+    to: "/kundali",
+    icon: Sparkles,
+    ne: "कुण्डली",
+    en: "Kundali",
+    match: (p) => p.startsWith("/kundali") || p.startsWith("/jyotish"),
+  },
+  {
+    to: "/dainikkranti",
+    icon: Moon,
+    ne: "दैनिक",
+    en: "Daily",
+    match: (p) => p.startsWith("/dainikkranti"),
+  },
+  {
+    to: "/learn",
+    icon: BookOpen,
+    ne: "सिकाइ",
+    en: "Learn",
+    match: (p) => p === "/learn" || p.startsWith("/learn/"),
+  },
+];
+
+/**
+ * Floating bottom navigation for small screens (< lg / 1024px), shown whenever
+ * the desktop nav collapses into the hamburger menu so users can reach the main
+ * sections without opening the drawer. Hidden at lg and up.
+ */
+export function MobileBottomNav() {
+  const { pick } = useLocale();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  return (
+    <nav
+      aria-label={pick("मुख्य नेभिगेसन", "Primary navigation")}
+      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pointer-events-none lg:hidden"
+    >
+      <div className="pointer-events-auto mx-auto flex max-w-md items-stretch justify-around gap-0.5 rounded-2xl border border-border bg-background/90 p-1 shadow-[0_6px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md">
+        {TABS.map(({ to, icon: Icon, ne, en, match }) => {
+          const active = match(pathname);
+          return (
+            <Link
+              key={to}
+              to={to}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[0.62rem] font-medium leading-none transition-colors",
+                active
+                  ? "bg-secondary/10 text-secondary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className="size-5 shrink-0" />
+              <span className="max-w-full truncate">{pick(ne, en)}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}

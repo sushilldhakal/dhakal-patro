@@ -7,6 +7,7 @@ import {
   type RouterHistory,
 } from "@tanstack/react-router";
 import { Header } from "./components/Header";
+import { MobileBottomNav } from "./components/MobileBottomNav";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { RouteSeo } from "./components/seo/RouteSeo";
 import { PanchangaShellLayout } from "./components/panchanga/PanchangaShellLayout";
@@ -57,7 +58,12 @@ const rootRoute = createRootRoute({
       <AnalyticsTracker />
       <div className="min-h-screen">
         <Header />
-        <Outlet />
+        {/* Bottom padding on small screens so page content clears the floating
+            MobileBottomNav; removed at lg where the bar is hidden. */}
+        <div className="pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
+          <Outlet />
+        </div>
+        <MobileBottomNav />
       </div>
     </RouteLoadingProvider>
   ),
