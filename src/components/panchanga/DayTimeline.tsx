@@ -17,7 +17,7 @@ import {
   type TimelineRowData,
 } from "./day-timeline-data";
 import { useLocale } from "@/i18n/locale";
-import { patroCard, patroMdRail, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
+import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import {
   pgTlAxis,
@@ -287,9 +287,9 @@ export function DayTimeline({
   const busy = loading || (isCivil ? civilLoading || !civil : !p) || !data;
   if (busy) {
     return (
-      <div className={cn(patroCard, patroMdRail)} aria-busy={busy}>
+      <div className={cn(patroCard, "w-full")} aria-busy={busy}>
         <DayTimelineBand mode={mode} onModeChange={onModeChange} />
-        <div className={cn("w-full", "max-w-full", "overflow-hidden", "pl-1", "pr-2", "pt-3", "pb-1")}>
+        <div className={cn("w-full", "max-w-full", "overflow-hidden", "px-0", "pt-3", "pb-1")}>
           <div className={cn(patroSkel, "w-full")} style={{ minHeight: 320 }} />
         </div>
       </div>
@@ -418,11 +418,11 @@ export function DayTimeline({
   const hairlineGs = isCivil ? [sunriseG, sunsetG] : [0, data.dayG, 60];
 
   return (
-    <div className={cn(patroCard, patroMdRail)}>
+    <div className={cn(patroCard, "w-full")}>
       <DayTimelineBand mode={mode} onModeChange={onModeChange} />
 
       <div className="relative">
-        <div className={cn("w-full", "max-w-full", "overflow-x-auto", "overscroll-x-contain", "pl-1", "pr-2", "pt-3", "pb-1")}>
+        <div className={cn("w-full", "max-w-full", "overflow-x-auto", "overscroll-x-contain", "px-0", "pt-3", "pb-1")}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className={cn("block", "h-auto", "w-full", "min-w-[768px]")}

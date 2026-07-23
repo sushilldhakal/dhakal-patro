@@ -221,7 +221,7 @@ export function Panchanga() {
   useRouteLoading(PANCHANGA_ROUTE_LOADING);
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-md:px-0 max-md:pb-16 max-md:pt-0">
+    <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-md:px-4 max-md:pb-16 max-md:pt-0">
       {/* Timeline + aside share a grid; aside sticks only through the ग्रह row,
           then releases before the wheel so everything below spans full width. */}
       <div className="mt-2 grid grid-cols-1 items-start gap-x-5 gap-y-4 max-md:pt-3 xl:grid-cols-[1fr_330px]">
