@@ -43,6 +43,24 @@ const BS_YEAR_OPTIONS = Array.from(
   (_, i) => BS_SUPPORTED_START_YEAR + i,
 );
 
+/** Home aside sits beside the calendar from Tailwind `xl` (1280px) up. */
+const ASIDE_SIDEBAR_MQ = "(min-width: 1280px)";
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(query).matches : false,
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(query);
+    const sync = () => setMatches(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [query]);
+  return matches;
+}
+
 type HomePatroView = "calendar" | "panchanga";
 export type { HomePatroView };
 export const HOME_PATRO_VIEW_KEY = "dhakalPatroHomePatroView";
@@ -130,6 +148,7 @@ export function CalendarView({
   const lastMonthContextKey = useRef("");
   const patroView = patroViewProp ?? internalPatroView;
   const isPanchangaPatro = enablePatroToggle && patroView === "panchanga";
+  const asideInSidebar = useMediaQuery(ASIDE_SIDEBAR_MQ);
 
   const switchPatroView = (next: HomePatroView) => {
     if (patroViewProp === undefined) setInternalPatroView(next);
@@ -276,9 +295,8 @@ export function CalendarView({
       });
       return;
     }
-    const next = selected?.date_ad === day.date_ad ? null : day;
-    setSelected(next);
-    onDaySelect?.(next);
+    setSelected(day);
+    onDaySelect?.(day);
   }
 
   function goToPanchangaDay(d: Date) {
@@ -353,17 +371,19 @@ export function CalendarView({
         />
       </div>
 
-      <DayDetailModal
-        day={selected}
-        bsYear={year}
-        bsMonth={month}
-        publicHolidayDates={publicHolidayDates}
-        location={location}
-        onClose={() => {
-          setSelected(null);
-          onDaySelect?.(null);
-        }}
-      />
+      {!asideInSidebar ? (
+        <DayDetailModal
+          day={selected}
+          bsYear={year}
+          bsMonth={month}
+          publicHolidayDates={publicHolidayDates}
+          location={location}
+          onClose={() => {
+            setSelected(null);
+            onDaySelect?.(null);
+          }}
+        />
+      ) : null}
     </>
   );
 

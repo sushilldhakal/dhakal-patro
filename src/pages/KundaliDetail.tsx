@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,7 +23,6 @@ import {
   DEFAULT_KUNDALI_SECTION,
   KundaliSectionNav,
   parseKundaliSectionFromHash,
-  setKundaliSectionHash,
   type KundaliSectionId,
 } from "@/components/kundali/KundaliSectionNav";
 import { PageShell } from "@/components/PageShell";
@@ -97,25 +96,24 @@ export function KundaliDetail() {
     localStorage.setItem(AYANAMSHA_KEY, next);
   };
 
-  const [section, setSection] = useState<KundaliSectionId>(() =>
-    typeof window !== "undefined"
-      ? parseKundaliSectionFromHash(window.location.hash)
-      : DEFAULT_KUNDALI_SECTION,
-  );
+  // Drive the active section from the router's hash so every navigation source
+  // stays in sync: the desktop sidebar's <Link hash>, the mobile tab nav, deep
+  // links and browser back/forward. (The old state + native `hashchange`
+  // listener never updated for router-driven hash changes — the sidebar Links
+  // route through TanStack Router, which doesn't fire a native `hashchange` —
+  // so clicking a desktop section tab left the rendered section unchanged.)
+  const navigate = useNavigate();
+  const routerHash = useRouterState({ select: (s) => s.location.hash });
+  const section = parseKundaliSectionFromHash(routerHash ?? "");
 
   useEffect(() => {
-    const syncFromHash = () => setSection(parseKundaliSectionFromHash(window.location.hash));
-    if (!window.location.hash) {
-      setKundaliSectionHash(DEFAULT_KUNDALI_SECTION);
-      setSection(DEFAULT_KUNDALI_SECTION);
+    if (!routerHash) {
+      navigate({ to: ".", hash: DEFAULT_KUNDALI_SECTION, replace: true });
     }
-    window.addEventListener("hashchange", syncFromHash);
-    return () => window.removeEventListener("hashchange", syncFromHash);
-  }, []);
+  }, [routerHash, navigate]);
 
   const navigateSection = (id: KundaliSectionId) => {
-    setKundaliSectionHash(id);
-    setSection(id);
+    navigate({ to: ".", hash: id, replace: true });
   };
 
   const {

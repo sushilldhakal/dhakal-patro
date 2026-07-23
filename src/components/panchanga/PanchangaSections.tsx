@@ -795,9 +795,11 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
 
   return (
     <div className="rounded-xl bg-card p-4 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
-      <div className="flex items-baseline gap-2 mb-2">
-        <h2 className="text-base font-bold m-0">{t("sections.planet_positions")}</h2>
-        <span className="text-sm">{getPlanetsAnchorLabel(p, lang)}</span>
+      <div className="mb-2 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
+        <h2 className="m-0 shrink-0 text-base font-bold">{t("sections.planet_positions")}</h2>
+        <span className="min-w-0 text-sm break-words [overflow-wrap:anywhere]">
+          {getPlanetsAnchorLabel(p, lang)}
+        </span>
       </div>
       <div className="flex flex-col">
         {lagna && (
@@ -812,7 +814,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
               </div>
             </div>
             {lagna.degree && (
-              <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">
+              <span className="font-mono text-sm font-semibold text-foreground break-all [overflow-wrap:anywhere]">
                 {lagna.degree}°
               </span>
             )}
@@ -821,17 +823,17 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
         {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords }) => (
           <div
             key={key}
-            className="flex items-center gap-3 py-2 border-b border-border last:border-0"
+            className="flex flex-wrap items-start gap-x-3 gap-y-1 py-2 border-b border-border last:border-0"
           >
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold">{pick(label, labelEn)}</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold break-words">{pick(label, labelEn)}</div>
               {(rashiNe || rashiEn) && (
-                <div className="text-sm">
+                <div className="text-sm break-words">
                   {formatRashiDisplay(rashiNe, rashiEn, lang) ?? pick(rashiNe ?? "", rashiEn ?? "")}
                 </div>
               )}
             </div>
-            <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">
+            <span className="font-mono text-sm font-semibold text-foreground break-all [overflow-wrap:anywhere]">
               {coords}
             </span>
           </div>

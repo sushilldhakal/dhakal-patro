@@ -723,9 +723,9 @@ export function DayTimeline({
 
       {p && planets.length > 0 && (
         <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>
-          <div className="flex flex-col gap-0.5 min-w-0">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span className="text-sm font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
-            <span className="text-sm text-base leading-snug">
+            <span className="min-w-0 text-sm leading-snug break-words [overflow-wrap:anywhere]">
               {getPlanetsAnchorLabel(p, lang)}
             </span>
           </div>
@@ -784,25 +784,34 @@ export function DayTimeline({
                   .filter(Boolean)
                   .join(" · ")}
               >
-                <div className="flex items-baseline justify-between gap-1.5">
-                  <span className="shrink-0 text-sm font-bold leading-tight">{labelL}</span>
-                  <span className={cn(patroMono, "min-w-0 truncate text-sm tabular-nums leading-tight")}>
-                    {coordText}
-                  </span>
-                </div>
-                {(nakWithPada || lordText) && (
-                  <div className="flex items-baseline justify-between gap-1.5 text-sm leading-tight">
-                    <span className="min-w-0 truncate">{nakWithPada}</span>
-                    {lordText ? (
-                      <span
-                        className="shrink-0 font-semibold text-secondary"
-                        title={pick("नक्षत्रेश / उप स्वामी", "Nakshatra lord / sub-lord")}
-                      >
-                        {lordText}
-                      </span>
-                    ) : null}
+                <div className="flex min-w-0 flex-col gap-1">
+                  <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                    <span className="text-sm font-bold leading-tight">{labelL}</span>
+                    <span
+                      className={cn(
+                        patroMono,
+                        "min-w-0 text-sm tabular-nums leading-tight break-all [overflow-wrap:anywhere]",
+                      )}
+                    >
+                      {coordText}
+                    </span>
                   </div>
-                )}
+                  {(nakWithPada || lordText) && (
+                    <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm leading-tight">
+                      {nakWithPada ? (
+                        <span className="min-w-0 break-words [overflow-wrap:anywhere]">{nakWithPada}</span>
+                      ) : null}
+                      {lordText ? (
+                        <span
+                          className="min-w-0 break-words font-semibold text-secondary [overflow-wrap:anywhere]"
+                          title={pick("नक्षत्रेश / उप स्वामी", "Nakshatra lord / sub-lord")}
+                        >
+                          {lordText}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
               </div>
               );
             })}
@@ -850,7 +859,7 @@ function PeriodCards({
               >
                 {it.n}
               </span>
-              <span className="min-w-0 text-sm font-semibold leading-snug [font-family:Mukta,sans-serif]">
+              <span className="min-w-0 text-sm font-semibold leading-snug break-words [overflow-wrap:anywhere] [font-family:Mukta,sans-serif]">
                 {it.label}
               </span>
             </div>

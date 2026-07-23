@@ -28,8 +28,8 @@ import { SeoContentSection } from "@/components/seo/SeoContentSection";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
 import {
   EphemerisModeBanner,
-  MuhurtaNowPanel,
 } from "@/components/panchanga/MuhurtaNowPanel";
+import { SunriseD1ChartPanel } from "@/components/panchanga/SunriseD1ChartPanel";
 import { usePanchangaLocation, displayLocationLabel } from "@/components/panchanga/use-panchanga-location";
 import {
   defaultClockForTimezone,
@@ -269,7 +269,7 @@ export function Panchanga() {
 
         <aside className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-[76px] xl:self-start">
           <GhatiClock sunrise={sunrise} sunset={sunset} timezone={effectiveTimezone} />
-          {ephemeris && data && <MuhurtaNowPanel p={data} clock={clock} />}
+          {data && <SunriseD1ChartPanel p={data} />}
           <PlanetEventsPanel dateAd={chartAd} location={location.params} />
         </aside>
       </div>
