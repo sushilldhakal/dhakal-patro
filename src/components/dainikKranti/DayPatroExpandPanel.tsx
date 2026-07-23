@@ -9,6 +9,7 @@ import {
   type LagnaMatrixRow,
 } from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
+import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import { useLocale } from "@/i18n/locale";
 
 const PLANET_EN: Record<string, string> = {
@@ -85,7 +86,15 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   key={key}
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-2.5 py-2"
                 >
-                  <div className="text-sm font-semibold text-foreground">{pick(PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}</div>
+                  <div className="flex items-center gap-1 text-sm font-semibold text-foreground">
+                    {pick(PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
+                    <GrahaStatusBadges
+                      planetKey={key}
+                      isRetrograde={cell.isRetrograde}
+                      isCombust={cell.isCombust}
+                      size={12}
+                    />
+                  </div>
                   <div className="mt-0.5 break-words font-mono text-xs tabular-nums sm:text-sm">
                     <span className="text-foreground">{isEn ? (cell.rashiEn ?? cell.rashiNe) : cell.rashiNe}</span> {cell.coords}
                   </div>
