@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CivilTimeline, PanchangaDay } from "@/lib/api";
+import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import {
   formatDegreeInRashi,
   getPlanetRows,
@@ -746,6 +747,8 @@ export function DayTimeline({
                 nakshatraLordEn,
                 nakshatraSubLordNe,
                 nakshatraSubLordEn,
+                isRetrograde,
+                isCombust,
               }) => {
               const labelL = pick(label, labelEn);
               const isLagna = planetKey === "lagna";
@@ -786,7 +789,15 @@ export function DayTimeline({
               >
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                    <span className="text-sm font-bold leading-tight">{labelL}</span>
+                    <span className="flex items-center gap-1 text-sm font-bold leading-tight">
+                      {labelL}
+                      <GrahaStatusBadges
+                        planetKey={planetKey}
+                        isRetrograde={isRetrograde}
+                        isCombust={isCombust}
+                        size={13}
+                      />
+                    </span>
                     <span
                       className={cn(
                         patroMono,
