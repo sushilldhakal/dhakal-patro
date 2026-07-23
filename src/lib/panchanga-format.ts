@@ -1167,6 +1167,9 @@ type PlanetDetail = {
   rashi_ne?: string;
   deg_in_rashi?: number;
   dms_in_rashi?: string;
+  is_retrograde?: boolean;
+  retrograde?: boolean;
+  is_combust?: boolean;
   nakshatra?: {
     number?: number;
     name?: string;
@@ -1194,6 +1197,10 @@ export type PlanetRow = {
   /** KP sub-lord (उप स्वामी) of the nakshatra sub-division. */
   nakshatraSubLordNe?: string;
   nakshatraSubLordEn?: string;
+  /** वक्री — planet in retrograde motion. */
+  isRetrograde?: boolean;
+  /** अस्त — planet combust (lost in the Sun's glare). */
+  isCombust?: boolean;
 };
 
 function planetLabelPair(key: string): { label: string; labelEn: string } {
@@ -1472,6 +1479,8 @@ export function getPlanetRows(p: PanchangaDay): PlanetRow[] {
         rashiEn,
         coords,
         siderealLongitude,
+        isRetrograde: info.is_retrograde ?? info.retrograde ?? false,
+        isCombust: info.is_combust ?? false,
         ...planetNakshatraFields(info),
       };
     });

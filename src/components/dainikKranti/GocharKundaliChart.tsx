@@ -11,6 +11,7 @@ import {
 } from "@/lib/kundali/north-indian-layout";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
+import { GrahaStatusLegend } from "@/components/graha/GrahaStatusBadges";
 import { useLocale } from "@/i18n/locale";
 
 type GrahaRow = GocharGraha & { key: string };
@@ -87,23 +88,44 @@ export function GocharKundaliChart({
             const points = NI_HOUSE_POLYGONS[house]!;
             const [cx, cy] = polygonCentroid(points);
             const planets = planetsByRashi[rashiNo] ?? [];
-            const planetLine = planets.join(" ");
 
             return (
               <g key={rashiNe}>
-                {planetLine ? (
+                {planets.length ? (
                   <text
                     x={cx}
                     y={cy - 6}
                     textAnchor="middle"
                     className="fill-foreground text-sm font-semibold"
                   >
-                    {planetLine}
+                    {planets.map((planet, i) => (
+                      <tspan key={i}>
+                        {i > 0 ? " " : ""}
+                        {planet.label}
+                        {planet.isRetrograde && (
+                          <tspan dy="-3" className="fill-secondary" fontSize="9">
+                            {pick("व", "R")}
+                          </tspan>
+                        )}
+                        {planet.isCombust && (
+                          <tspan
+                            dy={planet.isRetrograde ? "0" : "-3"}
+                            className="fill-destructive"
+                            fontSize="9"
+                          >
+                            {pick("अ", "C")}
+                          </tspan>
+                        )}
+                        {(planet.isRetrograde || planet.isCombust) && (
+                          <tspan dy="3" fontSize="0"> </tspan>
+                        )}
+                      </tspan>
+                    ))}
                   </text>
                 ) : null}
                 <text
                   x={cx}
-                  y={cy + (planetLine ? 14 : 4)}
+                  y={cy + (planets.length ? 14 : 4)}
                   textAnchor="middle"
                   className="fill-foreground/80 text-sm text-base"
                 >
@@ -121,6 +143,10 @@ export function GocharKundaliChart({
           </g>
         </svg>
       )}
+
+      {grahas.some((g) => g.is_retrograde || g.is_combust) ? (
+        <GrahaStatusLegend className="mt-2" />
+      ) : null}
 
       {dateLabel ? (
         <p className="mt-2 text-center text-sm">{pick(`${dateLabel} को स्थिति`, `Position on ${dateLabel}`)}</p>

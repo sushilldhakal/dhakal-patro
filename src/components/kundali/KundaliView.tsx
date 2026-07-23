@@ -545,6 +545,7 @@ export function KundaliView({
             <DivisionalChartCompare
               vargaCharts={detail.vargaCharts}
               rashiNeFromNumber={rashiNeFromNumber}
+              combustion={detail.combustion}
             />
           </PanchangaSection>
         </div>

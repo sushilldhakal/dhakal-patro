@@ -3,6 +3,10 @@
 export interface BhavaPlanetEntry {
   key: string;
   labelNe: string;
+  /** वक्री — planet in retrograde motion. */
+  isRetrograde?: boolean;
+  /** अस्त — planet combust (lost in the Sun's glare). */
+  isCombust?: boolean;
 }
 
 export interface BhavaHouse {
@@ -25,7 +29,13 @@ export function rashiToHouse(planetRashi: number, lagnaRashi: number): number {
 
 export function buildBhavaChart(
   lagnaRashi: number,
-  planetRashis: { key: string; labelNe: string; rashi: number }[],
+  planetRashis: {
+    key: string;
+    labelNe: string;
+    rashi: number;
+    isRetrograde?: boolean;
+    isCombust?: boolean;
+  }[],
   rashiNeFromNumber: (rashi?: number) => string | undefined
 ): BhavaHouse[] {
   const houses: BhavaHouse[] = Array.from({ length: 12 }, (_, i) => {
@@ -42,7 +52,12 @@ export function buildBhavaChart(
 
   for (const planet of planetRashis) {
     const house = rashiToHouse(planet.rashi, lagnaRashi);
-    houses[house - 1]!.planets.push({ key: planet.key, labelNe: planet.labelNe });
+    houses[house - 1]!.planets.push({
+      key: planet.key,
+      labelNe: planet.labelNe,
+      isRetrograde: planet.isRetrograde,
+      isCombust: planet.isCombust,
+    });
   }
 
   return houses;

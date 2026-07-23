@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocale } from "@/i18n/locale";
 import { D1Chart } from "@/components/kundali/D1Chart";
+import { GrahaStatusLegend } from "@/components/graha/GrahaStatusBadges";
 import { GrahaDetailsList } from "@/components/kundali/GrahaDetailsList";
 import { BhavaTable } from "@/components/kundali/BhavaTable";
 import type { VargaCharts } from "@/lib/api";
@@ -24,6 +25,7 @@ function buildDivisionalHouses(
   { anchor, division }: PanelConfig,
   vargaCharts: VargaCharts,
   rashiNeFromNumber: (rashi?: number) => string | undefined,
+  combustion: Record<string, boolean | null>,
 ): BhavaHouse[] {
   const entries = vargaCharts.entries[String(division)] ?? [];
   const anchorEntry = entries.find((e) => e.key === anchor);
@@ -35,6 +37,10 @@ function buildDivisionalHouses(
       key: e.key,
       labelNe: GRAHA_NAME[e.key as keyof typeof GRAHA_NAME]?.ne ?? e.key,
       rashi: e.vargaRashi,
+      // Retrograde/combust are physical states of the graha at the birth
+      // instant, so they carry across every divisional chart.
+      isRetrograde: e.retrograde ?? false,
+      isCombust: combustion[e.key] ?? false,
     }));
 
   return buildBhavaChart(anchorEntry.vargaRashi, planetRashis, rashiNeFromNumber);
@@ -132,7 +138,12 @@ function ChartSlot({
           </p>
         </div>
         {houses.length > 0 ? (
-          <D1Chart houses={houses} />
+          <>
+            <D1Chart houses={houses} />
+            {houses.some((h) => h.planets.some((pl) => pl.isRetrograde || pl.isCombust)) && (
+              <GrahaStatusLegend />
+            )}
+          </>
         ) : (
           <p className="text-sm py-8">
             {pick("चक्र बनाउन डाटा अपुग।", "Not enough data for this chart.")}
@@ -197,6 +208,8 @@ function ChartSlot({
 export type DivisionalChartCompareProps = {
   vargaCharts: VargaCharts;
   rashiNeFromNumber: (rashi?: number) => string | undefined;
+  /** Per-graha combustion (अस्त) flags from the kundali detail response. */
+  combustion?: Record<string, boolean | null>;
   defaultLeft?: PanelConfig;
   defaultRight?: PanelConfig;
 };
@@ -204,6 +217,7 @@ export type DivisionalChartCompareProps = {
 export function DivisionalChartCompare({
   vargaCharts,
   rashiNeFromNumber,
+  combustion = {},
   defaultLeft = { anchor: "lagna", division: 1 },
   defaultRight = { anchor: "moon", division: 9 },
 }: DivisionalChartCompareProps) {
@@ -217,13 +231,13 @@ export function DivisionalChartCompare({
     : { ...right, anchor: anchorOptions[1] ?? anchorOptions[0] ?? "moon" };
 
   const leftHouses = useMemo(
-    () => buildDivisionalHouses(safeLeft, vargaCharts, rashiNeFromNumber),
-    [safeLeft, vargaCharts, rashiNeFromNumber],
+    () => buildDivisionalHouses(safeLeft, vargaCharts, rashiNeFromNumber, combustion),
+    [safeLeft, vargaCharts, rashiNeFromNumber, combustion],
   );
 
   const rightHouses = useMemo(
-    () => buildDivisionalHouses(safeRight, vargaCharts, rashiNeFromNumber),
-    [safeRight, vargaCharts, rashiNeFromNumber],
+    () => buildDivisionalHouses(safeRight, vargaCharts, rashiNeFromNumber, combustion),
+    [safeRight, vargaCharts, rashiNeFromNumber, combustion],
   );
 
   if (anchorOptions.length === 0) return null;

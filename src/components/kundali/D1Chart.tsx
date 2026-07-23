@@ -100,6 +100,7 @@ export function D1Chart({ houses }: Props) {
                 const col = i - rowStart;
                 const x = cx + (col - (itemsInRow - 1) / 2) * layout.colGap;
                 const y = cy + row * layout.rowGap;
+                const markSize = layout.fontSize * 0.68;
                 return (
                   <text
                     key={planet.key}
@@ -110,6 +111,25 @@ export function D1Chart({ houses }: Props) {
                     className="text-base fill-foreground"
                   >
                     {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
+                    {planet.isRetrograde && (
+                      <tspan
+                        dy={-layout.fontSize * 0.42}
+                        style={{ fontSize: `${markSize}px` }}
+                        className="fill-secondary font-bold"
+                      >
+                        {pick("व", "R")}
+                      </tspan>
+                    )}
+                    {planet.isCombust && (
+                      <tspan
+                        dy={planet.isRetrograde ? 0 : -layout.fontSize * 0.42}
+                        dx={layout.fontSize * 0.06}
+                        style={{ fontSize: `${markSize}px` }}
+                        className="fill-destructive font-bold"
+                      >
+                        {pick("अ", "C")}
+                      </tspan>
+                    )}
                   </text>
                 );
               });
