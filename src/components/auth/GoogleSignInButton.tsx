@@ -13,6 +13,14 @@ interface GoogleAccountsId {
     client_id: string;
     callback: (r: { credential?: string }) => void;
     locale?: string;
+    /** Use the browser-native FedCM identity UI (no third-party cookies /
+     * popups) — the reliable path on mobile Chrome. */
+    use_fedcm_for_prompt?: boolean;
+    /** Enable the Intelligent Tracking Prevention (Safari/iOS) popup upgrade
+     * flow so the credential still returns under ITP. */
+    itp_support?: boolean;
+    auto_select?: boolean;
+    cancel_on_tap_outside?: boolean;
   }) => void;
   renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
 }
@@ -53,6 +61,14 @@ function ensureGsiInitialized(onCredential: (idToken: string) => void, locale: s
     id.initialize({
       client_id: CLIENT_ID,
       locale,
+      // FedCM + ITP support are what make the flow complete on mobile: without
+      // them the default popup posts the credential back through a channel that
+      // mobile Chrome/Safari sever (third-party-cookie / ITP restrictions), so
+      // the user is left stuck on the Google screen.
+      use_fedcm_for_prompt: true,
+      itp_support: true,
+      auto_select: false,
+      cancel_on_tap_outside: true,
       callback: (res) => {
         if (res.credential) onCredential(res.credential);
       },
