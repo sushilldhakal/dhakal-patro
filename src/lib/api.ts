@@ -2357,6 +2357,7 @@ export interface CalendarDayDetail {
       name_ne?: string;
     };
     ishtakaal_note_ne?: string;
+    ishtakaal_note_en?: string;
     sunrise_includes_corrections?: boolean;
   };
   /**

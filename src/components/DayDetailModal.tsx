@@ -46,7 +46,7 @@ interface Props {
 
 const sectionTitle = "mb-2 text-sm font-bold";
 const metaCard = "rounded-lg border border-border bg-surface-inset p-2.5";
-const metaLabel = "mb-1 text-sm text-base tracking-widest uppercase";
+const metaLabel = "mb-1 text-sm tracking-widest uppercase";
 
 function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
   const { pick, lang } = useLocale();

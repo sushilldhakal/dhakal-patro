@@ -244,6 +244,7 @@ export type SolarCorrections = {
   belaantar?: SolarCorrection;
   deshaantar?: SolarCorrection;
   ishtakaal_note_ne?: string;
+  ishtakaal_note_en?: string;
   sunrise_includes_corrections?: boolean;
 };
 
@@ -385,10 +386,17 @@ export function formatAayanLabel(
   return pickLocale(lang, aayan.name_ne ?? aayan.name ?? "", aayan.name ?? aayan.name_ne ?? "");
 }
 
-export function formatSolarCorrectionDisplay(c?: SolarCorrection): string | undefined {
+export function formatSolarCorrectionDisplay(
+  c?: SolarCorrection,
+  lang?: string,
+): string | undefined {
   if (!c || c.minutes == null || c.seconds == null) return undefined;
   const prefix = c.sign === "rin" ? "-" : "+";
-  const body = `${prefix}${c.minutes} मि ${String(c.seconds).padStart(2, "0")} से`;
+  const ss = String(c.seconds).padStart(2, "0");
+  if (normalizeLang(lang) === "en") {
+    return `${prefix}${c.minutes} min ${ss} sec`;
+  }
+  const body = `${prefix}${c.minutes} मि ${ss} से`;
   const signNe = c.sign_ne ? ` (${c.sign_ne})` : "";
   return `${toNepaliDigits(body)}${signNe}`;
 }
@@ -614,6 +622,14 @@ export function getVaaraNe(p: PanchangaDay, fallback?: string): string | undefin
   const detail = getPanchangaDetail(p);
   return (
     (detail?.vaara as { name_ne?: string } | undefined)?.name_ne ??
+    fallback
+  );
+}
+
+export function getVaaraEn(p: PanchangaDay, fallback?: string): string | undefined {
+  const detail = getPanchangaDetail(p);
+  return (
+    (detail?.vaara as { name_english?: string } | undefined)?.name_english ??
     fallback
   );
 }

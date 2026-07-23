@@ -281,9 +281,9 @@ export function Panchanga() {
                 <Link
                   to="/panchanga/year"
                   search={{ ...locationToSearch(location), year: bs.year }}
-                  className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/10 hover:text-secondary"
+                  className="inline-flex h-9 items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/10 hover:text-secondary"
                 >
-                  <CalendarRange className="h-4 w-4" />
+                  <CalendarRange className="size-4" />
                   {t("panchanga.year_link")}
                 </Link>
               ) : null}

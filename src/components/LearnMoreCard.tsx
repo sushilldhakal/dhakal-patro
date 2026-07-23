@@ -32,7 +32,7 @@ export function LearnMoreCard({ slugs, heading, className }: Props) {
       }
     >
       <div className="mb-3 flex items-center gap-2 text-secondary">
-        <BookOpen className="h-4 w-4" />
+        <BookOpen className="size-4" />
         <h2 className="text-sm font-semibold text-foreground">{resolvedHeading}</h2>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -45,13 +45,13 @@ export function LearnMoreCard({ slugs, heading, className }: Props) {
               params={{ slug: t.slug }}
               className="group flex items-center gap-2.5 rounded-xl border border-border/70 bg-background/40 px-3 py-2.5 transition-colors hover:border-secondary/60 hover:bg-secondary/[0.04]"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
-                <Icon className="h-4 w-4" />
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+                <Icon className="size-4" />
               </span>
-              <span className="min-w-0 flex-1 truncate text-sm text-base text-foreground">
+              <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                 {pick(t.titleNe, t.titleEn)}
               </span>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
+              <ArrowRight className="size-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
             </Link>
           );
         })}

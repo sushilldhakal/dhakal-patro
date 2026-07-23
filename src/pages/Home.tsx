@@ -166,19 +166,19 @@ function PanchangaAside({
     <aside
       className={cn(
         "flex flex-col gap-3 bg-transparent",
-        isBelow ? "w-full" : "min-[1081px]:gap-0",
+        isBelow ? "w-full" : "xl:gap-0",
       )}
     >
       <div
         className={cn(
           "flex flex-col gap-3",
-          isBelow ? "rounded-xl" : "min-[1081px]:gap-0",
+          isBelow ? "rounded-xl" : "xl:gap-0",
         )}
       >
         <div
           className={cn(
             "flex items-baseline gap-2.5 pt-3.5 pb-3 bg-transparent",
-            !isBelow && "min-[1081px]:shrink-0 min-[1081px]:border-b min-[1081px]:border-border",
+            !isBelow && "xl:shrink-0 xl:border-b xl:border-border",
             isBelow && "border-b border-border",
           )}
         >
@@ -204,9 +204,9 @@ function PanchangaAside({
             <div
               className={cn(
                 patroHeroMonthShell,
-                "shrink-0 rounded-xl p-[22px] text-white shadow-lg",
-                isBelow ? "mx-4 mt-4 lg:mx-0 lg:mt-0 lg:w-[min(100%,22rem)] lg:rounded-none lg:shadow-none" : "min-[1081px]:rounded-none min-[1081px]:p-5 min-[1081px]:shadow-none",
-                !isBelow && "min-[1081px]:rounded-none",
+                "shrink-0 rounded-xl p-5 text-white shadow-lg",
+                isBelow ? "mx-4 mt-4 lg:mx-0 lg:mt-0 lg:w-[min(100%,22rem)] lg:rounded-none lg:shadow-none" : "xl:rounded-none xl:p-5 xl:shadow-none",
+                !isBelow && "xl:rounded-none",
               )}
             >
               <HeroMonthArt src={heroMonthArt} />
@@ -219,7 +219,7 @@ function PanchangaAside({
                       ? t("panchanga.today_eyebrow").toUpperCase()
                       : (weekdayNe ?? "").toUpperCase()}
                   </div>
-                  <div className="mt-2.5 text-4xl font-bold leading-tight text-white min-[1081px]:mt-2 min-[1081px]:text-xl">
+                  <div className="mt-2.5 text-4xl font-bold leading-tight text-white xl:mt-2 xl:text-xl">
                     {displayHeroDate}
                   </div>
                   <div className="mt-0.5 text-sm text-white/90">
@@ -236,7 +236,7 @@ function PanchangaAside({
                   </div>
                 </div>
                 {(paksha || tithi || topFestName) ? (
-                  <div className="mt-0.5 flex max-w-[42%] shrink-0 flex-col items-end gap-1.5 min-[1081px]:max-w-[46%]">
+                  <div className="mt-0.5 flex max-w-[42%] shrink-0 flex-col items-end gap-1.5 xl:max-w-[46%]">
                     {paksha && <span className={patroHeroPill}>{paksha}</span>}
                     {tithi && <span className={patroHeroPill}>{tithi}</span>}
                     {topFestName && (
@@ -250,7 +250,7 @@ function PanchangaAside({
               </div>
             </div>
 
-            <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-card min-[1081px]:rounded-none">
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-card xl:rounded-none">
             <div
               className="grid shrink-0 grid-cols-3 border-b border-border bg-surface-muted"
               role="tablist"
@@ -262,7 +262,7 @@ function PanchangaAside({
                   role="tab"
                   variant="ghost"
                   size="sm"
-                  className={cn(patroAsideTab(id === asideTab), "h-auto w-full rounded-none text-md p-0")}
+                  className={cn(patroAsideTab(id === asideTab), "h-auto w-full rounded-none p-0")}
                   aria-selected={id === asideTab}
                   onClick={() => setAsideTab(id)}
                 >

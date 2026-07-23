@@ -43,9 +43,9 @@ export function LearnArticle() {
           <p>{t("learn_page.topic_not_found")}</p>
           <Link
             to="/learn"
-            className="inline-flex items-center gap-1.5 text-sm text-base text-secondary"
+            className="inline-flex items-center gap-1.5 text-sm text-secondary"
           >
-            <ArrowLeft className="h-4 w-4" /> {t("learn_page.back_hub")}
+            <ArrowLeft className="size-4" /> {t("learn_page.back_hub")}
           </Link>
         </div>
       </PageShell>
@@ -60,9 +60,9 @@ export function LearnArticle() {
     <PageShell>
       <Link
         to="/learn"
-        className="inline-flex items-center gap-1.5 text-sm text-base transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> {t("learn_page.eyebrow")}
+        <ArrowLeft className="size-4" /> {t("learn_page.eyebrow")}
       </Link>
 
       <article className={cn(tmPageShell, "rounded-2xl border border-border overflow-hidden")}>
@@ -85,12 +85,12 @@ export function LearnArticle() {
                 params={{ slug: prev.slug }}
                 className="group flex flex-1 items-center gap-2 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-secondary/60"
               >
-                <ArrowLeft className="h-4 w-4 shrink-0 text-secondary" />
+                <ArrowLeft className="size-4 shrink-0 text-secondary" />
                 <span className="min-w-0">
                   <span className="block text-sm uppercase tracking-wide">
                     {t("learn_page.prev")}
                   </span>
-                  <span className="block truncate text-sm text-base text-foreground">
+                  <span className="block truncate text-sm text-foreground">
                     {pick(prev.titleNe, prev.titleEn)}
                   </span>
                 </span>
@@ -108,11 +108,11 @@ export function LearnArticle() {
                   <span className="block text-sm uppercase tracking-wide">
                     {t("learn_page.next")}
                   </span>
-                  <span className="block truncate text-sm text-base text-foreground">
+                  <span className="block truncate text-sm text-foreground">
                     {pick(next.titleNe, next.titleEn)}
                   </span>
                 </span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-secondary" />
+                <ArrowRight className="size-4 shrink-0 text-secondary" />
               </Link>
             ) : (
               <span className="hidden flex-1 sm:block" />
@@ -122,9 +122,9 @@ export function LearnArticle() {
           <div className="mt-6 text-center">
             <Link
               to="/learn"
-              className="inline-flex items-center gap-1.5 text-sm text-base text-secondary"
+              className="inline-flex items-center gap-1.5 text-sm text-secondary"
             >
-              <BookOpen className="h-4 w-4" /> {t("learn_page.all_topics")}
+              <BookOpen className="size-4" /> {t("learn_page.all_topics")}
             </Link>
           </div>
         </div>

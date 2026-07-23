@@ -373,7 +373,7 @@ export function CalendarView({
   const patroModeMobileBtn = enablePatroToggle ? (
     <button
       type="button"
-      className="inline-flex h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-semibold transition-colors hover:text-foreground active:bg-muted"
+      className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-semibold transition-colors hover:text-foreground active:bg-muted"
       onClick={() => switchPatroView(nextPatroView)}
       aria-label={t("calendar.patro_mode_switch")}
     >
@@ -419,7 +419,7 @@ export function CalendarView({
         compact
         location={location}
         onLocationChange={onLocationChange}
-        className="h-[30px] min-w-0 w-auto max-w-[7.25rem] shrink-0 px-2"
+        className="h-8 min-w-0 w-auto max-w-[7.25rem] shrink-0 px-2"
       />
     ) : null;
 
@@ -497,10 +497,10 @@ export function CalendarView({
 
   if (aside || holidays) {
     return (
-      <div className="grid items-start gap-4 min-[1081px]:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] min-[1081px]:items-stretch min-[1081px]:gap-[15px] max-sm:gap-4">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] xl:items-stretch xl:gap-[15px] max-sm:gap-4">
         <div className="min-w-0">{monthHeader}{calendarBlock}</div>
         {aside ? (
-          <div className="flex min-w-0 flex-col min-[1081px]:min-h-full max-sm:px-2.5">{aside}</div>
+          <div className="flex min-w-0 flex-col xl:min-h-full max-sm:px-2.5">{aside}</div>
         ) : null}
         {holidays}
       </div>

@@ -27,6 +27,7 @@ import {
   getSolarCorrections,
   getSunriseDisplay,
   getSunsetDisplay,
+  getVaaraEn,
   getVaaraNe,
   formatRashiDisplay,
   formatSpanEndTime,
@@ -106,8 +107,8 @@ function AngaCell({ anga }: { anga?: Anga | null }) {
 export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
   const { pick, lang, digits } = useLocale();
   const solar = getSolarCorrections(p);
-  const belaantar = formatSolarCorrectionDisplay(solar?.belaantar);
-  const deshaantar = formatSolarCorrectionDisplay(solar?.deshaantar);
+  const belaantar = formatSolarCorrectionDisplay(solar?.belaantar, lang);
+  const deshaantar = formatSolarCorrectionDisplay(solar?.deshaantar, lang);
   const detail = getPanchangaDetail(p);
   const bs = (detail?.bs_date ?? p.bs_date) as
     | { year?: number; month_name_ne?: string; month_name?: string; day?: number }
@@ -219,9 +220,12 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
           </PanchangaFullRow>
         ) : null}
       </PanchangaTableBody>
-      {solar?.ishtakaal_note_ne ? (
+      {solar?.ishtakaal_note_ne || solar?.ishtakaal_note_en ? (
         <p className="border-t border-border px-4 py-2 text-sm m-0 leading-snug">
-          {solar.ishtakaal_note_ne}
+          {pick(
+            solar.ishtakaal_note_ne ?? "",
+            solar.ishtakaal_note_en ?? solar.ishtakaal_note_ne ?? "",
+          )}
         </p>
       ) : null}
     </PanchangaSection>
@@ -239,13 +243,14 @@ export function SamvatSection(_props: { p: PanchangaDay }) {
 }
 
 export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
+  const { pick, lang } = useLocale();
   const detail = getPanchangaDetail(p);
   const instant = p.mode === "ephemeris";
   const tithi = (instant ? p.tithi : detail?.tithi ?? p.tithi) as Anga | undefined;
   const nakshatra = (instant ? p.nakshatra : detail?.nakshatra ?? p.nakshatra) as Anga | undefined;
   const yoga = (instant ? p.yoga : detail?.yoga ?? p.yoga) as Anga | undefined;
   const karana = (instant ? p.karana : detail?.karana ?? p.karana) as Anga | undefined;
-  const paksha = formatPakshaNepaliDisplay(p);
+  const paksha = formatPakshaLabel(p, lang) ?? formatPakshaNepaliDisplay(p);
   const pakshaName = (detail?.paksha as { name?: string } | undefined)?.name;
   const pakshaSym = pakshaName === "shukla" ? "🌕" : "🌑";
 
@@ -263,7 +268,11 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
         <PanchangaQuadRow
           left={{
             labelKey: "sections.weekday",
-            children: <span className="font-semibold">{getVaaraNe(p, p.weekday) ?? "—"}</span>,
+            children: (
+              <span className="font-semibold">
+                {pick(getVaaraNe(p, p.weekday) ?? "—", getVaaraEn(p, p.weekday) ?? "—")}
+              </span>
+            ),
           }}
           right={{
             labelKey: "sections.paksha",

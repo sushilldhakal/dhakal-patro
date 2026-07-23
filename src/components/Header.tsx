@@ -48,16 +48,16 @@ const JYOTISH_LINKS = [
 const NAV = [{ to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen }] as const;
 
 const linkClass =
-  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-base transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 const subLinkClass =
-  "flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm text-base transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 const desktopLinkClass =
-  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-base transition-colors hover:text-foreground hover:bg-muted [&.active]:text-secondary [&.active]:bg-secondary/10";
+  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors hover:text-foreground hover:bg-muted [&.active]:text-secondary [&.active]:bg-secondary/10";
 
 const desktopSubLinkClass =
-  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-base hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 function isPanchangaRoute(pathname: string) {
   return (
@@ -91,10 +91,10 @@ function JyotishNavDropdown() {
           aria-expanded={open}
           aria-haspopup="menu"
         >
-          <Sparkles className="w-4 h-4" />
+          <Sparkles className="size-4" />
           {t("nav.jyotish")}
           <ChevronDown
-            className={cn("w-3.5 h-3.5 opacity-60 transition-transform", open && "rotate-180")}
+            className={cn("size-3.5 opacity-60 transition-transform", open && "rotate-180")}
           />
         </button>
       </PopoverTrigger>
@@ -107,7 +107,7 @@ function JyotishNavDropdown() {
             activeProps={{ className: "active" }}
             onClick={() => setOpen(false)}
           >
-            <Icon className="w-4 h-4 shrink-0" />
+            <Icon className="size-4 shrink-0" />
             {t(labelKey)}
           </Link>
         ))}
@@ -130,10 +130,10 @@ function JyotishNavGroup({ onNavigate }: { onNavigate?: () => void }) {
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
-        <Sparkles className="w-4 h-4 shrink-0" />
+        <Sparkles className="size-4 shrink-0" />
         <span className="flex-1 text-left">{t("nav.jyotish")}</span>
         <ChevronDown
-          className={cn("w-4 h-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
+          className={cn("size-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
         />
       </button>
       {expanded ? (
@@ -146,7 +146,7 @@ function JyotishNavGroup({ onNavigate }: { onNavigate?: () => void }) {
                 activeProps={{ className: "active" }}
                 onClick={onNavigate}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className="size-4 shrink-0" />
                 {t(labelKey)}
               </Link>
             </DrawerClose>
@@ -172,10 +172,10 @@ function PanchangaNavDropdown() {
           aria-expanded={open}
           aria-haspopup="menu"
         >
-          <Star className="w-4 h-4" />
+          <Star className="size-4" />
           {t("nav.surya_panchanga")}
           <ChevronDown
-            className={cn("w-3.5 h-3.5 opacity-60 transition-transform", open && "rotate-180")}
+            className={cn("size-3.5 opacity-60 transition-transform", open && "rotate-180")}
           />
         </button>
       </PopoverTrigger>
@@ -188,7 +188,7 @@ function PanchangaNavDropdown() {
             activeProps={{ className: "active" }}
             onClick={() => setOpen(false)}
           >
-            <Icon className="w-4 h-4 shrink-0" />
+            <Icon className="size-4 shrink-0" />
             {t(labelKey)}
           </Link>
         ))}
@@ -211,10 +211,10 @@ function PanchangaNavGroup({ onNavigate }: { onNavigate?: () => void }) {
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
       >
-        <Star className="w-4 h-4 shrink-0" />
+        <Star className="size-4 shrink-0" />
         <span className="flex-1 text-left">{t("nav.surya_panchanga")}</span>
         <ChevronDown
-          className={cn("w-4 h-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
+          className={cn("size-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
         />
       </button>
       {expanded ? (
@@ -227,7 +227,7 @@ function PanchangaNavGroup({ onNavigate }: { onNavigate?: () => void }) {
                 activeProps={{ className: "active" }}
                 onClick={onNavigate}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className="size-4 shrink-0" />
                 {t(labelKey)}
               </Link>
             </DrawerClose>
@@ -279,13 +279,13 @@ function ThemeToggle({ className, showLabel }: { className?: string; showLabel?:
       className={cn(
         showLabel
           ? "flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-semibold hover:bg-muted hover:text-foreground transition-colors shrink-0"
-          : "w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:text-foreground hover:bg-muted transition-colors shrink-0",
+          : "size-9 rounded-lg border border-border flex items-center justify-center hover:text-foreground hover:bg-muted transition-colors shrink-0",
         className,
       )}
       aria-label={t("theme_toggle")}
     >
-      <Sun className="w-4 h-4 hidden dark:block" />
-      <Moon className="w-4 h-4 dark:hidden" />
+      <Sun className="size-4 hidden dark:block" />
+      <Moon className="size-4 dark:hidden" />
       {showLabel ? (
         <span>{isDark ? t("theme_light") : t("theme_dark")}</span>
       ) : null}
@@ -299,11 +299,11 @@ function MenuPreferences() {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm text-base text-foreground">{t("language")}</span>
+        <span className="text-sm text-foreground">{t("language")}</span>
         <LanguageSwitcher />
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm text-base text-foreground">{t("theme_toggle")}</span>
+        <span className="text-sm text-foreground">{t("theme_toggle")}</span>
         <ThemeToggle showLabel />
       </div>
     </div>
@@ -317,7 +317,7 @@ function NavMenuContent({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="flex flex-col gap-1 p-3">
       <DrawerClose asChild>
         <Link to="/" className={linkClass} activeProps={{ className: "active" }} onClick={onNavigate}>
-          <CalendarDays className="w-4 h-4 shrink-0" />
+          <CalendarDays className="size-4 shrink-0" />
           {t("home")}
         </Link>
       </DrawerClose>
@@ -326,7 +326,7 @@ function NavMenuContent({ onNavigate }: { onNavigate?: () => void }) {
       {NAV.map(({ to, labelKey, icon: Icon }) => (
         <DrawerClose asChild key={to}>
           <Link to={to} className={linkClass} activeProps={{ className: "active" }} onClick={onNavigate}>
-            <Icon className="w-4 h-4 shrink-0" />
+            <Icon className="size-4 shrink-0" />
             {t(labelKey)}
           </Link>
         </DrawerClose>
@@ -379,7 +379,7 @@ export function Header() {
               className={desktopLinkClass}
               activeProps={{ className: "active" }}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="size-4" />
               {t(labelKey)}
             </Link>
           ))}
