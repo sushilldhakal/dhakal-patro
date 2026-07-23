@@ -1183,11 +1183,16 @@ export type PlanetRow = {
   rashiNe?: string;
   rashiEn?: string;
   coords: string;
+  /** Sidereal longitude (degrees) when known — lets callers render `07° सिंह 10′ 28″`. */
+  siderealLongitude?: number;
   nakshatraNe?: string;
   nakshatraEn?: string;
   pada?: number;
   nakshatraLordNe?: string;
   nakshatraLordEn?: string;
+  /** KP sub-lord (उप स्वामी) of the nakshatra sub-division. */
+  nakshatraSubLordNe?: string;
+  nakshatraSubLordEn?: string;
 };
 
 function planetLabelPair(key: string): { label: string; labelEn: string } {
@@ -1200,21 +1205,103 @@ function rashiEnFromNumber(rashi?: number): string | undefined {
   return RASHI_EN_NAMES[rashi - 1];
 }
 
-function planetNakshatraFields(info: PlanetDetail): Pick<
+type NakshatraFields = Pick<
   PlanetRow,
-  "nakshatraNe" | "nakshatraEn" | "pada" | "nakshatraLordNe" | "nakshatraLordEn"
-> {
+  | "nakshatraNe"
+  | "nakshatraEn"
+  | "pada"
+  | "nakshatraLordNe"
+  | "nakshatraLordEn"
+  | "nakshatraSubLordNe"
+  | "nakshatraSubLordEn"
+>;
+
+/**
+ * Vimshottari dasha lords with their year spans, in order. The nakshatra-lord
+ * cycle repeats every 9 nakshatras; the same sequence, proportioned by these
+ * years, subdivides each nakshatra into KP sub-lord (उप स्वामी) segments.
+ */
+const VIMSHOTTARI: Array<[GrahaKey, number]> = [
+  ["ketu", 7], ["venus", 20], ["sun", 6], ["moon", 10], ["mars", 7],
+  ["rahu", 18], ["jupiter", 16], ["saturn", 19], ["mercury", 17],
+];
+const VIMSHOTTARI_TOTAL = 120;
+
+/** KP sub-lord: which Vimshottari lord's sub-division holds this longitude. */
+function subLordKeyFromLongitude(longitude: number): GrahaKey {
+  const span = 360 / 27;
+  const norm = ((longitude % 360) + 360) % 360;
+  const idx = Math.min(26, Math.floor(norm / span));
+  const posInNak = norm - idx * span;
+  const startIdx = idx % 9; // nakshatra lord starts the sub-division sequence
+  let acc = 0;
+  for (let i = 0; i < 9; i += 1) {
+    const [key, years] = VIMSHOTTARI[(startIdx + i) % 9]!;
+    acc += (years / VIMSHOTTARI_TOTAL) * span;
+    if (posInNak < acc - 1e-9) return key;
+  }
+  return VIMSHOTTARI[(startIdx + 8) % 9]![0];
+}
+
+/**
+ * Nakshatra, pada (1–4), nakshatra lord and KP sub-lord derived from a sidereal
+ * longitude (degrees). Used when the payload ships a bare longitude but no
+ * per-body nakshatra block — e.g. the sunrise spashtagraha and the लग्न.
+ */
+export function nakshatraFieldsFromLongitude(longitude: number): NakshatraFields {
+  const norm = ((longitude % 360) + 360) % 360;
+  const span = 360 / 27; // 13°20′ per nakshatra
+  const idx = Math.min(26, Math.floor(norm / span));
+  const pada = Math.min(4, Math.floor((norm - idx * span) / (span / 4)) + 1);
+  const icon = NAKSHATRA_ICONS[idx];
+  const lordKey = VIMSHOTTARI[idx % 9]![0];
+  const subKey = subLordKeyFromLongitude(norm);
+  return {
+    nakshatraNe: icon?.ne,
+    nakshatraEn: icon?.en,
+    pada,
+    nakshatraLordNe: GRAHA_NAME[lordKey].ne,
+    nakshatraLordEn: GRAHA_NAME[lordKey].en,
+    nakshatraSubLordNe: GRAHA_NAME[subKey].ne,
+    nakshatraSubLordEn: GRAHA_NAME[subKey].en,
+  };
+}
+
+/** Sidereal longitude → `०७° सिंह १०′ २८″` (degree-in-rashi, rashi name, min, sec). */
+export function formatDegreeInRashi(longitude: number, rashiNe?: string): string {
+  const norm = ((longitude % 360) + 360) % 360;
+  const degInRashi = norm % 30;
+  let d = Math.floor(degInRashi);
+  let totalSec = Math.round((degInRashi - d) * 3600);
+  let m = Math.floor(totalSec / 60);
+  let s = totalSec % 60;
+  if (s === 60) { s = 0; m += 1; }
+  if (m === 60) { m = 0; d += 1; }
+  const pad = (n: number) => toNepaliDigits(String(n).padStart(2, "0"));
+  const rashi = rashiNe ? `${rashiNe} ` : "";
+  return `${pad(d)}° ${rashi}${pad(m)}′ ${pad(s)}″`;
+}
+
+function planetNakshatraFields(info: PlanetDetail): NakshatraFields {
   // Nakshatra placement is computed by the API and shipped on each planet.
   const nak = info.nakshatra;
-  if (!nak?.number) return {};
-  const lord = nak.lord as keyof typeof GRAHA_NAME | undefined;
-  return {
-    nakshatraNe: nak.name_ne ?? NAKSHATRA_ICONS[nak.number - 1]?.ne,
-    nakshatraEn: nak.name ?? NAKSHATRA_ICONS[nak.number - 1]?.en,
-    pada: nak.pada,
-    nakshatraLordNe: lord ? GRAHA_NAME[lord]?.ne : undefined,
-    nakshatraLordEn: lord ? GRAHA_NAME[lord]?.en : undefined,
-  };
+  if (nak?.number) {
+    const lord = nak.lord as keyof typeof GRAHA_NAME | undefined;
+    return {
+      nakshatraNe: nak.name_ne ?? NAKSHATRA_ICONS[nak.number - 1]?.ne,
+      nakshatraEn: nak.name ?? NAKSHATRA_ICONS[nak.number - 1]?.en,
+      pada: nak.pada,
+      nakshatraLordNe: lord ? GRAHA_NAME[lord]?.ne : undefined,
+      nakshatraLordEn: lord ? GRAHA_NAME[lord]?.en : undefined,
+    };
+  }
+  // Sunrise spashtagraha omits nakshatra — derive it from the sidereal longitude.
+  const lon =
+    info.longitude ??
+    (info.rashi != null && info.deg_in_rashi != null
+      ? (info.rashi - 1) * 30 + info.deg_in_rashi
+      : undefined);
+  return lon != null ? nakshatraFieldsFromLongitude(lon) : {};
 }
 
 export function getPlanetsAnchorLabel(p: PanchangaDay, lang?: string): string {
@@ -1371,8 +1458,48 @@ export function getPlanetRows(p: PanchangaDay): PlanetRow[] {
       const rashiNe = info.rashi_ne ?? rashiNeFromNumber(info.rashi);
       const rashiEn = info.rashi_name ?? rashiEnFromNumber(info.rashi) ?? info.rashi_ne;
       const coords = planetDegreeCells(info);
-      return { key, label, labelEn, rashiNe, rashiEn, coords, ...planetNakshatraFields(info) };
+      const siderealLongitude =
+        info.longitude ??
+        (info.rashi != null && info.deg_in_rashi != null
+          ? (info.rashi - 1) * 30 + info.deg_in_rashi
+          : undefined);
+      return {
+        key,
+        label,
+        labelEn,
+        rashiNe,
+        rashiEn,
+        coords,
+        siderealLongitude,
+        ...planetNakshatraFields(info),
+      };
     });
+}
+
+/**
+ * Sunrise ascendant (लग्न) as a {@link PlanetRow} so it can head the ग्रह card
+ * grid alongside the spashtagraha, with its own rashi, coords and nakshatra.
+ */
+export function getSunriseLagnaRow(p: PanchangaDay): PlanetRow | undefined {
+  const lagna = getInstantLagna(p);
+  if (!lagna) return undefined;
+  const lon =
+    resolveLagnaSiderealLongitude(lagna) ??
+    (lagna.number != null && lagna.degree_in_rashi != null
+      ? (lagna.number - 1) * 30 + lagna.degree_in_rashi
+      : undefined);
+  if (lon == null) return undefined;
+  const rashiNum = Math.floor((((lon % 360) + 360) % 360) / 30) + 1;
+  return {
+    key: "lagna",
+    label: "लग्न",
+    labelEn: "Lagna",
+    rashiNe: lagna.name_ne ?? rashiNeFromNumber(rashiNum),
+    rashiEn: lagna.name ?? rashiEnFromNumber(rashiNum),
+    coords: longitudeToDegreeCells(lon),
+    siderealLongitude: lon,
+    ...nakshatraFieldsFromLongitude(lon),
+  };
 }
 
 export function formatPlanetGocharLine(info: PlanetDetail): string {
@@ -1619,6 +1746,60 @@ export function getInauspiciousWindows(p: PanchangaDay): InauspiciousWindow[] {
       if (!seg.start_local_time_short) continue;
       if (seg.until_full_night && !seg.end_local_time_short) {
         // Runs to next sunrise — no explicit end time.
+        out.push({
+          key,
+          nameNe: ne,
+          nameEn: en,
+          start: seg.start_local_time_short,
+          end: "",
+          tillFullNight: true,
+        });
+      } else if (seg.end_local_time_short) {
+        out.push({
+          key,
+          nameNe: ne,
+          nameEn: en,
+          start: seg.start_local_time_short,
+          end: seg.end_local_time_short,
+        });
+      }
+    }
+  }
+
+  return out;
+}
+
+export interface AuspiciousWindow {
+  /** Muhurta key, e.g. "amrit_kalam", "abhijit", "sarvartha_siddhi_yoga". */
+  key: string;
+  nameNe: string;
+  nameEn: string;
+  /** Local wall-clock start/end, e.g. "13:41". */
+  start: string;
+  end: string;
+  /** Segment runs from `start` through the rest of the night to next sunrise. */
+  tillFullNight?: boolean;
+}
+
+/**
+ * Raw auspicious day-periods (Amrit Kalam, Abhijit, Vijaya, Godhuli, the two
+ * Sandhya, Nishita, Brahma muhurta, Sarvartha Siddhi yoga …) with their local
+ * clock ranges — the शुभ counterpart to {@link getInauspiciousWindows}, used by
+ * the day-cycle timeline's शुभ row. Returns machine-parseable times.
+ */
+export function getAuspiciousWindows(p: PanchangaDay): AuspiciousWindow[] {
+  const detail = getPanchangaDetail(p);
+  const m = (detail?.muhurta ?? p.muhurta) as MuhurtaDetail | undefined;
+  if (!m) return [];
+
+  const out: AuspiciousWindow[] = [];
+  for (const entry of m.auspicious_timings ?? []) {
+    const key = entry.key || "shubha";
+    const ne = entry.name_ne || entry.name_en || entry.key || "शुभ";
+    const en = entry.name_en || entry.name_ne || entry.key || "Shubha";
+    for (const seg of entry.segments ?? []) {
+      if (!seg.start_local_time_short) continue;
+      if (seg.until_full_night && !seg.end_local_time_short) {
         out.push({
           key,
           nameNe: ne,

@@ -1,6 +1,7 @@
 import type { ApiHoraSlot, CivilTimeline, PanchangaDay } from "@/lib/api";
 import {
   formatPakshaNepaliDisplay,
+  getAuspiciousWindows,
   getInauspiciousWindows,
   getLagnaSpans,
   getHoraSlots,
@@ -151,7 +152,7 @@ export const TL_GRAHA_EN: Record<string, string> = {
 export interface TimelineRowData {
   label: string;
   en: string;
-  kind?: "choghadiya" | "hora" | "lagna" | "graha" | "ashubha";
+  kind?: "choghadiya" | "hora" | "lagna" | "graha" | "ashubha" | "shubha";
   items: TimelineSegment[];
 }
 
@@ -182,6 +183,18 @@ export interface AshubhaSegment {
   nameEn: string;
   detailNe: string;
   detailEn: string;
+  startG: number;
+  endG: number;
+}
+
+/**
+ * Auspicious (शुभ) muhurta on the 0–60 ghati axis. Unlike {@link AshubhaSegment}
+ * these are kept as distinct named windows (not merged), so each muhurta —
+ * Amrit Kalam, Abhijit, Vijaya … — keeps its own name and number badge.
+ */
+export interface ShubhaSegment {
+  name: string;
+  nameEn: string;
   startG: number;
   endG: number;
 }
@@ -224,6 +237,7 @@ export interface DayTimelineData {
   badChoghadiya: ChoghadiyaSegment[];
   hora: HoraSegment[];
   ashubha: AshubhaSegment[];
+  shubha: ShubhaSegment[];
 }
 
 type AngaBlock = {
@@ -426,6 +440,39 @@ function buildAshubhaSegments(
     startG: m.s,
     endG: m.e,
   }));
+}
+
+/**
+ * Convert raw auspicious windows (local clock ranges) into शुभ segments on the
+ * shared 0–60 axis. Mirrors {@link buildAshubhaSegments} but keeps each muhurta
+ * as its own named window (auspicious periods are distinct, not merged doshas),
+ * sorted by start so the chart badge numbers match the list below.
+ */
+function buildShubhaSegments(
+  windows: ReturnType<typeof getAuspiciousWindows>,
+  toG: (minutes: number) => number,
+): ShubhaSegment[] {
+  const segs: ShubhaSegment[] = [];
+  for (const w of windows) {
+    const sMin = clockToMinutes(w.start);
+    if (sMin == null) continue;
+    const startG = toG(sMin);
+    if (startG < 0 || startG > 60) continue;
+    let endG: number;
+    if (w.tillFullNight) {
+      endG = 60;
+    } else {
+      const eMin = clockToMinutes(w.end);
+      if (eMin == null) continue;
+      endG = toG(eMin);
+      if (endG < startG) endG = 60; // window carried past the axis end
+    }
+    endG = Math.min(endG, 60);
+    if (endG <= startG) continue;
+    segs.push({ name: w.nameNe, nameEn: w.nameEn, startG, endG });
+  }
+  segs.sort((a, b) => a.startG - b.startG);
+  return segs;
 }
 
 /** Ghati for the "now" needle on a sunrise-to-sunrise chart; null before today's sunrise. */
@@ -658,6 +705,9 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
   const ashubha = buildAshubhaSegments(getInauspiciousWindows(p), (min) =>
     minutesToGhati(min, sunriseMin),
   );
+  const shubha = buildShubhaSegments(getAuspiciousWindows(p), (min) =>
+    minutesToGhati(min, sunriseMin),
+  );
   const lagnaSpans = (getLagnaSpans(p) ?? []) as LagnaSpanBlock[];
   const grahaSpashta = getPlanetRows(p).map(({ label, rashiNe, coords }) => ({
     label,
@@ -719,6 +769,9 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
       ...(ashubha.length > 0
         ? [{ label: "अशुभ", en: "Ashubha", kind: "ashubha" as const, items: [] }]
         : []),
+      ...(shubha.length > 0
+        ? [{ label: "शुभ", en: "Shubha", kind: "shubha" as const, items: [] }]
+        : []),
       ...(grahaSpashta.length > 0
         ? [
             {
@@ -734,6 +787,7 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
     badChoghadiya: cho.filter((c) => c.bad),
     hora,
     ashubha,
+    shubha,
   };
 }
 
@@ -816,6 +870,9 @@ export function buildCivilTimelineData(
   const ashubha = p
     ? buildAshubhaSegments(getInauspiciousWindows(p), (min) => minToG(min))
     : [];
+  const shubha = p
+    ? buildShubhaSegments(getAuspiciousWindows(p), (min) => minToG(min))
+    : [];
 
   const rows: TimelineRowData[] = [
     { label: "तिथि", en: "Tithi", items: angaItems(civil.rows.tithi, { paksha: true, toEn: tithiEnOf }) },
@@ -829,6 +886,9 @@ export function buildCivilTimelineData(
       : []),
     ...(ashubha.length > 0
       ? [{ label: "अशुभ", en: "Ashubha", kind: "ashubha" as const, items: [] }]
+      : []),
+    ...(shubha.length > 0
+      ? [{ label: "शुभ", en: "Shubha", kind: "shubha" as const, items: [] }]
       : []),
   ];
 
@@ -859,6 +919,7 @@ export function buildCivilTimelineData(
     badChoghadiya: choghadiya.filter((c) => c.bad),
     hora,
     ashubha,
+    shubha,
   };
 }
 
