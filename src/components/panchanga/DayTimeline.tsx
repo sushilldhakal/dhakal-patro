@@ -348,7 +348,28 @@ export function DayTimeline({
       return { key: row.label, ne: row.label, en: row.en, cls, segs };
     });
 
-  const H = T0 + tracks.length * TRACK + 6;
+  // Laned rows (अशुभ / शुभ) can stack several overlapping windows into vertical
+  // lanes; give them extra height so the number badges stay legible instead of
+  // colliding inside the fixed band. Other rows keep the standard band height.
+  const LANE_MIN = 15;
+  const ROW_GAP = TRACK - BAND;
+  const rowBands = tracks.map((tr) =>
+    tr.cls === "ashubha" || tr.cls === "shubha"
+      ? Math.max(BAND, Math.max(1, tr.segs[0]?.laneCount ?? 1) * LANE_MIN)
+      : BAND,
+  );
+  const rowTops: number[] = [];
+  {
+    let acc = T0;
+    for (let i = 0; i < tracks.length; i += 1) {
+      rowTops.push(acc);
+      acc += rowBands[i]! + ROW_GAP;
+    }
+  }
+  const lastIdx = tracks.length - 1;
+  const H = (rowTops[lastIdx] ?? T0) + (rowBands[lastIdx] ?? BAND) + 6;
+  const trackY = (i: number) => rowTops[i] ?? T0;
+  const rowBandAt = (i: number) => rowBands[i] ?? BAND;
   const tLabel = (g: number) => dualTimeAtGhati(g, data.sunriseMin).clock;
 
   let nowG: number | null = null;
@@ -390,8 +411,6 @@ export function DayTimeline({
       nowLabel = pick("छानिएको समय", "Chosen time");
     }
   }
-
-  const trackY = (i: number) => T0 + i * TRACK;
 
   const nightBands = data.nightBands ?? [[data.dayG, 60]];
   const sunriseG = isCivil ? data.sunriseG ?? 0 : 0;
@@ -476,13 +495,14 @@ export function DayTimeline({
 
           {tracks.map((tr, ti) => {
             const y = trackY(ti);
+            const rowBand = rowBandAt(ti);
             return (
               <g key={tr.key}>
                 <line
                   x1={X0}
-                  y1={y + BAND}
+                  y1={y + rowBand}
                   x2={X1}
-                  y2={y + BAND}
+                  y2={y + rowBand}
                   className={pgTlRowline(ti)}
                 />
 
@@ -512,9 +532,9 @@ export function DayTimeline({
                   const laned = tr.cls === "ashubha" || tr.cls === "shubha";
                   const laneCount = laned ? Math.max(1, s.laneCount ?? 1) : 1;
                   const laneGap = laneCount > 1 ? 1.5 : 0;
-                  const laneH = BAND / laneCount;
+                  const laneH = rowBand / laneCount;
                   const bandY = laned ? y + (s.lane ?? 0) * laneH : y;
-                  const bandH = laned ? laneH - laneGap : BAND;
+                  const bandH = laned ? laneH - laneGap : rowBand;
 
                   const clipId = `pgx-clip-${ti}-${si}`;
                   const labelY = bandY + bandH / 2 + Math.min(4, bandH / 3);
@@ -546,7 +566,7 @@ export function DayTimeline({
                         w > 20 && (
                           <text
                             x={(x + x2) / 2}
-                            y={y + BAND / 2 + 4}
+                            y={y + rowBand / 2 + 4}
                             className={pgxSegnameCho(s.bad)}
                             textAnchor="middle"
                           >
@@ -669,7 +689,7 @@ export function DayTimeline({
             <span
               key={tr.key}
               className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-sm font-bold leading-none text-foreground [font-family:Mukta,sans-serif] sm:text-sm"
-              style={{ top: `${((trackY(ti) + BAND / 2) / H) * 100}%` }}
+              style={{ top: `${((trackY(ti) + rowBandAt(ti) / 2) / H) * 100}%` }}
             >
               {tr.ne}
             </span>
@@ -677,11 +697,11 @@ export function DayTimeline({
         </div>
       </div>
 
-      {data.ashubha.length > 0 && (
+      {data.ashubhaAll.length > 0 && (
         <PeriodCards
           tone="danger"
           title={pick("अशुभ समय", "Inauspicious periods")}
-          items={data.ashubha.map((a, i) => ({
+          items={data.ashubhaAll.map((a, i) => ({
             n: digits(i + 1),
             label: pick(a.detailNe, a.detailEn),
             time: `${tLabel(a.startG)} – ${tLabel(a.endG)}`,

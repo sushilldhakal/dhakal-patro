@@ -1723,6 +1723,29 @@ export function getInauspiciousWindows(p: PanchangaDay): InauspiciousWindow[] {
   if (!m) return [];
 
   const out: InauspiciousWindow[] = [];
+
+  // Prefer the structured `inauspicious_timings` list (Rahu, Yamaganda, Gulika,
+  // Varjyam, Dur Muhurtam, Aadal/Vidal yoga, Baana, tithi doshas …). Only when it
+  // is absent do we fall back to the individual rahu/yama/gulika fields — using
+  // both would double-count those three. Mirrors {@link getMuhurtaRows}.
+  if (m.inauspicious_timings?.length) {
+    for (const entry of m.inauspicious_timings) {
+      const key = entry.key || "ashubha";
+      const ne = entry.name_ne || entry.name_en || entry.key || "अशुभ";
+      const en = entry.name_en || entry.name_ne || entry.key || "Ashubha";
+      for (const seg of entry.segments ?? []) {
+        if (!seg.start_local_time_short) continue;
+        if (seg.until_full_night && !seg.end_local_time_short) {
+          // Runs to next sunrise — no explicit end time.
+          out.push({ key, nameNe: ne, nameEn: en, start: seg.start_local_time_short, end: "", tillFullNight: true });
+        } else if (seg.end_local_time_short) {
+          out.push({ key, nameNe: ne, nameEn: en, start: seg.start_local_time_short, end: seg.end_local_time_short });
+        }
+      }
+    }
+    return out;
+  }
+
   const pushWin = (
     key: string,
     ne: string,
@@ -1733,39 +1756,9 @@ export function getInauspiciousWindows(p: PanchangaDay): InauspiciousWindow[] {
       out.push({ key, nameNe: ne, nameEn: en, start: w.start_time, end: w.end_time });
     }
   };
-
-  pushWin("rahu_kalam", "राहु", "Rahu", m.rahu_kalam);
+  pushWin("rahu_kalam", "राहु काल", "Rahu Kaal", m.rahu_kalam);
   pushWin("yamaganda", "यमगण्ड", "Yamaganda", m.yamaganda);
-  pushWin("gulika", "गुलिक", "Gulika", m.gulika);
-
-  for (const entry of m.inauspicious_timings ?? []) {
-    const key = entry.key || "ashubha";
-    const ne = entry.name_ne || entry.name_en || entry.key || "अशुभ";
-    const en = entry.name_en || entry.name_ne || entry.key || "Ashubha";
-    for (const seg of entry.segments ?? []) {
-      if (!seg.start_local_time_short) continue;
-      if (seg.until_full_night && !seg.end_local_time_short) {
-        // Runs to next sunrise — no explicit end time.
-        out.push({
-          key,
-          nameNe: ne,
-          nameEn: en,
-          start: seg.start_local_time_short,
-          end: "",
-          tillFullNight: true,
-        });
-      } else if (seg.end_local_time_short) {
-        out.push({
-          key,
-          nameNe: ne,
-          nameEn: en,
-          start: seg.start_local_time_short,
-          end: seg.end_local_time_short,
-        });
-      }
-    }
-  }
-
+  pushWin("gulika", "गुलिक काल", "Gulika Kaal", m.gulika);
   return out;
 }
 

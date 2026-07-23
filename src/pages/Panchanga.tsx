@@ -45,7 +45,6 @@ import {
 import {
   DinVisheshSection,
   FestivalsSection,
-  MuhurtaTimingsSection,
   NivasShoolSection,
   PanchangCoreSection,
   BalamSection,
@@ -304,7 +303,6 @@ export function Panchanga() {
               <RituSection p={data} />
               <BalamSection p={data} />
               <PanchakaLagnaSection p={data} />
-              <MuhurtaTimingsSection p={data} />
               <NivasShoolSection p={data} fallback={wheelData} />
               <DinVisheshSection p={data} />
               <FestivalsSection p={data} />

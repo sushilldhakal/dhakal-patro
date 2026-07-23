@@ -236,7 +236,10 @@ export interface DayTimelineData {
   choghadiya: ChoghadiyaSegment[];
   badChoghadiya: ChoghadiyaSegment[];
   hora: HoraSegment[];
+  /** Panchang-Shuddhi subset shown on the chart band. */
   ashubha: AshubhaSegment[];
+  /** Full अशुभ list shown in the cards below the chart. */
+  ashubhaAll: AshubhaSegment[];
   shubha: ShubhaSegment[];
 }
 
@@ -336,11 +339,11 @@ function clockToMinutes(raw?: string | null): number | null {
 }
 
 /**
- * The doshas shown on the Panchang-Shuddhi (अशुभ) row, keyed by the backend
- * dosha key and relabelled to match the drikpanchang chart. Any other
- * inauspicious timing (yamaganda, gulika, baana, ganda moola, …) is excluded.
- * Covers the Visha Ghati of each panchanga element: तिथि विष (tithi),
- * नक्षत्र विष (varjyam), योग विष (yoga), and करण / भद्रा (bhadra).
+ * The doshas shown on the Panchang-Shuddhi (अशुभ) chart row, keyed by backend
+ * dosha key and relabelled to match the drikpanchang chart. Only these keep the
+ * chart band uncluttered; every other inauspicious window (yamaganda, gulika,
+ * baana, aadal/vidal, dur muhurtam …) still appears in the card list below via
+ * {@link buildAshubhaAllSegments}.
  */
 const SHUDDHI_DOSHAS: Record<string, { ne: string; en: string }> = {
   tithi: { ne: "तिथि", en: "Tithi" },
@@ -353,54 +356,57 @@ const SHUDDHI_DOSHAS: Record<string, { ne: string; en: string }> = {
 };
 
 /**
- * Convert raw inauspicious windows (local clock ranges) into ashubha segments on
- * the shared 0–60 axis. `toG` maps minutes-from-midnight to a ghati position
- * (sunrise-relative for Day-Night, `min/24` for civil). Degenerate/zero-length
- * or sunrise-straddling windows are dropped so the row stays clean.
+ * Convert one raw inauspicious window to a segment on the 0–60 axis, or null if
+ * it is degenerate / off-axis. `tillFullNight` windows run to next sunrise.
+ */
+function windowToSpan(
+  w: ReturnType<typeof getInauspiciousWindows>[number],
+  toG: (minutes: number) => number,
+): { startG: number; endG: number } | null {
+  const sMin = clockToMinutes(w.start);
+  if (sMin == null) return null;
+  const startG = toG(sMin);
+  if (startG < 0 || startG > 60) return null;
+  let endG: number;
+  if (w.tillFullNight) {
+    endG = 60;
+  } else {
+    const eMin = clockToMinutes(w.end);
+    if (eMin == null) return null;
+    endG = toG(eMin);
+    if (endG < startG) endG = 60; // window carried past the axis end
+  }
+  endG = Math.min(endG, 60);
+  if (endG <= startG) return null;
+  return { startG, endG };
+}
+
+/**
+ * Chart-band अशुभ segments: only the Panchang-Shuddhi doshas, with overlapping
+ * ones merged into drikpanchang-style bands ("नक्षत्र विष, तिथि"). Keeps the
+ * timeline from turning solid red — the full list lives in the cards below.
  */
 function buildAshubhaSegments(
   windows: ReturnType<typeof getInauspiciousWindows>,
   toG: (minutes: number) => number,
 ): AshubhaSegment[] {
-  // 1) Convert each window to a position on the 0–60 axis. `tillFullNight`
-  //    windows run to the next sunrise (g = 60); midnight-spanning windows are
-  //    handled by `toG`, which wraps pre-sunrise clocks past 60 back to 0–60.
-  //    Only the five Panchang-Shuddhi doshas are shown, relabelled per drik.
   const parsed: { s: number; e: number; ne: string; en: string }[] = [];
   for (const w of windows) {
     const label = SHUDDHI_DOSHAS[w.key];
     if (!label) continue;
-    const sMin = clockToMinutes(w.start);
-    if (sMin == null) continue;
-    const startG = toG(sMin);
-    if (startG < 0 || startG > 60) continue;
-    let endG: number;
-    if (w.tillFullNight) {
-      endG = 60;
-    } else {
-      const eMin = clockToMinutes(w.end);
-      if (eMin == null) continue;
-      endG = toG(eMin);
-      if (endG < startG) endG = 60; // window carried past the axis end
-    }
-    endG = Math.min(endG, 60);
-    if (endG <= startG) continue;
-    parsed.push({ s: startG, e: endG, ne: label.ne, en: label.en });
+    const span = windowToSpan(w, toG);
+    if (!span) continue;
+    parsed.push({ s: span.startG, e: span.endG, ne: label.ne, en: label.en });
   }
-
   if (!parsed.length) return [];
 
-  // 2) Panchang-shuddhi sweep line: cut the axis at every window boundary, then
-  //    for each elementary slice record the *set* of doshas active there. This
-  //    yields drikpanchang-style contiguous bands where band 4 might be
-  //    "तिथि, राहु" and band 6 "करण, तिथि" — the overlap is spelled out per band.
+  // Sweep line: cut the axis at every boundary, record the dosha *set* per slice.
   const bounds = new Set<number>();
   for (const iv of parsed) {
     bounds.add(Number(iv.s.toFixed(3)));
     bounds.add(Number(iv.e.toFixed(3)));
   }
   const pts = [...bounds].sort((a, b) => a - b);
-
   const slices: { s: number; e: number; ne: string[]; en: string[] }[] = [];
   for (let i = 0; i < pts.length - 1; i++) {
     const s = pts[i]!;
@@ -419,7 +425,7 @@ function buildAshubhaSegments(
     slices.push({ s, e, ne, en });
   }
 
-  // 3) Merge neighbouring slices that carry the identical dosha set.
+  // Merge neighbouring slices carrying the identical dosha set.
   const sameSet = (a: string[], b: string[]) =>
     a.length === b.length && a.every((x) => b.includes(x));
   const merged: { s: number; e: number; ne: string[]; en: string[] }[] = [];
@@ -440,6 +446,32 @@ function buildAshubhaSegments(
     startG: m.s,
     endG: m.e,
   }));
+}
+
+/**
+ * Full अशुभ list for the cards below the chart: one segment per inauspicious
+ * window (Rahu, Yamaganda, Gulika, Varjyam, Dur Muhurtam, Aadal/Vidal, Baana,
+ * tithi doshas …), sorted by start. Not shown on the chart band.
+ */
+function buildAshubhaAllSegments(
+  windows: ReturnType<typeof getInauspiciousWindows>,
+  toG: (minutes: number) => number,
+): AshubhaSegment[] {
+  const segs: AshubhaSegment[] = [];
+  for (const w of windows) {
+    const span = windowToSpan(w, toG);
+    if (!span) continue;
+    segs.push({
+      name: w.nameNe,
+      nameEn: w.nameEn,
+      detailNe: w.nameNe,
+      detailEn: w.nameEn,
+      startG: span.startG,
+      endG: span.endG,
+    });
+  }
+  segs.sort((a, b) => a.startG - b.startG);
+  return segs;
 }
 
 /**
@@ -702,7 +734,11 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
   // Both choghadiya and hora come pre-computed from the API daily payload.
   const cho = apiChoghadiya?.length ? buildChoghadiyaFromApi(apiChoghadiya) : [];
   const hora = buildHoraTimelineSegments(p);
-  const ashubha = buildAshubhaSegments(getInauspiciousWindows(p), (min) =>
+  const inauspiciousWindows = getInauspiciousWindows(p);
+  const ashubha = buildAshubhaSegments(inauspiciousWindows, (min) =>
+    minutesToGhati(min, sunriseMin),
+  );
+  const ashubhaAll = buildAshubhaAllSegments(inauspiciousWindows, (min) =>
     minutesToGhati(min, sunriseMin),
   );
   const shubha = buildShubhaSegments(getAuspiciousWindows(p), (min) =>
@@ -787,6 +823,7 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
     badChoghadiya: cho.filter((c) => c.bad),
     hora,
     ashubha,
+    ashubhaAll,
     shubha,
   };
 }
@@ -867,9 +904,9 @@ export function buildCivilTimelineData(
     g: i * 3 * 2.5,
   }));
 
-  const ashubha = p
-    ? buildAshubhaSegments(getInauspiciousWindows(p), (min) => minToG(min))
-    : [];
+  const civilWindows = p ? getInauspiciousWindows(p) : [];
+  const ashubha = buildAshubhaSegments(civilWindows, (min) => minToG(min));
+  const ashubhaAll = buildAshubhaAllSegments(civilWindows, (min) => minToG(min));
   const shubha = p
     ? buildShubhaSegments(getAuspiciousWindows(p), (min) => minToG(min))
     : [];
@@ -919,6 +956,7 @@ export function buildCivilTimelineData(
     badChoghadiya: choghadiya.filter((c) => c.bad),
     hora,
     ashubha,
+    ashubhaAll,
     shubha,
   };
 }
