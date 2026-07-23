@@ -71,7 +71,7 @@ export function GrahaStatusMarksSvg({
   const asta = showAsta(planetKey, isCombust);
   if (!vakri && !asta) return null;
   const s = size / 24;
-  const gap = size + 1.5;
+  const gap = size + 0.75;
   const marks: React.ReactNode[] = [];
   let offset = 0;
   if (vakri) {
