@@ -24,6 +24,7 @@ import {
   facebookLogout,
   skipFacebookAutoLogin,
 } from "./facebook-sdk";
+import { consumeGoogleRedirect } from "./google-redirect";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -61,9 +62,29 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
     }
   }, []);
 
-  // Bootstrap from any stored session on first mount.
+  // Bootstrap: complete a pending Google redirect sign-in, else restore any
+  // stored session. Both run on first mount only.
   useEffect(() => {
     if (ssr) return;
+
+    const result = consumeGoogleRedirect();
+    if (result) {
+      const finish = async () => {
+        if (result.idToken) {
+          try {
+            tokenStore.set(await apiGoogle(result.idToken));
+          } catch {
+            /* fall through — user lands signed-out on the return page */
+          }
+        }
+        // Full navigation back to where sign-in started; the reload re-bootstraps
+        // from the freshly stored tokens (and keeps the router state consistent).
+        window.location.replace(result.returnTo || "/");
+      };
+      void finish();
+      return;
+    }
+
     void refreshUser().finally(() => setLoading(false));
   }, [refreshUser, ssr]);
 
