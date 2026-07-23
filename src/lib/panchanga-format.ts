@@ -1524,7 +1524,7 @@ export function formatPlanetGocharLine(info: PlanetDetail): string {
 export function getPlanetGocharLines(
   p: PanchangaDay,
   lang?: string,
-): { label: string; value: string }[] {
+): { key: string; label: string; value: string; isRetrograde?: boolean; isCombust?: boolean }[] {
   const planets = resolvePlanetsRecord(p);
   if (!planets) return [];
 
@@ -1547,9 +1547,15 @@ export function getPlanetGocharLines(
       const label = pickLocale(lang, ne, en);
       const info = planets[key];
       if (typeof info === "string") {
-        return { label, value: info };
+        return { key, label, value: info };
       }
-      return { label, value: formatPlanetGocharLine(info) };
+      return {
+        key,
+        label,
+        value: formatPlanetGocharLine(info),
+        isRetrograde: info.is_retrograde ?? info.retrograde ?? false,
+        isCombust: info.is_combust ?? false,
+      };
     });
 }
 

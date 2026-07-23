@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
+import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import {
   formatAngaPatroTransitionHint,
   formatClockNepali,
@@ -188,12 +189,20 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
           <div className="mb-1.5 text-sm font-bold text-foreground">{t("aside.gochar")}</div>
           {planets.length > 0 ? (
             <div className="grid grid-cols-3 gap-1.5">
-              {planets.map(({ label, value }) => (
+              {planets.map(({ key, label, value, isRetrograde, isCombust }) => (
                 <div
                   key={label}
                   className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark"
                 >
-                  <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">{label}</span>
+                  <span className="flex shrink-0 items-center gap-0.5 text-sm leading-tight font-semibold text-foreground">
+                    {label}
+                    <GrahaStatusBadges
+                      planetKey={key}
+                      isRetrograde={isRetrograde}
+                      isCombust={isCombust}
+                      size={12}
+                    />
+                  </span>
                   <span className="mono min-w-0 truncate text-right text-sm font-semibold text-foreground">
                     {value}
                   </span>

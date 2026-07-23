@@ -6,6 +6,7 @@ import {
   polygonCentroid,
 } from "@/lib/kundali/north-indian-layout";
 import { cn } from "@/lib/utils";
+import { GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
 import { useLocale } from "@/i18n/locale";
 
 const PLANET_ABBR_NE: Record<string, string> = {
@@ -100,37 +101,27 @@ export function D1Chart({ houses }: Props) {
                 const col = i - rowStart;
                 const x = cx + (col - (itemsInRow - 1) / 2) * layout.colGap;
                 const y = cy + row * layout.rowGap;
-                const markSize = layout.fontSize * 0.68;
+                const markSize = layout.fontSize * 0.62;
                 return (
-                  <text
-                    key={planet.key}
-                    x={x}
-                    y={y}
-                    textAnchor="middle"
-                    style={{ fontSize: `${layout.fontSize}px` }}
-                    className="text-base fill-foreground"
-                  >
-                    {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
-                    {planet.isRetrograde && (
-                      <tspan
-                        dy={-layout.fontSize * 0.42}
-                        style={{ fontSize: `${markSize}px` }}
-                        className="fill-secondary font-bold"
-                      >
-                        {pick("व", "R")}
-                      </tspan>
-                    )}
-                    {planet.isCombust && (
-                      <tspan
-                        dy={planet.isRetrograde ? 0 : -layout.fontSize * 0.42}
-                        dx={layout.fontSize * 0.06}
-                        style={{ fontSize: `${markSize}px` }}
-                        className="fill-destructive font-bold"
-                      >
-                        {pick("अ", "C")}
-                      </tspan>
-                    )}
-                  </text>
+                  <g key={planet.key}>
+                    <text
+                      x={x}
+                      y={y}
+                      textAnchor="middle"
+                      style={{ fontSize: `${layout.fontSize}px` }}
+                      className="text-base fill-foreground"
+                    >
+                      {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
+                    </text>
+                    <GrahaStatusMarksSvg
+                      planetKey={planet.key}
+                      isRetrograde={planet.isRetrograde}
+                      isCombust={planet.isCombust}
+                      x={x + layout.fontSize * 0.5}
+                      y={y - layout.fontSize * 1.25}
+                      size={markSize}
+                    />
+                  </g>
                 );
               });
             })()}

@@ -829,7 +829,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold break-words">
                 {pick(label, labelEn)}
-                <GrahaStatusBadges isRetrograde={isRetrograde} isCombust={isCombust} />
+                <GrahaStatusBadges planetKey={key} isRetrograde={isRetrograde} isCombust={isCombust} />
               </div>
               {(rashiNe || rashiEn) && (
                 <div className="text-sm break-words">

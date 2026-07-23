@@ -61,7 +61,10 @@ export type GrahaSpashtaRow = {
   weekdayNe?: string;
   weekdayEn?: string;
   planets: Partial<
-    Record<(typeof PATRO_PLANET_KEYS)[number], { rashiNe: string; rashiEn?: string; coords: string }>
+    Record<
+      (typeof PATRO_PLANET_KEYS)[number],
+      { rashiNe: string; rashiEn?: string; coords: string; isRetrograde?: boolean; isCombust?: boolean }
+    >
   >;
   belaantar?: string;
 };
@@ -169,6 +172,8 @@ export function buildGrahaSpashtaMatrix(days: CalendarDay[]): GrahaSpashtaRow[] 
           rashiNe,
           rashiEn: RASHI_COLUMNS_EN[RASHI_COLUMNS_NE.indexOf(rashiNe as (typeof RASHI_COLUMNS_NE)[number])] ?? rashiNe,
           coords: planetDegreeCells(info),
+          isRetrograde: info.is_retrograde ?? info.retrograde ?? false,
+          isCombust: info.is_combust ?? false,
         };
       }
     }
