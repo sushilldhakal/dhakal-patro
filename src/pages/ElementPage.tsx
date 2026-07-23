@@ -10,15 +10,23 @@ import { patroCard } from "@/lib/patro-classes";
 import { adToBS, bsToAD, formatBsAdStamp, getBSMonthLength } from "@/lib/bs-calendar";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
+import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
+import { NavataraBalamCardGrid } from "@/components/panchanga/NavataraBalamCardGrid";
 import { useRouteLoading } from "@/lib/route-loading";
 import { ELEMENT_BY_ID } from "@/lib/panchanga-elements";
 import { ELEMENT_DESCRIPTIONS } from "@/lib/panchanga-element-descriptions";
+import { getChandraBalamCards, getTaraBalamCards } from "@/lib/balam-cards";
+import { formatRashiDisplay, getChandrabalamTable, getTarabalaTable } from "@/lib/panchanga-format";
+import { todayAdStringInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   elementKeys,
   fetchElementDay,
   fetchElementSpans,
+  fetchPanchanga,
+  panchangaKeys,
   type ElementSpan,
   type ElementStamp,
+  type PanchangaDay,
 } from "@/lib/api";
 
 function toAdStr(d: Date): string {
@@ -214,6 +222,48 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
   return <p className="text-sm">{pick("विवरण उपलब्ध छैन।", "No data available.")}</p>;
 }
 
+function NavataraBalamElementView({
+  elementId,
+  p,
+  clock,
+}: {
+  elementId: "chandrabala" | "tarabala";
+  p: PanchangaDay;
+  clock?: string;
+}) {
+  const { pick, lang } = useLocale();
+  const isChandra = elementId === "chandrabala";
+  const cards = isChandra ? getChandraBalamCards(p) : getTaraBalamCards(p);
+  const table = isChandra ? getChandrabalamTable(p) : getTarabalaTable(p);
+
+  const moonRef = table?.moon_label
+    ? pick(
+        isChandra
+          ? `सूर्योदयको चन्द्र राशि: ${table.moon_label}`
+          : `सूर्योदयको चन्द्र नक्षत्र: ${table.moon_label}`,
+        isChandra
+          ? `Moon sign at sunrise: ${table.moon_label_en ?? table.moon_label}`
+          : `Moon nakshatra at sunrise: ${table.moon_label_en ?? table.moon_label}`,
+      )
+    : undefined;
+
+  const formatName = isChandra
+    ? (card: ReturnType<typeof getChandraBalamCards>[number]) =>
+        formatRashiDisplay(card.name, card.nameEn, lang) ?? pick(card.name, card.nameEn ?? card.name)
+    : (card: ReturnType<typeof getTaraBalamCards>[number]) => pick(card.name, card.nameEn ?? card.name);
+
+  if (!cards.length) {
+    return <p className="text-sm">{pick("विवरण उपलब्ध छैन।", "No data available.")}</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {moonRef ? <p className="m-0 text-center text-sm text-muted-foreground">{moonRef}</p> : null}
+      <NavataraBalamCardGrid cards={cards} clock={clock} formatName={formatName} lang={lang} />
+    </div>
+  );
+}
+
 /* ── description (what it is · how it's calculated · what it means) ──────── */
 
 function ElementDescription({ elementId }: { elementId: string }) {
@@ -253,6 +303,7 @@ export function ElementPage() {
   const { pick } = useLocale();
   const { location, setLocation } = usePanchangaLocation();
   const meta = name ? ELEMENT_BY_ID[name] : undefined;
+  const isNavataraBal = name === "chandrabala" || name === "tarabala";
 
   const today = new Date();
   const todayAd = toAdStr(today);
@@ -275,14 +326,30 @@ export function ElementPage() {
   const dayQuery = useQuery({
     queryKey: elementKeys.day(name ?? "", dayAd, location.params),
     queryFn: () => fetchElementDay(name!, dayAd, location.params),
-    enabled: Boolean(name) && Boolean(meta) && !isSpan,
+    enabled: Boolean(name) && Boolean(meta) && !isSpan && !isNavataraBal,
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
 
+  const panchangaQuery = useQuery({
+    queryKey: panchangaKeys.day(dayAd, "ad", location.params),
+    queryFn: () => fetchPanchanga(dayAd, "ad", location.params),
+    enabled: Boolean(name) && Boolean(meta) && !isSpan && isNavataraBal,
+    staleTime: 1000 * 60 * 30,
+    placeholderData: keepPreviousData,
+  });
+
+  const timezone = resolveTimeZone(undefined, location.params.timezone);
+  const elementClock =
+    dayAd === todayAdStringInTimezone(new Date(), timezone)
+      ? defaultClockForTimezone(timezone)
+      : undefined;
+
   const firstLoading = isSpan
     ? spanQuery.isLoading && !spanQuery.data
-    : dayQuery.isLoading && !dayQuery.data;
+    : isNavataraBal
+      ? panchangaQuery.isLoading && !panchangaQuery.data
+      : dayQuery.isLoading && !dayQuery.data;
   useRouteLoading(Boolean(meta) && firstLoading);
 
   if (!meta) {
@@ -346,6 +413,20 @@ export function ElementPage() {
           <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
         ) : spanQuery.data ? (
           <SpanList spans={spanQuery.data.spans} timeZone={spanQuery.data.timezone} />
+        ) : (
+          <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
+        )
+      ) : isNavataraBal ? (
+        panchangaQuery.isLoading && !panchangaQuery.data ? (
+          <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+        ) : panchangaQuery.data ? (
+          <div className={cn(patroCard, "p-3.5")}>
+            <NavataraBalamElementView
+              elementId={name as "chandrabala" | "tarabala"}
+              p={panchangaQuery.data}
+              clock={elementClock}
+            />
+          </div>
         ) : (
           <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
         )

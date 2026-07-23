@@ -121,17 +121,19 @@ const wheelStageStars =
   "before:bg-[radial-gradient(1.2px_1.2px_at_18%_22%,rgba(233,243,241,0.5),transparent),radial-gradient(1px_1px_at_72%_16%,rgba(233,243,241,0.4),transparent),radial-gradient(1.4px_1.4px_at_84%_64%,rgba(233,243,241,0.45),transparent),radial-gradient(1px_1px_at_30%_78%,rgba(233,243,241,0.35),transparent),radial-gradient(1.2px_1.2px_at_58%_88%,rgba(233,243,241,0.4),transparent),radial-gradient(1px_1px_at_8%_56%,rgba(233,243,241,0.3),transparent),radial-gradient(1.1px_1.1px_at_92%_38%,rgba(233,243,241,0.4),transparent)]";
 
 export const wheelStage = cn(
-  "relative mx-auto h-[min(90vh,960px)] min-h-[800px] w-full max-w-[1400px] overflow-hidden",
-  "max-[720px]:h-[min(78vh,640px)] max-[720px]:min-h-[520px]",
+  "relative mx-auto min-h-0 w-full max-w-[1400px] overflow-hidden",
+  "h-[min(calc(100dvh-env(safe-area-inset-top,0px)-64px-20px),960px)]",
+  "max-[720px]:h-[min(calc(100dvh-env(safe-area-inset-top,0px)-64px-20px),640px)]",
   "bg-[radial-gradient(circle_at_50%_47%,var(--w-sky-0)_0%,var(--w-sky-1)_42%,var(--w-sky-2)_78%)]",
   "before:pointer-events-none before:absolute before:inset-0 before:opacity-70 before:content-['']",
   wheelStageStars,
 );
 
 export const wheelStageExpanded = cn(
-  wheelStage,
-  "h-[100dvh] min-h-0 max-w-none",
-  "max-[720px]:h-[100dvh] max-[720px]:min-h-0",
+  "relative mx-auto h-[calc(100dvh-20px)] min-h-0 max-h-[calc(100dvh-20px)] w-full max-w-none overflow-hidden",
+  "bg-[radial-gradient(circle_at_50%_47%,var(--w-sky-0)_0%,var(--w-sky-1)_42%,var(--w-sky-2)_78%)]",
+  "before:pointer-events-none before:absolute before:inset-0 before:opacity-70 before:content-['']",
+  wheelStageStars,
 );
 
 export const wheelExpandedShell =

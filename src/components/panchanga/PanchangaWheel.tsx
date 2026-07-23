@@ -802,16 +802,7 @@ function PanchangaWheelBody({
     </div>
   );
 
-  return (
-    <div
-      className={cn(
-        expanded &&
-          "min-h-[min(90vh,960px)] max-[720px]:min-h-[520px]",
-      )}
-    >
-      {expanded ? createPortal(wheelNode, document.body) : wheelNode}
-    </div>
-  );
+  return expanded ? createPortal(wheelNode, document.body) : wheelNode;
 }
 
 function PanchangaWheelImpl(props: Props) {

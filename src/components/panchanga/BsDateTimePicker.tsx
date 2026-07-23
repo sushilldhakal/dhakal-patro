@@ -139,7 +139,7 @@ export function BsDateTimePicker({
   };
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="mx-auto flex w-full max-w-[22.5rem] flex-col gap-2.5">
       {/* Month / year header with step arrows */}
       <div className="flex items-center gap-1.5">
         <button
@@ -176,50 +176,59 @@ export function BsDateTimePicker({
         </button>
       </div>
 
-      {/* Weekday header */}
-      <div className="grid grid-cols-7 gap-0.5">
-        {weekdays.map((wd, i) => (
-          <div
-            key={wd}
-            className={cn(
-              "flex h-5 items-center justify-center text-sm font-semibold uppercase tracking-tight",
-              (i === 0 || i === 6) && "text-danger/80",
-            )}
-          >
-            {wd}
-          </div>
-        ))}
-      </div>
-
-      {/* Day grid */}
-      <div className="grid grid-cols-7 gap-0.5">
-        {cells.map((d, i) => {
-          if (d == null) return <div key={`e-${i}`} aria-hidden />;
-          const col = i % 7;
-          const isWeekend = col === 0 || col === 6;
-          const isSelected = d === dDay;
-          const isToday =
-            todayBs.year === dYear && todayBs.month === dMonth && todayBs.day === d;
-          return (
-            <button
-              key={d}
-              type="button"
-              onClick={() => setDraft((prev) => ({ ...prev, day: d }))}
-              aria-label={`${digits(d)}`}
-              aria-pressed={isSelected}
+      {/* Calendar grid */}
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        <div className="grid grid-cols-7 border-b border-border bg-muted/30">
+          {weekdays.map((wd, i) => (
+            <div
+              key={wd}
               className={cn(
-                "font-num flex h-8 items-center justify-center rounded-md text-sm font-semibold tabular-nums transition-colors",
-                !isSelected && "hover:bg-surface-hover",
-                !isSelected && isWeekend && "text-danger",
-                !isSelected && !isWeekend && "text-foreground",
-                isToday && !isSelected && "ring-1 ring-inset ring-secondary",
-                isSelected && "bg-secondary text-secondary-foreground",
+                "flex h-6 items-center justify-center border-r border-border text-sm font-semibold uppercase tracking-tight last:border-r-0",
+                (i === 0 || i === 6) && "text-danger/80",
               )}
             >
-              {digits(d)}
-            </button>
-          );
-        })}
+              {wd}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7">
+          {cells.map((d, i) => {
+            if (d == null) {
+              return (
+                <div
+                  key={`e-${i}`}
+                  aria-hidden
+                  className="h-8 border-b border-r border-border bg-muted/10"
+                />
+              );
+            }
+            const col = i % 7;
+            const isWeekend = col === 0 || col === 6;
+            const isSelected = d === dDay;
+            const isToday =
+              todayBs.year === dYear && todayBs.month === dMonth && todayBs.day === d;
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDraft((prev) => ({ ...prev, day: d }))}
+                aria-label={`${digits(d)}`}
+                aria-pressed={isSelected}
+                className={cn(
+                  "font-num flex h-8 items-center justify-center border-b border-r border-border text-sm font-semibold tabular-nums transition-colors",
+                  !isSelected && "hover:bg-surface-hover",
+                  !isSelected && isWeekend && "text-danger",
+                  !isSelected && !isWeekend && "text-foreground",
+                  isToday && !isSelected && "ring-1 ring-inset ring-secondary",
+                  isSelected && "bg-secondary text-secondary-foreground",
+                )}
+              >
+                {digits(d)}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Time picker — 12 hour with AM/PM */}

@@ -107,6 +107,14 @@ export async function fetchEphemerisPanchangaDay(
     solar_corrections:
       instantDetail.solar_corrections ?? dailyDetail.solar_corrections,
     nivas_shool: instantDetail.nivas_shool ?? dailyDetail.nivas_shool ?? daily.nivas_shool,
+    chandrabalam: dailyDetail.chandrabalam ?? instantDetail.chandrabalam,
+    tarabalam: dailyDetail.tarabalam ?? instantDetail.tarabalam,
+    chandrabala_table: dailyDetail.chandrabala_table ?? instantDetail.chandrabala_table,
+    tarabala_table: dailyDetail.tarabala_table ?? instantDetail.tarabala_table,
+    panchaka_rahita: dailyDetail.panchaka_rahita ?? instantDetail.panchaka_rahita,
+    udaya_lagna: dailyDetail.udaya_lagna ?? instantDetail.udaya_lagna,
+    chandra_rashi_spans: dailyDetail.chandra_rashi_spans ?? instantDetail.chandra_rashi_spans,
+    nakshatra_pada_spans: dailyDetail.nakshatra_pada_spans ?? instantDetail.nakshatra_pada_spans,
     lagna_spans:
       getLagnaSpans(normalized) ??
       (instantDetail.lagna_spans as PanchangaDay["lagna_spans"]) ??
@@ -121,6 +129,12 @@ export async function fetchEphemerisPanchangaDay(
     ...daily,
     ...normalized,
     nivas_shool: normalized.nivas_shool ?? daily.nivas_shool,
+    chandrabalam: dailyDetail.chandrabalam ?? normalized.chandrabalam,
+    tarabalam: dailyDetail.tarabalam ?? normalized.tarabalam,
+    chandrabala_table: daily.chandrabala_table ?? normalized.chandrabala_table,
+    tarabala_table: daily.tarabala_table ?? normalized.tarabala_table,
+    panchaka_rahita: (dailyDetail.panchaka_rahita ?? normalized.panchaka_rahita) as PanchangaDay["panchaka_rahita"],
+    udaya_lagna: (dailyDetail.udaya_lagna ?? normalized.udaya_lagna) as PanchangaDay["udaya_lagna"],
     planets: instantPlanets ?? normalized.planets ?? daily.planets,
     planets_anchor: instantPlanetsAnchor,
     sunrise: normalized.sunrise ?? daily.sunrise,

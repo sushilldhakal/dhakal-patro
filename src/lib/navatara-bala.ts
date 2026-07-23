@@ -58,3 +58,37 @@ export function formatNavataraQuality(quality: string, lang?: string): string {
   if (normalizeLang(lang) !== "en") return quality;
   return translateToken(quality, QUALITY_NE_TO_EN);
 }
+
+const NAVATARA_TYPES: Array<{
+  id: number;
+  tara: string;
+  quality: string;
+  tone: NavataraTone;
+}> = [
+  { id: 1, tara: "जन्म", quality: "मध्यम", tone: "neutral" },
+  { id: 2, tara: "सम्पत्", quality: "अति शुभ", tone: "best" },
+  { id: 3, tara: "विपत्", quality: "अशुभ", tone: "bad" },
+  { id: 4, tara: "क्षेम", quality: "अति शुभ", tone: "best" },
+  { id: 5, tara: "प्रत्यक्", quality: "अशुभ", tone: "bad" },
+  { id: 6, tara: "साधना", quality: "अति शुभ", tone: "best" },
+  { id: 7, tara: "निधन", quality: "घातक", tone: "worst" },
+  { id: 8, tara: "मित्र", quality: "शुभ", tone: "good" },
+  { id: 9, tara: "परम मित्र", quality: "अति शुभ", tone: "best" },
+];
+
+function computeNavataraNumber(moonIdx: number, targetIdx: number, cycleSize: number): number {
+  const diff = (targetIdx - moonIdx + cycleSize) % cycleSize;
+  if (diff === 0) return 1;
+  return ((9 - (diff % 9)) % 9) + 1;
+}
+
+/** Navatara tara/quality/tone for a janma rashi or nakshatra vs moon reference. */
+export function computeNavataraMeta(
+  moonIdx: number,
+  targetIdx: number,
+  cycleSize: number,
+): Pick<import("@/lib/api").NavataraRow, "tara" | "quality" | "tone" | "tara_num"> {
+  const taraNum = computeNavataraNumber(moonIdx, targetIdx, cycleSize);
+  const row = NAVATARA_TYPES.find((t) => t.id === taraNum) ?? NAVATARA_TYPES[0];
+  return { tara: row.tara, quality: row.quality, tone: row.tone, tara_num: taraNum };
+}

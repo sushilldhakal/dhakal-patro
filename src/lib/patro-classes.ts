@@ -132,6 +132,10 @@ const NAVATARA_TONE_BG: Record<Tone, string> = {
   worst: "bg-tone-worst",
 };
 
+export function patroNavataraToneBg(tone: Tone): string {
+  return NAVATARA_TONE_BG[tone] ?? "bg-surface-inset";
+}
+
 export function patroNavataraRow(tone: Tone, current?: boolean) {
   return cn(
     "flex min-w-0 flex-col items-center gap-0.5 rounded-md p-1.5 text-center",

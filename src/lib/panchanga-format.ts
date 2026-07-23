@@ -1063,6 +1063,7 @@ export function getSuryaNakshatra(p: PanchangaDay) {
 
 export function getChandrabalam(p: PanchangaDay) {
   const detail = getPanchangaDetail(p);
+  // Always from udaya (sunrise→next-sunrise) daily payload in detail.raw
   return (detail?.chandrabalam ?? p.chandrabalam) as import("@/lib/api").BalamBlock | undefined;
 }
 

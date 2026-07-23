@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
+import { patroNavataraToneBg } from "@/lib/patro-classes";
 
 export function PanchangaSection({
   titleKey,
@@ -28,7 +29,7 @@ export function PanchangaSection({
         className,
       )}
     >
-      <header className="flex items-baseline gap-2.5 px-4 py-2.5 border-b border-border bg-secondary/[0.09] dark:bg-secondary/20">
+      <header className="flex items-baseline justify-center gap-2.5 px-4 py-2.5 border-b border-border bg-secondary/[0.09] dark:bg-secondary/20">
         <h2 className="text-sm font-bold m-0">{title}</h2>
       </header>
       {children}
@@ -54,11 +55,20 @@ function QuadLabel({ children, className }: { children: React.ReactNode; classNa
   );
 }
 
-function QuadValue({ children, className }: { children: React.ReactNode; className?: string }) {
+function QuadValue({
+  children,
+  className,
+  nowrap,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  nowrap?: boolean;
+}) {
   return (
     <div
       className={cn(
-        "text-sm text-base leading-snug flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0",
+        "text-sm text-base leading-snug flex items-baseline gap-x-2 gap-y-1 min-w-0",
+        nowrap ? "flex-nowrap whitespace-nowrap" : "flex-wrap",
         className,
       )}
     >
@@ -67,7 +77,205 @@ function QuadValue({ children, className }: { children: React.ReactNode; classNa
   );
 }
 
-/** One table band: label|value on the left, optional label|value on the right. */
+/** Flex wrap — content-sized cards, multiple per row, each row centered. */
+export const panchangaCardGrid =
+  "flex w-full flex-wrap justify-center gap-2 p-4";
+
+/** Content-sized card; width follows label + value, never stretches. */
+export const panchangaCardBase =
+  "inline-flex w-max max-w-full shrink-0 grow-0 flex-col gap-1 rounded-xl border border-border/80 bg-background/60 px-3.5 py-2.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--foreground)_6%,transparent)]";
+
+/** Full-width subgroup label inside a card grid (forces a new row). */
+export function PanchangaGroupLabel({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <p
+      className={cn(
+        "m-0 w-full basis-full pt-1 text-center text-sm font-semibold text-muted-foreground first:pt-0",
+        className,
+      )}
+    >
+      {children}
+    </p>
+  );
+}
+
+/** Navatara balam card: name + time on top, tara/quality below, tone background. */
+export function PanchangaBalamCard({
+  titleLine,
+  subtitleLine,
+  tone = "neutral",
+  isCurrent,
+  className,
+}: {
+  titleLine: React.ReactNode;
+  subtitleLine?: React.ReactNode;
+  tone?: "best" | "good" | "neutral" | "bad" | "worst";
+  isCurrent?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        panchangaCardBase,
+        "min-w-[8.5rem] gap-1 border-transparent",
+        patroNavataraToneBg(tone),
+        isCurrent &&
+          "shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent)_65%,transparent)] ring-2 ring-accent/80",
+        className,
+      )}
+    >
+      <span className="text-sm font-bold leading-snug text-foreground whitespace-nowrap">{titleLine}</span>
+      {subtitleLine ? (
+        <span className="text-xs font-semibold leading-snug text-muted-foreground whitespace-nowrap">
+          {subtitleLine}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Udaya lagna card: rashi + time on top, optional pushkara line below. */
+export function PanchangaLagnaCard({
+  titleLine,
+  footerLine,
+  isCurrent,
+  className,
+}: {
+  titleLine: React.ReactNode;
+  footerLine?: React.ReactNode;
+  isCurrent?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        panchangaCardBase,
+        "min-w-[8.5rem] gap-1",
+        patroNavataraToneBg("neutral"),
+        isCurrent &&
+          "shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent)_65%,transparent)] ring-2 ring-accent/80",
+        className,
+      )}
+    >
+      <span className="text-sm font-bold leading-snug text-foreground whitespace-nowrap">{titleLine}</span>
+      {footerLine ? (
+        <span className="text-xs font-semibold leading-snug text-muted-foreground whitespace-nowrap">
+          {footerLine}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Compact label + time card for muhurta / panchaka / lagna rows. */
+export function PanchangaTimingCard({
+  label,
+  time,
+  note,
+  highlight,
+  className,
+}: {
+  label: React.ReactNode;
+  time?: React.ReactNode;
+  note?: React.ReactNode;
+  highlight?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        panchangaCardBase,
+        "gap-1.5",
+        highlight && "border-success/45 bg-success/[0.06]",
+        className,
+      )}
+    >
+      <span
+        className={cn(
+          "text-sm font-semibold whitespace-nowrap",
+          highlight ? "text-success" : "text-muted-foreground",
+        )}
+      >
+        {label}
+      </span>
+      {time ? (
+        <span className="font-mono text-sm font-semibold tabular-nums whitespace-nowrap">
+          {time}
+        </span>
+      ) : null}
+      {note ? (
+        <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">{note}</span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Title + chip list card for balam groups. */
+export function PanchangaChipGroupCard({
+  title,
+  children,
+  className,
+}: {
+  title: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn(panchangaCardBase, "gap-2", className)}>
+      <h3 className="m-0 text-sm font-semibold text-muted-foreground whitespace-nowrap">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+/** Wider card for panels (muhurta split, etc.). */
+export function PanchangaPanelCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn(panchangaCardBase, "max-w-[min(100%,36rem)]", className)}>
+      {children}
+    </div>
+  );
+}
+
+/** Single label|value card inside a PanchangaTableBody grid. */
+export function PanchangaFieldCell({
+  labelKey,
+  label,
+  children,
+  className,
+  nowrap,
+}: {
+  labelKey?: string;
+  label?: string;
+  children: React.ReactNode;
+  className?: string;
+  nowrap?: boolean;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className={cn(panchangaCardBase, className)}>
+      <QuadLabel className="shrink-0 whitespace-nowrap text-muted-foreground">
+        {rowLabel(labelKey, label, t)}
+      </QuadLabel>
+      <QuadValue nowrap={nowrap}>{children}</QuadValue>
+    </div>
+  );
+}
+
+/** @deprecated use PanchangaFieldCell — kept for gradual migration. */
 export function PanchangaQuadRow({
   left,
   right,
@@ -77,32 +285,22 @@ export function PanchangaQuadRow({
   right?: { labelKey?: string; label?: string; children: React.ReactNode };
   className?: string;
 }) {
-  const { t } = useTranslation();
-
   return (
-    <div
-      className={cn(
-        "grid grid-cols-[minmax(4.75rem,6.25rem)_1fr] sm:grid-cols-[minmax(4.75rem,6.25rem)_1fr_minmax(4.75rem,6.25rem)_1fr]",
-        "gap-x-3 gap-y-1.5 px-4 py-2 border-b border-border items-start",
-        className,
-      )}
-    >
-      <QuadLabel>{rowLabel(left.labelKey, left.label, t)}</QuadLabel>
-      <QuadValue>{left.children}</QuadValue>
+    <>
+      <PanchangaFieldCell
+        labelKey={left.labelKey}
+        label={left.label}
+        className={className}
+        nowrap
+      >
+        {left.children}
+      </PanchangaFieldCell>
       {right ? (
-        <>
-          <QuadLabel className="max-sm:col-span-2 max-sm:mt-1.5 max-sm:pt-2 max-sm:border-t max-sm:border-dashed max-sm:border-border">
-            {rowLabel(right.labelKey, right.label, t)}
-          </QuadLabel>
-          <QuadValue className="max-sm:col-span-2">{right.children}</QuadValue>
-        </>
-      ) : (
-        <>
-          <div className="hidden sm:block" aria-hidden />
-          <div className="hidden sm:block" aria-hidden />
-        </>
-      )}
-    </div>
+        <PanchangaFieldCell labelKey={right.labelKey} label={right.label} nowrap>
+          {right.children}
+        </PanchangaFieldCell>
+      ) : null}
+    </>
   );
 }
 
@@ -118,18 +316,10 @@ export function PanchangaFullRow({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { t } = useTranslation();
-
   return (
-    <div
-      className={cn(
-        "grid grid-cols-[minmax(4.75rem,6.25rem)_1fr] gap-x-3 gap-y-1 px-4 py-2 border-b border-border items-start",
-        className,
-      )}
-    >
-      <QuadLabel>{rowLabel(labelKey, label, t)}</QuadLabel>
-      <QuadValue>{children}</QuadValue>
-    </div>
+    <PanchangaFieldCell labelKey={labelKey} label={label} className={className}>
+      {children}
+    </PanchangaFieldCell>
   );
 }
 
@@ -140,11 +330,7 @@ export function PanchangaTableBody({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <div className={cn("[&>*:last-child]:border-b-0", className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn(panchangaCardGrid, className)}>{children}</div>;
 }
 
 /** @deprecated use PanchangaQuadRow */
@@ -197,13 +383,13 @@ export function UptoValue({
   return (
     <div
       className={cn(
-        "flex items-baseline gap-1.5 min-w-0",
-        compact ? "justify-between gap-2 w-full" : "flex-wrap",
+        "flex min-w-0 items-baseline gap-1.5",
+        compact ? "justify-between gap-2 w-full" : "flex-nowrap",
       )}
     >
-      <span className="inline-flex items-baseline gap-1.5 min-w-0">
+      <span className="inline-flex min-w-0 items-baseline gap-1.5">
         {sym && <span className="text-sm shrink-0">{sym}</span>}
-        <span className="font-semibold">{name}</span>
+        <span className="font-semibold whitespace-nowrap">{name}</span>
         {badge && (
           <span className="text-sm font-semibold px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary dark:text-accent">
             {badge}
