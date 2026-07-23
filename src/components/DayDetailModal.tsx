@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X, ChevronLeft, Sunrise, Sunset, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchPanchanga, panchangaKeys, type CalendarDay, type PanchangaDay } from "@/lib/api";
+import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
   formatAdShort,
@@ -102,13 +103,16 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
     <>
       <h4 className={sectionTitle}>{pick("उदयकालिक स्पष्टग्रह", "Planets at sunrise")}</h4>
       <div className="grid grid-cols-2 gap-2">
-        {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords }) => (
+        {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords, isRetrograde, isCombust }) => (
           <div
             key={key}
             className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2 text-sm text-base"
           >
             <div className="flex flex-col gap-0.5">
-              <span>{pick(label, labelEn)}</span>
+              <span className="flex flex-wrap items-center gap-1.5">
+                {pick(label, labelEn)}
+                <GrahaStatusBadges isRetrograde={isRetrograde} isCombust={isCombust} />
+              </span>
               {(rashiNe || rashiEn) && (
                 <span className="text-sm">
                   {pick(rashiNe ?? "", rashiEn ?? TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "")}

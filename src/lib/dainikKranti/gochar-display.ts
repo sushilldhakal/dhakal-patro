@@ -56,14 +56,24 @@ export function grahaRashiNe(g: GocharGraha): string | undefined {
   return g.rashi_ne ?? rashiEnToNe(g.rashi);
 }
 
+export type GocharChartPlanet = {
+  label: string;
+  isRetrograde?: boolean;
+  isCombust?: boolean;
+};
+
 export function buildPlanetsByRashi(
   grahas: Array<GocharGraha & { key: string }>,
-): Record<number, string[]> {
-  const out: Record<number, string[]> = {};
+): Record<number, GocharChartPlanet[]> {
+  const out: Record<number, GocharChartPlanet[]> = {};
   for (const g of grahas) {
     const num = rashiNoFromGraha(g);
     if (num == null) continue;
-    (out[num] ??= []).push(grahaChartLabel(g.key, g));
+    (out[num] ??= []).push({
+      label: grahaChartLabel(g.key, g),
+      isRetrograde: g.is_retrograde,
+      isCombust: g.is_combust,
+    });
   }
   return out;
 }

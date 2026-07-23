@@ -1,4 +1,5 @@
 import type { PanchangaDay } from "@/lib/api";
+import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import { useTranslation } from "react-i18next";
 import {
   formatAayanLabel,
@@ -820,13 +821,16 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
             )}
           </div>
         )}
-        {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords }) => (
+        {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords, isRetrograde, isCombust }) => (
           <div
             key={key}
             className="flex flex-wrap items-start gap-x-3 gap-y-1 py-2 border-b border-border last:border-0"
           >
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold break-words">{pick(label, labelEn)}</div>
+              <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold break-words">
+                {pick(label, labelEn)}
+                <GrahaStatusBadges isRetrograde={isRetrograde} isCombust={isCombust} />
+              </div>
               {(rashiNe || rashiEn) && (
                 <div className="text-sm break-words">
                   {formatRashiDisplay(rashiNe, rashiEn, lang) ?? pick(rashiNe ?? "", rashiEn ?? "")}

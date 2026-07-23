@@ -36,6 +36,8 @@ export function buildPanchangaD1Houses(p: PanchangaDay | null | undefined): Bhav
         key: row.key as GrahaKey,
         labelNe: row.label,
         rashi,
+        isRetrograde: row.isRetrograde,
+        isCombust: row.isCombust,
       },
     ];
   });

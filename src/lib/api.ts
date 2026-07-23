@@ -421,6 +421,8 @@ export interface GocharGraha {
   /** "Margi" (direct) or "Vakri" (retrograde). */
   motion?: string;
   is_retrograde?: boolean;
+  /** अस्त — combust (within the Sun's combustion orb). */
+  is_combust?: boolean;
   next_rashi_entry?: GocharNextEntry | null;
   next_nakshatra_entry?: GocharNextEntry | null;
   next_pada_entry?: GocharNextEntry | null;
@@ -2252,6 +2254,8 @@ export interface PlanetInfo {
   dms_in_rashi?: string;
   retrograde?: boolean;
   is_retrograde?: boolean;
+  /** अस्त — combust (within the Sun's combustion orb). */
+  is_combust?: boolean;
   longitude?: number;
   speed?: number;
   motion?: string;
