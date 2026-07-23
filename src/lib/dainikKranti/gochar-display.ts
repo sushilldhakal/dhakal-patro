@@ -57,6 +57,7 @@ export function grahaRashiNe(g: GocharGraha): string | undefined {
 }
 
 export type GocharChartPlanet = {
+  key: string;
   label: string;
   isRetrograde?: boolean;
   isCombust?: boolean;
@@ -70,6 +71,7 @@ export function buildPlanetsByRashi(
     const num = rashiNoFromGraha(g);
     if (num == null) continue;
     (out[num] ??= []).push({
+      key: g.key,
       label: grahaChartLabel(g.key, g),
       isRetrograde: g.is_retrograde,
       isCombust: g.is_combust,

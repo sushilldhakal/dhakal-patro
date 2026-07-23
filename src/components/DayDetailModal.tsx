@@ -111,7 +111,7 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
             <div className="flex flex-col gap-0.5">
               <span className="flex flex-wrap items-center gap-1.5">
                 {pick(label, labelEn)}
-                <GrahaStatusBadges isRetrograde={isRetrograde} isCombust={isCombust} />
+                <GrahaStatusBadges planetKey={key} isRetrograde={isRetrograde} isCombust={isCombust} />
               </span>
               {(rashiNe || rashiEn) && (
                 <span className="text-sm">

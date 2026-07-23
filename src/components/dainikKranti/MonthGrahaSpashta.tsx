@@ -6,6 +6,7 @@ import {
   type GrahaSpashtaRow,
 } from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
+import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import { useLocale } from "@/i18n/locale";
 import {
   Table,
@@ -105,14 +106,25 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
                   <TableCell className={cn(td, "")}>
                     {pick(row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
                   </TableCell>
-                  {PATRO_PLANET_KEYS.map((key) => (
-                    <TableCell
-                      key={key}
-                      className={cn(td, "text-center font-mono tabular-nums")}
-                    >
-                      {formatPlanetCell(row.planets[key], isEn)}
-                    </TableCell>
-                  ))}
+                  {PATRO_PLANET_KEYS.map((key) => {
+                    const cell = row.planets[key];
+                    return (
+                      <TableCell
+                        key={key}
+                        className={cn(td, "text-center font-mono tabular-nums")}
+                      >
+                        <span className="inline-flex items-center justify-center gap-1">
+                          {formatPlanetCell(cell, isEn)}
+                          <GrahaStatusBadges
+                            planetKey={key}
+                            isRetrograde={cell?.isRetrograde}
+                            isCombust={cell?.isCombust}
+                            size={12}
+                          />
+                        </span>
+                      </TableCell>
+                    );
+                  })}
                   <TableCell className={cn(td, "text-center font-mono tabular-nums")}>
                     {row.belaantar ?? (hasPlanets ? "—" : "—")}
                   </TableCell>

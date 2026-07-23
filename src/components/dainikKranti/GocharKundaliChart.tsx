@@ -11,7 +11,7 @@ import {
 } from "@/lib/kundali/north-indian-layout";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
-import { GrahaStatusLegend } from "@/components/graha/GrahaStatusBadges";
+import { GrahaStatusLegend, GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
 import { useLocale } from "@/i18n/locale";
 
 type GrahaRow = GocharGraha & { key: string };
@@ -89,40 +89,32 @@ export function GocharKundaliChart({
             const [cx, cy] = polygonCentroid(points);
             const planets = planetsByRashi[rashiNo] ?? [];
 
+            const slot = planets.length > 3 ? 15 : 18;
             return (
               <g key={rashiNe}>
-                {planets.length ? (
-                  <text
-                    x={cx}
-                    y={cy - 6}
-                    textAnchor="middle"
-                    className="fill-foreground text-sm font-semibold"
-                  >
-                    {planets.map((planet, i) => (
-                      <tspan key={i}>
-                        {i > 0 ? " " : ""}
+                {planets.map((planet, i) => {
+                  const px = cx + (i - (planets.length - 1) / 2) * slot;
+                  return (
+                    <g key={planet.key}>
+                      <text
+                        x={px}
+                        y={cy - 6}
+                        textAnchor="middle"
+                        className="fill-foreground text-sm font-semibold"
+                      >
                         {planet.label}
-                        {planet.isRetrograde && (
-                          <tspan dy="-3" className="fill-secondary" fontSize="9">
-                            {pick("व", "R")}
-                          </tspan>
-                        )}
-                        {planet.isCombust && (
-                          <tspan
-                            dy={planet.isRetrograde ? "0" : "-3"}
-                            className="fill-destructive"
-                            fontSize="9"
-                          >
-                            {pick("अ", "C")}
-                          </tspan>
-                        )}
-                        {(planet.isRetrograde || planet.isCombust) && (
-                          <tspan dy="3" fontSize="0"> </tspan>
-                        )}
-                      </tspan>
-                    ))}
-                  </text>
-                ) : null}
+                      </text>
+                      <GrahaStatusMarksSvg
+                        planetKey={planet.key}
+                        isRetrograde={planet.isRetrograde}
+                        isCombust={planet.isCombust}
+                        x={px + 3}
+                        y={cy - 18}
+                        size={7}
+                      />
+                    </g>
+                  );
+                })}
                 <text
                   x={cx}
                   y={cy + (planets.length ? 14 : 4)}
