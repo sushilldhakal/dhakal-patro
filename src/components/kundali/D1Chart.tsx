@@ -101,7 +101,11 @@ export function D1Chart({ houses }: Props) {
                 const col = i - rowStart;
                 const x = cx + (col - (itemsInRow - 1) / 2) * layout.colGap;
                 const y = cy + row * layout.rowGap;
-                const markSize = layout.fontSize * 0.62;
+                const markSize = layout.fontSize * 0.5;
+                const abbr = pick(
+                  PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2),
+                  PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2),
+                );
                 return (
                   <g key={planet.key}>
                     <text
@@ -111,14 +115,17 @@ export function D1Chart({ houses }: Props) {
                       style={{ fontSize: `${layout.fontSize}px` }}
                       className="text-base fill-foreground"
                     >
-                      {pick(PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2))}
+                      {abbr}
                     </text>
+                    {/* Marks sit just right of the abbreviation, aligned with
+                        the glyph's mid-height — never lifted into the rashi
+                        label above or crowded onto the neighbour. */}
                     <GrahaStatusMarksSvg
                       planetKey={planet.key}
                       isRetrograde={planet.isRetrograde}
                       isCombust={planet.isCombust}
-                      x={x + layout.fontSize * 0.5}
-                      y={y - layout.fontSize * 1.25}
+                      x={x + layout.fontSize * 0.42}
+                      y={y - markSize - layout.fontSize * 0.05}
                       size={markSize}
                     />
                   </g>
