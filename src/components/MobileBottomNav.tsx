@@ -63,9 +63,9 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label={pick("मुख्य नेभिगेसन", "Primary navigation")}
-      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pointer-events-none lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pointer-events-none lg:hidden"
     >
-      <div className="pointer-events-auto mx-auto flex max-w-md items-stretch justify-around gap-0.5 rounded-2xl border border-border bg-background/90 p-1 shadow-[0_6px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md">
+      <div className="pointer-events-auto mx-auto flex max-w-lg items-stretch justify-around gap-0.5 rounded-2xl border border-border bg-background/90 p-1 shadow-[0_6px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md">
         {TABS.map(({ to, icon: Icon, ne, en, match }) => {
           const active = match(pathname);
           return (
