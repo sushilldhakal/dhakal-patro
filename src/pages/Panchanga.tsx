@@ -309,7 +309,11 @@ export function Panchanga() {
         {data && (
           <div className="flex flex-col gap-3">
             <SunMoonSamvatSection p={data} />
-            <PanchangCoreSection p={data} />
+            {/* तिथि/नक्षत्र/योग/करण are reckoned from sunrise (udaya) like a
+                printed patro — show the sunrise anga (e.g. करण गर ९:२९ सम्म),
+                not the one active at the scrubbed instant. Matches the rashi /
+                balam / lagna sections below, which also use the udaya day. */}
+            <PanchangCoreSection p={wheelData ?? data} />
             <RashiSection p={wheelData ?? data} />
             <RituSection p={data} />
             <BalamSection p={wheelData ?? data} clock={clock} />
