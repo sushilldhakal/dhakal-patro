@@ -131,6 +131,9 @@ export const wheelStage = cn(
 
 export const wheelStageExpanded = cn(
   "relative mx-auto h-[calc(100dvh-20px)] min-h-0 max-h-[calc(100dvh-20px)] w-full max-w-none overflow-hidden",
+  // Override wheelStage's ≤720px height cap (min(…,640px)) so full-screen fills
+  // the whole viewport on phones instead of stopping at 640px (half screen).
+  "max-[720px]:h-[calc(100dvh-20px)] max-[720px]:max-h-[calc(100dvh-20px)]",
   "bg-[radial-gradient(circle_at_50%_47%,var(--w-sky-0)_0%,var(--w-sky-1)_42%,var(--w-sky-2)_78%)]",
   "before:pointer-events-none before:absolute before:inset-0 before:opacity-70 before:content-['']",
   wheelStageStars,
