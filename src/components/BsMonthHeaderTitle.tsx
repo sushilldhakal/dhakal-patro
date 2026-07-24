@@ -24,6 +24,7 @@ import {
   patroMonthChipHead,
   patroMonthChipShell,
   patroMonthNavShell,
+  patroMonthNavBtn,
   patroMonthRangeCompactBtn,
   patroMobilePickerBtn,
   patroMobileStepBtn,
@@ -101,6 +102,8 @@ type NavControlsProps = {
   showTime: boolean;
   /** comfortable widths inside the mobile drawer */
   spacious?: boolean;
+  /** hide prev/next when the sheet already has outer step buttons */
+  hideNavArrows?: boolean;
 };
 
 function MonthNavControls({
@@ -131,23 +134,27 @@ function MonthNavControls({
   nextAriaLabel,
   showTime,
   spacious = false,
+  hideNavArrows = false,
 }: NavControlsProps) {
-  const dayW = spacious ? "w-[3.75rem]" : "w-[2.75rem] sm:w-[3.5rem]";
-  const monthW = spacious ? "w-[5.75rem]" : "w-[3.25rem] sm:w-[5.25rem]";
-  const yearW = spacious ? "w-[4.5rem]" : "w-[2.875rem] sm:w-[4.5rem]";
-  const timeW = spacious ? "w-[3.75rem]" : "w-[2.75rem] sm:w-[3.5rem]";
+  const dayW = spacious ? "w-[4rem]" : "w-[2.75rem] sm:w-[3.5rem]";
+  const monthW = spacious ? "w-[6.5rem]" : "w-[3.25rem] sm:w-[5.25rem]";
+  const yearW = spacious ? "w-[5rem]" : "w-[2.875rem] sm:w-[4.5rem]";
+  const timeW = spacious ? "w-[4rem]" : "w-[2.75rem] sm:w-[3.5rem]";
+  const btnClass = spacious ? patroMonthNavBtn : patroMonthRangeCompactBtn;
 
   return (
     <>
-      <button
-        type="button"
-        className={patroMonthRangeCompactBtn}
-        onClick={onPrev}
-        disabled={prevDisabled}
-        aria-label={prevAriaLabel}
-      >
-        <ChevronLeft size={14} strokeWidth={2} />
-      </button>
+      {!hideNavArrows ? (
+        <button
+          type="button"
+          className={btnClass}
+          onClick={onPrev}
+          disabled={prevDisabled}
+          aria-label={prevAriaLabel}
+        >
+          <ChevronLeft size={14} strokeWidth={2} />
+        </button>
+      ) : null}
 
       {dayOptions && onDayChange && dayAriaLabel ? (
         <BsNativeSelect
@@ -156,6 +163,7 @@ function MonthNavControls({
           options={dayOptions}
           ariaLabel={dayAriaLabel}
           onChange={onDayChange}
+          comfortable={spacious}
         />
       ) : null}
 
@@ -165,6 +173,7 @@ function MonthNavControls({
         options={monthOptions}
         ariaLabel={monthAriaLabel}
         onChange={onMonthChange}
+        comfortable={spacious}
       />
 
       <BsNativeSelect
@@ -173,6 +182,7 @@ function MonthNavControls({
         options={yearSelectOptions}
         ariaLabel={yearAriaLabel}
         onChange={onYearChange}
+        comfortable={spacious}
       />
 
       {showTime && hourAriaLabel && minuteAriaLabel ? (
@@ -183,6 +193,7 @@ function MonthNavControls({
             options={hourOptions}
             ariaLabel={hourAriaLabel}
             onChange={(nextHour) => onClockPart(nextHour, minute)}
+            comfortable={spacious}
           />
           <BsNativeSelect
             className={timeW}
@@ -190,19 +201,22 @@ function MonthNavControls({
             options={minuteOptions}
             ariaLabel={minuteAriaLabel}
             onChange={(nextMinute) => onClockPart(hour, nextMinute)}
+            comfortable={spacious}
           />
         </>
       ) : null}
 
-      <button
-        type="button"
-        className={patroMonthRangeCompactBtn}
-        onClick={onNext}
-        disabled={nextDisabled}
-        aria-label={nextAriaLabel}
-      >
-        <ChevronRight size={14} strokeWidth={2} />
-      </button>
+      {!hideNavArrows ? (
+        <button
+          type="button"
+          className={btnClass}
+          onClick={onNext}
+          disabled={nextDisabled}
+          aria-label={nextAriaLabel}
+        >
+          <ChevronRight size={14} strokeWidth={2} />
+        </button>
+      ) : null}
     </>
   );
 }
@@ -418,24 +432,23 @@ export function BsMonthHeaderTitle({
     </div>
   );
 
+  const subtitleLine = adDayEnglish ?? adMonthRangeEnglish;
+
   const titleLine = (
     <>
       {monthTitle}{" "}
       <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+      {subtitleLine ? (
+        <span className="ml-1 text-xs font-semibold text-muted-foreground">{subtitleLine}</span>
+      ) : null}
     </>
   );
-  const subtitleLine = adDayEnglish ?? adMonthRangeEnglish;
 
   const mobileTitleBlock = (
     <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm font-bold leading-tight tracking-tight">
       <span className="min-w-0">{titleLine}</span>
       {samvatsaraLabel ? (
         <span className="shrink-0 text-sm font-semibold text-foreground/90">{samvatsaraLabel}</span>
-      ) : null}
-      {subtitleLine ? (
-        <span className="min-w-0 text-sm text-base leading-snug">
-          {subtitleLine}
-        </span>
       ) : null}
     </h1>
   );
@@ -446,11 +459,6 @@ export function BsMonthHeaderTitle({
       {samvatsaraLabel ? (
         <span className="hidden text-xl font-semibold text-foreground/90 sm:inline">
           {samvatsaraLabel}
-        </span>
-      ) : null}
-      {subtitleLine ? (
-        <span className="text-sm text-base sm:text-xs">
-          {subtitleLine}
         </span>
       ) : null}
     </h1>
@@ -475,40 +483,46 @@ export function BsMonthHeaderTitle({
         </button>
       </DrawerTrigger>
       <DrawerContent>
-        <DrawerHeader className="text-left">
-          <DrawerTitle>
-            {showTime ? pick("मिति र समय", "Date & time") : pick("मिति", "Date")}
+        <DrawerHeader className="pb-2 text-center">
+          <DrawerTitle className="text-base text-center">
+            {showTime
+              ? pick("मिति र समय", "Date & time")
+              : pick("महिना र वर्ष", "Month & year")}
           </DrawerTitle>
         </DrawerHeader>
-        <div className="flex flex-col gap-5 px-4 pb-2">
-          <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.14em]">
-              {pick("मिति", "Date")}
-            </p>
-            <div className={cn(patroMonthNavShell, "w-full justify-center")}>
-              <MonthNavControls {...navProps} showTime={false} spacious />
+        <div className="flex flex-col gap-4 px-4 pb-2">
+          <div className="flex w-full items-center justify-center">
+            <div className={cn(patroMonthNavShell, "gap-2")}>
+              <MonthNavControls
+                {...navProps}
+                showTime={false}
+                spacious
+                hideNavArrows
+              />
             </div>
           </div>
           {showTime && hourAriaLabel && minuteAriaLabel ? (
             <div>
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.14em]">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {pick("समय", "Time")}
               </p>
-              <div className={cn(patroMonthNavShell, "w-full justify-center")}>
+              <div className="flex w-full items-center justify-center gap-2">
                 <BsNativeSelect
-                  className="w-[4rem]"
+                  className="w-[4.5rem]"
                   value={hour}
                   options={hourOptions}
                   ariaLabel={hourAriaLabel}
                   onChange={(nextHour) => setClockPart(nextHour, minute)}
+                  comfortable
                 />
-                <span className="px-0.5 font-num text-sm font-semibold">:</span>
+                <span className="px-0.5 font-num text-base font-semibold">:</span>
                 <BsNativeSelect
-                  className="w-[4rem]"
+                  className="w-[4.5rem]"
                   value={minute}
                   options={minuteOptions}
                   ariaLabel={minuteAriaLabel}
                   onChange={(nextMinute) => setClockPart(hour, nextMinute)}
+                  comfortable
                 />
               </div>
             </div>

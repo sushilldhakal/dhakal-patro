@@ -12,6 +12,8 @@ interface Props {
   onChange: (value: number) => void;
   ariaLabel: string;
   className?: string;
+  /** Taller touch target for bottom-sheet pickers. */
+  comfortable?: boolean;
 }
 
 /** Native `<select>` overlay — opens iOS wheel picker on tap. */
@@ -21,6 +23,7 @@ export function BsNativeSelect({
   onChange,
   ariaLabel,
   className,
+  comfortable = false,
 }: Props) {
   const selected = options.find((option) => option.value === value);
 
@@ -39,7 +42,12 @@ export function BsNativeSelect({
         ))}
       </select>
       <span
-        className="pointer-events-none flex h-6 w-full min-w-0 items-center justify-between gap-0.5 rounded-md border border-border bg-card px-1 text-sm text-base text-foreground sm:h-7 sm:gap-1 sm:px-1.5 sm:text-xs"
+        className={cn(
+          "pointer-events-none flex w-full min-w-0 items-center justify-between gap-0.5 rounded-md border border-border bg-card text-foreground",
+          comfortable
+            ? "h-9 gap-1 px-2 text-sm"
+            : "h-6 gap-0.5 px-1 text-sm text-base sm:h-7 sm:gap-1 sm:px-1.5 sm:text-xs",
+        )}
         aria-hidden
       >
         <span className="truncate">{selected?.label ?? "—"}</span>

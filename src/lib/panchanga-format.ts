@@ -1565,19 +1565,38 @@ export function getSunriseLagnaRow(p: PanchangaDay): PlanetRow | undefined {
   };
 }
 
-export function formatPlanetGocharLine(info: PlanetDetail): string {
+export function formatPlanetGocharParts(
+  info: PlanetDetail,
+  lang?: string,
+): { rashi?: string; degree: string } {
   const cells = planetDegreeCells(info).split("|");
-  const rashiNo = info.rashi;
-  if (rashiNo != null && rashiNo >= 1 && rashiNo <= 12) {
-    return [toNepaliDigits(rashiNo), ...cells].join(":");
-  }
-  return cells.join(":");
+  const degree = cells.join(":");
+  const rashi = formatRashiDisplay(
+    info.rashi_ne,
+    info.rashi_name ?? rashiEnFromNumber(info.rashi),
+    lang,
+  );
+  return { rashi, degree };
+}
+
+export function formatPlanetGocharLine(info: PlanetDetail, lang?: string): string {
+  const { rashi, degree } = formatPlanetGocharParts(info, lang);
+  if (rashi) return `${rashi} ${degree}`;
+  return degree;
 }
 
 export function getPlanetGocharLines(
   p: PanchangaDay,
   lang?: string,
-): { key: string; label: string; value: string; isRetrograde?: boolean; isCombust?: boolean }[] {
+): {
+  key: string;
+  label: string;
+  rashi?: string;
+  degree: string;
+  value: string;
+  isRetrograde?: boolean;
+  isCombust?: boolean;
+}[] {
   const planets = resolvePlanetsRecord(p);
   if (!planets) return [];
 
@@ -1600,12 +1619,15 @@ export function getPlanetGocharLines(
       const label = pickLocale(lang, ne, en);
       const info = planets[key];
       if (typeof info === "string") {
-        return { key, label, value: info };
+        return { key, label, degree: info, value: info };
       }
+      const { rashi, degree } = formatPlanetGocharParts(info, lang);
       return {
         key,
         label,
-        value: formatPlanetGocharLine(info),
+        rashi,
+        degree,
+        value: rashi ? `${rashi} ${degree}` : degree,
         isRetrograde: info.is_retrograde ?? info.retrograde ?? false,
         isCombust: info.is_combust ?? false,
       };

@@ -188,11 +188,11 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
         <div className="mt-2.5 border-t border-foreground/10">
           <div className="mb-1.5 text-sm font-bold text-foreground">{t("aside.gochar")}</div>
           {planets.length > 0 ? (
-            <div className="grid grid-cols-3 gap-1.5">
-              {planets.map(({ key, label, value, isRetrograde, isCombust }) => (
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {planets.map(({ key, label, rashi, degree, isRetrograde, isCombust }) => (
                 <div
                   key={label}
-                  className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark"
+                  className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark"
                 >
                   <span className="flex shrink-0 items-center gap-0.5 text-sm leading-tight font-semibold text-foreground">
                     {label}
@@ -203,31 +203,38 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
                       size={12}
                     />
                   </span>
-                  <span className="mono min-w-0 truncate text-right text-sm font-semibold text-foreground">
-                    {value}
+                  <span className="mono min-w-0 text-sm font-semibold leading-tight text-foreground break-words">
+                    {rashi ? (
+                      <>
+                        <span className="block">{rashi}</span>
+                        <span className="block tabular-nums">{degree}</span>
+                      </>
+                    ) : (
+                      degree
+                    )}
                   </span>
                 </div>
               ))}
             </div>
           ) : null}
           {deshaantar || belaantar ? (
-            <div className="mt-1.5 grid grid-cols-2 gap-1.5 border-t border-foreground/10 pt-2">
+            <div className="mt-1.5 grid grid-cols-1 gap-1.5 border-t border-foreground/10 pt-2 sm:grid-cols-2">
               {deshaantar ? (
-                <div className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark">
+                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark sm:flex-row sm:items-center sm:justify-between sm:gap-1">
                   <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
                     {t("aside.suryakranti")}
                   </span>
-                  <span className="mono min-w-0 truncate text-right text-sm font-semibold text-foreground">
+                  <span className="mono min-w-0 text-sm font-semibold leading-tight text-foreground break-words sm:text-right">
                     {deshaantar}
                   </span>
                 </div>
               ) : null}
               {belaantar ? (
-                <div className="flex min-w-0 items-center justify-between gap-1 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark">
+                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark sm:flex-row sm:items-center sm:justify-between sm:gap-1">
                   <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
                     {t("aside.belaantar")}
                   </span>
-                  <span className="mono min-w-0 truncate text-right text-sm font-semibold text-foreground">
+                  <span className="mono min-w-0 text-sm font-semibold leading-tight text-foreground break-words sm:text-right">
                     {belaantar}
                   </span>
                 </div>

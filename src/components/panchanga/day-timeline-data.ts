@@ -898,10 +898,10 @@ export function buildCivilTimelineData(
       i < arr.length - 1 ? ghatiToCivilClockLabel(minToG(s.end_min), 0) : undefined,
   }));
 
-  // Civil hours 0…24 across the axis (0–60), every 3h for a clean ruler.
-  const civilHourTicks: CivilHourTick[] = Array.from({ length: 9 }, (_, i) => ({
-    hour: i * 3,
-    g: i * 3 * 2.5,
+  // Civil hours 0…24 across the axis (0–60), one tick per hour.
+  const civilHourTicks: CivilHourTick[] = Array.from({ length: 25 }, (_, i) => ({
+    hour: i,
+    g: i * 2.5,
   }));
 
   const civilWindows = p ? getInauspiciousWindows(p) : [];

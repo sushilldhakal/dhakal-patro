@@ -14,6 +14,7 @@ import { VedicPatroLoader } from "@/components/VedicPatroLoader";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WEEKDAYS_EN_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type PakshaPhase = "shukla" | "krishna";
 
@@ -139,7 +140,14 @@ export function PanchangaMonthGrid({
                   weekend && "text-danger",
                 )}
               >
-                {pick(ne, WEEKDAYS_EN[i])}
+                {isEn ? (
+                  <>
+                    <span className="max-md:hidden">{WEEKDAYS_EN[i]}</span>
+                    <span className="hidden max-md:inline">{WEEKDAYS_EN_SHORT[i]}</span>
+                  </>
+                ) : (
+                  ne
+                )}
               </span>
             </div>
           );
@@ -191,7 +199,7 @@ export function PanchangaMonthGrid({
                   </span>
 
                   {/* Mobile-only sunrise/sunset — stacked when space is tight */}
-                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-mono text-sm font-bold leading-tight tabular-nums max-md:flex">
+                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-mono text-xs font-bold leading-tight tabular-nums max-md:flex">
                     <span className="whitespace-nowrap">{day.sunrise ? digits(day.sunrise) : "—"}</span>
                     <span className="whitespace-nowrap">{day.sunset ? digits(day.sunset) : "—"}</span>
                   </div>

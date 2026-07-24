@@ -101,10 +101,10 @@ export function BsCalendarGrid({
               )}
               onClick={() => onSelectDay?.(day)}
             >
-              {/* Top row: tithi (left) · English date (right) */}
-              <span className="flex w-full items-start justify-between gap-1 leading-none">
+              {/* Top row: tithi (full width) */}
+              <span className="flex w-full items-start leading-none">
                 {tithi ? (
-                  <span className="min-w-0 flex-1 truncate text-left text-xs font-semibold md:text-sm pt-1">
+                  <span className="min-w-0 w-full truncate text-left text-xs font-semibold md:text-sm pt-1">
                     {tithi}
                   </span>
                 ) : isEnriching && !isOutside ? (
@@ -113,27 +113,29 @@ export function BsCalendarGrid({
                     aria-hidden
                   />
                 ) : (
-                  <span className="min-w-0 flex-1" aria-hidden />
+                  <span className="min-w-0 w-full" aria-hidden />
                 )}
-                <span className="font-num shrink-0 text-right text-xs font-semibold md:text-sm pt-1">
-                  {digits(fmtAdDay(day.date_ad))}
-                </span>
               </span>
 
-              {/* Center: BS day number */}
+              {/* Center: BS day (large) + AD day (small) */}
               <span className="flex flex-1 flex-col items-center justify-center gap-0.5">
                 {isToday && (
                   <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide text-secondary-foreground max-md:px-1">
                     {t("calendar.today_badge")}
                   </span>
                 )}
-                <span
-                  className={cn(
-                    "font-num text-3xl font-semibold leading-none tracking-tight max-md:text-2xl",
-                    !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
-                  )}
-                >
-                  {digits(day.day)}
+                <span className="flex items-baseline justify-center gap-1 leading-none">
+                  <span
+                    className={cn(
+                      "font-num text-3xl font-semibold tracking-tight max-md:text-2xl",
+                      !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
+                    )}
+                  >
+                    {digits(day.day)}
+                  </span>
+                  <span className="font-num text-xs font-semibold text-muted-foreground md:text-sm">
+                    {digits(fmtAdDay(day.date_ad))}
+                  </span>
                 </span>
               </span>
 
