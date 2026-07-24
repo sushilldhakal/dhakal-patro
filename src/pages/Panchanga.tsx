@@ -325,6 +325,7 @@ export function Panchanga() {
               isToday={isToday}
               timezone={effectiveTimezone}
               locationLabel={locationLabel}
+              civil={isCivilMode}
             />
             {wheelData ? (
               <Link

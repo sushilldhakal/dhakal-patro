@@ -185,6 +185,9 @@ interface Props {
   loading?: boolean;
   /** When true, only fetch at-time after the user moves the wheel time slider. */
   atTimeScrubOnly?: boolean;
+  /** दिन-रात mode: anchor the time scrubber/clock/now-needle to 00:00 (midnight)
+   * instead of sunrise, so the wheel's time axis matches the दिन-रात framing. */
+  civil?: boolean;
   /** Year view: vertical day scrub + autoplay on the right inside the wheel. */
   yearScrub?: YearWheelScrub;
 }
@@ -233,9 +236,16 @@ function PanchangaWheelBody({
   timezone,
   locationLabel,
   atTimeScrubOnly = false,
+  civil = false,
   yearScrub,
-}: WheelBodyProps & { atTimeScrubOnly?: boolean; yearScrub?: YearWheelScrub }) {
-  const det: WheelDetail = useMemo(() => buildWheelDetail(p), [p]);
+}: WheelBodyProps & { atTimeScrubOnly?: boolean; civil?: boolean; yearScrub?: YearWheelScrub }) {
+  // दिन-रात re-anchors the time scrubber to midnight: sunriseMin drives every
+  // g↔clock / now-needle / scrub-datetime calc, so overriding it to 0 makes the
+  // wheel's time axis run 00:00 → 24:00 instead of sunrise → sunrise.
+  const det: WheelDetail = useMemo(() => {
+    const d = buildWheelDetail(p);
+    return civil ? { ...d, sunriseMin: 0 } : d;
+  }, [p, civil]);
   const tz = resolveTimeZone(p?.location?.timezone, timezone);
   const [now, setNow] = useState(() => new Date());
 
@@ -685,7 +695,10 @@ function PanchangaWheelBody({
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick("रिलोड · जुम रिसेट · सूर्योदय", "Reload · reset zoom · sunrise")}
+                  title={pick(
+                    `रिलोड · जुम रिसेट · ${civil ? "मध्यरात" : "सूर्योदय"}`,
+                    `Reload · reset zoom · ${civil ? "midnight" : "sunrise"}`,
+                  )}
                   onClick={resetToSunrise}
                 >
                   <RotateCcw className={wheelDockIcon} strokeWidth={2} aria-hidden />
@@ -756,7 +769,10 @@ function PanchangaWheelBody({
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick("उत्तर सिधा · जुम रिसेट · सूर्योदय", "North up · reset zoom · sunrise")}
+                  title={pick(
+                    `उत्तर सिधा · जुम रिसेट · ${civil ? "मध्यरात" : "सूर्योदय"}`,
+                    `North up · reset zoom · ${civil ? "midnight" : "sunrise"}`,
+                  )}
                   onClick={resetToSunrise}
                 >
                   ⟳

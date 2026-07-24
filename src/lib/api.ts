@@ -15,7 +15,7 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
  * without a manual purge.
  */
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "27";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "28";
 
 /**
  * Sait listings are CDN-cached too. Appended as `sv=` so a change in the sait
