@@ -74,14 +74,16 @@ export function MobileBottomNav() {
               to={to}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[0.62rem] font-medium leading-none transition-colors",
+                "flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[0.62rem] font-medium transition-colors",
                 active
                   ? "bg-secondary/10 text-secondary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="size-5 shrink-0" />
-              <span className="max-w-full truncate">{pick(ne, en)}</span>
+              {/* leading-normal + no overflow clip so Devanagari vowel marks
+                  (above/below the baseline) aren't cut off top and bottom. */}
+              <span className="max-w-full whitespace-nowrap leading-normal">{pick(ne, en)}</span>
             </Link>
           );
         })}
