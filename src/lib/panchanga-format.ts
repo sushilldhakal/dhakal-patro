@@ -114,6 +114,59 @@ function angaEndsNextDay(anga: AngaPatro): boolean {
   return false;
 }
 
+type AngaEndLike = {
+  end_local_time?: string;
+  end_hours_clock?: string;
+  end_ghati_clock?: string;
+};
+
+/** Sunrise as decimal hours-of-day (e.g. 5.37), for day-offset math. */
+export function getSunriseHours(p: PanchangaDay): number | undefined {
+  const sr = getSunrise(p);
+  if (!sr) return undefined;
+  const [h, m] = sr.split(":").map((x) => Number(x));
+  if (Number.isNaN(h)) return undefined;
+  return h + (Number.isNaN(m) ? 0 : m) / 60;
+}
+
+/** Hours from sunrise to an anga's end (end_hours_clock is measured from sunrise;
+ * end_ghati_clock is ghati/pala from sunrise, 60 ghati = 24 h). */
+function angaHoursFromSunrise(anga: AngaEndLike): number | undefined {
+  if (anga.end_hours_clock) {
+    const [h, m] = anga.end_hours_clock.split(":").map((x) => Number(x));
+    if (!Number.isNaN(h)) return h + (Number.isNaN(m) ? 0 : m) / 60;
+  }
+  if (anga.end_ghati_clock) {
+    const [g, pa] = anga.end_ghati_clock.split(":").map((x) => Number(x));
+    if (!Number.isNaN(g)) return ((g + (Number.isNaN(pa) ? 0 : pa) / 60) * 24) / 60;
+  }
+  return undefined;
+}
+
+/**
+ * Calendar days from the panchanga date to an anga's end (0 = today, 1 = भोलि,
+ * 2 = पर्सि). The wall-clock date rolls at midnight, not sunrise — so add the
+ * hours-from-sunrise to the sunrise clock time and count 24-hour crossings.
+ */
+export function angaEndDayOffset(
+  anga: AngaEndLike | undefined | null,
+  sunriseHours?: number,
+): number {
+  if (!anga || sunriseHours == null) return 0;
+  const endH = angaHoursFromSunrise(anga);
+  if (endH == null) return 0;
+  return Math.max(0, Math.floor((sunriseHours + endH) / 24));
+}
+
+/** भोलि / पर्सि / +N दिन for a day offset (empty string for today). */
+export function dayOffsetLabel(offset: number, lang?: string): string {
+  if (offset <= 0) return "";
+  const isEn = normalizeLang(lang) === "en";
+  if (offset === 1) return isEn ? "tomorrow" : "भोलि";
+  if (offset === 2) return isEn ? "day after" : "पर्सि";
+  return isEn ? `+${offset}d` : `+${toNepaliDigits(offset)} दिन`;
+}
+
 function patroAngaEndClockLocalized(anga: AngaPatro, lang?: string): string | undefined {
   const t =
     formatTimeShort(anga.end_local_time) ??

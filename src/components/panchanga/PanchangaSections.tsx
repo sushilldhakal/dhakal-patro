@@ -41,6 +41,9 @@ import {
   formatTimeRangeShort,
   getNivasShool,
   toNepaliDigits,
+  getSunriseHours,
+  angaEndDayOffset,
+  dayOffsetLabel,
 } from "@/lib/panchanga-format";
 import type { NivasShoolSegment } from "@/lib/api";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
@@ -86,21 +89,33 @@ function angaEndTime(anga?: AngaEnd | null): string | undefined {
   return t ? toNepaliDigits(t) : undefined;
 }
 
-function AngaCell({ anga }: { anga?: Anga | null }) {
-  const { pick } = useLocale();
+/** End-time with a भोलि / पर्सि prefix when the transition falls on a later day. */
+function angaEndWithDay(
+  anga: Anga | AngaEnd | null | undefined,
+  sunriseHours: number | undefined,
+  lang: string,
+): string | undefined {
+  const time = angaEndTime(anga);
+  if (!time) return undefined;
+  const label = dayOffsetLabel(angaEndDayOffset(anga, sunriseHours), lang);
+  return label ? `${label} ${time}` : time;
+}
+
+function AngaCell({ anga, sunriseHours }: { anga?: Anga | null; sunriseHours?: number }) {
+  const { pick, lang } = useLocale();
   if (!anga) return <span>—</span>;
   const name = pick(anga.name_ne ?? anga.name ?? "—", anga.name ?? anga.name_ne ?? "—");
   const next = anga.next;
   const nextName = next?.name_ne ?? next?.name;
   return (
     <>
-      <UptoValue name={name} endTime={angaEndTime(anga)} />
+      <UptoValue name={name} endTime={angaEndWithDay(anga, sunriseHours, lang)} />
       {nextName ? (
         // The next anga now carries its own end time — on a kshaya-tithi day
         // this is where the skipped tithi's ending shows (e.g. प्रतिपदा … सम्म).
         <UptoValue
           name={pick(nextName, next?.name ?? next?.name_ne ?? nextName)}
-          endTime={angaEndTime(next)}
+          endTime={angaEndWithDay(next, sunriseHours, lang)}
         />
       ) : null}
     </>
@@ -207,21 +222,22 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
   const paksha = formatPakshaLabel(p, lang) ?? formatPakshaNepaliDisplay(p);
   const pakshaName = (detail?.paksha as { name?: string } | undefined)?.name;
   const pakshaSym = pakshaName === "shukla" ? "🌕" : "🌑";
+  const sunriseHours = getSunriseHours(p);
 
   return (
     <PanchangaSection titleKey="sections.panchang_core">
       <PanchangaTableBody>
         <PanchangaFieldCell labelKey="tithi">
-          <AngaCell anga={tithi} />
+          <AngaCell anga={tithi} sunriseHours={sunriseHours} />
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="nakshatra">
-          <AngaCell anga={nakshatra} />
+          <AngaCell anga={nakshatra} sunriseHours={sunriseHours} />
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.yoga">
-          <AngaCell anga={yoga} />
+          <AngaCell anga={yoga} sunriseHours={sunriseHours} />
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.karana">
-          <AngaCell anga={karana} />
+          <AngaCell anga={karana} sunriseHours={sunriseHours} />
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.weekday" nowrap>
           <span className="font-semibold">
