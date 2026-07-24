@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/i18n/locale";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange } from "lucide-react";
 import {
   fetchCivilTimeline,
   fetchPanchanga,
+  fetchPanchangaCivilDay,
   locationCacheKey,
   panchangaKeys,
 } from "@/lib/api";
@@ -20,7 +22,7 @@ import { formatTimeShort, getSunrise, getSunset } from "@/lib/panchanga-format";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { PanchangaDateNav } from "@/components/panchanga/PanchangaDateNav";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
-import { DayTimeline, type DayCycleMode } from "@/components/panchanga/DayTimeline";
+import { DayTimeline, DayCycleToggle, type DayCycleMode } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
@@ -75,6 +77,7 @@ function parseAdStr(s: string): Date {
 
 export function Panchanga() {
   const { t } = useTranslation();
+  const { pick } = useLocale();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
 
@@ -139,11 +142,31 @@ export function Panchanga() {
     placeholderData: keepPreviousData,
   });
 
+  // दिन-रात whole-page values: full panchanga referenced at 00:00 of the civil
+  // date. Only fetched when the page tab selects Calendar Day; the anga-based
+  // sections read from this so the text agrees with the midnight-anchored chart.
+  const midnightDayQuery = useQuery({
+    queryKey: panchangaKeys.civilDay(adDateStr, location.params),
+    queryFn: () => fetchPanchangaCivilDay(adDateStr, location.params),
+    enabled: dayCycleMode === "Calendar Day",
+    staleTime: 1000 * 60 * 30,
+    placeholderData: keepPreviousData,
+  });
+
   const { data, isError } = instantQuery;
   const ephemeris = isEphemerisPanchanga(data);
 
   const wheelData = udayaQuery.data;
   const showWheelSkeleton = udayaQuery.isLoading && !wheelData;
+
+  // Reference source for the "moving" anga sections (तिथि/नक्षत्र/योग/करण, rashi,
+  // balam, panchaka/lagna). दिन-रात reads them at midnight; अहोरात्र at sunrise.
+  // Date-property sections (festivals, ritu, samvat, sun/moon) always use the
+  // civil-date udaya day, so they stay identical across modes.
+  const isCivilMode = dayCycleMode === "Calendar Day";
+  const angaData = isCivilMode
+    ? midnightDayQuery.data ?? wheelData ?? data
+    : wheelData ?? data;
 
   const sunrise = udayaQuery.data
     ? getSunrise(udayaQuery.data)
@@ -226,6 +249,21 @@ export function Panchanga() {
           then releases before the wheel so everything below spans full width. */}
       <div className="mt-2 grid grid-cols-1 items-start gap-x-5 gap-y-4 max-md:pt-3 xl:grid-cols-[1fr_330px]">
         <div className="flex min-w-0 flex-col gap-4">
+          {/* Page-level day-boundary tab: drives the WHOLE page, not just the
+              chart. दिन-रात re-reads the moving angas at midnight; date sections
+              stay tied to the calendar date. Sits above the location picker. */}
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <span className="text-sm font-semibold text-muted-foreground">
+              {pick("गणना आधार", "Reckoning")}
+              <span className="ml-1.5 font-normal">
+                {isCivilMode
+                  ? pick("मध्यरातदेखि मध्यरात", "midnight to midnight")
+                  : pick("सूर्योदयदेखि सूर्योदय", "sunrise to sunrise")}
+              </span>
+            </span>
+            <DayCycleToggle mode={dayCycleMode} onModeChange={setDayCycleMode} size="md" />
+          </div>
+
           <PanchangaDateNav
             date={date}
             onDateChange={setDate}
@@ -261,6 +299,7 @@ export function Panchanga() {
               showNeedle={clockUserAdjusted || isToday}
               mode={dayCycleMode}
               onModeChange={setDayCycleMode}
+              showToggle={false}
               civil={civilQuery.data}
               civilLoading={civilQuery.isLoading}
             />
@@ -309,15 +348,15 @@ export function Panchanga() {
         {data && (
           <div className="flex flex-col gap-3">
             <SunMoonSamvatSection p={data} />
-            {/* तिथि/नक्षत्र/योग/करण are reckoned from sunrise (udaya) like a
-                printed patro — show the sunrise anga (e.g. करण गर ९:२९ सम्म),
-                not the one active at the scrubbed instant. Matches the rashi /
-                balam / lagna sections below, which also use the udaya day. */}
-            <PanchangCoreSection p={wheelData ?? data} />
-            <RashiSection p={wheelData ?? data} />
+            {/* तिथि/नक्षत्र/योग/करण and the rashi / balam / lagna sections read
+                from `angaData`: sunrise (udaya) in अहोरात्र mode, or the civil
+                date's 00:00 reference in दिन-रात mode, so the text agrees with
+                the day-boundary tab above and the midnight-anchored chart. */}
+            <PanchangCoreSection p={angaData ?? data} />
+            <RashiSection p={angaData ?? data} />
             <RituSection p={data} />
-            <BalamSection p={wheelData ?? data} clock={clock} />
-            <PanchakaLagnaSection p={wheelData ?? data} clock={clock} />
+            <BalamSection p={angaData ?? data} clock={clock} />
+            <PanchakaLagnaSection p={angaData ?? data} clock={clock} />
             <NivasShoolSection p={data} fallback={wheelData} />
             <DinVisheshSection p={data} />
             <FestivalsSection p={data} />

@@ -222,7 +222,9 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
   const paksha = formatPakshaLabel(p, lang) ?? formatPakshaNepaliDisplay(p);
   const pakshaName = (detail?.paksha as { name?: string } | undefined)?.name;
   const pakshaSym = pakshaName === "shukla" ? "🌕" : "🌑";
-  const sunriseHours = getSunriseHours(p);
+  // दिन-रात payloads measure anga end-times from midnight (not sunrise), so the
+  // भोलि/पर्सि day-offset must count from a 00:00 origin — pass 0 in that mode.
+  const sunriseHours = p.boundary === "midnight" ? 0 : getSunriseHours(p);
 
   return (
     <PanchangaSection titleKey="sections.panchang_core">

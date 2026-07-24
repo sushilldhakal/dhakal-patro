@@ -178,6 +178,8 @@ export const panchangaKeys = {
     ["panchanga", "at-time", PANCHANGA_CACHE_VERSION, datetime, locationCacheKey(location)] as const,
   civil: (date: string, location?: LocationParams) =>
     ["panchanga", "civil", PANCHANGA_CACHE_VERSION, date, locationCacheKey(location)] as const,
+  civilDay: (date: string, location?: LocationParams) =>
+    ["panchanga", "civil-day", PANCHANGA_CACHE_VERSION, date, locationCacheKey(location)] as const,
   header: (year: number, month: number, location?: LocationParams) =>
     ["calendar", "header", year, month, locationCacheKey(location)] as const,
 };
@@ -203,6 +205,26 @@ export const fetchPanchanga = (
     appendLocation(
       withPanchangaCacheVersion(
         `/panchanga/${date}?era=${era}&festivals=true&detail=true`,
+      ),
+      location,
+    ),
+  );
+
+/**
+ * Midnight-referenced (civil-day, 00:00→24:00) full panchanga. Same payload
+ * shape as {@link fetchPanchanga}, but the moving angas (tithi/नक्षत्र/योग/करण,
+ * chandra rashi, lagna, tara/chandra bala, panchaka) are read at local midnight
+ * so the दिन-रात page view agrees with the दिन-रात chart. Date-properties
+ * (festivals, ritu, samvat, sun/moon times, weekday) stay tied to the date.
+ */
+export const fetchPanchangaCivilDay = (
+  dateAd: string,
+  location?: LocationParams,
+) =>
+  get<PanchangaDay>(
+    appendLocation(
+      withPanchangaCacheVersion(
+        `/panchanga/${dateAd}?era=ad&festivals=true&detail=true&reference=midnight`,
       ),
       location,
     ),
@@ -2137,7 +2159,9 @@ export interface PanchangaAtTime {
 }
 
 export interface PanchangaDay {
-  mode?: "ephemeris" | "udaya";
+  mode?: "ephemeris" | "udaya" | "civil";
+  /** "midnight" for the civil-day (दिन-रात) payload — ghati/day-offset origin is 00:00. */
+  boundary?: "midnight";
   query_instant?: string;
   query_instant_local?: string;
   panchanga_date_ad?: string;

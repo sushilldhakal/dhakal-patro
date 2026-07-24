@@ -155,6 +155,8 @@ interface Props {
   /** Day boundary: "Day-Night" = sunrise→sunrise (default), "Calendar Day" = midnight→midnight. */
   mode?: DayCycleMode;
   onModeChange?: (mode: DayCycleMode) => void;
+  /** Hide the in-chart mode toggle when a page-level tab already drives it. */
+  showToggle?: boolean;
   /** Civil (midnight→midnight) timeline — only used in Calendar Day mode. */
   civil?: CivilTimeline;
   civilLoading?: boolean;
@@ -162,12 +164,15 @@ interface Props {
 
 export type DayCycleMode = "Day-Night" | "Calendar Day";
 
-function DayCycleToggle({
+export function DayCycleToggle({
   mode,
   onModeChange,
+  size = "sm",
 }: {
   mode: DayCycleMode;
   onModeChange?: (mode: DayCycleMode) => void;
+  /** "sm" = compact chart toolbar toggle; "md" = prominent page-level tab. */
+  size?: "sm" | "md";
 }) {
   const { pick } = useLocale();
   const options: Array<{ value: DayCycleMode; ne: string; en: string }> = [
@@ -175,7 +180,14 @@ function DayCycleToggle({
     { value: "Calendar Day", ne: "दिन-रात", en: "Calendar Day" },
   ];
   return (
-    <div className="inline-flex overflow-hidden rounded-md border border-border" role="radiogroup" aria-label={pick("दिन सीमा", "Day boundary")}>
+    <div
+      className={cn(
+        "inline-flex overflow-hidden rounded-md border border-border",
+        size === "md" && "rounded-lg",
+      )}
+      role="radiogroup"
+      aria-label={pick("दिन सीमा", "Day boundary")}
+    >
       {options.map((o) => (
         <button
           key={o.value}
@@ -184,7 +196,8 @@ function DayCycleToggle({
           aria-checked={mode === o.value}
           onClick={() => onModeChange?.(o.value)}
           className={cn(
-            "px-2 py-0.5 text-sm font-semibold transition-colors",
+            "font-semibold transition-colors",
+            size === "md" ? "px-3.5 py-1.5 text-sm" : "px-2 py-0.5 text-sm",
             mode === o.value
               ? "bg-primary text-primary-foreground"
               : "bg-card hover:bg-surface-hover",
@@ -200,9 +213,11 @@ function DayCycleToggle({
 function DayTimelineBand({
   mode,
   onModeChange,
+  showToggle = true,
 }: {
   mode: DayCycleMode;
   onModeChange?: (mode: DayCycleMode) => void;
+  showToggle?: boolean;
 }) {
   const { pick } = useLocale();
   const subtitle =
@@ -224,7 +239,7 @@ function DayTimelineBand({
           <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-secondary/22 not-italic" />
           {pick("रात", "Night")}
         </span>
-        <DayCycleToggle mode={mode} onModeChange={onModeChange} />
+        {showToggle && <DayCycleToggle mode={mode} onModeChange={onModeChange} />}
       </span>
     </div>
   );
@@ -261,6 +276,7 @@ export function DayTimeline({
   loading = false,
   mode = "Day-Night",
   onModeChange,
+  showToggle = true,
   civil,
   civilLoading = false,
 }: Props) {
@@ -289,7 +305,7 @@ export function DayTimeline({
   if (busy) {
     return (
       <div className={cn(patroCard, "w-full")} aria-busy={busy}>
-        <DayTimelineBand mode={mode} onModeChange={onModeChange} />
+        <DayTimelineBand mode={mode} onModeChange={onModeChange} showToggle={showToggle} />
         <div className={cn("w-full", "max-w-full", "overflow-hidden", "px-0", "pt-3", "pb-1")}>
           <div className={cn(patroSkel, "w-full")} style={{ minHeight: 320 }} />
         </div>
@@ -420,7 +436,7 @@ export function DayTimeline({
 
   return (
     <div className={cn(patroCard, "w-full")}>
-      <DayTimelineBand mode={mode} onModeChange={onModeChange} />
+      <DayTimelineBand mode={mode} onModeChange={onModeChange} showToggle={showToggle} />
 
       <div className="relative">
         <div className={cn("w-full", "max-w-full", "overflow-x-auto", "overscroll-x-contain", "px-0", "pt-3", "pb-1")}>
