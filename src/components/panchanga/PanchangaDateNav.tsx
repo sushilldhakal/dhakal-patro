@@ -32,8 +32,12 @@ interface Props {
   todayAd?: string;
   clock?: string;
   onClockChange?: (clock: string) => void;
-  /** Toolbar on the chart column — mode toggle, location, etc. */
+  /** Desktop (md+) right-column toolbar — stacked, right-aligned in the header row. */
   toolbar?: React.ReactNode;
+  /** Below md: row-1 top-right control (falls back to `toolbar`). */
+  mobileToolbar?: React.ReactNode;
+  /** Below md: row-2 right control. */
+  mobileToolbarLower?: React.ReactNode;
   className?: string;
 }
 
@@ -44,6 +48,8 @@ export function PanchangaDateNav({
   clock,
   onClockChange,
   toolbar,
+  mobileToolbar,
+  mobileToolbarLower,
   className,
 }: Props) {
   const { t } = useTranslation();
@@ -105,7 +111,8 @@ export function PanchangaDateNav({
           hourAriaLabel={t("panchanga.hour_aria")}
           minuteAriaLabel={t("panchanga.minute_aria")}
           mobileDateTimeDrawer
-          mobileToolbar={toolbar}
+          mobileToolbar={mobileToolbar ?? toolbar}
+          mobileToolbarLower={mobileToolbarLower}
         />
       </div>
       {toolbar ? (
