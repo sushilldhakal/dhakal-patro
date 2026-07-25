@@ -179,34 +179,57 @@ export function DayCycleToggle({
     { value: "Day-Night", ne: "अहोरात्र", en: "Day-Night" },
     { value: "Calendar Day", ne: "दिन-रात", en: "Calendar Day" },
   ];
+  // Under 768px there isn't room for both; mirror the language / calendar
+  // toggles — show only the *inactive* mode as a single button that switches
+  // to it on tap (and then flips to show the other one).
+  const inactive = options.find((o) => o.value !== mode) ?? options[0]!;
+  const padCls = size === "md" ? "px-3.5 py-1.5 text-sm" : "px-2 py-0.5 text-sm";
+  const roundCls = size === "md" ? "rounded-lg" : "rounded-md";
   return (
-    <div
-      className={cn(
-        "inline-flex overflow-hidden rounded-md border border-border",
-        size === "md" && "rounded-lg",
-      )}
-      role="radiogroup"
-      aria-label={pick("दिन सीमा", "Day boundary")}
-    >
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={mode === o.value}
-          onClick={() => onModeChange?.(o.value)}
-          className={cn(
-            "font-semibold transition-colors",
-            size === "md" ? "px-3.5 py-1.5 text-sm" : "px-2 py-0.5 text-sm",
-            mode === o.value
-              ? "bg-primary text-primary-foreground"
-              : "bg-card hover:bg-surface-hover",
-          )}
-        >
-          {pick(o.ne, o.en)}
-        </button>
-      ))}
-    </div>
+    <>
+      {/* Mobile (<768px): single "switch to …" toggle. */}
+      <button
+        type="button"
+        onClick={() => onModeChange?.(inactive.value)}
+        aria-label={pick(`${inactive.ne} मा बदल्नुहोस्`, `Switch to ${pick(inactive.ne, inactive.en)}`)}
+        className={cn(
+          "inline-flex items-center justify-center border border-border bg-card font-semibold transition-colors hover:bg-surface-hover md:hidden",
+          padCls,
+          roundCls,
+        )}
+      >
+        {pick(inactive.ne, inactive.en)}
+      </button>
+
+      {/* Desktop (≥768px): full segmented control. */}
+      <div
+        className={cn(
+          "hidden overflow-hidden rounded-md border border-border md:inline-flex",
+          size === "md" && "rounded-lg",
+        )}
+        role="radiogroup"
+        aria-label={pick("दिन सीमा", "Day boundary")}
+      >
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={mode === o.value}
+            onClick={() => onModeChange?.(o.value)}
+            className={cn(
+              "font-semibold transition-colors",
+              padCls,
+              mode === o.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-card hover:bg-surface-hover",
+            )}
+          >
+            {pick(o.ne, o.en)}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
 

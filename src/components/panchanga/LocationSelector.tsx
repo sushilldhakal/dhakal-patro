@@ -299,9 +299,11 @@ export function LocationSelector({
             />
           }
         >
-          <span className="inline-flex items-center gap-1.5 min-w-0">
+          <span className="inline-flex items-center gap-1 min-w-0 md:gap-1.5">
             <MapPin className="size-3.5 shrink-0" />
-            <span className="truncate">{labelMain}</span>
+            {/* Smaller text on mobile so the full city name fits instead of
+                truncating to "Kat…"; desktop keeps the standard size. */}
+            <span className="truncate text-[11px] leading-none md:text-sm">{labelMain}</span>
           </span>
         </ComboboxTrigger>
         <ComboboxContent

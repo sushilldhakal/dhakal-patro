@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useLocale } from "@/i18n/locale";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange } from "lucide-react";
 import {
@@ -77,7 +76,6 @@ function parseAdStr(s: string): Date {
 
 export function Panchanga() {
   const { t } = useTranslation();
-  const { pick } = useLocale();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
 
@@ -252,15 +250,7 @@ export function Panchanga() {
           {/* Page-level day-boundary tab: drives the WHOLE page, not just the
               chart. दिन-रात re-reads the moving angas at midnight; date sections
               stay tied to the calendar date. Sits above the location picker. */}
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-            <span className="text-sm font-semibold text-muted-foreground">
-              {pick("गणना आधार", "Reckoning")}
-              <span className="ml-1.5 font-normal">
-                {isCivilMode
-                  ? pick("मध्यरातदेखि मध्यरात", "midnight to midnight")
-                  : pick("सूर्योदयदेखि सूर्योदय", "sunrise to sunrise")}
-              </span>
-            </span>
+          <div className="flex justify-end">
             <DayCycleToggle mode={dayCycleMode} onModeChange={setDayCycleMode} size="md" />
           </div>
 
@@ -275,7 +265,7 @@ export function Panchanga() {
                 compact
                 location={location}
                 onLocationChange={setLocation}
-                className="h-[30px] min-w-0 w-auto max-w-[6.5rem] shrink-0 px-2 md:h-8 md:max-w-[12.5rem]"
+                className="h-[30px] min-w-0 w-auto max-w-[10rem] shrink-0 px-1.5 md:h-8 md:max-w-[12.5rem] md:px-3"
               />
             }
           />
