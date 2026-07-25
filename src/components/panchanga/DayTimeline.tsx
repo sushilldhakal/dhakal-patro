@@ -428,7 +428,9 @@ export function DayTimeline({
       const [hh, mm] = needleClock.split(":").map(Number);
       if (!Number.isNaN(hh) && !Number.isNaN(mm)) {
         mins = hh * 60 + mm;
-        nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
+        // The pill already prints the clock via tLabel(nowG); keep the label
+        // empty so a chosen time reads "१६:२३", not "१६:२३ बजे १६:२३".
+        nowLabel = "";
       }
     } else if (showNeedle && isToday) {
       mins = minutesSinceMidnightInTimezone(now, timeZone);
@@ -444,7 +446,9 @@ export function DayTimeline({
     // ("अहिले"); otherwise it falls back to the ephemeris query instant.
     nowG = needleGhatiOnVedicChart(chartMins, data.sunriseMin);
     if (nowG != null) {
-      nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
+      // Label stays empty; tLabel(nowG) in the pill prints the chosen clock,
+      // so this avoids the doubled "१६:२३ बजे १६:२३".
+      nowLabel = "";
     }
   } else if (showNeedle && isToday) {
     const minsNow = minutesSinceMidnightInTimezone(now, timeZone);
@@ -709,7 +713,7 @@ export function DayTimeline({
                 className={pgxNowPill}
               />
               <text x={clampX(gx(nowG), 30)} y={RULER_H - 10} textAnchor="middle" className={pgxNowText}>
-                {nowLabel} {tLabel(nowG)}
+                {[nowLabel, tLabel(nowG)].filter(Boolean).join(" ")}
               </text>
             </g>
           )}
