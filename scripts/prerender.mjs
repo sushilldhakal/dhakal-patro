@@ -1,6 +1,6 @@
 /**
  * Build-time static pre-rendering: React SSR → one HTML file per public route.
- * Runs after client + server Vite builds. Output stays in dist/ for nginx/Vercel.
+ * Runs after client + server Vite builds. Output stays in dist/ for nginx.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
