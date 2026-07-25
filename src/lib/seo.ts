@@ -8,10 +8,11 @@ export const OG_IMAGE_URL = `${SITE_URL}/og-image.jpg`;
 /**
  * Live दिन-चक्र chart for today (Kathmandu) — used as the share image on the
  * home + panchanga routes so a shared vedicpatro.com preview shows the actual
- * chart, not the static logo. The /og-image endpoint renders it; no `date`
- * means today, and `city=1283240` is Kathmandu.
+ * chart, not the static logo. Served via `/api/og-image` (nginx already proxies
+ * /api → FastAPI, so this needs no extra nginx rule); no `date` means today,
+ * and `city=1283240` is Kathmandu.
  */
-export const CHART_OG_IMAGE_URL = `${SITE_URL}/og-image?city=1283240`;
+export const CHART_OG_IMAGE_URL = `${SITE_URL}/api/og-image?city=1283240`;
 
 /** Routes whose share image is the live panchanga chart rather than the logo. */
 const CHART_OG_ROUTES = new Set(["/", "/panchanga"]);
