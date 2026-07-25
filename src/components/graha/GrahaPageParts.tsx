@@ -14,7 +14,7 @@ import {
   getBSMonthLength,
 } from "@/lib/bs-calendar";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
-import { patroCard, patroMdRail, patroSelect } from "@/lib/patro-classes";
+import { patroCard, patroSelect } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_BS_YEAR_OPTIONS = Array.from(
@@ -178,7 +178,9 @@ export function GrahaYearHeader({
   return (
     <div
       className={cn(
-        patroMdRail,
+        // Full width of the (already padded) page column — no extra mobile rail
+        // inset, so the header lines up with the home page header padding.
+        "w-full",
         "flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-3",
       )}
     >
