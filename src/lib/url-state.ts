@@ -8,8 +8,8 @@ import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-loc
 /**
  * Shareable URL state.
  *
- * The app is a single-page Vite build; `vercel.json` rewrites every path to
- * `index.html`, so the "server" already serves any route. What makes a view
+ * The app is a single-page Vite build; nginx falls back to `index.html` for
+ * any unknown path, so the "server" already serves any route. What makes a view
  * shareable is encoding the user's selections (date, time, month, paksha,
  * location, …) into the URL search params and reading them back on load — the
  * same approach the `/panchanga/year` route already uses for `year`.
