@@ -4,6 +4,7 @@ import {
   createRouter,
   Navigate,
   Outlet,
+  useRouterState,
   type RouterHistory,
 } from "@tanstack/react-router";
 import { Header } from "./components/Header";
@@ -22,6 +23,7 @@ import {
 } from "./lib/url-state";
 
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
+const PanchangaOgPreview = lazyRoute(() => import("./pages/PanchangaOgPreview"), "PanchangaOgPreview");
 const PanchangaYear = lazyRoute(() => import("./pages/PanchangaYear"), "PanchangaYear");
 const AvakahadaChakra = lazyRoute(() => import("./pages/AvakahadaChakra"), "AvakahadaChakra");
 const DainikKranti = lazyRoute(() => import("./pages/DainikKranti"), "DainikKranti");
@@ -52,21 +54,35 @@ const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail"
 const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPassword");
 
 const rootRoute = createRootRoute({
-  component: () => (
-    <RouteLoadingProvider>
-      <RouteSeo />
-      <AnalyticsTracker />
-      <div className="min-h-screen">
-        <Header />
-        {/* Bottom padding on small screens so page content clears the floating
-            MobileBottomNav; removed at lg where the bar is hidden. */}
-        <div className="pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
+  component: function RootLayout() {
+    // The /panchanga/og-preview route is a headless screenshot target — render
+    // it bare (no header / bottom nav) so the captured element is the chart alone.
+    const bare = useRouterState({
+      select: (s) => s.location.pathname.replace(/\/$/, "") === "/panchanga/og-preview",
+    });
+    if (bare) {
+      return (
+        <RouteLoadingProvider>
           <Outlet />
+        </RouteLoadingProvider>
+      );
+    }
+    return (
+      <RouteLoadingProvider>
+        <RouteSeo />
+        <AnalyticsTracker />
+        <div className="min-h-screen">
+          <Header />
+          {/* Bottom padding on small screens so page content clears the floating
+              MobileBottomNav; removed at lg where the bar is hidden. */}
+          <div className="pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
+            <Outlet />
+          </div>
+          <MobileBottomNav />
         </div>
-        <MobileBottomNav />
-      </div>
-    </RouteLoadingProvider>
-  ),
+      </RouteLoadingProvider>
+    );
+  },
 });
 
 /** Pathless layout — keeps the panchanga sidebar mounted across client navigations. */
@@ -77,6 +93,12 @@ const panchangaShellRoute = createRoute({
 });
 
 const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
+const panchangaOgPreviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/panchanga/og-preview",
+  validateSearch: validatePanchangaSearch,
+  component: PanchangaOgPreview,
+});
 const panchangaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/panchanga",
@@ -190,6 +212,7 @@ const routeTree = rootRoute.addChildren([
     chandraGrahanRoute,
     saitRoute,
   ]),
+  panchangaOgPreviewRoute,
   panchangaRoute,
   chandraKrantiLegacyRoute,
   dainikKrantiNeLegacyRoute,

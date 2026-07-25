@@ -160,6 +160,9 @@ interface Props {
   /** Civil (midnight→midnight) timeline — only used in Calendar Day mode. */
   civil?: CivilTimeline;
   civilLoading?: boolean;
+  /** Render only the horizontal chart — skip the अशुभ/शुभ period cards and the
+   *  planets grid below it. Used by the OG share-image preview. */
+  chartOnly?: boolean;
 }
 
 export type DayCycleMode = "Day-Night" | "Calendar Day";
@@ -302,6 +305,7 @@ export function DayTimeline({
   showToggle = true,
   civil,
   civilLoading = false,
+  chartOnly = false,
 }: Props) {
   const { pick, digits, lang } = useLocale();
   const isCivil = mode === "Calendar Day";
@@ -424,7 +428,9 @@ export function DayTimeline({
       const [hh, mm] = needleClock.split(":").map(Number);
       if (!Number.isNaN(hh) && !Number.isNaN(mm)) {
         mins = hh * 60 + mm;
-        nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
+        // The pill already prints the clock via tLabel(nowG); keep the label
+        // empty so a chosen time reads "१६:२३", not "१६:२३ बजे १६:२३".
+        nowLabel = "";
       }
     } else if (showNeedle && isToday) {
       mins = minutesSinceMidnightInTimezone(now, timeZone);
@@ -440,7 +446,9 @@ export function DayTimeline({
     // ("अहिले"); otherwise it falls back to the ephemeris query instant.
     nowG = needleGhatiOnVedicChart(chartMins, data.sunriseMin);
     if (nowG != null) {
-      nowLabel = pick(`${digits(needleClock)} बजे`, digits(needleClock));
+      // Label stays empty; tLabel(nowG) in the pill prints the chosen clock,
+      // so this avoids the doubled "१६:२३ बजे १६:२३".
+      nowLabel = "";
     }
   } else if (showNeedle && isToday) {
     const minsNow = minutesSinceMidnightInTimezone(now, timeZone);
@@ -705,7 +713,7 @@ export function DayTimeline({
                 className={pgxNowPill}
               />
               <text x={clampX(gx(nowG), 30)} y={RULER_H - 10} textAnchor="middle" className={pgxNowText}>
-                {nowLabel} {tLabel(nowG)}
+                {[nowLabel, tLabel(nowG)].filter(Boolean).join(" ")}
               </text>
             </g>
           )}
@@ -737,7 +745,7 @@ export function DayTimeline({
         </div>
       </div>
 
-      {data.ashubhaAll.length > 0 && (
+      {!chartOnly && data.ashubhaAll.length > 0 && (
         <PeriodCards
           tone="danger"
           title={pick("अशुभ समय", "Inauspicious periods")}
@@ -749,7 +757,7 @@ export function DayTimeline({
         />
       )}
 
-      {data.shubha.length > 0 && (
+      {!chartOnly && data.shubha.length > 0 && (
         <PeriodCards
           tone="success"
           title={pick("शुभ समय", "Auspicious periods")}
@@ -761,7 +769,7 @@ export function DayTimeline({
         />
       )}
 
-      {p && planets.length > 0 && (
+      {!chartOnly && p && planets.length > 0 && (
         <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="text-sm font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
