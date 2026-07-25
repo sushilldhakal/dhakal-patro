@@ -78,6 +78,7 @@ function isNoindexPath(pathname: string): boolean {
     normalized === "/account" ||
     normalized === "/verify-email" ||
     normalized === "/reset-password" ||
+    normalized === "/panchanga/og-preview" ||
     /^\/kundali\/[^/]+/.test(normalized)
   );
 }
