@@ -249,11 +249,8 @@ export function Panchanga() {
         <div className="flex min-w-0 flex-col gap-4">
           {/* Page-level day-boundary tab: drives the WHOLE page, not just the
               chart. दिन-रात re-reads the moving angas at midnight; date sections
-              stay tied to the calendar date. Sits above the location picker. */}
-          <div className="flex justify-end">
-            <DayCycleToggle mode={dayCycleMode} onModeChange={setDayCycleMode} size="md" />
-          </div>
-
+              stay tied to the calendar date. Rides in the header toolbar row
+              alongside the location picker — same single-row layout as home. */}
           <PanchangaDateNav
             date={date}
             onDateChange={setDate}
@@ -261,6 +258,20 @@ export function Panchanga() {
             clock={clock}
             onClockChange={handleClockChange}
             toolbar={
+              <>
+                <DayCycleToggle mode={dayCycleMode} onModeChange={setDayCycleMode} size="md" />
+                <LocationSelector
+                  compact
+                  location={location}
+                  onLocationChange={setLocation}
+                  className="h-[30px] min-w-0 w-auto max-w-[10rem] shrink-0 px-1.5 md:h-8 md:max-w-[12.5rem] md:px-3"
+                />
+              </>
+            }
+            mobileToolbar={
+              <DayCycleToggle mode={dayCycleMode} onModeChange={setDayCycleMode} size="md" />
+            }
+            mobileToolbarLower={
               <LocationSelector
                 compact
                 location={location}
