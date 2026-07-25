@@ -8,17 +8,26 @@ export const OG_IMAGE_URL = `${SITE_URL}/og-image.jpg`;
 /**
  * Live दिन-चक्र chart for today (Kathmandu) — used as the share image on the
  * home + panchanga routes so a shared vedicpatro.com preview shows the actual
- * chart, not the static logo. Served via `/api/og-image` (nginx already proxies
- * /api → FastAPI, so this needs no extra nginx rule); no `date` means today,
- * and `city=1283240` is Kathmandu.
+ * chart, not the static logo.
+ *
+ * Use the bare `/og-image` path (nginx proxies it to FastAPI), not `/api/og-image`:
+ * `robots.txt` disallows `/api/`, and Facebook's crawler respects that when
+ * fetching og:image — so an `/api/...` share URL falls back to favicon.svg in
+ * the Sharing Debugger even though the meta tag and Twitter previews are fine.
+ * No `date` means today; `city=1283240` is Kathmandu.
  */
-export const CHART_OG_IMAGE_URL = `${SITE_URL}/api/og-image?city=1283240`;
+export const CHART_OG_IMAGE_URL = `${SITE_URL}/og-image?city=1283240`;
 
 /** Routes whose share image is the live panchanga chart rather than the logo. */
 const CHART_OG_ROUTES = new Set(["/", "/panchanga"]);
 
 export function ogImageForRoute(normalized: string): string {
   return CHART_OG_ROUTES.has(normalized) ? CHART_OG_IMAGE_URL : OG_IMAGE_URL;
+}
+
+/** MIME type for the route's share image (chart PNG vs static JPG logo). */
+export function ogImageTypeForRoute(normalized: string): string {
+  return CHART_OG_ROUTES.has(normalized) ? "image/png" : "image/jpeg";
 }
 
 export interface PageSeoMeta {
@@ -276,6 +285,7 @@ export function buildHeadHtml(pathname: string, t: TFunc): string {
   const meta = resolvePageSeo(pathname, t, "ne");
   const normalized = pathname.replace(/\/$/, "") || "/";
   const ogImage = ogImageForRoute(normalized);
+  const ogImageType = ogImageTypeForRoute(normalized);
   const jsonLd = JSON.stringify(buildJsonLd(meta, pathname, t)).replace(/</g, "\\u003c");
 
   const lines = [
@@ -293,6 +303,8 @@ export function buildHeadHtml(pathname: string, t: TFunc): string {
     `<meta property="og:url" content="${escapeHtml(meta.canonical)}" />`,
     `<meta property="og:locale" content="ne_NP" />`,
     `<meta property="og:image" content="${escapeHtml(ogImage)}" />`,
+    `<meta property="og:image:secure_url" content="${escapeHtml(ogImage)}" />`,
+    `<meta property="og:image:type" content="${ogImageType}" />`,
     `<meta property="og:image:width" content="1200" />`,
     `<meta property="og:image:height" content="630" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
