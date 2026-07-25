@@ -263,14 +263,16 @@ export function BsMonthHeaderTitle({
   const samvatsara = resolveSamvatsaraForBsYear(year);
   const samvatsaraLabel = samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : undefined;
   const adLocale = lang === "en" ? "en-US" : "ne-NP";
-  const adDayEnglish =
-    day != null
-      ? bsToAD(year, month, day).toLocaleDateString(adLocale, {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : null;
+  // Always day → month → year (e.g. "२५ जुलाई २०२६" / "25 Jul 2026"). Relying on
+  // toLocaleDateString's own ordering put ne-NP as year-month-day, which reads
+  // backwards; build the parts explicitly instead.
+  const adDayEnglish = (() => {
+    if (day == null) return null;
+    const d = bsToAD(year, month, day);
+    const monthShort = d.toLocaleDateString(adLocale, { month: "short" });
+    const numLabel = (n: number) => (lang === "en" ? String(n) : digits(n));
+    return `${numLabel(d.getDate())} ${monthShort} ${numLabel(d.getFullYear())}`;
+  })();
   const adMonthRangeEnglish = (() => {
     if (day != null) return null;
     const start = bsToAD(year, month, 1);
