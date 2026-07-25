@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { BsHeadline } from "@/components/BsHeadline";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { useLocale } from "@/i18n/locale";
@@ -182,18 +183,21 @@ export function GrahaYearHeader({
       )}
     >
       <div className="min-w-0 flex-1 space-y-2">
-        <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xl font-bold leading-tight tracking-tight">
-          <span className="font-num font-semibold text-secondary dark:text-secondary">
-            {digits(year)}
-          </span>
-          <span>{pick("वि.सं.", "BS")}</span>
-          {samvatsaraLabel ? (
-            <span className="hidden text-xl font-semibold text-foreground/90 sm:inline">
-              {samvatsaraLabel}
-            </span>
-          ) : null}
-          <span className="text-sm font-normal text-base sm:text-xs">{adYearRange}</span>
-        </h1>
+        <BsHeadline
+          className="text-xl"
+          bs={
+            <>
+              <span className="font-num font-semibold text-secondary dark:text-secondary">
+                {digits(year)}
+              </span>{" "}
+              <span>{pick("वि.सं.", "BS")}</span>
+            </>
+          }
+          samvatsara={samvatsaraLabel}
+          samvatsaraClassName="hidden text-xl sm:inline"
+          gregorian={adYearRange}
+          gregorianClassName="text-sm font-normal text-base sm:text-xs"
+        />
 
         <div className="flex flex-wrap items-center gap-2">
           {yearControls}

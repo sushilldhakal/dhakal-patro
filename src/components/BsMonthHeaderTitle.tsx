@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
+import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
 import { BsDateTimePicker } from "@/components/panchanga/BsDateTimePicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -434,34 +435,38 @@ export function BsMonthHeaderTitle({
 
   const subtitleLine = adDayEnglish ?? adMonthRangeEnglish;
 
-  const titleLine = (
+  // Nepali BS date part of the heading. The संवत्सर name and Gregorian subtitle
+  // are ordered by <BsHeadline>, which is the single source of truth for the
+  // `<BS date> <संवत्सर> <Gregorian>` order shared across every page.
+  const bsTitlePart = (
     <>
       {monthTitle}{" "}
       <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
-      {subtitleLine ? (
-        <span className="ml-1 text-xs font-semibold text-muted-foreground">{subtitleLine}</span>
-      ) : null}
     </>
   );
 
   const mobileTitleBlock = (
-    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm font-bold leading-tight tracking-tight">
-      <span className="min-w-0">{titleLine}</span>
-      {samvatsaraLabel ? (
-        <span className="shrink-0 text-sm font-semibold text-foreground/90">{samvatsaraLabel}</span>
-      ) : null}
-    </h1>
+    <BsHeadline
+      className="text-sm"
+      bs={bsTitlePart}
+      bsClassName="min-w-0"
+      samvatsara={samvatsaraLabel}
+      samvatsaraClassName="text-sm"
+      gregorian={subtitleLine}
+      gregorianClassName="text-xs font-semibold text-muted-foreground"
+    />
   );
 
   const titleBlock = (
-    <h1 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xl font-bold leading-tight tracking-tight text-base">
-      <span className="min-w-0">{titleLine}</span>
-      {samvatsaraLabel ? (
-        <span className="hidden text-xl font-semibold text-foreground/90 sm:inline">
-          {samvatsaraLabel}
-        </span>
-      ) : null}
-    </h1>
+    <BsHeadline
+      className="text-xl text-base"
+      bs={bsTitlePart}
+      bsClassName="min-w-0"
+      samvatsara={samvatsaraLabel}
+      samvatsaraClassName="hidden text-xl sm:inline"
+      gregorian={subtitleLine}
+      gregorianClassName="text-xs font-semibold text-muted-foreground"
+    />
   );
 
   const drawerBlock = mobileDateTimeDrawer ? (
