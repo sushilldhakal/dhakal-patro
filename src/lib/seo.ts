@@ -5,6 +5,22 @@ export const SITE_URL = "https://www.vedicpatro.com";
 
 export const OG_IMAGE_URL = `${SITE_URL}/og-image.jpg`;
 
+/**
+ * Live दिन-चक्र chart for today (Kathmandu) — used as the share image on the
+ * home + panchanga routes so a shared vedicpatro.com preview shows the actual
+ * chart, not the static logo. Served via `/api/og-image` (nginx already proxies
+ * /api → FastAPI, so this needs no extra nginx rule); no `date` means today,
+ * and `city=1283240` is Kathmandu.
+ */
+export const CHART_OG_IMAGE_URL = `${SITE_URL}/api/og-image?city=1283240`;
+
+/** Routes whose share image is the live panchanga chart rather than the logo. */
+const CHART_OG_ROUTES = new Set(["/", "/panchanga"]);
+
+export function ogImageForRoute(normalized: string): string {
+  return CHART_OG_ROUTES.has(normalized) ? CHART_OG_IMAGE_URL : OG_IMAGE_URL;
+}
+
 export interface PageSeoMeta {
   title: string;
   description: string;
@@ -258,6 +274,8 @@ function escapeHtml(value: string): string {
 /** Static head tags injected at prerender time (Nepali default locale). */
 export function buildHeadHtml(pathname: string, t: TFunc): string {
   const meta = resolvePageSeo(pathname, t, "ne");
+  const normalized = pathname.replace(/\/$/, "") || "/";
+  const ogImage = ogImageForRoute(normalized);
   const jsonLd = JSON.stringify(buildJsonLd(meta, pathname, t)).replace(/</g, "\\u003c");
 
   const lines = [
@@ -274,13 +292,13 @@ export function buildHeadHtml(pathname: string, t: TFunc): string {
     `<meta property="og:description" content="${escapeHtml(meta.description)}" />`,
     `<meta property="og:url" content="${escapeHtml(meta.canonical)}" />`,
     `<meta property="og:locale" content="ne_NP" />`,
-    `<meta property="og:image" content="${escapeHtml(OG_IMAGE_URL)}" />`,
+    `<meta property="og:image" content="${escapeHtml(ogImage)}" />`,
     `<meta property="og:image:width" content="1200" />`,
     `<meta property="og:image:height" content="630" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(meta.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(meta.description)}" />`,
-    `<meta name="twitter:image" content="${escapeHtml(OG_IMAGE_URL)}" />`,
+    `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />`,
     `<script type="application/ld+json">${jsonLd}</script>`,
   ];
 
