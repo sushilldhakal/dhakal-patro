@@ -15,8 +15,13 @@ export const OG_IMAGE_URL = `${SITE_URL}/og-image.jpg`;
  * fetching og:image — so an `/api/...` share URL falls back to favicon.svg in
  * the Sharing Debugger even though the meta tag and Twitter previews are fine.
  * No `date` means today; `city=1283240` is Kathmandu.
+ *
+ * `v` is a manual cache-buster: the PNG is cached hard by Cloudflare, the
+ * backend's disk cache and Facebook's scraper, so bump it whenever the card
+ * layout changes or the old image keeps showing for days. v2 = 1200×630
+ * full-bleed card (chart + summary panel) instead of the letterboxed chart.
  */
-export const CHART_OG_IMAGE_URL = `${SITE_URL}/og-image?city=1283240`;
+export const CHART_OG_IMAGE_URL = `${SITE_URL}/og-image?city=1283240&v=2`;
 
 /** Routes whose share image is the live panchanga chart rather than the logo. */
 const CHART_OG_ROUTES = new Set(["/", "/panchanga"]);
