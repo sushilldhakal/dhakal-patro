@@ -230,8 +230,8 @@ export function formatPatroBelaantar(c?: SolarCorrection): string | undefined {
   if (!c || c.minutes == null || c.seconds == null) return undefined;
   const mm = toNepaliDigits(c.minutes);
   const ss = toNepaliDigits(String(c.seconds).padStart(2, "0"));
-  if (c.sign === "rin") return `(-) ${mm}:${ss}`;
-  return `उ ${mm}:${ss}`;
+  const prefix = c.sign === "rin" ? "-" : "+";
+  return `${prefix}${mm}:${ss}`;
 }
 
 /** Patro label देशान्तर — longitude correction from the zone meridian. */
@@ -239,8 +239,8 @@ export function formatPatroDeshaantar(c?: SolarCorrection): string | undefined {
   if (!c || c.minutes == null || c.seconds == null) return undefined;
   const mm = toNepaliDigits(c.minutes);
   const ss = toNepaliDigits(String(c.seconds).padStart(2, "0"));
-  if (c.sign === "rin") return `(-) ${mm}:${ss}`;
-  return `उ ${mm}:${ss}`;
+  const prefix = c.sign === "rin" ? "-" : "+";
+  return `${prefix}${mm}:${ss}`;
 }
 
 export function getPanchangaDetail(p: PanchangaDay) {
