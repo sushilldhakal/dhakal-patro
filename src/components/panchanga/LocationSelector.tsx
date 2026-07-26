@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 import {
   cityToLocation,
+  displayLocationLabel,
   type PanchangaLocation,
 } from "./use-panchanga-location";
 
@@ -162,9 +163,10 @@ export function LocationSelector({
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
+  const localizedLabel = displayLocationLabel(location, undefined, lang);
   const [labelMain] = (() => {
-    const parts = location.label.split(",").map((s) => s.trim());
-    return [parts[0] ?? location.label];
+    const parts = localizedLabel.split(",").map((s) => s.trim());
+    return [parts[0] ?? localizedLabel];
   })();
 
   useEffect(() => {
@@ -342,7 +344,7 @@ export function LocationSelector({
         >
           <span className="inline-flex items-center gap-2 min-w-0">
             <MapPin className="size-4 shrink-0" />
-            <span className="truncate">{location.label}</span>
+            <span className="truncate">{localizedLabel}</span>
           </span>
         </ComboboxTrigger>
         <ComboboxContent

@@ -6,7 +6,11 @@ import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
 import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
 import { PageShell } from "@/components/PageShell";
 import { useRouteLoading } from "@/lib/route-loading";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import {
+  displayLocationLabel,
+  usePanchangaLocation,
+} from "@/components/panchanga/use-panchanga-location";
+import { useLocale } from "@/i18n/locale";
 import {
   locationToSearch,
   sameLocationParams,
@@ -40,6 +44,8 @@ export function SunTimesYear() {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const { lang } = useLocale();
+  const locationLabel = displayLocationLabel(location, undefined, lang);
   const currentBs = getCurrentBs();
   const [year, setYear] = useState(() => initialYearFromSearch(search.year));
   const [gridLoading, setGridLoading] = useState(true);
@@ -139,7 +145,7 @@ export function SunTimesYear() {
 
       <SunTimesYearGrid
         bsYear={year}
-        locationLabel={location.label}
+        locationLabel={locationLabel}
         locationParams={location.params}
         hideHeader
         onLoadingChange={setGridLoading}

@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LocationParams } from "@/lib/api";
 import { getLocalStorageItem, isBrowser, setLocalStorageItem } from "@/lib/browser";
-import { NEPAL_CITIES, nepalCityEnglishLabel } from "@/lib/cities/nepal-cities";
+import {
+  NEPAL_CITIES,
+  localizeNepalCityLabel,
+  nepalCityEnglishLabel,
+} from "@/lib/cities/nepal-cities";
 
 const STORAGE_KEY = "dhakalPatroLocation";
 
@@ -154,13 +158,21 @@ export function coordsToLocation(lat: number, lon: number, timezone?: string): P
 /** API uses "custom" for lat/lon queries — keep the user's chosen label instead. */
 const GENERIC_API_LOCATION_NAMES = new Set(["custom"]);
 
+/**
+ * Location name for display. Stored labels (and the English-only names the API
+ * returns) are rewritten into the active language whenever they name one of the
+ * curated Nepal districts, so the place doesn't stay in the language it was
+ * picked in after the reader switches.
+ */
 export function displayLocationLabel(
   location: PanchangaLocation,
   apiName?: string | null,
+  lang = "ne",
 ): string {
+  const { lat, lon } = location.params;
   const name = apiName?.trim();
   if (name && !GENERIC_API_LOCATION_NAMES.has(name.toLowerCase())) {
-    return name;
+    return localizeNepalCityLabel(name, lang, lat, lon);
   }
-  return location.label;
+  return localizeNepalCityLabel(location.label, lang, lat, lon);
 }

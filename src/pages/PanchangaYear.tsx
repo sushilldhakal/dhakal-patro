@@ -111,7 +111,7 @@ const clampYear = (y: number) =>
 
 export function PanchangaYear() {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
@@ -416,7 +416,7 @@ export function PanchangaYear() {
 
   const effectiveTimezone = resolveTimeZone(displayData?.location?.timezone, location.params.timezone);
   const isToday = displayDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
-  const locationLabel = displayLocationLabel(location, displayData?.location?.name);
+  const locationLabel = displayLocationLabel(location, displayData?.location?.name, lang);
 
   // Step the active year within the range (prev/next), resetting to day 1.
   const goToYear = useCallback(
