@@ -24,7 +24,12 @@ export const AD_MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ] as const
 
-export { AD_MONTHS_SHORT }
+const AD_MONTHS_SHORT_NE = [
+  "जन", "फेब", "मार्च", "अप्रिल", "मे", "जुन",
+  "जुलाई", "अगस्ट", "सेप्ट", "अक्टो", "नोभे", "डिसे",
+] as const
+
+export { AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE }
 
 export type BikramSambatDate = {
   year: number

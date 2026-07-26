@@ -263,9 +263,8 @@ export function BsMonthHeaderTitle({
   const { lang, pick, digits } = useLocale();
   const isAdCalendar = calendarMode === "ad";
 
-  const todayBs = adToBS(
-    todayAd ? new Date(`${todayAd}T12:00:00`) : new Date(),
-  );
+  const todayDate = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
+  const todayBs = adToBS(todayDate);
 
   const monthTitle = isAdCalendar
     ? AD_MONTH_NAMES[month - 1]
@@ -303,8 +302,11 @@ export function BsMonthHeaderTitle({
     }
     return `${startMonth} ${yearLabel(startYear)}/${endMonth} ${yearLabel(endYear)}`;
   })();
-  const chipDay = day ?? todayBs.day;
-  const chipMonth = day != null ? month : isAdCalendar ? month : todayBs.month;
+  // The chip is the "jump to today" button, so on a month view it shows today
+  // in whichever calendar is driving the grid — not the month being browsed.
+  const chipDay = day ?? (isAdCalendar ? todayDate.getDate() : todayBs.day);
+  const chipMonth =
+    day != null ? month : isAdCalendar ? todayDate.getMonth() + 1 : todayBs.month;
   const monthOptions = (isAdCalendar ? AD_MONTH_NAMES : BS_MONTH_NAMES).map((_: string, i: number) => ({
     value: i + 1,
     label: isAdCalendar ? AD_MONTH_NAMES[i] : bsMonthLabel(i + 1, lang),

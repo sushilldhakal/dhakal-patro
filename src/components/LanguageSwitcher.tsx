@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ensureEnglishBundle } from "@/i18n";
+import { useLocale } from "@/i18n/locale";
 import { setStoredLanguage } from "@/lib/user-preferences";
 
 function notifyLangPrefChange() {
@@ -11,7 +12,11 @@ function notifyLangPrefChange() {
 
 export function LanguageSwitcher({ className }: { className?: string }) {
   const { i18n: i18nInstance, t, ready } = useTranslation();
-  const lang = i18nInstance.resolvedLanguage?.slice(0, 2) ?? i18nInstance.language?.slice(0, 2) ?? "ne";
+  // English resources load on demand, so i18next keeps `resolvedLanguage` on the
+  // Nepali fallback even while the UI is English — reading it raw left the
+  // button offering "English" in English, with no way back. `useLocale` applies
+  // the stored preference the same way the rest of the app does.
+  const { lang } = useLocale();
   const isNepali = lang !== "en";
 
   const toggle = () => {

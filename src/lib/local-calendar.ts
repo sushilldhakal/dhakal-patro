@@ -1,5 +1,7 @@
 import type { CalendarDay, Festival, Holiday } from "./api";
 import {
+  AD_MONTHS_SHORT,
+  AD_MONTHS_SHORT_NE,
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
   BS_SUPPORTED_END_YEAR,
@@ -180,6 +182,51 @@ export function buildAdCalendarGridDays(
   }
 
   return grid;
+}
+
+export type SecondaryCellDate = {
+  /** Day number of the other calendar (BS day in an AD grid, and vice versa). */
+  day: number;
+  /** Set only where that month turns over, so the number can be placed. */
+  monthLabel?: string;
+  /** Same label clipped for phone-width cells (~50px), e.g. Shrawan → Shr. */
+  monthLabelShort?: string;
+};
+
+/**
+ * The small counterpart date printed next to the big day number — the BS date
+ * inside a Gregorian grid, or the AD date inside a BS grid. The month name only
+ * rides along where that month turns over (its day 1) or on the grid's opening
+ * cell, so a reader can tell which असार / July the bare numbers belong to
+ * without the name repeating in all 42 cells.
+ */
+export function getSecondaryCellDate(
+  day: CalendarDay,
+  primaryDate: "bs" | "ad",
+  lang = "ne",
+  isFirstCell = false,
+): SecondaryCellDate {
+  const ad = new Date(`${day.date_ad}T12:00:00`);
+  const isEn = lang.slice(0, 2) === "en";
+
+  if (primaryDate === "ad") {
+    const bs = adToBS(ad);
+    if (!isFirstCell && bs.day !== 1) return { day: bs.day };
+    const name = isEn ? BS_MONTH_NAMES[bs.month - 1] : BS_MONTHS_NE[bs.month - 1];
+    return {
+      day: bs.day,
+      monthLabel: name,
+      // Only the romanized BS names run long; Devanagari ones already fit.
+      monthLabelShort: isEn ? name.slice(0, 3) : name,
+    };
+  }
+
+  const adDay = ad.getDate();
+  if (!isFirstCell && adDay !== 1) return { day: adDay };
+  const name = isEn
+    ? AD_MONTHS_SHORT[ad.getMonth()]
+    : AD_MONTHS_SHORT_NE[ad.getMonth()];
+  return { day: adDay, monthLabel: name, monthLabelShort: name };
 }
 
 /** BS month span subtitle for an AD month header, e.g. Poush–Magh 2082. */

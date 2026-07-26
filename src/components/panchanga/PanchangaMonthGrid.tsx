@@ -11,6 +11,7 @@ import { adToBS } from "@/lib/bs-calendar";
 import {
   buildAdCalendarGridDays,
   getBsMonthsOverlappingAdMonth,
+  getSecondaryCellDate,
   shiftAdMonth,
   uniqueBsMonths,
 } from "@/lib/local-calendar";
@@ -215,12 +216,23 @@ export function PanchangaMonthGrid({
           {blanks.map((b) => (
             <div key={`b-${b}`} className="min-h-[118px] bg-muted max-md:min-h-[150px]" />
           ))}
-          {days.map((day) => {
+          {days.map((day, i) => {
             const ad = new Date(`${day.date_ad}T12:00:00`);
             const phase = getPakshaPhase(day);
             const hasSunTimes = Boolean(day.sunrise || day.sunset);
             const primaryDay = isAdCalendar ? ad.getDate() : day.day;
-            const secondaryDay = isAdCalendar ? day.day : ad.getDate();
+            const secondary = getSecondaryCellDate(
+              day,
+              isAdCalendar ? "ad" : "bs",
+              lang,
+              i === 0,
+            );
+            const secondaryLabel = secondary.monthLabel
+              ? `${secondary.monthLabel} ${digits(secondary.day)}`
+              : digits(secondary.day);
+            const secondaryLabelShort = secondary.monthLabelShort
+              ? `${secondary.monthLabelShort} ${digits(secondary.day)}`
+              : digits(secondary.day);
 
             return (
               <button
@@ -254,12 +266,18 @@ export function PanchangaMonthGrid({
 
                 {/* Middle: BS/AD dates in one row (sun times vertical on md+) */}
                 <div className="flex min-w-0 flex-1 items-center justify-center py-0.5 max-md:flex-none max-md:flex-col max-md:justify-center max-md:gap-0.5">
-                  <div className="flex min-w-0 flex-row items-baseline justify-center gap-1 px-0.5">
+                  <div className="flex min-w-0 flex-row flex-wrap items-baseline justify-center gap-x-1 px-0.5">
                     <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-lg">
                       {digits(primaryDay)}
                     </span>
-                    <span className="font-mono text-xs leading-none sm:text-xs">
-                      {digits(secondaryDay)}
+                    <span
+                      className={cn(
+                        "font-mono whitespace-nowrap leading-none sm:text-xs",
+                        secondary.monthLabel ? "text-[0.625rem]" : "text-xs",
+                      )}
+                    >
+                      <span className="md:hidden">{secondaryLabelShort}</span>
+                      <span className="max-md:hidden">{secondaryLabel}</span>
                     </span>
                   </div>
 

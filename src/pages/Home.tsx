@@ -326,15 +326,20 @@ export function Home() {
     );
   }, []);
   const monthStartAd = useMemo(() => monthStartAdDate(monthContext), [monthContext]);
-  const viewingCurrentBsMonth = useMemo(() => {
+  // Works for either grid: in Gregorian mode the BS month of the displayed
+  // month never matches today's BS month, so ask the days themselves.
+  const viewingCurrentMonth = useMemo(() => {
+    if (monthContext.days.length) {
+      return monthContext.days.some((d) => d.date_ad === todayAd);
+    }
     const todayBs = adToBS(new Date(`${todayAd}T12:00:00`));
     return monthContext.year === todayBs.year && monthContext.month === todayBs.month;
-  }, [monthContext.year, monthContext.month, todayAd]);
+  }, [monthContext.days, monthContext.year, monthContext.month, todayAd]);
   const asideAdDate = useMemo(() => {
     if (selectedDay?.date_ad) return selectedDay.date_ad;
-    if (viewingCurrentBsMonth) return todayAd;
+    if (viewingCurrentMonth) return todayAd;
     return monthStartAd;
-  }, [selectedDay, viewingCurrentBsMonth, todayAd, monthStartAd]);
+  }, [selectedDay, viewingCurrentMonth, todayAd, monthStartAd]);
 
   const panchangaQ = useQuery({
     queryKey: panchangaKeys.day(asideAdDate, "ad", location.params),
