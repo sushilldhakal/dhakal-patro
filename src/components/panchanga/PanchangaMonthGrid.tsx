@@ -123,7 +123,7 @@ export function PanchangaMonthGrid({
           <span className="font-mono font-semibold text-foreground tabular-nums">
             {digits(clock)}
           </span>{" "}
-          {pick("बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)", "— tithi/nakshatra/yoga/karana (ephemeris mode)")}
+          {pick("बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)", "— tithi/nakshatra/yoga/karana (time-based)")}
         </div>
       )}
       <div className="grid grid-cols-7 gap-px  border-b border-border">

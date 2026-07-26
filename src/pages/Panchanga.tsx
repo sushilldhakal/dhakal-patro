@@ -281,7 +281,9 @@ export function Panchanga() {
             }
           />
 
-          {ephemeris && data && <EphemerisModeBanner p={data} clock={clock} />}
+          {ephemeris && data && (
+            <EphemerisModeBanner p={data} clock={clock} viewedDateAd={adDateStr} />
+          )}
 
           {/* Timeline shares the wheel's udaya (sunrise-to-sunrise) day for the
               viewed civil date so the two never disagree. Feeding it the

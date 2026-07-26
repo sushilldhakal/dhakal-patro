@@ -222,7 +222,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
               {deshaantar ? (
                 <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark sm:flex-row sm:items-center sm:justify-between sm:gap-1">
                   <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
-                    {t("aside.suryakranti")}
+                    {t("aside.deshaantar")}
                   </span>
                   <span className="mono min-w-0 text-sm font-semibold leading-tight text-foreground break-words sm:text-right">
                     {deshaantar}

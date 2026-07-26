@@ -230,11 +230,11 @@ export function formatPatroBelaantar(c?: SolarCorrection): string | undefined {
   if (!c || c.minutes == null || c.seconds == null) return undefined;
   const mm = toNepaliDigits(c.minutes);
   const ss = toNepaliDigits(String(c.seconds).padStart(2, "0"));
-  const prefix = c.sign === "rin" ? "(-) " : "(+) ";
-  return `${prefix}${mm}:${ss}`;
+  if (c.sign === "rin") return `(-) ${mm}:${ss}`;
+  return `उ ${mm}:${ss}`;
 }
 
-/** Patro label सूर्यक्रान्ति — maps to देशान्तर correction. */
+/** Patro label देशान्तर — longitude correction from the zone meridian. */
 export function formatPatroDeshaantar(c?: SolarCorrection): string | undefined {
   if (!c || c.minutes == null || c.seconds == null) return undefined;
   const mm = toNepaliDigits(c.minutes);

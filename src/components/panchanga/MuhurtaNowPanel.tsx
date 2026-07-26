@@ -1,7 +1,13 @@
 import type { MuhurtaNowBlock, PanchangaDay } from "@/lib/api";
+import { formatBsDateLong } from "@/lib/bs-calendar";
 import { formatTimeShort } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
+
+function parseAdStr(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
 
 function windowLabel(
   block: MuhurtaNowBlock | null | undefined,
@@ -25,6 +31,8 @@ const ROWS: { key: keyof NonNullable<PanchangaDay["muhurta_now"]>; label: string
 interface Props {
   p: PanchangaDay;
   clock?: string;
+  /** Civil AD date (YYYY-MM-DD) the user is viewing — not necessarily today. */
+  viewedDateAd?: string;
 }
 
 export function MuhurtaNowPanel({ p, clock }: Props) {
@@ -80,14 +88,18 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
   );
 }
 
-export function EphemerisModeBanner({ p, clock }: Props) {
-  const { pick, digits } = useLocale();
+export function EphemerisModeBanner({ p, clock, viewedDateAd }: Props) {
+  const { pick, digits, lang } = useLocale();
   const time = p.query_instant_local?.split(" ")[1] ?? clock;
   const civil = p.before_sunrise_of_civil_day;
+  const viewedAd = viewedDateAd ?? p.query_instant_local?.split(" ")[0];
+  const viewedDateLabel = viewedAd
+    ? formatBsDateLong(parseAdStr(viewedAd), lang, digits)
+    : null;
   return (
     <div className="rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm">
       <p className="m-0 font-semibold text-foreground">
-        {pick("समय-आधारित पञ्चाङ्ग", "Ephemeris mode")}
+        {pick("समय-आधारित पञ्चाङ्ग", "Time-based reading")}
       </p>
       <p className="m-0 mt-1 text-foreground text-sm leading-relaxed">
         {time ? (
@@ -110,10 +122,15 @@ export function EphemerisModeBanner({ p, clock }: Props) {
           )
         )}
         {civil &&
-          pick(
-            " यो समय आजको सूर्योदय अघि भएकाले हिजोको वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।",
-            " This time is before today's sunrise, so the previous Vedic day's panchanga is shown.",
-          )}
+          (viewedDateLabel
+            ? pick(
+                ` यो समय ${viewedDateLabel} को सूर्योदय अघि भएकाले ${viewedDateLabel} को वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।`,
+                ` This time is before sunrise on ${viewedDateLabel}, so ${viewedDateLabel}'s Vedic day panchanga is shown.`,
+              )
+            : pick(
+                " यो समय हेर्दै गरेको मितिको सूर्योदय अघि भएकाले सोही मितिको वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।",
+                " This time is before sunrise on the viewed date, so that date's Vedic day panchanga is shown.",
+              ))}
       </p>
     </div>
   );

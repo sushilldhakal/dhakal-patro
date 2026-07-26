@@ -185,15 +185,15 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
             <span className="font-semibold text-foreground">दशा कोष्ठक:</span> जन्म-समयमा बाँकी
             विंशोत्तरी दशाको वर्ष/महिना/दिन।{" "}
             <span className="font-semibold text-foreground">समय सुधार:</span> मुद्रणमा “उ” वा “०”
-            जस्ता सङ्केतले शून्य अंश/कला जनाउँछ। सूचीबद्ध सूर्योदयमा बेलान्तर र देशान्तर पहिल्यै
-            समायोजित छन्।
+            जस्ता सङ्केतले शून्य अंश/कला जनाउँछ। सूचीबद्ध सूर्योदयमा देशान्तर समायोजित छ;
+            बेलान्तर सन्दर्भका लागि मात्र देखाइन्छ।
           </>,
           <>
             <span className="font-semibold text-foreground">Dasha bracket:</span> the years/months/days
             of Vimshottari dasha remaining at birth.{" "}
             <span className="font-semibold text-foreground">Time correction:</span> in print, symbols like
-            “u” or “0” indicate zero degrees/kala. The listed sunrise already has belaantar and
-            deshaantar corrections applied.
+            “u” or “0” indicate zero degrees/kala. Listed sunrise already includes Deshaantar;
+            Belaantar is shown for reference only.
           </>,
         )}
       </p>
