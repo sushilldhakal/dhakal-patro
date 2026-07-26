@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { CalendarDay } from "@/lib/api";
 import { useLocale } from "@/i18n/locale";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { getSecondaryCellDate } from "@/lib/local-calendar";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -161,7 +162,13 @@ export function BsCalendarGrid({
           const extraFestCount = festivals.length > 2 ? festivals.length - 2 : 0;
           const adDayNum = fmtAdDay(day.date_ad);
           const primaryDayNum = primaryDate === "ad" ? adDayNum : day.day;
-          const secondaryDayNum = primaryDate === "ad" ? day.day : adDayNum;
+          const secondary = getSecondaryCellDate(day, primaryDate, lang, i === 0);
+          const secondaryLabel = secondary.monthLabel
+            ? `${secondary.monthLabel} ${digits(secondary.day)}`
+            : digits(secondary.day);
+          const secondaryLabelShort = secondary.monthLabelShort
+            ? `${secondary.monthLabelShort} ${digits(secondary.day)}`
+            : digits(secondary.day);
 
           const openFestivalDialog = (e: MouseEvent) => {
             e.preventDefault();
@@ -190,7 +197,7 @@ export function BsCalendarGrid({
                   isToday && "hover:bg-surface-today-hover",
                   !isToday && !isOutside && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
                 )}
-                aria-label={`${digits(primaryDayNum)}, ${day.date_ad}`}
+                aria-label={`${digits(primaryDayNum)} (${secondaryLabel}), ${day.date_ad}`}
                 onClick={() => onSelectDay?.(day)}
               />
 
@@ -233,7 +240,7 @@ export function BsCalendarGrid({
                     {t("calendar.today_badge")}
                   </span>
                 )}
-                <span className="flex items-baseline justify-center gap-1 leading-none">
+                <span className="flex flex-wrap items-baseline justify-center gap-x-1 leading-none">
                   <span
                     className={cn(
                       "font-num text-3xl font-semibold tracking-tight max-md:text-2xl",
@@ -242,8 +249,18 @@ export function BsCalendarGrid({
                   >
                     {digits(primaryDayNum)}
                   </span>
-                  <span className="font-num text-xs font-semibold text-muted-foreground md:text-sm">
-                    {digits(secondaryDayNum)}
+                  {/* Counterpart date — carries its month name where the month
+                      turns over, so July 17 reads as "Shrawan 1". The named
+                      form wraps under the big number on phones, where a cell is
+                      only ~50px wide, so it also drops a size there. */}
+                  <span
+                    className={cn(
+                      "font-num whitespace-nowrap font-semibold text-muted-foreground md:text-sm",
+                      secondary.monthLabel ? "text-[0.625rem]" : "text-xs",
+                    )}
+                  >
+                    <span className="md:hidden">{secondaryLabelShort}</span>
+                    <span className="max-md:hidden">{secondaryLabel}</span>
                   </span>
                   {extraFestCount > 0 ? (
                     <button

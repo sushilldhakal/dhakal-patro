@@ -192,15 +192,25 @@ export function CalendarView({
     if (prevLangRef.current === lang) return;
     const from = prevLangRef.current;
     prevLangRef.current = lang;
+    // Carry the reader across the switch: if the month they were looking at
+    // holds today, land on today's month in the other calendar (so the round
+    // trip is stable); otherwise map through the middle of the month, which is
+    // the month the two calendars overlap on most.
+    const today = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
     if (lang === "en") {
-      const anchor = todayAd
-        ? new Date(`${todayAd}T12:00:00`)
-        : bsToAD(year, month, Math.min(15, getBSMonthLength(year, month)));
+      const bsToday = adToBS(today);
+      const anchor =
+        bsToday.year === year && bsToday.month === month
+          ? today
+          : bsToAD(year, month, Math.min(15, getBSMonthLength(year, month)));
       setAdYear(anchor.getFullYear());
       setAdMonth(anchor.getMonth() + 1);
     } else if (from === "en") {
-      const mid = new Date(adYear, adMonth - 1, 15);
-      const bs = adToBS(mid);
+      const anchor =
+        today.getFullYear() === adYear && today.getMonth() + 1 === adMonth
+          ? today
+          : new Date(adYear, adMonth - 1, 15);
+      const bs = adToBS(anchor);
       setYear(bs.year);
       setMonth(bs.month);
     }
