@@ -13,6 +13,38 @@ function fmtAdDay(iso: string): number {
   return new Date(iso + "T12:00:00").getDate();
 }
 
+/** Patro-style upright vertical festival label along the cell edge. */
+function VerticalFestivalLabel({
+  name,
+  side,
+  danger,
+}: {
+  name: string;
+  side: "left" | "right";
+  danger?: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "pointer-events-none absolute z-[1] max-md:hidden",
+        "top-7 bottom-7 w-3 overflow-hidden",
+        side === "left" ? "left-1" : "right-1",
+      )}
+      aria-hidden
+    >
+      <span
+        className={cn(
+          "inline-block max-h-full overflow-hidden text-xs font-semibold leading-[1.05] tracking-tight",
+          danger ? "text-danger" : "text-foreground/85",
+          side === "left" ? "[writing-mode:vertical-rl] rotate-180" : "[writing-mode:vertical-rl]",
+        )}
+      >
+        {name}
+      </span>
+    </span>
+  );
+}
+
 interface Props {
   days: CalendarDay[];
   publicHolidayDates: Set<string>;
@@ -81,18 +113,24 @@ export function BsCalendarGrid({
           const isSelected = day.date_ad === selectedAdDate && !isToday;
           const isWeekend = col === 0 || col === 6;
           const isPublicHoliday = !isOutside && publicHolidayDates.has(day.date_ad);
-          const hasFestival = !isOutside && day.festivals.length > 0 && !isPublicHoliday;
-
-          const mainFest = day.festivals[0];
+          const festivals = !isOutside ? day.festivals.filter(Boolean) : [];
+          const hasFestival = festivals.length > 0 && !isPublicHoliday;
+          const mainFest = festivals[0];
+          const leftFest = festivals[1];
+          const rightFest = festivals[2];
           const tithi = pick(day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne);
+          const festTitle =
+            festivals.length > 3 ? festivals.join(" · ") : undefined;
 
           return (
             <button
               key={day.date_ad}
               type="button"
+              title={festTitle}
               className={cn(
-                "relative flex min-h-[104px] min-w-0 flex-col border-none bg-card p-2 text-foreground transition-colors",
+                "relative flex min-h-[104px] min-w-0 flex-col overflow-hidden border-none bg-card p-2 text-foreground transition-colors",
                 "max-md:min-h-[5rem] max-md:p-1",
+                (leftFest || rightFest) && "md:px-3",
                 isOutside && "bg-surface-muted/70 text-foreground/70 hover:bg-surface-hover",
                 isToday && "bg-surface-today hover:bg-surface-today-hover",
                 !isToday && !isOutside && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
@@ -101,10 +139,17 @@ export function BsCalendarGrid({
               )}
               onClick={() => onSelectDay?.(day)}
             >
+              {leftFest ? (
+                <VerticalFestivalLabel name={leftFest} side="left" danger={isPublicHoliday} />
+              ) : null}
+              {rightFest ? (
+                <VerticalFestivalLabel name={rightFest} side="right" danger={isPublicHoliday} />
+              ) : null}
+
               {/* Top row: tithi (full width) */}
               <span className="flex w-full items-start leading-none">
                 {tithi ? (
-                  <span className="min-w-0 w-full truncate text-left text-xs font-semibold md:text-sm pt-1">
+                  <span className="min-w-0 w-full truncate text-center text-xs font-semibold md:text-sm pt-1">
                     {tithi}
                   </span>
                 ) : isEnriching && !isOutside ? (
@@ -139,16 +184,29 @@ export function BsCalendarGrid({
                 </span>
               </span>
 
-              {/* Bottom: festival / holiday */}
-              {mainFest && !isOutside ? (
+              {/* Bottom: primary festival (extras on left/right vertically on md+) */}
+              {mainFest ? (
                 <span
                   className={cn(
-                    "w-full truncate text-center text-xs font-semibold leading-tight",
-                    "max-md:whitespace-normal max-md:line-clamp-2 max-md:leading-[1.15]",
+                    "flex w-full min-w-0 flex-col gap-px text-center text-xs font-semibold leading-tight",
                     isPublicHoliday ? "text-danger" : "text-foreground",
                   )}
                 >
-                  {mainFest}
+                  <span className="truncate max-md:whitespace-normal max-md:line-clamp-2 max-md:leading-[1.15]">
+                    {mainFest}
+                  </span>
+                  {festivals.length > 1 ? (
+                    <span className="flex flex-col gap-px md:hidden">
+                      {festivals.slice(1, 3).map((name, fi) => (
+                        <span
+                          key={`${name}-${fi}`}
+                          className="truncate text-[10px] font-medium leading-tight opacity-90"
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </span>
+                  ) : null}
                 </span>
               ) : null}
             </button>

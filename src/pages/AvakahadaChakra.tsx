@@ -36,17 +36,22 @@ import {
   type Gana,
 } from "@/lib/avakahada-data";
 import {
+  localizeDeity,
   localizeGana,
+  localizeJati,
   localizeLord,
+  localizeMukha,
   localizeNadi,
   localizeNakshatra,
   localizeRashi,
   localizeRashis,
+  localizeSanjna,
   localizeVarga,
   localizeVarna,
   localizeVashya,
   localizeYoni,
   rowMetaFromCharans,
+  sanjnaTitle,
 } from "@/lib/avakahada-locale";
 import { AvakahadaWheel } from "@/components/avakahada/AvakahadaWheel";
 
@@ -64,6 +69,10 @@ interface Row {
   charanRashis: string[];
   aksharaText: string;
   rashiText: string;
+  deity: string;
+  jati: string;
+  sanjna: string;
+  mukha: string;
   lord: string;
   varna: string;
   vashya: string;
@@ -84,6 +93,10 @@ function buildRows(lang: string): Row[] {
       charanRashis: r.charanRashis,
       aksharaText: r.aksharas.join(" "),
       rashiText: localizeRashis(r.rashis, lang),
+      deity: localizeDeity(r.deity, lang),
+      jati: localizeJati(r.jati, lang),
+      sanjna: localizeSanjna(r.sanjna, lang),
+      mukha: localizeMukha(r.mukha, lang),
       lord: localizeLord(meta.lord, lang),
       varna: localizeVarna(meta.varna, lang),
       vashya: localizeVashya(meta.vashya, lang),
@@ -102,6 +115,10 @@ const fuzzy: FilterFn<Row> = (row, _id, value: string) => {
   return [
     o.ne,
     o.en,
+    o.deity,
+    o.jati,
+    o.sanjna,
+    o.mukha,
     o.aksharaText,
     o.rashiText,
     o.lord,
@@ -151,6 +168,48 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
         cell: ({ row }) => <NakshatraCell row={row.original} lang={lang} />,
       },
       {
+        id: "deity",
+        header: t("avakahada.col_deity"),
+        accessorKey: "deity",
+        cell: ({ row }) => {
+          const raw = AVAKAHADA[row.original.index - 1]?.deity;
+          return (
+            <span
+              className="whitespace-nowrap"
+              title={raw === "अ.क." ? "अश्विनी कुमार" : undefined}
+            >
+              {row.original.deity}
+            </span>
+          );
+        },
+      },
+      {
+        id: "jati",
+        header: t("avakahada.col_jati"),
+        accessorKey: "jati",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+      {
+        id: "sanjna",
+        header: t("avakahada.col_sanjna"),
+        accessorKey: "sanjna",
+        cell: ({ row }) => {
+          const raw = AVAKAHADA[row.original.index - 1]?.sanjna;
+          const hint = raw ? sanjnaTitle(raw, lang) : undefined;
+          return (
+            <span className="whitespace-nowrap font-mono text-sm" title={hint}>
+              {row.original.sanjna}
+            </span>
+          );
+        },
+      },
+      {
+        id: "mukha",
+        header: t("avakahada.col_mukha"),
+        accessorKey: "mukha",
+        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
+      },
+      {
         id: "akshara",
         header: t("avakahada.col_akshara"),
         accessorFn: (r) => r.aksharaText,
@@ -180,7 +239,7 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
       },
       {
         id: "lord",
-        header: t("avakahada.col_lord"),
+        header: t("avakahada.col_rashi_lord"),
         accessorKey: "lord",
         cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
       },

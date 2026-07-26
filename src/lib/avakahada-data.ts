@@ -20,14 +20,14 @@ export interface RashiMeta {
 }
 
 export const RASHI_META: Record<string, RashiMeta> = {
-  मेष: { ne: "मेष", lord: "भौम", varna: "क्षत्रिय", vashya: "चतुष्पद" },
+  मेष: { ne: "मेष", lord: "मंगल", varna: "क्षत्रिय", vashya: "चतुष्पद" },
   वृष: { ne: "वृष", lord: "शुक्र", varna: "वैश्य", vashya: "चतुष्पद" },
   मिथुन: { ne: "मिथुन", lord: "बुध", varna: "शूद्र", vashya: "द्विपद" },
   कर्क: { ne: "कर्क", lord: "चन्द्र", varna: "विप्र", vashya: "जलचर" },
   सिंह: { ne: "सिंह", lord: "सूर्य", varna: "क्षत्रिय", vashya: "वनचर" },
   कन्या: { ne: "कन्या", lord: "बुध", varna: "वैश्य", vashya: "द्विपद" },
   तुला: { ne: "तुला", lord: "शुक्र", varna: "शूद्र", vashya: "द्विपद" },
-  वृश्चिक: { ne: "वृश्चिक", lord: "भौम", varna: "विप्र", vashya: "कीट" },
+  वृश्चिक: { ne: "वृश्चिक", lord: "मंगल", varna: "विप्र", vashya: "कीट" },
   धनु: { ne: "धनु", lord: "गुरु", varna: "क्षत्रिय", vashya: "द्विपद" },
   मकर: { ne: "मकर", lord: "शनि", varna: "वैश्य", vashya: "जलचर" },
   कुम्भ: { ne: "कुम्भ", lord: "शनि", varna: "शूद्र", vashya: "द्विपद" },
@@ -50,6 +50,36 @@ const ENEMY: Record<string, string> = {
   मार्जार: "मूषक", मूषक: "मार्जार",
   गौ: "व्याघ्र", व्याघ्र: "गौ",
 };
+
+/** नक्षत्र देवता (स्वामी) — printed Surya-patro avakahada summary row. */
+export const NAKSHATRA_DEITY = [
+  "अ.क.", "यम", "अग्नि", "ब्रम्हा", "चन्द्र", "शिव", "अदिति", "वृहस्पति", "सर्प",
+  "पितर", "भग", "अर्यमा", "सूर्य", "विश्वकर्मा", "वायु", "इन्द्राग्नि", "मित्र", "इन्द्र",
+  "राक्षस", "जल", "विश्वदेव", "विष्णु", "वसु", "वरुण", "अजेकपा", "अहिध्य", "पूषा",
+] as const;
+
+/** नक्षत्र जात — patro summary (distinct from राशि वर्ण). */
+export const NAKSHATRA_JATI = [
+  "वैश्य", "चाण्डाल", "ब्राम्हण", "शूद्र", "कृषक", "करजाति", "वैश्य", "क्षत्रिय", "चाण्डाल",
+  "शूद्र", "ब्राम्हण", "क्षत्रिय", "वैश्य", "कृषक", "कूरजाति", "चाण्डाल", "शूद्र", "कृषक",
+  "करजाति", "ब्राम्हण", "क्षत्रिय", "चाण्डाल", "कृषक", "करजाति", "ब्राम्हण", "क्षत्रिय", "शूद्र",
+] as const;
+
+/** नक्षत्र संज्ञा — laghu/kshipra/… abbreviations from the printed चक्र. */
+export const NAKSHATRA_SANJNA = [
+  "ल.", "क्षि.", "उ.कू.", "मि.सा.", "धु.स्थि.", "म.मै.", "ती.दा.", "च.च.", "ल.क्षि.", "ती.दा.",
+  "उ.क.", "उ.क.", "ध्रु.स्थि.", "ल.क्षि.", "म.मै.", "च.च.", "मि.सा.", "मु.मै.", "ती.दा.", "ती.दा.",
+  "उ.कू.", "धू.स्थि.", "च.च.", "च.च.", "च.च.", "उ.कू.", "म.मै.",
+] as const;
+
+export type MukhaDirection = "तिर्यङ" | "अधो" | "ऊर्ध्व";
+
+/** योनि मुख (mouth direction) — तिर्यङ / अधो / ऊर्ध्व. */
+export const NAKSHATRA_MUKHA: MukhaDirection[] = [
+  "तिर्यङ", "अधो", "अधो", "ऊर्ध्व", "तिर्यङ", "ऊर्ध्व", "तिर्यङ", "ऊर्ध्व", "अधो",
+  "अधो", "अधो", "ऊर्ध्व", "तिर्यङ", "तिर्यङ", "तिर्यङ", "अधो", "तिर्यङ", "तिर्यङ",
+  "अधो", "अधो", "ऊर्ध्व", "ऊर्ध्व", "ऊर्ध्व", "ऊर्ध्व", "अधो", "ऊर्ध्व", "तिर्यङ",
+];
 
 interface RawNakshatra {
   ne: string;
@@ -98,6 +128,10 @@ export interface NakshatraRow {
   /** distinct राशि the four पद fall in (1 or 2). */
   rashis: string[];
   charanRashis: string[]; // राशि per चरण (length 4)
+  deity: string;
+  jati: string;
+  sanjna: string;
+  mukha: MukhaDirection;
   yoni: string;
   vairiYoni: string;
   gana: Gana;
@@ -111,6 +145,10 @@ export const AVAKAHADA: NakshatraRow[] = RAW.map((r, i) => ({
   aksharas: r.aksharas,
   charanRashis: r.rashis,
   rashis: [...new Set(r.rashis)],
+  deity: NAKSHATRA_DEITY[i]!,
+  jati: NAKSHATRA_JATI[i]!,
+  sanjna: NAKSHATRA_SANJNA[i]!,
+  mukha: NAKSHATRA_MUKHA[i]!,
   yoni: r.yoni,
   vairiYoni: ENEMY[r.yoni] ?? "—",
   gana: r.gana,
