@@ -87,7 +87,7 @@ export function PanchangaOgPreview() {
     <div style={{ width: 1232, padding: 16, background: "#F7F3EA" }}>
       <div
         id="og-capture"
-        style={{ width: 1200, background: "#F7F3EA", borderRadius: 16, padding: "18px 20px 20px" }}
+        style={{ width: 1200, background: "#F7F3EA", borderRadius: 16, padding: "18px 0 20px" }}
       >
         {/* Slim brand strip above the chart */}
         <div className="mb-3 flex items-end justify-between">
