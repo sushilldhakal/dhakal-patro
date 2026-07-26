@@ -1,6 +1,7 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, adToBS, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import { getAdMonthBsSpanLabel } from "@/lib/local-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
@@ -65,9 +66,14 @@ interface Props {
   mobileToolbar?: ReactNode;
   /** Below md: bottom-right on row 2 (location on home, under toggle). */
   mobileToolbarLower?: ReactNode;
+  /** Gregorian month navigation when UI language is English. */
+  calendarMode?: "bs" | "ad";
 }
 
-function chipMonthLabel(month: number, lang: string): string {
+function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" = "bs"): string {
+  if (calendarMode === "ad") {
+    return AD_MONTHS_SHORT[month - 1].toUpperCase();
+  }
   if (lang === "en") {
     return BS_MONTH_NAMES[month - 1].slice(0, 3).toUpperCase();
   }
@@ -252,15 +258,19 @@ export function BsMonthHeaderTitle({
   mobileDateTimeDrawer = false,
   mobileToolbar,
   mobileToolbarLower,
+  calendarMode = "bs",
 }: Props) {
   const { lang, pick, digits } = useLocale();
+  const isAdCalendar = calendarMode === "ad";
 
   const todayBs = adToBS(
     todayAd ? new Date(`${todayAd}T12:00:00`) : new Date(),
   );
 
-  const monthTitle = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
-  const samvatsara = resolveSamvatsaraForBsYear(year);
+  const monthTitle = isAdCalendar
+    ? AD_MONTH_NAMES[month - 1]
+    : pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
+  const samvatsara = isAdCalendar ? undefined : resolveSamvatsaraForBsYear(year);
   const samvatsaraLabel = samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : undefined;
   const adLocale = lang === "en" ? "en-US" : "ne-NP";
   // Always day → month → year (e.g. "२५ जुलाई २०२६" / "25 Jul 2026"). Relying on
@@ -275,6 +285,9 @@ export function BsMonthHeaderTitle({
   })();
   const adMonthRangeEnglish = (() => {
     if (day != null) return null;
+    if (isAdCalendar) {
+      return getAdMonthBsSpanLabel(year, month, lang, digits);
+    }
     const start = bsToAD(year, month, 1);
     const end = bsToAD(year, month, getBSMonthLength(year, month));
     const startMonth = start.toLocaleDateString(adLocale, { month: "short" });
@@ -291,10 +304,10 @@ export function BsMonthHeaderTitle({
     return `${startMonth} ${yearLabel(startYear)}/${endMonth} ${yearLabel(endYear)}`;
   })();
   const chipDay = day ?? todayBs.day;
-  const chipMonth = day != null ? month : todayBs.month;
-  const monthOptions = BS_MONTH_NAMES.map((_: string, i: number) => ({
+  const chipMonth = day != null ? month : isAdCalendar ? month : todayBs.month;
+  const monthOptions = (isAdCalendar ? AD_MONTH_NAMES : BS_MONTH_NAMES).map((_: string, i: number) => ({
     value: i + 1,
-    label: bsMonthLabel(i + 1, lang),
+    label: isAdCalendar ? AD_MONTH_NAMES[i] : bsMonthLabel(i + 1, lang),
   }));
   const yearSelectOptions = yearOptions.map((y) => ({
     value: y,
@@ -558,7 +571,7 @@ export function BsMonthHeaderTitle({
         aria-label={todayAriaLabel}
         title={todayAriaLabel}
       >
-        <div className={patroMonthChipHead}>{chipMonthLabel(chipMonth, lang)}</div>
+        <div className={patroMonthChipHead}>{chipMonthLabel(chipMonth, lang, calendarMode)}</div>
         <div className={patroMonthChipDay}>{digits(chipDay)}</div>
       </button>
 

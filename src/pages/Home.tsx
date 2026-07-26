@@ -44,8 +44,7 @@ function fmtAdIso(d: Date): string {
 }
 
 function monthStartAdDate(ctx: CalendarMonthContext): string {
-  const first = ctx.days.find((d) => d.day === 1) ?? ctx.days[0];
-  if (first?.date_ad) return first.date_ad;
+  if (ctx.days[0]?.date_ad) return ctx.days[0].date_ad;
   return fmtAdIso(bsToAD(ctx.year, ctx.month, 1));
 }
 
@@ -135,8 +134,9 @@ function PanchangaAside({
       return `${monthName} ${digits(activeP.bs_date.day)}`;
     }
     if (contextDay) {
-      const monthName = pick(BS_MONTHS_NE[monthContext.month - 1], BS_MONTH_NAMES[monthContext.month - 1]);
-      return `${monthName} ${digits(contextDay.day)}`;
+      const bs = adToBS(new Date(`${contextDay.date_ad}T12:00:00`));
+      const monthName = pick(BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1]);
+      return `${monthName} ${digits(bs.day)}`;
     }
     if (activeP?.display?.bs_ne) return digits(activeP.display.bs_ne);
     if (activeP?.date_bs) return digits(activeP.date_bs);

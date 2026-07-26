@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
   fetchMonthCalendar,
@@ -15,7 +15,9 @@ import {
   BS_SUPPORTED_START_YEAR,
   adToBS,
   bsToAD,
+  getBSMonthLength,
   getCurrentBs,
+  getSupportedAdBounds,
 } from "@/lib/bs-calendar";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
@@ -24,16 +26,23 @@ import { locationToSearch } from "@/lib/url-state";
 import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 import {
   applyHolidaysToDays,
+  buildAdCalendarGridDays,
   buildCalendarGridDays,
+  buildLocalAdMonthDays,
   buildLocalMonthDays,
+  getBsMonthsOverlappingAdMonth,
   mergeEnrichedDays,
+  shiftAdMonth,
   shiftBsMonth,
+  uniqueBsMonths,
 } from "@/lib/local-calendar";
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { BsMonthHeaderTitle } from "./BsMonthHeaderTitle";
 import { VedicPatroLoader } from "./VedicPatroLoader";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { getStoredLanguage } from "@/lib/user-preferences";
 import { cn } from "@/lib/utils";
 import { patroMdRail, patroSegBtn } from "@/lib/patro-classes";
 import { ArrowLeftRight } from "lucide-react";
@@ -41,6 +50,12 @@ import { ArrowLeftRight } from "lucide-react";
 const BS_YEAR_OPTIONS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
   (_, i) => BS_SUPPORTED_START_YEAR + i,
+);
+
+const AD_BOUNDS = getSupportedAdBounds();
+const AD_YEAR_OPTIONS = Array.from(
+  { length: AD_BOUNDS.maxYear - AD_BOUNDS.minYear + 1 },
+  (_, i) => AD_BOUNDS.minYear + i,
 );
 
 /** Home aside sits beside the calendar from Tailwind `xl` (1280px) up. */
@@ -132,6 +147,10 @@ export function CalendarView({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { lang } = useLocale();
+  const calendarEra = useCalendarEra();
+  const startsGregorian =
+    typeof window !== "undefined" && getStoredLanguage() === "en";
+  const isAdCalendar = calendarEra === "ad" || lang === "en" || startsGregorian;
   const init = useMemo(() => {
     if (todayAd) {
       const bs = adToBS(new Date(`${todayAd}T12:00:00`));
@@ -139,8 +158,15 @@ export function CalendarView({
     }
     return getCurrentBs();
   }, [todayAd]);
+  const initAd = useMemo(() => {
+    const d = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
+    return { year: d.getFullYear(), month: d.getMonth() + 1 };
+  }, [todayAd]);
   const [year, setYear] = useState(init.year);
   const [month, setMonth] = useState(init.month);
+  const [adYear, setAdYear] = useState(initAd.year);
+  const [adMonth, setAdMonth] = useState(initAd.month);
+  const prevLangRef = useRef<string | null>(null);
   const [selected, setSelected] = useState<CalendarDay | null>(null);
   const [internalPatroView, setInternalPatroView] = useState<HomePatroView>(() =>
     enablePatroToggle ? loadHomePatroView() : "calendar",
@@ -158,7 +184,35 @@ export function CalendarView({
     onDaySelect?.(null);
   };
 
-  const localDays = useMemo(() => buildLocalMonthDays(year, month), [year, month]);
+  useEffect(() => {
+    if (prevLangRef.current === null) {
+      prevLangRef.current = lang;
+      return;
+    }
+    if (prevLangRef.current === lang) return;
+    const from = prevLangRef.current;
+    prevLangRef.current = lang;
+    if (lang === "en") {
+      const anchor = todayAd
+        ? new Date(`${todayAd}T12:00:00`)
+        : bsToAD(year, month, Math.min(15, getBSMonthLength(year, month)));
+      setAdYear(anchor.getFullYear());
+      setAdMonth(anchor.getMonth() + 1);
+    } else if (from === "en") {
+      const mid = new Date(adYear, adMonth - 1, 15);
+      const bs = adToBS(mid);
+      setYear(bs.year);
+      setMonth(bs.month);
+    }
+  }, [lang, year, month, adYear, adMonth, todayAd]);
+
+  const localDays = useMemo(
+    () =>
+      isAdCalendar && !isPanchangaPatro
+        ? buildLocalAdMonthDays(adYear, adMonth)
+        : buildLocalMonthDays(year, month),
+    [isAdCalendar, isPanchangaPatro, adYear, adMonth, year, month],
+  );
   const prevBs = useMemo(() => shiftBsMonth(year, month, -1), [year, month]);
   const nextBs = useMemo(() => shiftBsMonth(year, month, 1), [year, month]);
 
@@ -167,32 +221,81 @@ export function CalendarView({
   const canFetchNext =
     nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
 
-  // Lite month rows (`full=false`): the grid only renders day/tithi/festival
-  // basics and DayDetailModal fetches its own single-day detail, so skipping
-  // the embedded per-day panchanga cuts the payload ~10× and the server work.
-  const monthQ = useQuery({
-    queryKey: panchangaKeys.month(year, month, location?.params, false),
-    queryFn: () => fetchMonthCalendar(year, month, location?.params, { full: false }),
-    staleTime: 1000 * 60 * 60,
+  const prevAd = useMemo(() => shiftAdMonth(adYear, adMonth, -1), [adYear, adMonth]);
+  const nextAd = useMemo(() => shiftAdMonth(adYear, adMonth, 1), [adYear, adMonth]);
+
+  const requiredBsMonths = useMemo(() => {
+    if (isPanchangaPatro) return [{ year, month }];
+    if (!isAdCalendar) {
+      const months = [{ year, month }];
+      if (canFetchPrev) months.push(prevBs);
+      if (canFetchNext) months.push(nextBs);
+      return uniqueBsMonths(months);
+    }
+    return uniqueBsMonths([
+      ...getBsMonthsOverlappingAdMonth(adYear, adMonth),
+      ...getBsMonthsOverlappingAdMonth(prevAd.year, prevAd.month),
+      ...getBsMonthsOverlappingAdMonth(nextAd.year, nextAd.month),
+    ]);
+  }, [
+    isPanchangaPatro,
+    isAdCalendar,
+    year,
+    month,
+    adYear,
+    adMonth,
+    prevBs,
+    nextBs,
+    prevAd,
+    nextAd,
+    canFetchPrev,
+    canFetchNext,
+  ]);
+
+  const monthQueries = useQueries({
+    queries: requiredBsMonths.map(({ year: bsYear, month: bsMonth }) => ({
+      queryKey: panchangaKeys.month(bsYear, bsMonth, location?.params, false),
+      queryFn: () => fetchMonthCalendar(bsYear, bsMonth, location?.params, { full: false }),
+      staleTime: 1000 * 60 * 60,
+      enabled: !isPanchangaPatro,
+    })),
   });
 
-  const prevMonthQ = useQuery({
-    queryKey: panchangaKeys.month(prevBs.year, prevBs.month, location?.params, false),
-    queryFn: () => fetchMonthCalendar(prevBs.year, prevBs.month, location?.params, { full: false }),
-    staleTime: 1000 * 60 * 60,
-    enabled: canFetchPrev && !isPanchangaPatro,
-  });
+  const monthQueriesTick = monthQueries
+    .map((q) => `${q.dataUpdatedAt ?? 0}:${q.status}`)
+    .join("|");
 
-  const nextMonthQ = useQuery({
-    queryKey: panchangaKeys.month(nextBs.year, nextBs.month, location?.params, false),
-    queryFn: () => fetchMonthCalendar(nextBs.year, nextBs.month, location?.params, { full: false }),
-    staleTime: 1000 * 60 * 60,
-    enabled: canFetchNext && !isPanchangaPatro,
-  });
+  const enrichedCalendarDays = useMemo(() => {
+    const byDate = new Map<string, CalendarDay>();
+    for (const query of monthQueries) {
+      for (const day of query.data?.calendar ?? []) {
+        byDate.set(day.date_ad, day);
+      }
+    }
+    return [...byDate.values()];
+  }, [monthQueriesTick]);
+
+  const monthFetchError = monthQueries.some((q) => q.isError);
+
+  const prevMonthQ = !isAdCalendar
+    ? monthQueries.find(
+        (_q, i) =>
+          requiredBsMonths[i]?.year === prevBs.year &&
+          requiredBsMonths[i]?.month === prevBs.month,
+      )
+    : undefined;
+
+  const nextMonthQ = !isAdCalendar
+    ? monthQueries.find(
+        (_q, i) =>
+          requiredBsMonths[i]?.year === nextBs.year &&
+          requiredBsMonths[i]?.month === nextBs.month,
+      )
+    : undefined;
 
   const festivalYears = useMemo(
-    () => [...new Set([year, prevBs.year, nextBs.year])].sort((a, b) => a - b),
-    [year, prevBs.year, nextBs.year],
+    () => [...new Set(requiredBsMonths.map((m) => m.year))].sort((a, b) => a - b),
+    [requiredBsMonths],
   );
 
   const festivalQueries = useQueries({
@@ -224,23 +327,28 @@ export function CalendarView({
 
   const monthDays = useMemo(() => {
     let result = localDays;
-    // Merge month panchanga first, then overlay localized festival names so
-    // English isn't overwritten by Nepali strings from the month calendar API.
-    if (monthQ.data?.calendar) {
-      result = mergeEnrichedDays(result, monthQ.data.calendar);
+    if (enrichedCalendarDays.length) {
+      result = mergeEnrichedDays(result, enrichedCalendarDays);
     }
     if (yearFestivals.length) {
       result = applyHolidaysToDays(result, yearFestivals, lang);
     }
     return result;
-  }, [localDays, yearFestivals, monthQ.data, lang]);
+  }, [localDays, enrichedCalendarDays, yearFestivals, lang]);
 
   const gridDays = useMemo(() => {
     if (isPanchangaPatro) return monthDays;
+    if (isAdCalendar) {
+      let grid = buildAdCalendarGridDays(adYear, adMonth, enrichedCalendarDays);
+      if (yearFestivals.length) {
+        grid = applyHolidaysToDays(grid, yearFestivals, lang);
+      }
+      return grid;
+    }
     let grid = buildCalendarGridDays(year, month, {
-      prev: prevMonthQ.data?.calendar,
+      prev: prevMonthQ?.data?.calendar,
       current: monthDays,
-      next: nextMonthQ.data?.calendar,
+      next: nextMonthQ?.data?.calendar,
     });
     if (yearFestivals.length) {
       grid = applyHolidaysToDays(grid, yearFestivals, lang);
@@ -248,11 +356,15 @@ export function CalendarView({
     return grid;
   }, [
     isPanchangaPatro,
+    isAdCalendar,
+    adYear,
+    adMonth,
     year,
     month,
     monthDays,
-    prevMonthQ.data?.calendar,
-    nextMonthQ.data?.calendar,
+    enrichedCalendarDays,
+    prevMonthQ?.data?.calendar,
+    nextMonthQ?.data?.calendar,
     yearFestivals,
     lang,
   ]);
@@ -261,11 +373,27 @@ export function CalendarView({
     if (!onMonthContextChange) return;
     const first = monthDays[0]?.date_ad ?? "";
     const last = monthDays.at(-1)?.date_ad ?? "";
-    const key = `${year}|${month}|${monthDays.length}|${first}|${last}|${festivalDataTick}|${monthQ.dataUpdatedAt ?? 0}`;
+    const contextYear = isAdCalendar
+      ? adToBS(new Date(adYear, adMonth - 1, 1)).year
+      : year;
+    const contextMonth = isAdCalendar
+      ? adToBS(new Date(adYear, adMonth - 1, 1)).month
+      : month;
+    const key = `${contextYear}|${contextMonth}|${monthDays.length}|${first}|${last}|${festivalDataTick}|${monthQueriesTick}`;
     if (lastMonthContextKey.current === key) return;
     lastMonthContextKey.current = key;
-    onMonthContextChange({ year, month, days: monthDays });
-  }, [year, month, monthDays, festivalDataTick, monthQ.dataUpdatedAt, onMonthContextChange]);
+    onMonthContextChange({ year: contextYear, month: contextMonth, days: monthDays });
+  }, [
+    isAdCalendar,
+    adYear,
+    adMonth,
+    year,
+    month,
+    monthDays,
+    festivalDataTick,
+    monthQueriesTick,
+    onMonthContextChange,
+  ]);
 
   const publicHolidayDates = useMemo(
     () =>
@@ -277,12 +405,20 @@ export function CalendarView({
     [yearFestivals],
   );
 
-  const isEnriching = (monthQ.isFetching && !monthQ.data) || festivalsLoading;
+  const isEnriching =
+    (monthQueries.some((q) => q.isFetching && !q.data) || festivalsLoading) &&
+    !isPanchangaPatro;
 
-  const panchangaGridDate = useMemo(
-    () => anchorDateForBsMonth(year, month, monthDays, todayAd),
-    [year, month, monthDays, todayAd],
-  );
+  const panchangaGridDate = useMemo(() => {
+    if (isAdCalendar) {
+      if (todayAd) {
+        const d = new Date(`${todayAd}T12:00:00`);
+        if (d.getFullYear() === adYear && d.getMonth() + 1 === adMonth) return d;
+      }
+      return new Date(adYear, adMonth - 1, 1, 12, 0, 0, 0);
+    }
+    return anchorDateForBsMonth(year, month, monthDays, todayAd);
+  }, [isAdCalendar, adYear, adMonth, year, month, monthDays, todayAd]);
 
   function selectDay(day: CalendarDay) {
     if (isPanchangaPatro && location) {
@@ -311,9 +447,16 @@ export function CalendarView({
   }
 
   function prev() {
-    if (month === 1 && year <= BS_SUPPORTED_START_YEAR) return;
     setSelected(null);
     onDaySelect?.(null);
+    if (isAdCalendar) {
+      if (adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth) return;
+      const p = shiftAdMonth(adYear, adMonth, -1);
+      setAdYear(p.year);
+      setAdMonth(p.month);
+      return;
+    }
+    if (month === 1 && year <= BS_SUPPORTED_START_YEAR) return;
     if (month === 1) {
       setYear((y) => y - 1);
       setMonth(12);
@@ -321,9 +464,16 @@ export function CalendarView({
   }
 
   function nextMonth() {
-    if (month === 12 && year >= BS_SUPPORTED_END_YEAR) return;
     setSelected(null);
     onDaySelect?.(null);
+    if (isAdCalendar) {
+      if (adYear === AD_BOUNDS.maxYear && adMonth === AD_BOUNDS.maxMonth) return;
+      const n = shiftAdMonth(adYear, adMonth, 1);
+      setAdYear(n.year);
+      setAdMonth(n.month);
+      return;
+    }
+    if (month === 12 && year >= BS_SUPPORTED_END_YEAR) return;
     if (month === 12) {
       setYear((y) => y + 1);
       setMonth(1);
@@ -331,8 +481,13 @@ export function CalendarView({
   }
 
   function goToday() {
-    setYear(init.year);
-    setMonth(init.month);
+    if (isAdCalendar) {
+      setAdYear(initAd.year);
+      setAdMonth(initAd.month);
+    } else {
+      setYear(init.year);
+      setMonth(init.month);
+    }
     setSelected(null);
     onDaySelect?.(null);
   }
@@ -342,10 +497,11 @@ export function CalendarView({
       date={panchangaGridDate}
       locationParams={location?.params}
       onPickDay={goToPanchangaDay}
+      calendarMode={isAdCalendar ? "ad" : "bs"}
     />
   ) : (
     <>
-      {monthQ.isError && (
+      {monthFetchError && (
         <div className="mb-3 rounded-xl border border-warning/25 bg-warning-surface px-3.5 py-2 text-sm text-base text-warning">
           {t("calendar.enrich_error")}
         </div>
@@ -362,20 +518,34 @@ export function CalendarView({
           </div>
         )}
         <BsCalendarGrid
+          key={`${lang}-${isAdCalendar ? `${adYear}-${adMonth}` : `${year}-${month}`}`}
           days={gridDays}
           publicHolidayDates={publicHolidayDates}
           selectedAdDate={selected?.date_ad}
           onSelectDay={selectDay}
           isEnriching={isEnriching}
           todayAd={todayAd}
+          primaryDate={isAdCalendar ? "ad" : "bs"}
         />
       </div>
 
       {!asideInSidebar ? (
         <DayDetailModal
           day={selected}
-          bsYear={year}
-          bsMonth={month}
+          bsYear={
+            selected
+              ? adToBS(new Date(`${selected.date_ad}T12:00:00`)).year
+              : isAdCalendar
+                ? adToBS(new Date(adYear, adMonth - 1, 1)).year
+                : year
+          }
+          bsMonth={
+            selected
+              ? adToBS(new Date(`${selected.date_ad}T12:00:00`)).month
+              : isAdCalendar
+                ? adToBS(new Date(adYear, adMonth - 1, 1)).month
+                : month
+          }
           publicHolidayDates={publicHolidayDates}
           location={location}
           onClose={() => {
@@ -462,17 +632,35 @@ export function CalendarView({
     </>
   );
 
-  function changeMonth(nextMonth: number) {
-    setMonth(nextMonth);
+  function changeMonth(nextMonthValue: number) {
+    if (isAdCalendar) {
+      setAdMonth(nextMonthValue);
+    } else {
+      setMonth(nextMonthValue);
+    }
     setSelected(null);
     onDaySelect?.(null);
   }
 
-  function changeYear(nextYear: number) {
-    setYear(nextYear);
+  function changeYear(nextYearValue: number) {
+    if (isAdCalendar) {
+      setAdYear(nextYearValue);
+    } else {
+      setYear(nextYearValue);
+    }
     setSelected(null);
     onDaySelect?.(null);
   }
+
+  const headerYear = isAdCalendar ? adYear : year;
+  const headerMonth = isAdCalendar ? adMonth : month;
+  const headerYearOptions = isAdCalendar ? AD_YEAR_OPTIONS : BS_YEAR_OPTIONS;
+  const headerPrevDisabled = isAdCalendar
+    ? adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth
+    : month === 1 && year <= BS_SUPPORTED_START_YEAR;
+  const headerNextDisabled = isAdCalendar
+    ? adYear === AD_BOUNDS.maxYear && adMonth === AD_BOUNDS.maxMonth
+    : month === 12 && year >= BS_SUPPORTED_END_YEAR;
 
   const monthHeader = showMonthHeader ? (
     <div
@@ -483,9 +671,10 @@ export function CalendarView({
     >
       <div className="min-w-0 flex-1">
         <BsMonthHeaderTitle
-          year={year}
-          month={month}
-          yearOptions={BS_YEAR_OPTIONS}
+          calendarMode={isAdCalendar ? "ad" : "bs"}
+          year={headerYear}
+          month={headerMonth}
+          yearOptions={headerYearOptions}
           todayAd={todayAd}
           onToday={goToday}
           todayAriaLabel={t("calendar.today_btn")}
@@ -495,8 +684,8 @@ export function CalendarView({
           yearAriaLabel={t("calendar.year_aria")}
           onPrev={prev}
           onNext={nextMonth}
-          prevDisabled={month === 1 && year <= BS_SUPPORTED_START_YEAR}
-          nextDisabled={month === 12 && year >= BS_SUPPORTED_END_YEAR}
+          prevDisabled={headerPrevDisabled}
+          nextDisabled={headerNextDisabled}
           prevAriaLabel={t("calendar.prev_month")}
           nextAriaLabel={t("calendar.next_month")}
           mobileDateTimeDrawer

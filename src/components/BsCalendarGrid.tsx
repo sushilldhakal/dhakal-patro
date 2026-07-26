@@ -1,7 +1,17 @@
+import { useState, type MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { CalendarDay } from "@/lib/api";
 import { useLocale } from "@/i18n/locale";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { VerticalEdgeLabel } from "@/components/VerticalEdgeLabel";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -13,35 +23,54 @@ function fmtAdDay(iso: string): number {
   return new Date(iso + "T12:00:00").getDate();
 }
 
-/** Patro-style upright vertical festival label along the cell edge. */
-function VerticalFestivalLabel({
-  name,
-  side,
-  danger,
+function FestivalListDialog({
+  open,
+  onOpenChange,
+  day,
+  festivals,
 }: {
-  name: string;
-  side: "left" | "right";
-  danger?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  day: CalendarDay | null;
+  festivals: string[];
 }) {
+  const { t } = useTranslation();
+  const { pick, digits } = useLocale();
+
+  if (!day) return null;
+
+  const weekday = pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
+  const adDate = new Date(day.date_ad + "T12:00:00").toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
   return (
-    <span
-      className={cn(
-        "pointer-events-none absolute z-[1] max-md:hidden",
-        "top-7 bottom-7 w-3 overflow-hidden",
-        side === "left" ? "left-1" : "right-1",
-      )}
-      aria-hidden
-    >
-      <span
-        className={cn(
-          "inline-block max-h-full overflow-hidden text-xs font-semibold leading-[1.05] tracking-tight",
-          danger ? "text-danger" : "text-foreground/85",
-          side === "left" ? "[writing-mode:vertical-rl] rotate-180" : "[writing-mode:vertical-rl]",
-        )}
-      >
-        {name}
-      </span>
-    </span>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t("calendar.festivals_dialog_title")}</DialogTitle>
+          <DialogDescription>
+            {t("calendar.festivals_dialog_desc", {
+              weekday,
+              bsDay: digits(day.day),
+              adDate,
+            })}
+          </DialogDescription>
+        </DialogHeader>
+        <ul className="max-h-[min(60vh,20rem)] space-y-2 overflow-y-auto pr-1">
+          {festivals.map((name, i) => (
+            <li
+              key={`${name}-${i}`}
+              className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm font-medium leading-snug"
+            >
+              {name}
+            </li>
+          ))}
+        </ul>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -52,6 +81,8 @@ interface Props {
   onSelectDay?: (day: CalendarDay) => void;
   isEnriching?: boolean;
   todayAd?: string;
+  /** Which date system is primary in each cell (AD when English calendar mode). */
+  primaryDate?: "bs" | "ad";
 }
 
 export function BsCalendarGrid({
@@ -61,9 +92,17 @@ export function BsCalendarGrid({
   onSelectDay,
   isEnriching = false,
   todayAd = TODAY_AD,
+  primaryDate: primaryDateProp = "bs",
 }: Props) {
   const { t } = useTranslation();
   const { lang, pick, digits } = useLocale();
+  const calendarEra = useCalendarEra();
+  const primaryDate =
+    primaryDateProp === "ad" || calendarEra === "ad" || lang === "en" ? "ad" : "bs";
+  const [festivalDialog, setFestivalDialog] = useState<{
+    day: CalendarDay;
+    festivals: string[];
+  } | null>(null);
   const cells: (CalendarDay | null)[] = [...days];
   while (cells.length % 7 !== 0) cells.push(null);
 
@@ -119,33 +158,58 @@ export function BsCalendarGrid({
           const leftFest = festivals[1];
           const rightFest = festivals[2];
           const tithi = pick(day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne);
-          const festTitle =
-            festivals.length > 3 ? festivals.join(" · ") : undefined;
+          const extraFestCount = festivals.length > 2 ? festivals.length - 2 : 0;
+          const adDayNum = fmtAdDay(day.date_ad);
+          const primaryDayNum = primaryDate === "ad" ? adDayNum : day.day;
+          const secondaryDayNum = primaryDate === "ad" ? day.day : adDayNum;
+
+          const openFestivalDialog = (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setFestivalDialog({ day, festivals });
+          };
 
           return (
-            <button
+            <div
               key={day.date_ad}
-              type="button"
-              title={festTitle}
               className={cn(
-                "relative flex min-h-[104px] min-w-0 flex-col overflow-hidden border-none bg-card p-2 text-foreground transition-colors",
+                "relative flex min-h-[104px] min-w-0 flex-col overflow-hidden bg-card p-2 text-foreground",
                 "max-md:min-h-[5rem] max-md:p-1",
-                (leftFest || rightFest) && "md:px-3",
-                isOutside && "bg-surface-muted/70 text-foreground/70 hover:bg-surface-hover",
-                isToday && "bg-surface-today hover:bg-surface-today-hover",
-                !isToday && !isOutside && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
+                (leftFest || rightFest) && "md:px-3.5",
+                isOutside && "bg-surface-muted/70 text-foreground/70",
+                isToday && "bg-surface-today",
                 isSelected && "shadow-[inset_0_0_0_2px_var(--ring)]",
                 isPublicHoliday && "bg-surface-tint-danger",
               )}
-              onClick={() => onSelectDay?.(day)}
             >
+              <button
+                type="button"
+                className={cn(
+                  "absolute inset-0 z-0 border-none bg-transparent p-0 transition-colors",
+                  isOutside && "hover:bg-surface-hover",
+                  isToday && "hover:bg-surface-today-hover",
+                  !isToday && !isOutside && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
+                )}
+                aria-label={`${digits(primaryDayNum)}, ${day.date_ad}`}
+                onClick={() => onSelectDay?.(day)}
+              />
+
               {leftFest ? (
-                <VerticalFestivalLabel name={leftFest} side="left" danger={isPublicHoliday} />
+                <VerticalEdgeLabel
+                  text={leftFest}
+                  side="left"
+                  className={isPublicHoliday ? "text-danger" : "text-foreground/85"}
+                />
               ) : null}
               {rightFest ? (
-                <VerticalFestivalLabel name={rightFest} side="right" danger={isPublicHoliday} />
+                <VerticalEdgeLabel
+                  text={rightFest}
+                  side="right"
+                  className={isPublicHoliday ? "text-danger" : "text-foreground/85"}
+                />
               ) : null}
 
+              <div className="relative z-[1] flex min-h-0 flex-1 flex-col pointer-events-none">
               {/* Top row: tithi (full width) */}
               <span className="flex w-full items-start leading-none">
                 {tithi ? (
@@ -162,7 +226,7 @@ export function BsCalendarGrid({
                 )}
               </span>
 
-              {/* Center: BS day (large) + AD day (small) */}
+              {/* Center: primary day (large) + secondary day (small) */}
               <span className="flex flex-1 flex-col items-center justify-center gap-0.5">
                 {isToday && (
                   <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide text-secondary-foreground max-md:px-1">
@@ -176,11 +240,26 @@ export function BsCalendarGrid({
                       !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
                     )}
                   >
-                    {digits(day.day)}
+                    {digits(primaryDayNum)}
                   </span>
                   <span className="font-num text-xs font-semibold text-muted-foreground md:text-sm">
-                    {digits(fmtAdDay(day.date_ad))}
+                    {digits(secondaryDayNum)}
                   </span>
+                  {extraFestCount > 0 ? (
+                    <button
+                      type="button"
+                      title={festivals.join(" · ")}
+                      aria-label={t("calendar.festivals_more", { count: extraFestCount })}
+                      className={cn(
+                        "pointer-events-auto font-num shrink-0 rounded-full border-none bg-secondary px-1 py-px text-[10px] font-bold leading-none text-secondary-foreground",
+                        "ring-offset-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        "max-md:text-[9px] max-md:px-0.5",
+                      )}
+                      onClick={openFestivalDialog}
+                    >
+                      +{digits(extraFestCount)}
+                    </button>
+                  ) : null}
                 </span>
               </span>
 
@@ -195,7 +274,7 @@ export function BsCalendarGrid({
                   <span className="truncate max-md:whitespace-normal max-md:line-clamp-2 max-md:leading-[1.15]">
                     {mainFest}
                   </span>
-                  {festivals.length > 1 ? (
+                  {festivals.length > 1 && extraFestCount === 0 ? (
                     <span className="flex flex-col gap-px md:hidden">
                       {festivals.slice(1, 3).map((name, fi) => (
                         <span
@@ -209,10 +288,20 @@ export function BsCalendarGrid({
                   ) : null}
                 </span>
               ) : null}
-            </button>
+              </div>
+            </div>
           );
         })}
       </div>
+
+      <FestivalListDialog
+        open={festivalDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setFestivalDialog(null);
+        }}
+        day={festivalDialog?.day ?? null}
+        festivals={festivalDialog?.festivals ?? []}
+      />
     </div>
   );
 }

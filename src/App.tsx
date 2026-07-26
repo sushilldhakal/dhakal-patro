@@ -34,9 +34,8 @@ function LanguageBootstrap() {
   useEffect(() => {
     const stored = getStoredLanguage();
     const applyStored = async () => {
-      if (!stored) return;
       if (stored === "en") await ensureEnglishBundle();
-      if (normalizeLang(i18n.language) !== stored) {
+      if (stored && normalizeLang(i18n.resolvedLanguage ?? i18n.language) !== stored) {
         await i18n.changeLanguage(stored);
       }
     };

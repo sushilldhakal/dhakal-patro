@@ -19,6 +19,13 @@ const AD_MONTHS_SHORT = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ] as const
 
+export const AD_MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+] as const
+
+export { AD_MONTHS_SHORT }
+
 export type BikramSambatDate = {
   year: number
   month: number
@@ -143,6 +150,27 @@ export function getBSMonthADRange(date: Date): { start: Date; end: Date } {
 export function getCurrentBs(): { year: number; month: number } {
   const bs = adToBS(new Date())
   return { year: bs.year, month: bs.month }
+}
+
+/** Supported Gregorian bounds aligned with BS calendar tables. */
+export function getSupportedAdBounds(): {
+  minYear: number
+  minMonth: number
+  maxYear: number
+  maxMonth: number
+} {
+  const start = bsToAD(BS_SUPPORTED_START_YEAR, 1, 1)
+  const end = bsToAD(
+    BS_SUPPORTED_END_YEAR,
+    12,
+    getBSMonthLength(BS_SUPPORTED_END_YEAR, 12),
+  )
+  return {
+    minYear: start.getFullYear(),
+    minMonth: start.getMonth() + 1,
+    maxYear: end.getFullYear(),
+    maxMonth: end.getMonth() + 1,
+  }
 }
 
 export function bsMonthLabel(month: number, lang?: string): string {

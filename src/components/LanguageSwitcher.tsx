@@ -3,6 +3,12 @@ import { cn } from "@/lib/utils";
 import { ensureEnglishBundle } from "@/i18n";
 import { setStoredLanguage } from "@/lib/user-preferences";
 
+function notifyLangPrefChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("patro-lang-pref"));
+  }
+}
+
 export function LanguageSwitcher({ className }: { className?: string }) {
   const { i18n: i18nInstance, t, ready } = useTranslation();
   const lang = i18nInstance.resolvedLanguage?.slice(0, 2) ?? i18nInstance.language?.slice(0, 2) ?? "ne";
@@ -11,10 +17,15 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const toggle = () => {
     if (isNepali) {
       setStoredLanguage("en");
-      void ensureEnglishBundle().then(() => i18nInstance.changeLanguage("en"));
+      notifyLangPrefChange();
+      void ensureEnglishBundle().then(() => {
+        void i18nInstance.changeLanguage("en");
+      });
+      void i18nInstance.changeLanguage("en");
       return;
     }
     setStoredLanguage("ne");
+    notifyLangPrefChange();
     void i18nInstance.changeLanguage("ne");
   };
 

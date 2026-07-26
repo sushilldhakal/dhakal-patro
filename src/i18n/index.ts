@@ -1,7 +1,13 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { getStoredLanguage } from "@/lib/user-preferences";
 
 import ne from "./ne.json";
+
+function clientInitialLng(): string {
+  if (typeof window === "undefined") return "ne";
+  return getStoredLanguage() ?? "ne";
+}
 
 // Nepali only on first paint (default locale, matches SSR). English is loaded on
 // demand when the user switches language — keeps ~30 KiB out of the home bundle.
@@ -9,7 +15,7 @@ void i18n.use(initReactI18next).init({
   resources: {
     ne: { translation: ne },
   },
-  lng: "ne",
+  lng: clientInitialLng(),
   supportedLngs: ["en", "ne"],
   fallbackLng: "ne",
   load: "languageOnly",
@@ -36,3 +42,7 @@ export function ensureEnglishBundle(): Promise<void> {
 }
 
 export default i18n;
+
+if (typeof window !== "undefined" && clientInitialLng() === "en") {
+  void ensureEnglishBundle();
+}

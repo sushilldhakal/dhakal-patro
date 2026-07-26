@@ -2,6 +2,9 @@ import type { CalendarDay, Festival, Holiday } from "./api";
 import {
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
+  BS_SUPPORTED_END_YEAR,
+  BS_SUPPORTED_START_YEAR,
+  adToBS,
   bsToAD,
   getBSMonthLength,
 } from "./bs-calendar";
@@ -53,6 +56,158 @@ export function buildLocalMonthDays(year: number, month: number): CalendarDay[] 
   }
 
   return days;
+}
+
+/** Instant AD month skeleton — BS day + AD date + weekday, no network. */
+export function buildLocalAdMonthDays(adYear: number, adMonth: number): CalendarDay[] {
+  const daysInMonth = new Date(adYear, adMonth, 0).getDate();
+  const days: CalendarDay[] = [];
+
+  for (let adDay = 1; adDay <= daysInMonth; adDay += 1) {
+    const adDate = new Date(adYear, adMonth - 1, adDay);
+    const bs = adToBS(adDate);
+    const weekdayIdx = adDate.getDay();
+    days.push({
+      day: bs.day,
+      date_ad: formatAdIso(adDate),
+      weekday: WEEKDAYS_NE[weekdayIdx],
+      weekday_en: WEEKDAYS_EN[weekdayIdx],
+      weekday_ne: WEEKDAYS_NE[weekdayIdx],
+      tithi: "",
+      festivals: [],
+    });
+  }
+
+  return days;
+}
+
+export function shiftAdMonth(
+  adYear: number,
+  adMonth: number,
+  delta: number,
+): { year: number; month: number } {
+  const d = new Date(adYear, adMonth - 1 + delta, 1);
+  return { year: d.getFullYear(), month: d.getMonth() + 1 };
+}
+
+/** BS months that contain at least one day of the given AD month. */
+export function getBsMonthsOverlappingAdMonth(
+  adYear: number,
+  adMonth: number,
+): Array<{ year: number; month: number }> {
+  const start = new Date(adYear, adMonth - 1, 1);
+  const end = new Date(adYear, adMonth, 0);
+  const bsStart = adToBS(start);
+  const bsEnd = adToBS(end);
+  const result: Array<{ year: number; month: number }> = [];
+  const seen = new Set<string>();
+
+  let y = bsStart.year;
+  let m = bsStart.month;
+  while (true) {
+    const key = `${y}-${m}`;
+    if (
+      !seen.has(key) &&
+      y >= BS_SUPPORTED_START_YEAR &&
+      y <= BS_SUPPORTED_END_YEAR
+    ) {
+      seen.add(key);
+      result.push({ year: y, month: m });
+    }
+    if (y === bsEnd.year && m === bsEnd.month) break;
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+  }
+
+  return result;
+}
+
+export function uniqueBsMonths(
+  months: Array<{ year: number; month: number }>,
+): Array<{ year: number; month: number }> {
+  const seen = new Set<string>();
+  return months.filter(({ year, month }) => {
+    const key = `${year}-${month}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR;
+  });
+}
+
+/** Full 6-week AD grid: trailing/leading days from adjacent Gregorian months. */
+export function buildAdCalendarGridDays(
+  adYear: number,
+  adMonth: number,
+  enrichedDays?: CalendarDay[],
+): CalendarDay[] {
+  const currentLocal = buildLocalAdMonthDays(adYear, adMonth);
+  const first = currentLocal[0];
+  if (!first) return currentLocal;
+
+  const startOffset = new Date(`${first.date_ad}T12:00:00`).getDay();
+  const prevAd = shiftAdMonth(adYear, adMonth, -1);
+  const nextAd = shiftAdMonth(adYear, adMonth, 1);
+
+  const prevLocal = buildLocalAdMonthDays(prevAd.year, prevAd.month);
+  const leading: CalendarDay[] =
+    startOffset > 0
+      ? prevLocal.slice(-startOffset).map((d) => ({
+          ...d,
+          outsideMonth: true,
+        }))
+      : [];
+
+  const current: CalendarDay[] = currentLocal.map((d) => ({
+    ...d,
+    outsideMonth: false,
+  }));
+
+  const totalCells = Math.ceil((startOffset + current.length) / 7) * 7;
+  const trailingCount = totalCells - startOffset - current.length;
+  const nextLocal = buildLocalAdMonthDays(nextAd.year, nextAd.month);
+  const trailing: CalendarDay[] = nextLocal.slice(0, trailingCount).map((d) => ({
+    ...d,
+    outsideMonth: true,
+  }));
+
+  let grid: CalendarDay[] = [...leading, ...current, ...trailing];
+
+  if (enrichedDays?.length) {
+    grid = mergeEnrichedDays(grid, enrichedDays);
+  }
+
+  return grid;
+}
+
+/** BS month span subtitle for an AD month header, e.g. Poush–Magh 2082. */
+export function getAdMonthBsSpanLabel(
+  adYear: number,
+  adMonth: number,
+  lang = "en",
+  digitFn: (value: string | number) => string = String,
+): string {
+  const start = new Date(adYear, adMonth - 1, 1);
+  const end = new Date(adYear, adMonth, 0);
+  const bsStart = adToBS(start);
+  const bsEnd = adToBS(end);
+  const isEn = lang.slice(0, 2) === "en";
+  const startLabel = isEn
+    ? BS_MONTH_NAMES[bsStart.month - 1]
+    : BS_MONTHS_NE[bsStart.month - 1];
+  const endLabel = isEn
+    ? BS_MONTH_NAMES[bsEnd.month - 1]
+    : BS_MONTHS_NE[bsEnd.month - 1];
+
+  if (bsStart.year === bsEnd.year && bsStart.month === bsEnd.month) {
+    return `${startLabel} ${digitFn(bsStart.year)}`;
+  }
+  if (bsStart.year === bsEnd.year) {
+    return `${startLabel}–${endLabel} ${digitFn(bsStart.year)}`;
+  }
+  return `${startLabel} ${digitFn(bsStart.year)}/${endLabel} ${digitFn(bsEnd.year)}`;
 }
 
 export function shiftBsMonth(
