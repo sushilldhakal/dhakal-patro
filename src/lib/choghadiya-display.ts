@@ -1,103 +1,95 @@
-/** Choghadiya muhurta labels — shared by element page, timeline, and muhurta aside. */
+/** Choghadiya muhurta labels — names and qualities from ne.json / en.json. */
+
+import i18n from "@/i18n";
+import { normalizeLang, type Lang } from "@/i18n/locale";
 
 export type ChoghadiyaTone = "good" | "bad" | "neutral";
 
-export interface ChoghadiyaTypeMeta {
-  nameNe: string;
-  nameEn: string;
-  qualityNe: string;
-  qualityEn: string;
-  tone: ChoghadiyaTone;
+/** Devanagari name → i18n key under choghadiya.types.* */
+export const CHOGHADIYA_KEY_BY_NE: Record<string, string> = {
+  अमृत: "amrita",
+  शुभ: "shubha",
+  लाभ: "labha",
+  चर: "chara",
+  रोग: "roga",
+  काल: "kala",
+  उद्वेग: "udvega",
+};
+
+export const CHOGHADIYA_TYPE_KEYS = [
+  "amrita",
+  "shubha",
+  "labha",
+  "chara",
+  "roga",
+  "kala",
+  "udvega",
+] as const;
+
+export type ChoghadiyaTypeKey = (typeof CHOGHADIYA_TYPE_KEYS)[number];
+
+export const TONE_BY_KEY: Record<ChoghadiyaTypeKey, ChoghadiyaTone> = {
+  amrita: "good",
+  shubha: "good",
+  labha: "good",
+  chara: "neutral",
+  roga: "bad",
+  kala: "bad",
+  udvega: "bad",
+};
+
+function resolveLng(lang?: string | Lang): Lang {
+  return lang ? normalizeLang(lang) : normalizeLang(i18n.language);
 }
 
-export const CHOGHADIYA_TYPES: ChoghadiyaTypeMeta[] = [
-  {
-    nameNe: "अमृत",
-    nameEn: "Amrita",
-    qualityNe: "उत्तम (अत्यन्त शुभ)",
-    qualityEn: "Excellent (Highly Auspicious)",
-    tone: "good",
-  },
-  {
-    nameNe: "शुभ",
-    nameEn: "Shubha",
-    qualityNe: "शुभ",
-    qualityEn: "Auspicious",
-    tone: "good",
-  },
-  {
-    nameNe: "लाभ",
-    nameEn: "Labha",
-    qualityNe: "लाभ",
-    qualityEn: "Gain",
-    tone: "good",
-  },
-  {
-    nameNe: "चर",
-    nameEn: "Chara",
-    qualityNe: "यात्रा र चलचलका लागि राम्रो",
-    qualityEn: "Good for Movement & Travel",
-    tone: "neutral",
-  },
-  {
-    nameNe: "रोग",
-    nameEn: "Roga",
-    qualityNe: "रोग (महत्त्वपूर्ण काम टाढा राख्नुहोस्)",
-    qualityEn: "Disease (Avoid Important Tasks)",
-    tone: "bad",
-  },
-  {
-    nameNe: "काल",
-    nameEn: "Kala",
-    qualityNe: "अशुभ",
-    qualityEn: "Inauspicious",
-    tone: "bad",
-  },
-  {
-    nameNe: "उद्वेग",
-    nameEn: "Udvega",
-    qualityNe: "चिन्ता (महत्त्वपूर्ण काम टाढा राख्नुहोस्)",
-    qualityEn: "Anxiety (Avoid Important Tasks)",
-    tone: "bad",
-  },
-];
+function typeKey(nameNe: string): string | undefined {
+  return CHOGHADIYA_KEY_BY_NE[nameNe];
+}
 
-export const CHOGHADIYA_EN: Record<string, string> = Object.fromEntries(
-  CHOGHADIYA_TYPES.map((t) => [t.nameNe, t.nameEn]),
-);
-
-const BY_NE = new Map(CHOGHADIYA_TYPES.map((t) => [t.nameNe, t]));
-
-function resolveMeta(nameNe: string, bad?: boolean): ChoghadiyaTypeMeta | undefined {
-  const meta = BY_NE.get(nameNe);
-  if (!meta) return undefined;
-  if (bad && meta.tone !== "bad") {
-    return { ...meta, tone: "bad" };
+/** Legacy map for timeline code — built from i18n at call time. */
+export function choghadiyaEnMap(lang?: string | Lang): Record<string, string> {
+  const lng = resolveLng(lang);
+  const out: Record<string, string> = {};
+  for (const [ne, key] of Object.entries(CHOGHADIYA_KEY_BY_NE)) {
+    out[ne] = i18n.t(`choghadiya.types.${key}.name`, { lng });
   }
-  return meta;
+  return out;
 }
+
+/** @deprecated Use {@link choghadiyaName} — kept for re-export compatibility. */
+export const CHOGHADIYA_EN: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get(_t, prop: string) {
+    const key = CHOGHADIYA_KEY_BY_NE[prop];
+    if (!key) return prop;
+    return i18n.t(`choghadiya.types.${key}.name`);
+  },
+});
 
 export function choghadiyaTone(nameNe: string, bad?: boolean): ChoghadiyaTone {
-  const meta = resolveMeta(nameNe, bad);
-  if (meta) return meta.tone;
+  const key = typeKey(nameNe) as ChoghadiyaTypeKey | undefined;
+  if (key) return TONE_BY_KEY[key];
   if (bad) return "bad";
   return "neutral";
 }
 
-export function choghadiyaName(nameNe: string, lang: string): string {
-  const meta = BY_NE.get(nameNe);
-  if (!meta) return nameNe;
-  return lang.slice(0, 2) === "en" ? meta.nameEn : meta.nameNe;
+export function choghadiyaName(nameNe: string, lang?: string | Lang): string {
+  const key = typeKey(nameNe);
+  if (!key) return nameNe;
+  return i18n.t(`choghadiya.types.${key}.name`, { lng: resolveLng(lang) });
 }
 
-export function choghadiyaQuality(nameNe: string, lang: string, bad?: boolean): string {
-  const meta = resolveMeta(nameNe, bad);
-  if (!meta) return lang.slice(0, 2) === "en" ? (bad ? "Inauspicious" : "Neutral") : bad ? "अशुभ" : "सामान्य";
-  return lang.slice(0, 2) === "en" ? meta.qualityEn : meta.qualityNe;
+export function choghadiyaQuality(nameNe: string, lang?: string | Lang, bad?: boolean): string {
+  const key = typeKey(nameNe);
+  const lng = resolveLng(lang);
+  if (key) {
+    return i18n.t(`choghadiya.types.${key}.quality`, { lng });
+  }
+  if (lng === "en") return bad ? i18n.t("choghadiya.quality_bad", { lng }) : i18n.t("choghadiya.quality_neutral", { lng });
+  return bad ? i18n.t("choghadiya.quality_bad", { lng }) : i18n.t("choghadiya.quality_neutral", { lng });
 }
 
 /** Full row label, e.g. `Amrita — Excellent (Highly Auspicious)`. */
-export function choghadiyaRowLabel(nameNe: string, lang: string, bad?: boolean): string {
+export function choghadiyaRowLabel(nameNe: string, lang?: string | Lang, bad?: boolean): string {
   return `${choghadiyaName(nameNe, lang)} — ${choghadiyaQuality(nameNe, lang, bad)}`;
 }
 
@@ -105,4 +97,11 @@ export function choghadiyaLegendMarker(tone: ChoghadiyaTone): string {
   if (tone === "good") return "🟢";
   if (tone === "bad") return "🔴";
   return "🟡";
+}
+
+export function choghadiyaLegendLabel(typeKey: ChoghadiyaTypeKey, lang?: string | Lang): string {
+  const lng = resolveLng(lang);
+  const name = i18n.t(`choghadiya.types.${typeKey}.name`, { lng });
+  const quality = i18n.t(`choghadiya.types.${typeKey}.quality`, { lng });
+  return `${name} — ${quality}`;
 }

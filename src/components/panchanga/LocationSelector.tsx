@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Crosshair, Loader2, MapPin } from "lucide-react";
 import { cityKeys, fetchNearestCity, searchCities, type City } from "@/lib/api";
 import {
@@ -86,12 +87,13 @@ function LocationPickerPanel({
   onPickCity: (city: City) => void;
   onUseCurrentLocation: () => void;
 }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
+  const { t } = useTranslation();
   return (
     <>
       <ComboboxInput
         showTrigger={false}
-        placeholder={pick("सहर खोज्नुहोस्", "Search a city")}
+        placeholder={t("location.search_city")}
         className="w-full"
       />
 
@@ -109,7 +111,7 @@ function LocationPickerPanel({
           ) : (
             <Crosshair data-icon="inline-start" />
           )}
-          {pick("मेरो स्थान प्रयोग गर्नुहोस्", "Use my location")}
+          {t("location.use_my_location")}
         </Button>
       </div>
 
@@ -121,10 +123,10 @@ function LocationPickerPanel({
 
       <ComboboxEmpty className="py-3 text-xs">
         {debouncedQuery.length < 2
-          ? pick("कम्तीमा २ अक्षर टाइप गर्नुहोस्", "Type at least 2 characters")
+          ? t("location.type_min_chars")
           : isSearching
-            ? pick("खोज्दै…", "Searching…")
-            : pick("कुनै सहर भेटिएन", "No city found")}
+            ? t("location.searching")
+            : t("location.no_city_found")}
       </ComboboxEmpty>
 
       <ComboboxList className="max-h-60">
@@ -156,7 +158,8 @@ export function LocationSelector({
   className,
   compact = false,
 }: Props) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -201,7 +204,7 @@ export function LocationSelector({
 
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setGeoError(pick("जियोलोकेसन उपलब्ध छैन", "Geolocation unavailable"));
+      setGeoError(t("location.geolocation_unavailable"));
       return;
     }
     setGeoLoading(true);
@@ -234,11 +237,11 @@ export function LocationSelector({
       (err) => {
         setGeoLoading(false);
         if (err.code === err.PERMISSION_DENIED) {
-          setGeoError(pick("अनुमति अस्वीकृत — सहर खोज्नुहोस्", "Permission denied — search for a city"));
+          setGeoError(t("location.permission_denied"));
         } else if (err.code === err.TIMEOUT) {
-          setGeoError(pick("समय सकियो — पुन: प्रयास गर्नुहोस्", "Timed out — please try again"));
+          setGeoError(t("location.timed_out"));
         } else {
-          setGeoError(pick("स्थान पत्ता लागेन", "Location not found"));
+          setGeoError(t("location.not_found"));
         }
       },
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
@@ -297,7 +300,7 @@ export function LocationSelector({
                 "w-full max-w-[12.5rem] justify-between gap-1 font-semibold",
                 className
               )}
-              title={pick("स्थान छान्नुहोस्", "Choose location")}
+              title={t("location.choose_location")}
             />
           }
         >

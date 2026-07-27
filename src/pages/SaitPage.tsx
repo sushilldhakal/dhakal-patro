@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CalendarHeart, Info } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -38,6 +39,7 @@ export function SaitPage() {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { pick, digits, lang } = useLocale();
+  const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
   const bsYear = yearBrowse.bsYear;
@@ -172,10 +174,10 @@ export function SaitPage() {
       <PageShell>
         <PageHeader
           icon={<CalendarHeart className="h-6 w-6 text-secondary" />}
-          title={pick("अज्ञात मुहूर्त", "Unknown ceremony")}
+          title={t("sait.unknown_ceremony")}
         />
         <Link to="/panchanga/details" className="text-sm text-primary underline">
-          {pick("पञ्चाङ्ग विवरणमा फर्कनुहोस्", "Back to panchanga details")}
+          {t("element_page.back_to_details")}
         </Link>
       </PageShell>
     );
@@ -183,8 +185,8 @@ export function SaitPage() {
 
   return (
     <SaitCeremonyLayout
-      title={pick(`${meta.ne} साइत`, `${meta.en} Saait`)}
-      subtitle={pick(content.description.ne, content.description.en)}
+      title={t("sidebar_nav.sait_label", { category: t(`sait.categories.${meta.id}`) })}
+      subtitle={t(`sait.descriptions.${meta.id}`)}
       year={yearBrowse.browseYear}
       onYearChange={yearBrowse.setBrowseYear}
       calendarMode={yearBrowse.era}
@@ -211,19 +213,15 @@ export function SaitPage() {
           <div className={cn(patroCard, "flex gap-2.5 border-l-2 border-secondary p-3.5")}>
             <Info className="mt-0.5 size-4 shrink-0 text-secondary" />
             <p className="m-0 text-sm text-danger">
-              {pick("यसका लागि शिशुको जन्म मिति आवश्यक पर्दछ।", "Requires the child's birth date.")}
+              {t("sait.requires_birth_date")}
             </p>
           </div>
         ) : null
       }
-      emptyLabel={{
-        ne: "यस वर्ष कुनै शुभ मुहूर्त छैन।",
-        en: "No auspicious muhūrta this year.",
-      }}
-      countLabel={(count, y) => ({
-        ne: `वि.सं. ${digits(y)} मा ${digits(count)} शुभ दिन`,
-        en: `${digits(count)} auspicious days in BS ${digits(y)}`,
-      })}
+      emptyLabel={t("sait.empty_year")}
+      countLabel={(count, y) =>
+        t("sait.count_label", { count: digits(count), year: digits(y) })
+      }
     >
       {!isMuhurta ? (
         datesQuery.isLoading && !datesQuery.data ? (
@@ -278,10 +276,7 @@ export function SaitPage() {
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-surface-inset px-6 py-12 text-center">
             <p className="m-0 text-sm text-muted-foreground">
-              {pick(
-                "यस वर्षका लागि साइत सूची उपलब्ध छैन।",
-                "No auspicious dates listed for this year.",
-              )}
+              {t("sait.no_dates_year")}
             </p>
           </div>
         )

@@ -173,7 +173,20 @@
     "saving": "Saving…",
     "create": "Create",
     "route_error_body": "Something went wrong. Reloading usually fixes this.",
-    "reload": "Reload"
+    "reload": "Reload",
+    "load_error": "Could not load.",
+    "no_data": "No data available.",
+    "about": "About",
+    "done": "Done",
+    "time": "Time",
+    "begins": "Begins",
+    "ends": "Ends",
+    "pushkara": "Pushkara",
+    "moon_sign": "Moon sign",
+    "paksha_shukla": "Shukla",
+    "paksha_krishna": "Krishna",
+    "retrograde": "Retrograde",
+    "combust": "Combust"
   },
   "panchanga": {
     "today_title": "Today's Panchanga",
@@ -657,6 +670,36 @@
       "rudri-jurne": "Rudri homa",
       "agni-jurne": "Agni homa",
       "annaprasan": "Annaprasan"
+    },
+    "descriptions": {
+      "vivah": "Auspicious dates for the marriage ceremony — clean vivāha muhūrtas computed on favourable tithi, nakṣatra and lagna.",
+      "bratabandha": "Auspicious dates for the Upanayana (Bratabandha) sacred-thread rite marking the start of a boy's formal study.",
+      "griha-aarambha": "Auspicious dates to begin house construction (laying the foundation).",
+      "griha-pravesh": "Auspicious dates for entering and settling into a new home.",
+      "byaparik-pratisthan": "Auspicious dates for opening a new business, shop or establishment.",
+      "rudri-jurne": "Auspicious dates for the Rudri recitation and homa in worship of Śiva.",
+      "agni-jurne": "Auspicious dates for establishing the sacred fire (Agni) to begin a yajña or homa.",
+      "annaprasan": "Auspicious dates for a baby's first feeding of solid food (Annaprasan)."
+    },
+    "unknown_ceremony": "Unknown ceremony",
+    "requires_birth_date": "Requires the child's birth date.",
+    "empty_year": "No auspicious muhūrta this year.",
+    "count_label": "{{count}} auspicious days in BS {{year}}",
+    "no_dates_year": "No auspicious dates listed for this year.",
+    "nakshatra_tradition": "Nakṣatra tradition",
+    "nakshatra_modes": {
+      "classical": "Classical",
+      "nepali": "Nepali Panchanga",
+      "liberal": "Liberal"
+    },
+    "days_count": "{{count}} days",
+    "all_ceremonies": "← All ceremonies",
+    "marriage": {
+      "title": "Marriage Saait",
+      "subtitle": "Strict, śāstra-derived vivāha muhūrtas — computed by the book, not tracking the committee list.",
+      "empty_year": "No strict vivāha muhūrta this year.",
+      "count_label_bs": "{{count}} strict vivāha days in BS {{year}}",
+      "count_label_ad": "{{count}} strict vivāha days in {{year}}"
     }
   },
   "sun_times": {
@@ -856,6 +899,18 @@
     "ritu_see_all": "See all seasons"
   },
   "footer_note": "Powered by Vedic Patro · Nepal Panchanga · Default location Kathmandu at time of calculation",
+  "location": {
+    "search_city": "Search a city",
+    "use_my_location": "Use my location",
+    "type_min_chars": "Type at least 2 characters",
+    "searching": "Searching…",
+    "no_city_found": "No city found",
+    "geolocation_unavailable": "Geolocation unavailable",
+    "permission_denied": "Permission denied — search for a city",
+    "timed_out": "Timed out — please try again",
+    "not_found": "Location not found",
+    "choose_location": "Choose location"
+  },
   "theme_toggle": "Toggle theme",
   "theme_light": "Light",
   "theme_dark": "Dark",
@@ -966,5 +1021,419 @@
         }
       ]
     }
+  },
+  "patro_date": {
+    "change_date": "Change date",
+    "change_date_time": "Change date and time",
+    "date_time": "Date & time",
+    "month_year": "Month & year",
+    "month_aria": "Month",
+    "prev_month": "Previous month",
+    "next_month": "Next month",
+    "prev_year": "Previous year",
+    "next_year": "Next year",
+    "this_year": "This year",
+    "era_bs": "BS",
+    "era_ad": "AD"
+  },
+  "element_page": {
+    "unknown_element": "Unknown element",
+    "back_to_details": "Back to panchanga details",
+    "all_elements": "← All panchanga elements",
+    "no_entries_day": "No entries for this day.",
+    "section_what": "What it is",
+    "section_how": "How it's calculated",
+    "section_meaning": "What it means",
+    "moon_sign_sunrise": "Moon sign at sunrise: {{label}}",
+    "moon_nakshatra_sunrise": "Moon nakshatra at sunrise: {{label}}"
+  },
+  "panchanga_elements": {
+    "tithi": {
+      "title": "Tithi",
+      "blurb": "Lunar day — begin & end"
+    },
+    "nakshatra": {
+      "title": "Nakshatra",
+      "blurb": "Moon nakshatra transitions"
+    },
+    "yoga": {
+      "title": "Yoga",
+      "blurb": "27 yogas — begin & end"
+    },
+    "karana": {
+      "title": "Karana",
+      "blurb": "Half-tithi karana"
+    },
+    "chandra-rashi": {
+      "title": "Moon sign",
+      "blurb": "Moon sign transitions"
+    },
+    "choghadiya": {
+      "title": "Choghadiya",
+      "blurb": "Eight day/night muhurtas"
+    },
+    "hora": {
+      "title": "Hora",
+      "blurb": "Planetary hora — 24 slots"
+    },
+    "lagna": {
+      "title": "Lagna",
+      "blurb": "Ascendant sequence"
+    },
+    "udaya-lagna": {
+      "title": "Udaya Lagna",
+      "blurb": "Lagna times + Pushkara"
+    },
+    "chandrabala": {
+      "title": "Chandrabala",
+      "blurb": "Moon strength by sign"
+    },
+    "tarabala": {
+      "title": "Tarabala",
+      "blurb": "Star strength by nakshatra"
+    },
+    "panchaka-rahita": {
+      "title": "Panchaka Rahita",
+      "blurb": "Panchaka-free windows"
+    },
+    "pushkara": {
+      "title": "Pushkara Navamsha",
+      "blurb": "Pushkara Navamsha moments"
+    }
+  },
+  "graha_pages": {
+    "sthiti": {
+      "title": "Graha Sthiti",
+      "blurb": "Daily sphuta of the nine grahas and the ascendant",
+      "columns": {
+        "graha": "Graha",
+        "longitude": "Longitude",
+        "nakshatra_pada": "Nakshatra / Pada",
+        "lord_sublord": "Lord / Sub-lord",
+        "full_degree": "Full degree",
+        "latitude": "Latitude",
+        "speed": "Speed °/day",
+        "right_ascension": "R.A.",
+        "declination": "Decl."
+      }
+    },
+    "asta": {
+      "title": "Heliacal combustion",
+      "blurb": "Yearly asta (combustion) windows incl. Moon Tara Asta"
+    },
+    "vakri": {
+      "title": "Retrograde motion",
+      "blurb": "Yearly vakri / margi (retrograde) stations"
+    },
+    "surya_udaya": {
+      "title": "Surya Udaya-Asta",
+      "blurb": "Yearly rising & setting"
+    },
+    "eclipse_solar": {
+      "title": "Solar eclipse",
+      "blurb": "The year's solar eclipses and visibility from Nepal"
+    },
+    "eclipse_lunar": {
+      "title": "Lunar eclipse",
+      "blurb": "The year's lunar eclipses and visibility from Nepal"
+    },
+    "graha_sthiti_daily": {
+      "title": "Graha Sthiti",
+      "blurb": "Daily positions of 9 grahas + lagna"
+    },
+    "sait_hub": {
+      "title": "Sait",
+      "blurb": "Auspicious dates & explanation"
+    },
+    "sthiti_footnote": "↺ = retrograde · 🔥 = combust. Positions are computed at local sunrise.",
+    "asta": {
+      "outside_year": "outside year",
+      "east_morning": "East (morning)",
+      "west_evening": "West (evening)",
+      "asta_begins": "Asta begins",
+      "udaya_ends": "Udaya (ends)",
+      "duration_days": "{{count}} days",
+      "tara_asta": "(Tara Asta)",
+      "times": "{{count}}×",
+      "none": "none",
+      "no_asta_year": "No asta this year."
+    },
+    "vakri": {
+      "retrograde": "Retrograde",
+      "direct": "Direct",
+      "stations": "{{count}} stations",
+      "no_stations": "no stations",
+      "no_vakri_year": "No retrograde this year."
+    },
+    "eclipse": {
+      "visible_nepal": "Visible in Nepal",
+      "not_visible_nepal": "Not visible in Nepal",
+      "date": "Date",
+      "maximum": "Maximum",
+      "partial_begins": "Partial begins",
+      "partial_ends": "Partial ends",
+      "first_contact": "First contact",
+      "last_contact": "Last contact",
+      "no_eclipses_year": "There are no eclipses of this kind this year."
+    }
+  },
+  "choghadiya": {
+    "types": {
+      "amrita": {
+        "name": "Amrita",
+        "quality": "Excellent (Highly Auspicious)"
+      },
+      "shubha": {
+        "name": "Shubha",
+        "quality": "Auspicious"
+      },
+      "labha": {
+        "name": "Labha",
+        "quality": "Gain"
+      },
+      "chara": {
+        "name": "Chara",
+        "quality": "Good for Movement & Travel"
+      },
+      "roga": {
+        "name": "Roga",
+        "quality": "Disease (Avoid Important Tasks)"
+      },
+      "kala": {
+        "name": "Kala",
+        "quality": "Inauspicious"
+      },
+      "udvega": {
+        "name": "Udvega",
+        "quality": "Anxiety (Avoid Important Tasks)"
+      }
+    },
+    "quality_good": "Good",
+    "quality_bad": "Inauspicious",
+    "quality_neutral": "Neutral"
+  },
+  "element_descriptions": {
+    "tithi": {
+      "what": "A tithi is a lunar day — one of the 30 phases of the Moon in a lunar month. It is the time the Moon takes to gain 12° of angular separation (elongation) from the Sun.",
+      "how": "Computed from the difference between the Moon's and Sun's ecliptic longitudes. Each 12° of that gap is one tithi (30 tithis × 12° = 360°). Because it depends on the Moon's varying speed, a tithi can be shorter or longer than a solar day; the exact begin/end instants are found where the elongation crosses each multiple of 12°.",
+      "meaning": "The tithi governs most festivals, fasts (Ekadashi, Purnima, Aaushi) and muhurta selection. Shukla paksha (waxing) tithis 1–15 lead to the full moon; Krishna paksha (waning) tithis 1–15 lead to the new moon."
+    },
+    "nakshatra": {
+      "what": "A nakshatra is one of the 27 lunar mansions — equal 13°20′ divisions of the zodiac through which the Moon passes, occupying each for roughly a day.",
+      "how": "The ecliptic (360°) is divided into 27 equal arcs of 13°20′. After applying the Lahiri ayanamsha, the nakshatra is read from the Moon's sidereal longitude; begin/end times are the instants the Moon crosses each 13°20′ boundary.",
+      "meaning": "The nakshatra drives the birth star (janma nakshatra), tarabala, and muhurta. Each is ruled by a deity and a planet and carries its own nature (fixed, movable, fierce, and so on)."
+    },
+    "yoga": {
+      "what": "A (nitya) yoga is one of 27 Sun–Moon combinations. It is not a physical position but a value derived from their combined longitudes.",
+      "how": "Add the Sun's and Moon's sidereal longitudes and divide the total (0–360°) into 27 equal parts of 13°20′. Each part is one yoga; begin/end are when the combined longitude crosses each boundary.",
+      "meaning": "Some yogas are auspicious (Siddhi, Amrita) and some malefic (Vyatipata, Vaidhriti, the opening of Vishkumbha). Yoga is one of the five limbs of the panchanga checked when choosing a muhurta."
+    },
+    "karana": {
+      "what": "A karana is half of a tithi. There are 60 karanas in a lunar month, of 11 distinct types (7 movable that repeat, and 4 fixed).",
+      "how": "Each tithi (12° of elongation) is split into two 6° halves, and each half is a karana. The 7 movable karanas cycle round, while the 4 fixed karanas are anchored around the new moon (Aaushi).",
+      "meaning": "Karana refines timing within a tithi. The Vishti (Bhadra) karana is inauspicious for auspicious work; the fixed karanas (Shakuni, Chatushpada, Naga, Kimstughna) are considered heavy."
+    },
+    "chandra-rashi": {
+      "what": "The Moon sign is the zodiac sign (rashi) the Moon occupies — one of 12 equal 30° signs. It changes about every 2¼ days.",
+      "how": "From the Moon's sidereal longitude, the rashi is longitude ÷ 30°. Transition times are the moments the Moon crosses each 30° sign boundary.",
+      "meaning": "The Moon sign is the basis of Vedic rashiphal (horoscope), chandrabala, and the janma rashi used in naming and matchmaking."
+    },
+    "choghadiya": {
+      "what": "Choghadiya divides the day (sunrise→sunset) and night (sunset→sunrise) into 8 muhurtas each — 16 slots ruled in turn by planets, each marked good, bad, or neutral.",
+      "how": "Daylight is split into 8 equal parts and night into 8 equal parts, so each part's length varies with the season. The ruling planet of each slot follows a fixed sequence starting from the weekday's lord, and the planet's nature sets the quality.",
+      "meaning": "A quick, popular muhurta guide for daily tasks and travel — pick a Shubha/Amrita/Labha slot and avoid Roga/Kala/Udvega."
+    },
+    "hora": {
+      "what": "Hora is the planetary hour — the 24 hours of a day, each ruled by one of the 7 planets (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn).",
+      "how": "Day and night are divided into planetary hours from sunrise. The first hora of the day is ruled by the weekday's lord, then the sequence follows the Chaldean order, each hora advancing by one planet.",
+      "meaning": "Choose a hora whose ruling planet suits the task (Jupiter for study, Venus for the arts, Mercury for trade), and avoid malefic horas (Saturn, Mars, Sun) for delicate work."
+    },
+    "lagna": {
+      "what": "Lagna (the ascendant) is the zodiac sign rising on the eastern horizon at a given moment. Over a day all 12 signs rise in turn.",
+      "how": "Computed from the local sidereal time and the observer's latitude — the point of the ecliptic crossing the eastern horizon. Each sign's rising duration differs by latitude and by sign (short and long ascension).",
+      "meaning": "The lagna is the first house of a chart and the anchor for muhurta and kundali; the sign rising at an event's time shapes its outcome."
+    },
+    "udaya-lagna": {
+      "what": "Udaya Lagna lists the exact clock times each ascendant sign rises through the day, and flags the Pushkara Navamsha moments within them.",
+      "how": "The same ascendant maths as Lagna, but presented as a table of rising→setting times for each sign, with the Pushkara navamsha degrees (auspicious sub-divisions) marked where they fall.",
+      "meaning": "Used to pin a muhurta to the exact rising-sign window, and to catch the auspicious Pushkara moments for important beginnings."
+    },
+    "chandrabala": {
+      "what": "Chandrabala (\"Moon strength\") measures how favourable the Moon's current sign is relative to a person's birth Moon sign.",
+      "how": "Count signs from the birth Moon sign (janma rashi) to the Moon's transit sign. Positions 2, 5, 7, 9, 11 (and others by tradition) are strong and favourable; 1, 3, 6, 10 are weaker — tabulated for each rashi.",
+      "meaning": "A strong Chandrabala day supports travel, ceremonies and new work; weak Chandrabala warns that rashi to be cautious."
+    },
+    "tarabala": {
+      "what": "Tarabala (\"star strength\") rates the day's nakshatra against a person's birth nakshatra through the nine-tara cycle.",
+      "how": "Count from the birth star to the day's star and take it modulo 9 → one of nine taras (Janma, Sampat, Vipat, Kshema, Pratyari, Sadhaka, Vadha, Mitra, Ati-mitra). Some are auspicious, some to be avoided.",
+      "meaning": "The good taras (Sampat, Kshema, Sadhaka, Mitra, Ati-mitra) favour action; Vipat, Pratyari and Vadha are avoided for important work."
+    },
+    "panchaka-rahita": {
+      "what": "Panchaka Rahita shows the windows of the day free of the five \"panchaka\" faults (Mrityu, Agni, Raja, Chora, Roga) that make certain acts inauspicious.",
+      "how": "The weekday, tithi, nakshatra and lagna are combined; when their combination lands on one of the five panchaka faults it is flagged. The remaining clear time is \"panchaka-rahita\" (panchaka-free).",
+      "meaning": "Choose panchaka-free windows for acts the five faults specifically prohibit — roofing, travelling south, buying fuel or wood, or funerary rites."
+    },
+    "pushkara": {
+      "what": "Pushkara Navamsha are especially auspicious sub-segments: specific navamsha (1/9th) divisions within certain nakshatras where the ascendant becomes \"Pushkara\" (nourishing).",
+      "how": "Each sign's 30° is split into nine 3°20′ navamshas; in defined sign/navamsha pairs the rising point qualifies as Pushkara. The page marks the clock moments the lagna passes through these.",
+      "meaning": "Acts begun in a Pushkara Navamsha moment (purchases, investments, foundations) are held to prosper and multiply."
+    }
+  },
+  "sidebar_nav": {
+    "nav_aria": "Panchanga navigation",
+    "nav_title": "Panchanga",
+    "sections": {
+      "patro": {
+        "title": "Patro & dates"
+      },
+      "jyotish": {
+        "title": "Jyotish & moment"
+      },
+      "spans": {
+        "title": "Transition elements (begin–end)"
+      },
+      "graha": {
+        "title": "Planet details"
+      },
+      "tables": {
+        "title": "Daily tables"
+      },
+      "sait": {
+        "title": "Auspicious ceremonies"
+      }
+    },
+    "items": {
+      "holidays": {
+        "label": "Holidays"
+      },
+      "converter": {
+        "label": "Converter"
+      },
+      "suryakranti": {
+        "label": "Sun Revolution"
+      },
+      "panchanga-year": {
+        "label": "Annual panchanga wheel"
+      },
+      "dainikkranti": {
+        "label": "Daily transits"
+      },
+      "panchak-patro": {
+        "label": "Panchak calendar"
+      },
+      "ritu": {
+        "label": "Seasons"
+      },
+      "avakahada": {
+        "label": "Avakahada chakra"
+      },
+      "abhijit": {
+        "label": "Abhijit moment"
+      },
+      "kundali": {
+        "label": "Birth chart builder"
+      },
+      "kundali-milan": {
+        "label": "Chart matching"
+      },
+      "graha-sthiti": {
+        "label": "Planetary positions",
+        "blurb": "Daily positions of 9 grahas + lagna"
+      },
+      "graha-asta": {
+        "label": "Heliacal set",
+        "blurb": "Yearly rising & setting"
+      },
+      "graha-vakri": {
+        "label": "Retrograde",
+        "blurb": "Yearly retrograde stations"
+      },
+      "chandra-grahan": {
+        "label": "Lunar eclipse",
+        "blurb": "The year's lunar eclipses"
+      },
+      "surya-grahan": {
+        "label": "Solar eclipse",
+        "blurb": "The year's solar eclipses"
+      },
+      "sait_moment": {
+        "blurb": "Auspicious dates & explanation"
+      }
+    },
+    "sait_label": "{{category}} moment"
+  },
+  "grahas": {
+    "sun": "Sun",
+    "moon": "Moon",
+    "mars": "Mars",
+    "mercury": "Mercury",
+    "jupiter": "Jupiter",
+    "venus": "Venus",
+    "saturn": "Saturn",
+    "rahu": "Rahu",
+    "ketu": "Ketu",
+    "lagna": "Lagna"
+  },
+  "samvatsara_names": {
+    "prabhava": "Prabhava",
+    "vibhava": "Vibhava",
+    "shukla": "Shukla",
+    "pramoda": "Pramoda",
+    "prajapati": "Prajapati",
+    "angira": "Angira",
+    "shrimukha": "Shrimukha",
+    "bhava": "Bhava",
+    "yuva": "Yuva",
+    "dhatri": "Dhatri",
+    "ishvara": "Ishvara",
+    "bahudhanya": "Bahudhanya",
+    "pramathi": "Pramathi",
+    "vikrama": "Vikrama",
+    "vrisha": "Vrisha",
+    "chitrabhanu": "Chitrabhanu",
+    "subhanu": "Subhanu",
+    "tarana": "Tarana",
+    "parthiva": "Parthiva",
+    "vyaya": "Vyaya",
+    "sarvajit": "Sarvajit",
+    "sarvadhari": "Sarvadhari",
+    "virodhi": "Virodhi",
+    "vikriti": "Vikriti",
+    "khara": "Khara",
+    "nandana": "Nandana",
+    "vijaya": "Vijaya",
+    "jaya": "Jaya",
+    "manmatha": "Manmatha",
+    "durmukha": "Durmukha",
+    "hemalambi": "Hemalambi",
+    "vilambi": "Vilambi",
+    "vikari": "Vikari",
+    "sharvari": "Sharvari",
+    "plava": "Plava",
+    "shubhakrit": "Shubhakrit",
+    "shobhana": "Shobhana",
+    "krodhi": "Krodhi",
+    "vishvavasu": "Vishvavasu",
+    "parabhava": "Parabhava",
+    "plavanga": "Plavanga",
+    "kilaka": "Kilaka",
+    "saumya": "Saumya",
+    "sadharana": "Sadharana",
+    "virodhikrit": "Virodhikrit",
+    "paridhavi": "Paridhavi",
+    "pramadi": "Pramadi",
+    "ananda": "Ananda",
+    "rakshasa": "Rakshasa",
+    "nala": "Nala",
+    "pingala": "Pingala",
+    "kalayukta": "Kalayukta",
+    "siddharthi": "Siddharthi",
+    "raudra": "Raudra",
+    "durmati": "Durmati",
+    "dundubhi": "Dundubhi",
+    "rudhirodgari": "Rudhirodgari",
+    "raktakshi": "Raktakshi",
+    "krodhana": "Krodhana",
+    "akshaya": "Akshaya"
   }
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -23,7 +24,8 @@ import { profileChartParams } from "@/lib/kundali/profile-chart";
 const routeApi = getRouteApi("/vivah-sait");
 
 export function MarriageSait() {
-  const { pick, digits } = useLocale();
+  const { digits } = useLocale();
+  const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
@@ -75,11 +77,8 @@ export function MarriageSait() {
 
   return (
     <SaitCeremonyLayout
-      title={pick("विवाह साइत", "Marriage Saait")}
-      subtitle={pick(
-        "शास्त्रअनुसार कडाइका साथ गणना गरिएका शुद्ध विवाह मुहूर्तहरू — समितिको सूचीलाई पछ्याइएको छैन।",
-        "Strict, śāstra-derived vivāha muhūrtas — computed by the book, not tracking the committee list.",
-      )}
+      title={t("sait.marriage.title")}
+      subtitle={t("sait.marriage.subtitle")}
       year={yearBrowse.browseYear}
       onYearChange={yearBrowse.setBrowseYear}
       calendarMode={yearBrowse.era}
@@ -94,17 +93,13 @@ export function MarriageSait() {
       profileControl={profileControl}
       suitabilityByDay={suitabilityByDay}
       loading={detailQuery.isLoading && !detailQuery.data}
-      emptyLabel={{
-        ne: "यस वर्ष कुनै शुद्ध विवाह मुहूर्त छैन।",
-        en: "No strict vivāha muhūrta this year.",
-      }}
-      countLabel={(count, y) => ({
-        ne: `वि.सं. ${digits(bsYear)} मा ${digits(count)} शुद्ध विवाह दिन`,
-        en:
-          yearBrowse.era === "ad"
-            ? `${digits(count)} strict vivāha days in ${digits(y)}`
-            : `${digits(count)} strict vivāha days in BS ${digits(y)}`,
-      })}
+      emptyLabel={t("sait.marriage.empty_year")}
+      countLabel={(count, y) =>
+        t(
+          yearBrowse.era === "ad" ? "sait.marriage.count_label_ad" : "sait.marriage.count_label_bs",
+          { count: digits(count), year: digits(y) },
+        )
+      }
     />
   );
 }

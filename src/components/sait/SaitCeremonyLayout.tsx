@@ -1,6 +1,7 @@
 import { HeartHandshake } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { PatroYearNav } from "@/components/patro-date";
 import type { CalendarEra } from "@/lib/patro-era";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -49,19 +50,11 @@ interface Props {
   loading: boolean;
   notice?: React.ReactNode;
   children?: React.ReactNode;
-  emptyLabel?: { ne: string; en: string };
-  countLabel?: (count: number, year: number) => { ne: string; en: string };
+  emptyLabel?: string;
+  countLabel?: (count: number, year: number) => string;
 }
 
-const NAKSHATRA_MODES: {
-  id: BratabandhaNakshatraMode;
-  ne: string;
-  en: string;
-}[] = [
-  { id: "classical", ne: "शास्त्रीय", en: "Classical" },
-  { id: "nepali", ne: "नेपाली पञ्चाङ्ग", en: "Nepali" },
-  { id: "liberal", ne: "उदार", en: "Liberal" },
-];
+const NAKSHATRA_MODE_IDS = ["classical", "nepali", "liberal"] as const;
 
 /**
  * Shared ceremonial sāit layout — page header, rules, year/location bar,
@@ -93,13 +86,11 @@ export function SaitCeremonyLayout({
   loading,
   notice,
   children,
-  emptyLabel = {
-    ne: "यस वर्ष कुनै शुभ मुहूर्त छैन।",
-    en: "No auspicious muhūrta this year.",
-  },
+  emptyLabel,
   countLabel,
 }: Props) {
-  const { pick, digits } = useLocale();
+  const { digits, lang } = useLocale();
+  const { t } = useTranslation();
   const todayBsYear = useMemo(() => adToBS(new Date()).year, []);
 
   const byMonth = useMemo(() => {
@@ -112,10 +103,8 @@ export function SaitCeremonyLayout({
     return [...map.entries()].sort(([a], [b]) => a - b);
   }, [days]);
 
-  const defaultCount = (n: number, y: number) => ({
-    ne: `वि.सं. ${digits(y)} मा ${digits(n)} शुभ दिन`,
-    en: `${digits(n)} auspicious days in BS ${digits(y)}`,
-  });
+  const defaultCount = (n: number, y: number) =>
+    t("sait.count_label", { count: digits(n), year: digits(y) });
   const displayCount = count ?? days.length;
   const countText = (countLabel ?? defaultCount)(displayCount, year);
 
@@ -141,22 +130,22 @@ export function SaitCeremonyLayout({
       {nakshatraMode && onNakshatraModeChange ? (
         <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
           <span className="text-sm font-medium text-foreground">
-            {pick("नक्षत्र परम्परा", "Nakṣatra tradition")}
+            {t("sait.nakshatra_tradition")}
           </span>
           <div
             className="inline-flex flex-wrap gap-1 rounded-lg border border-border bg-card p-0.5"
             role="radiogroup"
-            aria-label={pick("नक्षत्र परम्परा", "Nakṣatra tradition")}
+            aria-label={t("sait.nakshatra_tradition")}
           >
-            {NAKSHATRA_MODES.map((m) => {
-              const active = nakshatraMode === m.id;
+            {NAKSHATRA_MODE_IDS.map((id) => {
+              const active = nakshatraMode === id;
               return (
                 <button
-                  key={m.id}
+                  key={id}
                   type="button"
                   role="radio"
                   aria-checked={active}
-                  onClick={() => onNakshatraModeChange(m.id)}
+                  onClick={() => onNakshatraModeChange(id)}
                   className={cn(
                     "rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors",
                     active
@@ -164,7 +153,7 @@ export function SaitCeremonyLayout({
                       : "text-muted-foreground hover:bg-surface-muted hover:text-foreground",
                   )}
                 >
-                  {pick(m.ne, m.en)}
+                  {t(`sait.nakshatra_modes.${id}`)}
                 </button>
               );
             })}
@@ -184,7 +173,7 @@ export function SaitCeremonyLayout({
 
       {!loading && displayCount > 0 ? (
         <p className="m-0 text-sm text-muted-foreground">
-          {pick(countText.ne, countText.en)}
+          {countText}
         </p>
       ) : null}
 
@@ -212,17 +201,15 @@ export function SaitCeremonyLayout({
           byMonth.map(([month, monthDays]) => {
             const monthNe = monthDays[0]?.bs_month_name_ne;
             const monthEn = BS_MONTH_NAMES[month - 1] ?? monthNe;
+            const monthLabel = lang === "en" ? monthEn : (monthNe ?? monthEn);
             return (
               <div key={month} className="space-y-3">
                 <div className="flex items-end justify-between gap-3">
                   <h2 className="m-0 text-lg font-bold text-foreground">
-                    {pick(monthNe ?? "", monthEn ?? "")}
+                    {monthLabel}
                   </h2>
                   <span className="text-sm text-muted-foreground">
-                    {pick(
-                      `${digits(monthDays.length)} दिन`,
-                      `${digits(monthDays.length)} days`,
-                    )}
+                    {t("sait.days_count", { count: digits(monthDays.length) })}
                   </span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -244,14 +231,14 @@ export function SaitCeremonyLayout({
           })
         ) : (
           <p className="m-0 py-8 text-center text-sm text-muted-foreground">
-            {pick(emptyLabel.ne, emptyLabel.en)}
+            {emptyLabel ?? t("sait.empty_year")}
           </p>
         )}
       </section>
 
       <p className="text-sm">
         <Link to="/panchanga/details" className="text-primary underline">
-          {pick("← सबै शुभ मुहूर्त", "← All ceremonies")}
+          {t("sait.all_ceremonies")}
         </Link>
       </p>
     </PageShell>

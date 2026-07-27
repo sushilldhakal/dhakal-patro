@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
 import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
+import { samvatsaraName } from "@/lib/samvatsara-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import { BsHeadline } from "@/components/BsHeadline";
@@ -260,16 +262,17 @@ export function PatroDateNavCore({
   mobileToolbarLower,
   calendarMode = "bs",
 }: PatroDateNavCoreProps) {
-  const { lang, pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
+  const { t } = useTranslation();
   const isAdCalendar = calendarMode === "ad";
 
   const monthTitle = isAdCalendar
     ? lang === "en"
       ? AD_MONTH_NAMES[month - 1]
       : new Date(year, month - 1, 1).toLocaleDateString("ne-NP", { month: "long" })
-    : pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
+    : bsMonthLabel(month, lang);
   const samvatsara = isAdCalendar ? undefined : resolveSamvatsaraForBsYear(year);
-  const samvatsaraLabel = samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : undefined;
+  const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
   const adLocale = lang === "en" ? "en-US" : "ne-NP";
   // Always day → month → year (e.g. "२५ जुलाई २०२६" / "25 Jul 2026"). Relying on
   // toLocaleDateString's own ordering put ne-NP as year-month-day, which reads
@@ -360,7 +363,7 @@ export function PatroDateNavCore({
   const clockSummary = showTime
     ? `${toNepaliDigits(String(hour).padStart(2, "0"))}:${toNepaliDigits(String(minute).padStart(2, "0"))}`
     : null;
-  const monthPickerHint = pick("महिना", "Month");
+  const monthPickerHint = t("patro_date.month_aria");
   /** Picker chip: omit year when the title already shows it (panchanga day view). */
   const mobilePickerLabel =
     day != null
@@ -406,8 +409,8 @@ export function PatroDateNavCore({
             className={patroMobilePickerBtn}
             aria-label={
               showTime
-                ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
-                : pick("मिति बदल्नुहोस्", "Change date")
+                ? t("patro_date.change_date_time")
+                : t("patro_date.change_date")
             }
           >
             <CalendarClock className="hidden size-3.5 shrink-0 text-secondary sm:block" strokeWidth={2} />
@@ -495,8 +498,8 @@ export function PatroDateNavCore({
           className={patroMobilePickerBtn}
           aria-label={
             showTime
-              ? pick("मिति र समय बदल्नुहोस्", "Change date and time")
-              : pick("मिति बदल्नुहोस्", "Change date")
+              ? t("patro_date.change_date_time")
+              : t("patro_date.change_date")
           }
         >
           <CalendarClock className="hidden size-3.5 shrink-0 text-secondary sm:block" strokeWidth={2} />
@@ -509,8 +512,8 @@ export function PatroDateNavCore({
         <DrawerHeader className="pb-2 text-center">
           <DrawerTitle className="text-base text-center">
             {showTime
-              ? pick("मिति र समय", "Date & time")
-              : pick("महिना र वर्ष", "Month & year")}
+              ? t("patro_date.date_time")
+              : t("patro_date.month_year")}
           </DrawerTitle>
         </DrawerHeader>
         <div className="flex flex-col gap-4 px-4 pb-2">
@@ -527,7 +530,7 @@ export function PatroDateNavCore({
           {showTime && hourAriaLabel && minuteAriaLabel ? (
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                {pick("समय", "Time")}
+                {t("common.time")}
               </p>
               <div className="flex w-full items-center justify-center gap-2">
                 <BsNativeSelect
@@ -557,7 +560,7 @@ export function PatroDateNavCore({
               type="button"
               className="h-10 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground"
             >
-              {pick("भयो", "Done")}
+              {t("common.done")}
             </button>
           </DrawerClose>
         </DrawerFooter>

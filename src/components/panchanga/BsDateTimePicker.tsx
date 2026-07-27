@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   AD_MONTH_NAMES,
@@ -64,7 +65,8 @@ export function BsDateTimePicker({
   showTime,
   calendarMode = "bs",
 }: Props) {
-  const { lang, pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
+  const { t } = useTranslation();
   const isAd = calendarMode === "ad";
 
   // Draft state — every interaction stays local; nothing is committed (and no
@@ -169,7 +171,7 @@ export function BsDateTimePicker({
           type="button"
           onClick={() => stepMonth(-1)}
           disabled={prevDisabled}
-          aria-label={pick("अघिल्लो महिना", "Previous month")}
+          aria-label={t("patro_date.prev_month")}
           className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-surface-hover disabled:opacity-40"
         >
           <ChevronLeft size={15} strokeWidth={2} />
@@ -192,7 +194,7 @@ export function BsDateTimePicker({
           type="button"
           onClick={() => stepMonth(1)}
           disabled={nextDisabled}
-          aria-label={pick("अर्को महिना", "Next month")}
+          aria-label={t("patro_date.next_month")}
           className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-surface-hover disabled:opacity-40"
         >
           <ChevronRight size={15} strokeWidth={2} />
@@ -266,7 +268,7 @@ export function BsDateTimePicker({
       {showTime && hourAriaLabel && minuteAriaLabel ? (
         <div className="flex flex-col gap-1.5 border-t border-border pt-2.5">
           <span className="text-sm font-semibold uppercase tracking-[0.14em]">
-            {pick("समय", "Time")}
+            {t("common.time")}
           </span>
           <div className="flex items-center gap-1.5">
             <BsNativeSelect
@@ -313,7 +315,7 @@ export function BsDateTimePicker({
           onClick={goDraftToday}
           className="h-8 flex-1 rounded-md border border-border bg-card text-sm font-semibold text-foreground transition-colors hover:bg-surface-hover"
         >
-          {pick("आज", "Today")}
+          {t("today")}
         </button>
         <PopoverClose asChild>
           <button
@@ -321,7 +323,7 @@ export function BsDateTimePicker({
             onClick={commit}
             className="h-8 flex-1 rounded-md bg-secondary text-sm font-semibold text-secondary-foreground"
           >
-            {pick("भयो", "Done")}
+            {t("common.done")}
           </button>
         </PopoverClose>
       </div>

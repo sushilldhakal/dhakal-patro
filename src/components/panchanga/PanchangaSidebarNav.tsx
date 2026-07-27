@@ -122,7 +122,6 @@ function SidebarSection({
   panchakYear,
   digits,
   t,
-  pick,
   kundaliProfileId,
   kundaliSectionId,
   era,
@@ -135,20 +134,19 @@ function SidebarSection({
   panchakYear: number;
   digits: (v: number | string) => string;
   t: ReturnType<typeof useTranslation>["t"];
-  pick: (ne: string, en: string) => string;
   kundaliProfileId: string | null;
   kundaliSectionId: ReturnType<typeof parseKundaliSectionFromHash>;
   era: ReturnType<typeof useCalendarEra>;
 }) {
-  const title = pick(section.titleNe, section.titleEn);
+  const title = t(section.titleKey);
   const hasActiveItem = section.items.some((item) => isSidebarItemActive(pathname, item));
 
   const renderItem = (item: PanchangaSidebarItem, forceActive?: boolean) => {
-    let label = pick(item.labelNe, item.labelEn);
+    let label = t(item.labelKey);
     if (item.id === "panchak-patro") {
       label = t("panchak.title", { year: digits(panchakYear) });
     }
-    const blurb = item.blurbNe ? pick(item.blurbNe, item.blurbEn ?? "") : undefined;
+    const blurb = item.blurbKey ? t(item.blurbKey) : undefined;
     const search = itemSearch(item, location, era);
     const active = forceActive ?? isSidebarItemActive(pathname, item);
     const prefetch = () => preloadPanchangaRoute(resolveSidebarLinkPath(item.to, item.params));
@@ -218,7 +216,7 @@ function SidebarSection({
 }
 
 export function PanchangaSidebarNav({ className }: { className?: string }) {
-  const { pick, digits } = useLocale();
+  const { digits } = useLocale();
   const { t } = useTranslation();
   const era = useCalendarEra();
   const { location } = usePanchangaLocation();
@@ -253,10 +251,10 @@ export function PanchangaSidebarNav({ className }: { className?: string }) {
         "rounded-2xl border border-border bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]",
         className,
       )}
-      aria-label={pick("पञ्चाङ्ग नेभिगेसन", "Panchanga navigation")}
+      aria-label={t("sidebar_nav.nav_aria")}
     >
       <p className="border-b border-border px-4 py-3 text-md font-semibold uppercase tracking-wider text-muted-foreground">
-        {pick("पञ्चाङ्ग", "Panchanga")}
+        {t("sidebar_nav.nav_title")}
       </p>
       <div className="flex max-h-[calc(100vh-6.5rem)] flex-col overflow-y-auto p-1">
         {sections.map((section) => (
@@ -272,7 +270,6 @@ export function PanchangaSidebarNav({ className }: { className?: string }) {
             panchakYear={panchakYear}
             digits={digits}
             t={t}
-            pick={pick}
             kundaliProfileId={kundaliProfileId}
             kundaliSectionId={kundaliSectionId}
             era={era}

@@ -2,8 +2,9 @@ import { Link, getRouteApi, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
-import { GrahaBanner } from "@/components/graha/GrahaPageParts";
+import { GrahaBanner, ElementDescription } from "@/components/graha/GrahaPageParts";
 import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
 import { useElementPageUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
@@ -25,10 +26,11 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { toAdStr } from "@/lib/patro-day";
 import { searchToLocation } from "@/lib/url-state";
 import { ELEMENT_BY_ID } from "@/lib/panchanga-elements";
-import { ELEMENT_DESCRIPTIONS } from "@/lib/panchanga-element-descriptions";
 import { getChandraBalamCards, getTaraBalamCards } from "@/lib/balam-cards";
 import {
-  CHOGHADIYA_TYPES,
+  CHOGHADIYA_TYPE_KEYS,
+  TONE_BY_KEY,
+  choghadiyaLegendLabel,
   choghadiyaLegendMarker,
   choghadiyaRowLabel,
   choghadiyaTone,
@@ -118,6 +120,7 @@ function SpanBoundary({
 
 function SpanList({ spans, timeZone }: { spans: ElementSpan[]; timeZone?: string }) {
   const { pick } = useLocale();
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {spans.map((s, i) => (
@@ -126,19 +129,19 @@ function SpanList({ spans, timeZone }: { spans: ElementSpan[]; timeZone?: string
             <span className="text-base font-bold text-foreground">{pick(s.name_ne, s.name)}</span>
             {s.paksha ? (
               <span className="text-xs text-base">
-                {pick(s.paksha === "shukla" ? "शुक्ल" : "कृष्ण", s.paksha)}
+                {s.paksha === "shukla" ? t("common.paksha_shukla") : t("common.paksha_krishna")}
               </span>
             ) : null}
           </div>
           <div className="flex flex-col gap-1.5">
             <SpanBoundary
-              label={pick("आरम्भ", "Begins")}
+              label={t("common.begins")}
               stamp={s.begins}
               tone="begin"
               timeZone={timeZone}
             />
             <SpanBoundary
-              label={pick("अन्त्य", "Ends")}
+              label={t("common.ends")}
               stamp={s.ends}
               tone="end"
               timeZone={timeZone}
@@ -161,16 +164,12 @@ function toneClass(good: boolean, bad: boolean): string {
 }
 
 function ChoghadiyaLegend() {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   return (
     <ul className="m-0 mb-3 grid list-none grid-cols-1 gap-1 p-0 sm:grid-cols-2">
-      {CHOGHADIYA_TYPES.map((type) => (
-        <li key={type.nameNe} className="text-sm leading-snug text-muted-foreground">
-          {choghadiyaLegendMarker(type.tone)}{" "}
-          {pick(
-            `${type.nameNe} — ${type.qualityNe}`,
-            `${type.nameEn} — ${type.qualityEn}`,
-          )}
+      {CHOGHADIYA_TYPE_KEYS.map((key) => (
+        <li key={key} className="text-sm leading-snug text-muted-foreground">
+          {choghadiyaLegendMarker(TONE_BY_KEY[key])} {choghadiyaLegendLabel(key, lang)}
         </li>
       ))}
     </ul>
@@ -188,11 +187,12 @@ type ChoghadiyaRow = {
 };
 
 function ChoghadiyaTableView({ data, sunrise }: { data: ChoghadiyaRow[]; sunrise?: string }) {
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
+  const { t } = useTranslation();
   const sunriseMin = parseHHMM(sunrise);
 
   if (data.length === 0) {
-    return <p className="text-sm">{pick("यस दिनका लागि विवरण छैन।", "No entries for this day.")}</p>;
+    return <p className="text-sm">{t("element_page.no_entries_day")}</p>;
   }
 
   return (
@@ -239,6 +239,7 @@ function TableView({
   elementId?: string;
 }) {
   const { pick, digits } = useLocale();
+  const { t } = useTranslation();
   const sunriseMin = parseHHMM(sunrise);
 
   // Object with a `rows` array → moon/star strength table (chandrabala/tarabala).
@@ -253,7 +254,7 @@ function TableView({
       <div className="flex flex-col gap-2">
         {anchor ? (
           <p className="text-sm text-base">
-            {pick("चन्द्र राशि", "Moon sign")}: <span className="font-bold text-foreground">{anchor}</span>
+            {t("common.moon_sign")}: <span className="font-bold text-foreground">{anchor}</span>
           </p>
         ) : null}
         <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -285,7 +286,7 @@ function TableView({
       return <ChoghadiyaTableView data={rows as ChoghadiyaRow[]} sunrise={sunrise} />;
     }
     if (rows.length === 0) {
-      return <p className="text-sm">{pick("यस दिनका लागि विवरण छैन।", "No entries for this day.")}</p>;
+      return <p className="text-sm">{t("element_page.no_entries_day")}</p>;
     }
     return (
       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -314,7 +315,7 @@ function TableView({
                 {label}
                 {hasPushkara ? (
                   <span className="rounded-full bg-secondary/20 px-1.5 py-px text-sm font-bold text-secondary dark:text-accent">
-                    {pick("पुष्कर", "Pushkara")}
+                    {t("common.pushkara")}
                   </span>
                 ) : null}
               </span>
@@ -326,7 +327,7 @@ function TableView({
     );
   }
 
-  return <p className="text-sm">{pick("विवरण उपलब्ध छैन।", "No data available.")}</p>;
+  return <p className="text-sm">{t("common.no_data")}</p>;
 }
 
 function NavataraBalamElementView({
@@ -339,19 +340,15 @@ function NavataraBalamElementView({
   clock?: string;
 }) {
   const { pick, lang } = useLocale();
+  const { t } = useTranslation();
   const isChandra = elementId === "chandrabala";
   const cards = isChandra ? getChandraBalamCards(p) : getTaraBalamCards(p);
   const table = isChandra ? getChandrabalamTable(p) : getTarabalaTable(p);
 
   const moonRef = table?.moon_label
-    ? pick(
-        isChandra
-          ? `सूर्योदयको चन्द्र राशि: ${table.moon_label}`
-          : `सूर्योदयको चन्द्र नक्षत्र: ${table.moon_label}`,
-        isChandra
-          ? `Moon sign at sunrise: ${table.moon_label_en ?? table.moon_label}`
-          : `Moon nakshatra at sunrise: ${table.moon_label_en ?? table.moon_label}`,
-      )
+    ? t(isChandra ? "element_page.moon_sign_sunrise" : "element_page.moon_nakshatra_sunrise", {
+        label: table.moon_label_en ?? table.moon_label,
+      })
     : undefined;
 
   const formatName = isChandra
@@ -360,7 +357,7 @@ function NavataraBalamElementView({
     : (card: ReturnType<typeof getTaraBalamCards>[number]) => pick(card.name, card.nameEn ?? card.name);
 
   if (!cards.length) {
-    return <p className="text-sm">{pick("विवरण उपलब्ध छैन।", "No data available.")}</p>;
+    return <p className="text-sm">{t("common.no_data")}</p>;
   }
 
   return (
@@ -371,43 +368,11 @@ function NavataraBalamElementView({
   );
 }
 
-/* ── description (what it is · how it's calculated · what it means) ──────── */
-
-function ElementDescription({ elementId }: { elementId: string }) {
-  const { pick } = useLocale();
-  const desc = ELEMENT_DESCRIPTIONS[elementId];
-  if (!desc) return null;
-
-  const blocks: { titleNe: string; titleEn: string; body: { ne: string; en: string } }[] = [
-    { titleNe: "यो के हो", titleEn: "What it is", body: desc.what },
-    { titleNe: "कसरी गणना गरिन्छ", titleEn: "How it's calculated", body: desc.how },
-    { titleNe: "यसको अर्थ", titleEn: "What it means", body: desc.meaning },
-  ];
-
-  return (
-    <section className={cn(patroCard, "mt-6 p-4")} aria-label={pick("विवरण", "About")}>
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-secondary">
-        {pick("बारेमा", "About")}
-      </h2>
-      <div className="flex flex-col gap-4">
-        {blocks.map((b) => (
-          <div key={b.titleEn} className="flex flex-col gap-1">
-            <h3 className="text-sm font-bold text-foreground">{pick(b.titleNe, b.titleEn)}</h3>
-            <p className="m-0 text-sm leading-relaxed text-muted-foreground">
-              {pick(b.body.ne, b.body.en)}
-            </p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 /* ── page ───────────────────────────────────────────────────────────────── */
 
 export function ElementPage() {
   const { name } = useParams({ strict: false }) as { name?: string };
-  const { pick } = useLocale();
+  const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
@@ -477,9 +442,9 @@ export function ElementPage() {
   if (!meta) {
     return (
       <PageShell>
-        <PageHeader icon={<Sparkles className="h-6 w-6 text-secondary" />} title={pick("अज्ञात तत्त्व", "Unknown element")} />
+        <PageHeader icon={<Sparkles className="h-6 w-6 text-secondary" />} title={t("element_page.unknown_element")} />
         <p className="text-sm">
-          <Link to="/panchanga/details" className="text-primary underline">{pick("पञ्चाङ्ग विवरणमा फर्कनुहोस्", "Back to panchanga details")}</Link>
+          <Link to="/panchanga/details" className="text-primary underline">{t("element_page.back_to_details")}</Link>
         </p>
       </PageShell>
     );
@@ -499,10 +464,8 @@ export function ElementPage() {
     <PageShell>
       <GrahaBanner
         icon={<Sparkles className="size-6" />}
-        ne={meta.ne}
-        en={meta.en}
-        blurbNe={meta.blurbNe}
-        blurbEn={meta.blurbEn}
+        titleKey={`panchanga_elements.${meta.id}.title`}
+        blurbKey={`panchanga_elements.${meta.id}.blurb`}
       />
 
       {isSpan ? (
@@ -535,15 +498,15 @@ export function ElementPage() {
 
       {isSpan ? (
         spanQuery.isLoading && !spanQuery.data ? (
-          <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+          <p className="text-sm">{t("common.loading")}</p>
         ) : spanQuery.data ? (
           <SpanList spans={spanQuery.data.spans} timeZone={spanQuery.data.timezone} />
         ) : (
-          <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
+          <p className="text-sm text-danger">{t("common.load_error")}</p>
         )
       ) : isNavataraBal ? (
         panchangaQuery.isLoading && !panchangaQuery.data ? (
-          <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+          <p className="text-sm">{t("common.loading")}</p>
         ) : panchangaQuery.data ? (
           <div className={cn(patroCard, "p-3.5")}>
             <NavataraBalamElementView
@@ -553,23 +516,23 @@ export function ElementPage() {
             />
           </div>
         ) : (
-          <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
+          <p className="text-sm text-danger">{t("common.load_error")}</p>
         )
       ) : dayQuery.isLoading && !dayQuery.data ? (
-        <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+        <p className="text-sm">{t("common.loading")}</p>
       ) : dayQuery.data ? (
         <div className={cn(patroCard, "p-3.5")}>
           <TableView data={dayQuery.data.data} sunrise={dayQuery.data.sunrise} elementId={name} />
         </div>
       ) : (
-        <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
+        <p className="text-sm text-danger">{t("common.load_error")}</p>
       )}
 
       <ElementDescription elementId={meta.id} />
 
       <p className="mt-6 text-sm">
         <Link to="/panchanga/details" className="text-primary underline">
-          {pick("← सबै पञ्चाङ्ग तत्त्वहरू", "← All panchanga elements")}
+          {t("element_page.all_elements")}
         </Link>
       </p>
     </PageShell>

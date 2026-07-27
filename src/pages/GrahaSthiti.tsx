@@ -7,6 +7,7 @@ import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-locat
 import { GrahaBanner, GrahaDescription } from "@/components/graha/GrahaPageParts";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 import { toAdStr } from "@/lib/patro-day";
@@ -34,20 +35,21 @@ function signed(value: number, digits: (v: number | string) => string): string {
   return `${s}${digits(Math.abs(value).toFixed(2))}`;
 }
 
-const COLS: { ne: string; en: string }[] = [
-  { ne: "ग्रह", en: "Graha" },
-  { ne: "रेखांश", en: "Longitude" },
-  { ne: "नक्षत्र / पद", en: "Nakshatra / Pada" },
-  { ne: "स्वामी / उप स्वामी", en: "Lord / Sub-lord" },
-  { ne: "पूर्ण डिग्री", en: "Full degree" },
-  { ne: "अक्षांश / शर", en: "Latitude" },
-  { ne: "गति °/दिन", en: "Speed °/day" },
-  { ne: "विषुवांश", en: "R.A." },
-  { ne: "क्रान्ति", en: "Decl." },
-];
+const COL_KEYS = [
+  "graha_pages.sthiti.columns.graha",
+  "graha_pages.sthiti.columns.longitude",
+  "graha_pages.sthiti.columns.nakshatra_pada",
+  "graha_pages.sthiti.columns.lord_sublord",
+  "graha_pages.sthiti.columns.full_degree",
+  "graha_pages.sthiti.columns.latitude",
+  "graha_pages.sthiti.columns.speed",
+  "graha_pages.sthiti.columns.right_ascension",
+  "graha_pages.sthiti.columns.declination",
+] as const;
 
 function GrahaRow({ row }: { row: GrahaSthitiRow }) {
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
+  const { t } = useTranslation();
   const isLagna = row.graha === "lagna";
   return (
     <tr className={cn("border-t border-border", isLagna && "bg-secondary/[0.06]")}>
@@ -55,12 +57,12 @@ function GrahaRow({ row }: { row: GrahaSthitiRow }) {
         <span className="mr-1 text-muted-foreground">{row.symbol}</span>
         {grahaSthitiName(row, lang)}
         {row.is_retrograde ? (
-          <span className="ml-1 text-danger" title={pick("वक्री", "Retrograde")}>
+          <span className="ml-1 text-danger" title={t("common.retrograde")}>
             ↺
           </span>
         ) : null}
         {row.is_combust ? (
-          <span className="ml-1" title={pick("अस्त", "Combust")}>
+          <span className="ml-1" title={t("common.combust")}>
             🔥
           </span>
         ) : null}
@@ -101,7 +103,7 @@ function GrahaRow({ row }: { row: GrahaSthitiRow }) {
 }
 
 export function GrahaSthiti() {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
@@ -123,10 +125,8 @@ export function GrahaSthiti() {
     <PageShell>
       <GrahaBanner
         icon={<Orbit className="h-6 w-6 text-accent dark:text-secondary" />}
-        ne="ग्रह स्थिति"
-        en="Planetary positions"
-        blurbNe="नौ ग्रह र लग्नको दैनिक स्पष्ट स्थिति"
-        blurbEn="Daily sphuta of the nine grahas and the ascendant"
+        titleKey="sidebar_nav.items.graha-sthiti.label"
+        blurbKey="sidebar_nav.items.graha-sthiti.blurb"
       />
 
       <div className="space-y-3">
@@ -141,18 +141,18 @@ export function GrahaSthiti() {
       </div>
 
       {query.isLoading && !query.data ? (
-        <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+        <p className="text-sm">{t("common.loading")}</p>
       ) : query.data ? (
         <div className={cn(patroDataTableWrap, "mt-2")}>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-secondary/[0.09] text-left dark:bg-secondary/20">
-                {COLS.map((c) => (
+                {COL_KEYS.map((key) => (
                   <th
-                    key={c.en}
+                    key={key}
                     className="whitespace-nowrap px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground"
                   >
-                    {pick(c.ne, c.en)}
+                    {t(key)}
                   </th>
                 ))}
               </tr>
@@ -165,21 +165,16 @@ export function GrahaSthiti() {
           </table>
         </div>
       ) : (
-        <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
+        <p className="text-sm text-danger">{t("common.load_error")}</p>
       )}
 
-      <p className="mt-2 text-sm text-muted-foreground">
-        {pick(
-          "↺ = वक्री (retrograde) · 🔥 = अस्त (combust)। स्थिति सूर्योदयको क्षणमा गणना गरिएको।",
-          "↺ = retrograde · 🔥 = combust. Positions are computed at local sunrise.",
-        )}
-      </p>
+      <p className="mt-2 text-sm text-muted-foreground">{t("graha_pages.sthiti_footnote")}</p>
 
       <GrahaDescription pageId="graha-sthiti" />
 
       <p className="mt-6 text-sm">
         <Link to="/panchanga/details" className="text-primary underline">
-          {pick("← सबै पञ्चाङ्ग तत्त्वहरू", "← All panchanga elements")}
+          {t("element_page.all_elements")}
         </Link>
       </p>
     </PageShell>

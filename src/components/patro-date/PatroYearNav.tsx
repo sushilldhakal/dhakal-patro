@@ -15,6 +15,7 @@ import {
   clampBsYear,
 } from "@/lib/patro-date-options";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
+import { samvatsaraName } from "@/lib/samvatsara-i18n";
 import {
   patroMonthChipDay,
   patroMonthChipHead,
@@ -51,7 +52,7 @@ export function PatroYearNav({
   className,
 }: PatroYearNavProps) {
   const { t } = useTranslation();
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
   const isAd = calendarMode === "ad";
   const options =
     yearOptions ?? (isAd ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS);
@@ -59,14 +60,12 @@ export function PatroYearNav({
   const maxYear = options[options.length - 1]!;
   const clampYear = (y: number) => (isAd ? clampAdYear(y, options) : clampBsYear(y, options));
 
-  const chipEra = pick("वि.सं.", "AD");
+  const chipEra = isAd ? t("patro_date.era_ad") : t("patro_date.era_bs");
   const chipYear = year;
 
   const bsYearForLabels = isAd ? adToBS(new Date(year, 6, 15)).year : year;
   const samvatsara = resolveSamvatsaraForBsYear(bsYearForLabels);
-  const samvatsaraLabel = samvatsara
-    ? pick(samvatsara.name_ne, samvatsara.name_en)
-    : undefined;
+  const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
 
   const adLocale = lang === "en" ? "en-US" : "ne-NP";
   const adYearRange = isAd
@@ -132,7 +131,7 @@ export function PatroYearNav({
             <span className="font-num font-semibold text-secondary dark:text-secondary">
               {digits(year)}
             </span>{" "}
-            <span>{pick("वि.सं.", "BS")}</span>
+            <span>{t("patro_date.era_bs")}</span>
           </>
         )
       }
@@ -153,7 +152,7 @@ export function PatroYearNav({
         <button
           type="button"
           className={patroMonthNavBtn}
-          aria-label={pick("अघिल्लो वर्ष", "Previous year")}
+          aria-label={t("patro_date.prev_year")}
           onClick={() => onYearChange(clampYear(year - 1))}
           disabled={year <= minYear}
         >
@@ -169,7 +168,7 @@ export function PatroYearNav({
         <button
           type="button"
           className={patroMonthNavBtn}
-          aria-label={pick("अर्को वर्ष", "Next year")}
+          aria-label={t("patro_date.next_year")}
           onClick={() => onYearChange(clampYear(year + 1))}
           disabled={year >= maxYear}
         >
@@ -182,7 +181,7 @@ export function PatroYearNav({
           onClick={() => onYearChange(currentYear)}
           className="shrink-0 rounded-full border border-border bg-card px-3 py-1 text-sm font-semibold text-foreground"
         >
-          {pick("यो वर्ष", "This year")}
+          {t("patro_date.this_year")}
         </button>
       ) : null}
     </div>

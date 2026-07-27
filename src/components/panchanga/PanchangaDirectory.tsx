@@ -8,26 +8,17 @@ import {
   Sunrise,
   type LucideIcon,
 } from "lucide-react";
-import {
-  QuickLinkCard,
-} from "@/components/home/HomeQuickLinks";
+import { useTranslation } from "react-i18next";
+import { QuickLinkCard } from "@/components/home/HomeQuickLinks";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { useLocale } from "@/i18n/locale";
+import { elementBlurb, elementTitle } from "@/lib/panchanga-i18n";
 import { CEREMONY_META, ELEMENT_META } from "@/lib/panchanga-elements";
 import { patroElementLinkSearch, patroRouteLinkSearch } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
 
-function SectionTitle({
-  ne,
-  en,
-  className,
-}: {
-  ne: string;
-  en: string;
-  className?: string;
-}) {
-  const { pick } = useLocale();
+function SectionTitle({ titleKey, className }: { titleKey: string; className?: string }) {
+  const { t } = useTranslation();
   return (
     <h2
       className={cn(
@@ -35,7 +26,7 @@ function SectionTitle({
         className,
       )}
     >
-      {pick(ne, en)}
+      {t(titleKey)}
     </h2>
   );
 }
@@ -44,81 +35,41 @@ function DirectoryCard({
   to,
   params,
   search,
-  ne,
-  en,
-  blurbNe,
-  blurbEn,
+  labelKey,
+  blurbKey,
   icon,
 }: {
   to: "/panchanga/element/$name" | "/sait/$category";
   params: Record<string, string>;
   search?: Record<string, unknown>;
-  ne: string;
-  en: string;
-  blurbNe: string;
-  blurbEn: string;
+  labelKey: string;
+  blurbKey: string;
   icon: LucideIcon;
 }) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
   return (
     <QuickLinkCard
       to={to}
       params={params}
       search={search}
       icon={icon}
-      label={pick(ne, en)}
-      description={pick(blurbNe, blurbEn)}
+      label={t(labelKey)}
+      description={t(blurbKey)}
     />
   );
 }
 
-/** Standalone graha-detail pages (positions, combustion, retrograde, eclipses). */
 const GRAHA_PAGES = [
-  {
-    to: "/panchanga/graha-sthiti" as const,
-    ne: "ग्रह स्थिति",
-    en: "Planetary positions",
-    blurbNe: "नौ ग्रह र लग्नको दैनिक स्थिति",
-    blurbEn: "Daily positions of 9 grahas + lagna",
-    icon: Orbit,
-  },
-  {
-    to: "/panchanga/graha-asta" as const,
-    ne: "ग्रह अस्त",
-    en: "Heliacal set",
-    blurbNe: "वर्षभरका उदय–अस्त क्षण",
-    blurbEn: "Yearly rising & setting",
-    icon: Sunrise,
-  },
-  {
-    to: "/panchanga/graha-vakri" as const,
-    ne: "ग्रह वक्री",
-    en: "Retrograde",
-    blurbNe: "वर्षभरका वक्री–मार्गी क्षण",
-    blurbEn: "Yearly retrograde stations",
-    icon: RotateCcw,
-  },
-  {
-    to: "/panchanga/chandra-grahan" as const,
-    ne: "चन्द्र ग्रहण",
-    en: "Lunar eclipse",
-    blurbNe: "वर्षका चन्द्र ग्रहण",
-    blurbEn: "The year's lunar eclipses",
-    icon: MoonStar,
-  },
-  {
-    to: "/panchanga/surya-grahan" as const,
-    ne: "सूर्य ग्रहण",
-    en: "Solar eclipse",
-    blurbNe: "वर्षका सूर्य ग्रहण",
-    blurbEn: "The year's solar eclipses",
-    icon: Eclipse,
-  },
+  { to: "/panchanga/graha-sthiti" as const, labelKey: "sidebar_nav.items.graha-sthiti.label", blurbKey: "sidebar_nav.items.graha-sthiti.blurb", icon: Orbit },
+  { to: "/panchanga/graha-asta" as const, labelKey: "sidebar_nav.items.graha-asta.label", blurbKey: "sidebar_nav.items.graha-asta.blurb", icon: Sunrise },
+  { to: "/panchanga/graha-vakri" as const, labelKey: "sidebar_nav.items.graha-vakri.label", blurbKey: "sidebar_nav.items.graha-vakri.blurb", icon: RotateCcw },
+  { to: "/panchanga/chandra-grahan" as const, labelKey: "sidebar_nav.items.chandra-grahan.label", blurbKey: "sidebar_nav.items.chandra-grahan.blurb", icon: MoonStar },
+  { to: "/panchanga/surya-grahan" as const, labelKey: "sidebar_nav.items.surya-grahan.label", blurbKey: "sidebar_nav.items.surya-grahan.blurb", icon: Eclipse },
 ];
 
 /** Categorized link grid: transition elements → graha detail → daily tables → shubha muhurta. */
 export function PanchangaDirectory({ className }: { className?: string }) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
   const era = useCalendarEra();
   const { location } = usePanchangaLocation();
   const spans = ELEMENT_META.filter((e) => e.kind === "span");
@@ -126,24 +77,22 @@ export function PanchangaDirectory({ className }: { className?: string }) {
 
   return (
     <div className={className}>
-      <SectionTitle ne="सङ्क्रमण तत्त्व (आरम्भ–अन्त्य)" en="Transition elements (begin–end)" />
+      <SectionTitle titleKey="sidebar_nav.sections.spans.title" />
       <div className="flex flex-wrap items-stretch justify-center gap-3">
         {spans.map((e) => (
-          <DirectoryCard
+          <QuickLinkCard
             key={e.id}
             to="/panchanga/element/$name"
             params={{ name: e.id }}
             search={patroElementLinkSearch(e.id, location, era) as Record<string, unknown>}
-            ne={e.ne}
-            en={e.en}
-            blurbNe={e.blurbNe}
-            blurbEn={e.blurbEn}
             icon={MoonStar}
+            label={elementTitle(e.id)}
+            description={elementBlurb(e.id)}
           />
         ))}
       </div>
 
-      <SectionTitle ne="ग्रह विवरण" en="Planet details" />
+      <SectionTitle titleKey="sidebar_nav.sections.graha.title" />
       <div className="flex flex-wrap items-stretch justify-center gap-3">
         {GRAHA_PAGES.map((g) => (
           <QuickLinkCard
@@ -151,30 +100,28 @@ export function PanchangaDirectory({ className }: { className?: string }) {
             to={g.to}
             search={patroRouteLinkSearch(g.to, location, era)}
             icon={g.icon}
-            label={pick(g.ne, g.en)}
-            description={pick(g.blurbNe, g.blurbEn)}
+            label={t(g.labelKey)}
+            description={t(g.blurbKey)}
           />
         ))}
       </div>
 
-      <SectionTitle ne="दैनिक तालिका" en="Daily tables" />
+      <SectionTitle titleKey="sidebar_nav.sections.tables.title" />
       <div className="flex flex-wrap items-stretch justify-center gap-3">
         {tables.map((e) => (
-          <DirectoryCard
+          <QuickLinkCard
             key={e.id}
             to="/panchanga/element/$name"
             params={{ name: e.id }}
             search={patroElementLinkSearch(e.id, location, era) as Record<string, unknown>}
-            ne={e.ne}
-            en={e.en}
-            blurbNe={e.blurbNe}
-            blurbEn={e.blurbEn}
             icon={CalendarClock}
+            label={elementTitle(e.id)}
+            description={elementBlurb(e.id)}
           />
         ))}
       </div>
 
-      <SectionTitle ne="शुभ मुहूर्त" en="Auspicious ceremonies" />
+      <SectionTitle titleKey="sidebar_nav.sections.sait.title" />
       <div className="flex flex-wrap items-stretch justify-center gap-3">
         {CEREMONY_META.map((c) => (
           <DirectoryCard
@@ -182,10 +129,8 @@ export function PanchangaDirectory({ className }: { className?: string }) {
             to="/sait/$category"
             params={{ category: c.id }}
             search={patroRouteLinkSearch(`/sait/${c.id}`, location, era)}
-            ne={`${c.ne} साइत`}
-            en={`${c.en} moment`}
-            blurbNe="शुभ मिति र व्याख्या"
-            blurbEn="Auspicious dates & explanation"
+            labelKey={`sait.categories.${c.id}`}
+            blurbKey="sidebar_nav.items.sait_moment.blurb"
             icon={HeartHandshake}
           />
         ))}

@@ -1,6 +1,7 @@
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Eclipse, MoonStar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { PageShell } from "@/components/PageShell";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
@@ -30,11 +31,13 @@ function fmtTime(iso?: string | null): string | null {
 }
 
 function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
-  const { pick, digits } = useLocale();
+  const { digits, lang } = useLocale();
+  const { t } = useTranslation();
   const begin = fmtTime(ev.begin_local);
   const end = fmtTime(ev.end_local);
   const max = fmtTime(ev.max_local);
   const isLunar = pageId === "chandra-grahan";
+  const typeLabel = lang === "en" ? ev.type_en : ev.type_ne;
   return (
     <div className={cn(patroCard, "flex flex-col")}>
       <div
@@ -43,9 +46,7 @@ function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
           ev.visible ? "bg-success/[0.12]" : "bg-secondary/[0.09] dark:bg-secondary/20",
         )}
       >
-        <span className="text-base font-bold text-foreground">
-          {pick(ev.type_ne, ev.type_en)}
-        </span>
+        <span className="text-base font-bold text-foreground">{typeLabel}</span>
         <span
           className={cn(
             "shrink-0 rounded-full px-2 py-0.5 text-xs font-bold",
@@ -55,13 +56,13 @@ function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
           )}
         >
           {ev.visible
-            ? pick("नेपालबाट देखिने", "Visible in Nepal")
-            : pick("नेपालबाट नदेखिने", "Not visible in Nepal")}
+            ? t("graha_pages.eclipse.visible_nepal")
+            : t("graha_pages.eclipse.not_visible_nepal")}
         </span>
       </div>
       <div className="flex flex-col gap-1.5 p-3.5 text-sm">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-muted-foreground">{pick("मिति", "Date")}</span>
+          <span className="text-muted-foreground">{t("graha_pages.eclipse.date")}</span>
           <span className="text-right font-semibold text-foreground">
             <span className="font-num tabular-nums">
               {ev.date_bs ? digits(ev.date_bs) : digits(ev.date_ad)}
@@ -69,13 +70,15 @@ function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-muted-foreground">{pick("मध्य (चरम)", "Maximum")}</span>
+          <span className="text-muted-foreground">{t("graha_pages.eclipse.maximum")}</span>
           <span className="font-num tabular-nums text-foreground">{max ? digits(max) : "—"}</span>
         </div>
         {ev.visible && begin ? (
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-muted-foreground">
-              {isLunar ? pick("आंशिक आरम्भ", "Partial begins") : pick("स्पर्श (आरम्भ)", "First contact")}
+              {isLunar
+                ? t("graha_pages.eclipse.partial_begins")
+                : t("graha_pages.eclipse.first_contact")}
             </span>
             <span className="font-num tabular-nums text-foreground">{digits(begin)}</span>
           </div>
@@ -83,7 +86,9 @@ function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
         {ev.visible && end ? (
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-muted-foreground">
-              {isLunar ? pick("आंशिक अन्त्य", "Partial ends") : pick("मोक्ष (अन्त्य)", "Last contact")}
+              {isLunar
+                ? t("graha_pages.eclipse.partial_ends")
+                : t("graha_pages.eclipse.last_contact")}
             </span>
             <span className="font-num tabular-nums text-foreground">{digits(end)}</span>
           </div>
@@ -94,7 +99,7 @@ function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
 }
 
 function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
   const routeApi = kind === "solar" ? suryaRouteApi : chandraRouteApi;
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
@@ -115,17 +120,13 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
     kind === "solar"
       ? {
           icon: <Eclipse className="h-6 w-6 text-accent dark:text-secondary" />,
-          ne: "सूर्य ग्रहण",
-          en: "Solar eclipse",
-          blurbNe: "वर्षभरका सूर्य ग्रहण र नेपालबाट देखिने अवस्था",
-          blurbEn: "The year's solar eclipses and visibility from Nepal",
+          titleKey: "graha_pages.eclipse_solar.title",
+          blurbKey: "graha_pages.eclipse_solar.blurb",
         }
       : {
           icon: <MoonStar className="h-6 w-6 text-accent dark:text-secondary" />,
-          ne: "चन्द्र ग्रहण",
-          en: "Lunar eclipse",
-          blurbNe: "वर्षभरका चन्द्र ग्रहण र नेपालबाट देखिने अवस्था",
-          blurbEn: "The year's lunar eclipses and visibility from Nepal",
+          titleKey: "graha_pages.eclipse_lunar.title",
+          blurbKey: "graha_pages.eclipse_lunar.blurb",
         };
 
   const events = query.data?.events ?? [];
@@ -134,10 +135,8 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
     <PageShell>
       <GrahaBanner
         icon={banner.icon}
-        ne={banner.ne}
-        en={banner.en}
-        blurbNe={banner.blurbNe}
-        blurbEn={banner.blurbEn}
+        titleKey={banner.titleKey}
+        blurbKey={banner.blurbKey}
       />
 
       <div className="space-y-3">
@@ -153,7 +152,7 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
       </div>
 
       {query.isLoading && !query.data ? (
-        <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+        <p className="text-sm">{t("common.loading")}</p>
       ) : query.data ? (
         events.length ? (
           <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -163,21 +162,18 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
           </div>
         ) : (
           <p className={cn(patroCard, "mt-2 p-4 text-sm text-muted-foreground")}>
-            {pick(
-              "यस वर्ष कुनै ग्रहण छैन।",
-              "There are no eclipses of this kind this year.",
-            )}
+            {t("graha_pages.eclipse.no_eclipses_year")}
           </p>
         )
       ) : (
-        <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>
+        <p className="text-sm text-danger">{t("common.load_error")}</p>
       )}
 
       <GrahaDescription pageId={pageId} />
 
       <p className="mt-6 text-sm">
         <Link to="/panchanga/details" className="text-primary underline">
-          {pick("← सबै पञ्चाङ्ग तत्त्वहरू", "← All panchanga elements")}
+          {t("element_page.all_elements")}
         </Link>
       </p>
     </PageShell>
