@@ -131,7 +131,13 @@ function buildPanchangaDetailCells(
       mono: true,
     },
     { label: t("aside.moonrise"), value: moonrise ?? t("sections.dash"), mono: true },
-    { label: t("aside.ritu"), value: getRituDisplay(p, lang), hint: getRituSeason(p, lang) },
+    (() => {
+      const value = getRituDisplay(p, lang);
+      const hint = getRituSeason(p, lang);
+      // Nepali names the season and the ritu with the same word — don't print
+      // "ग्रीष्म" twice.
+      return { label: t("aside.ritu"), value, hint: hint === value ? undefined : hint };
+    })(),
     {
       label: t("aside.nakshatra"),
       value: angaName(nakshatra, lang),

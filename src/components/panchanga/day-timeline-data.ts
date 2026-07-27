@@ -12,6 +12,7 @@ import {
   getSunrise,
   getSunset,
   toNepaliDigits,
+  toWesternRashi,
 } from "@/lib/panchanga-format";
 import { KARANA_EN, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
@@ -637,7 +638,9 @@ function lagnaSegments(spans?: LagnaSpanBlock[] | null): TimelineSegment[] {
   if (!spans?.length) return [];
   return spans.map((span, index) => ({
     name: span.name_ne ?? span.name ?? "",
-    nameEn: span.name ?? span.name_ne ?? "",
+    // The API's `name` is the Sanskrit romanization (Simha) — English readers
+    // get the western sign.
+    nameEn: toWesternRashi(span.name ?? span.name_ne) ?? "",
     endG: index < spans.length - 1 ? ghatiFromBlock(span) : null,
     transitionLocal:
       index < spans.length - 1 ? lagnaLocalClock(span.end_local_time) : undefined,
@@ -773,7 +776,7 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
       { label: "करण", en: "Karana", items: karanaSegments(karana) },
       {
         label: "चौघडिया",
-        en: weekdayEn,
+        en: "Choghadiya",
         kind: "choghadiya",
         items: cho.map((c) => ({
           name: c.name,
@@ -803,16 +806,16 @@ export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTime
           ]
         : []),
       ...(ashubha.length > 0
-        ? [{ label: "अशुभ", en: "Ashubha", kind: "ashubha" as const, items: [] }]
+        ? [{ label: "अशुभ", en: "Inauspicious", kind: "ashubha" as const, items: [] }]
         : []),
       ...(shubha.length > 0
-        ? [{ label: "शुभ", en: "Shubha", kind: "shubha" as const, items: [] }]
+        ? [{ label: "शुभ", en: "Auspicious", kind: "shubha" as const, items: [] }]
         : []),
       ...(grahaSpashta.length > 0
         ? [
             {
               label: "ग्रह",
-              en: "Planets at sunrise",
+              en: "Planets",
               kind: "graha" as const,
               items: grahaSegments(grahaSpashta),
             },
@@ -916,16 +919,16 @@ export function buildCivilTimelineData(
     { label: "नक्षत्र", en: "Nakshatra", items: angaItems(civil.rows.nakshatra, { toEn: nakEnOf }) },
     { label: "योग", en: "Yoga", items: angaItems(civil.rows.yoga, { toEn: yogaEnOf }) },
     { label: "करण", en: "Karana", items: angaItems(civil.rows.karana, { karana: true, toEn: karanaEnOf }) },
-    { label: "चौघडिया", en: civil.weekday_en ?? "", kind: "choghadiya", items: [] },
+    { label: "चौघडिया", en: "Choghadiya", kind: "choghadiya", items: [] },
     { label: "होरा", en: "Hora", kind: "hora", items: [] },
     ...(lagnaItems.length > 0
       ? [{ label: "लग्न", en: "Lagna", kind: "lagna" as const, items: lagnaItems }]
       : []),
     ...(ashubha.length > 0
-      ? [{ label: "अशुभ", en: "Ashubha", kind: "ashubha" as const, items: [] }]
+      ? [{ label: "अशुभ", en: "Inauspicious", kind: "ashubha" as const, items: [] }]
       : []),
     ...(shubha.length > 0
-      ? [{ label: "शुभ", en: "Shubha", kind: "shubha" as const, items: [] }]
+      ? [{ label: "शुभ", en: "Auspicious", kind: "shubha" as const, items: [] }]
       : []),
   ];
 

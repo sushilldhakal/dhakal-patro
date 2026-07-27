@@ -3,6 +3,7 @@ import type { CivilTimeline, PanchangaDay } from "@/lib/api";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import {
   formatDegreeInRashi,
+  formatRashiDisplay,
   getPlanetRows,
   getPlanetsAnchorLabel,
   getSunriseLagnaRow,
@@ -739,7 +740,7 @@ export function DayTimeline({
               className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-sm font-bold leading-none text-foreground [font-family:Mukta,sans-serif] sm:text-sm"
               style={{ top: `${((trackY(ti) + rowBandAt(ti) / 2) / H) * 100}%` }}
             >
-              {tr.ne}
+              {pick(tr.ne, tr.en ?? tr.ne)}
             </span>
           ))}
         </div>
@@ -799,10 +800,11 @@ export function DayTimeline({
               }) => {
               const labelL = pick(label, labelEn);
               const isLagna = planetKey === "lagna";
-              const rashiL = pick(
-                rashiNe ?? "—",
-                rashiEn ?? TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—",
-              );
+              // English readers get the western sign (Leo), not the Sanskrit
+              // romanization the API sends in `rashiEn` (Simha).
+              const rashiL =
+                formatRashiDisplay(rashiNe, rashiEn, lang) ??
+                pick(rashiNe ?? "—", TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—");
               // `07° सिंह 10′ 28″` when the longitude is known, else the |-cells fallback.
               const coordText =
                 siderealLongitude != null

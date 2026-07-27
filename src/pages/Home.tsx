@@ -148,9 +148,13 @@ function PanchangaAside({
     return "—";
   })();
 
+  // The day payload names festivals in `name` (Latin) + `name_ne`; only the
+  // yearly festivals API uses `name_en`. Read all three or English mode falls
+  // back to Devanagari.
+  const topFest = activeP?.festivals?.[0];
   const topFestName = pick(
-    activeP?.festivals?.[0]?.name_ne ?? activeP?.festivals?.[0]?.name_en ?? contextDay?.festivals[0],
-    activeP?.festivals?.[0]?.name_en ?? activeP?.festivals?.[0]?.name_ne ?? contextDay?.festivals[0],
+    topFest?.name_ne ?? topFest?.name_en ?? topFest?.name ?? contextDay?.festivals[0],
+    topFest?.name_en ?? topFest?.name ?? topFest?.name_ne ?? contextDay?.festivals[0],
   );
   const topFestIsPublic = activeP?.festivals?.[0]?.is_public_holiday ?? false;
   const bsYearForSamvatsara =
