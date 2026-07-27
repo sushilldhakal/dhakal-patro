@@ -3,12 +3,11 @@ import { useTranslation } from "react-i18next";
 import {
   PATRO_PLANET_KEYS,
   PATRO_PLANET_NE,
-  RASHI_COLUMNS_NE,
-  RASHI_COLUMNS_EN,
   type CalcNote,
   type GrahaSpashtaRow,
   type LagnaMatrixRow,
 } from "@/lib/dainikKranti/month-patro-tables";
+import { getRashiList } from "@/lib/rashi-i18n";
 import { cn } from "@/lib/utils";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -48,7 +47,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
         <div className="w-full min-w-0">
           <SectionTitle>{t("dainik.daily_lagna_start")}</SectionTitle>
           <div className={LAGNA_GRID}>
-            {RASHI_COLUMNS_NE.map((rne, i) => {
+            {getRashiList("ne").map((rne, i) => {
               const num = i + 1;
               const val = lagna.times[num];
               const late =
@@ -59,7 +58,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-1.5 py-1.5 text-center sm:px-2"
                 >
                   <div className="text-xs text-base leading-tight sm:text-sm">
-                    {bilingualText(lang, rne, RASHI_COLUMNS_EN[i])}
+                    {bilingualText(lang, rne, getRashiList("en")[i])}
                   </div>
                   <div
                     className={cn(

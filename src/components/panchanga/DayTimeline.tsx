@@ -3,21 +3,20 @@ import type { CivilTimeline, PanchangaDay } from "@/lib/api";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import {
   formatDegreeInRashi,
-  formatRashiDisplay,
   getPlanetRows,
   getPlanetsAnchorLabel,
   getSunriseLagnaRow,
 } from "@/lib/panchanga-format";
+import { formatRashiDisplay, resolveRashiDisplay } from "@/lib/rashi-i18n";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   buildCivilTimelineData,
   buildDayTimelineData,
   dualTimeAtGhati,
   needleGhatiOnVedicChart,
-  CHOGHADIYA_EN,
   type TimelineRowData,
 } from "./day-timeline-data";
-import { resolveRashiDisplay } from "@/lib/rashi-i18n";
+import { choghadiyaName } from "@/lib/choghadiya-display";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
@@ -349,7 +348,7 @@ export function DayTimeline({
         row.kind === "choghadiya"
           ? data.choghadiya.map((c) => ({
               ne: c.name,
-              en: CHOGHADIYA_EN[c.name] ?? c.name,
+              en: choghadiyaName(c.name, "en"),
               fromG: c.startG,
               toG: c.endG,
               bad: c.bad,

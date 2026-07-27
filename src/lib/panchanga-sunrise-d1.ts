@@ -4,7 +4,6 @@ import type { GrahaKey } from "@/lib/graha-details";
 import {
   getInstantLagna,
   getPlanetRows,
-  rashiNeFromNumber,
   resolveLagnaSiderealLongitude,
 } from "@/lib/panchanga-format";
 
@@ -43,8 +42,5 @@ export function buildPanchangaD1Houses(p: PanchangaDay | null | undefined): Bhav
   });
 
   if (!planetRashis.length) return null;
-  return buildBhavaChart(lagnaRashi, planetRashis, rashiNeFromNumber);
+  return buildBhavaChart(lagnaRashi, planetRashis);
 }
-
-/** @deprecated Use buildPanchangaD1Houses */
-export const buildSunriseD1Houses = buildPanchangaD1Houses;

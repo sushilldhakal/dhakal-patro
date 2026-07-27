@@ -24,7 +24,6 @@ import {
   getSuryaRashi,
   getVaaraNe,
   formatTithiWithPaksha,
-  rashiNeFromNumber,
 } from "@/lib/panchanga-format";
 import { getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
 import { resolveTimeZone } from "@/lib/zoned-time";
@@ -192,7 +191,11 @@ export function KundaliView({
 
   const moonRashiLabel = useMemo(() => {
     if (!moonRow) return undefined;
-    return bilingualText(lang, rashiNeFromNumber(moonRow.vargaRashi) ?? "—", rashiNeFromNumber(moonRow.vargaRashi) ?? "—");
+    return bilingualText(
+      lang,
+      formatRashiByNumber(moonRow.vargaRashi, "ne"),
+      formatRashiByNumber(moonRow.vargaRashi, "en"),
+    );
   }, [moonRow, lang]);
 
   const pickBi = (v?: BilingualValue | null) => (v ? bilingualText(lang, v.ne, v.en) : "—");
@@ -274,7 +277,7 @@ export function KundaliView({
     const d9 = detail?.vargaCharts?.entries?.["9"];
     const lagnaRow = d9?.find((row) => row.key === "lagna");
     if (!lagnaRow?.vargaRashi) return undefined;
-    const ne = rashiNeFromNumber(lagnaRow.vargaRashi) ?? "—";
+    const ne = formatRashiByNumber(lagnaRow.vargaRashi, "ne");
     const en = formatRashiByNumber(lagnaRow.vargaRashi, "en");
     return { ne, en };
   }, [detail]);
@@ -535,7 +538,6 @@ export function KundaliView({
           <PanchangaSection titleNe="कुण्डली चक्र" titleEn="Divisional Charts">
             <DivisionalChartCompare
               vargaCharts={detail.vargaCharts}
-              rashiNeFromNumber={rashiNeFromNumber}
               combustion={detail.combustion}
             />
           </PanchangaSection>

@@ -5,6 +5,3 @@
 export type ElementDescriptionSection = "what" | "how" | "meaning";
 
 export { elementDescriptionSection as getElementDescriptionText } from "@/lib/panchanga-i18n";
-
-/** @deprecated Descriptions moved to i18n JSON. */
-export const ELEMENT_DESCRIPTIONS: Record<string, never> = {};

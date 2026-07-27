@@ -275,35 +275,6 @@ export function PanchangaFieldCell({
   );
 }
 
-/** @deprecated use PanchangaFieldCell — kept for gradual migration. */
-export function PanchangaQuadRow({
-  left,
-  right,
-  className,
-}: {
-  left: { labelKey?: string; label?: string; children: React.ReactNode };
-  right?: { labelKey?: string; label?: string; children: React.ReactNode };
-  className?: string;
-}) {
-  return (
-    <>
-      <PanchangaFieldCell
-        labelKey={left.labelKey}
-        label={left.label}
-        className={className}
-        nowrap
-      >
-        {left.children}
-      </PanchangaFieldCell>
-      {right ? (
-        <PanchangaFieldCell labelKey={right.labelKey} label={right.label} nowrap>
-          {right.children}
-        </PanchangaFieldCell>
-      ) : null}
-    </>
-  );
-}
-
 /** Full-width label|value row (e.g. long lists). */
 export function PanchangaFullRow({
   labelKey,
@@ -331,37 +302,6 @@ export function PanchangaTableBody({
   className?: string;
 }) {
   return <div className={cn(panchangaCardGrid, className)}>{children}</div>;
-}
-
-/** @deprecated use PanchangaQuadRow */
-export function PanchangaRows({
-  children,
-}: {
-  children: React.ReactNode;
-  /** @deprecated ignored — use PanchangaQuadRow */
-  twoCol?: boolean;
-}) {
-  return <PanchangaTableBody>{children}</PanchangaTableBody>;
-}
-
-/** @deprecated use PanchangaQuadRow or PanchangaFullRow */
-export function PanchangaRow({
-  labelKey,
-  label,
-  children,
-  className,
-}: {
-  labelKey?: string;
-  label?: string;
-  children: React.ReactNode;
-  oddBorder?: boolean;
-  className?: string;
-}) {
-  return (
-    <PanchangaFullRow labelKey={labelKey} label={label} className={className}>
-      {children}
-    </PanchangaFullRow>
-  );
 }
 
 export function UptoValue({

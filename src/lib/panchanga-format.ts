@@ -2,24 +2,11 @@ import type { CalendarDay, Festival, NivasShoolBlock, PanchangaDay } from "./api
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import {
-  formatRashiByNumber,
   formatRashiDisplay,
   formatRashiDisplayNe,
   getRashiName,
   rashiNeFromNumber,
-  resolveRashiDisplay,
-  toWesternRashi,
 } from "@/lib/rashi-i18n";
-
-export {
-  formatRashiByNumber,
-  formatRashiDisplay,
-  formatRashiDisplayNe,
-  getRashiName,
-  rashiNeFromNumber,
-  resolveRashiDisplay,
-  toWesternRashi,
-};
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { normalizeLang, pickLocale } from "@/i18n/locale";
@@ -978,11 +965,6 @@ export function formatNepalSambatDisplay(
     return ns.year != null ? `ने.सं. ${toNepaliDigits(ns.year)} ${ns.label_ne}` : ns.label_ne;
   }
   return p.display?.ns_ne;
-}
-
-/** @deprecated use formatNepalSambatDisplay */
-export function formatNepalSambatShort(p: PanchangaDay): string | undefined {
-  return formatNepalSambatDisplay(p);
 }
 
 export function formatShakaYear(p: PanchangaDay): string | undefined {

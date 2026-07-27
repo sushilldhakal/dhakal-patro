@@ -106,7 +106,7 @@ export function resolveRashiDisplay(
   return fallback || undefined;
 }
 
-/** @deprecated Use {@link getRashiName}(n, "ne") */
+/** Nepali rashi label, or `undefined` when the index is missing/out of range. */
 export function rashiNeFromNumber(rashi?: number): string | undefined {
   if (rashi == null || rashi < 1 || rashi > RASHI_COUNT) return undefined;
   return getRashiName(rashi, "ne");

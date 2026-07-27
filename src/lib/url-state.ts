@@ -134,12 +134,6 @@ export function locationToSearch(loc: PanchangaLocation): LocationSearch {
   return out;
 }
 
-/**
- * Resolve AD vs BS from URL. Re-exported from {@link @/lib/patro-era}.
- * @deprecated Import {@link resolvePatroEra} from `@/lib/patro-era` instead.
- */
-export { resolvePatroEra, resolvePatroEra as resolvePatroUrlEra } from "@/lib/patro-era";
-
 /** Build era-aware month browse search params (+ optional route-specific keys). */
 export function buildPatroMonthBrowseSearch(
   loc: PanchangaLocation,

@@ -25,7 +25,6 @@ type PanelConfig = {
 function buildDivisionalHouses(
   { anchor, division }: PanelConfig,
   vargaCharts: VargaCharts,
-  rashiNeFromNumber: (rashi?: number) => string | undefined,
   combustion: Record<string, boolean | null>,
 ): BhavaHouse[] {
   const entries = vargaCharts.entries[String(division)] ?? [];
@@ -44,7 +43,7 @@ function buildDivisionalHouses(
       isCombust: combustion[e.key] ?? false,
     }));
 
-  return buildBhavaChart(anchorEntry.vargaRashi, planetRashis, rashiNeFromNumber);
+  return buildBhavaChart(anchorEntry.vargaRashi, planetRashis);
 }
 
 function useAnchorOptions(vargaCharts: VargaCharts) {
@@ -209,7 +208,6 @@ function ChartSlot({
 
 export type DivisionalChartCompareProps = {
   vargaCharts: VargaCharts;
-  rashiNeFromNumber: (rashi?: number) => string | undefined;
   /** Per-graha combustion (अस्त) flags from the kundali detail response. */
   combustion?: Record<string, boolean | null>;
   defaultLeft?: PanelConfig;
@@ -218,7 +216,6 @@ export type DivisionalChartCompareProps = {
 
 export function DivisionalChartCompare({
   vargaCharts,
-  rashiNeFromNumber,
   combustion = {},
   defaultLeft = { anchor: "lagna", division: 1 },
   defaultRight = { anchor: "moon", division: 9 },
@@ -240,13 +237,13 @@ export function DivisionalChartCompare({
   );
 
   const leftHouses = useMemo(
-    () => buildDivisionalHouses(safeLeft, vargaCharts, rashiNeFromNumber, combustion),
-    [safeLeft, vargaCharts, rashiNeFromNumber, combustion],
+    () => buildDivisionalHouses(safeLeft, vargaCharts, combustion),
+    [safeLeft, vargaCharts, combustion],
   );
 
   const rightHouses = useMemo(
-    () => buildDivisionalHouses(safeRight, vargaCharts, rashiNeFromNumber, combustion),
-    [safeRight, vargaCharts, rashiNeFromNumber, combustion],
+    () => buildDivisionalHouses(safeRight, vargaCharts, combustion),
+    [safeRight, vargaCharts, combustion],
   );
 
   if (anchorOptions.length === 0) return null;

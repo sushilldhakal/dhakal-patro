@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useCalendarEra, type CalendarEra } from "@/hooks/use-calendar-era";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import type { CalendarEra } from "@/lib/patro-era";
 import { useLocale } from "@/i18n/locale";
 import {
   adToBS,

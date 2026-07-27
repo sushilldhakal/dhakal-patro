@@ -5,14 +5,6 @@
  */
 
 import type { GrahaDignity, GrahaRelation } from "@/lib/api";
-import { getRashiName } from "@/lib/rashi-i18n";
-
-export { formatRashiByNumber, getRashiName, resolveRashiDisplay } from "@/lib/rashi-i18n";
-
-/** @deprecated Use getRashiName(n, "en") */
-export function rashiEnName(n: number): string {
-  return getRashiName(n, "en");
-}
 
 /** Nine grahas keyed the same way as the API planet blocks. */
 export type GrahaKey =

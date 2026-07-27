@@ -26,9 +26,6 @@ export const SEM = {
 export const SEM_EARTH_ORBIT_B = SEM.earthOrbitA * Math.sqrt(1 - SEM.earthOrbitE ** 2);
 export const SEM_MOON_ORBIT_B = SEM.moonOrbitA * Math.sqrt(1 - SEM.moonOrbitE ** 2);
 
-/** @deprecated use earthOrbitA — kept for any external refs */
-export const earthOrbitR = SEM.earthOrbitA;
-
 export const SYNODIC_MONTH = 29.530588;
 export const SIDEREAL_MONTH = 27.321661;
 export const TROPICAL_YEAR = 365.2422;

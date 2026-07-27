@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import type { CalendarEra } from "@/hooks/use-calendar-era";
+import type { CalendarEra } from "@/lib/patro-era";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { useLocale } from "@/i18n/locale";
 import { adToBS } from "@/lib/bs-calendar";

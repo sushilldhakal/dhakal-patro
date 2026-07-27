@@ -12,12 +12,11 @@ import {
   getSunrise,
   getSunset,
   toNepaliDigits,
-  toWesternRashi,
 } from "@/lib/panchanga-format";
+import { toWesternRashi } from "@/lib/rashi-i18n";
 import { KARANA_EN, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { resolveRashiDisplay } from "@/lib/rashi-i18n";
-import { choghadiyaTone } from "@/lib/choghadiya-display";
 
 /**
  * Devanagari → English for tithi / nakshatra / yoga / karana names. The daily
@@ -107,7 +106,6 @@ export interface TimelineSegment {
   subLabelEn?: string;
 }
 
-export { CHOGHADIYA_EN, choghadiyaTone } from "@/lib/choghadiya-display";
 
 /** Devanagari graha names → English, for the timeline graha row. */
 export const TL_GRAHA_EN: Record<string, string> = {
@@ -937,13 +935,6 @@ export function buildCivilTimelineData(
     ashubhaAll,
     shubha,
   };
-}
-
-export function choghadiyaQuality(name: string, bad?: boolean): "शुभ" | "अशुभ" | "सामान्य" {
-  const tone = choghadiyaTone(name, bad);
-  if (tone === "good") return "शुभ";
-  if (tone === "bad") return "अशुभ";
-  return "सामान्य";
 }
 
 /** Civil clock from sunrise; after 24:00 wraps to 1, 2, 3… (not 25, 26, 27). */

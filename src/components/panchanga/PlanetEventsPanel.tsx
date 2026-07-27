@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchGochar, gocharKeys, type LocationParams } from "@/lib/api";
-import { formatClockNepali, toWesternRashi } from "@/lib/panchanga-format";
+import {
+  formatClockNepali,
+} from "@/lib/panchanga-format";
+import { toWesternRashi } from "@/lib/rashi-i18n";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { resolveRashiDisplay } from "@/lib/rashi-i18n";
 import { useLocale, bilingualText } from "@/i18n/locale";

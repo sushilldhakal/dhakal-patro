@@ -1,8 +1,6 @@
 import { useCallback, useState } from "react";
 import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 
-export type PanchangaDataMode = "udaya" | "instant";
-
 const CLOCK_KEY = "dhakalPatroPanchClock";
 
 function pad2(n: number) {
@@ -51,12 +49,4 @@ export function usePanchangaClock(
   }, []);
 
   return { clock, setClock };
-}
-
-/** @deprecated Use usePanchangaClock — mode toggle removed from panchanga page. */
-export function usePanchangaMode(
-  defaultTimezone: string,
-  initial?: { mode?: PanchangaDataMode; clock?: string },
-) {
-  return usePanchangaClock(defaultTimezone, { clock: initial?.clock });
 }

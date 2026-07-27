@@ -216,19 +216,3 @@ export function buildRashyadiRangeTables(
 
   return { start, end };
 }
-
-/** @deprecated use buildRashyadiRangeTables */
-export function buildRashyadiSegments(
-  days: CalendarDay[],
-  allDays: CalendarDay[],
-  ingressEvents: GocharIngressEvent[],
-  pakshaSegmentOf: (day: CalendarDay) => PakshaSegmentInfo,
-): RashyadiSegment[] {
-  const { start, end } = buildRashyadiRangeTables(
-    days,
-    allDays,
-    ingressEvents,
-    pakshaSegmentOf,
-  );
-  return [start, end].filter((s): s is RashyadiSegment => s != null);
-}

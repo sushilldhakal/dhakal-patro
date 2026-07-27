@@ -2,10 +2,9 @@ import { useTranslation } from "react-i18next";
 import {
   PATRO_PLANET_KEYS,
   PATRO_PLANET_NE,
-  RASHI_COLUMNS_NE,
-  RASHI_COLUMNS_EN,
   type GrahaSpashtaRow,
 } from "@/lib/dainikKranti/month-patro-tables";
+import { getRashiList } from "@/lib/rashi-i18n";
 import { cn } from "@/lib/utils";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
@@ -142,12 +141,12 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
     <p className="border-t border-border px-4 py-2 text-sm leading-relaxed">
       {bilingualNode(lang, 
         <>
-          राशिहरू: {RASHI_COLUMNS_NE.join(", ")}। प्रत्येक ग्रहको कोष्ठकमा{" "}
+          राशिहरू: {getRashiList("ne").join(", ")}। प्रत्येक ग्रहको कोष्ठकमा{" "}
           <span className="font-mono">राशि अंश|कला|विकला</span> — जस्तै{" "}
           <span className="font-mono text-foreground">वृष १३|६|२९</span> = वृष राशि, १३ अंश ६ कला २९ विकला।
         </>,
         <>
-          Signs: {RASHI_COLUMNS_EN.join(", ")}. Each planet's bracket shows{" "}
+          Signs: {getRashiList("en").join(", ")}. Each planet's bracket shows{" "}
           <span className="font-mono">sign deg|kala|vikala</span> — e.g.{" "}
           <span className="font-mono text-foreground">Vrishabha 13|6|29</span> = Vrishabha sign, 13 deg 6 kala 29 vikala.
         </>,

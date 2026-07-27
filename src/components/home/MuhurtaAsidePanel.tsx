@@ -5,11 +5,13 @@ import type { ApiHoraSlot, NavataraRow, PanchangaDay, UdayaLagnaRow } from "@/li
 import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   buildDayTimelineData,
-  CHOGHADIYA_EN,
-  choghadiyaQuality,
-  choghadiyaTone,
   ghatiToCivilClockLabel,
 } from "@/components/panchanga/day-timeline-data";
+import {
+  choghadiyaName,
+  choghadiyaTone,
+  choghadiyaToneLabel,
+} from "@/lib/choghadiya-display";
 import {
   formatClockNepali,
   formatTimeRangeShort,
@@ -117,14 +119,13 @@ function ChoghadiyaList({ p }: { p: PanchangaDay }) {
     <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
       {timeline.choghadiya.map((seg, i) => {
         const tone = choghadiyaTone(seg.name, seg.bad);
-        const qualityNe = choghadiyaQuality(seg.name, seg.bad);
-        const qualityEn =
-          tone === "good" ? "Good" : tone === "bad" ? "Inauspicious" : "Neutral";
+        const qualityNe = choghadiyaToneLabel(seg.name, "ne", seg.bad);
+        const qualityEn = choghadiyaToneLabel(seg.name, "en", seg.bad);
         const range = `${ghatiToCivilClockLabel(seg.startG, sunriseMin)} – ${ghatiToCivilClockLabel(seg.endG, sunriseMin)}`;
         return (
           <li key={`${seg.name}-${i}`} className={patroNavataraRow(tone === "good" ? "good" : tone === "bad" ? "bad" : "neutral")}>
             <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-              {bilingualText(lang, seg.name, CHOGHADIYA_EN[seg.name] ?? seg.name)}
+              {bilingualText(lang, seg.name, choghadiyaName(seg.name, "en"))}
             </span>
             <span className="mono w-full text-center text-xs font-semibold leading-snug">
               {range}

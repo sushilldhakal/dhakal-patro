@@ -1,5 +1,7 @@
 /** Whole-sign house (bhava) mapping, derived from the Lagna's rashi. */
 
+import { formatRashiByNumber } from "@/lib/rashi-i18n";
+
 export interface BhavaPlanetEntry {
   key: string;
   labelNe: string;
@@ -35,8 +37,7 @@ export function buildBhavaChart(
     rashi: number;
     isRetrograde?: boolean;
     isCombust?: boolean;
-  }[],
-  rashiNeFromNumber: (rashi?: number) => string | undefined
+  }[]
 ): BhavaHouse[] {
   const houses: BhavaHouse[] = Array.from({ length: 12 }, (_, i) => {
     const house = i + 1;
@@ -44,7 +45,7 @@ export function buildBhavaChart(
     return {
       house,
       rashi,
-      rashiNe: rashiNeFromNumber(rashi) ?? "—",
+      rashiNe: formatRashiByNumber(rashi, "ne"),
       isLagna: house === 1,
       planets: [],
     };
@@ -125,10 +126,9 @@ export interface BhavaTableRow {
 export function buildBhavaTable(
   lagnaRashi: number,
   planetRashis: { key: string; labelNe: string; rashi: number }[],
-  ownedRashis: Record<string, number[]>,
-  rashiNeFromNumber: (rashi?: number) => string | undefined
+  ownedRashis: Record<string, number[]>
 ): BhavaTableRow[] {
-  const houses = buildBhavaChart(lagnaRashi, planetRashis, rashiNeFromNumber);
+  const houses = buildBhavaChart(lagnaRashi, planetRashis);
 
   const rashiOwner = new Map<number, string>();
   for (const [ownerKey, rashis] of Object.entries(ownedRashis)) {
