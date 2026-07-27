@@ -328,13 +328,17 @@ export function UptoValue({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-baseline gap-1.5",
-        compact ? "justify-between gap-2 w-full" : "flex-nowrap",
+        // `flex-wrap`, not nowrap: an English end time ("tomorrow 20:21 until")
+        // is on its own wider than a half-width card, so forcing it to share a
+        // line makes the name overflow its min-w-0 box and render on top of it.
+        "flex min-w-0 items-baseline gap-x-1.5 gap-y-0.5",
+        compact ? "justify-between gap-2 w-full" : "flex-wrap",
       )}
     >
       <span className="inline-flex min-w-0 items-baseline gap-1.5">
         {sym && <span className="text-sm shrink-0">{sym}</span>}
-        <span className="font-semibold whitespace-normal sm:whitespace-nowrap">{name}</span>
+        {/* min-w-0 so a long name wraps inside the card instead of spilling. */}
+        <span className="min-w-0 font-semibold">{name}</span>
         {badge && (
           <span className="text-sm font-semibold px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary dark:text-accent">
             {badge}
@@ -342,7 +346,9 @@ export function UptoValue({
         )}
       </span>
       {endTime && (
-        <span className="text-sm font-mono font-semibold text-foreground whitespace-normal sm:whitespace-nowrap shrink-0">
+        // Wrappable at its spaces ("tomorrow 20:21 until" is wider than a
+        // half-width card); the clock itself has none, so it never splits.
+        <span className="min-w-0 text-sm font-mono font-semibold text-foreground">
           {endTime} {t("sections.until")}
         </span>
       )}
