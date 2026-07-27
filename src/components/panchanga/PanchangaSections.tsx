@@ -131,7 +131,7 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
   const bs = (detail?.bs_date ?? p.bs_date) as
     | { year?: number; month_name_ne?: string; month_name?: string; day?: number }
     | undefined;
-  const ns = formatNepalSambatDisplay(p);
+  const ns = formatNepalSambatDisplay(p, lang);
   const shaka = formatShakaYear(p);
   const samvatsara = bs?.year
     ? resolveSamvatsaraForBsYear(bs.year, p.samvatsara)

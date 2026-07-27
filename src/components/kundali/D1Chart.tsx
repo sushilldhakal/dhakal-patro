@@ -26,9 +26,10 @@ const PLANET_ABBR_EN: Record<string, string> = {
   venus: "Ve", saturn: "Sa", rahu: "Ra", ketu: "Ke",
 };
 
+/** Western signs — English readers read "Leo", not the Sanskrit "Simha". */
 const RASHI_EN = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
+  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
 ];
 
 interface Props {

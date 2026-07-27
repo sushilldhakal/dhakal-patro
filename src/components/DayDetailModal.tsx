@@ -317,17 +317,17 @@ function PanchangaFull({
             <div className="text-sm font-semibold">{formatShakaYear(p)}</div>
           </div>
         )}
-        {formatNepalSambatDisplay(p) && (
+        {formatNepalSambatDisplay(p, lang) && (
           <div className={metaCard}>
             <div className={metaLabel}>{pick("नेपाल संवत्", "Nepal Samvat")}</div>
-            <div className="text-sm font-semibold">{formatNepalSambatDisplay(p)}</div>
+            <div className="text-sm font-semibold">{formatNepalSambatDisplay(p, lang)}</div>
           </div>
         )}
       </div>
 
       <PanchangaTable
         rows={[
-          { label: pick("उत्तरायण", "Ayana"), value: aayan },
+          { label: pick("उत्तरायण", "Sun's course"), value: aayan },
           { label: pick("ऋतु", "Ritu"), value: ritu },
           { label: pick("वार", "Day"), value: vaara },
           { label: pick("पक्ष", "Paksha"), value: paksha },

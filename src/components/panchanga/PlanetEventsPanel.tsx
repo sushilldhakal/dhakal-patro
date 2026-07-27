@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchGochar, gocharKeys, type LocationParams } from "@/lib/api";
-import { formatClockNepali } from "@/lib/panchanga-format";
+import { formatClockNepali, toWesternRashi } from "@/lib/panchanga-format";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { useLocale } from "@/i18n/locale";
 import { patroCard } from "@/lib/patro-classes";
@@ -81,7 +81,7 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
         key,
         symbol: g.symbol,
         ne: `${g.name_ne} ${rashi}मा प्रवेश`,
-        en: `${enName} enters ${entry.to_rashi}`,
+        en: `${enName} enters ${toWesternRashi(entry.to_rashi) ?? entry.to_rashi}`,
         time,
         rel,
         sortKey: entry.entry_time_local,

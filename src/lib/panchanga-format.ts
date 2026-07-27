@@ -355,7 +355,9 @@ export function getRituDisplay(p?: PanchangaDay | null, lang?: string): string |
   const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
   const top = typeof p.ritu === "object" ? p.ritu : undefined;
   const ne = ritu?.name_ne ?? top?.name_ne ?? p.ritu_ne;
-  const en = ritu?.name ?? top?.name ?? ritu?.season ?? top?.season ?? ne;
+  // English leads with the season (Summer); the Sanskrit ritu name is the hint
+  // underneath it, so the headline value is a word the reader knows.
+  const en = ritu?.season ?? top?.season ?? ritu?.name ?? top?.name ?? ne;
   return pickLocale(lang, ne, en);
 }
 
@@ -366,7 +368,11 @@ export function getRituSeason(p?: PanchangaDay | null, lang?: string): string | 
     ritu?.season ??
     (typeof p.ritu === "object" ? p.ritu?.season : undefined);
   if (!season) return undefined;
-  if (normalizeLang(lang) === "en") return season;
+  // English shows the season as the headline value, so the hint carries the
+  // Sanskrit name instead of repeating it.
+  if (normalizeLang(lang) === "en") {
+    return ritu?.name ?? (typeof p.ritu === "object" ? p.ritu?.name : undefined) ?? season;
+  }
   const SEASON_NE: Record<string, string> = {
     Spring: "वसन्त",
     Summer: "ग्रीष्म",
@@ -427,16 +433,29 @@ export function formatRituLabel(
 ): string | undefined {
   if (!ritu) return undefined;
   const name = pickLocale(lang, ritu.name_ne ?? ritu.name ?? "", ritu.name ?? ritu.name_ne ?? "");
-  if (lang === "en" && ritu.season) return `${name} (${ritu.season})`;
+  // English leads with the season the reader knows and keeps the Sanskrit name
+  // as the gloss — "Summer (Grishma)", not "Grishma (Summer)".
+  if (lang === "en" && ritu.season) return `${ritu.season} (${name})`;
   return name;
 }
+
+/** English gloss for the sun's half-year course, keyed by its Sanskrit name. */
+const AAYAN_EN: Record<string, string> = {
+  Uttarayana: "Northern course",
+  Uttarayan: "Northern course",
+  Dakshinayana: "Southern course",
+  Dakshinayan: "Southern course",
+};
 
 export function formatAayanLabel(
   aayan: AayanBlock | undefined,
   lang: "ne" | "en" | "hi",
 ): string | undefined {
   if (!aayan) return undefined;
-  return pickLocale(lang, aayan.name_ne ?? aayan.name ?? "", aayan.name ?? aayan.name_ne ?? "");
+  const name = pickLocale(lang, aayan.name_ne ?? aayan.name ?? "", aayan.name ?? aayan.name_ne ?? "");
+  if (lang !== "en") return name;
+  const gloss = AAYAN_EN[name];
+  return gloss ? `${gloss} (${name})` : name;
 }
 
 export function formatSolarCorrectionDisplay(
@@ -473,14 +492,22 @@ function addDaysIso(isoDate: string, days: number): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-/** BS date label for a civil (AD) calendar day, e.g. जेठ २९ / Jestha 29. */
-function formatEventDateBs(isoDate: string, lang?: string): string {
+/**
+ * Date a moon event falls on, in the reader's calendar: the BS date in Nepali
+ * (जेठ २९), the Gregorian one in English (May 12) — matching the era each
+ * language reads the rest of the app in.
+ */
+function formatEventDate(isoDate: string, lang?: string): string {
   const [y, m, d] = isoDate.split("-").map(Number);
   if (!y || !m || !d) return formatLocaleDigits(isoDate, lang);
+  if (normalizeLang(lang) === "en") {
+    return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  }
   const bs = adToBS(new Date(y, m - 1, d));
-  const isEn = normalizeLang(lang) === "en";
-  const monthName = isEn ? BS_MONTH_NAMES[bs.month - 1] : BS_MONTHS_NE[bs.month - 1];
-  return `${monthName} ${formatLocaleDigits(bs.day, lang)}`;
+  return `${BS_MONTHS_NE[bs.month - 1]} ${formatLocaleDigits(bs.day, lang)}`;
 }
 
 /** BS date from YYYY-MM-DD (BS era), e.g. जेठ १५, वि.सं. २०८२. */
@@ -576,7 +603,7 @@ export function formatMoonEventDisplay(
   const eventDate = resolveMoonEventAdDate(p, key, block);
   if (!time) return undefined;
   if (!eventDate) return time;
-  return `${formatEventDateBs(eventDate, lang)} · ${time}`;
+  return `${formatEventDate(eventDate, lang)} · ${time}`;
 }
 
 export function formatMonthMoonEventDisplay(
@@ -601,7 +628,7 @@ export function formatMonthMoonEventDisplay(
   const timeLabel = formatLocaleDigits(short, lang);
   if (!timeLabel) return undefined;
   if (!eventDate) return timeLabel;
-  return `${formatEventDateBs(eventDate, lang)} · ${timeLabel}`;
+  return `${formatEventDate(eventDate, lang)} · ${timeLabel}`;
 }
 
 /** Month patro grid — clock only (no BS date prefix when moon event is next/prior civil day). */
@@ -774,8 +801,11 @@ export function formatPakshaLabel(
 
   if (normalizeLang(lang) !== "en") return ne ?? enRaw;
 
-  // Prefer a clean Latin label from the API.
-  if (enRaw && !/[\u0900-\u097F]/.test(enRaw)) return enRaw;
+  // Prefer a clean Latin label from the API, title-cased \u2014 it arrives as
+  // "Ashadh shukla paksha" and sits next to title-cased tithi/nakshatra.
+  if (enRaw && !/[\u0900-\u097F]/.test(enRaw)) {
+    return enRaw.replace(/\b\p{Ll}/gu, (c) => c.toUpperCase());
+  }
 
   if (!ne) return enRaw;
   let out = ne;
@@ -853,21 +883,39 @@ export function formatNepalSambatSubtitle(p: PanchangaDay): string | undefined {
   return display?.ns_ne ?? p.display?.ns_ne;
 }
 
-export function formatNepalSambatDisplay(p: PanchangaDay): string | undefined {
+export function formatNepalSambatDisplay(
+  p: PanchangaDay,
+  lang?: string,
+): string | undefined {
   const detail = getPanchangaDetail(p);
   const display = detail?.display as { ns_ne?: string } | undefined;
   const ns = detail?.ns_date as {
     year?: number;
+    paksha?: string;
     paksha_ne?: string;
     day?: number;
     label_ne?: string;
   } | undefined;
-  const tithiNe =
-    (detail?.tithi as { name_ne?: string } | undefined)?.name_ne ??
-    p.tithi?.name_ne;
+  const tithi = (detail?.tithi ?? p.tithi) as
+    | { name?: string; name_ne?: string }
+    | undefined;
+  const isEn = normalizeLang(lang) === "en";
 
-  if (ns?.year != null && ns.paksha_ne && tithiNe && ns.day != null) {
-    return `ने.सं. ${toNepaliDigits(ns.year)} ${ns.paksha_ne} ${tithiNe} - ${toNepaliDigits(ns.day)}`;
+  // English builds the label from the Latin fields — the Nepali `label_ne` /
+  // `ns_ne` strings the API pre-renders are Devanagari all the way through.
+  if (isEn) {
+    const paksha = ns?.paksha
+      ? `${ns.paksha.charAt(0).toUpperCase()}${ns.paksha.slice(1)} Paksha`
+      : undefined;
+    if (ns?.year != null && paksha && tithi?.name && ns.day != null) {
+      return `NS ${ns.year} ${paksha} ${tithi.name} - ${ns.day}`;
+    }
+    if (ns?.year != null) return `NS ${ns.year}`;
+    return undefined;
+  }
+
+  if (ns?.year != null && ns.paksha_ne && tithi?.name_ne && ns.day != null) {
+    return `ने.सं. ${toNepaliDigits(ns.year)} ${ns.paksha_ne} ${tithi.name_ne} - ${toNepaliDigits(ns.day)}`;
   }
 
   if (display?.ns_ne) return display.ns_ne;
@@ -1047,6 +1095,17 @@ const RASHI_EN_TO_NE: Record<string, string> = {
   Kumbha: "कुम्भ",
   Meena: "मीन",
 };
+
+/**
+ * Western zodiac name for a rāśi given in Devanagari (सिंह) or in the Sanskrit
+ * romanization the API sends (Simha). Unknown names pass through, so a value
+ * that is already western (Leo) stays put.
+ */
+export function toWesternRashi(name?: string | null): string | undefined {
+  if (!name) return undefined;
+  const raw = name.trim();
+  return RASHI_EN_TO_WESTERN[raw] ?? RASHI_NE_TO_WESTERN[raw] ?? raw;
+}
 
 /** Locale-aware rashi label: Devanagari for ne, Western zodiac for en. */
 export function formatRashiDisplay(
@@ -2191,9 +2250,12 @@ export function getEventNames(
 ): string[] {
   const isEn = (lang ?? "ne").slice(0, 2) === "en";
   const fromApi = (p.festivals ?? [])
+    // The day payload names festivals in `name` (Latin); only the yearly
+    // festivals API fills `name_en`. English reads both before falling back to
+    // Devanagari.
     .map((f) =>
       isEn
-        ? (f.name_en ?? f.name_ne ?? f.name ?? "")
+        ? (f.name_en ?? f.name ?? f.name_ne ?? "")
         : (f.name_ne ?? f.name_en ?? f.name ?? ""),
     )
     .filter(Boolean);
@@ -2204,13 +2266,18 @@ export function getEventNames(
   return merged;
 }
 
-export function getShraddhaLabel(tithiNameNe?: string | null, lang?: string): string | undefined {
+export function getShraddhaLabel(
+  tithiNameNe?: string | null,
+  lang?: string,
+  tithiNameEn?: string | null,
+): string | undefined {
   if (!tithiNameNe) return undefined;
   if (tithiNameNe === "पूर्णिमा" || tithiNameNe === "औंसी") return undefined;
   const isEn = (lang ?? "ne").slice(0, 2) === "en";
   if (isEn) {
-    // Keep the Nepali tithi token when we lack an English map; callers pass localized day festivals.
-    return `${tithiNameNe} Shraddha`;
+    // Falls back to the Devanagari tithi only when the payload has no Latin
+    // name — otherwise this read "त्रयोदशी Shraddha" in English.
+    return `${tithiNameEn ?? tithiNameNe} Shraddha`;
   }
   return `${tithiNameNe} श्राद्ध`;
 }
@@ -2244,11 +2311,16 @@ export function getDinVisheshLabels(
     labels.push(ekadashi);
   }
 
-  const tithiNe =
-    (detail?.tithi as { name_ne?: string } | undefined)?.name_ne ??
-    p.tithi?.name_ne;
-  const shraddha = getShraddhaLabel(tithiNe, lang);
-  if (shraddha && !labels.some((label) => label.includes(tithiNe ?? ""))) {
+  const tithiBlock = (detail?.tithi ?? p.tithi) as
+    | { name?: string; name_ne?: string }
+    | undefined;
+  const tithiNe = tithiBlock?.name_ne;
+  const tithiEn = tithiBlock?.name;
+  const shraddha = getShraddhaLabel(tithiNe, lang, tithiEn);
+  if (
+    shraddha &&
+    !labels.some((label) => label.includes(isEn ? (tithiEn ?? tithiNe ?? "") : (tithiNe ?? "")))
+  ) {
     labels.push(shraddha);
   }
 
