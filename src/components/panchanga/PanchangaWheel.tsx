@@ -25,7 +25,7 @@ import {
   DEFAULT_WHEEL_TWEAKS,
   gClock,
   scrubGToDatetime,
-  WHEEL_RASHIS,
+  getWheelRashis,
   type WheelDetail,
 } from "@/lib/wheel-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
@@ -504,7 +504,7 @@ function PanchangaWheelBody({
         </div>
       );
     } else {
-      const rs = WHEEL_RASHIS[hover.i]!;
+      const rs = getWheelRashis()[hover.i]!;
       tipNode = (
         <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
           <div className={wheelTipKind}>{bilingualText(lang, "राशि", "Rashi")} · {num(hover.i + 1)}</div>

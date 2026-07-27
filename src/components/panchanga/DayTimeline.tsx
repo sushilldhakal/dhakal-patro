@@ -52,8 +52,10 @@ import {
 } from "@/lib/timeline-classes";
 
 const W = 1000;
-/** Left inset for row labels + start of the ghati grid (~26px tighter than before). */
-const X0 = 70;
+/** Left inset for row labels + start of the ghati grid. Wide enough that the
+ *  longest English row label ("Inauspicious") still fits the frozen label
+ *  column at the 768px minimum chart width. */
+const X0 = 120;
 const X1 = 994;
 const RULER_H = 58;
 const MOON_BAND_H = 20;
@@ -727,7 +729,7 @@ export function DayTimeline({
             scaling on every screen size. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1 top-3 bottom-1 z-10 w-[52px] sm:w-[62px]"
+          className="pointer-events-none absolute left-1 top-3 bottom-1 z-10 w-[84px] lg:w-[104px]"
         >
           <div
             className="absolute inset-x-0 bottom-0 border-r border-border bg-card shadow-[3px_0_6px_-3px_color-mix(in_srgb,var(--foreground)_28%,transparent)]"
@@ -736,7 +738,7 @@ export function DayTimeline({
           {tracks.map((tr, ti) => (
             <span
               key={tr.key}
-              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-sm font-bold leading-none text-foreground [font-family:Mukta,sans-serif] sm:text-sm"
+              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] font-bold leading-none text-foreground [font-family:Mukta,sans-serif] sm:text-xs lg:text-sm"
               style={{ top: `${((trackY(ti) + rowBandAt(ti) / 2) / H) * 100}%` }}
             >
               {bilingualText(lang, tr.ne, tr.en ?? tr.ne)}

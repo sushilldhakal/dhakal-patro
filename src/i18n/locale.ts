@@ -12,12 +12,21 @@ export function normalizeLang(lang?: string): Lang {
   return (lang ?? i18n.language ?? "ne").slice(0, 2) === "en" ? "en" : "ne";
 }
 
-/** Active UI language — prefers resolvedLanguage and stored preference on client. */
+/**
+ * Active UI language — prefers resolvedLanguage and stored preference on client.
+ *
+ * English copy is code-split and loaded on demand, so `lng` can be "en" while
+ * the bundle is still in flight. Reporting "en" during that window makes
+ * `t()`/`bilingualText` hand back the Nepali fallback under an English label,
+ * and any value memoized in that render stays Nepali for good. Until the
+ * bundle is actually present the UI genuinely is Nepali, so say so.
+ */
 export function resolveActiveLang(i18nLang?: string, resolvedLang?: string): Lang {
-  const fromI18n = normalizeLang(resolvedLang ?? i18nLang);
-  if (fromI18n === "en") return "en";
-  if (isBrowser && getStoredLanguage() === "en") return "en";
-  return "ne";
+  const wantsEnglish =
+    normalizeLang(resolvedLang ?? i18nLang) === "en" ||
+    (isBrowser && getStoredLanguage() === "en");
+  if (!wantsEnglish) return "ne";
+  return i18n.hasResourceBundle("en", "translation") ? "en" : "ne";
 }
 
 /** Pick the English or Nepali variant of a value based on the active language. */

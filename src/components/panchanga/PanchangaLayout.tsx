@@ -68,7 +68,9 @@ function QuadValue({
     <div
       className={cn(
         "text-sm text-base leading-snug flex items-baseline gap-x-2 gap-y-1 min-w-0",
-        nowrap ? "flex-nowrap whitespace-nowrap" : "flex-wrap",
+        // Half-width cards on phones can't honour nowrap without spilling out of
+        // the card, so let values wrap there and hold the single line from `sm`.
+        nowrap ? "flex-wrap whitespace-normal sm:flex-nowrap sm:whitespace-nowrap" : "flex-wrap",
         className,
       )}
     >
@@ -81,9 +83,13 @@ function QuadValue({
 export const panchangaCardGrid =
   "flex w-full flex-wrap justify-center gap-2 p-4";
 
-/** Content-sized card; width follows label + value, never stretches. */
+/**
+ * Two-up on phones, content-sized from `sm` upward. Below 640px a content-sized
+ * card whose label is long eats the whole row, so pin the basis to half the grid
+ * (minus half the 0.5rem gap) and let the label wrap into it instead.
+ */
 export const panchangaCardBase =
-  "inline-flex w-max max-w-full shrink-0 grow-0 flex-col gap-1 rounded-xl border border-border/80 bg-background/60 px-3.5 py-2.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--foreground)_6%,transparent)]";
+  "inline-flex min-w-0 max-w-full basis-[calc(50%-0.25rem)] grow flex-col gap-1 rounded-xl border border-border/80 bg-background/60 px-3.5 py-2.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--foreground)_6%,transparent)] sm:w-max sm:max-w-full sm:shrink-0 sm:grow-0 sm:basis-auto";
 
 /** Full-width subgroup label inside a card grid (forces a new row). */
 export function PanchangaGroupLabel({
@@ -130,9 +136,9 @@ export function PanchangaBalamCard({
         className,
       )}
     >
-      <span className="text-sm font-bold leading-snug text-foreground whitespace-nowrap">{titleLine}</span>
+      <span className="text-sm font-bold leading-snug text-foreground whitespace-normal sm:whitespace-nowrap">{titleLine}</span>
       {subtitleLine ? (
-        <span className="text-xs font-semibold leading-snug text-muted-foreground whitespace-nowrap">
+        <span className="text-xs font-semibold leading-snug text-muted-foreground whitespace-normal sm:whitespace-nowrap">
           {subtitleLine}
         </span>
       ) : null}
@@ -163,9 +169,9 @@ export function PanchangaLagnaCard({
         className,
       )}
     >
-      <span className="text-sm font-bold leading-snug text-foreground whitespace-nowrap">{titleLine}</span>
+      <span className="text-sm font-bold leading-snug text-foreground whitespace-normal sm:whitespace-nowrap">{titleLine}</span>
       {footerLine ? (
-        <span className="text-xs font-semibold leading-snug text-muted-foreground whitespace-nowrap">
+        <span className="text-xs font-semibold leading-snug text-muted-foreground whitespace-normal sm:whitespace-nowrap">
           {footerLine}
         </span>
       ) : null}
@@ -198,19 +204,19 @@ export function PanchangaTimingCard({
     >
       <span
         className={cn(
-          "text-sm font-semibold whitespace-nowrap",
+          "text-sm font-semibold whitespace-normal sm:whitespace-nowrap",
           highlight ? "text-success" : "text-muted-foreground",
         )}
       >
         {label}
       </span>
       {time ? (
-        <span className="font-mono text-sm font-semibold tabular-nums whitespace-nowrap">
+        <span className="font-mono text-sm font-semibold tabular-nums whitespace-normal sm:whitespace-nowrap">
           {time}
         </span>
       ) : null}
       {note ? (
-        <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">{note}</span>
+        <span className="text-xs font-mono text-muted-foreground whitespace-normal sm:whitespace-nowrap">{note}</span>
       ) : null}
     </div>
   );
@@ -228,7 +234,7 @@ export function PanchangaChipGroupCard({
 }) {
   return (
     <div className={cn(panchangaCardBase, "gap-2", className)}>
-      <h3 className="m-0 text-sm font-semibold text-muted-foreground whitespace-nowrap">{title}</h3>
+      <h3 className="m-0 text-sm font-semibold text-muted-foreground whitespace-normal sm:whitespace-nowrap">{title}</h3>
       {children}
     </div>
   );
@@ -267,7 +273,7 @@ export function PanchangaFieldCell({
 
   return (
     <div className={cn(panchangaCardBase, className)}>
-      <QuadLabel className="shrink-0 whitespace-nowrap text-muted-foreground">
+      <QuadLabel className="shrink-0 whitespace-normal text-muted-foreground sm:whitespace-nowrap">
         {rowLabel(labelKey, label, t)}
       </QuadLabel>
       <QuadValue nowrap={nowrap}>{children}</QuadValue>
@@ -328,7 +334,7 @@ export function UptoValue({
     >
       <span className="inline-flex min-w-0 items-baseline gap-1.5">
         {sym && <span className="text-sm shrink-0">{sym}</span>}
-        <span className="font-semibold whitespace-nowrap">{name}</span>
+        <span className="font-semibold whitespace-normal sm:whitespace-nowrap">{name}</span>
         {badge && (
           <span className="text-sm font-semibold px-1.5 py-0.5 rounded-full bg-secondary/15 text-secondary dark:text-accent">
             {badge}
@@ -336,7 +342,7 @@ export function UptoValue({
         )}
       </span>
       {endTime && (
-        <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap shrink-0">
+        <span className="text-sm font-mono font-semibold text-foreground whitespace-normal sm:whitespace-nowrap shrink-0">
           {endTime} {t("sections.until")}
         </span>
       )}

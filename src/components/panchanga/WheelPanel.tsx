@@ -4,7 +4,7 @@ import {
   PADA_AKSHAR,
   RASHI_ELEM,
   RASHI_LORDS,
-  WHEEL_RASHIS,
+  getWheelRashis,
 } from "@/lib/wheel-data";
 import type { WheelPick } from "./WheelChart";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -42,6 +42,7 @@ interface WheelPanelProps {
 
 export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
   const { lang, isEnglish } = useLocale();
+  const WHEEL_RASHIS = getWheelRashis();
   let body: React.ReactNode = null;
 
   if (sel?.type === "nak") {

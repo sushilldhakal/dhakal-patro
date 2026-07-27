@@ -6,7 +6,7 @@ import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edR
 import { Pause, Play } from "lucide-react";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
-import { WHEEL_RASHIS } from "@/lib/wheel-data";
+import { getWheelRashis } from "@/lib/wheel-data";
 import { SunEarthMoonOrbit } from "./SunEarthMoonOrbit";
 import {
   BS_MONTHS,
@@ -31,6 +31,7 @@ const PRESETS = [
 export function SunEarthMoonStudy() {
   const { t } = useTranslation();
   const { digits, lang } = useLocale();
+  const WHEEL_RASHIS = getWheelRashis();
   const [day, setDay] = useState(0);
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);

@@ -280,7 +280,7 @@ export function KundaliView({
     const ne = formatRashiByNumber(lagnaRow.vargaRashi, "ne");
     const en = formatRashiByNumber(lagnaRow.vargaRashi, "en");
     return { ne, en };
-  }, [detail]);
+  }, [detail, lang]);
 
   const aayanLabel = useMemo(() => {
     if (!data) return undefined;
