@@ -9,7 +9,6 @@ import {
 } from "@/lib/rashi-i18n";
 import { formatBsIsoDateNepali, toNepaliDigits } from "@/lib/panchanga-format";
 
-export { getRashiList, getRashiName, rashiNumberFromName, resolveRashiDisplay } from "@/lib/rashi-i18n";
 
 export const GRAHA_CHART_LABEL: Record<string, string> = {
   sun: "सू.",

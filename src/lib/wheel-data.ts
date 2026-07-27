@@ -460,7 +460,10 @@ export function buildWheelMarkersAtTime(p: PanchangaDay): WheelMarkers {
   return buildWheelMarkersFromDetail(det, lagnaLongitudeFromPanchanga(p));
 }
 
-/** @deprecated Use buildWheelMarkersFromDetail with API at-time scrub data. */
+/**
+ * Ghati-extrapolated markers, used only while the exact at-time response is
+ * still loading. Prefer {@link buildWheelMarkersAtTime} once that data lands.
+ */
 export function buildWheelMarkers(
   p: PanchangaDay,
   det: WheelDetail,

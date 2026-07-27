@@ -4,7 +4,7 @@ import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-loc
 import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect } from "@/components/BsNativeSelect";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { CalendarEra } from "@/hooks/use-calendar-era";
+import type { CalendarEra } from "@/lib/patro-era";
 import { useLocale } from "@/i18n/locale";
 import { adToBS, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { getBsYearSpanLabel } from "@/lib/local-calendar";

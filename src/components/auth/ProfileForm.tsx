@@ -75,7 +75,6 @@ export function ProfileForm({
   }
 
   async function onSubmit(e: React.FormEvent) {
-  const { t } = useTranslation();
     e.preventDefault();
     if (!form.full_name.trim()) {
       setError(t("profile.name_required"));

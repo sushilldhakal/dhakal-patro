@@ -1358,11 +1358,6 @@ export function Eclipses() {
   );
 }
 
-/** @deprecated merged into {@link Eclipses} */
-export const LunarEclipse = Eclipses;
-/** @deprecated merged into {@link Eclipses} */
-export const SolarEclipse = Eclipses;
-
 export function Ayanamsha() {
       const { lang } = useLocale();
   return bilingualNode(lang, <>

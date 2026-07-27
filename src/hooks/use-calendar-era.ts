@@ -2,12 +2,6 @@ import { useSyncExternalStore } from "react";
 import i18n from "@/i18n";
 import { type CalendarEra, readCalendarEra } from "@/lib/patro-era";
 
-export type { CalendarEra } from "@/lib/patro-era";
-export { readCalendarEra, resolvePatroEra } from "@/lib/patro-era";
-
-/** @deprecated Use {@link resolvePatroEra} from `@/lib/patro-era`. */
-export { resolvePatroEra as resolvePatroUrlEra } from "@/lib/patro-era";
-
 function subscribe(onStoreChange: () => void): () => void {
   const handler = () => onStoreChange();
   i18n.on("languageChanged", handler);

@@ -250,20 +250,6 @@ export const patroHeroMonthOverlay =
 export const patroHeroMonthShell =
   "relative isolate overflow-hidden bg-cover bg-center bg-no-repeat";
 
-/** @deprecated use patroHeroMonthShell — kept for any legacy dark hero usage */
-export const patroHeroDeco = cn(
-  "relative isolate overflow-hidden",
-  "before:pointer-events-none before:absolute before:-z-10 before:rounded-full before:blur-[46px]",
-  "before:w-[260px] before:h-[260px] before:-top-[110px] before:-right-[70px]",
-  "before:bg-[radial-gradient(circle,rgba(0,170,180,0.45),transparent_70%)]",
-  "before:animate-[pn-drift_22s_ease-in-out_infinite_alternate]",
-  "after:pointer-events-none after:absolute after:-z-10 after:rounded-full after:blur-[46px]",
-  "after:w-[220px] after:h-[220px] after:-bottom-[120px] after:-left-[60px]",
-  "after:bg-[radial-gradient(circle,rgba(255,215,10,0.2),transparent_70%)]",
-  "after:animate-[pn-drift_22s_ease-in-out_infinite_alternate-reverse]",
-  "motion-reduce:before:animate-none motion-reduce:after:animate-none",
-);
-
 export const patroHeroGrid = cn(
   "pointer-events-none absolute inset-0 -z-10",
   "bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)]",

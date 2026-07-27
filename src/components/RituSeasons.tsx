@@ -116,7 +116,6 @@ export function RituSeasons({
   }, [seasonsQ.data, todayAd, tz, nowMs]);
 
   const relLabel = (days: number) => {
-  const { t } = useTranslation();
     if (days <= 0) return "";
     if (days === 1) return t("ritu.tomorrow");
     return t("ritu.days_after", { count: days, days: dg(days) });

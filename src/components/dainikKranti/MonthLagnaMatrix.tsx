@@ -1,6 +1,6 @@
 import type { LagnaMatrixRow } from "@/lib/dainikKranti/month-patro-tables";
 import { useTranslation } from "react-i18next";
-import { RASHI_COLUMNS_NE, RASHI_COLUMNS_EN } from "@/lib/dainikKranti/month-patro-tables";
+import { getRashiList } from "@/lib/rashi-i18n";
 import { rashiSymFromNumber } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -41,10 +41,10 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
             <TableHead className={cn(th, patroStickyHeadCorner, "pl-3 text-left")}>{t("dainik.date")}</TableHead>
             <TableHead className={cn(th, patroStickyHeadCell, "text-left")}>{t("dainik.day")}</TableHead>
             <TableHead className={cn(th, patroStickyHeadCell, "text-amber-600 dark:text-amber-400")}>{t("dainik.rise")}</TableHead>
-            {RASHI_COLUMNS_NE.map((rne, i) => (
+            {getRashiList("ne").map((rne, i) => (
               <TableHead key={rne} className={cn(th, patroStickyHeadCell, "min-w-[3.75rem] text-center")}>
                 <span className="block text-secondary">{rashiSymFromNumber(i + 1)}</span>
-                <span>{bilingualText(lang, rne, RASHI_COLUMNS_EN[i])}</span>
+                <span>{bilingualText(lang, rne, getRashiList("en")[i])}</span>
               </TableHead>
             ))}
           </TableRow>
@@ -85,7 +85,7 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
                   <TableCell className={cn(td, "text-amber-600 dark:text-amber-400")}>
                     {row.sunrise ? digits(row.sunrise) : "—"}
                   </TableCell>
-                  {RASHI_COLUMNS_NE.map((_, i) => {
+                  {getRashiList("ne").map((_, i) => {
                     const num = i + 1;
                     const val = row.times[num];
                     const late = val?.includes("२५") || val?.includes("२६") || val?.includes("२७");

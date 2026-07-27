@@ -30,7 +30,6 @@ import {
   getSunsetDisplay,
   getVaaraEn,
   getVaaraNe,
-  formatRashiDisplay,
   formatSpanEndTime,
   getChandrabalamTable,
   getNakshatraPadaSpans,
@@ -45,6 +44,7 @@ import {
   angaEndDayOffset,
   dayOffsetLabel,
 } from "@/lib/panchanga-format";
+import { formatRashiDisplay } from "@/lib/rashi-i18n";
 import type { NivasShoolSegment } from "@/lib/api";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import {
@@ -199,16 +199,6 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
       ) : null}
     </PanchangaSection>
   );
-}
-
-/** @deprecated use SunMoonSamvatSection */
-export function SunMoonSection({ p }: { p: PanchangaDay }) {
-  return <SunMoonSamvatSection p={p} />;
-}
-
-/** @deprecated use SunMoonSamvatSection */
-export function SamvatSection() {
-  return null;
 }
 
 export function PanchangCoreSection({ p }: { p: PanchangaDay }) {

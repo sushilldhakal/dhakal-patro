@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Sunrise, Sunset } from "lucide-react";
-import type { CalendarEra } from "@/hooks/use-calendar-era";
+import type { CalendarEra } from "@/lib/patro-era";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   fetchYearSunTimes,

@@ -209,10 +209,6 @@ export function moonLonFromDay(t: number): number {
 export function nodeOmegaInertialFromDay(precDays: number): number {
   return (((NODE_START - (360 * precDays) / ECLIPSE_YEAR) % 360) + 360) % 360;
 }
-/** @deprecated use nodeOmegaInertialFromDay */
-export function nodeOmegaFromDay(t: number): number {
-  return nodeOmegaInertialFromDay(t);
-}
 export function earthLonFromDay(t: number): number {
   return (((360 * t) / YEAR_DAYS) % 360 + 360) % 360;
 }

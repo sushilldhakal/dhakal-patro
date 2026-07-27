@@ -5,7 +5,6 @@ import type { VargaCharts } from "@/lib/api";
 import { buildBhavaTable, type BhavaTableRow, RASHI_QUALITIES } from "@/lib/bhava";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
-import { rashiNeFromNumber } from "@/lib/panchanga-format";
 import {
   Table,
   TableBody,
@@ -50,7 +49,6 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
       anchorEntry.vargaRashi,
       planetRashis,
       vargaCharts.ownedRashis,
-      rashiNeFromNumber,
     );
   }, [division, anchorKey, vargaCharts]);
 

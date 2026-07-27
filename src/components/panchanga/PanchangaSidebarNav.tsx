@@ -142,7 +142,6 @@ function SidebarSection({
   const hasActiveItem = section.items.some((item) => isSidebarItemActive(pathname, item));
 
   const renderItem = (item: PanchangaSidebarItem, forceActive?: boolean) => {
-  const { t } = useTranslation();
     let label = t(item.labelKey);
     if (item.id === "panchak-patro") {
       label = t("panchak.title", { year: digits(panchakYear) });

@@ -35,7 +35,11 @@ import {
   choghadiyaRowLabel,
   choghadiyaTone,
 } from "@/lib/choghadiya-display";
-import { formatRashiDisplay, getChandrabalamTable, getTarabalaTable } from "@/lib/panchanga-format";
+import {
+  getChandrabalamTable,
+  getTarabalaTable,
+} from "@/lib/panchanga-format";
+import { formatRashiDisplay } from "@/lib/rashi-i18n";
 import { todayAdStringInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   elementKeys,

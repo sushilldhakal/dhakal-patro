@@ -11,18 +11,9 @@ import {
   formatTimeShort,
   formatVedicPatroTime,
   longitudeToDegreeCells,
-  rashiNeFromNumber,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
-import { formatRashiByNumber, getRashiList, rashiNumberFromName } from "@/lib/rashi-i18n";
-
-/** @deprecated Use getRashiList("ne") */
-export const RASHI_COLUMNS_NE = getRashiList("ne") as readonly string[];
-
-/** @deprecated Use getRashiList("en") */
-export const RASHI_COLUMNS_EN = getRashiList("en") as readonly string[];
-
-export { getRashiList };
+import { formatRashiByNumber, rashiNeFromNumber, rashiNumberFromName } from "@/lib/rashi-i18n";
 
 const GRAHA_EN_BY_KEY: Record<string, string> = {
   sun: "Sun", moon: "Moon", mars: "Mars", mercury: "Mercury", jupiter: "Jupiter",

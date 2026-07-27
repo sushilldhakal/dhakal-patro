@@ -46,25 +46,6 @@ function typeKey(nameNe: string): string | undefined {
   return CHOGHADIYA_KEY_BY_NE[nameNe];
 }
 
-/** Legacy map for timeline code — built from i18n at call time. */
-export function choghadiyaEnMap(lang?: string | Lang): Record<string, string> {
-  const lng = resolveLng(lang);
-  const out: Record<string, string> = {};
-  for (const [ne, key] of Object.entries(CHOGHADIYA_KEY_BY_NE)) {
-    out[ne] = i18n.t(`choghadiya.types.${key}.name`, { lng });
-  }
-  return out;
-}
-
-/** @deprecated Use {@link choghadiyaName} — kept for re-export compatibility. */
-export const CHOGHADIYA_EN: Record<string, string> = new Proxy({} as Record<string, string>, {
-  get(_t, prop: string) {
-    const key = CHOGHADIYA_KEY_BY_NE[prop];
-    if (!key) return prop;
-    return i18n.t(`choghadiya.types.${key}.name`);
-  },
-});
-
 export function choghadiyaTone(nameNe: string, bad?: boolean): ChoghadiyaTone {
   const key = typeKey(nameNe) as ChoghadiyaTypeKey | undefined;
   if (key) return TONE_BY_KEY[key];
@@ -78,14 +59,21 @@ export function choghadiyaName(nameNe: string, lang?: string | Lang): string {
   return i18n.t(`choghadiya.types.${key}.name`, { lng: resolveLng(lang) });
 }
 
+/** Full quality description, e.g. `Excellent (Highly Auspicious)`. */
 export function choghadiyaQuality(nameNe: string, lang?: string | Lang, bad?: boolean): string {
   const key = typeKey(nameNe);
   const lng = resolveLng(lang);
-  if (key) {
-    return i18n.t(`choghadiya.types.${key}.quality`, { lng });
-  }
-  if (lng === "en") return bad ? i18n.t("choghadiya.quality_bad", { lng }) : i18n.t("choghadiya.quality_neutral", { lng });
-  return bad ? i18n.t("choghadiya.quality_bad", { lng }) : i18n.t("choghadiya.quality_neutral", { lng });
+  if (key) return i18n.t(`choghadiya.types.${key}.quality`, { lng });
+  return choghadiyaToneLabel(nameNe, lng, bad);
+}
+
+/** Short tone label — `शुभ` / `अशुभ` / `सामान्य` and their English equivalents. */
+export function choghadiyaToneLabel(nameNe: string, lang?: string | Lang, bad?: boolean): string {
+  const lng = resolveLng(lang);
+  const tone = choghadiyaTone(nameNe, bad);
+  if (tone === "good") return i18n.t("choghadiya.quality_good", { lng });
+  if (tone === "bad") return i18n.t("choghadiya.quality_bad", { lng });
+  return i18n.t("choghadiya.quality_neutral", { lng });
 }
 
 /** Full row label, e.g. `Amrita — Excellent (Highly Auspicious)`. */

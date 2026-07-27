@@ -22,7 +22,6 @@ export function ResetPassword() {
   const [done, setDone] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
-  const { t } = useTranslation();
     e.preventDefault();
     setError(null);
     if (password.length < 8) {

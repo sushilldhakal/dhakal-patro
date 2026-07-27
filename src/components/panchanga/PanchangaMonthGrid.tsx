@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useQueries, keepPreviousData } from "@tanstack/react-query";
-import type { PanchangaDataMode } from "@/components/panchanga/use-panchanga-mode";
 import {
   fetchMonthCalendar,
   panchangaKeys,
@@ -51,8 +50,6 @@ interface Props {
   date: Date;
   locationParams?: LocationParams;
   onPickDay: (d: Date) => void;
-  dataMode?: PanchangaDataMode;
-  clock?: string;
   calendarMode?: "bs" | "ad";
 }
 
@@ -67,8 +64,6 @@ export function PanchangaMonthGrid({
   date,
   locationParams,
   onPickDay,
-  dataMode = "udaya",
-  clock = "12:00",
   calendarMode = "bs",
 }: Props) {
   const { lang, digits, isEnglish } = useLocale();
@@ -81,7 +76,6 @@ export function PanchangaMonthGrid({
   const selectedAd = toAdIso(date);
   const todayAd = toAdIso(new Date());
   const todayBs = adToBS(new Date());
-  const isInstant = dataMode === "instant";
 
   const prevAd = useMemo(() => shiftAdMonth(adYear, adMonth, -1), [adYear, adMonth]);
   const nextAd = useMemo(() => shiftAdMonth(adYear, adMonth, 1), [adYear, adMonth]);
@@ -97,13 +91,10 @@ export function PanchangaMonthGrid({
 
   const monthQueries = useQueries({
     queries: requiredBsMonths.map(({ year, month }) => ({
-      queryKey: isInstant
-        ? panchangaKeys.monthAtClock(year, month, clock, locationParams, true)
-        : panchangaKeys.month(year, month, locationParams, false, true),
+      queryKey: panchangaKeys.month(year, month, locationParams, false, true),
       queryFn: () =>
         fetchMonthCalendar(year, month, locationParams, {
-          clock: isInstant ? clock : undefined,
-          full: isInstant ? undefined : false,
+          full: false,
           excludeInternational: true,
         }),
       staleTime: 1000 * 60 * 60,
@@ -175,15 +166,6 @@ export function PanchangaMonthGrid({
           aria-live="polite"
         >
           <VedicPatroLoader size={88} />
-        </div>
-      )}
-      {isInstant && (
-        <div className="px-3 py-2 text-xs border-b border-border">
-          {bilingualText(lang, "प्रत्येक दिन ", "Each day at ")}
-          <span className="font-mono font-semibold text-foreground tabular-nums">
-            {digits(clock)}
-          </span>{" "}
-          {bilingualText(lang, "बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)", "— tithi/nakshatra/yoga/karana (time-based)")}
         </div>
       )}
       <div className="grid grid-cols-7 gap-px  border-b border-border">
