@@ -84,18 +84,31 @@ const R = {
 export type WheelHover = { type: "nak"; i: number } | { type: "rashi"; i: number };
 export type WheelPick = WheelHover;
 
+/** Split a ring label on whitespace so each word gets its own radial row. */
+function labelRows(label: string): string[] {
+  return label.trim().split(/\s+/).filter(Boolean);
+}
+
 interface RingLabelProps {
   L: number;
   r: number;
   cls: string;
   spin: number;
   size?: number;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  /**
+   * Stack the label radially instead of running it along the ring. Long
+   * English names ("Uttara Bhadrapada") overrun their segment's arc on one
+   * line, so they get split a word per row.
+   */
+  rows?: readonly string[];
 }
 
-function RingLabel({ L, r, cls, spin, size, children }: RingLabelProps) {
+function RingLabel({ L, r, cls, spin, size, children, rows }: RingLabelProps) {
   const a = normDeg(L + spin);
   const flip = a > 90 && a < 270;
+  // Flipping rotates the stack too, so reverse the rows to keep reading order.
+  const stack = rows && rows.length > 1 ? (flip ? [...rows].reverse() : rows) : null;
   return (
     <g transform={`rotate(${-(L + spin)} ${CX} ${CY})`}>
       <text
@@ -107,7 +120,17 @@ function RingLabel({ L, r, cls, spin, size, children }: RingLabelProps) {
         style={size ? { fontSize: size } : undefined}
         transform={flip ? `rotate(180 ${CX} ${CY - r})` : undefined}
       >
-        {children}
+        {stack
+          ? stack.map((row, i) => (
+              <tspan
+                key={`${row}-${i}`}
+                x={CX}
+                dy={i === 0 ? `${(-0.55 * (stack.length - 1)).toFixed(2)}em` : "1.1em"}
+              >
+                {row}
+              </tspan>
+            ))
+          : (children ?? rows?.[0])}
       </text>
     </g>
   );
@@ -219,9 +242,8 @@ function WheelChartImpl({
           r={(R.nakIn + R.nakOut) / 2}
           cls={wNakName(isSel || isHot)}
           spin={spin}
-        >
-          {bilingualText(lang, ico.ne, ico.en)}
-        </RingLabel>
+          rows={labelRows(bilingualText(lang, ico.ne, ico.en))}
+        />
       );
     }
 
