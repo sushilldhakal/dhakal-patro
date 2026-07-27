@@ -2,6 +2,9 @@ import type { TFunction } from "i18next";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
+import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { currentPatroMonthLinkSearch } from "@/lib/url-state";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import {
   formatAngaPatroTransitionHint,
@@ -35,6 +38,7 @@ type AngaBlock = {
 type Props = {
   p?: PanchangaDay;
   selectedDay?: CalendarDay | null;
+  location?: PanchangaLocation;
   bsYear?: number;
   bsMonth?: number;
   loading?: boolean;
@@ -42,21 +46,24 @@ type Props = {
 
 function AbhijitVivaranBlock({
   p,
-  bsYear,
-  bsMonth,
+  location,
 }: {
   p: PanchangaDay;
-  bsYear: number;
-  bsMonth: number;
+  location: PanchangaLocation;
 }) {
   const { t } = useTranslation();
+  const era = useCalendarEra();
   const abhijit = getAbhijitMuhurta(p);
 
   return (
     <div className="mt-2.5 border-t border-foreground/10 pt-2.5">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="text-sm font-bold text-secondary dark:text-secondary">{t("abhijit.title")}</div>
-        <Link to="/abhijit-muhurta" search={{ year: bsYear, month: bsMonth }} className={patroAsideLink}>
+        <Link
+          to="/abhijit-muhurta"
+          search={currentPatroMonthLinkSearch(location, era)}
+          className={patroAsideLink}
+        >
           {t("common.view_all")} →
         </Link>
       </div>
@@ -156,7 +163,7 @@ function buildPanchangaDetailCells(
   ];
 }
 
-export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading }: Props) {
+export function PanchangaVivaranPanel({ p, selectedDay, location, loading }: Props) {
   const { t } = useTranslation();
   const { lang } = useLocale();
 
@@ -250,8 +257,8 @@ export function PanchangaVivaranPanel({ p, selectedDay, bsYear, bsMonth, loading
         </div>
       ) : null}
 
-      {bsYear != null && bsMonth != null ? (
-        <AbhijitVivaranBlock p={p} bsYear={bsYear} bsMonth={bsMonth} />
+      {location && p ? (
+        <AbhijitVivaranBlock p={p} location={location} />
       ) : null}
     </section>
   );

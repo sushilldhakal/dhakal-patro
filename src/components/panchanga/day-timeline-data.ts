@@ -16,24 +16,8 @@ import {
 } from "@/lib/panchanga-format";
 import { KARANA_EN, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-
-/** Devanagari rashi names → English, for the timeline graha row. */
-export const TL_RASHI_EN: Record<string, string> = {
-  मेष: "Aries",
-  वृष: "Taurus",
-  वृषभ: "Taurus",
-  मिथुन: "Gemini",
-  कर्कट: "Cancer",
-  कर्क: "Cancer",
-  सिंह: "Leo",
-  कन्या: "Virgo",
-  तुला: "Libra",
-  वृश्चिक: "Scorpio",
-  धनु: "Sagittarius",
-  मकर: "Capricorn",
-  कुम्भ: "Aquarius",
-  मीन: "Pisces",
-};
+import { resolveRashiDisplay } from "@/lib/rashi-i18n";
+import { choghadiyaTone } from "@/lib/choghadiya-display";
 
 /**
  * Devanagari → English for tithi / nakshatra / yoga / karana names. The daily
@@ -123,16 +107,7 @@ export interface TimelineSegment {
   subLabelEn?: string;
 }
 
-/** Choghadiya muhurta names (Nepali → English). */
-export const CHOGHADIYA_EN: Record<string, string> = {
-  उद्वेग: "Udvega",
-  चर: "Chara",
-  लाभ: "Labha",
-  अमृत: "Amrita",
-  काल: "Kala",
-  शुभ: "Shubha",
-  रोग: "Roga",
-};
+export { CHOGHADIYA_EN, choghadiyaTone } from "@/lib/choghadiya-display";
 
 /** Devanagari graha names → English, for the timeline graha row. */
 export const TL_GRAHA_EN: Record<string, string> = {
@@ -657,7 +632,7 @@ function grahaSegments(planets: GrahaSpashtaItem[]): TimelineSegment[] {
   return list.map((p, i) => ({
     name: p.coords!,
     subLabel: `${p.label}-${p.rashiNe}`,
-    subLabelEn: `${TL_GRAHA_EN[p.label] ?? p.label}-${TL_RASHI_EN[p.rashiNe ?? ""] ?? p.rashiNe ?? ""}`,
+    subLabelEn: `${TL_GRAHA_EN[p.label] ?? p.label}-${resolveRashiDisplay(p.rashiNe, undefined, "en") ?? p.rashiNe ?? ""}`,
     endG: i < n - 1 ? ((i + 1) / n) * 60 : null,
   }));
 }
@@ -700,7 +675,7 @@ function buildHoraTimelineSegments(p: PanchangaDay): HoraSegment[] {
   }));
 }
 
-export function buildDayTimelineData(p: PanchangaDay, _dateAd?: string): DayTimelineData | null {
+export function buildDayTimelineData(p: PanchangaDay): DayTimelineData | null {
   const detail = getPanchangaDetail(p);
   const sunrise = getSunrise(p);
   const sunset = getSunset(p);
@@ -962,12 +937,6 @@ export function buildCivilTimelineData(
     ashubhaAll,
     shubha,
   };
-}
-
-export function choghadiyaTone(name: string, bad?: boolean): "bad" | "good" | "neutral" {
-  if (bad) return "bad";
-  if (name === "लाभ" || name === "अमृत" || name === "शुभ") return "good";
-  return "neutral";
 }
 
 export function choghadiyaQuality(name: string, bad?: boolean): "शुभ" | "अशुभ" | "सामान्य" {

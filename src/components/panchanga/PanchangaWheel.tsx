@@ -427,22 +427,21 @@ function PanchangaWheelBody({
     return () => clearInterval(id);
   }, [isToday]);
 
-  useEffect(() => {
-    if (scrubPinned || !isToday) return;
-    setScrubG(nowG);
-  }, [nowG, isToday, scrubPinned]);
-
-  useEffect(() => {
+  const dayKey = p.panchanga_date_ad ?? p.date_ad;
+  const [trackedDayKey, setTrackedDayKey] = useState(dayKey);
+  if (dayKey !== trackedDayKey) {
+    setTrackedDayKey(dayKey);
     setScrubPinned(false);
     setSpin(0);
-    if (isToday) {
-      setScrubG(nowG);
-    } else {
-      setScrubG(0);
-    }
-    // Only when the civil/vedic day changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [p.date_ad, p.panchanga_date_ad]);
+    setScrubG(isToday ? nowG : 0);
+  }
+
+  useEffect(() => {
+    if (scrubPinned || !isToday) return;
+    // Live-follow the clock hand when the user has not pinned a custom time.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setScrubG(nowG);
+  }, [nowG, isToday, scrubPinned]);
 
   useEffect(() => {
     if (!expanded) return;

@@ -1,14 +1,24 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Orbit } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
-import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
+import { PatroDayTimeNav } from "@/components/patro-date";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { GrahaBanner, GrahaDescription } from "@/components/graha/GrahaPageParts";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { useLocale } from "@/i18n/locale";
-import { adToBS, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { useRouteLoading } from "@/lib/route-loading";
+import { toAdStr } from "@/lib/patro-day";
+import {
+  grahaSthitiLord,
+  grahaSthitiNakshatra,
+  grahaSthitiName,
+  grahaSthitiRekhamsha,
+  grahaSthitiShara,
+  grahaSthitiSubLord,
+} from "@/lib/graha-sthiti-display";
+import { searchToLocation } from "@/lib/url-state";
 import { patroDataTableWrap } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import {
@@ -17,9 +27,7 @@ import {
   type GrahaSthitiRow,
 } from "@/lib/api";
 
-function toAdStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+const routeApi = getRouteApi("/panchanga-shell/panchanga/graha-sthiti");
 
 function signed(value: number, digits: (v: number | string) => string): string {
   const s = value > 0 ? "+" : value < 0 ? "−" : "";
@@ -39,13 +47,13 @@ const COLS: { ne: string; en: string }[] = [
 ];
 
 function GrahaRow({ row }: { row: GrahaSthitiRow }) {
-  const { pick, digits } = useLocale();
+  const { pick, digits, lang } = useLocale();
   const isLagna = row.graha === "lagna";
   return (
     <tr className={cn("border-t border-border", isLagna && "bg-secondary/[0.06]")}>
       <td className="whitespace-nowrap px-3 py-2 font-bold text-foreground">
         <span className="mr-1 text-muted-foreground">{row.symbol}</span>
-        {pick(row.name_ne, row.name_vedic)}
+        {grahaSthitiName(row, lang)}
         {row.is_retrograde ? (
           <span className="ml-1 text-danger" title={pick("वक्री", "Retrograde")}>
             ↺
@@ -58,21 +66,21 @@ function GrahaRow({ row }: { row: GrahaSthitiRow }) {
         ) : null}
       </td>
       <td className="whitespace-nowrap px-3 py-2 font-num tabular-nums text-foreground">
-        {digits(row.rekhamsha)}
+        {lang === "en" ? grahaSthitiRekhamsha(row, lang) : digits(grahaSthitiRekhamsha(row, lang))}
       </td>
       <td className="whitespace-nowrap px-3 py-2 text-foreground">
-        {pick(row.nakshatra_ne, row.nakshatra)}
+        {grahaSthitiNakshatra(row, lang)}
         <span className="text-muted-foreground"> · {digits(row.pada)}</span>
       </td>
       <td className="whitespace-nowrap px-3 py-2 text-foreground">
-        {row.nakshatra_lord_ne}
-        <span className="text-muted-foreground"> / {row.sub_lord_ne}</span>
+        {grahaSthitiLord(row, lang)}
+        <span className="text-muted-foreground"> / {grahaSthitiSubLord(row, lang)}</span>
       </td>
       <td className="whitespace-nowrap px-3 py-2 font-num tabular-nums text-foreground">
         {digits(row.full_degree.toFixed(2))}
       </td>
       <td className="whitespace-nowrap px-3 py-2 font-num tabular-nums text-foreground">
-        {digits(row.shara)}
+        {lang === "en" ? grahaSthitiShara(row, lang) : digits(grahaSthitiShara(row, lang))}
       </td>
       <td
         className={cn(
@@ -94,13 +102,13 @@ function GrahaRow({ row }: { row: GrahaSthitiRow }) {
 
 export function GrahaSthiti() {
   const { pick } = useLocale();
-  const { location, setLocation } = usePanchangaLocation();
-
-  const today = new Date();
-  const todayAd = toAdStr(today);
-  const todayBs = adToBS(today);
-  const [tbs, setTbs] = useState({ year: todayBs.year, month: todayBs.month, day: todayBs.day });
-  const dayAd = toAdStr(bsToAD(tbs.year, tbs.month, tbs.day));
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const langEra = useCalendarEra();
+  const dayBrowse = usePatroDayUrlBrowse(search, navigate, location, setLocation);
+  const todayAd = toAdStr(new Date());
+  const dayAd = dayBrowse.dateAd;
 
   const query = useQuery({
     queryKey: grahaDetailKeys.sthiti(dayAd, location.params),
@@ -110,14 +118,6 @@ export function GrahaSthiti() {
   });
 
   useRouteLoading(query.isLoading && !query.data);
-
-  const setDate = (y: number, m: number, d: number) =>
-    setTbs({ year: y, month: m, day: Math.min(d, getBSMonthLength(y, m)) });
-  const stepDay = (delta: number) => {
-    const d = bsToAD(tbs.year, tbs.month, tbs.day);
-    d.setDate(d.getDate() + delta);
-    setTbs(adToBS(d));
-  };
 
   return (
     <PageShell>
@@ -130,17 +130,10 @@ export function GrahaSthiti() {
       />
 
       <div className="space-y-3">
-        <PanchangaBrowseHeader
-          mode="day"
-          year={tbs.year}
-          month={tbs.month}
-          day={tbs.day}
-          onMonthChange={(m) => setDate(tbs.year, m, tbs.day)}
-          onYearChange={(y) => setDate(y, tbs.month, tbs.day)}
-          onSelectDate={(y, m, d) => setDate(y, m, d)}
-          onPrev={() => stepDay(-1)}
-          onNext={() => stepDay(1)}
-          onToday={() => setTbs({ year: todayBs.year, month: todayBs.month, day: todayBs.day })}
+        <PatroDayTimeNav
+          calendarMode={langEra}
+          date={dayBrowse.date}
+          onDateChange={dayBrowse.setDate}
           todayAd={todayAd}
           location={location}
           onLocationChange={setLocation}

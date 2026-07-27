@@ -19,18 +19,22 @@ import {
   specialMonthsKeys,
   type CalendarDay,
   type CalendarDayAnga,
+  type PanchangaDay,
 } from "@/lib/api";
 import {
   BS_MONTHS_NE,
-  BS_MONTH_NAMES,
   BS_SUPPORTED_START_YEAR,
   BS_SUPPORTED_END_YEAR,
-  getCurrentBs,
 } from "@/lib/bs-calendar";
-import { formatTimeShort, formatVedicPatroTime } from "@/lib/panchanga-format";
+import { formatTimeShort, formatVedicPatroTime, getRituDisplay } from "@/lib/panchanga-format";
+import {
+  getRashiName,
+  resolveRashiDisplay,
+} from "@/lib/rashi-i18n";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "@/components/PageShell";
-import { BsMonthHeaderTitle } from "@/components/BsMonthHeaderTitle";
+import { usePatroMonthUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { PatroMonthYearNav, PATRO_AD_YEAR_OPTIONS, PATRO_BS_YEAR_OPTIONS } from "@/components/patro-date";
 import {
   Table,
   TableBody,
@@ -42,11 +46,7 @@ import {
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
-  locationToSearch,
-  sameLocationParams,
-  sameSearch,
   searchToLocation,
-  type DainikKrantiSearch,
 } from "@/lib/url-state";
 import {
   patroSegBtn,
@@ -71,6 +71,10 @@ import { MonthLagnaMatrix } from "@/components/dainikKranti/MonthLagnaMatrix";
 import { MonthGrahaSpashta } from "@/components/dainikKranti/MonthGrahaSpashta";
 import { MonthCalcNotes } from "@/components/dainikKranti/MonthCalcNotes";
 import {
+  DainikKrantiMobileLoading,
+  DainikKrantiTableLoading,
+} from "@/components/dainikKranti/DainikKrantiDayListLoading";
+import {
   buildCalcNotes,
   buildGrahaSpashtaMatrix,
   buildLagnaMatrix,
@@ -79,29 +83,12 @@ import {
   type LagnaMatrixRow,
 } from "@/lib/dainikKranti/month-patro-tables";
 
-const COL_SPAN = 13;
+const COL_SPAN = 10;
 
 const routeApi = getRouteApi("/panchanga-shell/dainikkranti");
 
 type Phase = "krishna" | "shukla";
 type PakshaFilter = Phase | "all";
-
-const RASHI_NE = [
-  "मेष", "वृष", "मिथुन", "कर्क", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
-
-/** English rāśi names as returned by the gochar API, aligned to RASHI_NE order. */
-const RASHI_EN = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
-] as const;
-
-function rashiEnToNe(en?: string): string | undefined {
-  if (!en) return undefined;
-  const i = RASHI_EN.findIndex((r) => r.toLowerCase() === en.toLowerCase());
-  return i >= 0 ? RASHI_NE[i] : en;
-}
 
 /** 27 nakshatras in canonical order, matching the gochar API spellings. */
 const NAKSHATRA_EN = [
@@ -116,7 +103,7 @@ function rashiNeFromNakPada(nakshatraEn?: string, pada?: number): string | undef
   const ni = NAKSHATRA_EN.findIndex((n) => n.toLowerCase() === nakshatraEn.toLowerCase());
   if (ni < 0) return undefined;
   const absPada = ni * 4 + (pada - 1); // 0..107
-  return RASHI_NE[Math.floor(absPada / 9)];
+  return getRashiName(Math.floor(absPada / 9) + 1, "ne");
 }
 
 /** Insert the rāśi before the trailing "मा" — "कृत्तिका १ मा" → "कृत्तिका १ वृषमा". */
@@ -246,6 +233,90 @@ function fmtAd(dateAd: string, isEn: boolean): string {
   return d.toLocaleDateString(isEn ? "en-US" : "ne-NP", { day: "numeric", month: "short" });
 }
 
+/** BS gate large; AD month/day smaller underneath in Nepali. English AD browse: "Jul 1". */
+function DayLabel({
+  day,
+  isEn,
+  dg,
+  adBrowse = false,
+  accentClass,
+}: {
+  day: CalendarDay;
+  isEn: boolean;
+  dg: (v: string | number) => string;
+  adBrowse?: boolean;
+  accentClass?: string;
+}) {
+  const d = new Date(`${day.date_ad}T00:00:00`);
+  if (Number.isNaN(d.getTime())) {
+    return (
+      <span className={cn("font-num text-base font-bold tabular-nums", accentClass)}>
+        {dg(day.day)}
+      </span>
+    );
+  }
+  const adDay = d.getDate();
+  const adMonth = d.toLocaleDateString("en-US", { month: "short" });
+
+  if (isEn && adBrowse) {
+    return (
+      <span className={cn("font-num text-sm font-semibold tabular-nums", accentClass)}>
+        {adMonth} {dg(adDay)}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-baseline gap-1 whitespace-nowrap">
+      <span className={cn("font-num text-base font-bold tabular-nums leading-none", accentClass)}>
+        {dg(day.day)}
+      </span>
+      <span className="font-num text-xs tabular-nums font-normal text-muted-foreground">
+        {adMonth} {dg(adDay)}
+      </span>
+    </span>
+  );
+}
+
+function weekdayLabel(day: CalendarDay, isEn: boolean): string {
+  if (isEn) return day.weekday_en ?? day.weekday ?? day.weekday_ne ?? "—";
+  return day.weekday_ne ?? day.weekday ?? "—";
+}
+
+function sunRiseSetSignParts(
+  day: CalendarDay,
+  sunRashi: string | undefined,
+  ayanaMark: string | undefined,
+  dg: (v: string | number) => string,
+): { times: string; sign: string } {
+  const rise = day.sunrise ? dg(formatTimeShort(day.sunrise) ?? day.sunrise) : "—";
+  const set = day.sunset ? dg(formatTimeShort(day.sunset) ?? day.sunset) : "—";
+  return {
+    times: `${rise}/${set}`,
+    sign: sunRashi ? `${sunRashi}${ayanaMark ?? ""}` : "—",
+  };
+}
+
+function SunRiseSetSignValue({
+  day,
+  sunRashi,
+  ayanaMark,
+  dg,
+}: {
+  day: CalendarDay;
+  sunRashi: string | undefined;
+  ayanaMark: string | undefined;
+  dg: (v: string | number) => string;
+}) {
+  const { times, sign } = sunRiseSetSignParts(day, sunRashi, ayanaMark, dg);
+  return (
+    <div className="min-w-0 font-mono tabular-nums leading-snug">
+      <div className="whitespace-nowrap text-sm">{times}</div>
+      <div className={cn(subLine, "break-words")}>{sign}</div>
+    </div>
+  );
+}
+
 /** Day-of-week index from an AD date string (0 = Sunday … 6 = Saturday). */
 function dowOf(dateAd: string): number {
   const d = new Date(`${dateAd}T00:00:00`);
@@ -280,8 +351,75 @@ const KARTAVYA: Record<Phase, { ne: string; en: string }> = {
   },
 };
 
-const th = "whitespace-nowrap text-sm font-semibold";
+const th = "whitespace-nowrap text-sm font-semibold align-middle";
+const thWrap = "h-auto min-h-10 whitespace-normal py-2 text-sm font-semibold align-middle leading-tight";
 const subLine = "text-xs leading-tight";
+const sunColW = "w-[7.25rem] min-w-[7.25rem] max-w-[7.25rem] whitespace-normal";
+const moonColW = "w-[5.5rem] min-w-[5.5rem] max-w-[5.5rem] whitespace-normal break-words leading-snug";
+/** Festival column — wide enough for two wrapped lines of names. */
+const festivalColW = "min-w-[17rem] w-[19.5rem] max-w-[19.5rem] whitespace-normal";
+
+function moonRashiLabel(
+  day: CalendarDay,
+  det: CalendarDay["panchanga"],
+  lang: string,
+): string {
+  const span = det?.chandra_rashi_spans?.[0];
+  if (span) {
+    return resolveRashiDisplay(span.name_ne, span.name, lang) ?? "—";
+  }
+  return (
+    resolveRashiDisplay(
+      det?.chandra_rashi_ne ?? day.chandra_rashi_ne,
+      det?.chandra_rashi ?? day.chandra_rashi,
+      lang,
+    ) ?? "—"
+  );
+}
+
+/** End time when the Moon changes rashi before the next sunrise. */
+function moonRashiEnd(
+  det: CalendarDay["panchanga"],
+  d: (v: string | number) => string,
+  isEn: boolean,
+): string | null {
+  const spans = det?.chandra_rashi_spans;
+  const first = spans?.[0];
+  if (!first) return null;
+  const changesSameDay =
+    (spans?.length ?? 0) > 1 ||
+    Boolean(first.end_local_time_short ?? first.end_local_time ?? first.end_hours_clock);
+  if (!changesSameDay) return null;
+  const t = formatTimeShort(
+    first.end_local_time_short ?? first.end_local_time ?? first.end_hours_clock,
+  );
+  if (!t) return null;
+  return isEn ? d(t) : `${d(t)} बजे`;
+}
+
+function MoonRashiValue({
+  day,
+  det,
+  lang,
+  dg,
+  isEn,
+}: {
+  day: CalendarDay;
+  det: CalendarDay["panchanga"];
+  lang: string;
+  dg: (v: string | number) => string;
+  isEn: boolean;
+}) {
+  const { pick } = useLocale();
+  const label = moonRashiLabel(day, det, lang);
+  const end = moonRashiEnd(det, dg, isEn);
+  return (
+    <>
+      <div>{label}</div>
+      {end ? <div className={subLine}>{pick(`${end} सम्म`, `until ${end}`)}</div> : null}
+    </>
+  );
+}
 
 /** ग्रह उदयास्त सङ्केत — heliacal rising/setting + motion abbreviations. */
 const UDAYAST_LEGEND: { code: string; full: string; fullEn: string; meaning: string; meaningEn: string }[] = [
@@ -340,6 +478,7 @@ function DayPatroCard({
   lagna,
   graha,
   notes,
+  adBrowse = false,
 }: {
   day: CalendarDay;
   isToday: boolean;
@@ -349,6 +488,7 @@ function DayPatroCard({
   lagna?: LagnaMatrixRow;
   graha?: GrahaSpashtaRow;
   notes?: CalcNote[];
+  adBrowse?: boolean;
 }) {
   const { pick, lang, digits: dg } = useLocale();
   const isEn = lang === "en";
@@ -357,8 +497,7 @@ function DayPatroCard({
   const nakEnd = angaEnd(det?.nakshatra, dg, isEn);
   const yogaEnd = angaEnd(det?.yoga, dg, isEn);
   const karanaEnd = angaEnd(det?.karana, dg, isEn);
-  const sunRashi = pick(det?.surya_rashi_ne, det?.surya_rashi);
-  const moonRashi = pick(det?.chandra_rashi_ne, det?.chandra_rashi);
+  const sunRashi = resolveRashiDisplay(det?.surya_rashi_ne, det?.surya_rashi, lang);
   const isSaturday = dowOf(day.date_ad) === 6;
   const hasFestival = (day.festivals?.length ?? 0) > 0;
   const hasExtra = Boolean(lagna || graha || (notes?.length ?? 0) > 0);
@@ -377,14 +516,11 @@ function DayPatroCard({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-baseline gap-2">
-          <span className={cn("font-num text-2xl font-bold leading-none", dayColor)}>{dg(day.day)}</span>
-          <div className="flex flex-col leading-tight">
-            <span className={cn("text-sm font-semibold", isSaturday && "text-rose-600 dark:text-rose-400")}>
-              {pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday)}
-            </span>
-            <span className="text-xs text-base">{fmtAd(day.date_ad, isEn)}</span>
-          </div>
+        <div className="flex flex-col leading-tight">
+          <DayLabel day={day} isEn={isEn} dg={dg} adBrowse={adBrowse} accentClass={dayColor} />
+          <span className={cn("text-xs text-base", isSaturday && "text-rose-600 dark:text-rose-400")}>
+            {weekdayLabel(day, isEn)}
+          </span>
         </div>
         {isToday ? (
           <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
@@ -421,32 +557,18 @@ function DayPatroCard({
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-lg bg-muted/40 p-2.5">
+        <div className="col-span-2">
+          <CardField
+            label={pick("सूर्य उदय/अस्त/राशि", "Sun Rise/Set/sign")}
+            value={
+              <SunRiseSetSignValue day={day} sunRashi={sunRashi} ayanaMark={det?.ayana_mark} dg={dg} />
+            }
+          />
+        </div>
         <CardField
-          label={pick("सूर्योदय", "Sunrise")}
-          value={
-            <span className="text-amber-600 dark:text-amber-400">
-              {day.sunrise ? dg(formatTimeShort(day.sunrise) ?? day.sunrise) : "—"}
-            </span>
-          }
+          label={pick("चन्द्र राशि", "Moon sign")}
+          value={<MoonRashiValue day={day} det={det} lang={lang} dg={dg} isEn={isEn} />}
         />
-        <CardField
-          label={pick("सूर्यास्त", "Sunset")}
-          value={
-            <span className="text-indigo-600 dark:text-indigo-400">
-              {day.sunset ? dg(formatTimeShort(day.sunset) ?? day.sunset) : "—"}
-            </span>
-          }
-        />
-        <CardField
-          label={pick("सूर्य राशि", "Sun sign")}
-          value={
-            <>
-              {sunRashi ?? "—"}
-              {det?.ayana_mark ? <sup className="ml-0.5 text-xs">{det.ayana_mark}</sup> : null}
-            </>
-          }
-        />
-        <CardField label={pick("चन्द्र राशि", "Moon sign")} value={moonRashi ?? "—"} />
       </div>
 
       {(transits?.length ?? 0) > 0 ? (
@@ -467,7 +589,7 @@ function DayPatroCard({
       {hasFestival ? (
         <div className="mt-3 rounded-lg bg-rose-500/5 px-2.5 py-2">
           <div className="text-xs text-base">{pick("पर्व", "Festival")}</div>
-          <div className="text-sm text-rose-600 dark:text-rose-300">{day.festivals.join(" · ")}</div>
+          <div className="line-clamp-2 text-sm leading-snug text-rose-600 dark:text-rose-300">{day.festivals.join(" · ")}</div>
         </div>
       ) : null}
 
@@ -504,46 +626,30 @@ export function DainikKranti() {
 
   // Seed from the URL so a shared link opens on its month/paksha/location.
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const today = useMemo(() => getCurrentBs(), []);
-  const [year, setYear] = useState(() => search.year ?? today.year);
-  const [month, setMonth] = useState(() => search.month ?? today.month);
   const [paksha, setPaksha] = useState<PakshaFilter>(() => search.paksha ?? "all");
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-  const nowKey = useMemo(() => todayKey(), []);
-  const yearOptions = useMemo(
-    () =>
-      Array.from(
-        { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-        (_, i) => BS_SUPPORTED_START_YEAR + i,
-      ),
-    [],
+  const browseMirror = useMemo(
+    () => (paksha === "all" ? undefined : { paksha }),
+    [paksha],
   );
+  const monthBrowse = usePatroMonthUrlBrowse(search, navigate, location, setLocation, {
+    mirror: browseMirror,
+  });
+  const adBrowse = monthBrowse.era === "ad";
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const expandResetKey = `${monthBrowse.browseYear}|${monthBrowse.browseMonth}|${paksha}|${location.params.lat}|${location.params.lon}`;
+  const [trackedExpandKey, setTrackedExpandKey] = useState(expandResetKey);
+  if (expandResetKey !== trackedExpandKey) {
+    setTrackedExpandKey(expandResetKey);
+    setExpandedDays(new Set());
+  }
+  const nowKey = useMemo(() => todayKey(), []);
 
-  // Mirror the selection into the URL so the view stays copy-paste shareable.
-  useEffect(() => {
-    const desired: DainikKrantiSearch = {
-      ...locationToSearch(location),
-      year,
-      month,
-      paksha,
-    };
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
-    }
-  }, [location, year, month, paksha, search, navigate]);
-
-  // Adopt URL changes from browser back/forward. This effect deliberately
-  // subscribes page state to the router (an external system); the value guards
-  // avoid fighting the mirror above.
   /* eslint-disable react-hooks/set-state-in-effect */
+  // Back/forward only — do not depend on local `paksha` or we revert clicks before URL updates.
   useEffect(() => {
-    if (search.year != null && search.year !== year) setYear(search.year);
-    if (search.month != null && search.month !== month) setMonth(search.month);
-    if (search.paksha && search.paksha !== paksha) setPaksha(search.paksha);
-    const loc = searchToLocation(search);
-    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+    const urlPaksha = search.paksha ?? "all";
+    setPaksha((current) => (current === urlPaksha ? current : urlPaksha));
+  }, [search.paksha]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const toggleDayExpand = (dateAd: string) => {
@@ -555,22 +661,23 @@ export function DainikKranti() {
     });
   };
 
-  useEffect(() => {
-    setExpandedDays(new Set());
-  }, [year, month, paksha, location.params.lat, location.params.lon]);
-
   const stepMonth = (delta: number) => {
-    const idx = Math.min(
-      BS_MAX_INDEX,
-      Math.max(BS_MIN_INDEX, year * 12 + (month - 1) + delta),
-    );
-    setYear(Math.floor(idx / 12));
-    setMonth((idx % 12) + 1);
+    monthBrowse.stepMonth(delta);
   };
 
   const monthQ = useQuery({
-    queryKey: panchangaKeys.month(year, month, location.params),
-    queryFn: () => fetchMonthCalendar(year, month, location.params),
+    queryKey: panchangaKeys.month(
+      monthBrowse.browseYear,
+      monthBrowse.browseMonth,
+      location.params,
+      true,
+      false,
+      monthBrowse.era,
+    ),
+    queryFn: () =>
+      fetchMonthCalendar(monthBrowse.browseYear, monthBrowse.browseMonth, location.params, {
+        era: monthBrowse.era,
+      }),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -582,8 +689,8 @@ export function DainikKranti() {
 
   // Adhik / kshaya maas info for the displayed year (drives शुद्ध vs अधिक labels).
   const specialQ = useQuery({
-    queryKey: specialMonthsKeys.year(year),
-    queryFn: () => fetchSpecialMonths(year),
+    queryKey: specialMonthsKeys.year(monthBrowse.bsYear),
+    queryFn: () => fetchSpecialMonths(monthBrowse.bsYear),
     staleTime: 1000 * 60 * 60,
   });
   const adhik = specialQ.data?.adhik_maas;
@@ -680,7 +787,7 @@ export function DainikKranti() {
         isMotion || isUdayast
           ? (ev.label_ne ?? "")
           : isRashi
-          ? `→ ${ev.to_rashi ?? ev.to_rashi_ne ?? ""}`.trim()
+          ? `→ ${resolveRashiDisplay(ev.to_rashi_ne, ev.to_rashi, "en") ?? ev.to_rashi ?? ev.to_rashi_ne ?? ""}`.trim()
           : `${ev.to_nakshatra ?? ev.to_nakshatra_ne ?? ""}${ev.to_pada ? ` pada ${ev.to_pada}` : ""}`.trim();
       const timeRaw = ev.entry_time_local_short ?? ev.entry_time_local?.split(" ")[1];
       const time = timeRaw
@@ -745,23 +852,30 @@ export function DainikKranti() {
 
   const ritu = useMemo(() => {
     const dp = allDays.find((d) => d.panchanga?.ritu_ne)?.panchanga;
-    if (!dp) return undefined;
-    return isEn ? ((dp as { ritu?: string }).ritu ?? dp.ritu_ne) : dp.ritu_ne;
-  }, [allDays, isEn]);
+    return dp ? getRituDisplay(dp as PanchangaDay, lang) : undefined;
+  }, [allDays, lang]);
 
   const monthLabel = isEn
-    ? `${BS_MONTH_NAMES[month - 1]} (${BS_MONTHS_NE[month - 1]})`
-    : BS_MONTHS_NE[month - 1];
+    ? new Date(monthBrowse.browseYear, monthBrowse.browseMonth - 1, 1).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : `${BS_MONTHS_NE[monthBrowse.browseMonth - 1]} ${dg(monthBrowse.browseYear)}`;
   const pakshaLabel = isEn
     ? paksha === "krishna" ? "Krishna Paksha" : paksha === "shukla" ? "Shukla Paksha" : "Full month"
     : paksha === "krishna" ? "कृष्णपक्ष" : paksha === "shukla" ? "शुक्लपक्ष" : "पूरा महिना";
-  const atStart = year * 12 + (month - 1) <= BS_MIN_INDEX;
-  const atEnd = year * 12 + (month - 1) >= BS_MAX_INDEX;
+  const atStart =
+    monthBrowse.era === "ad"
+      ? monthBrowse.adYear <= PATRO_AD_YEAR_OPTIONS[0]! && monthBrowse.adMonth <= 1
+      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) <= BS_MIN_INDEX;
+  const atEnd =
+    monthBrowse.era === "ad"
+      ? monthBrowse.adYear >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]! &&
+        monthBrowse.adMonth >= 12
+      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) >= BS_MAX_INDEX;
 
   const goToday = () => {
-    const c = getCurrentBs();
-    setYear(c.year);
-    setMonth(c.month);
+    monthBrowse.goToday(nowKey);
   };
 
   const pageLoading =
@@ -822,36 +936,28 @@ export function DainikKranti() {
 
   return (
     <PageShell>
-      <div className="mb-1 flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <BsMonthHeaderTitle
-            year={year}
-            month={month}
-            yearOptions={yearOptions}
-            todayAd={nowKey}
-            onToday={goToday}
-            todayAriaLabel={t("calendar.today_btn")}
-            onMonthChange={setMonth}
-            onYearChange={setYear}
-            monthAriaLabel={t("calendar.month_aria")}
-            yearAriaLabel={t("calendar.year_aria")}
-            onPrev={() => stepMonth(-1)}
-            onNext={() => stepMonth(1)}
-            prevDisabled={atStart}
-            nextDisabled={atEnd}
-            prevAriaLabel={t("calendar.prev_month")}
-            nextAriaLabel={t("calendar.next_month")}
-            mobileDateTimeDrawer
-            mobileToolbar={pakshaToggle}
-            mobileToolbarLower={locationControlMobile}
-          />
-        </div>
-
-        <div className="hidden shrink-0 flex-col items-end gap-2 pt-0.5 md:flex">
-          {pakshaToggle}
-          {locationControlDesktop}
-        </div>
-      </div>
+      <PatroMonthYearNav
+        calendarMode={monthBrowse.era}
+        year={monthBrowse.browseYear}
+        month={monthBrowse.browseMonth}
+        yearOptions={monthBrowse.era === "ad" ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS}
+        todayAd={nowKey}
+        onToday={goToday}
+        onMonthChange={(m) => monthBrowse.setBrowseMonth(monthBrowse.browseYear, m)}
+        onYearChange={(y) => monthBrowse.setBrowseMonth(y, monthBrowse.browseMonth)}
+        onPrev={() => stepMonth(-1)}
+        onNext={() => stepMonth(1)}
+        prevDisabled={atStart}
+        nextDisabled={atEnd}
+        mobileToolbar={pakshaToggle}
+        mobileToolbarLower={locationControlMobile}
+        desktopToolbar={
+          <>
+            {pakshaToggle}
+            {locationControlDesktop}
+          </>
+        }
+      />
 
       <div className="space-y-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -861,7 +967,7 @@ export function DainikKranti() {
           {monthQ.data?.year_bs ? (
             <span className="text-sm">{dg(monthQ.data.year_bs)} {pick("बि.सं.", "BS")}</span>
           ) : null}
-          {ritu ? <span className="text-sm">· {pick("ऋतु", "Ritu")}: {ritu}</span> : null}
+          {ritu ? <span className="text-sm">· {pick("ऋतु", "Season")}: {ritu}</span> : null}
           {allDays.length ? (
             <span className="text-xs">· {dg(days.length)} {pick("दिन", "days")}</span>
           ) : null}
@@ -896,6 +1002,8 @@ export function DainikKranti() {
             <div className="rounded-xl border border-border py-8 text-center text-sm">
               {pick("विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।", "Could not load details. Please try again.")}
             </div>
+          ) : monthQ.isLoading ? (
+            <DainikKrantiMobileLoading />
           ) : days.length === 0 ? (
             <div className="rounded-xl border border-border py-8 text-center text-sm">
               {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
@@ -917,6 +1025,7 @@ export function DainikKranti() {
                     lagna={lagnaByDate[d.date_ad]}
                     graha={grahaByDate[d.date_ad]}
                     notes={notesByDate[d.date_ad]}
+                    adBrowse={adBrowse}
                   />
                 </Fragment>
               );
@@ -930,23 +1039,28 @@ export function DainikKranti() {
             <TableHeader>
               <TableRow className={patroStickyHeadRow}>
                 <TableHead className={cn(th, patroStickyHeadCell, "w-9 px-1")} aria-label={pick("विस्तार", "Expand")} />
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("गते · ता.", "Date")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("बा.", "Day")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("गते", adBrowse ? "Date" : "Day")}</TableHead>
                 <TableHead className={cn(th, patroStickyHeadCell)}>{pick("तिथि", "Tithi")}</TableHead>
                 <TableHead className={cn(th, patroStickyHeadCell)}>{pick("नक्षत्र", "Nakshatra")}</TableHead>
                 <TableHead className={cn(th, patroStickyHeadCell)}>{pick("योग", "Yoga")}</TableHead>
                 <TableHead className={cn(th, patroStickyHeadCell)}>{pick("करण", "Karana")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell, "text-indigo-600 dark:text-indigo-400")}>{pick("सु.अ.", "Set")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("सूर्य राशि", "Sun sign")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("चन्द्र राशि", "Moon sign")}</TableHead>
+                <TableHead className={cn(thWrap, patroStickyHeadCell, sunColW)}>
+                  <span className="block">{pick("सूर्य उदय/अस्त", "Sun Rise/Set")}</span>
+                  <span className="block">{pick("राशि", "sign")}</span>
+                </TableHead>
+                <TableHead className={cn(thWrap, patroStickyHeadCell, moonColW)}>
+                  <span className="block">{pick("चन्द्र", "Moon")}</span>
+                  <span className="block">{pick("राशि", "sign")}</span>
+                </TableHead>
                 <TableHead className={cn(th, patroStickyHeadCell)}>{pick("ग्रहचार / उदयास्त (बजे)", "Transits / rise-set")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("पर्व", "Festival")}</TableHead>
+                <TableHead className={cn(thWrap, patroStickyHeadCell, festivalColW)}>{pick("पर्व", "Festival")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {monthQ.isError ? (
                 <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center">{pick("विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।", "Could not load details. Please try again.")}</TableCell></TableRow>
+              ) : monthQ.isLoading ? (
+                <DainikKrantiTableLoading colSpan={COL_SPAN} />
               ) : days.length === 0 ? (
                 <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center">{pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}</TableCell></TableRow>
               ) : (
@@ -956,8 +1070,7 @@ export function DainikKranti() {
                   const nakEnd = angaEnd(det?.nakshatra, dg, isEn);
                   const yogaEnd = angaEnd(det?.yoga, dg, isEn);
                   const karanaEnd = angaEnd(det?.karana, dg, isEn);
-                  const sunRashi = pick(det?.surya_rashi_ne, det?.surya_rashi);
-                  const moonRashi = pick(det?.chandra_rashi_ne, det?.chandra_rashi);
+                  const sunRashi = resolveRashiDisplay(det?.surya_rashi_ne, det?.surya_rashi, lang);
                   const dow = dowOf(d.date_ad);
                   const isSaturday = dow === 6;
                   const isToday = d.date_ad === nowKey;
@@ -993,14 +1106,25 @@ export function DainikKranti() {
                           />
                         </button>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5">
+                      <TableCell className={cn("align-top", isSaturday && "text-rose-600 dark:text-rose-400")}>
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                           {isToday ? <span className="h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden /> : null}
-                          <span className={cn("font-semibold", isSaturday || hasFestival ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{dg(d.day)}</span>
-                        </span>
-                        <span className="ml-1.5 text-xs">{fmtAd(d.date_ad, isEn)}</span>
+                          <DayLabel
+                            day={d}
+                            isEn={isEn}
+                            dg={dg}
+                            adBrowse={adBrowse}
+                            accentClass={
+                              isSaturday || hasFestival
+                                ? "text-rose-600 dark:text-rose-400"
+                                : "text-foreground"
+                            }
+                          />
+                        </div>
+                        <div className={cn(subLine, isSaturday && "text-rose-600 dark:text-rose-400")}>
+                          {weekdayLabel(d, isEn)}
+                        </div>
                       </TableCell>
-                      <TableCell className={cn("whitespace-nowrap", isSaturday && "text-base text-rose-600 dark:text-rose-400")}>{pick(d.weekday_ne ?? d.weekday, d.weekday_en ?? d.weekday)}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div><span>{pakshaShort(d, isEn)}</span> {pick(d.tithi_ne ?? d.tithi, d.tithi ?? d.tithi_ne) ?? "—"}</div>
                         {tithiEnd ? <div className={subLine}>{pick(`${tithiEnd} सम्म`, `until ${tithiEnd}`)}</div> : null}
@@ -1017,13 +1141,12 @@ export function DainikKranti() {
                         <div>{pick(d.karana_ne ?? d.karana, d.karana ?? d.karana_ne) ?? "—"}</div>
                         {karanaEnd ? <div className={subLine}>{pick(`${karanaEnd} सम्म`, `until ${karanaEnd}`)}</div> : null}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-amber-600 dark:text-amber-400">{d.sunrise ? dg(formatTimeShort(d.sunrise) ?? d.sunrise) : "—"}</TableCell>
-                      <TableCell className="whitespace-nowrap text-indigo-600 dark:text-indigo-400">{d.sunset ? dg(formatTimeShort(d.sunset) ?? d.sunset) : "—"}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {sunRashi ?? "—"}
-                        {det?.ayana_mark ? <sup className="ml-0.5 text-sm">{det.ayana_mark}</sup> : null}
+                      <TableCell className={cn(sunColW, "align-top text-sm")}>
+                        <SunRiseSetSignValue day={d} sunRashi={sunRashi} ayanaMark={det?.ayana_mark} dg={dg} />
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">{moonRashi ?? "—"}</TableCell>
+                      <TableCell className={cn(moonColW, "align-top text-sm")}>
+                        <MoonRashiValue day={d} det={det} lang={lang} dg={dg} isEn={isEn} />
+                      </TableCell>
                       <TableCell className="align-top">
                         {(transitsByBsDay[d.day]?.length ?? 0) > 0 ? (
                           <div className="space-y-0.5">
@@ -1041,9 +1164,11 @@ export function DainikKranti() {
                           <span>—</span>
                         )}
                       </TableCell>
-                      <TableCell className="max-w-48">
+                      <TableCell className={cn(festivalColW, "align-top")}>
                         {hasFestival ? (
-                          <span className="line-clamp-2 text-sm text-rose-600 dark:text-rose-300">{d.festivals.join(" · ")}</span>
+                          <div className="line-clamp-2 text-sm leading-snug text-rose-600 dark:text-rose-300">
+                            {d.festivals.join(" · ")}
+                          </div>
                         ) : (
                           <span>—</span>
                         )}
@@ -1193,7 +1318,7 @@ export function DainikKranti() {
                   <li key={g.key} className="flex items-baseline justify-between gap-2">
                     <span className="text-foreground">
                       {pick(g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}
-                      <span className="ml-1">{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
+                      <span className="ml-1">{resolveRashiDisplay(g.rashi_ne ?? grahaRashiNe(g), g.rashi, lang) ?? ""}</span>
                     </span>
                     {g.next_pada_entry ? (
                       <span className="shrink-0 text-right text-sm">
@@ -1203,7 +1328,7 @@ export function DainikKranti() {
                       </span>
                     ) : g.next_rashi_entry ? (
                       <span className="shrink-0 text-right text-sm">
-                        → {pick(g.next_rashi_entry.to_rashi_ne ?? rashiEnToNe(g.next_rashi_entry.to_rashi) ?? g.next_rashi_entry.to_rashi, g.next_rashi_entry.to_rashi ?? g.next_rashi_entry.to_rashi_ne)}
+                        → {resolveRashiDisplay(g.next_rashi_entry.to_rashi_ne, g.next_rashi_entry.to_rashi, lang) ?? "—"}
                         <br />
                         {dg(g.next_rashi_entry.entry_time_local)}
                       </span>
@@ -1262,7 +1387,7 @@ export function DainikKranti() {
                   return (
                     <div key={g.key} className="flex items-baseline gap-1.5 text-sm">
                       <span className="text-foreground">{pick(g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}</span>
-                      <span>{pick(grahaRashiNe(g), g.rashi ?? grahaRashiNe(g)) ?? ""}</span>
+                      <span>{resolveRashiDisplay(g.rashi_ne ?? grahaRashiNe(g), g.rashi, lang) ?? ""}</span>
                       {g.dms_in_rashi ? <span className="text-foreground">{dg(g.dms_in_rashi)}</span> : null}
                       <span
                         className={cn(

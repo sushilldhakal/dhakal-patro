@@ -7,6 +7,8 @@ import { SAIT_CATEGORIES } from "@/lib/sait-data";
 import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import { patroEmpty } from "@/lib/patro-classes";
+import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { patroYearLinkSearch } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -14,6 +16,7 @@ type Props = {
   year: number;
   /** BS month (1–12) the calendar is currently showing. */
   month: number;
+  location: PanchangaLocation;
   /** Day to highlight (the selected calendar day), if it is auspicious. */
   highlightDay?: number;
 };
@@ -24,7 +27,7 @@ type Props = {
  * server computes just that month for all ceremonies in one call. Each row links
  * to the ceremony's /sait/$category page for the full yearly list.
  */
-export function SaitAsidePanel({ year, month, highlightDay }: Props) {
+export function SaitAsidePanel({ year, month, location, highlightDay }: Props) {
   const { t } = useTranslation();
   const { pick, digits } = useLocale();
 
@@ -58,6 +61,7 @@ export function SaitAsidePanel({ year, month, highlightDay }: Props) {
                   <Link
                     to="/sait/$category"
                     params={{ category: cat.id }}
+                    search={patroYearLinkSearch(location, year, "bs")}
                     className="flex items-center gap-2 rounded-md bg-surface-inset px-2.5 py-2 text-sm leading-snug transition-colors hover:bg-surface-hover"
                   >
                     <span className="shrink-0 font-bold text-foreground">

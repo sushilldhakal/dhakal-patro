@@ -6,12 +6,11 @@ import { rashiToHouse } from "@/lib/bhava";
 import {
   DIGNITY_LABELS,
   GRAHA_NAME,
-  RASHI_EN_NAMES,
   RELATION_LABELS,
   type GrahaKey,
 } from "@/lib/graha-details";
+import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { rashiNeFromNumber } from "@/lib/panchanga-format";
 import {
   Table,
   TableBody,
@@ -50,7 +49,7 @@ export function GrahaDetailsList({
   anchorKey,
   vargaCharts,
 }: GrahaDetailsListProps) {
-  const { pick, digits } = useLocale();
+  const { pick, digits, lang } = useLocale();
 
   const rows = useMemo<Row[]>(() => {
     const entries = vargaCharts.entries[String(division)] ?? [];
@@ -78,8 +77,7 @@ export function GrahaDetailsList({
 
   const grahaName = (key: string) =>
     pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
-  const rashiName = (rashi: number) =>
-    pick(rashiNeFromNumber(rashi) ?? "—", RASHI_EN_NAMES[rashi - 1] ?? "—");
+  const rashiName = (rashi: number) => formatRashiByNumber(rashi, lang);
 
   return (
     <Table>

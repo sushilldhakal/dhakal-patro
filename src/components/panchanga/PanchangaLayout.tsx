@@ -349,7 +349,6 @@ export function PanchangaRow({
   labelKey,
   label,
   children,
-  oddBorder: _oddBorder,
   className,
 }: {
   labelKey?: string;

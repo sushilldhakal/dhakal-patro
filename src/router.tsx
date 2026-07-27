@@ -18,8 +18,13 @@ import { RouteLoadingProvider } from "./lib/route-loading";
 import {
   validateAbhijitSearch,
   validateDainikKrantiSearch,
+  validateElementPageSearch,
+  validateGrahaDaySearch,
+  validateLocationSearch,
   validatePanchangaSearch,
   validatePanchangaYearSearch,
+  validatePatroMonthBrowseSearch,
+  validatePatroYearBrowseSearch,
 } from "./lib/url-state";
 
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
@@ -92,7 +97,12 @@ const panchangaShellRoute = createRoute({
   component: PanchangaShellLayout,
 });
 
-const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  validateSearch: validatePatroMonthBrowseSearch,
+  component: Home,
+});
 const panchangaOgPreviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/panchanga/og-preview",
@@ -138,8 +148,18 @@ const dainikKrantiNeLegacyRoute = createRoute({
 });
 const shantiVidhiRoute = createRoute({ getParentRoute: () => rootRoute, path: "/shanti-vidhi", component: ShantiVidhi });
 const converterRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/converter", component: Converter });
-const holidaysRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/holidays", component: Holidays });
-const rituRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/ritu", component: Ritu });
+const holidaysRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/holidays",
+  validateSearch: validatePatroYearBrowseSearch,
+  component: Holidays,
+});
+const rituRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/ritu",
+  validateSearch: validateLocationSearch,
+  component: Ritu,
+});
 const kundaliRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/kundali", component: Kundali });
 const kundaliDetailRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/kundali/$profileId", component: KundaliDetail });
 const kundaliMilanRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/jyotish/kundali-milan", component: KundaliMilan });
@@ -176,14 +196,54 @@ const historyLegacyRoute = createRoute({
   component: () => <Navigate to="/learn/history" replace />,
 });
 const panchangaDetailsRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/details", component: PanchangaDetailsHub });
-const elementRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/element/$name", component: ElementPage });
-const grahaSthitiRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/graha-sthiti", component: GrahaSthiti });
-const grahaAstaRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/graha-asta", component: GrahaAsta });
-const grahaVakriRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/graha-vakri", component: GrahaVakri });
-const suryaGrahanRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/surya-grahan", component: SuryaGrahan });
-const chandraGrahanRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/chandra-grahan", component: ChandraGrahan });
-const saitRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/sait/$category", component: SaitPage });
-const marriageSaitRoute = createRoute({ getParentRoute: () => rootRoute, path: "/vivah-sait", component: MarriageSait });
+const elementRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/panchanga/element/$name",
+  validateSearch: validateElementPageSearch,
+  component: ElementPage,
+});
+const grahaSthitiRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/panchanga/graha-sthiti",
+  validateSearch: validateGrahaDaySearch,
+  component: GrahaSthiti,
+});
+const grahaAstaRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/panchanga/graha-asta",
+  validateSearch: validatePatroYearBrowseSearch,
+  component: GrahaAsta,
+});
+const grahaVakriRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/panchanga/graha-vakri",
+  validateSearch: validatePatroYearBrowseSearch,
+  component: GrahaVakri,
+});
+const suryaGrahanRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/panchanga/surya-grahan",
+  validateSearch: validatePatroYearBrowseSearch,
+  component: SuryaGrahan,
+});
+const chandraGrahanRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/panchanga/chandra-grahan",
+  validateSearch: validatePatroYearBrowseSearch,
+  component: ChandraGrahan,
+});
+const saitRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/sait/$category",
+  validateSearch: validatePatroYearBrowseSearch,
+  component: SaitPage,
+});
+const marriageSaitRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/vivah-sait",
+  validateSearch: validatePatroYearBrowseSearch,
+  component: MarriageSait,
+});
 const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/account", component: Account });
 const verifyEmailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 const resetPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });

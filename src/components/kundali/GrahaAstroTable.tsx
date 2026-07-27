@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { Flame, RotateCcw } from "lucide-react";
 import { useLocale } from "@/i18n/locale";
 import type { VargaChartEntry } from "@/lib/api";
-import { GRAHA_NAME, RASHI_EN_NAMES, type GrahaKey } from "@/lib/graha-details";
+import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { rashiNeFromNumber } from "@/lib/panchanga-format";
 import {
   Table,
   TableBody,
@@ -57,7 +57,7 @@ function signedFixed(value: number | undefined, digits: (v: string) => string): 
  * columns come straight from the API's D1 varga rows.
  */
 export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAstroTableProps) {
-  const { pick, digits } = useLocale();
+  const { pick, digits, lang } = useLocale();
 
   const rows = useMemo<Row[]>(() => {
     return d1Rows.flatMap((entry) => {
@@ -79,8 +79,7 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
 
   const grahaName = (key: string) =>
     pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
-  const rashiName = (rashi: number) =>
-    pick(rashiNeFromNumber(rashi) ?? "—", RASHI_EN_NAMES[rashi - 1] ?? "—");
+  const rashiName = (rashi: number) => formatRashiByNumber(rashi, lang);
 
   return (
     <Table>

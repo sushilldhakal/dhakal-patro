@@ -1,14 +1,10 @@
 import type { CalendarDay, GocharIngressEvent, PlanetInfo } from "@/lib/api";
-import { RASHI_NE, rashiNoFromGraha } from "@/lib/dainikKranti/gochar-display";
+import { rashiNoFromGraha } from "@/lib/dainikKranti/gochar-display";
 import type { GocharGraha } from "@/lib/api";
 import { GOCHAR_RASHI_TO_HOUSE } from "@/lib/kundali/north-indian-layout";
+import { rashiNumberFromName } from "@/lib/rashi-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { GRAHA_KEY_TO_TRANSIT_ABBREV } from "./rashyadi";
-
-const RASHI_EN = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
-] as const;
 
 function isMoonIngress(ev: GocharIngressEvent): boolean {
   const g = (ev.graha ?? "").toLowerCase();
@@ -28,17 +24,10 @@ function resolveVedicDateAd(
 }
 
 function rashiNoFromIngress(ev: GocharIngressEvent): number | undefined {
-  if (ev.to_rashi) {
-    const i = RASHI_EN.findIndex(
-      (r) => r.toLowerCase() === ev.to_rashi!.toLowerCase(),
-    );
-    if (i >= 0) return i + 1;
-  }
-  if (ev.to_rashi_ne) {
-    const i = RASHI_NE.indexOf(ev.to_rashi_ne as (typeof RASHI_NE)[number]);
-    if (i >= 0) return i + 1;
-  }
-  return undefined;
+  return (
+    rashiNumberFromName(ev.to_rashi) ??
+    rashiNumberFromName(ev.to_rashi_ne)
+  );
 }
 
 export function houseFromRashiNo(rashiNo: number): number | undefined {

@@ -90,44 +90,19 @@ function buildMoonSweepPath(d0: number, d1: number, arcR: number): string {
   return pts.join(" ");
 }
 
-type SweepCache = {
-  elapsedDay: number;
-  completeMonths: number;
-  completed: { d: string; opacity: number }[];
-};
 
-function getSweepSegmentsCached(
-  elapsedDay: number,
-  arcR: number,
-  cache: SweepCache,
-): { d: string; opacity: number }[] {
+function computeSweepSegments(elapsedDay: number, arcR: number): { d: string; opacity: number }[] {
   const completeMonths = Math.floor(elapsedDay / SYNODIC_MONTH);
-
-  if (elapsedDay < cache.elapsedDay - 0.25) {
-    cache.completeMonths = 0;
-    cache.completed = [];
-  }
-
-  while (cache.completeMonths < completeMonths) {
-    const m = cache.completeMonths;
+  const segments: { d: string; opacity: number }[] = [];
+  for (let m = 0; m < completeMonths; m++) {
     const path = buildMoonSweepPath(m * SYNODIC_MONTH, (m + 1) * SYNODIC_MONTH, arcR);
-    if (path) cache.completed.push({ d: path, opacity: 0.5 });
-    cache.completeMonths++;
+    if (path) segments.push({ d: path, opacity: 0.5 });
   }
-
-  if (cache.completeMonths > completeMonths) {
-    cache.completed = cache.completed.slice(0, completeMonths);
-    cache.completeMonths = completeMonths;
-  }
-
   const partialStart = completeMonths * SYNODIC_MONTH;
-  const segments = [...cache.completed];
   if (elapsedDay > partialStart + 0.02) {
     const path = buildMoonSweepPath(partialStart, elapsedDay, arcR);
     if (path) segments.push({ d: path, opacity: 1 });
   }
-
-  cache.elapsedDay = elapsedDay;
   return segments;
 }
 
@@ -181,7 +156,6 @@ export function ElongationDiagram({
   const [mx, my] = edPos(E, ED.R, earthX, earthY);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef(false);
-  const sweepCacheRef = useRef<SweepCache>({ elapsedDay: -1, completeMonths: 0, completed: [] });
 
   const earthArcSpan = EARTH_ARC_SYNODIC * earthPathMonths;
   const earthSolarPath = useMemo(() => {
@@ -280,7 +254,10 @@ export function ElongationDiagram({
   }
 
   const arcR = ARC_R;
-  const sweepSegments = getSweepSegmentsCached(elapsedDay, arcR, sweepCacheRef.current);
+  const sweepSegments = useMemo(
+    () => computeSweepSegments(elapsedDay, arcR),
+    [elapsedDay, arcR],
+  );
   const [capx, capy] = edPos(E, arcR, earthX, earthY);
 
   const earthTraveledPath = buildEarthTraveledPath(elapsedDay);

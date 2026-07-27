@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
+import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { importWithRetry } from "@/lib/lazy-route";
 import { PanchangaVivaranPanel } from "@/components/home/PanchangaVivaranPanel";
 
@@ -35,6 +36,7 @@ type Props = {
   p?: PanchangaDay;
   selectedDay: CalendarDay | null;
   selectedAdDate: string;
+  location: PanchangaLocation;
   bsYear: number;
   bsMonth: number;
   loading?: boolean;
@@ -45,16 +47,17 @@ export function PanchangaAsideTabPanel({
   p,
   selectedDay,
   selectedAdDate,
+  location,
   bsYear,
   bsMonth,
   loading,
 }: Props) {
   if (loading) {
     return tab === "panchanga" ? (
-      <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} />
+      <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} location={location} />
     ) : tab === "sait" ? (
       <Suspense fallback={<TabFallback />}>
-        <SaitAsidePanel year={bsYear} month={bsMonth} />
+        <SaitAsidePanel year={bsYear} month={bsMonth} location={location} />
       </Suspense>
     ) : (
       <TabFallback />
@@ -67,6 +70,7 @@ export function PanchangaAsideTabPanel({
         <SaitAsidePanel
           year={bsYear}
           month={bsMonth}
+          location={location}
           highlightDay={selectedDay?.day}
         />
       </Suspense>
@@ -81,6 +85,7 @@ export function PanchangaAsideTabPanel({
         <PanchangaVivaranPanel
           p={p}
           selectedDay={selectedDay}
+          location={location}
           bsYear={bsYear}
           bsMonth={bsMonth}
         />

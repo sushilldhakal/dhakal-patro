@@ -46,7 +46,7 @@ import { KundaliReport } from "@/components/kundali/KundaliReport";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { formatGhadiPalaVipala } from "@/lib/birth-panchanga-meta";
-import { RASHI_EN_NAMES } from "@/lib/graha-details";
+import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 
@@ -278,7 +278,7 @@ export function KundaliView({
     const lagnaRow = d9?.find((row) => row.key === "lagna");
     if (!lagnaRow?.vargaRashi) return undefined;
     const ne = rashiNeFromNumber(lagnaRow.vargaRashi) ?? "—";
-    const en = RASHI_EN_NAMES[lagnaRow.vargaRashi - 1] ?? ne;
+    const en = formatRashiByNumber(lagnaRow.vargaRashi, "en");
     return { ne, en };
   }, [detail]);
 

@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { useLocale } from "@/i18n/locale";
 import type { VargaCharts } from "@/lib/api";
 import { buildBhavaTable, type BhavaTableRow, RASHI_QUALITIES } from "@/lib/bhava";
-import { GRAHA_NAME, RASHI_EN_NAMES, type GrahaKey } from "@/lib/graha-details";
+import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { rashiNeFromNumber } from "@/lib/panchanga-format";
 import {
   Table,
@@ -32,7 +33,7 @@ export type BhavaTableProps = {
  * extra API call.
  */
 export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps) {
-  const { pick, digits } = useLocale();
+  const { pick, digits, lang } = useLocale();
 
   const rows = useMemo<BhavaTableRow[]>(() => {
     const entries = vargaCharts.entries[String(division)] ?? [];
@@ -55,8 +56,7 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
 
   const grahaName = (key: string) =>
     pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
-  const rashiName = (rashi: number) =>
-    pick(rashiNeFromNumber(rashi) ?? "—", RASHI_EN_NAMES[rashi - 1] ?? "—");
+  const rashiName = (rashi: number) => formatRashiByNumber(rashi, lang);
 
   return (
     <Table>

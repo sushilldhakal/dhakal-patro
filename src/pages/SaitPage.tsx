@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { Link, getRouteApi, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CalendarHeart, Info } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
-import { adToBS } from "@/lib/bs-calendar";
 import { useRouteLoading } from "@/lib/route-loading";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { searchToLocation } from "@/lib/url-state";
 import { CEREMONY_META } from "@/lib/panchanga-elements";
 import { isMuhurtaSaitCategory, type SaitCategoryId } from "@/lib/sait-data";
 import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
@@ -30,27 +31,33 @@ import {
 import type { Profile } from "@/lib/auth/client";
 import { profileChartParams } from "@/lib/kundali/profile-chart";
 
+const routeApi = getRouteApi("/panchanga-shell/sait/$category");
+
 export function SaitPage() {
   const { category } = useParams({ strict: false }) as { category?: string };
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
   const { pick, digits, lang } = useLocale();
-  const { location, setLocation } = usePanchangaLocation();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
+  const bsYear = yearBrowse.bsYear;
+
   const meta = CEREMONY_META.find((c) => c.id === category);
   const isMuhurta = category ? isMuhurtaSaitCategory(category) : false;
   const content = meta ? SAIT_RULES_CONTENT[meta.id as SaitCategoryId] : undefined;
   const isBratabandha = category === "bratabandha";
-
-  const todayBs = adToBS(new Date());
-  const [year, setYear] = useState(todayBs.year);
 
   // Community rule toggles: ids the user has switched OFF. Reset when the
   // ceremony changes so one ceremony's picks don't leak into another.
   const [disabledRules, setDisabledRules] = useState<Set<string>>(() => new Set());
   const [nakshatraMode, setNakshatraMode] =
     useState<BratabandhaNakshatraMode>("classical");
-  useEffect(() => {
+  const [trackedCategory, setTrackedCategory] = useState(category);
+  if (category !== trackedCategory) {
+    setTrackedCategory(category);
     setDisabledRules(new Set());
     setNakshatraMode("classical");
-  }, [category]);
+  }
 
   const toggleableIds = useMemo(
     () =>
@@ -75,7 +82,7 @@ export function SaitPage() {
 
   const detailQuery = useQuery({
     queryKey: saitDetailKey(
-      year,
+      bsYear,
       category ?? "",
       location.params,
       excludeRules,
@@ -83,7 +90,7 @@ export function SaitPage() {
     ),
     queryFn: () =>
       fetchSaitDetail(
-        year,
+        bsYear,
         category!,
         location.params,
         excludeRules,
@@ -95,8 +102,8 @@ export function SaitPage() {
   });
 
   const datesQuery = useQuery({
-    queryKey: saitKeys.entries(year, category ?? "", location.params),
-    queryFn: () => fetchSait(year, category!, location.params),
+    queryKey: saitKeys.entries(bsYear, category ?? "", location.params),
+    queryFn: () => fetchSait(bsYear, category!, location.params),
     enabled: Boolean(category) && !isMuhurta,
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
@@ -122,9 +129,9 @@ export function SaitPage() {
   const gender = selectedProfile?.gender ?? "";
 
   const personalizeQuery = useQuery({
-    queryKey: saitPersonalizeKey(year, category ?? "", location.params, birthDatetime, birthTz, gender),
+    queryKey: saitPersonalizeKey(bsYear, category ?? "", location.params, birthDatetime, birthTz, gender),
     queryFn: () =>
-      fetchSaitPersonalize(year, category!, location.params, birthDatetime, birthTz, gender),
+      fetchSaitPersonalize(bsYear, category!, location.params, birthDatetime, birthTz, gender),
     enabled: Boolean(category) && Boolean(selectedProfile) && Boolean(birthDatetime),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
@@ -178,8 +185,11 @@ export function SaitPage() {
     <SaitCeremonyLayout
       title={pick(`${meta.ne} साइत`, `${meta.en} Saait`)}
       subtitle={pick(content.description.ne, content.description.en)}
-      year={year}
-      onYearChange={setYear}
+      year={yearBrowse.browseYear}
+      onYearChange={yearBrowse.setBrowseYear}
+      calendarMode={yearBrowse.era}
+      yearOptions={yearBrowse.yearOptions}
+      currentYear={yearBrowse.currentBrowseYear}
       location={location}
       onLocationChange={setLocation}
       method={content.method}

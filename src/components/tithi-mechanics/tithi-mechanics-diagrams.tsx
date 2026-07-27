@@ -22,6 +22,7 @@ import {
   tmVline,
 } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { getRashiList } from "@/lib/rashi-i18n";
 import { WHEEL_TITHIS, tithiNum } from "@/lib/tithi-wheel-data";
 import { tmAmLegend, tmCal, tmCalCellDup, tmCalGap, tmCalGate, tmCalNo, tmCalTithi, tmDiagramSvg, tmLegAdhik } from "@/lib/learn-classes";
 import { TmLegendDot, TmNewMoon, TmSun } from "./diagram-glyphs";
@@ -184,7 +185,7 @@ export function AdhikMassDiagram() {
   const x = (d: number) => padL + (d / days) * (W - padL - padR);
 
   const sankr = [0, SOLAR, SOLAR * 2, SOLAR * 3];
-  const rashi = ["मेष", "वृषभ", "मिथुन"];
+  const rashi = getRashiList("ne").slice(0, 3);
   const rashiSym = ["", "", ""];
   const amav = [0.6, 0.6 + SYN, 0.6 + SYN * 2, 0.6 + SYN * 3];
 

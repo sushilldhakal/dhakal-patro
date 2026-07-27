@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus, Star, Trash2, Pencil, MailWarning, Loader2 } from "lucide-react";
@@ -22,11 +23,19 @@ export function Account() {
   const { t } = useTranslation();
   const { user, loading: authLoading, refreshUser } = useAuth();
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const profilesQuery = useQuery({
+    queryKey: ["account-profiles"],
+    queryFn: listProfiles,
+    enabled: !!user,
+  });
+  const profiles = profilesQuery.data ?? [];
+  const loading = profilesQuery.isLoading;
   const [editing, setEditing] = useState<Profile | "new" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const error = profilesQuery.isError ? t("account_page.load_error") : null;
   const [resent, setResent] = useState(false);
+
+  const reloadProfiles = () => void queryClient.invalidateQueries({ queryKey: ["account-profiles"] });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -34,30 +43,15 @@ export function Account() {
     }
   }, [authLoading, user, navigate]);
 
-  async function load() {
-    setLoading(true);
-    try {
-      setProfiles(await listProfiles());
-    } catch (e) {
-      setError(t("account_page.load_error"));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (user) void load();
-  }, [user]);
-
   async function onDelete(id: string) {
     if (!confirm(t("account_page.delete_confirm"))) return;
     await deleteProfile(id);
-    void load();
+    reloadProfiles();
   }
 
   async function onMakeDefault(p: Profile) {
     await updateProfile(p.id, { is_default: true });
-    void load();
+    reloadProfiles();
   }
 
   useRouteLoading(authLoading || !user || loading);
@@ -113,7 +107,7 @@ export function Account() {
           onCancel={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
-            void load();
+            reloadProfiles();
             void refreshUser();
           }}
           existing={editing === "new" ? undefined : editing}

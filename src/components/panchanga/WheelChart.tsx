@@ -151,6 +151,8 @@ function WheelChartImpl({
     | { mode: "p"; x0: number; y0: number; pan0x: number; pan0y: number; moved: boolean }
     | null
   >(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragMoved, setDragMoved] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   /** Active pointer positions for pinch-to-zoom. */
   const ptrRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -746,6 +748,8 @@ function WheelChartImpl({
     ptrRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     e.currentTarget.setPointerCapture(e.pointerId);
     if (ptrRef.current.size === 1) {
+      setIsDragging(true);
+      setDragMoved(false);
       if (zoom > 1) {
         dragRef.current = { mode: "p", x0: e.clientX, y0: e.clientY, pan0x: pan.x, pan0y: pan.y, moved: false };
       } else {
@@ -773,11 +777,17 @@ function WheelChartImpl({
     if (dragRef.current.mode === "p") {
       const dx = e.clientX - dragRef.current.x0;
       const dy = e.clientY - dragRef.current.y0;
-      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.moved = true;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+        dragRef.current.moved = true;
+        setDragMoved(true);
+      }
       onPan(dragRef.current.pan0x + dx, dragRef.current.pan0y + dy);
     } else {
       const d = angleAt(e) - dragRef.current.a;
-      if (Math.abs(d) > 1.2) dragRef.current.moved = true;
+      if (Math.abs(d) > 1.2) {
+        dragRef.current.moved = true;
+        setDragMoved(true);
+      }
       onSpin(dragRef.current.spin0 + d);
     }
   };
@@ -785,6 +795,7 @@ function WheelChartImpl({
     e.currentTarget.releasePointerCapture(e.pointerId);
     ptrRef.current.delete(e.pointerId);
     dragRef.current = null;
+    setIsDragging(false);
     if (ptrRef.current.size < 2) pinchRef.current = null;
   };
 
@@ -796,11 +807,11 @@ function WheelChartImpl({
     <div
       className={wheelSvgWrap}
       ref={wrapRef}
-      style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: dragRef.current ? "none" : "transform 0.12s ease-out" }}
+      style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: isDragging ? "none" : "transform 0.12s ease-out" }}
     >
       <svg
         viewBox="42 42 916 916"
-        className={wheelSvg(!!dragRef.current?.moved)}
+        className={wheelSvg(dragMoved)}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}

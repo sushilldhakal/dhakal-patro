@@ -20,7 +20,9 @@ import {
 } from "@/lib/ephemeris-adapters";
 import { formatTimeShort, getSunrise, getSunset } from "@/lib/panchanga-format";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
-import { PanchangaDateNav } from "@/components/panchanga/PanchangaDateNav";
+import { PatroDayTimeNav } from "@/components/patro-date";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { usePatroPanchangaUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline, DayCycleToggle, type DayCycleMode } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
@@ -33,16 +35,10 @@ import {
 } from "@/components/panchanga/MuhurtaNowPanel";
 import { SunriseD1ChartPanel } from "@/components/panchanga/SunriseD1ChartPanel";
 import { usePanchangaLocation, displayLocationLabel } from "@/components/panchanga/use-panchanga-location";
+import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import {
-  defaultClockForTimezone,
-  usePanchangaClock,
-} from "@/components/panchanga/use-panchanga-mode";
-import {
-  locationToSearch,
-  sameLocationParams,
-  sameSearch,
+  currentPatroYearRangeLinkSearch,
   searchToLocation,
-  type PanchangaSearch,
 } from "@/lib/url-state";
 import {
   DinVisheshSection,
@@ -62,60 +58,20 @@ const PANCHANGA_ROUTE_LOADING = false;
 
 const routeApi = getRouteApi("/panchanga");
 
-function toAdStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-/** Parse "YYYY-MM-DD" into a Date in the local zone (no UTC shift). */
-function parseAdStr(s: string): Date {
-  const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
-}
-
 export function Panchanga() {
   const { t } = useTranslation();
   const { lang } = useLocale();
+  const langEra = useCalendarEra();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
 
-  // Seed every selection from the URL on first render so a shared link opens on
-  // exactly the date/time/view/location it encodes; otherwise fall back to the
-  // stored preference / today.
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const [date, setDate] = useState(() =>
-    search.date ? parseAdStr(search.date) : new Date()
-  );
-  const timezoneForMode = location.params.timezone ?? "Asia/Kathmandu";
-  const { clock, setClock } = usePanchangaClock(timezoneForMode, { clock: search.time });
+  const dayBrowse = usePatroPanchangaUrlBrowse(search, navigate, location, setLocation);
+  const { date, setDate, dateAd: adDateStr, clock, setClock } = dayBrowse;
   const [clockUserAdjusted, setClockUserAdjusted] = useState(false);
 
-  const adDateStr = toAdStr(date);
   const bs = adToBS(date);
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
-
-  useEffect(() => {
-    const desired: PanchangaSearch = {
-      ...locationToSearch(location),
-      date: adDateStr,
-      time: clock,
-    };
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
-    }
-  }, [location, adDateStr, clock, search, navigate]);
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (search.date && search.date !== adDateStr) setDate(parseAdStr(search.date));
-    if (search.time && search.time !== clock) setClock(search.time);
-    const loc = searchToLocation(search);
-    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const udayaQuery = useQuery({
     queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
@@ -187,10 +143,11 @@ export function Panchanga() {
 
   const hadUrlTimeRef = useRef(Boolean(search.time));
   const clockSyncedKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
+  const [trackedAdDate, setTrackedAdDate] = useState(adDateStr);
+  if (adDateStr !== trackedAdDate) {
+    setTrackedAdDate(adDateStr);
     setClockUserAdjusted(false);
-  }, [adDateStr]);
+  }
 
   const handleClockChange = useCallback(
     (next: string) => {
@@ -253,7 +210,8 @@ export function Panchanga() {
               chart. दिन-रात re-reads the moving angas at midnight; date sections
               stay tied to the calendar date. Rides in the header toolbar row
               alongside the location picker — same single-row layout as home. */}
-          <PanchangaDateNav
+          <PatroDayTimeNav
+            calendarMode={langEra}
             date={date}
             onDateChange={setDate}
             todayAd={todayAd}
@@ -335,7 +293,7 @@ export function Panchanga() {
             {wheelData ? (
               <Link
                 to="/panchanga/year"
-                search={{ ...locationToSearch(location), year: bs.year }}
+                search={currentPatroYearRangeLinkSearch(location, langEra)}
                 className="inline-flex h-9 items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/10 hover:text-secondary"
               >
                 <CalendarRange className="size-4" />

@@ -1,13 +1,14 @@
-import { ChevronLeft, ChevronRight, HeartHandshake } from "lucide-react";
+import { HeartHandshake } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { LocationSelector } from "@/components/panchanga/LocationSelector";
+import { PatroYearNav } from "@/components/patro-date";
+import type { CalendarEra } from "@/lib/patro-era";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { SaitDayCard } from "@/components/sait/SaitDayCard";
 import { SaitRulesSection, type SaitRule } from "@/components/sait/SaitRulesSection";
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
-import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
+import { adToBS, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import type {
   BratabandhaNakshatraMode,
   SaitDetailDay,
@@ -15,13 +16,15 @@ import type {
   SaitSuitability,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { patroMonthNavBtn } from "@/lib/patro-classes";
 
 interface Props {
   title: string;
   subtitle: string;
   year: number;
   onYearChange: (year: number) => void;
+  calendarMode?: CalendarEra;
+  yearOptions?: number[];
+  currentYear?: number;
   location: PanchangaLocation;
   onLocationChange: (loc: PanchangaLocation) => void;
   method?: { ne?: string; en?: string } | null;
@@ -69,6 +72,9 @@ export function SaitCeremonyLayout({
   subtitle,
   year,
   onYearChange,
+  calendarMode = "bs",
+  yearOptions,
+  currentYear,
   location,
   onLocationChange,
   method,
@@ -94,6 +100,7 @@ export function SaitCeremonyLayout({
   countLabel,
 }: Props) {
   const { pick, digits } = useLocale();
+  const todayBsYear = useMemo(() => adToBS(new Date()).year, []);
 
   const byMonth = useMemo(() => {
     const map = new Map<number, SaitDetailDay[]>();
@@ -165,38 +172,15 @@ export function SaitCeremonyLayout({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-0.5">
-          <button
-            type="button"
-            onClick={() => onYearChange(year - 1)}
-            className={patroMonthNavBtn}
-            aria-label={pick("अघिल्लो वर्ष", "Previous year")}
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="min-w-[6.5rem] px-1 text-center text-sm font-bold tabular-nums text-foreground">
-            {pick(`वि.सं. ${digits(year)}`, `BS ${digits(year)}`)}
-          </span>
-          <button
-            type="button"
-            onClick={() => onYearChange(year + 1)}
-            className={patroMonthNavBtn}
-            aria-label={pick("अर्को वर्ष", "Next year")}
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-
-        <div className="ml-auto flex min-w-0 items-center gap-1.5">
-          <LocationSelector
-            compact
-            location={location}
-            onLocationChange={onLocationChange}
-            className="h-9 min-w-0 w-auto max-w-[13rem]"
-          />
-        </div>
-      </div>
+      <PatroYearNav
+        calendarMode={calendarMode}
+        year={year}
+        onYearChange={onYearChange}
+        currentYear={currentYear ?? todayBsYear}
+        yearOptions={yearOptions}
+        location={location}
+        onLocationChange={onLocationChange}
+      />
 
       {!loading && displayCount > 0 ? (
         <p className="m-0 text-sm text-muted-foreground">

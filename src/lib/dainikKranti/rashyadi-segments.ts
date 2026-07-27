@@ -1,5 +1,5 @@
 import type { CalendarDay, GocharIngressEvent, PlanetInfo } from "@/lib/api";
-import { RASHI_NE } from "@/lib/dainikKranti/gochar-display";
+import { rashiNumberFromName } from "@/lib/rashi-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import {
   GRAHA_KEY_TO_TRANSIT_ABBREV,
@@ -9,11 +9,6 @@ import {
   type RashyadiSegment,
   rashyadiFromPlanetInfo,
 } from "./rashyadi";
-
-const RASHI_EN = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
-] as const;
 
 const LUNAR_MONTH_INITIAL: Record<string, string> = {
   baisakh: "वै.",
@@ -81,17 +76,10 @@ function resolveVedicDateAd(
 }
 
 function rashiNoFromIngress(ev: GocharIngressEvent): number | undefined {
-  if (ev.to_rashi) {
-    const i = RASHI_EN.findIndex(
-      (r) => r.toLowerCase() === ev.to_rashi!.toLowerCase(),
-    );
-    if (i >= 0) return i + 1;
-  }
-  if (ev.to_rashi_ne) {
-    const i = RASHI_NE.indexOf(ev.to_rashi_ne as (typeof RASHI_NE)[number]);
-    if (i >= 0) return i + 1;
-  }
-  return undefined;
+  return (
+    rashiNumberFromName(ev.to_rashi) ??
+    rashiNumberFromName(ev.to_rashi_ne)
+  );
 }
 
 export function formatGapashaCode(

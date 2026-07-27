@@ -2,8 +2,8 @@ import type { GocharGraha } from "@/lib/api";
 import {
   buildPlanetsByRashi,
   formatGocharBsLabel,
-  RASHI_NE,
 } from "@/lib/dainikKranti/gochar-display";
+import { getRashiList } from "@/lib/rashi-i18n";
 import {
   GOCHAR_RASHI_TO_HOUSE,
   NI_HOUSE_POLYGONS,
@@ -40,6 +40,7 @@ export function GocharKundaliChart({
   const { pick } = useLocale();
   const planetsByRashi = buildPlanetsByRashi(grahas);
   const dateLabel = formatGocharBsLabel(dateBs, dateAd);
+  const rashiListNe = getRashiList("ne");
 
   return (
     <div className={cn("rounded-xl border border-border p-4", className)}>
@@ -82,7 +83,7 @@ export function GocharKundaliChart({
             rx="2"
           />
 
-          {RASHI_NE.map((rashiNe, idx) => {
+          {rashiListNe.map((rashiNe, idx) => {
             const rashiNo = idx + 1;
             const house = GOCHAR_RASHI_TO_HOUSE[rashiNo]!;
             const points = NI_HOUSE_POLYGONS[house]!;

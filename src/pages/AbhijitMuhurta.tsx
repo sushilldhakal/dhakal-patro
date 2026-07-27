@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,8 @@ import {
   type CalendarDay,
 } from "@/lib/api";
 import { PageShell } from "@/components/PageShell";
-import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
+import { usePatroMonthUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { PatroMonthYearNav, PATRO_AD_YEAR_OPTIONS, PATRO_BS_YEAR_OPTIONS } from "@/components/patro-date";
 import {
   resolveLocationTimezone,
   usePanchangaLocation,
@@ -20,9 +21,7 @@ import {
   BS_MONTH_NAMES,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
-  adToBS,
   getBSMonthLength,
-  getCurrentBs,
 } from "@/lib/bs-calendar";
 import { useLocale } from "@/i18n/locale";
 import {
@@ -32,11 +31,7 @@ import {
 } from "@/lib/panchanga-format";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
 import {
-  locationToSearch,
-  sameLocationParams,
-  sameSearch,
   searchToLocation,
-  type AbhijitSearch,
 } from "@/lib/url-state";
 import {
   patroEmpty,
@@ -59,24 +54,6 @@ function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
     month: "short",
     year: "numeric",
   });
-}
-
-function initialYearFromSearch(searchYear?: number): number {
-  if (
-    searchYear != null &&
-    searchYear >= BS_SUPPORTED_START_YEAR &&
-    searchYear <= BS_SUPPORTED_END_YEAR
-  ) {
-    return searchYear;
-  }
-  return getCurrentBs().year;
-}
-
-function initialMonthFromSearch(searchMonth?: number): number {
-  if (searchMonth != null && searchMonth >= 1 && searchMonth <= 12) {
-    return searchMonth;
-  }
-  return getCurrentBs().month;
 }
 
 function buildRows(
@@ -175,42 +152,16 @@ function AbhijitMonthGrid({
   );
 }
 
+const BS_MIN_INDEX = BS_SUPPORTED_START_YEAR * 12;
+const BS_MAX_INDEX = BS_SUPPORTED_END_YEAR * 12 + 11;
+
 export function AbhijitMuhurta() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { pick, digits, lang } = useLocale();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const todayBs = useMemo(() => adToBS(new Date()), []);
-  const [year, setYear] = useState(() => initialYearFromSearch(search.year));
-  const [month, setMonth] = useState(() => initialMonthFromSearch(search.month));
-
-  useEffect(() => {
-    const desired: AbhijitSearch = {
-      ...locationToSearch(location),
-      year,
-      month,
-    };
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
-    }
-  }, [location, year, month, search, navigate]);
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (search.year != null) {
-      const next = initialYearFromSearch(search.year);
-      setYear((current) => (current === next ? current : next));
-    }
-    if (search.month != null) {
-      const next = initialMonthFromSearch(search.month);
-      setMonth((current) => (current === next ? current : next));
-    }
-    const loc = searchToLocation(search);
-    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  const monthBrowse = usePatroMonthUrlBrowse(search, navigate, location, setLocation);
 
   const todayAd = useMemo(
     () => todayAdStringInTimezone(new Date(), resolveLocationTimezone(location)),
@@ -218,15 +169,25 @@ export function AbhijitMuhurta() {
   );
 
   const monthQ = useQuery({
-    queryKey: panchangaKeys.month(year, month, location.params, false),
+    queryKey: panchangaKeys.month(
+      monthBrowse.browseYear,
+      monthBrowse.browseMonth,
+      location.params,
+      false,
+      false,
+      monthBrowse.era,
+    ),
     queryFn: () =>
-      fetchMonthCalendar(year, month, location.params, { full: false }),
+      fetchMonthCalendar(monthBrowse.browseYear, monthBrowse.browseMonth, location.params, {
+        full: false,
+        era: monthBrowse.era,
+      }),
     staleTime: 1000 * 60 * 60,
   });
 
   const rows = useMemo(
-    () => buildRows(monthQ.data?.calendar ?? [], year, month),
-    [monthQ.data?.calendar, year, month],
+    () => buildRows(monthQ.data?.calendar ?? [], monthBrowse.bsYear, monthBrowse.bsMonth),
+    [monthQ.data?.calendar, monthBrowse.bsYear, monthBrowse.bsMonth],
   );
 
   const todayRow = useMemo(
@@ -234,28 +195,30 @@ export function AbhijitMuhurta() {
     [rows, todayAd],
   );
 
-  const monthLabel = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
+  const monthLabel = pick(
+    BS_MONTHS_NE[monthBrowse.bsMonth - 1],
+    BS_MONTH_NAMES[monthBrowse.bsMonth - 1],
+  );
 
   useRouteLoading(monthQ.isLoading);
 
   function goToToday() {
-    setYear(todayBs.year);
-    setMonth(todayBs.month);
+    monthBrowse.goToday(todayAd);
   }
 
   function stepMonth(delta: number) {
-    const idx = year * 12 + (month - 1) + delta;
-    const nextYear = Math.floor(idx / 12);
-    const nextMonth = (idx % 12) + 1;
-    if (nextYear < BS_SUPPORTED_START_YEAR || nextYear > BS_SUPPORTED_END_YEAR) return;
-    setYear(nextYear);
-    setMonth(nextMonth);
+    monthBrowse.stepMonth(delta);
   }
 
-  function selectMonth(y: number, m: number) {
-    setYear(y);
-    setMonth(m);
-  }
+  const atMonthStart =
+    monthBrowse.era === "ad"
+      ? monthBrowse.adYear <= PATRO_AD_YEAR_OPTIONS[0]! && monthBrowse.adMonth <= 1
+      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) <= BS_MIN_INDEX;
+  const atMonthEnd =
+    monthBrowse.era === "ad"
+      ? monthBrowse.adYear >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]! &&
+        monthBrowse.adMonth >= 12
+      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) >= BS_MAX_INDEX;
 
   return (
     <PageShell className="pb-16 space-y-6">
@@ -276,17 +239,19 @@ export function AbhijitMuhurta() {
         </p>
       </div>
 
-      <PanchangaBrowseHeader
-        mode="month"
-        year={year}
-        month={month}
-        onMonthChange={(m) => setMonth(m)}
-        onYearChange={(y) => setYear(y)}
-        onSelectDate={(y, m) => selectMonth(y, m)}
+      <PatroMonthYearNav
+        calendarMode={monthBrowse.era}
+        year={monthBrowse.browseYear}
+        month={monthBrowse.browseMonth}
+        yearOptions={monthBrowse.era === "ad" ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS}
+        onMonthChange={(m) => monthBrowse.setBrowseMonth(monthBrowse.browseYear, m)}
+        onYearChange={(y) => monthBrowse.setBrowseMonth(y, monthBrowse.browseMonth)}
         onPrev={() => stepMonth(-1)}
         onNext={() => stepMonth(1)}
         onToday={goToToday}
         todayAd={todayAd}
+        prevDisabled={atMonthStart}
+        nextDisabled={atMonthEnd}
         location={location}
         onLocationChange={setLocation}
       />
@@ -300,7 +265,7 @@ export function AbhijitMuhurta() {
                 {t("abhijit.today_hero")}
               </p>
               <p className="text-sm mb-2">
-                {formatBsMonthDayPatro(year, month, todayRow.day.day)}
+                {formatBsMonthDayPatro(monthBrowse.bsYear, monthBrowse.bsMonth, todayRow.day.day)}
                 {" · "}
                 {pick(
                   todayRow.day.weekday_ne ?? todayRow.day.weekday,
@@ -344,7 +309,7 @@ export function AbhijitMuhurta() {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold text-foreground m-0">
-          {t("abhijit.month_heading")} — {monthLabel} {digits(year)}
+          {t("abhijit.month_heading")} — {monthLabel} {digits(monthBrowse.bsYear)}
         </h2>
         {!monthQ.isLoading && rows.length > 0 ? (
           <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-sm font-semibold">

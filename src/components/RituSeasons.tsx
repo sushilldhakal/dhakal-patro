@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -79,12 +79,12 @@ export function RituSeasons({
   });
 
   const south = seasonsQ.data?.southern_hemisphere ?? false;
+  const [nowMs] = useState(() => Date.now());
 
   const seasons = useMemo<SeasonItem[]>(() => {
     const boundaries = seasonsQ.data?.boundaries;
     if (!boundaries?.length) return [];
 
-    const nowMs = Date.now();
     const todayMid = midnightUtcMs(todayAd);
 
     return boundaries.map((b, i) => {
@@ -113,7 +113,7 @@ export function RituSeasons({
         progress,
       };
     });
-  }, [seasonsQ.data, todayAd, tz]);
+  }, [seasonsQ.data, todayAd, tz, nowMs]);
 
   const relLabel = (days: number) => {
     if (days <= 0) return "";

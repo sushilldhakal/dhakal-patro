@@ -14,16 +14,15 @@ import {
   rashiNeFromNumber,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import { formatRashiByNumber, getRashiList, rashiNumberFromName } from "@/lib/rashi-i18n";
 
-export const RASHI_COLUMNS_NE = [
-  "मेष", "वृष", "मिथुन", "कर्क", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
+/** @deprecated Use getRashiList("ne") */
+export const RASHI_COLUMNS_NE = getRashiList("ne") as readonly string[];
 
-export const RASHI_COLUMNS_EN = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
-] as const;
+/** @deprecated Use getRashiList("en") */
+export const RASHI_COLUMNS_EN = getRashiList("en") as readonly string[];
+
+export { getRashiList };
 
 const GRAHA_EN_BY_KEY: Record<string, string> = {
   sun: "Sun", moon: "Moon", mars: "Mars", mercury: "Mercury", jupiter: "Jupiter",
@@ -170,7 +169,8 @@ export function buildGrahaSpashtaMatrix(days: CalendarDay[]): GrahaSpashtaRow[] 
         if (!rashiNe) continue;
         planets[key] = {
           rashiNe,
-          rashiEn: RASHI_COLUMNS_EN[RASHI_COLUMNS_NE.indexOf(rashiNe as (typeof RASHI_COLUMNS_NE)[number])] ?? rashiNe,
+          rashiEn:
+            formatRashiByNumber(rashiNumberFromName(rashiNe), "en") ?? rashiNe,
           coords: planetDegreeCells(info),
           isRetrograde: info.is_retrograde ?? info.retrograde ?? false,
           isCombust: info.is_combust ?? false,
@@ -216,8 +216,9 @@ export function buildCalcNotes(
         formatTimeShort(span.start_hours_clock);
       if (!raw || !isLateNightPatroTime(raw, day.sunrise)) continue;
       const rashiNe = span.name_ne ?? rashiNeFromNumber(span.number);
-      const rashiEn = span.name ??
-        (span.number ? RASHI_COLUMNS_EN[span.number - 1] : undefined);
+      const rashiEn =
+        span.name ??
+        (span.number ? formatRashiByNumber(span.number, "en") : undefined);
       const clock = formatVedicPatroTime(raw, day.sunrise);
       notes.push({
         day: day.day,

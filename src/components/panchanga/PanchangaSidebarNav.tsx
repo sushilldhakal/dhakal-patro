@@ -3,7 +3,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
-import { getCurrentBs } from "@/lib/bs-calendar";
 import { defaultPanchakPatroYear } from "@/lib/panchak/panchak-patro-data";
 import {
   preloadAllPanchangaRoutes,
@@ -20,22 +19,26 @@ import {
   parseKundaliSectionFromHash,
 } from "@/components/panchanga/KundaliSidebarSubnav";
 import { parseKundaliProfileId } from "@/lib/kundali/kundali-routes";
-import { buildDainikKrantiSearch } from "@/lib/url-state";
+import { currentPatroYearLinkSearch, patroRouteLinkSearch } from "@/lib/url-state";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { cn } from "@/lib/utils";
 
 function itemSearch(
   item: PanchangaSidebarItem,
   location: ReturnType<typeof usePanchangaLocation>["location"],
+  era: ReturnType<typeof useCalendarEra>,
 ): Record<string, unknown> | undefined {
-  if (item.id === "dainikkranti") {
-    const { year, month } = getCurrentBs();
-    return buildDainikKrantiSearch(location, year, month) as Record<string, unknown>;
+  if (item.id === "kundali" || item.id === "kundali-milan" || item.id === "avakahada" || item.id === "converter") {
+    return undefined;
   }
   if (item.id === "panchak-patro") {
-    return { year: defaultPanchakPatroYear() };
+    return currentPatroYearLinkSearch(location, era) as Record<string, unknown>;
   }
-  return undefined;
+  const path = item.params
+    ? resolveSidebarLinkPath(item.to, item.params)
+    : item.to;
+  return patroRouteLinkSearch(path, location, era);
 }
 
 export function isSidebarItemActive(pathname: string, item: PanchangaSidebarItem): boolean {
@@ -122,6 +125,7 @@ function SidebarSection({
   pick,
   kundaliProfileId,
   kundaliSectionId,
+  era,
 }: {
   section: PanchangaSidebarSection;
   expanded: boolean;
@@ -134,6 +138,7 @@ function SidebarSection({
   pick: (ne: string, en: string) => string;
   kundaliProfileId: string | null;
   kundaliSectionId: ReturnType<typeof parseKundaliSectionFromHash>;
+  era: ReturnType<typeof useCalendarEra>;
 }) {
   const title = pick(section.titleNe, section.titleEn);
   const hasActiveItem = section.items.some((item) => isSidebarItemActive(pathname, item));
@@ -144,7 +149,7 @@ function SidebarSection({
       label = t("panchak.title", { year: digits(panchakYear) });
     }
     const blurb = item.blurbNe ? pick(item.blurbNe, item.blurbEn ?? "") : undefined;
-    const search = itemSearch(item, location);
+    const search = itemSearch(item, location, era);
     const active = forceActive ?? isSidebarItemActive(pathname, item);
     const prefetch = () => preloadPanchangaRoute(resolveSidebarLinkPath(item.to, item.params));
     const showKundaliSections = item.id === "kundali" && kundaliProfileId != null;
@@ -215,6 +220,7 @@ function SidebarSection({
 export function PanchangaSidebarNav({ className }: { className?: string }) {
   const { pick, digits } = useLocale();
   const { t } = useTranslation();
+  const era = useCalendarEra();
   const { location } = usePanchangaLocation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const hash = useRouterState({ select: (s) => s.location.hash });
@@ -225,12 +231,11 @@ export function PanchangaSidebarNav({ className }: { className?: string }) {
 
   const activeSectionId = findActiveSectionId(pathname, sections);
   const [expandedId, setExpandedId] = useState<string | null>(activeSectionId);
-
-  useEffect(() => {
-    if (activeSectionId) {
-      setExpandedId(activeSectionId);
-    }
-  }, [activeSectionId]);
+  const [trackedActiveSectionId, setTrackedActiveSectionId] = useState(activeSectionId);
+  if (activeSectionId && activeSectionId !== trackedActiveSectionId) {
+    setTrackedActiveSectionId(activeSectionId);
+    setExpandedId(activeSectionId);
+  }
 
   useEffect(() => {
     const run = () => preloadAllPanchangaRoutes();
@@ -270,6 +275,7 @@ export function PanchangaSidebarNav({ className }: { className?: string }) {
             pick={pick}
             kundaliProfileId={kundaliProfileId}
             kundaliSectionId={kundaliSectionId}
+            era={era}
           />
         ))}
       </div>

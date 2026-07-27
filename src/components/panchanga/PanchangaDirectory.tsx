@@ -11,8 +11,11 @@ import {
 import {
   QuickLinkCard,
 } from "@/components/home/HomeQuickLinks";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { useLocale } from "@/i18n/locale";
 import { CEREMONY_META, ELEMENT_META } from "@/lib/panchanga-elements";
+import { patroElementLinkSearch, patroRouteLinkSearch } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
 
 function SectionTitle({
@@ -40,6 +43,7 @@ function SectionTitle({
 function DirectoryCard({
   to,
   params,
+  search,
   ne,
   en,
   blurbNe,
@@ -48,6 +52,7 @@ function DirectoryCard({
 }: {
   to: "/panchanga/element/$name" | "/sait/$category";
   params: Record<string, string>;
+  search?: Record<string, unknown>;
   ne: string;
   en: string;
   blurbNe: string;
@@ -59,6 +64,7 @@ function DirectoryCard({
     <QuickLinkCard
       to={to}
       params={params}
+      search={search}
       icon={icon}
       label={pick(ne, en)}
       description={pick(blurbNe, blurbEn)}
@@ -113,6 +119,8 @@ const GRAHA_PAGES = [
 /** Categorized link grid: transition elements → graha detail → daily tables → shubha muhurta. */
 export function PanchangaDirectory({ className }: { className?: string }) {
   const { pick } = useLocale();
+  const era = useCalendarEra();
+  const { location } = usePanchangaLocation();
   const spans = ELEMENT_META.filter((e) => e.kind === "span");
   const tables = ELEMENT_META.filter((e) => e.kind === "table");
 
@@ -125,6 +133,7 @@ export function PanchangaDirectory({ className }: { className?: string }) {
             key={e.id}
             to="/panchanga/element/$name"
             params={{ name: e.id }}
+            search={patroElementLinkSearch(e.id, location, era) as Record<string, unknown>}
             ne={e.ne}
             en={e.en}
             blurbNe={e.blurbNe}
@@ -140,6 +149,7 @@ export function PanchangaDirectory({ className }: { className?: string }) {
           <QuickLinkCard
             key={g.to}
             to={g.to}
+            search={patroRouteLinkSearch(g.to, location, era)}
             icon={g.icon}
             label={pick(g.ne, g.en)}
             description={pick(g.blurbNe, g.blurbEn)}
@@ -154,6 +164,7 @@ export function PanchangaDirectory({ className }: { className?: string }) {
             key={e.id}
             to="/panchanga/element/$name"
             params={{ name: e.id }}
+            search={patroElementLinkSearch(e.id, location, era) as Record<string, unknown>}
             ne={e.ne}
             en={e.en}
             blurbNe={e.blurbNe}
@@ -170,8 +181,9 @@ export function PanchangaDirectory({ className }: { className?: string }) {
             key={c.id}
             to="/sait/$category"
             params={{ category: c.id }}
+            search={patroRouteLinkSearch(`/sait/${c.id}`, location, era)}
             ne={`${c.ne} साइत`}
-            en={`${c.en} muhurta`}
+            en={`${c.en} moment`}
             blurbNe="शुभ मिति र व्याख्या"
             blurbEn="Auspicious dates & explanation"
             icon={HeartHandshake}

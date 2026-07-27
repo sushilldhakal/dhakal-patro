@@ -1,18 +1,15 @@
 import type { GocharGraha } from "@/lib/api";
 import { adToBS } from "@/lib/bs-calendar";
 import { GOCHAR_RASHI_TO_HOUSE } from "@/lib/kundali/north-indian-layout";
+import {
+  formatRashiByNumber,
+  rashiNeFromApiEn,
+  rashiNumberFromName,
+  resolveRashiDisplay,
+} from "@/lib/rashi-i18n";
 import { formatBsIsoDateNepali, toNepaliDigits } from "@/lib/panchanga-format";
 
-export const RASHI_NE = [
-  "मेष", "वृष", "मिथुन", "कर्क", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
-
-/** English rāśi names from the gochar API, aligned to RASHI_NE order. */
-export const RASHI_EN = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
-] as const;
+export { getRashiList, getRashiName, rashiNumberFromName, resolveRashiDisplay } from "@/lib/rashi-i18n";
 
 export const GRAHA_CHART_LABEL: Record<string, string> = {
   sun: "सू.",
@@ -27,12 +24,7 @@ export const GRAHA_CHART_LABEL: Record<string, string> = {
 };
 
 export function rashiEnToNe(en?: string | null): string | undefined {
-  if (!en) return undefined;
-  const key = en.trim().toLowerCase();
-  const i = RASHI_EN.findIndex((r) => r.toLowerCase() === key);
-  if (i >= 0) return RASHI_NE[i];
-  const partial = RASHI_EN.findIndex((r) => key.startsWith(r.toLowerCase().slice(0, 4)));
-  return partial >= 0 ? RASHI_NE[partial] : en;
+  return rashiNeFromApiEn(en);
 }
 
 export function rashiNoFromGraha(g: GocharGraha): number | undefined {
@@ -42,10 +34,8 @@ export function rashiNoFromGraha(g: GocharGraha): number | undefined {
     const n = Number(raw);
     if (!Number.isNaN(n) && n >= 1 && n <= 12) return n;
   }
-  const fromName = rashiEnToNe(g.rashi);
-  if (!fromName) return undefined;
-  const idx = RASHI_NE.indexOf(fromName as (typeof RASHI_NE)[number]);
-  return idx >= 0 ? idx + 1 : undefined;
+  const fromName = rashiNumberFromName(g.rashi_ne) ?? rashiNumberFromName(g.rashi);
+  return fromName;
 }
 
 export function grahaChartLabel(key: string, g: GocharGraha): string {
@@ -53,7 +43,11 @@ export function grahaChartLabel(key: string, g: GocharGraha): string {
 }
 
 export function grahaRashiNe(g: GocharGraha): string | undefined {
-  return g.rashi_ne ?? rashiEnToNe(g.rashi);
+  return g.rashi_ne ?? rashiNeFromApiEn(g.rashi);
+}
+
+export function grahaRashiDisplay(g: GocharGraha, lang?: string): string | undefined {
+  return resolveRashiDisplay(g.rashi_ne, g.rashi, lang);
 }
 
 export type GocharChartPlanet = {
@@ -114,4 +108,8 @@ export function formatGocharBsLabel(dateBs?: string | null, dateAd?: string | nu
   if (!y || !m || !d) return undefined;
   const bs = adToBS(new Date(y, m - 1, d));
   return formatBsIsoDateNepali(`${bs.year}-${bs.month}-${bs.day}`);
+}
+
+export function rashiEnFromNumber(rashi: number): string {
+  return formatRashiByNumber(rashi, "en");
 }

@@ -229,6 +229,21 @@ export function getSecondaryCellDate(
   return { day: adDay, monthLabel: name, monthLabelShort: name };
 }
 
+/** BS day label for an AD calendar day subtitle, e.g. 12 Shrawan 2083. */
+export function getAdDayBsLabel(
+  adYear: number,
+  adMonth: number,
+  adDay: number,
+  lang = "en",
+  digitFn: (value: string | number) => string = String,
+): string {
+  const ad = new Date(adYear, adMonth - 1, adDay, 12, 0, 0, 0);
+  const bs = adToBS(ad);
+  const isEn = lang.slice(0, 2) === "en";
+  const monthLabel = isEn ? BS_MONTH_NAMES[bs.month - 1] : BS_MONTHS_NE[bs.month - 1];
+  return `${digitFn(bs.day)} ${monthLabel} ${digitFn(bs.year)}`;
+}
+
 /** BS month span subtitle for an AD month header, e.g. Poush–Magh 2082. */
 export function getAdMonthBsSpanLabel(
   adYear: number,
@@ -255,6 +270,17 @@ export function getAdMonthBsSpanLabel(
     return `${startLabel}–${endLabel} ${digitFn(bsStart.year)}`;
   }
   return `${startLabel} ${digitFn(bsStart.year)}/${endLabel} ${digitFn(bsEnd.year)}`;
+}
+
+/** BS Poush-to-Poush span for year browse — e.g. Poush 2083 – Poush 2084 (English). */
+export function getBsYearSpanLabel(
+  bsYear: number,
+  lang = "en",
+  digitFn: (value: string | number) => string = String,
+): string {
+  const isEn = lang.slice(0, 2) === "en";
+  const poushLabel = isEn ? BS_MONTH_NAMES[8] : BS_MONTHS_NE[8];
+  return `${poushLabel} ${digitFn(bsYear)} – ${poushLabel} ${digitFn(bsYear + 1)}`;
 }
 
 export function shiftBsMonth(

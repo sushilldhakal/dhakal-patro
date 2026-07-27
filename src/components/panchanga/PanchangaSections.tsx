@@ -207,7 +207,7 @@ export function SunMoonSection({ p }: { p: PanchangaDay }) {
 }
 
 /** @deprecated use SunMoonSamvatSection */
-export function SamvatSection(_props: { p: PanchangaDay }) {
+export function SamvatSection() {
   return null;
 }
 

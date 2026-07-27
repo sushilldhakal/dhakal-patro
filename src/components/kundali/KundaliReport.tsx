@@ -328,6 +328,7 @@ export function KundaliReport({
 
   useEffect(() => {
     if (disabled) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     generate(false);
   }, [datetime, location, ayanamsha, lang, disabled, generate]);
 

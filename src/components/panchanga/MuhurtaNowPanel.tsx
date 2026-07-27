@@ -46,7 +46,7 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="text-xs text-base uppercase tracking-[0.12em] mb-1">
-        {pick("क्षणिक मुहूर्त", "Muhurta now")}
+        {pick("क्षणिक मुहूर्त", "Moment now")}
       </div>
       {instantLabel && (
         <p className="text-sm mb-3 m-0">

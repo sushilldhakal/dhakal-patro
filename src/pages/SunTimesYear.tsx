@@ -1,79 +1,53 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { Trans, useTranslation } from "react-i18next";
 import { ArrowLeft, CalendarRange } from "lucide-react";
 import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
-import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
+import { PatroYearNav } from "@/components/patro-date";
 import { PageShell } from "@/components/PageShell";
+import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { useRouteLoading } from "@/lib/route-loading";
 import {
   displayLocationLabel,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { useLocale } from "@/i18n/locale";
-import {
-  locationToSearch,
-  sameLocationParams,
-  sameSearch,
-  searchToLocation,
-  type PanchangaYearSearch,
-} from "@/lib/url-state";
-import {
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-  getCurrentBs,
-} from "@/lib/bs-calendar";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { adToBS } from "@/lib/bs-calendar";
+import { getBsYearSpanLabel } from "@/lib/local-calendar";
+import { searchToLocation } from "@/lib/url-state";
 import { patroAyanaNorth, patroAyanaSouth } from "@/lib/patro-classes";
 
 const routeApi = getRouteApi("/panchanga-shell/suryakranti");
-
-function initialYearFromSearch(searchYear?: number): number {
-  if (
-    searchYear != null &&
-    searchYear >= BS_SUPPORTED_START_YEAR &&
-    searchYear <= BS_SUPPORTED_END_YEAR
-  ) {
-    return searchYear;
-  }
-  return getCurrentBs().year;
-}
 
 export function SunTimesYear() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const { lang } = useLocale();
+  const { lang, digits, pick } = useLocale();
   const locationLabel = displayLocationLabel(location, undefined, lang);
-  const currentBs = getCurrentBs();
-  const [year, setYear] = useState(() => initialYearFromSearch(search.year));
+  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
   const [gridLoading, setGridLoading] = useState(true);
 
+  const bsYearForLabel =
+    yearBrowse.era === "ad"
+      ? adToBS(new Date(yearBrowse.browseYear, 6, 15)).year
+      : yearBrowse.bsYear;
+  const bsYearSpan = getBsYearSpanLabel(bsYearForLabel, lang, digits);
+  const pageSubtitle =
+    yearBrowse.era === "ad"
+      ? pick(
+          `वार्षिक सूर्योदय–सूर्यास्त · ${digits(yearBrowse.browseYear)} AD · ${bsYearSpan}`,
+          `Annual sunrise & sunset · ${digits(yearBrowse.browseYear)} AD · ${bsYearSpan}`,
+        )
+      : pick(
+          `वार्षिक सूर्योदय–सूर्यास्त · ${bsYearSpan}`,
+          lang === "en"
+            ? `Annual sunrise & sunset · ${bsYearSpan}`
+            : `Annual sunrise & sunset · B.S. ${digits(yearBrowse.browseYear)}`,
+        );
+
   useRouteLoading(gridLoading);
-
-  // Keep the URL shareable: year + location always encoded in search params.
-  useEffect(() => {
-    const desired: PanchangaYearSearch = {
-      ...locationToSearch(location),
-      year,
-    };
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
-    }
-  }, [location, year, search, navigate]);
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (search.year != null) {
-      const next = initialYearFromSearch(search.year);
-      setYear((current) => (current === next ? current : next));
-    }
-    const loc = searchToLocation(search);
-    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
     <PageShell className="space-y-4 overflow-x-hidden pb-16">
@@ -88,68 +62,49 @@ export function SunTimesYear() {
         <h1 className="text-xl font-bold leading-tight tracking-tight m-0">
           {t("sun_times.title")}
         </h1>
-        <p className="text-sm mt-1 m-0">
-          {t("sun_times.subtitle", { year: toNepaliDigits(year) })}
-        </p>
+        <p className="text-sm mt-1 m-0">{pageSubtitle}</p>
       </div>
 
-      <GrahaYearHeader
-        year={year}
-        onYearChange={setYear}
-        currentYear={currentBs.year}
+      <PatroYearNav
+        calendarMode={yearBrowse.era}
+        year={yearBrowse.browseYear}
+        onYearChange={yearBrowse.setBrowseYear}
+        currentYear={yearBrowse.currentBrowseYear}
+        yearOptions={yearBrowse.yearOptions}
         location={location}
         onLocationChange={setLocation}
       />
 
-      <div className="rounded-xl border border-border bg-secondary/4 p-3.5 shadow-xs shadow-ring-soft">
-        <p className="m-0 mb-3 text-sm text-base leading-relaxed [&_strong]:font-extrabold [&_strong]:text-foreground">
-          <Trans i18nKey="sun_times.ayana_note" components={{ strong: <strong /> }} />
-        </p>
-        <div className="mb-3 overflow-x-auto">
-          <table className="w-full border-collapse text-sm text-base">
-            <thead>
-              <tr>
-                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold">
-                  {t("sun_times.col_ayana")}
-                </th>
-                <th scope="col" className="border-b border-border/80 px-2.5 py-2 text-left text-xs font-bold">
-                  {t("sun_times.col_sun_sign")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border-b border-border/80 px-2.5 py-2 align-middle">
-                  <span className={patroAyanaNorth}>उ</span> {t("sun_times.north_ayana")}
-                </td>
-                <td className="border-b border-border/80 px-2.5 py-2 align-middle">{t("sun_times.north_signs")}</td>
-              </tr>
-              <tr>
-                <td className="px-2.5 py-2 align-middle">
-                  <span className={patroAyanaSouth}>द</span> {t("sun_times.south_ayana")}
-                </td>
-                <td className="px-2.5 py-2 align-middle">{t("sun_times.south_signs")}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <Link
-          to="/panchanga/year"
-          search={{ year }}
-          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3.5 text-sm font-semibold text-foreground no-underline transition-colors hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary dark:hover:border-primary/35 dark:hover:bg-primary/10 dark:hover:text-primary"
-        >
-          <CalendarRange className="h-4 w-4 shrink-0" />
-          {t("sun_times.year_wheel_link")}
-        </Link>
-      </div>
-
       <SunTimesYearGrid
-        bsYear={year}
+        browseYear={yearBrowse.browseYear}
+        bsYear={yearBrowse.bsYear}
+        era={yearBrowse.era}
         locationLabel={locationLabel}
         locationParams={location.params}
         hideHeader
         onLoadingChange={setGridLoading}
       />
+
+      <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 text-sm leading-relaxed space-y-3">
+        <h2 className="text-base font-bold m-0 flex items-center gap-2">
+          <CalendarRange className="h-4 w-4 text-secondary shrink-0 dark:text-primary" />
+          {t("sun_times.ayana_title")}
+        </h2>
+        <p className="m-0 text-base">
+          <Trans
+            i18nKey="sun_times.ayana_body"
+            components={{
+              north: <span className={patroAyanaNorth} />,
+              south: <span className={patroAyanaSouth} />,
+            }}
+          />
+        </p>
+        {locationLabel ? (
+          <p className="m-0 text-xs text-base">
+            {pick("स्थान", "Location")}: {locationLabel}
+          </p>
+        ) : null}
+      </section>
     </PageShell>
   );
 }

@@ -15,9 +15,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { type ReactNode } from "react";
 import { useCurrentRitu } from "@/lib/ritu-display";
-import { buildDainikKrantiSearch } from "@/lib/url-state";
+import { currentPatroMonthLinkSearch, currentPatroYearLinkSearch, patroRouteLinkSearch } from "@/lib/url-state";
 import { defaultPanchakPatroYear } from "@/lib/panchak/panchak-patro-data";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 
@@ -97,7 +98,7 @@ function LinkCategory({
   );
 }
 
-function PanchakPatroQuickLink() {
+function PanchakPatroQuickLink({ location, era }: { location: PanchangaLocation; era: ReturnType<typeof useCalendarEra> }) {
   const { t } = useTranslation();
   const { digits } = useLocale();
   const year = defaultPanchakPatroYear();
@@ -105,28 +106,20 @@ function PanchakPatroQuickLink() {
   return (
     <QuickLinkCard
       to="/panchak-patro"
-      search={{ year }}
+      search={currentPatroYearLinkSearch(location, era)}
       icon={CalendarClock}
       label={t("panchak.title", { year: digits(year) })}
     />
   );
 }
 
-function ChandrKrantiQuickLink({
-  location,
-  bsYear,
-  bsMonth,
-}: {
-  location: PanchangaLocation;
-  bsYear: number;
-  bsMonth: number;
-}) {
+function ChandrKrantiQuickLink({ location, era }: { location: PanchangaLocation; era: ReturnType<typeof useCalendarEra> }) {
   const { t } = useTranslation();
 
   return (
     <QuickLinkCard
       to="/dainikkranti"
-      search={buildDainikKrantiSearch(location, bsYear, bsMonth)}
+      search={currentPatroMonthLinkSearch(location, era)}
       icon={Moon}
       label={t("nav.dainikkranti")}
     />
@@ -135,11 +128,13 @@ function ChandrKrantiQuickLink({
 
 function RituQuickLink({ location }: { location: PanchangaLocation }) {
   const { t } = useTranslation();
+  const era = useCalendarEra();
   const { current, loading } = useCurrentRitu(location);
 
   return (
     <QuickLinkCard
       to="/ritu"
+      search={patroRouteLinkSearch("/ritu", location, era)}
       label={t("ritu.title")}
       iconNode={
         loading ? (
@@ -158,17 +153,14 @@ function RituQuickLink({ location }: { location: PanchangaLocation }) {
 
 export function HomeQuickLinks({
   location,
-  bsYear,
-  bsMonth,
   className,
 }: {
   location: PanchangaLocation;
-  bsYear: number;
-  bsMonth: number;
   className?: string;
 }) {
   const { t } = useTranslation();
   const { pick } = useLocale();
+  const era = useCalendarEra();
 
   return (
     <div
@@ -179,16 +171,28 @@ export function HomeQuickLinks({
     >
       <LinkCategory title={pick("पात्रो तथा मिति", "Patro & dates")}>
         {QUICK_LINKS.filter(({ group }) => group === "patro").map(({ to, labelKey, icon }) => (
-          <QuickLinkCard key={to} to={to} icon={icon} label={t(labelKey)} />
+          <QuickLinkCard
+            key={to}
+            to={to}
+            search={patroRouteLinkSearch(to, location, era)}
+            icon={icon}
+            label={t(labelKey)}
+          />
         ))}
-        <ChandrKrantiQuickLink location={location} bsYear={bsYear} bsMonth={bsMonth} />
-        <PanchakPatroQuickLink />
+        <ChandrKrantiQuickLink location={location} era={era} />
+        <PanchakPatroQuickLink location={location} era={era} />
         <RituQuickLink location={location} />
       </LinkCategory>
 
-      <LinkCategory title={pick("ज्योतिष तथा मुहूर्त", "Jyotish & muhurta")}>
+      <LinkCategory title={pick("ज्योतिष तथा मुहूर्त", "Jyotish & moment")}>
         {QUICK_LINKS.filter(({ group }) => group === "jyotish").map(({ to, labelKey, icon }) => (
-          <QuickLinkCard key={to} to={to} icon={icon} label={t(labelKey)} />
+          <QuickLinkCard
+            key={to}
+            to={to}
+            search={patroRouteLinkSearch(to, location, era)}
+            icon={icon}
+            label={t(labelKey)}
+          />
         ))}
       </LinkCategory>
     </div>

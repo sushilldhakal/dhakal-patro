@@ -36,8 +36,9 @@ import {
   shiftBsMonth,
   uniqueBsMonths,
 } from "@/lib/local-calendar";
+import { PatroMonthYearNav, PATRO_AD_YEAR_OPTIONS, PATRO_BS_YEAR_OPTIONS } from "@/components/patro-date";
+import type { PatroMonthBrowse } from "@/hooks/use-patro-month-browse";
 import { BsCalendarGrid } from "./BsCalendarGrid";
-import { BsMonthHeaderTitle } from "./BsMonthHeaderTitle";
 import { VedicPatroLoader } from "./VedicPatroLoader";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
@@ -47,18 +48,8 @@ import { cn } from "@/lib/utils";
 import { patroMdRail, patroSegBtn } from "@/lib/patro-classes";
 import { ArrowLeftRight } from "lucide-react";
 
-const BS_YEAR_OPTIONS = Array.from(
-  { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-  (_, i) => BS_SUPPORTED_START_YEAR + i,
-);
-
 const AD_BOUNDS = getSupportedAdBounds();
-const AD_YEAR_OPTIONS = Array.from(
-  { length: AD_BOUNDS.maxYear - AD_BOUNDS.minYear + 1 },
-  (_, i) => AD_BOUNDS.minYear + i,
-);
 
-/** Home aside sits beside the calendar from Tailwind `xl` (1280px) up. */
 const ASIDE_SIDEBAR_MQ = "(min-width: 1280px)";
 
 function useMediaQuery(query: string): boolean {
@@ -129,6 +120,8 @@ interface Props {
   location?: PanchangaLocation;
   onLocationChange?: (location: PanchangaLocation) => void;
   todayAd?: string;
+  /** When set (Home), month/year/era come from URL-backed browse state. */
+  monthBrowse?: PatroMonthBrowse;
 }
 
 export function CalendarView({
@@ -143,6 +136,7 @@ export function CalendarView({
   location,
   onLocationChange,
   todayAd,
+  monthBrowse,
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -150,7 +144,6 @@ export function CalendarView({
   const calendarEra = useCalendarEra();
   const startsGregorian =
     typeof window !== "undefined" && getStoredLanguage() === "en";
-  const isAdCalendar = calendarEra === "ad" || lang === "en" || startsGregorian;
   const init = useMemo(() => {
     if (todayAd) {
       const bs = adToBS(new Date(`${todayAd}T12:00:00`));
@@ -162,11 +155,17 @@ export function CalendarView({
     const d = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
     return { year: d.getFullYear(), month: d.getMonth() + 1 };
   }, [todayAd]);
-  const [year, setYear] = useState(init.year);
-  const [month, setMonth] = useState(init.month);
-  const [adYear, setAdYear] = useState(initAd.year);
-  const [adMonth, setAdMonth] = useState(initAd.month);
-  const prevLangRef = useRef<string | null>(null);
+  const [bsYearState, setBsYearState] = useState(init.year);
+  const [bsMonthState, setBsMonthState] = useState(init.month);
+  const [adYearState, setAdYearState] = useState(initAd.year);
+  const [adMonthState, setAdMonthState] = useState(initAd.month);
+  const year = monthBrowse?.bsYear ?? bsYearState;
+  const month = monthBrowse?.bsMonth ?? bsMonthState;
+  const adYear = monthBrowse?.adYear ?? adYearState;
+  const adMonth = monthBrowse?.adMonth ?? adMonthState;
+  const isAdCalendar = monthBrowse
+    ? monthBrowse.era === "ad"
+    : calendarEra === "ad" || lang === "en" || startsGregorian;
   const [selected, setSelected] = useState<CalendarDay | null>(null);
   const [internalPatroView, setInternalPatroView] = useState<HomePatroView>(() =>
     enablePatroToggle ? loadHomePatroView() : "calendar",
@@ -184,14 +183,10 @@ export function CalendarView({
     onDaySelect?.(null);
   };
 
-  useEffect(() => {
-    if (prevLangRef.current === null) {
-      prevLangRef.current = lang;
-      return;
-    }
-    if (prevLangRef.current === lang) return;
-    const from = prevLangRef.current;
-    prevLangRef.current = lang;
+  const [syncedLang, setSyncedLang] = useState(lang);
+  if (!monthBrowse && lang !== syncedLang) {
+    const from = syncedLang;
+    setSyncedLang(lang);
     // Carry the reader across the switch: if the month they were looking at
     // holds today, land on today's month in the other calendar (so the round
     // trip is stable); otherwise map through the middle of the month, which is
@@ -200,21 +195,21 @@ export function CalendarView({
     if (lang === "en") {
       const bsToday = adToBS(today);
       const anchor =
-        bsToday.year === year && bsToday.month === month
+        bsToday.year === bsYearState && bsToday.month === bsMonthState
           ? today
-          : bsToAD(year, month, Math.min(15, getBSMonthLength(year, month)));
-      setAdYear(anchor.getFullYear());
-      setAdMonth(anchor.getMonth() + 1);
+          : bsToAD(bsYearState, bsMonthState, Math.min(15, getBSMonthLength(bsYearState, bsMonthState)));
+      setAdYearState(anchor.getFullYear());
+      setAdMonthState(anchor.getMonth() + 1);
     } else if (from === "en") {
       const anchor =
-        today.getFullYear() === adYear && today.getMonth() + 1 === adMonth
+        today.getFullYear() === adYearState && today.getMonth() + 1 === adMonthState
           ? today
-          : new Date(adYear, adMonth - 1, 15);
+          : new Date(adYearState, adMonthState - 1, 15);
       const bs = adToBS(anchor);
-      setYear(bs.year);
-      setMonth(bs.month);
+      setBsYearState(bs.year);
+      setBsMonthState(bs.month);
     }
-  }, [lang, year, month, adYear, adMonth, todayAd]);
+  }
 
   const localDays = useMemo(
     () =>
@@ -283,6 +278,8 @@ export function CalendarView({
       }
     }
     return [...byDate.values()];
+    // monthQueriesTick intentionally tracks query freshness without the unstable queries array reference.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthQueriesTick]);
 
   const monthFetchError = monthQueries.some((q) => q.isError);
@@ -459,44 +456,64 @@ export function CalendarView({
   function prev() {
     setSelected(null);
     onDaySelect?.(null);
+    if (monthBrowse) {
+      if (isAdCalendar) {
+        if (adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth) return;
+      } else if (month === 1 && year <= BS_SUPPORTED_START_YEAR) {
+        return;
+      }
+      monthBrowse.stepMonth(-1);
+      return;
+    }
     if (isAdCalendar) {
       if (adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth) return;
       const p = shiftAdMonth(adYear, adMonth, -1);
-      setAdYear(p.year);
-      setAdMonth(p.month);
+      setAdYearState(p.year);
+      setAdMonthState(p.month);
       return;
     }
     if (month === 1 && year <= BS_SUPPORTED_START_YEAR) return;
     if (month === 1) {
-      setYear((y) => y - 1);
-      setMonth(12);
-    } else setMonth((m) => m - 1);
+      setBsYearState((y) => y - 1);
+      setBsMonthState(12);
+    } else setBsMonthState((m) => m - 1);
   }
 
   function nextMonth() {
     setSelected(null);
     onDaySelect?.(null);
+    if (monthBrowse) {
+      if (isAdCalendar) {
+        if (adYear === AD_BOUNDS.maxYear && adMonth === AD_BOUNDS.maxMonth) return;
+      } else if (month === 12 && year >= BS_SUPPORTED_END_YEAR) {
+        return;
+      }
+      monthBrowse.stepMonth(1);
+      return;
+    }
     if (isAdCalendar) {
       if (adYear === AD_BOUNDS.maxYear && adMonth === AD_BOUNDS.maxMonth) return;
       const n = shiftAdMonth(adYear, adMonth, 1);
-      setAdYear(n.year);
-      setAdMonth(n.month);
+      setAdYearState(n.year);
+      setAdMonthState(n.month);
       return;
     }
     if (month === 12 && year >= BS_SUPPORTED_END_YEAR) return;
     if (month === 12) {
-      setYear((y) => y + 1);
-      setMonth(1);
-    } else setMonth((m) => m + 1);
+      setBsYearState((y) => y + 1);
+      setBsMonthState(1);
+    } else setBsMonthState((m) => m + 1);
   }
 
   function goToday() {
-    if (isAdCalendar) {
-      setAdYear(initAd.year);
-      setAdMonth(initAd.month);
+    if (monthBrowse) {
+      monthBrowse.goToday(todayAd);
+    } else if (isAdCalendar) {
+      setAdYearState(initAd.year);
+      setAdMonthState(initAd.month);
     } else {
-      setYear(init.year);
-      setMonth(init.month);
+      setBsYearState(init.year);
+      setBsMonthState(init.month);
     }
     setSelected(null);
     onDaySelect?.(null);
@@ -643,28 +660,36 @@ export function CalendarView({
   );
 
   function changeMonth(nextMonthValue: number) {
-    if (isAdCalendar) {
-      setAdMonth(nextMonthValue);
-    } else {
-      setMonth(nextMonthValue);
-    }
     setSelected(null);
     onDaySelect?.(null);
+    if (monthBrowse) {
+      monthBrowse.setBrowseMonth(monthBrowse.browseYear, nextMonthValue);
+      return;
+    }
+    if (isAdCalendar) {
+      setAdMonthState(nextMonthValue);
+    } else {
+      setBsMonthState(nextMonthValue);
+    }
   }
 
   function changeYear(nextYearValue: number) {
-    if (isAdCalendar) {
-      setAdYear(nextYearValue);
-    } else {
-      setYear(nextYearValue);
-    }
     setSelected(null);
     onDaySelect?.(null);
+    if (monthBrowse) {
+      monthBrowse.setBrowseMonth(nextYearValue, monthBrowse.browseMonth);
+      return;
+    }
+    if (isAdCalendar) {
+      setAdYearState(nextYearValue);
+    } else {
+      setBsYearState(nextYearValue);
+    }
   }
 
   const headerYear = isAdCalendar ? adYear : year;
   const headerMonth = isAdCalendar ? adMonth : month;
-  const headerYearOptions = isAdCalendar ? AD_YEAR_OPTIONS : BS_YEAR_OPTIONS;
+  const headerYearOptions = isAdCalendar ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS;
   const headerPrevDisabled = isAdCalendar
     ? adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth
     : month === 1 && year <= BS_SUPPORTED_START_YEAR;
@@ -673,40 +698,24 @@ export function CalendarView({
     : month === 12 && year >= BS_SUPPORTED_END_YEAR;
 
   const monthHeader = showMonthHeader ? (
-    <div
-      className={cn(
-        patroMdRail,
-        "mb-4 mt-2 flex flex-col gap-2 max-md:pt-3 md:flex-row md:items-start md:justify-between md:gap-3 md:pt-0",
-      )}
-    >
-      <div className="min-w-0 flex-1">
-        <BsMonthHeaderTitle
-          calendarMode={isAdCalendar ? "ad" : "bs"}
-          year={headerYear}
-          month={headerMonth}
-          yearOptions={headerYearOptions}
-          todayAd={todayAd}
-          onToday={goToday}
-          todayAriaLabel={t("calendar.today_btn")}
-          onMonthChange={changeMonth}
-          onYearChange={changeYear}
-          monthAriaLabel={t("calendar.month_aria")}
-          yearAriaLabel={t("calendar.year_aria")}
-          onPrev={prev}
-          onNext={nextMonth}
-          prevDisabled={headerPrevDisabled}
-          nextDisabled={headerNextDisabled}
-          prevAriaLabel={t("calendar.prev_month")}
-          nextAriaLabel={t("calendar.next_month")}
-          mobileDateTimeDrawer
-          mobileToolbar={mobileHeaderToolbar}
-          mobileToolbarLower={locationControlMobile ?? undefined}
-        />
-      </div>
-
-      <div className="hidden shrink-0 flex-row items-center justify-end gap-2 md:flex md:w-auto md:flex-col md:items-end md:pt-0.5">
-        {headerToolbarDesktop}
-      </div>
+    <div className={cn(patroMdRail, "mb-4 mt-2 max-md:pt-3 md:pt-0")}>
+      <PatroMonthYearNav
+        calendarMode={isAdCalendar ? "ad" : "bs"}
+        year={headerYear}
+        month={headerMonth}
+        yearOptions={headerYearOptions}
+        todayAd={todayAd}
+        onToday={goToday}
+        onMonthChange={changeMonth}
+        onYearChange={changeYear}
+        onPrev={prev}
+        onNext={nextMonth}
+        prevDisabled={headerPrevDisabled}
+        nextDisabled={headerNextDisabled}
+        mobileToolbar={mobileHeaderToolbar}
+        mobileToolbarLower={locationControlMobile ?? undefined}
+        desktopToolbar={headerToolbarDesktop}
+      />
     </div>
   ) : null;
 

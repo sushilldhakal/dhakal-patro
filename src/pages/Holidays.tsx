@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { getRouteApi } from "@tanstack/react-router";
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,12 +19,16 @@ import {
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
 import { SeoContentSection } from "../components/seo/SeoContentSection";
-import { GrahaYearHeader } from "@/components/graha/GrahaPageParts";
+import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { PatroYearNav } from "@/components/patro-date";
 import { useRouteLoading } from "@/lib/route-loading";
-import { getCurrentBs } from "../lib/bs-calendar";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { useLocale } from "@/i18n/locale";
-import { cn } from "../lib/utils";
+import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { searchToLocation } from "@/lib/url-state";
+import { formatHolidayBsDisplay } from "@/lib/panchanga-format";
+
+const routeApi = getRouteApi("/panchanga-shell/holidays");
 
 type Tab = "holidays" | "festivals";
 
@@ -32,7 +37,7 @@ const festivalCol = createColumnHelper<Festival>();
 
 function useHolidayColumns() {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   return useMemo(
     () => [
       holidayCol.accessor(r => pick(r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
@@ -40,10 +45,14 @@ function useHolidayColumns() {
         header: t("holidays.col_name"),
         cell: i => <span className="text-base">{i.getValue()}</span>,
       }),
-      holidayCol.accessor("bs_start_date", {
-        header: t("holidays.col_bs_date"),
-        cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
-      }),
+      holidayCol.accessor(
+        (r) => (r.start_date ? formatHolidayBsDisplay(r, lang) : undefined),
+        {
+          id: "bs_start_date",
+          header: t("holidays.col_bs_date"),
+          cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
+        },
+      ),
       holidayCol.accessor("start_date", {
         header: t("holidays.col_ad_date"),
         cell: i => <span className="font-mono text-sm">{i.getValue()}</span>,
@@ -61,13 +70,13 @@ function useHolidayColumns() {
         ),
       }),
     ],
-    [t, pick],
+    [t, pick, lang],
   );
 }
 
 function useFestivalColumns() {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   return useMemo(
     () => [
       festivalCol.accessor(r => pick(r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
@@ -75,10 +84,14 @@ function useFestivalColumns() {
         header: t("holidays.col_name"),
         cell: i => <span className="text-base">{i.getValue()}</span>,
       }),
-      festivalCol.accessor("bs_start_date", {
-        header: t("holidays.col_bs_date"),
-        cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
-      }),
+      festivalCol.accessor(
+        (r) => (r.start_date ? formatHolidayBsDisplay(r, lang) : undefined),
+        {
+          id: "bs_start_date",
+          header: t("holidays.col_bs_date"),
+          cell: i => <span className="font-mono text-sm">{i.getValue() ?? "—"}</span>,
+        },
+      ),
       festivalCol.accessor("start_date", {
         header: t("holidays.col_ad_date"),
         cell: i => <span className="font-mono text-sm">{i.getValue()}</span>,
@@ -101,7 +114,7 @@ function useFestivalColumns() {
           ) : null,
       }),
     ],
-    [t, pick],
+    [t, pick, lang],
   );
 }
 
@@ -183,22 +196,24 @@ function DataTable<T>({
 
 export function Holidays() {
   const { t } = useTranslation();
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const holidayColumns = useHolidayColumns();
   const festivalColumns = useFestivalColumns();
-  const currentBs = getCurrentBs();
-  const [year, setYear] = useState(currentBs.year);
+  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
   const [tab, setTab] = useState<Tab>("holidays");
   const [filter, setFilter] = useState("");
 
   const holidaysQ = useQuery({
-    queryKey: holidayKeys.holidays(year),
-    queryFn: () => fetchHolidays(year),
+    queryKey: holidayKeys.holidays(yearBrowse.browseYear, yearBrowse.era),
+    queryFn: () => fetchHolidays(yearBrowse.browseYear, yearBrowse.era),
     staleTime: 1000 * 60 * 60,
   });
 
   const festivalsQ = useQuery({
-    queryKey: holidayKeys.festivals(year),
-    queryFn: () => fetchFestivals(year),
+    queryKey: holidayKeys.festivals(yearBrowse.browseYear, yearBrowse.era),
+    queryFn: () => fetchFestivals(yearBrowse.browseYear, undefined, yearBrowse.era),
     staleTime: 1000 * 60 * 60,
   });
 
@@ -220,10 +235,14 @@ export function Holidays() {
         subtitle={t("holidays.page_subtitle")}
       />
 
-      <GrahaYearHeader
-        year={year}
-        onYearChange={setYear}
-        currentYear={currentBs.year}
+      <PatroYearNav
+        calendarMode={yearBrowse.era}
+        year={yearBrowse.browseYear}
+        onYearChange={yearBrowse.setBrowseYear}
+        currentYear={yearBrowse.currentBrowseYear}
+        yearOptions={yearBrowse.yearOptions}
+        location={location}
+        onLocationChange={setLocation}
       />
 
       {gregorianRange ? (

@@ -4,6 +4,7 @@ import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { getRashiList } from "@/lib/rashi-i18n";
 
 /**
  * Ayanāṁśa (अयनांश) study — why the *sāyana* (tropical) and *nirayana*
@@ -41,10 +42,7 @@ function ayanamsha(year: number, sys: SystemKey): number {
   return Math.max(0, SYSTEMS[sys].base2000 + (year - 2000) * RATE);
 }
 
-const RASHI = [
-  "मेष", "वृष", "मिथुन", "कर्कट", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
+const RASHI = getRashiList("ne");
 
 const rashiIndex = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30);
 

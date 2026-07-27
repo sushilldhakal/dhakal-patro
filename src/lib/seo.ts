@@ -113,7 +113,7 @@ function isNoindexPath(pathname: string): boolean {
   );
 }
 
-export function resolvePageSeo(pathname: string, t: TFunc, _lang: string): PageSeoMeta {
+export function resolvePageSeo(pathname: string, t: TFunc): PageSeoMeta {
   const normalized = pathname.replace(/\/$/, "") || "/";
   const canonical = `${SITE_URL}${normalized}`;
   const noindex = isNoindexPath(normalized);
@@ -287,7 +287,7 @@ function escapeHtml(value: string): string {
 
 /** Static head tags injected at prerender time (Nepali default locale). */
 export function buildHeadHtml(pathname: string, t: TFunc): string {
-  const meta = resolvePageSeo(pathname, t, "ne");
+  const meta = resolvePageSeo(pathname, t);
   const normalized = pathname.replace(/\/$/, "") || "/";
   const ogImage = ogImageForRoute(normalized);
   const ogImageType = ogImageTypeForRoute(normalized);

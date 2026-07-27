@@ -29,8 +29,10 @@ import {
   displayLocationLabel,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
 import {
-  locationToSearch,
+  buildPatroYearRangeSearch,
+  currentPatroDayLinkSearch,
   sameLocationParams,
   sameSearch,
   searchToLocation,
@@ -89,15 +91,8 @@ const YEAR_ROUTE_LOADING = false;
 
 const routeApi = getRouteApi("/panchanga-shell/panchanga/year");
 
-function initialYearFromSearch(searchYear?: number): number {
-  if (
-    searchYear != null &&
-    searchYear >= BS_SUPPORTED_START_YEAR &&
-    searchYear <= BS_SUPPORTED_END_YEAR
-  ) {
-    return searchYear;
-  }
-  return getCurrentBs().year;
+function initialYearFromSearch(search: PanchangaYearSearch): number {
+  return search.year ?? getCurrentBs().year;
 }
 
 /** Clamp a range-end year to [start, BS_SUPPORTED_END_YEAR]. */
@@ -112,6 +107,7 @@ const clampYear = (y: number) =>
 export function PanchangaYear() {
   const { t } = useTranslation();
   const { pick, lang } = useLocale();
+  const langEra = useCalendarEra();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
@@ -120,9 +116,9 @@ export function PanchangaYear() {
   // A range of BS years: `rangeStart`..`rangeEnd`, viewed one active year at a
   // time. `year` (the clamped active year) drives every downstream day/wheel
   // calc, so the existing single-year logic below is unchanged.
-  const [rangeStart, setRangeStart] = useState(() => initialYearFromSearch(search.year));
+  const [rangeStart, setRangeStart] = useState(() => initialYearFromSearch(search));
   const [rangeEnd, setRangeEnd] = useState(() =>
-    clampRangeEnd(initialYearFromSearch(search.year), search.to)
+    clampRangeEnd(initialYearFromSearch(search), search.to)
   );
   const [activeYear, setActiveYear] = useState(rangeStart);
   const year = Math.min(Math.max(activeYear, rangeStart), rangeEnd);
@@ -147,20 +143,21 @@ export function PanchangaYear() {
   const [isScrubbing, setIsScrubbing] = useState(false);
 
   useEffect(() => {
-    const desired: PanchangaYearSearch = {
-      ...locationToSearch(location),
-      year: rangeStart,
-    };
-    if (rangeEnd > rangeStart) desired.to = rangeEnd;
+    const desired = buildPatroYearRangeSearch(
+      location,
+      langEra,
+      rangeStart,
+      rangeEnd > rangeStart ? rangeEnd : undefined,
+    );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, rangeStart, rangeEnd, search, navigate]);
+  }, [location, rangeStart, rangeEnd, langEra, search, navigate]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (search.year != null) {
-      const nextStart = initialYearFromSearch(search.year);
+      const nextStart = initialYearFromSearch(search);
       setRangeStart((cur) => (cur === nextStart ? cur : nextStart));
       const nextEnd = clampRangeEnd(nextStart, search.to);
       setRangeEnd((cur) => (cur === nextEnd ? cur : nextEnd));
@@ -474,6 +471,7 @@ export function PanchangaYear() {
         <div>
           <Link
             to="/panchanga"
+            search={currentPatroDayLinkSearch(location)}
             className="inline-flex items-center gap-1 text-xs text-base hover:text-foreground mb-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />

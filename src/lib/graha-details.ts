@@ -5,6 +5,14 @@
  */
 
 import type { GrahaDignity, GrahaRelation } from "@/lib/api";
+import { getRashiName } from "@/lib/rashi-i18n";
+
+export { formatRashiByNumber, getRashiName, resolveRashiDisplay } from "@/lib/rashi-i18n";
+
+/** @deprecated Use getRashiName(n, "en") */
+export function rashiEnName(n: number): string {
+  return getRashiName(n, "en");
+}
 
 /** Nine grahas keyed the same way as the API planet blocks. */
 export type GrahaKey =
@@ -33,11 +41,6 @@ export const GRAHA_NAME: Record<GrahaKey, { ne: string; en: string }> = {
   rahu: { ne: "राहु", en: "Rahu" },
   ketu: { ne: "केतु", en: "Ketu" },
 };
-
-export const RASHI_EN_NAMES = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
-] as const;
 
 export const RELATION_LABELS: Record<GrahaRelation, { ne: string; en: string }> = {
   self: { ne: "स्वयं", en: "Self" },

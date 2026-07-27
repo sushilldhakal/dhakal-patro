@@ -1,24 +1,10 @@
 import type { Gana, Nadi, NakshatraRow } from "@/lib/avakahada-data";
 import { RASHI_META } from "@/lib/avakahada-data";
+import { resolveRashiDisplay } from "@/lib/rashi-i18n";
 
 export function isEnglishLocale(lang?: string): boolean {
   return (lang ?? "ne").startsWith("en");
 }
-
-const RASHI_NE_TO_EN: Record<string, string> = {
-  मेष: "Mesha",
-  वृष: "Vrishabha",
-  मिथुन: "Mithuna",
-  कर्क: "Karka",
-  सिंह: "Simha",
-  कन्या: "Kanya",
-  तुला: "Tula",
-  वृश्चिक: "Vrishchika",
-  धनु: "Dhanu",
-  मकर: "Makara",
-  कुम्भ: "Kumbha",
-  मीन: "Meena",
-};
 
 const LORD_NE_TO_EN: Record<string, string> = {
   मंगल: "Mars",
@@ -165,7 +151,7 @@ function mapJoined(value: string, map: Record<string, string>): string {
 
 export function localizeRashi(ne: string, lang?: string): string {
   if (!isEnglishLocale(lang)) return ne;
-  return RASHI_NE_TO_EN[ne] ?? ne;
+  return resolveRashiDisplay(ne, undefined, "en") ?? ne;
 }
 
 export function localizeRashis(rashis: string[], lang?: string): string {

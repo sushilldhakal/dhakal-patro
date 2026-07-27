@@ -159,8 +159,12 @@ export function HoraRing({ p, isToday, timezone }: Props) {
   const expandedHistoryRef = useRef(false);
   const ignorePopRef = useRef(false);
   const scrubbingRef = useRef(false);
-  const lastRef = useRef(performance.now());
+  const lastRef = useRef(0);
   const saveTimerRef = useRef(0);
+
+  useEffect(() => {
+    lastRef.current = performance.now();
+  }, []);
 
   const setExpandedMode = useCallback((next: boolean) => {
     if (next) {

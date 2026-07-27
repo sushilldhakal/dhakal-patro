@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { RotateCcw } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
@@ -7,18 +6,21 @@ import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-locat
 import {
   GrahaBanner,
   GrahaDescription,
-  GrahaYearHeader,
 } from "@/components/graha/GrahaPageParts";
+import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { PatroYearNav } from "@/components/patro-date";
 import { useLocale } from "@/i18n/locale";
-import { getCurrentBs } from "@/lib/bs-calendar";
 import { useRouteLoading } from "@/lib/route-loading";
 import { patroCard } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
+import { searchToLocation } from "@/lib/url-state";
 import {
   fetchGrahaVakriYear,
   grahaDetailKeys,
   type GrahaVakriEvent,
 } from "@/lib/api";
+
+const routeApi = getRouteApi("/panchanga-shell/panchanga/graha-vakri");
 
 const GRAHA_ORDER = ["mercury", "venus", "mars", "jupiter", "saturn"];
 const GRAHA_NE: Record<string, string> = {
@@ -64,13 +66,14 @@ function EventRow({ ev }: { ev: GrahaVakriEvent }) {
 
 export function GrahaVakri() {
   const { pick } = useLocale();
-  const { location, setLocation } = usePanchangaLocation();
-  const currentBs = getCurrentBs();
-  const [year, setYear] = useState(currentBs.year);
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
 
   const query = useQuery({
-    queryKey: grahaDetailKeys.vakri(year, location.params),
-    queryFn: () => fetchGrahaVakriYear(year, location.params),
+    queryKey: grahaDetailKeys.vakri(yearBrowse.browseYear, location.params, yearBrowse.era),
+    queryFn: () => fetchGrahaVakriYear(yearBrowse.browseYear, location.params, yearBrowse.era),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -95,10 +98,12 @@ export function GrahaVakri() {
       />
 
       <div className="space-y-3">
-        <GrahaYearHeader
-          year={year}
-          onYearChange={setYear}
-          currentYear={currentBs.year}
+        <PatroYearNav
+          calendarMode={yearBrowse.era}
+          year={yearBrowse.browseYear}
+          onYearChange={yearBrowse.setBrowseYear}
+          currentYear={yearBrowse.currentBrowseYear}
+          yearOptions={yearBrowse.yearOptions}
           location={location}
           onLocationChange={setLocation}
         />

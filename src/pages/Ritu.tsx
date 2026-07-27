@@ -1,3 +1,4 @@
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Sprout } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/PageShell";
@@ -7,12 +8,18 @@ import {
   displayLocationLabel,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
+import { usePatroLocationUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 
+const routeApi = getRouteApi("/panchanga-shell/ritu");
+
 export function Ritu() {
   const { t } = useTranslation();
+  const navigate = useNavigate({ from: "/ritu" });
+  const search = routeApi.useSearch();
   const { location, setLocation } = usePanchangaLocation();
+  usePatroLocationUrlBrowse(search, navigate, location, setLocation);
   const { lang } = useLocale();
 
   useRouteLoading(false);

@@ -11,7 +11,7 @@
       },
       "panchanga": {
         "title": "Today's Nepali Panchang — Tithi, Nakshatra, Rashi | Vedic Patro",
-        "description": "Today's Nepali panchanga: tithi, nakshatra, yoga, karana, moon sign, sunrise–sunset and auspicious muhurta, with precise astronomical timings.",
+        "description": "Today's Nepali panchanga: tithi, nakshatra, yoga, karana, moon sign, sunrise–sunset and auspicious moment, with precise astronomical timings.",
         "keywords": "today's panchang, aajako tithi, nepali panchang, tithi today, nakshatra, yoga, karana, moon sign today"
       },
       "panchanga_year": {
@@ -45,9 +45,9 @@
         "keywords": "nepal holidays {{adYear}}, nepal public holidays, dashain {{adYear}} date, tihar {{adYear}}, nepali festivals, holidays in nepal"
       },
       "ritu": {
-        "title": "Ritu — Tropical Seasons | Vedic Patro",
+        "title": "Season — Tropical Seasons | Vedic Patro",
         "description": "Six tropical seasons by equinox and solstice for your location — Spring, Summer, Monsoon, Autumn, Pre-winter, Winter.",
-        "keywords": "Ritu, Nepali seasons, equinox, solstice, tropical seasons"
+        "keywords": "Season, Nepali seasons, equinox, solstice, tropical seasons"
       },
       "kundali": {
         "title": "Free Kundali Online — Nepali Birth Chart | Vedic Patro",
@@ -70,19 +70,19 @@
         "keywords": "Nepali calendar history"
       },
       "suryakranti": {
-        "title": "Sun Times | Vedic Patro",
+        "title": "Sun Revolution | Vedic Patro",
         "description": "Annual solar transits, sunrise and sunset times.",
-        "keywords": "sunrise sunset, sankranti, sun times"
+        "keywords": "sunrise sunset, sankranti, sun revolution"
       },
       "abhijit_muhurta": {
-        "title": "Abhijit Muhurta | Vedic Patro",
-        "description": "Abhijit muhurta and auspicious time calculation.",
-        "keywords": "Abhijit muhurta, auspicious time"
+        "title": "Abhijit Moment | Vedic Patro",
+        "description": "Abhijit moment and auspicious time calculation.",
+        "keywords": "Abhijit moment, auspicious time"
       },
       "panchak_patro": {
         "title": "Panchak Patro | Vedic Patro",
         "description": "Annual Panchak windows, prohibited acts, and Panchak types per Vedic jyotish.",
-        "keywords": "Panchak, Panchak patro, Panchaka rahita, muhurta"
+        "keywords": "Panchak, Panchak patro, Panchaka rahita, moment"
       },
       "account": {
         "title": "Account | Vedic Patro",
@@ -135,7 +135,7 @@
   "nakshatra": "Nakshatra",
   "nav": {
     "surya_panchanga": "Daily Panchanga",
-    "suryakranti": "Sun Times",
+    "suryakranti": "Sun Revolution",
     "dainikkranti": "Daily Transit",
     "shanti_vidhi": "Shanti Vidhi",
     "avakahada_chakra": "Avakahada Chakra",
@@ -146,7 +146,7 @@
     "jyotish_kundali_milan": "Kundali Milan",
     "kundali": "Kundali",
     "learn": "Learn",
-    "abhijit_muhurta": "Abhijit Muhurta",
+    "abhijit_muhurta": "Abhijit Moment",
     "vivah_sait": "Marriage Saait",
     "panchanga_details": "Panchanga Details"
   },
@@ -187,7 +187,7 @@
       "panchanga": "Panchanga",
       "festivals": "Festivals",
       "sait": "Sait",
-      "muhurta": "Daily Muhurta"
+      "muhurta": "Daily Moment"
     },
     "no_festivals_month": "No festivals this month.",
     "eyebrow": "Nepali Patro · Panchanga",
@@ -490,7 +490,7 @@
     "balam_after_until_sunrise": "{{time}} – next sunrise",
     "balam_full_day": "Sunrise – next sunrise",
     "panchaka_lagna": "Panchaka Rahita & Udaya Lagna",
-    "today_panchaka": "Today's Panchaka Rahita Muhurta",
+    "today_panchaka": "Today's Panchaka Rahita Moment",
     "today_udaya_lagna": "Today's Udaya Lagna",
     "pushkara": "Pushkara",
     "ritu_ayana": "Season & Sun's course",
@@ -501,7 +501,7 @@
     "ayana": "Sun's course",
     "auspicious_timings": "Auspicious timings",
     "inauspicious_timings": "Inauspicious timings",
-    "muhurta_timings": "Muhurta timings",
+    "muhurta_timings": "Moment timings",
     "nivas_shool": "Nivas and Shool",
     "homahuti": "Homahuti",
     "disha_shool": "Disha Shool",
@@ -523,44 +523,44 @@
     "dash": "—"
   },
   "abhijit": {
-    "title": "Abhijit Muhurta",
-    "subtitle": "Monthly auspicious Abhijit muhurta — the 8th daytime muhurta between sunrise and sunset",
-    "today_hero": "Today's Abhijit Muhurta",
+    "title": "Abhijit Moment",
+    "subtitle": "Monthly auspicious Abhijit moment — the 8th daytime moment between sunrise and sunset",
+    "today_hero": "Today's Abhijit Moment",
     "month_heading": "Month at a glance",
     "days_count": "{{count}} days",
     "jump_today": "Today",
     "sun_context": "🌅 {{sunrise}} · 🌇 {{sunset}}",
     "today_window": "Today's window",
     "noon_short": "noon",
-    "unavailable": "Abhijit muhurta is not available for this day.",
-    "view_month": "View monthly Abhijit Muhurta",
+    "unavailable": "Abhijit moment is not available for this day.",
+    "view_month": "View monthly Abhijit Moment",
     "back_home": "Back to home",
     "year_label": "B.S. year",
     "month_label": "Month",
-    "note": "Abhijit is the 8th daytime muhurta — the most auspicious window, centred on local solar noon between sunrise and sunset.",
+    "note": "Abhijit is the 8th daytime moment — the most auspicious window, centred on local solar noon between sunrise and sunset.",
     "error": "Could not load the calendar. Try again shortly.",
     "none": "No Abhijit timings for this month.",
     "col_day": "Day",
     "col_weekday": "Weekday",
     "col_ad": "A.D.",
-    "col_abhijit": "Abhijit Muhurta",
+    "col_abhijit": "Abhijit Moment",
     "col_noon": "Solar noon",
     "col_sunrise": "Sunrise",
     "col_sunset": "Sunset",
-    "col_muhurta": "Muhurta"
+    "col_muhurta": "Moment"
   },
   "panchak": {
     "title": "Panchak Patro {{year}}",
-    "subtitle": "Panchak periods and muhurta details based on Vedic jyotish and Surya Siddhanta",
+    "subtitle": "Panchak periods and moment details based on Vedic jyotish and Surya Siddhanta",
     "intro": "Panchak is the roughly five-day span while the Moon transits the last half of Dhanishta, Shatabhisha, Purva Bhadrapada, Uttara Bhadrapada, and Revati. Many traditions advise avoiding certain acts during Panchak, believing work done then may repeat fivefold.",
     "back_home": "Back to home",
     "year_label": "B.S. year",
-    "periods_title": "Panchak windows for B.S. {{year}}",
+    "periods_title": "Panchak windows for {{year}}",
     "period_label": "Panchak {{n}}",
     "start_date": "Start",
     "end_date": "End",
     "duration": "Duration",
-    "no_data": "Panchak details for B.S. {{year}} are not available yet.",
+    "no_data": "Panchak details for {{year}} are not available yet.",
     "prohibited_title": "Acts discouraged during Panchak",
     "prohibited": {
       "south_travel": "Travel south",
@@ -577,7 +577,7 @@
     "learn_title": "Understanding Panchak",
     "what_title": "What is Panchak?",
     "what_body": "Panchak is the five-day lunar window through five special nakshatras (second half of Dhanishta through Revati). Travel south, gathering grass or firewood, and roofing a home are commonly avoided.",
-    "rahita_title": "Why Panchaka-rahita muhurta matters",
+    "rahita_title": "Why Panchaka-rahita moment matters",
     "rahita_body": "Scheduling auspicious rites (vivaha, mundana, etc.) in Panchaka-rahita windows keeps them outside these inauspicious spans so the work may proceed smoothly.",
     "types_title": "Types of Panchak by start weekday"
   },
@@ -620,7 +620,7 @@
     "belaantar": "Belaantar"
   },
   "muhurta_aside": {
-    "tabs_label": "Daily Muhurta",
+    "tabs_label": "Daily Moment",
     "tarabal": "Tarabal",
     "chandrabal": "Moon strength",
     "choghadiya": "Choghadiya",
@@ -660,7 +660,7 @@
     }
   },
   "sun_times": {
-    "title": "Sun Times",
+    "title": "Sun Revolution",
     "subtitle": "Annual sunrise & sunset · B.S. {{year}}",
     "ayana_note": "Each day's <strong>N</strong> or <strong>S</strong> mark is set by the Sun's sign at sunrise — not by the whole month. It changes twice a year at sankranti (Cancer and Capricorn).",
     "col_ayana": "Sun's course",
@@ -674,7 +674,7 @@
     "col_ayana_short": "Course",
     "col_sunrise": "Sunrise",
     "col_sunset": "Sunset",
-    "grid_title": "Sun Times",
+    "grid_title": "Sun Revolution",
     "days_count": "{{count}} days",
     "load_error": "Could not load sunrise/sunset times for this location.",
     "grid_aria": "Sunrise and sunset grid for BS year {{year}}"
@@ -792,7 +792,7 @@
     "sign_out": "Sign out"
   },
   "ritu": {
-    "title": "Ritu",
+    "title": "Season",
     "subtitle": "Tropical seasons · equinox–solstice",
     "southern": " · Southern hemisphere",
     "why_link": "Why do seasons shift?",
@@ -808,6 +808,20 @@
     "winter": "Winter",
     "vernal_equinox": "Vernal equinox",
     "autumnal_equinox": "Autumnal equinox"
+  },
+  "rashis": {
+    "1": "Aries",
+    "2": "Taurus",
+    "3": "Gemini",
+    "4": "Cancer",
+    "5": "Leo",
+    "6": "Virgo",
+    "7": "Libra",
+    "8": "Scorpio",
+    "9": "Sagittarius",
+    "10": "Capricorn",
+    "11": "Aquarius",
+    "12": "Pisces"
   },
   "weekdays": {
     "sun": "Sun",
@@ -825,13 +839,13 @@
     "fri_long": "Friday",
     "sat_long": "Saturday"
   },
-  "sun_times_cta": "Sun Times — Annual sunrise & sunset",
+  "sun_times_cta": "Sun Revolution — Annual sunrise & sunset",
   "home_quick": {
     "holidays_desc": "Public holidays & festivals",
     "converter_desc": "BS ↔ AD dates",
     "suryakranti_desc": "Annual sunrise & sunset",
     "panchanga_year_desc": "Tithi, nakshatra & graha through the year",
-    "abhijit_muhurta_desc": "Daily auspicious Abhijit muhurta window",
+    "abhijit_muhurta_desc": "Daily auspicious Abhijit moment window",
     "dainikkranti_desc": "Moon & graha transits",
     "panchak_patro_desc": "Annual Panchak windows",
     "kundali_build_title": "Birth Kundali",
@@ -923,8 +937,8 @@
           "a": "By default it follows Kathmandu sunrise; if you allow location access, timings adjust to your own city's sunrise and sunset."
         },
         {
-          "q": "What is an auspicious muhurta (sait)?",
-          "a": "A muhurta is a window when the panchanga limbs align favourably — weddings, bratabandha and house-warming are traditionally timed to it. Abhijit muhurta and daily sait are available in this patro."
+          "q": "What is an auspicious moment (sait)?",
+          "a": "A moment is a window when the panchanga limbs align favourably — weddings, bratabandha and house-warming are traditionally timed to it. Abhijit moment and daily sait are available in this patro."
         }
       ]
     },

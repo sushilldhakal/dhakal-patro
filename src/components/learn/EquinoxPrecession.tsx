@@ -5,6 +5,7 @@ import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { getRashiList } from "@/lib/rashi-i18n";
 import { RashiGlyph } from "./rashi-icons";
 
 /**
@@ -41,14 +42,8 @@ const BS_AYAN_ZERO = 342;
 const Y_MIN = 0;
 const Y_MAX = CYCLE;
 
-const RASHI = [
-  "मेष", "वृष", "मिथुन", "कर्कट", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
-const RASHI_EN = [
-  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
-] as const;
+const RASHI_NE = getRashiList("ne");
+const RASHI_EN = getRashiList("en");
 
 const rashiIndex = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30);
 const norm360 = (a: number) => ((a % 360) + 360) % 360;
@@ -140,7 +135,7 @@ export function EquinoxPrecession() {
     return { eqSid, ayanamsha, sinceBs0, alphaEq, equatorPath, poleVec };
   }, [year]);
 
-  const eqRashiNe = RASHI[rashiIndex(model.eqSid)];
+  const eqRashiNe = RASHI_NE[rashiIndex(model.eqSid)];
   const eqRashiEn = RASHI_EN[rashiIndex(model.eqSid)];
 
   const amber = "var(--tm-amber)";
@@ -182,7 +177,7 @@ export function EquinoxPrecession() {
         {/* ── zodiac band (FIXED sidereal राशि) ── */}
         <ellipse cx={CX} cy={CY} rx={RX * bandOuter} ry={RY * bandOuter} fill="color-mix(in srgb, var(--tm-teal) 14%, var(--tm-card))" stroke="var(--tm-border)" strokeWidth={1} />
         <ellipse cx={CX} cy={CY} rx={RX * bandInner} ry={RY * bandInner} fill={card} stroke="var(--tm-border)" strokeWidth={1} />
-        {RASHI.map((name, i) => {
+        {RASHI_NE.map((name, i) => {
           const a0 = i * 30;
           const [ix, iy] = projPlane(alphaOf(a0), bandInner);
           const [ox, oy] = projPlane(alphaOf(a0), bandOuter);

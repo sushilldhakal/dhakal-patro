@@ -225,10 +225,17 @@ export function DivisionalChartCompare({
   const [left, setLeft] = useState<PanelConfig>(defaultLeft);
   const [right, setRight] = useState<PanelConfig>(defaultRight);
 
-  const safeLeft = anchorOptions.includes(left.anchor) ? left : { ...left, anchor: anchorOptions[0] ?? "lagna" };
-  const safeRight = anchorOptions.includes(right.anchor)
-    ? right
-    : { ...right, anchor: anchorOptions[1] ?? anchorOptions[0] ?? "moon" };
+  const safeLeft = useMemo(
+    () => (anchorOptions.includes(left.anchor) ? left : { ...left, anchor: anchorOptions[0] ?? "lagna" }),
+    [anchorOptions, left],
+  );
+  const safeRight = useMemo(
+    () =>
+      anchorOptions.includes(right.anchor)
+        ? right
+        : { ...right, anchor: anchorOptions[1] ?? anchorOptions[0] ?? "moon" },
+    [anchorOptions, right],
+  );
 
   const leftHouses = useMemo(
     () => buildDivisionalHouses(safeLeft, vargaCharts, rashiNeFromNumber, combustion),

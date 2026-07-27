@@ -162,8 +162,9 @@ export const panchangaKeys = {
     location?: LocationParams,
     full = true,
     excludeInternational = false,
+    era: "bs" | "ad" = "bs",
   ) =>
-    ["panchanga", "month", year, month, locationCacheKey(location), full ? "full" : "lite", excludeInternational ? "nointl" : "intl"] as const,
+    ["panchanga", "month", era, year, month, locationCacheKey(location), full ? "full" : "lite", excludeInternational ? "nointl" : "intl"] as const,
   year: (year: number, location?: LocationParams, full = true) =>
     ["panchanga", "year", year, locationCacheKey(location), full ? "full" : "lite"] as const,
   monthAtClock: (
@@ -603,12 +604,12 @@ export interface EclipseYearResponse {
 export const grahaDetailKeys = {
   sthiti: (dateAd: string, location?: LocationParams) =>
     ["graha", "sthiti", dateAd, locationCacheKey(location)] as const,
-  asta: (bsYear: number, location?: LocationParams) =>
-    ["graha", "asta", bsYear, locationCacheKey(location)] as const,
-  vakri: (bsYear: number, location?: LocationParams) =>
-    ["graha", "vakri", bsYear, locationCacheKey(location)] as const,
-  eclipse: (kind: "solar" | "lunar", bsYear: number, location?: LocationParams) =>
-    ["graha", "eclipse", kind, bsYear, locationCacheKey(location)] as const,
+  asta: (year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
+    ["graha", "asta", era, year, locationCacheKey(location)] as const,
+  vakri: (year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
+    ["graha", "vakri", era, year, locationCacheKey(location)] as const,
+  eclipse: (kind: "solar" | "lunar", year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
+    ["graha", "eclipse", kind, era, year, locationCacheKey(location)] as const,
 };
 
 /**
@@ -628,23 +629,72 @@ export const fetchGrahaSthiti = (dateAd: string, location?: LocationParams) =>
     appendLocation(withGrahaCacheVersion(`/nepal/graha-sthiti/${dateAd}?era=ad`), location),
   );
 
-export const fetchGrahaAstaYear = (bsYear: number, location?: LocationParams) =>
+export const fetchGrahaAstaYear = (
+  year: number,
+  location?: LocationParams,
+  era: "bs" | "ad" = "bs",
+) =>
   get<GrahaAstaResponse>(
-    appendLocation(withGrahaCacheVersion(`/nepal/graha-asta/year/${bsYear}`), location),
+    appendLocation(withGrahaCacheVersion(`/nepal/graha-asta/year/${year}?era=${era}`), location),
   );
 
-export const fetchGrahaVakriYear = (bsYear: number, location?: LocationParams) =>
+export const fetchGrahaVakriYear = (
+  year: number,
+  location?: LocationParams,
+  era: "bs" | "ad" = "bs",
+) =>
   get<GrahaVakriResponse>(
-    appendLocation(withGrahaCacheVersion(`/nepal/graha-vakri/year/${bsYear}`), location),
+    appendLocation(withGrahaCacheVersion(`/nepal/graha-vakri/year/${year}?era=${era}`), location),
   );
 
 export const fetchEclipseYear = (
   kind: "solar" | "lunar",
-  bsYear: number,
+  year: number,
   location?: LocationParams,
+  era: "bs" | "ad" = "bs",
 ) =>
   get<EclipseYearResponse>(
-    appendLocation(withGrahaCacheVersion(`/nepal/eclipse/${kind}/year/${bsYear}`), location),
+    appendLocation(withGrahaCacheVersion(`/nepal/eclipse/${kind}/year/${year}?era=${era}`), location),
+  );
+
+export interface PanchakMomentResponse {
+  date_ad: string;
+  bs_year: number;
+  bs_month: number;
+  bs_day: number;
+  time_en: string;
+  time_ne: string;
+  time_short?: string;
+}
+
+export interface PanchakPeriodResponse {
+  start: PanchakMomentResponse;
+  end: PanchakMomentResponse;
+  duration_en: string;
+  duration_ne: string;
+}
+
+export interface PanchakYearResponse {
+  era: "bs" | "ad";
+  bs_year?: number;
+  ad_year?: number;
+  count: number;
+  gregorian_range: { start: string; end: string };
+  periods: PanchakPeriodResponse[];
+}
+
+export const panchakKeys = {
+  year: (year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
+    ["panchak", era, year, locationCacheKey(location)] as const,
+};
+
+export const fetchPanchakYear = (
+  year: number,
+  location?: LocationParams,
+  era: "bs" | "ad" = "bs",
+) =>
+  get<PanchakYearResponse>(
+    appendLocation(`/nepal/panchak/year/${year}?era=${era}`, location),
   );
 
 type RawMonthDay = CalendarDay;
@@ -690,6 +740,7 @@ function normalizeMonthDay(day: RawMonthDay): CalendarDay {
 
   return {
     ...day,
+    day: day.day_bs ?? day.day,
     paksha,
     paksha_ne: pakshaNe,
     aayan: day.aayan ?? nested?.aayan,
@@ -714,18 +765,25 @@ export const fetchMonthCalendar = async (
   year: number,
   month: number,
   location?: LocationParams,
-  options?: { clock?: string; full?: boolean; excludeInternational?: boolean }
+  options?: {
+    clock?: string;
+    full?: boolean;
+    excludeInternational?: boolean;
+    era?: "bs" | "ad";
+  },
 ): Promise<MonthCalendar> => {
   const full = options?.full !== false;
+  const era = options?.era ?? "bs";
   const params = new URLSearchParams();
   if (full) params.set("full", "true");
   if (options?.clock) params.set("clock", options.clock);
   if (options?.excludeInternational) params.set("exclude_international", "true");
   const qs = params.toString();
-  const path = appendLocation(
-    withPanchangaCacheVersion(`/panchanga/${year}/${month}${qs ? `?${qs}` : ""}`),
-    location
-  );
+  const base =
+    era === "ad"
+      ? `/panchanga/ad/${year}/${month}`
+      : `/panchanga/${year}/${month}`;
+  const path = appendLocation(withPanchangaCacheVersion(`${base}${qs ? `?${qs}` : ""}`), location);
   const data = await get<MonthCalendar & { calendar: RawMonthDay[] }>(path);
   return {
     ...data,
@@ -825,20 +883,20 @@ export const fetchPatroMonth = (year: number, month: number) =>
 // ─── Holidays & Festivals ─────────────────────────────────────────────────────
 
 export const holidayKeys = {
-  holidays: (year: number) => ["holidays", year] as const,
-  festivals: (year: number, month?: number) =>
+  holidays: (year: number, era: "bs" | "ad" = "bs") => ["holidays", era, year] as const,
+  festivals: (year: number, era: "bs" | "ad" = "bs", month?: number) =>
     month != null
-      ? (["festivals", year, month] as const)
-      : (["festivals", year] as const),
+      ? (["festivals", era, year, month] as const)
+      : (["festivals", era, year] as const),
   upcoming: (days = 90, limit = 15, holidaysOnly = false) =>
     ["festivals", "upcoming", days, limit, holidaysOnly] as const,
 };
 
-export const fetchHolidays = (year: number) =>
-  get<HolidaysResponse>(withPanchangaCacheVersion(`/nepal/holidays?year=${year}&era=bs`));
+export const fetchHolidays = (year: number, era: "bs" | "ad" = "bs") =>
+  get<HolidaysResponse>(withPanchangaCacheVersion(`/nepal/holidays?year=${year}&era=${era}`));
 
-export const fetchFestivals = (year: number, month?: number) => {
-  const params = new URLSearchParams({ year: String(year), era: "bs" });
+export const fetchFestivals = (year: number, month?: number, era: "bs" | "ad" = "bs") => {
+  const params = new URLSearchParams({ year: String(year), era });
   if (month != null) params.set("month", String(month));
   return get<FestivalsResponse>(withPanchangaCacheVersion(`/nepal/festivals?${params}`));
 };
@@ -2353,6 +2411,7 @@ export interface CalendarDayDetail {
   surya_rashi_ne?: string;
   chandra_rashi?: string;
   chandra_rashi_ne?: string;
+  chandra_rashi_spans?: RashiSpan[];
   sun?: { sunrise?: string; sunset?: string; noon?: string };
   moon?: { rise?: string; set?: string };
   dinamaan?: string;
@@ -2447,6 +2506,8 @@ export interface CalendarDay {
   query_instant?: string;
   /** Leading/trailing cells from adjacent BS months in the home grid. */
   outsideMonth?: boolean;
+  /** BS day-of-month when enriched from nested panchanga (API alias). */
+  day_bs?: number;
 }
 
 export interface PatroMonth {

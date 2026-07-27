@@ -24,9 +24,8 @@ export function importWithRetry<M>(loader: () => Promise<M>): Promise<M> {
       return mod;
     },
     (err: unknown) => {
-      let lastReload = 0;
       try {
-        lastReload = Number(sessionStorage.getItem(RELOAD_FLAG) ?? 0);
+        const lastReload = Number(sessionStorage.getItem(RELOAD_FLAG) ?? 0);
         if (Date.now() - lastReload > 30_000) {
           sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
           window.location.reload();

@@ -1,17 +1,12 @@
 import { useSyncExternalStore } from "react";
 import i18n from "@/i18n";
-import { getStoredLanguage } from "@/lib/user-preferences";
-import { normalizeLang } from "@/i18n/locale";
+import { type CalendarEra, readCalendarEra } from "@/lib/patro-era";
 
-/** Home calendar layout: Gregorian (AD) in English, Bikram Sambat in Nepali. */
-export type CalendarEra = "bs" | "ad";
+export type { CalendarEra } from "@/lib/patro-era";
+export { readCalendarEra, resolvePatroEra } from "@/lib/patro-era";
 
-export function readCalendarEra(): CalendarEra {
-  const lang = normalizeLang(i18n.resolvedLanguage ?? i18n.language);
-  if (lang === "en") return "ad";
-  if (getStoredLanguage() === "en") return "ad";
-  return "bs";
-}
+/** @deprecated Use {@link resolvePatroEra} from `@/lib/patro-era`. */
+export { resolvePatroEra as resolvePatroUrlEra } from "@/lib/patro-era";
 
 function subscribe(onStoreChange: () => void): () => void {
   const handler = () => onStoreChange();

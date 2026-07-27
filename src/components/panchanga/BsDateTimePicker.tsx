@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
+  AD_MONTH_NAMES,
   BS_MONTH_NAMES,
   adToBS,
   bsMonthLabel,
@@ -31,6 +32,7 @@ interface Props {
   hourAriaLabel?: string;
   minuteAriaLabel?: string;
   showTime: boolean;
+  calendarMode?: "bs" | "ad";
 }
 
 /** 24h → 12h parts. */
@@ -60,8 +62,10 @@ export function BsDateTimePicker({
   hourAriaLabel,
   minuteAriaLabel,
   showTime,
+  calendarMode = "bs",
 }: Props) {
   const { lang, pick, digits } = useLocale();
+  const isAd = calendarMode === "ad";
 
   // Draft state — every interaction stays local; nothing is committed (and no
   // API refetch happens) until the user presses Done. The popover remounts on
@@ -69,8 +73,12 @@ export function BsDateTimePicker({
   const [draft, setDraft] = useState({ year, month, day, clock: clock ?? "" });
   const { year: dYear, month: dMonth, day: dDay } = draft;
 
-  const monthLen = getBSMonthLength(dYear, dMonth);
-  const firstDow = bsToAD(dYear, dMonth, 1).getDay();
+  const monthLen = isAd
+    ? new Date(dYear, dMonth, 0).getDate()
+    : getBSMonthLength(dYear, dMonth);
+  const firstDow = isAd
+    ? new Date(dYear, dMonth - 1, 1).getDay()
+    : bsToAD(dYear, dMonth, 1).getDay();
   const cells: (number | null)[] = [
     ...Array.from({ length: firstDow }, () => null),
     ...Array.from({ length: monthLen }, (_, i) => i + 1),
@@ -82,15 +90,19 @@ export function BsDateTimePicker({
   const minYear = yearOptions[0] ?? dYear;
   const maxYear = yearOptions[yearOptions.length - 1] ?? dYear;
 
-  const monthOptions = BS_MONTH_NAMES.map((_, i) => ({
-    value: i + 1,
-    label: bsMonthLabel(i + 1, lang),
-  }));
+  const monthOptions = isAd
+    ? AD_MONTH_NAMES.map((name, i) => ({ value: i + 1, label: name }))
+    : BS_MONTH_NAMES.map((_, i) => ({
+        value: i + 1,
+        label: bsMonthLabel(i + 1, lang),
+      }));
   const yearSelectOptions = yearOptions.map((y) => ({ value: y, label: digits(y) }));
   const weekdays = lang === "en" ? WEEKDAYS_EN : WEEKDAYS_NE;
 
-  const setMonthYear = (y: number, m: number) =>
-    setDraft((d) => ({ ...d, year: y, month: m, day: Math.min(d.day, getBSMonthLength(y, m)) }));
+  const setMonthYear = (y: number, m: number) => {
+    const maxDay = isAd ? new Date(y, m, 0).getDate() : getBSMonthLength(y, m);
+    setDraft((d) => ({ ...d, year: y, month: m, day: Math.min(d.day, maxDay) }));
+  };
 
   const stepMonth = (delta: number) => {
     let m = dMonth + delta;
@@ -122,13 +134,24 @@ export function BsDateTimePicker({
   const setTime = (nextHour12: number, nextMinute: number, nextMeridiem: "AM" | "PM") =>
     setDraft((d) => ({ ...d, clock: formatClockParts(from12h(nextHour12, nextMeridiem), nextMinute) }));
 
-  const goDraftToday = () =>
+  const goDraftToday = () => {
+    if (isAd) {
+      const t = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
+      setDraft((d) => ({
+        ...d,
+        year: t.getFullYear(),
+        month: t.getMonth() + 1,
+        day: t.getDate(),
+      }));
+      return;
+    }
     setDraft((d) => ({
       ...d,
       year: todayBs.year,
       month: todayBs.month,
       day: todayBs.day,
     }));
+  };
 
   // Push the draft to the page (and refetch) — only fires on Done.
   const commit = () => {
@@ -206,8 +229,16 @@ export function BsDateTimePicker({
             const col = i % 7;
             const isWeekend = col === 0 || col === 6;
             const isSelected = d === dDay;
-            const isToday =
-              todayBs.year === dYear && todayBs.month === dMonth && todayBs.day === d;
+            const isToday = isAd
+              ? (() => {
+                  const t = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
+                  return (
+                    dYear === t.getFullYear() &&
+                    dMonth === t.getMonth() + 1 &&
+                    d === t.getDate()
+                  );
+                })()
+              : todayBs.year === dYear && todayBs.month === dMonth && todayBs.day === d;
             return (
               <button
                 key={d}

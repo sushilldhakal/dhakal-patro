@@ -78,7 +78,7 @@ function ceremonyItems(): PanchangaSidebarItem[] {
     to: "/sait/$category",
     params: { category: c.id },
     labelNe: `${c.ne} साइत`,
-    labelEn: `${c.en} muhurta`,
+    labelEn: `${c.en} moment`,
     blurbNe: "शुभ मिति र व्याख्या",
     blurbEn: "Auspicious dates & explanation",
   }));
@@ -108,7 +108,7 @@ export function getPanchangaSidebarSections(): PanchangaSidebarSection[] {
           id: "suryakranti",
           to: "/suryakranti",
           labelNe: "सूर्यक्रान्ति",
-          labelEn: "Sun times",
+          labelEn: "Sun Revolution",
         },
         {
           id: "panchanga-year",
@@ -139,7 +139,7 @@ export function getPanchangaSidebarSections(): PanchangaSidebarSection[] {
     {
       id: "jyotish",
       titleNe: "ज्योतिष तथा मुहूर्त",
-      titleEn: "Jyotish & muhurta",
+      titleEn: "Jyotish & moment",
       items: [
         {
           id: "avakahada",
@@ -151,7 +151,7 @@ export function getPanchangaSidebarSections(): PanchangaSidebarSection[] {
           id: "abhijit",
           to: "/abhijit-muhurta",
           labelNe: "अभिजित् मुहूर्त",
-          labelEn: "Abhijit muhurta",
+          labelEn: "Abhijit moment",
         },
         {
           id: "kundali",

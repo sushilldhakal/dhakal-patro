@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Link } from "@tanstack/react-router";
+import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import {
   fetchPanchanga,
   fetchSaitMonthAll,
@@ -16,6 +16,7 @@ import { setLocalStorageItem } from "@/lib/browser";
 import {
   resolveLocationTimezone,
   usePanchangaLocation,
+  type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsToAD, getCurrentBs } from "../lib/bs-calendar";
@@ -35,6 +36,10 @@ import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { HeroMonthArt } from "@/components/home/HeroMonthArt";
 import { PanchangaDirectory } from "@/components/panchanga/PanchangaDirectory";
 import { Button } from "@/components/ui/button";
+import { usePatroMonthUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { currentPatroDayLinkSearch } from "@/lib/url-state";
+
+const routeApi = getRouteApi("/");
 
 function fmtAdIso(d: Date): string {
   const y = d.getFullYear();
@@ -67,6 +72,7 @@ function PanchangaAside({
   selectedAdDate,
   todayAd,
   monthContext,
+  location,
   p,
   loading,
   error,
@@ -76,6 +82,7 @@ function PanchangaAside({
   selectedAdDate: string;
   todayAd: string;
   monthContext: CalendarMonthContext;
+  location: PanchangaLocation;
   p?: PanchangaDay;
   /** True while the panchanga for the selected date/location is in flight. */
   loading: boolean;
@@ -189,7 +196,11 @@ function PanchangaAside({
           <h2 className="m-0 flex-1 text-lg font-bold">
             {isSelectedToday ? t("panchanga.today_title") : t("panchanga.title")}
           </h2>
-          <Link to="/panchanga" className={patroAsideLink}>
+          <Link
+            to="/panchanga"
+            search={currentPatroDayLinkSearch(location, selectedAdDate)}
+            className={patroAsideLink}
+          >
             {t("panchanga.full_detail")} →
           </Link>
         </div>
@@ -295,6 +306,7 @@ function PanchangaAside({
                     p={activeP}
                     selectedDay={contextDay}
                     selectedAdDate={selectedAdDate}
+                    location={location}
                     bsYear={monthContext.year}
                     bsMonth={monthContext.month}
                     loading={loading}
@@ -311,7 +323,10 @@ function PanchangaAside({
 
 export function Home() {
   const { t } = useTranslation();
+  const navigate = useNavigate({ from: "/" });
+  const search = routeApi.useSearch();
   const { location, setLocation } = usePanchangaLocation();
+  const monthBrowse = usePatroMonthUrlBrowse(search, navigate, location, setLocation);
   const { year: bsYear, month: bsMonth } = getCurrentBs();
   const todayAd = useMemo(
     () => todayAdStringInTimezone(new Date(), resolveLocationTimezone(location)),
@@ -358,8 +373,8 @@ export function Home() {
   // already-loaded panchanga day, so it only needs its chunk. Runs off the main
   // thread (requestIdleCallback) so it never competes with the initial render.
   const queryClient = useQueryClient();
-  const prefetchYear = monthContext.year;
-  const prefetchMonth = monthContext.month;
+  const prefetchYear = monthBrowse.bsYear;
+  const prefetchMonth = monthBrowse.bsMonth;
   useEffect(() => {
     if (typeof window === "undefined") return;
     let cancelled = false;
@@ -403,6 +418,7 @@ export function Home() {
   return (
     <main className="mx-auto max-w-[1400px] px-4 pb-12 pt-4 max-md:px-0 max-md:pb-16 max-md:pt-0">
       <CalendarView
+        monthBrowse={monthBrowse}
         location={location}
         onLocationChange={setLocation}
         todayAd={todayAd}
@@ -418,6 +434,7 @@ export function Home() {
             selectedAdDate={asideAdDate}
             todayAd={todayAd}
             monthContext={monthContext}
+            location={location}
             p={panchangaQ.data}
             loading={asideLoading}
             error={panchangaQ.isError}
@@ -425,11 +442,7 @@ export function Home() {
         }
         holidays={
           <section className="col-span-full mt-2 max-sm:px-2.5">
-            <HomeQuickLinks
-              location={location}
-              bsYear={monthContext.year}
-              bsMonth={monthContext.month}
-            />
+            <HomeQuickLinks location={location} />
             <PanchangaDirectory className="mt-8" />
           </section>
         }

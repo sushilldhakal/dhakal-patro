@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchGochar, gocharKeys, type LocationParams } from "@/lib/api";
 import { formatClockNepali, toWesternRashi } from "@/lib/panchanga-format";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { resolveRashiDisplay } from "@/lib/rashi-i18n";
 import { useLocale } from "@/i18n/locale";
 import { patroCard } from "@/lib/patro-classes";
 
@@ -18,25 +19,9 @@ const GRAHA_ORDER = [
   "ketu",
 ] as const satisfies readonly GrahaKey[];
 
-const RASHI_EN_NE: Record<string, string> = {
-  Mesha: "मेष",
-  Vrishabha: "वृष",
-  Mithuna: "मिथुन",
-  Karka: "कर्कट",
-  Karkata: "कर्कट",
-  Simha: "सिंह",
-  Kanya: "कन्या",
-  Tula: "तुला",
-  Vrishchika: "वृश्चिक",
-  Dhanu: "धनु",
-  Makara: "मकर",
-  Kumbha: "कुम्भ",
-  Meena: "मीन",
-};
-
 function rashiNe(english?: string): string {
   if (!english) return "—";
-  return RASHI_EN_NE[english] ?? english;
+  return resolveRashiDisplay(undefined, english, "ne") ?? english;
 }
 
 function localTimePart(entryLocal: string): string {

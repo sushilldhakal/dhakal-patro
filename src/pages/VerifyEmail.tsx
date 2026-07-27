@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, XCircle } from "lucide-react";
@@ -10,16 +10,19 @@ import { useAuth } from "@/lib/auth/AuthContext";
 export function VerifyEmail() {
   const { t } = useTranslation();
   const { refreshUser } = useAuth();
-  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
-  const [message, setMessage] = useState("");
+  const token = useMemo(
+    () => new URLSearchParams(window.location.search).get("token"),
+    [],
+  );
+  const [status, setStatus] = useState<"loading" | "ok" | "error">(() =>
+    token ? "loading" : "error",
+  );
+  const [message, setMessage] = useState(() =>
+    token ? "" : t("auth.verify_missing_token"),
+  );
 
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get("token");
-    if (!token) {
-      setStatus("error");
-      setMessage(t("auth.verify_missing_token"));
-      return;
-    }
+    if (!token) return;
     apiVerifyEmail(token)
       .then(async () => {
         setStatus("ok");
@@ -29,7 +32,7 @@ export function VerifyEmail() {
         setStatus("error");
         setMessage(t("auth.verify_failed"));
       });
-  }, [refreshUser, t]);
+  }, [refreshUser, t, token]);
 
   useRouteLoading(status === "loading");
 

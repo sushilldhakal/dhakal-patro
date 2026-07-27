@@ -8,6 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import { GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
 import { useLocale } from "@/i18n/locale";
+import { formatRashiByNumber } from "@/lib/rashi-i18n";
 
 const PLANET_ABBR_NE: Record<string, string> = {
   sun: "सू",
@@ -26,18 +27,14 @@ const PLANET_ABBR_EN: Record<string, string> = {
   venus: "Ve", saturn: "Sa", rahu: "Ra", ketu: "Ke",
 };
 
-/** Western signs — English readers read "Leo", not the Sanskrit "Simha". */
-const RASHI_EN = [
-  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
-];
+/** Western signs from i18n (Aries, Leo, …). */
 
 interface Props {
   houses: BhavaHouse[];
 }
 
 export function D1Chart({ houses }: Props) {
-  const { pick, digits } = useLocale();
+  const { pick, digits, lang } = useLocale();
   const byHouse = new Map(houses.map((h) => [h.house, h]));
 
   return (
@@ -89,7 +86,7 @@ export function D1Chart({ houses }: Props) {
                   house.isLagna ? "fill-secondary" : "fill-muted-foreground"
                 )}
               >
-                {digits(house.rashi)} {pick(house.rashiNe, RASHI_EN[house.rashi - 1] ?? house.rashiNe)}
+                {digits(house.rashi)} {formatRashiByNumber(house.rashi, lang)}
               </text>
             )}
             {(() => {

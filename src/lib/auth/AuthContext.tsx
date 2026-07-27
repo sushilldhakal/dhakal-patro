@@ -85,6 +85,7 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshUser().finally(() => setLoading(false));
   }, [refreshUser, ssr]);
 
@@ -98,7 +99,7 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [refreshUser]);
+  }, [refreshUser, ssr]);
 
   const login = useCallback(async (email: string, password: string) => {
     authEpoch.current += 1;

@@ -41,12 +41,19 @@ export function FacebookSignInButton({
   checkStatus?: boolean;
 }) {
   const { t } = useTranslation();
-  const [checking, setChecking] = useState(checkStatus);
-  const [ready, setReady] = useState(!checkStatus);
+  const [checking, setChecking] = useState(
+    () => checkStatus && facebookSignInEnabled && !shouldSkipFacebookAutoLogin(),
+  );
+  const [ready, setReady] = useState(
+    () => !checkStatus || !facebookSignInEnabled || shouldSkipFacebookAutoLogin(),
+  );
   const onAccessTokenRef = useRef(onAccessToken);
   const onErrorRef = useRef(onError);
-  onAccessTokenRef.current = onAccessToken;
-  onErrorRef.current = onError;
+
+  useEffect(() => {
+    onAccessTokenRef.current = onAccessToken;
+    onErrorRef.current = onError;
+  });
 
   const handleStatus = useCallback((response: FacebookAuthResponse) => {
     const token = facebookAccessToken(response);
@@ -71,17 +78,8 @@ export function FacebookSignInButton({
   }, [handleStatus]);
 
   useEffect(() => {
-    if (!facebookSignInEnabled || !checkStatus) {
-      setChecking(false);
-      setReady(true);
-      return;
-    }
-
-    if (shouldSkipFacebookAutoLogin()) {
-      setChecking(false);
-      setReady(true);
-      return;
-    }
+    if (!facebookSignInEnabled || !checkStatus) return;
+    if (shouldSkipFacebookAutoLogin()) return;
 
     let cancelled = false;
     getFacebookLoginStatus()

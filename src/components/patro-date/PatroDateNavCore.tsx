@@ -1,7 +1,7 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, adToBS, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
-import { getAdMonthBsSpanLabel } from "@/lib/local-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
@@ -32,7 +32,7 @@ import {
   patroMobileStepBtn,
 } from "@/lib/patro-classes";
 
-interface Props {
+export type PatroDateNavCoreProps = {
   year: number;
   month: number;
   yearOptions: number[];
@@ -228,7 +228,7 @@ function MonthNavControls({
   );
 }
 
-export function BsMonthHeaderTitle({
+export function PatroDateNavCore({
   year,
   month,
   yearOptions,
@@ -259,15 +259,14 @@ export function BsMonthHeaderTitle({
   mobileToolbar,
   mobileToolbarLower,
   calendarMode = "bs",
-}: Props) {
+}: PatroDateNavCoreProps) {
   const { lang, pick, digits } = useLocale();
   const isAdCalendar = calendarMode === "ad";
 
-  const todayDate = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
-  const todayBs = adToBS(todayDate);
-
   const monthTitle = isAdCalendar
-    ? AD_MONTH_NAMES[month - 1]
+    ? lang === "en"
+      ? AD_MONTH_NAMES[month - 1]
+      : new Date(year, month - 1, 1).toLocaleDateString("ne-NP", { month: "long" })
     : pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
   const samvatsara = isAdCalendar ? undefined : resolveSamvatsaraForBsYear(year);
   const samvatsaraLabel = samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : undefined;
@@ -276,7 +275,7 @@ export function BsMonthHeaderTitle({
   // toLocaleDateString's own ordering put ne-NP as year-month-day, which reads
   // backwards; build the parts explicitly instead.
   const adDayEnglish = (() => {
-    if (day == null) return null;
+    if (day == null || isAdCalendar) return null;
     const d = bsToAD(year, month, day);
     const monthShort = d.toLocaleDateString(adLocale, { month: "short" });
     const numLabel = (n: number) => (lang === "en" ? String(n) : digits(n));
@@ -302,11 +301,10 @@ export function BsMonthHeaderTitle({
     }
     return `${startMonth} ${yearLabel(startYear)}/${endMonth} ${yearLabel(endYear)}`;
   })();
-  // The chip is the "jump to today" button, so on a month view it shows today
-  // in whichever calendar is driving the grid — not the month being browsed.
-  const chipDay = day ?? (isAdCalendar ? todayDate.getDate() : todayBs.day);
-  const chipMonth =
-    day != null ? month : isAdCalendar ? todayDate.getMonth() + 1 : todayBs.month;
+  // Month-only views: chip shows the browsed month (day 1). Day views keep today
+  // in the chip because it doubles as the jump-to-today control.
+  const chipDay = day ?? 1;
+  const chipMonth = month;
   const monthOptions = (isAdCalendar ? AD_MONTH_NAMES : BS_MONTH_NAMES).map((_: string, i: number) => ({
     value: i + 1,
     label: isAdCalendar ? AD_MONTH_NAMES[i] : bsMonthLabel(i + 1, lang),
@@ -362,24 +360,22 @@ export function BsMonthHeaderTitle({
   const clockSummary = showTime
     ? `${toNepaliDigits(String(hour).padStart(2, "0"))}:${toNepaliDigits(String(minute).padStart(2, "0"))}`
     : null;
-  const mobileSummary = day != null
-    ? `${digits(day)} ${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`
-    : `${monthTitle} ${digits(year)}${clockSummary ? ` · ${clockSummary}` : ""}`;
+  const monthPickerHint = pick("महिना", "Month");
   /** Picker chip: omit year when the title already shows it (panchanga day view). */
   const mobilePickerLabel =
     day != null
       ? clockSummary
         ? `${digits(day)} ${monthTitle} · ${clockSummary}`
         : `${digits(day)} ${monthTitle}`
-      : mobileSummary;
+      : monthPickerHint;
   /**
-   * Below sm (<640px): drop the month token (the title row already shows it).
-   * Day view keeps the day + time; month view (home) falls back to the month.
+   * Below sm (<640px): day view drops the month token (title row shows it).
+   * Month view uses a neutral hint — title already shows month + year.
    */
   const mobilePickerLabelCompact =
     day != null
       ? `${digits(day)}${clockSummary ? ` · ${clockSummary}` : ""}`
-      : `${monthTitle}${clockSummary ? ` · ${clockSummary}` : ""}`;
+      : monthPickerHint;
 
   // Day views (panchanga) get a proper calendar + 12h time popover; month
   // views (home) keep the select-based nav / bottom sheet.
@@ -422,6 +418,7 @@ export function BsMonthHeaderTitle({
         </PopoverTrigger>
         <PopoverContent align="start" sideOffset={6} className="w-[17.5rem]">
           <BsDateTimePicker
+            calendarMode={calendarMode}
             year={year}
             month={month}
             day={day ?? 1}
@@ -450,7 +447,11 @@ export function BsMonthHeaderTitle({
     </div>
   );
 
-  const subtitleLine = adDayEnglish ?? adMonthRangeEnglish;
+  const subtitleLine = isAdCalendar
+    ? day != null
+      ? getAdDayBsLabel(year, month, day, lang, digits)
+      : adMonthRangeEnglish
+    : adDayEnglish ?? adMonthRangeEnglish;
 
   // Nepali BS date part of the heading. The संवत्सर name and Gregorian subtitle
   // are ordered by <BsHeadline>, which is the single source of truth for the

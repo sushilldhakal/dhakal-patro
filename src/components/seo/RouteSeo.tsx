@@ -10,16 +10,11 @@ import {
 } from "@/lib/seo";
 import { isBrowser } from "@/lib/browser";
 
-/**
- * Updates document title, meta tags, canonical URL, and JSON-LD on every route change.
- * Skipped during SSR prerender — buildHeadHtml injects those tags into <head> instead.
- */
-export function RouteSeo() {
-  if (!isBrowser) return null;
+function RouteSeoInner() {
   const { t, i18n } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const meta = resolvePageSeo(pathname, t, i18n.language);
+  const meta = resolvePageSeo(pathname, t);
   const jsonLd = buildJsonLd(meta, pathname, t);
   const htmlLang = i18n.language?.startsWith("en") ? "en" : "ne";
   const normalized = pathname.replace(/\/$/, "") || "/";
@@ -59,4 +54,13 @@ export function RouteSeo() {
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
     </Helmet>
   );
+}
+
+/**
+ * Updates document title, meta tags, canonical URL, and JSON-LD on every route change.
+ * Skipped during SSR prerender — buildHeadHtml injects those tags into <head> instead.
+ */
+export function RouteSeo() {
+  if (!isBrowser) return null;
+  return <RouteSeoInner />;
 }

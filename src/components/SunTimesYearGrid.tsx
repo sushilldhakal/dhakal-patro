@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import {
   createColumnHelper,
   flexRender,
@@ -8,14 +8,24 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Sunrise, Sunset } from "lucide-react";
+import type { CalendarEra } from "@/hooks/use-calendar-era";
+import { useLocale } from "@/i18n/locale";
 import {
   fetchYearSunTimes,
   sunYearKeys,
   type SunYearDay,
+  type SunYearResponse,
   type LocationParams,
 } from "@/lib/api";
-import { BS_MONTHS_NE, getBSMonthLength, getCurrentBs } from "@/lib/bs-calendar";
-import { formatClockNepali, formatTimeShort, toNepaliDigits } from "@/lib/panchanga-format";
+import {
+  AD_MONTHS_SHORT,
+  AD_MONTHS_SHORT_NE,
+  BS_MONTHS_NE,
+  adToBS,
+  getBSMonthLength,
+  getCurrentBs,
+} from "@/lib/bs-calendar";
+import { formatClockNepali, formatAyanaMarkShort, formatTimeShort, isAyanaNorthMark } from "@/lib/panchanga-format";
 import {
   Accordion,
   AccordionContent,
@@ -53,13 +63,45 @@ export type SunDayRow = {
 
 type SunCell = SunDayRow;
 
-function resolveAyanaMark(day: SunYearDay): { mark?: "उ" | "द"; label?: string } {
+function resolveAyanaMark(
+  day: SunYearDay,
+  isEnglish: boolean,
+): { mark?: "उ" | "द"; label?: string } {
   if (!day.ayana_mark) return {};
-  return { mark: day.ayana_mark, label: day.aayan_ne ?? day.aayan };
+  const label = isEnglish
+    ? (day.aayan ?? day.aayan_ne ?? (day.ayana_mark === "उ" ? "Uttarayana" : "Dakshinayana"))
+    : (day.aayan_ne ?? day.aayan);
+  return { mark: day.ayana_mark, label };
 }
 
-function buildYearGrid(
+function formatClockDisplay(time: string | undefined, nepaliDigits: boolean): string | undefined {
+  if (!time) return undefined;
+  return nepaliDigits ? formatClockNepali(time) : formatTimeShort(time);
+}
+
+function dayCell(
+  d: SunYearDay,
+  nepaliDigits: boolean,
+  isEnglish: boolean,
+): SunCell {
+  const sunrise = formatTimeShort(d.sunrise);
+  const sunset = formatTimeShort(d.sunset);
+  const { mark: ayanaMark, label: ayanaNe } = resolveAyanaMark(d, isEnglish);
+  return {
+    day: d.day,
+    sunrise,
+    sunset,
+    sunriseDisplay: formatClockDisplay(sunrise, nepaliDigits),
+    sunsetDisplay: formatClockDisplay(sunset, nepaliDigits),
+    ayanaMark,
+    ayanaNe,
+  };
+}
+
+function buildBsYearGrid(
   months: (SunYearDay[] | undefined)[],
+  nepaliDigits: boolean,
+  isEnglish: boolean,
 ): Map<string, SunCell> {
   const grid = new Map<string, SunCell>();
 
@@ -67,26 +109,59 @@ function buildYearGrid(
     if (!days) return;
     const month = monthIdx + 1;
     for (const d of days) {
-      const sunrise = formatTimeShort(d.sunrise);
-      const sunset = formatTimeShort(d.sunset);
-      const { mark: ayanaMark, label: ayanaNe } = resolveAyanaMark(d);
-      grid.set(`${month}-${d.day}`, {
-        day: d.day,
-        sunrise,
-        sunset,
-        sunriseDisplay: formatClockNepali(sunrise),
-        sunsetDisplay: formatClockNepali(sunset),
-        ayanaMark,
-        ayanaNe,
-      });
+      grid.set(`${month}-${d.day}`, dayCell(d, nepaliDigits, isEnglish));
     }
   });
 
   return grid;
 }
 
-function buildMonthRows(bsYear: number, month: number, grid: Map<string, SunCell>): SunDayRow[] {
-  const monthLen = getBSMonthLength(bsYear, month);
+function parseDateAd(dateAd: string): Date {
+  const [y, m, day] = dateAd.split("-").map(Number);
+  return new Date(y!, m! - 1, day!);
+}
+
+function bsYearsForAdYear(adYear: number): number[] {
+  const start = adToBS(new Date(adYear, 0, 1)).year;
+  const end = adToBS(new Date(adYear, 11, 31)).year;
+  return start === end ? [start] : [start, end];
+}
+
+function buildAdYearGrid(
+  responses: (SunYearResponse | undefined)[],
+  adYear: number,
+  nepaliDigits: boolean,
+  isEnglish: boolean,
+): Map<string, SunCell> {
+  const grid = new Map<string, SunCell>();
+  for (const resp of responses) {
+    if (!resp) continue;
+    for (const month of resp.months) {
+      for (const d of month.calendar) {
+        if (!d.date_ad) continue;
+        const adDate = parseDateAd(d.date_ad);
+        if (adDate.getFullYear() !== adYear) continue;
+        const adMonth = adDate.getMonth() + 1;
+        const adDay = adDate.getDate();
+        grid.set(`${adMonth}-${adDay}`, {
+          ...dayCell(d, nepaliDigits, isEnglish),
+          day: adDay,
+        });
+      }
+    }
+  }
+  return grid;
+}
+
+function getAdMonthLength(adYear: number, month: number): number {
+  return new Date(adYear, month, 0).getDate();
+}
+
+function buildMonthRows(
+  month: number,
+  monthLen: number,
+  grid: Map<string, SunCell>,
+): SunDayRow[] {
   return Array.from({ length: monthLen }, (_, i) => {
     const day = i + 1;
     return grid.get(`${month}-${day}`) ?? { day };
@@ -97,12 +172,13 @@ const monthCol = createColumnHelper<SunDayRow>();
 
 function useMonthTableColumns() {
   const { t } = useTranslation();
+  const { digits, lang } = useLocale();
   return useMemo(
     () => [
       monthCol.accessor("day", {
         header: t("sun_times.col_day"),
         cell: (info) => (
-          <span className="font-semibold tabular-nums">{toNepaliDigits(info.getValue())}</span>
+          <span className="font-semibold tabular-nums">{digits(info.getValue())}</span>
         ),
       }),
       monthCol.accessor("ayanaMark", {
@@ -114,11 +190,11 @@ function useMonthTableColumns() {
           return (
             <span
               className={cn(
-                mark === "उ" ? patroAyanaNorth : patroAyanaSouth,
+                isAyanaNorthMark(mark) ? patroAyanaNorth : patroAyanaSouth,
               )}
               title={ayanaNe}
             >
-              {mark}
+              {formatAyanaMarkShort(mark, lang)}
             </span>
           );
         },
@@ -150,7 +226,7 @@ function useMonthTableColumns() {
         ),
       }),
     ],
-    [t],
+    [t, digits, lang],
   );
 }
 
@@ -211,12 +287,17 @@ function MonthSunDataTable({
   );
 }
 
-function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
+function SunTimesLegend({
+  hideHeader,
+  locationLabel,
+  browseYear,
+}: {
   hideHeader: boolean;
   locationLabel: string;
-  bsYear: number;
+  browseYear: number;
 }) {
   const { t } = useTranslation();
+  const { digits, pick } = useLocale();
   return (
     <div
       className={cn(
@@ -228,7 +309,7 @@ function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
         <div>
           <h3 className="m-0 text-base font-bold">{t("sun_times.grid_title")}</h3>
           <span className="mt-0.5 block text-sm text-base">
-            {t("sun_times.subtitle", { year: toNepaliDigits(bsYear) })} · {locationLabel}
+            {t("sun_times.subtitle", { year: digits(browseYear) })} · {locationLabel}
           </span>
         </div>
       ) : null}
@@ -242,11 +323,11 @@ function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
           {t("sun_times.col_sunset")}
         </span>
         <span className="inline-flex items-center gap-1 text-sm text-base">
-          <span className={patroAyanaNorth}>उ</span>
+          <span className={patroAyanaNorth}>{pick("उ", "N")}</span>
           {t("sun_times.north_ayana")}
         </span>
         <span className="inline-flex items-center gap-1 text-sm text-base">
-          <span className={patroAyanaSouth}>द</span>
+          <span className={patroAyanaSouth}>{pick("द", "S")}</span>
           {t("sun_times.south_ayana")}
         </span>
       </div>
@@ -254,23 +335,32 @@ function SunTimesLegend({ hideHeader, locationLabel, bsYear }: {
   );
 }
 
+type CalendarLayout = {
+  year: number;
+  monthLabels: readonly string[];
+  getMonthLength: (month: number) => number;
+  maxDay: number;
+  defaultMonth: string;
+};
+
 function SunTimesYearMatrix({
-  bsYear,
+  layout,
   grid,
-  maxDay,
   isLoading,
 }: {
-  bsYear: number;
+  layout: CalendarLayout;
   grid: Map<string, SunCell>;
-  maxDay: number;
   isLoading: boolean;
 }) {
   const { t } = useTranslation();
+  const { digits, lang } = useLocale();
+  const { year, monthLabels, getMonthLength, maxDay } = layout;
+
   return (
     <div className="max-w-full overflow-x-auto overscroll-x-contain [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch]">
       <table
         className="w-max min-w-full border-collapse table-fixed text-sm font-semibold font-num"
-        aria-label={t("sun_times.grid_aria", { year: bsYear })}
+        aria-label={t("sun_times.grid_aria", { year })}
       >
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -280,7 +370,7 @@ function SunTimesYearMatrix({
             >
               {t("sun_times.col_day")}
             </TableHead>
-            {BS_MONTHS_NE.map((name) => (
+            {monthLabels.map((name) => (
               <TableHead
                 key={name}
                 scope="col"
@@ -300,11 +390,11 @@ function SunTimesYearMatrix({
                   scope="row"
                   className="sticky left-0 z-[2] w-12 min-w-12 border-r border-b border-border/70 bg-card px-2.5 py-2 text-center text-sm font-bold"
                 >
-                  {toNepaliDigits(day)}
+                  {digits(day)}
                 </TableHead>
                 {Array.from({ length: 12 }, (_, colIdx) => {
                   const month = colIdx + 1;
-                  const monthLen = getBSMonthLength(bsYear, month);
+                  const monthLen = getMonthLength(month);
                   if (day > monthLen) {
                     return (
                       <TableCell
@@ -318,7 +408,7 @@ function SunTimesYearMatrix({
                   const cell = grid.get(`${month}-${day}`);
                   const title =
                     cell?.sunrise && cell?.sunset
-                      ? `${BS_MONTHS_NE[colIdx]} ${day}: ${cell.ayanaMark ? `${cell.ayanaNe ?? cell.ayanaMark} · ` : ""}↑ ${cell.sunriseDisplay ?? cell.sunrise} ↓ ${cell.sunsetDisplay ?? cell.sunset}`
+                      ? `${monthLabels[colIdx]} ${day}: ${cell.ayanaMark ? `${cell.ayanaNe ?? formatAyanaMarkShort(cell.ayanaMark, lang)} · ` : ""}↑ ${cell.sunriseDisplay ?? cell.sunrise} ↓ ${cell.sunsetDisplay ?? cell.sunset}`
                       : undefined;
 
                   return (
@@ -334,18 +424,24 @@ function SunTimesYearMatrix({
                         <span className={patroSkel} />
                       ) : cell?.sunrise || cell?.sunset ? (
                         <>
-                          {cell.ayanaMark ? (
-                            <span
-                              className={cn(
-                                cell.ayanaMark === "उ" ? patroAyanaNorth : patroAyanaSouth,
-                              )}
-                              title={cell.ayanaNe}
-                            >
-                              {cell.ayanaMark}
-                            </span>
-                          ) : null}
-                          <span className={patroSunRise}>
+                          <span className={cn(patroSunRise, "whitespace-nowrap")}>
                             {cell.sunriseDisplay ?? "—"}
+                            {cell.ayanaMark ? (
+                              <>
+                                {" "}
+                                <span
+                                  className={cn(
+                                    isAyanaNorthMark(cell.ayanaMark)
+                                      ? patroAyanaNorth
+                                      : patroAyanaSouth,
+                                    "mb-0 text-[11px] align-baseline",
+                                  )}
+                                  title={cell.ayanaNe}
+                                >
+                                  {formatAyanaMarkShort(cell.ayanaMark, lang)}
+                                </span>
+                              </>
+                            ) : null}
                           </span>
                           <span className={patroSunSet}>
                             {cell.sunsetDisplay ?? "—"}
@@ -365,36 +461,37 @@ function SunTimesYearMatrix({
 }
 
 function SunTimesYearAccordion({
-  bsYear,
+  layout,
   grid,
   isLoading,
 }: {
-  bsYear: number;
+  layout: CalendarLayout;
   grid: Map<string, SunCell>;
   isLoading: boolean;
 }) {
   const { t } = useTranslation();
-  const currentMonth =
-    getCurrentBs().year === bsYear ? String(getCurrentBs().month) : "1";
+  const { digits } = useLocale();
+  const { monthLabels, getMonthLength, defaultMonth } = layout;
 
   return (
     <Accordion
-      key={isLoading ? "loading" : `ready-${bsYear}`}
+      key={isLoading ? "loading" : `ready-${layout.year}`}
       type="single"
       collapsible
-      defaultValue={isLoading ? undefined : `month-${currentMonth}`}
+      defaultValue={isLoading ? undefined : defaultMonth}
       className="px-3 pb-3"
     >
-      {BS_MONTHS_NE.map((name, idx) => {
+      {monthLabels.map((name, idx) => {
         const month = idx + 1;
-        const rows = buildMonthRows(bsYear, month, grid);
+        const monthLen = getMonthLength(month);
+        const rows = buildMonthRows(month, monthLen, grid);
         return (
           <AccordionItem key={name} value={`month-${month}`} className="border-border">
             <AccordionTrigger className="px-1 text-base font-semibold hover:no-underline">
               <span>
                 {name}
                 <span className="ml-2 text-sm font-normal">
-                  {t("sun_times.days_count", { count: toNepaliDigits(getBSMonthLength(bsYear, month)) })}
+                  {t("sun_times.days_count", { count: digits(monthLen) })}
                 </span>
               </span>
             </AccordionTrigger>
@@ -409,6 +506,8 @@ function SunTimesYearAccordion({
 }
 
 interface Props {
+  era: CalendarEra;
+  browseYear: number;
   bsYear: number;
   locationLabel: string;
   locationParams: LocationParams;
@@ -418,6 +517,8 @@ interface Props {
 }
 
 export function SunTimesYearGrid({
+  era,
+  browseYear,
   bsYear,
   locationLabel,
   locationParams,
@@ -425,33 +526,72 @@ export function SunTimesYearGrid({
   onLoadingChange,
 }: Props) {
   const { t } = useTranslation();
-  // Slim सूर्यक्रान्ति payload (~4 KB/year, ms from the API's year cache)
-  // instead of the full year calendar build.
-  const yearQuery = useQuery({
-    queryKey: sunYearKeys.year(bsYear, locationParams),
-    queryFn: () => fetchYearSunTimes(bsYear, locationParams),
-    staleTime: 1000 * 60 * 60 * 24,
+  const { isEnglish } = useLocale();
+  const nepaliDigits = !isEnglish;
+
+  const fetchYears = era === "ad" ? bsYearsForAdYear(browseYear) : [bsYear];
+
+  const yearQueries = useQueries({
+    queries: fetchYears.map((y) => ({
+      queryKey: sunYearKeys.year(y, locationParams),
+      queryFn: () => fetchYearSunTimes(y, locationParams),
+      staleTime: 1000 * 60 * 60 * 24,
+    })),
   });
 
-  const isLoading = yearQuery.isLoading;
-  const isError = yearQuery.isError;
+  const isLoading = yearQueries.some((q) => q.isLoading);
+  const isError = yearQueries.some((q) => q.isError);
 
   useEffect(() => {
     onLoadingChange?.(isLoading);
   }, [isLoading, onLoadingChange]);
 
   const grid = useMemo(() => {
-    const monthDays = yearQuery.data?.months.map((month) => month.calendar);
-    return buildYearGrid(monthDays ?? []);
-  }, [yearQuery.data]);
-
-  const maxDay = useMemo(() => {
-    let max = 30;
-    for (let m = 1; m <= 12; m += 1) {
-      max = Math.max(max, getBSMonthLength(bsYear, m));
+    if (era === "ad") {
+      return buildAdYearGrid(
+        yearQueries.map((q) => q.data),
+        browseYear,
+        nepaliDigits,
+        isEnglish,
+      );
     }
-    return max;
-  }, [bsYear]);
+    const monthDays = yearQueries[0]?.data?.months.map((month) => month.calendar);
+    return buildBsYearGrid(monthDays ?? [], nepaliDigits, isEnglish);
+  }, [yearQueries, era, browseYear, nepaliDigits, isEnglish]);
+
+  const layout = useMemo((): CalendarLayout => {
+    if (era === "ad") {
+      const monthLabels = isEnglish ? AD_MONTHS_SHORT : AD_MONTHS_SHORT_NE;
+      const today = new Date();
+      const defaultMonth =
+        today.getFullYear() === browseYear ? String(today.getMonth() + 1) : "1";
+      let maxDay = 31;
+      for (let m = 1; m <= 12; m += 1) {
+        maxDay = Math.max(maxDay, getAdMonthLength(browseYear, m));
+      }
+      return {
+        year: browseYear,
+        monthLabels,
+        getMonthLength: (month) => getAdMonthLength(browseYear, month),
+        maxDay,
+        defaultMonth: `month-${defaultMonth}`,
+      };
+    }
+
+    const currentBs = getCurrentBs();
+    let maxDay = 30;
+    for (let m = 1; m <= 12; m += 1) {
+      maxDay = Math.max(maxDay, getBSMonthLength(bsYear, m));
+    }
+    return {
+      year: browseYear,
+      monthLabels: BS_MONTHS_NE,
+      getMonthLength: (month) => getBSMonthLength(bsYear, month),
+      maxDay,
+      defaultMonth:
+        currentBs.year === bsYear ? `month-${currentBs.month}` : "month-1",
+    };
+  }, [era, browseYear, bsYear, isEnglish]);
 
   if (isError) {
     return (
@@ -468,20 +608,15 @@ export function SunTimesYearGrid({
       <SunTimesLegend
         hideHeader={hideHeader}
         locationLabel={locationLabel}
-        bsYear={bsYear}
+        browseYear={browseYear}
       />
 
       <div className="hidden lg:block">
-        <SunTimesYearMatrix
-          bsYear={bsYear}
-          grid={grid}
-          maxDay={maxDay}
-          isLoading={isLoading}
-        />
+        <SunTimesYearMatrix layout={layout} grid={grid} isLoading={isLoading} />
       </div>
 
       <div className="lg:hidden">
-        <SunTimesYearAccordion bsYear={bsYear} grid={grid} isLoading={isLoading} />
+        <SunTimesYearAccordion layout={layout} grid={grid} isLoading={isLoading} />
       </div>
     </div>
   );

@@ -103,10 +103,10 @@ function NavataraAsideList({
   );
 }
 
-function ChoghadiyaList({ p, dateAd }: { p: PanchangaDay; dateAd: string }) {
+function ChoghadiyaList({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
   const { pick } = useLocale();
-  const timeline = buildDayTimelineData(p, dateAd);
+  const timeline = buildDayTimelineData(p);
   const sunriseMin = parseTimeToMinutes(getSunrise(p));
 
   if (!timeline?.choghadiya.length || sunriseMin == null) {
@@ -231,7 +231,7 @@ type Props = {
   dateAd: string;
 };
 
-export function MuhurtaAsidePanel({ p, dateAd }: Props) {
+export function MuhurtaAsidePanel({ p }: Props) {
   const { t } = useTranslation();
   const [subTab, setSubTab] = useState<MuhurtaSubTab>("tarabal");
   const tara = getTarabalaTable(p);
@@ -278,7 +278,7 @@ export function MuhurtaAsidePanel({ p, dateAd }: Props) {
             rows={chandra?.rows ?? []}
           />
         ) : null}
-        {subTab === "choghadiya" ? <ChoghadiyaList p={p} dateAd={dateAd} /> : null}
+        {subTab === "choghadiya" ? <ChoghadiyaList p={p} /> : null}
         {subTab === "hora" ? <HoraList p={p} /> : null}
         {subTab === "pushkara" ? <PushkaraList p={p} /> : null}
       </div>

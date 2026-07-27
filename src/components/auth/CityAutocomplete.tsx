@@ -27,21 +27,20 @@ export function CityAutocomplete({
   const { lang, pick: localePick } = useLocale();
   const resolvedPlaceholder = placeholder ?? localePick("सहर खोज्नुहोस्…", "Search a city…");
   const [query, setQuery] = useState(value ?? "");
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setQuery(value ?? "");
+  }
   const [results, setResults] = useState<City[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setQuery(value ?? "");
-  }, [value]);
-
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (query.trim().length < 2) return;
     let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- debounced fetch starts loading immediately
     setLoading(true);
     // Nepal from the curated local list; other countries from the backend.
     const nepal = searchNepalCities(query.trim()).map((c) => nepalCityToCity(c, lang));
@@ -61,6 +60,8 @@ export function CityAutocomplete({
       clearTimeout(t);
     };
   }, [query, lang]);
+
+  const visibleResults = query.trim().length < 2 ? [] : results;
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -103,9 +104,9 @@ export function CityAutocomplete({
           <Loader2 className="absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 animate-spin" />
         )}
       </div>
-      {open && results.length > 0 && (
+      {open && visibleResults.length > 0 && (
         <ul className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-border bg-popover p-1 shadow-md">
-          {results.map((c) => (
+          {visibleResults.map((c) => (
             <li key={c.id}>
               <button
                 type="button"

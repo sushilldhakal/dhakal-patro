@@ -1,6 +1,25 @@
 import type { CalendarDay, Festival, NivasShoolBlock, PanchangaDay } from "./api";
 import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
-import { GRAHA_NAME, RASHI_EN_NAMES, type GrahaKey } from "@/lib/graha-details";
+import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import {
+  formatRashiByNumber,
+  formatRashiDisplay,
+  formatRashiDisplayNe,
+  getRashiName,
+  rashiNeFromNumber,
+  resolveRashiDisplay,
+  toWesternRashi,
+} from "@/lib/rashi-i18n";
+
+export {
+  formatRashiByNumber,
+  formatRashiDisplay,
+  formatRashiDisplayNe,
+  getRashiName,
+  rashiNeFromNumber,
+  resolveRashiDisplay,
+  toWesternRashi,
+};
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { normalizeLang, pickLocale } from "@/i18n/locale";
@@ -23,6 +42,24 @@ export function formatClockNepali(time?: string | null): string | undefined {
   if (!time) return undefined;
   const short = formatTimeShort(time) ?? time;
   return toNepaliDigits(short);
+}
+
+export type AyanaMark = "उ" | "द";
+
+/** Short ayana badge — उ/द in Nepali, N/S (Uttarayana/Dakshinayana) in English. */
+export function formatAyanaMarkShort(
+  mark: AyanaMark | undefined,
+  lang?: string,
+): string | undefined {
+  if (!mark) return undefined;
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
+  if (mark === "उ") return isEn ? "N" : "उ";
+  if (mark === "द") return isEn ? "S" : "द";
+  return mark;
+}
+
+export function isAyanaNorthMark(mark: AyanaMark | undefined): boolean {
+  return mark === "उ";
 }
 
 export function formatGhatiEnd(clock?: string | null): string | undefined {
@@ -325,6 +362,16 @@ export function totalSolarCorrectionMinutes(solar?: SolarCorrections): number {
 }
 
 type RituBlock = { name?: string; name_ne?: string; season?: string };
+
+/** Sanskrit ritu name → English season (month calendar exposes ritu as a plain string). */
+const RITU_NAME_TO_SEASON: Record<string, string> = {
+  Vasanta: "Spring",
+  Grishma: "Summer",
+  Varsha: "Monsoon",
+  Sharad: "Autumn",
+  Hemanta: "Pre-winter",
+  Shishira: "Winter",
+};
 type AayanBlock = { name?: string; name_ne?: string };
 type DurationBlock = {
   label_en?: string;
@@ -352,12 +399,20 @@ export function getRituDisplayNe(p?: PanchangaDay | null): string | undefined {
 /** Locale-aware ritu label (Nepali name / English season or name). */
 export function getRituDisplay(p?: PanchangaDay | null, lang?: string): string | undefined {
   if (!p) return undefined;
-  const ritu = getDetailValue<RituBlock>(p, "ritu") ?? getDetailValue<RituBlock>(p, "ritu_pauranik");
+  const rawRitu = getDetailValue<RituBlock | string>(p, "ritu");
+  const ritu = typeof rawRitu === "object" ? rawRitu : getDetailValue<RituBlock>(p, "ritu_pauranik");
   const top = typeof p.ritu === "object" ? p.ritu : undefined;
   const ne = ritu?.name_ne ?? top?.name_ne ?? p.ritu_ne;
+  const rituName =
+    ritu?.name ?? top?.name ?? (typeof rawRitu === "string" ? rawRitu : typeof p.ritu === "string" ? p.ritu : undefined);
   // English leads with the season (Summer); the Sanskrit ritu name is the hint
   // underneath it, so the headline value is a word the reader knows.
-  const en = ritu?.season ?? top?.season ?? ritu?.name ?? top?.name ?? ne;
+  const en =
+    ritu?.season ??
+    top?.season ??
+    (rituName ? RITU_NAME_TO_SEASON[rituName] : undefined) ??
+    rituName ??
+    ne;
   return pickLocale(lang, ne, en);
 }
 
@@ -988,30 +1043,12 @@ export function formatMadhyahnaDisplay(
   return `${h}:${mStr} ${ampm}`;
 }
 
-const RASHI_NE = [
-  "मेष", "वृष", "मिथुन", "कर्कट", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
-
-export const RASHI_SYM = [
+const RASHI_SYM = [
   "", "", "", "", "", "",
   "", "", "", "", "", "",
 ] as const;
 
-const RASHI_DISPLAY_NE: Record<string, string> = {
-  मेष: "मेष",
-  वृष: "वृषभ",
-  मिथुन: "मिथुन",
-  कर्कट: "कर्कट",
-  सिंह: "सिंह",
-  कन्या: "कन्या",
-  तुला: "तुला",
-  वृश्चिक: "वृश्चिक",
-  धनु: "धनु",
-  मकर: "मकर",
-  कुम्भ: "कुम्भ",
-  मीन: "मीन",
-};
+export { RASHI_SYM };
 
 /** Clock time for patro tables — adds 24h when after midnight before sunrise. */
 export function formatVedicPatroTime(
@@ -1030,96 +1067,9 @@ export function formatVedicPatroTime(
   return toNepaliDigits(t);
 }
 
-export function rashiNeFromNumber(rashi?: number): string | undefined {
-  if (rashi == null || rashi < 1 || rashi > 12) return undefined;
-  return RASHI_NE[rashi - 1];
-}
-
 export function rashiSymFromNumber(rashi?: number): string | undefined {
   if (rashi == null || rashi < 1 || rashi > 12) return undefined;
   return RASHI_SYM[rashi - 1];
-}
-
-export function formatRashiDisplayNe(nameNe?: string): string | undefined {
-  if (!nameNe) return undefined;
-  return RASHI_DISPLAY_NE[nameNe] ?? nameNe;
-}
-
-/** Western zodiac names for English UI (Mesha → Aries, etc.). */
-const RASHI_NE_TO_WESTERN: Record<string, string> = {
-  मेष: "Aries",
-  वृष: "Taurus",
-  वृषभ: "Taurus",
-  मिथुन: "Gemini",
-  कर्कट: "Cancer",
-  कर्क: "Cancer",
-  सिंह: "Leo",
-  कन्या: "Virgo",
-  तुला: "Libra",
-  वृश्चिक: "Scorpio",
-  धनु: "Sagittarius",
-  मकर: "Capricorn",
-  कुम्भ: "Aquarius",
-  मीन: "Pisces",
-};
-
-const RASHI_EN_TO_WESTERN: Record<string, string> = {
-  Mesha: "Aries",
-  Vrishabha: "Taurus",
-  Mithuna: "Gemini",
-  Karka: "Cancer",
-  Karkata: "Cancer",
-  Simha: "Leo",
-  Kanya: "Virgo",
-  Tula: "Libra",
-  Vrishchika: "Scorpio",
-  Dhanu: "Sagittarius",
-  Makara: "Capricorn",
-  Kumbha: "Aquarius",
-  Meena: "Pisces",
-};
-
-/** English rāśi → Devanagari (API often sends only lagna_en). */
-const RASHI_EN_TO_NE: Record<string, string> = {
-  Mesha: "मेष",
-  Vrishabha: "वृष",
-  Mithuna: "मिथुन",
-  Karka: "कर्कट",
-  Karkata: "कर्कट",
-  Simha: "सिंह",
-  Kanya: "कन्या",
-  Tula: "तुला",
-  Vrishchika: "वृश्चिक",
-  Dhanu: "धनु",
-  Makara: "मकर",
-  Kumbha: "कुम्भ",
-  Meena: "मीन",
-};
-
-/**
- * Western zodiac name for a rāśi given in Devanagari (सिंह) or in the Sanskrit
- * romanization the API sends (Simha). Unknown names pass through, so a value
- * that is already western (Leo) stays put.
- */
-export function toWesternRashi(name?: string | null): string | undefined {
-  if (!name) return undefined;
-  const raw = name.trim();
-  return RASHI_EN_TO_WESTERN[raw] ?? RASHI_NE_TO_WESTERN[raw] ?? raw;
-}
-
-/** Locale-aware rashi label: Devanagari for ne, Western zodiac for en. */
-export function formatRashiDisplay(
-  nameNe?: string,
-  nameEn?: string,
-  lang?: string,
-): string | undefined {
-  if (normalizeLang(lang) === "en") {
-    const raw = nameEn ?? nameNe;
-    if (!raw) return undefined;
-    return RASHI_EN_TO_WESTERN[raw] ?? RASHI_NE_TO_WESTERN[raw] ?? raw;
-  }
-  const ne = nameNe ?? (nameEn ? RASHI_EN_TO_NE[nameEn] : undefined) ?? nameEn;
-  return formatRashiDisplayNe(ne);
 }
 
 type SpanEndBlock = {
@@ -1322,7 +1272,7 @@ function planetLabelPair(key: string): { label: string; labelEn: string } {
 
 function rashiEnFromNumber(rashi?: number): string | undefined {
   if (rashi == null || rashi < 1 || rashi > 12) return undefined;
-  return RASHI_EN_NAMES[rashi - 1];
+  return getRashiName(rashi, "en");
 }
 
 type NakshatraFields = Pick<
@@ -1392,7 +1342,7 @@ export function formatDegreeInRashi(longitude: number, rashiNe?: string): string
   const norm = ((longitude % 360) + 360) % 360;
   const degInRashi = norm % 30;
   let d = Math.floor(degInRashi);
-  let totalSec = Math.round((degInRashi - d) * 3600);
+  const totalSec = Math.round((degInRashi - d) * 3600);
   let m = Math.floor(totalSec / 60);
   let s = totalSec % 60;
   if (s === 60) { s = 0; m += 1; }
@@ -2003,7 +1953,7 @@ export function getMuhurtaRows(
   const abhijit = getAbhijitMuhurta(p);
   if (abhijit) {
     rows.push({
-      label: isEn ? "Abhijit Muhurta" : "अभिजित् मुहूर्त",
+      label: isEn ? "Abhijit Moment" : "अभिजित् मुहूर्त",
       value: abhijit.noonDisplay
         ? isEn
           ? `${abhijit.rangeDisplay} (noon ${abhijit.noonDisplay})`
@@ -2098,7 +2048,7 @@ function normalizeFestKey(name: string): string {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\u0900-\u097F]+/g, " ")
+    .replace(/[^a-z0-9\p{Script=Devanagari}]+/gu, " ")
     .trim();
 }
 

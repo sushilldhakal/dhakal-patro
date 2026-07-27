@@ -1,7 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { X, ChevronLeft, Sunrise, Sunset, Moon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fetchPanchanga, panchangaKeys, type CalendarDay, type PanchangaDay } from "@/lib/api";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -34,7 +34,7 @@ import {
 import { useLocale } from "@/i18n/locale";
 import { patroAsideLink } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
-import { TL_RASHI_EN } from "@/components/panchanga/day-timeline-data";
+import { resolveRashiDisplay } from "@/lib/rashi-i18n";
 
 interface Props {
   day: CalendarDay | null;
@@ -48,6 +48,14 @@ interface Props {
 const sectionTitle = "mb-2 text-sm font-bold";
 const metaCard = "rounded-lg border border-border bg-surface-inset p-2.5";
 const metaLabel = "mb-1 text-sm tracking-widest uppercase";
+
+function civilDaysFromToday(dateAd: string): number {
+  const [y, m, d] = dateAd.split("-").map(Number);
+  const target = Date.UTC(y!, m! - 1, d!);
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target - today) / 86_400_000);
+}
 
 function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
   const { pick, lang } = useLocale();
@@ -75,7 +83,7 @@ function MuhurtaSection({ p }: { p: PanchangaDay }) {
 
   return (
     <>
-      <h4 className={sectionTitle}>{pick("मुहूर्त", "Muhurta")}</h4>
+      <h4 className={sectionTitle}>{pick("मुहूर्त", "Moment")}</h4>
       <div className="mb-4 overflow-hidden rounded-lg border border-border">
         {rows.map((row) => (
           <div
@@ -95,7 +103,7 @@ function MuhurtaSection({ p }: { p: PanchangaDay }) {
 }
 
 function PlanetsSection({ p }: { p: PanchangaDay }) {
-  const { pick } = useLocale();
+  const { pick, lang } = useLocale();
   const planets = getPlanetRows(p);
   if (!planets.length) return null;
 
@@ -115,7 +123,7 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
               </span>
               {(rashiNe || rashiEn) && (
                 <span className="text-sm">
-                  {pick(rashiNe ?? "", rashiEn ?? TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "")}
+                  {resolveRashiDisplay(rashiNe, rashiEn, lang) ?? rashiNe ?? ""}
                 </span>
               )}
             </div>
@@ -328,7 +336,7 @@ function PanchangaFull({
       <PanchangaTable
         rows={[
           { label: pick("उत्तरायण", "Sun's course"), value: aayan },
-          { label: pick("ऋतु", "Ritu"), value: ritu },
+          { label: pick("ऋतु", "Season"), value: ritu },
           { label: pick("वार", "Day"), value: vaara },
           { label: pick("पक्ष", "Paksha"), value: paksha },
           { label: pick("तिथि", "Tithi"), value: angaVal(tithi) },
@@ -359,6 +367,11 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
   const { pick, lang } = useLocale();
   const [showPanchanga, setShowPanchanga] = useState(false);
   const dateAd = day?.date_ad ?? "";
+  const [trackedDateAd, setTrackedDateAd] = useState(dateAd);
+  if (dateAd !== trackedDateAd) {
+    setTrackedDateAd(dateAd);
+    if (!dateAd) setShowPanchanga(false);
+  }
 
   const q = useQuery({
     queryKey: panchangaKeys.day(dateAd, "ad", location?.params),
@@ -367,12 +380,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
     staleTime: 1000 * 60 * 60,
   });
 
-  useEffect(() => {
-    if (!day) setShowPanchanga(false);
-  }, [day]);
-
-  const adDate = day ? new Date(day.date_ad) : null;
-  const daysDiff = adDate ? Math.ceil((adDate.getTime() - Date.now()) / 86_400_000) : null;
+  const daysDiff = day ? civilDaysFromToday(day.date_ad) : null;
 
   return (
     <Dialog.Root

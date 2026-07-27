@@ -1,29 +1,23 @@
 import type { PanchangaDay, LagnaSpan } from "@/lib/api";
 import { BS_MONTHS_NE } from "@/lib/bs-calendar";
 import {
-  formatRashiDisplayNe,
   getLagnaSpans,
   getPanchangaDetail,
   getSunrise,
   RASHI_SYM,
   toNepaliDigits,
 } from "@/lib/panchanga-format";
+import { getRashiName, rashiNumberFromName } from "@/lib/rashi-i18n";
 
-const RASHI_NE = [
-  "मेष", "वृष", "मिथुन", "कर्कट", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
+export function getWheelRashis(): WheelRashi[] {
+  return Array.from({ length: 12 }, (_, i) => ({
+    ne: getRashiName(i + 1, "ne"),
+    en: getRashiName(i + 1, "en"),
+    sym: RASHI_SYM[i]!,
+  }));
+}
 
-const RASHI_EN = [
-  "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
-  "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena",
-] as const;
-
-export const WHEEL_RASHIS = RASHI_NE.map((ne, i) => ({
-  ne: formatRashiDisplayNe(ne) ?? ne,
-  en: RASHI_EN[i]!,
-  sym: RASHI_SYM[i]!,
-}));
+export const WHEEL_RASHIS = getWheelRashis();
 
 export const GREG_NE = [
   "जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन",
@@ -111,11 +105,8 @@ export const DEFAULT_WHEEL_TWEAKS: WheelTweaks = {
 
 function rashiFromNe(nameNe?: string | null): WheelRashi | undefined {
   if (!nameNe) return undefined;
-  const display = formatRashiDisplayNe(nameNe) ?? nameNe;
-  const idx = WHEEL_RASHIS.findIndex((r) => r.ne === display || r.ne === nameNe);
-  if (idx >= 0) return WHEEL_RASHIS[idx]!;
-  const altIdx = RASHI_NE.findIndex((n) => n === nameNe);
-  if (altIdx >= 0) return WHEEL_RASHIS[altIdx]!;
+  const num = rashiNumberFromName(nameNe);
+  if (num) return WHEEL_RASHIS[num - 1];
   return undefined;
 }
 

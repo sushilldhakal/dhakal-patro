@@ -121,6 +121,7 @@ export function PanchangaMonthGrid({
       }
     }
     return [...byDate.values()];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthQueriesTick]);
 
   const days = useMemo(() => {
@@ -128,6 +129,7 @@ export function PanchangaMonthGrid({
       return monthQueries[0]?.data?.calendar ?? [];
     }
     return buildAdCalendarGridDays(adYear, adMonth, enrichedDays);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdCalendar, adYear, adMonth, enrichedDays, monthQueriesTick]);
 
   const isFetching = monthQueries.some((q) => q.isFetching);

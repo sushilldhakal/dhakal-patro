@@ -4,6 +4,7 @@ import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { getRashiList } from "@/lib/rashi-i18n";
 import { EarthGlobeImage } from "./EarthGlobeImage";
 import { RashiGlyph } from "./rashi-icons";
 
@@ -50,10 +51,7 @@ function axisDir(phi: number): V3 {
   return [SE * Math.cos(phi), CE, SE * Math.sin(phi)];
 }
 
-const RASHI = [
-  "मेष", "वृष", "मिथुन", "कर्कट", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-] as const;
+const RASHI = getRashiList("ne");
 
 /* ---- pole stars the north pole sweeps past, by बिक्रम सम्वत् year -------
  * ध्रुव (Polaris) and अभिजित (Vega) keep their Nepali names; the rest carry

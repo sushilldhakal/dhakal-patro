@@ -153,7 +153,10 @@ function GsiButton({
   const isDark = useIsDarkTheme();
   const [ready, setReady] = useState(false);
   const onCredentialRef = useRef(onCredential);
-  onCredentialRef.current = onCredential;
+
+  useEffect(() => {
+    onCredentialRef.current = onCredential;
+  });
 
   useEffect(() => {
     if (!CLIENT_ID || !buttonRef.current || isDark === undefined) return;

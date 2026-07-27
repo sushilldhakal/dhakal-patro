@@ -1,9 +1,9 @@
 import {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useState,
 } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   ChevronRight,
@@ -44,28 +44,20 @@ interface Props {
 export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
   function MilanProfilePicker({ boyId, girlId, onBoySelect, onGirlSelect }, ref) {
     const { t } = useTranslation();
-    const [profiles, setProfiles] = useState<Profile[] | null>(null);
+    const queryClient = useQueryClient();
+    const profilesQuery = useQuery({
+      queryKey: ["milan-profiles"],
+      queryFn: listProfiles,
+    });
+    const profiles = profilesQuery.isPending ? null : (profilesQuery.data ?? []);
+    const reload = async () => {
+      await queryClient.invalidateQueries({ queryKey: ["milan-profiles"] });
+    };
     const [formDialog, setFormDialog] = useState<DialogState>(null);
     const [pickRole, setPickRole] = useState<PickRole>(null);
-    const [error, setError] = useState<string | null>(null);
+    const error = profilesQuery.isError ? t("account_page.load_error") : null;
 
     useImperativeHandle(ref, () => ({ openAdd: () => setFormDialog({ mode: "add" }) }), []);
-
-    async function load(): Promise<Profile[]> {
-      try {
-        const list = await listProfiles();
-        setProfiles(list);
-        return list;
-      } catch (e) {
-        setError(t("account_page.load_error"));
-        setProfiles([]);
-        return [];
-      }
-    }
-
-    useEffect(() => {
-      void load();
-    }, []);
 
     const boyProfile = profiles?.find((p) => p.id === boyId) ?? null;
     const girlProfile = profiles?.find((p) => p.id === girlId) ?? null;
@@ -107,7 +99,7 @@ export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
               <Sparkles className="size-4" /> {t("kundali.add_profile")}
             </Button>
           </div>
-          <ProfileFormDialog dialog={formDialog} setDialog={setFormDialog} onSaved={load} />
+          <ProfileFormDialog dialog={formDialog} setDialog={setFormDialog} onSaved={reload} />
         </>
       );
     }
@@ -152,7 +144,7 @@ export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
           }}
         />
 
-        <ProfileFormDialog dialog={formDialog} setDialog={setFormDialog} onSaved={load} />
+        <ProfileFormDialog dialog={formDialog} setDialog={setFormDialog} onSaved={reload} />
       </>
     );
   },
@@ -328,7 +320,7 @@ function ProfileFormDialog({
 }: {
   dialog: DialogState;
   setDialog: (v: DialogState) => void;
-  onSaved: () => Promise<Profile[]>;
+  onSaved: () => void | Promise<void>;
 }) {
   const { t } = useTranslation();
 

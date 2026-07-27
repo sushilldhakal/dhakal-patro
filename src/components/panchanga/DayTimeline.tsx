@@ -15,9 +15,9 @@ import {
   dualTimeAtGhati,
   needleGhatiOnVedicChart,
   CHOGHADIYA_EN,
-  TL_RASHI_EN,
   type TimelineRowData,
 } from "./day-timeline-data";
+import { resolveRashiDisplay } from "@/lib/rashi-i18n";
 import { useLocale } from "@/i18n/locale";
 import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
@@ -312,8 +312,8 @@ export function DayTimeline({
   const isCivil = mode === "Calendar Day";
   const data = useMemo(() => {
     if (isCivil) return civil ? buildCivilTimelineData(civil, p) : null;
-    return p ? buildDayTimelineData(p, dateAd) : null;
-  }, [isCivil, civil, p, dateAd]);
+    return p ? buildDayTimelineData(p) : null;
+  }, [isCivil, civil, p]);
   const planets = useMemo(() => {
     if (!p) return [];
     const rows = getPlanetRows(p);
@@ -804,7 +804,8 @@ export function DayTimeline({
               // romanization the API sends in `rashiEn` (Simha).
               const rashiL =
                 formatRashiDisplay(rashiNe, rashiEn, lang) ??
-                pick(rashiNe ?? "—", TL_RASHI_EN[rashiNe ?? ""] ?? rashiNe ?? "—");
+                resolveRashiDisplay(rashiNe, rashiEn, lang) ??
+                "—";
               // `07° सिंह 10′ 28″` when the longitude is known, else the |-cells fallback.
               const coordText =
                 siderealLongitude != null

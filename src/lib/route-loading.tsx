@@ -4,7 +4,6 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -29,14 +28,12 @@ export function RouteLoadingProvider({ children }: { children: ReactNode }) {
   const [dataLoading, setDataLoading] = useState(isBrowser);
   const [suspenseLoading, setSuspenseLoading] = useState(false);
   const [trackedPath, setTrackedPath] = useState(pathname);
-  const prevPathRef = useRef(pathname);
 
   // Reset to "loading" synchronously DURING RENDER when the route changes, before
   // children commit. Skip the blanket overlay for panchanga-shell hops — the
   // sidebar stays mounted and pages report their own fetch state.
   if (pathname !== trackedPath) {
-    const from = prevPathRef.current;
-    prevPathRef.current = pathname;
+    const from = trackedPath;
     setTrackedPath(pathname);
     if (!isPanchangaShellNavigation(from, pathname)) {
       setDataLoading(true);

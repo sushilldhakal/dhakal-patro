@@ -1,21 +1,38 @@
-import { useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, getRouteApi, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { GrahaBanner } from "@/components/graha/GrahaPageParts";
 import { useLocale } from "@/i18n/locale";
+import { useElementPageUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
-import { adToBS, bsToAD, formatBsAdStamp, getBSMonthLength } from "@/lib/bs-calendar";
+import { formatBsAdStamp } from "@/lib/bs-calendar";
+import {
+  PatroDayTimeNav,
+  PatroMonthYearNav,
+  PATRO_AD_YEAR_OPTIONS,
+  PATRO_BS_YEAR_OPTIONS,
+} from "@/components/patro-date";
+import {
+  BS_SUPPORTED_END_YEAR,
+  BS_SUPPORTED_START_YEAR,
+} from "@/lib/bs-calendar";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { PanchangaBrowseHeader } from "@/components/panchanga/PanchangaBrowseHeader";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import { NavataraBalamCardGrid } from "@/components/panchanga/NavataraBalamCardGrid";
 import { useRouteLoading } from "@/lib/route-loading";
+import { toAdStr } from "@/lib/patro-day";
+import { searchToLocation } from "@/lib/url-state";
 import { ELEMENT_BY_ID } from "@/lib/panchanga-elements";
 import { ELEMENT_DESCRIPTIONS } from "@/lib/panchanga-element-descriptions";
 import { getChandraBalamCards, getTaraBalamCards } from "@/lib/balam-cards";
+import {
+  CHOGHADIYA_TYPES,
+  choghadiyaLegendMarker,
+  choghadiyaRowLabel,
+  choghadiyaTone,
+} from "@/lib/choghadiya-display";
 import { formatRashiDisplay, getChandrabalamTable, getTarabalaTable } from "@/lib/panchanga-format";
 import { todayAdStringInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
@@ -29,8 +46,18 @@ import {
   type PanchangaDay,
 } from "@/lib/api";
 
-function toAdStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const routeApi = getRouteApi("/panchanga-shell/panchanga/element/$name");
+
+const BS_MIN_INDEX = BS_SUPPORTED_START_YEAR * 12;
+const BS_MAX_INDEX = BS_SUPPORTED_END_YEAR * 12 + 11;
+
+function adMonthRange(year: number, month: number): { start: string; end: string } {
+  const lastDay = new Date(year, month, 0).getDate();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    start: `${year}-${pad(month)}-01`,
+    end: `${year}-${pad(month)}-${pad(lastDay)}`,
+  };
 }
 
 function clockFromGhati(sunriseMin: number | null, g: number): string | null {
@@ -133,7 +160,84 @@ function toneClass(good: boolean, bad: boolean): string {
   return "bg-foreground/4 text-foreground";
 }
 
-function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
+function ChoghadiyaLegend() {
+  const { pick } = useLocale();
+  return (
+    <ul className="m-0 mb-3 grid list-none grid-cols-1 gap-1 p-0 sm:grid-cols-2">
+      {CHOGHADIYA_TYPES.map((type) => (
+        <li key={type.nameNe} className="text-sm leading-snug text-muted-foreground">
+          {choghadiyaLegendMarker(type.tone)}{" "}
+          {pick(
+            `${type.nameNe} — ${type.qualityNe}`,
+            `${type.nameEn} — ${type.qualityEn}`,
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type ChoghadiyaRow = {
+  name_ne?: string;
+  name?: string;
+  start_local_time_short?: string;
+  end_local_time_short?: string;
+  start_g?: number;
+  end_g?: number;
+  bad?: boolean;
+};
+
+function ChoghadiyaTableView({ data, sunrise }: { data: ChoghadiyaRow[]; sunrise?: string }) {
+  const { pick, digits, lang } = useLocale();
+  const sunriseMin = parseHHMM(sunrise);
+
+  if (data.length === 0) {
+    return <p className="text-sm">{pick("यस दिनका लागि विवरण छैन।", "No entries for this day.")}</p>;
+  }
+
+  return (
+    <>
+      <ChoghadiyaLegend />
+      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+        {data.map((it, i) => {
+          const nameNe = String(it.name_ne ?? it.name ?? "—");
+          const tone = choghadiyaTone(nameNe, it.bad);
+          const label = choghadiyaRowLabel(nameNe, lang, it.bad);
+          let time: string | null = null;
+          if (it.start_local_time_short) {
+            time = `${digits(String(it.start_local_time_short))}–${digits(String(it.end_local_time_short ?? ""))}`;
+          } else if (typeof it.start_g === "number") {
+            const a = clockFromGhati(sunriseMin, it.start_g);
+            const b = clockFromGhati(sunriseMin, it.end_g as number);
+            if (a && b) time = `${digits(a)}–${digits(b)}`;
+          }
+          return (
+            <div
+              key={i}
+              className={cn(
+                "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm",
+                toneClass(tone === "good", tone === "bad"),
+              )}
+            >
+              <span className="font-semibold">{label}</span>
+              {time ? <span className="font-num tabular-nums text-sm opacity-90">{time}</span> : null}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function TableView({
+  data,
+  sunrise,
+  elementId,
+}: {
+  data: unknown;
+  sunrise?: string;
+  elementId?: string;
+}) {
   const { pick, digits } = useLocale();
   const sunriseMin = parseHHMM(sunrise);
 
@@ -177,6 +281,9 @@ function TableView({ data, sunrise }: { data: unknown; sunrise?: string }) {
   // Array of time segments (choghadiya / hora / lagna / panchaka / pushkara).
   if (Array.isArray(data)) {
     const rows = data as AnyRow[];
+    if (elementId === "choghadiya") {
+      return <ChoghadiyaTableView data={rows as ChoghadiyaRow[]} sunrise={sunrise} />;
+    }
     if (rows.length === 0) {
       return <p className="text-sm">{pick("यस दिनका लागि विवरण छैन।", "No entries for this day.")}</p>;
     }
@@ -301,23 +408,38 @@ function ElementDescription({ elementId }: { elementId: string }) {
 export function ElementPage() {
   const { name } = useParams({ strict: false }) as { name?: string };
   const { pick } = useLocale();
-  const { location, setLocation } = usePanchangaLocation();
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const meta = name ? ELEMENT_BY_ID[name] : undefined;
   const isNavataraBal = name === "chandrabala" || name === "tarabala";
 
   const today = new Date();
   const todayAd = toAdStr(today);
-  const todayBs = adToBS(today);
   const isSpan = meta?.kind === "span";
 
-  // span → browse by BS month; table → browse by BS day.
-  const [bs, setBs] = useState({ year: todayBs.year, month: todayBs.month });
-  const [tbs, setTbs] = useState({ year: todayBs.year, month: todayBs.month, day: todayBs.day });
-  const dayAd = toAdStr(bsToAD(tbs.year, tbs.month, tbs.day));
+  const { monthBrowse, dayBrowse } = useElementPageUrlBrowse(
+    Boolean(isSpan),
+    search,
+    navigate,
+    location,
+    setLocation,
+  );
+  const dayAd = dayBrowse.dateAd;
+
+  const spanRange =
+    monthBrowse.era === "ad"
+      ? adMonthRange(monthBrowse.browseYear, monthBrowse.browseMonth)
+      : { bsYear: monthBrowse.bsYear, bsMonth: monthBrowse.bsMonth };
 
   const spanQuery = useQuery({
-    queryKey: elementKeys.month(name ?? "", bs.year, bs.month, location.params),
-    queryFn: () => fetchElementSpans(name!, { bsYear: bs.year, bsMonth: bs.month }, location.params),
+    queryKey: elementKeys.month(
+      name ?? "",
+      monthBrowse.browseYear,
+      monthBrowse.browseMonth,
+      location.params,
+    ),
+    queryFn: () => fetchElementSpans(name!, spanRange, location.params),
     enabled: Boolean(name) && Boolean(meta) && isSpan,
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
@@ -363,24 +485,15 @@ export function ElementPage() {
     );
   }
 
-  const setTableDate = (y: number, m: number, d: number) =>
-    setTbs({ year: y, month: m, day: Math.min(d, getBSMonthLength(y, m)) });
-  const stepMonth = (delta: number) => {
-    let m = bs.month + delta;
-    let y = bs.year;
-    if (m < 1) { m = 12; y -= 1; }
-    if (m > 12) { m = 1; y += 1; }
-    setBs({ year: y, month: m });
-  };
-  const stepDay = (delta: number) => {
-    const d = bsToAD(tbs.year, tbs.month, tbs.day);
-    d.setDate(d.getDate() + delta);
-    setTbs(adToBS(d));
-  };
-  const goToday = () => {
-    setBs({ year: todayBs.year, month: todayBs.month });
-    setTbs({ year: todayBs.year, month: todayBs.month, day: todayBs.day });
-  };
+  const atMonthStart =
+    monthBrowse.era === "ad"
+      ? monthBrowse.adYear <= PATRO_AD_YEAR_OPTIONS[0]! && monthBrowse.adMonth <= 1
+      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) <= BS_MIN_INDEX;
+  const atMonthEnd =
+    monthBrowse.era === "ad"
+      ? monthBrowse.adYear >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]! &&
+        monthBrowse.adMonth >= 12
+      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) >= BS_MAX_INDEX;
 
   return (
     <PageShell>
@@ -392,21 +505,33 @@ export function ElementPage() {
         blurbEn={meta.blurbEn}
       />
 
-      <PanchangaBrowseHeader
-        mode={isSpan ? "month" : "day"}
-        year={isSpan ? bs.year : tbs.year}
-        month={isSpan ? bs.month : tbs.month}
-        day={isSpan ? undefined : tbs.day}
-        onMonthChange={(m) => (isSpan ? setBs({ ...bs, month: m }) : setTableDate(tbs.year, m, tbs.day))}
-        onYearChange={(y) => (isSpan ? setBs({ ...bs, year: y }) : setTableDate(y, tbs.month, tbs.day))}
-        onSelectDate={(y, m, d) => (isSpan ? setBs({ year: y, month: m }) : setTableDate(y, m, d))}
-        onPrev={() => (isSpan ? stepMonth(-1) : stepDay(-1))}
-        onNext={() => (isSpan ? stepMonth(1) : stepDay(1))}
-        onToday={goToday}
-        todayAd={todayAd}
-        location={location}
-        onLocationChange={setLocation}
-      />
+      {isSpan ? (
+        <PatroMonthYearNav
+          calendarMode={monthBrowse.era}
+          year={monthBrowse.browseYear}
+          month={monthBrowse.browseMonth}
+          yearOptions={monthBrowse.era === "ad" ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS}
+          onMonthChange={(m) => monthBrowse.setBrowseMonth(monthBrowse.browseYear, m)}
+          onYearChange={(y) => monthBrowse.setBrowseMonth(y, monthBrowse.browseMonth)}
+          onPrev={() => monthBrowse.stepMonth(-1)}
+          onNext={() => monthBrowse.stepMonth(1)}
+          onToday={() => monthBrowse.goToday(todayAd)}
+          todayAd={todayAd}
+          prevDisabled={atMonthStart}
+          nextDisabled={atMonthEnd}
+          location={location}
+          onLocationChange={setLocation}
+        />
+      ) : (
+        <PatroDayTimeNav
+          calendarMode={monthBrowse.era}
+          date={dayBrowse.date}
+          onDateChange={dayBrowse.setDate}
+          todayAd={todayAd}
+          location={location}
+          onLocationChange={setLocation}
+        />
+      )}
 
       {isSpan ? (
         spanQuery.isLoading && !spanQuery.data ? (
@@ -434,7 +559,7 @@ export function ElementPage() {
         <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
       ) : dayQuery.data ? (
         <div className={cn(patroCard, "p-3.5")}>
-          <TableView data={dayQuery.data.data} sunrise={dayQuery.data.sunrise} />
+          <TableView data={dayQuery.data.data} sunrise={dayQuery.data.sunrise} elementId={name} />
         </div>
       ) : (
         <p className="text-sm text-danger">{pick("लोड गर्न सकिएन।", "Could not load.")}</p>

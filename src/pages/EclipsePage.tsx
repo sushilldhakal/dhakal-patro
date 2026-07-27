@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Eclipse, MoonStar } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
@@ -7,18 +6,22 @@ import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-locat
 import {
   GrahaBanner,
   GrahaDescription,
-  GrahaYearHeader,
 } from "@/components/graha/GrahaPageParts";
+import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { PatroYearNav } from "@/components/patro-date";
 import { useLocale } from "@/i18n/locale";
-import { getCurrentBs } from "@/lib/bs-calendar";
 import { useRouteLoading } from "@/lib/route-loading";
 import { patroCard } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
+import { searchToLocation } from "@/lib/url-state";
 import {
   fetchEclipseYear,
   grahaDetailKeys,
   type EclipseEvent,
 } from "@/lib/api";
+
+const suryaRouteApi = getRouteApi("/panchanga-shell/panchanga/surya-grahan");
+const chandraRouteApi = getRouteApi("/panchanga-shell/panchanga/chandra-grahan");
 
 function fmtTime(iso?: string | null): string | null {
   if (!iso) return null;
@@ -92,14 +95,16 @@ function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
 
 function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
   const { pick } = useLocale();
-  const { location, setLocation } = usePanchangaLocation();
-  const currentBs = getCurrentBs();
-  const [year, setYear] = useState(currentBs.year);
+  const routeApi = kind === "solar" ? suryaRouteApi : chandraRouteApi;
+  const search = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
   const pageId = kind === "solar" ? "surya-grahan" : "chandra-grahan";
 
   const query = useQuery({
-    queryKey: grahaDetailKeys.eclipse(kind, year, location.params),
-    queryFn: () => fetchEclipseYear(kind, year, location.params),
+    queryKey: grahaDetailKeys.eclipse(kind, yearBrowse.browseYear, location.params, yearBrowse.era),
+    queryFn: () => fetchEclipseYear(kind, yearBrowse.browseYear, location.params, yearBrowse.era),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -136,10 +141,12 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
       />
 
       <div className="space-y-3">
-        <GrahaYearHeader
-          year={year}
-          onYearChange={setYear}
-          currentYear={currentBs.year}
+        <PatroYearNav
+          calendarMode={yearBrowse.era}
+          year={yearBrowse.browseYear}
+          onYearChange={yearBrowse.setBrowseYear}
+          currentYear={yearBrowse.currentBrowseYear}
+          yearOptions={yearBrowse.yearOptions}
           location={location}
           onLocationChange={setLocation}
         />

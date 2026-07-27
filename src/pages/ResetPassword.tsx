@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Loader2 } from "lucide-react";
@@ -11,16 +11,15 @@ export function ResetPassword() {
   useRouteLoading(false);
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [token, setToken] = useState<string | null>(null);
+  const token = useMemo(
+    () => new URLSearchParams(window.location.search).get("token"),
+    [],
+  );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    setToken(new URLSearchParams(window.location.search).get("token"));
-  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

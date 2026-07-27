@@ -3,7 +3,24 @@ import {
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
 } from "@/lib/bs-calendar";
+import {
+  type CalendarEra,
+  defaultPatroBrowseMonth,
+  defaultPatroBrowseYear,
+  parseCalendarEra,
+  readCalendarEra,
+  resolvePatroEra,
+  validatePatroBrowseMonth,
+  validatePatroBrowseYear,
+  type PatroMonthBrowseSearch,
+  type PatroMonthBrowseState,
+  type PatroYearBrowseSearch,
+  type PatroYearBrowseState,
+} from "@/lib/patro-era";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { resolveLocationTimezone } from "@/components/panchanga/use-panchanga-location";
+import { ELEMENT_BY_ID } from "@/lib/panchanga-elements";
+import { todayAdStringInTimezone } from "@/lib/zoned-time";
 
 /**
  * Shareable URL state.
@@ -33,6 +50,8 @@ export interface LocationSearch {
 }
 
 export interface PanchangaSearch extends LocationSearch {
+  /** AD vs BS date picker — English → `ad`, Nepali → `bs`. */
+  era?: CalendarEra;
   /** Selected day in AD, "YYYY-MM-DD". */
   date?: string;
   /** Day vs. month view. */
@@ -43,26 +62,20 @@ export interface PanchangaSearch extends LocationSearch {
   time?: string;
 }
 
-export interface DainikKrantiSearch extends LocationSearch {
-  /** Bikram Sambat year. */
-  year?: number;
-  /** Bikram Sambat month, 1-12. */
-  month?: number;
+export interface DainikKrantiSearch extends LocationSearch, PatroMonthBrowseSearch {
   /** Paksha filter. */
   paksha?: "all" | "krishna" | "shukla";
 }
 
-export interface PanchangaYearSearch extends LocationSearch {
-  /** Range start / currently-active BS year. */
-  year?: number;
+export interface PanchangaYearSearch extends LocationSearch, PatroYearBrowseSearch {
   /** Range end (inclusive) BS year. Omitted / equal to `year` ⇒ single year. */
   to?: number;
 }
 
-export interface AbhijitSearch extends LocationSearch {
-  year?: number;
-  month?: number;
-}
+export interface AbhijitSearch extends LocationSearch, PatroMonthBrowseSearch {}
+
+/** Element detail pages — day browse (`date`) and span month browse (`era`/`year`/`month`). */
+export type ElementPageSearch = LocationSearch & PanchangaSearch & PatroMonthBrowseSearch;
 
 function toNum(v: unknown): number | undefined {
   if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
@@ -121,18 +134,227 @@ export function locationToSearch(loc: PanchangaLocation): LocationSearch {
   return out;
 }
 
-/** Shareable `/dainikkranti` search — location + BS month on screen. */
+/**
+ * Resolve AD vs BS from URL. Re-exported from {@link @/lib/patro-era}.
+ * @deprecated Import {@link resolvePatroEra} from `@/lib/patro-era` instead.
+ */
+export { resolvePatroEra, resolvePatroEra as resolvePatroUrlEra } from "@/lib/patro-era";
+
+/** Build era-aware month browse search params (+ optional route-specific keys). */
+export function buildPatroMonthBrowseSearch(
+  loc: PanchangaLocation,
+  browse: PatroMonthBrowseState,
+  extra?: Record<string, unknown>,
+): PatroMonthBrowseSearch & LocationSearch {
+  const isAd = browse.era === "ad";
+  const out: PatroMonthBrowseSearch & LocationSearch = {
+    ...locationToSearch(loc),
+    era: browse.era,
+    year: isAd ? browse.adYear : browse.bsYear,
+    month: isAd ? browse.adMonth : browse.bsMonth,
+  };
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      // Omit default paksha so URLs stay stable and sameSearch matches validated search.
+      if (key === "paksha" && (value === "all" || value == null)) continue;
+      out[key as keyof typeof out] = value as never;
+    }
+  }
+  return out;
+}
+
+/** Build era-aware year browse search params (+ optional route-specific keys). */
+export function buildPatroYearBrowseSearch(
+  loc: PanchangaLocation | undefined,
+  browse: PatroYearBrowseState,
+  extra?: Record<string, unknown>,
+): PatroYearBrowseSearch & LocationSearch {
+  return {
+    ...(loc ? locationToSearch(loc) : {}),
+    era: browse.era,
+    year: browse.browseYear,
+    ...extra,
+  };
+}
+
+/** Shareable `/dainikkranti` search — location + era-aware month on screen. */
 export function buildDainikKrantiSearch(
   loc: PanchangaLocation,
   year: number,
   month: number,
   paksha: NonNullable<DainikKrantiSearch["paksha"]> = "all",
+  era: CalendarEra = readCalendarEra(),
 ): DainikKrantiSearch {
   return {
     ...locationToSearch(loc),
+    era,
     year,
     month,
     paksha,
+  };
+}
+
+/** Build era-aware year range search (Panchanga year wheel). */
+export function buildPatroYearRangeSearch(
+  loc: PanchangaLocation,
+  era: CalendarEra,
+  year: number,
+  to?: number,
+): PanchangaYearSearch & LocationSearch {
+  return {
+    ...locationToSearch(loc),
+    era,
+    year,
+    ...(to != null && to > year ? { to } : {}),
+  };
+}
+
+/** Build shareable day-browse search (panchanga, graha sthiti, element tables). */
+export function buildPatroDaySearch(
+  loc: PanchangaLocation,
+  dateAd: string,
+  era: CalendarEra = readCalendarEra(),
+): PanchangaSearch & LocationSearch {
+  return {
+    ...locationToSearch(loc),
+    era,
+    date: dateAd,
+  };
+}
+
+/** Build shareable panchanga search — day + clock time + location. */
+export function buildPatroPanchangaSearch(
+  loc: PanchangaLocation,
+  dateAd: string,
+  time: string,
+  era: CalendarEra = readCalendarEra(),
+): PanchangaSearch & LocationSearch {
+  return {
+    ...buildPatroDaySearch(loc, dateAd, era),
+    time,
+  };
+}
+export function currentPatroMonthLinkSearch(
+  loc: PanchangaLocation,
+  era: CalendarEra = readCalendarEra(),
+): DainikKrantiSearch {
+  return buildDainikKrantiSearch(
+    loc,
+    defaultPatroBrowseYear(era),
+    defaultPatroBrowseMonth(era),
+    "all",
+    era,
+  );
+}
+
+/** Shareable year-browse search (holidays, suryakranti, graha yearly, sait, …). */
+export function currentPatroYearLinkSearch(
+  loc: PanchangaLocation,
+  era: CalendarEra = readCalendarEra(),
+): PatroYearBrowseSearch & LocationSearch {
+  return {
+    ...locationToSearch(loc),
+    era,
+    year: defaultPatroBrowseYear(era),
+  };
+}
+
+/** Shareable day-browse search (panchanga, graha sthiti, element tables). */
+export function currentPatroDayLinkSearch(
+  loc: PanchangaLocation,
+  dateAd?: string,
+  era: CalendarEra = readCalendarEra(),
+): PanchangaSearch & LocationSearch {
+  const tz = resolveLocationTimezone(loc);
+  const date = dateAd ?? todayAdStringInTimezone(new Date(), tz);
+  return buildPatroDaySearch(loc, date, era);
+}
+
+/** Location-only share link (ritu, converter with a place). */
+export function currentPatroLocationLinkSearch(loc: PanchangaLocation): LocationSearch {
+  return locationToSearch(loc);
+}
+
+/** Shareable panchanga year wheel search. */
+export function currentPatroYearRangeLinkSearch(
+  loc: PanchangaLocation,
+  era: CalendarEra = readCalendarEra(),
+): PanchangaYearSearch & LocationSearch {
+  const year = defaultPatroBrowseYear(era);
+  return buildPatroYearRangeSearch(loc, era, year);
+}
+
+/** Element detail pages — span (month) vs table (day) pick the right URL keys. */
+export function patroElementLinkSearch(
+  elementId: string,
+  loc: PanchangaLocation,
+  era: CalendarEra = readCalendarEra(),
+): ElementPageSearch {
+  const meta = ELEMENT_BY_ID[elementId];
+  if (meta?.kind === "table") {
+    return currentPatroDayLinkSearch(loc);
+  }
+  return {
+    ...locationToSearch(loc),
+    era,
+    year: defaultPatroBrowseYear(era),
+    month: defaultPatroBrowseMonth(era),
+  };
+}
+
+/**
+ * Best-effort shareable search for a patro route path.
+ * Used by sidebar, home quick links, and directory cards.
+ */
+export function patroRouteLinkSearch(
+  route: string,
+  loc: PanchangaLocation,
+  era: CalendarEra = readCalendarEra(),
+): Record<string, unknown> {
+  const normalized = route.replace(/\/$/, "");
+  if (normalized === "/ritu" || normalized === "/converter") {
+    return currentPatroLocationLinkSearch(loc) as Record<string, unknown>;
+  }
+  if (normalized === "/dainikkranti" || normalized === "/abhijit-muhurta") {
+    return currentPatroMonthLinkSearch(loc, era) as Record<string, unknown>;
+  }
+  if (normalized === "/panchanga/year") {
+    return currentPatroYearRangeLinkSearch(loc, era) as Record<string, unknown>;
+  }
+  if (normalized === "/panchanga/graha-sthiti" || normalized === "/panchanga") {
+    return currentPatroDayLinkSearch(loc) as Record<string, unknown>;
+  }
+  if (
+    normalized === "/holidays" ||
+    normalized === "/suryakranti" ||
+    normalized === "/panchak-patro" ||
+    normalized === "/panchanga/graha-asta" ||
+    normalized === "/panchanga/graha-vakri" ||
+    normalized === "/panchanga/chandra-grahan" ||
+    normalized === "/panchanga/surya-grahan"
+  ) {
+    return currentPatroYearLinkSearch(loc, era) as Record<string, unknown>;
+  }
+  if (normalized.startsWith("/sait/")) {
+    return currentPatroYearLinkSearch(loc, era) as Record<string, unknown>;
+  }
+  if (normalized.startsWith("/panchanga/element/")) {
+    const elementId = normalized.split("/").pop() ?? "";
+    return patroElementLinkSearch(elementId, loc, era) as Record<string, unknown>;
+  }
+  return currentPatroLocationLinkSearch(loc) as Record<string, unknown>;
+}
+
+/** Year browse with an explicit year (e.g. home sait aside for the visible BS year). */
+export function patroYearLinkSearch(
+  loc: PanchangaLocation,
+  year: number,
+  era: CalendarEra = readCalendarEra(),
+): PatroYearBrowseSearch & LocationSearch {
+  return {
+    ...locationToSearch(loc),
+    era,
+    year,
   };
 }
 
@@ -174,18 +396,26 @@ export function sameLocationParams(a: LocationParams, b: LocationParams): boolea
   );
 }
 
-/** Shallow equality for two search objects (only the keys each side defines). */
+/** Shallow equality for two search objects (union of keys; missing paksha = "all"). */
 export function sameSearch(a: object, b: object): boolean {
   const ae = a as Record<string, unknown>;
   const be = b as Record<string, unknown>;
-  const ak = Object.keys(ae);
-  const bk = Object.keys(be);
-  if (ak.length !== bk.length) return false;
-  return ak.every((k) => ae[k] === be[k]);
+  const keys = new Set([...Object.keys(ae), ...Object.keys(be)]);
+  return [...keys].every((k) => {
+    let av = ae[k];
+    let bv = be[k];
+    if (k === "paksha") {
+      av = av ?? "all";
+      bv = bv ?? "all";
+    }
+    return av === bv;
+  });
 }
 
 export function validatePanchangaSearch(search: Record<string, unknown>): PanchangaSearch {
   const out: PanchangaSearch = { ...validateLocationSearch(search) };
+  const era = parseCalendarEra(search.era);
+  if (era) out.era = era;
   const date = validIsoDate(search.date);
   if (date) out.date = date;
   if (search.view === "day" || search.view === "month") out.view = search.view;
@@ -195,16 +425,41 @@ export function validatePanchangaSearch(search: Record<string, unknown>): Pancha
   return out;
 }
 
+export function validatePatroMonthBrowseSearch(
+  search: Record<string, unknown>,
+): PatroMonthBrowseSearch & LocationSearch {
+  const out: PatroMonthBrowseSearch & LocationSearch = { ...validateLocationSearch(search) };
+  const era = parseCalendarEra(search.era);
+  if (era) out.era = era;
+
+  const rawYear = toInt(search.year);
+  const resolvedEra = resolvePatroEra({ era: out.era, year: rawYear });
+  const year = validatePatroBrowseYear(rawYear, resolvedEra);
+  if (year != null) out.year = year;
+
+  const month = validatePatroBrowseMonth(toInt(search.month));
+  if (month != null) out.month = month;
+  return out;
+}
+
+export function validatePatroYearBrowseSearch(
+  search: Record<string, unknown>,
+): PatroYearBrowseSearch & LocationSearch {
+  const out: PatroYearBrowseSearch & LocationSearch = { ...validateLocationSearch(search) };
+  const era = parseCalendarEra(search.era);
+  if (era) out.era = era;
+
+  const rawYear = toInt(search.year);
+  const resolvedEra = resolvePatroEra({ era: out.era, year: rawYear });
+  const year = validatePatroBrowseYear(rawYear, resolvedEra);
+  if (year != null) out.year = year;
+  return out;
+}
+
 export function validateDainikKrantiSearch(
   search: Record<string, unknown>
 ): DainikKrantiSearch {
-  const out: DainikKrantiSearch = { ...validateLocationSearch(search) };
-  const year = toInt(search.year);
-  if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
-    out.year = year;
-  }
-  const month = toInt(search.month);
-  if (month != null && month >= 1 && month <= 12) out.month = month;
+  const out: DainikKrantiSearch = { ...validatePatroMonthBrowseSearch(search) };
   if (
     search.paksha === "all" ||
     search.paksha === "krishna" ||
@@ -218,11 +473,7 @@ export function validateDainikKrantiSearch(
 export function validatePanchangaYearSearch(
   search: Record<string, unknown>,
 ): PanchangaYearSearch {
-  const out: PanchangaYearSearch = { ...validateLocationSearch(search) };
-  const year = toInt(search.year);
-  if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
-    out.year = year;
-  }
+  const out: PanchangaYearSearch = { ...validatePatroYearBrowseSearch(search) };
   const to = toInt(search.to);
   if (
     to != null &&
@@ -236,12 +487,21 @@ export function validatePanchangaYearSearch(
 }
 
 export function validateAbhijitSearch(search: Record<string, unknown>): AbhijitSearch {
-  const out: AbhijitSearch = { ...validateLocationSearch(search) };
-  const year = toInt(search.year);
-  if (year != null && year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR) {
-    out.year = year;
-  }
-  const month = toInt(search.month);
-  if (month != null && month >= 1 && month <= 12) out.month = month;
+  return validatePatroMonthBrowseSearch(search);
+}
+
+export function validateElementPageSearch(
+  search: Record<string, unknown>,
+): ElementPageSearch {
+  const out = validatePatroMonthBrowseSearch(search) as ElementPageSearch;
+  const date = validIsoDate(search.date);
+  if (date) out.date = date;
   return out;
+}
+
+/** Graha sthiti and other single-day browse pages. */
+export function validateGrahaDaySearch(
+  search: Record<string, unknown>,
+): PanchangaSearch {
+  return validatePanchangaSearch(search);
 }
