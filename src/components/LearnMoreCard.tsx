@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { LEARN_TOPICS_BY_SLUG } from "@/lib/learn/learn-topics";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 interface Props {
   slugs: string[];
@@ -17,7 +17,7 @@ interface Props {
  */
 export function LearnMoreCard({ slugs, heading, className }: Props) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const resolvedHeading = heading ?? t("learn_more.default_heading");
   const topics = slugs
     .map((s) => LEARN_TOPICS_BY_SLUG[s])
@@ -49,7 +49,7 @@ export function LearnMoreCard({ slugs, heading, className }: Props) {
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0 flex-1 truncate text-sm text-foreground">
-                {pick(t.titleNe, t.titleEn)}
+                {bilingualText(lang, t.titleNe, t.titleEn)}
               </span>
               <ArrowRight className="size-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
             </Link>

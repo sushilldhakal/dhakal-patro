@@ -41,3 +41,20 @@ export function grahaPageTitle(pageId: string, lang?: string | Lang): string {
 export function grahaPageBlurb(pageId: string, lang?: string | Lang): string {
   return i18n.t(`graha_pages.${pageId}.blurb`, { lng: lng(lang), defaultValue: "" });
 }
+
+export function grahaDescriptionSection(
+  pageId: string,
+  section: "what" | "how" | "meaning",
+  lang?: string | Lang,
+): string {
+  return i18n.t(`graha_descriptions.${pageId}.${section}`, { lng: lng(lang), defaultValue: "" });
+}
+
+/** All three description blocks for a graha detail page. */
+export function grahaDescriptionBlocks(pageId: string, lang?: string | Lang) {
+  const sections: Array<"what" | "how" | "meaning"> = ["what", "how", "meaning"];
+  return sections.map((section) => ({
+    section,
+    body: grahaDescriptionSection(pageId, section, lang),
+  }));
+}

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { learnHero, learnStatPill } from "@/lib/learn-classes";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
@@ -98,7 +98,7 @@ function TopicCard({
   variant?: "default" | "featured" | "compact";
 }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const Icon = topic.icon;
   const category = categoryForTopic(topic);
   const meta = CATEGORY_META[topic.category];
@@ -121,16 +121,16 @@ function TopicCard({
                 meta.chip,
               )}
             >
-              {pick(category.ne, category.en)}
+              {bilingualText(lang, category.ne, category.en)}
             </span>
           )}
         </div>
         <h3 className="text-xl font-bold leading-snug text-foreground">
-          {pick(topic.titleNe, topic.titleEn)}
+          {bilingualText(lang, topic.titleNe, topic.titleEn)}
         </h3>
-        <p className="mt-1 text-sm text-base">{pick(topic.titleEn, "")}</p>
+        <p className="mt-1 text-sm text-base">{bilingualText(lang, topic.titleEn, "")}</p>
         <p className="mt-3 flex-1 text-base leading-relaxed text-foreground/80">
-          {pick(topic.summary, topic.summaryEn)}
+          {bilingualText(lang, topic.summary, topic.summaryEn)}
         </p>
         <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
           {t("learn_page.read_start")}
@@ -152,10 +152,10 @@ function TopicCard({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-base font-semibold text-foreground">
-            {pick(topic.titleNe, topic.titleEn)}
+            {bilingualText(lang, topic.titleNe, topic.titleEn)}
           </span>
           <span className="block truncate text-sm">
-            {pick(topic.titleEn, "")}
+            {bilingualText(lang, topic.titleEn, "")}
           </span>
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
@@ -183,18 +183,18 @@ function TopicCard({
               meta.chip,
             )}
           >
-            {pick(category.ne, category.en)}
+            {bilingualText(lang, category.ne, category.en)}
           </span>
         )}
       </div>
       <div>
-        <h3 className="text-lg font-bold leading-snug text-foreground">{pick(topic.titleNe, topic.titleEn)}</h3>
+        <h3 className="text-lg font-bold leading-snug text-foreground">{bilingualText(lang, topic.titleNe, topic.titleEn)}</h3>
         <p className="mt-1 text-sm text-base">
-          {pick(topic.titleEn, "")}
+          {bilingualText(lang, topic.titleEn, "")}
         </p>
       </div>
       <p className="flex-1 text-base leading-relaxed text-foreground/80">
-        {pick(topic.summary, topic.summaryEn)}
+        {bilingualText(lang, topic.summary, topic.summaryEn)}
       </p>
       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
         {t("learn_page.read_detail")}
@@ -206,7 +206,7 @@ function TopicCard({
 
 export function Learn() {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   useRouteLoading(false);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -372,7 +372,7 @@ export function Learn() {
                 )}
               >
                 <MetaIcon className="h-3.5 w-3.5" />
-                {pick(cat.ne, cat.en)}
+                {bilingualText(lang, cat.ne, cat.en)}
                 <span className="opacity-70">({count})</span>
               </button>
             );
@@ -445,9 +445,9 @@ export function Learn() {
                       <CatIcon className="h-5 w-5" />
                     </span>
                     <div>
-                      <h2 className="text-2xl font-bold text-foreground">{pick(cat.ne, cat.en)}</h2>
+                      <h2 className="text-2xl font-bold text-foreground">{bilingualText(lang, cat.ne, cat.en)}</h2>
                       <p className="text-sm">
-                        {pick(cat.ne, cat.en)} · {t("learn_page.articles_count", { count: topics.length })}
+                        {bilingualText(lang, cat.ne, cat.en)} · {t("learn_page.articles_count", { count: topics.length })}
                       </p>
                     </div>
                   </div>

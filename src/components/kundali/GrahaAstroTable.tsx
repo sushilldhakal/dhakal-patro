@@ -1,6 +1,7 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Flame, RotateCcw } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import type { VargaChartEntry } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
@@ -57,7 +58,8 @@ function signedFixed(value: number | undefined, digits: (v: string) => string): 
  * columns come straight from the API's D1 varga rows.
  */
 export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAstroTableProps) {
-  const { pick, digits, lang } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
 
   const rows = useMemo<Row[]>(() => {
     return d1Rows.flatMap((entry) => {
@@ -78,7 +80,7 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
   if (rows.length === 0) return null;
 
   const grahaName = (key: string) =>
-    pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
+    bilingualText(lang, GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
   const rashiName = (rashi: number) => formatRashiByNumber(rashi, lang);
 
   return (
@@ -86,24 +88,21 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5 normal-case")}>
-            {pick("ग्रह / वक्री / अस्त", "Graha / R / C")}
+            {t("kundali.graha_r_c")}
           </TableHead>
-          <TableHead className={th}>{pick("स्पष्ट", "Longitude")}</TableHead>
-          <TableHead className={th}>{pick("नक्षत्र / स्वामी", "Nakshatra / Swami")}</TableHead>
-          <TableHead className={cn(th, "text-right")}>{pick("कच्चा देशान्तर", "Raw L.")}</TableHead>
-          <TableHead className={cn(th, "text-right")}>{pick("शर (अक्षांश)", "Latitude / Shara")}</TableHead>
-          <TableHead className={cn(th, "text-right")}>{pick("विषुवांश", "Right Ascension")}</TableHead>
-          <TableHead className={cn(th, "text-right")}>{pick("क्रान्ति", "Declination / Kranti")}</TableHead>
-          <TableHead className={cn(th, "text-right")}>{pick("गति °/दिन", "Speed deg/day")}</TableHead>
+          <TableHead className={th}>{t("kundali.longitude")}</TableHead>
+          <TableHead className={th}>{t("kundali.nakshatra_swami")}</TableHead>
+          <TableHead className={cn(th, "text-right")}>{t("kundali.raw_l")}</TableHead>
+          <TableHead className={cn(th, "text-right")}>{t("kundali.latitude_shara")}</TableHead>
+          <TableHead className={cn(th, "text-right")}>{t("kundali.right_ascension")}</TableHead>
+          <TableHead className={cn(th, "text-right")}>{t("kundali.declination_kranti")}</TableHead>
+          <TableHead className={cn(th, "text-right")}>{t("kundali.speed_deg_day")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.map((row, i) => {
-          const name = row.key === "lagna" ? pick("लग्न", "Lagna") : grahaName(row.key);
-          const nakName = pick(
-            NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—",
-            NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—",
-          );
+          const name = row.key === "lagna" ? t("kundali.lagna") : grahaName(row.key);
+          const nakName = bilingualText(lang, NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—", NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—");
           const zebra = i % 2 === 1 && "bg-muted/20";
           return (
             <TableRow key={row.key} className={cn(zebra)}>
@@ -121,19 +120,19 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
                   {row.retrograde && (
                     <span
                       className="inline-flex items-center gap-0.5 text-sm font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
-                      title={pick("वक्री", "Retrograde")}
+                      title={t("kundali.retrograde")}
                     >
                       <RotateCcw className="size-2.5" aria-hidden />
-                      {pick("वक्री", "R")}
+                      {t("kundali.r")}
                     </span>
                   )}
                   {row.combust && (
                     <span
                       className="inline-flex items-center gap-0.5 text-sm font-bold normal-case text-destructive bg-destructive/10 px-1 py-0.5 rounded-full"
-                      title={pick("अस्त (सूर्य सामीप्य)", "Combust")}
+                      title={t("kundali.combust")}
                     >
                       <Flame className="size-2.5" aria-hidden />
-                      {pick("अस्त", "C")}
+                      {t("kundali.c")}
                     </span>
                   )}
                 </span>

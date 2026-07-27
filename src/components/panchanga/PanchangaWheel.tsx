@@ -31,7 +31,7 @@ import {
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WheelChart, type WheelHover, type WheelPick } from "./WheelChart";
 import { WheelPanel } from "./WheelPanel";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroSkel, patroWheelShell } from "@/lib/patro-classes";
 import {
   wheelDock,
@@ -104,7 +104,7 @@ export type YearWheelScrub = {
 /** Year-view playback controls (rewind / play-pause / fast-forward) for the dock. */
 function WheelYearPlayback({ scrub }: { scrub: YearWheelScrub }) {
   const { t } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const { direction, speed, onForward, onBackward, onPause } = scrub;
   const num = (n: number) => digits(n);
   const playing = direction !== 0;
@@ -117,9 +117,9 @@ function WheelYearPlayback({ scrub }: { scrub: YearWheelScrub }) {
         type="button"
         className={cn(wheelIconBtn, direction === -1 && wheelYearScrubBtnActive)}
         onClick={onBackward}
-        aria-label={pick("पछाडि", "Rewind")}
+        aria-label={bilingualText(lang, "पछाडि", "Rewind")}
         aria-pressed={direction === -1}
-        title={speedTitle(pick("पछाडि चलाउनुहोस्", "Play backward"))}
+        title={speedTitle(bilingualText(lang, "पछाडि चलाउनुहोस्", "Play backward"))}
       >
         <Rewind className={wheelDockIcon} strokeWidth={2} aria-hidden />
       </button>
@@ -142,9 +142,9 @@ function WheelYearPlayback({ scrub }: { scrub: YearWheelScrub }) {
         type="button"
         className={cn(wheelIconBtn, direction === 1 && wheelYearScrubBtnActive)}
         onClick={onForward}
-        aria-label={pick("अगाडि", "Fast forward")}
+        aria-label={bilingualText(lang, "अगाडि", "Fast forward")}
         aria-pressed={direction === 1}
-        title={speedTitle(pick("अगाडि चलाउनुहोस्", "Play forward"))}
+        title={speedTitle(bilingualText(lang, "अगाडि चलाउनुहोस्", "Play forward"))}
       >
         <FastForward className={wheelDockIcon} strokeWidth={2} aria-hidden />
       </button>
@@ -198,24 +198,24 @@ function PanchangaWheelSkeleton({
   bsDay,
   locationLabel,
 }: Pick<Props, "bsYear" | "bsMonthNe" | "bsDay" | "locationLabel">) {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const num = (n: number | string) => digits(n);
-  const locLabel = locationLabel ?? pick("काठमाडौं", "Kathmandu");
+  const locLabel = locationLabel ?? bilingualText(lang, "काठमाडौं", "Kathmandu");
 
   return (
     <div className={cn("pn-wheel", patroWheelShell)} aria-busy="true">
       <div className={wheelStage}>
         <WheelHead
-          eyebrow={pick("पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
+          eyebrow={bilingualText(lang, "पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
           title={
             <>
-              {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
+              {bilingualText(lang, "ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
               <span className="yr">{num(bsYear)}</span>
             </>
           }
           sub={
             <>
-              {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))} {num(bsDay)} · {locLabel}
+              {bilingualText(lang, bsMonthNe, bsMonthEnOf(bsMonthNe))} {num(bsDay)} · {locLabel}
             </>
           }
         />
@@ -470,7 +470,7 @@ function PanchangaWheelBody({
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const stageRef = useRef<HTMLDivElement>(null);
   const num = (n: number | string) => digits(n);
   const scrubClock = gClock(scrubG, det.sunriseMin);
@@ -480,7 +480,7 @@ function PanchangaWheelBody({
     : undefined;
   const tithiNe = scrubTithi?.name_ne ?? det.tithi2[0]?.ne ?? "—";
   const tithiEn = scrubTithi?.name ?? det.tithi2[0]?.en ?? tithiNe;
-  const locLabel = locationLabel ?? p.location?.name ?? pick("काठमाडौं", "Kathmandu");
+  const locLabel = locationLabel ?? p.location?.name ?? bilingualText(lang, "काठमाडौं", "Kathmandu");
 
   const onStageMove = (e: React.MouseEvent) => {
     const r = stageRef.current?.getBoundingClientRect();
@@ -494,11 +494,11 @@ function PanchangaWheelBody({
       const ic = NAKSHATRA_ICONS[hover.i]!;
       tipNode = (
         <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
-          <div className={wheelTipKind}>{pick("नक्षत्र", "Nakshatra")} · {num(hover.i + 1)}</div>
-          <div className={wheelTipTitle}>{pick(ic.ne, ic.en)}</div>
+          <div className={wheelTipKind}>{bilingualText(lang, "नक्षत्र", "Nakshatra")} · {num(hover.i + 1)}</div>
+          <div className={wheelTipTitle}>{bilingualText(lang, ic.ne, ic.en)}</div>
           <div className={wheelTipRow}>
-            <span>{pick("स्वामी", "Lord")}</span>
-            <b>{pick(ic.lord_ne, NAK_LORD_EN[ic.lord_ne] ?? ic.lord_ne)}</b>
+            <span>{bilingualText(lang, "स्वामी", "Lord")}</span>
+            <b>{bilingualText(lang, ic.lord_ne, NAK_LORD_EN[ic.lord_ne] ?? ic.lord_ne)}</b>
           </div>
           <div className={wheelTipSym}>{ic.sym_ne}</div>
         </div>
@@ -507,13 +507,13 @@ function PanchangaWheelBody({
       const rs = WHEEL_RASHIS[hover.i]!;
       tipNode = (
         <div className={wheelTip(true)} style={{ left: tip.x, top: tip.y }}>
-          <div className={wheelTipKind}>{pick("राशि", "Rashi")} · {num(hover.i + 1)}</div>
+          <div className={wheelTipKind}>{bilingualText(lang, "राशि", "Rashi")} · {num(hover.i + 1)}</div>
           <div className={wheelTipTitle}>
-            {pick(rs.ne, rs.en)}
+            {bilingualText(lang, rs.ne, rs.en)}
           </div>
           <div className={wheelTipRow}>
-            <span>{pick("महिना", "Month")}</span>
-            <b>{pick(bsMonthNe, bsMonthEnOf(bsMonthNe))}</b>
+            <span>{bilingualText(lang, "महिना", "Month")}</span>
+            <b>{bilingualText(lang, bsMonthNe, bsMonthEnOf(bsMonthNe))}</b>
           </div>
         </div>
       );
@@ -533,18 +533,18 @@ function PanchangaWheelBody({
         onMouseMove={onStageMove}
       >
         <WheelHead
-          eyebrow={pick("पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
+          eyebrow={bilingualText(lang, "पञ्चाङ्ग चक्र", "Nepali Patro · Panchanga Wheel")}
           title={
             <>
-              {isToday && !scrubPinned ? pick("आजको", "Today's") : ""}{" "}
-              {pick("ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
+              {isToday && !scrubPinned ? bilingualText(lang, "आजको", "Today's") : ""}{" "}
+              {bilingualText(lang, "ग्रह–नक्षत्र · तिथि–करण चक्र", "Graha–Nakshatra · Tithi–Karana wheel")}{" "}
               <span className="yr">{num(bsYear)}</span>
             </>
           }
           sub={
             <>
-              {pick(det.weekday.ne, det.weekday.en)}, {pick(bsMonthNe, bsMonthEnOf(bsMonthNe))}{" "}
-              {num(bsDay)} · {pick(tithiNe, tithiEn)} · {locLabel}
+              {bilingualText(lang, det.weekday.ne, det.weekday.en)}, {bilingualText(lang, bsMonthNe, bsMonthEnOf(bsMonthNe))}{" "}
+              {num(bsDay)} · {bilingualText(lang, tithiNe, tithiEn)} · {locLabel}
             </>
           }
         />
@@ -579,18 +579,18 @@ function PanchangaWheelBody({
         <div className={wheelLegend}>
           <div className={wheelLegendRow}>
             <span className={wheelLegendDot} style={{ background: "var(--w-accent)" }} />
-            {pick("लग्न · वर्तमान नक्षत्र · तिथि", "Lagna · current nakshatra · tithi")}
+            {bilingualText(lang, "लग्न · वर्तमान नक्षत्र · तिथि", "Lagna · current nakshatra · tithi")}
           </div>
           <div className={wheelLegendRow}>
             <span className={wheelLegendDot} style={{ background: "#f2a81d" }} />
-            {pick("सूर्य राशि", "Sun sign")}
+            {bilingualText(lang, "सूर्य राशि", "Sun sign")}
           </div>
           <div className={wheelLegendRow}>
             <span className={wheelLegendDot} style={{ background: "#d3dce4" }} />
-            {pick("चन्द्र राशि", "Moon sign")}
+            {bilingualText(lang, "चन्द्र राशि", "Moon sign")}
           </div>
           <div className={cn(wheelLegendRow, "mt-0.5 opacity-70")}>
-            {pick("घुमाउन तान्नुहोस् · जुम गर्नुहोस्", "Drag to rotate · pinch to zoom")}
+            {bilingualText(lang, "घुमाउन तान्नुहोस् · जुम गर्नुहोस्", "Drag to rotate · pinch to zoom")}
           </div>
         </div>
 
@@ -611,7 +611,7 @@ function PanchangaWheelBody({
                       defaultValue={yearScrub.dayInYear ?? yearScrub.day}
                       min={1}
                       max={yearScrub.daysInYear ?? yearScrub.totalDays}
-                      aria-label={pick("दिन जानुहोस्", "Jump to day")}
+                      aria-label={bilingualText(lang, "दिन जानुहोस्", "Jump to day")}
                       className={cn(wheelDockEditInput, "w-[54px] max-[720px]:w-[44px]")}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") commitDayEdit((e.target as HTMLInputElement).value);
@@ -627,7 +627,7 @@ function PanchangaWheelBody({
                   <button
                     type="button"
                     className={cn(wheelDockVal, "min-w-0 cursor-pointer whitespace-nowrap")}
-                    title={pick("दिन जानुहोस्", "Jump to day")}
+                    title={bilingualText(lang, "दिन जानुहोस्", "Jump to day")}
                     onClick={() => {
                       yearScrub.onPause();
                       setEditingDay(true);
@@ -654,7 +654,7 @@ function PanchangaWheelBody({
                     type="time"
                     autoFocus
                     defaultValue={scrubClock}
-                    aria-label={pick("समय", "Time")}
+                    aria-label={bilingualText(lang, "समय", "Time")}
                     className={cn(wheelDockEditInput, "w-[94px] max-[720px]:w-[80px]")}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") commitTimeEdit((e.target as HTMLInputElement).value);
@@ -666,7 +666,7 @@ function PanchangaWheelBody({
                   <button
                     type="button"
                     className={cn(wheelDockVal, "cursor-pointer whitespace-nowrap")}
-                    title={pick("समय बदल्नुहोस्", "Edit time")}
+                    title={bilingualText(lang, "समय बदल्नुहोस्", "Edit time")}
                     onClick={() => {
                       yearScrub.onPause();
                       setEditingTime(true);
@@ -678,7 +678,7 @@ function PanchangaWheelBody({
                   <button
                     type="button"
                     className={wheelIconBtn}
-                    title={pick("समय हेर्नुहोस्", "Show / edit time")}
+                    title={bilingualText(lang, "समय हेर्नुहोस्", "Show / edit time")}
                     onClick={() => {
                       yearScrub.onPause();
                       setShowYearTime(true);
@@ -694,7 +694,7 @@ function PanchangaWheelBody({
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick(
+                  title={bilingualText(lang, 
                     `रिलोड · जुम रिसेट · ${civil ? "मध्यरात" : "सूर्योदय"}`,
                     `Reload · reset zoom · ${civil ? "midnight" : "sunrise"}`,
                   )}
@@ -705,7 +705,7 @@ function PanchangaWheelBody({
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick("जुम इन", "Zoom in")}
+                  title={bilingualText(lang, "जुम इन", "Zoom in")}
                   onClick={() => handleZoom(zoom * 1.4)}
                 >
                   <ZoomIn className={wheelDockIcon} strokeWidth={2} aria-hidden />
@@ -713,7 +713,7 @@ function PanchangaWheelBody({
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick("जुम आउट", "Zoom out")}
+                  title={bilingualText(lang, "जुम आउट", "Zoom out")}
                   onClick={() => handleZoom(zoom / 1.4)}
                 >
                   <ZoomOut className={wheelDockIcon} strokeWidth={2} aria-hidden />
@@ -723,8 +723,8 @@ function PanchangaWheelBody({
                   className={wheelIconBtn}
                   title={
                     expanded
-                      ? pick("सामान्य दृश्य", "Exit full width")
-                      : pick("पूर्ण चौडाइ", "Full width view")
+                      ? bilingualText(lang, "सामान्य दृश्य", "Exit full width")
+                      : bilingualText(lang, "पूर्ण चौडाइ", "Full width view")
                   }
                   aria-pressed={expanded}
                   onClick={toggleExpanded}
@@ -740,7 +740,7 @@ function PanchangaWheelBody({
           ) : (
             <>
               <div className={wheelDockTimeGrp}>
-                <span className={wheelDockLabel}>{pick("समय", "Time")}</span>
+                <span className={wheelDockLabel}>{bilingualText(lang, "समय", "Time")}</span>
                 <input
                   className={wheelScrub}
                   type="range"
@@ -759,16 +759,16 @@ function PanchangaWheelBody({
                   <button
                     type="button"
                     className={wheelDockTodayBtn}
-                    title={pick("अहिलेको समय", "Current time")}
+                    title={bilingualText(lang, "अहिलेको समय", "Current time")}
                     onClick={snapToNow}
                   >
-                    {pick("आज", "Now")}
+                    {bilingualText(lang, "आज", "Now")}
                   </button>
                 )}
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick(
+                  title={bilingualText(lang, 
                     `उत्तर सिधा · जुम रिसेट · ${civil ? "मध्यरात" : "सूर्योदय"}`,
                     `North up · reset zoom · ${civil ? "midnight" : "sunrise"}`,
                   )}
@@ -779,7 +779,7 @@ function PanchangaWheelBody({
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick("जुम इन", "Zoom in")}
+                  title={bilingualText(lang, "जुम इन", "Zoom in")}
                   onClick={() => handleZoom(zoom * 1.4)}
                 >
                   +
@@ -787,7 +787,7 @@ function PanchangaWheelBody({
                 <button
                   type="button"
                   className={wheelIconBtn}
-                  title={pick("जुम आउट", "Zoom out")}
+                  title={bilingualText(lang, "जुम आउट", "Zoom out")}
                   onClick={() => handleZoom(zoom / 1.4)}
                 >
                   −
@@ -797,8 +797,8 @@ function PanchangaWheelBody({
                   className={wheelIconBtn}
                   title={
                     expanded
-                      ? pick("सामान्य दृश्य", "Exit full width")
-                      : pick("पूर्ण चौडाइ", "Full width view")
+                      ? bilingualText(lang, "सामान्य दृश्य", "Exit full width")
+                      : bilingualText(lang, "पूर्ण चौडाइ", "Full width view")
                   }
                   aria-pressed={expanded}
                   onClick={toggleExpanded}

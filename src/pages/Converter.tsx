@@ -11,7 +11,7 @@ import { PageShell, PageHeader } from "../components/PageShell";
 import { SeoContentSection } from "../components/seo/SeoContentSection";
 import { useRouteLoading } from "@/lib/route-loading";
 import { formatLocaleDigits } from "@/i18n/digits";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { StatCard } from "../components/StatCard";
 import { cn } from "../lib/utils";
 
@@ -31,7 +31,7 @@ function todayAd() {
 
 export function Converter() {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const [mode, setMode] = useState<"ad-to-bs" | "bs-to-ad">("ad-to-bs");
   const [adInput, setAdInput] = useState(todayAd());
   const [bsInput, setBsInput] = useState("2083-02-01");
@@ -148,10 +148,10 @@ export function Converter() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <StatCard label={t("converter.bs_date")} value={adResult.bs_date} highlight />
             <StatCard label={t("converter.bs_year")} value={formatLocaleDigits(adResult.bs_year)} />
-            <StatCard label={t("converter.bs_month")} value={pick(adResult.bs_month_name_ne, adResult.bs_month_name)} />
+            <StatCard label={t("converter.bs_month")} value={bilingualText(lang, adResult.bs_month_name_ne, adResult.bs_month_name)} />
             <StatCard label={t("converter.bs_day")} value={formatLocaleDigits(adResult.bs_day)} />
             <StatCard label={t("converter.ad_date")} value={adResult.ad_date} />
-            <StatCard label={t("converter.weekday")} value={pick(WEEKDAY_NE[adResult.weekday] ?? adResult.weekday, adResult.weekday)} />
+            <StatCard label={t("converter.weekday")} value={bilingualText(lang, WEEKDAY_NE[adResult.weekday] ?? adResult.weekday, adResult.weekday)} />
           </div>
         </div>
       )}
@@ -167,10 +167,10 @@ export function Converter() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <StatCard label={t("converter.ad_date")} value={bsResult.ad_date} highlight />
             <StatCard label={t("converter.bs_date")} value={bsResult.bs_date} />
-            <StatCard label={t("converter.bs_month")} value={pick(bsResult.bs_month_name_ne, bsResult.bs_month_name)} />
+            <StatCard label={t("converter.bs_month")} value={bilingualText(lang, bsResult.bs_month_name_ne, bsResult.bs_month_name)} />
             <StatCard label={t("converter.bs_day")} value={formatLocaleDigits(bsResult.bs_day)} />
             <StatCard label={t("converter.bs_year")} value={formatLocaleDigits(bsResult.bs_year)} />
-            <StatCard label={t("converter.weekday")} value={pick(WEEKDAY_NE[bsResult.weekday] ?? bsResult.weekday, bsResult.weekday)} />
+            <StatCard label={t("converter.weekday")} value={bilingualText(lang, WEEKDAY_NE[bsResult.weekday] ?? bsResult.weekday, bsResult.weekday)} />
           </div>
         </div>
       )}

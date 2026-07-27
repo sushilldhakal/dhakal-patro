@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -26,7 +26,7 @@ const LEGACY_ECLIPSE_SLUGS: Record<string, string> = {
 
 export function LearnArticle() {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   useRouteLoading(false);
   const { slug } = useParams({ strict: false }) as { slug?: string };
 
@@ -69,11 +69,11 @@ export function LearnArticle() {
         <div className={tmWrap}>
           <header className={tmHero}>
             <div className={tmHeroEyebrow}>
-              {category ? `${pick(category.ne, category.en)} · ` : ""}
-              {pick(topic.titleEn, topic.titleNe)}
+              {category ? `${bilingualText(lang, category.ne, category.en)} · ` : ""}
+              {bilingualText(lang, topic.titleEn, topic.titleNe)}
             </div>
-            <h1 className={tmHeroTitle}>{pick(topic.titleNe, topic.titleEn)}</h1>
-            <p className={tmHeroSub}>{pick(topic.summary, topic.summaryEn)}</p>
+            <h1 className={tmHeroTitle}>{bilingualText(lang, topic.titleNe, topic.titleEn)}</h1>
+            <p className={tmHeroSub}>{bilingualText(lang, topic.summary, topic.summaryEn)}</p>
           </header>
 
           <Content />
@@ -91,7 +91,7 @@ export function LearnArticle() {
                     {t("learn_page.prev")}
                   </span>
                   <span className="block truncate text-sm text-foreground">
-                    {pick(prev.titleNe, prev.titleEn)}
+                    {bilingualText(lang, prev.titleNe, prev.titleEn)}
                   </span>
                 </span>
               </Link>
@@ -109,7 +109,7 @@ export function LearnArticle() {
                     {t("learn_page.next")}
                   </span>
                   <span className="block truncate text-sm text-foreground">
-                    {pick(next.titleNe, next.titleEn)}
+                    {bilingualText(lang, next.titleNe, next.titleEn)}
                   </span>
                 </span>
                 <ArrowRight className="size-4 shrink-0 text-secondary" />

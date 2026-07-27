@@ -2,7 +2,7 @@ import type { MuhurtaNowBlock, PanchangaDay } from "@/lib/api";
 import { formatBsDateLong } from "@/lib/bs-calendar";
 import { formatTimeShort } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 
 function parseAdStr(s: string): Date {
   const [y, m, d] = s.split("-").map(Number);
@@ -36,7 +36,7 @@ interface Props {
 }
 
 export function MuhurtaNowPanel({ p, clock }: Props) {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const now = p.muhurta_now;
   if (!now) return null;
 
@@ -46,11 +46,11 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="text-xs text-base uppercase tracking-[0.12em] mb-1">
-        {pick("क्षणिक मुहूर्त", "Moment now")}
+        {bilingualText(lang, "क्षणिक मुहूर्त", "Moment now")}
       </div>
       {instantLabel && (
         <p className="text-sm mb-3 m-0">
-          {pick(`${digits(instantTime)} बजेको अवस्था`, `Status at ${digits(instantTime)}`)}
+          {bilingualText(lang, `${digits(instantTime)} बजेको अवस्था`, `Status at ${digits(instantTime)}`)}
         </p>
       )}
       <ul className="space-y-2 m-0 p-0 list-none">
@@ -67,12 +67,12 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
               )}
             >
               <span>
-                <span className="font-semibold">{pick(label, labelEn)}</span>
+                <span className="font-semibold">{bilingualText(lang, label, labelEn)}</span>
               </span>
               <span className="text-right shrink-0 font-semibold">
                 {active ? (
                   <span className="text-xs font-bold uppercase tracking-wide text-secondary">
-                    {pick("सक्रिय", "Active")}
+                    {bilingualText(lang, "सक्रिय", "Active")}
                   </span>
                 ) : (
                   <span className="text-xs font-mono tabular-nums">
@@ -89,7 +89,7 @@ export function MuhurtaNowPanel({ p, clock }: Props) {
 }
 
 export function EphemerisModeBanner({ p, clock, viewedDateAd }: Props) {
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
   const time = p.query_instant_local?.split(" ")[1] ?? clock;
   const civil = p.before_sunrise_of_civil_day;
   const viewedAd = viewedDateAd ?? p.query_instant_local?.split(" ")[0];
@@ -99,12 +99,11 @@ export function EphemerisModeBanner({ p, clock, viewedDateAd }: Props) {
   return (
     <div className="rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm">
       <p className="m-0 font-semibold text-foreground">
-        {pick("समय-आधारित पञ्चाङ्ग", "Time-based reading")}
+        {bilingualText(lang, "समय-आधारित पञ्चाङ्ग", "Time-based reading")}
       </p>
       <p className="m-0 mt-1 text-foreground text-sm leading-relaxed">
         {time ? (
-          pick(
-            <>
+          bilingualNode(lang, <>
               <span className="font-mono tabular-nums">{digits(time)}</span> बजेको वास्तविक
               ग्रहस्थितिअनुसार तिथि, नक्षत्र, योग र करण। आकाशगङ्गाका ग्रहहरूको सटीक गणनामा
               आधारित भएकाले मुद्रित सिद्धान्तिक पात्रोसँग केही मात्रामा नमिल्न सक्छ।
@@ -116,18 +115,18 @@ export function EphemerisModeBanner({ p, clock, viewedDateAd }: Props) {
             </>,
           )
         ) : (
-          pick(
+          bilingualText(lang, 
             "तोकिएको समयको वास्तविक ग्रहस्थितिअनुसार तिथि, नक्षत्र, योग र करण। आकाशगङ्गाका ग्रहहरूको सटीक गणनामा आधारित भएकाले मुद्रित सिद्धान्तिक पात्रोसँग केही मात्रामा नमिल्न सक्छ।",
             "Tithi, nakshatra, yoga and karana from the actual planetary positions at the chosen time. Based on precise sky calculations, so it may differ slightly from printed theoretical patros.",
           )
         )}
         {civil &&
           (viewedDateLabel
-            ? pick(
+            ? bilingualText(lang, 
                 ` यो समय ${viewedDateLabel} को सूर्योदय अघि भएकाले ${viewedDateLabel} को वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।`,
                 ` This time is before sunrise on ${viewedDateLabel}, so ${viewedDateLabel}'s Vedic day panchanga is shown.`,
               )
-            : pick(
+            : bilingualText(lang, 
                 " यो समय हेर्दै गरेको मितिको सूर्योदय अघि भएकाले सोही मितिको वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।",
                 " This time is before sunrise on the viewed date, so that date's Vedic day panchanga is shown.",
               ))}

@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { dashaExpandKeys, fetchDashaChildren, type DashaSystem, type DashaTreeNode } from "@/lib/api";
 import { formatZonedBsMoment } from "@/lib/bs-calendar";
 import {
@@ -153,13 +154,11 @@ function DashaDurationGrid({
   start,
   end,
   lang,
-  pick,
   digits,
 }: {
   start: Date;
   end: Date;
   lang: string;
-  pick: (ne: string, en: string) => string;
   digits: (v: string | number) => string;
 }) {
   const ms = end.getTime() - start.getTime();
@@ -184,7 +183,7 @@ function DashaDurationGrid({
                 key={col.ne}
                 className="border border-border/50 bg-muted/30 px-1.5 py-1 text-left font-semibold text-sm uppercase tracking-wide"
               >
-                {pick(col.ne, col.en)}
+                {bilingualText(lang, col.ne, col.en)}
               </th>
             ))}
           </tr>
@@ -242,7 +241,8 @@ function DashaNode({
   system: DashaSystem;
   maxLevel: number;
 }) {
-  const { lang, pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
   const [open, setOpen] = useState(false);
 
   const running = span.start.getTime() <= now && now < span.end.getTime();
@@ -265,7 +265,7 @@ function DashaNode({
   }, [open, expandable, span.childNodes, childQ.data]);
 
   const duration = formatDashaDuration(span.end.getTime() - span.start.getTime(), lang);
-  const levelLabel = pick(LEVEL_LABELS[level]!.ne, LEVEL_LABELS[level]!.en);
+  const levelLabel = bilingualText(lang, LEVEL_LABELS[level]!.ne, LEVEL_LABELS[level]!.en);
   const accent = lordAccent(span.lord, system);
 
   return (
@@ -327,18 +327,18 @@ function DashaNode({
             </span>
             {running && (
               <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-bold text-secondary">
-                {pick("चालु दशा", "Running")}
+                {t("kundali.running")}
               </span>
             )}
           </span>
 
           <span className="mt-2 block space-y-0.5 pl-[22px]">
             <MomentLine
-              label={pick("सुरु", "Begin")}
+              label={t("kundali.begin")}
               value={formatMoment(span.start, lang, timeZone, digits)}
             />
             <MomentLine
-              label={pick("अन्त्य", "End")}
+              label={t("kundali.end")}
               value={formatMoment(span.end, lang, timeZone, digits)}
             />
           </span>
@@ -347,7 +347,6 @@ function DashaNode({
             start={span.start}
             end={span.end}
             lang={lang}
-            pick={pick}
             digits={digits}
           />
 
@@ -401,7 +400,8 @@ export function DashaTree({
   maxLevel = MAX_LEVEL,
   cycleYears,
 }: DashaTreeProps) {
-  const { lang, pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
   const [now] = useState(() => Date.now());
   const mahadashas = useMemo(() => tree.map(toSpan), [tree]);
 
@@ -422,7 +422,7 @@ export function DashaTree({
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm">
           <span>
             <span className="font-semibold uppercase tracking-wide text-sm">
-              {pick("सुरु", "From")}
+              {t("kundali.from")}
             </span>{" "}
             <span className="text-base text-foreground/80">
               {formatMoment(timelineStart, lang, timeZone, digits)}
@@ -431,7 +431,7 @@ export function DashaTree({
           <span className="hidden sm:inline">→</span>
           <span>
             <span className="font-semibold uppercase tracking-wide text-sm">
-              {pick("अन्त्य", "To")}
+              {t("kundali.to")}
             </span>{" "}
             <span className="text-base text-foreground/80">
               {formatMoment(timelineEnd, lang, timeZone, digits)}
@@ -450,26 +450,26 @@ export function DashaTree({
             <p className="text-sm font-bold text-foreground">
               {displayLordName(running, lang, system)}
               <span className="mx-1.5 font-normal">·</span>
-              {pick("महादशा", "Maha Dasha")}
+              {t("kundali.maha_dasha")}
             </p>
             <div className="flex items-center gap-2">
               {yoginiCycle ? (
                 <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
-                  {pick(`चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
+                  {bilingualText(lang, `चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
                 </span>
               ) : null}
               <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-bold text-secondary">
-                {pick("चालु दशा", "Running Dasha")}
+                {t("kundali.running_dasha")}
               </span>
             </div>
           </div>
           <div className="mt-1.5 space-y-0.5 pl-2">
             <MomentLine
-              label={pick("सुरु", "Begin")}
+              label={t("kundali.begin")}
               value={formatMoment(running.start, lang, timeZone, digits)}
             />
             <MomentLine
-              label={pick("अन्त्य", "End")}
+              label={t("kundali.end")}
               value={formatMoment(running.end, lang, timeZone, digits)}
             />
           </div>
@@ -478,19 +478,18 @@ export function DashaTree({
               start={running.start}
               end={running.end}
               lang={lang}
-              pick={pick}
               digits={digits}
             />
           </div>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 pl-2 text-sm">
             <p>
-              <span>{pick("कुल", "Total")} — </span>
+              <span>{t("kundali.total")} — </span>
               <span className="font-semibold text-foreground">
                 {digits(formatDashaDuration(running.end.getTime() - running.start.getTime(), lang))}
               </span>
             </p>
             <p>
-              <span>{pick("बाँकी", "Left")} — </span>
+              <span>{t("kundali.left")} — </span>
               <span className="font-semibold text-foreground">
                 {digits(formatDashaDuration(running.end.getTime() - now, lang))}
               </span>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sunrise, Moon } from "lucide-react";
 import { getZonedTimeParts, minutesSinceMidnightInTimezone } from "@/lib/zoned-time";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 function parseTimeToMinutes(time?: string): number | null {
   if (!time) return null;
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function GhatiClock({ sunrise, sunset, timezone }: Props) {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const [now, setNow] = useState(() => new Date());
   const timeZone = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -64,7 +64,7 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
       />
 
       <div className="text-sm font-semibold tracking-[0.16em] text-[#f5f5f1]/55">
-        {pick("वैदिक समय", "Vedic time")}
+        {bilingualText(lang, "वैदिक समय", "Vedic time")}
       </div>
       <div className="font-mono font-bold text-5xl leading-none mt-3.5 tracking-tight tabular-nums">
         {digits(pad2(gh))}
@@ -74,7 +74,7 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
         <span className="text-sm text-[#f5f5f1]/65">{digits(pad2(vi))}</span>
       </div>
       <div className="text-sm font-semibold tracking-wide text-panchang mt-2">
-        {pick("घडी : पला : विपला", "Ghati : Pala : Vipala")}
+        {bilingualText(lang, "घडी : पला : विपला", "Ghati : Pala : Vipala")}
       </div>
 
       <div className="h-px bg-white/12 mx-5 my-3.5" />
@@ -84,7 +84,7 @@ export function GhatiClock({ sunrise, sunset, timezone }: Props) {
         <span className="text-sm text-[#f5f5f1]/65">:{digits(pad2(ss))}</span>
       </div>
       <div className="text-sm font-semibold tracking-wide text-[#f5f5f1]/50 mt-2">
-        {pick("घण्टा : मिनेट", "Hour : Minute")}
+        {bilingualText(lang, "घण्टा : मिनेट", "Hour : Minute")}
       </div>
 
       <div className="flex justify-center gap-4 mt-3.5 text-sm font-mono text-[#f5f5f1]/80">

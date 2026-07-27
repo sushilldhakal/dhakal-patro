@@ -19,7 +19,7 @@ import {
   getCurrentBs,
 } from "@/lib/bs-calendar";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { patroSelect } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -106,7 +106,7 @@ const clampYear = (y: number) =>
 
 export function PanchangaYear() {
   const { t } = useTranslation();
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const langEra = useCalendarEra();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
@@ -495,7 +495,7 @@ export function PanchangaYear() {
                 type="button"
                 onClick={() => goToYear(year - 1)}
                 disabled={year <= rangeStart}
-                aria-label={pick("अघिल्लो वर्ष", "Previous year")}
+                aria-label={bilingualText(lang, "अघिल्लो वर्ष", "Previous year")}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -510,7 +510,7 @@ export function PanchangaYear() {
                 type="button"
                 onClick={() => goToYear(year + 1)}
                 disabled={year >= rangeEnd}
-                aria-label={pick("अर्को वर्ष", "Next year")}
+                aria-label={bilingualText(lang, "अर्को वर्ष", "Next year")}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -522,12 +522,12 @@ export function PanchangaYear() {
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
           <div className="inline-flex items-center gap-1.5">
             <span className="text-xs text-base">
-              {pick("दायरा", "Range")}
+              {bilingualText(lang, "दायरा", "Range")}
             </span>
             <select
               className={patroSelect}
               value={rangeStart}
-              aria-label={pick("सुरु वर्ष", "Start year")}
+              aria-label={bilingualText(lang, "सुरु वर्ष", "Start year")}
               onChange={(e) => handleRangeStartChange(Number(e.target.value))}
             >
               {BS_YEAR_OPTIONS.map((y) => (
@@ -540,7 +540,7 @@ export function PanchangaYear() {
             <select
               className={patroSelect}
               value={rangeEnd}
-              aria-label={pick("अन्त्य वर्ष", "End year")}
+              aria-label={bilingualText(lang, "अन्त्य वर्ष", "End year")}
               onChange={(e) => handleRangeEndChange(Number(e.target.value))}
             >
               {BS_YEAR_OPTIONS.filter((y) => y >= rangeStart).map((y) => (
@@ -612,11 +612,11 @@ export function PanchangaYear() {
           <p className="text-xs m-0 px-1">
             {rangeSpan > 1
               ? readyCount >= rangeSpan
-                ? pick(
+                ? bilingualText(lang, 
                     `दायरा तयार · सबै ${toNepaliDigits(rangeSpan)} वर्ष`,
                     `Range ready · all ${rangeSpan} years cached`,
                   )
-                : pick(
+                : bilingualText(lang, 
                     `${toNepaliDigits(readyCount)}/${toNepaliDigits(rangeSpan)} वर्ष तयार · अर्को वर्ष पूर्वलोड हुँदै…`,
                     `${readyCount}/${rangeSpan} years ready · preloading ahead…`,
                   )

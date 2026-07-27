@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pause, Play } from "lucide-react";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { moonIllumination, WHEEL_TITHIS, tithiIndexFromElongation, tithiNum, tithiPaksha, tithiPakshaEn } from "@/lib/tithi-wheel-data";
@@ -7,7 +8,7 @@ import { SYNODIC_MONTH } from "@/components/learn/sun-earth-moon-math";
 import { cn } from "@/lib/utils";
 import { edScrub } from "@/lib/diagram-classes";
 import { AdhikMassDiagram, SunriseTimeline } from "./tithi-mechanics-diagrams";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { tmCardCap, tmCardPadLg, tmFcard, tmFormula, tmHero, tmHeroEyebrow, tmHeroSub, tmHeroTitle, tmKey, tmKeys, tmLede, tmNote, tmPageShell, tmSecEn, tmSecHead, tmSecKicker, tmSecTitle, tmSection, tmWrap, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 
 const PRESETS = [
@@ -39,8 +40,9 @@ export interface ElongationStudyProps {
 }
 
 export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationStudyProps) {
+  const { t } = useTranslation();
   const pathMonths = earthPathMonths ?? animMonths;
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const [lunarDay, setLunarDay] = useState((87 / 360) * SYNODIC_MONTH);
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);
@@ -74,11 +76,11 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
   }, [playing, animSpan]);
 
   const idx = tithiIndexFromElongation(E);
-  const t = WHEEL_TITHIS[idx]!;
-  const paksha = pick(tithiPaksha(idx), tithiPakshaEn(idx));
+  const wheelTithi = WHEEL_TITHIS[idx]!;
+  const paksha = bilingualText(lang, tithiPaksha(idx), tithiPakshaEn(idx));
   const tno = tithiNum(idx);
   const illum = moonIllumination(E);
-  const tithiLabel = t.moon === "full" ? pick("पूर्णिमा", "Purnima") : t.moon === "new" ? pick("औंसी", "Aunsi") : pick(t.ne, t.en);
+  const tithiLabel = wheelTithi.moon === "full" ? t("learn.purnima") : wheelTithi.moon === "new" ? t("learn.aunsi") : bilingualText(lang, wheelTithi.ne, wheelTithi.en);
   const earthArc = earthOrbitDegFromLunarDay(lunarDay);
   const monthStart = Math.floor(lunarDay / SYNODIC_MONTH) * SYNODIC_MONTH;
 
@@ -97,7 +99,7 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
         <div className={edReadout}>
           {animMonths > 1 && (
             <div className={edRo}>
-              <span className={edRoK}>{pick("कुल दिन (२ चान्द्र मास)", "Total days (2 lunar months)")}</span>
+              <span className={edRoK}>{t("learn.total_days_2_lunar_months")}</span>
               <span className={edRoV({ mono: true })}>
                 {fmt(Math.round(lunarDay * 10) / 10)} / ~{fmt(Math.round(animSpan))}
               </span>
@@ -106,8 +108,8 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
           <div className={edRo}>
             <span className={edRoK}>
               {animMonths > 1
-                ? pick("चान्द्र महिना · दिन", "Lunar month · day")
-                : pick("चान्द्र महिनाको दिन", "Day of lunar month")}
+                ? t("learn.lunar_month_day")
+                : t("learn.day_of_lunar_month")}
             </span>
             <span className={edRoV({ amber: animMonths > 1 && lunarMonthNum === 2 })}>
               {animMonths > 1
@@ -116,25 +118,25 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
             </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("कोणीय दूरी", "Elongation")}</span>
+            <span className={edRoK}>{t("learn.elongation")}</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(E))}°</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("मास · पक्ष", "Month · Paksha")}</span>
-            <span className={edRoV()}>{pick("असार", "Ashadh")} {paksha}</span>
+            <span className={edRoK}>{t("learn.month_paksha")}</span>
+            <span className={edRoV()}>{t("learn.ashadh")} {paksha}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("तिथि", "Tithi")}</span>
+            <span className={edRoK}>{t("learn.tithi")}</span>
             <span className={edRoV({ amber: true })}>
               {tithiLabel} · {fmt(tno)}
             </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("चन्द्रकला", "Illumination")}</span>
+            <span className={edRoK}>{t("learn.illumination")}</span>
             <span className={edRoV({ mono: true })}>{fmt(illum)}%</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("पृथ्वी सार", "Earth arc")}</span>
+            <span className={edRoK}>{t("learn.earth_arc")}</span>
             <span className={edRoV({ mono: true })}>
               {fmt(Math.round(earthArc))}° / ~{fmt(Math.round(EARTH_ARC_SYNODIC * pathMonths))}°
             </span>
@@ -145,8 +147,8 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
             type="button"
             className={edPlayBtn}
             onClick={() => setPlaying((p) => !p)}
-            title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
-            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+            title={playing ? t("learn.pause") : t("learn.play")}
+            aria-label={playing ? t("learn.pause") : t("learn.play")}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
@@ -175,7 +177,7 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
                 setLunarDay(p.day);
               }}
             >
-              {pick(p.ne, p.en)}
+              {bilingualText(lang, p.ne, p.en)}
             </button>
           ))}
           {animMonths > 1 && (
@@ -187,7 +189,7 @@ export function ElongationStudy({ animMonths = 2, earthPathMonths }: ElongationS
                 setLunarDay(SYNODIC_MONTH);
               }}
             >
-              {pick("२-रो औंसी", "Month 2 Aaushi")}
+              {t("learn.month_2_aaushi")}
             </button>
           )}
         </div>

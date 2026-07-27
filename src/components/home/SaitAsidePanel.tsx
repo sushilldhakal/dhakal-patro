@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { fetchSaitMonthAll, saitMonthAllKey } from "@/lib/api";
 import { SAIT_CATEGORIES } from "@/lib/sait-data";
 import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroEmpty } from "@/lib/patro-classes";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { patroYearLinkSearch } from "@/lib/url-state";
@@ -29,7 +29,7 @@ type Props = {
  */
 export function SaitAsidePanel({ year, month, location, highlightDay }: Props) {
   const { t } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
 
   const saitQ = useQuery({
     queryKey: saitMonthAllKey(year, month),
@@ -40,7 +40,7 @@ export function SaitAsidePanel({ year, month, location, highlightDay }: Props) {
   });
 
   const cats = saitQ.data?.categories;
-  const monthName = pick(BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
+  const monthName = bilingualText(lang, BS_MONTHS_NE[month - 1], BS_MONTH_NAMES[month - 1]);
   const anyDates = cats ? Object.values(cats).some((d) => d.length > 0) : false;
 
   return (

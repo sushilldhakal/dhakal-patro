@@ -16,7 +16,7 @@ import {
 } from "@/lib/panchak/panchak-types";
 import { fetchPanchakYear, panchakKeys } from "@/lib/api";
 import { formatBsMonthDayPatro } from "@/lib/panchanga-format";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { isEnglishLocale } from "@/lib/avakahada-locale";
 import { patroNoteBox } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -100,9 +100,8 @@ function PanchakPeriodCard({
 export function PanchakPatro() {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { t, i18n } = useTranslation();
-  const { digits, pick } = useLocale();
-  const lang = i18n.language;
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
   const en = isEnglishLocale(lang);
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
 
@@ -159,10 +158,10 @@ export function PanchakPatro() {
       <p className={cn(patroNoteBox, "text-sm leading-relaxed")}>{t("panchak.intro")}</p>
 
       {query.isLoading && !query.data ? (
-        <p className="text-sm">{pick("लोड हुँदै…", "Loading…")}</p>
+        <p className="text-sm">{bilingualText(lang, "लोड हुँदै…", "Loading…")}</p>
       ) : query.isError ? (
         <p className="text-sm text-destructive">
-          {pick("पञ्चक विवरण लोड गर्न सकिएन।", "Could not load Panchak details.")}
+          {bilingualText(lang, "पञ्चक विवरण लोड गर्न सकिएन।", "Could not load Panchak details.")}
         </p>
       ) : !periods.length ? (
         <p className="text-sm">{t("panchak.no_data", { year: digits(browseYear) })}</p>

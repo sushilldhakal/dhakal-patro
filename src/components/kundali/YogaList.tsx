@@ -1,5 +1,6 @@
 import { Check, Info } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import type { KundaliYoga } from "@/lib/api";
 import {
   Table,
@@ -24,7 +25,8 @@ export type YogaListProps = {
  * ⓘ description of the rule used.
  */
 export function YogaList({ yogas }: YogaListProps) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const present = yogas.filter((y) => y.present);
 
   if (present.length === 0) return null;
@@ -33,21 +35,15 @@ export function YogaList({ yogas }: YogaListProps) {
     <Table>
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
-          <TableHead className={cn(th, "pl-3.5")}>{pick("योग", "Yoga")}</TableHead>
-          <TableHead className={th}>{pick("प्रकृति", "Nature")}</TableHead>
-          <TableHead className={cn(th, "pr-3.5")}>{pick("स्थिति", "Status")}</TableHead>
+          <TableHead className={cn(th, "pl-3.5")}>{t("kundali.yoga")}</TableHead>
+          <TableHead className={th}>{t("kundali.nature")}</TableHead>
+          <TableHead className={cn(th, "pr-3.5")}>{t("kundali.status")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {present.map((yoga, i) => {
-          const desc = pick(
-            yoga.descNe?.trim() ? yoga.descNe : yoga.descEn,
-            yoga.descEn,
-          );
-          const name = pick(
-            yoga.nameNe?.trim() ? yoga.nameNe : yoga.nameEn,
-            yoga.nameEn,
-          );
+          const desc = bilingualText(lang, yoga.descNe?.trim() ? yoga.descNe : yoga.descEn, yoga.descEn);
+          const name = bilingualText(lang, yoga.nameNe?.trim() ? yoga.nameNe : yoga.nameEn, yoga.nameEn);
           return (
             <TableRow
               key={yoga.key}
@@ -87,18 +83,18 @@ export function YogaList({ yogas }: YogaListProps) {
                   )}
                 >
                   {yoga.nature === "auspicious"
-                    ? pick("शुभ", "Auspicious")
+                    ? t("kundali.auspicious")
                     : yoga.nature === "mixed"
-                      ? pick("मिश्र", "Mixed")
+                      ? t("kundali.mixed")
                       : yoga.nature === "caution"
-                        ? pick("सावधानी", "Caution")
-                        : pick("अशुभ", "Inauspicious")}
+                        ? t("kundali.caution")
+                        : t("kundali.inauspicious")}
                 </span>
               </TableCell>
               <TableCell className={cn(td, "pr-3.5 whitespace-nowrap align-top")}>
                 <span className="inline-flex items-center gap-1 font-semibold text-foreground">
                   <Check className="size-3.5 text-secondary" aria-hidden />
-                  {pick("छ", "Present")}
+                  {t("kundali.present")}
                 </span>
               </TableCell>
             </TableRow>

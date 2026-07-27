@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import { Sunrise, Sunset } from "lucide-react";
 import type { CalendarEra } from "@/hooks/use-calendar-era";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   fetchYearSunTimes,
   sunYearKeys,
@@ -297,7 +297,7 @@ function SunTimesLegend({
   browseYear: number;
 }) {
   const { t } = useTranslation();
-  const { digits, pick } = useLocale();
+  const { lang, digits } = useLocale();
   return (
     <div
       className={cn(
@@ -323,11 +323,11 @@ function SunTimesLegend({
           {t("sun_times.col_sunset")}
         </span>
         <span className="inline-flex items-center gap-1 text-sm text-base">
-          <span className={patroAyanaNorth}>{pick("उ", "N")}</span>
+          <span className={patroAyanaNorth}>{bilingualText(lang, "उ", "N")}</span>
           {t("sun_times.north_ayana")}
         </span>
         <span className="inline-flex items-center gap-1 text-sm text-base">
-          <span className={patroAyanaSouth}>{pick("द", "S")}</span>
+          <span className={patroAyanaSouth}>{bilingualText(lang, "द", "S")}</span>
           {t("sun_times.south_ayana")}
         </span>
       </div>

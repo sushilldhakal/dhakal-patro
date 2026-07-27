@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { listProfiles, type Profile } from "@/lib/auth/client";
-import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { importWithRetry } from "@/lib/lazy-route";
 
@@ -23,7 +23,7 @@ export function SaitProfilePicker({
   selectedId: string | null;
   onSelect: (profile: Profile | null) => void;
 }) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -42,7 +42,7 @@ export function SaitProfilePicker({
   const label = (
     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
       <UserRound className="size-4 text-secondary" />
-      {pick("व्यक्तिगत मिति", "Personalise")}
+      {t("sait.personalise")}
     </span>
   );
 
@@ -55,7 +55,7 @@ export function SaitProfilePicker({
           onClick={() => setAuthOpen(true)}
           className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-surface-muted"
         >
-          {pick("साइन इन गरी आफ्नो प्रोफाइल छान्नुहोस्", "Sign in to pick your profile")}
+          {t("sait.sign_in_to_pick_your_profile")}
         </button>
         {authOpen ? (
           <Suspense fallback={null}>
@@ -71,10 +71,7 @@ export function SaitProfilePicker({
       <div className="flex flex-wrap items-center gap-2">
         {label}
         <span className="text-xs text-muted-foreground">
-          {pick(
-            "कुनै प्रोफाइल छैन — खातामा गई थप्नुहोस्।",
-            "No saved profiles — add one in your account.",
-          )}
+          {t("sait.no_saved_profiles_add_one_in_your_account")}
         </span>
       </div>
     );
@@ -97,8 +94,8 @@ export function SaitProfilePicker({
       >
         <option value="">
           {profiles === null
-            ? pick("लोड हुँदै…", "Loading…")
-            : pick("सामान्य (प्रोफाइल छैन)", "General (no profile)")}
+            ? t("sait.loading")
+            : t("sait.general_no_profile")}
         </option>
         {(profiles ?? []).map((p) => (
           <option key={p.id} value={p.id}>

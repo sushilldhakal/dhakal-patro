@@ -1,8 +1,9 @@
 import type { LagnaMatrixRow } from "@/lib/dainikKranti/month-patro-tables";
+import { useTranslation } from "react-i18next";
 import { RASHI_COLUMNS_NE, RASHI_COLUMNS_EN } from "@/lib/dainikKranti/month-patro-tables";
 import { rashiSymFromNumber } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   Table,
   TableBody,
@@ -31,18 +32,19 @@ type Props = {
 };
 
 export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: Props) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
   const table = (
       <Table>
         <TableHeader>
           <TableRow className={patroStickyHeadRow}>
-            <TableHead className={cn(th, patroStickyHeadCorner, "pl-3 text-left")}>{pick("गते", "Date")}</TableHead>
-            <TableHead className={cn(th, patroStickyHeadCell, "text-left")}>{pick("बा.", "Day")}</TableHead>
-            <TableHead className={cn(th, patroStickyHeadCell, "text-amber-600 dark:text-amber-400")}>{pick("सु.उ.", "Rise")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCorner, "pl-3 text-left")}>{t("dainik.date")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "text-left")}>{t("dainik.day")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "text-amber-600 dark:text-amber-400")}>{t("dainik.rise")}</TableHead>
             {RASHI_COLUMNS_NE.map((rne, i) => (
               <TableHead key={rne} className={cn(th, patroStickyHeadCell, "min-w-[3.75rem] text-center")}>
                 <span className="block text-secondary">{rashiSymFromNumber(i + 1)}</span>
-                <span>{pick(rne, RASHI_COLUMNS_EN[i])}</span>
+                <span>{bilingualText(lang, rne, RASHI_COLUMNS_EN[i])}</span>
               </TableHead>
             ))}
           </TableRow>
@@ -51,13 +53,13 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
           {loading ? (
             <TableRow>
               <TableCell colSpan={15} className="py-8 text-center text-sm">
-                {pick("लोड हुँदैछ…", "Loading…")}
+                {t("dainik.loading")}
               </TableCell>
             </TableRow>
           ) : empty || rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={15} className="py-8 text-center text-sm">
-                {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
+                {t("dainik.no_days_found_in_this_paksha")}
               </TableCell>
             </TableRow>
           ) : (
@@ -78,7 +80,7 @@ export function MonthLagnaMatrix({ rows, todayKey, loading, empty, embedded }: P
                     {digits(row.day)}
                   </TableCell>
                   <TableCell className={cn(td, "text-left")}>
-                    {pick(row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
+                    {bilingualText(lang, row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
                   </TableCell>
                   <TableCell className={cn(td, "text-amber-600 dark:text-amber-400")}>
                     {row.sunrise ? digits(row.sunrise) : "—"}

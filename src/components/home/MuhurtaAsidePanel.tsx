@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import type { ApiHoraSlot, NavataraRow, PanchangaDay, UdayaLagnaRow } from "@/lib/api";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   buildDayTimelineData,
   CHOGHADIYA_EN,
@@ -66,7 +66,7 @@ function NavataraAsideList({
   rows: NavataraRow[];
 }) {
   const { t } = useTranslation();
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
 
   if (!rows.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.unavailable")}</p>;
@@ -78,7 +78,7 @@ function NavataraAsideList({
         <p className="m-0 mb-2 text-sm font-semibold text-foreground">
           {t(moonRefKey)}:{" "}
           <strong className="text-accent">
-            {pick(moonLabel ?? moonLabelEn ?? "", moonLabelEn ?? moonLabel ?? "")}
+            {bilingualText(lang, moonLabel ?? moonLabelEn ?? "", moonLabelEn ?? moonLabel ?? "")}
           </strong>
         </p>
       ) : null}
@@ -88,7 +88,7 @@ function NavataraAsideList({
           return (
             <li key={row.name} className={patroNavataraRow(row.tone, isMoon)}>
               <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-                {pick(row.name, row.name_en ?? row.name)}
+                {bilingualText(lang, row.name, row.name_en ?? row.name)}
               </span>
               <span className="w-full text-center text-xs font-semibold leading-snug">
                 {formatNavataraTara(row.tara, lang)}
@@ -105,7 +105,7 @@ function NavataraAsideList({
 
 function ChoghadiyaList({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const timeline = buildDayTimelineData(p);
   const sunriseMin = parseTimeToMinutes(getSunrise(p));
 
@@ -124,12 +124,12 @@ function ChoghadiyaList({ p }: { p: PanchangaDay }) {
         return (
           <li key={`${seg.name}-${i}`} className={patroNavataraRow(tone === "good" ? "good" : tone === "bad" ? "bad" : "neutral")}>
             <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-              {pick(seg.name, CHOGHADIYA_EN[seg.name] ?? seg.name)}
+              {bilingualText(lang, seg.name, CHOGHADIYA_EN[seg.name] ?? seg.name)}
             </span>
             <span className="mono w-full text-center text-xs font-semibold leading-snug">
               {range}
               <span className="mx-1 opacity-55">/</span>
-              {pick(qualityNe, qualityEn)}
+              {bilingualText(lang, qualityNe, qualityEn)}
             </span>
           </li>
         );
@@ -156,7 +156,7 @@ function HoraList({ p }: { p: PanchangaDay }) {
 }
 
 function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const start = formatClockNepali(slot.start_local_time_short) ?? slot.start_local_time_short;
   const end = formatClockNepali(slot.end_local_time_short) ?? slot.end_local_time_short;
   const tone = slot.tone === "bad" ? "bad" : "good";
@@ -164,7 +164,7 @@ function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
   return (
     <li className={patroNavataraRow(tone)}>
       <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-        {pick(
+        {bilingualText(lang, 
           slot.planet_ne,
           GRAHA_NAME[slot.planet as GrahaKey]?.en ?? slot.planet_en ?? slot.planet ?? slot.planet_ne,
         )}
@@ -172,7 +172,7 @@ function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
       <span className="mono w-full text-center text-xs font-semibold leading-snug">
         {start} – {end}
         <span className="mx-1 opacity-55">/</span>
-        {pick(slot.quality_ne, slot.tone === "bad" ? "Inauspicious" : "Auspicious")}
+        {bilingualText(lang, slot.quality_ne, slot.tone === "bad" ? "Inauspicious" : "Auspicious")}
       </span>
     </li>
   );
@@ -180,14 +180,14 @@ function HoraSlot({ slot }: { slot: ApiHoraSlot }) {
 
 function PushkaraList({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const rows = getUdayaLagna(p);
 
   if (!rows?.length) {
     return <p className={patroEmpty}>{t("muhurta_aside.pushkara_unavailable")}</p>;
   }
 
-  const pushkaraLabel = pick("पुष्कर", "Pushkara");
+  const pushkaraLabel = bilingualText(lang, "पुष्कर", "Pushkara");
 
   return (
     <ul className="m-0 grid list-none grid-cols-3 gap-1 p-0">
@@ -199,7 +199,7 @@ function PushkaraList({ p }: { p: PanchangaDay }) {
 }
 
 function PushkaraSlot({ row, pushkaraLabel }: { row: UdayaLagnaRow; pushkaraLabel: string }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const hits = row.pushkara_navamsha ?? [];
   const times = hits
     .map((hit) => formatClockNepali(hit.local_time_short ?? hit.local_time) ?? hit.local_time_short)
@@ -215,7 +215,7 @@ function PushkaraSlot({ row, pushkaraLabel }: { row: UdayaLagnaRow; pushkaraLabe
   return (
     <li className={patroNavataraRow(hasPushkara ? "good" : "neutral")}>
       <span className="w-full text-center text-xs font-bold leading-tight text-foreground">
-        {pick(row.name_ne ?? row.name, row.name ?? row.name_ne)}
+        {bilingualText(lang, row.name_ne ?? row.name, row.name ?? row.name_ne)}
       </span>
       <span className="mono w-full text-center text-xs font-semibold leading-snug">
         {hasPushkara ? times : range}

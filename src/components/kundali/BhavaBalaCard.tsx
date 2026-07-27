@@ -1,4 +1,5 @@
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
 import type { BhavaBalaData, BhavaBalaHouse } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import {
@@ -48,19 +49,20 @@ export function BhavaBalaCard({ data }: { data: BhavaBalaData }) {
 }
 
 export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
 
   const houseLabel = (house: number) =>
-    pick(`भाव ${digits(house)}`, `House ${house}`);
+    bilingualText(lang, `भाव ${digits(house)}`, `House ${house}`);
 
   const lordLabel = (key: GrahaKey) =>
-    pick(GRAHA_NAME[key].ne, GRAHA_NAME[key].en);
+    bilingualText(lang, GRAHA_NAME[key].ne, GRAHA_NAME[key].en);
 
   const houseSummary = (h: BhavaBalaHouse) => (
     <>
       <p className="text-lg font-bold text-foreground">{houseLabel(h.house)}</p>
       <p className="text-xs mt-0.5">
-        {pick("स्वामी", "Lord")} {lordLabel(h.lordKey as GrahaKey)}
+        {t("kundali.lord")} {lordLabel(h.lordKey as GrahaKey)}
         <span className="mx-1">·</span>
         {digits(h.percent.toFixed(1))}%
       </p>
@@ -71,21 +73,18 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wide mb-1">
-          {pick("भाव बल — भाव शक्ति (विरुप)", "Bhava Bala — House Strength (Virupas)")}
+          {t("kundali.bhava_bala_house_strength_virupas")}
         </h3>
         <p className="text-xs">
-          {pick(
-            `भावाधिपति (स्वामीको षड्बल) + भाव दिशा + भाव दृष्टि। समपूर्ण राशि भाव; ${digits(data.referenceVirupas)} विरुप (७ रूप) = १००%।`,
-            `Bhavadhipati (lord's Shadbala) + Bhava Disha + Bhava Drishti. Whole-sign houses; ${data.referenceVirupas} virupas (7 rupas) = 100%.`,
-          )}
+          {bilingualText(lang, `भावाधिपति (स्वामीको षड्बल) + भाव दिशा + भाव दृष्टि। समपूर्ण राशि भाव; ${digits(data.referenceVirupas)} विरुप (७ रूप) = १००%।`, `Bhavadhipati (lord's Shadbala) + Bhava Disha + Bhava Drishti. Whole-sign houses; ${data.referenceVirupas} virupas (7 rupas) = 100%.`)}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <GlanceTile label={pick("सबैभन्दा बलियो भाव", "Strongest house")}>
+        <GlanceTile label={t("kundali.strongest_house")}>
           {houseSummary(data.strongest)}
         </GlanceTile>
-        <GlanceTile label={pick("सबैभन्दा कमजोर भाव", "Weakest house")}>
+        <GlanceTile label={t("kundali.weakest_house")}>
           {houseSummary(data.weakest)}
         </GlanceTile>
       </div>
@@ -94,19 +93,19 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className={cn(th, "pl-3.5")}>{pick("भाव", "House")}</TableHead>
-              <TableHead className={cn(th, "text-right")}>{pick("स्वामी", "Lord")}</TableHead>
+              <TableHead className={cn(th, "pl-3.5")}>{t("kundali.house")}</TableHead>
+              <TableHead className={cn(th, "text-right")}>{t("kundali.lord")}</TableHead>
               <TableHead className={cn(th, "text-right")}>
-                {pick("भावाधिपति", "Bhavadhipati")}
+                {t("kundali.bhavadhipati")}
               </TableHead>
-              <TableHead className={cn(th, "text-right")}>{pick("दिशा", "Disha")}</TableHead>
-              <TableHead className={cn(th, "text-right")}>{pick("दृष्टि", "Drishti")}</TableHead>
+              <TableHead className={cn(th, "text-right")}>{t("kundali.disha")}</TableHead>
+              <TableHead className={cn(th, "text-right")}>{t("kundali.drishti")}</TableHead>
               <TableHead className={cn(th, "text-right")}>
-                {pick("कुल पिण्ड", "Total Pinda")}
+                {t("kundali.total_pinda")}
               </TableHead>
-              <TableHead className={cn(th, "text-right")}>{pick("रूप", "Rupas")}</TableHead>
+              <TableHead className={cn(th, "text-right")}>{t("kundali.rupas")}</TableHead>
               <TableHead className={cn(th, "text-right")}>
-                {pick("भाव (%)", "Bhava (%)")}
+                {t("kundali.bhava")}
               </TableHead>
             </TableRow>
           </TableHeader>

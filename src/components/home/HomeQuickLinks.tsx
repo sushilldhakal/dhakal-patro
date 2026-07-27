@@ -19,7 +19,7 @@ import { currentPatroMonthLinkSearch, currentPatroYearLinkSearch, patroRouteLink
 import { defaultPanchakPatroYear } from "@/lib/panchak/panchak-patro-data";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 
 const QUICK_LINKS = [
@@ -159,7 +159,7 @@ export function HomeQuickLinks({
   className?: string;
 }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const era = useCalendarEra();
 
   return (
@@ -169,7 +169,7 @@ export function HomeQuickLinks({
         className,
       )}
     >
-      <LinkCategory title={pick("पात्रो तथा मिति", "Patro & dates")}>
+      <LinkCategory title={bilingualText(lang, "पात्रो तथा मिति", "Patro & dates")}>
         {QUICK_LINKS.filter(({ group }) => group === "patro").map(({ to, labelKey, icon }) => (
           <QuickLinkCard
             key={to}
@@ -184,7 +184,7 @@ export function HomeQuickLinks({
         <RituQuickLink location={location} />
       </LinkCategory>
 
-      <LinkCategory title={pick("ज्योतिष तथा मुहूर्त", "Jyotish & moment")}>
+      <LinkCategory title={bilingualText(lang, "ज्योतिष तथा मुहूर्त", "Jyotish & moment")}>
         {QUICK_LINKS.filter(({ group }) => group === "jyotish").map(({ to, labelKey, icon }) => (
           <QuickLinkCard
             key={to}

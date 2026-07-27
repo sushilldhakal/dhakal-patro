@@ -44,6 +44,7 @@ export function Account() {
   }, [authLoading, user, navigate]);
 
   async function onDelete(id: string) {
+  const { t } = useTranslation();
     if (!confirm(t("account_page.delete_confirm"))) return;
     await deleteProfile(id);
     reloadProfiles();

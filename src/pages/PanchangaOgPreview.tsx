@@ -6,7 +6,7 @@ import { searchToLocation } from "@/lib/url-state";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
 import { resolveTimeZone } from "@/lib/zoned-time";
 import { useRouteLoading } from "@/lib/route-loading";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
 import {
   formatTimeShort,
@@ -80,7 +80,7 @@ function isFullMode(): boolean {
 }
 
 export function PanchangaOgPreview() {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const search = routeApi.useSearch();
   const location = searchToLocation(search) ?? KATHMANDU;
   const date = search.date ? parseAdStr(search.date) : new Date();
@@ -147,10 +147,10 @@ export function PanchangaOgPreview() {
     ("place" in search && search.place) || location.label || p?.location?.name || "Kathmandu";
 
   const bs = adToBS(date);
-  const bsLine = `${pick(BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1])} ${digits(bs.day)}, ${digits(bs.year)}`;
+  const bsLine = `${bilingualText(lang, BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1])} ${digits(bs.day)}, ${digits(bs.year)}`;
   const adLine = `${digits(date.getDate())} ${AD_MONTHS_NE[date.getMonth()]} ${digits(date.getFullYear())}`;
   const weekday = p
-    ? pick(getVaaraNe(p, p.weekday) ?? "", getVaaraEn(p, p.weekday) ?? "")
+    ? bilingualText(lang, getVaaraNe(p, p.weekday) ?? "", getVaaraEn(p, p.weekday) ?? "")
     : "";
 
   const timeline = (
@@ -249,27 +249,27 @@ export function PanchangaOgPreview() {
 }
 
 function SummaryPanel({ p }: { p: PanchangaDay | undefined }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
 
   const angaRow = (key: "tithi" | "nakshatra" | "yoga" | "karana") => {
     const a = anga(p, key);
     if (!a) return { value: "—", upto: "" };
-    const name = pick(a.name_ne ?? a.name ?? "—", a.name ?? a.name_ne ?? "—");
+    const name = bilingualText(lang, a.name_ne ?? a.name ?? "—", a.name ?? a.name_ne ?? "—");
     const end = formatTimeShort(a.end_local_time);
-    return { value: name, upto: end ? `${toNepaliDigits(end)} ${pick("सम्म", "until")}` : "" };
+    return { value: name, upto: end ? `${toNepaliDigits(end)} ${bilingualText(lang, "सम्म", "until")}` : "" };
   };
 
   const rows: { label: string; value: string; upto?: string }[] = [
-    { label: pick("तिथि", "Tithi"), ...angaRow("tithi") },
-    { label: pick("नक्षत्र", "Nakshatra"), ...angaRow("nakshatra") },
-    { label: pick("योग", "Yoga"), ...angaRow("yoga") },
-    { label: pick("करण", "Karana"), ...angaRow("karana") },
+    { label: bilingualText(lang, "तिथि", "Tithi"), ...angaRow("tithi") },
+    { label: bilingualText(lang, "नक्षत्र", "Nakshatra"), ...angaRow("nakshatra") },
+    { label: bilingualText(lang, "योग", "Yoga"), ...angaRow("yoga") },
+    { label: bilingualText(lang, "करण", "Karana"), ...angaRow("karana") },
     {
-      label: pick("सूर्योदय", "Sunrise"),
+      label: bilingualText(lang, "सूर्योदय", "Sunrise"),
       value: (p && getSunriseDisplay(p)) || "—",
     },
     {
-      label: pick("सूर्यास्त", "Sunset"),
+      label: bilingualText(lang, "सूर्यास्त", "Sunset"),
       value: (p && getSunsetDisplay(p)) || "—",
     },
   ];

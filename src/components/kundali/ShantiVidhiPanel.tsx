@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { ShadbalaResponse, VimshottariResponse } from "@/lib/api";
 import { NAVAGRAHA_SHANTI, getGrahaShanti } from "@/lib/shanti/navagraha-shanti";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 
 const th = "whitespace-nowrap text-xs font-semibold";
 
@@ -80,7 +80,7 @@ function RecommendationCard({
   detailNe?: string;
   onSelect: (key: string) => void;
 }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const graha = grahaKey ? getGrahaShanti(grahaKey) : undefined;
   return (
     <div className="rounded-xl border border-border bg-card/40 p-4">
@@ -88,7 +88,7 @@ function RecommendationCard({
       {graha ? (
         <>
           <div className="mt-1 flex items-center gap-2">
-            <span className="text-lg font-bold text-foreground">{pick(graha.nameNe, graha.nameEn)}</span>
+            <span className="text-lg font-bold text-foreground">{bilingualText(lang, graha.nameNe, graha.nameEn)}</span>
           </div>
           {detailNe ? <p className="mt-0.5 text-xs">{detailNe}</p> : null}
           <button
@@ -96,7 +96,7 @@ function RecommendationCard({
             onClick={() => onSelect(graha.key)}
             className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-secondary bg-secondary/10 px-3 py-1.5 text-sm text-base text-secondary transition-colors hover:bg-secondary/20"
           >
-            <ArrowDownToLine className="h-3.5 w-3.5" /> {pick(`${graha.nameNe} शान्ति हेर्नुहोस्`, `View ${graha.nameEn} shanti`)}
+            <ArrowDownToLine className="h-3.5 w-3.5" /> {bilingualText(lang, `${graha.nameNe} शान्ति हेर्नुहोस्`, `View ${graha.nameEn} shanti`)}
           </button>
         </>
       ) : (
@@ -120,7 +120,7 @@ export function ShantiVidhiPanel({
   shadbala?: ShadbalaResponse;
   isError?: boolean;
 }) {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const [selectedKey, setSelectedKey] = useState("saturn");
   const [nowMs] = useState(() => Date.now());
   const detailRef = useRef<HTMLDivElement>(null);
@@ -152,7 +152,7 @@ export function ShantiVidhiPanel({
       {/* recommendations from this chart */}
       {isError ? (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-          {pick(
+          {bilingualText(lang, 
             "गणना ल्याउन सकिएन। मिति/समय/स्थान जाँचेर पुनः प्रयास गर्नुहोस्।",
             "Could not load the calculation. Check date/time/place and try again.",
           )}
@@ -160,16 +160,16 @@ export function ShantiVidhiPanel({
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           <RecommendationCard
-            heading={pick("वर्तमान महादशा (विंशोत्तरी)", "Current Mahadasha (Vimshottari)")}
+            heading={bilingualText(lang, "वर्तमान महादशा (विंशोत्तरी)", "Current Mahadasha (Vimshottari)")}
             grahaKey={currentDasha.key}
             detailNe={
               currentDasha.period
-                ? pick(
+                ? bilingualText(lang, 
                     `${currentDasha.period.lord_ne} महादशा चलिरहेको — यसको शान्ति उपयुक्त।`,
                     `${currentDasha.period.lord} Mahadasha is running — its shanti is suitable.`,
                   )
                 : vimshottari?.mahadasha_lord_ne
-                  ? pick(
+                  ? bilingualText(lang, 
                       `${vimshottari.mahadasha_lord_ne} महादशा (जन्मकालीन)।`,
                       `${vimshottari.mahadasha_lord ?? vimshottari.mahadasha_lord_ne} Mahadasha (at birth).`,
                     )
@@ -178,11 +178,11 @@ export function ShantiVidhiPanel({
             onSelect={selectAndScroll}
           />
           <RecommendationCard
-            heading={pick("सबैभन्दा बलहीन ग्रह (षड्बल)", "Weakest planet (Shadbala)")}
+            heading={bilingualText(lang, "सबैभन्दा बलहीन ग्रह (षड्बल)", "Weakest planet (Shadbala)")}
             grahaKey={weakestKey}
             detailNe={
               weakest
-                ? pick(
+                ? bilingualText(lang, 
                     `${weakest.name_ne}: बल ${(weakest.ratio * 100).toFixed(0)}% (${SHADBALA_STATUS_NE[weakest.status] ?? weakest.status}) — बल बढाउन शान्ति गर्नुहोस्।`,
                     `${weakest.name ?? weakest.name_ne}: strength ${(weakest.ratio * 100).toFixed(0)}% (${weakest.status}) — do shanti to strengthen it.`,
                   )
@@ -193,7 +193,7 @@ export function ShantiVidhiPanel({
         </div>
       )}
       <p className="text-sm leading-relaxed">
-        {pick(
+        {bilingualText(lang, 
           "गणना जन्म समयको ग्रहस्थिति (विंशोत्तरी महादशा) र ग्रह बल (षड्बल) मा आधारित छ। यो सामान्य मार्गदर्शन हो — विधिवत् उपायका लागि योग्य ज्योतिषीसँग परामर्श गर्नुहोस्।",
           "The calculation is based on the birth-time planetary positions (Vimshottari mahadasha) and planetary strength (Shadbala). This is general guidance — consult a qualified astrologer for formal remedies.",
         )}
@@ -215,7 +215,7 @@ export function ShantiVidhiPanel({
                   : "border-border bg-card/30 text-foreground hover:bg-muted",
               )}
             >
-              <span className="text-xs font-semibold">{pick(g.nameNe, g.nameEn)}</span>
+              <span className="text-xs font-semibold">{bilingualText(lang, g.nameNe, g.nameEn)}</span>
             </button>
           );
         })}
@@ -233,16 +233,16 @@ export function ShantiVidhiPanel({
             aria-hidden
           />
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-foreground">{pick(`${graha.nameNe} शान्ति`, `${graha.nameEn} Shanti`)}</h2>
-            <p className="text-xs">{pick(graha.nameEn, graha.nameNe)}</p>
+            <h2 className="text-lg font-bold text-foreground">{bilingualText(lang, `${graha.nameNe} शान्ति`, `${graha.nameEn} Shanti`)}</h2>
+            <p className="text-xs">{bilingualText(lang, graha.nameEn, graha.nameNe)}</p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1">
-              <CalendarDays className="h-3.5 w-3.5" /> {pick(graha.vaaraNe, graha.vaaraEn)}
+              <CalendarDays className="h-3.5 w-3.5" /> {bilingualText(lang, graha.vaaraNe, graha.vaaraEn)}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1">
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: graha.colorHex }} />
-              {pick(graha.colorNe, graha.colorEn)}
+              {bilingualText(lang, graha.colorNe, graha.colorEn)}
             </span>
           </div>
         </header>
@@ -250,11 +250,10 @@ export function ShantiVidhiPanel({
         <div className="space-y-5 p-5">
           {/* mantra + japa */}
           <div className="rounded-xl border border-border bg-muted/30 p-4">
-            <div className="mb-1 text-sm text-base uppercase tracking-wide">{pick("बीज मन्त्र", "Beeja Mantra")}</div>
+            <div className="mb-1 text-sm text-base uppercase tracking-wide">{bilingualText(lang, "बीज मन्त्र", "Beeja Mantra")}</div>
             <p className="text-lg font-semibold leading-relaxed text-foreground">{graha.beejMantra}</p>
             <p className="mt-1.5 text-sm">
-              {pick(
-                <>जप संख्या: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> पटक</>,
+              {bilingualNode(lang, <>जप संख्या: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> पटक</>,
                 <>Japa count: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> times</>,
               )}
             </p>
@@ -262,19 +261,19 @@ export function ShantiVidhiPanel({
 
           {/* tiles */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <InfoTile icon={<TreePine className="h-4 w-4" />} label={pick("समिधा (हवन काठ)", "Samidha (homa wood)")} value={pick(graha.samidhaNe, graha.samidhaEn)} />
-            <InfoTile icon={<Gem className="h-4 w-4" />} label={pick("रत्न", "Gem")} value={pick(graha.gemNe, graha.gemEn)} />
-            <InfoTile icon={<Sparkles className="h-4 w-4" />} label={pick("धातु", "Metal")} value={pick(graha.metalNe, graha.metalEn)} />
-            <InfoTile icon={<Flame className="h-4 w-4" />} label={pick("अधिदेवता", "Deity")} value={pick(graha.adhidevataNe, graha.adhidevataEn)} />
+            <InfoTile icon={<TreePine className="h-4 w-4" />} label={bilingualText(lang, "समिधा (हवन काठ)", "Samidha (homa wood)")} value={bilingualText(lang, graha.samidhaNe, graha.samidhaEn)} />
+            <InfoTile icon={<Gem className="h-4 w-4" />} label={bilingualText(lang, "रत्न", "Gem")} value={bilingualText(lang, graha.gemNe, graha.gemEn)} />
+            <InfoTile icon={<Sparkles className="h-4 w-4" />} label={bilingualText(lang, "धातु", "Metal")} value={bilingualText(lang, graha.metalNe, graha.metalEn)} />
+            <InfoTile icon={<Flame className="h-4 w-4" />} label={bilingualText(lang, "अधिदेवता", "Deity")} value={bilingualText(lang, graha.adhidevataNe, graha.adhidevataEn)} />
           </div>
 
           {/* daan */}
           <div>
             <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <HandCoins className="h-4 w-4 text-secondary" /> {pick("दान सामग्री", "Donation items")}
+              <HandCoins className="h-4 w-4 text-secondary" /> {bilingualText(lang, "दान सामग्री", "Donation items")}
             </div>
             <div className="flex flex-wrap gap-2">
-              {(pick(graha.daan, graha.daanEn)).map((item, idx) => (
+              {(lang === "en" ? graha.daanEn ?? graha.daan : graha.daan).map((item, idx) => (
                 <span key={`${item}-${idx}`} className="rounded-full border border-border bg-card/40 px-3 py-1 text-sm text-foreground">
                   {item}
                 </span>
@@ -283,26 +282,26 @@ export function ShantiVidhiPanel({
           </div>
 
           <p className="rounded-lg border border-border bg-card/30 p-3 text-sm leading-relaxed">
-            <span className="font-semibold text-foreground">{pick("उपयोग:", "Use:")}</span> {pick(graha.remedyNe, graha.remedyEn)}
+            <span className="font-semibold text-foreground">{bilingualText(lang, "उपयोग:", "Use:")}</span> {bilingualText(lang, graha.remedyNe, graha.remedyEn)}
           </p>
         </div>
       </section>
 
       {/* full reference table */}
       <div>
-        <h3 className="mb-3 text-base font-bold text-foreground">{pick("नवग्रह शान्ति तालिका", "Navagraha Shanti table")}</h3>
+        <h3 className="mb-3 text-base font-bold text-foreground">{bilingualText(lang, "नवग्रह शान्ति तालिका", "Navagraha Shanti table")}</h3>
         <div className="overflow-x-auto rounded-xl border border-border">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted hover:bg-muted">
-                <TableHead className={th}>{pick("ग्रह", "Planet")}</TableHead>
-                <TableHead className={th}>{pick("बार", "Day")}</TableHead>
-                <TableHead className={th}>{pick("बीज मन्त्र", "Beeja mantra")}</TableHead>
-                <TableHead className={th}>{pick("जप", "Japa")}</TableHead>
-                <TableHead className={th}>{pick("समिधा", "Samidha")}</TableHead>
-                <TableHead className={th}>{pick("रत्न", "Gem")}</TableHead>
-                <TableHead className={th}>{pick("धातु", "Metal")}</TableHead>
-                <TableHead className={th}>{pick("दान", "Daan")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "ग्रह", "Planet")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "बार", "Day")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "बीज मन्त्र", "Beeja mantra")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "जप", "Japa")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "समिधा", "Samidha")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "रत्न", "Gem")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "धातु", "Metal")}</TableHead>
+                <TableHead className={th}>{bilingualText(lang, "दान", "Daan")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -313,16 +312,16 @@ export function ShantiVidhiPanel({
                   onClick={() => setSelectedKey(g.key)}
                 >
                   <TableCell className="whitespace-nowrap font-semibold text-foreground">
-                    {pick(g.nameNe, g.nameEn)}
+                    {bilingualText(lang, g.nameNe, g.nameEn)}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">{pick(g.vaaraNe, g.vaaraEn)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{bilingualText(lang, g.vaaraNe, g.vaaraEn)}</TableCell>
                   <TableCell className="whitespace-nowrap">{g.beejMantra}</TableCell>
                   <TableCell className="whitespace-nowrap">{digits(g.japa)}</TableCell>
-                  <TableCell className="whitespace-nowrap">{pick(g.samidhaNe, g.samidhaEn)}</TableCell>
-                  <TableCell className="whitespace-nowrap">{pick(g.gemNe, g.gemEn)}</TableCell>
-                  <TableCell className="whitespace-nowrap">{pick(g.metalNe, g.metalEn)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{bilingualText(lang, g.samidhaNe, g.samidhaEn)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{bilingualText(lang, g.gemNe, g.gemEn)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{bilingualText(lang, g.metalNe, g.metalEn)}</TableCell>
                   <TableCell className="max-w-56">
-                    <span className="text-xs">{pick(g.daan, g.daanEn).join(", ")}</span>
+                    <span className="text-xs">{bilingualText(lang, Array.isArray(g.daan) ? g.daan.join(", ") : g.daan, Array.isArray(g.daanEn) ? g.daanEn.join(", ") : g.daanEn)}</span>
                   </TableCell>
                 </TableRow>
               ))}
@@ -330,7 +329,7 @@ export function ShantiVidhiPanel({
           </Table>
         </div>
         <p className="mt-2 text-sm leading-relaxed">
-          {pick(
+          {bilingualText(lang, 
             "सूचना: माथिका विवरण शास्त्रीय नवग्रह शान्ति परम्परामा आधारित छन्। रत्नधारण वा विधिवत् हवन गर्नुअघि योग्य ज्योतिषी/पुरोहितसँग परामर्श गर्नुहोस्।",
             "Note: the details above are based on the classical Navagraha Shanti tradition. Consult a qualified astrologer/priest before wearing gems or performing a formal homa.",
           )}

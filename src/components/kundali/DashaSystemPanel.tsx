@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import type { DashaSystem, DashaTreeResponse } from "@/lib/api";
 import { DashaTree } from "@/components/kundali/DashaTree";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,8 @@ export function DashaSystemPanel({
   yogini,
   timeZone,
 }: DashaSystemPanelProps) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const tabs: DashaTab[] = [
     {
       id: "vimshottari",
@@ -60,7 +62,7 @@ export function DashaSystemPanel({
       <div
         className="flex flex-wrap gap-1 rounded-xl border border-border/70 bg-muted/20 p-1"
         role="tablist"
-        aria-label={pick("दशा प्रणाली", "Dasha system")}
+        aria-label={t("kundali.dasha_system")}
       >
         {tabs.map((tab) => (
           <button
@@ -76,7 +78,7 @@ export function DashaSystemPanel({
                 : "hover:text-foreground",
             )}
           >
-            {pick(tab.labelNe, tab.labelEn)}
+            {bilingualText(lang, tab.labelNe, tab.labelEn)}
           </button>
         ))}
       </div>
@@ -85,13 +87,13 @@ export function DashaSystemPanel({
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-border/80 bg-card px-3.5 py-3 min-w-0 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_5%,transparent)]">
             <p className="text-sm font-semibold uppercase tracking-wider mb-1 truncate">
-              {pick("महादशा सुरु (जन्मकालीन)", "Mahadasha at birth")}
+              {t("kundali.mahadasha_at_birth")}
             </p>
             <p className="text-base font-bold text-foreground leading-tight">
               {dasha.mahadasha_lord_ne}
             </p>
             <p className="text-xs mt-0.5">
-              {pick(`बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
+              {bilingualText(lang, `बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
             </p>
           </div>
         </div>
@@ -107,7 +109,7 @@ export function DashaSystemPanel({
         />
       ) : (
         <p className="text-sm">
-          {pick("दशा विवरण उपलब्ध छैन।", "Dasha details are not available.")}
+          {t("kundali.dasha_details_are_not_available")}
         </p>
       )}
     </div>

@@ -18,7 +18,7 @@ import {
   type TimelineRowData,
 } from "./day-timeline-data";
 import { resolveRashiDisplay } from "@/lib/rashi-i18n";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import {
@@ -178,7 +178,7 @@ export function DayCycleToggle({
   /** "sm" = compact chart toolbar toggle; "md" = prominent page-level tab. */
   size?: "sm" | "md";
 }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const options: Array<{ value: DayCycleMode; ne: string; en: string }> = [
     { value: "Day-Night", ne: "अहोरात्र", en: "Day-Night" },
     { value: "Calendar Day", ne: "दिन-रात", en: "Calendar Day" },
@@ -195,14 +195,14 @@ export function DayCycleToggle({
       <button
         type="button"
         onClick={() => onModeChange?.(inactive.value)}
-        aria-label={pick(`${inactive.ne} मा बदल्नुहोस्`, `Switch to ${pick(inactive.ne, inactive.en)}`)}
+        aria-label={bilingualText(lang, `${inactive.ne} मा बदल्नुहोस्`, `Switch to ${bilingualText(lang, inactive.ne, inactive.en)}`)}
         className={cn(
           "inline-flex items-center justify-center border border-border bg-card font-semibold transition-colors hover:bg-surface-hover md:hidden",
           padCls,
           roundCls,
         )}
       >
-        {pick(inactive.ne, inactive.en)}
+        {bilingualText(lang, inactive.ne, inactive.en)}
       </button>
 
       {/* Desktop (≥768px): full segmented control. */}
@@ -212,7 +212,7 @@ export function DayCycleToggle({
           size === "md" && "rounded-lg",
         )}
         role="radiogroup"
-        aria-label={pick("दिन सीमा", "Day boundary")}
+        aria-label={bilingualText(lang, "दिन सीमा", "Day boundary")}
       >
         {options.map((o) => (
           <button
@@ -229,7 +229,7 @@ export function DayCycleToggle({
                 : "bg-card hover:bg-surface-hover",
             )}
           >
-            {pick(o.ne, o.en)}
+            {bilingualText(lang, o.ne, o.en)}
           </button>
         ))}
       </div>
@@ -246,25 +246,25 @@ function DayTimelineBand({
   onModeChange?: (mode: DayCycleMode) => void;
   showToggle?: boolean;
 }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const subtitle =
     mode === "Calendar Day"
-      ? pick("पूर्ण पञ्चाङ्ग रेखा · मध्यरातदेखि मध्यरात", "Full panchanga timeline · midnight to midnight")
-      : pick("पूर्ण पञ्चाङ्ग रेखा · सूर्योदयदेखि सूर्योदय", "Full panchanga timeline · sunrise to sunrise");
+      ? bilingualText(lang, "पूर्ण पञ्चाङ्ग रेखा · मध्यरातदेखि मध्यरात", "Full panchanga timeline · midnight to midnight")
+      : bilingualText(lang, "पूर्ण पञ्चाङ्ग रेखा · सूर्योदयदेखि सूर्योदय", "Full panchanga timeline · sunrise to sunrise");
   return (
     <div className={patroSecBand}>
-      <h2 className={cn("m-0", "text-sm", "font-bold")}>{pick("दिन-चक्र", "Day cycle")}</h2>
+      <h2 className={cn("m-0", "text-sm", "font-bold")}>{bilingualText(lang, "दिन-चक्र", "Day cycle")}</h2>
       <span className="text-sm text-base uppercase tracking-wider">
         {subtitle}
       </span>
       <span className="ml-auto inline-flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-base normal-case tracking-normal">
         <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-success/34 not-italic" />
-          {pick("शुभ", "Good")}
+          {bilingualText(lang, "शुभ", "Good")}
           <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-danger/30 not-italic" />
-          {pick("अशुभ", "Bad")}
+          {bilingualText(lang, "अशुभ", "Bad")}
           <i className="inline-block h-2.5 w-2.5 rounded-[3px] bg-secondary/22 not-italic" />
-          {pick("रात", "Night")}
+          {bilingualText(lang, "रात", "Night")}
         </span>
         {showToggle && <DayCycleToggle mode={mode} onModeChange={onModeChange} />}
       </span>
@@ -308,7 +308,7 @@ export function DayTimeline({
   civilLoading = false,
   chartOnly = false,
 }: Props) {
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
   const isCivil = mode === "Calendar Day";
   const data = useMemo(() => {
     if (isCivil) return civil ? buildCivilTimelineData(civil, p) : null;
@@ -418,7 +418,7 @@ export function DayTimeline({
   const tLabel = (g: number) => dualTimeAtGhati(g, data.sunriseMin).clock;
 
   let nowG: number | null = null;
-  let nowLabel = pick("अहिले", "Now");
+  let nowLabel = bilingualText(lang, "अहिले", "Now");
   const anchorAd = p?.panchanga_date_ad ?? p?.date_ad ?? dateAd;
   const chartMins = minutesOnVedicChart(p?.query_instant_local, anchorAd ?? "", needleClock);
 
@@ -437,7 +437,7 @@ export function DayTimeline({
       mins = minutesSinceMidnightInTimezone(now, timeZone);
     } else if (showNeedle && chartMins != null) {
       mins = chartMins % (24 * 60);
-      nowLabel = pick("छानिएको समय", "Chosen time");
+      nowLabel = bilingualText(lang, "छानिएको समय", "Chosen time");
     }
     if (mins != null) nowG = Math.max(0, Math.min(60, mins / 24));
   } else if (showNeedle && needleClock && chartMins != null) {
@@ -457,7 +457,7 @@ export function DayTimeline({
   } else if (showNeedle && chartMins != null) {
     nowG = needleGhatiOnVedicChart(chartMins, data.sunriseMin);
     if (nowG != null) {
-      nowLabel = pick("छानिएको समय", "Chosen time");
+      nowLabel = bilingualText(lang, "छानिएको समय", "Chosen time");
     }
   }
 
@@ -477,7 +477,7 @@ export function DayTimeline({
           className={cn("block", "h-auto", "w-full", "min-w-[768px]")}
           preserveAspectRatio="xMinYMid meet"
           role="img"
-          aria-label={pick("पूर्ण दिन पञ्चाङ्ग चित्र", "Full panchanga day chart")}
+          aria-label={bilingualText(lang, "पूर्ण दिन पञ्चाङ्ग चित्र", "Full panchanga day chart")}
         >
           {nightBands.map(([a, b], i) => (
             <rect
@@ -491,11 +491,11 @@ export function DayTimeline({
           ))}
 
           <text x={X0 - 10} y={isCivil ? 34 : 20} className={pgxScaleLabelDim()} textAnchor="end">
-            {pick("घण्टा", "Hour")}
+            {bilingualText(lang, "घण्टा", "Hour")}
           </text>
           {!isCivil && (
             <text x={X0 - 10} y={47} className={pgxScaleLabelDim(true)} textAnchor="end">
-              {pick("घडी", "Ghati")}
+              {bilingualText(lang, "घडी", "Ghati")}
             </text>
           )}
           <line x1={X0} y1={30} x2={X1} y2={30} className={pgTlAxis} />
@@ -571,7 +571,7 @@ export function DayTimeline({
                   });
                   const midX = clampX((x + x2) / 2, 26);
                   const narrow = w < 64;
-                  const segText = pick(s.ne, s.en);
+                  const segText = bilingualText(lang, s.ne, s.en);
                   const [mainName, paksha] = segText.includes(", ")
                     ? [segText.split(", ")[0]!, segText.split(", ").slice(1).join(", ")]
                     : [segText, ""];
@@ -609,7 +609,7 @@ export function DayTimeline({
                         rx={4}
                         className={segCls}
                       >
-                        <title>{`${pick(tr.ne, tr.en)}: ${s.detailNe ? pick(s.detailNe, s.detailEn ?? s.detailNe) : segText} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
+                        <title>{`${bilingualText(lang, tr.ne, tr.en)}: ${s.detailNe ? bilingualText(lang, s.detailNe, s.detailEn ?? s.detailNe) : segText} · ${tLabel(s.fromG)} – ${tLabel(s.toG)}`}</title>
                       </rect>
                       {tr.cls === "cho" || tr.cls === "hora" ? (
                         w > 20 && (
@@ -740,7 +740,7 @@ export function DayTimeline({
               className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-sm font-bold leading-none text-foreground [font-family:Mukta,sans-serif] sm:text-sm"
               style={{ top: `${((trackY(ti) + rowBandAt(ti) / 2) / H) * 100}%` }}
             >
-              {pick(tr.ne, tr.en ?? tr.ne)}
+              {bilingualText(lang, tr.ne, tr.en ?? tr.ne)}
             </span>
           ))}
         </div>
@@ -749,10 +749,10 @@ export function DayTimeline({
       {!chartOnly && data.ashubhaAll.length > 0 && (
         <PeriodCards
           tone="danger"
-          title={pick("अशुभ समय", "Inauspicious periods")}
+          title={bilingualText(lang, "अशुभ समय", "Inauspicious periods")}
           items={data.ashubhaAll.map((a, i) => ({
             n: digits(i + 1),
-            label: pick(a.detailNe, a.detailEn),
+            label: bilingualText(lang, a.detailNe, a.detailEn),
             time: `${tLabel(a.startG)} – ${tLabel(a.endG)}`,
           }))}
         />
@@ -761,10 +761,10 @@ export function DayTimeline({
       {!chartOnly && data.shubha.length > 0 && (
         <PeriodCards
           tone="success"
-          title={pick("शुभ समय", "Auspicious periods")}
+          title={bilingualText(lang, "शुभ समय", "Auspicious periods")}
           items={data.shubha.map((s, i) => ({
             n: digits(i + 1),
-            label: pick(s.name, s.nameEn),
+            label: bilingualText(lang, s.name, s.nameEn),
             time: `${tLabel(s.startG)} – ${tLabel(s.endG)}`,
           }))}
         />
@@ -773,7 +773,7 @@ export function DayTimeline({
       {!chartOnly && p && planets.length > 0 && (
         <div className={cn("flex flex-col gap-2.5 border-t border-border px-4 py-3 pb-3.5")}>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-bold leading-tight">{pick("ग्रह", "Planets")}</span>
+            <span className="text-sm font-bold leading-tight">{bilingualText(lang, "ग्रह", "Planets")}</span>
             <span className="min-w-0 text-sm leading-snug break-words [overflow-wrap:anywhere]">
               {getPlanetsAnchorLabel(p, lang)}
             </span>
@@ -798,7 +798,7 @@ export function DayTimeline({
                 isRetrograde,
                 isCombust,
               }) => {
-              const labelL = pick(label, labelEn);
+              const labelL = bilingualText(lang, label, labelEn);
               const isLagna = planetKey === "lagna";
               // English readers get the western sign (Leo), not the Sanskrit
               // romanization the API sends in `rashiEn` (Simha).
@@ -811,11 +811,11 @@ export function DayTimeline({
                 siderealLongitude != null
                   ? formatDegreeInRashi(siderealLongitude, rashiL)
                   : coords;
-              const nakName = pick(nakshatraNe, nakshatraEn ?? nakshatraNe);
+              const nakName = bilingualText(lang, nakshatraNe, nakshatraEn ?? nakshatraNe);
               const nakWithPada =
                 nakName && pada != null ? `${nakName} (${digits(pada)})` : nakName ?? undefined;
-              const lordL = pick(nakshatraLordNe, nakshatraLordEn ?? nakshatraLordNe);
-              const subLordL = pick(nakshatraSubLordNe, nakshatraSubLordEn ?? nakshatraSubLordNe);
+              const lordL = bilingualText(lang, nakshatraLordNe, nakshatraLordEn ?? nakshatraLordNe);
+              const subLordL = bilingualText(lang, nakshatraSubLordNe, nakshatraSubLordEn ?? nakshatraSubLordNe);
               const lordText = lordL
                 ? subLordL
                   ? `${lordL}/${subLordL}`
@@ -832,7 +832,7 @@ export function DayTimeline({
                   labelL,
                   coordText,
                   nakWithPada,
-                  lordText && `${pick("नक्षत्रेश / उप", "Lord / Sub")} ${lordText}`,
+                  lordText && `${bilingualText(lang, "नक्षत्रेश / उप", "Lord / Sub")} ${lordText}`,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -865,7 +865,7 @@ export function DayTimeline({
                       {lordText ? (
                         <span
                           className="min-w-0 break-words font-semibold text-secondary [overflow-wrap:anywhere]"
-                          title={pick("नक्षत्रेश / उप स्वामी", "Nakshatra lord / sub-lord")}
+                          title={bilingualText(lang, "नक्षत्रेश / उप स्वामी", "Nakshatra lord / sub-lord")}
                         >
                           {lordText}
                         </span>

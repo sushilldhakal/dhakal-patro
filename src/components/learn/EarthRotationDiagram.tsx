@@ -1,4 +1,5 @@
 import { EarthGlobeImage } from "./EarthGlobeImage";
+import { useTranslation } from "react-i18next";
 import { ssRotArrowHead, ssRotAxis, ssRotCurve, ssRotDir, ssRotGlow, ssRotLabel, ssRotPole } from "@/lib/diagram-classes";
 import { ssRotSvg } from "@/lib/learn-classes";
 import { useLocale } from "@/i18n/locale";
@@ -10,7 +11,8 @@ const cy = H / 2 + 8;
 const r = 124;
 
 export function EarthRotationDiagram() {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { digits } = useLocale();
   const fmt = (n: number) => digits(n);
 
   return (
@@ -22,10 +24,10 @@ export function EarthRotationDiagram() {
       </defs>
 
       <text x={72} y={cy - 4} className={ssRotDir} textAnchor="middle">
-        {pick("पश्चिम", "West")}
+        {t("learn.west")}
       </text>
       <text x={W - 72} y={cy - 4} className={ssRotDir} textAnchor="middle">
-        {pick("पूर्व", "East")}
+        {t("learn.east")}
       </text>
 
       <line x1={100} y1={cy} x2={W - 100} y2={cy} className={ssRotAxis} />
@@ -39,7 +41,7 @@ export function EarthRotationDiagram() {
         markerEnd="url(#ss-rot-arrow)"
       />
       <text x={cx} y={cy + 72} className={ssRotLabel} textAnchor="middle">
-        {pick("↻ पश्चिम → पूर्व", "↻ West → East")} · ~{fmt(24)} {pick("घण्टा", "hours")}
+        {t("learn.west_east")} · ~{fmt(24)} {t("learn.hours")}
       </text>
     </svg>
   );

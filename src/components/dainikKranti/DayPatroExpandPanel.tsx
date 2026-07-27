@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import {
   PATRO_PLANET_KEYS,
   PATRO_PLANET_NE,
@@ -10,7 +11,7 @@ import {
 } from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 const PLANET_EN: Record<string, string> = {
   sun: "Sun", moon: "Moon", mars: "Mars", mercury: "Mercury", jupiter: "Jupiter",
@@ -38,13 +39,14 @@ function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
-  const { lang, pick } = useLocale();
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const isEn = lang === "en";
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 py-2">
       {lagna ? (
         <div className="w-full min-w-0">
-          <SectionTitle>{pick("दैनिक लग्न आरम्भ (बजे)", "Daily lagna start")}</SectionTitle>
+          <SectionTitle>{t("dainik.daily_lagna_start")}</SectionTitle>
           <div className={LAGNA_GRID}>
             {RASHI_COLUMNS_NE.map((rne, i) => {
               const num = i + 1;
@@ -57,7 +59,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-1.5 py-1.5 text-center sm:px-2"
                 >
                   <div className="text-xs text-base leading-tight sm:text-sm">
-                    {pick(rne, RASHI_COLUMNS_EN[i])}
+                    {bilingualText(lang, rne, RASHI_COLUMNS_EN[i])}
                   </div>
                   <div
                     className={cn(
@@ -76,7 +78,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
 
       {graha ? (
         <div className="w-full min-w-0">
-          <SectionTitle>{pick("उदयकालिक ग्रहस्पष्ट (सूर्योदय)", "Planetary positions at sunrise")}</SectionTitle>
+          <SectionTitle>{t("dainik.planetary_positions_at_sunrise")}</SectionTitle>
           <div className={GRAHA_GRID}>
             {PATRO_PLANET_KEYS.map((key) => {
               const cell = graha.planets[key];
@@ -87,7 +89,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-2.5 py-2"
                 >
                   <div className="flex items-center gap-1 text-sm font-semibold text-foreground">
-                    {pick(PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
+                    {bilingualText(lang, PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
                     <GrahaStatusBadges
                       planetKey={key}
                       isRetrograde={cell.isRetrograde}
@@ -103,7 +105,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
             })}
             {graha.belaantar ? (
               <div className="min-w-0 rounded-md border border-amber-500/30 bg-amber-500/5 px-2.5 py-2 md:col-span-2 lg:col-span-4">
-                <div className="text-sm font-semibold text-foreground">{pick("बेलान्तर", "Belaantar")}</div>
+                <div className="text-sm font-semibold text-foreground">{t("dainik.belaantar")}</div>
                 <div className="mt-0.5 break-words font-mono text-xs text-amber-800 dark:text-amber-200 sm:text-sm">
                   {graha.belaantar}
                 </div>
@@ -117,7 +119,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
         <ul className="w-full min-w-0 space-y-1.5 text-sm">
           {notes.map((n) => (
             <li key={`${n.kind}-${n.text}`} className="break-words">
-              <span className="text-base text-foreground">{pick(n.text, n.textEn ?? n.text)}</span>
+              <span className="text-base text-foreground">{bilingualText(lang, n.text, n.textEn ?? n.text)}</span>
             </li>
           ))}
         </ul>

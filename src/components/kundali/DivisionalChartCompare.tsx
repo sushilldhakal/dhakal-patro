@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { D1Chart } from "@/components/kundali/D1Chart";
 import { GrahaStatusLegend } from "@/components/graha/GrahaStatusBadges";
 import { GrahaDetailsList } from "@/components/kundali/GrahaDetailsList";
@@ -72,7 +73,8 @@ function ChartSlot({
   anchorOptions: ChartAnchor[];
   vargaCharts: VargaCharts;
 }) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const varga = vargaOption(panel.division);
   const anchorLabel = CHART_ANCHOR_LABELS[panel.anchor];
   const hasAnchor = Boolean(vargaCharts.points[panel.anchor]);
@@ -88,7 +90,7 @@ function ChartSlot({
       >
         <label className="flex flex-col gap-1 min-w-[7.5rem] flex-1">
           <span className="text-sm font-semibold uppercase tracking-wider">
-            {pick("आधार", "Anchor")}
+            {t("kundali.anchor")}
           </span>
           <select
             className="h-9 rounded-lg border border-border bg-card px-2.5 text-sm text-base text-foreground"
@@ -101,7 +103,7 @@ function ChartSlot({
               const labels = CHART_ANCHOR_LABELS[anchor];
               return (
                 <option key={anchor} value={anchor}>
-                  {pick(labels.labelNe, labels.labelEn)}
+                  {bilingualText(lang, labels.labelNe, labels.labelEn)}
                 </option>
               );
             })}
@@ -109,7 +111,7 @@ function ChartSlot({
         </label>
         <label className="flex flex-col gap-1 min-w-[9rem] flex-1">
           <span className="text-sm font-semibold uppercase tracking-wider">
-            {pick("वर्ग", "Chart")}
+            {t("kundali.chart")}
           </span>
           <select
             className="h-9 rounded-lg border border-border bg-card px-2.5 text-sm text-base text-foreground"
@@ -120,7 +122,7 @@ function ChartSlot({
           >
             {VARGA_OPTIONS.map((opt) => (
               <option key={opt.division} value={opt.division}>
-                {opt.short} — {pick(opt.labelNe, opt.labelEn)}
+                {opt.short} — {bilingualText(lang, opt.labelNe, opt.labelEn)}
               </option>
             ))}
           </select>
@@ -130,11 +132,11 @@ function ChartSlot({
       <div className="rounded-2xl border border-border bg-card p-4 flex flex-col items-center gap-3 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
         <div className="text-center w-full border-b border-border/60 pb-2">
           <p className="text-sm font-bold text-foreground">
-            {pick(anchorLabel.labelNe, anchorLabel.labelEn)}
+            {bilingualText(lang, anchorLabel.labelNe, anchorLabel.labelEn)}
             <span className="font-normal mx-1.5">·</span>
             {varga.short}
             <span className="font-normal mx-1">—</span>
-            {pick(varga.labelNe, varga.labelEn)}
+            {bilingualText(lang, varga.labelNe, varga.labelEn)}
           </p>
         </div>
         {houses.length > 0 ? (
@@ -146,7 +148,7 @@ function ChartSlot({
           </>
         ) : (
           <p className="text-sm py-8">
-            {pick("चक्र बनाउन डाटा अपुग।", "Not enough data for this chart.")}
+            {t("kundali.not_enough_data_for_this_chart")}
           </p>
         )}
       </div>
@@ -165,7 +167,7 @@ function ChartSlot({
                     : "hover:text-foreground",
                 )}
               >
-                {pick("ग्रह", "Graha")}
+                {t("kundali.graha")}
               </button>
               <button
                 type="button"
@@ -177,11 +179,11 @@ function ChartSlot({
                     : "hover:text-foreground",
                 )}
               >
-                {pick("भाव", "Bhava")}
+                {t("kundali.bhava_19")}
               </button>
             </div>
             <p className="text-sm">
-              {pick(anchorLabel.labelNe, anchorLabel.labelEn)}
+              {bilingualText(lang, anchorLabel.labelNe, anchorLabel.labelEn)}
               <span className="mx-1">·</span>
               {varga.short}
             </p>

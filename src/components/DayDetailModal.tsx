@@ -31,7 +31,7 @@ import {
   getVaaraNe,
   relativeDayLabel,
 } from "@/lib/panchanga-format";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroAsideLink } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import { resolveRashiDisplay } from "@/lib/rashi-i18n";
@@ -58,13 +58,13 @@ function civilDaysFromToday(dateAd: string): number {
 }
 
 function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const labels = getDinVisheshLabels(p, day.festivals, lang);
   if (!labels.length) return null;
 
   return (
     <>
-      <h4 className={sectionTitle}>{pick("दिन विशेष", "Day highlights")}</h4>
+      <h4 className={sectionTitle}>{bilingualText(lang, "दिन विशेष", "Day highlights")}</h4>
       <ul className="m-0 list-none p-0">
         {labels.map((name) => (
           <li key={name} className="border-b border-border py-2 text-sm text-base last:border-b-0">
@@ -77,13 +77,13 @@ function DinVisheshSection({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
 }
 
 function MuhurtaSection({ p }: { p: PanchangaDay }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const rows = getMuhurtaRows(p, lang);
   if (!rows.length) return null;
 
   return (
     <>
-      <h4 className={sectionTitle}>{pick("मुहूर्त", "Moment")}</h4>
+      <h4 className={sectionTitle}>{bilingualText(lang, "मुहूर्त", "Moment")}</h4>
       <div className="mb-4 overflow-hidden rounded-lg border border-border">
         {rows.map((row) => (
           <div
@@ -103,13 +103,13 @@ function MuhurtaSection({ p }: { p: PanchangaDay }) {
 }
 
 function PlanetsSection({ p }: { p: PanchangaDay }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const planets = getPlanetRows(p);
   if (!planets.length) return null;
 
   return (
     <>
-      <h4 className={sectionTitle}>{pick("उदयकालिक स्पष्टग्रह", "Planets at sunrise")}</h4>
+      <h4 className={sectionTitle}>{bilingualText(lang, "उदयकालिक स्पष्टग्रह", "Planets at sunrise")}</h4>
       <div className="grid grid-cols-2 gap-2">
         {planets.map(({ key, label, labelEn, rashiNe, rashiEn, coords, isRetrograde, isCombust }) => (
           <div
@@ -118,7 +118,7 @@ function PlanetsSection({ p }: { p: PanchangaDay }) {
           >
             <div className="flex flex-col gap-0.5">
               <span className="flex flex-wrap items-center gap-1.5">
-                {pick(label, labelEn)}
+                {bilingualText(lang, label, labelEn)}
                 <GrahaStatusBadges planetKey={key} isRetrograde={isRetrograde} isCombust={isCombust} />
               </span>
               {(rashiNe || rashiEn) && (
@@ -154,7 +154,7 @@ function PanchangaTable({ rows }: { rows: { label: string; value?: string | null
 }
 
 function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
-  const { lang, pick } = useLocale();
+  const { lang } = useLocale();
   const sunrise =
     getSunriseDisplay(p) ?? (day.sunrise ? formatClockNepali(day.sunrise) : undefined);
   const sunset =
@@ -170,7 +170,7 @@ function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
         <span className="inline-flex items-center gap-1.5">
           <Sunrise size={16} strokeWidth={1.8} />
           <span>
-            {pick("सूर्योदय", "Sunrise")} {sunrise}
+            {bilingualText(lang, "सूर्योदय", "Sunrise")} {sunrise}
           </span>
         </span>
       )}
@@ -178,7 +178,7 @@ function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
         <span className="inline-flex items-center gap-1.5">
           <Sunset size={16} strokeWidth={1.8} />
           <span>
-            {pick("सूर्यास्त", "Sunset")} {sunset}
+            {bilingualText(lang, "सूर्यास्त", "Sunset")} {sunset}
           </span>
         </span>
       )}
@@ -186,7 +186,7 @@ function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
         <span className="inline-flex items-center gap-1.5">
           <Moon size={16} strokeWidth={1.8} />
           <span>
-            {pick("चन्द्रोदय", "Moonrise")} {moonrise}
+            {bilingualText(lang, "चन्द्रोदय", "Moonrise")} {moonrise}
           </span>
         </span>
       )}
@@ -194,7 +194,7 @@ function CelestialTimesRow({ p, day }: { p: PanchangaDay; day: CalendarDay }) {
         <span className="inline-flex items-center gap-1.5">
           <Moon size={16} strokeWidth={1.8} />
           <span>
-            {pick("चन्द्रास्त", "Moonset")} {moonset}
+            {bilingualText(lang, "चन्द्रास्त", "Moonset")} {moonset}
           </span>
         </span>
       )}
@@ -211,7 +211,7 @@ function DaySummary({
   day: CalendarDay;
   onFullPanchanga: () => void;
 }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const detail = getPanchangaDetail(p);
   const tithi = (detail?.tithi ?? p.tithi) as Parameters<typeof formatAngaTransition>[0];
   const nakshatra = (detail?.nakshatra ?? p.nakshatra) as Parameters<typeof formatAngaTransition>[0];
@@ -223,9 +223,9 @@ function DaySummary({
     enFallback?: string,
   ) =>
     formatAngaTransition(anga as Parameters<typeof formatAngaTransition>[0], lang) ??
-    pick(anga?.name_ne ?? neFallback, anga?.name ?? anga?.name_ne ?? enFallback ?? neFallback);
-  const vaara = pick(getVaaraNe(p, day.weekday_ne ?? day.weekday), day.weekday_en ?? day.weekday);
-  const pakshaDisplay = formatPakshaLabel(p, lang) ?? pick(formatPakshaNepaliDisplay(p), p.paksha?.label_en ?? formatPakshaNepaliDisplay(p));
+    bilingualText(lang, anga?.name_ne ?? neFallback, anga?.name ?? anga?.name_ne ?? enFallback ?? neFallback);
+  const vaara = bilingualText(lang, getVaaraNe(p, day.weekday_ne ?? day.weekday), day.weekday_en ?? day.weekday);
+  const pakshaDisplay = formatPakshaLabel(p, lang) ?? bilingualText(lang, formatPakshaNepaliDisplay(p), p.paksha?.label_en ?? formatPakshaNepaliDisplay(p));
   const nsSubtitle = formatNepalSambatSubtitle(p);
 
   return (
@@ -235,15 +235,15 @@ function DaySummary({
 
       <CelestialTimesRow p={p} day={day} />
 
-      <h4 className={sectionTitle}>{pick("पञ्चाङ्ग", "Panchanga")}</h4>
+      <h4 className={sectionTitle}>{bilingualText(lang, "पञ्चाङ्ग", "Panchanga")}</h4>
       <PanchangaTable
         rows={[
-          { label: pick("पक्ष", "Paksha"), value: pakshaDisplay },
-          { label: pick("वार", "Day"), value: vaara },
-          { label: pick("तिथि", "Tithi"), value: angaVal(tithi, day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne) },
-          { label: pick("नक्षत्र", "Nakshatra"), value: angaVal(nakshatra, day.nakshatra_ne ?? day.nakshatra, day.nakshatra ?? day.nakshatra_ne) },
-          { label: pick("योग", "Yog"), value: angaVal(yoga, day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) },
-          { label: pick("करण", "Karan"), value: angaVal(karana, day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) },
+          { label: bilingualText(lang, "पक्ष", "Paksha"), value: pakshaDisplay },
+          { label: bilingualText(lang, "वार", "Day"), value: vaara },
+          { label: bilingualText(lang, "तिथि", "Tithi"), value: angaVal(tithi, day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne) },
+          { label: bilingualText(lang, "नक्षत्र", "Nakshatra"), value: angaVal(nakshatra, day.nakshatra_ne ?? day.nakshatra, day.nakshatra ?? day.nakshatra_ne) },
+          { label: bilingualText(lang, "योग", "Yog"), value: angaVal(yoga, day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) },
+          { label: bilingualText(lang, "करण", "Karan"), value: angaVal(karana, day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) },
         ]}
       />
 
@@ -251,7 +251,7 @@ function DaySummary({
       <DinVisheshSection p={p} day={day} />
 
       <button type="button" className={cn(patroAsideLink, "mb-4 inline-block cursor-pointer border-none bg-transparent p-0 text-sm")} onClick={onFullPanchanga}>
-        {pick("पूर्ण पञ्चाङ्ग हेर्नुहोस् →", "See full panchanga →")}
+        {bilingualText(lang, "पूर्ण पञ्चाङ्ग हेर्नुहोस् →", "See full panchanga →")}
       </button>
     </>
   );
@@ -268,7 +268,7 @@ function PanchangaFull({
   bsYear: number;
   bsMonth: number;
 }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const detail = getPanchangaDetail(p);
   const tithi = (detail?.tithi ?? p.tithi) as Parameters<typeof formatAngaTransition>[0];
   const nakshatra = (detail?.nakshatra ?? p.nakshatra) as Parameters<typeof formatAngaTransition>[0];
@@ -276,16 +276,16 @@ function PanchangaFull({
   const karana = (detail?.karana ?? p.karana) as Parameters<typeof formatAngaTransition>[0];
   const angaVal = (anga: { name_ne?: string; name?: string } | null | undefined) =>
     formatAngaTransition(anga as Parameters<typeof formatAngaTransition>[0], lang) ??
-    pick(anga?.name_ne, anga?.name ?? anga?.name_ne);
-  const vaara = pick(getVaaraNe(p, day.weekday_ne ?? day.weekday), day.weekday_en ?? day.weekday);
-  const paksha = formatPakshaLabel(p, lang) ?? pick(
+    bilingualText(lang, anga?.name_ne, anga?.name ?? anga?.name_ne);
+  const vaara = bilingualText(lang, getVaaraNe(p, day.weekday_ne ?? day.weekday), day.weekday_en ?? day.weekday);
+  const paksha = formatPakshaLabel(p, lang) ?? bilingualText(lang, 
     formatPakshaNepaliDisplay(p) ??
       (detail?.paksha as { label_ne?: string } | undefined)?.label_ne ??
       p.paksha?.label_ne ??
       p.paksha_ne,
     p.paksha?.label_en ?? p.paksha?.label_ne ?? p.paksha_ne,
   );
-  const chandraNe = pick(
+  const chandraNe = bilingualText(lang, 
     (detail?.chandra_rashi as { name_ne?: string } | undefined)?.name_ne ??
       p.chandra_rashi?.name_ne ??
       (typeof p.chandra_rashi === "string" ? p.chandra_rashi : undefined),
@@ -293,8 +293,8 @@ function PanchangaFull({
       p.chandra_rashi?.name ??
       p.chandra_rashi?.name_ne,
   );
-  const ritu = pick(getRituDisplayNe(p), getRituDisplay(p, "en") ?? getRituDisplayNe(p));
-  const aayan = pick(
+  const ritu = bilingualText(lang, getRituDisplayNe(p), getRituDisplay(p, "en") ?? getRituDisplayNe(p));
+  const aayan = bilingualText(lang, 
     (detail?.aayan as { name_ne?: string } | undefined)?.name_ne ?? p.aayan?.name_ne ?? p.aayan?.name,
     p.aayan?.name ?? p.aayan?.name_ne,
   );
@@ -312,22 +312,22 @@ function PanchangaFull({
     <div>
       <div className="mb-4 grid grid-cols-2 gap-2.5">
         <div className={metaCard}>
-          <div className={metaLabel}>{pick("वि.सं.", "BS")}</div>
+          <div className={metaLabel}>{bilingualText(lang, "वि.सं.", "BS")}</div>
           <div className="text-sm font-semibold">{bsLine}</div>
         </div>
         <div className={metaCard}>
-          <div className={metaLabel}>{pick("इ.सन्", "AD")}</div>
+          <div className={metaLabel}>{bilingualText(lang, "इ.सन्", "AD")}</div>
           <div className="text-sm font-semibold">{formatAdShort(p, day.date_ad, lang)}</div>
         </div>
         {formatShakaYear(p) && (
           <div className={metaCard}>
-            <div className={metaLabel}>{pick("शक संवत्", "Shaka Samvat")}</div>
+            <div className={metaLabel}>{bilingualText(lang, "शक संवत्", "Shaka Samvat")}</div>
             <div className="text-sm font-semibold">{formatShakaYear(p)}</div>
           </div>
         )}
         {formatNepalSambatDisplay(p, lang) && (
           <div className={metaCard}>
-            <div className={metaLabel}>{pick("नेपाल संवत्", "Nepal Samvat")}</div>
+            <div className={metaLabel}>{bilingualText(lang, "नेपाल संवत्", "Nepal Samvat")}</div>
             <div className="text-sm font-semibold">{formatNepalSambatDisplay(p, lang)}</div>
           </div>
         )}
@@ -335,26 +335,26 @@ function PanchangaFull({
 
       <PanchangaTable
         rows={[
-          { label: pick("उत्तरायण", "Sun's course"), value: aayan },
-          { label: pick("ऋतु", "Season"), value: ritu },
-          { label: pick("वार", "Day"), value: vaara },
-          { label: pick("पक्ष", "Paksha"), value: paksha },
-          { label: pick("तिथि", "Tithi"), value: angaVal(tithi) },
-          { label: pick("नक्षत्र", "Nakshatra"), value: angaVal(nakshatra) },
-          { label: pick("योग", "Yoga"), value: angaVal(yoga) },
-          { label: pick("करण", "Karana"), value: angaVal(karana) },
-          { label: pick("चन्द्रराशि", "Moon sign"), value: chandraNe },
-          { label: pick("दिनमान", "Day length"), value: formatDinamaanShort(p) },
-          { label: pick("सूर्योदय", "Sunrise"), value: getSunriseDisplay(p) ?? formatClockNepali(day.sunrise) },
-          { label: pick("सूर्यास्त", "Sunset"), value: getSunsetDisplay(p) ?? formatClockNepali(day.sunset) },
-          { label: pick("चन्द्रोदय", "Moonrise"), value: getMoonriseDisplay(p, lang) },
-          { label: pick("चन्द्रास्त", "Moonset"), value: getMoonsetDisplay(p, lang) },
+          { label: bilingualText(lang, "उत्तरायण", "Sun's course"), value: aayan },
+          { label: bilingualText(lang, "ऋतु", "Season"), value: ritu },
+          { label: bilingualText(lang, "वार", "Day"), value: vaara },
+          { label: bilingualText(lang, "पक्ष", "Paksha"), value: paksha },
+          { label: bilingualText(lang, "तिथि", "Tithi"), value: angaVal(tithi) },
+          { label: bilingualText(lang, "नक्षत्र", "Nakshatra"), value: angaVal(nakshatra) },
+          { label: bilingualText(lang, "योग", "Yoga"), value: angaVal(yoga) },
+          { label: bilingualText(lang, "करण", "Karana"), value: angaVal(karana) },
+          { label: bilingualText(lang, "चन्द्रराशि", "Moon sign"), value: chandraNe },
+          { label: bilingualText(lang, "दिनमान", "Day length"), value: formatDinamaanShort(p) },
+          { label: bilingualText(lang, "सूर्योदय", "Sunrise"), value: getSunriseDisplay(p) ?? formatClockNepali(day.sunrise) },
+          { label: bilingualText(lang, "सूर्यास्त", "Sunset"), value: getSunsetDisplay(p) ?? formatClockNepali(day.sunset) },
+          { label: bilingualText(lang, "चन्द्रोदय", "Moonrise"), value: getMoonriseDisplay(p, lang) },
+          { label: bilingualText(lang, "चन्द्रास्त", "Moonset"), value: getMoonsetDisplay(p, lang) },
         ]}
       />
 
       {dinVishesh.length > 0 && (
         <p className="mb-4 text-sm text-base">
-          {pick("दिन विशेष", "Day highlights")} : {dinVishesh.join(" · ")}
+          {bilingualText(lang, "दिन विशेष", "Day highlights")} : {dinVishesh.join(" · ")}
         </p>
       )}
 
@@ -364,7 +364,7 @@ function PanchangaFull({
 }
 
 export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Props) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const [showPanchanga, setShowPanchanga] = useState(false);
   const dateAd = day?.date_ad ?? "";
   const [trackedDateAd, setTrackedDateAd] = useState(dateAd);
@@ -411,13 +411,13 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
                     onClick={() => setShowPanchanga(false)}
                   >
                     <ChevronLeft size={16} strokeWidth={1.8} />
-                    {pick("फर्कनुहोस्", "Back")}
+                    {bilingualText(lang, "फर्कनुहोस्", "Back")}
                   </button>
-                  <Dialog.Title className="m-0 text-lg font-bold">{pick("पञ्चाङ्ग", "Panchanga")}</Dialog.Title>
+                  <Dialog.Title className="m-0 text-lg font-bold">{bilingualText(lang, "पञ्चाङ्ग", "Panchanga")}</Dialog.Title>
                 </div>
                 <Dialog.Close
                   className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card hover:bg-surface-inset hover:text-foreground"
-                  aria-label={pick("बन्द", "Close")}
+                  aria-label={bilingualText(lang, "बन्द", "Close")}
                 >
                   <X size={16} strokeWidth={1.8} />
                 </Dialog.Close>
@@ -450,7 +450,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
                 </div>
                 <Dialog.Close
                   className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card hover:bg-surface-inset hover:text-foreground"
-                  aria-label={pick("बन्द", "Close")}
+                  aria-label={bilingualText(lang, "बन्द", "Close")}
                 >
                   <X size={16} strokeWidth={1.8} />
                 </Dialog.Close>
@@ -469,7 +469,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
 
             {q.isError && (
               <p className="text-sm text-danger">
-                {pick("दिन विवरण लोड गर्न सकिएन।", "Failed to load day details.")}
+                {bilingualText(lang, "दिन विवरण लोड गर्न सकिएन।", "Failed to load day details.")}
               </p>
             )}
 

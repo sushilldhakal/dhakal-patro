@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { CalendarDay } from "@/lib/api";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { getSecondaryCellDate } from "@/lib/local-calendar";
 import { cn } from "@/lib/utils";
@@ -36,11 +36,11 @@ function FestivalListDialog({
   festivals: string[];
 }) {
   const { t } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
 
   if (!day) return null;
 
-  const weekday = pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
+  const weekday = bilingualText(lang, day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
   const adDate = new Date(day.date_ad + "T12:00:00").toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -96,7 +96,7 @@ export function BsCalendarGrid({
   primaryDate: primaryDateProp = "bs",
 }: Props) {
   const { t } = useTranslation();
-  const { lang, pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const calendarEra = useCalendarEra();
   const primaryDate =
     primaryDateProp === "ad" || calendarEra === "ad" || lang === "en" ? "ad" : "bs";
@@ -158,7 +158,7 @@ export function BsCalendarGrid({
           const mainFest = festivals[0];
           const leftFest = festivals[1];
           const rightFest = festivals[2];
-          const tithi = pick(day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne);
+          const tithi = bilingualText(lang, day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne);
           const extraFestCount = festivals.length > 2 ? festivals.length - 2 : 0;
           const adDayNum = fmtAdDay(day.date_ad);
           const primaryDayNum = primaryDate === "ad" ? adDayNum : day.day;

@@ -395,7 +395,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
     [activeFocus, allRows],
   );
 
-  const pick = useCallback((focus: HubFocus) => {
+  const selectFocus = useCallback((focus: HubFocus) => {
     setSelected((s) =>
       s?.index === focus.index && s?.ring === focus.ring && s?.padaIndex === focus.padaIndex
         ? null
@@ -442,7 +442,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
           className={avWheelHit}
           onMouseEnter={() => setHover({ index: row.index, ring: "nakshatra" })}
           onMouseLeave={() => setHover(null)}
-          onClick={() => pick({ index: row.index, ring: "nakshatra" })}
+          onClick={() => selectFocus({ index: row.index, ring: "nakshatra" })}
         />,
       );
 
@@ -470,7 +470,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
             className={avWheelHit}
             onMouseEnter={() => setHover(ringFocus)}
             onMouseLeave={() => setHover(null)}
-            onClick={() => pick(ringFocus)}
+            onClick={() => selectFocus(ringFocus)}
           />,
         );
         labels.push(
@@ -500,7 +500,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
     });
 
     return { segs, hits, labels };
-  }, [activeFocus, allRows, attrRings, hasFilter, highlightSet, lang, pick, setHover]);
+  }, [activeFocus, allRows, attrRings, hasFilter, highlightSet, lang, selectFocus, setHover]);
 
   const padaSegs = useMemo(() => {
     const step = 360 / 108;
@@ -525,7 +525,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
               })}
               onMouseEnter={() => setHover(padaFocus)}
               onMouseLeave={() => setHover(null)}
-              onClick={() => pick(padaFocus)}
+              onClick={() => selectFocus(padaFocus)}
             />
             <RadialText deg={mid} r={239} className={avWheelPadaAkshar} size={7.5}>
               {akshara}
@@ -534,7 +534,7 @@ export function AvakahadaWheel({ highlighted }: Props) {
         );
       }),
     );
-  }, [activeFocus, hasFilter, highlightSet, pick, setHover]);
+  }, [activeFocus, hasFilter, highlightSet, selectFocus, setHover]);
 
   const ringGuides = useMemo(
     () =>

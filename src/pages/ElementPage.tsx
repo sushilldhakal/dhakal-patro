@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { GrahaBanner, ElementDescription } from "@/components/graha/GrahaPageParts";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
 import { useElementPageUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { cn } from "@/lib/utils";
@@ -119,14 +119,14 @@ function SpanBoundary({
 }
 
 function SpanList({ spans, timeZone }: { spans: ElementSpan[]; timeZone?: string }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {spans.map((s, i) => (
         <div key={`${s.name}-${i}`} className={cn(patroCard, "flex flex-col gap-2 p-3")}>
           <div className="flex items-baseline justify-between gap-2">
-            <span className="text-base font-bold text-foreground">{pick(s.name_ne, s.name)}</span>
+            <span className="text-base font-bold text-foreground">{bilingualText(lang, s.name_ne, s.name)}</span>
             {s.paksha ? (
               <span className="text-xs text-base">
                 {s.paksha === "shukla" ? t("common.paksha_shukla") : t("common.paksha_krishna")}
@@ -238,7 +238,7 @@ function TableView({
   sunrise?: string;
   elementId?: string;
 }) {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const { t } = useTranslation();
   const sunriseMin = parseHHMM(sunrise);
 
@@ -246,7 +246,7 @@ function TableView({
   if (data && typeof data === "object" && Array.isArray((data as AnyRow).rows)) {
     const obj = data as AnyRow;
     const rows = obj.rows as AnyRow[];
-    const anchor = pick(
+    const anchor = bilingualText(lang, 
       String(obj.moon_label ?? obj.label_ne ?? ""),
       String(obj.moon_label_en ?? obj.label_en ?? ""),
     );
@@ -266,10 +266,10 @@ function TableView({
                 key={i}
                 className={cn("flex items-center justify-between rounded-lg px-3 py-1.5 text-sm", toneClass(good, bad))}
               >
-                <span className="font-semibold">{pick(String(r.name ?? ""), String(r.name_en ?? r.name ?? ""))}</span>
+                <span className="font-semibold">{bilingualText(lang, String(r.name ?? ""), String(r.name_en ?? r.name ?? ""))}</span>
                 <span className="text-sm opacity-90">
-                  {pick(String(r.tara ?? ""), String(r.tara ?? ""))}
-                  {r.quality ? ` · ${pick(String(r.quality), String(r.quality))}` : ""}
+                  {bilingualText(lang, String(r.tara ?? ""), String(r.tara ?? ""))}
+                  {r.quality ? ` · ${bilingualText(lang, String(r.quality), String(r.quality))}` : ""}
                 </span>
               </div>
             );
@@ -291,7 +291,7 @@ function TableView({
     return (
       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((it, i) => {
-          const label = pick(
+          const label = bilingualText(lang, 
             String(it.name_ne ?? it.planet_ne ?? it.lagna_ne ?? it.name ?? it.lagna ?? "—"),
             String(it.name ?? it.planet_en ?? it.lagna ?? it.name_ne ?? "—"),
           );
@@ -339,7 +339,7 @@ function NavataraBalamElementView({
   p: PanchangaDay;
   clock?: string;
 }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const { t } = useTranslation();
   const isChandra = elementId === "chandrabala";
   const cards = isChandra ? getChandraBalamCards(p) : getTaraBalamCards(p);
@@ -353,8 +353,8 @@ function NavataraBalamElementView({
 
   const formatName = isChandra
     ? (card: ReturnType<typeof getChandraBalamCards>[number]) =>
-        formatRashiDisplay(card.name, card.nameEn, lang) ?? pick(card.name, card.nameEn ?? card.name)
-    : (card: ReturnType<typeof getTaraBalamCards>[number]) => pick(card.name, card.nameEn ?? card.name);
+        formatRashiDisplay(card.name, card.nameEn, lang) ?? bilingualText(lang, card.name, card.nameEn ?? card.name)
+    : (card: ReturnType<typeof getTaraBalamCards>[number]) => bilingualText(lang, card.name, card.nameEn ?? card.name);
 
   if (!cards.length) {
     return <p className="text-sm">{t("common.no_data")}</p>;

@@ -3,7 +3,7 @@ import { Link, getRouteApi, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CalendarHeart, Info } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
@@ -38,7 +38,7 @@ export function SaitPage() {
   const { category } = useParams({ strict: false }) as { category?: string };
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
   const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
@@ -252,10 +252,7 @@ export function SaitPage() {
                         key={d}
                         title={
                           verdict
-                            ? pick(
-                                `${selectedProfile?.full_name ?? ""}: ${style!.ne}`,
-                                `${selectedProfile?.full_name ?? ""}: ${style!.en}`,
-                              )
+                            ? bilingualText(lang, `${selectedProfile?.full_name ?? ""}: ${style!.ne}`, `${selectedProfile?.full_name ?? ""}: ${style!.en}`)
                             : undefined
                         }
                         className={cn(

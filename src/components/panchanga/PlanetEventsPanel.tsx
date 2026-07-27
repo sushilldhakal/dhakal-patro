@@ -4,7 +4,7 @@ import { fetchGochar, gocharKeys, type LocationParams } from "@/lib/api";
 import { formatClockNepali, toWesternRashi } from "@/lib/panchanga-format";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { resolveRashiDisplay } from "@/lib/rashi-i18n";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroCard } from "@/lib/patro-classes";
 
 const GRAHA_ORDER = [
@@ -43,7 +43,7 @@ interface Props {
 }
 
 export function PlanetEventsPanel({ dateAd, location }: Props) {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const refDate = useMemo(() => new Date(`${dateAd}T12:00:00`), [dateAd]);
 
   const { data, isLoading, isError } = useQuery({
@@ -80,22 +80,22 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
   return (
     <div className={patroCard + " p-3.5 px-4"}>
       <div className="mb-2 flex flex-wrap items-baseline gap-2">
-        <h2 className="m-0 text-base font-bold">{pick("आगामी ग्रह-गोचर", "Planetary events")}</h2>
+        <h2 className="m-0 text-base font-bold">{bilingualText(lang, "आगामी ग्रह-गोचर", "Planetary events")}</h2>
       </div>
 
       {isLoading && (
-        <div className="px-4 py-6 text-sm">{pick("लोड हुँदै…", "Loading…")}</div>
+        <div className="px-4 py-6 text-sm">{bilingualText(lang, "लोड हुँदै…", "Loading…")}</div>
       )}
 
       {isError && (
         <div className="px-4 py-6 text-sm">
-          {pick("ग्रह-गोचर लोड गर्न सकिएन।", "Could not load planetary events.")}
+          {bilingualText(lang, "ग्रह-गोचर लोड गर्न सकिएन।", "Could not load planetary events.")}
         </div>
       )}
 
       {!isLoading && !isError && events.length === 0 && (
         <div className="px-4 py-6 text-sm">
-          {pick("कुनै आगामी गोचर छैन।", "No upcoming transits.")}
+          {bilingualText(lang, "कुनै आगामी गोचर छैन।", "No upcoming transits.")}
         </div>
       )}
 
@@ -107,15 +107,15 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
               className="flex items-center gap-2.5 border-b border-border py-2 last:border-b-0"
             >
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-sm font-semibold">{pick(e.ne, e.en)}</span>
+                <span className="text-sm font-semibold">{bilingualText(lang, e.ne, e.en)}</span>
                 <span className="text-sm font-semibold">
                   <span className="font-mono">{e.time}</span>
                 </span>
               </span>
               <span className="whitespace-nowrap font-mono text-sm font-semibold">
                 {e.rel <= 0
-                  ? pick("आज", "Today")
-                  : pick(`${digits(e.rel)} दिन`, `${digits(e.rel)}d`)}
+                  ? bilingualText(lang, "आज", "Today")
+                  : bilingualText(lang, `${digits(e.rel)} दिन`, `${digits(e.rel)}d`)}
               </span>
             </div>
           ))}

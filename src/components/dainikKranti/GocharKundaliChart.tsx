@@ -1,4 +1,5 @@
 import type { GocharGraha } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 import {
   buildPlanetsByRashi,
   formatGocharBsLabel,
@@ -12,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import { GrahaStatusLegend, GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 type GrahaRow = GocharGraha & { key: string };
 
@@ -37,7 +38,8 @@ export function GocharKundaliChart({
   loading,
   className,
 }: Props) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const planetsByRashi = buildPlanetsByRashi(grahas);
   const dateLabel = formatGocharBsLabel(dateBs, dateAd);
   const rashiListNe = getRashiList("ne");
@@ -45,13 +47,13 @@ export function GocharKundaliChart({
   return (
     <div className={cn("rounded-xl border border-border p-4", className)}>
       <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-        <Sparkles className="h-4 w-4 text-secondary" /> {pick("गोचर कुण्डली", "Transit Chart")}
+        <Sparkles className="h-4 w-4 text-secondary" /> {t("dainik.transit_chart")}
       </h3>
 
       <div className="mb-3 space-y-2">
         <div className="rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5">
           <p className="font-mono text-base text-base leading-relaxed text-foreground">
-            {papanshaLine || pick("पापाशाः—", "Papashah —")}
+            {papanshaLine || t("dainik.papashah")}
           </p>
         </div>
         {gapanshaLine ? (
@@ -64,15 +66,15 @@ export function GocharKundaliChart({
       </div>
 
       {loading ? (
-        <p className="py-8 text-center text-sm">{pick("लोड हुँदैछ…", "Loading…")}</p>
+        <p className="py-8 text-center text-sm">{t("dainik.loading")}</p>
       ) : grahas.length === 0 ? (
-        <p className="py-8 text-center text-sm">{pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
+        <p className="py-8 text-center text-sm">{t("dainik.no_details_available")}</p>
       ) : (
         <svg
           viewBox="0 0 300 300"
           className="mx-auto h-auto w-full max-w-[300px] text-foreground"
           role="img"
-          aria-label={pick("गोचर कुण्डली", "Transit chart")}
+          aria-label={t("dainik.transit_chart_19")}
         >
           <rect
             x="0"
@@ -142,7 +144,7 @@ export function GocharKundaliChart({
       ) : null}
 
       {dateLabel ? (
-        <p className="mt-2 text-center text-sm">{pick(`${dateLabel} को स्थिति`, `Position on ${dateLabel}`)}</p>
+        <p className="mt-2 text-center text-sm">{bilingualText(lang, `${dateLabel} को स्थिति`, `Position on ${dateLabel}`)}</p>
       ) : null}
     </div>
   );

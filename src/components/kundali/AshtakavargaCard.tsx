@@ -1,4 +1,5 @@
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
 import type {
   AshtakavargaData,
   AshtakavargaSignRow,
@@ -46,11 +47,12 @@ function AshtakavargaMatrix({
   rows: AshtakavargaSignRow[];
   showSarvashtaka?: boolean;
 }) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
 
   const targetHead = (t: (typeof ASHTAKAVARGA_TARGETS)[number]) => {
     const label = ASHTAKAVARGA_TARGET_LABEL[t];
-    return pick(label.shortNe, label.shortEn);
+    return bilingualText(lang, label.shortNe, label.shortEn);
   };
 
   return (
@@ -61,7 +63,7 @@ function AshtakavargaMatrix({
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
               <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3 min-w-[5.5rem]")}>
-                {pick("राशि", "Rashi")}
+                {t("kundali.rashi")}
               </TableHead>
               {ASHTAKAVARGA_TARGETS.map((t) => (
                 <TableHead key={t} className={cn(th, "text-right min-w-[2.75rem]")}>
@@ -70,7 +72,7 @@ function AshtakavargaMatrix({
               ))}
               {showSarvashtaka && (
                 <TableHead className={cn(th, "text-right min-w-[3rem]")}>
-                  {pick("सर्व*", "Sarv*")}
+                  {t("kundali.sarv")}
                 </TableHead>
               )}
             </TableRow>
@@ -79,7 +81,7 @@ function AshtakavargaMatrix({
             {rows.map((row) => (
               <TableRow key={row.rashi}>
                 <TableCell className={cn(td, "sticky left-0 z-10 bg-card pl-3 font-semibold text-foreground")}>
-                  {pick(row.rashiNe, row.rashiEn)}
+                  {bilingualText(lang, row.rashiNe, row.rashiEn)}
                 </TableCell>
                 {ASHTAKAVARGA_TARGETS.map((t) => (
                   <TableCell key={t} className={cn(td, num)}>
@@ -95,7 +97,7 @@ function AshtakavargaMatrix({
             ))}
             <TableRow className="bg-muted/30 font-semibold">
               <TableCell className={cn(td, "sticky left-0 z-10 bg-muted/30 pl-3")}>
-                {pick("*सर्वाष्टक", "*Sarvashtaka")}
+                {t("kundali.sarvashtaka")}
               </TableCell>
               {ASHTAKAVARGA_TARGETS.map((t) => (
                 <TableCell key={t} className={cn(td, num)}>
@@ -116,7 +118,8 @@ function AshtakavargaMatrix({
 }
 
 function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
 
   const metricRows: {
     key: keyof Pick<ShodhyaPindaRow, "rashiPinda" | "grahaPinda" | "shodhyaPinda">;
@@ -131,7 +134,7 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
   return (
     <div>
       <h4 className="text-sm font-semibold text-foreground mb-2">
-        {pick("शोध्य पिण्ड", "Shodhya Pinda")}
+        {t("kundali.shodhya_pinda")}
       </h4>
       <div className="rounded-xl border border-border overflow-x-auto">
         <Table>
@@ -142,7 +145,7 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
                 const label = ASHTAKAVARGA_TARGET_LABEL[t];
                 return (
                   <TableHead key={t} className={cn(th, "text-right min-w-[2.75rem]")}>
-                    {pick(label.shortNe, label.shortEn)}
+                    {bilingualText(lang, label.shortNe, label.shortEn)}
                   </TableHead>
                 );
               })}
@@ -155,7 +158,7 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
                 className={metric.key === "shodhyaPinda" ? "bg-muted/20 font-semibold" : undefined}
               >
                 <TableCell className={cn(td, "sticky left-0 z-10 bg-card pl-3 font-semibold")}>
-                  {pick(metric.ne, metric.en)}
+                  {bilingualText(lang, metric.ne, metric.en)}
                 </TableCell>
                 {ASHTAKAVARGA_TARGETS.map((t) => {
                   const row = rows.find((r) => r.target === t);
@@ -176,29 +179,26 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
 }
 
 export function AshtakavargaCard({ data }: { data: AshtakavargaData }) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-8">
       <div>
         <h3 className="text-sm font-semibold uppercase tracking-wide mb-1">
-          {pick("अष्टकवर्ग", "Ashtakavarga")}
+          {t("kundali.ashtakavarga")}
         </h3>
         <p className="text-xs">
-          {pick(
-            "पाराशरी बिन्दु तालिका प्रति राशि। सर्व* ले सात ग्रहको योग जोड्छ (लग्न बाहेक)। शोध्य चартमा त्रिकोण र एकाधिपत्य शोधन लागू हुन्छ।",
-            "Parashari bindu tables per rashi. Sarv* sums the seven grahas (excludes Lagna). Reduced charts apply Trikona then Ekadhipatya Shodhana.",
-          )}
+          {t("kundali.parashari_bindu_tables_per_rashi_sarv_sums_the_seven_gr")}
         </p>
       </div>
 
       <AshtakavargaMatrix
-        title={pick("अष्टकवर्ग", "Ashtakavarga")}
+        title={t("kundali.ashtakavarga")}
         rows={data.raw}
       />
 
       <AshtakavargaMatrix
-        title={pick("शोध्य अष्टकवर्ग", "Reduced Ashtakavarga")}
+        title={t("kundali.reduced_ashtakavarga")}
         rows={data.reduced}
       />
 

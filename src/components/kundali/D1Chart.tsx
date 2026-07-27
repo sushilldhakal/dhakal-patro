@@ -1,4 +1,5 @@
 import type { BhavaHouse } from "@/lib/bhava";
+import { useTranslation } from "react-i18next";
 import {
   NI_HOUSE_POLYGONS,
   planetGridLayout,
@@ -7,7 +8,7 @@ import {
 } from "@/lib/kundali/north-indian-layout";
 import { cn } from "@/lib/utils";
 import { GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 
 const PLANET_ABBR_NE: Record<string, string> = {
@@ -34,7 +35,8 @@ interface Props {
 }
 
 export function D1Chart({ houses }: Props) {
-  const { pick, digits, lang } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
   const byHouse = new Map(houses.map((h) => [h.house, h]));
 
   return (
@@ -42,7 +44,7 @@ export function D1Chart({ houses }: Props) {
       viewBox="0 0 300 300"
       className="w-full h-auto max-w-[340px] mx-auto"
       role="img"
-      aria-label={pick("उत्तर भारतीय कुण्डली चक्र", "North Indian kundali chart")}
+      aria-label={t("kundali.north_indian_kundali_chart")}
     >
       <rect
         x="0"
@@ -100,10 +102,7 @@ export function D1Chart({ houses }: Props) {
                 const x = cx + (col - (itemsInRow - 1) / 2) * layout.colGap;
                 const y = cy + row * layout.rowGap;
                 const markSize = layout.fontSize * 0.5;
-                const abbr = pick(
-                  PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2),
-                  PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2),
-                );
+                const abbr = bilingualText(lang, PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2));
                 return (
                   <g key={planet.key}>
                     <text

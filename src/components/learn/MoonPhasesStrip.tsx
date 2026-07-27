@@ -6,7 +6,7 @@ import {
   ssPhaseNe,
   ssPhasesList,
 } from "@/lib/learn-classes";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 const PHASES = [
   { ne: "औंसी", en: "Aaushi", E: 0 },
@@ -21,7 +21,7 @@ const PHASES = [
 const R = 26;
 
 export function MoonPhasesStrip() {
-  const { lang, pick } = useLocale();
+  const { lang } = useLocale();
   return (
     <div>
       <ol className={ssPhasesList}>
@@ -32,7 +32,7 @@ export function MoonPhasesStrip() {
                 <MoonPhaseDisc elongation={p.E} r={R} uid={`ss-mp-${i}`} />
               </g>
             </svg>
-            <span className={ssPhaseNe}>{pick(p.ne, p.en)}</span>
+            <span className={ssPhaseNe}>{bilingualText(lang, p.ne, p.en)}</span>
             {lang === "ne" && <span className={ssPhaseEn}>{p.en}</span>}
           </li>
         ))}

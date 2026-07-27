@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Star, Sparkles, Moon, BookOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 type Tab = {
   to: string;
@@ -57,12 +57,12 @@ const TABS: Tab[] = [
  * sections without opening the drawer. Hidden at lg and up.
  */
 export function MobileBottomNav() {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <nav
-      aria-label={pick("मुख्य नेभिगेसन", "Primary navigation")}
+      aria-label={bilingualText(lang, "मुख्य नेभिगेसन", "Primary navigation")}
       className="fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pointer-events-none lg:hidden"
     >
       <div className="pointer-events-auto mx-auto flex max-w-lg items-stretch justify-around gap-0.5 rounded-2xl border border-border bg-background/90 p-1 shadow-[0_6px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md">
@@ -83,7 +83,7 @@ export function MobileBottomNav() {
               <Icon className="size-5 shrink-0" />
               {/* leading-normal + no overflow clip so Devanagari vowel marks
                   (above/below the baseline) aren't cut off top and bottom. */}
-              <span className="max-w-full whitespace-nowrap leading-normal">{pick(ne, en)}</span>
+              <span className="max-w-full whitespace-nowrap leading-normal">{bilingualText(lang, ne, en)}</span>
             </Link>
           );
         })}

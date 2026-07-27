@@ -20,7 +20,7 @@ import {
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsToAD, getCurrentBs } from "../lib/bs-calendar";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroAsideLink, patroAsideTab, patroHeroMonthOverlay, patroHeroMonthShell, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
 import { bsMonthArtUrl } from "@/lib/month-art";
@@ -90,7 +90,7 @@ function PanchangaAside({
   placement?: "sidebar" | "below";
 }) {
   const { t } = useTranslation();
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
 
   const contextDay =
@@ -104,16 +104,16 @@ function PanchangaAside({
 
   const isSelectedToday = selectedAdDate === todayAd;
 
-  const bsDisplay = pick(activeP?.display?.bs_ne, undefined) ?? activeP?.date_bs;
+  const bsDisplay = bilingualText(lang, activeP?.display?.bs_ne, undefined) ?? activeP?.date_bs;
   const adDisplay =
     lang === "en"
       ? (activeP?.display?.gregorian_en ?? fmtAdFull(selectedAdDate, lang))
       : fmtAdFull(selectedAdDate, lang);
-  const weekdayNe = pick(
+  const weekdayNe = bilingualText(lang, 
     activeP?.weekday ?? contextDay?.weekday_ne ?? contextDay?.weekday,
     contextDay?.weekday_en ?? activeP?.weekday ?? contextDay?.weekday,
   );
-  const tithi = pick(
+  const tithi = bilingualText(lang, 
     activeP?.tithi?.name_ne ?? activeP?.tithi?.name ?? contextDay?.tithi_ne ?? contextDay?.tithi,
     activeP?.tithi?.name ?? activeP?.tithi?.name_ne ?? contextDay?.tithi ?? contextDay?.tithi_ne,
   );
@@ -137,19 +137,19 @@ function PanchangaAside({
 
   const displayHeroDate = (() => {
     if (activeP?.bs_date && typeof activeP.bs_date === "object") {
-      const monthName = pick(BS_MONTHS_NE[activeP.bs_date.month - 1], BS_MONTH_NAMES[activeP.bs_date.month - 1]);
+      const monthName = bilingualText(lang, BS_MONTHS_NE[activeP.bs_date.month - 1], BS_MONTH_NAMES[activeP.bs_date.month - 1]);
       return `${monthName} ${digits(activeP.bs_date.day)}`;
     }
     if (contextDay) {
       const bs = adToBS(new Date(`${contextDay.date_ad}T12:00:00`));
-      const monthName = pick(BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1]);
+      const monthName = bilingualText(lang, BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1]);
       return `${monthName} ${digits(bs.day)}`;
     }
     if (activeP?.display?.bs_ne) return digits(activeP.display.bs_ne);
     if (activeP?.date_bs) return digits(activeP.date_bs);
     if (bsDisplay) return digits(bsDisplay);
     if (fallbackBs) {
-      const monthName = pick(BS_MONTHS_NE[fallbackBs.month - 1], BS_MONTH_NAMES[fallbackBs.month - 1]);
+      const monthName = bilingualText(lang, BS_MONTHS_NE[fallbackBs.month - 1], BS_MONTH_NAMES[fallbackBs.month - 1]);
       return `${monthName} ${digits(fallbackBs.day)}`;
     }
     return "—";
@@ -159,7 +159,7 @@ function PanchangaAside({
   // yearly festivals API uses `name_en`. Read all three or English mode falls
   // back to Devanagari.
   const topFest = activeP?.festivals?.[0];
-  const topFestName = pick(
+  const topFestName = bilingualText(lang, 
     topFest?.name_ne ?? topFest?.name_en ?? topFest?.name ?? contextDay?.festivals[0],
     topFest?.name_en ?? topFest?.name ?? topFest?.name_ne ?? contextDay?.festivals[0],
   );
@@ -169,7 +169,7 @@ function PanchangaAside({
       ? activeP.bs_date.year
       : monthContext.year;
   const samvatsara = resolveSamvatsaraForBsYear(bsYearForSamvatsara, activeP?.samvatsara);
-  const samvatsaraLabel = samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : undefined;
+  const samvatsaraLabel = samvatsara ? bilingualText(lang, samvatsara.name_ne, samvatsara.name_en) : undefined;
   const isBelow = placement === "below";
   const heroMonthArt = bsMonthArtUrl(monthContext.month);
 

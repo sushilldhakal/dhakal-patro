@@ -82,7 +82,6 @@ export function KundaliSectionNav({
   variant = "sidebar",
 }: KundaliSectionNavProps) {
   const { t } = useTranslation();
-
   const items = KUNDALI_SECTIONS.map(({ id, labelKey, icon, ...rest }) => {
     const Icon = ICONS[icon];
     const active = activeId === id;

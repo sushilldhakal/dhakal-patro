@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { Clock, Flame, MapPin } from "lucide-react";
 import {
   fetchKundaliDetail,
@@ -143,7 +143,7 @@ export function KundaliView({
   section,
 }: KundaliViewProps) {
   const { t } = useTranslation();
-  const { lang, pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const adDateStr = toAdStr(date);
   const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
 
@@ -192,13 +192,10 @@ export function KundaliView({
 
   const moonRashiLabel = useMemo(() => {
     if (!moonRow) return undefined;
-    return pick(
-      rashiNeFromNumber(moonRow.vargaRashi) ?? "—",
-      rashiNeFromNumber(moonRow.vargaRashi) ?? "—",
-    );
-  }, [moonRow, pick]);
+    return bilingualText(lang, rashiNeFromNumber(moonRow.vargaRashi) ?? "—", rashiNeFromNumber(moonRow.vargaRashi) ?? "—");
+  }, [moonRow, lang]);
 
-  const pickBi = (v?: BilingualValue | null) => (v ? pick(v.ne, v.en) : "—");
+  const pickBi = (v?: BilingualValue | null) => (v ? bilingualText(lang, v.ne, v.en) : "—");
   const janmaAvakahada = detail?.avakahada ?? null;
 
   const birthMeta = detail?.birthMeta;
@@ -336,7 +333,7 @@ export function KundaliView({
         <div className="flex flex-col lg:flex-row lg:items-stretch lg:divide-x lg:divide-border">
           <div className="flex-1 px-5 py-4 border-b lg:border-b-0 border-border bg-secondary/[0.09] dark:bg-secondary/20">
             <p className="text-sm font-semibold uppercase tracking-wider mb-1.5">
-              {pick("जन्म समय", "Birth moment")}
+              {t("kundali.birth_moment")}
             </p>
             <p className="text-2xl font-bold text-foreground font-[family-name:var(--pn-num)] leading-tight">
               {birthBsLabel}
@@ -358,7 +355,7 @@ export function KundaliView({
             <div className="flex-1 px-5 py-4 flex flex-col justify-center min-w-[200px]">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <p className="text-sm font-semibold uppercase tracking-wider">
-                  {pick("लग्न", "Lagna")}
+                  {t("kundali.lagna")}
                 </p>
                 <span className="text-sm text-base bg-muted px-2 py-0.5 rounded-full shrink-0">
                   {ayanamshaInfo.labelNe}
@@ -383,7 +380,7 @@ export function KundaliView({
         <div className="rounded-2xl border border-secondary/25 bg-gradient-to-br from-secondary/[0.08] to-card p-4 sm:p-5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_15%,transparent)]">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <p className="text-sm font-semibold uppercase tracking-wider">
-              {pick("जन्म पञ्चाङ्ग", "Birth panchanga")}
+              {t("kundali.birth_panchanga")}
             </p>
             <span className="text-sm text-base bg-card border border-border px-2.5 py-1 rounded-full shrink-0">
               {ayanamshaInfo.labelNe}
@@ -393,94 +390,88 @@ export function KundaliView({
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             {panchangSummary?.tithiNe ? (
               <DetailTraitRow
-                label={pick("तिथि", "Tithi")}
-                value={pick(panchangSummary.tithiNe, panchangSummary.tithiEn ?? panchangSummary.tithiNe)}
+                label={t("kundali.tithi")}
+                value={bilingualText(lang, panchangSummary.tithiNe, panchangSummary.tithiEn ?? panchangSummary.tithiNe)}
               />
             ) : null}
             {panchangSummary?.nakshatra ? (
               <DetailTraitRow
-                label={pick("नक्षत्र", "Nakshatra")}
-                value={`${pick(panchangSummary.nakshatra.ne, panchangSummary.nakshatra.en)} · ${pick(`पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`)}`}
+                label={t("kundali.nakshatra")}
+                value={`${bilingualText(lang, panchangSummary.nakshatra.ne, panchangSummary.nakshatra.en)} · ${bilingualText(lang, `पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`)}`}
               />
             ) : null}
             {panchangSummary?.yoga ? (
-              <DetailTraitRow label={pick("योग", "Yoga")} value={panchangSummary.yoga.ne} />
+              <DetailTraitRow label={t("kundali.yoga")} value={panchangSummary.yoga.ne} />
             ) : null}
             {panchangSummary?.karanaNe ? (
-              <DetailTraitRow label={pick("करण", "Karana")} value={panchangSummary.karanaNe} />
+              <DetailTraitRow label={t("kundali.karana")} value={panchangSummary.karanaNe} />
             ) : null}
             {choghadiyaAtBirth ? (
               <DetailTraitRow
-                label={pick("चौघडिया", "Choghadiya")}
-                value={pick(
-                  `${choghadiyaAtBirth.nameNe} (${choghadiyaAtBirth.quality})`,
-                  `${choghadiyaAtBirth.nameEn ?? choghadiyaAtBirth.nameNe} (${
+                label={t("kundali.choghadiya")}
+                value={bilingualText(lang, `${choghadiyaAtBirth.nameNe} (${choghadiyaAtBirth.quality})`, `${choghadiyaAtBirth.nameEn ?? choghadiyaAtBirth.nameNe} (${
                     choghadiyaAtBirth.quality === "शुभ"
                       ? "auspicious"
                       : choghadiyaAtBirth.quality === "अशुभ"
                         ? "inauspicious"
                         : "neutral"
-                  })`,
-                )}
+                  })`)}
               />
             ) : null}
             {lagna ? (
               <DetailTraitRow
-                label={pick("लग्न", "Lagna")}
+                label={t("kundali.lagna")}
                 value={`${lagna.nameNe}${lagna.degree ? ` ${lagna.degree}°` : ""}`}
               />
             ) : null}
             {navamshaLagnaLabel ? (
               <DetailTraitRow
-                label={pick("नवांश लग्न", "Navamsha Lagna")}
-                value={pick(navamshaLagnaLabel.ne, navamshaLagnaLabel.en)}
+                label={t("kundali.navamsha_lagna")}
+                value={bilingualText(lang, navamshaLagnaLabel.ne, navamshaLagnaLabel.en)}
               />
             ) : null}
             {moonRashiLabel ? (
-              <DetailTraitRow label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={moonRashiLabel} />
+              <DetailTraitRow label={t("kundali.rashi_moon")} value={moonRashiLabel} />
             ) : null}
             {getSunriseDisplay(data) ? (
               <DetailTraitRow
-                label={pick("सूर्योदय", "Sunrise")}
+                label={t("kundali.sunrise")}
                 value={getSunriseDisplay(data) ?? "—"}
               />
             ) : null}
             {getSunsetDisplay(data) ? (
               <DetailTraitRow
-                label={pick("सूर्यास्त", "Sunset")}
+                label={t("kundali.sunset")}
                 value={getSunsetDisplay(data) ?? "—"}
               />
             ) : null}
-            <DetailTraitRow label={pick("इष्ट काल", "Ishta Kala")} value={ishtaKalaLabel ?? "—"} />
+            <DetailTraitRow label={t("kundali.ishta_kala")} value={ishtaKalaLabel ?? "—"} />
             <DetailTraitRow
-              label={pick("अहोरात्र इष्ट काल", "Ahoratri Ishta Kala")}
+              label={t("kundali.ahoratri_ishta_kala")}
               value={ahoratriIshtaLabel ?? "—"}
             />
             {panchangSummary?.vaaraNe ? (
               <DetailTraitRow
-                label={pick("वार", "Weekday")}
-                value={pick(panchangSummary.vaaraNe, vaaraEn ?? panchangSummary.vaaraNe)}
+                label={t("kundali.weekday")}
+                value={bilingualText(lang, panchangSummary.vaaraNe, vaaraEn ?? panchangSummary.vaaraNe)}
               />
             ) : null}
             {aayanLabel ? (
               <DetailTraitRow
-                label={pick("अयन", "Ayana")}
-                value={pick(aayanLabel.ne, aayanLabel.en)}
+                label={t("kundali.ayana")}
+                value={bilingualText(lang, aayanLabel.ne, aayanLabel.en)}
               />
             ) : null}
             {suryaMeta?.rashiNe ? (
               <DetailTraitRow
-                label={pick("सूर्य राशि", "Sun sign")}
-                value={pick(suryaMeta.rashiNe, suryaMeta.rashiEn ?? suryaMeta.rashiNe)}
+                label={t("kundali.sun_sign")}
+                value={bilingualText(lang, suryaMeta.rashiNe, suryaMeta.rashiEn ?? suryaMeta.rashiNe)}
               />
             ) : null}
             {suryaMeta?.nakshatra ? (
               <DetailTraitRow
-                label={pick("सूर्य नक्षत्र", "Surya Nakshatra")}
-                value={pick(
-                  `${suryaMeta.nakshatra.ne} · पद ${digits(suryaMeta.nakshatra.pada)}`,
-                  `${suryaMeta.nakshatra.en ?? suryaMeta.nakshatra.ne} · Pada ${digits(suryaMeta.nakshatra.pada)}`,
-                )}
+                label={t("kundali.surya_nakshatra")}
+                value={bilingualText(lang, `${suryaMeta.nakshatra.ne} · पद ${digits(suryaMeta.nakshatra.pada)}`, `${suryaMeta.nakshatra.en ?? suryaMeta.nakshatra.ne} · Pada ${digits(suryaMeta.nakshatra.pada)}`)}
               />
             ) : null}
           </div>
@@ -488,33 +479,33 @@ export function KundaliView({
           {janmaAvakahada ? (
             <div className="mt-4 pt-4 border-t border-border/70">
               <p className="text-sm font-semibold uppercase tracking-wider mb-2">
-                {pick("अवकहडा", "Avakahada")}
+                {t("kundali.avakahada")}
                 <span className="mx-1.5 font-normal">·</span>
                 <span className="normal-case tracking-normal font-semibold text-foreground">
                   {pickBi(janmaAvakahada.nakshatra)}
                   <span className="mx-1">·</span>
-                  {pick(`पद ${digits(janmaAvakahada.pada)}`, `Pada ${digits(janmaAvakahada.pada)}`)}
+                  {bilingualText(lang, `पद ${digits(janmaAvakahada.pada)}`, `Pada ${digits(janmaAvakahada.pada)}`)}
                 </span>
               </p>
               <div className="flex flex-wrap gap-x-5 gap-y-2">
                 <DetailTraitRow
-                  label={pick("राशि पाय", "Rashi Paya")}
+                  label={t("kundali.rashi_paya")}
                   value={pickBi(janmaAvakahada.rashiPaya)}
                 />
                 <DetailTraitRow
-                  label={pick("नक्षत्र पाय", "Nakshatra Paya")}
+                  label={t("kundali.nakshatra_paya")}
                   value={pickBi(janmaAvakahada.nakshatraPaya)}
                 />
-                <DetailTraitRow label={pick("तत्त्व", "Tattva")} value={pickBi(janmaAvakahada.tattva)} />
-                <DetailTraitRow label={pick("युञ्ज", "Yunja")} value={pickBi(janmaAvakahada.yunja)} />
-                <DetailTraitRow label={pick("वश्य", "Vashya")} value={pickBi(janmaAvakahada.vashya)} />
-                <DetailTraitRow label={pick("तारा", "Tara")} value={pickBi(janmaAvakahada.tara)} />
-                <DetailTraitRow label={pick("अक्षर", "Akshara")} value={pickBi(janmaAvakahada.akshara)} />
-                <DetailTraitRow label={pick("गण", "Gana")} value={pickBi(janmaAvakahada.gana)} />
-                <DetailTraitRow label={pick("नाडी", "Nadi")} value={pickBi(janmaAvakahada.nadi)} />
-                <DetailTraitRow label={pick("आसन", "Asana")} value={pickBi(janmaAvakahada.asana)} />
-                <DetailTraitRow label={pick("योनी", "Yoni")} value={pickBi(janmaAvakahada.yoni)} />
-                <DetailTraitRow label={pick("जात", "Jati")} value={pickBi(janmaAvakahada.jati)} />
+                <DetailTraitRow label={t("kundali.tattva")} value={pickBi(janmaAvakahada.tattva)} />
+                <DetailTraitRow label={t("kundali.yunja")} value={pickBi(janmaAvakahada.yunja)} />
+                <DetailTraitRow label={t("kundali.vashya")} value={pickBi(janmaAvakahada.vashya)} />
+                <DetailTraitRow label={t("kundali.tara")} value={pickBi(janmaAvakahada.tara)} />
+                <DetailTraitRow label={t("kundali.akshara")} value={pickBi(janmaAvakahada.akshara)} />
+                <DetailTraitRow label={t("kundali.gana")} value={pickBi(janmaAvakahada.gana)} />
+                <DetailTraitRow label={t("kundali.nadi")} value={pickBi(janmaAvakahada.nadi)} />
+                <DetailTraitRow label={t("kundali.asana")} value={pickBi(janmaAvakahada.asana)} />
+                <DetailTraitRow label={t("kundali.yoni")} value={pickBi(janmaAvakahada.yoni)} />
+                <DetailTraitRow label={t("kundali.jati")} value={pickBi(janmaAvakahada.jati)} />
               </div>
             </div>
           ) : null}
@@ -523,18 +514,18 @@ export function KundaliView({
 
       {panchangSummary && !hideBirthSummary && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatTile label={pick("राशि (चन्द्र)", "Rashi (Moon)")} value={moonRashiLabel ?? "—"} />
+          <StatTile label={t("kundali.rashi_moon")} value={moonRashiLabel ?? "—"} />
           <StatTile
-            label={pick("नक्षत्र (चन्द्र)", "Nakshatra (Moon)")}
-            value={panchangSummary.nakshatra ? pick(panchangSummary.nakshatra.ne, panchangSummary.nakshatra.en) : "—"}
-            sub={panchangSummary.nakshatra ? pick(`पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`) : undefined}
+            label={t("kundali.nakshatra_moon")}
+            value={panchangSummary.nakshatra ? bilingualText(lang, panchangSummary.nakshatra.ne, panchangSummary.nakshatra.en) : "—"}
+            sub={panchangSummary.nakshatra ? bilingualText(lang, `पद ${digits(panchangSummary.nakshatra.pada)}`, `Pada ${digits(panchangSummary.nakshatra.pada)}`) : undefined}
           />
           <StatTile
-            label={pick("तिथि", "Tithi")}
-            value={pick(panchangSummary.tithiNe ?? "—", panchangSummary.tithiEn ?? panchangSummary.tithiNe ?? "—")}
+            label={t("kundali.tithi")}
+            value={bilingualText(lang, panchangSummary.tithiNe ?? "—", panchangSummary.tithiEn ?? panchangSummary.tithiNe ?? "—")}
           />
-          <StatTile label={pick("वार", "Day")} value={panchangSummary.vaaraNe ?? "—"} />
-          <StatTile label={pick("योग", "Yoga")} value={panchangSummary.yoga?.ne ?? "—"} />
+          <StatTile label={t("kundali.day")} value={panchangSummary.vaaraNe ?? "—"} />
+          <StatTile label={t("kundali.yoga")} value={panchangSummary.yoga?.ne ?? "—"} />
         </div>
       )}
 
@@ -564,7 +555,7 @@ export function KundaliView({
             {detail.upagrahas.length > 0 && (
               <div className="border-t border-border">
                 <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider">
-                  {pick("उपग्रह", "Upagraha")}
+                  {t("kundali.upagraha")}
                 </p>
                 <UpagrahaTable upagrahas={detail.upagrahas} />
               </div>
@@ -663,10 +654,7 @@ export function KundaliView({
           <div className="p-4">
             <div className="mb-3 flex items-center gap-1.5 text-sm">
               <Flame className="h-4 w-4 text-secondary" />
-              {pick(
-                "यस कुण्डलीको दशा र ग्रहबल अनुसार सुझाव गरिएको नवग्रह शान्ति।",
-                "Navagraha Shanti suggested from this chart's dasha and planetary strength.",
-              )}
+              {t("kundali.navagraha_shanti_suggested_from_this_chart_s_dasha_and_")}
             </div>
             <ShantiVidhiPanel
               vimshottari={dasha}

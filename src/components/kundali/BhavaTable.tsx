@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import type { VargaCharts } from "@/lib/api";
 import { buildBhavaTable, type BhavaTableRow, RASHI_QUALITIES } from "@/lib/bhava";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
@@ -33,7 +34,8 @@ export type BhavaTableProps = {
  * extra API call.
  */
 export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps) {
-  const { pick, digits, lang } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
 
   const rows = useMemo<BhavaTableRow[]>(() => {
     const entries = vargaCharts.entries[String(division)] ?? [];
@@ -55,7 +57,7 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
   if (rows.length === 0) return null;
 
   const grahaName = (key: string) =>
-    pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
+    bilingualText(lang, GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
   const rashiName = (rashi: number) => formatRashiByNumber(rashi, lang);
 
   return (
@@ -63,13 +65,13 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>
-            {pick("भाव", "Bhava")}
+            {t("kundali.bhava_19")}
           </TableHead>
-          <TableHead className={th}>{pick("बासिन्दा", "Residents")}</TableHead>
-          <TableHead className={th}>{pick("स्वामी", "Owner")}</TableHead>
-          <TableHead className={th}>{pick("राशि", "Rashi")}</TableHead>
-          <TableHead className={th}>{pick("गुण", "Qualities")}</TableHead>
-          <TableHead className={th}>{pick("दृष्टि", "Aspected By")}</TableHead>
+          <TableHead className={th}>{t("kundali.residents")}</TableHead>
+          <TableHead className={th}>{t("kundali.owner")}</TableHead>
+          <TableHead className={th}>{t("kundali.rashi")}</TableHead>
+          <TableHead className={th}>{t("kundali.qualities")}</TableHead>
+          <TableHead className={th}>{t("kundali.aspected_by")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -100,7 +102,7 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
               <TableCell className={td}>{row.owner ? grahaName(row.owner) : "—"}</TableCell>
               <TableCell className={td}>{rashiName(row.rashi)}</TableCell>
               <TableCell className={cn(td, "")}>
-                {quality ? pick(quality.ne, quality.en) : "—"}
+                {quality ? bilingualText(lang, quality.ne, quality.en) : "—"}
               </TableCell>
               <TableCell className={td}>
                 {row.aspectedBy.length > 0

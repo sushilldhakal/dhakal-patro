@@ -23,7 +23,7 @@ import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { PatroYearNav } from "@/components/patro-date";
 import { useRouteLoading } from "@/lib/route-loading";
 import { formatLocaleDigits } from "@/i18n/digits";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { searchToLocation } from "@/lib/url-state";
 import { formatHolidayBsDisplay } from "@/lib/panchanga-format";
@@ -38,10 +38,10 @@ const festivalCol = createColumnHelper<Festival>();
 
 function useHolidayColumns() {
   const { t } = useTranslation();
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   return useMemo(
     () => [
-      holidayCol.accessor(r => pick(r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
+      holidayCol.accessor(r => bilingualText(lang, r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
         id: "name",
         header: t("holidays.col_name"),
         cell: i => <span className="text-base">{i.getValue()}</span>,
@@ -71,16 +71,16 @@ function useHolidayColumns() {
         ),
       }),
     ],
-    [t, pick, lang],
+    [t, lang],
   );
 }
 
 function useFestivalColumns() {
   const { t } = useTranslation();
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   return useMemo(
     () => [
-      festivalCol.accessor(r => pick(r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
+      festivalCol.accessor(r => bilingualText(lang, r.name_ne ?? r.name_en, r.name_en ?? r.name_ne) ?? "—", {
         id: "name",
         header: t("holidays.col_name"),
         cell: i => <span className="text-base">{i.getValue()}</span>,
@@ -115,7 +115,7 @@ function useFestivalColumns() {
           ) : null,
       }),
     ],
-    [t, pick, lang],
+    [t, lang],
   );
 }
 

@@ -203,6 +203,7 @@ export function LocationSelector({
   };
 
   const useCurrentLocation = () => {
+  const { t } = useTranslation();
     if (!navigator.geolocation) {
       setGeoError(t("location.geolocation_unavailable"));
       return;

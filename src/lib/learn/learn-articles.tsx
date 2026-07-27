@@ -32,7 +32,7 @@ import {
 } from "@/components/panchanga/use-panchanga-location";
 import { fetchPanchanga, panchangaKeys } from "@/lib/api";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualNode } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import {
   ssPhasesHeading,
@@ -106,9 +106,8 @@ function Note({ children }: { children: React.ReactNode }) {
 /* ================================================================== */
 
 export function AstronomyBasics() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="आकाश कसरी देखिन्छ" en="What we see from Earth">
         <Lede>
           रातको आकाशमा <span className="hl">ताराहरू</span> टाढाका सूर्यजस्तै उज्यालो
@@ -414,9 +413,8 @@ export function AstronomyBasics() {
 }
 
 export function SolarSystem() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="सूर्य केन्द्र, पृथ्वी परिक्रमा" en="Heliocentric view">
         <Lede>
           हाम्रो सौर्यमण्डलमा पृथ्वी सूर्यको वरिपरि झन्डै <b>३६५.२५ दिन</b> मा एक फेरो लगाउँछ —
@@ -578,9 +576,8 @@ export function SolarSystem() {
 }
 
 export function BsCalendar() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="दुई फरक घडी" en="Two different clocks">
         <Lede>
           <span className="hl-amber">सौर पात्रो</span> सूर्यको स्थितिमा आधारित हुन्छ — ऋतुसँग
@@ -707,9 +704,8 @@ export function BsCalendar() {
 }
 
 export function CalendarDifferences() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="तीन पात्रो, तीन आधार" en="Three systems">
         <Lede>
           <b>ग्रेगोरियन (ई.सं.)</b> शुद्ध सौर पात्रो हो — महिनाको दिन निश्चित।{" "}
@@ -760,9 +756,8 @@ export function CalendarDifferences() {
 }
 
 export function WhatIsPanchang() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="पञ्चाङ्ग = पाँच अङ्ग" en="The five limbs">
         <Lede>
           “पञ्चाङ्ग” शब्द <b>पञ्च (पाँच) + अङ्ग</b> बाट बनेको हो। हरेक दिनको खगोलीय अवस्था
@@ -810,9 +805,8 @@ export function WhatIsPanchang() {
 }
 
 export function TithiArticle() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="तिथि = १२° कोणीय दूरी" en="12° of elongation">
         <Lede>
           पृथ्वीबाट हेर्दा चन्द्रमा सूर्यभन्दा जति <span className="hl">कोणले अगाडि</span> पुग्छ,
@@ -901,9 +895,8 @@ export function TithiArticle() {
 }
 
 export function TithiVriddhi() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="एउटै तिथि दुई दिन" en="Repeated tithi">
         <Lede>
           जब चन्द्र <span className="hl">मन्द गतिमा</span> (~१०.७°/दिन) हिँड्छ, एउटै १२° को
@@ -939,9 +932,8 @@ export function TithiVriddhi() {
 }
 
 export function TithiKshaya() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="हराएको तिथि" en="Skipped tithi">
         <Lede>
           उल्टो, जब चन्द्र <span className="hl">द्रुत गतिमा</span> (~१४.३°/दिन) हिँड्छ, कुनै १२°
@@ -978,9 +970,8 @@ export function TithiKshaya() {
 }
 
 export function AdhikMaas() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="थपिने महिना" en="Extra month">
         <Lede>
           एक <b>चान्द्र मास</b> ~{N(29.5)} दिनको हुन्छ; एक <b>सौर मास</b> ~{N(30.4)} दिनको।
@@ -1032,9 +1023,8 @@ export function AdhikMaas() {
 }
 
 export function Nakshatra() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="२७ तारापुञ्ज" en="27 lunar mansions">
         <Lede>
           आकाशको चान्द्र–मार्गलाई <b>{N(27)} बराबर भाग</b> मा बाँडिएको छ, प्रत्येक{" "}
@@ -1084,9 +1074,8 @@ export function Nakshatra() {
 }
 
 export function Yoga() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="सूर्य + चन्द्रको जोड" en="Sun + Moon longitude">
         <Lede>
           योग पञ्चाङ्गको चौथो अङ्ग हो। यो सूर्य र चन्द्रको <b>देशान्तर जोडेर</b> निकालिन्छ —
@@ -1120,9 +1109,8 @@ export function Yoga() {
 }
 
 export function Karana() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="तिथिको आधा भाग" en="Half a tithi">
         <Lede>
           करण भनेको <b>आधा तिथि</b> हो — चन्द्र–सूर्यको <b>६° कोणीय दूरी</b>। एक तिथिमा दुई
@@ -1158,9 +1146,8 @@ export function Karana() {
 }
 
 export function Sankranti() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="राशि परिवर्तनको क्षण" en="Sun enters a sign">
         <Lede>
           सूर्य एक राशिबाट अर्को राशिमा प्रवेश गर्ने ठ्याक्क क्षणलाई{" "}
@@ -1209,9 +1196,8 @@ export function Sankranti() {
 }
 
 export function Eclipses() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="चन्द्रग्रहण — पृथ्वीको छायाँमा चन्द्र" en="Lunar eclipse: Earth's shadow">
         <Lede>
           चन्द्रग्रहण सधैँ <b>पूर्णिमा</b> मा हुन्छ — जब सूर्य, पृथ्वी र चन्द्रमा एकै रेखामा
@@ -1378,9 +1364,8 @@ export const LunarEclipse = Eclipses;
 export const SolarEclipse = Eclipses;
 
 export function Ayanamsha() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="सायन र निरयन — एउटै आकाश, दुई शून्य" en="Tropical vs sidereal zero">
         <Lede>
           राशिचक्रको <b>शून्य अंश</b> कहाँबाट सुरु गर्ने? दुई जवाफ छन्।{" "}
@@ -1490,9 +1475,8 @@ export function Ayanamsha() {
 }
 
 export function RituDrift() {
-  const { pick } = useLocale();
-  return pick(
-    <>
+      const { lang } = useLocale();
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="ऋतु सायन, महिना निरयन" en="Seasons are tropical, months are sidereal">
         <Lede>
           एउटै सूर्यलाई <b>दुई फरक शून्य</b> बाट नापिन्छ। <span className="hl-amber">ऋतु</span> लाई{" "}
@@ -1639,6 +1623,7 @@ export function RituDrift() {
 }
 
 export function HoraArticle() {
+  const { lang } = useLocale();
   const { location } = usePanchangaLocation();
   const todayAd = useMemo(
     () => todayAdStringInTimezone(new Date(), resolveLocationTimezone(location)),
@@ -1651,10 +1636,8 @@ export function HoraArticle() {
   });
   const p = panchangaQ.data;
   const timezone = resolveTimeZone(p?.location?.timezone, location.params.timezone);
-  const { pick } = useLocale();
 
-  return pick(
-    <>
+  return bilingualNode(lang, <>
       <Section kicker="०१" title="दिनका चौबीस होरा" en="Planetary hours">
         <Lede>
           प्रत्येक दिनलाई <b>चौबीस होरा</b> (ग्रहीय घण्टा) मा बाँडिन्छ — सूर्योदयदेखि अर्को

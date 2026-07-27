@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import type { CalcNote } from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
 import { PatroTableShell } from "./PatroTableShell";
@@ -10,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 import {
   patroStickyHeadCell,
   patroStickyHeadRow,
@@ -61,7 +62,7 @@ type Props = {
 };
 
 function KindBadge({ kind }: { kind: CalcNote["kind"] }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   return (
     <span
       className={cn(
@@ -73,7 +74,7 @@ function KindBadge({ kind }: { kind: CalcNote["kind"] }) {
         kind === "motion" && "bg-rose-500/15 text-rose-700 dark:text-rose-300",
       )}
     >
-      {pick(KIND_LABEL[kind], KIND_LABEL_EN[kind])}
+      {bilingualText(lang, KIND_LABEL[kind], KIND_LABEL_EN[kind])}
     </span>
   );
 }
@@ -82,7 +83,8 @@ const th = "h-9 whitespace-nowrap px-2.5 text-left text-xs font-semibold";
 const td = "px-2.5 py-2 align-top text-sm";
 
 export function MonthCalcNotes({ notes, loading, embedded }: Props) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
 
   const groups = useMemo(() => {
     const byDate = new Map<string, DayGroup>();
@@ -109,10 +111,10 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
   }, [notes]);
 
   const notesTable = loading ? (
-    <p className="px-4 py-8 text-center text-sm">{pick("लोड हुँदैछ…", "Loading…")}</p>
+    <p className="px-4 py-8 text-center text-sm">{t("dainik.loading")}</p>
   ) : groups.length === 0 ? (
     <p className="px-4 py-8 text-center text-sm">
-      {pick("यस महिनामा विशेष गणना सूचना छैन।", "No special calculation notes this month.")}
+      {t("dainik.no_special_calculation_notes_this_month")}
     </p>
   ) : (
     <div className="overflow-x-auto">
@@ -120,10 +122,10 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
         <TableHeader>
           <TableRow className={patroStickyHeadRow}>
             <TableHead className={cn(th, patroStickyHeadCell, "w-14")}>
-              {pick("गते", "Date")}
+              {t("dainik.date")}
             </TableHead>
             <TableHead className={cn(th, patroStickyHeadCell)}>
-              {pick("सूचना", "Notes")}
+              {t("dainik.notes")}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -147,7 +149,7 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
                       ) : null}
                       <KindBadge kind={note.kind} />
                       <span className="text-foreground">
-                        {pick(note.text, note.textEn ?? note.text)}
+                        {bilingualText(lang, note.text, note.textEn ?? note.text)}
                       </span>
                     </span>
                   ))}
@@ -163,7 +165,7 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
   const legend = (
     <section className={cn(!embedded && "rounded-xl border border-border p-4", embedded && "mt-4 border-t border-border pt-4")}>
       <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide">
-        {pick("ग्रह उदयास्त सङ्केत", "Planet rise-set symbols")}
+        {t("dainik.planet_rise_set_symbols")}
       </h4>
       <dl className="space-y-1.5">
         {UDAYAST_LEGEND.map((it) => (
@@ -174,28 +176,25 @@ export function MonthCalcNotes({ notes, loading, embedded }: Props) {
               </span>
             </dt>
             <dd>
-              <span className="text-foreground">{pick(it.full, it.fullEn)}</span> — {pick(it.meaning, it.meaningEn)}
+              <span className="text-foreground">{bilingualText(lang, it.full, it.fullEn)}</span> — {bilingualText(lang, it.meaning, it.meaningEn)}
             </dd>
           </div>
         ))}
       </dl>
       <p className="mt-4 text-sm leading-relaxed">
-        {pick(
-          <>
+        {bilingualNode(lang, <>
             <span className="font-semibold text-foreground">दशा कोष्ठक:</span> जन्म-समयमा बाँकी
             विंशोत्तरी दशाको वर्ष/महिना/दिन।{" "}
             <span className="font-semibold text-foreground">समय सुधार:</span> मुद्रणमा “उ” वा “०”
             जस्ता सङ्केतले शून्य अंश/कला जनाउँछ। सूचीबद्ध सूर्योदयमा देशान्तर समायोजित छ;
             बेलान्तर सन्दर्भका लागि मात्र देखाइन्छ।
-          </>,
-          <>
+          </>, <>
             <span className="font-semibold text-foreground">Dasha bracket:</span> the years/months/days
             of Vimshottari dasha remaining at birth.{" "}
             <span className="font-semibold text-foreground">Time correction:</span> in print, symbols like
             “u” or “0” indicate zero degrees/kala. Listed sunrise already includes Deshaantar;
             Belaantar is shown for reference only.
-          </>,
-        )}
+          </>,)}
       </p>
     </section>
   );

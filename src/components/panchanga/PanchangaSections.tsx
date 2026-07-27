@@ -66,7 +66,7 @@ import {
   panchangaCardGrid,
 } from "./PanchangaLayout";
 import { NavataraBalamCardGrid } from "./NavataraBalamCardGrid";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 type AngaEnd = {
   name_ne?: string;
@@ -102,9 +102,9 @@ function angaEndWithDay(
 }
 
 function AngaCell({ anga, sunriseHours }: { anga?: Anga | null; sunriseHours?: number }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   if (!anga) return <span>—</span>;
-  const name = pick(anga.name_ne ?? anga.name ?? "—", anga.name ?? anga.name_ne ?? "—");
+  const name = bilingualText(lang, anga.name_ne ?? anga.name ?? "—", anga.name ?? anga.name_ne ?? "—");
   const next = anga.next;
   const nextName = next?.name_ne ?? next?.name;
   return (
@@ -114,7 +114,7 @@ function AngaCell({ anga, sunriseHours }: { anga?: Anga | null; sunriseHours?: n
         // The next anga now carries its own end time — on a kshaya-tithi day
         // this is where the skipped tithi's ending shows (e.g. प्रतिपदा … सम्म).
         <UptoValue
-          name={pick(nextName, next?.name ?? next?.name_ne ?? nextName)}
+          name={bilingualText(lang, nextName, next?.name ?? next?.name_ne ?? nextName)}
           endTime={angaEndWithDay(next, sunriseHours, lang)}
         />
       ) : null}
@@ -123,7 +123,7 @@ function AngaCell({ anga, sunriseHours }: { anga?: Anga | null; sunriseHours?: n
 }
 
 export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
-  const { pick, lang, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const solar = getSolarCorrections(p);
   const belaantar = formatSolarCorrectionDisplay(solar?.belaantar, lang);
   const deshaantar = formatSolarCorrectionDisplay(solar?.deshaantar, lang);
@@ -173,13 +173,13 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
         <PanchangaFieldCell labelKey="sections.vikram" nowrap>
           <span className="font-semibold">
             {bs?.year && bs.day && (bs.month_name_ne || bs.month_name)
-              ? `${digits(bs.year)} ${pick(bs.month_name_ne ?? bs.month_name ?? "", bs.month_name ?? bs.month_name_ne ?? "")} ${digits(bs.day)}`
+              ? `${digits(bs.year)} ${bilingualText(lang, bs.month_name_ne ?? bs.month_name ?? "", bs.month_name ?? bs.month_name_ne ?? "")} ${digits(bs.day)}`
               : (p.display?.bs_ne ?? "—")}
           </span>
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.samvatsara" nowrap>
           <span className="font-semibold">
-            {samvatsara ? pick(samvatsara.name_ne, samvatsara.name_en) : "—"}
+            {samvatsara ? bilingualText(lang, samvatsara.name_ne, samvatsara.name_en) : "—"}
           </span>
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.shaka" nowrap>
@@ -191,7 +191,7 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
       </PanchangaTableBody>
       {solar?.ishtakaal_note_ne || solar?.ishtakaal_note_en ? (
         <p className="border-t border-border px-4 py-2 text-sm m-0 leading-snug">
-          {pick(
+          {bilingualText(lang, 
             solar.ishtakaal_note_ne ?? "",
             solar.ishtakaal_note_en ?? solar.ishtakaal_note_ne ?? "",
           )}
@@ -212,7 +212,7 @@ export function SamvatSection() {
 }
 
 export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const detail = getPanchangaDetail(p);
   const instant = p.mode === "ephemeris";
   const tithi = (instant ? p.tithi : detail?.tithi ?? p.tithi) as Anga | undefined;
@@ -243,7 +243,7 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.weekday" nowrap>
           <span className="font-semibold">
-            {pick(getVaaraNe(p, p.weekday) ?? "—", getVaaraEn(p, p.weekday) ?? "—")}
+            {bilingualText(lang, getVaaraNe(p, p.weekday) ?? "—", getVaaraEn(p, p.weekday) ?? "—")}
           </span>
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.paksha" nowrap>
@@ -257,7 +257,7 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
 
 export function RashiSection({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const padaSpans = getNakshatraPadaSpans(p);
 
   if (!padaSpans?.length) return null;
@@ -266,11 +266,11 @@ export function RashiSection({ p }: { p: PanchangaDay }) {
     <PanchangaSection titleKey="sections.pada_detail">
       <PanchangaTableBody>
         {padaSpans.map((span, i) => {
-          const nakName = pick(
+          const nakName = bilingualText(lang, 
             span.nakshatra_name_ne ?? span.nakshatra_name ?? "",
             span.nakshatra_name ?? span.nakshatra_name_ne ?? "",
           );
-          const padaLabel = pick(
+          const padaLabel = bilingualText(lang, 
             span.pada_ne ?? digits(span.pada ?? ""),
             String(span.pada ?? span.pada_ne ?? ""),
           );
@@ -338,7 +338,7 @@ function BalamKindBlock({
 
 export function BalamSection({ p, clock }: { p: PanchangaDay; clock?: string }) {
   const { t } = useTranslation();
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const chandraCards = getChandraBalamCards(p);
   const taraCards = getTaraBalamCards(p);
   const chandraTable = getChandrabalamTable(p);
@@ -349,21 +349,21 @@ export function BalamSection({ p, clock }: { p: PanchangaDay; clock?: string }) 
   }
 
   const chandraMoonRef = chandraTable?.moon_label
-    ? pick(
+    ? bilingualText(lang, 
         `सूर्योदयको चन्द्र राशि: ${chandraTable.moon_label}`,
         `Moon sign at sunrise: ${chandraTable.moon_label_en ?? chandraTable.moon_label}`,
       )
     : undefined;
   const taraMoonRef = taraTable?.moon_label
-    ? pick(
+    ? bilingualText(lang, 
         `सूर्योदयको चन्द्र नक्षत्र: ${taraTable.moon_label}`,
         `Moon nakshatra at sunrise: ${taraTable.moon_label_en ?? taraTable.moon_label}`,
       )
     : undefined;
 
   const formatRashiName = (card: BalamCardItem) =>
-    formatRashiDisplay(card.name, card.nameEn, lang) ?? pick(card.name, card.nameEn ?? card.name);
-  const formatNakName = (card: BalamCardItem) => pick(card.name, card.nameEn ?? card.name);
+    formatRashiDisplay(card.name, card.nameEn, lang) ?? bilingualText(lang, card.name, card.nameEn ?? card.name);
+  const formatNakName = (card: BalamCardItem) => bilingualText(lang, card.name, card.nameEn ?? card.name);
 
   return (
     <PanchangaSection titleKey="sections.balam">
@@ -389,7 +389,7 @@ export function BalamSection({ p, clock }: { p: PanchangaDay; clock?: string }) 
 
 export function PanchakaLagnaSection({ p, clock }: { p: PanchangaDay; clock?: string }) {
   const { t } = useTranslation();
-  const { pick, lang } = useLocale();
+  const { lang } = useLocale();
   const panchaka = getPanchakaRahita(p) ?? [];
   const lagna = getUdayaLagna(p) ?? [];
   const currentLagna = findCurrentUdayaLagna(lagna, clock);
@@ -405,7 +405,7 @@ export function PanchakaLagnaSection({ p, clock }: { p: PanchangaDay; clock?: st
             {panchaka.map((pr, i) => (
               <PanchangaTimingCard
                 key={`panchaka-${i}`}
-                label={pick(pr.name_ne ?? pr.name ?? "—", pr.name ?? pr.name_ne ?? "—")}
+                label={bilingualText(lang, pr.name_ne ?? pr.name ?? "—", pr.name ?? pr.name_ne ?? "—")}
                 time={
                   formatTimeRangeShort(
                     pr.start_local_time_short ?? pr.start_local_time,
@@ -662,9 +662,9 @@ function NivasDirectionValue({
 }: {
   segment?: NivasShoolSegment | null;
 }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   if (!segment) return <span>—</span>;
-  const name = pick(segment.name_ne ?? segment.name_en ?? "—", segment.name_en ?? segment.name_ne ?? "—");
+  const name = bilingualText(lang, segment.name_ne ?? segment.name_en ?? "—", segment.name_en ?? segment.name_ne ?? "—");
   return <span className="font-semibold">{name}</span>;
 }
 
@@ -678,15 +678,15 @@ function NivasTimedSegments({
   showGuna?: boolean;
 }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   if (!segments?.length) return <span>—</span>;
 
   return (
     <div className="flex flex-col gap-1 min-w-0">
       {segments.map((seg, idx) => {
-        const name = pick(seg.name_ne ?? seg.name_en ?? "—", seg.name_en ?? seg.name_ne ?? "—");
+        const name = bilingualText(lang, seg.name_ne ?? seg.name_en ?? "—", seg.name_en ?? seg.name_ne ?? "—");
         const subtitle = showSubtitle
-          ? pick(seg.subtitle_ne ?? seg.subtitle_en ?? "", seg.subtitle_en ?? seg.subtitle_ne ?? "")
+          ? bilingualText(lang, seg.subtitle_ne ?? seg.subtitle_en ?? "", seg.subtitle_en ?? seg.subtitle_ne ?? "")
           : "";
         const endTime = seg.end_local_time_short
           ? toNepaliDigits(formatTimeShort(seg.end_local_time_short) ?? seg.end_local_time_short)
@@ -807,7 +807,7 @@ export function DinVisheshSection({ p }: { p: PanchangaDay }) {
 
 export function PlanetsPanel({ p }: { p: PanchangaDay }) {
   const { t } = useTranslation();
-  const { lang, pick } = useLocale();
+  const { lang } = useLocale();
   const planets = getPlanetRows(p);
   const lagna = getLagnaDisplay(p);
   if (!planets.length && !lagna) return null;
@@ -824,7 +824,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
         {lagna && (
           <div className="flex items-center gap-3 py-2 border-b border-border">
             <span className="w-8 h-8 rounded-lg flex items-center justify-center text-base bg-secondary/11 text-secondary dark:text-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
-              {pick("लग्न", "ASC")}
+              {bilingualText(lang, "लग्न", "ASC")}
             </span>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold">{t("sections.lagna")}</div>
@@ -846,12 +846,12 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
           >
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold break-words">
-                {pick(label, labelEn)}
+                {bilingualText(lang, label, labelEn)}
                 <GrahaStatusBadges planetKey={key} isRetrograde={isRetrograde} isCombust={isCombust} />
               </div>
               {(rashiNe || rashiEn) && (
                 <div className="text-sm break-words">
-                  {formatRashiDisplay(rashiNe, rashiEn, lang) ?? pick(rashiNe ?? "", rashiEn ?? "")}
+                  {formatRashiDisplay(rashiNe, rashiEn, lang) ?? bilingualText(lang, rashiNe ?? "", rashiEn ?? "")}
                 </div>
               )}
             </div>
@@ -866,7 +866,7 @@ export function PlanetsPanel({ p }: { p: PanchangaDay }) {
 }
 
 export function FestivalsSection({ p }: { p: PanchangaDay }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const festivals = p.festivals ?? [];
   if (!festivals.length) return null;
 
@@ -882,7 +882,7 @@ export function FestivalsSection({ p }: { p: PanchangaDay }) {
                 : "text-sm font-semibold px-2.5 py-1.5 rounded-full bg-secondary/12 text-secondary dark:text-accent border border-secondary/20"
             }
           >
-            {pick(f.name_ne ?? f.name ?? "", f.name_en ?? f.name ?? f.name_ne ?? "")}
+            {bilingualText(lang, f.name_ne ?? f.name ?? "", f.name_en ?? f.name ?? f.name_ne ?? "")}
           </span>
         ))}
       </div>

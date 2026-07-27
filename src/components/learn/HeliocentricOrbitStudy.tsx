@@ -3,7 +3,7 @@ import { edScrub } from "@/lib/diagram-classes";
 import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { HeliocentricOrbitDiagram } from "./HeliocentricOrbitDiagram";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 import {
   ORBIT_MARKERS,
   ORBIT_PRESETS,
@@ -35,7 +35,7 @@ function orbitEvent(meanDeg: number, isEn: boolean): string {
 }
 
 export function HeliocentricOrbitStudy() {
-  const { lang, pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const isEn = lang === "en";
   const [meanDeg, setMeanDeg] = useState(() => meanFromTrue(180));
   const [playing, setPlaying] = useState(false);
@@ -68,8 +68,7 @@ export function HeliocentricOrbitStudy() {
         }}
       />
       <p className={tmCardCap}>
-        {pick(
-          <>
+        {bilingualNode(lang, <>
             सूर्य एउटा केन्द्रबिन्दु (focus) मा छ — पृथ्वी वास्तविक दीर्घवृत्तमा{" "}
             <b>वामावर्त</b> घुम्छ। नजिक हुँदा छिटो (उपसौर / हिमतिर), टाढा हुँदा ढिलो (अपसौर /
             ग्रीष्मतिर) — यसैले केही महिनामा दिन छिटो बित्छ। ध्रुव {fmt(23.5)}° ढल्किएकाले
@@ -87,21 +86,21 @@ export function HeliocentricOrbitStudy() {
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>{pick("माध्य कोण (वर्ष)", "Mean angle (year)")}</span>
+            <span className={edRoK}>{bilingualText(lang, "माध्य कोण (वर्ष)", "Mean angle (year)")}</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(meanDeg))}°</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("वर्षको दिन (लगभग)", "Day of year (approx)")}</span>
+            <span className={edRoK}>{bilingualText(lang, "वर्षको दिन (लगभग)", "Day of year (approx)")}</span>
             <span className={edRoV({ mono: true })}>{fmt(dayOfYear)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("घटना · ऋतु", "Event · season")}</span>
+            <span className={edRoK}>{bilingualText(lang, "घटना · ऋतु", "Event · season")}</span>
             <span className={edRoV({ amber: true })}>{orbitEvent(meanDeg, isEn)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("सूर्यदेखि दूरी", "Distance from Sun")}</span>
+            <span className={edRoK}>{bilingualText(lang, "सूर्यदेखि दूरी", "Distance from Sun")}</span>
             <span className={edRoV({ mono: true })}>
-              {orbit.speed > 1.02 ? pick("नजिक · छिटो", "Near · fast") : orbit.speed < 0.98 ? pick("टाढा · ढिलो", "Far · slow") : pick("मध्यम", "Medium")}
+              {orbit.speed > 1.02 ? bilingualText(lang, "नजिक · छिटो", "Near · fast") : orbit.speed < 0.98 ? bilingualText(lang, "टाढा · ढिलो", "Far · slow") : bilingualText(lang, "मध्यम", "Medium")}
             </span>
           </div>
         </div>
@@ -110,8 +109,8 @@ export function HeliocentricOrbitStudy() {
             type="button"
             className={edPlayBtn}
             onClick={() => setPlaying((p) => !p)}
-            title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
-            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+            title={playing ? bilingualText(lang, "रोक्नुहोस्", "Pause") : bilingualText(lang, "चलाउनुहोस्", "Play")}
+            aria-label={playing ? bilingualText(lang, "रोक्नुहोस्", "Pause") : bilingualText(lang, "चलाउनुहोस्", "Play")}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
@@ -144,7 +143,7 @@ export function HeliocentricOrbitStudy() {
                   setMeanDeg(preset.meanDeg);
                 }}
               >
-                {pick(m.ne, m.en)}
+                {bilingualText(lang, m.ne, m.en)}
               </button>
             );
           })}

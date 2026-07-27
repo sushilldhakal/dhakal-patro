@@ -54,7 +54,7 @@ import {
   patroStickyHeadRow,
 } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 import {
   Accordion,
   AccordionContent,
@@ -410,13 +410,12 @@ function MoonRashiValue({
   dg: (v: string | number) => string;
   isEn: boolean;
 }) {
-  const { pick } = useLocale();
-  const label = moonRashiLabel(day, det, lang);
+    const label = moonRashiLabel(day, det, lang);
   const end = moonRashiEnd(det, dg, isEn);
   return (
     <>
       <div>{label}</div>
-      {end ? <div className={subLine}>{pick(`${end} सम्म`, `until ${end}`)}</div> : null}
+      {end ? <div className={subLine}>{bilingualText(lang, `${end} सम्म`, `until ${end}`)}</div> : null}
     </>
   );
 }
@@ -490,7 +489,8 @@ function DayPatroCard({
   notes?: CalcNote[];
   adBrowse?: boolean;
 }) {
-  const { pick, lang, digits: dg } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits: dg } = useLocale();
   const isEn = lang === "en";
   const det = day.panchanga;
   const tithiEnd = angaEnd(det?.tithi, dg, isEn);
@@ -524,61 +524,61 @@ function DayPatroCard({
         </div>
         {isToday ? (
           <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-            {pick("आज", "Today")}
+            {t("dainik.today")}
           </span>
         ) : null}
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
         <CardField
-          label={pick("तिथि", "Tithi")}
+          label={t("dainik.tithi")}
           value={
             <>
-              <span>{pakshaShort(day, isEn)}</span> {pick(day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne) ?? "—"}
+              <span>{pakshaShort(day, isEn)}</span> {bilingualText(lang, day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne) ?? "—"}
             </>
           }
-          sub={tithiEnd ? pick(`${tithiEnd} सम्म`, `until ${tithiEnd}`) : null}
+          sub={tithiEnd ? bilingualText(lang, `${tithiEnd} सम्म`, `until ${tithiEnd}`) : null}
         />
         <CardField
-          label={pick("नक्षत्र", "Nakshatra")}
-          value={pick(day.nakshatra_ne ?? day.nakshatra, day.nakshatra ?? day.nakshatra_ne) ?? "—"}
-          sub={nakEnd ? pick(`${nakEnd} सम्म`, `until ${nakEnd}`) : null}
+          label={t("dainik.nakshatra")}
+          value={bilingualText(lang, day.nakshatra_ne ?? day.nakshatra, day.nakshatra ?? day.nakshatra_ne) ?? "—"}
+          sub={nakEnd ? bilingualText(lang, `${nakEnd} सम्म`, `until ${nakEnd}`) : null}
         />
         <CardField
-          label={pick("योग", "Yoga")}
-          value={pick(day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
-          sub={yogaEnd ? pick(`${yogaEnd} सम्म`, `until ${yogaEnd}`) : null}
+          label={t("dainik.yoga")}
+          value={bilingualText(lang, day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
+          sub={yogaEnd ? bilingualText(lang, `${yogaEnd} सम्म`, `until ${yogaEnd}`) : null}
         />
         <CardField
-          label={pick("करण", "Karana")}
-          value={pick(day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
-          sub={karanaEnd ? pick(`${karanaEnd} सम्म`, `until ${karanaEnd}`) : null}
+          label={t("dainik.karana")}
+          value={bilingualText(lang, day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
+          sub={karanaEnd ? bilingualText(lang, `${karanaEnd} सम्म`, `until ${karanaEnd}`) : null}
         />
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-lg bg-muted/40 p-2.5">
         <div className="col-span-2">
           <CardField
-            label={pick("सूर्य उदय/अस्त/राशि", "Sun Rise/Set/sign")}
+            label={t("dainik.sun_rise_set_sign")}
             value={
               <SunRiseSetSignValue day={day} sunRashi={sunRashi} ayanaMark={det?.ayana_mark} dg={dg} />
             }
           />
         </div>
         <CardField
-          label={pick("चन्द्र राशि", "Moon sign")}
+          label={t("dainik.moon_sign")}
           value={<MoonRashiValue day={day} det={det} lang={lang} dg={dg} isEn={isEn} />}
         />
       </div>
 
       {(transits?.length ?? 0) > 0 ? (
         <div className="mt-3">
-          <div className="text-xs text-base">{pick("ग्रहचार / उदयास्त", "Transits / rise-set")}</div>
+          <div className="text-xs text-base">{t("dainik.transits_rise_set")}</div>
           <div className="mt-1 space-y-0.5">
             {transits!.map((ev, i) => (
               <div key={i} className="text-sm leading-tight">
-                <span className="text-foreground">{pick(ev.labelNe, ev.labelEn)}</span>{" "}
-                <span className="text-secondary">{pick(ev.planetNe, ev.planetEn)}</span>
+                <span className="text-foreground">{bilingualText(lang, ev.labelNe, ev.labelEn)}</span>{" "}
+                <span className="text-secondary">{bilingualText(lang, ev.planetNe, ev.planetEn)}</span>
                 {ev.time ? <span> {dg(ev.time)}</span> : null}
               </div>
             ))}
@@ -588,7 +588,7 @@ function DayPatroCard({
 
       {hasFestival ? (
         <div className="mt-3 rounded-lg bg-rose-500/5 px-2.5 py-2">
-          <div className="text-xs text-base">{pick("पर्व", "Festival")}</div>
+          <div className="text-xs text-base">{t("dainik.festival")}</div>
           <div className="line-clamp-2 text-sm leading-snug text-rose-600 dark:text-rose-300">{day.festivals.join(" · ")}</div>
         </div>
       ) : null}
@@ -603,8 +603,8 @@ function DayPatroCard({
           >
             <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
             {isExpanded
-              ? pick("विवरण लुकाउनुहोस्", "Hide details")
-              : pick("लग्न · ग्रहस्पष्ट · थप विवरण", "Lagna · planets & more")}
+              ? t("dainik.hide_details")
+              : t("dainik.lagna_planets_more")}
           </button>
           {isExpanded ? (
             <div className="mt-1 border-t border-border">
@@ -619,7 +619,7 @@ function DayPatroCard({
 
 export function DainikKranti() {
   const { t } = useTranslation();
-  const { lang, pick, digits: dg } = useLocale();
+  const { lang, digits: dg } = useLocale();
   const isEn = lang === "en";
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
@@ -965,32 +965,26 @@ export function DainikKranti() {
             {monthLabel} · {pakshaLabel}
           </h2>
           {monthQ.data?.year_bs ? (
-            <span className="text-sm">{dg(monthQ.data.year_bs)} {pick("बि.सं.", "BS")}</span>
+            <span className="text-sm">{dg(monthQ.data.year_bs)} {t("dainik.bs")}</span>
           ) : null}
-          {ritu ? <span className="text-sm">· {pick("ऋतु", "Season")}: {ritu}</span> : null}
+          {ritu ? <span className="text-sm">· {t("dainik.season")}: {ritu}</span> : null}
           {allDays.length ? (
-            <span className="text-xs">· {dg(days.length)} {pick("दिन", "days")}</span>
+            <span className="text-xs">· {dg(days.length)} {t("dainik.days")}</span>
           ) : null}
         </div>
         <p className="text-sm">
-          {pick(
-            "पक्ष अनुसार दैनिक पञ्चाङ्ग — तिथि, नक्षत्र, योग, करण, सूर्योदय/अस्त, पर्व र ग्रह गोचर।",
-            "Daily panchanga by paksha — tithi, nakshatra, yoga, karana, sunrise/sunset, festivals and planetary transits.",
-          )}
+          {bilingualText(lang, "पक्ष अनुसार दैनिक पञ्चाङ्ग — तिथि, नक्षत्र, योग, करण, सूर्योदय/अस्त, पर्व र ग्रह गोचर।", "Daily panchanga by paksha — tithi, nakshatra, yoga, karana, sunrise/sunset, festivals and planetary transits.",)}
         </p>
       </div>
 
       {monthHasAdhik && adhik?.month_name ? (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          {pick(
-            <>
+          {bilingualNode(lang, <>
               <span className="font-semibold">अधिक मास:</span> यस वर्ष <span className="font-semibold">अधिक {lunarMonthNe(adhik.month_name)}</span> मास परेको छ — त्यसैले यो महिनामा अधिक र शुद्ध पक्षहरू छुट्टाछुट्टै देखाइएका छन्। (अधिक मास = मलमास / पुरुषोत्तम मास; यसमा सङ्क्रान्ति पर्दैन।)
-            </>,
-            <>
+            </>, <>
               <span className="font-semibold">Adhik Maas:</span> this year has an{" "}
               <span className="font-semibold">Adhik {lunarMonthNe(adhik.month_name, true)}</span> month — so the adhik and shuddha pakshas are shown separately for this month. (Adhik Maas = Malamas / Purushottam Maas; it contains no sankranti.)
-            </>,
-          )}
+            </>,)}
         </div>
       ) : null}
 
@@ -1000,13 +994,13 @@ export function DainikKranti() {
         <div className="space-y-3 md:hidden">
           {monthQ.isError ? (
             <div className="rounded-xl border border-border py-8 text-center text-sm">
-              {pick("विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।", "Could not load details. Please try again.")}
+              {t("dainik.could_not_load_details_please_try_again")}
             </div>
           ) : monthQ.isLoading ? (
             <DainikKrantiMobileLoading />
           ) : days.length === 0 ? (
             <div className="rounded-xl border border-border py-8 text-center text-sm">
-              {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
+              {t("dainik.no_days_found_in_this_paksha")}
             </div>
           ) : (
             days.map((d) => {
@@ -1038,31 +1032,31 @@ export function DainikKranti() {
           <Table className="w-full min-w-max text-sm">
             <TableHeader>
               <TableRow className={patroStickyHeadRow}>
-                <TableHead className={cn(th, patroStickyHeadCell, "w-9 px-1")} aria-label={pick("विस्तार", "Expand")} />
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("गते", adBrowse ? "Date" : "Day")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("तिथि", "Tithi")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("नक्षत्र", "Nakshatra")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("योग", "Yoga")}</TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("करण", "Karana")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell, "w-9 px-1")} aria-label={t("dainik.expand")} />
+                <TableHead className={cn(th, patroStickyHeadCell)}>{bilingualText(lang, "गते", adBrowse ? "Date" : "Day")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{t("dainik.tithi")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{t("dainik.nakshatra")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{t("dainik.yoga")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{t("dainik.karana")}</TableHead>
                 <TableHead className={cn(thWrap, patroStickyHeadCell, sunColW)}>
-                  <span className="block">{pick("सूर्य उदय/अस्त", "Sun Rise/Set")}</span>
-                  <span className="block">{pick("राशि", "sign")}</span>
+                  <span className="block">{t("dainik.sun_rise_set")}</span>
+                  <span className="block">{t("dainik.sign")}</span>
                 </TableHead>
                 <TableHead className={cn(thWrap, patroStickyHeadCell, moonColW)}>
-                  <span className="block">{pick("चन्द्र", "Moon")}</span>
-                  <span className="block">{pick("राशि", "sign")}</span>
+                  <span className="block">{t("dainik.moon")}</span>
+                  <span className="block">{t("dainik.sign")}</span>
                 </TableHead>
-                <TableHead className={cn(th, patroStickyHeadCell)}>{pick("ग्रहचार / उदयास्त (बजे)", "Transits / rise-set")}</TableHead>
-                <TableHead className={cn(thWrap, patroStickyHeadCell, festivalColW)}>{pick("पर्व", "Festival")}</TableHead>
+                <TableHead className={cn(th, patroStickyHeadCell)}>{t("dainik.transits_rise_set")}</TableHead>
+                <TableHead className={cn(thWrap, patroStickyHeadCell, festivalColW)}>{t("dainik.festival")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {monthQ.isError ? (
-                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center">{pick("विवरण ल्याउन सकिएन। पुनः प्रयास गर्नुहोस्।", "Could not load details. Please try again.")}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center">{t("dainik.could_not_load_details_please_try_again")}</TableCell></TableRow>
               ) : monthQ.isLoading ? (
                 <DainikKrantiTableLoading colSpan={COL_SPAN} />
               ) : days.length === 0 ? (
-                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center">{pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={COL_SPAN} className="py-8 text-center">{t("dainik.no_days_found_in_this_paksha")}</TableCell></TableRow>
               ) : (
                 days.map((d) => {
                   const det = d.panchanga;
@@ -1098,7 +1092,7 @@ export function DainikKranti() {
                           type="button"
                           onClick={() => toggleDayExpand(d.date_ad)}
                           aria-expanded={isExpanded}
-                          aria-label={pick(`${dg(d.day)} गतेको लग्न र ग्रहस्पष्ट`, `Lagna & planets for day ${dg(d.day)}`)}
+                          aria-label={bilingualText(lang, `${dg(d.day)} गतेको लग्न र ग्रहस्पष्ट`, `Lagna & planets for day ${dg(d.day)}`)}
                           className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-muted hover:text-foreground"
                         >
                           <ChevronRight
@@ -1126,20 +1120,20 @@ export function DainikKranti() {
                         </div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div><span>{pakshaShort(d, isEn)}</span> {pick(d.tithi_ne ?? d.tithi, d.tithi ?? d.tithi_ne) ?? "—"}</div>
-                        {tithiEnd ? <div className={subLine}>{pick(`${tithiEnd} सम्म`, `until ${tithiEnd}`)}</div> : null}
+                        <div><span>{pakshaShort(d, isEn)}</span> {bilingualText(lang, d.tithi_ne ?? d.tithi, d.tithi ?? d.tithi_ne) ?? "—"}</div>
+                        {tithiEnd ? <div className={subLine}>{bilingualText(lang, `${tithiEnd} सम्म`, `until ${tithiEnd}`)}</div> : null}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div>{pick(d.nakshatra_ne ?? d.nakshatra, d.nakshatra ?? d.nakshatra_ne) ?? "—"}</div>
-                        {nakEnd ? <div className={subLine}>{pick(`${nakEnd} सम्म`, `until ${nakEnd}`)}</div> : null}
+                        <div>{bilingualText(lang, d.nakshatra_ne ?? d.nakshatra, d.nakshatra ?? d.nakshatra_ne) ?? "—"}</div>
+                        {nakEnd ? <div className={subLine}>{bilingualText(lang, `${nakEnd} सम्म`, `until ${nakEnd}`)}</div> : null}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div>{pick(d.yoga_ne ?? d.yoga, d.yoga ?? d.yoga_ne) ?? "—"}</div>
-                        {yogaEnd ? <div className={subLine}>{pick(`${yogaEnd} सम्म`, `until ${yogaEnd}`)}</div> : null}
+                        <div>{bilingualText(lang, d.yoga_ne ?? d.yoga, d.yoga ?? d.yoga_ne) ?? "—"}</div>
+                        {yogaEnd ? <div className={subLine}>{bilingualText(lang, `${yogaEnd} सम्म`, `until ${yogaEnd}`)}</div> : null}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div>{pick(d.karana_ne ?? d.karana, d.karana ?? d.karana_ne) ?? "—"}</div>
-                        {karanaEnd ? <div className={subLine}>{pick(`${karanaEnd} सम्म`, `until ${karanaEnd}`)}</div> : null}
+                        <div>{bilingualText(lang, d.karana_ne ?? d.karana, d.karana ?? d.karana_ne) ?? "—"}</div>
+                        {karanaEnd ? <div className={subLine}>{bilingualText(lang, `${karanaEnd} सम्म`, `until ${karanaEnd}`)}</div> : null}
                       </TableCell>
                       <TableCell className={cn(sunColW, "align-top text-sm")}>
                         <SunRiseSetSignValue day={d} sunRashi={sunRashi} ayanaMark={det?.ayana_mark} dg={dg} />
@@ -1152,8 +1146,8 @@ export function DainikKranti() {
                           <div className="space-y-0.5">
                             {transitsByBsDay[d.day]!.map((ev, i) => (
                               <div key={i} className="whitespace-nowrap text-sm leading-tight">
-                                <span className="text-foreground">{pick(ev.labelNe, ev.labelEn)}</span>{" "}
-                                <span className="text-secondary">{pick(ev.planetNe, ev.planetEn)}</span>
+                                <span className="text-foreground">{bilingualText(lang, ev.labelNe, ev.labelEn)}</span>{" "}
+                                <span className="text-secondary">{bilingualText(lang, ev.planetNe, ev.planetEn)}</span>
                                 {ev.time ? (
                                   <span> {dg(ev.time)}</span>
                                 ) : null}
@@ -1199,14 +1193,11 @@ export function DainikKranti() {
         <Accordion type="multiple" className="rounded-xl border border-border px-4">
           <AccordionItem value="lagna-month">
             <AccordionTrigger className="py-3 text-base font-semibold text-foreground hover:no-underline">
-              {pick("दैनिक लग्न आरम्भ समयतालिका (पूरा महिना)", "Daily lagna start timetable (full month)")}
+              {t("dainik.daily_lagna_start_timetable_full_month")}
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <p className="mb-3 text-sm leading-relaxed">
-                {pick(
-                  "प्रत्येक गते सूर्योदयदेखि अर्को सूर्योदयसम्म कुन राशि कहिले लग्नमा आउँछ।",
-                  "For each day, which rashi rises as the lagna and when, from sunrise to the next sunrise.",
-                )}
+                {bilingualText(lang, "प्रत्येक गते सूर्योदयदेखि अर्को सूर्योदयसम्म कुन राशि कहिले लग्नमा आउँछ।", "For each day, which rashi rises as the lagna and when, from sunrise to the next sunrise.",)}
               </p>
               <div className="overflow-x-auto rounded-lg border border-border">
                 <MonthLagnaMatrix
@@ -1221,14 +1212,11 @@ export function DainikKranti() {
           </AccordionItem>
           <AccordionItem value="graha-month">
             <AccordionTrigger className="py-3 text-base font-semibold text-foreground hover:no-underline">
-              {pick("उदयकालिक सूर्यादिग्रहस्पष्ट (पूरा महिना)", "Planetary positions at sunrise (full month)")}
+              {t("dainik.planetary_positions_at_sunrise_full_month")}
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <p className="mb-3 text-sm leading-relaxed">
-                {pick(
-                  "सूर्योदयको क्षणमा ग्रहहरूको राश्यादि स्थिति र दैनिक बेलान्तर।",
-                  "The planets' rashi positions at the moment of sunrise, and the daily time-difference.",
-                )}
+                {bilingualText(lang, "सूर्योदयको क्षणमा ग्रहहरूको राश्यादि स्थिति र दैनिक बेलान्तर।", "The planets' rashi positions at the moment of sunrise, and the daily time-difference.",)}
               </p>
               <MonthGrahaSpashta
                 embedded
@@ -1241,7 +1229,7 @@ export function DainikKranti() {
           </AccordionItem>
           <AccordionItem value="calc-notes">
             <AccordionTrigger className="py-3 text-base font-semibold text-foreground hover:no-underline">
-              {pick("गणना सूचना र विशेष दिनहरू", "Calculation notes & special days")}
+              {t("dainik.calculation_notes_special_days")}
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <MonthCalcNotes
@@ -1265,14 +1253,14 @@ export function DainikKranti() {
                 <div className="flex items-center gap-2 rounded-xl border border-border p-3">
                   <Sunrise className="h-5 w-5 text-amber-500" />
                   <div className="text-sm">
-                    <div className="text-sm">{pick("सूर्योदय", "Sunrise")}</div>
+                    <div className="text-sm">{t("dainik.sunrise")}</div>
                     <div className="font-semibold text-foreground">{ref.sunrise ? dg(formatTimeShort(ref.sunrise) ?? ref.sunrise) : "—"}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 rounded-xl border border-border p-3">
                   <Sunset className="h-5 w-5 text-indigo-500" />
                   <div className="text-sm">
-                    <div className="text-sm">{pick("सूर्यास्त", "Sunset")}</div>
+                    <div className="text-sm">{t("dainik.sunset")}</div>
                     <div className="font-semibold text-foreground">{ref.sunset ? dg(formatTimeShort(ref.sunset) ?? ref.sunset) : "—"}</div>
                   </div>
                 </div>
@@ -1309,20 +1297,20 @@ export function DainikKranti() {
 
           {/* graha gochar / udayast */}
           <div className="rounded-xl border border-border p-4">
-            <h3 className="mb-2 text-sm font-semibold text-foreground">{pick("ग्रह गोचर र अर्को सङ्क्रान्ति", "Planetary transits & next sankranti")}</h3>
+            <h3 className="mb-2 text-sm font-semibold text-foreground">{t("dainik.planetary_transits_next_sankranti")}</h3>
             {grahas.length === 0 ? (
-              <p className="text-sm">{gocharQ.isLoading ? pick("लोड हुँदैछ…", "Loading…") : pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
+              <p className="text-sm">{gocharQ.isLoading ? t("dainik.loading") : t("dainik.no_details_available")}</p>
             ) : (
               <ul className="space-y-1.5 text-sm">
                 {grahas.map((g) => (
                   <li key={g.key} className="flex items-baseline justify-between gap-2">
                     <span className="text-foreground">
-                      {pick(g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}
+                      {bilingualText(lang, g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}
                       <span className="ml-1">{resolveRashiDisplay(g.rashi_ne ?? grahaRashiNe(g), g.rashi, lang) ?? ""}</span>
                     </span>
                     {g.next_pada_entry ? (
                       <span className="shrink-0 text-right text-sm">
-                        {pick(g.next_pada_entry.label_ne, g.next_pada_entry.to_rashi ?? g.next_pada_entry.label_ne)}
+                        {bilingualText(lang, g.next_pada_entry.label_ne, g.next_pada_entry.to_rashi ?? g.next_pada_entry.label_ne)}
                         <br />
                         {dg(g.next_pada_entry.entry_time_local_short ?? g.next_pada_entry.entry_time_local ?? "")}
                       </span>
@@ -1342,16 +1330,16 @@ export function DainikKranti() {
           {/* kartavya */}
           <div className="rounded-xl border border-border bg-muted/30 p-4 md:col-span-2 xl:col-span-4">
             <h3 className="mb-2 text-sm font-semibold text-foreground">
-              {pakshaLabel} {pick("कर्तव्य", "duties")}
+              {pakshaLabel} {t("dainik.duties")}
             </h3>
             <div className="space-y-2 text-sm leading-relaxed">
               {paksha === "all" ? (
                 <>
-                  <p>{pick(KARTAVYA.krishna.ne, KARTAVYA.krishna.en)}</p>
-                  <p>{pick(KARTAVYA.shukla.ne, KARTAVYA.shukla.en)}</p>
+                  <p>{bilingualText(lang, KARTAVYA.krishna.ne, KARTAVYA.krishna.en)}</p>
+                  <p>{bilingualText(lang, KARTAVYA.shukla.ne, KARTAVYA.shukla.en)}</p>
                 </>
               ) : (
-                <p>{pick(KARTAVYA[paksha].ne, KARTAVYA[paksha].en)}</p>
+                <p>{bilingualText(lang, KARTAVYA[paksha].ne, KARTAVYA[paksha].en)}</p>
               )}
             </div>
           </div>
@@ -1361,13 +1349,10 @@ export function DainikKranti() {
       <section className="rounded-xl border border-border">
         <header className="flex items-center gap-1.5 border-b border-border px-4 py-3">
           <Sparkles className="h-4 w-4 text-secondary" />
-          <h3 className="text-sm font-semibold text-foreground">{pick("ग्रह स्पष्ट, उदयास्त र गोचर सङ्केत", "Planet positions, rise-set & transit legend")}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t("dainik.planet_positions_rise_set_transit_legend")}</h3>
           {gocharQ.data?.date_ad ? (
             <span className="ml-auto text-sm">
-              {pick(
-                `${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad, false)} को स्थिति`,
-                `Position on ${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad, true)}`,
-              )}
+              {bilingualText(lang, `${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad, false)} को स्थिति`, `Position on ${formatGocharBsLabel(gocharQ.data.date_bs, gocharQ.data.date_ad) ?? fmtAd(gocharQ.data.date_ad, true)}`,)}
             </span>
           ) : null}
         </header>
@@ -1376,17 +1361,17 @@ export function DainikKranti() {
           {/* live graha spashta (degree · kala · vikala) + motion */}
           <div className="md:col-span-2">
             <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide">
-              {pick("ग्रह स्पष्ट (अंश° कला′ विकला″)", "Planet positions (deg° kala′ vikala″)")}
+              {t("dainik.planet_positions_deg_kala_vikala")}
             </h4>
             {grahas.length === 0 ? (
-              <p className="text-sm">{gocharQ.isLoading ? pick("लोड हुँदैछ…", "Loading…") : pick("विवरण उपलब्ध छैन।", "No details available.")}</p>
+              <p className="text-sm">{gocharQ.isLoading ? t("dainik.loading") : t("dainik.no_details_available")}</p>
             ) : (
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-3 lg:grid-cols-4">
                 {grahas.map((g) => {
                   const m = motionNe(g);
                   return (
                     <div key={g.key} className="flex items-baseline gap-1.5 text-sm">
-                      <span className="text-foreground">{pick(g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}</span>
+                      <span className="text-foreground">{bilingualText(lang, g.name_ne, grahaTableEn(g.key, g.name_vedic ?? g.name_ne))}</span>
                       <span>{resolveRashiDisplay(g.rashi_ne ?? grahaRashiNe(g), g.rashi, lang) ?? ""}</span>
                       {g.dms_in_rashi ? <span className="text-foreground">{dg(g.dms_in_rashi)}</span> : null}
                       <span
@@ -1395,7 +1380,7 @@ export function DainikKranti() {
                           m.vakri ? "bg-rose-500/15 text-rose-600 dark:text-rose-300" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
                         )}
                       >
-                        {pick(m.label, m.labelEn)}
+                        {bilingualText(lang, m.label, m.labelEn)}
                       </span>
                     </div>
                   );
@@ -1403,7 +1388,7 @@ export function DainikKranti() {
               </div>
             )}
             <p className="mt-2 text-sm leading-relaxed">
-              {pick(
+              {bilingualNode(lang, 
                 <>प्रत्येक पक्षको आरम्भमा ग्रहहरूको स्पष्ट स्थान अंश°, कला′, विकला″ (र प्रति-विकला) मा दिइन्छ — जस्तै “१३ ६ २९ ४०” = १३ अंश ६ कला २९ विकला ४० प्रति-विकला। <span className="text-rose-600 dark:text-rose-300">वक्री</span> = उल्टो गति, <span className="text-emerald-600 dark:text-emerald-300">मार्गी</span> = सुल्टो गति।</>,
                 <>At the start of each paksha, each planet's exact position is given in degrees°, kala′, vikala″ (and prati-vikala) — e.g. “13 6 29 40” = 13 deg 6 kala 29 vikala 40 prati-vikala. <span className="text-rose-600 dark:text-rose-300">Vakri</span> = retrograde (backward) motion, <span className="text-emerald-600 dark:text-emerald-300">Margi</span> = direct (forward) motion.</>,
               )}
@@ -1413,7 +1398,7 @@ export function DainikKranti() {
           {/* udayast symbol legend */}
           <div>
             <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide">
-              {pick("ग्रह उदयास्त सङ्केत", "Planet rise-set symbols")}
+              {t("dainik.planet_rise_set_symbols")}
             </h4>
             <dl className="space-y-1.5">
               {UDAYAST_LEGEND.map((it) => (
@@ -1422,7 +1407,7 @@ export function DainikKranti() {
                     <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold text-secondary">{it.code}</span>
                   </dt>
                   <dd>
-                    <span className="text-foreground">{pick(it.full, it.fullEn)}</span> — {pick(it.meaning, it.meaningEn)}
+                    <span className="text-foreground">{bilingualText(lang, it.full, it.fullEn)}</span> — {bilingualText(lang, it.meaning, it.meaningEn)}
                   </dd>
                 </div>
               ))}
@@ -1432,7 +1417,7 @@ export function DainikKranti() {
           {/* gochar / papashanti house legend */}
           <div>
             <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide">
-              {pick("गोचर / पापशान्ति घर-सङ्केत", "Transit / Papashanti house symbols")}
+              {t("dainik.transit_papashanti_house_symbols")}
             </h4>
             <dl className="space-y-1.5">
               {GOCHAR_LEGEND.map((it) => (
@@ -1440,15 +1425,12 @@ export function DainikKranti() {
                   <dt className="w-20 shrink-0">
                     <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold text-secondary">{it.code}</span>
                   </dt>
-                  <dd>{pick(it.meaning, it.meaningEn)}</dd>
+                  <dd>{bilingualText(lang, it.meaning, it.meaningEn)}</dd>
                 </div>
               ))}
             </dl>
             <p className="mt-3 text-sm leading-relaxed">
-              {pick(
-                <><span className="font-semibold text-foreground">दशा कोष्ठक:</span> जन्म-समयमा बाँकी विंशोत्तरी दशाको वर्ष/महिना/दिन। <span className="font-semibold text-foreground">समय सुधार:</span> मुद्रणमा “उ” वा “०” जस्ता सङ्केतले शून्य अंश/कला जनाउँछ।</>,
-                <><span className="font-semibold text-foreground">Dasha bracket:</span> the years/months/days of Vimshottari dasha remaining at birth. <span className="font-semibold text-foreground">Time correction:</span> in print, symbols like “u” or “0” indicate zero degrees/kala.</>,
-              )}
+              {bilingualNode(lang, <><span className="font-semibold text-foreground">दशा कोष्ठक:</span> जन्म-समयमा बाँकी विंशोत्तरी दशाको वर्ष/महिना/दिन। <span className="font-semibold text-foreground">समय सुधार:</span> मुद्रणमा “उ” वा “०” जस्ता सङ्केतले शून्य अंश/कला जनाउँछ।</>, <><span className="font-semibold text-foreground">Dasha bracket:</span> the years/months/days of Vimshottari dasha remaining at birth. <span className="font-semibold text-foreground">Time correction:</span> in print, symbols like “u” or “0” indicate zero degrees/kala.</>,)}
             </p>
           </div>
         </div>

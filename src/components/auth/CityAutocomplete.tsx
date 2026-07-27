@@ -3,7 +3,7 @@ import { MapPin, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchCities, type City } from "@/lib/api";
 import { nepalCityToCity, searchNepalCities } from "@/lib/cities/nepal-cities";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 
 export interface CitySelection {
   city: string;
@@ -24,8 +24,8 @@ export function CityAutocomplete({
   onSelect: (sel: CitySelection) => void;
   placeholder?: string;
 }) {
-  const { lang, pick: localePick } = useLocale();
-  const resolvedPlaceholder = placeholder ?? localePick("सहर खोज्नुहोस्…", "Search a city…");
+  const { lang } = useLocale();
+  const resolvedPlaceholder = placeholder ?? bilingualText(lang, "सहर खोज्नुहोस्…", "Search a city…");
   const [query, setQuery] = useState(value ?? "");
   const [prevValue, setPrevValue] = useState(value);
   if (value !== prevValue) {
@@ -72,7 +72,7 @@ export function CityAutocomplete({
   }, []);
 
   function selectCity(city: City) {
-    const name = localePick(city.name || city.ascii_name, city.ascii_name || city.name);
+    const name = bilingualText(lang, city.name || city.ascii_name, city.ascii_name || city.name);
     const label = `${name}, ${city.country}`;
     setQuery(label);
     setOpen(false);
@@ -115,7 +115,7 @@ export function CityAutocomplete({
               >
                 <MapPin className="size-3.5 shrink-0" />
                 <span className="truncate">
-                  {localePick(c.name || c.ascii_name, c.ascii_name || c.name)}, {c.country}
+                  {bilingualText(lang, c.name || c.ascii_name, c.ascii_name || c.name)}, {c.country}
                 </span>
               </button>
             </li>

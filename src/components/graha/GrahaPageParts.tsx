@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   GRAHA_PAGE_DESCRIPTIONS,
   type GrahaPageDescription,
@@ -46,7 +46,7 @@ export function GrahaBanner({
 /** "About" block — what it is · how it's calculated · what it means. */
 export function GrahaDescription({ pageId }: { pageId: string }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const desc: GrahaPageDescription | undefined = GRAHA_PAGE_DESCRIPTIONS[pageId];
   if (!desc) return null;
 
@@ -68,7 +68,7 @@ export function GrahaDescription({ pageId }: { pageId: string }) {
               {t(`element_page.section_${b.section}`)}
             </h3>
             <p className="m-0 text-sm leading-relaxed text-muted-foreground">
-              {pick(b.body.ne, b.body.en)}
+              {bilingualText(lang, b.body.ne, b.body.en)}
             </p>
           </div>
         ))}

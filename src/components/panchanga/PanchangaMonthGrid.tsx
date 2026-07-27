@@ -17,7 +17,7 @@ import {
 } from "@/lib/local-calendar";
 import { getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { VedicPatroLoader } from "@/components/VedicPatroLoader";
 import { VerticalEdgeLabel } from "@/components/VerticalEdgeLabel";
@@ -71,7 +71,7 @@ export function PanchangaMonthGrid({
   clock = "12:00",
   calendarMode = "bs",
 }: Props) {
-  const { lang, pick, digits, isEnglish } = useLocale();
+  const { lang, digits, isEnglish } = useLocale();
   const calendarEra = useCalendarEra();
   const isEn = isEnglish;
   const isAdCalendar = calendarMode === "ad" || calendarEra === "ad" || isEnglish;
@@ -179,11 +179,11 @@ export function PanchangaMonthGrid({
       )}
       {isInstant && (
         <div className="px-3 py-2 text-xs border-b border-border">
-          {pick("प्रत्येक दिन ", "Each day at ")}
+          {bilingualText(lang, "प्रत्येक दिन ", "Each day at ")}
           <span className="font-mono font-semibold text-foreground tabular-nums">
             {digits(clock)}
           </span>{" "}
-          {pick("बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)", "— tithi/nakshatra/yoga/karana (time-based)")}
+          {bilingualText(lang, "बजेको तिथि/नक्षत्र/योग/करण (समय-आधारित)", "— tithi/nakshatra/yoga/karana (time-based)")}
         </div>
       )}
       <div className="grid grid-cols-7 gap-px  border-b border-border">
@@ -296,10 +296,10 @@ export function PanchangaMonthGrid({
                     {getMonthDayChandraRashi(day, lang) ?? "—"}
                   </span>
                   <span className="text-center font-bold sm:truncate">
-                    {pick(day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
+                    {bilingualText(lang, day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
                   </span>
                   <span className="text-center font-bold sm:truncate">
-                    {pick(day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
+                    {bilingualText(lang, day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
                   </span>
                 </div>
 

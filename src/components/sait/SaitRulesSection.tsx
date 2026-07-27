@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { ChevronDown, Info, Loader2, ScrollText } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 
@@ -43,9 +44,10 @@ export function SaitRulesSection({
   /** Show a recomputing indicator while a custom-rule fetch is in flight. */
   busy?: boolean;
 }) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
   const [open, setOpen] = useState(defaultOpen);
-  const intro = method ? pick(method.ne ?? "", method.en ?? "") : "";
+  const intro = method ? bilingualText(lang, method.ne ?? "", method.en ?? "") : "";
   if (!intro && (!rules || rules.length === 0)) return null;
 
   const ruleCount = rules?.length ?? 0;
@@ -65,23 +67,14 @@ export function SaitRulesSection({
         <ScrollText className="size-4 shrink-0 text-secondary" aria-hidden />
         <span className="min-w-0 flex-1">
           <span className="block text-base font-bold text-foreground">
-            {pick("यो सूची कसरी बन्छ", "How this list is generated")}
+            {t("sait.how_this_list_is_generated")}
           </span>
           <span className="mt-0.5 block text-sm text-muted-foreground">
             {offCount > 0
-              ? pick(
-                  `${digits(ruleCount)} मध्ये ${digits(offCount)} नियम हटाइएको`,
-                  `${digits(offCount)} of ${digits(ruleCount)} rules switched off`,
-                )
+              ? bilingualText(lang, `${digits(ruleCount)} मध्ये ${digits(offCount)} नियम हटाइएको`, `${digits(offCount)} of ${digits(ruleCount)} rules switched off`)
               : togglingEnabled
-                ? pick(
-                    `${digits(ruleCount)} शास्त्रीय नियम · आफ्नो परम्परा अनुसार अफ गर्न मिल्ने`,
-                    `${digits(ruleCount)} classical rules · switch off any your tradition skips`,
-                  )
-                : pick(
-                    `${digits(ruleCount)} शास्त्रीय नियम · स्रोतसहित`,
-                    `${digits(ruleCount)} classical rules · with sources`,
-                  )}
+                ? bilingualText(lang, `${digits(ruleCount)} शास्त्रीय नियम · आफ्नो परम्परा अनुसार अफ गर्न मिल्ने`, `${digits(ruleCount)} classical rules · switch off any your tradition skips`)
+                : bilingualText(lang, `${digits(ruleCount)} शास्त्रीय नियम · स्रोतसहित`, `${digits(ruleCount)} classical rules · with sources`)}
           </span>
         </span>
         {busy ? (
@@ -113,10 +106,7 @@ export function SaitRulesSection({
             {togglingEnabled ? (
               <p className="m-0 flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
                 <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                {pick(
-                  "आफ्नो समुदायले नमान्ने नियम स्विच अफ गर्नुहोस् — मिति तुरुन्तै पुनः गणना हुन्छन्। अधिकमास, ग्रहण, संक्रान्ति जस्ता खगोलीय रक्षाहरू सधैँ लागू हुन्छन्।",
-                  "Switch off a rule your community doesn't follow — the dates recompute. Astronomical safeguards (Adhik-māsa, eclipse, Sankrānti) always apply.",
-                )}
+                {t("sait.switch_off_a_rule_your_community_doesn_t_follow_the_dat")}
               </p>
             ) : null}
 
@@ -146,14 +136,14 @@ export function SaitRulesSection({
                             off ? "text-muted-foreground" : "text-foreground",
                           )}
                         >
-                          {pick(r.ne, r.en)}
+                          {bilingualText(lang, r.ne, r.en)}
                         </p>
                         {toggleable ? (
                           <Switch
                             size="sm"
                             checked={enabled}
                             onCheckedChange={(v) => r.id && onToggleRule?.(r.id, v)}
-                            aria-label={pick("यो नियम लागू गर्ने", "Apply this rule")}
+                            aria-label={t("sait.apply_this_rule")}
                             className="mt-0.5 shrink-0"
                           />
                         ) : null}
@@ -168,7 +158,7 @@ export function SaitRulesSection({
                         >
                           {r.source ? (
                             <p className="m-0 text-sm font-semibold text-muted-foreground">
-                              {pick(r.source.ne, r.source.en)}
+                              {bilingualText(lang, r.source.ne, r.source.en)}
                             </p>
                           ) : null}
                           {r.shloka ? (
@@ -181,7 +171,7 @@ export function SaitRulesSection({
                           ) : null}
                           {r.gloss ? (
                             <p className="m-0 text-sm leading-relaxed text-muted-foreground">
-                              {pick(r.gloss.ne, r.gloss.en)}
+                              {bilingualText(lang, r.gloss.ne, r.gloss.en)}
                             </p>
                           ) : null}
                         </div>
@@ -195,7 +185,7 @@ export function SaitRulesSection({
             {engineVersion ? (
               <p className="m-0 flex items-center gap-1.5 text-xs pt-4 text-muted-foreground">
                 <Info className="size-3.5" aria-hidden />
-                {pick("मुहूर्त इन्जिन संस्करण", "Muhūrta engine")} {engineVersion}
+                {t("sait.muh_rta_engine")} {engineVersion}
               </p>
             ) : null}
           </div>

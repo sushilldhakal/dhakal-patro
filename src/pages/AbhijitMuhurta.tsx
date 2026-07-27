@@ -23,7 +23,7 @@ import {
   BS_SUPPORTED_START_YEAR,
   getBSMonthLength,
 } from "@/lib/bs-calendar";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   computeAbhijitFromSunTimes,
   formatBsMonthDayPatro,
@@ -82,12 +82,12 @@ function AbhijitDayCard({
   isToday: boolean;
 }) {
   const { t } = useTranslation();
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const { day, abhijit } = row;
   const adDay = new Date(`${day.date_ad}T12:00:00`).getDate();
   const sunrise = formatClockNepali(day.sunrise) ?? day.sunrise ?? "—";
   const sunset = formatClockNepali(day.sunset) ?? day.sunset ?? "—";
-  const weekday = pick(day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
+  const weekday = bilingualText(lang, day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
 
   return (
     <article
@@ -159,7 +159,7 @@ export function AbhijitMuhurta() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { pick, digits, lang } = useLocale();
+  const { digits, lang } = useLocale();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const monthBrowse = usePatroMonthUrlBrowse(search, navigate, location, setLocation);
 
@@ -195,7 +195,7 @@ export function AbhijitMuhurta() {
     [rows, todayAd],
   );
 
-  const monthLabel = pick(
+  const monthLabel = bilingualText(lang, 
     BS_MONTHS_NE[monthBrowse.bsMonth - 1],
     BS_MONTH_NAMES[monthBrowse.bsMonth - 1],
   );
@@ -267,7 +267,7 @@ export function AbhijitMuhurta() {
               <p className="text-sm mb-2">
                 {formatBsMonthDayPatro(monthBrowse.bsYear, monthBrowse.bsMonth, todayRow.day.day)}
                 {" · "}
-                {pick(
+                {bilingualText(lang, 
                   todayRow.day.weekday_ne ?? todayRow.day.weekday,
                   todayRow.day.weekday_en ?? todayRow.day.weekday,
                 )}

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroNavataraToneBg } from "@/lib/patro-classes";
 
 export function PanchangaSection({
@@ -17,10 +17,10 @@ export function PanchangaSection({
   className?: string;
 }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const title = titleKey
     ? t(titleKey)
-    : pick(titleNe ?? titleEn ?? "", titleEn ?? titleNe ?? "");
+    : bilingualText(lang, titleNe ?? titleEn ?? "", titleEn ?? titleNe ?? "");
 
   return (
     <section

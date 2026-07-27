@@ -1,4 +1,5 @@
 import { Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   BS_MONTHS_NE,
   BS_SUPPORTED_END_YEAR,
@@ -9,7 +10,7 @@ import {
 } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 
@@ -71,7 +72,8 @@ export function KundaliControls({
   location,
   onLocationChange,
 }: Props) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const bs = adToBS(date);
   const adYear = date.getFullYear();
   const adMonth = date.getMonth() + 1;
@@ -94,7 +96,7 @@ export function KundaliControls({
       <div
         className="inline-flex shrink-0 p-0.5 gap-0.5 border border-border rounded-lg bg-card"
         role="group"
-        aria-label={pick("संवत्", "Era")}
+        aria-label={t("kundali.era")}
       >
         {(["bs", "ad"] as const).map((e) => (
           <button
@@ -118,7 +120,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={bs.year}
-            aria-label={pick("वर्ष", "Year")}
+            aria-label={t("kundali.year")}
             onChange={(e) => pickBs(Number(e.target.value), bs.month, bs.day)}
           >
             {BS_YEARS.map((y) => (
@@ -131,7 +133,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={bs.month - 1}
-            aria-label={pick("महिना", "Month")}
+            aria-label={t("kundali.month")}
             onChange={(e) => pickBs(bs.year, Number(e.target.value) + 1, bs.day)}
           >
             {BS_MONTHS_NE.map((ne, i) => (
@@ -144,7 +146,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={bs.day}
-            aria-label={pick("दिन", "Day")}
+            aria-label={t("kundali.day")}
             onChange={(e) => pickBs(bs.year, bs.month, Number(e.target.value))}
           >
             {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
@@ -159,7 +161,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={adYear}
-            aria-label={pick("वर्ष", "Year")}
+            aria-label={t("kundali.year")}
             onChange={(e) => pickAd(Number(e.target.value), adMonth, adDay)}
           >
             {AD_YEARS.map((y) => (
@@ -172,12 +174,12 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={adMonth - 1}
-            aria-label={pick("महिना", "Month")}
+            aria-label={t("kundali.month")}
             onChange={(e) => pickAd(adYear, Number(e.target.value) + 1, adDay)}
           >
             {AD_MONTHS.map((m, i) => (
               <option key={m.en} value={i}>
-                {pick(m.ne, m.en)}
+                {bilingualText(lang, m.ne, m.en)}
               </option>
             ))}
           </select>
@@ -185,7 +187,7 @@ export function KundaliControls({
           <select
             className={selectClass}
             value={adDay}
-            aria-label={pick("दिन", "Day")}
+            aria-label={t("kundali.day")}
             onChange={(e) => pickAd(adYear, adMonth, Number(e.target.value))}
           >
             {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
@@ -204,7 +206,7 @@ export function KundaliControls({
           value={clock}
           onChange={(e) => onClockChange(e.target.value)}
           className="bg-transparent border-0 p-0 m-0 w-full text-sm font-mono font-semibold text-foreground focus:outline-none focus:ring-0"
-          aria-label={pick("जन्म समय", "Birth time")}
+          aria-label={t("kundali.birth_time")}
         />
       </label>
 

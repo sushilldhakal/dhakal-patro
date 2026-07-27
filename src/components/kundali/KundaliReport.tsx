@@ -16,7 +16,7 @@ import {
   type ReportMeta,
   type ReportSection,
 } from "@/lib/api";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { cn } from "@/lib/utils";
 
@@ -135,8 +135,8 @@ function ItemCard({ item }: { item: ReportItem }) {
 }
 
 function SectionCard({ section }: { section: ReportSection }) {
-  const { pick, isEnglish } = useLocale();
-  const title = pick(section.title_ne, section.title_en);
+  const { lang, isEnglish } = useLocale();
+  const title = bilingualText(lang, section.title_ne, section.title_en);
   const isGrid =
     section.id === "planet_by_planet" ||
     section.id === "house_by_house" ||
@@ -190,17 +190,17 @@ function SectionCard({ section }: { section: ReportSection }) {
 
 function MetaStrip({ meta }: { meta: ReportMeta }) {
   const { t } = useTranslation();
-  const { pick, isEnglish } = useLocale();
+  const { lang, isEnglish } = useLocale();
   const cells: { label: string; value: string; sub?: string }[] = [
     {
       label: t("kundali.report.meta_lagna"),
-      value: pick(meta.lagna.name_ne, meta.lagna.name_en),
+      value: bilingualText(lang, meta.lagna.name_ne, meta.lagna.name_en),
     },
     {
       label: t("kundali.report.meta_nakshatra"),
       value: meta.nakshatra
-        ? pick(meta.nakshatra.name_ne, meta.nakshatra.name_en)
-        : pick(meta.moon_sign.name_ne, meta.moon_sign.name_en),
+        ? bilingualText(lang, meta.nakshatra.name_ne, meta.nakshatra.name_en)
+        : bilingualText(lang, meta.moon_sign.name_ne, meta.moon_sign.name_en),
       sub: meta.nakshatra
         ? isEnglish
           ? `${meta.nakshatra.name_en} · ${t("kundali.report.meta_pada", { pada: meta.nakshatra.pada })}`
@@ -209,18 +209,15 @@ function MetaStrip({ meta }: { meta: ReportMeta }) {
     },
     {
       label: t("kundali.report.meta_sun"),
-      value: pick(meta.sun_sign.name_ne, meta.sun_sign.name_en),
+      value: bilingualText(lang, meta.sun_sign.name_ne, meta.sun_sign.name_en),
       sub: isEnglish ? meta.sun_sign.name_en : undefined,
     },
     {
       label: t("kundali.report.meta_mahadasha"),
       value: meta.mahadasha
-        ? `${pick(meta.mahadasha.lord_ne, meta.mahadasha.lord_en)}${
+        ? `${bilingualText(lang, meta.mahadasha.lord_ne, meta.mahadasha.lord_en)}${
             meta.mahadasha.antardasha
-              ? ` / ${pick(
-                  meta.mahadasha.antardasha_ne ?? meta.mahadasha.antardasha,
-                  meta.mahadasha.antardasha_en ?? meta.mahadasha.antardasha
-                )}`
+              ? ` / ${bilingualText(lang, meta.mahadasha.antardasha_ne ?? meta.mahadasha.antardasha, meta.mahadasha.antardasha_en ?? meta.mahadasha.antardasha)}`
               : ""
           }`
         : "—",

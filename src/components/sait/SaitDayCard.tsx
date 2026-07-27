@@ -1,5 +1,6 @@
 import { Baby, Clock3, Compass } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { formatRashiDisplay } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
@@ -56,31 +57,26 @@ export function SaitDayCard({
   suitability?: SaitSuitability;
   personalize?: SaitPersonalizeDay;
 }) {
-  const { pick, digits, lang } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
   const shuddhi = personalize?.shuddhi ?? null;
   const kumbha = personalize?.kumbha ?? null;
   const annaMonth = personalize?.anna_month ?? null;
   const overnight = d.window_end < d.window_start;
-  const monthLabel = pick(
-    d.bs_month_name_ne,
-    BS_MONTH_NAMES[d.bs_month - 1] ?? d.bs_month_name_ne,
-  );
-  const paksha = pick(
-    d.paksha_ne,
-    d.paksha === "shukla" ? "Shukla" : d.paksha === "krishna" ? "Krishna" : d.paksha_ne,
-  );
+  const monthLabel = bilingualText(lang, d.bs_month_name_ne, BS_MONTH_NAMES[d.bs_month - 1] ?? d.bs_month_name_ne);
+  const paksha = bilingualText(lang, d.paksha_ne, d.paksha === "shukla" ? "Shukla" : d.paksha === "krishna" ? "Krishna" : d.paksha_ne);
   const rows: { label: string; value: string }[] = [
-    { label: pick("तिथि", "Tithi"), value: `${paksha} ${pick(d.tithi_ne, d.tithi_en)}` },
-    { label: pick("नक्षत्र", "Nakṣatra"), value: pick(d.nakshatra_ne, d.nakshatra_en) },
-    { label: pick("योग", "Yoga"), value: pick(d.yoga_ne, d.yoga_en) },
-    { label: pick("करण", "Karaṇa"), value: pick(d.karana_ne, d.karana_en) },
+    { label: t("sait.tithi"), value: `${paksha} ${bilingualText(lang, d.tithi_ne, d.tithi_en)}` },
+    { label: t("sait.nak_atra"), value: bilingualText(lang, d.nakshatra_ne, d.nakshatra_en) },
+    { label: t("sait.yoga"), value: bilingualText(lang, d.yoga_ne, d.yoga_en) },
+    { label: t("sait.kara_a"), value: bilingualText(lang, d.karana_ne, d.karana_en) },
     {
-      label: pick("लग्न", "Lagna"),
-      value: formatRashiDisplay(d.lagna_ne, d.lagna_en, lang) ?? pick(d.lagna_ne, d.lagna_en) ?? "—",
+      label: t("sait.lagna"),
+      value: formatRashiDisplay(d.lagna_ne, d.lagna_en, lang) ?? bilingualText(lang, d.lagna_ne, d.lagna_en) ?? "—",
     },
     {
-      label: pick("चन्द्रमास", "Lunar month"),
-      value: pick(d.lunar_month_ne ?? "—", d.lunar_month_en ?? "—"),
+      label: t("sait.lunar_month"),
+      value: bilingualText(lang, d.lunar_month_ne ?? "—", d.lunar_month_en ?? "—"),
     },
   ];
 
@@ -111,7 +107,7 @@ export function SaitDayCard({
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <h3 className="m-0 text-base font-bold leading-tight text-foreground">
-              {pick(d.weekday_ne, d.weekday_en)}
+              {bilingualText(lang, d.weekday_ne, d.weekday_en)}
             </h3>
             <span className="font-num text-sm text-muted-foreground">{d.gregorian}</span>
           </div>
@@ -120,10 +116,10 @@ export function SaitDayCard({
             <Clock3 className="size-3.5 shrink-0 opacity-80" aria-hidden />
             <span className="font-num tabular-nums">
               {digits(d.window_start)} – {digits(d.window_end)}
-              {overnight ? ` (${pick("भोलिपल्ट", "+1")})` : ""}
+              {overnight ? ` (${t("sait.1")})` : ""}
             </span>
             <span className="hidden text-xs font-medium text-secondary/80 sm:inline">
-              {pick("शुभ लग्न", "lagna window")}
+              {t("sait.lagna_window")}
             </span>
           </div>
         </div>
@@ -142,26 +138,26 @@ export function SaitDayCard({
         <div className="mt-3 border-t border-border pt-2.5">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs font-semibold text-muted-foreground">
-              {pick("ग्रह शुद्धि", "Graha Śuddhi")}
+              {t("sait.graha_uddhi")}
             </span>
             {shuddhi.planets.map((p) => (
               <span
                 key={p.planet}
-                title={pick(p.rashi_ne, p.rashi_en)}
+                title={bilingualText(lang, p.rashi_ne, p.rashi_en)}
                 className={cn(
                   "font-num inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums",
                   SHUDDHI_TONE_CHIP[p.tone],
                 )}
               >
-                {pick(SHUDDHI_PLANET_LABEL[p.planet].ne, SHUDDHI_PLANET_LABEL[p.planet].en)}
+                {bilingualText(lang, SHUDDHI_PLANET_LABEL[p.planet].ne, SHUDDHI_PLANET_LABEL[p.planet].en)}
                 <span>{digits(p.house)}</span>
               </span>
             ))}
           </div>
           <p className={cn("m-0 mt-1.5 text-xs font-semibold", SHUDDHI_TONE_TEXT[shuddhi.tone])}>
-            {pick(SHUDDHI_SUMMARY[shuddhi.tone].ne, SHUDDHI_SUMMARY[shuddhi.tone].en)}
+            {bilingualText(lang, SHUDDHI_SUMMARY[shuddhi.tone].ne, SHUDDHI_SUMMARY[shuddhi.tone].en)}
             <span className="ml-1 font-normal text-muted-foreground">
-              {pick("(जन्मराशिबाट भाव)", "(house from janma rāśi)")}
+              {t("sait.house_from_janma_r_i")}
             </span>
           </p>
         </div>
@@ -172,7 +168,7 @@ export function SaitDayCard({
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
               <Compass className="size-3.5 shrink-0 opacity-80" aria-hidden />
-              {pick("कुम्भ चक्र", "Kumbha Chakra")}
+              {t("sait.kumbha_chakra")}
             </span>
             <span
               className={cn(
@@ -180,13 +176,13 @@ export function SaitDayCard({
                 SHUDDHI_TONE_CHIP[kumbha.tone],
               )}
             >
-              {pick(kumbha.zone_ne, kumbha.zone_en)}
+              {bilingualText(lang, kumbha.zone_ne, kumbha.zone_en)}
             </span>
           </div>
           <p className={cn("m-0 mt-1.5 text-xs font-semibold", SHUDDHI_TONE_TEXT[kumbha.tone])}>
-            {pick(kumbha.effect_ne, kumbha.effect_en)}
+            {bilingualText(lang, kumbha.effect_ne, kumbha.effect_en)}
             <span className="ml-1 font-normal text-muted-foreground">
-              {pick("(सूर्यदेखि गणना)", "(counted from the Sun)")}
+              {t("sait.counted_from_the_sun")}
             </span>
           </p>
         </div>
@@ -197,7 +193,7 @@ export function SaitDayCard({
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
               <Baby className="size-3.5 shrink-0 opacity-80" aria-hidden />
-              {pick("अन्नप्राशन उमेर-मास", "Annaprāśana age-month")}
+              {t("sait.annapr_ana_age_month")}
             </span>
             <span
               className={cn(
@@ -205,13 +201,13 @@ export function SaitDayCard({
                 SHUDDHI_TONE_CHIP[annaMonth.tone],
               )}
             >
-              {pick(`${digits(annaMonth.ordinal_month)} औँ महिना`, `month ${digits(annaMonth.ordinal_month)}`)}
+              {bilingualText(lang, `${digits(annaMonth.ordinal_month)} औँ महिना`, `month ${digits(annaMonth.ordinal_month)}`)}
             </span>
           </div>
           <p className={cn("m-0 mt-1.5 text-xs font-semibold", SHUDDHI_TONE_TEXT[annaMonth.tone])}>
             {annaMonth.matches
-              ? pick("बालकको उपयुक्त उमेर-मास", "the child's right age-month")
-              : pick("यो बालकको उपयुक्त उमेर-मास होइन", "not this child's age-month")}
+              ? t("sait.the_child_s_right_age_month")
+              : t("sait.not_this_child_s_age_month")}
           </p>
         </div>
       ) : null}

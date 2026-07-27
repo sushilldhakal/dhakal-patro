@@ -1,4 +1,5 @@
 import type { GocharGraha } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 import {
   mergeKundaliRashi,
   RASHYADI_PLANET_ABBREV,
@@ -34,7 +35,8 @@ export function GocharRashyadiTable({
   loading,
   className,
 }: TableProps) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { digits } = useLocale();
   const planets =
     kundaliGrahas &&
     kundaliDateAd &&
@@ -46,7 +48,7 @@ export function GocharRashyadiTable({
   if (loading) {
     return (
       <div className={cn("flex h-full min-h-[280px] items-center justify-center rounded-xl border border-border p-4", className)}>
-        <p className="text-sm">{pick("लोड हुँदैछ…", "Loading…")}</p>
+        <p className="text-sm">{t("dainik.loading")}</p>
       </div>
     );
   }
@@ -59,13 +61,13 @@ export function GocharRashyadiTable({
           {segment.labelNe}
           {segment.bsDay != null ? (
             <span className="ml-1.5 text-sm">
-              ({digits(segment.bsDay)}{pick(" गते", "")})
+              ({digits(segment.bsDay)}{t("dainik.text")})
             </span>
           ) : null}
         </p>
         {segment.moonRashiNe ? (
           <p className="mt-1 text-sm">
-            {pick("च.रा.", "Moon")}: <span className="text-base text-foreground">{segment.moonRashiNe}</span>
+            {t("dainik.moon")}: <span className="text-base text-foreground">{segment.moonRashiNe}</span>
           </p>
         ) : null}
       </div>
@@ -114,10 +116,7 @@ export function GocharRashyadiTable({
         </tbody>
       </table>
       <p className="border-t border-border/60 px-3 py-1.5 text-xs">
-        {pick(
-          "अं=अंश · ग=कला · वि=विकला · प्र=तटपरा · त्र=प्रतितत्परा",
-          "Deg=degree · Ka=kala · Vi=vikala · Pr=prati-tatpara · Tr=prati-vikala",
-        )}
+        {t("dainik.deg_degree_ka_kala_vi_vikala_pr_prati_tatpara_tr_prati_")}
       </p>
     </div>
   );

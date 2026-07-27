@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { edScrub } from "@/lib/diagram-classes";
 import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 import { WHEEL_RASHIS } from "@/lib/wheel-data";
 import { SunEarthMoonOrbit } from "./SunEarthMoonOrbit";
 import {
@@ -28,7 +29,8 @@ const PRESETS = [
 ];
 
 export function SunEarthMoonStudy() {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
   const [day, setDay] = useState(0);
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);
@@ -55,7 +57,7 @@ export function SunEarthMoonStudy() {
   const E = elongationFromDay(day);
   const monthIdx = rashiIdx;
   const monthsDone = lunarMonthsCompleted(day);
-  const paksha = E < 180 ? pick("शुक्ल", "Shukla") : pick("कृष्ण", "Krishna");
+  const paksha = E < 180 ? t("learn.shukla") : t("learn.krishna");
   const daysIntoLunarMonth = day - monthsDone * SYNODIC_MONTH;
 
   return (
@@ -70,36 +72,36 @@ export function SunEarthMoonStudy() {
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>{pick("सौर महिना", "Solar month")}</span>
+            <span className={edRoK}>{t("learn.solar_month")}</span>
             <span className={edRoV()}>{BS_MONTHS[monthIdx]}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("सूर्य राशि · नक्षत्र", "Sun sign · nakshatra")}</span>
+            <span className={edRoK}>{t("learn.sun_sign_nakshatra")}</span>
             <span className={edRoV()}>
-              {pick(WHEEL_RASHIS[rashiIdx]!.ne, WHEEL_RASHIS[rashiIdx]!.en)} · {pick(NAKSHATRA_ICONS[nakIdx]!.ne, NAKSHATRA_ICONS[nakIdx]!.en)}
+              {bilingualText(lang, WHEEL_RASHIS[rashiIdx]!.ne, WHEEL_RASHIS[rashiIdx]!.en)} · {bilingualText(lang, NAKSHATRA_ICONS[nakIdx]!.ne, NAKSHATRA_ICONS[nakIdx]!.en)}
             </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("सूर्य देशान्तर", "Sun longitude")}</span>
+            <span className={edRoK}>{t("learn.sun_longitude")}</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(sunLon))}°</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("वर्षको दिन", "Day of year")}</span>
+            <span className={edRoK}>{t("learn.day_of_year")}</span>
             <span className={edRoV({ mono: true })}>
               {fmt(Math.round(day))} / {fmt(365)}
             </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("चन्द्र कोण · पक्ष", "Moon angle · paksha")}</span>
+            <span className={edRoK}>{t("learn.moon_angle_paksha")}</span>
             <span className={edRoV({ mono: true })}>
               {fmt(Math.round(E))}° · {paksha}
             </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{pick("सकिएका चान्द्र महिना", "Lunar months done")}</span>
+            <span className={edRoK}>{t("learn.lunar_months_done")}</span>
             <span className={edRoV({ amber: true })}>
               {fmt(monthsDone)} / ~{fmt(12)} · {fmt(Math.round(daysIntoLunarMonth))}{" "}
-              {pick("दिन यो महिनाको", "days into this month")}
+              {t("learn.days_into_this_month")}
             </span>
           </div>
         </div>
@@ -108,8 +110,8 @@ export function SunEarthMoonStudy() {
             type="button"
             className={edPlayBtn}
             onClick={() => setPlaying((p) => !p)}
-            title={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
-            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+            title={playing ? t("learn.pause") : t("learn.play")}
+            aria-label={playing ? t("learn.pause") : t("learn.play")}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
@@ -138,13 +140,13 @@ export function SunEarthMoonStudy() {
                 setDay(p.day);
               }}
             >
-              {pick(p.ne, p.en)}
+              {bilingualText(lang, p.ne, p.en)}
             </button>
           ))}
         </div>
       </div>
       <p className={tmCardCap}>
-        {pick(
+        {bilingualNode(lang, 
           <>
             बाहिरी {fmt(12)} राशि र {fmt(27)} नक्षत्रको ग्रिडले पृथ्वीबाट देखिने{" "}
             <span className={cn("hl-amber")}>सूर्यको स्थिति</span> देखाउँछ — सूर्य नयाँ राशि वा नक्षत्रमा

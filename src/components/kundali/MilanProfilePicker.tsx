@@ -43,7 +43,7 @@ interface Props {
 
 export const MilanProfilePicker = forwardRef<MilanProfilePickerHandle, Props>(
   function MilanProfilePicker({ boyId, girlId, onBoySelect, onGirlSelect }, ref) {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
     const queryClient = useQueryClient();
     const profilesQuery = useQuery({
       queryKey: ["milan-profiles"],
@@ -247,7 +247,6 @@ function RolePickerDialog({
   onAdd: () => void;
 }) {
   const { t } = useTranslation();
-
   const title = role === "boy" ? t("milan.pick_vara_title") : t("milan.pick_kanya_title");
   const desc = role === "boy" ? t("milan.pick_vara_desc") : t("milan.pick_kanya_desc");
 
@@ -323,7 +322,6 @@ function ProfileFormDialog({
   onSaved: () => void | Promise<void>;
 }) {
   const { t } = useTranslation();
-
   return (
     <Dialog open={dialog !== null} onOpenChange={(o) => !o && setDialog(null)}>
       <DialogContent className="max-w-xl">

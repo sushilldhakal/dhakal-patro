@@ -28,7 +28,7 @@ import {
   type HoraPlanetKey,
 } from "@/lib/hora-data";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 import { patroWheelShell } from "@/lib/patro-classes";
 import {
   horaCompassEn,
@@ -134,7 +134,7 @@ function CompassMarker({ deg, nep, en }: { deg: number; nep: string; en: string 
 }
 
 export function HoraRing({ p, isToday, timezone }: Props) {
-  const { pick, digits } = useLocale();
+  const { lang, digits } = useLocale();
   const det = useMemo(() => buildWheelDetail(p), [p]);
   const tz = resolveTimeZone(p?.location?.timezone, timezone);
   const [now, setNow] = useState(() => new Date());
@@ -320,19 +320,19 @@ export function HoraRing({ p, isToday, timezone }: Props) {
     <div className="relative mx-auto aspect-[960/900] w-full max-w-[640px]">
       <div className={horaStatusBar} aria-live="polite">
         <div>
-          <span className={horaStatusLabel}>{pick("वार", "Day")}</span>
-          <span className={horaStatusVal}>{pick(week.day, week.en)}</span>
+          <span className={horaStatusLabel}>{bilingualText(lang, "वार", "Day")}</span>
+          <span className={horaStatusVal}>{bilingualText(lang, week.day, week.en)}</span>
         </div>
         <div>
-          <span className={horaStatusLabel}>{pick("होरा", "Hora")}</span>
+          <span className={horaStatusLabel}>{bilingualText(lang, "होरा", "Hora")}</span>
           <span className={cn(horaStatusVal, "font-num tabular-nums")}>
             {horaPad(gii + 1)} / 24
           </span>
         </div>
         <div>
-          <span className={horaStatusLabel}>{pick("स्वामी", "Lord")}</span>
+          <span className={horaStatusLabel}>{bilingualText(lang, "स्वामी", "Lord")}</span>
           <span className={horaStatusVal} style={{ color: ruler.color }}>
-            {pick(HORA_DEVA[rulerKey], ruler.en)}
+            {bilingualText(lang, HORA_DEVA[rulerKey], ruler.en)}
           </span>
         </div>
       </div>
@@ -441,10 +441,10 @@ export function HoraRing({ p, isToday, timezone }: Props) {
         </g>
 
         <text className={horaHubDay} x={HORA_CX} y={HORA_CY + 2} textAnchor="middle">
-          {pick(week.day, week.en)}
+          {bilingualText(lang, week.day, week.en)}
         </text>
         <text className={horaHubRom} x={HORA_CX} y={HORA_CY + 20} textAnchor="middle">
-          {pick(week.rom, ruler.en)}
+          {bilingualText(lang, week.rom, ruler.en)}
         </text>
         <text className={horaHubNum} x={HORA_CX} y={HORA_CY + 42} textAnchor="middle">
           HORĀ {horaPad(gii + 1)} / 24
@@ -456,7 +456,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
           textAnchor="middle"
           fill={ruler.color}
         >
-          {pick(HORA_DEVA[rulerKey], ruler.en)}
+          {bilingualText(lang, HORA_DEVA[rulerKey], ruler.en)}
         </text>
 
         <circle cx={mx} cy={my} r={15} fill="var(--brand-gold)" opacity={0.5} filter="url(#hora-markGlow)" />
@@ -476,7 +476,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
       <button
         type="button"
         className={horaControlBtn}
-        title={expanded ? pick("सामान्य दृश्य", "Exit fullscreen") : pick("पूर्ण स्क्रिन", "Fullscreen")}
+        title={expanded ? bilingualText(lang, "सामान्य दृश्य", "Exit fullscreen") : bilingualText(lang, "पूर्ण स्क्रिन", "Fullscreen")}
         aria-pressed={expanded}
         onClick={toggleExpanded}
       >
@@ -486,7 +486,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
       <button
         type="button"
         className={horaPlayBtn}
-        aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+        aria-label={playing ? bilingualText(lang, "रोक्नुहोस्", "Pause") : bilingualText(lang, "चलाउनुहोस्", "Play")}
         onClick={() => {
           const next = !playing;
           setPlaying(next);
@@ -512,7 +512,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
           max={PROG_STEPS - 1}
           step={1}
           value={progStep}
-          aria-label={pick("हप्ता होरा स्लाइडर", "Week hora slider")}
+          aria-label={bilingualText(lang, "हप्ता होरा स्लाइडर", "Week hora slider")}
           className={horaVerticalScrub}
           style={{ "--fill": `${prog * 100}%` } as React.CSSProperties}
           onPointerDown={() => {
@@ -559,17 +559,16 @@ export function HoraRing({ p, isToday, timezone }: Props) {
             {!expanded ? (
               <div className="w-full max-w-[640px]">
                 <div className="flex items-center justify-center gap-2.5 text-xs font-semibold uppercase tracking-[0.22em] text-secondary before:h-px before:w-[22px] before:bg-secondary/70 before:content-[''] dark:text-[var(--hora-yellow)] dark:before:bg-[var(--hora-yellow)]/70">
-                  {pick("होरा · ग्रहीय होरा", "Hora · Planetary Hours")}
+                  {bilingualText(lang, "होरा · ग्रहीय होरा", "Hora · Planetary Hours")}
                 </div>
                 <h2 className="mt-3.5 text-[clamp(28px,4vw,40px)] font-bold leading-tight tracking-tight text-foreground dark:text-[var(--hora-ink)]">
-                  {pick("एक हप्ता,", "One week,")}
+                  {bilingualText(lang, "एक हप्ता,", "One week,")}
                   <br />
                   <span className="text-secondary dark:text-[var(--hora-yellow)]">
-                    {pick("निरन्तर होरा", "unbroken hora")}
+                    {bilingualText(lang, "निरन्तर होरा", "unbroken hora")}
                   </span>
                 </h2>
-                {pick(
-                  <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
+                {bilingualNode(lang, <p className="mx-auto mt-3.5 max-w-[600px] text-sm leading-relaxed dark:text-[var(--hora-ink-dim)] [&_em]:italic [&_em]:text-foreground dark:[&_em]:text-[var(--hora-ink)] [&_span]:font-semibold [&_span]:text-foreground dark:[&_span]:text-[var(--hora-ink)]">
                     हरेक वलय एउटै दिन हो — सात ग्रहले पालो–पालोमा शासन गर्ने चौबीस{" "}
                     <em>होरा</em>। सूर्योदयपछिको <em>पहिलो</em> होराको ग्रहले दिनको नाम दिन्छ। गणना
                     कहिल्यै रोकिँदैन: <span>आइतबार</span>को अन्तिम होरा <span>सोम</span>मा गुड्छ र{" "}
@@ -591,7 +590,7 @@ export function HoraRing({ p, isToday, timezone }: Props) {
 
             <div className="w-full max-w-[440px] text-left">
               <div className="mb-2.5 text-center text-sm font-semibold uppercase tracking-[0.18em] dark:text-[var(--hora-ink-faint)]">
-                {pick("सात दिन · भित्र → बाहिर", "Seven days · inner → outer")}
+                {bilingualText(lang, "सात दिन · भित्र → बाहिर", "Seven days · inner → outer")}
               </div>
               {HORA_WEEK.map((w, i) => {
                 const P = HORA_PLANETS[w.ruler];
@@ -605,10 +604,10 @@ export function HoraRing({ p, isToday, timezone }: Props) {
                     </span>
                     <span className="flex min-w-0 flex-1 flex-col gap-px">
                       <span className="font-semibold text-foreground dark:text-[var(--hora-ink)]">
-                        {pick(w.day, w.en)}
+                        {bilingualText(lang, w.day, w.en)}
                       </span>
                       <span className="text-sm dark:text-[var(--hora-ink-faint)]">
-                        {pick(`${w.rom} · ${HORA_DEVA[w.ruler]} ${P.nep}`, `${P.en} · ${P.nep}`)}
+                        {bilingualText(lang, `${w.rom} · ${HORA_DEVA[w.ruler]} ${P.nep}`, `${P.en} · ${P.nep}`)}
                       </span>
                     </span>
                     <span className="h-[7px] w-[38px] shrink-0 rounded-full" style={{ background: P.color }} />

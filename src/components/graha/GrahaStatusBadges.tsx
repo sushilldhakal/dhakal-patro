@@ -1,5 +1,5 @@
 import { Flame, RotateCcw } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { showAsta, showVakri } from "@/lib/graha-status";
 
@@ -20,7 +20,7 @@ type Props = {
  * hover tooltip, never as inline text.
  */
 export function GrahaStatusBadges({ planetKey, isRetrograde, isCombust, className, size = 14 }: Props) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const vakri = showVakri(planetKey, isRetrograde);
   const asta = showAsta(planetKey, isCombust);
   if (!vakri && !asta) return null;
@@ -29,12 +29,12 @@ export function GrahaStatusBadges({ planetKey, isRetrograde, isCombust, classNam
   return (
     <span className={cn("inline-flex items-center gap-1", className)}>
       {vakri && (
-        <span className="inline-flex" title={pick("वक्री", "Retrograde")} aria-label={pick("वक्री", "Retrograde")}>
+        <span className="inline-flex" title={bilingualText(lang, "वक्री", "Retrograde")} aria-label={bilingualText(lang, "वक्री", "Retrograde")}>
           <RotateCcw className="text-secondary" style={{ width: px, height: px }} strokeWidth={2.5} aria-hidden />
         </span>
       )}
       {asta && (
-        <span className="inline-flex" title={pick("अस्त", "Combust")} aria-label={pick("अस्त", "Combust")}>
+        <span className="inline-flex" title={bilingualText(lang, "अस्त", "Combust")} aria-label={bilingualText(lang, "अस्त", "Combust")}>
           <Flame className="text-destructive" style={{ width: px, height: px }} strokeWidth={2.5} aria-hidden />
         </span>
       )}
@@ -96,7 +96,7 @@ export function GrahaStatusMarksSvg({
 
 /** Compact icon key explaining the chart/list markers. */
 export function GrahaStatusLegend({ className }: { className?: string }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   return (
     <p
       className={cn(
@@ -106,11 +106,11 @@ export function GrahaStatusLegend({ className }: { className?: string }) {
     >
       <span className="inline-flex items-center gap-1">
         <RotateCcw className="size-3.5 text-secondary" aria-hidden />
-        {pick("वक्री", "Retrograde")}
+        {bilingualText(lang, "वक्री", "Retrograde")}
       </span>
       <span className="inline-flex items-center gap-1">
         <Flame className="size-3.5 text-destructive" aria-hidden />
-        {pick("अस्त", "Combust")}
+        {bilingualText(lang, "अस्त", "Combust")}
       </span>
     </p>
   );

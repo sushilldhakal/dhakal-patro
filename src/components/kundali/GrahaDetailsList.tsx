@@ -1,6 +1,7 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCcw } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import type { VargaChartEntry, VargaCharts } from "@/lib/api";
 import { rashiToHouse } from "@/lib/bhava";
 import {
@@ -49,7 +50,8 @@ export function GrahaDetailsList({
   anchorKey,
   vargaCharts,
 }: GrahaDetailsListProps) {
-  const { pick, digits, lang } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
 
   const rows = useMemo<Row[]>(() => {
     const entries = vargaCharts.entries[String(division)] ?? [];
@@ -76,7 +78,7 @@ export function GrahaDetailsList({
   if (rows.length === 0) return null;
 
   const grahaName = (key: string) =>
-    pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
+    bilingualText(lang, GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
   const rashiName = (rashi: number) => formatRashiByNumber(rashi, lang);
 
   return (
@@ -84,25 +86,22 @@ export function GrahaDetailsList({
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3.5")}>
-            {pick("ग्रह", "Graha")}
+            {t("kundali.graha")}
           </TableHead>
-          <TableHead className={th}>{pick("राशि / स्पष्ट", "Rashi / Longitude")}</TableHead>
-          <TableHead className={cn(th, "text-center")}>{pick("भाव", "Bhava")}</TableHead>
-          <TableHead className={th}>{pick("नक्षत्र (पद)", "Nakshatra (Pada)")}</TableHead>
-          <TableHead className={th}>{pick("नक्षत्रेश / उप", "Lord / Sub")}</TableHead>
-          <TableHead className={th}>{pick("स्वामी", "Owner")}</TableHead>
-          <TableHead className={th}>{pick("सम्बन्ध", "Relationship")}</TableHead>
-          <TableHead className={th}>{pick("स्थिति", "Dignity")}</TableHead>
-          <TableHead className={th}>{pick("स्वामित्व", "Rules")}</TableHead>
+          <TableHead className={th}>{t("kundali.rashi_longitude")}</TableHead>
+          <TableHead className={cn(th, "text-center")}>{t("kundali.bhava_19")}</TableHead>
+          <TableHead className={th}>{t("kundali.nakshatra_pada")}</TableHead>
+          <TableHead className={th}>{t("kundali.lord_sub")}</TableHead>
+          <TableHead className={th}>{t("kundali.owner")}</TableHead>
+          <TableHead className={th}>{t("kundali.relationship")}</TableHead>
+          <TableHead className={th}>{t("kundali.dignity")}</TableHead>
+          <TableHead className={th}>{t("kundali.rules")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.map((row, i) => {
-          const name = row.key === "lagna" ? pick("लग्न", "Lagna") : grahaName(row.key);
-          const nakName = pick(
-            NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—",
-            NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—",
-          );
+          const name = row.key === "lagna" ? t("kundali.lagna") : grahaName(row.key);
+          const nakName = bilingualText(lang, NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—", NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—");
           const zebra = i % 2 === 1 && "bg-muted/20";
           return (
             <TableRow
@@ -125,10 +124,10 @@ export function GrahaDetailsList({
                   {row.retrograde && (
                     <span
                       className="inline-flex items-center gap-0.5 text-sm font-bold normal-case text-secondary bg-secondary/15 px-1 py-0.5 rounded-full"
-                      title={pick("वक्री", "Retrograde")}
+                      title={t("kundali.retrograde")}
                     >
                       <RotateCcw className="size-2.5" aria-hidden />
-                      {pick("वक्री", "R")}
+                      {t("kundali.r")}
                     </span>
                   )}
                 </span>
@@ -158,26 +157,23 @@ export function GrahaDetailsList({
                 {row.ownerBhava != null && (
                   <span>
                     {" "}
-                    {pick(`(भाव ${digits(row.ownerBhava)})`, `(bhava ${digits(row.ownerBhava)})`)}
+                    {bilingualText(lang, `(भाव ${digits(row.ownerBhava)})`, `(bhava ${digits(row.ownerBhava)})`)}
                   </span>
                 )}
               </TableCell>
               <TableCell className={td}>
                 {row.relation
-                  ? pick(RELATION_LABELS[row.relation].ne, RELATION_LABELS[row.relation].en)
+                  ? bilingualText(lang, RELATION_LABELS[row.relation].ne, RELATION_LABELS[row.relation].en)
                   : "—"}
               </TableCell>
               <TableCell className={td}>
                 {row.dignity
-                  ? pick(DIGNITY_LABELS[row.dignity].ne, DIGNITY_LABELS[row.dignity].en)
+                  ? bilingualText(lang, DIGNITY_LABELS[row.dignity].ne, DIGNITY_LABELS[row.dignity].en)
                   : "—"}
               </TableCell>
               <TableCell className={td}>
                 {row.rulesBhavas.length > 0
-                  ? pick(
-                      `भाव ${row.rulesBhavas.map((h) => digits(h)).join(", ")}`,
-                      `Bhava ${row.rulesBhavas.map((h) => digits(h)).join(", ")}`,
-                    )
+                  ? bilingualText(lang, `भाव ${row.rulesBhavas.map((h) => digits(h)).join(", ")}`, `Bhava ${row.rulesBhavas.map((h) => digits(h)).join(", ")}`)
                   : "—"}
               </TableCell>
             </TableRow>

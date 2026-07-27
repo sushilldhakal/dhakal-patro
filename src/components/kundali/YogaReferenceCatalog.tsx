@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, Loader2, Search } from "lucide-react";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   fetchYogaReference,
   type YogaReferenceEntry,
@@ -77,7 +78,8 @@ export type YogaReferenceCatalogProps = {
  * Fetched once from the CDN-cached `/kundali/yogas/reference` endpoint.
  */
 export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps = {}) {
-  const { pick } = useLocale();
+  const { t } = useTranslation();
+  const { lang } = useLocale();
   const [entries, setEntries] = useState<YogaReferenceEntry[] | null>(null);
   const [error, setError] = useState(false);
   const [open, setOpen] = useState(false);
@@ -121,13 +123,10 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
       >
         <span className="flex flex-col">
           <span className="text-sm font-semibold text-foreground">
-            {pick("योग सन्दर्भ सूची (१६२ संयोग)", "Yoga reference catalog (162 combinations)")}
+            {t("kundali.yoga_reference_catalog_162_combinations")}
           </span>
           <span className="text-xs text-muted-foreground">
-            {pick(
-              "बी. वी. रमनको “Three Hundred Important Combinations”, भाग I",
-              "B. V. Raman — “Three Hundred Important Combinations”, Part I",
-            )}
+            {bilingualText(lang, "बी. वी. रमनको “Three Hundred Important Combinations”, भाग I")}
           </span>
         </span>
         <ChevronDown
@@ -140,12 +139,12 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
         <div className="border-t border-border/60 p-3">
           {error ? (
             <p className="px-1 py-6 text-center text-sm text-muted-foreground">
-              {pick("सन्दर्भ सूची लोड गर्न सकिएन।", "Could not load the reference catalog.")}
+              {t("kundali.could_not_load_the_reference_catalog")}
             </p>
           ) : !entries ? (
             <p className="flex items-center justify-center gap-2 px-1 py-6 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" aria-hidden />
-              {pick("लोड हुँदैछ…", "Loading…")}
+              {t("kundali.loading")}
             </p>
           ) : (
             <>
@@ -155,10 +154,7 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={pick(
-                    "नाम, नियम वा फलले खोज्नुहोस्…",
-                    "Search name, rule or result…",
-                  )}
+                  placeholder={bilingualText(lang, "नाम, नियम वा फलले खोज्नुहोस्…")}
                   className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
               </label>
@@ -168,9 +164,9 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className={cn(th, "pl-3.5")}>ID</TableHead>
-                      <TableHead className={th}>{pick("योग", "Yoga")}</TableHead>
-                      <TableHead className={th}>{pick("नियम", "Rule")}</TableHead>
-                      <TableHead className={cn(th, "pr-3.5")}>{pick("फल", "Result")}</TableHead>
+                      <TableHead className={th}>{t("kundali.yoga")}</TableHead>
+                      <TableHead className={th}>{t("kundali.rule")}</TableHead>
+                      <TableHead className={cn(th, "pr-3.5")}>{t("kundali.result")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -183,13 +179,13 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
                           {e.yogaId}
                         </TableCell>
                         <TableCell className={cn(td, "whitespace-nowrap font-semibold text-foreground")}>
-                          {pick(e.nameNe?.trim() ? e.nameNe : e.name, e.name)}
+                          {bilingualText(lang, e.nameNe?.trim() ? e.nameNe : e.name, e.name)}
                         </TableCell>
                         <TableCell className={cn(td, "min-w-[14rem] whitespace-normal leading-snug")}>
-                          {pick(e.definitionNe?.trim() ? e.definitionNe : e.definition, e.definition)}
+                          {bilingualText(lang, e.definitionNe?.trim() ? e.definitionNe : e.definition, e.definition)}
                         </TableCell>
                         <TableCell className={cn(td, "min-w-[12rem] whitespace-normal pr-3.5 leading-snug")}>
-                          {pick(e.resultNe?.trim() ? e.resultNe : e.result, e.result)}
+                          {bilingualText(lang, e.resultNe?.trim() ? e.resultNe : e.result, e.result)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -199,7 +195,7 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
                           colSpan={4}
                           className="px-3.5 py-6 text-center text-sm text-muted-foreground"
                         >
-                          {pick("कुनै मिल्दो योग भेटिएन।", "No matching combination.")}
+                          {t("kundali.no_matching_combination")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -207,10 +203,7 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
                 </Table>
               </div>
               <p className="mt-2 px-1 text-xs text-muted-foreground">
-                {pick(
-                  "समूहबद्ध ID (जस्तै 33-44, 75-106) स्रोतमा जस्तै राखिएको। भाग II (163–300) पछि थपिनेछ।",
-                  "Grouped IDs (e.g. 33-44, 75-106) are kept as in the source. Part II (163–300) will be added later.",
-                )}
+                {t("kundali.grouped_ids_e_g_33_44_75_106_are_kept_as_in_the_source_")}
               </p>
             </>
           )}

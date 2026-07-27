@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   PATRO_PLANET_KEYS,
   PATRO_PLANET_NE,
@@ -7,7 +8,7 @@ import {
 } from "@/lib/dainikKranti/month-patro-tables";
 import { cn } from "@/lib/utils";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 import {
   Table,
   TableBody,
@@ -47,42 +48,43 @@ function formatPlanetCell(cell: { rashiNe: string; rashiEn?: string; coords: str
 }
 
 export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: Props) {
-  const { lang, pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
   const isEn = lang === "en";
   const table = (
       <Table>
         <TableHeader>
           <TableRow className={patroStickyHeadRow}>
-            <TableHead className={cn(th, patroStickyHeadCorner, "pl-3 text-left")}>{pick("गते", "Date")}</TableHead>
-            <TableHead className={cn(th, patroStickyHeadCell, "text-left")}>{pick("बा.", "Day")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCorner, "pl-3 text-left")}>{t("dainik.date")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "text-left")}>{t("dainik.day")}</TableHead>
             {PATRO_PLANET_KEYS.map((key) => (
               <TableHead key={key} className={cn(th, patroStickyHeadCell, "min-w-[5.5rem] text-center")}>
-                {pick(PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
+                {bilingualText(lang, PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
               </TableHead>
             ))}
-            <TableHead className={cn(th, patroStickyHeadCell, "min-w-[4.5rem] text-center")}>{pick("बेलान्तर", "Belaantar")}</TableHead>
+            <TableHead className={cn(th, patroStickyHeadCell, "min-w-[4.5rem] text-center")}>{t("dainik.belaantar")}</TableHead>
           </TableRow>
           <TableRow className="bg-muted/60 hover:bg-muted/60">
             <TableHead colSpan={2} className={patroStickySubHeadCorner} />
             {PATRO_PLANET_KEYS.map((key) => (
               <TableHead key={`sub-${key}`} className={cn(th, patroStickySubHeadCell, "text-center font-normal")}>
-                {pick("रा|अं|क|वि", "Ra|Deg|Ka|Vi")}
+                {t("dainik.ra_deg_ka_vi")}
               </TableHead>
             ))}
-            <TableHead className={cn(th, patroStickySubHeadCell, "text-center font-normal")}>{pick("समय सुधार", "Time corr.")}</TableHead>
+            <TableHead className={cn(th, patroStickySubHeadCell, "text-center font-normal")}>{t("dainik.time_corr")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
               <TableCell colSpan={11} className="py-8 text-center text-sm">
-                {pick("लोड हुँदैछ…", "Loading…")}
+                {t("dainik.loading")}
               </TableCell>
             </TableRow>
           ) : empty || rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={11} className="py-8 text-center text-sm">
-                {pick("यो पक्षमा कुनै दिन भेटिएन।", "No days found in this paksha.")}
+                {t("dainik.no_days_found_in_this_paksha")}
               </TableCell>
             </TableRow>
           ) : (
@@ -104,7 +106,7 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
                     {digits(row.day)}
                   </TableCell>
                   <TableCell className={cn(td, "")}>
-                    {pick(row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
+                    {bilingualText(lang, row.weekdayNe ?? "—", row.weekdayEn ?? row.weekdayNe ?? "—")}
                   </TableCell>
                   {PATRO_PLANET_KEYS.map((key) => {
                     const cell = row.planets[key];
@@ -138,7 +140,7 @@ export function MonthGrahaSpashta({ rows, todayKey, loading, empty, embedded }: 
 
   const footnote = (
     <p className="border-t border-border px-4 py-2 text-sm leading-relaxed">
-      {pick(
+      {bilingualNode(lang, 
         <>
           राशिहरू: {RASHI_COLUMNS_NE.join(", ")}। प्रत्येक ग्रहको कोष्ठकमा{" "}
           <span className="font-mono">राशि अंश|कला|विकला</span> — जस्तै{" "}

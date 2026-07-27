@@ -11,7 +11,7 @@ import {
   displayLocationLabel,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { adToBS } from "@/lib/bs-calendar";
 import { getBsYearSpanLabel } from "@/lib/local-calendar";
 import { searchToLocation } from "@/lib/url-state";
@@ -24,7 +24,7 @@ export function SunTimesYear() {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const { lang, digits, pick } = useLocale();
+  const { lang, digits } = useLocale();
   const locationLabel = displayLocationLabel(location, undefined, lang);
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
   const [gridLoading, setGridLoading] = useState(true);
@@ -36,11 +36,11 @@ export function SunTimesYear() {
   const bsYearSpan = getBsYearSpanLabel(bsYearForLabel, lang, digits);
   const pageSubtitle =
     yearBrowse.era === "ad"
-      ? pick(
+      ? bilingualText(lang, 
           `वार्षिक सूर्योदय–सूर्यास्त · ${digits(yearBrowse.browseYear)} AD · ${bsYearSpan}`,
           `Annual sunrise & sunset · ${digits(yearBrowse.browseYear)} AD · ${bsYearSpan}`,
         )
-      : pick(
+      : bilingualText(lang, 
           `वार्षिक सूर्योदय–सूर्यास्त · ${bsYearSpan}`,
           lang === "en"
             ? `Annual sunrise & sunset · ${bsYearSpan}`
@@ -101,7 +101,7 @@ export function SunTimesYear() {
         </p>
         {locationLabel ? (
           <p className="m-0 text-xs text-base">
-            {pick("स्थान", "Location")}: {locationLabel}
+            {bilingualText(lang, "स्थान", "Location")}: {locationLabel}
           </p>
         ) : null}
       </section>

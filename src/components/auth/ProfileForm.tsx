@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityAutocomplete } from "@/components/auth/CityAutocomplete";
 import { formatDateInput, formatTimeInput } from "@/lib/birth-date";
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   createProfile,
   updateProfile,
@@ -65,7 +65,7 @@ export function ProfileForm({
   onSaved: (saved: Profile) => void;
 }) {
   const { t } = useTranslation();
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const [form, setForm] = useState<ProfileInput>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +75,7 @@ export function ProfileForm({
   }
 
   async function onSubmit(e: React.FormEvent) {
+  const { t } = useTranslation();
     e.preventDefault();
     if (!form.full_name.trim()) {
       setError(t("profile.name_required"));
@@ -159,7 +160,7 @@ export function ProfileForm({
           <Input
             value={form.birth_date ?? ""}
             onChange={(e) => set("birth_date", formatDateInput(e.target.value))}
-            placeholder={pick("वर्ष-महिना-दिन", "YYYY-MM-DD")}
+            placeholder={bilingualText(lang, "वर्ष-महिना-दिन", "YYYY-MM-DD")}
             inputMode="numeric"
             maxLength={10}
           />
@@ -169,7 +170,7 @@ export function ProfileForm({
           <Input
             value={form.birth_time ?? ""}
             onChange={(e) => set("birth_time", formatTimeInput(e.target.value))}
-            placeholder={pick("घण्टा:मिनेट", "HH:MM")}
+            placeholder={bilingualText(lang, "घण्टा:मिनेट", "HH:MM")}
             inputMode="numeric"
             maxLength={5}
           />

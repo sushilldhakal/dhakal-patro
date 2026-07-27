@@ -1,4 +1,5 @@
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { SaitSuitability } from "@/lib/api";
 import { SUITABILITY_STYLE } from "@/lib/sait-suitability";
@@ -11,7 +12,7 @@ export function SuitabilityBadge({
   suitability: SaitSuitability;
   className?: string;
 }) {
-  const { pick } = useLocale();
+  const { lang } = useLocale();
   const s = SUITABILITY_STYLE[suitability];
   return (
     <span
@@ -22,7 +23,7 @@ export function SuitabilityBadge({
       )}
     >
       <span className={cn("size-1.5 rounded-full", s.dot)} aria-hidden />
-      {pick(s.ne, s.en)}
+      {bilingualText(lang, s.ne, s.en)}
     </span>
   );
 }
@@ -33,19 +34,20 @@ export function SuitabilityLegend({
 }: {
   counts?: { favourable: number; neutral: number; avoid: number } | null;
 }) {
-  const { pick, digits } = useLocale();
+  const { t } = useTranslation();
+  const { lang, digits } = useLocale();
   const order: SaitSuitability[] = ["favourable", "neutral", "avoid"];
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
       <span className="font-medium text-foreground">
-        {pick("तपाईंको प्रोफाइलअनुसार", "For your profile")}
+        {t("sait.for_your_profile")}
       </span>
       {order.map((k) => {
         const s = SUITABILITY_STYLE[k];
         return (
           <span key={k} className="inline-flex items-center gap-1">
             <span className={cn("size-2 rounded-full", s.dot)} aria-hidden />
-            {pick(s.ne, s.en)}
+            {bilingualText(lang, s.ne, s.en)}
             {counts ? (
               <span className="font-num tabular-nums">· {digits(counts[k])}</span>
             ) : null}

@@ -1,4 +1,5 @@
-import { useLocale } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
 import type { UpagrahaDetailRow } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
@@ -25,31 +26,29 @@ export type UpagrahaTableProps = {
  * points. Longitude DMS, nakshatra pada and lord all come from the API.
  */
 export function UpagrahaTable({ upagrahas }: UpagrahaTableProps) {
-  const { pick, digits, lang } = useLocale();
+  const { t } = useTranslation();
+  const { digits, lang } = useLocale();
 
   if (upagrahas.length === 0) return null;
 
   const grahaName = (key: string) =>
-    pick(GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
+    bilingualText(lang, GRAHA_NAME[key as GrahaKey]?.ne ?? key, GRAHA_NAME[key as GrahaKey]?.en ?? key);
   const rashiName = (rashi: number) => formatRashiByNumber(rashi, lang);
 
   return (
     <Table>
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
-          <TableHead className={cn(th, "pl-3.5")}>{pick("उपग्रह", "Upagraha")}</TableHead>
-          <TableHead className={th}>{pick("स्पष्ट", "Longitude")}</TableHead>
-          <TableHead className={th}>{pick("नक्षत्र / स्वामी", "Nakshatra / Swami")}</TableHead>
-          <TableHead className={cn(th, "text-right pr-3.5")}>{pick("कच्चा देशान्तर", "Raw L.")}</TableHead>
+          <TableHead className={cn(th, "pl-3.5")}>{t("kundali.upagraha")}</TableHead>
+          <TableHead className={th}>{t("kundali.longitude")}</TableHead>
+          <TableHead className={th}>{t("kundali.nakshatra_swami")}</TableHead>
+          <TableHead className={cn(th, "text-right pr-3.5")}>{t("kundali.raw_l")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {upagrahas.map((row, i) => {
-          const nakName = pick(
-            NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—",
-            NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—",
-          );
-          const name = pick(row.name_ne ?? row.name ?? row.key, row.name ?? row.key);
+          const nakName = bilingualText(lang, NAKSHATRA_ICONS[row.nakshatraIndex]?.ne ?? "—", NAKSHATRA_ICONS[row.nakshatraIndex]?.en ?? "—");
+          const name = bilingualText(lang, row.name_ne ?? row.name ?? row.key, row.name ?? row.key);
           return (
             <TableRow key={row.key} className={cn(i % 2 === 1 && "bg-muted/20")}>
               <TableCell className={cn(td, "pl-3.5 font-semibold text-foreground")}>
