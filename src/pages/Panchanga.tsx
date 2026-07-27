@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/i18n/locale";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange } from "lucide-react";
 import {
@@ -76,6 +77,7 @@ function parseAdStr(s: string): Date {
 
 export function Panchanga() {
   const { t } = useTranslation();
+  const { lang } = useLocale();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
 
@@ -179,7 +181,7 @@ export function Panchanga() {
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, location.params.timezone);
   const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
 
-  const locationLabel = displayLocationLabel(location, data?.location?.name);
+  const locationLabel = displayLocationLabel(location, data?.location?.name, lang);
   const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
   const todayAd = todayAdStringInTimezone(new Date(), effectiveTimezone);
 

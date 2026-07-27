@@ -13,6 +13,7 @@ import {
   displayRituSlot,
 } from "@/lib/ritu-display";
 import {
+  displayLocationLabel,
   resolveLocationTimezone,
   type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
@@ -67,6 +68,7 @@ export function RituSeasons({
 }) {
   const { t } = useTranslation();
   const { pick, digits: dg, lang } = useLocale();
+  const locationLabel = displayLocationLabel(location, undefined, lang);
   const tz = resolveLocationTimezone(location);
   const todayAd = useMemo(() => todayAdStringInTimezone(new Date(), tz), [tz]);
 
@@ -126,7 +128,7 @@ export function RituSeasons({
           <Sprout className="self-center text-secondary dark:text-primary" size={18} strokeWidth={1.8} />
           <h2 className="m-0 text-lg font-bold">{t("ritu.title")}</h2>
           <span className="flex-1 text-xs text-base">
-            {t("ritu.subtitle")}{location.label ? ` · ${location.label}` : ""}
+            {t("ritu.subtitle")}{locationLabel ? ` · ${locationLabel}` : ""}
             {south && <span className="ml-1 font-semibold text-warning">{t("ritu.southern")}</span>}
           </span>
           <Link

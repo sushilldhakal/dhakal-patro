@@ -3,16 +3,22 @@ import { Sprout } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { RituSeasons } from "@/components/RituSeasons";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import {
+  displayLocationLabel,
+  usePanchangaLocation,
+} from "@/components/panchanga/use-panchanga-location";
+import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 
 export function Ritu() {
   const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation();
+  const { lang } = useLocale();
 
   useRouteLoading(false);
 
-  const subtitle = `${t("ritu.subtitle")}${location.label ? ` · ${location.label}` : ""}`;
+  const locationLabel = displayLocationLabel(location, undefined, lang);
+  const subtitle = `${t("ritu.subtitle")}${locationLabel ? ` · ${locationLabel}` : ""}`;
 
   return (
     <PageShell>
