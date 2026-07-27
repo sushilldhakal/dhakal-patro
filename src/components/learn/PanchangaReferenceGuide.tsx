@@ -8,7 +8,7 @@ import {
   WHEEL_TITHIS,
   WHEEL_YOGAS,
 } from "@/lib/tithi-wheel-data";
-import { PADA_AKSHAR, RASHI_ELEM, RASHI_LORDS, WHEEL_RASHIS } from "@/lib/wheel-data";
+import { PADA_AKSHAR, RASHI_ELEM, RASHI_LORDS, getWheelRashis } from "@/lib/wheel-data";
 import { NAK_LORD_EN, TATTVA_EN } from "@/lib/wheel-locale";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import {
@@ -77,7 +77,7 @@ export function RashiReferenceTable() {
         </tr>
       </thead>
       <tbody>
-        {WHEEL_RASHIS.map((r, i) => (
+        {getWheelRashis().map((r, i) => (
           <tr key={r.ne}>
             <td className={patroMono}>{N(i + 1)}</td>
             <td>{bilingualText(lang, r.ne, r.en)}</td>

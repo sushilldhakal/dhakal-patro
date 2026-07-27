@@ -36,6 +36,12 @@ export function ensureEnglishBundle(): Promise<void> {
   if (!enLoadPromise) {
     enLoadPromise = import("./en.json").then((mod) => {
       i18n.addResourceBundle("en", "translation", mod.default, true, true);
+      // `lng` may already be "en" (restored from storage), in which case nothing
+      // else emits languageChanged once the bundle lands — components would keep
+      // rendering the Nepali fallback they resolved on first paint.
+      if ((i18n.language ?? "").slice(0, 2) === "en") {
+        void i18n.changeLanguage("en");
+      }
     });
   }
   return enLoadPromise;

@@ -78,7 +78,9 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
 
     rows.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     return rows;
-  }, [data, refDate]);
+    // `lang` gates the i18n lookups above — without it the labels keep whatever
+    // language was active when the gochar response first arrived.
+  }, [data, refDate, lang]);
 
   return (
     <div className={patroCard + " p-3.5 px-4"}>

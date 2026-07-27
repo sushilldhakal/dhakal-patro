@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { semEclipticGrid, semGridNakLabelCur, semGridNakLine, semGridNakSegVariant, semGridRashiLabelCur, semGridRashiLine, semGridRashiSegVariant } from "@/lib/diagram-classes";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { WHEEL_RASHIS } from "@/lib/wheel-data";
+import { getWheelRashis } from "@/lib/wheel-data";
 import {
   NAKSHATRA_SPAN_DEG,
   SEM,
@@ -83,10 +83,11 @@ export function EclipticGridLayer({ sunLon }: Props) {
     return { rashiArcs, nakArcs, rashiLines, nakLines };
   }, []);
 
+  const rashis = getWheelRashis();
   const rashiLabels = Array.from({ length: 12 }, (_, i) => {
     const Lm = i * 30 + 15;
     const [lx, ly] = pol(SEM.cx, SEM.cy, SEM_GRID.rashiLabelR, Lm);
-    const r = WHEEL_RASHIS[i]!;
+    const r = rashis[i]!;
     return (
       <text
         key={`rl-${i}`}

@@ -808,7 +808,10 @@ export function DainikKranti() {
       out[Number(day)]!.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     }
     return out;
-  }, [ingressQ.data, allDays]);
+    // `lang` looks unused here, but resolveRashiDisplay reads the active i18n
+    // bundle. Without it these labels keep the language they were built under.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ingressQ.data, allDays, lang]);
 
   const lagnaMatrix = useMemo(() => buildLagnaMatrix(days), [days]);
   const grahaMatrix = useMemo(() => buildGrahaSpashtaMatrix(days), [days]);

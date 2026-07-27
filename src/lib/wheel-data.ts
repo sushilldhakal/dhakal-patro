@@ -1,5 +1,5 @@
 import type { PanchangaDay, LagnaSpan } from "@/lib/api";
-import { BS_MONTHS_NE } from "@/lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
 import {
   getLagnaSpans,
   getPanchangaDetail,
@@ -17,11 +17,14 @@ export function getWheelRashis(): WheelRashi[] {
   }));
 }
 
-export const WHEEL_RASHIS = getWheelRashis();
-
 export const GREG_NE = [
   "जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन",
   "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर",
+] as const;
+
+export const GREG_EN = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ] as const;
 
 export const RASHI_LORDS = [
@@ -65,6 +68,7 @@ const GRAHA_KEYS = [
 
 const GRAHA_SYMS = ["", "", "", "", "", "", "", "", ""] as const;
 const GRAHA_NE = ["सूर्य", "चन्द्र", "मंगल", "बुध", "बृहस्पति", "शुक्र", "शनि", "राहु", "केतु"] as const;
+const GRAHA_EN = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"] as const;
 
 export interface WheelRashi {
   ne: string;
@@ -75,6 +79,7 @@ export interface WheelRashi {
 export interface WheelGraha {
   sym: string;
   ne: string;
+  en: string;
   rashi: WheelRashi;
   deg: [number, number, number];
   longitude?: number;
@@ -106,13 +111,13 @@ export const DEFAULT_WHEEL_TWEAKS: WheelTweaks = {
 function rashiFromNe(nameNe?: string | null): WheelRashi | undefined {
   if (!nameNe) return undefined;
   const num = rashiNumberFromName(nameNe);
-  if (num) return WHEEL_RASHIS[num - 1];
+  if (num) return getWheelRashis()[num - 1];
   return undefined;
 }
 
 function rashiFromNumber(rashi?: number): WheelRashi | undefined {
   if (rashi == null || rashi < 1 || rashi > 12) return undefined;
-  return WHEEL_RASHIS[rashi - 1];
+  return getWheelRashis()[rashi - 1];
 }
 
 type PlanetDetail = {
@@ -169,7 +174,7 @@ function planetLongitude(info: PlanetDetail): number | null {
   }
   if (info.rashi_ne) {
     const rashi = rashiFromNe(info.rashi_ne);
-    const ri = rashi ? WHEEL_RASHIS.findIndex((r) => r.ne === rashi.ne) : -1;
+    const ri = rashi ? getWheelRashis().findIndex((r) => r.ne === rashi.ne) : -1;
     if (ri >= 0) {
       const [d, m, s] = planetDegrees(info);
       return normDeg(ri * 30 + d + m / 60 + s / 3600);
@@ -277,7 +282,7 @@ function elongationWithinBand(elong0: number, g: number): number {
 function rashiIndexFromNe(nameNe?: string | null): number | null {
   const rashi = rashiFromNe(nameNe);
   if (!rashi) return null;
-  const idx = WHEEL_RASHIS.findIndex((r) => r.ne === rashi.ne);
+  const idx = getWheelRashis().findIndex((r) => r.ne === rashi.ne);
   return idx >= 0 ? idx + 1 : null;
 }
 
@@ -469,7 +474,7 @@ export function buildWheelMarkers(
   det: WheelDetail,
   scrubG: number
 ): WheelMarkers {
-  const lagnaLon = lagnaLongitudeAtG(p, scrubG) ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", rashi: WHEEL_RASHIS[0]!, deg: [0, 0, 0] });
+  const lagnaLon = lagnaLongitudeAtG(p, scrubG) ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", en: "", rashi: getWheelRashis()[0]!, deg: [0, 0, 0] });
   const moonLon = moonLonAtG(p, det, scrubG);
   const moonNak = Math.floor(normDeg(moonLon) / (360 / 27));
 
@@ -477,7 +482,7 @@ export function buildWheelMarkers(
   const planetLons = det.grahas.map((gr, i) =>
     grahaLonAtG(gr, i, scrubG, moonLon, rahuBase)
   );
-  const sunLon = planetLons[0] ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", rashi: WHEEL_RASHIS[0]!, deg: [0, 0, 0] });
+  const sunLon = planetLons[0] ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", en: "", rashi: getWheelRashis()[0]!, deg: [0, 0, 0] });
 
   return {
     lagnaLon,
@@ -503,7 +508,7 @@ export function clockToScrubG(clock: string, sunriseMin: number): number {
 
 export function grahaLon(g: WheelGraha): number {
   if (g.longitude != null) return normDeg(g.longitude);
-  const ri = WHEEL_RASHIS.findIndex((r) => r.ne === g.rashi.ne || r.en === g.rashi.en);
+  const ri = getWheelRashis().findIndex((r) => r.ne === g.rashi.ne || r.en === g.rashi.en);
   return normDeg((ri >= 0 ? ri : 0) * 30 + g.deg[0] + g.deg[1] / 60 + g.deg[2] / 3600);
 }
 
@@ -542,12 +547,13 @@ export function buildWheelDetail(p: PanchangaDay): WheelDetail {
     }
 
     if (!rashi) {
-      rashi = WHEEL_RASHIS[i % 12]!;
+      rashi = getWheelRashis()[i % 12]!;
     }
 
     return {
       sym: GRAHA_SYMS[i]!,
       ne: GRAHA_NE[i]!,
+      en: GRAHA_EN[i]!,
       rashi,
       deg,
       longitude,
@@ -603,5 +609,5 @@ const WEEKDAY_NE_TO_EN: Record<string, string> = {
 };
 
 export function bsMonthsForWheel() {
-  return BS_MONTHS_NE.map((ne) => ({ ne }));
+  return BS_MONTHS_NE.map((ne, i) => ({ ne, en: BS_MONTH_NAMES[i] ?? ne }));
 }

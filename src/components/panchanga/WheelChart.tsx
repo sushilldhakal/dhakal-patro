@@ -5,14 +5,16 @@ import { getBSMonthLength } from "@/lib/bs-calendar";
 import {
   bsMonthsForWheel,
   GRAHA_META,
+  GREG_EN,
   GREG_NE,
+  getWheelRashis,
   normDeg,
   PADA_AKSHAR,
   type WheelDetail,
   type WheelMarkers,
   type WheelTweaks,
-  WHEEL_RASHIS,
 } from "@/lib/wheel-data";
+import { useLocale, bilingualText } from "@/i18n/locale";
 import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 import { wheelSvg, wheelSvgWrap } from "@/lib/wheel-classes";
 import {
@@ -163,6 +165,7 @@ function WheelChartImpl({
    * rashi / nakshatra that planet falls in.
    */
   const [lineTarget, setLineTarget] = useState(1);
+  const { lang } = useLocale();
 
   const pol = useCallback(
     (L: number, r: number): [number, number] => {
@@ -192,6 +195,7 @@ function WheelChartImpl({
   // here means scrubbing the year slider (which only changes `det`/`markers`)
   // never rebuilds these ~600 nodes; only the data layers below re-render.
   const staticLayers = useMemo(() => {
+    const rashis = getWheelRashis();
     const nakSegs: React.ReactNode[] = [];
     const nakDecor: React.ReactNode[] = [];
     for (let i = 0; i < 27; i++) {
@@ -216,7 +220,7 @@ function WheelChartImpl({
           cls={wNakName(isSel || isHot)}
           spin={spin}
         >
-          {ico.ne}
+          {bilingualText(lang, ico.ne, ico.en)}
         </RingLabel>
       );
     }
@@ -227,7 +231,7 @@ function WheelChartImpl({
       const L0 = i * 30;
       const L1 = (i + 1) * 30;
       const Lm = L0 + 15;
-      const rs = WHEEL_RASHIS[i]!;
+      const rs = rashis[i]!;
       const isHot = hover?.type === "rashi" && hover.i === i;
       const isSel = sel?.type === "rashi" && sel.i === i;
       rashiSegs.push(
@@ -251,7 +255,7 @@ function WheelChartImpl({
             {rs.sym}
           </text>
           <RingLabel L={Lm} r={R.rashiName} cls={wRashiName(isSel || isHot)} spin={spin}>
-            {rs.ne}
+            {bilingualText(lang, rs.ne, rs.en)}
           </RingLabel>
         </g>
       );
@@ -342,13 +346,13 @@ function WheelChartImpl({
     const gregLabels: React.ReactNode[] = tw.show_greg
       ? GREG_NE.map((m, i) => (
           <RingLabel key={`g${i}`} L={(i - 3) * 30 + 5} r={R.gregMid} cls={wMonthGreg} spin={spin}>
-            {m}
+            {bilingualText(lang, m, GREG_EN[i]!)}
           </RingLabel>
         ))
       : [];
 
     return { nakSegs, nakDecor, rashiSegs, rashiDecor, padaCells, dayTicks, hits, rashiRays, gregLabels };
-  }, [spin, hover, sel, bsYear, tw, pol, arcSeg, onHover, onLeave, onPick]);
+  }, [spin, hover, sel, bsYear, tw, pol, arcSeg, onHover, onLeave, onPick, lang]);
 
   // The data layers — current-time markers, the inner tithi/karana/yoga rings
   // and the planet core — are the only parts that depend on the panchanga data
@@ -486,7 +490,7 @@ function WheelChartImpl({
       const Lm = sunL + k * 6 + 3;
       const kd = KARANA_SEQ[k]!;
       const isCur = k === curKarIdx;
-      const kName = kd.ne;
+      const kName = bilingualText(lang, kd.ne, kd.en);
       innerRings.push(
         <path
           key={`kar${k}`}
@@ -518,7 +522,7 @@ function WheelChartImpl({
       const Lm = sunL + i * 12 + 6;
       const isCur = i === curTithiIdx;
       const shukla = i < 15;
-      const tName = WHEEL_TITHIS[i]!.ne;
+      const tName = bilingualText(lang, WHEEL_TITHIS[i]!.ne, WHEEL_TITHIS[i]!.en);
       innerRings.push(
         <g key={`tit${i}`}>
           <path
@@ -680,7 +684,7 @@ function WheelChartImpl({
       core.push(
         <text key={`pn${i}`} x={px} y={py + rad + 9} textAnchor="middle"
           className={wPlanetName} style={{ pointerEvents: "none" }}>
-          {g.ne}
+          {bilingualText(lang, g.ne, g.en)}
         </text>
       );
 
@@ -697,7 +701,7 @@ function WheelChartImpl({
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => setLineTarget(i)}
         >
-          <title>{g.ne}</title>
+          <title>{bilingualText(lang, g.ne, g.en)}</title>
         </circle>
       );
     });
@@ -720,13 +724,13 @@ function WheelChartImpl({
             cls={wMonthNe(tw.show_today && i === sunRashiIdx)}
             spin={spin}
           >
-            {m.ne}
+            {bilingualText(lang, m.ne, m.en)}
           </RingLabel>
         ))
       : [];
 
     return { markerNodes, innerRings, core, bsLabels };
-  }, [markers, det, spin, tw, moonNak, moonLon, sunLon, planetLons, lineTarget, pol, arcSeg]);
+  }, [markers, det, spin, tw, moonNak, moonLon, sunLon, planetLons, lineTarget, pol, arcSeg, lang]);
 
   const angleAt = (e: React.PointerEvent) => {
     const r = wrapRef.current!.getBoundingClientRect();
