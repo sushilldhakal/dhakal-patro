@@ -7,13 +7,18 @@ function injectGaSnippet(measurementId: string | undefined): Plugin {
   return {
     name: "inject-ga-snippet",
     transformIndexHtml(html) {
-      if (!measurementId) {
+      if (!measurementId || !/^G-[A-Z0-9]+$/i.test(measurementId)) {
         return html.replace(/\s*<!-- @ga-snippet -->\s*/, "\n")
       }
 
-      // GA loads from src/lib/analytics.ts after first user interaction (or a
-      // delayed fallback) so Lighthouse and first paint are not blocked.
-      const snippet = `<!-- Google tag (gtag.js) — loaded on interaction via analytics.ts -->`
+      const snippet = `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${measurementId}', { send_page_view: false });
+</script>`
 
       return html.replace("<!-- @ga-snippet -->", snippet)
     },

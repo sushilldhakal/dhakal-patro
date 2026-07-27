@@ -27,10 +27,10 @@ elif [[ -f .env ]] && grep -q '^VITE_GA_MEASUREMENT_ID=' .env; then
 fi
 env "${BUILD_ENV[@]}" npm run build
 
-if grep -q 'analytics.ts' dist/index.html 2>/dev/null || grep -q 'Google tag' dist/index.html 2>/dev/null; then
-  echo "==> Google Analytics hook present in build"
+if grep -q 'googletagmanager.com/gtag/js' dist/index.html 2>/dev/null; then
+  echo "==> Google Analytics gtag snippet present in build"
 else
-  echo "WARNING: Google Analytics hook missing from dist/index.html." >&2
+  echo "WARNING: Google Analytics gtag snippet missing from dist/index.html." >&2
   echo "         Set VITE_GA_MEASUREMENT_ID in server .env or GitHub Actions secrets." >&2
 fi
 

@@ -9,6 +9,11 @@ let initialized = false;
 let loadScheduled = false;
 const pendingPageViews: string[] = [];
 
+function measurementId(): string | undefined {
+  const id = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
+  return id || undefined;
+}
+
 function flushPendingPageViews(): void {
   if (!initialized || !window.gtag) return;
   while (pendingPageViews.length > 0) {
@@ -22,62 +27,55 @@ function onGtagReady(): void {
   flushPendingPageViews();
 }
 
+/** Fallback when the Vite HTML injection did not run (e.g. missing env at build). */
 function loadGtagScript(id: string): void {
   if (loadScheduled) return;
   loadScheduled = true;
 
   window.dataLayer = window.dataLayer || [];
-  window.gtag = window.gtag || function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args);
-  };
+  window.gtag =
+    window.gtag ||
+    function gtag(...args: unknown[]) {
+      window.dataLayer!.push(args);
+    };
 
   const script = document.createElement("script");
   script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
   script.onload = () => {
     window.gtag!("js", new Date());
     window.gtag!("config", id, { send_page_view: false });
     onGtagReady();
-    window.dispatchEvent(new Event("gtag-ready"));
+  };
+  script.onerror = () => {
+    loadScheduled = false;
   };
   document.head.appendChild(script);
 }
 
-function scheduleGtagLoad(id: string): void {
-  if (loadScheduled) return;
-
-  const load = () => loadGtagScript(id);
-  const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
-
-  const onFirstInteraction = () => {
-    events.forEach((event) => window.removeEventListener(event, onFirstInteraction));
-    load();
-  };
-
-  events.forEach((event) => {
-    window.addEventListener(event, onFirstInteraction, { passive: true, once: true });
-  });
-
-  // Capture bounce sessions without blocking the initial load (Lighthouse window).
-  window.setTimeout(load, 12_000);
-}
-
+/**
+ * Wire up GA4. When VITE_GA_MEASUREMENT_ID is set, vite.config injects the
+ * standard gtag snippet into index.html; this marks the tracker ready and
+ * drains any pageviews queued before hydration.
+ */
 export function initAnalytics(): void {
-  const id = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  if (!id || loadScheduled) return;
+  const id = measurementId();
+  if (!id || initialized) return;
 
   if (typeof window.gtag === "function") {
     onGtagReady();
     return;
   }
 
-  window.addEventListener("gtag-ready", onGtagReady, { once: true });
-  scheduleGtagLoad(id);
+  loadGtagScript(id);
 }
 
 export function trackPageView(path: string): void {
+  if (!measurementId()) return;
+
   if (!initialized || !window.gtag) {
     pendingPageViews.push(path);
+    initAnalytics();
     return;
   }
 
@@ -85,5 +83,5 @@ export function trackPageView(path: string): void {
 }
 
 export function isAnalyticsEnabled(): boolean {
-  return initialized;
+  return initialized && Boolean(measurementId());
 }

@@ -27,6 +27,7 @@ import { useLocale } from "@/i18n/locale";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { searchToLocation } from "@/lib/url-state";
 import { formatHolidayBsDisplay } from "@/lib/panchanga-format";
+import { cn } from "../lib/utils";
 
 const routeApi = getRouteApi("/panchanga-shell/holidays");
 
@@ -46,7 +47,7 @@ function useHolidayColumns() {
         cell: i => <span className="text-base">{i.getValue()}</span>,
       }),
       holidayCol.accessor(
-        (r) => (r.start_date ? formatHolidayBsDisplay(r, lang) : undefined),
+        (r) => (r.start_date ? formatHolidayBsDisplay({ ...r, start_date: r.start_date }, lang) : undefined),
         {
           id: "bs_start_date",
           header: t("holidays.col_bs_date"),
@@ -85,7 +86,7 @@ function useFestivalColumns() {
         cell: i => <span className="text-base">{i.getValue()}</span>,
       }),
       festivalCol.accessor(
-        (r) => (r.start_date ? formatHolidayBsDisplay(r, lang) : undefined),
+        (r) => (r.start_date ? formatHolidayBsDisplay({ ...r, start_date: r.start_date }, lang) : undefined),
         {
           id: "bs_start_date",
           header: t("holidays.col_bs_date"),
