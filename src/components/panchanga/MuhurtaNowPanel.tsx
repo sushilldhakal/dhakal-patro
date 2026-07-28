@@ -124,11 +124,11 @@ export function EphemerisModeBanner({ p, clock, viewedDateAd }: Props) {
           (viewedDateLabel
             ? bilingualText(lang, 
                 ` यो समय ${viewedDateLabel} को सूर्योदय अघि भएकाले ${viewedDateLabel} को वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।`,
-                ` This time is before sunrise on ${viewedDateLabel}, so ${viewedDateLabel}'s Vedic day panchanga is shown.`,
+                ` This time is before sunrise on ${viewedDateLabel}, so ${viewedDateLabel}'s Vedic day almanac is shown.`,
               )
             : bilingualText(lang, 
                 " यो समय हेर्दै गरेको मितिको सूर्योदय अघि भएकाले सोही मितिको वैदिक दिनको पञ्चाङ्ग देखाइँदैछ।",
-                " This time is before sunrise on the viewed date, so that date's Vedic day panchanga is shown.",
+                " This time is before sunrise on the viewed date, so that date's Vedic day almanac is shown.",
               ))}
       </p>
     </div>

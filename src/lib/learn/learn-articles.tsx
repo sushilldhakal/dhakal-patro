@@ -279,7 +279,7 @@ export function AstronomyBasics() {
           In the night sky the <span className="hl">stars</span> are bright points like distant
           suns. By day the <span className="hl-amber">Sun</span> is the brightest; at night the{" "}
           <span className="hl">Moon</span> is the nearest celestial body — these three form the
-          basis of the Nepali patro and panchanga calculations.
+          basis of the Nepali patro and almanac calculations.
         </Lede>
         <Keys
           items={[
@@ -309,7 +309,7 @@ export function AstronomyBasics() {
       </Section>
       <Section kicker="03" title="Why degrees matter" en="Why degrees matter">
         <Lede>
-          In the panchanga, the positions of the Sun, Moon and other planets are measured in{" "}
+          In the almanac, the positions of the Sun, Moon and other planets are measured in{" "}
           <b>degrees (°)</b>. The full sky is divided into <b>360°</b> to answer “how far ahead of
           the Sun is the Moon” — tithi, nakshatra and yoga are all derived from this angle.
         </Lede>
@@ -356,7 +356,7 @@ export function AstronomyBasics() {
       </Section>
       <Section kicker="06" title="Nine grahas" en="Nine grahas">
         <Lede>
-          The panchanga and kundali use <b>9 grahas</b> (nava graha) — seven real bodies and two{" "}
+          The almanac and kundali use <b>9 grahas</b> (nava graha) — seven real bodies and two{" "}
           <span className="hl">shadow points</span> (Rahu, Ketu). Every position is measured as an angle.
         </Lede>
         <GrahaReferenceTable />
@@ -400,7 +400,7 @@ export function AstronomyBasics() {
           items={[
             { h: "Solar system & lunar motion", p: "Earth's elliptical orbit, 23.5° tilt, the Moon's phases." },
             { h: "Solar vs lunar calendar", p: "Why Vikram Samvat runs by aligning two clocks." },
-            { h: "The five limbs of panchanga", p: "Tithi, vaara, nakshatra, yoga, karana — how they arise from angles." },
+            { h: "The five limbs of the almanac", p: "Tithi, vaara, nakshatra, yoga, karana — how they arise from angles." },
           ]}
         />
       </Section>
@@ -508,7 +508,7 @@ export function SolarSystem() {
         <Lede>
           The Moon completes one orbit of the Earth in about <b>27.3 days</b> (sidereal month), but
           because the Sun also moves, one <b>new moon to the next</b> takes ~29.5 days (synodic
-          month). The interplay of these two motions determines the panchanga's tithi, nakshatra
+          month). The interplay of these two motions determines the almanac's tithi, nakshatra
           and paksha.
         </Lede>
         <ElongationStudy />
@@ -569,7 +569,7 @@ export function SolarSystem() {
       </Section>
       <Note>
         This very regularity of celestial motion is the foundation of every calculation from the
-        Nepali patro to the panchanga.
+        Nepali patro to the almanac.
       </Note>
     </>,
   );
@@ -697,7 +697,7 @@ export function BsCalendar() {
       </Section>
       <Note>
         This is why stating next year's calendar exactly in advance needs astronomical calculation
-        (panchanga) — the number of days in a month is set by the Sun's actual position.
+        (the almanac) — the number of days in a month is set by the Sun's actual position.
       </Note>
     </>,
   );
@@ -733,7 +733,7 @@ export function CalendarDifferences() {
         <Lede>
           The <b>Gregorian (AD)</b> is a purely solar calendar — fixed days per month. The{" "}
           <b>Nepali (BS)</b> is luni-solar — the month is set by the Sun's sign. The <b>Vedic</b>{" "}
-          tradition has two streams: the civil Shaka Samvat (solar) and the panchanga-based
+          tradition has two streams: the civil Shaka Samvat (solar) and the almanac-based
           Vikram/Shalivahana (luni-solar).
         </Lede>
       </Section>
@@ -748,7 +748,7 @@ export function CalendarDifferences() {
         />
       </Section>
       <Note>
-        This is why date conversion cannot be done by simple addition/subtraction — panchanga
+        This is why date conversion cannot be done by simple addition/subtraction — almanac
         calculation is the correct answer.
       </Note>
     </>,
@@ -1093,7 +1093,7 @@ export function Yoga() {
     <>
       <Section kicker="01" title="Sum of Sun + Moon" en="Sun + Moon longitude">
         <Lede>
-          Yoga is the fourth limb of the panchanga. It is found by <b>adding the longitudes</b> of
+          Yoga is the fourth limb of the almanac. It is found by <b>adding the longitudes</b> of
           the Sun and Moon — each time the sum increases by <b>13°20′</b> a new yoga begins. There
           are <span className="hl-amber">27 yogas</span> in all — from Vishkambha to Vaidhriti.
         </Lede>
@@ -1454,7 +1454,7 @@ export function Ayanamsha() {
         </Lede>
         <Keys
           items={[
-            { h: "Lahiri", p: "India's official system (Chitra-paksha) — the default in most panchangas; ~24° today." },
+            { h: "Lahiri", p: "India's official system (Chitra-paksha) — the default in most almanacs; ~24° today." },
             { h: "Raman", p: "Popularised by B. V. Raman — about 1.3° less than Lahiri." },
             { h: "Krishnamurti (KP)", p: "The K. S. Krishnamurti system — a tiny amount (~6′) less than Lahiri; used in fine prediction." },
           ]}
