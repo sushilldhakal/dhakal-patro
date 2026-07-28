@@ -245,12 +245,14 @@ export function PatroYearNav({
           <div className="@container/month-head min-w-0 flex-1">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 md:hidden">
               <div className="col-start-1 row-start-1 min-w-0">{titleBlock("text-sm")}</div>
+              <div className="col-start-1 row-start-2 min-w-0">{yearChipMobile}</div>
+              {/* Second row, beside the year stepper — same slot the day and
+                  month navs use. The title row is too narrow to share. */}
               {locationMobile ? (
-                <div className="col-start-2 row-start-1 flex shrink-0 items-start justify-end self-start">
+                <div className="col-start-2 row-start-2 flex shrink-0 items-end justify-end self-start">
                   {locationMobile}
                 </div>
               ) : null}
-              <div className="col-start-1 row-start-2 min-w-0">{yearChipMobile}</div>
             </div>
 
             <PatroDateSheet
