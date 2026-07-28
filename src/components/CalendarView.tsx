@@ -105,6 +105,12 @@ export type CalendarMonthContext = {
   year: number;
   month: number;
   days: CalendarDay[];
+  /** Gregorian month the grid is showing — an AD month spans two BS months, so
+   *  `year`/`month` above only name the one the 1st falls in. */
+  adYear: number;
+  adMonth: number;
+  /** True when the grid is laid out as a Gregorian month, not a BS one. */
+  isAdCalendar: boolean;
 };
 
 interface Props {
@@ -386,10 +392,17 @@ export function CalendarView({
     const contextMonth = isAdCalendar
       ? adToBS(new Date(adYear, adMonth - 1, 1)).month
       : month;
-    const key = `${contextYear}|${contextMonth}|${monthDays.length}|${first}|${last}|${festivalDataTick}|${monthQueriesTick}`;
+    const key = `${contextYear}|${contextMonth}|${adYear}|${adMonth}|${isAdCalendar}|${monthDays.length}|${first}|${last}|${festivalDataTick}|${monthQueriesTick}`;
     if (lastMonthContextKey.current === key) return;
     lastMonthContextKey.current = key;
-    onMonthContextChange({ year: contextYear, month: contextMonth, days: monthDays });
+    onMonthContextChange({
+      year: contextYear,
+      month: contextMonth,
+      days: monthDays,
+      adYear,
+      adMonth,
+      isAdCalendar,
+    });
   }, [
     isAdCalendar,
     adYear,

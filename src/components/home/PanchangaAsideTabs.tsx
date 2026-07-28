@@ -39,6 +39,9 @@ type Props = {
   location: PanchangaLocation;
   bsYear: number;
   bsMonth: number;
+  /** Set only while the calendar is in AD mode — see SaitAsidePanel. */
+  adYear?: number;
+  adMonth?: number;
   loading?: boolean;
 };
 
@@ -50,14 +53,28 @@ export function PanchangaAsideTabPanel({
   location,
   bsYear,
   bsMonth,
+  adYear,
+  adMonth,
   loading,
 }: Props) {
+  const isAd = adYear != null && adMonth != null;
+  // The saait list is keyed by whichever era it renders, so highlight the
+  // selected day in that era too.
+  const saitHighlightDay = isAd
+    ? (() => {
+        const ad = selectedDay?.date_ad ?? selectedAdDate;
+        const d = ad ? new Date(`${ad}T12:00:00`) : null;
+        return d && d.getFullYear() === adYear && d.getMonth() + 1 === adMonth
+          ? d.getDate()
+          : undefined;
+      })()
+    : selectedDay?.day;
   if (loading) {
     return tab === "panchanga" ? (
       <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} location={location} selectedAdDate={selectedAdDate} />
     ) : tab === "sait" ? (
       <Suspense fallback={<TabFallback />}>
-        <SaitAsidePanel year={bsYear} month={bsMonth} location={location} />
+        <SaitAsidePanel year={bsYear} month={bsMonth} adYear={adYear} adMonth={adMonth} location={location} />
       </Suspense>
     ) : (
       <TabFallback />
@@ -70,8 +87,10 @@ export function PanchangaAsideTabPanel({
         <SaitAsidePanel
           year={bsYear}
           month={bsMonth}
+          adYear={adYear}
+          adMonth={adMonth}
           location={location}
-          highlightDay={selectedDay?.day}
+          highlightDay={saitHighlightDay}
         />
       </Suspense>
     );

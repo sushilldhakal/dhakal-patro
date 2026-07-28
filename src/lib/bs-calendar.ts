@@ -24,6 +24,11 @@ export const AD_MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ] as const
 
+export const AD_MONTH_NAMES_NE = [
+  "जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन",
+  "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर",
+] as const
+
 const AD_MONTHS_SHORT_NE = [
   "जन", "फेब", "मार्च", "अप्रिल", "मे", "जुन",
   "जुलाई", "अगस्ट", "सेप्ट", "अक्टो", "नोभे", "डिसे",

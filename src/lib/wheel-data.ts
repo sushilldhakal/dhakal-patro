@@ -1,5 +1,10 @@
 import type { PanchangaDay, LagnaSpan } from "@/lib/api";
-import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
+import {
+  AD_MONTH_NAMES,
+  AD_MONTH_NAMES_NE,
+  BS_MONTH_NAMES,
+  BS_MONTHS_NE,
+} from "@/lib/bs-calendar";
 import {
   getLagnaSpans,
   getPanchangaDetail,
@@ -17,15 +22,8 @@ export function getWheelRashis(): WheelRashi[] {
   }));
 }
 
-export const GREG_NE = [
-  "जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन",
-  "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर",
-] as const;
-
-export const GREG_EN = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-] as const;
+export const GREG_NE = AD_MONTH_NAMES_NE;
+export const GREG_EN = AD_MONTH_NAMES;
 
 export const RASHI_LORDS = [
   "मङ्गल", "शुक्र", "बुध", "चन्द्र", "सूर्य", "बुध",

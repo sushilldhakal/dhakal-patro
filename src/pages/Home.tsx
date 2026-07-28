@@ -322,6 +322,8 @@ const PanchangaAside = forwardRef(function PanchangaAside(
                     location={location}
                     bsYear={monthContext.year}
                     bsMonth={monthContext.month}
+                    adYear={monthContext.isAdCalendar ? monthContext.adYear : undefined}
+                    adMonth={monthContext.isAdCalendar ? monthContext.adMonth : undefined}
                     loading={loading}
                   />
                 </div>
@@ -373,11 +375,17 @@ export function Home() {
     });
   }, [selectedDay]);
   const [patroView, setPatroView] = useState<HomePatroView>(loadHomePatroView);
-  const [monthContext, setMonthContext] = useState<CalendarMonthContext>(() => ({
-    year: bsYear,
-    month: bsMonth,
-    days: [],
-  }));
+  const [monthContext, setMonthContext] = useState<CalendarMonthContext>(() => {
+    const today = new Date();
+    return {
+      year: bsYear,
+      month: bsMonth,
+      days: [],
+      adYear: today.getFullYear(),
+      adMonth: today.getMonth() + 1,
+      isAdCalendar: false,
+    };
+  });
   const handleMonthContextChange = useCallback((ctx: CalendarMonthContext) => {
     setMonthContext((prev) =>
       prev.year === ctx.year && prev.month === ctx.month && prev.days === ctx.days ? prev : ctx,
