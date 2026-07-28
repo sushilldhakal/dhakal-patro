@@ -81,8 +81,8 @@ export function GrahaVakri() {
     <PageShell>
       <GrahaBanner
         icon={<RotateCcw className="h-6 w-6 text-accent dark:text-secondary" />}
-        titleKey="graha_pages.vakri.title"
-        blurbKey="graha_pages.vakri.blurb"
+        titleKey="sidebar_nav.items.graha-vakri.label"
+        blurbKey="sidebar_nav.items.graha-vakri.blurb"
       />
 
       <div className="space-y-3">

@@ -113,8 +113,8 @@ export function GrahaAsta() {
     <PageShell>
       <GrahaBanner
         icon={<Sunrise className="h-6 w-6 text-accent dark:text-secondary" />}
-        titleKey="graha_pages.asta.title"
-        blurbKey="graha_pages.asta.blurb"
+        titleKey="sidebar_nav.items.graha-asta.label"
+        blurbKey="sidebar_nav.items.graha-asta.blurb"
       />
 
       <div className="space-y-3">
