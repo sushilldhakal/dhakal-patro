@@ -86,7 +86,9 @@ export const patroMonthChipDay =
  * overflow-hidden trimming them to its rounded corners.
  */
 export const patroMonthChipLine =
-  "relative h-7 bg-card sm:h-8";
+  // Height matches the day numeral's block so both chip variants are the same
+  // size (patroMonthChipDay: 4px + 14px line + 4px, then 2rem from sm).
+  "relative h-[1.375rem] bg-card sm:h-8";
 
 export const patroMonthRangeNav =
   "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-1 py-1 shadow-xs sm:gap-2";
