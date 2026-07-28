@@ -1,4 +1,4 @@
-import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, BS_MONTHS_SHORT, AD_MONTH_NAMES, AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
@@ -12,18 +12,17 @@ import { formatClockParts, parseClockParts } from "@/components/panchanga/use-pa
 import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
 import { BsDateTimePicker } from "@/components/panchanga/BsDateTimePicker";
-import { LocationSearchPanel } from "@/components/panchanga/LocationSearchPanel";
+import {
+  MonthGridPicker,
+  PatroDateChip,
+  PatroDateSheet,
+  PatroLocationChip,
+  YearStepper,
+} from "./PatroDateSheet";
+import { usePatroDateSheet } from "./use-patro-date-sheet";
+export type { PatroSheetTab } from "./use-patro-date-sheet";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import {
   patroMonthChipButton,
   patroMonthChipDay,
@@ -78,13 +77,7 @@ export type PatroDateNavCoreProps = {
   onLocationChange?: (location: PanchangaLocation) => void;
   /** Sheet state is lifted so the header's location chip can open it on the
    *  Location tab rather than opening a popup of its own. */
-  sheetOpen?: boolean;
-  onSheetOpenChange?: (open: boolean) => void;
-  sheetTab?: PatroSheetTab;
-  onSheetTabChange?: (tab: PatroSheetTab) => void;
 }
-
-export type PatroSheetTab = "date" | "location";
 
 function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" = "bs"): string {
   if (calendarMode === "ad") {
@@ -119,88 +112,6 @@ function MonthChipGrid() {
         )}
       </g>
     </svg>
-  );
-}
-
-/** Month picker for the sheet: 12 buttons, three to a row, no dropdown. */
-function MonthGridPicker({
-  month,
-  options,
-  onMonthChange,
-}: {
-  month: number;
-  options: BsNativeSelectOption[];
-  onMonthChange: (month: number) => void;
-}) {
-  return (
-    <div className="grid grid-cols-3 gap-2" role="group">
-      {options.map((option) => {
-        const selected = option.value === month;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onMonthChange(option.value)}
-            className={cn(
-              "min-w-0 truncate rounded-lg border px-2 py-2.5 text-sm font-semibold transition-colors",
-              selected
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-surface-hover",
-            )}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Year row for the sheet: the select flanked by step-by-one buttons. */
-function YearStepper({
-  year,
-  options,
-  ariaLabel,
-  onYearChange,
-}: {
-  year: number;
-  options: BsNativeSelectOption[];
-  ariaLabel: string;
-  onYearChange: (year: number) => void;
-}) {
-  const values = options.map((o) => o.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  return (
-    <div className="flex items-center justify-center gap-2">
-      <button
-        type="button"
-        className={patroMonthNavBtn}
-        onClick={() => onYearChange(year - 1)}
-        disabled={year <= min}
-        aria-label={`${ariaLabel} −1`}
-      >
-        <Minus size={16} strokeWidth={2.25} />
-      </button>
-      <BsNativeSelect
-        className="w-[6.5rem]"
-        value={year}
-        options={options}
-        ariaLabel={ariaLabel}
-        onChange={onYearChange}
-        comfortable
-      />
-      <button
-        type="button"
-        className={patroMonthNavBtn}
-        onClick={() => onYearChange(year + 1)}
-        disabled={year >= max}
-        aria-label={`${ariaLabel} +1`}
-      >
-        <Plus size={16} strokeWidth={2.25} />
-      </button>
-    </div>
   );
 }
 
@@ -388,11 +299,8 @@ export function PatroDateNavCore({
   calendarMode = "bs",
   location,
   onLocationChange,
-  sheetOpen,
-  onSheetOpenChange,
-  sheetTab = "date",
-  onSheetTabChange,
 }: PatroDateNavCoreProps) {
+  const sheet = usePatroDateSheet();
   const { lang, digits } = useLocale();
   const { t } = useTranslation();
   const isAdCalendar = calendarMode === "ad";
@@ -645,146 +553,87 @@ export function PatroDateNavCore({
     />
   );
 
-  const showLocationTab = Boolean(location && onLocationChange);
+  const dateTitle = showTime ? t("patro_date.date_time") : t("patro_date.month_year");
 
-  const drawerBlock = mobileDateTimeDrawer ? (
-    <Drawer open={sheetOpen} onOpenChange={onSheetOpenChange}>
-      <DrawerTrigger asChild>
-        <button
-          type="button"
-          className={patroMobilePickerBtn}
-          onClick={() => onSheetTabChange?.("date")}
-          aria-label={
-            showTime
-              ? t("patro_date.change_date_time")
-              : t("patro_date.change_date")
-          }
-        >
-          <CalendarClock className="hidden size-3.5 shrink-0 text-secondary sm:block" strokeWidth={2} />
-          <span className="min-w-0 truncate font-num sm:hidden">{mobilePickerLabelCompact}</span>
-          <span className="hidden min-w-0 truncate font-num sm:inline">{mobilePickerLabel}</span>
-          <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
-        </button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="pb-2 text-center">
-          <DrawerTitle className="text-base text-center">
-            {showLocationTab && sheetTab === "location"
-              ? t("location.choose_location")
-              : showTime
-                ? t("patro_date.date_time")
-                : t("patro_date.month_year")}
-          </DrawerTitle>
-        </DrawerHeader>
+  // Every nav gets the same phone location control: a chip in the lower slot
+  // that opens this sheet on its Location tab.
+  const resolvedToolbarLower =
+    mobileToolbarLower ??
+    (location && onLocationChange ? (
+      <PatroLocationChip location={location} onOpen={sheet.openLocation} />
+    ) : null);
 
-        {showLocationTab ? (
-          // Half each, and tall — the location tab is the only way into the
-          // picker on a phone, so it has to be obvious rather than discovered.
-          <div className="grid grid-cols-2 gap-2 px-4 pb-3" role="tablist">
-            {(["date", "location"] as const).map((id) => {
-              const selected = sheetTab === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  aria-controls={`patro-sheet-${id}`}
-                  onClick={() => onSheetTabChange?.(id)}
-                  className={cn(
-                    "h-12 rounded-xl border text-sm font-bold transition-colors",
-                    selected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:bg-surface-hover",
-                  )}
-                >
-                  {id === "date" ? t("patro_date.month_year") : t("location.tab")}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
+  const dateChip = mobileDateTimeDrawer ? (
+    <PatroDateChip
+        label={mobilePickerLabel}
+        labelCompact={mobilePickerLabelCompact}
+        ariaLabel={showTime ? t("patro_date.change_date_time") : t("patro_date.change_date")}
+      onOpen={sheet.openDate}
+    />
+  ) : null;
 
-        {showLocationTab && sheetTab === "location" ? (
-          <div id="patro-sheet-location" role="tabpanel" className="px-4 pb-2">
-            <LocationSearchPanel
-              location={location!}
-              onLocationChange={onLocationChange!}
-              active={sheetOpen}
+  // Mounted whenever there is a sheet to open — day views drive dates from the
+  // calendar popover, but their location chip still opens this.
+  const sheetBlock =
+    mobileDateTimeDrawer || resolvedToolbarLower ? (
+      <PatroDateSheet
+        sheet={sheet}
+        dateTitle={dateTitle}
+        location={location}
+        onLocationChange={onLocationChange}
+      >
+        <MonthGridPicker month={month} options={monthOptions} onMonthChange={onMonthChange} />
+        <YearStepper
+          year={year}
+          options={yearSelectOptions}
+          ariaLabel={yearAriaLabel}
+          onYearChange={onYearChange}
+        />
+        {dayOptions && onDayChange && dayAriaLabel ? (
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm font-semibold text-muted-foreground">{dayAriaLabel}</span>
+            <BsNativeSelect
+              className="w-[5rem]"
+              value={day ?? dayOptions[0]?.value ?? 1}
+              options={dayOptions}
+              ariaLabel={dayAriaLabel}
+              onChange={onDayChange}
+              comfortable
             />
           </div>
-        ) : (
-        <div id="patro-sheet-date" role="tabpanel" className="flex flex-col gap-4 px-4 pb-2">
-          <MonthGridPicker
-            month={month}
-            options={monthOptions}
-            onMonthChange={onMonthChange}
-          />
-          <YearStepper
-            year={year}
-            options={yearSelectOptions}
-            ariaLabel={yearAriaLabel}
-            onYearChange={onYearChange}
-          />
-          {dayOptions && onDayChange && dayAriaLabel ? (
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-sm font-semibold text-muted-foreground">
-                {dayAriaLabel}
-              </span>
+        ) : null}
+        {showTime && hourAriaLabel && minuteAriaLabel ? (
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              {t("common.time")}
+            </p>
+            <div className="flex w-full items-center justify-center gap-2">
               <BsNativeSelect
-                className="w-[5rem]"
-                value={day ?? dayOptions[0]?.value ?? 1}
-                options={dayOptions}
-                ariaLabel={dayAriaLabel}
-                onChange={onDayChange}
+                className="w-[4.5rem]"
+                value={hour}
+                options={hourOptions}
+                ariaLabel={hourAriaLabel}
+                onChange={(nextHour) => setClockPart(nextHour, minute)}
+                comfortable
+              />
+              <span className="px-0.5 font-num text-base font-semibold">:</span>
+              <BsNativeSelect
+                className="w-[4.5rem]"
+                value={minute}
+                options={minuteOptions}
+                ariaLabel={minuteAriaLabel}
+                onChange={(nextMinute) => setClockPart(hour, nextMinute)}
                 comfortable
               />
             </div>
-          ) : null}
-          {showTime && hourAriaLabel && minuteAriaLabel ? (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                {t("common.time")}
-              </p>
-              <div className="flex w-full items-center justify-center gap-2">
-                <BsNativeSelect
-                  className="w-[4.5rem]"
-                  value={hour}
-                  options={hourOptions}
-                  ariaLabel={hourAriaLabel}
-                  onChange={(nextHour) => setClockPart(nextHour, minute)}
-                  comfortable
-                />
-                <span className="px-0.5 font-num text-base font-semibold">:</span>
-                <BsNativeSelect
-                  className="w-[4.5rem]"
-                  value={minute}
-                  options={minuteOptions}
-                  ariaLabel={minuteAriaLabel}
-                  onChange={(nextMinute) => setClockPart(hour, nextMinute)}
-                  comfortable
-                />
-              </div>
-            </div>
-          ) : null}
-        </div>
-        )}
-        <DrawerFooter>
-          <DrawerClose asChild>
-            <button
-              type="button"
-              className="h-10 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground"
-            >
-              {t("common.done")}
-            </button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
-  ) : null;
+          </div>
+        ) : null}
+      </PatroDateSheet>
+    ) : null;
 
   return (
     <div className="flex min-w-0 items-start gap-1.5 sm:gap-3">
+      {sheetBlock}
       <button
         type="button"
         className={cn(patroMonthChipShell, patroMonthChipButton)}
@@ -829,7 +678,7 @@ export function PatroDateNavCore({
                 >
                   <ChevronLeft size={15} strokeWidth={2} />
                 </button>
-                {drawerBlock}
+                {dateChip}
                 <button
                   type="button"
                   className={patroMobileStepBtn}
@@ -849,9 +698,9 @@ export function PatroDateNavCore({
               <p className="m-0 text-sm text-base leading-none">{panchangaSubtitle}</p>
             ) : null}
           </div>
-          {mobileToolbarLower ? (
+          {resolvedToolbarLower ? (
             <div className="col-start-2 row-start-2 flex shrink-0 items-end justify-end self-start">
-              {mobileToolbarLower}
+              {resolvedToolbarLower}
             </div>
           ) : null}
         </div>

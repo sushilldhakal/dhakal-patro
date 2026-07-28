@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -11,11 +11,7 @@ import {
   PATRO_AD_YEAR_OPTIONS,
   PATRO_BS_YEAR_OPTIONS,
 } from "@/lib/patro-date-options";
-import { PatroDateNavCore, type PatroSheetTab } from "./PatroDateNavCore";
-import { displayLocationLabel } from "@/components/panchanga/use-panchanga-location";
-import { useLocale } from "@/i18n/locale";
-import { MapPin } from "lucide-react";
-import { patroMobilePickerBtn } from "@/lib/patro-classes";
+import { PatroDateNavCore } from "./PatroDateNavCore";
 
 export type PatroMonthYearNavProps = {
   year: number;
@@ -66,10 +62,6 @@ export function PatroMonthYearNav({
   className,
 }: PatroMonthYearNavProps) {
   const { t } = useTranslation();
-  const { lang } = useLocale();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetTab, setSheetTab] = useState<PatroSheetTab>("date");
-
   const isAd = calendarMode === "ad";
   const resolvedYearOptions =
     yearOptions ?? (isAd ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS);
@@ -101,27 +93,6 @@ export function PatroMonthYearNav({
   // controls in the same header.
   const resolvedMobileToolbar = mobileToolbar;
 
-  /**
-   * Phone location control. Opens the date sheet on its Location tab rather
-   * than a popup of its own, so there is one picker surface on mobile.
-   */
-  const locationSheetButton =
-    location && onLocationChange ? (
-      <button
-        type="button"
-        className={cn(patroMobilePickerBtn, "max-w-[10rem]")}
-        onClick={() => {
-          setSheetTab("location");
-          setSheetOpen(true);
-        }}
-        aria-label={t("location.choose_location")}
-      >
-        <MapPin className="size-3.5 shrink-0 text-secondary" strokeWidth={2} />
-        <span className="min-w-0 truncate">
-          {displayLocationLabel(location, undefined, lang).split(",")[0]?.trim()}
-        </span>
-      </button>
-    ) : null;
 
   return (
     <div
@@ -152,13 +123,9 @@ export function PatroMonthYearNav({
           panchangaSubtitle={subtitle}
           mobileDateTimeDrawer
           mobileToolbar={resolvedMobileToolbar}
-          mobileToolbarLower={mobileToolbarLower ?? locationSheetButton}
+          mobileToolbarLower={mobileToolbarLower}
           location={location}
           onLocationChange={onLocationChange}
-          sheetOpen={sheetOpen}
-          onSheetOpenChange={setSheetOpen}
-          sheetTab={sheetTab}
-          onSheetTabChange={setSheetTab}
         />
       </div>
       {locationDesktop ? (

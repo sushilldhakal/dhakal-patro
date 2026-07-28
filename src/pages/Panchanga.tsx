@@ -228,16 +228,10 @@ export function Panchanga() {
                 />
               </>
             }
+            location={location}
+            onLocationChange={setLocation}
             mobileToolbar={
               <DayCycleToggle mode={dayCycleMode} onModeChange={setDayCycleMode} size="md" />
-            }
-            mobileToolbarLower={
-              <LocationSelector
-                compact
-                location={location}
-                onLocationChange={setLocation}
-                className="h-[30px] min-w-0 w-auto max-w-[10rem] shrink-0 px-1.5 md:h-8 md:max-w-[12.5rem] md:px-3"
-              />
             }
           />
 

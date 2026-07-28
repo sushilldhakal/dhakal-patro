@@ -1019,14 +1019,6 @@ export function DainikKranti() {
     />
   );
 
-  const locationControlMobile = (
-    <LocationSelector
-      compact
-      location={location}
-      onLocationChange={setLocation}
-      className="h-[30px] min-w-0 w-auto max-w-[7.25rem] shrink-0 px-2"
-    />
-  );
 
   return (
     <PageShell>
@@ -1043,8 +1035,9 @@ export function DainikKranti() {
         onNext={() => stepMonth(1)}
         prevDisabled={atStart}
         nextDisabled={atEnd}
+        location={location}
+        onLocationChange={setLocation}
         mobileToolbar={pakshaToggleMobile}
-        mobileToolbarLower={locationControlMobile}
         desktopToolbar={
           <>
             {pakshaToggleDesktop}

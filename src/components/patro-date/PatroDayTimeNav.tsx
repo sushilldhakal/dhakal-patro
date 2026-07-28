@@ -91,16 +91,9 @@ export function PatroDayTimeNav({
       />
     ) : null);
 
-  const resolvedMobileToolbar =
-    mobileToolbar ??
-    (location && onLocationChange ? (
-      <LocationSelector
-        compact
-        location={location}
-        onLocationChange={onLocationChange}
-        className="h-[30px] min-w-0 w-auto max-w-[9rem] shrink-0 px-2"
-      />
-    ) : undefined);
+  // Below md the location lives in the date sheet's Location tab (the core
+  // renders the chip for it), so no popup selector here.
+  const resolvedMobileToolbar = mobileToolbar;
 
   return (
     <div
@@ -150,6 +143,8 @@ export function PatroDayTimeNav({
           mobileDateTimeDrawer
           mobileToolbar={resolvedMobileToolbar ?? toolbar}
           mobileToolbarLower={mobileToolbarLower}
+          location={location}
+          onLocationChange={onLocationChange}
         />
       </div>
       {locationDesktop ? (

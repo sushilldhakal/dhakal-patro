@@ -3,6 +3,12 @@ import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect } from "@/components/BsNativeSelect";
+import {
+  PatroDateSheet,
+  PatroLocationChip,
+  YearStepper,
+} from "./PatroDateSheet";
+import { usePatroDateSheet } from "./use-patro-date-sheet";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { CalendarEra } from "@/lib/patro-era";
 import { useLocale } from "@/i18n/locale";
@@ -86,6 +92,7 @@ export function PatroYearNav({
 
   const bsYearSpanLabel = getBsYearSpanLabel(bsYearForLabels, lang, digits);
 
+  const sheet = usePatroDateSheet();
   const showLocation = Boolean(location && onLocationChange);
 
   const locationDesktop = showLocation ? (
@@ -97,13 +104,10 @@ export function PatroYearNav({
     />
   ) : null;
 
+  // Same phone behaviour as the other date navs: the location opens the shared
+  // sheet on its Location tab rather than a popup of its own.
   const locationMobile = showLocation ? (
-    <LocationSelector
-      compact
-      location={location!}
-      onLocationChange={onLocationChange!}
-      className="h-[30px] min-w-0 w-auto max-w-[9rem] shrink-0 px-2"
-    />
+    <PatroLocationChip location={location!} onOpen={sheet.openLocation} />
   ) : null;
 
   const yearSelectOptions = options.map((y) => ({
@@ -217,6 +221,20 @@ export function PatroYearNav({
               ) : null}
               <div className="col-start-1 row-start-2 -mt-1 min-w-0">{navRow}</div>
             </div>
+
+            <PatroDateSheet
+              sheet={sheet}
+              dateTitle={t("calendar.year_aria")}
+              location={location}
+              onLocationChange={onLocationChange}
+            >
+              <YearStepper
+                year={year}
+                options={yearSelectOptions}
+                ariaLabel={t("calendar.year_aria")}
+                onYearChange={(next) => onYearChange(clampYear(next))}
+              />
+            </PatroDateSheet>
 
             <div className="hidden min-w-0 flex-col gap-0.5 sm:gap-1 md:flex">
               {titleBlock("text-xl text-base")}
