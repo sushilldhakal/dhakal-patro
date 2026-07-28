@@ -630,16 +630,6 @@ export function CalendarView({
     </div>
   );
 
-  const locationControlMobile =
-    location && onLocationChange ? (
-      <LocationSelector
-        compact
-        location={location}
-        onLocationChange={onLocationChange}
-        className="h-8 min-w-0 w-auto max-w-[7.25rem] shrink-0 px-2"
-      />
-    ) : null;
-
   const locationControlDesktop =
     location && onLocationChange ? (
       <LocationSelector
@@ -713,7 +703,8 @@ export function CalendarView({
         prevDisabled={headerPrevDisabled}
         nextDisabled={headerNextDisabled}
         mobileToolbar={mobileHeaderToolbar}
-        mobileToolbarLower={locationControlMobile ?? undefined}
+        location={location}
+        onLocationChange={onLocationChange}
         desktopToolbar={headerToolbarDesktop}
       />
     </div>

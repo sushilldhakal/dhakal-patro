@@ -1,14 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Crosshair, Loader2, MapPin } from "lucide-react";
-import { cityKeys, fetchNearestCity, searchCities, type City } from "@/lib/api";
-import {
-  NEPAL_NEAREST_MAX_KM,
-  nearestNepalCity,
-  nepalCityToCity,
-  searchNepalCities,
-} from "@/lib/cities/nepal-cities";
+import { type City } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -20,53 +13,16 @@ import {
   ComboboxTrigger,
 } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
+import { cityItemLabel, cityLabel } from "./city-labels";
+import { useCitySearch } from "./use-city-search";
 import { useLocale } from "@/i18n/locale";
-import {
-  cityToLocation,
-  displayLocationLabel,
-  type PanchangaLocation,
-} from "./use-panchanga-location";
+import { displayLocationLabel, type PanchangaLocation } from "./use-panchanga-location";
 
 interface Props {
   location: PanchangaLocation;
   onLocationChange: (location: PanchangaLocation) => void;
   className?: string;
   compact?: boolean;
-}
-
-function cityLabel(city: City): string {
-  return city.name || city.ascii_name;
-}
-
-// Resolve a 2-letter ISO country code to a readable, localized name
-// ("NP" → "Nepal" / "नेपाल") via the built-in Intl API. Cached per locale;
-// falls back to the raw code if the runtime lacks the region data.
-const countryNameCache = new Map<string, Intl.DisplayNames | null>();
-
-function countryName(code: string | undefined | null, lang: string): string {
-  if (!code) return "";
-  const locale = lang === "ne" ? "ne" : "en";
-  if (!countryNameCache.has(locale)) {
-    try {
-      countryNameCache.set(locale, new Intl.DisplayNames([locale], { type: "region" }));
-    } catch {
-      countryNameCache.set(locale, null);
-    }
-  }
-  const dn = countryNameCache.get(locale);
-  const upper = code.toUpperCase();
-  try {
-    return dn?.of(upper) ?? upper;
-  } catch {
-    return upper;
-  }
-}
-
-function cityItemLabel(city: City, lang: string): string {
-  const region = city.admin1_name ?? city.admin1;
-  const country = countryName(city.country, lang);
-  if (region) return `${cityLabel(city)}, ${region}, ${country}`;
-  return `${cityLabel(city)}, ${country}`;
 }
 
 function LocationPickerPanel({
@@ -160,109 +116,35 @@ export function LocationSelector({
 }: Props) {
   const { lang } = useLocale();
   const { t } = useTranslation();
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError, setGeoError] = useState<string | null>(null);
-
   const localizedLabel = displayLocationLabel(location, undefined, lang);
-  const [labelMain] = (() => {
-    const parts = localizedLabel.split(",").map((s) => s.trim());
-    return [parts[0] ?? localizedLabel];
-  })();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  const { data: searchData, isFetching: isSearching } = useQuery({
-    queryKey: cityKeys.search(debouncedQuery),
-    queryFn: () => searchCities(debouncedQuery, 15),
-    enabled: debouncedQuery.length >= 2 && open,
-    staleTime: 60_000,
-  });
-
-  // Nepal comes from the curated local list; other countries from the backend
-  // (its vague NP entries are dropped so Nepal is shown only once, cleanly).
-  const results = useMemo<City[]>(() => {
-    const nepal = searchNepalCities(debouncedQuery).map((c) => nepalCityToCity(c, lang));
-    const world = (searchData?.cities ?? []).filter(
-      (c) => c.country?.toUpperCase() !== "NP",
-    );
-    return [...nepal, ...world];
-  }, [debouncedQuery, lang, searchData]);
+  const labelMain = localizedLabel.split(",")[0]?.trim() ?? localizedLabel;
+  const {
+    query,
+    setQuery,
+    debouncedQuery,
+    isSearching,
+    results,
+    geoLoading,
+    geoError,
+    pickCity: pickCityAndReset,
+    useCurrentLocation,
+    reset,
+  } = useCitySearch({ onLocationChange, enabled: open });
 
   const pickCity = (city: City) => {
-    onLocationChange(cityToLocation(city));
-    setQuery("");
-    setDebouncedQuery("");
+    pickCityAndReset(city);
     setOpen(false);
-    setGeoError(null);
-  };
-
-  const useCurrentLocation = () => {
-  const { t } = useTranslation();
-    if (!navigator.geolocation) {
-      setGeoError(t("location.geolocation_unavailable"));
-      return;
-    }
-    setGeoLoading(true);
-    setGeoError(null);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude: lat, longitude: lon } = pos.coords;
-        // Always resolve to a named city — never raw coordinates. Inside Nepal
-        // snap to the nearest district HQ (curated, works offline); elsewhere
-        // ask the backend for the nearest GeoNames city, which has no distance
-        // limit, so even a city 200 km away is used instead of bare lat/lon.
-        const nearest = nearestNepalCity(lat, lon);
-        try {
-          if (nearest.distanceKm <= NEPAL_NEAREST_MAX_KM) {
-            onLocationChange(cityToLocation(nepalCityToCity(nearest.city, lang)));
-          } else {
-            const { city } = await fetchNearestCity(lat, lon);
-            onLocationChange(cityToLocation(city));
-          }
-        } catch {
-          // Backend unreachable (offline): still snap to a named city — the
-          // nearest district HQ — rather than falling back to raw coordinates.
-          onLocationChange(cityToLocation(nepalCityToCity(nearest.city, lang)));
-        }
-        setQuery("");
-        setDebouncedQuery("");
-        setOpen(false);
-        setGeoLoading(false);
-      },
-      (err) => {
-        setGeoLoading(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          setGeoError(t("location.permission_denied"));
-        } else if (err.code === err.TIMEOUT) {
-          setGeoError(t("location.timed_out"));
-        } else {
-          setGeoError(t("location.not_found"));
-        }
-      },
-      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
-    );
   };
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
-    if (!next) {
-      setQuery("");
-      setDebouncedQuery("");
-    }
+    if (!next) reset();
   };
 
   const comboboxSearchProps = {
     inputValue: query,
-    onInputValueChange: (value: string) => {
-      setQuery(value);
-      setGeoError(null);
-    },
+    onInputValueChange: setQuery,
   };
 
   const pickerPanel = (

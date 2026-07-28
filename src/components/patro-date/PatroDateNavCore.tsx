@@ -1,4 +1,4 @@
-import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import { BS_MONTH_NAMES, BS_MONTHS_NE, BS_MONTHS_SHORT, AD_MONTH_NAMES, AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
@@ -12,6 +12,8 @@ import { formatClockParts, parseClockParts } from "@/components/panchanga/use-pa
 import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
 import { BsDateTimePicker } from "@/components/panchanga/BsDateTimePicker";
+import { LocationSearchPanel } from "@/components/panchanga/LocationSearchPanel";
+import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Drawer,
@@ -71,7 +73,18 @@ export type PatroDateNavCoreProps = {
   mobileToolbarLower?: ReactNode;
   /** Gregorian month navigation when UI language is English. */
   calendarMode?: "bs" | "ad";
+  /** Given both, the mobile sheet grows a Location tab beside the date one. */
+  location?: PanchangaLocation;
+  onLocationChange?: (location: PanchangaLocation) => void;
+  /** Sheet state is lifted so the header's location chip can open it on the
+   *  Location tab rather than opening a popup of its own. */
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
+  sheetTab?: PatroSheetTab;
+  onSheetTabChange?: (tab: PatroSheetTab) => void;
 }
+
+export type PatroSheetTab = "date" | "location";
 
 function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" = "bs"): string {
   if (calendarMode === "ad") {
@@ -97,14 +110,97 @@ function MonthChipGrid() {
       aria-hidden
       focusable="false"
     >
-      {/* Nine dots, three to a row — the day cells of a month. Ruled lines at
-          this size read as a hash rather than a calendar. */}
+      {/* Six dots, three to a row — the day cells of a month. Two rows rather
+          than three so the glyph sits low and wide like the chip it fills;
+          ruled lines at this size read as a hash rather than a calendar. */}
       <g fill="currentColor">
-        {[5.5, 11, 16.5].map((cy) =>
+        {[8, 14.5].map((cy) =>
           [7, 15, 23].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.7" />),
         )}
       </g>
     </svg>
+  );
+}
+
+/** Month picker for the sheet: 12 buttons, three to a row, no dropdown. */
+function MonthGridPicker({
+  month,
+  options,
+  onMonthChange,
+}: {
+  month: number;
+  options: BsNativeSelectOption[];
+  onMonthChange: (month: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2" role="group">
+      {options.map((option) => {
+        const selected = option.value === month;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onMonthChange(option.value)}
+            className={cn(
+              "min-w-0 truncate rounded-lg border px-2 py-2.5 text-sm font-semibold transition-colors",
+              selected
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-foreground hover:bg-surface-hover",
+            )}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Year row for the sheet: the select flanked by step-by-one buttons. */
+function YearStepper({
+  year,
+  options,
+  ariaLabel,
+  onYearChange,
+}: {
+  year: number;
+  options: BsNativeSelectOption[];
+  ariaLabel: string;
+  onYearChange: (year: number) => void;
+}) {
+  const values = options.map((o) => o.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <button
+        type="button"
+        className={patroMonthNavBtn}
+        onClick={() => onYearChange(year - 1)}
+        disabled={year <= min}
+        aria-label={`${ariaLabel} −1`}
+      >
+        <Minus size={16} strokeWidth={2.25} />
+      </button>
+      <BsNativeSelect
+        className="w-[6.5rem]"
+        value={year}
+        options={options}
+        ariaLabel={ariaLabel}
+        onChange={onYearChange}
+        comfortable
+      />
+      <button
+        type="button"
+        className={patroMonthNavBtn}
+        onClick={() => onYearChange(year + 1)}
+        disabled={year >= max}
+        aria-label={`${ariaLabel} +1`}
+      >
+        <Plus size={16} strokeWidth={2.25} />
+      </button>
+    </div>
   );
 }
 
@@ -290,6 +386,12 @@ export function PatroDateNavCore({
   mobileToolbar,
   mobileToolbarLower,
   calendarMode = "bs",
+  location,
+  onLocationChange,
+  sheetOpen,
+  onSheetOpenChange,
+  sheetTab = "date",
+  onSheetTabChange,
 }: PatroDateNavCoreProps) {
   const { lang, digits } = useLocale();
   const { t } = useTranslation();
@@ -543,12 +645,15 @@ export function PatroDateNavCore({
     />
   );
 
+  const showLocationTab = Boolean(location && onLocationChange);
+
   const drawerBlock = mobileDateTimeDrawer ? (
-    <Drawer>
+    <Drawer open={sheetOpen} onOpenChange={onSheetOpenChange}>
       <DrawerTrigger asChild>
         <button
           type="button"
           className={patroMobilePickerBtn}
+          onClick={() => onSheetTabChange?.("date")}
           aria-label={
             showTime
               ? t("patro_date.change_date_time")
@@ -564,22 +669,78 @@ export function PatroDateNavCore({
       <DrawerContent>
         <DrawerHeader className="pb-2 text-center">
           <DrawerTitle className="text-base text-center">
-            {showTime
-              ? t("patro_date.date_time")
-              : t("patro_date.month_year")}
+            {showLocationTab && sheetTab === "location"
+              ? t("location.choose_location")
+              : showTime
+                ? t("patro_date.date_time")
+                : t("patro_date.month_year")}
           </DrawerTitle>
         </DrawerHeader>
-        <div className="flex flex-col gap-4 px-4 pb-2">
-          <div className="flex w-full items-center justify-center">
-            <div className={cn(patroMonthNavShell, "gap-2")}>
-              <MonthNavControls
-                {...navProps}
-                showTime={false}
-                spacious
-                hideNavArrows
+
+        {showLocationTab ? (
+          // Half each, and tall — the location tab is the only way into the
+          // picker on a phone, so it has to be obvious rather than discovered.
+          <div className="grid grid-cols-2 gap-2 px-4 pb-3" role="tablist">
+            {(["date", "location"] as const).map((id) => {
+              const selected = sheetTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={`patro-sheet-${id}`}
+                  onClick={() => onSheetTabChange?.(id)}
+                  className={cn(
+                    "h-12 rounded-xl border text-sm font-bold transition-colors",
+                    selected
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-foreground hover:bg-surface-hover",
+                  )}
+                >
+                  {id === "date" ? t("patro_date.month_year") : t("location.tab")}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {showLocationTab && sheetTab === "location" ? (
+          <div id="patro-sheet-location" role="tabpanel" className="px-4 pb-2">
+            <LocationSearchPanel
+              location={location!}
+              onLocationChange={onLocationChange!}
+              active={sheetOpen}
+            />
+          </div>
+        ) : (
+        <div id="patro-sheet-date" role="tabpanel" className="flex flex-col gap-4 px-4 pb-2">
+          <MonthGridPicker
+            month={month}
+            options={monthOptions}
+            onMonthChange={onMonthChange}
+          />
+          <YearStepper
+            year={year}
+            options={yearSelectOptions}
+            ariaLabel={yearAriaLabel}
+            onYearChange={onYearChange}
+          />
+          {dayOptions && onDayChange && dayAriaLabel ? (
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-sm font-semibold text-muted-foreground">
+                {dayAriaLabel}
+              </span>
+              <BsNativeSelect
+                className="w-[5rem]"
+                value={day ?? dayOptions[0]?.value ?? 1}
+                options={dayOptions}
+                ariaLabel={dayAriaLabel}
+                onChange={onDayChange}
+                comfortable
               />
             </div>
-          </div>
+          ) : null}
           {showTime && hourAriaLabel && minuteAriaLabel ? (
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -607,6 +768,7 @@ export function PatroDateNavCore({
             </div>
           ) : null}
         </div>
+        )}
         <DrawerFooter>
           <DrawerClose asChild>
             <button

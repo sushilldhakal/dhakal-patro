@@ -1181,7 +1181,8 @@
     "permission_denied": "Permission denied — search for a city",
     "timed_out": "Timed out — please try again",
     "not_found": "Location not found",
-    "choose_location": "Choose location"
+    "choose_location": "Choose location",
+    "tab": "Location"
   },
   "theme_toggle": "Toggle theme",
   "theme_light": "Light",
