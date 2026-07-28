@@ -80,9 +80,13 @@ export const patroMonthChipHead =
 export const patroMonthChipDay =
   "flex min-h-md items-center justify-center bg-card pb-1 pt-1 text-sm font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-base";
 
-/** Calendar-grid "body" of the month chip — used where there is no day numeral. */
+/**
+ * Calendar-grid "body" of the month chip — used where there is no day numeral.
+ * No padding: the rules are meant to run edge to edge, the shell's
+ * overflow-hidden trimming them to its rounded corners.
+ */
 export const patroMonthChipLine =
-  "flex min-h-md items-center justify-center bg-card px-2 py-1 sm:min-h-[2rem]";
+  "relative h-7 bg-card sm:h-8";
 
 export const patroMonthRangeNav =
   "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-1 py-1 shadow-xs sm:gap-2";

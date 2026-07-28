@@ -92,16 +92,19 @@ function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" =
 function MonthChipGrid() {
   return (
     <svg
-      viewBox="0 0 20 16"
-      className="h-[1.0625rem] w-[1.375rem] text-foreground/65 sm:h-5 sm:w-[1.625rem]"
+      viewBox="0 0 30 24"
+      preserveAspectRatio="none"
+      className="absolute inset-0 h-full w-full text-foreground/60"
       aria-hidden
       focusable="false"
     >
-      <g stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
-        <line x1="1" y1="5.5" x2="19" y2="5.5" />
-        <line x1="1" y1="10.5" x2="19" y2="10.5" />
-        <line x1="7" y1="1" x2="7" y2="15" />
-        <line x1="13" y1="1" x2="13" y2="15" />
+      {/* non-scaling-stroke keeps both axes the same weight despite the
+          non-uniform stretch; butt caps let them finish flush at the edge. */}
+      <g stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke">
+        <line x1="0" y1="8" x2="30" y2="8" />
+        <line x1="0" y1="16" x2="30" y2="16" />
+        <line x1="10" y1="0" x2="10" y2="24" />
+        <line x1="20" y1="0" x2="20" y2="24" />
       </g>
     </svg>
   );
