@@ -1,6 +1,6 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
 import { useLocale } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
@@ -267,9 +267,7 @@ export function PatroDateNavCore({
   const isAdCalendar = calendarMode === "ad";
 
   const monthTitle = isAdCalendar
-    ? lang === "en"
-      ? AD_MONTH_NAMES[month - 1]
-      : new Date(year, month - 1, 1).toLocaleDateString("ne-NP", { month: "long" })
+    ? adMonthLabel(month, lang)
     : bsMonthLabel(month, lang);
   const samvatsara = isAdCalendar ? undefined : resolveSamvatsaraForBsYear(year);
   const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
@@ -310,7 +308,7 @@ export function PatroDateNavCore({
   const chipMonth = month;
   const monthOptions = (isAdCalendar ? AD_MONTH_NAMES : BS_MONTH_NAMES).map((_: string, i: number) => ({
     value: i + 1,
-    label: isAdCalendar ? AD_MONTH_NAMES[i] : bsMonthLabel(i + 1, lang),
+    label: isAdCalendar ? adMonthLabel(i + 1, lang) : bsMonthLabel(i + 1, lang),
   }));
   const yearSelectOptions = yearOptions.map((y) => ({
     value: y,
@@ -363,22 +361,22 @@ export function PatroDateNavCore({
   const clockSummary = showTime
     ? `${toNepaliDigits(String(hour).padStart(2, "0"))}:${toNepaliDigits(String(minute).padStart(2, "0"))}`
     : null;
-  const monthPickerHint = t("patro_date.month_aria");
   /** Picker chip: omit year when the title already shows it (panchanga day view). */
   const mobilePickerLabel =
     day != null
       ? clockSummary
         ? `${digits(day)} ${monthTitle} · ${clockSummary}`
         : `${digits(day)} ${monthTitle}`
-      : monthPickerHint;
+      : `${monthTitle} ${digits(year)}`;
   /**
-   * Below sm (<640px): day view drops the month token (title row shows it).
-   * Month view uses a neutral hint — title already shows month + year.
+   * Below sm (<640px): day view drops the month token (title row shows it);
+   * month view drops the year for the same reason. The chip always names the
+   * month it is currently on — it is the control's value, not a caption.
    */
   const mobilePickerLabelCompact =
     day != null
       ? `${digits(day)}${clockSummary ? ` · ${clockSummary}` : ""}`
-      : monthPickerHint;
+      : monthTitle;
 
   // Day views (panchanga) get a proper calendar + 12h time popover; month
   // views (home) keep the select-based nav / bottom sheet.

@@ -188,6 +188,12 @@ export function bsMonthLabel(month: number, lang?: string): string {
   return isEn ? BS_MONTH_NAMES[month - 1] : BS_MONTHS_NE[month - 1];
 }
 
+/** Gregorian month name, mirroring {@link bsMonthLabel}. */
+export function adMonthLabel(month: number, lang?: string): string {
+  const isEn = (lang ?? "ne").slice(0, 2) === "en";
+  return isEn ? AD_MONTH_NAMES[month - 1] : AD_MONTH_NAMES_NE[month - 1];
+}
+
 const WEEKDAY_FULL_NE = [
   "आइतबार", "सोमबार", "मङ्गलबार", "बुधबार", "बिहीबार", "शुक्रबार", "शनिबार",
 ] as const
