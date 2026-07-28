@@ -661,13 +661,10 @@ export function PatroDateNavCore({
             </div>
           ) : null}
           <div className="col-start-1 row-start-2 -mt-1 flex min-w-0 flex-col gap-1">
-            {useCalendarPicker ? (
-              // Prev/next arrows flank the calendar+time popover, so the day can
-              // be stepped without opening the picker — mirrors the md+ nav row.
-              calendarControl(patroMobileStepBtn, "-mt-[5px]")
-            ) : mobileDateTimeDrawer ? (
-              // Prev/next arrows flank the date picker so the month/day can be
-              // stepped without opening the sheet — mirrors the md+ nav row.
+            {mobileDateTimeDrawer ? (
+              // Below md every nav opens the same sheet, day views included —
+              // the calendar popover stays for md+ only. Prev/next arrows flank
+              // it so the day can be stepped without opening the sheet.
               <div className="-mt-[5px] flex min-w-0 items-center gap-1">
                 <button
                   type="button"
@@ -689,6 +686,8 @@ export function PatroDateNavCore({
                   <ChevronRight size={15} strokeWidth={2} />
                 </button>
               </div>
+            ) : useCalendarPicker ? (
+              calendarControl(patroMobileStepBtn, "-mt-[5px]")
             ) : (
               <div className={patroMonthNavShell}>
                 <MonthNavControls {...navProps} />

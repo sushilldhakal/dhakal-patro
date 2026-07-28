@@ -4,6 +4,7 @@ import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-loc
 import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect } from "@/components/BsNativeSelect";
 import {
+  PatroDateChip,
   PatroDateSheet,
   PatroLocationChip,
   YearStepper,
@@ -28,6 +29,7 @@ import {
   patroMonthChipShell,
   patroMonthNavBtn,
   patroMonthNavShell,
+  patroMobileStepBtn,
 } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 
@@ -150,6 +152,35 @@ export function PatroYearNav({
     />
   );
 
+  const yearChipMobile = (
+    <div className="-mt-[5px] flex min-w-0 items-center gap-1">
+      <button
+        type="button"
+        className={patroMobileStepBtn}
+        aria-label={t("patro_date.prev_year")}
+        onClick={() => onYearChange(clampYear(year - 1))}
+        disabled={year <= minYear}
+      >
+        <ChevronLeft size={15} strokeWidth={2} />
+      </button>
+      <PatroDateChip
+        label={`${digits(year)} ${isAd ? t("patro_date.era_ad") : t("patro_date.era_bs")}`}
+        labelCompact={digits(year)}
+        ariaLabel={t("calendar.year_aria")}
+        onOpen={sheet.openDate}
+      />
+      <button
+        type="button"
+        className={patroMobileStepBtn}
+        aria-label={t("patro_date.next_year")}
+        onClick={() => onYearChange(clampYear(year + 1))}
+        disabled={year >= maxYear}
+      >
+        <ChevronRight size={15} strokeWidth={2} />
+      </button>
+    </div>
+  );
+
   const navRow = (
     <div className="flex flex-wrap items-center gap-2">
       <div className={patroMonthNavShell}>
@@ -219,7 +250,7 @@ export function PatroYearNav({
                   {locationMobile}
                 </div>
               ) : null}
-              <div className="col-start-1 row-start-2 -mt-1 min-w-0">{navRow}</div>
+              <div className="col-start-1 row-start-2 -mt-1 min-w-0">{yearChipMobile}</div>
             </div>
 
             <PatroDateSheet
