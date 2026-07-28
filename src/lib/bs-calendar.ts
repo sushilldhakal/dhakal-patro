@@ -5,6 +5,15 @@ export const BS_MONTH_NAMES = [
   "Kartik", "Mangsir", "Poush", "Magh", "Falgun", "Chaitra",
 ] as const
 
+/**
+ * Three-letter BS months for tight spots (the mobile header's cross-calendar
+ * reference). Ashwin is "Asw", not "Ash", so it stays distinct from Ashadh.
+ */
+export const BS_MONTHS_SHORT = [
+  "Bai", "Jes", "Ash", "Shr", "Bha", "Asw",
+  "Kar", "Man", "Pou", "Mag", "Fal", "Cha",
+] as const
+
 export const BS_MONTHS_NE = [
   "वैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज",
   "कात्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत",

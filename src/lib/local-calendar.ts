@@ -4,6 +4,7 @@ import {
   AD_MONTHS_SHORT_NE,
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
+  BS_MONTHS_SHORT,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
   adToBS,
@@ -217,7 +218,8 @@ export function getSecondaryCellDate(
       day: bs.day,
       monthLabel: name,
       // Only the romanized BS names run long; Devanagari ones already fit.
-      monthLabelShort: isEn ? name.slice(0, 3) : name,
+      // Not a slice: that collapses Ashadh and Ashwin onto the same "Ash".
+      monthLabelShort: isEn ? BS_MONTHS_SHORT[bs.month - 1] : name,
     };
   }
 
@@ -236,11 +238,15 @@ export function getAdDayBsLabel(
   adDay: number,
   lang = "en",
   digitFn: (value: string | number) => string = String,
+  /** Abbreviate the English BS name for the mobile header. */
+  short = false,
 ): string {
   const ad = new Date(adYear, adMonth - 1, adDay, 12, 0, 0, 0);
   const bs = adToBS(ad);
   const isEn = lang.slice(0, 2) === "en";
-  const monthLabel = isEn ? BS_MONTH_NAMES[bs.month - 1] : BS_MONTHS_NE[bs.month - 1];
+  const monthLabel = isEn
+    ? (short ? BS_MONTHS_SHORT : BS_MONTH_NAMES)[bs.month - 1]
+    : BS_MONTHS_NE[bs.month - 1];
   return `${digitFn(bs.day)} ${monthLabel} ${digitFn(bs.year)}`;
 }
 
@@ -250,18 +256,17 @@ export function getAdMonthBsSpanLabel(
   adMonth: number,
   lang = "en",
   digitFn: (value: string | number) => string = String,
+  /** Abbreviate the English BS names ("Ash–Shr") for the mobile header. */
+  short = false,
 ): string {
   const start = new Date(adYear, adMonth - 1, 1);
   const end = new Date(adYear, adMonth, 0);
   const bsStart = adToBS(start);
   const bsEnd = adToBS(end);
   const isEn = lang.slice(0, 2) === "en";
-  const startLabel = isEn
-    ? BS_MONTH_NAMES[bsStart.month - 1]
-    : BS_MONTHS_NE[bsStart.month - 1];
-  const endLabel = isEn
-    ? BS_MONTH_NAMES[bsEnd.month - 1]
-    : BS_MONTHS_NE[bsEnd.month - 1];
+  const enNames = short ? BS_MONTHS_SHORT : BS_MONTH_NAMES;
+  const startLabel = isEn ? enNames[bsStart.month - 1] : BS_MONTHS_NE[bsStart.month - 1];
+  const endLabel = isEn ? enNames[bsEnd.month - 1] : BS_MONTHS_NE[bsEnd.month - 1];
 
   if (bsStart.year === bsEnd.year && bsStart.month === bsEnd.month) {
     return `${startLabel} ${digitFn(bsStart.year)}`;

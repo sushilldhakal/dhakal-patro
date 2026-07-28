@@ -1,6 +1,6 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
 import { useLocale } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
@@ -271,26 +271,27 @@ export function PatroDateNavCore({
     : bsMonthLabel(month, lang);
   const samvatsara = isAdCalendar ? undefined : resolveSamvatsaraForBsYear(year);
   const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
-  const adLocale = lang === "en" ? "en-US" : "ne-NP";
   // Always day → month → year (e.g. "२५ जुलाई २०२६" / "25 Jul 2026"). Relying on
   // toLocaleDateString's own ordering put ne-NP as year-month-day, which reads
   // backwards; build the parts explicitly instead.
+  // `ne-NP` has no abbreviated month forms in ICU — toLocaleDateString(…,
+  // { month: "short" }) hands back the full "सेप्टेम्बर", which is what made the
+  // Nepali header wide. Use our own short list so both languages abbreviate.
+  const adMonthShort = (monthIndex: number) =>
+    lang === "en" ? AD_MONTHS_SHORT[monthIndex] : AD_MONTHS_SHORT_NE[monthIndex];
   const adDayEnglish = (() => {
     if (day == null || isAdCalendar) return null;
     const d = bsToAD(year, month, day);
-    const monthShort = d.toLocaleDateString(adLocale, { month: "short" });
+    const monthShort = adMonthShort(d.getMonth());
     const numLabel = (n: number) => (lang === "en" ? String(n) : digits(n));
     return `${numLabel(d.getDate())} ${monthShort} ${numLabel(d.getFullYear())}`;
   })();
   const adMonthRangeEnglish = (() => {
     if (day != null) return null;
-    if (isAdCalendar) {
-      return getAdMonthBsSpanLabel(year, month, lang, digits);
-    }
     const start = bsToAD(year, month, 1);
     const end = bsToAD(year, month, getBSMonthLength(year, month));
-    const startMonth = start.toLocaleDateString(adLocale, { month: "short" });
-    const endMonth = end.toLocaleDateString(adLocale, { month: "short" });
+    const startMonth = adMonthShort(start.getMonth());
+    const endMonth = adMonthShort(end.getMonth());
     const startYear = start.getFullYear();
     const endYear = end.getFullYear();
     const yearLabel = (y: number) => (lang === "en" ? String(y) : digits(y));
@@ -448,11 +449,20 @@ export function PatroDateNavCore({
     </div>
   );
 
-  const subtitleLine = isAdCalendar
-    ? day != null
-      ? getAdDayBsLabel(year, month, day, lang, digits)
-      : adMonthRangeEnglish
-    : adDayEnglish ?? adMonthRangeEnglish;
+  /**
+   * The cross-calendar reference under the heading. `short` abbreviates the
+   * romanized BS names ("Ash–Shr") for the phone header, where the full pair
+   * plus a year is the widest thing in the top bar. The AD side is already
+   * abbreviated in both languages, so it does not vary.
+   */
+  const buildSubtitleLine = (short: boolean) => {
+    if (!isAdCalendar) return adDayEnglish ?? adMonthRangeEnglish;
+    return day != null
+      ? getAdDayBsLabel(year, month, day, lang, digits, short)
+      : getAdMonthBsSpanLabel(year, month, lang, digits, short);
+  };
+  const subtitleLine = buildSubtitleLine(false);
+  const subtitleLineShort = buildSubtitleLine(true);
 
   // Nepali BS date part of the heading. The संवत्सर name and Gregorian subtitle
   // are ordered by <BsHeadline>, which is the single source of truth for the
@@ -471,7 +481,7 @@ export function PatroDateNavCore({
       bsClassName="min-w-0"
       samvatsara={samvatsaraLabel}
       samvatsaraClassName="text-sm"
-      gregorian={subtitleLine}
+      gregorian={subtitleLineShort}
       gregorianClassName="text-xs font-semibold text-muted-foreground"
     />
   );
