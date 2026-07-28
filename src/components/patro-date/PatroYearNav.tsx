@@ -153,7 +153,7 @@ export function PatroYearNav({
   );
 
   const yearChipMobile = (
-    <div className="-mt-[5px] flex min-w-0 items-center gap-1">
+    <div className="flex min-w-0 items-center gap-1">
       <button
         type="button"
         className={patroMobileStepBtn}
@@ -250,7 +250,7 @@ export function PatroYearNav({
                   {locationMobile}
                 </div>
               ) : null}
-              <div className="col-start-1 row-start-2 -mt-1 min-w-0">{yearChipMobile}</div>
+              <div className="col-start-1 row-start-2 min-w-0">{yearChipMobile}</div>
             </div>
 
             <PatroDateSheet
