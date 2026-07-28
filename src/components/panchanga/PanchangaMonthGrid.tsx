@@ -6,7 +6,7 @@ import {
   type CalendarDay,
   type LocationParams,
 } from "@/lib/api";
-import { adToBS } from "@/lib/bs-calendar";
+import { adToBS, WEEKDAYS_SHORT_NE } from "@/lib/bs-calendar";
 import {
   buildAdCalendarGridDays,
   getBsMonthsOverlappingAdMonth,
@@ -188,7 +188,10 @@ export function PanchangaMonthGrid({
                     <span className="hidden max-md:inline">{WEEKDAYS_EN_SHORT[i]}</span>
                   </>
                 ) : (
-                  ne
+                  <>
+                    <span className="max-md:hidden">{ne}</span>
+                    <span className="hidden max-md:inline">{WEEKDAYS_SHORT_NE[i]}</span>
+                  </>
                 )}
               </span>
             </div>

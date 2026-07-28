@@ -38,9 +38,10 @@ export const AD_MONTH_NAMES_NE = [
   "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर",
 ] as const
 
+/** मार्च, मे and जुन are already short, so they stay whole. */
 const AD_MONTHS_SHORT_NE = [
-  "जन", "फेब", "मार्च", "अप्रिल", "मे", "जुन",
-  "जुलाई", "अगस्ट", "सेप्ट", "अक्टो", "नोभे", "डिसे",
+  "जन", "फेब", "मार्च", "अप्र", "मे", "जुन",
+  "जुल", "अग", "सेप", "अक्टो", "नोभे", "डिसे",
 ] as const
 
 export { AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE }
@@ -190,6 +191,16 @@ export function getSupportedAdBounds(): {
     maxYear: end.getFullYear(),
     maxMonth: end.getMonth() + 1,
   }
+}
+
+/**
+ * सोमवार → सोम, for phone-width labels. Works off the suffix rather than a
+ * lookup because the API and the local lists disagree on वार vs बार.
+ */
+export function shortWeekdayNe(name?: string | null): string | undefined {
+  if (!name) return undefined;
+  const trimmed = name.trim().replace(/(वार|बार)$/u, "");
+  return trimmed || name;
 }
 
 export function bsMonthLabel(month: number, lang?: string): string {

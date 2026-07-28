@@ -46,6 +46,7 @@ import {
 } from "@/lib/panchanga-format";
 import { formatRashiDisplay } from "@/lib/rashi-i18n";
 import type { NivasShoolSegment } from "@/lib/api";
+import { shortWeekdayNe } from "@/lib/bs-calendar";
 import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
 import {
   findCurrentUdayaLagna,
@@ -232,7 +233,15 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
           <AngaCell anga={karana} sunriseHours={sunriseHours} />
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.weekday" nowrap>
-          <span className="font-semibold">
+          {/* सोमवार is wide for a half-width card; drop to सोम on phones. */}
+          <span className="font-semibold sm:hidden">
+            {bilingualText(
+              lang,
+              shortWeekdayNe(getVaaraNe(p, p.weekday)) ?? "—",
+              getVaaraEn(p, p.weekday) ?? "—",
+            )}
+          </span>
+          <span className="hidden font-semibold sm:inline">
             {bilingualText(lang, getVaaraNe(p, p.weekday) ?? "—", getVaaraEn(p, p.weekday) ?? "—")}
           </span>
         </PanchangaFieldCell>
