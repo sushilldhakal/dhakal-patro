@@ -556,7 +556,7 @@ export function CalendarView({
         />
       </div>
 
-      {!asideInSidebar ? (
+      {!asideInSidebar && !aside ? (
         <DayDetailModal
           day={selected}
           bsYear={

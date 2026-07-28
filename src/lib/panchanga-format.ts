@@ -2214,6 +2214,14 @@ export function getShraddhaLabel(
   return `${tithiNameNe} श्राद्ध`;
 }
 
+function hasNamedPurnimaFestival(labels: string[]): boolean {
+  return labels.some((label) => {
+    const trimmed = label.trim();
+    if (trimmed === "पूर्णिमा" || trimmed === "Purnima") return false;
+    return /पूर्णिमा|पुन्ही|purnima/i.test(trimmed);
+  });
+}
+
 export function getDinVisheshLabels(
   p: PanchangaDay,
   dayFestivals: string[],
@@ -2233,7 +2241,12 @@ export function getDinVisheshLabels(
   const aaushi = isEn ? "Amavasya" : "औंसी";
   const ekadashi = isEn ? "Ekadashi" : "एकादशी";
 
-  if (markers?.is_purnima && !labels.includes(purnima) && !labels.includes("पूर्णिमा")) {
+  if (
+    markers?.is_purnima &&
+    !hasNamedPurnimaFestival(labels) &&
+    !labels.includes(purnima) &&
+    !labels.includes("पूर्णिमा")
+  ) {
     labels.push(purnima);
   }
   if (markers?.is_Aaushi && !labels.includes(aaushi) && !labels.includes("औंसी")) {

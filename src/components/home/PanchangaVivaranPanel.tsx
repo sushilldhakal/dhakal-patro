@@ -3,8 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { CalendarDay, PanchangaDay } from "@/lib/api";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { useCalendarEra } from "@/hooks/use-calendar-era";
-import { currentPatroMonthLinkSearch } from "@/lib/url-state";
+import { currentPatroDayLinkSearch } from "@/lib/url-state";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import {
   formatAngaPatroTransitionHint,
@@ -23,8 +22,8 @@ import {
   getSunsetDisplay,
 } from "@/lib/panchanga-format";
 import { useLocale } from "@/i18n/locale";
-import { patroAsideLink } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type AngaBlock = {
   name_ne?: string;
@@ -38,50 +37,49 @@ type AngaBlock = {
 type Props = {
   p?: PanchangaDay;
   selectedDay?: CalendarDay | null;
+  selectedAdDate?: string;
   location?: PanchangaLocation;
   bsYear?: number;
   bsMonth?: number;
   loading?: boolean;
 };
 
-function AbhijitVivaranBlock({
+function AsideFooter({
   p,
   location,
+  selectedAdDate,
 }: {
   p: PanchangaDay;
   location: PanchangaLocation;
+  selectedAdDate: string;
 }) {
   const { t } = useTranslation();
-  const era = useCalendarEra();
+  const { lang } = useLocale();
   const abhijit = getAbhijitMuhurta(p);
+  const isEn = lang === "en";
 
   return (
     <div className="mt-2.5 border-t border-foreground/10 pt-2.5">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="text-sm font-bold text-secondary dark:text-secondary">{t("abhijit.title")}</div>
-        <Link
-          to="/abhijit-muhurta"
-          search={currentPatroMonthLinkSearch(location, era)}
-          className={patroAsideLink}
-        >
-          {t("common.view_all")} →
-        </Link>
-      </div>
       {abhijit ? (
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <span className="text-xs text-base">{t("abhijit.today_window")}</span>
-          <span className="flex flex-wrap items-baseline justify-end gap-1.5">
-            <span className="mono text-sm font-semibold text-foreground">{abhijit.rangeDisplay}</span>
-            {abhijit.noonDisplay ? (
-              <span className="mono text-sm">
-                ({t("abhijit.noon_short")} {abhijit.noonDisplay})
-              </span>
-            ) : null}
+        <p className="m-0 text-sm leading-snug text-foreground">
+          <span className="font-semibold">{t("abhijit.title")}</span>{" "}
+          <span className="font-num font-semibold">
+            {abhijit.rangeDisplay}
+            {abhijit.noonDisplay
+              ? isEn
+                ? ` (noon ${abhijit.noonDisplay})`
+                : ` (${t("abhijit.noon_short")} ${abhijit.noonDisplay})`
+              : ""}
           </span>
-        </div>
+        </p>
       ) : (
-        <p className="m-0 py-5 text-center text-sm text-base">{t("abhijit.unavailable")}</p>
+        <p className="m-0 text-sm text-base">{t("abhijit.unavailable")}</p>
       )}
+      <Button variant="outline" size="sm" className="mt-3 w-full" asChild>
+        <Link to="/panchanga" search={currentPatroDayLinkSearch(location, selectedAdDate)}>
+          {t("panchanga.detail_title")}
+        </Link>
+      </Button>
     </div>
   );
 }
@@ -163,7 +161,7 @@ function buildPanchangaDetailCells(
   ];
 }
 
-export function PanchangaVivaranPanel({ p, selectedDay, location, loading }: Props) {
+export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location, loading }: Props) {
   const { t } = useTranslation();
   const { lang } = useLocale();
 
@@ -257,8 +255,8 @@ export function PanchangaVivaranPanel({ p, selectedDay, location, loading }: Pro
         </div>
       ) : null}
 
-      {location && p ? (
-        <AbhijitVivaranBlock p={p} location={location} />
+      {location && selectedAdDate ? (
+        <AsideFooter p={p} location={location} selectedAdDate={selectedAdDate} />
       ) : null}
     </section>
   );

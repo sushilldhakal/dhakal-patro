@@ -66,7 +66,7 @@ export function PanchangaMonthGrid({
   onPickDay,
   calendarMode = "bs",
 }: Props) {
-  const { lang, digits, isEnglish } = useLocale();
+  const { lang, monoDigits, isEnglish } = useLocale();
   const calendarEra = useCalendarEra();
   const isEn = isEnglish;
   const isAdCalendar = calendarMode === "ad" || calendarEra === "ad" || isEnglish;
@@ -212,11 +212,11 @@ export function PanchangaMonthGrid({
               i === 0,
             );
             const secondaryLabel = secondary.monthLabel
-              ? `${secondary.monthLabel} ${digits(secondary.day)}`
-              : digits(secondary.day);
+              ? `${secondary.monthLabel} ${monoDigits(secondary.day)}`
+              : monoDigits(secondary.day);
             const secondaryLabelShort = secondary.monthLabelShort
-              ? `${secondary.monthLabelShort} ${digits(secondary.day)}`
-              : digits(secondary.day);
+              ? `${secondary.monthLabelShort} ${monoDigits(secondary.day)}`
+              : monoDigits(secondary.day);
 
             return (
               <button
@@ -227,16 +227,16 @@ export function PanchangaMonthGrid({
               >
                 {day.sunrise ? (
                   <VerticalEdgeLabel
-                    text={digits(day.sunrise)}
+                    text={monoDigits(day.sunrise)}
                     side="left"
-                    className="font-mono font-normal tabular-nums text-muted-foreground"
+                    className="font-normal tabular-nums text-muted-foreground"
                   />
                 ) : null}
                 {day.sunset ? (
                   <VerticalEdgeLabel
-                    text={digits(day.sunset)}
+                    text={monoDigits(day.sunset)}
                     side="right"
-                    className="font-mono font-normal tabular-nums text-muted-foreground"
+                    className="font-normal tabular-nums text-muted-foreground"
                   />
                 ) : null}
 
@@ -251,12 +251,12 @@ export function PanchangaMonthGrid({
                 {/* Middle: BS/AD dates in one row (sun times vertical on md+) */}
                 <div className="flex min-w-0 flex-1 items-center justify-center py-0.5 max-md:flex-none max-md:flex-col max-md:justify-center max-md:gap-0.5">
                   <div className="flex min-w-0 flex-row flex-wrap items-baseline justify-center gap-x-1 px-0.5">
-                    <span className="font-mono text-lg font-bold leading-none tabular-nums sm:text-lg">
-                      {digits(primaryDay)}
+                    <span className="font-num text-lg font-bold leading-none tabular-nums sm:text-lg">
+                      {monoDigits(primaryDay)}
                     </span>
                     <span
                       className={cn(
-                        "font-mono whitespace-nowrap leading-none sm:text-xs",
+                        "font-num whitespace-nowrap leading-none sm:text-xs",
                         secondary.monthLabel ? "text-[0.625rem]" : "text-xs",
                       )}
                     >
@@ -266,9 +266,9 @@ export function PanchangaMonthGrid({
                   </div>
 
                   {/* Mobile-only sunrise/sunset — stacked when space is tight */}
-                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-mono text-xs font-bold leading-tight tabular-nums max-md:flex">
-                    <span className="whitespace-nowrap">{day.sunrise ? digits(day.sunrise) : "—"}</span>
-                    <span className="whitespace-nowrap">{day.sunset ? digits(day.sunset) : "—"}</span>
+                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-num text-xs font-bold leading-tight tabular-nums max-md:flex">
+                    <span className="whitespace-nowrap">{day.sunrise ? monoDigits(day.sunrise) : "—"}</span>
+                    <span className="whitespace-nowrap">{day.sunset ? monoDigits(day.sunset) : "—"}</span>
                   </div>
                 </div>
 

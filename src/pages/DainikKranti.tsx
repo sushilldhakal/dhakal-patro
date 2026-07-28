@@ -90,6 +90,67 @@ const routeApi = getRouteApi("/panchanga-shell/dainikkranti");
 type Phase = "krishna" | "shukla";
 type PakshaFilter = Phase | "all";
 
+const MOBILE_PAKSHA_MQ = "(max-width: 767px)";
+
+function useMobilePakshaLayout(): boolean {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(MOBILE_PAKSHA_MQ).matches : false,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_PAKSHA_MQ);
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return isMobile;
+}
+
+function defaultMobilePaksha(days: CalendarDay[], todayAd: string): Phase {
+  const today = days.find((d) => d.date_ad === todayAd);
+  const phase = today ? phaseOf(today) : undefined;
+  return phase === "krishna" || phase === "shukla" ? phase : "shukla";
+}
+
+function PakshaSegToggle({
+  value,
+  onChange,
+  options,
+  className,
+  buttonClassName,
+}: {
+  value: PakshaFilter;
+  onChange: (v: PakshaFilter) => void;
+  options: readonly (readonly [PakshaFilter, string])[];
+  className?: string;
+  buttonClassName?: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className={cn(
+        "inline-flex shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5",
+        className,
+      )}
+      role="radiogroup"
+      aria-label={t("calendar.paksha_aria")}
+    >
+      {options.map(([optionValue, label]) => (
+        <button
+          key={optionValue}
+          type="button"
+          role="radio"
+          aria-checked={value === optionValue}
+          className={cn(patroSegBtn(value === optionValue), buttonClassName)}
+          onClick={() => onChange(optionValue)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** 27 nakshatras in canonical order, matching the gochar API spellings. */
 const NAKSHATRA_EN = [
   "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
@@ -626,6 +687,7 @@ export function DainikKranti() {
 
   // Seed from the URL so a shared link opens on its month/paksha/location.
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const isMobilePaksha = useMobilePakshaLayout();
   const [paksha, setPaksha] = useState<PakshaFilter>(() => search.paksha ?? "all");
   const browseMirror = useMemo(
     () => (paksha === "all" ? undefined : { paksha }),
@@ -682,9 +744,27 @@ export function DainikKranti() {
   });
 
   const allDays = useMemo(() => monthQ.data?.calendar ?? [], [monthQ.data]);
+
+  const effectivePaksha = useMemo((): PakshaFilter => {
+    if (!isMobilePaksha) return paksha;
+    if (paksha === "krishna" || paksha === "shukla") return paksha;
+    return defaultMobilePaksha(allDays, nowKey);
+  }, [isMobilePaksha, paksha, allDays, nowKey]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  // Mobile never shows both pakshas at once — drop "all" for a Krishna/Shukla toggle.
+  useEffect(() => {
+    if (!isMobilePaksha || paksha !== "all" || allDays.length === 0) return;
+    setPaksha(defaultMobilePaksha(allDays, nowKey));
+  }, [isMobilePaksha, paksha, allDays, nowKey]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   const days = useMemo(
-    () => (paksha === "all" ? allDays : allDays.filter((d) => phaseOf(d) === paksha)),
-    [allDays, paksha],
+    () =>
+      effectivePaksha === "all"
+        ? allDays
+        : allDays.filter((d) => phaseOf(d) === effectivePaksha),
+    [allDays, effectivePaksha],
   );
 
   // Adhik / kshaya maas info for the displayed year (drives शुद्ध vs अधिक labels).
@@ -865,8 +945,16 @@ export function DainikKranti() {
       })
     : `${BS_MONTHS_NE[monthBrowse.browseMonth - 1]} ${dg(monthBrowse.browseYear)}`;
   const pakshaLabel = isEn
-    ? paksha === "krishna" ? "Krishna Paksha" : paksha === "shukla" ? "Shukla Paksha" : "Full month"
-    : paksha === "krishna" ? "कृष्णपक्ष" : paksha === "shukla" ? "शुक्लपक्ष" : "पूरा महिना";
+    ? effectivePaksha === "krishna"
+      ? "Krishna Paksha"
+      : effectivePaksha === "shukla"
+        ? "Shukla Paksha"
+        : "Full month"
+    : effectivePaksha === "krishna"
+      ? "कृष्णपक्ष"
+      : effectivePaksha === "shukla"
+        ? "शुक्लपक्ष"
+        : "पूरा महिना";
   const atStart =
     monthBrowse.era === "ad"
       ? monthBrowse.adYear <= PATRO_AD_YEAR_OPTIONS[0]! && monthBrowse.adMonth <= 1
@@ -892,31 +980,34 @@ export function DainikKranti() {
   // Paksha filter + location controls are shared between the desktop header
   // (md+, right column) and the mobile drawer header slots (below md), so the
   // month/year picker matches the home page: a bottom sheet on mobile.
-  const pakshaToggle = (
-    <div
-      className="inline-flex shrink-0 gap-0.5 rounded-lg border border-border bg-card p-0.5"
-      role="radiogroup"
-      aria-label={t("calendar.paksha_aria")}
-    >
-      {(
-        [
-          ["all", t("calendar.paksha_all")],
-          ["krishna", t("calendar.paksha_krishna")],
-          ["shukla", t("calendar.paksha_shukla")],
-        ] as const
-      ).map(([value, label]) => (
-        <button
-          key={value}
-          type="button"
-          role="radio"
-          aria-checked={paksha === value}
-          className={patroSegBtn(paksha === value)}
-          onClick={() => setPaksha(value)}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
+  const pakshaToggleDesktop = (
+    <PakshaSegToggle
+      value={paksha}
+      onChange={setPaksha}
+      options={[
+        ["all", t("calendar.paksha_all")],
+        ["krishna", t("calendar.paksha_krishna")],
+        ["shukla", t("calendar.paksha_shukla")],
+      ]}
+    />
+  );
+
+  const mobilePakshaValue: Phase =
+    effectivePaksha === "krishna" || effectivePaksha === "shukla"
+      ? effectivePaksha
+      : defaultMobilePaksha(allDays, nowKey);
+
+  const pakshaToggleMobile = (
+    <PakshaSegToggle
+      value={mobilePakshaValue}
+      onChange={setPaksha}
+      options={[
+        ["krishna", t("calendar.paksha_krishna")],
+        ["shukla", t("calendar.paksha_shukla")],
+      ]}
+      className="w-full max-w-[10rem]"
+      buttonClassName="flex-1 min-w-0 px-2"
+    />
   );
 
   const locationControlDesktop = (
@@ -952,11 +1043,11 @@ export function DainikKranti() {
         onNext={() => stepMonth(1)}
         prevDisabled={atStart}
         nextDisabled={atEnd}
-        mobileToolbar={pakshaToggle}
+        mobileToolbar={pakshaToggleMobile}
         mobileToolbarLower={locationControlMobile}
         desktopToolbar={
           <>
-            {pakshaToggle}
+            {pakshaToggleDesktop}
             {locationControlDesktop}
           </>
         }
@@ -1336,13 +1427,13 @@ export function DainikKranti() {
               {pakshaLabel} {t("dainik.duties")}
             </h3>
             <div className="space-y-2 text-sm leading-relaxed">
-              {paksha === "all" ? (
+              {effectivePaksha === "all" ? (
                 <>
                   <p>{bilingualText(lang, KARTAVYA.krishna.ne, KARTAVYA.krishna.en)}</p>
                   <p>{bilingualText(lang, KARTAVYA.shukla.ne, KARTAVYA.shukla.en)}</p>
                 </>
               ) : (
-                <p>{bilingualText(lang, KARTAVYA[paksha].ne, KARTAVYA[paksha].en)}</p>
+                <p>{bilingualText(lang, KARTAVYA[effectivePaksha].ne, KARTAVYA[effectivePaksha].en)}</p>
               )}
             </div>
           </div>

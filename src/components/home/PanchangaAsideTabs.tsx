@@ -54,7 +54,7 @@ export function PanchangaAsideTabPanel({
 }: Props) {
   if (loading) {
     return tab === "panchanga" ? (
-      <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} location={location} />
+      <PanchangaVivaranPanel loading bsYear={bsYear} bsMonth={bsMonth} location={location} selectedAdDate={selectedAdDate} />
     ) : tab === "sait" ? (
       <Suspense fallback={<TabFallback />}>
         <SaitAsidePanel year={bsYear} month={bsMonth} location={location} />
@@ -85,6 +85,7 @@ export function PanchangaAsideTabPanel({
         <PanchangaVivaranPanel
           p={p}
           selectedDay={selectedDay}
+          selectedAdDate={selectedAdDate}
           location={location}
           bsYear={bsYear}
           bsMonth={bsMonth}

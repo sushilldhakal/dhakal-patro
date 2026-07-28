@@ -430,6 +430,45 @@ export function mergeEnrichedDays(
   });
 }
 
+/** Drop alias / generic vrata rows when a named festival already covers the day. */
+const FESTIVAL_SUBSUMED_BY: Record<string, string> = {
+  "guru-purnima-vrata": "guru-purnima",
+  "dilla-punhi": "guru-purnima",
+};
+
+function isGenericPurnimaVrataId(id: string): boolean {
+  return id.startsWith("purnima-vrata-");
+}
+
+function isNamedPurnimaFestivalEntry(h: { id: string; name_en?: string; name_ne?: string }): boolean {
+  if (isGenericPurnimaVrataId(h.id) || h.id.endsWith("-vrata")) return false;
+  const nameEn = (h.name_en ?? "").toLowerCase();
+  const nameNe = h.name_ne ?? "";
+  return /purnima/.test(nameEn) || /पूर्णिमा|पुन्ही/.test(nameNe);
+}
+
+export function filterRedundantDayFestivals<T extends { id: string; name_en?: string; name_ne?: string }>(
+  festivals: T[],
+): T[] {
+  if (festivals.length <= 1) return festivals;
+
+  const presentIds = new Set(festivals.map((f) => f.id));
+  const hasNamedPurnima = festivals.some(isNamedPurnimaFestivalEntry);
+
+  return festivals.filter((festival) => {
+    const subsumedBy = FESTIVAL_SUBSUMED_BY[festival.id];
+    if (subsumedBy && presentIds.has(subsumedBy)) return false;
+
+    if (festival.id.endsWith("-vrata")) {
+      const baseId = festival.id.slice(0, -"-vrata".length);
+      if (presentIds.has(baseId)) return false;
+    }
+
+    if (hasNamedPurnima && isGenericPurnimaVrataId(festival.id)) return false;
+    return true;
+  });
+}
+
 /** Attach festival/holiday names from a yearly list (lighter than full month API). */
 export function applyHolidaysToDays(
   days: CalendarDay[],
@@ -441,22 +480,32 @@ export function applyHolidaysToDays(
   /** All known aliases for holidays on a date (ne/en/id) — used to drop duplicates. */
   const aliasesByDate = new Map<string, Set<string>>();
 
+  const byDate = new Map<string, Array<Holiday | Festival>>();
   for (const h of holidays) {
     if (!h.start_date) continue;
-    const fallbackName = "name" in h ? h.name : undefined;
-    const name = isEn
-      ? (h.name_en ?? h.name_ne ?? fallbackName ?? h.id)
-      : (h.name_ne ?? h.name_en ?? fallbackName ?? h.id);
-    const existing = namesByDate.get(h.start_date) ?? [];
-    const aliases = aliasesByDate.get(h.start_date) ?? new Set<string>();
-    for (const alias of [h.name_ne, h.name_en, fallbackName, h.id, name]) {
-      if (alias) aliases.add(alias.toLowerCase());
-    }
-    aliasesByDate.set(h.start_date, aliases);
+    const list = byDate.get(h.start_date) ?? [];
+    list.push(h);
+    byDate.set(h.start_date, list);
+  }
 
-    const duplicate = existing.some((entry) => aliases.has(entry.toLowerCase()) || entry === name);
-    if (!duplicate) existing.push(name);
-    namesByDate.set(h.start_date, existing);
+  for (const [startDate, list] of byDate) {
+    const filtered = filterRedundantDayFestivals(list);
+    for (const h of filtered) {
+      const fallbackName = "name" in h ? h.name : undefined;
+      const name = isEn
+        ? (h.name_en ?? h.name_ne ?? fallbackName ?? h.id)
+        : (h.name_ne ?? h.name_en ?? fallbackName ?? h.id);
+      const existing = namesByDate.get(startDate) ?? [];
+      const aliases = aliasesByDate.get(startDate) ?? new Set<string>();
+      for (const alias of [h.name_ne, h.name_en, fallbackName, h.id, name]) {
+        if (alias) aliases.add(alias.toLowerCase());
+      }
+      aliasesByDate.set(startDate, aliases);
+
+      const duplicate = existing.some((entry) => aliases.has(entry.toLowerCase()) || entry === name);
+      if (!duplicate) existing.push(name);
+      namesByDate.set(startDate, existing);
+    }
   }
 
   return days.map((day) => {

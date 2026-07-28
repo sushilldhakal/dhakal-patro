@@ -20,6 +20,12 @@ export function formatLocaleDigits(value: string | number, lang?: string): strin
   return toDevanagariDigits(value);
 }
 
+/** Western digits for `font-num` / Fira Code — the mono face has no Devanagari glyphs. */
+export function formatMonoDigits(value: string | number | null | undefined): string {
+  if (value == null) return "";
+  return String(value);
+}
+
 export function useLocaleDigits() {
   const { i18n: inst } = useTranslation();
   return useCallback(

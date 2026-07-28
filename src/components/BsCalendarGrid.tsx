@@ -96,7 +96,7 @@ export function BsCalendarGrid({
   primaryDate: primaryDateProp = "bs",
 }: Props) {
   const { t } = useTranslation();
-  const { lang, digits } = useLocale();
+  const { lang, monoDigits } = useLocale();
   const calendarEra = useCalendarEra();
   const primaryDate =
     primaryDateProp === "ad" || calendarEra === "ad" || lang === "en" ? "ad" : "bs";
@@ -164,11 +164,11 @@ export function BsCalendarGrid({
           const primaryDayNum = primaryDate === "ad" ? adDayNum : day.day;
           const secondary = getSecondaryCellDate(day, primaryDate, lang, i === 0);
           const secondaryLabel = secondary.monthLabel
-            ? `${secondary.monthLabel} ${digits(secondary.day)}`
-            : digits(secondary.day);
+            ? `${monoDigits(secondary.day)}`
+            : monoDigits(secondary.day);
           const secondaryLabelShort = secondary.monthLabelShort
-            ? `${secondary.monthLabelShort} ${digits(secondary.day)}`
-            : digits(secondary.day);
+            ? `${monoDigits(secondary.day)}`
+            : monoDigits(secondary.day);
 
           const openFestivalDialog = (e: MouseEvent) => {
             e.preventDefault();
@@ -197,7 +197,7 @@ export function BsCalendarGrid({
                   isToday && "hover:bg-surface-today-hover",
                   !isToday && !isOutside && !isPublicHoliday && !hasFestival && "hover:bg-surface-hover",
                 )}
-                aria-label={`${digits(primaryDayNum)} (${secondaryLabel}), ${day.date_ad}`}
+                aria-label={`${monoDigits(primaryDayNum)} (${secondaryLabel}), ${day.date_ad}`}
                 onClick={() => onSelectDay?.(day)}
               />
 
@@ -247,7 +247,7 @@ export function BsCalendarGrid({
                       !isOutside && (isWeekend || isPublicHoliday) && "text-danger",
                     )}
                   >
-                    {digits(primaryDayNum)}
+                    {monoDigits(primaryDayNum)}
                   </span>
                   {/* Counterpart date — carries its month name where the month
                       turns over, so July 17 reads as "Shrawan 1". The named
@@ -274,7 +274,7 @@ export function BsCalendarGrid({
                       )}
                       onClick={openFestivalDialog}
                     >
-                      +{digits(extraFestCount)}
+                      +{monoDigits(extraFestCount)}
                     </button>
                   ) : null}
                 </span>

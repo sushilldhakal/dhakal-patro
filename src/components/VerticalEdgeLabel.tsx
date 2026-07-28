@@ -21,7 +21,7 @@ export function VerticalEdgeLabel({
     <span
       className={cn(
         "inline-block max-h-full whitespace-nowrap font-semibold leading-[1.4] tracking-wide",
-        "[writing-mode:vertical-rl] [text-orientation:mixed]",
+        "[writing-mode:vertical-rl] [text-orientation:mixed] font-num",
         className,
       )}
       style={{ fontSize: `${fontSize}px` }}

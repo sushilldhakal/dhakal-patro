@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
@@ -38,6 +38,10 @@ import { PanchangaDirectory } from "@/components/panchanga/PanchangaDirectory";
 import { Button } from "@/components/ui/button";
 import { usePatroMonthUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { currentPatroDayLinkSearch } from "@/lib/url-state";
+import { smoothScrollToElement } from "@/lib/scroll";
+
+const ASIDE_SIDEBAR_MQ = "(min-width: 1280px)";
+const PANCHANGA_SCROLL_OFFSET = 72; // sticky header (h-16) + small gap
 
 const routeApi = getRouteApi("/");
 
@@ -67,31 +71,38 @@ function panchangaMatchesAd(p: PanchangaDay | undefined, ad: string): boolean {
   return p.date_ad === ad || p.panchanga_date_ad === ad;
 }
 
-function PanchangaAside({
-  selectedDay,
-  selectedAdDate,
-  todayAd,
-  monthContext,
-  location,
-  p,
-  loading,
-  error,
-  placement = "sidebar",
-}: {
-  selectedDay: CalendarDay | null;
-  selectedAdDate: string;
-  todayAd: string;
-  monthContext: CalendarMonthContext;
-  location: PanchangaLocation;
-  p?: PanchangaDay;
-  /** True while the panchanga for the selected date/location is in flight. */
-  loading: boolean;
-  error: boolean;
-  placement?: "sidebar" | "below";
-}) {
+const PanchangaAside = forwardRef(function PanchangaAside(
+  {
+    selectedDay,
+    selectedAdDate,
+    todayAd,
+    monthContext,
+    location,
+    p,
+    loading,
+    error,
+    placement = "sidebar",
+  }: {
+    selectedDay: CalendarDay | null;
+    selectedAdDate: string;
+    todayAd: string;
+    monthContext: CalendarMonthContext;
+    location: PanchangaLocation;
+    p?: PanchangaDay;
+    /** True while the panchanga for the selected date/location is in flight. */
+    loading: boolean;
+    error: boolean;
+    placement?: "sidebar" | "below";
+  },
+  ref: React.ForwardedRef<HTMLElement>,
+) {
   const { t } = useTranslation();
   const { digits, lang } = useLocale();
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
+
+  useEffect(() => {
+    if (selectedDay?.date_ad) setAsideTab("panchanga");
+  }, [selectedDay?.date_ad]);
 
   const contextDay =
     selectedDay ??
@@ -175,8 +186,10 @@ function PanchangaAside({
 
   return (
     <aside
+      ref={ref}
+      id="home-panchanga-aside"
       className={cn(
-        "flex flex-col gap-3 bg-transparent",
+        "scroll-mt-[4.5rem] flex flex-col gap-3 bg-transparent",
         isBelow ? "w-full" : "xl:gap-0",
       )}
     >
@@ -319,7 +332,7 @@ function PanchangaAside({
       </div>
     </aside>
   );
-}
+});
 
 export function Home() {
   const { t } = useTranslation();
@@ -333,6 +346,32 @@ export function Home() {
     [location],
   );
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const panchangaAsideRef = useRef<HTMLElement>(null);
+  const scrollToPanchangaRef = useRef(false);
+
+  const handleDaySelect = useCallback((day: CalendarDay | null) => {
+    setSelectedDay(day);
+    if (
+      day &&
+      typeof window !== "undefined" &&
+      !window.matchMedia(ASIDE_SIDEBAR_MQ).matches
+    ) {
+      scrollToPanchangaRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!scrollToPanchangaRef.current || !selectedDay) return;
+    scrollToPanchangaRef.current = false;
+    const el = panchangaAsideRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      smoothScrollToElement(el, {
+        duration: 400,
+        offset: PANCHANGA_SCROLL_OFFSET,
+      });
+    });
+  }, [selectedDay]);
   const [patroView, setPatroView] = useState<HomePatroView>(loadHomePatroView);
   const [monthContext, setMonthContext] = useState<CalendarMonthContext>(() => ({
     year: bsYear,
@@ -425,10 +464,11 @@ export function Home() {
         enablePatroToggle
         patroView={patroView}
         onPatroViewChange={handlePatroViewChange}
-        onDaySelect={setSelectedDay}
+        onDaySelect={handleDaySelect}
         onMonthContextChange={handleMonthContextChange}
         aside={
           <PanchangaAside
+            ref={panchangaAsideRef}
             placement="sidebar"
             selectedDay={selectedDay}
             selectedAdDate={asideAdDate}

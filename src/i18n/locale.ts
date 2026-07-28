@@ -1,7 +1,7 @@
 import { useCallback, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "./index";
-import { formatLocaleDigits } from "./digits";
+import { formatLocaleDigits, formatMonoDigits } from "./digits";
 import { getStoredLanguage } from "@/lib/user-preferences";
 import { isBrowser } from "@/lib/browser";
 
@@ -69,5 +69,10 @@ export function useLocale() {
     [lang],
   );
 
-  return { lang, isEnglish: lang === "en", digits };
+  const monoDigits = useCallback(
+    (value: string | number | null | undefined): string => formatMonoDigits(value),
+    [],
+  );
+
+  return { lang, isEnglish: lang === "en", digits, monoDigits };
 }
