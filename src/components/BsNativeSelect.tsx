@@ -4,6 +4,12 @@ import { cn } from "@/lib/utils";
 export type BsNativeSelectOption = {
   value: number;
   label: string;
+  /**
+   * Shown on the closed control below `md` when `label` is too wide there
+   * (e.g. "Sep" for "September"). The option list keeps the full label — it
+   * opens as the OS picker, which has room and reads better spelled out.
+   */
+  shortLabel?: string;
 };
 
 interface Props {
@@ -50,7 +56,14 @@ export function BsNativeSelect({
         )}
         aria-hidden
       >
-        <span className="truncate">{selected?.label ?? "—"}</span>
+        {selected?.shortLabel ? (
+          <span className="truncate">
+            <span className="md:hidden">{selected.shortLabel}</span>
+            <span className="hidden md:inline">{selected.label}</span>
+          </span>
+        ) : (
+          <span className="truncate">{selected?.label ?? "—"}</span>
+        )}
         <ChevronDown className="size-3 shrink-0 opacity-45" strokeWidth={2.25} />
       </span>
     </label>

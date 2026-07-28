@@ -43,6 +43,7 @@ import { VedicPatroLoader } from "./VedicPatroLoader";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { getStoredLanguage } from "@/lib/user-preferences";
 import { cn } from "@/lib/utils";
 import { patroMdRail, patroSegBtn } from "@/lib/patro-classes";
@@ -52,20 +53,6 @@ const AD_BOUNDS = getSupportedAdBounds();
 
 const ASIDE_SIDEBAR_MQ = "(min-width: 1280px)";
 
-function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia(query).matches : false,
-  );
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia(query);
-    const sync = () => setMatches(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, [query]);
-  return matches;
-}
 
 type HomePatroView = "calendar" | "panchanga";
 export type { HomePatroView };

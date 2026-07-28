@@ -1,6 +1,6 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, AD_MONTH_NAMES, AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, BS_MONTHS_SHORT, AD_MONTH_NAMES, AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
 import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
 import { useLocale } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
@@ -77,7 +77,8 @@ function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" =
     return AD_MONTHS_SHORT[month - 1].toUpperCase();
   }
   if (lang === "en") {
-    return BS_MONTH_NAMES[month - 1].slice(0, 3).toUpperCase();
+    // Not a slice — that maps Ashadh and Ashwin onto the same "ASH".
+    return BS_MONTHS_SHORT[month - 1].toUpperCase();
   }
   return BS_MONTHS_NE[month - 1];
 }
@@ -146,8 +147,11 @@ function MonthNavControls({
   hideNavArrows = false,
 }: NavControlsProps) {
   const dayW = spacious ? "w-[4rem]" : "w-[2.75rem] sm:w-[3.5rem]";
-  const monthW = spacious ? "w-[6.5rem]" : "w-[3.25rem] sm:w-[5.25rem]";
-  const yearW = spacious ? "w-[5rem]" : "w-[2.875rem] sm:w-[4.5rem]";
+  // Below sm these were too narrow for their own contents — "Sep" and "2026"
+  // both ellipsised. Wide enough for a three-letter month and a four-digit year
+  // plus the chevron; there is spare room in the row at 360px.
+  const monthW = spacious ? "w-[6.5rem]" : "w-[3.75rem] sm:w-[5.25rem]";
+  const yearW = spacious ? "w-[5rem]" : "w-[4.25rem] sm:w-[4.5rem]";
   const timeW = spacious ? "w-[4rem]" : "w-[2.75rem] sm:w-[3.5rem]";
   const btnClass = spacious ? patroMonthNavBtn : patroMonthRangeCompactBtn;
 
@@ -269,6 +273,15 @@ export function PatroDateNavCore({
   const monthTitle = isAdCalendar
     ? adMonthLabel(month, lang)
     : bsMonthLabel(month, lang);
+  /**
+   * Phone heading: "SEP 2026" rather than "September 2026". Only the romanized
+   * names run long — Devanagari is already compact, so Nepali keeps the full
+   * name. The grid repeats the month beside day 1 either way.
+   */
+  const monthTitleShort =
+    lang === "en"
+      ? (isAdCalendar ? AD_MONTHS_SHORT[month - 1] : BS_MONTHS_SHORT[month - 1]).toUpperCase()
+      : monthTitle;
   const samvatsara = isAdCalendar ? undefined : resolveSamvatsaraForBsYear(year);
   const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
   // Always day → month → year (e.g. "२५ जुलाई २०२६" / "25 Jul 2026"). Relying on
@@ -307,9 +320,14 @@ export function PatroDateNavCore({
   // in the chip because it doubles as the jump-to-today control.
   const chipDay = day ?? 1;
   const chipMonth = month;
+  // The closed month control is the widest thing in the phone date sheet, so it
+  // shows a three-letter form there; the option list keeps the full name.
+  // English only — Devanagari month names already fit.
   const monthOptions = (isAdCalendar ? AD_MONTH_NAMES : BS_MONTH_NAMES).map((_: string, i: number) => ({
     value: i + 1,
     label: isAdCalendar ? adMonthLabel(i + 1, lang) : bsMonthLabel(i + 1, lang),
+    shortLabel:
+      lang === "en" ? (isAdCalendar ? AD_MONTHS_SHORT[i] : BS_MONTHS_SHORT[i]) : undefined,
   }));
   const yearSelectOptions = yearOptions.map((y) => ({
     value: y,
@@ -377,7 +395,7 @@ export function PatroDateNavCore({
   const mobilePickerLabelCompact =
     day != null
       ? `${digits(day)}${clockSummary ? ` · ${clockSummary}` : ""}`
-      : monthTitle;
+      : monthTitleShort;
 
   // Day views (panchanga) get a proper calendar + 12h time popover; month
   // views (home) keep the select-based nav / bottom sheet.
@@ -467,17 +485,19 @@ export function PatroDateNavCore({
   // Nepali BS date part of the heading. The संवत्सर name and Gregorian subtitle
   // are ordered by <BsHeadline>, which is the single source of truth for the
   // `<BS date> <संवत्सर> <Gregorian>` order shared across every page.
-  const bsTitlePart = (
+  const titlePartFor = (title: string) => (
     <>
-      {monthTitle}{" "}
+      {title}{" "}
       <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
     </>
   );
+  const bsTitlePart = titlePartFor(monthTitle);
+  const bsTitlePartShort = titlePartFor(monthTitleShort);
 
   const mobileTitleBlock = (
     <BsHeadline
       className="text-sm"
-      bs={bsTitlePart}
+      bs={bsTitlePartShort}
       bsClassName="min-w-0"
       samvatsara={samvatsaraLabel}
       samvatsaraClassName="text-sm"
