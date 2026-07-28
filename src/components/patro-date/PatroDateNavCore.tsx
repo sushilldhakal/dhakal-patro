@@ -26,6 +26,7 @@ import {
   patroMonthChipButton,
   patroMonthChipDay,
   patroMonthChipHead,
+  patroMonthChipLine,
   patroMonthChipShell,
   patroMonthNavShell,
   patroMonthNavBtn,
@@ -81,6 +82,29 @@ function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" =
     return BS_MONTHS_SHORT[month - 1].toUpperCase();
   }
   return BS_MONTHS_NE[month - 1];
+}
+
+/**
+ * Calendar-grid glyph for the month chip. Month views have no single day to
+ * show, and printing "1" read as a date the user had not chosen — two rules
+ * each way say "a month" without naming a day.
+ */
+function MonthChipGrid() {
+  return (
+    <svg
+      viewBox="0 0 20 16"
+      className="h-[1.0625rem] w-[1.375rem] text-foreground/65 sm:h-5 sm:w-[1.625rem]"
+      aria-hidden
+      focusable="false"
+    >
+      <g stroke="currentColor" strokeWidth="1.35" strokeLinecap="round">
+        <line x1="1" y1="5.5" x2="19" y2="5.5" />
+        <line x1="1" y1="10.5" x2="19" y2="10.5" />
+        <line x1="7" y1="1" x2="7" y2="15" />
+        <line x1="13" y1="1" x2="13" y2="15" />
+      </g>
+    </svg>
+  );
 }
 
 type NavControlsProps = {
@@ -606,7 +630,13 @@ export function PatroDateNavCore({
         title={todayAriaLabel}
       >
         <div className={patroMonthChipHead}>{chipMonthLabel(chipMonth, lang, calendarMode)}</div>
-        <div className={patroMonthChipDay}>{digits(chipDay)}</div>
+        {day != null ? (
+          <div className={patroMonthChipDay}>{digits(chipDay)}</div>
+        ) : (
+          <div className={patroMonthChipLine}>
+            <MonthChipGrid />
+          </div>
+        )}
       </button>
 
       <div className="@container/month-head min-w-0 flex-1">
