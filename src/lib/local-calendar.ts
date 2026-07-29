@@ -437,9 +437,25 @@ export function mergeEnrichedDays(
 
 /** Drop alias / generic vrata rows when a named festival already covers the day. */
 const FESTIVAL_SUBSUMED_BY: Record<string, string> = {
-  "guru-purnima-vrata": "guru-purnima",
   "dilla-punhi": "guru-purnima",
+  "vasant-panchami-vrata": "saraswati-puja",
+  "putrada-ekadashi-vaishnava": "putrada-ekadashi-smarta",
 };
+
+/**
+ * Rows that are only a second label for another festival. Unlike the map above
+ * these never stand on their own, so they drop even when the canonical row is
+ * absent from the same day — a MoHA override can move it (BS 2081 pulled
+ * मातातीर्थ औंसी to Baishakh 25) and a day-scoped rule would strand the alias.
+ * Mirrors `alias_of` in the API's festival_rules_v3.json.
+ */
+const FESTIVAL_ALIAS_IDS = new Set([
+  "guru-purnima-vrata",
+  "navaratri-arambha",
+  "amako-mukh-herne-din",
+  "sattila-ekadashi",
+  "nari-diwas",
+]);
 
 function isGenericPurnimaVrataId(id: string): boolean {
   return id.startsWith("purnima-vrata-");
@@ -455,12 +471,13 @@ function isNamedPurnimaFestivalEntry(h: { id: string; name_en?: string; name_ne?
 export function filterRedundantDayFestivals<T extends { id: string; name_en?: string; name_ne?: string }>(
   festivals: T[],
 ): T[] {
-  if (festivals.length <= 1) return festivals;
+  const rows = festivals.filter((f) => !FESTIVAL_ALIAS_IDS.has(f.id));
+  if (rows.length <= 1) return rows;
 
-  const presentIds = new Set(festivals.map((f) => f.id));
-  const hasNamedPurnima = festivals.some(isNamedPurnimaFestivalEntry);
+  const presentIds = new Set(rows.map((f) => f.id));
+  const hasNamedPurnima = rows.some(isNamedPurnimaFestivalEntry);
 
-  return festivals.filter((festival) => {
+  return rows.filter((festival) => {
     const subsumedBy = FESTIVAL_SUBSUMED_BY[festival.id];
     if (subsumedBy && presentIds.has(subsumedBy)) return false;
 
