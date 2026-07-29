@@ -202,11 +202,19 @@ export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
               {planets.map(({ key, label, rashi, degree, isRetrograde, isCombust }) => (
                 <div
-                  key={label}
-                  className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark"
+                  key={key}
+                  className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset p-2.5 shadow-ring-soft"
                 >
-                  <span className="flex shrink-0 items-center gap-0.5 text-sm leading-tight font-semibold text-foreground">
-                    {label}
+                  <span className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 text-sm leading-tight font-semibold text-foreground">
+                    <span className="min-w-0 break-words">
+                      {label}
+                      {rashi ? (
+                        <>
+                          {" "}
+                          <span aria-hidden>→</span> {rashi}
+                        </>
+                      ) : null}
+                    </span>
                     <GrahaStatusBadges
                       planetKey={key}
                       isRetrograde={isRetrograde}
@@ -214,15 +222,8 @@ export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location
                       size={12}
                     />
                   </span>
-                  <span className="mono min-w-0 text-sm font-semibold leading-tight text-foreground break-words">
-                    {rashi ? (
-                      <>
-                        <span className="block">{rashi}</span>
-                        <span className="block tabular-nums">{degree}</span>
-                      </>
-                    ) : (
-                      degree
-                    )}
+                  <span className="font-num text-sm font-semibold leading-tight tabular-nums text-foreground">
+                    {degree}
                   </span>
                 </div>
               ))}
@@ -231,7 +232,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location
           {deshaantar || belaantar ? (
             <div className="mt-1.5 grid grid-cols-1 gap-1.5 border-t border-foreground/10 pt-2 sm:grid-cols-2">
               {deshaantar ? (
-                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark sm:flex-row sm:items-center sm:justify-between sm:gap-1">
+                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset shadow-ring-soft p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
                   <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
                     {t("aside.deshaantar")}
                   </span>
@@ -241,7 +242,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location
                 </div>
               ) : null}
               {belaantar ? (
-                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-gochar-chip px-1.5 py-1 dark:bg-gochar-chip-dark sm:flex-row sm:items-center sm:justify-between sm:gap-1">
+                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset shadow-ring-soft p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
                   <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
                     {t("aside.belaantar")}
                   </span>
