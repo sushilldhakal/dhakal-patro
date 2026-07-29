@@ -527,7 +527,11 @@ export function PatroDateNavCore({
     </>
   );
   const bsTitlePart = titlePartFor(monthTitle);
-  const bsTitlePartShort = titlePartFor(monthTitleShort);
+  // Phone headings open on the year: the chip to their left already carries the
+  // month name, so repeating it here only ate width in the narrowest row.
+  const bsTitlePartShort = (
+    <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+  );
 
   const mobileTitleBlock = (
     <BsHeadline
@@ -654,12 +658,17 @@ export function PatroDateNavCore({
       <div className="@container/month-head min-w-0 flex-1">
         {/* Mobile only (<768px): row1 title|toolbar, row2 picker|toolbarLower */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 md:hidden">
-          {/* self-center: the toolbar chip beside it is taller than the title,
-              so it sets the row height. Left at the top, the title would leave
-              that difference as dead space above the date row. */}
+          {/* self-center pairs with the fixed-height toolbar cell below: the
+              chip is taller than the title, so centring puts the two on one
+              line instead of leaving the difference as dead space above the
+              date row. */}
           <div className="col-start-1 row-start-1 min-w-0 self-center">{mobileTitleBlock}</div>
           {mobileToolbar ? (
-            <div className="col-start-2 row-start-1 flex shrink-0 items-start justify-end self-start">
+            // Every phone toolbar is pinned to the same 30px as the date,
+            // location and step chips — each page passes its own control
+            // (mode toggle, day cycle, paksha), and left to themselves they
+            // came out 30/32/34px, so the top row never lined up.
+            <div className="col-start-2 row-start-1 flex h-[30px] shrink-0 items-center justify-end self-start [&>*]:h-full">
               {mobileToolbar}
             </div>
           ) : null}

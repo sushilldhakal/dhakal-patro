@@ -42,8 +42,11 @@ export function MonthGridPicker({
             onClick={() => onMonthChange(option.value)}
             className={cn(
               "min-w-0 truncate rounded-lg border px-2 py-2.5 text-sm font-semibold transition-colors",
+              // Selection reads in the same colour as the month chip's header
+              // and the segmented toggles (bg-secondary), not the saffron
+              // accent — the sheet is the chip's own picker.
               selected
-                ? "border-primary bg-primary text-primary-foreground"
+                ? "border-secondary bg-secondary text-secondary-foreground"
                 : "border-border bg-card text-foreground hover:bg-surface-hover",
             )}
           >
@@ -202,7 +205,7 @@ export function PatroDateSheet({
                   className={cn(
                     "h-12 rounded-xl border text-sm font-bold transition-colors",
                     selected
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "border-secondary bg-secondary text-secondary-foreground"
                       : "border-border bg-card text-foreground hover:bg-surface-hover",
                   )}
                 >
@@ -231,7 +234,7 @@ export function PatroDateSheet({
           <DrawerClose asChild>
             <button
               type="button"
-              className="h-10 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground"
+              className="h-10 w-full rounded-lg bg-secondary text-sm font-semibold text-secondary-foreground"
             >
               {t("common.done")}
             </button>
