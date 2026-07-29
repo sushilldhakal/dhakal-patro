@@ -230,7 +230,7 @@ export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location
             </div>
           ) : null}
           {deshaantar || belaantar ? (
-            <div className="mt-1.5 grid grid-cols-1 gap-1.5 border-t border-foreground/10 pt-2 sm:grid-cols-2">
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5 border-t border-foreground/10 pt-2 sm:grid-cols-2">
               {deshaantar ? (
                 <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset shadow-ring-soft p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
                   <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">

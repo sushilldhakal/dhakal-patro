@@ -52,10 +52,9 @@ import {
 } from "@/lib/timeline-classes";
 
 const W = 1000;
-/** Left inset for row labels + start of the ghati grid. Wide enough that the
- *  longest English row label ("Inauspicious") still fits the frozen label
- *  column at the 768px minimum chart width. */
-const X0 = 120;
+/** Left inset for घण्टा/घडी scale + start of the ghati grid. Keep in sync with
+ *  `--tl-label-col` on the chart wrapper (frozen row labels sit in that column). */
+const X0 = 95;
 const X1 = 994;
 const RULER_H = 58;
 const MOON_BAND_H = 20;
@@ -471,8 +470,13 @@ export function DayTimeline({
     <div className={cn(patroCard, "w-full")}>
       <DayTimelineBand mode={mode} onModeChange={onModeChange} showToggle={showToggle} />
 
-      <div className="relative">
-        <div className={cn("w-full", "max-w-full", "overflow-x-auto", "overscroll-x-contain", "px-0", "pt-3", "pb-1")}>
+      <div className="relative [--tl-label-col:65px] lg:[--tl-label-col:104px]">
+        <div
+          className={cn(
+            "w-full max-w-full overflow-x-auto overscroll-x-contain pt-3 pb-1",
+            "pl-[var(--tl-label-col)]",
+          )}
+        >
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className={cn("block", "h-auto", "w-full", "min-w-[768px]")}
@@ -727,9 +731,10 @@ export function DayTimeline({
             घण्टा/घडी scale keeps scrolling; only the track rows get an opaque
             backing. Positioned by % of the SVG height, so it tracks the chart's
             scaling on every screen size. */}
+            
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1 top-3 bottom-1 z-10 w-[84px] lg:w-[104px]"
+          className="pointer-events-none absolute left-1 top-3 bottom-1 z-10 w-[var(--tl-label-col)]"
         >
           <div
             className="absolute inset-x-0 bottom-0 border-r border-border bg-card shadow-[3px_0_6px_-3px_color-mix(in_srgb,var(--foreground)_28%,transparent)]"

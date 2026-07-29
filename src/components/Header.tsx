@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  CalendarDays,
   Star,
   Sparkles,
   BookOpen,
@@ -19,7 +18,6 @@ import { cn } from "../lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -30,6 +28,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { MobileNavMenu } from "@/components/MobileNavMenu";
 import { useLocale } from "@/i18n/locale";
 
 const PANCHANGA_LINKS = [
@@ -46,12 +45,6 @@ const JYOTISH_LINKS = [
 ] as const;
 
 const NAV = [{ to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen }] as const;
-
-const linkClass =
-  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
-
-const subLinkClass =
-  "flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm transition-colors hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 const desktopLinkClass =
   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors hover:text-foreground hover:bg-muted [&.active]:text-secondary [&.active]:bg-secondary/10";
@@ -116,47 +109,6 @@ function JyotishNavDropdown() {
   );
 }
 
-function JyotishNavGroup({ onNavigate }: { onNavigate?: () => void }) {
-  const { t } = useTranslation();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [expanded, setExpanded] = useState(() => isJyotishRoute(pathname));
-  const isActive = isJyotishRoute(pathname);
-
-  return (
-    <div>
-      <button
-        type="button"
-        className={cn(linkClass, "w-full", isActive && "text-foreground")}
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <Sparkles className="size-4 shrink-0" />
-        <span className="flex-1 text-left">{t("nav.jyotish")}</span>
-        <ChevronDown
-          className={cn("size-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
-        />
-      </button>
-      {expanded ? (
-        <div className="flex flex-col gap-0.5 pb-1">
-          {JYOTISH_LINKS.map(({ to, labelKey, icon: Icon }) => (
-            <DrawerClose asChild key={to}>
-              <Link
-                to={to}
-                className={subLinkClass}
-                activeProps={{ className: "active" }}
-                onClick={onNavigate}
-              >
-                <Icon className="size-4 shrink-0" />
-                {t(labelKey)}
-              </Link>
-            </DrawerClose>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 function PanchangaNavDropdown() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -194,47 +146,6 @@ function PanchangaNavDropdown() {
         ))}
       </PopoverContent>
     </Popover>
-  );
-}
-
-function PanchangaNavGroup({ onNavigate }: { onNavigate?: () => void }) {
-  const { t } = useTranslation();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [expanded, setExpanded] = useState(() => isPanchangaRoute(pathname));
-  const isActive = isPanchangaRoute(pathname);
-
-  return (
-    <div>
-      <button
-        type="button"
-        className={cn(linkClass, "w-full", isActive && "text-foreground")}
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <Star className="size-4 shrink-0" />
-        <span className="flex-1 text-left">{t("nav.surya_panchanga")}</span>
-        <ChevronDown
-          className={cn("size-4 shrink-0 opacity-60 transition-transform", expanded && "rotate-180")}
-        />
-      </button>
-      {expanded ? (
-        <div className="flex flex-col gap-0.5 pb-1">
-          {PANCHANGA_LINKS.map(({ to, labelKey, icon: Icon }) => (
-            <DrawerClose asChild key={to}>
-              <Link
-                to={to}
-                className={subLinkClass}
-                activeProps={{ className: "active" }}
-                onClick={onNavigate}
-              >
-                <Icon className="size-4 shrink-0" />
-                {t(labelKey)}
-              </Link>
-            </DrawerClose>
-          ))}
-        </div>
-      ) : null}
-    </div>
   );
 }
 
@@ -310,31 +221,6 @@ function MenuPreferences() {
   );
 }
 
-function NavMenuContent({ onNavigate }: { onNavigate?: () => void }) {
-  const { t } = useTranslation();
-
-  return (
-    <nav className="flex flex-col gap-1 p-3">
-      <DrawerClose asChild>
-        <Link to="/" className={linkClass} activeProps={{ className: "active" }} onClick={onNavigate}>
-          <CalendarDays className="size-4 shrink-0" />
-          {t("home")}
-        </Link>
-      </DrawerClose>
-      <PanchangaNavGroup onNavigate={onNavigate} />
-      <JyotishNavGroup onNavigate={onNavigate} />
-      {NAV.map(({ to, labelKey, icon: Icon }) => (
-        <DrawerClose asChild key={to}>
-          <Link to={to} className={linkClass} activeProps={{ className: "active" }} onClick={onNavigate}>
-            <Icon className="size-4 shrink-0" />
-            {t(labelKey)}
-          </Link>
-        </DrawerClose>
-      ))}
-    </nav>
-  );
-}
-
 function DrawerBrandHeader() {
   const { t } = useTranslation();
 
@@ -403,7 +289,7 @@ export function Header() {
               <DrawerContent className="flex h-full flex-col p-0">
                 <DrawerBrandHeader />
                 <div className="flex-1 overflow-y-auto">
-                  <NavMenuContent onNavigate={() => setMobileOpen(false)} />
+                  <MobileNavMenu onNavigate={() => setMobileOpen(false)} />
                 </div>
                 <DrawerFooter className="border-t border-border">
                   <MenuPreferences />
@@ -428,9 +314,11 @@ export function Header() {
                   <Menu className="size-5" />
                 </Button>
               </DrawerTrigger>
-              <DrawerContent className="p-0">
+              <DrawerContent className="flex h-full flex-col p-0">
                 <DrawerBrandHeader />
-                <NavMenuContent onNavigate={() => setTabletOpen(false)} />
+                <div className="flex-1 overflow-y-auto">
+                  <MobileNavMenu onNavigate={() => setTabletOpen(false)} />
+                </div>
               </DrawerContent>
             </Drawer>
           </div>

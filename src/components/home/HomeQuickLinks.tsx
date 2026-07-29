@@ -40,9 +40,15 @@ const QUICK_LINKS = [
 
 const QUICK_LINK_ICON_SIZE = 28;
 const QUICK_LINK_ICON_STROKE = 1.75;
+const NAV_DRAWER_ICON_SIZE = 20;
+const NAV_DRAWER_ICON_STROKE = 1.75;
 
 export const quickLinkCardClass =
   "group flex aspect-square w-[calc((100%-1.5rem)/3)] max-w-[7.25rem] shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-2.5 py-3.5 text-center no-underline transition-[border-color,background-color,transform] duration-200 hover:border-secondary/35 hover:bg-tab-hover active:scale-[0.98] sm:w-[calc((100%-2.25rem)/4)] sm:max-w-[8rem] md:w-[calc((100%-3rem)/5)] lg:max-w-none lg:w-[calc((100%-5.25rem)/8)]";
+
+/** Compact home-style card for the mobile drawer — 3 per row, icon + title only. */
+export const navDrawerCardClass =
+  "group flex aspect-square w-[calc((100%-0.75rem)/3)] flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-1 py-2 text-center no-underline transition-[border-color,background-color,transform] duration-200 hover:border-secondary/35 hover:bg-tab-hover active:scale-[0.98] [&.active]:border-secondary/40 [&.active]:bg-secondary/10 [&.active]:text-secondary";
 
 export const quickLinkIconClass = "shrink-0 text-danger dark:text-danger";
 
@@ -77,6 +83,43 @@ export function QuickLinkCard({
           {description}
         </span>
       ) : null}
+    </Link>
+  );
+}
+
+export function NavDrawerLinkCard({
+  label,
+  icon: Icon,
+  iconNode,
+  className,
+  onClick,
+  ...linkProps
+}: {
+  label: string;
+  icon?: LucideIcon;
+  iconNode?: ReactNode;
+  className?: string;
+  onClick?: () => void;
+} & Omit<LinkProps, "className" | "children" | "onClick">) {
+  return (
+    <Link
+      {...linkProps}
+      onClick={onClick}
+      className={cn(navDrawerCardClass, className)}
+      activeProps={{ className: "active" }}
+    >
+      {iconNode ??
+        (Icon ? (
+          <Icon
+            size={NAV_DRAWER_ICON_SIZE}
+            strokeWidth={NAV_DRAWER_ICON_STROKE}
+            className={quickLinkIconClass}
+            aria-hidden
+          />
+        ) : null)}
+      <span className="w-full min-w-0 px-0.5 text-[0.62rem] font-bold leading-tight text-foreground line-clamp-3">
+        {label}
+      </span>
     </Link>
   );
 }
