@@ -150,8 +150,8 @@ export function PatroDateChip({
         className="hidden size-3.5 shrink-0 text-secondary sm:block"
         strokeWidth={2}
       />
-      <span className="min-w-0 truncate font-num sm:hidden">{labelCompact}</span>
-      <span className="hidden min-w-0 truncate font-num sm:inline">{label}</span>
+      <span className="min-w-0 font-num sm:hidden">{labelCompact}</span>
+      <span className="hidden min-w-0 font-num sm:inline">{label}</span>
       <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
     </button>
   );

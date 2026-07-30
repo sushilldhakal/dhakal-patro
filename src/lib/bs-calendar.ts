@@ -55,6 +55,7 @@ export type BikramSambatDate = {
 
 type BsMonthLengths = readonly [number, number, number, number, number, number, number, number, number, number, number, number]
 
+/** Inclusive BS range for pickers, URL validation, and offline conversion (matches API: BS 60–3000). */
 export const BS_SUPPORTED_START_YEAR = calendarData.start_year
 export const BS_SUPPORTED_END_YEAR = calendarData.end_year
 

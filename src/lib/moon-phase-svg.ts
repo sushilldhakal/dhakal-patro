@@ -31,6 +31,11 @@ export function moonPhaseLitPath(E: number, r: number): string {
   return `M0,${-r} A${r},${r} 0 0 ${outerSweep} 0,${r} A${rx.toFixed(2)},${r} 0 0 ${termSweep} 0,${-r} Z`;
 }
 
+/** Mid-tithi elongation for wheel index 0–29 (0° औंसी … ~180° पूर्णिमा). */
+export function elongationFromTithiIndex(idx: number): number {
+  return (idx + 0.5) * 12;
+}
+
 /** Rotate (deg) so the phase disc's sunward side (−x) points at (sx, sy) from moon center. */
 export function moonSunFacingRotation(mx: number, my: number, sx: number, sy: number): number {
   const dx = sx - mx;

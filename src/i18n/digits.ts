@@ -20,10 +20,13 @@ export function formatLocaleDigits(value: string | number, lang?: string): strin
   return toDevanagariDigits(value);
 }
 
-/** Western digits for `font-num` / Fira Code — the mono face has no Devanagari glyphs. */
-export function formatMonoDigits(value: string | number | null | undefined): string {
+/** Locale-aware digits for tabular number spans (`.font-num` / `.font-mono`). */
+export function formatMonoDigits(
+  value: string | number | null | undefined,
+  lang?: string,
+): string {
   if (value == null) return "";
-  return String(value);
+  return formatLocaleDigits(value, lang);
 }
 
 export function useLocaleDigits() {

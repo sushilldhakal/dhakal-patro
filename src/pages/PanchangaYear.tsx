@@ -21,10 +21,10 @@ import {
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { patroSelect } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
+import { YearRangePicker } from "@/components/panchanga/YearRangePicker";
 import {
   displayLocationLabel,
   usePanchangaLocation,
@@ -42,11 +42,6 @@ import {
   panchangaYearBulkKey,
   seedYearPanchangaCache,
 } from "@/lib/panchanga-year-cache";
-
-const BS_YEAR_OPTIONS = Array.from(
-  { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-  (_, i) => BS_SUPPORTED_START_YEAR + i
-);
 
 function daysInBsYear(year: number): number {
   let total = 0;
@@ -448,19 +443,26 @@ export function PanchangaYear() {
     [rangeDayIndex, rangeStart],
   );
 
-  function handleRangeStartChange(nextStart: number) {
+  /**
+   * Commit a whole range at once. Both bounds land in the same React batch, so
+   * the prefetch chain never sees a half-edited range: picking a start of 1700
+   * while the end still read 2083 used to widen the live range to 384 years and
+   * queue a year payload for every one of them.
+   */
+  function applyRange(nextStart: number, nextEnd: number) {
     const start = clampYear(nextStart);
+    const end = Math.max(clampYear(nextEnd), start);
     setRangeStart(start);
-    setRangeEnd((end) => Math.max(end, start));
-    setActiveYear(start);
-    setDayOfYear(1);
-    setQueryDay(1);
-  }
-
-  function handleRangeEndChange(nextEnd: number) {
-    const end = Math.max(clampYear(nextEnd), rangeStart);
     setRangeEnd(end);
-    setActiveYear((y) => Math.min(y, end));
+    setActiveYear(start);
+    // Land on today when the range opens on today's year, matching the day the
+    // page picks on first load; any other year has no "current" day to hold.
+    const day =
+      start === todayBs.year
+        ? dayOfYearFromBs(todayBs.year, todayBs.month, todayBs.day)
+        : 1;
+    setDayOfYear(day);
+    setQueryDay(day);
   }
 
   useRouteLoading(YEAR_ROUTE_LOADING);
@@ -520,36 +522,14 @@ export function PanchangaYear() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
-          <div className="inline-flex items-center gap-1.5">
-            <span className="text-xs text-base">
-              {bilingualText(lang, "दायरा", "Range")}
-            </span>
-            <select
-              className={patroSelect}
-              value={rangeStart}
-              aria-label={bilingualText(lang, "सुरु वर्ष", "Start year")}
-              onChange={(e) => handleRangeStartChange(Number(e.target.value))}
-            >
-              {BS_YEAR_OPTIONS.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-            <span>–</span>
-            <select
-              className={patroSelect}
-              value={rangeEnd}
-              aria-label={bilingualText(lang, "अन्त्य वर्ष", "End year")}
-              onChange={(e) => handleRangeEndChange(Number(e.target.value))}
-            >
-              {BS_YEAR_OPTIONS.filter((y) => y >= rangeStart).map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
+          <YearRangePicker
+            start={rangeStart}
+            end={rangeEnd}
+            minYear={BS_SUPPORTED_START_YEAR}
+            maxYear={BS_SUPPORTED_END_YEAR}
+            currentYear={todayBs.year}
+            onApply={applyRange}
+          />
           <LocationSelector
             compact
             className="shrink-0"

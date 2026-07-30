@@ -20,10 +20,11 @@ import { choghadiyaName } from "@/lib/choghadiya-display";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
+import { CalendarMoonPhaseIcon } from "@/components/panchanga/CalendarMoonPhaseIcon";
+import { tithiIndexFromPanchanga } from "@/lib/tithi-wheel-data";
 import {
   pgTlAxis,
   pgTlEventTimeMoon,
-  pgTlMoonEmoji,
   pgTlRowline,
   pgTlSunDisc,
   pgTlSunHorizon,
@@ -90,6 +91,22 @@ function gx(g: number) {
 
 function clampX(x: number, pad: number) {
   return Math.max(X0 + pad, Math.min(X1 - pad, x));
+}
+
+const MOON_ICON = 14;
+
+function MoonMarkerIcon({ x, y, tithiIndex }: { x: number; y: number; tithiIndex: number }) {
+  return (
+    <foreignObject
+      x={x - MOON_ICON / 2}
+      y={y - MOON_ICON / 2}
+      width={MOON_ICON}
+      height={MOON_ICON}
+      className="overflow-visible"
+    >
+      <CalendarMoonPhaseIcon tithiIndex={tithiIndex} className="size-3.5" />
+    </foreignObject>
+  );
 }
 
 interface ChartSegment {
@@ -321,6 +338,7 @@ export function DayTimeline({
     return lagna ? [lagna, ...rows] : rows;
   }, [p]);
   const timeZone = resolveTimeZone(p?.location?.timezone, timezone);
+  const tithiIdx = p ? tithiIndexFromPanchanga(p) : null;
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -522,10 +540,22 @@ export function DayTimeline({
           <EventMarker g={sunriseG} sunriseMin={data.sunriseMin} kind="sunrise" anchor={isCivil ? "middle" : "start"} />
           <EventMarker g={sunsetG} sunriseMin={data.sunriseMin} kind="sunset" anchor="middle" />
           {data.moonsetG != null && (
-            <EventMarker g={data.moonsetG} sunriseMin={data.sunriseMin} kind="moonset" anchor="middle" />
+            <EventMarker
+              g={data.moonsetG}
+              sunriseMin={data.sunriseMin}
+              kind="moonset"
+              anchor="middle"
+              tithiIndex={tithiIdx}
+            />
           )}
           {data.moonriseG != null && (
-            <EventMarker g={data.moonriseG} sunriseMin={data.sunriseMin} kind="moonrise" anchor="middle" />
+            <EventMarker
+              g={data.moonriseG}
+              sunriseMin={data.sunriseMin}
+              kind="moonrise"
+              anchor="middle"
+              tithiIndex={tithiIdx}
+            />
           )}
           {!isCivil && (
             <EventMarker g={60} sunriseMin={data.sunriseMin} kind="next-sunrise" anchor="end" />
@@ -635,18 +665,27 @@ export function DayTimeline({
                         )
                       ) : (
                         w >= 20 && (
-                          <text
-                            x={midX}
-                            y={labelY}
-                            className={narrow ? cn(pgxSegname, pgxSegnameSm) : pgxSegname}
-                            textAnchor="middle"
-                            clipPath={`url(#${clipId})`}
-                          >
-                            {mainName}
-                            {!narrow && paksha ? (
-                              <tspan className={pgxPaksha}>{` · ${paksha}`}</tspan>
+                          <>
+                            {tr.cls === "tithi" && si === 0 && tithiIdx != null && w >= 30 ? (
+                              <MoonMarkerIcon
+                                x={x + MOON_ICON / 2 + 2}
+                                y={labelY}
+                                tithiIndex={tithiIdx}
+                              />
                             ) : null}
-                          </text>
+                            <text
+                              x={midX + (tr.cls === "tithi" && si === 0 && tithiIdx != null && w >= 30 ? 8 : 0)}
+                              y={labelY}
+                              className={narrow ? cn(pgxSegname, pgxSegnameSm) : pgxSegname}
+                              textAnchor="middle"
+                              clipPath={`url(#${clipId})`}
+                            >
+                              {mainName}
+                              {!narrow && paksha ? (
+                                <tspan className={pgxPaksha}>{` · ${paksha}`}</tspan>
+                              ) : null}
+                            </text>
+                          </>
                         )
                       )}
                     </g>
@@ -738,7 +777,7 @@ export function DayTimeline({
           {tracks.map((tr, ti) => (
             <span
               key={tr.key}
-              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] font-bold leading-none text-foreground [font-family:Mukta,sans-serif] sm:text-xs lg:text-sm"
+              className="absolute right-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] font-bold leading-none text-foreground [font-family:var(--pn-font)] sm:text-xs lg:text-sm"
               style={{ top: `${((trackY(ti) + rowBandAt(ti) / 2) / H) * 100}%` }}
             >
               {bilingualText(lang, tr.ne, tr.en ?? tr.ne)}
@@ -921,11 +960,11 @@ function PeriodCards({
               >
                 {it.n}
               </span>
-              <span className="min-w-0 text-sm font-semibold leading-snug break-words [overflow-wrap:anywhere] [font-family:Mukta,sans-serif]">
+              <span className="min-w-0 text-sm font-semibold leading-snug break-words [overflow-wrap:anywhere] [font-family:var(--pn-font)]">
                 {it.label}
               </span>
             </div>
-            <span className="mt-auto text-sm font-semibold tabular-nums [font-family:Mukta,sans-serif]">
+            <span className="mt-auto text-sm font-semibold tabular-nums [font-family:var(--pn-font)]">
               {it.time}
             </span>
           </li>
@@ -969,35 +1008,27 @@ function EventMarker({
   sunriseMin,
   kind,
   anchor,
+  tithiIndex,
 }: {
   g: number;
   sunriseMin: number;
   kind: "sunrise" | "sunset" | "moonrise" | "moonset" | "next-sunrise";
   anchor: "start" | "middle" | "end";
+  tithiIndex?: number | null;
 }) {
   const { clock } = dualTimeAtGhati(g, sunriseMin);
   const x = gx(g);
   const labelX = anchor === "start" ? x : anchor === "end" ? x : x;
   const isSun = kind === "sunrise" || kind === "sunset" || kind === "next-sunrise";
   const sunVariant = kind === "sunset" ? "set" : "rise";
-  const moonEmoji = kind === "moonset" ? "🌘" : "🌒";
 
   return (
     <g>
       {isSun ? (
         <SunHalfIcon x={x} y={SUNLINE_Y} variant={sunVariant} />
-      ) : (
-        <text
-          x={x}
-          y={MOON_EMOJI_Y}
-          textAnchor="middle"
-          className={pgTlMoonEmoji}
-          dominantBaseline="central"
-          aria-hidden
-        >
-          {moonEmoji}
-        </text>
-      )}
+      ) : tithiIndex != null ? (
+        <MoonMarkerIcon x={x} y={MOON_EMOJI_Y} tithiIndex={tithiIndex} />
+      ) : null}
       <text
         x={labelX}
         y={isSun ? MARKER_TIME_Y : MOON_TIME_Y}

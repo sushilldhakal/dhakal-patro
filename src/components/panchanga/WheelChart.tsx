@@ -18,6 +18,11 @@ import { useLocale, bilingualText } from "@/i18n/locale";
 import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 import { wheelSvg, wheelSvgWrap } from "@/lib/wheel-classes";
 import {
+  NAKSHATRA_GLYPHS,
+  RASHI_GLYPHS,
+  WheelGlyph,
+} from "@/lib/wheel-glyphs";
+import {
   wDaytick,
   wHit,
   wKarLbl,
@@ -31,7 +36,6 @@ import {
   wPadaAkshar,
   wPlanetGlow,
   wPlanetName,
-  wRashiGlyph,
   wRashiName,
   wRashiRay,
   wRimCircle,
@@ -50,9 +54,14 @@ const CY = 500;
 /** Scale factor applied to all planet orbit radii to leave room for the inner yoga/karana/tithi rings. */
 const ORBIT_SCALE = 0.58;
 
-/** Yoga ring stays deep in the core. Karana → Tithi now sit between the rashi and nakshatra rings, sharing boundaries. */
+/**
+ * Every inner ring shares a boundary with its neighbour, so no dead band opens
+ * up between them: Yoga → Rashi, Karana → Tithi → Rashi, Karana → pada inner.
+ * The yoga ring's inner edge is pinned just clear of the outermost planet orbit
+ * (216 × ORBIT_SCALE ≈ 125, plus the widest planet body) rather than to a ring.
+ */
 const R_YOGA_I = 140;
-const R_YOGA_O = 158;
+const R_YOGA_O = 178; // shared boundary with rashi inner / core
 const R_KAR_I  = 303;
 const R_KAR_O  = 327; // shared boundary with pada inner
 const R_TIT_I  = 263; // shared boundary with rashi outer
@@ -80,6 +89,15 @@ const R = {
   rashiIn: 178,
   core: 178,
 } as const;
+
+/**
+ * Glyph box sizes. Both are "contain" fits, so these are the longer side of the
+ * artwork, not its apparent weight — the rashi band (178–263) has more radial
+ * room to spare than the nakshatra band, whose glyph shares 345–423 with a name
+ * that runs to two stacked rows in English.
+ */
+const RASHI_GLYPH_SIZE = 30;
+const NAK_GLYPH_SIZE = 26;
 
 export type WheelHover = { type: "nak"; i: number } | { type: "rashi"; i: number };
 export type WheelPick = WheelHover;
@@ -235,15 +253,29 @@ function WheelChartImpl({
           className={wSegNak({ alt: i % 2 === 1, hot: isHot, sel: isSel })}
         />
       );
+      // The name used to sit alone at the band's midpoint; it moves in to
+      // R.nakName so the glyph can take R.nakIcon, the slot already reserved for
+      // it out near the rim. Both stay — the icon reads at a glance, the name
+      // is what you actually look up.
+      const [nx, ny] = pol(Lm, R.nakIcon);
       nakDecor.push(
-        <RingLabel
-          key={`ni${i}`}
-          L={Lm}
-          r={(R.nakIn + R.nakOut) / 2}
-          cls={wNakName(isSel || isHot)}
-          spin={spin}
-          rows={labelRows(bilingualText(lang, ico.ne, ico.en))}
-        />
+        <g key={`ni${i}`}>
+          <WheelGlyph
+            art={NAKSHATRA_GLYPHS[i]}
+            size={NAK_GLYPH_SIZE}
+            cx={nx}
+            cy={ny}
+            className={wNakName(isSel || isHot)}
+            title={bilingualText(lang, ico.ne, ico.en)}
+          />
+          <RingLabel
+            L={Lm}
+            r={R.nakName}
+            cls={wNakName(isSel || isHot)}
+            spin={spin}
+            rows={labelRows(bilingualText(lang, ico.ne, ico.en))}
+          />
+        </g>
       );
     }
 
@@ -266,16 +298,19 @@ function WheelChartImpl({
       const [gx, gy] = pol(Lm, R.rashiGlyph);
       rashiDecor.push(
         <g key={`rd${i}`}>
-          <text
-            x={gx}
-            y={gy}
-            textAnchor="middle"
-            dominantBaseline="central"
-            className={wRashiGlyph}
-            style={{ fontSize: 27 }}
-          >
-            {rs.sym}
-          </text>
+          {/* Left upright rather than rotated with the ring: a crab or a pair of
+              scales is only recognisable the right way up, and the Unicode symbol
+              this replaced sat upright too. */}
+          {/* Same class as the name, so hovering or selecting a sign tints its
+              glyph too — the nakshatra glyph below does the same. */}
+          <WheelGlyph
+            art={RASHI_GLYPHS[i]}
+            size={RASHI_GLYPH_SIZE}
+            cx={gx}
+            cy={gy}
+            className={wRashiName(isSel || isHot)}
+            title={bilingualText(lang, rs.ne, rs.en)}
+          />
           <RingLabel L={Lm} r={R.rashiName} cls={wRashiName(isSel || isHot)} spin={spin}>
             {bilingualText(lang, rs.ne, rs.en)}
           </RingLabel>
@@ -496,9 +531,17 @@ function WheelChartImpl({
           r={(R_YOGA_I + R_YOGA_O) / 2}
           cls={wYogaLbl(isCur)}
           spin={spin}
-          size={isCur ? 7 : 5.5}
+          // One size for every segment, current included. A 13.3° segment holds
+          // ~37 units of arc at this radius and the longest name (आयुष्मान्) runs
+          // 32 of them at 8 — enlarging just the current label would overflow on
+          // whichever days that yoga is the current one. The highlight reads from
+          // the brighter fill, stroke and text colour instead.
+          size={8}
         >
-          {yName.length > 4 ? yName.slice(0, 4) : yName}
+          {/* The band is 38 wide now, not 18, so the type grew with it — else the
+              ring reads as a bigger empty gap. Full names, no truncation: slicing
+              to 4 chars cut mid-conjunct and left a dangling virama ("अतिगण्"). */}
+          {yName}
         </RingLabel>
       );
     }

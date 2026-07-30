@@ -1,4 +1,4 @@
-import type { PanchangaDay } from "@/lib/api";
+import type { CalendarDay, PanchangaDay } from "@/lib/api";
 import { getPanchangaDetail } from "@/lib/panchanga-format";
 
 const TITHI_BASE = [
@@ -162,6 +162,42 @@ export function tithiIndexFromPanchanga(p: PanchangaDay): number {
   }
 
   return krishna ? 15 : 0;
+}
+
+function calendarDayKrishna(day: CalendarDay): boolean {
+  if (day.paksha === "krishna" || day.paksha_ne?.includes("कृष्ण")) return true;
+  if (day.paksha === "shukla" || day.paksha_ne?.includes("शुक्ल")) return false;
+  return /कृष्ण|krishna/i.test(day.paksha_ne ?? day.paksha ?? "");
+}
+
+/** Wheel tithi index 0–29 from a month-grid {@link CalendarDay}. */
+export function tithiIndexFromCalendarDay(day: CalendarDay): number | undefined {
+  const nameNe = normalizeTithiName(day.tithi_ne ?? day.tithi);
+  if (!nameNe) return undefined;
+
+  if (/पूर्णिमा|purnima/i.test(nameNe)) return 14;
+  if (/औंसी|aunsi|aaushi/i.test(nameNe)) return 29;
+
+  const krishna = calendarDayKrishna(day);
+  const rangeStart = krishna ? 15 : 0;
+  const rangeEnd = krishna ? 29 : 14;
+
+  for (let i = rangeStart; i < rangeEnd; i++) {
+    if (WHEEL_TITHIS[i]!.ne === nameNe) return i;
+  }
+
+  const nameEn = normalizeTithiName(day.tithi);
+  for (let i = rangeStart; i < rangeEnd; i++) {
+    if (WHEEL_TITHIS[i]!.en.toLowerCase() === nameEn.toLowerCase()) return i;
+  }
+
+  for (let i = 0; i < 30; i++) {
+    if (WHEEL_TITHIS[i]!.ne === nameNe || WHEEL_TITHIS[i]!.en.toLowerCase() === nameEn.toLowerCase()) {
+      return i;
+    }
+  }
+
+  return undefined;
 }
 
 /** 27 yoga names in Nepali, index 0 = Vishkambha, anchored at ecliptic 0°. */

@@ -7,6 +7,7 @@ import {
   adToBS,
   bsToAD,
   getBSMonthLength,
+  getSupportedAdBounds,
 } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
@@ -19,14 +20,10 @@ const BS_YEARS = Array.from(
   (_, i) => BS_SUPPORTED_START_YEAR + i
 );
 
-// Kept fully inside the BS 1700–2200 window every AD year here maps into
-// (BS 1700 starts 1643-04-09; BS 2200 ends 2144-04-15) — so every date this
-// dropdown can produce is one bsToAD/adToBS already computes correctly.
-const AD_START_YEAR = 1644;
-const AD_END_YEAR = 2143;
+const AD_BOUNDS = getSupportedAdBounds();
 const AD_YEARS = Array.from(
-  { length: AD_END_YEAR - AD_START_YEAR + 1 },
-  (_, i) => AD_START_YEAR + i
+  { length: AD_BOUNDS.maxYear - AD_BOUNDS.minYear + 1 },
+  (_, i) => AD_BOUNDS.minYear + i,
 );
 
 const AD_MONTHS = [

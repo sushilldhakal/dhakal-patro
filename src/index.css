@@ -12,10 +12,10 @@
      so pair it with `md:`/`lg:` overrides to keep the bump phone-only. Also
      enables `max-xs:` (< 400px) for the smallest phones. */
   --breakpoint-xs: 25rem;
-  --font-devanagari: "Mukta", sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", sans-serif;
   --font-sans: var(--font-devanagari);
   --font-heading: var(--font-devanagari);
-  --font-en: "Mukta", sans-serif;
+  --font-en: "Noto Sans Devanagari", sans-serif;
   --font-mono: "Fira Code", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -138,10 +138,10 @@
   --color-danger: var(--brand-vermilion);
   --color-info: var(--brand-blue);
 
-  --font-devanagari: "Mukta", sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", sans-serif;
   --font-sans: var(--font-devanagari);
   --font-heading: var(--font-devanagari);
-  --font-en: "Mukta", sans-serif;
+  --font-en: "Noto Sans Devanagari", sans-serif;
   --font-mono: "Fira Code", monospace;
 
   /* Typography is driven entirely by the Tailwind text scale (--text-xs …
@@ -189,7 +189,7 @@
   --sidebar-accent: var(--brand-saffron);
 
   --pn-font: var(--font-devanagari);
-  --pn-num: "Fira Code", monospace;
+  --pn-num: var(--font-devanagari);
   --pn-ring-soft: color-mix(in srgb, var(--brand-gold) 28%, transparent);
 
   --chart-4: var(--brand-blue);
@@ -242,12 +242,14 @@
     --pn-font: var(--font-en);
     --font-sans: var(--font-en);
     --font-heading: var(--font-en);
+    --pn-num: "Fira Code", monospace;
   }
 
   html:not([lang="en"]) {
     --pn-font: var(--font-devanagari);
     --font-sans: var(--font-devanagari);
     --font-heading: var(--font-devanagari);
+    --pn-num: var(--font-devanagari);
   }
 
   body {
@@ -282,7 +284,6 @@
 /* ── Panchanga Chakra (cosmic wheel) ─────────────────────── */
 .pn-wheel {
   --pn-font: var(--font-sans);
-  --pn-num: "Fira Code", monospace;
   --pn-ring-soft: color-mix(in srgb, #8fbfc1 18%, transparent);
   --w-sky-0: #112c2a;
   --w-sky-1: #0a1a1b;

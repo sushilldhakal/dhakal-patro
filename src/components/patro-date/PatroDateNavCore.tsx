@@ -27,7 +27,7 @@ import {
   patroMonthChipButton,
   patroMonthChipDay,
   patroMonthChipHead,
-  patroMonthChipLine,
+  patroMonthChipSpan,
   patroMonthChipShell,
   patroMonthNavShell,
   patroMonthNavBtn,
@@ -91,28 +91,21 @@ function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" =
 }
 
 /**
- * Calendar-grid glyph for the month chip. Month views have no single day to
- * show, and printing "1" read as a date the user had not chosen — two rules
- * each way say "a month" without naming a day.
+ * Day span for the month chip. Month views have no single day to show, and
+ * printing "1" read as a date the user had not chosen — the month's own length
+ * says "a month" without naming a day, and answers a question the dot grid it
+ * replaced could not: BS months run 29–32 days, so १-३२ is real information.
  */
-function MonthChipGrid() {
-  return (
-    <svg
-      viewBox="0 0 30 22"
-      className="absolute inset-0 h-full w-full text-foreground/70"
-      aria-hidden
-      focusable="false"
-    >
-      {/* Six dots, three to a row — the day cells of a month. Two rows rather
-          than three so the glyph sits low and wide like the chip it fills;
-          ruled lines at this size read as a hash rather than a calendar. */}
-      <g fill="currentColor">
-        {[8, 14.5].map((cy) =>
-          [7, 15, 23].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.7" />),
-        )}
-      </g>
-    </svg>
-  );
+function monthChipSpan(
+  year: number,
+  month: number,
+  isAdCalendar: boolean,
+  digits: (value: number) => string,
+): string {
+  const length = isAdCalendar
+    ? new Date(year, month, 0).getDate() // day 0 of the next month = last of this
+    : getBSMonthLength(year, month);
+  return `${digits(1)}-${digits(length)}`;
 }
 
 type NavControlsProps = {
@@ -466,8 +459,8 @@ export function PatroDateNavCore({
             }
           >
             <CalendarClock className="hidden size-3.5 shrink-0 text-secondary sm:block" strokeWidth={2} />
-            <span className="min-w-0 truncate font-num sm:hidden">{mobilePickerLabelCompact}</span>
-            <span className="hidden min-w-0 truncate font-num sm:inline">{mobilePickerLabel}</span>
+            <span className="min-w-0 font-num sm:hidden">{mobilePickerLabelCompact}</span>
+            <span className="hidden min-w-0 font-num sm:inline">{mobilePickerLabel}</span>
             <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
           </button>
         </PopoverTrigger>
@@ -649,8 +642,8 @@ export function PatroDateNavCore({
         {day != null ? (
           <div className={patroMonthChipDay}>{digits(chipDay)}</div>
         ) : (
-          <div className={patroMonthChipLine}>
-            <MonthChipGrid />
+          <div className={patroMonthChipSpan}>
+            {monthChipSpan(year, chipMonth, isAdCalendar, digits)}
           </div>
         )}
       </button>
@@ -677,7 +670,7 @@ export function PatroDateNavCore({
               // Below md every nav opens the same sheet, day views included —
               // the calendar popover stays for md+ only. Prev/next arrows flank
               // it so the day can be stepped without opening the sheet.
-              <div className="flex min-w-0 items-center gap-1">
+              <div className="flex min-w-0 items-center gap-1 mt-[-7px]">
                 <button
                   type="button"
                   className={patroMobileStepBtn}

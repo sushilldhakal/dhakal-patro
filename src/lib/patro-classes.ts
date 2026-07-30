@@ -44,11 +44,11 @@ export const patroMdRail =
 
 /** Compact date/time drawer trigger — content-sized, capped so toolbar fits beside it. */
 export const patroMobilePickerBtn =
-  "inline-flex h-[30px] w-max max-w-[min(100%,10.5rem)] shrink-0 items-center gap-1 rounded-lg border border-border bg-card px-2 text-sm text-base text-foreground";
+  "inline-flex h-[30px] w-max max-w-[min(100%,calc(10.5rem+5px))] shrink-0 items-center gap-1 rounded-lg border border-border bg-card px-2 text-sm text-base text-foreground";
 
 /** Prev/next step buttons flanking the mobile date picker — matches its chip. */
 export const patroMobileStepBtn =
-  "flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40";
+  "flex h-[25px] w-[25px] md:h-[30px] md:w-[30px] shrink-0 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40";
 
 export const patroMonthNavShell =
   "inline-flex w-max max-w-full shrink-0 flex-nowrap items-center gap-0.5 max-md:gap-0.5 sm:gap-1.5";
@@ -81,14 +81,14 @@ export const patroMonthChipDay =
   "flex min-h-md items-center justify-center bg-card pb-1 pt-1 text-sm font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-base";
 
 /**
- * Calendar-grid "body" of the month chip — used where there is no day numeral.
- * No padding: the rules are meant to run edge to edge, the shell's
- * overflow-hidden trimming them to its rounded corners.
+ * Day-span "body" of the month chip — used where there is no day numeral.
+ * Names the month's own length (१-३२ for a 32-day Saun) instead of the abstract
+ * dot grid it replaced, which read as a decorative icon rather than data.
  */
-export const patroMonthChipLine =
-  // Height matches the day numeral's block so both chip variants are the same
-  // size (patroMonthChipDay: 4px + 14px line + 4px, then 2rem from sm).
-  "relative h-[1.375rem] bg-card sm:h-8";
+export const patroMonthChipSpan =
+  // Same box as patroMonthChipDay so both chip variants are the same size; only
+  // the type is smaller, since four glyphs share the width one or two had.
+  "flex min-h-md items-center justify-center bg-card pb-1 pt-1 font-num text-xs font-bold leading-none tracking-tight tabular-nums text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-sm";
 
 export const patroMonthRangeNav =
   "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-1 py-1 shadow-xs sm:gap-2";

@@ -13,12 +13,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { VerticalEdgeLabel } from "@/components/VerticalEdgeLabel";
+import { CalendarMoonPhaseIcon } from "@/components/panchanga/CalendarMoonPhaseIcon";
+import { tithiIndexFromCalendarDay } from "@/lib/tithi-wheel-data";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAYS_SHORT = ["आइत", "सोम", "मंगल", "बुध", "बिही", "शुक्र", "शनि"];
 
 const TODAY_AD = new Date().toISOString().split("T")[0];
+
+type PakshaPhase = "shukla" | "krishna";
+
+function getPakshaPhase(day: CalendarDay): PakshaPhase | undefined {
+  if (day.paksha === "shukla" || day.paksha_ne?.includes("शुक्ल")) return "shukla";
+  if (day.paksha === "krishna" || day.paksha_ne?.includes("कृष्ण")) return "krishna";
+  return undefined;
+}
+
+function moonPhaseTitle(phase: PakshaPhase | undefined, isEn: boolean): string | undefined {
+  if (phase === "shukla") return isEn ? "Shukla paksha (waxing moon)" : "शुक्ल पक्ष";
+  if (phase === "krishna") return isEn ? "Krishna paksha (waning moon)" : "कृष्ण पक्ष";
+  return undefined;
+}
 
 function fmtAdDay(iso: string): number {
   return new Date(iso + "T12:00:00").getDate();
@@ -97,6 +113,7 @@ export function BsCalendarGrid({
 }: Props) {
   const { t } = useTranslation();
   const { lang, monoDigits } = useLocale();
+  const isEn = lang === "en";
   const calendarEra = useCalendarEra();
   const primaryDate =
     primaryDateProp === "ad" || calendarEra === "ad" || lang === "en" ? "ad" : "bs";
@@ -108,7 +125,7 @@ export function BsCalendarGrid({
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-muted shadow-sm shadow-ring-soft max-md:rounded-none max-md:shadow-none">
+    <div className="overflow-hidden rounded-xl border border-border bg-border shadow-sm shadow-ring-soft max-md:rounded-none max-md:shadow-none">
       <div className="grid grid-cols-7 gap-px">
         {WEEKDAYS_NE.map((ne, i) => {
           const weekend = i === 0 || i === 6;
@@ -159,6 +176,8 @@ export function BsCalendarGrid({
           const leftFest = festivals[1];
           const rightFest = festivals[2];
           const tithi = bilingualText(lang, day.tithi_ne ?? day.tithi, day.tithi ?? day.tithi_ne);
+          const tithiIdx = tithiIndexFromCalendarDay(day);
+          const moonTitle = moonPhaseTitle(getPakshaPhase(day), isEn);
           const extraFestCount = festivals.length > 2 ? festivals.length - 2 : 0;
           const adDayNum = fmtAdDay(day.date_ad);
           const primaryDayNum = primaryDate === "ad" ? adDayNum : day.day;
@@ -200,6 +219,14 @@ export function BsCalendarGrid({
                 aria-label={`${monoDigits(primaryDayNum)} (${secondaryLabel}), ${day.date_ad}`}
                 onClick={() => onSelectDay?.(day)}
               />
+
+              {tithiIdx != null ? (
+                <CalendarMoonPhaseIcon
+                  tithiIndex={tithiIdx}
+                  title={moonTitle}
+                  className="pointer-events-none absolute right-0.5 top-0.5 z-[2] size-3.5 sm:size-4 max-md:right-0 max-md:top-0 md:right-1 md:top-1"
+                />
+              ) : null}
 
               {leftFest ? (
                 <VerticalEdgeLabel

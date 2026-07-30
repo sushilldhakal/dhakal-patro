@@ -68,6 +68,8 @@ import {
 } from "./PanchangaLayout";
 import { NavataraBalamCardGrid } from "./NavataraBalamCardGrid";
 import { useLocale, bilingualText } from "@/i18n/locale";
+import { CalendarMoonPhaseIcon } from "@/components/panchanga/CalendarMoonPhaseIcon";
+import { tithiIndexFromPanchanga } from "@/lib/tithi-wheel-data";
 
 type AngaEnd = {
   name_ne?: string;
@@ -138,6 +140,7 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
     ? resolveSamvatsaraForBsYear(bs.year, p.samvatsara)
     : undefined;
   const pakshaLabel = formatPakshaLabel(p, lang) ?? "—";
+  const tithiIdx = tithiIndexFromPanchanga(p);
 
   return (
     <PanchangaSection titleKey="sections.sun_moon_samvat">
@@ -151,11 +154,11 @@ export function SunMoonSamvatSection({ p }: { p: PanchangaDay }) {
           <span className="font-mono font-semibold">{getSunsetDisplay(p) ?? "—"}</span>
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.moonrise" nowrap>
-          <span>🌒</span>
+          <CalendarMoonPhaseIcon tithiIndex={tithiIdx} className="size-4 shrink-0" />
           <span className="font-mono font-semibold">{getMoonriseDisplay(p, lang) ?? "—"}</span>
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.moonset" nowrap>
-          <span>🌘</span>
+          <CalendarMoonPhaseIcon tithiIndex={tithiIdx} className="size-4 shrink-0" />
           <span className="font-mono font-semibold">{getMoonsetDisplay(p, lang) ?? "—"}</span>
         </PanchangaFieldCell>
         {belaantar ? (
@@ -211,8 +214,7 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
   const yoga = (instant ? p.yoga : detail?.yoga ?? p.yoga) as Anga | undefined;
   const karana = (instant ? p.karana : detail?.karana ?? p.karana) as Anga | undefined;
   const paksha = formatPakshaLabel(p, lang) ?? formatPakshaNepaliDisplay(p);
-  const pakshaName = (detail?.paksha as { name?: string } | undefined)?.name;
-  const pakshaSym = pakshaName === "shukla" ? "🌕" : "🌑";
+  const tithiIdx = tithiIndexFromPanchanga(p);
   // दिन-रात payloads measure anga end-times from midnight (not sunrise), so the
   // भोलि/पर्सि day-offset must count from a 00:00 origin — pass 0 in that mode.
   const sunriseHours = p.boundary === "midnight" ? 0 : getSunriseHours(p);
@@ -246,7 +248,7 @@ export function PanchangCoreSection({ p }: { p: PanchangaDay }) {
           </span>
         </PanchangaFieldCell>
         <PanchangaFieldCell labelKey="sections.paksha" nowrap>
-          <span>{pakshaSym}</span>
+          <CalendarMoonPhaseIcon tithiIndex={tithiIdx} className="size-4 shrink-0" />
           <span className="font-semibold">{paksha ?? "—"}</span>
         </PanchangaFieldCell>
       </PanchangaTableBody>

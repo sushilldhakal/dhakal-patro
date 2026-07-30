@@ -6,20 +6,24 @@ import {
   type CalendarDay,
   type LocationParams,
 } from "@/lib/api";
-import { adToBS, WEEKDAYS_SHORT_NE } from "@/lib/bs-calendar";
+import { adToBS, BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR, WEEKDAYS_SHORT_NE } from "@/lib/bs-calendar";
 import {
   buildAdCalendarGridDays,
+  buildCalendarGridDays,
   getBsMonthsOverlappingAdMonth,
   getSecondaryCellDate,
   shiftAdMonth,
+  shiftBsMonth,
   uniqueBsMonths,
 } from "@/lib/local-calendar";
 import { getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-format";
+import { tithiIndexFromCalendarDay } from "@/lib/tithi-wheel-data";
 import { cn } from "@/lib/utils";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { VedicPatroLoader } from "@/components/VedicPatroLoader";
 import { VerticalEdgeLabel } from "@/components/VerticalEdgeLabel";
+import { CalendarMoonPhaseIcon } from "@/components/panchanga/CalendarMoonPhaseIcon";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -33,17 +37,14 @@ function getPakshaPhase(day: CalendarDay): PakshaPhase | undefined {
   return undefined;
 }
 
-function formatTithiWithPaksha(day: CalendarDay, isEn: boolean): string {
-  const tithi = isEn ? (day.tithi ?? day.tithi_ne ?? "—") : (day.tithi_ne ?? day.tithi ?? "—");
-  const phase = getPakshaPhase(day);
-  const pakshaLabel = (() => {
-    if (phase === "shukla") return isEn ? "Shukla" : "शुक्ल";
-    if (phase === "krishna") return isEn ? "Krishna" : "कृष्ण";
-    if (!isEn && day.paksha_ne) return day.paksha_ne.replace(/\s*पक्ष$/, "");
-    return undefined;
-  })();
-  if (!pakshaLabel) return tithi;
-  return `${pakshaLabel} ${tithi}`;
+function formatTithiLabel(day: CalendarDay, isEn: boolean): string {
+  return isEn ? (day.tithi ?? day.tithi_ne ?? "—") : (day.tithi_ne ?? day.tithi ?? "—");
+}
+
+function moonPhaseTitle(phase: PakshaPhase | undefined, isEn: boolean): string | undefined {
+  if (phase === "shukla") return isEn ? "Shukla paksha (waxing moon)" : "शुक्ल पक्ष";
+  if (phase === "krishna") return isEn ? "Krishna paksha (waning moon)" : "कृष्ण पक्ष";
+  return undefined;
 }
 
 interface Props {
@@ -75,19 +76,42 @@ export function PanchangaMonthGrid({
   const adMonth = date.getMonth() + 1;
   const selectedAd = toAdIso(date);
   const todayAd = toAdIso(new Date());
-  const todayBs = adToBS(new Date());
 
   const prevAd = useMemo(() => shiftAdMonth(adYear, adMonth, -1), [adYear, adMonth]);
   const nextAd = useMemo(() => shiftAdMonth(adYear, adMonth, 1), [adYear, adMonth]);
+  const prevBs = useMemo(() => shiftBsMonth(bs.year, bs.month, -1), [bs.year, bs.month]);
+  const nextBs = useMemo(() => shiftBsMonth(bs.year, bs.month, 1), [bs.year, bs.month]);
+
+  const canFetchPrev =
+    prevBs.year >= BS_SUPPORTED_START_YEAR && prevBs.year <= BS_SUPPORTED_END_YEAR;
+  const canFetchNext =
+    nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
 
   const requiredBsMonths = useMemo(() => {
-    if (!isAdCalendar) return [{ year: bs.year, month: bs.month }];
+    if (!isAdCalendar) {
+      const months = [{ year: bs.year, month: bs.month }];
+      if (canFetchPrev) months.push(prevBs);
+      if (canFetchNext) months.push(nextBs);
+      return uniqueBsMonths(months);
+    }
     return uniqueBsMonths([
       ...getBsMonthsOverlappingAdMonth(adYear, adMonth),
       ...getBsMonthsOverlappingAdMonth(prevAd.year, prevAd.month),
       ...getBsMonthsOverlappingAdMonth(nextAd.year, nextAd.month),
     ]);
-  }, [isAdCalendar, bs.year, bs.month, adYear, adMonth, prevAd, nextAd]);
+  }, [
+    isAdCalendar,
+    bs.year,
+    bs.month,
+    prevBs,
+    nextBs,
+    canFetchPrev,
+    canFetchNext,
+    adYear,
+    adMonth,
+    prevAd,
+    nextAd,
+  ]);
 
   const monthQueries = useQueries({
     queries: requiredBsMonths.map(({ year, month }) => ({
@@ -115,44 +139,71 @@ export function PanchangaMonthGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthQueriesTick]);
 
+  const currentMonthQ = monthQueries.find(
+    (_q, i) => requiredBsMonths[i]?.year === bs.year && requiredBsMonths[i]?.month === bs.month,
+  );
+  const prevMonthQ = !isAdCalendar
+    ? monthQueries.find(
+        (_q, i) => requiredBsMonths[i]?.year === prevBs.year && requiredBsMonths[i]?.month === prevBs.month,
+      )
+    : undefined;
+  const nextMonthQ = !isAdCalendar
+    ? monthQueries.find(
+        (_q, i) => requiredBsMonths[i]?.year === nextBs.year && requiredBsMonths[i]?.month === nextBs.month,
+      )
+    : undefined;
+
   const days = useMemo(() => {
-    if (!isAdCalendar) {
-      return monthQueries[0]?.data?.calendar ?? [];
+    if (isAdCalendar) {
+      return buildAdCalendarGridDays(adYear, adMonth, enrichedDays);
     }
-    return buildAdCalendarGridDays(adYear, adMonth, enrichedDays);
+    return buildCalendarGridDays(bs.year, bs.month, {
+      prev: prevMonthQ?.data?.calendar,
+      current: currentMonthQ?.data?.calendar,
+      next: nextMonthQ?.data?.calendar,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdCalendar, adYear, adMonth, enrichedDays, monthQueriesTick]);
+  }, [
+    isAdCalendar,
+    adYear,
+    adMonth,
+    enrichedDays,
+    bs.year,
+    bs.month,
+    currentMonthQ?.data?.calendar,
+    prevMonthQ?.data?.calendar,
+    nextMonthQ?.data?.calendar,
+    monthQueriesTick,
+  ]);
 
   const isFetching = monthQueries.some((q) => q.isFetching);
   const isPlaceholderData = monthQueries.some((q) => q.isPlaceholderData);
   const hasData = monthQueries.some((q) => q.data);
-  const firstWeekday = days[0] ? new Date(`${days[0].date_ad}T12:00:00`).getDay() : 0;
-  // AD grid from buildAdCalendarGridDays already includes leading/trailing padding.
-  const blanks = isAdCalendar ? [] : Array.from({ length: firstWeekday }, (_, i) => i);
   const isLoadingFresh = isFetching && (isPlaceholderData || !hasData);
 
   const cellClass = (day: CalendarDay, phase: PakshaPhase | undefined) => {
-    const isToday = isAdCalendar
-      ? day.date_ad === todayAd
-      : day.day === todayBs.day && bs.month === todayBs.month && bs.year === todayBs.year;
-    const isSel = isAdCalendar ? day.date_ad === selectedAd : day.day === bs.day;
+    const isOutside = day.outsideMonth === true;
+    const isToday = day.date_ad === todayAd;
+    const isSel = day.date_ad === selectedAd;
     const isKrishna = phase === "krishna";
     return cn(
-      "relative min-h-[118px] overflow-hidden p-1.5 text-left cursor-pointer flex flex-col gap-0.5 transition-colors border-0",
-      "max-md:min-h-[150px] max-md:gap-px max-md:p-1",
-      isKrishna
-        ? "bg-background text-foreground dark:text-foreground dark:bg-background"
-        : "bg-white text-foreground dark:text-foreground dark:bg-background",
+      "relative min-h-[118px] p-1.5 text-left cursor-pointer flex flex-col overflow-visible transition-colors border-0",
+      "max-md:min-h-0 max-md:h-auto max-md:p-1",
+      isOutside
+        ? "bg-surface-muted/70 text-foreground/70"
+        : isKrishna
+          ? "bg-background text-foreground dark:text-foreground dark:bg-background"
+          : "bg-white text-foreground dark:text-foreground dark:bg-background",
       isSel && "ring-2 ring-primary ring-inset",
-      isToday && !isKrishna && "bg-surface-today",
-      isToday && isKrishna && "bg-surface-today ring-2 ring-danger/30 ring-inset"
+      isToday && !isOutside && !isKrishna && "bg-surface-today",
+      isToday && !isOutside && isKrishna && "bg-surface-today ring-2 ring-danger/30 ring-inset",
     );
   };
 
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border bg-muted shadow-sm shadow-ring-soft",
+        "relative overflow-hidden rounded-xl border border-border bg-border shadow-sm shadow-ring-soft",
         // No rows yet (first fetch for this location) — reserve space so the
         // loader overlay isn't clipped by a collapsed grid.
         days.length === 0 && "min-h-[420px]",
@@ -199,10 +250,7 @@ export function PanchangaMonthGrid({
         })}
       </div>
 
-      <div className="grid grid-cols-7 gap-px ">
-          {blanks.map((b) => (
-            <div key={`b-${b}`} className="min-h-[118px] bg-muted max-md:min-h-[150px]" />
-          ))}
+      <div className="grid grid-cols-7 gap-px auto-rows-min">
           {days.map((day, i) => {
             const ad = new Date(`${day.date_ad}T12:00:00`);
             const phase = getPakshaPhase(day);
@@ -215,90 +263,113 @@ export function PanchangaMonthGrid({
               i === 0,
             );
             const secondaryLabel = secondary.monthLabel
-              ? `${secondary.monthLabel} ${monoDigits(secondary.day)}`
+              ? `${monoDigits(secondary.day)}`
               : monoDigits(secondary.day);
             const secondaryLabelShort = secondary.monthLabelShort
-              ? `${secondary.monthLabelShort} ${monoDigits(secondary.day)}`
+              ? `${monoDigits(secondary.day)}`
               : monoDigits(secondary.day);
+            const tithiLabel = formatTithiLabel(day, isEn);
+            const tithiIdx = tithiIndexFromCalendarDay(day);
+            const moonTitle = moonPhaseTitle(phase, isEn);
+            const nakshatraLabel = getMonthDayNakshatra(day, lang) ?? "—";
+            const rashiLabel = getMonthDayChandraRashi(day, lang) ?? "—";
+            const yogaLabel =
+              bilingualText(lang, day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—";
+            const karanaLabel =
+              bilingualText(lang, day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—";
+            const sunTimesLabel = [
+              day.sunrise ? monoDigits(day.sunrise) : "—",
+              day.sunset ? monoDigits(day.sunset) : "—",
+            ].join(" ");
 
             return (
               <button
                 key={day.date_ad}
                 type="button"
-                className={cn(cellClass(day, phase), hasSunTimes && "md:px-3.5", day.outsideMonth && "opacity-60")}
+                className={cn(cellClass(day, phase), hasSunTimes && "md:px-3.5")}
                 onClick={() => onPickDay(ad)}
               >
-                {day.sunrise ? (
-                  <VerticalEdgeLabel
-                    text={monoDigits(day.sunrise)}
-                    side="left"
-                    className="font-normal tabular-nums text-muted-foreground"
-                  />
-                ) : null}
-                {day.sunset ? (
-                  <VerticalEdgeLabel
-                    text={monoDigits(day.sunset)}
-                    side="right"
-                    className="font-normal tabular-nums text-muted-foreground"
+                {tithiIdx != null ? (
+                  <CalendarMoonPhaseIcon
+                    tithiIndex={tithiIdx}
+                    title={moonTitle}
+                    className="pointer-events-none absolute right-0.5 top-0.5 z-[2] size-3.5 sm:size-4 max-md:right-0 max-md:top-0 md:right-1 md:top-1"
                   />
                 ) : null}
 
-                {/* Top: tithi — always visible; wraps on narrow cells */}
-                <p className="m-0 w-full text-center text-xs font-semibold leading-snug text-foreground line-clamp-2 max-md:line-clamp-none sm:text-xs sm:line-clamp-1 sm:truncate">
-                  {formatTithiWithPaksha(day, isEn)}
-                </p>
-                <p className="m-0 w-full text-center text-xs font-semibold leading-tight text-panchang dark:text-accent sm:truncate sm:text-xs">
-                  {getMonthDayNakshatra(day, lang) ?? "—"}
-                </p>
+                {/* Mobile: stacked left, full text wraps (no ellipsis) */}
+                <div className="flex w-full flex-col items-start gap-px md:hidden">
+                  <span className="flex flex-wrap items-baseline gap-x-1 leading-none">
+                    <span className="font-num text-sm font-bold tabular-nums">
+                      {monoDigits(primaryDay)}
+                    </span>
+                    <span
+                      className={cn(
+                        "font-num font-semibold tabular-nums text-muted-foreground",
+                        secondary.monthLabel ? "text-[0.625rem]" : "text-xs",
+                      )}
+                    >
+                      {secondaryLabelShort}
+                    </span>
+                  </span>
+                  <div className="flex w-full flex-col items-start gap-px text-[0.6875rem] font-semibold leading-tight">
+                    <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-foreground">{tithiLabel}</span>
+                    <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-panchang dark:text-accent">{nakshatraLabel}</span>
+                    <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-panchang dark:text-accent">{rashiLabel}</span>
+                    <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-foreground">{yogaLabel}</span>
+                    <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-foreground">{karanaLabel}</span>
+                  </div>
+                  <span className="font-num text-[0.625rem] font-bold leading-none tabular-nums text-muted-foreground">
+                    {sunTimesLabel}
+                  </span>
+                </div>
 
-                {/* Middle: BS/AD dates in one row (sun times vertical on md+) */}
-                <div className="flex min-w-0 flex-1 items-center justify-center py-0.5 max-md:flex-none max-md:flex-col max-md:justify-center max-md:gap-0.5">
-                  <div className="flex min-w-0 flex-row flex-wrap items-baseline justify-center gap-x-1 px-0.5">
+                {/* Desktop: centered layout with vertical sun times */}
+                <div className="hidden w-full flex-col gap-0.5 md:flex">
+                  {day.sunrise ? (
+                    <VerticalEdgeLabel
+                      text={monoDigits(day.sunrise)}
+                      side="left"
+                      className="font-normal tabular-nums text-muted-foreground"
+                    />
+                  ) : null}
+                  {day.sunset ? (
+                    <VerticalEdgeLabel
+                      text={monoDigits(day.sunset)}
+                      side="right"
+                      className="font-normal tabular-nums text-muted-foreground"
+                    />
+                  ) : null}
+
+                  <p className="m-0 w-full [overflow-wrap:anywhere] whitespace-normal text-center text-xs font-semibold leading-snug text-foreground sm:text-xs">
+                    {tithiLabel}
+                  </p>
+                  <p className="m-0 w-full [overflow-wrap:anywhere] whitespace-normal text-center text-xs font-semibold leading-tight text-panchang dark:text-accent sm:text-xs">
+                    {nakshatraLabel}
+                  </p>
+
+                  <div className="flex flex-wrap items-baseline justify-center gap-x-1 px-0.5 py-0.5">
                     <span className="font-num text-lg font-bold leading-none tabular-nums sm:text-lg">
                       {monoDigits(primaryDay)}
                     </span>
                     <span
                       className={cn(
-                        "font-num whitespace-nowrap leading-none sm:text-xs",
+                        "font-num font-semibold leading-none text-muted-foreground",
                         secondary.monthLabel ? "text-[0.625rem]" : "text-xs",
                       )}
                     >
-                      <span className="md:hidden">{secondaryLabelShort}</span>
-                      <span className="max-md:hidden">{secondaryLabel}</span>
+                      {secondaryLabel}
                     </span>
                   </div>
 
-                  {/* Mobile-only sunrise/sunset — stacked when space is tight */}
-                  <div className="hidden w-full flex-col items-center justify-center gap-0.5 font-num text-xs font-bold leading-tight tabular-nums max-md:flex">
-                    <span className="whitespace-nowrap">{day.sunrise ? monoDigits(day.sunrise) : "—"}</span>
-                    <span className="whitespace-nowrap">{day.sunset ? monoDigits(day.sunset) : "—"}</span>
+                  <div className="flex w-full flex-col gap-0.5 text-center text-xs font-bold leading-tight sm:text-xs">
+                    <div className="grid w-full grid-cols-2 gap-0.5">
+                      <span className="[overflow-wrap:anywhere] whitespace-normal font-bold text-panchang dark:text-accent">{rashiLabel}</span>
+                      <span className="[overflow-wrap:anywhere] whitespace-normal font-bold">{karanaLabel}</span>
+                    </div>
+                    <span className="[overflow-wrap:anywhere] whitespace-normal font-bold">{yogaLabel}</span>
                   </div>
                 </div>
-
-                {/* Bottom: rashi · yoga · karana */}
-                <div className="grid w-full min-w-0 grid-cols-3 gap-0.5 text-xs font-bold leading-tight sm:text-xs max-md:grid-cols-1 max-md:gap-px">
-                  <span className="text-center font-bold text-panchang dark:text-accent sm:truncate">
-                    {getMonthDayChandraRashi(day, lang) ?? "—"}
-                  </span>
-                  <span className="text-center font-bold sm:truncate">
-                    {bilingualText(lang, day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—"}
-                  </span>
-                  <span className="text-center font-bold sm:truncate">
-                    {bilingualText(lang, day.karana_ne ?? day.karana, day.karana ?? day.karana_ne) ?? "—"}
-                  </span>
-                </div>
-
-                {/* {day.festivals[0] && (
-                  <span
-                    className={cn(
-                      "max-w-full truncate rounded-full px-1 py-0.5 text-xs font-semibold self-start",
-                      "max-md:w-full max-md:self-center max-md:py-px max-md:text-sm max-md:leading-tight",
-                      "text-panchang text-foreground dark:text-accent"
-                    )}
-                  >
-                    {day.festivals[0]}
-                  </span>
-                )} */}
               </button>
             );
           })}
