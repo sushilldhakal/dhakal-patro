@@ -13,6 +13,7 @@ import {
   toNepaliDigits,
 } from "@/lib/panchanga-format";
 import { getRashiName, rashiNumberFromName } from "@/lib/rashi-i18n";
+import { toAdStr } from "@/lib/patro-day";
 
 export function getWheelRashis(): WheelRashi[] {
   return Array.from({ length: 12 }, (_, i) => ({
@@ -419,7 +420,7 @@ export function scrubGToDatetime(
   const m = Math.round(minsInDay % 60);
   const [y, mo, d] = anchorAd.split("-").map(Number);
   const date = new Date(y!, mo! - 1, d! + dayOffset);
-  const ad = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const ad = toAdStr(date);
   return `${ad}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
 }
 

@@ -18,6 +18,7 @@ import {
   getBSMonthLength,
   getCurrentBs,
 } from "@/lib/bs-calendar";
+import { toAdStr } from "@/lib/patro-day";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -67,11 +68,7 @@ function dayOfYearFromBs(year: number, month: number, day: number): number {
 
 function adDateStrForDay(year: number, dayOfYear: number): string {
   const { month, day } = bsMonthDayFromDayOfYear(year, dayOfYear);
-  const date = bsToAD(year, month, day);
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return toAdStr(bsToAD(year, month, day));
 }
 
 /**

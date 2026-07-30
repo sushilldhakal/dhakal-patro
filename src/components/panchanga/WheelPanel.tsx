@@ -1,4 +1,5 @@
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
+import { NAKSHATRA_GLYPHS, RASHI_GLYPHS, WheelGlyph } from "@/lib/wheel-glyphs";
 import {
   bsMonthsForWheel,
   PADA_AKSHAR,
@@ -59,16 +60,20 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
     body = (
       <>
         <div className={wheelPanelHead}>
+          {/* Same artwork the wheel's nakshatra ring draws. This used to inject
+              `ico.svg` from nakshatra-icons-data.json — a different, stroke-based
+              icon set — so the sheet showed a glyph that didn't match the ring. */}
           <div className={wheelPanelIco}>
-            <svg
-              viewBox="0 0 48 48"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              dangerouslySetInnerHTML={{ __html: ico.svg }}
-            />
+            <svg viewBox="0 0 56 56">
+              <WheelGlyph
+                art={NAKSHATRA_GLYPHS[sel.i]}
+                size={50}
+                cx={28}
+                cy={28}
+                className="fill-current"
+                title={bilingualText(lang, ico.ne, ico.en)}
+              />
+            </svg>
           </div>
           <div>
             <div className={wheelPanelKind}>{bilingualText(lang, "नक्षत्र", "Nakshatra")} · {num(sel.i + 1)}</div>
@@ -124,6 +129,20 @@ export function WheelPanel({ sel, open, num, onClose }: WheelPanelProps) {
     body = (
       <>
         <div className={wheelPanelHead}>
+          {/* The rashi sheet had no glyph at all; now that the ring carries the
+              artwork, the sheet shows the same sign. */}
+          <div className={wheelPanelIco}>
+            <svg viewBox="0 0 56 56">
+              <WheelGlyph
+                art={RASHI_GLYPHS[sel.i]}
+                size={50}
+                cx={28}
+                cy={28}
+                className="fill-current"
+                title={bilingualText(lang, rs.ne, rs.en)}
+              />
+            </svg>
+          </div>
           <div>
             <div className={wheelPanelKind}>{bilingualText(lang, "राशि", "Rashi")} · {num(sel.i + 1)}</div>
             <h2 className={wheelPanelTitle}>{bilingualText(lang, rs.ne, rs.en)}</h2>
