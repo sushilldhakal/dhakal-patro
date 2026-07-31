@@ -1,29 +1,21 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { BsHeadline } from "@/components/BsHeadline";
-import { BsNativeSelect } from "@/components/BsNativeSelect";
+import { PatroYearCombobox } from "./PatroYearCombobox";
 import {
   PatroDateChip,
   PatroDateSheet,
   PatroLocationChip,
-  YearStepper,
 } from "./PatroDateSheet";
 import { usePatroDateSheet } from "./use-patro-date-sheet";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { CalendarEra } from "@/lib/patro-era";
-import { useLocale } from "@/i18n/locale";
-import { adToBS, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
-import { getBsYearSpanLabel } from "@/lib/local-calendar";
+import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { stepPatroBrowseYear } from "@/lib/patro-year-browse-step";
+import { patroBrowseTodayYear } from "@/hooks/use-patro-year-browse";
+import { usePatroDisplayLocale } from "@/hooks/use-patro-display-locale";
 import {
-  PATRO_AD_YEAR_OPTIONS,
-  PATRO_BS_YEAR_OPTIONS,
-  clampAdYear,
-  clampBsYear,
-} from "@/lib/patro-date-options";
-import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
-import { samvatsaraName } from "@/lib/samvatsara-i18n";
-import {
+  patroMonthChipButton,
   patroMonthChipDay,
   patroMonthChipHead,
   patroMonthChipShell,
@@ -32,14 +24,32 @@ import {
   patroMobileStepBtn,
 } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
+import { isGregorianEraBrowse } from "./patro-month-labels";
+import {
+  getLanguageForEra,
+  type Era,
+} from "@/lib/era";
+import { resolveSamvatsaraForPatroYear } from "@/lib/samvatsara";
+import { samvatsaraName } from "@/lib/samvatsara-i18n";
+import { formatPatroYearGregorianRange } from "@/lib/patro-headline-subtitle";
+import { patroEraShortLabel } from "./patro-era-short-label";
 
 export type PatroYearNavProps = {
-  /** Browse year in the active {@link calendarMode} (BS or AD). */
+  era: Era;
   year: number;
   onYearChange: (year: number) => void;
-  currentYear: number;
-  calendarMode?: CalendarEra;
-  yearOptions?: number[];
+  onEraChange?: (era: Era) => void;
+  /** Raw API gregorian year span — formatted for the headline subtitle. */
+  gregorianRange?: { start: string; end: string } | null;
+  /** Preformatted cross-era span (skip when {@link gregorianRange} is set). */
+  rangeLabel?: string | null;
+  /** Out-of-range or validation message from the backend (400 detail). */
+  yearError?: string | null;
+  /** Observer “today” (YYYY-MM-DD) for the chip jump — e.g. location timezone. */
+  todayAd?: string;
+  /** Override chip “go to today”; default sets year via {@link patroBrowseTodayYear}. */
+  onToday?: () => void;
+  displayLanguage?: import("@/lib/era").Language;
   location?: PanchangaLocation;
   onLocationChange?: (location: PanchangaLocation) => void;
   className?: string;
@@ -47,52 +57,51 @@ export type PatroYearNavProps = {
 
 /**
  * Year-only navigation — graha yearly pages (asta, vakri), holidays, suryakranti.
- * {@link calendarMode} drives API boundaries: BS Baisakh–Chaitra vs AD Jan–Dec.
+ * Positive {@link year} in the active {@link Era}; the backend validates range.
  */
 export function PatroYearNav({
+  era,
   year,
   onYearChange,
-  currentYear,
-  calendarMode = "bs",
-  yearOptions,
+  onEraChange,
+  gregorianRange,
+  rangeLabel,
+  yearError,
+  todayAd,
+  onToday,
+  displayLanguage,
   location,
   onLocationChange,
   className,
 }: PatroYearNavProps) {
   const { t } = useTranslation();
-  const { digits, lang } = useLocale();
-  const isAd = calendarMode === "ad";
-  const options =
-    yearOptions ?? (isAd ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS);
-  const minYear = options[0]!;
-  const maxYear = options[options.length - 1]!;
-  const clampYear = (y: number) => (isAd ? clampAdYear(y, options) : clampBsYear(y, options));
-
-  const chipEra = isAd ? t("patro_date.era_ad") : t("patro_date.era_bs");
+  const { lang, digits } = usePatroDisplayLocale(displayLanguage);
+  const chipEra = patroEraShortLabel(era, t);
   const chipYear = year;
-
-  const bsYearForLabels = isAd ? adToBS(new Date(year, 6, 15)).year : year;
-  const samvatsara = resolveSamvatsaraForBsYear(bsYearForLabels);
+  const vikramHeadline = `${digits(year)} ${chipEra}`;
+  const isGregorianEra = getLanguageForEra(era) === "en";
+  const samvatsara = isGregorianEraBrowse(era)
+    ? undefined
+    : resolveSamvatsaraForPatroYear(era, year);
   const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
 
-  const adLocale = lang === "en" ? "en-US" : "ne-NP";
-  const adYearRange = isAd
-    ? (() => {
-        const start = new Date(year, 0, 1);
-        const end = new Date(year, 11, 31);
-        const startLabel = start.toLocaleDateString(adLocale, { month: "short", year: "numeric" });
-        const endLabel = end.toLocaleDateString(adLocale, { month: "short", year: "numeric" });
-        return `${startLabel} – ${endLabel}`;
-      })()
-    : (() => {
-        const start = bsToAD(year, 1, 1);
-        const end = bsToAD(year, 12, getBSMonthLength(year, 12));
-        const startLabel = start.toLocaleDateString(adLocale, { month: "short", year: "numeric" });
-        const endLabel = end.toLocaleDateString(adLocale, { month: "short", year: "numeric" });
-        return `${startLabel} – ${endLabel}`;
-      })();
+  const todayBrowseYear = useMemo(
+    () => patroBrowseTodayYear(era, todayAd),
+    [era, todayAd],
+  );
+  const jumpToToday = onToday ?? (() => onYearChange(todayBrowseYear));
 
-  const bsYearSpanLabel = getBsYearSpanLabel(bsYearForLabels, lang, digits);
+  const gregorianSubtitle = useMemo(() => {
+    if (gregorianRange?.start && gregorianRange?.end) {
+      return formatPatroYearGregorianRange(
+        gregorianRange.start,
+        gregorianRange.end,
+        lang,
+        digits,
+      );
+    }
+    return rangeLabel ?? undefined;
+  }, [gregorianRange, rangeLabel, lang, digits]);
 
   const sheet = usePatroDateSheet();
   const showLocation = Boolean(location && onLocationChange);
@@ -106,50 +115,69 @@ export function PatroYearNav({
     />
   ) : null;
 
-  // Same phone behaviour as the other date navs: the location opens the shared
-  // sheet on its Location tab rather than a popup of its own.
   const locationMobile = showLocation ? (
     <PatroLocationChip location={location!} onOpen={sheet.openLocation} />
   ) : null;
 
-  const yearSelectOptions = options.map((y) => ({
-    value: y,
-    label: digits(y),
-  }));
+  const canPrev = stepPatroBrowseYear(era, year, "prev") !== year;
+  const canNext = stepPatroBrowseYear(era, year, "next") !== year;
 
   const titleBlock = (sizeClass: string) => (
     <BsHeadline
       className={sizeClass}
       bs={
-        isAd ? (
+        isGregorianEra ? (
           <>
             <span className="font-num font-semibold text-secondary dark:text-secondary">
               {digits(year)}
             </span>{" "}
-            <span>AD</span>
+            <span>{chipEra}</span>
           </>
-        ) : lang === "en" ? (
-          <span className="font-num font-semibold text-secondary dark:text-secondary">
-            {bsYearSpanLabel}
-          </span>
         ) : (
-          <>
-            <span className="font-num font-semibold text-secondary dark:text-secondary">
-              {digits(year)}
-            </span>{" "}
-            <span>{t("patro_date.era_bs")}</span>
-          </>
+          <span className="font-num font-semibold text-secondary dark:text-secondary">
+            {vikramHeadline}
+          </span>
         )
       }
       bsClassName="min-w-0"
-      samvatsara={isAd || lang === "en" ? undefined : samvatsaraLabel}
-      samvatsaraClassName={cn(
-        "text-sm",
-        sizeClass.includes("text-xl") && "hidden sm:inline sm:text-xl",
-      )}
-      gregorian={isAd ? bsYearSpanLabel : lang === "en" ? undefined : adYearRange}
+      gregorian={gregorianSubtitle}
       gregorianClassName="text-xs font-semibold text-muted-foreground"
+      samvatsara={samvatsaraLabel}
+      samvatsaraClassName="font-num font-semibold text-secondary dark:text-secondary"
     />
+  );
+
+  const yearStepperRow = (comfortable: boolean) => (
+    <div className="flex items-center justify-center gap-2">
+      <button
+        type="button"
+        className={patroMonthNavBtn}
+        onClick={() => onYearChange(stepPatroBrowseYear(era, year, "prev"))}
+        disabled={!canPrev}
+        aria-label={t("patro_date.prev_year")}
+      >
+        {comfortable ? <Minus size={16} strokeWidth={2.25} /> : <ChevronLeft size={14} strokeWidth={2} />}
+      </button>
+      <PatroYearCombobox
+        className={comfortable ? "w-[7.5rem]" : "w-[5.5rem] sm:w-[7rem]"}
+        era={era}
+        value={year}
+        ariaLabel={t("calendar.year_aria")}
+        onChange={onYearChange}
+        onEraChange={onEraChange}
+        displayLanguage={displayLanguage}
+        comfortable={comfortable}
+      />
+      <button
+        type="button"
+        className={patroMonthNavBtn}
+        onClick={() => onYearChange(stepPatroBrowseYear(era, year, "next"))}
+        disabled={!canNext}
+        aria-label={t("patro_date.next_year")}
+      >
+        {comfortable ? <Plus size={16} strokeWidth={2.25} /> : <ChevronRight size={14} strokeWidth={2} />}
+      </button>
+    </div>
   );
 
   const yearChipMobile = (
@@ -158,14 +186,14 @@ export function PatroYearNav({
         type="button"
         className={patroMobileStepBtn}
         aria-label={t("patro_date.prev_year")}
-        onClick={() => onYearChange(clampYear(year - 1))}
-        disabled={year <= minYear}
+        onClick={() => onYearChange(stepPatroBrowseYear(era, year, "prev"))}
+        disabled={!canPrev}
       >
         <ChevronLeft size={15} strokeWidth={2} />
       </button>
       <PatroDateChip
-        label={`${digits(year)} ${isAd ? t("patro_date.era_ad") : t("patro_date.era_bs")}`}
-        labelCompact={digits(year)}
+        label={vikramHeadline}
+        labelCompact={digits(chipYear)}
         ariaLabel={t("calendar.year_aria")}
         onOpen={sheet.openDate}
       />
@@ -173,62 +201,29 @@ export function PatroYearNav({
         type="button"
         className={patroMobileStepBtn}
         aria-label={t("patro_date.next_year")}
-        onClick={() => onYearChange(clampYear(year + 1))}
-        disabled={year >= maxYear}
+        onClick={() => onYearChange(stepPatroBrowseYear(era, year, "next"))}
+        disabled={!canNext}
       >
         <ChevronRight size={15} strokeWidth={2} />
       </button>
     </div>
   );
 
-  const navRow = (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className={patroMonthNavShell}>
-        <button
-          type="button"
-          className={patroMonthNavBtn}
-          aria-label={t("patro_date.prev_year")}
-          onClick={() => onYearChange(clampYear(year - 1))}
-          disabled={year <= minYear}
-        >
-          <ChevronLeft size={14} strokeWidth={2} />
-        </button>
-        <BsNativeSelect
-          className="w-[5.5rem] sm:w-[6.5rem]"
-          value={year}
-          options={yearSelectOptions}
-          ariaLabel={t("calendar.year_aria")}
-          onChange={onYearChange}
-        />
-        <button
-          type="button"
-          className={patroMonthNavBtn}
-          aria-label={t("patro_date.next_year")}
-          onClick={() => onYearChange(clampYear(year + 1))}
-          disabled={year >= maxYear}
-        >
-          <ChevronRight size={14} strokeWidth={2} />
-        </button>
-      </div>
-      {year !== currentYear && options.includes(currentYear) ? (
-        <button
-          type="button"
-          onClick={() => onYearChange(currentYear)}
-          className="shrink-0 rounded-full border border-border bg-card px-3 py-1 text-sm font-semibold text-foreground"
-        >
-          {t("patro_date.this_year")}
-        </button>
-      ) : null}
-    </div>
-  );
+  const navRow = <div className={patroMonthNavShell}>{yearStepperRow(false)}</div>;
 
   const yearChip = (
-    <div className={cn(patroMonthChipShell, "w-[2.85rem] sm:w-[3.75rem]")} aria-hidden>
+    <button
+      type="button"
+      className={cn(patroMonthChipShell, patroMonthChipButton, "w-[2.85rem] sm:w-[3.75rem]")}
+      onClick={jumpToToday}
+      aria-label={t("calendar.today_btn")}
+      title={t("calendar.today_btn")}
+    >
       <div className={patroMonthChipHead}>{chipEra}</div>
       <div className={cn(patroMonthChipDay, "font-num px-0.5 text-[11px] sm:text-sm")}>
         {digits(chipYear)}
       </div>
-    </div>
+    </button>
   );
 
   return (
@@ -245,9 +240,9 @@ export function PatroYearNav({
           <div className="@container/month-head min-w-0 flex-1">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 md:hidden">
               <div className="col-start-1 row-start-1 min-w-0">{titleBlock("text-sm")}</div>
-              <div className="col-start-1 row-start-2 min-w-0">{yearChipMobile}</div>
-              {/* Second row, beside the year stepper — same slot the day and
-                  month navs use. The title row is too narrow to share. */}
+              <div className="col-start-1 row-start-2 min-w-0 flex flex-col gap-1">
+                {yearChipMobile}
+              </div>
               {locationMobile ? (
                 <div className="col-start-2 row-start-2 flex shrink-0 items-end justify-end self-start">
                   {locationMobile}
@@ -261,12 +256,7 @@ export function PatroYearNav({
               location={location}
               onLocationChange={onLocationChange}
             >
-              <YearStepper
-                year={year}
-                options={yearSelectOptions}
-                ariaLabel={t("calendar.year_aria")}
-                onYearChange={(next) => onYearChange(clampYear(next))}
-              />
+              {yearStepperRow(true)}
             </PatroDateSheet>
 
             <div className="hidden min-w-0 flex-col gap-0.5 sm:gap-1 md:flex">
@@ -275,6 +265,11 @@ export function PatroYearNav({
             </div>
           </div>
         </div>
+        {yearError ? (
+          <p className="mt-1 text-xs font-medium text-danger" role="alert">
+            {yearError}
+          </p>
+        ) : null}
       </div>
       {locationDesktop ? (
         <div className="hidden shrink-0 md:flex md:w-auto md:flex-col md:items-end md:pt-0.5">

@@ -15,7 +15,8 @@ import {
   ZoomOut,
 } from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
-import { fetchPanchangaAtTime, panchangaKeys } from "@/lib/api";
+import { fetchPanchangaAtTimeForDay, fetchPanchangaAtTimeJd, panchangaKeys } from "@/lib/api";
+import type { PatroDayFetchState } from "@/lib/patro-day-url";
 import { getPanchangaDetail } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
@@ -24,7 +25,7 @@ import {
   buildWheelMarkersAtTime,
   DEFAULT_WHEEL_TWEAKS,
   gClock,
-  scrubGToDatetime,
+  scrubGToAtTimeQuery,
   getWheelRashis,
   type WheelDetail,
 } from "@/lib/wheel-data";
@@ -190,6 +191,8 @@ interface Props {
   civil?: boolean;
   /** Year view: vertical day scrub + autoplay on the right inside the wheel. */
   yearScrub?: YearWheelScrub;
+  /** When set, wheel scrub uses calendar at-time (BBS/BC) instead of raw `jd`. */
+  atTimeDayState?: PatroDayFetchState;
 }
 
 function PanchangaWheelSkeleton({
@@ -238,6 +241,7 @@ function PanchangaWheelBody({
   atTimeScrubOnly = false,
   civil = false,
   yearScrub,
+  atTimeDayState,
 }: WheelBodyProps & { atTimeScrubOnly?: boolean; civil?: boolean; yearScrub?: YearWheelScrub }) {
   // दिन-रात re-anchors the time scrubber to midnight: sunriseMin drives every
   // g↔clock / now-needle / scrub-datetime calc, so overriding it to 0 makes the
@@ -321,7 +325,6 @@ function PanchangaWheelBody({
     return () => clearTimeout(id);
   }, [scrubG]);
 
-  const anchorAd = p.panchanga_date_ad ?? p.date_ad ?? "";
   const locationParams = useMemo(
     () =>
       p.location?.city_id != null
@@ -336,21 +339,33 @@ function PanchangaWheelBody({
     [p.location]
   );
 
-  const scrubDatetime = useMemo(
-    () => scrubGToDatetime(anchorAd, debouncedScrubG, det.sunriseMin),
-    [anchorAd, debouncedScrubG, det.sunriseMin]
+  const anchorJd = p.jd_ut;
+  const scrubAtTime = useMemo(
+    () =>
+      anchorJd != null
+        ? scrubGToAtTimeQuery(anchorJd, debouncedScrubG, det.sunriseMin)
+        : null,
+    [anchorJd, debouncedScrubG, det.sunriseMin],
   );
 
   const scrubbing =
     scrubPinned || Math.abs(scrubG - (isToday && !scrubPinned ? nowG : 0)) > 0.05;
 
   const needsAtTime =
-    Boolean(anchorAd) &&
+    scrubAtTime != null &&
     (scrubbing || (isToday && !atTimeScrubOnly));
 
   const scrubQ = useQuery({
-    queryKey: panchangaKeys.atTime(scrubDatetime, locationParams),
-    queryFn: () => fetchPanchangaAtTime(scrubDatetime, locationParams),
+    queryKey:
+      atTimeDayState != null
+        ? panchangaKeys.atTimeDay(atTimeDayState, scrubAtTime!.clock, locationParams)
+        : panchangaKeys.atTime(scrubAtTime!.jd, scrubAtTime!.clock, locationParams),
+    queryFn: () =>
+      atTimeDayState != null
+        ? fetchPanchangaAtTimeForDay(atTimeDayState, scrubAtTime!.clock, locationParams, {
+            resolvedJdUt: anchorJd ?? undefined,
+          })
+        : fetchPanchangaAtTimeJd(scrubAtTime!.jd, scrubAtTime!.clock, locationParams),
     staleTime: 1000 * 60,
     placeholderData: keepPreviousData,
     enabled: needsAtTime,
@@ -565,6 +580,7 @@ function PanchangaWheelBody({
           onZoom={handleZoom}
           pan={pan}
           onPan={handlePan}
+          sheetOpen={!!picked}
         />
 
         {tipNode}

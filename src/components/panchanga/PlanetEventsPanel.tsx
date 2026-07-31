@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchGochar, gocharKeys, type LocationParams } from "@/lib/api";
+import { fetchGocharJd, gocharKeys, type LocationParams } from "@/lib/api";
 import {
   formatClockNepali,
 } from "@/lib/panchanga-format";
@@ -9,6 +9,7 @@ import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { resolveRashiDisplay } from "@/lib/rashi-i18n";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroCard } from "@/lib/patro-classes";
+import { civilIsoDatePart, civilIsoFromDate, parseCivilIsoToDate } from "@/lib/patro-day";
 
 const GRAHA_ORDER = [
   "sun",
@@ -33,25 +34,33 @@ function localTimePart(entryLocal: string): string {
 }
 
 function daysUntil(entryLocal: string, refDate: Date): number {
-  const entryDay = entryLocal.slice(0, 10);
-  const ref = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, "0")}-${String(refDate.getDate()).padStart(2, "0")}`;
-  const a = new Date(`${entryDay}T12:00:00`);
-  const b = new Date(`${ref}T12:00:00`);
+  const entryDay = civilIsoDatePart(entryLocal);
+  const refDay = civilIsoFromDate(refDate);
+  const a = parseCivilIsoToDate(entryDay);
+  const b = parseCivilIsoToDate(refDay);
   return Math.round((a.getTime() - b.getTime()) / 86_400_000);
 }
 
 interface Props {
-  dateAd: string;
+  /** Civil-day Julian identity from panchanga (`jd_ut`). */
+  jdUt: number;
+  /** Civil `date_ad` from panchanga (for relative day math). */
+  refDateAd?: string;
   location: LocationParams;
 }
 
-export function PlanetEventsPanel({ dateAd, location }: Props) {
+export function PlanetEventsPanel({ jdUt, refDateAd, location }: Props) {
   const { lang, digits } = useLocale();
-  const refDate = useMemo(() => new Date(`${dateAd}T12:00:00`), [dateAd]);
+  const refIso = refDateAd?.trim() ?? "";
+  const refDate = useMemo(() => {
+    if (!refIso) return null;
+    return parseCivilIsoToDate(refIso);
+  }, [refIso]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: gocharKeys.day(dateAd, "ad", location),
-    queryFn: () => fetchGochar(dateAd, "ad", location),
+    queryKey: gocharKeys.day(jdUt, location),
+    queryFn: () => fetchGocharJd(jdUt, location),
+    enabled: Number.isFinite(jdUt) && jdUt > 0,
     staleTime: 1000 * 60 * 60,
   });
 
@@ -63,7 +72,7 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
       if (!g || !entry?.entry_time_local) return null;
       const rashi = rashiNe(entry.to_rashi);
       const time = formatClockNepali(localTimePart(entry.entry_time_local)) ?? "—";
-      const rel = daysUntil(entry.entry_time_local, refDate);
+      const rel = refDate ? daysUntil(entry.entry_time_local, refDate) : 0;
       const enName = GRAHA_NAME[key].en;
       return {
         key,
@@ -78,9 +87,7 @@ export function PlanetEventsPanel({ dateAd, location }: Props) {
 
     rows.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     return rows;
-    // `lang` gates the i18n lookups above — without it the labels keep whatever
-    // language was active when the gochar response first arrived.
-  }, [data, refDate, lang]);
+  }, [data, refDate]);
 
   return (
     <div className={patroCard + " p-3.5 px-4"}>

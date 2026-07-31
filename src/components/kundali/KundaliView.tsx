@@ -14,7 +14,9 @@ import {
   type PlanetInfo,
 } from "@/lib/api";
 import { formatBsDateLong } from "@/lib/bs-calendar";
-import { buildAtTimeDatetime, normalizeEphemerisDay } from "@/lib/ephemeris-adapters";
+import { civilIsoFromDate } from "@/lib/patro-day";
+import { normalizeEphemerisDay } from "@/lib/ephemeris-adapters";
+import { instantCacheKey, instantFromCivilIso } from "@/lib/instant-query";
 import {
   getInstantLagna,
   getLagnaDisplay,
@@ -118,12 +120,6 @@ export interface KundaliViewProps {
   section?: KundaliSectionId;
 }
 
-function toAdStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 /**
  * Full birth-chart view for a single applied birth moment. Everything is
@@ -143,13 +139,18 @@ export function KundaliView({
 }: KundaliViewProps) {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
-  const adDateStr = toAdStr(date);
-  const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
+  const adDateStr = civilIsoFromDate(date);
+  // Memoised: this object is an effect/callback dependency in KundaliReport, so a
+  // fresh identity every render would restart the report stream endlessly.
+  const birthMoment = useMemo(
+    () => instantFromCivilIso(adDateStr, clock),
+    [adDateStr, clock],
+  );
 
   const detailQ = useQuery({
-    queryKey: kundaliDetailKeys.atTime(atTimeDatetime, locationParams, ayanamshaMode),
+    queryKey: kundaliDetailKeys.atTime(birthMoment, locationParams, ayanamshaMode),
     queryFn: () =>
-      fetchKundaliDetail(atTimeDatetime, locationParams, { ayanamsha: ayanamshaMode }),
+      fetchKundaliDetail(birthMoment, locationParams, { ayanamsha: ayanamshaMode }),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -280,7 +281,7 @@ export function KundaliView({
     const ne = formatRashiByNumber(lagnaRow.vargaRashi, "ne");
     const en = formatRashiByNumber(lagnaRow.vargaRashi, "en");
     return { ne, en };
-  }, [detail, lang]);
+  }, [detail]);
 
   const aayanLabel = useMemo(() => {
     if (!data) return undefined;
@@ -671,8 +672,8 @@ export function KundaliView({
       {showSection("kundali-report") && (
       <div id="kundali-report" className="scroll-mt-24">
       <KundaliReport
-        key={`${atTimeDatetime}|${locationCacheKey(locationParams)}|${ayanamshaMode}`}
-        datetime={atTimeDatetime}
+        key={`${instantCacheKey(birthMoment)}|${locationCacheKey(locationParams)}|${ayanamshaMode}`}
+        moment={birthMoment}
         location={locationParams}
         ayanamsha={ayanamshaMode}
         disabled={isLoading || isError}

@@ -1,84 +1,90 @@
 import { useState } from "react";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
-import type { CalendarEra } from "@/lib/patro-era";
 import { useLocale } from "@/i18n/locale";
+import { adToBS, getCurrentBs } from "@/lib/bs-calendar";
 import {
-  adToBS,
-  bsToAD,
-  getBSMonthLength,
-  getCurrentBs,
-} from "@/lib/bs-calendar";
-import {
-  PATRO_AD_YEAR_OPTIONS,
-  PATRO_BS_YEAR_OPTIONS,
-  clampAdYear,
-  clampBsYear,
-} from "@/lib/patro-date-options";
+  defaultEraForLanguage,
+  type Era,
+  type Language,
+} from "@/lib/era";
 
-/** Year browse state — BS in Nepali, AD (Jan–Dec) in English. Follows {@link useCalendarEra} unless overridden. */
+function positiveInt(y: number): number {
+  const t = Math.trunc(y);
+  return t >= 1 ? t : 1;
+}
+
+function calendarEraAsEra(raw: ReturnType<typeof useCalendarEra>): Era {
+  return raw === "bbs" || raw === "bs" || raw === "ad" ? raw : "bs";
+}
+
+function defaultBrowseYear(era: Era): number {
+  if (era === "bs" || era === "bbs") return getCurrentBs().year;
+  return new Date().getFullYear();
+}
+
+/** Same AD-year leak as {@link coerceMonthBrowseFromUrl} — year-only browse URLs. */
+export function coerceYearBrowseFromUrl(
+  era: Era,
+  year: number | undefined,
+): number | undefined {
+  if (year == null || era === "ad" || era === "bc") return year;
+  if (year === new Date().getFullYear()) return getCurrentBs().year;
+  return year;
+}
+
+/** Browsed year for “today” in the active Vikram or Gregorian era. */
+export function patroBrowseTodayYear(era: Era, todayAd?: string): number {
+  if (era === "bs" || era === "bbs") {
+    const bs = todayAd
+      ? adToBS(new Date(`${todayAd}T12:00:00`))
+      : getCurrentBs();
+    return bs.year;
+  }
+  const d = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
+  if (era === "ad" || era === "bc") return d.getFullYear();
+  return getCurrentBs().year;
+}
+
+/** Year browse — positive `year` in the active {@link Era}; no BS↔AD conversion. */
 export function usePatroYearBrowse(
-  initialBsYear?: number,
-  options?: { era?: CalendarEra; initialAdYear?: number },
+  initial?: { year?: number },
+  options?: { era?: Era },
 ) {
   const langEra = useCalendarEra();
-  const era = options?.era ?? langEra;
   const { lang } = useLocale();
-  const currentBs = getCurrentBs();
-  const today = new Date();
+  const fallbackLang: Language = lang === "en" ? "en" : "ne";
 
-  const initBs = initialBsYear ?? currentBs.year;
-  const initAd = options?.initialAdYear ?? bsToAD(initBs, 1, 1).getFullYear();
-  const [bsYear, setBsYear] = useState(initBs);
-  const [adYear, setAdYear] = useState(initAd);
+  const initialEra = options?.era ?? calendarEraAsEra(langEra);
+  const [era, setEraState] = useState<Era>(() => initialEra);
+  const [year, setYearState] = useState(() => {
+    if (initial?.year != null) {
+      return positiveInt(coerceYearBrowseFromUrl(initialEra, initial.year) ?? initial.year);
+    }
+    return defaultBrowseYear(initialEra);
+  });
   const [syncedLang, setSyncedLang] = useState(lang);
 
   if (lang !== syncedLang) {
-    const fromEn = syncedLang === "en";
     setSyncedLang(lang);
-    if (lang === "en") {
-      const anchor =
-        today.getFullYear() === bsYear || today.getMonth() === 0
-          ? today
-          : bsToAD(bsYear, 6, Math.min(15, getBSMonthLength(bsYear, 6)));
-      setAdYear(anchor.getFullYear());
-    } else if (fromEn) {
-      const anchor =
-        today.getFullYear() === adYear && today.getMonth() + 1 === 6
-          ? today
-          : new Date(adYear, 6, 15);
-      const bs = adToBS(anchor);
-      setBsYear(clampBsYear(bs.year));
-    }
+    const nextEra = defaultEraForLanguage(fallbackLang);
+    setEraState(nextEra);
+    setYearState(defaultBrowseYear(nextEra));
   }
 
-  const browseYear = era === "ad" ? adYear : bsYear;
-  const setBrowseYear = (y: number) => {
-    if (era === "ad") setAdYear(clampAdYear(y));
-    else setBsYear(clampBsYear(y));
-  };
-  const currentBrowseYear = era === "ad" ? today.getFullYear() : currentBs.year;
+  const setYear = (y: number) => setYearState(positiveInt(y));
+  const setEra = (next: Era) => setEraState(next);
 
-  const setFromBs = (year: number) => {
-    const y = clampBsYear(year);
-    setBsYear(y);
-    const anchor =
-      today.getFullYear() === y || today.getMonth() === 0
-        ? today
-        : bsToAD(y, 6, Math.min(15, getBSMonthLength(y, 6)));
-    setAdYear(anchor.getFullYear());
+  const goToday = (todayAd?: string) => {
+    setYearState(positiveInt(patroBrowseTodayYear(era, todayAd)));
   };
 
   return {
     era,
-    browseYear,
-    setBrowseYear,
-    setFromBs,
-    currentBrowseYear,
-    bsYear,
-    adYear,
-    yearOptions: era === "ad" ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS,
-    clampYear: (y: number) => (era === "ad" ? clampAdYear(y) : clampBsYear(y)),
+    year,
+    setYear,
+    setEra,
+    goToday,
   } as const;
 }
 
-export type PatroYearBrowse = ReturnType<typeof usePatroYearBrowse> & { era: CalendarEra };
+export type PatroYearBrowse = ReturnType<typeof usePatroYearBrowse>;

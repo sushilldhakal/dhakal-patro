@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
+import { History as HistoryPage } from "@/pages/History";
 import {
   LEARN_CATEGORIES,
   LEARN_TOPICS_BY_SLUG,
@@ -32,6 +33,10 @@ export function LearnArticle() {
 
   if (slug && LEGACY_ECLIPSE_SLUGS[slug]) {
     return <Navigate to="/learn/$slug" params={{ slug: LEGACY_ECLIPSE_SLUGS[slug] }} replace />;
+  }
+
+  if (slug === "history") {
+    return <HistoryPage />;
   }
 
   const topic = slug ? LEARN_TOPICS_BY_SLUG[slug] : undefined;

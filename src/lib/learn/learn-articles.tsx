@@ -30,7 +30,8 @@ import {
   resolveLocationTimezone,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
-import { fetchPanchanga, panchangaKeys } from "@/lib/api";
+import { fetchPanchangaDay, panchangaKeys } from "@/lib/api";
+import { AD_DISPLAY, patroDayFetchFromApiDateAd } from "@/lib/patro-day-url";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { useLocale, bilingualNode } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
@@ -1626,7 +1627,7 @@ export function HoraArticle() {
   );
   const panchangaQ = useQuery({
     queryKey: panchangaKeys.day(todayAd, "ad", location.params),
-    queryFn: () => fetchPanchanga(todayAd, "ad", location.params),
+    queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(todayAd, AD_DISPLAY), location.params),
     staleTime: 1000 * 60 * 30,
   });
   const p = panchangaQ.data;

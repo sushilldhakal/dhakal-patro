@@ -1,3 +1,4 @@
+import type { Era } from "@/lib/era";
 import type { CalendarDay, Festival, Holiday } from "./api";
 import {
   AD_MONTHS_SHORT,
@@ -5,12 +6,22 @@ import {
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
   BS_MONTHS_SHORT,
+  BS_OFFLINE_TABLE_START_YEAR,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
   adToBS,
   bsToAD,
   getBSMonthLength,
 } from "./bs-calendar";
+import { patroYearWithinEphemeris } from "./patro-year-axis";
+import {
+  canonicalCivilIso,
+  civilIsoDayOfMonth,
+  civilIsoWeekday,
+  parseCivilIso,
+  parseCivilIsoToDate,
+  civilIsoFromDate,
+} from "./patro-day";
 
 const WEEKDAYS_NE = [
   "आइतवार",
@@ -33,23 +44,39 @@ const WEEKDAYS_EN = [
 ] as const;
 
 function formatAdIso(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return civilIsoFromDate(date);
+}
+
+/**
+ * True when the embedded month table can date this BS year offline.
+ *
+ * BBS (negative) years and anything past the table have no local data — those
+ * months come from the API instead. Callers must check rather than let `bsToAD`
+ * throw: an uncaught throw here took down the whole `CalendarView` with
+ * "केही गडबड भयो" instead of just leaving the grid to load from the server.
+ */
+export function bsMonthHasOfflineData(year: number, browseEra: Era = "bs"): boolean {
+  if (browseEra === "bbs") return false;
+  return year >= BS_OFFLINE_TABLE_START_YEAR && year <= BS_SUPPORTED_END_YEAR;
 }
 
 /** Instant month skeleton — BS/AD dates and weekdays only, no network. */
-export function buildLocalMonthDays(year: number, month: number): CalendarDay[] {
+export function buildLocalMonthDays(
+  year: number,
+  month: number,
+  browseEra: Era = "bs",
+): CalendarDay[] {
+  if (!bsMonthHasOfflineData(year, browseEra)) return [];
   const monthLength = getBSMonthLength(year, month);
   const days: CalendarDay[] = [];
 
   for (let day = 1; day <= monthLength; day += 1) {
     const adDate = bsToAD(year, month, day);
-    const weekdayIdx = adDate.getDay();
+    const dateAd = formatAdIso(adDate);
+    const weekdayIdx = civilIsoWeekday(dateAd);
     days.push({
       day,
-      date_ad: formatAdIso(adDate),
+      date_ad: dateAd,
       weekday: WEEKDAYS_NE[weekdayIdx],
       weekday_en: WEEKDAYS_EN[weekdayIdx],
       weekday_ne: WEEKDAYS_NE[weekdayIdx],
@@ -128,6 +155,14 @@ export function getBsMonthsOverlappingAdMonth(
   return result;
 }
 
+/**
+ * Months worth asking the API for.
+ *
+ * Gated on the ephemeris window, not on `BS_SUPPORTED_START_YEAR` — that is the
+ * *browse picker* floor (60, from `browse_start_year`) and using it here meant no
+ * month request was ever issued below BS 60, so those months rendered a grid of
+ * day numbers with an empty tithi column even though the server serves them.
+ */
 export function uniqueBsMonths(
   months: Array<{ year: number; month: number }>,
 ): Array<{ year: number; month: number }> {
@@ -136,7 +171,7 @@ export function uniqueBsMonths(
     const key = `${year}-${month}`;
     if (seen.has(key)) return false;
     seen.add(key);
-    return year >= BS_SUPPORTED_START_YEAR && year <= BS_SUPPORTED_END_YEAR;
+    return patroYearWithinEphemeris(year);
   });
 }
 
@@ -150,7 +185,7 @@ export function buildAdCalendarGridDays(
   const first = currentLocal[0];
   if (!first) return currentLocal;
 
-  const startOffset = new Date(`${first.date_ad}T12:00:00`).getDay();
+  const startOffset = civilIsoWeekday(first.date_ad);
   const prevAd = shiftAdMonth(adYear, adMonth, -1);
   const nextAd = shiftAdMonth(adYear, adMonth, 1);
 
@@ -207,7 +242,7 @@ export function getSecondaryCellDate(
   lang = "ne",
   isFirstCell = false,
 ): SecondaryCellDate {
-  const ad = new Date(`${day.date_ad}T12:00:00`);
+  const ad = parseCivilIsoToDate(day.date_ad);
   const isEn = lang.slice(0, 2) === "en";
 
   if (primaryDate === "ad") {
@@ -223,11 +258,12 @@ export function getSecondaryCellDate(
     };
   }
 
-  const adDay = ad.getDate();
+  const adDay = civilIsoDayOfMonth(day.date_ad);
   if (!isFirstCell && adDay !== 1) return { day: adDay };
+  const { month } = parseCivilIso(day.date_ad);
   const name = isEn
-    ? AD_MONTHS_SHORT[ad.getMonth()]
-    : AD_MONTHS_SHORT_NE[ad.getMonth()];
+    ? AD_MONTHS_SHORT[month - 1]
+    : AD_MONTHS_SHORT_NE[month - 1];
   return { day: adDay, monthLabel: name, monthLabelShort: name };
 }
 
@@ -303,7 +339,26 @@ export function shiftBsMonth(
     m -= 12;
     y += 1;
   }
+  // The axis has no year 0 — BS 1 is preceded by BBS 1 (signed −1). Landing on 0
+  // asked the offline table for "Vikram year 0" and threw, which is what blanked
+  // BS 1 month 1: its grid needs the previous month.
+  if (y === 0) y = delta < 0 ? -1 : 1;
   return { year: y, month: m };
+}
+
+/**
+ * Days of the month being shown: the offline skeleton where there is one, else
+ * the API's own days (BBS / out-of-table years).
+ */
+function currentLocal_(
+  year: number,
+  month: number,
+  apiDays?: CalendarDay[],
+  browseEra: Era = "bs",
+): CalendarDay[] {
+  const local = buildLocalMonthDays(year, month, browseEra);
+  if (local.length) return local;
+  return (apiDays ?? []).filter((d) => d.date_ad).map((d) => ({ ...d }));
 }
 
 /** Full 6-week grid: trailing days from previous BS month + current + leading from next. */
@@ -315,20 +370,27 @@ export function buildCalendarGridDays(
     current?: CalendarDay[];
     next?: CalendarDay[];
   },
+  browseEra: Era = "bs",
 ): CalendarDay[] {
-  const currentLocal = buildLocalMonthDays(year, month);
+  // A BBS month has no offline table, so `currentLocal` is empty and the API days
+  // are the only source. Falling through on an empty local month returned an
+  // empty grid and the enriched days were never merged — the calendar rendered
+  // as bare weekday headers.
+  const currentLocal = currentLocal_(year, month, enriched?.current, browseEra);
   const first = currentLocal[0];
   if (!first) return currentLocal;
 
-  const startOffset = new Date(`${first.date_ad}T12:00:00`).getDay();
+  const startOffset = civilIsoWeekday(first.date_ad);
   const prevBs = shiftBsMonth(year, month, -1);
   const nextBs = shiftBsMonth(year, month, 1);
 
-  const prevLocal = buildLocalMonthDays(prevBs.year, prevBs.month);
+  const prevLocal = buildLocalMonthDays(prevBs.year, prevBs.month, browseEra);
+  const prevPool =
+    prevLocal.length > 0 ? prevLocal : (enriched?.prev ?? []);
   // slice(-0) is slice(0) in JS — returns the whole array, not zero elements
   const leading: CalendarDay[] =
     startOffset > 0
-      ? prevLocal.slice(-startOffset).map((d) => ({
+      ? prevPool.slice(-startOffset).map((d) => ({
           ...d,
           outsideMonth: true,
         }))
@@ -341,8 +403,9 @@ export function buildCalendarGridDays(
 
   const totalCells = Math.ceil((startOffset + current.length) / 7) * 7;
   const trailingCount = totalCells - startOffset - current.length;
-  const nextLocal = buildLocalMonthDays(nextBs.year, nextBs.month);
-  const trailing: CalendarDay[] = nextLocal.slice(0, trailingCount).map((d) => ({
+  const nextLocal = buildLocalMonthDays(nextBs.year, nextBs.month, browseEra);
+  const nextPool = nextLocal.length > 0 ? nextLocal : (enriched?.next ?? []);
+  const trailing: CalendarDay[] = nextPool.slice(0, trailingCount).map((d) => ({
     ...d,
     outsideMonth: true,
   }));
@@ -380,25 +443,26 @@ export function getLocalMonthMeta(year: number, month: number) {
 
 export function getBsMonthAdSpanLabel(year: number, month: number): string {
   const { month_start_ad, month_end_ad } = getLocalMonthMeta(year, month);
-  const start = new Date(month_start_ad);
-  const end = new Date(month_end_ad);
-  const s = new Date(start.getFullYear(), start.getMonth());
-  const e = new Date(end.getFullYear(), end.getMonth());
-  const fmt = (d: Date) => d.toLocaleString("en", { month: "short", year: "numeric" });
-  return s.getTime() === e.getTime()
-    ? fmt(start)
-    : `${start.toLocaleString("en", { month: "short" })}–${fmt(end)}`;
+  const start = parseCivilIsoToDate(month_start_ad);
+  const end = parseCivilIsoToDate(month_end_ad);
+  const fmtOpts: Intl.DateTimeFormatOptions = { month: "short", year: "numeric", timeZone: "UTC" };
+  const startKey = parseCivilIso(month_start_ad);
+  const endKey = parseCivilIso(month_end_ad);
+  const sameMonth = startKey.year === endKey.year && startKey.month === endKey.month;
+  return sameMonth
+    ? start.toLocaleString("en", fmtOpts)
+    : `${start.toLocaleString("en", { month: "short", timeZone: "UTC" })}–${end.toLocaleString("en", fmtOpts)}`;
 }
 
 /** Compact AD month hint for header, e.g. sep/oct or jun */
 export function getBsMonthAdSpanCompact(year: number, month: number): string {
   const { month_start_ad, month_end_ad } = getLocalMonthMeta(year, month);
-  const start = new Date(`${month_start_ad}T12:00:00`);
-  const end = new Date(`${month_end_ad}T12:00:00`);
-  const startKey = start.getFullYear() * 12 + start.getMonth();
-  const endKey = end.getFullYear() * 12 + end.getMonth();
-  const fmt = (d: Date) =>
-    d.toLocaleString("en", { month: "short" }).replace(/\./g, "").toLowerCase();
+  const start = parseCivilIso(month_start_ad);
+  const end = parseCivilIso(month_end_ad);
+  const startKey = start.year * 12 + start.month;
+  const endKey = end.year * 12 + end.month;
+  const fmt = (p: { month: number }) =>
+    AD_MONTHS_SHORT[p.month - 1]!.toLowerCase();
   if (startKey === endKey) return fmt(start);
   return `${fmt(start)}/${fmt(end)}`;
 }
@@ -421,9 +485,12 @@ export function mergeEnrichedDays(
   localDays: CalendarDay[],
   enrichedDays: CalendarDay[],
 ): CalendarDay[] {
-  const byDate = new Map(enrichedDays.map((d) => [d.date_ad, d]));
+  if (!localDays.length && enrichedDays.length) return enrichedDays;
+  const byDate = new Map(
+    enrichedDays.map((d) => [canonicalCivilIso(d.date_ad), d]),
+  );
   return localDays.map((local) => {
-    const remote = byDate.get(local.date_ad);
+    const remote = byDate.get(canonicalCivilIso(local.date_ad));
     if (!remote) return local;
     // Keep grid lead/trail flags — remote month payloads never set outsideMonth.
     return {

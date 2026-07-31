@@ -6,6 +6,12 @@ import type {
   PlanetInfo,
 } from "@/lib/api";
 import {
+  ingressEventBsDayForMonth,
+  ingressEventRowDateAd,
+  type IngressBrowseMonth,
+} from "@/lib/dainikKranti/ingress-day-match";
+import { canonicalCivilIso } from "@/lib/patro-day";
+import {
   dmsInRashiToDegreeCells,
   formatSolarCorrectionDisplay,
   formatTimeShort,
@@ -184,6 +190,8 @@ export function buildCalcNotes(
   days: CalendarDay[],
   ingressEvents: GocharIngressEvent[] = [],
   headerByDate: Record<string, string> = {},
+  allDays: CalendarDay[] = days,
+  browse?: IngressBrowseMonth,
 ): CalcNote[] {
   const notes: CalcNote[] = [];
 
@@ -222,10 +230,26 @@ export function buildCalcNotes(
   }
 
   for (const ev of ingressEvents) {
-    const dateKey = ev.entry_vedic_date_ad ?? ev.entry_date_ad;
-    if (!dateKey) continue;
-    const day = days.find((d) => d.date_ad === dateKey);
-    if (!day) continue;
+    let day: CalendarDay | undefined;
+    let dateKey: string | undefined;
+    if (browse) {
+      const bsDay = ingressEventBsDayForMonth(
+        ev,
+        browse.year,
+        browse.month,
+        allDays,
+      );
+      if (bsDay != null) {
+        day = days.find((d) => d.day === bsDay);
+        dateKey =
+          day?.date_ad ??
+          ingressEventRowDateAd(ev, allDays, browse.year, browse.month);
+      }
+    } else {
+      dateKey = ingressEventRowDateAd(ev, allDays);
+      if (dateKey) day = days.find((d) => canonicalCivilIso(d.date_ad) === canonicalCivilIso(dateKey!));
+    }
+    if (!day || !dateKey) continue;
     const timeRaw = ev.entry_time_local_short ?? ev.entry_time_local?.split(" ")[1];
     const timeNe = timeRaw
       ? formatVedicPatroTime(timeRaw, day.sunrise) ?? toNepaliDigits(timeRaw)

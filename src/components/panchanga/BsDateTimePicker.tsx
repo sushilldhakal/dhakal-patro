@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -6,14 +7,23 @@ import {
   BS_MONTH_NAMES,
   adToBS,
   bsMonthLabel,
-  bsToAD,
   getBSMonthLength,
 } from "@/lib/bs-calendar";
+import {
+  bsMonthGridOffline,
+  bsMonthHasOfflineTable,
+  monthGridFromApiCalendar,
+} from "@/lib/bs-month-grid";
+import { fetchMonthCalendar, type LocationParams } from "@/lib/api";
+import { DEFAULT_PANCHANGA_LOCATION } from "@/components/panchanga/use-panchanga-location";
+import { stepPatroSignedYear } from "@/lib/patro-year-axis";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { BsNativeSelect } from "@/components/BsNativeSelect";
 import { PopoverClose } from "@/components/ui/popover";
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
+import type { Era } from "@/lib/era";
+import { PatroYearEraToggle } from "@/components/patro-date/PatroYearEraToggle";
 
 const WEEKDAYS_NE = ["आइत", "सोम", "मंगल", "बुध", "बिही", "शुक्र", "शनि"];
 const WEEKDAYS_EN = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -33,7 +43,11 @@ interface Props {
   hourAriaLabel?: string;
   minuteAriaLabel?: string;
   showTime: boolean;
-  calendarMode?: "bs" | "ad";
+  gridEra?: "bs" | "bbs" | "ad";
+  displayEra?: Era;
+  onEraChange?: (era: Era) => void;
+  /** Observer for BBS month grids (no offline `bsToAD`). */
+  locationParams?: LocationParams;
 }
 
 /** 24h → 12h parts. */
@@ -63,11 +77,15 @@ export function BsDateTimePicker({
   hourAriaLabel,
   minuteAriaLabel,
   showTime,
-  calendarMode = "bs",
+  gridEra = "bs",
+  displayEra,
+  onEraChange,
+  locationParams,
 }: Props) {
   const { lang, digits } = useLocale();
   const { t } = useTranslation();
-  const isAd = calendarMode === "ad";
+  const isAd = gridEra === "ad";
+  const monthFetchEra: Era = isAd ? "ad" : gridEra === "bbs" ? "bbs" : "bs";
 
   // Draft state — every interaction stays local; nothing is committed (and no
   // API refetch happens) until the user presses Done. The popover remounts on
@@ -75,12 +93,34 @@ export function BsDateTimePicker({
   const [draft, setDraft] = useState({ year, month, day, clock: clock ?? "" });
   const { year: dYear, month: dMonth, day: dDay } = draft;
 
+  const resolvedLocation = locationParams ?? DEFAULT_PANCHANGA_LOCATION.params;
+  const needsApiMonth = !isAd && (monthFetchEra === "bbs" || !bsMonthHasOfflineTable(dYear, dMonth));
+  const monthQ = useQuery({
+    queryKey: ["picker-month", dYear, dMonth, resolvedLocation],
+    queryFn: () =>
+      fetchMonthCalendar(dYear, dMonth, resolvedLocation, {
+        full: false,
+        era: monthFetchEra,
+      }),
+    enabled: needsApiMonth,
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const bsGrid = useMemo(() => {
+    if (isAd) return null;
+    if (needsApiMonth) {
+      const cal = monthQ.data?.calendar;
+      return cal ? monthGridFromApiCalendar(cal) : null;
+    }
+    return bsMonthGridOffline(dYear, dMonth);
+  }, [isAd, needsApiMonth, monthQ.data?.calendar, dYear, dMonth]);
+
   const monthLen = isAd
     ? new Date(dYear, dMonth, 0).getDate()
-    : getBSMonthLength(dYear, dMonth);
+    : (bsGrid?.monthLen ?? getBSMonthLength(dYear, dMonth));
   const firstDow = isAd
     ? new Date(dYear, dMonth - 1, 1).getDay()
-    : bsToAD(dYear, dMonth, 1).getDay();
+    : (bsGrid?.firstDow ?? 0);
   const cells: (number | null)[] = [
     ...Array.from({ length: firstDow }, () => null),
     ...Array.from({ length: monthLen }, (_, i) => i + 1),
@@ -111,10 +151,10 @@ export function BsDateTimePicker({
     let y = dYear;
     if (m < 1) {
       m = 12;
-      y -= 1;
+      y = stepPatroSignedYear(y, -1);
     } else if (m > 12) {
       m = 1;
-      y += 1;
+      y = stepPatroSignedYear(y, 1);
     }
     if (y < minYear || y > maxYear) return;
     setMonthYear(y, m);
@@ -165,7 +205,7 @@ export function BsDateTimePicker({
 
   return (
     <div className="mx-auto flex w-full max-w-[22.5rem] flex-col gap-2.5">
-      {/* Month / year header with step arrows */}
+      {/* Month / year / era — one row */}
       <div className="flex items-center gap-1.5">
         <button
           type="button"
@@ -190,6 +230,14 @@ export function BsDateTimePicker({
           ariaLabel={yearAriaLabel}
           onChange={(y) => setMonthYear(y, dMonth)}
         />
+        {displayEra && onEraChange ? (
+          <PatroYearEraToggle
+            era={displayEra}
+            onEraChange={onEraChange}
+            compact
+            comfortable
+          />
+        ) : null}
         <button
           type="button"
           onClick={() => stepMonth(1)}
@@ -203,6 +251,12 @@ export function BsDateTimePicker({
 
       {/* Calendar grid */}
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        {needsApiMonth && monthQ.isLoading && !bsGrid ? (
+          <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+            {t("common.loading")}
+          </div>
+        ) : (
+          <>
         <div className="grid grid-cols-7 border-b border-border bg-muted/30">
           {weekdays.map((wd, i) => (
             <div
@@ -262,6 +316,8 @@ export function BsDateTimePicker({
             );
           })}
         </div>
+          </>
+        )}
       </div>
 
       {/* Time picker — 12 hour with AM/PM */}

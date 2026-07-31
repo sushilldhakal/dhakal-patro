@@ -4,11 +4,12 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { ArrowLeft, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import {
-  fetchPanchanga,
+  fetchPanchangaDay,
   locationCacheKey,
   panchangaKeys,
   type PanchangaDay,
 } from "@/lib/api";
+import { AD_DISPLAY, patroDayFetchFromApiDateAd } from "@/lib/patro-day-url";
 import {
   BS_MONTHS_NE,
   BS_SUPPORTED_END_YEAR,
@@ -236,7 +237,7 @@ export function PanchangaYear() {
       const dateStr = adDateStrForDay(year, day);
       void queryClient.prefetchQuery({
         queryKey: panchangaKeys.day(dateStr, "ad", location.params),
-        queryFn: () => fetchPanchanga(dateStr, "ad", location.params),
+        queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(dateStr, AD_DISPLAY), location.params),
         staleTime: 1000 * 60 * 30,
       });
     },
@@ -357,7 +358,7 @@ export function PanchangaYear() {
 
   const { data, isError } = useQuery({
     queryKey: panchangaKeys.day(debouncedDateStr, "ad", location.params),
-    queryFn: () => fetchPanchanga(debouncedDateStr, "ad", location.params),
+    queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(debouncedDateStr, AD_DISPLAY), location.params),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
     enabled: !yearFullyCached,
@@ -379,7 +380,7 @@ export function PanchangaYear() {
 
   const { data: fetchingLiveData, isPlaceholderData: fetchingIsPlaceholder } = useQuery({
     queryKey: panchangaKeys.day(liveDateStr, "ad", location.params),
-    queryFn: () => fetchPanchanga(liveDateStr, "ad", location.params),
+    queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(liveDateStr, AD_DISPLAY), location.params),
     staleTime: 1000 * 60 * 30,
     enabled: isScrubbing && !cachedLiveData && !yearFullyCached,
     placeholderData: keepPreviousData,

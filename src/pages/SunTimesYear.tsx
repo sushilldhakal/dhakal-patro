@@ -11,9 +11,7 @@ import {
   displayLocationLabel,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
-import { useLocale, bilingualText } from "@/i18n/locale";
-import { adToBS } from "@/lib/bs-calendar";
-import { getBsYearSpanLabel } from "@/lib/local-calendar";
+import { useLocale } from "@/i18n/locale";
 import { searchToLocation } from "@/lib/url-state";
 import { patroAyanaNorth, patroAyanaSouth } from "@/lib/patro-classes";
 
@@ -27,25 +25,10 @@ export function SunTimesYear() {
   const { lang, digits } = useLocale();
   const locationLabel = displayLocationLabel(location, undefined, lang);
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
+  const { year, era, setYear, setEra } = yearBrowse;
   const [gridLoading, setGridLoading] = useState(true);
 
-  const bsYearForLabel =
-    yearBrowse.era === "ad"
-      ? adToBS(new Date(yearBrowse.browseYear, 6, 15)).year
-      : yearBrowse.bsYear;
-  const bsYearSpan = getBsYearSpanLabel(bsYearForLabel, lang, digits);
-  const pageSubtitle =
-    yearBrowse.era === "ad"
-      ? bilingualText(lang, 
-          `वार्षिक सूर्योदय–सूर्यास्त · ${digits(yearBrowse.browseYear)} AD · ${bsYearSpan}`,
-          `Annual sunrise & sunset · ${digits(yearBrowse.browseYear)} AD · ${bsYearSpan}`,
-        )
-      : bilingualText(lang, 
-          `वार्षिक सूर्योदय–सूर्यास्त · ${bsYearSpan}`,
-          lang === "en"
-            ? `Annual sunrise & sunset · ${bsYearSpan}`
-            : `Annual sunrise & sunset · B.S. ${digits(yearBrowse.browseYear)}`,
-        );
+  const pageSubtitle = t("sun_times.subtitle", { year: digits(year) });
 
   useRouteLoading(gridLoading);
 
@@ -66,19 +49,17 @@ export function SunTimesYear() {
       </div>
 
       <PatroYearNav
-        calendarMode={yearBrowse.era}
-        year={yearBrowse.browseYear}
-        onYearChange={yearBrowse.setBrowseYear}
-        currentYear={yearBrowse.currentBrowseYear}
-        yearOptions={yearBrowse.yearOptions}
+        era={era}
+        year={year}
+        onYearChange={setYear}
+        onEraChange={setEra}
         location={location}
         onLocationChange={setLocation}
       />
 
       <SunTimesYearGrid
-        browseYear={yearBrowse.browseYear}
-        bsYear={yearBrowse.bsYear}
-        era={yearBrowse.era}
+        era={era}
+        year={year}
         locationLabel={locationLabel}
         locationParams={location.params}
         hideHeader
@@ -101,7 +82,7 @@ export function SunTimesYear() {
         </p>
         {locationLabel ? (
           <p className="m-0 text-xs text-base">
-            {bilingualText(lang, "स्थान", "Location")}: {locationLabel}
+            {lang === "en" ? "Location" : "स्थान"}: {locationLabel}
           </p>
         ) : null}
       </section>

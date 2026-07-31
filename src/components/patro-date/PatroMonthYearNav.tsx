@@ -2,31 +2,28 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import type { Era, Language } from "@/lib/era";
 import { cn } from "@/lib/utils";
-import {
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-} from "@/lib/bs-calendar";
-import {
-  PATRO_AD_YEAR_OPTIONS,
-  PATRO_BS_YEAR_OPTIONS,
-} from "@/lib/patro-date-options";
 import { PatroDateNavCore } from "./PatroDateNavCore";
+import { usePatroMonthHeadlineSubtitle } from "./use-patro-month-headline-subtitle";
 
 export type PatroMonthYearNavProps = {
+  era: Era;
   year: number;
   month: number;
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
+  onEraChange?: (era: Era) => void;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
   todayAd?: string;
   prevDisabled?: boolean;
   nextDisabled?: boolean;
-  /** Gregorian month grid when English or AD era. */
-  calendarMode?: "bs" | "ad";
-  yearOptions?: number[];
+  /** Optional override; default comes from {@link usePatroMonthHeadlineSubtitle}. */
+  crossEraSubtitle?: string | null;
+  /** URL `language` — Nepali digits when `ne`. */
+  displayLanguage?: Language;
   subtitle?: string;
   location?: PanchangaLocation;
   onLocationChange?: (location: PanchangaLocation) => void;
@@ -41,18 +38,20 @@ export type PatroMonthYearNavProps = {
  * No day picker, no time picker.
  */
 export function PatroMonthYearNav({
+  era,
   year,
   month,
   onMonthChange,
   onYearChange,
+  onEraChange,
   onPrev,
   onNext,
   onToday,
   todayAd,
   prevDisabled,
   nextDisabled,
-  calendarMode = "bs",
-  yearOptions,
+  crossEraSubtitle,
+  displayLanguage,
   subtitle,
   location,
   onLocationChange,
@@ -62,20 +61,9 @@ export function PatroMonthYearNav({
   className,
 }: PatroMonthYearNavProps) {
   const { t } = useTranslation();
-  const isAd = calendarMode === "ad";
-  const resolvedYearOptions =
-    yearOptions ?? (isAd ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS);
 
-  const defaultPrevDisabled =
-    prevDisabled ??
-    (isAd
-      ? false
-      : month === 1 && year <= BS_SUPPORTED_START_YEAR);
-  const defaultNextDisabled =
-    nextDisabled ??
-    (isAd
-      ? false
-      : month === 12 && year >= BS_SUPPORTED_END_YEAR);
+  const defaultPrevDisabled = prevDisabled ?? false;
+  const defaultNextDisabled = nextDisabled ?? false;
 
   const locationDesktop =
     desktopToolbar ??
@@ -88,11 +76,16 @@ export function PatroMonthYearNav({
       />
     ) : null);
 
-  // No LocationSelector fallback here: below md the location lives in the date
-  // sheet's Location tab, and rendering the popup too would put two location
-  // controls in the same header.
   const resolvedMobileToolbar = mobileToolbar;
 
+  const headlineCrossEra = usePatroMonthHeadlineSubtitle(
+    era,
+    year,
+    month,
+    location,
+    crossEraSubtitle,
+    displayLanguage,
+  );
 
   return (
     <div
@@ -103,15 +96,17 @@ export function PatroMonthYearNav({
     >
       <div className="min-w-0 flex-1">
         <PatroDateNavCore
-          calendarMode={calendarMode}
+          era={era}
           year={year}
           month={month}
-          yearOptions={resolvedYearOptions}
+          crossEraSubtitle={headlineCrossEra}
+          displayLanguage={displayLanguage}
           todayAd={todayAd}
           onToday={onToday}
           todayAriaLabel={t("calendar.today_btn")}
           onMonthChange={onMonthChange}
           onYearChange={onYearChange}
+          onEraChange={onEraChange}
           monthAriaLabel={t("calendar.month_aria")}
           yearAriaLabel={t("calendar.year_aria")}
           onPrev={onPrev}

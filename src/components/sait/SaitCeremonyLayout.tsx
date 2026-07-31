@@ -3,13 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PatroYearNav } from "@/components/patro-date";
-import type { CalendarEra } from "@/lib/patro-era";
+import type { Era } from "@/lib/era";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { SaitDayCard } from "@/components/sait/SaitDayCard";
 import { SaitRulesSection, type SaitRule } from "@/components/sait/SaitRulesSection";
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { useLocale } from "@/i18n/locale";
-import { adToBS, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import type {
   BratabandhaNakshatraMode,
   SaitDetailDay,
@@ -23,9 +22,11 @@ interface Props {
   subtitle: string;
   year: number;
   onYearChange: (year: number) => void;
-  calendarMode?: CalendarEra;
-  yearOptions?: number[];
-  currentYear?: number;
+  onEraChange?: (era: Era) => void;
+  era: Era;
+  gregorianRange?: { start: string; end: string } | null;
+  rangeLabel?: string | null;
+  yearError?: string | null;
   location: PanchangaLocation;
   onLocationChange: (loc: PanchangaLocation) => void;
   method?: { ne?: string; en?: string } | null;
@@ -65,9 +66,11 @@ export function SaitCeremonyLayout({
   subtitle,
   year,
   onYearChange,
-  calendarMode = "bs",
-  yearOptions,
-  currentYear,
+  onEraChange,
+  era,
+  gregorianRange,
+  rangeLabel,
+  yearError,
   location,
   onLocationChange,
   method,
@@ -91,8 +94,6 @@ export function SaitCeremonyLayout({
 }: Props) {
   const { digits, lang } = useLocale();
   const { t } = useTranslation();
-  const todayBsYear = useMemo(() => adToBS(new Date()).year, []);
-
   const byMonth = useMemo(() => {
     const map = new Map<number, SaitDetailDay[]>();
     for (const d of days) {
@@ -162,11 +163,13 @@ export function SaitCeremonyLayout({
       ) : null}
 
       <PatroYearNav
-        calendarMode={calendarMode}
+        era={era}
         year={year}
         onYearChange={onYearChange}
-        currentYear={currentYear ?? todayBsYear}
-        yearOptions={yearOptions}
+        onEraChange={onEraChange}
+        gregorianRange={gregorianRange}
+        rangeLabel={rangeLabel}
+        yearError={yearError}
         location={location}
         onLocationChange={onLocationChange}
       />
@@ -200,8 +203,10 @@ export function SaitCeremonyLayout({
         ) : days.length > 0 ? (
           byMonth.map(([month, monthDays]) => {
             const monthNe = monthDays[0]?.bs_month_name_ne;
-            const monthEn = BS_MONTH_NAMES[month - 1] ?? monthNe;
-            const monthLabel = lang === "en" ? monthEn : (monthNe ?? monthEn);
+            const monthLabel =
+              lang === "en"
+                ? t("sait.month_number", { month: digits(month), defaultValue: `Month ${digits(month)}` })
+                : (monthNe ?? t("sait.month_number", { month: digits(month) }));
             return (
               <div key={month} className="space-y-3">
                 <div className="flex items-end justify-between gap-3">

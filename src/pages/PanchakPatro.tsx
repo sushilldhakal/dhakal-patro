@@ -22,8 +22,13 @@ import { patroNoteBox } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
 import { searchToLocation } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
+import { type Era } from "@/lib/era";
 
 const routeApi = getRouteApi("/panchanga-shell/panchak-patro");
+
+function panchakApiEra(era: Era): "ad" | "bs" {
+  return era === "ad" || era === "bc" ? "ad" : "bs";
+}
 
 function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
   const d = new Date(`${iso}T12:00:00`);
@@ -106,11 +111,13 @@ export function PanchakPatro() {
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
 
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
-  const { browseYear, era } = yearBrowse;
+  const { year, era, setYear, setEra } = yearBrowse;
+
+  const apiEra = panchakApiEra(era);
 
   const query = useQuery({
-    queryKey: panchakKeys.year(browseYear, location.params, era),
-    queryFn: () => fetchPanchakYear(browseYear, location.params, era),
+    queryKey: panchakKeys.year(year, location.params, apiEra),
+    queryFn: () => fetchPanchakYear(year, location.params, apiEra),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
   });
@@ -140,17 +147,17 @@ export function PanchakPatro() {
 
         <PageHeader
           icon={<CalendarClock className="h-7 w-7 text-secondary shrink-0" />}
-          title={t("panchak.title", { year: digits(browseYear) })}
+          title={t("panchak.title", { year: digits(year) })}
           subtitle={t("panchak.subtitle")}
         />
       </div>
 
       <PatroYearNav
-        calendarMode={era}
-        year={browseYear}
-        onYearChange={yearBrowse.setBrowseYear}
-        currentYear={yearBrowse.currentBrowseYear}
-        yearOptions={yearBrowse.yearOptions}
+        era={era}
+        year={year}
+        onYearChange={setYear}
+        onEraChange={setEra}
+        gregorianRange={query.data?.gregorian_range}
         location={location}
         onLocationChange={setLocation}
       />
@@ -164,12 +171,12 @@ export function PanchakPatro() {
           {bilingualText(lang, "पञ्चक विवरण लोड गर्न सकिएन।", "Could not load Panchak details.")}
         </p>
       ) : !periods.length ? (
-        <p className="text-sm">{t("panchak.no_data", { year: digits(browseYear) })}</p>
+        <p className="text-sm">{t("panchak.no_data", { year: digits(year) })}</p>
       ) : (
         <section className="space-y-3">
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
             <AlertTriangle className="size-4 text-amber-600" />
-            {t("panchak.periods_title", { year: digits(browseYear) })}
+            {t("panchak.periods_title", { year: digits(year) })}
           </h2>
           <div className="grid gap-3 lg:grid-cols-2">
             {periods.map((period, i) => (

@@ -2,7 +2,8 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { X, ChevronLeft, Sunrise, Sunset, Moon } from "lucide-react";
 import { useState } from "react";
-import { fetchPanchanga, panchangaKeys, type CalendarDay, type PanchangaDay } from "@/lib/api";
+import { fetchPanchangaDay, panchangaKeys, type CalendarDay, type PanchangaDay } from "@/lib/api";
+import { AD_DISPLAY, patroDayFetchFromApiDateAd } from "@/lib/patro-day-url";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import {
@@ -375,7 +376,7 @@ export function DayDetailModal({ day, bsYear, bsMonth, location, onClose }: Prop
 
   const q = useQuery({
     queryKey: panchangaKeys.day(dateAd, "ad", location?.params),
-    queryFn: () => fetchPanchanga(dateAd, "ad", location?.params),
+    queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(dateAd, AD_DISPLAY), location?.params),
     enabled: !!day,
     staleTime: 1000 * 60 * 60,
   });

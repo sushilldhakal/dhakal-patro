@@ -1,33 +1,93 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { NavigateOptions } from "@tanstack/react-router";
+import type { PatroMonthBrowseSearch, PatroYearBrowseSearch } from "@/lib/patro-era";
 import {
-  applyPatroMonthSearchToBrowse,
-  applyPatroYearSearchToBrowse,
-  patroMonthBrowseInit,
-  patroYearBrowseInit,
-  type PatroMonthBrowseSearch,
-  type PatroYearBrowseSearch,
-} from "@/lib/patro-era";
+  buildPageSearch,
+  getLanguageForEra,
+  parseEraFromUrl,
+  type EraSelection,
+  type Language,
+} from "@/lib/era";
 import {
-  buildPatroDaySearch,
-  buildPatroMonthBrowseSearch,
-  buildPatroPanchangaSearch,
-  buildPatroYearBrowseSearch,
   locationToSearch,
   sameLocationParams,
   sameSearch,
   searchToLocation,
   type LocationSearch,
-  type PanchangaSearch,
 } from "@/lib/url-state";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { usePanchangaClock } from "@/components/panchanga/use-panchanga-mode";
-import { useCalendarEra } from "@/hooks/use-calendar-era";
-import { usePatroMonthBrowse } from "@/hooks/use-patro-month-browse";
+import { coerceMonthBrowseFromUrl, usePatroMonthBrowse } from "@/hooks/use-patro-month-browse";
 import { usePatroYearBrowse } from "@/hooks/use-patro-year-browse";
-import { parseAdStr, toAdStr } from "@/lib/patro-day";
+import { useLocale } from "@/i18n/locale";
+import { usePatroDayUrlBrowse } from "@/hooks/use-patro-day-url-browse";
 
 type NavigateFn = (opts: NavigateOptions) => void;
+
+function fallbackLanguage(lang: string): Language {
+  return lang === "en" ? "en" : "ne";
+}
+
+function urlYearUnparseable(search: object, language: Language): boolean {
+  const raw = search as Record<string, unknown>;
+  if (raw.year == null || raw.year === "") return false;
+  return parseEraFromUrl(raw, language).year == null;
+}
+
+function urlMonthUnparseable(search: object, language: Language): boolean {
+  const raw = search as Record<string, unknown>;
+  if (raw.month == null || raw.month === "") return false;
+  return parseEraFromUrl(raw, language).month == null;
+}
+
+function eraBrowseSelection(
+  browse: { era: EraSelection["era"]; year: number; month?: number },
+  urlLanguage?: Language,
+): EraSelection {
+  return {
+    era: browse.era,
+    language: urlLanguage ?? getLanguageForEra(browse.era),
+    year: browse.year,
+    month: browse.month,
+  };
+}
+
+function buildEraBrowseSearch(
+  loc: PanchangaLocation | undefined,
+  browse: { era: EraSelection["era"]; year: number; month?: number },
+  extra?: Record<string, unknown>,
+  urlLanguage?: Language,
+): Record<string, unknown> {
+  return {
+    ...(loc ? locationToSearch(loc) : {}),
+    ...buildPageSearch(eraBrowseSelection(browse, urlLanguage), extra),
+  };
+}
+
+function applyEraBrowseFromSearch(
+  search: object,
+  browse: {
+    era: EraSelection["era"];
+    year: number;
+    month?: number;
+    setEra: (era: EraSelection["era"]) => void;
+    setYear: (year: number) => void;
+    setMonth?: (month: number) => void;
+  },
+  language: Language,
+): void {
+  const raw = search as Record<string, unknown>;
+  if (raw.year == null && raw.month == null && raw.era == null) return;
+  if (urlYearUnparseable(search, language)) return;
+  if (urlMonthUnparseable(search, language)) return;
+
+  const parsed = parseEraFromUrl(raw, language);
+  const coerced = coerceMonthBrowseFromUrl(parsed.era, parsed.year, parsed.month);
+  if (parsed.era !== browse.era) browse.setEra(parsed.era);
+  if (coerced.year != null && coerced.year !== browse.year) browse.setYear(coerced.year);
+  if (coerced.month != null && browse.setMonth != null && coerced.month !== browse.month) {
+    browse.setMonth(coerced.month);
+  }
+}
 
 /** Month browse + URL mirror/back-forward — single pattern for Dainik Kranti, Abhijit, etc. */
 export function usePatroMonthUrlBrowse(
@@ -40,39 +100,55 @@ export function usePatroMonthUrlBrowse(
     mirror?: Record<string, unknown>;
   },
 ) {
-  const langEra = useCalendarEra();
-  const { initial } = patroMonthBrowseInit(search);
-  const monthBrowse = usePatroMonthBrowse(initial, { era: langEra });
+  const { lang } = useLocale();
+  const language = fallbackLanguage(lang);
+  const parsed = useMemo(
+    () => parseEraFromUrl(search as Record<string, unknown>, language),
+    [search, language],
+  );
+  const monthBrowse = usePatroMonthBrowse(
+    parsed.year != null || parsed.month != null
+      ? { year: parsed.year, month: parsed.month }
+      : undefined,
+    { era: parsed.era },
+  );
   const mirror = extra?.mirror;
   const mirrorPaksha = mirror?.paksha;
 
   useEffect(() => {
-    const desired = buildPatroMonthBrowseSearch(location, monthBrowse, mirror);
+    if (urlYearUnparseable(search, language) || urlMonthUnparseable(search, language)) {
+      return;
+    }
+    const desired = buildEraBrowseSearch(
+      location,
+      {
+        era: monthBrowse.era,
+        year: monthBrowse.year,
+        month: monthBrowse.month,
+      },
+      mirror,
+      parsed.language,
+    );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
   }, [
     location,
     monthBrowse.era,
-    monthBrowse.adYear,
-    monthBrowse.adMonth,
-    monthBrowse.bsYear,
-    monthBrowse.bsMonth,
+    monthBrowse.year,
+    monthBrowse.month,
     mirrorPaksha,
     search,
     navigate,
-    monthBrowse,
     mirror,
+    parsed.language,
   ]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    applyPatroMonthSearchToBrowse(search, monthBrowse);
+    applyEraBrowseFromSearch(search, monthBrowse, language);
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  }, [search, language]);
 
   return monthBrowse;
 }
@@ -84,30 +160,40 @@ export function usePatroYearUrlBrowse(
   location: PanchangaLocation | undefined,
   setLocation: ((loc: PanchangaLocation) => void) | undefined,
 ) {
-  const langEra = useCalendarEra();
-  const { initialBsYear, initialAdYear } = useMemo(
-    () => patroYearBrowseInit(search),
-    [search],
+  const { lang } = useLocale();
+  const language = fallbackLanguage(lang);
+  const parsed = useMemo(
+    () => parseEraFromUrl(search as Record<string, unknown>, language),
+    [search, language],
   );
-  const yearBrowse = usePatroYearBrowse(initialBsYear, { era: langEra, initialAdYear });
+  const yearBrowse = usePatroYearBrowse(
+    parsed.year != null ? { year: parsed.year } : undefined,
+    { era: parsed.era },
+  );
 
   useEffect(() => {
-    const desired = buildPatroYearBrowseSearch(location, yearBrowse);
+    if (urlYearUnparseable(search, language)) return;
+    const desired = buildEraBrowseSearch(
+      location,
+      {
+        era: yearBrowse.era,
+        year: yearBrowse.year,
+      },
+      undefined,
+      parsed.language,
+    );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, yearBrowse.browseYear, yearBrowse.era, search, navigate, yearBrowse]);
+  }, [location, yearBrowse.year, yearBrowse.era, search, navigate, language, parsed.language]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    applyPatroYearSearchToBrowse(search, yearBrowse);
+    applyEraBrowseFromSearch(search, yearBrowse, language);
     if (setLocation && location) {
       const loc = searchToLocation(search);
       if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  }, [search, language]);
 
   return yearBrowse;
 }
@@ -126,120 +212,57 @@ export function usePatroLocationUrlBrowse(
     }
   }, [location, search, navigate]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 }
 
-/** Day browse + URL mirror/back-forward — panchanga, graha sthiti, element tables. */
-export function usePatroDayUrlBrowse(
-  search: PanchangaSearch & LocationSearch,
-  navigate: NavigateFn,
-  location: PanchangaLocation,
-  setLocation: (loc: PanchangaLocation) => void,
-) {
-  const langEra = useCalendarEra();
-  const today = new Date();
-  const [date, setDate] = useState(() =>
-    search.date ? parseAdStr(search.date) : today,
-  );
-
-  useEffect(() => {
-    const desired = buildPatroDaySearch(location, toAdStr(date), langEra);
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
-    }
-  }, [location, date, langEra, search, navigate]);
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (search.date && search.date !== toAdStr(date)) {
-      setDate(parseAdStr(search.date));
-    }
-    const loc = searchToLocation(search);
-    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  return {
-    date,
-    setDate,
-    dateAd: toAdStr(date),
-  } as const;
-}
-
-/** Panchanga day browse + `time` mirror — `/panchanga?date=…&time=…&lat=…`. */
-export function usePatroPanchangaUrlBrowse(
-  search: PanchangaSearch & LocationSearch,
-  navigate: NavigateFn,
-  location: PanchangaLocation,
-  setLocation: (loc: PanchangaLocation) => void,
-) {
-  const timezone = location.params.timezone ?? "Asia/Kathmandu";
-  const langEra = useCalendarEra();
-  const today = new Date();
-  const [date, setDate] = useState(() =>
-    search.date ? parseAdStr(search.date) : today,
-  );
-  const { clock, setClock } = usePanchangaClock(timezone, { clock: search.time });
-  const dateAd = toAdStr(date);
-
-  useEffect(() => {
-    const desired = buildPatroPanchangaSearch(location, dateAd, clock, langEra);
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
-    }
-  }, [location, dateAd, clock, langEra, search, navigate]);
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (search.date && search.date !== dateAd) {
-      setDate(parseAdStr(search.date));
-    }
-    if (search.time && search.time !== clock) {
-      setClock(search.time);
-    }
-    const loc = searchToLocation(search);
-    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  return {
-    date,
-    setDate,
-    dateAd,
-    clock,
-    setClock,
-  } as const;
-}
+export {
+  usePatroDayUrlBrowse,
+  usePatroPanchangaUrlBrowse,
+} from "@/hooks/use-patro-day-url-browse";
 
 /** Element pages — span (month) vs table (day) share location but mirror different keys. */
 export function useElementPageUrlBrowse(
   isSpan: boolean,
-  search: PatroMonthBrowseSearch & { date?: string } & LocationSearch,
+  search: PatroMonthBrowseSearch & LocationSearch,
   navigate: NavigateFn,
   location: PanchangaLocation,
   setLocation: (loc: PanchangaLocation) => void,
 ) {
-  const langEra = useCalendarEra();
-  const { initial } = patroMonthBrowseInit(search);
-  const monthBrowse = usePatroMonthBrowse(initial, { era: langEra });
-
-  const today = new Date();
-  const [date, setDate] = useState(() =>
-    search.date ? parseAdStr(search.date) : today,
+  const { lang } = useLocale();
+  const language = fallbackLanguage(lang);
+  const parsed = useMemo(
+    () => parseEraFromUrl(search as Record<string, unknown>, language),
+    [search, language],
+  );
+  const monthBrowse = usePatroMonthBrowse(
+    parsed.year != null || parsed.month != null
+      ? { year: parsed.year, month: parsed.month }
+      : undefined,
+    { era: parsed.era },
   );
 
+  const dayBrowse = usePatroDayUrlBrowse(search, navigate, location, setLocation, {
+    mirrorUrl: !isSpan,
+  });
+
   useEffect(() => {
-    const desired = isSpan
-      ? buildPatroMonthBrowseSearch(location, monthBrowse)
-      : buildPatroDaySearch(location, toAdStr(date), langEra);
+    if (!isSpan) return;
+    if (urlYearUnparseable(search, language) || urlMonthUnparseable(search, language)) {
+      return;
+    }
+    const desired = buildEraBrowseSearch(
+      location,
+      {
+        era: monthBrowse.era,
+        year: monthBrowse.year,
+        month: monthBrowse.month,
+      },
+      undefined,
+      parsed.language,
+    );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
@@ -247,30 +270,27 @@ export function useElementPageUrlBrowse(
     isSpan,
     location,
     monthBrowse.era,
-    monthBrowse.adYear,
-    monthBrowse.adMonth,
-    monthBrowse.bsYear,
-    monthBrowse.bsMonth,
-    date,
+    monthBrowse.year,
+    monthBrowse.month,
     search,
     navigate,
-    monthBrowse,
+    language,
+    parsed.language,
   ]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    applyPatroMonthSearchToBrowse(search, monthBrowse);
-    if (!isSpan && search.date && search.date !== toAdStr(date)) {
-      setDate(parseAdStr(search.date));
+    if (isSpan) {
+      applyEraBrowseFromSearch(search, monthBrowse, language);
     }
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, isSpan]);
+  }, [search, isSpan, language]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   return {
     monthBrowse,
-    dayBrowse: { date, setDate, dateAd: toAdStr(date) },
+    dayBrowse,
   } as const;
 }

@@ -6,6 +6,11 @@ import {
   type CalendarDay,
   type LocationParams,
 } from "@/lib/api";
+import {
+  BBS_URL_YEAR_MAX,
+  BBS_URL_YEAR_MIN,
+} from "@/lib/patro-year-axis";
+import type { Era } from "@/lib/era";
 import { adToBS, BS_SUPPORTED_END_YEAR, BS_SUPPORTED_START_YEAR, WEEKDAYS_SHORT_NE } from "@/lib/bs-calendar";
 import {
   buildAdCalendarGridDays,
@@ -18,6 +23,7 @@ import {
 } from "@/lib/local-calendar";
 import { getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-format";
 import { tithiIndexFromCalendarDay } from "@/lib/tithi-wheel-data";
+import { civilIsoDayOfMonth, parseCivilIsoToDate } from "@/lib/patro-day";
 import { cn } from "@/lib/utils";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
@@ -49,9 +55,13 @@ function moonPhaseTitle(phase: PakshaPhase | undefined, isEn: boolean): string |
 
 interface Props {
   date: Date;
+  /** URL-backed Vikram month (Home browse). When set, overrides `date` → BS mapping. */
+  browseYear?: number;
+  browseMonth?: number;
   locationParams?: LocationParams;
   onPickDay: (d: Date) => void;
-  calendarMode?: "bs" | "ad";
+  /** Month grid labels and API era for month fetch. */
+  gridEra?: "bs" | "bbs" | "ad";
 }
 
 function toAdIso(d: Date): string {
@@ -63,15 +73,25 @@ function toAdIso(d: Date): string {
 
 export function PanchangaMonthGrid({
   date,
+  browseYear,
+  browseMonth,
   locationParams,
   onPickDay,
-  calendarMode = "bs",
+  gridEra = "bs",
 }: Props) {
   const { lang, monoDigits, isEnglish } = useLocale();
   const calendarEra = useCalendarEra();
   const isEn = isEnglish;
-  const isAdCalendar = calendarMode === "ad" || calendarEra === "ad" || isEnglish;
-  const bs = adToBS(date);
+  const isAdCalendar = gridEra === "ad" || calendarEra === "ad" || isEnglish;
+  const monthFetchEra: Era = isAdCalendar ? "ad" : gridEra === "bbs" ? "bbs" : "bs";
+  const bsFromDate = adToBS(date);
+  const bs = useMemo(
+    () =>
+      browseYear != null && browseMonth != null
+        ? { year: browseYear, month: browseMonth }
+        : bsFromDate,
+    [browseYear, browseMonth, bsFromDate.year, bsFromDate.month],
+  );
   const adYear = date.getFullYear();
   const adMonth = date.getMonth() + 1;
   const selectedAd = toAdIso(date);
@@ -82,10 +102,16 @@ export function PanchangaMonthGrid({
   const prevBs = useMemo(() => shiftBsMonth(bs.year, bs.month, -1), [bs.year, bs.month]);
   const nextBs = useMemo(() => shiftBsMonth(bs.year, bs.month, 1), [bs.year, bs.month]);
 
-  const canFetchPrev =
-    prevBs.year >= BS_SUPPORTED_START_YEAR && prevBs.year <= BS_SUPPORTED_END_YEAR;
-  const canFetchNext =
-    nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
+  const canFetchPrev = isAdCalendar
+    ? true
+    : monthFetchEra === "bbs"
+      ? !(bs.month === 1 && bs.year <= BBS_URL_YEAR_MIN)
+      : prevBs.year >= BS_SUPPORTED_START_YEAR && prevBs.year <= BS_SUPPORTED_END_YEAR;
+  const canFetchNext = isAdCalendar
+    ? true
+    : monthFetchEra === "bbs"
+      ? !(bs.month === 12 && bs.year >= BBS_URL_YEAR_MAX)
+      : nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
 
   const requiredBsMonths = useMemo(() => {
     if (!isAdCalendar) {
@@ -115,11 +141,19 @@ export function PanchangaMonthGrid({
 
   const monthQueries = useQueries({
     queries: requiredBsMonths.map(({ year, month }) => ({
-      queryKey: panchangaKeys.month(year, month, locationParams, false, true),
+      queryKey: panchangaKeys.month(
+        year,
+        month,
+        locationParams,
+        false,
+        true,
+        monthFetchEra,
+      ),
       queryFn: () =>
         fetchMonthCalendar(year, month, locationParams, {
           full: false,
           excludeInternational: true,
+          era: monthFetchEra,
         }),
       staleTime: 1000 * 60 * 60,
       placeholderData: keepPreviousData,
@@ -157,11 +191,16 @@ export function PanchangaMonthGrid({
     if (isAdCalendar) {
       return buildAdCalendarGridDays(adYear, adMonth, enrichedDays);
     }
-    return buildCalendarGridDays(bs.year, bs.month, {
-      prev: prevMonthQ?.data?.calendar,
-      current: currentMonthQ?.data?.calendar,
-      next: nextMonthQ?.data?.calendar,
-    });
+    return buildCalendarGridDays(
+      bs.year,
+      bs.month,
+      {
+        prev: prevMonthQ?.data?.calendar,
+        current: currentMonthQ?.data?.calendar,
+        next: nextMonthQ?.data?.calendar,
+      },
+      monthFetchEra,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isAdCalendar,
@@ -170,6 +209,7 @@ export function PanchangaMonthGrid({
     enrichedDays,
     bs.year,
     bs.month,
+    monthFetchEra,
     currentMonthQ?.data?.calendar,
     prevMonthQ?.data?.calendar,
     nextMonthQ?.data?.calendar,
@@ -252,10 +292,10 @@ export function PanchangaMonthGrid({
 
       <div className="grid grid-cols-7 gap-px auto-rows-min">
           {days.map((day, i) => {
-            const ad = new Date(`${day.date_ad}T12:00:00`);
             const phase = getPakshaPhase(day);
             const hasSunTimes = Boolean(day.sunrise || day.sunset);
-            const primaryDay = isAdCalendar ? ad.getDate() : day.day;
+            const ad = parseCivilIsoToDate(day.date_ad);
+            const primaryDay = isAdCalendar ? civilIsoDayOfMonth(day.date_ad) : day.day;
             const secondary = getSecondaryCellDate(
               day,
               isAdCalendar ? "ad" : "bs",

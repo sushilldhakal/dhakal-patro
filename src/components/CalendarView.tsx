@@ -10,49 +10,66 @@ import {
   type CalendarDay,
   type Festival,
 } from "@/lib/api";
+import { buildPatroAdYearOptions } from "@/lib/patro-date-options";
 import {
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-  adToBS,
-  bsToAD,
-  getBSMonthLength,
-  getCurrentBs,
-  getSupportedAdBounds,
-} from "@/lib/bs-calendar";
+  BBS_URL_YEAR_MAX,
+  BBS_URL_YEAR_MIN,
+  BS_FESTIVAL_STACK_MIN_YEAR,
+  PATRO_EPHEMERIS_SIGNED_MAX,
+} from "@/lib/patro-year-axis";
+import { civilIsoFromDate, parseCivilIso, parseCivilIsoToDate } from "@/lib/patro-day";
+
+const PATRO_AD_YEAR_OPTIONS = buildPatroAdYearOptions();
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
-import { locationToSearch } from "@/lib/url-state";
+import { buildPatroDaySearch } from "@/lib/url-state";
+import { getLanguageForEra } from "@/lib/era";
+import {
+  patroDayFetchFromApiBsParts,
+  patroDayFetchFromApiDateAd,
+} from "@/lib/patro-day-url";
 import { getLocalStorageItem, setLocalStorageItem } from "@/lib/browser";
 import {
   applyHolidaysToDays,
   buildAdCalendarGridDays,
   buildCalendarGridDays,
   buildLocalAdMonthDays,
-  buildLocalMonthDays,
-  getBsMonthsOverlappingAdMonth,
   mergeEnrichedDays,
   shiftAdMonth,
   shiftBsMonth,
   uniqueBsMonths,
 } from "@/lib/local-calendar";
-import { PatroMonthYearNav, PATRO_AD_YEAR_OPTIONS, PATRO_BS_YEAR_OPTIONS } from "@/components/patro-date";
+import { PatroMonthYearNav } from "@/components/patro-date";
+import { patroEraShortLabel } from "@/components/patro-date/patro-era-short-label";
+import { isGregorianEraBrowse } from "@/components/patro-date/patro-month-labels";
 import type { PatroMonthBrowse } from "@/hooks/use-patro-month-browse";
 import { BsCalendarGrid } from "./BsCalendarGrid";
 import { VedicPatroLoader } from "./VedicPatroLoader";
 import { DayDetailModal } from "./DayDetailModal";
 import { useLocale } from "@/i18n/locale";
-import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { getStoredLanguage } from "@/lib/user-preferences";
 import { cn } from "@/lib/utils";
 import { patroMdRail, patroSegBtn } from "@/lib/patro-classes";
 import { ArrowLeftRight } from "lucide-react";
 
-const AD_BOUNDS = getSupportedAdBounds();
-
 const ASIDE_SIDEBAR_MQ = "(min-width: 1280px)";
 
+function anchorDateForBrowseMonth(
+  browseYear: number,
+  browseMonth: number,
+  days: CalendarDay[],
+  todayAd: string | undefined,
+  isGregorian: boolean,
+): Date {
+  if (todayAd && days.some((d) => d.date_ad === todayAd)) {
+    return parseCivilIsoToDate(todayAd);
+  }
+  const first = days.find((d) => d.day === 1) ?? days[0];
+  if (first?.date_ad) return parseCivilIsoToDate(first.date_ad);
+  if (isGregorian) return new Date(browseYear, browseMonth - 1, 1, 12, 0, 0, 0);
+  return todayAd ? parseCivilIsoToDate(todayAd) : new Date();
+}
 
 type HomePatroView = "calendar" | "panchanga";
 export type { HomePatroView };
@@ -61,31 +78,6 @@ export const HOME_PATRO_VIEW_KEY = "dhakalPatroHomePatroView";
 export function loadHomePatroView(): HomePatroView {
   const saved = getLocalStorageItem(HOME_PATRO_VIEW_KEY);
   return saved === "panchanga" ? "panchanga" : "calendar";
-}
-
-function anchorDateForBsMonth(
-  year: number,
-  month: number,
-  days: CalendarDay[],
-  todayAd: string | undefined,
-): Date {
-  if (todayAd) {
-    const bs = adToBS(new Date(`${todayAd}T12:00:00`));
-    if (bs.year === year && bs.month === month) {
-      return new Date(`${todayAd}T12:00:00`);
-    }
-  }
-  const first = days.find((d) => d.day === 1) ?? days[0];
-  if (first?.date_ad) return new Date(`${first.date_ad}T12:00:00`);
-  const ad = bsToAD(year, month, 1);
-  return new Date(ad.getFullYear(), ad.getMonth(), ad.getDate(), 12, 0, 0, 0);
-}
-
-function toAdStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
 }
 
 export type CalendarMonthContext = {
@@ -113,8 +105,8 @@ interface Props {
   location?: PanchangaLocation;
   onLocationChange?: (location: PanchangaLocation) => void;
   todayAd?: string;
-  /** When set (Home), month/year/era come from URL-backed browse state. */
-  monthBrowse?: PatroMonthBrowse;
+  /** URL-backed month/year/era (Home). */
+  monthBrowse: PatroMonthBrowse;
 }
 
 export function CalendarView({
@@ -134,31 +126,12 @@ export function CalendarView({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { lang } = useLocale();
-  const calendarEra = useCalendarEra();
-  const startsGregorian =
-    typeof window !== "undefined" && getStoredLanguage() === "en";
-  const init = useMemo(() => {
-    if (todayAd) {
-      const bs = adToBS(new Date(`${todayAd}T12:00:00`));
-      return { year: bs.year, month: bs.month };
-    }
-    return getCurrentBs();
-  }, [todayAd]);
-  const initAd = useMemo(() => {
-    const d = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
-    return { year: d.getFullYear(), month: d.getMonth() + 1 };
-  }, [todayAd]);
-  const [bsYearState, setBsYearState] = useState(init.year);
-  const [bsMonthState, setBsMonthState] = useState(init.month);
-  const [adYearState, setAdYearState] = useState(initAd.year);
-  const [adMonthState, setAdMonthState] = useState(initAd.month);
-  const year = monthBrowse?.bsYear ?? bsYearState;
-  const month = monthBrowse?.bsMonth ?? bsMonthState;
-  const adYear = monthBrowse?.adYear ?? adYearState;
-  const adMonth = monthBrowse?.adMonth ?? adMonthState;
-  const isAdCalendar = monthBrowse
-    ? monthBrowse.era === "ad"
-    : calendarEra === "ad" || lang === "en" || startsGregorian;
+  const era = monthBrowse.era;
+  const year = monthBrowse.year;
+  const month = monthBrowse.month;
+  const isGregorian = isGregorianEraBrowse(era);
+  const adYear = isGregorian ? year : 0;
+  const adMonth = isGregorian ? month : 0;
   const [selected, setSelected] = useState<CalendarDay | null>(null);
   const [internalPatroView, setInternalPatroView] = useState<HomePatroView>(() =>
     enablePatroToggle ? loadHomePatroView() : "calendar",
@@ -176,72 +149,45 @@ export function CalendarView({
     onDaySelect?.(null);
   };
 
-  const [syncedLang, setSyncedLang] = useState(lang);
-  if (!monthBrowse && lang !== syncedLang) {
-    const from = syncedLang;
-    setSyncedLang(lang);
-    // Carry the reader across the switch: if the month they were looking at
-    // holds today, land on today's month in the other calendar (so the round
-    // trip is stable); otherwise map through the middle of the month, which is
-    // the month the two calendars overlap on most.
-    const today = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
-    if (lang === "en") {
-      const bsToday = adToBS(today);
-      const anchor =
-        bsToday.year === bsYearState && bsToday.month === bsMonthState
-          ? today
-          : bsToAD(bsYearState, bsMonthState, Math.min(15, getBSMonthLength(bsYearState, bsMonthState)));
-      setAdYearState(anchor.getFullYear());
-      setAdMonthState(anchor.getMonth() + 1);
-    } else if (from === "en") {
-      const anchor =
-        today.getFullYear() === adYearState && today.getMonth() + 1 === adMonthState
-          ? today
-          : new Date(adYearState, adMonthState - 1, 15);
-      const bs = adToBS(anchor);
-      setBsYearState(bs.year);
-      setBsMonthState(bs.month);
-    }
-  }
+  const localDays = useMemo(() => {
+    if (isGregorian && !isPanchangaPatro) return buildLocalAdMonthDays(year, month);
+    return [];
+  }, [isGregorian, isPanchangaPatro, year, month]);
 
-  const localDays = useMemo(
-    () =>
-      isAdCalendar && !isPanchangaPatro
-        ? buildLocalAdMonthDays(adYear, adMonth)
-        : buildLocalMonthDays(year, month),
-    [isAdCalendar, isPanchangaPatro, adYear, adMonth, year, month],
-  );
   const prevBs = useMemo(() => shiftBsMonth(year, month, -1), [year, month]);
   const nextBs = useMemo(() => shiftBsMonth(year, month, 1), [year, month]);
 
   const canFetchPrev =
-    prevBs.year >= BS_SUPPORTED_START_YEAR && prevBs.year <= BS_SUPPORTED_END_YEAR;
+    era === "bbs"
+      ? !(month === 1 && year <= BBS_URL_YEAR_MIN)
+      : era === "bs"
+        ? !(month === 1 && year <= 1)
+        : true;
   const canFetchNext =
-    nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
+    era === "bbs"
+      ? !(month === 12 && year >= BBS_URL_YEAR_MAX)
+      : era === "bs"
+        ? !(month === 12 && year >= PATRO_EPHEMERIS_SIGNED_MAX)
+        : true;
 
-  const prevAd = useMemo(() => shiftAdMonth(adYear, adMonth, -1), [adYear, adMonth]);
-  const nextAd = useMemo(() => shiftAdMonth(adYear, adMonth, 1), [adYear, adMonth]);
+  const prevAd = useMemo(() => shiftAdMonth(year, month, -1), [year, month]);
+  const nextAd = useMemo(() => shiftAdMonth(year, month, 1), [year, month]);
 
   const requiredBsMonths = useMemo(() => {
     if (isPanchangaPatro) return [{ year, month }];
-    if (!isAdCalendar) {
-      const months = [{ year, month }];
-      if (canFetchPrev) months.push(prevBs);
-      if (canFetchNext) months.push(nextBs);
+    if (isGregorian) {
+      const months = [{ year, month }, prevAd, nextAd];
       return uniqueBsMonths(months);
     }
-    return uniqueBsMonths([
-      ...getBsMonthsOverlappingAdMonth(adYear, adMonth),
-      ...getBsMonthsOverlappingAdMonth(prevAd.year, prevAd.month),
-      ...getBsMonthsOverlappingAdMonth(nextAd.year, nextAd.month),
-    ]);
+    const months = [{ year, month }];
+    if (canFetchPrev) months.push(prevBs);
+    if (canFetchNext) months.push(nextBs);
+    return uniqueBsMonths(months);
   }, [
     isPanchangaPatro,
-    isAdCalendar,
+    isGregorian,
     year,
     month,
-    adYear,
-    adMonth,
     prevBs,
     nextBs,
     prevAd,
@@ -250,12 +196,25 @@ export function CalendarView({
     canFetchNext,
   ]);
 
+  const monthFetchEra = era;
+
   const monthQueries = useQueries({
     queries: requiredBsMonths.map(({ year: bsYear, month: bsMonth }) => ({
-      queryKey: panchangaKeys.month(bsYear, bsMonth, location?.params, false),
-      queryFn: () => fetchMonthCalendar(bsYear, bsMonth, location?.params, { full: false }),
+      queryKey: panchangaKeys.month(
+        bsYear,
+        bsMonth,
+        location?.params,
+        false,
+        false,
+        monthFetchEra,
+      ),
+      queryFn: () =>
+        fetchMonthCalendar(bsYear, bsMonth, location?.params, {
+          full: false,
+          era: monthFetchEra,
+        }),
       staleTime: 1000 * 60 * 60,
-      enabled: !isPanchangaPatro,
+      enabled: !isPanchangaPatro && bsYear !== 0,
     })),
   });
 
@@ -277,7 +236,12 @@ export function CalendarView({
 
   const monthFetchError = monthQueries.some((q) => q.isError);
 
-  const prevMonthQ = !isAdCalendar
+  const currentMonthQ = monthQueries.find(
+    (_q, i) =>
+      requiredBsMonths[i]?.year === year && requiredBsMonths[i]?.month === month,
+  );
+
+  const prevMonthQ = !isGregorian
     ? monthQueries.find(
         (_q, i) =>
           requiredBsMonths[i]?.year === prevBs.year &&
@@ -285,7 +249,7 @@ export function CalendarView({
       )
     : undefined;
 
-  const nextMonthQ = !isAdCalendar
+  const nextMonthQ = !isGregorian
     ? monthQueries.find(
         (_q, i) =>
           requiredBsMonths[i]?.year === nextBs.year &&
@@ -294,7 +258,10 @@ export function CalendarView({
     : undefined;
 
   const festivalYears = useMemo(
-    () => [...new Set(requiredBsMonths.map((m) => m.year))].sort((a, b) => a - b),
+    () =>
+      [...new Set(requiredBsMonths.map((m) => m.year))]
+        .filter((y) => y >= BS_FESTIVAL_STACK_MIN_YEAR)
+        .sort((a, b) => a - b),
     [requiredBsMonths],
   );
 
@@ -323,42 +290,55 @@ export function CalendarView({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- festivalQueries ref is unstable; festivalDataTick tracks data
   }, [festivalDataTick]);
 
-  const festivalsLoading = festivalQueries.some((q) => q.isLoading);
+  const currentMonthCalendar = useMemo(() => {
+    const idx = requiredBsMonths.findIndex(
+      (m) => m.year === year && m.month === month,
+    );
+    if (idx < 0) return [];
+    return monthQueries[idx]?.data?.calendar ?? [];
+    // monthQueriesTick tracks freshness without unstable query array refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthQueriesTick, year, month, requiredBsMonths]);
 
   const monthDays = useMemo(() => {
     let result = localDays;
-    if (enrichedCalendarDays.length) {
-      result = mergeEnrichedDays(result, enrichedCalendarDays);
+    if (result.length && currentMonthCalendar.length) {
+      result = mergeEnrichedDays(result, currentMonthCalendar);
+    } else if (!result.length) {
+      result = currentMonthCalendar;
     }
     if (yearFestivals.length) {
       result = applyHolidaysToDays(result, yearFestivals, lang);
     }
     return result;
-  }, [localDays, enrichedCalendarDays, yearFestivals, lang]);
+  }, [localDays, currentMonthCalendar, yearFestivals, lang]);
 
   const gridDays = useMemo(() => {
     if (isPanchangaPatro) return monthDays;
-    if (isAdCalendar) {
-      let grid = buildAdCalendarGridDays(adYear, adMonth, enrichedCalendarDays);
+    if (isGregorian) {
+      let grid = buildAdCalendarGridDays(year, month, enrichedCalendarDays);
       if (yearFestivals.length) {
         grid = applyHolidaysToDays(grid, yearFestivals, lang);
       }
       return grid;
     }
-    let grid = buildCalendarGridDays(year, month, {
-      prev: prevMonthQ?.data?.calendar,
-      current: monthDays,
-      next: nextMonthQ?.data?.calendar,
-    });
+    let grid = buildCalendarGridDays(
+      year,
+      month,
+      {
+        prev: prevMonthQ?.data?.calendar,
+        current: monthDays,
+        next: nextMonthQ?.data?.calendar,
+      },
+      era,
+    );
     if (yearFestivals.length) {
       grid = applyHolidaysToDays(grid, yearFestivals, lang);
     }
     return grid;
   }, [
     isPanchangaPatro,
-    isAdCalendar,
-    adYear,
-    adMonth,
+    isGregorian,
     year,
     month,
     monthDays,
@@ -373,25 +353,24 @@ export function CalendarView({
     if (!onMonthContextChange) return;
     const first = monthDays[0]?.date_ad ?? "";
     const last = monthDays.at(-1)?.date_ad ?? "";
-    const contextYear = isAdCalendar
-      ? adToBS(new Date(adYear, adMonth - 1, 1)).year
-      : year;
-    const contextMonth = isAdCalendar
-      ? adToBS(new Date(adYear, adMonth - 1, 1)).month
-      : month;
-    const key = `${contextYear}|${contextMonth}|${adYear}|${adMonth}|${isAdCalendar}|${monthDays.length}|${first}|${last}|${festivalDataTick}|${monthQueriesTick}`;
+    const contextAd = first ? parseCivilIso(first) : null;
+    const contextYear = isGregorian ? year : year;
+    const contextMonth = isGregorian ? month : month;
+    const ctxAdYear = isGregorian ? year : (contextAd?.year ?? 0);
+    const ctxAdMonth = isGregorian ? month : (contextAd?.month ?? 0);
+    const key = `${contextYear}|${contextMonth}|${ctxAdYear}|${ctxAdMonth}|${isGregorian}|${monthDays.length}|${first}|${last}|${festivalDataTick}|${monthQueriesTick}`;
     if (lastMonthContextKey.current === key) return;
     lastMonthContextKey.current = key;
     onMonthContextChange({
       year: contextYear,
       month: contextMonth,
       days: monthDays,
-      adYear,
-      adMonth,
-      isAdCalendar,
+      adYear: ctxAdYear,
+      adMonth: ctxAdMonth,
+      isAdCalendar: isGregorian,
     });
   }, [
-    isAdCalendar,
+    isGregorian,
     adYear,
     adMonth,
     year,
@@ -412,29 +391,26 @@ export function CalendarView({
     [yearFestivals],
   );
 
-  const isEnriching =
-    (monthQueries.some((q) => q.isFetching && !q.data) || festivalsLoading) &&
-    !isPanchangaPatro;
+  const monthEnriching = localDays.length
+    ? Boolean(currentMonthQ?.isFetching && !currentMonthQ?.data)
+    : monthQueries.some((q) => q.isFetching && !q.data);
 
-  const panchangaGridDate = useMemo(() => {
-    if (isAdCalendar) {
-      if (todayAd) {
-        const d = new Date(`${todayAd}T12:00:00`);
-        if (d.getFullYear() === adYear && d.getMonth() + 1 === adMonth) return d;
-      }
-      return new Date(adYear, adMonth - 1, 1, 12, 0, 0, 0);
-    }
-    return anchorDateForBsMonth(year, month, monthDays, todayAd);
-  }, [isAdCalendar, adYear, adMonth, year, month, monthDays, todayAd]);
+  const isEnriching = monthEnriching && !isPanchangaPatro;
+
+  const panchangaGridDate = useMemo(
+    () => anchorDateForBrowseMonth(year, month, monthDays, todayAd, isGregorian),
+    [year, month, monthDays, todayAd, isGregorian],
+  );
 
   function selectDay(day: CalendarDay) {
     if (isPanchangaPatro && location) {
+      const display = { era, language: getLanguageForEra(era) };
+      const state = day.date_ad
+        ? patroDayFetchFromApiDateAd(day.date_ad, display)
+        : patroDayFetchFromApiBsParts({ year, month, day: day.day }, display);
       navigate({
         to: "/panchanga",
-        search: {
-          ...locationToSearch(location),
-          date: day.date_ad,
-        },
+        search: buildPatroDaySearch(location, state),
       });
       return;
     }
@@ -444,77 +420,30 @@ export function CalendarView({
 
   function goToPanchangaDay(d: Date) {
     if (!location) return;
+    const display = { era, language: getLanguageForEra(era) };
     navigate({
       to: "/panchanga",
-      search: {
-        ...locationToSearch(location),
-        date: toAdStr(d),
-      },
+      search: buildPatroDaySearch(
+        location,
+        patroDayFetchFromApiDateAd(civilIsoFromDate(d), display),
+      ),
     });
   }
 
   function prev() {
     setSelected(null);
     onDaySelect?.(null);
-    if (monthBrowse) {
-      if (isAdCalendar) {
-        if (adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth) return;
-      } else if (month === 1 && year <= BS_SUPPORTED_START_YEAR) {
-        return;
-      }
-      monthBrowse.stepMonth(-1);
-      return;
-    }
-    if (isAdCalendar) {
-      if (adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth) return;
-      const p = shiftAdMonth(adYear, adMonth, -1);
-      setAdYearState(p.year);
-      setAdMonthState(p.month);
-      return;
-    }
-    if (month === 1 && year <= BS_SUPPORTED_START_YEAR) return;
-    if (month === 1) {
-      setBsYearState((y) => y - 1);
-      setBsMonthState(12);
-    } else setBsMonthState((m) => m - 1);
+    monthBrowse.stepMonth(-1);
   }
 
   function nextMonth() {
     setSelected(null);
     onDaySelect?.(null);
-    if (monthBrowse) {
-      if (isAdCalendar) {
-        if (adYear === AD_BOUNDS.maxYear && adMonth === AD_BOUNDS.maxMonth) return;
-      } else if (month === 12 && year >= BS_SUPPORTED_END_YEAR) {
-        return;
-      }
-      monthBrowse.stepMonth(1);
-      return;
-    }
-    if (isAdCalendar) {
-      if (adYear === AD_BOUNDS.maxYear && adMonth === AD_BOUNDS.maxMonth) return;
-      const n = shiftAdMonth(adYear, adMonth, 1);
-      setAdYearState(n.year);
-      setAdMonthState(n.month);
-      return;
-    }
-    if (month === 12 && year >= BS_SUPPORTED_END_YEAR) return;
-    if (month === 12) {
-      setBsYearState((y) => y + 1);
-      setBsMonthState(1);
-    } else setBsMonthState((m) => m + 1);
+    monthBrowse.stepMonth(1);
   }
 
   function goToday() {
-    if (monthBrowse) {
-      monthBrowse.goToday(todayAd);
-    } else if (isAdCalendar) {
-      setAdYearState(initAd.year);
-      setAdMonthState(initAd.month);
-    } else {
-      setBsYearState(init.year);
-      setBsMonthState(init.month);
-    }
+    monthBrowse.goToday(todayAd);
     setSelected(null);
     onDaySelect?.(null);
   }
@@ -522,9 +451,11 @@ export function CalendarView({
   const calendarBlock = isPanchangaPatro ? (
     <PanchangaMonthGrid
       date={panchangaGridDate}
+      browseYear={year}
+      browseMonth={month}
       locationParams={location?.params}
       onPickDay={goToPanchangaDay}
-      calendarMode={isAdCalendar ? "ad" : "bs"}
+      gridEra={isGregorian ? "ad" : era === "bbs" ? "bbs" : "bs"}
     />
   ) : (
     <>
@@ -545,34 +476,22 @@ export function CalendarView({
           </div>
         )}
         <BsCalendarGrid
-          key={`${lang}-${isAdCalendar ? `${adYear}-${adMonth}` : `${year}-${month}`}`}
+          key={`${lang}-${isGregorian ? `${adYear}-${adMonth}` : `${year}-${month}`}`}
           days={gridDays}
           publicHolidayDates={publicHolidayDates}
           selectedAdDate={selected?.date_ad}
           onSelectDay={selectDay}
           isEnriching={isEnriching}
           todayAd={todayAd}
-          primaryDate={isAdCalendar ? "ad" : "bs"}
+          primaryDate={isGregorian ? "ad" : "bs"}
         />
       </div>
 
       {!asideInSidebar && !aside ? (
         <DayDetailModal
           day={selected}
-          bsYear={
-            selected
-              ? adToBS(new Date(`${selected.date_ad}T12:00:00`)).year
-              : isAdCalendar
-                ? adToBS(new Date(adYear, adMonth - 1, 1)).year
-                : year
-          }
-          bsMonth={
-            selected
-              ? adToBS(new Date(`${selected.date_ad}T12:00:00`)).month
-              : isAdCalendar
-                ? adToBS(new Date(adYear, adMonth - 1, 1)).month
-                : month
-          }
+          bsYear={year}
+          bsMonth={month}
           publicHolidayDates={publicHolidayDates}
           location={location}
           onClose={() => {
@@ -585,7 +504,11 @@ export function CalendarView({
   );
 
   const nextPatroView: HomePatroView = patroView === "calendar" ? "panchanga" : "calendar";
-  const nextPatroLabel = t(nextPatroView === "panchanga" ? "calendar.mode_panchanga" : "calendar.mode_bs");
+  const calendarTabLabel = isGregorian
+    ? t("calendar.mode_ad")
+    : patroEraShortLabel(era, t);
+  const nextPatroLabel =
+    nextPatroView === "panchanga" ? t("calendar.mode_panchanga") : calendarTabLabel;
 
   const patroModeMobileBtn = enablePatroToggle ? (
     <button
@@ -612,7 +535,7 @@ export function CalendarView({
         className={patroSegBtn(patroView === "calendar")}
         onClick={() => switchPatroView("calendar")}
       >
-        {t("calendar.mode_bs")}
+        {calendarTabLabel}
       </button>
       <button
         type="button"
@@ -652,52 +575,45 @@ export function CalendarView({
   function changeMonth(nextMonthValue: number) {
     setSelected(null);
     onDaySelect?.(null);
-    if (monthBrowse) {
-      monthBrowse.setBrowseMonth(monthBrowse.browseYear, nextMonthValue);
-      return;
-    }
-    if (isAdCalendar) {
-      setAdMonthState(nextMonthValue);
-    } else {
-      setBsMonthState(nextMonthValue);
-    }
+    monthBrowse.setYearMonth(monthBrowse.year, nextMonthValue);
   }
 
   function changeYear(nextYearValue: number) {
     setSelected(null);
     onDaySelect?.(null);
-    if (monthBrowse) {
-      monthBrowse.setBrowseMonth(nextYearValue, monthBrowse.browseMonth);
-      return;
-    }
-    if (isAdCalendar) {
-      setAdYearState(nextYearValue);
-    } else {
-      setBsYearState(nextYearValue);
-    }
+    monthBrowse.setYearMonth(nextYearValue, monthBrowse.month);
   }
 
-  const headerYear = isAdCalendar ? adYear : year;
-  const headerMonth = isAdCalendar ? adMonth : month;
-  const headerYearOptions = isAdCalendar ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS;
-  const headerPrevDisabled = isAdCalendar
-    ? adYear === AD_BOUNDS.minYear && adMonth === AD_BOUNDS.minMonth
-    : month === 1 && year <= BS_SUPPORTED_START_YEAR;
-  const headerNextDisabled = isAdCalendar
-    ? adYear === AD_BOUNDS.maxYear && adMonth === AD_BOUNDS.maxMonth
-    : month === 12 && year >= BS_SUPPORTED_END_YEAR;
+  const headerPrevDisabled =
+    monthBrowse.month > 1
+      ? false
+      : isGregorianEraBrowse(era)
+        ? year <= PATRO_AD_YEAR_OPTIONS[0]!
+        : era === "bbs"
+          ? year <= BBS_URL_YEAR_MIN
+          : year <= 1;
+
+  const headerNextDisabled =
+    monthBrowse.month < 12
+      ? false
+      : isGregorianEraBrowse(era)
+        ? year >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]!
+        : era === "bbs"
+          ? year >= BBS_URL_YEAR_MAX
+          : year >= PATRO_EPHEMERIS_SIGNED_MAX;
+
 
   const monthHeader = showMonthHeader ? (
     <div className={cn(patroMdRail, "mb-4 mt-2 max-md:pt-3 md:pt-0")}>
       <PatroMonthYearNav
-        calendarMode={isAdCalendar ? "ad" : "bs"}
-        year={headerYear}
-        month={headerMonth}
-        yearOptions={headerYearOptions}
+        era={era}
+        year={year}
+        month={month}
         todayAd={todayAd}
         onToday={goToday}
         onMonthChange={changeMonth}
         onYearChange={changeYear}
+        onEraChange={monthBrowse.setEra}
         onPrev={prev}
         onNext={nextMonth}
         prevDisabled={headerPrevDisabled}

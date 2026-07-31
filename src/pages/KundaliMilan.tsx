@@ -11,7 +11,7 @@ import {
 import { KundaliMilanResult } from "@/components/kundali/KundaliMilanResult";
 import { PageShell } from "@/components/PageShell";
 import { AYANAMSHA_MODES, getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
-import { buildAtTimeDatetime } from "@/lib/ephemeris-adapters";
+import { instantFromCivilIso } from "@/lib/instant-query";
 import { profileChartParams } from "@/lib/kundali/profile-chart";
 import { useLocale } from "@/i18n/locale";
 import {
@@ -77,7 +77,7 @@ function milanQueryFromProfile(profile: Profile): MilanPersonQuery | null {
   const chart = profileChartParams(profile);
   if (!chart) return null;
   return {
-    datetime: buildAtTimeDatetime(chart.adDate, chart.clock),
+    moment: instantFromCivilIso(chart.adDate, chart.clock),
     lat: chart.location.params.lat,
     lon: chart.location.params.lon,
     timezone: chart.location.params.timezone,

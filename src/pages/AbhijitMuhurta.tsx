@@ -5,28 +5,20 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, Sparkles, Sun } from "lucide-react";
 import {
   fetchMonthCalendar,
-  panchangaKeys,
   type CalendarDay,
 } from "@/lib/api";
 import { PageShell } from "@/components/PageShell";
 import { usePatroMonthUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { PatroMonthYearNav, PATRO_AD_YEAR_OPTIONS, PATRO_BS_YEAR_OPTIONS } from "@/components/patro-date";
+import { PatroMonthYearNav } from "@/components/patro-date";
 import {
   resolveLocationTimezone,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { useRouteLoading } from "@/lib/route-loading";
-import {
-  BS_MONTHS_NE,
-  BS_MONTH_NAMES,
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-  getBSMonthLength,
-} from "@/lib/bs-calendar";
+import { civilIsoDayOfMonth } from "@/lib/patro-day";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   computeAbhijitFromSunTimes,
-  formatBsMonthDayPatro,
   formatClockNepali,
 } from "@/lib/panchanga-format";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
@@ -47,31 +39,15 @@ type AbhijitRow = {
   abhijit: NonNullable<ReturnType<typeof computeAbhijitFromSunTimes>>;
 };
 
-function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString(lang === "en" ? "en-US" : "ne-NP", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function buildRows(
-  days: CalendarDay[],
-  bsYear: number,
-  bsMonth: number,
-): AbhijitRow[] {
-  const monthLen = getBSMonthLength(bsYear, bsMonth);
-  const byDay = new Map(days.map((d) => [d.day, d]));
-
-  return Array.from({ length: monthLen }, (_, i) => {
-    const bsDay = i + 1;
-    const day = byDay.get(bsDay);
-    if (!day?.sunrise || !day?.sunset) return null;
-    const abhijit = computeAbhijitFromSunTimes(day.sunrise, day.sunset);
-    if (!abhijit) return null;
-    return { day, abhijit };
-  }).filter((row): row is AbhijitRow => row != null);
+function buildRows(days: CalendarDay[]): AbhijitRow[] {
+  return days
+    .map((day) => {
+      if (!day.sunrise || !day.sunset) return null;
+      const abhijit = computeAbhijitFromSunTimes(day.sunrise, day.sunset);
+      if (!abhijit) return null;
+      return { day, abhijit };
+    })
+    .filter((row): row is AbhijitRow => row != null);
 }
 
 function AbhijitDayCard({
@@ -84,7 +60,7 @@ function AbhijitDayCard({
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
   const { day, abhijit } = row;
-  const adDay = new Date(`${day.date_ad}T12:00:00`).getDate();
+  const adDay = civilIsoDayOfMonth(day.date_ad);
   const sunrise = formatClockNepali(day.sunrise) ?? day.sunrise ?? "—";
   const sunset = formatClockNepali(day.sunset) ?? day.sunset ?? "—";
   const weekday = bilingualText(lang, day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
@@ -152,9 +128,6 @@ function AbhijitMonthGrid({
   );
 }
 
-const BS_MIN_INDEX = BS_SUPPORTED_START_YEAR * 12;
-const BS_MAX_INDEX = BS_SUPPORTED_END_YEAR * 12 + 11;
-
 export function AbhijitMuhurta() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
@@ -169,16 +142,17 @@ export function AbhijitMuhurta() {
   );
 
   const monthQ = useQuery({
-    queryKey: panchangaKeys.month(
-      monthBrowse.browseYear,
-      monthBrowse.browseMonth,
-      location.params,
-      false,
-      false,
+    queryKey: [
+      "panchanga",
+      "month",
       monthBrowse.era,
-    ),
+      monthBrowse.year,
+      monthBrowse.month,
+      location.params,
+      "lite",
+    ] as const,
     queryFn: () =>
-      fetchMonthCalendar(monthBrowse.browseYear, monthBrowse.browseMonth, location.params, {
+      fetchMonthCalendar(monthBrowse.year, monthBrowse.month, location.params, {
         full: false,
         era: monthBrowse.era,
       }),
@@ -186,8 +160,8 @@ export function AbhijitMuhurta() {
   });
 
   const rows = useMemo(
-    () => buildRows(monthQ.data?.calendar ?? [], monthBrowse.bsYear, monthBrowse.bsMonth),
-    [monthQ.data?.calendar, monthBrowse.bsYear, monthBrowse.bsMonth],
+    () => buildRows(monthQ.data?.calendar ?? []),
+    [monthQ.data?.calendar],
   );
 
   const todayRow = useMemo(
@@ -195,9 +169,10 @@ export function AbhijitMuhurta() {
     [rows, todayAd],
   );
 
-  const monthLabel = bilingualText(lang, 
-    BS_MONTHS_NE[monthBrowse.bsMonth - 1],
-    BS_MONTH_NAMES[monthBrowse.bsMonth - 1],
+  const monthLabel = bilingualText(
+    lang,
+    monthQ.data?.month_name_ne ?? monthQ.data?.month_name ?? "",
+    monthQ.data?.month_name ?? monthQ.data?.month_name_ne ?? "",
   );
 
   useRouteLoading(monthQ.isLoading);
@@ -209,16 +184,6 @@ export function AbhijitMuhurta() {
   function stepMonth(delta: number) {
     monthBrowse.stepMonth(delta);
   }
-
-  const atMonthStart =
-    monthBrowse.era === "ad"
-      ? monthBrowse.adYear <= PATRO_AD_YEAR_OPTIONS[0]! && monthBrowse.adMonth <= 1
-      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) <= BS_MIN_INDEX;
-  const atMonthEnd =
-    monthBrowse.era === "ad"
-      ? monthBrowse.adYear >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]! &&
-        monthBrowse.adMonth >= 12
-      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) >= BS_MAX_INDEX;
 
   return (
     <PageShell className="pb-16 space-y-6">
@@ -240,18 +205,16 @@ export function AbhijitMuhurta() {
       </div>
 
       <PatroMonthYearNav
-        calendarMode={monthBrowse.era}
-        year={monthBrowse.browseYear}
-        month={monthBrowse.browseMonth}
-        yearOptions={monthBrowse.era === "ad" ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS}
-        onMonthChange={(m) => monthBrowse.setBrowseMonth(monthBrowse.browseYear, m)}
-        onYearChange={(y) => monthBrowse.setBrowseMonth(y, monthBrowse.browseMonth)}
+        era={monthBrowse.era}
+        year={monthBrowse.year}
+        month={monthBrowse.month}
+        onMonthChange={(m) => monthBrowse.setYearMonth(monthBrowse.year, m)}
+        onYearChange={(y) => monthBrowse.setYearMonth(y, monthBrowse.month)}
+        onEraChange={monthBrowse.setEra}
         onPrev={() => stepMonth(-1)}
         onNext={() => stepMonth(1)}
         onToday={goToToday}
         todayAd={todayAd}
-        prevDisabled={atMonthStart}
-        nextDisabled={atMonthEnd}
         location={location}
         onLocationChange={setLocation}
       />
@@ -265,12 +228,15 @@ export function AbhijitMuhurta() {
                 {t("abhijit.today_hero")}
               </p>
               <p className="text-sm mb-2">
-                {formatBsMonthDayPatro(monthBrowse.bsYear, monthBrowse.bsMonth, todayRow.day.day)}
+                {digits(todayRow.day.day)}
                 {" · "}
-                {bilingualText(lang, 
+                {bilingualText(
+                  lang,
                   todayRow.day.weekday_ne ?? todayRow.day.weekday,
                   todayRow.day.weekday_en ?? todayRow.day.weekday,
                 )}
+                {" · "}
+                <span className="font-num tabular-nums">{todayRow.day.date_ad}</span>
               </p>
               <p className="mono text-[clamp(1.5rem,5vw,2rem)] font-bold text-foreground leading-tight">
                 {todayRow.abhijit.rangeDisplay}
@@ -294,7 +260,7 @@ export function AbhijitMuhurta() {
                   })}
                 </span>
               </div>
-              <p className="mono text-xs">{fmtAdShort(todayRow.day.date_ad, lang)}</p>
+              <p className="mono text-xs font-num tabular-nums">{todayRow.day.date_ad}</p>
             </div>
           </div>
         </section>
@@ -309,7 +275,7 @@ export function AbhijitMuhurta() {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold text-foreground m-0">
-          {t("abhijit.month_heading")} — {monthLabel} {digits(monthBrowse.bsYear)}
+          {t("abhijit.month_heading")} — {monthLabel} {digits(monthBrowse.year)}
         </h2>
         {!monthQ.isLoading && rows.length > 0 ? (
           <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-sm font-semibold">

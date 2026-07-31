@@ -16,6 +16,10 @@ import { grahaName } from "@/lib/graha-i18n";
 import { patroCard } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import { searchToLocation } from "@/lib/url-state";
+import { formatBsIsoDateNepali } from "@/lib/panchanga-format";
+import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
+import { formatLocaleDigits } from "@/i18n/digits";
+import { parsePatroDayDateKey } from "@/lib/patro-day";
 import {
   fetchGrahaAstaYear,
   grahaDetailKeys,
@@ -27,6 +31,28 @@ const routeApi = getRouteApi("/panchanga-shell/panchanga/graha-asta");
 
 const GRAHA_ORDER = ["mercury", "venus", "moon", "mars", "jupiter", "saturn"];
 
+function formatEraDayLabel(eraDay: string, lang: string): string | undefined {
+  try {
+    const { month, day } = parsePatroDayDateKey(eraDay);
+    const isEn = lang.startsWith("en");
+    const monthName = isEn ? BS_MONTH_NAMES[month - 1] : BS_MONTHS_NE[month - 1];
+    return `${monthName} ${formatLocaleDigits(day, lang)}`;
+  } catch {
+    return formatBsIsoDateNepali(eraDay, { lang, includeYear: false });
+  }
+}
+
+function renderedStampDate(stamp: AstaStamp | null, lang: string): string {
+  if (!stamp) return "";
+  const eraDay = stamp.date?.trim();
+  if (eraDay) {
+    return formatEraDayLabel(eraDay, lang) ?? eraDay;
+  }
+  const isEn = lang.startsWith("en");
+  if (isEn) return stamp.date_ad ?? stamp.date_bs ?? "";
+  return stamp.date_bs ?? stamp.date_ad ?? "";
+}
+
 function StampLine({
   label,
   stamp,
@@ -36,8 +62,9 @@ function StampLine({
   stamp: AstaStamp | null;
   tone: "asta" | "udaya";
 }) {
-  const { digits } = useLocale();
+  const { digits, lang } = useLocale();
   const { t } = useTranslation();
+  const dateLabel = renderedStampDate(stamp, lang);
   return (
     <div className="flex items-start justify-between gap-2">
       <span className={cn("font-semibold", tone === "asta" ? "text-danger" : "text-success")}>
@@ -45,15 +72,10 @@ function StampLine({
       </span>
       <span className="text-right font-num tabular-nums text-foreground font-semibold">
         {stamp ? (
-          <>
-            <span className="block">
-              {stamp.date_bs ? digits(stamp.date_bs) : digits(stamp.date_ad)}
-              <span className="text-muted-foreground"> · {digits(stamp.time_short)}</span>
-            </span>
-            {stamp.date_bs ? (
-              <span className="block text-xs text-muted-foreground">{stamp.date_ad}</span>
-            ) : null}
-          </>
+          <span className="block">
+            {digits(dateLabel)}
+            <span className="text-muted-foreground"> · {digits(stamp.time_short)}</span>
+          </span>
         ) : (
           <span className="text-muted-foreground">{t("graha_pages.asta.outside_year")}</span>
         )}
@@ -94,8 +116,8 @@ export function GrahaAsta() {
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
 
   const query = useQuery({
-    queryKey: grahaDetailKeys.asta(yearBrowse.browseYear, location.params, yearBrowse.era),
-    queryFn: () => fetchGrahaAstaYear(yearBrowse.browseYear, location.params, yearBrowse.era),
+    queryKey: grahaDetailKeys.asta(yearBrowse.year, location.params, yearBrowse.era),
+    queryFn: () => fetchGrahaAstaYear(yearBrowse.year, location.params, yearBrowse.era),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -119,11 +141,11 @@ export function GrahaAsta() {
 
       <div className="space-y-3">
         <PatroYearNav
-          calendarMode={yearBrowse.era}
-          year={yearBrowse.browseYear}
-          onYearChange={yearBrowse.setBrowseYear}
-          currentYear={yearBrowse.currentBrowseYear}
-          yearOptions={yearBrowse.yearOptions}
+          era={yearBrowse.era}
+          year={yearBrowse.year}
+          onYearChange={yearBrowse.setYear}
+          onEraChange={yearBrowse.setEra}
+          gregorianRange={query.data?.gregorian_range}
           location={location}
           onLocationChange={setLocation}
         />

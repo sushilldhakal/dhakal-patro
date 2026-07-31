@@ -16,6 +16,7 @@ import {
   type ReportMeta,
   type ReportSection,
 } from "@/lib/api";
+import type { InstantQuery } from "@/lib/instant-query";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { cn } from "@/lib/utils";
@@ -246,12 +247,12 @@ function MetaStrip({ meta }: { meta: ReportMeta }) {
 }
 
 export function KundaliReport({
-  datetime,
+  moment,
   location,
   ayanamsha,
   disabled,
 }: {
-  datetime: string;
+  moment: InstantQuery;
   location?: LocationParams;
   ayanamsha?: string;
   disabled?: boolean;
@@ -296,7 +297,7 @@ export function KundaliReport({
       setFromCache(false);
 
       streamKundaliReport(
-        datetime,
+        moment,
         location,
         { ayanamsha, lang, force },
         (record) => {
@@ -320,14 +321,14 @@ export function KundaliReport({
           setStatus("error");
         });
     },
-    [datetime, location, ayanamsha, lang, t]
+    [moment, location, ayanamsha, lang, t]
   );
 
   useEffect(() => {
     if (disabled) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     generate(false);
-  }, [datetime, location, ayanamsha, lang, disabled, generate]);
+  }, [moment, location, ayanamsha, lang, disabled, generate]);
 
   const streaming = status === "streaming";
 

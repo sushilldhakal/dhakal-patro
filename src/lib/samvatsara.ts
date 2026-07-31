@@ -1,3 +1,7 @@
+import type { Era } from "@/lib/era";
+import { signedFromBbs } from "@/lib/patro-year-axis";
+import SAMVATSARA_TABLE from "./samvatsara-table.json";
+
 /** Nepal Bikram Sambat samvatsara (60-year Jovian cycle) — mirrors backend true-Jupiter rules. */
 
 export interface SamvatsaraInfo {
@@ -71,42 +75,23 @@ export const SAMVATSARA_ENTRIES: readonly SamvatsaraInfo[] = [
   { key: "akshaya", name_en: "Akshaya", name_ne: "अक्षय", cycle: 60, deity: "shiva" },
 ] as const;
 
-/** Precomputed indices for BS 1700–2200 (true Jupiter + Nepal kshaya rules;
- * below ~BS 1855 the tuned corrections give way to plain Jupiter-rashi
- * progression). Generated from the backend samvatsara engine — keep in sync. */
-const SAMVATSARA_INDEX_BASE_YEAR = 1700;
-const SAMVATSARA_INDICES = [
-  5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
-  29, 30, 31, 32, 33, 34, 35, 36, 38, 39, 41, 42, 43, 45, 46, 47, 48, 49, 50, 52, 53, 54, 55, 56,
-  57, 58, 59, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-  22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-  46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 0, 1, 2, 3, 4, 5, 7, 9, 10, 11,
-  13, 14, 15, 16, 17, 18, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39,
-  40, 41, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 0, 1, 2, 3, 4,
-  5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
-  29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 49, 50, 52, 53, 54, 55,
-  56, 57, 58, 59, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-  22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-  46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 0, 1, 2, 3, 4, 5, 6, 7, 9, 10,
-  11, 12, 13, 14, 15, 17, 18, 20, 21, 22, 24, 25, 26, 27, 28, 29, 31, 32, 33, 34, 35, 36, 37, 38,
-  39, 40, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 0, 1, 2, 3,
-  4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
-  28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 45, 46, 48, 49, 50, 52, 52, 53,
-  54, 55, 56, 58, 59, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-  20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-  44, 45, 46, 47, 48, 49, 50, 51, 52, 52, 53, 54, 55, 56, 57, 58, 59, 0, 1, 2, 3, 4, 5, 6,
-  7, 8, 9, 10, 12, 14, 15, 16, 18, 19, 20, 21, 22, 23, 25, 26, 27, 29, 30, 31, 32, 33, 34, 35,
-  36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
-] as const;
+/**
+ * Samvatsara index per signed patro year, generated from the backend engine by
+ * `nepali-holiday-api/scripts/generate_samvatsara_table.py` — the same file both
+ * sides read, so client and server can never disagree.
+ *
+ * This replaced a hardcoded 501-entry array covering only BS 1700–2200. Outside
+ * that window the client returned `undefined`, so BS 60–1699 depended entirely on
+ * the API payload and BBS years showed no samvatsara at all.
+ */
+const SAMVATSARA_INDEX_BY_YEAR: Record<string, number> = SAMVATSARA_TABLE.indices;
 
-const SAMVATSARA_INDEX_END_YEAR =
-  SAMVATSARA_INDEX_BASE_YEAR + SAMVATSARA_INDICES.length - 1;
+export const SAMVATSARA_TABLE_MIN_YEAR = SAMVATSARA_TABLE._meta.min_year;
+export const SAMVATSARA_TABLE_MAX_YEAR = SAMVATSARA_TABLE._meta.max_year;
 
 export function samvatsaraForBsYear(bsYear: number): SamvatsaraInfo | undefined {
-  if (bsYear < SAMVATSARA_INDEX_BASE_YEAR || bsYear > SAMVATSARA_INDEX_END_YEAR) {
-    return undefined;
-  }
-  const idx = SAMVATSARA_INDICES[bsYear - SAMVATSARA_INDEX_BASE_YEAR];
+  const idx = SAMVATSARA_INDEX_BY_YEAR[String(bsYear)];
+  if (idx == null) return undefined;
   return SAMVATSARA_ENTRIES[idx];
 }
 
@@ -139,4 +124,21 @@ export function resolveSamvatsaraForBsYear(
   payload?: SamvatsaraPayload | null,
 ): SamvatsaraInfo | undefined {
   return samvatsaraFromPayload(payload) ?? samvatsaraForBsYear(bsYear);
+}
+
+/** Signed patro year used by `samvatsara-table.json` (BS positive, BBS negative). */
+export function signedPatroYearForSamvatsara(era: Era, browseYear: number): number | undefined {
+  if (era === "ad" || era === "bc") return undefined;
+  if (era === "bbs") return signedFromBbs(browseYear);
+  return browseYear;
+}
+
+export function resolveSamvatsaraForPatroYear(
+  era: Era,
+  browseYear: number,
+  payload?: SamvatsaraPayload | null,
+): SamvatsaraInfo | undefined {
+  const signed = signedPatroYearForSamvatsara(era, browseYear);
+  if (signed == null) return undefined;
+  return resolveSamvatsaraForBsYear(signed, payload);
 }

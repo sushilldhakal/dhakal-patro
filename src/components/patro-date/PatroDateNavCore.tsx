@@ -1,13 +1,28 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, BS_MONTHS_SHORT, AD_MONTH_NAMES, AD_MONTHS_SHORT, AD_MONTHS_SHORT_NE, adMonthLabel, bsMonthLabel, bsToAD, getBSMonthLength } from "@/lib/bs-calendar";
-import { getAdDayBsLabel, getAdMonthBsSpanLabel } from "@/lib/local-calendar";
-import { useLocale } from "@/i18n/locale";
+import {
+  BS_MONTH_NAMES,
+  BS_MONTHS_NE,
+  BS_MONTHS_SHORT,
+  AD_MONTH_NAMES,
+  AD_MONTHS_SHORT,
+  adMonthLabel,
+  bsMonthLabel,
+  isGregorianEraBrowse,
+} from "./patro-month-labels";
+import type { Era, Language } from "@/lib/era";
+import { usePatroDisplayLocale } from "@/hooks/use-patro-display-locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
+import { resolveSamvatsaraForPatroYear } from "@/lib/samvatsara";
 import { samvatsaraName } from "@/lib/samvatsara-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { buildPatroAdYearOptions, buildPatroBrowseYearOptions } from "@/lib/patro-date-options";
+import {
+  formatBrowsePatroYearPicker,
+} from "@/lib/patro-year-axis";
+
+const PATRO_AD_YEAR_OPTIONS = buildPatroAdYearOptions();
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
@@ -19,6 +34,9 @@ import {
   PatroLocationChip,
   YearStepper,
 } from "./PatroDateSheet";
+import { PatroYearEraToggle } from "./PatroYearEraToggle";
+import { patroEraShortLabel } from "./patro-era-short-label";
+import { PatroYearCombobox } from "./PatroYearCombobox";
 import { usePatroDateSheet } from "./use-patro-date-sheet";
 export type { PatroSheetTab } from "./use-patro-date-sheet";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -37,9 +55,13 @@ import {
 } from "@/lib/patro-classes";
 
 export type PatroDateNavCoreProps = {
+  era: Era;
+  /** Resolved Vikram era from the API — headline/samvatsara/year picker (not URL display alone). */
+  vikramEra?: Era;
   year: number;
   month: number;
-  yearOptions: number[];
+  /** Backend-rendered cross-era line under the headline (optional). */
+  crossEraSubtitle?: string | null;
   todayAd?: string;
   onToday: () => void;
   todayAriaLabel: string;
@@ -70,17 +92,17 @@ export type PatroDateNavCoreProps = {
   mobileToolbar?: ReactNode;
   /** Below md: bottom-right on row 2 (location on home, under toggle). */
   mobileToolbarLower?: ReactNode;
-  /** Gregorian month navigation when UI language is English. */
-  calendarMode?: "bs" | "ad";
   /** Given both, the mobile sheet grows a Location tab beside the date one. */
   location?: PanchangaLocation;
   onLocationChange?: (location: PanchangaLocation) => void;
-  /** Sheet state is lifted so the header's location chip can open it on the
-   *  Location tab rather than opening a popup of its own. */
+  /** Share URL `language` — Nepali digits/labels when `ne`. */
+  displayLanguage?: Language;
+  /** Switch BS↔BBS or AD↔BC from the year dropdown (URL-backed pages). */
+  onEraChange?: (era: Era) => void;
 }
 
-function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" = "bs"): string {
-  if (calendarMode === "ad") {
+function chipMonthLabel(month: number, lang: string, era: Era): string {
+  if (isGregorianEraBrowse(era)) {
     return AD_MONTHS_SHORT[month - 1].toUpperCase();
   }
   if (lang === "en") {
@@ -99,12 +121,12 @@ function chipMonthLabel(month: number, lang: string, calendarMode: "bs" | "ad" =
 function monthChipSpan(
   year: number,
   month: number,
-  isAdCalendar: boolean,
+  isGregorian: boolean,
   digits: (value: number) => string,
 ): string {
-  const length = isAdCalendar
+  const length = isGregorian
     ? new Date(year, month, 0).getDate() // day 0 of the next month = last of this
-    : getBSMonthLength(year, month);
+    : 32;
   return `${digits(1)}-${digits(length)}`;
 }
 
@@ -118,9 +140,11 @@ type NavControlsProps = {
   monthAriaLabel: string;
   onMonthChange: (month: number) => void;
   year: number;
-  yearSelectOptions: BsNativeSelectOption[];
+  yearEra?: Era;
+  yearDisplayLanguage?: Language;
   yearAriaLabel: string;
   onYearChange: (year: number) => void;
+  onEraChange?: (era: Era) => void;
   hour: number;
   minute: number;
   hourOptions: BsNativeSelectOption[];
@@ -151,9 +175,11 @@ function MonthNavControls({
   monthAriaLabel,
   onMonthChange,
   year,
-  yearSelectOptions,
+  yearEra,
+  yearDisplayLanguage,
   yearAriaLabel,
   onYearChange,
+  onEraChange,
   hour,
   minute,
   hourOptions,
@@ -176,9 +202,11 @@ function MonthNavControls({
   // both ellipsised. Wide enough for a three-letter month and a four-digit year
   // plus the chevron; there is spare room in the row at 360px.
   const monthW = spacious ? "w-[6.5rem]" : "w-[3.75rem] sm:w-[5.25rem]";
-  const yearW = spacious ? "w-[5rem]" : "w-[4.25rem] sm:w-[4.5rem]";
+  const yearW = spacious ? "w-[6.5rem]" : "w-[4.5rem] sm:w-[5.25rem]";
   const timeW = spacious ? "w-[4rem]" : "w-[2.75rem] sm:w-[3.5rem]";
   const btnClass = spacious ? patroMonthNavBtn : patroMonthRangeCompactBtn;
+  const hasDayPicker = Boolean(dayOptions && onDayChange && dayAriaLabel);
+  const eraInCombobox = Boolean(yearEra && onEraChange && !hasDayPicker);
 
   return (
     <>
@@ -214,14 +242,24 @@ function MonthNavControls({
         comfortable={spacious}
       />
 
-      <BsNativeSelect
+      <PatroYearCombobox
         className={yearW}
+        era={yearEra ?? "bs"}
         value={year}
-        options={yearSelectOptions}
-        ariaLabel={yearAriaLabel}
+        displayLanguage={yearDisplayLanguage}
         onChange={onYearChange}
+        onEraChange={eraInCombobox ? onEraChange : undefined}
+        ariaLabel={yearAriaLabel}
         comfortable={spacious}
       />
+      {yearEra && onEraChange && hasDayPicker ? (
+        <PatroYearEraToggle
+          era={yearEra}
+          onEraChange={onEraChange}
+          compact
+          comfortable={spacious}
+        />
+      ) : null}
 
       {showTime && hourAriaLabel && minuteAriaLabel ? (
         <>
@@ -260,9 +298,11 @@ function MonthNavControls({
 }
 
 export function PatroDateNavCore({
+  era,
+  vikramEra,
   year,
   month,
-  yearOptions,
+  crossEraSubtitle,
   todayAd,
   onToday,
   todayAriaLabel,
@@ -289,16 +329,19 @@ export function PatroDateNavCore({
   mobileDateTimeDrawer = false,
   mobileToolbar,
   mobileToolbarLower,
-  calendarMode = "bs",
   location,
   onLocationChange,
+  displayLanguage,
+  onEraChange,
 }: PatroDateNavCoreProps) {
   const sheet = usePatroDateSheet();
-  const { lang, digits } = useLocale();
+  const { lang, digits } = usePatroDisplayLocale(displayLanguage);
   const { t } = useTranslation();
-  const isAdCalendar = calendarMode === "ad";
+  const isGregorian = isGregorianEraBrowse(era);
+  const headlineEra = vikramEra ?? era;
+  const pickerYearOptions = isGregorian ? PATRO_AD_YEAR_OPTIONS : buildPatroBrowseYearOptions(headlineEra);
 
-  const monthTitle = isAdCalendar
+  const monthTitle = isGregorian
     ? adMonthLabel(month, lang)
     : bsMonthLabel(month, lang);
   /**
@@ -308,9 +351,9 @@ export function PatroDateNavCore({
    */
   const monthTitleShort =
     lang === "en"
-      ? (isAdCalendar ? AD_MONTHS_SHORT[month - 1] : BS_MONTHS_SHORT[month - 1]).toUpperCase()
+      ? (isGregorian ? AD_MONTHS_SHORT[month - 1] : BS_MONTHS_SHORT[month - 1]).toUpperCase()
       : monthTitle;
-  const samvatsara = isAdCalendar ? undefined : resolveSamvatsaraForBsYear(year);
+  const samvatsara = isGregorian ? undefined : resolveSamvatsaraForPatroYear(headlineEra, year);
   const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
   // Always day → month → year (e.g. "२५ जुलाई २०२६" / "25 Jul 2026"). Relying on
   // toLocaleDateString's own ordering put ne-NP as year-month-day, which reads
@@ -318,32 +361,7 @@ export function PatroDateNavCore({
   // `ne-NP` has no abbreviated month forms in ICU — toLocaleDateString(…,
   // { month: "short" }) hands back the full "सेप्टेम्बर", which is what made the
   // Nepali header wide. Use our own short list so both languages abbreviate.
-  const adMonthShort = (monthIndex: number) =>
-    lang === "en" ? AD_MONTHS_SHORT[monthIndex] : AD_MONTHS_SHORT_NE[monthIndex];
-  const adDayEnglish = (() => {
-    if (day == null || isAdCalendar) return null;
-    const d = bsToAD(year, month, day);
-    const monthShort = adMonthShort(d.getMonth());
-    const numLabel = (n: number) => (lang === "en" ? String(n) : digits(n));
-    return `${numLabel(d.getDate())} ${monthShort} ${numLabel(d.getFullYear())}`;
-  })();
-  const adMonthRangeEnglish = (() => {
-    if (day != null) return null;
-    const start = bsToAD(year, month, 1);
-    const end = bsToAD(year, month, getBSMonthLength(year, month));
-    const startMonth = adMonthShort(start.getMonth());
-    const endMonth = adMonthShort(end.getMonth());
-    const startYear = start.getFullYear();
-    const endYear = end.getFullYear();
-    const yearLabel = (y: number) => (lang === "en" ? String(y) : digits(y));
-    if (startMonth === endMonth && startYear === endYear) {
-      return `${startMonth} ${yearLabel(startYear)}`;
-    }
-    if (startYear === endYear) {
-      return `${startMonth}/${endMonth} ${yearLabel(startYear)}`;
-    }
-    return `${startMonth} ${yearLabel(startYear)}/${endMonth} ${yearLabel(endYear)}`;
-  })();
+  // Cross-era subtitles under Vikram headings come from the API on browse pages.
   // Month-only views: chip shows the browsed month (day 1). Day views keep today
   // in the chip because it doubles as the jump-to-today control.
   const chipDay = day ?? 1;
@@ -351,15 +369,15 @@ export function PatroDateNavCore({
   // The closed month control is the widest thing in the phone date sheet, so it
   // shows a three-letter form there; the option list keeps the full name.
   // English only — Devanagari month names already fit.
-  const monthOptions = (isAdCalendar ? AD_MONTH_NAMES : BS_MONTH_NAMES).map((_: string, i: number) => ({
+  const monthOptions = (isGregorian ? AD_MONTH_NAMES : BS_MONTH_NAMES).map((_: string, i: number) => ({
     value: i + 1,
-    label: isAdCalendar ? adMonthLabel(i + 1, lang) : bsMonthLabel(i + 1, lang),
+    label: isGregorian ? adMonthLabel(i + 1, lang) : bsMonthLabel(i + 1, lang),
     shortLabel:
-      lang === "en" ? (isAdCalendar ? AD_MONTHS_SHORT[i] : BS_MONTHS_SHORT[i]) : undefined,
+      lang === "en" ? (isGregorian ? AD_MONTHS_SHORT[i] : BS_MONTHS_SHORT[i]) : undefined,
   }));
-  const yearSelectOptions = yearOptions.map((y) => ({
+  const yearSelectOptions = pickerYearOptions.map((y) => ({
     value: y,
-    label: digits(y),
+    label: formatBrowsePatroYearPicker(y, digits),
   }));
   const { hour, minute } = clock ? parseClockParts(clock) : { hour: 0, minute: 0 };
   const hourOptions = Array.from({ length: 24 }, (_, i) => ({
@@ -386,9 +404,11 @@ export function PatroDateNavCore({
     monthAriaLabel,
     onMonthChange,
     year,
-    yearSelectOptions,
+    yearEra: headlineEra,
+    yearDisplayLanguage: displayLanguage,
     yearAriaLabel,
     onYearChange,
+    onEraChange,
     hour,
     minute,
     hourOptions,
@@ -408,13 +428,13 @@ export function PatroDateNavCore({
   const clockSummary = showTime
     ? `${toNepaliDigits(String(hour).padStart(2, "0"))}:${toNepaliDigits(String(minute).padStart(2, "0"))}`
     : null;
-  /** Picker chip: omit year when the title already shows it (panchanga day view). */
+  /** Picker chip: month is on the left chip — month-only views show year here. */
   const mobilePickerLabel =
     day != null
       ? clockSummary
         ? `${digits(day)} ${monthTitle} · ${clockSummary}`
         : `${digits(day)} ${monthTitle}`
-      : `${monthTitle} ${digits(year)}`;
+      : formatBrowsePatroYearPicker(year, digits);
   /**
    * Below sm (<640px): day view drops the month token (title row shows it);
    * month view drops the year for the same reason. The chip always names the
@@ -464,13 +484,15 @@ export function PatroDateNavCore({
             <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" sideOffset={6} className="w-[17.5rem]">
+        <PopoverContent align="start" sideOffset={6} className="w-[19rem]">
           <BsDateTimePicker
-            calendarMode={calendarMode}
+            gridEra={isGregorian ? "ad" : headlineEra === "bbs" ? "bbs" : "bs"}
+            displayEra={headlineEra}
+            onEraChange={onEraChange}
             year={year}
             month={month}
             day={day ?? 1}
-            yearOptions={yearOptions}
+            yearOptions={pickerYearOptions}
             todayAd={todayAd}
             onSelectDate={selectDate}
             monthAriaLabel={monthAriaLabel}
@@ -480,6 +502,7 @@ export function PatroDateNavCore({
             hourAriaLabel={hourAriaLabel}
             minuteAriaLabel={minuteAriaLabel}
             showTime={showTime}
+            locationParams={location?.params}
           />
         </PopoverContent>
       </Popover>
@@ -501,38 +524,28 @@ export function PatroDateNavCore({
    * plus a year is the widest thing in the top bar. The AD side is already
    * abbreviated in both languages, so it does not vary.
    */
-  const buildSubtitleLine = (short: boolean) => {
-    if (!isAdCalendar) return adDayEnglish ?? adMonthRangeEnglish;
-    return day != null
-      ? getAdDayBsLabel(year, month, day, lang, digits, short)
-      : getAdMonthBsSpanLabel(year, month, lang, digits, short);
-  };
-  const subtitleLine = buildSubtitleLine(false);
-  const subtitleLineShort = buildSubtitleLine(true);
+  const subtitleLine = crossEraSubtitle ?? undefined;
+  const subtitleLineShort = crossEraSubtitle ?? undefined;
 
-  // Nepali BS date part of the heading. The संवत्सर name and Gregorian subtitle
-  // are ordered by <BsHeadline>, which is the single source of truth for the
-  // `<BS date> <संवत्सर> <Gregorian>` order shared across every page.
-  const titlePartFor = (title: string) => (
-    <>
-      {title}{" "}
-      <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
-    </>
-  );
-  const bsTitlePart = titlePartFor(monthTitle);
-  // Phone headings open on the year: the chip to their left already carries the
-  // month name, so repeating it here only ate width in the narrowest row.
-  const bsTitlePartShort = (
-    <span className="font-num font-semibold text-secondary dark:text-secondary">{digits(year)}</span>
+  // Year in the headline — month name lives on the left chip only (avoids
+  // repeating e.g. साउन + साउन वि.सं. २०८३).
+  const yearHeadline = isGregorian ? (
+    <span className="font-num font-semibold text-secondary dark:text-secondary">
+      {digits(year)}
+    </span>
+  ) : (
+    <span className="font-num font-semibold text-secondary dark:text-secondary">
+      {digits(year)} {patroEraShortLabel(headlineEra, t)}
+    </span>
   );
 
   const mobileTitleBlock = (
     <BsHeadline
       className="text-sm"
-      bs={bsTitlePartShort}
+      bs={yearHeadline}
       bsClassName="min-w-0"
       samvatsara={samvatsaraLabel}
-      samvatsaraClassName="text-sm"
+      samvatsaraClassName="font-num font-semibold text-secondary dark:text-secondary"
       gregorian={subtitleLineShort}
       gregorianClassName="text-xs font-semibold text-muted-foreground"
     />
@@ -541,10 +554,10 @@ export function PatroDateNavCore({
   const titleBlock = (
     <BsHeadline
       className="text-xl text-base"
-      bs={bsTitlePart}
+      bs={yearHeadline}
       bsClassName="min-w-0"
       samvatsara={samvatsaraLabel}
-      samvatsaraClassName="hidden text-xl sm:inline"
+      samvatsaraClassName="font-num font-semibold text-secondary dark:text-secondary"
       gregorian={subtitleLine}
       gregorianClassName="text-xs font-semibold text-muted-foreground"
     />
@@ -582,9 +595,12 @@ export function PatroDateNavCore({
         <MonthGridPicker month={month} options={monthOptions} onMonthChange={onMonthChange} />
         <YearStepper
           year={year}
+          era={era}
           options={yearSelectOptions}
           ariaLabel={yearAriaLabel}
           onYearChange={onYearChange}
+          onEraChange={onEraChange}
+          signedBsYears={era === "bbs"}
         />
         {dayOptions && onDayChange && dayAriaLabel ? (
           <div className="flex items-center justify-center gap-2">
@@ -638,12 +654,12 @@ export function PatroDateNavCore({
         aria-label={todayAriaLabel}
         title={todayAriaLabel}
       >
-        <div className={patroMonthChipHead}>{chipMonthLabel(chipMonth, lang, calendarMode)}</div>
+        <div className={patroMonthChipHead}>{chipMonthLabel(chipMonth, lang, era)}</div>
         {day != null ? (
           <div className={patroMonthChipDay}>{digits(chipDay)}</div>
         ) : (
           <div className={patroMonthChipSpan}>
-            {monthChipSpan(year, chipMonth, isAdCalendar, digits)}
+            {monthChipSpan(year, chipMonth, isGregorian, digits)}
           </div>
         )}
       </button>

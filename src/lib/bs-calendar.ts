@@ -1,4 +1,5 @@
 import calendarData from "./bs-calendar-data.json"
+import { civilGregorianToUtcMs, parseCivilIso, toAdStr } from "./patro-day"
 
 export const BS_MONTH_NAMES = [
   "Baisakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin",
@@ -55,41 +56,74 @@ export type BikramSambatDate = {
 
 type BsMonthLengths = readonly [number, number, number, number, number, number, number, number, number, number, number, number]
 
-/** Inclusive BS range for pickers, URL validation, and offline conversion (matches API: BS 60–3000). */
-export const BS_SUPPORTED_START_YEAR = calendarData.start_year
-export const BS_SUPPORTED_END_YEAR = calendarData.end_year
-
 function asMonthLengths(lengths: number[]): BsMonthLengths {
   if (lengths.length !== 12) throw new Error(`BS month length row must have 12 entries, got ${lengths.length}`)
   return lengths as unknown as BsMonthLengths
 }
 
 const BS_YEAR_MONTH_LENGTHS: Record<number, BsMonthLengths> = Object.fromEntries(
-  Object.entries(calendarData.month_lengths).map(([year, lengths]) => [Number(year), asMonthLengths(lengths)])
+  Object.entries(calendarData.month_lengths).map(([year, lengths]) => [Number(year), asMonthLengths(lengths)]),
 )
 
 const BAISAKH_1_AD: Record<number, string> = Object.fromEntries(
-  Object.entries(calendarData.baisakh_1_ad).map(([year, iso]) => [Number(year), iso])
+  Object.entries(calendarData.baisakh_1_ad).map(([year, iso]) => [Number(year), iso]),
+)
+
+/** First BS year with full server panchanga cache on typical deploy (browse floor may still be 60). */
+export const BS_PANCHANGA_START_YEAR =
+  typeof (calendarData as { panchanga_start_year?: number }).panchanga_start_year === "number"
+    ? (calendarData as { panchanga_start_year: number }).panchanga_start_year
+    : 60
+
+/** Inclusive Vikram year range for month/year browse pickers (offline month grid from {@link BS_SUPPORTED_START_YEAR}). */
+export const BS_SUPPORTED_START_YEAR =
+  typeof (calendarData as { browse_start_year?: number }).browse_start_year === "number"
+    ? (calendarData as { browse_start_year: number }).browse_start_year
+    : typeof (calendarData as { panchanga_start_year?: number }).panchanga_start_year === "number"
+      ? (calendarData as { panchanga_start_year: number }).panchanga_start_year
+      : calendarData.start_year
+export const BS_SUPPORTED_END_YEAR = calendarData.end_year
+
+/** First BS year in embedded `baisakh_1_ad` / `month_lengths` (includes 1–59, not only browse floor). */
+export const BS_OFFLINE_TABLE_START_YEAR = Math.min(
+  ...Object.keys(BAISAKH_1_AD).map(Number).filter((y) => Number.isFinite(y) && y >= 1),
 )
 
 type BsMonthStart = { year: number; month: number; adMs: number }
 
 function parseAdDateOnly(isoDate: string): number {
-  const parts = isoDate.split("-").map(Number)
-  const y = parts[0] ?? 0
-  const m = parts[1] ?? 1
-  const d = parts[2] ?? 1
-  return Date.UTC(y, m - 1, d)
+  const { year, month, day } = parseCivilIso(isoDate)
+  return civilGregorianToUtcMs(year, month, day)
 }
 
+function normalizeToUtcDate(date: Date): number {
+  if (
+    date.getUTCHours() === 0 &&
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getUTCMilliseconds() === 0
+  ) {
+    return civilGregorianToUtcMs(
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate(),
+    )
+  }
+  return civilGregorianToUtcMs(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate(),
+  )
+}
+
+/** Civil day at UTC midnight — do not use local `Date(y,m,d)` (years 0–99 → 1900–1999). */
 function localDateFromUtcMs(ms: number): Date {
-  const date = new Date(ms)
-  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  return new Date(ms)
 }
 
 function buildMonthStarts(): BsMonthStart[] {
   const starts: BsMonthStart[] = []
-  for (let year = BS_SUPPORTED_START_YEAR; year <= BS_SUPPORTED_END_YEAR; year += 1) {
+  for (let year = BS_OFFLINE_TABLE_START_YEAR; year <= BS_SUPPORTED_END_YEAR; year += 1) {
     const baisakh1 = BAISAKH_1_AD[year]
     if (!baisakh1) continue
     let cursor = parseAdDateOnly(baisakh1)
@@ -99,14 +133,11 @@ function buildMonthStarts(): BsMonthStart[] {
       cursor += days * 86_400_000
     }
   }
+  starts.sort((a, b) => a.adMs - b.adMs)
   return starts
 }
 
 const BS_MONTH_STARTS = buildMonthStarts()
-
-function normalizeToUtcDate(date: Date): number {
-  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-}
 
 function monthStartFor(year: number, month: number): BsMonthStart | undefined {
   return BS_MONTH_STARTS.find((s) => s.year === year && s.month === month)
@@ -128,9 +159,40 @@ export function getBSMonthLength(year: number, month: number): number {
   return Math.round((next.adMs - current.adMs) / 86_400_000)
 }
 
+/**
+ * `bsToAD` that answers `null` instead of throwing when the year is outside the
+ * embedded table (BBS / negative years, or past its end).
+ *
+ * `bsToAD` throwing is right — a wrong date is worse than none — but ~20 call
+ * sites treated it as total. Reaching one with a BBS year killed the whole page
+ * with "केही गडबड भयो", so anything on a browse path that a signed year can
+ * reach uses this and falls back.
+ */
+export function bsToAdOrNull(year: number, month: number, day: number): Date | null {
+  if (year < BS_OFFLINE_TABLE_START_YEAR || year > BS_SUPPORTED_END_YEAR) return null
+  try {
+    return bsToAD(year, month, day)
+  } catch {
+    return null
+  }
+}
+
 export function bsToAD(year: number, month: number, day: number): Date {
-  const monthStart = monthStartFor(year, month) ?? BS_MONTH_STARTS[0]
-  if (!monthStart) return new Date(year, month - 1, day)
+  const monthStart = monthStartFor(year, month)
+  if (!monthStart) {
+    const baisakh1 = BAISAKH_1_AD[year]
+    if (!baisakh1) {
+      throw new Error(`No offline BS calendar table for Vikram year ${year}`)
+    }
+    let cursor = parseAdDateOnly(baisakh1)
+    for (let m = 1; m < month; m += 1) {
+      const days = BS_YEAR_MONTH_LENGTHS[year]?.[m - 1] ?? 30
+      cursor += days * 86_400_000
+    }
+    const monthLength = getBSMonthLength(year, month)
+    const safeDay = Math.min(Math.max(1, day), monthLength)
+    return localDateFromUtcMs(cursor + (safeDay - 1) * 86_400_000)
+  }
   const monthLength = getBSMonthLength(year, month)
   const safeDay = Math.min(Math.max(1, day), monthLength)
   return localDateFromUtcMs(monthStart.adMs + (safeDay - 1) * 86_400_000)
@@ -180,17 +242,19 @@ export function getSupportedAdBounds(): {
   maxYear: number
   maxMonth: number
 } {
-  const start = bsToAD(BS_SUPPORTED_START_YEAR, 1, 1)
+  const start = bsToAD(BS_OFFLINE_TABLE_START_YEAR, 1, 1)
   const end = bsToAD(
     BS_SUPPORTED_END_YEAR,
     12,
     getBSMonthLength(BS_SUPPORTED_END_YEAR, 12),
   )
+  const startCivil = parseCivilIso(toAdStr(start))
+  const endCivil = parseCivilIso(toAdStr(end))
   return {
-    minYear: start.getFullYear(),
-    minMonth: start.getMonth() + 1,
-    maxYear: end.getFullYear(),
-    maxMonth: end.getMonth() + 1,
+    minYear: startCivil.year,
+    minMonth: startCivil.month,
+    maxYear: endCivil.year,
+    maxMonth: endCivil.month,
   }
 }
 

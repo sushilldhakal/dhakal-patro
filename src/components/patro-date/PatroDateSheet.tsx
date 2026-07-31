@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarClock, ChevronDown, MapPin, Minus, Plus } from "lucide-react";
-import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
+import type { BsNativeSelectOption } from "@/components/BsNativeSelect";
 import { LocationSearchPanel } from "@/components/panchanga/LocationSearchPanel";
 import {
   displayLocationLabel,
@@ -17,8 +17,11 @@ import {
 } from "@/components/ui/drawer";
 import { useLocale } from "@/i18n/locale";
 import { patroMobilePickerBtn, patroMonthNavBtn } from "@/lib/patro-classes";
+import { stepPatroSignedYear } from "@/lib/patro-year-axis";
+import type { Era } from "@/lib/era";
 import { cn } from "@/lib/utils";
 import type { PatroDateSheetState } from "./use-patro-date-sheet";
+import { PatroYearCombobox } from "./PatroYearCombobox";
 
 /** Month picker for the sheet: 12 buttons, three to a row, no dropdown. */
 export function MonthGridPicker({
@@ -61,41 +64,52 @@ export function MonthGridPicker({
 /** Year row for the sheet: the select flanked by step-by-one buttons. */
 export function YearStepper({
   year,
+  era,
   options,
   ariaLabel,
   onYearChange,
+  onEraChange,
+  signedBsYears = false,
 }: {
   year: number;
+  era: Era;
   options: BsNativeSelectOption[];
   ariaLabel: string;
   onYearChange: (year: number) => void;
+  onEraChange?: (era: Era) => void;
+  /** Step across BBSE ↔ BS without hitting invalid year 0 */
+  signedBsYears?: boolean;
 }) {
   const values = options.map((o) => o.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
+  const step = (delta: -1 | 1) =>
+    signedBsYears ? stepPatroSignedYear(year, delta) : year + delta;
   return (
     <div className="flex items-center justify-center gap-2">
       <button
         type="button"
         className={patroMonthNavBtn}
-        onClick={() => onYearChange(year - 1)}
+        onClick={() => onYearChange(step(-1))}
         disabled={year <= min}
         aria-label={`${ariaLabel} −1`}
       >
         <Minus size={16} strokeWidth={2.25} />
       </button>
-      <BsNativeSelect
-        className="w-[6.5rem]"
+      <PatroYearCombobox
+        className="w-[7.5rem]"
+        era={era}
         value={year}
         options={options}
         ariaLabel={ariaLabel}
         onChange={onYearChange}
+        onEraChange={onEraChange}
         comfortable
       />
       <button
         type="button"
         className={patroMonthNavBtn}
-        onClick={() => onYearChange(year + 1)}
+        onClick={() => onYearChange(step(1))}
         disabled={year >= max}
         aria-label={`${ariaLabel} +1`}
       >

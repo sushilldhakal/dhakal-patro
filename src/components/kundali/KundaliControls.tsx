@@ -10,8 +10,8 @@ import {
   getSupportedAdBounds,
 } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { cn } from "@/lib/utils";
 import { useLocale, bilingualText } from "@/i18n/locale";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 
@@ -51,8 +51,6 @@ function getADMonthLength(year: number, month: number): number {
 interface Props {
   date: Date;
   onDateChange: (d: Date) => void;
-  era: "bs" | "ad";
-  onEraChange: (era: "bs" | "ad") => void;
   clock: string;
   onClockChange: (clock: string) => void;
   location: PanchangaLocation;
@@ -62,8 +60,6 @@ interface Props {
 export function KundaliControls({
   date,
   onDateChange,
-  era,
-  onEraChange,
   clock,
   onClockChange,
   location,
@@ -71,6 +67,9 @@ export function KundaliControls({
 }: Props) {
   const { t } = useTranslation();
   const { lang } = useLocale();
+  const calendarEra = useCalendarEra();
+  const era: "bs" | "ad" =
+    calendarEra === "ad" || calendarEra === "bc" ? "ad" : "bs";
   const bs = adToBS(date);
   const adYear = date.getFullYear();
   const adMonth = date.getMonth() + 1;
@@ -90,28 +89,6 @@ export function KundaliControls({
 
   return (
     <div className="w-full flex flex-wrap items-center gap-2 rounded-xl bg-card px-3 py-2.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
-      <div
-        className="inline-flex shrink-0 p-0.5 gap-0.5 border border-border rounded-lg bg-card"
-        role="group"
-        aria-label={t("kundali.era")}
-      >
-        {(["bs", "ad"] as const).map((e) => (
-          <button
-            key={e}
-            type="button"
-            className={cn(
-              "h-8 px-3 rounded-[calc(var(--radius-lg)-2px)] border-0 text-sm font-semibold cursor-pointer transition-colors",
-              era === e
-                ? "bg-secondary text-secondary-foreground"
-                : "bg-transparent hover:text-foreground"
-            )}
-            onClick={() => onEraChange(e)}
-          >
-            {e.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
       {era === "bs" ? (
         <>
           <select

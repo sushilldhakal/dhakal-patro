@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Flame, UserSearch } from "lucide-react";
@@ -10,7 +10,7 @@ import {
   vimshottariKeys,
   shadbalaKeys,
 } from "@/lib/api";
-import { buildAtTimeDatetime } from "@/lib/ephemeris-adapters";
+import { instantFromCivilIso } from "@/lib/instant-query";
 import { KundaliControls } from "@/components/kundali/KundaliControls";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -27,25 +27,28 @@ export function ShantiVidhi() {
   const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation();
   const [date, setDate] = useState(() => new Date());
-  const [era, setEra] = useState<"bs" | "ad">("ad");
   const timezone = location.params.timezone ?? "Asia/Kathmandu";
   const [clock, setClock] = useState(() => defaultClockForTimezone(timezone));
 
   const adDateStr = toAdStr(date);
-  const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
+  // Memoised — a new object each render would re-key every dependent query.
+  const birthMoment = useMemo(
+    () => instantFromCivilIso(adDateStr, clock),
+    [adDateStr, clock],
+  );
 
   const vimshottariQ = useQuery({
-    queryKey: vimshottariKeys.atTime(atTimeDatetime, location.params),
-    queryFn: () => fetchVimshottari(atTimeDatetime, location.params),
+    queryKey: vimshottariKeys.atTime(birthMoment, location.params),
+    queryFn: () => fetchVimshottari(birthMoment, location.params),
     staleTime: 1000 * 60 * 5,
-    enabled: Boolean(atTimeDatetime),
+    enabled: Boolean(adDateStr),
   });
 
   const shadbalaQ = useQuery({
-    queryKey: shadbalaKeys.atTime(atTimeDatetime, location.params),
-    queryFn: () => fetchShadbala(atTimeDatetime, location.params),
+    queryKey: shadbalaKeys.atTime(birthMoment, location.params),
+    queryFn: () => fetchShadbala(birthMoment, location.params),
     staleTime: 1000 * 60 * 5,
-    enabled: Boolean(atTimeDatetime),
+    enabled: Boolean(adDateStr),
   });
 
   useRouteLoading(vimshottariQ.isLoading || shadbalaQ.isLoading);
@@ -69,8 +72,6 @@ export function ShantiVidhi() {
           <KundaliControls
             date={date}
             onDateChange={setDate}
-            era={era}
-            onEraChange={setEra}
             clock={clock}
             onClockChange={setClock}
             location={location}

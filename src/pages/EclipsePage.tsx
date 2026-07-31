@@ -15,6 +15,7 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { patroCard } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import { searchToLocation } from "@/lib/url-state";
+import { getLanguageForEra, type Era } from "@/lib/era";
 import {
   fetchEclipseYear,
   grahaDetailKeys,
@@ -24,20 +25,28 @@ import {
 const suryaRouteApi = getRouteApi("/panchanga-shell/panchanga/surya-grahan");
 const chandraRouteApi = getRouteApi("/panchanga-shell/panchanga/chandra-grahan");
 
-function fmtTime(iso?: string | null): string | null {
+function localTimeShort(iso?: string | null): string | null {
   if (!iso) return null;
   const m = iso.match(/T(\d{2}:\d{2})/);
   return m ? m[1] : null;
 }
 
-function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
+function renderedEclipseDate(ev: EclipseEvent, era: Era): string {
+  const raw = ev as EclipseEvent & { date?: string };
+  if (typeof raw.date === "string") return raw.date;
+  if (getLanguageForEra(era) === "ne" && ev.date_bs) return ev.date_bs;
+  return ev.date_ad ?? ev.date_bs ?? "";
+}
+
+function EclipseCard({ ev, pageId, era }: { ev: EclipseEvent; pageId: string; era: Era }) {
   const { digits, lang } = useLocale();
   const { t } = useTranslation();
-  const begin = fmtTime(ev.begin_local);
-  const end = fmtTime(ev.end_local);
-  const max = fmtTime(ev.max_local);
+  const begin = localTimeShort(ev.begin_local);
+  const end = localTimeShort(ev.end_local);
+  const max = localTimeShort(ev.max_local);
   const isLunar = pageId === "chandra-grahan";
   const typeLabel = lang === "en" ? ev.type_en : ev.type_ne;
+  const dateLabel = renderedEclipseDate(ev, era);
   return (
     <div className={cn(patroCard, "flex flex-col")}>
       <div
@@ -64,9 +73,7 @@ function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-muted-foreground">{t("graha_pages.eclipse.date")}</span>
           <span className="text-right font-semibold text-foreground">
-            <span className="font-num tabular-nums">
-              {ev.date_bs ? digits(ev.date_bs) : digits(ev.date_ad)}
-            </span>
+            <span className="font-num tabular-nums">{digits(dateLabel)}</span>
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-2">
@@ -108,8 +115,8 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
   const pageId = kind === "solar" ? "surya-grahan" : "chandra-grahan";
 
   const query = useQuery({
-    queryKey: grahaDetailKeys.eclipse(kind, yearBrowse.browseYear, location.params, yearBrowse.era),
-    queryFn: () => fetchEclipseYear(kind, yearBrowse.browseYear, location.params, yearBrowse.era),
+    queryKey: grahaDetailKeys.eclipse(kind, yearBrowse.year, location.params, yearBrowse.era),
+    queryFn: () => fetchEclipseYear(kind, yearBrowse.year, location.params, yearBrowse.era),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -141,11 +148,11 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
 
       <div className="space-y-3">
         <PatroYearNav
-          calendarMode={yearBrowse.era}
-          year={yearBrowse.browseYear}
-          onYearChange={yearBrowse.setBrowseYear}
-          currentYear={yearBrowse.currentBrowseYear}
-          yearOptions={yearBrowse.yearOptions}
+          era={yearBrowse.era}
+          year={yearBrowse.year}
+          onYearChange={yearBrowse.setYear}
+          onEraChange={yearBrowse.setEra}
+          gregorianRange={query.data?.gregorian_range}
           location={location}
           onLocationChange={setLocation}
         />
@@ -157,7 +164,7 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
         events.length ? (
           <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {events.map((ev, i) => (
-              <EclipseCard key={i} ev={ev} pageId={pageId} />
+              <EclipseCard key={i} ev={ev} pageId={pageId} era={yearBrowse.era} />
             ))}
           </div>
         ) : (

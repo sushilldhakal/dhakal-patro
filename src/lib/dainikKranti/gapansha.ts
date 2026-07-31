@@ -1,6 +1,10 @@
-import type { CalendarDay, GocharIngressEvent, PlanetInfo } from "@/lib/api";
+import type { CalendarDay, GocharGraha, GocharIngressEvent, PlanetInfo } from "@/lib/api";
+import {
+  ingressEventBsDayForMonth,
+  ingressEventRowDateAd,
+  type IngressBrowseMonth,
+} from "@/lib/dainikKranti/ingress-day-match";
 import { rashiNoFromGraha } from "@/lib/dainikKranti/gochar-display";
-import type { GocharGraha } from "@/lib/api";
 import { GOCHAR_RASHI_TO_HOUSE } from "@/lib/kundali/north-indian-layout";
 import { rashiNumberFromName } from "@/lib/rashi-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -13,14 +17,25 @@ function isMoonIngress(ev: GocharIngressEvent): boolean {
   return ne.includes("चन्द्र") || ne.includes("चंद्र");
 }
 
-function resolveVedicDateAd(
+function ingressDayInRange(
   ev: GocharIngressEvent,
+  rangeDays: CalendarDay[],
   allDays: CalendarDay[],
-): string | undefined {
-  const civil = ev.entry_vedic_date_ad ?? ev.entry_date_ad;
-  if (!civil) return undefined;
-  if (allDays.some((d) => d.date_ad === civil)) return civil;
-  return ev.entry_date_ad;
+  browse?: IngressBrowseMonth,
+): CalendarDay | undefined {
+  if (browse) {
+    const bsDay = ingressEventBsDayForMonth(
+      ev,
+      browse.year,
+      browse.month,
+      allDays,
+    );
+    if (bsDay == null) return undefined;
+    return rangeDays.find((d) => d.day === bsDay);
+  }
+  const dateAd = ingressEventRowDateAd(ev, allDays);
+  if (!dateAd) return undefined;
+  return rangeDays.find((d) => d.date_ad === dateAd);
 }
 
 function rashiNoFromIngress(ev: GocharIngressEvent): number | undefined {
@@ -102,20 +117,18 @@ function collectDatedIngress(
   rangeDays: CalendarDay[],
   allDays: CalendarDay[],
   ingressEvents: GocharIngressEvent[],
+  browse?: IngressBrowseMonth,
 ): DatedIngress[] {
-  const rangeDates = new Set(rangeDays.map((d) => d.date_ad));
-  const dayByDate = new Map(allDays.map((d) => [d.date_ad, d]));
   const out: DatedIngress[] = [];
 
   for (const ev of ingressEvents) {
     if (ev.level !== "rashi" || isMoonIngress(ev)) continue;
     if (ev.graha === "rahu" || ev.graha === "ketu") continue;
-    const dateAd = resolveVedicDateAd(ev, allDays);
-    if (!dateAd || !rangeDates.has(dateAd)) continue;
-    const day = dayByDate.get(dateAd);
+    const day = ingressDayInRange(ev, rangeDays, allDays, browse);
     const rNo = rashiNoFromIngress(ev);
     const house = rNo != null ? houseFromRashiNo(rNo) : undefined;
     if (!day || house == null || !ev.graha) continue;
+    const dateAd = day.date_ad;
     out.push({
       bsDay: day.day,
       graha: ev.graha,
@@ -135,20 +148,18 @@ function collectRahuKetuDated(
   rangeDays: CalendarDay[],
   allDays: CalendarDay[],
   ingressEvents: GocharIngressEvent[],
+  browse?: IngressBrowseMonth,
 ): { bsDay: number; rahuHouse: number; ketuHouse: number; sortKey: string }[] {
-  const rangeDates = new Set(rangeDays.map((d) => d.date_ad));
-  const dayByDate = new Map(allDays.map((d) => [d.date_ad, d]));
   const byDate = new Map<string, { rahu?: number; ketu?: number; sortKey: string; bsDay: number }>();
 
   for (const ev of ingressEvents) {
     if (ev.level !== "rashi" || isMoonIngress(ev)) continue;
     if (ev.graha !== "rahu" && ev.graha !== "ketu") continue;
-    const dateAd = resolveVedicDateAd(ev, allDays);
-    if (!dateAd || !rangeDates.has(dateAd)) continue;
-    const day = dayByDate.get(dateAd);
+    const day = ingressDayInRange(ev, rangeDays, allDays, browse);
     const rNo = rashiNoFromIngress(ev);
     const house = rNo != null ? houseFromRashiNo(rNo) : undefined;
     if (!day || house == null) continue;
+    const dateAd = day.date_ad;
     const slot = byDate.get(dateAd) ?? {
       bsDay: day.day,
       sortKey: ev.entry_time_utc ?? `${dateAd}T12:00`,
@@ -207,20 +218,21 @@ export function buildGapanshaLine(
   rangeDays: CalendarDay[],
   allDays: CalendarDay[],
   ingressEvents: GocharIngressEvent[],
+  browse?: IngressBrowseMonth,
 ): string {
   if (rangeDays.length === 0) return "";
 
   type Item = { bsDay: number; sortKey: string; text: string };
   const items: Item[] = [];
 
-  for (const ev of collectDatedIngress(rangeDays, allDays, ingressEvents)) {
+  for (const ev of collectDatedIngress(rangeDays, allDays, ingressEvents, browse)) {
     const text =
       ev.graha === "sun"
         ? formatSunDated(ev.bsDay, ev.house)
         : formatGrahaDated(ev.bsDay, ev.graha, ev.house);
     items.push({ bsDay: ev.bsDay, sortKey: ev.sortKey, text });
   }
-  for (const ev of collectRahuKetuDated(rangeDays, allDays, ingressEvents)) {
+  for (const ev of collectRahuKetuDated(rangeDays, allDays, ingressEvents, browse)) {
     items.push({
       bsDay: ev.bsDay,
       sortKey: ev.sortKey,

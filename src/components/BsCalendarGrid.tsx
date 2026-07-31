@@ -15,6 +15,7 @@ import {
 import { VerticalEdgeLabel } from "@/components/VerticalEdgeLabel";
 import { CalendarMoonPhaseIcon } from "@/components/panchanga/CalendarMoonPhaseIcon";
 import { tithiIndexFromCalendarDay } from "@/lib/tithi-wheel-data";
+import { civilIsoDayOfMonth, parseCivilIsoToDate } from "@/lib/patro-day";
 
 const WEEKDAYS_NE = ["आइतवार", "सोमवार", "मंगलवार", "बुधवार", "बिहीवार", "शुक्रवार", "शनिवार"];
 const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -37,7 +38,7 @@ function moonPhaseTitle(phase: PakshaPhase | undefined, isEn: boolean): string |
 }
 
 function fmtAdDay(iso: string): number {
-  return new Date(iso + "T12:00:00").getDate();
+  return civilIsoDayOfMonth(iso);
 }
 
 function FestivalListDialog({
@@ -57,7 +58,7 @@ function FestivalListDialog({
   if (!day) return null;
 
   const weekday = bilingualText(lang, day.weekday_ne ?? day.weekday, day.weekday_en ?? day.weekday);
-  const adDate = new Date(day.date_ad + "T12:00:00").toLocaleDateString(undefined, {
+  const adDate = parseCivilIsoToDate(day.date_ad).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",

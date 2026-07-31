@@ -1,6 +1,20 @@
 // Same-origin by default: nginx proxies "/api" → the FastAPI backend, so the
 // browser never makes a cross-origin request (no CORS). Override with
 // VITE_API_BASE_URL for a split host (e.g. http://localhost:8080 in dev).
+import { buildApiQuery, getLanguageForEra, type Era } from "@/lib/era";
+import {
+  appendInstantParams,
+  instantCacheKey,
+  type InstantQuery,
+} from "@/lib/instant-query";
+import {
+  buildPatroDayApiQuery,
+  patroDayFetchFromApiDateAd,
+  patroDayQueryCacheKey,
+  type PatroDayFetchState,
+  type PatroDisplayContext,
+} from "@/lib/patro-day-url";
+
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 // Public, cacheable data endpoints live under a version segment (…/api/v1/…) so
@@ -14,8 +28,11 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
  * `cv=` on panchanga URLs so Cloudflare edge keys change on engine deploys
  * without a manual purge.
  */
+// Keep in step with CACHE_PAYLOAD_VERSION in services/panchanga_cache.py — it had
+// drifted (29 vs 32), which lets the edge serve payloads from before an engine fix.
+// 34 = samvatsara resolves for BBS / BS < 58 (JD-based Jovian walk + table).
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "29";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "34";
 
 /**
  * Sait listings are CDN-cached too. Appended as `sv=` so a change in the sait
@@ -30,9 +47,35 @@ export const API_BASE = BASE;
 /** Versioned base for public, cacheable data endpoints. */
 export const API_DATA_BASE = DATA_BASE;
 
+/** Error from a failed API call, carrying the backend's own explanation. */
+export class ApiError extends Error {
+  status: number;
+  /** The backend's `detail` — e.g. why a date is out of range. */
+  detail: string | undefined;
+
+  constructor(status: number, detail: string | undefined, path: string) {
+    super(detail ? `API ${status}: ${detail}` : `API ${status}: ${path}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${DATA_BASE}${path}`);
-  if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
+  if (!res.ok) {
+    // A 400 here is usually a date the engine can't compute (out of era range,
+    // beyond the ephemeris). The backend explains why in `detail`; throwing that
+    // away left pages with nothing to show but a fabricated fallback date.
+    let detail: string | undefined;
+    try {
+      const body = await res.json();
+      if (typeof body?.detail === "string") detail = body.detail;
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new ApiError(res.status, detail, path);
+  }
   return res.json();
 }
 
@@ -154,6 +197,16 @@ export const panchangaKeys = {
     ["panchanga", "today", locationCacheKey(location)] as const,
   day: (date: string, era: string, location?: LocationParams) =>
     ["panchanga", "day", PANCHANGA_CACHE_VERSION, date, era, locationCacheKey(location)] as const,
+  daySelection: (state: PatroDayFetchState, location?: LocationParams) =>
+    [
+      "panchanga",
+      "day",
+      PANCHANGA_CACHE_VERSION,
+      patroDayQueryCacheKey(state),
+      state.display.era,
+      state.display.language,
+      locationCacheKey(location),
+    ] as const,
   nepalDay: (date: string, location?: LocationParams) =>
     ["panchanga", "nepal", date, locationCacheKey(location)] as const,
   month: (
@@ -162,7 +215,7 @@ export const panchangaKeys = {
     location?: LocationParams,
     full = true,
     excludeInternational = false,
-    era: "bs" | "ad" = "bs",
+    era: Era = "bs",
   ) =>
     ["panchanga", "month", era, year, month, locationCacheKey(location), full ? "full" : "lite", excludeInternational ? "nointl" : "intl"] as const,
   year: (year: number, location?: LocationParams, full = true) =>
@@ -175,8 +228,18 @@ export const panchangaKeys = {
     excludeInternational = false,
   ) =>
     ["panchanga", "month", "clock", year, month, clock, locationCacheKey(location), excludeInternational ? "nointl" : "intl"] as const,
-  atTime: (datetime: string, location?: LocationParams) =>
-    ["panchanga", "at-time", PANCHANGA_CACHE_VERSION, datetime, locationCacheKey(location)] as const,
+  atTime: (jd: number, clock: string, location?: LocationParams) =>
+    ["panchanga", "at-time", PANCHANGA_CACHE_VERSION, jd, clock, locationCacheKey(location)] as const,
+  atTimeDay: (state: PatroDayFetchState, clock: string, location?: LocationParams) =>
+    [
+      "panchanga",
+      "at-time",
+      PANCHANGA_CACHE_VERSION,
+      patroDayQueryCacheKey(state),
+      state.display.era,
+      clock,
+      locationCacheKey(location),
+    ] as const,
   civil: (date: string, location?: LocationParams) =>
     ["panchanga", "civil", PANCHANGA_CACHE_VERSION, date, locationCacheKey(location)] as const,
   civilDay: (date: string, location?: LocationParams) =>
@@ -185,50 +248,54 @@ export const panchangaKeys = {
     ["calendar", "header", year, month, locationCacheKey(location)] as const,
 };
 
-export const fetchTodayPanchanga = (location?: LocationParams) => {
-  const today = new Date().toISOString().split("T")[0];
-  return get<PanchangaDay>(
-    appendLocation(
-      withPanchangaCacheVersion(
-        `/panchanga/${today}?era=ad&festivals=true&detail=true`,
-      ),
-      location,
-    ),
+export const fetchTodayPanchanga = (location?: LocationParams, displayEra: Era = "ad") =>
+  fetchPanchangaDay(
+    {
+      kind: "today",
+      display: {
+        era: displayEra,
+        language: getLanguageForEra(displayEra),
+      },
+    },
+    location,
   );
-};
 
-export const fetchPanchanga = (
-  date: string,
-  era: "bs" | "ad" = "bs",
-  location?: LocationParams
-) =>
-  get<PanchangaDay>(
-    appendLocation(
-      withPanchangaCacheVersion(
-        `/panchanga/${date}?era=${era}&festivals=true&detail=true`,
-      ),
-      location,
-    ),
-  );
+export const PANCHANGA_TODAY_SEGMENT = "today";
+
+export function fetchPanchangaDay(
+  state: import("@/lib/patro-day-url").PatroDayFetchState,
+  location?: LocationParams,
+  extra?: Record<string, string | number | undefined>,
+) {
+  const qs = buildPatroDayApiQuery(state, {
+    festivals: "true",
+    detail: "true",
+    cv: PANCHANGA_CACHE_VERSION,
+    ...extra,
+  }).toString();
+  const path =
+    state.kind === "jd"
+      ? `/panchanga/jd/${state.jd}`
+      : `/panchanga/${PANCHANGA_TODAY_SEGMENT}`;
+  return get<PanchangaDay>(appendLocation(`${path}?${qs}`, location));
+}
 
 /**
  * Midnight-referenced (civil-day, 00:00→24:00) full panchanga. Same payload
- * shape as {@link fetchPanchanga}, but the moving angas (tithi/नक्षत्र/योग/करण,
+ * shape as {@link fetchPanchangaDay}, but the moving angas (tithi/नक्षत्र/योग/करण,
  * chandra rashi, lagna, tara/chandra bala, panchaka) are read at local midnight
  * so the दिन-रात page view agrees with the दिन-रात chart. Date-properties
  * (festivals, ritu, samvat, sun/moon times, weekday) stay tied to the date.
  */
 export const fetchPanchangaCivilDay = (
-  dateAd: string,
+  civilDateAd: string,
+  display: PatroDisplayContext,
   location?: LocationParams,
 ) =>
-  get<PanchangaDay>(
-    appendLocation(
-      withPanchangaCacheVersion(
-        `/panchanga/${dateAd}?era=ad&festivals=true&detail=true&reference=midnight`,
-      ),
-      location,
-    ),
+  fetchPanchangaDay(
+    patroDayFetchFromApiDateAd(civilDateAd, display),
+    location,
+    { reference: "midnight" },
   );
 
 export const fetchNepalPanchanga = (dateAd: string, location?: LocationParams) =>
@@ -286,7 +353,7 @@ export interface CivilTimeline {
 
 export const fetchCivilTimeline = (
   date: string,
-  era: "bs" | "ad" = "ad",
+  era: Era = "ad",
   location?: LocationParams,
 ) =>
   get<{ civil_timeline: CivilTimeline }>(
@@ -305,6 +372,61 @@ export const fetchPanchangaAtTime = (
 ) => {
   const params = new URLSearchParams();
   params.set("datetime", datetime);
+  if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  return get<PanchangaDay>(
+    appendLocation(
+      withPanchangaCacheVersion(`/panchanga/at-time?${params.toString()}`),
+      location,
+    ),
+  );
+};
+
+/** Ephemeris panchanga at observer-local `clock` on the browsed civil day. */
+export const fetchPanchangaAtTimeForDay = (
+  dayState: PatroDayFetchState,
+  clock: string,
+  location?: LocationParams,
+  options?: { ayanamsha?: string; resolvedJdUt?: number },
+) => {
+  const params = new URLSearchParams();
+  params.set("cv", PANCHANGA_CACHE_VERSION);
+  params.set("clock", clock);
+  if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+
+  if (dayState.kind === "input") {
+    const dayQs = buildPatroDayApiQuery(dayState);
+    dayQs.forEach((value, key) => {
+      if (key !== "cv") params.set(key, value);
+    });
+  } else if (dayState.kind === "jd") {
+    params.set("jd", String(dayState.jd));
+  } else {
+    const dayQs = buildPatroDayApiQuery(dayState);
+    dayQs.forEach((value, key) => {
+      if (key !== "cv") params.set(key, value);
+    });
+    const jd = options?.resolvedJdUt;
+    if (jd != null) params.set("jd", String(jd));
+  }
+
+  return get<PanchangaDay>(
+    appendLocation(
+      withPanchangaCacheVersion(`/panchanga/at-time?${params.toString()}`),
+      location,
+    ),
+  );
+};
+
+/** Ephemeris panchanga at observer-local `clock` on civil day `jd_ut` (0h UT). */
+export const fetchPanchangaAtTimeJd = (
+  jdUt: number,
+  clock: string,
+  location?: LocationParams,
+  options?: { ayanamsha?: string },
+) => {
+  const params = new URLSearchParams();
+  params.set("jd", String(jdUt));
+  params.set("clock", clock);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
   return get<PanchangaDay>(
     appendLocation(
@@ -363,17 +485,21 @@ export interface VimshottariResponse {
 }
 
 export const vimshottariKeys = {
-  atTime: (datetime: string, location?: LocationParams, ayanamsha?: string) =>
-    ["vimshottari", datetime, locationCacheKey(location), ayanamsha ?? "lahiri"] as const,
+  atTime: (moment: InstantQuery, location?: LocationParams, ayanamsha?: string) =>
+    [
+      "vimshottari",
+      instantCacheKey(moment),
+      locationCacheKey(location),
+      ayanamsha ?? "lahiri",
+    ] as const,
 };
 
 export const fetchVimshottari = (
-  datetime: string,
+  moment: InstantQuery,
   location?: LocationParams,
   options?: { ayanamsha?: string; cycles?: number }
 ) => {
-  const params = new URLSearchParams();
-  params.set("datetime", datetime);
+  const params = appendInstantParams(new URLSearchParams(), moment);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
   if (options?.cycles != null) params.set("cycles", String(options.cycles));
   return get<VimshottariResponse>(
@@ -415,6 +541,11 @@ export interface GocharIngressEvent {
   entry_date_ad?: string;
   /** Vedic day (sunrise–sunrise) civil date — patro गते row key. */
   entry_vedic_date_ad?: string;
+  /** BS patro date key when the civil AD fields are omitted (BCE / JD path). */
+  entry_jd_date?: string;
+  entry_vedic_jd_date?: string;
+  entry_jd?: number;
+  entry_vedic_jd?: number;
   /** udayast only */
   event?: "udaya" | "asta";
   hemisphere?: "east" | "west";
@@ -458,7 +589,9 @@ export interface GocharResponse {
 }
 
 export const gocharKeys = {
-  day: (date: string, era: string, location?: LocationParams) =>
+  day: (jdUt: number, location?: LocationParams) =>
+    ["gochar", "jd", jdUt, locationCacheKey(location)] as const,
+  dayLegacy: (date: string, era: string, location?: LocationParams) =>
     ["gochar", date, era, locationCacheKey(location)] as const,
   ingress: (
     from: string,
@@ -466,22 +599,32 @@ export const gocharKeys = {
     level: string,
     location?: LocationParams
   ) => ["gochar", "ingress", from, to, level, locationCacheKey(location)] as const,
+  ingressEra: (
+    from: string,
+    to: string,
+    level: string,
+    era: string,
+    location?: LocationParams,
+  ) => ["gochar", "ingress", from, to, level, era, locationCacheKey(location)] as const,
 };
 
 export const fetchGochar = (
   date: string,
-  era: "bs" | "ad" = "ad",
+  era: Era = "ad",
   location?: LocationParams
 ) =>
   get<GocharResponse>(
     appendLocation(`/nepal/gochar/${date}?era=${era}`, location)
   );
 
+export const fetchGocharJd = (jdUt: number, location?: LocationParams) =>
+  get<GocharResponse>(appendLocation(`/nepal/gochar/jd/${jdUt}`, location));
+
 export const fetchGocharIngress = (
   from: string,
   to: string,
   location?: LocationParams,
-  options?: { level?: "pada" | "nakshatra" | "rashi" | "patro" | "udayast"; era?: "bs" | "ad" }
+  options?: { level?: "pada" | "nakshatra" | "rashi" | "patro" | "udayast"; era?: Era }
 ) => {
   const params = new URLSearchParams();
   params.set("from", from);
@@ -533,8 +676,11 @@ export interface GrahaSthitiResponse {
 /** A localized timestamp for an asta period boundary. */
 export interface AstaStamp {
   iso: string;
-  date_ad: string;
-  date_bs: string | null;
+  jd?: number;
+  /** Era-rendered day label from {@link jd} (EraMiddleware). */
+  date?: string;
+  date_ad?: string;
+  date_bs?: string | null;
   time_short: string;
 }
 
@@ -566,8 +712,9 @@ export interface GrahaVakriEvent {
   label_ne?: string;
   entry_time_local?: string;
   entry_time_local_short?: string;
-  entry_date_ad?: string;
-  entry_date_bs?: string | null;
+  entry_jd?: number;
+  /** Era-rendered civil day label from {@link entry_jd} (EraMiddleware). */
+  entry_jd_date?: string;
 }
 
 export interface GrahaVakriResponse {
@@ -601,61 +748,112 @@ export interface EclipseYearResponse {
   events: EclipseEvent[];
 }
 
-export const grahaDetailKeys = {
-  sthiti: (dateAd: string, location?: LocationParams) =>
-    ["graha", "sthiti", dateAd, locationCacheKey(location)] as const,
-  asta: (year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
-    ["graha", "asta", era, year, locationCacheKey(location)] as const,
-  vakri: (year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
-    ["graha", "vakri", era, year, locationCacheKey(location)] as const,
-  eclipse: (kind: "solar" | "lunar", year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
-    ["graha", "eclipse", kind, era, year, locationCacheKey(location)] as const,
-};
-
 /**
  * Cache-buster for the graha detail endpoints. Appended as `gv=` so a change
  * in an endpoint's response shape mints a fresh CDN object instead of serving
  * the previous deploy's stale payload. Bump when a graha response shape changes.
  */
-const GRAHA_CACHE_VERSION = "2";
+const GRAHA_CACHE_VERSION = "3";
+
+export const grahaDetailKeys = {
+  sthiti: (dateKey: string, apiEra: Era, location?: LocationParams) =>
+    ["graha", "sthiti", GRAHA_CACHE_VERSION, apiEra, dateKey, locationCacheKey(location)] as const,
+  asta: (year: number, location?: LocationParams, era: Era = "bs") =>
+    ["graha", "asta", GRAHA_CACHE_VERSION, era, year, locationCacheKey(location)] as const,
+  vakri: (year: number, location?: LocationParams, era: Era = "bs") =>
+    ["graha", "vakri", GRAHA_CACHE_VERSION, era, year, locationCacheKey(location)] as const,
+  eclipse: (kind: "solar" | "lunar", year: number, location?: LocationParams, era: Era = "bs") =>
+    ["graha", "eclipse", GRAHA_CACHE_VERSION, kind, era, year, locationCacheKey(location)] as const,
+};
 
 function withGrahaCacheVersion(path: string): string {
   const sep = path.includes("?") ? "&" : "?";
   return `${path}${sep}gv=${GRAHA_CACHE_VERSION}`;
 }
 
-export const fetchGrahaSthiti = (dateAd: string, location?: LocationParams) =>
+export const fetchGrahaSthiti = (
+  dateKey: string,
+  location?: LocationParams,
+  apiEra: Era = "ad",
+) =>
   get<GrahaSthitiResponse>(
-    appendLocation(withGrahaCacheVersion(`/nepal/graha-sthiti/${dateAd}?era=ad`), location),
+    appendLocation(
+      withGrahaCacheVersion(`/nepal/graha-sthiti/${dateKey}?era=${apiEra}`),
+      location,
+    ),
   );
+
+/** Date key + API era for graha-sthiti — positive y/m/d in the path, era on the query. */
+export function grahaSthitiRequestForDisplay(
+  displayEra: Era,
+  dateAd: string,
+  dateParts?: Pick<EraDateParts, "vikram" | "gregorian"> | null,
+): { dateKey: string; apiEra: Era } {
+  if (displayEra === "ad" || displayEra === "bc") {
+    const g = dateParts?.gregorian;
+    if (g?.year && g.month && g.day) {
+      return {
+        dateKey: `${String(g.year).padStart(4, "0")}-${String(g.month).padStart(2, "0")}-${String(g.day).padStart(2, "0")}`,
+        apiEra: g.era,
+      };
+    }
+    return { dateKey: dateAd, apiEra: displayEra };
+  }
+  const v = dateParts?.vikram;
+  if (v?.year && v.month && v.day && (v.era === "bs" || v.era === "bbs")) {
+    return {
+      dateKey: `${v.year}-${String(v.month).padStart(2, "0")}-${String(v.day).padStart(2, "0")}`,
+      apiEra: v.era,
+    };
+  }
+  return { dateKey: dateAd, apiEra: displayEra };
+}
 
 export const fetchGrahaAstaYear = (
   year: number,
   location?: LocationParams,
-  era: "bs" | "ad" = "bs",
-) =>
-  get<GrahaAstaResponse>(
-    appendLocation(withGrahaCacheVersion(`/nepal/graha-asta/year/${year}?era=${era}`), location),
+  era: Era = "bs",
+) => {
+  const query = buildApiQuery({ era, language: getLanguageForEra(era), year });
+  return get<GrahaAstaResponse>(
+    appendLocation(
+      withGrahaCacheVersion(`/nepal/graha-asta/year/${year}?${query.toString()}`),
+      location,
+    ),
   );
+};
 
+/**
+ * Forwards `era` + a positive `year`; the backend resolves them via EraMiddleware.
+ */
 export const fetchGrahaVakriYear = (
   year: number,
   location?: LocationParams,
-  era: "bs" | "ad" = "bs",
-) =>
-  get<GrahaVakriResponse>(
-    appendLocation(withGrahaCacheVersion(`/nepal/graha-vakri/year/${year}?era=${era}`), location),
+  era: Era = "bs",
+) => {
+  const query = buildApiQuery({ era, language: getLanguageForEra(era), year });
+  return get<GrahaVakriResponse>(
+    appendLocation(
+      withGrahaCacheVersion(`/nepal/graha-vakri/year/${year}?${query.toString()}`),
+      location,
+    ),
   );
+};
 
 export const fetchEclipseYear = (
   kind: "solar" | "lunar",
   year: number,
   location?: LocationParams,
-  era: "bs" | "ad" = "bs",
-) =>
-  get<EclipseYearResponse>(
-    appendLocation(withGrahaCacheVersion(`/nepal/eclipse/${kind}/year/${year}?era=${era}`), location),
+  era: Era = "bs",
+) => {
+  const query = buildApiQuery({ era, language: getLanguageForEra(era), year });
+  return get<EclipseYearResponse>(
+    appendLocation(
+      withGrahaCacheVersion(`/nepal/eclipse/${kind}/year/${year}?${query.toString()}`),
+      location,
+    ),
   );
+};
 
 export interface PanchakMomentResponse {
   date_ad: string;
@@ -684,18 +882,20 @@ export interface PanchakYearResponse {
 }
 
 export const panchakKeys = {
-  year: (year: number, location?: LocationParams, era: "bs" | "ad" = "bs") =>
+  year: (year: number, location?: LocationParams, era: Era = "bs") =>
     ["panchak", era, year, locationCacheKey(location)] as const,
 };
 
 export const fetchPanchakYear = (
   year: number,
   location?: LocationParams,
-  era: "bs" | "ad" = "bs",
-) =>
-  get<PanchakYearResponse>(
-    appendLocation(`/nepal/panchak/year/${year}?era=${era}`, location),
+  era: Era = "bs",
+) => {
+  const query = buildApiQuery({ era, language: getLanguageForEra(era), year });
+  return get<PanchakYearResponse>(
+    appendLocation(`/nepal/panchak/year/${year}?${query.toString()}`, location),
   );
+};
 
 type RawMonthDay = CalendarDay;
 
@@ -769,12 +969,17 @@ export const fetchMonthCalendar = async (
     clock?: string;
     full?: boolean;
     excludeInternational?: boolean;
-    era?: "bs" | "ad";
+    era?: Era;
   },
 ): Promise<MonthCalendar> => {
   const full = options?.full !== false;
   const era = options?.era ?? "bs";
-  const params = new URLSearchParams();
+  const params = buildApiQuery({
+    era,
+    language: getLanguageForEra(era),
+    year,
+    month,
+  });
   if (full) params.set("full", "true");
   if (options?.clock) params.set("clock", options.clock);
   if (options?.excludeInternational) params.set("exclude_international", "true");
@@ -858,15 +1063,24 @@ export interface SunYearResponse {
 }
 
 // Bump when year sun-times payload logic changes (invalidates React Query + IDB).
-export const SUN_YEAR_DATA_VERSION = 15;
+export const SUN_YEAR_DATA_VERSION = 16;
 
 export const sunYearKeys = {
-  year: (year: number, location?: LocationParams) =>
-    ["sun-times", "year", SUN_YEAR_DATA_VERSION, year, locationCacheKey(location)] as const,
+  year: (year: number, era: Era, location?: LocationParams) =>
+    ["sun-times", "year", SUN_YEAR_DATA_VERSION, era, year, locationCacheKey(location)] as const,
 };
 
-export const fetchYearSunTimes = (year: number, location?: LocationParams) =>
-  get<SunYearResponse>(appendLocation(`/panchanga/year/${year}/sun`, location));
+/** Forwards positive `year` + {@link Era}; backend resolves the Julian year span. */
+export const fetchYearSunTimes = (
+  year: number,
+  era: Era,
+  location?: LocationParams,
+) => {
+  const query = buildApiQuery({ era, language: getLanguageForEra(era), year });
+  return get<SunYearResponse>(
+    appendLocation(`/panchanga/year/${year}/sun?${query.toString()}`, location),
+  );
+};
 
 export const fetchCalendarHeader = (year: number, month: number) =>
   get<CalendarHeader>(`/calendar/header/${year}/${month}`);
@@ -883,8 +1097,8 @@ export const fetchPatroMonth = (year: number, month: number) =>
 // ─── Holidays & Festivals ─────────────────────────────────────────────────────
 
 export const holidayKeys = {
-  holidays: (year: number, era: "bs" | "ad" = "bs") => ["holidays", era, year] as const,
-  festivals: (year: number, era: "bs" | "ad" = "bs", month?: number) =>
+  holidays: (year: number, era: Era = "bs") => ["holidays", era, year] as const,
+  festivals: (year: number, era: Era = "bs", month?: number) =>
     month != null
       ? (["festivals", era, year, month] as const)
       : (["festivals", era, year] as const),
@@ -892,13 +1106,17 @@ export const holidayKeys = {
     ["festivals", "upcoming", days, limit, holidaysOnly] as const,
 };
 
-export const fetchHolidays = (year: number, era: "bs" | "ad" = "bs") =>
-  get<HolidaysResponse>(withPanchangaCacheVersion(`/nepal/holidays?year=${year}&era=${era}`));
+export const fetchHolidays = (year: number, era: Era = "bs") => {
+  const query = buildApiQuery({ era, language: getLanguageForEra(era), year });
+  return get<HolidaysResponse>(
+    withPanchangaCacheVersion(`/nepal/holidays?${query.toString()}`),
+  );
+};
 
-export const fetchFestivals = (year: number, month?: number, era: "bs" | "ad" = "bs") => {
-  const params = new URLSearchParams({ year: String(year), era });
-  if (month != null) params.set("month", String(month));
-  return get<FestivalsResponse>(withPanchangaCacheVersion(`/nepal/festivals?${params}`));
+export const fetchFestivals = (year: number, month?: number, era: Era = "bs") => {
+  const query = buildApiQuery({ era, language: getLanguageForEra(era), year });
+  if (month != null) query.set("month", String(month));
+  return get<FestivalsResponse>(withPanchangaCacheVersion(`/nepal/festivals?${query.toString()}`));
 };
 
 /** Festival with countdown, as returned by /nepal/festivals/upcoming. */
@@ -1290,18 +1508,29 @@ export const fetchElements = () =>
     (r) => r.elements,
   );
 
+/** A month, named in an era. The backend resolves it to a Julian Day span. */
+export type ElementSpanRange = { era: Era; year: number; month: number };
+
 export const fetchElementSpans = (
   name: string,
-  range: { start: string; end: string } | { bsYear: number; bsMonth: number },
+  range: ElementSpanRange,
   location?: LocationParams,
-) => {
-  const query =
-    "bsYear" in range
-      ? `bs_year=${range.bsYear}&bs_month=${range.bsMonth}`
-      : `start=${range.start}&end=${range.end}`;
+): Promise<ElementSpansResponse> => {
+  // The era middleware turns era + year + month into the JD span server-side.
+  // This used to fetch the whole month calendar first just to read its first and
+  // last `date_ad` and send them as `start`/`end` — an extra round-trip, and
+  // those params no longer exist on the route (the range is Julian Days now), so
+  // every element-span request was 400ing.
+  const query = new URLSearchParams({
+    era: range.era,
+    year: String(range.year),
+    month: String(range.month),
+  });
   return get<ElementSpansResponse>(
     appendLocation(
-      withPanchangaCacheVersion(`/panchanga/element/${name}/spans?${query}`),
+      withPanchangaCacheVersion(
+        `/panchanga/element/${name}/spans?${query.toString()}`,
+      ),
       location,
     ),
   );
@@ -1452,14 +1681,14 @@ export interface ShadbalaResponse {
 }
 
 export const shadbalaKeys = {
-  atTime: (datetime: string, location?: LocationParams) =>
-    ["shadbala", "at-time", datetime, locationCacheKey(location)] as const,
+  atTime: (moment: InstantQuery, location?: LocationParams) =>
+    ["shadbala", "at-time", instantCacheKey(moment), locationCacheKey(location)] as const,
 };
 
-export const fetchShadbala = (datetime: string, location?: LocationParams) =>
+export const fetchShadbala = (moment: InstantQuery, location?: LocationParams) =>
   get<ShadbalaResponse>(
     appendLocation(
-      `/shadbala?datetime=${encodeURIComponent(datetime)}`,
+      `/shadbala?${appendInstantParams(new URLSearchParams(), moment).toString()}`,
       location
     )
   );
@@ -1731,17 +1960,22 @@ export interface KundaliDetailResponse {
 }
 
 export const kundaliDetailKeys = {
-  atTime: (datetime: string, location?: LocationParams, ayanamsha?: string) =>
-    ["kundali", "detail", datetime, locationCacheKey(location), ayanamsha ?? "lahiri"] as const,
+  atTime: (moment: InstantQuery, location?: LocationParams, ayanamsha?: string) =>
+    [
+      "kundali",
+      "detail",
+      instantCacheKey(moment),
+      locationCacheKey(location),
+      ayanamsha ?? "lahiri",
+    ] as const,
 };
 
 export const fetchKundaliDetail = (
-  datetime: string,
+  moment: InstantQuery,
   location?: LocationParams,
   options?: { ayanamsha?: string }
 ) => {
-  const params = new URLSearchParams();
-  params.set("datetime", datetime);
+  const params = appendInstantParams(new URLSearchParams(), moment);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
   return get<KundaliDetailResponse>(
     appendLocation(`/kundali/detail?${params.toString()}`, location)
@@ -1836,7 +2070,8 @@ export interface KundaliMilanResponse {
 }
 
 export interface MilanPersonQuery {
-  datetime: string;
+  /** Birth moment: a civil day in some era plus the local clock. */
+  moment: InstantQuery;
   lat?: number;
   lon?: number;
   timezone?: string;
@@ -1852,9 +2087,9 @@ export const milanKeys = {
     [
       "kundali",
       "milan",
-      boy.datetime,
+      instantCacheKey(boy.moment),
       `${boy.lat ?? ""},${boy.lon ?? ""},${boy.timezone ?? ""}`,
-      girl.datetime,
+      instantCacheKey(girl.moment),
       `${girl.lat ?? ""},${girl.lon ?? ""},${girl.timezone ?? ""}`,
       ayanamsha ?? "lahiri",
       lang ?? "ne",
@@ -1867,8 +2102,8 @@ export const fetchKundaliMilan = (
   options?: { ayanamsha?: string; lang?: string }
 ) => {
   const params = new URLSearchParams();
-  params.set("boy_datetime", boy.datetime);
-  params.set("girl_datetime", girl.datetime);
+  appendInstantParams(params, boy.moment, "boy_");
+  appendInstantParams(params, girl.moment, "girl_");
   if (boy.lat != null) params.set("boy_lat", String(boy.lat));
   if (boy.lon != null) params.set("boy_lon", String(boy.lon));
   if (boy.timezone) params.set("boy_timezone", boy.timezone);
@@ -1960,14 +2195,13 @@ export type ReportRecord =
  * sections progressively. Pass an AbortSignal to cancel an in-flight report.
  */
 export async function streamKundaliReport(
-  datetime: string,
+  moment: InstantQuery,
   location: LocationParams | undefined,
   options: { ayanamsha?: string; lang?: string; force?: boolean } | undefined,
   onRecord: (record: ReportRecord) => void,
   signal?: AbortSignal
 ): Promise<{ fromCache: boolean }> {
-  const params = new URLSearchParams();
-  params.set("datetime", datetime);
+  const params = appendInstantParams(new URLSearchParams(), moment);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
   if (options?.lang) params.set("lang", options.lang);
   if (options?.force) params.set("force", "true");
@@ -2216,6 +2450,27 @@ export interface PanchangaAtTime {
   location?: PanchangaDay["location"];
 }
 
+/** One day in one era. `year` is always >= 1 — the era carries the sign. */
+export interface EraDateSpelling {
+  era: Era;
+  year: number;
+  month: number;
+  day: number;
+}
+
+/**
+ * The backend's era-correct rendering of a day, keyed by its Julian Day.
+ *
+ * The top-level `era`/`year`/`month`/`day` are the requested display era;
+ * `vikram` and `gregorian` are the same instant in both systems, so the client
+ * never has to convert between them.
+ */
+export interface EraDateParts extends EraDateSpelling {
+  jd: number;
+  vikram: EraDateSpelling;
+  gregorian: EraDateSpelling;
+}
+
 export interface PanchangaDay {
   mode?: "ephemeris" | "udaya" | "civil";
   /** "midnight" for the civil-day (दिन-रात) payload — ghati/day-offset origin is 00:00. */
@@ -2229,6 +2484,16 @@ export interface PanchangaDay {
   location?: { name?: string; lat?: number; lon?: number; timezone?: string; city_id?: number };
   date_bs?: string;
   date_ad?: string;
+  /** Civil day at 0h UT — canonical ephemeris identity (Swiss Ephemeris JD). */
+  jd_ut?: number;
+  /**
+   * The day rendered the way the eras actually work: every year positive, with
+   * `era` carrying which side of which epoch it falls on.
+   *
+   * Prefer this over `date_bs`/`date_ad`, which are the engine's machine fields
+   * and spell pre-epoch days on a signed axis (`-4-01-01`, `-0060-03-16`).
+   */
+  date_parts?: EraDateParts;
   bs_date?: { year: number; month: number; day: number; month_name_ne?: string };
   samvatsara?: {
     key: string;
@@ -2426,6 +2691,7 @@ export interface CalendarDayDetail {
     label_ne?: string;
     label_en?: string;
   };
+  jd_ut?: number;
   solar_corrections?: {
     belaantar?: {
       minutes?: number;

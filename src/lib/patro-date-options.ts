@@ -1,24 +1,22 @@
 import {
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-  bsToAD,
+  bsToAdOrNull,
   getBSMonthLength,
   getSupportedAdBounds,
 } from "@/lib/bs-calendar";
-
-/** Bikram Sambat years available in month/year/day pickers. */
-export const PATRO_BS_YEAR_OPTIONS = Array.from(
-  { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
-  (_, i) => BS_SUPPORTED_START_YEAR + i,
-);
+import { fetchPanchangaDay, type LocationParams } from "@/lib/api";
+import { getLanguageForEra } from "@/lib/era";
+import { patroDayFetchFromApiBsParts } from "@/lib/patro-day-url";
+import { DEFAULT_PANCHANGA_LOCATION } from "@/components/panchanga/use-panchanga-location";
+import { parseCivilIsoToDate } from "@/lib/patro-day";
+import type { Era } from "@/lib/era";
+import {
+  BBS_URL_YEAR_MAX,
+  PATRO_EPHEMERIS_SIGNED_MAX,
+  PATRO_SIGNED_YEAR_MAX,
+  PATRO_SIGNED_YEAR_MIN,
+} from "@/lib/patro-year-axis";
 
 const AD_BOUNDS = getSupportedAdBounds();
-
-/** Gregorian years that overlap the supported BS range. */
-export const PATRO_AD_YEAR_OPTIONS = Array.from(
-  { length: AD_BOUNDS.maxYear - AD_BOUNDS.minYear + 1 },
-  (_, i) => AD_BOUNDS.minYear + i,
-);
 
 export function buildBsDayOptions(
   year: number,
@@ -33,22 +31,42 @@ export function buildBsDayOptions(
 }
 
 export function pickBsDate(
-  onDateChange: (d: Date) => void,
+  onDateChange: (
+    d: Date,
+    bsParts?: { year: number; month: number; day: number },
+  ) => void,
   year: number,
   month: number,
   day: number,
+  location?: LocationParams,
 ): void {
-  const safeDay = Math.min(day, getBSMonthLength(year, month));
-  onDateChange(bsToAD(year, month, safeDay));
+  const len = getBSMonthLength(year, month);
+  const safeDay = Math.min(day, len);
+  const parts = { year, month, day: safeDay };
+  const ad = bsToAdOrNull(year, month, safeDay);
+  if (ad) {
+    onDateChange(ad, parts);
+    return;
+  }
+  const params = location ?? DEFAULT_PANCHANGA_LOCATION.params;
+  void fetchPanchangaDay(
+    patroDayFetchFromApiBsParts(parts, {
+      era: "bs",
+      language: getLanguageForEra("bs"),
+    }),
+    params,
+  ).then((p) => {
+    if (p.date_ad) onDateChange(parseCivilIsoToDate(p.date_ad), parts);
+  });
 }
 
 export function isAtMinBsDay(year: number, month: number, day: number): boolean {
-  return year === BS_SUPPORTED_START_YEAR && month === 1 && day === 1;
+  return year === PATRO_SIGNED_YEAR_MIN && month === 1 && day === 1;
 }
 
 export function isAtMaxBsDay(year: number, month: number, day: number): boolean {
   return (
-    year === BS_SUPPORTED_END_YEAR &&
+    year === PATRO_SIGNED_YEAR_MAX &&
     month === 12 &&
     day === getBSMonthLength(year, month)
   );
@@ -96,20 +114,19 @@ export function isAtMaxAdDay(year: number, month: number, day: number): boolean 
   );
 }
 
-export function clampBsYear(
-  year: number,
-  options: number[] = PATRO_BS_YEAR_OPTIONS,
-): number {
-  const min = options[0] ?? BS_SUPPORTED_START_YEAR;
-  const max = options[options.length - 1] ?? BS_SUPPORTED_END_YEAR;
-  return Math.min(Math.max(year, min), max);
+/** Gregorian years that overlap the supported BS range (picker options). */
+export function buildPatroAdYearOptions(): number[] {
+  return Array.from(
+    { length: AD_BOUNDS.maxYear - AD_BOUNDS.minYear + 1 },
+    (_, i) => AD_BOUNDS.minYear + i,
+  );
 }
 
-export function clampAdYear(
-  year: number,
-  options: number[] = PATRO_AD_YEAR_OPTIONS,
-): number {
-  const min = options[0] ?? AD_BOUNDS.minYear;
-  const max = options[options.length - 1] ?? AD_BOUNDS.maxYear;
-  return Math.min(Math.max(year, min), max);
+/** Positive years offered in era-aware browse pickers (ephemeris window for Vikram eras). */
+export function buildPatroBrowseYearOptions(era: Era): number[] {
+  if (era === "ad" || era === "bc") return buildPatroAdYearOptions();
+  if (era === "bbs") {
+    return Array.from({ length: BBS_URL_YEAR_MAX }, (_, i) => i + 1);
+  }
+  return Array.from({ length: PATRO_EPHEMERIS_SIGNED_MAX }, (_, i) => i + 1);
 }

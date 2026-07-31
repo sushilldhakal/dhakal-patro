@@ -1,29 +1,21 @@
 import { Link, getRouteApi, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { GrahaBanner, ElementDescription } from "@/components/graha/GrahaPageParts";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
 import { useElementPageUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { parseEraFromUrl } from "@/lib/era";
+import { useSyncUrlLanguage } from "@/hooks/use-sync-url-language";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
-import { formatBsAdStamp } from "@/lib/bs-calendar";
-import {
-  PatroDayTimeNav,
-  PatroMonthYearNav,
-  PATRO_AD_YEAR_OPTIONS,
-  PATRO_BS_YEAR_OPTIONS,
-} from "@/components/patro-date";
-import {
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-} from "@/lib/bs-calendar";
+import { PatroDayTimeNav, PatroMonthYearNav } from "@/components/patro-date";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
 import { NavataraBalamCardGrid } from "@/components/panchanga/NavataraBalamCardGrid";
 import { useRouteLoading } from "@/lib/route-loading";
-import { toAdStr } from "@/lib/patro-day";
 import { searchToLocation } from "@/lib/url-state";
 import { ELEMENT_BY_ID } from "@/lib/panchanga-elements";
 import { getChandraBalamCards, getTaraBalamCards } from "@/lib/balam-cards";
@@ -38,6 +30,7 @@ import {
 import {
   getChandrabalamTable,
   getTarabalaTable,
+  formatElementStampDisplay,
 } from "@/lib/panchanga-format";
 import { formatRashiDisplay } from "@/lib/rashi-i18n";
 import { todayAdStringInTimezone, resolveTimeZone } from "@/lib/zoned-time";
@@ -45,7 +38,7 @@ import {
   elementKeys,
   fetchElementDay,
   fetchElementSpans,
-  fetchPanchanga,
+  fetchPanchangaDay,
   panchangaKeys,
   type ElementSpan,
   type ElementStamp,
@@ -53,18 +46,6 @@ import {
 } from "@/lib/api";
 
 const routeApi = getRouteApi("/panchanga-shell/panchanga/element/$name");
-
-const BS_MIN_INDEX = BS_SUPPORTED_START_YEAR * 12;
-const BS_MAX_INDEX = BS_SUPPORTED_END_YEAR * 12 + 11;
-
-function adMonthRange(year: number, month: number): { start: string; end: string } {
-  const lastDay = new Date(year, month, 0).getDate();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return {
-    start: `${year}-${pad(month)}-01`,
-    end: `${year}-${pad(month)}-${pad(lastDay)}`,
-  };
-}
 
 function clockFromGhati(sunriseMin: number | null, g: number): string | null {
   if (sunriseMin == null) return null;
@@ -87,19 +68,12 @@ function SpanBoundary({
   label,
   stamp,
   tone,
-  timeZone,
 }: {
   label: string;
   stamp: ElementStamp;
   tone: "begin" | "end";
-  timeZone?: string;
 }) {
   const { digits, lang } = useLocale();
-  const { weekday, bsMonthDay, adShort } = formatBsAdStamp(stamp.iso, {
-    lang,
-    timeZone,
-    digits,
-  });
   const shell =
     tone === "begin"
       ? "rounded-md bg-success/10 px-2 py-1.5"
@@ -113,16 +87,13 @@ function SpanBoundary({
         <span className="font-num tabular-nums text-foreground">{digits(stamp.time_label)}</span>
       </div>
       <p className="m-0 font-num text-sm font-semibold leading-snug text-foreground md:text-base">
-        <span>
-          {weekday} {bsMonthDay}
-        </span>
-        <span className="text-base text-muted-foreground"> · {adShort}</span>
+        {formatElementStampDisplay(stamp, lang)}
       </p>
     </div>
   );
 }
 
-function SpanList({ spans, timeZone }: { spans: ElementSpan[]; timeZone?: string }) {
+function SpanList({ spans }: { spans: ElementSpan[] }) {
   const { lang } = useLocale();
   const { t } = useTranslation();
   return (
@@ -142,13 +113,11 @@ function SpanList({ spans, timeZone }: { spans: ElementSpan[]; timeZone?: string
               label={t("common.begins")}
               stamp={s.begins}
               tone="begin"
-              timeZone={timeZone}
             />
             <SpanBoundary
               label={t("common.ends")}
               stamp={s.ends}
               tone="end"
-              timeZone={timeZone}
             />
           </div>
         </div>
@@ -382,9 +351,14 @@ export function ElementPage() {
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const meta = name ? ELEMENT_BY_ID[name] : undefined;
   const isNavataraBal = name === "chandrabala" || name === "tarabala";
+  const urlParsed = parseEraFromUrl(search as Record<string, unknown>);
+  const urlLanguage = urlParsed.language;
+  useSyncUrlLanguage(urlLanguage);
 
-  const today = new Date();
-  const todayAd = toAdStr(today);
+  const todayAd = todayAdStringInTimezone(
+    new Date(Date.now()),
+    resolveTimeZone(undefined, location.params.timezone),
+  );
   const isSpan = meta?.kind === "span";
 
   const { monthBrowse, dayBrowse } = useElementPageUrlBrowse(
@@ -394,21 +368,43 @@ export function ElementPage() {
     location,
     setLocation,
   );
-  const dayAd = dayBrowse.dateAd;
+  const { dayState, date, setDate, promoteToJd, setDisplayEra } = dayBrowse;
 
-  const spanRange =
-    monthBrowse.era === "ad"
-      ? adMonthRange(monthBrowse.browseYear, monthBrowse.browseMonth)
-      : { bsYear: monthBrowse.bsYear, bsMonth: monthBrowse.bsMonth };
+  const dayResolveQ = useQuery({
+    queryKey: panchangaKeys.daySelection(dayState, location.params),
+    queryFn: () => fetchPanchangaDay(dayState, location.params),
+    enabled: Boolean(name) && Boolean(meta) && !isSpan,
+    staleTime: 1000 * 60 * 30,
+    placeholderData: keepPreviousData,
+  });
+
+  useEffect(() => {
+    const jd = dayResolveQ.data?.jd_ut;
+    if (jd != null && dayState.kind !== "jd") promoteToJd(jd);
+  }, [dayResolveQ.data?.jd_ut, dayState.kind, promoteToJd]);
+
+  const dayAd = dayResolveQ.data?.date_ad ?? "";
 
   const spanQuery = useQuery({
-    queryKey: elementKeys.month(
-      name ?? "",
-      monthBrowse.browseYear,
-      monthBrowse.browseMonth,
+    queryKey: [
+      "element",
+      "spans",
+      name,
+      monthBrowse.era,
+      monthBrowse.year,
+      monthBrowse.month,
       location.params,
-    ),
-    queryFn: () => fetchElementSpans(name!, spanRange, location.params),
+    ] as const,
+    queryFn: () =>
+      fetchElementSpans(
+        name!,
+        {
+          era: monthBrowse.era,
+          year: monthBrowse.year,
+          month: monthBrowse.month,
+        },
+        location.params,
+      ),
     enabled: Boolean(name) && Boolean(meta) && isSpan,
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
@@ -417,18 +413,12 @@ export function ElementPage() {
   const dayQuery = useQuery({
     queryKey: elementKeys.day(name ?? "", dayAd, location.params),
     queryFn: () => fetchElementDay(name!, dayAd, location.params),
-    enabled: Boolean(name) && Boolean(meta) && !isSpan && !isNavataraBal,
+    enabled: Boolean(name) && Boolean(meta) && !isSpan && !isNavataraBal && Boolean(dayAd),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
 
-  const panchangaQuery = useQuery({
-    queryKey: panchangaKeys.day(dayAd, "ad", location.params),
-    queryFn: () => fetchPanchanga(dayAd, "ad", location.params),
-    enabled: Boolean(name) && Boolean(meta) && !isSpan && isNavataraBal,
-    staleTime: 1000 * 60 * 30,
-    placeholderData: keepPreviousData,
-  });
+  const panchangaQuery = dayResolveQ;
 
   const timezone = resolveTimeZone(undefined, location.params.timezone);
   const elementClock =
@@ -439,7 +429,7 @@ export function ElementPage() {
   const firstLoading = isSpan
     ? spanQuery.isLoading && !spanQuery.data
     : isNavataraBal
-      ? panchangaQuery.isLoading && !panchangaQuery.data
+      ? dayResolveQ.isLoading && !dayResolveQ.data
       : dayQuery.isLoading && !dayQuery.data;
   useRouteLoading(Boolean(meta) && firstLoading);
 
@@ -454,16 +444,6 @@ export function ElementPage() {
     );
   }
 
-  const atMonthStart =
-    monthBrowse.era === "ad"
-      ? monthBrowse.adYear <= PATRO_AD_YEAR_OPTIONS[0]! && monthBrowse.adMonth <= 1
-      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) <= BS_MIN_INDEX;
-  const atMonthEnd =
-    monthBrowse.era === "ad"
-      ? monthBrowse.adYear >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]! &&
-        monthBrowse.adMonth >= 12
-      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) >= BS_MAX_INDEX;
-
   return (
     <PageShell>
       <GrahaBanner
@@ -474,26 +454,30 @@ export function ElementPage() {
 
       {isSpan ? (
         <PatroMonthYearNav
-          calendarMode={monthBrowse.era}
-          year={monthBrowse.browseYear}
-          month={monthBrowse.browseMonth}
-          yearOptions={monthBrowse.era === "ad" ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS}
-          onMonthChange={(m) => monthBrowse.setBrowseMonth(monthBrowse.browseYear, m)}
-          onYearChange={(y) => monthBrowse.setBrowseMonth(y, monthBrowse.browseMonth)}
+          era={monthBrowse.era}
+          year={monthBrowse.year}
+          month={monthBrowse.month}
+          displayLanguage={urlLanguage}
+          onMonthChange={(m) => monthBrowse.setYearMonth(monthBrowse.year, m)}
+          onYearChange={(y) => monthBrowse.setYearMonth(y, monthBrowse.month)}
+          onEraChange={monthBrowse.setEra}
           onPrev={() => monthBrowse.stepMonth(-1)}
           onNext={() => monthBrowse.stepMonth(1)}
           onToday={() => monthBrowse.goToday(todayAd)}
           todayAd={todayAd}
-          prevDisabled={atMonthStart}
-          nextDisabled={atMonthEnd}
           location={location}
           onLocationChange={setLocation}
         />
       ) : (
         <PatroDayTimeNav
-          calendarMode={monthBrowse.era}
-          date={dayBrowse.date}
-          onDateChange={dayBrowse.setDate}
+          era={dayState.display.era}
+          displayLanguage={urlLanguage}
+          date={date}
+          vikram={dayResolveQ.data?.date_parts?.vikram}
+          civilDateAd={dayResolveQ.data?.date_ad}
+          gregorian={dayResolveQ.data?.date_parts?.gregorian}
+          onDateChange={setDate}
+          onEraChange={setDisplayEra}
           todayAd={todayAd}
           location={location}
           onLocationChange={setLocation}
@@ -504,7 +488,7 @@ export function ElementPage() {
         spanQuery.isLoading && !spanQuery.data ? (
           <p className="text-sm">{t("common.loading")}</p>
         ) : spanQuery.data ? (
-          <SpanList spans={spanQuery.data.spans} timeZone={spanQuery.data.timezone} />
+          <SpanList spans={spanQuery.data.spans} />
         ) : (
           <p className="text-sm text-danger">{t("common.load_error")}</p>
         )

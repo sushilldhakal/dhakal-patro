@@ -37,6 +37,8 @@ import {
   RituDrift,
 } from "./learn-articles";
 
+/** Routed at `/learn/history` — body lives in `History` page, not LearnArticle shell. */
+
 export interface LearnTopic {
   slug: string;
   category: string;
@@ -55,6 +57,7 @@ export interface LearnCategory {
 }
 
 export const LEARN_CATEGORIES: LearnCategory[] = [
+  { id: "history", ne: "इतिहास · सम्पदा", en: "History · heritage" },
   { id: "astronomy", ne: "खगोल आधार", en: "Astronomy" },
   { id: "calendars", ne: "पात्रो", en: "Calendars" },
   { id: "panchanga", ne: "पञ्चाङ्ग", en: "Panchanga" },
@@ -63,6 +66,17 @@ export const LEARN_CATEGORIES: LearnCategory[] = [
 ];
 
 export const LEARN_TOPICS: LearnTopic[] = [
+  {
+    slug: "history",
+    category: "history",
+    titleNe: "मयासुरको सूर्य सिद्धान्त",
+    titleEn: "Mayasura's Surya Siddhanta",
+    icon: History,
+    summary: "नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।",
+    summaryEn:
+      "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
+    Content: () => null,
+  },
   {
     slug: "astronomy-basics",
     category: "astronomy",

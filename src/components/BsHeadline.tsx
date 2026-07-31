@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface BsHeadlineProps {
-  /** Nepali BS date label — month + year, or year + वि.सं. */
+  /** Nepali BS year / era label (month is on the month chip, not here). */
   bs: ReactNode;
   /** संवत्सर name. Always rendered right after the Nepali year, before the AD date. */
   samvatsara?: ReactNode;
@@ -18,11 +18,10 @@ interface BsHeadlineProps {
  * Single source of truth for every BS calendar page heading. Enforces the one
  * canonical order across the whole app:
  *
- *   <Nepali BS date>   <संवत्सर name>   <Gregorian date>
+ *   <Nepali year / era>   <संवत्सर name>   <Gregorian date>
  *
- * e.g. `साउन २०८३ रौद्र २०२६ जुलाई २५`. The samvatsara name always sits between
- * the Nepali year and the Gregorian date — never reorder these in call sites,
- * change this component instead.
+ * Month name is shown on the month chip beside this headline, not repeated here.
+ * e.g. `वि.सं. २०८३ रौद्र जुल/अग २०२६`.
  */
 export function BsHeadline({
   bs,

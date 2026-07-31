@@ -13,7 +13,6 @@ import {
   toNepaliDigits,
 } from "@/lib/panchanga-format";
 import { getRashiName, rashiNumberFromName } from "@/lib/rashi-i18n";
-import { toAdStr } from "@/lib/patro-day";
 
 export function getWheelRashis(): WheelRashi[] {
   return Array.from({ length: 12 }, (_, i) => ({
@@ -408,21 +407,20 @@ export interface WheelMarkers {
   planetLons: number[];
 }
 
-export function scrubGToDatetime(
-  anchorAd: string,
+export function scrubGToAtTimeQuery(
+  jdUt: number,
   scrubG: number,
-  sunriseMin: number
-): string {
+  sunriseMin: number,
+): { jd: number; clock: string } {
   const totalMin = sunriseMin + scrubG * 24;
   const dayOffset = Math.floor(totalMin / 1440);
   const minsInDay = totalMin - dayOffset * 1440;
   const h = Math.floor(minsInDay / 60);
   const m = Math.round(minsInDay % 60);
-  const [y, mo, d] = anchorAd.split("-").map(Number);
-  const date = new Date(y!, mo! - 1, d! + dayOffset);
-  const ad = toAdStr(date);
-  return `${ad}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+  const clock = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+  return { jd: jdUt + dayOffset, clock };
 }
+
 
 export function buildWheelMarkersFromDetail(
   det: WheelDetail,

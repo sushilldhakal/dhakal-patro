@@ -1,5 +1,5 @@
-import type { CalendarDay, Festival, NivasShoolBlock, PanchangaDay } from "./api";
-import { adToBS, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
+import type { CalendarDay, ElementStamp, Festival, NivasShoolBlock, PanchangaDay } from "./api";
+import { adToBS, AD_MONTHS_SHORT, BS_MONTH_NAMES, BS_MONTHS_NE } from "./bs-calendar";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import {
   formatRashiDisplay,
@@ -10,6 +10,19 @@ import {
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { normalizeLang, pickLocale } from "@/i18n/locale";
+import {
+  addDaysCivilIso,
+  civilDayDiffIso,
+  civilIsoDatePart,
+  formatCivilIsoParts,
+  parseCivilIso,
+  parseCivilIsoToDate,
+  positiveGregorianCivilIso,
+} from "@/lib/patro-day";
+import {
+  formatGregorianEraYearLabel,
+  formatGregorianFromDateParts,
+} from "@/lib/patro-headline-subtitle";
 
 export function toNepaliDigits(value: string | number): string {
   return formatLocaleDigits(value);
@@ -432,10 +445,19 @@ export function formatAdTitle(
   dateAd: string,
   lang?: string,
 ): string {
-  const d = new Date(dateAd.includes("T") ? dateAd : `${dateAd}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return dateAd;
-  const locale = normalizeLang(lang) === "en" ? "en-US" : "ne-NP";
-  return d.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  try {
+    const { year, month, day } = parseCivilIso(dateAd.split("T")[0] ?? dateAd);
+    const locale = normalizeLang(lang) === "en" ? "en-US" : "ne-NP";
+    const monthLong = new Date(Date.UTC(Math.max(year, 1), month - 1, 15)).toLocaleDateString(
+      locale,
+      { month: "long" },
+    );
+    const digit = (n: number | string) =>
+      normalizeLang(lang) === "en" ? String(n) : formatLocaleDigits(n);
+    return `${digit(day)} ${monthLong} ${formatGregorianEraYearLabel(year, lang ?? "en", digit)}`;
+  } catch {
+    return dateAd;
+  }
 }
 
 export function formatAdShort(
@@ -443,10 +465,19 @@ export function formatAdShort(
   dateAd: string,
   lang?: string,
 ): string {
-  const d = new Date(dateAd.includes("T") ? dateAd : `${dateAd}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return dateAd;
-  const locale = normalizeLang(lang) === "en" ? "en-US" : "ne-NP";
-  return d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+  try {
+    const { year, month, day } = parseCivilIso(dateAd.split("T")[0] ?? dateAd);
+    const locale = normalizeLang(lang) === "en" ? "en-US" : "ne-NP";
+    const monthShort = new Date(Date.UTC(Math.max(year, 1), month - 1, 15)).toLocaleDateString(
+      locale,
+      { month: "short" },
+    );
+    const digit = (n: number | string) =>
+      normalizeLang(lang) === "en" ? String(n) : formatLocaleDigits(n);
+    return `${digit(day)} ${monthShort} ${formatGregorianEraYearLabel(year, lang ?? "en", digit)}`;
+  } catch {
+    return dateAd;
+  }
 }
 
 export function getRituPauranik(p?: PanchangaDay | null): RituBlock | undefined {
@@ -524,14 +555,50 @@ function parseTimeToMinutes(time?: string | null): number | null {
   return Number(match[1]) * 60 + Number(match[2]);
 }
 
-function addDaysIso(isoDate: string, days: number): string {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  if (!y || !m || !d) return isoDate;
-  const dt = new Date(y, m - 1, d + days);
-  const yy = dt.getFullYear();
-  const mm = String(dt.getMonth() + 1).padStart(2, "0");
-  const dd = String(dt.getDate()).padStart(2, "0");
-  return `${yy}-${mm}-${dd}`;
+
+function offsetBsIsoByCivilDayDelta(bsIso: string, delta: number): string | undefined {
+  if (delta === 0) return bsIso;
+  const { year, month, day } = parseCivilIso(bsIso);
+  const nextDay = day + delta;
+  if (nextDay < 1 || nextDay > 35) return undefined;
+  return formatCivilIsoParts(year, month, nextDay);
+}
+
+function formatGregorianEventPartsLabel(
+  g: { era?: string; year: number; month: number; day: number },
+  lang?: string,
+): string {
+  const digitFn = (n: number | string) => formatLocaleDigits(n, lang);
+  return formatGregorianFromDateParts(g, lang ?? "ne", digitFn);
+}
+
+/** Vikram or Gregorian label for the civil day a moon event falls on. */
+function formatPatroMoonEventDate(p: PanchangaDay, eventCivilIso: string, lang?: string): string {
+  const normalized = positiveGregorianCivilIso(eventCivilIso);
+  const greg = p.date_parts?.gregorian;
+  const vikram = p.date_parts?.vikram;
+
+  if (vikram?.year && vikram.month && vikram.day && greg?.year && greg.month && greg.day && p.date_bs) {
+    const anchor = formatCivilIsoParts(greg.year, greg.month, greg.day);
+    const delta = civilDayDiffIso(normalized, anchor);
+    const bsIso = offsetBsIsoByCivilDayDelta(p.date_bs, delta);
+
+    if (normalizeLang(lang) === "en") {
+      if (delta === 0) {
+        return formatGregorianEventPartsLabel(greg, lang);
+      }
+      const parts = parseCivilIso(normalized);
+      return formatGregorianEventPartsLabel(
+        { era: greg.era, year: parts.year, month: parts.month, day: parts.day },
+        lang,
+      );
+    }
+
+    const label = formatBsIsoDateNepali(bsIso ?? p.date_bs, { includeYear: false, lang });
+    if (label) return label;
+  }
+
+  return formatEventDate(normalized, lang);
 }
 
 /**
@@ -540,35 +607,56 @@ function addDaysIso(isoDate: string, days: number): string {
  * language reads the rest of the app in.
  */
 function formatEventDate(isoDate: string, lang?: string): string {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  if (!y || !m || !d) return formatLocaleDigits(isoDate, lang);
-  if (normalizeLang(lang) === "en") {
-    return new Date(y, m - 1, d).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+  const normalized = positiveGregorianCivilIso(isoDate);
+  // `"-0020-04-16".split("-")` yields a leading empty field, so the old parse
+  // produced year 0 and bailed to the raw string — a BCE moonrise read
+  // "-0020-04-16 · १७:५४" instead of a date. Parse sign-aware instead.
+  let parts: { year: number; month: number; day: number };
+  try {
+    parts = parseCivilIso(normalized);
+  } catch {
+    return formatLocaleDigits(isoDate, lang);
   }
-  const bs = adToBS(new Date(y, m - 1, d));
+  const { month, day } = parts;
+  if (!month || !day) return formatLocaleDigits(isoDate, lang);
+  const date = parseCivilIsoToDate(normalized);
+  if (normalizeLang(lang) === "en") {
+    if (parts.year < 1) return `${AD_MONTHS_SHORT[month - 1]} ${day}`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+  const bs = adToBS(date);
   return `${BS_MONTHS_NE[bs.month - 1]} ${formatLocaleDigits(bs.day, lang)}`;
 }
 
-/** BS date from YYYY-MM-DD (BS era), e.g. जेठ १५, वि.सं. २०८२. */
+/**
+ * BS date from a `date_bs` string, e.g. जेठ १५, वि.सं. २०८२.
+ *
+ * `date_bs` spells pre-epoch days on the engine's signed axis (`-4-01-01`), so
+ * it is parsed sign-aware and rendered the way the eras actually work: a
+ * negative year is BBS (पू.वि.सं.) with a positive number, never "BS -4".
+ * A plain `split("-")` here shifted every field on those days.
+ */
 export function formatBsIsoDateNepali(
   bsIso?: string | null,
   opts?: { includeYear?: boolean; lang?: string }
 ): string | undefined {
   if (!bsIso) return undefined;
-  const [ys, ms, ds] = bsIso.split("-");
-  const year = Number(ys);
-  const month = Number(ms);
-  const day = Number(ds);
+  let year: number;
+  let month: number;
+  let day: number;
+  try {
+    ({ year, month, day } = parseCivilIso(bsIso));
+  } catch {
+    return undefined;
+  }
   if (!month || !day) return undefined;
   const isEn = (opts?.lang ?? "ne").slice(0, 2) === "en";
   const months = isEn ? BS_MONTH_NAMES : BS_MONTHS_NE;
-  const era = isEn ? "BS" : "वि.सं.";
+  const beforeEpoch = year < 0;
+  const era = isEn ? (beforeEpoch ? "BBS" : "BS") : beforeEpoch ? "पू.वि.सं." : "वि.सं.";
   const label = `${months[month - 1]} ${formatLocaleDigits(day, opts?.lang)}`;
   if (opts?.includeYear === false || !year) return label;
-  return `${label}, ${era} ${formatLocaleDigits(year, opts?.lang)}`;
+  return `${label}, ${era} ${formatLocaleDigits(Math.abs(year), opts?.lang)}`;
 }
 
 export function formatHolidayBsDisplay(
@@ -614,19 +702,20 @@ export function resolveMoonEventAdDate(
   key: "moonrise" | "moonset",
   block: MoonTimeBlock
 ): string | undefined {
-  const dayDate = p.date_ad;
-  if (!dayDate) return block.local?.slice(0, 10);
+  const dayDate = p.date_ad ? positiveGregorianCivilIso(p.date_ad) : undefined;
+  if (!dayDate) return block.local ? positiveGregorianCivilIso(civilIsoDatePart(block.local)) : undefined;
 
-  const eventDate = block.local?.slice(0, 10);
+  const eventDateRaw = block.local ? civilIsoDatePart(block.local) : undefined;
+  const eventDate = eventDateRaw ? positiveGregorianCivilIso(eventDateRaw) : undefined;
   const eventMin = parseTimeToMinutes(block.local_time_short);
   const sunriseMin = parseTimeToMinutes(getSunrise(p));
 
-  if (eventDate && eventDate !== dayDate) {
+  if (eventDate && dayDate && eventDate !== dayDate) {
     return eventDate;
   }
 
   if (key === "moonrise" && eventMin != null && sunriseMin != null && eventMin < sunriseMin) {
-    return addDaysIso(dayDate, 1);
+    return addDaysCivilIso(dayDate, 1);
   }
 
   return eventDate ?? dayDate;
@@ -645,12 +734,34 @@ export function formatMoonEventDisplay(
   const eventDate = resolveMoonEventAdDate(p, key, block);
   if (!time) return undefined;
   if (!eventDate) return time;
-  return `${formatEventDate(eventDate, lang)} · ${time}`;
+  return `${formatPatroMoonEventDate(p, eventDate, lang)} · ${time}`;
+}
+
+/** Span element boundary — locale-aware date + clock (tithi/nakshatra month pages). */
+export function formatElementStampDisplay(
+  stamp: ElementStamp,
+  lang?: string,
+): string {
+  const time = formatTimeShort(stamp.time_label) ?? stamp.time_label;
+  const timeOut = formatLocaleDigits(time, lang);
+  const datePart = stamp.iso.includes("T") ? stamp.iso.split("T")[0]! : stamp.iso.slice(0, 10);
+  let dateOut: string;
+  try {
+    dateOut = formatEventDate(datePart, lang);
+  } catch {
+    dateOut = formatLocaleDigits(stamp.date_label, lang);
+  }
+  if (normalizeLang(lang) === "en") {
+    return `${timeOut} on ${dateOut}`;
+  }
+  return `${timeOut} · ${dateOut}`;
 }
 
 export function formatMonthMoonEventDisplay(
   day: {
     date_ad: string;
+    date_bs?: string;
+    date_parts?: PanchangaDay["date_parts"];
     sunrise?: string;
     moonrise?: string;
     moonrise_local?: string;
@@ -664,13 +775,18 @@ export function formatMonthMoonEventDisplay(
   if (!time) return undefined;
   const local = key === "moonrise" ? day.moonrise_local : day.moonset_local;
   const block: MoonTimeBlock = { local_time_short: time, local };
-  const pseudo = { date_ad: day.date_ad, sunrise: day.sunrise } as PanchangaDay;
+  const pseudo = {
+    date_ad: day.date_ad,
+    date_bs: day.date_bs,
+    date_parts: day.date_parts,
+    sunrise: day.sunrise,
+  } as PanchangaDay;
   const eventDate = resolveMoonEventAdDate(pseudo, key, block);
   const short = formatTimeShort(time) ?? time;
   const timeLabel = formatLocaleDigits(short, lang);
   if (!timeLabel) return undefined;
   if (!eventDate) return timeLabel;
-  return `${formatEventDate(eventDate, lang)} · ${timeLabel}`;
+  return `${formatPatroMoonEventDate(pseudo, eventDate, lang)} · ${timeLabel}`;
 }
 
 /** Month patro grid — clock only (no BS date prefix when moon event is next/prior civil day). */

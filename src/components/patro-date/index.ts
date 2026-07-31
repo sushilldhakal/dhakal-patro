@@ -11,11 +11,9 @@ export { PatroDayTimeNav, type PatroDayTimeNavProps } from "./PatroDayTimeNav";
 export { PatroYearNav, type PatroYearNavProps } from "./PatroYearNav";
 
 export {
-  PATRO_BS_YEAR_OPTIONS,
-  PATRO_AD_YEAR_OPTIONS,
+  buildPatroAdYearOptions,
   buildBsDayOptions,
   pickBsDate,
   isAtMinBsDay,
   isAtMaxBsDay,
-  clampBsYear,
 } from "@/lib/patro-date-options";

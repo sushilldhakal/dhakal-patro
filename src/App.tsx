@@ -1,5 +1,6 @@
 import { RouterProvider, type AnyRouter } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ApiError } from "@/lib/api";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { useEffect, type ReactNode } from "react";
@@ -20,8 +21,26 @@ import { normalizeLang } from "./i18n/locale";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      // Never retry a client error. A 4xx here means the request itself is
+      // wrong — an out-of-range year, a date with no ephemeris — and repeating
+      // it cannot help. It also actively hurt: React Query pauses *between*
+      // retry attempts, so a doomed retry left the query parked at
+      // fetchStatus "paused" with status "pending" instead of settling to
+      // "error", and the page showed placeholder state forever rather than the
+      // API's explanation. Server/network faults still get one retry.
+      retry: (failureCount, error) =>
+        error instanceof ApiError && error.status >= 400 && error.status < 500
+          ? false
+          : failureCount < 1,
       refetchOnWindowFocus: false,
+      // Always run and always settle. Under the default "online" mode React
+      // Query consults its own connectivity guess before retrying, and when
+      // that guess is wrong a failed query parks at fetchStatus "paused"
+      // forever: status stays "pending", `isError` never becomes true, and the
+      // page keeps rendering placeholder state instead of the API's actual
+      // error. Every request here is same-origin (nginx proxies /api), so
+      // there is nothing for the offline heuristic to usefully protect.
+      networkMode: "always",
     },
   },
 });

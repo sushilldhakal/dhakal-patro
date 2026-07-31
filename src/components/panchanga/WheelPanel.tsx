@@ -1,5 +1,6 @@
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { NAKSHATRA_GLYPHS, RASHI_GLYPHS, WheelGlyph } from "@/lib/wheel-glyphs";
+import { NAKSHATRA_GLYPHS, RASHI_GLYPHS } from "@/lib/wheel-glyph-art";
+import { WheelGlyph } from "@/lib/wheel-glyphs";
 import {
   bsMonthsForWheel,
   PADA_AKSHAR,

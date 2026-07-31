@@ -14,18 +14,14 @@ import {
   fetchGochar,
   fetchGocharIngress,
   fetchSpecialMonths,
-  panchangaKeys,
   gocharKeys,
   specialMonthsKeys,
   type CalendarDay,
   type CalendarDayAnga,
   type PanchangaDay,
 } from "@/lib/api";
-import {
-  BS_MONTHS_NE,
-  BS_SUPPORTED_START_YEAR,
-  BS_SUPPORTED_END_YEAR,
-} from "@/lib/bs-calendar";
+import { getLanguageForEra } from "@/lib/era";
+import { formatBsDateKey } from "@/lib/patro-day";
 import { formatTimeShort, formatVedicPatroTime, getRituDisplay } from "@/lib/panchanga-format";
 import {
   getRashiName,
@@ -34,7 +30,7 @@ import {
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "@/components/PageShell";
 import { usePatroMonthUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { PatroMonthYearNav, PATRO_AD_YEAR_OPTIONS, PATRO_BS_YEAR_OPTIONS } from "@/components/patro-date";
+import { PatroMonthYearNav } from "@/components/patro-date";
 import {
   Table,
   TableBody,
@@ -66,6 +62,7 @@ import { GocharKundaliChart } from "@/components/dainikKranti/GocharKundaliChart
 import { GocharRashyadiTable } from "@/components/dainikKranti/GocharRashyadiTables";
 import { buildRashyadiRangeTables } from "@/lib/dainikKranti/rashyadi-segments";
 import { buildGapanshaLine, buildPapanshaDisplayLine } from "@/lib/dainikKranti/gapansha";
+import { ingressEventBsDayForMonth } from "@/lib/dainikKranti/ingress-day-match";
 import { grahaRashiNe, formatGocharBsLabel } from "@/lib/dainikKranti/gochar-display";
 import { MonthLagnaMatrix } from "@/components/dainikKranti/MonthLagnaMatrix";
 import { MonthGrahaSpashta } from "@/components/dainikKranti/MonthGrahaSpashta";
@@ -208,19 +205,6 @@ type TransitEvent = {
   time?: string;
   sortKey: string;
 };
-function resolvePatroRowDateAd(
-  ev: { entry_vedic_date_ad?: string; entry_date_ad?: string },
-  allDays: CalendarDay[],
-): string | undefined {
-  const civil = ev.entry_vedic_date_ad ?? ev.entry_date_ad;
-  if (!civil) return undefined;
-  if (allDays.some((d) => d.date_ad === civil)) return civil;
-  // Fallback: vedic date may be last day of prior month when month starts mid-week.
-  return ev.entry_date_ad;
-}
-
-const BS_MIN_INDEX = BS_SUPPORTED_START_YEAR * 12;
-const BS_MAX_INDEX = BS_SUPPORTED_END_YEAR * 12 + 11;
 
 function phaseOf(day: CalendarDay): Phase | undefined {
   if (day.paksha === "shukla" || day.paksha_ne?.includes("शुक्ल")) return "shukla";
@@ -696,9 +680,9 @@ export function DainikKranti() {
   const monthBrowse = usePatroMonthUrlBrowse(search, navigate, location, setLocation, {
     mirror: browseMirror,
   });
-  const adBrowse = monthBrowse.era === "ad";
+  const adBrowse = getLanguageForEra(monthBrowse.era) === "en";
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-  const expandResetKey = `${monthBrowse.browseYear}|${monthBrowse.browseMonth}|${paksha}|${location.params.lat}|${location.params.lon}`;
+  const expandResetKey = `${monthBrowse.era}|${monthBrowse.year}|${monthBrowse.month}|${paksha}|${location.params.lat}|${location.params.lon}`;
   const [trackedExpandKey, setTrackedExpandKey] = useState(expandResetKey);
   if (expandResetKey !== trackedExpandKey) {
     setTrackedExpandKey(expandResetKey);
@@ -728,16 +712,17 @@ export function DainikKranti() {
   };
 
   const monthQ = useQuery({
-    queryKey: panchangaKeys.month(
-      monthBrowse.browseYear,
-      monthBrowse.browseMonth,
-      location.params,
-      true,
-      false,
+    queryKey: [
+      "panchanga",
+      "month",
       monthBrowse.era,
-    ),
+      monthBrowse.year,
+      monthBrowse.month,
+      location.params,
+      "full",
+    ] as const,
     queryFn: () =>
-      fetchMonthCalendar(monthBrowse.browseYear, monthBrowse.browseMonth, location.params, {
+      fetchMonthCalendar(monthBrowse.year, monthBrowse.month, location.params, {
         era: monthBrowse.era,
       }),
     staleTime: 1000 * 60 * 30,
@@ -769,8 +754,9 @@ export function DainikKranti() {
 
   // Adhik / kshaya maas info for the displayed year (drives शुद्ध vs अधिक labels).
   const specialQ = useQuery({
-    queryKey: specialMonthsKeys.year(monthBrowse.bsYear),
-    queryFn: () => fetchSpecialMonths(monthBrowse.bsYear),
+    queryKey: specialMonthsKeys.year(monthBrowse.year),
+    queryFn: () => fetchSpecialMonths(monthBrowse.year),
+    enabled: monthBrowse.era === "bs",
     staleTime: 1000 * 60 * 60,
   });
   const adhik = specialQ.data?.adhik_maas;
@@ -804,11 +790,30 @@ export function DainikKranti() {
 
   // गोचर kundali + transit extraction are anchored to the month start so each
   // planet's `next_rashi_entry` covers the whole displayed month.
-  const gocharDate = allDays[0]?.date_ad ?? nowKey;
+  const gocharApiEra: "bs" | "ad" = adBrowse ? "ad" : "bs";
+
+  const gocharAnchor = useMemo(() => {
+    if (!adBrowse) {
+      return formatBsDateKey(monthBrowse.year, monthBrowse.month, 1);
+    }
+    return allDays[0]?.date_ad ?? null;
+  }, [adBrowse, monthBrowse.year, monthBrowse.month, allDays]);
+
+  const gocharEnd = useMemo(() => {
+    if (!adBrowse) {
+      const lastDay =
+        allDays[allDays.length - 1]?.day ?? monthQ.data?.month_length ?? 30;
+      return formatBsDateKey(monthBrowse.year, monthBrowse.month, lastDay);
+    }
+    return allDays[allDays.length - 1]?.date_ad ?? null;
+  }, [adBrowse, monthBrowse.year, monthBrowse.month, allDays, monthQ.data?.month_length]);
+
+  const gocharReady = Boolean(gocharAnchor && gocharEnd);
+
   const gocharQ = useQuery({
-    queryKey: gocharKeys.day(gocharDate, "ad", location.params),
-    queryFn: () => fetchGochar(gocharDate, "ad", location.params),
-    enabled: Boolean(gocharDate),
+    queryKey: gocharKeys.dayLegacy(gocharAnchor ?? "", gocharApiEra, location.params),
+    queryFn: () => fetchGochar(gocharAnchor!, gocharApiEra, location.params),
+    enabled: gocharReady,
     staleTime: 1000 * 60 * 30,
   });
 
@@ -817,34 +822,38 @@ export function DainikKranti() {
     [gocharQ.data],
   );
 
-  const monthEnd = allDays[allDays.length - 1]?.date_ad;
   const ingressQ = useQuery({
-    queryKey: gocharKeys.ingress(
-      gocharDate,
-      monthEnd ?? gocharDate,
+    queryKey: gocharKeys.ingressEra(
+      gocharAnchor ?? "",
+      gocharEnd ?? "",
       "patro",
-      location.params
+      gocharApiEra,
+      location.params,
     ),
     queryFn: () =>
-      fetchGocharIngress(gocharDate, monthEnd ?? gocharDate, location.params, {
+      fetchGocharIngress(gocharAnchor!, gocharEnd!, location.params, {
         level: "patro",
-        era: "ad",
+        era: gocharApiEra,
       }),
-    enabled: Boolean(gocharDate && monthEnd),
+    enabled: gocharReady,
     staleTime: 1000 * 60 * 30,
   });
 
   // Per-day ग्रहचार / उदयास्त — keyed by BS गते (vedic sunrise day).
   const transitsByBsDay = useMemo(() => {
     const out: Record<number, TransitEvent[]> = {};
-    const dateToBsDay = Object.fromEntries(allDays.map((d) => [d.date_ad, d.day]));
     const sunriseByDate = Object.fromEntries(allDays.map((d) => [d.date_ad, d.sunrise]));
 
     for (const ev of ingressQ.data?.events ?? []) {
-      const rowDateAd = resolvePatroRowDateAd(ev, allDays);
-      if (!rowDateAd) continue;
-      const bsDay = dateToBsDay[rowDateAd];
+      const bsDay = ingressEventBsDayForMonth(
+        ev,
+        monthBrowse.year,
+        monthBrowse.month,
+        allDays,
+      );
       if (bsDay == null) continue;
+      const rowDateAd = allDays.find((d) => d.day === bsDay)?.date_ad;
+      if (!rowDateAd) continue;
 
       const planetNe = grahaTableNe(ev.graha, ev.graha_ne);
       const planetEn = grahaTableEn(ev.graha, ev.graha_ne);
@@ -891,13 +900,25 @@ export function DainikKranti() {
     // `lang` looks unused here, but resolveRashiDisplay reads the active i18n
     // bundle. Without it these labels keep the language they were built under.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingressQ.data, allDays, lang]);
+  }, [ingressQ.data, allDays, lang, monthBrowse.year, monthBrowse.month]);
+
+  const ingressBrowse = useMemo(
+    () => ({ year: monthBrowse.year, month: monthBrowse.month }),
+    [monthBrowse.year, monthBrowse.month],
+  );
 
   const lagnaMatrix = useMemo(() => buildLagnaMatrix(days), [days]);
   const grahaMatrix = useMemo(() => buildGrahaSpashtaMatrix(days), [days]);
   const calcNotes = useMemo(
-    () => buildCalcNotes(days, ingressQ.data?.events ?? [], headerByDate),
-    [days, ingressQ.data?.events, headerByDate],
+    () =>
+      buildCalcNotes(
+        days,
+        ingressQ.data?.events ?? [],
+        headerByDate,
+        allDays,
+        ingressBrowse,
+      ),
+    [days, ingressQ.data?.events, headerByDate, allDays, ingressBrowse],
   );
   const rashyadiRange = useMemo(
     () =>
@@ -906,8 +927,9 @@ export function DainikKranti() {
         allDays,
         ingressQ.data?.events ?? [],
         (d) => pakshaSegmentOf(d, adhikMonthEn, isEn),
+        ingressBrowse,
       ),
-    [days, allDays, ingressQ.data?.events, adhikMonthEn, isEn],
+    [days, allDays, ingressQ.data?.events, adhikMonthEn, isEn, ingressBrowse],
   );
   const papanshaLine = useMemo(() => {
     if (days.length === 0) return "";
@@ -915,8 +937,8 @@ export function DainikKranti() {
   }, [days]);
   const gapanshaLine = useMemo(() => {
     if (days.length === 0) return "";
-    return buildGapanshaLine(days, allDays, ingressQ.data?.events ?? []);
-  }, [days, allDays, ingressQ.data?.events]);
+    return buildGapanshaLine(days, allDays, ingressQ.data?.events ?? [], ingressBrowse);
+  }, [days, allDays, ingressQ.data?.events, ingressBrowse]);
   const lagnaByDate = useMemo(
     () => Object.fromEntries(lagnaMatrix.map((r) => [r.dateAd, r])),
     [lagnaMatrix],
@@ -938,12 +960,11 @@ export function DainikKranti() {
     return dp ? getRituDisplay(dp as PanchangaDay, lang) : undefined;
   }, [allDays, lang]);
 
-  const monthLabel = isEn
-    ? new Date(monthBrowse.browseYear, monthBrowse.browseMonth - 1, 1).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      })
-    : `${BS_MONTHS_NE[monthBrowse.browseMonth - 1]} ${dg(monthBrowse.browseYear)}`;
+  const monthLabel = bilingualText(
+    lang,
+    monthQ.data?.month_name_ne ?? monthQ.data?.month_name ?? "",
+    monthQ.data?.month_name ?? monthQ.data?.month_name_ne ?? "",
+  );
   const pakshaLabel = isEn
     ? effectivePaksha === "krishna"
       ? "Krishna Paksha"
@@ -955,16 +976,6 @@ export function DainikKranti() {
       : effectivePaksha === "shukla"
         ? "शुक्लपक्ष"
         : "पूरा महिना";
-  const atStart =
-    monthBrowse.era === "ad"
-      ? monthBrowse.adYear <= PATRO_AD_YEAR_OPTIONS[0]! && monthBrowse.adMonth <= 1
-      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) <= BS_MIN_INDEX;
-  const atEnd =
-    monthBrowse.era === "ad"
-      ? monthBrowse.adYear >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]! &&
-        monthBrowse.adMonth >= 12
-      : monthBrowse.bsYear * 12 + (monthBrowse.bsMonth - 1) >= BS_MAX_INDEX;
-
   const goToday = () => {
     monthBrowse.goToday(nowKey);
   };
@@ -1023,18 +1034,16 @@ export function DainikKranti() {
   return (
     <PageShell>
       <PatroMonthYearNav
-        calendarMode={monthBrowse.era}
-        year={monthBrowse.browseYear}
-        month={monthBrowse.browseMonth}
-        yearOptions={monthBrowse.era === "ad" ? PATRO_AD_YEAR_OPTIONS : PATRO_BS_YEAR_OPTIONS}
+        era={monthBrowse.era}
+        year={monthBrowse.year}
+        month={monthBrowse.month}
         todayAd={nowKey}
         onToday={goToday}
-        onMonthChange={(m) => monthBrowse.setBrowseMonth(monthBrowse.browseYear, m)}
-        onYearChange={(y) => monthBrowse.setBrowseMonth(y, monthBrowse.browseMonth)}
+        onMonthChange={(m) => monthBrowse.setYearMonth(monthBrowse.year, m)}
+        onYearChange={(y) => monthBrowse.setYearMonth(y, monthBrowse.month)}
+        onEraChange={monthBrowse.setEra}
         onPrev={() => stepMonth(-1)}
         onNext={() => stepMonth(1)}
-        prevDisabled={atStart}
-        nextDisabled={atEnd}
         location={location}
         onLocationChange={setLocation}
         mobileToolbar={pakshaToggleMobile}
@@ -1049,7 +1058,7 @@ export function DainikKranti() {
       <div className="space-y-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="text-lg font-bold text-foreground">
-            {monthLabel} · {pakshaLabel}
+            {monthLabel} {dg(monthBrowse.year)} · {pakshaLabel}
           </h2>
           {monthQ.data?.year_bs ? (
             <span className="text-sm">{dg(monthQ.data.year_bs)} {t("dainik.bs")}</span>

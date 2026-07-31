@@ -30,12 +30,12 @@ export function MarriageSait() {
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
-  const bsYear = yearBrowse.bsYear;
+  const { year, era, setYear, setEra } = yearBrowse;
   const content = SAIT_RULES_CONTENT.vivah;
 
   const detailQuery = useQuery({
-    queryKey: saitDetailKey(bsYear, "vivah", location.params),
-    queryFn: () => fetchSaitDetail(bsYear, "vivah", location.params),
+    queryKey: saitDetailKey(year, "vivah", location.params),
+    queryFn: () => fetchSaitDetail(year, "vivah", location.params),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
   });
@@ -48,8 +48,8 @@ export function MarriageSait() {
   const birthTz = selectedProfile?.timezone ?? "Asia/Kathmandu";
 
   const personalizeQuery = useQuery({
-    queryKey: saitPersonalizeKey(bsYear, "vivah", location.params, birthDatetime, birthTz),
-    queryFn: () => fetchSaitPersonalize(bsYear, "vivah", location.params, birthDatetime, birthTz),
+    queryKey: saitPersonalizeKey(year, "vivah", location.params, birthDatetime, birthTz),
+    queryFn: () => fetchSaitPersonalize(year, "vivah", location.params, birthDatetime, birthTz),
     enabled: Boolean(selectedProfile) && Boolean(birthDatetime),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
@@ -79,11 +79,10 @@ export function MarriageSait() {
     <SaitCeremonyLayout
       title={t("sait.marriage.title")}
       subtitle={t("sait.marriage.subtitle")}
-      year={yearBrowse.browseYear}
-      onYearChange={yearBrowse.setBrowseYear}
-      calendarMode={yearBrowse.era}
-      yearOptions={yearBrowse.yearOptions}
-      currentYear={yearBrowse.currentBrowseYear}
+      year={year}
+      onYearChange={setYear}
+      onEraChange={setEra}
+      era={era}
       location={location}
       onLocationChange={setLocation}
       method={content.method}
@@ -96,7 +95,9 @@ export function MarriageSait() {
       emptyLabel={t("sait.marriage.empty_year")}
       countLabel={(count, y) =>
         t(
-          yearBrowse.era === "ad" ? "sait.marriage.count_label_ad" : "sait.marriage.count_label_bs",
+          era === "ad" || era === "bc"
+            ? "sait.marriage.count_label_ad"
+            : "sait.marriage.count_label_bs",
           { count: digits(count), year: digits(y) },
         )
       }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { learnHero, learnStatPill } from "@/lib/learn-classes";
@@ -70,6 +70,11 @@ const CATEGORY_META: Record<
     chip: "bg-rose-500/10 text-rose-900 border-rose-500/25 dark:text-rose-200",
     ring: "group-hover:ring-rose-500/25",
   },
+  history: {
+    icon: HistoryIcon,
+    chip: "bg-orange-500/10 text-orange-950 border-orange-500/25 dark:text-orange-200",
+    ring: "group-hover:ring-orange-500/25",
+  },
 };
 
 function normalizeSearch(value: string) {
@@ -90,6 +95,29 @@ function categoryForTopic(topic: LearnTopic): LearnCategory | undefined {
   return LEARN_CATEGORIES.find((c) => c.id === topic.category);
 }
 
+function LearnTopicLink({
+  topic,
+  className,
+  children,
+}: {
+  topic: LearnTopic;
+  className?: string;
+  children: ReactNode;
+}) {
+  if (topic.slug === "history") {
+    return (
+      <Link to="/learn/history" className={className}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <Link to="/learn/$slug" params={{ slug: topic.slug }} className={className}>
+      {children}
+    </Link>
+  );
+}
+
 function TopicCard({
   topic,
   variant = "default",
@@ -105,9 +133,8 @@ function TopicCard({
 
   if (variant === "featured") {
     return (
-      <Link
-        to="/learn/$slug"
-        params={{ slug: topic.slug }}
+      <LearnTopicLink
+        topic={topic}
         className="group relative flex h-full flex-col rounded-2xl border border-secondary/25 bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-secondary/50 hover:shadow-md"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
@@ -136,15 +163,14 @@ function TopicCard({
           {t("learn_page.read_start")}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </span>
-      </Link>
+      </LearnTopicLink>
     );
   }
 
   if (variant === "compact") {
     return (
-      <Link
-        to="/learn/$slug"
-        params={{ slug: topic.slug }}
+      <LearnTopicLink
+        topic={topic}
         className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-secondary/50 hover:bg-secondary/[0.05]"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
@@ -159,14 +185,13 @@ function TopicCard({
           </span>
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
-      </Link>
+      </LearnTopicLink>
     );
   }
 
   return (
-    <Link
-      to="/learn/$slug"
-      params={{ slug: topic.slug }}
+    <LearnTopicLink
+      topic={topic}
       className={cn(
         "group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-secondary/45 hover:shadow-md",
         meta?.ring && `hover:ring-2 ${meta.ring}`,
@@ -200,7 +225,7 @@ function TopicCard({
         {t("learn_page.read_detail")}
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </span>
-    </Link>
+    </LearnTopicLink>
   );
 }
 
@@ -314,32 +339,6 @@ export function Learn() {
             ))}
           </div>
         </section>
-      )}
-
-      {!isFiltering && (
-        <Link
-          to="/learn/history"
-          className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-secondary/50 sm:flex-row sm:items-center sm:gap-6 sm:p-7"
-        >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
-            <HistoryIcon className="h-6 w-6" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold uppercase tracking-wide text-secondary">
-              {t("learn_page.history_eyebrow")}
-            </div>
-            <h2 className="mt-0.5 text-lg font-bold text-foreground sm:text-xl">
-              {t("learn_page.history_title")}
-            </h2>
-            <p className="mt-1 text-sm">
-              {t("learn_page.history_desc")}
-            </p>
-          </div>
-          <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-secondary">
-            {t("common.read_more")}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </span>
-        </Link>
       )}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

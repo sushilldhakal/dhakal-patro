@@ -13,9 +13,11 @@ import {
 } from "@tanstack/react-table";
 import { PartyPopper, Flag, Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import {
-  fetchHolidays, fetchFestivals,
+  fetchHolidays,
+  fetchFestivals,
   holidayKeys,
-  type Holiday, type Festival,
+  type Holiday,
+  type Festival,
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
 import { SeoContentSection } from "../components/seo/SeoContentSection";
@@ -207,14 +209,14 @@ export function Holidays() {
   const [filter, setFilter] = useState("");
 
   const holidaysQ = useQuery({
-    queryKey: holidayKeys.holidays(yearBrowse.browseYear, yearBrowse.era),
-    queryFn: () => fetchHolidays(yearBrowse.browseYear, yearBrowse.era),
+    queryKey: holidayKeys.holidays(yearBrowse.year, yearBrowse.era),
+    queryFn: () => fetchHolidays(yearBrowse.year, yearBrowse.era),
     staleTime: 1000 * 60 * 60,
   });
 
   const festivalsQ = useQuery({
-    queryKey: holidayKeys.festivals(yearBrowse.browseYear, yearBrowse.era),
-    queryFn: () => fetchFestivals(yearBrowse.browseYear, undefined, yearBrowse.era),
+    queryKey: holidayKeys.festivals(yearBrowse.year, yearBrowse.era),
+    queryFn: () => fetchFestivals(yearBrowse.year, undefined, yearBrowse.era),
     staleTime: 1000 * 60 * 60,
   });
 
@@ -237,20 +239,16 @@ export function Holidays() {
       />
 
       <PatroYearNav
-        calendarMode={yearBrowse.era}
-        year={yearBrowse.browseYear}
-        onYearChange={yearBrowse.setBrowseYear}
-        currentYear={yearBrowse.currentBrowseYear}
-        yearOptions={yearBrowse.yearOptions}
+        era={yearBrowse.era}
+        year={yearBrowse.year}
+        onYearChange={yearBrowse.setYear}
+        onEraChange={yearBrowse.setEra}
+        gregorianRange={
+          gregorianRange?.start && gregorianRange?.end ? gregorianRange : undefined
+        }
         location={location}
         onLocationChange={setLocation}
       />
-
-      {gregorianRange ? (
-        <p className="m-0 -mt-2 text-xs">
-          ({gregorianRange.start} – {gregorianRange.end})
-        </p>
-      ) : null}
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">

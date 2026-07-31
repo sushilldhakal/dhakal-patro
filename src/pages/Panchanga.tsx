@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { CalendarRange } from "lucide-react";
 import {
+  ApiError,
   fetchCivilTimeline,
-  fetchPanchanga,
   fetchPanchangaCivilDay,
+  fetchPanchangaDay,
   locationCacheKey,
   panchangaKeys,
 } from "@/lib/api";
-import { adToBS } from "@/lib/bs-calendar";
+import { parseCivilIso } from "@/lib/patro-day";
+import { adToBS, BS_MONTHS_NE } from "@/lib/bs-calendar";
 import {
-  buildAtTimeDatetime,
-  chartDateAd,
   fetchEphemerisPanchangaDay,
   isEphemerisPanchanga,
 } from "@/lib/ephemeris-adapters";
@@ -23,6 +23,8 @@ import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { PatroDayTimeNav } from "@/components/patro-date";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { usePatroPanchangaUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { patroDayFetchWithDisplayEra } from "@/lib/patro-day-url";
+import { isEra } from "@/lib/era";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline, DayCycleToggle, type DayCycleMode } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
@@ -67,53 +69,128 @@ export function Panchanga() {
 
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const dayBrowse = usePatroPanchangaUrlBrowse(search, navigate, location, setLocation);
-  const { date, setDate, dateAd: adDateStr, clock, setClock } = dayBrowse;
+  const {
+    dayState,
+    date,
+    setDate,
+    replaceDayState,
+    promoteToJd,
+    syncPickerFromDateAd,
+    clock,
+    setClock,
+    setDisplayEra,
+  } = dayBrowse;
+  const browseEra = dayState.display.era;
   const [clockUserAdjusted, setClockUserAdjusted] = useState(false);
 
-  const bs = adToBS(date);
-  const atTimeDatetime = buildAtTimeDatetime(adDateStr, clock);
-
   const udayaQuery = useQuery({
-    queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
-    queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
+    queryKey: panchangaKeys.daySelection(dayState, location.params),
+    queryFn: () => fetchPanchangaDay(dayState, location.params),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
 
+  useEffect(() => {
+    const ad = udayaQuery.data?.date_ad;
+    if (ad) syncPickerFromDateAd(ad);
+    const jd = udayaQuery.data?.jd_ut;
+    // Keep BS/BBS (and AD/BC) calendar keys in the URL — do not collapse to `jd`.
+    if (jd != null && dayState.kind !== "jd" && dayState.kind !== "input") {
+      promoteToJd(jd);
+    }
+  }, [udayaQuery.data?.date_ad, udayaQuery.data?.jd_ut, dayState.kind, promoteToJd, syncPickerFromDateAd]);
+
+  /** Shared links with `jd` + wrong display `era` — fix display only, not BBS input browse. */
+  useEffect(() => {
+    if (dayState.kind !== "jd") return;
+    const vEra = udayaQuery.data?.date_parts?.vikram?.era;
+    if (!vEra || !isEra(vEra) || vEra === dayState.display.era) return;
+    replaceDayState(patroDayFetchWithDisplayEra(dayState, vEra));
+  }, [
+    dayState,
+    dayState.kind,
+    dayState.display.era,
+    udayaQuery.data?.date_parts?.vikram?.era,
+    replaceDayState,
+  ]);
+
+  const wheelData = udayaQuery.data;
+  const civilAnchor = wheelData?.date_ad ?? "";
+  const hasCivilAnchor = civilAnchor.trim().length > 0;
+  const adDateStr = civilAnchor;
+  const isCeCivilDay = useMemo(() => {
+    const gEra = wheelData?.date_parts?.gregorian?.era;
+    if (gEra === "bc") return false;
+    if (!hasCivilAnchor) return false;
+    try {
+      return parseCivilIso(civilAnchor).year >= 1;
+    } catch {
+      return false;
+    }
+  }, [wheelData?.date_parts?.gregorian?.era, civilAnchor, hasCivilAnchor]);
+  const jdUt = wheelData?.jd_ut;
+  const atTimeClock =
+    clock.split(":").length >= 3 ? clock : `${clock}:00`;
+
+  const atTimeReady =
+    wheelData != null &&
+    (dayState.kind === "input" ||
+      (jdUt != null && wheelData.date_parts?.gregorian?.era !== "bc"));
+
   const instantQuery = useQuery({
-    queryKey: panchangaKeys.atTime(atTimeDatetime, location.params),
-    queryFn: () => fetchEphemerisPanchangaDay(atTimeDatetime, adDateStr, location.params),
+    queryKey: panchangaKeys.atTimeDay(dayState, atTimeClock, location.params),
+    queryFn: () =>
+      fetchEphemerisPanchangaDay(dayState, atTimeClock, location.params, {
+        resolvedJdUt: jdUt ?? undefined,
+      }),
     staleTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
+    enabled: atTimeReady,
   });
 
   // दिन-चक्र day boundary: sunrise→sunrise (default) vs midnight→midnight.
   // The civil timeline is fetched lazily, only when Calendar Day is active.
   const [dayCycleMode, setDayCycleMode] = useState<DayCycleMode>("Day-Night");
   const civilQuery = useQuery({
-    queryKey: panchangaKeys.civil(adDateStr, location.params),
-    queryFn: () => fetchCivilTimeline(adDateStr, "ad", location.params),
-    enabled: dayCycleMode === "Calendar Day",
+    queryKey: panchangaKeys.civil(civilAnchor, location.params),
+    queryFn: () => fetchCivilTimeline(civilAnchor, browseEra, location.params),
+    enabled: dayCycleMode === "Calendar Day" && hasCivilAnchor,
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
 
-  // दिन-रात whole-page values: full panchanga referenced at 00:00 of the civil
-  // date. Only fetched when the page tab selects Calendar Day; the anga-based
-  // sections read from this so the text agrees with the midnight-anchored chart.
   const midnightDayQuery = useQuery({
-    queryKey: panchangaKeys.civilDay(adDateStr, location.params),
-    queryFn: () => fetchPanchangaCivilDay(adDateStr, location.params),
-    enabled: dayCycleMode === "Calendar Day",
+    queryKey: panchangaKeys.civilDay(civilAnchor, location.params),
+    queryFn: () =>
+      fetchPanchangaCivilDay(civilAnchor, dayState.display, location.params),
+    enabled: dayCycleMode === "Calendar Day" && hasCivilAnchor,
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
 
-  const { data, isError } = instantQuery;
-  const ephemeris = isEphemerisPanchanga(data);
+  const instantData = instantQuery.data;
+  const data = instantData ?? (isCeCivilDay ? undefined : wheelData);
+  const isError = udayaQuery.isError && !wheelData;
+  const ephemeris = isEphemerisPanchanga(instantData);
 
-  const wheelData = udayaQuery.data;
   const showWheelSkeleton = udayaQuery.isLoading && !wheelData;
+
+  // The backend already resolved this day in every era, so read its answer.
+  // `adToBS` is the offline skeleton only — it is built from a Vikram-era month
+  // table and cannot date a pre-epoch day, which is how a BBS day rendered as
+  // "पू.वि.सं. १" no matter which year was asked for.
+  const bs = useMemo(() => {
+    const vikram = wheelData?.date_parts?.vikram;
+    if (vikram) {
+      return {
+        year: vikram.year,
+        month: vikram.month,
+        day: vikram.day,
+        monthName: BS_MONTHS_NE[vikram.month - 1] ?? "",
+      };
+    }
+    return adToBS(date);
+  }, [wheelData?.date_parts?.vikram, date]);
 
   // Reference source for the "moving" anga sections (तिथि/नक्षत्र/योग/करण, rashi,
   // balam, panchaka/lagna). दिन-रात reads them at midnight; अहोरात्र at sunrise.
@@ -138,7 +215,6 @@ export function Panchanga() {
   const isToday = adDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
 
   const locationLabel = displayLocationLabel(location, data?.location?.name, lang);
-  const chartAd = data ? chartDateAd(data, adDateStr) : adDateStr;
   const todayAd = todayAdStringInTimezone(new Date(), effectiveTimezone);
 
   const hadUrlTimeRef = useRef(Boolean(search.time));
@@ -211,9 +287,13 @@ export function Panchanga() {
               stay tied to the calendar date. Rides in the header toolbar row
               alongside the location picker — same single-row layout as home. */}
           <PatroDayTimeNav
-            calendarMode={langEra}
+            era={browseEra}
             date={date}
+            vikram={wheelData?.date_parts?.vikram}
+            civilDateAd={wheelData?.date_ad}
+            gregorian={wheelData?.date_parts?.gregorian}
             onDateChange={setDate}
+            onEraChange={setDisplayEra}
             todayAd={todayAd}
             clock={clock}
             onClockChange={handleClockChange}
@@ -266,7 +346,13 @@ export function Panchanga() {
         <aside className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-[76px] xl:self-start">
           <GhatiClock sunrise={sunrise} sunset={sunset} timezone={effectiveTimezone} />
           {data && <SunriseD1ChartPanel p={data} />}
-          <PlanetEventsPanel dateAd={chartAd} location={location.params} />
+          {jdUt != null && hasCivilAnchor ? (
+            <PlanetEventsPanel
+              jdUt={jdUt}
+              refDateAd={civilAnchor}
+              location={location.params}
+            />
+          ) : null}
         </aside>
       </div>
 
@@ -283,6 +369,7 @@ export function Panchanga() {
               timezone={effectiveTimezone}
               locationLabel={locationLabel}
               civil={isCivilMode}
+              atTimeDayState={dayState.kind === "input" ? dayState : undefined}
             />
             {wheelData ? (
               <Link
@@ -299,7 +386,12 @@ export function Panchanga() {
 
         {isError && (
           <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-            {t("panchanga.error_load")}
+            {/* Prefer the backend's own explanation — for an unreachable date
+                ("bbs year must be 1..12942", "outside the installed ephemeris
+                range") that is the only thing that tells the user what to fix. */}
+            {udayaQuery.error instanceof ApiError && udayaQuery.error.detail
+              ? udayaQuery.error.detail
+              : t("panchanga.error_load")}
           </div>
         )}
 

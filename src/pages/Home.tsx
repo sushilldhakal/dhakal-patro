@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { useTranslation } from "react-i18next";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import {
-  fetchPanchanga,
+  fetchPanchangaDay,
   fetchSaitMonthAll,
   panchangaKeys,
   saitMonthAllKey,
@@ -19,12 +19,25 @@ import {
   type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsToAD, getCurrentBs } from "../lib/bs-calendar";
+import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsToAdOrNull, getCurrentBs } from "../lib/bs-calendar";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { patroAsideLink, patroAsideTab, patroHeroMonthOverlay, patroHeroMonthShell, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
 import { bsMonthArtUrl } from "@/lib/month-art";
-import { resolveSamvatsaraForBsYear } from "@/lib/samvatsara";
+import { resolveSamvatsaraForPatroYear } from "@/lib/samvatsara";
+import { patroEraShortLabel } from "@/components/patro-date/patro-era-short-label";
+import {
+  formatGregorianFromDateParts,
+  formatPatroCivilDayLabel,
+  patroHeadlineDigits,
+} from "@/lib/patro-headline-subtitle";
+import { canonicalCivilIso, parseCivilIsoToDate } from "@/lib/patro-day";
+import { getLanguageForEra, type Era } from "@/lib/era";
+import {
+  patroDayFetchFromApiDateAd,
+  patroDayFetchFromBrowseGridParts,
+  type PatroDayFetchState,
+} from "@/lib/patro-day-url";
 import { formatPakshaLabel } from "@/lib/panchanga-format";
 import {
   ASIDE_TAB_IDS,
@@ -53,22 +66,47 @@ function fmtAdIso(d: Date): string {
 }
 
 function monthStartAdDate(ctx: CalendarMonthContext): string {
-  if (ctx.days[0]?.date_ad) return ctx.days[0].date_ad;
-  return fmtAdIso(bsToAD(ctx.year, ctx.month, 1));
+  const inMonth =
+    ctx.days.find((d) => !d.outsideMonth && d.day === 1) ??
+    ctx.days.find((d) => !d.outsideMonth);
+  if (inMonth?.date_ad) return inMonth.date_ad;
+  // BBS months have no offline mapping — their days come from the API. Hold today
+  // until they arrive instead of throwing out of the whole Home tree.
+  const ad = bsToAdOrNull(ctx.year, ctx.month, 1);
+  return fmtAdIso(ad ?? new Date());
 }
 
-function fmtAdFull(iso: string, lang: "ne" | "en"): string {
-  const d = new Date(iso.includes("T") ? iso : `${iso}T12:00:00`);
-  return d.toLocaleDateString(lang === "en" ? "en-US" : "ne-NP", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function panchangaMatchesAd(p: PanchangaDay | undefined, ad: string): boolean {
+function panchangaMatchesAside(
+  p: PanchangaDay | undefined,
+  asideAdDate: string,
+  ctx: CalendarMonthContext,
+  contextDay: CalendarDay | null,
+): boolean {
   if (!p) return false;
-  return p.date_ad === ad || p.panchanga_date_ad === ad;
+  const v = p.date_parts?.vikram;
+  if (!ctx.isAdCalendar && contextDay && v?.year && v.month && v.day) {
+    return v.year === ctx.year && v.month === ctx.month && v.day === contextDay.day;
+  }
+  const ad = canonicalCivilIso(asideAdDate);
+  if (p.date_ad && canonicalCivilIso(p.date_ad) === ad) return true;
+  if (p.panchanga_date_ad && canonicalCivilIso(p.panchanga_date_ad) === ad) return true;
+  if (!ctx.isAdCalendar && contextDay && p.bs_date && typeof p.bs_date === "object") {
+    return (
+      p.bs_date.year === ctx.year &&
+      p.bs_date.month === ctx.month &&
+      p.bs_date.day === contextDay.day
+    );
+  }
+  if (
+    !ctx.isAdCalendar &&
+    contextDay &&
+    v?.year === ctx.year &&
+    v.month === ctx.month &&
+    v.day === contextDay.day
+  ) {
+    return true;
+  }
+  return false;
 }
 
 const PanchangaAside = forwardRef(function PanchangaAside(
@@ -82,6 +120,7 @@ const PanchangaAside = forwardRef(function PanchangaAside(
     loading,
     error,
     placement = "sidebar",
+    browseEra = "bs",
   }: {
     selectedDay: CalendarDay | null;
     selectedAdDate: string;
@@ -93,6 +132,7 @@ const PanchangaAside = forwardRef(function PanchangaAside(
     loading: boolean;
     error: boolean;
     placement?: "sidebar" | "below";
+    browseEra?: Era;
   },
   ref: React.ForwardedRef<HTMLElement>,
 ) {
@@ -100,26 +140,29 @@ const PanchangaAside = forwardRef(function PanchangaAside(
   const { digits, lang } = useLocale();
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
 
-  useEffect(() => {
-    if (selectedDay?.date_ad) setAsideTab("panchanga");
-  }, [selectedDay?.date_ad]);
-
   const contextDay =
     selectedDay ??
-    monthContext.days.find((d) => d.date_ad === selectedAdDate) ??
-    monthContext.days.find((d) => d.day === 1) ??
-    monthContext.days[0] ??
+    monthContext.days.find((d) => !d.outsideMonth && d.date_ad === selectedAdDate) ??
+    monthContext.days.find((d) => !d.outsideMonth && d.day === 1) ??
+    monthContext.days.find((d) => !d.outsideMonth) ??
     null;
-  const pMatches = panchangaMatchesAd(p, selectedAdDate);
+  const pMatches = panchangaMatchesAside(p, selectedAdDate, monthContext, contextDay);
   const activeP = pMatches ? p : undefined;
 
   const isSelectedToday = selectedAdDate === todayAd;
 
   const bsDisplay = bilingualText(lang, activeP?.display?.bs_ne, undefined) ?? activeP?.date_bs;
-  const adDisplay =
-    lang === "en"
-      ? (activeP?.display?.gregorian_en ?? fmtAdFull(selectedAdDate, lang))
-      : fmtAdFull(selectedAdDate, lang);
+  const adDisplay = (() => {
+    const digitFn = patroHeadlineDigits(lang);
+    const g = activeP?.date_parts?.gregorian;
+    if (g?.year && g.month && g.day) {
+      return formatGregorianFromDateParts(g, lang, digitFn);
+    }
+    if (activeP?.date_ad) {
+      return formatPatroCivilDayLabel(activeP.date_ad, lang, digitFn);
+    }
+    return formatPatroCivilDayLabel(selectedAdDate, lang, digitFn);
+  })();
   const weekdayNe = bilingualText(lang, 
     activeP?.weekday ?? contextDay?.weekday_ne ?? contextDay?.weekday,
     contextDay?.weekday_en ?? activeP?.weekday ?? contextDay?.weekday,
@@ -147,12 +190,33 @@ const PanchangaAside = forwardRef(function PanchangaAside(
   }, [selectedAdDate]);
 
   const displayHeroDate = (() => {
+    const v = activeP?.date_parts?.vikram;
+    if (v?.month && v.day) {
+      const monthName = bilingualText(
+        lang,
+        BS_MONTHS_NE[v.month - 1],
+        BS_MONTH_NAMES[v.month - 1],
+      );
+      return `${monthName} ${digits(v.day)}`;
+    }
     if (activeP?.bs_date && typeof activeP.bs_date === "object") {
-      const monthName = bilingualText(lang, BS_MONTHS_NE[activeP.bs_date.month - 1], BS_MONTH_NAMES[activeP.bs_date.month - 1]);
+      const monthName = bilingualText(
+        lang,
+        BS_MONTHS_NE[activeP.bs_date.month - 1],
+        BS_MONTH_NAMES[activeP.bs_date.month - 1],
+      );
       return `${monthName} ${digits(activeP.bs_date.day)}`;
     }
+    if (contextDay && !monthContext.isAdCalendar) {
+      const monthName = bilingualText(
+        lang,
+        BS_MONTHS_NE[monthContext.month - 1],
+        BS_MONTH_NAMES[monthContext.month - 1],
+      );
+      return `${monthName} ${digits(contextDay.day)}`;
+    }
     if (contextDay) {
-      const bs = adToBS(new Date(`${contextDay.date_ad}T12:00:00`));
+      const bs = adToBS(parseCivilIsoToDate(contextDay.date_ad));
       const monthName = bilingualText(lang, BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1]);
       return `${monthName} ${digits(bs.day)}`;
     }
@@ -175,11 +239,16 @@ const PanchangaAside = forwardRef(function PanchangaAside(
     topFest?.name_en ?? topFest?.name ?? topFest?.name_ne ?? contextDay?.festivals[0],
   );
   const topFestIsPublic = activeP?.festivals?.[0]?.is_public_holiday ?? false;
-  const bsYearForSamvatsara =
-    activeP?.bs_date && typeof activeP.bs_date === "object"
-      ? activeP.bs_date.year
-      : monthContext.year;
-  const samvatsara = resolveSamvatsaraForBsYear(bsYearForSamvatsara, activeP?.samvatsara);
+  const patroYearForLabel =
+    activeP?.date_parts?.vikram?.year ??
+    (activeP?.bs_date && typeof activeP.bs_date === "object" ? activeP.bs_date.year : monthContext.year);
+  const patroEraForLabel =
+    activeP?.date_parts?.vikram?.era ??
+    (activeP?.bs_date && typeof activeP.bs_date === "object" && activeP.bs_date.year < 0
+      ? "bbs"
+      : browseEra);
+  const vikramEraLabel = patroEraShortLabel(patroEraForLabel, t);
+  const samvatsara = resolveSamvatsaraForPatroYear(patroEraForLabel, patroYearForLabel, activeP?.samvatsara);
   const samvatsaraLabel = samvatsara ? bilingualText(lang, samvatsara.name_ne, samvatsara.name_en) : undefined;
   const isBelow = placement === "below";
   const heroMonthArt = bsMonthArtUrl(monthContext.month);
@@ -252,9 +321,7 @@ const PanchangaAside = forwardRef(function PanchangaAside(
                   </div>
                   <div className="mt-0.5 text-sm text-white/90">
                     {weekdayNe}
-                    {activeP?.bs_date && typeof activeP.bs_date === "object"
-                      ? `, ${t("panchanga.bs_era")} ${digits(activeP.bs_date.year)}`
-                      : `, ${t("panchanga.bs_era")} ${digits(monthContext.year)}`}
+                    {`, ${vikramEraLabel} ${digits(patroYearForLabel)}`}
                     {samvatsaraLabel ? (
                       <span className="text-white/75"> · {samvatsaraLabel}</span>
                     ) : null}
@@ -407,9 +474,57 @@ export function Home() {
     return monthStartAd;
   }, [selectedDay, viewingCurrentMonth, todayAd, monthStartAd]);
 
+  const { era: browseEra, year: browseYear, month: browseMonth } = monthBrowse;
+  const asideDayState = useMemo((): PatroDayFetchState => {
+    const display = {
+      era: browseEra,
+      language: getLanguageForEra(browseEra),
+    };
+
+    const gridDay =
+      selectedDay && !selectedDay.outsideMonth
+        ? selectedDay.day
+        : (() => {
+            const cell =
+              monthContext.days.find((d) => !d.outsideMonth && d.date_ad === asideAdDate) ??
+              monthContext.days.find((d) => !d.outsideMonth && d.day === 1) ??
+              monthContext.days.find((d) => !d.outsideMonth) ??
+              null;
+            return cell?.day ?? 1;
+          })();
+
+    if (!monthContext.isAdCalendar && monthContext.year && monthContext.month) {
+      return patroDayFetchFromBrowseGridParts(
+        {
+          year: monthContext.year,
+          month: monthContext.month,
+          day: gridDay,
+        },
+        display,
+      );
+    }
+
+    if (selectedDay?.date_ad) {
+      return patroDayFetchFromApiDateAd(selectedDay.date_ad, display);
+    }
+    const cell =
+      monthContext.days.find((d) => !d.outsideMonth && d.date_ad === asideAdDate) ??
+      monthContext.days.find((d) => !d.outsideMonth && d.day === 1) ??
+      null;
+    if (cell?.date_ad) {
+      return patroDayFetchFromApiDateAd(cell.date_ad, display);
+    }
+    return { kind: "today", display };
+  }, [
+    browseEra,
+    asideAdDate,
+    monthContext,
+    selectedDay,
+  ]);
+
   const panchangaQ = useQuery({
-    queryKey: panchangaKeys.day(asideAdDate, "ad", location.params),
-    queryFn: () => fetchPanchanga(asideAdDate, "ad", location.params),
+    queryKey: panchangaKeys.daySelection(asideDayState, location.params),
+    queryFn: () => fetchPanchangaDay(asideDayState, location.params),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -420,8 +535,8 @@ export function Home() {
   // already-loaded panchanga day, so it only needs its chunk. Runs off the main
   // thread (requestIdleCallback) so it never competes with the initial render.
   const queryClient = useQueryClient();
-  const prefetchYear = monthBrowse.bsYear;
-  const prefetchMonth = monthBrowse.bsMonth;
+  const prefetchYear = browseYear;
+  const prefetchMonth = browseMonth;
   useEffect(() => {
     if (typeof window === "undefined") return;
     let cancelled = false;
@@ -476,6 +591,7 @@ export function Home() {
         onMonthContextChange={handleMonthContextChange}
         aside={
           <PanchangaAside
+            key={selectedDay?.date_ad ?? "none"}
             ref={panchangaAsideRef}
             placement="sidebar"
             selectedDay={selectedDay}
@@ -486,6 +602,7 @@ export function Home() {
             p={panchangaQ.data}
             loading={asideLoading}
             error={panchangaQ.isError}
+            browseEra={browseEra}
           />
         }
         holidays={

@@ -1,4 +1,9 @@
 import type { CalendarDay, GocharIngressEvent, PlanetInfo } from "@/lib/api";
+import {
+  ingressEventBsDayForMonth,
+  ingressEventRowDateAd,
+  type IngressBrowseMonth,
+} from "@/lib/dainikKranti/ingress-day-match";
 import { rashiNumberFromName } from "@/lib/rashi-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import {
@@ -65,14 +70,25 @@ function isMoonIngress(ev: GocharIngressEvent): boolean {
   return ne.includes("चन्द्र") || ne.includes("चंद्र");
 }
 
-function resolveVedicDateAd(
+function ingressDayInRange(
   ev: GocharIngressEvent,
+  rangeDays: CalendarDay[],
   allDays: CalendarDay[],
-): string | undefined {
-  const civil = ev.entry_vedic_date_ad ?? ev.entry_date_ad;
-  if (!civil) return undefined;
-  if (allDays.some((d) => d.date_ad === civil)) return civil;
-  return ev.entry_date_ad;
+  browse?: IngressBrowseMonth,
+): CalendarDay | undefined {
+  if (browse) {
+    const bsDay = ingressEventBsDayForMonth(
+      ev,
+      browse.year,
+      browse.month,
+      allDays,
+    );
+    if (bsDay == null) return undefined;
+    return rangeDays.find((d) => d.day === bsDay);
+  }
+  const dateAd = ingressEventRowDateAd(ev, allDays);
+  if (!dateAd) return undefined;
+  return rangeDays.find((d) => d.date_ad === dateAd);
 }
 
 function rashiNoFromIngress(ev: GocharIngressEvent): number | undefined {
@@ -119,16 +135,13 @@ function collectTransitCodes(
   rangeDays: CalendarDay[],
   allDays: CalendarDay[],
   ingressEvents: GocharIngressEvent[],
+  browse?: IngressBrowseMonth,
 ): string[] {
-  const rangeDates = new Set(rangeDays.map((d) => d.date_ad));
-  const dayByDate = new Map(allDays.map((d) => [d.date_ad, d]));
   const codes: string[] = [];
 
   for (const ev of ingressEvents) {
     if (ev.level !== "rashi" || isMoonIngress(ev)) continue;
-    const dateAd = resolveVedicDateAd(ev, allDays);
-    if (!dateAd || !rangeDates.has(dateAd)) continue;
-    const day = dayByDate.get(dateAd);
+    const day = ingressDayInRange(ev, rangeDays, allDays, browse);
     const rNo = rashiNoFromIngress(ev);
     if (!day || !rNo) continue;
     const code = formatGapashaCode(day.day, ev.graha, rNo);
@@ -176,6 +189,7 @@ export function buildRashyadiRangeTables(
   allDays: CalendarDay[],
   ingressEvents: GocharIngressEvent[],
   pakshaSegmentOf: (day: CalendarDay) => PakshaSegmentInfo,
+  browse?: IngressBrowseMonth,
 ): RashyadiRangeTables {
   if (days.length === 0) {
     return { start: null, end: null };
@@ -183,7 +197,7 @@ export function buildRashyadiRangeTables(
 
   const firstDay = days[0]!;
   const lastDay = days[days.length - 1]!;
-  const transitCodes = collectTransitCodes(days, allDays, ingressEvents);
+  const transitCodes = collectTransitCodes(days, allDays, ingressEvents, browse);
   const pakshaDayCount = days.length;
   const versionNe = pakshaSegmentOf(firstDay).label;
 

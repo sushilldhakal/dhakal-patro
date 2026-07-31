@@ -25,6 +25,7 @@ import {
   validatePanchangaYearSearch,
   validatePatroMonthBrowseSearch,
   validatePatroYearBrowseSearch,
+  validateHolidaysSearch,
 } from "./lib/url-state";
 
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
@@ -151,7 +152,7 @@ const converterRoute = createRoute({ getParentRoute: () => panchangaShellRoute, 
 const holidaysRoute = createRoute({
   getParentRoute: () => panchangaShellRoute,
   path: "/holidays",
-  validateSearch: validatePatroYearBrowseSearch,
+  validateSearch: validateHolidaysSearch,
   component: Holidays,
 });
 const rituRoute = createRoute({
@@ -278,9 +279,9 @@ const routeTree = rootRoute.addChildren([
   dainikKrantiNeLegacyRoute,
   shantiVidhiRoute,
   learnRoute,
+  historyRoute,
   learnArticleRoute,
   sunTimesLegacyRoute,
-  historyRoute,
   historyLegacyRoute,
   marriageSaitRoute,
   accountRoute,

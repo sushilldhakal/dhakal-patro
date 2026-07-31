@@ -1307,7 +1307,15 @@
     "next_year": "Next year",
     "this_year": "This year",
     "era_bs": "BS",
-    "era_ad": "AD"
+    "era_ad": "AD",
+    "era_bc": "BC",
+    "era_pbbs": "BBS",
+    "year_era_toggle_aria": "Calendar era (before or after year 1)",
+    "switch_to_era": "Switch to {{era}}",
+    "year_search_placeholder": "Type year + BS or BBS (Purba Bikram Sambat, e.g. 2082 BS, 5 BBS)",
+    "year_search_empty": "No matching year",
+    "pre_panchanga_grid": "Full server panchanga starts at Vikram (BS) {{from}}. This view is still BS — not BBSE.",
+    "bbse_not_bs": "BBSE (Before Bikram Samvat) is the BCE era from ~3000 BCE to 58 BCE — before वि.सं. १ at 57 BCE. It is not BS year 1–59. See History for BBSE dates."
   },
   "element_page": {
     "unknown_element": "Unknown element",

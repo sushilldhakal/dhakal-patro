@@ -26,10 +26,20 @@ const routeApi = getRouteApi("/panchanga-shell/panchanga/graha-vakri");
 
 const GRAHA_ORDER = ["mercury", "venus", "mars", "jupiter", "saturn"];
 
+function renderedEntryDate(ev: GrahaVakriEvent): string {
+  const label = ev.entry_jd_date?.trim();
+  if (!label) {
+    throw new Error("Graha vakri event missing entry_jd_date (stale gv= cache?)");
+  }
+  return label;
+}
+
 function EventRow({ ev }: { ev: GrahaVakriEvent }) {
   const { digits } = useLocale();
   const { t } = useTranslation();
   const isVakri = ev.is_retrograde === true || ev.motion === "Vakri";
+  const dateLabel = renderedEntryDate(ev);
+  const timeLabel = ev.entry_time_local_short ?? "";
   return (
     <div className="flex items-center font-semibold justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm odd:bg-foreground/[0.03]">
       <span className="flex items-center gap-1.5">
@@ -41,13 +51,10 @@ function EventRow({ ev }: { ev: GrahaVakriEvent }) {
         </span>
       </span>
       <span className="text-right">
-        <span className="font-num tabular-nums text-foreground">
-          {ev.entry_date_bs ? digits(ev.entry_date_bs) : ""}
-        </span>
-        <span className="text-muted-foreground">
-          {" "}
-          · {ev.entry_time_local_short ? digits(ev.entry_time_local_short) : ""}
-        </span>
+        <span className="font-num tabular-nums text-foreground">{digits(dateLabel)}</span>
+        {timeLabel ? (
+          <span className="text-muted-foreground"> · {digits(timeLabel)}</span>
+        ) : null}
       </span>
     </div>
   );
@@ -62,8 +69,8 @@ export function GrahaVakri() {
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
 
   const query = useQuery({
-    queryKey: grahaDetailKeys.vakri(yearBrowse.browseYear, location.params, yearBrowse.era),
-    queryFn: () => fetchGrahaVakriYear(yearBrowse.browseYear, location.params, yearBrowse.era),
+    queryKey: grahaDetailKeys.vakri(yearBrowse.year, location.params, yearBrowse.era),
+    queryFn: () => fetchGrahaVakriYear(yearBrowse.year, location.params, yearBrowse.era),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
@@ -87,11 +94,11 @@ export function GrahaVakri() {
 
       <div className="space-y-3">
         <PatroYearNav
-          calendarMode={yearBrowse.era}
-          year={yearBrowse.browseYear}
-          onYearChange={yearBrowse.setBrowseYear}
-          currentYear={yearBrowse.currentBrowseYear}
-          yearOptions={yearBrowse.yearOptions}
+          era={yearBrowse.era}
+          year={yearBrowse.year}
+          onYearChange={yearBrowse.setYear}
+          onEraChange={yearBrowse.setEra}
+          gregorianRange={query.data?.gregorian_range}
           location={location}
           onLocationChange={setLocation}
         />

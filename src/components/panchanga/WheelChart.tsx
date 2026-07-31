@@ -16,12 +16,10 @@ import {
 } from "@/lib/wheel-data";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
-import { wheelSvg, wheelSvgWrap } from "@/lib/wheel-classes";
-import {
-  NAKSHATRA_GLYPHS,
-  RASHI_GLYPHS,
-  WheelGlyph,
-} from "@/lib/wheel-glyphs";
+import { wheelSvg, wheelSvgWrap, wheelSvgWrapSheetInset } from "@/lib/wheel-classes";
+import { cn } from "@/lib/utils";
+import { NAKSHATRA_GLYPHS, RASHI_GLYPHS } from "@/lib/wheel-glyph-art";
+import { WheelGlyph } from "@/lib/wheel-glyphs";
 import {
   wDaytick,
   wHit,
@@ -170,6 +168,8 @@ interface WheelChartProps {
   onZoom: (z: number) => void;
   pan: { x: number; y: number };
   onPan: (x: number, y: number) => void;
+  /** Detail sheet is open — inset the wheel so it is not covered by it. */
+  sheetOpen?: boolean;
 }
 
 function WheelChartImpl({
@@ -188,6 +188,7 @@ function WheelChartImpl({
   onZoom,
   pan,
   onPan,
+  sheetOpen = false,
 }: WheelChartProps) {
   const dragRef = useRef<
     | { mode: "r"; a: number; spin0: number; moved: boolean }
@@ -874,7 +875,7 @@ function WheelChartImpl({
 
   return (
     <div
-      className={wheelSvgWrap}
+      className={cn(wheelSvgWrap, sheetOpen && wheelSvgWrapSheetInset, "transition-[padding] duration-200 ease-out")}
       ref={wrapRef}
       style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: isDragging ? "none" : "transform 0.12s ease-out" }}
     >

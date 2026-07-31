@@ -42,7 +42,7 @@ export function SaitPage() {
   const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
-  const bsYear = yearBrowse.bsYear;
+  const browseYear = yearBrowse.year;
 
   const meta = CEREMONY_META.find((c) => c.id === category);
   const isMuhurta = category ? isMuhurtaSaitCategory(category) : false;
@@ -84,7 +84,7 @@ export function SaitPage() {
 
   const detailQuery = useQuery({
     queryKey: saitDetailKey(
-      bsYear,
+      browseYear,
       category ?? "",
       location.params,
       excludeRules,
@@ -92,7 +92,7 @@ export function SaitPage() {
     ),
     queryFn: () =>
       fetchSaitDetail(
-        bsYear,
+        browseYear,
         category!,
         location.params,
         excludeRules,
@@ -104,8 +104,8 @@ export function SaitPage() {
   });
 
   const datesQuery = useQuery({
-    queryKey: saitKeys.entries(bsYear, category ?? "", location.params),
-    queryFn: () => fetchSait(bsYear, category!, location.params),
+    queryKey: saitKeys.entries(browseYear, category ?? "", location.params),
+    queryFn: () => fetchSait(browseYear, category!, location.params),
     enabled: Boolean(category) && !isMuhurta,
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
@@ -131,9 +131,9 @@ export function SaitPage() {
   const gender = selectedProfile?.gender ?? "";
 
   const personalizeQuery = useQuery({
-    queryKey: saitPersonalizeKey(bsYear, category ?? "", location.params, birthDatetime, birthTz, gender),
+    queryKey: saitPersonalizeKey(browseYear, category ?? "", location.params, birthDatetime, birthTz, gender),
     queryFn: () =>
-      fetchSaitPersonalize(bsYear, category!, location.params, birthDatetime, birthTz, gender),
+      fetchSaitPersonalize(browseYear, category!, location.params, birthDatetime, birthTz, gender),
     enabled: Boolean(category) && Boolean(selectedProfile) && Boolean(birthDatetime),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
@@ -185,43 +185,41 @@ export function SaitPage() {
 
   return (
     <SaitCeremonyLayout
-      title={t("sidebar_nav.sait_label", { category: t(`sait.categories.${meta.id}`) })}
-      subtitle={t(`sait.descriptions.${meta.id}`)}
-      year={yearBrowse.browseYear}
-      onYearChange={yearBrowse.setBrowseYear}
-      calendarMode={yearBrowse.era}
-      yearOptions={yearBrowse.yearOptions}
-      currentYear={yearBrowse.currentBrowseYear}
-      location={location}
-      onLocationChange={setLocation}
-      method={content.method}
-      rules={content.rules}
-      engineVersion={detailQuery.data?.engine_version}
-      enabledRuleIds={hasToggles ? enabledRuleIds : undefined}
-      onToggleRule={hasToggles ? handleToggleRule : undefined}
-      rulesBusy={detailQuery.isFetching && !detailQuery.isLoading}
-      nakshatraMode={isBratabandha ? nakshatraMode : null}
-      onNakshatraModeChange={isBratabandha ? setNakshatraMode : undefined}
-      days={isMuhurta ? (detailQuery.data?.days ?? []) : []}
-      count={totalCount}
-      profileControl={profileControl}
-      suitabilityByDay={suitabilityByDay}
-      personalizeByDay={personalizeByDay}
-      loading={activeQuery.isLoading && !activeQuery.data}
-      notice={
-        content.requiresBirthDate ? (
+      {...({
+        title: t("sidebar_nav.sait_label", { category: t(`sait.categories.${meta.id}`) }),
+        subtitle: t(`sait.descriptions.${meta.id}`),
+        year: yearBrowse.year,
+        onYearChange: yearBrowse.setYear,
+        onEraChange: yearBrowse.setEra,
+        era: yearBrowse.era,
+        location,
+        onLocationChange: setLocation,
+        method: content.method,
+        rules: content.rules,
+        engineVersion: detailQuery.data?.engine_version,
+        enabledRuleIds: hasToggles ? enabledRuleIds : undefined,
+        onToggleRule: hasToggles ? handleToggleRule : undefined,
+        rulesBusy: detailQuery.isFetching && !detailQuery.isLoading,
+        nakshatraMode: isBratabandha ? nakshatraMode : null,
+        onNakshatraModeChange: isBratabandha ? setNakshatraMode : undefined,
+        days: isMuhurta ? (detailQuery.data?.days ?? []) : [],
+        count: totalCount,
+        profileControl,
+        suitabilityByDay,
+        personalizeByDay,
+        loading: activeQuery.isLoading && !activeQuery.data,
+        notice: content.requiresBirthDate ? (
           <div className={cn(patroCard, "flex gap-2.5 border-l-2 border-secondary p-3.5")}>
             <Info className="mt-0.5 size-4 shrink-0 text-secondary" />
-            <p className="m-0 text-sm text-danger">
-              {t("sait.requires_birth_date")}
-            </p>
+            <p className="m-0 text-sm text-danger">{t("sait.requires_birth_date")}</p>
           </div>
-        ) : null
-      }
-      emptyLabel={t("sait.empty_year")}
-      countLabel={(count, y) =>
-        t("sait.count_label", { count: digits(count), year: digits(y) })
-      }
+        ) : null,
+        emptyLabel: t("sait.empty_year"),
+        countLabel: (count: number, y: number) =>
+          t("sait.count_label", { count: digits(count), year: digits(y) }),
+      } as React.ComponentProps<typeof SaitCeremonyLayout> & {
+        era: typeof yearBrowse.era;
+      })}
     >
       {!isMuhurta ? (
         datesQuery.isLoading && !datesQuery.data ? (

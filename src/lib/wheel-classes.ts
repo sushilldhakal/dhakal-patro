@@ -142,8 +142,27 @@ export const wheelStageExpanded = cn(
 export const wheelExpandedShell =
   "fixed inset-0 z-[120] max-w-none overflow-hidden rounded-none border-0 shadow-none";
 
+/**
+ * The dock is an opaque control bar over the stage's bottom centre — exactly
+ * where the wheel's bottom arc runs — and it sits above the SVG's hit layer, so
+ * any ring segment under it cannot be clicked at all. Reserving its height here
+ * keeps the whole ring reachable, at the cost of a slightly smaller wheel.
+ */
 export const wheelSvgWrap =
-  "absolute inset-0 z-[1] grid touch-none place-items-center";
+  "absolute inset-0 z-[1] grid touch-none place-items-center pb-[76px] max-[720px]:pb-[56px]";
+
+/**
+ * Extra right padding while the detail sheet is open, so the wheel slides out
+ * from under it instead of hiding six nakshatra segments behind an opaque panel
+ * — those were unclickable, since the sheet sits above the SVG's hit layer.
+ *
+ * 336px = the sheet's own width (w-80) plus its right-4 offset. The wheel is
+ * height-constrained on a wide stage (≈807px across in a 1143px box), so this
+ * only re-centres it; it starts shrinking only once the stage is narrow enough
+ * for width to bind. Applies from 720px up, where the sheet is a side panel —
+ * below that it is a bottom sheet and padding would squash the wheel instead.
+ */
+export const wheelSvgWrapSheetInset = "min-[720px]:pr-[336px]";
 
 export function wheelSvg(dragging?: boolean) {
   return cn(

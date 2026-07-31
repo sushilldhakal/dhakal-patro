@@ -117,8 +117,8 @@ export function History() {
             </h1>
             <p className={tmHeroSub}>
               ८,८०० वर्ष पुरानो वैदिक पञ्चाङ्ग परम्परा — {formatBbse(6778)} को ग्रहसंयोगदेखि युग
-              चक्र, नक्षत्र स्थानान्तरण, र विश्वका पात्रोहरूमा प्रभावसम्म। सबै मिति BBSE वा
-              वि.सं. मा प्रस्तुत।
+              चक्र, नक्षत्र स्थानान्तरण, र विश्वका पात्रोहरूमा प्रभावसम्म। सबै मिति पू.वि.सं. (~३०००–५८
+              ई.पू.) वा वि.सं. (५७ ई.पू. देखि) मा प्रस्तुत।
             </p>
 
             <a
@@ -144,7 +144,7 @@ export function History() {
 
           <div className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card/50 px-4 py-3 text-sm sm:flex-row sm:gap-6">
             <p className="m-0">
-              <span className="font-semibold text-foreground">BBSE</span>
+              <span className="font-semibold text-foreground">पू.वि.सं.</span>
               {" — "}
               {HISTORY_ERA_NOTE.bbse}
             </p>

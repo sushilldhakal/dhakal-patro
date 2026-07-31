@@ -1,9 +1,10 @@
 import {
-  fetchPanchanga,
-  fetchPanchangaAtTime,
+  fetchPanchangaAtTimeForDay,
+  fetchPanchangaDay,
   type LocationParams,
   type PanchangaDay,
 } from "@/lib/api";
+import type { PatroDayFetchState } from "@/lib/patro-day-url";
 import { getLagnaSpans } from "@/lib/panchanga-format";
 
 /** Ensure at-time lagna_spans are available for chart + cards (top-level and detail). */
@@ -31,13 +32,6 @@ export function normalizeEphemerisDay(raw: PanchangaDay): PanchangaDay {
 
 export function isEphemerisPanchanga(p: PanchangaDay | undefined): boolean {
   return p?.mode === "ephemeris";
-}
-
-export function buildAtTimeDatetime(adDate: string, clock: string): string {
-  const [hh, mm] = clock.split(":");
-  const h = String(hh ?? "12").padStart(2, "0");
-  const m = String(mm ?? "00").padStart(2, "0");
-  return `${adDate}T${h}:${m}:00`;
 }
 
 export function chartDateAd(p: PanchangaDay | undefined, fallback: string): string {
@@ -78,18 +72,18 @@ export function mergeEphemerisWithDaily(
 }
 
 /**
- * Ephemeris day from `/panchanga/at-time` — uses API lagna_spans directly.
- * Falls back to daily merge only when the API omits spans (older deployment).
+ * Ephemeris day from `/panchanga/at-time` — calendar parts + clock for BBS/BC
+ * input browse; `jd` + clock for JD identity (CE). Raw `jd` alone breaks on
+ * pre-1 CE civil days (backend cannot isoformat the anchor).
  */
 export async function fetchEphemerisPanchangaDay(
-  datetime: string,
-  civilDateAd: string,
+  dayState: PatroDayFetchState,
+  clock: string,
   location?: LocationParams,
-  options?: { ayanamsha?: string }
+  options?: { ayanamsha?: string; resolvedJdUt?: number },
 ): Promise<PanchangaDay> {
-  const raw = await fetchPanchangaAtTime(datetime, location, options);
-  const anchor = raw.panchanga_date_ad ?? raw.date_ad ?? civilDateAd;
-  const daily = await fetchPanchanga(anchor, "ad", location);
+  const raw = await fetchPanchangaAtTimeForDay(dayState, clock, location, options);
+  const daily = await fetchPanchangaDay(dayState, location);
   const normalized = normalizeEphemerisDay(raw);
 
   const dailyDetail = (daily.detail ?? {}) as Record<string, unknown>;

@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { fetchPanchanga, panchangaKeys, type PanchangaDay } from "@/lib/api";
+import { fetchPanchangaDay, panchangaKeys, type PanchangaDay } from "@/lib/api";
+import { parsePatroDayUrl } from "@/lib/patro-day-url";
+import { parseCivilIsoToDate } from "@/lib/patro-day";
 import { searchToLocation } from "@/lib/url-state";
 import { DayTimeline } from "@/components/panchanga/DayTimeline";
 import { resolveTimeZone } from "@/lib/zoned-time";
@@ -51,18 +53,6 @@ const AD_MONTHS_NE = [
   "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर",
 ];
 
-function toAdStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function parseAdStr(s: string): Date {
-  const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
-}
-
 type AngaLike = { name?: string; name_ne?: string; end_local_time?: string } | undefined;
 
 function anga(p: PanchangaDay | undefined, key: "tithi" | "nakshatra" | "yoga" | "karana"): AngaLike {
@@ -83,17 +73,17 @@ export function PanchangaOgPreview() {
   const { lang, digits } = useLocale();
   const search = routeApi.useSearch();
   const location = searchToLocation(search) ?? KATHMANDU;
-  const date = search.date ? parseAdStr(search.date) : new Date();
-  const adDateStr = toAdStr(date);
+  const dayState = parsePatroDayUrl(search as Record<string, unknown>, lang === "en" ? "en" : "ne");
   const [full] = useState(isFullMode);
 
   const q = useQuery({
-    queryKey: panchangaKeys.day(adDateStr, "ad", location.params),
-    queryFn: () => fetchPanchanga(adDateStr, "ad", location.params),
+    queryKey: panchangaKeys.daySelection(dayState, location.params),
+    queryFn: () => fetchPanchangaDay(dayState, location.params),
     staleTime: Infinity,
     placeholderData: keepPreviousData,
   });
   const p = q.data;
+  const adDateStr = p?.date_ad ?? "";
   const tz = resolveTimeZone(p?.location?.timezone, location.params.timezone);
 
   // Never show the full-page route-loading overlay on the capture target — the
@@ -146,9 +136,10 @@ export function PanchangaOgPreview() {
   const placeLabel =
     ("place" in search && search.place) || location.label || p?.location?.name || "Kathmandu";
 
-  const bs = adToBS(date);
+  const civilDate = adDateStr ? parseCivilIsoToDate(adDateStr) : new Date();
+  const bs = adToBS(civilDate);
   const bsLine = `${bilingualText(lang, BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1])} ${digits(bs.day)}, ${digits(bs.year)}`;
-  const adLine = `${digits(date.getDate())} ${AD_MONTHS_NE[date.getMonth()]} ${digits(date.getFullYear())}`;
+  const adLine = `${digits(civilDate.getDate())} ${AD_MONTHS_NE[civilDate.getMonth()]} ${digits(civilDate.getFullYear())}`;
   const weekday = p
     ? bilingualText(lang, getVaaraNe(p, p.weekday) ?? "", getVaaraEn(p, p.weekday) ?? "")
     : "";

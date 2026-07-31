@@ -1,16 +1,16 @@
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Orbit } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { PatroDayTimeNav } from "@/components/patro-date";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { GrahaBanner, GrahaDescription } from "@/components/graha/GrahaPageParts";
-import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
-import { toAdStr } from "@/lib/patro-day";
+import { todayAdStringInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   grahaSthitiLord,
   grahaSthitiNakshatra,
@@ -24,7 +24,10 @@ import { patroDataTableWrap } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import {
   fetchGrahaSthiti,
+  fetchPanchangaDay,
   grahaDetailKeys,
+  grahaSthitiRequestForDisplay,
+  panchangaKeys,
   type GrahaSthitiRow,
 } from "@/lib/api";
 
@@ -107,19 +110,60 @@ export function GrahaSthiti() {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const langEra = useCalendarEra();
   const dayBrowse = usePatroDayUrlBrowse(search, navigate, location, setLocation);
-  const todayAd = toAdStr(new Date());
-  const dayAd = dayBrowse.dateAd;
+  const { dayState, date, setDate, syncPickerFromDateAd, syncResolvedPatroDay, patroEra, setDisplayEra } =
+    dayBrowse;
+  const displayLanguage = dayState.display.language;
+  const todayAd = todayAdStringInTimezone(
+    new Date(Date.now()),
+    resolveTimeZone(undefined, location.params.timezone),
+  );
 
-  const query = useQuery({
-    queryKey: grahaDetailKeys.sthiti(dayAd, location.params),
-    queryFn: () => fetchGrahaSthiti(dayAd, location.params),
+  const dayResolveQ = useQuery({
+    queryKey: panchangaKeys.daySelection(dayState, location.params),
+    queryFn: () => fetchPanchangaDay(dayState, location.params),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
   });
 
-  useRouteLoading(query.isLoading && !query.data);
+  useEffect(() => {
+    const data = dayResolveQ.data;
+    if (!data) return;
+    if (data.date_ad) syncPickerFromDateAd(data.date_ad);
+    syncResolvedPatroDay({
+      date_ad: data.date_ad,
+      date_parts: data.date_parts,
+      bs_date:
+        data.bs_date && typeof data.bs_date === "object"
+          ? {
+              year: data.bs_date.year,
+              month: data.bs_date.month,
+              day: data.bs_date.day,
+            }
+          : undefined,
+    });
+  }, [dayResolveQ.data, syncPickerFromDateAd, syncResolvedPatroDay]);
+
+  const sthitiRequest = grahaSthitiRequestForDisplay(
+    patroEra,
+    dayResolveQ.data?.date_ad ?? "",
+    dayResolveQ.data?.date_parts,
+  );
+
+  const query = useQuery({
+    queryKey: grahaDetailKeys.sthiti(
+      sthitiRequest.dateKey,
+      sthitiRequest.apiEra,
+      location.params,
+    ),
+    queryFn: () =>
+      fetchGrahaSthiti(sthitiRequest.dateKey, location.params, sthitiRequest.apiEra),
+    enabled: Boolean(sthitiRequest.dateKey),
+    staleTime: 1000 * 60 * 30,
+    placeholderData: keepPreviousData,
+  });
+
+  useRouteLoading((dayResolveQ.isLoading && !dayResolveQ.data) || (query.isLoading && !query.data));
 
   return (
     <PageShell>
@@ -131,9 +175,14 @@ export function GrahaSthiti() {
 
       <div className="space-y-3">
         <PatroDayTimeNav
-          calendarMode={langEra}
-          date={dayBrowse.date}
-          onDateChange={dayBrowse.setDate}
+          era={patroEra}
+          displayLanguage={displayLanguage}
+          date={date}
+          vikram={dayResolveQ.data?.date_parts?.vikram}
+          civilDateAd={dayResolveQ.data?.date_ad}
+          gregorian={dayResolveQ.data?.date_parts?.gregorian}
+          onDateChange={setDate}
+          onEraChange={setDisplayEra}
           todayAd={todayAd}
           location={location}
           onLocationChange={setLocation}
