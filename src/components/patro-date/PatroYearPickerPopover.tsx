@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Era, Language } from "@/lib/era";
@@ -59,6 +59,20 @@ export function PatroYearPickerPopover({
     [draftYearRange, query, value, pickerEra, digits],
   );
 
+  /**
+   * Centre the browsed year when the panel opens: the window straddles it, so
+   * without this the list lands on the oldest year 50 rows above it.
+   */
+  const centerSelectedRow = useCallback((node: HTMLButtonElement | null) => {
+    if (!node) return;
+    const list = node.closest<HTMLElement>("[data-year-list]");
+    if (!list) return;
+    list.scrollTop = Math.max(
+      0,
+      node.offsetTop - list.clientHeight / 2 + node.offsetHeight / 2,
+    );
+  }, []);
+
   const pickYear = (y: number) => {
     if (!isValidBrowseYear(pickerEra, y)) return;
     if (onBrowseCommit) {
@@ -106,6 +120,7 @@ export function PatroYearPickerPopover({
       <PopoverContent
         align="start"
         sideOffset={4}
+        collisionPadding={{ top: 8, bottom: 88, left: 8, right: 8 }}
         data-vaul-no-drag
         onOpenAutoFocus={(e) => e.preventDefault()}
         className="z-[120] w-[min(calc(100vw-2rem),14rem)] gap-0 p-0"
@@ -138,7 +153,8 @@ export function PatroYearPickerPopover({
           />
         </div>
         <ul
-          className="max-h-60 overflow-y-auto overscroll-contain p-1 font-num"
+          data-year-list
+          className="max-h-60 min-h-32 overflow-y-auto overscroll-contain p-1 font-num"
           role="listbox"
           aria-label={ariaLabel}
         >
@@ -152,6 +168,7 @@ export function PatroYearPickerPopover({
               return (
                 <li key={item.value} role="presentation">
                   <button
+                    ref={selected ? centerSelectedRow : undefined}
                     type="button"
                     role="option"
                     data-vaul-no-drag

@@ -8,6 +8,12 @@ import {
 
 type YearItem = BsNativeSelectOption;
 
+/** Year dropdown window: 50 years back and 50 forward around the browsed year. */
+export const PICKER_YEAR_RADIUS = 50;
+
+/** Native `<select>` keeps the wider window — scrolling a long list is cheap there. */
+const NATIVE_SELECT_YEAR_RADIUS = 100;
+
 function labelYear(
   y: number,
   digits: (n: number | string) => string,
@@ -15,20 +21,38 @@ function labelYear(
   return { value: y, label: formatBrowsePatroYearPicker(y, digits) };
 }
 
-/** Window around `currentYear` in a sorted ascending browse-year list. */
+/** Index of `year` in a sorted ascending list, or the nearest one when absent. */
+function nearestYearIndex(years: readonly number[], year: number): number {
+  let lo = 0;
+  let hi = years.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const v = years[mid]!;
+    if (v === year) return mid;
+    if (v < year) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  // `lo` is the first entry greater than `year`; clamp into range.
+  return Math.min(Math.max(lo, 0), years.length - 1);
+}
+
+/**
+ * Window around `currentYear` in a sorted ascending browse-year list.
+ *
+ * The window always straddles the browsed year (clamped to the ends of the
+ * list) so the dropdown shows years either side of what is selected rather
+ * than an unrelated stretch of the axis.
+ */
 export function sliceBrowseYearRange(
   years: readonly number[],
   currentYear: number,
-  radius = 100,
+  radius = PICKER_YEAR_RADIUS,
 ): number[] {
   if (years.length === 0) return [];
-  const idx = years.indexOf(currentYear);
-  if (idx < 0) {
-    return years.slice(Math.max(0, years.length - (radius * 2 + 1)));
-  }
+  const idx = nearestYearIndex(years, currentYear);
   const start = Math.max(0, idx - radius);
-  const end = Math.min(years.length, idx + radius + 1);
-  return years.slice(start, end);
+  const end = Math.min(years.length, start + radius * 2 + 1);
+  return years.slice(Math.max(0, end - (radius * 2 + 1)), end);
 }
 
 /** Native `<select>` options — ~201 years around the browsed year (not the full ephemeris list). */
@@ -38,7 +62,14 @@ export function windowedBrowseYearSelectOptions(
   era: Era,
   digits: (n: number | string) => string,
 ): YearItem[] {
-  return lazyBrowseYearListItems(years, "", currentYear, era, digits);
+  return lazyBrowseYearListItems(
+    years,
+    "",
+    currentYear,
+    era,
+    digits,
+    NATIVE_SELECT_YEAR_RADIUS,
+  );
 }
 
 /** Combobox rows — format labels only for the visible slice, not the full ephemeris list. */
@@ -48,10 +79,13 @@ export function lazyBrowseYearListItems(
   currentYear: number,
   era: Era,
   digits: (n: number | string) => string,
+  radius = PICKER_YEAR_RADIUS,
 ): YearItem[] {
   const q = query.trim();
   if (!q) {
-    return sliceBrowseYearRange(years, currentYear).map((y) => labelYear(y, digits));
+    return sliceBrowseYearRange(years, currentYear, radius).map((y) =>
+      labelYear(y, digits),
+    );
   }
 
   const { n, era: parsedEra } = parsePatroYearSearchQuery(q);
