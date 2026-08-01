@@ -348,24 +348,40 @@ function PanchangaWheelBody({
     [anchorJd, debouncedScrubG, det.sunriseMin],
   );
 
+  /** HH:MM:00 for at-time API — from JD scrub math or g↔clock when JD is missing. */
+  const scrubClockQuery = useMemo(() => {
+    if (scrubAtTime) return scrubAtTime.clock;
+    const short = gClock(debouncedScrubG, det.sunriseMin);
+    return short.includes(":") && short.split(":").length === 2 ? `${short}:00` : short;
+  }, [scrubAtTime, debouncedScrubG, det.sunriseMin]);
+
   const scrubbing =
     scrubPinned || Math.abs(scrubG - (isToday && !scrubPinned ? nowG : 0)) > 0.05;
 
+  const canFetchAtTime = scrubAtTime != null || atTimeDayState != null;
   const needsAtTime =
-    scrubAtTime != null &&
-    (scrubbing || (isToday && !atTimeScrubOnly));
+    canFetchAtTime && (scrubbing || (isToday && !atTimeScrubOnly));
 
   const scrubQ = useQuery({
     queryKey:
-      atTimeDayState != null
-        ? panchangaKeys.atTimeDay(atTimeDayState, scrubAtTime!.clock, locationParams)
-        : panchangaKeys.atTime(scrubAtTime!.jd, scrubAtTime!.clock, locationParams),
-    queryFn: () =>
-      atTimeDayState != null
-        ? fetchPanchangaAtTimeForDay(atTimeDayState, scrubAtTime!.clock, locationParams, {
-            resolvedJdUt: anchorJd ?? undefined,
-          })
-        : fetchPanchangaAtTimeJd(scrubAtTime!.jd, scrubAtTime!.clock, locationParams),
+      !needsAtTime
+        ? (["panchanga", "at-time", "idle"] as const)
+        : atTimeDayState != null
+          ? panchangaKeys.atTimeDay(atTimeDayState, scrubClockQuery, locationParams)
+          : scrubAtTime != null
+            ? panchangaKeys.atTime(scrubAtTime.jd, scrubAtTime.clock, locationParams)
+            : (["panchanga", "at-time", "idle"] as const),
+    queryFn: () => {
+      if (atTimeDayState != null) {
+        return fetchPanchangaAtTimeForDay(atTimeDayState, scrubClockQuery, locationParams, {
+          resolvedJdUt: anchorJd ?? undefined,
+        });
+      }
+      if (scrubAtTime == null) {
+        throw new Error("at-time fetch requires jd or atTimeDayState");
+      }
+      return fetchPanchangaAtTimeJd(scrubAtTime.jd, scrubAtTime.clock, locationParams);
+    },
     staleTime: 1000 * 60,
     placeholderData: keepPreviousData,
     enabled: needsAtTime,

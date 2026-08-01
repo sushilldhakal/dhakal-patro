@@ -409,6 +409,11 @@ export function PanchangaYear() {
       ? liveDateStr
       : debouncedDateStr;
 
+  const wheelAtTimeDayState = useMemo(
+    () => patroDayFetchFromApiDateAd(displayDateStr, AD_DISPLAY),
+    [displayDateStr],
+  );
+
   const yearLoading = vikramBulk && yearBulkQ.isFetching && !yearFullyCached;
 
   const effectiveTimezone = resolveTimeZone(displayData?.location?.timezone, location.params.timezone);
@@ -530,6 +535,7 @@ export function PanchangaYear() {
             timezone={effectiveTimezone}
             locationLabel={locationLabel}
             atTimeScrubOnly
+            atTimeDayState={wheelAtTimeDayState}
             yearScrub={{
               day: clampedGlobal,
               totalDays: rangeTotal,
