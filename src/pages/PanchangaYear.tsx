@@ -353,7 +353,7 @@ export function PanchangaYear() {
   useEffect(() => {
     if (play.dir === 0) return;
     const tick = Math.max(70, Math.round(PLAY_BASE_MS / play.speed));
-    const id = setTimeout(() => {
+    const id = setInterval(() => {
       setGlobalDay((g) => {
         const cur = Math.min(Math.max(1, g), rangeTotal);
         if (play.dir === 1) {
@@ -362,8 +362,18 @@ export function PanchangaYear() {
         return cur <= 1 ? rangeTotal : cur - 1;
       });
     }, tick);
-    return () => clearTimeout(id);
+    return () => clearInterval(id);
   }, [play, rangeTotal]);
+
+  // Keep a small window of days ahead of playback warm so faster speeds
+  // aren't waiting on a fetch for every single tick.
+  useEffect(() => {
+    if (play.dir === 0) return;
+    const lead = Math.max(3, play.speed * 2);
+    for (let i = 1; i <= lead; i++) {
+      prefetchDayAtGlobal(clampedGlobal + play.dir * i);
+    }
+  }, [play, clampedGlobal, prefetchDayAtGlobal]);
 
   const debouncedDateStr = useMemo(
     () => adDateStrForPosition(queryPosition),
