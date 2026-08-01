@@ -17,8 +17,10 @@ import {
   isAtMinAdDay,
   isAtMinBsDay,
   pickAdDate,
-  pickBsDate,
+  pickBrowseVikramDate,
+  stepBrowseVikramDay,
 } from "@/lib/patro-date-options";
+import { signedPatroYearFromBrowse } from "@/lib/patro-year-axis";
 import { addCivilDays, civilPartsFromPickerDate, parseCivilIsoToDate, toAdStr } from "@/lib/patro-day";
 import { isGregorianEraBrowse } from "./patro-month-labels";
 import { PatroDateNavCore } from "./PatroDateNavCore";
@@ -105,9 +107,25 @@ export function PatroDayTimeNav({
    */
   const resolvedEra: Era = isGregorian ? era : (vikram?.era ?? era);
 
+  /**
+   * Era for the headline, which must match the number sitting next to it.
+   *
+   * The year shown comes from `vikram` once the day resolves, and from `adToBS`
+   * before then — and `adToBS` only ever speaks BS. Labelling that fallback with
+   * the URL's browse era printed a BS year under a BBS heading ("२०८३ पू.वि.सं."
+   * beside 1 August 2026), which is true in no calendar. The nav *controls*
+   * still follow `era`, so switching BS↔BBS stays instant.
+   */
+  const headlineVikramEra: Era | undefined = isGregorian
+    ? undefined
+    : (vikram?.era ?? "bs");
+
   const navYear = isGregorian ? civil.year : (bsFromDate?.year ?? civil.year);
   const navMonth = isGregorian ? civil.month : (bsFromDate?.month ?? civil.month);
   const navDay = isGregorian ? civil.day : (bsFromDate?.day ?? civil.day);
+  const signedNavYear = isGregorian
+    ? navYear
+    : signedPatroYearFromBrowse(era, navYear);
 
   const crossEraSubtitle = useMemo(() => {
     if (isGregorian) {
@@ -143,15 +161,40 @@ export function PatroDayTimeNav({
 
   const dayOptions = isGregorian
     ? buildAdDayOptions(navYear, navMonth, digits)
-    : buildBsDayOptions(navYear, navMonth, digits);
+    : buildBsDayOptions(signedNavYear, navMonth, digits);
 
   const pickDate = (y: number, m: number, d: number) =>
     isGregorian
       ? pickAdDate(onDateChange, y, m, d)
-      : pickBsDate(onDateChange, y, m, d, location?.params);
+      : pickBrowseVikramDate(onDateChange, era, y, m, d, location?.params);
+
+  const commitBrowseDay = useCallback(
+    (nextEra: Era, y: number, m: number, d: number) => {
+      if (!onEraChange) return;
+      onEraChange(nextEra, { year: y, month: m, day: d });
+    },
+    [onEraChange],
+  );
 
   const stepDay = (delta: number) => {
-    onDateChange(addCivilDays(date, delta));
+    if (isGregorian) {
+      onDateChange(addCivilDays(date, delta));
+      return;
+    }
+    if (!bsFromDate) return;
+    const next = stepBrowseVikramDay(era, navYear, navMonth, navDay, delta);
+    if (onEraChange) {
+      commitBrowseDay(era, next.year, next.month, next.day);
+      return;
+    }
+    pickBrowseVikramDate(
+      onDateChange,
+      era,
+      next.year,
+      next.month,
+      next.day,
+      location?.params,
+    );
   };
 
   const handleEraChange = useCallback(
@@ -163,6 +206,13 @@ export function PatroDayTimeNav({
       onEraChange(nextEra, calendar);
     },
     [onEraChange, isGregorian, civil.year, civil.month, civil.day, navYear, navMonth, navDay],
+  );
+
+  const handleBrowseCommit = useCallback(
+    (nextEra: Era, nextYear: number) => {
+      commitBrowseDay(nextEra, nextYear, navMonth, navDay);
+    },
+    [commitBrowseDay, navMonth, navDay],
   );
 
   const locationDesktop =
@@ -188,7 +238,7 @@ export function PatroDayTimeNav({
       <div className="min-w-0 flex-1">
         <PatroDateNavCore
           era={era}
-          vikramEra={vikram?.era}
+          vikramEra={headlineVikramEra}
           crossEraSubtitle={crossEraSubtitle}
           displayLanguage={displayLanguage}
           year={navYear}
@@ -206,6 +256,8 @@ export function PatroDayTimeNav({
           onMonthChange={(nextMonth) => pickDate(navYear, nextMonth, navDay)}
           onYearChange={(nextYear) => pickDate(nextYear, navMonth, navDay)}
           onEraChange={handleEraChange}
+          onBrowseCommit={onEraChange ? handleBrowseCommit : undefined}
+          onCommitBrowseDay={onEraChange ? commitBrowseDay : undefined}
           monthAriaLabel={t("calendar.month_aria")}
           yearAriaLabel={t("calendar.year_aria")}
           onPrev={() => stepDay(-1)}
@@ -213,12 +265,12 @@ export function PatroDayTimeNav({
           prevDisabled={
             isGregorian
               ? isAtMinAdDay(navYear, navMonth, navDay)
-              : isAtMinBsDay(navYear, navMonth, navDay)
+              : isAtMinBsDay(signedNavYear, navMonth, navDay)
           }
           nextDisabled={
             isGregorian
               ? isAtMaxAdDay(navYear, navMonth, navDay)
-              : isAtMaxBsDay(navYear, navMonth, navDay)
+              : isAtMaxBsDay(signedNavYear, navMonth, navDay)
           }
           prevAriaLabel={t("calendar.prev_day")}
           nextAriaLabel={t("calendar.next_day")}

@@ -1,5 +1,6 @@
 import { CalendarClock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import type { ReactNode } from "react";
+import { useCallback, useMemo, useRef, type ReactNode } from "react";
+import { BELOW_MD_MQ, useMediaQuery } from "@/hooks/use-media-query";
 import {
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
@@ -17,12 +18,12 @@ import { cn } from "@/lib/utils";
 import { resolveSamvatsaraForPatroYear } from "@/lib/samvatsara";
 import { samvatsaraName } from "@/lib/samvatsara-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { buildPatroAdYearOptions, buildPatroBrowseYearOptions } from "@/lib/patro-date-options";
+import { buildPatroBrowseYearOptions } from "@/lib/patro-date-options";
 import {
   formatBrowsePatroYearPicker,
+  isValidBrowseYear,
 } from "@/lib/patro-year-axis";
 
-const PATRO_AD_YEAR_OPTIONS = buildPatroAdYearOptions();
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import { BsHeadline } from "@/components/BsHeadline";
 import { BsNativeSelect, type BsNativeSelectOption } from "@/components/BsNativeSelect";
@@ -32,11 +33,15 @@ import {
   PatroDateChip,
   PatroDateSheet,
   PatroLocationChip,
+  PatroMobileDateSheetDraft,
+  type PatroMobileDateSheetDraft as MobileSheetDraft,
   YearStepper,
 } from "./PatroDateSheet";
 import { PatroYearEraToggle } from "./PatroYearEraToggle";
 import { patroEraShortLabel } from "./patro-era-short-label";
+import { windowedBrowseYearSelectOptions } from "@/lib/patro-browse-year-items";
 import { PatroYearCombobox } from "./PatroYearCombobox";
+import { PatroYearPickerPopover } from "./PatroYearPickerPopover";
 import { usePatroDateSheet } from "./use-patro-date-sheet";
 export type { PatroSheetTab } from "./use-patro-date-sheet";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -99,6 +104,10 @@ export type PatroDateNavCoreProps = {
   displayLanguage?: Language;
   /** Switch BS↔BBS or AD↔BC from the year dropdown (URL-backed pages). */
   onEraChange?: (era: Era) => void;
+  /** Era + year applied together when the year popover commits (draft era toggle). */
+  onBrowseCommit?: (era: Era, year: number) => void;
+  /** Single commit for calendar popover / sheet — avoids era then date double-navigate. */
+  onCommitBrowseDay?: (era: Era, year: number, month: number, day: number) => void;
 }
 
 function chipMonthLabel(month: number, lang: string, era: Era): string {
@@ -141,10 +150,12 @@ type NavControlsProps = {
   onMonthChange: (month: number) => void;
   year: number;
   yearEra?: Era;
+  yearRange?: readonly number[];
   yearDisplayLanguage?: Language;
   yearAriaLabel: string;
   onYearChange: (year: number) => void;
   onEraChange?: (era: Era) => void;
+  onBrowseCommit?: (era: Era, year: number) => void;
   hour: number;
   minute: number;
   hourOptions: BsNativeSelectOption[];
@@ -176,10 +187,12 @@ function MonthNavControls({
   onMonthChange,
   year,
   yearEra,
+  yearRange,
   yearDisplayLanguage,
   yearAriaLabel,
   onYearChange,
   onEraChange,
+  onBrowseCommit,
   hour,
   minute,
   hourOptions,
@@ -206,7 +219,14 @@ function MonthNavControls({
   const timeW = spacious ? "w-[4rem]" : "w-[2.75rem] sm:w-[3.5rem]";
   const btnClass = spacious ? patroMonthNavBtn : patroMonthRangeCompactBtn;
   const hasDayPicker = Boolean(dayOptions && onDayChange && dayAriaLabel);
-  const eraInCombobox = Boolean(yearEra && onEraChange && !hasDayPicker);
+  const browseEra = yearEra ?? "bs";
+  const { digits: yearDigits } = usePatroDisplayLocale(yearDisplayLanguage);
+  const yearSelectOptions = useMemo(() => {
+    if (!yearRange?.length) return [];
+    return windowedBrowseYearSelectOptions(yearRange, year, browseEra, yearDigits);
+  }, [yearRange, year, browseEra, yearDigits]);
+  const useNativeYearSelect = yearRange != null && yearRange.length > 0;
+  const eraInYearDropdown = Boolean(onBrowseCommit && useNativeYearSelect);
 
   return (
     <>
@@ -242,17 +262,40 @@ function MonthNavControls({
         comfortable={spacious}
       />
 
-      <PatroYearCombobox
-        className={yearW}
-        era={yearEra ?? "bs"}
-        value={year}
-        displayLanguage={yearDisplayLanguage}
-        onChange={onYearChange}
-        onEraChange={eraInCombobox ? onEraChange : undefined}
-        ariaLabel={yearAriaLabel}
-        comfortable={spacious}
-      />
-      {yearEra && onEraChange && hasDayPicker ? (
+      {eraInYearDropdown ? (
+        <PatroYearPickerPopover
+          className={yearW}
+          era={browseEra}
+          value={year}
+          displayLanguage={yearDisplayLanguage}
+          onChange={onYearChange}
+          onBrowseCommit={onBrowseCommit}
+          ariaLabel={yearAriaLabel}
+          comfortable={spacious}
+        />
+      ) : useNativeYearSelect ? (
+        <BsNativeSelect
+          className={yearW}
+          value={year}
+          options={yearSelectOptions}
+          ariaLabel={yearAriaLabel}
+          onChange={(y) => {
+            if (isValidBrowseYear(browseEra, y)) onYearChange(y);
+          }}
+          comfortable={spacious}
+        />
+      ) : (
+        <PatroYearCombobox
+          className={yearW}
+          era={browseEra}
+          value={year}
+          displayLanguage={yearDisplayLanguage}
+          onChange={onYearChange}
+          ariaLabel={yearAriaLabel}
+          comfortable={spacious}
+        />
+      )}
+      {yearEra && onEraChange && hasDayPicker && !onBrowseCommit ? (
         <PatroYearEraToggle
           era={yearEra}
           onEraChange={onEraChange}
@@ -333,13 +376,29 @@ export function PatroDateNavCore({
   onLocationChange,
   displayLanguage,
   onEraChange,
+  onBrowseCommit,
+  onCommitBrowseDay,
 }: PatroDateNavCoreProps) {
   const sheet = usePatroDateSheet();
+  const isMobileDateNav = useMediaQuery(BELOW_MD_MQ);
   const { lang, digits } = usePatroDisplayLocale(displayLanguage);
   const { t } = useTranslation();
   const isGregorian = isGregorianEraBrowse(era);
   const headlineEra = vikramEra ?? era;
-  const pickerYearOptions = isGregorian ? PATRO_AD_YEAR_OPTIONS : buildPatroBrowseYearOptions(headlineEra);
+  const pickerYearOptions = useMemo(() => {
+    const browseEra = era;
+    const base = buildPatroBrowseYearOptions(browseEra);
+    const filtered = base.filter((y) => Number.isFinite(y) && y >= 1);
+    if (
+      Number.isFinite(year) &&
+      year >= 1 &&
+      isValidBrowseYear(browseEra, year) &&
+      !filtered.includes(year)
+    ) {
+      return [...filtered, year].sort((a, b) => a - b);
+    }
+    return filtered;
+  }, [era, year]);
 
   const monthTitle = isGregorian
     ? adMonthLabel(month, lang)
@@ -375,10 +434,6 @@ export function PatroDateNavCore({
     shortLabel:
       lang === "en" ? (isGregorian ? AD_MONTHS_SHORT[i] : BS_MONTHS_SHORT[i]) : undefined,
   }));
-  const yearSelectOptions = pickerYearOptions.map((y) => ({
-    value: y,
-    label: formatBrowsePatroYearPicker(y, digits),
-  }));
   const { hour, minute } = clock ? parseClockParts(clock) : { hour: 0, minute: 0 };
   const hourOptions = Array.from({ length: 24 }, (_, i) => ({
     value: i,
@@ -404,11 +459,13 @@ export function PatroDateNavCore({
     monthAriaLabel,
     onMonthChange,
     year,
-    yearEra: headlineEra,
+    yearEra: era,
+    yearRange: pickerYearOptions,
     yearDisplayLanguage: displayLanguage,
     yearAriaLabel,
     onYearChange,
     onEraChange,
+    onBrowseCommit,
     hour,
     minute,
     hourOptions,
@@ -486,9 +543,10 @@ export function PatroDateNavCore({
         </PopoverTrigger>
         <PopoverContent align="start" sideOffset={6} className="w-[19rem]">
           <BsDateTimePicker
-            gridEra={isGregorian ? "ad" : headlineEra === "bbs" ? "bbs" : "bs"}
-            displayEra={headlineEra}
+            gridEra={isGregorian ? "ad" : "bs"}
+            displayEra={era}
             onEraChange={onEraChange}
+            onCommitBrowseDay={onCommitBrowseDay}
             year={year}
             month={month}
             day={day ?? 1}
@@ -582,65 +640,148 @@ export function PatroDateNavCore({
     />
   ) : null;
 
+  const mobileSheetDraftRef = useRef<MobileSheetDraft | null>(null);
+  const rememberMobileSheetDraft = useCallback((draft: MobileSheetDraft) => {
+    mobileSheetDraftRef.current = draft;
+  }, []);
+
+  const commitMobileSheetDraft = useCallback(() => {
+    const draft = mobileSheetDraftRef.current;
+    if (!draft) return;
+    const eraChanged = draft.era !== era;
+    const dateChanged =
+      draft.year !== year ||
+      draft.month !== month ||
+      draft.day !== (day ?? 1);
+    const clockChanged = showTime && draft.clock != null && draft.clock !== (clock ?? "");
+
+    if (eraChanged || dateChanged) {
+      if (onCommitBrowseDay) {
+        onCommitBrowseDay(draft.era, draft.year, draft.month, draft.day);
+      } else {
+        if (draft.era !== era || draft.year !== year) {
+          if (onBrowseCommit) {
+            onBrowseCommit(draft.era, draft.year);
+          } else if (eraChanged && onEraChange) {
+            onEraChange(draft.era);
+          }
+        } else if (eraChanged && onEraChange) {
+          onEraChange(draft.era);
+        }
+        if (dateChanged) {
+          if (onSelectDate) {
+            onSelectDate(draft.year, draft.month, draft.day);
+          } else {
+            if (draft.year !== year) onYearChange(draft.year);
+            if (draft.month !== month) onMonthChange(draft.month);
+            if (day != null && draft.day !== day) onDayChange?.(draft.day);
+          }
+        }
+      }
+    }
+    if (clockChanged && draft.clock) {
+      onClockChange?.(draft.clock);
+    }
+  }, [
+    era,
+    year,
+    month,
+    day,
+    clock,
+    showTime,
+    onEraChange,
+    onBrowseCommit,
+    onCommitBrowseDay,
+    onSelectDate,
+    onYearChange,
+    onMonthChange,
+    onDayChange,
+    onClockChange,
+  ]);
+
   // Mounted whenever there is a sheet to open — day views drive dates from the
   // calendar popover, but their location chip still opens this.
   const sheetBlock =
-    mobileDateTimeDrawer || resolvedToolbarLower ? (
+    isMobileDateNav && (mobileDateTimeDrawer || resolvedToolbarLower) ? (
       <PatroDateSheet
         sheet={sheet}
         dateTitle={dateTitle}
         location={location}
         onLocationChange={onLocationChange}
+        onDateCommit={mobileDateTimeDrawer ? commitMobileSheetDraft : undefined}
       >
-        <MonthGridPicker month={month} options={monthOptions} onMonthChange={onMonthChange} />
-        <YearStepper
-          year={year}
-          era={era}
-          options={yearSelectOptions}
-          ariaLabel={yearAriaLabel}
-          onYearChange={onYearChange}
-          onEraChange={onEraChange}
-          signedBsYears={era === "bbs"}
-        />
-        {dayOptions && onDayChange && dayAriaLabel ? (
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-sm font-semibold text-muted-foreground">{dayAriaLabel}</span>
-            <BsNativeSelect
-              className="w-[5rem]"
-              value={day ?? dayOptions[0]?.value ?? 1}
-              options={dayOptions}
-              ariaLabel={dayAriaLabel}
-              onChange={onDayChange}
-              comfortable
+        {mobileDateTimeDrawer ? (
+          <PatroMobileDateSheetDraft
+            sheet={sheet}
+            era={era}
+            year={year}
+            month={month}
+            day={day ?? 1}
+            yearRange={pickerYearOptions}
+            monthOptions={monthOptions}
+            yearAriaLabel={yearAriaLabel}
+            dayAriaLabel={dayAriaLabel}
+            showTime={showTime}
+            clock={clock}
+            hourOptions={hourOptions}
+            minuteOptions={minuteOptions}
+            hourAriaLabel={hourAriaLabel}
+            minuteAriaLabel={minuteAriaLabel}
+            onDraftChange={rememberMobileSheetDraft}
+          />
+        ) : (
+          <>
+            <MonthGridPicker month={month} options={monthOptions} onMonthChange={onMonthChange} />
+            <YearStepper
+              year={year}
+              era={era}
+              yearRange={pickerYearOptions}
+              ariaLabel={yearAriaLabel}
+              onYearChange={onYearChange}
+              onBrowseCommit={onBrowseCommit}
+              signedBsYears={era === "bbs"}
             />
-          </div>
-        ) : null}
-        {showTime && hourAriaLabel && minuteAriaLabel ? (
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              {t("common.time")}
-            </p>
-            <div className="flex w-full items-center justify-center gap-2">
-              <BsNativeSelect
-                className="w-[4.5rem]"
-                value={hour}
-                options={hourOptions}
-                ariaLabel={hourAriaLabel}
-                onChange={(nextHour) => setClockPart(nextHour, minute)}
-                comfortable
-              />
-              <span className="px-0.5 font-num text-base font-semibold">:</span>
-              <BsNativeSelect
-                className="w-[4.5rem]"
-                value={minute}
-                options={minuteOptions}
-                ariaLabel={minuteAriaLabel}
-                onChange={(nextMinute) => setClockPart(hour, nextMinute)}
-                comfortable
-              />
-            </div>
-          </div>
-        ) : null}
+            {dayOptions && onDayChange && dayAriaLabel ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-sm font-semibold text-muted-foreground">{dayAriaLabel}</span>
+                <BsNativeSelect
+                  className="w-[5rem]"
+                  value={day ?? dayOptions[0]?.value ?? 1}
+                  options={dayOptions}
+                  ariaLabel={dayAriaLabel}
+                  onChange={onDayChange}
+                  comfortable
+                />
+              </div>
+            ) : null}
+            {showTime && hourAriaLabel && minuteAriaLabel ? (
+              <div>
+                <p className="mb-2 text-xs text-center font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {t("common.time")}
+                </p>
+                <div className="flex w-full items-center justify-center gap-2">
+                  <BsNativeSelect
+                    className="w-[4.5rem]"
+                    value={hour}
+                    options={hourOptions}
+                    ariaLabel={hourAriaLabel}
+                    onChange={(nextHour) => setClockPart(nextHour, minute)}
+                    comfortable
+                  />
+                  <span className="px-0.5 font-num text-base font-semibold">:</span>
+                  <BsNativeSelect
+                    className="w-[4.5rem]"
+                    value={minute}
+                    options={minuteOptions}
+                    ariaLabel={minuteAriaLabel}
+                    onChange={(nextMinute) => setClockPart(hour, nextMinute)}
+                    comfortable
+                  />
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
       </PatroDateSheet>
     ) : null;
 

@@ -13,7 +13,8 @@ import {
   bsToAD,
   getBSMonthLength,
 } from "./bs-calendar";
-import { patroYearWithinEphemeris } from "./patro-year-axis";
+import { patroBrowseYearWithinEphemeris } from "./patro-year-axis";
+import { shiftPatroBrowseMonth } from "./patro-year-browse-step";
 import {
   canonicalCivilIso,
   civilIsoDayOfMonth,
@@ -165,13 +166,14 @@ export function getBsMonthsOverlappingAdMonth(
  */
 export function uniqueBsMonths(
   months: Array<{ year: number; month: number }>,
+  browseEra: Era = "bs",
 ): Array<{ year: number; month: number }> {
   const seen = new Set<string>();
   return months.filter(({ year, month }) => {
     const key = `${year}-${month}`;
     if (seen.has(key)) return false;
     seen.add(key);
-    return patroYearWithinEphemeris(year);
+    return patroBrowseYearWithinEphemeris(browseEra, year);
   });
 }
 
@@ -329,21 +331,7 @@ export function shiftBsMonth(
   month: number,
   delta: number,
 ): { year: number; month: number } {
-  let m = month + delta;
-  let y = year;
-  while (m < 1) {
-    m += 12;
-    y -= 1;
-  }
-  while (m > 12) {
-    m -= 12;
-    y += 1;
-  }
-  // The axis has no year 0 — BS 1 is preceded by BBS 1 (signed −1). Landing on 0
-  // asked the offline table for "Vikram year 0" and threw, which is what blanked
-  // BS 1 month 1: its grid needs the previous month.
-  if (y === 0) y = delta < 0 ? -1 : 1;
-  return { year: y, month: m };
+  return shiftPatroBrowseMonth("bs", year, month, delta);
 }
 
 /**
@@ -381,8 +369,8 @@ export function buildCalendarGridDays(
   if (!first) return currentLocal;
 
   const startOffset = civilIsoWeekday(first.date_ad);
-  const prevBs = shiftBsMonth(year, month, -1);
-  const nextBs = shiftBsMonth(year, month, 1);
+  const prevBs = shiftPatroBrowseMonth(browseEra, year, month, -1);
+  const nextBs = shiftPatroBrowseMonth(browseEra, year, month, 1);
 
   const prevLocal = buildLocalMonthDays(prevBs.year, prevBs.month, browseEra);
   const prevPool =

@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { usePatroDisplayLocale } from "@/hooks/use-patro-display-locale";
 import type { Era, Language } from "@/lib/era";
-import { fetchMonthCalendar, locationCacheKey } from "@/lib/api";
+import { fetchFestivals, fetchMonthCalendar, locationCacheKey } from "@/lib/api";
 import { isGregorianEraBrowse } from "./patro-month-labels";
 import {
   formatPatroAdRangeHeadlineSubtitle,
   formatPatroMonthCrossEraSubtitle,
+  formatPatroYearGregorianRange,
 } from "@/lib/patro-headline-subtitle";
 import { canonicalCivilIso } from "@/lib/patro-day";
 
@@ -45,6 +46,18 @@ export function usePatroMonthHeadlineSubtitle(
     staleTime: 1000 * 60 * 30,
   });
 
+  const needsYearFallback =
+    (override == null || override === "") &&
+    !local &&
+    !isGregorianEraBrowse(era);
+
+  const yearQ = useQuery({
+    queryKey: ["patro-headline-year", era, year] as const,
+    queryFn: () => fetchFestivals(year, undefined, era),
+    enabled: needsYearFallback,
+    staleTime: 1000 * 60 * 30,
+  });
+
   return useMemo(() => {
     if (override != null && override !== "") return override;
     if (local) return local;
@@ -61,15 +74,22 @@ export function usePatroMonthHeadlineSubtitle(
         );
       }
     }
-    if (!data?.calendar?.length) return undefined;
-    const first = data.calendar[0]!.date_ad;
-    const last = data.calendar[data.calendar.length - 1]!.date_ad;
-    if (!first || !last) return undefined;
-    return formatPatroAdRangeHeadlineSubtitle(
-      canonicalCivilIso(first),
-      canonicalCivilIso(last),
-      lang,
-      digits,
-    );
-  }, [override, local, monthQ.data, lang, digits]);
+    if (data?.calendar?.length) {
+      const first = data.calendar[0]!.date_ad;
+      const last = data.calendar[data.calendar.length - 1]!.date_ad;
+      if (first && last) {
+        return formatPatroAdRangeHeadlineSubtitle(
+          canonicalCivilIso(first),
+          canonicalCivilIso(last),
+          lang,
+          digits,
+        );
+      }
+    }
+    const gr = yearQ.data?.gregorian_range;
+    if (gr?.start && gr?.end) {
+      return formatPatroYearGregorianRange(gr.start, gr.end, lang, digits);
+    }
+    return undefined;
+  }, [override, local, monthQ.data, yearQ.data, lang, digits]);
 }

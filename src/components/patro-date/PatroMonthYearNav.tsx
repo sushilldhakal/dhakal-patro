@@ -14,6 +14,7 @@ export type PatroMonthYearNavProps = {
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
   onEraChange?: (era: Era) => void;
+  onBrowseCommit?: (era: Era, year: number) => void;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -43,7 +44,7 @@ export function PatroMonthYearNav({
   month,
   onMonthChange,
   onYearChange,
-  onEraChange,
+  onBrowseCommit,
   onPrev,
   onNext,
   onToday,
@@ -106,7 +107,7 @@ export function PatroMonthYearNav({
           todayAriaLabel={t("calendar.today_btn")}
           onMonthChange={onMonthChange}
           onYearChange={onYearChange}
-          onEraChange={onEraChange}
+          onBrowseCommit={onBrowseCommit}
           monthAriaLabel={t("calendar.month_aria")}
           yearAriaLabel={t("calendar.year_aria")}
           onPrev={onPrev}

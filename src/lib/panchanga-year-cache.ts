@@ -11,9 +11,13 @@ import {
   writePersistedYear,
   yearCacheStorageKey,
 } from "@/lib/year-cache-storage";
+import type { Era } from "@/lib/era";
 
-export const panchangaYearBulkKey = (year: number, location?: LocationParams) =>
-  ["panchanga", "year-bulk", year, locationCacheKey(location)] as const;
+export const panchangaYearBulkKey = (
+  year: number,
+  location?: LocationParams,
+  era: Era = "bs",
+) => ["panchanga", "year-bulk", era, year, locationCacheKey(location)] as const;
 
 function seedDayRow(
   day: CalendarDay,
@@ -68,6 +72,7 @@ export type YearCacheSeedResult = {
 export async function seedYearPanchangaCache(
   year: number,
   location: LocationParams | undefined,
+  era: Era = "bs",
 ): Promise<YearCacheSeedResult> {
   const locKey = locationCacheKey(location);
   const storageKey = yearCacheStorageKey(year, locKey);
@@ -78,7 +83,7 @@ export async function seedYearPanchangaCache(
     return { daysSeeded, fromPersistentCache: true, days };
   }
 
-  const payload = await fetchYearCalendar(year, location, { wheel: true });
+  const payload = await fetchYearCalendar(year, location, { wheel: true, era });
   void writePersistedYear(storageKey, payload);
   const { daysSeeded, days } = seedFromPayload(payload);
   return { daysSeeded, fromPersistentCache: false, days };

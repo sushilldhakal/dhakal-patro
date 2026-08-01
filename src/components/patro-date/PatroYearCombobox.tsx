@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { BsNativeSelectOption } from "@/components/BsNativeSelect";
 import {
@@ -13,11 +13,9 @@ import {
 import type { Era, Language } from "@/lib/era";
 import { cn } from "@/lib/utils";
 import { usePatroDisplayLocale } from "@/hooks/use-patro-display-locale";
-import { formatBrowsePatroYearPicker } from "@/lib/patro-year-axis";
-import {
-  parsePatroYearSearchQuery,
-  signedTargetsForYearSearch,
-} from "@/lib/patro-year-search-query";
+import { lazyBrowseYearListItems } from "@/lib/patro-browse-year-items";
+import { formatBrowsePatroYearPicker, isValidBrowseYear } from "@/lib/patro-year-axis";
+import { parsePatroYearSearchQuery } from "@/lib/patro-year-search-query";
 import { PatroYearEraToggle } from "./PatroYearEraToggle";
 
 export type PatroYearComboboxProps = {
@@ -28,43 +26,15 @@ export type PatroYearComboboxProps = {
   className?: string;
   comfortable?: boolean;
   displayLanguage?: Language;
-  /** Full year list (mobile sheet); omit for nearby-year freeform list. */
+  /** Sorted ascending browse years — labels built lazily for the open list window. */
+  yearRange?: readonly number[];
+  /** @deprecated Prefer `yearRange`; small pre-labeled lists only. */
   options?: BsNativeSelectOption[];
   /** BS↔BBS / AD↔BC — shown at the top of the dropdown (not beside the trigger). */
   onEraChange?: (era: Era) => void;
 };
 
 type YearItem = BsNativeSelectOption;
-
-function filterLegacyYearItems(
-  items: YearItem[],
-  query: string,
-  currentYear: number,
-): YearItem[] {
-  const q = query.trim();
-  if (!q) {
-    const idx = items.findIndex((o) => o.value === currentYear);
-    if (idx < 0) return items.slice(0, 201);
-    const start = Math.max(0, idx - 100);
-    const end = Math.min(items.length, idx + 101);
-    return items.slice(start, end);
-  }
-
-  const { n, era } = parsePatroYearSearchQuery(q);
-  if (n != null) {
-    const byValue = new Map(items.map((o) => [o.value, o]));
-    const out: YearItem[] = [];
-    for (const signed of signedTargetsForYearSearch(n, era)) {
-      if (signed === 0) continue;
-      const hit = byValue.get(signed);
-      if (hit) out.push(hit);
-    }
-    return out;
-  }
-
-  const needle = q.toLowerCase();
-  return items.filter((o) => o.label.toLowerCase().includes(needle)).slice(0, 20);
-}
 
 function freeformYearItems(
   era: Era,
@@ -75,6 +45,7 @@ function freeformYearItems(
   const q = query.trim();
   const { n } = parsePatroYearSearchQuery(q, era);
   if (n != null) {
+    if (!isValidBrowseYear(era, n)) return [];
     return [{ value: n, label: formatBrowsePatroYearPicker(n, digits) }];
   }
   if (q) return [];
@@ -94,39 +65,48 @@ export function PatroYearCombobox(props: PatroYearComboboxProps) {
   const { digits } = usePatroDisplayLocale(props.displayLanguage);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
-  const useOptionList = props.options != null;
+  const useYearRange = props.yearRange != null && props.yearRange.length > 0;
 
   const selected = useMemo(() => {
-    if (useOptionList && props.options) {
-      return (
-        props.options.find((o) => o.value === props.value) ?? {
-          value: props.value,
-          label: digits(props.value),
-        }
-      );
-    }
     const label = formatBrowsePatroYearPicker(props.value, digits);
     return { value: props.value, label };
-  }, [useOptionList, props, digits]);
+  }, [props.value, digits]);
 
   const listItems = useMemo(() => {
-    if (useOptionList && props.options) {
-      return filterLegacyYearItems(props.options, query, props.value);
+    if (useYearRange && props.yearRange) {
+      return lazyBrowseYearListItems(
+        props.yearRange,
+        query,
+        props.value,
+        props.era,
+        digits,
+      );
     }
     return freeformYearItems(props.era, props.value, query, digits);
-  }, [useOptionList, props, query, digits]);
+  }, [useYearRange, props.yearRange, props.era, props.value, query, digits]);
 
-  const triggerLabel = selected.shortLabel ?? selected.label;
+  const triggerLabel = selected.label;
 
   const handleOpenChange = (next: boolean) => {
+    if (next) {
+      setPortalContainer(
+        triggerRef.current?.closest<HTMLElement>(
+          "[data-slot=drawer-content], [data-slot=sheet-content]",
+        ) ?? null,
+      );
+    } else {
+      setPortalContainer(null);
+    }
     setOpen(next);
     if (!next) setQuery("");
   };
 
   const commitTypedYear = () => {
     const { n } = parsePatroYearSearchQuery(query, props.era);
-    if (n != null && n >= 1) {
+    if (n != null && n >= 1 && isValidBrowseYear(props.era, n)) {
       props.onChange(n);
       setOpen(false);
       setQuery("");
@@ -139,9 +119,10 @@ export function PatroYearCombobox(props: PatroYearComboboxProps) {
       onOpenChange={handleOpenChange}
       items={listItems}
       filter={null}
+      modal={false}
       value={selected}
       onValueChange={(item) => {
-        if (item) {
+        if (item && isValidBrowseYear(props.era, item.value)) {
           props.onChange(item.value);
           setOpen(false);
           setQuery("");
@@ -153,9 +134,11 @@ export function PatroYearCombobox(props: PatroYearComboboxProps) {
       isItemEqualToValue={(a, b) => a.value === b.value}
     >
       <ComboboxTrigger
+        ref={triggerRef}
+        type="button"
         aria-label={props.ariaLabel}
         className={cn(
-          "inline-flex min-w-0 shrink-0 items-center justify-between gap-0.5 rounded-md border border-border bg-card font-num text-foreground",
+          "inline-flex min-w-0 shrink-0 cursor-pointer items-center justify-between gap-0.5 rounded-md border border-border bg-card font-num text-foreground",
           props.comfortable
             ? "h-9 gap-1 px-2 text-sm"
             : "h-6 gap-0.5 px-1 text-sm sm:h-7 sm:gap-1 sm:px-1.5 sm:text-xs",
@@ -165,10 +148,11 @@ export function PatroYearCombobox(props: PatroYearComboboxProps) {
         <span className="truncate">{triggerLabel}</span>
       </ComboboxTrigger>
       <ComboboxContent
+        container={portalContainer}
         align="start"
         side="bottom"
         sideOffset={4}
-        className="min-w-[10rem] w-[min(calc(100vw-2rem),14rem)]"
+        className="z-[100] min-w-[10rem] w-[min(calc(100vw-2rem),14rem)]"
       >
         {props.onEraChange ? (
           <PatroYearEraToggle

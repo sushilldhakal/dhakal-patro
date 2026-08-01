@@ -460,7 +460,7 @@ export function ElementPage() {
           displayLanguage={urlLanguage}
           onMonthChange={(m) => monthBrowse.setYearMonth(monthBrowse.year, m)}
           onYearChange={(y) => monthBrowse.setYearMonth(y, monthBrowse.month)}
-          onEraChange={monthBrowse.setEra}
+          onBrowseCommit={monthBrowse.commitEraYear}
           onPrev={() => monthBrowse.stepMonth(-1)}
           onNext={() => monthBrowse.stepMonth(1)}
           onToday={() => monthBrowse.goToday(todayAd)}

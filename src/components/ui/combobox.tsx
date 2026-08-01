@@ -19,13 +19,13 @@ function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />
 }
 
-function ComboboxTrigger({
-  className,
-  children,
-  ...props
-}: ComboboxPrimitive.Trigger.Props) {
+const ComboboxTrigger = React.forwardRef<
+  HTMLButtonElement,
+  ComboboxPrimitive.Trigger.Props
+>(function ComboboxTrigger({ className, children, ...props }, ref) {
   return (
     <ComboboxPrimitive.Trigger
+      ref={ref}
       data-slot="combobox-trigger"
       className={cn("[&_svg:not([class*='size-'])]:size-4", className)}
       {...props}
@@ -34,7 +34,7 @@ function ComboboxTrigger({
       <ChevronDownIcon className="pointer-events-none size-4" />
     </ComboboxPrimitive.Trigger>
   )
-}
+})
 
 function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
   return (
@@ -93,14 +93,22 @@ function ComboboxContent({
   align = "start",
   alignOffset = 0,
   anchor,
+  container,
   ...props
 }: ComboboxPrimitive.Popup.Props &
   Pick<
     ComboboxPrimitive.Positioner.Props,
     "side" | "align" | "sideOffset" | "alignOffset" | "anchor"
-  >) {
+  > &
+  Pick<ComboboxPrimitive.Portal.Props, "container">) {
   return (
-    <ComboboxPrimitive.Portal>
+    // `container` matters inside a modal surface (drawer/sheet/dialog). Portalled
+    // to the default `document.body`, the popup lands *outside* that surface, so
+    // the modal's overlay covers it and forces `pointer-events: none` on it: the
+    // panel renders in the right place but is inert, and every press hits the
+    // overlay instead — which reads as "the dropdown just closes". Portalling it
+    // into the surface keeps it inside the modal's interactive region.
+    <ComboboxPrimitive.Portal container={container}>
       <ComboboxPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

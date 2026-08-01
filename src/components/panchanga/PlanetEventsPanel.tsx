@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchGocharJd, gocharKeys, type LocationParams } from "@/lib/api";
+import { fetchGocharJd, gocharKeys, type GocharNextEntry, type LocationParams } from "@/lib/api";
 import {
   formatClockNepali,
 } from "@/lib/panchanga-format";
@@ -28,13 +28,19 @@ function rashiNe(english?: string): string {
   return resolveRashiDisplay(undefined, english, "ne") ?? english;
 }
 
-function localTimePart(entryLocal: string): string {
-  const m = entryLocal.match(/(\d{1,2}):(\d{2})/);
-  return m ? `${m[1]}:${m[2]}` : entryLocal;
+function localTimePart(entry: GocharNextEntry): string {
+  if (entry.entry_time_local_short?.trim()) {
+    return entry.entry_time_local_short.trim();
+  }
+  const raw = entry.entry_time_local.trim();
+  const tIdx = raw.indexOf("T");
+  const tail = tIdx >= 0 ? raw.slice(tIdx + 1) : raw.slice(raw.lastIndexOf(" ") + 1);
+  const m = tail.match(/^(\d{1,2}):(\d{2})/);
+  return m ? `${m[1]}:${m[2]}` : tail;
 }
 
 function daysUntil(entryLocal: string, refDate: Date): number {
-  const entryDay = civilIsoDatePart(entryLocal);
+  const entryDay = civilIsoDatePart(entryLocal.split(" ")[0] ?? entryLocal);
   const refDay = civilIsoFromDate(refDate);
   const a = parseCivilIsoToDate(entryDay);
   const b = parseCivilIsoToDate(refDay);
@@ -54,13 +60,13 @@ export function PlanetEventsPanel({ jdUt, refDateAd, location }: Props) {
   const refIso = refDateAd?.trim() ?? "";
   const refDate = useMemo(() => {
     if (!refIso) return null;
-    return parseCivilIsoToDate(refIso);
+    return parseCivilIsoToDate(civilIsoDatePart(refIso));
   }, [refIso]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: gocharKeys.day(jdUt, location),
     queryFn: () => fetchGocharJd(jdUt, location),
-    enabled: Number.isFinite(jdUt) && jdUt > 0,
+    enabled: Number.isFinite(jdUt),
     staleTime: 1000 * 60 * 60,
   });
 
@@ -70,9 +76,10 @@ export function PlanetEventsPanel({ jdUt, refDateAd, location }: Props) {
       const g = data.gochar[key];
       const entry = g?.next_rashi_entry;
       if (!g || !entry?.entry_time_local) return null;
-      const rashi = rashiNe(entry.to_rashi);
-      const time = formatClockNepali(localTimePart(entry.entry_time_local)) ?? "—";
       const rel = refDate ? daysUntil(entry.entry_time_local, refDate) : 0;
+      if (refDate && rel < 0) return null;
+      const rashi = rashiNe(entry.to_rashi);
+      const time = formatClockNepali(localTimePart(entry)) ?? "—";
       const enName = GRAHA_NAME[key].en;
       return {
         key,
@@ -125,7 +132,7 @@ export function PlanetEventsPanel({ jdUt, refDateAd, location }: Props) {
                 </span>
               </span>
               <span className="whitespace-nowrap font-mono text-sm font-semibold">
-                {e.rel <= 0
+                {e.rel === 0
                   ? bilingualText(lang, "आज", "Today")
                   : bilingualText(lang, `${digits(e.rel)} दिन`, `${digits(e.rel)}d`)}
               </span>

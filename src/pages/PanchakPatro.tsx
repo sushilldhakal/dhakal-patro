@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -22,13 +23,9 @@ import { patroNoteBox } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
 import { searchToLocation } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
-import { type Era } from "@/lib/era";
+import { formatBrowsePatroYear } from "@/lib/patro-year-axis";
 
 const routeApi = getRouteApi("/panchanga-shell/panchak-patro");
-
-function panchakApiEra(era: Era): "ad" | "bs" {
-  return era === "ad" || era === "bc" ? "ad" : "bs";
-}
 
 function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
   const d = new Date(`${iso}T12:00:00`);
@@ -113,11 +110,14 @@ export function PanchakPatro() {
   const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
   const { year, era, setYear, setEra } = yearBrowse;
 
-  const apiEra = panchakApiEra(era);
+  const yearLabel = useMemo(
+    () => formatBrowsePatroYear(era, year, lang, digits),
+    [era, year, lang, digits],
+  );
 
   const query = useQuery({
-    queryKey: panchakKeys.year(year, location.params, apiEra),
-    queryFn: () => fetchPanchakYear(year, location.params, apiEra),
+    queryKey: panchakKeys.year(year, location.params, era),
+    queryFn: () => fetchPanchakYear(year, location.params, era),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
   });
@@ -147,7 +147,7 @@ export function PanchakPatro() {
 
         <PageHeader
           icon={<CalendarClock className="h-7 w-7 text-secondary shrink-0" />}
-          title={t("panchak.title", { year: digits(year) })}
+          title={t("panchak.title", { year: yearLabel })}
           subtitle={t("panchak.subtitle")}
         />
       </div>
@@ -171,12 +171,12 @@ export function PanchakPatro() {
           {bilingualText(lang, "पञ्चक विवरण लोड गर्न सकिएन।", "Could not load Panchak details.")}
         </p>
       ) : !periods.length ? (
-        <p className="text-sm">{t("panchak.no_data", { year: digits(year) })}</p>
+        <p className="text-sm">{t("panchak.no_data", { year: yearLabel })}</p>
       ) : (
         <section className="space-y-3">
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
             <AlertTriangle className="size-4 text-amber-600" />
-            {t("panchak.periods_title", { year: digits(year) })}
+            {t("panchak.periods_title", { year: yearLabel })}
           </h2>
           <div className="grid gap-3 lg:grid-cols-2">
             {periods.map((period, i) => (

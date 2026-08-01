@@ -22,6 +22,11 @@ import {
   parsePatroDayUrl,
   type PatroDayFetchState,
 } from "@/lib/patro-day-url";
+import { getCurrentBs } from "@/lib/bs-calendar";
+import {
+  normalizePatroBrowseRange,
+  type PatroBrowseRange,
+} from "@/lib/patro-browse-range";
 
 /**
  * Shareable URL state.
@@ -75,8 +80,12 @@ export interface DainikKrantiSearch extends LocationSearch, PatroMonthBrowseSear
 }
 
 export interface PanchangaYearSearch extends LocationSearch, PatroYearBrowseSearch {
-  /** Range end (inclusive) BS year. Omitted / equal to `year` ⇒ single year. */
+  /** Range end (inclusive) browse year. Omitted / equal to `year` ⇒ single year. */
   to?: number;
+  /** Range start month (1–12). Default 1. */
+  month?: number;
+  /** Range end month (1–12). Default 12 when `to` is set. */
+  toMonth?: number;
 }
 
 export interface AbhijitSearch extends LocationSearch, PatroMonthBrowseSearch {}
@@ -210,22 +219,31 @@ export function buildDainikKrantiSearch(
   } as DainikKrantiSearch;
 }
 
-/** Build era-aware year range search (Panchanga year wheel). */
+/** Build era-aware month–year range search (Panchanga year wheel). */
 export function buildPatroYearRangeSearch(
   loc: PanchangaLocation,
   era: CalendarEra,
-  year: number,
-  to?: number,
+  startYear: number,
+  startMonth: number,
+  endYear: number,
+  endMonth: number,
 ): PanchangaYearSearch & LocationSearch {
   const selection: EraSelection = {
     era: era as Era,
     language: getLanguageForEra(era as Era),
-    year,
+    year: startYear,
+    month: startMonth > 1 ? startMonth : undefined,
   };
-  const extra = to != null && to > year ? { to } : undefined;
+  const extra: Record<string, number> = {};
+  if (endYear > startYear) {
+    extra.to = endYear;
+    if (endMonth !== 12) extra.toMonth = endMonth;
+  } else if (startMonth > 1 || endMonth !== 12) {
+    extra.toMonth = endMonth;
+  }
   return {
     ...locationToSearch(loc),
-    ...buildPageSearch(selection, extra),
+    ...buildPageSearch(selection, Object.keys(extra).length ? extra : undefined),
   } as PanchangaYearSearch & LocationSearch;
 }
 
@@ -516,7 +534,34 @@ export function validatePanchangaYearSearch(
   if (to != null && to >= 1 && (out.year == null || to >= out.year)) {
     out.to = to;
   }
+  const month = toInt(search.month);
+  if (month != null && month >= 1 && month <= 12) {
+    out.month = month;
+  }
+  const toMonth = toInt(search.toMonth);
+  if (toMonth != null && toMonth >= 1 && toMonth <= 12) {
+    out.toMonth = toMonth;
+  }
   return out;
+}
+
+/** Panchanga year wheel URL → inclusive month–year browse range. */
+export function panchangaYearSearchToBrowseRange(
+  search: PanchangaYearSearch,
+  fallbackEra: CalendarEra = readCalendarEra(),
+): PatroBrowseRange {
+  const era = (search.era ?? fallbackEra) as Era;
+  const startYear = search.year ?? getCurrentBs().year;
+  const startMonth = search.month ?? 1;
+  const endYear = search.to ?? startYear;
+  const endMonth = search.toMonth ?? 12;
+  return normalizePatroBrowseRange({
+    era,
+    startYear,
+    startMonth,
+    endYear,
+    endMonth,
+  });
 }
 
 export function validateAbhijitSearch(search: Record<string, unknown>): AbhijitSearch {

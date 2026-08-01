@@ -10,16 +10,17 @@ import {
   type CalendarDay,
   type Festival,
 } from "@/lib/api";
-import { buildPatroAdYearOptions } from "@/lib/patro-date-options";
 import {
   BBS_URL_YEAR_MAX,
   BBS_URL_YEAR_MIN,
   BS_FESTIVAL_STACK_MIN_YEAR,
+  maxBrowseYearForEra,
+  PATRO_AD_BROWSE_YEAR_MIN,
+  PATRO_BC_BROWSE_YEAR_MIN,
   PATRO_EPHEMERIS_SIGNED_MAX,
 } from "@/lib/patro-year-axis";
 import { civilIsoFromDate, parseCivilIso, parseCivilIsoToDate } from "@/lib/patro-day";
 
-const PATRO_AD_YEAR_OPTIONS = buildPatroAdYearOptions();
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { PanchangaMonthGrid } from "@/components/panchanga/PanchangaMonthGrid";
@@ -37,9 +38,9 @@ import {
   buildLocalAdMonthDays,
   mergeEnrichedDays,
   shiftAdMonth,
-  shiftBsMonth,
   uniqueBsMonths,
 } from "@/lib/local-calendar";
+import { shiftPatroBrowseMonth } from "@/lib/patro-year-browse-step";
 import { PatroMonthYearNav } from "@/components/patro-date";
 import { patroEraShortLabel } from "@/components/patro-date/patro-era-short-label";
 import { isGregorianEraBrowse } from "@/components/patro-date/patro-month-labels";
@@ -154,18 +155,24 @@ export function CalendarView({
     return [];
   }, [isGregorian, isPanchangaPatro, year, month]);
 
-  const prevBs = useMemo(() => shiftBsMonth(year, month, -1), [year, month]);
-  const nextBs = useMemo(() => shiftBsMonth(year, month, 1), [year, month]);
+  const prevBs = useMemo(
+    () => shiftPatroBrowseMonth(era, year, month, -1),
+    [era, year, month],
+  );
+  const nextBs = useMemo(
+    () => shiftPatroBrowseMonth(era, year, month, 1),
+    [era, year, month],
+  );
 
   const canFetchPrev =
     era === "bbs"
-      ? !(month === 1 && year <= BBS_URL_YEAR_MIN)
+      ? !(month === 1 && year >= BBS_URL_YEAR_MAX)
       : era === "bs"
         ? !(month === 1 && year <= 1)
         : true;
   const canFetchNext =
     era === "bbs"
-      ? !(month === 12 && year >= BBS_URL_YEAR_MAX)
+      ? !(month === 12 && year <= BBS_URL_YEAR_MIN)
       : era === "bs"
         ? !(month === 12 && year >= PATRO_EPHEMERIS_SIGNED_MAX)
         : true;
@@ -177,12 +184,12 @@ export function CalendarView({
     if (isPanchangaPatro) return [{ year, month }];
     if (isGregorian) {
       const months = [{ year, month }, prevAd, nextAd];
-      return uniqueBsMonths(months);
+      return uniqueBsMonths(months, era);
     }
     const months = [{ year, month }];
     if (canFetchPrev) months.push(prevBs);
     if (canFetchNext) months.push(nextBs);
-    return uniqueBsMonths(months);
+    return uniqueBsMonths(months, era);
   }, [
     isPanchangaPatro,
     isGregorian,
@@ -194,6 +201,7 @@ export function CalendarView({
     nextAd,
     canFetchPrev,
     canFetchNext,
+    era,
   ]);
 
   const monthFetchEra = era;
@@ -588,16 +596,19 @@ export function CalendarView({
     monthBrowse.month > 1
       ? false
       : isGregorianEraBrowse(era)
-        ? year <= PATRO_AD_YEAR_OPTIONS[0]!
+        ? era === "bc"
+          ? year <= PATRO_BC_BROWSE_YEAR_MIN
+          : year <= PATRO_AD_BROWSE_YEAR_MIN
         : era === "bbs"
           ? year <= BBS_URL_YEAR_MIN
           : year <= 1;
 
+  const gregorianMax = maxBrowseYearForEra(era) ?? PATRO_AD_BROWSE_YEAR_MIN;
   const headerNextDisabled =
     monthBrowse.month < 12
       ? false
       : isGregorianEraBrowse(era)
-        ? year >= PATRO_AD_YEAR_OPTIONS[PATRO_AD_YEAR_OPTIONS.length - 1]!
+        ? year >= gregorianMax
         : era === "bbs"
           ? year >= BBS_URL_YEAR_MAX
           : year >= PATRO_EPHEMERIS_SIGNED_MAX;
@@ -613,7 +624,7 @@ export function CalendarView({
         onToday={goToday}
         onMonthChange={changeMonth}
         onYearChange={changeYear}
-        onEraChange={monthBrowse.setEra}
+        onBrowseCommit={monthBrowse.commitEraYear}
         onPrev={prev}
         onNext={nextMonth}
         prevDisabled={headerPrevDisabled}

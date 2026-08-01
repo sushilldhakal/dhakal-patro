@@ -239,7 +239,7 @@ export function DayCycleToggle({
             aria-checked={mode === o.value}
             onClick={() => onModeChange?.(o.value)}
             className={cn(
-              "font-semibold transition-colors",
+              "font-semibold transition-colors !py-1 h-7",
               padCls,
               mode === o.value
                 ? "bg-primary text-primary-foreground"

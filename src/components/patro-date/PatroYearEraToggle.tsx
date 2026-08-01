@@ -4,10 +4,23 @@ import { isPatroBrowseEraPair, togglePatroBrowseEra, type Era } from "@/lib/era"
 import { cn } from "@/lib/utils";
 import { patroEraShortLabel } from "./patro-era-short-label";
 
-const VIKRAM_PAIR: readonly Era[] = ["bs", "bbs"];
-const GREGORIAN_PAIR: readonly Era[] = ["ad", "bc"];
-
+/**
+ * Keep the press from reaching the combobox popup, which dismisses on an
+ * outside/interaction pointerdown.
+ *
+ * `stopPropagation` alone does that. Calling `preventDefault` on **pointerdown**
+ * as well is what breaks touch: it suppresses the compatibility mouse events the
+ * browser would otherwise synthesise, and on a touch device that is the path
+ * these buttons' `onClick` depends on — so the tap registers as a dismiss and
+ * the era never changes. Mouse users were unaffected, which is why this only
+ * ever showed up on a phone.
+ */
 function stopBubble(e: PointerEvent | MouseEvent) {
+  e.stopPropagation();
+}
+
+/** Mouse-only: suppress the focus steal without touching the click path. */
+function stopBubbleMouse(e: MouseEvent) {
   e.preventDefault();
   e.stopPropagation();
 }
@@ -34,50 +47,40 @@ export function PatroYearEraToggle({
   const { t } = useTranslation();
   if (!isPatroBrowseEraPair(era)) return null;
 
-  if (variant === "dropdown") {
-    const options = era === "ad" || era === "bc" ? GREGORIAN_PAIR : VIKRAM_PAIR;
-    return (
-      <div
-        className={cn(
-          "flex gap-1 border-b border-border px-2 pb-2 pt-1",
-          className,
-        )}
-        role="group"
-        aria-label={t("patro_date.year_era_toggle_aria")}
-        onPointerDown={stopBubble}
-        onMouseDown={stopBubble}
-      >
-        {options.map((option) => {
-          const selected = option === era;
-          const label = patroEraShortLabel(option, t);
-          return (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={selected}
-              className={cn(
-                "min-w-0 flex-1 truncate rounded-md px-2 py-1.5 text-xs font-semibold transition-colors",
-                selected
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-              onClick={(e) => {
-                stopBubble(e);
-                if (!selected) onEraChange(option);
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-
   const targetEra = togglePatroBrowseEra(era);
   if (targetEra == null) return null;
 
   const targetLabel = patroEraShortLabel(targetEra, t);
+
+  if (variant === "dropdown") {
+    return (
+      <div
+        className={cn("border-b border-border px-2 pb-2 pt-1.5", className)}
+        onPointerDown={stopBubble}
+        onMouseDown={stopBubbleMouse}
+      >
+        <button
+          type="button"
+          data-vaul-no-drag
+          className={cn(
+            "flex w-full cursor-pointer items-center justify-center rounded-md border border-border bg-card px-2 py-1.5 text-xs font-semibold text-muted-foreground transition-colors",
+            "hover:bg-muted hover:text-foreground",
+          )}
+          aria-label={t("patro_date.switch_to_era", {
+            era: targetLabel,
+            defaultValue: `Switch to ${targetLabel}`,
+          })}
+          title={targetLabel}
+          onClick={(e) => {
+            stopBubble(e);
+            onEraChange(targetEra);
+          }}
+        >
+          {targetLabel}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <button
@@ -96,7 +99,7 @@ export function PatroYearEraToggle({
       aria-label={t("patro_date.switch_to_era", { era: targetLabel, defaultValue: `Switch to ${targetLabel}` })}
       title={targetLabel}
       onPointerDown={stopBubble}
-      onMouseDown={stopBubble}
+      onMouseDown={stopBubbleMouse}
       onClick={(e) => {
         stopBubble(e);
         onEraChange(targetEra);

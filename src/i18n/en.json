@@ -123,6 +123,16 @@
         "title": "Lunar Eclipse | Vedic Patro",
         "description": "The year's lunar eclipses, their type and visibility from Nepal.",
         "keywords": "lunar eclipse, eclipse, chandra grahan, blood moon"
+      },
+      "panchanga_details": {
+        "title": "Almanac Elements Directory | Vedic Patro",
+        "description": "Browse tithi, nakshatra, yoga, karana, hora, lagna, choghadiya and other panchanga tables and spans.",
+        "keywords": "panchanga elements, tithi table, hora, choghadiya, lagna"
+      },
+      "vivah_sait": {
+        "title": "Marriage Saait {{bsYear}} | Vedic Patro",
+        "description": "Auspicious vivāha dates and muhurta for the browsed year — lagna-based marriage saait for Nepal.",
+        "keywords": "vivah saait, marriage muhurta, wedding dates nepal, shubha vivah"
       }
     }
   },

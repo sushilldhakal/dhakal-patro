@@ -17,6 +17,7 @@ import {
   patroDayFetchFromResolvedPanchanga,
   patroDayFetchStatesEqual,
   patroDayFetchWithBrowseEraToggle,
+  patroDayFetchWithDisplayEra,
   type PatroBrowseCalendarParts,
   type PatroDayFetchState,
   type ResolvedPatroDayFields,
@@ -120,6 +121,10 @@ export function usePatroDayUrlBrowse(
 
   const setDisplayEra = useCallback(
     (nextEra: Era, calendar?: PatroBrowseCalendarParts) => {
+      if (dayState.kind === "jd" || dayState.kind === "today") {
+        replaceDayState(patroDayFetchWithDisplayEra(dayState, nextEra));
+        return;
+      }
       let parts = calendar;
       if (
         !parts &&
@@ -291,6 +296,10 @@ export function usePatroPanchangaUrlBrowse(
 
   const setDisplayEra = useCallback(
     (nextEra: Era, calendar?: PatroBrowseCalendarParts) => {
+      if (dayState.kind === "jd" || dayState.kind === "today") {
+        replaceDayState(patroDayFetchWithDisplayEra(dayState, nextEra));
+        return;
+      }
       let parts = calendar;
       if (
         !parts &&

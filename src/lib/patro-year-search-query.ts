@@ -1,4 +1,5 @@
 import { ERA_CODES, type Era } from "@/lib/era";
+import { PATRO_EPHEMERIS_SIGNED_MAX } from "@/lib/patro-year-axis";
 
 const DEVANAGARI_TO_ASCII: Record<string, string> = {
   "०": "0",
@@ -62,6 +63,6 @@ export function parsePatroYearSearchQuery(
 export function signedTargetsForYearSearch(n: number, era: YearSearchEra): number[] {
   if (n <= 0) return [];
   if (era === "bbs") return [-n];
-  if (era === "bs") return [n];
+  if (era === "bs") return n <= PATRO_EPHEMERIS_SIGNED_MAX ? [n] : [];
   return [n, -n];
 }

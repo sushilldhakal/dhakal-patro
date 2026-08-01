@@ -12,7 +12,7 @@ import {
   locationCacheKey,
   panchangaKeys,
 } from "@/lib/api";
-import { parseCivilIso } from "@/lib/patro-day";
+import { civilAnchorFromPanchangaDay, parseCivilIso } from "@/lib/patro-day";
 import { adToBS, BS_MONTHS_NE } from "@/lib/bs-calendar";
 import {
   fetchEphemerisPanchangaDay,
@@ -91,8 +91,11 @@ export function Panchanga() {
   });
 
   useEffect(() => {
-    const ad = udayaQuery.data?.date_ad;
-    if (ad) syncPickerFromDateAd(ad);
+    const payload = udayaQuery.data;
+    if (payload) {
+      const ad = civilAnchorFromPanchangaDay(payload);
+      if (ad) syncPickerFromDateAd(ad);
+    }
     const jd = udayaQuery.data?.jd_ut;
     // Keep BS/BBS (and AD/BC) calendar keys in the URL — do not collapse to `jd`.
     if (jd != null && dayState.kind !== "jd" && dayState.kind !== "input") {
@@ -115,7 +118,7 @@ export function Panchanga() {
   ]);
 
   const wheelData = udayaQuery.data;
-  const civilAnchor = wheelData?.date_ad ?? "";
+  const civilAnchor = wheelData ? civilAnchorFromPanchangaDay(wheelData) : "";
   const hasCivilAnchor = civilAnchor.trim().length > 0;
   const adDateStr = civilAnchor;
   const isCeCivilDay = useMemo(() => {
@@ -290,7 +293,7 @@ export function Panchanga() {
             era={browseEra}
             date={date}
             vikram={wheelData?.date_parts?.vikram}
-            civilDateAd={wheelData?.date_ad}
+            civilDateAd={hasCivilAnchor ? civilAnchor : wheelData?.date_ad}
             gregorian={wheelData?.date_parts?.gregorian}
             onDateChange={setDate}
             onEraChange={setDisplayEra}

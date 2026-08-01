@@ -18,9 +18,9 @@ import {
   getBsMonthsOverlappingAdMonth,
   getSecondaryCellDate,
   shiftAdMonth,
-  shiftBsMonth,
   uniqueBsMonths,
 } from "@/lib/local-calendar";
+import { shiftPatroBrowseMonth } from "@/lib/patro-year-browse-step";
 import { getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-format";
 import { tithiIndexFromCalendarDay } from "@/lib/tithi-wheel-data";
 import { civilIsoDayOfMonth, parseCivilIsoToDate } from "@/lib/patro-day";
@@ -99,18 +99,24 @@ export function PanchangaMonthGrid({
 
   const prevAd = useMemo(() => shiftAdMonth(adYear, adMonth, -1), [adYear, adMonth]);
   const nextAd = useMemo(() => shiftAdMonth(adYear, adMonth, 1), [adYear, adMonth]);
-  const prevBs = useMemo(() => shiftBsMonth(bs.year, bs.month, -1), [bs.year, bs.month]);
-  const nextBs = useMemo(() => shiftBsMonth(bs.year, bs.month, 1), [bs.year, bs.month]);
+  const prevBs = useMemo(
+    () => shiftPatroBrowseMonth(monthFetchEra, bs.year, bs.month, -1),
+    [monthFetchEra, bs.year, bs.month],
+  );
+  const nextBs = useMemo(
+    () => shiftPatroBrowseMonth(monthFetchEra, bs.year, bs.month, 1),
+    [monthFetchEra, bs.year, bs.month],
+  );
 
   const canFetchPrev = isAdCalendar
     ? true
     : monthFetchEra === "bbs"
-      ? !(bs.month === 1 && bs.year <= BBS_URL_YEAR_MIN)
+      ? !(bs.month === 1 && bs.year >= BBS_URL_YEAR_MAX)
       : prevBs.year >= BS_SUPPORTED_START_YEAR && prevBs.year <= BS_SUPPORTED_END_YEAR;
   const canFetchNext = isAdCalendar
     ? true
     : monthFetchEra === "bbs"
-      ? !(bs.month === 12 && bs.year >= BBS_URL_YEAR_MAX)
+      ? !(bs.month === 12 && bs.year <= BBS_URL_YEAR_MIN)
       : nextBs.year >= BS_SUPPORTED_START_YEAR && nextBs.year <= BS_SUPPORTED_END_YEAR;
 
   const requiredBsMonths = useMemo(() => {
@@ -118,13 +124,16 @@ export function PanchangaMonthGrid({
       const months = [{ year: bs.year, month: bs.month }];
       if (canFetchPrev) months.push(prevBs);
       if (canFetchNext) months.push(nextBs);
-      return uniqueBsMonths(months);
+      return uniqueBsMonths(months, monthFetchEra);
     }
-    return uniqueBsMonths([
-      ...getBsMonthsOverlappingAdMonth(adYear, adMonth),
-      ...getBsMonthsOverlappingAdMonth(prevAd.year, prevAd.month),
-      ...getBsMonthsOverlappingAdMonth(nextAd.year, nextAd.month),
-    ]);
+    return uniqueBsMonths(
+      [
+        ...getBsMonthsOverlappingAdMonth(adYear, adMonth),
+        ...getBsMonthsOverlappingAdMonth(prevAd.year, prevAd.month),
+        ...getBsMonthsOverlappingAdMonth(nextAd.year, nextAd.month),
+      ],
+      "bs",
+    );
   }, [
     isAdCalendar,
     bs.year,

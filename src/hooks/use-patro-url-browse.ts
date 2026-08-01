@@ -81,6 +81,11 @@ function applyEraBrowseFromSearch(
   if (urlMonthUnparseable(search, language)) return;
 
   const parsed = parseEraFromUrl(raw, language);
+  // Share URL still reflects the old UI language (e.g. ne+bs) while i18n just
+  // flipped — applying it would fight usePatro*Browse's language→era sync and
+  // loop navigate/replace forever.
+  if (parsed.language !== language) return;
+
   const coerced = coerceMonthBrowseFromUrl(parsed.era, parsed.year, parsed.month);
   if (parsed.era !== browse.era) browse.setEra(parsed.era);
   if (coerced.year != null && coerced.year !== browse.year) browse.setYear(coerced.year);
@@ -127,7 +132,7 @@ export function usePatroMonthUrlBrowse(
         month: monthBrowse.month,
       },
       mirror,
-      parsed.language,
+      language,
     );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
@@ -141,7 +146,7 @@ export function usePatroMonthUrlBrowse(
     search,
     navigate,
     mirror,
-    parsed.language,
+    language,
   ]);
 
   useEffect(() => {
@@ -180,12 +185,12 @@ export function usePatroYearUrlBrowse(
         year: yearBrowse.year,
       },
       undefined,
-      parsed.language,
+      language,
     );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, yearBrowse.year, yearBrowse.era, search, navigate, language, parsed.language]);
+  }, [location, yearBrowse.year, yearBrowse.era, search, navigate, language]);
 
   useEffect(() => {
     applyEraBrowseFromSearch(search, yearBrowse, language);
@@ -261,7 +266,7 @@ export function useElementPageUrlBrowse(
         month: monthBrowse.month,
       },
       undefined,
-      parsed.language,
+      language,
     );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
@@ -275,7 +280,6 @@ export function useElementPageUrlBrowse(
     search,
     navigate,
     language,
-    parsed.language,
   ]);
 
   /* eslint-disable react-hooks/set-state-in-effect */

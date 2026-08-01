@@ -2,7 +2,7 @@
  * Signed patro year on one axis (URL / pickers when `era=bs`):
  *
  * - **1 … 3000** → Vikram **BS**
- * - **−1 … −6722** → **BBS** (Before Bikram Sambat), display as BBS `|year|`
+ * - **−1 … −13201** → **BBS** (Before Bikram Sambat), display as BBS `|year|`
  * - **0** → invalid
  *
  * BS 1 ≈ 57 BCE. BBS 6722 ≈ tradition / Surya Siddhanta deep anchor (~6778 BCE).
@@ -21,8 +21,8 @@ import type { Era } from "@/lib/era";
  * Ephemeris span (11 Aug 13000 BCE, JD −3026604.5 … 7 Jan 17000 CE), i.e. the
  * deepest the library can reach once every `.se1` file is installed.
  */
-export const PATRO_SIGNED_YEAR_MIN = -12942; // BBS 12942 ≈ 12999 BCE
-export const PATRO_SIGNED_YEAR_MAX = 17055; // BS 17055 ≈ 16998 CE
+export const PATRO_SIGNED_YEAR_MIN = -13202;
+export const PATRO_SIGNED_YEAR_MAX = 17248;
 
 /**
  * What the server's installed `.se1` set can actually compute — mirrors
@@ -30,8 +30,8 @@ export const PATRO_SIGNED_YEAR_MAX = 17055; // BS 17055 ≈ 16998 CE
  * this the API answers 400 with an "install more .se1" message, so the UI should
  * not offer those years. Keep both files in step when ephemeris files change.
  */
-export const PATRO_EPHEMERIS_SIGNED_MIN = -7144; // BBS 7144 ≈ 7200 BCE
-export const PATRO_EPHEMERIS_SIGNED_MAX = 3057; // BS 3057 ≈ 3000 CE
+export const PATRO_EPHEMERIS_SIGNED_MIN = -13201; // BBS 13201 ≈ 13201 BCE
+export const PATRO_EPHEMERIS_SIGNED_MAX = 17247; // BS 17247 ≈ AD 17191 CE
 
 /** Retained aliases — both gates are the same ephemeris window now. */
 export const PATRO_SANKRANTI_SIGNED_MIN = PATRO_EPHEMERIS_SIGNED_MIN;
@@ -43,6 +43,12 @@ export const BS_FESTIVAL_STACK_MIN_YEAR = 60;
 /** Positive BBS year bounds in share URLs (`era=bbs&year=…`). */
 export const BBS_URL_YEAR_MIN = 1;
 export const BBS_URL_YEAR_MAX = -PATRO_EPHEMERIS_SIGNED_MIN;
+
+/** Gregorian browse pickers — mirror ``AD_YEAR_*`` / ``BC_YEAR_*`` on the API. */
+export const PATRO_AD_BROWSE_YEAR_MIN = 1;
+export const PATRO_AD_BROWSE_YEAR_MAX = 17191;
+export const PATRO_BC_BROWSE_YEAR_MIN = 1;
+export const PATRO_BC_BROWSE_YEAR_MAX = BBS_URL_YEAR_MAX;
 
 export function validatePatroSignedYear(year: number): void {
   if (
@@ -86,13 +92,49 @@ export function stepPatroSignedYear(year: number, delta: -1 | 1): number {
   return clampPatroSignedYear(next);
 }
 
-/** Both ends matter: the axis reaches BS 17055, the ephemeris stops at BS 3057. */
+/** Both ends matter: the axis reaches BS 17055; extended ephemeris reaches BS 16799. */
 export function patroYearWithinEphemeris(signed: number): boolean {
   return (
     signed !== 0 &&
     signed >= PATRO_EPHEMERIS_SIGNED_MIN &&
     signed <= PATRO_EPHEMERIS_SIGNED_MAX
   );
+}
+
+/** Browse URL year → signed axis (`era=bbs&year=N` → `−N`). */
+export function signedPatroYearFromBrowse(era: Era, browseYear: number): number {
+  if (era === "bbs") return signedFromBbs(browseYear);
+  return browseYear;
+}
+
+/** Ephemeris window check for positive browse URL years. */
+export function patroBrowseYearWithinEphemeris(era: Era, browseYear: number): boolean {
+  if (era === "ad") {
+    return browseYear >= PATRO_AD_BROWSE_YEAR_MIN && browseYear <= PATRO_AD_BROWSE_YEAR_MAX;
+  }
+  if (era === "bc") {
+    return browseYear >= PATRO_BC_BROWSE_YEAR_MIN && browseYear <= PATRO_BC_BROWSE_YEAR_MAX;
+  }
+  return patroYearWithinEphemeris(signedPatroYearFromBrowse(era, browseYear));
+}
+
+/** Max positive year in the year picker for the active browse era. */
+export function maxBrowseYearForEra(era: Era): number | undefined {
+  if (era === "bs") return PATRO_EPHEMERIS_SIGNED_MAX;
+  if (era === "bbs") return BBS_URL_YEAR_MAX;
+  if (era === "ad") return PATRO_AD_BROWSE_YEAR_MAX;
+  if (era === "bc") return PATRO_BC_BROWSE_YEAR_MAX;
+  return undefined;
+}
+
+/** Whether `year` is allowed while `era` is selected (picker + URL, no era flip). */
+export function isValidBrowseYear(era: Era, year: number): boolean {
+  if (!Number.isFinite(year) || year < 1) return false;
+  if (era === "bs") return year <= PATRO_EPHEMERIS_SIGNED_MAX;
+  if (era === "bbs") return year <= BBS_URL_YEAR_MAX;
+  if (era === "ad") return year <= PATRO_AD_BROWSE_YEAR_MAX;
+  if (era === "bc") return year <= PATRO_BC_BROWSE_YEAR_MAX;
+  return true;
 }
 
 export function patroYearSupportsSankrantiGrid(signed: number): boolean {
@@ -152,7 +194,7 @@ export function formatBrowsePatroYearPicker(
   digits: (n: number | string) => string = String,
 ): string {
   if (!Number.isFinite(year) || year < 1) {
-    throw new Error("browse year must be a positive integer");
+    return digits("—");
   }
   return digits(year);
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarClock, ChevronDown, MapPin, Minus, Plus } from "lucide-react";
 import type { BsNativeSelectOption } from "@/components/BsNativeSelect";
@@ -15,13 +16,25 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import { useLocale } from "@/i18n/locale";
 import { patroMobilePickerBtn, patroMonthNavBtn } from "@/lib/patro-classes";
-import { stepPatroSignedYear } from "@/lib/patro-year-axis";
+import { BsNativeSelect } from "@/components/BsNativeSelect";
+import { getBSMonthLength } from "@/lib/bs-calendar";
+import { browseYearRangeBounds, windowedBrowseYearSelectOptions } from "@/lib/patro-browse-year-items";
 import type { Era } from "@/lib/era";
+import { buildAdDayOptions, buildBsDayOptions } from "@/lib/patro-date-options";
+import {
+  isValidBrowseYear,
+  signedPatroYearFromBrowse,
+  stepPatroSignedYear,
+} from "@/lib/patro-year-axis";
 import { cn } from "@/lib/utils";
+import { sameLocationParams } from "@/lib/url-state";
+import { usePatroDisplayLocale } from "@/hooks/use-patro-display-locale";
 import type { PatroDateSheetState } from "./use-patro-date-sheet";
-import { PatroYearCombobox } from "./PatroYearCombobox";
+import { PatroYearPickerPopover } from "./PatroYearPickerPopover";
+import { isGregorianEraBrowse } from "./patro-month-labels";
 
 /** Month picker for the sheet: 12 buttons, three to a row, no dropdown. */
 export function MonthGridPicker({
@@ -65,24 +78,27 @@ export function MonthGridPicker({
 export function YearStepper({
   year,
   era,
-  options,
+  yearRange,
   ariaLabel,
   onYearChange,
-  onEraChange,
+  onBrowseCommit,
   signedBsYears = false,
 }: {
   year: number;
   era: Era;
-  options: BsNativeSelectOption[];
+  yearRange: readonly number[];
   ariaLabel: string;
   onYearChange: (year: number) => void;
-  onEraChange?: (era: Era) => void;
+  onBrowseCommit?: (era: Era, year: number) => void;
   /** Step across BBSE ↔ BS without hitting invalid year 0 */
   signedBsYears?: boolean;
 }) {
-  const values = options.map((o) => o.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const { digits } = usePatroDisplayLocale();
+  const { min, max } = browseYearRangeBounds(yearRange);
+  const yearOptions = useMemo(
+    () => windowedBrowseYearSelectOptions(yearRange, year, era, digits),
+    [yearRange, year, era, digits],
+  );
   const step = (delta: -1 | 1) =>
     signedBsYears ? stepPatroSignedYear(year, delta) : year + delta;
   return (
@@ -90,25 +106,39 @@ export function YearStepper({
       <button
         type="button"
         className={patroMonthNavBtn}
+        data-vaul-no-drag
         onClick={() => onYearChange(step(-1))}
         disabled={year <= min}
         aria-label={`${ariaLabel} −1`}
       >
         <Minus size={16} strokeWidth={2.25} />
       </button>
-      <PatroYearCombobox
-        className="w-[7.5rem]"
-        era={era}
-        value={year}
-        options={options}
-        ariaLabel={ariaLabel}
-        onChange={onYearChange}
-        onEraChange={onEraChange}
-        comfortable
-      />
+      {onBrowseCommit ? (
+        <PatroYearPickerPopover
+          className="w-[7.5rem]"
+          era={era}
+          value={year}
+          ariaLabel={ariaLabel}
+          onChange={onYearChange}
+          onBrowseCommit={onBrowseCommit}
+          comfortable
+        />
+      ) : (
+        <BsNativeSelect
+          className="w-[7.5rem]"
+          value={year}
+          options={yearOptions}
+          ariaLabel={ariaLabel}
+          onChange={(y) => {
+            if (isValidBrowseYear(era, y)) onYearChange(y);
+          }}
+          comfortable
+        />
+      )}
       <button
         type="button"
         className={patroMonthNavBtn}
+        data-vaul-no-drag
         onClick={() => onYearChange(step(1))}
         disabled={year >= max}
         aria-label={`${ariaLabel} +1`}
@@ -116,6 +146,241 @@ export function YearStepper({
         <Plus size={16} strokeWidth={2.25} />
       </button>
     </div>
+  );
+}
+
+export type PatroMobileDateSheetDraft = {
+  era: Era;
+  year: number;
+  month: number;
+  day: number;
+  clock?: string;
+};
+
+/**
+ * Mobile sheet date UI — changes stay local until the sheet Done button commits.
+ */
+export function PatroMobileDateSheetDraft({
+  sheet,
+  era,
+  year,
+  month,
+  day,
+  yearRange,
+  monthOptions,
+  yearAriaLabel,
+  dayAriaLabel,
+  showTime,
+  clock,
+  hourOptions,
+  minuteOptions,
+  hourAriaLabel,
+  minuteAriaLabel,
+  onDraftChange,
+}: {
+  sheet: PatroDateSheetState;
+  era: Era;
+  year: number;
+  month: number;
+  day: number;
+  yearRange: readonly number[];
+  monthOptions: BsNativeSelectOption[];
+  yearAriaLabel: string;
+  dayAriaLabel?: string;
+  showTime: boolean;
+  clock?: string;
+  hourOptions: BsNativeSelectOption[];
+  minuteOptions: BsNativeSelectOption[];
+  hourAriaLabel?: string;
+  minuteAriaLabel?: string;
+  onDraftChange: (draft: PatroMobileDateSheetDraft) => void;
+}) {
+  const { t } = useTranslation();
+  const { digits } = usePatroDisplayLocale();
+  const isGregorian = isGregorianEraBrowse(era);
+
+  const [draftEra, setDraftEra] = useState(era);
+  const [draftYear, setDraftYear] = useState(year);
+  const [draftMonth, setDraftMonth] = useState(month);
+  const [draftDay, setDraftDay] = useState(day);
+  const [draftClock, setDraftClock] = useState(clock ?? "");
+
+  useEffect(() => {
+    if (!sheet.open) return;
+    setDraftEra(era);
+    setDraftYear(year);
+    setDraftMonth(month);
+    setDraftDay(day);
+    setDraftClock(clock ?? "");
+  }, [sheet.open, era, year, month, day, clock]);
+
+  const clampDay = useCallback(
+    (y: number, m: number, d: number, browseEra: Era) => {
+      const max = isGregorian
+        ? new Date(y, m, 0).getDate()
+        : getBSMonthLength(signedPatroYearFromBrowse(browseEra, y), m);
+      return Math.min(Math.max(1, d), max);
+    },
+    [isGregorian],
+  );
+
+  const draftDayOptions = useMemo(() => {
+    if (isGregorian) {
+      return buildAdDayOptions(draftYear, draftMonth, digits);
+    }
+    return buildBsDayOptions(
+      signedPatroYearFromBrowse(draftEra, draftYear),
+      draftMonth,
+      digits,
+    );
+  }, [isGregorian, draftEra, draftYear, draftMonth, digits]);
+
+  const pickBrowseYear = (nextEra: Era, nextYear: number) => {
+    setDraftEra(nextEra);
+    setDraftYear(nextYear);
+    setDraftDay((d) => clampDay(nextYear, draftMonth, d, nextEra));
+  };
+
+  const setDraftMonthOnly = (m: number) => {
+    setDraftMonth(m);
+    setDraftDay((d) => clampDay(draftYear, m, d, draftEra));
+  };
+
+  const setDraftYearOnly = (y: number) => {
+    setDraftYear(y);
+    setDraftDay((d) => clampDay(y, draftMonth, d, draftEra));
+  };
+
+  const { hour, minute } = draftClock ? parseClockParts(draftClock) : { hour: 0, minute: 0 };
+
+  useEffect(() => {
+    onDraftChange({
+      era: draftEra,
+      year: draftYear,
+      month: draftMonth,
+      day: draftDay,
+      clock: showTime ? draftClock : undefined,
+    });
+  }, [
+    draftEra,
+    draftYear,
+    draftMonth,
+    draftDay,
+    draftClock,
+    showTime,
+    onDraftChange,
+  ]);
+
+  return (
+    <>
+      <MonthGridPicker month={draftMonth} options={monthOptions} onMonthChange={setDraftMonthOnly} />
+      <YearStepper
+        year={draftYear}
+        era={draftEra}
+        yearRange={yearRange}
+        ariaLabel={yearAriaLabel}
+        onYearChange={setDraftYearOnly}
+        onBrowseCommit={pickBrowseYear}
+        signedBsYears={draftEra === "bbs"}
+      />
+      {dayAriaLabel ? (
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-sm font-semibold text-muted-foreground">{dayAriaLabel}</span>
+          <BsNativeSelect
+            className="w-[5rem]"
+            value={draftDay}
+            options={draftDayOptions}
+            ariaLabel={dayAriaLabel}
+            onChange={setDraftDay}
+            comfortable
+          />
+        </div>
+      ) : null}
+      {showTime && hourAriaLabel && minuteAriaLabel ? (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            {t("common.time")}
+          </p>
+          <div className="flex w-full items-center justify-center gap-2">
+            <BsNativeSelect
+              className="w-[4.5rem]"
+              value={hour}
+              options={hourOptions}
+              ariaLabel={hourAriaLabel}
+              onChange={(nextHour) =>
+                setDraftClock(formatClockParts(nextHour, minute))
+              }
+              comfortable
+            />
+            <span className="px-0.5 font-num text-base font-semibold">:</span>
+            <BsNativeSelect
+              className="w-[4.5rem]"
+              value={minute}
+              options={minuteOptions}
+              ariaLabel={minuteAriaLabel}
+              onChange={(nextMinute) =>
+                setDraftClock(formatClockParts(hour, nextMinute))
+              }
+              comfortable
+            />
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export type PatroMobileYearSheetDraft = {
+  era: Era;
+  year: number;
+};
+
+/**
+ * Mobile sheet year UI — era/year stay local until the sheet Done button commits.
+ */
+export function PatroMobileYearSheetDraft({
+  sheet,
+  era,
+  year,
+  yearRange,
+  yearAriaLabel,
+  onDraftChange,
+}: {
+  sheet: PatroDateSheetState;
+  era: Era;
+  year: number;
+  yearRange: readonly number[];
+  yearAriaLabel: string;
+  onDraftChange: (draft: PatroMobileYearSheetDraft) => void;
+}) {
+  const [draftEra, setDraftEra] = useState(era);
+  const [draftYear, setDraftYear] = useState(year);
+
+  useEffect(() => {
+    if (!sheet.open) return;
+    setDraftEra(era);
+    setDraftYear(year);
+  }, [sheet.open, era, year]);
+
+  const pickBrowseYear = (nextEra: Era, nextYear: number) => {
+    setDraftEra(nextEra);
+    setDraftYear(nextYear);
+  };
+
+  useEffect(() => {
+    onDraftChange({ era: draftEra, year: draftYear });
+  }, [draftEra, draftYear, onDraftChange]);
+
+  return (
+    <YearStepper
+      year={draftYear}
+      era={draftEra}
+      yearRange={yearRange}
+      ariaLabel={yearAriaLabel}
+      onYearChange={setDraftYear}
+      onBrowseCommit={pickBrowseYear}
+      signedBsYears={draftEra === "bbs"}
+    />
   );
 }
 
@@ -182,19 +447,49 @@ export function PatroDateSheet({
   location,
   onLocationChange,
   children,
+  onDateCommit,
+  onLocationCommit,
 }: {
   sheet: PatroDateSheetState;
   dateTitle: string;
   location?: PanchangaLocation;
   onLocationChange?: (location: PanchangaLocation) => void;
   children: ReactNode;
+  /** Fired when the user taps Done on the date tab (before the drawer closes). */
+  onDateCommit?: () => void;
+  /** Fired when the user taps Done on the location tab (before the drawer closes). */
+  onLocationCommit?: () => void;
 }) {
   const { t } = useTranslation();
   const hasLocation = Boolean(location && onLocationChange);
   const onLocationTab = hasLocation && sheet.tab === "location";
+  const deferSheetCommits = Boolean(onDateCommit || onLocationCommit);
+  const [draftLocation, setDraftLocation] = useState(location);
+
+  useEffect(() => {
+    if (!sheet.open || !location) return;
+    setDraftLocation(location);
+  }, [sheet.open, location]);
+
+  const applyLocationDraft = () => {
+    if (!onLocationChange || !draftLocation || !location) return;
+    if (sameLocationParams(draftLocation.params, location.params)) return;
+    onLocationChange(draftLocation);
+  };
+
+  const locationPanelLocation = deferSheetCommits
+    ? (draftLocation ?? location!)
+    : location!;
+  const locationPanelOnChange = deferSheetCommits
+    ? (next: PanchangaLocation) => setDraftLocation(next)
+    : onLocationChange!;
 
   return (
-    <Drawer open={sheet.open} onOpenChange={sheet.setOpen}>
+    <Drawer
+      open={sheet.open}
+      onOpenChange={sheet.setOpen}
+      repositionInputs={false}
+    >
       <DrawerContent>
         <DrawerHeader className="pb-2 text-center">
           <DrawerTitle className="text-base text-center">
@@ -233,8 +528,8 @@ export function PatroDateSheet({
         {onLocationTab ? (
           <div id="patro-sheet-location" role="tabpanel" className="px-4 pb-2">
             <LocationSearchPanel
-              location={location!}
-              onLocationChange={onLocationChange!}
+              location={locationPanelLocation}
+              onLocationChange={locationPanelOnChange}
               active={sheet.open}
             />
           </div>
@@ -248,6 +543,14 @@ export function PatroDateSheet({
           <DrawerClose asChild>
             <button
               type="button"
+              onClick={() => {
+                if (onLocationTab) {
+                  applyLocationDraft();
+                  onLocationCommit?.();
+                } else {
+                  onDateCommit?.();
+                }
+              }}
               className="h-10 w-full rounded-lg bg-secondary text-sm font-semibold text-secondary-foreground"
             >
               {t("common.done")}

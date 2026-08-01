@@ -1,4 +1,5 @@
-import { LEARN_TOPICS, LEARN_TOPICS_BY_SLUG } from "@/lib/learn/learn-topics";
+import { LEARN_TOPICS_BY_SLUG } from "@/lib/learn/learn-topics-meta";
+import { PRERENDER_PATHS as ALL_PRERENDER_PATHS } from "@/lib/public-indexable-paths";
 
 export const SITE_NAME = "Vedic Patro";
 export const SITE_URL = "https://www.vedicpatro.com";
@@ -83,6 +84,8 @@ const ROUTE_SEO_KEYS: Record<string, string> = {
   "/panchanga/graha-vakri": "seo.routes.graha_vakri",
   "/panchanga/surya-grahan": "seo.routes.surya_grahan",
   "/panchanga/chandra-grahan": "seo.routes.chandra_grahan",
+  "/panchanga/details": "seo.routes.panchanga_details",
+  "/vivah-sait": "seo.routes.vivah_sait",
   "/dainikkranti": "seo.routes.dainikkranti",
   "/chandrakranti": "seo.routes.dainikkranti",
   "/दैनिकक्रान्ति": "seo.routes.dainikkranti",
@@ -323,25 +326,4 @@ export function buildHeadHtml(pathname: string, t: TFunc): string {
 }
 
 /** Public routes pre-rendered at build time for crawlers and first paint. */
-export const PRERENDER_PATHS: string[] = [
-  "/",
-  "/panchanga",
-  "/panchanga/year",
-  "/panchanga/avakahada-chakra",
-  "/dainikkranti",
-  "/shanti-vidhi",
-  "/converter",
-  "/holidays",
-  "/ritu",
-  "/kundali",
-  "/jyotish/kundali-milan",
-  "/learn",
-  "/learn/history",
-  "/suryakranti",
-  "/abhijit-muhurta",
-  "/panchak-patro",
-  "/account",
-  "/verify-email",
-  "/reset-password",
-  ...LEARN_TOPICS.map((t) => `/learn/${t.slug}`),
-];
+export const PRERENDER_PATHS: string[] = ALL_PRERENDER_PATHS;

@@ -3,6 +3,33 @@ import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import path from "path"
 
+function manualChunkId(id: string): string | undefined {
+  if (id.includes("samvatsara-table.json")) return "samvatsara-data"
+  if (id.includes("bs-calendar-data.json")) return "bs-calendar-data"
+  if (id.includes("/src/i18n/ne.json")) return "i18n-ne"
+
+  if (!id.includes("node_modules")) return
+
+  if (id.includes("@tanstack/react-table")) return "table"
+  if (id.includes("react-day-picker") || id.includes("date-fns")) {
+    return "calendar-picker"
+  }
+  if (id.includes("@tanstack/react-router")) return "router"
+  if (id.includes("@tanstack/react-query")) return "query"
+  if (id.includes("lucide-react")) return "icons"
+  if (id.includes("i18next")) return "i18n-runtime"
+  if (
+    id.includes("@base-ui") ||
+    id.includes("radix-ui") ||
+    id.includes("class-variance-authority") ||
+    id.includes("clsx") ||
+    id.includes("tailwind-merge")
+  ) {
+    return "ui"
+  }
+  if (id.includes("react-dom") || id.includes("/react/")) return "react"
+}
+
 function injectGaSnippet(measurementId: string | undefined): Plugin {
   return {
     name: "inject-ga-snippet",
@@ -60,27 +87,7 @@ export default defineConfig(({ mode, isSsrBuild }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (!id.includes("node_modules")) return
-
-            if (id.includes("@tanstack/react-table")) return "table"
-            if (id.includes("react-day-picker") || id.includes("date-fns")) {
-              return "calendar-picker"
-            }
-            if (id.includes("@tanstack/react-router")) return "router"
-            if (id.includes("@tanstack/react-query")) return "query"
-            if (id.includes("lucide-react")) return "icons"
-            if (
-              id.includes("@base-ui") ||
-              id.includes("radix-ui") ||
-              id.includes("class-variance-authority") ||
-              id.includes("clsx") ||
-              id.includes("tailwind-merge")
-            ) {
-              return "ui"
-            }
-            if (id.includes("react-dom") || id.includes("/react/")) return "react"
-          },
+          manualChunks: manualChunkId,
         },
       },
     },

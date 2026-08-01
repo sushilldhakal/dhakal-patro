@@ -1,18 +1,22 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useCallback, useMemo, useRef } from "react";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { BsHeadline } from "@/components/BsHeadline";
-import { PatroYearCombobox } from "./PatroYearCombobox";
+import { PatroYearPickerPopover } from "./PatroYearPickerPopover";
 import {
   PatroDateChip,
   PatroDateSheet,
   PatroLocationChip,
+  PatroMobileYearSheetDraft,
+  type PatroMobileYearSheetDraft as MobileYearDraft,
 } from "./PatroDateSheet";
+import { buildPatroBrowseYearOptions } from "@/lib/patro-date-options";
+import { isValidBrowseYear } from "@/lib/patro-year-axis";
 import { usePatroDateSheet } from "./use-patro-date-sheet";
 import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import { stepPatroBrowseYear } from "@/lib/patro-year-browse-step";
-import { patroBrowseTodayYear } from "@/hooks/use-patro-year-browse";
+import { patroBrowseTodayEra, patroBrowseTodayYear } from "@/hooks/use-patro-year-browse";
 import { usePatroDisplayLocale } from "@/hooks/use-patro-display-locale";
 import {
   patroMonthChipButton,
@@ -31,8 +35,8 @@ import {
 } from "@/lib/era";
 import { resolveSamvatsaraForPatroYear } from "@/lib/samvatsara";
 import { samvatsaraName } from "@/lib/samvatsara-i18n";
-import { formatPatroYearGregorianRange } from "@/lib/patro-headline-subtitle";
 import { patroEraShortLabel } from "./patro-era-short-label";
+import { usePatroYearHeadlineSubtitle } from "./use-patro-year-headline-subtitle";
 
 export type PatroYearNavProps = {
   era: Era;
@@ -85,23 +89,21 @@ export function PatroYearNav({
     : resolveSamvatsaraForPatroYear(era, year);
   const samvatsaraLabel = samvatsara ? samvatsaraName(samvatsara, lang) : undefined;
 
-  const todayBrowseYear = useMemo(
-    () => patroBrowseTodayYear(era, todayAd),
-    [era, todayAd],
-  );
-  const jumpToToday = onToday ?? (() => onYearChange(todayBrowseYear));
+  const jumpToToday =
+    onToday ??
+    (() => {
+      const targetEra = patroBrowseTodayEra(era);
+      if (targetEra !== era) onEraChange?.(targetEra);
+      onYearChange(patroBrowseTodayYear(era, todayAd));
+    });
 
-  const gregorianSubtitle = useMemo(() => {
-    if (gregorianRange?.start && gregorianRange?.end) {
-      return formatPatroYearGregorianRange(
-        gregorianRange.start,
-        gregorianRange.end,
-        lang,
-        digits,
-      );
-    }
-    return rangeLabel ?? undefined;
-  }, [gregorianRange, rangeLabel, lang, digits]);
+  const gregorianSubtitle = usePatroYearHeadlineSubtitle(
+    era,
+    year,
+    gregorianRange,
+    rangeLabel,
+    displayLanguage,
+  );
 
   const sheet = usePatroDateSheet();
   const showLocation = Boolean(location && onLocationChange);
@@ -121,6 +123,32 @@ export function PatroYearNav({
 
   const canPrev = stepPatroBrowseYear(era, year, "prev") !== year;
   const canNext = stepPatroBrowseYear(era, year, "next") !== year;
+
+  const pickerYearOptions = useMemo(() => {
+    const base = buildPatroBrowseYearOptions(era);
+    const filtered = base.filter((y) => Number.isFinite(y) && y >= 1);
+    if (
+      Number.isFinite(year) &&
+      year >= 1 &&
+      isValidBrowseYear(era, year) &&
+      !filtered.includes(year)
+    ) {
+      return [...filtered, year].sort((a, b) => a - b);
+    }
+    return filtered;
+  }, [era, year]);
+
+  const mobileYearDraftRef = useRef<MobileYearDraft | null>(null);
+  const rememberMobileYearDraft = useCallback((draft: MobileYearDraft) => {
+    mobileYearDraftRef.current = draft;
+  }, []);
+
+  const commitMobileYearDraft = useCallback(() => {
+    const draft = mobileYearDraftRef.current;
+    if (!draft) return;
+    if (draft.era !== era && onEraChange) onEraChange(draft.era);
+    if (draft.year !== year || draft.era !== era) onYearChange(draft.year);
+  }, [era, year, onEraChange, onYearChange]);
 
   const titleBlock = (sizeClass: string) => (
     <BsHeadline
@@ -158,7 +186,7 @@ export function PatroYearNav({
       >
         {comfortable ? <Minus size={16} strokeWidth={2.25} /> : <ChevronLeft size={14} strokeWidth={2} />}
       </button>
-      <PatroYearCombobox
+      <PatroYearPickerPopover
         className={comfortable ? "w-[7.5rem]" : "w-[5.5rem] sm:w-[7rem]"}
         era={era}
         value={year}
@@ -255,8 +283,16 @@ export function PatroYearNav({
               dateTitle={t("calendar.year_aria")}
               location={location}
               onLocationChange={onLocationChange}
+              onDateCommit={commitMobileYearDraft}
             >
-              {yearStepperRow(true)}
+              <PatroMobileYearSheetDraft
+                sheet={sheet}
+                era={era}
+                year={year}
+                yearRange={pickerYearOptions}
+                yearAriaLabel={t("calendar.year_aria")}
+                onDraftChange={rememberMobileYearDraft}
+              />
             </PatroDateSheet>
 
             <div className="hidden min-w-0 flex-col gap-0.5 sm:gap-1 md:flex">

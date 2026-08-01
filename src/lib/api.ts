@@ -873,7 +873,7 @@ export interface PanchakPeriodResponse {
 }
 
 export interface PanchakYearResponse {
-  era: "bs" | "ad";
+  era: Era;
   bs_year?: number;
   ad_year?: number;
   count: number;
@@ -974,11 +974,11 @@ export const fetchMonthCalendar = async (
 ): Promise<MonthCalendar> => {
   const full = options?.full !== false;
   const era = options?.era ?? "bs";
+  // Year/month live in the path — omit from query so EraMiddleware does not run
+  // to_jd() on mirrored params (that gate returned 400 for some BBS months).
   const params = buildApiQuery({
     era,
     language: getLanguageForEra(era),
-    year,
-    month,
   });
   if (full) params.set("full", "true");
   if (options?.clock) params.set("clock", options.clock);
@@ -987,7 +987,9 @@ export const fetchMonthCalendar = async (
   const base =
     era === "ad"
       ? `/panchanga/ad/${year}/${month}`
-      : `/panchanga/${year}/${month}`;
+      : era === "bc"
+        ? `/panchanga/bc/${year}/${month}`
+        : `/panchanga/${year}/${month}`;
   const path = appendLocation(withPanchangaCacheVersion(`${base}${qs ? `?${qs}` : ""}`), location);
   const data = await get<MonthCalendar & { calendar: RawMonthDay[] }>(path);
   return {
@@ -999,9 +1001,12 @@ export const fetchMonthCalendar = async (
 export const fetchYearCalendar = async (
   year: number,
   location?: LocationParams,
-  options?: { full?: boolean; wheel?: boolean },
+  options?: { full?: boolean; wheel?: boolean; era?: Era },
 ): Promise<YearCalendar> => {
   const params = new URLSearchParams();
+  if (options?.era === "bbs" || options?.era === "bs") {
+    params.set("era", options.era);
+  }
   if (options?.wheel) {
     // Slim year-wheel payload: days once in `calendar` with wheel-only state,
     // `months` metadata only (no duplicated per-day grids). ~90% smaller.

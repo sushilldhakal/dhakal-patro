@@ -1,62 +1,17 @@
 #!/usr/bin/env node
 /**
- * Regenerates public/sitemap.xml from the app route list.
+ * Regenerates public/sitemap.xml from scripts/indexable-routes.mjs
  * Run: node scripts/generate-sitemap.mjs
  */
 import { writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { SITEMAP_ENTRIES } from "./indexable-routes.mjs";
 
 const SITE = "https://www.vedicpatro.com";
-
-const LEARN_SLUGS = [
-  "astronomy-basics",
-  "solar-system",
-  "bs-calendar",
-  "calendar-differences",
-  "adhik-maas",
-  "ritu-drift",
-  "what-is-panchang",
-  "tithi",
-  "tithi-vriddhi",
-  "tithi-kshaya",
-  "nakshatra",
-  "yoga",
-  "karana",
-  "sankranti",
-  "hora",
-  "eclipses",
-  "ayanamsha",
-];
-
-/** @type {{ path: string; changefreq: string; priority: string }[]} */
-const ROUTES = [
-  { path: "/", changefreq: "daily", priority: "1.0" },
-  { path: "/panchanga", changefreq: "daily", priority: "0.9" },
-  { path: "/panchanga/year", changefreq: "weekly", priority: "0.7" },
-  { path: "/panchanga/avakahada-chakra", changefreq: "monthly", priority: "0.6" },
-  { path: "/dainikkranti", changefreq: "weekly", priority: "0.8" },
-  { path: "/shanti-vidhi", changefreq: "monthly", priority: "0.6" },
-  { path: "/converter", changefreq: "monthly", priority: "0.8" },
-  { path: "/holidays", changefreq: "weekly", priority: "0.8" },
-  { path: "/ritu", changefreq: "weekly", priority: "0.7" },
-  { path: "/kundali", changefreq: "monthly", priority: "0.7" },
-  { path: "/jyotish/kundali-milan", changefreq: "monthly", priority: "0.7" },
-  { path: "/learn", changefreq: "weekly", priority: "0.8" },
-  { path: "/learn/history", changefreq: "monthly", priority: "0.6" },
-  { path: "/suryakranti", changefreq: "weekly", priority: "0.7" },
-  { path: "/abhijit-muhurta", changefreq: "weekly", priority: "0.7" },
-  { path: "/panchak-patro", changefreq: "monthly", priority: "0.7" },
-  ...LEARN_SLUGS.map((slug) => ({
-    path: `/learn/${slug}`,
-    changefreq: "monthly",
-    priority: "0.6",
-  })),
-];
-
 const lastmod = new Date().toISOString().slice(0, 10);
 
-const urls = ROUTES.map(
+const urls = SITEMAP_ENTRIES.map(
   (r) => `  <url>
     <loc>${SITE}${r.path}</loc>
     <lastmod>${lastmod}</lastmod>
@@ -74,4 +29,4 @@ ${urls}
 const root = dirname(fileURLToPath(import.meta.url));
 const out = join(root, "..", "public", "sitemap.xml");
 writeFileSync(out, xml, "utf8");
-console.log(`Wrote ${ROUTES.length} URLs → public/sitemap.xml`);
+console.log(`Wrote ${SITEMAP_ENTRIES.length} URLs → public/sitemap.xml`);

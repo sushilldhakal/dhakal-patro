@@ -7,6 +7,12 @@ import {
   type Era,
   type Language,
 } from "@/lib/era";
+import { patroBrowseTodayEra } from "@/hooks/use-patro-year-browse";
+import { shiftPatroBrowseMonth } from "@/lib/patro-year-browse-step";
+import {
+  isValidBrowseYear,
+  PATRO_EPHEMERIS_SIGNED_MAX,
+} from "@/lib/patro-year-axis";
 
 function positiveInt(y: number): number {
   const t = Math.trunc(y);
@@ -18,20 +24,6 @@ function positiveMonth(m: number): number {
   if (t < 1) return 1;
   if (t > 12) return 12;
   return t;
-}
-
-function shiftMonth(year: number, month: number, delta: number): { year: number; month: number } {
-  let m = month + delta;
-  let y = year;
-  while (m < 1) {
-    m += 12;
-    y -= 1;
-  }
-  while (m > 12) {
-    m -= 12;
-    y += 1;
-  }
-  return { year: positiveInt(y), month: m };
 }
 
 function calendarEraAsEra(raw: ReturnType<typeof useCalendarEra>): Era {
@@ -74,14 +66,15 @@ export function coerceMonthBrowseFromUrl(
 function resolveInitialMonthBrowse(
   era: Era,
   initial?: { year?: number; month?: number },
-): { year: number; month: number } {
+): { era: Era; year: number; month: number } {
   const defaults = defaultMonthBrowseParts(era);
-  if (!initial) return defaults;
+  if (!initial) {
+    return { era, year: defaults.year, month: defaults.month };
+  }
   const coerced = coerceMonthBrowseFromUrl(era, initial.year, initial.month);
-  return {
-    year: positiveInt(coerced.year ?? initial.year ?? defaults.year),
-    month: positiveMonth(coerced.month ?? initial.month ?? defaults.month),
-  };
+  const year = positiveInt(coerced.year ?? initial.year ?? defaults.year);
+  const month = positiveMonth(coerced.month ?? initial.month ?? defaults.month);
+  return { era, year, month };
 }
 
 /** Month+year browse — positive parts in the active era; no BS↔AD conversion. */
@@ -93,13 +86,10 @@ export function usePatroMonthBrowse(
   const { lang } = useLocale();
   const fallbackLang: Language = lang === "en" ? "en" : "ne";
 
-  const [era, setEraState] = useState<Era>(
-    () => options?.era ?? calendarEraAsEra(langEra),
-  );
-  const initialParts = resolveInitialMonthBrowse(
-    options?.era ?? calendarEraAsEra(langEra),
-    initial,
-  );
+  const baseEra = options?.era ?? calendarEraAsEra(langEra);
+  const initialParts = resolveInitialMonthBrowse(baseEra, initial);
+
+  const [era, setEraState] = useState<Era>(() => initialParts.era);
   const [year, setYearState] = useState(() => initialParts.year);
   const [month, setMonthState] = useState(() => initialParts.month);
   const [syncedLang, setSyncedLang] = useState(lang);
@@ -113,23 +103,43 @@ export function usePatroMonthBrowse(
     setMonthState(next.month);
   }
 
-  const setYear = (y: number) => setYearState(positiveInt(y));
-  const setEra = (next: Era) => setEraState(next);
+  const setYear = (y: number) => {
+    const n = positiveInt(y);
+    if (!isValidBrowseYear(era, n)) return;
+    setYearState(n);
+  };
+  const setEra = (next: Era) => {
+    if (next === "bs" && year > PATRO_EPHEMERIS_SIGNED_MAX) return;
+    setEraState(next);
+  };
+
+  /** Apply era + year together (e.g. year picker after a draft BBS/BS toggle). */
+  const commitEraYear = (nextEra: Era, y: number) => {
+    const n = positiveInt(y);
+    if (nextEra === "bs" && n > PATRO_EPHEMERIS_SIGNED_MAX) return;
+    if (!isValidBrowseYear(nextEra, n)) return;
+    setEraState(nextEra);
+    setYearState(n);
+  };
   const setMonth = (m: number) => setMonthState(positiveMonth(m));
 
   const setYearMonth = (y: number, m: number) => {
+    if (!isValidBrowseYear(era, y)) return;
     setYearState(positiveInt(y));
     setMonthState(positiveMonth(m));
   };
 
   const stepMonth = (delta: number) => {
-    const next = shiftMonth(year, month, delta);
+    const next = shiftPatroBrowseMonth(era, year, month, delta);
     setYearState(next.year);
     setMonthState(next.month);
   };
 
   const goToday = (todayAd?: string) => {
-    if (era === "bs" || era === "bbs") {
+    const targetEra = patroBrowseTodayEra(era);
+    if (targetEra !== era) setEraState(targetEra);
+
+    if (targetEra === "bs") {
       const bs = todayAd
         ? adToBS(new Date(`${todayAd}T12:00:00`))
         : getCurrentBs();
@@ -138,7 +148,7 @@ export function usePatroMonthBrowse(
       return;
     }
     const d = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
-    if (era === "ad" || era === "bc") {
+    if (targetEra === "ad" || targetEra === "bc") {
       setYearState(d.getFullYear());
       setMonthState(d.getMonth() + 1);
     }
@@ -150,6 +160,7 @@ export function usePatroMonthBrowse(
     month,
     setYear,
     setEra,
+    commitEraYear,
     setMonth,
     setYearMonth,
     stepMonth,

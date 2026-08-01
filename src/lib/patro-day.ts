@@ -110,6 +110,36 @@ export function canonicalCivilIso(iso: string): string {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+export type GregorianDateParts = {
+  era?: string;
+  year: number;
+  month: number;
+  day: number;
+};
+
+/** Signed proleptic civil ISO from API ``date_parts.gregorian`` (BC uses positive year + era). */
+export function civilIsoFromGregorianParts(g: GregorianDateParts): string {
+  const y = g.era === "bc" ? 1 - g.year : g.year;
+  return formatCivilIsoParts(y, g.month, g.day);
+}
+
+/**
+ * Authoritative civil day for panchanga payloads — ``date_ad`` alone omits the BC
+ * sign (e.g. ``1657-05-27`` for 1657 BCE); gregorian parts carry ``era: bc``.
+ */
+export function civilAnchorFromPanchangaDay(p: {
+  date_ad?: string;
+  date_parts?: { gregorian?: GregorianDateParts };
+}): string {
+  const g = p.date_parts?.gregorian;
+  if (g?.year && g.month && g.day) {
+    return civilIsoFromGregorianParts(g);
+  }
+  const ad = p.date_ad?.trim();
+  if (!ad) return "";
+  return canonicalCivilIso(ad);
+}
+
 /** Sunday = 0 … Saturday = 6 for a civil ISO date. */
 export function civilIsoWeekday(iso: string): number {
   const { year, month, day } = parseCivilIso(iso);

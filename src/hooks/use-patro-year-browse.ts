@@ -32,16 +32,23 @@ export function coerceYearBrowseFromUrl(
   return year;
 }
 
-/** Browsed year for “today” in the active Vikram or Gregorian era. */
+/** Civil “today” is always BS or AD — not BBS (before-era) coordinates. */
+export function patroBrowseTodayEra(era: Era): Era {
+  if (era === "bbs") return "bs";
+  return era;
+}
+
+/** Browsed year for “today” in {@link patroBrowseTodayEra}. */
 export function patroBrowseTodayYear(era: Era, todayAd?: string): number {
-  if (era === "bs" || era === "bbs") {
+  const targetEra = patroBrowseTodayEra(era);
+  if (targetEra === "bs") {
     const bs = todayAd
       ? adToBS(new Date(`${todayAd}T12:00:00`))
       : getCurrentBs();
     return bs.year;
   }
   const d = todayAd ? new Date(`${todayAd}T12:00:00`) : new Date();
-  if (era === "ad" || era === "bc") return d.getFullYear();
+  if (targetEra === "ad" || targetEra === "bc") return d.getFullYear();
   return getCurrentBs().year;
 }
 
@@ -75,6 +82,8 @@ export function usePatroYearBrowse(
   const setEra = (next: Era) => setEraState(next);
 
   const goToday = (todayAd?: string) => {
+    const targetEra = patroBrowseTodayEra(era);
+    if (targetEra !== era) setEraState(targetEra);
     setYearState(positiveInt(patroBrowseTodayYear(era, todayAd)));
   };
 

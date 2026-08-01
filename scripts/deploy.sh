@@ -5,12 +5,13 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/home/ubuntu/dhakal-patro}"
 WEB_ROOT="${WEB_ROOT:-/var/www/vedicpatro}"
+DEPLOY_REF="${DEPLOY_REF:-main}"
 
 cd "${APP_DIR}"
 
-echo "==> Pulling latest code"
-git fetch origin main
-git reset --hard origin/main
+echo "==> Pulling latest code (${DEPLOY_REF})"
+git fetch origin "${DEPLOY_REF}"
+git reset --hard "origin/${DEPLOY_REF}"
 
 echo "==> Installing dependencies (npm ci)"
 npm ci

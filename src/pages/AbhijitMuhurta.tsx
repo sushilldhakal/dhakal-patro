@@ -210,7 +210,7 @@ export function AbhijitMuhurta() {
         month={monthBrowse.month}
         onMonthChange={(m) => monthBrowse.setYearMonth(monthBrowse.year, m)}
         onYearChange={(y) => monthBrowse.setYearMonth(y, monthBrowse.month)}
-        onEraChange={monthBrowse.setEra}
+        onBrowseCommit={monthBrowse.commitEraYear}
         onPrev={() => stepMonth(-1)}
         onNext={() => stepMonth(1)}
         onToday={goToToday}

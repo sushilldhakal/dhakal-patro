@@ -10,92 +10,76 @@ import {
   type PanchangaDay,
 } from "@/lib/api";
 import { AD_DISPLAY, patroDayFetchFromApiDateAd } from "@/lib/patro-day-url";
-import {
-  BS_MONTHS_NE,
-  BS_SUPPORTED_END_YEAR,
-  BS_SUPPORTED_START_YEAR,
-  adToBS,
-  bsToAD,
-  getBSMonthLength,
-  getCurrentBs,
-} from "@/lib/bs-calendar";
-import { toAdStr } from "@/lib/patro-day";
+import { BS_MONTHS_NE, adToBS } from "@/lib/bs-calendar";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
-import { YearRangePicker } from "@/components/panchanga/YearRangePicker";
+import { PatroBrowseRangePicker } from "@/components/panchanga/PatroBrowseRangePicker";
+import {
+  adMonthLabel,
+  bsMonthLabel,
+  isGregorianEraBrowse,
+} from "@/components/patro-date/patro-month-labels";
 import {
   displayLocationLabel,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
+import type { Era } from "@/lib/era";
+import {
+  browsePositionToAdDateStr,
+  browsePositionToGlobalDay,
+  distinctBrowseYearsInRange,
+  globalDayToBrowsePosition,
+  listBrowseRangeMonthSegments,
+  normalizePatroBrowseRange,
+  totalDaysInBrowseRange,
+  type PatroBrowseRange,
+} from "@/lib/patro-browse-range";
+import { signedPatroYearFromBrowse } from "@/lib/patro-year-axis";
 import {
   buildPatroYearRangeSearch,
   currentPatroDayLinkSearch,
+  panchangaYearSearchToBrowseRange,
   sameLocationParams,
   sameSearch,
   searchToLocation,
-  type PanchangaYearSearch,
 } from "@/lib/url-state";
 import {
   panchangaYearBulkKey,
   seedYearPanchangaCache,
 } from "@/lib/panchanga-year-cache";
 
-function daysInBsYear(year: number): number {
-  let total = 0;
-  for (let m = 1; m <= 12; m++) total += getBSMonthLength(year, m);
-  return total;
-}
-
-function bsMonthDayFromDayOfYear(year: number, dayOfYear: number): { month: number; day: number } {
-  let remaining = dayOfYear;
-  for (let m = 1; m <= 12; m++) {
-    const len = getBSMonthLength(year, m);
-    if (remaining <= len) return { month: m, day: remaining };
-    remaining -= len;
-  }
-  return { month: 12, day: getBSMonthLength(year, 12) };
-}
-
-function dayOfYearFromBs(year: number, month: number, day: number): number {
-  let d = day;
-  for (let m = 1; m < month; m++) d += getBSMonthLength(year, m);
-  return d;
-}
-
-function adDateStrForDay(year: number, dayOfYear: number): string {
-  const { month, day } = bsMonthDayFromDayOfYear(year, dayOfYear);
-  return toAdStr(bsToAD(year, month, day));
-}
-
-/**
- * Debounce before fetching a cold day over the network. Cached days render live
- * via synchronous cache reads while the thumb moves.
- */
 const SCRUB_DEBOUNCE_MS = 90;
-/** Shorter debounce while dragging so uncached days start loading before release. */
 const SCRUB_FETCH_MS = 120;
-/** PanchangaYear never blocks the page with the route overlay while scrubbing. */
 const YEAR_ROUTE_LOADING = false;
 
 const routeApi = getRouteApi("/panchanga-shell/panchanga/year");
 
-function initialYearFromSearch(search: PanchangaYearSearch): number {
-  return search.year ?? getCurrentBs().year;
+function isVikramBrowseEra(era: Era): boolean {
+  return era === "bs" || era === "bbs";
 }
 
-/** Clamp a range-end year to [start, BS_SUPPORTED_END_YEAR]. */
-function clampRangeEnd(start: number, to?: number): number {
-  if (to == null || to < start) return start;
-  return Math.min(to, BS_SUPPORTED_END_YEAR);
+function todayBrowseAnchor(era: Era): { year: number; month: number; day: number } {
+  if (isGregorianEraBrowse(era)) {
+    const d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+  }
+  const bs = adToBS(new Date());
+  return { year: bs.year, month: bs.month, day: bs.day };
 }
 
-const clampYear = (y: number) =>
-  Math.min(Math.max(y, BS_SUPPORTED_START_YEAR), BS_SUPPORTED_END_YEAR);
+function initialGlobalDay(range: PatroBrowseRange): number {
+  const r = normalizePatroBrowseRange(range);
+  const t = todayBrowseAnchor(r.era);
+  const g = browsePositionToGlobalDay(r, t.year, t.month, t.day);
+  const total = totalDaysInBrowseRange(r);
+  if (g >= 1 && g <= total) return g;
+  return 1;
+}
 
 export function PanchangaYear() {
   const { t } = useTranslation();
@@ -105,171 +89,236 @@ export function PanchangaYear() {
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const queryClient = useQueryClient();
-  const todayBs = useMemo(() => adToBS(new Date()), []);
-  // A range of BS years: `rangeStart`..`rangeEnd`, viewed one active year at a
-  // time. `year` (the clamped active year) drives every downstream day/wheel
-  // calc, so the existing single-year logic below is unchanged.
-  const [rangeStart, setRangeStart] = useState(() => initialYearFromSearch(search));
-  const [rangeEnd, setRangeEnd] = useState(() =>
-    clampRangeEnd(initialYearFromSearch(search), search.to)
-  );
-  const [activeYear, setActiveYear] = useState(rangeStart);
-  const year = Math.min(Math.max(activeYear, rangeStart), rangeEnd);
-  const rangeSpan = rangeEnd - rangeStart + 1;
-  const locKey = locationCacheKey(location.params);
 
-  const [dayOfYear, setDayOfYear] = useState(() =>
-    dayOfYearFromBs(todayBs.year, todayBs.month, todayBs.day)
+  const [browseRange, setBrowseRange] = useState(() =>
+    panchangaYearSearchToBrowseRange(search, langEra),
   );
-  // Decoupled from dayOfYear so the slider thumb tracks the pointer instantly
-  // while the (much heavier) network fetch only fires once dragging settles —
-  // otherwise every day crossed while dragging fires its own request and they
-  // all queue up behind each other.
-  const [queryDay, setQueryDay] = useState(dayOfYear);
-  // Autoplay: direction (-1 back, 0 paused, 1 forward) + speed multiplier.
-  // Pressing forward/back repeatedly ramps the speed 1×→2×→4×→8× (like a media
-  // player's fast-forward / rewind), until the user pauses.
+  const normalizedRange = useMemo(
+    () => normalizePatroBrowseRange(browseRange),
+    [browseRange],
+  );
+  const browseEra = normalizedRange.era;
+  const vikramBulk = isVikramBrowseEra(browseEra);
+
+  const [globalDay, setGlobalDay] = useState(() => initialGlobalDay(normalizedRange));
+  const [queryGlobalDay, setQueryGlobalDay] = useState(globalDay);
   const [play, setPlay] = useState<{ dir: -1 | 0 | 1; speed: number }>({
     dir: 0,
     speed: 1,
   });
   const [isScrubbing, setIsScrubbing] = useState(false);
 
+  const locKey = locationCacheKey(location.params);
+  const rangeTotal = useMemo(
+    () => totalDaysInBrowseRange(normalizedRange),
+    [normalizedRange],
+  );
+  const clampedGlobal = Math.min(Math.max(1, globalDay), rangeTotal);
+  const clampedQueryGlobal = Math.min(Math.max(1, queryGlobalDay), rangeTotal);
+
+  const position = useMemo(
+    () => globalDayToBrowsePosition(normalizedRange, clampedGlobal),
+    [normalizedRange, clampedGlobal],
+  );
+  const queryPosition = useMemo(
+    () => globalDayToBrowsePosition(normalizedRange, clampedQueryGlobal),
+    [normalizedRange, clampedQueryGlobal],
+  );
+
+  const browseYear = position.year;
+  const bsMonth = position.month;
+  const bsDay = position.day;
+
+  const distinctYears = useMemo(
+    () => distinctBrowseYearsInRange(normalizedRange),
+    [normalizedRange],
+  );
+  const yearIndex = Math.max(0, distinctYears.indexOf(browseYear));
+  const rangeYearSpan = distinctYears.length;
+
+  const daysInActiveBrowseYear = useMemo(() => {
+    let n = 0;
+    for (const seg of listBrowseRangeMonthSegments(normalizedRange)) {
+      if (seg.browseYear === browseYear) n += seg.days;
+    }
+    return n;
+  }, [normalizedRange, browseYear]);
+
+  const dayInActiveBrowseYear = useMemo(() => {
+    let n = 0;
+    for (const seg of listBrowseRangeMonthSegments(normalizedRange)) {
+      if (seg.browseYear === browseYear) {
+        if (seg.month === bsMonth) return n + bsDay;
+        n += seg.days;
+      }
+    }
+    return bsDay;
+  }, [normalizedRange, browseYear, bsMonth, bsDay]);
+
   useEffect(() => {
     const desired = buildPatroYearRangeSearch(
       location,
-      langEra,
-      rangeStart,
-      rangeEnd > rangeStart ? rangeEnd : undefined,
+      normalizedRange.era,
+      normalizedRange.startYear,
+      normalizedRange.startMonth,
+      normalizedRange.endYear,
+      normalizedRange.endMonth,
     );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, rangeStart, rangeEnd, langEra, search, navigate]);
+  }, [location, normalizedRange, search, navigate]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (search.year != null) {
-      const nextStart = initialYearFromSearch(search);
-      setRangeStart((cur) => (cur === nextStart ? cur : nextStart));
-      const nextEnd = clampRangeEnd(nextStart, search.to);
-      setRangeEnd((cur) => (cur === nextEnd ? cur : nextEnd));
-    }
+    const next = panchangaYearSearchToBrowseRange(search, langEra);
+    setBrowseRange((cur) => {
+      const a = normalizePatroBrowseRange(cur);
+      const b = normalizePatroBrowseRange(next);
+      if (
+        a.era === b.era &&
+        a.startYear === b.startYear &&
+        a.startMonth === b.startMonth &&
+        a.endYear === b.endYear &&
+        a.endMonth === b.endMonth
+      ) {
+        return cur;
+      }
+      return b;
+    });
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const totalDays = useMemo(() => daysInBsYear(year), [year]);
-  const clampedDay = Math.min(dayOfYear, totalDays);
-  const clampedQueryDay = Math.min(queryDay, totalDays);
-
-  // A continuous day index across the whole range, so the wheel's day slider
-  // rolls straight from one year's last day into the next year's first.
-  const rangeDayIndex = useMemo(() => {
-    const offsets: number[] = [];
-    let acc = 0;
-    for (let y = rangeStart; y <= rangeEnd; y++) {
-      offsets.push(acc);
-      acc += daysInBsYear(y);
-    }
-    return { offsets, total: acc };
-  }, [rangeStart, rangeEnd]);
-  const activeIndex = year - rangeStart;
-  const globalDay = (rangeDayIndex.offsets[activeIndex] ?? 0) + clampedDay;
+  const wheelSignedYear = vikramBulk
+    ? signedPatroYearFromBrowse(browseEra, browseYear)
+    : browseYear;
 
   const yearBulkQ = useQuery({
-    queryKey: panchangaYearBulkKey(year, location.params),
-    queryFn: () => seedYearPanchangaCache(year, location.params),
+    queryKey: panchangaYearBulkKey(browseYear, location.params, browseEra),
+    queryFn: () => seedYearPanchangaCache(browseYear, location.params, browseEra),
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: 1000 * 60 * 60 * 24 * 7,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    enabled: vikramBulk,
   });
 
-  const yearFullyCached = yearBulkQ.isSuccess;
-
-  // Lazy-load the rest of the range: once the active year is ready, prefetch the
-  // next year, then the one after, … up to `rangeEnd`, one at a time so a wide
-  // range never floods the network. Each lands in IndexedDB + the bulk-query
-  // cache, so stepping to the next year (manually or via autoplay) is instant.
-  const [rangeReadyThrough, setRangeReadyThrough] = useState(rangeStart - 1);
-  const readyCount = Math.max(0, Math.min(rangeReadyThrough - rangeStart + 1, rangeSpan));
+  const yearFullyCached = vikramBulk && yearBulkQ.isSuccess;
+  const [rangeReadyThroughIdx, setRangeReadyThroughIdx] = useState(-1);
+  const readyCount = Math.max(0, Math.min(rangeReadyThroughIdx + 1, rangeYearSpan));
 
   useEffect(() => {
-    // A new range start / location resets readiness; the chained effect refills.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRangeReadyThrough(rangeStart - 1);
-  }, [rangeStart, locKey]);
+    setRangeReadyThroughIdx(-1);
+  }, [normalizedRange, locKey]);
 
   useEffect(() => {
-    if (!yearFullyCached) return;
+    if (!vikramBulk || !yearFullyCached) return;
     let cancelled = false;
     const run = async () => {
-      setRangeReadyThrough((p) => Math.max(p, year));
-      for (let y = year + 1; y <= rangeEnd; y++) {
+      const idx = distinctYears.indexOf(browseYear);
+      setRangeReadyThroughIdx((p) => Math.max(p, idx));
+      for (let i = idx + 1; i < distinctYears.length; i++) {
+        const y = distinctYears[i]!;
         if (cancelled) return;
         try {
           await queryClient.prefetchQuery({
-            queryKey: panchangaYearBulkKey(y, location.params),
-            queryFn: () => seedYearPanchangaCache(y, location.params),
+            queryKey: panchangaYearBulkKey(y, location.params, browseEra),
+            queryFn: () => seedYearPanchangaCache(y, location.params, browseEra),
             staleTime: Number.POSITIVE_INFINITY,
             gcTime: 1000 * 60 * 60 * 24 * 7,
           });
         } catch {
-          return; // network hiccup — a later render retries the chain
+          return;
         }
         if (cancelled) return;
-        setRangeReadyThrough((p) => Math.max(p, y));
+        setRangeReadyThroughIdx((p) => Math.max(p, i));
       }
     };
     void run();
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yearFullyCached, year, rangeEnd, locKey, queryClient]);
+  }, [
+    vikramBulk,
+    yearFullyCached,
+    browseYear,
+    distinctYears,
+    browseEra,
+    locKey,
+    queryClient,
+    location.params,
+  ]);
 
-  const prefetchDay = useCallback(
-    (day: number) => {
-      if (yearFullyCached || day < 1 || day > totalDays) return;
-      const dateStr = adDateStrForDay(year, day);
+  const adDateStrForPosition = useCallback(
+    (pos: { year: number; month: number; day: number }) =>
+      browsePositionToAdDateStr(browseEra, pos.year, pos.month, pos.day),
+    [browseEra],
+  );
+
+  const prefetchDayAtGlobal = useCallback(
+    (g: number) => {
+      if (yearFullyCached || g < 1 || g > rangeTotal) return;
+      const pos = globalDayToBrowsePosition(normalizedRange, g);
+      const dateStr = adDateStrForPosition(pos);
       void queryClient.prefetchQuery({
         queryKey: panchangaKeys.day(dateStr, "ad", location.params),
-        queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(dateStr, AD_DISPLAY), location.params),
+        queryFn: () =>
+          fetchPanchangaDay(patroDayFetchFromApiDateAd(dateStr, AD_DISPLAY), location.params),
         staleTime: 1000 * 60 * 30,
       });
     },
-    [yearFullyCached, year, totalDays, location.params, queryClient],
+    [
+      yearFullyCached,
+      rangeTotal,
+      normalizedRange,
+      adDateStrForPosition,
+      location.params,
+      queryClient,
+    ],
   );
 
-  const prefetchAround = useCallback(
-    (centerDay: number, radius = 5) => {
-      for (let d = centerDay - radius; d <= centerDay + radius; d++) {
-        prefetchDay(d);
+  const prefetchAroundGlobal = useCallback(
+    (center: number, radius = 5) => {
+      for (let d = center - radius; d <= center + radius; d++) {
+        prefetchDayAtGlobal(d);
       }
     },
-    [prefetchDay],
+    [prefetchDayAtGlobal],
   );
 
   const finishScrub = useCallback(() => {
     setIsScrubbing(false);
-    setQueryDay(clampedDay);
-    prefetchAround(clampedDay);
-  }, [clampedDay, prefetchAround]);
+    setQueryGlobalDay(clampedGlobal);
+    prefetchAroundGlobal(clampedGlobal);
+  }, [clampedGlobal, prefetchAroundGlobal]);
 
-  // Jump straight to a day-in-year (from the editable dock readout): pause any
-  // autoplay, clamp to the active year's length, and fetch that day.
   const jumpToDay = useCallback(
     (dayInYear: number) => {
-      const clamped = Math.min(Math.max(1, Math.round(dayInYear)), totalDays);
-      setPlay({ dir: 0, speed: 1 });
-      setDayOfYear(clamped);
-      setQueryDay(clamped);
-      prefetchAround(clamped);
+      const target = Math.min(Math.max(1, Math.round(dayInYear)), daysInActiveBrowseYear);
+      let acc = 0;
+      for (const seg of listBrowseRangeMonthSegments(normalizedRange)) {
+        if (seg.browseYear !== browseYear) continue;
+        if (target <= acc + seg.days) {
+          const dayInMonth = target - acc;
+          setPlay({ dir: 0, speed: 1 });
+          const g = browsePositionToGlobalDay(
+            normalizedRange,
+            browseYear,
+            seg.month,
+            dayInMonth,
+          );
+          setGlobalDay(g);
+          setQueryGlobalDay(g);
+          prefetchAroundGlobal(g);
+          return;
+        }
+        acc += seg.days;
+      }
     },
-    [totalDays, prefetchAround],
+    [daysInActiveBrowseYear, normalizedRange, browseYear, prefetchAroundGlobal],
   );
 
   const MAX_PLAY_SPEED = 8;
@@ -291,96 +340,60 @@ export function PanchangaYear() {
 
   useEffect(() => {
     const delay = isScrubbing ? SCRUB_FETCH_MS : SCRUB_DEBOUNCE_MS;
-    const id = setTimeout(() => setQueryDay(dayOfYear), delay);
+    const id = setTimeout(() => setQueryGlobalDay(globalDay), delay);
     return () => clearTimeout(id);
-  }, [dayOfYear, isScrubbing]);
+  }, [globalDay, isScrubbing]);
 
-  // Kick off fetch for the thumb day while dragging so the wheel can update
-  // before pointer-up when that day is not yet in the cache.
   useEffect(() => {
     if (!isScrubbing) return;
-    prefetchDay(clampedDay);
-  }, [isScrubbing, clampedDay, prefetchDay]);
+    prefetchDayAtGlobal(clampedGlobal);
+  }, [isScrubbing, clampedGlobal, prefetchDayAtGlobal]);
 
-  // Playback: base ~one day/second, divided by the speed multiplier (2×/4×/8×).
-  // Forward rolls off a year's last day into the next range year (preloaded) for
-  // a continuous multi-year animation, wrapping the whole range at the ends;
-  // backward mirrors it. `setTimeout` re-arms each tick, so the callback always
-  // reads the current day/year/speed.
   const PLAY_BASE_MS = 900;
   useEffect(() => {
     if (play.dir === 0) return;
     const tick = Math.max(70, Math.round(PLAY_BASE_MS / play.speed));
     const id = setTimeout(() => {
-      if (play.dir === 1) {
-        if (dayOfYear < totalDays) {
-          setDayOfYear(dayOfYear + 1);
-        } else if (year < rangeEnd) {
-          setActiveYear(year + 1);
-          setDayOfYear(1);
-          setQueryDay(1);
-        } else if (rangeStart < year) {
-          // End of a multi-year range → wrap to its first year.
-          setActiveYear(rangeStart);
-          setDayOfYear(1);
-          setQueryDay(1);
-        } else {
-          setDayOfYear(1); // single year → loop
+      setGlobalDay((g) => {
+        const cur = Math.min(Math.max(1, g), rangeTotal);
+        if (play.dir === 1) {
+          return cur >= rangeTotal ? 1 : cur + 1;
         }
-      } else {
-        if (dayOfYear > 1) {
-          setDayOfYear(dayOfYear - 1);
-        } else if (year > rangeStart) {
-          const prevLen = daysInBsYear(year - 1);
-          setActiveYear(year - 1);
-          setDayOfYear(prevLen);
-          setQueryDay(prevLen);
-        } else if (rangeEnd > year) {
-          // Start of a multi-year range → wrap to its last year's last day.
-          const lastLen = daysInBsYear(rangeEnd);
-          setActiveYear(rangeEnd);
-          setDayOfYear(lastLen);
-          setQueryDay(lastLen);
-        } else {
-          setDayOfYear(totalDays); // single year → loop
-        }
-      }
+        return cur <= 1 ? rangeTotal : cur - 1;
+      });
     }, tick);
     return () => clearTimeout(id);
-  }, [play, dayOfYear, totalDays, year, rangeEnd, rangeStart]);
+  }, [play, rangeTotal]);
 
-  // The debounced day drives the actual network subscription: it only changes
-  // once dragging settles, so we never fire a request per crossed day.
   const debouncedDateStr = useMemo(
-    () => adDateStrForDay(year, clampedQueryDay),
-    [year, clampedQueryDay]
+    () => adDateStrForPosition(queryPosition),
+    [adDateStrForPosition, queryPosition],
   );
 
   const { data, isError } = useQuery({
     queryKey: panchangaKeys.day(debouncedDateStr, "ad", location.params),
-    queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(debouncedDateStr, AD_DISPLAY), location.params),
+    queryFn: () =>
+      fetchPanchangaDay(patroDayFetchFromApiDateAd(debouncedDateStr, AD_DISPLAY), location.params),
     staleTime: 1000 * 60 * 30,
     placeholderData: keepPreviousData,
     enabled: !yearFullyCached,
   });
 
   const liveDateStr = useMemo(
-    () => adDateStrForDay(year, clampedDay),
-    [year, clampedDay]
+    () => adDateStrForPosition(position),
+    [adDateStrForPosition, position],
   );
-  // Read from the bulk query's own day map first: it's held by an observed,
-  // long-lived query, so it survives the `gcTime` eviction that clears the
-  // individually seeded `panchangaKeys.day` entries after a few idle minutes
-  // (which used to freeze the wheel until a page refresh re-seeded them).
+
   const cachedLiveData =
     yearBulkQ.data?.days.get(liveDateStr) ??
     queryClient.getQueryData<PanchangaDay>(
-      panchangaKeys.day(liveDateStr, "ad", location.params)
+      panchangaKeys.day(liveDateStr, "ad", location.params),
     );
 
   const { data: fetchingLiveData, isPlaceholderData: fetchingIsPlaceholder } = useQuery({
     queryKey: panchangaKeys.day(liveDateStr, "ad", location.params),
-    queryFn: () => fetchPanchangaDay(patroDayFetchFromApiDateAd(liveDateStr, AD_DISPLAY), location.params),
+    queryFn: () =>
+      fetchPanchangaDay(patroDayFetchFromApiDateAd(liveDateStr, AD_DISPLAY), location.params),
     staleTime: 1000 * 60 * 30,
     enabled: isScrubbing && !cachedLiveData && !yearFullyCached,
     placeholderData: keepPreviousData,
@@ -396,71 +409,43 @@ export function PanchangaYear() {
       ? liveDateStr
       : debouncedDateStr;
 
-  // Wheel header tracks the slider thumb; panchanga data may trail on cold days.
-  const { month: bsMonth, day: bsDay } = useMemo(
-    () => bsMonthDayFromDayOfYear(year, clampedDay),
-    [year, clampedDay]
-  );
-  const { month: liveMonth, day: liveDay } = bsMonthDayFromDayOfYear(year, clampedDay);
-  const yearLoading = yearBulkQ.isFetching && !yearFullyCached;
+  const yearLoading = vikramBulk && yearBulkQ.isFetching && !yearFullyCached;
 
   const effectiveTimezone = resolveTimeZone(displayData?.location?.timezone, location.params.timezone);
   const isToday = displayDateStr === todayAdStringInTimezone(new Date(), effectiveTimezone);
   const locationLabel = displayLocationLabel(location, displayData?.location?.name, lang);
 
-  // Step the active year within the range (prev/next), resetting to day 1.
-  const goToYear = useCallback(
+  const monthHeadline = isGregorianEraBrowse(browseEra)
+    ? adMonthLabel(bsMonth, lang)
+    : bsMonthLabel(bsMonth, lang);
+
+  const goToBrowseYear = useCallback(
     (nextYear: number) => {
-      setActiveYear((cur) => {
-        const clamped = Math.min(Math.max(nextYear, rangeStart), rangeEnd);
-        if (clamped === cur) return cur;
-        setDayOfYear(1);
-        setQueryDay(1);
-        return clamped;
-      });
+      const idx = distinctYears.indexOf(nextYear);
+      if (idx < 0) return;
+      const seg = listBrowseRangeMonthSegments(normalizedRange).find(
+        (s) => s.browseYear === nextYear,
+      );
+      if (!seg) return;
+      setGlobalDay(seg.globalStart + 1);
+      setQueryGlobalDay(seg.globalStart + 1);
     },
-    [rangeStart, rangeEnd],
+    [distinctYears, normalizedRange],
   );
 
-  // Map a global (range-wide) day index from the slider back to (year, day),
-  // switching the active year on the fly as the thumb crosses a year boundary.
   const handleGlobalDayChange = useCallback(
     (globalDayValue: number) => {
-      const g = Math.min(Math.max(1, globalDayValue), rangeDayIndex.total);
-      let idx = rangeDayIndex.offsets.length - 1;
-      for (let i = 0; i < rangeDayIndex.offsets.length; i++) {
-        const end = rangeDayIndex.offsets[i]! + daysInBsYear(rangeStart + i);
-        if (g <= end) {
-          idx = i;
-          break;
-        }
-      }
-      setActiveYear(rangeStart + idx);
-      setDayOfYear(g - rangeDayIndex.offsets[idx]!);
+      setGlobalDay(Math.min(Math.max(1, globalDayValue), rangeTotal));
     },
-    [rangeDayIndex, rangeStart],
+    [rangeTotal],
   );
 
-  /**
-   * Commit a whole range at once. Both bounds land in the same React batch, so
-   * the prefetch chain never sees a half-edited range: picking a start of 1700
-   * while the end still read 2083 used to widen the live range to 384 years and
-   * queue a year payload for every one of them.
-   */
-  function applyRange(nextStart: number, nextEnd: number) {
-    const start = clampYear(nextStart);
-    const end = Math.max(clampYear(nextEnd), start);
-    setRangeStart(start);
-    setRangeEnd(end);
-    setActiveYear(start);
-    // Land on today when the range opens on today's year, matching the day the
-    // page picks on first load; any other year has no "current" day to hold.
-    const day =
-      start === todayBs.year
-        ? dayOfYearFromBs(todayBs.year, todayBs.month, todayBs.day)
-        : 1;
-    setDayOfYear(day);
-    setQueryDay(day);
+  function applyBrowseRange(next: PatroBrowseRange) {
+    const r = normalizePatroBrowseRange(next);
+    setBrowseRange(r);
+    const g = initialGlobalDay(r);
+    setGlobalDay(g);
+    setQueryGlobalDay(g);
   }
 
   useRouteLoading(YEAR_ROUTE_LOADING);
@@ -481,7 +466,7 @@ export function PanchangaYear() {
             {t("panchanga_year.title")}
           </h1>
           <div className="text-sm mt-1">
-            {BS_MONTHS_NE[liveMonth - 1]} {toNepaliDigits(liveDay)}, {toNepaliDigits(year)}
+            {monthHeadline} {toNepaliDigits(bsDay)}, {toNepaliDigits(browseYear)}
             {" · "}
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
@@ -489,27 +474,27 @@ export function PanchangaYear() {
             </span>
           </div>
 
-          {rangeSpan > 1 && (
+          {rangeYearSpan > 1 && (
             <div className="mt-2 inline-flex items-center gap-1 rounded-lg border border-border bg-card p-0.5">
               <button
                 type="button"
-                onClick={() => goToYear(year - 1)}
-                disabled={year <= rangeStart}
+                onClick={() => goToBrowseYear(distinctYears[yearIndex - 1]!)}
+                disabled={yearIndex <= 0}
                 aria-label={bilingualText(lang, "अघिल्लो वर्ष", "Previous year")}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <span className="px-1.5 text-sm font-semibold tabular-nums">
-                {toNepaliDigits(year)}
+                {toNepaliDigits(browseYear)}
                 <span className="ml-1 text-sm text-base">
-                  {toNepaliDigits(year - rangeStart + 1)}/{toNepaliDigits(rangeSpan)}
+                  {toNepaliDigits(yearIndex + 1)}/{toNepaliDigits(rangeYearSpan)}
                 </span>
               </span>
               <button
                 type="button"
-                onClick={() => goToYear(year + 1)}
-                disabled={year >= rangeEnd}
+                onClick={() => goToBrowseYear(distinctYears[yearIndex + 1]!)}
+                disabled={yearIndex >= rangeYearSpan - 1}
                 aria-label={bilingualText(lang, "अर्को वर्ष", "Next year")}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
               >
@@ -520,14 +505,7 @@ export function PanchangaYear() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:justify-end">
-          <YearRangePicker
-            start={rangeStart}
-            end={rangeEnd}
-            minYear={BS_SUPPORTED_START_YEAR}
-            maxYear={BS_SUPPORTED_END_YEAR}
-            currentYear={todayBs.year}
-            onApply={applyRange}
-          />
+          <PatroBrowseRangePicker range={normalizedRange} onApply={applyBrowseRange} />
           <LocationSelector
             compact
             className="shrink-0"
@@ -541,16 +519,20 @@ export function PanchangaYear() {
         {displayData && (
           <PanchangaWheel
             p={displayData}
-            bsYear={year}
-            bsMonthNe={BS_MONTHS_NE[bsMonth - 1]!}
+            bsYear={wheelSignedYear}
+            bsMonthNe={
+              isGregorianEraBrowse(browseEra)
+                ? adMonthLabel(bsMonth, "ne")
+                : BS_MONTHS_NE[bsMonth - 1]!
+            }
             bsDay={bsDay}
             isToday={isToday}
             timezone={effectiveTimezone}
             locationLabel={locationLabel}
             atTimeScrubOnly
             yearScrub={{
-              day: globalDay,
-              totalDays: rangeDayIndex.total,
+              day: clampedGlobal,
+              totalDays: rangeTotal,
               direction: play.dir,
               speed: play.speed,
               onForward: stepForward,
@@ -560,10 +542,10 @@ export function PanchangaYear() {
               onJumpDay: jumpToDay,
               onScrubStart: () => setIsScrubbing(true),
               onScrubEnd: finishScrub,
-              ...(rangeSpan > 1 && {
-                yearLabel: toNepaliDigits(year),
-                dayInYear: clampedDay,
-                daysInYear: totalDays,
+              ...(rangeYearSpan > 1 && {
+                yearLabel: toNepaliDigits(browseYear),
+                dayInYear: dayInActiveBrowseYear,
+                daysInYear: daysInActiveBrowseYear,
               }),
             }}
           />
@@ -588,19 +570,29 @@ export function PanchangaYear() {
           </div>
         ) : yearFullyCached ? (
           <p className="text-xs m-0 px-1">
-            {rangeSpan > 1
-              ? readyCount >= rangeSpan
-                ? bilingualText(lang, 
-                    `दायरा तयार · सबै ${toNepaliDigits(rangeSpan)} वर्ष`,
-                    `Range ready · all ${rangeSpan} years cached`,
+            {rangeYearSpan > 1
+              ? readyCount >= rangeYearSpan
+                ? bilingualText(
+                    lang,
+                    `दायरा तयार · सबै ${toNepaliDigits(rangeYearSpan)} वर्ष`,
+                    `Range ready · all ${rangeYearSpan} years cached`,
                   )
-                : bilingualText(lang, 
-                    `${toNepaliDigits(readyCount)}/${toNepaliDigits(rangeSpan)} वर्ष तयार · अर्को वर्ष पूर्वलोड हुँदै…`,
-                    `${readyCount}/${rangeSpan} years ready · preloading ahead…`,
+                : bilingualText(
+                    lang,
+                    `${toNepaliDigits(readyCount)}/${toNepaliDigits(rangeYearSpan)} वर्ष तयार · अर्को वर्ष पूर्वलोड हुँदै…`,
+                    `${readyCount}/${rangeYearSpan} years ready · preloading ahead…`,
                   )
               : yearBulkQ.data?.fromPersistentCache
                 ? t("panchanga_year.year_from_cache")
                 : t("panchanga_year.year_ready")}
+          </p>
+        ) : !vikramBulk ? (
+          <p className="text-xs m-0 px-1 text-base">
+            {bilingualText(
+              lang,
+              "यो दायरा दिन-दिन पञ्चाङ्ग लोड गर्छ (वर्ष बल्क क्यास BS/BBS मात्र)।",
+              "This range loads panchanga day-by-day (year bulk cache is BS/BBS only).",
+            )}
           </p>
         ) : null}
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -16,14 +16,15 @@ import {
 } from "@/lib/bs-month-grid";
 import { fetchMonthCalendar, type LocationParams } from "@/lib/api";
 import { DEFAULT_PANCHANGA_LOCATION } from "@/components/panchanga/use-panchanga-location";
-import { stepPatroSignedYear } from "@/lib/patro-year-axis";
+import { PatroYearPickerPopover } from "@/components/patro-date/PatroYearPickerPopover";
+import { signedPatroYearFromBrowse } from "@/lib/patro-year-axis";
+import { stepBrowseVikramMonth } from "@/lib/patro-date-options";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { BsNativeSelect } from "@/components/BsNativeSelect";
 import { PopoverClose } from "@/components/ui/popover";
 import { formatClockParts, parseClockParts } from "@/components/panchanga/use-panchanga-mode";
 import type { Era } from "@/lib/era";
-import { PatroYearEraToggle } from "@/components/patro-date/PatroYearEraToggle";
 
 const WEEKDAYS_NE = ["आइत", "सोम", "मंगल", "बुध", "बिही", "शुक्र", "शनि"];
 const WEEKDAYS_EN = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -48,6 +49,8 @@ interface Props {
   onEraChange?: (era: Era) => void;
   /** Observer for BBS month grids (no offline `bsToAD`). */
   locationParams?: LocationParams;
+  /** One shot commit (era + y/m/d) — avoids display-era race with separate date commit. */
+  onCommitBrowseDay?: (era: Era, year: number, month: number, day: number) => void;
 }
 
 /** 24h → 12h parts. */
@@ -80,23 +83,32 @@ export function BsDateTimePicker({
   gridEra = "bs",
   displayEra,
   onEraChange,
+  onCommitBrowseDay,
   locationParams,
 }: Props) {
   const { lang, digits } = useLocale();
   const { t } = useTranslation();
   const isAd = gridEra === "ad";
-  const monthFetchEra: Era = isAd ? "ad" : gridEra === "bbs" ? "bbs" : "bs";
 
-  // Draft state — every interaction stays local; nothing is committed (and no
-  // API refetch happens) until the user presses Done. The popover remounts on
-  // each open, so this re-seeds from the current committed date/time.
   const [draft, setDraft] = useState({ year, month, day, clock: clock ?? "" });
+  const [draftBrowseEra, setDraftBrowseEra] = useState<Era>(displayEra ?? "bs");
+
+  useEffect(() => {
+    setDraft({ year, month, day, clock: clock ?? "" });
+    setDraftBrowseEra(displayEra ?? "bs");
+  }, [year, month, day, clock, displayEra]);
+
   const { year: dYear, month: dMonth, day: dDay } = draft;
+  const monthFetchEra: Era = isAd ? "ad" : draftBrowseEra;
+  const signedGridYear = isAd ? dYear : signedPatroYearFromBrowse(draftBrowseEra, dYear);
 
   const resolvedLocation = locationParams ?? DEFAULT_PANCHANGA_LOCATION.params;
-  const needsApiMonth = !isAd && (monthFetchEra === "bbs" || !bsMonthHasOfflineTable(dYear, dMonth));
+  const needsApiMonth =
+    !isAd &&
+    (draftBrowseEra === "bbs" ||
+      !bsMonthHasOfflineTable(signedGridYear, dMonth));
   const monthQ = useQuery({
-    queryKey: ["picker-month", dYear, dMonth, resolvedLocation],
+    queryKey: ["picker-month", signedGridYear, dMonth, draftBrowseEra, resolvedLocation],
     queryFn: () =>
       fetchMonthCalendar(dYear, dMonth, resolvedLocation, {
         full: false,
@@ -112,12 +124,12 @@ export function BsDateTimePicker({
       const cal = monthQ.data?.calendar;
       return cal ? monthGridFromApiCalendar(cal) : null;
     }
-    return bsMonthGridOffline(dYear, dMonth);
-  }, [isAd, needsApiMonth, monthQ.data?.calendar, dYear, dMonth]);
+    return bsMonthGridOffline(signedGridYear, dMonth);
+  }, [isAd, needsApiMonth, monthQ.data?.calendar, signedGridYear, dMonth]);
 
   const monthLen = isAd
     ? new Date(dYear, dMonth, 0).getDate()
-    : (bsGrid?.monthLen ?? getBSMonthLength(dYear, dMonth));
+    : (bsGrid?.monthLen ?? getBSMonthLength(signedGridYear, dMonth));
   const firstDow = isAd
     ? new Date(dYear, dMonth - 1, 1).getDay()
     : (bsGrid?.firstDow ?? 0);
@@ -142,22 +154,35 @@ export function BsDateTimePicker({
   const weekdays = lang === "en" ? WEEKDAYS_EN : WEEKDAYS_NE;
 
   const setMonthYear = (y: number, m: number) => {
-    const maxDay = isAd ? new Date(y, m, 0).getDate() : getBSMonthLength(y, m);
+    const maxDay = isAd
+      ? new Date(y, m, 0).getDate()
+      : getBSMonthLength(signedPatroYearFromBrowse(draftBrowseEra, y), m);
     setDraft((d) => ({ ...d, year: y, month: m, day: Math.min(d.day, maxDay) }));
   };
 
+  const pickBrowseYear = (nextEra: Era, nextYear: number) => {
+    setDraftBrowseEra(nextEra);
+    setMonthYear(nextYear, dMonth);
+  };
+
   const stepMonth = (delta: number) => {
-    let m = dMonth + delta;
-    let y = dYear;
-    if (m < 1) {
-      m = 12;
-      y = stepPatroSignedYear(y, -1);
-    } else if (m > 12) {
-      m = 1;
-      y = stepPatroSignedYear(y, 1);
+    if (isAd) {
+      let m = dMonth + delta;
+      let y = dYear;
+      if (m < 1) {
+        m = 12;
+        y -= 1;
+      } else if (m > 12) {
+        m = 1;
+        y += 1;
+      }
+      if (y < minYear || y > maxYear) return;
+      setMonthYear(y, m);
+      return;
     }
-    if (y < minYear || y > maxYear) return;
-    setMonthYear(y, m);
+    const next = stepBrowseVikramMonth(draftBrowseEra, dYear, dMonth, delta);
+    if (next.year < minYear || next.year > maxYear) return;
+    setMonthYear(next.year, next.month);
   };
 
   const prevDisabled = dYear <= minYear && dMonth <= 1;
@@ -197,9 +222,16 @@ export function BsDateTimePicker({
 
   // Push the draft to the page (and refetch) — only fires on Done.
   const commit = () => {
+    const eraChanged =
+      displayEra != null && draftBrowseEra !== displayEra && onEraChange != null;
     const dateChanged = draft.year !== year || draft.month !== month || draft.day !== day;
     const clockChanged = showTime && draft.clock !== (clock ?? "");
-    if (dateChanged) onSelectDate(draft.year, draft.month, draft.day);
+    if (onCommitBrowseDay && (eraChanged || dateChanged)) {
+      onCommitBrowseDay(draftBrowseEra, draft.year, draft.month, draft.day);
+    } else {
+      if (eraChanged) onEraChange?.(draftBrowseEra);
+      if (dateChanged) onSelectDate(draft.year, draft.month, draft.day);
+    }
     if (clockChanged) onClockChange?.(draft.clock);
   };
 
@@ -223,21 +255,25 @@ export function BsDateTimePicker({
           ariaLabel={monthAriaLabel}
           onChange={(m) => setMonthYear(dYear, m)}
         />
-        <BsNativeSelect
-          className="w-[4.25rem] shrink-0"
-          value={dYear}
-          options={yearSelectOptions}
-          ariaLabel={yearAriaLabel}
-          onChange={(y) => setMonthYear(y, dMonth)}
-        />
-        {displayEra && onEraChange ? (
-          <PatroYearEraToggle
-            era={displayEra}
-            onEraChange={onEraChange}
-            compact
-            comfortable
+        {isAd ? (
+          <BsNativeSelect
+            className="w-[4.25rem] shrink-0"
+            value={dYear}
+            options={yearSelectOptions}
+            ariaLabel={yearAriaLabel}
+            onChange={(y) => setMonthYear(y, dMonth)}
           />
-        ) : null}
+        ) : (
+          <PatroYearPickerPopover
+            className="w-[5.5rem] shrink-0 h-7"
+            era={draftBrowseEra}
+            value={dYear}
+            ariaLabel={yearAriaLabel}
+            comfortable
+            onChange={(y) => setMonthYear(y, dMonth)}
+            onBrowseCommit={pickBrowseYear}
+          />
+        )}
         <button
           type="button"
           onClick={() => stepMonth(1)}
