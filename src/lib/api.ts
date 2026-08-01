@@ -30,9 +30,9 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
  */
 // Keep in step with CACHE_PAYLOAD_VERSION in services/panchanga_cache.py — it had
 // drifted (29 vs 32), which lets the edge serve payloads from before an engine fix.
-// 34 = samvatsara resolves for BBS / BS < 58 (JD-based Jovian walk + table).
+// Must match services/panchanga_cache.CACHE_PAYLOAD_VERSION (compose of domain + astronomy).
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "34";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "3803";
 
 /**
  * Sait listings are CDN-cached too. Appended as `sv=` so a change in the sait
