@@ -104,6 +104,11 @@
         "description": "Daily sphuta of the nine grahas and the ascendant — sign, nakshatra, pada, lord/sub-lord, speed, right ascension and declination.",
         "keywords": "planetary positions, graha sphuta, planet longitude, ascendant, nakshatra"
       },
+      "gochar": {
+        "title": "Planetary Transits (Gochar) | Vedic Patro",
+        "description": "Live graha positions, upcoming sign and nakshatra changes, and per-planet transit windows — Lahiri sidereal, for your city.",
+        "keywords": "gochar, planetary transit, graha gochar, rashi change, retrograde"
+      },
       "graha_asta": {
         "title": "Heliacal Rising & Setting | Vedic Patro",
         "description": "Yearly udaya / asta (combustion) moments for Mercury, Venus, Mars, Jupiter and Saturn.",
@@ -879,6 +884,7 @@
     "karana": "Karana",
     "gochar": "Planet transit",
     "deshaantar": "Deshaantar",
+    "akshamsha": "Akshamsha",
     "belaantar": "Belaantar"
   },
   "muhurta_aside": {
@@ -1623,6 +1629,10 @@
         "label": "Planetary positions",
         "blurb": "Daily positions of 9 grahas + lagna"
       },
+      "gochar": {
+        "label": "Planetary transits (Gochar)",
+        "blurb": "Sky at a glance, upcoming changes & deep dive"
+      },
       "graha-asta": {
         "label": "Heliacal set",
         "blurb": "Yearly rising & setting"
@@ -1644,6 +1654,14 @@
       }
     },
     "sait_label": "{{category}} moment"
+  },
+  "gochar": {
+    "page_title": "Planetary Transits (Gochar)",
+    "page_subtitle": "Live positions, upcoming changes, and per-planet windows for your place and day.",
+    "promo_title": "Planetary Transits (Gochar)",
+    "promo_cta": "Open gochar page",
+    "view_more": "View more",
+    "load_error": "Could not load gochar data for this day."
   },
   "grahas": {
     "sun": "Sun",

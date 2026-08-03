@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { NavigateOptions } from "@tanstack/react-router";
 import type { PatroMonthBrowseSearch, PatroYearBrowseSearch } from "@/lib/patro-era";
 import {
@@ -9,10 +9,13 @@ import {
   type Language,
 } from "@/lib/era";
 import {
+  locationSearchFingerprint,
   locationToSearch,
   sameLocationParams,
   sameSearch,
   searchToLocation,
+  stripPatroDayOnlySearchKeys,
+  patroMonthGridNavigateSearch,
   type LocationSearch,
 } from "@/lib/url-state";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -119,23 +122,27 @@ export function usePatroMonthUrlBrowse(
   );
   const mirror = extra?.mirror;
   const mirrorPaksha = mirror?.paksha;
+  const seenUrlLocationRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (urlYearUnparseable(search, language) || urlMonthUnparseable(search, language)) {
       return;
     }
-    const desired = buildEraBrowseSearch(
-      location,
-      {
-        era: monthBrowse.era,
-        year: monthBrowse.year,
-        month: monthBrowse.month,
-      },
-      mirror,
-      language,
+    const desired = stripPatroDayOnlySearchKeys(
+      buildEraBrowseSearch(
+        location,
+        {
+          era: monthBrowse.era,
+          year: monthBrowse.year,
+          month: monthBrowse.month,
+        },
+        mirror,
+        language,
+      ) as Record<string, unknown>,
     );
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
+    const current = stripPatroDayOnlySearchKeys(search as Record<string, unknown>);
+    if (!sameSearch(desired, current)) {
+      navigate({ search: patroMonthGridNavigateSearch(desired), replace: true });
     }
   }, [
     location,
@@ -149,11 +156,17 @@ export function usePatroMonthUrlBrowse(
     language,
   ]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     applyEraBrowseFromSearch(search, monthBrowse, language);
+    const fp = locationSearchFingerprint(search);
+    const prev = seenUrlLocationRef.current;
+    seenUrlLocationRef.current = fp;
+    if (prev !== null && fp === prev) return;
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-  }, [search, language]);
+  }, [search, language, location, setLocation]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return monthBrowse;
 }
@@ -176,6 +189,8 @@ export function usePatroYearUrlBrowse(
     { era: parsed.era },
   );
 
+  const seenUrlLocationRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (urlYearUnparseable(search, language)) return;
     const desired = buildEraBrowseSearch(
@@ -192,13 +207,18 @@ export function usePatroYearUrlBrowse(
     }
   }, [location, yearBrowse.year, yearBrowse.era, search, navigate, language]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     applyEraBrowseFromSearch(search, yearBrowse, language);
-    if (setLocation && location) {
-      const loc = searchToLocation(search);
-      if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-    }
-  }, [search, language]);
+    if (!setLocation || !location) return;
+    const fp = locationSearchFingerprint(search);
+    const prev = seenUrlLocationRef.current;
+    seenUrlLocationRef.current = fp;
+    if (prev !== null && fp === prev) return;
+    const loc = searchToLocation(search);
+    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+  }, [search, language, location, setLocation]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return yearBrowse;
 }
@@ -258,18 +278,21 @@ export function useElementPageUrlBrowse(
     if (urlYearUnparseable(search, language) || urlMonthUnparseable(search, language)) {
       return;
     }
-    const desired = buildEraBrowseSearch(
-      location,
-      {
-        era: monthBrowse.era,
-        year: monthBrowse.year,
-        month: monthBrowse.month,
-      },
-      undefined,
-      language,
+    const desired = stripPatroDayOnlySearchKeys(
+      buildEraBrowseSearch(
+        location,
+        {
+          era: monthBrowse.era,
+          year: monthBrowse.year,
+          month: monthBrowse.month,
+        },
+        undefined,
+        language,
+      ) as Record<string, unknown>,
     );
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
+    const current = stripPatroDayOnlySearchKeys(search as Record<string, unknown>);
+    if (!sameSearch(desired, current)) {
+      navigate({ search: patroMonthGridNavigateSearch(desired), replace: true });
     }
   }, [
     isSpan,
@@ -287,6 +310,9 @@ export function useElementPageUrlBrowse(
     if (isSpan) {
       applyEraBrowseFromSearch(search, monthBrowse, language);
     }
+    // Day-table elements mirror location via usePatroDayUrlBrowse — avoid reverting
+    // a fresh picker choice before the URL mirror effect runs.
+    if (!isSpan) return;
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
     // eslint-disable-next-line react-hooks/exhaustive-deps

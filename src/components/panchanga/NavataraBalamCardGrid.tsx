@@ -1,6 +1,7 @@
 import type { BalamCardItem } from "@/lib/balam-cards";
 import { findCurrentBalamCard } from "@/lib/balam-cards";
 import { formatNavataraQuality, formatNavataraTara } from "@/lib/navatara-bala";
+import { NakshatraGlyphIcon, RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
 import { PanchangaBalamCard, panchangaCardGrid } from "./PanchangaLayout";
 
 export function NavataraBalamCardGrid({
@@ -8,11 +9,13 @@ export function NavataraBalamCardGrid({
   clock,
   formatName,
   lang,
+  variant = "chandrabala",
 }: {
   cards: BalamCardItem[];
   clock?: string;
   formatName: (card: BalamCardItem) => string;
   lang?: string;
+  variant?: "chandrabala" | "tarabala";
 }) {
   const current = findCurrentBalamCard(cards, clock);
   if (!cards.length) return null;
@@ -40,6 +43,13 @@ export function NavataraBalamCardGrid({
             subtitleLine={subtitle}
             tone={card.tone}
             isCurrent={current?.key === card.key}
+            icon={
+              variant === "tarabala" ? (
+                <NakshatraGlyphIcon name={card.name} number={card.number} size={24} />
+              ) : (
+                <RashiGlyphIcon name={card.name} number={card.number} size={24} />
+              )
+            }
           />
         );
       })}

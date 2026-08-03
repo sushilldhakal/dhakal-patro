@@ -12,6 +12,7 @@ import { MobileBottomNav } from "./components/MobileBottomNav";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { RouteSeo } from "./components/seo/RouteSeo";
 import { PanchangaShellLayout } from "./components/panchanga/PanchangaShellLayout";
+import { PanchangaLocationProvider } from "./components/panchanga/use-panchanga-location";
 import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
 import { RouteLoadingProvider } from "./lib/route-loading";
@@ -48,6 +49,7 @@ const PanchakPatro = lazyRoute(() => import("./pages/PanchakPatro"), "PanchakPat
 const History = lazyRoute(() => import("./pages/History"), "History");
 const PanchangaDetailsHub = lazyRoute(() => import("./pages/PanchangaDetailsHub"), "PanchangaDetailsHub");
 const ElementPage = lazyRoute(() => import("./pages/ElementPage"), "ElementPage");
+const Gochar = lazyRoute(() => import("./pages/Gochar"), "Gochar");
 const GrahaSthiti = lazyRoute(() => import("./pages/GrahaSthiti"), "GrahaSthiti");
 const GrahaAsta = lazyRoute(() => import("./pages/GrahaAsta"), "GrahaAsta");
 const GrahaVakri = lazyRoute(() => import("./pages/GrahaVakri"), "GrahaVakri");
@@ -68,25 +70,29 @@ const rootRoute = createRootRoute({
     });
     if (bare) {
       return (
-        <RouteLoadingProvider>
-          <Outlet />
-        </RouteLoadingProvider>
+        <PanchangaLocationProvider>
+          <RouteLoadingProvider>
+            <Outlet />
+          </RouteLoadingProvider>
+        </PanchangaLocationProvider>
       );
     }
     return (
-      <RouteLoadingProvider>
-        <RouteSeo />
-        <AnalyticsTracker />
-        <div className="min-h-screen">
-          <Header />
-          {/* Bottom padding on small screens so page content clears the floating
-              MobileBottomNav; removed at lg where the bar is hidden. */}
-          <div className="pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
-            <Outlet />
+      <PanchangaLocationProvider>
+        <RouteLoadingProvider>
+          <RouteSeo />
+          <AnalyticsTracker />
+          <div className="min-h-screen">
+            <Header />
+            {/* Bottom padding on small screens so page content clears the floating
+                MobileBottomNav; removed at lg where the bar is hidden. */}
+            <div className="pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
+              <Outlet />
+            </div>
+            <MobileBottomNav />
           </div>
-          <MobileBottomNav />
-        </div>
-      </RouteLoadingProvider>
+        </RouteLoadingProvider>
+      </PanchangaLocationProvider>
     );
   },
 });
@@ -203,6 +209,12 @@ const elementRoute = createRoute({
   validateSearch: validateElementPageSearch,
   component: ElementPage,
 });
+const gocharRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/gochar",
+  validateSearch: validateGrahaDaySearch,
+  component: Gochar,
+});
 const grahaSthitiRoute = createRoute({
   getParentRoute: () => panchangaShellRoute,
   path: "/panchanga/graha-sthiti",
@@ -266,6 +278,7 @@ const routeTree = rootRoute.addChildren([
     panchakPatroRoute,
     panchangaDetailsRoute,
     elementRoute,
+    gocharRoute,
     grahaSthitiRoute,
     grahaAstaRoute,
     grahaVakriRoute,

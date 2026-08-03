@@ -9,6 +9,7 @@ export { PatroDateNavCore, type PatroDateNavCoreProps } from "./PatroDateNavCore
 export { PatroMonthYearNav, type PatroMonthYearNavProps } from "./PatroMonthYearNav";
 export { PatroDayTimeNav, type PatroDayTimeNavProps } from "./PatroDayTimeNav";
 export { PatroYearNav, type PatroYearNavProps } from "./PatroYearNav";
+export { PatroDayMonthChip } from "./PatroDayMonthChip";
 
 export {
   buildPatroAdYearOptions,

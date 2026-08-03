@@ -5,6 +5,7 @@ const SIDEBAR_ROUTE_PATTERNS: RegExp[] = [
   /^\/suryakranti$/,
   /^\/panchanga\/year$/,
   /^\/dainikkranti$/,
+  /^\/gochar$/,
   /^\/panchak-patro$/,
   /^\/ritu$/,
   /^\/panchanga\/avakahada-chakra$/,

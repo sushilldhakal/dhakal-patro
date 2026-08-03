@@ -118,12 +118,14 @@ export function PanchangaBalamCard({
   tone = "neutral",
   isCurrent,
   className,
+  icon,
 }: {
   titleLine: React.ReactNode;
   subtitleLine?: React.ReactNode;
   tone?: "best" | "good" | "neutral" | "bad" | "worst";
   isCurrent?: boolean;
   className?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <div
@@ -136,7 +138,10 @@ export function PanchangaBalamCard({
         className,
       )}
     >
-      <span className="text-sm font-bold leading-snug text-foreground whitespace-normal sm:whitespace-nowrap">{titleLine}</span>
+      <span className="flex items-start gap-2 text-sm font-bold leading-snug text-foreground">
+        {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
+        <span className="min-w-0 whitespace-normal sm:whitespace-nowrap">{titleLine}</span>
+      </span>
       {subtitleLine ? (
         <span className="text-xs font-semibold leading-snug text-muted-foreground whitespace-normal sm:whitespace-nowrap">
           {subtitleLine}

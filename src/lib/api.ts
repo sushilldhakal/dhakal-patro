@@ -32,7 +32,7 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
 // drifted (29 vs 32), which lets the edge serve payloads from before an engine fix.
 // Must match services/panchanga_cache.CACHE_PAYLOAD_VERSION (compose of domain + astronomy).
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "3903";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "4003";
 
 /**
  * Sait listings are CDN-cached too. Appended as `sv=` so a change in the sait
@@ -550,6 +550,7 @@ export interface GocharIngressEvent {
   event?: "udaya" | "asta";
   hemisphere?: "east" | "west";
   motion_ne?: string;
+  is_retrograde?: boolean;
 }
 
 export interface GocharIngressResponse {
@@ -2707,6 +2708,14 @@ export interface CalendarDayDetail {
       name_ne?: string;
     };
     deshaantar?: {
+      minutes?: number;
+      seconds?: number;
+      sign?: "dhan" | "rin";
+      sign_ne?: string;
+      label_ne?: string;
+      name_ne?: string;
+    };
+    akshamsha?: {
       minutes?: number;
       seconds?: number;
       sign?: "dhan" | "rin";

@@ -180,6 +180,9 @@ export function BsCalendarGrid({
           const tithiIdx = tithiIndexFromCalendarDay(day);
           const moonTitle = moonPhaseTitle(getPakshaPhase(day), isEn);
           const extraFestCount = festivals.length > 2 ? festivals.length - 2 : 0;
+          const festCount = festivals.length;
+          /** BS patro on phones: tint + count badge only — no festival labels in the cell. */
+          const mobileBsFestCompact = primaryDate === "bs" && festCount > 0;
           const adDayNum = fmtAdDay(day.date_ad);
           const primaryDayNum = primaryDate === "ad" ? adDayNum : day.day;
           const secondary = getSecondaryCellDate(day, primaryDate, lang, i === 0);
@@ -207,6 +210,9 @@ export function BsCalendarGrid({
                 isToday && "bg-surface-today",
                 isSelected && "shadow-[inset_0_0_0_2px_var(--ring)]",
                 isPublicHoliday && "bg-surface-tint-danger",
+                mobileBsFestCompact &&
+                  !isPublicHoliday &&
+                  "max-md:bg-surface-tint-danger",
               )}
             >
               <button
@@ -233,14 +239,20 @@ export function BsCalendarGrid({
                 <VerticalEdgeLabel
                   text={leftFest}
                   side="left"
-                  className={isPublicHoliday ? "text-danger" : "text-foreground/85"}
+                  className={cn(
+                    isPublicHoliday ? "text-danger" : "text-foreground/85",
+                    primaryDate === "bs" && "max-md:hidden",
+                  )}
                 />
               ) : null}
               {rightFest ? (
                 <VerticalEdgeLabel
                   text={rightFest}
                   side="right"
-                  className={isPublicHoliday ? "text-danger" : "text-foreground/85"}
+                  className={cn(
+                    isPublicHoliday ? "text-danger" : "text-foreground/85",
+                    primaryDate === "bs" && "max-md:hidden",
+                  )}
                 />
               ) : null}
 
@@ -290,7 +302,7 @@ export function BsCalendarGrid({
                     <span className="md:hidden">{secondaryLabelShort}</span>
                     <span className="max-md:hidden">{secondaryLabel}</span>
                   </span>
-                  {extraFestCount > 0 ? (
+                  {extraFestCount > 0 && primaryDate !== "bs" ? (
                     <button
                       type="button"
                       title={festivals.join(" · ")}
@@ -308,12 +320,28 @@ export function BsCalendarGrid({
                 </span>
               </span>
 
+              {mobileBsFestCompact ? (
+                <button
+                  type="button"
+                  title={festivals.join(" · ")}
+                  aria-label={t("calendar.festivals_more", { count: festCount })}
+                  className={cn(
+                    "pointer-events-auto mx-auto mt-auto font-num shrink-0 rounded-full border-none bg-secondary px-1.5 py-0.5 text-[10px] font-bold leading-none text-secondary-foreground md:hidden",
+                    "ring-offset-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                  )}
+                  onClick={openFestivalDialog}
+                >
+                  +{monoDigits(festCount)}
+                </button>
+              ) : null}
+
               {/* Bottom: primary festival (extras on left/right vertically on md+) */}
               {mainFest ? (
                 <span
                   className={cn(
                     "flex w-full min-w-0 flex-col gap-px text-center text-xs font-semibold leading-tight",
                     isPublicHoliday ? "text-danger" : "text-foreground",
+                    primaryDate === "bs" && "max-md:hidden",
                   )}
                 >
                   <span className="truncate max-md:whitespace-normal max-md:line-clamp-2 max-md:leading-[1.15]">

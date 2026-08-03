@@ -200,6 +200,33 @@ export function tithiIndexFromCalendarDay(day: CalendarDay): number | undefined 
   return undefined;
 }
 
+/** Wheel tithi index 0–29 from a tithi element-page span (display_number + paksha). */
+export function tithiIndexFromElementSpan(span: {
+  number: number;
+  name?: string;
+  name_ne?: string;
+  paksha?: string;
+}): number {
+  const nameNe = normalizeTithiName(span.name_ne ?? span.name);
+  if (/पूर्णिमा|purnima/i.test(nameNe)) return 14;
+  if (/औंसी|aunsi|aaushi/i.test(nameNe)) return 29;
+
+  const krishna =
+    span.paksha === "krishna" ||
+    /कृष्ण|krishna/i.test(span.paksha ?? "") ||
+    /कृष्ण|krishna/i.test(nameNe);
+
+  const n = span.number;
+  if (n >= 1 && n <= 15) {
+    return krishna ? 14 + n : n - 1;
+  }
+
+  for (let i = 0; i < 30; i++) {
+    if (WHEEL_TITHIS[i]!.ne === nameNe) return i;
+  }
+  return krishna ? 15 : 0;
+}
+
 /** 27 yoga names in Nepali, index 0 = Vishkambha, anchored at ecliptic 0°. */
 export const WHEEL_YOGAS = [
   "विष्कम्भ", "प्रीति", "आयुष्मान्", "सौभाग्य", "शोभन",

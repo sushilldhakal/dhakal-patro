@@ -7,8 +7,6 @@ import { GrahaBanner, ElementDescription } from "@/components/graha/GrahaPagePar
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
 import { useElementPageUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { parseEraFromUrl } from "@/lib/era";
-import { useSyncUrlLanguage } from "@/hooks/use-sync-url-language";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
 import { PatroDayTimeNav, PatroMonthYearNav } from "@/components/patro-date";
@@ -33,6 +31,12 @@ import {
   formatElementStampDisplay,
 } from "@/lib/panchanga-format";
 import { formatRashiDisplay } from "@/lib/rashi-i18n";
+import {
+  ElementDayRowIcon,
+  ElementSpanIcon,
+  RashiGlyphIcon,
+  NakshatraGlyphIcon,
+} from "@/components/panchanga/element/ElementGlyphIcon";
 import { todayAdStringInTimezone, resolveTimeZone } from "@/lib/zoned-time";
 import {
   elementKeys,
@@ -93,20 +97,27 @@ function SpanBoundary({
   );
 }
 
-function SpanList({ spans }: { spans: ElementSpan[] }) {
+function SpanList({ spans, elementId }: { spans: ElementSpan[]; elementId: string }) {
   const { lang } = useLocale();
   const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {spans.map((s, i) => (
         <div key={`${s.name}-${i}`} className={cn(patroCard, "flex flex-col gap-2 p-3")}>
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="text-base font-bold text-foreground">{bilingualText(lang, s.name_ne, s.name)}</span>
-            {s.paksha ? (
-              <span className="text-xs text-base">
-                {s.paksha === "shukla" ? t("common.paksha_shukla") : t("common.paksha_krishna")}
-              </span>
-            ) : null}
+          <div className="flex items-center gap-2.5">
+            <ElementSpanIcon elementId={elementId} span={s} size={34} className="opacity-95" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-base font-bold text-foreground">
+                  {bilingualText(lang, s.name_ne, s.name)}
+                </span>
+                {s.paksha ? (
+                  <span className="text-xs text-base">
+                    {s.paksha === "shukla" ? t("common.paksha_shukla") : t("common.paksha_krishna")}
+                  </span>
+                ) : null}
+              </div>
+            </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <SpanBoundary
@@ -234,12 +245,24 @@ function TableView({
           {rows.map((r, i) => {
             const good = r.tone === "good" || r.quality === "शुभ";
             const bad = r.tone === "bad" || r.quality === "अशुभ";
+            const rowNum = typeof r.number === "number" ? r.number : i + 1;
             return (
               <div
                 key={i}
-                className={cn("flex items-center justify-between rounded-lg px-3 py-1.5 text-sm", toneClass(good, bad))}
+                className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-sm", toneClass(good, bad))}
               >
-                <span className="font-semibold">{bilingualText(lang, String(r.name ?? ""), String(r.name_en ?? r.name ?? ""))}</span>
+                <span className="flex min-w-0 items-center gap-2 font-semibold">
+                  {elementId === "tarabala" ? (
+                    <NakshatraGlyphIcon
+                      name={String(r.name ?? "")}
+                      number={rowNum}
+                      size={24}
+                    />
+                  ) : (
+                    <RashiGlyphIcon name={String(r.name ?? "")} number={rowNum} size={24} />
+                  )}
+                  {bilingualText(lang, String(r.name ?? ""), String(r.name_en ?? r.name ?? ""))}
+                </span>
                 <span className="text-sm opacity-90">
                   {bilingualText(lang, String(r.tara ?? ""), String(r.tara ?? ""))}
                   {r.quality ? ` · ${bilingualText(lang, String(r.quality), String(r.quality))}` : ""}
@@ -284,7 +307,8 @@ function TableView({
               key={i}
               className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm", toneClass(good, bad))}
             >
-              <span className="flex items-center gap-1.5 font-semibold">
+              <span className="flex min-w-0 items-center gap-2 font-semibold">
+                <ElementDayRowIcon elementId={elementId} row={it} size={24} />
                 {label}
                 {hasPushkara ? (
                   <span className="rounded-full bg-secondary/20 px-1.5 py-px text-sm font-bold text-secondary dark:text-accent">
@@ -318,11 +342,15 @@ function NavataraBalamElementView({
   const cards = isChandra ? getChandraBalamCards(p) : getTaraBalamCards(p);
   const table = isChandra ? getChandrabalamTable(p) : getTarabalaTable(p);
 
-  const moonRef = table?.moon_label
-    ? t(isChandra ? "element_page.moon_sign_sunrise" : "element_page.moon_nakshatra_sunrise", {
-        label: table.moon_label_en ?? table.moon_label,
-      })
-    : undefined;
+  const moonLabel = isChandra
+    ? formatRashiDisplay(table?.moon_label, table?.moon_label_en, lang)
+    : bilingualText(lang, table?.moon_label ?? "", table?.moon_label_en ?? table?.moon_label ?? "");
+  const moonRef =
+    table?.moon_label && moonLabel
+      ? t(isChandra ? "element_page.moon_sign_sunrise" : "element_page.moon_nakshatra_sunrise", {
+          label: moonLabel,
+        })
+      : undefined;
 
   const formatName = isChandra
     ? (card: ReturnType<typeof getChandraBalamCards>[number]) =>
@@ -336,7 +364,13 @@ function NavataraBalamElementView({
   return (
     <div className="flex flex-col gap-2">
       {moonRef ? <p className="m-0 text-center text-sm text-muted-foreground">{moonRef}</p> : null}
-      <NavataraBalamCardGrid cards={cards} clock={clock} formatName={formatName} lang={lang} />
+      <NavataraBalamCardGrid
+        cards={cards}
+        clock={clock}
+        formatName={formatName}
+        lang={lang}
+        variant={elementId}
+      />
     </div>
   );
 }
@@ -346,14 +380,12 @@ function NavataraBalamElementView({
 export function ElementPage() {
   const { name } = useParams({ strict: false }) as { name?: string };
   const { t } = useTranslation();
+  const { lang } = useLocale();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
   const meta = name ? ELEMENT_BY_ID[name] : undefined;
   const isNavataraBal = name === "chandrabala" || name === "tarabala";
-  const urlParsed = parseEraFromUrl(search as Record<string, unknown>);
-  const urlLanguage = urlParsed.language;
-  useSyncUrlLanguage(urlLanguage);
 
   const todayAd = todayAdStringInTimezone(
     new Date(Date.now()),
@@ -368,7 +400,8 @@ export function ElementPage() {
     location,
     setLocation,
   );
-  const { dayState, date, setDate, promoteToJd, setDisplayEra } = dayBrowse;
+  const { dayState, date, setDate, setDisplayEra, syncPickerFromDateAd, syncResolvedPatroDay } =
+    dayBrowse;
 
   const dayResolveQ = useQuery({
     queryKey: panchangaKeys.daySelection(dayState, location.params),
@@ -379,9 +412,22 @@ export function ElementPage() {
   });
 
   useEffect(() => {
-    const jd = dayResolveQ.data?.jd_ut;
-    if (jd != null && dayState.kind !== "jd") promoteToJd(jd);
-  }, [dayResolveQ.data?.jd_ut, dayState.kind, promoteToJd]);
+    const data = dayResolveQ.data;
+    if (!data || isSpan) return;
+    if (data.date_ad) syncPickerFromDateAd(data.date_ad);
+    syncResolvedPatroDay({
+      date_ad: data.date_ad,
+      date_parts: data.date_parts,
+      bs_date:
+        data.bs_date && typeof data.bs_date === "object"
+          ? {
+              year: data.bs_date.year,
+              month: data.bs_date.month,
+              day: data.bs_date.day,
+            }
+          : undefined,
+    });
+  }, [isSpan, dayResolveQ.data, syncPickerFromDateAd, syncResolvedPatroDay]);
 
   const dayAd = dayResolveQ.data?.date_ad ?? "";
 
@@ -457,7 +503,7 @@ export function ElementPage() {
           era={monthBrowse.era}
           year={monthBrowse.year}
           month={monthBrowse.month}
-          displayLanguage={urlLanguage}
+          displayLanguage={lang}
           onMonthChange={(m) => monthBrowse.setYearMonth(monthBrowse.year, m)}
           onYearChange={(y) => monthBrowse.setYearMonth(y, monthBrowse.month)}
           onBrowseCommit={monthBrowse.commitEraYear}
@@ -471,7 +517,7 @@ export function ElementPage() {
       ) : (
         <PatroDayTimeNav
           era={dayState.display.era}
-          displayLanguage={urlLanguage}
+          displayLanguage={lang}
           date={date}
           vikram={dayResolveQ.data?.date_parts?.vikram}
           civilDateAd={dayResolveQ.data?.date_ad}
@@ -488,7 +534,7 @@ export function ElementPage() {
         spanQuery.isLoading && !spanQuery.data ? (
           <p className="text-sm">{t("common.loading")}</p>
         ) : spanQuery.data ? (
-          <SpanList spans={spanQuery.data.spans} />
+          <SpanList spans={spanQuery.data.spans} elementId={name!} />
         ) : (
           <p className="text-sm text-danger">{t("common.load_error")}</p>
         )

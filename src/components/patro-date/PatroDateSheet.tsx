@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarClock, ChevronDown, MapPin, Minus, Plus } from "lucide-react";
 import type { BsNativeSelectOption } from "@/components/BsNativeSelect";
@@ -253,7 +253,7 @@ export function PatroMobileDateSheetDraft({
 
   const { hour, minute } = draftClock ? parseClockParts(draftClock) : { hour: 0, minute: 0 };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onDraftChange({
       era: draftEra,
       year: draftYear,
@@ -367,7 +367,7 @@ export function PatroMobileYearSheetDraft({
     setDraftYear(nextYear);
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onDraftChange({ era: draftEra, year: draftYear });
   }, [draftEra, draftYear, onDraftChange]);
 

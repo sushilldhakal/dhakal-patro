@@ -9,8 +9,7 @@ import {
   formatAngaPatroTransitionHint,
   formatClockNepali,
   formatMonthMoonEventDisplay,
-  formatPatroBelaantar,
-  formatPatroDeshaantar,
+  formatPatroSignedCorrection,
   getAbhijitMuhurta,
   getMoonriseDisplay,
   getPanchangaDetail,
@@ -161,6 +160,15 @@ function buildPanchangaDetailCells(
   ];
 }
 
+function SolarCorrectionAsideCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset p-2.5 shadow-ring-soft">
+      <span className="text-sm leading-tight font-semibold text-foreground">{label}</span>
+      <span className="mono text-sm font-semibold leading-tight tabular-nums text-foreground">{value}</span>
+    </div>
+  );
+}
+
 export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location, loading }: Props) {
   const { t } = useTranslation();
   const { lang } = useLocale();
@@ -184,8 +192,20 @@ export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location
   const cells = buildPanchangaDetailCells(p, t, lang, selectedDay);
   const planets = getPlanetGocharLines(p, lang);
   const solar = getSolarCorrections(p);
-  const deshaantar = formatPatroDeshaantar(solar?.deshaantar);
-  const belaantar = formatPatroBelaantar(solar?.belaantar);
+  const hasSolar =
+    solar?.deshaantar != null || solar?.akshamsha != null || solar?.belaantar != null;
+  const solarCards = hasSolar
+    ? (
+        [
+          ["aside.deshaantar", solar?.deshaantar] as const,
+          ["aside.akshamsha", solar?.akshamsha] as const,
+          ["aside.belaantar", solar?.belaantar] as const,
+        ] as const
+      ).map(([labelKey, block]) => ({
+        label: t(labelKey),
+        value: formatPatroSignedCorrection(block) ?? "—",
+      }))
+    : [];
 
   return (
     <section className="min-h-full rounded-lg bg-card">
@@ -195,64 +215,53 @@ export function PanchangaVivaranPanel({ p, selectedDay, selectedAdDate, location
         ))}
       </div>
 
-      {planets.length > 0 || deshaantar || belaantar ? (
+      {planets.length > 0 ? (
         <div className="mt-2.5 border-t border-foreground/10">
           <div className="mb-1.5 text-sm font-bold text-foreground">{t("aside.gochar")}</div>
-          {planets.length > 0 ? (
-            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-              {planets.map(({ key, label, rashi, degree, isRetrograde, isCombust }) => (
-                <div
-                  key={key}
-                  className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset p-2.5 shadow-ring-soft"
-                >
-                  <span className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 text-sm leading-tight font-semibold text-foreground">
-                    <span className="min-w-0 break-words">
-                      {label}
-                      {rashi ? (
-                        <>
-                          {" "}
-                          <span aria-hidden>→</span> {rashi}
-                        </>
-                      ) : null}
-                    </span>
-                    <GrahaStatusBadges
-                      planetKey={key}
-                      isRetrograde={isRetrograde}
-                      isCombust={isCombust}
-                      size={12}
-                    />
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            {planets.map(({ key, label, rashi, degree, isRetrograde, isCombust }) => (
+              <div
+                key={key}
+                className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset p-2.5 shadow-ring-soft"
+              >
+                <span className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 text-sm leading-tight font-semibold text-foreground">
+                  <span className="min-w-0 break-words">
+                    {label}
+                    {rashi ? (
+                      <>
+                        {" "}
+                        <span aria-hidden>→</span> {rashi}
+                      </>
+                    ) : null}
                   </span>
-                  <span className="font-num text-sm font-semibold leading-tight tabular-nums text-foreground">
-                    {degree}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          {deshaantar || belaantar ? (
-            <div className="mt-1.5 grid grid-cols-2 gap-1.5 border-t border-foreground/10 pt-2 sm:grid-cols-2">
-              {deshaantar ? (
-                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset shadow-ring-soft p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
-                  <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
-                    {t("aside.deshaantar")}
-                  </span>
-                  <span className="mono min-w-0 text-sm font-semibold leading-tight text-foreground break-words sm:text-right">
-                    {deshaantar}
-                  </span>
-                </div>
-              ) : null}
-              {belaantar ? (
-                <div className="flex min-w-0 flex-col gap-0.5 rounded-[5px] bg-surface-inset shadow-ring-soft p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
-                  <span className="shrink-0 text-sm leading-tight font-semibold text-foreground">
-                    {t("aside.belaantar")}
-                  </span>
-                  <span className="mono min-w-0 text-sm font-semibold leading-tight text-foreground break-words sm:text-right">
-                    {belaantar}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+                  <GrahaStatusBadges
+                    planetKey={key}
+                    isRetrograde={isRetrograde}
+                    isCombust={isCombust}
+                    size={12}
+                  />
+                </span>
+                <span className="font-num text-sm font-semibold leading-tight tabular-nums text-foreground">
+                  {degree}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {solarCards.length > 0 ? (
+        <div
+          className={cn(
+            "border-t border-foreground/10 pt-2",
+            planets.length > 0 ? "mt-1.5" : "mt-2.5",
+          )}
+        >
+          <div className="grid grid-cols-3 gap-1.5">
+            {solarCards.map(({ label, value }) => (
+              <SolarCorrectionAsideCard key={label} label={label} value={value} />
+            ))}
+          </div>
         </div>
       ) : null}
 

@@ -1,8 +1,7 @@
 /**
  * Day-browse URL + API identity — Julian Day is the neutral key.
  *
- * - `jd` — canonical identity (from API `jd_ut`), shareable in the page URL
- * - `inputEra` + year/month/day — how to parse those parts into JD (never display)
+ * - `inputEra` + year/month/day — shareable page URL identity (JD stays on the server)
  * - `era` — display calendar + language default only (does NOT parse path/date keys)
  *
  * Month/year browse (`EraSelection` in era.ts) still uses era + y/m as grid coordinates.
@@ -14,6 +13,7 @@ import {
   type Era,
   type Language,
 } from "@/lib/era";
+import { adToBS } from "@/lib/bs-calendar";
 import { parseCivilIso } from "@/lib/patro-day";
 
 export type PatroDisplayContext = {
@@ -50,12 +50,6 @@ function toPositiveInt(raw: unknown): number | undefined {
   return t >= 1 ? t : undefined;
 }
 
-function parseJd(raw: unknown): number | undefined {
-  if (raw == null || raw === "") return undefined;
-  const n = typeof raw === "number" ? raw : Number(raw);
-  return Number.isFinite(n) && n > 0 ? n : undefined;
-}
-
 function parseLanguage(raw: unknown, displayEra: Era): Language {
   if (raw === "en" || raw === "ne") return raw;
   return getLanguageForEra(displayEra);
@@ -75,10 +69,7 @@ export function parsePatroDayUrl(
   fallbackLanguage: Language = "ne",
 ): PatroDayFetchState {
   const display = parseDisplay(search, fallbackLanguage);
-  const jd = parseJd(search.jd);
-  if (jd != null) {
-    return { kind: "jd", jd, display };
-  }
+  // Julian day is resolved server-side only — never read `jd` from the router URL.
 
   const year = toPositiveInt(search.year);
   const month = toPositiveInt(search.month);
@@ -90,6 +81,25 @@ export function parsePatroDayUrl(
         ? search.era
         : display.era;
     return { kind: "input", inputEra, year, month, day, display };
+  }
+
+  if (year != null && month != null) {
+    const inputEra = isEra(search.inputEra)
+      ? search.inputEra
+      : isEra(search.era)
+        ? search.era
+        : display.era;
+    let defaultDay = 1;
+    if (inputEra === "bs" || inputEra === "bbs") {
+      const cur = adToBS(new Date());
+      if (cur.year === year && cur.month === month) defaultDay = cur.day;
+    } else if (inputEra === "ad") {
+      const now = new Date();
+      if (now.getFullYear() === year && now.getMonth() + 1 === month) {
+        defaultDay = now.getDate();
+      }
+    }
+    return { kind: "input", inputEra, year, month, day: defaultDay, display };
   }
 
   return { kind: "today", display };
@@ -268,6 +278,15 @@ export function patroDayFetchWithDisplayEra(
   return state;
 }
 
+/** Mirror active UI language into day-browse URL (language toggle). */
+export function patroDayFetchWithUiLanguage(
+  state: PatroDayFetchState,
+  language: Language,
+): PatroDayFetchState {
+  if (state.display.language === language) return state;
+  return { ...state, display: { ...state.display, language } };
+}
+
 export function patroDayFetchStatesEqual(
   a: PatroDayFetchState,
   b: PatroDayFetchState,
@@ -298,10 +317,6 @@ export function buildPatroDayPageSearch(
     era: state.display.era,
     language: state.display.language,
   };
-  if (state.kind === "jd") {
-    out.jd = state.jd;
-    return out;
-  }
   if (state.kind === "input") {
     out.inputEra = state.inputEra;
     out.year = state.year;

@@ -23,8 +23,6 @@ import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { PatroDayTimeNav } from "@/components/patro-date";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { usePatroPanchangaUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { patroDayFetchWithDisplayEra } from "@/lib/patro-day-url";
-import { isEra } from "@/lib/era";
 import { GhatiClock } from "@/components/panchanga/GhatiClock";
 import { DayTimeline, DayCycleToggle, type DayCycleMode } from "@/components/panchanga/DayTimeline";
 import { PanchangaWheel } from "@/components/panchanga/PanchangaWheel";
@@ -32,6 +30,7 @@ import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { SeoContentSection } from "@/components/seo/SeoContentSection";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
+import { GocharPromoCard } from "@/components/gochar/GocharPromoCard";
 import {
   EphemerisModeBanner,
 } from "@/components/panchanga/MuhurtaNowPanel";
@@ -73,9 +72,8 @@ export function Panchanga() {
     dayState,
     date,
     setDate,
-    replaceDayState,
-    promoteToJd,
     syncPickerFromDateAd,
+    syncResolvedPatroDay,
     clock,
     setClock,
     setDisplayEra,
@@ -92,30 +90,22 @@ export function Panchanga() {
 
   useEffect(() => {
     const payload = udayaQuery.data;
-    if (payload) {
-      const ad = civilAnchorFromPanchangaDay(payload);
-      if (ad) syncPickerFromDateAd(ad);
-    }
-    const jd = udayaQuery.data?.jd_ut;
-    // Keep BS/BBS (and AD/BC) calendar keys in the URL — do not collapse to `jd`.
-    if (jd != null && dayState.kind !== "jd" && dayState.kind !== "input") {
-      promoteToJd(jd);
-    }
-  }, [udayaQuery.data?.date_ad, udayaQuery.data?.jd_ut, dayState.kind, promoteToJd, syncPickerFromDateAd]);
-
-  /** Shared links with `jd` + wrong display `era` — fix display only, not BBS input browse. */
-  useEffect(() => {
-    if (dayState.kind !== "jd") return;
-    const vEra = udayaQuery.data?.date_parts?.vikram?.era;
-    if (!vEra || !isEra(vEra) || vEra === dayState.display.era) return;
-    replaceDayState(patroDayFetchWithDisplayEra(dayState, vEra));
-  }, [
-    dayState,
-    dayState.kind,
-    dayState.display.era,
-    udayaQuery.data?.date_parts?.vikram?.era,
-    replaceDayState,
-  ]);
+    if (!payload) return;
+    const ad = civilAnchorFromPanchangaDay(payload);
+    if (ad) syncPickerFromDateAd(ad);
+    syncResolvedPatroDay({
+      date_ad: payload.date_ad,
+      date_parts: payload.date_parts,
+      bs_date:
+        payload.bs_date && typeof payload.bs_date === "object"
+          ? {
+              year: payload.bs_date.year,
+              month: payload.bs_date.month,
+              day: payload.bs_date.day,
+            }
+          : undefined,
+    });
+  }, [udayaQuery.data, syncPickerFromDateAd, syncResolvedPatroDay]);
 
   const wheelData = udayaQuery.data;
   const civilAnchor = wheelData ? civilAnchorFromPanchangaDay(wheelData) : "";
@@ -354,6 +344,7 @@ export function Panchanga() {
               jdUt={jdUt}
               refDateAd={civilAnchor}
               location={location.params}
+              browseLocation={location}
             />
           ) : null}
         </aside>
@@ -416,6 +407,8 @@ export function Panchanga() {
           </div>
         )}
       </div>
+
+      <GocharPromoCard location={location} className="mt-7 max-sm:px-2.5" />
 
       <LearnMoreCard
         className="mt-7 max-sm:px-2.5"

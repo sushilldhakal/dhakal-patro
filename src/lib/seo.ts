@@ -79,6 +79,7 @@ const ROUTE_SEO_KEYS: Record<string, string> = {
   "/panchanga": "seo.routes.panchanga",
   "/panchanga/year": "seo.routes.panchanga_year",
   "/panchanga/avakahada-chakra": "seo.routes.avakahada",
+  "/gochar": "seo.routes.gochar",
   "/panchanga/graha-sthiti": "seo.routes.graha_sthiti",
   "/panchanga/graha-asta": "seo.routes.graha_asta",
   "/panchanga/graha-vakri": "seo.routes.graha_vakri",

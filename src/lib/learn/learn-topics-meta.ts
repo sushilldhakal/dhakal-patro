@@ -16,6 +16,7 @@ import {
   Eye,
   Sun,
   History,
+  Server,
 } from "lucide-react";
 
 /** Metadata for learn routes — no article bodies (those live in learn-articles.tsx). */
@@ -55,6 +56,17 @@ export const LEARN_TOPIC_METAS: LearnTopicMeta[] = [
     summary: "नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।",
     summaryEn:
       "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
+  },
+  {
+    slug: "how-we-calculate",
+    category: "history",
+    titleNe: "हामी यो कसरी गणना गर्छौं",
+    titleEn: "How We Calculate It",
+    icon: Server,
+    summary:
+      "nepali-holiday-api को pipeline — राशि पट्टी, झुकाव, अयन चलन, Swiss Ephemeris सूत्र, daily.py र HTTP routes; अन्तरक्रियात्मक चित्र सहित।",
+    summaryEn:
+      "The nepali-holiday-api pipeline — rashi belt, axial tilt, precession, Swiss Ephemeris formulas, daily.py, and routes — with interactive sky diagrams.",
   },
   {
     slug: "astronomy-basics",

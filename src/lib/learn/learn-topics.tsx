@@ -17,6 +17,7 @@ import {
   Ayanamsha,
   RituDrift,
 } from "./learn-articles";
+import { HowWeCalculateArticle } from "@/components/learn/HowWeCalculateStudy";
 import {
   adjacentTopicMetas,
   LEARN_CATEGORIES,
@@ -56,6 +57,7 @@ const CONTENT_BY_SLUG: Record<string, () => React.ReactNode> = {
   hora: HoraArticle,
   eclipses: Eclipses,
   ayanamsha: Ayanamsha,
+  "how-we-calculate": HowWeCalculateArticle,
 };
 
 export const LEARN_TOPICS: LearnTopic[] = LEARN_TOPIC_METAS.map((meta) => ({

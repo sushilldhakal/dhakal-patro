@@ -1,4 +1,5 @@
 import type { LinkProps } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import {
   ArrowLeftRight,
@@ -18,6 +19,7 @@ import {
   Orbit,
   PartyPopper,
   RotateCcw,
+  Route,
   Sparkles,
   Sprout,
   Star,
@@ -28,6 +30,7 @@ import { useTranslation } from "react-i18next";
 import { DrawerClose } from "@/components/ui/drawer";
 import { NavDrawerLinkCard } from "@/components/home/HomeQuickLinks";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { parseEraFromUrl } from "@/lib/era";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { useCurrentRitu } from "@/lib/ritu-display";
 import { elementTitle } from "@/lib/panchanga-i18n";
@@ -81,6 +84,7 @@ const TABLE_ITEM_ICONS: Record<string, LucideIcon> = {
 };
 
 const GRAHA_ITEM_ICONS: Record<string, LucideIcon> = {
+  gochar: Route,
   "graha-sthiti": Orbit,
   "graha-asta": Sunrise,
   "graha-vakri": RotateCcw,
@@ -92,6 +96,7 @@ function itemSearch(
   item: PanchangaSidebarItem,
   location: ReturnType<typeof usePanchangaLocation>["location"],
   era: ReturnType<typeof useCalendarEra>,
+  urlBrowse: { year?: number; month?: number },
 ): Record<string, unknown> | undefined {
   if (item.id === "kundali" || item.id === "kundali-milan" || item.id === "avakahada" || item.id === "converter") {
     return undefined;
@@ -102,7 +107,7 @@ function itemSearch(
   const path = item.params
     ? resolveSidebarLinkPath(item.to, item.params)
     : item.to;
-  return patroRouteLinkSearch(path, location, era) as Record<string, unknown>;
+  return patroRouteLinkSearch(path, location, era, urlBrowse) as Record<string, unknown>;
 }
 
 function resolveIcon(sectionId: string, itemId: string): LucideIcon {
@@ -181,6 +186,9 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
   const { digits, lang } = useLocale();
   const era = useCalendarEra();
   const { location } = usePanchangaLocation();
+  const rawSearch = useRouterState({ select: (s) => s.location.search as Record<string, unknown> });
+  const fallbackLang = lang === "en" ? "en" : "ne";
+  const urlBrowse = parseEraFromUrl(rawSearch, fallbackLang);
   const { current: ritu, loading: rituLoading } = useCurrentRitu(location);
   const sections = getPanchangaSidebarSections();
   const panchakYear = defaultPanchakPatroYear();
@@ -205,7 +213,7 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
           <NavDrawerLinkCard to="/" label={t("home")} icon={Home} onClick={onNavigate} />
         </DrawerClose>
         <DrawerClose asChild>
-          <NavDrawerLinkCard to="/panchanga" search={patroRouteLinkSearch("/panchanga", location, era)} label={t("nav.surya_panchanga")} icon={Star} onClick={onNavigate} />
+          <NavDrawerLinkCard to="/panchanga" search={patroRouteLinkSearch("/panchanga", location, era, { year: urlBrowse.year, month: urlBrowse.month })} label={t("nav.surya_panchanga")} icon={Star} onClick={onNavigate} />
         </DrawerClose>
         <DrawerClose asChild>
           <NavDrawerLinkCard to="/learn" label={t("nav.learn")} icon={BookOpen} onClick={onNavigate} />
@@ -216,7 +224,10 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
         <NavSection key={section.id} title={t(section.titleKey)}>
           {section.items.map((item) => {
             const label = labelForItem(item);
-            const search = itemSearch(item, location, era);
+            const search = itemSearch(item, location, era, {
+              year: urlBrowse.year,
+              month: urlBrowse.month,
+            });
             const icon = resolveIcon(section.id, item.id);
 
             if (item.id === "ritu") {

@@ -9,23 +9,22 @@ import {
   parseCivilIsoToDate,
 } from "@/lib/patro-day";
 import {
-  buildPatroDayPageSearch,
   parsePatroDayUrl,
   patroDayFetchFromApiBsParts,
   patroDayFetchFromApiDateAd,
-  patroDayFetchFromApiJd,
   patroDayFetchFromResolvedPanchanga,
   patroDayFetchStatesEqual,
   patroDayFetchWithBrowseEraToggle,
   patroDayFetchWithDisplayEra,
+  patroDayFetchWithUiLanguage,
   type PatroBrowseCalendarParts,
   type PatroDayFetchState,
   type ResolvedPatroDayFields,
 } from "@/lib/patro-day-url";
 import type { Era } from "@/lib/era";
 import {
-  buildPatroPanchangaSearch,
-  locationToSearch,
+  locationSearchFingerprint,
+  patroDayBrowseNavigateSearch,
   sameLocationParams,
   sameSearch,
   searchToLocation,
@@ -83,34 +82,40 @@ export function usePatroDayUrlBrowse(
     [search, language],
   );
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
+  const seenUrlLocationRef = useRef<string | null>(null);
 
   const replaceDayState = useCallback(
     (next: PatroDayFetchState) => {
+      if (!mirrorUrl) return;
       navigate({
-        search: {
-          ...locationToSearch(location),
-          ...buildPatroDayPageSearch(next),
-        },
+        search: patroDayBrowseNavigateSearch(location, next),
+        replace: true,
       });
     },
-    [location, navigate],
+    [location, navigate, mirrorUrl],
   );
 
   useEffect(() => {
     if (!mirrorUrl) return;
-    const desired = {
-      ...locationToSearch(location),
-      ...buildPatroDayPageSearch(dayState),
-    };
+    const desired = patroDayBrowseNavigateSearch(
+      location,
+      patroDayFetchWithUiLanguage(dayState, language),
+    );
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, dayState, search, navigate, mirrorUrl]);
+  }, [location, dayState, search, navigate, mirrorUrl, language]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    const fp = locationSearchFingerprint(search);
+    const prev = seenUrlLocationRef.current;
+    seenUrlLocationRef.current = fp;
+    if (prev !== null && fp === prev) return;
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
   }, [search, location, setLocation]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const setDayState = useCallback(
     (next: PatroDayFetchState) => {
@@ -121,7 +126,7 @@ export function usePatroDayUrlBrowse(
 
   const setDisplayEra = useCallback(
     (nextEra: Era, calendar?: PatroBrowseCalendarParts) => {
-      if (dayState.kind === "jd" || dayState.kind === "today") {
+      if (dayState.kind === "today") {
         replaceDayState(patroDayFetchWithDisplayEra(dayState, nextEra));
         return;
       }
@@ -144,11 +149,6 @@ export function usePatroDayUrlBrowse(
   // Stable identity: callers put this in effect dependency arrays. As an inline
   // arrow it was rebuilt every render, so those effects re-ran every render and
   // never settled.
-  const promoteToJd = useCallback(
-    (jdUt: number) => setDayState(patroDayFetchFromApiJd(jdUt, dayState.display)),
-    [setDayState, dayState.display],
-  );
-
   const setDateWithParts = useCallback(
     (d: Date, parts?: { year: number; month: number; day: number }) => {
       setPickerDate(d);
@@ -195,7 +195,6 @@ export function usePatroDayUrlBrowse(
   return {
     dayState,
     setDayState,
-    promoteToJd,
     syncResolvedPatroDay,
     date,
     setDate: setDateWithParts,
@@ -223,23 +222,34 @@ export function usePatroPanchangaUrlBrowse(
   const { clock, setClock } = usePanchangaClock(timezone, { clock: search.time });
   /** Last `?time=` this hook has observed — distinguishes an external change from our own echo. */
   const seenUrlTimeRef = useRef(search.time);
+  const seenUrlLocationRef = useRef<string | null>(null);
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
 
   const replaceDayState = useCallback(
     (next: PatroDayFetchState) => {
       navigate({
-        search: buildPatroPanchangaSearch(location, next, clock),
+        search: {
+          ...patroDayBrowseNavigateSearch(location, next),
+          time: clock,
+        },
+        replace: true,
       });
     },
     [location, clock, navigate],
   );
 
   useEffect(() => {
-    const desired = buildPatroPanchangaSearch(location, dayState, clock);
+    const desired = {
+      ...patroDayBrowseNavigateSearch(
+        location,
+        patroDayFetchWithUiLanguage(dayState, language),
+      ),
+      time: clock,
+    };
     if (!sameSearch(desired, search)) {
       navigate({ search: desired, replace: true });
     }
-  }, [location, dayState, clock, search, navigate]);
+  }, [location, dayState, clock, search, navigate, language]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -258,15 +268,24 @@ export function usePatroPanchangaUrlBrowse(
     if (changedExternally && urlTime && urlTime !== clock) {
       setClock(urlTime);
     }
-    const loc = searchToLocation(search);
-    if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    const locFp = locationSearchFingerprint(search);
+    const prevLoc = seenUrlLocationRef.current;
+    seenUrlLocationRef.current = locFp;
+    if (prevLoc === null || locFp !== prevLoc) {
+      const loc = searchToLocation(search);
+      if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    }
   }, [search, clock, setClock, location, setLocation]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Stable identity — see the note in usePatroDayUrlBrowse.
-  const promoteToJd = useCallback(
-    (jdUt: number) => replaceDayState(patroDayFetchFromApiJd(jdUt, dayState.display)),
-    [replaceDayState, dayState.display],
+  const syncResolvedPatroDay = useCallback(
+    (resolved: ResolvedPatroDayFields) => {
+      const next = patroDayFetchFromResolvedPanchanga(dayState.display, resolved);
+      if (next && !patroDayFetchStatesEqual(dayState, next)) {
+        replaceDayState(next);
+      }
+    },
+    [dayState, replaceDayState],
   );
 
   const setDateWithParts = useCallback(
@@ -296,7 +315,7 @@ export function usePatroPanchangaUrlBrowse(
 
   const setDisplayEra = useCallback(
     (nextEra: Era, calendar?: PatroBrowseCalendarParts) => {
-      if (dayState.kind === "jd" || dayState.kind === "today") {
+      if (dayState.kind === "today") {
         replaceDayState(patroDayFetchWithDisplayEra(dayState, nextEra));
         return;
       }
@@ -319,7 +338,7 @@ export function usePatroPanchangaUrlBrowse(
   return {
     dayState,
     replaceDayState,
-    promoteToJd,
+    syncResolvedPatroDay,
     date: pickerDate ?? placeholderDate(),
     setDate: setDateWithParts,
     syncPickerFromDateAd,

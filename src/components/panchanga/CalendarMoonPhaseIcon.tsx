@@ -1,10 +1,12 @@
 import { cn } from "@/lib/utils";
+import type { CSSProperties } from "react";
 import { elongationFromTithiIndex, moonPhaseLitPath } from "@/lib/moon-phase-svg";
 
 type Props = {
   /** Wheel tithi index 0–29 (0 = शुक्ल प्रतिपदा … 14 = पूर्णिमा … 29 = औंसी). */
   tithiIndex: number;
   className?: string;
+  style?: CSSProperties;
   title?: string;
 };
 
@@ -17,12 +19,13 @@ const yellowFill = "fill-yellow-200 dark:fill-yellow-100/90";
 const yellowStroke = "stroke-yellow-400 dark:stroke-yellow-500";
 
 /**
- * Compact paksha/tithi moon glyph for calendar cells.
+ * App-wide tithi moon phase glyph (geometry from {@link moonPhaseLitPath}).
+ * Used on home/month grids, day timeline, panchanga sections, and element tithi spans.
  *
  * पूर्णिमा → fully yellow; darkness creeps in from the right through कृष्ण पक्ष.
  * औंसी → fully black; yellow light grows from the right through शुक्ल पक्ष.
  */
-export function CalendarMoonPhaseIcon({ tithiIndex, className, title }: Props) {
+export function CalendarMoonPhaseIcon({ tithiIndex, className, style, title }: Props) {
   const isPurnima = tithiIndex === 14;
   const isAaushi = tithiIndex === 29;
 
@@ -37,6 +40,7 @@ export function CalendarMoonPhaseIcon({ tithiIndex, className, title }: Props) {
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
+      style={style}
       className={cn("shrink-0 text-muted-foreground", className)}
       aria-hidden={title ? undefined : true}
       role={title ? "img" : undefined}

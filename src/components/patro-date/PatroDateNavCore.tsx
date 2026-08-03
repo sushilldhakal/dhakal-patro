@@ -659,7 +659,25 @@ export function PatroDateNavCore({
       if (onCommitBrowseDay) {
         onCommitBrowseDay(draft.era, draft.year, draft.month, draft.day);
       } else {
-        if (draft.era !== era || draft.year !== year) {
+        if (dateChanged) {
+          if (onSelectDate) {
+            onSelectDate(draft.year, draft.month, draft.day);
+          } else {
+            // Month/day before era/year: parent month handlers read year from hook
+            // state that is still stale in this tick; committing year first makes
+            // setYearMonth(staleYear, newMonth) undo the year change.
+            if (draft.month !== month) onMonthChange(draft.month);
+            if (day != null && draft.day !== day) onDayChange?.(draft.day);
+            if (draft.era !== era || draft.year !== year) {
+              if (onBrowseCommit) {
+                onBrowseCommit(draft.era, draft.year);
+              } else {
+                if (eraChanged && onEraChange) onEraChange(draft.era);
+                if (draft.year !== year) onYearChange(draft.year);
+              }
+            }
+          }
+        } else if (draft.era !== era || draft.year !== year) {
           if (onBrowseCommit) {
             onBrowseCommit(draft.era, draft.year);
           } else if (eraChanged && onEraChange) {
@@ -667,15 +685,6 @@ export function PatroDateNavCore({
           }
         } else if (eraChanged && onEraChange) {
           onEraChange(draft.era);
-        }
-        if (dateChanged) {
-          if (onSelectDate) {
-            onSelectDate(draft.year, draft.month, draft.day);
-          } else {
-            if (draft.year !== year) onYearChange(draft.year);
-            if (draft.month !== month) onMonthChange(draft.month);
-            if (day != null && draft.day !== day) onDayChange?.(draft.day);
-          }
         }
       }
     }

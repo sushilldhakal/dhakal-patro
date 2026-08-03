@@ -15,7 +15,11 @@ export function PageShell({ children, className }: Props) {
   const inShell = useInPanchangaShell();
 
   if (inShell) {
-    return <div className={cn("space-y-8", className)}>{children}</div>;
+    return (
+      <div className={cn("min-w-0 max-w-full space-y-8 overflow-x-hidden", className)}>
+        {children}
+      </div>
+    );
   }
 
   return (

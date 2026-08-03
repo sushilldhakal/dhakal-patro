@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { fetchGocharJd, gocharKeys, type GocharNextEntry, type LocationParams } from "@/lib/api";
 import {
   formatClockNepali,
@@ -8,6 +9,10 @@ import { toWesternRashi } from "@/lib/rashi-i18n";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { resolveRashiDisplay } from "@/lib/rashi-i18n";
 import { useLocale, bilingualText } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { patroRouteLinkSearch } from "@/lib/url-state";
 import { patroCard } from "@/lib/patro-classes";
 import { civilIsoDatePart, civilIsoFromDate, parseCivilIsoToDate } from "@/lib/patro-day";
 
@@ -53,10 +58,14 @@ interface Props {
   /** Civil `date_ad` from panchanga (for relative day math). */
   refDateAd?: string;
   location: LocationParams;
+  /** For “view more” link — full location object with search params. */
+  browseLocation?: PanchangaLocation;
 }
 
-export function PlanetEventsPanel({ jdUt, refDateAd, location }: Props) {
+export function PlanetEventsPanel({ jdUt, refDateAd, location, browseLocation }: Props) {
   const { lang, digits } = useLocale();
+  const { t } = useTranslation();
+  const era = useCalendarEra();
   const refIso = refDateAd?.trim() ?? "";
   const refDate = useMemo(() => {
     if (!refIso) return null;
@@ -98,8 +107,17 @@ export function PlanetEventsPanel({ jdUt, refDateAd, location }: Props) {
 
   return (
     <div className={patroCard + " p-3.5 px-4"}>
-      <div className="mb-2 flex flex-wrap items-baseline gap-2">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="m-0 text-base font-bold">{bilingualText(lang, "आगामी ग्रह-गोचर", "Planetary events")}</h2>
+        {browseLocation ? (
+          <Link
+            to="/gochar"
+            search={patroRouteLinkSearch("/gochar", browseLocation, era) as Record<string, unknown>}
+            className="shrink-0 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-semibold text-secondary transition-colors hover:border-secondary/40 hover:bg-secondary/10"
+          >
+            {t("gochar.view_more")}
+          </Link>
+        ) : null}
       </div>
 
       {isLoading && (

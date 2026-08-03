@@ -19,7 +19,7 @@ export function PanchangaShellLayout() {
       <main className="mx-auto max-w-[1600px] px-4 py-8">
         <div className="flex items-start gap-6">
           <PanchangaSidebarNav className={SIDEBAR_CLASS} />
-          <div className={cn("min-w-0 flex-1")}>
+          <div className={cn("min-w-0 flex-1 overflow-x-hidden")}>
             <Outlet />
           </div>
         </div>

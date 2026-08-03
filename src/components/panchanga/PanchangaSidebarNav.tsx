@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ import {
   parseEraFromUrl,
   type EraSelection,
 } from "@/lib/era";
-import { locationToSearch, patroRouteLinkSearch } from "@/lib/url-state";
+import { locationSearchFingerprint, locationToSearch, patroRouteLinkSearch, sameLocationParams, searchToLocation, validateLocationSearch } from "@/lib/url-state";
 import type { CalendarEra } from "@/lib/patro-era";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { cn } from "@/lib/utils";
@@ -74,7 +74,10 @@ function itemSearch(
     ) as Record<string, unknown>;
   }
 
-  return patroRouteLinkSearch(path, location, active.era as CalendarEra);
+  return patroRouteLinkSearch(path, location, active.era as CalendarEra, {
+    year: active.year,
+    month: active.month,
+  });
 }
 
 export function isSidebarItemActive(pathname: string, item: PanchangaSidebarItem): boolean {
@@ -254,9 +257,30 @@ function SidebarSection({
 export function PanchangaSidebarNav({ className }: { className?: string }) {
   const { digits, lang } = useLocale();
   const { t } = useTranslation();
-  const { location } = usePanchangaLocation();
+  const { location, setLocation } = usePanchangaLocation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const rawSearch = useRouterState({ select: (s) => s.location.search as Record<string, unknown> });
+  const validatedLocationSearch = useMemo(
+    () => validateLocationSearch(rawSearch),
+    [rawSearch],
+  );
+  const urlLocation = useMemo(
+    () => searchToLocation(validatedLocationSearch),
+    [validatedLocationSearch],
+  );
+  const locationForLinks = urlLocation ?? location;
+  const seenUrlLocationRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const fp = locationSearchFingerprint(validatedLocationSearch);
+    const prev = seenUrlLocationRef.current;
+    seenUrlLocationRef.current = fp;
+    if (prev !== null && fp === prev) return;
+    if (!urlLocation) return;
+    if (!sameLocationParams(urlLocation.params, location.params)) {
+      setLocation(urlLocation);
+    }
+  }, [validatedLocationSearch, urlLocation, location, setLocation]);
   const hash = useRouterState({ select: (s) => s.location.hash });
   const fallbackLang = lang === "en" ? "en" : "ne";
   const activeEraSelection = parseEraFromUrl(rawSearch, fallbackLang);
@@ -304,7 +328,7 @@ export function PanchangaSidebarNav({ className }: { className?: string }) {
               setExpandedId((current) => (current === section.id ? null : section.id))
             }
             pathname={pathname}
-            location={location}
+            location={locationForLinks}
             panchakYear={panchakYear}
             digits={digits}
             t={t}

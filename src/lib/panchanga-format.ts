@@ -264,20 +264,12 @@ export function formatPakshaShortNe(p: PanchangaDay): string | undefined {
 }
 
 export function formatPatroBelaantar(c?: SolarCorrection): string | undefined {
-  if (!c || c.minutes == null || c.seconds == null) return undefined;
-  const mm = toNepaliDigits(c.minutes);
-  const ss = toNepaliDigits(String(c.seconds).padStart(2, "0"));
-  const prefix = c.sign === "rin" ? "-" : "+";
-  return `${prefix}${mm}:${ss}`;
+  return formatPatroSignedCorrection(c);
 }
 
 /** Patro label देशान्तर — longitude correction from the zone meridian. */
 export function formatPatroDeshaantar(c?: SolarCorrection): string | undefined {
-  if (!c || c.minutes == null || c.seconds == null) return undefined;
-  const mm = toNepaliDigits(c.minutes);
-  const ss = toNepaliDigits(String(c.seconds).padStart(2, "0"));
-  const prefix = c.sign === "rin" ? "-" : "+";
-  return `${prefix}${mm}:${ss}`;
+  return formatPatroSignedCorrection(c);
 }
 
 export function getPanchangaDetail(p: PanchangaDay) {
@@ -324,6 +316,7 @@ export function getSunsetDisplay(p: PanchangaDay): string | undefined {
 type SolarCorrection = {
   minutes?: number;
   seconds?: number;
+  minutes_total?: number;
   sign?: "dhan" | "rin";
   sign_ne?: string;
   name_ne?: string;
@@ -333,6 +326,7 @@ type SolarCorrection = {
 export type SolarCorrections = {
   belaantar?: SolarCorrection;
   deshaantar?: SolarCorrection;
+  akshamsha?: SolarCorrection;
   ishtakaal_note_ne?: string;
   ishtakaal_note_en?: string;
   sunrise_includes_corrections?: boolean;
@@ -340,10 +334,42 @@ export type SolarCorrections = {
 
 export function getSolarCorrections(p: PanchangaDay): SolarCorrections | undefined {
   const detail = getPanchangaDetail(p);
-  return (
-    (detail?.solar_corrections as SolarCorrections | undefined) ??
-    (p as PanchangaDay & { solar_corrections?: SolarCorrections }).solar_corrections
-  );
+  const fromDetail = detail?.solar_corrections as SolarCorrections | undefined;
+  const fromTop = (p as PanchangaDay & { solar_corrections?: SolarCorrections }).solar_corrections;
+  if (!fromDetail && !fromTop) return undefined;
+  return {
+    ...fromTop,
+    ...fromDetail,
+    belaantar: fromDetail?.belaantar ?? fromTop?.belaantar,
+    deshaantar: fromDetail?.deshaantar ?? fromTop?.deshaantar,
+    akshamsha: fromDetail?.akshamsha ?? fromTop?.akshamsha,
+    ishtakaal_note_ne: fromDetail?.ishtakaal_note_ne ?? fromTop?.ishtakaal_note_ne,
+    ishtakaal_note_en: fromDetail?.ishtakaal_note_en ?? fromTop?.ishtakaal_note_en,
+    sunrise_includes_corrections:
+      fromDetail?.sunrise_includes_corrections ?? fromTop?.sunrise_includes_corrections,
+  };
+}
+
+/** Patro aside ±MM:SS from a solar correction block (धन/ऋण). */
+export function formatPatroSignedCorrection(c?: SolarCorrection): string | undefined {
+  if (!c) return undefined;
+  let minutes = c.minutes;
+  let seconds = c.seconds;
+  if ((minutes == null || seconds == null) && c.minutes_total != null) {
+    const abs = Math.abs(c.minutes_total);
+    minutes = Math.floor(abs);
+    seconds = Math.round((abs - minutes) * 60);
+    if (seconds >= 60) {
+      seconds -= 60;
+      minutes = (minutes ?? 0) + 1;
+    }
+  }
+  if (minutes == null || seconds == null) return undefined;
+  const sign = c.sign ?? (c.minutes_total != null && c.minutes_total < 0 ? "rin" : "dhan");
+  const mm = toNepaliDigits(minutes);
+  const ss = toNepaliDigits(String(seconds).padStart(2, "0"));
+  const prefix = sign === "rin" ? "-" : "+";
+  return `${prefix}${mm}:${ss}`;
 }
 
 /** Signed minutes — धन (+) / ऋण (−) per Surya Panchanga convention. */

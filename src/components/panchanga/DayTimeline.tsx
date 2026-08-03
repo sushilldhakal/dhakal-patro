@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CivilTimeline, PanchangaDay } from "@/lib/api";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
+import type { GrahaKey } from "@/lib/graha-details";
 import {
   formatDegreeInRashi,
   getPlanetRows,
@@ -51,6 +53,14 @@ import {
   pgxSunline,
   pgxTimeLagna,
 } from "@/lib/timeline-classes";
+
+const GRAHA_KEYS = new Set<string>([
+  "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu",
+]);
+
+function isGrahaKey(key: string): key is GrahaKey {
+  return GRAHA_KEYS.has(key);
+}
 
 const W = 1000;
 /** Start of the ghati grid in viewBox units. Was 120 when the frozen label column
@@ -880,6 +890,9 @@ export function DayTimeline({
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
                     <span className="flex items-center gap-1 text-sm font-bold leading-tight">
+                      {isGrahaKey(planetKey) ? (
+                        <GrahaPlanetIcon graha={planetKey} size={18} className="-my-0.5" />
+                      ) : null}
                       {labelL}
                       <GrahaStatusBadges
                         planetKey={planetKey}

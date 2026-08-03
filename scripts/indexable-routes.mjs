@@ -12,6 +12,7 @@ export const STATIC_SITEMAP_ENTRIES = [
   { path: "/panchanga/year", changefreq: "weekly", priority: "0.7" },
   { path: "/panchanga/details", changefreq: "monthly", priority: "0.7" },
   { path: "/panchanga/avakahada-chakra", changefreq: "monthly", priority: "0.6" },
+  { path: "/gochar", changefreq: "daily", priority: "0.8" },
   { path: "/panchanga/graha-sthiti", changefreq: "weekly", priority: "0.7" },
   { path: "/panchanga/graha-asta", changefreq: "weekly", priority: "0.7" },
   { path: "/panchanga/graha-vakri", changefreq: "weekly", priority: "0.7" },

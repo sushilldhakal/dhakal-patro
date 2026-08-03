@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LocationParams } from "@/lib/api";
 import { getLocalStorageItem, isBrowser, setLocalStorageItem } from "@/lib/browser";
 import {
@@ -6,6 +6,7 @@ import {
   localizeNepalCityLabel,
   nepalCityEnglishLabel,
 } from "@/lib/cities/nepal-cities";
+import { sameLocationParams } from "@/lib/url-state";
 
 const STORAGE_KEY = "dhakalPatroLocation";
 
@@ -84,11 +85,49 @@ function readStoredLocation(): PanchangaLocation {
   }
 }
 
+type PanchangaLocationContextValue = {
+  location: PanchangaLocation;
+  setLocation: (next: PanchangaLocation) => void;
+};
+
+const PanchangaLocationContext = createContext<PanchangaLocationContextValue | null>(
+  null,
+);
+
+/** One shared place preference for the whole app (URL mirror hooks + sidebar links). */
+export function PanchangaLocationProvider({ children }: { children: ReactNode }) {
+  const [location, setLocationState] = useState(readStoredLocation);
+
+  const setLocation = useCallback((next: PanchangaLocation) => {
+    setLocationState(next);
+    setLocalStorageItem(STORAGE_KEY, JSON.stringify(next));
+  }, []);
+
+  useEffect(() => {
+    if (!isBrowser) return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        setLocationState(readStoredLocation());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const value = useMemo(
+    () => ({ location, setLocation }),
+    [location, setLocation],
+  );
+
+  return createElement(PanchangaLocationContext.Provider, { value }, children);
+}
+
 export function usePanchangaLocation(initial?: PanchangaLocation) {
-  // A location supplied via the URL (shared link) wins over the stored
-  // preference on first render so the page opens on the shared place.
+  const ctx = useContext(PanchangaLocationContext);
+  const bootstrappedRef = useRef(false);
+
   const [location, setLocationState] = useState<PanchangaLocation>(
-    () => initial ?? readStoredLocation()
+    () => initial ?? readStoredLocation(),
   );
 
   const setLocation = useCallback((next: PanchangaLocation) => {
@@ -106,6 +145,20 @@ export function usePanchangaLocation(initial?: PanchangaLocation) {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!ctx || !initial || bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+    if (!sameLocationParams(initial.params, ctx.location.params)) {
+      ctx.setLocation(initial);
+    }
+  }, [ctx, initial]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  if (ctx) {
+    return ctx;
+  }
 
   return { location, setLocation };
 }
