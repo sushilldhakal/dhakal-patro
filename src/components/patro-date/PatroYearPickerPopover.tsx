@@ -1,9 +1,5 @@
 import { ChevronDown } from "lucide-react";
-<<<<<<< HEAD
-import { useCallback, useEffect, useMemo, useState } from "react";
-=======
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
->>>>>>> 81a7358 (Update sitemap.xml and routing for Gochar page integration)
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Era, Language } from "@/lib/era";
@@ -63,21 +59,6 @@ export function PatroYearPickerPopover({
     [draftYearRange, query, value, pickerEra, digits],
   );
 
-<<<<<<< HEAD
-  /**
-   * Centre the browsed year when the panel opens: the window straddles it, so
-   * without this the list lands on the oldest year 50 rows above it.
-   */
-  const centerSelectedRow = useCallback((node: HTMLButtonElement | null) => {
-    if (!node) return;
-    const list = node.closest<HTMLElement>("[data-year-list]");
-    if (!list) return;
-    list.scrollTop = Math.max(
-      0,
-      node.offsetTop - list.clientHeight / 2 + node.offsetHeight / 2,
-    );
-  }, []);
-=======
   const listRef = useRef<HTMLUListElement>(null);
   const selectedOptionRef = useRef<HTMLLIElement | null>(null);
 
@@ -99,7 +80,6 @@ export function PatroYearPickerPopover({
     centerSelectedYear();
     requestAnimationFrame(centerSelectedYear);
   }, [open, query, listItems, value, pickerEra]);
->>>>>>> 81a7358 (Update sitemap.xml and routing for Gochar page integration)
 
   const pickYear = (y: number) => {
     if (!isValidBrowseYear(pickerEra, y)) return;
@@ -181,13 +161,9 @@ export function PatroYearPickerPopover({
           />
         </div>
         <ul
-<<<<<<< HEAD
+          ref={listRef}
           data-year-list
           className="max-h-60 min-h-32 overflow-y-auto overscroll-contain p-1 font-num"
-=======
-          ref={listRef}
-          className="max-h-60 overflow-y-auto overscroll-contain p-1 font-num"
->>>>>>> 81a7358 (Update sitemap.xml and routing for Gochar page integration)
           role="listbox"
           aria-label={ariaLabel}
         >
@@ -206,7 +182,6 @@ export function PatroYearPickerPopover({
                   ref={scrollAnchor ? selectedOptionRef : undefined}
                 >
                   <button
-                    ref={selected ? centerSelectedRow : undefined}
                     type="button"
                     role="option"
                     data-vaul-no-drag
