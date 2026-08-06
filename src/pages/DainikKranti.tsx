@@ -301,12 +301,11 @@ function DayLabel({
     );
   }
   const adDay = d.getDate();
-  const adMonth = d.toLocaleDateString("en-US", { month: "short" });
 
   if (isEn && adBrowse) {
     return (
       <span className={cn("font-num text-sm font-semibold tabular-nums", accentClass)}>
-        {adMonth} {dg(adDay)}
+        {dg(adDay)}
       </span>
     );
   }
@@ -317,7 +316,7 @@ function DayLabel({
         {dg(day.day)}
       </span>
       <span className="font-num text-xs tabular-nums font-normal text-muted-foreground">
-        {adMonth} {dg(adDay)}
+        {dg(adDay)}
       </span>
     </span>
   );
@@ -338,7 +337,7 @@ function sunRiseSetSignParts(
   const set = day.sunset ? dg(formatTimeShort(day.sunset) ?? day.sunset) : "—";
   return {
     times: `${rise}/${set}`,
-    sign: sunRashi ? `${sunRashi}${ayanaMark ?? ""}` : "—",
+    sign: sunRashi ? (ayanaMark ? `${sunRashi} ${ayanaMark}` : sunRashi) : "—",
   };
 }
 
@@ -1178,23 +1177,32 @@ export function DainikKranti() {
                     ) : null}
                     <TableRow
                       className={cn(
+                        "cursor-pointer",
                         isToday && "bg-secondary/15 hover:bg-secondary/20",
                         !isToday && hasFestival && "bg-rose-500/5",
                         isExpanded && "border-b-0",
                       )}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
+                      aria-label={bilingualText(lang, `${dg(d.day)} गतेको लग्न र ग्रहस्पष्ट`, `Lagna & planets for day ${dg(d.day)}`)}
+                      onClick={() => toggleDayExpand(d.date_ad)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleDayExpand(d.date_ad);
+                        }
+                      }}
                     >
-                      <TableCell className="w-9 px-1">
-                        <button
-                          type="button"
-                          onClick={() => toggleDayExpand(d.date_ad)}
-                          aria-expanded={isExpanded}
-                          aria-label={bilingualText(lang, `${dg(d.day)} गतेको लग्न र ग्रहस्पष्ट`, `Lagna & planets for day ${dg(d.day)}`)}
-                          className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-muted hover:text-foreground"
+                      <TableCell className="w-9 px-1 pointer-events-none">
+                        <span
+                          className="flex h-7 w-7 items-center justify-center rounded-md"
+                          aria-hidden
                         >
                           <ChevronRight
                             className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-90")}
                           />
-                        </button>
+                        </span>
                       </TableCell>
                       <TableCell className={cn("align-top", isSaturday && "text-rose-600 dark:text-rose-400")}>
                         <div className="inline-flex items-center gap-1.5 whitespace-nowrap">

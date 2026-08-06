@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LayoutGrid, Sunrise } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   PATRO_PLANET_KEYS,
@@ -7,10 +8,14 @@ import {
   type GrahaSpashtaRow,
   type LagnaMatrixRow,
 } from "@/lib/dainikKranti/month-patro-tables";
+import { PatroSolarCorrectionStrip } from "@/components/dainikKranti/PatroSolarCorrectionStrip";
+import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
 import { getRashiList } from "@/lib/rashi-i18n";
 import { cn } from "@/lib/utils";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import { GrahaStatusBadges } from "@/components/graha/GrahaStatusBadges";
 import { useLocale, bilingualText } from "@/i18n/locale";
+import type { GrahaKey } from "@/lib/graha-details";
 
 const PLANET_EN: Record<string, string> = {
   sun: "Sun", moon: "Moon", mars: "Mars", mercury: "Mercury", jupiter: "Jupiter",
@@ -29,11 +34,12 @@ const LAGNA_GRID =
 const GRAHA_GRID =
   "grid w-full min-w-0 grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4";
 
-function SectionTitle({ children }: { children: ReactNode }) {
+function SectionHeading({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <p className="mb-2 text-xs font-semibold uppercase tracking-wide sm:text-sm">
+    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+      <span className="text-secondary [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
       {children}
-    </p>
+    </div>
   );
 }
 
@@ -45,7 +51,7 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
     <div className="w-full min-w-0 max-w-full space-y-4 py-2">
       {lagna ? (
         <div className="w-full min-w-0">
-          <SectionTitle>{t("dainik.daily_lagna_start")}</SectionTitle>
+          <SectionHeading icon={<LayoutGrid />}>{t("dainik.daily_lagna_start")}</SectionHeading>
           <div className={LAGNA_GRID}>
             {getRashiList("ne").map((rne, i) => {
               const num = i + 1;
@@ -57,7 +63,10 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   key={rne}
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-1.5 py-1.5 text-center sm:px-2"
                 >
-                  <div className="text-xs text-base leading-tight sm:text-sm">
+                  <div className="flex justify-center">
+                    <RashiGlyphIcon name={rne} number={num} size={22} />
+                  </div>
+                  <div className="text-xs leading-tight sm:text-sm">
                     {bilingualText(lang, rne, getRashiList("en")[i])}
                   </div>
                   <div
@@ -76,8 +85,8 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
       ) : null}
 
       {graha ? (
-        <div className="w-full min-w-0">
-          <SectionTitle>{t("dainik.planetary_positions_at_sunrise")}</SectionTitle>
+        <div className="w-full min-w-0 space-y-3">
+          <SectionHeading icon={<Sunrise />}>{t("dainik.planetary_positions_at_sunrise")}</SectionHeading>
           <div className={GRAHA_GRID}>
             {PATRO_PLANET_KEYS.map((key) => {
               const cell = graha.planets[key];
@@ -87,7 +96,8 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                   key={key}
                   className="min-w-0 rounded-md border border-border/80 bg-background/80 px-2.5 py-2"
                 >
-                  <div className="flex items-center gap-1 text-sm font-semibold text-foreground">
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                    <GrahaPlanetIcon graha={key as GrahaKey} size={20} />
                     {bilingualText(lang, PATRO_PLANET_NE[key], PLANET_EN[key] ?? PATRO_PLANET_NE[key])}
                     <GrahaStatusBadges
                       planetKey={key}
@@ -97,20 +107,18 @@ export function DayPatroExpandPanel({ lagna, graha, notes = [] }: Props) {
                     />
                   </div>
                   <div className="mt-0.5 break-words font-mono text-xs tabular-nums sm:text-sm">
-                    <span className="text-foreground">{isEn ? (cell.rashiEn ?? cell.rashiNe) : cell.rashiNe}</span> {cell.coords}
+                    <span className="text-foreground">{isEn ? (cell.rashiEn ?? cell.rashiNe) : cell.rashiNe}</span>{" "}
+                    {cell.coords}
                   </div>
                 </div>
               );
             })}
-            {graha.belaantar ? (
-              <div className="min-w-0 rounded-md border border-amber-500/30 bg-amber-500/5 px-2.5 py-2 md:col-span-2 lg:col-span-4">
-                <div className="text-sm font-semibold text-foreground">{t("dainik.belaantar")}</div>
-                <div className="mt-0.5 break-words font-mono text-xs text-amber-800 dark:text-amber-200 sm:text-sm">
-                  {graha.belaantar}
-                </div>
-              </div>
-            ) : null}
           </div>
+          <PatroSolarCorrectionStrip
+            deshaantar={graha.deshaantar}
+            akshamsha={graha.akshamsha}
+            belaantar={graha.belaantar}
+          />
         </div>
       ) : null}
 

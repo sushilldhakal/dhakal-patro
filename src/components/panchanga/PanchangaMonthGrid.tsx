@@ -22,6 +22,7 @@ import {
 } from "@/lib/local-calendar";
 import { shiftPatroBrowseMonth } from "@/lib/patro-year-browse-step";
 import { getMonthDayChandraRashi, getMonthDayNakshatra } from "@/lib/panchanga-format";
+import { nakshatraShortLabel } from "@/lib/nakshatra-short";
 import { tithiIndexFromCalendarDay } from "@/lib/tithi-wheel-data";
 import { civilIsoDayOfMonth, parseCivilIsoToDate } from "@/lib/patro-day";
 import { cn } from "@/lib/utils";
@@ -321,6 +322,8 @@ export function PanchangaMonthGrid({
             const tithiIdx = tithiIndexFromCalendarDay(day);
             const moonTitle = moonPhaseTitle(phase, isEn);
             const nakshatraLabel = getMonthDayNakshatra(day, lang) ?? "—";
+            const nakshatraLabelMobile =
+              nakshatraShortLabel(nakshatraLabel, lang) ?? nakshatraLabel;
             const rashiLabel = getMonthDayChandraRashi(day, lang) ?? "—";
             const yogaLabel =
               bilingualText(lang, day.yoga_ne ?? day.yoga, day.yoga ?? day.yoga_ne) ?? "—";
@@ -363,7 +366,12 @@ export function PanchangaMonthGrid({
                   </span>
                   <div className="flex w-full flex-col items-start gap-px text-[0.6875rem] font-semibold leading-tight">
                     <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-foreground">{tithiLabel}</span>
-                    <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-panchang dark:text-accent">{nakshatraLabel}</span>
+                    <span
+                      className="w-full [overflow-wrap:anywhere] whitespace-normal text-panchang dark:text-accent"
+                      title={nakshatraLabel !== "—" ? nakshatraLabel : undefined}
+                    >
+                      {nakshatraLabelMobile}
+                    </span>
                     <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-panchang dark:text-accent">{rashiLabel}</span>
                     <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-foreground">{yogaLabel}</span>
                     <span className="w-full [overflow-wrap:anywhere] whitespace-normal text-foreground">{karanaLabel}</span>

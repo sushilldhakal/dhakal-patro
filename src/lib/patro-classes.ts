@@ -75,10 +75,10 @@ export const patroMonthChipButton =
   "cursor-pointer transition-[filter,transform,box-shadow] hover:brightness-[1.03] hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 export const patroMonthChipHead =
-  "truncate bg-secondary px-0.5 py-1.5 text-center text-sm font-bold leading-none tracking-wide text-secondary-foreground max-[512px]:text-xs sm:px-1 sm:py-1.5";
+  "truncate bg-secondary px-0.5 text-center text-[14px] font-bold leading-[20px] tracking-wide text-secondary-foreground flex h-[26px] items-center justify-center sm:px-1";
 
 export const patroMonthChipDay =
-  "flex min-h-md items-center justify-center bg-card pb-1 pt-1 text-sm font-bold leading-none text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-base";
+  "flex h-[32px] items-center justify-center bg-card text-sm font-bold leading-none text-foreground sm:text-base";
 
 /**
  * Day-span "body" of the month chip — used where there is no day numeral.
@@ -86,9 +86,7 @@ export const patroMonthChipDay =
  * dot grid it replaced, which read as a decorative icon rather than data.
  */
 export const patroMonthChipSpan =
-  // Same box as patroMonthChipDay so both chip variants are the same size; only
-  // the type is smaller, since four glyphs share the width one or two had.
-  "flex min-h-md items-center justify-center bg-card px-0.5 py-1.5 font-num text-xs font-bold leading-snug tracking-tight tabular-nums text-foreground sm:min-h-[2rem] sm:py-1.5 sm:text-sm";
+  "flex h-[32px] items-center justify-center bg-card px-0.5 font-num text-xs line-height-[1.2] font-bold leading-snug tracking-tight tabular-nums text-foreground sm:text-xs";
 
 export const patroMonthRangeNav =
   "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-1 py-1 shadow-xs sm:gap-2";

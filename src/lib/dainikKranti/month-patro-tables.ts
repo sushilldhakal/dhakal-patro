@@ -62,6 +62,8 @@ export type GrahaSpashtaRow = {
       { rashiNe: string; rashiEn?: string; coords: string; isRetrograde?: boolean; isCombust?: boolean }
     >
   >;
+  deshaantar?: string;
+  akshamsha?: string;
   belaantar?: string;
 };
 
@@ -174,13 +176,18 @@ export function buildGrahaSpashtaMatrix(days: CalendarDay[]): GrahaSpashtaRow[] 
         };
       }
     }
-    const belaantar = formatSolarCorrectionDisplay(p?.solar_corrections?.belaantar);
+    const sc = p?.solar_corrections;
+    const deshaantar = formatSolarCorrectionDisplay(sc?.deshaantar);
+    const akshamsha = formatSolarCorrectionDisplay(sc?.akshamsha);
+    const belaantar = formatSolarCorrectionDisplay(sc?.belaantar);
     return {
       day: day.day,
       dateAd: day.date_ad,
       weekdayNe: day.weekday_ne ?? day.weekday,
       weekdayEn: day.weekday_en ?? day.weekday,
       planets,
+      deshaantar,
+      akshamsha,
       belaantar,
     };
   });
