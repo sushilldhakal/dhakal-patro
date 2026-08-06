@@ -92,18 +92,18 @@ export function KundaliSectionNav({
           type="button"
           onClick={() => onNavigate(id)}
           className={cn(
-            "text-base transition-colors",
+            "text-sm transition-colors",
             variant === "sidebar"
               ? cn(
-                  "flex w-full items-center gap-2.5 rounded-xl py-2.5 text-sm text-left",
-                  isChild ? "pl-8 pr-3" : "px-3",
+                  "flex w-full items-center gap-2.5 rounded-xl py-2.5 text-left font-medium",
+                  isChild ? "pl-8 pr-3 text-base" : "px-3 text-sm",
                   active
                     ? "bg-secondary/12 text-secondary ring-1 ring-secondary/25"
                     : "hover:bg-muted hover:text-foreground",
                 )
               : cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs whitespace-nowrap",
-                  isChild && "ml-3 border-dashed",
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 whitespace-nowrap",
+                  isChild ? "ml-3 border-dashed text-sm" : "text-xs",
                   active
                     ? "border-secondary/40 bg-secondary/12 text-secondary"
                     : "border-border bg-card hover:bg-muted hover:text-foreground",
@@ -112,7 +112,7 @@ export function KundaliSectionNav({
           aria-current={active ? "page" : undefined}
         >
           {variant === "sidebar" ? (
-            <Icon className={cn("size-4 shrink-0", active && "text-secondary", isChild && "size-3.5")} />
+            <Icon className={cn("size-4 shrink-0", active && "text-secondary")} />
           ) : null}
           {t(labelKey)}
         </button>

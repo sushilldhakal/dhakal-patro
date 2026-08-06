@@ -8,9 +8,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { patroCard } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { searchToLocation } from "@/lib/url-state";
+import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
 import { CEREMONY_META } from "@/lib/panchanga-elements";
 import { isMuhurtaSaitCategory, type SaitCategoryId } from "@/lib/sait-data";
 import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
@@ -40,8 +38,7 @@ export function SaitPage() {
   const navigate = routeApi.useNavigate();
   const { digits, lang } = useLocale();
   const { t } = useTranslation();
-  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
+  const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
   const browseYear = yearBrowse.year;
 
   const meta = CEREMONY_META.find((c) => c.id === category);

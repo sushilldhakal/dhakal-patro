@@ -261,31 +261,35 @@ const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/acco
 const verifyEmailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 const resetPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
 
+/** Children of panchangaShellRoute — the persistent sidebar shell. Also the source of
+ *  truth for PANCHANGA_SHELL_PATHS below; don't list these routes anywhere else. */
+const panchangaShellChildRoutes = [
+  panchangaYearRoute,
+  avakahadaRoute,
+  dainikKrantiRoute,
+  converterRoute,
+  holidaysRoute,
+  rituRoute,
+  kundaliRoute,
+  kundaliDetailRoute,
+  kundaliMilanRoute,
+  suryakrantiRoute,
+  abhijitMuhurtaRoute,
+  panchakPatroRoute,
+  panchangaDetailsRoute,
+  elementRoute,
+  gocharRoute,
+  grahaSthitiRoute,
+  grahaAstaRoute,
+  grahaVakriRoute,
+  suryaGrahanRoute,
+  chandraGrahanRoute,
+  saitRoute,
+];
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  panchangaShellRoute.addChildren([
-    panchangaYearRoute,
-    avakahadaRoute,
-    dainikKrantiRoute,
-    converterRoute,
-    holidaysRoute,
-    rituRoute,
-    kundaliRoute,
-    kundaliDetailRoute,
-    kundaliMilanRoute,
-    suryakrantiRoute,
-    abhijitMuhurtaRoute,
-    panchakPatroRoute,
-    panchangaDetailsRoute,
-    elementRoute,
-    gocharRoute,
-    grahaSthitiRoute,
-    grahaAstaRoute,
-    grahaVakriRoute,
-    suryaGrahanRoute,
-    chandraGrahanRoute,
-    saitRoute,
-  ]),
+  panchangaShellRoute.addChildren(panchangaShellChildRoutes),
   panchangaOgPreviewRoute,
   panchangaRoute,
   chandraKrantiLegacyRoute,
@@ -332,6 +336,10 @@ export function createAppRouter(history?: RouterHistory) {
 }
 
 export const router = createAppRouter();
+
+/** Absolute path templates (e.g. "/kundali/$profileId") for pages that render inside
+ *  the panchanga sidebar shell — derived from panchangaShellChildRoutes so it can't drift. */
+export const PANCHANGA_SHELL_PATHS: string[] = panchangaShellChildRoutes.map((r) => r.fullPath);
 
 declare module "@tanstack/react-router" {
   interface Register {

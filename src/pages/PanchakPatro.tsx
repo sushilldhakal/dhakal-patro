@@ -4,9 +4,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft, CalendarClock } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
-import { PatroYearNav } from "@/components/patro-date";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
+import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
 import {
   mapPanchakPeriod,
   type PanchakPeriod,
@@ -21,20 +20,11 @@ import { useLocale, bilingualText } from "@/i18n/locale";
 import { isEnglishLocale } from "@/lib/avakahada-locale";
 import { patroNoteBox } from "@/lib/patro-classes";
 import { useRouteLoading } from "@/lib/route-loading";
-import { searchToLocation } from "@/lib/url-state";
+import { fmtAdShort } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
 import { formatBrowsePatroYear } from "@/lib/patro-year-axis";
 
 const routeApi = getRouteApi("/panchanga-shell/panchak-patro");
-
-function fmtAdShort(iso: string, lang: "ne" | "en" = "en"): string {
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString(lang === "en" ? "en-US" : "ne-NP", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function PanchakPeriodCard({
   index,
@@ -105,9 +95,7 @@ export function PanchakPatro() {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
   const en = isEnglishLocale(lang);
-  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-
-  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
+  const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
   const { year, era, setYear, setEra } = yearBrowse;
 
   const yearLabel = useMemo(
@@ -152,7 +140,7 @@ export function PanchakPatro() {
         />
       </div>
 
-      <PatroYearNav
+      <PatroYearNavBlock
         era={era}
         year={year}
         onYearChange={setYear}
@@ -160,6 +148,7 @@ export function PanchakPatro() {
         gregorianRange={query.data?.gregorian_range}
         location={location}
         onLocationChange={setLocation}
+        className=""
       />
 
       <p className={cn(patroNoteBox, "text-sm leading-relaxed")}>{t("panchak.intro")}</p>

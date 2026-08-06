@@ -10,6 +10,7 @@ import type {
   YuddhaData,
 } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import {
   Table,
   TableBody,
@@ -222,7 +223,10 @@ export function ShadbalaCard({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <GlanceTile label={t("kundali.strongest_planet")}>
             <p className="text-lg font-bold text-foreground">
-              {bilingualText(lang, summary.strongest.name_ne, summary.strongest.name)}
+              <span className="inline-flex items-center gap-2">
+                <GrahaPlanetIcon graha={summary.strongest.key as GrahaKey} size={28} />
+                {bilingualText(lang, summary.strongest.name_ne, summary.strongest.name)}
+              </span>
             </p>
             <div className="mt-1 flex items-center gap-2">
               <StatusBadge status={summary.strongest.status} />
@@ -234,7 +238,10 @@ export function ShadbalaCard({
 
           <GlanceTile label={t("kundali.weakest_planet")}>
             <p className="text-lg font-bold text-foreground">
-              {bilingualText(lang, summary.weakest.name_ne, summary.weakest.name)}
+              <span className="inline-flex items-center gap-2">
+                <GrahaPlanetIcon graha={summary.weakest.key as GrahaKey} size={28} />
+                {bilingualText(lang, summary.weakest.name_ne, summary.weakest.name)}
+              </span>
             </p>
             <div className="mt-1 flex items-center gap-2">
               <StatusBadge status={summary.weakest.status} />
@@ -298,7 +305,10 @@ export function ShadbalaCard({
                 </TableHead>
                 {ordered.map((p) => (
                   <TableHead key={p.key} className={cn(th, "text-right min-w-[5.25rem]")}>
-                    {planetName(p)}
+                    <span className="inline-flex items-center justify-end gap-1.5">
+                      <GrahaPlanetIcon graha={p.key as GrahaKey} size={20} />
+                      <span>{planetName(p)}</span>
+                    </span>
                   </TableHead>
                 ))}
               </TableRow>

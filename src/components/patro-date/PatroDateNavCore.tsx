@@ -20,7 +20,6 @@ import { samvatsaraName } from "@/lib/samvatsara-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { buildPatroBrowseYearOptions } from "@/lib/patro-date-options";
 import {
-  formatBrowsePatroYearPicker,
   isValidBrowseYear,
 } from "@/lib/patro-year-axis";
 
@@ -485,15 +484,15 @@ export function PatroDateNavCore({
   const clockSummary = showTime
     ? `${toNepaliDigits(String(hour).padStart(2, "0"))}:${toNepaliDigits(String(minute).padStart(2, "0"))}`
     : null;
-  /** Picker chip: month is on the left chip — month-only views show year here. */
+  /** Picker chip: month-only views show the month (year is in the title row). */
   const mobilePickerLabel =
     day != null
       ? clockSummary
         ? `${digits(day)} ${monthTitle} · ${clockSummary}`
         : `${digits(day)} ${monthTitle}`
-      : formatBrowsePatroYearPicker(year, digits);
+      : monthTitleShort;
   /**
-   * Below sm (<640px): day view drops the month token (title row shows it);
+   * Below md (<768px): day view drops the month token (title row shows it);
    * month view drops the year for the same reason. The chip always names the
    * month it is currently on — it is the control's value, not a caption.
    */
@@ -535,9 +534,9 @@ export function PatroDateNavCore({
                 : t("patro_date.change_date")
             }
           >
-            <CalendarClock className="hidden size-3.5 shrink-0 text-secondary sm:block" strokeWidth={2} />
-            <span className="min-w-0 font-num sm:hidden">{mobilePickerLabelCompact}</span>
-            <span className="hidden min-w-0 font-num sm:inline">{mobilePickerLabel}</span>
+            <CalendarClock className="hidden size-3.5 shrink-0 text-secondary md:block" strokeWidth={2} />
+            <span className="min-w-0 font-num md:hidden">{mobilePickerLabelCompact}</span>
+            <span className="hidden min-w-0 font-num md:inline">{mobilePickerLabel}</span>
             <ChevronDown className="size-3.5 shrink-0 opacity-50" strokeWidth={2} />
           </button>
         </PopoverTrigger>

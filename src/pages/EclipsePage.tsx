@@ -1,20 +1,16 @@
-import { Link, getRouteApi } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Eclipse, MoonStar } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { PageShell } from "@/components/PageShell";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import {
-  GrahaBanner,
-  GrahaDescription,
-} from "@/components/graha/GrahaPageParts";
-import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { PatroYearNav } from "@/components/patro-date";
+import { RoutePageState } from "@/components/common/RoutePageState";
+import { GrahaDetailPageFrame } from "@/components/graha/GrahaDetailPageFrame";
+import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
+import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 import { patroCard } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
-import { searchToLocation } from "@/lib/url-state";
+import { localTimeShortFromIso } from "@/lib/time-format";
 import {
   fetchEclipseYear,
   grahaDetailKeys,
@@ -23,12 +19,6 @@ import {
 
 const suryaRouteApi = getRouteApi("/panchanga-shell/panchanga/surya-grahan");
 const chandraRouteApi = getRouteApi("/panchanga-shell/panchanga/chandra-grahan");
-
-function localTimeShort(iso?: string | null): string | null {
-  if (!iso) return null;
-  const m = iso.match(/T(\d{2}:\d{2})/);
-  return m ? m[1] : null;
-}
 
 function renderedEclipseDate(ev: EclipseEvent): string {
   const label = ev.date_jd_date?.trim();
@@ -39,9 +29,9 @@ function renderedEclipseDate(ev: EclipseEvent): string {
 function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
   const { digits, lang } = useLocale();
   const { t } = useTranslation();
-  const begin = localTimeShort(ev.begin_local);
-  const end = localTimeShort(ev.end_local);
-  const max = localTimeShort(ev.max_local);
+  const begin = localTimeShortFromIso(ev.begin_local);
+  const end = localTimeShortFromIso(ev.end_local);
+  const max = localTimeShortFromIso(ev.max_local);
   const isLunar = pageId === "chandra-grahan";
   const typeLabel = lang === "en" ? ev.type_en : ev.type_ne;
   const dateLabel = renderedEclipseDate(ev);
@@ -108,8 +98,7 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
   const routeApi = kind === "solar" ? suryaRouteApi : chandraRouteApi;
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
+  const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
   const pageId = kind === "solar" ? "surya-grahan" : "chandra-grahan";
 
   const query = useQuery({
@@ -134,18 +123,12 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
           blurbKey: "graha_pages.eclipse_lunar.blurb",
         };
 
-  const events = query.data?.events ?? [];
-
   return (
-    <PageShell>
-      <GrahaBanner
-        icon={banner.icon}
-        titleKey={banner.titleKey}
-        blurbKey={banner.blurbKey}
-      />
-
-      <div className="space-y-3">
-        <PatroYearNav
+    <GrahaDetailPageFrame
+      banner={banner}
+      descriptionPageId={pageId}
+      nav={
+        <PatroYearNavBlock
           era={yearBrowse.era}
           year={yearBrowse.year}
           onYearChange={yearBrowse.setYear}
@@ -154,34 +137,24 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
           location={location}
           onLocationChange={setLocation}
         />
-      </div>
-
-      {query.isLoading && !query.data ? (
-        <p className="text-sm">{t("common.loading")}</p>
-      ) : query.data ? (
-        events.length ? (
-          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {events.map((ev, i) => (
-              <EclipseCard key={i} ev={ev} pageId={pageId} />
-            ))}
-          </div>
-        ) : (
-          <p className={cn(patroCard, "mt-2 p-4 text-sm text-muted-foreground")}>
-            {t("graha_pages.eclipse.no_eclipses_year")}
-          </p>
-        )
-      ) : (
-        <p className="text-sm text-danger">{t("common.load_error")}</p>
-      )}
-
-      <GrahaDescription pageId={pageId} />
-
-      <p className="mt-6 text-sm">
-        <Link to="/panchanga/details" className="text-primary underline">
-          {t("element_page.all_elements")}
-        </Link>
-      </p>
-    </PageShell>
+      }
+    >
+      <RoutePageState isLoading={query.isLoading} data={query.data}>
+        {(data) =>
+          data.events.length ? (
+            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {data.events.map((ev, i) => (
+                <EclipseCard key={i} ev={ev} pageId={pageId} />
+              ))}
+            </div>
+          ) : (
+            <p className={cn(patroCard, "mt-2 p-4 text-sm text-muted-foreground")}>
+              {t("graha_pages.eclipse.no_eclipses_year")}
+            </p>
+          )
+        }
+      </RoutePageState>
+    </GrahaDetailPageFrame>
   );
 }
 

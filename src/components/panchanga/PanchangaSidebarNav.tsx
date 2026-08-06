@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { defaultPanchakPatroYear } from "@/lib/panchak/panchak-patro-data";
+import { isKundaliRoute } from "@/lib/kundali/kundali-routes";
 import {
   preloadAllPanchangaRoutes,
   preloadPanchangaRoute,
@@ -82,7 +83,7 @@ function itemSearch(
 
 export function isSidebarItemActive(pathname: string, item: PanchangaSidebarItem): boolean {
   if (item.id === "kundali") {
-    return pathname === "/kundali" || pathname.startsWith("/kundali/");
+    return isKundaliRoute(pathname);
   }
   if (item.to === "/panchanga/element/$name" && item.params?.name) {
     return pathname === `/panchanga/element/${item.params.name}`;

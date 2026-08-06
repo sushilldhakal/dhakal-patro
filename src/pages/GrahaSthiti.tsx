@@ -1,12 +1,12 @@
-import { Link, getRouteApi } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { Orbit } from "lucide-react";
-import { PageShell } from "@/components/PageShell";
 import { PatroDayTimeNav } from "@/components/patro-date";
+import { RoutePageState } from "@/components/common/RoutePageState";
+import { GrahaDetailPageFrame } from "@/components/graha/GrahaDetailPageFrame";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { GrahaBanner, GrahaDescription } from "@/components/graha/GrahaPageParts";
 import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { useResolvedPatroDayQuery } from "@/hooks/use-resolved-patro-day-query";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -24,10 +24,8 @@ import { patroDataTableWrap } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import {
   fetchGrahaSthiti,
-  fetchPanchangaDay,
   grahaDetailKeys,
   grahaSthitiRequestForDisplay,
-  panchangaKeys,
   type GrahaSthitiRow,
 } from "@/lib/api";
 
@@ -119,30 +117,10 @@ export function GrahaSthiti() {
     resolveTimeZone(undefined, location.params.timezone),
   );
 
-  const dayResolveQ = useQuery({
-    queryKey: panchangaKeys.daySelection(dayState, location.params),
-    queryFn: () => fetchPanchangaDay(dayState, location.params),
-    staleTime: 1000 * 60 * 30,
-    placeholderData: keepPreviousData,
+  const dayResolveQ = useResolvedPatroDayQuery(dayState, location.params, {
+    syncPickerFromDateAd,
+    syncResolvedPatroDay,
   });
-
-  useEffect(() => {
-    const data = dayResolveQ.data;
-    if (!data) return;
-    if (data.date_ad) syncPickerFromDateAd(data.date_ad);
-    syncResolvedPatroDay({
-      date_ad: data.date_ad,
-      date_parts: data.date_parts,
-      bs_date:
-        data.bs_date && typeof data.bs_date === "object"
-          ? {
-              year: data.bs_date.year,
-              month: data.bs_date.month,
-              day: data.bs_date.day,
-            }
-          : undefined,
-    });
-  }, [dayResolveQ.data, syncPickerFromDateAd, syncResolvedPatroDay]);
 
   const sthitiRequest = grahaSthitiRequestForDisplay(
     patroEra,
@@ -166,14 +144,17 @@ export function GrahaSthiti() {
   useRouteLoading((dayResolveQ.isLoading && !dayResolveQ.data) || (query.isLoading && !query.data));
 
   return (
-    <PageShell>
-      <GrahaBanner
-        icon={<Orbit className="h-6 w-6 text-accent dark:text-secondary" />}
-        titleKey="sidebar_nav.items.graha-sthiti.label"
-        blurbKey="sidebar_nav.items.graha-sthiti.blurb"
-      />
-
-      <div className="space-y-3">
+    <GrahaDetailPageFrame
+      banner={{
+        icon: <Orbit className="h-6 w-6 text-accent dark:text-secondary" />,
+        titleKey: "sidebar_nav.items.graha-sthiti.label",
+        blurbKey: "sidebar_nav.items.graha-sthiti.blurb",
+      }}
+      descriptionPageId="graha-sthiti"
+      beforeDescription={
+        <p className="mt-2 text-sm text-muted-foreground">{t("graha_pages.sthiti_footnote")}</p>
+      }
+      nav={
         <PatroDayTimeNav
           era={patroEra}
           displayLanguage={displayLanguage}
@@ -187,46 +168,34 @@ export function GrahaSthiti() {
           location={location}
           onLocationChange={setLocation}
         />
-      </div>
-
-      {query.isLoading && !query.data ? (
-        <p className="text-sm">{t("common.loading")}</p>
-      ) : query.data ? (
-        <div className={cn(patroDataTableWrap, "mt-2")}>
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-secondary/[0.09] text-left dark:bg-secondary/20">
-                {COL_KEYS.map((key) => (
-                  <th
-                    key={key}
-                    className="whitespace-nowrap px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground"
-                  >
-                    {t(key)}
-                  </th>
+      }
+    >
+      <RoutePageState isLoading={query.isLoading} data={query.data}>
+        {(data) => (
+          <div className={cn(patroDataTableWrap, "mt-2")}>
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-secondary/[0.09] text-left dark:bg-secondary/20">
+                  {COL_KEYS.map((key) => (
+                    <th
+                      key={key}
+                      className="whitespace-nowrap px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground"
+                    >
+                      {t(key)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.rows.map((row) => (
+                  <GrahaRow key={row.graha} row={row} />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {query.data.rows.map((row) => (
-                <GrahaRow key={row.graha} row={row} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p className="text-sm text-danger">{t("common.load_error")}</p>
-      )}
-
-      <p className="mt-2 text-sm text-muted-foreground">{t("graha_pages.sthiti_footnote")}</p>
-
-      <GrahaDescription pageId="graha-sthiti" />
-
-      <p className="mt-6 text-sm">
-        <Link to="/panchanga/details" className="text-primary underline">
-          {t("element_page.all_elements")}
-        </Link>
-      </p>
-    </PageShell>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </RoutePageState>
+    </GrahaDetailPageFrame>
   );
 }
 

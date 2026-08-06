@@ -1,14 +1,17 @@
-import { Link, getRouteApi, useParams } from "@tanstack/react-router";
+import { getRouteApi, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { GrahaBanner, ElementDescription } from "@/components/graha/GrahaPageParts";
+import { RoutePageState } from "@/components/common/RoutePageState";
+import { PanchangaDetailsBackLink } from "@/components/panchanga/PanchangaDetailsBackLink";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
 import { useElementPageUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { useResolvedPatroDayQuery } from "@/hooks/use-resolved-patro-day-query";
 import { cn } from "@/lib/utils";
-import { patroCard } from "@/lib/patro-classes";
+import { patroCard, patroGoodBadTone } from "@/lib/patro-classes";
+import { clockFromGhati, parseHHMM } from "@/lib/time-format";
 import { PatroDayTimeNav, PatroMonthYearNav } from "@/components/patro-date";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
@@ -42,29 +45,12 @@ import {
   elementKeys,
   fetchElementDay,
   fetchElementSpans,
-  fetchPanchangaDay,
-  panchangaKeys,
   type ElementSpan,
   type ElementStamp,
   type PanchangaDay,
 } from "@/lib/api";
 
 const routeApi = getRouteApi("/panchanga-shell/panchanga/element/$name");
-
-function clockFromGhati(sunriseMin: number | null, g: number): string | null {
-  if (sunriseMin == null) return null;
-  const total = sunriseMin + g * 24;
-  let h = Math.floor(total / 60);
-  const m = Math.round(total % 60);
-  if (h >= 24) h -= 24;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
-function parseHHMM(s?: string | null): number | null {
-  if (!s) return null;
-  const m = s.match(/(\d{1,2}):(\d{2})/);
-  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
-}
 
 /* ── span (begin→end) view ─────────────────────────────────────────────── */
 
@@ -141,12 +127,6 @@ function SpanList({ spans, elementId }: { spans: ElementSpan[]; elementId: strin
 
 type AnyRow = Record<string, unknown>;
 
-function toneClass(good: boolean, bad: boolean): string {
-  if (bad) return "bg-danger/10 text-danger";
-  if (good) return "bg-success/12 text-success-foreground dark:text-success";
-  return "bg-foreground/4 text-foreground";
-}
-
 function ChoghadiyaLegend() {
   const { lang } = useLocale();
   return (
@@ -200,7 +180,7 @@ function ChoghadiyaTableView({ data, sunrise }: { data: ChoghadiyaRow[]; sunrise
               key={i}
               className={cn(
                 "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm",
-                toneClass(tone === "good", tone === "bad"),
+                patroGoodBadTone(tone === "good", tone === "bad"),
               )}
             >
               <span className="font-semibold">{label}</span>
@@ -249,7 +229,7 @@ function TableView({
             return (
               <div
                 key={i}
-                className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-sm", toneClass(good, bad))}
+                className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-sm", patroGoodBadTone(good, bad))}
               >
                 <span className="flex min-w-0 items-center gap-2 font-semibold">
                   {elementId === "tarabala" ? (
@@ -305,7 +285,7 @@ function TableView({
           return (
             <div
               key={i}
-              className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm", toneClass(good, bad))}
+              className={cn("flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm", patroGoodBadTone(good, bad))}
             >
               <span className="flex min-w-0 items-center gap-2 font-semibold">
                 <ElementDayRowIcon elementId={elementId} row={it} size={24} />
@@ -403,31 +383,15 @@ export function ElementPage() {
   const { dayState, date, setDate, setDisplayEra, syncPickerFromDateAd, syncResolvedPatroDay } =
     dayBrowse;
 
-  const dayResolveQ = useQuery({
-    queryKey: panchangaKeys.daySelection(dayState, location.params),
-    queryFn: () => fetchPanchangaDay(dayState, location.params),
-    enabled: Boolean(name) && Boolean(meta) && !isSpan,
-    staleTime: 1000 * 60 * 30,
-    placeholderData: keepPreviousData,
-  });
-
-  useEffect(() => {
-    const data = dayResolveQ.data;
-    if (!data || isSpan) return;
-    if (data.date_ad) syncPickerFromDateAd(data.date_ad);
-    syncResolvedPatroDay({
-      date_ad: data.date_ad,
-      date_parts: data.date_parts,
-      bs_date:
-        data.bs_date && typeof data.bs_date === "object"
-          ? {
-              year: data.bs_date.year,
-              month: data.bs_date.month,
-              day: data.bs_date.day,
-            }
-          : undefined,
-    });
-  }, [isSpan, dayResolveQ.data, syncPickerFromDateAd, syncResolvedPatroDay]);
+  const dayResolveQ = useResolvedPatroDayQuery(
+    dayState,
+    location.params,
+    { syncPickerFromDateAd, syncResolvedPatroDay },
+    {
+      enabled: Boolean(name) && Boolean(meta) && !isSpan,
+      syncFromData: !isSpan,
+    },
+  );
 
   const dayAd = dayResolveQ.data?.date_ad ?? "";
 
@@ -483,9 +447,7 @@ export function ElementPage() {
     return (
       <PageShell>
         <PageHeader icon={<Sparkles className="h-6 w-6 text-secondary" />} title={t("element_page.unknown_element")} />
-        <p className="text-sm">
-          <Link to="/panchanga/details" className="text-primary underline">{t("element_page.back_to_details")}</Link>
-        </p>
+        <PanchangaDetailsBackLink labelKey="element_page.back_to_details" variant="inline" />
       </PageShell>
     );
   }
@@ -531,44 +493,34 @@ export function ElementPage() {
       )}
 
       {isSpan ? (
-        spanQuery.isLoading && !spanQuery.data ? (
-          <p className="text-sm">{t("common.loading")}</p>
-        ) : spanQuery.data ? (
-          <SpanList spans={spanQuery.data.spans} elementId={name!} />
-        ) : (
-          <p className="text-sm text-danger">{t("common.load_error")}</p>
-        )
+        <RoutePageState isLoading={spanQuery.isLoading} data={spanQuery.data}>
+          {(data) => <SpanList spans={data.spans} elementId={name!} />}
+        </RoutePageState>
       ) : isNavataraBal ? (
-        panchangaQuery.isLoading && !panchangaQuery.data ? (
-          <p className="text-sm">{t("common.loading")}</p>
-        ) : panchangaQuery.data ? (
-          <div className={cn(patroCard, "p-3.5")}>
-            <NavataraBalamElementView
-              elementId={name as "chandrabala" | "tarabala"}
-              p={panchangaQuery.data}
-              clock={elementClock}
-            />
-          </div>
-        ) : (
-          <p className="text-sm text-danger">{t("common.load_error")}</p>
-        )
-      ) : dayQuery.isLoading && !dayQuery.data ? (
-        <p className="text-sm">{t("common.loading")}</p>
-      ) : dayQuery.data ? (
-        <div className={cn(patroCard, "p-3.5")}>
-          <TableView data={dayQuery.data.data} sunrise={dayQuery.data.sunrise} elementId={name} />
-        </div>
+        <RoutePageState isLoading={panchangaQuery.isLoading} data={panchangaQuery.data}>
+          {(data) => (
+            <div className={cn(patroCard, "p-3.5")}>
+              <NavataraBalamElementView
+                elementId={name as "chandrabala" | "tarabala"}
+                p={data}
+                clock={elementClock}
+              />
+            </div>
+          )}
+        </RoutePageState>
       ) : (
-        <p className="text-sm text-danger">{t("common.load_error")}</p>
+        <RoutePageState isLoading={dayQuery.isLoading} data={dayQuery.data}>
+          {(data) => (
+            <div className={cn(patroCard, "p-3.5")}>
+              <TableView data={data.data} sunrise={data.sunrise} elementId={name} />
+            </div>
+          )}
+        </RoutePageState>
       )}
 
       <ElementDescription elementId={meta.id} />
 
-      <p className="mt-6 text-sm">
-        <Link to="/panchanga/details" className="text-primary underline">
-          {t("element_page.all_elements")}
-        </Link>
-      </p>
+      <PanchangaDetailsBackLink />
     </PageShell>
   );
 }

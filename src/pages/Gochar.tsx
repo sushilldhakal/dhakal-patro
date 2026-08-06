@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Orbit } from "lucide-react";
 import { getRouteApi } from "@tanstack/react-router";
@@ -9,6 +9,7 @@ import { GocharIngressSection } from "@/components/gochar/GocharIngressSection";
 import { GocharPlanetDeepDive } from "@/components/gochar/GocharPlanetDeepDive";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { useResolvedPatroDayQuery } from "@/hooks/use-resolved-patro-day-query";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -20,9 +21,7 @@ import {
   fetchGocharIngress,
   fetchGocharJd,
   fetchMonthCalendar,
-  fetchPanchangaDay,
   gocharKeys,
-  panchangaKeys,
 } from "@/lib/api";
 import {
   buildGocharIngressMonthList,
@@ -63,30 +62,10 @@ export function Gochar() {
 
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaKey>("sun");
 
-  const dayQ = useQuery({
-    queryKey: panchangaKeys.daySelection(dayState, location.params),
-    queryFn: () => fetchPanchangaDay(dayState, location.params),
-    staleTime: 1000 * 60 * 30,
-    placeholderData: keepPreviousData,
+  const dayQ = useResolvedPatroDayQuery(dayState, location.params, {
+    syncPickerFromDateAd,
+    syncResolvedPatroDay,
   });
-
-  useEffect(() => {
-    const data = dayQ.data;
-    if (!data) return;
-    if (data.date_ad) syncPickerFromDateAd(data.date_ad);
-    syncResolvedPatroDay({
-      date_ad: data.date_ad,
-      date_parts: data.date_parts,
-      bs_date:
-        data.bs_date && typeof data.bs_date === "object"
-          ? {
-              year: data.bs_date.year,
-              month: data.bs_date.month,
-              day: data.bs_date.day,
-            }
-          : undefined,
-    });
-  }, [dayQ.data, syncPickerFromDateAd, syncResolvedPatroDay]);
 
   const jdUt = dayQ.data?.jd_ut;
   const refDateAd = dayQ.data?.date_ad ?? todayAd;

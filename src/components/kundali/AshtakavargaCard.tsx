@@ -14,6 +14,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
+import type { GrahaKey } from "@/lib/graha-details";
 
 /** Matrix column order + labels (display only — scores come from the API). */
 const ASHTAKAVARGA_TARGETS = [
@@ -38,6 +41,37 @@ const th = "h-9 px-2 text-sm font-semibold uppercase tracking-wide whitespace-no
 const td = "px-2 py-1.5 text-sm";
 const num = "text-right font-mono tabular-nums";
 
+function ashtakavargaTargetLabel(
+  target: (typeof ASHTAKAVARGA_TARGETS)[number],
+  lang: "ne" | "en",
+) {
+  const label = ASHTAKAVARGA_TARGET_LABEL[target];
+  return bilingualText(lang, label.shortNe, label.shortEn);
+}
+
+function AshtakavargaTargetHead({
+  target,
+}: {
+  target: (typeof ASHTAKAVARGA_TARGETS)[number];
+}) {
+  const { lang } = useLocale();
+  const label = ASHTAKAVARGA_TARGET_LABEL[target];
+  if (target !== "lagna") {
+    return (
+      <span
+        className="inline-flex flex-col items-end gap-0.5"
+        title={bilingualText(lang, label.ne, label.en)}
+      >
+        <GrahaPlanetIcon graha={target as GrahaKey} size={18} />
+        <span className="text-[10px] font-normal normal-case tracking-normal">
+          {ashtakavargaTargetLabel(target, lang)}
+        </span>
+      </span>
+    );
+  }
+  return ashtakavargaTargetLabel(target, lang);
+}
+
 function AshtakavargaMatrix({
   title,
   rows,
@@ -49,11 +83,6 @@ function AshtakavargaMatrix({
 }) {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
-
-  const targetHead = (t: (typeof ASHTAKAVARGA_TARGETS)[number]) => {
-    const label = ASHTAKAVARGA_TARGET_LABEL[t];
-    return bilingualText(lang, label.shortNe, label.shortEn);
-  };
 
   return (
     <div>
@@ -67,7 +96,7 @@ function AshtakavargaMatrix({
               </TableHead>
               {ASHTAKAVARGA_TARGETS.map((t) => (
                 <TableHead key={t} className={cn(th, "text-right min-w-[2.75rem]")}>
-                  {targetHead(t)}
+                  <AshtakavargaTargetHead target={t} />
                 </TableHead>
               ))}
               {showSarvashtaka && (
@@ -81,7 +110,10 @@ function AshtakavargaMatrix({
             {rows.map((row) => (
               <TableRow key={row.rashi}>
                 <TableCell className={cn(td, "sticky left-0 z-10 bg-card pl-3 font-semibold text-foreground")}>
-                  {bilingualText(lang, row.rashiNe, row.rashiEn)}
+                  <span className="inline-flex items-center gap-2">
+                    <RashiGlyphIcon name={row.rashiNe} number={row.rashi} size={22} />
+                    {bilingualText(lang, row.rashiNe, row.rashiEn)}
+                  </span>
                 </TableCell>
                 {ASHTAKAVARGA_TARGETS.map((t) => (
                   <TableCell key={t} className={cn(td, num)}>
@@ -141,14 +173,11 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
               <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3")} />
-              {ASHTAKAVARGA_TARGETS.map((t) => {
-                const label = ASHTAKAVARGA_TARGET_LABEL[t];
-                return (
-                  <TableHead key={t} className={cn(th, "text-right min-w-[2.75rem]")}>
-                    {bilingualText(lang, label.shortNe, label.shortEn)}
-                  </TableHead>
-                );
-              })}
+              {ASHTAKAVARGA_TARGETS.map((t) => (
+                <TableHead key={t} className={cn(th, "text-right min-w-[2.75rem]")}>
+                  <AshtakavargaTargetHead target={t} />
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>

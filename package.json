@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:lan": "VITE_API_BASE_URL=/api vite --host 0.0.0.0 --port 5173 --strictPort",
-    "build": "node scripts/generate-sitemap.mjs && tsc -b && npm run build:client && npm run build:server && npm run prerender",
+    "build": "npm run generate-sitemap && tsc -b && npm run build:client && npm run build:server && npm run prerender",
+    "generate-sitemap": "TSX_TSCONFIG_PATH=./tsconfig.app.json tsx scripts/generate-sitemap.mjs",
     "build:client": "vite build",
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
     "prerender": "node scripts/prerender.mjs",
@@ -50,6 +51,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "tsx": "^4.23.8",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"

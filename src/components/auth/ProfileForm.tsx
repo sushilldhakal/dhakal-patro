@@ -112,7 +112,15 @@ export function ProfileForm({
         </div>
         <div className={fieldWrap}>
           <label className={labelClass}>{t("profile.email")}</label>
-          <Input type="email" value={form.email ?? ""} onChange={(e) => set("email", e.target.value)} />
+          <Input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={form.email ?? ""}
+            onChange={(e) => set("email", e.target.value)}
+          />
         </div>
         <div className={fieldWrap}>
           <label className={labelClass}>{t("profile.gender")}</label>

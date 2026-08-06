@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import type { ShadbalaResponse, VimshottariResponse } from "@/lib/api";
 import { NAVAGRAHA_SHANTI, getGrahaShanti } from "@/lib/shanti/navagraha-shanti";
 import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
+import type { GrahaKey } from "@/lib/graha-details";
 
 const th = "whitespace-nowrap text-xs font-semibold";
 
@@ -88,6 +90,7 @@ function RecommendationCard({
       {graha ? (
         <>
           <div className="mt-1 flex items-center gap-2">
+            <GrahaPlanetIcon graha={graha.key as GrahaKey} size={28} />
             <span className="text-lg font-bold text-foreground">{bilingualText(lang, graha.nameNe, graha.nameEn)}</span>
           </div>
           {detailNe ? <p className="mt-0.5 text-xs">{detailNe}</p> : null}
@@ -215,6 +218,7 @@ export function ShantiVidhiPanel({
                   : "border-border bg-card/30 text-foreground hover:bg-muted",
               )}
             >
+              <GrahaPlanetIcon graha={g.key as GrahaKey} size={28} />
               <span className="text-xs font-semibold">{bilingualText(lang, g.nameNe, g.nameEn)}</span>
             </button>
           );
@@ -232,6 +236,7 @@ export function ShantiVidhiPanel({
             style={{ backgroundColor: graha.colorHex }}
             aria-hidden
           />
+          <GrahaPlanetIcon graha={graha.key as GrahaKey} size={40} className="shrink-0" />
           <div className="flex-1">
             <h2 className="text-lg font-bold text-foreground">{bilingualText(lang, `${graha.nameNe} शान्ति`, `${graha.nameEn} Shanti`)}</h2>
             <p className="text-xs">{bilingualText(lang, graha.nameEn, graha.nameNe)}</p>
@@ -312,7 +317,10 @@ export function ShantiVidhiPanel({
                   onClick={() => setSelectedKey(g.key)}
                 >
                   <TableCell className="whitespace-nowrap font-semibold text-foreground">
-                    {bilingualText(lang, g.nameNe, g.nameEn)}
+                    <span className="inline-flex items-center gap-2">
+                      <GrahaPlanetIcon graha={g.key as GrahaKey} size={22} />
+                      {bilingualText(lang, g.nameNe, g.nameEn)}
+                    </span>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{bilingualText(lang, g.vaaraNe, g.vaaraEn)}</TableCell>
                   <TableCell className="whitespace-nowrap">{g.beejMantra}</TableCell>

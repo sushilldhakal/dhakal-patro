@@ -4,9 +4,7 @@ import { getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { searchToLocation } from "@/lib/url-state";
+import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
 import { SaitCeremonyLayout } from "@/components/sait/SaitCeremonyLayout";
 import { SaitProfilePicker } from "@/components/sait/SaitProfilePicker";
 import { SuitabilityLegend } from "@/components/sait/sait-suitability";
@@ -28,8 +26,7 @@ export function MarriageSait() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
+  const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
   const { year, era, setYear, setEra } = yearBrowse;
   const content = SAIT_RULES_CONTENT.vivah;
 

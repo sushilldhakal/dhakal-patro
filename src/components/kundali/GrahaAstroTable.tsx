@@ -4,6 +4,7 @@ import { Flame, RotateCcw } from "lucide-react";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import type { VargaChartEntry } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import {
@@ -116,6 +117,9 @@ export function GrahaAstroTable({ planets, lagna, d1Rows, combustion }: GrahaAst
                 )}
               >
                 <span className="inline-flex flex-wrap items-center gap-1.5">
+                  {row.key !== "lagna" && (
+                    <GrahaPlanetIcon graha={row.key as GrahaKey} size={22} />
+                  )}
                   {name}
                   {row.retrograde && (
                     <span

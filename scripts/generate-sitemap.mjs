@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Regenerates public/sitemap.xml from scripts/indexable-routes.mjs
- * Run: node scripts/generate-sitemap.mjs
+ * Regenerates public/sitemap.xml from src/lib/public-indexable-paths.ts
+ * Run: npx tsx scripts/generate-sitemap.mjs
  */
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SITEMAP_ENTRIES } from "./indexable-routes.mjs";
+import { SITEMAP_ENTRIES } from "../src/lib/public-indexable-paths.ts";
 
 const SITE = "https://www.vedicpatro.com";
 const lastmod = new Date().toISOString().slice(0, 10);

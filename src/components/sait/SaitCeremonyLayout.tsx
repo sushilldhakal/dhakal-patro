@@ -1,8 +1,8 @@
 import { HeartHandshake } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { PatroYearNav } from "@/components/patro-date";
+import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
+import { PanchangaDetailsBackLink } from "@/components/panchanga/PanchangaDetailsBackLink";
 import type { Era } from "@/lib/era";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { SaitDayCard } from "@/components/sait/SaitDayCard";
@@ -162,7 +162,7 @@ export function SaitCeremonyLayout({
         </div>
       ) : null}
 
-      <PatroYearNav
+      <PatroYearNavBlock
         era={era}
         year={year}
         onYearChange={onYearChange}
@@ -172,6 +172,7 @@ export function SaitCeremonyLayout({
         yearError={yearError}
         location={location}
         onLocationChange={onLocationChange}
+        className=""
       />
 
       {!loading && displayCount > 0 ? (
@@ -241,11 +242,7 @@ export function SaitCeremonyLayout({
         )}
       </section>
 
-      <p className="text-sm">
-        <Link to="/panchanga/details" className="text-primary underline">
-          {t("sait.all_ceremonies")}
-        </Link>
-      </p>
+      <PanchangaDetailsBackLink labelKey="sait.all_ceremonies" variant="inline" />
     </PageShell>
   );
 }

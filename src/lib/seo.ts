@@ -1,5 +1,6 @@
 import { LEARN_TOPICS_BY_SLUG } from "@/lib/learn/learn-topics-meta";
 import { PRERENDER_PATHS as ALL_PRERENDER_PATHS } from "@/lib/public-indexable-paths";
+import { ROUTE_SEO_KEYS, isNoindexPath } from "@/lib/app-routes";
 
 export const SITE_NAME = "Vedic Patro";
 export const SITE_URL = "https://www.vedicpatro.com";
@@ -72,49 +73,6 @@ export function seoYearVars(now: Date = new Date()): Record<string, string> {
     bsYear: String(bsYear),
     bsYearNe: toDevanagariDigits(bsYear),
   };
-}
-
-const ROUTE_SEO_KEYS: Record<string, string> = {
-  "/": "seo.routes.home",
-  "/panchanga": "seo.routes.panchanga",
-  "/panchanga/year": "seo.routes.panchanga_year",
-  "/panchanga/avakahada-chakra": "seo.routes.avakahada",
-  "/gochar": "seo.routes.gochar",
-  "/panchanga/graha-sthiti": "seo.routes.graha_sthiti",
-  "/panchanga/graha-asta": "seo.routes.graha_asta",
-  "/panchanga/graha-vakri": "seo.routes.graha_vakri",
-  "/panchanga/surya-grahan": "seo.routes.surya_grahan",
-  "/panchanga/chandra-grahan": "seo.routes.chandra_grahan",
-  "/panchanga/details": "seo.routes.panchanga_details",
-  "/vivah-sait": "seo.routes.vivah_sait",
-  "/dainikkranti": "seo.routes.dainikkranti",
-  "/chandrakranti": "seo.routes.dainikkranti",
-  "/दैनिकक्रान्ति": "seo.routes.dainikkranti",
-  "/shanti-vidhi": "seo.routes.shanti_vidhi",
-  "/converter": "seo.routes.converter",
-  "/holidays": "seo.routes.holidays",
-  "/ritu": "seo.routes.ritu",
-  "/kundali": "seo.routes.kundali",
-  "/jyotish/kundali-milan": "seo.routes.kundali_milan",
-  "/learn": "seo.routes.learn",
-  "/learn/history": "seo.routes.learn_history",
-  "/suryakranti": "seo.routes.suryakranti",
-  "/abhijit-muhurta": "seo.routes.abhijit_muhurta",
-  "/panchak-patro": "seo.routes.panchak_patro",
-  "/account": "seo.routes.account",
-  "/verify-email": "seo.routes.verify_email",
-  "/reset-password": "seo.routes.reset_password",
-};
-
-function isNoindexPath(pathname: string): boolean {
-  const normalized = pathname.replace(/\/$/, "") || "/";
-  return (
-    normalized === "/account" ||
-    normalized === "/verify-email" ||
-    normalized === "/reset-password" ||
-    normalized === "/panchanga/og-preview" ||
-    /^\/kundali\/[^/]+/.test(normalized)
-  );
 }
 
 export function resolvePageSeo(pathname: string, t: TFunc): PageSeoMeta {

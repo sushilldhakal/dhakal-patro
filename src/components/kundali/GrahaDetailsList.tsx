@@ -10,6 +10,7 @@ import {
   RELATION_LABELS,
   type GrahaKey,
 } from "@/lib/graha-details";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import {
@@ -120,6 +121,9 @@ export function GrahaDetailsList({
                 )}
               >
                 <span className="inline-flex items-center gap-1.5">
+                  {row.key !== "lagna" && (
+                    <GrahaPlanetIcon graha={row.key as GrahaKey} size={22} />
+                  )}
                   {name}
                   {row.retrograde && (
                     <span

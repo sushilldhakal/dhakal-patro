@@ -2,6 +2,7 @@ import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
 import type { VimshopakaData, VimshopakaGrade } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import {
   Table,
   TableBody,
@@ -66,7 +67,10 @@ export function VimshopakaCard({ data }: { data: VimshopakaData }) {
               return (
                 <TableRow key={p.key}>
                   <TableCell className="whitespace-nowrap font-semibold text-foreground">
-                    {graha ? bilingualText(lang, graha.ne, graha.en) : bilingualText(lang, p.name_ne, p.name)}
+                    <span className="inline-flex items-center gap-2">
+                      <GrahaPlanetIcon graha={p.key as GrahaKey} size={22} />
+                      {graha ? bilingualText(lang, graha.ne, graha.en) : bilingualText(lang, p.name_ne, p.name)}
+                    </span>
                   </TableCell>
                   {classes.map((c) => {
                     const s = p.scores[c.key];

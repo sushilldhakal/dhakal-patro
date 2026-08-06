@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MobileNavMenu } from "@/components/MobileNavMenu";
+import { isKundaliRoute } from "@/lib/kundali/kundali-routes";
 import { useLocale } from "@/i18n/locale";
 
 const PANCHANGA_LINKS = [
@@ -66,7 +67,7 @@ function isPanchangaRoute(pathname: string) {
 }
 
 function isJyotishRoute(pathname: string) {
-  return pathname === "/kundali" || pathname.startsWith("/kundali/") || pathname.startsWith("/jyotish/");
+  return isKundaliRoute(pathname) || pathname.startsWith("/jyotish/");
 }
 
 function JyotishNavDropdown() {

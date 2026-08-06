@@ -3,16 +3,12 @@ import { Link, getRouteApi } from "@tanstack/react-router";
 import { Trans, useTranslation } from "react-i18next";
 import { ArrowLeft, CalendarRange } from "lucide-react";
 import { SunTimesYearGrid } from "@/components/SunTimesYearGrid";
-import { PatroYearNav } from "@/components/patro-date";
+import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
 import { PageShell } from "@/components/PageShell";
-import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
+import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
 import { useRouteLoading } from "@/lib/route-loading";
-import {
-  displayLocationLabel,
-  usePanchangaLocation,
-} from "@/components/panchanga/use-panchanga-location";
+import { displayLocationLabel } from "@/components/panchanga/use-panchanga-location";
 import { useLocale } from "@/i18n/locale";
-import { searchToLocation } from "@/lib/url-state";
 import { patroAyanaNorth, patroAyanaSouth } from "@/lib/patro-classes";
 
 const routeApi = getRouteApi("/panchanga-shell/suryakranti");
@@ -21,11 +17,10 @@ export function SunTimesYear() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
+  const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
+  const { year, era, setYear, setEra } = yearBrowse;
   const { lang, digits } = useLocale();
   const locationLabel = displayLocationLabel(location, undefined, lang);
-  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
-  const { year, era, setYear, setEra } = yearBrowse;
   const [gridLoading, setGridLoading] = useState(true);
 
   const pageSubtitle = t("sun_times.subtitle", { year: digits(year) });
@@ -48,13 +43,14 @@ export function SunTimesYear() {
         <p className="text-sm mt-1 m-0">{pageSubtitle}</p>
       </div>
 
-      <PatroYearNav
+      <PatroYearNavBlock
         era={era}
         year={year}
         onYearChange={setYear}
         onEraChange={setEra}
         location={location}
         onLocationChange={setLocation}
+        className=""
       />
 
       <SunTimesYearGrid

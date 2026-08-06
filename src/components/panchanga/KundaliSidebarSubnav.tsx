@@ -29,10 +29,12 @@ export function KundaliSidebarSubnav({
               params={{ profileId }}
               hash={id}
               className={cn(
-                "block rounded-lg py-1.5 text-left text-xs leading-snug transition-colors",
-                isChild ? "pl-3 pr-2" : "px-2",
+                "block rounded-lg text-left leading-snug transition-colors",
+                isChild
+                  ? "py-2 pl-3 pr-2 text-base font-medium"
+                  : "px-2 py-1.5 text-sm font-medium",
                 active
-                  ? "bg-secondary/12 font-medium text-secondary ring-1 ring-secondary/20"
+                  ? "bg-secondary/12 text-secondary ring-1 ring-secondary/20"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
               aria-current={active ? "true" : undefined}

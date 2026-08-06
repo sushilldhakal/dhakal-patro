@@ -15,7 +15,8 @@ import {
   type PatroDisplayContext,
 } from "@/lib/patro-day-url";
 
-const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
+/** Strip trailing slashes so `${BASE}/${API_VERSION}` never becomes `…/api//v1`. */
+const BASE = (import.meta.env.VITE_API_BASE_URL ?? "/api").replace(/\/+$/, "") || "/api";
 
 // Public, cacheable data endpoints live under a version segment (…/api/v1/…) so
 // a backend engine bump (v1 → v2) becomes a brand-new CDN object — no Cloudflare

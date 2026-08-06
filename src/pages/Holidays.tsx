@@ -21,13 +21,11 @@ import {
 } from "../lib/api";
 import { PageShell, PageHeader } from "../components/PageShell";
 import { SeoContentSection } from "../components/seo/SeoContentSection";
-import { usePatroYearUrlBrowse } from "@/hooks/use-patro-url-browse";
-import { PatroYearNav } from "@/components/patro-date";
+import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
+import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
 import { useRouteLoading } from "@/lib/route-loading";
 import { formatLocaleDigits } from "@/i18n/digits";
 import { useLocale, bilingualText } from "@/i18n/locale";
-import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import { searchToLocation } from "@/lib/url-state";
 import { formatHolidayBsDisplay } from "@/lib/panchanga-format";
 import { cn } from "../lib/utils";
 
@@ -201,12 +199,11 @@ export function Holidays() {
   const { t } = useTranslation();
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
-  const holidayColumns = useHolidayColumns();
-  const festivalColumns = useFestivalColumns();
-  const yearBrowse = usePatroYearUrlBrowse(search, navigate, location, setLocation);
+  const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
   const [tab, setTab] = useState<Tab>("holidays");
   const [filter, setFilter] = useState("");
+  const holidayColumns = useHolidayColumns();
+  const festivalColumns = useFestivalColumns();
 
   const holidaysQ = useQuery({
     queryKey: holidayKeys.holidays(yearBrowse.year, yearBrowse.era),
@@ -238,7 +235,7 @@ export function Holidays() {
         subtitle={t("holidays.page_subtitle")}
       />
 
-      <PatroYearNav
+      <PatroYearNavBlock
         era={yearBrowse.era}
         year={yearBrowse.year}
         onYearChange={yearBrowse.setYear}
@@ -248,6 +245,7 @@ export function Holidays() {
         }
         location={location}
         onLocationChange={setLocation}
+        className=""
       />
 
       {/* Tabs */}

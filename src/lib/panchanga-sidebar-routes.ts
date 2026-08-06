@@ -1,28 +1,18 @@
-/** Routes that show the left panchanga sidebar on desktop (≥992px). */
-const SIDEBAR_ROUTE_PATTERNS: RegExp[] = [
-  /^\/holidays$/,
-  /^\/converter$/,
-  /^\/suryakranti$/,
-  /^\/panchanga\/year$/,
-  /^\/dainikkranti$/,
-  /^\/gochar$/,
-  /^\/panchak-patro$/,
-  /^\/ritu$/,
-  /^\/panchanga\/avakahada-chakra$/,
-  /^\/abhijit-muhurta$/,
-  /^\/kundali$/,
-  /^\/kundali\//,
-  /^\/jyotish\/kundali-milan$/,
-  /^\/panchanga\/details$/,
-  /^\/panchanga\/element\//,
-  /^\/panchanga\/graha-/,
-  /^\/panchanga\/chandra-grahan$/,
-  /^\/panchanga\/surya-grahan$/,
-  /^\/sait\//,
-];
+import { PANCHANGA_SHELL_PATHS } from "@/router";
 
+/** True if `template`'s static segments match `pathname` (dynamic "$param" segments match anything). */
+function matchesTemplate(pathname: string, template: string): boolean {
+  const pathSegments = pathname.split("/");
+  const templateSegments = template.split("/");
+  if (pathSegments.length !== templateSegments.length) return false;
+  return templateSegments.every(
+    (segment, i) => segment.startsWith("$") || segment === pathSegments[i],
+  );
+}
+
+/** Routes that show the left panchanga sidebar on desktop (≥992px). */
 export function shouldShowPanchangaSidebar(pathname: string): boolean {
-  return SIDEBAR_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname));
+  return PANCHANGA_SHELL_PATHS.some((template) => matchesTemplate(pathname, template));
 }
 
 /** Client navigations that keep the persistent panchanga shell mounted. */

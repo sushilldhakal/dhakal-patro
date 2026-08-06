@@ -3,6 +3,13 @@ import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import type { DashaSystem, DashaTreeResponse } from "@/lib/api";
 import { DashaTree } from "@/components/kundali/DashaTree";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
+import {
+  DASHA_LORD_EN,
+  DASHA_LORD_NE,
+  dashaMahadashaGrahaKey,
+  type DashaLord,
+} from "@/lib/dasha";
 import { cn } from "@/lib/utils";
 
 type DashaTab = {
@@ -89,12 +96,30 @@ export function DashaSystemPanel({
             <p className="text-sm font-semibold uppercase tracking-wider mb-1 truncate">
               {t("kundali.mahadasha_at_birth")}
             </p>
-            <p className="text-base font-bold text-foreground leading-tight">
-              {dasha.mahadasha_lord_ne}
-            </p>
-            <p className="text-xs mt-0.5">
-              {bilingualText(lang, `बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
-            </p>
+            {(() => {
+              const grahaKey = dashaMahadashaGrahaKey(current.id, dasha.mahadasha_lord);
+              const lordLabel =
+                current.id === "yogini"
+                  ? bilingualText(lang, dasha.mahadasha_lord_ne, dasha.mahadasha_lord)
+                  : bilingualText(
+                      lang,
+                      DASHA_LORD_NE[dasha.mahadasha_lord as DashaLord] ?? dasha.mahadasha_lord_ne,
+                      DASHA_LORD_EN[dasha.mahadasha_lord as DashaLord] ?? dasha.mahadasha_lord,
+                    );
+              return (
+                <>
+                  <p className="text-base font-bold text-foreground leading-tight">
+                    <span className="inline-flex items-center gap-2">
+                      {grahaKey ? <GrahaPlanetIcon graha={grahaKey} size={28} /> : null}
+                      {lordLabel}
+                    </span>
+                  </p>
+                  <p className="text-xs mt-0.5">
+                    {bilingualText(lang, `बाँकी अवधि: ${dasha.balance_label}`, `Balance: ${dasha.balance_label}`)}
+                  </p>
+                </>
+              );
+            })()}
           </div>
         </div>
       ) : null}

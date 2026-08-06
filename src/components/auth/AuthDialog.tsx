@@ -160,7 +160,10 @@ export function AuthDialog({
             <Input
               id="auth-email"
               type="email"
+              inputMode="email"
               autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}

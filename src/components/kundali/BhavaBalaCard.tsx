@@ -2,6 +2,7 @@ import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
 import type { BhavaBalaData, BhavaBalaHouse } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import {
   Table,
   TableBody,
@@ -57,6 +58,16 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
 
   const lordLabel = (key: GrahaKey) =>
     bilingualText(lang, GRAHA_NAME[key].ne, GRAHA_NAME[key].en);
+
+  const lordCell = (key: string) => {
+    const graha = key as GrahaKey;
+    return (
+      <span className="inline-flex items-center justify-end gap-1.5">
+        <GrahaPlanetIcon graha={graha} size={20} />
+        {lordLabel(graha)}
+      </span>
+    );
+  };
 
   const houseSummary = (h: BhavaBalaHouse) => (
     <>
@@ -115,7 +126,7 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
                 <TableCell className={cn(td, "font-semibold pl-3.5")}>
                   {houseLabel(h.house)}
                 </TableCell>
-                <TableCell className={cn(td, "text-right")}>{lordLabel(h.lordKey as GrahaKey)}</TableCell>
+                <TableCell className={cn(td, "text-right")}>{lordCell(h.lordKey)}</TableCell>
                 <TableCell className={cn(td, num)}>{fmtNum(h.bhavadhipati, digits)}</TableCell>
                 <TableCell className={cn(td, num)}>{fmtNum(h.disha, digits)}</TableCell>
                 <TableCell className={cn(td, num)}>{fmtNum(h.drishti, digits)}</TableCell>

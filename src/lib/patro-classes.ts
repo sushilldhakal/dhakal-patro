@@ -157,6 +157,13 @@ export function patroSlotRow(tone: "good" | "bad" | "neutral", nightStart?: bool
   );
 }
 
+/** Element table rows: auspicious / inauspicious / neutral background. */
+export function patroGoodBadTone(good: boolean, bad: boolean): string {
+  if (bad) return "bg-danger/10 text-danger";
+  if (good) return "bg-success/12 text-success-foreground dark:text-success";
+  return "bg-foreground/4 text-foreground";
+}
+
 export function patroSlotBadge(tone: "good" | "bad" | "neutral") {
   return cn(
     "shrink-0 rounded-full px-1.5 py-0.5 text-sm font-bold leading-none whitespace-nowrap",

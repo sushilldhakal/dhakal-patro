@@ -39,6 +39,28 @@ export const DASHA_LORD_EN: Record<DashaLord, string> = {
   mercury: "Mercury",
 };
 
+/** Yogini dasha name → ruling graha (for icons in the UI). */
+export const YOGINI_TO_GRAHA: Record<string, DashaLord> = {
+  mangala: "moon",
+  pingala: "sun",
+  dhanya: "jupiter",
+  bhramari: "mars",
+  bhadrika: "mercury",
+  ulka: "saturn",
+  siddha: "venus",
+  sankata: "rahu",
+};
+
+/** Resolve birth mahadasha lord to a graha key for planet artwork. */
+export function dashaMahadashaGrahaKey(
+  system: "vimshottari" | "tribhagi" | "yogini",
+  lord: string,
+): DashaLord | undefined {
+  if (system === "yogini") return YOGINI_TO_GRAHA[lord];
+  if (lord in DASHA_LORD_NE) return lord as DashaLord;
+  return undefined;
+}
+
 /** One dasha period at any level of the Vimshottari hierarchy. */
 export interface DashaSpan {
   lord: DashaLord;
