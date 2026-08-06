@@ -16,6 +16,7 @@ import { PanchangaLocationProvider } from "./components/panchanga/use-panchanga-
 import { Home } from "./pages/Home";
 import { lazyRoute } from "./lib/lazy-route";
 import { RouteLoadingProvider } from "./lib/route-loading";
+import { PANCHANGA_SHELL_PATHS as PANCHANGA_SHELL_PATHS_CANONICAL } from "@/lib/panchanga-shell-paths";
 import {
   validateAbhijitSearch,
   validateDainikKrantiSearch,
@@ -337,9 +338,22 @@ export function createAppRouter(history?: RouterHistory) {
 
 export const router = createAppRouter();
 
-/** Absolute path templates (e.g. "/kundali/$profileId") for pages that render inside
- *  the panchanga sidebar shell — derived from panchangaShellChildRoutes so it can't drift. */
+/** Absolute path templates (e.g. "/kundali/$profileId") for pages inside the panchanga shell. */
 export const PANCHANGA_SHELL_PATHS: string[] = panchangaShellChildRoutes.map((r) => r.fullPath);
+
+if (import.meta.env.DEV) {
+  const computed = PANCHANGA_SHELL_PATHS;
+  const canonical = [...PANCHANGA_SHELL_PATHS_CANONICAL];
+  if (
+    computed.length !== canonical.length ||
+    computed.some((p, i) => p !== canonical[i])
+  ) {
+    console.warn(
+      "[router] PANCHANGA_SHELL_PATHS drift — update src/lib/panchanga-shell-paths.ts",
+      { computed, canonical },
+    );
+  }
+}
 
 declare module "@tanstack/react-router" {
   interface Register {
