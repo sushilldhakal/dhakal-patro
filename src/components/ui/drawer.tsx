@@ -44,12 +44,14 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  "aria-describedby": ariaDescribedBy,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
   return (
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
+        aria-describedby={ariaDescribedBy ?? undefined}
         data-slot="drawer-content"
         className={cn(
           "group/drawer-content bg-background fixed z-50 flex h-auto flex-col outline-none",
@@ -88,9 +90,12 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function DrawerTitle({ className, ...props }: React.ComponentProps<"h2">) {
+function DrawerTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Title>) {
   return (
-    <h2
+    <DrawerPrimitive.Title
       data-slot="drawer-title"
       className={cn("text-foreground font-semibold", className)}
       {...props}
@@ -98,11 +103,14 @@ function DrawerTitle({ className, ...props }: React.ComponentProps<"h2">) {
   );
 }
 
-function DrawerDescription({ className, ...props }: React.ComponentProps<"p">) {
+function DrawerDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Description>) {
   return (
-    <p
+    <DrawerPrimitive.Description
       data-slot="drawer-description"
-      className={cn("text-sm", className)}
+      className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
   );

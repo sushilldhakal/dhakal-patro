@@ -186,7 +186,10 @@ export function patroDayFetchFromResolvedPanchanga(
         v.era === "bbs" || v.era === "bs" ? v.era : display.era === "bbs" ? "bbs" : "bs";
       const resolvedDisplay: PatroDisplayContext = {
         era: inputEra,
-        language: getLanguageForEra(inputEra),
+        // Keep the UI language the user chose (e.g. en on a BS day). Forcing
+        // getLanguageForEra(inputEra) made syncResolvedPatroDay fight the URL
+        // mirror effect and throttle navigation forever.
+        language: display.language,
       };
       return {
         kind: "input",
