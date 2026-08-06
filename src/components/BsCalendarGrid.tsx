@@ -187,10 +187,10 @@ export function BsCalendarGrid({
           const primaryDayNum = primaryDate === "ad" ? adDayNum : day.day;
           const secondary = getSecondaryCellDate(day, primaryDate, lang, i === 0);
           const secondaryLabel = secondary.monthLabel
-            ? `${monoDigits(secondary.day)}`
+            ? `${secondary.monthLabel} ${monoDigits(secondary.day)}`
             : monoDigits(secondary.day);
           const secondaryLabelShort = secondary.monthLabelShort
-            ? `${monoDigits(secondary.day)}`
+            ? `${secondary.monthLabelShort} ${monoDigits(secondary.day)}`
             : monoDigits(secondary.day);
 
           const openFestivalDialog = (e: MouseEvent) => {
@@ -210,9 +210,6 @@ export function BsCalendarGrid({
                 isToday && "bg-surface-today",
                 isSelected && "shadow-[inset_0_0_0_2px_var(--ring)]",
                 isPublicHoliday && "bg-surface-tint-danger",
-                mobileBsFestCompact &&
-                  !isPublicHoliday &&
-                  "max-md:bg-surface-tint-danger",
               )}
             >
               <button

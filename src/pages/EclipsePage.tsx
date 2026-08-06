@@ -15,7 +15,6 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { patroCard } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import { searchToLocation } from "@/lib/url-state";
-import { getLanguageForEra, type Era } from "@/lib/era";
 import {
   fetchEclipseYear,
   grahaDetailKeys,
@@ -31,14 +30,13 @@ function localTimeShort(iso?: string | null): string | null {
   return m ? m[1] : null;
 }
 
-function renderedEclipseDate(ev: EclipseEvent, era: Era): string {
-  const raw = ev as EclipseEvent & { date?: string };
-  if (typeof raw.date === "string") return raw.date;
-  if (getLanguageForEra(era) === "ne" && ev.date_bs) return ev.date_bs;
-  return ev.date_ad ?? ev.date_bs ?? "";
+function renderedEclipseDate(ev: EclipseEvent): string {
+  const label = ev.date_jd_date?.trim();
+  if (label) return label;
+  return ev.date_bs ?? ev.date_ad ?? "";
 }
 
-function EclipseCard({ ev, pageId, era }: { ev: EclipseEvent; pageId: string; era: Era }) {
+function EclipseCard({ ev, pageId }: { ev: EclipseEvent; pageId: string }) {
   const { digits, lang } = useLocale();
   const { t } = useTranslation();
   const begin = localTimeShort(ev.begin_local);
@@ -46,7 +44,7 @@ function EclipseCard({ ev, pageId, era }: { ev: EclipseEvent; pageId: string; er
   const max = localTimeShort(ev.max_local);
   const isLunar = pageId === "chandra-grahan";
   const typeLabel = lang === "en" ? ev.type_en : ev.type_ne;
-  const dateLabel = renderedEclipseDate(ev, era);
+  const dateLabel = renderedEclipseDate(ev);
   return (
     <div className={cn(patroCard, "flex flex-col")}>
       <div
@@ -164,7 +162,7 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
         events.length ? (
           <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {events.map((ev, i) => (
-              <EclipseCard key={i} ev={ev} pageId={pageId} era={yearBrowse.era} />
+              <EclipseCard key={i} ev={ev} pageId={pageId} />
             ))}
           </div>
         ) : (

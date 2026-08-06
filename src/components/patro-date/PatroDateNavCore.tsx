@@ -799,7 +799,7 @@ export function PatroDateNavCore({
       {sheetBlock}
       <button
         type="button"
-        className={cn(patroMonthChipShell, patroMonthChipButton)}
+        className={cn(patroMonthChipShell, patroMonthChipButton, "self-center")}
         onClick={onToday}
         aria-label={todayAriaLabel}
         title={todayAriaLabel}

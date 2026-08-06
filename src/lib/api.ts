@@ -733,8 +733,10 @@ export interface EclipseEvent {
   type_en: string;
   max_utc: string;
   max_local: string;
-  date_ad: string;
-  date_bs: string | null;
+  /** Civil day of maximum (era middleware from ``date_jd``). */
+  date_jd_date?: string;
+  date_ad?: string;
+  date_bs?: string | null;
   visible: boolean;
   begin_local?: string | null;
   end_local?: string | null;

@@ -8,7 +8,7 @@ import {
   AD_MONTH_NAMES_NE,
   AD_MONTHS_SHORT,
   AD_MONTHS_SHORT_NE,
-  BS_MONTH_NAMES,
+  BS_MONTHS_SHORT,
   BS_MONTHS_NE,
   adToBS,
 } from "@/lib/bs-calendar";
@@ -64,7 +64,7 @@ export function formatPatroDayCrossEraSubtitle(
   if (isGregorianEraBrowse(era)) {
     const bs = adToBS(parseCivilIsoToDate(dateAdIso));
     const isEn = lang.slice(0, 2) === "en";
-    const monthLabel = isEn ? BS_MONTH_NAMES[bs.month - 1] : BS_MONTHS_NE[bs.month - 1];
+    const monthLabel = isEn ? BS_MONTHS_SHORT[bs.month - 1] : BS_MONTHS_NE[bs.month - 1];
     return `${monthLabel} ${digitFn(bs.day)}, ${digitFn(bs.year)} ${isEn ? "BS" : "वि.सं."}`;
   }
   return formatPatroCivilDayLabel(dateAdIso, lang, digitFn);
@@ -135,7 +135,7 @@ function formatAdMonthBsCrossEraSubtitle(
   const startBs = adToBS(parseCivilIsoToDate(startIso));
   const endBs = adToBS(parseCivilIsoToDate(endIso));
   const isEn = lang.slice(0, 2) === "en";
-  const monthLabel = (m: number) => (isEn ? BS_MONTH_NAMES[m - 1] : BS_MONTHS_NE[m - 1])!;
+  const monthLabel = (m: number) => (isEn ? BS_MONTHS_SHORT[m - 1] : BS_MONTHS_NE[m - 1])!;
   if (startBs.year === endBs.year && startBs.month === endBs.month) {
     return `${monthLabel(startBs.month)} ${digitFn(startBs.year)} ${isEn ? "BS" : "वि.सं."}`;
   }

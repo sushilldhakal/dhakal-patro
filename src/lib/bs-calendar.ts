@@ -9,9 +9,10 @@ export const BS_MONTH_NAMES = [
 /**
  * Three-letter BS months for tight spots (the mobile header's cross-calendar
  * reference). Ashwin is "Asw", not "Ash", so it stays distinct from Ashadh.
+ * Shrawan is "Sha" (not "Shr") to pair cleanly with "Bha" in cross-era spans.
  */
 export const BS_MONTHS_SHORT = [
-  "Bai", "Jes", "Ash", "Shr", "Bha", "Asw",
+  "Bai", "Jes", "Ash", "Sha", "Bha", "Asw",
   "Kar", "Man", "Pou", "Mag", "Fal", "Cha",
 ] as const
 

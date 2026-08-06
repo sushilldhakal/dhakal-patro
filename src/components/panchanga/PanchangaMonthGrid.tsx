@@ -312,10 +312,10 @@ export function PanchangaMonthGrid({
               i === 0,
             );
             const secondaryLabel = secondary.monthLabel
-              ? `${monoDigits(secondary.day)}`
+              ? `${secondary.monthLabel} ${monoDigits(secondary.day)}`
               : monoDigits(secondary.day);
             const secondaryLabelShort = secondary.monthLabelShort
-              ? `${monoDigits(secondary.day)}`
+              ? `${secondary.monthLabelShort} ${monoDigits(secondary.day)}`
               : monoDigits(secondary.day);
             const tithiLabel = formatTithiLabel(day, isEn);
             const tithiIdx = tithiIndexFromCalendarDay(day);

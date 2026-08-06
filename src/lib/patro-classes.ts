@@ -69,7 +69,7 @@ export const patroMonthTodayBtn =
   "h-8 cursor-pointer rounded-lg border-none bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-xs transition-[filter,transform] hover:brightness-105 active:translate-y-px sm:px-4 sm:text-sm";
 
 export const patroMonthChipShell =
-  "flex w-[2.5rem] sm:mt-0 mt-[7px] shrink-0 flex-col overflow-hidden rounded-[8px] border border-border bg-card shadow-sm sm:w-[3.25rem] sm:rounded-[10px]";
+  "flex w-[2.5rem] shrink-0 flex-col overflow-hidden rounded-[8px] border border-border bg-card shadow-sm sm:w-[3.25rem] sm:rounded-[10px]";
 
 export const patroMonthChipButton =
   "cursor-pointer transition-[filter,transform,box-shadow] hover:brightness-[1.03] hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
@@ -88,7 +88,7 @@ export const patroMonthChipDay =
 export const patroMonthChipSpan =
   // Same box as patroMonthChipDay so both chip variants are the same size; only
   // the type is smaller, since four glyphs share the width one or two had.
-  "flex min-h-md items-center justify-center bg-card pb-1 pt-1 font-num text-xs font-bold leading-none tracking-tight tabular-nums text-foreground sm:min-h-[2rem] sm:pb-1 sm:text-sm";
+  "flex min-h-md items-center justify-center bg-card px-0.5 py-1.5 font-num text-xs font-bold leading-snug tracking-tight tabular-nums text-foreground sm:min-h-[2rem] sm:py-1.5 sm:text-sm";
 
 export const patroMonthRangeNav =
   "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-1 py-1 shadow-xs sm:gap-2";

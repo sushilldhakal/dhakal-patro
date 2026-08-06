@@ -8,7 +8,7 @@ export const BS_MONTH_NAMES = [
 ] as const;
 
 export const BS_MONTHS_SHORT = [
-  "Bai", "Jes", "Ash", "Shr", "Bha", "Asw",
+  "Bai", "Jes", "Ash", "Sha", "Bha", "Asw",
   "Kar", "Man", "Pou", "Mag", "Fal", "Cha",
 ] as const;
 
