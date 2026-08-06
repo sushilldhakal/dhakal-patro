@@ -24,12 +24,12 @@ import { patroCard, patroMono, patroSecBand, patroSkel } from "@/lib/patro-class
 import { cn } from "@/lib/utils";
 import { CalendarMoonPhaseIcon } from "@/components/panchanga/CalendarMoonPhaseIcon";
 import { tithiIndexFromPanchanga } from "@/lib/tithi-wheel-data";
+import { SUNRISE_ICON_PATH, SUNRISE_ICON_VIEWBOX } from "@/lib/sunrise-icon-art";
 import {
   pgTlAxis,
   pgTlEventTimeMoon,
   pgTlRowline,
   pgTlSunDisc,
-  pgTlSunHorizon,
   pgTlTick,
   pgTlVgridMajor,
   pgxArrow,
@@ -1003,15 +1003,21 @@ function TransitionArrow({ x2, y }: { x2: number; y: number }) {
 }
 
 function SunHalfIcon({ x, y, variant }: { x: number; y: number; variant: "rise" | "set" }) {
-  const arc =
-    variant === "rise"
-      ? `M ${x - SUN_R} ${y} A ${SUN_R} ${SUN_R} 0 0 1 ${x + SUN_R} ${y} Z`
-      : `M ${x - SUN_R} ${y} A ${SUN_R} ${SUN_R} 0 0 0 ${x + SUN_R} ${y} Z`;
+  const { w: vbW, h: vbH } = SUNRISE_ICON_VIEWBOX;
+  const width = SUN_R * 2 + 10;
+  const scale = width / vbW;
+  const h = vbH * scale;
+  const left = x - width / 2;
+  const top = variant === "rise" ? y - h : y;
+  const cx = vbW / 2;
+  const cy = vbH / 2;
+  const inner = variant === "set" ? `rotate(180 ${cx} ${cy})` : undefined;
 
   return (
-    <g aria-hidden>
-      <line x1={x - SUN_R - 3} y1={y} x2={x + SUN_R + 3} y2={y} className={pgTlSunHorizon} />
-      <path d={arc} className={pgTlSunDisc} />
+    <g aria-hidden transform={`translate(${left}, ${top}) scale(${scale})`}>
+      <g transform={inner}>
+        <path d={SUNRISE_ICON_PATH} className={pgTlSunDisc} />
+      </g>
     </g>
   );
 }

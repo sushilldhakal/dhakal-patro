@@ -171,17 +171,9 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
         id: "deity",
         header: t("avakahada.col_deity"),
         accessorKey: "deity",
-        cell: ({ row }) => {
-          const raw = AVAKAHADA[row.original.index - 1]?.deity;
-          return (
-            <span
-              className="whitespace-nowrap"
-              title={raw === "अ.क." ? "अश्विनी कुमार" : undefined}
-            >
-              {row.original.deity}
-            </span>
-          );
-        },
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap">{row.original.deity}</span>
+        ),
       },
       {
         id: "jati",

@@ -217,6 +217,7 @@ export function localizeVarga(varga: string, lang?: string): string {
 }
 
 const DEITY_NE_TO_EN: Record<string, string> = {
+  "अश्विनी कुमार": "Ashvini Kumaras",
   "अ.क.": "Ashvini Kumaras",
   यम: "Yama",
   अग्नि: "Agni",
