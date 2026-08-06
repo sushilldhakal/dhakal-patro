@@ -1,13 +1,14 @@
 import { getRouteApi } from "@tanstack/react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Eclipse, MoonStar } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RoutePageState } from "@/components/common/RoutePageState";
 import { GrahaDetailPageFrame } from "@/components/graha/GrahaDetailPageFrame";
 import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
-import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
+import {
+  usePatroYearDataPage,
+  usePatroYearDataQuery,
+} from "@/hooks/use-patro-year-data-page";
 import { useLocale } from "@/i18n/locale";
-import { useRouteLoading } from "@/lib/route-loading";
 import { patroCard } from "@/lib/patro-classes";
 import { cn } from "@/lib/utils";
 import { localTimeShortFromIso } from "@/lib/time-format";
@@ -101,14 +102,12 @@ function EclipseView({ kind }: { kind: "solar" | "lunar" }) {
   const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
   const pageId = kind === "solar" ? "surya-grahan" : "chandra-grahan";
 
-  const query = useQuery({
-    queryKey: grahaDetailKeys.eclipse(kind, yearBrowse.year, location.params, yearBrowse.era),
-    queryFn: () => fetchEclipseYear(kind, yearBrowse.year, location.params, yearBrowse.era),
-    staleTime: 1000 * 60 * 30,
-    placeholderData: keepPreviousData,
+  const query = usePatroYearDataQuery({ location, setLocation, yearBrowse }, {
+    queryKey: (year, locationParams, era) =>
+      grahaDetailKeys.eclipse(kind, year, locationParams, era),
+    queryFn: (year, locationParams, era) =>
+      fetchEclipseYear(kind, year, locationParams, era),
   });
-
-  useRouteLoading(query.isLoading && !query.data);
 
   const banner =
     kind === "solar"

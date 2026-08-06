@@ -13,7 +13,7 @@ import { isBrowser } from "@/lib/browser";
 import {
   isPanchangaShellNavigation,
   shouldShowPanchangaSidebar,
-} from "@/lib/panchanga-sidebar-routes";
+} from "@/lib/app-routes";
 
 type RouteLoadingContextValue = {
   setDataLoading: (loading: boolean) => void;

@@ -25,7 +25,10 @@ export function mapPanchakPeriod(row: PanchakPeriodResponse): PanchakPeriod {
       bsDay: row.start.bs_day,
       timeNe: row.start.time_ne,
       timeEn: row.start.time_en,
-      ad: row.start.date_ad,
+      // Slice to the bare civil date — `iso` carries the Nepal offset, so the
+      // date before "T" is already the Nepal-local day; fmtAdShort re-anchors
+      // it to local noon when formatting, matching every other `ad` field.
+      ad: row.start.iso.slice(0, 10),
     },
     end: {
       bsYear: row.end.bs_year,
@@ -33,7 +36,7 @@ export function mapPanchakPeriod(row: PanchakPeriodResponse): PanchakPeriod {
       bsDay: row.end.bs_day,
       timeNe: row.end.time_ne,
       timeEn: row.end.time_en,
-      ad: row.end.date_ad,
+      ad: row.end.iso.slice(0, 10),
     },
     durationNe: row.duration_ne,
     durationEn: row.duration_en,

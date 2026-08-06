@@ -1,12 +1,18 @@
 /**
- * Static route metadata — the single source for SEO title/description keys,
- * sitemap entries, prerender targets, and noindex flags. router.tsx still owns
- * actual route construction (paths here are descriptive, not registered).
+ * Route registry and matching helpers — the single source for SEO title/
+ * description keys, sitemap entries, prerender targets, noindex flags,
+ * panchanga-sidebar visibility, and the active-route predicates used by
+ * Header's dropdowns and MobileBottomNav's tabs. router.tsx still owns actual
+ * route construction (paths here are descriptive, not registered) — see
+ * PANCHANGA_SHELL_PATHS there for why sidebar visibility is derived, not
+ * hand-listed.
  *
  * Dynamic routes (/learn/$slug, /panchanga/element/$name, /sait/$category) are
  * NOT enumerated here — they expand from their own metadata (learn-topics-meta.ts,
  * panchanga-elements.ts) in public-indexable-paths.ts, same as before.
  */
+import { PANCHANGA_SHELL_PATHS } from "@/router";
+import { isKundaliRoute } from "@/lib/kundali/kundali-routes";
 
 export type SitemapChangefreq = "daily" | "weekly" | "monthly";
 
@@ -79,4 +85,76 @@ const STATIC_NOINDEX_PATHS = new Set(ROUTES.filter((r) => r.noindex).map((r) => 
 /** True for exact noindex routes above, plus any /kundali/:id (dynamic, per-user). */
 export function isNoindexPath(pathname: string): boolean {
   return STATIC_NOINDEX_PATHS.has(pathname) || /^\/kundali\/[^/]+/.test(pathname);
+}
+
+// ---------------------------------------------------------------------------
+// Active-route matching — Header's dropdown highlighting, MobileBottomNav's
+// tab highlighting, and the panchanga sidebar shell all read from here so
+// there's one definition of "is this pathname a panchanga/jyotish page."
+
+export { isKundaliRoute };
+
+/** Header's "पञ्चाङ्ग" dropdown + broad panchanga-domain check (includes dainikkranti). */
+export function isPanchangaRoute(pathname: string): boolean {
+  return (
+    pathname === "/panchanga" ||
+    pathname.startsWith("/panchanga/") ||
+    pathname === "/suryakranti" ||
+    pathname === "/sun-times" ||
+    pathname === "/abhijit-muhurta" ||
+    pathname === "/dainikkranti" ||
+    pathname === "/chandrakranti" ||
+    pathname === "/दैनिकक्रान्ति" ||
+    decodeURIComponent(pathname) === "/दैनिकक्रान्ति"
+  );
+}
+
+/** Header's "ज्योतिष" dropdown; also MobileBottomNav's Kundali tab (same routes). */
+export function isJyotishRoute(pathname: string): boolean {
+  return isKundaliRoute(pathname) || pathname.startsWith("/jyotish/");
+}
+
+/** MobileBottomNav's Panchanga tab — narrower than {@link isPanchangaRoute}: dainikkranti gets its own tab. */
+export function isPanchangaTabRoute(pathname: string): boolean {
+  return (
+    pathname === "/panchanga" ||
+    pathname.startsWith("/panchanga/") ||
+    pathname === "/suryakranti" ||
+    pathname === "/abhijit-muhurta"
+  );
+}
+
+/** MobileBottomNav's Daily (dainikkranti) tab. */
+export function isDainikkrantiTabRoute(pathname: string): boolean {
+  return pathname.startsWith("/dainikkranti");
+}
+
+/** MobileBottomNav's Learn tab. */
+export function isLearnRoute(pathname: string): boolean {
+  return pathname === "/learn" || pathname.startsWith("/learn/");
+}
+
+/** True if `template`'s static segments match `pathname` (dynamic "$param" segments match anything). */
+function matchesTemplate(pathname: string, template: string): boolean {
+  const pathSegments = pathname.split("/");
+  const templateSegments = template.split("/");
+  if (pathSegments.length !== templateSegments.length) return false;
+  return templateSegments.every(
+    (segment, i) => segment.startsWith("$") || segment === pathSegments[i],
+  );
+}
+
+/**
+ * Routes that show the left panchanga sidebar on desktop (≥992px). Derived
+ * from PANCHANGA_SHELL_PATHS (router.tsx), not hand-listed here — reads it
+ * lazily (inside the function body) since router.tsx imports this module
+ * indirectly (via route-loading.tsx), and the import is circular.
+ */
+export function shouldShowPanchangaSidebar(pathname: string): boolean {
+  return PANCHANGA_SHELL_PATHS.some((template) => matchesTemplate(pathname, template));
+}
+
+/** Client navigations that keep the persistent panchanga shell mounted. */
+export function isPanchangaShellNavigation(from: string, to: string): boolean {
+  return shouldShowPanchangaSidebar(from) && shouldShowPanchangaSidebar(to);
 }

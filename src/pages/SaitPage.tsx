@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, getRouteApi, useParams } from "@tanstack/react-router";
+import { getRouteApi, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CalendarHeart, Info } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -12,6 +12,7 @@ import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
 import { CEREMONY_META } from "@/lib/panchanga-elements";
 import { isMuhurtaSaitCategory, type SaitCategoryId } from "@/lib/sait-data";
 import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
+import { PanchangaDetailsBackLink } from "@/components/panchanga/PanchangaDetailsBackLink";
 import { SaitCeremonyLayout } from "@/components/sait/SaitCeremonyLayout";
 import { SaitProfilePicker } from "@/components/sait/SaitProfilePicker";
 import { SuitabilityLegend } from "@/components/sait/sait-suitability";
@@ -173,9 +174,7 @@ export function SaitPage() {
           icon={<CalendarHeart className="h-6 w-6 text-secondary" />}
           title={t("sait.unknown_ceremony")}
         />
-        <Link to="/panchanga/details" className="text-sm text-primary underline">
-          {t("element_page.back_to_details")}
-        </Link>
+        <PanchangaDetailsBackLink labelKey="element_page.back_to_details" variant="inline" />
       </PageShell>
     );
   }

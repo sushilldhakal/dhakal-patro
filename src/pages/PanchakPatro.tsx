@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft, CalendarClock } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
-import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
+import { RoutePageState } from "@/components/common/RoutePageState";
+import {
+  usePatroYearDataPage,
+  usePatroYearDataQuery,
+} from "@/hooks/use-patro-year-data-page";
 import {
   mapPanchakPeriod,
   type PanchakPeriod,
@@ -16,15 +19,22 @@ import {
 } from "@/lib/panchak/panchak-types";
 import { fetchPanchakYear, panchakKeys } from "@/lib/api";
 import { formatBsMonthDayPatro } from "@/lib/panchanga-format";
-import { useLocale, bilingualText } from "@/i18n/locale";
+import { useLocale } from "@/i18n/locale";
 import { isEnglishLocale } from "@/lib/avakahada-locale";
 import { patroNoteBox } from "@/lib/patro-classes";
-import { useRouteLoading } from "@/lib/route-loading";
 import { fmtAdShort } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
 import { formatBrowsePatroYear } from "@/lib/patro-year-axis";
 
 const routeApi = getRouteApi("/panchanga-shell/panchak-patro");
+
+const PROHIBITED_ITEMS = [
+  { titleKey: "panchak.prohibited.south_travel", descKey: "panchak.prohibited.south_travel_desc" },
+  { titleKey: "panchak.prohibited.roof", descKey: "panchak.prohibited.roof_desc" },
+  { titleKey: "panchak.prohibited.bed", descKey: "panchak.prohibited.bed_desc" },
+  { titleKey: "panchak.prohibited.fuel", descKey: "panchak.prohibited.fuel_desc" },
+  { titleKey: "panchak.prohibited.last_rites", descKey: "panchak.prohibited.last_rites_desc" },
+] as const;
 
 function PanchakPeriodCard({
   index,
@@ -103,24 +113,15 @@ export function PanchakPatro() {
     [era, year, lang, digits],
   );
 
-  const query = useQuery({
-    queryKey: panchakKeys.year(year, location.params, era),
-    queryFn: () => fetchPanchakYear(year, location.params, era),
-    staleTime: 1000 * 60 * 60,
-    placeholderData: keepPreviousData,
+  const query = usePatroYearDataQuery({ location, setLocation, yearBrowse }, {
+    queryKey: panchakKeys.year,
+    queryFn: fetchPanchakYear,
   });
 
-  useRouteLoading(query.isLoading && !query.data);
-
-  const periods = query.data?.periods.map(mapPanchakPeriod) ?? [];
-
-  const prohibited = [
-    { titleKey: "panchak.prohibited.south_travel", descKey: "panchak.prohibited.south_travel_desc" },
-    { titleKey: "panchak.prohibited.roof", descKey: "panchak.prohibited.roof_desc" },
-    { titleKey: "panchak.prohibited.bed", descKey: "panchak.prohibited.bed_desc" },
-    { titleKey: "panchak.prohibited.fuel", descKey: "panchak.prohibited.fuel_desc" },
-    { titleKey: "panchak.prohibited.last_rites", descKey: "panchak.prohibited.last_rites_desc" },
-  ] as const;
+  const periods = useMemo(
+    () => query.data?.periods.map(mapPanchakPeriod) ?? [],
+    [query.data?.periods],
+  );
 
   return (
     <PageShell className="pb-16 space-y-4">
@@ -153,32 +154,30 @@ export function PanchakPatro() {
 
       <p className={cn(patroNoteBox, "text-sm leading-relaxed")}>{t("panchak.intro")}</p>
 
-      {query.isLoading && !query.data ? (
-        <p className="text-sm">{bilingualText(lang, "लोड हुँदै…", "Loading…")}</p>
-      ) : query.isError ? (
-        <p className="text-sm text-destructive">
-          {bilingualText(lang, "पञ्चक विवरण लोड गर्न सकिएन।", "Could not load Panchak details.")}
-        </p>
-      ) : !periods.length ? (
-        <p className="text-sm">{t("panchak.no_data", { year: yearLabel })}</p>
-      ) : (
-        <section className="space-y-3">
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-            <AlertTriangle className="size-4 text-amber-600" />
-            {t("panchak.periods_title", { year: yearLabel })}
-          </h2>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {periods.map((period, i) => (
-              <PanchakPeriodCard key={`${period.start.ad}-${period.end.ad}`} index={i} period={period} lang={lang} />
-            ))}
-          </div>
-        </section>
-      )}
+      <RoutePageState isLoading={query.isLoading} data={query.data}>
+        {() =>
+          !periods.length ? (
+            <p className="text-sm">{t("panchak.no_data", { year: yearLabel })}</p>
+          ) : (
+            <section className="space-y-3">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                <AlertTriangle className="size-4 text-amber-600" />
+                {t("panchak.periods_title", { year: yearLabel })}
+              </h2>
+              <div className="grid gap-3 lg:grid-cols-2">
+                {periods.map((period, i) => (
+                  <PanchakPeriodCard key={`${period.start.ad}-${period.end.ad}`} index={i} period={period} lang={lang} />
+                ))}
+              </div>
+            </section>
+          )
+        }
+      </RoutePageState>
 
       <section className="rounded-2xl border border-border bg-card p-5">
         <h2 className="text-base font-bold text-foreground mb-3">{t("panchak.prohibited_title")}</h2>
         <ul className="space-y-3">
-          {prohibited.map(({ titleKey, descKey }) => (
+          {PROHIBITED_ITEMS.map(({ titleKey, descKey }) => (
             <li key={titleKey} className="border-b border-border/60 pb-3 last:border-0 last:pb-0">
               <p className="text-sm font-semibold text-foreground">{t(titleKey)}</p>
               <p className="text-sm mt-0.5 leading-relaxed">{t(descKey)}</p>

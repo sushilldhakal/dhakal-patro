@@ -1,6 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Star, Sparkles, Moon, BookOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import {
+  isDainikkrantiTabRoute,
+  isJyotishRoute,
+  isLearnRoute,
+  isPanchangaTabRoute,
+} from "@/lib/app-routes";
 import { cn } from "@/lib/utils";
 import { useLocale, bilingualText } from "@/i18n/locale";
 
@@ -22,32 +28,28 @@ const TABS: Tab[] = [
     icon: Star,
     ne: "पञ्चाङ्ग",
     en: "Panchanga",
-    match: (p) =>
-      p === "/panchanga" ||
-      p.startsWith("/panchanga/") ||
-      p === "/suryakranti" ||
-      p === "/abhijit-muhurta",
+    match: isPanchangaTabRoute,
   },
   {
     to: "/kundali",
     icon: Sparkles,
     ne: "कुण्डली",
     en: "Kundali",
-    match: (p) => p.startsWith("/kundali") || p.startsWith("/jyotish"),
+    match: isJyotishRoute,
   },
   {
     to: "/dainikkranti",
     icon: Moon,
     ne: "दैनिक",
     en: "Daily",
-    match: (p) => p.startsWith("/dainikkranti"),
+    match: isDainikkrantiTabRoute,
   },
   {
     to: "/learn",
     icon: BookOpen,
     ne: "सिकाइ",
     en: "Learn",
-    match: (p) => p === "/learn" || p.startsWith("/learn/"),
+    match: isLearnRoute,
   },
 ];
 

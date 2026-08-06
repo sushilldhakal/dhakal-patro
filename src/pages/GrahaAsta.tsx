@@ -1,13 +1,15 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { Sunrise } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RoutePageState } from "@/components/common/RoutePageState";
 import { GrahaDetailPageFrame } from "@/components/graha/GrahaDetailPageFrame";
 import { GrahaGroupedEventCards } from "@/components/graha/GrahaGroupedEventCards";
 import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
-import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
+import {
+  usePatroYearDataPage,
+  usePatroYearDataQuery,
+} from "@/hooks/use-patro-year-data-page";
 import { useLocale } from "@/i18n/locale";
-import { useRouteLoading } from "@/lib/route-loading";
 import { grahaName } from "@/lib/graha-i18n";
 import { cn } from "@/lib/utils";
 import { formatBsIsoDateNepali } from "@/lib/panchanga-format";
@@ -109,21 +111,20 @@ export function GrahaAsta() {
   const navigate = routeApi.useNavigate();
   const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
 
-  const query = useQuery({
-    queryKey: grahaDetailKeys.asta(yearBrowse.year, location.params, yearBrowse.era),
-    queryFn: () => fetchGrahaAstaYear(yearBrowse.year, location.params, yearBrowse.era),
-    staleTime: 1000 * 60 * 30,
-    placeholderData: keepPreviousData,
+  const query = usePatroYearDataQuery({ location, setLocation, yearBrowse }, {
+    queryKey: grahaDetailKeys.asta,
+    queryFn: fetchGrahaAstaYear,
   });
 
-  useRouteLoading(query.isLoading && !query.data);
-
-  const byGraha = new Map<string, GrahaAstaPeriod[]>();
-  for (const g of GRAHA_ORDER) byGraha.set(g, []);
-  for (const p of query.data?.periods ?? []) {
-    if (!byGraha.has(p.graha)) byGraha.set(p.graha, []);
-    byGraha.get(p.graha)!.push(p);
-  }
+  const byGraha = useMemo(() => {
+    const groups = new Map<string, GrahaAstaPeriod[]>();
+    for (const g of GRAHA_ORDER) groups.set(g, []);
+    for (const p of query.data?.periods ?? []) {
+      if (!groups.has(p.graha)) groups.set(p.graha, []);
+      groups.get(p.graha)!.push(p);
+    }
+    return groups;
+  }, [query.data?.periods]);
 
   return (
     <GrahaDetailPageFrame

@@ -860,7 +860,8 @@ export const fetchEclipseYear = (
 };
 
 export interface PanchakMomentResponse {
-  date_ad: string;
+  /** Full AD instant with the Nepal offset, e.g. "2026-04-13T04:03:00+05:45". */
+  iso: string;
   bs_year: number;
   bs_month: number;
   bs_day: number;

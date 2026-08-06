@@ -17,27 +17,15 @@ import { cn } from "@/lib/utils";
 import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
 import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import type { GrahaKey } from "@/lib/graha-details";
+import { grahaName } from "@/lib/graha-i18n";
 
 /** Matrix column order + labels (display only — scores come from the API). */
 const ASHTAKAVARGA_TARGETS = [
   "lagna", "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn",
 ] as const;
 
-const ASHTAKAVARGA_TARGET_LABEL: Record<
-  (typeof ASHTAKAVARGA_TARGETS)[number],
-  { en: string; ne: string; shortEn: string; shortNe: string }
-> = {
-  lagna: { en: "Lagna", ne: "लग्न", shortEn: "Lg", shortNe: "ल" },
-  sun: { en: "Sun", ne: "सूर्य", shortEn: "Su", shortNe: "सू" },
-  moon: { en: "Moon", ne: "चन्द्र", shortEn: "Ch", shortNe: "च" },
-  mars: { en: "Mars", ne: "मंगल", shortEn: "Ma", shortNe: "म" },
-  mercury: { en: "Mercury", ne: "बुध", shortEn: "Bu", shortNe: "बु" },
-  jupiter: { en: "Jupiter", ne: "बृहस्पति", shortEn: "Gu", shortNe: "गु" },
-  venus: { en: "Venus", ne: "शुक्र", shortEn: "Ve", shortNe: "श" },
-  saturn: { en: "Saturn", ne: "शनि", shortEn: "Sa", shortNe: "श" },
-};
-
-const th = "h-9 px-2 text-sm font-semibold uppercase tracking-wide whitespace-nowrap";
+const th = "h-auto py-2 px-2 text-sm font-semibold tracking-wide whitespace-nowrap";
+const thGraha = cn(th, "text-right min-w-[4.75rem] normal-case align-bottom");
 const td = "px-2 py-1.5 text-sm";
 const num = "text-right font-mono tabular-nums";
 
@@ -45,8 +33,7 @@ function ashtakavargaTargetLabel(
   target: (typeof ASHTAKAVARGA_TARGETS)[number],
   lang: "ne" | "en",
 ) {
-  const label = ASHTAKAVARGA_TARGET_LABEL[target];
-  return bilingualText(lang, label.shortNe, label.shortEn);
+  return grahaName(target, lang);
 }
 
 function AshtakavargaTargetHead({
@@ -55,21 +42,16 @@ function AshtakavargaTargetHead({
   target: (typeof ASHTAKAVARGA_TARGETS)[number];
 }) {
   const { lang } = useLocale();
-  const label = ASHTAKAVARGA_TARGET_LABEL[target];
+  const label = ashtakavargaTargetLabel(target, lang);
   if (target !== "lagna") {
     return (
-      <span
-        className="inline-flex flex-col items-end gap-0.5"
-        title={bilingualText(lang, label.ne, label.en)}
-      >
+      <span className="inline-flex flex-col items-end gap-1">
         <GrahaPlanetIcon graha={target as GrahaKey} size={18} />
-        <span className="text-[10px] font-normal normal-case tracking-normal">
-          {ashtakavargaTargetLabel(target, lang)}
-        </span>
+        <span className="text-xs font-semibold leading-tight">{label}</span>
       </span>
     );
   }
-  return ashtakavargaTargetLabel(target, lang);
+  return <span className="text-xs font-semibold leading-tight">{label}</span>;
 }
 
 function AshtakavargaMatrix({
@@ -91,16 +73,16 @@ function AshtakavargaMatrix({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3 min-w-[5.5rem]")}>
+              <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3 min-w-[5.5rem] uppercase")}>
                 {t("kundali.rashi")}
               </TableHead>
               {ASHTAKAVARGA_TARGETS.map((t) => (
-                <TableHead key={t} className={cn(th, "text-right min-w-[2.75rem]")}>
+                <TableHead key={t} className={thGraha}>
                   <AshtakavargaTargetHead target={t} />
                 </TableHead>
               ))}
               {showSarvashtaka && (
-                <TableHead className={cn(th, "text-right min-w-[3rem]")}>
+                <TableHead className={cn(th, "text-right min-w-[3rem] uppercase")}>
                   {t("kundali.sarv")}
                 </TableHead>
               )}
@@ -174,7 +156,7 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
             <TableRow className="bg-muted/40 hover:bg-muted/40">
               <TableHead className={cn(th, "sticky left-0 z-10 bg-muted pl-3")} />
               {ASHTAKAVARGA_TARGETS.map((t) => (
-                <TableHead key={t} className={cn(th, "text-right min-w-[2.75rem]")}>
+                <TableHead key={t} className={thGraha}>
                   <AshtakavargaTargetHead target={t} />
                 </TableHead>
               ))}

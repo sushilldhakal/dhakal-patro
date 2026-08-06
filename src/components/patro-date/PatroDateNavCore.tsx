@@ -39,6 +39,7 @@ import {
 import { PatroYearEraToggle } from "./PatroYearEraToggle";
 import { patroEraShortLabel } from "./patro-era-short-label";
 import { windowedBrowseYearSelectOptions } from "@/lib/patro-browse-year-items";
+import { monthLengthInBrowseEra } from "@/lib/patro-browse-range";
 import { PatroYearCombobox } from "./PatroYearCombobox";
 import { PatroYearPickerPopover } from "./PatroYearPickerPopover";
 import { usePatroDateSheet } from "./use-patro-date-sheet";
@@ -121,20 +122,16 @@ function chipMonthLabel(month: number, lang: string, era: Era): string {
 }
 
 /**
- * Day span for the month chip. Month views have no single day to show, and
- * printing "1" read as a date the user had not chosen — the month's own length
- * says "a month" without naming a day, and answers a question the dot grid it
- * replaced could not: BS months run 29–32 days, so १-३२ is real information.
+ * Day span for the month chip when no single day is selected (month browse).
+ * Uses the real month length for the active era (BS months are 29–32 days).
  */
 function monthChipSpan(
+  era: Era,
   year: number,
   month: number,
-  isGregorian: boolean,
   digits: (value: number) => string,
 ): string {
-  const length = isGregorian
-    ? new Date(year, month, 0).getDate() // day 0 of the next month = last of this
-    : 32;
+  const length = monthLengthInBrowseEra(era, year, month);
   return `${digits(1)}-${digits(length)}`;
 }
 
@@ -808,7 +805,7 @@ export function PatroDateNavCore({
           <div className={patroMonthChipDay}>{digits(chipDay)}</div>
         ) : (
           <div className={patroMonthChipSpan}>
-            {monthChipSpan(year, chipMonth, isGregorian, digits)}
+            {monthChipSpan(era, year, chipMonth, digits)}
           </div>
         )}
       </button>

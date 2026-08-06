@@ -29,7 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MobileNavMenu } from "@/components/MobileNavMenu";
-import { isKundaliRoute } from "@/lib/kundali/kundali-routes";
+import { isJyotishRoute, isPanchangaRoute } from "@/lib/app-routes";
 import { useLocale } from "@/i18n/locale";
 
 const PANCHANGA_LINKS = [
@@ -52,23 +52,6 @@ const desktopLinkClass =
 
 const desktopSubLinkClass =
   "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-muted hover:text-foreground [&.active]:bg-secondary/10 [&.active]:text-secondary";
-
-function isPanchangaRoute(pathname: string) {
-  return (
-    pathname === "/panchanga" ||
-    pathname.startsWith("/panchanga/") ||
-    pathname === "/suryakranti" || pathname === "/sun-times" ||
-    pathname === "/abhijit-muhurta" ||
-    pathname === "/dainikkranti" ||
-    pathname === "/chandrakranti" ||
-    pathname === "/दैनिकक्रान्ति" ||
-    decodeURIComponent(pathname) === "/दैनिकक्रान्ति"
-  );
-}
-
-function isJyotishRoute(pathname: string) {
-  return isKundaliRoute(pathname) || pathname.startsWith("/jyotish/");
-}
 
 function JyotishNavDropdown() {
   const { t } = useTranslation();

@@ -1,14 +1,16 @@
 import { getRouteApi } from "@tanstack/react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RoutePageState } from "@/components/common/RoutePageState";
 import { GrahaDetailPageFrame } from "@/components/graha/GrahaDetailPageFrame";
 import { GrahaGroupedEventCards } from "@/components/graha/GrahaGroupedEventCards";
 import { PatroYearNavBlock } from "@/components/patro-page/PatroYearNavBlock";
-import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
+import {
+  usePatroYearDataPage,
+  usePatroYearDataQuery,
+} from "@/hooks/use-patro-year-data-page";
 import { useLocale } from "@/i18n/locale";
-import { useRouteLoading } from "@/lib/route-loading";
 import { grahaName } from "@/lib/graha-i18n";
 import { cn } from "@/lib/utils";
 import {
@@ -62,21 +64,20 @@ export function GrahaVakri() {
   const navigate = routeApi.useNavigate();
   const { location, setLocation, yearBrowse } = usePatroYearDataPage(search, navigate);
 
-  const query = useQuery({
-    queryKey: grahaDetailKeys.vakri(yearBrowse.year, location.params, yearBrowse.era),
-    queryFn: () => fetchGrahaVakriYear(yearBrowse.year, location.params, yearBrowse.era),
-    staleTime: 1000 * 60 * 30,
-    placeholderData: keepPreviousData,
+  const query = usePatroYearDataQuery({ location, setLocation, yearBrowse }, {
+    queryKey: grahaDetailKeys.vakri,
+    queryFn: fetchGrahaVakriYear,
   });
 
-  useRouteLoading(query.isLoading && !query.data);
-
-  const byGraha = new Map<string, GrahaVakriEvent[]>();
-  for (const g of GRAHA_ORDER) byGraha.set(g, []);
-  for (const ev of query.data?.events ?? []) {
-    if (!byGraha.has(ev.graha)) byGraha.set(ev.graha, []);
-    byGraha.get(ev.graha)!.push(ev);
-  }
+  const byGraha = useMemo(() => {
+    const groups = new Map<string, GrahaVakriEvent[]>();
+    for (const g of GRAHA_ORDER) groups.set(g, []);
+    for (const ev of query.data?.events ?? []) {
+      if (!groups.has(ev.graha)) groups.set(ev.graha, []);
+      groups.get(ev.graha)!.push(ev);
+    }
+    return groups;
+  }, [query.data?.events]);
 
   return (
     <GrahaDetailPageFrame
