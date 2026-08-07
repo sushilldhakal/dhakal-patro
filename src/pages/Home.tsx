@@ -11,6 +11,7 @@ import {
   type PanchangaDay,
 } from "../lib/api";
 import { CalendarView, loadHomePatroView, type CalendarMonthContext, type HomePatroView, HOME_PATRO_VIEW_KEY } from "../components/CalendarView";
+import { AakashGocharEntryCard } from "@/components/sky3d/AakashGocharEntryCard";
 import { useRouteLoading } from "@/lib/route-loading";
 import { setLocalStorageItem } from "@/lib/browser";
 import {
@@ -579,6 +580,10 @@ export function Home() {
 
   return (
     <main className="mx-auto max-w-[1400px] px-4 pb-12 pt-4 max-md:px-0 max-md:pb-16 max-md:pt-0">
+      {/* `main` drops its padding below md, so the card brings its own there —
+          otherwise it alone would run edge to edge above the calendar. */}
+      <AakashGocharEntryCard className="mb-3 max-md:mx-3 max-md:mt-3" />
+
       <CalendarView
         monthBrowse={monthBrowse}
         location={location}

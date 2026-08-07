@@ -33,8 +33,8 @@ const fluid = (raw: string) =>
       `<svg${attrs.replace(/\s(?:width|height)="[^"]*"/g, "")} width="100%" height="100%">`,
     );
 
-/** Index 0 is Mesha; use `RASHI_ICONS[rashiNumber - 1]`. */
-export const RASHI_ICONS: string[] = [
+/** Index 0 is Mesha; read through {@link RashiSkyGlyph} rather than directly. */
+const RASHI_ICONS: string[] = [
   mesha,
   vrishabha,
   mithuna,

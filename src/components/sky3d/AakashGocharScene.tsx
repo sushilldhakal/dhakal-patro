@@ -864,7 +864,6 @@ export function AakashGocharScene({
     try {
       runFrame(state, delta);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error("SKY FRAME ERROR", err);
     }
   });

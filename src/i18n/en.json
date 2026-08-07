@@ -109,6 +109,11 @@
         "description": "Live graha positions, upcoming sign and nakshatra changes, and per-planet transit windows — Lahiri sidereal, for your city.",
         "keywords": "gochar, planetary transit, graha gochar, rashi change, retrograde"
       },
+      "aakash_gochar": {
+        "title": "3D Aakash Gochar — Live Planetary Sky | Vedic Patro",
+        "description": "Watch the grahas move in three dimensions around the Earth: true sidereal longitudes, retrograde loops, the 23.44° axial tilt and the precession of the pole star.",
+        "keywords": "3d gochar, aakash gochar, planetary sky, geocentric, retrograde loop, precession, nakshatra"
+      },
       "graha_asta": {
         "title": "Heliacal Rising & Setting | Vedic Patro",
         "description": "Yearly udaya / asta (combustion) moments for Mercury, Venus, Mars, Jupiter and Saturn.",

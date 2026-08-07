@@ -587,6 +587,12 @@ export interface GocharGraha {
 export interface GocharResponse {
   date_ad: string;
   date_bs?: string;
+  /**
+   * The frame the longitudes below are sidereal in — where the start of मेष
+   * stands against the equinox on this date. Optional: older cached responses
+   * predate the field.
+   */
+  ayanamsa?: { name: string; degrees: number };
   gochar: Record<string, GocharGraha>;
 }
 
