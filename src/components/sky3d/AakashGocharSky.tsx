@@ -50,7 +50,13 @@ import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { cn } from "@/lib/utils";
 import { GRAHA_COLOR } from "@/lib/sky3d/geocentric-model";
 import { KATHMANDU, type Observer } from "@/lib/sky3d/horizon";
-import { ayanamsa, calibrate, daysSinceJ2000, type SkyCalibration } from "@/lib/sky3d/orbital-model";
+import {
+  ayanamsa,
+  calibrate,
+  daysSinceJ2000,
+  GEO_BODY_ORDER,
+  type SkyCalibration,
+} from "@/lib/sky3d/orbital-model";
 import { RashiSkyGlyph } from "@/lib/sky3d/rashi-icons";
 import { getZonedTimeParts } from "@/lib/zoned-time";
 import { SOLAR_STATIONS } from "@/lib/sky3d/sky-geometry";
@@ -98,6 +104,9 @@ const LABEL_COLOR = {
  * button repeatedly climbs it; pause drops back to the first rung.
  */
 const SPEED_LADDER = [
+  /* The bottom rung is the clock on the wall: play runs the sky at the rate the
+     sky actually runs. Everything above it is a fast button away. */
+  { seconds: 1, ne: "१ सेकेन्ड/से", en: "1 sec/s" },
   { seconds: 60, ne: "१ मिनेट/से", en: "1 min/s" },
   { seconds: 7200, ne: "२ घण्टा/से", en: "2 hr/s" },
   { seconds: 172800, ne: "२ दिन/से", en: "2 days/s" },
@@ -120,12 +129,56 @@ const SYSTEM_DISTANCE = 26;
 const HORIZON_WIDE = 45;
 /** Default zoom in the Earth-globe view — frames the globe and its ring. */
 const GLOBE_VIEW = 78;
+/**
+ * Where the globe camera starts.
+ *
+ * Past a right angle, so the face turned towards you is the one the observer is
+ * standing on — the page is Kathmandu's sky, and opening on the Pacific would
+ * put the marker round the back.
+ */
+const GLOBE_YAW = Math.PI - 0.6;
+const GLOBE_PITCH = 0.42;
 
 /** The camera never comes closer than this, nor pulls back further. */
 const ZOOM_MIN = 0.35;
 const ZOOM_MAX = 120;
 
 const clampZoom = (v: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
+
+/** How far a press may wander, in px, and still count as a tap rather than a drag. */
+const DRAG_SLOP = 5;
+
+/** The most the belt text is allowed to grow as the camera pulls back. */
+const LABEL_SCALE_MAX = 2.4;
+/**
+ * Points shaved off the belt text at the widest zoom, ramped in with the scale.
+ *
+ * The growth curve is right for reading a small ring across the screen, but by
+ * the far end the rashi and nakshatra names had got heavy enough to crowd the
+ * belt they sit on. This trims that end only: nothing is taken at the mode's own
+ * framing, where the text already reads well.
+ */
+const LABEL_WIDE_TRIM = 4;
+
+/**
+ * A zone-shifted instant → the UTC midnight of the day it lands on.
+ *
+ * `adToBS` reads a mid-day instant off the device's own calendar and a UTC one
+ * off UTC, so anything shown against the observed place has to arrive already
+ * flattened to its day — otherwise an evening in Kathmandu reads as tomorrow to
+ * anyone further east. Built through the UTC setters because `new Date(y, …)`
+ * folds years 0–99 into the 1900s, and this clock runs to both ends of history.
+ */
+const zoneMidnight = (shifted: Date) => {
+  const midnight = new Date(0);
+  midnight.setUTCFullYear(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate());
+  midnight.setUTCHours(0, 0, 0, 0);
+  return midnight;
+};
+
+/** Belt-label font size at `scale`, with the wide-zoom trim applied. */
+const beltFontSize = (base: number, scale: number) =>
+  base * scale - (LABEL_WIDE_TRIM * (scale - 1)) / (LABEL_SCALE_MAX - 1);
 
 export type AakashGocharSkyProps = {
   /** Gochar rows for {@link date} — the API longitudes the model is pinned to. */
@@ -203,7 +256,7 @@ export function AakashGocharSky({
   });
   /* Opens on the globe, so these have to match the framing the पृथ्वी गोला chip
      sets — otherwise the first frame is the space camera on a globe scene. */
-  const view = useRef<ViewState>({ yaw: 0.6, pitch: 0.42, distance: GLOBE_VIEW });
+  const view = useRef<ViewState>({ yaw: GLOBE_YAW, pitch: GLOBE_PITCH, distance: GLOBE_VIEW });
 
   const [mode, setMode] = useState<SkyMode>("globe");
   const [playing, setPlaying] = useState(true);
@@ -232,7 +285,9 @@ export function AakashGocharSky({
   /* The transport row's own date picker — the date nav above the canvas is
      unreachable once fullscreen, so this is the only way to jump dates there. */
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const dateBs = useMemo(() => adToBS(date), [date]);
+  /* The lock needs a graha, and hitting a graha on the sky is a small target on
+     a phone — so the lock button doubles as the way to choose one. */
+  const [grahaPickerOpen, setGrahaPickerOpen] = useState(false);
 
   // Following the date nav above the canvas keeps the two in step.
   useEffect(() => {
@@ -248,21 +303,22 @@ export function AakashGocharSky({
 
   /**
    * A press of either fast button. Coming from a standstill or from the other
-   * direction it starts at the bottom of the ladder; otherwise it climbs a rung
-   * and stops at the top.
+   * direction it starts at a minute a second — the first rung that is actually
+   * fast, real time being the one below it; otherwise it climbs a rung and
+   * stops at the top, seventy-two years a second.
    */
   const stepSpeed = useCallback(
     (direction: "forward" | "back") => {
       const wantReverse = direction === "back";
       const fromRest = !playing || reverse !== wantReverse;
-      setSpeedIndex((i) => (fromRest ? 0 : Math.min(SPEED_LADDER.length - 1, i + 1)));
+      setSpeedIndex((i) => (fromRest ? 1 : Math.min(SPEED_LADDER.length - 1, i + 1)));
       setReverse(wantReverse);
       setPlaying(true);
     },
     [playing, reverse],
   );
 
-  /** Pause always returns the clock to normal speed, running forward. */
+  /** Pause always returns the clock to real time, running forward. */
   const togglePlay = useCallback(() => {
     if (playing) {
       setSpeedIndex(0);
@@ -287,6 +343,8 @@ export function AakashGocharSky({
   const gestureStart = useRef({ yaw: 0, pitch: 0, distance: 0, pinch: 0 });
   /** Where the current one-finger drag started, in client px. */
   const dragOrigin = useRef({ x: 0, y: 0 });
+  /** Pointers this wrapper has taken capture of — see {@link captureDrag}. */
+  const captured = useRef(new Set<number>());
 
   /**
    * Re-anchor the gesture on where the camera is now and on whichever pointer
@@ -300,12 +358,32 @@ export function AakashGocharSky({
     if (!first.done) dragOrigin.current = { ...first.value };
   }, []);
 
+  /**
+   * Take capture of a pointer, once — so a drag that runs off the canvas keeps
+   * steering it.
+   *
+   * Deliberately *not* done on pointerdown. Capture retargets every later event
+   * for that pointer at this wrapper, and the browser then fires `click` on the
+   * nearest common ancestor rather than on what was pressed. Grabbing it up
+   * front therefore swallowed both the overlay buttons (zoom, fullscreen) and
+   * the canvas's own hit-testing, which is how a graha gets selected. So the
+   * press is left alone until it has actually moved — a tap reaches its target,
+   * a drag still steers.
+   */
+  const captureDrag = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (captured.current.has(e.pointerId)) return;
+    captured.current.add(e.pointerId);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  }, []);
+
   const onPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
+      /* A press that lands on a control is that control's, not the sky's —
+         otherwise a slightly shaky press on "+" starts a camera drag. */
+      if ((e.target as HTMLElement | null)?.closest?.("button, input, select, [role='button']")) {
+        return;
+      }
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      /* Capture so a drag that leaves the canvas keeps steering it, and so the
-         matching up event still arrives to clear the pointer. */
-      e.currentTarget.setPointerCapture?.(e.pointerId);
       reanchor();
     },
     [reanchor],
@@ -314,7 +392,9 @@ export function AakashGocharSky({
   const endPointer = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
       pointers.current.delete(e.pointerId);
-      e.currentTarget.releasePointerCapture?.(e.pointerId);
+      if (captured.current.delete(e.pointerId)) {
+        e.currentTarget.releasePointerCapture?.(e.pointerId);
+      }
       reanchor();
     },
     [reanchor],
@@ -327,6 +407,7 @@ export function AakashGocharSky({
     const live = [...pointers.current.values()];
 
     if (live.length >= 2) {
+      captureDrag(e);
       const [a, b] = live;
       const dist = Math.hypot(a.x - b.x, a.y - b.y);
       if (!dist) return;
@@ -339,6 +420,10 @@ export function AakashGocharSky({
 
     const dx = e.clientX - dragOrigin.current.x;
     const dy = e.clientY - dragOrigin.current.y;
+    /* Under the slop radius this is still a tap, and a tap belongs to whatever
+       is under it — a graha, or a button. Past it, it is a drag for good. */
+    if (!captured.current.has(e.pointerId) && Math.hypot(dx, dy) < DRAG_SLOP) return;
+    captureDrag(e);
     /* Drag the sphere, don't drive the camera: pulling right swings the face
        you are looking at to the right, which means the camera has to go the
        other way round. */
@@ -354,7 +439,7 @@ export function AakashGocharSky({
       1.45,
       Math.max(lowestPitch, gestureStart.current.pitch + dy * 0.005),
     );
-  }, []);
+  }, [captureDrag]);
 
   const zoomBy = useCallback((factor: number) => {
     view.current.distance = clampZoom(view.current.distance * factor);
@@ -394,6 +479,21 @@ export function AakashGocharSky({
     [controlled, onSelectedKeyChange, selectedKeyProp],
   );
 
+  /** Select outright — the picker names a graha, so it never toggles it off. */
+  const setSelected = useCallback(
+    (key: GrahaKey | null) => {
+      if (!controlled) setOwnSelectedKey(key);
+      onSelectedKeyChange?.(key);
+    },
+    [controlled, onSelectedKeyChange],
+  );
+
+  /* Nothing selected, nothing to centre on: the lock cannot stay on once its
+     graha is deselected, or the camera silently stops following. */
+  useEffect(() => {
+    if (!selectedKey) setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
+  }, [selectedKey]);
+
   /* Fullscreen takes the viewport, so the page behind it must not scroll — and
      Escape has to get out, which is the one affordance a fixed overlay owes a
      keyboard. */
@@ -426,7 +526,9 @@ export function AakashGocharSky({
      screen at the very widest zoom. */
   const modeBaseline =
     mode === "space" ? SYSTEM_DISTANCE : mode === "globe" ? GLOBE_VIEW : HORIZON_WIDE;
-  const labelScale = sample ? Math.min(2.4, Math.max(1, sample.zoomDistance / modeBaseline)) : 1;
+  const labelScale = sample
+    ? Math.min(LABEL_SCALE_MAX, Math.max(1, sample.zoomDistance / modeBaseline))
+    : 1;
 
   /**
    * The place's offset from UT, taken once at the date the page is on.
@@ -444,6 +546,21 @@ export function AakashGocharSky({
     if (delta <= -720) delta += 1440;
     return delta * 60000;
   }, [date, timeZone]);
+
+  /**
+   * The day the date picker opens on — the one the place is having, not the
+   * device.
+   *
+   * `adToBS` reads a mid-day instant off the device's own calendar, so at 20:30
+   * in Kathmandu a reader in Melbourne was shown tomorrow, and setting the hour
+   * looked like it moved the day. Normalising through the observed zone, and
+   * handing over a UTC midnight, makes the picker agree with the HUD above it
+   * wherever it is read from.
+   */
+  const dateBs = useMemo(
+    () => adToBS(zoneMidnight(new Date(date.getTime() + zoneOffsetMs))),
+    [date, zoneOffsetMs],
+  );
 
   /**
    * The clock reading, in the calendar the reader is using and on the wall of
@@ -479,8 +596,9 @@ export function AakashGocharSky({
 
     /* Past बि.सं. २२०० the compiled table has nothing, so the Sun becomes the
        calendar it always was — see [[bikram-solar]]. Marked with ≈ so it never
-       passes for the almanac. */
-    const bs = bikramFromSun(simDate, sunLongitude ?? 0, sunSpeed);
+       passes for the almanac. The civil day goes with it, so the table is asked
+       about the place's day rather than the device's. */
+    const bs = bikramFromSun(simDate, sunLongitude ?? 0, sunSpeed, zoneMidnight(local));
     const mark = bs.approximate ? "≈" : "";
     return {
       date: `${mark}${digits(bs.year)} ${bsMonthLabel(bs.month, "ne")} ${digits(bs.day)}, ${
@@ -571,7 +689,7 @@ export function AakashGocharSky({
         label={pick("पृथ्वी गोला", "Earth globe")}
         onPress={() => {
           setMode("globe");
-          view.current = { yaw: 0.6, pitch: 0.42, distance: GLOBE_VIEW };
+          view.current = { yaw: GLOBE_YAW, pitch: GLOBE_PITCH, distance: GLOBE_VIEW };
         }}
         overlay={fullscreen}
         compact={fullscreen}
@@ -613,13 +731,27 @@ export function AakashGocharSky({
         icon={<Crosshair className="size-full" />}
         label={
           selectedKey
-            ? pick("चयनित ग्रह केन्द्रमा", "Lock view on selected graha")
-            : pick("पहिले ग्रह छान्नुहोस्", "Select a graha on the sky first")
+            ? toggles.lockCenter
+              ? pick(
+                  `${GRAHA_NAME[selectedKey].ne} केन्द्रबाट छुटाउनुहोस्`,
+                  `Unlock the view from ${GRAHA_NAME[selectedKey].en}`,
+                )
+              : pick(
+                  `${GRAHA_NAME[selectedKey].ne} केन्द्रमा राख्नुहोस्`,
+                  `Keep ${GRAHA_NAME[selectedKey].en} centred`,
+                )
+            : pick("ग्रह छान्नुहोस्", "Choose a graha to follow")
         }
         active={toggles.lockCenter}
         overlay={fullscreen}
         compact={fullscreen}
-        onPress={() => setToggles((t) => ({ ...t, lockCenter: !t.lockCenter }))}
+        /* With nothing selected there is nothing to centre on, so the press
+           opens the chooser instead of toggling a lock that would do nothing. */
+        onPress={() =>
+          selectedKey
+            ? setToggles((t) => ({ ...t, lockCenter: !t.lockCenter }))
+            : setGrahaPickerOpen(true)
+        }
       />
     </>
   );
@@ -794,6 +926,64 @@ export function AakashGocharSky({
         )}
       </div>
 
+      {/* Which graha the camera should ride. Picking one turns the lock on in
+          the same press — choosing a graha here is only ever asked for because
+          you want to follow it. */}
+      {grahaPickerOpen ? (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <button
+            type="button"
+            aria-label={pick("बन्द गर्नुहोस्", "Close")}
+            className="absolute inset-0 cursor-default"
+            onClick={() => setGrahaPickerOpen(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-4">
+            <p className="m-0 mb-3 text-sm font-bold text-foreground">
+              {pick("कुन ग्रह पछ्याउने?", "Which graha to follow?")}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {GEO_BODY_ORDER.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    setSelected(key);
+                    setToggles((t) => ({ ...t, lockCenter: true }));
+                    setGrahaPickerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-semibold transition-colors",
+                    selectedKey === key
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-border text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  <span
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: GRAHA_COLOR[key] }}
+                  />
+                  <span className="truncate">
+                    {pick(GRAHA_NAME[key].ne, GRAHA_NAME[key].en)}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {selectedKey ? (
+              <button
+                type="button"
+                className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted"
+                onClick={() => {
+                  setSelected(null);
+                  setGrahaPickerOpen(false);
+                }}
+              >
+                {pick("पछ्याउन छोड्नुहोस्", "Stop following")}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {/* An in-tree overlay rather than a portal: it belongs to the fullscreen
           layer it opens over, so it inherits that layer's stacking and theme
           without either being re-applied. */}
@@ -903,7 +1093,7 @@ const SkyLabels = memo(function SkyLabels({
               <RashiSkyGlyph index={label.index} size={iconSize} color={LABEL_COLOR.rashi} />
               <span
                 className="max-w-full truncate font-bold"
-                style={{ fontSize: 14 * scale, color: LABEL_COLOR.rashi }}
+                style={{ fontSize: beltFontSize(14, scale), color: LABEL_COLOR.rashi }}
               >
                 {formatRashiByNumber(label.index, lang)}
               </span>
@@ -918,7 +1108,7 @@ const SkyLabels = memo(function SkyLabels({
               key={label.id}
               style={{
                 ...labelBox(label.x, label.y, boxWidth, -6 * scale),
-                fontSize: 12 * scale,
+                fontSize: beltFontSize(12, scale),
                 color: LABEL_COLOR.nakshatra,
               }}
             >

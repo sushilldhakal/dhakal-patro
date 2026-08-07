@@ -72,15 +72,21 @@ export type BikramReading = {
  * derived from `sunLongitude` (sidereal, degrees) and `sunSpeed` (degrees per
  * day, the Sun's true rate — it runs slower near aphelion, which is worth a
  * whole day by the end of a rashi).
+ *
+ * `civilDay` names which calendar day the instant belongs to, as a UTC
+ * midnight. Worth passing whenever the reading is shown against a particular
+ * place: {@link adToBS} resolves a mid-day instant on the *device's* calendar,
+ * so without it an evening in Kathmandu reads as tomorrow to anyone east of it.
  */
 export function bikramFromSun(
   date: Date,
   sunLongitude: number,
   sunSpeed?: number,
+  civilDay?: Date,
 ): BikramReading {
   const dt = daysSinceJ2000(date);
   if (dt >= TABLE_START_DT && dt <= TABLE_END_DT) {
-    const table = adToBS(date);
+    const table = adToBS(civilDay ?? date);
     return { ...table, approximate: false };
   }
 

@@ -6,7 +6,7 @@
  * play walks the real gochar forward rather than an approximation of it.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Orbit, TriangleAlert } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -26,7 +26,7 @@ import { fetchGochar, gocharKeys } from "@/lib/api";
 import { formatGocharPatroDate } from "@/lib/gochar-page-utils";
 import type { GrahaKey } from "@/lib/graha-details";
 import { KATHMANDU, type Observer } from "@/lib/sky3d/horizon";
-import { todayAdStringInTimezone } from "@/lib/zoned-time";
+import { todayAdStringInTimezone, zonedWallTimeToInstant } from "@/lib/zoned-time";
 
 /** Canvas height when the page is not fullscreen. */
 const SCENE_HEIGHT = 560;
@@ -54,6 +54,18 @@ export function AakashGochar() {
    */
   const hydrated = useHydrated();
 
+  /**
+   * Whether the sky has ever been on screen.
+   *
+   * Once it has, it stays: swapping it back out for the loader unmounts the
+   * canvas and takes the camera, the view mode, the selection and fullscreen
+   * with it — so picking a date from inside the sky would drop you back to the
+   * page's default view instead of moving to that date. The query keeps the
+   * previous day's rows on screen meanwhile, and the scene runs on its own
+   * model regardless, so there is nothing to wait for.
+   */
+  const skyShown = useRef(false);
+
   const dateAd = useMemo(() => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -62,13 +74,23 @@ export function AakashGochar() {
   }, [date]);
 
   /* The scene reads a single instant — merge the picked day with the picked
-     clock so the time pickers actually move the sky, not just the date. */
+     clock so the time pickers actually move the sky, not just the date.
+
+     Resolved in the *place's* zone, not the device's: the pickers offer
+     Kathmandu's wall clock and the HUD reads it back the same way, so building
+     the instant with `setHours` would land whoever is not sitting in that zone
+     on a different moment than the one they chose. */
   const sceneDate = useMemo(() => {
     const [hour, minute] = clock.split(":").map(Number);
-    const d = new Date(date);
-    d.setHours(hour || 0, minute || 0, 0, 0);
-    return d;
-  }, [date, clock]);
+    return zonedWallTimeToInstant(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      date.getDate(),
+      hour || 0,
+      minute || 0,
+      tz,
+    );
+  }, [date, clock, tz]);
 
   /* The horizon/globe view is drawn from these coordinates — the observer frame
      and the "you are here" pin both. Every stored location carries them, so the
@@ -84,9 +106,15 @@ export function AakashGochar() {
     /* Without this, `isLoading` goes true on every date change (no data yet
        under the new key), which swaps AakashGocharSky out for the spinner —
        unmounting it and wiping its fullscreen/mode/camera state. Keeping the
-       previous day's data on screen during the refetch keeps it mounted. */
+       previous day's data on screen during the refetch keeps it mounted.
+       {@link skyShown} covers the case this cannot: a date whose fetch fails or
+       has nothing to fall back on. */
     placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (hydrated && !query.isLoading) skyShown.current = true;
+  }, [hydrated, query.isLoading]);
 
   /* Clicking the card already selected clears it, matching the canvas. */
   const toggleSelected = useCallback(
@@ -131,7 +159,7 @@ export function AakashGochar() {
         onLocationChange={setLocation}
       />
 
-      {!hydrated || query.isLoading ? (
+      {!hydrated || (query.isLoading && !skyShown.current) ? (
         <div className="flex items-center justify-center rounded-2xl border border-dashed border-border py-24">
           <VedicPatroLoader />
         </div>

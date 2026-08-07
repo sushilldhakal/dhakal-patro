@@ -238,14 +238,17 @@ export type SceneToggles = {
 /* ── shared primitives ─────────────────────────────────────────────────── */
 
 /**
- * Earth-fixed latitude/longitude → scene vector, axis along +Y. Longitude runs
- * the mirrored way, to match the zodiac ring drawn around this globe.
+ * Earth-fixed latitude/longitude → scene vector, axis along +Y.
+ *
+ * Same handedness as {@link eclipticToVec3}, and the same one three's own
+ * sphere UVs use — so the Earth map can be laid on the globe straight and every
+ * coastline lands where this function says it should.
  */
 function geoToVec3(lat: number, lon: number, radius: number): [number, number, number] {
   const a = lat * DEG;
   const b = lon * DEG;
   const cosLat = Math.cos(a);
-  return [radius * cosLat * Math.cos(b), radius * Math.sin(a), radius * cosLat * Math.sin(b)];
+  return [radius * cosLat * Math.cos(b), radius * Math.sin(a), -radius * cosLat * Math.sin(b)];
 }
 
 function circlePoints(radius: number, segments = 128): THREE.Vector3[] {
@@ -608,6 +611,7 @@ export function AakashGocharScene({
     return map;
   }, [loaded]);
 
+
   const bodyRefs = useRef<Partial<Record<GrahaKey, THREE.Group>>>({});
   const spinRefs = useRef<Partial<Record<GrahaKey, THREE.Mesh>>>({});
   const retroRefs = useRef<Partial<Record<GrahaKey, THREE.Group>>>({});
@@ -908,16 +912,18 @@ export function AakashGocharScene({
      * over the year: uttarayana climbing north, dakshinayana falling south.
      */
     const globePlace = (lonSid: number, latEc: number, radius: number): [number, number, number] => {
-      /* The globe view runs the zodiac the opposite way round from the space
-         view, by request: the ring is mirrored so the rashi read anticlockwise
-         from this camera. */
-      const [x, y, z] = eclipticToVec3(-(lonSid + ayan), latEc, radius);
+      /* The same handedness as the space view and as the globe underneath it.
+         The ring used to be mirrored here, to turn the rashi the other way
+         round; that put the Earth's own map on backwards, so the frame is now
+         the honest one throughout and the rashi run as the geometry has them. */
+      const [x, y, z] = eclipticToVec3(lonSid + ayan, latEc, radius);
       const c = Math.cos(eps * DEG);
       const s = Math.sin(eps * DEG);
-      /* The tilt is mirrored with it, so tropical 90° still comes out `eps`
+      /* Tilted about the line of equinoxes, so tropical 90° comes out `eps`
          north — Karka Sankranti at the Tropic of Cancer — and 270° `eps` south.
-         Flip one without the other and uttarayana runs backwards. */
-      return [x, y * c + z * s, -y * s + z * c];
+         Flip the sense of this without the longitude and uttarayana runs
+         backwards. */
+      return [x, y * c - z * s, y * s + z * c];
     };
 
     /**
@@ -1580,15 +1586,38 @@ export function AakashGocharScene({
           the zodiac ring hugging it. Zooming out of the horizon view lands
           here. */}
       <group ref={globeRootRef} visible={false}>
-        {/* Opaque body, so the far side of the grid and the ring is hidden and
-            the Sun's light picks out the lit half. */}
-        <mesh ref={shellRef}>
-          <sphereGeometry args={[GLOBE_R * 0.995, 64, 64]} />
-          <meshStandardMaterial color="#0a1a22" roughness={1} metalness={0} />
-        </mesh>
-
         {/* Turns once a sidereal day; the ring globe it does not. */}
         <group ref={globeSpinRef}>
+          {/* The Earth itself — opaque, so the far side of the grid and of the
+              ring is hidden and the Sun picks out the lit half. It sits inside
+              the spinning group, not outside it: a map has to turn with the
+              graticule drawn on top of it, or Nepal walks away from its dot.
+
+              A little emissive of its own map keeps the night side as geography
+              rather than a black hole, the same trick the space view uses. */}
+          <mesh ref={shellRef}>
+            <sphereGeometry args={[GLOBE_R * 0.995, 64, 64]} />
+            <meshStandardMaterial
+              map={textures.earth}
+              emissive="#ffffff"
+              emissiveMap={textures.earth}
+              emissiveIntensity={0.16}
+              roughness={0.9}
+              metalness={0.02}
+            />
+          </mesh>
+          {/* Weather, faint enough that the graticule and the coastlines under
+              it both still read. */}
+          <mesh>
+            <sphereGeometry args={[GLOBE_R * 1.004, 48, 48]} />
+            <meshStandardMaterial
+              map={textures.earthclouds}
+              transparent
+              opacity={0.32}
+              depthWrite={false}
+            />
+          </mesh>
+
           {globeLines.parallels.map(({ object }, i) => (
             <primitive key={`par-${i}`} object={object} />
           ))}
