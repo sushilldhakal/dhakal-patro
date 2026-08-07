@@ -149,6 +149,14 @@ export type AakashGocharSkyProps = {
   observer?: Observer;
   /** The place's timezone — the clock in the HUD reads on its wall, not UTC. */
   timeZone?: string;
+  /**
+   * The graha the sky is focused on. Optional: pass it with
+   * {@link onSelectedKeyChange} to drive selection from outside — the page pairs
+   * the sky with its detail cards that way — or leave both off and the sky keeps
+   * its own.
+   */
+  selectedKey?: GrahaKey | null;
+  onSelectedKeyChange?: (key: GrahaKey | null) => void;
   /** Canvas height in px when not fullscreen. */
   height?: number;
 };
@@ -163,6 +171,8 @@ export function AakashGocharSky({
   observer = KATHMANDU,
   timeZone = "Asia/Kathmandu",
   height = 460,
+  selectedKey: selectedKeyProp,
+  onSelectedKeyChange,
 }: AakashGocharSkyProps) {
   const { lang, digits } = useLocale();
   const pick = useCallback(
@@ -199,7 +209,11 @@ export function AakashGocharSky({
   const [playing, setPlaying] = useState(true);
   const [speedIndex, setSpeedIndex] = useState(0);
   const [reverse, setReverse] = useState(false);
-  const [selectedKey, setSelectedKey] = useState<GrahaKey | null>(null);
+  /* Controlled when the page passes a key, uncontrolled otherwise — the inner
+     state is kept either way so an uncontrolled sky still works on its own. */
+  const [ownSelectedKey, setOwnSelectedKey] = useState<GrahaKey | null>(null);
+  const controlled = selectedKeyProp !== undefined;
+  const selectedKey = controlled ? selectedKeyProp : ownSelectedKey;
   const [sample, setSample] = useState<SkySample | null>(null);
   const [toggles, setToggles] = useState<SceneToggles>({
     belts: true,
@@ -364,9 +378,21 @@ export function AakashGocharSky({
   }, [zoomBy]);
 
   const onSample = useCallback((next: SkySample) => setSample(next), []);
-  const onSelect = useCallback((key: GrahaKey) => {
-    setSelectedKey((prev) => (prev === key ? null : key));
-  }, []);
+  /* Clicking the graha already selected clears it, in both modes. */
+  const onSelect = useCallback(
+    (key: GrahaKey) => {
+      if (controlled) {
+        onSelectedKeyChange?.(selectedKeyProp === key ? null : key);
+        return;
+      }
+      setOwnSelectedKey((prev) => {
+        const next = prev === key ? null : key;
+        onSelectedKeyChange?.(next);
+        return next;
+      });
+    },
+    [controlled, onSelectedKeyChange, selectedKeyProp],
+  );
 
   /* Fullscreen takes the viewport, so the page behind it must not scroll — and
      Escape has to get out, which is the one affordance a fixed overlay owes a

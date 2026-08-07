@@ -6,20 +6,25 @@
  * play walks the real gochar forward rather than an approximation of it.
  */
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Orbit } from "lucide-react";
+import { Orbit, TriangleAlert } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PatroDayTimeNav } from "@/components/patro-date";
 import { VedicPatroLoader } from "@/components/VedicPatroLoader";
 import { AakashGocharSky } from "@/components/sky3d/AakashGocharSky";
+import { GocharSkySection } from "@/components/gochar/GocharSkySection";
 import {
+  displayLocationLabel,
   resolveLocationTimezone,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLocale, bilingualText } from "@/i18n/locale";
+import { useRouteLoading } from "@/lib/route-loading";
 import { fetchGochar, gocharKeys } from "@/lib/api";
+import { formatGocharPatroDate } from "@/lib/gochar-page-utils";
+import type { GrahaKey } from "@/lib/graha-details";
 import { KATHMANDU, type Observer } from "@/lib/sky3d/horizon";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
 
@@ -38,6 +43,9 @@ export function AakashGochar() {
   const todayAd = todayAdStringInTimezone(new Date(), tz);
   const [date, setDate] = useState(() => new Date(`${todayAd}T12:00:00`));
   const [clock, setClock] = useState("12:00");
+  /* Held here rather than inside the sky, so clicking a graha up in the canvas
+     and clicking its card down in the grid are the same act. */
+  const [selectedKey, setSelectedKey] = useState<GrahaKey | null>(null);
 
   /**
    * WebGL cannot run during the build-time prerender, and rendering the canvas
@@ -80,15 +88,37 @@ export function AakashGochar() {
     placeholderData: keepPreviousData,
   });
 
+  /* Clicking the card already selected clears it, matching the canvas. */
+  const toggleSelected = useCallback(
+    (key: GrahaKey) => setSelectedKey((prev) => (prev === key ? null : key)),
+    [],
+  );
+
+  const locationLabel = displayLocationLabel(location, undefined, lang);
+  const dateLabel = useMemo(
+    () => `${formatGocharPatroDate(dateAd, lang, { includeYear: true })} · ${locationLabel}`,
+    [dateAd, lang, locationLabel],
+  );
+
+  /* Every data-driven page reports its own readiness — the shell's overlay
+     starts up and stays up until one of them says otherwise, so without this a
+     direct load of this route sits behind the loader for good. */
+  useRouteLoading(query.isLoading && !query.data);
+
+  const gochar = query.data?.gochar;
+  /* The rows on screen belong to the previous date until the new ones land —
+     say so rather than let the grid read as current. */
+  const stale = query.isPlaceholderData && query.isFetching;
+
   return (
     <PageShell>
       <PageHeader
         icon={<Orbit className="size-7 text-secondary" strokeWidth={1.75} aria-hidden />}
         title={pick("३D आकाश गोचर", "3D Aakash Gochar")}
-        subtitle={pick(
+        subtitle={`${pick(
           "भूकेन्द्रित दृष्टिकोणबाट प्रत्यक्ष ग्रह गोचर",
           "Live graha transits from the geocentric standpoint",
-        )}
+        )} · ${locationLabel}`}
       />
 
       <PatroDayTimeNav
@@ -109,7 +139,7 @@ export function AakashGochar() {
         /* The scene runs on its own model, so a failed fetch costs accuracy for
            the day on screen, not the view itself. */
         <AakashGocharSky
-          gochar={query.data?.gochar}
+          gochar={gochar}
           ayanamsaDeg={query.data?.ayanamsa?.degrees}
           date={sceneDate}
           onDateChange={setDate}
@@ -118,8 +148,40 @@ export function AakashGochar() {
           observer={observer}
           timeZone={tz}
           height={SCENE_HEIGHT}
+          selectedKey={selectedKey}
+          onSelectedKeyChange={setSelectedKey}
         />
       )}
+
+      {/* The scene carries its own orbital model, so a failed fetch costs the
+          calibration for this date rather than the view — which is worth saying
+          plainly, since nothing else on screen would look wrong. */}
+      {query.isError ? (
+        <p className="m-0 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-foreground">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden />
+          <span>
+            {pick(
+              "सर्भरबाट ग्रह विवरण ल्याउन सकिएन — आकाश आफ्नै गणितमा चलिरहेको छ, त्यसैले स्थिति अनुमानित हुन सक्छ।",
+              "Could not load graha details from the server — the sky is running on its own model, so positions may be approximate.",
+            )}
+          </span>
+        </p>
+      ) : null}
+
+      {/* The server's own reading for the chosen date and place: the numbers the
+          scene is pinned to. Selection runs both ways — picking a card marks
+          that graha in the sky and draws its trail, and clicking one up in the
+          canvas rings its card down here. */}
+      {gochar ? (
+        <div className={stale ? "opacity-60 transition-opacity" : "transition-opacity"}>
+          <GocharSkySection
+            gochar={gochar}
+            dateLabel={dateLabel}
+            selectedPlanet={selectedKey}
+            onSelectPlanet={toggleSelected}
+          />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">
@@ -136,8 +198,14 @@ export function AakashGochar() {
         </p>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">
           {pick(
-            "गति रेखाले ४५ दिन अघि र पछिको बाटो देखाउँछ — मंगल वा शनि वक्री हुँदा त्यही रेखामा पछाडि फर्किएको पासो देखिन्छ। कुनै पनि ग्रह छोएर नजिक पुग्न सकिन्छ; «−» ले फेरि सिङ्गो सौर्यमण्डल देखाउँछ।",
-            "The trail draws 45 days either side of the moment on screen — when Mars or Saturn turns vakri you can watch the loop close on itself. Click any graha to fly in close to it; “−” pulls back to the whole system.",
+            "कुनै पनि ग्रह — आकाशमा वा तलको कार्डमा — छानेपछि त्यसको ४५ दिन अघि र पछिको गति रेखा देखिन्छ; मंगल वा शनि वक्री हुँदा त्यही रेखामा पछाडि फर्किएको पासो देखिन्छ। क्रसहेयर थिचे क्यामेरा त्यही ग्रहमा केन्द्रित रहन्छ।",
+            "Pick any graha — in the sky or on a card below — to draw its trail 45 days either side of the moment on screen; when Mars or Saturn turns vakri you can watch the loop close on itself. The crosshair button then keeps the camera centred on it.",
+          )}
+        </p>
+        <p className="m-0 text-sm leading-relaxed text-muted-foreground">
+          {pick(
+            "तलका ग्रह विवरण माथि छानिएको मिति र स्थानका लागि सर्भरबाट आउँछन्, र आकाश पनि तिनै अंकमा जोडिएको छ — मिति वा स्थान फेर्दा दुवै सँगै फेरिन्छन्। तर «चलाउनुहोस्» थिचेर समय अघि बढाउँदा आकाश मात्र हिँड्छ; विवरण छानिएकै मितिको रहन्छ।",
+            "The graha details below come from the server for the date and place chosen above, and the sky is pinned to those same numbers — change either and both follow. Pressing play moves the sky alone, though: the details stay with the chosen date.",
           )}
         </p>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">

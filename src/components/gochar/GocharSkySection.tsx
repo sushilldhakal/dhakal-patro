@@ -25,6 +25,11 @@ type Props = {
   gochar: Record<string, GocharGraha>;
   dateLabel: string;
   onSelectPlanet?: (key: GrahaKey) => void;
+  /**
+   * Ring the card for this graha. The 3D sky page pairs the grid with the
+   * canvas and uses this to show which one is picked out up there.
+   */
+  selectedPlanet?: GrahaKey | null;
 };
 
 function MetaRow({ label, value }: { label: string; value: string }) {
@@ -36,7 +41,12 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function GocharSkySection({ gochar, dateLabel, onSelectPlanet }: Props) {
+export function GocharSkySection({
+  gochar,
+  dateLabel,
+  onSelectPlanet,
+  selectedPlanet,
+}: Props) {
   const { lang, digits } = useLocale();
 
   return (
@@ -72,11 +82,14 @@ export function GocharSkySection({ gochar, dateLabel, onSelectPlanet }: Props) {
               key={key}
               type="button"
               onClick={() => onSelectPlanet?.(key)}
+              aria-pressed={selectedPlanet != null ? selectedPlanet === key : undefined}
               className={cn(
                 "relative flex min-w-0 flex-col overflow-hidden rounded-xl bg-background text-left",
-                "shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_8%,transparent)]",
                 "transition-[box-shadow,transform] hover:shadow-md hover:shadow-secondary/10 active:scale-[0.995]",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                selectedPlanet === key
+                  ? "shadow-[0_0_0_2px_var(--secondary)]"
+                  : "shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_8%,transparent)]",
               )}
             >
               <span className={cn("absolute inset-y-0 left-0 z-[1] w-1", PLANET_STRIPE[key])} aria-hidden />

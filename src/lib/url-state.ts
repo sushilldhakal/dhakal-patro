@@ -199,11 +199,16 @@ export function validateLocationSearch(search: Record<string, unknown>): Locatio
 export function locationToSearch(loc: PanchangaLocation): LocationSearch {
   const { params, label } = loc;
   const out: LocationSearch = {};
-  if (params.lat != null && params.lon != null) {
+  /* `city_id` wins when there is one, matching how appendLocation builds the
+     request: a city pick now carries its coordinates as well, and encoding
+     those instead would switch the API from city resolution to raw lat/lon and
+     rewrite every shared city URL. Coordinate picks have no id and still
+     encode as lat/lon. */
+  if (params.city_id != null) {
+    out.city = params.city_id;
+  } else if (params.lat != null && params.lon != null) {
     out.lat = params.lat;
     out.lon = params.lon;
-  } else if (params.city_id != null) {
-    out.city = params.city_id;
   }
   if (params.timezone) out.tz = params.timezone;
   if (label) out.place = label;
@@ -564,6 +569,12 @@ export function searchToLocation(search: LocationSearch): PanchangaLocation | un
 
 /** Whether two location param sets resolve to the same place. */
 export function sameLocationParams(a: LocationParams, b: LocationParams): boolean {
+  /* Same city id is the same place, whatever else rides along. A location built
+     from a URL carries only the id, while the same city picked in the selector
+     also carries its coordinates — comparing field by field would call those
+     two different and let the URL copy overwrite the richer one, dropping the
+     coordinates the 3D sky places the observer from. */
+  if (a.city_id != null && b.city_id != null) return a.city_id === b.city_id;
   return (
     a.city_id === b.city_id &&
     a.lat === b.lat &&

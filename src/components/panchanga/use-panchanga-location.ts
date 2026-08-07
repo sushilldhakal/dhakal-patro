@@ -188,10 +188,17 @@ export function cityToLocation(city: {
       },
     };
   }
+  /* `city_id` stays the identity the panchanga is computed from — appendLocation
+     prefers it and never sends the coordinates, and locationCacheKey keys off it
+     too, so carrying lat/lon here changes neither the request nor the cache.
+     They ride along for the callers that need to place the city rather than ask
+     the API about it: the 3D sky draws its observer frame and its "you are here"
+     pin straight from these, and without them every city rendered as Kathmandu. */
   return {
     label,
     params: {
       city_id: city.id,
+      ...(city.lat != null && city.lon != null ? { lat: city.lat, lon: city.lon } : {}),
       ...(city.timezone ? { timezone: city.timezone } : {}),
     },
   };
