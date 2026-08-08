@@ -86,6 +86,21 @@ export const RASHI_INNER = 9.0;
 export const RASHI_OUTER = 10.3;
 const NAK_INNER = 10.4;
 const NAK_OUTER = 11.1;
+/**
+ * Half the height of the zodiac slab in the space view.
+ *
+ * The belt is a band of sky twice this either side of the ecliptic, not a line
+ * on the floor — drawn flat it read as a table the grahas hovered over, with no
+ * way to see which of them sat north of the plane and which south.
+ */
+const BELT_HALF_H = 0.5;
+/**
+ * How far above the ecliptic the camera is held while it follows a graha in the
+ * space view — about 34°, enough that the belt stays a ring rather than an edge.
+ */
+const SPACE_LOCK_MIN_PITCH = 0.6;
+/** Half-width of the selected graha's mark on the belt, in radians — about 1½°. */
+const BELT_MARK_HALF_W = 0.026;
 const RASHI_MID = (RASHI_INNER + RASHI_OUTER) / 2;
 const NAK_MID = (NAK_INNER + NAK_OUTER) / 2;
 
@@ -386,6 +401,64 @@ function Belt({ inner, outer, color, opacity }: { inner: number; outer: number; 
   );
 }
 
+/**
+ * The wall of the zodiac slab: an open cylinder standing on the belt's outer
+ * edge, with an upright at every segment boundary.
+ *
+ * This is what gives the belt height. Faint on purpose — it is the volume the
+ * grahas move through, and it has to be read *through*, not looked at.
+ */
+function BeltWall({
+  radius,
+  count,
+  color,
+  opacity,
+}: {
+  radius: number;
+  count: number;
+  color: string;
+  opacity: number;
+}) {
+  const uprights = useMemo(() => {
+    const points: number[] = [];
+    for (const deg of beltDivisions(count)) {
+      const a = deg * DEG;
+      points.push(
+        radius * Math.cos(a), -BELT_HALF_H, -radius * Math.sin(a),
+        radius * Math.cos(a), BELT_HALF_H, -radius * Math.sin(a),
+      );
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
+    /* The ribs carry the height — the wall itself is a wash, and a wash alone
+       reads as haze rather than as a wall standing up off the plane. */
+    return new THREE.LineSegments(
+      geometry,
+      new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity: Math.min(0.5, opacity * 3),
+      }),
+    );
+  }, [radius, count, color, opacity]);
+
+  return (
+    <group>
+      <mesh>
+        <cylinderGeometry args={[radius, radius, BELT_HALF_H * 2, 128, 1, true]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={opacity}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+      <primitive object={uprights} />
+    </group>
+  );
+}
+
 /** Radial spokes marking segment boundaries on a belt. */
 function BeltDivisions({ count, inner, outer, color, opacity }: { count: number; inner: number; outer: number; color: string; opacity: number }) {
   const object = useMemo(() => {
@@ -662,6 +735,11 @@ export function AakashGocharScene({
   const globeSpinRef = useRef<THREE.Group | null>(null);
   const subsolarRef = useRef<THREE.Mesh | null>(null);
   const spaceOnlyRef = useRef<THREE.Group | null>(null);
+  /** The selected graha's mark on the zodiac belt, and the foot of its शर. */
+  const beltMarkRef = useRef<THREE.Group | null>(null);
+  const sharaFootRef = useRef<THREE.Mesh | null>(null);
+  /** Body → the ecliptic plane below or above it: the शर, drawn. */
+  const sharaLine = useMemo(() => makeDynamicLine(2, "#ffffff", 0.55), []);
 
   /* Sight rays: one two-point line per graha, rewritten every frame. */
   const rays = useMemo(() => {
@@ -1073,6 +1151,41 @@ export function AakashGocharScene({
       if (collect && labelVisible(at)) {
         project({ id: `g-${key}`, kind: "graha", key }, at);
       }
+
+      /* ── the selected graha, marked against the belt ─────────────────
+         Two readings the belt cannot give on its own: where along it the
+         graha stands, and how far off its plane. The first is a mark on the
+         wall at the graha's own longitude; the second is the drop from the
+         body to the plane, which is the शर at the same scale as everything
+         around it. Space view only — inside the dome and on the globe the
+         belt is a ring on a sphere and has no wall to mark. */
+      if (space && key === selectedKey) {
+        const mark = beltMarkRef.current;
+        if (mark) {
+          /* One turn about the axis puts the whole group on the graha's
+             longitude — the wedge is built starting at zero, so the rotation
+             *is* the longitude. */
+          mark.rotation.y = body.longitude * DEG;
+          mark.visible = true;
+        }
+        const foot = sharaFootRef.current;
+        if (foot) {
+          foot.position.set(at[0], 0, at[2]);
+          foot.rotation.set(-Math.PI / 2, 0, 0);
+          foot.visible = true;
+        }
+        setPoint(sharaLine, 0, at);
+        setPoint(sharaLine, 1, [at[0], 0, at[2]]);
+        flushLine(sharaLine);
+        sharaLine.visible = true;
+        sharaLine.material.color.set(GRAHA_COLOR[key]);
+      }
+    }
+
+    if (!space || !selectedKey) {
+      if (beltMarkRef.current) beltMarkRef.current.visible = false;
+      if (sharaFootRef.current) sharaFootRef.current.visible = false;
+      sharaLine.visible = false;
     }
 
     /* ── the banded zodiac, the equator and the alt-az cage ──────────── */
@@ -1506,22 +1619,29 @@ export function AakashGocharScene({
     } else {
       const cosP = Math.cos(v.pitch);
       if (trackAt) {
+        /**
+         * Follow from above, not from alongside.
+         *
+         * The lock used to ride the outward ray through the graha, which in
+         * this view is a ray lying in the ecliptic — every graha is within a
+         * few degrees of the plane the belt is drawn on, so the camera ended up
+         * *in* the belt and the whole zodiac collapsed to a line across the
+         * screen. Nothing about that view is readable.
+         *
+         * So the camera orbits the graha on the reader's own yaw and pitch,
+         * with the pitch held above {@link SPACE_LOCK_MIN_PITCH} — high enough
+         * that the belt is always a ring seen from over it. Written back to the
+         * view, so a drag afterwards carries on from where the lock put it
+         * rather than snapping.
+         */
         target.current.copy(trackAt);
-        scratch.current.copy(target.current);
-        const bodyR = scratch.current.length();
-        if (bodyR < 1e-5) {
-          target.current.set(0, 0, 0);
-          cam.position.set(
-            v.distance * cosP * Math.sin(v.yaw),
-            v.distance * Math.sin(v.pitch),
-            -v.distance * cosP * Math.cos(v.yaw),
-          );
-        } else {
-          scratch.current.normalize().multiplyScalar(bodyR + v.distance);
-          cam.position.copy(scratch.current);
-          v.yaw = Math.atan2(cam.position.x, cam.position.z);
-          v.pitch = Math.asin(Math.max(-1, Math.min(1, cam.position.y / (bodyR + v.distance))));
-        }
+        v.pitch = Math.max(SPACE_LOCK_MIN_PITCH, v.pitch);
+        const lockCosP = Math.cos(v.pitch);
+        cam.position.set(
+          target.current.x + v.distance * lockCosP * Math.sin(v.yaw),
+          target.current.y + v.distance * Math.sin(v.pitch),
+          target.current.z + v.distance * lockCosP * Math.cos(v.yaw),
+        );
         cam.lookAt(target.current);
       } else {
         target.current.set(0, 0, 0);
@@ -1753,15 +1873,67 @@ export function AakashGocharScene({
 
         {toggles.belts ? (
           <group>
-            {/* Rashi belt: 12 × 30°. */}
+            {/* Rashi belt: 12 × 30°, as a slab rather than a floor — the flat
+                ring is its mid-plane and the wall carries its height. */}
             <Belt inner={RASHI_INNER} outer={RASHI_OUTER} color="#0f3234" opacity={0.8} />
             <BeltDivisions count={12} inner={RASHI_INNER} outer={RASHI_OUTER} color={SEP} opacity={0.85} />
+            <BeltWall radius={RASHI_OUTER} count={12} color={SEP} opacity={0.16} />
+            <BeltWall radius={RASHI_INNER} count={12} color={SEP} opacity={0.1} />
             {/* Nakshatra belt: 27 × 13°20′, with pada ticks at 108. */}
             <Belt inner={NAK_INNER} outer={NAK_OUTER} color="#0a2426" opacity={0.8} />
             <BeltDivisions count={27} inner={NAK_INNER} outer={NAK_OUTER} color={SEP} opacity={0.6} />
             <BeltDivisions count={108} inner={NAK_OUTER - 0.2} outer={NAK_OUTER} color={INK_DIM} opacity={0.4} />
+            <BeltWall radius={NAK_OUTER} count={27} color={SEP} opacity={0.12} />
           </group>
         ) : null}
+
+        {/* Where the selected graha stands on the belt, and how far off the
+            plane it is. The group is turned to the graha's longitude, so both
+            marks in it land at the right place on the ring: a wedge lying
+            across both belts, which is what you read from above, and an upright
+            on the outer wall, which is what you read from the side. */}
+        <group ref={beltMarkRef} visible={false}>
+          {/* Lifted off the belt's own plane and drawn last: coplanar with the
+              ring it marks, it lost the depth test as often as it won it and
+              the mark flickered in and out with the camera. */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]} renderOrder={4}>
+            <ringGeometry
+              args={[RASHI_INNER, NAK_OUTER, 6, 1, -BELT_MARK_HALF_W, BELT_MARK_HALF_W * 2]}
+            />
+            <meshBasicMaterial
+              color={selectedKey ? GRAHA_COLOR[selectedKey] : "#ffffff"}
+              transparent
+              opacity={0.95}
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+          <mesh position={[RASHI_OUTER, 0, 0]} rotation={[0, -Math.PI / 2, 0]} renderOrder={4}>
+            <planeGeometry args={[0.42, BELT_HALF_H * 2]} />
+            <meshBasicMaterial
+              color={selectedKey ? GRAHA_COLOR[selectedKey] : "#ffffff"}
+              transparent
+              opacity={0.8}
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </group>
+        <primitive object={sharaLine} />
+        <mesh ref={sharaFootRef} visible={false}>
+          <circleGeometry args={[0.13, 20]} />
+          <meshBasicMaterial
+            color={selectedKey ? GRAHA_COLOR[selectedKey] : "#ffffff"}
+            transparent
+            opacity={0.7}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
       </group>
 
       {skyLines.map(({ object }, i) => (

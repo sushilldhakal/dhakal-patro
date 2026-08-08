@@ -499,8 +499,14 @@ export function AakashGocharSky({
    * imperative non-passive listener, exactly as the wheel above is.
    */
   useEffect(() => {
+    /* Fullscreen only. In the page the canvas is most of a phone's screen, and
+       a canvas that eats every vertical swipe is a canvas you cannot scroll
+       past — the rest of the page becomes unreachable. There the sky settles
+       for `touch-action: pan-y` instead: a swipe up or down is the page's, a
+       drag across is the sky's, and the whole gesture set comes back the moment
+       it goes fullscreen, where there is nothing to scroll to. */
     const el = canvasWrapRef.current;
-    if (!el) return;
+    if (!el || !fullscreen) return;
     const onTouchMove = (e: TouchEvent) => {
       /* The control row floats over the sky in fullscreen, so a touch there
          reaches this listener on its way up. That row scrolls sideways on a
@@ -937,8 +943,10 @@ export function AakashGocharSky({
       <div
         ref={canvasWrapRef}
         className={cn(
-          "relative touch-none select-none overscroll-none",
-          fullscreen ? "flex-1" : "",
+          "relative select-none overscroll-none",
+          /* See the touchmove effect: in the page a vertical swipe has to stay
+             the page's, or the canvas becomes a wall you cannot scroll past. */
+          fullscreen ? "flex-1 touch-none" : "touch-pan-y",
         )}
         style={{
           height: fullscreen ? undefined : height,
