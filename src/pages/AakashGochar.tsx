@@ -226,14 +226,20 @@ export function AakashGochar() {
         </p>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">
           {pick(
-            "कुनै पनि ग्रह — आकाशमा वा तलको कार्डमा — छानेपछि त्यसको ४५ दिन अघि र पछिको गति रेखा देखिन्छ; मंगल वा शनि वक्री हुँदा त्यही रेखामा पछाडि फर्किएको पासो देखिन्छ। क्रसहेयर थिचे क्यामेरा त्यही ग्रहमा केन्द्रित रहन्छ।",
-            "Pick any graha — in the sky or on a card below — to draw its trail 45 days either side of the moment on screen; when Mars or Saturn turns vakri you can watch the loop close on itself. The crosshair button then keeps the camera centred on it.",
+            "कुनै पनि ग्रह — आकाशमा वा तलको कार्डमा — छानेपछि त्यसको ४५ दिन अघि र पछिको गति रेखा देखिन्छ; मंगल वा शनि वक्री हुँदा त्यही रेखामा पछाडि फर्किएको पासो देखिन्छ। क्रसहेयर थिचे क्यामेरा त्यही ग्रहमा केन्द्रित रहन्छ — वा गोलामा रहेको आफ्नै स्थान छाने त्यसैमा।",
+            "Pick any graha — in the sky or on a card below — to draw its trail 45 days either side of the moment on screen; when Mars or Saturn turns vakri you can watch the loop close on itself. The crosshair button then keeps the camera centred on it — or on your own place on the globe, if that is what you point it at.",
           )}
         </p>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">
           {pick(
             "तलका ग्रह विवरण माथि छानिएको मिति र स्थानका लागि सर्भरबाट आउँछन्, र आकाश पनि तिनै अंकमा जोडिएको छ — मिति वा स्थान फेर्दा दुवै सँगै फेरिन्छन्। तर «चलाउनुहोस्» थिचेर समय अघि बढाउँदा आकाश मात्र हिँड्छ; विवरण छानिएकै मितिको रहन्छ।",
             "The graha details below come from the server for the date and place chosen above, and the sky is pinned to those same numbers — change either and both follow. Pressing play moves the sky alone, though: the details stay with the chosen date.",
+          )}
+        </p>
+        <p className="m-0 text-sm leading-relaxed text-muted-foreground">
+          {pick(
+            "«स्थान स्थिर» ले तपाईं उभिएको ठाउँ अडाउँछ र आकाश त्यसमाथि घुम्छ — एक नक्षत्र दिनमा एक फेरा, जुन बाहिर निस्केर हेर्दा देखिने कुरा हो। बन्द गरे उल्टो हुन्छ: राशि वलय अडिन्छ र पृथ्वी त्यसमुनि घुम्छ।",
+            "“Lock to position” holds the ground you are standing on still and lets the sky turn over it — one full turn a sidereal day, which is what you see standing outside. Switch it off and it is the other way round: the zodiac holds still and the Earth spins underneath it.",
           )}
         </p>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">
