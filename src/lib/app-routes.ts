@@ -39,6 +39,7 @@ export const ROUTES: RouteMeta[] = [
   { id: "panchanga-year", path: "/panchanga/year", seoKey: "seo.routes.panchanga_year", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },
   { id: "avakahada-chakra", path: "/panchanga/avakahada-chakra", seoKey: "seo.routes.avakahada", sitemap: { changefreq: "monthly", priority: "0.6" }, prerender: true },
   { id: "gochar", path: "/gochar", seoKey: "seo.routes.gochar", sitemap: { changefreq: "daily", priority: "0.8" }, prerender: true },
+  { id: "aakash-gochar", path: "/aakash-gochar", seoKey: "seo.routes.aakash_gochar", sitemap: { changefreq: "daily", priority: "0.7" }, prerender: true },
   { id: "graha-sthiti", path: "/panchanga/graha-sthiti", seoKey: "seo.routes.graha_sthiti", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },
   { id: "graha-asta", path: "/panchanga/graha-asta", seoKey: "seo.routes.graha_asta", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },
   { id: "graha-vakri", path: "/panchanga/graha-vakri", seoKey: "seo.routes.graha_vakri", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },

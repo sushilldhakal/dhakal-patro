@@ -51,6 +51,7 @@ const History = lazyRoute(() => import("./pages/History"), "History");
 const PanchangaDetailsHub = lazyRoute(() => import("./pages/PanchangaDetailsHub"), "PanchangaDetailsHub");
 const ElementPage = lazyRoute(() => import("./pages/ElementPage"), "ElementPage");
 const Gochar = lazyRoute(() => import("./pages/Gochar"), "Gochar");
+const AakashGochar = lazyRoute(() => import("./pages/AakashGochar"), "AakashGochar");
 const GrahaSthiti = lazyRoute(() => import("./pages/GrahaSthiti"), "GrahaSthiti");
 const GrahaAsta = lazyRoute(() => import("./pages/GrahaAsta"), "GrahaAsta");
 const GrahaVakri = lazyRoute(() => import("./pages/GrahaVakri"), "GrahaVakri");
@@ -252,6 +253,13 @@ const saitRoute = createRoute({
   validateSearch: validatePatroYearBrowseSearch,
   component: SaitPage,
 });
+/* Root-level, not a panchanga-shell child: the sky wants the full page width,
+   and the sidebar has nothing to add beside a canvas. */
+const aakashGocharRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/aakash-gochar",
+  component: AakashGochar,
+});
 const marriageSaitRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/vivah-sait",
@@ -301,6 +309,7 @@ const routeTree = rootRoute.addChildren([
   learnArticleRoute,
   sunTimesLegacyRoute,
   historyLegacyRoute,
+  aakashGocharRoute,
   marriageSaitRoute,
   accountRoute,
   verifyEmailRoute,
