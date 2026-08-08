@@ -390,8 +390,10 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
         vec2 d = gl_PointCoord - vec2(0.5);
         float r2 = dot(d, d);
         if (r2 > 0.25) discard;
-        // Solid core, soft rim — a star, not a disc.
-        float alpha = smoothstep(0.25, 0.02, r2);
+        /* Solid to the edge, with only the last of it feathered. Ramping the
+           alpha all the way from the centre made every star a soft blob —
+           read as out of focus rather than as a point of light. */
+        float alpha = 1.0 - smoothstep(0.185, 0.25, r2);
         gl_FragColor = vec4(uColor, uOpacity * alpha);
       }
     `,
@@ -856,15 +858,15 @@ export function AakashGocharScene({
         : makeDynamicLine(src.length, color, opacity),
     });
     return [
-      band(BAND_EDGES.rashiOuter, ZODIAC, 0.85),
-      band(BAND_EDGES.rashiInner, ZODIAC, 0.85),
-      band(BAND_EDGES.nakOuter, NAKSHATRA, 0.7),
-      band(BAND_EDGES.nakInner, NAKSHATRA, 0.7),
-      band(BAND_EDGES.ecliptic, ZODIAC, 0.5),
-      band(RASHI_DIVIDERS, ZODIAC, 0.75, true),
-      band(NAKSHATRA_DIVIDERS, NAKSHATRA, 0.6, true),
-      band(PADA_TICKS, NAKSHATRA, 0.35, true),
-      band(DEGREE_TICKS, ZODIAC, 0.45, true),
+      band(BAND_EDGES.rashiOuter, ZODIAC, 1),
+      band(BAND_EDGES.rashiInner, ZODIAC, 1),
+      band(BAND_EDGES.nakOuter, NAKSHATRA, 0.9),
+      band(BAND_EDGES.nakInner, NAKSHATRA, 0.9),
+      band(BAND_EDGES.ecliptic, ZODIAC, 0.75),
+      band(RASHI_DIVIDERS, ZODIAC, 0.9, true),
+      band(NAKSHATRA_DIVIDERS, NAKSHATRA, 0.8, true),
+      band(PADA_TICKS, NAKSHATRA, 0.55, true),
+      band(DEGREE_TICKS, ZODIAC, 0.6, true),
     ];
   }, []);
 
@@ -927,11 +929,11 @@ export function AakashGocharScene({
       links,
       byNakshatra: [...byNakshatra.entries()],
       groups: [
-        { indices: junction, object: makeStarPoints(junction.length, "#ffd98a", 5.5, 0.95) },
-        { indices: bright, object: makeStarPoints(bright.length, "#eaf2ff", 3.6, 0.85) },
-        { indices: faint, object: makeStarPoints(faint.length, "#c8d8ee", 2.4, 0.6) },
+        { indices: junction, object: makeStarPoints(junction.length, "#ffd98a", 6.5, 1) },
+        { indices: bright, object: makeStarPoints(bright.length, "#eaf2ff", 4.6, 0.95) },
+        { indices: faint, object: makeStarPoints(faint.length, "#c8d8ee", 3.2, 0.8) },
       ],
-      lines: makeDynamicSegments(links.length * 2, "#7f9dc4", 0.32),
+      lines: makeDynamicSegments(links.length * 2, "#9db9dd", 0.62),
     };
   }, []);
 
@@ -994,8 +996,8 @@ export function AakashGocharScene({
     return {
       stars,
       track: poleTrackPoints(23.4392911),
-      trackLine: makeDynamicLine(181, "#8ab4f8", 0.3),
-      points: makeStarPoints(stars.length, "#dceaff", 4, 0.9),
+      trackLine: makeDynamicLine(181, "#8ab4f8", 0.62),
+      points: makeStarPoints(stars.length, "#dceaff", 5, 1),
       /* The reigning one is drawn on top of its own dot, larger and gold. */
       crown: makeStarPoints(1, "#ffd166", 8, 1),
     };
@@ -1275,8 +1277,17 @@ export function AakashGocharScene({
       setPoint(ray, 0, [0, 0, 0]);
       setPoint(ray, 1, space ? eclipticToVec3(body.longitude, body.latitude, RASHI_OUTER) : at);
       flushLine(ray);
-      // Always drawn: the sight line is what ties a graha to its rashi.
-      ray.visible = space ? true : globe ? false : at[1] > 0;
+      /* The sight line is what ties a graha to its rashi, so in the space view
+         every one of them is drawn. On the globe that would be nine lines
+         through the Earth at once, so only the Sun's is kept — it is the one
+         that plants the subsolar point and divides day from night — and any
+         other appears when you pick that graha, and goes when you let it go.
+         Inside the dome, whatever is above the horizon. */
+      ray.visible = space
+        ? true
+        : globe
+          ? key !== "sun" && key === selectedKey
+          : at[1] > 0;
 
       // Below the horizon the ground hides the body, but a DOM label has no
       // depth test — so it has to be filtered out explicitly.
