@@ -729,6 +729,20 @@ export function AakashGocharSky({
   /* Fullscreen runs edge to edge; the HUD and the zoom column start below any
      notch the browser reports. */
   const overlayTop = fullscreen ? "calc(env(safe-area-inset-top, 0px) + 16px)" : "12px";
+  /**
+   * The HUD's own top, which in fullscreen is lower than everything else's.
+   *
+   * Safari on iPad puts its own exit-fullscreen ✕ in the top-left corner —
+   * inside the page's fullscreen element, over whatever is there — and what was
+   * there is the date, the time and the place. It fades after a few seconds,
+   * which is a few seconds of the one line the reader is most likely to want.
+   * So the HUD starts below it. There is no way to ask how big it is, so this
+   * is the corner button's own size plus room to breathe, and it costs nothing
+   * anywhere else: the sky behind it is sky.
+   */
+  const hudTop = fullscreen
+    ? "calc(env(safe-area-inset-top, 0px) + 68px)"
+    : "12px";
 
   /* ── controls ─────────────────────────────────────────────────────────── */
 
@@ -920,8 +934,8 @@ export function AakashGocharSky({
 
         {/* HUD — the simulated instant, which drifts away from the nav once it runs. */}
         <div
-          className="pointer-events-none absolute left-3 rounded-lg bg-black/45 px-2.5 py-1.5"
-          style={{ top: overlayTop }}
+          className="pointer-events-none absolute rounded-lg bg-black/45 px-2.5 py-1.5"
+          style={{ top: hudTop, left: "calc(env(safe-area-inset-left, 0px) + 12px)" }}
         >
           <p className="m-0 text-[11px] font-bold" style={{ color: LABEL_COLOR.hud }}>
             {simStamp.date}
@@ -1363,23 +1377,6 @@ const SkyLabels = memo(function SkyLabels({
                 ? pick("कर्कट रेखा · २३.४४°उ", "Tropic of Cancer · 23.44°N")
                 : pick("मकर रेखा · २३.४४°द", "Tropic of Capricorn · 23.44°S")}
             </span>
-          );
-        }
-        if (label.kind === "observer") {
-          return (
-            <div
-              key={label.id}
-              className="flex flex-col items-center"
-              style={{ position: "absolute", left: label.x - 55, top: label.y - 8, width: 110 }}
-            >
-              <MapPin size={14 * scale} color={LABEL_COLOR.observer} fill={LABEL_COLOR.observer} />
-              <span
-                className="max-w-full truncate font-bold"
-                style={{ fontSize: 10 * scale, color: LABEL_COLOR.observer }}
-              >
-                {pick("तपाईं यहाँ", "You are here")}
-              </span>
-            </div>
           );
         }
         if (label.kind === "azimuth") {
