@@ -149,6 +149,16 @@ const clampZoom = (v: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
 const DRAG_SLOP = 5;
 
 /**
+ * What counts as a control rather than sky.
+ *
+ * A press that lands on one of these is that control's — it neither starts a
+ * camera drag nor has its touch gesture eaten. In fullscreen the control row
+ * floats *over* the canvas, so both handlers meet its events and both have to
+ * hand them back.
+ */
+const CONTROL_SELECTOR = "button, input, select, [role='button'], [data-sky-controls]";
+
+/**
  * The most the belt text is allowed to grow as the camera pulls back.
  *
  * Deliberately small. The idea behind growing it at all is sound — the belt
@@ -390,7 +400,7 @@ export function AakashGocharSky({
     (e: ReactPointerEvent<HTMLDivElement>) => {
       /* A press that lands on a control is that control's, not the sky's —
          otherwise a slightly shaky press on "+" starts a camera drag. */
-      if ((e.target as HTMLElement | null)?.closest?.("button, input, select, [role='button']")) {
+      if ((e.target as HTMLElement | null)?.closest?.(CONTROL_SELECTOR)) {
         return;
       }
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -470,7 +480,39 @@ export function AakashGocharSky({
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [zoomBy]);
+    /* `fullscreen` is not read in here, but entering it re-roots this subtree:
+       the old wrapper goes and a new one takes its place, and a listener bound
+       to the node this ran on the first time is left on a node nobody can
+       reach. Re-binding on the swap is the whole reason it is a dependency —
+       without it the wheel stopped zooming the moment the sky went fullscreen. */
+  }, [zoomBy, fullscreen]);
+
+  /*
+   * Touch drags belong to the sky, and have to say so to the browser.
+   *
+   * Safari on iPad reads a downward swipe over a fullscreened element as "leave
+   * fullscreen" — the same gesture that dismisses a fullscreen video — so
+   * dragging the globe south dropped the reader back onto the page. Nothing in
+   * CSS settles it: `touch-action: none` governs scrolling and pinch-zoom, not
+   * that gesture, and React's own onTouchMove is bound passively at the root,
+   * so calling preventDefault there does nothing at all. It has to be an
+   * imperative non-passive listener, exactly as the wheel above is.
+   */
+  useEffect(() => {
+    const el = canvasWrapRef.current;
+    if (!el) return;
+    const onTouchMove = (e: TouchEvent) => {
+      /* The control row floats over the sky in fullscreen, so a touch there
+         reaches this listener on its way up. That row scrolls sideways on a
+         narrow screen, and swallowing its touchmove would leave half the chips
+         unreachable — so anything that starts on a control keeps its gesture. */
+      const target = e.target;
+      if (target instanceof Element && target.closest(CONTROL_SELECTOR)) return;
+      if (e.cancelable) e.preventDefault();
+    };
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", onTouchMove);
+  }, [fullscreen]);
 
   const onSample = useCallback((next: SkySample) => setSample(next), []);
   /* Clicking the graha already selected clears it, in both modes. */
@@ -729,6 +771,20 @@ export function AakashGocharSky({
   /* Fullscreen runs edge to edge; the HUD and the zoom column start below any
      notch the browser reports. */
   const overlayTop = fullscreen ? "calc(env(safe-area-inset-top, 0px) + 16px)" : "12px";
+  /**
+   * The HUD's own top, which in fullscreen is lower than everything else's.
+   *
+   * Safari on iPad puts its own exit-fullscreen ✕ in the top-left corner —
+   * inside the page's fullscreen element, over whatever is there — and what was
+   * there is the date, the time and the place. It fades after a few seconds,
+   * which is a few seconds of the one line the reader is most likely to want.
+   * So the HUD starts below it. There is no way to ask how big it is, so this
+   * is the corner button's own size plus room to breathe, and it costs nothing
+   * anywhere else: the sky behind it is sky.
+   */
+  const hudTop = fullscreen
+    ? "calc(env(safe-area-inset-top, 0px) + 68px)"
+    : "12px";
 
   /* ── controls ─────────────────────────────────────────────────────────── */
 
@@ -880,7 +936,10 @@ export function AakashGocharSky({
     >
       <div
         ref={canvasWrapRef}
-        className={cn("relative touch-none select-none", fullscreen ? "flex-1" : "")}
+        className={cn(
+          "relative touch-none select-none overscroll-none",
+          fullscreen ? "flex-1" : "",
+        )}
         style={{
           height: fullscreen ? undefined : height,
           backgroundColor: CANVAS_BG,
@@ -920,8 +979,8 @@ export function AakashGocharSky({
 
         {/* HUD — the simulated instant, which drifts away from the nav once it runs. */}
         <div
-          className="pointer-events-none absolute left-3 rounded-lg bg-black/45 px-2.5 py-1.5"
-          style={{ top: overlayTop }}
+          className="pointer-events-none absolute rounded-lg bg-black/45 px-2.5 py-1.5"
+          style={{ top: hudTop, left: "calc(env(safe-area-inset-left, 0px) + 12px)" }}
         >
           <p className="m-0 text-[11px] font-bold" style={{ color: LABEL_COLOR.hud }}>
             {simStamp.date}
@@ -966,6 +1025,7 @@ export function AakashGocharSky({
           stays pinned and everything else scrolls past it, with a chevron to
           drop the lot down to a single button. */}
       <div
+        data-sky-controls
         className={
           fullscreen
             ? "dark absolute inset-x-0 bottom-0 px-2 pt-2"
@@ -1160,7 +1220,12 @@ export function AakashGocharSky({
      behind it until the bar happens to retract. Browsers without dvh drop the
      declaration and land back on inset-0. */
   return (
-    <div ref={overlayRef} className="fixed inset-0 z-[100] h-[100dvh] w-full bg-background">
+    <div
+      ref={overlayRef}
+      /* `overscroll-none` so a drag that runs past the sky has nothing to
+         rubber-band into — on iPad that pull is read as leaving fullscreen. */
+      className="fixed inset-0 z-[100] h-[100dvh] w-full overscroll-none bg-background"
+    >
       {body}
     </div>
   );
@@ -1363,23 +1428,6 @@ const SkyLabels = memo(function SkyLabels({
                 ? pick("कर्कट रेखा · २३.४४°उ", "Tropic of Cancer · 23.44°N")
                 : pick("मकर रेखा · २३.४४°द", "Tropic of Capricorn · 23.44°S")}
             </span>
-          );
-        }
-        if (label.kind === "observer") {
-          return (
-            <div
-              key={label.id}
-              className="flex flex-col items-center"
-              style={{ position: "absolute", left: label.x - 55, top: label.y - 8, width: 110 }}
-            >
-              <MapPin size={14 * scale} color={LABEL_COLOR.observer} fill={LABEL_COLOR.observer} />
-              <span
-                className="max-w-full truncate font-bold"
-                style={{ fontSize: 10 * scale, color: LABEL_COLOR.observer }}
-              >
-                {pick("तपाईं यहाँ", "You are here")}
-              </span>
-            </div>
           );
         }
         if (label.kind === "azimuth") {

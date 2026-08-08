@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { GrahaKey } from "@/lib/graha-details";
 import {
@@ -117,6 +117,12 @@ const RETRO = "#ef4444";
 const ZODIAC = "#d8c84a";
 const NAKSHATRA = "#35d05a";
 const GRID = "#4d7fb5";
+/**
+ * The globe's own graticule. Lighter than {@link GRID}, which was picked to sit
+ * on a black sky: the same blue over ocean and forest is a line you have to go
+ * looking for.
+ */
+const GLOBE_GRID = "#a8ccf0";
 const EARTH_RADIUS = 0.75;
 
 /** Bodies that get a photographic texture; the nodes are not bodies at all. */
@@ -178,8 +184,7 @@ export type ScreenLabel = {
     | "polestar"
     | "obliquity"
     | "axis"
-    | "asterism"
-    | "observer";
+    | "asterism";
   /**
    * 1–12 for rashi, 1–27 for nakshatra; for a pole star, 1 marks the one the
    * pole is nearest at the moment on screen.
@@ -617,16 +622,27 @@ export function AakashGocharScene({
   onSelectObserver?: () => void;
   onSample: (sample: SkySample) => void;
 }) {
+  const gl = useThree((s) => s.gl);
   const loaded = useLoader(THREE.TextureLoader, SKY_TEXTURE_SOURCES as string[]);
   const textures = useMemo(() => {
+    /* Anisotropic filtering, at whatever the card will give. A sphere shows its
+       map at every angle at once, and towards the limb the texture is being
+       squeezed into a few pixels — that is where a trilinear mipmap gives up
+       and smears, and it is most of what "the Earth looks blurry" was. */
+    const maxAnisotropy = gl.capabilities.getMaxAnisotropy?.() ?? 1;
     const map = {} as Record<SkyTextureKey, THREE.Texture>;
     SKY_TEXTURE_KEYS.forEach((key, i) => {
       const tex = loaded[i];
       tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = maxAnisotropy;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.generateMipmaps = true;
+      tex.needsUpdate = true;
       map[key] = tex;
     });
     return map;
-  }, [loaded]);
+  }, [loaded, gl]);
 
 
   const bodyRefs = useRef<Partial<Record<GrahaKey, THREE.Group>>>({});
@@ -698,16 +714,22 @@ export function AakashGocharScene({
     const asLine = (src: GeoPoint[], color: string, opacity: number) => ({
       src,
       object: makeLine(
-        src.map((p) => new THREE.Vector3(...geoToVec3(p.lat, p.lon, GLOBE_R))),
+        /* Held clear of the sphere rather than on it. At the surface radius the
+           grid fought the map for the same depth and came and went in bands as
+           the globe turned; a percent of clearance is invisible at this scale
+           and settles it. */
+        src.map((p) => new THREE.Vector3(...geoToVec3(p.lat, p.lon, GLOBE_R * 1.01))),
         color,
         opacity,
       ),
     });
+    /* Brighter than the dark ball this used to be drawn on: over a satellite
+       map at a fifth opacity the graticule simply was not there. */
     return {
-      parallels: GLOBE_PARALLELS.map((p) => asLine(p, GRID, 0.22)),
-      meridians: GLOBE_MERIDIANS.map((m) => asLine(m, GRID, 0.22)),
-      equator: asLine(GLOBE_EQUATOR, "#7fd4ff", 0.75),
-      tropics: GLOBE_TROPICS.map((t) => ({ ...asLine(t.points, ZODIAC, 0.6), id: t.id, lat: t.lat })),
+      parallels: GLOBE_PARALLELS.map((p) => asLine(p, GLOBE_GRID, 0.5)),
+      meridians: GLOBE_MERIDIANS.map((m) => asLine(m, GLOBE_GRID, 0.5)),
+      equator: asLine(GLOBE_EQUATOR, "#7fd4ff", 0.95),
+      tropics: GLOBE_TROPICS.map((t) => ({ ...asLine(t.points, ZODIAC, 0.85), id: t.id, lat: t.lat })),
     };
   }, []);
 
@@ -1318,25 +1340,10 @@ export function AakashGocharScene({
           project({ id: `tr-${t.id}`, kind: "tropic", text: t.id }, world);
         }
       }
-      {
-        /* Same treatment as a tropic label: the marker sits on the spinning
-           globe, so its world position needs the same spin quaternion applied.
-           At {@link OBSERVER_R} exactly, the radius the marker mesh is drawn
-           at — floated above it, the label sat on a wider sphere than the dot
-           and the two drew apart as the globe turned, which read as the marker
-           sliding over the map rather than being fixed to it. */
-        const at = geoToVec3(observer.lat, observer.lon, OBSERVER_R);
-        scratch.current.set(at[0], at[1], at[2]);
-        if (globeSpinRef.current) scratch.current.applyQuaternion(globeSpinRef.current.quaternion);
-        const world: [number, number, number] = [
-          scratch.current.x,
-          scratch.current.y,
-          scratch.current.z,
-        ];
-        if (labelVisible(world)) {
-          project({ id: "observer-loc", kind: "observer" }, world);
-        }
-      }
+      /* The observer's place carries no overlay label. A DOM node cannot be
+         nailed to a spinning sphere the way the marker mesh is — it is
+         re-projected every sixth frame and always trails the dot it belongs
+         to — so the dot is left to say it on its own, which it does. */
     }
 
     /* ── frame-level scenery ────────────────────────────────────────── */
@@ -1651,12 +1658,19 @@ export function AakashGocharScene({
               A little emissive of its own map keeps the night side as geography
               rather than a black hole, the same trick the space view uses. */}
           <mesh ref={shellRef}>
-            <sphereGeometry args={[GLOBE_R * 0.995, 64, 64]} />
+            {/* Enough segments that the limb reads as a curve. This is the one
+                sphere in the scene that fills the screen. */}
+            <sphereGeometry args={[GLOBE_R * 0.995, 128, 96]} />
+            {/* More emissive than before, because the map underneath it changed:
+                the old one was pale and low-contrast, so a sixth of its own
+                light was enough to keep the night side legible. A real Blue
+                Marble has real oceans, and at that setting half the globe went
+                to black. */}
             <meshStandardMaterial
               map={textures.earth}
               emissive="#ffffff"
               emissiveMap={textures.earth}
-              emissiveIntensity={0.16}
+              emissiveIntensity={0.4}
               roughness={0.9}
               metalness={0.02}
             />
