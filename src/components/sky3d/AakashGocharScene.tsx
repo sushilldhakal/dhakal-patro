@@ -94,16 +94,11 @@ const NAK_OUTER = 11.1;
  * way to see which of them sat north of the plane and which south.
  */
 const BELT_HALF_H = 3.6;
-/**
- * The ecliptic latitude the drum's wall spans, top to bottom.
- *
- * A नक्षत्र is a patch of sky, not a mark on a ring, and this is how wide that
- * patch is allowed to be here: latitude maps straight onto the wall's height,
- * so a star two thirds of the way up sits at two thirds of this. The handful
- * that reach past it — अभिजित् highest among them — pin to the rim rather than
- * fly off it.
- */
-const BELT_LAT_SPAN = 24;
+/** How far a नक्षत्र's figure is held clear of its segment's own boundaries. */
+const PANEL_INSET = 0.14;
+/** The panel each figure is drawn in, as a fraction of the wall's half-height. */
+const PANEL_TOP = -0.5;
+const PANEL_BOTTOM = -0.95;
 /**
  * How far above the ecliptic the camera is held while it follows a graha in the
  * space view — about 34°, enough that the belt stays a ring rather than an edge.
@@ -148,6 +143,8 @@ const SEP = "#8fbfc1";
 const RETRO = "#ef4444";
 /** Star-atlas palette: the zodiac band in gold, the nakshatra strip in green. */
 const ZODIAC = "#d8c84a";
+/** The नक्षत्र half of the drum wall — the same green its names are set in. */
+const NAK_ZONE = "#6fe08a";
 const NAKSHATRA = "#35d05a";
 const GRID = "#4d7fb5";
 /**
@@ -435,25 +432,33 @@ function BeltWall({
   count,
   color,
   opacity,
+  yFrom,
+  yTo,
 }: {
   radius: number;
   count: number;
   color: string;
   opacity: number;
+  /** The band of wall this covers, as a fraction of the half-height. */
+  yFrom: number;
+  yTo: number;
 }) {
+  const lo = Math.min(yFrom, yTo) * BELT_HALF_H;
+  const hi = Math.max(yFrom, yTo) * BELT_HALF_H;
+
   const uprights = useMemo(() => {
     const points: number[] = [];
     for (const deg of beltDivisions(count)) {
       const a = deg * DEG;
       points.push(
-        radius * Math.cos(a), -BELT_HALF_H, -radius * Math.sin(a),
-        radius * Math.cos(a), BELT_HALF_H, -radius * Math.sin(a),
+        radius * Math.cos(a), lo, -radius * Math.sin(a),
+        radius * Math.cos(a), hi, -radius * Math.sin(a),
       );
     }
-    /* The two rims the uprights run between. Without them the wall is a row of
+    /* The rims the uprights run between. Without them the wall is a row of
        posts with nothing joining their ends, and the drum has no edge. */
     const RIM_STEPS = 128;
-    for (const y of [-BELT_HALF_H, BELT_HALF_H]) {
+    for (const y of [lo, hi]) {
       for (let i = 0; i < RIM_STEPS; i += 1) {
         const a = (i / RIM_STEPS) * Math.PI * 2;
         const b = ((i + 1) / RIM_STEPS) * Math.PI * 2;
@@ -475,12 +480,12 @@ function BeltWall({
         opacity: Math.min(0.42, opacity * 6),
       }),
     );
-  }, [radius, count, color, opacity]);
+  }, [radius, count, color, opacity, lo, hi]);
 
   return (
     <group>
-      <mesh>
-        <cylinderGeometry args={[radius, radius, BELT_HALF_H * 2, 128, 1, true]} />
+      <mesh position={[0, (lo + hi) / 2, 0]}>
+        <cylinderGeometry args={[radius, radius, hi - lo, 128, 1, true]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -918,6 +923,53 @@ export function AakashGocharScene({
   }, []);
 
   /**
+   * Where each star sits inside its own नक्षत्र's panel on the drum wall.
+   *
+   * Not where it is in the sky — where it belongs on the diagram. Each group's
+   * own spread in longitude and latitude is normalised into the segment named
+   * after it, so the figure you are looking at is the figure that segment is
+   * *for*. At true position the groups straddle their boundaries and spill
+   * across their neighbours: that tells you where the stars are, but not which
+   * नक्षत्र is which — and the globe and horizon views already answer the
+   * first question exactly, at true position and precessing.
+   *
+   * Fixed, therefore, rather than walking with the equinox: a schematic panel
+   * has nothing to drift against.
+   */
+  const spaceStarPos = useMemo(() => {
+    const out: [number, number, number][] = new Array(starField.stars.length);
+    const R = NAK_OUTER - 0.06;
+    for (const [nak, indices] of starField.byNakshatra) {
+      /* Longitudes inside a group can straddle 0°/360°, so they are measured
+         against the first member rather than in absolute terms. */
+      const base = starField.stars[indices[0]].lon;
+      const rel = indices.map((i) => {
+        let d = starField.stars[i].lon - base;
+        if (d > 180) d -= 360;
+        if (d < -180) d += 360;
+        return d;
+      });
+      const lats = indices.map((i) => starField.stars[i].lat);
+      const minLon = Math.min(...rel);
+      const spanLon = Math.max(...rel) - minLon;
+      const minLat = Math.min(...lats);
+      const spanLat = Math.max(...lats) - minLat;
+      const segStart = (nak - 1) * NAKSHATRA_ARC;
+      indices.forEach((starIndex, k) => {
+        // A group of one, or one strung along a single line, sits centred.
+        const u = spanLon > 1e-6 ? (rel[k] - minLon) / spanLon : 0.5;
+        const v = spanLat > 1e-6 ? (lats[k] - minLat) / spanLat : 0.5;
+        const lon = segStart + (PANEL_INSET + u * (1 - 2 * PANEL_INSET)) * NAKSHATRA_ARC;
+        // v runs south-to-north, so the panel's floor is its high v.
+        const y = (PANEL_BOTTOM + v * (PANEL_TOP - PANEL_BOTTOM)) * BELT_HALF_H;
+        const a = lon * DEG;
+        out[starIndex] = [R * Math.cos(a), y, -R * Math.sin(a)];
+      });
+    }
+    return out;
+  }, [starField]);
+
+  /**
    * The ध्रुव तारा, and the circle the celestial pole walks between them.
    *
    * The circle is fixed in the sky — ecliptic latitude 90° − ε all the way
@@ -1287,19 +1339,11 @@ export function AakashGocharScene({
      * A fixed star's place, in whichever frame is live.
      *
      * Inside the dome and around the globe the sky is a sphere and the star
-     * goes on it. In the space view the zodiac is a drum standing around the
-     * Earth, so the star goes on its *wall*: the longitude turns it about the
-     * axis and the latitude rides straight up the wall, one for one against
-     * {@link BELT_LAT_SPAN}. A sphere would have pulled every figure in towards
-     * the axis as it climbed, which is precisely the flattening that made a
-     * नक्षत्र look like a mark on a ring.
+     * goes on it, at its true position and precessing. In the space view it
+     * goes where the diagram wants it — see {@link spaceStarPos}.
      */
-    const starPlace = (lonSid: number, latEc: number): [number, number, number] => {
-      if (!space) return place(lonSid, latEc, starRadius);
-      const a = lonSid * DEG;
-      const t = Math.max(-1, Math.min(1, latEc / BELT_LAT_SPAN));
-      return [starRadius * Math.cos(a), BELT_HALF_H * t, -starRadius * Math.sin(a)];
-    };
+    const starPlace = (index: number, lonSid: number, latEc: number): [number, number, number] =>
+      space ? spaceStarPos[index] : place(lonSid, latEc, starRadius);
 
     if ((zodiac || space) && beltMoved) {
       lastBelt.current = { mode, lst: beltLst, ayan: beltAyan, eps: beltEps };
@@ -1331,7 +1375,7 @@ export function AakashGocharScene({
           (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
           for (let i = 0; i < indices.length; i += 1) {
             const star = starField.stars[indices[i]];
-            setVertex(object, i, starPlace(star.lon + precession - ayan, star.lat));
+            setVertex(object, i, starPlace(indices[i], star.lon + precession - ayan, star.lat));
           }
           (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
         }
@@ -1339,8 +1383,8 @@ export function AakashGocharScene({
           const [a, b] = starField.links[i];
           const sa = starField.stars[a];
           const sb = starField.stars[b];
-          setVertex(starField.lines, i * 2, starPlace(sa.lon + precession - ayan, sa.lat));
-          setVertex(starField.lines, i * 2 + 1, starPlace(sb.lon + precession - ayan, sb.lat));
+          setVertex(starField.lines, i * 2, starPlace(a, sa.lon + precession - ayan, sa.lat));
+          setVertex(starField.lines, i * 2 + 1, starPlace(b, sb.lon + precession - ayan, sb.lat));
         }
         flushLine(starField.lines);
       }
@@ -1425,12 +1469,14 @@ export function AakashGocharScene({
 
     if (collect && toggles.belts) {
       /**
-       * A point on the drum's rim, for the names that ride it.
+       * A point on the drum's wall, for the names written on it.
        *
-       * The space view's zodiac is a drum, so its names belong on the edge of
-       * the drum rather than lying inside the ring — from the side, a name in
-       * the mid-plane is a name buried in the wall. `up` is a fraction of the
-       * wall's half-height: +1 the top rim, −1 the bottom.
+       * The space view's zodiac is a drum, so its names belong on the wall
+       * rather than lying inside the ring — from the side, a name in the
+       * mid-plane is a name buried in it. `up` is a fraction of the wall's
+       * half-height: +1 the top rim, 0 the line between the two zones, −1 the
+       * bottom. Each name sits inside the zone it belongs to, which is what
+       * makes the two read as one wall in two colours.
        */
       const rim = (lon: number, radius: number, up: number): [number, number, number] => {
         const a = lon * DEG;
@@ -1441,18 +1487,16 @@ export function AakashGocharScene({
         const lon = (i + 0.5) * RASHI_ARC;
         // Above the rim in space, as on the reference drum; on the ring itself
         // in the two views where the zodiac really is a ring on a sphere.
-        const at = space
-          ? rim(lon, RASHI_OUTER, 1.16)
-          : place(lon, RASHI_LABEL_LAT, RASHI_MID);
+        // In the rashi's own half of the wall, not floating above the drum.
+        const at = space ? rim(lon, NAK_OUTER, 0.55) : place(lon, RASHI_LABEL_LAT, RASHI_MID);
         if (labelVisible(at)) {
           project({ id: `r-${i}`, kind: "rashi", index: i + 1 }, at);
         }
       }
       for (let i = 0; i < 27; i += 1) {
         const lon = (i + 0.5) * NAKSHATRA_ARC;
-        const at = space
-          ? rim(lon, NAK_OUTER, -1.16)
-          : place(lon, NAK_LABEL_LAT, NAK_MID);
+        // Just under the line between the zones, at the top of its own half.
+        const at = space ? rim(lon, NAK_OUTER, -0.16) : place(lon, NAK_LABEL_LAT, NAK_MID);
         if (labelVisible(at)) {
           project({ id: `n-${i}`, kind: "nakshatra", index: i + 1 }, at);
         }
@@ -1469,7 +1513,7 @@ export function AakashGocharScene({
           const lon = (i + 0.5) * padaArc;
           // Just inside its नक्षत्र's own name on the bottom rim.
           const at = space
-            ? rim(lon, NAK_OUTER, -0.86)
+            ? rim(lon, NAK_OUTER, -0.36)
             : place(lon, NAK_LABEL_LAT, NAK_OUTER - 0.32);
           if (labelVisible(at)) {
             project(
@@ -1503,7 +1547,9 @@ export function AakashGocharScene({
        The mean of the members lands inside the sphere, so it is pushed back out
        to where the stars are — otherwise the text would sit at a different
        depth from the figure it names and drift against it as the view turns. */
-    if (collect && (zodiac || space) && toggles.asterisms) {
+    /* Dome and globe only. In the space view each figure is drawn inside the
+       segment named after it, so its own name would be that name twice. */
+    if (collect && zodiac && toggles.asterisms) {
       const precession = precessionSinceJ2000(dtDays);
       for (const [nak, indices] of starField.byNakshatra) {
         let x = 0;
@@ -1512,7 +1558,7 @@ export function AakashGocharScene({
         let radius = 0;
         for (const i of indices) {
           const s = starField.stars[i];
-          const p = starPlace(s.lon + precession - ayan, s.lat);
+          const p = starPlace(i, s.lon + precession - ayan, s.lat);
           x += p[0];
           y += p[1];
           z += p[2];
@@ -2028,12 +2074,31 @@ export function AakashGocharScene({
                 ring is its mid-plane and the wall carries its height. */}
             <Belt inner={RASHI_INNER} outer={RASHI_OUTER} color="#0f3234" opacity={0.8} />
             <BeltDivisions count={12} inner={RASHI_INNER} outer={RASHI_OUTER} color={SEP} opacity={0.85} />
-            <BeltWall radius={RASHI_OUTER} count={12} color={SEP} opacity={0.045} />
+            {/* One drum, two zones. Upper half is the rashi's, divided
+                twelve ways and gold like its names; lower half is the
+                नक्षत्र's, divided twenty-seven ways and green like its own —
+                so the two read as bands of one wall rather than as a ring with
+                labels floating above and below it. */}
+            <BeltWall
+              radius={NAK_OUTER}
+              count={12}
+              color={ZODIAC}
+              opacity={0.05}
+              yFrom={0}
+              yTo={1}
+            />
             {/* Nakshatra belt: 27 × 13°20′, with pada ticks at 108. */}
             <Belt inner={NAK_INNER} outer={NAK_OUTER} color="#0a2426" opacity={0.8} />
             <BeltDivisions count={27} inner={NAK_INNER} outer={NAK_OUTER} color={SEP} opacity={0.6} />
             <BeltDivisions count={108} inner={NAK_OUTER - 0.2} outer={NAK_OUTER} color={INK_DIM} opacity={0.4} />
-            <BeltWall radius={NAK_OUTER} count={27} color={SEP} opacity={0.03} />
+            <BeltWall
+              radius={NAK_OUTER}
+              count={27}
+              color={NAK_ZONE}
+              opacity={0.05}
+              yFrom={-1}
+              yTo={0}
+            />
           </group>
         ) : null}
 
