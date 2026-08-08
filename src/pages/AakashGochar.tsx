@@ -238,8 +238,8 @@ export function AakashGochar() {
         </p>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">
           {pick(
-            "«स्थान स्थिर» ले तपाईं उभिएको ठाउँ अडाउँछ र आकाश त्यसमाथि घुम्छ — एक नक्षत्र दिनमा एक फेरा, जुन बाहिर निस्केर हेर्दा देखिने कुरा हो। बन्द गरे उल्टो हुन्छ: राशि वलय अडिन्छ र पृथ्वी त्यसमुनि घुम्छ।",
-            "“Lock to position” holds the ground you are standing on still and lets the sky turn over it — one full turn a sidereal day, which is what you see standing outside. Switch it off and it is the other way round: the zodiac holds still and the Earth spins underneath it.",
+            "गोलामा रातो चिन्हले तपाईंको स्थान देखाउँछ। त्यो थिचे वा क्रसहेयरबाट «तपाईंको स्थान» छाने क्यामेरा त्यसैमा अडिन्छ — पृथ्वी उसै गरी घुमिरहन्छ, तर तपाईंको ठाउँ पर्दाको बीचमै रहन्छ, ठ्याक्कै ग्रह लक गरेजस्तै।",
+            "The red marker on the globe is where you are watching from. Press it — or pick “Your location” behind the crosshair — and the camera holds it in the middle of the screen. The Earth keeps turning exactly as before; your place simply stays centred as it goes round, the same way locking a graha works.",
           )}
         </p>
         <p className="m-0 text-sm leading-relaxed text-muted-foreground">

@@ -271,7 +271,7 @@ export function AakashGocharSky({
   const [toggles, setToggles] = useState<SceneToggles>({
     belts: true,
     grid: true,
-    lockPosition: true,
+    lockStars: true,
     lockCenter: false,
     asterisms: true,
     poleStars: true,
@@ -492,10 +492,17 @@ export function AakashGocharSky({
     [controlled, onSelectedKeyChange],
   );
 
-  /** Choose your own place as the lock target, and follow it straight away. */
+  /**
+   * Choose your own place as the lock target, and follow it straight away.
+   *
+   * The Earth's spin comes back on with it. Following your own place only says
+   * anything while the globe is actually turning — the camera riding round with
+   * it is the whole picture — and against a frozen Earth the lock would look
+   * like it had done nothing at all.
+   */
   const followObserver = useCallback(() => {
     setLockObserver(true);
-    setToggles((t) => ({ ...t, lockCenter: true }));
+    setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
   }, []);
 
   /* Pressing the marker again lets it go, the same way pressing the graha
@@ -503,7 +510,7 @@ export function AakashGocharSky({
   const toggleObserver = useCallback(() => {
     setLockObserver((on) => {
       if (on) setToggles((t) => ({ ...t, lockCenter: false }));
-      else setToggles((t) => ({ ...t, lockCenter: true }));
+      else setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
       return !on;
     });
   }, []);
@@ -816,9 +823,9 @@ export function AakashGocharSky({
         compact={fullscreen}
       />
       <Chip
-        active={toggles.lockPosition}
-        label={pick("स्थान स्थिर", "Lock to position")}
-        onPress={() => setToggles((t) => ({ ...t, lockPosition: !t.lockPosition }))}
+        active={toggles.lockStars}
+        label={pick("तारा स्थिर", "Lock to stars")}
+        onPress={() => setToggles((t) => ({ ...t, lockStars: !t.lockStars }))}
         overlay={fullscreen}
         compact={fullscreen}
       />
