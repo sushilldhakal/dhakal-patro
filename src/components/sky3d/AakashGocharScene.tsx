@@ -204,17 +204,11 @@ export type SceneToggles = {
   /** The alt-az cage: almucantars and verticals every 15°. */
   grid: boolean;
   /**
-   * Stand in the Earth's own frame: your place on the globe is held still and
-   * the sky wheels past it, once a sidereal day — which is what you actually
-   * see standing outside. Off, the frame is the stars': the zodiac is nailed
-   * down and the Earth spins under it.
-   *
-   * Only one of the two can hold still, and which one it is decides what the
-   * belt does. This used to freeze *both* — the Earth stopped and the belt was
-   * left where the star frame had it — so at any speed the diurnal motion
-   * simply vanished from the picture rather than moving to the sky.
+   * Freeze the Earth's spin. The diurnal rotation drags the whole sky round
+   * once a day, which drowns out planetary motion when the clock is running
+   * fast; locked, the zodiac holds still and only the grahas move along it.
    */
-  lockPosition: boolean;
+  lockStars: boolean;
   /**
    * Keep the lock target in the middle of the view while time runs — the
    * camera target follows its motion (works in space, globe, and horizon
@@ -861,14 +855,7 @@ export function AakashGocharScene({
    * nothing does move — the ring only creeps by the ayanamsa, a degree in 72
    * years. `null` forces the next frame to rebuild.
    */
-  const lastBelt = useRef<{
-    mode: SkyMode;
-    lst: number;
-    ayan: number;
-    eps: number;
-    /** The globe view's diurnal turn — non-zero only when locked to a place. */
-    turn: number;
-  } | null>(null);
+  const lastBelt = useRef<{ mode: SkyMode; lst: number; ayan: number; eps: number } | null>(null);
   const labels = useRef<ScreenLabel[]>([]);
   const scratch = useRef(new THREE.Vector3());
   const target = useRef(new THREE.Vector3());
@@ -918,13 +905,10 @@ export function AakashGocharScene({
        hangs off it. */
     const ayan = ayanamsa(dtDays) + ayanamsaShift;
     const eps = obliquity(dtDays);
-    /* Inside the dome, standing on your own patch of Earth *is* the live
-       sidereal time — the sky wheels past you. Let go of the position and the
-       frame becomes the stars': sidereal time is pinned where it stood when
-       the lock came off, so the belt holds still and only the grahas walk
-       along it. */
+    /* Locked, the sky keeps the sidereal time it had when the lock went on, so
+       the belt stays put and only the grahas walk along it. */
     const liveLst = lstDeg(date, observer.lon);
-    if (toggles.lockPosition) lockedLst.current = null;
+    if (!toggles.lockStars) lockedLst.current = null;
     else if (lockedLst.current == null) lockedLst.current = liveLst;
     const lst = lockedLst.current ?? liveLst;
 
@@ -941,18 +925,6 @@ export function AakashGocharScene({
      * sidereal angle drops straight in.
      */
     const earthSpin = lstDeg(date, 0) * DEG;
-    /**
-     * How far the sky is turned about the Earth's axis, in the globe view.
-     *
-     * Only one of the Earth and the sky can be held still. Locked to your
-     * position the Earth is, so the whole sky — belt, nakshatra figures, pole
-     * stars and every graha with them — takes the rotation instead, running
-     * the opposite way. Unlocked the sky is the fixed thing and the globe
-     * spins under it, so there is nothing to turn.
-     */
-    const skyTurn = globe && toggles.lockPosition ? -earthSpin : 0;
-    const skyTurnCos = Math.cos(skyTurn);
-    const skyTurnSin = Math.sin(skyTurn);
 
     /**
      * Ecliptic → the globe frame: Earth upright with its axis along +Y and its
@@ -977,13 +949,7 @@ export function AakashGocharScene({
          north — Karka Sankranti at the Tropic of Cancer — and 270° `eps` south.
          Flip the sense of this without the longitude and uttarayana runs
          backwards. */
-      const ty = y * c - z * s;
-      const tz = y * s + z * c;
-      /* Then the diurnal turn, about the Earth's axis (+Y) and therefore after
-         the tilt — the same rotation the globe would have taken, handed to the
-         sky because the globe is being held still. Zero unless locked. */
-      if (!skyTurn) return [x, ty, tz];
-      return [x * skyTurnCos + tz * skyTurnSin, ty, -x * skyTurnSin + tz * skyTurnCos];
+      return [x, y * c - z * s, y * s + z * c];
     };
 
     /**
@@ -1089,20 +1055,15 @@ export function AakashGocharScene({
     const beltLst = horizon ? quantizeDeg(lst) : 0;
     const beltAyan = quantizeDeg(ayan);
     const beltEps = quantizeDeg(eps);
-    /* The globe's ring is nailed to the stars — until the view is locked to
-       your position, when the sky is what turns and the ring has to be
-       re-projected as it does. */
-    const beltTurn = quantizeDeg(((skyTurn / DEG) % 360) || 0);
     const beltMoved =
       !lastBelt.current ||
       lastBelt.current.mode !== mode ||
       lastBelt.current.lst !== beltLst ||
       lastBelt.current.ayan !== beltAyan ||
-      lastBelt.current.eps !== beltEps ||
-      lastBelt.current.turn !== beltTurn;
+      lastBelt.current.eps !== beltEps;
 
     if (zodiac && beltMoved) {
-      lastBelt.current = { mode, lst: beltLst, ayan: beltAyan, eps: beltEps, turn: beltTurn };
+      lastBelt.current = { mode, lst: beltLst, ayan: beltAyan, eps: beltEps };
 
       if (toggles.belts) {
         for (const { src, object } of skyLines) {
@@ -1391,10 +1352,9 @@ export function AakashGocharScene({
 
     /* ── the Earth globe ────────────────────────────────────────────── */
     if (globe) {
-      /* Whichever of the two is not being held still takes the rotation: the
-         globe when the frame is the stars', the sky when it is your place. */
+      // The graticule turns with the Earth; the zodiac ring around it does not.
       if (globeSpinRef.current) {
-        const spin = toggles.lockPosition ? 0 : earthSpin;
+        const spin = toggles.lockStars ? 0 : earthSpin;
         // +Y is the axis; positive Y rotation is eastward (prograde), viewed from the north pole.
         globeSpinRef.current.rotation.y = spin % (Math.PI * 2);
       }
@@ -1444,6 +1404,10 @@ export function AakashGocharScene({
      * choosing the marker is how you say it should be the ground rather than a
      * body. It only means something on the globe: inside the dome you are
      * already standing there, and from space the Earth is the centre anyway.
+     *
+     * The point rides the spinning globe, so the camera rides round with it —
+     * the Earth turns as it always did and your place simply stays in the
+     * middle of the screen, which is what the lock is for.
      */
     const trackKey = toggles.lockCenter && !lockObserver && selectedKey ? selectedKey : null;
     const trackGroup = trackKey ? bodyRefs.current[trackKey] : null;
