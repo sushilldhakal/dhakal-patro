@@ -271,7 +271,7 @@ export function AakashGocharSky({
   const [toggles, setToggles] = useState<SceneToggles>({
     belts: true,
     grid: true,
-    lockStars: true,
+    lockPosition: true,
     lockCenter: false,
     asterisms: true,
     poleStars: true,
@@ -285,9 +285,13 @@ export function AakashGocharSky({
   /* The transport row's own date picker — the date nav above the canvas is
      unreachable once fullscreen, so this is the only way to jump dates there. */
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  /* The lock needs a graha, and hitting a graha on the sky is a small target on
-     a phone — so the lock button doubles as the way to choose one. */
+  /* The lock needs a target, and hitting one on the sky is small on a phone —
+     so the lock button doubles as the way to choose it. */
   const [grahaPickerOpen, setGrahaPickerOpen] = useState(false);
+  /* The other thing the camera can follow: your own place on the globe, which
+     holds it under the camera while the sky turns overhead. Exclusive with a
+     graha — the lock has one target. */
+  const [lockObserver, setLockObserver] = useState(false);
 
   // Following the date nav above the canvas keeps the two in step.
   useEffect(() => {
@@ -488,11 +492,47 @@ export function AakashGocharSky({
     [controlled, onSelectedKeyChange],
   );
 
-  /* Nothing selected, nothing to centre on: the lock cannot stay on once its
-     graha is deselected, or the camera silently stops following. */
+  /** Choose your own place as the lock target, and follow it straight away. */
+  const followObserver = useCallback(() => {
+    setLockObserver(true);
+    setToggles((t) => ({ ...t, lockCenter: true }));
+  }, []);
+
+  /* Pressing the marker again lets it go, the same way pressing the graha
+     already selected clears that. */
+  const toggleObserver = useCallback(() => {
+    setLockObserver((on) => {
+      if (on) setToggles((t) => ({ ...t, lockCenter: false }));
+      else setToggles((t) => ({ ...t, lockCenter: true }));
+      return !on;
+    });
+  }, []);
+
+  /** Follow a graha instead — which is the other half of the same choice. */
+  const followGraha = useCallback(
+    (key: GrahaKey) => {
+      setLockObserver(false);
+      setSelected(key);
+      setToggles((t) => ({ ...t, lockCenter: true }));
+    },
+    [setSelected],
+  );
+
+  /* No target, nothing to centre on: the lock cannot stay on once its graha is
+     deselected and your place is not standing in for it, or the camera
+     silently stops following. */
   useEffect(() => {
-    if (!selectedKey) setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
-  }, [selectedKey]);
+    if (!selectedKey && !lockObserver) {
+      setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
+    }
+  }, [selectedKey, lockObserver]);
+
+  /** What the lock is aimed at, named — or null when it is aimed at nothing. */
+  const lockTargetName = lockObserver
+    ? { ne: "तपाईंको स्थान", en: "your location" }
+    : selectedKey
+      ? GRAHA_NAME[selectedKey]
+      : null;
 
   /* Fullscreen takes the viewport, so the page behind it must not scroll — and
      Escape has to get out, which is the one affordance a fixed overlay owes a
@@ -508,6 +548,61 @@ export function AakashGocharSky({
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
+    };
+  }, [fullscreen]);
+
+  /** The fixed layer the sky moves into — and what the browser is handed. */
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
+  /*
+   * Ask the browser for the screen, not just the viewport.
+   *
+   * A fixed layer only ever covers the page: the address bar, the tab strip and
+   * the OS status bar all stay, which is exactly the "not really fullscreen"
+   * this is here to fix — and on a phone the URL bar keeps a slice of the sky
+   * for itself. The Fullscreen API takes the lot.
+   *
+   * The fixed layer stays underneath as the fallback rather than being replaced
+   * by it: iOS Safari has the API on <video> alone and refuses this outright,
+   * and a request can also be denied by permissions policy. Either way the
+   * overlay is already on screen and nothing is lost.
+   */
+  useEffect(() => {
+    const el = overlayRef.current;
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => void;
+    };
+    const active = () => doc.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
+
+    if (!fullscreen) {
+      if (active()) (doc.exitFullscreen ?? doc.webkitExitFullscreen)?.call(doc);
+      return;
+    }
+    if (!el) return;
+
+    const target = el as HTMLDivElement & { webkitRequestFullscreen?: () => void };
+    /* navigationUI: "hide" is a hint; browsers that do not know it ignore the
+       dictionary rather than the call. */
+    void Promise.resolve(
+      target.requestFullscreen
+        ? target.requestFullscreen({ navigationUI: "hide" })
+        : target.webkitRequestFullscreen?.(),
+    ).catch(() => {
+      /* Denied — the fixed layer under this is the whole fallback. */
+    });
+
+    /* Browsers offer their own way out (Escape, the F11 key, a swipe on the
+       notch). Leaving that way has to bring the overlay down with it, or the
+       page is left in a fullscreen layout that is no longer fullscreen. */
+    const onChange = () => {
+      if (!active()) setFullscreen(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
     };
   }, [fullscreen]);
 
@@ -721,34 +816,34 @@ export function AakashGocharSky({
         compact={fullscreen}
       />
       <Chip
-        active={toggles.lockStars}
-        label={pick("तारा स्थिर", "Lock to stars")}
-        onPress={() => setToggles((t) => ({ ...t, lockStars: !t.lockStars }))}
+        active={toggles.lockPosition}
+        label={pick("स्थान स्थिर", "Lock to position")}
+        onPress={() => setToggles((t) => ({ ...t, lockPosition: !t.lockPosition }))}
         overlay={fullscreen}
         compact={fullscreen}
       />
       <IconButton
         icon={<Crosshair className="size-full" />}
         label={
-          selectedKey
+          lockTargetName
             ? toggles.lockCenter
               ? pick(
-                  `${GRAHA_NAME[selectedKey].ne} केन्द्रबाट छुटाउनुहोस्`,
-                  `Unlock the view from ${GRAHA_NAME[selectedKey].en}`,
+                  `${lockTargetName.ne} केन्द्रबाट छुटाउनुहोस्`,
+                  `Unlock the view from ${lockTargetName.en}`,
                 )
               : pick(
-                  `${GRAHA_NAME[selectedKey].ne} केन्द्रमा राख्नुहोस्`,
-                  `Keep ${GRAHA_NAME[selectedKey].en} centred`,
+                  `${lockTargetName.ne} केन्द्रमा राख्नुहोस्`,
+                  `Keep ${lockTargetName.en} centred`,
                 )
-            : pick("ग्रह छान्नुहोस्", "Choose a graha to follow")
+            : pick("के पछ्याउने छान्नुहोस्", "Choose what to follow")
         }
         active={toggles.lockCenter}
         overlay={fullscreen}
         compact={fullscreen}
-        /* With nothing selected there is nothing to centre on, so the press
-           opens the chooser instead of toggling a lock that would do nothing. */
+        /* With no target there is nothing to centre on, so the press opens the
+           chooser instead of toggling a lock that would do nothing. */
         onPress={() =>
-          selectedKey
+          lockTargetName
             ? setToggles((t) => ({ ...t, lockCenter: !t.lockCenter }))
             : setGrahaPickerOpen(true)
         }
@@ -791,8 +886,10 @@ export function AakashGocharSky({
               calibration={calibration}
               ayanamsaShift={ayanamsaShift}
               selectedKey={selectedKey}
+              lockObserver={lockObserver}
               toggles={toggles}
               onSelect={onSelect}
+              onSelectObserver={toggleObserver}
               onSample={onSample}
             />
           </Suspense>
@@ -926,9 +1023,9 @@ export function AakashGocharSky({
         )}
       </div>
 
-      {/* Which graha the camera should ride. Picking one turns the lock on in
-          the same press — choosing a graha here is only ever asked for because
-          you want to follow it. */}
+      {/* What the camera should ride — a graha, or the ground you are standing
+          on. Picking one turns the lock on in the same press: choosing here is
+          only ever asked for because you want to follow it. */}
       {grahaPickerOpen ? (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <button
@@ -939,21 +1036,39 @@ export function AakashGocharSky({
           />
           <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-4">
             <p className="m-0 mb-3 text-sm font-bold text-foreground">
-              {pick("कुन ग्रह पछ्याउने?", "Which graha to follow?")}
+              {pick("के पछ्याउने?", "What should the camera follow?")}
             </p>
+            {/* Your own place, first: it is the one target that is not up in
+                the sky, and the one that holds the ground still while the
+                zodiac turns overhead. */}
+            <button
+              type="button"
+              onClick={() => {
+                followObserver();
+                setGrahaPickerOpen(false);
+              }}
+              className={cn(
+                "mb-2 flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors",
+                lockObserver
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted",
+              )}
+            >
+              <MapPin className="size-3.5 shrink-0" style={{ color: LABEL_COLOR.observer }} />
+              <span className="truncate">{pick("तपाईंको स्थान", "Your location")}</span>
+            </button>
             <div className="grid grid-cols-3 gap-2">
               {GEO_BODY_ORDER.map((key) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => {
-                    setSelected(key);
-                    setToggles((t) => ({ ...t, lockCenter: true }));
+                    followGraha(key);
                     setGrahaPickerOpen(false);
                   }}
                   className={cn(
                     "flex items-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-semibold transition-colors",
-                    selectedKey === key
+                    !lockObserver && selectedKey === key
                       ? "border-primary bg-primary/10 text-foreground"
                       : "border-border text-muted-foreground hover:bg-muted",
                   )}
@@ -968,11 +1083,12 @@ export function AakashGocharSky({
                 </button>
               ))}
             </div>
-            {selectedKey ? (
+            {lockTargetName ? (
               <button
                 type="button"
                 className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted"
                 onClick={() => {
+                  setLockObserver(false);
                   setSelected(null);
                   setGrahaPickerOpen(false);
                 }}
@@ -1016,8 +1132,19 @@ export function AakashGocharSky({
   /* A fixed layer, not a portal to <body>: staying in the tree keeps the theme
      class and every CSS variable the chips read, which a detached root would
      lose. The scene remounts, but its textures come back out of the loader
-     cache, so the sky is already there when the layer paints. */
-  return <div className="fixed inset-0 z-[100] bg-background">{body}</div>;
+     cache, so the sky is already there when the layer paints.
+     This element is also what goes to the Fullscreen API above, which is why
+     it carries the background rather than leaving it to the body underneath —
+     once promoted it is the only thing on the screen.
+     `h-[100dvh]` over the `inset-0` bottom: on a phone the layout viewport
+     runs *under* a retractable URL bar, so inset-0 alone hides the control row
+     behind it until the bar happens to retract. Browsers without dvh drop the
+     declaration and land back on inset-0. */
+  return (
+    <div ref={overlayRef} className="fixed inset-0 z-[100] h-[100dvh] w-full bg-background">
+      {body}
+    </div>
+  );
 }
 
 /**
