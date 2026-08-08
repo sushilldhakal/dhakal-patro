@@ -66,6 +66,7 @@ import {
   type SceneToggles,
   type ScreenLabel,
   type SimState,
+  PADA_ZOOM,
   type SkyMode,
   type SkySample,
   type ViewState,
@@ -84,6 +85,7 @@ const CANVAS_BG = "#04090c";
 const LABEL_COLOR = {
   rashi: "#f4c542",
   nakshatra: "#6fe08a",
+  pada: "#8fd6b0",
   cardinal: "#ff8a8a",
   azimuth: "#7ea9d8",
   station: "#ffd166",
@@ -191,6 +193,34 @@ const zoneMidnight = (shifted: Date) => {
   midnight.setUTCHours(0, 0, 0, 0);
   return midnight;
 };
+
+/**
+ * A नक्षत्र's figure, drawn in the overlay's own colour.
+ *
+ * Not `NakshatraIcon`: that one is styled `text-foreground` for the pages it
+ * was written for, and the foreground over this canvas is near-black in light
+ * mode — the same trap {@link LABEL_COLOR} exists to avoid. Same artwork, same
+ * `.fx` fill convention, colour inherited from the label it sits in.
+ */
+function NakshatraFigure({ svg, size }: { svg?: string; size: number }) {
+  if (!svg) return null;
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="block shrink-0 [&_.fx]:fill-current [&_.fx]:stroke-none"
+      aria-hidden
+    >
+      <g dangerouslySetInnerHTML={{ __html: svg }} />
+    </svg>
+  );
+}
 
 /** Belt-label font size at `scale`, with the wide-zoom trim applied. */
 const beltFontSize = (base: number, scale: number) =>
@@ -691,6 +721,10 @@ export function AakashGocharSky({
   const labelScale = sample
     ? Math.min(LABEL_SCALE_MAX, Math.sqrt(Math.max(1, sample.zoomDistance / modeBaseline)))
     : 1;
+  /* Close enough for the belt to carry its detail — the same threshold the
+     scene uses to decide whether to offer पाद anchors at all, so the figures
+     and the quarter numbers arrive together rather than one zoom apart. */
+  const labelDetail = (sample?.zoomDistance ?? Infinity) <= PADA_ZOOM;
 
   /**
    * The place's offset from UT, taken once at the date the page is on.
@@ -983,7 +1017,7 @@ export function AakashGocharSky({
 
         {/* Labels ride over the canvas rather than in it — real Devanagari type,
             positioned from the scene's own projection of each anchor. */}
-        {toggles.labels && sample ? <SkyLabels labels={sample.labels} scale={labelScale} /> : null}
+        {toggles.labels && sample ? <SkyLabels labels={sample.labels} scale={labelScale} detail={labelDetail} /> : null}
 
         {/* HUD — the simulated instant, which drifts away from the nav once it runs. */}
         <div
@@ -1282,12 +1316,16 @@ function labelBox(x: number, y: number, width: number, top: number): CSSProperti
 const SkyLabels = memo(function SkyLabels({
   labels,
   scale = 1,
+  detail = false,
 }: {
   labels: ScreenLabel[];
   /** Grows the rashi/nakshatra belt text as the camera pulls back — a fixed
       pixel size reads fine close up but disappears against the wider view
       once the belt has shrunk to a small ring in the middle of the screen. */
   scale?: number;
+  /** Close in: each नक्षत्र carries its figure over its name, and the पाद
+      quarters are named. Further out both are clutter on a crowded ring. */
+  detail?: boolean;
 }) {
   const { lang, digits } = useLocale();
   const pick = (ne: string, en: string) => bilingualText(lang, ne, en);
@@ -1322,16 +1360,58 @@ const SkyLabels = memo(function SkyLabels({
         if (label.kind === "nakshatra" && label.index) {
           const nak = NAKSHATRA_ICONS[label.index - 1];
           const boxWidth = 90 * scale;
+          const name = nak ? (lang === "en" ? nak.en : nak.ne) : "";
+          /* Close in, the नक्षत्र gets its own figure over its name, the way a
+             rashi gets its glyph — the shape is what the group is named for,
+             and at this range there is room for it. Further out it is a smudge
+             on a crowded ring, so the name goes alone. */
+          if (!detail) {
+            return (
+              <span
+                key={label.id}
+                style={{
+                  ...labelBox(label.x, label.y, boxWidth, -6 * scale),
+                  fontSize: beltFontSize(12, scale),
+                  color: LABEL_COLOR.nakshatra,
+                }}
+              >
+                {name}
+              </span>
+            );
+          }
           return (
-            <span
+            <div
               key={label.id}
+              className="flex flex-col items-center"
               style={{
-                ...labelBox(label.x, label.y, boxWidth, -6 * scale),
-                fontSize: beltFontSize(12, scale),
+                position: "absolute",
+                left: label.x - boxWidth / 2,
+                top: label.y - 14 * scale,
+                width: boxWidth,
                 color: LABEL_COLOR.nakshatra,
               }}
             >
-              {nak ? (lang === "en" ? nak.en : nak.ne) : ""}
+              <NakshatraFigure svg={nak?.svg} size={20 * scale} />
+              <span
+                className="max-w-full truncate"
+                style={{ fontSize: beltFontSize(12, scale) }}
+              >
+                {name}
+              </span>
+            </div>
+          );
+        }
+        if (label.kind === "pada" && label.index) {
+          /* The quarter's own number, and which नक्षत्र it is a quarter of —
+             the belt already carries the ticks, this says which is which. */
+          const nak = label.deg ? NAKSHATRA_SHORT[label.deg - 1] : undefined;
+          return (
+            <span
+              key={label.id}
+              className="text-[9px]"
+              style={{ ...labelBox(label.x, label.y, 54, -5), color: LABEL_COLOR.pada }}
+            >
+              {`${nak ? (lang === "en" ? nak.en : nak.ne) : ""} ${digits(label.index)}`}
             </span>
           );
         }
