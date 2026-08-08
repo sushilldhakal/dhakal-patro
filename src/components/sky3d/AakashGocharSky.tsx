@@ -148,17 +148,23 @@ const clampZoom = (v: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
 /** How far a press may wander, in px, and still count as a tap rather than a drag. */
 const DRAG_SLOP = 5;
 
-/** The most the belt text is allowed to grow as the camera pulls back. */
-const LABEL_SCALE_MAX = 2.4;
+/**
+ * The most the belt text is allowed to grow as the camera pulls back.
+ *
+ * Deliberately small. The idea behind growing it at all is sound — the belt
+ * shrinks to a ring in the middle of the screen and fixed-size text goes with
+ * it — but at 2.4 the rashi names came out near thirty points, big enough to
+ * smother the ring they name and each other. The far zoom is where there is
+ * *least* room between labels, not most.
+ */
+const LABEL_SCALE_MAX = 1.3;
 /**
  * Points shaved off the belt text at the widest zoom, ramped in with the scale.
  *
- * The growth curve is right for reading a small ring across the screen, but by
- * the far end the rashi and nakshatra names had got heavy enough to crowd the
- * belt they sit on. This trims that end only: nothing is taken at the mode's own
- * framing, where the text already reads well.
+ * With the cap above this very nearly cancels the growth, which is the point:
+ * out at the far end the names hold their own size instead of swelling.
  */
-const LABEL_WIDE_TRIM = 4;
+const LABEL_WIDE_TRIM = 3;
 
 /**
  * A zone-shifted instant → the UTC midnight of the day it lands on.
@@ -625,11 +631,17 @@ export function AakashGocharSky({
 
   /* Rashi/nakshatra text grows past its base size once the camera pulls back
      beyond the mode's own default framing — capped so it never swamps the
-     screen at the very widest zoom. */
+     screen at the very widest zoom.
+
+     Through a square root, not straight off the ratio: the space view can pull
+     back to nearly five times its own framing, and taken linearly that put the
+     text at the cap long before the zoom got there, so most of the range was
+     spent at the largest size. The root keeps it near its own size through the
+     middle of the range and only leans on the cap at the very end. */
   const modeBaseline =
     mode === "space" ? SYSTEM_DISTANCE : mode === "globe" ? GLOBE_VIEW : HORIZON_WIDE;
   const labelScale = sample
-    ? Math.min(LABEL_SCALE_MAX, Math.max(1, sample.zoomDistance / modeBaseline))
+    ? Math.min(LABEL_SCALE_MAX, Math.sqrt(Math.max(1, sample.zoomDistance / modeBaseline)))
     : 1;
 
   /**

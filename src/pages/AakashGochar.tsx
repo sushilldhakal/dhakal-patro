@@ -19,12 +19,17 @@ import {
   resolveLocationTimezone,
   usePanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
+import { isGregorianEraBrowse } from "@/components/patro-date/patro-month-labels";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 import { fetchGochar, gocharKeys } from "@/lib/api";
+import type { Era } from "@/lib/era";
 import { formatGocharPatroDate } from "@/lib/gochar-page-utils";
 import type { GrahaKey } from "@/lib/graha-details";
+import { pickAdDate, pickBrowseVikramDate } from "@/lib/patro-date-options";
+import { toAdStr } from "@/lib/patro-day";
 import { KATHMANDU, type Observer } from "@/lib/sky3d/horizon";
 import { todayAdStringInTimezone, zonedWallTimeToInstant } from "@/lib/zoned-time";
 
@@ -43,6 +48,48 @@ export function AakashGochar() {
   const todayAd = todayAdStringInTimezone(new Date(), tz);
   const [date, setDate] = useState(() => new Date(`${todayAd}T12:00:00`));
   const [clock, setClock] = useState("12:00");
+
+  /**
+   * Which calendar the date nav is browsing in.
+   *
+   * The nav only offers its BS↔BBS toggle to a page that can take the answer,
+   * so without this the era was whatever the UI language implied and पू.वि.सं.
+   * — every date before the Vikram epoch — was simply unreachable here. Which
+   * is the one page it least belongs on: the sky runs to both ends of history,
+   * and the eight thousand years the nav can now reach are all inside it.
+   *
+   * Page state rather than the URL browse machinery the other day pages use:
+   * this route carries no search params, and the era is a way of naming the day
+   * on screen, not a second source of truth for which day that is. The `Date`
+   * stays the only one of those.
+   */
+  const langEra = useCalendarEra();
+  const [era, setEra] = useState<Era>(() => (langEra === "ad" ? "ad" : "bs"));
+  /**
+   * The Vikram day the nav is showing, when it came from a Vikram pick.
+   *
+   * Without it the nav re-derives the day through `adToBS`, whose table starts
+   * at the Vikram epoch: a पू.वि.सं. date came back as a nonsense BS year with
+   * a वि.सं. label on it, so arriving at the date you asked for still left the
+   * wrong one on screen. The parts here are the ones that were asked for and
+   * anchored, which is what the nav wants to print.
+   */
+  const [vikram, setVikram] = useState<{
+    era: Era;
+    year: number;
+    month: number;
+    day: number;
+  } | null>(null);
+
+  /**
+   * A date arriving from anywhere but a Vikram pick — the AD picker, "today",
+   * the sky's own date sheet. The Vikram parts on screen belonged to the day
+   * being left, so they go with it and the nav derives the new one itself.
+   */
+  const changeDate = useCallback((next: Date) => {
+    setVikram(null);
+    setDate(next);
+  }, []);
   /* Held here rather than inside the sky, so clicking a graha up in the canvas
      and clicking its card down in the grid are the same act. */
   const [selectedKey, setSelectedKey] = useState<GrahaKey | null>(null);
@@ -66,12 +113,13 @@ export function AakashGochar() {
    */
   const skyShown = useRef(false);
 
-  const dateAd = useMemo(() => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }, [date]);
+  /** Which Vikram pick is the live one — see {@link handleEraChange}. */
+  const pickToken = useRef(0);
+
+  /* Through the shared helper, not hand-rolled: a पू.वि.सं. day lands in the
+     centuries before the Christian era, and `${year}-${m}-${d}` writes those as
+     "-57-01-01" — which is not the proleptic ISO the API reads. */
+  const dateAd = useMemo(() => toAdStr(date), [date]);
 
   /* The scene reads a single instant — merge the picked day with the picked
      clock so the time pickers actually move the sky, not just the date.
@@ -122,6 +170,46 @@ export function AakashGochar() {
     [],
   );
 
+  /**
+   * The nav answering with a new era, and the day it wants read in it.
+   *
+   * Once the page takes this callback the nav routes its whole day-browse
+   * through it — the era toggle, the year/day sheet, the arrows — so the
+   * conversion has to happen here. `pickBrowseVikramDate` is the one that
+   * matters: the offline Vikram table starts at the epoch and cannot date a
+   * पू.वि.सं. day at all, so it asks the backend and lands the answer on
+   * `setDate` when it comes back.
+   */
+  const handleEraChange = useCallback(
+    (nextEra: Era, calendar?: { year: number; month: number; day: number }) => {
+      setEra(nextEra);
+      if (!calendar) return;
+      if (isGregorianEraBrowse(nextEra)) {
+        setVikram(null);
+        pickAdDate(setDate, calendar.year, calendar.month, calendar.day);
+        return;
+      }
+      /* A पू.वि.सं. day is a round trip to the backend, and the reader can pick
+         again while it is in the air — so only the newest answer is allowed to
+         land, or an abandoned date arrives after the one that replaced it. */
+      pickToken.current += 1;
+      const token = pickToken.current;
+      pickBrowseVikramDate(
+        (next, parts) => {
+          if (token !== pickToken.current) return;
+          setVikram(parts ? { era: nextEra, ...parts } : null);
+          setDate(next);
+        },
+        nextEra,
+        calendar.year,
+        calendar.month,
+        calendar.day,
+        location.params,
+      );
+    },
+    [location.params],
+  );
+
   const locationLabel = displayLocationLabel(location, undefined, lang);
   const dateLabel = useMemo(
     () => `${formatGocharPatroDate(dateAd, lang, { includeYear: true })} · ${locationLabel}`,
@@ -151,7 +239,11 @@ export function AakashGochar() {
 
       <PatroDayTimeNav
         date={date}
-        onDateChange={setDate}
+        onDateChange={changeDate}
+        era={era}
+        onEraChange={handleEraChange}
+        vikram={vikram}
+        civilDateAd={dateAd}
         todayAd={todayAd}
         clock={clock}
         onClockChange={setClock}
@@ -170,7 +262,7 @@ export function AakashGochar() {
           gochar={gochar}
           ayanamsaDeg={query.data?.ayanamsa?.degrees}
           date={sceneDate}
-          onDateChange={setDate}
+          onDateChange={changeDate}
           clock={clock}
           onClockChange={setClock}
           observer={observer}
