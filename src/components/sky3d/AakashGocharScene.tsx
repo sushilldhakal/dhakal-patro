@@ -96,6 +96,13 @@ const OUTSIDE_ZOOM_MAX = 120;
 
 /** Radius of the Earth globe in the zoomed-out view. */
 const GLOBE_R = 30;
+/**
+ * Radius the "you are here" marker sits at — the globe's own surface, near
+ * enough. Both the dot and its label are placed here, so they stay the same
+ * point on the map as it turns rather than drifting apart with the parallax
+ * between two different spheres.
+ */
+const OBSERVER_R = GLOBE_R * 1.006;
 /** Radius the zodiac ring hugs the globe at. */
 const GLOBE_BAND_R = GLOBE_R * 1.42;
 /** Where the globe camera sits — far enough back to read as orthographic. */
@@ -1312,9 +1319,13 @@ export function AakashGocharScene({
         }
       }
       {
-        // Same treatment as a tropic label: the marker sits on the spinning
-        // globe, so its world position needs the same spin quaternion applied.
-        const at = geoToVec3(observer.lat, observer.lon, GLOBE_R * 1.09);
+        /* Same treatment as a tropic label: the marker sits on the spinning
+           globe, so its world position needs the same spin quaternion applied.
+           At {@link OBSERVER_R} exactly, the radius the marker mesh is drawn
+           at — floated above it, the label sat on a wider sphere than the dot
+           and the two drew apart as the globe turned, which read as the marker
+           sliding over the map rather than being fixed to it. */
+        const at = geoToVec3(observer.lat, observer.lon, OBSERVER_R);
         scratch.current.set(at[0], at[1], at[2]);
         if (globeSpinRef.current) scratch.current.applyQuaternion(globeSpinRef.current.quaternion);
         const world: [number, number, number] = [
@@ -1676,28 +1687,41 @@ export function AakashGocharScene({
               it, so it reads at a glance instead of disappearing as a single dot
               against the grid. Pressing it picks your own place as what the
               camera follows, the same way pressing a graha picks that. */}
-          <group position={geoToVec3(observer.lat, observer.lon, GLOBE_R * 1.006)}>
+          <group position={geoToVec3(observer.lat, observer.lon, OBSERVER_R)}>
+            {/* A place, not a region: at the old size the dot covered most of
+                Nepal and the glow the subcontinent, which is both wrong and
+                what made it read as sitting above the map rather than on it.
+                The invisible disc under them keeps the press target the size a
+                finger needs, which the dot no longer is. */}
             <mesh onClick={onSelectObserver}>
-              <sphereGeometry args={[GLOBE_R * 0.045, 16, 16]} />
+              <sphereGeometry args={[GLOBE_R * 0.018, 16, 16]} />
               <meshBasicMaterial color={lockObserver ? "#ffd166" : "#ff6b6b"} />
             </mesh>
             <mesh onClick={onSelectObserver}>
-              <sphereGeometry args={[GLOBE_R * 0.09, 16, 16]} />
+              <sphereGeometry args={[GLOBE_R * 0.036, 16, 16]} />
               <meshBasicMaterial
                 color={lockObserver ? "#ffd166" : "#ff6b6b"}
                 transparent
-                opacity={lockObserver ? 0.42 : 0.28}
+                opacity={lockObserver ? 0.45 : 0.3}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
               />
+            </mesh>
+            {/* Transparent rather than `visible={false}`: the raycaster skips
+                anything invisible, so a hidden hit target is no target. */}
+            <mesh onClick={onSelectObserver}>
+              <sphereGeometry args={[GLOBE_R * 0.075, 8, 8]} />
+              <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
           </group>
         </group>
 
         {/* The Sun's ray and the subsolar point it plants between the tropics. */}
         <primitive object={sunRay} />
+        {/* The point the Sun stands over. Small on purpose — it marks one spot
+            on the map, and at any size worth noticing it stops being one. */}
         <mesh ref={subsolarRef}>
-          <sphereGeometry args={[GLOBE_R * 0.03, 14, 14]} />
+          <sphereGeometry args={[GLOBE_R * 0.014, 12, 12]} />
           <meshBasicMaterial color="#ffd166" />
         </mesh>
 
