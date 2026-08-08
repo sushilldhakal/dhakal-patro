@@ -93,7 +93,17 @@ const NAK_OUTER = 11.1;
  * on the floor — drawn flat it read as a table the grahas hovered over, with no
  * way to see which of them sat north of the plane and which south.
  */
-const BELT_HALF_H = 1.15;
+const BELT_HALF_H = 3.6;
+/**
+ * The ecliptic latitude the drum's wall spans, top to bottom.
+ *
+ * A नक्षत्र is a patch of sky, not a mark on a ring, and this is how wide that
+ * patch is allowed to be here: latitude maps straight onto the wall's height,
+ * so a star two thirds of the way up sits at two thirds of this. The handful
+ * that reach past it — अभिजित् highest among them — pin to the rim rather than
+ * fly off it.
+ */
+const BELT_LAT_SPAN = 24;
 /**
  * How far above the ecliptic the camera is held while it follows a graha in the
  * space view — about 34°, enough that the belt stays a ring rather than an edge.
@@ -440,6 +450,19 @@ function BeltWall({
         radius * Math.cos(a), BELT_HALF_H, -radius * Math.sin(a),
       );
     }
+    /* The two rims the uprights run between. Without them the wall is a row of
+       posts with nothing joining their ends, and the drum has no edge. */
+    const RIM_STEPS = 128;
+    for (const y of [-BELT_HALF_H, BELT_HALF_H]) {
+      for (let i = 0; i < RIM_STEPS; i += 1) {
+        const a = (i / RIM_STEPS) * Math.PI * 2;
+        const b = ((i + 1) / RIM_STEPS) * Math.PI * 2;
+        points.push(
+          radius * Math.cos(a), y, -radius * Math.sin(a),
+          radius * Math.cos(b), y, -radius * Math.sin(b),
+        );
+      }
+    }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
     /* The ribs carry the height — the wall itself is a wash, and a wash alone
@@ -449,7 +472,7 @@ function BeltWall({
       new THREE.LineBasicMaterial({
         color,
         transparent: true,
-        opacity: Math.min(0.5, opacity * 3),
+        opacity: Math.min(0.42, opacity * 6),
       }),
     );
   }, [radius, count, color, opacity]);
@@ -1248,10 +1271,44 @@ export function AakashGocharScene({
       lastBelt.current.ayan !== beltAyan ||
       lastBelt.current.eps !== beltEps;
 
-    if (zodiac && beltMoved) {
+    /**
+     * The sphere the fixed stars are drawn on, for whichever view is live.
+     *
+     * Inside the dome and around the globe that is the sky itself. In the space
+     * view there is no sky sphere — the belt *is* the far edge of the picture —
+     * so the star groups sit just outside the नक्षत्र band, each figure over
+     * the segment it gives its name to. Their latitudes carry them out of the
+     * slab, which is the honest answer to why a नक्षत्र is a patch of sky and
+     * not a line on the belt.
+     */
+    const starRadius = space ? NAK_OUTER + 0.25 : DOME * 0.995;
+
+    /**
+     * A fixed star's place, in whichever frame is live.
+     *
+     * Inside the dome and around the globe the sky is a sphere and the star
+     * goes on it. In the space view the zodiac is a drum standing around the
+     * Earth, so the star goes on its *wall*: the longitude turns it about the
+     * axis and the latitude rides straight up the wall, one for one against
+     * {@link BELT_LAT_SPAN}. A sphere would have pulled every figure in towards
+     * the axis as it climbed, which is precisely the flattening that made a
+     * नक्षत्र look like a mark on a ring.
+     */
+    const starPlace = (lonSid: number, latEc: number): [number, number, number] => {
+      if (!space) return place(lonSid, latEc, starRadius);
+      const a = lonSid * DEG;
+      const t = Math.max(-1, Math.min(1, latEc / BELT_LAT_SPAN));
+      return [starRadius * Math.cos(a), BELT_HALF_H * t, -starRadius * Math.sin(a)];
+    };
+
+    if ((zodiac || space) && beltMoved) {
       lastBelt.current = { mode, lst: beltLst, ayan: beltAyan, eps: beltEps };
 
-      if (toggles.belts) {
+      /* Dome and globe only: in the space view `place` takes its radius from
+         the caller, and the banded zodiac asks for zero — which would fold the
+         whole band onto the origin. That band is drawn as flat geometry there
+         instead, and needs nothing from this. */
+      if (toggles.belts && zodiac) {
         for (const { src, object } of skyLines) {
           for (let i = 0; i < src.length; i += 1) {
             setPoint(object, i, place(src[i].lon, src[i].lat, 0));
@@ -1274,7 +1331,7 @@ export function AakashGocharScene({
           (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
           for (let i = 0; i < indices.length; i += 1) {
             const star = starField.stars[indices[i]];
-            setVertex(object, i, place(star.lon + precession - ayan, star.lat, DOME * 0.995));
+            setVertex(object, i, starPlace(star.lon + precession - ayan, star.lat));
           }
           (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
         }
@@ -1282,8 +1339,8 @@ export function AakashGocharScene({
           const [a, b] = starField.links[i];
           const sa = starField.stars[a];
           const sb = starField.stars[b];
-          setVertex(starField.lines, i * 2, place(sa.lon + precession - ayan, sa.lat, DOME * 0.995));
-          setVertex(starField.lines, i * 2 + 1, place(sb.lon + precession - ayan, sb.lat, DOME * 0.995));
+          setVertex(starField.lines, i * 2, starPlace(sa.lon + precession - ayan, sa.lat));
+          setVertex(starField.lines, i * 2 + 1, starPlace(sb.lon + precession - ayan, sb.lat));
         }
         flushLine(starField.lines);
       }
@@ -1313,7 +1370,7 @@ export function AakashGocharScene({
          is what stands still, so it is the pole *circle* that wheels past it —
          the equivalent picture to the axis sweeping its cone, and the one that
          shows you which star is on duty. */
-      if (toggles.poleStars) {
+      if (toggles.poleStars && zodiac) {
         const precession = precessionSinceJ2000(dtDays);
         const dpr = state.gl.getPixelRatio();
         for (const object of [poleField.points, poleField.crown]) {
@@ -1367,16 +1424,35 @@ export function AakashGocharScene({
     }
 
     if (collect && toggles.belts) {
+      /**
+       * A point on the drum's rim, for the names that ride it.
+       *
+       * The space view's zodiac is a drum, so its names belong on the edge of
+       * the drum rather than lying inside the ring — from the side, a name in
+       * the mid-plane is a name buried in the wall. `up` is a fraction of the
+       * wall's half-height: +1 the top rim, −1 the bottom.
+       */
+      const rim = (lon: number, radius: number, up: number): [number, number, number] => {
+        const a = lon * DEG;
+        return [radius * Math.cos(a), BELT_HALF_H * up, -radius * Math.sin(a)];
+      };
+
       for (let i = 0; i < 12; i += 1) {
         const lon = (i + 0.5) * RASHI_ARC;
-        const at = place(lon, zodiac ? RASHI_LABEL_LAT : 0, RASHI_MID);
+        // Above the rim in space, as on the reference drum; on the ring itself
+        // in the two views where the zodiac really is a ring on a sphere.
+        const at = space
+          ? rim(lon, RASHI_OUTER, 1.16)
+          : place(lon, RASHI_LABEL_LAT, RASHI_MID);
         if (labelVisible(at)) {
           project({ id: `r-${i}`, kind: "rashi", index: i + 1 }, at);
         }
       }
       for (let i = 0; i < 27; i += 1) {
         const lon = (i + 0.5) * NAKSHATRA_ARC;
-        const at = place(lon, zodiac ? NAK_LABEL_LAT : 0, NAK_MID);
+        const at = space
+          ? rim(lon, NAK_OUTER, -1.16)
+          : place(lon, NAK_LABEL_LAT, NAK_MID);
         if (labelVisible(at)) {
           project({ id: `n-${i}`, kind: "nakshatra", index: i + 1 }, at);
         }
@@ -1391,7 +1467,10 @@ export function AakashGocharScene({
         const padaArc = NAKSHATRA_ARC / 4;
         for (let i = 0; i < 108; i += 1) {
           const lon = (i + 0.5) * padaArc;
-          const at = place(lon, zodiac ? NAK_LABEL_LAT : 0, NAK_OUTER - 0.32);
+          // Just inside its नक्षत्र's own name on the bottom rim.
+          const at = space
+            ? rim(lon, NAK_OUTER, -0.86)
+            : place(lon, NAK_LABEL_LAT, NAK_OUTER - 0.32);
           if (labelVisible(at)) {
             project(
               { id: `p-${i}`, kind: "pada", index: (i % 4) + 1, deg: Math.floor(i / 4) + 1 },
@@ -1424,7 +1503,7 @@ export function AakashGocharScene({
        The mean of the members lands inside the sphere, so it is pushed back out
        to where the stars are — otherwise the text would sit at a different
        depth from the figure it names and drift against it as the view turns. */
-    if (collect && zodiac && toggles.asterisms) {
+    if (collect && (zodiac || space) && toggles.asterisms) {
       const precession = precessionSinceJ2000(dtDays);
       for (const [nak, indices] of starField.byNakshatra) {
         let x = 0;
@@ -1433,18 +1512,25 @@ export function AakashGocharScene({
         let radius = 0;
         for (const i of indices) {
           const s = starField.stars[i];
-          const p = place(s.lon + precession - ayan, s.lat, DOME * 0.995);
+          const p = starPlace(s.lon + precession - ayan, s.lat);
           x += p[0];
           y += p[1];
           z += p[2];
           radius = Math.hypot(p[0], p[1], p[2]);
         }
-        const len = Math.hypot(x, y, z) || 1;
-        const at: [number, number, number] = [
-          (x / len) * radius,
-          (y / len) * radius,
-          (z / len) * radius,
-        ];
+        /* On a sphere the mean of the members falls inside it, so it is pushed
+           back out to where the stars are — otherwise the text sits at a
+           different depth from the figure it names and drifts against it as
+           the view turns. On the drum's wall the mean is already on the wall in
+           height; only its distance from the axis needs restoring. */
+        let at: [number, number, number];
+        if (space) {
+          const flat = Math.hypot(x, z) || 1;
+          at = [(x / flat) * starRadius, y / indices.length, (z / flat) * starRadius];
+        } else {
+          const len = Math.hypot(x, y, z) || 1;
+          at = [(x / len) * radius, (y / len) * radius, (z / len) * radius];
+        }
         if (labelVisible(at)) {
           project({ id: `ast-${nak}`, kind: "asterism", index: nak }, at);
         }
@@ -1531,8 +1617,10 @@ export function AakashGocharScene({
     if (globeRootRef.current) globeRootRef.current.visible = globe;
     for (const { object } of skyLines) object.visible = zodiac && toggles.belts;
     // The star groups belong to the sky, so they live wherever the belt does.
-    for (const { object } of starField.groups) object.visible = zodiac && toggles.asterisms;
-    starField.lines.visible = zodiac && toggles.asterisms;
+    for (const { object } of starField.groups) {
+      object.visible = (zodiac || space) && toggles.asterisms;
+    }
+    starField.lines.visible = (zodiac || space) && toggles.asterisms;
     poleField.points.visible = zodiac && toggles.poleStars;
     poleField.crown.visible = zodiac && toggles.poleStars;
     poleField.trackLine.visible = zodiac && toggles.poleStars;
@@ -1789,7 +1877,7 @@ export function AakashGocharScene({
             map={textures.earth}
             emissive="#ffffff"
             emissiveMap={textures.earth}
-            emissiveIntensity={0.1}
+            emissiveIntensity={0.38}
             roughness={0.85}
             metalness={0.02}
           />
@@ -1940,13 +2028,12 @@ export function AakashGocharScene({
                 ring is its mid-plane and the wall carries its height. */}
             <Belt inner={RASHI_INNER} outer={RASHI_OUTER} color="#0f3234" opacity={0.8} />
             <BeltDivisions count={12} inner={RASHI_INNER} outer={RASHI_OUTER} color={SEP} opacity={0.85} />
-            <BeltWall radius={RASHI_OUTER} count={12} color={SEP} opacity={0.16} />
-            <BeltWall radius={RASHI_INNER} count={12} color={SEP} opacity={0.1} />
+            <BeltWall radius={RASHI_OUTER} count={12} color={SEP} opacity={0.045} />
             {/* Nakshatra belt: 27 × 13°20′, with pada ticks at 108. */}
             <Belt inner={NAK_INNER} outer={NAK_OUTER} color="#0a2426" opacity={0.8} />
             <BeltDivisions count={27} inner={NAK_INNER} outer={NAK_OUTER} color={SEP} opacity={0.6} />
             <BeltDivisions count={108} inner={NAK_OUTER - 0.2} outer={NAK_OUTER} color={INK_DIM} opacity={0.4} />
-            <BeltWall radius={NAK_OUTER} count={27} color={SEP} opacity={0.12} />
+            <BeltWall radius={NAK_OUTER} count={27} color={SEP} opacity={0.03} />
           </group>
         ) : null}
 
