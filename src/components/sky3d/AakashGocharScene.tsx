@@ -96,9 +96,13 @@ const NAK_OUTER = 11.1;
 const BELT_HALF_H = 3.6;
 /** How far a नक्षत्र's figure is held clear of its segment's own boundaries. */
 const PANEL_INSET = 0.14;
-/** The panel each figure is drawn in, as a fraction of the wall's half-height. */
-const PANEL_TOP = -0.5;
-const PANEL_BOTTOM = -0.95;
+/**
+ * The panel each नक्षत्र's figure is drawn in, as a fraction of the wall's
+ * half-height — centred on the ecliptic, so the figure stands around the
+ * grahas running through the middle rather than under them.
+ */
+const PANEL_TOP = 0.6;
+const PANEL_BOTTOM = -0.6;
 /**
  * How far above the ecliptic the camera is held while it follows a graha in the
  * space view — about 34°, enough that the belt stays a ring rather than an edge.
@@ -139,7 +143,6 @@ const GLOBE_CAM_R = 300;
 const GLOBE_BODY_SCALE = 0.55;
 
 const INK_DIM = "#a7c4c3";
-const SEP = "#8fbfc1";
 const RETRO = "#ef4444";
 /** Star-atlas palette: the zodiac band in gold, the nakshatra strip in green. */
 const ZODIAC = "#d8c84a";
@@ -434,14 +437,20 @@ function BeltWall({
   opacity,
   yFrom,
   yTo,
+  wash = false,
+  rims = false,
 }: {
   radius: number;
   count: number;
   color: string;
   opacity: number;
-  /** The band of wall this covers, as a fraction of the half-height. */
+  /** The band these ribs span, as a fraction of the wall's half-height. */
   yFrom: number;
   yTo: number;
+  /** Fill the cylinder behind the ribs. The outermost cage only. */
+  wash?: boolean;
+  /** Close the ribs with a circle at each end. The outermost cage only. */
+  rims?: boolean;
 }) {
   const lo = Math.min(yFrom, yTo) * BELT_HALF_H;
   const hi = Math.max(yFrom, yTo) * BELT_HALF_H;
@@ -455,23 +464,25 @@ function BeltWall({
         radius * Math.cos(a), hi, -radius * Math.sin(a),
       );
     }
-    /* The rims the uprights run between. Without them the wall is a row of
-       posts with nothing joining their ends, and the drum has no edge. */
-    const RIM_STEPS = 128;
-    for (const y of [lo, hi]) {
-      for (let i = 0; i < RIM_STEPS; i += 1) {
-        const a = (i / RIM_STEPS) * Math.PI * 2;
-        const b = ((i + 1) / RIM_STEPS) * Math.PI * 2;
-        points.push(
-          radius * Math.cos(a), y, -radius * Math.sin(a),
-          radius * Math.cos(b), y, -radius * Math.sin(b),
-        );
+    if (rims) {
+      /* The rims the uprights run between. Without them the wall is a row of
+         posts with nothing joining their ends, and the drum has no edge. */
+      const RIM_STEPS = 128;
+      for (const y of [lo, hi]) {
+        for (let i = 0; i < RIM_STEPS; i += 1) {
+          const a = (i / RIM_STEPS) * Math.PI * 2;
+          const b = ((i + 1) / RIM_STEPS) * Math.PI * 2;
+          points.push(
+            radius * Math.cos(a), y, -radius * Math.sin(a),
+            radius * Math.cos(b), y, -radius * Math.sin(b),
+          );
+        }
       }
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
-    /* The ribs carry the height — the wall itself is a wash, and a wash alone
-       reads as haze rather than as a wall standing up off the plane. */
+    /* The ribs carry the height — the wash alone reads as haze rather than as a
+       wall standing up off the plane. */
     return new THREE.LineSegments(
       geometry,
       new THREE.LineBasicMaterial({
@@ -480,20 +491,22 @@ function BeltWall({
         opacity: Math.min(0.42, opacity * 6),
       }),
     );
-  }, [radius, count, color, opacity, lo, hi]);
+  }, [radius, count, color, opacity, lo, hi, rims]);
 
   return (
     <group>
-      <mesh position={[0, (lo + hi) / 2, 0]}>
-        <cylinderGeometry args={[radius, radius, hi - lo, 128, 1, true]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={opacity}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
+      {wash ? (
+        <mesh position={[0, (lo + hi) / 2, 0]}>
+          <cylinderGeometry args={[radius, radius, hi - lo, 128, 1, true]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={opacity}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      ) : null}
       <primitive object={uprights} />
     </group>
   );
@@ -1474,9 +1487,10 @@ export function AakashGocharScene({
        * The space view's zodiac is a drum, so its names belong on the wall
        * rather than lying inside the ring — from the side, a name in the
        * mid-plane is a name buried in it. `up` is a fraction of the wall's
-       * half-height: +1 the top rim, 0 the line between the two zones, −1 the
-       * bottom. Each name sits inside the zone it belongs to, which is what
-       * makes the two read as one wall in two colours.
+       * half-height: +1 the top rim, 0 the ecliptic the grahas run along, −1
+       * the bottom. The rashi rides the upper rim and its नक्षत्र the lower,
+       * with the figures between them — one belt, read top to bottom, rather
+       * than two stacked on each other.
        */
       const rim = (lon: number, radius: number, up: number): [number, number, number] => {
         const a = lon * DEG;
@@ -1487,16 +1501,16 @@ export function AakashGocharScene({
         const lon = (i + 0.5) * RASHI_ARC;
         // Above the rim in space, as on the reference drum; on the ring itself
         // in the two views where the zodiac really is a ring on a sphere.
-        // In the rashi's own half of the wall, not floating above the drum.
-        const at = space ? rim(lon, NAK_OUTER, 0.55) : place(lon, RASHI_LABEL_LAT, RASHI_MID);
+        // On the belt's upper rim, over the figures rather than beside them.
+        const at = space ? rim(lon, NAK_OUTER, 0.84) : place(lon, RASHI_LABEL_LAT, RASHI_MID);
         if (labelVisible(at)) {
           project({ id: `r-${i}`, kind: "rashi", index: i + 1 }, at);
         }
       }
       for (let i = 0; i < 27; i += 1) {
         const lon = (i + 0.5) * NAKSHATRA_ARC;
-        // Just under the line between the zones, at the top of its own half.
-        const at = space ? rim(lon, NAK_OUTER, -0.16) : place(lon, NAK_LABEL_LAT, NAK_MID);
+        // The lower rim, under the figure it names.
+        const at = space ? rim(lon, NAK_OUTER, -0.76) : place(lon, NAK_LABEL_LAT, NAK_MID);
         if (labelVisible(at)) {
           project({ id: `n-${i}`, kind: "nakshatra", index: i + 1 }, at);
         }
@@ -1513,7 +1527,7 @@ export function AakashGocharScene({
           const lon = (i + 0.5) * padaArc;
           // Just inside its नक्षत्र's own name on the bottom rim.
           const at = space
-            ? rim(lon, NAK_OUTER, -0.36)
+            ? rim(lon, NAK_OUTER, -0.95)
             : place(lon, NAK_LABEL_LAT, NAK_OUTER - 0.32);
           if (labelVisible(at)) {
             project(
@@ -2070,34 +2084,52 @@ export function AakashGocharScene({
 
         {toggles.belts ? (
           <group>
-            {/* Rashi belt: 12 × 30°, as a slab rather than a floor — the flat
-                ring is its mid-plane and the wall carries its height. */}
-            <Belt inner={RASHI_INNER} outer={RASHI_OUTER} color="#0f3234" opacity={0.8} />
-            <BeltDivisions count={12} inner={RASHI_INNER} outer={RASHI_OUTER} color={SEP} opacity={0.85} />
-            {/* One drum, two zones. Upper half is the rashi's, divided
-                twelve ways and gold like its names; lower half is the
-                नक्षत्र's, divided twenty-seven ways and green like its own —
-                so the two read as bands of one wall rather than as a ring with
-                labels floating above and below it. */}
+            {/* The mid-plane, which is what the belt looks like from directly
+                over the pole: rashi ring, नक्षत्र ring, and the पाद ticks
+                inside it. Kept thin — from the side this is the ecliptic
+                itself, the line the grahas run along. */}
+            <Belt inner={RASHI_INNER} outer={RASHI_OUTER} color="#0f3234" opacity={0.65} />
+            <BeltDivisions count={12} inner={RASHI_INNER} outer={RASHI_OUTER} color={ZODIAC} opacity={0.7} />
+            <Belt inner={NAK_INNER} outer={NAK_OUTER} color="#0a2426" opacity={0.65} />
+            <BeltDivisions count={27} inner={NAK_INNER} outer={NAK_OUTER} color={NAK_ZONE} opacity={0.5} />
+            <BeltDivisions count={108} inner={NAK_OUTER - 0.2} outer={NAK_OUTER} color={INK_DIM} opacity={0.4} />
+            {/* One belt, the full height of the drum, cut across its *width*.
+                The ecliptic runs through its middle, which is where the Earth
+                and every graha are — so from the side they sit level with the
+                belt's waist rather than along an edge of it.
+
+                Three depths of division, longest to shortest: the twelve
+                rashi in gold, the twenty-seven नक्षत्र in green inside them,
+                and the hundred and eight पाद inside those. Colour and length
+                say which is which; nothing is stacked above anything. */}
             <BeltWall
               radius={NAK_OUTER}
               count={12}
               color={ZODIAC}
               opacity={0.05}
-              yFrom={0}
+              yFrom={-1}
               yTo={1}
+              wash
+              rims
             />
-            {/* Nakshatra belt: 27 × 13°20′, with pada ticks at 108. */}
-            <Belt inner={NAK_INNER} outer={NAK_OUTER} color="#0a2426" opacity={0.8} />
-            <BeltDivisions count={27} inner={NAK_INNER} outer={NAK_OUTER} color={SEP} opacity={0.6} />
-            <BeltDivisions count={108} inner={NAK_OUTER - 0.2} outer={NAK_OUTER} color={INK_DIM} opacity={0.4} />
             <BeltWall
               radius={NAK_OUTER}
               count={27}
               color={NAK_ZONE}
-              opacity={0.05}
+              opacity={0.055}
               yFrom={-1}
-              yTo={0}
+              yTo={0.62}
+            />
+            {/* पाद as short ticks off the lower rim, not ribs through the
+                middle: a hundred and eight full-height lines is a picket fence
+                in front of the figures they are subdividing. */}
+            <BeltWall
+              radius={NAK_OUTER}
+              count={108}
+              color={NAK_ZONE}
+              opacity={0.03}
+              yFrom={-1}
+              yTo={-0.84}
             />
           </group>
         ) : null}
