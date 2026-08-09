@@ -7,12 +7,15 @@ import {
   fetchYearWheelCalendar,
   locationCacheKey,
   yearWheelKeys,
+  type PanchangaDay,
 } from "@/lib/api";
 import {
   adToBS,
   bsToAD,
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
+  BS_SUPPORTED_END_YEAR,
+  BS_SUPPORTED_START_YEAR,
   getBSMonthLength,
   shiftBsMonth,
 } from "@/lib/bs-calendar";
@@ -40,6 +43,13 @@ import {
   yearWheelIndexOfAdDate,
 } from "@/lib/panchanga-year-wheel";
 import {
+  formatWheelPlaybackRate,
+  WHEEL_MAX_PLAY_SPEED,
+  WHEEL_PLAY_BASE_MS,
+} from "@/lib/wheel-year-playback";
+import { buildPatroBrowseYearOptions, pickBrowseVikramDate } from "@/lib/patro-date-options";
+import type { Era } from "@/lib/era";
+import {
   currentPatroDayLinkSearch,
   patroDayBrowseNavigateSearch,
   sameSearch,
@@ -47,9 +57,9 @@ import {
   type PanchangaSearch,
 } from "@/lib/url-state";
 
-const PLAY_BASE_MS = 900;
-const MAX_PLAY_SPEED = 32;
-const EXTEND_MARGIN = 7;
+const PLAY_BASE_MS = WHEEL_PLAY_BASE_MS;
+const MAX_PLAY_SPEED = WHEEL_MAX_PLAY_SPEED;
+const EXTEND_MARGIN_PLAY = 45;
 const MAX_MONTHS_EACH = 3;
 const YEAR_ROUTE_LOADING = false;
 
@@ -109,6 +119,9 @@ export function PanchangaYear() {
   const [play, setPlay] = useState<{ dir: -1 | 0 | 1; speed: number }>({ dir: 0, speed: 1 });
   const [monthsBack, setMonthsBack] = useState(1);
   const [monthsFwd, setMonthsFwd] = useState(1);
+  const scrubbingRef = useRef(false);
+  const lastWheelDataRef = useRef<PanchangaDay | undefined>(undefined);
+  const prevPlayDirRef = useRef(play.dir);
 
   useEffect(() => {
     const legacy = search as PanchangaSearch & { to?: number; toMonth?: number };
@@ -127,10 +140,18 @@ export function PanchangaYear() {
   }, [search, location, navigate, dayState.display]);
 
   useEffect(() => {
+    const wasPlaying = prevPlayDirRef.current !== 0;
+    prevPlayDirRef.current = play.dir;
+
     if (scrubbingRef.current || play.dir !== 0) return;
+    // On the frame autoplay stops, the wheel day is ahead of the URL — sync URL
+    // first (effect below). Pulling dayAd back to stale adDateStr here caused a
+    // setDate ↔ setDayAd loop and "Maximum update depth exceeded".
+    if (wasPlaying) return;
+    if (dayAd === adDateStr) return;
     setDayAd(adDateStr);
     setAnchor(parseAdStr(adDateStr));
-  }, [adDateStr, play.dir]);
+  }, [adDateStr, play.dir, dayAd]);
 
   const bounds = useMemo(
     () => wheelWindowBounds(anchor, monthsBack, monthsFwd),
@@ -138,8 +159,21 @@ export function PanchangaYear() {
   );
   const atLimit = useMemo(() => wheelWindowAtLimit(bounds), [bounds]);
 
+  const queryYears = useMemo(() => {
+    const years = new Set(bounds.years);
+    const bs = adToBS(parseAdStr(dayAd));
+    years.add(bs.year);
+    if (play.dir === 1 && bs.year < BS_SUPPORTED_END_YEAR) years.add(bs.year + 1);
+    if (play.dir === -1 && bs.year > BS_SUPPORTED_START_YEAR) years.add(bs.year - 1);
+    const endBs = adToBS(parseAdStr(bounds.endAd));
+    const startBs = adToBS(parseAdStr(bounds.startAd));
+    if (play.dir === 1 && endBs.year < BS_SUPPORTED_END_YEAR) years.add(endBs.year + 1);
+    if (play.dir === -1 && startBs.year > BS_SUPPORTED_START_YEAR) years.add(startBs.year - 1);
+    return [...years].sort((a, b) => a - b);
+  }, [bounds.years, bounds.endAd, bounds.startAd, dayAd, play.dir]);
+
   const yearQueries = useQueries({
-    queries: bounds.years.map((y) => ({
+    queries: queryYears.map((y) => ({
       queryKey: yearWheelKeys.year(y, location.params, browseEra === "bbs" ? "bbs" : "bs"),
       queryFn: () =>
         fetchYearWheelCalendar(y, location.params, browseEra === "bbs" ? "bbs" : "bs"),
@@ -149,7 +183,7 @@ export function PanchangaYear() {
     })),
   });
 
-  const windowLoading = yearQueries.some((q) => q.isLoading);
+  const windowLoading = yearQueries.some((q) => q.isLoading && !q.data);
   const windowFetching = yearQueries.some((q) => q.isFetching);
   const windowError = yearQueries.some((q) => q.isError);
   const yearsStamp = yearQueries.map((q) => q.dataUpdatedAt).join("|");
@@ -167,13 +201,14 @@ export function PanchangaYear() {
   const clamped = foundIndex ?? 1;
   const current = days[clamped - 1];
   const wheelData = current?.p;
+  if (wheelData) lastWheelDataRef.current = wheelData;
+  const displayWheelData = wheelData ?? lastWheelDataRef.current;
 
-  const scrubbingRef = useRef(false);
   useEffect(() => {
-    if (scrubbingRef.current || !current?.dateAd) return;
-    if (current.dateAd === adDateStr) return;
-    setDate(parseAdStr(current.dateAd));
-  }, [current?.dateAd, adDateStr, setDate]);
+    if (scrubbingRef.current || play.dir !== 0) return;
+    if (!dayAd || dayAd === adDateStr) return;
+    setDate(parseAdStr(dayAd));
+  }, [dayAd, adDateStr, setDate, play.dir]);
 
   useEffect(() => {
     if (play.dir === 0 || !total) return;
@@ -189,16 +224,17 @@ export function PanchangaYear() {
   }, [play, total, days]);
 
   useEffect(() => {
-    if (play.dir === 0 || !total || windowFetching) return;
-    if (play.dir === 1 && total - clamped <= EXTEND_MARGIN && !atLimit.end) {
+    if (play.dir === 0 || !total) return;
+    const margin = EXTEND_MARGIN_PLAY;
+    if (play.dir === 1 && total - clamped <= margin && !atLimit.end) {
       if (monthsFwd < MAX_MONTHS_EACH) setMonthsFwd((m) => m + 1);
       else setAnchor((a) => shiftAnchorMonths(a, 1));
     }
-    if (play.dir === -1 && clamped <= EXTEND_MARGIN && !atLimit.start) {
+    if (play.dir === -1 && clamped <= margin && !atLimit.start) {
       if (monthsBack < MAX_MONTHS_EACH) setMonthsBack((m) => m + 1);
       else setAnchor((a) => shiftAnchorMonths(a, -1));
     }
-  }, [play.dir, clamped, total, windowFetching, atLimit, monthsBack, monthsFwd]);
+  }, [play.dir, clamped, total, atLimit, monthsBack, monthsFwd]);
 
   const pausePlay = useCallback(() => setPlay({ dir: 0, speed: 1 }), []);
 
@@ -279,6 +315,43 @@ export function PanchangaYear() {
     return `${name(from.month)} ${digits(from.day)} — ${name(to.month)} ${digits(to.day)}`;
   }, [bounds, lang, digits]);
 
+  const pickerYearOptions = useMemo(
+    () => buildPatroBrowseYearOptions(browseEra),
+    [browseEra],
+  );
+
+  const playbackRateLabel = useMemo(() => {
+    if (play.dir === 0) return undefined;
+    return formatWheelPlaybackRate(play.speed, digits, (ne, en) => bilingualText(lang, ne, en));
+  }, [play.dir, play.speed, digits, lang]);
+
+  const handleCalendarCommit = useCallback(
+    (nextEra: Era, y: number, m: number, d: number, nextClock: string) => {
+      pausePlay();
+      scrubbingRef.current = false;
+      setClockUserAdjusted(true);
+      setClock(nextClock);
+      if (nextEra !== browseEra) {
+        setDisplayEra(nextEra, { year: y, month: m, day: d });
+      }
+      pickBrowseVikramDate(
+        (picked) => {
+          setDate(picked);
+          setAnchor(picked);
+          setDayAd(toAdStr(picked));
+          setMonthsBack(1);
+          setMonthsFwd(1);
+        },
+        nextEra,
+        y,
+        m,
+        d,
+        location.params,
+      );
+    },
+    [pausePlay, setClock, setDate, setDisplayEra, browseEra, location.params],
+  );
+
   useRouteLoading(YEAR_ROUTE_LOADING);
 
   return (
@@ -322,8 +395,8 @@ export function PanchangaYear() {
 
       <div className="mt-4 flex flex-col gap-4">
         <PanchangaWheel
-          p={wheelData}
-          loading={windowLoading || !current}
+          p={displayWheelData}
+          loading={!displayWheelData && windowLoading}
           bsYear={current?.bsYear ?? bsYear}
           bsMonthNe={monthNe || BS_MONTHS_NE[0]!}
           bsDay={current?.bsDay ?? 1}
@@ -337,9 +410,22 @@ export function PanchangaYear() {
             totalDays: total || 1,
             direction: play.dir,
             speed: play.speed,
+            playbackRateLabel,
             onForward: stepForward,
             onBackward: stepBackward,
             onPause: pausePlay,
+            calendarPick: {
+              era: browseEra,
+              year: current?.bsYear ?? bsYear,
+              month: current?.bsMonth ?? adToBS(date).month,
+              day: current?.bsDay ?? adToBS(date).day,
+              yearOptions: pickerYearOptions,
+              todayAd,
+              clock,
+              locationParams: location.params,
+              onCommit: handleCalendarCommit,
+              onEraChange: setDisplayEra,
+            },
             onDayChange: (d) => {
               pausePlay();
               jumpToIndex(d);

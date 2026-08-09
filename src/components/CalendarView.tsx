@@ -97,6 +97,8 @@ interface Props {
   onDaySelect?: (day: CalendarDay | null) => void;
   onMonthContextChange?: (ctx: CalendarMonthContext) => void;
   aside?: ReactNode;
+  /** Rendered under the calendar / monthly patro grid (home left column). */
+  belowPatro?: ReactNode;
   holidays?: ReactNode;
   showMonthHeader?: boolean;
   /** Home: toggle between BS calendar and monthly panchanga patro. */
@@ -114,6 +116,7 @@ export function CalendarView({
   onDaySelect,
   onMonthContextChange,
   aside,
+  belowPatro,
   holidays,
   showMonthHeader = true,
   enablePatroToggle = false,
@@ -644,7 +647,11 @@ export function CalendarView({
   if (aside || holidays) {
     return (
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] xl:items-stretch xl:gap-[15px] max-sm:gap-4">
-        <div className="min-w-0">{monthHeader}{calendarBlock}</div>
+        <div className="min-w-0">
+          {monthHeader}
+          {calendarBlock}
+          {belowPatro}
+        </div>
         {aside ? (
           <div className="flex min-w-0 flex-col xl:min-h-full max-sm:px-2.5">{aside}</div>
         ) : null}

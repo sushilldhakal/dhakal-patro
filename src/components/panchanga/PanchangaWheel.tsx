@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
-  Clock,
+  CalendarDays,
   FastForward,
   Fullscreen,
   Minimize2,
@@ -37,7 +37,6 @@ import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroSkel, patroWheelShell } from "@/lib/patro-classes";
 import {
   wheelDock,
-  wheelDockEditInput,
   wheelDockGrp,
   wheelDockLabel,
   wheelDockSep,
@@ -64,10 +63,20 @@ import {
   wheelTipTitle,
   wheelYearScrubBtnActive,
   wheelYearScrubSpeed,
+  wheelPlayRateBadge,
 } from "@/lib/wheel-classes";
 import { cn } from "@/lib/utils";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { NAK_LORD_EN } from "@/lib/wheel-locale";
+import type { Era } from "@/lib/era";
+import type { LocationParams } from "@/lib/api";
+import { BsDateTimePicker } from "@/components/panchanga/BsDateTimePicker";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function bsMonthEnOf(ne: string): string {
   const i = BS_MONTHS_NE.indexOf(ne);
@@ -75,6 +84,19 @@ function bsMonthEnOf(ne: string): string {
 }
 
 const wheelDockIcon = "h-3.5 w-3.5 max-[480px]:h-3 max-[480px]:w-3";
+
+export type YearWheelCalendarPick = {
+  era: Era;
+  year: number;
+  month: number;
+  day: number;
+  yearOptions: number[];
+  todayAd?: string;
+  clock: string;
+  locationParams?: LocationParams;
+  onCommit: (era: Era, year: number, month: number, day: number, clock: string) => void;
+  onEraChange?: (era: Era) => void;
+};
 
 export type YearWheelScrub = {
   /** Global day index across the whole range (single year ⇒ 1..365). */
@@ -85,6 +107,10 @@ export type YearWheelScrub = {
   direction: -1 | 0 | 1;
   /** Autoplay speed multiplier while playing: 1 | 2 | 4 | 8. */
   speed: number;
+  /** e.g. "2 weeks / 1 sec" while autoplay is running. */
+  playbackRateLabel?: string;
+  /** Full-screen date + time jump dialog. */
+  calendarPick?: YearWheelCalendarPick;
   /** Play/step forward — repeated presses ramp 1×→2×→4×→8×. */
   onForward: () => void;
   /** Play/step backward — repeated presses ramp 1×→2×→4×→8×. */
@@ -161,16 +187,21 @@ function WheelHead({
   eyebrow,
   title,
   sub,
+  playRate,
+  className,
 }: {
   eyebrow: React.ReactNode;
   title: React.ReactNode;
   sub: React.ReactNode;
+  playRate?: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className={wheelHead}>
+    <div className={cn(wheelHead, "top-4", className)}>
       <div className={wheelHeadEyebrow}>{eyebrow}</div>
       <div className={wheelHeadTitle}>{title}</div>
       <div className={wheelHeadSub}>{sub}</div>
+      {playRate ? <div className={wheelPlayRateBadge}>{playRate}</div> : null}
     </div>
   );
 }
@@ -265,9 +296,7 @@ function PanchangaWheelBody({
   const [tip, setTip] = useState({ x: 0, y: 0 });
   const [scrubPinned, setScrubPinned] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [showYearTime, setShowYearTime] = useState(false);
-  const [editingDay, setEditingDay] = useState(false);
-  const [editingTime, setEditingTime] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const expandedHistoryRef = useRef(false);
   const ignorePopRef = useRef(false);
 
@@ -427,29 +456,10 @@ function PanchangaWheelBody({
 
   // Commit an edited "HH:MM" clock value → convert to a g-offset from sunrise
   // (mirrors the nowG math) and pin the wheel to that moment of the same day.
-  const commitTimeEdit = useCallback(
-    (value: string) => {
-      setEditingTime(false);
-      const [hh, mm] = value.split(":").map(Number);
-      if (hh == null || mm == null || Number.isNaN(hh) || Number.isNaN(mm)) return;
-      const mins = hh * 60 + mm;
-      let g = (mins - det.sunriseMin) / 24;
-      g = ((g % 60) + 60) % 60;
-      handleScrubChange(g);
-    },
-    [det.sunriseMin, handleScrubChange],
-  );
-
-  const commitDayEdit = useCallback(
-    (value: string) => {
-      setEditingDay(false);
-      if (!yearScrub) return;
-      const n = Number(value);
-      if (!Number.isFinite(n)) return;
-      yearScrub.onJumpDay(Math.round(n));
-    },
-    [yearScrub],
-  );
+  const openYearCalendar = useCallback(() => {
+    yearScrub?.onPause();
+    setCalendarOpen(true);
+  }, [yearScrub]);
 
   const snapToNow = useCallback(() => {
     setScrubPinned(false);
@@ -519,7 +529,7 @@ function PanchangaWheelBody({
   const { lang, digits } = useLocale();
   const stageRef = useRef<HTMLDivElement>(null);
   const num = (n: number | string) => digits(n);
-  const scrubClock = gClock(scrubG, det.sunriseMin);
+  const scrubClock = rangeMode && clock ? clock.slice(0, 5) : gClock(scrubG, det.sunriseMin);
   const scrubTithi = atTimeData
     ? (getPanchangaDetail(atTimeData)?.tithi as { name_ne?: string; name?: string } | undefined) ??
       (atTimeData.tithi as { name_ne?: string; name?: string } | undefined)
@@ -593,6 +603,14 @@ function PanchangaWheelBody({
               {num(bsDay)} · {bilingualText(lang, tithiNe, tithiEn)} · {locLabel}
             </>
           }
+          playRate={
+            yearScrub?.playbackRateLabel && yearScrub.direction !== 0 ? (
+              <span aria-live="polite">
+                {yearScrub.playbackRateLabel}
+                <span className="text-[var(--w-ink)]"> · {num(yearScrub.speed)}×</span>
+              </span>
+            ) : undefined
+          }
         />
 
         <WheelChart
@@ -646,96 +664,19 @@ function PanchangaWheelBody({
             <>
               <WheelYearPlayback scrub={yearScrub} />
               <div className={wheelDockSep} />
-              <div className={cn(wheelDockGrp, "min-w-0 justify-center")}>
-                {editingDay ? (
-                  <span className={cn(wheelDockVal, "inline-flex min-w-0 items-center gap-1")}>
-                    {yearScrub.yearLabel != null && (
-                      <span className="text-[var(--w-ink-dim)]">{yearScrub.yearLabel} · </span>
-                    )}
-                    <input
-                      type="number"
-                      autoFocus
-                      defaultValue={yearScrub.dayInYear ?? yearScrub.day}
-                      min={1}
-                      max={yearScrub.daysInYear ?? yearScrub.totalDays}
-                      aria-label={bilingualText(lang, "दिन जानुहोस्", "Jump to day")}
-                      className={cn(wheelDockEditInput, "w-[54px] max-[720px]:w-[44px]")}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") commitDayEdit((e.target as HTMLInputElement).value);
-                        else if (e.key === "Escape") setEditingDay(false);
-                      }}
-                      onBlur={(e) => commitDayEdit(e.target.value)}
-                    />
-                    <span className="text-[var(--w-ink-dim)]">
-                      /{num(yearScrub.daysInYear ?? yearScrub.totalDays)}
-                    </span>
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    className={cn(wheelDockVal, "min-w-0 cursor-pointer whitespace-nowrap")}
-                    title={bilingualText(lang, "दिन जानुहोस्", "Jump to day")}
-                    onClick={() => {
-                      yearScrub.onPause();
-                      setEditingDay(true);
-                    }}
-                  >
-                    {yearScrub.yearLabel != null &&
-                    yearScrub.dayInYear != null &&
-                    yearScrub.daysInYear != null ? (
-                      <>
-                        <span className="text-[var(--w-ink-dim)]">{yearScrub.yearLabel} · </span>
-                        {num(yearScrub.dayInYear)}
-                        <span className="text-[var(--w-ink-dim)]">/{num(yearScrub.daysInYear)}</span>
-                      </>
-                    ) : (
-                      <>
-                        {num(yearScrub.day)}
-                        <span className="text-[var(--w-ink-dim)]">/{num(yearScrub.totalDays)}</span>
-                      </>
-                    )}
-                  </button>
-                )}
-                {editingTime ? (
-                  <input
-                    type="time"
-                    autoFocus
-                    defaultValue={scrubClock}
-                    aria-label={bilingualText(lang, "समय", "Time")}
-                    className={cn(wheelDockEditInput, "w-[94px] max-[720px]:w-[80px]")}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") commitTimeEdit((e.target as HTMLInputElement).value);
-                      else if (e.key === "Escape") setEditingTime(false);
-                    }}
-                    onBlur={(e) => commitTimeEdit(e.target.value)}
-                  />
-                ) : showYearTime ? (
-                  <button
-                    type="button"
-                    className={cn(wheelDockVal, "cursor-pointer whitespace-nowrap")}
-                    title={bilingualText(lang, "समय बदल्नुहोस्", "Edit time")}
-                    onClick={() => {
-                      yearScrub.onPause();
-                      setEditingTime(true);
-                    }}
-                  >
-                    {num(scrubClock)}
-                  </button>
-                ) : (
+              {yearScrub.calendarPick ? (
+                <div className={cn(wheelDockGrp, "shrink-0")}>
                   <button
                     type="button"
                     className={wheelIconBtn}
-                    title={bilingualText(lang, "समय हेर्नुहोस्", "Show / edit time")}
-                    onClick={() => {
-                      yearScrub.onPause();
-                      setShowYearTime(true);
-                      setEditingTime(true);
-                    }}
+                    title={bilingualText(lang, "मिति र समय छान्नुहोस्", "Pick date and time")}
+                    aria-label={bilingualText(lang, "मिति र समय छान्नुहोस्", "Pick date and time")}
+                    onClick={openYearCalendar}
                   >
-                    <Clock className={wheelDockIcon} strokeWidth={2} aria-hidden />
+                    <CalendarDays className={wheelDockIcon} strokeWidth={2} aria-hidden />
                   </button>
-                )}
-              </div>
+                </div>
+              ) : null}
               <div className={wheelDockSep} />
               <div className={cn(wheelDockGrp, "shrink-0")}>
                 <button
@@ -861,6 +802,42 @@ function PanchangaWheelBody({
           )}
         </div>
       </div>
+
+      {yearScrub?.calendarPick ? (
+        <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <DialogContent
+            overlayClassName="z-[125] bg-black/70"
+            className="z-[130] max-w-[22rem] border-[#3d5c58] bg-[#0d2428] p-4 text-[#e9f3f1] shadow-2xl"
+          >
+            <DialogHeader>
+              <DialogTitle className="text-[#e9f3f1]">
+                {bilingualText(lang, "मिति र समय", "Date and time")}
+              </DialogTitle>
+            </DialogHeader>
+            <BsDateTimePicker
+              gridEra="bs"
+              displayEra={yearScrub.calendarPick.era}
+              onEraChange={yearScrub.calendarPick.onEraChange}
+              year={yearScrub.calendarPick.year}
+              month={yearScrub.calendarPick.month}
+              day={yearScrub.calendarPick.day}
+              yearOptions={yearScrub.calendarPick.yearOptions}
+              todayAd={yearScrub.calendarPick.todayAd}
+              onSelectDate={() => {}}
+              monthAriaLabel={bilingualText(lang, "महिना", "Month")}
+              yearAriaLabel={bilingualText(lang, "वर्ष", "Year")}
+              clock={yearScrub.calendarPick.clock}
+              hourAriaLabel={bilingualText(lang, "घण्टा", "Hour")}
+              minuteAriaLabel={bilingualText(lang, "मिनेट", "Minute")}
+              showTime
+              locationParams={yearScrub.calendarPick.locationParams}
+              onCommitDateTime={yearScrub.calendarPick.onCommit}
+              afterCommit={() => setCalendarOpen(false)}
+              solidSurface
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   );
 

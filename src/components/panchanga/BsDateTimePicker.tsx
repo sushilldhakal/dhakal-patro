@@ -51,6 +51,13 @@ interface Props {
   locationParams?: LocationParams;
   /** One shot commit (era + y/m/d) — avoids display-era race with separate date commit. */
   onCommitBrowseDay?: (era: Era, year: number, month: number, day: number) => void;
+  /** Called after Done commits (e.g. close a dialog outside a popover). */
+  afterCommit?: () => void;
+  /** Single Done handler — date, era, and time in one shot (fullscreen wheel dialog). */
+  onCommitDateTime?: (era: Era, year: number, month: number, day: number, clock: string) => void;
+  /** Opaque styling when rendered over the wheel dialog (default theme is too transparent). */
+  solidSurface?: boolean;
+  className?: string;
 }
 
 /** 24h → 12h parts. */
@@ -85,6 +92,10 @@ export function BsDateTimePicker({
   onEraChange,
   onCommitBrowseDay,
   locationParams,
+  afterCommit,
+  onCommitDateTime,
+  solidSurface = false,
+  className,
 }: Props) {
   const { lang, digits } = useLocale();
   const { t } = useTranslation();
@@ -222,6 +233,17 @@ export function BsDateTimePicker({
 
   // Push the draft to the page (and refetch) — only fires on Done.
   const commit = () => {
+    if (onCommitDateTime) {
+      onCommitDateTime(
+        draftBrowseEra,
+        draft.year,
+        draft.month,
+        draft.day,
+        showTime ? draft.clock : (clock ?? ""),
+      );
+      afterCommit?.();
+      return;
+    }
     const eraChanged =
       displayEra != null && draftBrowseEra !== displayEra && onEraChange != null;
     const dateChanged = draft.year !== year || draft.month !== month || draft.day !== day;
@@ -233,10 +255,34 @@ export function BsDateTimePicker({
       if (dateChanged) onSelectDate(draft.year, draft.month, draft.day);
     }
     if (clockChanged) onClockChange?.(draft.clock);
+    afterCommit?.();
   };
 
+  const stepBtn = cn(
+    "flex size-7 shrink-0 items-center justify-center rounded-md border transition-colors disabled:opacity-40",
+    solidSurface
+      ? "border-[#3d5c58] bg-[#243f3c] text-[#e9f3f1] hover:bg-[#2d4f4b]"
+      : "border-border bg-card text-foreground hover:bg-surface-hover",
+  );
+  const gridShell = cn(
+    "overflow-hidden rounded-xl border shadow-sm",
+    solidSurface ? "border-[#3d5c58] bg-[#1a3835]" : "border-border bg-card",
+  );
+  const gridHead = cn(
+    "grid grid-cols-7 border-b",
+    solidSurface ? "border-[#3d5c58] bg-[#152f2d]" : "border-border bg-muted/30",
+  );
+  const gridPad = solidSurface ? "border-[#3d5c58] bg-[#132824]" : "border-border bg-muted/10";
+  const dayHover = solidSurface ? "hover:bg-[#2d4f4b]" : "hover:bg-surface-hover";
+  const footerBtn = cn(
+    "h-8 flex-1 rounded-md border text-sm font-semibold transition-colors",
+    solidSurface
+      ? "border-[#3d5c58] bg-[#243f3c] text-[#e9f3f1] hover:bg-[#2d4f4b]"
+      : "border-border bg-card text-foreground hover:bg-surface-hover",
+  );
+
   return (
-    <div className="mx-auto flex w-full max-w-[22.5rem] flex-col gap-2.5">
+    <div className={cn("mx-auto flex w-full max-w-[22.5rem] flex-col gap-2.5", className)}>
       {/* Month / year / era — one row */}
       <div className="flex items-center gap-1.5">
         <button
@@ -244,7 +290,7 @@ export function BsDateTimePicker({
           onClick={() => stepMonth(-1)}
           disabled={prevDisabled}
           aria-label={t("patro_date.prev_month")}
-          className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-surface-hover disabled:opacity-40"
+          className={stepBtn}
         >
           <ChevronLeft size={15} strokeWidth={2} />
         </button>
@@ -279,26 +325,27 @@ export function BsDateTimePicker({
           onClick={() => stepMonth(1)}
           disabled={nextDisabled}
           aria-label={t("patro_date.next_month")}
-          className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-surface-hover disabled:opacity-40"
+          className={stepBtn}
         >
           <ChevronRight size={15} strokeWidth={2} />
         </button>
       </div>
 
       {/* Calendar grid */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className={gridShell}>
         {needsApiMonth && monthQ.isLoading && !bsGrid ? (
           <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
             {t("common.loading")}
           </div>
         ) : (
           <>
-        <div className="grid grid-cols-7 border-b border-border bg-muted/30">
+        <div className={gridHead}>
           {weekdays.map((wd, i) => (
             <div
               key={wd}
               className={cn(
-                "flex h-6 items-center justify-center border-r border-border text-sm font-semibold uppercase tracking-tight last:border-r-0",
+                "flex h-6 items-center justify-center border-r text-sm font-semibold uppercase tracking-tight last:border-r-0",
+                solidSurface ? "border-[#3d5c58]" : "border-border",
                 (i === 0 || i === 6) && "text-danger/80",
               )}
             >
@@ -314,7 +361,7 @@ export function BsDateTimePicker({
                 <div
                   key={`e-${i}`}
                   aria-hidden
-                  className="h-8 border-b border-r border-border bg-muted/10"
+                  className={cn("h-8 border-b border-r", gridPad)}
                 />
               );
             }
@@ -339,10 +386,11 @@ export function BsDateTimePicker({
                 aria-label={`${digits(d)}`}
                 aria-pressed={isSelected}
                 className={cn(
-                  "font-num flex h-8 items-center justify-center border-b border-r border-border text-sm font-semibold tabular-nums transition-colors",
-                  !isSelected && "hover:bg-surface-hover",
+                  "font-num flex h-8 items-center justify-center border-b border-r text-sm font-semibold tabular-nums transition-colors",
+                  solidSurface ? "border-[#3d5c58]" : "border-border",
+                  !isSelected && dayHover,
                   !isSelected && isWeekend && "text-danger",
-                  !isSelected && !isWeekend && "text-foreground",
+                  !isSelected && !isWeekend && (solidSurface ? "text-[#e9f3f1]" : "text-foreground"),
                   isToday && !isSelected && "ring-1 ring-inset ring-secondary",
                   isSelected && "bg-secondary text-secondary-foreground",
                 )}
@@ -358,7 +406,7 @@ export function BsDateTimePicker({
 
       {/* Time picker — 12 hour with AM/PM */}
       {showTime && hourAriaLabel && minuteAriaLabel ? (
-        <div className="flex flex-col gap-1.5 border-t border-border pt-2.5">
+        <div className={cn("flex flex-col gap-1.5 border-t pt-2.5", solidSurface ? "border-[#3d5c58]" : "border-border")}>
           <span className="text-sm font-semibold uppercase tracking-[0.14em]">
             {t("common.time")}
           </span>
@@ -401,15 +449,15 @@ export function BsDateTimePicker({
       ) : null}
 
       {/* Footer — Today stages the draft; Done commits and refetches. */}
-      <div className="flex items-center gap-2 border-t border-border pt-2.5">
+      <div className={cn("flex items-center gap-2 border-t pt-2.5", solidSurface ? "border-[#3d5c58]" : "border-border")}>
         <button
           type="button"
           onClick={goDraftToday}
-          className="h-8 flex-1 rounded-md border border-border bg-card text-sm font-semibold text-foreground transition-colors hover:bg-surface-hover"
+          className={footerBtn}
         >
           {t("today")}
         </button>
-        <PopoverClose asChild>
+        {onCommitDateTime ? (
           <button
             type="button"
             onClick={commit}
@@ -417,7 +465,17 @@ export function BsDateTimePicker({
           >
             {t("common.done")}
           </button>
-        </PopoverClose>
+        ) : (
+          <PopoverClose asChild>
+            <button
+              type="button"
+              onClick={commit}
+              className="h-8 flex-1 rounded-md bg-secondary text-sm font-semibold text-secondary-foreground"
+            >
+              {t("common.done")}
+            </button>
+          </PopoverClose>
+        )}
       </div>
     </div>
   );

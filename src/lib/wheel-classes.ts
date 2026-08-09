@@ -1,7 +1,11 @@
 import { cn } from "./utils";
 
 export const wheelHead =
-  "pointer-events-none absolute top-4 left-4 z-20";
+  "pointer-events-none absolute left-4 z-20 max-w-[min(100%-2rem,28rem)]";
+
+/** Autoplay rate — directly under the weekday / month line in the wheel header. */
+export const wheelPlayRateBadge =
+  "mt-2.5 font-num text-lg font-bold tabular-nums leading-snug tracking-tight text-[#f9c800] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] max-[720px]:text-base";
 
 export const wheelHeadEyebrow =
   "text-sm font-semibold uppercase tracking-[0.16em] text-[var(--w-ink-faint)]";

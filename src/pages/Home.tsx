@@ -594,6 +594,9 @@ export function Home() {
         onPatroViewChange={handlePatroViewChange}
         onDaySelect={handleDaySelect}
         onMonthContextChange={handleMonthContextChange}
+        belowPatro={
+          <AakashGocharEntryCard className="mt-3 max-sm:mx-2.5 border-secondary/40 bg-secondary/[0.07] shadow-sm" />
+        }
         aside={
           <PanchangaAside
             key={selectedDay?.date_ad ?? "none"}
@@ -617,7 +620,6 @@ export function Home() {
           </section>
         }
       />
- <AakashGocharEntryCard className="my-3 mx-3" />
       <p className="mt-7 text-center text-sm max-sm:px-2.5">{t("footer_note")}</p>
     </main>
   );
