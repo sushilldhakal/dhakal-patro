@@ -97,10 +97,14 @@ export function RashifalPersonalCard({ name, personal }: Props) {
         "shadow-[0_0_0_1px_color-mix(in_srgb,var(--secondary)_18%,transparent)]",
       )}
     >
+      {/* Leads with the Rashi (Moon sign) — "राशि" in everyday usage — with the
+          Lagna named explicitly alongside rather than standing in for it. The
+          engine's own scoring is Lagna-anchored (see rashifal_personal.py);
+          only the *display* order changes here. */}
       <header className="flex items-start gap-3 border-b border-border bg-secondary/[0.08] px-4 py-3 dark:bg-secondary/15">
         <RashiGlyphIcon
-          name={getRashiName(personal.lagna_sign, lang)}
-          number={personal.lagna_sign}
+          name={getRashiName(personal.moon_sign, lang)}
+          number={personal.moon_sign}
           size={36}
           className="shrink-0"
         />

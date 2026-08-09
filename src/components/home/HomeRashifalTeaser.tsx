@@ -21,8 +21,18 @@ import {
   type RashifalSignBlock,
 } from "@/lib/api";
 
-/** Bare-minimum shared shape the card reads — either a general sign card
- * (Sun's current rashi) or a personal reading, normalised to one view. */
+/**
+ * Bare-minimum shared shape the card reads — either a general sign card
+ * (Sun's current rashi) or a personal reading, normalised to one view.
+ *
+ * The headline is always the **Rashi** (Moon sign): "राशि" in everyday Nepali
+ * usage means the Moon sign, not the Lagna, and the personal engine's own
+ * scoring is Lagna-anchored for good classical reasons (see
+ * rashifal_personal.py) — so a personal reading has a real Lagna to show
+ * *in addition*, not instead. `subLabel` carries that ("लग्न: सिंह") as a
+ * clearly named second line rather than silently swapping in for the rashi
+ * the reader already knows themselves by.
+ */
 type TeaserContent = {
   kind: "personal" | "general";
   name: string;
@@ -31,19 +41,24 @@ type TeaserContent = {
   score: number;
   tone: RashifalSignBlock["tone"];
   prediction: string;
-  eyebrow: string;
+  headline: string;
+  subLabel?: string;
 };
 
 function fromPersonal(name: string, p: RashifalPersonal, lang: string): TeaserContent {
+  const ne = lang === "ne";
+  const moonName = ne ? p.moon_sign_ne : p.moon_sign_en;
+  const lagnaName = ne ? p.lagna_sign_ne : p.lagna_sign_en;
   return {
     kind: "personal",
     name,
-    glyphKey: getRashiName(p.lagna_sign, lang),
-    glyphId: p.lagna_sign,
+    glyphKey: getRashiName(p.moon_sign, lang),
+    glyphId: p.moon_sign,
     score: p.percent,
     tone: p.tone,
-    prediction: lang === "ne" ? p.prediction_ne : p.prediction_en,
-    eyebrow: lang === "ne" ? p.lagna_sign_ne : p.lagna_sign_en,
+    prediction: ne ? p.prediction_ne : p.prediction_en,
+    headline: moonName,
+    subLabel: ne ? `लग्न ${lagnaName}` : `Lagna ${lagnaName}`,
   };
 }
 
@@ -57,7 +72,7 @@ function fromGeneral(sign: RashifalSignBlock, lang: string): TeaserContent {
     score: sign.percent,
     tone: sign.tone,
     prediction: ne ? sign.prediction_ne : sign.prediction_en,
-    eyebrow: ne ? sign.name : sign.title_en,
+    headline: ne ? sign.name : sign.title_en,
   };
 }
 
@@ -178,8 +193,11 @@ export function HomeRashifalTeaser({
                     : t("home_rashifal.general_eyebrow")}
                 </p>
                 <h3 className="m-0 mt-0.5 truncate text-base font-bold leading-snug text-foreground">
-                  {content.kind === "personal" ? content.eyebrow : content.name}
+                  {content.headline}
                 </h3>
+                {content.subLabel ? (
+                  <p className="m-0 mt-0.5 truncate text-xs text-muted-foreground">{content.subLabel}</p>
+                ) : null}
               </div>
               <span className="shrink-0 rounded-md bg-muted px-2 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-muted-foreground">
                 {monthLabel || t("rashifal.tabs.monthly")}
