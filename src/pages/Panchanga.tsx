@@ -31,6 +31,7 @@ import { LearnMoreCard } from "@/components/LearnMoreCard";
 import { SeoContentSection } from "@/components/seo/SeoContentSection";
 import { PlanetEventsPanel } from "@/components/panchanga/PlanetEventsPanel";
 import { GocharPromoCard } from "@/components/gochar/GocharPromoCard";
+import { RelatedPageLinks } from "@/components/related/RelatedPageLinks";
 import {
   EphemerisModeBanner,
 } from "@/components/panchanga/MuhurtaNowPanel";
@@ -415,6 +416,8 @@ export function Panchanga() {
         heading={t("panchanga.learn_heading")}
         slugs={["what-is-panchang", "tithi", "nakshatra", "yoga", "karana", "hora"]}
       />
+
+      <RelatedPageLinks className="max-sm:px-2.5" />
 
       <SeoContentSection route="panchanga" />
     </div>

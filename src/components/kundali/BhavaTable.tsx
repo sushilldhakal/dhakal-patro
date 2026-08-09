@@ -2,7 +2,12 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import type { VargaCharts } from "@/lib/api";
-import { buildBhavaTable, type BhavaTableRow, RASHI_QUALITIES } from "@/lib/bhava";
+import {
+  buildBhavaTable,
+  formatHouseBadge,
+  type BhavaTableRow,
+  RASHI_QUALITIES,
+} from "@/lib/bhava";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import {
@@ -87,8 +92,15 @@ export function BhavaTable({ division, anchorKey, vargaCharts }: BhavaTableProps
               >
                 {digits(row.house)}
                 {row.badge && (
-                  <span className="ml-1 text-sm font-semibold">
-                    ({row.badge})
+                  <span
+                    className="ml-1 text-sm font-semibold"
+                    title={bilingualText(
+                      lang,
+                      row.badge === "Q" ? "\u0915\u0947\u0928\u094d\u0926\u094d\u0930" : "\u0924\u094d\u0930\u093f\u0915\u094b\u0923",
+                      row.badge === "Q" ? "Kendra" : "Trikona",
+                    )}
+                  >
+                    ({formatHouseBadge(row.badge, lang)})
                   </span>
                 )}
               </TableCell>

@@ -9,7 +9,7 @@ export function PanchangaDetailsHub() {
   useRouteLoading(false);
 
   return (
-    <PageShell>
+    <PageShell showRelatedLinks={false}>
       <PageHeader
         icon={<LayoutGrid className="h-6 w-6 text-secondary" />}
         title={bilingualText(lang, "पञ्चाङ्ग विवरण", "Panchanga details")}

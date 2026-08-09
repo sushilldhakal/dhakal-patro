@@ -71,10 +71,18 @@ const TRIKONA_HOUSES = new Set([1, 5, 9]);
 
 /** "Q" for kendra (angle), "T" for trikona (trine), else undefined. Houses
  * that are both (only house 1) show as kendra — the stronger classical label. */
-export function houseBadge(house: number): "Q" | "T" | undefined {
+export type HouseBadgeKind = "Q" | "T";
+
+export function houseBadge(house: number): HouseBadgeKind | undefined {
   if (KENDRA_HOUSES.has(house)) return "Q";
   if (TRIKONA_HOUSES.has(house)) return "T";
   return undefined;
+}
+
+/** UI label for kendra (Q) / trikona (T) house markers. */
+export function formatHouseBadge(badge: HouseBadgeKind, lang: "en" | "ne"): string {
+  if (lang === "ne") return badge === "Q" ? "के" : "त्रि";
+  return badge;
 }
 
 /** Gender + modality per rashi (1-12) — fixed classical attributes, not chart-dependent. */
@@ -110,7 +118,7 @@ function aspectHousesFor(key: string): number[] {
 
 export interface BhavaTableRow {
   house: number;
-  badge?: "Q" | "T";
+  badge?: HouseBadgeKind;
   residents: BhavaPlanetEntry[];
   owner?: string;
   rashi: number;

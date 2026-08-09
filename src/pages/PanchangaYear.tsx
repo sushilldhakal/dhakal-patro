@@ -49,6 +49,7 @@ import {
 } from "@/lib/wheel-year-playback";
 import { buildPatroBrowseYearOptions, pickBrowseVikramDate } from "@/lib/patro-date-options";
 import type { Era } from "@/lib/era";
+import { RelatedPageLinks } from "@/components/related/RelatedPageLinks";
 import {
   currentPatroDayLinkSearch,
   patroDayBrowseNavigateSearch,
@@ -458,6 +459,8 @@ export function PanchangaYear() {
           </p>
         ) : null}
       </div>
+
+      <RelatedPageLinks />
     </div>
   );
 }

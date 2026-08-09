@@ -41,6 +41,7 @@ import { DashaSystemPanel } from "@/components/kundali/DashaSystemPanel";
 import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { BhavaBalaCard } from "@/components/kundali/BhavaBalaCard";
+import { JanmaPhalaTables } from "@/components/kundali/JanmaPhalaTables";
 import { VimshopakaCard } from "@/components/kundali/VimshopakaCard";
 import { AshtakavargaCard } from "@/components/kundali/AshtakavargaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
@@ -618,6 +619,7 @@ export function KundaliView({
               {t("kundali.section_unavailable")}
             </p>
           )}
+          <JanmaPhalaTables />
         </div>
       )}
 

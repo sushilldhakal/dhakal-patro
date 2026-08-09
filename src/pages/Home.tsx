@@ -482,46 +482,50 @@ export function Home() {
       language: getLanguageForEra(browseEra),
     };
 
-    const gridDay =
-      selectedDay && !selectedDay.outsideMonth
-        ? selectedDay.day
-        : (() => {
-            const cell =
-              monthContext.days.find((d) => !d.outsideMonth && d.date_ad === asideAdDate) ??
-              monthContext.days.find((d) => !d.outsideMonth && d.day === 1) ??
-              monthContext.days.find((d) => !d.outsideMonth) ??
-              null;
-            return cell?.day ?? 1;
-          })();
-
-    if (!monthContext.isAdCalendar && monthContext.year && monthContext.month) {
-      return patroDayFetchFromBrowseGridParts(
-        {
-          year: monthContext.year,
-          month: monthContext.month,
-          day: gridDay,
-        },
-        display,
-      );
-    }
-
     if (selectedDay?.date_ad) {
       return patroDayFetchFromApiDateAd(selectedDay.date_ad, display);
     }
+
+    // While the month grid is empty or still fetching, the old logic fell back to
+    // day 1 in the browsed month — so the aside fetched e.g. 2083/4/1 while
+    // asideAdDate was still today, pMatches failed, and the panel showed "—".
+    if (!monthContext.isAdCalendar && monthContext.year && monthContext.month && asideAdDate) {
+      try {
+        const bs = adToBS(parseCivilIsoToDate(asideAdDate));
+        if (bs.year === monthContext.year && bs.month === monthContext.month) {
+          return patroDayFetchFromBrowseGridParts(
+            { year: bs.year, month: bs.month, day: bs.day },
+            display,
+          );
+        }
+      } catch {
+        /* use civil date below */
+      }
+    }
+
     const cell =
       monthContext.days.find((d) => !d.outsideMonth && d.date_ad === asideAdDate) ??
       monthContext.days.find((d) => !d.outsideMonth && d.day === 1) ??
       null;
+    if (
+      !monthContext.isAdCalendar &&
+      monthContext.year &&
+      monthContext.month &&
+      cell &&
+      !cell.outsideMonth
+    ) {
+      return patroDayFetchFromBrowseGridParts(
+        { year: monthContext.year, month: monthContext.month, day: cell.day },
+        display,
+      );
+    }
+
     if (cell?.date_ad) {
       return patroDayFetchFromApiDateAd(cell.date_ad, display);
     }
-    return { kind: "today", display };
-  }, [
-    browseEra,
-    asideAdDate,
-    monthContext,
-    selectedDay,
-  ]);
+
+    return patroDayFetchFromApiDateAd(asideAdDate, display);
+  }, [browseEra, asideAdDate, monthContext, selectedDay]);
 
   const panchangaQ = useQuery({
     queryKey: panchangaKeys.daySelection(asideDayState, location.params),
@@ -569,13 +573,30 @@ export function Home() {
     setLocalStorageItem(HOME_PATRO_VIEW_KEY, view);
   }, []);
 
-  const asideInitialLoading = panchangaQ.isLoading && !panchangaQ.data;
-  // keepPreviousData keeps `isLoading` false on a location/date change and
-  // leaves the previous city's data on screen — confusing for the user. While
-  // the query is showing placeholder (previous-key) data mid-fetch, swap the
-  // panel body for the loader instead.
+  const asideContextDay = useMemo(() => {
+    if (selectedDay) return selectedDay;
+    return (
+      monthContext.days.find((d) => !d.outsideMonth && d.date_ad === asideAdDate) ??
+      monthContext.days.find((d) => !d.outsideMonth && d.day === 1) ??
+      monthContext.days.find((d) => !d.outsideMonth) ??
+      null
+    );
+  }, [selectedDay, monthContext.days, asideAdDate]);
+
+  const asideDataMatches = useMemo(
+    () =>
+      panchangaQ.data
+        ? panchangaMatchesAside(panchangaQ.data, asideAdDate, monthContext, asideContextDay)
+        : false,
+    [panchangaQ.data, asideAdDate, monthContext, asideContextDay],
+  );
+
+  const asideP = asideDataMatches ? panchangaQ.data : undefined;
+  const asideInitialLoading = panchangaQ.isLoading && !asideP;
   const asideLoading =
-    asideInitialLoading || (panchangaQ.isFetching && panchangaQ.isPlaceholderData);
+    asideInitialLoading ||
+    panchangaQ.isFetching ||
+    (Boolean(panchangaQ.data) && !asideDataMatches);
   useRouteLoading(asideInitialLoading);
 
   return (
@@ -607,7 +628,7 @@ export function Home() {
             todayAd={todayAd}
             monthContext={monthContext}
             location={location}
-            p={panchangaQ.data}
+            p={asideP}
             loading={asideLoading}
             error={panchangaQ.isError}
             browseEra={browseEra}

@@ -87,7 +87,7 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
           {t("kundali.bhava_bala_house_strength_virupas")}
         </h3>
         <p className="text-xs">
-          {bilingualText(lang, `भावाधिपति (स्वामीको षड्बल) + भाव दिशा + भाव दृष्टि। समपूर्ण राशि भाव; ${digits(data.referenceVirupas)} विरुप (७ रूप) = १००%।`, `Bhavadhipati (lord's Shadbala) + Bhava Disha + Bhava Drishti. Whole-sign houses; ${data.referenceVirupas} virupas (7 rupas) = 100%.`)}
+          {bilingualText(lang, `भावाधिपति (स्वामीको षड्बल) + भाव दिशा + भाव दृष्टि। समपूर्ण राशि भाव; ${digits(data.referenceVirupas)} विरुप = १००%।`, `Bhavadhipati (lord's Shadbala) + Bhava Disha + Bhava Drishti. Whole-sign houses; ${data.referenceVirupas} virupas = 100%.`)}
         </p>
       </div>
 
@@ -114,7 +114,6 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
               <TableHead className={cn(th, "text-right")}>
                 {t("kundali.total_pinda")}
               </TableHead>
-              <TableHead className={cn(th, "text-right")}>{t("kundali.rupas")}</TableHead>
               <TableHead className={cn(th, "text-right")}>
                 {t("kundali.bhava")}
               </TableHead>
@@ -133,7 +132,6 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
                 <TableCell className={cn(td, num, "font-semibold")}>
                   {fmtNum(h.totalPinda, digits)}
                 </TableCell>
-                <TableCell className={cn(td, num, "font-semibold")}>{fmtNum(h.rupas, digits)}</TableCell>
                 <TableCell className={cn(td, num, "font-semibold")}>
                   {digits(h.percent.toFixed(1))}%
                 </TableCell>

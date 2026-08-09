@@ -453,6 +453,14 @@
     "grahas_lagna_and_nakshatra_are_computed_in_this_ayanams": " · Grahas, lagna and nakshatra are computed in this ayanamsha; tithi/yoga/karana stay Lahiri-based.",
     "lord": "Lord",
     "bhava_bala_house_strength_virupas": "Bhava Bala — House Strength (Virupas)",
+    "janma_phala_title": "Janma phala tables (by house & graha)",
+    "janma_phala_tab_male": "Male (Purush)",
+    "janma_phala_tab_female": "Female (Stree)",
+    "janma_phala_tabs_aria": "Purush or Stree janma table",
+    "janma_phala_purusha_intro": "Classical phala for the nine grahas and Gulika in each of the twelve houses of a male birth chart — used in Nepali jyotish tradition for wealth, courage, career, longevity, and health (jātakoktaṃ phala).",
+    "janma_phala_stree_intro": "Classical phala for grahas in each house of a female birth chart — focused on saubhāgya, family, children, and health; Rahu and Ketu share one column (jātakoktaṃ phala).",
+    "janma_phala_purusha_hint": "→ Sun: karma — sukīrtimān | Moon: kalatra — bahustrīkaḥ | Mars: vyaya — vyayī",
+    "janma_phala_stree_hint": "→ Sun: karma — sukarmaratā | Moon: strī — patipriyā sudehā | Mars: vyaya — khalā rugārtā",
     "strongest_house": "Strongest house",
     "weakest_house": "Weakest house",
     "house": "House",
@@ -675,6 +683,11 @@
   },
   "learn_more": {
     "default_heading": "Learn more"
+  },
+  "related_pages": {
+    "heading": "Related pages",
+    "learn_heading": "Related reading",
+    "aria": "Related pages and articles"
   },
   "auth": {
     "sign_in": "Sign in",
