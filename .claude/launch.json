@@ -2,15 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dhakal-patro-bbtmp",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": [
-        "-c",
-        "cd /Users/sushildhakal/Desktop/calender-patro/dhakal-patro && VITE_API_BASE_URL=http://localhost:8137 npm run dev -- --port 5188 --strictPort"
-      ],
-      "port": 5188
-    },
-    {
       "name": "dhakal-patro",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
