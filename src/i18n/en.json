@@ -365,22 +365,24 @@
   },
   "rashifal": {
     "title": "Rashifal",
-    "subtitle": "Daily, weekly and monthly rashifal from sunrise panchanga — Lahiri Drik Ganita, chandrabala (navatara) and Moorti Nirnaya.",
+    "subtitle": "Daily, weekly, monthly and yearly rashifal from sunrise panchanga — gochar with vedha, Ashtakavarga, Sudarshana chakra, chandrabala and the sign lord, on Lahiri Drik Ganita.",
     "eyebrow": "Nepali Patro · Jyotish · Rashifal",
     "tabs_label": "Rashifal period",
     "tabs": {
       "daily": "Daily",
       "weekly": "Weekly",
-      "monthly": "Monthly"
+      "monthly": "Monthly",
+      "yearly": "Yearly"
     },
     "lucky_color": "Lucky colour",
     "lucky_number": "Lucky number",
     "moon_at_sunrise": "Moon at sunrise: {{sign}}",
-    "method_note": "Computed on the server from local sunrise, transit Moon and navatara chandrabala for your janma rashi. Lucky colour follows Moorti; lucky number from tara.",
+    "method_note": "Computed on the server at your local sunrise — nine-graha gochar with vedha, Ashtakavarga of the transit chart, the lagna / Chandra / Surya Sudarshana chakras, navatara chandrabala, Moorti nirnaya and the sign lord's own condition. Lucky colour, number, direction and hora all follow the sign lord.",
     "error": "Could not load rashifal for this date and place. Try another day or refresh.",
     "period_intro": {
-      "weekly": "Seven-day summary from sunrise panchanga — guidance uses the weakest chandrabala day in the window.",
-      "monthly": "Full BS-month summary from daily sunrise calculations."
+      "weekly": "Averaged over the seven sunrises from Sunday to Saturday.",
+      "monthly": "Averaged over every sunrise of the BS month.",
+      "yearly": "The whole BS year, weighted towards the Jupiter and Saturn transits a year actually turns on."
     },
     "phala": {
       "best": "A strong day — auspicious for important work, travel and new beginnings.",
@@ -388,7 +390,14 @@
       "neutral": "Mixed or moderate — proceed with care; routine work is fine.",
       "bad": "Caution advised — delay major decisions; focus on patience and remedies.",
       "worst": "Very inauspicious — avoid risky ventures; spiritual practice and rest are better."
-    }
+    },
+    "lucky_direction": "Lucky direction",
+    "lucky_time": "Lucky hora",
+    "why_this": "Why this reading?",
+    "remedy": "Remedy",
+    "lord_line": "Sign lord {{lord}} is in {{sign}}, house {{house}} from the sign — {{dignity}}.",
+    "gochar_hint": "{{graha}} — in {{sign}}, house {{house}} from the sign",
+    "window_days": "Strongest day {{best}}; the one to watch {{weak}}."
   },
   "kundali": {
     "eyebrow": "Nepali Patro · Jyotish · Birth Kundali",

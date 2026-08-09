@@ -283,7 +283,7 @@ export function fetchPanchangaDay(
 
 export function fetchRashifal(
   state: import("@/lib/patro-day-url").PatroDayFetchState,
-  period: "daily" | "weekly" | "monthly",
+  period: RashifalPeriod,
   location?: LocationParams,
 ) {
   const qs = buildPatroDayApiQuery(state, {
@@ -2383,6 +2383,97 @@ export interface NavataraTableBlock {
   rows: NavataraRow[];
 }
 
+export const RASHIFAL_PERIODS = ["daily", "weekly", "monthly", "yearly"] as const;
+export type RashifalPeriod = (typeof RASHIFAL_PERIODS)[number];
+
+/** The six life areas the server scores from each sign's own houses. */
+export const RASHIFAL_DOMAINS = [
+  "career",
+  "finance",
+  "health",
+  "love",
+  "learning",
+  "travel",
+] as const;
+export type RashifalDomainKey = (typeof RASHIFAL_DOMAINS)[number];
+
+/** One scoring layer (gochar, chandrabala, ashtakavarga, …) behind a sign. */
+export interface RashifalComponent {
+  key: string;
+  label_ne: string;
+  label_en: string;
+  score: number;
+  percent: number;
+  weight: number;
+  tone: NavataraTone;
+  note_ne: string;
+  note_en: string;
+}
+
+export interface RashifalDomain {
+  key: RashifalDomainKey;
+  label_ne: string;
+  label_en: string;
+  score: number;
+  percent: number;
+  tone: NavataraTone;
+  houses: number[];
+  karaka: string[];
+  tenants: string[];
+}
+
+/** One graha's transit verdict counted from the sign. */
+export interface RashifalGocharRow {
+  graha: string;
+  graha_ne: string;
+  graha_en: string;
+  sign: number;
+  sign_ne: string;
+  sign_en: string;
+  house: number;
+  favourable: boolean;
+  vedha_by: string | null;
+  vedha_by_ne: string | null;
+  bindu: number | null;
+  retrograde: boolean;
+  combust: boolean;
+  weight: number;
+  score: number;
+}
+
+export interface RashifalLordBlock {
+  score: number;
+  lord: string;
+  lord_ne: string;
+  lord_en: string;
+  house: number;
+  sign: number;
+  sign_ne: string;
+  sign_en: string;
+  dignity: string;
+  dignity_ne: string;
+  dignity_en: string;
+  combust: boolean;
+  retrograde: boolean;
+}
+
+export interface RashifalHoraWindow {
+  planet: string;
+  planet_ne: string;
+  planet_en: string;
+  start_local_time_short?: string | null;
+  end_local_time_short?: string | null;
+  phase?: string;
+}
+
+export interface RashifalDayMarker {
+  date_ad: string;
+  date_bs?: string | null;
+  score: number;
+  percent: number;
+  tone: NavataraTone;
+}
+
 export interface RashifalSignBlock {
   index: number;
   id: number;
@@ -2390,34 +2481,91 @@ export interface RashifalSignBlock {
   name_en: string;
   title_en: string;
   syllables_ne: string;
+  score: number;
+  percent: number;
+  stars: number;
+  tone?: NavataraTone;
   tara?: string;
   quality?: string;
-  tone?: NavataraTone;
   tara_num?: number;
   house_from_moon?: number;
   moorti?: string;
   moorti_ne?: string;
   moorti_en?: string;
+  lucky_lord?: string;
+  lucky_lord_ne?: string;
+  lucky_lord_en?: string;
   lucky_color_ne: string;
   lucky_color_en: string;
   lucky_number_ne: string;
   lucky_number_en: string;
+  lucky_direction_ne?: string;
+  lucky_direction_en?: string;
+  lucky_time?: RashifalHoraWindow | null;
+  rashi_lord?: RashifalLordBlock;
+  components?: RashifalComponent[];
+  domains?: RashifalDomain[];
+  gochar?: RashifalGocharRow[];
+  ashtakavarga?: { score: number; sav: number; sav_trikona: number; sav_kendra: number };
+  cycle?: { score: number; graha: string; graha_ne: string; graha_en: string; house: number };
+  days_in_period?: number;
+  best_day?: RashifalDayMarker;
+  weak_day?: RashifalDayMarker;
+  remedy_ne?: string;
+  remedy_en?: string;
   prediction_ne: string;
   prediction_en: string;
 }
 
+/** Day-wide state every sign was read against — shown once above the grid. */
+export interface RashifalFrame {
+  date_ad: string;
+  jd_sunrise: number;
+  vaara_num: number;
+  paksha: string;
+  tithi_index: number;
+  day_fraction: number;
+  moon_sign: number;
+  moon_sign_ne: string;
+  moon_sign_en: string;
+  sun_sign: number;
+  sun_sign_ne: string;
+  sun_sign_en: string;
+  lagna_sign: number;
+  lagna_sign_ne: string;
+  lagna_sign_en: string;
+  sarvashtakavarga: number[];
+}
+
+export interface RashifalIngress {
+  graha: string;
+  graha_ne: string;
+  graha_en: string;
+  date_ad: string;
+  date_bs?: string | null;
+  from_sign: number;
+  from_sign_ne: string;
+  to_sign: number;
+  to_sign_ne: string;
+  to_sign_en: string;
+}
+
 export interface RashifalBlock {
-  period: "daily" | "weekly" | "monthly";
+  period: RashifalPeriod;
   anchor?: string;
-  method?: Record<string, string>;
+  method?: Record<string, unknown>;
   moon_index?: number;
   moon_label?: string;
   moon_label_en?: string;
   signs: RashifalSignBlock[];
+  frame?: RashifalFrame;
+  ingress?: RashifalIngress[];
   range_start_ad?: string;
   range_end_ad?: string;
   bs_year?: number;
   bs_month?: number;
+  bs_month_name_ne?: string;
+  bs_month_name_en?: string;
   days_computed?: number;
 }
 

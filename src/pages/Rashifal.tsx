@@ -15,14 +15,18 @@ import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 import { cn } from "@/lib/utils";
 import { patroAsideTab } from "@/lib/patro-classes";
+import { RASHIFAL_PERIOD_ICON } from "@/lib/rashifal-ui";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { searchToLocation } from "@/lib/url-state";
-import { fetchRashifal, panchangaKeys, type RashifalBlock } from "@/lib/api";
+import {
+  RASHIFAL_PERIODS,
+  fetchRashifal,
+  panchangaKeys,
+  type RashifalBlock,
+  type RashifalPeriod,
+} from "@/lib/api";
 import { formatNavataraQuality, formatNavataraTara } from "@/lib/navatara-bala";
 import { formatRashiDisplay } from "@/lib/rashi-i18n";
-
-const RASHIFAL_PERIOD_TABS = ["daily", "weekly", "monthly"] as const;
-type RashifalPeriod = (typeof RASHIFAL_PERIOD_TABS)[number];
 
 const routeApi = getRouteApi("/panchanga-shell/jyotish/rashifal");
 
@@ -42,43 +46,37 @@ export function Rashifal() {
     resolveTimeZone(undefined, location.params.timezone),
   );
 
+  // The day query still drives the date navigator's BS/AD labels; the rashifal
+  // itself always comes from /panchanga/rashifal now. The panchanga payload
+  // carries only the legacy chandrabala block, which has none of the scored
+  // layers the cards render.
   const dayQ = useResolvedPatroDayQuery(dayState, location.params, {
     syncPickerFromDateAd,
     syncResolvedPatroDay,
   });
 
-  const needsRashifalFetch = period !== "daily" || !dayQ.data?.rashifal?.signs?.length;
-
   const rashifalQ = useQuery({
-    queryKey: [
-      ...panchangaKeys.daySelection(dayState, location.params),
-      "rashifal",
-      period,
-    ],
+    queryKey: [...panchangaKeys.daySelection(dayState, location.params), "rashifal", period],
     queryFn: () => fetchRashifal(dayState, period, location.params),
-    enabled: needsRashifalFetch,
     staleTime: 1000 * 60 * 30,
   });
 
-  const rashifal: RashifalBlock | undefined = useMemo(() => {
-    if (period === "daily" && dayQ.data?.rashifal?.signs?.length) {
-      return dayQ.data.rashifal;
-    }
-    return rashifalQ.data;
-  }, [period, dayQ.data?.rashifal, rashifalQ.data]);
+  const rashifal: RashifalBlock | undefined = rashifalQ.data;
 
-  const loading =
-    (period === "daily" && dayQ.isLoading && !dayQ.data) ||
-    (needsRashifalFetch && rashifalQ.isLoading && !rashifal);
-  const error = (period === "daily" && dayQ.isError) || (needsRashifalFetch && rashifalQ.isError);
+  const loading = rashifalQ.isLoading && !rashifal;
+  const error = rashifalQ.isError;
 
   useRouteLoading(loading);
 
+  // "Moon at sunrise" is one sunrise. Over a month or a year the payload's
+  // moon_label is only the middle sample, so naming it would read as a claim
+  // about the whole window.
   const moonRef = useMemo(() => {
+    if (period !== "daily" && period !== "weekly") return undefined;
     if (!rashifal?.moon_label) return undefined;
     const label = formatRashiDisplay(rashifal.moon_label, rashifal.moon_label_en, lang);
     return label ? t("rashifal.moon_at_sunrise", { sign: label }) : undefined;
-  }, [rashifal, lang, t]);
+  }, [period, rashifal, lang, t]);
 
   return (
     <PageShell className="pb-16">
@@ -107,25 +105,35 @@ export function Rashifal() {
         />
       </div>
 
+      {/* Icon-only period switch — the label stays as the accessible name. */}
       <div
-        className="mt-4 grid grid-cols-3 border border-border bg-surface-muted sm:max-w-md sm:rounded-lg sm:overflow-hidden"
+        className="mt-4 grid grid-cols-4 border border-border bg-surface-muted sm:max-w-md sm:rounded-lg sm:overflow-hidden"
         role="tablist"
         aria-label={t("rashifal.tabs_label")}
       >
-        {RASHIFAL_PERIOD_TABS.map((id) => (
-          <Button
-            key={id}
-            type="button"
-            role="tab"
-            variant="ghost"
-            size="sm"
-            className={cn(patroAsideTab(period === id), "h-auto min-h-10 w-full rounded-none px-2 py-2.5")}
-            aria-selected={period === id}
-            onClick={() => setPeriod(id)}
-          >
-            {t(`rashifal.tabs.${id}`)}
-          </Button>
-        ))}
+        {RASHIFAL_PERIODS.map((id) => {
+          const Icon = RASHIFAL_PERIOD_ICON[id];
+          const label = t(`rashifal.tabs.${id}`);
+          return (
+            <Button
+              key={id}
+              type="button"
+              role="tab"
+              variant="ghost"
+              size="sm"
+              className={cn(
+                patroAsideTab(period === id),
+                "h-auto min-h-11 w-full rounded-none px-2 py-2.5",
+              )}
+              aria-selected={period === id}
+              aria-label={label}
+              title={label}
+              onClick={() => setPeriod(id)}
+            >
+              <Icon className="size-5" aria-hidden="true" />
+            </Button>
+          );
+        })}
       </div>
 
       {error ? (
@@ -146,23 +154,24 @@ export function Rashifal() {
           {moonRef ? (
             <p className="m-0 text-center text-sm text-muted-foreground">{moonRef}</p>
           ) : null}
-          <p className="m-0 text-center text-xs text-muted-foreground">{t("rashifal.method_note")}</p>
+          <p className="m-0 text-center text-xs text-muted-foreground">
+            {t("rashifal.method_note")}
+          </p>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {rashifal.signs.map((sign) => {
+              // Chandrabala is a 2¼-day reading. It belongs on a day or a week;
+              // over a month or a year the server all but drops the layer, so
+              // showing one day's tara there would contradict the score above it.
+              const showTara = period === "daily" || period === "weekly";
               const taraLine =
-                sign.tara && sign.quality
+                showTara && sign.tara && sign.quality
                   ? `${formatNavataraTara(sign.tara, lang)}/${formatNavataraQuality(sign.quality, lang)}`
                   : undefined;
-              const prediction = lang === "ne" ? sign.prediction_ne : sign.prediction_en;
-              const luckyColor = lang === "ne" ? sign.lucky_color_ne : sign.lucky_color_en;
-              const luckyNumber = lang === "ne" ? sign.lucky_number_ne : sign.lucky_number_en;
               return (
                 <RashifalSignCard
                   key={sign.id}
                   sign={sign}
-                  prediction={prediction}
-                  luckyColor={luckyColor}
-                  luckyNumber={luckyNumber}
+                  period={period}
                   taraLine={taraLine}
                   tone={sign.tone}
                 />
