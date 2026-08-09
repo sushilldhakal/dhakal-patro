@@ -413,7 +413,7 @@
     },
     "personal": {
       "method_note": "Cast from your birth date, time and place — Lagna, natal Ashtakavarga and the running Vimshottari dasha, computed on the server.",
-      "lagna_line": "Lagna {{lagna}} · Moon {{moon}} · Sun {{sun}}",
+      "lagna_line": "Rashi {{moon}} · Lagna {{lagna}} · Sun {{sun}}",
       "dasha_line": "Running {{maha}} Mahadasha, {{antar}} Antardasha",
       "dasha_range": "{{maha}} Mahadasha until {{mahaEnd}}. {{antar}} Antardasha until {{antarEnd}}.",
       "lord_line": "Lagna lord {{lord}} is in {{sign}}, house {{house}} from the Lagna — {{dignity}}."
