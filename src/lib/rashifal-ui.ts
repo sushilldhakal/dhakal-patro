@@ -18,7 +18,9 @@ import {
   Sun,
   type LucideIcon,
 } from "lucide-react";
-import type { NavataraTone, RashifalDomainKey, RashifalPeriod } from "@/lib/api";
+import type { NavataraTone, RashifalBlock, RashifalDomainKey, RashifalPeriod } from "@/lib/api";
+import { addCivilDays, parseCivilIsoToDate } from "@/lib/patro-day";
+import { formatPatroCivilDayLabel } from "@/lib/patro-headline-subtitle";
 
 /**
  * Period tabs are icon-only on the page, so each icon has to carry the whole
@@ -91,4 +93,57 @@ export function toNepaliDigits(value: number | string, lang?: string): string {
   const text = String(value);
   if (lang !== "ne") return text;
   return text.replace(/\d/g, (d) => NE_DIGITS[Number(d)]);
+}
+
+/**
+ * The window a period tab is actually showing, read straight off the already-
+ * fetched payload rather than recomputed client-side — daily has nothing to
+ * add (the main date nav already names the day), weekly/monthly/yearly each
+ * use whichever fields the server already resolved for that window.
+ */
+export function rashifalRangeLabel(
+  rashifal: RashifalBlock | undefined,
+  period: RashifalPeriod,
+  lang: string,
+): string | undefined {
+  if (!rashifal) return undefined;
+  const digitFn = (n: number | string) => toNepaliDigits(n, lang);
+  if (period === "weekly" && rashifal.range_start_ad && rashifal.range_end_ad) {
+    const start = formatPatroCivilDayLabel(rashifal.range_start_ad, lang, digitFn);
+    const end = formatPatroCivilDayLabel(rashifal.range_end_ad, lang, digitFn);
+    return `${start} – ${end}`;
+  }
+  if (period === "monthly" && rashifal.bs_year != null) {
+    const monthName = lang === "ne" ? rashifal.bs_month_name_ne : rashifal.bs_month_name_en;
+    return `${monthName ?? ""} ${digitFn(rashifal.bs_year)}`.trim();
+  }
+  if (period === "yearly" && rashifal.bs_year != null) {
+    return lang === "ne" ? `वि.सं. ${digitFn(rashifal.bs_year)}` : `BS ${digitFn(rashifal.bs_year)}`;
+  }
+  return undefined;
+}
+
+/**
+ * Anchor date to browse to for "prev"/"next" on a period tab.
+ *
+ * Daily just steps one civil day either way. For weekly/monthly/yearly, moving
+ * by a day (the shared date-nav's own step unit) usually lands inside the
+ * *same* server-resolved window — a BS month runs 29–32 days, so a single
+ * ±1-day nudge only crosses into the next one on a lucky click, which is
+ * exactly the "needs 2–3 clicks" complaint. Stepping to one day past the
+ * window's own boundary — already known from the payload that produced the
+ * button — guarantees a new window on every click, with no BS calendar
+ * arithmetic duplicated on the client.
+ */
+export function rashifalStepDate(
+  rashifal: RashifalBlock | undefined,
+  period: RashifalPeriod,
+  currentDate: Date,
+  direction: 1 | -1,
+): Date {
+  if (period === "daily" || !rashifal?.range_start_ad || !rashifal.range_end_ad) {
+    return addCivilDays(currentDate, direction);
+  }
+  const boundaryIso = direction > 0 ? rashifal.range_end_ad : rashifal.range_start_ad;
+  return addCivilDays(parseCivilIsoToDate(boundaryIso), direction);
 }

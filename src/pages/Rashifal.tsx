@@ -1,25 +1,33 @@
 import { useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PatroDayTimeNav } from "@/components/patro-date";
 import { DataUnavailablePanel } from "@/components/common/DataUnavailablePanel";
 import { RashifalSignCard } from "@/components/rashifal/RashifalSignCard";
+import { RashifalProfilePicker } from "@/components/rashifal/RashifalProfilePicker";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { useResolvedPatroDayQuery } from "@/hooks/use-resolved-patro-day-query";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 import { cn } from "@/lib/utils";
-import { patroAsideTab } from "@/lib/patro-classes";
-import { RASHIFAL_PERIOD_ICON } from "@/lib/rashifal-ui";
+import { patroAsideTab, patroMobileStepBtn } from "@/lib/patro-classes";
+import { profileChartParams } from "@/lib/kundali/profile-chart";
+import type { Profile } from "@/lib/auth/client";
+import {
+  RASHIFAL_PERIOD_ICON,
+  rashifalRangeLabel,
+  rashifalStepDate,
+} from "@/lib/rashifal-ui";
 import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { searchToLocation } from "@/lib/url-state";
 import {
   RASHIFAL_PERIODS,
+  fetchJanmaRashi,
   fetchRashifal,
   panchangaKeys,
   type RashifalBlock,
@@ -34,6 +42,7 @@ export function Rashifal() {
   const { t } = useTranslation();
   const { lang } = useLocale();
   const [period, setPeriod] = useState<RashifalPeriod>("daily");
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { location, setLocation } = usePanchangaLocation(searchToLocation(search));
@@ -67,6 +76,44 @@ export function Rashifal() {
   const error = rashifalQ.isError;
 
   useRouteLoading(loading);
+
+  // Selected profile → its janma (birth Moon) rashi, resolved server-side from
+  // birth date/time/place — a BS-era profile is converted to AD first, same as
+  // the kundali profile flow, so the lookup never duplicates that arithmetic.
+  const profileChart = selectedProfile ? profileChartParams(selectedProfile) : null;
+  const birthIso = profileChart ? `${profileChart.adDate}T${profileChart.clock}` : null;
+  const birthTz = profileChart?.location.params.timezone ?? "Asia/Kathmandu";
+
+  const janmaQ = useQuery({
+    queryKey: ["rashifal-janma", selectedProfile?.id, birthIso, birthTz],
+    queryFn: () => fetchJanmaRashi(birthIso as string, birthTz),
+    enabled: Boolean(selectedProfile && birthIso),
+    staleTime: Infinity,
+  });
+
+  // A profile without a saved birth date can't resolve a rashi — reject the
+  // pick at selection time instead of silently showing all twelve later.
+  const [profileError, setProfileError] = useState(false);
+  const handleSelectProfile = (profile: Profile | null) => {
+    if (profile && !profileChartParams(profile)) {
+      setProfileError(true);
+      setSelectedProfile(null);
+      return;
+    }
+    setProfileError(false);
+    setSelectedProfile(profile);
+  };
+
+  const visibleSigns = useMemo(() => {
+    if (!rashifal?.signs) return rashifal?.signs;
+    if (!selectedProfile || !janmaQ.data) return rashifal.signs;
+    return rashifal.signs.filter((s) => s.id === janmaQ.data.janma_rashi);
+  }, [rashifal, selectedProfile, janmaQ.data]);
+
+  const rangeLabel = useMemo(
+    () => rashifalRangeLabel(rashifal, period, lang),
+    [rashifal, period, lang],
+  );
 
   // "Moon at sunrise" is one sunrise. Over a month or a year the payload's
   // moon_label is only the middle sample, so naming it would read as a claim
@@ -105,15 +152,17 @@ export function Rashifal() {
         />
       </div>
 
-      {/* Icon-only period switch — the label stays as the accessible name. */}
+      {/* Period switch — active tab carries its label, the rest stay icon-only
+          so four tabs read at a glance without four labels competing. */}
       <div
-        className="mt-4 grid grid-cols-4 border border-border bg-surface-muted sm:max-w-md sm:rounded-lg sm:overflow-hidden"
+        className="mt-4 flex flex-wrap border border-border bg-surface-muted sm:max-w-md sm:rounded-lg sm:overflow-hidden"
         role="tablist"
         aria-label={t("rashifal.tabs_label")}
       >
         {RASHIFAL_PERIODS.map((id) => {
           const Icon = RASHIFAL_PERIOD_ICON[id];
           const label = t(`rashifal.tabs.${id}`);
+          const active = period === id;
           return (
             <Button
               key={id}
@@ -122,18 +171,59 @@ export function Rashifal() {
               variant="ghost"
               size="sm"
               className={cn(
-                patroAsideTab(period === id),
-                "h-auto min-h-11 w-full rounded-none px-2 py-2.5",
+                patroAsideTab(active),
+                "h-auto min-h-11 flex-1 rounded-none px-2 py-2.5",
+                active ? "gap-1.5" : "gap-0",
               )}
-              aria-selected={period === id}
+              aria-selected={active}
               aria-label={label}
               title={label}
               onClick={() => setPeriod(id)}
             >
-              <Icon className="size-5" aria-hidden="true" />
+              <Icon className="size-5 shrink-0" aria-hidden="true" />
+              {active ? <span className="whitespace-nowrap">{label}</span> : null}
             </Button>
           );
         })}
+      </div>
+
+      {/* Range strip — the window this tab is actually reading, with prev/next
+          that step by a whole window (day / week / BS month / BS year) rather
+          than by the shared date-nav's single civil day, which for a week or a
+          month usually leaves the window unchanged. */}
+      {period !== "daily" ? (
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            className={patroMobileStepBtn}
+            aria-label={t("rashifal.range_prev")}
+            onClick={() => setDate(rashifalStepDate(rashifal, period, date, -1))}
+          >
+            <ChevronLeft size={15} strokeWidth={2} />
+          </button>
+          <span className="min-w-0 truncate text-center text-sm font-semibold text-foreground">
+            {rangeLabel ?? t("common.loading")}
+          </span>
+          <button
+            type="button"
+            className={patroMobileStepBtn}
+            aria-label={t("rashifal.range_next")}
+            onClick={() => setDate(rashifalStepDate(rashifal, period, date, 1))}
+          >
+            <ChevronRight size={15} strokeWidth={2} />
+          </button>
+        </div>
+      ) : null}
+
+      {/* Signed-in users can narrow the grid to their own saved profile. */}
+      <div className="mt-3 flex flex-col items-center gap-1.5">
+        <RashifalProfilePicker
+          selectedId={selectedProfile?.id ?? null}
+          onSelect={handleSelectProfile}
+        />
+        {profileError ? (
+          <p className="m-0 text-xs text-destructive">{t("rashifal.profile.missing_birth_data")}</p>
+        ) : null}
       </div>
 
       {error ? (
@@ -157,8 +247,34 @@ export function Rashifal() {
           <p className="m-0 text-center text-xs text-muted-foreground">
             {t("rashifal.method_note")}
           </p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {rashifal.signs.map((sign) => {
+          {selectedProfile ? (
+            <div className="flex items-center justify-center gap-1.5 text-sm text-secondary">
+              <Users className="size-4" aria-hidden="true" />
+              {janmaQ.isLoading ? (
+                <span>{t("rashifal.profile.resolving")}</span>
+              ) : (
+                <>
+                  <span>{t("rashifal.profile.showing_for", { name: selectedProfile.full_name })}</span>
+                  <button
+                    type="button"
+                    className="font-semibold underline underline-offset-2 hover:no-underline"
+                    onClick={() => setSelectedProfile(null)}
+                  >
+                    {t("rashifal.profile.show_all")}
+                  </button>
+                </>
+              )}
+            </div>
+          ) : null}
+          <div
+            className={cn(
+              "grid gap-4",
+              selectedProfile && visibleSigns?.length === 1
+                ? "sm:max-w-md sm:mx-auto"
+                : "sm:grid-cols-2 xl:grid-cols-3",
+            )}
+          >
+            {(visibleSigns ?? rashifal.signs).map((sign) => {
               // Chandrabala is a 2¼-day reading. It belongs on a day or a week;
               // over a month or a year the server all but drops the layer, so
               // showing one day's tara there would contradict the score above it.

@@ -293,6 +293,22 @@ export function fetchRashifal(
   return get<RashifalBlock>(appendLocation(`/panchanga/rashifal?${qs}`, location));
 }
 
+export interface JanmaRashi {
+  janma_nakshatra: number;
+  janma_rashi: number;
+}
+
+/**
+ * A saved profile's janma (birth Moon) rashi — 1..12, matching
+ * {@link RashifalSignBlock.id}. `birth` is a naive local ISO datetime
+ * (`YYYY-MM-DDTHH:MM`), already resolved to Gregorian client-side (a BS-era
+ * profile is converted before this call, same as the kundali profile flow).
+ */
+export function fetchJanmaRashi(birth: string, birthTz: string) {
+  const qs = new URLSearchParams({ birth, birth_tz: birthTz }).toString();
+  return get<JanmaRashi>(`/panchanga/rashifal/janma?${qs}`);
+}
+
 /**
  * Midnight-referenced (civil-day, 00:00→24:00) full panchanga. Same payload
  * shape as {@link fetchPanchangaDay}, but the moving angas (tithi/नक्षत्र/योग/करण,

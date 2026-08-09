@@ -397,7 +397,20 @@
     "remedy": "Remedy",
     "lord_line": "Sign lord {{lord}} is in {{sign}}, house {{house}} from the sign — {{dignity}}.",
     "gochar_hint": "{{graha}} — in {{sign}}, house {{house}} from the sign",
-    "window_days": "Strongest day {{best}}; the one to watch {{weak}}."
+    "window_days": "Strongest day {{best}}; the one to watch {{weak}}.",
+    "range_prev": "Previous period",
+    "range_next": "Next period",
+    "profile": {
+      "label": "Profile",
+      "sign_in": "Sign in to see your rashi",
+      "no_profiles": "No saved profiles — add one on your account page.",
+      "loading": "Loading…",
+      "all_signs": "All signs",
+      "resolving": "Finding janma rashi…",
+      "showing_for": "Showing {{name}}'s rashi",
+      "show_all": "Show all signs",
+      "missing_birth_data": "This profile has no saved birth date/time, so its rashi can't be resolved. Add it on your account page."
+    }
   },
   "kundali": {
     "eyebrow": "Nepali Patro · Jyotish · Birth Kundali",
