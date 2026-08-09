@@ -2485,6 +2485,12 @@ export interface RashifalSignBlock {
   percent: number;
   stars: number;
   tone?: NavataraTone;
+  /** Vimshopaka four-grade band (Full / Medium / Small / Nil). */
+  grade?: "full" | "medium" | "small" | "nil";
+  grade_ne?: string;
+  grade_en?: string;
+  /** Aggregate periods only: the plain window mean, before the peak blend. */
+  mean_score?: number;
   tara?: string;
   quality?: string;
   tara_num?: number;
