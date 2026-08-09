@@ -70,6 +70,7 @@ export function RashifalSignCard({ sign, period, taraLine, tone }: Props) {
   const luckyNumber = ne ? sign.lucky_number_ne : sign.lucky_number_en;
   const luckyDirection = ne ? sign.lucky_direction_ne : sign.lucky_direction_en;
   const remedy = ne ? sign.remedy_ne : sign.remedy_en;
+  const grade = ne ? sign.grade_ne : sign.grade_en;
   const lord = sign.rashi_lord;
   const luckyTime = sign.lucky_time;
   const detailsId = `rashifal-detail-${sign.id}`;
@@ -125,6 +126,12 @@ export function RashifalSignCard({ sign, period, taraLine, tone }: Props) {
           <span aria-hidden="true">%</span>
         </span>
       </div>
+
+      {grade ? (
+        <p className="m-0 border-b border-border/60 px-4 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+          {grade}
+        </p>
+      ) : null}
 
       {/* Six life areas, icon-led so the row scans without reading a word. */}
       {sign.domains?.length ? (
