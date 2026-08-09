@@ -18,7 +18,7 @@ import {
   Sun,
   type LucideIcon,
 } from "lucide-react";
-import type { NavataraTone, RashifalBlock, RashifalDomainKey, RashifalPeriod } from "@/lib/api";
+import type { NavataraTone, RashifalDomainKey, RashifalPeriod } from "@/lib/api";
 import { addCivilDays, parseCivilIsoToDate } from "@/lib/patro-day";
 import { formatPatroCivilDayLabel } from "@/lib/patro-headline-subtitle";
 
@@ -96,29 +96,44 @@ export function toNepaliDigits(value: number | string, lang?: string): string {
 }
 
 /**
+ * The window-identifying fields both {@link RashifalBlock} and
+ * {@link RashifalPersonal} carry — the range strip and its prev/next read
+ * whichever of the two payloads is actually on screen (the general grid, or
+ * one profile's personal reading), so these helpers take just this common
+ * shape rather than the full union.
+ */
+export interface RashifalWindowSource {
+  range_start_ad?: string;
+  range_end_ad?: string;
+  bs_year?: number;
+  bs_month_name_ne?: string;
+  bs_month_name_en?: string;
+}
+
+/**
  * The window a period tab is actually showing, read straight off the already-
  * fetched payload rather than recomputed client-side — daily has nothing to
  * add (the main date nav already names the day), weekly/monthly/yearly each
  * use whichever fields the server already resolved for that window.
  */
 export function rashifalRangeLabel(
-  rashifal: RashifalBlock | undefined,
+  source: RashifalWindowSource | undefined,
   period: RashifalPeriod,
   lang: string,
 ): string | undefined {
-  if (!rashifal) return undefined;
+  if (!source) return undefined;
   const digitFn = (n: number | string) => toNepaliDigits(n, lang);
-  if (period === "weekly" && rashifal.range_start_ad && rashifal.range_end_ad) {
-    const start = formatPatroCivilDayLabel(rashifal.range_start_ad, lang, digitFn);
-    const end = formatPatroCivilDayLabel(rashifal.range_end_ad, lang, digitFn);
+  if (period === "weekly" && source.range_start_ad && source.range_end_ad) {
+    const start = formatPatroCivilDayLabel(source.range_start_ad, lang, digitFn);
+    const end = formatPatroCivilDayLabel(source.range_end_ad, lang, digitFn);
     return `${start} – ${end}`;
   }
-  if (period === "monthly" && rashifal.bs_year != null) {
-    const monthName = lang === "ne" ? rashifal.bs_month_name_ne : rashifal.bs_month_name_en;
-    return `${monthName ?? ""} ${digitFn(rashifal.bs_year)}`.trim();
+  if (period === "monthly" && source.bs_year != null) {
+    const monthName = lang === "ne" ? source.bs_month_name_ne : source.bs_month_name_en;
+    return `${monthName ?? ""} ${digitFn(source.bs_year)}`.trim();
   }
-  if (period === "yearly" && rashifal.bs_year != null) {
-    return lang === "ne" ? `वि.सं. ${digitFn(rashifal.bs_year)}` : `BS ${digitFn(rashifal.bs_year)}`;
+  if (period === "yearly" && source.bs_year != null) {
+    return lang === "ne" ? `वि.सं. ${digitFn(source.bs_year)}` : `BS ${digitFn(source.bs_year)}`;
   }
   return undefined;
 }
@@ -136,14 +151,14 @@ export function rashifalRangeLabel(
  * arithmetic duplicated on the client.
  */
 export function rashifalStepDate(
-  rashifal: RashifalBlock | undefined,
+  source: RashifalWindowSource | undefined,
   period: RashifalPeriod,
   currentDate: Date,
   direction: 1 | -1,
 ): Date {
-  if (period === "daily" || !rashifal?.range_start_ad || !rashifal.range_end_ad) {
+  if (period === "daily" || !source?.range_start_ad || !source.range_end_ad) {
     return addCivilDays(currentDate, direction);
   }
-  const boundaryIso = direction > 0 ? rashifal.range_end_ad : rashifal.range_start_ad;
+  const boundaryIso = direction > 0 ? source.range_end_ad : source.range_start_ad;
   return addCivilDays(parseCivilIsoToDate(boundaryIso), direction);
 }

@@ -402,14 +402,21 @@
     "range_next": "Next period",
     "profile": {
       "label": "Profile",
-      "sign_in": "Sign in to see your rashi",
+      "sign_in": "Sign in to see your birth chart reading",
       "no_profiles": "No saved profiles — add one on your account page.",
       "loading": "Loading…",
       "all_signs": "All signs",
-      "resolving": "Finding janma rashi…",
-      "showing_for": "Showing {{name}}'s rashi",
+      "resolving": "Casting your birth chart…",
+      "showing_for": "{{name}}'s birth-chart rashifal",
       "show_all": "Show all signs",
-      "missing_birth_data": "This profile has no saved birth date/time, so its rashi can't be resolved. Add it on your account page."
+      "missing_birth_data": "This profile has no saved birth date, time and place, so a birth chart can't be cast. Add it on your account page."
+    },
+    "personal": {
+      "method_note": "Cast from your birth date, time and place — Lagna, natal Ashtakavarga and the running Vimshottari dasha, computed on the server.",
+      "lagna_line": "Lagna {{lagna}} · Moon {{moon}} · Sun {{sun}}",
+      "dasha_line": "Running {{maha}} Mahadasha, {{antar}} Antardasha",
+      "dasha_range": "{{maha}} Mahadasha until {{mahaEnd}}. {{antar}} Antardasha until {{antarEnd}}.",
+      "lord_line": "Lagna lord {{lord}} is in {{sign}}, house {{house}} from the Lagna — {{dignity}}."
     }
   },
   "kundali": {

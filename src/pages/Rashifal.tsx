@@ -8,6 +8,7 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 import { PatroDayTimeNav } from "@/components/patro-date";
 import { DataUnavailablePanel } from "@/components/common/DataUnavailablePanel";
 import { RashifalSignCard } from "@/components/rashifal/RashifalSignCard";
+import { RashifalPersonalCard } from "@/components/rashifal/RashifalPersonalCard";
 import { RashifalProfilePicker } from "@/components/rashifal/RashifalProfilePicker";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
@@ -27,7 +28,7 @@ import { resolveTimeZone, todayAdStringInTimezone } from "@/lib/zoned-time";
 import { searchToLocation } from "@/lib/url-state";
 import {
   RASHIFAL_PERIODS,
-  fetchJanmaRashi,
+  fetchPersonalRashifal,
   fetchRashifal,
   panchangaKeys,
   type RashifalBlock,
@@ -67,6 +68,10 @@ export function Rashifal() {
   const rashifalQ = useQuery({
     queryKey: [...panchangaKeys.daySelection(dayState, location.params), "rashifal", period],
     queryFn: () => fetchRashifal(dayState, period, location.params),
+    // Skipped once a profile is selected — the personal reading below is a
+    // different computation, not a filtered view of these twelve, so there is
+    // nothing here worth paying for while it's showing instead.
+    enabled: !selectedProfile,
     staleTime: 1000 * 60 * 30,
   });
 
@@ -77,25 +82,46 @@ export function Rashifal() {
 
   useRouteLoading(loading);
 
-  // Selected profile → its janma (birth Moon) rashi, resolved server-side from
-  // birth date/time/place — a BS-era profile is converted to AD first, same as
-  // the kundali profile flow, so the lookup never duplicates that arithmetic.
+  // Selected profile → a reading cast on that profile's own birth chart
+  // (Lagna, natal Ashtakavarga, running dasha) rather than a filter down to
+  // whichever of the twelve general cards matches their Moon sign. A BS-era
+  // profile's birth date is converted to AD client-side first (same helper
+  // the kundali profile flow already uses), so the server only ever sees
+  // Gregorian dates.
   const profileChart = selectedProfile ? profileChartParams(selectedProfile) : null;
   const birthIso = profileChart ? `${profileChart.adDate}T${profileChart.clock}` : null;
   const birthTz = profileChart?.location.params.timezone ?? "Asia/Kathmandu";
+  const birthLat = profileChart?.location.params.lat;
+  const birthLon = profileChart?.location.params.lon;
 
-  const janmaQ = useQuery({
-    queryKey: ["rashifal-janma", selectedProfile?.id, birthIso, birthTz],
-    queryFn: () => fetchJanmaRashi(birthIso as string, birthTz),
-    enabled: Boolean(selectedProfile && birthIso),
-    staleTime: Infinity,
+  const personalQ = useQuery({
+    queryKey: [
+      "rashifal-personal",
+      selectedProfile?.id,
+      birthIso,
+      birthTz,
+      birthLat,
+      birthLon,
+      ...panchangaKeys.daySelection(dayState, location.params),
+      period,
+    ],
+    queryFn: () =>
+      fetchPersonalRashifal(
+        dayState,
+        period,
+        { birth: birthIso as string, birthLat: birthLat as number, birthLon: birthLon as number, birthTz },
+        location.params,
+      ),
+    enabled: Boolean(selectedProfile && birthIso && birthLat != null && birthLon != null),
+    staleTime: 1000 * 60 * 10,
   });
 
-  // A profile without a saved birth date can't resolve a rashi — reject the
-  // pick at selection time instead of silently showing all twelve later.
+  // A profile without a saved birth date and place can't cast a Lagna — reject
+  // the pick at selection time instead of silently failing later.
   const [profileError, setProfileError] = useState(false);
   const handleSelectProfile = (profile: Profile | null) => {
-    if (profile && !profileChartParams(profile)) {
+    const chart = profile ? profileChartParams(profile) : null;
+    if (profile && (!chart || chart.location.params.lat == null || chart.location.params.lon == null)) {
       setProfileError(true);
       setSelectedProfile(null);
       return;
@@ -104,15 +130,13 @@ export function Rashifal() {
     setSelectedProfile(profile);
   };
 
-  const visibleSigns = useMemo(() => {
-    if (!rashifal?.signs) return rashifal?.signs;
-    if (!selectedProfile || !janmaQ.data) return rashifal.signs;
-    return rashifal.signs.filter((s) => s.id === janmaQ.data.janma_rashi);
-  }, [rashifal, selectedProfile, janmaQ.data]);
-
+  // The range strip reads whichever payload is actually on screen — the
+  // general grid, or one profile's personal reading — so it (and its
+  // prev/next) don't stall on the general query while it's disabled.
+  const windowSource = selectedProfile ? personalQ.data : rashifal;
   const rangeLabel = useMemo(
-    () => rashifalRangeLabel(rashifal, period, lang),
-    [rashifal, period, lang],
+    () => rashifalRangeLabel(windowSource, period, lang),
+    [windowSource, period, lang],
   );
 
   // "Moon at sunrise" is one sunrise. Over a month or a year the payload's
@@ -197,7 +221,7 @@ export function Rashifal() {
             type="button"
             className={patroMobileStepBtn}
             aria-label={t("rashifal.range_prev")}
-            onClick={() => setDate(rashifalStepDate(rashifal, period, date, -1))}
+            onClick={() => setDate(rashifalStepDate(windowSource, period, date, -1))}
           >
             <ChevronLeft size={15} strokeWidth={2} />
           </button>
@@ -208,7 +232,7 @@ export function Rashifal() {
             type="button"
             className={patroMobileStepBtn}
             aria-label={t("rashifal.range_next")}
-            onClick={() => setDate(rashifalStepDate(rashifal, period, date, 1))}
+            onClick={() => setDate(rashifalStepDate(windowSource, period, date, 1))}
           >
             <ChevronRight size={15} strokeWidth={2} />
           </button>
@@ -226,7 +250,39 @@ export function Rashifal() {
         ) : null}
       </div>
 
-      {error ? (
+      {selectedProfile ? (
+        // A profile is selected: show its own birth-chart reading instead of
+        // the general twelve-sign sweep. This is a genuinely different
+        // computation (natal Lagna, natal Ashtakavarga, running dasha), not a
+        // filtered view of the cards above, so the two are not shown together.
+        <div className="mt-6 flex flex-col gap-4" role="tabpanel">
+          <div className="flex items-center justify-center gap-1.5 text-sm text-secondary">
+            <Users className="size-4" aria-hidden="true" />
+            <span>{t("rashifal.profile.showing_for", { name: selectedProfile.full_name })}</span>
+            <button
+              type="button"
+              className="font-semibold underline underline-offset-2 hover:no-underline"
+              onClick={() => setSelectedProfile(null)}
+            >
+              {t("rashifal.profile.show_all")}
+            </button>
+          </div>
+          <p className="m-0 text-center text-xs text-muted-foreground">
+            {t("rashifal.personal.method_note")}
+          </p>
+          {personalQ.isError ? (
+            <DataUnavailablePanel message={t("rashifal.error")} className="mt-2" />
+          ) : personalQ.isLoading || !personalQ.data ? (
+            <div className="mt-2 rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm">
+              {t("rashifal.profile.resolving")}
+            </div>
+          ) : (
+            <div className="mx-auto w-full sm:max-w-md">
+              <RashifalPersonalCard name={selectedProfile.full_name} personal={personalQ.data} />
+            </div>
+          )}
+        </div>
+      ) : error ? (
         <DataUnavailablePanel message={t("rashifal.error")} className="mt-6" />
       ) : loading ? (
         <div className="mt-6 rounded-xl border border-dashed border-border bg-muted/20 px-5 py-12 text-center text-sm">
@@ -247,34 +303,8 @@ export function Rashifal() {
           <p className="m-0 text-center text-xs text-muted-foreground">
             {t("rashifal.method_note")}
           </p>
-          {selectedProfile ? (
-            <div className="flex items-center justify-center gap-1.5 text-sm text-secondary">
-              <Users className="size-4" aria-hidden="true" />
-              {janmaQ.isLoading ? (
-                <span>{t("rashifal.profile.resolving")}</span>
-              ) : (
-                <>
-                  <span>{t("rashifal.profile.showing_for", { name: selectedProfile.full_name })}</span>
-                  <button
-                    type="button"
-                    className="font-semibold underline underline-offset-2 hover:no-underline"
-                    onClick={() => setSelectedProfile(null)}
-                  >
-                    {t("rashifal.profile.show_all")}
-                  </button>
-                </>
-              )}
-            </div>
-          ) : null}
-          <div
-            className={cn(
-              "grid gap-4",
-              selectedProfile && visibleSigns?.length === 1
-                ? "sm:max-w-md sm:mx-auto"
-                : "sm:grid-cols-2 xl:grid-cols-3",
-            )}
-          >
-            {(visibleSigns ?? rashifal.signs).map((sign) => {
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {rashifal.signs.map((sign) => {
               // Chandrabala is a 2¼-day reading. It belongs on a day or a week;
               // over a month or a year the server all but drops the layer, so
               // showing one day's tara there would contradict the score above it.

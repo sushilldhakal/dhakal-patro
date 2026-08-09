@@ -309,6 +309,93 @@ export function fetchJanmaRashi(birth: string, birthTz: string) {
   return get<JanmaRashi>(`/panchanga/rashifal/janma?${qs}`);
 }
 
+/** One end of a running Vimshottari period (Mahadasha or Antardasha). */
+export interface RashifalDashaPeriod {
+  lord: string;
+  lord_ne: string;
+  lord_en: string;
+  start: string;
+  end: string;
+}
+
+export interface RashifalDasha {
+  score: number;
+  mahadasha: RashifalDashaPeriod;
+  antardasha: RashifalDashaPeriod;
+}
+
+/**
+ * A reading cast on one person's own birth chart — Lagna (not a Moon-sign
+ * stand-in), natal Ashtakavarga, and the running Vimshottari dasha — rather
+ * than the general engine's twelve-sign, Moon-sign-only sweep.
+ */
+export interface RashifalPersonal {
+  period: RashifalPeriod;
+  anchor?: string;
+  date_ad?: string;
+  range_start_ad?: string;
+  range_end_ad?: string;
+  bs_year?: number;
+  bs_month?: number;
+  bs_month_name_ne?: string;
+  bs_month_name_en?: string;
+  days_in_period?: number;
+  lagna_sign: number;
+  lagna_sign_ne: string;
+  lagna_sign_en: string;
+  moon_sign: number;
+  moon_sign_ne: string;
+  moon_sign_en: string;
+  sun_sign: number;
+  sun_sign_ne: string;
+  sun_sign_en: string;
+  lucky_lord: string;
+  lucky_lord_ne: string;
+  lucky_lord_en: string;
+  lucky_color_ne: string;
+  lucky_color_en: string;
+  lucky_number: number;
+  lucky_number_ne: string;
+  lucky_number_en: string;
+  lucky_direction_ne: string;
+  lucky_direction_en: string;
+  score: number;
+  percent: number;
+  stars: number;
+  tone: NavataraTone;
+  dasha: RashifalDasha;
+  rashi_lord: RashifalLordBlock;
+  components: RashifalComponent[];
+  domains: RashifalDomain[];
+  gochar: RashifalGocharRow[];
+  prediction_ne: string;
+  prediction_en: string;
+}
+
+/**
+ * The personal endpoint takes the profile's birth date/time already resolved
+ * to Gregorian (BS→AD conversion happens client-side via profileChartParams,
+ * same as {@link fetchJanmaRashi}) plus the birth place — needed once, to
+ * cast the Lagna, which unlike the Moon is not geocentric. `location` is
+ * where the transits are read *from* (the viewer's current place).
+ */
+export function fetchPersonalRashifal(
+  state: import("@/lib/patro-day-url").PatroDayFetchState,
+  period: RashifalPeriod,
+  birth: { birth: string; birthLat: number; birthLon: number; birthTz: string },
+  location?: LocationParams,
+) {
+  const qs = buildPatroDayApiQuery(state, {
+    period,
+    birth: birth.birth,
+    birth_lat: birth.birthLat,
+    birth_lon: birth.birthLon,
+    birth_tz: birth.birthTz,
+    cv: PANCHANGA_CACHE_VERSION,
+  }).toString();
+  return get<RashifalPersonal>(appendLocation(`/panchanga/rashifal/personal?${qs}`, location));
+}
+
 /**
  * Midnight-referenced (civil-day, 00:00→24:00) full panchanga. Same payload
  * shape as {@link fetchPanchangaDay}, but the moving angas (tithi/नक्षत्र/योग/करण,
