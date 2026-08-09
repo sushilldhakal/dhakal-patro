@@ -19,6 +19,7 @@ import { fetchPanchangaAtTimeForDay, fetchPanchangaAtTimeJd, panchangaKeys } fro
 import type { PatroDayFetchState } from "@/lib/patro-day-url";
 import { getPanchangaDetail } from "@/lib/panchanga-format";
 import { minutesSinceMidnightInTimezone, resolveTimeZone } from "@/lib/zoned-time";
+import { parseClockParts } from "./use-panchanga-mode";
 import {
   buildWheelDetail,
   buildWheelMarkers,
@@ -191,6 +192,8 @@ interface Props {
   civil?: boolean;
   /** Year view: vertical day scrub + autoplay on the right inside the wheel. */
   yearScrub?: YearWheelScrub;
+  /** When set with {@link yearScrub}, the needle follows this clock instead of the wheel time slider. */
+  clock?: string;
   /** When set, wheel scrub uses calendar at-time (BBS/BC) instead of raw `jd`. */
   atTimeDayState?: PatroDayFetchState;
 }
@@ -241,8 +244,9 @@ function PanchangaWheelBody({
   atTimeScrubOnly = false,
   civil = false,
   yearScrub,
+  clock,
   atTimeDayState,
-}: WheelBodyProps & { atTimeScrubOnly?: boolean; civil?: boolean; yearScrub?: YearWheelScrub }) {
+}: WheelBodyProps & { atTimeScrubOnly?: boolean; civil?: boolean; yearScrub?: YearWheelScrub; clock?: string }) {
   // दिन-रात re-anchors the time scrubber to midnight: sunriseMin drives every
   // g↔clock / now-needle / scrub-datetime calc, so overriding it to 0 makes the
   // wheel's time axis run 00:00 → 24:00 instead of sunrise → sunrise.
@@ -317,8 +321,18 @@ function PanchangaWheelBody({
     return Math.max(0, Math.min(60, g));
   }, [now, det.sunriseMin, tz]);
 
+  const rangeMode = Boolean(yearScrub);
+  const clockG = useMemo(() => {
+    if (!clock) return null;
+    const { hour, minute } = parseClockParts(clock);
+    let g = (hour * 60 + minute - det.sunriseMin) / 24;
+    if (g < 0) g += 60;
+    return Math.max(0, Math.min(60, g));
+  }, [clock, det.sunriseMin]);
+
   const [scrubG, setScrubG] = useState(() => (isToday ? nowG : 0));
   const [debouncedScrubG, setDebouncedScrubG] = useState(scrubG);
+  const markerG = rangeMode ? (clockG ?? 0) : scrubG;
 
   useEffect(() => {
     const id = setTimeout(() => setDebouncedScrubG(scrubG), 400);
@@ -356,11 +370,12 @@ function PanchangaWheelBody({
   }, [scrubAtTime, debouncedScrubG, det.sunriseMin]);
 
   const scrubbing =
-    scrubPinned || Math.abs(scrubG - (isToday && !scrubPinned ? nowG : 0)) > 0.05;
+    !rangeMode &&
+    (scrubPinned || Math.abs(scrubG - (isToday && !scrubPinned ? nowG : 0)) > 0.05);
 
   const canFetchAtTime = scrubAtTime != null || atTimeDayState != null;
   const needsAtTime =
-    canFetchAtTime && (scrubbing || (isToday && !atTimeScrubOnly));
+    canFetchAtTime && !rangeMode && (scrubbing || (isToday && !atTimeScrubOnly));
 
   const scrubQ = useQuery({
     queryKey:
@@ -401,8 +416,8 @@ function PanchangaWheelBody({
     needsAtTime && !scrubQ.isPlaceholderData ? scrubQ.data : undefined;
 
   const markers = useMemo(
-    () => (atTimeData ? buildWheelMarkersAtTime(atTimeData) : buildWheelMarkers(p, det, scrubG)),
-    [atTimeData, p, det, scrubG]
+    () => (atTimeData ? buildWheelMarkersAtTime(atTimeData) : buildWheelMarkers(p, det, markerG)),
+    [atTimeData, p, det, markerG],
   );
 
   const handleScrubChange = useCallback((g: number) => {

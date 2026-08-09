@@ -443,19 +443,12 @@ export function currentPatroLocationLinkSearch(loc: PanchangaLocation): Location
   return locationToSearch(loc);
 }
 
-/** Shareable panchanga year wheel search. */
+/** Shareable panchanga year wheel search (same day keys as daily panchanga). */
 export function currentPatroYearRangeLinkSearch(
   loc: PanchangaLocation,
   era: CalendarEra = readCalendarEra(),
-): PanchangaYearSearch & LocationSearch {
-  const selection: EraSelection = {
-    era: era as Era,
-    language: getLanguageForEra(era as Era),
-  };
-  return {
-    ...locationToSearch(loc),
-    ...buildPageSearch(selection),
-  } as PanchangaYearSearch & LocationSearch;
+): PanchangaSearch & LocationSearch {
+  return currentPatroDayLinkSearch(loc, { era });
 }
 
 /** Element detail pages — span (month) vs table (day) pick the right URL keys. */

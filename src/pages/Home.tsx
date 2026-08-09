@@ -617,7 +617,7 @@ export function Home() {
           </section>
         }
       />
- <AakashGocharEntryCard className="mye-3" />
+ <AakashGocharEntryCard className="my-3 mx-3" />
       <p className="mt-7 text-center text-sm max-sm:px-2.5">{t("footer_note")}</p>
     </main>
   );

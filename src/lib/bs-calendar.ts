@@ -231,6 +231,20 @@ export function getBSMonthADRange(date: Date): { start: Date; end: Date } {
   }
 }
 
+export function shiftBsMonth(year: number, month: number, delta: number): { year: number; month: number } {
+  let m = month + delta;
+  let y = year;
+  while (m < 1) {
+    m += 12;
+    y -= 1;
+  }
+  while (m > 12) {
+    m -= 12;
+    y += 1;
+  }
+  return { year: y, month: m };
+}
+
 export function getCurrentBs(): { year: number; month: number } {
   const bs = adToBS(new Date())
   return { year: bs.year, month: bs.month }

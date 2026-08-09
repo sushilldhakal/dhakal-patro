@@ -127,7 +127,7 @@ const panchangaRoute = createRoute({
 const panchangaYearRoute = createRoute({
   getParentRoute: () => panchangaShellRoute,
   path: "/panchanga/year",
-  validateSearch: validatePanchangaYearSearch,
+  validateSearch: validatePanchangaSearch,
   component: PanchangaYear,
 });
 const avakahadaRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/panchanga/avakahada-chakra", component: AvakahadaChakra });
