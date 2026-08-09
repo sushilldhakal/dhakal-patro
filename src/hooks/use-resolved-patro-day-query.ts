@@ -35,6 +35,17 @@ export function useResolvedPatroDayQuery(
 
   useEffect(() => {
     if (!syncFromData) return;
+    // `placeholderData: keepPreviousData` means `query.data` is still the
+    // PREVIOUS day's payload while a new `dayState` key is in flight — same
+    // object reference, so it doesn't retrigger this effect on its own. But
+    // `sync.syncResolvedPatroDay` is re-created every time `dayState` changes
+    // (it closes over `dayState`), so a fresh navigation *does* rerun this
+    // effect, once, with that stale placeholder still sitting in `query.data`.
+    // Syncing it back would echo the day just left as though it were the
+    // answer for the day just requested, undoing the navigation before the
+    // real fetch even lands (the "next" button needing 2–3 clicks). Wait for
+    // the placeholder to be replaced by data that actually matches this key.
+    if (query.isPlaceholderData) return;
     const data = query.data;
     if (!data) return;
     if (data.date_ad) sync.syncPickerFromDateAd(data.date_ad);
@@ -53,6 +64,7 @@ export function useResolvedPatroDayQuery(
   }, [
     syncFromData,
     query.data,
+    query.isPlaceholderData,
     sync.syncPickerFromDateAd,
     sync.syncResolvedPatroDay,
   ]);
