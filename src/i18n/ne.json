@@ -1954,5 +1954,13 @@
     "illumination": "चन्द्रकला",
     "earth_arc": "पृथ्वी सार",
     "month_2_aaushi": "२-रो औंसी"
+  },
+  "home_rashifal": {
+    "section_title": "मासिक राशिफल",
+    "personal_eyebrow": "{{name}}को जन्मकुण्डलीअनुसार यो महिना",
+    "general_eyebrow": "यो महिना सूर्य रहेको राशि",
+    "see_daily": "दैनिक राशिफल",
+    "see_full": "पूरा राशिफल",
+    "see_yours": "आफ्नो राशि हेर्नुहोस्"
   }
 }

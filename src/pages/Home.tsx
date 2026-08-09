@@ -47,6 +47,7 @@ import {
 } from "@/components/home/PanchangaAsideTabs";
 import { prefetchAsidePanels } from "@/components/home/aside-prefetch";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
+import { HomeRashifalTeaser } from "@/components/home/HomeRashifalTeaser";
 import { HeroMonthArt } from "@/components/home/HeroMonthArt";
 import { PanchangaDirectory } from "@/components/panchanga/PanchangaDirectory";
 import { Button } from "@/components/ui/button";
@@ -636,7 +637,10 @@ export function Home() {
         }
         holidays={
           <section className="col-span-full mt-2 max-sm:px-2.5">
-            <HomeQuickLinks location={location} />
+            <HomeRashifalTeaser location={location} todayAd={todayAd} />
+            <div className="mt-8">
+              <HomeQuickLinks location={location} />
+            </div>
             <PanchangaDirectory className="mt-8" />
           </section>
         }

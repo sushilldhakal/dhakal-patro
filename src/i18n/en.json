@@ -1954,5 +1954,13 @@
     "illumination": "Illumination",
     "earth_arc": "Earth arc",
     "month_2_aaushi": "Month 2 Aaushi"
+  },
+  "home_rashifal": {
+    "section_title": "Monthly Rashifal",
+    "personal_eyebrow": "{{name}}'s birth-chart reading this month",
+    "general_eyebrow": "The sign the Sun is in this month",
+    "see_daily": "Daily rashifal",
+    "see_full": "Full rashifal",
+    "see_yours": "See your rashifal"
   }
 }
