@@ -68,6 +68,7 @@ export function getPanchangaSidebarSections(): PanchangaSidebarSection[] {
         { id: "abhijit", to: "/abhijit-muhurta", labelKey: "sidebar_nav.items.abhijit.label" },
         { id: "kundali", to: "/kundali", labelKey: "sidebar_nav.items.kundali.label" },
         { id: "kundali-milan", to: "/jyotish/kundali-milan", labelKey: "sidebar_nav.items.kundali-milan.label" },
+        { id: "rashifal", to: "/jyotish/rashifal", labelKey: "rashifal.title" },
       ],
     },
     {

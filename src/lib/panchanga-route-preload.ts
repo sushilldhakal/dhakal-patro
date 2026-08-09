@@ -14,6 +14,7 @@ const PATH_LOADERS: { match: RegExp; load: () => Promise<unknown> }[] = [
   { match: /^\/kundali$/, load: () => import("../pages/Kundali") },
   { match: /^\/kundali\//, load: () => import("../pages/KundaliDetail") },
   { match: /^\/jyotish\/kundali-milan$/, load: () => import("../pages/KundaliMilan") },
+  { match: /^\/jyotish\/rashifal$/, load: () => import("../pages/Rashifal") },
   { match: /^\/panchanga\/details$/, load: () => import("../pages/PanchangaDetailsHub") },
   { match: /^\/panchanga\/element\//, load: () => import("../pages/ElementPage") },
   { match: /^\/gochar$/, load: () => import("../pages/Gochar") },

@@ -406,3 +406,119 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
 ];
+
+const JANMA_PHALA_HINT_GRAHAS_PURUSHA = PURUSHA_JANMA_GRAHAS.map((g) => ({
+  grahaKey: g.id,
+  colId: g.id,
+  ne: g.ne,
+  en: g.en,
+}));
+
+const JANMA_PHALA_HINT_GRAHAS_STREE = [
+  ...STREI_JANMA_GRAHAS.filter((g) => g.id !== "rahuKetu").map((g) => ({
+    grahaKey: g.id,
+    colId: g.id,
+    ne: g.ne,
+    en: g.en,
+  })),
+  { grahaKey: "rahu", colId: "rahuKetu", ne: "राहु", en: "Rahu" },
+  { grahaKey: "ketu", colId: "rahuKetu", ne: "केतु", en: "Ketu" },
+];
+
+export type JanmaPhalaHintPart = {
+  grahaKey: string;
+  grahaLabel: string;
+  house: number;
+  houseLabel: string;
+  bhavaTag: string;
+  phala: string;
+};
+
+function janmaPhalaHintGrahas(tab: "male" | "female") {
+  return tab === "male" ? JANMA_PHALA_HINT_GRAHAS_PURUSHA : JANMA_PHALA_HINT_GRAHAS_STREE;
+}
+
+/** One entry per graha placed in this D1 chart (Purush includes Gulika when computed). */
+export function buildJanmaPhalaHintParts(
+  planetBhavas: Partial<Record<string, number>>,
+  tab: "male" | "female",
+  lang: "en" | "ne",
+  digits: (v: string | number) => string = String,
+): JanmaPhalaHintPart[] {
+  const rows = tab === "male" ? PURUSHA_JANMA_ROWS : STREI_JANMA_ROWS;
+  const grahaCols = tab === "male" ? PURUSHA_JANMA_GRAHAS : STREI_JANMA_GRAHAS;
+  const grahas = janmaPhalaHintGrahas(tab);
+
+  const parts: JanmaPhalaHintPart[] = [];
+  for (const g of grahas) {
+    if (g.grahaKey === "gulika" && tab === "female") continue;
+    const house = planetBhavas[g.grahaKey];
+    if (house == null) continue;
+    const row = rows[house - 1];
+    if (!row) continue;
+    const colIdx = grahaCols.findIndex((c) => c.id === g.colId);
+    if (colIdx < 0) continue;
+    const phala = row.phala[colIdx]?.trim();
+    if (!phala) continue;
+    parts.push({
+      grahaKey: g.grahaKey,
+      grahaLabel: lang === "ne" ? g.ne : g.en,
+      house,
+      houseLabel: houseHintLabel(house, tab, lang),
+      bhavaTag: lang === "ne" ? `भाव ${digits(house)}` : `H ${digits(house)}`,
+      phala,
+    });
+  }
+  return parts;
+}
+
+/** Chart-specific summary: every graha in D1 + matching janma-phala cell. */
+export function buildJanmaPhalaHintLine(
+  planetBhavas: Partial<Record<string, number>>,
+  tab: "male" | "female",
+  lang: "en" | "ne",
+  digits: (v: string | number) => string = String,
+): string | null {
+  const parts = buildJanmaPhalaHintParts(planetBhavas, tab, lang, digits);
+  if (parts.length === 0) return null;
+  return `→ ${parts.map((p) => `${p.grahaLabel}: ${p.houseLabel} (${p.bhavaTag}) — ${p.phala}`).join(" | ")}`;
+}
+
+const HOUSE_HINT_NE = [
+  "तनु",
+  "धन",
+  "भ्राता",
+  "सुख",
+  "पुत्र",
+  "रिपु",
+  "कलत्र",
+  "आयु",
+  "धर्म",
+  "कर्म",
+  "लाभ",
+  "व्यय",
+] as const;
+
+const HOUSE_HINT_EN = [
+  "Tanu",
+  "Dhana",
+  "Bhrata",
+  "Sukha",
+  "Putra",
+  "Ripu",
+  "Kalatra",
+  "Ayus",
+  "Dharma",
+  "Karma",
+  "Labha",
+  "Vyaya",
+] as const;
+
+function houseHintLabel(house: number, tab: "male" | "female", lang: "en" | "ne"): string {
+  if (house === 7) {
+    if (lang === "ne") return tab === "female" ? "स्त्री" : "कलत्र";
+    return tab === "female" ? "Stri" : "Kalatra";
+  }
+  const idx = house - 1;
+  return lang === "ne" ? HOUSE_HINT_NE[idx]! : HOUSE_HINT_EN[idx]!;
+}

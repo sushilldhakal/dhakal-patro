@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -42,6 +42,7 @@ import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
 import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
 import { BhavaBalaCard } from "@/components/kundali/BhavaBalaCard";
 import { JanmaPhalaTables } from "@/components/kundali/JanmaPhalaTables";
+import { d1AllJanmaPhalaBhavas } from "@/lib/bhava";
 import { VimshopakaCard } from "@/components/kundali/VimshopakaCard";
 import { AshtakavargaCard } from "@/components/kundali/AshtakavargaCard";
 import { KundaliReport } from "@/components/kundali/KundaliReport";
@@ -140,6 +141,7 @@ export function KundaliView({
 }: KundaliViewProps) {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
+  const [janmaPhalaTab, setJanmaPhalaTab] = useState<"male" | "female">("male");
   const adDateStr = civilIsoFromDate(date);
   // Memoised: this object is an effect/callback dependency in KundaliReport, so a
   // fresh identity every render would restart the report stream endlessly.
@@ -177,6 +179,14 @@ export function KundaliView({
   );
   const moonRow = useMemo(() => d1Rows.find((r) => r.key === "moon"), [d1Rows]);
   const sunRow = useMemo(() => d1Rows.find((r) => r.key === "sun"), [d1Rows]);
+
+  const janmaPhalaPlanetBhavas = useMemo(() => {
+    if (!detail?.vargaCharts) return {};
+    const gulika = detail.upagrahas?.find((u) => u.key === "gulika");
+    return d1AllJanmaPhalaBhavas(detail.vargaCharts, {
+      gulikaLongitude: gulika?.longitude,
+    });
+  }, [detail?.vargaCharts, detail?.upagrahas]);
 
   const janmaNakshatra = useMemo(() => {
     const meta = detail?.birthMeta.moonNakshatra;
@@ -619,7 +629,11 @@ export function KundaliView({
               {t("kundali.section_unavailable")}
             </p>
           )}
-          <JanmaPhalaTables />
+          <JanmaPhalaTables
+            tab={janmaPhalaTab}
+            onTabChange={setJanmaPhalaTab}
+            chartBhavas={janmaPhalaPlanetBhavas}
+          />
         </div>
       )}
 

@@ -33,7 +33,7 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
 // drifted (29 vs 32), which lets the edge serve payloads from before an engine fix.
 // Must match services/panchanga_cache.CACHE_PAYLOAD_VERSION (compose of domain + astronomy).
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "4003";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "4303";
 
 /**
  * Sait listings are CDN-cached too. Appended as `sv=` so a change in the sait
@@ -279,6 +279,18 @@ export function fetchPanchangaDay(
       ? `/panchanga/jd/${state.jd}`
       : `/panchanga/${PANCHANGA_TODAY_SEGMENT}`;
   return get<PanchangaDay>(appendLocation(`${path}?${qs}`, location));
+}
+
+export function fetchRashifal(
+  state: import("@/lib/patro-day-url").PatroDayFetchState,
+  period: "daily" | "weekly" | "monthly",
+  location?: LocationParams,
+) {
+  const qs = buildPatroDayApiQuery(state, {
+    period,
+    cv: PANCHANGA_CACHE_VERSION,
+  }).toString();
+  return get<RashifalBlock>(appendLocation(`/panchanga/rashifal?${qs}`, location));
 }
 
 /**
@@ -2371,6 +2383,44 @@ export interface NavataraTableBlock {
   rows: NavataraRow[];
 }
 
+export interface RashifalSignBlock {
+  index: number;
+  id: number;
+  name: string;
+  name_en: string;
+  title_en: string;
+  syllables_ne: string;
+  tara?: string;
+  quality?: string;
+  tone?: NavataraTone;
+  tara_num?: number;
+  house_from_moon?: number;
+  moorti?: string;
+  moorti_ne?: string;
+  moorti_en?: string;
+  lucky_color_ne: string;
+  lucky_color_en: string;
+  lucky_number_ne: string;
+  lucky_number_en: string;
+  prediction_ne: string;
+  prediction_en: string;
+}
+
+export interface RashifalBlock {
+  period: "daily" | "weekly" | "monthly";
+  anchor?: string;
+  method?: Record<string, string>;
+  moon_index?: number;
+  moon_label?: string;
+  moon_label_en?: string;
+  signs: RashifalSignBlock[];
+  range_start_ad?: string;
+  range_end_ad?: string;
+  bs_year?: number;
+  bs_month?: number;
+  days_computed?: number;
+}
+
 export interface ApiHoraSlot {
   index: number;
   phase: "day" | "night";
@@ -2558,6 +2608,7 @@ export interface PanchangaDay {
   tarabalam?: BalamBlock;
   tarabala_table?: NavataraTableBlock;
   chandrabala_table?: NavataraTableBlock;
+  rashifal?: RashifalBlock;
   hora?: ApiHoraSlot[];
   hora_day?: ApiHoraSlot[];
   choghadiya?: Array<{

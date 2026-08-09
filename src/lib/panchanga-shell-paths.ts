@@ -12,6 +12,7 @@ export const PANCHANGA_SHELL_PATHS: readonly string[] = [
   "/kundali",
   "/kundali/$profileId",
   "/jyotish/kundali-milan",
+  "/jyotish/rashifal",
   "/suryakranti",
   "/abhijit-muhurta",
   "/panchak-patro",

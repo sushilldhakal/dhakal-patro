@@ -59,6 +59,11 @@
         "description": "Boy and girl kundali milan using Ashtakuta — eight kuta gunas, Nadi dosha and marriage compatibility.",
         "keywords": "Kundali milan, guna milan, ashtakuta, marriage compatibility, nadi dosha"
       },
+      "rashifal": {
+        "title": "Daily Rashifal — Moon Sign Forecast | Vedic Patro",
+        "description": "Daily rashifal for all 12 rashis from chandrabala at sunrise — tara, quality and guidance for your janma rashi.",
+        "keywords": "rashifal, daily horoscope nepali, chandrabala, moon sign, vedic rashifal"
+      },
       "learn": {
         "title": "Learn Almanac & Astrology | Vedic Patro",
         "description": "Educational articles on Tithi, Nakshatra, Almanac, calendars and Kundali.",
@@ -164,6 +169,7 @@
     "jyotish": "Jyotish",
     "jyotish_kundali": "Kundali",
     "jyotish_kundali_milan": "Kundali Milan",
+    "jyotish_rashifal": "Rashifal",
     "kundali": "Kundali",
     "learn": "Learn",
     "abhijit_muhurta": "Abhijit Moment",
@@ -355,6 +361,33 @@
       "unbroken_hora": "unbroken hora",
       "intro": "Each ring is one day — twenty-four <1>horas</1> ruled in turn by the seven planets. The planet of the <2>first</2> hora after sunrise gives the day its name. The count never stops: the last hora of <3>Sunday</3> rolls into <4>Monday</4> and opens <5>Monday</5>. Follow the spiral from the centre outward — <6>Sun → Saturn</6> — across the week.",
       "seven_days": "Seven days · inner → outer"
+    }
+  },
+  "rashifal": {
+    "title": "Rashifal",
+    "subtitle": "Daily, weekly and monthly rashifal from sunrise panchanga — Lahiri Drik Ganita, chandrabala (navatara) and Moorti Nirnaya.",
+    "eyebrow": "Nepali Patro · Jyotish · Rashifal",
+    "tabs_label": "Rashifal period",
+    "tabs": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "lucky_color": "Lucky colour",
+    "lucky_number": "Lucky number",
+    "moon_at_sunrise": "Moon at sunrise: {{sign}}",
+    "method_note": "Computed on the server from local sunrise, transit Moon and navatara chandrabala for your janma rashi. Lucky colour follows Moorti; lucky number from tara.",
+    "error": "Could not load rashifal for this date and place. Try another day or refresh.",
+    "period_intro": {
+      "weekly": "Seven-day summary from sunrise panchanga — guidance uses the weakest chandrabala day in the window.",
+      "monthly": "Full BS-month summary from daily sunrise calculations."
+    },
+    "phala": {
+      "best": "A strong day — auspicious for important work, travel and new beginnings.",
+      "good": "Generally favourable — steady progress on plans and relationships.",
+      "neutral": "Mixed or moderate — proceed with care; routine work is fine.",
+      "bad": "Caution advised — delay major decisions; focus on patience and remedies.",
+      "worst": "Very inauspicious — avoid risky ventures; spiritual practice and rest are better."
     }
   },
   "kundali": {

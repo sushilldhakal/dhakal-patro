@@ -20,6 +20,7 @@ import {
   Sparkles,
   Sprout,
   Sunrise,
+  Sun,
   type LucideIcon,
 } from "lucide-react";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
@@ -58,6 +59,7 @@ const SITE_LINK_ICONS: Record<string, LucideIcon> = {
   "graha-vakri": RotateCcw,
   "chandra-grahan": MoonStar,
   "surya-grahan": Eclipse,
+  rashifal: Sun,
 };
 
 function iconForLinkId(id: string): LucideIcon {

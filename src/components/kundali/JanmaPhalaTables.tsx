@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import {
@@ -6,10 +5,12 @@ import {
   PURUSHA_JANMA_ROWS,
   STREI_JANMA_GRAHAS,
   STREI_JANMA_ROWS,
+  buildJanmaPhalaHintParts,
   splitJanmaPhala,
   type JanmaPhalaGrahaCol,
   type JanmaPhalaRow,
 } from "@/lib/kundali/janma-phala-tables";
+import { JanmaPhalaChartSummary } from "@/components/kundali/JanmaPhalaChartSummary";
 import {
   Table,
   TableBody,
@@ -48,10 +49,12 @@ function JanmaPhalaTable({
   rows,
   grahas,
   houseColLabel,
+  chartBhavas,
 }: {
   rows: JanmaPhalaRow[];
   grahas: JanmaPhalaGrahaCol[];
   houseColLabel: string;
+  chartBhavas?: Partial<Record<string, number>>;
 }) {
   const { lang } = useLocale();
 
@@ -71,28 +74,56 @@ function JanmaPhalaTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.houseNe}>
-              <TableCell className={cn(houseTd, "pl-3.5 border-r border-border")}>
-                {bilingualText(lang, row.houseNe, row.houseEn)}
-              </TableCell>
-              {row.phala.map((cell, i) => (
-                <TableCell key={`${row.houseNe}-${i}`} className={td}>
-                  <PhalaCell text={cell} />
+          {rows.map((row, rowIdx) => {
+            const houseNum = rowIdx + 1;
+            return (
+              <TableRow key={row.houseNe}>
+                <TableCell className={cn(houseTd, "pl-3.5 border-r border-border")}>
+                  {bilingualText(lang, row.houseNe, row.houseEn)}
                 </TableCell>
-              ))}
-            </TableRow>
-          ))}
+                {row.phala.map((cell, i) => {
+                  const grahaId = grahas[i]?.id;
+                  const houseForGraha = (id: string) => chartBhavas?.[id];
+                  const isChartCell =
+                    grahaId != null &&
+                    (grahaId === "rahuKetu"
+                      ? houseForGraha("rahu") === houseNum || houseForGraha("ketu") === houseNum
+                      : houseForGraha(grahaId) === houseNum);
+                  return (
+                    <TableCell
+                      key={`${row.houseNe}-${i}`}
+                      className={cn(
+                        td,
+                        isChartCell && "bg-secondary/15 ring-1 ring-inset ring-secondary/40",
+                      )}
+                    >
+                      <PhalaCell text={cell} />
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
   );
 }
 
-export function JanmaPhalaTables() {
+export function JanmaPhalaTables({
+  tab,
+  onTabChange,
+  chartBhavas,
+}: {
+  tab: TabId;
+  onTabChange: (tab: TabId) => void;
+  /** D1 lagna-anchored bhavas for sun/moon/mars — highlights matching table cells. */
+  chartBhavas?: Partial<Record<string, number>>;
+}) {
   const { t } = useTranslation();
-  const { lang } = useLocale();
-  const [tab, setTab] = useState<TabId>("male");
+  const { lang, digits } = useLocale();
+
+  const hintParts = buildJanmaPhalaHintParts(chartBhavas ?? {}, tab, lang, digits);
 
   return (
     <div className="mt-10 space-y-4 border-t border-border pt-8">
@@ -122,7 +153,7 @@ export function JanmaPhalaTables() {
               "h-8 rounded-md px-3 text-sm font-semibold",
               tab === "male" && "bg-card shadow-sm text-secondary",
             )}
-            onClick={() => setTab("male")}
+            onClick={() => onTabChange("male")}
           >
             {t("kundali.janma_phala_tab_male")}
           </Button>
@@ -136,16 +167,16 @@ export function JanmaPhalaTables() {
               "h-8 rounded-md px-3 text-sm font-semibold",
               tab === "female" && "bg-card shadow-sm text-secondary",
             )}
-            onClick={() => setTab("female")}
+            onClick={() => onTabChange("female")}
           >
             {t("kundali.janma_phala_tab_female")}
           </Button>
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground rounded-lg border border-border/80 bg-muted/20 px-3 py-2">
-        {tab === "male" ? t("kundali.janma_phala_purusha_hint") : t("kundali.janma_phala_stree_hint")}
-      </p>
+      {hintParts.length > 0 ? (
+        <JanmaPhalaChartSummary parts={hintParts} />
+      ) : null}
 
       <p className="text-xs font-medium text-muted-foreground">
         {tab === "male"
@@ -166,12 +197,14 @@ export function JanmaPhalaTables() {
           rows={PURUSHA_JANMA_ROWS}
           grahas={PURUSHA_JANMA_GRAHAS}
           houseColLabel={bilingualText(lang, "भाव", "Bhava")}
+          chartBhavas={chartBhavas}
         />
       ) : (
         <JanmaPhalaTable
           rows={STREI_JANMA_ROWS}
           grahas={STREI_JANMA_GRAHAS}
           houseColLabel={bilingualText(lang, "भाव", "Bhava")}
+          chartBhavas={chartBhavas}
         />
       )}
     </div>

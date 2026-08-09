@@ -43,6 +43,7 @@ const PANCHANGA_LINKS = [
 const JYOTISH_LINKS = [
   { to: "/kundali" as const, labelKey: "nav.jyotish_kundali", icon: Sparkles },
   { to: "/jyotish/kundali-milan" as const, labelKey: "nav.jyotish_kundali_milan", icon: Heart },
+  { to: "/jyotish/rashifal" as const, labelKey: "nav.jyotish_rashifal", icon: Sun },
 ] as const;
 
 const NAV = [{ to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen }] as const;

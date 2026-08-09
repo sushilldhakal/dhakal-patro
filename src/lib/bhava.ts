@@ -29,6 +29,65 @@ export function rashiToHouse(planetRashi: number, lagnaRashi: number): number {
   return ((planetRashi - lagnaRashi + 12) % 12) + 1;
 }
 
+/** D1 whole-sign bhavas from lagna anchor — same source as D1 chart / Bhava table. */
+export function d1LagnaRashi(vargaCharts: {
+  entries: Record<string, { key: string; vargaRashi: number }[]>;
+}): number | undefined {
+  const lagna = vargaCharts.entries["1"]?.find((e) => e.key === "lagna");
+  return lagna?.vargaRashi;
+}
+
+export function d1PlanetBhavas(
+  vargaCharts: { entries: Record<string, { key: string; vargaRashi: number }[]> },
+  planetKeys: string[],
+): Partial<Record<string, number>> {
+  const entries = vargaCharts.entries["1"] ?? [];
+  const lagnaRashi = entries.find((e) => e.key === "lagna")?.vargaRashi;
+  if (lagnaRashi == null) return {};
+  const out: Partial<Record<string, number>> = {};
+  for (const key of planetKeys) {
+    const row = entries.find((e) => e.key === key);
+    if (row?.vargaRashi != null) {
+      out[key] = rashiToHouse(row.vargaRashi, lagnaRashi);
+    }
+  }
+  return out;
+}
+
+/** Nine grahas in standard D1 janma-phala order (excludes lagna). */
+export const D1_JANMA_PHALA_GRAHA_KEYS = [
+  "sun",
+  "moon",
+  "mars",
+  "mercury",
+  "jupiter",
+  "venus",
+  "saturn",
+  "rahu",
+  "ketu",
+] as const;
+
+export function siderealRashiFromLongitude(longitude: number): number {
+  const lon = ((longitude % 360) + 360) % 360;
+  return Math.floor(lon / 30) + 1;
+}
+
+/** All D1 lagna-anchored bhavas for janma-phala (optionally Gulika from upagraha longitude). */
+export function d1AllJanmaPhalaBhavas(
+  vargaCharts: { entries: Record<string, { key: string; vargaRashi: number }[]> },
+  options?: { gulikaLongitude?: number },
+): Partial<Record<string, number>> {
+  const out = d1PlanetBhavas(vargaCharts, [...D1_JANMA_PHALA_GRAHA_KEYS]);
+  const lagnaRashi = d1LagnaRashi(vargaCharts);
+  if (lagnaRashi != null && options?.gulikaLongitude != null) {
+    out.gulika = rashiToHouse(
+      siderealRashiFromLongitude(options.gulikaLongitude),
+      lagnaRashi,
+    );
+  }
+  return out;
+}
+
 export function buildBhavaChart(
   lagnaRashi: number,
   planetRashis: {

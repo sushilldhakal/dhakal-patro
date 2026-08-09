@@ -42,6 +42,7 @@ const Ritu = lazyRoute(() => import("./pages/Ritu"), "Ritu");
 const Kundali = lazyRoute(() => import("./pages/Kundali"), "Kundali");
 const KundaliDetail = lazyRoute(() => import("./pages/KundaliDetail"), "KundaliDetail");
 const KundaliMilan = lazyRoute(() => import("./pages/KundaliMilan"), "KundaliMilan");
+const Rashifal = lazyRoute(() => import("./pages/Rashifal"), "Rashifal");
 const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
@@ -172,6 +173,12 @@ const rituRoute = createRoute({
 const kundaliRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/kundali", component: Kundali });
 const kundaliDetailRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/kundali/$profileId", component: KundaliDetail });
 const kundaliMilanRoute = createRoute({ getParentRoute: () => panchangaShellRoute, path: "/jyotish/kundali-milan", component: KundaliMilan });
+const rashifalRoute = createRoute({
+  getParentRoute: () => panchangaShellRoute,
+  path: "/jyotish/rashifal",
+  validateSearch: validatePanchangaSearch,
+  component: Rashifal,
+});
 const learnRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn", component: Learn });
 const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/$slug", component: LearnArticle });
 const suryakrantiRoute = createRoute({
@@ -282,6 +289,7 @@ const panchangaShellChildRoutes = [
   kundaliRoute,
   kundaliDetailRoute,
   kundaliMilanRoute,
+  rashifalRoute,
   suryakrantiRoute,
   abhijitMuhurtaRoute,
   panchakPatroRoute,

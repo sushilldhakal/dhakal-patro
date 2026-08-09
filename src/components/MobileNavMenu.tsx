@@ -24,6 +24,7 @@ import {
   Sprout,
   Star,
   Sunrise,
+  Sun,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -62,6 +63,7 @@ const JYOTISH_ITEM_ICONS: Record<string, LucideIcon> = {
   abhijit: Sparkles,
   kundali: Sparkles,
   "kundali-milan": Heart,
+  rashifal: Sun,
 };
 
 const SPAN_ITEM_ICONS: Record<string, LucideIcon> = {
@@ -98,7 +100,7 @@ function itemSearch(
   era: ReturnType<typeof useCalendarEra>,
   urlBrowse: { year?: number; month?: number },
 ): Record<string, unknown> | undefined {
-  if (item.id === "kundali" || item.id === "kundali-milan" || item.id === "avakahada" || item.id === "converter") {
+  if (item.id === "kundali" || item.id === "kundali-milan" || item.id === "rashifal" || item.id === "avakahada" || item.id === "converter") {
     return undefined;
   }
   if (item.id === "panchak-patro") {
