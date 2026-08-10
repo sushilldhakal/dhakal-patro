@@ -22,14 +22,20 @@ import {
 } from "@/lib/api";
 
 /**
- * First sentence or so of a prediction, cut on a word boundary — a plain JS
- * truncation rather than `line-clamp`. `-webkit-line-clamp` is a hack (it
- * repurposes multicol layout) that some WebKit/Safari versions size
- * inconsistently inside a flex/grid ancestor, letting the last clipped line
- * crowd or overlap whatever sits right after the paragraph. A short, fixed
- * string has no such failure mode — the footer below it can never move.
+ * Just the prediction's opening sentence — a plain JS truncation rather than
+ * `line-clamp`. `-webkit-line-clamp` is a hack (it repurposes multicol
+ * layout) that some WebKit/Safari versions size inconsistently inside a
+ * flex/grid ancestor, letting the last clipped line crowd or overlap
+ * whatever sits right after the paragraph. A short, fixed string has no such
+ * failure mode — the footer below it can never move. This is a *teaser*, so
+ * one sentence (found at the first Devanagari or Latin sentence terminator)
+ * is enough; `maxLength` only bounds a sentence that never ends.
  */
-function truncateSnippet(text: string, maxLength = 130): string {
+function truncateSnippet(text: string, maxLength = 70): string {
+  const terminatorIndex = text.search(/[।.!?]/);
+  if (terminatorIndex !== -1 && terminatorIndex <= maxLength) {
+    return text.slice(0, terminatorIndex + 1);
+  }
   if (text.length <= maxLength) return text;
   const cut = text.slice(0, maxLength);
   const lastSpace = cut.lastIndexOf(" ");
