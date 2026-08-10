@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Sparkles, Users } from "lucide-react";
+import { Sparkles, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -16,7 +16,7 @@ import { useResolvedPatroDayQuery } from "@/hooks/use-resolved-patro-day-query";
 import { useLocale } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
 import { cn } from "@/lib/utils";
-import { patroAsideTab, patroMobileStepBtn } from "@/lib/patro-classes";
+import { patroAsideTab } from "@/lib/patro-classes";
 import { profileChartParams } from "@/lib/kundali/profile-chart";
 import type { Profile } from "@/lib/auth/client";
 import {
@@ -173,6 +173,18 @@ export function Rashifal() {
           todayAd={todayAd}
           location={location}
           onLocationChange={setLocation}
+          // Weekly/monthly/yearly: the same header nav shows the window's own
+          // range instead of a single day, and its prev/next step a whole
+          // window at once — one date nav, not a second one bolted on below.
+          subtitleOverride={period !== "daily" ? rangeLabel : undefined}
+          stepOverride={
+            period !== "daily"
+              ? {
+                  onPrev: () => setDate(rashifalStepDate(windowSource, period, date, -1)),
+                  onNext: () => setDate(rashifalStepDate(windowSource, period, date, 1)),
+                }
+              : undefined
+          }
         />
       </div>
 
@@ -210,34 +222,6 @@ export function Rashifal() {
           );
         })}
       </div>
-
-      {/* Range strip — the window this tab is actually reading, with prev/next
-          that step by a whole window (day / week / BS month / BS year) rather
-          than by the shared date-nav's single civil day, which for a week or a
-          month usually leaves the window unchanged. */}
-      {period !== "daily" ? (
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <button
-            type="button"
-            className={patroMobileStepBtn}
-            aria-label={t("rashifal.range_prev")}
-            onClick={() => setDate(rashifalStepDate(windowSource, period, date, -1))}
-          >
-            <ChevronLeft size={15} strokeWidth={2} />
-          </button>
-          <span className="min-w-0 truncate text-center text-sm font-semibold text-foreground">
-            {rangeLabel ?? t("common.loading")}
-          </span>
-          <button
-            type="button"
-            className={patroMobileStepBtn}
-            aria-label={t("rashifal.range_next")}
-            onClick={() => setDate(rashifalStepDate(windowSource, period, date, 1))}
-          >
-            <ChevronRight size={15} strokeWidth={2} />
-          </button>
-        </div>
-      ) : null}
 
       {/* Signed-in users can narrow the grid to their own saved profile. */}
       <div className="mt-3 flex flex-col items-center gap-1.5">
