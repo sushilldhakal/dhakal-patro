@@ -1961,6 +1961,7 @@
     "general_eyebrow": "The sign the Sun is in this month",
     "see_daily": "Daily rashifal",
     "see_full": "Full rashifal",
-    "see_yours": "See your rashifal"
+    "see_yours": "See your rashifal",
+    "carousel_hint": "Swipe or pick a rashi — four cards visible on wide screens."
   }
 }

@@ -637,7 +637,7 @@ export function Home() {
         }
         holidays={
           <section className="col-span-full mt-2 max-sm:px-2.5">
-            <HomeRashifalTeaser location={location} todayAd={todayAd} />
+            <HomeRashifalTeaser location={location} dayState={asideDayState} />
             <div className="mt-8">
               <HomeQuickLinks location={location} />
             </div>
