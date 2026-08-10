@@ -401,8 +401,8 @@
     "range_prev": "Previous period",
     "range_next": "Next period",
     "profile": {
-      "label": "Profile",
-      "sign_in": "Sign in to see your birth chart reading",
+      "label": "Rashifal from your birth chart",
+      "sign_in": "Sign in to see rashifal from your birth chart",
       "no_profiles": "No saved profiles — add one on your account page.",
       "loading": "Loading…",
       "all_signs": "All signs",

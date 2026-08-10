@@ -54,6 +54,20 @@ export type PatroDayTimeNavProps = {
   mobileToolbar?: ReactNode;
   mobileToolbarLower?: ReactNode;
   className?: string;
+  /**
+   * Replaces the computed single-day subtitle (normally "११ अगस्त २०२६") with
+   * a caller-supplied string — a week/month/year range, for pages whose
+   * "day" concept is really a window. `BsHeadline`'s own `gregorian` slot is
+   * already documented as a "date / range" subtitle, so this needs no change
+   * to the rendering underneath, only to what text reaches it.
+   */
+  subtitleOverride?: string;
+  /**
+   * Replaces prev/next's single-civil-day step with caller-supplied handlers
+   * — e.g. stepping a whole week/BS-month/BS-year at once. Leaves every other
+   * page's day-stepping untouched; only a caller that passes this opts in.
+   */
+  stepOverride?: { onPrev: () => void; onNext: () => void };
 };
 
 /** Map legacy UI default (language-only) to full {@link Era}. */
@@ -85,6 +99,8 @@ export function PatroDayTimeNav({
   mobileToolbar,
   mobileToolbarLower,
   className,
+  subtitleOverride,
+  stepOverride,
 }: PatroDayTimeNavProps) {
   const { t } = useTranslation();
   const { lang, digits } = usePatroDisplayLocale(displayLanguage);
@@ -239,7 +255,7 @@ export function PatroDayTimeNav({
         <PatroDateNavCore
           era={era}
           vikramEra={headlineVikramEra}
-          crossEraSubtitle={crossEraSubtitle}
+          crossEraSubtitle={subtitleOverride ?? crossEraSubtitle}
           displayLanguage={displayLanguage}
           year={navYear}
           month={navMonth}
@@ -260,17 +276,21 @@ export function PatroDayTimeNav({
           onCommitBrowseDay={onEraChange ? commitBrowseDay : undefined}
           monthAriaLabel={t("calendar.month_aria")}
           yearAriaLabel={t("calendar.year_aria")}
-          onPrev={() => stepDay(-1)}
-          onNext={() => stepDay(1)}
+          onPrev={stepOverride?.onPrev ?? (() => stepDay(-1))}
+          onNext={stepOverride?.onNext ?? (() => stepDay(1))}
           prevDisabled={
-            isGregorian
-              ? isAtMinAdDay(navYear, navMonth, navDay)
-              : isAtMinBsDay(signedNavYear, navMonth, navDay)
+            stepOverride
+              ? false
+              : isGregorian
+                ? isAtMinAdDay(navYear, navMonth, navDay)
+                : isAtMinBsDay(signedNavYear, navMonth, navDay)
           }
           nextDisabled={
-            isGregorian
-              ? isAtMaxAdDay(navYear, navMonth, navDay)
-              : isAtMaxBsDay(signedNavYear, navMonth, navDay)
+            stepOverride
+              ? false
+              : isGregorian
+                ? isAtMaxAdDay(navYear, navMonth, navDay)
+                : isAtMaxBsDay(signedNavYear, navMonth, navDay)
           }
           prevAriaLabel={t("calendar.prev_day")}
           nextAriaLabel={t("calendar.next_day")}

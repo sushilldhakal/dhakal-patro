@@ -22,6 +22,21 @@ import {
 } from "@/lib/api";
 
 /**
+ * First sentence or so of a prediction, cut on a word boundary — a plain JS
+ * truncation rather than `line-clamp`. `-webkit-line-clamp` is a hack (it
+ * repurposes multicol layout) that some WebKit/Safari versions size
+ * inconsistently inside a flex/grid ancestor, letting the last clipped line
+ * crowd or overlap whatever sits right after the paragraph. A short, fixed
+ * string has no such failure mode — the footer below it can never move.
+ */
+function truncateSnippet(text: string, maxLength = 130): string {
+  if (text.length <= maxLength) return text;
+  const cut = text.slice(0, maxLength);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${cut.slice(0, lastSpace > 40 ? lastSpace : maxLength).trimEnd()}…`;
+}
+
+/**
  * Bare-minimum shared shape the card reads — either a general sign card
  * (Sun's current rashi) or a personal reading, normalised to one view.
  *
@@ -56,7 +71,7 @@ function fromPersonal(name: string, p: RashifalPersonal, lang: string): TeaserCo
     glyphId: p.moon_sign,
     score: p.percent,
     tone: p.tone,
-    prediction: ne ? p.prediction_ne : p.prediction_en,
+    prediction: truncateSnippet(ne ? p.prediction_ne : p.prediction_en),
     headline: moonName,
     subLabel: ne ? `लग्न ${lagnaName}` : `Lagna ${lagnaName}`,
   };
@@ -71,7 +86,7 @@ function fromGeneral(sign: RashifalSignBlock, lang: string): TeaserContent {
     glyphId: sign.id,
     score: sign.percent,
     tone: sign.tone,
-    prediction: ne ? sign.prediction_ne : sign.prediction_en,
+    prediction: truncateSnippet(ne ? sign.prediction_ne : sign.prediction_en),
     headline: ne ? sign.name : sign.title_en,
   };
 }
@@ -219,7 +234,7 @@ export function HomeRashifalTeaser({
               </span>
             </div>
 
-            <p className="m-0 line-clamp-3 px-4 py-3 text-sm leading-relaxed text-foreground/90">
+            <p className="m-0 px-4 py-3 text-sm leading-relaxed text-foreground/90">
               {content.prediction}
             </p>
 
