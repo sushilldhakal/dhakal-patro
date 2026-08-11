@@ -955,7 +955,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "solar-vs-lunar-calendar",
     section: "comparison",
-    status: "planned",
+    status: "published",
     icon: SunMoon,
     title: { ne: "सौर पात्रो vs चान्द्र पात्रो", en: "Solar Calendar vs Lunar Calendar" },
     summary: {
@@ -966,7 +966,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "sidereal-vs-tropical-year",
     section: "comparison",
-    status: "planned",
+    status: "published",
     icon: Ruler,
     title: { ne: "नाक्षत्र वर्ष vs सायन वर्ष", en: "Sidereal Year vs Tropical Year" },
     summary: {
@@ -977,7 +977,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "leap-years",
     section: "comparison",
-    status: "planned",
+    status: "published",
     icon: CalendarRange,
     title: { ne: "लीप वर्ष किन चाहिन्छ", en: "Why Leap Years Exist" },
     summary: {
@@ -988,7 +988,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calendar-drift",
     section: "comparison",
-    status: "planned",
+    status: "published",
     icon: TrendingUp,
     title: { ne: "पात्रोको मिति बिस्तारै किन सर्छ", en: "Why Calendar Dates Slowly Drift" },
     summary: {
@@ -999,7 +999,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calendars-aligned-with-nature",
     section: "comparison",
-    status: "planned",
+    status: "published",
     icon: Milestone,
     title: { ne: "पात्रो प्रकृतिसँग कसरी मिलिरहन्छ", en: "How Calendars Stay Aligned With Nature" },
     summary: {
@@ -1010,7 +1010,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "ancient-calendars",
     section: "comparison",
-    status: "planned",
+    status: "published",
     icon: Landmark,
     title: { ne: "प्राचीन पात्रोले समय कसरी नाप्थे", en: "How Ancient Calendars Measured Time" },
     summary: {
@@ -1035,7 +1035,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "ancient-planetary-motion",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Orbit,
     title: { ne: "प्राचीन ज्योतिषीले ग्रह गति कसरी वर्णन गर्थे", en: "How Ancient Astronomers Described Planetary Motion" },
     summary: {
@@ -1046,7 +1046,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "mean-vs-true-motion",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Gauge,
     title: { ne: "मध्यम गति र स्पष्ट गति", en: "Mean Motion vs True Motion" },
     summary: {
@@ -1057,7 +1057,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "retrograde-motion",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Repeat,
     title: { ne: "वक्री गति", en: "Retrograde Motion Explained" },
     summary: {
@@ -1068,7 +1068,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "geocentric-heliocentric",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Network,
     title: { ne: "भूकेन्द्रित र सूर्यकेन्द्रित दृष्टिकोण", en: "Geocentric vs Heliocentric Views" },
     summary: {
@@ -1079,7 +1079,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "celestial-sphere",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Globe,
     title: { ne: "खगोलीय गोला", en: "The Celestial Sphere" },
     summary: {
@@ -1090,7 +1090,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "ecliptic",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Spline,
     title: { ne: "क्रान्तिवृत्त", en: "The Ecliptic" },
     summary: {
@@ -1101,7 +1101,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "celestial-equator",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Scale,
     title: { ne: "खगोलीय विषुवत् रेखा", en: "The Celestial Equator" },
     summary: {
@@ -1112,7 +1112,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "right-ascension",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Pi,
     title: { ne: "विषुवांश (Right Ascension)", en: "Right Ascension" },
     summary: {
@@ -1123,7 +1123,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "zodiac-belt",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Grid2x2,
     title: { ne: "राशि पट्टी", en: "The Zodiac Belt" },
     summary: {
@@ -1134,7 +1134,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "sky-rotation",
     section: "deeper",
-    status: "planned",
+    status: "published",
     icon: Route,
     title: { ne: "पृथ्वीबाट आकाश कसरी घुमेको देखिन्छ", en: "How the Sky Appears to Rotate From Earth" },
     summary: {

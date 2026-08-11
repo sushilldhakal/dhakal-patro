@@ -57,6 +57,24 @@ import { calcYoga } from "./calculation/calc-yoga";
 import { locationDifferentResults } from "./calculation/location-different-results";
 import { timeScales } from "./calculation/time-scales";
 
+import { ancientCalendars } from "./comparison/ancient-calendars";
+import { calendarDrift } from "./comparison/calendar-drift";
+import { calendarsAlignedWithNature } from "./comparison/calendars-aligned-with-nature";
+import { leapYears } from "./comparison/leap-years";
+import { siderealVsTropicalYear } from "./comparison/sidereal-vs-tropical-year";
+import { solarVsLunarCalendar } from "./comparison/solar-vs-lunar-calendar";
+
+import { ancientPlanetaryMotion } from "./deeper/ancient-planetary-motion";
+import { celestialEquator } from "./deeper/celestial-equator";
+import { celestialSphere } from "./deeper/celestial-sphere";
+import { ecliptic } from "./deeper/ecliptic";
+import { geocentricHeliocentric } from "./deeper/geocentric-heliocentric";
+import { meanVsTrueMotion } from "./deeper/mean-vs-true-motion";
+import { retrogradeMotion } from "./deeper/retrograde-motion";
+import { rightAscension } from "./deeper/right-ascension";
+import { skyRotation } from "./deeper/sky-rotation";
+import { zodiacBelt } from "./deeper/zodiac-belt";
+
 /**
  * Every data-driven article body, keyed by slug.
  *
@@ -128,6 +146,26 @@ const ALL: ArticleData[] = [
   calcMoonrise,
   locationDifferentResults,
   timeScales,
+
+  /* Calendar comparison */
+  solarVsLunarCalendar,
+  siderealVsTropicalYear,
+  leapYears,
+  calendarDrift,
+  calendarsAlignedWithNature,
+  ancientCalendars,
+
+  /* Deeper knowledge */
+  ancientPlanetaryMotion,
+  meanVsTrueMotion,
+  retrogradeMotion,
+  geocentricHeliocentric,
+  celestialSphere,
+  ecliptic,
+  celestialEquator,
+  rightAscension,
+  zodiacBelt,
+  skyRotation,
 ];
 
 export const DATA_ARTICLES: Record<string, ArticleData | undefined> = Object.fromEntries(
