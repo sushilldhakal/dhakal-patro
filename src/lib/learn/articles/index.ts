@@ -9,6 +9,24 @@ import { sauramana } from "./foundation/sauramana";
 import { whyLocationMatters } from "./foundation/why-location-matters";
 import { yearBeginsBaisakh } from "./foundation/year-begins-baisakh";
 
+import { amavasyaPurnima } from "./moon/amavasya-purnima";
+import { kshayaMaas } from "./moon/kshaya-maas";
+import { lunarMonth } from "./moon/lunar-month";
+import { lunarSolarDrift } from "./moon/lunar-solar-drift";
+import { moonLunarCalendar } from "./moon/moon-lunar-calendar";
+import { shuklaKrishnaPaksha } from "./moon/shukla-krishna-paksha";
+import { tithiNot24Hours } from "./moon/tithi-not-24-hours";
+
+import { karkaSankranti } from "./sun/karka-sankranti";
+import { makaraSankranti } from "./sun/makara-sankranti";
+import { meshaSankranti } from "./sun/mesha-sankranti";
+import { rashi } from "./sun/rashi";
+import { sankrantiVsSolstice } from "./sun/sankranti-vs-solstice";
+import { siderealVsTropical } from "./sun/sidereal-vs-tropical";
+import { solarYear } from "./sun/solar-year";
+import { twelveRashis } from "./sun/twelve-rashis";
+import { uttarayanaDakshinayana } from "./sun/uttarayana-dakshinayana";
+
 /**
  * Every data-driven article body, keyed by slug.
  *
@@ -26,6 +44,26 @@ const ALL: ArticleData[] = [
   sauramana,
   chandramana,
   whyLocationMatters,
+
+  /* The Moon */
+  tithiNot24Hours,
+  shuklaKrishnaPaksha,
+  amavasyaPurnima,
+  lunarMonth,
+  moonLunarCalendar,
+  lunarSolarDrift,
+  kshayaMaas,
+
+  /* The Sun */
+  solarYear,
+  rashi,
+  twelveRashis,
+  meshaSankranti,
+  makaraSankranti,
+  karkaSankranti,
+  uttarayanaDakshinayana,
+  sankrantiVsSolstice,
+  siderealVsTropical,
 ];
 
 export const DATA_ARTICLES: Record<string, ArticleData | undefined> = Object.fromEntries(

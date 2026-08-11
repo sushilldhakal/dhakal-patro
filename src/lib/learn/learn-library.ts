@@ -305,7 +305,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "solar-year",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: Orbit,
     title: { ne: "सूर्यले सौर वर्ष कसरी तय गर्छ", en: "How the Sun Defines the Solar Year" },
     summary: {
@@ -316,7 +316,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "rashi",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: CircleDot,
     title: { ne: "राशि के हो", en: "What Is a Rashi?" },
     summary: {
@@ -327,7 +327,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "twelve-rashis",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: Grid2x2,
     title: { ne: "बाह्र राशिको परिचय", en: "The 12 Rashis Explained" },
     summary: {
@@ -349,7 +349,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "mesha-sankranti",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: Sunrise,
     title: { ne: "मेष सङ्क्रान्ति र बैशाखको आरम्भ", en: "Mesha Sankranti and the Start of Baisakh" },
     summary: {
@@ -360,7 +360,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "makara-sankranti",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: Snowflake,
     title: { ne: "मकर सङ्क्रान्ति", en: "Makara Sankranti Explained" },
     summary: {
@@ -371,7 +371,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "karka-sankranti",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: Thermometer,
     title: { ne: "कर्क सङ्क्रान्ति", en: "Karka Sankranti Explained" },
     summary: {
@@ -382,7 +382,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "uttarayana-dakshinayana",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: TrendingUp,
     title: { ne: "उत्तरायण र दक्षिणायन", en: "Uttarāyaṇa and Dakṣiṇāyana" },
     summary: {
@@ -393,7 +393,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "sankranti-vs-solstice",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: Split,
     title: { ne: "सङ्क्रान्ति र अयनान्त — फरक के?", en: "Sankranti vs Solstice" },
     summary: {
@@ -404,7 +404,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "sidereal-vs-tropical",
     section: "sun",
-    status: "planned",
+    status: "published",
     icon: Compass,
     title: { ne: "निरयन र सायन राशिचक्र", en: "Sidereal vs Tropical Zodiac" },
     summary: {
@@ -450,7 +450,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "tithi-not-24-hours",
     section: "moon",
-    status: "planned",
+    status: "published",
     icon: Hourglass,
     title: { ne: "तिथि २४ घण्टाको किन हुँदैन", en: "Why a Tithi Is Not 24 Hours" },
     summary: {
@@ -483,7 +483,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "shukla-krishna-paksha",
     section: "moon",
-    status: "planned",
+    status: "published",
     icon: SunMoon,
     title: { ne: "शुक्ल र कृष्ण पक्ष", en: "Shukla Paksha and Krishna Paksha" },
     summary: {
@@ -494,7 +494,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "amavasya-purnima",
     section: "moon",
-    status: "planned",
+    status: "published",
     icon: CircleDot,
     title: { ne: "औंसी र पूर्णिमा", en: "Amāvasyā and Pūrṇimā" },
     summary: {
@@ -505,7 +505,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "lunar-month",
     section: "moon",
-    status: "planned",
+    status: "published",
     icon: CalendarClock,
     title: { ne: "चान्द्र मास के हो", en: "What Is a Lunar Month?" },
     summary: {
@@ -516,7 +516,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "moon-lunar-calendar",
     section: "moon",
-    status: "planned",
+    status: "published",
     icon: Moon,
     title: { ne: "चन्द्रले चान्द्र पात्रो कसरी बनाउँछ", en: "How the Moon Creates the Lunar Calendar" },
     summary: {
@@ -527,7 +527,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "lunar-solar-drift",
     section: "moon",
-    status: "planned",
+    status: "published",
     icon: Split,
     title: { ne: "चान्द्र र सौर पात्रो किन छुट्टिन्छन्", en: "Why Lunar and Solar Calendars Drift Apart" },
     summary: {
@@ -549,7 +549,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "kshaya-maas",
     section: "moon",
-    status: "planned",
+    status: "published",
     icon: Scissors,
     title: { ne: "क्षय मास — घट्ने महिना", en: "Kṣaya Māsa — When a Lunar Month Is Skipped" },
     summary: {
