@@ -18,6 +18,8 @@ import {
   RituDrift,
 } from "./learn-articles";
 import { HowWeCalculateArticle } from "@/components/learn/HowWeCalculateStudy";
+import { ArticleBody } from "./article-render";
+import { DATA_ARTICLES } from "./articles";
 import {
   adjacentTopicMetas,
   LEARN_CATEGORIES,
@@ -39,7 +41,14 @@ export interface LearnTopic extends LearnTopicMeta {
   Content: () => React.ReactNode;
 }
 
-const CONTENT_BY_SLUG: Record<string, () => React.ReactNode> = {
+/**
+ * Article bodies still written as React components.
+ *
+ * New articles should be data (see `articles/`); these predate that format and
+ * keep working unchanged. A slug found here wins over a data article, so a
+ * conversion is: add the data file, delete the entry here.
+ */
+const COMPONENT_CONTENT_BY_SLUG: Record<string, () => React.ReactNode> = {
   "astronomy-basics": AstronomyBasics,
   "solar-system": SolarSystem,
   "bs-calendar": BsCalendar,
@@ -60,9 +69,19 @@ const CONTENT_BY_SLUG: Record<string, () => React.ReactNode> = {
   "how-we-calculate": HowWeCalculateArticle,
 };
 
+function contentForSlug(slug: string): () => React.ReactNode {
+  const component = COMPONENT_CONTENT_BY_SLUG[slug];
+  if (component) return component;
+
+  const data = DATA_ARTICLES[slug];
+  if (data) return () => <ArticleBody article={data} />;
+
+  return () => null;
+}
+
 export const LEARN_TOPICS: LearnTopic[] = LEARN_TOPIC_METAS.map((meta) => ({
   ...meta,
-  Content: CONTENT_BY_SLUG[meta.slug] ?? (() => null),
+  Content: contentForSlug(meta.slug),
 }));
 
 export const LEARN_TOPICS_BY_SLUG: Record<string, LearnTopic> = Object.fromEntries(

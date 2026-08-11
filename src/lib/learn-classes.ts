@@ -69,6 +69,49 @@ export const tmKey = cn(
 export const tmNote =
   "mx-auto mt-8 max-w-[720px] text-center text-sm leading-relaxed text-[var(--tm-ink-faint)]";
 
+/* ── Data-driven article blocks (see lib/learn/article-render.tsx) ── */
+
+/** Body paragraph — `tmLede` without its leading emphasis on first-line size. */
+export const tmPara =
+  "mt-4 max-w-[760px] text-pretty text-base leading-relaxed text-[var(--tm-ink-dim)]";
+
+/** Inline emphasis spans produced by the article inline-markup parser. */
+export const tmInkStrong = "font-semibold text-[var(--tm-ink)]";
+export const tmInkTeal = "font-semibold text-[var(--tm-teal)]";
+export const tmInkAmber = "font-semibold text-[var(--tm-amber)]";
+export const tmInkNum =
+  "font-num tabular-nums text-[0.95em] text-[var(--tm-ink)]";
+
+export const tmFigure = cn(
+  "mt-5 overflow-x-auto rounded-[14px] border border-[var(--tm-border)] bg-[var(--tm-card)] p-4 shadow-xs [-webkit-overflow-scrolling:touch]",
+  "dark:shadow-[0_18px_50px_rgba(0,0,0,0.4)]",
+);
+
+/**
+ * ASCII figures need a genuinely fixed-width font for their box-drawing rules
+ * to line up — `font-num` is tabular-numeral, not monospace, and lets the
+ * vertical bars wander. The stack leads with fonts that actually carry the
+ * box-drawing block so those glyphs are not substituted from a proportional
+ * fallback (which would break the alignment again).
+ */
+export const tmFigurePre =
+  "m-0 whitespace-pre text-xs leading-[1.7] text-[var(--tm-ink-dim)] [font-family:'DejaVu_Sans_Mono','Liberation_Mono','Menlo','Consolas',ui-monospace,monospace] sm:text-sm";
+
+export const tmList =
+  "mt-4 max-w-[760px] space-y-2 pl-1 text-base leading-relaxed text-[var(--tm-ink-dim)]";
+
+export const tmListItem = "flex gap-2.5";
+
+export const tmListMarker =
+  "mt-[0.15em] shrink-0 font-num text-sm font-semibold text-[var(--tm-amber)]";
+
+/** "See also" strip at the foot of an article. */
+export const tmSeeAlso =
+  "mt-12 grid gap-2.5 border-t border-[var(--tm-border)] pt-6 sm:grid-cols-2";
+
+export const tmSeeAlsoItem =
+  "group flex items-center gap-2.5 rounded-xl border border-[var(--tm-border)] bg-[var(--tm-card)] px-4 py-3 text-sm font-semibold text-[var(--tm-ink)] transition-colors hover:border-[var(--tm-teal)]";
+
 export const motSliderRow = "flex w-full flex-col gap-1.5";
 
 export const motSliderLabel =
