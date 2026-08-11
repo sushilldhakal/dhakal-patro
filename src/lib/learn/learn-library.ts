@@ -832,7 +832,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-sunrise",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Sunrise,
     title: { ne: "सूर्योदय कसरी गणना हुन्छ", en: "How Sunrise Is Calculated" },
     summary: {
@@ -843,7 +843,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-sunset",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Sunset,
     title: { ne: "सूर्यास्त कसरी गणना हुन्छ", en: "How Sunset Is Calculated" },
     summary: {
@@ -854,7 +854,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-sankranti",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Sun,
     title: { ne: "सङ्क्रान्ति कसरी गणना हुन्छ", en: "How Sankranti Is Calculated" },
     summary: {
@@ -865,7 +865,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-tithi",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Sigma,
     title: { ne: "तिथि कसरी गणना हुन्छ (सूत्र)", en: "How Tithi Is Computed (Formula)" },
     summary: {
@@ -876,7 +876,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-nakshatra",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Star,
     title: { ne: "नक्षत्र कसरी गणना हुन्छ", en: "How Nakshatra Is Calculated" },
     summary: {
@@ -887,7 +887,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-yoga",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Spline,
     title: { ne: "योग कसरी गणना हुन्छ", en: "How Yoga Is Calculated" },
     summary: {
@@ -898,7 +898,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-karana",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Scissors,
     title: { ne: "करण कसरी गणना हुन्छ", en: "How Karana Is Calculated" },
     summary: {
@@ -909,7 +909,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "calc-moonrise",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Moon,
     title: { ne: "चन्द्रोदय र चन्द्रास्त कसरी गणना हुन्छ", en: "How Moonrise and Moonset Are Calculated" },
     summary: {
@@ -920,7 +920,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "location-different-results",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Map,
     title: { ne: "दुई स्थानमा पञ्चाङ्ग किन फरक हुन्छ", en: "Why Two Locations Differ" },
     summary: {
@@ -931,7 +931,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "time-scales",
     section: "calculation",
-    status: "planned",
+    status: "published",
     icon: Gauge,
     title: { ne: "गणनालाई शुद्ध काल मापन किन चाहिन्छ", en: "Why Calculations Need a Precise Time Scale" },
     summary: {

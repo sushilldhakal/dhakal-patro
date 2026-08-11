@@ -46,6 +46,17 @@ import { solarLongitude } from "./astronomy/solar-longitude";
 import { solstices } from "./astronomy/solstices";
 import { whySeasons } from "./astronomy/why-seasons";
 
+import { calcKarana } from "./calculation/calc-karana";
+import { calcMoonrise } from "./calculation/calc-moonrise";
+import { calcNakshatra } from "./calculation/calc-nakshatra";
+import { calcSankranti } from "./calculation/calc-sankranti";
+import { calcSunrise } from "./calculation/calc-sunrise";
+import { calcSunset } from "./calculation/calc-sunset";
+import { calcTithi } from "./calculation/calc-tithi";
+import { calcYoga } from "./calculation/calc-yoga";
+import { locationDifferentResults } from "./calculation/location-different-results";
+import { timeScales } from "./calculation/time-scales";
+
 /**
  * Every data-driven article body, keyed by slug.
  *
@@ -105,6 +116,18 @@ const ALL: ArticleData[] = [
   solarLongitude,
   lunarLongitude,
   declination,
+
+  /* How a date is calculated */
+  calcSunrise,
+  calcSunset,
+  calcSankranti,
+  calcTithi,
+  calcNakshatra,
+  calcYoga,
+  calcKarana,
+  calcMoonrise,
+  locationDifferentResults,
+  timeScales,
 ];
 
 export const DATA_ARTICLES: Record<string, ArticleData | undefined> = Object.fromEntries(
