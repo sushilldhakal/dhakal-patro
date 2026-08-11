@@ -27,6 +27,25 @@ import { solarYear } from "./sun/solar-year";
 import { twelveRashis } from "./sun/twelve-rashis";
 import { uttarayanaDakshinayana } from "./sun/uttarayana-dakshinayana";
 
+import { fiveLimbsTogether } from "./five-limbs/five-limbs-together";
+import { vara } from "./five-limbs/vara";
+
+import { eclipseSeasons } from "./eclipses/eclipse-seasons";
+import { rahuKetuNodes } from "./eclipses/rahu-ketu-nodes";
+
+import { ancientSky } from "./astronomy/ancient-sky";
+import { axialTilt } from "./astronomy/axial-tilt";
+import { declination } from "./astronomy/declination";
+import { earthRotationDay } from "./astronomy/earth-rotation-day";
+import { equinoxes } from "./astronomy/equinoxes";
+import { lunarLongitude } from "./astronomy/lunar-longitude";
+import { poleStarChanges } from "./astronomy/pole-star-changes";
+import { precession } from "./astronomy/precession";
+import { siderealTime } from "./astronomy/sidereal-time";
+import { solarLongitude } from "./astronomy/solar-longitude";
+import { solstices } from "./astronomy/solstices";
+import { whySeasons } from "./astronomy/why-seasons";
+
 /**
  * Every data-driven article body, keyed by slug.
  *
@@ -64,6 +83,28 @@ const ALL: ArticleData[] = [
   uttarayanaDakshinayana,
   sankrantiVsSolstice,
   siderealVsTropical,
+
+  /* The Five Limbs */
+  vara,
+  fiveLimbsTogether,
+
+  /* Eclipses */
+  rahuKetuNodes,
+  eclipseSeasons,
+
+  /* Astronomy behind the calendar */
+  earthRotationDay,
+  axialTilt,
+  whySeasons,
+  equinoxes,
+  solstices,
+  precession,
+  poleStarChanges,
+  ancientSky,
+  siderealTime,
+  solarLongitude,
+  lunarLongitude,
+  declination,
 ];
 
 export const DATA_ARTICLES: Record<string, ArticleData | undefined> = Object.fromEntries(

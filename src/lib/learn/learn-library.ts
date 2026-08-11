@@ -562,7 +562,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "vara",
     section: "five-limbs",
-    status: "planned",
+    status: "published",
     icon: CalendarDays,
     title: { ne: "वार", en: "Vāra — The Weekday" },
     summary: {
@@ -617,7 +617,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "five-limbs-together",
     section: "five-limbs",
-    status: "planned",
+    status: "published",
     icon: Workflow,
     title: { ne: "पाँच अङ्ग सँगै कसरी काम गर्छन्", en: "How the Five Elements Work Together" },
     summary: {
@@ -641,7 +641,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "earth-rotation-day",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: RotateCw,
     title: { ne: "पृथ्वीको घुर्णन र दिनको लम्बाइ", en: "Earth's Rotation and the Length of a Day" },
     summary: {
@@ -663,7 +663,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "axial-tilt",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Axis3d,
     title: { ne: "पृथ्वीको २३.४४° अक्ष झुकाव", en: "Earth's 23.44° Axial Tilt" },
     summary: {
@@ -674,7 +674,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "why-seasons",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: CloudSun,
     title: { ne: "ऋतु किन हुन्छन्", en: "Why Seasons Occur" },
     summary: {
@@ -685,7 +685,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "equinoxes",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Scale,
     title: { ne: "विषुव", en: "Equinoxes Explained" },
     summary: {
@@ -696,7 +696,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "solstices",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Flame,
     title: { ne: "अयनान्त", en: "Solstices Explained" },
     summary: {
@@ -707,7 +707,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "precession",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Rotate3d,
     title: { ne: "पृथ्वीको अक्षको अयन चलन", en: "Precession of Earth's Axis" },
     summary: {
@@ -718,7 +718,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "pole-star-changes",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Star,
     title: { ne: "ध्रुव तारा किन फेरिन्छ", en: "Why the Pole Star Changes" },
     summary: {
@@ -729,7 +729,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "ancient-sky",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Landmark,
     title: { ne: "प्राचीन आकाश कस्तो देखिन्थ्यो", en: "How the Ancient Sky Looked Different" },
     summary: {
@@ -740,7 +740,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "sidereal-time",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Timer,
     title: { ne: "नाक्षत्र काल", en: "Sidereal Time" },
     summary: {
@@ -751,7 +751,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "solar-longitude",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Navigation,
     title: { ne: "सूर्यको देशान्तर", en: "Solar Longitude" },
     summary: {
@@ -762,7 +762,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "lunar-longitude",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Locate,
     title: { ne: "चन्द्रको देशान्तर", en: "Lunar Longitude" },
     summary: {
@@ -773,7 +773,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "declination",
     section: "astronomy",
-    status: "planned",
+    status: "published",
     icon: Crosshair,
     title: { ne: "क्रान्ति र सूर्यको उत्तर–दक्षिण गति", en: "Declination and the Sun's North–South Motion" },
     summary: {
@@ -797,7 +797,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "rahu-ketu-nodes",
     section: "eclipses",
-    status: "planned",
+    status: "published",
     icon: Aperture,
     title: { ne: "राहु–केतु र पात रेखा", en: "Rahu–Ketu and the Node Line" },
     summary: {
@@ -808,7 +808,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   {
     slug: "eclipse-seasons",
     section: "eclipses",
-    status: "planned",
+    status: "published",
     icon: Radar,
     title: { ne: "ग्रहण ऋतु र चक्र", en: "Eclipse Seasons and Cycles" },
     summary: {
