@@ -1136,7 +1136,8 @@
     "read_start": "Start reading",
     "read_detail": "Read in full",
     "articles_count": "{{count}} articles",
-    "suggested_path_sub": "Suggested path"
+    "suggested_path_sub": "Suggested path",
+    "more_coming": "{{count}} more being written"
   },
   "avakahada": {
     "title": "Avakahada Chakra",

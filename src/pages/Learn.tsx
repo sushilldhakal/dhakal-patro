@@ -3,21 +3,14 @@ import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { learnHero, learnStatPill } from "@/lib/learn-classes";
 import { Link } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
   ArrowRight,
   Search,
   Sparkles,
-  Orbit,
-  CalendarRange,
-  ScrollText,
-  Moon,
-  Compass,
   X,
   GraduationCap,
   Layers3,
-  History as HistoryIcon,
 } from "lucide-react";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
@@ -30,52 +23,70 @@ import {
   type LearnCategory,
   type LearnTopic,
 } from "@/lib/learn/learn-topics";
+import { LEARN_SECTIONS_BY_ID, plannedInSection } from "@/lib/learn/learn-library";
 
-const FEATURED_SLUGS = ["what-is-panchang", "tithi", "solar-system"] as const;
+const FEATURED_SLUGS = ["nepali-calendar-basics", "what-is-panchang", "tithi"] as const;
 
+/** The intended entry path: calendar → era → panchanga → tithi. */
 const STARTER_PATH_SLUGS = [
-  "astronomy-basics",
-  "solar-system",
+  "nepali-calendar-basics",
+  "bikram-sambat",
+  "year-begins-baisakh",
   "what-is-panchang",
-  "tithi",
-  "nakshatra",
 ] as const;
 
-const CATEGORY_META: Record<
-  string,
-  { icon: LucideIcon; chip: string; ring: string }
-> = {
-  astronomy: {
-    icon: Orbit,
-    chip: "bg-sky-500/10 text-sky-800 border-sky-500/25 dark:text-sky-200",
-    ring: "group-hover:ring-sky-500/25",
+/**
+ * Accent colours per library section. Icons come from the library itself, so
+ * adding a section there only needs a palette entry here — and falls back to
+ * neutral styling if it does not get one.
+ */
+const SECTION_STYLE: Record<string, { chip: string; ring: string }> = {
+  foundation: {
+    chip: "bg-emerald-500/10 text-emerald-900 border-emerald-500/25 dark:text-emerald-200",
+    ring: "group-hover:ring-emerald-500/25",
   },
-  calendars: {
-    icon: CalendarRange,
+  sun: {
     chip: "bg-amber-500/10 text-amber-900 border-amber-500/25 dark:text-amber-200",
     ring: "group-hover:ring-amber-500/25",
   },
-  panchanga: {
-    icon: ScrollText,
+  moon: {
+    chip: "bg-sky-500/10 text-sky-800 border-sky-500/25 dark:text-sky-200",
+    ring: "group-hover:ring-sky-500/25",
+  },
+  "five-limbs": {
     chip: "bg-teal-500/10 text-teal-900 border-teal-500/25 dark:text-teal-200",
     ring: "group-hover:ring-teal-500/25",
   },
+  astronomy: {
+    chip: "bg-indigo-500/10 text-indigo-900 border-indigo-500/25 dark:text-indigo-200",
+    ring: "group-hover:ring-indigo-500/25",
+  },
   eclipses: {
-    icon: Moon,
     chip: "bg-violet-500/10 text-violet-900 border-violet-500/25 dark:text-violet-200",
     ring: "group-hover:ring-violet-500/25",
   },
-  kundali: {
-    icon: Compass,
-    chip: "bg-rose-500/10 text-rose-900 border-rose-500/25 dark:text-rose-200",
-    ring: "group-hover:ring-rose-500/25",
+  calculation: {
+    chip: "bg-cyan-500/10 text-cyan-900 border-cyan-500/25 dark:text-cyan-200",
+    ring: "group-hover:ring-cyan-500/25",
   },
-  history: {
-    icon: HistoryIcon,
+  comparison: {
     chip: "bg-orange-500/10 text-orange-950 border-orange-500/25 dark:text-orange-200",
     ring: "group-hover:ring-orange-500/25",
   },
+  deeper: {
+    chip: "bg-rose-500/10 text-rose-900 border-rose-500/25 dark:text-rose-200",
+    ring: "group-hover:ring-rose-500/25",
+  },
 };
+
+function sectionIcon(sectionId: string) {
+  return LEARN_SECTIONS_BY_ID[sectionId]?.icon ?? BookOpen;
+}
+
+function sectionBlurb(lang: string, sectionId: string): string {
+  const blurb = LEARN_SECTIONS_BY_ID[sectionId]?.blurb;
+  return blurb ? bilingualText(lang, blurb.ne, blurb.en, "") : "";
+}
 
 function normalizeSearch(value: string) {
   return value.trim().toLowerCase();
@@ -129,7 +140,7 @@ function TopicCard({
   const { lang } = useLocale();
   const Icon = topic.icon;
   const category = categoryForTopic(topic);
-  const meta = CATEGORY_META[topic.category];
+  const meta = SECTION_STYLE[topic.category];
 
   if (variant === "featured") {
     return (
@@ -356,7 +367,7 @@ export function Learn() {
             {t("common.all")}
           </button>
           {LEARN_CATEGORIES.map((cat) => {
-            const MetaIcon = CATEGORY_META[cat.id]?.icon ?? BookOpen;
+            const MetaIcon = sectionIcon(cat.id);
             const count = topicsInCategory(cat.id).length;
             return (
               <button
@@ -434,7 +445,10 @@ export function Learn() {
           {visibleCategories.map((cat) => {
             const topics = topicsInCategory(cat.id);
             if (topics.length === 0) return null;
-            const CatIcon = CATEGORY_META[cat.id]?.icon ?? BookOpen;
+            const CatIcon = sectionIcon(cat.id);
+            // Outlined articles are not linkable yet, but saying how many are
+            // on the way stops a thin section from looking abandoned.
+            const upcoming = plannedInSection(cat.id).length;
 
             return (
               <section key={cat.id} id={`learn-${cat.id}`}>
@@ -444,9 +458,18 @@ export function Learn() {
                       <CatIcon className="h-5 w-5" />
                     </span>
                     <div>
-                      <h2 className="text-2xl font-bold text-foreground">{bilingualText(lang, cat.ne, cat.en)}</h2>
-                      <p className="text-sm">
-                        {bilingualText(lang, cat.ne, cat.en)} · {t("learn_page.articles_count", { count: topics.length })}
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {bilingualText(lang, cat.ne, cat.en)}
+                      </h2>
+                      <p className="max-w-2xl text-sm">
+                        {sectionBlurb(lang, cat.id)} ·{" "}
+                        {t("learn_page.articles_count", { count: topics.length })}
+                        {upcoming > 0 && (
+                          <span className="opacity-70">
+                            {" · "}
+                            {t("learn_page.more_coming", { count: upcoming })}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>

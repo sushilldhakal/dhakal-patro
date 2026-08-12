@@ -1136,7 +1136,8 @@
     "read_start": "पढ्न सुरु गर्नुहोस्",
     "read_detail": "विस्तृत पढ्नुहोस्",
     "articles_count": "{{count}} लेख",
-    "suggested_path_sub": "सुझाव गरिएको बाटो"
+    "suggested_path_sub": "सुझाव गरिएको बाटो",
+    "more_coming": "अन्य {{count}} लेख तयारीमा"
   },
   "avakahada": {
     "title": "अवकहडा चक्र",
