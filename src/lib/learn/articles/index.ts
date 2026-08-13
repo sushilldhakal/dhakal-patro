@@ -7,6 +7,7 @@ import { bsVsAd } from "./foundation/bs-vs-ad";
 import { chandramana } from "./foundation/chandramana";
 import { nepaliCalendarBasics } from "./foundation/nepali-calendar-basics";
 import { sauramana } from "./foundation/sauramana";
+import { whatIsADay } from "./foundation/what-is-a-day";
 import { whyLocationMatters } from "./foundation/why-location-matters";
 import { yearBeginsBaisakh } from "./foundation/year-begins-baisakh";
 
@@ -94,6 +95,7 @@ const ALL: ArticleData[] = [
   sauramana,
   chandramana,
   whyLocationMatters,
+  whatIsADay,
 
   /* The Moon */
   tithiNot24Hours,

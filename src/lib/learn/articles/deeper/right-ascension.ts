@@ -59,7 +59,7 @@ export const rightAscension: ArticleData = {
           kind: "table",
           headers: [
             { ne: "", en: "" },
-            { ne: "क्रान्तिवृत्तीय देशान्तर", en: "Ecliptic longitude" },
+            { ne: "क्रान्तिवृत्तीय देशान्तर", en: "ecliptic longitude" },
             { ne: "विषुवांश", en: "Right ascension" },
           ],
           rows: [
@@ -75,7 +75,7 @@ export const rightAscension: ArticleData = {
             ],
             [
               { ne: "जोडी समन्वय", en: "Paired with" },
-              { ne: "शर (latitude)", en: "Ecliptic latitude" },
+              { ne: "शर (latitude)", en: "ecliptic latitude" },
               { ne: "क्रान्ति (declination)", en: "Declination" },
             ],
             [

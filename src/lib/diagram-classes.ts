@@ -121,7 +121,7 @@ export function edPakshaOn(on?: boolean) {
 export const eclPanelBg =
   "fill-[color-mix(in_srgb,var(--tm-card)_92%,#f4f7fb)] dark:fill-[color-mix(in_srgb,#0e1520_88%,var(--tm-card))]";
 
-export const eclEclipticRing =
+export const ecleclipticRing =
   "stroke-[color-mix(in_srgb,var(--tm-ink)_88%,transparent)] [stroke-width:2.2] stroke-round";
 
 export const eclAxis =
@@ -578,7 +578,7 @@ export const semMoonLabel =
 export const semRadiusLine =
   "stroke-[color-mix(in_srgb,var(--tm-ink)_16%,transparent)] [stroke-width:1] [stroke-dasharray:2_6]";
 
-export const semEclipticGrid = "pointer-events-none";
+export const semeclipticGrid = "pointer-events-none";
 
 export const semGridRashiSeg =
   "fill-[color-mix(in_srgb,var(--tm-amber)_6%,transparent)] stroke-none";

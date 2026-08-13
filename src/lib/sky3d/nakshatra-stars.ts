@@ -484,7 +484,7 @@ const DEG = Math.PI / 180;
 const EPS_J2000 = 23.4392911;
 
 /** Equatorial J2000 → ecliptic J2000, both in degrees. */
-export function equatorialToEclipticJ2000(ra: number, dec: number): { lon: number; lat: number } {
+export function equatorialToeclipticJ2000(ra: number, dec: number): { lon: number; lat: number } {
   const a = ra * DEG;
   const d = dec * DEG;
   const e = EPS_J2000 * DEG;
@@ -508,9 +508,9 @@ export function precessionSinceJ2000(daysSinceJ2000: number): number {
 
 /** One star, flattened out of the asterism list and pre-converted. */
 export type FlatStar = {
-  /** Ecliptic longitude at J2000, degrees. */
+  /** ecliptic longitude at J2000, degrees. */
   lon: number;
-  /** Ecliptic latitude, degrees — treated as fixed. */
+  /** ecliptic latitude, degrees — treated as fixed. */
   lat: number;
   mag: number;
   /** 1–27: which nakshatra it belongs to. */
@@ -527,7 +527,7 @@ export function flattenAsterisms(): { stars: FlatStar[]; links: [number, number]
     const base = stars.length;
     for (let i = 0; i < nak.stars.length; i += 1) {
       const s = nak.stars[i];
-      const { lon, lat } = equatorialToEclipticJ2000(s.ra, s.dec);
+      const { lon, lat } = equatorialToeclipticJ2000(s.ra, s.dec);
       stars.push({ lon, lat, mag: s.mag, nakshatra: nak.index, junction: i === 0 });
     }
     for (const [a, b] of nak.links) links.push([base + a, base + b]);

@@ -19,7 +19,7 @@ export const celestialEquator: ArticleData = {
           kind: "keys",
           items: [
             {
-              h: { ne: "क्रान्तिवृत्त", en: "Ecliptic" },
+              h: { ne: "क्रान्तिवृत्त", en: "ecliptic" },
               p: {
                 ne: "पृथ्वीको **कक्ष**बाट — सूर्य यसैमा हिँड्छ। राशि, नक्षत्र, तिथि यहाँ नापिन्छन्।",
                 en: "From Earth's **orbit** — the Sun travels along it. Rashi, nakshatra and tithi are measured here.",
@@ -51,7 +51,7 @@ export const celestialEquator: ArticleData = {
           kind: "lede",
           text: {
             ne: "वसन्त विषुव बिन्दु विशेष छ — यो **दुवै** समन्वय प्रणालीको शून्य बिन्दु हो। क्रान्तिवृत्तीय देशान्तर र विषुवांश दुवै यहीँबाट गनिन्छन्।",
-            en: "The vernal equinox point is special — it is the zero of **both** coordinate systems. Ecliptic longitude and right ascension are each counted from it.",
+            en: "The vernal equinox point is special — it is the zero of **both** coordinate systems. ecliptic longitude and right ascension are each counted from it.",
           },
         },
         {
@@ -98,11 +98,11 @@ export const celestialEquator: ArticleData = {
           rows: [
             [
               { ne: "तिथि, नक्षत्र, योग, करण", en: "Tithi, nakshatra, yoga, karana" },
-              { ne: "क्रान्तिवृत्तीय — देशान्तर", en: "Ecliptic — longitude" },
+              { ne: "क्रान्तिवृत्तीय — देशान्तर", en: "ecliptic — longitude" },
             ],
             [
               { ne: "राशि, सङ्क्रान्ति, गते", en: "Rashi, sankranti, gate" },
-              { ne: "क्रान्तिवृत्तीय — निरयन देशान्तर", en: "Ecliptic — sidereal longitude" },
+              { ne: "क्रान्तिवृत्तीय — निरयन देशान्तर", en: "ecliptic — sidereal longitude" },
             ],
             [
               { ne: "सूर्योदय, सूर्यास्त, दिनमान", en: "Sunrise, sunset, day length" },

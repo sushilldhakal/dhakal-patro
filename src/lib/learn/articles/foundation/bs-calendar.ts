@@ -188,7 +188,7 @@ export const bsCalendar: ArticleData = {
             {
               h: { ne: "नयाँ वर्ष बैशाखमा", en: "The year starts in Baisakh" },
               p: {
-                ne: "~मेष सङ्क्रान्ति~ — सामान्यतया अप्रिल मध्यतिर पर्छ।",
+                ne: "~मेष सङ्क्रान्ति~ — बैशाख १, ग्रेगोरियन पात्रोमा अप्रिल मध्यतिर।",
                 en: "~Mesha Sankranti~ — usually falling around the middle of April.",
               },
             },

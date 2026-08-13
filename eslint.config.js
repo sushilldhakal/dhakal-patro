@@ -57,6 +57,7 @@ export default defineConfig([
     files: [
       'src/components/sky3d/AakashGocharScene.tsx',
       'src/components/learn/TwoSystemsScene.tsx',
+      'src/components/learn/DaySimScene.tsx',
     ],
     rules: {
       'react-hooks/immutability': 'off',

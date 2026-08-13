@@ -525,6 +525,27 @@
   border: 2px solid var(--card);
 }
 
+/* Same control on a dark panel — the 3D playground's own chrome.
+
+   `.ed-scrub` is built for the light article body: its empty track is
+   `--tm-ink` at 20% and its thumb is ringed in `--card`, both of which vanish
+   against a near-black panel. These override only the two colours, so the
+   geometry and the `--fill` contract stay shared. */
+.ed-scrub-dark {
+  background: linear-gradient(
+    90deg,
+    var(--tm-amber) 0%,
+    var(--tm-amber) var(--fill, 0%),
+    rgba(255, 255, 255, 0.24) var(--fill, 0%)
+  );
+}
+.ed-scrub-dark::-webkit-slider-thumb {
+  border-color: rgba(0, 0, 0, 0.6);
+}
+.ed-scrub-dark::-moz-range-thumb {
+  border-color: rgba(0, 0, 0, 0.6);
+}
+
 /* ── Avakahada Chakra wheel ───────────────────────────────── */
 .av-wheel {
   --av-gana-dev: color-mix(in srgb, var(--brand-green) 38%, #0b181a);

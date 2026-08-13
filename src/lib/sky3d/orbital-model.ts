@@ -64,7 +64,7 @@ export const PLANET_ELEMENTS = {
 export type PlanetKey = keyof typeof PLANET_ELEMENTS;
 
 /** Rectangular ecliptic coordinates, AU. */
-export type EclipticXYZ = { x: number; y: number; z: number };
+export type eclipticXYZ = { x: number; y: number; z: number };
 
 /** Newton–Raphson on Kepler's equation, M = E − e·sin E (radians). */
 function solveKepler(M: number, e: number): number {
@@ -76,7 +76,7 @@ function solveKepler(M: number, e: number): number {
 }
 
 /** Heliocentric ecliptic position, AU, `dt` days after J2000. */
-export function heliocentric(el: OrbitalElements, dt: number): EclipticXYZ {
+export function heliocentric(el: OrbitalElements, dt: number): eclipticXYZ {
   const n = 360 / el.periodDays;
   const M = normalizeDeg(el.L0 - el.peri + n * dt) * RAD;
   const E = solveKepler(M, el.e);
@@ -113,7 +113,7 @@ export function heliocentric(el: OrbitalElements, dt: number): EclipticXYZ {
  * Good to roughly 0.3° in longitude, which is invisible at scene scale and is
  * corrected outright by {@link calibrate} for the date on screen.
  */
-export function moonGeocentric(dt: number): EclipticXYZ {
+export function moonGeocentric(dt: number): eclipticXYZ {
   const Lp = 218.316 + 13.176396 * dt; // mean longitude
   const M = (134.963 + 13.064993 * dt) * RAD; // Moon's mean anomaly
   const Ms = (357.529 + 0.98560028 * dt) * RAD; // Sun's mean anomaly
@@ -172,7 +172,7 @@ export type GeoBody = {
   key: GrahaKey;
   /** Sidereal (Lahiri) ecliptic longitude, deg 0–360. */
   longitude: number;
-  /** Ecliptic latitude — the shara, deg. */
+  /** ecliptic latitude — the shara, deg. */
   latitude: number;
   /** Geocentric distance, AU. Nodes carry the Moon's distance. */
   distanceAu: number;
@@ -181,7 +181,7 @@ export type GeoBody = {
   retrograde: boolean;
 };
 
-function toSpherical(v: EclipticXYZ) {
+function toSpherical(v: eclipticXYZ) {
   const r = Math.hypot(v.x, v.y, v.z);
   return {
     lon: normalizeDeg(Math.atan2(v.y, v.x) / RAD),
@@ -190,7 +190,7 @@ function toSpherical(v: EclipticXYZ) {
   };
 }
 
-function sub(a: EclipticXYZ, b: EclipticXYZ): EclipticXYZ {
+function sub(a: eclipticXYZ, b: eclipticXYZ): eclipticXYZ {
   return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
 }
 

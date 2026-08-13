@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { semEclipticGrid, semGridNakLabelCur, semGridNakLine, semGridNakSegVariant, semGridRashiLabelCur, semGridRashiLine, semGridRashiSegVariant } from "@/lib/diagram-classes";
+import { semeclipticGrid, semGridNakLabelCur, semGridNakLine, semGridNakSegVariant, semGridRashiLabelCur, semGridRashiLine, semGridRashiSegVariant } from "@/lib/diagram-classes";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { getWheelRashis } from "@/lib/wheel-data";
 import {
@@ -121,7 +121,7 @@ export function EclipticGridLayer({ sunLon }: Props) {
   });
 
   return (
-    <g className={semEclipticGrid} aria-hidden>
+    <g className={semeclipticGrid} aria-hidden>
       {grid.rashiArcs}
       {grid.nakArcs}
       {grid.rashiLines}

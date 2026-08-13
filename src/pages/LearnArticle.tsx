@@ -2,6 +2,8 @@ import { Link, Navigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
+import { DayPlaygroundDiagram } from "@/components/learn/DayPlaygroundDiagram";
+import { playgroundFor } from "@/lib/learn/playground-config";
 import { cn } from "@/lib/utils";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
@@ -57,6 +59,7 @@ export function LearnArticle() {
     );
   }
 
+  const playgroundConfig = playgroundFor(topic.slug);
   const category = LEARN_CATEGORIES.find((c) => c.id === topic.category);
   const { prev, next } = adjacentTopics(topic.slug);
   const Content = topic.Content;
@@ -80,6 +83,20 @@ export function LearnArticle() {
             <h1 className={tmHeroTitle}>{bilingualText(lang, topic.titleNe, topic.titleEn)}</h1>
             <p className={tmHeroSub}>{bilingualText(lang, topic.summary, topic.summaryEn)}</p>
           </header>
+
+          {/* The playground sits above the prose, not buried in it: a topic
+              that has one is a topic you can watch, and the reader should meet
+              it before the words. Its opening state is the topic's own. */}
+          {playgroundConfig ? (
+            <DayPlaygroundDiagram
+              /* Keyed by slug: moving to another topic remounts the playground
+                 on that topic's own opening state, rather than carrying the
+                 last one's layers and camera across. */
+              key={topic.slug}
+              slug={topic.slug}
+              config={playgroundConfig}
+            />
+          ) : null}
 
           <Content />
 

@@ -10,7 +10,7 @@
 import { NAKSHATRA_ARC, RASHI_ARC } from "@/lib/sky3d/geocentric-model";
 
 /** A point on the celestial sphere in ecliptic coordinates, degrees. */
-export type EclipticPoint = { lon: number; lat: number };
+export type eclipticPoint = { lon: number; lat: number };
 /** A point in the observer's horizon frame, degrees. */
 export type HorizonPoint = { alt: number; az: number };
 
@@ -30,7 +30,7 @@ export const NAK_LABEL_LAT = -6.4;
 /** Points per full circle for the smooth band edges. */
 const EDGE_STEPS = 180;
 
-function edge(lat: number): EclipticPoint[] {
+function edge(lat: number): eclipticPoint[] {
   return Array.from({ length: EDGE_STEPS + 1 }, (_, i) => ({
     lon: (i / EDGE_STEPS) * 360,
     lat,
@@ -47,7 +47,7 @@ export const BAND_EDGES = {
 };
 
 /** Line-segment pairs, flattened: [a0, b0, a1, b1, …]. */
-export type SegmentPairs = EclipticPoint[];
+export type SegmentPairs = eclipticPoint[];
 
 function dividers(count: number, halfLat: number): SegmentPairs {
   const out: SegmentPairs = [];

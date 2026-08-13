@@ -39,7 +39,7 @@ export const declination: ArticleData = {
     },
     {
       title: { ne: "दुई समन्वय प्रणाली", en: "Two coordinate systems" },
-      eyebrow: "Ecliptic vs equatorial",
+      eyebrow: "ecliptic vs equatorial",
       blocks: [
         {
           kind: "lede",
@@ -58,7 +58,7 @@ export const declination: ArticleData = {
           ],
           rows: [
             [
-              { ne: "क्रान्तिवृत्तीय", en: "Ecliptic" },
+              { ne: "क्रान्तिवृत्तीय", en: "ecliptic" },
               { ne: "सूर्यको मार्ग", en: "The Sun's path" },
               { ne: "देशान्तर, शर", en: "Longitude, latitude" },
               { ne: "राशि, तिथि, नक्षत्र", en: "Rashi, tithi, nakshatra" },

@@ -65,7 +65,7 @@ import {
   PADA_TICKS,
   RASHI_DIVIDERS,
   RASHI_LABEL_LAT,
-  type EclipticPoint,
+  type eclipticPoint,
   type HorizonPoint,
 } from "@/lib/sky3d/sky-geometry";
 import { flattenAsterisms, precessionSinceJ2000 } from "@/lib/sky3d/nakshatra-stars";
@@ -685,7 +685,7 @@ function GrahaBody({
 const TRAIL_DAYS = 45;
 const TRAIL_STEPS = 90;
 /** Points along the ecliptic great circle in the horizon view. */
-const ECLIPTIC_STEPS = 180;
+const ecliptic_STEPS = 180;
 
 /**
  * Angles are compared at this resolution before the zodiac band is re-projected
@@ -851,7 +851,7 @@ export function AakashGocharScene({
    * in sky coordinates and is re-projected onto the dome every frame.
    */
   const skyLines = useMemo(() => {
-    const band = (src: EclipticPoint[], color: string, opacity: number, segments = false) => ({
+    const band = (src: eclipticPoint[], color: string, opacity: number, segments = false) => ({
       src,
       object: segments
         ? makeDynamicSegments(src.length, color, opacity)
@@ -1023,7 +1023,7 @@ export function AakashGocharScene({
   const sunRay = useMemo(() => makeDynamicLine(2, "#ffd166", 0.75), []);
 
   /** The celestial equator — the reference the ecliptic is visibly tilted against. */
-  const equatorLine = useMemo(() => makeDynamicLine(ECLIPTIC_STEPS + 1, "#5aa9e6", 0.45), []);
+  const equatorLine = useMemo(() => makeDynamicLine(ecliptic_STEPS + 1, "#5aa9e6", 0.45), []);
 
   /** Almucantars and verticals, flattened into one segment list. */
   const gridSegments = useMemo(() => {
@@ -1168,7 +1168,7 @@ export function AakashGocharScene({
     const earthSpin = lstDeg(date, 0) * DEG;
 
     /**
-     * Ecliptic → the globe frame: Earth upright with its axis along +Y and its
+     * ecliptic → the globe frame: Earth upright with its axis along +Y and its
      * equator in the XZ plane, and the ecliptic tilted off it by the obliquity
      * about the line of equinoxes.
      *
@@ -1470,11 +1470,11 @@ export function AakashGocharScene({
       }
 
       if (horizon && toggles.belts) {
-        for (let i = 0; i <= ECLIPTIC_STEPS; i += 1) {
+        for (let i = 0; i <= ecliptic_STEPS; i += 1) {
           // Declination 0 all the way round — the celestial equator, which the
           // ecliptic crosses at the two equinoxes and nowhere else. On the
           // globe this is drawn on the sphere itself instead.
-          const eq = equatorialToAltAz({ ra: (i / ECLIPTIC_STEPS) * 360, dec: 0 }, lst, observer.lat);
+          const eq = equatorialToAltAz({ ra: (i / ecliptic_STEPS) * 360, dec: 0 }, lst, observer.lat);
           setPoint(equatorLine, i, altAzToVec3(eq.alt, eq.az, DOME * 0.997));
         }
         flushLine(equatorLine);

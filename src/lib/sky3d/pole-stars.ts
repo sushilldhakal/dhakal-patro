@@ -21,7 +21,7 @@
  * along the zodiac.
  */
 
-import { equatorialToEclipticJ2000, precessionSinceJ2000 } from "@/lib/sky3d/nakshatra-stars";
+import { equatorialToeclipticJ2000, precessionSinceJ2000 } from "@/lib/sky3d/nakshatra-stars";
 
 export type PoleStar = {
   ne: string;
@@ -53,7 +53,7 @@ export const POLE_STARS: PoleStar[] = [
   { ne: "एर्राई", en: "Errai (γ Cep)", ra: 354.8367, dec: 77.6323, mag: 3.21 },
 ];
 
-/** Ecliptic longitude of the north celestial pole — the same at every epoch. */
+/** ecliptic longitude of the north celestial pole — the same at every epoch. */
 export const POLE_LON = 90;
 
 /** How long one turn of the axis takes, years, at the app's precession rate. */
@@ -67,9 +67,9 @@ export type PoleStarPlaced = {
   ne: string;
   en: string;
   mag: number;
-  /** Ecliptic longitude at J2000, degrees. */
+  /** ecliptic longitude at J2000, degrees. */
   lon: number;
-  /** Ecliptic latitude, degrees — fixed. */
+  /** ecliptic latitude, degrees — fixed. */
   lat: number;
   /**
    * The Gregorian year the pole passes closest to it. Reduced into the lap that
@@ -102,7 +102,7 @@ export function poleStarEpoch(lonJ2000: number, aroundYear = 2000): number {
 export function placedPoleStars(eps: number, aroundYear = 2000): PoleStarPlaced[] {
   const poleLat = poleLatitude(eps);
   return POLE_STARS.map((s) => {
-    const { lon, lat } = equatorialToEclipticJ2000(s.ra, s.dec);
+    const { lon, lat } = equatorialToeclipticJ2000(s.ra, s.dec);
     return {
       ne: s.ne,
       en: s.en,

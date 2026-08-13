@@ -14,8 +14,7 @@ import {
 } from "@/components/tithi-mechanics/tithi-mechanics-diagrams";
 import { AyanamshaWheel } from "@/components/learn/AyanamshaWheel";
 import {
-  EclipticBeltStudy,
-  PrecessionSkyStudy,
+  EclipticBeltStudy,  PrecessionSkyStudy,
 } from "@/components/learn/ComputationSkyDiagrams";
 import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
 import { EclipseStudy } from "@/components/learn/EclipseStudy";

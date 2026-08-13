@@ -101,14 +101,6 @@ export const nepaliCalendarBasics: ArticleData = {
             en: "These are two distinct **measurement frameworks**, but a traditional calendar uses the relationship between Sun and Moon together — each one anchors the other.",
           },
         },
-        {
-          kind: "diagram",
-          id: "two-systems",
-          caption: {
-            ne: "एउटै आकाश, दुई मापन। सूर्यको राशिचक्रमा स्थितिले सौरमान दिन्छ (राशि पार गर्दा सङ्क्रान्ति, अनि नयाँ सौर महिना); चन्द्र–सूर्यको कोणले चान्द्रमान (हरेक १२° = १ तिथि, १५ तिथि = १ पक्ष)। तलको समयरेखामा १२ चान्द्र मास सौर वर्षभन्दा ~११ दिन छोटो हुन्छ — त्यही खाली ठाउँ अधिक मासले पुर्छ।",
-            en: "One sky, two measures. The Sun's place in the zodiac gives sauramāna (cross a rashi and a sankranti begins a new solar month); the Moon–Sun angle gives chāndramāna (every 12° is one tithi, fifteen tithis one paksha). On the timeline below, twelve lunar months fall ~11 days short of the solar year — the gap an adhik maas fills.",
-          },
-        },
       ],
     },
     {

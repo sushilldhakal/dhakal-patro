@@ -246,7 +246,7 @@ export function EquinoxPrecession() {
         {/* legend */}
         <g transform="translate(14 14)">
           <line x1={0} y1={6} x2={22} y2={6} stroke={gold} strokeWidth={2.4} />
-          <text x={28} y={6} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>क्रान्तिवृत्त (Ecliptic)</text>
+          <text x={28} y={6} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>क्रान्तिवृत्त (ecliptic)</text>
           <line x1={0} y1={24} x2={22} y2={24} stroke="#3f86c4" strokeWidth={2.4} />
           <text x={28} y={24} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>खगोलीय विषुवत् (Celestial Equator)</text>
         </g>

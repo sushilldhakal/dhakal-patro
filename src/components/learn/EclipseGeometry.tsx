@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { eclAxis, eclBloodGlow, eclBloodTint, eclBodyLabel, eclEarthGlow, eclEclipticRing, eclMoonEclipsed, eclMoonOrbit, eclNodeArrow, eclNodeArrowHead, eclNodeCallout, eclNodeDot, eclNodeLine, eclNodeTitle, eclPanelBg, eclPenumbra, eclPlaneCaption, eclRay, eclStatusFor, eclStatusSub, eclSunDisc, eclTiltNote, eclUmbraShape } from "@/lib/diagram-classes";
+import { eclAxis, eclBloodGlow, eclBloodTint, eclBodyLabel, eclEarthGlow, ecleclipticRing, eclMoonEclipsed, eclMoonOrbit, eclNodeArrow, eclNodeArrowHead, eclNodeCallout, eclNodeDot, eclNodeLine, eclNodeTitle, eclPanelBg, eclPenumbra, eclPlaneCaption, eclRay, eclStatusFor, eclStatusSub, eclSunDisc, eclTiltNote, eclUmbraShape } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
 import { moonSunFacingRotation } from "@/lib/moon-phase-svg";
@@ -239,7 +239,7 @@ export function EclipseGeometry({ u, omega, omegaInertial, earthLon, onU }: Prop
         </text>
 
         {/* Earth's orbital path around the Sun (क्रान्तिवृत्त) */}
-        <path d={earthOrbit} className={eclEclipticRing} fill="none" />
+        <path d={earthOrbit} className={ecleclipticRing} fill="none" />
 
         {/* राहु–केतु रेखा — through Earth's centre */}
         <line

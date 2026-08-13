@@ -240,6 +240,17 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
+    slug: "what-is-a-day",
+    section: "foundation",
+    status: "published",
+    icon: Clock,
+    title: { ne: "दिन के हो", en: "What Is a Day?" },
+    summary: {
+      ne: "एक फेरो घुम्नु दिन होइन — घुम्दै सर्दै गएकाले थपिने त्यो अलिकति नै दिन बनाउँछ। ३डी नमुनामा आफैँ खेलेर हेर्नुहोस्।",
+      en: "One rotation is not a day — the little bit extra, added because the planet moves while it turns, is what makes one. Take it apart in a 3D model.",
+    },
+  },
+  {
     slug: "bikram-sambat",
     section: "foundation",
     status: "published",
@@ -591,7 +602,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     section: "zodiac",
     status: "published",
     icon: Spline,
-    title: { ne: "क्रान्तिवृत्त", en: "The Ecliptic" },
+    title: { ne: "क्रान्तिवृत्त", en: "The ecliptic" },
     summary: {
       ne: "सूर्यको वार्षिक मार्ग — राशि र नक्षत्र यसैमा नापिन्छन्।",
       en: "The Sun's annual path — the line along which rashi and nakshatra are measured.",

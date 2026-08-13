@@ -24,7 +24,7 @@ export const RASHI_ARC = 30;
 export type Vec3 = [number, number, number];
 
 /**
- * Ecliptic (longitude, latitude) → cartesian on a sphere of `radius`.
+ * ecliptic (longitude, latitude) → cartesian on a sphere of `radius`.
  * Latitude is the graha's shara; passing 0 keeps a body exactly on the ecliptic.
  */
 export function eclipticToVec3(lonDeg: number, latDeg: number, radius: number): Vec3 {
@@ -89,7 +89,7 @@ export type SkyGraha = {
   key: GrahaKey;
   /** Sidereal ecliptic longitude in degrees. */
   longitude: number;
-  /** Ecliptic latitude (shara) in degrees; 0 when the API does not supply it. */
+  /** ecliptic latitude (shara) in degrees; 0 when the API does not supply it. */
   latitude: number;
   retrograde: boolean;
   position: Vec3;

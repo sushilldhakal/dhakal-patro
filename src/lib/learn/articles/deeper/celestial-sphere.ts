@@ -47,7 +47,7 @@ export const celestialSphere: ArticleData = {
               { ne: "पृथ्वीको विषुवत् रेखा आकाशमा प्रक्षेपित।", en: "Earth's equator projected onto the sky." },
             ],
             [
-              { ne: "क्रान्तिवृत्त", en: "Ecliptic" },
+              { ne: "क्रान्तिवृत्त", en: "ecliptic" },
               { ne: "सूर्यको वार्षिक मार्ग — विषुवत् रेखासँग २३.४४° ढल्केको।", en: "The Sun's annual path, tilted 23.44° to the equator." },
             ],
             [
@@ -63,7 +63,7 @@ export const celestialSphere: ArticleData = {
               { ne: "उत्तर, शिरोबिन्दु र दक्षिण जोड्ने वृत्त।", en: "The circle through north, the zenith and south." },
             ],
             [
-              { ne: "शिरोबिन्दु", en: "Zenith" },
+              { ne: "शिरोबिन्दु", en: "zenith" },
               { ne: "अवलोकनकर्ताको ठीक माथिको बिन्दु।", en: "The point directly overhead." },
             ],
           ],

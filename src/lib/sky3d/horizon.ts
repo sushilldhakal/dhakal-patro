@@ -51,7 +51,7 @@ export function eclipticToEquatorial(lonDeg: number, latDeg: number, eps: number
 }
 
 /** Equatorial (α, δ) → tropical ecliptic (λ, β), the inverse of the above. */
-export function equatorialToEcliptic(eq: Equatorial, eps: number) {
+export function equatorialToecliptic(eq: Equatorial, eps: number) {
   const a = eq.ra * RAD;
   const d = eq.dec * RAD;
   const e = eps * RAD;
