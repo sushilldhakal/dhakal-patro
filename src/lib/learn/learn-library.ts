@@ -65,9 +65,12 @@ import type { Bi } from "./article-schema";
  * knowledge section, in reading order.
  *
  * The section runs as one course rather than a bag of loose pages: a reader
- * who starts at "how the Nepali calendar works" and follows prev/next moves
- * Sun → Moon → Rashi → Sankranti → Tithi → month → year → BS. Array order
- * *is* that path, so insert a topic where it belongs in the sequence.
+ * who starts at "sky basics" and follows prev/next moves Earth → Sun →
+ * zodiac → Moon → panchanga → how a BS date is built → how we compute it →
+ * eclipses → deeper astronomy → comparison. The order follows the reader's
+ * own questions: what moves, how we measure it, what it produces, and only
+ * then how the computation runs. Array order *is* that path, so insert a
+ * topic where it belongs in the sequence.
  *
  * `status` separates the map from the territory. `planned` entries hold a
  * slug and title so the outline stays visible in one place while the article
@@ -103,8 +106,17 @@ export const LEARN_SECTIONS: LibrarySection[] = [
     icon: Globe,
     title: { ne: "आधार", en: "Foundation" },
     blurb: {
-      ne: "पात्रो कसरी बन्छ, विक्रम सम्वत् के हो, र सौर–चान्द्र दुई मापन प्रणालीको परिचय।",
-      en: "How a calendar is built, what Bikram Sambat is, and the two systems of measuring time.",
+      ne: "आकाशको चिनारीदेखि सुरु — पात्रो कसरी बन्छ, विक्रम सम्वत् के हो, र सौर–चान्द्र दुई मापन प्रणाली।",
+      en: "Starting from the sky itself — how a calendar is built, what Bikram Sambat is, and the two systems of measuring time.",
+    },
+  },
+  {
+    id: "earth-sky",
+    icon: Rotate3d,
+    title: { ne: "पृथ्वी र आकाश", en: "Earth and Sky" },
+    blurb: {
+      ne: "पृथ्वीको घुर्णन र परिक्रमा, २३.४४° अक्ष झुकाव, ऋतु, विषुव र अयनान्त — सबै गतिको स्रोत।",
+      en: "Earth's rotation and orbit, the 23.44° tilt, seasons, equinoxes and solstices — where every motion begins.",
     },
   },
   {
@@ -114,6 +126,15 @@ export const LEARN_SECTIONS: LibrarySection[] = [
     blurb: {
       ne: "राशि, सङ्क्रान्ति, अयन र सायन–निरयन राशिचक्र — सौर पात्रोको सम्पूर्ण आधार।",
       en: "Rashi, sankranti, the ayanas and the two zodiacs — everything the solar calendar rests on.",
+    },
+  },
+  {
+    id: "zodiac",
+    icon: Grid2x2,
+    title: { ne: "राशि र आकाशीय समन्वय", en: "The Zodiac and Celestial Coordinates" },
+    blurb: {
+      ne: "क्रान्तिवृत्त, खगोलीय विषुवत् रेखा, राशि पट्टी र आकाशमा स्थान नाप्ने ढाँचा।",
+      en: "The ecliptic, the celestial equator, the zodiac belt and the frame that measures position in the sky.",
     },
   },
   {
@@ -130,26 +151,26 @@ export const LEARN_SECTIONS: LibrarySection[] = [
     icon: ScrollText,
     title: { ne: "पञ्चाङ्गका पाँच अङ्ग", en: "The Five Limbs" },
     blurb: {
-      ne: "तिथि, वार, नक्षत्र, योग र करण — प्रत्येक अङ्ग र तिनको पारस्परिक सम्बन्ध।",
-      en: "Tithi, vara, nakshatra, yoga and karana — each limb and how they work together.",
+      ne: "वार, नक्षत्र, योग र करण — पाँच अङ्ग र तिनको पारस्परिक सम्बन्ध।",
+      en: "Vara, nakshatra, yoga and karana — the five limbs and how they work together.",
     },
   },
   {
-    id: "astronomy",
-    icon: Orbit,
-    title: { ne: "पात्रोपछाडिको खगोल विज्ञान", en: "Astronomy Behind the Calendar" },
+    id: "vedic-time",
+    icon: Hourglass,
+    title: { ne: "वैदिक समय", en: "Vedic Time Divisions" },
     blurb: {
-      ne: "पृथ्वीको घुर्णन, परिक्रमा, अक्ष झुकाव, विषुव–अयनान्त र अयन चलन।",
-      en: "Earth's rotation and orbit, axial tilt, equinoxes, solstices and precession.",
+      ne: "होरा, दिनमान–रात्रिमान, मुहूर्त र घटी–पला — दिनभित्रका परम्परागत समय एकाइ।",
+      en: "Hora, day and night lengths, muhurta and ghati — the traditional units inside a day.",
     },
   },
   {
-    id: "eclipses",
-    icon: Eclipse,
-    title: { ne: "ग्रहण", en: "Eclipses" },
+    id: "bs-construction",
+    icon: CalendarRange,
+    title: { ne: "बि.सं. कसरी बन्छ", en: "How Bikram Sambat Is Built" },
     blurb: {
-      ne: "राहु–केतु, पात रेखा, सूर्यग्रहण र चन्द्रग्रहणको ज्यामिति।",
-      en: "Rahu–Ketu, the node line, and the geometry of solar and lunar eclipses.",
+      ne: "सूर्य, चन्द्र र पञ्चाङ्ग सिकेपछि — बैशाख १, गते, महिना र वर्ष कसरी जोडिएर एउटा मिति बन्छ।",
+      en: "With the Sun, Moon and panchanga learned — how Baisakh 1, gate, month and year assemble into one date.",
     },
   },
   {
@@ -162,21 +183,30 @@ export const LEARN_SECTIONS: LibrarySection[] = [
     },
   },
   {
+    id: "eclipses",
+    icon: Eclipse,
+    title: { ne: "ग्रहण", en: "Eclipses" },
+    blurb: {
+      ne: "राहु–केतु, पात रेखा, सूर्यग्रहण र चन्द्रग्रहणको ज्यामिति।",
+      en: "Rahu–Ketu, the node line, and the geometry of solar and lunar eclipses.",
+    },
+  },
+  {
+    id: "deeper",
+    icon: Telescope,
+    title: { ne: "गहन खगोल विज्ञान", en: "Deeper Astronomy" },
+    blurb: {
+      ne: "भूकेन्द्रित दृष्टिकोण, ग्रह गति, वक्री गति, अयन चलन र सूर्य सिद्धान्त।",
+      en: "The geocentric frame, planetary motion, retrogression, precession and the Surya Siddhanta.",
+    },
+  },
+  {
     id: "comparison",
     icon: GitCompare,
     title: { ne: "पात्रो तुलना", en: "Calendar Comparison" },
     blurb: {
       ne: "वैदिक, ग्रेगोरियन, सौर र चान्द्र पात्रोको आमनेसामने तुलना।",
       en: "The Vedic, Gregorian, solar and lunar calendars side by side.",
-    },
-  },
-  {
-    id: "deeper",
-    icon: Telescope,
-    title: { ne: "गहन ज्ञान", en: "Deeper Knowledge" },
-    blurb: {
-      ne: "सूर्य सिद्धान्त, ग्रह गति, वक्री गति र खगोलीय गोलाको समन्वय प्रणाली।",
-      en: "The Surya Siddhanta, planetary motion, retrogression and the celestial sphere.",
     },
   },
 ];
@@ -186,7 +216,18 @@ export const LEARN_SECTIONS: LibrarySection[] = [
 /* ------------------------------------------------------------------ */
 
 export const LEARN_LIBRARY: LibraryTopic[] = [
-  /* ── 🌍 FOUNDATION ────────────────────────────────────────────── */
+  /* ── 🌍 FOUNDATION ────────────────────────────────────────────────── */
+  {
+    slug: "astronomy-basics",
+    section: "foundation",
+    status: "published",
+    icon: Eye,
+    title: { ne: "गहिरो जानुअघि — खगोलीय आधार", en: "Before Going Deeper — Sky Basics" },
+    summary: {
+      ne: "आकाश, कोण, १२ राशि, ९ ग्रह, २७ नक्षत्र, तिथि, योग, करण — गहिरो पढ्नुअघि पूरा सूची।",
+      en: "The sky, angles, 12 rashis, 9 grahas, 27 nakshatras, tithi, yoga, karana — the full list before reading deeper.",
+    },
+  },
   {
     slug: "nepali-calendar-basics",
     section: "foundation",
@@ -207,39 +248,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "बि.सं. सम्वत् (वर्ष गणना) हो, र महिना–गते छुट्टै खगोलीय नियमले तय हुन्छन् — यी दुई फरक प्रश्न हुन्।",
       en: "BS is an era — a way of numbering years — while its months and dates come from separate astronomical rules. Two different questions.",
-    },
-  },
-  {
-    slug: "year-begins-baisakh",
-    section: "foundation",
-    status: "published",
-    icon: Sunrise,
-    title: { ne: "नेपाली वर्ष बैशाखमा किन सुरु हुन्छ", en: "Why the Nepali Year Begins in Baisakh" },
-    summary: {
-      ne: "मेष सङ्क्रान्ति — सूर्य मेष राशिमा प्रवेश गर्ने क्षणले सौर वर्षको आरम्भ तय गर्छ, कुनै मनपरी मिति होइन।",
-      en: "Mesha Sankranti — the Sun's entry into Mesha sets the start of the solar year, not an arbitrary chosen date.",
-    },
-  },
-  {
-    slug: "bs-vs-ad",
-    section: "foundation",
-    status: "published",
-    icon: ArrowLeftRight,
-    title: { ne: "बि.सं. र ई.सं. कसरी फरक छन्", en: "BS vs AD: How the Two Calendars Differ" },
-    summary: {
-      ne: "वर्षारम्भ, महिनाको लम्बाइ, दिनको सीमा र आधार — दुई पात्रो कहाँ–कहाँ बाझिन्छन्।",
-      en: "Year start, month length, day boundary and underlying basis — every point where the two calendars part ways.",
-    },
-  },
-  {
-    slug: "bs-ad-offset",
-    section: "foundation",
-    status: "published",
-    icon: Sigma,
-    title: { ne: "बि.सं. र ई.सं.बीच स्थिर फरक किन हुँदैन", en: "Why BS and AD Have No Fixed Offset" },
-    summary: {
-      ne: "“५६–५७ वर्ष अगाडि” अनुमान मात्र हो। मिति = वर्ष + महिना + गते, र प्रत्येकको सीमा फरक नियमले तय हुन्छ।",
-      en: "\"56–57 years ahead\" is a rough guide. A date is year + month + day, and each boundary follows different rules.",
     },
   },
   {
@@ -290,6 +298,39 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
+    slug: "year-begins-baisakh",
+    section: "foundation",
+    status: "published",
+    icon: Sunrise,
+    title: { ne: "नेपाली वर्ष बैशाखमा किन सुरु हुन्छ", en: "Why the Nepali Year Begins in Baisakh" },
+    summary: {
+      ne: "मेष सङ्क्रान्ति — सूर्य मेष राशिमा प्रवेश गर्ने क्षणले सौर वर्षको आरम्भ तय गर्छ, कुनै मनपरी मिति होइन।",
+      en: "Mesha Sankranti — the Sun's entry into Mesha sets the start of the solar year, not an arbitrary chosen date.",
+    },
+  },
+  {
+    slug: "bs-vs-ad",
+    section: "foundation",
+    status: "published",
+    icon: ArrowLeftRight,
+    title: { ne: "बि.सं. र ई.सं. कसरी फरक छन्", en: "BS vs AD: How the Two Calendars Differ" },
+    summary: {
+      ne: "वर्षारम्भ, महिनाको लम्बाइ, दिनको सीमा र आधार — दुई पात्रो कहाँ–कहाँ बाझिन्छन्।",
+      en: "Year start, month length, day boundary and underlying basis — every point where the two calendars part ways.",
+    },
+  },
+  {
+    slug: "bs-ad-offset",
+    section: "foundation",
+    status: "published",
+    icon: Sigma,
+    title: { ne: "बि.सं. र ई.सं.बीच स्थिर फरक किन हुँदैन", en: "Why BS and AD Have No Fixed Offset" },
+    summary: {
+      ne: "“५६–५७ वर्ष अगाडि” अनुमान मात्र हो। मिति = वर्ष + महिना + गते, र प्रत्येकको सीमा फरक नियमले तय हुन्छ।",
+      en: "\"56–57 years ahead\" is a rough guide. A date is year + month + day, and each boundary follows different rules.",
+    },
+  },
+  {
     slug: "why-location-matters",
     section: "foundation",
     status: "published",
@@ -300,8 +341,118 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "An astronomical event has one instant, but sunrise and the day boundary are local — why one tithi shows differently in Kathmandu, Melbourne and New York.",
     },
   },
-
-  /* ── ☀️ THE SUN ───────────────────────────────────────────────── */
+  /* ── 🌍 EARTH AND SKY ─────────────────────────────────────────────── */
+  {
+    slug: "earth-rotation-day",
+    section: "earth-sky",
+    status: "published",
+    icon: RotateCw,
+    title: { ne: "पृथ्वीको घुर्णन र दिनको लम्बाइ", en: "Earth's Rotation and the Length of a Day" },
+    summary: {
+      ne: "नाक्षत्र दिन र सौर दिनबीचको ~४ मिनेटको फरक किन?",
+      en: "Why a sidereal day and a solar day differ by about 4 minutes.",
+    },
+  },
+  {
+    slug: "solar-system",
+    section: "earth-sky",
+    status: "published",
+    icon: Orbit,
+    title: { ne: "सौर्यमण्डल र चन्द्र गति", en: "Earth's Revolution and Lunar Motion" },
+    summary: {
+      ne: "पृथ्वीको परिक्रमा र चन्द्रको गति — सबै पात्रो गणनाको खगोलीय जग।",
+      en: "Earth's orbit and the Moon's motion — the astronomical basis of all patro calculations.",
+    },
+  },
+  {
+    slug: "axial-tilt",
+    section: "earth-sky",
+    status: "published",
+    icon: Axis3d,
+    title: { ne: "पृथ्वीको २३.४४° अक्ष झुकाव", en: "Earth's 23.44° Axial Tilt" },
+    summary: {
+      ne: "क्रान्तिवृत्त र खगोलीय विषुवत् रेखाबीचको कोण — ऋतुको मूल कारण।",
+      en: "The angle between the ecliptic and the celestial equator — the root cause of the seasons.",
+    },
+  },
+  {
+    slug: "why-seasons",
+    section: "earth-sky",
+    status: "published",
+    icon: CloudSun,
+    title: { ne: "ऋतु किन हुन्छन्", en: "Why Seasons Occur" },
+    summary: {
+      ne: "दूरी होइन, झुकाव — सूर्यको किरणको कोण र दिनको लम्बाइले ऋतु बनाउँछ।",
+      en: "Tilt, not distance — the angle of sunlight and the length of day make the seasons.",
+    },
+  },
+  {
+    slug: "equinoxes",
+    section: "earth-sky",
+    status: "published",
+    icon: Scale,
+    title: { ne: "विषुव", en: "Equinoxes Explained" },
+    summary: {
+      ne: "सूर्य खगोलीय विषुवत् रेखा काट्ने दुई क्षण — दिन र रात बराबर।",
+      en: "The two moments the Sun crosses the celestial equator — day and night in balance.",
+    },
+  },
+  {
+    slug: "solstices",
+    section: "earth-sky",
+    status: "published",
+    icon: Flame,
+    title: { ne: "अयनान्त", en: "Solstices Explained" },
+    summary: {
+      ne: "सूर्यको क्रान्ति उच्चतम वा न्यूनतम हुने क्षण — सबैभन्दा लामो र छोटो दिन।",
+      en: "When the Sun's declination reaches its extreme — the longest and shortest days.",
+    },
+  },
+  {
+    slug: "solar-longitude",
+    section: "earth-sky",
+    status: "published",
+    icon: Navigation,
+    title: { ne: "सूर्यको देशान्तर", en: "Solar Longitude" },
+    summary: {
+      ne: "क्रान्तिवृत्तमा सूर्यको ०–३६०° स्थान — गते र सङ्क्रान्ति यहीँबाट निस्कन्छ।",
+      en: "The Sun's 0–360° place on the ecliptic — where gate and sankranti come from.",
+    },
+  },
+  {
+    slug: "lunar-longitude",
+    section: "earth-sky",
+    status: "published",
+    icon: Locate,
+    title: { ne: "चन्द्रको देशान्तर", en: "Lunar Longitude" },
+    summary: {
+      ne: "क्रान्तिवृत्तमा चन्द्रको स्थान — तिथि, नक्षत्र र योगको इनपुट।",
+      en: "The Moon's place on the ecliptic — the input to tithi, nakshatra and yoga.",
+    },
+  },
+  {
+    slug: "declination",
+    section: "earth-sky",
+    status: "published",
+    icon: Crosshair,
+    title: { ne: "क्रान्ति र सूर्यको उत्तर–दक्षिण गति", en: "Declination and the Sun's North–South Motion" },
+    summary: {
+      ne: "सूर्य विषुवत् रेखाबाट कति उत्तर वा दक्षिण — सूर्योदयको समय यसैले बदल्छ।",
+      en: "How far north or south of the equator the Sun stands — what shifts sunrise through the year.",
+    },
+  },
+  {
+    slug: "sky-rotation",
+    section: "earth-sky",
+    status: "published",
+    icon: Route,
+    title: { ne: "पृथ्वीबाट आकाश कसरी घुमेको देखिन्छ", en: "How the Sky Appears to Rotate From Earth" },
+    summary: {
+      ne: "दैनिक घुर्णन, ध्रुव र अक्षांशअनुसार आकाशको फरक दृश्य।",
+      en: "Daily rotation, the poles, and how the view of the sky changes with latitude.",
+    },
+  },
+  /* ── ☀️ THE SUN ──────────────────────────────────────────────────── */
   {
     slug: "solar-year",
     section: "sun",
@@ -358,50 +509,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "makara-sankranti",
-    section: "sun",
-    status: "published",
-    icon: Snowflake,
-    title: { ne: "मकर सङ्क्रान्ति", en: "Makara Sankranti Explained" },
-    summary: {
-      ne: "माघे सङ्क्रान्ति — सूर्य मकरमा प्रवेश, र यो शीत अयनान्तसँग किन मिल्दैन।",
-      en: "Maghe Sankranti — the Sun's entry into Makara, and why it is not the winter solstice.",
-    },
-  },
-  {
-    slug: "karka-sankranti",
-    section: "sun",
-    status: "published",
-    icon: Thermometer,
-    title: { ne: "कर्क सङ्क्रान्ति", en: "Karka Sankranti Explained" },
-    summary: {
-      ne: "सूर्य कर्क राशिमा — दक्षिणायनको आरम्भ र वर्षा ऋतुसँगको सम्बन्ध।",
-      en: "The Sun in Karka — the start of Dakshinayana and its link with the monsoon.",
-    },
-  },
-  {
-    slug: "uttarayana-dakshinayana",
-    section: "sun",
-    status: "published",
-    icon: TrendingUp,
-    title: { ne: "उत्तरायण र दक्षिणायन", en: "Uttarāyaṇa and Dakṣiṇāyana" },
-    summary: {
-      ne: "सूर्यको उत्तर–दक्षिण यात्राका दुई आधावार्षिक चरण, र क्रान्ति (declination) सँगको सम्बन्ध।",
-      en: "The two half-year phases of the Sun's north–south journey, and how they relate to declination.",
-    },
-  },
-  {
-    slug: "sankranti-vs-solstice",
-    section: "sun",
-    status: "published",
-    icon: Split,
-    title: { ne: "सङ्क्रान्ति र अयनान्त — फरक के?", en: "Sankranti vs Solstice" },
-    summary: {
-      ne: "एउटा राशि सीमामा आधारित, अर्को सूर्यको क्रान्तिमा — दुई फरक सन्दर्भ प्रणाली।",
-      en: "One is defined by a zodiac boundary, the other by the Sun's declination — two different reference systems.",
-    },
-  },
-  {
     slug: "sidereal-vs-tropical",
     section: "sun",
     status: "published",
@@ -424,6 +531,50 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
+    slug: "uttarayana-dakshinayana",
+    section: "sun",
+    status: "published",
+    icon: TrendingUp,
+    title: { ne: "उत्तरायण र दक्षिणायन", en: "Uttarāyaṇa and Dakṣiṇāyana" },
+    summary: {
+      ne: "सूर्यको उत्तर–दक्षिण यात्राका दुई आधावार्षिक चरण, र क्रान्ति (declination) सँगको सम्बन्ध।",
+      en: "The two half-year phases of the Sun's north–south journey, and how they relate to declination.",
+    },
+  },
+  {
+    slug: "makara-sankranti",
+    section: "sun",
+    status: "published",
+    icon: Snowflake,
+    title: { ne: "मकर सङ्क्रान्ति", en: "Makara Sankranti Explained" },
+    summary: {
+      ne: "माघे सङ्क्रान्ति — सूर्य मकरमा प्रवेश, र यो शीत अयनान्तसँग किन मिल्दैन।",
+      en: "Maghe Sankranti — the Sun's entry into Makara, and why it is not the winter solstice.",
+    },
+  },
+  {
+    slug: "karka-sankranti",
+    section: "sun",
+    status: "published",
+    icon: Thermometer,
+    title: { ne: "कर्क सङ्क्रान्ति", en: "Karka Sankranti Explained" },
+    summary: {
+      ne: "सूर्य कर्क राशिमा — दक्षिणायनको आरम्भ र वर्षा ऋतुसँगको सम्बन्ध।",
+      en: "The Sun in Karka — the start of Dakshinayana and its link with the monsoon.",
+    },
+  },
+  {
+    slug: "sankranti-vs-solstice",
+    section: "sun",
+    status: "published",
+    icon: Split,
+    title: { ne: "सङ्क्रान्ति र अयनान्त — फरक के?", en: "Sankranti vs Solstice" },
+    summary: {
+      ne: "एउटा राशि सीमामा आधारित, अर्को सूर्यको क्रान्तिमा — दुई फरक सन्दर्भ प्रणाली।",
+      en: "One is defined by a zodiac boundary, the other by the Sun's declination — two different reference systems.",
+    },
+  },
+  {
     slug: "ritu-drift",
     section: "sun",
     status: "published",
@@ -434,8 +585,96 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "Ṛtu follows the tropical (equinox–solstice) zodiac, months follow the sidereal (sign–sankranti) one — precession shifts them by ~1 day every 72 years; both cannot stay fixed together.",
     },
   },
-
-  /* ── 🌙 THE MOON ──────────────────────────────────────────────── */
+  /* ── ♈ THE ZODIAC AND CELESTIAL COORDINATES ──────────────────────── */
+  {
+    slug: "ecliptic",
+    section: "zodiac",
+    status: "published",
+    icon: Spline,
+    title: { ne: "क्रान्तिवृत्त", en: "The Ecliptic" },
+    summary: {
+      ne: "सूर्यको वार्षिक मार्ग — राशि र नक्षत्र यसैमा नापिन्छन्।",
+      en: "The Sun's annual path — the line along which rashi and nakshatra are measured.",
+    },
+  },
+  {
+    slug: "celestial-equator",
+    section: "zodiac",
+    status: "published",
+    icon: Scale,
+    title: { ne: "खगोलीय विषुवत् रेखा", en: "The Celestial Equator" },
+    summary: {
+      ne: "पृथ्वीको विषुवत् रेखाको आकाशीय प्रक्षेप — विषुव यहीँ बन्छ।",
+      en: "Earth's equator projected onto the sky — where the equinoxes are defined.",
+    },
+  },
+  {
+    slug: "zodiac-belt",
+    section: "zodiac",
+    status: "published",
+    icon: Grid2x2,
+    title: { ne: "राशि पट्टी", en: "The Zodiac Belt" },
+    summary: {
+      ne: "क्रान्तिवृत्तको दुईतिर ~९° को पट्टी जहाँ सूर्य, चन्द्र र ग्रह हिँड्छन्।",
+      en: "The ~9° band either side of the ecliptic in which Sun, Moon and planets travel.",
+    },
+  },
+  {
+    slug: "celestial-sphere",
+    section: "zodiac",
+    status: "published",
+    icon: Globe,
+    title: { ne: "खगोलीय गोला", en: "The Celestial Sphere" },
+    summary: {
+      ne: "आकाशलाई गोलाकार मानी स्थान नाप्ने ढाँचा।",
+      en: "The frame that treats the sky as a sphere so positions can be measured.",
+    },
+  },
+  {
+    slug: "sidereal-time",
+    section: "zodiac",
+    status: "published",
+    icon: Timer,
+    title: { ne: "नाक्षत्र काल", en: "Sidereal Time" },
+    summary: {
+      ne: "ताराको सापेक्ष नापिने समय — लग्न र भाव गणनाको आधार।",
+      en: "Time measured against the stars — the basis of lagna and house calculation.",
+    },
+  },
+  {
+    slug: "right-ascension",
+    section: "zodiac",
+    status: "published",
+    icon: Pi,
+    title: { ne: "विषुवांश (Right Ascension)", en: "Right Ascension" },
+    summary: {
+      ne: "विषुवत् प्रणालीको देशान्तर — घण्टामा नापिने आकाशीय समन्वय।",
+      en: "Longitude in the equatorial system — a celestial coordinate measured in hours.",
+    },
+  },
+  /* ── 🌙 THE MOON ──────────────────────────────────────────────────── */
+  {
+    slug: "moon-lunar-calendar",
+    section: "moon",
+    status: "published",
+    icon: Moon,
+    title: { ne: "चन्द्रले चान्द्र पात्रो कसरी बनाउँछ", en: "How the Moon Creates the Lunar Calendar" },
+    summary: {
+      ne: "तिथिबाट पक्ष, पक्षबाट मास — चान्द्र पात्रोको संरचना।",
+      en: "Tithi into paksha, paksha into month — the structure of the lunar calendar.",
+    },
+  },
+  {
+    slug: "lunar-month",
+    section: "moon",
+    status: "published",
+    icon: CalendarClock,
+    title: { ne: "चान्द्र मास के हो", en: "What Is a Lunar Month?" },
+    summary: {
+      ne: "एक औंसीदेखि अर्कोसम्म ~२९.५३ दिन — सांयोगिक (synodic) मास।",
+      en: "From one new moon to the next, about 29.53 days — the synodic month.",
+    },
+  },
   {
     slug: "tithi",
     section: "moon",
@@ -456,28 +695,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "चन्द्र र सूर्यको कोणीय गति स्थिर नभएकाले १२° पूरा हुने समय घटबढ हुन्छ।",
       en: "Because neither the Moon nor the Sun moves at a constant angular speed, the time to cover 12° varies.",
-    },
-  },
-  {
-    slug: "tithi-vriddhi",
-    section: "moon",
-    status: "published",
-    icon: Repeat,
-    title: { ne: "तिथि किन दोहोरिन्छ", en: "Why Tithi Repeats (Vriddhi)" },
-    summary: {
-      ne: "चन्द्र मन्द गतिमा हिँड्दा एउटै तिथि किन दुई दिन पर्छ।",
-      en: "Why one tithi spans two days when the Moon moves slowly.",
-    },
-  },
-  {
-    slug: "tithi-kshaya",
-    section: "moon",
-    status: "published",
-    icon: Scissors,
-    title: { ne: "तिथि किन हराउँछ", en: "Why Tithi Skips (Kshaya)" },
-    summary: {
-      ne: "चन्द्र द्रुत गतिमा हिँड्दा कुनै तिथि किन पात्रोबाट हराउँछ।",
-      en: "Why a tithi disappears from the calendar when the Moon moves quickly.",
     },
   },
   {
@@ -503,25 +720,25 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "lunar-month",
+    slug: "tithi-vriddhi",
     section: "moon",
     status: "published",
-    icon: CalendarClock,
-    title: { ne: "चान्द्र मास के हो", en: "What Is a Lunar Month?" },
+    icon: Repeat,
+    title: { ne: "तिथि किन दोहोरिन्छ", en: "Why Tithi Repeats (Vriddhi)" },
     summary: {
-      ne: "एक औंसीदेखि अर्कोसम्म ~२९.५३ दिन — सांयोगिक (synodic) मास।",
-      en: "From one new moon to the next, about 29.53 days — the synodic month.",
+      ne: "चन्द्र मन्द गतिमा हिँड्दा एउटै तिथि किन दुई दिन पर्छ।",
+      en: "Why one tithi spans two days when the Moon moves slowly.",
     },
   },
   {
-    slug: "moon-lunar-calendar",
+    slug: "tithi-kshaya",
     section: "moon",
     status: "published",
-    icon: Moon,
-    title: { ne: "चन्द्रले चान्द्र पात्रो कसरी बनाउँछ", en: "How the Moon Creates the Lunar Calendar" },
+    icon: Scissors,
+    title: { ne: "तिथि किन हराउँछ", en: "Why Tithi Skips (Kshaya)" },
     summary: {
-      ne: "तिथिबाट पक्ष, पक्षबाट मास — चान्द्र पात्रोको संरचना।",
-      en: "Tithi into paksha, paksha into month — the structure of the lunar calendar.",
+      ne: "चन्द्र द्रुत गतिमा हिँड्दा कुनै तिथि किन पात्रोबाट हराउँछ।",
+      en: "Why a tithi disappears from the calendar when the Moon moves quickly.",
     },
   },
   {
@@ -557,8 +774,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "When two sankrantis fall inside one lunar month it drops from the calendar — a rare case.",
     },
   },
-
-  /* ── ⭐ THE FIVE LIMBS ────────────────────────────────────────── */
+  /* ── ⭐ THE FIVE LIMBS ────────────────────────────────────────────── */
   {
     slug: "vara",
     section: "five-limbs",
@@ -568,17 +784,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "सात वार, तिनका ग्रह स्वामी, र सूर्योदयदेखि सूर्योदयसम्मको वैदिक दिन।",
       en: "The seven weekdays, their planetary rulers, and the sunrise-to-sunrise Vedic day.",
-    },
-  },
-  {
-    slug: "hora",
-    section: "five-limbs",
-    status: "published",
-    icon: Clock,
-    title: { ne: "होरा · ग्रहीय होरा", en: "Planetary Hora (Hours)" },
-    summary: {
-      ne: "सात ग्रहले पालैपालो शासन गर्ने दिनका चौबीस होरा — र दिनको नाम कसरी बन्छ।",
-      en: "The day's twenty-four horas ruled in turn by the seven planets — and how the day gets its name.",
     },
   },
   {
@@ -625,199 +830,141 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "How to read a single day's panchanga line — the five limbs taken together.",
     },
   },
-
-  /* ── 🌌 ASTRONOMY BEHIND THE CALENDAR ────────────────────────── */
+  /* ── ⏱️ VEDIC TIME DIVISIONS ─────────────────────────────────────── */
   {
-    slug: "astronomy-basics",
-    section: "astronomy",
+    slug: "hora",
+    section: "vedic-time",
     status: "published",
-    icon: Eye,
-    title: { ne: "गहिरो जानुअघि — खगोलीय आधार", en: "Before Going Deeper — Sky Basics" },
+    icon: Clock,
+    title: { ne: "होरा · ग्रहीय होरा", en: "Planetary Hora (Hours)" },
     summary: {
-      ne: "आकाश, कोण, १२ राशि, ९ ग्रह, २७ नक्षत्र, तिथि, योग, करण — गहिरो पढ्नुअघि पूरा सूची।",
-      en: "The sky, angles, 12 rashis, 9 grahas, 27 nakshatras, tithi, yoga, karana — the full list before reading deeper.",
+      ne: "सात ग्रहले पालैपालो शासन गर्ने दिनका चौबीस होरा — र दिनको नाम कसरी बन्छ।",
+      en: "The day's twenty-four horas ruled in turn by the seven planets — and how the day gets its name.",
     },
   },
   {
-    slug: "earth-rotation-day",
-    section: "astronomy",
-    status: "published",
-    icon: RotateCw,
-    title: { ne: "पृथ्वीको घुर्णन र दिनको लम्बाइ", en: "Earth's Rotation and the Length of a Day" },
+    slug: "day-night-divisions",
+    section: "vedic-time",
+    status: "planned",
+    icon: SunMoon,
+    title: { ne: "दिन र रात कसरी बाँडिन्छ", en: "How Day and Night Are Divided" },
     summary: {
-      ne: "नाक्षत्र दिन र सौर दिनबीचको ~४ मिनेटको फरक किन?",
-      en: "Why a sidereal day and a solar day differ by about 4 minutes.",
+      ne: "सूर्योदयदेखि सूर्यास्तसम्मको दिनमान र रात्रिमान — वैदिक दिन घडीको २४ घण्टासँग किन मिल्दैन।",
+      en: "Dinamana and ratrimana, from sunrise to sunset — why the Vedic day does not match a 24-hour clock.",
     },
   },
   {
-    slug: "solar-system",
-    section: "astronomy",
-    status: "published",
-    icon: Orbit,
-    title: { ne: "सौर्यमण्डल र चन्द्र गति", en: "Earth's Revolution and Lunar Motion" },
-    summary: {
-      ne: "पृथ्वीको परिक्रमा र चन्द्रको गति — सबै पात्रो गणनाको खगोलीय जग।",
-      en: "Earth's orbit and the Moon's motion — the astronomical basis of all patro calculations.",
-    },
-  },
-  {
-    slug: "axial-tilt",
-    section: "astronomy",
-    status: "published",
-    icon: Axis3d,
-    title: { ne: "पृथ्वीको २३.४४° अक्ष झुकाव", en: "Earth's 23.44° Axial Tilt" },
-    summary: {
-      ne: "क्रान्तिवृत्त र खगोलीय विषुवत् रेखाबीचको कोण — ऋतुको मूल कारण।",
-      en: "The angle between the ecliptic and the celestial equator — the root cause of the seasons.",
-    },
-  },
-  {
-    slug: "why-seasons",
-    section: "astronomy",
-    status: "published",
-    icon: CloudSun,
-    title: { ne: "ऋतु किन हुन्छन्", en: "Why Seasons Occur" },
-    summary: {
-      ne: "दूरी होइन, झुकाव — सूर्यको किरणको कोण र दिनको लम्बाइले ऋतु बनाउँछ।",
-      en: "Tilt, not distance — the angle of sunlight and the length of day make the seasons.",
-    },
-  },
-  {
-    slug: "equinoxes",
-    section: "astronomy",
-    status: "published",
-    icon: Scale,
-    title: { ne: "विषुव", en: "Equinoxes Explained" },
-    summary: {
-      ne: "सूर्य खगोलीय विषुवत् रेखा काट्ने दुई क्षण — दिन र रात बराबर।",
-      en: "The two moments the Sun crosses the celestial equator — day and night in balance.",
-    },
-  },
-  {
-    slug: "solstices",
-    section: "astronomy",
-    status: "published",
-    icon: Flame,
-    title: { ne: "अयनान्त", en: "Solstices Explained" },
-    summary: {
-      ne: "सूर्यको क्रान्ति उच्चतम वा न्यूनतम हुने क्षण — सबैभन्दा लामो र छोटो दिन।",
-      en: "When the Sun's declination reaches its extreme — the longest and shortest days.",
-    },
-  },
-  {
-    slug: "precession",
-    section: "astronomy",
-    status: "published",
-    icon: Rotate3d,
-    title: { ne: "पृथ्वीको अक्षको अयन चलन", en: "Precession of Earth's Axis" },
-    summary: {
-      ne: "~२६,००० वर्षको चक्र जसले विषुव र तारापुञ्जको सम्बन्ध बिस्तारै बदल्छ।",
-      en: "The ~26,000-year cycle that slowly changes the relationship between equinox and stars.",
-    },
-  },
-  {
-    slug: "pole-star-changes",
-    section: "astronomy",
-    status: "published",
-    icon: Star,
-    title: { ne: "ध्रुव तारा किन फेरिन्छ", en: "Why the Pole Star Changes" },
-    summary: {
-      ne: "अक्ष घुम्दै जाँदा उत्तर आकाशीय ध्रुवले फरक तारा देखाउँछ।",
-      en: "As the axis swings, the north celestial pole points at a different star.",
-    },
-  },
-  {
-    slug: "ancient-sky",
-    section: "astronomy",
-    status: "published",
-    icon: Landmark,
-    title: { ne: "प्राचीन आकाश कस्तो देखिन्थ्यो", en: "How the Ancient Sky Looked Different" },
-    summary: {
-      ne: "हजारौँ वर्ष अघिको विषुव, नक्षत्र र ऋतुको सम्बन्ध।",
-      en: "The relationship between equinox, nakshatra and season thousands of years ago.",
-    },
-  },
-  {
-    slug: "sidereal-time",
-    section: "astronomy",
-    status: "published",
+    slug: "muhurta",
+    section: "vedic-time",
+    status: "planned",
     icon: Timer,
-    title: { ne: "नाक्षत्र काल", en: "Sidereal Time" },
+    title: { ne: "मुहूर्त", en: "Muhurta" },
     summary: {
-      ne: "ताराको सापेक्ष नापिने समय — लग्न र भाव गणनाको आधार।",
-      en: "Time measured against the stars — the basis of lagna and house calculation.",
+      ne: "दिनलाई ३० भागमा बाँड्ने वैदिक समय एकाइ र शुभ–अशुभ मुहूर्तको आधार।",
+      en: "The Vedic time unit that splits the day into thirty parts, and the basis of auspicious timing.",
     },
   },
   {
-    slug: "solar-longitude",
-    section: "astronomy",
-    status: "published",
-    icon: Navigation,
-    title: { ne: "सूर्यको देशान्तर", en: "Solar Longitude" },
+    slug: "ghati-pala",
+    section: "vedic-time",
+    status: "planned",
+    icon: Hourglass,
+    title: { ne: "घटी, पला र विपला", en: "Ghati, Pala and Vipala" },
     summary: {
-      ne: "क्रान्तिवृत्तमा सूर्यको ०–३६०° स्थान — गते र सङ्क्रान्ति यहीँबाट निस्कन्छ।",
-      en: "The Sun's 0–360° place on the ecliptic — where gate and sankranti come from.",
+      ne: "पञ्चाङ्गमा समय लेख्ने परम्परागत एकाइ — घटी–पलालाई घण्टा–मिनेटमा कसरी पढ्ने।",
+      en: "The traditional units a panchanga writes time in — how to read ghati and pala as hours and minutes.",
+    },
+  },
+  /* ── 🇳🇵 HOW BIKRAM SAMBAT IS BUILT ───────────────────────────────── */
+  {
+    slug: "baisakh-1",
+    section: "bs-construction",
+    status: "planned",
+    icon: Milestone,
+    title: { ne: "बैशाख १ कसरी तय हुन्छ", en: "How Baisakh 1 Is Fixed" },
+    summary: {
+      ne: "मेष सङ्क्रान्तिको क्षण र सूर्योदयको नियमले वर्षको पहिलो गते कसरी छान्छ।",
+      en: "How the instant of Mesha Sankranti and the sunrise rule together pick the first day of the year.",
     },
   },
   {
-    slug: "lunar-longitude",
-    section: "astronomy",
-    status: "published",
+    slug: "solar-month-first-gate",
+    section: "bs-construction",
+    status: "planned",
+    icon: CalendarClock,
+    title: { ne: "सौर महिनाको पहिलो गते कसरी आउँछ", en: "How the First Gate of a Solar Month Arrives" },
+    summary: {
+      ne: "सङ्क्रान्ति दिनको कुन समयमा पर्‍यो भन्नेले गते १ त्यही दिन कि भोलि हुन्छ भन्ने तय गर्छ।",
+      en: "Where the sankranti falls within a day decides whether gate 1 is that day or the next.",
+    },
+  },
+  {
+    slug: "sankranti-to-month",
+    section: "bs-construction",
+    status: "planned",
+    icon: Workflow,
+    title: { ne: "सङ्क्रान्तिबाट महिना कसरी बन्छ", en: "From Sankranti to a Calendar Month" },
+    summary: {
+      ne: "दुई सङ्क्रान्तिबीचको अवधि नै एक नेपाली महिना — गते गन्ती यसैभित्र चल्छ।",
+      en: "The span between two sankrantis is one Nepali month, and the gate count runs inside it.",
+    },
+  },
+  {
+    slug: "nepali-month-length",
+    section: "bs-construction",
+    status: "planned",
+    icon: Ruler,
+    title: { ne: "नेपाली महिनाको लम्बाइ किन फरक हुन्छ", en: "Why Nepali Months Have Different Lengths" },
+    summary: {
+      ne: "पृथ्वीको अण्डाकार कक्षले सूर्यको गति बदल्छ, त्यसैले महिना २९ देखि ३२ दिनसम्मको हुन्छ।",
+      en: "Earth's elliptical orbit changes the Sun's apparent speed, so months run from 29 to 32 days.",
+    },
+  },
+  {
+    slug: "bs-year-formation",
+    section: "bs-construction",
+    status: "planned",
+    icon: CalendarRange,
+    title: { ne: "बि.सं. को वर्ष कसरी बन्छ", en: "How a Bikram Sambat Year Is Formed" },
+    summary: {
+      ne: "बाह्र सौर महिना जोडिएर एक बि.सं. वर्ष बन्छ — र त्यो वर्ष सधैँ ३६५ दिनको हुँदैन।",
+      en: "Twelve solar months make one BS year — and that year is not always 365 days long.",
+    },
+  },
+  {
+    slug: "bs-date-determination",
+    section: "bs-construction",
+    status: "planned",
     icon: Locate,
-    title: { ne: "चन्द्रको देशान्तर", en: "Lunar Longitude" },
+    title: { ne: "एक बि.सं. मिति कसरी निर्धारण हुन्छ", en: "How a Single BS Date Is Determined" },
     summary: {
-      ne: "क्रान्तिवृत्तमा चन्द्रको स्थान — तिथि, नक्षत्र र योगको इनपुट।",
-      en: "The Moon's place on the ecliptic — the input to tithi, nakshatra and yoga.",
+      ne: "वर्ष, महिना र गते — तीनवटै छुट्टै नियमबाट आउँछन्, र सँगै एउटा मिति बनाउँछन्।",
+      en: "Year, month and gate each come from a separate rule, and together they make one date.",
     },
   },
   {
-    slug: "declination",
-    section: "astronomy",
-    status: "published",
-    icon: Crosshair,
-    title: { ne: "क्रान्ति र सूर्यको उत्तर–दक्षिण गति", en: "Declination and the Sun's North–South Motion" },
+    slug: "month-days-vary",
+    section: "bs-construction",
+    status: "planned",
+    icon: Layers,
+    title: { ne: "एउटै महिनाका दिन वर्षैपिच्छे किन फरक हुन्छन्", en: "Why the Same Month Has Different Day Counts" },
     summary: {
-      ne: "सूर्य विषुवत् रेखाबाट कति उत्तर वा दक्षिण — सूर्योदयको समय यसैले बदल्छ।",
-      en: "How far north or south of the equator the Sun stands — what shifts sunrise through the year.",
-    },
-  },
-
-  /* ── 🌑 ECLIPSES ──────────────────────────────────────────────── */
-  {
-    slug: "eclipses",
-    section: "eclipses",
-    status: "published",
-    icon: Eclipse,
-    title: { ne: "ग्रहण — सूर्य र चन्द्र", en: "Solar & Lunar Eclipses" },
-    summary: {
-      ne: "राहु–केतु, पात रेखा, चन्द्रग्रहण (पूर्णिमा) र सूर्यग्रहण (औंसी) — प्रकार, चित्र र सावधानी।",
-      en: "Rahu–Ketu, the node line, lunar eclipses (full moon) and solar eclipses (new moon) — types, diagrams and precautions.",
+      ne: "गत वर्ष ३१ दिनको भदौ यस वर्ष ३२ दिनको किन — सङ्क्रान्तिको क्षण सर्दै जाने कारण।",
+      en: "Why a 31-day Bhadau becomes 32 days the next year — the sankranti instant keeps shifting.",
     },
   },
   {
-    slug: "rahu-ketu-nodes",
-    section: "eclipses",
-    status: "published",
-    icon: Aperture,
-    title: { ne: "राहु–केतु र पात रेखा", en: "Rahu–Ketu and the Node Line" },
+    slug: "bs-ad-conversion",
+    section: "bs-construction",
+    status: "planned",
+    icon: ArrowLeftRight,
+    title: { ne: "बि.सं. र ई.सं. मिति कसरी रूपान्तरण हुन्छ", en: "How BS and AD Dates Are Converted" },
     summary: {
-      ne: "चन्द्र कक्ष र क्रान्तिवृत्त काटिने दुई बिन्दु — ग्रहण यहीँ मात्र सम्भव।",
-      en: "The two points where the Moon's orbit crosses the ecliptic — the only places an eclipse can happen.",
+      ne: "तालिका होइन, गणना — जुलियन दिनमार्फत दुई पात्रोबीच मिति कसरी सारिन्छ।",
+      en: "Not a lookup table but a computation — how a date moves between the two calendars via the Julian Day.",
     },
   },
-  {
-    slug: "eclipse-seasons",
-    section: "eclipses",
-    status: "published",
-    icon: Radar,
-    title: { ne: "ग्रहण ऋतु र चक्र", en: "Eclipse Seasons and Cycles" },
-    summary: {
-      ne: "ग्रहण किन झुण्डमा आउँछन्, र सरोस चक्र कसरी दोहोरिन्छ।",
-      en: "Why eclipses come in groups, and how the saros cycle repeats.",
-    },
-  },
-
-  /* ── 🧮 HOW A DATE IS CALCULATED ─────────────────────────────── */
+  /* ── 🧮 HOW A DATE IS CALCULATED ──────────────────────────────────── */
   {
     slug: "how-we-calculate",
     section: "calculation",
@@ -827,6 +974,17 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "nepali-holiday-api को pipeline — राशि पट्टी, झुकाव, अयन चलन, Swiss Ephemeris सूत्र, daily.py र HTTP routes; अन्तरक्रियात्मक चित्र सहित।",
       en: "The nepali-holiday-api pipeline — rashi belt, axial tilt, precession, Swiss Ephemeris formulas, daily.py, and routes — with interactive sky diagrams.",
+    },
+  },
+  {
+    slug: "time-scales",
+    section: "calculation",
+    status: "published",
+    icon: Gauge,
+    title: { ne: "गणनालाई शुद्ध काल मापन किन चाहिन्छ", en: "Why Calculations Need a Precise Time Scale" },
+    summary: {
+      ne: "UT, TT र ΔT — कुन घडीमा गणना गर्दा फरक पर्छ।",
+      en: "UT, TT and ΔT — which clock you compute in, and why it matters.",
     },
   },
   {
@@ -928,19 +1086,131 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "One instant, different sunrises — the local day boundary changes the answer.",
     },
   },
+  /* ── 🌑 ECLIPSES ──────────────────────────────────────────────────── */
   {
-    slug: "time-scales",
-    section: "calculation",
+    slug: "rahu-ketu-nodes",
+    section: "eclipses",
     status: "published",
-    icon: Gauge,
-    title: { ne: "गणनालाई शुद्ध काल मापन किन चाहिन्छ", en: "Why Calculations Need a Precise Time Scale" },
+    icon: Aperture,
+    title: { ne: "राहु–केतु र पात रेखा", en: "Rahu–Ketu and the Node Line" },
     summary: {
-      ne: "UT, TT र ΔT — कुन घडीमा गणना गर्दा फरक पर्छ।",
-      en: "UT, TT and ΔT — which clock you compute in, and why it matters.",
+      ne: "चन्द्र कक्ष र क्रान्तिवृत्त काटिने दुई बिन्दु — ग्रहण यहीँ मात्र सम्भव।",
+      en: "The two points where the Moon's orbit crosses the ecliptic — the only places an eclipse can happen.",
     },
   },
-
-  /* ── 🗓️ CALENDAR COMPARISON ──────────────────────────────────── */
+  {
+    slug: "eclipses",
+    section: "eclipses",
+    status: "published",
+    icon: Eclipse,
+    title: { ne: "ग्रहण — सूर्य र चन्द्र", en: "Solar & Lunar Eclipses" },
+    summary: {
+      ne: "राहु–केतु, पात रेखा, चन्द्रग्रहण (पूर्णिमा) र सूर्यग्रहण (औंसी) — प्रकार, चित्र र सावधानी।",
+      en: "Rahu–Ketu, the node line, lunar eclipses (full moon) and solar eclipses (new moon) — types, diagrams and precautions.",
+    },
+  },
+  {
+    slug: "eclipse-seasons",
+    section: "eclipses",
+    status: "published",
+    icon: Radar,
+    title: { ne: "ग्रहण ऋतु र चक्र", en: "Eclipse Seasons and Cycles" },
+    summary: {
+      ne: "ग्रहण किन झुण्डमा आउँछन्, र सरोस चक्र कसरी दोहोरिन्छ।",
+      en: "Why eclipses come in groups, and how the saros cycle repeats.",
+    },
+  },
+  /* ── 🔭 DEEPER ASTRONOMY ──────────────────────────────────────────── */
+  {
+    slug: "geocentric-heliocentric",
+    section: "deeper",
+    status: "published",
+    icon: Network,
+    title: { ne: "भूकेन्द्रित र सूर्यकेन्द्रित दृष्टिकोण", en: "Geocentric vs Heliocentric Views" },
+    summary: {
+      ne: "पञ्चाङ्ग पृथ्वीबाट देखिने आकाश वर्णन गर्छ — दुई दृष्टिकोण किन दुवै सही छन्।",
+      en: "A panchanga describes the sky as seen from Earth — why both frames are valid.",
+    },
+  },
+  {
+    slug: "mean-vs-true-motion",
+    section: "deeper",
+    status: "published",
+    icon: Gauge,
+    title: { ne: "मध्यम गति र स्पष्ट गति", en: "Mean Motion vs True Motion" },
+    summary: {
+      ne: "औसत गतिबाट वास्तविक स्थानमा पुग्ने सुधार — मध्यम ग्रहबाट स्पष्ट ग्रह।",
+      en: "The correction from an average rate to a real position — madhyama to spashta.",
+    },
+  },
+  {
+    slug: "retrograde-motion",
+    section: "deeper",
+    status: "published",
+    icon: Repeat,
+    title: { ne: "वक्री गति", en: "Retrograde Motion Explained" },
+    summary: {
+      ne: "ग्रह पछाडि हिँडेको किन देखिन्छ — सापेक्ष गतिको ज्यामिति।",
+      en: "Why a planet appears to move backwards — the geometry of relative motion.",
+    },
+  },
+  {
+    slug: "precession",
+    section: "deeper",
+    status: "published",
+    icon: Rotate3d,
+    title: { ne: "पृथ्वीको अक्षको अयन चलन", en: "Precession of Earth's Axis" },
+    summary: {
+      ne: "~२६,००० वर्षको चक्र जसले विषुव र तारापुञ्जको सम्बन्ध बिस्तारै बदल्छ।",
+      en: "The ~26,000-year cycle that slowly changes the relationship between equinox and stars.",
+    },
+  },
+  {
+    slug: "pole-star-changes",
+    section: "deeper",
+    status: "published",
+    icon: Star,
+    title: { ne: "ध्रुव तारा किन फेरिन्छ", en: "Why the Pole Star Changes" },
+    summary: {
+      ne: "अक्ष घुम्दै जाँदा उत्तर आकाशीय ध्रुवले फरक तारा देखाउँछ।",
+      en: "As the axis swings, the north celestial pole points at a different star.",
+    },
+  },
+  {
+    slug: "ancient-sky",
+    section: "deeper",
+    status: "published",
+    icon: Landmark,
+    title: { ne: "प्राचीन आकाश कस्तो देखिन्थ्यो", en: "How the Ancient Sky Looked Different" },
+    summary: {
+      ne: "हजारौँ वर्ष अघिको विषुव, नक्षत्र र ऋतुको सम्बन्ध।",
+      en: "The relationship between equinox, nakshatra and season thousands of years ago.",
+    },
+  },
+  {
+    slug: "ancient-planetary-motion",
+    section: "deeper",
+    status: "published",
+    icon: Orbit,
+    title: { ne: "प्राचीन ज्योतिषीले ग्रह गति कसरी वर्णन गर्थे", en: "How Ancient Astronomers Described Planetary Motion" },
+    summary: {
+      ne: "मन्दोच्च, शीघ्रोच्च र सिद्धान्तिक सुधार चक्र।",
+      en: "Manda and shighra corrections, and the cycles of siddhantic astronomy.",
+    },
+  },
+  {
+    slug: "history",
+    section: "deeper",
+    status: "published",
+    icon: History,
+    path: "/learn/history",
+    title: { ne: "मयासुरको सूर्य सिद्धान्त", en: "Mayasura's Surya Siddhanta" },
+    summary: {
+      ne: "नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।",
+      en: "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
+    },
+  },
+  /* ── 📚 CALENDAR COMPARISON ───────────────────────────────────────── */
   {
     slug: "calendar-differences",
     section: "comparison",
@@ -1016,130 +1286,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "छायाँ, गनोमन, जल घडी र नक्षत्र अवलोकन।",
       en: "Shadows, gnomons, water clocks and nakshatra observation.",
-    },
-  },
-
-  /* ── 🔭 DEEPER KNOWLEDGE ─────────────────────────────────────── */
-  {
-    slug: "history",
-    section: "deeper",
-    status: "published",
-    icon: History,
-    path: "/learn/history",
-    title: { ne: "मयासुरको सूर्य सिद्धान्त", en: "Mayasura's Surya Siddhanta" },
-    summary: {
-      ne: "नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।",
-      en: "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
-    },
-  },
-  {
-    slug: "ancient-planetary-motion",
-    section: "deeper",
-    status: "published",
-    icon: Orbit,
-    title: { ne: "प्राचीन ज्योतिषीले ग्रह गति कसरी वर्णन गर्थे", en: "How Ancient Astronomers Described Planetary Motion" },
-    summary: {
-      ne: "मन्दोच्च, शीघ्रोच्च र सिद्धान्तिक सुधार चक्र।",
-      en: "Manda and shighra corrections, and the cycles of siddhantic astronomy.",
-    },
-  },
-  {
-    slug: "mean-vs-true-motion",
-    section: "deeper",
-    status: "published",
-    icon: Gauge,
-    title: { ne: "मध्यम गति र स्पष्ट गति", en: "Mean Motion vs True Motion" },
-    summary: {
-      ne: "औसत गतिबाट वास्तविक स्थानमा पुग्ने सुधार — मध्यम ग्रहबाट स्पष्ट ग्रह।",
-      en: "The correction from an average rate to a real position — madhyama to spashta.",
-    },
-  },
-  {
-    slug: "retrograde-motion",
-    section: "deeper",
-    status: "published",
-    icon: Repeat,
-    title: { ne: "वक्री गति", en: "Retrograde Motion Explained" },
-    summary: {
-      ne: "ग्रह पछाडि हिँडेको किन देखिन्छ — सापेक्ष गतिको ज्यामिति।",
-      en: "Why a planet appears to move backwards — the geometry of relative motion.",
-    },
-  },
-  {
-    slug: "geocentric-heliocentric",
-    section: "deeper",
-    status: "published",
-    icon: Network,
-    title: { ne: "भूकेन्द्रित र सूर्यकेन्द्रित दृष्टिकोण", en: "Geocentric vs Heliocentric Views" },
-    summary: {
-      ne: "पञ्चाङ्ग पृथ्वीबाट देखिने आकाश वर्णन गर्छ — दुई दृष्टिकोण किन दुवै सही छन्।",
-      en: "A panchanga describes the sky as seen from Earth — why both frames are valid.",
-    },
-  },
-  {
-    slug: "celestial-sphere",
-    section: "deeper",
-    status: "published",
-    icon: Globe,
-    title: { ne: "खगोलीय गोला", en: "The Celestial Sphere" },
-    summary: {
-      ne: "आकाशलाई गोलाकार मानी स्थान नाप्ने ढाँचा।",
-      en: "The frame that treats the sky as a sphere so positions can be measured.",
-    },
-  },
-  {
-    slug: "ecliptic",
-    section: "deeper",
-    status: "published",
-    icon: Spline,
-    title: { ne: "क्रान्तिवृत्त", en: "The Ecliptic" },
-    summary: {
-      ne: "सूर्यको वार्षिक मार्ग — राशि र नक्षत्र यसैमा नापिन्छन्।",
-      en: "The Sun's annual path — the line along which rashi and nakshatra are measured.",
-    },
-  },
-  {
-    slug: "celestial-equator",
-    section: "deeper",
-    status: "published",
-    icon: Scale,
-    title: { ne: "खगोलीय विषुवत् रेखा", en: "The Celestial Equator" },
-    summary: {
-      ne: "पृथ्वीको विषुवत् रेखाको आकाशीय प्रक्षेप — विषुव यहीँ बन्छ।",
-      en: "Earth's equator projected onto the sky — where the equinoxes are defined.",
-    },
-  },
-  {
-    slug: "right-ascension",
-    section: "deeper",
-    status: "published",
-    icon: Pi,
-    title: { ne: "विषुवांश (Right Ascension)", en: "Right Ascension" },
-    summary: {
-      ne: "विषुवत् प्रणालीको देशान्तर — घण्टामा नापिने आकाशीय समन्वय।",
-      en: "Longitude in the equatorial system — a celestial coordinate measured in hours.",
-    },
-  },
-  {
-    slug: "zodiac-belt",
-    section: "deeper",
-    status: "published",
-    icon: Grid2x2,
-    title: { ne: "राशि पट्टी", en: "The Zodiac Belt" },
-    summary: {
-      ne: "क्रान्तिवृत्तको दुईतिर ~९° को पट्टी जहाँ सूर्य, चन्द्र र ग्रह हिँड्छन्।",
-      en: "The ~9° band either side of the ecliptic in which Sun, Moon and planets travel.",
-    },
-  },
-  {
-    slug: "sky-rotation",
-    section: "deeper",
-    status: "published",
-    icon: Route,
-    title: { ne: "पृथ्वीबाट आकाश कसरी घुमेको देखिन्छ", en: "How the Sky Appears to Rotate From Earth" },
-    summary: {
-      ne: "दैनिक घुर्णन, ध्रुव र अक्षांशअनुसार आकाशको फरक दृश्य।",
-      en: "Daily rotation, the poles, and how the view of the sky changes with latitude.",
     },
   },
 ];

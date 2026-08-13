@@ -21,11 +21,13 @@ import { EarthRotationDiagram } from "@/components/learn/EarthRotationDiagram";
 import { EclipseStudy } from "@/components/learn/EclipseStudy";
 import { EquinoxPrecession } from "@/components/learn/EquinoxPrecession";
 import { HeliocentricOrbitStudy } from "@/components/learn/HeliocentricOrbitStudy";
+import { HierarchyDiagram } from "@/components/learn/HierarchyDiagram";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import { PrecessionCone } from "@/components/learn/PrecessionCone";
 import { SolarEclipseStudy } from "@/components/learn/SolarEclipseStudy";
 import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
+import { TwoSystemsDiagram } from "@/components/learn/TwoSystemsDiagram";
 import {
   GrahaReferenceTable,
   KaranaReferenceTable,
@@ -41,6 +43,9 @@ export const LEARN_DIAGRAMS = {
   "earth-rotation": EarthRotationDiagram,
   "sun-earth-moon": SunEarthMoonStudy,
   "ecliptic-belt": EclipticBeltStudy,
+  /* 3D, client-only and code-split — see TwoSystemsDiagram. */
+  "two-systems": TwoSystemsDiagram,
+  "calendar-hierarchy": HierarchyDiagram,
 
   /* Zodiac reference frames */
   "ayanamsha-wheel": AyanamshaWheel,

@@ -2,6 +2,7 @@ import type { ArticleData } from "../article-schema";
 
 import { bikramSambat } from "./foundation/bikram-sambat";
 import { bsAdOffset } from "./foundation/bs-ad-offset";
+import { bsCalendar } from "./foundation/bs-calendar";
 import { bsVsAd } from "./foundation/bs-vs-ad";
 import { chandramana } from "./foundation/chandramana";
 import { nepaliCalendarBasics } from "./foundation/nepali-calendar-basics";
@@ -86,6 +87,7 @@ const ALL: ArticleData[] = [
   /* Foundation */
   nepaliCalendarBasics,
   bikramSambat,
+  bsCalendar,
   yearBeginsBaisakh,
   bsVsAd,
   bsAdOffset,

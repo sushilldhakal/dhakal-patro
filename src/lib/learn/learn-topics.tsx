@@ -1,7 +1,6 @@
 import {
   AstronomyBasics,
   SolarSystem,
-  BsCalendar,
   CalendarDifferences,
   WhatIsPanchang,
   TithiArticle,
@@ -51,7 +50,6 @@ export interface LearnTopic extends LearnTopicMeta {
 const COMPONENT_CONTENT_BY_SLUG: Record<string, () => React.ReactNode> = {
   "astronomy-basics": AstronomyBasics,
   "solar-system": SolarSystem,
-  "bs-calendar": BsCalendar,
   "calendar-differences": CalendarDifferences,
   "adhik-maas": AdhikMaas,
   "ritu-drift": RituDrift,

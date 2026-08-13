@@ -159,8 +159,6 @@ export const learnRefHighlightRow =
 
 export const learnRefSym = "mr-1 text-base opacity-90";
 
-export const learnRefEn = "whitespace-nowrap text-sm text-[var(--tm-ink-faint)]";
-
 export const learnRefDeg =
   "whitespace-nowrap text-xs text-[var(--tm-amber)]";
 

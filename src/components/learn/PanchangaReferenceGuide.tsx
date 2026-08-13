@@ -14,7 +14,6 @@ import { useLocale, bilingualText } from "@/i18n/locale";
 import {
   learnRefCaption,
   learnRefDeg,
-  learnRefEn,
   learnRefHighlightRow,
   learnRefNote,
   learnRefPada,
@@ -70,7 +69,6 @@ export function RashiReferenceTable() {
         <tr>
           <th>#</th>
           <th>{t("learn.rashi")}</th>
-          <th>English</th>
           <th>°</th>
           <th>{t("learn.lord")}</th>
           <th>{t("learn.element")}</th>
@@ -81,7 +79,6 @@ export function RashiReferenceTable() {
           <tr key={r.ne}>
             <td className={patroMono}>{N(i + 1)}</td>
             <td>{bilingualText(lang, r.ne, r.en)}</td>
-            <td className={learnRefEn}>{r.en}</td>
             <td className={cn(patroMono, learnRefDeg)}>
               {N(i * 30)}°–{N((i + 1) * 30)}°
             </td>
@@ -103,7 +100,6 @@ export function GrahaReferenceTable() {
         <tr>
           <th>#</th>
           <th>{t("learn.graha")}</th>
-          <th>English</th>
           <th>{t("learn.brief_meaning")}</th>
         </tr>
       </thead>
@@ -112,7 +108,6 @@ export function GrahaReferenceTable() {
           <tr key={g.ne}>
             <td className={patroMono}>{N(i + 1)}</td>
             <td>{bilingualText(lang, g.ne, g.en)}</td>
-            <td className={learnRefEn}>{g.en}</td>
             <td>{bilingualText(lang, g.note, g.noteEn)}</td>
           </tr>
         ))}
@@ -130,7 +125,6 @@ export function NakshatraReferenceTable() {
         <tr>
           <th>#</th>
           <th>{t("learn.nakshatra")}</th>
-          <th>English</th>
           <th>°</th>
           <th>{t("learn.lord")}</th>
           <th>{t("learn.symbol")}</th>
@@ -148,7 +142,6 @@ export function NakshatraReferenceTable() {
             <tr key={nak.ne}>
               <td className={patroMono}>{N(i + 1)}</td>
               <td>{bilingualText(lang, nak.ne, nak.en)}</td>
-              <td className={learnRefEn}>{nak.en}</td>
               <td className={cn(patroMono, learnRefDeg)}>
                 {N(startDeg)}°{N(20)}′–{N(startDeg + 13)}°{N(20)}′
               </td>
@@ -176,7 +169,6 @@ export function TithiReferenceTable() {
         <tr>
           <th>#</th>
           <th>{t("learn.tithi")}</th>
-          <th>English</th>
           <th>{t("learn.paksha")}</th>
           <th>{t("learn.angle")}</th>
         </tr>
@@ -189,7 +181,6 @@ export function TithiReferenceTable() {
             <tr key={`${t.ne}-${i}`} className={t.moon ? learnRefHighlightRow : undefined}>
               <td className={patroMono}>{N(i + 1)}</td>
               <td>{bilingualText(lang, t.ne, t.en)}</td>
-              <td className={learnRefEn}>{t.en}</td>
               <td>{bilingualText(lang, t.paksha, t.pakshaEn ? `${t.pakshaEn} Paksha` : t.paksha)}</td>
               <td className={cn(patroMono, learnRefDeg)}>
                 {N(degStart)}°–{N(degEnd)}°

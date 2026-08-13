@@ -97,16 +97,16 @@ export const nepaliCalendarBasics: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "यी दुई पूरै छुट्टाछुट्टै पात्रो होइनन्। परम्परागत पात्रो प्रणालीले यिनको **खगोलीय सम्बन्ध** प्रयोग गरेर मिति व्यवस्थित गर्छ — एउटैले अर्कोलाई बाँधेर राख्छ।",
-            en: "These are not two entirely separate calendars. Traditional calendrical systems use their **astronomical relationship** to organise dates — each one anchors the other.",
+            ne: "यी दुई छुट्टाछुट्टै **मापन प्रणाली** हुन्, तर परम्परागत पात्रोमा सूर्य र चन्द्र दुवैको सम्बन्ध प्रयोग हुन्छ — एउटैले अर्कोलाई बाँधेर राख्छ।",
+            en: "These are two distinct **measurement frameworks**, but a traditional calendar uses the relationship between Sun and Moon together — each one anchors the other.",
           },
         },
         {
           kind: "diagram",
-          id: "sun-earth-moon",
+          id: "two-systems",
           caption: {
-            ne: "पृथ्वी सूर्यको वरिपरि (सौर वर्ष) र चन्द्र पृथ्वीको वरिपरि (चान्द्र मास) — दुवै चक्र एकैसाथ चल्छन्।",
-            en: "Earth around the Sun (the solar year) and the Moon around Earth (the lunar month) — both cycles run at once.",
+            ne: "एउटै आकाश, दुई मापन। सूर्यको राशिचक्रमा स्थितिले सौरमान दिन्छ (राशि पार गर्दा सङ्क्रान्ति, अनि नयाँ सौर महिना); चन्द्र–सूर्यको कोणले चान्द्रमान (हरेक १२° = १ तिथि, १५ तिथि = १ पक्ष)। तलको समयरेखामा १२ चान्द्र मास सौर वर्षभन्दा ~११ दिन छोटो हुन्छ — त्यही खाली ठाउँ अधिक मासले पुर्छ।",
+            en: "One sky, two measures. The Sun's place in the zodiac gives sauramāna (cross a rashi and a sankranti begins a new solar month); the Moon–Sun angle gives chāndramāna (every 12° is one tithi, fifteen tithis one paksha). On the timeline below, twelve lunar months fall ~11 days short of the solar year — the gap an adhik maas fills.",
           },
         },
       ],
@@ -166,32 +166,8 @@ export const nepaliCalendarBasics: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `                     CELESTIAL MOTION
-                            │
-           ┌────────────────┼────────────────┐
-           │                │                │
-          SUN              MOON            EARTH
-           │                │                │
-           ▼                ▼                ▼
-        RASHI             TITHI          DAY / VĀRA
-           │                │                │
-           ▼                ▼                │
-     SANKRANTI          PAKSHA               │
-           │                │                │
-           ▼                ▼                │
-     SOLAR MONTH       LUNAR MONTH           │
-           │                │                │
-           └────────┬───────┘                │
-                    ▼                        │
-               CALENDAR YEAR                 │
-                    │                        │
-                    ▼                        │
-               PANCHANGA ◄───────────────────┘`,
-          caption: {
-            ne: "सूर्यबाट राशि र सङ्क्रान्ति, चन्द्रबाट तिथि र पक्ष, पृथ्वीबाट दिन र वार — तीनै मिलेर पञ्चाङ्ग बन्छ।",
-            en: "Rashi and sankranti from the Sun, tithi and paksha from the Moon, day and vara from Earth — the three together make the Panchanga.",
-          },
+          kind: "diagram",
+          id: "calendar-hierarchy",
         },
         {
           kind: "para",

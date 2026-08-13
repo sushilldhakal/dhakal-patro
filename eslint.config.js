@@ -50,11 +50,14 @@ export default defineConfig([
     },
   },
   {
-    // The 3D sky's frame loop is imperative on purpose: `useFrame` writes
+    // A 3D scene's frame loop is imperative on purpose: `useFrame` writes
     // positions straight onto three.js object refs sixty times a second, and
     // React only hears a sampled snapshot five times a second. Routing that
-    // through state is exactly what the scene is built to avoid.
-    files: ['src/components/sky3d/AakashGocharScene.tsx'],
+    // through state is exactly what these scenes are built to avoid.
+    files: [
+      'src/components/sky3d/AakashGocharScene.tsx',
+      'src/components/learn/TwoSystemsScene.tsx',
+    ],
     rules: {
       'react-hooks/immutability': 'off',
     },

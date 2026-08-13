@@ -25,13 +25,17 @@ import {
 } from "@/lib/learn/learn-topics";
 import { LEARN_SECTIONS_BY_ID, plannedInSection } from "@/lib/learn/learn-library";
 
-const FEATURED_SLUGS = ["nepali-calendar-basics", "what-is-panchang", "tithi"] as const;
+const FEATURED_SLUGS = ["astronomy-basics", "nepali-calendar-basics", "tithi"] as const;
 
-/** The intended entry path: calendar → era → panchanga → tithi. */
+/**
+ * The intended entry path: sky → calendar → the Sun that drives it → the
+ * panchanga it produces. Astronomy first, because every later article
+ * assumes the reader can already picture what is moving.
+ */
 const STARTER_PATH_SLUGS = [
+  "astronomy-basics",
   "nepali-calendar-basics",
-  "bikram-sambat",
-  "year-begins-baisakh",
+  "solar-year",
   "what-is-panchang",
 ] as const;
 
@@ -57,9 +61,21 @@ const SECTION_STYLE: Record<string, { chip: string; ring: string }> = {
     chip: "bg-teal-500/10 text-teal-900 border-teal-500/25 dark:text-teal-200",
     ring: "group-hover:ring-teal-500/25",
   },
-  astronomy: {
+  "earth-sky": {
+    chip: "bg-lime-500/10 text-lime-900 border-lime-500/25 dark:text-lime-200",
+    ring: "group-hover:ring-lime-500/25",
+  },
+  zodiac: {
     chip: "bg-indigo-500/10 text-indigo-900 border-indigo-500/25 dark:text-indigo-200",
     ring: "group-hover:ring-indigo-500/25",
+  },
+  "vedic-time": {
+    chip: "bg-slate-500/10 text-slate-900 border-slate-500/25 dark:text-slate-200",
+    ring: "group-hover:ring-slate-500/25",
+  },
+  "bs-construction": {
+    chip: "bg-red-500/10 text-red-900 border-red-500/25 dark:text-red-200",
+    ring: "group-hover:ring-red-500/25",
   },
   eclipses: {
     chip: "bg-violet-500/10 text-violet-900 border-violet-500/25 dark:text-violet-200",
@@ -266,6 +282,12 @@ export function Learn() {
     [],
   );
 
+  /** Sections with nothing published yet are outline-only — don't count them. */
+  const liveCategoryCount = useMemo(
+    () => LEARN_CATEGORIES.filter((c) => topicsInCategory(c.id).length > 0).length,
+    [],
+  );
+
   const filteredTopics = useMemo(() => {
     return LEARN_TOPICS.filter((topic) => {
       const matchesCategory =
@@ -303,7 +325,7 @@ export function Learn() {
               </div>
               <div className={learnStatPill}>
                 <Layers3 className="h-4 w-4 text-secondary" />
-                <span>{t("learn_page.categories_count", { count: LEARN_CATEGORIES.length })}</span>
+                <span>{t("learn_page.categories_count", { count: liveCategoryCount })}</span>
               </div>
             </div>
           </div>
@@ -369,6 +391,9 @@ export function Learn() {
           {LEARN_CATEGORIES.map((cat) => {
             const MetaIcon = sectionIcon(cat.id);
             const count = topicsInCategory(cat.id).length;
+            // A section whose articles are all still outlined has nothing to
+            // filter to — its chip would lead to the empty state.
+            if (count === 0) return null;
             return (
               <button
                 key={cat.id}
