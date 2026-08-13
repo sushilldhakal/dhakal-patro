@@ -19,6 +19,7 @@
  */
 
 import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
 import { Link } from "@tanstack/react-router";
 import {
@@ -490,15 +491,6 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           </IconButton>
         </div>
 
-        {/* Prev / next topic, only in fullscreen — inline, the article's own
-            footer already links onward. */}
-        {fullscreen && (
-          <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
-            {navButton("prev") ?? <span />}
-            {navButton("next") ?? <span />}
-          </div>
-        )}
-
         {/* Capped against the canvas, not the viewport: the drawer floats over
             the scene, so a 70vh panel on a short canvas would hang off the
             bottom of the thing it belongs to. */}
@@ -592,6 +584,15 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           fullscreen && (detailsOpen ? "max-h-[46vh]" : "max-h-none"),
         )}
       >
+        {/* Prev / next topic. In the panel, not floating over the canvas: down
+            there they landed on top of the filter chips on a phone. */}
+        {fullscreen && (prev || next) && (
+          <div className="flex items-center justify-between gap-2">
+            {navButton("prev") ?? <span />}
+            {navButton("next") ?? <span />}
+          </div>
+        )}
+
         {filterChips}
 
         <div className="flex w-full items-center gap-2.5 sm:gap-3">
@@ -673,6 +674,16 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               ))}
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+                {pick("अर्को ग्रहको कक्ष र झुकाव लगाउनुहोस्", "Borrow another world's orbit and tilt")}
+              </span>
+              <p className="text-[11px] leading-snug text-white/40">
+                {pick(
+                  "उत्केन्द्रता र अक्ष झुकाव मात्र सर्छ — वर्षका दिन उस्तै रहन्छ, किनभने कुनै पनि ग्रहको साँचो सङ्ख्या यो स्लाइडरमा अट्दैन।",
+                  "Only the eccentricity and tilt transfer — days per year is left alone, because no planet's real figure fits on that slider.",
+                )}
+              </p>
             <div className={edPresets}>
               {PLANET_PRESETS.map((p) => (
                 <button
@@ -680,6 +691,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                   type="button"
                   className={cn(edPreset(false), "!text-white/60 hover:!text-white")}
                   onClick={() => applyPreset(p.key)}
+                  title={pick(
+                    `${PLANET_NAMES[p.key]![0]} · उत्केन्द्रता ${num(p.eccentricity.toFixed(4))} · झुकाव ${num(p.tilt.toFixed(2))}° · वास्तविक वर्षमा ${num(Math.round(p.daysPerYear - 1))} सौर दिन`,
+                    `${PLANET_NAMES[p.key]![1]} · eccentricity ${p.eccentricity.toFixed(4)} · tilt ${p.tilt.toFixed(2)}° · a real year there holds ${Math.round(p.daysPerYear - 1)} solar days`,
+                  )}
                 >
                   {PLANET_NAMES[p.key]![ne ? 0 : 1]}
                 </button>
@@ -696,6 +711,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               >
                 {pick("यो विषयमा फर्कनुहोस्", "Back to this topic")}
               </button>
+            </div>
             </div>
 
             <button
@@ -726,22 +742,47 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
   if (!fullscreen) return <div className="mt-5">{body}</div>;
 
+  /*
+   * Portalled to <body>, not rendered where it sits.
+   *
+   * The article body is `relative z-[1]`, which opens a stacking context — and
+   * a fixed layer inside one can never rise above a sibling of that context, so
+   * the z-50 sticky header and the z-50 mobile bottom nav stayed on top of the
+   * "fullscreen" view. Any transformed or filtered ancestor also becomes the
+   * containing block for `position: fixed`, so `inset-0` covered that
+   * ancestor's box rather than the viewport. A portal to <body> escapes both,
+   * and z-[100] clears the app chrome. Same fix as {@link ./TwoSystemsStudy}.
+   */
   return (
-    <div ref={overlayRef} className="fixed inset-0 z-[100] bg-black">
-      {body}
+    <div className="mt-5">
+      <div className="rounded-2xl border border-dashed border-[var(--tm-border)] px-4 py-8 text-center text-sm text-[var(--tm-ink-faint)]">
+        {pick(
+          "पूर्ण स्क्रिनमा खुलेको छ — बन्द गर्न Esc थिच्नुहोस्",
+          "Open in fullscreen — press Esc to close",
+        )}
+      </div>
+      {createPortal(
+        <div
+          ref={overlayRef}
+          className="fixed inset-0 z-[100] overscroll-contain"
+          style={{ background: CANVAS_BG }}
+        >
+          {body}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
 
+/** Earth plus the five graha the eye can see. No Uranus, no Neptune. */
 const PLANET_NAMES: Record<string, [string, string]> = {
-  mercury: ["बुध", "Mercury"],
-  venus: ["शुक्र", "Venus"],
   earth: ["पृथ्वी", "Earth"],
   mars: ["मङ्गल", "Mars"],
+  mercury: ["बुध", "Mercury"],
   jupiter: ["बृहस्पति", "Jupiter"],
+  venus: ["शुक्र", "Venus"],
   saturn: ["शनि", "Saturn"],
-  uranus: ["युरेनस", "Uranus"],
-  neptune: ["नेप्च्युन", "Neptune"],
 };
 
 function IconButton({

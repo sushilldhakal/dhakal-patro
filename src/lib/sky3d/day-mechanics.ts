@@ -224,34 +224,43 @@ export function dayCounts(day: number, daysPerYear: number, eot: number) {
 /* Presets                                                             */
 /* ------------------------------------------------------------------ */
 
+const EARTH_YEAR = 365.256;
+
 export interface PlanetPreset {
   key: string;
-  /** Sidereal rotations per orbit. */
+  /** Sidereal rotations per orbit. Informational only — see below. */
   daysPerYear: number;
   eccentricity: number;
   /** Axial tilt in degrees. */
   tilt: number;
 }
 
-const EARTH_YEAR = 365.256;
-
 /**
- * Real values for the planets, for the "does this happen anywhere else" question.
+ * The five graha the eye can see, with Earth as the home reading.
  *
- * `daysPerYear` is the orbital period over the rotation period, so it is not
- * round for anybody but Earth. Venus, Uranus and Pluto are tilted past 90°,
- * which is how a retrograde spin is written down — the sim renders it as the
- * backwards rotation it is.
+ * These exist to make one point: the extra turn and the equation of time are
+ * not Earth's quirks. Give any world an ellipse and a tilted axis and it gets
+ * its own analemma, of its own shape.
+ *
+ * **Only eccentricity and tilt are applied.** `daysPerYear` is carried for
+ * display and nothing else, because none of these fit on the slider — Mercury
+ * turns half a time per orbit and Saturn twenty-four thousand — so setting it
+ * would clamp to the nearest end and quietly show something that is not the
+ * planet at all. Eccentricity and tilt are exact, and they are the two that
+ * shape the equation of time, which is what the presets are for.
+ *
+ * Ordered as the weekdays name them — मङ्गल, बुध, बृहस्पति, शुक्र, शनि — since
+ * that ordering is itself a पञ्चाङ्ग idea the library teaches elsewhere.
+ * Uranus and Neptune are gone: they are not नव ग्रह and have no business here.
  */
 export const PLANET_PRESETS: PlanetPreset[] = [
-  { key: "mercury", daysPerYear: (87.969 * 24) / 4222.6, eccentricity: 0.2056, tilt: 0.01 },
-  { key: "venus", daysPerYear: (224.701 * 24) / 2802.0, eccentricity: 0.0068, tilt: 177.4 },
   { key: "earth", daysPerYear: EARTH_YEAR, eccentricity: 0.0167, tilt: 23.439 },
   { key: "mars", daysPerYear: (686.98 * 24) / 24.7, eccentricity: 0.0934, tilt: 25.19 },
+  { key: "mercury", daysPerYear: (87.969 * 24) / 4222.6, eccentricity: 0.2056, tilt: 0.01 },
   { key: "jupiter", daysPerYear: (11.862 * EARTH_YEAR * 24) / 9.9, eccentricity: 0.0484, tilt: 3.13 },
+  /* Tilted past 90°, which is how a retrograde spin is written down. */
+  { key: "venus", daysPerYear: (224.701 * 24) / 2802.0, eccentricity: 0.0068, tilt: 177.4 },
   { key: "saturn", daysPerYear: (29.457 * EARTH_YEAR * 24) / 10.7, eccentricity: 0.0542, tilt: 26.73 },
-  { key: "uranus", daysPerYear: (84.011 * EARTH_YEAR * 24) / 17.2, eccentricity: 0.0472, tilt: 97.77 },
-  { key: "neptune", daysPerYear: (164.79 * EARTH_YEAR * 24) / 16.1, eccentricity: 0.0086, tilt: 28.32 },
 ];
 
 /**
