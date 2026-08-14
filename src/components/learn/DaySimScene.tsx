@@ -107,21 +107,16 @@ const NODAL_PERIOD_DAYS = 6793.48;
 const NODAL_LAPS_PER_YEAR = 365.256363 / NODAL_PERIOD_DAYS;
 
 /**
- * The tilt of the Moon's orbit off the ecliptic — why eclipses are rare.
+ * The Moon's orbital plane against the ecliptic.
  *
- * Drawn at 26°, not the true 5.14°, and the exaggeration is deliberate. What
- * has to survive the scene's scale is not the angle but its *consequence*: at
- * syzygy the Moon must clear the planet's disc, or the picture says an eclipse
- * happens every month. Even at {@link MOON_ORBIT} = 3.6 the true angle lifts it
- * 0.32 against a planet of radius 1, so it would still pass behind. At 26° the
- * lift is 1.58 — past the planet's edge and the Moon's own radius, with room to
- * see it.
- *
- * What that buys is the thing worth teaching: the crossings are back to being
- * *occasional*. A पूर्णिमा only darkens when it happens to land near a node, the
- * two points where the tilted orbit cuts the ecliptic, and most of them do not.
+ * The real inclination is ~5.14°. At this scene's compressed orbit that lift
+ * is only a fraction of the planet's radius, so the Moon no longer clears the
+ * disc at every syzygy the way a 60-radii orbit would. The honest angle is
+ * still the right one to draw: Rāhu and Ketu *are* those two crossings, and
+ * exaggerating the tilt made the orbit a different object from the one they
+ * live on.
  */
-const MOON_INCLINATION = 26 * (Math.PI / 180);
+const MOON_INCLINATION = 5.14 * (Math.PI / 180);
 
 /** Synodic laps per year — new moon to new moon, one fewer than sidereal. */
 const MOON_SYNODIC_PER_YEAR = MOON_LAPS_PER_YEAR - 1;
@@ -509,30 +504,6 @@ function DaySimScene({
   const camAnchor = useRef(new THREE.Vector3());
   const lastTarget = useRef<CameraTarget>("meanSun");
   const focusEase = useRef(1);
-  const gridOuter = useRef<THREE.Group>(null!);
-  const gridGroup = useRef<THREE.Group>(null!);
-  const gridHelper = useRef<THREE.PolarGridHelper>(null!);
-
-  /*
-   * The grid is a plane, and half the year the Sun is under it.
-   *
-   * `PolarGridHelper` builds opaque, depth-writing lines, so a body below the
-   * equatorial plane was crossed out by whichever spokes happened to pass in
-   * front of it — exactly when the tilt has carried it down there, which is the
-   * one thing that view exists to show. Semi-transparent lines that do not
-   * write depth keep the grid readable as a floor and let what is beneath it
-   * show through.
-   */
-  useEffect(() => {
-    const helper = gridHelper.current;
-    if (!helper) return;
-    for (const m of Array.isArray(helper.material) ? helper.material : [helper.material]) {
-      m.transparent = true;
-      m.opacity = 0.6;
-      m.depthWrite = false;
-      m.needsUpdate = true;
-    }
-  }, []);
 
   const siderealGeom = useArcGeometry(1.4, 1.6);
   const solarGeom = useArcGeometry(1.2, 1.4);
@@ -791,6 +762,57 @@ function DaySimScene({
     group.add(makeLine(ellipseGeometry(BELT_OUTER, BELT_OUTER), COLOR.belt, 0.45));
     return group;
   }, []);
+
+  /** बिक्रम months sit on this circle — same 12-fold as the राशि, just inside. */
+  const monthRingLine = useMemo(
+    () => makeLine(ellipseGeometry(MONTH_R, MONTH_R), 0xe3d9a8, 0.5),
+    [],
+  );
+  useEffect(() => () => dispose(monthRingLine), [monthRingLine]);
+
+  /**
+   * Polar guide drawn in the belts' own frame, so the twelve radials *are*
+   * the राशि / month edges and the circles sit on the month, राशि and नक्षत्र
+   * rings. Built with `atLon`, not `PolarGridHelper` — that helper's first
+   * spoke is +Z, a quarter-turn off this scene's +X zero.
+   */
+  const guideGrid = useMemo(() => {
+    const group = new THREE.Group();
+    const rpts: number[] = [];
+    for (let i = 0; i < 12; i += 1) {
+      const a = atLon(i * 30, 4);
+      const b = atLon(i * 30, NAK_OUTER);
+      rpts.push(a.x, 0, a.z, b.x, 0, b.z);
+    }
+    const rg = new THREE.BufferGeometry();
+    rg.setAttribute("position", new THREE.Float32BufferAttribute(rpts, 3));
+    const spokes = new THREE.LineSegments(
+      rg,
+      new THREE.LineBasicMaterial({
+        color: 0x1e4a7a,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+      }),
+    );
+    group.add(spokes);
+    for (const r of [8, 12, MONTH_R, BELT_INNER, BELT_OUTER, NAK_OUTER]) {
+      const ring = makeLine(ellipseGeometry(r, r, 96), 0x1e4a7a, 0.4);
+      (ring.material as THREE.LineBasicMaterial).depthWrite = false;
+      group.add(ring);
+    }
+    return group;
+  }, []);
+  useEffect(
+    () => () => {
+      guideGrid.traverse((o) => {
+        const any = o as THREE.Mesh;
+        any.geometry?.dispose?.();
+        (any.material as THREE.Material | undefined)?.dispose?.();
+      });
+    },
+    [guideGrid],
+  );
 
   /** The lit segment — which rashi the Sun is in. Rotated, never rebuilt. */
   const rashiHighlight = useMemo(() => {
@@ -1155,9 +1177,6 @@ function DaySimScene({
     /* The Moon's own longitude, read from the world vector rather than assumed
        from `moonLon`: the 5.14° orbital inclination tilts the direction, so the
        ecliptic longitude is not quite the in-plane angle. */
-    /* The Moon's own longitude, read from the world vector rather than assumed
-       from `moonLon`: the 5.14° orbital inclination tilts the direction, so the
-       ecliptic longitude is not quite the in-plane angle. */
     const mDir = atLonInto(vMoon.current, moonLonAt(day), MOON_ORBIT)
       .applyQuaternion(moonPlaneQ.current)
       .applyQuaternion(eclipticQ);
@@ -1226,22 +1245,6 @@ function DaySimScene({
       anchorPos.z + v.distance * cosPitch * Math.cos(yaw),
     );
     cam.lookAt(anchorPos);
-
-    /*
-     * The grid belongs to whatever is focused — it is that body's own plane,
-     * the thing everything else is judged above or below. Left at the origin it
-     * measured the mean sun's plane no matter what the reader had picked, so
-     * with the Earth focused the Earth sat in the middle of a grid that was not
-     * its own. It rides the same eased anchor as the camera, so the two move
-     * together on a change of focus.
-     *
-     * From the Sun the plane that matters is the orbit's rather than the
-     * planet's equator, so the inner group tilts — the reference sim turns its
-     * grid on this focus for the same reason. Everything else in the scene is
-     * built in the equatorial frame, so it is the grid alone that moves.
-     */
-    gridOuter.current.position.copy(camAnchor.current);
-    gridGroup.current.rotation.x = cameraTarget === "sun" ? -tilt : 0;
 
     /* ── labels: positioned every frame, described five times a second ── */
     frame.current += 1;
@@ -1423,6 +1426,20 @@ function DaySimScene({
         {/* The belt's own zero rotated onto मेष, so the spokes line up with
             the labels and with the sightline's reading. */}
         <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
+          <group visible={toggles.grid} position={[0, -0.05, 0]}>
+            <primitive object={guideGrid} />
+            <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
+              <circleGeometry args={[NAK_OUTER, 64]} />
+              <meshBasicMaterial
+                color={0x000022}
+                transparent
+                opacity={0.7}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+              />
+            </mesh>
+          </group>
+          <primitive object={monthRingLine} visible={toggles.monthRing} />
           <primitive object={rashiBelt} visible={toggles.rashiBelt} />
           <primitive object={rashiHighlight} visible={toggles.rashiBelt} position={[0, -0.01, 0]} />
           <primitive object={nakBelt} visible={toggles.nakshatraBelt} />
@@ -1443,34 +1460,6 @@ function DaySimScene({
           to a belt that is already positioned there. */}
       <primitive object={sightline} visible={toggles.sightline} />
       <primitive object={moonSightline} />
-
-      {/* Equatorial grid.
-          Two groups, as in the reference sim: the outer one carries the grid to
-          whichever body is focused, the inner one tilts it into that body's own
-          plane. The filled disc under the lines is the point of the thing — a
-          bare wireframe gives the eye nothing to judge "below" against, so the
-          Sun dipping under the plane and coming back up only reads once there
-          is a surface for it to pass behind. */}
-      <group ref={gridOuter}>
-        <group ref={gridGroup} visible={toggles.grid} position={[0, -0.05, 0]}>
-          <polarGridHelper
-            ref={gridHelper}
-            args={[MEAN_DISTANCE * 3, 12, 6, 64, 0x001e44, 0x102b61]}
-          />
-          <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
-            <circleGeometry args={[MEAN_DISTANCE * 3, 64]} />
-            <meshBasicMaterial
-              color={0x000022}
-              transparent
-              opacity={0.7}
-              side={THREE.DoubleSide}
-              /* Never occludes what is in front of it — a body above the plane
-                 stays crisp, one below shows through dimmed. */
-              depthWrite={false}
-            />
-          </mesh>
-        </group>
-      </group>
 
       {/* Mean sun at the origin, and the circle the clock believes in */}
       <group visible={toggles.meanSun}>
