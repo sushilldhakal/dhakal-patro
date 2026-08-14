@@ -263,6 +263,12 @@ export function AakashGochar() {
           ayanamsaDeg={query.data?.ayanamsa?.degrees}
           date={sceneDate}
           onDateChange={changeDate}
+          /* The sky's own date picker is the only one within reach in
+             fullscreen, so it browses through the same era machinery the nav
+             above the canvas does — पू.वि.सं. included. */
+          era={era}
+          vikram={vikram}
+          onEraChange={handleEraChange}
           clock={clock}
           onClockChange={setClock}
           observer={observer}

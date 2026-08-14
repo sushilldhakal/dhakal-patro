@@ -1097,6 +1097,8 @@ export function AakashGocharScene({
    * years. `null` forces the next frame to rebuild.
    */
   const lastBelt = useRef<{ mode: SkyMode; lst: number; ayan: number; eps: number } | null>(null);
+  /** The obliquity the two tropic circles are currently drawn at. */
+  const tropicEps = useRef(Number.NaN);
   const labels = useRef<ScreenLabel[]>([]);
   const scratch = useRef(new THREE.Vector3());
   const target = useRef(new THREE.Vector3());
@@ -1431,6 +1433,26 @@ export function AakashGocharScene({
           setPoint(tiltMarks.arc, i, [0, arcR * Math.cos(t), -arcR * Math.sin(t)]);
         }
         flushLine(tiltMarks.arc);
+      }
+
+      /* ── the tropics, at the tilt of the day ───────────────────────────
+         The two parallels *are* the obliquity, laid on the ground: the Sun
+         stands overhead there at the ayana ends and nowhere further. Drawn
+         once at 23.44° they only match a sky near our own — this clock runs
+         to both ends of the बिक्रम axis, where the tilt is most of a degree
+         away and the subsolar point crossed a line that was not the tropic.
+         Rebuilt only when it has actually moved: within a lifetime it has
+         not, and this is a frame loop. */
+      if (globe && Math.abs(tropicEps.current - eps) > 0.002) {
+        tropicEps.current = eps;
+        for (const tropic of globeLines.tropics) {
+          const lat = tropic.id === "cancer" ? eps : -eps;
+          tropic.lat = lat;
+          for (let i = 0; i < tropic.src.length; i += 1) {
+            setVertex(tropic.object, i, geoToVec3(lat, tropic.src[i].lon, GLOBE_R * 1.01));
+          }
+          flushLine(tropic.object);
+        }
       }
 
       /* ── the ध्रुव तारा ────────────────────────────────────────────────
