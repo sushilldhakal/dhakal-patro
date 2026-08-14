@@ -34,12 +34,26 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type MutableRefObject,
 } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
+import rahuIconUrl from "@/assets/graha/rahu.svg?url";
+import ketuIconUrl from "@/assets/graha/ketu.svg?url";
 import { KATHMANDU } from "@/lib/sky3d/horizon";
+import {
+  atLonInto,
+  BELT_MID,
+  BELT_OUTER,
+  EclipticWheel,
+  GuideGrid,
+  MONTH_R,
+  NAK_INNER,
+  NAK_MID,
+  NAK_OUTER,
+} from "@/components/learn/EclipticWheel";
 import {
   equationOfTime,
   euclideanModulo,
@@ -103,6 +117,25 @@ const MOON_LAPS_PER_YEAR = 365.256363 / 27.321661;
  * and stay exactly 180° apart: they are the two ends of one line, the
  * intersection of the Moon's orbit with the ecliptic, not two independent bodies.
  */
+/**
+ * How far off the ecliptic the Moon may be at syzygy and still be eclipsed.
+ *
+ * The real limits are about 1.5° for a lunar eclipse and a little more for a
+ * solar one; one figure for both is close enough for a picture, and it is the
+ * *rarity* it is buying — an eclipse season twice a year, not every month.
+ */
+const ECLIPSE_LAT_LIMIT_DEG = 1.5;
+
+/**
+ * How near syzygy counts, in degrees of elongation.
+ *
+ * The real span of the partial phases, not a widened one: the Moon moves about
+ * 12° a day against the Sun, so ±1.5° is the couple of hours an eclipse
+ * actually lasts. It goes by quickly at playing speed for the same reason it
+ * does in life.
+ */
+const ECLIPSE_ELONG_WINDOW_DEG = 1.5;
+
 const NODAL_PERIOD_DAYS = 6793.48;
 const NODAL_LAPS_PER_YEAR = 365.256363 / NODAL_PERIOD_DAYS;
 
@@ -147,20 +180,8 @@ const MOON_ANCHOR_FROM_MESHA = 189.25;
 const TRAIL_STEPS = 160;
 const LAP_SEGMENTS = 240;
 
-const MONTH_R = 17.5;
-const BELT_INNER = 20;
-const BELT_MID = 23;
-const BELT_OUTER = 26;
-/* The नक्षत्र belt is built exactly like the राशि one — a band with an inner
-   and outer edge, spokes across it and the name centred inside — rather than a
-   thin line of ticks with the name floating outside it. Same width, so the two
-   read as the same kind of object. */
-/* Flush against the राशि belt — `NAK_INNER` *is* `BELT_OUTER`. They are two
-   rings of one wheel, the way a पञ्चाङ्ग chart draws them, so a gap between
-   them would read as a third thing that is not there. */
-const NAK_INNER = BELT_OUTER;
-const NAK_MID = 29;
-const NAK_OUTER = 32;
+/* Belt radii live on {@link EclipticWheel} — this scene and Aakash Gochar
+   mount that same wheel. */
 
 /** Ring segment count — arcs quantise to this, so 2° steps. */
 const ARC_SEGMENTS = 180;
@@ -184,25 +205,6 @@ const MOON_INCL_Q = new THREE.Quaternion().setFromAxisAngle(
   MOON_INCLINATION,
 );
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
-
-/** ecliptic longitude → a point in the equatorial plane, app convention. */
-function atLon(lonDeg: number, radius: number) {
-  const a = lonDeg * (Math.PI / 180);
-  return new THREE.Vector3(radius * Math.cos(a), 0, -radius * Math.sin(a));
-}
-
-/**
- * The same, written into a vector you already own.
- *
- * The frame loop runs sixty times a second and touches upwards of fifty
- * anchors; allocating a `Vector3` for each one handed the garbage collector
- * about fifteen hundred short-lived objects a second, and those collections
- * showed up as stutter. Everything on the hot path writes into scratch now.
- */
-function atLonInto(out: THREE.Vector3, lonDeg: number, radius: number) {
-  const a = lonDeg * (Math.PI / 180);
-  return out.set(radius * Math.cos(a), 0, -radius * Math.sin(a));
-}
 
 export type CameraTarget = "meanSun" | "planet" | "sun";
 
@@ -316,14 +318,6 @@ function ellipseGeometry(semiMajor: number, semiMinor: number, segments = 128) {
 }
 
 /**
- * Lines go through `<primitive>`, not `<line>`.
- *
- * `line` is an SVG intrinsic in React's JSX types, so the R3F element of the
- * same name resolves to `SVGLineElement` and every three.js prop on it is a
- * type error. Building the object and handing it over sidesteps the clash —
- * the same thing {@link ./TwoSystemsScene} does.
- */
-/**
  * Truncate a full ring to `angle`, by index count rather than by rebuilding.
  *
  * `RingGeometry` emits six indices per theta-segment in order, so the arc
@@ -362,20 +356,61 @@ function composeMoonPlane(
   return out.copy(solar).multiply(qNode).multiply(MOON_INCL_Q).multiply(qNodeInv);
 }
 
-/** Rāhu / Ketu — a smoky core and a ring facing the planet, not a textured ball. */
+/**
+ * Rasterise a bundled SVG into a texture.
+ *
+ * `TextureLoader` will not do: these files carry a `viewBox` and no width or
+ * height, so the browser hands the `<img>` its 300×150 default box and the
+ * artwork arrives squashed. Drawing it into a square canvas at a size the
+ * camera can zoom into keeps it round and sharp.
+ */
+function useSvgTexture(url: string, size = 256) {
+  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
+  useEffect(() => {
+    let live = true;
+    let made: THREE.CanvasTexture | null = null;
+    const img = new Image();
+    img.onload = () => {
+      if (!live) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, size, size);
+      made = new THREE.CanvasTexture(canvas);
+      made.colorSpace = THREE.SRGBColorSpace;
+      made.anisotropy = 4;
+      setTexture(made);
+    };
+    img.src = url;
+    return () => {
+      live = false;
+      made?.dispose();
+    };
+  }, [url, size]);
+  return texture;
+}
+
+/**
+ * राहु / केतु — the app's own graha artwork, billboarded.
+ *
+ * A sprite rather than a sphere, and the same SVG the पञ्चाङ्ग tables and the
+ * hora ring use, so a shadow graha looks like itself everywhere in the app.
+ * The glow behind it is kept: the nodes are not bodies, and a bare icon
+ * floating in the plane did not say so.
+ */
 function ShadowGraha({
   nodeRef,
   color,
+  map,
 }: {
   nodeRef: MutableRefObject<THREE.Group>;
   color: number;
+  map: THREE.Texture | null;
 }) {
   return (
     <group ref={nodeRef}>
-      <mesh>
-        <sphereGeometry args={[NODE_R, 16, 12]} />
-        <meshBasicMaterial color={color} transparent opacity={0.55} />
-      </mesh>
       <mesh>
         <sphereGeometry args={[NODE_R * 1.9, 16, 12]} />
         <meshBasicMaterial
@@ -386,12 +421,17 @@ function ShadowGraha({
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-      {/* Torus in YZ, so from ±X (where the nodes sit on the axis group) the
-          ring faces the planet — a hollow, not a body. */}
-      <mesh rotation={[0, Math.PI / 2, 0]}>
-        <torusGeometry args={[NODE_R * 1.45, NODE_R * 0.2, 8, 28]} />
-        <meshBasicMaterial color={color} transparent opacity={0.9} />
-      </mesh>
+      {map ? (
+        <sprite scale={[NODE_R * 5, NODE_R * 5, 1]}>
+          <spriteMaterial map={map} transparent depthWrite={false} />
+        </sprite>
+      ) : (
+        /* Until the artwork has decoded — one frame, usually. */
+        <mesh>
+          <sphereGeometry args={[NODE_R, 16, 12]} />
+          <meshBasicMaterial color={color} transparent opacity={0.55} />
+        </mesh>
+      )}
     </group>
   );
 }
@@ -480,6 +520,12 @@ function DaySimScene({
   const rahuGroup = useRef<THREE.Group>(null!);
   const ketuGroup = useRef<THREE.Group>(null!);
   const beltRoot = useRef<THREE.Group>(null!);
+  const gridRoot = useRef<THREE.Group>(null!);
+  const solarShadow = useRef<THREE.Group>(null!);
+  const vMoonWorld = useRef(new THREE.Vector3());
+  const vShadow = useRef(new THREE.Vector3());
+  const rashiHighlight = useRef<THREE.Mesh>(null!);
+  const nakHighlight = useRef<THREE.Mesh>(null!);
   const moonMesh = useRef<THREE.Mesh>(null!);
   const moonPlaneQ = useRef(new THREE.Quaternion());
   const qMoonNode = useRef(new THREE.Quaternion());
@@ -590,6 +636,20 @@ function DaySimScene({
    * incidental: a rounder orbit really does put सङ्क्रान्ति somewhere else
    * relative to perihelion.
    */
+  /**
+   * Where the grid's spokes start — the focused body's own radius.
+   *
+   * A fixed inner radius cannot serve all three: at 4 it cleared the planet by
+   * three units of empty floor, which reads as a hole punched round whatever is
+   * being watched. Each body gets its own, so the plane leaves its equator.
+   */
+  /** The app's own graha artwork for the two nodes. */
+  const rahuIcon = useSvgTexture(rahuIconUrl);
+  const ketuIcon = useSvgTexture(ketuIconUrl);
+
+  const focusRadius =
+    cameraTarget === "planet" ? PLANET_R : cameraTarget === "sun" ? SUN_R : MEAN_SUN_R;
+
   const beltZeroDeg = useMemo(
     () =>
       euclideanModulo(
@@ -740,163 +800,6 @@ function DaySimScene({
   }, []);
   useEffect(() => () => dispose(dropLine), [dropLine]);
 
-  /* ── the belts ─────────────────────────────────────────────────────── */
-
-  /** Rashi belt: two rings and the twelve 30° spokes between them. */
-  const rashiBelt = useMemo(() => {
-    const pts: number[] = [];
-    for (let i = 0; i < 12; i += 1) {
-      const a = atLon(i * 30, BELT_INNER);
-      const b = atLon(i * 30, BELT_OUTER);
-      pts.push(a.x, 0, a.z, b.x, 0, b.z);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
-    const spokes = new THREE.LineSegments(
-      g,
-      new THREE.LineBasicMaterial({ color: COLOR.belt, transparent: true, opacity: 0.75 }),
-    );
-    const group = new THREE.Group();
-    group.add(spokes);
-    group.add(makeLine(ellipseGeometry(BELT_INNER, BELT_INNER), COLOR.belt, 0.45));
-    group.add(makeLine(ellipseGeometry(BELT_OUTER, BELT_OUTER), COLOR.belt, 0.45));
-    return group;
-  }, []);
-
-  /** बिक्रम months sit on this circle — same 12-fold as the राशि, just inside. */
-  const monthRingLine = useMemo(
-    () => makeLine(ellipseGeometry(MONTH_R, MONTH_R), 0xe3d9a8, 0.5),
-    [],
-  );
-  useEffect(() => () => dispose(monthRingLine), [monthRingLine]);
-
-  /**
-   * Polar guide drawn in the belts' own frame, so the twelve radials *are*
-   * the राशि / month edges and the circles sit on the month, राशि and नक्षत्र
-   * rings. Built with `atLon`, not `PolarGridHelper` — that helper's first
-   * spoke is +Z, a quarter-turn off this scene's +X zero.
-   */
-  const guideGrid = useMemo(() => {
-    const group = new THREE.Group();
-    const rpts: number[] = [];
-    for (let i = 0; i < 12; i += 1) {
-      const a = atLon(i * 30, 4);
-      const b = atLon(i * 30, NAK_OUTER);
-      rpts.push(a.x, 0, a.z, b.x, 0, b.z);
-    }
-    const rg = new THREE.BufferGeometry();
-    rg.setAttribute("position", new THREE.Float32BufferAttribute(rpts, 3));
-    const spokes = new THREE.LineSegments(
-      rg,
-      new THREE.LineBasicMaterial({
-        color: 0x1e4a7a,
-        transparent: true,
-        opacity: 0.55,
-        depthWrite: false,
-      }),
-    );
-    group.add(spokes);
-    for (const r of [8, 12, MONTH_R, BELT_INNER, BELT_OUTER, NAK_OUTER]) {
-      const ring = makeLine(ellipseGeometry(r, r, 96), 0x1e4a7a, 0.4);
-      (ring.material as THREE.LineBasicMaterial).depthWrite = false;
-      group.add(ring);
-    }
-    return group;
-  }, []);
-  useEffect(
-    () => () => {
-      guideGrid.traverse((o) => {
-        const any = o as THREE.Mesh;
-        any.geometry?.dispose?.();
-        (any.material as THREE.Material | undefined)?.dispose?.();
-      });
-    },
-    [guideGrid],
-  );
-
-  /** The lit segment — which rashi the Sun is in. Rotated, never rebuilt. */
-  const rashiHighlight = useMemo(() => {
-    const g = new THREE.RingGeometry(BELT_INNER, BELT_OUTER, 24, 1, 0, Math.PI / 6);
-    const m = new THREE.Mesh(
-      g,
-      new THREE.MeshBasicMaterial({
-        color: COLOR.solar,
-        transparent: true,
-        opacity: 0.16,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      }),
-    );
-    m.rotation.x = -Math.PI / 2;
-    return m;
-  }, []);
-
-  /** Nakshatra belt: 27 ticks at 13°20′. */
-  const nakBelt = useMemo(() => {
-    const pts: number[] = [];
-    for (let i = 0; i < 27; i += 1) {
-      const lon = (i * 360) / 27;
-      const a = atLon(lon, NAK_INNER);
-      const b = atLon(lon, NAK_OUTER);
-      pts.push(a.x, 0, a.z, b.x, 0, b.z);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
-    const ticks = new THREE.LineSegments(
-      g,
-      new THREE.LineBasicMaterial({ color: COLOR.nakshatra, transparent: true, opacity: 0.7 }),
-    );
-    /**
-     * The twelve राशि boundaries, carried out across the नक्षत्र belt.
-     *
-     * A rashi is 30° and a nakshatra 13°20′, so a rashi holds exactly **2¼**
-     * nakshatras and the two grids only agree every 120°. Without these marks
-     * the outer belt is 27 anonymous ticks; with them you can read straight off
-     * which nakshatras a rashi contains, and see the quarter-nakshatra
-     * (a *पाद*) that the boundary cuts through.
-     */
-    const rpts: number[] = [];
-    for (let i = 0; i < 12; i += 1) {
-      /* Starting exactly on the shared edge continues the राशि spokes from the
-         inner belt without a break, so a boundary reads as one line crossing
-         both rings; the outward overshoot keeps it distinct from the 27
-         नक्षत्र spokes it runs beside. */
-      const a = atLon(i * 30, NAK_INNER);
-      const b = atLon(i * 30, NAK_OUTER + 1.1);
-      rpts.push(a.x, 0, a.z, b.x, 0, b.z);
-    }
-    const rg = new THREE.BufferGeometry();
-    rg.setAttribute("position", new THREE.Float32BufferAttribute(rpts, 3));
-    const rashiMarks = new THREE.LineSegments(
-      rg,
-      /* Belt gold, so they read as belonging to the rashi ring inside. */
-      new THREE.LineBasicMaterial({ color: COLOR.belt, transparent: true, opacity: 0.85 }),
-    );
-
-    const group = new THREE.Group();
-    group.add(ticks);
-    group.add(rashiMarks);
-    group.add(makeLine(ellipseGeometry(NAK_INNER, NAK_INNER), COLOR.nakshatra, 0.4));
-    group.add(makeLine(ellipseGeometry(NAK_OUTER, NAK_OUTER), COLOR.nakshatra, 0.4));
-    return group;
-  }, []);
-
-  /** The lit नक्षत्र — the same treatment the rashi belt gets, one segment wide. */
-  const nakHighlight = useMemo(() => {
-    const m = new THREE.Mesh(
-      new THREE.RingGeometry(NAK_INNER, NAK_OUTER, 10, 1, 0, PI2 / 27),
-      new THREE.MeshBasicMaterial({
-        color: COLOR.solar,
-        transparent: true,
-        opacity: 0.18,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      }),
-    );
-    m.rotation.x = -Math.PI / 2;
-    return m;
-  }, []);
-
   /**
    * Earth → Moon → नक्षत्र belt.
    *
@@ -942,23 +845,6 @@ function DaySimScene({
     return makeLine(g, COLOR.solar, 0.75);
   }, []);
   useEffect(() => () => dispose(sightline), [sightline]);
-
-  useEffect(
-    () => () => {
-      for (const group of [rashiBelt, nakBelt]) {
-        group.traverse((o) => {
-          const any = o as THREE.Mesh;
-          any.geometry?.dispose?.();
-          (any.material as THREE.Material | undefined)?.dispose?.();
-        });
-      }
-      for (const m of [rashiHighlight, nakHighlight]) {
-        m.geometry.dispose();
-        (m.material as THREE.Material).dispose();
-      }
-    },
-    [rashiBelt, nakBelt, rashiHighlight, nakHighlight],
-  );
 
   useFrame((_, delta) => {
     const { daysPerYear, eccentricity: e, tilt } = params;
@@ -1114,6 +1000,73 @@ function DaySimScene({
       }
     }
 
+    /*
+     * ── ग्रहण ─────────────────────────────────────────────────────────
+     *
+     * Decided in *angles*, drawn in the scene's own units, and the split is
+     * deliberate.
+     *
+     * The test is the real one an almanac uses: at syzygy, is the Moon's
+     * ecliptic latitude inside the eclipse limit? That latitude comes straight
+     * out of the model — the orbit is tilted about the राहु–केतु axis, so the
+     * Moon is only near the ecliptic when a syzygy falls near a node, which is
+     * why eclipses come in seasons twice a year instead of every fortnight.
+     *
+     * It cannot be read off the drawn geometry instead. The Moon is drawn 3.6
+     * planet-radii out where it belongs sixty, so its 5.14° of tilt lifts it a
+     * third of a radius rather than five — from the drawn picture alone every
+     * पूर्णिमा looks like it lands in the shadow. The angles are true even
+     * though the picture is compressed, so the angles decide.
+     *
+     * Both limits are the real ones. Nothing in the Moon's own geometry — the
+     * inclination, the orbit, the nodal period — is touched to make a shadow
+     * easier to catch.
+     */
+    {
+      const moonWorld = atLonInto(vMoonWorld.current, moonLonAt(day), MOON_ORBIT)
+        .applyQuaternion(moonPlaneQ.current)
+        .add(planetPos);
+
+      const toMoon = vShadow.current.copy(moonWorld).sub(planetPos).normalize();
+      const toSunDir = vTmp.current.copy(sunPos).sub(planetPos).normalize();
+      /* Latitude off the ecliptic, and elongation from the Sun — both as the
+         observer on the planet would measure them. */
+      const eclipticNormal = vAnchor.current.set(0, 1, 0).applyQuaternion(solarPlaneQ);
+      const latDeg = Math.asin(
+        Math.min(1, Math.max(-1, toMoon.dot(eclipticNormal))),
+      ) * (180 / Math.PI);
+      const elongDeg =
+        Math.acos(Math.min(1, Math.max(-1, toMoon.dot(toSunDir)))) * (180 / Math.PI);
+
+      /** 1 at dead centre, easing to 0 at the limit. */
+      const within = (value: number, limit: number) =>
+        Math.max(0, 1 - Math.abs(value) / limit);
+      const nearNode = within(latDeg, ECLIPSE_LAT_LIMIT_DEG);
+      const solar = nearNode * within(elongDeg, ECLIPSE_ELONG_WINDOW_DEG);
+      const lunar = nearNode * within(180 - elongDeg, ECLIPSE_ELONG_WINDOW_DEG);
+
+      /* सूर्य ग्रहण — the Moon's shadow on the planet, under the Moon itself.
+         Placed at the sub-lunar point rather than by intersecting the drawn
+         ray, for the same reason the test is angular: at this scale the drawn
+         ray hits the planet at every अमावस्या. */
+      const show = toggles.moon && solar > 0.02;
+      solarShadow.current.visible = show;
+      if (show) {
+        const hit = vShadow.current.copy(toMoon).multiplyScalar(PLANET_R).add(planetPos);
+        const normal = vTmp.current.copy(toMoon);
+        solarShadow.current.position.copy(hit).addScaledVector(normal, 0.015);
+        solarShadow.current.lookAt(vMoonWorld.current);
+        /* Grows as the shadow closes on the middle of the disc. */
+        solarShadow.current.scale.setScalar(0.45 + 0.55 * solar);
+      }
+
+      /* चन्द्र ग्रहण — the planet's shadow on the Moon, so it is the Moon that
+         darkens. Copper rather than black: the planet's air bends red light
+         into its own shadow, which is why a totally eclipsed Moon still shows. */
+      const mat = moonMesh.current.material as THREE.MeshStandardMaterial;
+      mat.color.setRGB(1 - 0.62 * lunar, 1 - 0.86 * lunar, 1 - 0.9 * lunar);
+    }
+
     /* ── which body the sky ring is hung around ──────────────────────── */
     /*
      * The belts are a ring of *directions*, and the stars that fix those
@@ -1156,8 +1109,8 @@ function DaySimScene({
 
     /* The highlight lives inside the ecliptic group, so its own rotation is
        just the rashi's start longitude within that plane. */
-    rashiHighlight.rotation.z = rashi * (Math.PI / 6);
-    nakHighlight.rotation.z = nak * (PI2 / 27);
+    if (rashiHighlight.current) rashiHighlight.current.rotation.z = rashi * (Math.PI / 6);
+    if (nakHighlight.current) nakHighlight.current.rotation.z = nak * (PI2 / 27);
 
     if (toggles.sightline) {
       /* Out to the belt's far edge, so the line crosses the whole band and
@@ -1245,6 +1198,10 @@ function DaySimScene({
       anchorPos.z + v.distance * cosPitch * Math.cos(yaw),
     );
     cam.lookAt(anchorPos);
+
+    /* The grid rides the same anchor, so the plane and the view arrive on the
+       focused body together rather than the floor sliding in afterwards. */
+    gridRoot.current.position.copy(anchorPos);
 
     /* ── labels: positioned every frame, described five times a second ── */
     frame.current += 1;
@@ -1426,27 +1383,15 @@ function DaySimScene({
         {/* The belt's own zero rotated onto मेष, so the spokes line up with
             the labels and with the sightline's reading. */}
         <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
-          <group visible={toggles.grid} position={[0, -0.05, 0]}>
-            <primitive object={guideGrid} />
-            <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
-              <circleGeometry args={[NAK_OUTER, 64]} />
-              <meshBasicMaterial
-                color={0x000022}
-                transparent
-                opacity={0.7}
-                side={THREE.DoubleSide}
-                depthWrite={false}
-              />
-            </mesh>
-          </group>
-          <primitive object={monthRingLine} visible={toggles.monthRing} />
-          <primitive object={rashiBelt} visible={toggles.rashiBelt} />
-          <primitive object={rashiHighlight} visible={toggles.rashiBelt} position={[0, -0.01, 0]} />
-          <primitive object={nakBelt} visible={toggles.nakshatraBelt} />
-          <primitive
-            object={nakHighlight}
-            visible={toggles.nakshatraBelt}
-            position={[0, -0.01, 0]}
+          <EclipticWheel
+            /* The grid is not drawn here: it belongs to the focused body, not
+               to the observer the belts hang on. See `gridRoot` below. */
+            grid={false}
+            rashiBelt={toggles.rashiBelt}
+            nakshatraBelt={toggles.nakshatraBelt}
+            monthRing={toggles.monthRing}
+            rashiHighlightRef={rashiHighlight}
+            nakHighlightRef={nakHighlight}
           />
           {/* Visibility of the two Moon markers is owned by the frame loop:
               it also depends on which body the belt is hung around, which only
@@ -1454,6 +1399,24 @@ function DaySimScene({
           <primitive object={moonNakHighlight} position={[0, -0.02, 0]} />
         </group>
       </group>
+      </group>
+
+      {/*
+        The polar grid, on the body the reader has focused.
+       *
+       * Its own root rather than a layer of the wheel: the belts are a sky ring
+       * and have to stay on the observer for the sightlines to read, while the
+       * grid is a *plane* — the thing a body is above or below — and that only
+       * means anything when it is the focused body's own. The spokes start at
+       * that body's radius, so the grid leaves its equator instead of opening a
+       * hole around it.
+       */}
+      <group ref={gridRoot}>
+        <group quaternion={solarPlaneQ}>
+          <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
+            <GuideGrid visible={toggles.grid} innerR={focusRadius} planeInnerR={focusRadius} />
+          </group>
+        </group>
       </group>
 
       {/* World-space, not in the belt root: both are drawn from the planet out
@@ -1497,6 +1460,42 @@ function DaySimScene({
         />
       </mesh>
 
+      {/*
+        The Moon's shadow on the planet, at a सूर्य ग्रहण.
+
+        World-space, not parented to the planet: the shadow stands still while
+        the planet turns under it, which is why a total eclipse sweeps a track
+        across the ground rather than sitting on one country.
+
+        The umbra is drawn far larger than it is. A real one is about a fortieth
+        of the planet's width — at this scale a couple of pixels, invisible at
+        any camera distance that also shows the Moon's orbit. The penumbra ring
+        around it is the honest part of the shape: most of the places under it
+        see a partial eclipse, not a total one.
+      */}
+      <group ref={solarShadow} visible={false}>
+        <mesh>
+          <circleGeometry args={[PLANET_R * 0.2, 32]} />
+          <meshBasicMaterial
+            color={0x05070c}
+            transparent
+            opacity={0.9}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+        <mesh position={[0, 0, -0.004]}>
+          <circleGeometry args={[PLANET_R * 0.42, 32]} />
+          <meshBasicMaterial
+            color={0x05070c}
+            transparent
+            opacity={0.4}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      </group>
+
       {/* The Moon, on its own inclined plane, carried along with the planet */}
       <primitive object={moonTrail} visible={toggles.moonTrail} />
       <group ref={moonRoot}>
@@ -1513,10 +1512,10 @@ function DaySimScene({
           <group ref={nodeAxis} visible={toggles.moon}>
             <primitive object={nodeLine} />
             <group position={[MOON_ORBIT, 0, 0]}>
-              <ShadowGraha nodeRef={rahuGroup} color={COLOR.rahu} />
+              <ShadowGraha nodeRef={rahuGroup} color={COLOR.rahu} map={rahuIcon} />
             </group>
             <group position={[-MOON_ORBIT, 0, 0]}>
-              <ShadowGraha nodeRef={ketuGroup} color={COLOR.ketu} />
+              <ShadowGraha nodeRef={ketuGroup} color={COLOR.ketu} map={ketuIcon} />
             </group>
           </group>
         </group>

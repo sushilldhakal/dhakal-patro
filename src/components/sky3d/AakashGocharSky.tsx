@@ -25,23 +25,34 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { Canvas } from "@react-three/fiber";
+import { createPortal } from "react-dom";
+import { Canvas, useThree } from "@react-three/fiber";
 import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  Crosshair,
   FastForward,
+  Focus,
   MapPin,
+  Maximize2,
+  Minimize2,
   Pause,
   Play,
   Rewind,
   RotateCcw,
+  SlidersHorizontal,
 } from "lucide-react";
 import type { GocharGraha } from "@/lib/api";
 import type { Era } from "@/lib/era";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
-import { adToBS, bsMonthLabel, bsToAD, WEEKDAYS_SHORT_NE } from "@/lib/bs-calendar";
+import {
+  adToBS,
+  BS_MONTH_NAMES,
+  BS_MONTHS_NE,
+  bsMonthLabel,
+  bsToAD,
+  WEEKDAYS_SHORT_NE,
+} from "@/lib/bs-calendar";
 import { SkyDateTimePicker } from "@/components/sky3d/SkyDateTimePicker";
 import { bikramFromSun } from "@/lib/sky3d/bikram-solar";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
@@ -49,7 +60,7 @@ import { NAKSHATRA_SHORT } from "@/lib/sky3d/nakshatra-stars";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { cn } from "@/lib/utils";
-import { GRAHA_COLOR } from "@/lib/sky3d/geocentric-model";
+import { GRAHA_COLOR, normalizeDeg, rashiOfLongitude } from "@/lib/sky3d/geocentric-model";
 import { KATHMANDU, type Observer } from "@/lib/sky3d/horizon";
 import {
   ayanamsa,
@@ -75,7 +86,49 @@ import {
 
 const Scene = memo(AakashGocharScene);
 
-const CANVAS_BG = "#04090c";
+const CANVAS_BG = "#04070d";
+
+/**
+ * Native fullscreen often does not fire a ResizeObserver. R3F then keeps the
+ * in-page drawing buffer, so the camera looks along −Z at y=40 and the
+ * ecliptic (around the origin) never enters the frame.
+ */
+function FitCanvas() {
+  const gl = useThree((s) => s.gl);
+  const setSize = useThree((s) => s.setSize);
+  const invalidate = useThree((s) => s.invalidate);
+
+  useEffect(() => {
+    const el = gl.domElement.parentElement;
+    if (!el) return;
+    let lastW = 0;
+    let lastH = 0;
+    const sync = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (w < 2 || h < 2) return;
+      if (Math.abs(w - lastW) < 0.5 && Math.abs(h - lastH) < 0.5) return;
+      lastW = w;
+      lastH = h;
+      setSize(w, h);
+      invalidate();
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      ro.disconnect();
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [gl, setSize, invalidate]);
+
+  return null;
+}
 
 /**
  * Overlay label colours, applied inline.
@@ -86,6 +139,7 @@ const CANVAS_BG = "#04090c";
 const LABEL_COLOR = {
   rashi: "#f4c542",
   nakshatra: "#6fe08a",
+  month: "#e3d9a8",
   pada: "#8fd6b0",
   cardinal: "#ff8a8a",
   azimuth: "#7ea9d8",
@@ -98,7 +152,6 @@ const LABEL_COLOR = {
   observer: "#ff6b6b",
   hud: "#ffffff",
   hudDim: "rgba(255,255,255,0.72)",
-  overlayText: "rgba(236,242,244,0.88)",
   overlayDim: "rgba(236,242,244,0.62)",
 } as const;
 
@@ -126,8 +179,10 @@ const SPEED_LADDER = [
      minute and the pole hands over its star while you watch. */
   { seconds: 2272100544, ne: "७२ वर्ष/से", en: "72 years/s" },
 ];
-/** Camera distance that frames the whole system in the space view. */
-const SYSTEM_DISTANCE = 26;
+/** Learn year-mode framing — same wheel scale, same seat above it. */
+const SYSTEM_YAW = 0.2;
+const SYSTEM_PITCH = 1.15;
+const SYSTEM_DISTANCE = 70;
 /** Zoom value that opens the horizon view out to a ~120° fisheye. */
 const HORIZON_WIDE = 45;
 /** Default zoom in the Earth-globe view — frames the globe and its ring. */
@@ -145,8 +200,14 @@ const GLOBE_PITCH = 0.42;
 /** The camera never comes closer than this, nor pulls back further. */
 const ZOOM_MIN = 0.35;
 const ZOOM_MAX = 120;
+/** Space view matches the Learn playground's orbit range. */
+const SPACE_ZOOM_MIN = 6;
+const SPACE_ZOOM_MAX = 130;
 
-const clampZoom = (v: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
+const clampZoom = (v: number, skyMode: SkyMode) =>
+  skyMode === "space"
+    ? Math.min(SPACE_ZOOM_MAX, Math.max(SPACE_ZOOM_MIN, v))
+    : Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
 
 /** How far a press may wander, in px, and still count as a tap rather than a drag. */
 const DRAG_SLOP = 5;
@@ -171,6 +232,11 @@ const CONTROL_SELECTOR = "button, input, select, [role='button'], [data-sky-cont
  * *least* room between labels, not most.
  */
 const LABEL_SCALE_MAX = 1.3;
+
+/** Same pitch limits as the Learn playground — under the wheel is allowed. */
+function clampPitch(p: number) {
+  return Math.max(-1.45, Math.min(1.45, p));
+}
 /**
  * Points shaved off the belt text at the widest zoom, ramped in with the scale.
  *
@@ -322,11 +388,16 @@ export function AakashGocharSky({
     secondsPerRealSecond: SPEED_LADDER[0].seconds,
     playing: true,
   });
-  /* Opens on the globe, so these have to match the framing the पृथ्वी गोला chip
-     sets — otherwise the first frame is the space camera on a globe scene. */
-  const view = useRef<ViewState>({ yaw: GLOBE_YAW, pitch: GLOBE_PITCH, distance: GLOBE_VIEW });
+  /* Opens on अन्तरिक्ष from above, so the rashi / नक्षत्र / month wheel
+     reads as a wheel — the Learn playground's own framing. Globe is one chip
+     away. */
+  const view = useRef<ViewState>({
+    yaw: SYSTEM_YAW,
+    pitch: SYSTEM_PITCH,
+    distance: SYSTEM_DISTANCE,
+  });
 
-  const [mode, setMode] = useState<SkyMode>("globe");
+  const [mode, setMode] = useState<SkyMode>("space");
   const [playing, setPlaying] = useState(true);
   const [speedIndex, setSpeedIndex] = useState(0);
   const [reverse, setReverse] = useState(false);
@@ -337,16 +408,25 @@ export function AakashGocharSky({
   const selectedKey = controlled ? selectedKeyProp : ownSelectedKey;
   const [sample, setSample] = useState<SkySample | null>(null);
   const [toggles, setToggles] = useState<SceneToggles>({
-    belts: true,
+    rashiBelt: true,
+    nakshatraBelt: true,
+    monthRing: true,
     grid: true,
     lockStars: true,
     lockCenter: false,
-    asterisms: true,
     poleStars: true,
     tilt: true,
-    labels: true,
+    primeMeridian: true,
   });
+  const [flash, setFlash] = useState<number | null>(null);
+  const lastRashi = useRef<number | null>(null);
+  const [phaseFlash, setPhaseFlash] = useState<"amavasya" | "purnima" | "solar" | "lunar" | null>(
+    null,
+  );
+  const lastSyzygy = useRef<"amavasya" | "purnima" | "solar" | "lunar" | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
   /* Fullscreen only: the whole control row folds away to a single chevron, so
      the sky can have the entire screen when you just want to watch it. */
   const [controlsOpen, setControlsOpen] = useState(true);
@@ -486,35 +566,32 @@ export function AakashGocharSky({
       if (!gestureStart.current.pinch) gestureStart.current.pinch = dist;
       view.current.distance = clampZoom(
         gestureStart.current.distance * (gestureStart.current.pinch / dist),
+        modeRef.current,
       );
       return;
     }
 
     const dx = e.clientX - dragOrigin.current.x;
     const dy = e.clientY - dragOrigin.current.y;
-    /* Under the slop radius this is still a tap, and a tap belongs to whatever
-       is under it — a graha, or a button. Past it, it is a drag for good. */
-    if (!captured.current.has(e.pointerId) && Math.hypot(dx, dy) < DRAG_SLOP) return;
+    /* Learn updates the orbit from the first pixel. Space does the same.
+       Globe/horizon keep the slop so a tap still selects a graha. */
+    if (
+      modeRef.current !== "space" &&
+      !captured.current.has(e.pointerId) &&
+      Math.hypot(dx, dy) < DRAG_SLOP
+    ) {
+      return;
+    }
     captureDrag(e);
     /* Drag the sphere, don't drive the camera: pulling right swings the face
        you are looking at to the right, which means the camera has to go the
        other way round. */
     view.current.yaw = gestureStart.current.yaw - dx * 0.006;
-    /* The camera is kept north of the ecliptic only in the space view — from
-       the south side there the zodiac reads backwards, rashi and every graha
-       running clockwise, which is never what you want to be looking at. The
-       globe view is just the Earth sphere, with no such concern, so it gets the
-       same full range as the horizon view. Both still clamp short of true
-       vertical so the view cannot flip over on itself. */
-    const lowestPitch = modeRef.current === "space" ? 0.08 : -1.45;
-    view.current.pitch = Math.min(
-      1.45,
-      Math.max(lowestPitch, gestureStart.current.pitch + dy * 0.005),
-    );
+    view.current.pitch = clampPitch(gestureStart.current.pitch + dy * 0.005);
   }, [captureDrag]);
 
   const zoomBy = useCallback((factor: number) => {
-    view.current.distance = clampZoom(view.current.distance * factor);
+    view.current.distance = clampZoom(view.current.distance * factor, modeRef.current);
   }, []);
 
   /* The wheel is the desktop's pinch. Bound imperatively and non-passively:
@@ -551,14 +628,11 @@ export function AakashGocharSky({
    * imperative non-passive listener, exactly as the wheel above is.
    */
   useEffect(() => {
-    /* Fullscreen only. In the page the canvas is most of a phone's screen, and
-       a canvas that eats every vertical swipe is a canvas you cannot scroll
-       past — the rest of the page becomes unreachable. There the sky settles
-       for `touch-action: pan-y` instead: a swipe up or down is the page's, a
-       drag across is the sky's, and the whole gesture set comes back the moment
-       it goes fullscreen, where there is nothing to scroll to. */
+    /* Space (and fullscreen) take the vertical swipe for the orbit, the way
+       the Learn playground does. Globe/horizon still leave page-scroll alone
+       while the canvas sits in the document. */
     const el = canvasWrapRef.current;
-    if (!el || !fullscreen) return;
+    if (!el || !(fullscreen || mode === "space")) return;
     const onTouchMove = (e: TouchEvent) => {
       /* The control row floats over the sky in fullscreen, so a touch there
          reaches this listener on its way up. That row scrolls sideways on a
@@ -570,7 +644,7 @@ export function AakashGocharSky({
     };
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => el.removeEventListener("touchmove", onTouchMove);
-  }, [fullscreen]);
+  }, [fullscreen, mode]);
 
   const onSample = useCallback((next: SkySample) => setSample(next), []);
   /* Clicking the graha already selected clears it, in both modes. */
@@ -728,6 +802,53 @@ export function AakashGocharSky({
   /* The Sun the scene has already computed — the calendar past the table's end. */
   const sunLongitude = sample?.sky.sun.longitude;
   const sunSpeed = sample?.sky.sun.speedDegPerDay;
+  const sunRashi = sunLongitude == null ? null : rashiOfLongitude(sunLongitude);
+  const sunMonthName =
+    sunRashi == null
+      ? ""
+      : lang === "en"
+        ? BS_MONTH_NAMES[sunRashi - 1]
+        : BS_MONTHS_NE[sunRashi - 1];
+  const sunRashiName = sunRashi == null ? "" : formatRashiByNumber(sunRashi, lang);
+
+  const elongation =
+    sample?.sky.sun && sample.sky.moon
+      ? normalizeDeg(sample.sky.moon.longitude - sample.sky.sun.longitude)
+      : null;
+  /** ±15° of conjunction / opposition — the Moon is visually between the Sun
+      and Earth, or Earth sits between them. */
+  const syzygy: "amavasya" | "purnima" | null =
+    elongation == null
+      ? null
+      : elongation <= 15 || elongation >= 345
+        ? "amavasya"
+        : Math.abs(elongation - 180) <= 15
+          ? "purnima"
+          : null;
+  const eclipse = sample?.eclipse ?? null;
+  const skyEvent: "amavasya" | "purnima" | "solar" | "lunar" | null = eclipse
+    ? eclipse.kind
+    : syzygy;
+
+  useEffect(() => {
+    if (sunRashi == null) return;
+    if (lastRashi.current !== null && lastRashi.current !== sunRashi) setFlash(sunRashi);
+    lastRashi.current = sunRashi;
+  }, [sunRashi]);
+  useEffect(() => {
+    if (flash === null) return;
+    const id = setTimeout(() => setFlash(null), 2400);
+    return () => clearTimeout(id);
+  }, [flash]);
+  useEffect(() => {
+    if (skyEvent && lastSyzygy.current !== skyEvent) setPhaseFlash(skyEvent);
+    lastSyzygy.current = skyEvent;
+  }, [skyEvent]);
+  useEffect(() => {
+    if (phaseFlash === null) return;
+    const id = setTimeout(() => setPhaseFlash(null), 2400);
+    return () => clearTimeout(id);
+  }, [phaseFlash]);
 
   /* Rashi/nakshatra text grows past its base size once the camera pulls back
      beyond the mode's own default framing — capped so it never swamps the
@@ -884,7 +1005,6 @@ export function AakashGocharSky({
         icon={<Rewind className="size-full" />}
         label={pick("पछाडि छिटो", "Faster backward")}
         active={!playing ? false : reverse && speedIndex > 0}
-        overlay={fullscreen}
         compact={fullscreen}
         onPress={() => stepSpeed("back")}
       />
@@ -892,7 +1012,6 @@ export function AakashGocharSky({
         icon={playing ? <Pause className="size-full" /> : <Play className="size-full" />}
         label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
         active={playing}
-        overlay={fullscreen}
         compact={fullscreen}
         onPress={togglePlay}
       />
@@ -900,7 +1019,6 @@ export function AakashGocharSky({
         icon={<FastForward className="size-full" />}
         label={pick("अगाडि छिटो", "Faster forward")}
         active={!playing ? false : !reverse && speedIndex > 0}
-        overlay={fullscreen}
         compact={fullscreen}
         onPress={() => stepSpeed("forward")}
       />
@@ -908,7 +1026,6 @@ export function AakashGocharSky({
         icon={<RotateCcw className="size-full" />}
         label={pick("मितिमा फर्कनुहोस्", "Back to the chosen date")}
         active={false}
-        overlay={fullscreen}
         compact={fullscreen}
         onPress={() => {
           /* The nav above starts on today, so with no date chosen this is
@@ -921,7 +1038,6 @@ export function AakashGocharSky({
           icon={<Calendar className="size-full" />}
           label={pick("मिति छान्नुहोस्", "Choose a date")}
           active={datePickerOpen}
-          overlay={fullscreen}
           compact={fullscreen}
           onPress={() => setDatePickerOpen(true)}
         />
@@ -936,10 +1052,8 @@ export function AakashGocharSky({
         label={pick("अन्तरिक्ष", "Space")}
         onPress={() => {
           setMode("space");
-          view.current = { yaw: 0.5, pitch: 0.62, distance: SYSTEM_DISTANCE };
+          view.current = { yaw: SYSTEM_YAW, pitch: SYSTEM_PITCH, distance: SYSTEM_DISTANCE };
         }}
-        overlay={fullscreen}
-        compact={fullscreen}
       />
       <Chip
         active={mode === "globe"}
@@ -948,89 +1062,29 @@ export function AakashGocharSky({
           setMode("globe");
           view.current = { yaw: GLOBE_YAW, pitch: GLOBE_PITCH, distance: GLOBE_VIEW };
         }}
-        overlay={fullscreen}
-        compact={fullscreen}
-      />
-    </>
-  );
-
-  const toggleChips = (
-    <>
-      <Chip
-        active={toggles.labels}
-        label={pick("नाम", "Labels")}
-        onPress={() => setToggles((t) => ({ ...t, labels: !t.labels }))}
-        overlay={fullscreen}
-        compact={fullscreen}
-      />
-      <Chip
-        active={toggles.belts}
-        label={pick("राशि/नक्षत्र", "Zodiac")}
-        onPress={() => setToggles((t) => ({ ...t, belts: !t.belts }))}
-        overlay={fullscreen}
-        compact={fullscreen}
-      />
-      <Chip
-        active={toggles.asterisms}
-        label={pick("तारापुञ्ज", "Star groups")}
-        onPress={() => setToggles((t) => ({ ...t, asterisms: !t.asterisms }))}
-        overlay={fullscreen}
-        compact={fullscreen}
-      />
-      <Chip
-        active={toggles.lockStars}
-        label={pick("तारा स्थिर", "Lock to stars")}
-        onPress={() => setToggles((t) => ({ ...t, lockStars: !t.lockStars }))}
-        overlay={fullscreen}
-        compact={fullscreen}
-      />
-      <IconButton
-        icon={<Crosshair className="size-full" />}
-        label={
-          lockTargetName
-            ? toggles.lockCenter
-              ? pick(
-                  `${lockTargetName.ne} केन्द्रबाट छुटाउनुहोस्`,
-                  `Unlock the view from ${lockTargetName.en}`,
-                )
-              : pick(
-                  `${lockTargetName.ne} केन्द्रमा राख्नुहोस्`,
-                  `Keep ${lockTargetName.en} centred`,
-                )
-            : pick("के पछ्याउने छान्नुहोस्", "Choose what to follow")
-        }
-        active={toggles.lockCenter}
-        overlay={fullscreen}
-        compact={fullscreen}
-        /* With no target there is nothing to centre on, so the press opens the
-           chooser instead of toggling a lock that would do nothing. */
-        onPress={() =>
-          lockTargetName
-            ? setToggles((t) => ({ ...t, lockCenter: !t.lockCenter }))
-            : setGrahaPickerOpen(true)
-        }
       />
     </>
   );
 
   const body = (
     <div
-      className={
-        fullscreen
-          ? "flex h-full flex-col bg-background"
-          : "overflow-hidden rounded-2xl border border-border"
-      }
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-border",
+        fullscreen && "flex h-full min-h-0 flex-col rounded-none border-0",
+      )}
+      style={{ background: CANVAS_BG }}
     >
       <div
         ref={canvasWrapRef}
         className={cn(
-          "relative select-none overscroll-none",
-          /* See the touchmove effect: in the page a vertical swipe has to stay
-             the page's, or the canvas becomes a wall you cannot scroll past. */
-          fullscreen ? "flex-1 touch-none" : "touch-pan-y",
+          "relative min-h-0 w-full select-none overscroll-none",
+          /* Space matches Learn: the drag *is* the orbit, so vertical swipe
+             cannot belong to the page. Globe/horizon in the page still yield
+             vertical swipes so you can scroll past the canvas. */
+          fullscreen || mode === "space" ? "flex-1 touch-none" : "touch-pan-y",
         )}
         style={{
-          height: fullscreen ? undefined : height,
+          height: fullscreen ? "100%" : height,
           backgroundColor: CANVAS_BG,
           cursor: "grab",
         }}
@@ -1040,10 +1094,16 @@ export function AakashGocharSky({
         onPointerCancel={endPointer}
       >
         <Canvas
-          camera={{ position: [0, 14, 22], fov: 50, near: 0.05, far: 1200 }}
+          camera={{ position: [0, 40, 26], fov: 46, near: 0.1, far: 600 }}
           gl={{ antialias: true }}
-          onCreated={({ gl }) => gl.setClearColor(CANVAS_BG)}
+          resize={{ debounce: 0, offsetSize: true }}
+          style={{ width: "100%", height: "100%", display: "block" }}
+          onCreated={({ camera, gl }) => {
+            gl.setClearColor(CANVAS_BG);
+            camera.lookAt(0, 0, 0);
+          }}
         >
+          <FitCanvas />
           <Suspense fallback={null}>
             <Scene
               sim={sim}
@@ -1064,14 +1124,54 @@ export function AakashGocharSky({
 
         {/* Labels ride over the canvas rather than in it — real Devanagari type,
             positioned from the scene's own projection of each anchor. */}
-        {toggles.labels && sample ? <SkyLabels labels={sample.labels} scale={labelScale} detail={labelDetail} /> : null}
+        {sample ? (
+          <SkyLabels
+            labels={sample.labels}
+            scale={labelScale}
+            detail={labelDetail}
+            flatBelts={mode === "space"}
+          />
+        ) : null}
 
         {/* HUD — the simulated instant, which drifts away from the nav once it runs. */}
         <div
-          className="pointer-events-none absolute rounded-lg bg-black/45 px-2.5 py-1.5"
+          className="pointer-events-none absolute rounded-lg border border-white/15 bg-black/45 px-2.5 py-1.5 backdrop-blur"
           style={{ top: hudTop, left: "calc(env(safe-area-inset-left, 0px) + 12px)" }}
         >
-          <p className="m-0 text-[11px] font-bold" style={{ color: LABEL_COLOR.hud }}>
+          {sunRashi != null ? (
+            <>
+              <p className="m-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/50">
+                {pick("सूर्य राशि · महिना", "Sun's rashi · month")}
+              </p>
+              <p className="m-0 text-sm font-bold text-white">
+                {sunRashiName} · {sunMonthName}
+              </p>
+            </>
+          ) : null}
+          {eclipse?.kind === "solar" ? (
+            <p className="m-0 mt-1 text-[11px] font-bold text-amber-200">
+              {pick(
+                `सूर्यग्रहण · औंसी + ${eclipse.node === "rahu" ? "राहु" : "केतु"}`,
+                `Solar eclipse · new moon + ${eclipse.node === "rahu" ? "Rāhu" : "Ketu"}`,
+              )}
+            </p>
+          ) : eclipse?.kind === "lunar" ? (
+            <p className="m-0 mt-1 text-[11px] font-bold text-rose-200">
+              {pick(
+                `चन्द्रग्रहण · पूर्णिमा + ${eclipse.node === "rahu" ? "राहु" : "केतु"}`,
+                `Lunar eclipse · full moon + ${eclipse.node === "rahu" ? "Rāhu" : "Ketu"}`,
+              )}
+            </p>
+          ) : syzygy === "amavasya" ? (
+            <p className="m-0 mt-1 text-[11px] font-bold text-slate-200">
+              {pick("औंसी · चन्द्र सूर्य र पृथ्वीको बीचमा", "Amavasya · Moon between Sun and Earth")}
+            </p>
+          ) : syzygy === "purnima" ? (
+            <p className="m-0 mt-1 text-[11px] font-bold text-amber-100">
+              {pick("पूर्णिमा · पृथ्वी सूर्य र चन्द्रको बीचमा", "Purnima · Earth between Sun and Moon")}
+            </p>
+          ) : null}
+          <p className="m-0 mt-1 text-[11px] font-bold" style={{ color: LABEL_COLOR.hud }}>
             {simStamp.date}
           </p>
           <p className="m-0 text-[10px]" style={{ color: LABEL_COLOR.hudDim }}>
@@ -1094,99 +1194,239 @@ export function AakashGocharSky({
           </p>
         </div>
 
-        <div className="absolute right-3 flex flex-col gap-2.5" style={{ top: overlayTop }}>
-          <RoundButton label="+" title={pick("नजिक", "Zoom in")} onPress={() => zoomBy(0.7)} />
-          <RoundButton label="−" title={pick("टाढा", "Zoom out")} onPress={() => zoomBy(1.4)} />
-          <RoundButton
-            label={fullscreen ? "✕" : "⛶"}
-            title={fullscreen ? pick("बाहिर निस्कनुहोस्", "Exit fullscreen") : pick("पूरा पर्दा", "Fullscreen")}
+        {phaseFlash !== null ? (
+          <div
+            className={cn(
+              "pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border px-4 py-1.5 text-sm font-bold backdrop-blur",
+              phaseFlash === "solar"
+                ? "border-amber-300/70 bg-amber-500/25 text-amber-50"
+                : phaseFlash === "lunar"
+                  ? "border-rose-400/70 bg-rose-900/40 text-rose-100"
+                  : phaseFlash === "purnima"
+                    ? "border-amber-200/60 bg-amber-100/15 text-amber-50"
+                    : "border-slate-400/60 bg-slate-500/20 text-slate-100",
+            )}
+          >
+            {phaseFlash === "solar"
+              ? pick("सूर्यग्रहण · चन्द्र सूर्यलाई ढाक्छ", "Solar eclipse · Moon covers the Sun")
+              : phaseFlash === "lunar"
+                ? pick("चन्द्रग्रहण · पृथ्वीको छाया चन्द्रमा", "Lunar eclipse · Earth's shadow on the Moon")
+                : phaseFlash === "amavasya"
+                  ? pick("औंसी · चन्द्र सूर्य–पृथ्वीको बीचमा", "Amavasya · Moon between Sun and Earth")
+                  : pick("पूर्णिमा · पृथ्वी सूर्य–चन्द्रको बीचमा", "Purnima · Earth between Sun and Moon")}
+          </div>
+        ) : flash !== null ? (
+          <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-amber-400/60 bg-amber-500/20 px-4 py-1.5 text-sm font-bold text-amber-100 backdrop-blur">
+            {pick("सङ्क्रान्ति", "Sankranti")} · {formatRashiByNumber(flash, lang)} ·{" "}
+            {lang === "en" ? BS_MONTH_NAMES[flash - 1] : BS_MONTHS_NE[flash - 1]} {digits(1)}
+          </div>
+        ) : null}
+
+        <div className="absolute right-3 flex gap-2" style={{ top: overlayTop }}>
+          <IconButton
+            icon={<SlidersHorizontal size={16} />}
+            label={pick("नियन्त्रण", "Controls")}
+            active={drawerOpen}
+            onPress={() => {
+              setDrawerOpen((v) => !v);
+              setFocusOpen(false);
+            }}
+          />
+          <IconButton
+            icon={<Focus size={16} />}
+            label={pick("केन्द्रविन्दु", "Focus")}
+            active={focusOpen}
+            onPress={() => {
+              setFocusOpen((v) => !v);
+              setDrawerOpen(false);
+            }}
+          />
+          <IconButton
+            icon={fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            label={
+              fullscreen
+                ? pick("सामान्य दृश्य", "Exit fullscreen")
+                : pick("पूर्ण स्क्रिन", "Fullscreen")
+            }
+            active={fullscreen}
             onPress={() => setFullscreen((f) => !f)}
           />
         </div>
+
+        {drawerOpen ? (
+          <div
+            data-sky-controls
+            className="absolute right-3 z-10 flex max-h-[calc(100%-4.5rem)] w-[min(260px,calc(100%-1.5rem))] flex-col gap-3 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur"
+            style={{ top: `calc(${overlayTop} + 2.75rem)` }}
+          >
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+              {pick("मार्गदर्शक", "Guides")}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Chip
+                active={toggles.grid}
+                label={pick("ग्रिड", "Grid")}
+                onPress={() => setToggles((t) => ({ ...t, grid: !t.grid }))}
+              />
+              <Chip
+                active={toggles.lockStars}
+                label={pick("तारा स्थिर", "Lock to stars")}
+                onPress={() => setToggles((t) => ({ ...t, lockStars: !t.lockStars }))}
+              />
+              <Chip
+                active={toggles.primeMeridian}
+                label={pick("काठमाडौँ रेखा", "Kathmandu meridian")}
+                onPress={() => setToggles((t) => ({ ...t, primeMeridian: !t.primeMeridian }))}
+              />
+              {mode !== "space" ? (
+                <Chip
+                  active={toggles.poleStars}
+                  label={pick("ध्रुव तारा", "Pole stars")}
+                  onPress={() => setToggles((t) => ({ ...t, poleStars: !t.poleStars }))}
+                />
+              ) : null}
+              {mode === "globe" ? (
+                <Chip
+                  active={toggles.tilt}
+                  label={pick("अक्ष झुकाव", "Tilt")}
+                  onPress={() => setToggles((t) => ({ ...t, tilt: !t.tilt }))}
+                />
+              ) : null}
+            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+              {pick("वलय", "Belts")}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Chip
+                active={toggles.rashiBelt}
+                label={pick("राशि", "Rashi")}
+                onPress={() => setToggles((t) => ({ ...t, rashiBelt: !t.rashiBelt }))}
+              />
+              <Chip
+                active={toggles.nakshatraBelt}
+                label={pick("नक्षत्र", "Nakshatra")}
+                onPress={() => setToggles((t) => ({ ...t, nakshatraBelt: !t.nakshatraBelt }))}
+              />
+              <Chip
+                active={toggles.monthRing}
+                label={pick("महिना", "Months")}
+                onPress={() => setToggles((t) => ({ ...t, monthRing: !t.monthRing }))}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {focusOpen ? (
+          <div
+            data-sky-controls
+            className="absolute right-3 z-10 flex w-[min(230px,calc(100%-1.5rem))] flex-col gap-2.5 rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur"
+            style={{ top: `calc(${overlayTop} + 2.75rem)` }}
+          >
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+              {pick("केन्द्रविन्दु", "Focus")}
+            </span>
+            <div className="flex flex-col gap-1">
+              {(
+                [
+                  ["sun", pick("सूर्य", "Sun")],
+                  ["earth", pick("पृथ्वी", "Earth")],
+                  ["moon", pick("चन्द्र", "Moon")],
+                  ["mercury", pick("बुध", "Mercury")],
+                  ["venus", pick("शुक्र", "Venus")],
+                  ["jupiter", pick("बृहस्पति", "Jupiter")],
+                  ["saturn", pick("शनि", "Saturn")],
+                  ["mars", pick("मंगल", "Mars")],
+                ] as const
+              ).map(([key, label]) => {
+                const checked = key === "earth" ? !selectedKey : selectedKey === key;
+                return (
+                  <label
+                    key={key}
+                    className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-white/70 hover:text-white"
+                  >
+                    <input
+                      type="radio"
+                      name="gochar-focus"
+                      className="size-3.5 accent-white"
+                      checked={checked}
+                      onChange={() => {
+                        if (key === "earth") {
+                          setLockObserver(false);
+                          setSelected(null);
+                          setToggles((t) => ({ ...t, lockCenter: false }));
+                          return;
+                        }
+                        followGraha(key);
+                      }}
+                    />
+                    {label}
+                  </label>
+                );
+              })}
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 border-t border-white/10 pt-2.5 text-xs font-semibold text-white/70 hover:text-white">
+              <input
+                type="checkbox"
+                className="size-3.5 accent-white"
+                checked={toggles.lockCenter && !!selectedKey}
+                disabled={!selectedKey}
+                onChange={() =>
+                  setToggles((t) => ({ ...t, lockCenter: !t.lockCenter }))
+                }
+              />
+              {pick("ग्रह पछ्याउनुहोस्", "Follow graha")}
+            </label>
+          </div>
+        ) : null}
       </div>
 
-      {/* Floating over the canvas, this panel is always dark glass — so it runs
-          on the dark tokens whatever the app theme is, or light-mode text would
-          come out near-black on it.
-
-          Fullscreen gets one row, not three. Stacked, the controls ate a third
-          of a landscape screen's height — the sky is the point, so the transport
-          stays pinned and everything else scrolls past it, with a chevron to
-          drop the lot down to a single button. */}
+      {/* Dark glass under the canvas, matching the Learn playground: the chips
+          and transport sit on the sky's own black rather than a light card. */}
       <div
         data-sky-controls
-        className={
-          fullscreen
-            ? "dark absolute inset-x-0 bottom-0 px-2 pt-2"
-            : "flex flex-col gap-2.5 border-t border-border bg-card px-3 py-3"
-        }
-        style={
-          fullscreen
-            ? {
-                backgroundColor: controlsOpen ? "rgba(4, 9, 12, 0.62)" : "transparent",
-                paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
-              }
-            : undefined
-        }
+        className={cn(
+          "flex flex-col gap-3 border-t border-white/10 bg-black/30 px-3.5 py-3 text-white",
+          fullscreen &&
+            "shrink-0 overflow-y-auto overscroll-contain pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+          fullscreen && (controlsOpen ? "max-h-[46vh]" : "max-h-none"),
+        )}
       >
-        {fullscreen ? (
+        {fullscreen && !controlsOpen ? (
           <div className="flex items-center gap-1.5">
-            {controlsOpen ? (
-              <>
-                {transport}
-                <div className="h-6 w-px bg-white/15" />
-                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {viewChips}
-                  <div className="mx-0.5 h-5 w-px shrink-0 bg-white/15" />
-                  {toggleChips}
-                </div>
-              </>
-            ) : (
-              /* Collapsed: enough to stop the clock, and the way back. */
-              <>
-                <IconButton
-                  icon={playing ? <Pause className="size-full" /> : <Play className="size-full" />}
-                  label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
-                  active={playing}
-                  overlay
-                  compact
-                  onPress={togglePlay}
-                />
-                <div className="flex-1" />
-              </>
-            )}
             <IconButton
-              icon={
-                controlsOpen ? (
-                  <ChevronDown className="size-full" />
-                ) : (
-                  <ChevronUp className="size-full" />
-                )
-              }
-              label={
-                controlsOpen
-                  ? pick("नियन्त्रण लुकाउनुहोस्", "Hide controls")
-                  : pick("नियन्त्रण देखाउनुहोस्", "Show controls")
-              }
-              active={false}
-              overlay
+              icon={playing ? <Pause className="size-full" /> : <Play className="size-full" />}
+              label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+              active={playing}
               compact
-              onPress={() => setControlsOpen((o) => !o)}
+              onPress={togglePlay}
+            />
+            <div className="flex-1" />
+            <IconButton
+              icon={<ChevronUp className="size-full" />}
+              label={pick("नियन्त्रण देखाउनुहोस्", "Show controls")}
+              active={false}
+              compact
+              onPress={() => setControlsOpen(true)}
             />
           </div>
         ) : (
           <>
-            {/* Transport — each press of a fast button steps further up the
-                speed ladder; pause drops back to normal. */}
-            <div className="flex items-center gap-1">{transport}</div>
-
-            {/* View and layers share one scroller: two short rows of chips were
-                a row too many. */}
-            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {viewChips}
-              <div className="mx-1 h-5 w-px shrink-0 bg-border" />
-              {toggleChips}
+              {fullscreen ? (
+                <>
+                  <div className="flex-1" />
+                  <IconButton
+                    icon={<ChevronDown className="size-full" />}
+                    label={pick("नियन्त्रण लुकाउनुहोस्", "Hide controls")}
+                    active={false}
+                    compact
+                    onPress={() => setControlsOpen(false)}
+                  />
+                </>
+              ) : null}
             </div>
+            <div className="flex items-center gap-1.5">{transport}</div>
           </>
         )}
       </div>
@@ -1304,26 +1544,37 @@ export function AakashGocharSky({
 
   if (!fullscreen) return body;
 
-  /* A fixed layer, not a portal to <body>: staying in the tree keeps the theme
-     class and every CSS variable the chips read, which a detached root would
-     lose. The scene remounts, but its textures come back out of the loader
-     cache, so the sky is already there when the layer paints.
-     This element is also what goes to the Fullscreen API above, which is why
-     it carries the background rather than leaving it to the body underneath —
-     once promoted it is the only thing on the screen.
-     `h-[100dvh]` over the `inset-0` bottom: on a phone the layout viewport
-     runs *under* a retractable URL bar, so inset-0 alone hides the control row
-     behind it until the bar happens to retract. Browsers without dvh drop the
-     declaration and land back on inset-0. */
+  /*
+   * Portalled to <body>, same as the Learn playground.
+   *
+   * `position: fixed` inside the page is trapped by PageShell's
+   * `overflow-x-hidden` (which computes as a scroll container). The overlay
+   * then sizes against that column, the canvas often measures 0×0 on the
+   * first paint, and the ecliptic around Earth never enters the frame.
+   * A portal escapes that box. Theme tokens live on `:root` / `.dark`, so
+   * they still apply on <body>.
+   *
+   * The overlay is a flex column so the canvas wrap's `flex-1` / `h-full`
+   * actually receive a height — without that, R3F keeps the in-page buffer.
+   */
   return (
-    <div
-      ref={overlayRef}
-      /* `overscroll-none` so a drag that runs past the sky has nothing to
-         rubber-band into — on iPad that pull is read as leaving fullscreen. */
-      className="fixed inset-0 z-[100] h-[100dvh] w-full overscroll-none bg-background"
-    >
-      {body}
-    </div>
+    <>
+      <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+        {pick("पूर्ण स्क्रिनमा खुलेको छ — बन्द गर्न Esc थिच्नुहोस्", "Open in fullscreen — press Esc to close")}
+      </div>
+      {createPortal(
+        <div
+          ref={overlayRef}
+          /* `overscroll-none` so a drag that runs past the sky has nothing to
+             rubber-band into — on iPad that pull is read as leaving fullscreen. */
+          className="fixed inset-0 z-[100] flex h-[100dvh] min-h-0 w-full flex-col overscroll-none"
+          style={{ background: CANVAS_BG }}
+        >
+          {body}
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
 
@@ -1371,6 +1622,7 @@ const SkyLabels = memo(function SkyLabels({
   labels,
   scale = 1,
   detail = false,
+  flatBelts = false,
 }: {
   labels: ScreenLabel[];
   /** Grows the rashi/nakshatra belt text as the camera pulls back — a fixed
@@ -1380,13 +1632,19 @@ const SkyLabels = memo(function SkyLabels({
   /** Close in: each नक्षत्र carries its figure over its name, and the पाद
       quarters are named. Further out both are clutter on a crowded ring. */
   detail?: boolean;
+  /** Space-view wheel: Learn playground colours, and dim the inactive spans. */
+  flatBelts?: boolean;
 }) {
   const { lang, digits } = useLocale();
   const pick = (ne: string, en: string) => bilingualText(lang, ne, en);
+  const rashiColor = LABEL_COLOR.rashi;
+  const nakColor = flatBelts ? "#8fb6d8" : LABEL_COLOR.nakshatra;
+  const monthColor = LABEL_COLOR.month;
 
   return (
     <div className="pointer-events-none absolute inset-0">
       {labels.map((label) => {
+        const dim = flatBelts && label.dim ? 0.4 : 1;
         if (label.kind === "rashi" && label.index) {
           const iconSize = 22 * scale;
           const boxWidth = 76 * scale;
@@ -1399,34 +1657,56 @@ const SkyLabels = memo(function SkyLabels({
                 left: label.x - boxWidth / 2,
                 top: label.y - 12 * scale,
                 width: boxWidth,
+                opacity: dim,
               }}
             >
-              <RashiSkyGlyph index={label.index} size={iconSize} color={LABEL_COLOR.rashi} />
+              <RashiSkyGlyph index={label.index} size={iconSize} color={rashiColor} />
               <span
                 className="max-w-full truncate font-bold"
-                style={{ fontSize: beltFontSize(14, scale), color: LABEL_COLOR.rashi }}
+                style={{ fontSize: beltFontSize(14, scale), color: rashiColor }}
               >
                 {formatRashiByNumber(label.index, lang)}
               </span>
             </div>
           );
         }
+        if (label.kind === "month" && label.index) {
+          return (
+            <span
+              key={label.id}
+              className="font-semibold"
+              style={{
+                ...labelBox(label.x, label.y, 72 * scale, -6 * scale),
+                fontSize: beltFontSize(12, scale),
+                color: monthColor,
+                opacity: dim,
+              }}
+            >
+              {lang === "en" ? BS_MONTH_NAMES[label.index - 1] : BS_MONTHS_NE[label.index - 1]}
+            </span>
+          );
+        }
         if (label.kind === "nakshatra" && label.index) {
           const nak = NAKSHATRA_ICONS[label.index - 1];
-          const boxWidth = 90 * scale;
-          const name = nak ? (lang === "en" ? nak.en : nak.ne) : "";
-          /* Close in, the नक्षत्र gets its own figure over its name, the way a
-             rashi gets its glyph — the shape is what the group is named for,
-             and at this range there is room for it. Further out it is a smudge
+          /* Space wheel matches the Learn playground: full names (उत्तरभाद्रपदा)
+             overflow a 13°20′ span, so the belt uses NAKSHATRA_SHORT. Globe and
+             horizon keep the unabbreviated name — the camera can push in. */
+          const short = NAKSHATRA_SHORT[label.index - 1];
+          const named = flatBelts ? short : nak;
+          const boxWidth = (flatBelts ? 56 : 90) * scale;
+          const name = named ? (lang === "en" ? named.en : named.ne) : "";
+          /* Space wheel always carries the figure, like the Learn playground.
+             Globe/horizon only add it close in — further out it is a smudge
              on a crowded ring, so the name goes alone. */
-          if (!detail) {
+          if (!detail && !flatBelts) {
             return (
               <span
                 key={label.id}
                 style={{
                   ...labelBox(label.x, label.y, boxWidth, -6 * scale),
                   fontSize: beltFontSize(12, scale),
-                  color: LABEL_COLOR.nakshatra,
+                  color: nakColor,
+                  opacity: dim,
                 }}
               >
                 {name}
@@ -1442,7 +1722,8 @@ const SkyLabels = memo(function SkyLabels({
                 left: label.x - boxWidth / 2,
                 top: label.y - 14 * scale,
                 width: boxWidth,
-                color: LABEL_COLOR.nakshatra,
+                color: nakColor,
+                opacity: dim,
               }}
             >
               <NakshatraFigure svg={nak?.svg} size={20 * scale} />
@@ -1477,7 +1758,11 @@ const SkyLabels = memo(function SkyLabels({
             <span
               key={label.id}
               className="text-[10px] font-bold"
-              style={{ ...labelBox(label.x, label.y, 60, 6), color: LABEL_COLOR.asterism }}
+              style={{
+                ...labelBox(label.x, label.y, 60, 6),
+                color: LABEL_COLOR.asterism,
+                opacity: 0.45,
+              }}
             >
               {nak ? (lang === "en" ? nak.en : nak.ne) : ""}
             </span>
@@ -1604,35 +1889,21 @@ function Chip({
   active,
   label,
   onPress,
-  overlay,
-  compact,
 }: {
   active: boolean;
   label: string;
   onPress: () => void;
-  /** Floating over the canvas: force light text, whatever the app theme is. */
-  overlay?: boolean;
-  /** Tighter, for the single row that floats over a fullscreen sky. */
-  compact?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onPress}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-full border font-medium transition-opacity hover:opacity-80",
-        compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-xs",
-        active ? "border-secondary bg-secondary/15" : "border-border bg-background",
-        !overlay && (active ? "text-secondary" : "text-muted-foreground"),
+        "h-[28px] shrink-0 cursor-pointer whitespace-nowrap rounded-full border px-2.5 text-xs font-semibold transition-colors",
+        active
+          ? "border-transparent bg-white/85 text-black"
+          : "border-white/20 bg-transparent text-white/60 hover:border-white/45 hover:text-white",
       )}
-      style={
-        overlay
-          ? {
-              backgroundColor: "rgba(255,255,255,0.08)",
-              color: active ? LABEL_COLOR.rashi : LABEL_COLOR.overlayText,
-            }
-          : undefined
-      }
     >
       {label}
     </button>
@@ -1644,14 +1915,12 @@ function IconButton({
   icon,
   label,
   active,
-  overlay,
   compact,
   onPress,
 }: {
   icon: ReactNode;
   label: string;
   active: boolean;
-  overlay?: boolean;
   /** Tighter, for the single row that floats over a fullscreen sky. */
   compact?: boolean;
   onPress: () => void;
@@ -1663,48 +1932,14 @@ function IconButton({
       aria-label={label}
       title={label}
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full border transition-opacity hover:opacity-80",
-        compact ? "size-8 p-1.5" : "size-10 p-2",
-        active ? "border-secondary bg-secondary/15" : "border-border bg-background",
-        !overlay && (active ? "text-secondary" : "text-muted-foreground"),
+        "grid shrink-0 cursor-pointer place-items-center rounded-full border backdrop-blur transition-colors",
+        compact ? "size-8" : "size-9",
+        active
+          ? "border-white/60 bg-white/85 text-black"
+          : "border-white/20 bg-black/40 text-white/80 hover:border-white/50 hover:text-white",
       )}
-      style={
-        overlay
-          ? {
-              backgroundColor: "rgba(255,255,255,0.08)",
-              color: active ? LABEL_COLOR.rashi : LABEL_COLOR.overlayText,
-            }
-          : undefined
-      }
     >
-      {icon}
-    </button>
-  );
-}
-
-/**
- * Zoom and fullscreen, sitting on top of the sky. Large on purpose: against a
- * star field a small dark disc reads as scenery.
- */
-function RoundButton({
-  label,
-  title,
-  onPress,
-}: {
-  label: string;
-  title: string;
-  onPress: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onPress}
-      aria-label={title}
-      title={title}
-      className="flex size-14 items-center justify-center rounded-full bg-black/45 text-[28px] font-bold leading-none transition-opacity hover:opacity-80"
-      style={{ color: LABEL_COLOR.hud }}
-    >
-      {label}
+      <span className={cn("block", compact ? "size-3.5" : "size-4")}>{icon}</span>
     </button>
   );
 }
