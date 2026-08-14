@@ -69,6 +69,69 @@ Aries    Taurus     Gemini    Cancer                Pisces
       ],
     },
     {
+      title: {
+        ne: "त्यो बिन्दु सूर्य विषुवत् रेखामा पुग्ने ठाउँ थियो",
+        en: "That point was where the Sun crossed the equator",
+      },
+      eyebrow: "Equinox · वसन्त आरम्भ",
+      blocks: [
+        {
+          kind: "lede",
+          text: {
+            ne: "मेषलाई शून्य मान्नु परम्परा मात्र होइन। जुन बेला यो राशिचक्र निश्चित गरियो — करिब `२८५` ई.सं., अर्थात् `३४२` बि.सं. तिर — मेषको ० अंश ठ्याक्कै **वसन्त विषुव** मा थियो।",
+            en: "Taking Mesha as zero was not merely a convention. When this zodiac was fixed — around `285` CE, roughly `342` BS — the 0° point of Mesha sat exactly on the **vernal equinox**.",
+          },
+        },
+        {
+          kind: "para",
+          text: {
+            ne: "त्यो क्षणमा आकाशमा तीन कुरा एकैसाथ हुन्थे, र त्यही मेल नै वर्षारम्भको कारण हो।",
+            en: "At that moment three things happened in the sky together, and it is that coincidence which made it the start of the year.",
+          },
+        },
+        {
+          kind: "keys",
+          items: [
+            {
+              h: { ne: "सूर्य विषुवत् रेखामा", en: "The Sun on the equator" },
+              p: {
+                ne: "सूर्य ~खगोलीय विषुवत् वृत्त~ ठ्याक्कै पार गर्थ्यो — क्रान्ति शून्य।",
+                en: "The Sun crossed the ~celestial equator~ exactly — declination zero.",
+              },
+            },
+            {
+              h: { ne: "दिन र रात बराबर", en: "Day equal to night" },
+              p: {
+                ne: "पृथ्वीभरि दिन र रात दुवै झन्डै `१२`–`१२` घण्टाका हुन्थे।",
+                en: "Everywhere on Earth, day and night were each about `12` hours.",
+              },
+            },
+            {
+              h: { ne: "वसन्त ऋतुको आरम्भ", en: "Spring begins" },
+              p: {
+                ne: "उत्तरी गोलार्धमा *वसन्त* सुरु — जाडो सकिएर उज्यालो बढ्न थाल्ने बिन्दु।",
+                en: "In the northern hemisphere *spring* opened — winter done, daylight lengthening.",
+              },
+            },
+          ],
+        },
+        {
+          kind: "para",
+          text: {
+            ne: "त्यसैले बैशाख १ बनावटी मिति थिएन। यो **वर्षको त्यो दिन थियो जब सूर्य विषुवत् रेखा नाघेर उत्तरतिर जान्थ्यो** — नयाँ ऋतु, नयाँ वर्ष।",
+            en: "So Baisakh 1 was not an invented date. It was **the day the Sun crossed the equator heading north** — a new season, and with it a new year.",
+          },
+        },
+        {
+          kind: "note",
+          text: {
+            ne: "यो मेल अब टुटिसक्यो। ~अक्ष–चलन~ ले विषुव बिन्दुलाई बिस्तारै पछाडि सारेको छ, र आज मेष सङ्क्रान्ति विषुवभन्दा करिब `२४` दिन पछि पर्छ। पात्रोले **ताराको सन्दर्भ** समात्यो, ऋतु भने सर्दै गयो — अर्को खण्डमा यही फरक।",
+            en: "That alignment has since broken. ~Precession~ has slowly dragged the equinox backwards, and today Mesha Sankranti falls about `24` days after it. The calendar held on to **the stars**, and let the seasons drift — which is the next section.",
+          },
+        },
+      ],
+    },
+    {
       title: { ne: "अप्रिल मध्यतिर किन पर्छ", en: "Why it lands in mid-April" },
       eyebrow: "Sidereal reference",
       blocks: [
