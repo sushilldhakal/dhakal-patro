@@ -743,7 +743,11 @@ function labelsMoved(prev: ScreenLabel[], next: ScreenLabel[]): boolean {
   for (let i = 0; i < next.length; i += 1) {
     const a = prev[i];
     const b = next[i];
-    if (a.id !== b.id || Math.abs(a.x - b.x) >= 1 || Math.abs(a.y - b.y) >= 1) return true;
+    /* `dim` counts as movement: which राशि and नक्षत्र are lit changes on
+       selection, and on a paused sky nothing else about the label does — so
+       leaving it out froze the bright pair on whoever was picked first. */
+    if (a.id !== b.id || a.dim !== b.dim || Math.abs(a.x - b.x) >= 1 || Math.abs(a.y - b.y) >= 1)
+      return true;
   }
   return false;
 }
@@ -828,6 +832,8 @@ export function AakashGocharScene({
   const sharaFootRef = useRef<THREE.Mesh | null>(null);
   const rashiHiRef = useRef<THREE.Mesh | null>(null);
   const nakHiRef = useRef<THREE.Mesh | null>(null);
+  /** Which graha the lit belt segments are currently tinted for. */
+  const lastBeltKey = useRef<GrahaKey | null>(null);
   const moonEclipse = useRef<{ kind: "solar" | "lunar" | null; mag: number }>({ kind: null, mag: 0 });
   const umbraAxis = useRef(new THREE.Vector3());
   const umbraFrom = useRef(new THREE.Vector3());
@@ -1176,6 +1182,8 @@ export function AakashGocharScene({
   // the projection was skipped, so the vertices are wherever they were left.
   useEffect(() => {
     lastBelt.current = null;
+    // The wheel rebuilds its highlight meshes with it, so the tint is gone too.
+    lastBeltKey.current = null;
   }, [toggles.rashiBelt, toggles.nakshatraBelt, toggles.monthRing]);
 
   useFrame((state, delta) => {
@@ -1199,12 +1207,28 @@ export function AakashGocharScene({
     /* Both the dome and the globe draw the banded zodiac and place grahas on
        it; only the space view uses the schematic shells. */
     const zodiac = horizon || globe;
-    const sunLon = normalizeDeg(sky.sun.longitude);
-    const sunRashi = Math.floor(sunLon / RASHI_ARC) % 12;
-    const sunNak = Math.floor(sunLon / NAKSHATRA_ARC) % 27;
+    /* ── whose राशि and नक्षत्र the belts light up ─────────────────────
+       One graha at a time, and the Sun until you pick another: the same graha
+       the sightline is drawn for, so the lit segments and the line agree about
+       where on the belt to look. The month ring is the one thing that stays
+       the Sun's — the महिना *are* its twelve signs, so dimming them off
+       another graha says nothing. */
+    const sunRashi = Math.floor(normalizeDeg(sky.sun.longitude) / RASHI_ARC) % 12;
+    const beltKey: GrahaKey = selectedKey ?? "sun";
+    const beltLon = normalizeDeg(sky[beltKey].longitude);
+    const beltRashi = Math.floor(beltLon / RASHI_ARC) % 12;
+    const beltNak = Math.floor(beltLon / NAKSHATRA_ARC) % 27;
     if (space) {
-      if (rashiHiRef.current) rashiHiRef.current.rotation.z = sunRashi * (Math.PI / 6);
-      if (nakHiRef.current) nakHiRef.current.rotation.z = sunNak * ((Math.PI * 2) / 27);
+      const tint = lastBeltKey.current !== beltKey ? GRAHA_COLOR[beltKey] : null;
+      if (rashiHiRef.current) {
+        rashiHiRef.current.rotation.z = beltRashi * (Math.PI / 6);
+        if (tint) (rashiHiRef.current.material as THREE.MeshBasicMaterial).color.set(tint);
+      }
+      if (nakHiRef.current) {
+        nakHiRef.current.rotation.z = beltNak * ((Math.PI * 2) / 27);
+        if (tint) (nakHiRef.current.material as THREE.MeshBasicMaterial).color.set(tint);
+      }
+      lastBeltKey.current = beltKey;
     }
 
     /* The server's Lahiri value for the date on screen, carried as an offset on
@@ -1376,11 +1400,13 @@ export function AakashGocharScene({
         setPoint(ray, 1, at);
       }
       flushLine(ray);
-      /* Space: the line to नक्षत्र is only for the graha you picked. Globe
-         keeps the Sun's ray off (it would run through the Earth) and shows
-         any other when selected. Horizon: whatever is above the ground. */
+      /* Space: one sightline only, running out through both belts — for the
+         graha you picked, or the Sun until you pick one, so it always matches
+         the lit राशि and नक्षत्र segments. Globe keeps the Sun's ray off (it
+         would run through the Earth) and shows any other when selected.
+         Horizon: whatever is above the ground. */
       ray.visible = space
-        ? key === selectedKey
+        ? key === beltKey
         : globe
           ? key !== "sun" && key === selectedKey
           : at[1] > 0;
@@ -1647,7 +1673,7 @@ export function AakashGocharScene({
           const lon = (i + 0.5) * RASHI_ARC;
           const at = space ? onWheel(lon, RASHI_LABEL_R) : place(lon, RASHI_LABEL_LAT, RASHI_MID);
           if (labelVisible(at)) {
-            project({ id: `r-${i}`, kind: "rashi", index: i + 1, dim: i !== sunRashi }, at);
+            project({ id: `r-${i}`, kind: "rashi", index: i + 1, dim: i !== beltRashi }, at);
           }
         }
       }
@@ -1665,7 +1691,7 @@ export function AakashGocharScene({
           const lon = (i + 0.5) * NAKSHATRA_ARC;
           const at = space ? onWheel(lon, NAK_MID) : place(lon, NAK_LABEL_LAT, NAK_MID);
           if (labelVisible(at)) {
-            project({ id: `n-${i}`, kind: "nakshatra", index: i + 1, dim: i !== sunNak }, at);
+            project({ id: `n-${i}`, kind: "nakshatra", index: i + 1, dim: i !== beltNak }, at);
           }
         }
 
