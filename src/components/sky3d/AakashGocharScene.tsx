@@ -134,8 +134,6 @@ const GLOBE_BODY_SCALE = 0.55;
 const INK_DIM = "#a7c4c3";
 const RETRO = "#ef4444";
 const ZODIAC = "#d8c84a";
-/** The नक्षत्र half of the drum wall — the same green its names are set in. */
-const NAK_ZONE = "#6fe08a";
 const NAKSHATRA = "#35d05a";
 const GRID = "#4d7fb5";
 /**
