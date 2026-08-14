@@ -586,7 +586,9 @@ export function TwoSystemsStudy() {
       {createPortal(
         <div
           ref={overlayRef}
-          className="fixed inset-0 z-[100] overscroll-contain"
+          /* `tm-tokens`: on <body> the overlay is outside `.tm-page`, so the
+             theme variables it styles itself with would be undefined. */
+          className="tm-tokens fixed inset-0 z-[100] overscroll-contain"
           style={{ background: CANVAS_BG }}
         >
           {body}

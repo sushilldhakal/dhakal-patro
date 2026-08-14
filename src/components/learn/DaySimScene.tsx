@@ -27,7 +27,15 @@
  * second, and the HTML overlay draws its labels from that.
  */
 
-import { memo, useCallback, useEffect, useMemo, useRef, type MutableRefObject } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type MutableRefObject,
+} from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -63,7 +71,20 @@ const MEAN_SUN_R = 0.42;
  * doing the work of saying which rashi the Sun is *seen* in.
  */
 const MOON_R = 0.27;
-const MOON_ORBIT = 2.6;
+/** Shadow grahas — points, not discs, but they still have to read at this scale. */
+const NODE_R = 0.16;
+/**
+ * The Moon's orbit, drawn wide enough for its tilt to mean something.
+ *
+ * At 2.6 it was 2.6 planet-radii out. The real one is sixty, and that ratio is
+ * the whole reason eclipses are rare: 5.14° of inclination lifts the Moon about
+ * five planet-radii clear of the shadow, so most months it passes above or
+ * below and nothing happens. Compressed to 2.6, the same 5.14° lifts it 0.23 —
+ * a quarter of the way to the planet's own edge — so *every* पूर्णिमा put the
+ * Moon inside the shadow and every अमावस्या put it across the Sun's face. The
+ * sim was claiming an eclipse a fortnight.
+ */
+const MOON_ORBIT = 3.6;
 
 /**
  * Sidereal months in a sidereal year — 365.256 / 27.322.
@@ -75,8 +96,32 @@ const MOON_ORBIT = 2.6;
  */
 const MOON_LAPS_PER_YEAR = 365.256363 / 27.321661;
 
-/** The Moon's orbit is tilted this far off the ecliptic — why eclipses are rare. */
-const MOON_INCLINATION = 5.14 * (Math.PI / 180);
+/**
+ * One retrograde circuit of the lunar nodes — Rāhu and Ketu.
+ *
+ * 18 years, 221 days and 16 hours. They travel *clockwise* (against the Moon)
+ * and stay exactly 180° apart: they are the two ends of one line, the
+ * intersection of the Moon's orbit with the ecliptic, not two independent bodies.
+ */
+const NODAL_PERIOD_DAYS = 6793.48;
+const NODAL_LAPS_PER_YEAR = 365.256363 / NODAL_PERIOD_DAYS;
+
+/**
+ * The tilt of the Moon's orbit off the ecliptic — why eclipses are rare.
+ *
+ * Drawn at 26°, not the true 5.14°, and the exaggeration is deliberate. What
+ * has to survive the scene's scale is not the angle but its *consequence*: at
+ * syzygy the Moon must clear the planet's disc, or the picture says an eclipse
+ * happens every month. Even at {@link MOON_ORBIT} = 3.6 the true angle lifts it
+ * 0.32 against a planet of radius 1, so it would still pass behind. At 26° the
+ * lift is 1.58 — past the planet's edge and the Moon's own radius, with room to
+ * see it.
+ *
+ * What that buys is the thing worth teaching: the crossings are back to being
+ * *occasional*. A पूर्णिमा only darkens when it happens to land near a node, the
+ * two points where the tilted orbit cuts the ecliptic, and most of them do not.
+ */
+const MOON_INCLINATION = 26 * (Math.PI / 180);
 
 /** Synodic laps per year — new moon to new moon, one fewer than sidereal. */
 const MOON_SYNODIC_PER_YEAR = MOON_LAPS_PER_YEAR - 1;
@@ -135,7 +180,15 @@ const COLOR = {
   mean: 0xe93f33,
   belt: 0x8a7c2e,
   nakshatra: 0x4a6b8a,
+  rahu: 0x8b5cf6,
+  ketu: 0xe11d48,
 } as const;
+
+const MOON_INCL_Q = new THREE.Quaternion().setFromAxisAngle(
+  new THREE.Vector3(1, 0, 0),
+  MOON_INCLINATION,
+);
+const AXIS_Y = new THREE.Vector3(0, 1, 0);
 
 /** ecliptic longitude → a point in the equatorial plane, app convention. */
 function atLon(lonDeg: number, radius: number) {
@@ -294,6 +347,60 @@ function makeLine(geometry: THREE.BufferGeometry, color: number, opacity: number
   );
 }
 
+/**
+ * Tip the Moon's plane around a travelling node line.
+ *
+ * `rotY(Ω) · rotX(i) · rotY(-Ω)` leaves longitudes in the parent frame alone
+ * and only tilts around the diameter at Ω — so the Moon keeps the longitude it
+ * already had, while the two crossings (Rāhu at Ω, Ketu at Ω+180°) stay on the
+ * ecliptic and drift with Ω.
+ */
+function composeMoonPlane(
+  out: THREE.Quaternion,
+  solar: THREE.Quaternion,
+  omegaRad: number,
+  qNode: THREE.Quaternion,
+  qNodeInv: THREE.Quaternion,
+) {
+  qNode.setFromAxisAngle(AXIS_Y, omegaRad);
+  qNodeInv.copy(qNode).invert();
+  return out.copy(solar).multiply(qNode).multiply(MOON_INCL_Q).multiply(qNodeInv);
+}
+
+/** Rāhu / Ketu — a smoky core and a ring facing the planet, not a textured ball. */
+function ShadowGraha({
+  nodeRef,
+  color,
+}: {
+  nodeRef: MutableRefObject<THREE.Group>;
+  color: number;
+}) {
+  return (
+    <group ref={nodeRef}>
+      <mesh>
+        <sphereGeometry args={[NODE_R, 16, 12]} />
+        <meshBasicMaterial color={color} transparent opacity={0.55} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[NODE_R * 1.9, 16, 12]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.14}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+      {/* Torus in YZ, so from ±X (where the nodes sit on the axis group) the
+          ring faces the planet — a hollow, not a body. */}
+      <mesh rotation={[0, Math.PI / 2, 0]}>
+        <torusGeometry args={[NODE_R * 1.45, NODE_R * 0.2, 8, 28]} />
+        <meshBasicMaterial color={color} transparent opacity={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Scene                                                               */
 /* ------------------------------------------------------------------ */
@@ -313,7 +420,14 @@ export interface SceneProps {
   nakshatraNames: string[];
   /** The same, in full — the icon lookup needs the unabbreviated name. */
   nakshatraFullNames: string[];
-  bodyNames: { planet: string; sun: string; meanSun: string; moon: string };
+  bodyNames: {
+    planet: string;
+    sun: string;
+    meanSun: string;
+    moon: string;
+    rahu: string;
+    ketu: string;
+  };
   clockText: MutableRefObject<{ sidereal: string; solar: string; mean: string }>;
   /**
    * The label spans, by id, so the frame loop can move them directly.
@@ -366,8 +480,17 @@ function DaySimScene({
   const wedge = useRef<THREE.Mesh>(null!);
   const sunOrbitGroup = useRef<THREE.Group>(null!);
   const moonRoot = useRef<THREE.Group>(null!);
+  const moonPlane = useRef<THREE.Group>(null!);
+  const nodeAxis = useRef<THREE.Group>(null!);
+  const rahuGroup = useRef<THREE.Group>(null!);
+  const ketuGroup = useRef<THREE.Group>(null!);
   const beltRoot = useRef<THREE.Group>(null!);
   const moonMesh = useRef<THREE.Mesh>(null!);
+  const moonPlaneQ = useRef(new THREE.Quaternion());
+  const qMoonNode = useRef(new THREE.Quaternion());
+  const qMoonNodeInv = useRef(new THREE.Quaternion());
+  const omegaRad = useRef(0);
+  const yearCount = useRef(0);
 
   const frame = useRef(0);
   const lastRashi = useRef(-1);
@@ -381,6 +504,35 @@ function DaySimScene({
   const scratch = useRef(new THREE.Vector3());
   const lookAt = useRef(new THREE.Vector3());
   const followYaw = useRef(0);
+  /* Where the camera is actually pointed this frame, and how far through a
+     change of focus it is. See the camera block in the frame loop. */
+  const camAnchor = useRef(new THREE.Vector3());
+  const lastTarget = useRef<CameraTarget>("meanSun");
+  const focusEase = useRef(1);
+  const gridOuter = useRef<THREE.Group>(null!);
+  const gridGroup = useRef<THREE.Group>(null!);
+  const gridHelper = useRef<THREE.PolarGridHelper>(null!);
+
+  /*
+   * The grid is a plane, and half the year the Sun is under it.
+   *
+   * `PolarGridHelper` builds opaque, depth-writing lines, so a body below the
+   * equatorial plane was crossed out by whichever spokes happened to pass in
+   * front of it — exactly when the tilt has carried it down there, which is the
+   * one thing that view exists to show. Semi-transparent lines that do not
+   * write depth keep the grid readable as a floor and let what is beneath it
+   * show through.
+   */
+  useEffect(() => {
+    const helper = gridHelper.current;
+    if (!helper) return;
+    for (const m of Array.isArray(helper.material) ? helper.material : [helper.material]) {
+      m.transparent = true;
+      m.opacity = 0.6;
+      m.depthWrite = false;
+      m.needsUpdate = true;
+    }
+  }, []);
 
   const siderealGeom = useArcGeometry(1.4, 1.6);
   const solarGeom = useArcGeometry(1.2, 1.4);
@@ -490,21 +642,41 @@ function DaySimScene({
   );
 
   /** The Moon's orbital plane: the ecliptic, tipped by its own inclination. */
-  const moonPlaneQ = useMemo(
-    () =>
-      solarPlaneQ
-        .clone()
-        .multiply(
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), MOON_INCLINATION),
-        ),
+  const seedMoonPlane = useCallback(
+    (omega: number) => {
+      composeMoonPlane(
+        moonPlaneQ.current,
+        solarPlaneQ,
+        omega,
+        qMoonNode.current,
+        qMoonNodeInv.current,
+      );
+      if (moonPlane.current) moonPlane.current.quaternion.copy(moonPlaneQ.current);
+    },
     [solarPlaneQ],
   );
+  useLayoutEffect(() => seedMoonPlane(omegaRad.current), [seedMoonPlane]);
 
   const moonOrbitLine = useMemo(
     () => makeLine(ellipseGeometry(MOON_ORBIT, MOON_ORBIT, 96), 0x9aa8c0, 0.4),
     [],
   );
   useEffect(() => () => dispose(moonOrbitLine), [moonOrbitLine]);
+
+  /** The line of nodes — Rāhu to Ketu through the planet, always a diameter. */
+  const nodeLine = useMemo(
+    () =>
+      makeLine(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-MOON_ORBIT, 0, 0),
+          new THREE.Vector3(MOON_ORBIT, 0, 0),
+        ]),
+        0xc4b5fd,
+        0.55,
+      ),
+    [],
+  );
+  useEffect(() => () => dispose(nodeLine), [nodeLine]);
 
   /**
    * The Moon's path through space over one synodic month.
@@ -774,7 +946,12 @@ function DaySimScene({
     if (c.playing) {
       /* Clamped so a backgrounded tab does not resume with one giant step. */
       c.day += c.daysPerSecond * Math.min(delta, 0.1);
-      c.day -= Math.floor(c.day / daysPerYear) * daysPerYear;
+      const wrappedYears = Math.floor(c.day / daysPerYear);
+      if (wrappedYears) {
+        /* The year loops; the nodes must not. One lap is 18.6 years. */
+        yearCount.current += wrappedYears;
+        c.day -= wrappedYears * daysPerYear;
+      }
     }
 
     /* ── where everything is ─────────────────────────────────────────── */
@@ -863,6 +1040,22 @@ function DaySimScene({
     moonRoot.current.position.copy(planetPos);
     const moonLonAt = (d: number) =>
       beltZeroDeg + MOON_ANCHOR_FROM_MESHA + MOON_LAPS_PER_YEAR * 360 * (d / daysPerYear);
+    /* Clockwise = decreasing longitude. One lap in NODAL_PERIOD_DAYS.
+       `yearCount` survives the year wrapping so the nodes keep travelling. */
+    const rahuLon = euclideanModulo(
+      -NODAL_LAPS_PER_YEAR * 360 * (yearCount.current + day / daysPerYear),
+      360,
+    );
+    omegaRad.current = rahuLon * (Math.PI / 180);
+    composeMoonPlane(
+      moonPlaneQ.current,
+      solarPlaneQ,
+      omegaRad.current,
+      qMoonNode.current,
+      qMoonNodeInv.current,
+    );
+    moonPlane.current.quaternion.copy(moonPlaneQ.current);
+    nodeAxis.current.rotation.y = omegaRad.current;
     if (toggles.moon || toggles.moonTrail || toggles.moonLap) {
       const moonLon = moonLonAt(day);
       atLonInto(moonMesh.current.position, moonLon, MOON_ORBIT);
@@ -899,6 +1092,29 @@ function DaySimScene({
       }
     }
 
+    /* ── which body the sky ring is hung around ──────────────────────── */
+    /*
+     * The belts are a ring of *directions*, and the stars that fix those
+     * directions are effectively at infinity — so the ring may be hung around
+     * whichever body the camera is watching, and each division still points
+     * the same way. Hanging it on the planet is the geocentric sky, the one a
+     * पात्रो is written from; hanging it on the Sun gives the heliocentric
+     * view, where the planet is the thing going round the middle.
+     *
+     * The Sun's own reading survives the move: from the planet, the Sun lies
+     * along `sunLon`, and the point at `sunLon` on a Sun-centred ring is
+     * straight out along that same line — so the sightline still crosses the
+     * Sun and lands on the rashi it is really in.
+     *
+     * The Moon's does not, and that is not a rounding error: the Moon is a
+     * couple of units from the planet against the Sun's ten, so from the Sun
+     * it lies in a quite different direction. Its markers are geocentric
+     * quantities, so they are simply not drawn in the heliocentric frame
+     * rather than drawn wrong.
+     */
+    const geocentric = cameraTarget !== "sun";
+    const beltCentre = geocentric ? planetPos : sunPos;
+
     /* ── which rashi is the Sun seen in ──────────────────────────────── */
     /* A rashi is a division of the **ecliptic**, not of the equator, so the
        longitude has to be read in the ecliptic frame — undo the tilt first.
@@ -927,7 +1143,7 @@ function DaySimScene({
          The endpoint keeps its `y`: the belt lies in the *ecliptic*, which is
          tilted out of this scene's equatorial working plane, so flattening it
          to zero left the line hanging up to nine units short of the belt. */
-      const hit = atBeltInto(vAnchor.current, sunLon, BELT_OUTER).add(planetPos);
+      const hit = atBeltInto(vAnchor.current, sunLon, BELT_OUTER).add(beltCentre);
       const a = sightline.geometry.getAttribute("position") as THREE.BufferAttribute;
       a.setXYZ(0, planetPos.x, planetPos.y, planetPos.z);
       a.setXYZ(1, sunPos.x, sunPos.y, sunPos.z);
@@ -943,23 +1159,25 @@ function DaySimScene({
        from `moonLon`: the 5.14° orbital inclination tilts the direction, so the
        ecliptic longitude is not quite the in-plane angle. */
     const mDir = atLonInto(vMoon.current, moonLonAt(day), MOON_ORBIT)
-      .applyQuaternion(moonPlaneQ)
+      .applyQuaternion(moonPlaneQ.current)
       .applyQuaternion(eclipticQ);
     const moonEclLon = euclideanModulo(Math.atan2(-mDir.z, mDir.x) * (180 / Math.PI), 360);
     const moonNak =
       Math.floor((euclideanModulo(moonEclLon - beltZeroDeg, 360) * 27) / 360) % 27;
     moonNakHighlight.rotation.z = moonNak * (PI2 / 27);
+    moonNakHighlight.visible = toggles.nakshatraBelt && toggles.moonSightline && geocentric;
+    moonSightline.visible = toggles.moonSightline && geocentric;
 
-    if (toggles.moonSightline) {
+    if (moonSightline.visible) {
       /* Rebuilt rather than read off the mesh: `getWorldPosition` would use a
          matrix this frame has not committed yet. */
       const mPos = atLonInto(vTmp.current, moonLonAt(day), MOON_ORBIT)
-        .applyQuaternion(moonPlaneQ)
+        .applyQuaternion(moonPlaneQ.current)
         .add(planetPos);
       const a = moonSightline.geometry.getAttribute("position") as THREE.BufferAttribute;
       a.setXYZ(0, planetPos.x, planetPos.y, planetPos.z);
       a.setXYZ(1, mPos.x, mPos.y, mPos.z);
-      const hit = atBeltInto(vAnchor.current, moonEclLon, NAK_OUTER).add(planetPos);
+      const hit = atBeltInto(vAnchor.current, moonEclLon, NAK_OUTER).add(beltCentre);
       a.setXYZ(2, hit.x, hit.y, hit.z);
       a.needsUpdate = true;
       moonSightline.geometry.computeBoundingSphere();
@@ -969,27 +1187,61 @@ function DaySimScene({
     if (lastRashi.current !== -1 && rashi !== lastRashi.current) sankranti = rashi;
     lastRashi.current = rashi;
 
-    /* The belts are **geocentric**: they ride with the planet, because a rashi
-       is a direction seen from here. Centred on the Sun instead, a straight
-       line from the planet through a body could never land on the sign that
-       body is actually in — it would miss by up to 20°, most of a rashi. */
-    beltRoot.current.position.copy(planetPos);
+    beltRoot.current.position.copy(beltCentre);
 
     /* ── camera ──────────────────────────────────────────────────────── */
     const v = camera.current;
     const target =
       cameraTarget === "planet" ? planetPos : cameraTarget === "sun" ? sunPos : lookAt.current.set(0, 0, 0);
+
+    /*
+     * Switching focus glides; holding it tracks exactly.
+     *
+     * A hard cut between two bodies ten units apart reads as a teleport — the
+     * reader loses which body they were looking at, which is the one thing the
+     * control exists to make obvious. So the anchor eases across on a change of
+     * target and then snaps to exact, because a permanent lerp would trail
+     * behind a planet moving twelve rotations a second.
+     */
+    if (cameraTarget !== lastTarget.current) {
+      lastTarget.current = cameraTarget;
+      focusEase.current = 0;
+    }
+    if (focusEase.current < 1) {
+      focusEase.current = Math.min(1, focusEase.current + delta * 2.5);
+      camAnchor.current.lerp(target, Math.min(1, delta * 6));
+    } else {
+      camAnchor.current.copy(target);
+    }
+    const anchorPos = camAnchor.current;
+
     /* Follow eases the yaw round with the planet so it stays put on screen. */
     followYaw.current += shortestAngle((cameraFollow ? -M : 0) - followYaw.current) *
       Math.min(1, delta * 3);
     const yaw = v.yaw + followYaw.current;
     const cosPitch = Math.cos(v.pitch);
     cam.position.set(
-      target.x + v.distance * cosPitch * Math.sin(yaw),
-      target.y + v.distance * Math.sin(v.pitch),
-      target.z + v.distance * cosPitch * Math.cos(yaw),
+      anchorPos.x + v.distance * cosPitch * Math.sin(yaw),
+      anchorPos.y + v.distance * Math.sin(v.pitch),
+      anchorPos.z + v.distance * cosPitch * Math.cos(yaw),
     );
-    cam.lookAt(target);
+    cam.lookAt(anchorPos);
+
+    /*
+     * The grid belongs to whatever is focused — it is that body's own plane,
+     * the thing everything else is judged above or below. Left at the origin it
+     * measured the mean sun's plane no matter what the reader had picked, so
+     * with the Earth focused the Earth sat in the middle of a grid that was not
+     * its own. It rides the same eased anchor as the camera, so the two move
+     * together on a change of focus.
+     *
+     * From the Sun the plane that matters is the orbit's rather than the
+     * planet's equator, so the inner group tilts — the reference sim turns its
+     * grid on this focus for the same reason. Everything else in the scene is
+     * built in the equatorial frame, so it is the grid alone that moves.
+     */
+    gridOuter.current.position.copy(camAnchor.current);
+    gridGroup.current.rotation.x = cameraTarget === "sun" ? -tilt : 0;
 
     /* ── labels: positioned every frame, described five times a second ── */
     frame.current += 1;
@@ -1008,7 +1260,7 @@ function DaySimScene({
         const d = day - synodicDays * (1 - i / TRAIL_STEPS);
         const Md = meanAnomalyAt(d / daysPerYear);
         v.set(MEAN_DISTANCE * Math.cos(Md), 0, -MEAN_DISTANCE * Math.sin(Md));
-        atLonInto(w, moonLonAt(d), MOON_ORBIT).applyQuaternion(moonPlaneQ);
+        atLonInto(w, moonLonAt(d), MOON_ORBIT).applyQuaternion(moonPlaneQ.current);
         a.setXYZ(i, v.x + w.x, v.y + w.y, v.z + w.z);
       }
       a.needsUpdate = true;
@@ -1053,7 +1305,7 @@ function DaySimScene({
           `r-${i}`,
           "rashi",
           rashiNames[i]!,
-          atBeltInto(vAnchor.current, beltZeroDeg + i * 30 + 15, BELT_MID).add(planetPos),
+          atBeltInto(vAnchor.current, beltZeroDeg + i * 30 + 15, BELT_MID).add(beltCentre),
           i !== rashi,
           undefined,
           i + 1,
@@ -1066,7 +1318,7 @@ function DaySimScene({
           `bs-${i}`,
           "month",
           monthNames[i]!,
-          atBeltInto(vAnchor.current, beltZeroDeg + i * 30 + 15, MONTH_R).add(planetPos),
+          atBeltInto(vAnchor.current, beltZeroDeg + i * 30 + 15, MONTH_R).add(beltCentre),
           i !== rashi,
         );
       }
@@ -1081,7 +1333,7 @@ function DaySimScene({
             vAnchor.current,
             beltZeroDeg + (i * 360) / 27 + 360 / 54,
             NAK_MID,
-          ).add(planetPos),
+          ).add(beltCentre),
           i !== nak,
           undefined,
           undefined,
@@ -1102,6 +1354,12 @@ function DaySimScene({
         moonMesh.current.getWorldPosition(anchor).setY(MOON_R * 3.4),
         false,
       );
+      rahuGroup.current.getWorldPosition(anchor);
+      anchor.y += NODE_R * 2.6;
+      push("b-rahu", "body", bodyNames.rahu, anchor, false);
+      ketuGroup.current.getWorldPosition(anchor);
+      anchor.y += NODE_R * 2.6;
+      push("b-ketu", "body", bodyNames.ketu, anchor, false);
     }
     if (toggles.trueSun)
       push("b-sun", "body", bodyNames.sun, anchor.copy(sunPos).setY(sunPos.y + SUN_R * 2.2), false);
@@ -1173,11 +1431,10 @@ function DaySimScene({
             visible={toggles.nakshatraBelt}
             position={[0, -0.01, 0]}
           />
-          <primitive
-            object={moonNakHighlight}
-            visible={toggles.nakshatraBelt && toggles.moonSightline}
-            position={[0, -0.02, 0]}
-          />
+          {/* Visibility of the two Moon markers is owned by the frame loop:
+              it also depends on which body the belt is hung around, which only
+              it knows. A `visible` prop here would fight it on every render. */}
+          <primitive object={moonNakHighlight} position={[0, -0.02, 0]} />
         </group>
       </group>
       </group>
@@ -1185,11 +1442,34 @@ function DaySimScene({
       {/* World-space, not in the belt root: both are drawn from the planet out
           to a belt that is already positioned there. */}
       <primitive object={sightline} visible={toggles.sightline} />
-      <primitive object={moonSightline} visible={toggles.moonSightline} />
+      <primitive object={moonSightline} />
 
-      {/* Equatorial grid */}
-      <group visible={toggles.grid} position={[0, -0.05, 0]}>
-        <polarGridHelper args={[MEAN_DISTANCE * 3, 12, 6, 64, 0x001e44, 0x102b61]} />
+      {/* Equatorial grid.
+          Two groups, as in the reference sim: the outer one carries the grid to
+          whichever body is focused, the inner one tilts it into that body's own
+          plane. The filled disc under the lines is the point of the thing — a
+          bare wireframe gives the eye nothing to judge "below" against, so the
+          Sun dipping under the plane and coming back up only reads once there
+          is a surface for it to pass behind. */}
+      <group ref={gridOuter}>
+        <group ref={gridGroup} visible={toggles.grid} position={[0, -0.05, 0]}>
+          <polarGridHelper
+            ref={gridHelper}
+            args={[MEAN_DISTANCE * 3, 12, 6, 64, 0x001e44, 0x102b61]}
+          />
+          <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
+            <circleGeometry args={[MEAN_DISTANCE * 3, 64]} />
+            <meshBasicMaterial
+              color={0x000022}
+              transparent
+              opacity={0.7}
+              side={THREE.DoubleSide}
+              /* Never occludes what is in front of it — a body above the plane
+                 stays crisp, one below shows through dimmed. */
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
       </group>
 
       {/* Mean sun at the origin, and the circle the clock believes in */}
@@ -1231,7 +1511,7 @@ function DaySimScene({
       {/* The Moon, on its own inclined plane, carried along with the planet */}
       <primitive object={moonTrail} visible={toggles.moonTrail} />
       <group ref={moonRoot}>
-        <group quaternion={moonPlaneQ}>
+        <group ref={moonPlane}>
           <primitive object={moonOrbitLine} visible={toggles.moon} />
           <primitive object={lapArc.first} visible={toggles.moonLap} />
           <primitive object={lapArc.over} visible={toggles.moonLap} />
@@ -1240,6 +1520,16 @@ function DaySimScene({
             <sphereGeometry args={[MOON_R, 32, 24]} />
             <meshStandardMaterial map={moonMap} roughness={1} metalness={0} />
           </mesh>
+          {/* Rāhu at +X, Ketu at −X of this axis; the axis itself is Ω. */}
+          <group ref={nodeAxis} visible={toggles.moon}>
+            <primitive object={nodeLine} />
+            <group position={[MOON_ORBIT, 0, 0]}>
+              <ShadowGraha nodeRef={rahuGroup} color={COLOR.rahu} />
+            </group>
+            <group position={[-MOON_ORBIT, 0, 0]}>
+              <ShadowGraha nodeRef={ketuGroup} color={COLOR.ketu} />
+            </group>
+          </group>
         </group>
       </group>
 

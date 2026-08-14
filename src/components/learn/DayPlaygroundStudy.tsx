@@ -27,11 +27,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Focus,
+  LineChart,
   Maximize2,
   Minimize2,
   Pause,
   Play,
-  RotateCcw,
   SlidersHorizontal,
 } from "lucide-react";
 
@@ -40,7 +41,7 @@ import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { getRashiList } from "@/lib/rashi-i18n";
-import { edPreset, edPresets, edRo, edRoK, edRoV } from "@/lib/learn-classes";
+import { edRo, edRoK, edRoV } from "@/lib/learn-classes";
 import { edScrub } from "@/lib/diagram-classes";
 import { useFullscreen } from "@/lib/use-fullscreen";
 import { RashiSkyGlyph } from "@/lib/sky3d/rashi-icons";
@@ -137,7 +138,11 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const [flash, setFlash] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
+
+  /** Which planet preset is showing in the drawer; `""` is this topic's own. */
+  const [preset, setPreset] = useState("");
 
   const [solarDaysPerYear, setSolarDaysPerYear] = useState(initial.params.daysPerYear - 1);
   const [eccentricity, setEccentricity] = useState(initial.params.eccentricity);
@@ -187,6 +192,38 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const eot = equationOfTime(meanAnomaly, eccentricity, tilt, PERIHELION - VERNAL);
   const eotMinutes = (eot * 24 * 60) / PI2;
 
+  /* How far the sidereal clock has crept ahead of the mean one: a turn a year
+     spread evenly, so it opens at zero and closes on a full 24h. This is the
+     one reading that grows monotonically, which is what makes it legible while
+     the clock faces themselves are spinning past too fast to compare. */
+  const siderealGainMinutes = (day / daysPerYear) * 24 * 60;
+
+  /**
+   * How long one of each kind of day actually lasts, in minutes of mean time.
+   *
+   * This is where the difference is a plain number rather than a gap you have
+   * to watch accumulate — the mean day is 24h by definition, the sidereal day
+   * is shorter by the orbit's own share of a turn, and the true solar day is
+   * the only one whose length changes from day to day.
+   *
+   * The true one is measured, not derived: apparent noon comes a little early
+   * or late depending on which way the equation of time is moving that week, so
+   * the length is 24h minus the day's own change in it. Both the eccentricity
+   * and the tilt slider move it, which is the point of having them.
+   */
+  const dayLengths = useMemo(() => {
+    const eotMinAt = (d: number) =>
+      (equationOfTime(meanAnomalyAt(d / daysPerYear), eccentricity, tilt, PERIHELION - VERNAL) *
+        24 *
+        60) /
+      PI2;
+    return {
+      sidereal: 1440 * (1 - 1 / daysPerYear),
+      mean: 1440,
+      solar: 1440 - (eotMinAt(day + 0.5) - eotMinAt(day - 0.5)),
+    };
+  }, [day, daysPerYear, eccentricity, tilt]);
+
   const readings = useMemo(() => clocks(day, daysPerYear, eot), [day, daysPerYear, eot]);
   const counts = useMemo(() => dayCounts(day, daysPerYear, eot), [day, daysPerYear, eot]);
 
@@ -217,6 +254,8 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       sun: pick("सूर्य", "Sun"),
       meanSun: pick("माध्य सूर्य", "Mean Sun"),
       moon: pick("चन्द्र", "Moon"),
+      rahu: pick("राहु", "Rāhu"),
+      ketu: pick("केतु", "Ketu"),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lang],
@@ -240,18 +279,24 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     });
   }, []);
 
-  const applyPreset = useCallback((key: string) => {
-    const p = PLANET_PRESETS.find((x) => x.key === key);
-    if (!p) return;
-    setSolarDaysPerYear(Math.max(1, Math.min(365, Math.round(p.daysPerYear - 1))));
-    setEccentricity(p.eccentricity);
-    setTiltDeg(p.tilt);
-  }, []);
-
-  const reset = useCallback(() => {
-    clock.current.day = 0;
-    setPlaying(false);
-  }, []);
+  /** Empty key means this topic's own settings — the way back from a preset. */
+  const applyPreset = useCallback(
+    (key: string) => {
+      setPreset(key);
+      const p = PLANET_PRESETS.find((x) => x.key === key);
+      if (!p) {
+        setToggles(initial.toggles);
+        setSolarDaysPerYear(initial.params.daysPerYear - 1);
+        setEccentricity(initial.params.eccentricity);
+        setTiltDeg(initial.params.tilt / DEG);
+        return;
+      }
+      setSolarDaysPerYear(Math.max(1, Math.min(365, Math.round(p.daysPerYear - 1))));
+      setEccentricity(p.eccentricity);
+      setTiltDeg(p.tilt);
+    },
+    [initial],
+  );
 
   const { prev, next } = useMemo(() => adjacentTopicMetas(slug), [slug]);
 
@@ -285,6 +330,31 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
   /* ── pieces ───────────────────────────────────────────────────────── */
 
+  /** A signed gap in minutes as `+6h 18m` / `−12 min`. */
+  const gapLabel = (minutes: number) => {
+    /* Rounded before the sign is taken, so a gap of −0.1 min reads `0 min`
+       rather than the nonsense `−0 min`. */
+    const whole = Math.round(minutes);
+    const sign = whole < 0 ? "−" : whole > 0 ? "+" : "";
+    const abs = Math.abs(whole);
+    const h = Math.floor(abs / 60);
+    const m = abs - h * 60;
+    return {
+      sign,
+      text: h > 0 ? `${h}${pick("घ", "h")} ${m}${pick("मि", "m")}` : `${m} ${pick("मिनेट", "min")}`,
+    };
+  };
+
+  /** A duration in minutes as `23h 56m 04s` — seconds included because the true
+      solar day only ever moves in that last column. */
+  const lengthLabel = (minutes: number) => {
+    const total = Math.round(minutes * 60);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total - h * 3600) / 60);
+    const s = total - h * 3600 - m * 60;
+    return `${h}${pick("घ", "h")} ${String(m).padStart(2, "0")}${pick("मि", "m")} ${String(s).padStart(2, "0")}${pick("से", "s")}`;
+  };
+
   const chip = (active: boolean, label: string, onPress: () => void, key?: string) => (
     <button
       key={key ?? label}
@@ -299,6 +369,18 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     >
       {label}
     </button>
+  );
+
+  /** One titled section of layer switches in the drawer. */
+  const layerGroup = (title: string, items: [keyof SimToggles, string][]) => (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+        {title}
+      </span>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map(([k, label]) => chip(toggles[k], label, () => setToggle(k), k))}
+      </div>
+    </div>
   );
 
   /** The filter row: four groups, then the three belts. */
@@ -474,14 +556,34 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
         <div className="absolute right-3 top-3 flex gap-2">
           <IconButton
-            onClick={() => setControlsOpen((v) => !v)}
+            onClick={() => {
+              setControlsOpen((v) => !v);
+              setFocusOpen(false);
+            }}
             label={pick("नियन्त्रण", "Controls")}
             active={controlsOpen}
           >
             <SlidersHorizontal size={16} />
           </IconButton>
-          <IconButton onClick={reset} label={pick("सुरुमा फर्कनुहोस्", "Back to start")}>
-            <RotateCcw size={16} />
+          {/* Focus has its own button rather than a section of the drawer: it
+              is the control a reader reaches for while watching, and digging
+              past four sliders for it every time was the wrong trade. */}
+          <IconButton
+            onClick={() => {
+              setFocusOpen((v) => !v);
+              setControlsOpen(false);
+            }}
+            label={pick("केन्द्रविन्दु", "Focus")}
+            active={focusOpen}
+          >
+            <Focus size={16} />
+          </IconButton>
+          <IconButton
+            onClick={() => setGraphOpen((v) => !v)}
+            label={pick("समयको समीकरण ग्राफ", "Equation-of-time graph")}
+            active={graphOpen}
+          >
+            <LineChart size={16} />
           </IconButton>
           <IconButton
             onClick={onToggleFullscreen}
@@ -496,6 +598,27 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             bottom of the thing it belongs to. */}
         {controlsOpen && (
           <div className="absolute right-3 top-14 z-10 flex max-h-[calc(100%-4.5rem)] w-[min(290px,calc(100%-1.5rem))] flex-col gap-4 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
+            {/* A world to borrow, in one line. Six buttons and a paragraph of
+                caveats were the widest thing in the panel for something a
+                reader picks once. */}
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+                {pick("ग्रह", "Planet")}
+              </span>
+              <select
+                className="h-8 w-full cursor-pointer rounded-lg border border-white/20 bg-black/60 px-2 text-xs font-semibold text-white/85 outline-none hover:border-white/45"
+                value={preset}
+                onChange={(e) => applyPreset(e.target.value)}
+              >
+                <option value="">{pick("यो विषयमा फर्कनुहोस्", "Back to this topic")}</option>
+                {PLANET_PRESETS.map((p) => (
+                  <option key={p.key} value={p.key}>
+                    {PLANET_NAMES[p.key]![ne ? 0 : 1]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             {slider(
               pick("वर्षमा सौर दिन", "Solar days per year"),
               solarDaysPerYear,
@@ -524,48 +647,105 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               setTiltDeg,
             )}
 
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
-                {pick("क्यामेरा", "Camera")}
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {chip(cameraTarget === "meanSun", pick("केन्द्र", "Centre"), () => setCameraTarget("meanSun"))}
-                {chip(cameraTarget === "planet", pick("पृथ्वी", "Earth"), () => setCameraTarget("planet"))}
-                {chip(cameraTarget === "sun", pick("सूर्य", "Sun"), () => setCameraTarget("sun"))}
-                {chip(cameraFollow, pick("कक्ष पछ्याउनुहोस्", "Follow orbit"), () =>
-                  setCameraFollow((v) => !v),
-                )}
-              </div>
-            </div>
+            {/* Grouped the way the reference sim groups them — guides, then the
+                bodies, then the things that measure them — rather than one flat
+                run of fifteen chips where the arcs sat next to the grid. Every
+                layer is still individually reachable; the toolbar's group chips
+                remain a shortcut, not a replacement. */}
+            {layerGroup(pick("मार्गदर्शक", "Guides"), [
+              ["grid", pick("ग्रिड", "Grid")],
+              ["planetOrbit", pick("कक्ष", "Orbit")],
+              ["sunOrbit", pick("सूर्यपथ", "Sun path")],
+              ["primeMeridian", pick("काठमाडौँ रेखा", "Kathmandu meridian")],
+            ])}
+            {layerGroup(pick("वस्तुहरू", "Elements"), [
+              ["trueSun", pick("साँचो सूर्य", "True Sun")],
+              ["meanSun", pick("माध्य सूर्य", "Mean Sun")],
+              ["moon", pick("चन्द्र", "Moon")],
+              ["eotWedge", pick("समय फरक", "EOT wedge")],
+            ])}
+            {layerGroup(pick("सङ्केत", "Indicators"), [
+              ["siderealArc", pick("नाक्षत्र चाप", "Sidereal arc")],
+              ["solarArc", pick("सौर चाप", "Solar arc")],
+              ["meanArc", pick("माध्य चाप", "Mean arc")],
+              ["sightline", pick("दृष्टिरेखा", "Sightline")],
+              ["moonSightline", pick("चन्द्र दृष्टिरेखा", "Moon sightline")],
+              ["moonTrail", pick("चन्द्रपथ", "Moon trail")],
+              ["moonLap", pick("मास फरक", "Month gap")],
+            ])}
+          </div>
+        )}
 
-            {/* Every layer on its own — the group chips are a shortcut, not a
-                replacement, so nothing in the scene is unreachable. */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
-                {pick("सबै तह", "All layers")}
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {chip(toggles.siderealArc, pick("नाक्षत्र चाप", "Sidereal arc"), () => setToggle("siderealArc"))}
-                {chip(toggles.solarArc, pick("सौर चाप", "Solar arc"), () => setToggle("solarArc"))}
-                {chip(toggles.meanArc, pick("माध्य चाप", "Mean arc"), () => setToggle("meanArc"))}
-                {chip(toggles.eotWedge, pick("समय फरक", "EOT wedge"), () => setToggle("eotWedge"))}
-                {chip(toggles.trueSun, pick("साँचो सूर्य", "True Sun"), () => setToggle("trueSun"))}
-                {chip(toggles.meanSun, pick("माध्य सूर्य", "Mean Sun"), () => setToggle("meanSun"))}
-                {chip(toggles.sightline, pick("दृष्टिरेखा", "Sightline"), () => setToggle("sightline"))}
-                {chip(toggles.moon, pick("चन्द्र", "Moon"), () => setToggle("moon"))}
-                {chip(toggles.moonTrail, pick("चन्द्रपथ", "Moon trail"), () => setToggle("moonTrail"))}
-                {chip(toggles.moonLap, pick("मास फरक", "Month gap"), () => setToggle("moonLap"))}
-                {chip(
-                  toggles.moonSightline,
-                  pick("चन्द्र दृष्टिरेखा", "Moon sightline"),
-                  () => setToggle("moonSightline"),
-                )}
-                {chip(toggles.planetOrbit, pick("कक्ष", "Orbit"), () => setToggle("planetOrbit"))}
-                {chip(toggles.sunOrbit, pick("सूर्यपथ", "Sun path"), () => setToggle("sunOrbit"))}
-                {chip(toggles.grid, pick("ग्रिड", "Grid"), () => setToggle("grid"))}
-                {chip(toggles.primeMeridian, pick("काठमाडौँ रेखा", "Kathmandu meridian"), () => setToggle("primeMeridian"))}
-              </div>
+        {/* Focus: which body the view is hung on, and whether the camera rides
+            round with the orbit. Radio, because the scene can only be centred
+            on one thing; the follow switch is a separate question about that
+            same choice, so it lives with it rather than among the layers. */}
+        {focusOpen && (
+          <div className="absolute right-3 top-14 z-10 flex w-[min(230px,calc(100%-1.5rem))] flex-col gap-2.5 rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+              {pick("केन्द्रविन्दु", "Focus")}
+            </span>
+            <div className="flex flex-col gap-1">
+              {(
+                [
+                  ["meanSun", pick("माध्य सूर्य", "Mean Sun")],
+                  ["sun", pick("सूर्य", "Sun")],
+                  ["planet", pick("पृथ्वी", "Earth")],
+                ] as [CameraTarget, string][]
+              ).map(([key, label]) => (
+                <label
+                  key={key}
+                  className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-white/70 hover:text-white"
+                >
+                  <input
+                    type="radio"
+                    name="playground-focus"
+                    className="size-3.5 accent-white"
+                    checked={cameraTarget === key}
+                    onChange={() => setCameraTarget(key)}
+                  />
+                  {label}
+                </label>
+              ))}
             </div>
+            <label className="flex cursor-pointer items-center gap-2 border-t border-white/10 pt-2.5 text-xs font-semibold text-white/70 hover:text-white">
+              <input
+                type="checkbox"
+                className="size-3.5 accent-white"
+                checked={cameraFollow}
+                onChange={() => setCameraFollow((v) => !v)}
+              />
+              {pick("कक्ष पछ्याउनुहोस्", "Follow orbit")}
+            </label>
+
+            {/* Rate lives with focus, not with the orbit's own figures: it is
+                about how the reader watches the thing, the same question the
+                rest of this menu answers. */}
+            <div className="border-t border-white/10 pt-2.5">
+              {slider(
+                pick("कक्षीय गति", "Orbit speed"),
+                speed,
+                `${num(SPEED_MULTIPLIERS[speed]!)}×`,
+                0,
+                SPEED_MULTIPLIERS.length - 1,
+                1,
+                (v) => setSpeed(Math.round(v)),
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* The graph over the scene, not buried in the panel below it: it is
+            read against the sim's own motion, so it has to be on screen at the
+            same time as the thing it is describing. */}
+        {graphOpen && (
+          <div className="absolute bottom-3 left-3 z-10 w-[min(420px,calc(100%-1.5rem))] rounded-xl border border-white/15 bg-black/85 p-3 text-white backdrop-blur">
+            <EotGraph
+              eccentricity={eccentricity}
+              tilt={tilt}
+              dayOfYear={day}
+              daysPerYear={daysPerYear}
+            />
           </div>
         )}
 
@@ -624,24 +804,6 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             }}
             aria-label={pick("वर्षभरि सार्नुहोस्", "Scrub through the year")}
           />
-          <div className="flex shrink-0 gap-1">
-            {SPEED_MULTIPLIERS.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSpeed(i)}
-                className={cn(
-                  "h-7 w-7 cursor-pointer rounded-full border text-[11px] font-bold",
-                  speed === i
-                    ? "border-transparent bg-white/85 text-black"
-                    : "border-white/20 text-white/55 hover:border-white/45 hover:text-white",
-                )}
-                aria-label={`${pick("गति", "Speed")} ${num(i + 1)}`}
-              >
-                {num(i + 1)}
-              </button>
-            ))}
-          </div>
           <button
             type="button"
             onClick={() => setDetailsOpen((v) => !v)}
@@ -654,86 +816,76 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
         {detailsOpen && (
           <>
+            {/* The three clock faces alone do not carry the point at speed: a
+                year mode runs twelve rotations a second, so each face lands on
+                a new random-looking time five times a second and the eye reads
+                no pattern in them at all. What it *can* read is the gap — how
+                far each clock has crept away from the mean one — because that
+                only ever grows, and by year's end it is exactly the numbers the
+                article is about: 24h for the sidereal clock (the extra turn),
+                ±16 min for the true Sun (the equation of time). */}
             <div className="grid grid-cols-3 gap-x-4 gap-y-2.5">
               {(
                 [
-                  ["sidereal", pick("नाक्षत्र दिन", "Sidereal day"), readings.sidereal, counts.sidereal],
-                  ["solar", pick("साँचो सौर दिन", "True solar day"), readings.solar, counts.solar],
-                  ["mean", pick("माध्य सौर दिन", "Mean solar day"), readings.mean, counts.mean],
+                  [
+                    "sidereal",
+                    pick("नाक्षत्र दिन", "Sidereal day"),
+                    readings.sidereal,
+                    /* Counted in *turns*, not days. A year holds one more turn
+                       than it holds days, and calling that 366th one "day 366"
+                       is what makes the sidereal system look like a calendar
+                       with an extra day in it. It is not a calendar at all — it
+                       is the planet's rotation count against the stars. */
+                    pick("फन्को", "turn"),
+                    counts.sidereal,
+                    gapLabel(siderealGainMinutes),
+                    dayLengths.sidereal,
+                  ],
+                  [
+                    "solar",
+                    pick("साँचो सौर दिन", "True solar day"),
+                    readings.solar,
+                    pick("दिन", "day"),
+                    counts.solar,
+                    gapLabel(eotMinutes),
+                    dayLengths.solar,
+                  ],
+                  [
+                    "mean",
+                    pick("माध्य सौर दिन", "Mean solar day"),
+                    readings.mean,
+                    pick("दिन", "day"),
+                    counts.mean,
+                    null,
+                    dayLengths.mean,
+                  ],
                 ] as const
-              ).map(([tone, label, time, count]) => (
+              ).map(([tone, label, time, unit, count, gap, length]) => (
                 <div key={tone} className={edRo}>
                   <span className={edRoK} style={{ color: TONE[tone] }}>
                     {label}
                   </span>
                   <span className={cn(edRoV({ mono: true }), "!text-white")}>{num(time)}</span>
                   <span className="font-num text-xs tabular-nums text-white/45">
-                    {pick("दिन", "day")} {num(count)}
+                    {unit} {num(count)}
+                    {gap ? ` · ${gap.sign}${num(gap.text)}` : ""}
+                  </span>
+                  {/* The length of one such day. Every column carries one — the
+                      mean day's flat 24h is what the other two are measured
+                      against, so leaving it as prose said nothing. */}
+                  <span
+                    className="font-num text-xs font-semibold tabular-nums"
+                    style={{ color: TONE[tone] }}
+                  >
+                    <span className="mr-1 font-sans text-[10px] font-semibold uppercase tracking-[0.08em] text-white/40">
+                      {pick("लम्बाइ", "lasts")}{" "}
+                    </span>
+                    {num(lengthLabel(length))}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
-                {pick("अर्को ग्रहको कक्ष र झुकाव लगाउनुहोस्", "Borrow another world's orbit and tilt")}
-              </span>
-              <p className="text-[11px] leading-snug text-white/40">
-                {pick(
-                  "उत्केन्द्रता र अक्ष झुकाव मात्र सर्छ — वर्षका दिन उस्तै रहन्छ, किनभने कुनै पनि ग्रहको साँचो सङ्ख्या यो स्लाइडरमा अट्दैन।",
-                  "Only the eccentricity and tilt transfer — days per year is left alone, because no planet's real figure fits on that slider.",
-                )}
-              </p>
-            <div className={edPresets}>
-              {PLANET_PRESETS.map((p) => (
-                <button
-                  key={p.key}
-                  type="button"
-                  className={cn(edPreset(false), "!text-white/60 hover:!text-white")}
-                  onClick={() => applyPreset(p.key)}
-                  title={pick(
-                    `${PLANET_NAMES[p.key]![0]} · उत्केन्द्रता ${num(p.eccentricity.toFixed(4))} · झुकाव ${num(p.tilt.toFixed(2))}° · वास्तविक वर्षमा ${num(Math.round(p.daysPerYear - 1))} सौर दिन`,
-                    `${PLANET_NAMES[p.key]![1]} · eccentricity ${p.eccentricity.toFixed(4)} · tilt ${p.tilt.toFixed(2)}° · a real year there holds ${Math.round(p.daysPerYear - 1)} solar days`,
-                  )}
-                >
-                  {PLANET_NAMES[p.key]![ne ? 0 : 1]}
-                </button>
-              ))}
-              <button
-                type="button"
-                className={cn(edPreset(false), "!text-white/60 hover:!text-white")}
-                onClick={() => {
-                  setToggles(initial.toggles);
-                  setSolarDaysPerYear(initial.params.daysPerYear - 1);
-                  setEccentricity(initial.params.eccentricity);
-                  setTiltDeg(initial.params.tilt / DEG);
-                }}
-              >
-                {pick("यो विषयमा फर्कनुहोस्", "Back to this topic")}
-              </button>
-            </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setGraphOpen((v) => !v)}
-              className="self-start text-xs font-semibold text-white/55 underline-offset-2 hover:text-white hover:underline"
-            >
-              {graphOpen
-                ? pick("ग्राफ लुकाउनुहोस्", "Hide the graph")
-                : pick("समयको समीकरण ग्राफ", "Equation-of-time graph")}
-            </button>
-
-            {graphOpen && (
-              <div className="text-white">
-                <EotGraph
-                  eccentricity={eccentricity}
-                  tilt={tilt}
-                  dayOfYear={day}
-                  daysPerYear={daysPerYear}
-                />
-              </div>
-            )}
           </>
         )}
       </div>
@@ -764,7 +916,11 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       {createPortal(
         <div
           ref={overlayRef}
-          className="fixed inset-0 z-[100] overscroll-contain"
+          /* `tm-tokens`: the overlay lives on <body>, outside the article's
+             `.tm-page`, and without it every `var(--tm-*)` in here resolves to
+             nothing — the scrub tracks are a gradient made of `--tm-amber`, so
+             they came out as invisible 5px strips. */
+          className="tm-tokens fixed inset-0 z-[100] overscroll-contain"
           style={{ background: CANVAS_BG }}
         >
           {body}
@@ -832,7 +988,11 @@ const Label = memo(function Label({
           ? "#8fb6d8"
           : label.kind === "month"
             ? "#e3d9a8"
-            : "#ffffff";
+            : label.id === "b-rahu"
+              ? "#c4b5fd"
+              : label.id === "b-ketu"
+                ? "#fb7185"
+                : "#ffffff";
   return (
     <span
       ref={(el) => {

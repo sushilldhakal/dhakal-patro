@@ -443,7 +443,16 @@
 }
 
 /* ── Tithi mechanics (calendar embed) ────────────────────── */
-.tm-page {
+
+/* The tokens carry a second selector, `.tm-tokens`, for the study overlays:
+   a fullscreen playground is portalled to <body>, so it sits outside the
+   `.tm-page` subtree and every `var(--tm-*)` in it would resolve to nothing —
+   which silently blanked the scrub tracks, whose whole track is a gradient
+   built from `--tm-amber`. `.tm-tokens` hands over the variables alone; the
+   parchment background and the starfield ::before stay on `.tm-page`, because
+   the overlay paints its own night sky. */
+.tm-page,
+.tm-tokens {
   --tm-sky-0: var(--parchment-card);
   --tm-sky-1: var(--parchment);
   --tm-sky-2: var(--background);
@@ -458,7 +467,8 @@
   --tm-card: var(--card);
   --tm-border: var(--border);
 }
-.dark .tm-page {
+.dark .tm-page,
+.dark .tm-tokens {
   --tm-sky-0: #0b3d40;
   --tm-sky-1: #082628;
   --tm-sky-2: #061f21;
@@ -472,6 +482,8 @@
   --tm-gold: var(--brand-gold);
   --tm-card: color-mix(in srgb, var(--midnight-card) 86%, transparent);
   --tm-border: color-mix(in srgb, var(--brand-gold) 18%, transparent);
+}
+.dark .tm-page {
   background:
     radial-gradient(1100px 760px at 72% 12%, var(--tm-sky-0) 0%, var(--tm-sky-1) 46%, var(--tm-sky-2) 100%),
     var(--tm-sky-2);
