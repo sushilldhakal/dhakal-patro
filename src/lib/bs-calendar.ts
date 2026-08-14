@@ -315,6 +315,7 @@ type ZonedParts = {
 export function getZonedParts(date: Date, timeZone?: string): ZonedParts {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
+    era: "short",
     year: "numeric",
     month: "numeric",
     day: "numeric",
@@ -325,8 +326,13 @@ export function getZonedParts(date: Date, timeZone?: string): ZonedParts {
   }).formatToParts(date)
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ""
   const weekdayIdx = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"))
+  /* Before 1 CE `Intl` prints a positive year with a `BC` era beside it, so the
+     digits alone name a date ten thousand years the wrong side of the epoch.
+     The astronomical year is `1 − n`. */
+  const era = get("era")
+  const year = Number(get("year"))
   return {
-    year: Number(get("year")),
+    year: era && /^b/i.test(era) ? 1 - year : year,
     month: Number(get("month")),
     day: Number(get("day")),
     weekday: weekdayIdx >= 0 ? weekdayIdx : 0,

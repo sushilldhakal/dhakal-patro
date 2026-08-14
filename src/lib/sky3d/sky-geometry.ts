@@ -115,7 +115,12 @@ export const GRID_LINES: HorizonPoint[][] = (() => {
 /** A point on the Earth's surface, degrees. */
 export type GeoPoint = { lat: number; lon: number };
 
-/** Obliquity to draw the tropics at. The live value moves by arcseconds a century. */
+/**
+ * The obliquity the tropics are *built* at — near enough for any sky within a
+ * lifetime of now. The scene rewrites the two circles to the live value when
+ * the clock travels far enough for the difference to show, which on this axis
+ * is most of a degree.
+ */
 export const TROPIC_LAT = 23.44;
 
 function parallel(lat: number, steps = 120): GeoPoint[] {

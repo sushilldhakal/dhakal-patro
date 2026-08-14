@@ -13,10 +13,76 @@ import { julianDay } from "@/lib/sky3d/orbital-model";
 
 const RAD = Math.PI / 180;
 
-/** Obliquity of the ecliptic, deg — the 23.44° tilt between ecliptic and equator. */
+/** ε at J2000: 23°26′21.448″. */
+const EPS_J2000 = 23 + 26 / 60 + 21.448 / 3600;
+
+/**
+ * Laskar's obliquity polynomial (Meeus, *Astronomical Algorithms* 22.3), in
+ * arcseconds off {@link EPS_J2000}, for `U` = ten thousand Julian years since
+ * J2000. Quoted good to about 0.01″ over ±1000 years and a few arcseconds over
+ * the whole |U| ≤ 1 range it is fitted on.
+ */
+const LASKAR = [
+  -4680.93, -1.55, 1999.25, -51.38, -249.67, -39.05, 7.12, 27.87, 5.79, 2.45,
+] as const;
+
+function laskarDeg(u: number): number {
+  let arcsec = 0;
+  let power = 1;
+  for (const coefficient of LASKAR) {
+    power *= u;
+    arcsec += coefficient * power;
+  }
+  return EPS_J2000 + arcsec / 3600;
+}
+
+/** dε/dU, deg per unit of `U` — the slope the continuation below is matched to. */
+function laskarSlopeDeg(u: number): number {
+  let arcsec = 0;
+  let power = 1;
+  for (let i = 0; i < LASKAR.length; i += 1) {
+    arcsec += (i + 1) * LASKAR[i] * power;
+    power *= u;
+  }
+  return arcsec / 3600;
+}
+
+/**
+ * The tilt's own long cycle: it swings between roughly 22.0° and 24.5° once in
+ * about 41,040 years, so this is the midpoint and the period the continuation
+ * below carries the curve on with.
+ */
+const OBLIQUITY_MID = 23.25;
+const OBLIQUITY_PERIOD_U = 41040 / 10000;
+
+/**
+ * Obliquity of the ecliptic, deg — the tilt between the ecliptic and the
+ * equator, the ~23.44° that gives us the ayana and the seasons.
+ *
+ * Not a constant: the tilt nods between about 22.0° and 24.5° over some 41,000
+ * years, and this sky runs to both ends of the बिक्रम axis — पू.वि.सं. 13201 at
+ * one end, वि.सं. 17247 at the other — so the value has to travel with it.
+ *
+ * Laskar's polynomial holds inside ±10,000 Julian years of J2000 and diverges
+ * violently outside it (it is a fit, not a physical model — one more millennium
+ * and it reads 28°, which is not a tilt the Earth has ever had). Past that end
+ * the curve is continued as the cosine the polynomial is approximating,
+ * matched to Laskar's own value *and* slope at the boundary, so it leaves the
+ * fitted range smoothly and stays inside the band the real thing occupies.
+ */
 export function obliquity(dtDays: number): number {
-  const T = dtDays / 36525;
-  return 23.439291 - 0.0130042 * T - 1.64e-7 * T * T;
+  const u = dtDays / 3652500;
+  if (Math.abs(u) <= 1) return laskarDeg(u);
+
+  const edge = Math.sign(u);
+  const value = laskarDeg(edge);
+  const slope = laskarSlopeDeg(edge);
+  const k = (2 * Math.PI) / OBLIQUITY_PERIOD_U;
+  /* ε = mid + A·cos(θ) with ε′ = −A·k·sin(θ): the pair below is the amplitude
+     and phase that reproduce both at the boundary. */
+  const amplitude = Math.hypot(value - OBLIQUITY_MID, slope / k);
+  const phase = Math.atan2(-slope / k, value - OBLIQUITY_MID);
+  return OBLIQUITY_MID + amplitude * Math.cos(phase + k * (u - edge));
 }
 
 /** Greenwich mean sidereal time, deg. */

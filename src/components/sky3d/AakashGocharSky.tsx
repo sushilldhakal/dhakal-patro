@@ -39,6 +39,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import type { GocharGraha } from "@/lib/api";
+import type { Era } from "@/lib/era";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { adToBS, bsMonthLabel, bsToAD, WEEKDAYS_SHORT_NE } from "@/lib/bs-calendar";
 import { SkyDateTimePicker } from "@/components/sky3d/SkyDateTimePicker";
@@ -242,6 +243,24 @@ export type AakashGocharSkyProps = {
    * nav above the canvas is out of reach.
    */
   onDateChange?: (date: Date) => void;
+  /**
+   * Which calendar the fullscreen date picker reads its year in, and the way
+   * back out when the reader changes it.
+   *
+   * The sky runs to both ends of the Vikram axis, and most of what is down
+   * there is पू.वि.सं. — but a पू.वि.सं. day cannot be dated from the offline
+   * table, so the conversion belongs to the page that owns the fetch.
+   * {@link onEraChange} is the same callback the date nav above the canvas
+   * takes; without it the picker stays on वि.सं. and converts locally.
+   */
+  era?: Era;
+  /**
+   * The Vikram day the page last asked for, when it came from a Vikram pick.
+   * The picker opens on it — `adToBS` cannot re-derive a पू.वि.सं. date from
+   * the instant, so without this the picker opens on a nonsense वि.सं. year.
+   */
+  vikram?: { era: Era; year: number; month: number; day: number } | null;
+  onEraChange?: (era: Era, calendar?: { year: number; month: number; day: number }) => void;
   clock?: string;
   onClockChange?: (clock: string) => void;
   /** Where the sky is being watched from. Drives the whole horizon view. */
@@ -265,6 +284,9 @@ export function AakashGocharSky({
   ayanamsaDeg,
   date,
   onDateChange,
+  era = "bs",
+  vikram,
+  onEraChange,
   clock,
   onClockChange,
   observer = KATHMANDU,
@@ -759,6 +781,31 @@ export function AakashGocharSky({
   );
 
   /**
+   * The day the picker opens on, in the era it is showing.
+   *
+   * The page's own parts win when they are for this era: they are the ones that
+   * were asked for, and below the Vikram epoch they are the only ones there
+   * are — `adToBS` has no table down there and pins to its first month, so a
+   * पू.वि.सं. instant comes back as वि.सं. १७०० every time.
+   */
+  const pickerDate = useMemo(() => {
+    if (vikram && vikram.era === era) return vikram;
+    if (era === "ad" || era === "bc") {
+      /* Gregorian browse reads straight off the instant. Every era takes a
+         positive year and carries the sign itself, so a BCE date is named by
+         the era: astronomical 0 is 1 BC. */
+      const local = zoneMidnight(new Date(date.getTime() + zoneOffsetMs));
+      const y = local.getUTCFullYear();
+      return {
+        year: era === "bc" ? Math.max(1, 1 - y) : Math.max(1, y),
+        month: local.getUTCMonth() + 1,
+        day: local.getUTCDate(),
+      };
+    }
+    return dateBs;
+  }, [vikram, era, dateBs, date, zoneOffsetMs]);
+
+  /**
    * The clock reading, in the calendar the reader is using and on the wall of
    * the place they picked — not UTC, and not the device's own zone.
    *
@@ -1234,11 +1281,18 @@ export function AakashGocharSky({
           />
           <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-4">
             <SkyDateTimePicker
-              year={dateBs.year}
-              month={dateBs.month}
-              day={dateBs.day}
+              era={era}
+              year={pickerDate.year}
+              month={pickerDate.month}
+              day={pickerDate.day}
               clock={clock}
-              onSelectDate={(y, m, d) => onDateChange?.(bsToAD(y, m, d))}
+              onSelectDate={(nextEra, y, m, d) => {
+                /* The page converts when it can take the era back — that is the
+                   path a पू.वि.सं. day has to go down. Falling back to the
+                   offline table keeps a sky mounted on its own working. */
+                if (onEraChange) onEraChange(nextEra, { year: y, month: m, day: d });
+                else onDateChange?.(bsToAD(y, m, d));
+              }}
               onClockChange={onClockChange}
               onDone={() => setDatePickerOpen(false)}
             />
