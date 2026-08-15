@@ -18,7 +18,7 @@ export const whySeasons: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "वास्तवमा पृथ्वी **जनवरीमा** सूर्यको सबैभन्दा नजिक (उपसौर) र **जुलाईमा** सबैभन्दा टाढा (अपसौर) हुन्छ — अर्थात् उत्तरी गोलार्धको जाडोमा नजिक। दूरीले ऋतु बनाएको भए ठीक उल्टो हुनुपर्थ्यो।",
+            ne: "वास्तवमा पृथ्वी **पुषमा** सूर्यको सबैभन्दा नजिक (उपसौर) र **असारमा** सबैभन्दा टाढा (अपसौर) हुन्छ — अर्थात् उत्तरी गोलार्धको जाडोमा नजिक। दूरीले ऋतु बनाएको भए ठीक उल्टो हुनुपर्थ्यो।",
             en: "In fact Earth is closest to the Sun in **January** and farthest in **July** — that is, closest during the northern winter. If distance made the seasons, it would be the other way round.",
           },
         },
@@ -28,13 +28,13 @@ export const whySeasons: ArticleData = {
             {
               big: "147.1",
               unit: { ne: "मि. किमी", en: "M km" },
-              label: { ne: "उपसौर · जनवरी", en: "Perihelion · January" },
+              label: { ne: "उपसौर · पुष", en: "Perihelion · January" },
               desc: { ne: "सबैभन्दा नजिक — तर उत्तरी गोलार्धमा जाडो।", en: "Nearest — yet it is winter in the north." },
             },
             {
               big: "152.1",
               unit: { ne: "मि. किमी", en: "M km" },
-              label: { ne: "अपसौर · जुलाई", en: "Aphelion · July" },
+              label: { ne: "अपसौर · असार", en: "Aphelion · July" },
               desc: { ne: "सबैभन्दा टाढा — तर उत्तरी गोलार्धमा गर्मी।", en: "Farthest — yet it is summer in the north." },
             },
             {
