@@ -16,16 +16,18 @@ export const calcKarana: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `KARANA_SPAN = 6.0°
-
-करण सूचकाङ्क / karana index = ⌊ कोणान्तर / 6° ⌋
-                              ⌊ elongation / 6° ⌋
-
-360° / 6° = 60 खण्ड / slots  =  30 तिथि × 2`,
-          caption: {
-            ne: "प्रत्येक तिथिमा ठ्याक्कै दुई करण — पहिलो आधा र दोस्रो आधा।",
-            en: "Exactly two karanas to a tithi — its first half and its second.",
+          kind: "calc",
+          rule: [
+            { ne: "करणको चौडाइ = `६°` — तिथिको ठ्याक्कै आधा", en: "karana span = `6°` — exactly half a tithi" },
+            { ne: "करण सूचकाङ्क = (कोणान्तर ÷ `६°`) को पूर्णांक भाग", en: "karana index = integer part of (elongation ÷ `6°`)" },
+          ],
+          example: [
+            { k: { ne: "पूरा वृत्त", en: "full circle" }, v: "360°" },
+            { k: { ne: "३६० ÷ ६", en: "360 ÷ 6" }, v: "60" },
+          ],
+          result: {
+            ne: "एक चान्द्र मासमा **६० करण खण्ड** — ३० तिथि × २। त्यसैले हरेक तिथिमा ठ्याक्कै दुई करण पर्छन्।",
+            en: "**60 karana slots** in a lunar month — 30 tithis × 2. Every tithi therefore carries exactly two karanas.",
           },
         },
       ],

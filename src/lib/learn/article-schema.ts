@@ -54,6 +54,28 @@ export type Block =
   | { kind: "list"; ordered?: boolean; items: Bi[] }
   /** Monospace ASCII figure (zodiac belts, hierarchy trees). */
   | { kind: "figure"; art: string; caption?: Bi }
+  /**
+   * A worked calculation: the rule, what its symbols mean, and a numeric
+   * example that lands on an answer.
+   *
+   * Distinct from `formula`, which is three headline *values* on cards. This
+   * one is for the पञ्चाङ्ग arithmetic — तिथि, नक्षत्र, योग, करण, सूर्योदय —
+   * where the article is showing you how a number is produced. It replaced
+   * monospace ASCII, which could not set an equation, could not align a
+   * worked example, and forced both languages onto one line.
+   */
+  | {
+      kind: "calc";
+      /** The rule itself, one entry per line. */
+      rule: Bi[];
+      /** Glossary for the symbols used above. */
+      where?: { sym: string; is: Bi }[];
+      /** Worked example, rendered as aligned label → value rows. */
+      example?: { k: Bi; v: string }[];
+      /** The line the example arrives at. */
+      result?: Bi;
+      caption?: Bi;
+    }
   /** An interactive/SVG diagram from the diagram registry. */
   | { kind: "diagram"; id: DiagramId; caption?: Bi }
   /** Centred closing aside. */

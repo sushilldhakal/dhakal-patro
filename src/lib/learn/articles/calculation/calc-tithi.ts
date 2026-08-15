@@ -16,21 +16,20 @@ export const calcTithi: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `कोणान्तर / elongation = (चन्द्र − सूर्य) mod 360°
-                        (Moon − Sun) mod 360°
-
-तिथि / tithi  = ⌊ कोणान्तर / 12° ⌋ + 1
-
-उदाहरण / example:
-   चन्द्र / Moon  =  152.4°
-   सूर्य  / Sun   =   38.1°
-   कोणान्तर       =  114.3°
-   114.3 / 12     =    9.525  →  ⌊9.525⌋ + 1 = तिथि 10
-   प्रगति / progress = 0.525  →  तिथि 52.5% सकियो / 52.5% elapsed`,
-          caption: {
-            ne: "तिथिको सङ्ख्या र त्यसको प्रगति दुवै एउटै भागबाट निस्कन्छ।",
-            en: "Both the tithi number and how far it has run come from the same division.",
+          kind: "calc",
+          rule: [
+            { ne: "कोणान्तर = (चन्द्रको देशान्तर − सूर्यको देशान्तर) mod `३६०°`", en: "elongation = (Moon's longitude − Sun's longitude) mod `360°`" },
+            { ne: "तिथि = (कोणान्तर ÷ `१२°`) को पूर्णांक भाग + `१`", en: "tithi = integer part of (elongation ÷ `12°`) + `1`" },
+          ],
+          example: [
+            { k: { ne: "चन्द्रको देशान्तर", en: "Moon's longitude" }, v: "152.4°" },
+            { k: { ne: "सूर्यको देशान्तर", en: "Sun's longitude" }, v: "38.1°" },
+            { k: { ne: "कोणान्तर", en: "elongation" }, v: "114.3°" },
+            { k: { ne: "११४.३ ÷ १२", en: "114.3 ÷ 12" }, v: "9.525" },
+          ],
+          result: {
+            ne: "पूर्णांक भाग `९` + `१` = **तिथि १०**, र दशमलव `०.५२५` ले त्यो तिथि `५२.५%` सकिएको बताउँछ।",
+            en: "Integer part `9` + `1` = **tithi 10**, and the fraction `0.525` says that tithi is `52.5%` elapsed.",
           },
         },
         {

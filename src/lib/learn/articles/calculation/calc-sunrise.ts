@@ -70,19 +70,21 @@ export const calcSunrise: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `cos(H) = ( sin(h₀) − sin(φ)·sin(δ) ) / ( cos(φ)·cos(δ) )
-
-  φ  = अक्षांश / latitude
-  δ  = सूर्यको क्रान्ति / Sun's declination
-  h₀ = −0.833°  (बिम्ब + अपवर्तन / disc + refraction)
-  H  = घण्टा कोण / hour angle
-
-सूर्योदय / sunrise = स्थानीय मध्याह्न / local noon − H
-सूर्यास्त  / sunset  = स्थानीय मध्याह्न / local noon + H`,
+          kind: "calc",
+          rule: [
+            { ne: "cos(H) = ( sin(h₀) − sin(φ)·sin(δ) ) ÷ ( cos(φ)·cos(δ) )", en: "cos(H) = ( sin(h₀) − sin(φ)·sin(δ) ) ÷ ( cos(φ)·cos(δ) )" },
+            { ne: "सूर्योदय = स्थानीय मध्याह्न − H", en: "sunrise = local noon − H" },
+            { ne: "सूर्यास्त = स्थानीय मध्याह्न + H", en: "sunset = local noon + H" },
+          ],
+          where: [
+            { sym: "φ", is: { ne: "स्थानको अक्षांश", en: "the observer's latitude" } },
+            { sym: "δ", is: { ne: "सूर्यको क्रान्ति — वर्षभरि ±२३.४४° झुल्ने", en: "the Sun's declination, swinging ±23.44° through the year" } },
+            { sym: "h₀", is: { ne: "−०.८३३° — सूर्यको बिम्ब र वायुमण्डलीय अपवर्तनको भत्ता", en: "−0.833° — the allowance for the Sun's disc and atmospheric refraction" } },
+            { sym: "H", is: { ne: "घण्टा कोण — मध्याह्नदेखि उदय/अस्तसम्मको आधा दिन", en: "the hour angle — half a day, from noon out to rise or set" } },
+          ],
           caption: {
-            ne: "मानक −०.८३३° मा बिम्बको अर्धव्यास र औसत अपवर्तन दुवै समेटिएको हुन्छ।",
-            en: "The standard −0.833° already folds in the disc's radius and mean refraction.",
+            ne: "h₀ शून्य नभई ऋणात्मक हुनुले नै सूर्योदय ज्यामितीय क्षितिजभन्दा केही मिनेट अगाडि पार्छ।",
+            en: "That h₀ is negative rather than zero is exactly what puts sunrise a few minutes ahead of the geometric horizon.",
           },
         },
         {
