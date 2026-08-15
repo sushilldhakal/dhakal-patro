@@ -181,6 +181,13 @@ export const rashi: ArticleData = {
             },
           ],
         },
+        {
+          kind: "note",
+          text: {
+            ne: "यो ऋतु–भाषा **सायन** राशिचक्रबाट आएको हो, जब दुई राशिचक्र मिलेका थिए। आज निरयन मेष वसन्त विषुवभन्दा `~२४` दिन पछाडि पर्छ, त्यसैले चर राशिले अब ऋतु ठ्याक्कै सुरु गर्दैनन् — वर्गीकरण परम्परागत रूपमै चलिरहेको छ। ऋतुको वास्तविक सन्धि ~विषुव र अयनान्त~ मा हुन्छ।",
+            en: "This season language comes from the **tropical** zodiac, from when the two zodiacs still coincided. Today sidereal Mesha sits `~24` days after the spring equinox, so a chara sign no longer opens a season exactly — the grouping continues by tradition. The real seasonal hinges are the ~equinoxes and solstices~.",
+          },
+        },
       ],
     },
     {
