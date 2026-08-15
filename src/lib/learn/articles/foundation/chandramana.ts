@@ -110,17 +110,8 @@ export const chandramana: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `12 × 29.53   =  354.4  दिन / days   ← चान्द्र वर्ष / lunar year
-                 365.24 दिन / days   ← सौर वर्ष  / solar year
-                 ───────
-                 −10.87 दिन / days   ← हरेक वर्षको फरक / gap each year
-
-3 वर्षमा / after 3 years:   10.87 × 3  ≈  32.6 दिन / days  ≈  एक महिना / one month`,
-          caption: {
-            ne: "शुद्ध चान्द्र वर्ष सौर वर्षभन्दा झन्डै ११ दिन छोटो — तीन वर्षमा फरक एक महिना नाघ्छ।",
-            en: "A purely lunar year runs about 11 days short of the solar year — in three years the gap exceeds a month.",
-          },
+          kind: "diagram",
+          id: "lunar-solar-gap",
         },
         {
           kind: "para",

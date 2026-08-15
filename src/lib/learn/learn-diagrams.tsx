@@ -24,6 +24,8 @@ import { HierarchyDiagram } from "@/components/learn/HierarchyDiagram";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import { PrecessionCone } from "@/components/learn/PrecessionCone";
+import { CircumpolarSky } from "@/components/learn/CircumpolarSky";
+import { LunarSolarGap } from "@/components/learn/LunarSolarGap";
 import { RituWheel } from "@/components/learn/RituWheel";
 import { SolarDeclinationYear } from "@/components/learn/SolarDeclinationYear";
 import { SolarMonthLengths } from "@/components/learn/SolarMonthLengths";
@@ -47,6 +49,8 @@ export const LEARN_DIAGRAMS = {
   "ecliptic-belt": EclipticBeltStudy,
   "declination-year": SolarDeclinationYear,
   "ritu-wheel": RituWheel,
+  "lunar-solar-gap": LunarSolarGap,
+  "circumpolar-sky": CircumpolarSky,
   "solar-month-lengths": SolarMonthLengths,
   /* 3D, client-only and code-split — see TwoSystemsDiagram. */
   "two-systems": TwoSystemsDiagram,
