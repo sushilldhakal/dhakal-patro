@@ -33,13 +33,13 @@ export const solstices: ArticleData = {
           rows: [
             [
               { ne: "ग्रीष्म अयनान्त", en: "Summer solstice" },
-              "~21 Jun",
+              { ne: "~असार ६–७", en: "~21 Jun" },
               "+23.44°",
               { ne: "सबैभन्दा लामो दिन", en: "Longest day" },
             ],
             [
               { ne: "शीत अयनान्त", en: "Winter solstice" },
-              "~22 Dec",
+              { ne: "~पुष ६–७", en: "~22 Dec" },
               "−23.44°",
               { ne: "सबैभन्दा छोटो दिन", en: "Shortest day" },
             ],
@@ -102,7 +102,7 @@ export const solstices: ArticleData = {
         {
           kind: "note",
           text: {
-            ne: "छोटोमा: सबैभन्दा छोटो दिन डिसेम्बरमा हुन्छ, माघे सङ्क्रान्तिमा होइन।",
+            ne: "छोटोमा: सबैभन्दा छोटो दिन पुषमा हुन्छ, माघे सङ्क्रान्तिमा होइन।",
             en: "In short: the shortest day is in December, not at Maghe Sankranti.",
           },
         },

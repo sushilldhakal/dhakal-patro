@@ -98,7 +98,7 @@ export const karkaSankranti: ArticleData = {
         {
           kind: "note",
           text: {
-            ne: "मकरजस्तै यहाँ पनि उही सावधानी लागू हुन्छ: वास्तविक ग्रीष्म अयनान्त `२१` जुनतिर पर्छ, कर्क सङ्क्रान्तिभन्दा झन्डै `२४` दिन अघि।",
+            ne: "मकरजस्तै यहाँ पनि उही सावधानी लागू हुन्छ: वास्तविक ग्रीष्म अयनान्त असार `६`–`७` तिर पर्छ, कर्क सङ्क्रान्तिभन्दा झन्डै `२४` दिन अघि।",
             en: "The same caveat as for Makara applies here: the actual summer solstice occurs around `21` June, some `24` days before Karka Sankranti.",
           },
         },

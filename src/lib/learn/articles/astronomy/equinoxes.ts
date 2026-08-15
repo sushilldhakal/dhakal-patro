@@ -19,14 +19,14 @@ export const equinoxes: ArticleData = {
           kind: "keys",
           items: [
             {
-              h: { ne: "वसन्त विषुव · ~२१ मार्च", en: "Vernal equinox · ~21 March" },
+              h: { ne: "वसन्त विषुव · ~चैत ६–७", en: "Vernal equinox · ~21 March" },
               p: {
                 ne: "सूर्य दक्षिणबाट उत्तरतिर काट्छ। सायन राशिचक्रको **शून्य बिन्दु** यही हो।",
                 en: "The Sun crosses south to north. This is the **zero point** of the tropical zodiac.",
               },
             },
             {
-              h: { ne: "शरद् विषुव · ~२३ सेप्टेम्बर", en: "Autumnal equinox · ~23 September" },
+              h: { ne: "शरद् विषुव · ~असोज ६–७", en: "Autumnal equinox · ~23 September" },
               p: {
                 ne: "सूर्य उत्तरबाट दक्षिणतिर काट्छ। सायन तुलाको आरम्भ।",
                 en: "The Sun crosses north to south — the start of tropical Libra.",

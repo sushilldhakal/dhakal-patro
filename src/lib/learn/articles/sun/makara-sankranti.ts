@@ -46,12 +46,12 @@ export const makaraSankranti: ArticleData = {
             [
               { ne: "शीत अयनान्त", en: "Winter solstice" },
               { ne: "सूर्यको क्रान्ति दक्षिणतम — सबैभन्दा छोटो दिन", en: "The Sun's southernmost declination — the shortest day" },
-              "~21–22 Dec",
+              { ne: "~पुष ६–७", en: "~21–22 Dec" },
             ],
             [
               { ne: "मकर सङ्क्रान्ति", en: "Makara Sankranti" },
               { ne: "निरयन देशान्तर २७०° — राशि सीमा नाघ्नु", en: "Sidereal longitude 270° — crossing a sign boundary" },
-              "~14–15 Jan",
+              { ne: "माघ १", en: "~14–15 Jan" },
             ],
           ],
         },
@@ -89,7 +89,7 @@ export const makaraSankranti: ArticleData = {
         {
           kind: "note",
           text: {
-            ne: "त्यसैले माघे सङ्क्रान्तिलाई “सूर्य उत्तर लाग्यो” भन्नु **ऐतिहासिक रूपमा सही** हो, तर आजको खगोलीय अवस्थाको वर्णन होइन। वास्तविक उत्तरायण `२२` डिसेम्बरतिरै सुरु भइसकेको हुन्छ।",
+            ne: "त्यसैले माघे सङ्क्रान्तिलाई “सूर्य उत्तर लाग्यो” भन्नु **ऐतिहासिक रूपमा सही** हो, तर आजको खगोलीय अवस्थाको वर्णन होइन। वास्तविक उत्तरायण पुष `६`–`७` तिरै सुरु भइसकेको हुन्छ।",
             en: "Calling Maghe Sankranti the Sun's turn to the north is therefore **historically accurate** rather than a description of today's sky. The actual northward turn has already happened, back around `22` December.",
           },
         },

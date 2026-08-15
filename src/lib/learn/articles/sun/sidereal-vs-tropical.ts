@@ -21,7 +21,7 @@ export const siderealVsTropical: ArticleData = {
             {
               h: { ne: "सायन राशिचक्र", en: "Tropical zodiac" },
               p: {
-                ne: "शून्य = **वसन्त विषुव**। ऋतुसँग बाँधिएको; मेषको आरम्भ सधैँ ~२१ मार्च।",
+                ne: "शून्य = **वसन्त विषुव**। ऋतुसँग बाँधिएको; मेषको आरम्भ ग्रेगोरियन पात्रोमा सधैँ ~२१ मार्च।",
                 en: "Zero = the **vernal equinox**. Tied to the seasons; the start of Aries is always ~21 March.",
               },
             },
