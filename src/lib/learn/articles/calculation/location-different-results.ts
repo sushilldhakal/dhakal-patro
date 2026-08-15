@@ -80,22 +80,8 @@ export const locationDifferentResults: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `तिथि सकिने क्षण / tithi ends:  22:00 UTC
-
-काठमाडौँ / Kathmandu (UTC+05:45)
-   स्थानीय / local  03:45  भोलिपल्ट / next day
-   सूर्योदय / sunrise 06:10  →  सूर्योदयअघि सकियो / ended before sunrise
-   →  त्यो दिनको तिथि = अर्को तिथि / that day's tithi = the NEXT one
-
-सिड्नी / Sydney (UTC+11:00)
-   स्थानीय / local  09:00  भोलिपल्ट / next day
-   सूर्योदय / sunrise 06:30  →  सूर्योदयपछि सकियो / ended after sunrise
-   →  त्यो दिनको तिथि = पुरानै तिथि / that day's tithi = the SAME one`,
-          caption: {
-            ne: "एउटै खगोलीय घटना — तर दुई सहरका पञ्चाङ्गमा फरक तिथि देखिन्छ।",
-            en: "One astronomical event, and yet the two cities' panchangas show different tithis.",
-          },
+          kind: "diagram",
+          id: "tithi-across-zones",
         },
         {
           kind: "para",

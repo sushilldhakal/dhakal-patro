@@ -25,6 +25,13 @@ import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import { PrecessionCone } from "@/components/learn/PrecessionCone";
 import { CircumpolarSky } from "@/components/learn/CircumpolarSky";
+import {
+  DayLengthHourAngle,
+  MoonriseSlip,
+  SiderealSolarDay,
+  SunriseSamplesTithi,
+  TithiAcrossZones,
+} from "@/components/learn/day-timeline-diagrams";
 import { LunarSolarGap } from "@/components/learn/LunarSolarGap";
 import { RituWheel } from "@/components/learn/RituWheel";
 import { SolarDeclinationYear } from "@/components/learn/SolarDeclinationYear";
@@ -51,6 +58,11 @@ export const LEARN_DIAGRAMS = {
   "ritu-wheel": RituWheel,
   "lunar-solar-gap": LunarSolarGap,
   "circumpolar-sky": CircumpolarSky,
+  "sidereal-solar-day": SiderealSolarDay,
+  "day-length-hour-angle": DayLengthHourAngle,
+  "moonrise-slip": MoonriseSlip,
+  "sunrise-samples-tithi": SunriseSamplesTithi,
+  "tithi-across-zones": TithiAcrossZones,
   "solar-month-lengths": SolarMonthLengths,
   /* 3D, client-only and code-split — see TwoSystemsDiagram. */
   "two-systems": TwoSystemsDiagram,
