@@ -16,6 +16,9 @@ import {
 } from "./learn-articles";
 import { HowWeCalculateArticle } from "@/components/learn/HowWeCalculateStudy";
 import { ArticleBody } from "./article-render";
+import { MERGED_BY_SLUG, type MergedPage } from "./merged-pages";
+import { useLocale } from "@/i18n/locale";
+import { tmChapter, tmChapterNav, tmChapterNavLabel, tmChapterTitle } from "@/lib/learn-classes";
 import { DATA_ARTICLES } from "./articles";
 import {
   adjacentTopicMetas,
@@ -63,7 +66,76 @@ const COMPONENT_CONTENT_BY_SLUG: Record<string, () => React.ReactNode> = {
   "how-we-calculate": HowWeCalculateArticle,
 };
 
+/** One former article, however it happens to be written. */
+function partBody(slug: string, offset: number): { node: React.ReactNode; sections: number } {
+  const component = COMPONENT_CONTENT_BY_SLUG[slug];
+  if (component) {
+    const C = component;
+    return { node: <C />, sections: 0 };
+  }
+  const data = DATA_ARTICLES[slug];
+  if (data) {
+    return {
+      node: <ArticleBody article={data} sectionOffset={offset} hideSeeAlso />,
+      sections: data.sections.length,
+    };
+  }
+  return { node: null, sections: 0 };
+}
+
+/**
+ * A merged page: several former articles on one scroll, each under a chapter
+ * heading with an anchor, preceded by a jump list.
+ *
+ * Section numbers run continuously across the data-written chapters, which is
+ * what stops a long page reading as a pile of separate articles that each
+ * restart at ०१. The hand-written chapters carry their own kickers and are
+ * left alone — they sit under their chapter heading, which scopes them.
+ */
+function MergedBody({ page }: { page: MergedPage }) {
+  const { lang } = useLocale();
+  let offset = 0;
+  const chapters = page.parts.map((part) => {
+    const { node, sections } = partBody(part.slug, offset);
+    offset += sections;
+    return { part, node };
+  });
+
+  return (
+    <>
+      <nav className={tmChapterNav} aria-label={lang === "en" ? "On this page" : "यस पृष्ठमा"}>
+        <span className={tmChapterNavLabel}>
+          {lang === "en" ? "On this page" : "यस पृष्ठमा"}
+        </span>
+        <ol>
+          {chapters.map(({ part }, i) => (
+            <li key={part.slug}>
+              <a href={`#${part.slug}`}>
+                <span>{toNepaliIndex(lang, i + 1)}</span>
+                {lang === "en" ? part.title.en : part.title.ne}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+      {chapters.map(({ part, node }) => (
+        <section key={part.slug} id={part.slug} className={tmChapter}>
+          <h2 className={tmChapterTitle}>{lang === "en" ? part.title.en : part.title.ne}</h2>
+          {node}
+        </section>
+      ))}
+    </>
+  );
+}
+
+const NE_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
+const toNepaliIndex = (lang: string, n: number) =>
+  lang === "en" ? String(n) : String(n).replace(/\d/g, (d) => NE_DIGITS[Number(d)]!);
+
 function contentForSlug(slug: string): () => React.ReactNode {
+  const merged = MERGED_BY_SLUG[slug];
+  if (merged) return () => <MergedBody page={merged} />;
+
   const component = COMPONENT_CONTENT_BY_SLUG[slug];
   if (component) return component;
 

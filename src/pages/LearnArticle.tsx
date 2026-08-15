@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
 import { History as HistoryPage } from "@/pages/History";
+import { PART_REDIRECTS } from "@/lib/learn/merged-pages";
 import {
   LEARN_CATEGORIES,
   LEARN_TOPICS_BY_SLUG,
@@ -23,27 +24,38 @@ import {
 } from "@/lib/learn-classes";
 
 /**
- * Slugs that used to be their own article and now live inside another.
+ * Where a retired slug went.
  *
- * Merges are the normal way this section improves — two half-articles that
- * kept re-deriving each other become one — and every merge orphans a URL that
- * is already in someone's history or a search index. Keep the old slug here
- * and it lands on the article that absorbed it instead of on "not found".
+ * Two kinds. `MERGED_SLUGS` are articles absorbed wholesale into another —
+ * they land at the top of the page that took them over. `PART_REDIRECTS` is
+ * generated from the merged-page map: those slugs became *chapters* of a long
+ * page, so they land on their own anchor inside it rather than at the top of
+ * something several screens long.
+ *
+ * Both matter because merging is how this section keeps improving, and every
+ * merge orphans a URL that is already in someone's history or a search index.
  */
 const MERGED_SLUGS: Record<string, string> = {
   "lunar-eclipse": "eclipses",
   "solar-eclipse": "eclipses",
-  equinoxes: "equinox-solstice",
-  solstices: "equinox-solstice",
-  "sankranti-vs-solstice": "uttarayana-dakshinayana",
+  equinoxes: "axial-tilt#equinox-solstice",
+  solstices: "axial-tilt#equinox-solstice",
+  "sankranti-vs-solstice": "sidereal-vs-tropical#uttarayana-dakshinayana",
   "twelve-rashis": "rashi",
   "solar-vs-lunar-calendar": "bs-calendar",
   "sidereal-vs-tropical-year": "sidereal-vs-tropical",
-  "tithi-vriddhi": "tithi-vriddhi-kshaya",
-  "tithi-kshaya": "tithi-vriddhi-kshaya",
+  "tithi-vriddhi": "tithi#tithi-vriddhi-kshaya",
+  "tithi-kshaya": "tithi#tithi-vriddhi-kshaya",
   "adhik-maas": "adhik-kshaya-maas",
   "kshaya-maas": "adhik-kshaya-maas",
+  ...PART_REDIRECTS,
 };
+
+/** Split a "page#anchor" target into router params. */
+function redirectTarget(to: string): { slug: string; hash?: string } {
+  const [slug, hash] = to.split("#");
+  return { slug: slug!, hash };
+}
 
 export function LearnArticle() {
   const { t } = useTranslation();
@@ -52,7 +64,8 @@ export function LearnArticle() {
   const { slug } = useParams({ strict: false }) as { slug?: string };
 
   if (slug && MERGED_SLUGS[slug]) {
-    return <Navigate to="/learn/$slug" params={{ slug: MERGED_SLUGS[slug] }} replace />;
+    const { slug: to, hash } = redirectTarget(MERGED_SLUGS[slug]!);
+    return <Navigate to="/learn/$slug" params={{ slug: to }} hash={hash} replace />;
   }
 
   if (slug === "history") {

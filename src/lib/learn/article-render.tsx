@@ -289,13 +289,28 @@ function SeeAlso({ slugs, lang }: { slugs: string[]; lang: Lang }) {
   );
 }
 
-export function ArticleBody({ article }: { article: ArticleData }) {
+/**
+ * `sectionOffset` lets several articles run as one continuous page with their
+ * section numbers carrying on rather than restarting at ०१ — which is what a
+ * merged chapter needs. `hideSeeAlso` suppresses the per-article footer for
+ * the same reason: a merged page carries one at the very bottom, not one after
+ * every chapter.
+ */
+export function ArticleBody({
+  article,
+  sectionOffset = 0,
+  hideSeeAlso = false,
+}: {
+  article: ArticleData;
+  sectionOffset?: number;
+  hideSeeAlso?: boolean;
+}) {
   const { lang } = useLocale();
 
   return (
     <>
       {article.sections.map((section, index) => {
-        const kicker = sectionKicker(index);
+        const kicker = sectionKicker(index + sectionOffset);
         return (
           <section className={tmSection} key={section.title.en || section.title.ne}>
             <div className={tmSecHead}>
@@ -311,7 +326,7 @@ export function ArticleBody({ article }: { article: ArticleData }) {
           </section>
         );
       })}
-      {article.seeAlso && <SeeAlso slugs={article.seeAlso} lang={lang} />}
+      {article.seeAlso && !hideSeeAlso && <SeeAlso slugs={article.seeAlso} lang={lang} />}
     </>
   );
 }

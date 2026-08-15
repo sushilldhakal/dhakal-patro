@@ -132,6 +132,29 @@ export const tmCalcEg = cn(
 export const tmCalcResult =
   "mt-3 rounded-[9px] bg-[var(--tm-amber)]/10 px-3 py-2 text-[0.85rem] font-semibold text-[var(--tm-ink)]";
 
+/**
+ * Merged-page furniture: a jump list at the top, then one block per chapter.
+ *
+ * A long page needs both — the list so a reader can see the whole shape and
+ * skip, and a ruled heading per chapter so the scroll never feels like one
+ * undifferentiated wall.
+ */
+export const tmChapterNav = cn(
+  "mb-10 rounded-[14px] border border-[var(--tm-border)] bg-[var(--tm-card)] px-5 py-4",
+  "[&_ol]:m-0 [&_ol]:grid [&_ol]:list-none [&_ol]:gap-x-6 [&_ol]:gap-y-1.5 [&_ol]:p-0 sm:[&_ol]:grid-cols-2",
+  "[&_a]:flex [&_a]:items-baseline [&_a]:gap-2 [&_a]:text-[0.92rem] [&_a]:text-[var(--tm-ink-dim)] [&_a]:no-underline",
+  "[&_a:hover]:text-[var(--tm-ink)]",
+  "[&_a>span]:font-num [&_a>span]:text-[0.78rem] [&_a>span]:font-semibold [&_a>span]:text-[var(--tm-amber)]",
+);
+
+export const tmChapterNavLabel =
+  "mb-2.5 block text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[var(--tm-ink-dim)] opacity-70";
+
+export const tmChapter = "scroll-mt-24 border-t border-[var(--tm-border)] pt-9 first-of-type:border-t-0 first-of-type:pt-0";
+
+export const tmChapterTitle =
+  "mb-1 text-[1.45rem] font-bold leading-tight tracking-tight text-[var(--tm-ink)] sm:text-[1.7rem]";
+
 export const tmList =
   "mt-4 max-w-[760px] space-y-2 pl-1 text-base leading-relaxed text-[var(--tm-ink-dim)]";
 
