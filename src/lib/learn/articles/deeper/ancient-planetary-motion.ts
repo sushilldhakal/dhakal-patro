@@ -73,13 +73,13 @@ export const ancientPlanetaryMotion: ArticleData = {
     },
     {
       title: { ne: "ज्या तालिका", en: "The sine tables" },
-      eyebrow: "An Indian contribution",
+      eyebrow: "A Vedic contribution",
       blocks: [
         {
           kind: "lede",
           text: {
-            ne: "यी सुधार गणना गर्न त्रिकोणमितीय फलन चाहिन्थ्यो। भारतीय ज्योतिषले यसका लागि *ज्या* (jyā) तालिका विकास गरे — जुन आधुनिक **साइन** फलनको प्रत्यक्ष पूर्वज हो।",
-            en: "Computing those corrections required trigonometric functions. Indian astronomy developed *jyā* tables for the purpose — the direct ancestor of the modern **sine**.",
+            ne: "यी सुधार गणना गर्न त्रिकोणमितीय फलन चाहिन्थ्यो। वैदिक ज्योतिषले यसका लागि *ज्या* (jyā) तालिका विकास गरे — जुन आधुनिक **साइन** फलनको प्रत्यक्ष पूर्वज हो।",
+            en: "Computing those corrections required trigonometric functions. Vedic astronomy developed *jyā* tables for the purpose — the direct ancestor of the modern **sine**.",
           },
         },
         {

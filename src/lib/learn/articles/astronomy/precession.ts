@@ -96,8 +96,8 @@ export const precession: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "भारतीय सिद्धान्त ग्रन्थहरूले पनि यसलाई चिनेका थिए र *अयन चलन* भनेका थिए। केहीले यसलाई पूर्ण घुर्णन नभई एउटा सीमित दोलन (trepidation) मानेका थिए — त्यो अंश आधुनिक अवलोकनले सच्याइसकेको छ।",
-            en: "The Indian siddhantas recognised it too and named it *ayana calana*. Some treated it as a bounded oscillation — a trepidation — rather than a full circuit, a detail modern observation has since corrected.",
+            ne: "वैदिक सिद्धान्त ग्रन्थहरूले पनि यसलाई चिनेका थिए र *अयन चलन* भनेका थिए। केहीले यसलाई पूर्ण घुर्णन नभई एउटा सीमित दोलन (trepidation) मानेका थिए — त्यो अंश आधुनिक अवलोकनले सच्याइसकेको छ।",
+            en: "The Vedic siddhantas recognised it too and named it *ayana calana*. Some treated it as a bounded oscillation — a trepidation — rather than a full circuit, a detail modern observation has since corrected.",
           },
         },
         {

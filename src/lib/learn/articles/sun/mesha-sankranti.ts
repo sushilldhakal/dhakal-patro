@@ -68,7 +68,7 @@ export const meshaSankranti: ArticleData = {
           kind: "note",
           text: {
             ne: "यही कारण नेपाल र भारतका पात्रोमा एउटै सङ्क्रान्ति कहिलेकाहीँ फरक दिनमा देखिन्छ — क्षण उही, तर दिनमा राख्ने नियम फरक।",
-            en: "It is also why the Nepali and Indian calendars sometimes place the same sankranti on different days — the instant is shared, the assignment rule is not.",
+            en: "It is also why the Nepali and Vedic calendars sometimes place the same sankranti on different days — the instant is shared, the assignment rule is not.",
           },
         },
       ],

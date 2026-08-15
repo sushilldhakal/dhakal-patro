@@ -102,8 +102,8 @@ so a portion of the southern sky is never visible from Kathmandu`,
         {
           kind: "para",
           text: {
-            ne: "यही कारण **सप्तर्षि** (Big Dipper) नेपालबाट वर्षभरि देखिन्छ भने **क्रक्स** (Southern Cross) कहिल्यै देखिँदैन। भारतीय परम्परामा सप्तर्षिको केन्द्रीय स्थान हुनुको कारण पनि यही हो।",
-            en: "Which is why the **Saptarishi** — the Big Dipper — is visible from Nepal all year while the **Southern Cross** never is. It also explains the central place the Saptarishi holds in Indian tradition.",
+            ne: "यही कारण **सप्तर्षि** (Big Dipper) नेपालबाट वर्षभरि देखिन्छ भने **क्रक्स** (Southern Cross) कहिल्यै देखिँदैन। वैदिक परम्परामा सप्तर्षिको केन्द्रीय स्थान हुनुको कारण पनि यही हो।",
+            en: "Which is why the **Saptarishi** — the Big Dipper — is visible from Nepal all year while the **Southern Cross** never is. It also explains the central place the Saptarishi holds in Vedic tradition.",
           },
         },
         {

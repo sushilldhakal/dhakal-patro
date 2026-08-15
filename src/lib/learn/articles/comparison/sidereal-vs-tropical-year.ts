@@ -11,8 +11,8 @@ export const siderealVsTropicalYear: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "दुई किसिमका “वर्ष” छन्, र यीबीचको फरक प्रति वर्ष झन्डै `२०` मिनेटको मात्र छ। तर यही सानो फरकले भारतीय र पश्चिमी पात्रोलाई अलग बाटोमा लैजान्छ।",
-            en: "There are two kinds of \"year\", and they differ by only about `20` minutes. Yet that small gap is what sends the Indian and Western calendars down separate roads.",
+            ne: "दुई किसिमका “वर्ष” छन्, र यीबीचको फरक प्रति वर्ष झन्डै `२०` मिनेटको मात्र छ। तर यही सानो फरकले वैदिक र पश्चिमी पात्रोलाई अलग बाटोमा लैजान्छ।",
+            en: "There are two kinds of \"year\", and they differ by only about `20` minutes. Yet that small gap is what sends the Vedic and Western calendars down separate roads.",
           },
         },
         {

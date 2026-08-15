@@ -11,8 +11,8 @@ export const siderealVsTropical: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "राशिचक्र `३६०°` को वृत्त हो। तर वृत्तको **शून्य कहाँ राख्ने**? यो एउटै प्रश्नले भारतीय र पश्चिमी पात्रोलाई अलग बनाउँछ।",
-            en: "The zodiac is a `360°` circle. But **where do you put its zero**? That single question is what separates the Indian and Western calendars.",
+            ne: "राशिचक्र `३६०°` को वृत्त हो। तर वृत्तको **शून्य कहाँ राख्ने**? यो एउटै प्रश्नले वैदिक र पश्चिमी पात्रोलाई अलग बनाउँछ।",
+            en: "The zodiac is a `360°` circle. But **where do you put its zero**? That single question is what separates the Vedic and Western calendars.",
           },
         },
         {

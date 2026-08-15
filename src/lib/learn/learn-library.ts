@@ -526,8 +526,8 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     icon: Compass,
     title: { ne: "निरयन र सायन राशिचक्र", en: "Sidereal vs Tropical Zodiac" },
     summary: {
-      ne: "ताराको सन्दर्भ vs विषुवको सन्दर्भ — भारतीय पात्रो ग्रेगोरियन ऋतु ढाँचाभन्दा किन फरक छ।",
-      en: "A stellar reference against an equinox reference — why Indian calendars differ from the Gregorian seasonal frame.",
+      ne: "ताराको सन्दर्भ vs विषुवको सन्दर्भ — वैदिक पात्रो ग्रेगोरियन ऋतु ढाँचाभन्दा किन फरक छ।",
+      en: "A stellar reference against an equinox reference — why Vedic calendars differ from the Gregorian seasonal frame.",
     },
   },
   {
@@ -1227,7 +1227,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     section: "comparison",
     status: "published",
     icon: Globe,
-    title: { ne: "नेपाली, वैदिक र ग्रेगोरियन भिन्नता", en: "Nepali vs Indian vs Gregorian" },
+    title: { ne: "नेपाली, वैदिक र ग्रेगोरियन भिन्नता", en: "Nepali vs Vedic vs Gregorian" },
     summary: {
       ne: "तीन पात्रो प्रणालीको आधार, वर्षारम्भ र महिना–लम्बाइको तुलना।",
       en: "A comparison of the three calendar systems — their basis, year-start and month lengths.",
