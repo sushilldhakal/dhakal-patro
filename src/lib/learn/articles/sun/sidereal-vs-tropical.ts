@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const siderealVsTropical: ArticleData = {
   slug: "sidereal-vs-tropical",
-  seeAlso: ["ayanamsha", "ritu-drift", "precession", "sidereal-vs-tropical"],
+  seeAlso: ["ayanamsha", "ritu-drift", "precession", "equinox-solstice"],
   sections: [
     {
       title: { ne: "राशिचक्र कहाँबाट नाप्ने?", en: "Where do you start measuring the zodiac?" },
@@ -172,17 +172,6 @@ export const siderealVsTropical: ArticleData = {
       title: { ne: "जम्मा हुँदै जाने", en: "How it accumulates" },
       eyebrow: "One day in 72 years",
       blocks: [
-        {
-          kind: "figure",
-          art: `प्रति वर्ष / per year        20 मिनेट 24 सेकेन्ड / 20m 24s
-72 वर्षमा / in 72 years      ≈ 1 दिन / day
-2,160 वर्षमा / years         ≈ 30 दिन / days  ≈ 1 राशि / one full sign
-25,800 वर्षमा / years        ≈ 1 पूरा वर्ष / a whole year — चक्र पूरा / cycle closes`,
-          caption: {
-            ne: "प्रति वर्ष २० मिनेटले २५,८०० वर्षमा पूरै वर्षको फेरो लगाउँछ।",
-            en: "Twenty minutes a year comes full circle after 25,800 years.",
-          },
-        },
         {
           kind: "para",
           text: {

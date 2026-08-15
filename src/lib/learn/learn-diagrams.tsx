@@ -33,6 +33,11 @@ import {
 } from "@/components/learn/calendar-cycle-diagrams";
 import { CircumpolarSky } from "@/components/learn/CircumpolarSky";
 import {
+  MandaShighra,
+  PakshaStrip,
+  RetrogradeLoop,
+} from "@/components/learn/motion-and-month-diagrams";
+import {
   EclipticEquatorCross,
   TwoZeroPoints,
   ZodiacBeltWidth,
@@ -70,6 +75,9 @@ export const LEARN_DIAGRAMS = {
   "ritu-wheel": RituWheel,
   "lunar-solar-gap": LunarSolarGap,
   "circumpolar-sky": CircumpolarSky,
+  "retrograde-loop": RetrogradeLoop,
+  "manda-shighra": MandaShighra,
+  "paksha-strip": PakshaStrip,
   "two-zero-points": TwoZeroPoints,
   "zodiac-belt-width": ZodiacBeltWidth,
   "ecliptic-equator-cross": EclipticEquatorCross,

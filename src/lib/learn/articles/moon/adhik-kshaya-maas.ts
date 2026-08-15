@@ -106,23 +106,6 @@ export const adhikKshayaMaas: ArticleData = {
             en: "A lunar month runs `29.53` days and a solar month usually `30`–`31`, so normally exactly one sankranti falls inside each lunar month. Around पुष–माघ, though, Earth is near ~perihelion~. The Sun then moves at its fastest and a solar month shrinks to about `29` days — shorter than a lunar month. Two sankrantis can then fit inside one.",
           },
         },
-        {
-          kind: "figure",
-          art: `सामान्य / Normal
-  ├──── चान्द्र मास (29.53 दिन/days) ────┤
-        ↑ सङ्क्रान्ति / sankranti          (एक / one)
-
-क्षय मास / Kshaya masa   (उपसौर नजिक / near perihelion)
-  ├──── चान्द्र मास (29.53 दिन/days) ────┤
-   ↑                                  ↑
-   सङ्क्रान्ति                       सङ्क्रान्ति   (दुई / two)
-   → एक सौर मासको नाम प्रयोग नै हुँदैन
-     one solar month name is never used`,
-          caption: {
-            ne: "छोटो सौर मास चान्द्र मासभित्र पूरै अटाउँदा त्यसको नाम पात्रोमा देखिँदैन।",
-            en: "When a short solar month fits entirely inside a lunar month, its name never appears in the calendar.",
-          },
-        },
       ],
     },
     {

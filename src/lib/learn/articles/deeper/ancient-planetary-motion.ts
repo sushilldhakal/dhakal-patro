@@ -63,19 +63,8 @@ export const ancientPlanetaryMotion: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `मध्यम ग्रह / mean planet   (एकनास वृत्ताकार गति / uniform circular motion)
-        │
-        + मन्द फल / manda phala        ← कक्षको अण्डाकारपन / orbital eccentricity
-        │
-        + शीघ्र फल / shighra phala     ← पृथ्वीको गति / Earth's motion
-        │
-        ▼
-स्पष्ट ग्रह / true planet   (आकाशमा देखिने स्थान / where it actually appears)`,
-          caption: {
-            ne: "औसतबाट वास्तविकतासम्म — सिद्धान्तिक गणनाको मूल शृङ्खला।",
-            en: "From average to actual — the core chain of siddhantic computation.",
-          },
+          kind: "diagram",
+          id: "manda-shighra",
         },
       ],
     },

@@ -167,17 +167,8 @@ export const uttarayanaDakshinayana: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `~285 ई. / CE          आज / today            ~२९०० ई. / CE
-अयनांश ० / 0°         अयनांश ~24°           अयनांश ~३६° / ~36°
-
-अयनान्त ─┐            अयनान्त ─┐            अयनान्त ─┐
-सङ्क्रान्ति ─┘  (एउटै)   │  ~24 दिन/days     │  ~३६ दिन/days
-                     सङ्क्रान्ति ─┘         सङ्क्रान्ति ─┘`,
-          caption: {
-            ne: "अयन चलनले दुई घटनालाई शताब्दीयौँमा बिस्तारै अलग गर्दै लगेको छ।",
-            en: "Precession has been prising the two events apart, century by century.",
-          },
+          kind: "diagram",
+          id: "equinox-precession",
         },
         {
           kind: "note",

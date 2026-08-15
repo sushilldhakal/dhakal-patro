@@ -44,23 +44,8 @@ export const retrogradeMotion: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `पृथ्वी भित्री कक्षमा छिटो / Earth on the inner, faster orbit
-मङ्गल बाहिरी कक्षमा ढिलो / Mars on the outer, slower one
-
-  ★ ★ ★ ★ ★ ★ ★ ★   ← पृष्ठभूमिका तारा / background stars
-
-  1 → 2 → 3        पृथ्वी नजिक आउँदै / Earth approaching
-        ↓
-  मङ्गल देखिने दिशा उल्टिन्छ / apparent direction of Mars reverses
-        ↓
-  4 ← 5            पृथ्वीले उछिन्यो / Earth overtakes  → वक्री / retrograde
-        ↓
-  6 → 7 → 8        फेरि सामान्य / direct again`,
-          caption: {
-            ne: "पृथ्वीले बाहिरी ग्रहलाई उछिन्दा त्यो ग्रह ताराको सापेक्ष पछाडि सरेको देखिन्छ।",
-            en: "As Earth overtakes an outer planet, that planet appears to slip backwards against the stars.",
-          },
+          kind: "diagram",
+          id: "retrograde-loop",
         },
         {
           kind: "para",
