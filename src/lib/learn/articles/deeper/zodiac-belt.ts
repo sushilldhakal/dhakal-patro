@@ -38,6 +38,10 @@ export const zodiacBelt: ArticleData = {
             en: "Lengthwise the belt divides into twelve rashis; its width is set by how far the planets stray.",
           },
         },
+        {
+          kind: "diagram",
+          id: "ecliptic-belt",
+        },
       ],
     },
     {

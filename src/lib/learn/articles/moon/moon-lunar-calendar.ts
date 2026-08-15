@@ -33,6 +33,10 @@ export const moonLunarCalendar: ArticleData = {
             en: "Note that \"day\" is nowhere the basis here. The day enters only afterwards, when these angular states are mapped onto civil dates using the sunrise boundary.",
           },
         },
+        {
+          kind: "diagram",
+          id: "moon-phases",
+        },
       ],
     },
     {

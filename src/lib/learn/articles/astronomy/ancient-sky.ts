@@ -22,6 +22,14 @@ export const ancientSky: ArticleData = {
             en: "Which means that when the Vedas and the siddhantas were composed the sky was **measurably different** from today's. Reading their astronomical descriptions requires keeping that in mind.",
           },
         },
+        {
+          kind: "diagram",
+          id: "precession-sky",
+          caption: {
+            ne: "अयन चलनले शताब्दीयौँमा आकाश बदल्छ — प्राचीन अवलोकन आजकै आकाशमा मिल्दैन।",
+            en: "Precession reshapes the sky over centuries — ancient observations do not match today's.",
+          },
+        },
       ],
     },
     {

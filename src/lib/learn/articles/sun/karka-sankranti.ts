@@ -22,6 +22,14 @@ export const karkaSankranti: ArticleData = {
             en: "It is the point diametrically opposite Makara Sankranti — `180°` away on the zodiac. Tradition treats it as the start of ~Dakshinayana~.",
           },
         },
+        {
+          kind: "diagram",
+          id: "declination-year",
+          caption: {
+            ne: "कर्क सङ्क्रान्ति (साउन १) र वास्तविक ग्रीष्म अयनान्त (~असार ६–७) — बीचमा झन्डै २४ दिन।",
+            en: "Karka Sankranti (साउन १) and the true summer solstice (~असार ६–७) — some 24 days apart.",
+          },
+        },
       ],
     },
     {

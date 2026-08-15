@@ -48,6 +48,10 @@ export const calendarDrift: ArticleData = {
             en: "Note that the third row is **not an error**. A sidereal calendar is not trying to track the seasons; it tracks the stars, and at that it is exact. \"Drift\" always begs the question — drift against what?",
           },
         },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+        },
       ],
     },
     {

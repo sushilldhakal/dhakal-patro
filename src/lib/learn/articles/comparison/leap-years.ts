@@ -22,6 +22,14 @@ export const leapYears: ArticleData = {
             en: "Left unabsorbed it accumulates — nearly a day in four years, `24` days in a century. The leap day is the device that gives it back.",
           },
         },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+          caption: {
+            ne: "लीप वर्षको नियम विषुवलाई एउटै मितिमा अड्याउन बनेको हो।",
+            en: "The leap-year rule exists to hold the equinox on one date.",
+          },
+        },
       ],
     },
     {

@@ -22,6 +22,14 @@ export const ancientPlanetaryMotion: ArticleData = {
             en: "The central task of the siddhantas was exactly this: **start from a simple uniform motion and add corrections until you reach the true position**.",
           },
         },
+        {
+          kind: "diagram",
+          id: "two-systems",
+          caption: {
+            ne: "भूकेन्द्रित ढाँचामा वक्री गति देखाउन मन्द र शीघ्र सुधार चाहिन्थ्यो।",
+            en: "Explaining retrograde motion in a geocentric frame is what the manda and shighra corrections were for.",
+          },
+        },
       ],
     },
     {

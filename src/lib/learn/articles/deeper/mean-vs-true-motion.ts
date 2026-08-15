@@ -41,6 +41,14 @@ export const meanVsTrueMotion: ArticleData = {
             en: "The distinction applies to the Sun too. The **mean Sun** advances by exactly `0.9856°` a day; the **true Sun** by anywhere from `0.953°` to `1.019°`.",
           },
         },
+        {
+          kind: "diagram",
+          id: "earth-orbit",
+          caption: {
+            ne: "अण्डाकार कक्षमा पृथ्वी उपसौर नजिक छिटो, अपसौर नजिक ढिलो — माध्य र साँचो गतिको फरक यहीँबाट।",
+            en: "On an elliptical orbit Earth runs fast near perihelion and slow near aphelion — the gap between mean and true motion starts here.",
+          },
+        },
       ],
     },
     {

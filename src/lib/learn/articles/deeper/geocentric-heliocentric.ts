@@ -41,6 +41,10 @@ export const geocentricHeliocentric: ArticleData = {
             en: "A panchanga is **geocentric** — and must be. \"The Sun is in Mesha\" means the Sun appears in that direction as seen from Earth. From the Sun the statement has no meaning at all.",
           },
         },
+        {
+          kind: "diagram",
+          id: "two-systems",
+        },
       ],
     },
     {

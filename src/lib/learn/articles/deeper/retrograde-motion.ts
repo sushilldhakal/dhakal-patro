@@ -22,6 +22,14 @@ export const retrogradeMotion: ArticleData = {
             en: "Crucially, the planet does not actually reverse. The effect is entirely **apparent**, arising from the relative motion of Earth and that planet.",
           },
         },
+        {
+          kind: "diagram",
+          id: "two-systems",
+          caption: {
+            ne: "एउटै गति दुई दृष्टिबाट — सूर्यकेन्द्रित चित्रमा कुनै ग्रह पछाडि हिँड्दैन।",
+            en: "One motion from two viewpoints — in the heliocentric picture no planet ever moves backwards.",
+          },
+        },
       ],
     },
     {

@@ -48,6 +48,14 @@ export const calcSunrise: ArticleData = {
             },
           ],
         },
+        {
+          kind: "diagram",
+          id: "sunrise-vriddhi",
+          caption: {
+            ne: "सूर्योदयको क्षण स्थानसापेक्ष — अक्षांश, देशान्तर र उचाइ तीनैले सार्छ।",
+            en: "The instant of sunrise is local — latitude, longitude and altitude all move it.",
+          },
+        },
       ],
     },
     {

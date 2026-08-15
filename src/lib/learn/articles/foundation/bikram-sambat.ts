@@ -48,6 +48,14 @@ export const bikramSambat: ArticleData = {
             en: "Miss this distinction and \"BS runs 57 years ahead of the Gregorian\" starts to sound like a full account of the calendar — when in fact it describes only the year number.",
           },
         },
+        {
+          kind: "diagram",
+          id: "calendar-hierarchy",
+          caption: {
+            ne: "वर्ष, महिना, गते र तिथि — विक्रम सम्वत्‌का तहहरू कसरी एकमाथि अर्को बस्छन्।",
+            en: "Year, month, gate and tithi — how the layers of Bikram Sambat stack up.",
+          },
+        },
       ],
     },
     {

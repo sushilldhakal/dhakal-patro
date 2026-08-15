@@ -44,6 +44,10 @@ export const eclipseSeasons: ArticleData = {
             },
           ],
         },
+        {
+          kind: "diagram",
+          id: "moon-orbit-tilt",
+        },
       ],
     },
     {

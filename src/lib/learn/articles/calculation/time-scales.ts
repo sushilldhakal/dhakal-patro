@@ -41,6 +41,14 @@ export const timeScales: ArticleData = {
             },
           ],
         },
+        {
+          kind: "diagram",
+          id: "earth-rotation",
+          caption: {
+            ne: "पृथ्वीको घुर्णनले UT दिन्छ, तर त्यो एकनास छैन — त्यसैले गणनाका लागि TT चाहिन्छ।",
+            en: "Earth's rotation gives UT, but it is not uniform — which is why the computation needs TT.",
+          },
+        },
       ],
     },
     {

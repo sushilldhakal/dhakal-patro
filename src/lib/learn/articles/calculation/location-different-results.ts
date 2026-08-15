@@ -62,6 +62,10 @@ export const locationDifferentResults: ArticleData = {
             en: "Note that although the first two are **location-independent**, the question of *which day they belong to* is not. That turn is where the confusion begins.",
           },
         },
+        {
+          kind: "diagram",
+          id: "sunrise-vriddhi",
+        },
       ],
     },
     {

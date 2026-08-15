@@ -42,6 +42,14 @@ export const rightAscension: ArticleData = {
             en: "Why hours? Because it makes the number **directly usable at the telescope** — two stars `2` hours apart in right ascension cross the meridian `2` hours apart.",
           },
         },
+        {
+          kind: "diagram",
+          id: "ecliptic-belt",
+          caption: {
+            ne: "विषुवत् रेखामा नापिने देशान्तर नै विषुवांश — क्रान्तिवृत्तको देशान्तरभन्दा फरक ढाँचा।",
+            en: "Longitude measured along the equator is right ascension — a different frame from ecliptic longitude.",
+          },
+        },
       ],
     },
     {

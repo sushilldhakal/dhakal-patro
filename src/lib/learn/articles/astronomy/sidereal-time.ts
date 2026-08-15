@@ -44,6 +44,14 @@ export const siderealTime: ArticleData = {
             },
           ],
         },
+        {
+          kind: "diagram",
+          id: "earth-rotation",
+          caption: {
+            ne: "नाक्षत्र दिन र सौर दिनको ~४ मिनेटको फरक — नाक्षत्र समय यही छोटो दिनमा चल्छ।",
+            en: "The ~4-minute gap between a sidereal and a solar day — sidereal time runs on the shorter one.",
+          },
+        },
       ],
     },
     {

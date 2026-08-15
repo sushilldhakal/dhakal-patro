@@ -35,6 +35,10 @@ export const declination: ArticleData = {
             en: "The Sun's declination swings between `+23.44°` and `−23.44°` through the year — and that swing sets the seasons, the ayanas and the length of the day.",
           },
         },
+        {
+          kind: "diagram",
+          id: "declination-year",
+        },
       ],
     },
     {

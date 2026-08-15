@@ -22,6 +22,10 @@ export const makaraSankranti: ArticleData = {
             en: "In the Gregorian calendar it usually falls on `14`–`15` January, and it is the most widely observed of the year's sankrantis — marked with yam, chaku, sesame sweets and ghee.",
           },
         },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+        },
       ],
     },
     {

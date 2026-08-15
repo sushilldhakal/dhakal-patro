@@ -24,7 +24,9 @@ import { HierarchyDiagram } from "@/components/learn/HierarchyDiagram";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import { PrecessionCone } from "@/components/learn/PrecessionCone";
+import { RituWheel } from "@/components/learn/RituWheel";
 import { SolarDeclinationYear } from "@/components/learn/SolarDeclinationYear";
+import { SolarMonthLengths } from "@/components/learn/SolarMonthLengths";
 import { SolarEclipseStudy } from "@/components/learn/SolarEclipseStudy";
 import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
 import { TwoSystemsDiagram } from "@/components/learn/TwoSystemsDiagram";
@@ -44,6 +46,8 @@ export const LEARN_DIAGRAMS = {
   "sun-earth-moon": SunEarthMoonStudy,
   "ecliptic-belt": EclipticBeltStudy,
   "declination-year": SolarDeclinationYear,
+  "ritu-wheel": RituWheel,
+  "solar-month-lengths": SolarMonthLengths,
   /* 3D, client-only and code-split — see TwoSystemsDiagram. */
   "two-systems": TwoSystemsDiagram,
   "calendar-hierarchy": HierarchyDiagram,

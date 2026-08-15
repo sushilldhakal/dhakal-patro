@@ -41,6 +41,14 @@ export const celestialEquator: ArticleData = {
             en: "The two circles meet at `23.44°` — the axial tilt — and the two points where they cross are the ~equinoxes~.",
           },
         },
+        {
+          kind: "diagram",
+          id: "declination-year",
+          caption: {
+            ne: "क्रान्ति शून्य हुने रेखा नै खगोलीय विषुवत् रेखा — वर्षमा दुई पटक सूर्यले यसलाई काट्छ।",
+            en: "The line where declination is zero is the celestial equator — the Sun crosses it twice a year.",
+          },
+        },
       ],
     },
     {
