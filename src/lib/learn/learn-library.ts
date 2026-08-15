@@ -491,17 +491,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "twelve-rashis",
-    section: "sun",
-    status: "published",
-    icon: Grid2x2,
-    title: { ne: "बाह्र राशिको परिचय", en: "The 12 Rashis Explained" },
-    summary: {
-      ne: "मेषदेखि मीनसम्म — प्रत्येक राशिको संस्कृत नाम, पश्चिमी समकक्ष र सीमा।",
-      en: "Mesha to Meena — each rashi's Sanskrit name, Western equivalent and boundaries.",
-    },
-  },
-  {
     slug: "sankranti",
     section: "sun",
     status: "published",
@@ -554,17 +543,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "सूर्यको उत्तर–दक्षिण यात्राका दुई आधावार्षिक चरण, र क्रान्ति (declination) सँगको सम्बन्ध।",
       en: "The two half-year phases of the Sun's north–south journey, and how they relate to declination.",
-    },
-  },
-  {
-    slug: "sankranti-vs-solstice",
-    section: "sun",
-    status: "published",
-    icon: Split,
-    title: { ne: "सङ्क्रान्ति र अयनान्त — फरक के?", en: "Sankranti vs Solstice" },
-    summary: {
-      ne: "एउटा राशि सीमामा आधारित, अर्को सूर्यको क्रान्तिमा — दुई फरक सन्दर्भ प्रणाली।",
-      en: "One is defined by a zodiac boundary, the other by the Sun's declination — two different reference systems.",
     },
   },
   {
@@ -668,25 +646,14 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "tithi-vriddhi",
+    slug: "tithi-vriddhi-kshaya",
     section: "moon",
     status: "published",
     icon: Repeat,
-    title: { ne: "तिथि किन दोहोरिन्छ", en: "Why Tithi Repeats (Vriddhi)" },
+    title: { ne: "तिथि वृद्धि र क्षय", en: "When a Tithi Repeats or Skips" },
     summary: {
-      ne: "चन्द्र मन्द गतिमा हिँड्दा एउटै तिथि किन दुई दिन पर्छ।",
-      en: "Why one tithi spans two days when the Moon moves slowly.",
-    },
-  },
-  {
-    slug: "tithi-kshaya",
-    section: "moon",
-    status: "published",
-    icon: Scissors,
-    title: { ne: "तिथि किन हराउँछ", en: "Why Tithi Skips (Kshaya)" },
-    summary: {
-      ne: "चन्द्र द्रुत गतिमा हिँड्दा कुनै तिथि किन पात्रोबाट हराउँछ।",
-      en: "Why a tithi disappears from the calendar when the Moon moves quickly.",
+      ne: "चन्द्रको गति स्थिर नभएकाले कुनै तिथि दुई दिन देखिन्छ, कुनै पात्रोबाटै हराउँछ — एउटै नियमका दुई पक्ष।",
+      en: "Because the Moon's speed is not constant, a tithi can occupy two days or vanish entirely — two sides of one rule.",
     },
   },
   {
@@ -701,25 +668,14 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "adhik-maas",
+    slug: "adhik-kshaya-maas",
     section: "moon",
     status: "published",
-    icon: Layers,
-    title: { ne: "अधिक मास — थपिने महिना", en: "Adhika Māsa — The Extra Lunar Month" },
+    icon: CalendarRange,
+    title: { ne: "अधिक र क्षय मास", en: "The Extra and the Skipped Month" },
     summary: {
-      ne: "चान्द्र र सौर मासको फरकले किन झन्डै तीन वर्षमा एक महिना थपिन्छ।",
-      en: "Why the gap between lunar and solar months adds an extra month roughly every three years.",
-    },
-  },
-  {
-    slug: "kshaya-maas",
-    section: "moon",
-    status: "published",
-    icon: Scissors,
-    title: { ne: "क्षय मास — घट्ने महिना", en: "Kṣaya Māsa — When a Lunar Month Is Skipped" },
-    summary: {
-      ne: "एउटै चान्द्र मासमा दुई सङ्क्रान्ति पर्दा महिना पात्रोबाट हराउँछ — दुर्लभ अवस्था।",
-      en: "When two sankrantis fall inside one lunar month it drops from the calendar — a rare case.",
+      ne: "चान्द्र मासभित्र सङ्क्रान्ति गन्नुहोस् — शून्य भए मास दोहोरिन्छ, दुई भए मास घट्छ।",
+      en: "Count the sankrantis inside a lunar month — none doubles it, two drops it.",
     },
   },
   /* ── ⭐ THE PANCHANGA ─────────────────────────────────────────────── */
@@ -1187,28 +1143,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "तीन पात्रो प्रणालीको आधार, वर्षारम्भ र महिना–लम्बाइको तुलना।",
       en: "A comparison of the three calendar systems — their basis, year-start and month lengths.",
-    },
-  },
-  {
-    slug: "solar-vs-lunar-calendar",
-    section: "comparison",
-    status: "published",
-    icon: SunMoon,
-    title: { ne: "सौर पात्रो vs चान्द्र पात्रो", en: "Solar Calendar vs Lunar Calendar" },
-    summary: {
-      ne: "ग्रेगोरियन, इस्लामी र चान्द्र–सौर पात्रो — कुनले के मिलाउँछ।",
-      en: "Gregorian, Islamic and lunisolar calendars — what each one keeps aligned.",
-    },
-  },
-  {
-    slug: "sidereal-vs-tropical-year",
-    section: "comparison",
-    status: "published",
-    icon: Ruler,
-    title: { ne: "नाक्षत्र वर्ष vs सायन वर्ष", en: "Sidereal Year vs Tropical Year" },
-    summary: {
-      ne: "३६५.२५६४ vs ३६५.२४२२ दिन — वर्षमा ~२० मिनेटको फरक र त्यसको परिणाम।",
-      en: "365.2564 against 365.2422 days — about 20 minutes a year, and what it accumulates into.",
     },
   },
   {

@@ -35,6 +35,14 @@ const MERGED_SLUGS: Record<string, string> = {
   "solar-eclipse": "eclipses",
   equinoxes: "equinox-solstice",
   solstices: "equinox-solstice",
+  "sankranti-vs-solstice": "uttarayana-dakshinayana",
+  "twelve-rashis": "rashi",
+  "solar-vs-lunar-calendar": "bs-calendar",
+  "sidereal-vs-tropical-year": "sidereal-vs-tropical",
+  "tithi-vriddhi": "tithi-vriddhi-kshaya",
+  "tithi-kshaya": "tithi-vriddhi-kshaya",
+  "adhik-maas": "adhik-kshaya-maas",
+  "kshaya-maas": "adhik-kshaya-maas",
 };
 
 export function LearnArticle() {

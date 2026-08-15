@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const zodiacBelt: ArticleData = {
   slug: "zodiac-belt",
-  seeAlso: ["ecliptic", "rashi", "twelve-rashis", "how-we-calculate"],
+  seeAlso: ["ecliptic", "rashi", "how-we-calculate"],
   sections: [
     {
       title: { ne: "राशि पट्टी — ग्रह हिँड्ने बाटो", en: "The zodiac belt — the lane the planets keep to" },

@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const leapYears: ArticleData = {
   slug: "leap-years",
-  seeAlso: ["calendar-drift", "adhik-maas", "sidereal-vs-tropical-year", "calendars-aligned-with-nature"],
+  seeAlso: ["calendar-drift", "adhik-kshaya-maas", "sidereal-vs-tropical", "calendars-aligned-with-nature"],
   sections: [
     {
       title: { ne: "अंशको समस्या", en: "The problem of the remainder" },

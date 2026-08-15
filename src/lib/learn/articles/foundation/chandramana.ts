@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const chandramana: ArticleData = {
   slug: "chandramana",
-  seeAlso: ["sauramana", "tithi", "adhik-maas", "bs-calendar"],
+  seeAlso: ["sauramana", "tithi", "adhik-kshaya-maas", "bs-calendar"],
   sections: [
     {
       title: { ne: "चान्द्रमान भनेको के हो", en: "What Chāndramāna is" },

@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const lunarSolarDrift: ArticleData = {
   slug: "lunar-solar-drift",
-  seeAlso: ["adhik-maas", "kshaya-maas", "lunar-month", "chandramana"],
+  seeAlso: ["adhik-kshaya-maas", "lunar-month", "chandramana"],
   sections: [
     {
       title: { ne: "वर्षमा ११ दिनको खाडल", en: "The eleven-day gap each year" },

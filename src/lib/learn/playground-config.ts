@@ -195,7 +195,7 @@ export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   "bs-calendar": { mode: "year" },
   sauramana: { mode: "year" },
   "year-begins-baisakh": { mode: "sun" },
-  "sidereal-vs-tropical-year": { mode: "year", layers: { nakshatraBelt: true } },
+  "sidereal-vs-tropical": { mode: "year", layers: { nakshatraBelt: true } },
   "solar-longitude": { mode: "sun" },
 
   /* ── the Sun along the belt ──────────────────────────────────────── */
@@ -205,7 +205,6 @@ export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   "makara-sankranti": { mode: "sun" },
   "karka-sankranti": { mode: "sun" },
   rashi: { mode: "sun" },
-  "twelve-rashis": { mode: "sun" },
   "zodiac-belt": { mode: "sun" },
   nakshatra: {
     mode: "sun",
@@ -222,12 +221,10 @@ export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   /* ── the tilt and what it causes ─────────────────────────────────── */
   "axial-tilt": { mode: "tilt" },
   "why-seasons": { mode: "tilt" },
-  solstices: { mode: "tilt" },
-  equinoxes: { mode: "tilt" },
+  "equinox-solstice": { mode: "tilt" },
   "uttarayana-dakshinayana": { mode: "tilt" },
   declination: { mode: "tilt" },
   "celestial-equator": { mode: "tilt" },
-  "sankranti-vs-solstice": { mode: "tilt" },
   "ritu-drift": { mode: "tilt" },
 };
 

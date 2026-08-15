@@ -22,7 +22,6 @@ import {
 } from "@/components/learn/PanchangaReferenceGuide";
 import {
   SunriseTimeline,
-  AdhikMassDiagram,
 } from "@/components/tithi-mechanics/tithi-mechanics-diagrams";
 import { HoraRing } from "@/components/panchanga/HoraRing";
 import {
@@ -766,10 +765,10 @@ export function TithiArticle() {
   );
 }
 
-export function TithiVriddhi() {
+export function TithiVriddhiKshaya() {
       const { lang } = useLocale();
   return bilingualNode(lang, <>
-      <Section kicker="०१" title="एउटै तिथि दुई दिन" en="Repeated tithi">
+      <Section kicker="०१" title="एउटै तिथि दुई दिन — वृद्धि" en="Repeated tithi">
         <Lede>
           जब चन्द्र <span className="hl">मन्द गतिमा</span> (~१०.७°/दिन) हिँड्छ, एउटै १२° को
           तिथि–खण्डले <b>लगातार दुई सूर्योदय</b> समेट्छ। दुवै बिहान त्यही तिथि चलिरहेकाले
@@ -783,30 +782,7 @@ export function TithiVriddhi() {
           </div>
         </div>
       </Section>
-    </>,
-    <>
-      <Section kicker="01" title="One tithi, two days" en="Repeated tithi">
-        <Lede>
-          When the Moon moves <span className="hl">slowly</span> (~10.7°/day), a single 12°
-          tithi-segment spans <b>two consecutive sunrises</b>. Since the same tithi is running on
-          both mornings, the calendar shows that tithi on <span className="hl-amber">two days</span>.
-        </Lede>
-        <div className={tmCardPadLg}>
-          <SunriseTimeline mode="vriddhi" />
-          <div className={tmCardCap}>
-            The Tritiya segment is so wide that both the 10th and 11th sunrises fall within it — so
-            Tritiya repeats.
-          </div>
-        </div>
-      </Section>
-    </>,
-  );
-}
-
-export function TithiKshaya() {
-      const { lang } = useLocale();
-  return bilingualNode(lang, <>
-      <Section kicker="०१" title="हराएको तिथि" en="Skipped tithi">
+      <Section kicker="०२" title="हराएको तिथि — क्षय" en="Skipped tithi">
         <Lede>
           उल्टो, जब चन्द्र <span className="hl">द्रुत गतिमा</span> (~१४.३°/दिन) हिँड्छ, कुनै १२°
           को तिथि–खण्ड <b>दुई सूर्योदयको बीचमै</b> पूरै सकिन्छ। कुनै पनि सूर्योदयमा त्यो तिथि
@@ -820,9 +796,30 @@ export function TithiKshaya() {
           </div>
         </div>
       </Section>
+      <Section kicker="०३" title="एउटै नियमका दुई पक्ष" en="Two sides of one rule">
+        <Lede>
+          दुवै अवस्था एउटै नियमबाट आउँछन् — <b>सूर्योदयमा जुन तिथि चलिरहेको छ, त्यही दिनको तिथि</b>।
+          तिथि–खण्ड सूर्योदयको अन्तरभन्दा <span className="hl">फराकिलो</span> भए वृद्धि,{" "}
+          <span className="hl">साँघुरो</span> भए क्षय। चन्द्रको गति स्थिर नभएकाले दुवै अनिवार्य छन्।
+        </Lede>
+      </Section>
     </>,
     <>
-      <Section kicker="01" title="A skipped tithi" en="Skipped tithi">
+      <Section kicker="01" title="One tithi, two days — vriddhi" en="Repeated tithi">
+        <Lede>
+          When the Moon moves <span className="hl">slowly</span> (~10.7°/day), a single 12°
+          tithi-segment spans <b>two consecutive sunrises</b>. Since the same tithi is running on
+          both mornings, the calendar shows that tithi on <span className="hl-amber">two days</span>.
+        </Lede>
+        <div className={tmCardPadLg}>
+          <SunriseTimeline mode="vriddhi" />
+          <div className={tmCardCap}>
+            The Tritiya segment is so wide that both the 10th and 11th sunrises fall within it — so
+            Tritiya repeats.
+          </div>
+        </div>
+      </Section>
+      <Section kicker="02" title="A skipped tithi — kshaya" en="Skipped tithi">
         <Lede>
           Conversely, when the Moon moves <span className="hl">fast</span> (~14.3°/day), a 12°
           tithi-segment finishes entirely <b>between two sunrises</b>. Since that tithi is present
@@ -837,58 +834,13 @@ export function TithiKshaya() {
           </div>
         </div>
       </Section>
-    </>,
-  );
-}
-
-export function AdhikMaas() {
-      const { lang } = useLocale();
-  return bilingualNode(lang, <>
-      <Section kicker="०१" title="थपिने महिना" en="Extra month">
+      <Section kicker="03" title="Two sides of one rule" en="Two sides of one rule">
         <Lede>
-          एक <b>चान्द्र मास</b> ~{N(29.5)} दिनको हुन्छ; एक <b>सौर मास</b> ~{N(30.4)} दिनको।
-          चान्द्र मास छोटो भएकाले बेलाबेला एउटा चान्द्र मासभित्र{" "}
-          <span className="hl">कुनै सङ्क्रान्ति पर्दैन</span> — त्यही महिना{" "}
-          <span className="hl-amber">अधिक मास</span> कहलिन्छ र अघिल्लो महिनाको नाम दोहोरिन्छ।
+          Both cases fall out of the same rule — <b>the tithi running at sunrise is the tithi of
+          that day</b>. If a tithi-segment is <span className="hl">wider</span> than the gap
+          between sunrises you get a vriddhi; <span className="hl">narrower</span>, a kshaya.
+          Since the Moon's speed is not constant, both are inevitable.
         </Lede>
-        <div className={tmCardPadLg}>
-          <AdhikMassDiagram />
-          <div className={tmCardCap}>
-            मेष सौर मासभित्रै दुई औंसी परे — बीचको चान्द्र मासमा सङ्क्रान्ति नपरेकाले त्यो
-            “अधिक वैशाख” बन्यो; त्यसपछिको नियमित महिना “निज वैशाख”।
-          </div>
-        </div>
-        <Keys
-          items={[
-            { h: "~३२.५ महिनामा एकपटक", p: "जोडिँदै गएको फरकले झन्डै हरेक तीन वर्षमा एक अधिक मास बनाउँछ।" },
-            { h: "अधिक र निज", p: "सङ्क्रान्ति बिनाको महिना “अधिक”, त्यसपछिको “निज” (साँचो)।" },
-            { h: "क्षय मास", p: "विरलै एउटै चान्द्र मासमा दुई सङ्क्रान्ति परे त्यो महिना क्षय हुन्छ।" },
-          ]}
-        />
-      </Section>
-    </>,
-    <>
-      <Section kicker="01" title="The extra month" en="Extra month">
-        <Lede>
-          A <b>lunar month</b> is ~29.5 days; a <b>solar month</b> ~30.4 days. Because the lunar
-          month is shorter, occasionally a lunar month contains{" "}
-          <span className="hl">no sankranti</span> — that month is called an{" "}
-          <span className="hl-amber">Adhik Maas</span> and repeats the previous month's name.
-        </Lede>
-        <div className={tmCardPadLg}>
-          <AdhikMassDiagram />
-          <div className={tmCardCap}>
-            Two new moons fell within the Mesha solar month — because the lunar month between them
-            had no sankranti, it became “Adhik Baisakh”; the regular month after it is “Nija Baisakh”.
-          </div>
-        </div>
-        <Keys
-          items={[
-            { h: "Once in ~32.5 months", p: "The accumulating difference adds one adhik maas roughly every three years." },
-            { h: "Adhik and Nija", p: "The month with no sankranti is “Adhik”, the one after it “Nija” (true)." },
-            { h: "Kshaya maas", p: "Rarely, if one lunar month has two sankrantis, that month is dropped (kshaya)." },
-          ]}
-        />
       </Section>
     </>,
   );

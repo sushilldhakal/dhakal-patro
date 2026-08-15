@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const lunarMonth: ArticleData = {
   slug: "lunar-month",
-  seeAlso: ["chandramana", "amavasya-purnima", "lunar-solar-drift", "adhik-maas"],
+  seeAlso: ["chandramana", "amavasya-purnima", "lunar-solar-drift", "adhik-kshaya-maas"],
   sections: [
     {
       title: { ne: "सांयोगिक मास — औंसीदेखि औंसीसम्म", en: "The synodic month — new moon to new moon" },

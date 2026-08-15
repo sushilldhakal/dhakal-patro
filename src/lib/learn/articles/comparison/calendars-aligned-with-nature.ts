@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const calendarsAlignedWithNature: ArticleData = {
   slug: "calendars-aligned-with-nature",
-  seeAlso: ["calendar-drift", "leap-years", "adhik-maas", "ancient-calendars"],
+  seeAlso: ["calendar-drift", "leap-years", "adhik-kshaya-maas", "ancient-calendars"],
   sections: [
     {
       title: { ne: "पात्रोलाई आकाशसँग बाँध्ने उपाय", en: "The devices that tie a calendar to the sky" },

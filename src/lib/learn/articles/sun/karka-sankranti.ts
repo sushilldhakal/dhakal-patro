@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const karkaSankranti: ArticleData = {
   slug: "karka-sankranti",
-  seeAlso: ["uttarayana-dakshinayana", "makara-sankranti", "sankranti", "why-seasons"],
+  seeAlso: ["uttarayana-dakshinayana", "makara-sankranti", "sankranti", "equinox-solstice"],
   sections: [
     {
       title: { ne: "कर्क सङ्क्रान्ति", en: "Karka Sankranti" },
@@ -98,8 +98,8 @@ export const karkaSankranti: ArticleData = {
         {
           kind: "note",
           text: {
-            ne: "मकरजस्तै यहाँ पनि उही सावधानी लागू हुन्छ: वास्तविक ग्रीष्म अयनान्त असार `६`–`७` तिर पर्छ, कर्क सङ्क्रान्तिभन्दा झन्डै `२४` दिन अघि।",
-            en: "The same caveat as for Makara applies here: the actual summer solstice occurs around `21` June, some `24` days before Karka Sankranti.",
+            ne: "मकरजस्तै यहाँ पनि उही सावधानी लागू हुन्छ: वास्तविक ग्रीष्म अयनान्त असार `६`–`७` तिर पर्छ, कर्क सङ्क्रान्तिभन्दा झन्डै `२४` दिन अघि। सङ्क्रान्ति निरयन घटना हो, अयनान्त सायन — पूरा कारण ~उत्तरायण र दक्षिणायन~ मा।",
+            en: "The same caveat as for Makara applies here: the actual summer solstice falls around असार `6`–`7`, some `24` days before Karka Sankranti. A sankranti is sidereal and a solstice tropical — the full reason is in ~Uttarāyaṇa and Dakṣiṇāyana~.",
           },
         },
       ],

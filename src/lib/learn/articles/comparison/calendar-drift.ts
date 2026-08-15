@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const calendarDrift: ArticleData = {
   slug: "calendar-drift",
-  seeAlso: ["leap-years", "ritu-drift", "calendars-aligned-with-nature", "sidereal-vs-tropical-year"],
+  seeAlso: ["leap-years", "ritu-drift", "calendars-aligned-with-nature", "sidereal-vs-tropical"],
   sections: [
     {
       title: { ne: "सानो त्रुटि, ठूलो परिणाम", en: "Small error, large consequence" },
