@@ -61,7 +61,7 @@ export const uttarayanaDakshinayana: ArticleData = {
             {
               big: "+23.44°",
               label: { ne: "उत्तरतम क्रान्ति", en: "Northernmost declination" },
-              desc: { ne: "ग्रीष्म अयनान्त, ~२१ जुन — उत्तरी गोलार्धमा सबैभन्दा लामो दिन।", en: "Summer solstice, ~21 June — the longest day in the northern hemisphere." },
+              desc: { ne: "ग्रीष्म अयनान्त, ~असार ६–७ — उत्तरी गोलार्धमा सबैभन्दा लामो दिन।", en: "Summer solstice, ~21 June — the longest day in the northern hemisphere." },
             },
             {
               big: "0°",
@@ -71,14 +71,14 @@ export const uttarayanaDakshinayana: ArticleData = {
             {
               big: "−23.44°",
               label: { ne: "दक्षिणतम क्रान्ति", en: "Southernmost declination" },
-              desc: { ne: "शीत अयनान्त, ~२२ डिसेम्बर — सबैभन्दा छोटो दिन।", en: "Winter solstice, ~22 December — the shortest day." },
+              desc: { ne: "शीत अयनान्त, ~पुष ६–७ — सबैभन्दा छोटो दिन।", en: "Winter solstice, ~22 December — the shortest day." },
             },
           ],
         },
         {
           kind: "para",
           text: {
-            ne: "अयनान्त भनेको क्रान्ति **चरम बिन्दुमा पुगेर फर्किने क्षण** हो। त्यसैले अयन (उत्तरायण/दक्षिणायन) को वास्तविक सन्धि अयनान्तमै हुन्छ — डिसेम्बर र जुनमा।",
+            ne: "अयनान्त भनेको क्रान्ति **चरम बिन्दुमा पुगेर फर्किने क्षण** हो। त्यसैले अयन (उत्तरायण/दक्षिणायन) को वास्तविक सन्धि अयनान्तमै हुन्छ — पुष र असारमा।",
             en: "A solstice is the moment declination **reaches its extreme and reverses**. So the true turn between the ayanas happens at the solstices — in December and June.",
           },
         },
@@ -105,13 +105,13 @@ export const uttarayanaDakshinayana: ArticleData = {
           rows: [
             [
               { ne: "उत्तरायण", en: "Uttarāyaṇa" },
-              { ne: "मकर सङ्क्रान्ति · ~१४ जनवरी", en: "Makara Sankranti · ~14 Jan" },
-              { ne: "शीत अयनान्त · ~२२ डिसेम्बर", en: "Winter solstice · ~22 Dec" },
+              { ne: "मकर सङ्क्रान्ति · माघ १", en: "Makara Sankranti · ~14 Jan" },
+              { ne: "शीत अयनान्त · ~पुष ६–७", en: "Winter solstice · ~22 Dec" },
             ],
             [
               { ne: "दक्षिणायन", en: "Dakṣiṇāyana" },
-              { ne: "कर्क सङ्क्रान्ति · ~१६ जुलाई", en: "Karka Sankranti · ~16 Jul" },
-              { ne: "ग्रीष्म अयनान्त · ~२१ जुन", en: "Summer solstice · ~21 Jun" },
+              { ne: "कर्क सङ्क्रान्ति · साउन १", en: "Karka Sankranti · ~16 Jul" },
+              { ne: "ग्रीष्म अयनान्त · ~असार ६–७", en: "Summer solstice · ~21 Jun" },
             ],
           ],
         },

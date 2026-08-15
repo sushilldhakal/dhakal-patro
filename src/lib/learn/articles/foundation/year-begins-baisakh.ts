@@ -145,7 +145,7 @@ Aries    Taurus     Gemini    Cancer                Pisces
         {
           kind: "para",
           text: {
-            ne: "सायन प्रणालीमा मेषको आरम्भ वसन्त विषुव (~२१ मार्च) मा पर्छ। निरयन प्रणालीमा त्यही बिन्दु ~अयनांश~ (अहिले करिब `२४°`) ले पछाडि सरेको हुन्छ — र `२४°` सूर्यले पार गर्न झन्डै `२४` दिन लाग्छ। त्यसैले नयाँ वर्ष मार्चको अन्त्यमा नभई अप्रिल मध्यमा पर्छ।",
+            ne: "सायन प्रणालीमा मेषको आरम्भ वसन्त विषुव (करिब २१ मार्च) मा पर्छ। निरयन प्रणालीमा त्यही बिन्दु ~अयनांश~ (अहिले करिब `२४°`) ले पछाडि सरेको हुन्छ — र `२४°` सूर्यले पार गर्न झन्डै `२४` दिन लाग्छ। त्यसैले नयाँ वर्ष मार्चको अन्त्यमा नभई अप्रिल मध्यमा पर्छ।",
             en: "In the tropical system the start of Mesha coincides with the vernal equinox (about 21 March). In the sidereal system that same point sits behind it by the ~ayanamsha~ — currently about `24°` — and the Sun needs roughly `24` days to cover `24°`. Hence a mid-April new year rather than a late-March one.",
           },
         },
