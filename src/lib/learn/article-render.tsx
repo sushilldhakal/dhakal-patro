@@ -17,6 +17,11 @@ import {
   tmCardCap,
   tmFcard,
   tmFigure,
+  tmCalc,
+  tmCalcEg,
+  tmCalcResult,
+  tmCalcRule,
+  tmCalcWhere,
   tmFigurePre,
   tmFormula,
   tmInkAmber,
@@ -203,6 +208,41 @@ function BlockView({ block, lang }: { block: Block; lang: Lang }) {
         <div>
           <div className={tmFigure}>
             <pre className={tmFigurePre}>{block.art}</pre>
+          </div>
+          {block.caption && <p className={tmCardCap}>{pick(lang, block.caption)}</p>}
+        </div>
+      );
+
+    case "calc":
+      return (
+        <div>
+          <div className={tmCalc}>
+            <div className={tmCalcRule}>
+              {block.rule.map((line) => (
+                <div key={line.en || line.ne}>{richText(pick(lang, line))}</div>
+              ))}
+            </div>
+            {block.where && (
+              <dl className={tmCalcWhere}>
+                {block.where.map((w) => (
+                  <div key={w.sym}>
+                    <dt>{w.sym}</dt>
+                    <dd>{richText(pick(lang, w.is))}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {block.example && (
+              <div className={tmCalcEg}>
+                {block.example.map((row) => (
+                  <div key={row.k.en || row.k.ne}>
+                    <span>{richText(pick(lang, row.k))}</span>
+                    <span>{cellText(lang, row.v)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {block.result && <div className={tmCalcResult}>{richText(pick(lang, block.result))}</div>}
           </div>
           {block.caption && <p className={tmCardCap}>{pick(lang, block.caption)}</p>}
         </div>

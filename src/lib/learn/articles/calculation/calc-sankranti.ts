@@ -16,20 +16,19 @@ export const calcSankranti: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `f(t) = सूर्यको निरयन देशान्तर − लक्ष्य कोण
-       sidereal solar longitude − target degree
-
-  f(t)
-   +  │        ╱
-      │      ╱
-   0  ├────●────────  ← f(t) = 0 यहीँ सङ्क्रान्ति / here is the sankranti
-      │  ╱
-   −  │╱
-      └────────────── t`,
-          caption: {
-            ne: "फलनको चिन्ह बदलिने ठाउँ नै सङ्क्रान्तिको क्षण हो।",
-            en: "Where the function changes sign is the instant of the sankranti.",
+          kind: "calc",
+          rule: [
+            { ne: "f(t) = सूर्यको निरयन देशान्तर(t) − लक्ष्य कोण", en: "f(t) = sidereal solar longitude(t) − target degree" },
+            { ne: "सङ्क्रान्ति = त्यो t जहाँ f(t) = `०`", en: "the sankranti is the t at which f(t) = `0`" },
+          ],
+          where: [
+            { sym: "t", is: { ne: "समय — सामान्यतया जुलियन दिनमा", en: "time, usually as a Julian day" } },
+            { sym: "0°", is: { ne: "मेष सङ्क्रान्ति — बैशाख १", en: "Mesha Sankranti — बैशाख १" } },
+            { sym: "270°", is: { ne: "मकर सङ्क्रान्ति — माघ १", en: "Makara Sankranti — माघ १" } },
+          ],
+          result: {
+            ne: "सूर्यको देशान्तर एकनासले बढ्ने भएकाले f(t) एकदिशीय हुन्छ — त्यसैले जरा एउटै हुन्छ र **द्विभाजन** वा **न्यूटन** विधिले केही पुनरावृत्तिमै सेकेन्डको शुद्धतामा भेटिन्छ।",
+            en: "Because solar longitude increases monotonically, f(t) crosses zero exactly once — so **bisection** or **Newton's method** finds the root to second-level precision in a handful of iterations.",
           },
         },
         {

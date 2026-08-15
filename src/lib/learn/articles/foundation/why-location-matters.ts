@@ -60,20 +60,8 @@ export const whyLocationMatters: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `      04:30                05:45                          अर्को सूर्योदय
-        │                    │                                  │
-   ─────┼────────────────────┼──────────────────────────────────┼─────▶
-        │                    │                                  │
-   तिथि परिवर्तन        सूर्योदय / sunrise                next sunrise
-   tithi changes            │
-                            ▼
-              सूर्योदयमा जुन तिथि छ = आजको पञ्चाङ्ग तिथि
-              the tithi at sunrise = today's panchanga tithi`,
-          caption: {
-            ne: "तिथि ०४:३० मा बदलिए पनि, सूर्योदय ०५:४५ मा हुँदा त्यसपछिको तिथि दिनभरिको पञ्चाङ्ग तिथि बन्छ।",
-            en: "Even though the tithi changed at 04:30, sunrise at 05:45 means the new tithi is the one assigned to the whole panchanga day.",
-          },
+          kind: "diagram",
+          id: "sunrise-samples-tithi",
         },
         {
           kind: "para",

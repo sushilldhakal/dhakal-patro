@@ -16,20 +16,20 @@ export const calcYoga: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `YOGA_SPAN = 360° / 27 = 13°20′   (नक्षत्रकै जस्तै / same as nakshatra)
-
-योग / yoga = ⌊ ((सूर्य + चन्द्र) mod 360°) / 13°20′ ⌋ + 1
-             ⌊ ((Sun + Moon) mod 360°) / 13°20′ ⌋ + 1
-
-उदाहरण / example:
-   सूर्य / Sun   =  38.1°
-   चन्द्र / Moon = 152.4°
-   जोड / sum     = 190.5°
-   190.5 / 13.3333 = 14.29  →  योग 15`,
-          caption: {
-            ne: "जोड पनि ३६०° मा बेरिन्छ — त्यसैले mod आवश्यक हुन्छ।",
-            en: "The sum also wraps at 360°, so the modulo is needed.",
+          kind: "calc",
+          rule: [
+            { ne: "योगको चौडाइ = `३६०° ÷ २७` = `१३°२०′` — नक्षत्रकै जत्रो", en: "yoga span = `360° ÷ 27` = `13°20′` — the same as a nakshatra" },
+            { ne: "योग = ((सूर्य + चन्द्र) mod `३६०°` ÷ `१३°२०′`) को पूर्णांक भाग + `१`", en: "yoga = integer part of ((Sun + Moon) mod `360°` ÷ `13°20′`) + `1`" },
+          ],
+          example: [
+            { k: { ne: "सूर्यको देशान्तर", en: "Sun's longitude" }, v: "38.1°" },
+            { k: { ne: "चन्द्रको देशान्तर", en: "Moon's longitude" }, v: "152.4°" },
+            { k: { ne: "जोड", en: "sum" }, v: "190.5°" },
+            { k: { ne: "१९०.५ ÷ १३.३३३३", en: "190.5 ÷ 13.3333" }, v: "14.29" },
+          ],
+          result: {
+            ne: "पूर्णांक भाग `१४` + `१` = **योग १५**। तिथिले घटाउ प्रयोग गर्छ, योगले **जोड** — यही एउटा फरक हो।",
+            en: "Integer part `14` + `1` = **yoga 15**. A tithi uses the difference, a yoga the **sum** — that is the only difference between them.",
           },
         },
       ],

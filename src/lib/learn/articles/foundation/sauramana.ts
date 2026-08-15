@@ -51,6 +51,10 @@ export const sauramana: ArticleData = {
             },
           ],
         },
+        {
+          kind: "diagram",
+          id: "solar-month-lengths",
+        },
       ],
     },
     {

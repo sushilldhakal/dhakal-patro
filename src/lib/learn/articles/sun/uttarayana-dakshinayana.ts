@@ -1,8 +1,17 @@
 import type { ArticleData } from "../../article-schema";
 
+/**
+ * The two अयन, and why the traditional gate is no longer the astronomical one.
+ *
+ * Absorbed `sankranti-vs-solstice`, which was arguing the same case from the
+ * other end: that article existed to say a सङ्क्रान्ति and an अयनान्त answer
+ * different questions, and this one existed to say the अयन turn moved off the
+ * सङ्क्रान्ति. That is one argument, and it reads better without the seam —
+ * longitude against declination, then the ~२४ day gap that follows from it.
+ */
 export const uttarayanaDakshinayana: ArticleData = {
   slug: "uttarayana-dakshinayana",
-  seeAlso: ["declination", "makara-sankranti", "karka-sankranti", "solstices"],
+  seeAlso: ["equinox-solstice", "makara-sankranti", "sidereal-vs-tropical", "ritu-drift"],
   sections: [
     {
       title: { ne: "सूर्यको उत्तर–दक्षिण यात्रा", en: "The Sun's north–south journey" },
@@ -36,11 +45,7 @@ export const uttarayanaDakshinayana: ArticleData = {
         },
         {
           kind: "diagram",
-          id: "earth-rotation",
-          caption: {
-            ne: "पृथ्वीको झुकिएको अक्षले सूर्यलाई वर्षभरि उत्तर–दक्षिण सारेको देखाउँछ।",
-            en: "Earth's tilted axis is what makes the Sun appear to swing north and south through the year.",
-          },
+          id: "declination-year",
         },
       ],
     },
@@ -78,8 +83,47 @@ export const uttarayanaDakshinayana: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "अयनान्त भनेको क्रान्ति **चरम बिन्दुमा पुगेर फर्किने क्षण** हो। त्यसैले अयन (उत्तरायण/दक्षिणायन) को वास्तविक सन्धि अयनान्तमै हुन्छ — पुष र असारमा।",
-            en: "A solstice is the moment declination **reaches its extreme and reverses**. So the true turn between the ayanas happens at the solstices — in December and June.",
+            ne: "अयनान्त भनेको क्रान्ति **चरम बिन्दुमा पुगेर फर्किने क्षण** हो। त्यसैले अयनको वास्तविक सन्धि अयनान्तमै हुन्छ — पुष र असारमा। विषुव त बाटोको बीचमा पर्ने बिन्दु हो, जहाँ सूर्य सबैभन्दा छिटो हिँडिरहेको हुन्छ।",
+            en: "A solstice is the moment declination **reaches its extreme and reverses**. So the true hinge of an ayana is a solstice — in पुष and असार. An equinox is a midpoint along the way, where the Sun happens to be moving fastest.",
+          },
+        },
+      ],
+    },
+    {
+      title: { ne: "सङ्क्रान्ति र अयनान्त — दुई फरक नाप", en: "Sankranti and solstice measure different things" },
+      eyebrow: "Longitude vs declination",
+      blocks: [
+        {
+          kind: "lede",
+          text: {
+            ne: "सङ्क्रान्ति र अयनान्त दुवै सूर्यसँग सम्बन्धित छन्, र कहिलेकाहीँ नजिक पनि पर्छन् — तर यी **फरक सन्दर्भ प्रणालीमा** परिभाषित छन्।",
+            en: "Both a sankranti and a solstice concern the Sun, and they sometimes fall close together — but they are defined in **different reference systems**.",
+          },
+        },
+        {
+          kind: "keys",
+          items: [
+            {
+              h: { ne: "सङ्क्रान्ति", en: "Sankranti" },
+              p: {
+                ne: "प्रश्न: *सूर्य ताराको सापेक्ष कहाँ छ?* उत्तर देशान्तरमा — `३०°` को सीमा नाघ्नु।",
+                en: "The question is *where is the Sun against the stars?* — answered in longitude, at a `30°` boundary.",
+              },
+            },
+            {
+              h: { ne: "अयनान्त", en: "Solstice" },
+              p: {
+                ne: "प्रश्न: *सूर्य विषुवत् रेखाभन्दा कति उत्तर वा दक्षिण छ?* उत्तर क्रान्तिमा — चरम `±२३.४४°`।",
+                en: "The question is *how far north or south of the equator is the Sun?* — answered in declination, at the extreme of `±23.44°`.",
+              },
+            },
+          ],
+        },
+        {
+          kind: "para",
+          text: {
+            ne: "एउटा **कहाँ** भन्ने प्रश्न हो, अर्को **कति माथि/तल** भन्ने। यी दुई नाप एकअर्कासँग बाँधिएका छैनन् — त्यसैले तिनका मिति पनि सधैँ सँगै चल्दैनन्।",
+            en: "One asks **where along**, the other asks **how far above or below**. The two measurements are not locked to each other — so neither are their dates.",
           },
         },
       ],
@@ -116,10 +160,61 @@ export const uttarayanaDakshinayana: ArticleData = {
           ],
         },
         {
+          kind: "para",
+          text: {
+            ne: "यो अन्तर सधैँ थिएन। जब अयनांश शून्य थियो — झन्डै `२८५` ई.मा — सायन र निरयन राशिचक्र ठ्याक्कै मिलेका थिए, र मकर सङ्क्रान्ति शीत अयनान्तकै दिन पर्थ्यो।",
+            en: "The gap was not always there. When the ayanamsha was zero — around `285` CE — the tropical and sidereal zodiacs lined up exactly, and Makara Sankranti fell on the winter solstice itself.",
+          },
+        },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+        },
+        {
           kind: "note",
           text: {
-            ne: "यो `~२४` दिनको फरक त्रुटि होइन — अयन चलनको सञ्चित परिणाम हो। कुनै समय दुवै एउटै दिन पर्थे; अब पर्दैनन्, र भविष्यमा झन् टाढा हुँदै जानेछन्।",
-            en: "That `~24`-day gap is not an error but the accumulated effect of precession. The two once fell on the same day; they no longer do, and they will keep drifting further apart.",
+            ne: "यसैले पुराना ग्रन्थमा “मकर सङ्क्रान्तिमा सूर्य उत्तर लाग्छ” लेखिएको भेटिन्छ — त्यो लेखिँदा **ठ्याक्कै सही** थियो। यो `~२४` दिनको फरक त्रुटि होइन, अयन चलनको सञ्चित परिणाम हो, र भविष्यमा झन् बढ्दै जानेछ।",
+            en: "So when older texts say the Sun turns north at Makara Sankranti, they were **exactly right** when written. The `~24`-day gap is not an error but the accumulated effect of precession, and it will keep widening.",
+          },
+        },
+      ],
+    },
+    {
+      title: { ne: "किन दुवै राख्ने", en: "Why keep both" },
+      eyebrow: "Each does a job",
+      blocks: [
+        {
+          kind: "lede",
+          text: {
+            ne: "यदि दुई प्रणाली छुट्टिँदै छन् भने एउटा छाडे हुँदैन? हुँदैन — किनभने दुवैले फरक काम गर्छन्।",
+            en: "If the two systems are drifting apart, why not drop one? Because each does a different job.",
+          },
+        },
+        {
+          kind: "table",
+          headers: [
+            { ne: "कामका लागि", en: "For" },
+            { ne: "कुन प्रणाली", en: "Which system" },
+            { ne: "किन", en: "Why" },
+          ],
+          rows: [
+            [
+              { ne: "ऋतु, कृषि, दिनको लम्बाइ", en: "Seasons, farming, day length" },
+              { ne: "सायन (अयनान्त–विषुव)", en: "Tropical (solstice–equinox)" },
+              { ne: "यी सूर्यको क्रान्तिमा निर्भर छन्।", en: "These depend on the Sun's declination." },
+            ],
+            [
+              { ne: "महिना, गते, ग्रह स्थिति", en: "Months, gate, planetary positions" },
+              { ne: "निरयन (राशि–सङ्क्रान्ति)", en: "Sidereal (rashi–sankranti)" },
+              { ne: "यी ताराको सन्दर्भमा नापिन्छन्।", en: "These are measured against the stars." },
+            ],
+          ],
+        },
+        {
+          kind: "note",
+          text: {
+            ne: "पञ्चाङ्गले दुवै बोक्छ — ऋतुको हिसाब सायनबाट, महिनाको हिसाब निरयनबाट। भ्रम तब मात्र हुन्छ जब एउटा प्रणालीको नामलाई अर्को प्रणालीको घटना ठानिन्छ।",
+            en: "A panchanga carries both — ṛtus from the tropical frame, months from the sidereal one. Confusion arises only when a name from one system is mistaken for an event in the other.",
           },
         },
       ],

@@ -14,7 +14,6 @@ import {
   Crosshair,
   Eclipse,
   Eye,
-  Flame,
   Gauge,
   GitCompare,
   Globe,
@@ -102,12 +101,12 @@ export interface LibrarySection {
 
 export const LEARN_SECTIONS: LibrarySection[] = [
   {
-    id: "foundation",
-    icon: Globe,
-    title: { ne: "आधार", en: "Foundation" },
+    id: "start",
+    icon: Compass,
+    title: { ne: "सुरुवात", en: "Start Here" },
     blurb: {
-      ne: "आकाशको चिनारीदेखि सुरु — पात्रो कसरी बन्छ, विक्रम सम्वत् के हो, र सौर–चान्द्र दुई मापन प्रणाली।",
-      en: "Starting from the sky itself — how a calendar is built, what Bikram Sambat is, and the two systems of measuring time.",
+      ne: "पात्रो भनेको के हो, दिन कसरी नापिन्छ, विक्रम सम्वत् र पञ्चाङ्ग के हुन् — बाँकी सबै यहीँबाट सुरु हुन्छ।",
+      en: "What a calendar is, how a day is measured, what Bikram Sambat and a panchanga are — everything else starts here.",
     },
   },
   {
@@ -120,48 +119,39 @@ export const LEARN_SECTIONS: LibrarySection[] = [
     },
   },
   {
+    id: "coordinates",
+    icon: Grid2x2,
+    title: { ne: "आकाशीय ढाँचा", en: "The Celestial Frame" },
+    blurb: {
+      ne: "क्रान्तिवृत्त, खगोलीय विषुवत् रेखा, राशि पट्टी र आकाशमा कुनै वस्तुको स्थान नाप्ने निर्देशांक।",
+      en: "The ecliptic, the celestial equator, the zodiac belt and the coordinates that pin a position in the sky.",
+    },
+  },
+  {
     id: "sun",
     icon: Sun,
-    title: { ne: "सूर्य", en: "The Sun" },
+    title: { ne: "सूर्य र सौरमान", en: "The Sun and the Solar Month" },
     blurb: {
       ne: "राशि, सङ्क्रान्ति, अयन र सायन–निरयन राशिचक्र — सौर पात्रोको सम्पूर्ण आधार।",
       en: "Rashi, sankranti, the ayanas and the two zodiacs — everything the solar calendar rests on.",
     },
   },
   {
-    id: "zodiac",
-    icon: Grid2x2,
-    title: { ne: "राशि र आकाशीय समन्वय", en: "The Zodiac and Celestial Coordinates" },
-    blurb: {
-      ne: "क्रान्तिवृत्त, खगोलीय विषुवत् रेखा, राशि पट्टी र आकाशमा स्थान नाप्ने ढाँचा।",
-      en: "The ecliptic, the celestial equator, the zodiac belt and the frame that measures position in the sky.",
-    },
-  },
-  {
     id: "moon",
     icon: Moon,
-    title: { ne: "चन्द्र", en: "The Moon" },
+    title: { ne: "चन्द्र र चान्द्रमान", en: "The Moon and the Lunar Month" },
     blurb: {
       ne: "तिथि, पक्ष, चान्द्र मास र अधिक–क्षय मास — चन्द्रले पात्रोमा ल्याउने लय।",
       en: "Tithi, paksha, the lunar month and the extra or skipped month the Moon brings.",
     },
   },
   {
-    id: "five-limbs",
+    id: "panchanga",
     icon: ScrollText,
-    title: { ne: "पञ्चाङ्गका पाँच अङ्ग", en: "The Five Limbs" },
+    title: { ne: "पञ्चाङ्ग", en: "The Panchanga" },
     blurb: {
-      ne: "वार, नक्षत्र, योग र करण — पाँच अङ्ग र तिनको पारस्परिक सम्बन्ध।",
-      en: "Vara, nakshatra, yoga and karana — the five limbs and how they work together.",
-    },
-  },
-  {
-    id: "vedic-time",
-    icon: Hourglass,
-    title: { ne: "वैदिक समय", en: "Vedic Time Divisions" },
-    blurb: {
-      ne: "होरा, दिनमान–रात्रिमान, मुहूर्त र घटी–पला — दिनभित्रका परम्परागत समय एकाइ।",
-      en: "Hora, day and night lengths, muhurta and ghati — the traditional units inside a day.",
+      ne: "वार, नक्षत्र, योग, करण — पाँच अङ्ग, तिनको पारस्परिक सम्बन्ध र दिनभित्रका परम्परागत समय एकाइ।",
+      en: "Vara, nakshatra, yoga and karana — the five limbs, how they interlock, and the traditional units inside a day.",
     },
   },
   {
@@ -176,37 +166,28 @@ export const LEARN_SECTIONS: LibrarySection[] = [
   {
     id: "calculation",
     icon: Calculator,
-    title: { ne: "गणना कसरी हुन्छ", en: "How a Date Is Calculated" },
+    title: { ne: "गणना", en: "How a Date Is Calculated" },
     blurb: {
-      ne: "सूर्योदय, सङ्क्रान्ति, तिथि, नक्षत्र — Vedic Patro भित्रको वास्तविक गणना।",
-      en: "Sunrise, sankranti, tithi, nakshatra — the actual computation inside Vedic Patro.",
-    },
-  },
-  {
-    id: "eclipses",
-    icon: Eclipse,
-    title: { ne: "ग्रहण", en: "Eclipses" },
-    blurb: {
-      ne: "राहु–केतु, पात रेखा, सूर्यग्रहण र चन्द्रग्रहणको ज्यामिति।",
-      en: "Rahu–Ketu, the node line, and the geometry of solar and lunar eclipses.",
+      ne: "सूर्योदय, सङ्क्रान्ति, तिथि र नक्षत्र — प्रत्येक अङ्क कुन सूत्र र कुन ग्रहपातबाट आउँछ।",
+      en: "Sunrise, sankranti, tithi and nakshatra — which formula and which ephemeris each number comes from.",
     },
   },
   {
     id: "deeper",
     icon: Telescope,
-    title: { ne: "गहन खगोल विज्ञान", en: "Deeper Astronomy" },
+    title: { ne: "गहिराइ", en: "Going Deeper" },
     blurb: {
-      ne: "भूकेन्द्रित दृष्टिकोण, ग्रह गति, वक्री गति, अयन चलन र सूर्य सिद्धान्त।",
-      en: "The geocentric frame, planetary motion, retrogression, precession and the Surya Siddhanta.",
+      ne: "भूकेन्द्रित र सूर्यकेन्द्रित दृष्टि, वक्री गति, अयन चलन, ग्रहण — पात्रोभन्दा पर खगोलशास्त्र।",
+      en: "Geocentric and heliocentric views, retrograde motion, precession and eclipses — the astronomy beyond the calendar.",
     },
   },
   {
     id: "comparison",
     icon: GitCompare,
-    title: { ne: "पात्रो तुलना", en: "Calendar Comparison" },
+    title: { ne: "तुलना र इतिहास", en: "Comparison and History" },
     blurb: {
-      ne: "वैदिक, ग्रेगोरियन, सौर र चान्द्र पात्रोको आमनेसामने तुलना।",
-      en: "The Vedic, Gregorian, solar and lunar calendars side by side.",
+      ne: "नेपाली, वैदिक र ग्रेगोरियन पात्रो आमनेसामने — लीप वर्ष, चलन र प्राचीन पात्रोको इतिहास।",
+      en: "The Nepali, Vedic and Gregorian calendars side by side — leap years, drift, and where ancient calendars came from.",
     },
   },
 ];
@@ -216,10 +197,10 @@ export const LEARN_SECTIONS: LibrarySection[] = [
 /* ------------------------------------------------------------------ */
 
 export const LEARN_LIBRARY: LibraryTopic[] = [
-  /* ── 🌍 FOUNDATION ────────────────────────────────────────────────── */
+  /* ── 🧭 START HERE ────────────────────────────────────────────────── */
   {
     slug: "astronomy-basics",
-    section: "foundation",
+    section: "start",
     status: "published",
     icon: Eye,
     title: { ne: "गहिरो जानुअघि — खगोलीय आधार", en: "Before Going Deeper — Sky Basics" },
@@ -229,19 +210,8 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "nepali-calendar-basics",
-    section: "foundation",
-    status: "published",
-    icon: CalendarDays,
-    title: { ne: "नेपाली पात्रो कसरी चल्छ", en: "How the Nepali Calendar Works" },
-    summary: {
-      ne: "नेपाली पात्रो दिन गन्ने प्रणाली मात्र होइन — खगोलीय गतिबाट बनेको समय प्रणाली हो। सुरुदेखि सम्पूर्ण चित्र।",
-      en: "The Nepali calendar is not a numbering system for days but a time system built from astronomical cycles — the whole picture, from the start.",
-    },
-  },
-  {
     slug: "what-is-a-day",
-    section: "foundation",
+    section: "start",
     status: "published",
     icon: Clock,
     title: { ne: "दिन के हो", en: "What Is a Day?" },
@@ -251,8 +221,19 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
+    slug: "nepali-calendar-basics",
+    section: "start",
+    status: "published",
+    icon: CalendarDays,
+    title: { ne: "नेपाली पात्रो कसरी चल्छ", en: "How the Nepali Calendar Works" },
+    summary: {
+      ne: "नेपाली पात्रो दिन गन्ने प्रणाली मात्र होइन — खगोलीय गतिबाट बनेको समय प्रणाली हो। सुरुदेखि सम्पूर्ण चित्र।",
+      en: "The Nepali calendar is not a numbering system for days but a time system built from astronomical cycles — the whole picture, from the start.",
+    },
+  },
+  {
     slug: "bikram-sambat",
-    section: "foundation",
+    section: "start",
     status: "published",
     icon: CalendarRange,
     title: { ne: "विक्रम सम्वत् के हो", en: "What Is Bikram Sambat?" },
@@ -262,8 +243,19 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
+    slug: "what-is-panchang",
+    section: "start",
+    status: "published",
+    icon: ScrollText,
+    title: { ne: "पञ्चाङ्ग भनेको के हो?", en: "What Is a Panchanga?" },
+    summary: {
+      ne: "तिथि, वार, नक्षत्र, योग र करण — पञ्चाङ्गका पाँच अङ्गको परिचय।",
+      en: "An introduction to the five limbs of the panchanga — tithi, vaara, nakshatra, yoga and karana.",
+    },
+  },
+  {
     slug: "bs-calendar",
-    section: "foundation",
+    section: "start",
     status: "published",
     icon: SunMoon,
     title: {
@@ -277,7 +269,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "sauramana",
-    section: "foundation",
+    section: "start",
     status: "published",
     icon: Sun,
     title: { ne: "सौरमान के हो", en: "What Is Sauramāna?" },
@@ -288,7 +280,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "chandramana",
-    section: "foundation",
+    section: "start",
     status: "published",
     icon: Moon,
     title: { ne: "चान्द्रमान के हो", en: "What Is Chāndramāna?" },
@@ -298,52 +290,8 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "what-is-panchang",
-    section: "foundation",
-    status: "published",
-    icon: ScrollText,
-    title: { ne: "पञ्चाङ्ग भनेको के हो?", en: "What Is a Panchanga?" },
-    summary: {
-      ne: "तिथि, वार, नक्षत्र, योग र करण — पञ्चाङ्गका पाँच अङ्गको परिचय।",
-      en: "An introduction to the five limbs of the panchanga — tithi, vaara, nakshatra, yoga and karana.",
-    },
-  },
-  {
-    slug: "year-begins-baisakh",
-    section: "foundation",
-    status: "published",
-    icon: Sunrise,
-    title: { ne: "नेपाली वर्ष बैशाखमा किन सुरु हुन्छ", en: "Why the Nepali Year Begins in Baisakh" },
-    summary: {
-      ne: "मेष सङ्क्रान्ति — सूर्य मेष राशिमा प्रवेश गर्ने क्षणले सौर वर्षको आरम्भ तय गर्छ, कुनै मनपरी मिति होइन।",
-      en: "Mesha Sankranti — the Sun's entry into Mesha sets the start of the solar year, not an arbitrary chosen date.",
-    },
-  },
-  {
-    slug: "bs-vs-ad",
-    section: "foundation",
-    status: "published",
-    icon: ArrowLeftRight,
-    title: { ne: "बि.सं. र ई.सं. कसरी फरक छन्", en: "BS vs AD: How the Two Calendars Differ" },
-    summary: {
-      ne: "वर्षारम्भ, महिनाको लम्बाइ, दिनको सीमा र आधार — दुई पात्रो कहाँ–कहाँ बाझिन्छन्।",
-      en: "Year start, month length, day boundary and underlying basis — every point where the two calendars part ways.",
-    },
-  },
-  {
-    slug: "bs-ad-offset",
-    section: "foundation",
-    status: "published",
-    icon: Sigma,
-    title: { ne: "बि.सं. र ई.सं.बीच स्थिर फरक किन हुँदैन", en: "Why BS and AD Have No Fixed Offset" },
-    summary: {
-      ne: "“५६–५७ वर्ष अगाडि” अनुमान मात्र हो। मिति = वर्ष + महिना + गते, र प्रत्येकको सीमा फरक नियमले तय हुन्छ।",
-      en: "\"56–57 years ahead\" is a rough guide. A date is year + month + day, and each boundary follows different rules.",
-    },
-  },
-  {
     slug: "why-location-matters",
-    section: "foundation",
+    section: "start",
     status: "published",
     icon: MapPin,
     title: { ne: "पञ्चाङ्गमा स्थानले किन फरक पार्छ", en: "Why Location Matters in a Panchanga" },
@@ -398,47 +346,14 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "equinoxes",
+    slug: "equinox-solstice",
     section: "earth-sky",
     status: "published",
     icon: Scale,
-    title: { ne: "विषुव", en: "Equinoxes Explained" },
+    title: { ne: "विषुव र अयनान्त", en: "Equinoxes and Solstices" },
     summary: {
-      ne: "सूर्य खगोलीय विषुवत् रेखा काट्ने दुई क्षण — दिन र रात बराबर।",
-      en: "The two moments the Sun crosses the celestial equator — day and night in balance.",
-    },
-  },
-  {
-    slug: "solstices",
-    section: "earth-sky",
-    status: "published",
-    icon: Flame,
-    title: { ne: "अयनान्त", en: "Solstices Explained" },
-    summary: {
-      ne: "सूर्यको क्रान्ति उच्चतम वा न्यूनतम हुने क्षण — सबैभन्दा लामो र छोटो दिन।",
-      en: "When the Sun's declination reaches its extreme — the longest and shortest days.",
-    },
-  },
-  {
-    slug: "solar-longitude",
-    section: "earth-sky",
-    status: "published",
-    icon: Navigation,
-    title: { ne: "सूर्यको देशान्तर", en: "Solar Longitude" },
-    summary: {
-      ne: "क्रान्तिवृत्तमा सूर्यको ०–३६०° स्थान — गते र सङ्क्रान्ति यहीँबाट निस्कन्छ।",
-      en: "The Sun's 0–360° place on the ecliptic — where gate and sankranti come from.",
-    },
-  },
-  {
-    slug: "lunar-longitude",
-    section: "earth-sky",
-    status: "published",
-    icon: Locate,
-    title: { ne: "चन्द्रको देशान्तर", en: "Lunar Longitude" },
-    summary: {
-      ne: "क्रान्तिवृत्तमा चन्द्रको स्थान — तिथि, नक्षत्र र योगको इनपुट।",
-      en: "The Moon's place on the ecliptic — the input to tithi, nakshatra and yoga.",
+      ne: "सूर्यको क्रान्ति वर्षभरि ±२३.४४° झुल्छ — विषुव त्यो झुलाइले शून्य काट्ने बिन्दु, अयनान्त त्यो फर्किने बिन्दु।",
+      en: "The Sun's declination swings ±23.44° through the year — an equinox is where that swing crosses zero, a solstice is where it turns.",
     },
   },
   {
@@ -463,7 +378,96 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "Daily rotation, the poles, and how the view of the sky changes with latitude.",
     },
   },
-  /* ── ☀️ THE SUN ──────────────────────────────────────────────────── */
+  /* ── ♈ THE CELESTIAL FRAME ───────────────────────────────────────── */
+  {
+    slug: "celestial-sphere",
+    section: "coordinates",
+    status: "published",
+    icon: Globe,
+    title: { ne: "खगोलीय गोला", en: "The Celestial Sphere" },
+    summary: {
+      ne: "आकाशलाई गोलाकार मानी स्थान नाप्ने ढाँचा।",
+      en: "The frame that treats the sky as a sphere so positions can be measured.",
+    },
+  },
+  {
+    slug: "ecliptic",
+    section: "coordinates",
+    status: "published",
+    icon: Spline,
+    title: { ne: "क्रान्तिवृत्त", en: "The ecliptic" },
+    summary: {
+      ne: "सूर्यको वार्षिक मार्ग — राशि र नक्षत्र यसैमा नापिन्छन्।",
+      en: "The Sun's annual path — the line along which rashi and nakshatra are measured.",
+    },
+  },
+  {
+    slug: "celestial-equator",
+    section: "coordinates",
+    status: "published",
+    icon: Scale,
+    title: { ne: "खगोलीय विषुवत् रेखा", en: "The Celestial Equator" },
+    summary: {
+      ne: "पृथ्वीको विषुवत् रेखाको आकाशीय प्रक्षेप — विषुव यहीँ बन्छ।",
+      en: "Earth's equator projected onto the sky — where the equinoxes are defined.",
+    },
+  },
+  {
+    slug: "zodiac-belt",
+    section: "coordinates",
+    status: "published",
+    icon: Grid2x2,
+    title: { ne: "राशि पट्टी", en: "The Zodiac Belt" },
+    summary: {
+      ne: "क्रान्तिवृत्तको दुईतिर ~९° को पट्टी जहाँ सूर्य, चन्द्र र ग्रह हिँड्छन्।",
+      en: "The ~9° band either side of the ecliptic in which Sun, Moon and planets travel.",
+    },
+  },
+  {
+    slug: "right-ascension",
+    section: "coordinates",
+    status: "published",
+    icon: Pi,
+    title: { ne: "विषुवांश (Right Ascension)", en: "Right Ascension" },
+    summary: {
+      ne: "विषुवत् प्रणालीको देशान्तर — घण्टामा नापिने आकाशीय समन्वय।",
+      en: "Longitude in the equatorial system — a celestial coordinate measured in hours.",
+    },
+  },
+  {
+    slug: "sidereal-time",
+    section: "coordinates",
+    status: "published",
+    icon: Timer,
+    title: { ne: "नाक्षत्र काल", en: "Sidereal Time" },
+    summary: {
+      ne: "ताराको सापेक्ष नापिने समय — लग्न र भाव गणनाको आधार।",
+      en: "Time measured against the stars — the basis of lagna and house calculation.",
+    },
+  },
+  {
+    slug: "solar-longitude",
+    section: "coordinates",
+    status: "published",
+    icon: Navigation,
+    title: { ne: "सूर्यको देशान्तर", en: "Solar Longitude" },
+    summary: {
+      ne: "क्रान्तिवृत्तमा सूर्यको ०–३६०° स्थान — गते र सङ्क्रान्ति यहीँबाट निस्कन्छ।",
+      en: "The Sun's 0–360° place on the ecliptic — where gate and sankranti come from.",
+    },
+  },
+  {
+    slug: "lunar-longitude",
+    section: "coordinates",
+    status: "published",
+    icon: Locate,
+    title: { ne: "चन्द्रको देशान्तर", en: "Lunar Longitude" },
+    summary: {
+      ne: "क्रान्तिवृत्तमा चन्द्रको स्थान — तिथि, नक्षत्र र योगको इनपुट।",
+      en: "The Moon's place on the ecliptic — the input to tithi, nakshatra and yoga.",
+    },
+  },
+  /* ── ☀️ THE SUN AND THE SOLAR MONTH ──────────────────────────────── */
   {
     slug: "solar-year",
     section: "sun",
@@ -484,17 +488,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "राशिचक्रको ३०° को एक भाग — आकाशीय देशान्तर नाप्ने समन्वय प्रणाली।",
       en: "A 30° division of the zodiac — the coordinate frame for describing celestial longitude.",
-    },
-  },
-  {
-    slug: "twelve-rashis",
-    section: "sun",
-    status: "published",
-    icon: Grid2x2,
-    title: { ne: "बाह्र राशिको परिचय", en: "The 12 Rashis Explained" },
-    summary: {
-      ne: "मेषदेखि मीनसम्म — प्रत्येक राशिको संस्कृत नाम, पश्चिमी समकक्ष र सीमा।",
-      en: "Mesha to Meena — each rashi's Sanskrit name, Western equivalent and boundaries.",
     },
   },
   {
@@ -520,39 +513,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "sidereal-vs-tropical",
-    section: "sun",
-    status: "published",
-    icon: Compass,
-    title: { ne: "निरयन र सायन राशिचक्र", en: "Sidereal vs Tropical Zodiac" },
-    summary: {
-      ne: "ताराको सन्दर्भ vs विषुवको सन्दर्भ — भारतीय पात्रो ग्रेगोरियन ऋतु ढाँचाभन्दा किन फरक छ।",
-      en: "A stellar reference against an equinox reference — why Indian calendars differ from the Gregorian seasonal frame.",
-    },
-  },
-  {
-    slug: "ayanamsha",
-    section: "sun",
-    status: "published",
-    icon: Compass,
-    title: { ne: "अयनांश", en: "Ayanamsha (Lahiri, Raman, KP)" },
-    summary: {
-      ne: "सायन र निरयन राशिबीचको फरक र तीन प्रमुख अयनांश प्रणाली।",
-      en: "The difference between the tropical and sidereal zodiac and the three main ayanamsha systems.",
-    },
-  },
-  {
-    slug: "uttarayana-dakshinayana",
-    section: "sun",
-    status: "published",
-    icon: TrendingUp,
-    title: { ne: "उत्तरायण र दक्षिणायन", en: "Uttarāyaṇa and Dakṣiṇāyana" },
-    summary: {
-      ne: "सूर्यको उत्तर–दक्षिण यात्राका दुई आधावार्षिक चरण, र क्रान्ति (declination) सँगको सम्बन्ध।",
-      en: "The two half-year phases of the Sun's north–south journey, and how they relate to declination.",
-    },
-  },
-  {
     slug: "makara-sankranti",
     section: "sun",
     status: "published",
@@ -575,14 +535,36 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "sankranti-vs-solstice",
+    slug: "uttarayana-dakshinayana",
     section: "sun",
     status: "published",
-    icon: Split,
-    title: { ne: "सङ्क्रान्ति र अयनान्त — फरक के?", en: "Sankranti vs Solstice" },
+    icon: TrendingUp,
+    title: { ne: "उत्तरायण र दक्षिणायन", en: "Uttarāyaṇa and Dakṣiṇāyana" },
     summary: {
-      ne: "एउटा राशि सीमामा आधारित, अर्को सूर्यको क्रान्तिमा — दुई फरक सन्दर्भ प्रणाली।",
-      en: "One is defined by a zodiac boundary, the other by the Sun's declination — two different reference systems.",
+      ne: "सूर्यको उत्तर–दक्षिण यात्राका दुई आधावार्षिक चरण, र क्रान्ति (declination) सँगको सम्बन्ध।",
+      en: "The two half-year phases of the Sun's north–south journey, and how they relate to declination.",
+    },
+  },
+  {
+    slug: "sidereal-vs-tropical",
+    section: "sun",
+    status: "published",
+    icon: Compass,
+    title: { ne: "निरयन र सायन राशिचक्र", en: "Sidereal vs Tropical Zodiac" },
+    summary: {
+      ne: "ताराको सन्दर्भ vs विषुवको सन्दर्भ — वैदिक पात्रो ग्रेगोरियन ऋतु ढाँचाभन्दा किन फरक छ।",
+      en: "A stellar reference against an equinox reference — why Vedic calendars differ from the Gregorian seasonal frame.",
+    },
+  },
+  {
+    slug: "ayanamsha",
+    section: "sun",
+    status: "published",
+    icon: Compass,
+    title: { ne: "अयनांश", en: "Ayanamsha (Lahiri, Raman, KP)" },
+    summary: {
+      ne: "सायन र निरयन राशिबीचको फरक र तीन प्रमुख अयनांश प्रणाली।",
+      en: "The difference between the tropical and sidereal zodiac and the three main ayanamsha systems.",
     },
   },
   {
@@ -596,74 +578,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "Ṛtu follows the tropical (equinox–solstice) zodiac, months follow the sidereal (sign–sankranti) one — precession shifts them by ~1 day every 72 years; both cannot stay fixed together.",
     },
   },
-  /* ── ♈ THE ZODIAC AND CELESTIAL COORDINATES ──────────────────────── */
-  {
-    slug: "ecliptic",
-    section: "zodiac",
-    status: "published",
-    icon: Spline,
-    title: { ne: "क्रान्तिवृत्त", en: "The ecliptic" },
-    summary: {
-      ne: "सूर्यको वार्षिक मार्ग — राशि र नक्षत्र यसैमा नापिन्छन्।",
-      en: "The Sun's annual path — the line along which rashi and nakshatra are measured.",
-    },
-  },
-  {
-    slug: "celestial-equator",
-    section: "zodiac",
-    status: "published",
-    icon: Scale,
-    title: { ne: "खगोलीय विषुवत् रेखा", en: "The Celestial Equator" },
-    summary: {
-      ne: "पृथ्वीको विषुवत् रेखाको आकाशीय प्रक्षेप — विषुव यहीँ बन्छ।",
-      en: "Earth's equator projected onto the sky — where the equinoxes are defined.",
-    },
-  },
-  {
-    slug: "zodiac-belt",
-    section: "zodiac",
-    status: "published",
-    icon: Grid2x2,
-    title: { ne: "राशि पट्टी", en: "The Zodiac Belt" },
-    summary: {
-      ne: "क्रान्तिवृत्तको दुईतिर ~९° को पट्टी जहाँ सूर्य, चन्द्र र ग्रह हिँड्छन्।",
-      en: "The ~9° band either side of the ecliptic in which Sun, Moon and planets travel.",
-    },
-  },
-  {
-    slug: "celestial-sphere",
-    section: "zodiac",
-    status: "published",
-    icon: Globe,
-    title: { ne: "खगोलीय गोला", en: "The Celestial Sphere" },
-    summary: {
-      ne: "आकाशलाई गोलाकार मानी स्थान नाप्ने ढाँचा।",
-      en: "The frame that treats the sky as a sphere so positions can be measured.",
-    },
-  },
-  {
-    slug: "sidereal-time",
-    section: "zodiac",
-    status: "published",
-    icon: Timer,
-    title: { ne: "नाक्षत्र काल", en: "Sidereal Time" },
-    summary: {
-      ne: "ताराको सापेक्ष नापिने समय — लग्न र भाव गणनाको आधार।",
-      en: "Time measured against the stars — the basis of lagna and house calculation.",
-    },
-  },
-  {
-    slug: "right-ascension",
-    section: "zodiac",
-    status: "published",
-    icon: Pi,
-    title: { ne: "विषुवांश (Right Ascension)", en: "Right Ascension" },
-    summary: {
-      ne: "विषुवत् प्रणालीको देशान्तर — घण्टामा नापिने आकाशीय समन्वय।",
-      en: "Longitude in the equatorial system — a celestial coordinate measured in hours.",
-    },
-  },
-  /* ── 🌙 THE MOON ──────────────────────────────────────────────────── */
+  /* ── 🌙 THE MOON AND THE LUNAR MONTH ──────────────────────────────── */
   {
     slug: "moon-lunar-calendar",
     section: "moon",
@@ -731,25 +646,14 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "tithi-vriddhi",
+    slug: "tithi-vriddhi-kshaya",
     section: "moon",
     status: "published",
     icon: Repeat,
-    title: { ne: "तिथि किन दोहोरिन्छ", en: "Why Tithi Repeats (Vriddhi)" },
+    title: { ne: "तिथि वृद्धि र क्षय", en: "When a Tithi Repeats or Skips" },
     summary: {
-      ne: "चन्द्र मन्द गतिमा हिँड्दा एउटै तिथि किन दुई दिन पर्छ।",
-      en: "Why one tithi spans two days when the Moon moves slowly.",
-    },
-  },
-  {
-    slug: "tithi-kshaya",
-    section: "moon",
-    status: "published",
-    icon: Scissors,
-    title: { ne: "तिथि किन हराउँछ", en: "Why Tithi Skips (Kshaya)" },
-    summary: {
-      ne: "चन्द्र द्रुत गतिमा हिँड्दा कुनै तिथि किन पात्रोबाट हराउँछ।",
-      en: "Why a tithi disappears from the calendar when the Moon moves quickly.",
+      ne: "चन्द्रको गति स्थिर नभएकाले कुनै तिथि दुई दिन देखिन्छ, कुनै पात्रोबाटै हराउँछ — एउटै नियमका दुई पक्ष।",
+      en: "Because the Moon's speed is not constant, a tithi can occupy two days or vanish entirely — two sides of one rule.",
     },
   },
   {
@@ -764,31 +668,20 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "adhik-maas",
+    slug: "adhik-kshaya-maas",
     section: "moon",
     status: "published",
-    icon: Layers,
-    title: { ne: "अधिक मास — थपिने महिना", en: "Adhika Māsa — The Extra Lunar Month" },
+    icon: CalendarRange,
+    title: { ne: "अधिक र क्षय मास", en: "The Extra and the Skipped Month" },
     summary: {
-      ne: "चान्द्र र सौर मासको फरकले किन झन्डै तीन वर्षमा एक महिना थपिन्छ।",
-      en: "Why the gap between lunar and solar months adds an extra month roughly every three years.",
+      ne: "चान्द्र मासभित्र सङ्क्रान्ति गन्नुहोस् — शून्य भए मास दोहोरिन्छ, दुई भए मास घट्छ।",
+      en: "Count the sankrantis inside a lunar month — none doubles it, two drops it.",
     },
   },
-  {
-    slug: "kshaya-maas",
-    section: "moon",
-    status: "published",
-    icon: Scissors,
-    title: { ne: "क्षय मास — घट्ने महिना", en: "Kṣaya Māsa — When a Lunar Month Is Skipped" },
-    summary: {
-      ne: "एउटै चान्द्र मासमा दुई सङ्क्रान्ति पर्दा महिना पात्रोबाट हराउँछ — दुर्लभ अवस्था।",
-      en: "When two sankrantis fall inside one lunar month it drops from the calendar — a rare case.",
-    },
-  },
-  /* ── ⭐ THE FIVE LIMBS ────────────────────────────────────────────── */
+  /* ── ⭐ THE PANCHANGA ─────────────────────────────────────────────── */
   {
     slug: "vara",
-    section: "five-limbs",
+    section: "panchanga",
     status: "published",
     icon: CalendarDays,
     title: { ne: "वार", en: "Vāra — The Weekday" },
@@ -799,7 +692,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "nakshatra",
-    section: "five-limbs",
+    section: "panchanga",
     status: "published",
     icon: Star,
     title: { ne: "नक्षत्र", en: "Nakshatra Explained" },
@@ -810,7 +703,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "yoga",
-    section: "five-limbs",
+    section: "panchanga",
     status: "published",
     icon: Spline,
     title: { ne: "योग", en: "Yoga Explained" },
@@ -821,7 +714,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "karana",
-    section: "five-limbs",
+    section: "panchanga",
     status: "published",
     icon: Scissors,
     title: { ne: "करण", en: "Karana Explained" },
@@ -832,7 +725,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "five-limbs-together",
-    section: "five-limbs",
+    section: "panchanga",
     status: "published",
     icon: Workflow,
     title: { ne: "पाँच अङ्ग सँगै कसरी काम गर्छन्", en: "How the Five Elements Work Together" },
@@ -841,10 +734,9 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "How to read a single day's panchanga line — the five limbs taken together.",
     },
   },
-  /* ── ⏱️ VEDIC TIME DIVISIONS ─────────────────────────────────────── */
   {
     slug: "hora",
-    section: "vedic-time",
+    section: "panchanga",
     status: "published",
     icon: Clock,
     title: { ne: "होरा · ग्रहीय होरा", en: "Planetary Hora (Hours)" },
@@ -855,7 +747,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "day-night-divisions",
-    section: "vedic-time",
+    section: "panchanga",
     status: "planned",
     icon: SunMoon,
     title: { ne: "दिन र रात कसरी बाँडिन्छ", en: "How Day and Night Are Divided" },
@@ -866,7 +758,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "muhurta",
-    section: "vedic-time",
+    section: "panchanga",
     status: "planned",
     icon: Timer,
     title: { ne: "मुहूर्त", en: "Muhurta" },
@@ -877,7 +769,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
   },
   {
     slug: "ghati-pala",
-    section: "vedic-time",
+    section: "panchanga",
     status: "planned",
     icon: Hourglass,
     title: { ne: "घटी, पला र विपला", en: "Ghati, Pala and Vipala" },
@@ -887,6 +779,39 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   /* ── 🇳🇵 HOW BIKRAM SAMBAT IS BUILT ───────────────────────────────── */
+  {
+    slug: "year-begins-baisakh",
+    section: "bs-construction",
+    status: "published",
+    icon: Sunrise,
+    title: { ne: "नेपाली वर्ष बैशाखमा किन सुरु हुन्छ", en: "Why the Nepali Year Begins in Baisakh" },
+    summary: {
+      ne: "मेष सङ्क्रान्ति — सूर्य मेष राशिमा प्रवेश गर्ने क्षणले सौर वर्षको आरम्भ तय गर्छ, कुनै मनपरी मिति होइन।",
+      en: "Mesha Sankranti — the Sun's entry into Mesha sets the start of the solar year, not an arbitrary chosen date.",
+    },
+  },
+  {
+    slug: "bs-vs-ad",
+    section: "bs-construction",
+    status: "published",
+    icon: ArrowLeftRight,
+    title: { ne: "बि.सं. र ई.सं. कसरी फरक छन्", en: "BS vs AD: How the Two Calendars Differ" },
+    summary: {
+      ne: "वर्षारम्भ, महिनाको लम्बाइ, दिनको सीमा र आधार — दुई पात्रो कहाँ–कहाँ बाझिन्छन्।",
+      en: "Year start, month length, day boundary and underlying basis — every point where the two calendars part ways.",
+    },
+  },
+  {
+    slug: "bs-ad-offset",
+    section: "bs-construction",
+    status: "published",
+    icon: Sigma,
+    title: { ne: "बि.सं. र ई.सं.बीच स्थिर फरक किन हुँदैन", en: "Why BS and AD Have No Fixed Offset" },
+    summary: {
+      ne: "“५६–५७ वर्ष अगाडि” अनुमान मात्र हो। मिति = वर्ष + महिना + गते, र प्रत्येकको सीमा फरक नियमले तय हुन्छ।",
+      en: "\"56–57 years ahead\" is a rough guide. A date is year + month + day, and each boundary follows different rules.",
+    },
+  },
   {
     slug: "baisakh-1",
     section: "bs-construction",
@@ -1021,6 +946,17 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
+    slug: "calc-moonrise",
+    section: "calculation",
+    status: "published",
+    icon: Moon,
+    title: { ne: "चन्द्रोदय र चन्द्रास्त कसरी गणना हुन्छ", en: "How Moonrise and Moonset Are Calculated" },
+    summary: {
+      ne: "चन्द्रको द्रुत गति र लम्बन (parallax) ले किन अतिरिक्त पुनरावृत्ति चाहिन्छ।",
+      en: "Why the Moon's fast motion and parallax demand extra iteration.",
+    },
+  },
+  {
     slug: "calc-sankranti",
     section: "calculation",
     status: "published",
@@ -1076,17 +1012,6 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "calc-moonrise",
-    section: "calculation",
-    status: "published",
-    icon: Moon,
-    title: { ne: "चन्द्रोदय र चन्द्रास्त कसरी गणना हुन्छ", en: "How Moonrise and Moonset Are Calculated" },
-    summary: {
-      ne: "चन्द्रको द्रुत गति र लम्बन (parallax) ले किन अतिरिक्त पुनरावृत्ति चाहिन्छ।",
-      en: "Why the Moon's fast motion and parallax demand extra iteration.",
-    },
-  },
-  {
     slug: "location-different-results",
     section: "calculation",
     status: "published",
@@ -1097,41 +1022,7 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
       en: "One instant, different sunrises — the local day boundary changes the answer.",
     },
   },
-  /* ── 🌑 ECLIPSES ──────────────────────────────────────────────────── */
-  {
-    slug: "rahu-ketu-nodes",
-    section: "eclipses",
-    status: "published",
-    icon: Aperture,
-    title: { ne: "राहु–केतु र पात रेखा", en: "Rahu–Ketu and the Node Line" },
-    summary: {
-      ne: "चन्द्र कक्ष र क्रान्तिवृत्त काटिने दुई बिन्दु — ग्रहण यहीँ मात्र सम्भव।",
-      en: "The two points where the Moon's orbit crosses the ecliptic — the only places an eclipse can happen.",
-    },
-  },
-  {
-    slug: "eclipses",
-    section: "eclipses",
-    status: "published",
-    icon: Eclipse,
-    title: { ne: "ग्रहण — सूर्य र चन्द्र", en: "Solar & Lunar Eclipses" },
-    summary: {
-      ne: "राहु–केतु, पात रेखा, चन्द्रग्रहण (पूर्णिमा) र सूर्यग्रहण (औंसी) — प्रकार, चित्र र सावधानी।",
-      en: "Rahu–Ketu, the node line, lunar eclipses (full moon) and solar eclipses (new moon) — types, diagrams and precautions.",
-    },
-  },
-  {
-    slug: "eclipse-seasons",
-    section: "eclipses",
-    status: "published",
-    icon: Radar,
-    title: { ne: "ग्रहण ऋतु र चक्र", en: "Eclipse Seasons and Cycles" },
-    summary: {
-      ne: "ग्रहण किन झुण्डमा आउँछन्, र सरोस चक्र कसरी दोहोरिन्छ।",
-      en: "Why eclipses come in groups, and how the saros cycle repeats.",
-    },
-  },
-  /* ── 🔭 DEEPER ASTRONOMY ──────────────────────────────────────────── */
+  /* ── 🔭 GOING DEEPER ──────────────────────────────────────────────── */
   {
     slug: "geocentric-heliocentric",
     section: "deeper",
@@ -1210,49 +1101,48 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     },
   },
   {
-    slug: "history",
+    slug: "rahu-ketu-nodes",
     section: "deeper",
     status: "published",
-    icon: History,
-    path: "/learn/history",
-    title: { ne: "मयासुरको सूर्य सिद्धान्त", en: "Mayasura's Surya Siddhanta" },
+    icon: Aperture,
+    title: { ne: "राहु–केतु र पात रेखा", en: "Rahu–Ketu and the Node Line" },
     summary: {
-      ne: "नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।",
-      en: "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
+      ne: "चन्द्र कक्ष र क्रान्तिवृत्त काटिने दुई बिन्दु — ग्रहण यहीँ मात्र सम्भव।",
+      en: "The two points where the Moon's orbit crosses the ecliptic — the only places an eclipse can happen.",
     },
   },
-  /* ── 📚 CALENDAR COMPARISON ───────────────────────────────────────── */
+  {
+    slug: "eclipses",
+    section: "deeper",
+    status: "published",
+    icon: Eclipse,
+    title: { ne: "ग्रहण — सूर्य र चन्द्र", en: "Solar & Lunar Eclipses" },
+    summary: {
+      ne: "राहु–केतु, पात रेखा, चन्द्रग्रहण (पूर्णिमा) र सूर्यग्रहण (औंसी) — प्रकार, चित्र र सावधानी।",
+      en: "Rahu–Ketu, the node line, lunar eclipses (full moon) and solar eclipses (new moon) — types, diagrams and precautions.",
+    },
+  },
+  {
+    slug: "eclipse-seasons",
+    section: "deeper",
+    status: "published",
+    icon: Radar,
+    title: { ne: "ग्रहण ऋतु र चक्र", en: "Eclipse Seasons and Cycles" },
+    summary: {
+      ne: "ग्रहण किन झुण्डमा आउँछन्, र सरोस चक्र कसरी दोहोरिन्छ।",
+      en: "Why eclipses come in groups, and how the saros cycle repeats.",
+    },
+  },
+  /* ── 📚 COMPARISON AND HISTORY ────────────────────────────────────── */
   {
     slug: "calendar-differences",
     section: "comparison",
     status: "published",
     icon: Globe,
-    title: { ne: "नेपाली, वैदिक र ग्रेगोरियन भिन्नता", en: "Nepali vs Indian vs Gregorian" },
+    title: { ne: "नेपाली, वैदिक र ग्रेगोरियन भिन्नता", en: "Nepali vs Vedic vs Gregorian" },
     summary: {
       ne: "तीन पात्रो प्रणालीको आधार, वर्षारम्भ र महिना–लम्बाइको तुलना।",
       en: "A comparison of the three calendar systems — their basis, year-start and month lengths.",
-    },
-  },
-  {
-    slug: "solar-vs-lunar-calendar",
-    section: "comparison",
-    status: "published",
-    icon: SunMoon,
-    title: { ne: "सौर पात्रो vs चान्द्र पात्रो", en: "Solar Calendar vs Lunar Calendar" },
-    summary: {
-      ne: "ग्रेगोरियन, इस्लामी र चान्द्र–सौर पात्रो — कुनले के मिलाउँछ।",
-      en: "Gregorian, Islamic and lunisolar calendars — what each one keeps aligned.",
-    },
-  },
-  {
-    slug: "sidereal-vs-tropical-year",
-    section: "comparison",
-    status: "published",
-    icon: Ruler,
-    title: { ne: "नाक्षत्र वर्ष vs सायन वर्ष", en: "Sidereal Year vs Tropical Year" },
-    summary: {
-      ne: "३६५.२५६४ vs ३६५.२४२२ दिन — वर्षमा ~२० मिनेटको फरक र त्यसको परिणाम।",
-      en: "365.2564 against 365.2422 days — about 20 minutes a year, and what it accumulates into.",
     },
   },
   {
@@ -1297,6 +1187,18 @@ export const LEARN_LIBRARY: LibraryTopic[] = [
     summary: {
       ne: "छायाँ, गनोमन, जल घडी र नक्षत्र अवलोकन।",
       en: "Shadows, gnomons, water clocks and nakshatra observation.",
+    },
+  },
+  {
+    slug: "history",
+    section: "comparison",
+    status: "published",
+    icon: History,
+    path: "/learn/history",
+    title: { ne: "मयासुरको सूर्य सिद्धान्त", en: "Mayasura's Surya Siddhanta" },
+    summary: {
+      ne: "नेपाली पात्रोको खगोलीय जग — सूर्य सिद्धान्तको इतिहास, कालक्रम र स्रोतहरू।",
+      en: "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
     },
   },
 ];

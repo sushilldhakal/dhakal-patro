@@ -57,21 +57,8 @@ export const earthRotationDay: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `      ★ तारा / star (असीम टाढा / effectively infinite)
-      │
-      │   एक पूरा घुर्णन = 23h 56m  (नाक्षत्र दिन / sidereal)
-      │   one full rotation
-      │
-   ☉──┼── पृथ्वी कक्षमा ~1° सर्‍यो / Earth moved ~1° along its orbit
-      │
-      └── सूर्यलाई भेट्न थप ~1° = ~4 मिनेट
-          ~1° more to face the Sun again = ~4 minutes
-          कुल / total: 24h 00m (सौर दिन / solar day)`,
-          caption: {
-            ne: "सौर दिन नाक्षत्र दिनभन्दा लामो हुनुको कारण — पृथ्वीको आफ्नै कक्षीय गति।",
-            en: "Why the solar day outlasts the sidereal one — Earth's own orbital motion.",
-          },
+          kind: "diagram",
+          id: "sidereal-solar-day",
         },
         {
           kind: "diagram",

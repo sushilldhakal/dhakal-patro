@@ -41,6 +41,10 @@ export const geocentricHeliocentric: ArticleData = {
             en: "A panchanga is **geocentric** — and must be. \"The Sun is in Mesha\" means the Sun appears in that direction as seen from Earth. From the Sun the statement has no meaning at all.",
           },
         },
+        {
+          kind: "diagram",
+          id: "two-systems",
+        },
       ],
     },
     {
@@ -52,22 +56,6 @@ export const geocentricHeliocentric: ArticleData = {
           text: {
             ne: "दुई ढाँचा **समतुल्य** छन् — एउटाबाट अर्कोमा गणितीय रूपान्तरण गर्न सकिन्छ। कुनै सूचना हराउँदैन; केवल मूल बिन्दु सर्छ।",
             en: "The two frames are **equivalent** — a mathematical transformation carries you from one to the other. No information is lost; only the origin moves.",
-          },
-        },
-        {
-          kind: "figure",
-          art: `सूर्यकेन्द्रित / heliocentric        भूकेन्द्रित / geocentric
-
-      ☉                                    ⊕
-     ╱ ╲                                  ╱ ╲
-   ⊕     ♂                              ☉     ♂
-
-ग्रहको सूर्यकेन्द्रित सदिश − पृथ्वीको सूर्यकेन्द्रित सदिश
-planet's heliocentric vector − Earth's heliocentric vector
-        = ग्रहको भूकेन्द्रित सदिश / planet's geocentric vector`,
-          caption: {
-            ne: "एउटा घटाउ — यत्तिले नै दुई ढाँचा जोड्छ।",
-            en: "One subtraction is all that separates the two frames.",
           },
         },
         {

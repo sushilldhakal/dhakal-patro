@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const lunarMonth: ArticleData = {
   slug: "lunar-month",
-  seeAlso: ["chandramana", "amavasya-purnima", "lunar-solar-drift", "adhik-maas"],
+  seeAlso: ["chandramana", "amavasya-purnima", "lunar-solar-drift", "adhik-kshaya-maas"],
   sections: [
     {
       title: { ne: "सांयोगिक मास — औंसीदेखि औंसीसम्म", en: "The synodic month — new moon to new moon" },
@@ -46,18 +46,8 @@ export const lunarMonth: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `चन्द्रले एक कक्ष पूरा गर्‍यो / Moon completes one orbit
-├──────────── 27.32 दिन / days ────────────┤
-                                           │
-   तर पृथ्वी सर्‍यो — फेरि मिलाउन थप समय   │
-   but Earth moved — extra time to catch up│
-├──────────────── 29.53 दिन / days ─────────────────┤
-                                           └── +2.21 दिन / days`,
-          caption: {
-            ne: "नाक्षत्र मास र सांयोगिक मासबीचको फरक — पृथ्वीको आफ्नै गतिको परिणाम।",
-            en: "The gap between the sidereal and synodic month — a consequence of Earth's own motion.",
-          },
+          kind: "diagram",
+          id: "moon-phases",
         },
       ],
     },

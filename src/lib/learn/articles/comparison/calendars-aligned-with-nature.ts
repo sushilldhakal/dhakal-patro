@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const calendarsAlignedWithNature: ArticleData = {
   slug: "calendars-aligned-with-nature",
-  seeAlso: ["calendar-drift", "leap-years", "adhik-maas", "ancient-calendars"],
+  seeAlso: ["calendar-drift", "leap-years", "adhik-kshaya-maas", "ancient-calendars"],
   sections: [
     {
       title: { ne: "पात्रोलाई आकाशसँग बाँध्ने उपाय", en: "The devices that tie a calendar to the sky" },
@@ -55,6 +55,14 @@ export const calendarsAlignedWithNature: ArticleData = {
           text: {
             ne: "हिब्रू र चिनियाँ पात्रोले प्रयोग गर्ने `१९`-वर्षे चक्रलाई ~मेटोनिक चक्र~ भनिन्छ — `१९` सौर वर्ष झन्डै ठ्याक्कै `२३५` चान्द्र मास बराबर हुने संयोगमा आधारित।",
             en: "The `19`-year cycle used by the Hebrew and Chinese calendars is the ~Metonic cycle~, resting on the near-exact equality of `19` solar years with `235` lunar months.",
+          },
+        },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+          caption: {
+            ne: "विषुव बिन्दु ताराको सापेक्ष सर्दै — पात्रोलाई प्रकृतिसँग बाँध्न कुन सन्दर्भ रोज्ने भन्ने प्रश्नको जड।",
+            en: "The equinox point sliding against the stars — the root of which reference a calendar must pick.",
           },
         },
       ],

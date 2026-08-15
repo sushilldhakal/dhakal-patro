@@ -24,6 +24,35 @@ import { HierarchyDiagram } from "@/components/learn/HierarchyDiagram";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import { PrecessionCone } from "@/components/learn/PrecessionCone";
+import {
+  EclipseSeasonWindow,
+  GregorianJump,
+  HoraWeekdayCycle,
+  SunRayAngle,
+  YearLengthLadder,
+} from "@/components/learn/calendar-cycle-diagrams";
+import { CircumpolarSky } from "@/components/learn/CircumpolarSky";
+import {
+  MandaShighra,
+  PakshaStrip,
+  RetrogradeLoop,
+} from "@/components/learn/motion-and-month-diagrams";
+import {
+  EclipticEquatorCross,
+  TwoZeroPoints,
+  ZodiacBeltWidth,
+} from "@/components/learn/zodiac-frame-diagrams";
+import {
+  DayLengthHourAngle,
+  MoonriseSlip,
+  SiderealSolarDay,
+  SunriseSamplesTithi,
+  TithiAcrossZones,
+} from "@/components/learn/day-timeline-diagrams";
+import { LunarSolarGap } from "@/components/learn/LunarSolarGap";
+import { RituWheel } from "@/components/learn/RituWheel";
+import { SolarDeclinationYear } from "@/components/learn/SolarDeclinationYear";
+import { SolarMonthLengths } from "@/components/learn/SolarMonthLengths";
 import { SolarEclipseStudy } from "@/components/learn/SolarEclipseStudy";
 import { SunEarthMoonStudy } from "@/components/learn/SunEarthMoonStudy";
 import { TwoSystemsDiagram } from "@/components/learn/TwoSystemsDiagram";
@@ -42,6 +71,27 @@ export const LEARN_DIAGRAMS = {
   "earth-rotation": EarthRotationDiagram,
   "sun-earth-moon": SunEarthMoonStudy,
   "ecliptic-belt": EclipticBeltStudy,
+  "declination-year": SolarDeclinationYear,
+  "ritu-wheel": RituWheel,
+  "lunar-solar-gap": LunarSolarGap,
+  "circumpolar-sky": CircumpolarSky,
+  "retrograde-loop": RetrogradeLoop,
+  "manda-shighra": MandaShighra,
+  "paksha-strip": PakshaStrip,
+  "two-zero-points": TwoZeroPoints,
+  "zodiac-belt-width": ZodiacBeltWidth,
+  "ecliptic-equator-cross": EclipticEquatorCross,
+  "hora-weekday-cycle": HoraWeekdayCycle,
+  "year-length-ladder": YearLengthLadder,
+  "gregorian-jump": GregorianJump,
+  "eclipse-season-window": EclipseSeasonWindow,
+  "sun-ray-angle": SunRayAngle,
+  "sidereal-solar-day": SiderealSolarDay,
+  "day-length-hour-angle": DayLengthHourAngle,
+  "moonrise-slip": MoonriseSlip,
+  "sunrise-samples-tithi": SunriseSamplesTithi,
+  "tithi-across-zones": TithiAcrossZones,
+  "solar-month-lengths": SolarMonthLengths,
   /* 3D, client-only and code-split — see TwoSystemsDiagram. */
   "two-systems": TwoSystemsDiagram,
   "calendar-hierarchy": HierarchyDiagram,

@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const leapYears: ArticleData = {
   slug: "leap-years",
-  seeAlso: ["calendar-drift", "adhik-maas", "sidereal-vs-tropical-year", "calendars-aligned-with-nature"],
+  seeAlso: ["calendar-drift", "adhik-kshaya-maas", "sidereal-vs-tropical", "calendars-aligned-with-nature"],
   sections: [
     {
       title: { ne: "अंशको समस्या", en: "The problem of the remainder" },
@@ -22,6 +22,14 @@ export const leapYears: ArticleData = {
             en: "Left unabsorbed it accumulates — nearly a day in four years, `24` days in a century. The leap day is the device that gives it back.",
           },
         },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+          caption: {
+            ne: "लीप वर्षको नियम विषुवलाई एउटै मितिमा अड्याउन बनेको हो।",
+            en: "The leap-year rule exists to hold the equinox on one date.",
+          },
+        },
       ],
     },
     {
@@ -36,17 +44,8 @@ export const leapYears: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `जुलियन औसत / Julian mean     365.2500
-वास्तविक / actual              365.2422
-                               ────────
-अतिरिक्त / excess               0.0078 दिन/day प्रति वर्ष/per year
-                             ≈ 1 दिन / day प्रति 128 वर्ष / per 128 years
-                             ≈ 10 दिन / days by 1582 CE`,
-          caption: {
-            ne: "जुलियन नियम अलिकति उदार थियो — शताब्दीयौँमा १० दिनको त्रुटि जम्मा भयो।",
-            en: "The Julian rule was slightly too generous — ten days of error had piled up by 1582.",
-          },
+          kind: "diagram",
+          id: "year-length-ladder",
         },
         {
           kind: "para",

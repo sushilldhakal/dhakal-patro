@@ -12,7 +12,7 @@ import { whyLocationMatters } from "./foundation/why-location-matters";
 import { yearBeginsBaisakh } from "./foundation/year-begins-baisakh";
 
 import { amavasyaPurnima } from "./moon/amavasya-purnima";
-import { kshayaMaas } from "./moon/kshaya-maas";
+import { adhikKshayaMaas } from "./moon/adhik-kshaya-maas";
 import { lunarMonth } from "./moon/lunar-month";
 import { lunarSolarDrift } from "./moon/lunar-solar-drift";
 import { moonLunarCalendar } from "./moon/moon-lunar-calendar";
@@ -23,10 +23,8 @@ import { karkaSankranti } from "./sun/karka-sankranti";
 import { makaraSankranti } from "./sun/makara-sankranti";
 import { meshaSankranti } from "./sun/mesha-sankranti";
 import { rashi } from "./sun/rashi";
-import { sankrantiVsSolstice } from "./sun/sankranti-vs-solstice";
 import { siderealVsTropical } from "./sun/sidereal-vs-tropical";
 import { solarYear } from "./sun/solar-year";
-import { twelveRashis } from "./sun/twelve-rashis";
 import { uttarayanaDakshinayana } from "./sun/uttarayana-dakshinayana";
 
 import { fiveLimbsTogether } from "./five-limbs/five-limbs-together";
@@ -38,14 +36,13 @@ import { rahuKetuNodes } from "./eclipses/rahu-ketu-nodes";
 import { ancientSky } from "./astronomy/ancient-sky";
 import { axialTilt } from "./astronomy/axial-tilt";
 import { declination } from "./astronomy/declination";
+import { equinoxSolstice } from "./astronomy/equinox-solstice";
 import { earthRotationDay } from "./astronomy/earth-rotation-day";
-import { equinoxes } from "./astronomy/equinoxes";
 import { lunarLongitude } from "./astronomy/lunar-longitude";
 import { poleStarChanges } from "./astronomy/pole-star-changes";
 import { precession } from "./astronomy/precession";
 import { siderealTime } from "./astronomy/sidereal-time";
 import { solarLongitude } from "./astronomy/solar-longitude";
-import { solstices } from "./astronomy/solstices";
 import { whySeasons } from "./astronomy/why-seasons";
 
 import { calcKarana } from "./calculation/calc-karana";
@@ -63,8 +60,6 @@ import { ancientCalendars } from "./comparison/ancient-calendars";
 import { calendarDrift } from "./comparison/calendar-drift";
 import { calendarsAlignedWithNature } from "./comparison/calendars-aligned-with-nature";
 import { leapYears } from "./comparison/leap-years";
-import { siderealVsTropicalYear } from "./comparison/sidereal-vs-tropical-year";
-import { solarVsLunarCalendar } from "./comparison/solar-vs-lunar-calendar";
 
 import { ancientPlanetaryMotion } from "./deeper/ancient-planetary-motion";
 import { celestialEquator } from "./deeper/celestial-equator";
@@ -104,17 +99,15 @@ const ALL: ArticleData[] = [
   lunarMonth,
   moonLunarCalendar,
   lunarSolarDrift,
-  kshayaMaas,
+  adhikKshayaMaas,
 
   /* The Sun */
   solarYear,
   rashi,
-  twelveRashis,
   meshaSankranti,
   makaraSankranti,
   karkaSankranti,
   uttarayanaDakshinayana,
-  sankrantiVsSolstice,
   siderealVsTropical,
 
   /* The Five Limbs */
@@ -129,8 +122,7 @@ const ALL: ArticleData[] = [
   earthRotationDay,
   axialTilt,
   whySeasons,
-  equinoxes,
-  solstices,
+  equinoxSolstice,
   precession,
   poleStarChanges,
   ancientSky,
@@ -152,8 +144,6 @@ const ALL: ArticleData[] = [
   timeScales,
 
   /* Calendar comparison */
-  solarVsLunarCalendar,
-  siderealVsTropicalYear,
   leapYears,
   calendarDrift,
   calendarsAlignedWithNature,

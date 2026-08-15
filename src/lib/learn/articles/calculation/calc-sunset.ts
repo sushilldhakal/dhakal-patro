@@ -16,19 +16,8 @@ export const calcSunset: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `स्थानीय मध्याह्न / local noon
-              │
-    ◄─── H ───┼─── H ───►
-    │                   │
-सूर्योदय              सूर्यास्त
-sunrise               sunset
-
-दिनमान / day length = 2H`,
-          caption: {
-            ne: "उदय र अस्त स्थानीय मध्याह्नको वरिपरि सम्मित हुन्छन् — झन्डै, तर ठ्याक्कै होइन।",
-            en: "Rising and setting sit symmetrically about local noon — almost, but not exactly.",
-          },
+          kind: "diagram",
+          id: "day-length-hour-angle",
         },
         {
           kind: "para",

@@ -16,15 +16,8 @@ export const moonLunarCalendar: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `कोणान्तर १२° / 12° of separation   →   १ तिथि   / 1 tithi
-१५ तिथि          / 15 tithis        →   १ पक्ष    / 1 paksha
-२ पक्ष            / 2 pakshas       →   १ मास     / 1 lunar month  (~29.53 दिन/days)
-१२ मास            / 12 months       →   १ चान्द्र वर्ष / 1 lunar year (~354.4 दिन/days)`,
-          caption: {
-            ne: "एउटै कोणीय परिभाषाबाट पूरै चान्द्र पात्रो निस्कन्छ।",
-            en: "The whole lunar calendar unfolds from one angular definition.",
-          },
+          kind: "diagram",
+          id: "tithi-elongation",
         },
         {
           kind: "para",
@@ -32,6 +25,10 @@ export const moonLunarCalendar: ArticleData = {
             ne: "ध्यान दिनुहोस् — यहाँ कतै “दिन” आधार बनेको छैन। दिन पछि मात्र आउँछ, जब कोणीय अवस्थालाई सूर्योदयको सीमामा राखेर नागरिक मितिमा बाँडिन्छ।",
             en: "Note that \"day\" is nowhere the basis here. The day enters only afterwards, when these angular states are mapped onto civil dates using the sunrise boundary.",
           },
+        },
+        {
+          kind: "diagram",
+          id: "moon-phases",
         },
       ],
     },

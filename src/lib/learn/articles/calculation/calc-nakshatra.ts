@@ -16,19 +16,20 @@ export const calcNakshatra: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `NAKSHATRA_SPAN = 360° / 27 = 13.3333…°  =  13°20′
-
-नक्षत्र / nakshatra = ⌊ चन्द्रको देशान्तर / 13°20′ ⌋ + 1
-
-पद / pada = ⌊ (बाँकी / remainder) / 3°20′ ⌋ + 1     (प्रत्येक नक्षत्रका ४ पद / 4 padas each)
-
-उदाहरण / example:  चन्द्र / Moon = 100.5°
-   100.5 / 13.3333 = 7.5375  →  नक्षत्र 8 (पुष्य / Pushya)
-   बाँकी / remainder 0.5375  →  पद 3`,
-          caption: {
-            ne: "एउटै भागले नक्षत्र र पद दुवै दिन्छ।",
-            en: "One division yields both the nakshatra and its pada.",
+          kind: "calc",
+          rule: [
+            { ne: "नक्षत्रको चौडाइ = `३६०° ÷ २७` = `१३°२०′`", en: "nakshatra span = `360° ÷ 27` = `13°20′`" },
+            { ne: "नक्षत्र = (चन्द्रको देशान्तर ÷ `१३°२०′`) को पूर्णांक भाग + `१`", en: "nakshatra = integer part of (Moon's longitude ÷ `13°20′`) + `1`" },
+            { ne: "पाद = (बाँकी ÷ `३°२०′`) को पूर्णांक भाग + `१` — प्रत्येक नक्षत्रका चार पाद", en: "pada = integer part of (remainder ÷ `3°20′`) + `1` — four padas to each nakshatra" },
+          ],
+          example: [
+            { k: { ne: "चन्द्रको देशान्तर", en: "Moon's longitude" }, v: "100.5°" },
+            { k: { ne: "१००.५ ÷ १३.३३३३", en: "100.5 ÷ 13.3333" }, v: "7.5375" },
+            { k: { ne: "बाँकी", en: "remainder" }, v: "0.5375" },
+          ],
+          result: {
+            ne: "पूर्णांक भाग `७` + `१` = **नक्षत्र ८ — पुष्य**, र बाँकीले **पाद ३** दिन्छ।",
+            en: "Integer part `7` + `1` = **nakshatra 8 — Pushya**, and the remainder gives **pada 3**.",
           },
         },
         {

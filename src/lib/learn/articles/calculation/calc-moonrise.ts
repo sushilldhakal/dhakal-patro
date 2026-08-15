@@ -69,15 +69,8 @@ export const calcMoonrise: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `दिन / day 1   चन्द्रोदय / moonrise 23:20  ●
-दिन / day 2   चन्द्रोदय / moonrise 00:10  ●  र / and  23:59 ●   (दुई पटक / twice)
-दिन / day 3   — कुनै चन्द्रोदय छैन / no moonrise —
-दिन / day 4   चन्द्रोदय / moonrise 00:48  ●`,
-          caption: {
-            ne: "५० मिनेटको दैनिक ढिलाइले नागरिक दिनको सीमामा यस्तो अवस्था ल्याउँछ।",
-            en: "The 50-minute daily lag produces exactly this behaviour at the civil-day boundary.",
-          },
+          kind: "diagram",
+          id: "moonrise-slip",
         },
         {
           kind: "para",

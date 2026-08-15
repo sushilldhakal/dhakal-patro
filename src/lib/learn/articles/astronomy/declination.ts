@@ -35,6 +35,10 @@ export const declination: ArticleData = {
             en: "The Sun's declination swings between `+23.44°` and `−23.44°` through the year — and that swing sets the seasons, the ayanas and the length of the day.",
           },
         },
+        {
+          kind: "diagram",
+          id: "declination-year",
+        },
       ],
     },
     {
@@ -92,17 +96,19 @@ export const declination: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `cos(H) = −tan(अक्षांश/latitude) × tan(क्रान्ति/declination)
-
-H = घण्टा कोण / hour angle  →  दिनको आधा लम्बाइ / half the day's length
-
-काठमाडौँ / Kathmandu, अक्षांश / lat 27.7°N
-  ग्रीष्म अयनान्त / summer solstice  (δ = +23.44°)  →  दिन ~13h 50m / day
-  शीत अयनान्त  / winter solstice  (δ = −23.44°)  →  दिन ~10h 25m / day`,
-          caption: {
-            ne: "अक्षांश जति उत्तर, दिनको लम्बाइको फरक त्यति ठूलो।",
-            en: "The further north the latitude, the wider the swing in day length.",
+          kind: "calc",
+          rule: [
+            { ne: "cos(H) = −tan(अक्षांश) × tan(क्रान्ति)", en: "cos(H) = −tan(latitude) × tan(declination)" },
+            { ne: "दिनको लम्बाइ = `२`H", en: "day length = `2`H" },
+          ],
+          example: [
+            { k: { ne: "काठमाडौँको अक्षांश", en: "Kathmandu's latitude" }, v: "27.7°N" },
+            { k: { ne: "ग्रीष्म अयनान्त · δ = +२३.४४°", en: "summer solstice · δ = +23.44°" }, v: "~13h 50m" },
+            { k: { ne: "शीत अयनान्त · δ = −२३.४४°", en: "winter solstice · δ = −23.44°" }, v: "~10h 25m" },
+          ],
+          result: {
+            ne: "अक्षांश जति बढी, दुई अयनान्तबीचको दिन–लम्बाइको फरक त्यति नै ठूलो — भूमध्यरेखामा फरक शून्य, ध्रुवमा पूरै दिन/रात।",
+            en: "The higher the latitude, the wider the gap between the two solstices — zero at the equator, a whole day or night at the pole.",
           },
         },
         {

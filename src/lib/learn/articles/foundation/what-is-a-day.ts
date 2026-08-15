@@ -55,6 +55,14 @@ export const whatIsADay: ArticleData = {
             en: "So a year always contains **exactly one more** sidereal day than solar days — not a coincidence, but the single orbit itself, counted.",
           },
         },
+        {
+          kind: "diagram",
+          id: "earth-rotation",
+          caption: {
+            ne: "एक फन्को पूरा गर्न पृथ्वीलाई २३ घण्टा ५६ मिनेट लाग्छ; सूर्य फेरि उही ठाउँमा आउन ~४ मिनेट थप।",
+            en: "Earth takes 23h 56m for one turn; bringing the Sun back to the same place takes ~4 minutes more.",
+          },
+        },
       ],
     },
     {

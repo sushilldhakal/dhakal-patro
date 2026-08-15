@@ -52,20 +52,8 @@ export const shuklaKrishnaPaksha: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `शुक्ल पक्ष / Shukla Paksha        कृष्ण पक्ष / Krishna Paksha
-  1  प्रतिपदा   Pratipada           1  प्रतिपदा   Pratipada
-  2  द्वितीया   Dvitiya             2  द्वितीया   Dvitiya
-  3  तृतीया     Tritiya             3  तृतीया     Tritiya
-     ·                                 ·
-     ·                                 ·
- 14  चतुर्दशी   Chaturdashi        14  चतुर्दशी   Chaturdashi
- 15  पूर्णिमा   PURNIMA            15  औंसी      AMAVASYA
-     (पूर्ण चन्द्र / full)             (चन्द्र अदृश्य / dark)`,
-          caption: {
-            ne: "पहिलो चौध नाम उही — त्यसैले तिथि भन्दा पक्ष पनि भन्नै पर्छ।",
-            en: "The first fourteen names are identical — which is why a tithi is never quoted without its paksha.",
-          },
+          kind: "diagram",
+          id: "paksha-strip",
         },
         {
           kind: "para",

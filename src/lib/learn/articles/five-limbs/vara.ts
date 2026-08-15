@@ -73,22 +73,8 @@ export const vara: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `२४ होरा / 24 horas  →  २४ ÷ ७ = ३ बाँकी ४ / remainder 4
-अर्थात् भोलिको पहिलो होरा क्रममा ४ स्थान अगाडि
-so tomorrow's first hora is 4 places along the cycle
-
-शनि → बृहस्पति → मंगल → सूर्य → शुक्र → बुध → चन्द्र
- Sat     Jup      Mars    Sun    Venus   Merc    Moon
-  1        2        3      4       5      6       7
-
-सूर्य(4) बाट ४ गन्नुहोस् → चन्द्र   |  from Sun(4), count 4 → Moon
-चन्द्रबाट ४ → मंगल                  |  from Moon, 4 → Mars
-आइतबार → सोमबार → मंगलबार …        |  Sunday → Monday → Tuesday …`,
-          caption: {
-            ne: "२४ घण्टा सात ग्रहमा बाँड्दा बाँकी ४ रहन्छ — त्यही ४ ले वारको क्रम बनाउँछ।",
-            en: "Dividing 24 hours among seven grahas leaves a remainder of 4 — and that 4 generates the order of the weekdays.",
-          },
+          kind: "diagram",
+          id: "hora-weekday-cycle",
         },
         {
           kind: "diagram",

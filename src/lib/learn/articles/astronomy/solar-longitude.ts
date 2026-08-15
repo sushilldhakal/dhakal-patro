@@ -38,20 +38,8 @@ export const solarLongitude: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `सायन देशान्तर / tropical longitude
-        −  अयनांश / ayanamsha  (आज ~24° / ~24° today)
-        ─────────────────────────────
-        =  निरयन देशान्तर / sidereal longitude
-
-उदाहरण / example:
-   सायन    24°  मेष / Aries
-   अयनांश  −24°
-   निरयन    0°  मेष आरम्भ / start of Mesha  →  बैशाख १ गते / Baisakh 1`,
-          caption: {
-            ne: "एउटै क्षणको सूर्य — दुई प्रणालीमा दुई फरक सङ्ख्या।",
-            en: "The same Sun at the same instant — two different numbers in the two systems.",
-          },
+          kind: "diagram",
+          id: "two-zero-points",
         },
         {
           kind: "para",

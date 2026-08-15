@@ -22,6 +22,14 @@ export const ancientPlanetaryMotion: ArticleData = {
             en: "The central task of the siddhantas was exactly this: **start from a simple uniform motion and add corrections until you reach the true position**.",
           },
         },
+        {
+          kind: "diagram",
+          id: "two-systems",
+          caption: {
+            ne: "भूकेन्द्रित ढाँचामा वक्री गति देखाउन मन्द र शीघ्र सुधार चाहिन्थ्यो।",
+            en: "Explaining retrograde motion in a geocentric frame is what the manda and shighra corrections were for.",
+          },
+        },
       ],
     },
     {
@@ -55,31 +63,20 @@ export const ancientPlanetaryMotion: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `मध्यम ग्रह / mean planet   (एकनास वृत्ताकार गति / uniform circular motion)
-        │
-        + मन्द फल / manda phala        ← कक्षको अण्डाकारपन / orbital eccentricity
-        │
-        + शीघ्र फल / shighra phala     ← पृथ्वीको गति / Earth's motion
-        │
-        ▼
-स्पष्ट ग्रह / true planet   (आकाशमा देखिने स्थान / where it actually appears)`,
-          caption: {
-            ne: "औसतबाट वास्तविकतासम्म — सिद्धान्तिक गणनाको मूल शृङ्खला।",
-            en: "From average to actual — the core chain of siddhantic computation.",
-          },
+          kind: "diagram",
+          id: "manda-shighra",
         },
       ],
     },
     {
       title: { ne: "ज्या तालिका", en: "The sine tables" },
-      eyebrow: "An Indian contribution",
+      eyebrow: "A Vedic contribution",
       blocks: [
         {
           kind: "lede",
           text: {
-            ne: "यी सुधार गणना गर्न त्रिकोणमितीय फलन चाहिन्थ्यो। भारतीय ज्योतिषले यसका लागि *ज्या* (jyā) तालिका विकास गरे — जुन आधुनिक **साइन** फलनको प्रत्यक्ष पूर्वज हो।",
-            en: "Computing those corrections required trigonometric functions. Indian astronomy developed *jyā* tables for the purpose — the direct ancestor of the modern **sine**.",
+            ne: "यी सुधार गणना गर्न त्रिकोणमितीय फलन चाहिन्थ्यो। वैदिक ज्योतिषले यसका लागि *ज्या* (jyā) तालिका विकास गरे — जुन आधुनिक **साइन** फलनको प्रत्यक्ष पूर्वज हो।",
+            en: "Computing those corrections required trigonometric functions. Vedic astronomy developed *jyā* tables for the purpose — the direct ancestor of the modern **sine**.",
           },
         },
         {

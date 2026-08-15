@@ -44,6 +44,14 @@ export const siderealTime: ArticleData = {
             },
           ],
         },
+        {
+          kind: "diagram",
+          id: "earth-rotation",
+          caption: {
+            ne: "नाक्षत्र दिन र सौर दिनको ~४ मिनेटको फरक — नाक्षत्र समय यही छोटो दिनमा चल्छ।",
+            en: "The ~4-minute gap between a sidereal and a solar day — sidereal time runs on the shorter one.",
+          },
+        },
       ],
     },
     {
@@ -65,21 +73,26 @@ export const siderealTime: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `जन्म समय + मिति / birth time + date
-        │
-        ▼
-  स्थानीय नाक्षत्र काल / local sidereal time   ← देशान्तर चाहिन्छ / needs longitude
-        │
-        ▼
-  पूर्वी क्षितिजमा कुन देशान्तर उदाउँदै / which longitude is rising
-        │                                     ← अक्षांश चाहिन्छ / needs latitude
-        ▼
-  लग्न + बाह्र भाव / lagna + the twelve houses`,
-          caption: {
-            ne: "लग्न गणनाको शृङ्खला — नाक्षत्र काल यसको पहिलो कडी हो।",
-            en: "The chain that produces a lagna — sidereal time is its first link.",
-          },
+          kind: "list",
+          ordered: true,
+          items: [
+            {
+              ne: "**जन्मको समय र मिति** — कुन क्षणको आकाश चाहिएको हो।",
+              en: "**Time and date of birth** — which instant of sky is wanted.",
+            },
+            {
+              ne: "→ **स्थानीय नाक्षत्र काल** — यसका लागि ~देशान्तर~ चाहिन्छ।",
+              en: "→ **local sidereal time** — this needs the ~longitude~.",
+            },
+            {
+              ne: "→ **पूर्वी क्षितिजमा कुन देशान्तर उदाउँदै छ** — यसका लागि ~अक्षांश~ चाहिन्छ।",
+              en: "→ **which longitude is rising on the eastern horizon** — this needs the ~latitude~.",
+            },
+            {
+              ne: "→ **लग्न र बाह्र भाव** — कुण्डलीको जग।",
+              en: "→ **the lagna and the twelve houses** — the frame a kundali is built on.",
+            },
+          ],
         },
       ],
     },

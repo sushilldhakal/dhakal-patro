@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const lunarSolarDrift: ArticleData = {
   slug: "lunar-solar-drift",
-  seeAlso: ["adhik-maas", "kshaya-maas", "lunar-month", "chandramana"],
+  seeAlso: ["adhik-kshaya-maas", "lunar-month", "chandramana"],
   sections: [
     {
       title: { ne: "वर्षमा ११ दिनको खाडल", en: "The eleven-day gap each year" },
@@ -52,16 +52,8 @@ export const lunarSolarDrift: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `वर्ष / Year   जम्मा फरक / Accumulated gap
-   1              10.87 दिन / days
-   2              21.74 दिन / days
-   3              32.61 दिन / days   ←  एक चान्द्र मासभन्दा बढी
-                                        more than a whole lunar month`,
-          caption: {
-            ne: "तीन वर्षमा फरक एक महिना नाघ्छ — यहीँ सुधार आवश्यक हुन्छ।",
-            en: "Within three years the gap exceeds a month — the point at which a correction becomes necessary.",
-          },
+          kind: "diagram",
+          id: "lunar-solar-gap",
         },
         {
           kind: "para",

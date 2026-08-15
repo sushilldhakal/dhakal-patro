@@ -97,6 +97,41 @@ export const tmFigure = cn(
 export const tmFigurePre =
   "m-0 whitespace-pre text-xs leading-[1.7] text-[var(--tm-ink-dim)] [font-family:'DejaVu_Sans_Mono','Liberation_Mono','Menlo','Consolas',ui-monospace,monospace] sm:text-sm";
 
+/**
+ * Worked calculation: the rule in an amber-ruled band, an optional symbol
+ * glossary, then the numeric example aligned in two columns.
+ *
+ * Everything here is proportional type rather than a `<pre>` — an equation
+ * only needs its *columns* to line up, which a grid does far better than
+ * hand-counted spaces, and it lets the Nepali sit at its real size instead of
+ * being squeezed into a monospace cell.
+ */
+export const tmCalc = cn(
+  "mt-5 overflow-x-auto rounded-[14px] border border-[var(--tm-border)] bg-[var(--tm-card)] p-4 shadow-xs",
+  "border-l-[3px] border-l-[var(--tm-amber)] [-webkit-overflow-scrolling:touch]",
+  "dark:shadow-[0_18px_50px_rgba(0,0,0,0.4)]",
+);
+
+export const tmCalcRule =
+  "space-y-1.5 font-num text-[0.95rem] leading-relaxed text-[var(--tm-ink)]";
+
+export const tmCalcWhere = cn(
+  "mt-3.5 grid gap-x-3 gap-y-1 border-t border-[var(--tm-border)] pt-3 text-[0.8rem]",
+  "[&>div]:flex [&>div]:gap-2.5",
+  "[&_dt]:min-w-[2.2rem] [&_dt]:shrink-0 [&_dt]:font-num [&_dt]:font-semibold [&_dt]:text-[var(--tm-amber)]",
+  "[&_dd]:m-0 [&_dd]:text-[var(--tm-ink-dim)]",
+);
+
+export const tmCalcEg = cn(
+  "mt-3.5 border-t border-[var(--tm-border)] pt-3 text-[0.82rem]",
+  "[&>div]:flex [&>div]:justify-between [&>div]:gap-4 [&>div]:py-[0.15rem]",
+  "[&>div>span:first-child]:text-[var(--tm-ink-dim)]",
+  "[&>div>span:last-child]:font-num [&>div>span:last-child]:tabular-nums [&>div>span:last-child]:text-[var(--tm-ink)]",
+);
+
+export const tmCalcResult =
+  "mt-3 rounded-[9px] bg-[var(--tm-amber)]/10 px-3 py-2 text-[0.85rem] font-semibold text-[var(--tm-ink)]";
+
 export const tmList =
   "mt-4 max-w-[760px] space-y-2 pl-1 text-base leading-relaxed text-[var(--tm-ink-dim)]";
 

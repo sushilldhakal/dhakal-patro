@@ -85,25 +85,14 @@ export const skyRotation: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `परिध्रुवीय सीमा / circumpolar limit:  क्रान्ति / declination > (90° − अक्षांश / latitude)
-
-काठमाडौँ / Kathmandu (27.7°N):
-   क्रान्ति / dec > 62.3°  →  कहिल्यै अस्ताउँदैन / never sets
-   क्रान्ति / dec < −62.3° →  कहिल्यै उदाउँदैन / never rises
-
-अर्थात् काठमाडौँबाट दक्षिणी आकाशको एउटा भाग कहिल्यै देखिँदैन
-so a portion of the southern sky is never visible from Kathmandu`,
-          caption: {
-            ne: "अक्षांशले आकाशको कति भाग देखिन्छ भन्ने तय गर्छ।",
-            en: "Latitude decides how much of the sky you can ever see.",
-          },
+          kind: "diagram",
+          id: "circumpolar-sky",
         },
         {
           kind: "para",
           text: {
-            ne: "यही कारण **सप्तर्षि** (Big Dipper) नेपालबाट वर्षभरि देखिन्छ भने **क्रक्स** (Southern Cross) कहिल्यै देखिँदैन। भारतीय परम्परामा सप्तर्षिको केन्द्रीय स्थान हुनुको कारण पनि यही हो।",
-            en: "Which is why the **Saptarishi** — the Big Dipper — is visible from Nepal all year while the **Southern Cross** never is. It also explains the central place the Saptarishi holds in Indian tradition.",
+            ne: "यही कारण **सप्तर्षि** (Big Dipper) नेपालबाट वर्षभरि देखिन्छ भने **क्रक्स** (Southern Cross) कहिल्यै देखिँदैन। वैदिक परम्परामा सप्तर्षिको केन्द्रीय स्थान हुनुको कारण पनि यही हो।",
+            en: "Which is why the **Saptarishi** — the Big Dipper — is visible from Nepal all year while the **Southern Cross** never is. It also explains the central place the Saptarishi holds in Vedic tradition.",
           },
         },
         {

@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const whySeasons: ArticleData = {
   slug: "why-seasons",
-  seeAlso: ["axial-tilt", "solstices", "equinoxes", "ritu-drift"],
+  seeAlso: ["axial-tilt", "equinox-solstice", "uttarayana-dakshinayana", "ritu-drift"],
   sections: [
     {
       title: { ne: "दूरीले होइन, झुकावले", en: "Tilt, not distance" },
@@ -77,18 +77,8 @@ export const whySeasons: ArticleData = {
           ],
         },
         {
-          kind: "figure",
-          art: `ठाडो किरण / steep rays        छड्के किरण / slanting rays
-      ↓ ↓ ↓ ↓                        ↘ ↘ ↘ ↘
-   ───────────                    ─────────────────
-   सानो क्षेत्र                     ठूलो क्षेत्र
-   small area                     large area
-   बढी ताप / more heat            कम ताप / less heat
-   → गर्मी / summer               → जाडो / winter`,
-          caption: {
-            ne: "उही मात्राको सूर्य किरण फरक कोणमा पर्दा फरक क्षेत्रमा फिँजिन्छ।",
-            en: "The same quantity of sunlight spread over different areas, purely because of the angle.",
-          },
+          kind: "diagram",
+          id: "sun-ray-angle",
         },
         {
           kind: "para",
@@ -125,6 +115,24 @@ export const whySeasons: ArticleData = {
             [{ ne: "हेमन्त", en: "Hemanta" }, { ne: "मंसिर–पुष", en: "Mangsir–Poush" }, "Pre-winter"],
             [{ ne: "शिशिर", en: "Śiśira" }, { ne: "माघ–फागुन", en: "Magh–Falgun" }, "Winter"],
           ],
+        },
+        {
+          kind: "diagram",
+          id: "ritu-wheel",
+        },
+        {
+          kind: "para",
+          text: {
+            ne: "तर ध्यान दिनुहोस् — ऋतुको **नाम** महिनाले दिन्छ, ऋतु **बनाउने** कुरा भने सूर्यको उत्तर–दक्षिण यात्रा हो। महिना निरयन ढाँचामा (राशि सीमा) चल्छन्, ऋतु सायन ढाँचामा (विषुव–अयनान्त) — र अयन चलनले दुईलाई हरेक `७२` वर्षमा `१°` का दरले छुट्याउँदै लैजान्छ।",
+            en: "Note, though, that the months give a ṛtu its **name** while what **makes** a ṛtu is the Sun's north–south journey. The months run on the sidereal frame (sign boundaries), the ṛtus on the tropical one (equinox–solstice) — and precession parts the two by `1°` every `72` years.",
+          },
+        },
+        {
+          kind: "note",
+          text: {
+            ne: "त्यसैले ऋतुको कुरा गर्दा भरपर्दो सन्दर्भ महिना होइन, ~उत्तरायण र दक्षिणायन~ हो — ती सूर्यको क्रान्तिले नै परिभाषित हुन्छन्, र ऋतुसँग कहिल्यै छुट्टिँदैनन्।",
+            en: "So the dependable reference for a ṛtu is not the month but ~Uttarāyaṇa and Dakṣiṇāyana~ — those are defined by the Sun's declination itself, and never part company with the seasons.",
+          },
         },
         {
           kind: "note",

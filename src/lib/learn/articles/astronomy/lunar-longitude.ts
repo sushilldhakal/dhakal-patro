@@ -35,6 +35,14 @@ export const lunarLongitude: ArticleData = {
             en: "A small error in lunar longitude therefore propagates into four limbs at once — it is the most sensitive number in the whole computation.",
           },
         },
+        {
+          kind: "diagram",
+          id: "moon-orbit-tilt",
+          caption: {
+            ne: "चन्द्रको कक्ष क्रान्तिवृत्तबाट ५.१° झुकेको — देशान्तर यही तलमा नापिन्छ।",
+            en: "The Moon's orbit tilted 5.1° from the ecliptic — longitude is measured on that plane.",
+          },
+        },
       ],
     },
     {

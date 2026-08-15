@@ -68,7 +68,7 @@ export const meshaSankranti: ArticleData = {
           kind: "note",
           text: {
             ne: "यही कारण नेपाल र भारतका पात्रोमा एउटै सङ्क्रान्ति कहिलेकाहीँ फरक दिनमा देखिन्छ — क्षण उही, तर दिनमा राख्ने नियम फरक।",
-            en: "It is also why the Nepali and Indian calendars sometimes place the same sankranti on different days — the instant is shared, the assignment rule is not.",
+            en: "It is also why the Nepali and Vedic calendars sometimes place the same sankranti on different days — the instant is shared, the assignment rule is not.",
           },
         },
       ],
@@ -85,16 +85,8 @@ export const meshaSankranti: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `सायन मेष ०° / tropical 0° Aries      निरयन मेष ०° / sidereal 0° Mesha
-        ~21 मार्च / Mar                      ~14 अप्रिल / Apr
-              │◄──────── अयनांश ~24° ────────►│
-              │       ayanamsha ~24°          │
-              │       (~24 दिन / days)        │`,
-          caption: {
-            ne: "सूर्यलाई २४° पार गर्न झन्डै २४ दिन लाग्छ — त्यही समयले नववर्षलाई अप्रिल मध्यमा सार्छ।",
-            en: "The Sun needs roughly 24 days to cover 24° — and that is what carries the new year into mid-April.",
-          },
+          kind: "diagram",
+          id: "two-zero-points",
         },
         {
           kind: "diagram",

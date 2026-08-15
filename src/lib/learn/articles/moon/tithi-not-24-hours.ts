@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const tithiNot24Hours: ArticleData = {
   slug: "tithi-not-24-hours",
-  seeAlso: ["tithi", "tithi-vriddhi", "tithi-kshaya", "why-location-matters"],
+  seeAlso: ["tithi", "tithi-vriddhi-kshaya", "why-location-matters"],
   sections: [
     {
       title: { ne: "दिन र तिथि — दुई फरक परिभाषा", en: "A day and a tithi are defined differently" },

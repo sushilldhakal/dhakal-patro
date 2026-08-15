@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const makaraSankranti: ArticleData = {
   slug: "makara-sankranti",
-  seeAlso: ["sankranti-vs-solstice", "uttarayana-dakshinayana", "sankranti", "solstices"],
+  seeAlso: ["uttarayana-dakshinayana", "sankranti", "equinox-solstice"],
   sections: [
     {
       title: { ne: "माघे सङ्क्रान्ति", en: "Maghe Sankranti" },
@@ -22,6 +22,10 @@ export const makaraSankranti: ArticleData = {
             en: "In the Gregorian calendar it usually falls on `14`–`15` January, and it is the most widely observed of the year's sankrantis — marked with yam, chaku, sesame sweets and ghee.",
           },
         },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+        },
       ],
     },
     {
@@ -36,35 +40,30 @@ export const makaraSankranti: ArticleData = {
           },
         },
         {
-          kind: "table",
-          headers: [
-            { ne: "घटना", en: "Event" },
-            { ne: "कसरी परिभाषित", en: "Defined by" },
-            { ne: "मिति", en: "Date" },
-          ],
-          rows: [
-            [
-              { ne: "शीत अयनान्त", en: "Winter solstice" },
-              { ne: "सूर्यको क्रान्ति दक्षिणतम — सबैभन्दा छोटो दिन", en: "The Sun's southernmost declination — the shortest day" },
-              { ne: "~पुष ६–७", en: "~21–22 Dec" },
-            ],
-            [
-              { ne: "मकर सङ्क्रान्ति", en: "Makara Sankranti" },
-              { ne: "निरयन देशान्तर २७०° — राशि सीमा नाघ्नु", en: "Sidereal longitude 270° — crossing a sign boundary" },
-              { ne: "माघ १", en: "~14–15 Jan" },
-            ],
+          kind: "keys",
+          items: [
+            {
+              h: { ne: "शीत अयनान्त · ~पुष ६–७", en: "Winter solstice · ~पुष ६–७" },
+              p: {
+                ne: "**सायन** घटना — सूर्यको क्रान्ति दक्षिणतम `−२३.४४°` मा। वर्षको सबैभन्दा छोटो दिन।",
+                en: "A **tropical** event — the Sun's declination at its southernmost `−23.44°`. The year's shortest day.",
+              },
+            },
+            {
+              h: { ne: "मकर सङ्क्रान्ति · माघ १", en: "Makara Sankranti · माघ १" },
+              p: {
+                ne: "**निरयन** घटना — निरयन देशान्तर `२७०°`, राशि सीमा नाघ्नु। ताराको सापेक्ष नापिन्छ।",
+                en: "A **sidereal** event — sidereal longitude `270°`, a sign boundary crossed. Measured against the stars.",
+              },
+            },
           ],
         },
         {
           kind: "para",
           text: {
-            ne: "दुईबीच झन्डै `२४` दिनको अन्तर छ — ठ्याक्कै अयनांश जति। कारण उही: एउटा **सायन** (विषुव–अयनान्तमा आधारित) घटना हो, अर्को **निरयन** (ताराको सापेक्ष) घटना।",
-            en: "The two sit about `24` days apart — exactly the ayanamsha. The reason is the same as always: one is a **tropical** event, defined by the equinox–solstice frame; the other is **sidereal**, defined against the stars.",
+            ne: "दुईबीच झन्डै `२४` दिनको अन्तर छ — ठ्याक्कै अयनांश जति। किन दुई फरक ढाँचाले फरक मिति दिन्छन् भन्ने पूरा कुरा ~उत्तरायण र दक्षिणायन~ मा छ।",
+            en: "The two sit about `24` days apart — exactly the ayanamsha. Why two frames give two dates is worked through in ~Uttarāyaṇa and Dakṣiṇāyana~.",
           },
-        },
-        {
-          kind: "diagram",
-          id: "equinox-precession",
         },
       ],
     },

@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const calendarDrift: ArticleData = {
   slug: "calendar-drift",
-  seeAlso: ["leap-years", "ritu-drift", "calendars-aligned-with-nature", "sidereal-vs-tropical-year"],
+  seeAlso: ["leap-years", "ritu-drift", "calendars-aligned-with-nature", "sidereal-vs-tropical"],
   sections: [
     {
       title: { ne: "सानो त्रुटि, ठूलो परिणाम", en: "Small error, large consequence" },
@@ -48,6 +48,10 @@ export const calendarDrift: ArticleData = {
             en: "Note that the third row is **not an error**. A sidereal calendar is not trying to track the seasons; it tracks the stars, and at that it is exact. \"Drift\" always begs the question — drift against what?",
           },
         },
+        {
+          kind: "diagram",
+          id: "equinox-precession",
+        },
       ],
     },
     {
@@ -69,20 +73,8 @@ export const calendarDrift: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `... 2  3  4  ┃  15  16  17 ...
-   अक्टोबर १५८२ / October 1582
-              ┗━ १० दिन हटाइयो / ten days removed
-
-तर सबैले एकैचोटि अपनाएनन् / but not everyone adopted at once:
-   1582  इटाली, स्पेन, पोर्चुगल / Italy, Spain, Portugal
-   1752  बेलायत — तबसम्म ११ दिन / Britain — 11 days by then
-   1918  रुस — १३ दिन / Russia — 13 days
-   1923  ग्रीस / Greece`,
-          caption: {
-            ne: "सुधार अपनाउन शताब्दीयौँ लाग्यो — त्यसैले ऐतिहासिक मिति पढ्दा कुन पात्रो हो भन्ने जान्नु आवश्यक हुन्छ।",
-            en: "Adoption took centuries — which is why reading a historical date requires knowing which calendar it is in.",
-          },
+          kind: "diagram",
+          id: "gregorian-jump",
         },
       ],
     },

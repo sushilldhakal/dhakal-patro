@@ -42,6 +42,14 @@ export const rightAscension: ArticleData = {
             en: "Why hours? Because it makes the number **directly usable at the telescope** — two stars `2` hours apart in right ascension cross the meridian `2` hours apart.",
           },
         },
+        {
+          kind: "diagram",
+          id: "ecliptic-belt",
+          caption: {
+            ne: "विषुवत् रेखामा नापिने देशान्तर नै विषुवांश — क्रान्तिवृत्तको देशान्तरभन्दा फरक ढाँचा।",
+            en: "Longitude measured along the equator is right ascension — a different frame from ecliptic longitude.",
+          },
+        },
       ],
     },
     {
@@ -113,20 +121,8 @@ export const rightAscension: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `नाक्षत्र काल / sidereal time
-        ▼
-याम्योत्तरमा कुन विषुवांश / which RA is on the meridian
-        ▼
-क्षितिजमा कुन बिन्दु उदाउँदै / which point is rising  ← अक्षांश / latitude
-        ▼
-त्यसलाई क्रान्तिवृत्तीय देशान्तरमा बदल्ने / convert to ecliptic longitude
-        ▼
-अयनांश घटाउने / subtract the ayanamsha  →  लग्न राशि / lagna rashi`,
-          caption: {
-            ne: "लग्न गणना — दुई समन्वय प्रणालीबीच ओहोरदोहोर गर्ने प्रक्रिया।",
-            en: "Computing a lagna means travelling between the two coordinate systems and back.",
-          },
+          kind: "diagram",
+          id: "ecliptic-equator-cross",
         },
       ],
     },
