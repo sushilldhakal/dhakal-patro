@@ -38,14 +38,13 @@ import { rahuKetuNodes } from "./eclipses/rahu-ketu-nodes";
 import { ancientSky } from "./astronomy/ancient-sky";
 import { axialTilt } from "./astronomy/axial-tilt";
 import { declination } from "./astronomy/declination";
+import { equinoxSolstice } from "./astronomy/equinox-solstice";
 import { earthRotationDay } from "./astronomy/earth-rotation-day";
-import { equinoxes } from "./astronomy/equinoxes";
 import { lunarLongitude } from "./astronomy/lunar-longitude";
 import { poleStarChanges } from "./astronomy/pole-star-changes";
 import { precession } from "./astronomy/precession";
 import { siderealTime } from "./astronomy/sidereal-time";
 import { solarLongitude } from "./astronomy/solar-longitude";
-import { solstices } from "./astronomy/solstices";
 import { whySeasons } from "./astronomy/why-seasons";
 
 import { calcKarana } from "./calculation/calc-karana";
@@ -129,8 +128,7 @@ const ALL: ArticleData[] = [
   earthRotationDay,
   axialTilt,
   whySeasons,
-  equinoxes,
-  solstices,
+  equinoxSolstice,
   precession,
   poleStarChanges,
   ancientSky,

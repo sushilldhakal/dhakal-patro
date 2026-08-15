@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const whySeasons: ArticleData = {
   slug: "why-seasons",
-  seeAlso: ["axial-tilt", "solstices", "equinoxes", "ritu-drift"],
+  seeAlso: ["axial-tilt", "equinox-solstice", "ritu-drift"],
   sections: [
     {
       title: { ne: "दूरीले होइन, झुकावले", en: "Tilt, not distance" },

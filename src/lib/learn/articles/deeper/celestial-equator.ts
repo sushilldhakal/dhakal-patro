@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const celestialEquator: ArticleData = {
   slug: "celestial-equator",
-  seeAlso: ["ecliptic", "declination", "equinoxes", "celestial-sphere"],
+  seeAlso: ["ecliptic", "declination", "equinox-solstice", "celestial-sphere"],
   sections: [
     {
       title: { ne: "पृथ्वीको विषुवत् रेखा आकाशमा", en: "Earth's equator, projected upward" },

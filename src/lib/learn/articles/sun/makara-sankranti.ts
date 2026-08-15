@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const makaraSankranti: ArticleData = {
   slug: "makara-sankranti",
-  seeAlso: ["sankranti-vs-solstice", "uttarayana-dakshinayana", "sankranti", "solstices"],
+  seeAlso: ["sankranti-vs-solstice", "uttarayana-dakshinayana", "sankranti", "equinox-solstice"],
   sections: [
     {
       title: { ne: "माघे सङ्क्रान्ति", en: "Maghe Sankranti" },

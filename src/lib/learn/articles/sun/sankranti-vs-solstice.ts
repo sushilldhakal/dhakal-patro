@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const sankrantiVsSolstice: ArticleData = {
   slug: "sankranti-vs-solstice",
-  seeAlso: ["makara-sankranti", "solstices", "sidereal-vs-tropical", "ritu-drift"],
+  seeAlso: ["makara-sankranti", "equinox-solstice", "sidereal-vs-tropical", "ritu-drift"],
   sections: [
     {
       title: { ne: "दुई फरक प्रश्नका दुई फरक उत्तर", en: "Two different questions, two different answers" },

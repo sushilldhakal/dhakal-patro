@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const uttarayanaDakshinayana: ArticleData = {
   slug: "uttarayana-dakshinayana",
-  seeAlso: ["declination", "makara-sankranti", "karka-sankranti", "solstices"],
+  seeAlso: ["declination", "makara-sankranti", "karka-sankranti", "equinox-solstice"],
   sections: [
     {
       title: { ne: "सूर्यको उत्तर–दक्षिण यात्रा", en: "The Sun's north–south journey" },

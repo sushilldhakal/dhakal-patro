@@ -2,7 +2,7 @@ import type { ArticleData } from "../../article-schema";
 
 export const axialTilt: ArticleData = {
   slug: "axial-tilt",
-  seeAlso: ["why-seasons", "declination", "solstices", "celestial-equator"],
+  seeAlso: ["why-seasons", "declination", "equinox-solstice", "celestial-equator"],
   sections: [
     {
       title: { ne: "२३.४४° — एउटै कोण, धेरै परिणाम", en: "23.44° — one angle, many consequences" },

@@ -22,9 +22,19 @@ import {
   tmWrap,
 } from "@/lib/learn-classes";
 
-const LEGACY_ECLIPSE_SLUGS: Record<string, string> = {
+/**
+ * Slugs that used to be their own article and now live inside another.
+ *
+ * Merges are the normal way this section improves — two half-articles that
+ * kept re-deriving each other become one — and every merge orphans a URL that
+ * is already in someone's history or a search index. Keep the old slug here
+ * and it lands on the article that absorbed it instead of on "not found".
+ */
+const MERGED_SLUGS: Record<string, string> = {
   "lunar-eclipse": "eclipses",
   "solar-eclipse": "eclipses",
+  equinoxes: "equinox-solstice",
+  solstices: "equinox-solstice",
 };
 
 export function LearnArticle() {
@@ -33,8 +43,8 @@ export function LearnArticle() {
   useRouteLoading(false);
   const { slug } = useParams({ strict: false }) as { slug?: string };
 
-  if (slug && LEGACY_ECLIPSE_SLUGS[slug]) {
-    return <Navigate to="/learn/$slug" params={{ slug: LEGACY_ECLIPSE_SLUGS[slug] }} replace />;
+  if (slug && MERGED_SLUGS[slug]) {
+    return <Navigate to="/learn/$slug" params={{ slug: MERGED_SLUGS[slug] }} replace />;
   }
 
   if (slug === "history") {
