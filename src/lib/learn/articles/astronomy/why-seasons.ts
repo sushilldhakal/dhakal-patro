@@ -77,18 +77,8 @@ export const whySeasons: ArticleData = {
           ],
         },
         {
-          kind: "figure",
-          art: `ठाडो किरण / steep rays        छड्के किरण / slanting rays
-      ↓ ↓ ↓ ↓                        ↘ ↘ ↘ ↘
-   ───────────                    ─────────────────
-   सानो क्षेत्र                     ठूलो क्षेत्र
-   small area                     large area
-   बढी ताप / more heat            कम ताप / less heat
-   → गर्मी / summer               → जाडो / winter`,
-          caption: {
-            ne: "उही मात्राको सूर्य किरण फरक कोणमा पर्दा फरक क्षेत्रमा फिँजिन्छ।",
-            en: "The same quantity of sunlight spread over different areas, purely because of the angle.",
-          },
+          kind: "diagram",
+          id: "sun-ray-angle",
         },
         {
           kind: "para",

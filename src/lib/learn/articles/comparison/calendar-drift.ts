@@ -73,20 +73,8 @@ export const calendarDrift: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `... 2  3  4  ┃  15  16  17 ...
-   अक्टोबर १५८२ / October 1582
-              ┗━ १० दिन हटाइयो / ten days removed
-
-तर सबैले एकैचोटि अपनाएनन् / but not everyone adopted at once:
-   1582  इटाली, स्पेन, पोर्चुगल / Italy, Spain, Portugal
-   1752  बेलायत — तबसम्म ११ दिन / Britain — 11 days by then
-   1918  रुस — १३ दिन / Russia — 13 days
-   1923  ग्रीस / Greece`,
-          caption: {
-            ne: "सुधार अपनाउन शताब्दीयौँ लाग्यो — त्यसैले ऐतिहासिक मिति पढ्दा कुन पात्रो हो भन्ने जान्नु आवश्यक हुन्छ।",
-            en: "Adoption took centuries — which is why reading a historical date requires knowing which calendar it is in.",
-          },
+          kind: "diagram",
+          id: "gregorian-jump",
         },
       ],
     },

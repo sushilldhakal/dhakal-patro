@@ -44,17 +44,8 @@ export const leapYears: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `जुलियन औसत / Julian mean     365.2500
-वास्तविक / actual              365.2422
-                               ────────
-अतिरिक्त / excess               0.0078 दिन/day प्रति वर्ष/per year
-                             ≈ 1 दिन / day प्रति 128 वर्ष / per 128 years
-                             ≈ 10 दिन / days by 1582 CE`,
-          caption: {
-            ne: "जुलियन नियम अलिकति उदार थियो — शताब्दीयौँमा १० दिनको त्रुटि जम्मा भयो।",
-            en: "The Julian rule was slightly too generous — ten days of error had piled up by 1582.",
-          },
+          kind: "diagram",
+          id: "year-length-ladder",
         },
         {
           kind: "para",

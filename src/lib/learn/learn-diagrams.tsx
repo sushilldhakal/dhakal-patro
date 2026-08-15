@@ -24,6 +24,13 @@ import { HierarchyDiagram } from "@/components/learn/HierarchyDiagram";
 import { MoonOrbitTiltStudy } from "@/components/learn/MoonOrbitTilt";
 import { MoonPhasesStrip } from "@/components/learn/MoonPhasesStrip";
 import { PrecessionCone } from "@/components/learn/PrecessionCone";
+import {
+  EclipseSeasonWindow,
+  GregorianJump,
+  HoraWeekdayCycle,
+  SunRayAngle,
+  YearLengthLadder,
+} from "@/components/learn/calendar-cycle-diagrams";
 import { CircumpolarSky } from "@/components/learn/CircumpolarSky";
 import {
   DayLengthHourAngle,
@@ -58,6 +65,11 @@ export const LEARN_DIAGRAMS = {
   "ritu-wheel": RituWheel,
   "lunar-solar-gap": LunarSolarGap,
   "circumpolar-sky": CircumpolarSky,
+  "hora-weekday-cycle": HoraWeekdayCycle,
+  "year-length-ladder": YearLengthLadder,
+  "gregorian-jump": GregorianJump,
+  "eclipse-season-window": EclipseSeasonWindow,
+  "sun-ray-angle": SunRayAngle,
   "sidereal-solar-day": SiderealSolarDay,
   "day-length-hour-angle": DayLengthHourAngle,
   "moonrise-slip": MoonriseSlip,

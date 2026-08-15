@@ -62,19 +62,8 @@ export const eclipseSeasons: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `ग्रहण ऋतु / eclipse season  (~34 दिन / days)
-├────────────────────────────────────────┤
-   ●                    ○
- औंसी                पूर्णिमा
- new moon            full moon
- सूर्यग्रहण           चन्द्रग्रहण
- solar eclipse       lunar eclipse
-   │◄──── ~14 दिन / days ────►│`,
-          caption: {
-            ne: "सूर्य पात नजिक हुँदा औंसी र पूर्णिमा दुवैले ग्रहणको सर्त पूरा गर्न सक्छन्।",
-            en: "While the Sun lingers near a node, both the new and the full moon can satisfy the eclipse condition.",
-          },
+          kind: "diagram",
+          id: "eclipse-season-window",
         },
         {
           kind: "para",
