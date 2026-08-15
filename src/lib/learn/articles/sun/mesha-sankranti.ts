@@ -85,16 +85,8 @@ export const meshaSankranti: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `सायन मेष ०° / tropical 0° Aries      निरयन मेष ०° / sidereal 0° Mesha
-        ~21 मार्च / Mar                      ~14 अप्रिल / Apr
-              │◄──────── अयनांश ~24° ────────►│
-              │       ayanamsha ~24°          │
-              │       (~24 दिन / days)        │`,
-          caption: {
-            ne: "सूर्यलाई २४° पार गर्न झन्डै २४ दिन लाग्छ — त्यही समयले नववर्षलाई अप्रिल मध्यमा सार्छ।",
-            en: "The Sun needs roughly 24 days to cover 24° — and that is what carries the new year into mid-April.",
-          },
+          kind: "diagram",
+          id: "two-zero-points",
         },
         {
           kind: "diagram",

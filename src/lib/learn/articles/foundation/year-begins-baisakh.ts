@@ -43,17 +43,8 @@ export const yearBeginsBaisakh: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `0°       30°       60°       90°                   360°
-│─────────│─────────│─────────│  ·  ·  ·  ·  ·  ─────│
-Mesha   Vrishabha  Mithuna    Karka      ...        Meena
-Aries    Taurus     Gemini    Cancer                Pisces
-  ▲
-  └── सूर्य यहाँ पुग्दा सौर वर्षको सन्दर्भ बिन्दु पूरा होस् / solar year resets here`,
-          caption: {
-            ne: "सूर्य मेषको आरम्भमा पुग्दा राशि–चक्र आफ्नो सन्दर्भ बिन्दुमा फर्किसकेको हुन्छ।",
-            en: "When the Sun reaches the start of Mesha, the zodiacal cycle has returned to its reference point.",
-          },
+          kind: "diagram",
+          id: "two-zero-points",
         },
         {
           kind: "para",

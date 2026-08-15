@@ -33,6 +33,11 @@ import {
 } from "@/components/learn/calendar-cycle-diagrams";
 import { CircumpolarSky } from "@/components/learn/CircumpolarSky";
 import {
+  EclipticEquatorCross,
+  TwoZeroPoints,
+  ZodiacBeltWidth,
+} from "@/components/learn/zodiac-frame-diagrams";
+import {
   DayLengthHourAngle,
   MoonriseSlip,
   SiderealSolarDay,
@@ -65,6 +70,9 @@ export const LEARN_DIAGRAMS = {
   "ritu-wheel": RituWheel,
   "lunar-solar-gap": LunarSolarGap,
   "circumpolar-sky": CircumpolarSky,
+  "two-zero-points": TwoZeroPoints,
+  "zodiac-belt-width": ZodiacBeltWidth,
+  "ecliptic-equator-cross": EclipticEquatorCross,
   "hora-weekday-cycle": HoraWeekdayCycle,
   "year-length-ladder": YearLengthLadder,
   "gregorian-jump": GregorianJump,

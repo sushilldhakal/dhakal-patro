@@ -63,19 +63,8 @@ export const celestialEquator: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `        क्रान्तिवृत्त / ecliptic
-              ╱
-            ╱   23.44°
-          ╱
-────────●──────────── खगोलीय विषुवत् रेखा / celestial equator
-        │
-   वसन्त विषुव / vernal equinox
-   दुवै प्रणालीको ०° / 0° of both systems`,
-          caption: {
-            ne: "दुई महावृत्त काटिने बिन्दु — सायन प्रणालीको आधारशिला।",
-            en: "Where the two great circles cross — the anchor of the tropical system.",
-          },
+          kind: "diagram",
+          id: "ecliptic-equator-cross",
         },
         {
           kind: "para",

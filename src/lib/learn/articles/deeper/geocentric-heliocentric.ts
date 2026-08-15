@@ -59,22 +59,6 @@ export const geocentricHeliocentric: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `सूर्यकेन्द्रित / heliocentric        भूकेन्द्रित / geocentric
-
-      ☉                                    ⊕
-     ╱ ╲                                  ╱ ╲
-   ⊕     ♂                              ☉     ♂
-
-ग्रहको सूर्यकेन्द्रित सदिश − पृथ्वीको सूर्यकेन्द्रित सदिश
-planet's heliocentric vector − Earth's heliocentric vector
-        = ग्रहको भूकेन्द्रित सदिश / planet's geocentric vector`,
-          caption: {
-            ne: "एउटा घटाउ — यत्तिले नै दुई ढाँचा जोड्छ।",
-            en: "One subtraction is all that separates the two frames.",
-          },
-        },
-        {
           kind: "para",
           text: {
             ne: "Swiss Ephemeris ले दुवै दिन सक्छ। पञ्चाङ्ग गणनाले **भूकेन्द्रित** माग्छ, र engine ले त्यही झिक्छ — तर भित्री गणना सूर्यकेन्द्रित ग्रहपातबाटै आउँछ।",

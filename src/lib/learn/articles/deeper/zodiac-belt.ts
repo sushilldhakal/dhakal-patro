@@ -23,20 +23,8 @@ export const zodiacBelt: ArticleData = {
           },
         },
         {
-          kind: "figure",
-          art: `        ┌─────────────────────────────────┐  +9°
-        │                                 │
-────────┼─────── क्रान्तिवृत्त / ecliptic ──┼──────  0°
-        │                                 │
-        └─────────────────────────────────┘  −9°
-         ☉ ☾ ☿ ♀ ♂ ♃ ♄  सबै यहीँभित्र / all stay inside
-
-  मेष   वृषभ  मिथुन  कर्क  …  मीन
-  ├─30°─┼─30°─┼─30°─┼─30°─┼ … ┤`,
-          caption: {
-            ne: "पट्टीलाई लम्बाइमा १२ राशिमा बाँडिन्छ; चौडाइ ग्रहको विचलनले तय गर्छ।",
-            en: "Lengthwise the belt divides into twelve rashis; its width is set by how far the planets stray.",
-          },
+          kind: "diagram",
+          id: "zodiac-belt-width",
         },
         {
           kind: "diagram",
