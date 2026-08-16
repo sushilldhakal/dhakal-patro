@@ -103,7 +103,7 @@ const GROUPS = {
   year: ["planetOrbit", "monthRing", "rashiBelt"],
   sun: ["trueSun", "sightline", "sunOrbit"],
   day: ["siderealArc", "solarArc", "meanArc", "primeMeridian"],
-  tilt: ["sunOrbit", "grid", "eotWedge", "meanSun"],
+  tilt: ["sunOrbit", "grid", "eotWedge", "meanSun", "axis"],
   moon: ["moon", "moonTrail", "moonLap", "moonSightline"],
 } satisfies Record<string, (keyof SimToggles)[]>;
 
@@ -661,6 +661,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               ["planetOrbit", pick("कक्ष", "Orbit")],
               ["sunOrbit", pick("सूर्यपथ", "Sun path")],
               ["primeMeridian", pick("काठमाडौँ रेखा", "Kathmandu meridian")],
+              ["axis", pick("अक्ष", "Spin axis")],
             ])}
             {layerGroup(pick("वस्तुहरू", "Elements"), [
               ["trueSun", pick("साँचो सूर्य", "True Sun")],

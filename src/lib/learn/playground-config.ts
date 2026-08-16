@@ -59,6 +59,7 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     solarArc: true,
     meanArc: true,
     primeMeridian: true,
+    axis: true,
     rashiBelt: false,
     nakshatraBelt: false,
     monthRing: false,
@@ -79,6 +80,7 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     solarArc: false,
     meanArc: false,
     primeMeridian: false,
+    axis: false,
     rashiBelt: true,
     nakshatraBelt: false,
     monthRing: true,
@@ -99,6 +101,7 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     solarArc: false,
     meanArc: false,
     primeMeridian: false,
+    axis: false,
     rashiBelt: true,
     nakshatraBelt: true,
     monthRing: true,
@@ -119,6 +122,9 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     solarArc: false,
     meanArc: false,
     primeMeridian: false,
+    /* This mode's whole subject is the tilt, so the axis it is measured
+       against opens on even though the meridian does not. */
+    axis: true,
     rashiBelt: true,
     nakshatraBelt: false,
     monthRing: true,

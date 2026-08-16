@@ -200,6 +200,7 @@ const COLOR = {
   nakshatra: 0x4a6b8a,
   rahu: 0x8b5cf6,
   ketu: 0xe11d48,
+  axis: 0xdfe7f2,
 } as const;
 
 const MOON_INCL_Q = new THREE.Quaternion().setFromAxisAngle(
@@ -237,6 +238,8 @@ export type SimToggles = {
   meanArc: boolean;
   /** काठमाडौँ's meridian, pole to pole — the line noon is reckoned against. */
   primeMeridian: boolean;
+  /** The spin axis, run out through both poles, against the orbital plane. */
+  axis: boolean;
   /** The twelve राशि, out beyond the orbit. */
   rashiBelt: boolean;
   /** The twenty-seven नक्षत्र, outside the rashi belt. */
@@ -595,6 +598,30 @@ function DaySimScene({
     [],
   );
   /**
+   * The spin axis, run out well past both poles.
+   *
+   * This scene keeps the planet's *equator* as its working plane and tilts the
+   * Sun's plane instead, which is what makes the equation of time tractable —
+   * so the axis is world-vertical here rather than leaning over. The 23.44°
+   * does not vanish with that choice, it changes which line carries it: the
+   * tilt is the angle between this axis and the orbital plane the planet is
+   * riding, and the low camera of the tilt mode is aimed to show exactly that.
+   */
+  const axisLine = useMemo(
+    () =>
+      makeLine(
+        (() => {
+          const g = new THREE.BufferGeometry();
+          const L = PLANET_R * 2.3;
+          g.setAttribute("position", new THREE.Float32BufferAttribute([0, -L, 0, 0, L, 0], 3));
+          return g;
+        })(),
+        COLOR.axis,
+        0.85,
+      ),
+    [],
+  );
+  /**
    * Half a great circle, pole to pole, through **काठमाडौँ**.
    *
    * Drawn in the XY plane it would run through longitude 0° — Greenwich — which
@@ -626,6 +653,7 @@ function DaySimScene({
   useEffect(() => () => dispose(trueOrbitLine), [trueOrbitLine]);
   useEffect(() => () => dispose(meanOrbitLine), [meanOrbitLine]);
   useEffect(() => () => dispose(localMeridian), [localMeridian]);
+  useEffect(() => () => dispose(axisLine), [axisLine]);
 
   /**
    * Rotation carrying the equatorial plane onto the ecliptic.
@@ -1581,6 +1609,22 @@ function DaySimScene({
           <meshStandardMaterial map={earthMap} roughness={0.92} metalness={0} />
           <primitive object={localMeridian} visible={toggles.primeMeridian} />
         </mesh>
+
+        {/* The spin axis: one line straight through the globe and out past both
+            poles, with a marker on each pole. It sits outside `planetMesh` so
+            the spin does not carry it — an axis that rotated with the surface
+            would be the one thing in the scene that cannot. */}
+        <group visible={toggles.axis}>
+          <primitive object={axisLine} />
+          <mesh position={[0, PLANET_R, 0]}>
+            <sphereGeometry args={[PLANET_R * 0.06, 12, 8]} />
+            <meshBasicMaterial color={COLOR.axis} />
+          </mesh>
+          <mesh position={[0, -PLANET_R, 0]}>
+            <sphereGeometry args={[PLANET_R * 0.06, 12, 8]} />
+            <meshBasicMaterial color={COLOR.axis} />
+          </mesh>
+        </group>
 
         <mesh
           ref={meanArc}
