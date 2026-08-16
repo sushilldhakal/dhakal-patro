@@ -550,6 +550,18 @@ function DaySimScene({
   const ketuGroup = useRef<THREE.Group>(null!);
   const beltRoot = useRef<THREE.Group>(null!);
   const gridRoot = useRef<THREE.Group>(null!);
+  /**
+   * The whole moving world, slid so the focused body sits on the origin.
+   *
+   * Focus used to be a camera move: the camera flew to the body and the grid
+   * flew with it, so the *floor* travelled and every orbit line appeared to
+   * drift. Shifting the world instead makes focus what it claims to be — a
+   * change of reference frame. The focused body is then genuinely still at the
+   * centre, the grid is a fixed plane it sits on, and everything else moves
+   * against it: with the Sun focused the planet runs its orbit and dips below
+   * and above the plane, instead of the plane chasing the planet.
+   */
+  const frameRoot = useRef<THREE.Group>(null!);
   const solarShadow = useRef<THREE.Group>(null!);
   const vMoonWorld = useRef(new THREE.Vector3());
   const vShadow = useRef(new THREE.Vector3());
@@ -1257,7 +1269,9 @@ function DaySimScene({
     } else {
       camAnchor.current.copy(target);
     }
-    const anchorPos = camAnchor.current;
+    /* The world moves, not the camera: everything is slid by −anchor, which
+       puts the focused body on the origin and leaves it there. */
+    frameRoot.current.position.copy(camAnchor.current).negate();
 
     /* Follow eases the yaw round with the planet so it stays put on screen. */
     followYaw.current += shortestAngle((cameraFollow ? -M : 0) - followYaw.current) *
@@ -1265,15 +1279,15 @@ function DaySimScene({
     const yaw = v.yaw + followYaw.current;
     const cosPitch = Math.cos(v.pitch);
     cam.position.set(
-      anchorPos.x + v.distance * cosPitch * Math.sin(yaw),
-      anchorPos.y + v.distance * Math.sin(v.pitch),
-      anchorPos.z + v.distance * cosPitch * Math.cos(yaw),
+      v.distance * cosPitch * Math.sin(yaw),
+      v.distance * Math.sin(v.pitch),
+      v.distance * cosPitch * Math.cos(yaw),
     );
-    cam.lookAt(anchorPos);
+    cam.lookAt(0, 0, 0);
 
-    /* The grid rides the same anchor, so the plane and the view arrive on the
-       focused body together rather than the floor sliding in afterwards. */
-    gridRoot.current.position.copy(anchorPos);
+    /* The grid stays on the origin — which *is* the focused body now. It sits
+       outside the shifted world for that reason: a plane a body is above or
+       below has to hold still, or nothing can be seen to rise through it. */
 
     /* ── labels: positioned every frame, described five times a second ── */
     frame.current += 1;
@@ -1310,7 +1324,10 @@ function DaySimScene({
       index?: number,
       full?: string,
     ) => {
-      proj.copy(at).project(cam);
+      /* `at` is built in the scene's own coordinates, which the frame shift
+         then slides; project from the shifted position or every label sits
+         where its body used to be. */
+      proj.copy(at).add(frameRoot.current.position).project(cam);
       const node = labelNodes.current.get(id);
       const behind = proj.z > 1;
       const x = (proj.x * 0.5 + 0.5) * size.width;
@@ -1438,7 +1455,6 @@ function DaySimScene({
           does the modelling, so अमावस्या goes properly dark and पूर्णिमा
           lights the full face. */}
       <ambientLight intensity={toggles.trueSun ? 0.1 : 0.8} />
-      <pointLight ref={sunLight} intensity={520} distance={0} decay={2} />
 
       {/* Sky. `BackSide` alone turns the sphere outside-in — a negative scale
           as well would cancel it out and cull every face. */}
@@ -1446,6 +1462,29 @@ function DaySimScene({
         <sphereGeometry args={[300, 32, 16]} />
         <meshBasicMaterial map={skyMap} side={THREE.BackSide} depthWrite={false} />
       </mesh>
+
+      {/*
+        The polar grid, on the body the reader has focused.
+       *
+       * Its own root rather than a layer of the wheel: the belts are a sky ring
+       * and have to stay on the observer for the sightlines to read, while the
+       * grid is a *plane* — the thing a body is above or below — and that only
+       * means anything when it holds still. It sits outside the frame root, on
+       * the origin, which is where the focused body now is.
+       */}
+      <group ref={gridRoot}>
+        <group quaternion={solarPlaneQ}>
+          <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
+            <GuideGrid visible={toggles.grid} innerR={focusRadius} planeInnerR={focusRadius} />
+          </group>
+        </group>
+      </group>
+
+      {/* Everything that moves, slid together so the focused body is at the
+          origin. Positions inside are written in the scene's own coordinates,
+          exactly as before — the group carries the frame change. */}
+      <group ref={frameRoot}>
+      <pointLight ref={sunLight} intensity={520} distance={0} decay={2} />
 
       {/* राशि · नक्षत्र · बिक्रम महिना.
 
@@ -1476,24 +1515,6 @@ function DaySimScene({
           <primitive object={moonNakHighlight} position={[0, -0.02, 0]} />
         </group>
       </group>
-      </group>
-
-      {/*
-        The polar grid, on the body the reader has focused.
-       *
-       * Its own root rather than a layer of the wheel: the belts are a sky ring
-       * and have to stay on the observer for the sightlines to read, while the
-       * grid is a *plane* — the thing a body is above or below — and that only
-       * means anything when it is the focused body's own. The spokes start at
-       * that body's radius, so the grid leaves its equator instead of opening a
-       * hole around it.
-       */}
-      <group ref={gridRoot}>
-        <group quaternion={solarPlaneQ}>
-          <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
-            <GuideGrid visible={toggles.grid} innerR={focusRadius} planeInnerR={focusRadius} />
-          </group>
-        </group>
       </group>
 
       {/* World-space, not in the belt root: both are drawn from the planet out
@@ -1652,6 +1673,7 @@ function DaySimScene({
             />
           </mesh>
         </group>
+      </group>
       </group>
     </>
   );
