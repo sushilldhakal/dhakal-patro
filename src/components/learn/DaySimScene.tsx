@@ -432,16 +432,14 @@ function useSvgTexture(url: string, size = 256) {
  * floating in the plane did not say so.
  */
 function ShadowGraha({
-  nodeRef,
   color,
   map,
 }: {
-  nodeRef: MutableRefObject<THREE.Group>;
   color: number;
   map: THREE.Texture | null;
 }) {
   return (
-    <group ref={nodeRef}>
+    <group>
       <mesh>
         <sphereGeometry args={[NODE_R * 1.9, 16, 12]} />
         <meshBasicMaterial
@@ -548,8 +546,6 @@ function DaySimScene({
   const moonRoot = useRef<THREE.Group>(null!);
   const moonPlane = useRef<THREE.Group>(null!);
   const nodeAxis = useRef<THREE.Group>(null!);
-  const rahuGroup = useRef<THREE.Group>(null!);
-  const ketuGroup = useRef<THREE.Group>(null!);
   const beltRoot = useRef<THREE.Group>(null!);
   const gridRoot = useRef<THREE.Group>(null!);
   /**
@@ -1034,6 +1030,29 @@ function DaySimScene({
     moonRoot.current.position.copy(planetPos);
     const moonLonAt = (d: number) =>
       beltZeroDeg + MOON_ANCHOR_FROM_MESHA + MOON_LAPS_PER_YEAR * 360 * (d / daysPerYear);
+    /**
+     * The Moon's place, in the scene's own coordinates.
+     *
+     * Composed from the model rather than read back off the mesh, for the same
+     * reason the sightline below builds its own: a world matrix is only
+     * recomputed at render, so on the frame this runs it is one frame stale —
+     * and, worse, it already carries the frame shift that `push` is about to
+     * add again. See the label block.
+     */
+    const moonAt = (out: THREE.Vector3, lonDeg: number) =>
+      atLonInto(out, lonDeg, MOON_ORBIT).applyQuaternion(moonPlaneQ.current).add(planetPos);
+    /** Rāhu at +MOON_ORBIT along the node line, Ketu at −, lifted clear for the name. */
+    const nodeAt = (out: THREE.Vector3, signedRadius: number) => {
+      out
+        .set(signedRadius, 0, 0)
+        .applyAxisAngle(AXIS_Y, omegaRad.current)
+        .applyQuaternion(moonPlaneQ.current)
+        .add(planetPos);
+      /* Added rather than set: the node sits on the *ecliptic*, which is tilted
+         out of this scene's equatorial plane, so its own y is rarely zero. */
+      out.y += NODE_R * 2.6;
+      return out;
+    };
     /* Clockwise = decreasing longitude. One lap in NODAL_PERIOD_DAYS.
        `yearCount` survives the year wrapping so the nodes keep travelling. */
     const rahuLon = euclideanModulo(
@@ -1415,19 +1434,19 @@ function DaySimScene({
     const anchor = vAnchor.current;
     push("b-planet", "body", bodyNames.planet, anchor.copy(planetPos).setY(PLANET_R * 2.2), false);
     if (toggles.moon) {
-      push(
-        "b-moon",
-        "body",
-        bodyNames.moon,
-        moonMesh.current.getWorldPosition(anchor).setY(MOON_R * 3.4),
-        false,
-      );
-      rahuGroup.current.getWorldPosition(anchor);
-      anchor.y += NODE_R * 2.6;
-      push("b-rahu", "body", bodyNames.rahu, anchor, false);
-      ketuGroup.current.getWorldPosition(anchor);
-      anchor.y += NODE_R * 2.6;
-      push("b-ketu", "body", bodyNames.ketu, anchor, false);
+      /*
+       * Built from the model, not read back with `getWorldPosition`.
+       *
+       * These three live inside `frameRoot`, so their world matrices already
+       * carry the frame shift — and `push` adds that shift a second time,
+       * putting all three names a whole shift away from the bodies they label.
+       * It hides at the default focus, where the shift is zero, and is up to
+       * ten units off at any other. The matrix is also one frame stale, since
+       * nothing has committed this frame's transforms yet.
+       */
+      push("b-moon", "body", bodyNames.moon, moonAt(anchor, moonLonAt(day)).setY(MOON_R * 3.4), false);
+      push("b-rahu", "body", bodyNames.rahu, nodeAt(anchor, MOON_ORBIT), false);
+      push("b-ketu", "body", bodyNames.ketu, nodeAt(anchor, -MOON_ORBIT), false);
     }
     if (toggles.trueSun)
       push("b-sun", "body", bodyNames.sun, anchor.copy(sunPos).setY(sunPos.y + SUN_R * 2.2), false);
@@ -1641,10 +1660,10 @@ function DaySimScene({
           <group ref={nodeAxis} visible={toggles.moon}>
             <primitive object={nodeLine} />
             <group position={[MOON_ORBIT, 0, 0]}>
-              <ShadowGraha nodeRef={rahuGroup} color={COLOR.rahu} map={rahuIcon} />
+              <ShadowGraha color={COLOR.rahu} map={rahuIcon} />
             </group>
             <group position={[-MOON_ORBIT, 0, 0]}>
-              <ShadowGraha nodeRef={ketuGroup} color={COLOR.ketu} map={ketuIcon} />
+              <ShadowGraha color={COLOR.ketu} map={ketuIcon} />
             </group>
           </group>
         </group>
