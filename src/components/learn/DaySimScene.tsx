@@ -1471,12 +1471,20 @@ function DaySimScene({
        * grid is a *plane* — the thing a body is above or below — and that only
        * means anything when it holds still. It sits outside the frame root, on
        * the origin, which is where the focused body now is.
+       *
+       * **Equatorial, not ecliptic.** It used to carry `solarPlaneQ` like the
+       * belts do, and that made it useless as a reference: the planet's orbit
+       * *defines* the ecliptic, so laying the grid in that same plane left
+       * every body permanently flat in it and nothing could ever be seen to
+       * rise or dip. Declination — the whole of the equinoxes and the solstices
+       * — is height above the *equator*, which is this scene's y = 0. Leaving
+       * the grid there is what lets the ±23.44° swing be seen at all: with the
+       * Sun focused the planet rides up through it and back down over a year;
+       * with the planet focused, the Sun does.
        */}
       <group ref={gridRoot}>
-        <group quaternion={solarPlaneQ}>
-          <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
-            <GuideGrid visible={toggles.grid} innerR={focusRadius} planeInnerR={focusRadius} />
-          </group>
+        <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
+          <GuideGrid visible={toggles.grid} innerR={focusRadius} planeInnerR={focusRadius} />
         </group>
       </group>
 
