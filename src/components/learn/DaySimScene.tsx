@@ -75,6 +75,8 @@ export const MEAN_DISTANCE = 10;
 const PLANET_R = 1;
 /** काठमाडौँ's longitude in radians — the spin phase that puts it at noon. */
 const KATHMANDU_LON = KATHMANDU.lon * (Math.PI / 180);
+/** Where the mean sun sits. Read-only — never mutate it. */
+const ORIGIN = new THREE.Vector3();
 const SUN_R = 0.9;
 const MEAN_SUN_R = 0.42;
 
@@ -1171,8 +1173,25 @@ function DaySimScene({
      * quantities, so they are simply not drawn in the heliocentric frame
      * rather than drawn wrong.
      */
-    const geocentric = cameraTarget !== "sun";
-    const beltCentre = geocentric ? planetPos : sunPos;
+    /*
+     * The belt hangs on whichever body is focused — including the mean sun.
+     *
+     * It used to fall back to the planet for anything that was not the true
+     * Sun, so focusing the **mean sun** put the camera on the origin while the
+     * largest structure in the scene — the rashi ring, wider than the orbit —
+     * stayed wrapped around the planet. The mean sun was centred and the
+     * picture still read as planet-centred, because the rings said so.
+     *
+     * The mean sun is the centre of the planet's own orbit, so hanging the belt
+     * there is the orbit-centred view, and the planet then visibly runs round
+     * inside it.
+     */
+    const beltCentre =
+      cameraTarget === "planet" ? planetPos : cameraTarget === "sun" ? sunPos : ORIGIN;
+    /* The Moon's markers are geocentric quantities — an ecliptic longitude read
+       from the planet — so they are drawn only while the belt is on the planet,
+       rather than drawn wrong against a ring centred somewhere else. */
+    const geocentric = cameraTarget === "planet";
 
     /* ── which rashi is the Sun seen in ──────────────────────────────── */
     /* A rashi is a division of the **ecliptic**, not of the equator, so the
