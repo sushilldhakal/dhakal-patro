@@ -148,8 +148,17 @@ export const MODE_SPEED: Record<PlaygroundMode, number> = {
   tilt: 11,
 };
 
-/** Speed rungs, as multiples of the mode's own base pace. Rung 2 is 1×. */
-export const SPEED_MULTIPLIERS = [0.25, 1, 3, 8];
+/**
+ * Speed rungs, as multiples of the mode's own base pace. Rung 3 is 1×.
+ *
+ * The two rungs below 1× exist for a different question than the rest of the
+ * ladder. At 1× the belt modes cross a year in about thirty seconds, which is
+ * the right pace for watching a year — and far too fast to watch a *day*: the
+ * globe is turning several times a second, so the gap the three clocks are
+ * opening up cannot be read at all. 0.05× is one rotation every couple of
+ * seconds, slow enough to watch a single day's ~4 minutes appear.
+ */
+export const SPEED_MULTIPLIERS = [0.05, 0.1, 0.25, 1, 3, 8];
 
 /** Days per year each mode wants — small for spin, real-ish for the belt. */
 export const MODE_PARAMS: Record<PlaygroundMode, SimParams> = {
@@ -184,6 +193,7 @@ export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   "earth-rotation-day": { mode: "day" },
   "sidereal-time": { mode: "day", layers: { siderealArc: true, solarArc: false } },
   vara: { mode: "day", layers: { eotWedge: false } },
+  "how-we-calculate": { mode: "day" },
   "calc-sunrise": { mode: "day" },
   "calc-sunset": { mode: "day" },
   "time-scales": { mode: "day" },
@@ -192,6 +202,7 @@ export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   /* ── the year and the orbit ──────────────────────────────────────── */
   "solar-year": { mode: "year" },
   "nepali-calendar-basics": { mode: "year" },
+  "bikram-sambat": { mode: "year" },
   "bs-calendar": { mode: "year" },
   sauramana: { mode: "year" },
   "year-begins-baisakh": { mode: "sun" },

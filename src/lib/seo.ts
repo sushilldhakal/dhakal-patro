@@ -82,7 +82,7 @@ export function resolvePageSeo(pathname: string, t: TFunc): PageSeoMeta {
   const years = seoYearVars();
 
   const learnMatch = normalized.match(/^\/learn\/([^/]+)$/);
-  if (learnMatch && learnMatch[1] !== "history") {
+  if (learnMatch) {
     const topic = LEARN_TOPICS_BY_SLUG[learnMatch[1]!];
     if (topic) {
       return {

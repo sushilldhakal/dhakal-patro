@@ -72,7 +72,7 @@ export const SITE_LINK_PATH: Record<string, string> = {
 
 export const SITE_LINK_LABEL_KEY: Record<string, string> = {
   panchanga: "panchanga.title",
-  "aakash-gochar": "seo.routes.aakash_gochar.title",
+  "aakash-gochar": "sidebar_nav.items.aakash-gochar.label",
   holidays: "sidebar_nav.items.holidays.label",
   converter: "sidebar_nav.items.converter.label",
   suryakranti: "sidebar_nav.items.suryakranti.label",
@@ -102,37 +102,44 @@ export const SITE_LINK_BLURB_KEY: Record<string, string> = {
   "graha-vakri": "sidebar_nav.items.graha-vakri.blurb",
   "chandra-grahan": "sidebar_nav.items.chandra-grahan.blurb",
   "surya-grahan": "sidebar_nav.items.surya-grahan.blurb",
-  "aakash-gochar": "sidebar_nav.items.gochar.blurb",
+  "aakash-gochar": "sidebar_nav.items.aakash-gochar.blurb",
 };
 
+/**
+ * Site page → learn guides worth reading next.
+ *
+ * These must name *live page* slugs, not retired chapter slugs: an unknown slug
+ * is dropped silently, so a stale entry here shows up only as a related section
+ * that is quietly one link short.
+ */
 const PAGE_LEARN_SLUGS: Record<string, string[]> = {
-  panchanga: ["what-is-panchang", "hora", "nakshatra"],
-  "panchanga-year": ["sankranti", "what-is-panchang"],
-  holidays: ["bs-calendar", "calendar-differences"],
-  converter: ["bs-calendar", "calendar-differences"],
-  suryakranti: ["sankranti", "solar-system"],
-  dainikkranti: ["sankranti", "what-is-panchang"],
-  "panchak-patro": ["what-is-panchang", "nakshatra"],
-  ritu: ["ritu-drift", "bs-calendar"],
-  gochar: ["astronomy-basics", "solar-system"],
-  "aakash-gochar": ["astronomy-basics", "solar-system"],
-  "graha-sthiti": ["astronomy-basics", "solar-system"],
-  "graha-asta": ["astronomy-basics", "solar-system"],
-  "graha-vakri": ["astronomy-basics", "solar-system"],
-  "chandra-grahan": ["eclipses"],
-  "surya-grahan": ["eclipses"],
-  rashifal: ["what-is-panchang", "nakshatra"],
-  kundali: ["ayanamsha"],
-  "kundali-milan": ["ayanamsha"],
-  "abhijit-muhurta": ["hora", "what-is-panchang"],
-  "avakahada-chakra": ["nakshatra", "what-is-panchang"],
-  "element:tithi": ["tithi", "tithi-vriddhi", "tithi-kshaya"],
-  "element:nakshatra": ["nakshatra"],
-  "element:yoga": ["yoga"],
-  "element:karana": ["karana"],
-  "element:chandra-rashi": ["nakshatra", "sankranti"],
-  "element:hora": ["hora"],
-  "element:choghadiya": ["hora"],
+  panchanga: ["what-is-panchang", "five-limbs-together", "tithi"],
+  "panchanga-year": ["rashi", "what-is-panchang"],
+  holidays: ["bikram-sambat", "calendar-differences"],
+  converter: ["bikram-sambat", "calendar-differences"],
+  suryakranti: ["rashi", "earth-rotation-day"],
+  dainikkranti: ["rashi", "what-is-panchang"],
+  "panchak-patro": ["five-limbs-together", "what-is-panchang"],
+  ritu: ["sidereal-vs-tropical", "bikram-sambat"],
+  gochar: ["geocentric-heliocentric", "earth-rotation-day"],
+  "aakash-gochar": ["geocentric-heliocentric", "earth-rotation-day"],
+  "graha-sthiti": ["geocentric-heliocentric", "earth-rotation-day"],
+  "graha-asta": ["geocentric-heliocentric", "earth-rotation-day"],
+  "graha-vakri": ["geocentric-heliocentric", "earth-rotation-day"],
+  "chandra-grahan": ["geocentric-heliocentric"],
+  "surya-grahan": ["geocentric-heliocentric"],
+  rashifal: ["rashi", "five-limbs-together"],
+  kundali: ["sidereal-vs-tropical"],
+  "kundali-milan": ["sidereal-vs-tropical"],
+  "abhijit-muhurta": ["five-limbs-together", "what-is-panchang"],
+  "avakahada-chakra": ["five-limbs-together", "what-is-panchang"],
+  "element:tithi": ["tithi", "lunar-month"],
+  "element:nakshatra": ["five-limbs-together"],
+  "element:yoga": ["five-limbs-together"],
+  "element:karana": ["five-limbs-together"],
+  "element:chandra-rashi": ["lunar-month", "rashi"],
+  "element:hora": ["five-limbs-together"],
+  "element:choghadiya": ["five-limbs-together"],
   "element:lagna": ["what-is-panchang"],
   "element:udaya-lagna": ["what-is-panchang"],
 };
@@ -247,7 +254,7 @@ export function getRelatedLearnSlugs(pageId: string, limit = RELATED_LEARN_LIMIT
   if (mapped?.length) return mapped.slice(0, limit);
 
   if (pageId.startsWith("sait:")) {
-    return ["what-is-panchang", "hora"].slice(0, limit);
+    return ["what-is-panchang", "five-limbs-together"].slice(0, limit);
   }
 
   if (pageId === "learn-hub") return [];

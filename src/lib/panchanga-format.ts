@@ -62,6 +62,15 @@ export function isAyanaNorthMark(mark: AyanaMark | undefined): boolean {
   return mark === "उ";
 }
 
+/** Infer उ/द from an ayana name ("Uttarayana", "उत्तरायण", …). */
+export function ayanaMarkFromName(name?: string | null): AyanaMark | undefined {
+  if (!name) return undefined;
+  const n = name.trim();
+  if (/^उ$|uttarayan|उत्तरायण/i.test(n)) return "उ";
+  if (/^द$|dakshinayan|dakṣiṇāyan|दक्षिणाय/i.test(n)) return "द";
+  return undefined;
+}
+
 export function formatGhatiEnd(clock?: string | null): string | undefined {
   if (!clock) return undefined;
   const parts = clock.split(":").map(Number);
@@ -555,6 +564,36 @@ export function formatAayanLabel(
   if (lang !== "en") return name;
   const gloss = AAYAN_EN[name];
   return gloss ? `${gloss} (${name})` : name;
+}
+
+/** Home-aside ayana: mark (उ/द) plus a short locale name. */
+export function getAyanaDisplay(
+  p?: PanchangaDay | null,
+  day?: CalendarDay | null,
+  lang?: string,
+): { mark: AyanaMark; label: string } | undefined {
+  const aayan = getAayanVedic(p) ?? getAayanPauranik(p);
+  const mark =
+    day?.ayana_mark ??
+    ayanaMarkFromName(aayan?.name) ??
+    ayanaMarkFromName(aayan?.name_ne) ??
+    ayanaMarkFromName(day?.aayan) ??
+    ayanaMarkFromName(day?.aayan_ne);
+  if (!mark) return undefined;
+
+  const isEn = normalizeLang(lang) === "en";
+  const label = isEn
+    ? (aayan?.name ??
+      day?.aayan ??
+      aayan?.name_ne ??
+      day?.aayan_ne ??
+      (mark === "उ" ? "Uttarayana" : "Dakshinayana"))
+    : (aayan?.name_ne ??
+      day?.aayan_ne ??
+      aayan?.name ??
+      day?.aayan ??
+      (mark === "उ" ? "उत्तरायण" : "दक्षिणायण"));
+  return { mark, label };
 }
 
 export function formatSolarCorrectionDisplay(

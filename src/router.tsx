@@ -48,7 +48,6 @@ const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArtic
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
 const AbhijitMuhurta = lazyRoute(() => import("./pages/AbhijitMuhurta"), "AbhijitMuhurta");
 const PanchakPatro = lazyRoute(() => import("./pages/PanchakPatro"), "PanchakPatro");
-const History = lazyRoute(() => import("./pages/History"), "History");
 const PanchangaDetailsHub = lazyRoute(() => import("./pages/PanchangaDetailsHub"), "PanchangaDetailsHub");
 const ElementPage = lazyRoute(() => import("./pages/ElementPage"), "ElementPage");
 const Gochar = lazyRoute(() => import("./pages/Gochar"), "Gochar");
@@ -205,7 +204,15 @@ const sunTimesLegacyRoute = createRoute({
   path: "/sun-times",
   component: () => <Navigate to="/suryakranti" replace />,
 });
-const historyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/history", component: History });
+/* The Surya Siddhanta history is now the closing chapter of the calendar
+   comparison guide, so its old address lands on that chapter. */
+const historyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/learn/history",
+  component: () => (
+    <Navigate to="/learn/$slug" params={{ slug: "calendar-differences" }} hash="history" replace />
+  ),
+});
 const historyLegacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/history",

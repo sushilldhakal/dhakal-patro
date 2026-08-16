@@ -73,6 +73,8 @@ const PI2 = Math.PI * 2;
 /** Radius of the mean orbit. Everything else is scaled against this. */
 export const MEAN_DISTANCE = 10;
 const PLANET_R = 1;
+/** काठमाडौँ's longitude in radians — the spin phase that puts it at noon. */
+const KATHMANDU_LON = KATHMANDU.lon * (Math.PI / 180);
 const SUN_R = 0.9;
 const MEAN_SUN_R = 0.42;
 
@@ -318,6 +320,30 @@ function ellipseGeometry(semiMajor: number, semiMinor: number, segments = 128) {
 }
 
 /**
+ * The orbit ellipse drawn about its **focus**, not its centre.
+ *
+ * Centring it on the Sun is what made raising the eccentricity look like it did
+ * nothing: the semi-minor axis is `a√(1−e²)`, so even e = 0.4 flattens the
+ * outline by only 8% and e = 0.17 by 1.5% — an eccentric orbit really is very
+ * nearly circular. What eccentricity actually *shows* is the Sun sitting
+ * off-centre, by `a·e`, which a centre-drawn ellipse hides completely.
+ *
+ * Building it from the polar form puts the focus at the origin by construction,
+ * with θ = 0 at perihelion, matching the frame the caller already rotates.
+ */
+function focalEllipseGeometry(semiMajor: number, e: number, segments = 128) {
+  const pts: number[] = [];
+  for (let i = 0; i <= segments; i += 1) {
+    const theta = (i / segments) * PI2;
+    const r = orbitDistance(semiMajor, e, theta);
+    pts.push(r * Math.cos(theta), 0, -r * Math.sin(theta));
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+  return g;
+}
+
+/**
  * Truncate a full ring to `angle`, by index count rather than by rebuilding.
  *
  * `RingGeometry` emits six indices per theta-segment in order, so the arc
@@ -556,13 +582,13 @@ function DaySimScene({
   const meanGeom = useArcGeometry(0.98, 1.2);
 
   /* Orbit outlines only change when the orbit's shape does. */
-  const { semiMajor, semiMinor } = useMemo(
+  const { semiMajor } = useMemo(
     () => orbitRadii(params.eccentricity, MEAN_DISTANCE),
     [params.eccentricity],
   );
   const trueOrbitLine = useMemo(
-    () => makeLine(ellipseGeometry(semiMajor, semiMinor), COLOR.solar, 0.5),
-    [semiMajor, semiMinor],
+    () => makeLine(focalEllipseGeometry(semiMajor, params.eccentricity), COLOR.solar, 0.5),
+    [semiMajor, params.eccentricity],
   );
   const meanOrbitLine = useMemo(
     () => makeLine(ellipseGeometry(MEAN_DISTANCE, MEAN_DISTANCE), COLOR.mean, 0.55),
@@ -886,18 +912,36 @@ function DaySimScene({
     const sunPos = vSun.current.copy(planetPos).sub(sunOffset);
 
     /* ── planet, arcs ────────────────────────────────────────────────── */
+    /**
+     * How far the mean sun has moved *since day 0*, not since perihelion.
+     *
+     * `M` is measured from perihelion, and मेष sits `MESHA_FROM_PERIHELION`
+     * (~100°) past it — so every rotation measured with raw `M` opened day 0
+     * already 100° along: three arcs a third of the way round the globe before
+     * the reader has pressed play, three ticks scattered around the planet, and
+     * a Kathmandu nowhere near the Sun, all while the clock faces underneath
+     * said noon. The clocks were right and the geometry was carrying a constant
+     * offset the clocks never had; subtracting it here is what puts the two on
+     * the same zero.
+     */
+    const spin = M - MESHA_FROM_PERIHELION;
+
     /* Arc root points at the mean sun (hence the π), so the mean arc's zero
        is mean noon and every other arc is measured off the same origin. */
     arcRoot.current.position.copy(planetPos);
     arcRoot.current.rotation.y = M + Math.PI;
-    planetMesh.current.rotation.y = dayAngle - M;
-    siderealGroup.current.rotation.y = -M;
+    /* Backing the spin off by काठमाडौँ's longitude puts *its* meridian — the
+       red line, and the one every time in this app is reckoned from — under the
+       Sun, instead of Greenwich, which the equirectangular texture would
+       otherwise leave there. */
+    planetMesh.current.rotation.y = dayAngle - spin - KATHMANDU_LON;
+    siderealGroup.current.rotation.y = -spin;
     solarGroup.current.rotation.y = -eot;
 
     const setArc = (mesh: THREE.Mesh, angle: number) => setRingArc(mesh, angle, ARC_SEGMENTS);
     setArc(siderealArc.current, dayAngle);
-    setArc(solarArc.current, dayAngle + eot - M);
-    setArc(meanArc.current, dayAngle - M);
+    setArc(solarArc.current, dayAngle + eot - spin);
+    setArc(meanArc.current, dayAngle - spin);
 
     /* ── suns ────────────────────────────────────────────────────────── */
     sunGroup.current.position.copy(sunPos);
@@ -1326,19 +1370,24 @@ function DaySimScene({
     if (toggles.meanSun)
       push("b-mean", "body", bodyNames.meanSun, anchor.set(0, MEAN_SUN_R * 2.6, 0), false);
 
-    /* Clock labels ride the tick that marks each arc's zero direction. */
-    const tick = (localAngle: number) => {
+    /* Clock labels ride the tick that marks each arc's zero direction.
+       Their angles converge — the three ticks sit on top of each other at day 0,
+       and mean and true stay within the equation of time (~16 min, ~4°) of each
+       other all year — so each label is pushed out to its own radius instead,
+       in the same inner-to-outer order as the three arcs it labels. */
+    const tick = (localAngle: number, radius: number) => {
       const a = M + Math.PI + localAngle;
       return anchor.set(
-        planetPos.x + 2.1 * Math.cos(a),
+        planetPos.x + radius * Math.cos(a),
         0,
-        planetPos.z - 2.1 * Math.sin(a),
+        planetPos.z - radius * Math.sin(a),
       );
     };
     const ct = clockText.current;
-    if (toggles.meanArc) push("c-mean", "clock", ct.mean, tick(0), false, "mean");
-    if (toggles.solarArc) push("c-solar", "clock", ct.solar, tick(-eot), false, "solar");
-    if (toggles.siderealArc) push("c-sidereal", "clock", ct.sidereal, tick(-M), false, "sidereal");
+    if (toggles.meanArc) push("c-mean", "clock", ct.mean, tick(0, 1.75), false, "mean");
+    if (toggles.solarArc) push("c-solar", "clock", ct.solar, tick(-eot, 2.45), false, "solar");
+    if (toggles.siderealArc)
+      push("c-sidereal", "clock", ct.sidereal, tick(-spin, 3.15), false, "sidereal");
 
     if (!sampling) return;
     onSample({
@@ -1431,7 +1480,11 @@ function DaySimScene({
           <meshBasicMaterial color={COLOR.mean} wireframe />
         </mesh>
       </group>
-      <primitive object={meanOrbitLine} visible={toggles.meanSun && toggles.planetOrbit} />
+      {/* The planet's own track. It is drawn whenever the orbit layer is on,
+          not only alongside the mean sun: this circle *is* the path the planet
+          travels in this scene, so gating it on another layer left the planet
+          moving across empty space with no orbit shown at all. */}
+      <primitive object={meanOrbitLine} visible={toggles.planetOrbit} />
 
       {/* True sun, its spin, and the orbit it really travels */}
       <group ref={sunGroup} visible={toggles.trueSun}>

@@ -15,6 +15,7 @@ import {
   RituDrift,
 } from "./learn-articles";
 import { HowWeCalculateArticle } from "@/components/learn/HowWeCalculateStudy";
+import { SuryaSiddhantaHistory } from "@/components/learn/SuryaSiddhantaHistory";
 import { ArticleBody } from "./article-render";
 import { MERGED_BY_SLUG, type MergedPage } from "./merged-pages";
 import { useLocale } from "@/i18n/locale";
@@ -27,8 +28,6 @@ import {
   type LearnCategory,
   type LearnTopicMeta,
 } from "./learn-topics-meta";
-
-/** Routed at `/learn/history` — body lives in `History` page, not LearnArticle shell. */
 
 export type { LearnCategory, LearnTopicMeta };
 export { LEARN_CATEGORIES, LEARN_TOPIC_METAS };
@@ -64,6 +63,7 @@ const COMPONENT_CONTENT_BY_SLUG: Record<string, () => React.ReactNode> = {
   eclipses: Eclipses,
   ayanamsha: Ayanamsha,
   "how-we-calculate": HowWeCalculateArticle,
+  history: SuryaSiddhantaHistory,
 };
 
 /** One former article, however it happens to be written. */

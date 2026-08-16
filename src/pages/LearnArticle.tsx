@@ -7,7 +7,6 @@ import { playgroundFor } from "@/lib/learn/playground-config";
 import { cn } from "@/lib/utils";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
-import { History as HistoryPage } from "@/pages/History";
 import { PART_REDIRECTS } from "@/lib/learn/merged-pages";
 import {
   LEARN_CATEGORIES,
@@ -36,18 +35,18 @@ import {
  * merge orphans a URL that is already in someone's history or a search index.
  */
 const MERGED_SLUGS: Record<string, string> = {
-  "lunar-eclipse": "eclipses",
-  "solar-eclipse": "eclipses",
+  "lunar-eclipse": "geocentric-heliocentric#eclipses",
+  "solar-eclipse": "geocentric-heliocentric#eclipses",
   equinoxes: "axial-tilt#equinox-solstice",
   solstices: "axial-tilt#equinox-solstice",
   "sankranti-vs-solstice": "sidereal-vs-tropical#uttarayana-dakshinayana",
   "twelve-rashis": "rashi",
-  "solar-vs-lunar-calendar": "bs-calendar",
+  "solar-vs-lunar-calendar": "bikram-sambat#bs-calendar",
   "sidereal-vs-tropical-year": "sidereal-vs-tropical",
   "tithi-vriddhi": "tithi#tithi-vriddhi-kshaya",
   "tithi-kshaya": "tithi#tithi-vriddhi-kshaya",
-  "adhik-maas": "adhik-kshaya-maas",
-  "kshaya-maas": "adhik-kshaya-maas",
+  "adhik-maas": "tithi#adhik-kshaya-maas",
+  "kshaya-maas": "tithi#adhik-kshaya-maas",
   ...PART_REDIRECTS,
 };
 
@@ -66,10 +65,6 @@ export function LearnArticle() {
   if (slug && MERGED_SLUGS[slug]) {
     const { slug: to, hash } = redirectTarget(MERGED_SLUGS[slug]!);
     return <Navigate to="/learn/$slug" params={{ slug: to }} hash={hash} replace />;
-  }
-
-  if (slug === "history") {
-    return <HistoryPage />;
   }
 
   const topic = slug ? LEARN_TOPICS_BY_SLUG[slug] : undefined;

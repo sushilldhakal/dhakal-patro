@@ -7,10 +7,8 @@ import {
   BookOpen,
   ArrowRight,
   Search,
-  Sparkles,
   X,
   GraduationCap,
-  Layers3,
 } from "lucide-react";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PageShell } from "../components/PageShell";
@@ -25,19 +23,69 @@ import {
 } from "@/lib/learn/learn-topics";
 import { LEARN_SECTIONS_BY_ID, plannedInSection } from "@/lib/learn/learn-library";
 
-const FEATURED_SLUGS = ["astronomy-basics", "nepali-calendar-basics", "tithi"] as const;
+interface LearnModule {
+  id: string;
+  title: { ne: string; en: string };
+  blurb: { ne: string; en: string };
+  sections: string[];
+}
 
-/**
- * The intended entry path: sky → calendar → the Sun that drives it → the
- * panchanga it produces. Astronomy first, because every later article
- * assumes the reader can already picture what is moving.
- */
-const STARTER_PATH_SLUGS = [
-  "astronomy-basics",
-  "nepali-calendar-basics",
-  "solar-year",
-  "what-is-panchang",
-] as const;
+const LEARN_MODULES: LearnModule[] = [
+  {
+    id: "basics",
+    title: { ne: "पहिले बुझ्ने कुरा", en: "Start Here" },
+    blurb: {
+      ne: "पात्रो, पञ्चाङ्ग र विक्रम सम्वत् बुझ्ने आधार।",
+      en: "The base ideas behind the patro, panchanga and Bikram Sambat.",
+    },
+    sections: ["start"],
+  },
+  {
+    id: "sky-sun",
+    title: { ne: "आकाश, पृथ्वी र सूर्य", en: "Sky, Earth and Sun" },
+    blurb: {
+      ne: "दिन, ऋतु, राशि, सङ्क्रान्ति र अयनांश एउटै प्रवाहमा।",
+      en: "Day, seasons, rashi, sankranti and ayanamsha in one flow.",
+    },
+    sections: ["earth-sky", "sun"],
+  },
+  {
+    id: "moon-panchanga",
+    title: { ne: "चन्द्र र पञ्चाङ्ग", en: "Moon and Panchanga" },
+    blurb: {
+      ne: "तिथि, पक्ष, मास र पञ्चाङ्गका पाँच अङ्ग।",
+      en: "Tithi, paksha, months and the five limbs of the panchanga.",
+    },
+    sections: ["moon", "panchanga"],
+  },
+  {
+    id: "calculation",
+    title: { ne: "गणना कसरी हुन्छ", en: "How Calculation Works" },
+    blurb: {
+      ne: "सूर्योदय, तिथि, नक्षत्र र स्थानअनुसार फरक पर्ने कारण।",
+      en: "Sunrise, tithi, nakshatra and why location changes the answer.",
+    },
+    sections: ["calculation"],
+  },
+  {
+    id: "deeper",
+    title: { ne: "अलि गहिरो खगोल", en: "Deeper Astronomy" },
+    blurb: {
+      ne: "वक्री गति, अयन चलन, ध्रुव तारा र ग्रहण।",
+      en: "Retrograde motion, precession, pole stars and eclipses.",
+    },
+    sections: ["deeper"],
+  },
+  {
+    id: "comparison",
+    title: { ne: "तुलना र इतिहास", en: "Comparison and History" },
+    blurb: {
+      ne: "नेपाली, वैदिक र ग्रेगोरियन पात्रो, अनि सूर्य सिद्धान्त।",
+      en: "Nepali, Vedic and Gregorian calendars, plus Surya Siddhanta.",
+    },
+    sections: ["comparison"],
+  },
+];
 
 /**
  * Accent colours per library section. Icons come from the library itself, so
@@ -45,6 +93,10 @@ const STARTER_PATH_SLUGS = [
  * neutral styling if it does not get one.
  */
 const SECTION_STYLE: Record<string, { chip: string; ring: string }> = {
+  start: {
+    chip: "bg-emerald-500/10 text-emerald-900 border-emerald-500/25 dark:text-emerald-200",
+    ring: "group-hover:ring-emerald-500/25",
+  },
   foundation: {
     chip: "bg-emerald-500/10 text-emerald-900 border-emerald-500/25 dark:text-emerald-200",
     ring: "group-hover:ring-emerald-500/25",
@@ -73,6 +125,10 @@ const SECTION_STYLE: Record<string, { chip: string; ring: string }> = {
     chip: "bg-slate-500/10 text-slate-900 border-slate-500/25 dark:text-slate-200",
     ring: "group-hover:ring-slate-500/25",
   },
+  panchanga: {
+    chip: "bg-teal-500/10 text-teal-900 border-teal-500/25 dark:text-teal-200",
+    ring: "group-hover:ring-teal-500/25",
+  },
   "bs-construction": {
     chip: "bg-red-500/10 text-red-900 border-red-500/25 dark:text-red-200",
     ring: "group-hover:ring-red-500/25",
@@ -99,11 +155,6 @@ function sectionIcon(sectionId: string) {
   return LEARN_SECTIONS_BY_ID[sectionId]?.icon ?? BookOpen;
 }
 
-function sectionBlurb(lang: string, sectionId: string): string {
-  const blurb = LEARN_SECTIONS_BY_ID[sectionId]?.blurb;
-  return blurb ? bilingualText(lang, blurb.ne, blurb.en, "") : "";
-}
-
 function normalizeSearch(value: string) {
   return value.trim().toLowerCase();
 }
@@ -122,6 +173,15 @@ function categoryForTopic(topic: LearnTopic): LearnCategory | undefined {
   return LEARN_CATEGORIES.find((c) => c.id === topic.category);
 }
 
+function topicsInModule(module: LearnModule): LearnTopic[] {
+  const sectionIds = new Set(module.sections);
+  return LEARN_TOPICS.filter((topic) => sectionIds.has(topic.category));
+}
+
+function moduleMatchesFilter(module: LearnModule, activeCategory: string) {
+  return activeCategory === "all" || module.sections.includes(activeCategory);
+}
+
 function LearnTopicLink({
   topic,
   className,
@@ -131,13 +191,6 @@ function LearnTopicLink({
   className?: string;
   children: ReactNode;
 }) {
-  if (topic.slug === "history") {
-    return (
-      <Link to="/learn/history" className={className}>
-        {children}
-      </Link>
-    );
-  }
   return (
     <Link to="/learn/$slug" params={{ slug: topic.slug }} className={className}>
       {children}
@@ -145,93 +198,38 @@ function LearnTopicLink({
   );
 }
 
-function TopicCard({
-  topic,
-  variant = "default",
-}: {
-  topic: LearnTopic;
-  variant?: "default" | "featured" | "compact";
-}) {
+function TopicCard({ topic }: { topic: LearnTopic }) {
   const { t } = useTranslation();
   const { lang } = useLocale();
   const Icon = topic.icon;
   const category = categoryForTopic(topic);
   const meta = SECTION_STYLE[topic.category];
 
-  if (variant === "featured") {
-    return (
-      <LearnTopicLink
-        topic={topic}
-        className="group relative flex h-full flex-col rounded-2xl border border-secondary/25 bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-secondary/50 hover:shadow-md"
-      >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary/12 text-secondary">
-            <Icon className="h-6 w-6" />
-          </span>
-          {category && meta && (
-            <span
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide",
-                meta.chip,
-              )}
-            >
-              {bilingualText(lang, category.ne, category.en)}
-            </span>
-          )}
-        </div>
-        <h3 className="text-xl font-bold leading-snug text-foreground">
-          {bilingualText(lang, topic.titleNe, topic.titleEn)}
-        </h3>
-        <p className="mt-1 text-sm text-base">{bilingualText(lang, topic.titleEn, "")}</p>
-        <p className="mt-3 flex-1 text-base leading-relaxed text-foreground/80">
-          {bilingualText(lang, topic.summary, topic.summaryEn)}
-        </p>
-        <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
-          {t("learn_page.read_start")}
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </span>
-      </LearnTopicLink>
-    );
-  }
-
-  if (variant === "compact") {
-    return (
-      <LearnTopicLink
-        topic={topic}
-        className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-secondary/50 hover:bg-secondary/[0.05]"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
-          <Icon className="h-5 w-5" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-base font-semibold text-foreground">
-            {bilingualText(lang, topic.titleNe, topic.titleEn)}
-          </span>
-          <span className="block truncate text-sm">
-            {bilingualText(lang, topic.titleEn, "")}
-          </span>
-        </span>
-        <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-secondary" />
-      </LearnTopicLink>
-    );
-  }
-
   return (
     <LearnTopicLink
       topic={topic}
       className={cn(
-        "group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-secondary/45 hover:shadow-md",
+        "group relative flex h-full flex-col rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-secondary/45 hover:shadow-md",
         meta?.ring && `hover:ring-2 ${meta.ring}`,
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary/15">
+      {/* Icon, title and category read as one line, so the card opens with its identity. */}
+      <div className="flex items-start gap-3 px-5 pt-5">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary/15">
           <Icon className="h-5 w-5" />
         </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-bold leading-snug text-foreground">
+            {bilingualText(lang, topic.titleNe, topic.titleEn)}
+          </h3>
+          {bilingualText(lang, topic.titleEn, "") && (
+            <p className="mt-0.5 text-sm leading-snug">{bilingualText(lang, topic.titleEn, "")}</p>
+          )}
+        </div>
         {category && meta && (
           <span
             className={cn(
-              "rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide",
+              "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
               meta.chip,
             )}
           >
@@ -239,19 +237,15 @@ function TopicCard({
           </span>
         )}
       </div>
-      <div>
-        <h3 className="text-lg font-bold leading-snug text-foreground">{bilingualText(lang, topic.titleNe, topic.titleEn)}</h3>
-        <p className="mt-1 text-sm text-base">
-          {bilingualText(lang, topic.titleEn, "")}
-        </p>
-      </div>
-      <p className="flex-1 text-base leading-relaxed text-foreground/80">
+
+      <p className="flex-1 px-5 pt-3 text-sm leading-relaxed text-foreground/80">
         {bilingualText(lang, topic.summary, topic.summaryEn)}
       </p>
-      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
-        {t("learn_page.read_detail")}
-        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-      </span>
+
+      <div className="mt-4 flex items-center justify-between border-t border-border/70 px-5 py-3">
+        <span className="text-sm font-semibold text-secondary">{t("learn_page.read_detail")}</span>
+        <ArrowRight className="h-4 w-4 text-secondary transition-transform group-hover:translate-x-0.5" />
+      </div>
     </LearnTopicLink>
   );
 }
@@ -266,25 +260,9 @@ export function Learn() {
   const normalizedQuery = normalizeSearch(query);
   const isFiltering = normalizedQuery.length > 0 || activeCategory !== "all";
 
-  const featuredTopics = useMemo(
-    () =>
-      FEATURED_SLUGS.map((slug) => LEARN_TOPICS.find((t) => t.slug === slug)).filter(
-        (t): t is LearnTopic => Boolean(t),
-      ),
-    [],
-  );
-
-  const starterPath = useMemo(
-    () =>
-      STARTER_PATH_SLUGS.map((slug) => LEARN_TOPICS.find((t) => t.slug === slug)).filter(
-        (t): t is LearnTopic => Boolean(t),
-      ),
-    [],
-  );
-
-  /** Sections with nothing published yet are outline-only — don't count them. */
-  const liveCategoryCount = useMemo(
-    () => LEARN_CATEGORIES.filter((c) => topicsInCategory(c.id).length > 0).length,
+  /** Modules with at least one published article are what the hub presents first. */
+  const liveModuleCount = useMemo(
+    () => LEARN_MODULES.filter((module) => topicsInModule(module).length > 0).length,
     [],
   );
 
@@ -321,11 +299,11 @@ export function Learn() {
             <div className="mt-6 flex flex-wrap gap-3">
               <div className={learnStatPill}>
                 <GraduationCap className="h-4 w-4 text-secondary" />
-                <span>{t("learn_page.topics_count", { count: LEARN_TOPICS.length })}</span>
+                <span>{t("learn_page.learning_paths_count", { count: liveModuleCount })}</span>
               </div>
               <div className={learnStatPill}>
-                <Layers3 className="h-4 w-4 text-secondary" />
-                <span>{t("learn_page.categories_count", { count: liveCategoryCount })}</span>
+                <BookOpen className="h-4 w-4 text-secondary" />
+                <span>{t("learn_page.articles_count", { count: LEARN_TOPICS.length })}</span>
               </div>
             </div>
           </div>
@@ -357,22 +335,6 @@ export function Learn() {
           </div>
         </div>
       </section>
-
-      {!isFiltering && (
-        <section>
-          <div className="mb-5">
-            <h2 className="text-xl font-bold text-foreground sm:text-2xl">{t("learn_page.featured_title")}</h2>
-            <p className="mt-1 text-base">
-              {t("learn_page.featured_sub")}
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredTopics.map((topic) => (
-              <TopicCard key={topic.slug} topic={topic} variant="featured" />
-            ))}
-          </div>
-        </section>
-      )}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
@@ -420,28 +382,6 @@ export function Learn() {
         )}
       </div>
 
-      {!isFiltering && (
-        <section className="rounded-2xl border border-border bg-card p-6 sm:p-7">
-          <div className="mb-5 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-secondary" />
-            <h2 className="text-lg font-bold text-foreground sm:text-xl">
-              {t("learn_page.starter_path")}
-            </h2>
-            <span className="text-sm">· {t("learn_page.suggested_path_sub")}</span>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {starterPath.map((topic, index) => (
-              <div key={topic.slug} className="relative">
-                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-secondary">
-                  {t("learn_page.step", { n: index + 1 })}
-                </span>
-                <TopicCard topic={topic} variant="compact" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {filteredTopics.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/40 px-6 py-14 text-center">
           <p className="text-base text-base text-foreground">{t("learn_page.no_topics")}</p>
@@ -467,28 +407,35 @@ export function Learn() {
         </div>
       ) : (
         <div className="space-y-12">
-          {visibleCategories.map((cat) => {
-            const topics = topicsInCategory(cat.id);
-            if (topics.length === 0) return null;
-            const CatIcon = sectionIcon(cat.id);
-            // Outlined articles are not linkable yet, but saying how many are
-            // on the way stops a thin section from looking abandoned.
-            const upcoming = plannedInSection(cat.id).length;
+          {LEARN_MODULES.map((module) => {
+            const moduleTopics = topicsInModule(module);
+            if (moduleTopics.length === 0 || !moduleMatchesFilter(module, activeCategory)) {
+              return null;
+            }
+            const firstSection = module.sections[0] ?? module.id;
+            const ModuleIcon = sectionIcon(firstSection);
+            const upcoming = module.sections.reduce(
+              (total, sectionId) => total + plannedInSection(sectionId).length,
+              0,
+            );
+            const moduleCategories = visibleCategories.filter((cat) =>
+              module.sections.includes(cat.id),
+            );
 
             return (
-              <section key={cat.id} id={`learn-${cat.id}`}>
+              <section key={module.id} id={`learn-${module.id}`}>
                 <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
-                      <CatIcon className="h-5 w-5" />
+                      <ModuleIcon className="h-5 w-5" />
                     </span>
                     <div>
                       <h2 className="text-2xl font-bold text-foreground">
-                        {bilingualText(lang, cat.ne, cat.en)}
+                        {bilingualText(lang, module.title.ne, module.title.en)}
                       </h2>
                       <p className="max-w-2xl text-sm">
-                        {sectionBlurb(lang, cat.id)} ·{" "}
-                        {t("learn_page.articles_count", { count: topics.length })}
+                        {bilingualText(lang, module.blurb.ne, module.blurb.en)} ·{" "}
+                        {t("learn_page.articles_count", { count: moduleTopics.length })}
                         {upcoming > 0 && (
                           <span className="opacity-70">
                             {" · "}
@@ -498,18 +445,40 @@ export function Learn() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveCategory(cat.id)}
-                    className="text-sm font-semibold text-secondary hover:underline"
-                  >
-                    {t("learn_page.view_category")}
-                  </button>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {topics.map((topic) => (
-                    <TopicCard key={topic.slug} topic={topic} />
-                  ))}
+                <div className="space-y-8">
+                  {moduleCategories.map((cat) => {
+                    const topics = topicsInCategory(cat.id);
+                    if (topics.length === 0) return null;
+                    const CatIcon = sectionIcon(cat.id);
+                    return (
+                      <div key={cat.id}>
+                        {moduleCategories.length > 1 && (
+                          <div className="mb-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                              <CatIcon className="h-4 w-4 text-secondary" />
+                              {bilingualText(lang, cat.ne, cat.en)}
+                              <span className="font-medium text-muted-foreground">
+                                {t("learn_page.articles_count", { count: topics.length })}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setActiveCategory(cat.id)}
+                              className="text-sm font-semibold text-secondary hover:underline"
+                            >
+                              {t("learn_page.view_category")}
+                            </button>
+                          </div>
+                        )}
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          {topics.map((topic) => (
+                            <TopicCard key={topic.slug} topic={topic} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             );

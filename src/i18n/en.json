@@ -747,8 +747,7 @@
     "default_heading": "Learn more"
   },
   "related_pages": {
-    "heading": "Related pages",
-    "learn_heading": "Related reading",
+    "heading": "Related",
     "aria": "Related pages and articles"
   },
   "auth": {
@@ -1113,16 +1112,13 @@
     "title_accent": "explained simply",
     "subtitle": "Articles from astronomical foundations to daily use — tithi, eclipses, Vikram Sambat and kundali.",
     "topics_count": "{{count}} topics",
+    "learning_paths_count": "{{count}} learning paths",
     "categories_count": "{{count}} categories",
     "search_label": "Search topics",
     "search_placeholder": "Tithi, eclipse, ayanamsha…",
-    "featured_title": "Featured topics",
-    "featured_sub": "The most useful articles to start with",
     "history_eyebrow": "History · heritage",
     "history_title": "Mayasura's Surya Siddhanta",
     "history_desc": "The astronomical roots of the Nepali patro — history, timeline and sources of the Surya Siddhanta.",
-    "starter_path": "Starter path",
-    "step": "Step {{n}}",
     "results_count": "{{count}} topics found",
     "no_topics": "No topics found",
     "no_topics_hint": "Try a different word or category.",
@@ -1133,10 +1129,8 @@
     "prev": "Previous",
     "next": "Next",
     "all_topics": "View all topics",
-    "read_start": "Start reading",
     "read_detail": "Read in full",
     "articles_count": "{{count}} articles",
-    "suggested_path_sub": "Suggested path",
     "more_coming": "{{count}} more being written"
   },
   "avakahada": {
@@ -1713,6 +1707,10 @@
       "gochar": {
         "label": "Planetary transits (Gochar)",
         "blurb": "Sky at a glance, upcoming changes & deep dive"
+      },
+      "aakash-gochar": {
+        "label": "3D Aakash Gochar",
+        "blurb": "The live sky in three dimensions, geocentric"
       },
       "graha-asta": {
         "label": "Heliacal set",

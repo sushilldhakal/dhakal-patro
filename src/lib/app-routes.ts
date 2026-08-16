@@ -64,7 +64,7 @@ export const ROUTES: RouteMeta[] = [
   { id: "sun-times-legacy", path: "/sun-times" },
   { id: "abhijit-muhurta", path: "/abhijit-muhurta", seoKey: "seo.routes.abhijit_muhurta", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },
   { id: "panchak-patro", path: "/panchak-patro", seoKey: "seo.routes.panchak_patro", sitemap: { changefreq: "monthly", priority: "0.7" }, prerender: true },
-  { id: "learn-history", path: "/learn/history", seoKey: "seo.routes.learn_history", sitemap: { changefreq: "monthly", priority: "0.6" }, prerender: true },
+  { id: "learn-history", path: "/learn/history" },
   { id: "history-legacy", path: "/history" },
   { id: "element", path: "/panchanga/element/$name" },
   { id: "sait", path: "/sait/$category" },

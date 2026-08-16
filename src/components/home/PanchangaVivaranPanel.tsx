@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { TFunction } from "i18next";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,7 @@ import {
   formatMonthMoonEventDisplay,
   formatPatroSignedCorrection,
   getAbhijitMuhurta,
+  getAyanaDisplay,
   getMoonriseDisplay,
   getPanchangaDetail,
   getPlanetGocharLines,
@@ -19,9 +21,11 @@ import {
   getSolarCorrections,
   getSunriseDisplay,
   getSunsetDisplay,
+  isAyanaNorthMark,
 } from "@/lib/panchanga-format";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
+import { patroAyanaNorth, patroAyanaSouth } from "@/lib/patro-classes";
 import { Button } from "@/components/ui/button";
 
 type AngaBlock = {
@@ -85,8 +89,8 @@ function AsideFooter({
 
 type DetailCell = {
   label: string;
-  value?: string;
-  hint?: string;
+  value?: ReactNode;
+  hint?: ReactNode;
   wide?: boolean;
   mono?: boolean;
 };
@@ -127,11 +131,28 @@ function buildPanchangaDetailCells(
   const moonrise =
     getMoonriseDisplay(p, lang) ??
     (selectedDay ? formatMonthMoonEventDisplay(selectedDay, "moonrise", lang) : undefined);
+  const ayana = getAyanaDisplay(p, selectedDay, lang);
 
   return [
     {
       label: t("aside.sunrise_sunset"),
-      value: sunrise && sunset ? `${sunrise} / ${sunset}` : undefined,
+      value:
+        sunrise && sunset ? (
+          <>
+            {sunrise} / {sunset}
+            {ayana ? (
+              <span
+                className={cn(
+                  isAyanaNorthMark(ayana.mark) ? patroAyanaNorth : patroAyanaSouth,
+                  "mb-0 ml-1.5",
+                )}
+                title={ayana.label}
+              >
+                {ayana.mark}
+              </span>
+            ) : null}
+          </>
+        ) : undefined,
       mono: true,
     },
     { label: t("aside.moonrise"), value: moonrise ?? t("sections.dash"), mono: true },

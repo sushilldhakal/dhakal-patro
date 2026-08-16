@@ -199,12 +199,16 @@ export function clockFromMinutes(n: number): string {
  */
 export function clocks(day: number, daysPerYear: number, eot: number) {
   const solarRate = 1 - 1 / daysPerYear;
-  /* Half a turn, so day 0 — मेष सङ्क्रान्ति — opens at local noon on all three. */
+  /* Half a turn, so day 0 — मेष सङ्क्रान्ति — opens at local noon on all three,
+     with काठमाडौँ under the Sun (the scene's spin phase is set to match; see
+     `planetMesh` in DaySimScene). The three tick at different rates and so can
+     agree at exactly one instant: this is that instant, and every later reading
+     is the drift accumulated since. */
   const offset = 0.5;
   const minutes = (frac: number) => 24 * 60 * euclideanModulo(frac, 1);
 
   return {
-    sidereal: clockFromMinutes(minutes(day + 0.5)),
+    sidereal: clockFromMinutes(minutes(day + offset)),
     mean: clockFromMinutes(minutes(day * solarRate + offset)),
     solar: clockFromMinutes(minutes(day * solarRate + offset + eot / PI2)),
   };

@@ -76,6 +76,9 @@ const CANVAS_BG = "#04070d";
 const PI2 = Math.PI * 2;
 const DEG = Math.PI / 180;
 
+/** The 1× rung in {@link SPEED_MULTIPLIERS} — where every topic opens. */
+const DEFAULT_SPEED_RUNG = SPEED_MULTIPLIERS.indexOf(1);
+
 const TONE = {
   sidereal: "#6cb6f5",
   solar: "#e6e34a",
@@ -123,7 +126,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const clock = useRef<SimClock>({
     day: 0,
     playing: false,
-    daysPerSecond: initial.speed * SPEED_MULTIPLIERS[1]!,
+    daysPerSecond: initial.speed * SPEED_MULTIPLIERS[DEFAULT_SPEED_RUNG]!,
   });
   const camera = useRef<CameraState>({ ...initial.camera });
   const clockText = useRef({ sidereal: "", solar: "", mean: "" });
@@ -132,8 +135,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const labelNodes = useRef<Map<string, HTMLElement>>(new Map());
 
   const [playing, setPlaying] = useState(false);
-  /* Rung 2 is 1x the mode's own pace — the speed this topic was tuned for. */
-  const [speed, setSpeed] = useState(1);
+  /* The 1× rung — the pace this topic was tuned for. Below it sit the two
+     slow rungs for watching a single day. */
+  const [speed, setSpeed] = useState(DEFAULT_SPEED_RUNG);
   const [sample, setSample] = useState<SceneSample | null>(null);
   const [flash, setFlash] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(true);
