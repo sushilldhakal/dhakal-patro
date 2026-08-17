@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Flame,
   Gem,
@@ -123,6 +124,7 @@ export function ShantiVidhiPanel({
   shadbala?: ShadbalaResponse;
   isError?: boolean;
 }) {
+  const { t } = useTranslation();
   const { lang, digits } = useLocale();
   const [selectedKey, setSelectedKey] = useState("saturn");
   const [nowMs] = useState(() => Date.now());

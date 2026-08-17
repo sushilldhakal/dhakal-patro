@@ -41,6 +41,7 @@ const YEARS = 3;
 const SPAN = SOLAR_YEAR * YEARS;
 
 export function LunarSolarGap() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
@@ -74,7 +75,7 @@ export function LunarSolarGap() {
                 textAnchor="end"
                 className="fill-current text-[8.5px] opacity-60"
               >
-                {bilingualText(lang, `${num(i + 1)} वर्षपछि`, `after ${i + 1} yr`)}
+                {t("learn.study.lunar_gap.after_years", { years: num(i + 1) })}
               </text>
 
               {/* सौर वर्ष — the reference length */}
