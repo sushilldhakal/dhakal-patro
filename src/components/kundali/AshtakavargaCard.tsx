@@ -133,7 +133,7 @@ function AshtakavargaMatrix({
 
 function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
   const { t } = useTranslation();
-  const { lang, digits } = useLocale();
+  const { digits } = useLocale();
 
   const metricRows: {
     key: keyof Pick<ShodhyaPindaRow, "rashiPinda" | "grahaPinda" | "shodhyaPinda">;

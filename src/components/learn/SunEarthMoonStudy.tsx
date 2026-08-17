@@ -5,11 +5,11 @@ import { edScrub } from "@/lib/diagram-classes";
 import { tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
+import { useLocale, bilingualText } from "@/i18n/locale";
+import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { getWheelRashis } from "@/lib/wheel-data";
 import { SunEarthMoonOrbit } from "./SunEarthMoonOrbit";
 import {
-  BS_MONTHS,
   SYNODIC_MONTH,
   TROPICAL_YEAR,
   earthOrbitFromMeanAnomaly,
@@ -21,11 +21,12 @@ import {
   yearAngleFromDay,
 } from "./sun-earth-moon-math";
 
+/** Scrub presets — catalogue keys, resolved at render rather than module load. */
 const PRESETS = [
-  { ne: "वर्षारम्भ", en: "Year start", day: 0 },
-  { ne: "३ महिनापछि", en: "After 3 months", day: TROPICAL_YEAR / 4 },
-  { ne: "६ महिनापछि", en: "After 6 months", day: TROPICAL_YEAR / 2 },
-  { ne: "वर्ष अन्त्य", en: "Year end", day: TROPICAL_YEAR - 2 },
+  { key: "learn.study.sem.preset_year_start", day: 0 },
+  { key: "learn.study.sem.preset_after_3_months", day: TROPICAL_YEAR / 4 },
+  { key: "learn.study.sem.preset_after_6_months", day: TROPICAL_YEAR / 2 },
+  { key: "learn.study.sem.preset_year_end", day: TROPICAL_YEAR - 2 },
 ];
 
 export function SunEarthMoonStudy() {
@@ -74,7 +75,9 @@ export function SunEarthMoonStudy() {
         <div className={edReadout}>
           <div className={edRo}>
             <span className={edRoK}>{t("learn.solar_month")}</span>
-            <span className={edRoV()}>{BS_MONTHS[monthIdx]}</span>
+            <span className={edRoV()}>
+              {(lang === "en" ? BS_MONTH_NAMES : BS_MONTHS_NE)[monthIdx]}
+            </span>
           </div>
           <div className={edRo}>
             <span className={edRoK}>{t("learn.sun_sign_nakshatra")}</span>
@@ -133,7 +136,7 @@ export function SunEarthMoonStudy() {
         <div className={edPresets}>
           {PRESETS.map((p) => (
             <button
-              key={p.ne}
+              key={p.key}
               type="button"
               className={edPreset(Math.abs(day - p.day) < 4)}
               onClick={() => {
@@ -141,30 +144,21 @@ export function SunEarthMoonStudy() {
                 setDay(p.day);
               }}
             >
-              {bilingualText(lang, p.ne, p.en)}
+              {t(p.key)}
             </button>
           ))}
         </div>
       </div>
       <p className={tmCardCap}>
-        {bilingualNode(lang, 
-          <>
-            बाहिरी {fmt(12)} राशि र {fmt(27)} नक्षत्रको ग्रिडले पृथ्वीबाट देखिने{" "}
-            <span className={cn("hl-amber")}>सूर्यको स्थिति</span> देखाउँछ — सूर्य नयाँ राशि वा नक्षत्रमा
-            प्रवेश गर्दा ग्रिड सीमा पार हुन्छ (सङ्क्रान्ति)। पृथ्वीले सूर्यको १ फेरो (~{fmt(365)}{" "}
-            दिन) लगाउँदा चन्द्रले ~{fmt(12)}.{fmt(4)} फेरो लगाउँछ — त्यसैले १२ चान्द्र महिना सकिँदा
-            वर्ष ~{fmt(11)} दिन बाँकी रहन्छ, जसले <span className={cn("hl-amber")}>अधिक मास</span>{" "}
-            जन्माउँछ।
-          </>,
-          <>
-            The outer grid of {fmt(12)} rashis and {fmt(27)} nakshatras shows the{" "}
-            <span className={cn("hl-amber")}>Sun's position</span> as seen from Earth — when the Sun
-            enters a new rashi or nakshatra it crosses a grid boundary (sankranti). While the Earth
-            makes 1 orbit of the Sun (~{fmt(365)} days) the Moon makes ~{fmt(12)}.{fmt(4)} orbits —
-            so after 12 lunar months about {fmt(11)} days of the year remain, which gives rise to{" "}
-            <span className={cn("hl-amber")}>Adhika Masa</span>.
-          </>,
-        )}
+        {t("learn.study.sem.caption_lead", { rashis: fmt(12), nakshatras: fmt(27) })}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.sem.caption_sun_position")}</span>{" "}
+        {t("learn.study.sem.caption_drift", {
+          yearDays: fmt(365),
+          moonLaps: `${fmt(12)}.${fmt(4)}`,
+          remainingDays: fmt(11),
+        })}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.sem.caption_adhika_masa")}</span>
+        {t("learn.study.sem.caption_tail")}
       </p>
     </div>
   );

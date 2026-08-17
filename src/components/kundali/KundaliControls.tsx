@@ -10,7 +10,6 @@ import {
   getSupportedAdBounds,
 } from "@/lib/bs-calendar";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { useLocale, bilingualText } from "@/i18n/locale";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -67,7 +66,6 @@ export function KundaliControls({
   onLocationChange,
 }: Props) {
   const { t } = useTranslation();
-  const { lang } = useLocale();
   const calendarEra = useCalendarEra();
   const era: "bs" | "ad" =
     calendarEra === "ad" || calendarEra === "bc" ? "ad" : "bs";

@@ -8,7 +8,7 @@ import {
 } from "@/lib/kundali/north-indian-layout";
 import { cn } from "@/lib/utils";
 import { GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
-import { useLocale, bilingualText } from "@/i18n/locale";
+import { useLocale } from "@/i18n/locale";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 
 /** Catalogue key for each planet's two-letter glyph label. */

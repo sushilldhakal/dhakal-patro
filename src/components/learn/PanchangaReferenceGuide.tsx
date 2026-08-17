@@ -24,16 +24,17 @@ import {
 } from "@/lib/learn-classes";
 import { cn } from "@/lib/utils";
 
+/* Catalogue keys, not text: this table is built at module level, above any hook. */
 const GRAHA_ROWS = [
-  { ne: "सूर्य", en: "Sun", note: "आत्मा, पिता, अधिकार — राशि र सङ्क्रान्तिको माप", noteEn: "Soul, father, authority — measures rashi and sankranti" },
-  { ne: "चन्द्र", en: "Moon", note: "मन, माता — तिथि, नक्षत्र, पक्ष", noteEn: "Mind, mother — tithi, nakshatra, paksha" },
-  { ne: "मंगल", en: "Mars", note: "साहस, भाइ — मङ्गलवार, होरा", noteEn: "Courage, siblings — Tuesday, hora" },
-  { ne: "बुध", en: "Mercury", note: "बुद्धि, वाणी — बुधवार", noteEn: "Intellect, speech — Wednesday" },
-  { ne: "बृहस्पति", en: "Jupiter", note: "गुरु, ज्ञान — बिहीवार", noteEn: "Teacher, knowledge — Thursday" },
-  { ne: "शुक्र", en: "Venus", note: "प्रेम, सौन्दर्य — शुक्रवार", noteEn: "Love, beauty — Friday" },
-  { ne: "शनि", en: "Saturn", note: "कर्म, धैर्य — शनिवार", noteEn: "Karma, patience — Saturday" },
-  { ne: "राहु", en: "Rahu", note: "छाया ग्रह — ग्रहण, अप्रत्याशित परिवर्तन", noteEn: "Shadow planet — eclipses, sudden change" },
-  { ne: "केतु", en: "Ketu", note: "छाया ग्रह — मोक्ष, आध्यात्म", noteEn: "Shadow planet — moksha, spirituality" },
+  { name: "grahas.sun", meaning: "learn.diagrams.graha_meaning_sun" },
+  { name: "grahas.moon", meaning: "learn.diagrams.graha_meaning_moon" },
+  { name: "learn.diagrams.graha_mars", meaning: "learn.diagrams.graha_meaning_mars" },
+  { name: "grahas.mercury", meaning: "learn.diagrams.graha_meaning_mercury" },
+  { name: "grahas.jupiter", meaning: "learn.diagrams.graha_meaning_jupiter" },
+  { name: "grahas.venus", meaning: "learn.diagrams.graha_meaning_venus" },
+  { name: "grahas.saturn", meaning: "learn.diagrams.graha_meaning_saturn" },
+  { name: "grahas.rahu", meaning: "learn.diagrams.graha_meaning_rahu" },
+  { name: "grahas.ketu", meaning: "learn.diagrams.graha_meaning_ketu" },
 ] as const;
 
 const YOGA_EN = [
@@ -93,7 +94,7 @@ export function RashiReferenceTable() {
 
 export function GrahaReferenceTable() {
   const { t } = useTranslation();
-  const { lang, digits: N } = useLocale();
+  const { digits: N } = useLocale();
   return (
     <RefTable caption={t("learn.nava_graha_9_used_in_panchanga_and_kundali")}>
       <thead>
@@ -105,10 +106,10 @@ export function GrahaReferenceTable() {
       </thead>
       <tbody>
         {GRAHA_ROWS.map((g, i) => (
-          <tr key={g.ne}>
+          <tr key={g.name}>
             <td className={patroMono}>{N(i + 1)}</td>
-            <td>{bilingualText(lang, g.ne, g.en)}</td>
-            <td>{bilingualText(lang, g.note, g.noteEn)}</td>
+            <td>{t(g.name)}</td>
+            <td>{t(g.meaning)}</td>
           </tr>
         ))}
       </tbody>
@@ -174,14 +175,14 @@ export function TithiReferenceTable() {
         </tr>
       </thead>
       <tbody>
-        {WHEEL_TITHIS.map((t, i) => {
+        {WHEEL_TITHIS.map((row, i) => {
           const degStart = i * 12;
           const degEnd = (i + 1) * 12;
           return (
-            <tr key={`${t.ne}-${i}`} className={t.moon ? learnRefHighlightRow : undefined}>
+            <tr key={`${row.ne}-${i}`} className={row.moon ? learnRefHighlightRow : undefined}>
               <td className={patroMono}>{N(i + 1)}</td>
-              <td>{bilingualText(lang, t.ne, t.en)}</td>
-              <td>{bilingualText(lang, t.paksha, t.pakshaEn ? `${t.pakshaEn} Paksha` : t.paksha)}</td>
+              <td>{bilingualText(lang, row.ne, row.en)}</td>
+              <td>{bilingualText(lang, row.paksha, row.pakshaEn ? `${row.pakshaEn} Paksha` : row.paksha)}</td>
               <td className={cn(patroMono, learnRefDeg)}>
                 {N(degStart)}°–{N(degEnd)}°
               </td>

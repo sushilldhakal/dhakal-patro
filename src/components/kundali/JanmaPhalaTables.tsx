@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useLocale, bilingualText } from "@/i18n/locale";
+import { useLocale } from "@/i18n/locale";
 import {
   PURUSHA_JANMA_GRAHAS,
   PURUSHA_JANMA_ROWS,
@@ -56,7 +56,7 @@ function JanmaPhalaTable({
   houseColLabel: string;
   chartBhavas?: Partial<Record<string, number>>;
 }) {
-  const { lang } = useLocale();
+  const { t } = useTranslation();
 
   return (
     <div className="rounded-xl border border-border overflow-x-auto">
@@ -68,7 +68,7 @@ function JanmaPhalaTable({
             </TableHead>
             {grahas.map((g) => (
               <TableHead key={g.id} className={cn(th, "min-w-[7rem] max-w-[9rem] text-center")}>
-                {bilingualText(lang, g.ne, g.en)}
+                {t(g.labelKey)}
               </TableHead>
             ))}
           </TableRow>
@@ -77,9 +77,9 @@ function JanmaPhalaTable({
           {rows.map((row, rowIdx) => {
             const houseNum = rowIdx + 1;
             return (
-              <TableRow key={row.houseNe}>
+              <TableRow key={row.houseKey}>
                 <TableCell className={cn(houseTd, "pl-3.5 border-r border-border")}>
-                  {bilingualText(lang, row.houseNe, row.houseEn)}
+                  {t(row.houseKey)}
                 </TableCell>
                 {row.phala.map((cell, i) => {
                   const grahaId = grahas[i]?.id;
@@ -91,7 +91,7 @@ function JanmaPhalaTable({
                       : houseForGraha(grahaId) === houseNum);
                   return (
                     <TableCell
-                      key={`${row.houseNe}-${i}`}
+                      key={`${row.houseKey}-${i}`}
                       className={cn(
                         td,
                         isChartCell && "bg-secondary/15 ring-1 ring-inset ring-secondary/40",
@@ -121,9 +121,9 @@ export function JanmaPhalaTables({
   chartBhavas?: Partial<Record<string, number>>;
 }) {
   const { t } = useTranslation();
-  const { lang, digits } = useLocale();
+  const { digits } = useLocale();
 
-  const hintParts = buildJanmaPhalaHintParts(chartBhavas ?? {}, tab, lang, digits);
+  const hintParts = buildJanmaPhalaHintParts(chartBhavas ?? {}, tab, t, digits);
 
   return (
     <div className="mt-10 space-y-4 border-t border-border pt-8">

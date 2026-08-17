@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { edBodyLabel, edScrub, hoEarthGroup, solAntumbra, solBannerType, solCorona, solEarthGlow, solEyeFrame, solEyeMoon, solEyeRim, solEyeSky, solEyeStatus, solEyeSun, solEyeTitle, solLegendLabel, solLight, solMoon, solMoonLabel, solPenumbra, solRay, solSpotAnti, solSpotPen, solSpotUmbra, solSunGlow, solUmbra } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useTranslation } from "react-i18next";
+import { useLocaleDigits } from "@/i18n/digits";
 import { EarthGlobeImage } from "./EarthGlobeImage";
 
 /**
@@ -17,7 +18,6 @@ import { EarthGlobeImage } from "./EarthGlobeImage";
  * standing under the shadow actually sees.
  */
 
-const fmt = (n: string | number) => toNepaliDigits(n);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -85,6 +85,7 @@ function computeModel(t: number, d: number): Model {
 }
 
 function ConeScene({ m }: { m: Model }) {
+  const { t } = useTranslation();
   const { moonY, apexX, type, offset } = m;
   const moonTop = moonY - MOON_R;
   const moonBot = moonY + MOON_R;
@@ -152,14 +153,14 @@ function ConeScene({ m }: { m: Model }) {
       {sunRays}
       <circle cx={SUN_X} cy={AXIS_Y} r={SUN_R} fill="url(#sol-sun)" />
       <text x={SUN_X} y={AXIS_Y + SUN_R + 34} className={edBodyLabel} textAnchor="middle">
-        सूर्य
+        {t("grahas.sun")}
       </text>
 
       {/* Earth */}
       <g className={hoEarthGroup} transform={`translate(${EARTH_X} ${AXIS_Y})`}>
         <EarthGlobeImage cx={0} cy={0} r={EARTH_R} glow glowClassName={solEarthGlow} glowPad={10} />
         <text y={EARTH_R + 30} className={edBodyLabel} textAnchor="middle">
-          पृथ्वी
+          {t("grahas.earth")}
         </text>
       </g>
 
@@ -180,13 +181,15 @@ function ConeScene({ m }: { m: Model }) {
       {/* Moon (drawn last so it sits in front, casting the cone) */}
       <circle cx={MOON_X} cy={moonY} r={MOON_R} className={solMoon} />
       <text x={MOON_X} y={moonY - MOON_R - 12} className={solMoonLabel} textAnchor="middle">
-        चन्द्र
+        {t("grahas.moon")}
       </text>
     </>
   );
 }
 
 function ObserverInset({ m }: { m: Model }) {
+  const { t } = useTranslation();
+  const fmt = useLocaleDigits();
   const { type, rM, sep, coverage } = m;
   const x0 = 902;
   const y0 = 16;
@@ -199,18 +202,18 @@ function ObserverInset({ m }: { m: Model }) {
 
   const typeText =
     type === "total"
-      ? "पूर्ण · सूर्यमुकुट"
+      ? t("learn.study.solar_eclipse.inset_total")
       : type === "annular"
-        ? "वलयाकार · औँठी"
+        ? t("learn.study.solar_eclipse.inset_annular")
         : type === "partial"
-          ? "खण्डग्रास"
-          : "ग्रहण छैन";
+          ? t("learn.study.solar_eclipse.partial")
+          : t("learn.study.solar_eclipse.none");
 
   return (
     <g>
       <rect x={x0} y={y0} width={w} height={h} rx={16} className={solEyeFrame} />
       <text x={cx} y={y0 + 26} className={solEyeTitle} textAnchor="middle">
-        पृथ्वीबाट देखिने दृश्य
+        {t("learn.study.solar_eclipse.inset_title")}
       </text>
       <clipPath id="sol-eye-clip">
         <circle cx={cx} cy={cy + 8} r={sky} />
@@ -237,7 +240,9 @@ function ObserverInset({ m }: { m: Model }) {
 }
 
 export function SolarEclipseStudy() {
-  const [t, setT] = useState(0.5);
+  const { t } = useTranslation();
+  const fmt = useLocaleDigits();
+  const [sweep, setSweep] = useState(0.5);
   const [d, setD] = useState(0.18);
   const [playing, setPlaying] = useState(true);
   const raf = useRef(0);
@@ -248,25 +253,30 @@ export function SolarEclipseStudy() {
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setT((p) => (p + dt * 0.16) % 1);
+      setSweep((p) => (p + dt * 0.16) % 1);
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
   }, [playing]);
 
-  const m = useMemo(() => computeModel(t, d), [t, d]);
+  const m = useMemo(() => computeModel(sweep, d), [sweep, d]);
 
   const typeText =
     m.type === "total"
-      ? "पूर्ण सूर्यग्रहण"
+      ? t("learn.study.solar_eclipse.total")
       : m.type === "annular"
-        ? "वलयाकार (ring of fire)"
+        ? t("learn.study.solar_eclipse.annular")
         : m.type === "partial"
-          ? "खण्डग्रास"
-          : "ग्रहण छैन";
+          ? t("learn.study.solar_eclipse.partial")
+          : t("learn.study.solar_eclipse.none");
 
-  const distLabel = d < 0.4 ? "नजिक · perigee" : d > 0.6 ? "टाढा · apogee" : "मध्यम";
+  const distLabel =
+    d < 0.4
+      ? t("learn.study.solar_eclipse.dist_perigee")
+      : d > 0.6
+        ? t("learn.study.solar_eclipse.dist_apogee")
+        : t("learn.study.medium");
 
   return (
     <div className={tmCardPadLg}>
@@ -288,10 +298,10 @@ export function SolarEclipseStudy() {
         {m.type !== "none" && (
           <text x={VB.W / 2} y={40} className={solBannerType(m.type)} textAnchor="middle">
             {m.type === "total"
-              ? "● पूर्ण सूर्यग्रहण — प्रच्छायाँ पृथ्वीमा"
+              ? t("learn.study.solar_eclipse.banner_total")
               : m.type === "annular"
-                ? "● वलयाकार ग्रहण — वलयच्छायाँ (antumbra) पृथ्वीमा"
-                : "खण्डग्रास — उपछायाँ मात्र"}
+                ? t("learn.study.solar_eclipse.banner_annular")
+                : t("learn.study.solar_eclipse.banner_partial")}
           </text>
         )}
 
@@ -300,11 +310,17 @@ export function SolarEclipseStudy() {
         {/* legend (top-left empty sky) */}
         <g transform="translate(30 26)">
           <rect x={0} y={0} width={26} height={15} className={solUmbra} />
-          <text x={34} y={12} className={solLegendLabel}>प्रच्छाया (umbra) — पूर्ण</text>
+          <text x={34} y={12} className={solLegendLabel}>
+            {t("learn.study.solar_eclipse.legend_umbra")}
+          </text>
           <rect x={0} y={26} width={26} height={15} className={solAntumbra} />
-          <text x={34} y={38} className={solLegendLabel}>वलयच्छाया (antumbra) — वलयाकार</text>
+          <text x={34} y={38} className={solLegendLabel}>
+            {t("learn.study.solar_eclipse.legend_antumbra")}
+          </text>
           <rect x={0} y={52} width={26} height={15} className={solPenumbra} />
-          <text x={34} y={64} className={solLegendLabel}>उपछाया (penumbra) — खण्डग्रास</text>
+          <text x={34} y={64} className={solLegendLabel}>
+            {t("learn.study.solar_eclipse.legend_penumbra")}
+          </text>
         </g>
 
         <ObserverInset m={m} />
@@ -313,32 +329,32 @@ export function SolarEclipseStudy() {
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>प्रकार</span>
+            <span className={edRoK}>{t("learn.study.solar_eclipse.type")}</span>
             <span className={edRoV({ amber: m.type === "total" || m.type === "annular" })}>{typeText}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>सूर्य आवरण</span>
+            <span className={edRoK}>{t("learn.study.solar_eclipse.coverage")}</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(m.coverage * 100))}%</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>चन्द्र दूरी</span>
+            <span className={edRoK}>{t("learn.study.solar_eclipse.moon_distance")}</span>
             <span className={edRoV({ mono: true })}>{fmt(m.distanceKm.toLocaleString("en-US"))} km</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>अवस्था</span>
+            <span className={edRoK}>{t("learn.study.eclipse.state")}</span>
             <span className={edRoV()}>{distLabel}</span>
           </div>
         </div>
 
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>छायाँ सर्दै — समय (पृथ्वीमाथि मार्ग)</span>
+          <span className={motSliderLabel}>{t("learn.study.solar_eclipse.slider_time")}</span>
           <div className={edScrubWrap}>
             <button
               type="button"
               className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
-              title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+              title={playing ? t("learn.pause") : t("learn.play")}
+              aria-label={playing ? t("learn.pause") : t("learn.play")}
             >
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
@@ -348,18 +364,18 @@ export function SolarEclipseStudy() {
               min={0}
               max={1}
               step={0.005}
-              value={t}
-              style={{ "--fill": `${t * 100}%` } as React.CSSProperties}
+              value={sweep}
+              style={{ "--fill": `${sweep * 100}%` } as React.CSSProperties}
               onChange={(e) => {
                 setPlaying(false);
-                setT(+e.target.value);
+                setSweep(+e.target.value);
               }}
             />
           </div>
         </div>
 
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>⟺ चन्द्र दूरी — perigee (पूर्ण) ↔ apogee (वलयाकार)</span>
+          <span className={motSliderLabel}>{t("learn.study.solar_eclipse.slider_distance")}</span>
           <input
             className={edScrub}
             type="range"
@@ -373,25 +389,26 @@ export function SolarEclipseStudy() {
         </div>
 
         <div className={edPresets}>
-          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setT(0.5); setD(0.12); }}>
-            पूर्ण ग्रहण →
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setSweep(0.5); setD(0.12); }}>
+            {t("learn.study.solar_eclipse.preset_total")}
           </button>
-          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setT(0.5); setD(0.9); }}>
-            वलयाकार →
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setSweep(0.5); setD(0.9); }}>
+            {t("learn.study.solar_eclipse.preset_annular")}
           </button>
-          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setT(0.78); setD(0.4); }}>
-            खण्डग्रास →
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setSweep(0.78); setD(0.4); }}>
+            {t("learn.study.solar_eclipse.preset_partial")}
           </button>
         </div>
       </div>
 
       <p className={tmCardCap}>
-        सूर्यग्रहण सधैँ <b>औंसी</b> मा हुन्छ — चन्द्र सूर्य र पृथ्वीको बीचमा आउँदा त्यसको{" "}
-        <span className={cn("hl-amber")}>प्रच्छायाँ (umbra)</span> पृथ्वीको सानो भागमा पर्छ। चन्द्र नजिक
-        (perigee) हुँदा प्रच्छायाँले पृथ्वी छुन्छ → <b>पूर्ण ग्रहण</b>; टाढा (apogee) हुँदा प्रच्छायाँ
-        अपुग हुन्छ र <span className={cn("hl")}>वलयच्छायाँ (antumbra)</span> पुग्छ → <b>वलयाकार “आगोको
-        औँठी”</b>। फराकिलो <span className={cn("hl")}>उपछायाँ</span> ले ठूलो क्षेत्रमा खण्डग्रास दिन्छ।
-        समय स्लाइडरले छायाँलाई पृथ्वीमाथि सार्छ — त्यही नै पूर्णताको मार्ग हो।
+        {t("learn.study.solar_eclipse.caption_lead")}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.solar_eclipse.term_umbra")}</span>{" "}
+        {t("learn.study.solar_eclipse.caption_umbra")}{" "}
+        <span className={cn("hl")}>{t("learn.study.solar_eclipse.term_antumbra")}</span>{" "}
+        {t("learn.study.solar_eclipse.caption_antumbra")}{" "}
+        <span className={cn("hl")}>{t("learn.study.solar_eclipse.term_penumbra")}</span>{" "}
+        {t("learn.study.solar_eclipse.caption_penumbra")}
       </p>
     </div>
   );

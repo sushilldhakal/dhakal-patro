@@ -27,6 +27,7 @@ import { ChevronDown, ChevronUp, Maximize2, Minimize2, Pause, Play, RotateCcw } 
 import { useTranslation } from "react-i18next";
 
 import { useLocale } from "@/i18n/locale";
+import { getRashiName } from "@/lib/rashi-i18n";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { edPlayBtn, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
@@ -60,12 +61,6 @@ const GOLD = "#d8c84a";
 
 /** Days of simulated time per real second, per speed rung. */
 const SPEEDS = [2, 8, 30];
-
-/** Rashi names, indexed from Mesha — matching the belt labels in the scene. */
-const RASHI_NE = [
-  "मेष", "वृष", "मिथुन", "कर्कट", "सिंह", "कन्या",
-  "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
-];
 
 const FOCUS_CHIPS: { id: Focus; key: string }[] = [
   { id: "solar", key: "learn.study.two_systems.focus_solar" },
@@ -241,7 +236,7 @@ export function TwoSystemsStudy() {
         <div className={edRo}>
           <span className={edRoK}>{t("learn.study.two_systems.moon_in_rashi")}</span>
           <span className={edRoV()}>
-            {RASHI_NE[moonRashi]} · {num(Math.floor(moonLongitude))}°
+            {getRashiName(moonRashi + 1, lang)} · {num(Math.floor(moonLongitude))}°
           </span>
         </div>
         <div className={edRo}>

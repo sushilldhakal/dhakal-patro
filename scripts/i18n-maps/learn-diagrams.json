@@ -7,6 +7,14 @@
     "ne": "पृथ्वी",
     "en": "Earth"
   },
+  "grahas.jupiter": {
+    "ne": "बृहस्पति",
+    "en": "Jupiter"
+  },
+  "grahas.ketu": {
+    "ne": "केतु",
+    "en": "Ketu"
+  },
   "grahas.mercury": {
     "ne": "बुध",
     "en": "Mercury"
@@ -15,9 +23,21 @@
     "ne": "चन्द्र",
     "en": "Moon"
   },
+  "grahas.rahu": {
+    "ne": "राहु",
+    "en": "Rahu"
+  },
+  "grahas.saturn": {
+    "ne": "शनि",
+    "en": "Saturn"
+  },
   "grahas.sun": {
     "ne": "सूर्य",
     "en": "Sun"
+  },
+  "grahas.venus": {
+    "ne": "शुक्र",
+    "en": "Venus"
   },
   "learn.diagrams.autumn_equinox": {
     "ne": "शरद् विषुव",
@@ -126,6 +146,46 @@
   "learn.diagrams.ecliptic_longitude_axis": {
     "ne": "क्रान्तिवृत्तीय देशान्तर ०° → ३६०° →",
     "en": "ecliptic longitude 0° → 360° →"
+  },
+  "learn.diagrams.graha_mars": {
+    "ne": "मंगल",
+    "en": "Mars"
+  },
+  "learn.diagrams.graha_meaning_jupiter": {
+    "ne": "गुरु, ज्ञान — बिहीवार",
+    "en": "Teacher, knowledge — Thursday"
+  },
+  "learn.diagrams.graha_meaning_ketu": {
+    "ne": "छाया ग्रह — मोक्ष, आध्यात्म",
+    "en": "Shadow planet — moksha, spirituality"
+  },
+  "learn.diagrams.graha_meaning_mars": {
+    "ne": "साहस, भाइ — मङ्गलवार, होरा",
+    "en": "Courage, siblings — Tuesday, hora"
+  },
+  "learn.diagrams.graha_meaning_mercury": {
+    "ne": "बुद्धि, वाणी — बुधवार",
+    "en": "Intellect, speech — Wednesday"
+  },
+  "learn.diagrams.graha_meaning_moon": {
+    "ne": "मन, माता — तिथि, नक्षत्र, पक्ष",
+    "en": "Mind, mother — tithi, nakshatra, paksha"
+  },
+  "learn.diagrams.graha_meaning_rahu": {
+    "ne": "छाया ग्रह — ग्रहण, अप्रत्याशित परिवर्तन",
+    "en": "Shadow planet — eclipses, sudden change"
+  },
+  "learn.diagrams.graha_meaning_saturn": {
+    "ne": "कर्म, धैर्य — शनिवार",
+    "en": "Karma, patience — Saturday"
+  },
+  "learn.diagrams.graha_meaning_sun": {
+    "ne": "आत्मा, पिता, अधिकार — राशि र सङ्क्रान्तिको माप",
+    "en": "Soul, father, authority — measures rashi and sankranti"
+  },
+  "learn.diagrams.graha_meaning_venus": {
+    "ne": "प्रेम, सौन्दर्य — शुक्रवार",
+    "en": "Love, beauty — Friday"
   },
   "learn.diagrams.gregorian_jump_caption": {
     "ne": "जुलियन नियमको जम्मा भएको त्रुटि मिलाउन अक्टोबर १५८२ बाट दस दिन एकैचोटि हटाइयो — ४ गतेको भोलिपल्ट सिधै १५ गते भयो, र बीचका दस दिन कहीँ पनि अस्तित्वमा आएनन्। तर सबैले एकैचोटि अपनाएनन्, र त्रुटि चलिरहेकै हुनाले पछि अपनाउनेले झन् धेरै दिन हटाउनुपर्‍यो — बेलायतले ११, रुसले १३।",
@@ -258,10 +318,6 @@
   "learn.diagrams.hora_ring_jupiter": {
     "ne": "बृहस्पति",
     "en": "Jup"
-  },
-  "learn.diagrams.hora_ring_mars": {
-    "ne": "मंगल",
-    "en": "Mars"
   },
   "learn.diagrams.hora_ring_mercury": {
     "ne": "बुध",

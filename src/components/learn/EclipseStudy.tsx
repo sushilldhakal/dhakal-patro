@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useTranslation } from "react-i18next";
+import { useLocaleDigits } from "@/i18n/digits";
 import { EclipseGeometry } from "./EclipseGeometry";
 import {
   ECL_RANGE_DAYS,
@@ -16,19 +17,20 @@ import {
   lunarEclipseStatus,
 } from "./eclipse-math";
 
-const fmt = (n: string | number) => toNepaliDigits(n);
 const RANGE = Math.round(ECL_RANGE_DAYS);
 /** Simulated days per real second for Moon / Earth animation. */
 const MOON_PLAY_SPEED = 9;
 
-function phaseName(E: number): string {
-  if (E < 12 || E > 348) return "औंसी";
-  if (Math.abs(E - 180) < 12) return "पूर्णिमा";
-  return E < 180 ? "शुक्ल पक्ष" : "कृष्ण पक्ष";
+function phaseKey(E: number): string {
+  if (E < 12 || E > 348) return "learn.aunsi";
+  if (Math.abs(E - 180) < 12) return "learn.purnima";
+  return E < 180 ? "learn.study.eclipse.shukla_paksha" : "learn.study.eclipse.krishna_paksha";
 }
 
 export function EclipseStudy() {
-  const [t, setT] = useState(18);
+  const { t } = useTranslation();
+  const fmt = useLocaleDigits();
+  const [day, setDay] = useState(18);
   const [precDays, setPrecDays] = useState(18);
   const [playing, setPlaying] = useState(true);
   const [playingNodes, setPlayingNodes] = useState(false);
@@ -41,7 +43,7 @@ export function EclipseStudy() {
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setT((prev) => (prev + dt * MOON_PLAY_SPEED) % RANGE);
+      setDay((prev) => (prev + dt * MOON_PLAY_SPEED) % RANGE);
       rafMoon.current = requestAnimationFrame(tick);
     };
     rafMoon.current = requestAnimationFrame(tick);
@@ -63,39 +65,39 @@ export function EclipseStudy() {
 
   const events = useMemo(() => findEclipses(RANGE), []);
 
-  const { u, omega, omegaInertial, earthLon, g } = geoFromDay(t, precDays);
+  const { u, omega, omegaInertial, earthLon, g } = geoFromDay(day, precDays);
   const status = lunarEclipseStatus(g);
   const solar = isSolarAlignment(g);
-  const monthNo = Math.floor(t / SYNODIC_MONTH) + 1;
+  const monthNo = Math.floor(day / SYNODIC_MONTH) + 1;
   const nodeCyclePct = precDays / ECLIPSE_YEAR;
 
   const next = useMemo(() => {
-    const after = events.filter((e) => e.t > t + 0.5);
+    const after = events.filter((e) => e.t > day + 0.5);
     const list = after.length ? after : events;
     return list[0] ?? null;
-  }, [events, t]);
+  }, [events, day]);
 
   const jumpNext = (kind: "lunar" | "solar") => {
-    const after = events.filter((e) => e.kind === kind && e.t > t + 0.5);
+    const after = events.filter((e) => e.kind === kind && e.t > day + 0.5);
     const target = (after.length ? after : events.filter((e) => e.kind === kind))[0];
     if (target) {
       setPlaying(false);
       setPlayingNodes(false);
-      setT(target.t);
+      setDay(target.t);
       setPrecDays(target.t);
     }
   };
 
   const statusText =
     status === "total"
-      ? "पूर्ण ग्रहण"
+      ? t("learn.study.eclipse.status_total")
       : status === "partial"
-        ? "खण्डग्रास"
+        ? t("learn.study.eclipse.status_partial")
         : status === "penumbral"
-          ? "उपछाया ग्रहण"
+          ? t("learn.study.eclipse.status_penumbral")
           : solar
-            ? "सूर्यग्रहण"
-            : "ग्रहण छैन";
+            ? t("learn.study.eclipse.status_solar")
+            : t("learn.study.eclipse.status_none");
 
   const lunarCount = events.filter((e) => e.kind === "lunar").length;
   const solarCount = events.filter((e) => e.kind === "solar").length;
@@ -106,41 +108,44 @@ export function EclipseStudy() {
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>दिन · चान्द्र महिना</span>
+            <span className={edRoK}>{t("learn.study.eclipse.day_lunar_month")}</span>
             <span className={edRoV({ mono: true })}>
-              {fmt(Math.round(t))} · {fmt(monthNo)}
+              {fmt(Math.round(day))} · {fmt(monthNo)}
             </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>चन्द्र चरण</span>
-            <span className={edRoV()}>{phaseName(g.E)}</span>
+            <span className={edRoK}>{t("learn.study.eclipse.moon_phase")}</span>
+            <span className={edRoV()}>{t(phaseKey(g.E))}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>पात कोण</span>
+            <span className={edRoK}>{t("learn.study.eclipse.node_angle")}</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(omegaInertial))}°</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>पात-चक्र</span>
+            <span className={edRoK}>{t("learn.study.eclipse.node_cycle")}</span>
             <span className={edRoV({ mono: true })}>
-              {fmt(Math.round(precDays))} दिन · {fmt(Math.round(nodeCyclePct * 100))}%
+              {t("learn.study.eclipse.node_cycle_value", {
+                days: fmt(Math.round(precDays)),
+                percent: fmt(Math.round(nodeCyclePct * 100)),
+              })}
             </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>अवस्था</span>
+            <span className={edRoK}>{t("learn.study.eclipse.state")}</span>
             <span className={edRoV({ amber: status === "total" || status === "partial" })}>
               {statusText}
             </span>
           </div>
         </div>
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>चन्द्र · पृथ्वी र चन्द्र (छिटो)</span>
+          <span className={motSliderLabel}>{t("learn.study.eclipse.slider_moon")}</span>
           <div className={edScrubWrap}>
             <button
               type="button"
               className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
-              title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+              title={playing ? t("learn.pause") : t("learn.play")}
+              aria-label={playing ? t("learn.pause") : t("learn.play")}
             >
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
@@ -150,24 +155,24 @@ export function EclipseStudy() {
               min={0}
               max={RANGE}
               step={0.5}
-              value={t}
-              style={{ "--fill": `${(t / RANGE) * 100}%` } as React.CSSProperties}
+              value={day}
+              style={{ "--fill": `${(day / RANGE) * 100}%` } as React.CSSProperties}
               onChange={(e) => {
                 setPlaying(false);
-                setT(+e.target.value);
+                setDay(+e.target.value);
               }}
             />
           </div>
         </div>
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>राहु–केतु · पात-चक्र (ढिलो · घडीको दिशा)</span>
+          <span className={motSliderLabel}>{t("learn.study.eclipse.slider_nodes")}</span>
           <div className={edScrubWrap}>
             <button
               type="button"
               className={edPlayBtn}
               onClick={() => setPlayingNodes((p) => !p)}
-              title={playingNodes ? "रोक्नुहोस्" : "पात चलाउनुहोस्"}
-              aria-label={playingNodes ? "रोक्नुहोस्" : "पात चलाउनुहोस्"}
+              title={playingNodes ? t("learn.pause") : t("learn.study.eclipse.play_nodes")}
+              aria-label={playingNodes ? t("learn.pause") : t("learn.study.eclipse.play_nodes")}
             >
               {playingNodes ? <Pause size={16} /> : <Play size={16} />}
             </button>
@@ -188,10 +193,10 @@ export function EclipseStudy() {
         </div>
         <div className={edPresets}>
           <button type="button" className={edPreset()} onClick={() => jumpNext("lunar")}>
-            अर्को चन्द्रग्रहण →
+            {t("learn.study.eclipse.next_lunar")}
           </button>
           <button type="button" className={edPreset()} onClick={() => jumpNext("solar")}>
-            अर्को सूर्यग्रहण →
+            {t("learn.study.eclipse.next_solar")}
           </button>
           <button
             type="button"
@@ -199,21 +204,32 @@ export function EclipseStudy() {
             onClick={() => {
               setPlaying(false);
               setPlayingNodes(false);
-              setT(0);
+              setDay(0);
               setPrecDays(0);
             }}
           >
-            सुरुमा
+            {t("learn.study.eclipse.to_start")}
           </button>
         </div>
       </div>
       <p className={tmCardCap}>
-        चन्द्रले ~{fmt(27)} दिनमा एक राशि पार गर्छ; <span className={cn("hl-amber")}>राहु–केतु</span> भने आकाशमा
-        बिस्तारै <b>घडीको दिशामा</b> घुम्छन् (~{fmt(19)}°/वर्ष, ~{fmt(19)} वर्षे पूरा चक्र) — चन्द्रभन्दा लगभग{" "}
-        {fmt(250)} गुणा ढिलो। माथिको <b>चन्द्र</b> बटनले चन्द्र/पृथ्वी चलाउँछ; <b>पात-चक्र</b> बटन वा स्लाइडरले मात्र पात
-        रेखा सार्छ। ग्रहण तब हुन्छ जब पूर्णिमा/औंसी पात रेखा नजिक पर्छ — वर्षमा झन्डै दुई पटक (
-        {fmt(lunarCount)} चन्द्र, {fmt(solarCount)} सूर्य यस चक्रमा)।
-        {next ? ` अर्को ग्रहण ~${fmt(Math.max(0, Math.round(next.t - t)))} दिनमा।` : ""}
+        {t("learn.study.eclipse.caption_moon_pace", { days: fmt(27) })}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.eclipse.rahu_ketu")}</span>{" "}
+        {t("learn.study.eclipse.caption_nodes_drift", {
+          perYear: fmt(19),
+          years: fmt(19),
+          factor: fmt(250),
+        })}{" "}
+        {t("learn.study.eclipse.caption_controls")}{" "}
+        {t("learn.study.eclipse.caption_when", {
+          lunar: fmt(lunarCount),
+          solar: fmt(solarCount),
+        })}
+        {next
+          ? ` ${t("learn.study.eclipse.caption_next", {
+              days: fmt(Math.max(0, Math.round(next.t - day))),
+            })}`
+          : ""}
       </p>
     </div>
   );

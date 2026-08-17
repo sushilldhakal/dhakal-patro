@@ -8,11 +8,14 @@
  * milestones, the era note the dates need to be read with, the sections, and
  * the source attribution.
  *
- * Nepali only, unlike the bilingual articles around it — it is a transcript of
- * a Nepali documentary, not a translated explainer.
+ * The transcript itself stays Nepali, unlike the bilingual articles around it —
+ * it is the wording of a Nepali documentary, not a translated explainer. The
+ * chrome around it (lede, contents, era note, attribution) is translated, so an
+ * English reader is at least told what they are looking at.
  */
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink, History as HistoryIcon, ScrollText, Video } from "lucide-react";
 import {
   Accordion,
@@ -38,7 +41,7 @@ import {
 } from "@/lib/history/surya-siddhanta-history";
 import { formatBbse } from "@/lib/history/era-dates";
 import { getCurrentBs } from "@/lib/bs-calendar";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useLocaleDigits } from "@/i18n/digits";
 
 function SectionBody({ section }: { section: HistorySection }) {
   return (
@@ -65,6 +68,8 @@ function SectionBlock({ section }: { section: HistorySection }) {
 }
 
 export function SuryaSiddhantaHistory() {
+  const { t } = useTranslation();
+  const digits = useLocaleDigits();
   const [activeId, setActiveId] = useState(SURYA_SIDDHANTA_HISTORY[0]?.id ?? "");
   const currentBsYear = getCurrentBs().year;
 
@@ -91,11 +96,7 @@ export function SuryaSiddhantaHistory() {
 
   return (
     <>
-      <p className={tmLede}>
-        ८,८०० वर्ष पुरानो वैदिक पञ्चाङ्ग परम्परा — {formatBbse(6778)} को ग्रहसंयोगदेखि युग चक्र,
-        नक्षत्र स्थानान्तरण, र विश्वका पात्रोहरूमा प्रभावसम्म। सबै मिति पू.वि.सं. (~३०००–५८ ई.पू.)
-        वा वि.सं. (५७ ई.पू. देखि) मा प्रस्तुत।
-      </p>
+      <p className={tmLede}>{t("learn.study.history.lede", { epoch: formatBbse(6778) })}</p>
 
       <a
         href={HISTORY_SOURCE.url}
@@ -119,23 +120,25 @@ export function SuryaSiddhantaHistory() {
 
       <div className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card/50 px-4 py-3 text-sm sm:flex-row sm:gap-6">
         <p className="m-0">
-          <span className="font-semibold text-foreground">पू.वि.सं.</span>
+          <span className="font-semibold text-foreground">{t("learn.study.history.era_bbse")}</span>
           {" — "}
           {HISTORY_ERA_NOTE.bbse}
         </p>
         <p className="m-0">
-          <span className="font-semibold text-foreground">वि.सं.</span>
+          <span className="font-semibold text-foreground">{t("learn.study.history.era_bs")}</span>
           {" — "}
-          {HISTORY_ERA_NOTE.bs} (आज {toNepaliDigits(currentBsYear)})
+          {HISTORY_ERA_NOTE.bs} {t("learn.study.history.era_bs_today", { year: digits(currentBsYear) })}
         </p>
       </div>
 
       <div className="mt-10 hidden lg:grid lg:grid-cols-[minmax(0,200px)_minmax(0,1fr)] lg:gap-12">
         <nav
           className="sticky top-20 self-start rounded-xl border border-border bg-card/60 p-3 backdrop-blur-sm"
-          aria-label="इतिहासका विषय"
+          aria-label={t("learn.study.history.toc_aria")}
         >
-          <p className="mb-2 px-2 text-sm font-semibold uppercase tracking-wider">विषयसूची</p>
+          <p className="mb-2 px-2 text-sm font-semibold uppercase tracking-wider">
+            {t("learn.study.history.toc_title")}
+          </p>
           <ul className="flex flex-col gap-0.5">
             {SURYA_SIDDHANTA_HISTORY.map((section) => (
               <li key={section.id}>
@@ -166,7 +169,9 @@ export function SuryaSiddhantaHistory() {
       <div className="mt-8 lg:hidden">
         <div className="mb-4 flex items-center gap-2 text-secondary">
           <ScrollText className="size-4" />
-          <h3 className="text-sm font-semibold text-foreground">विषयहरू</h3>
+          <h3 className="text-sm font-semibold text-foreground">
+            {t("learn.study.history.topics")}
+          </h3>
         </div>
         <Accordion
           type="single"
@@ -193,17 +198,16 @@ export function SuryaSiddhantaHistory() {
       <div className={cn(tmSection, "mt-12 rounded-xl border border-border bg-card/50 p-6 text-center")}>
         <HistoryIcon className="mx-auto size-8 text-secondary" />
         <p className={cn(tmLede, "mx-auto mt-4 max-w-xl text-center")}>
-          यो अध्याय{" "}
+          {t("learn.study.history.transcript_lead")}{" "}
           <a
             href={HISTORY_SOURCE.url}
             target="_blank"
             rel="noopener noreferrer"
             className="text-secondary underline-offset-2 hover:underline"
           >
-            वृत्तचित्र
-          </a>{" "}
-          को नेपाली प्रतिलेख हो — शैक्षिक उद्देश्यका लागि। विज्ञान र इतिहासका दावीहरू स्वतन्त्र
-          रूपमा प्रमाणित गर्न सिफारिस गरिन्छ।
+            {t("learn.study.history.transcript_link")}
+          </a>
+          {t("learn.study.history.transcript_rest")}
         </p>
       </div>
     </>

@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useTranslation } from "react-i18next";
+import { useLocaleDigits } from "@/i18n/digits";
+import { useLocale } from "@/i18n/locale";
 import { getRashiList } from "@/lib/rashi-i18n";
 import { EarthGlobeImage } from "./EarthGlobeImage";
 import { RashiGlyph } from "./rashi-icons";
@@ -19,7 +21,6 @@ import { RashiGlyph } from "./rashi-icons";
  * exactly what makes the सायन ↔ निरयन gap (ayanāṁśa) grow.
  */
 
-const N = toNepaliDigits;
 const TAU = Math.PI * 2;
 const CYCLE = 25772; // years for one full precession
 const D2R = Math.PI / 180;
@@ -51,29 +52,34 @@ function axisDir(phi: number): V3 {
   return [SE * Math.cos(phi), CE, SE * Math.sin(phi)];
 }
 
-const RASHI = getRashiList("ne");
-
 /* ---- pole stars the north pole sweeps past, by बिक्रम सम्वत् year -------
- * ध्रुव (Polaris) and अभिजित (Vega) keep their Nepali names; the rest carry
- * their standard names in देवनागरी (year = closest approach, बि.सं.).        */
+ * ध्रुव (Polaris) and अभिजित (Vega) keep their Nepali names in the catalogue;
+ * the rest carry their standard names (year = closest approach, बि.सं.).     */
 const POLE_STARS = [
-  { ne: "थुबन", bs: -2730 }, // Thuban (α Dra)
-  { ne: "कोचाब", bs: -943 }, // Kochab (β UMi)
-  { ne: "ध्रुव", bs: 2159 }, // Polaris (α UMi)
-  { ne: "एर्राई", bs: 4057 }, // Errai / γ Cephei
-  { ne: "अल्डेरामिन", bs: 7557 }, // Alderamin (α Cep)
-  { ne: "डेनेब", bs: 9857 }, // Deneb (α Cyg)
-  { ne: "अभिजित", bs: 13784 }, // Vega (α Lyr)
+  { key: "learn.study.precession.star_thuban", bs: -2730 }, // α Dra
+  { key: "learn.study.precession.star_kochab", bs: -943 }, // β UMi
+  { key: "learn.study.precession.star_polaris", bs: 2159 }, // α UMi
+  { key: "learn.study.precession.star_errai", bs: 4057 }, // γ Cephei
+  { key: "learn.study.precession.star_alderamin", bs: 7557 }, // α Cep
+  { key: "learn.study.precession.star_deneb", bs: 9857 }, // α Cyg
+  { key: "learn.study.precession.star_vega", bs: 13784 }, // α Lyr
 ].map((s) => ({ ...s, phi: ((((s.bs / CYCLE) % 1) + 1) % 1) * TAU }));
 
-/** बिक्रम सम्वत् year → label */
-function fmtYear(bs: number): string {
-  const r = Math.round(bs);
-  const abs = N(Math.abs(r).toLocaleString("en-US"));
-  return r < 0 ? `${abs} बि.सं. पूर्व` : `${abs} बि.सं.`;
-}
-
 export function PrecessionCone() {
+  const { t } = useTranslation();
+  const N = useLocaleDigits();
+  const { lang } = useLocale();
+  const RASHI = useMemo(() => getRashiList(lang), [lang]);
+
+  /** बिक्रम सम्वत् year → label; negative years read as "before BS". */
+  const fmtYear = (bs: number): string => {
+    const r = Math.round(bs);
+    const year = N(Math.abs(r).toLocaleString("en-US"));
+    return r < 0
+      ? t("learn.study.precession.year_before_bs", { year })
+      : t("learn.study.precession.year_bs", { year });
+  };
+
   const [phi, setPhi] = useState(0); // precession phase (0 = year 2000)
   const [playing, setPlaying] = useState(false);
   const raf = useRef(0);
@@ -140,7 +146,12 @@ export function PrecessionCone() {
 
   return (
     <div className={tmCardPadLg}>
-      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg()} role="img" aria-label="अयन चलन शंकु">
+      <svg
+        viewBox={`0 0 ${VB.W} ${VB.H}`}
+        className={edSvg()}
+        role="img"
+        aria-label={t("learn.study.precession.aria")}
+      >
         <defs>
           <radialGradient id="pc-disk" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="color-mix(in srgb, var(--tm-gold) 30%, transparent)" />
@@ -214,11 +225,11 @@ export function PrecessionCone() {
           const ly = topCY - 82 * Math.sin(s.phi);
           const onRight = Math.cos(s.phi) >= 0;
           return (
-            <g key={s.ne}>
+            <g key={s.key}>
               <line x1={mx} y1={my} x2={lx} y2={ly} stroke="var(--tm-ink-faint)" strokeWidth={0.8} opacity={0.7} />
               <circle cx={mx} cy={my} r={isNow ? 4 : 2.6} fill={isNow ? "var(--tm-gold)" : "var(--tm-ink-dim)"} stroke="var(--tm-card)" strokeWidth={1} />
               <text x={lx + (onRight ? 5 : -5)} y={ly} fill={isNow ? "var(--tm-gold)" : "var(--tm-ink-dim)"} textAnchor={onRight ? "start" : "end"} dominantBaseline="central" style={{ font: `${isNow ? 700 : 500} ${isNow ? 10.5 : 9.5}px var(--pn-font)` }}>
-                {s.ne}
+                {t(s.key)}
               </text>
             </g>
           );

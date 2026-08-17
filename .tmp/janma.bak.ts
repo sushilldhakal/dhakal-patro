@@ -1,39 +1,36 @@
 /** Graha-in-house classical phala — Purusha & Stree janma tables (static śāstra reference). */
 
-/** Minimal shape of react-i18next's `t`, so this data module stays hook-free. */
-type TFn = (key: string, opts?: Record<string, unknown>) => string;
-
-export type JanmaPhalaGrahaCol = { id: string; /** Catalogue key for the column header. */ labelKey: string };
+export type JanmaPhalaGrahaCol = { id: string; ne: string; en: string };
 
 export type JanmaPhalaRow = {
-  /** Catalogue key for the house name. */
-  houseKey: string;
+  houseNe: string;
+  houseEn: string;
   /** One Sanskrit phrase pair per column, same order as `grahas`. */
   phala: string[];
 };
 
 export const PURUSHA_JANMA_GRAHAS: JanmaPhalaGrahaCol[] = [
-  { id: "sun", labelKey: "grahas.sun" },
-  { id: "moon", labelKey: "grahas.moon" },
-  { id: "mars", labelKey: "kundali.x.graha_bhauma" },
-  { id: "mercury", labelKey: "grahas.mercury" },
-  { id: "jupiter", labelKey: "kundali.x.graha_guru" },
-  { id: "venus", labelKey: "grahas.venus" },
-  { id: "saturn", labelKey: "grahas.saturn" },
-  { id: "rahu", labelKey: "grahas.rahu" },
-  { id: "ketu", labelKey: "grahas.ketu" },
-  { id: "gulika", labelKey: "kundali.x.graha_gulika" },
+  { id: "sun", ne: "सूर्य", en: "Sun" },
+  { id: "moon", ne: "चन्द्र", en: "Moon" },
+  { id: "mars", ne: "भौम", en: "Mars" },
+  { id: "mercury", ne: "बुध", en: "Mercury" },
+  { id: "jupiter", ne: "गुरु", en: "Jupiter" },
+  { id: "venus", ne: "शुक्र", en: "Venus" },
+  { id: "saturn", ne: "शनि", en: "Saturn" },
+  { id: "rahu", ne: "राहु", en: "Rahu" },
+  { id: "ketu", ne: "केतु", en: "Ketu" },
+  { id: "gulika", ne: "गुलिक", en: "Gulika" },
 ];
 
 export const STREI_JANMA_GRAHAS: JanmaPhalaGrahaCol[] = [
-  { id: "sun", labelKey: "grahas.sun" },
-  { id: "moon", labelKey: "grahas.moon" },
-  { id: "mars", labelKey: "kundali.x.graha_bhauma" },
-  { id: "mercury", labelKey: "grahas.mercury" },
-  { id: "jupiter", labelKey: "kundali.x.graha_guru" },
-  { id: "venus", labelKey: "grahas.venus" },
-  { id: "saturn", labelKey: "grahas.saturn" },
-  { id: "rahuKetu", labelKey: "kundali.x.graha_rahu_ketu" },
+  { id: "sun", ne: "सूर्य", en: "Sun" },
+  { id: "moon", ne: "चन्द्र", en: "Moon" },
+  { id: "mars", ne: "भौम", en: "Mars" },
+  { id: "mercury", ne: "बुध", en: "Mercury" },
+  { id: "jupiter", ne: "गुरु", en: "Jupiter" },
+  { id: "venus", ne: "शुक्र", en: "Venus" },
+  { id: "saturn", ne: "शनि", en: "Saturn" },
+  { id: "rahuKetu", ne: "राहु, केतु", en: "Rahu, Ketu" },
 ];
 
 /** Split "word1 word2" pairs into two readable lines. */
@@ -46,7 +43,8 @@ export function splitJanmaPhala(cell: string): [string, string] {
 
 export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
   {
-    houseKey: "kundali.x.janma_house_tanu_1",
+    houseNe: "तनूः १",
+    houseEn: "Tanu 1",
     phala: [
       "शूरः विकलनयनः",
       "सुरूपः अन्धः",
@@ -61,7 +59,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_dhana_2",
+    houseNe: "धनम् २",
+    houseEn: "Dhana 2",
     phala: [
       "वक्त्ररोगी धनी",
       "कुटुम्बी धनी",
@@ -76,7 +75,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_bhrata_3",
+    houseNe: "भ्राता ३",
+    houseEn: "Bhrata 3",
     phala: [
       "सुखी विक्रमी",
       "हिंस्रः सात्त्विकः",
@@ -91,7 +91,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_sukha_4",
+    houseNe: "सुखम् ४",
+    houseEn: "Sukha 4",
     phala: [
       "असुखी उद्विग्नः",
       "सुखी सुशीलः",
@@ -106,7 +107,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_putra_5",
+    houseNe: "पुत्रः ५",
+    houseEn: "Putra 5",
     phala: [
       "निःस्वः असुतः",
       "धनी पुत्रवान्",
@@ -121,7 +123,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_shatru_6",
+    houseNe: "शत्रुः ६",
+    houseEn: "Shatru 6",
     phala: [
       "बलवान् शत्रुजित्",
       "अल्पायुः बहुशत्रुः",
@@ -136,7 +139,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_stri_7",
+    houseNe: "स्त्री ७",
+    houseEn: "Stri 7",
     phala: [
       "स्त्रीजितः खलः",
       "ईर्ष्युस्तीव्रमदः",
@@ -151,7 +155,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_mrityu_8",
+    houseNe: "मृत्युः ८",
+    houseEn: "Mrityu 8",
     phala: [
       "नेत्ररोगी अल्पायुः",
       "व्याध्यर्दितः सुधीः",
@@ -166,7 +171,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_dharma_9",
+    houseNe: "धर्मः ९",
+    houseEn: "Dharma 9",
     phala: [
       "सुतार्थसुखभाक्",
       "भाग्यवान् धनी",
@@ -181,7 +187,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_karma_10",
+    houseNe: "कर्म १०",
+    houseEn: "Karma 10",
     phala: [
       "सुखशौर्यभाक्",
       "धर्मार्थशौर्ययुतः",
@@ -196,7 +203,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_labha_11",
+    houseNe: "लाभः ११",
+    houseEn: "Labha 11",
     phala: [
       "बहुधनवान्",
       "ख्यातः सल्लाभः",
@@ -211,7 +219,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_vyaya_12",
+    houseNe: "व्ययः १२",
+    houseEn: "Vyaya 12",
     phala: [
       "व्यङ्गः पतितः",
       "अङ्गहीनः हिंस्रः",
@@ -229,7 +238,8 @@ export const PURUSHA_JANMA_ROWS: JanmaPhalaRow[] = [
 
 export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
   {
-    houseKey: "kundali.x.janma_house_tanu_1",
+    houseNe: "तनूः १",
+    houseEn: "Tanu 1",
     phala: [
       "विधवा सक्रोधा",
       "अल्पायुषी",
@@ -242,7 +252,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_dhana_2",
+    houseNe: "धनम् २",
+    houseEn: "Dhana 2",
     phala: [
       "दरिद्रा दुःखार्ता",
       "बहुधनपुत्रान्विता",
@@ -255,7 +266,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_bhrata_3",
+    houseNe: "भ्राता ३",
+    houseEn: "Bhrata 3",
     phala: [
       "सुतधनान्विता",
       "सुखार्थयुक्ता",
@@ -268,7 +280,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_sukha_4",
+    houseNe: "सुखम् ४",
+    houseEn: "Sukha 4",
     phala: [
       "दरिद्रा सुपीडा",
       "सुभगार्थयुक्ता",
@@ -281,7 +294,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_putra_5",
+    houseNe: "पुत्रः ५",
+    houseEn: "Putra 5",
     phala: [
       "नष्टात्मजा",
       "सुपुत्रा सुखयुता",
@@ -294,7 +308,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_shatru_6",
+    houseNe: "शत्रुः ६",
+    houseEn: "Shatru 6",
     phala: [
       "सुखधनाढ्या",
       "सरोगा विधवा",
@@ -307,7 +322,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_stri_7",
+    houseNe: "स्त्री ७",
+    houseEn: "Stri 7",
     phala: [
       "सर्वसुखविमुक्ता",
       "पतिप्रिया सुदेहा",
@@ -320,7 +336,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_mrityu_8",
+    houseNe: "मृत्युः ८",
+    houseEn: "Mrityu 8",
     phala: [
       "विधवा दुःखार्ता",
       "रोगार्दिता कुनेत्रा",
@@ -333,7 +350,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_dharma_9",
+    houseNe: "धर्मः ९",
+    houseEn: "Dharma 9",
     phala: [
       "धनधर्मान्विता",
       "सुखपुत्रान्विता",
@@ -346,7 +364,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_karma_10",
+    houseNe: "कर्म १०",
+    houseEn: "Karma 10",
     phala: [
       "सुकर्मरता",
       "धनधर्मयुक्ता",
@@ -359,7 +378,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_labha_11",
+    houseNe: "लाभः ११",
+    houseEn: "Labha 11",
     phala: [
       "सुलाभा बहुपुत्रा",
       "भव्या विधिज्ञा",
@@ -372,7 +392,8 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
     ],
   },
   {
-    houseKey: "kundali.x.janma_house_vyaya_12",
+    houseNe: "व्ययः १२",
+    houseEn: "Vyaya 12",
     phala: [
       "सरोगा विधवा",
       "हीनाङ्गी व्ययाढ्या",
@@ -389,18 +410,19 @@ export const STREI_JANMA_ROWS: JanmaPhalaRow[] = [
 const JANMA_PHALA_HINT_GRAHAS_PURUSHA = PURUSHA_JANMA_GRAHAS.map((g) => ({
   grahaKey: g.id,
   colId: g.id,
-  labelKey: g.labelKey,
+  ne: g.ne,
+  en: g.en,
 }));
 
-/** Rahu and Ketu share one Stree column, so the hint list splits them back out. */
 const JANMA_PHALA_HINT_GRAHAS_STREE = [
   ...STREI_JANMA_GRAHAS.filter((g) => g.id !== "rahuKetu").map((g) => ({
     grahaKey: g.id,
     colId: g.id,
-    labelKey: g.labelKey,
+    ne: g.ne,
+    en: g.en,
   })),
-  { grahaKey: "rahu", colId: "rahuKetu", labelKey: "grahas.rahu" },
-  { grahaKey: "ketu", colId: "rahuKetu", labelKey: "grahas.ketu" },
+  { grahaKey: "rahu", colId: "rahuKetu", ne: "राहु", en: "Rahu" },
+  { grahaKey: "ketu", colId: "rahuKetu", ne: "केतु", en: "Ketu" },
 ];
 
 export type JanmaPhalaHintPart = {
@@ -420,7 +442,7 @@ function janmaPhalaHintGrahas(tab: "male" | "female") {
 export function buildJanmaPhalaHintParts(
   planetBhavas: Partial<Record<string, number>>,
   tab: "male" | "female",
-  t: TFn,
+  lang: "en" | "ne",
   digits: (v: string | number) => string = String,
 ): JanmaPhalaHintPart[] {
   const rows = tab === "male" ? PURUSHA_JANMA_ROWS : STREI_JANMA_ROWS;
@@ -440,10 +462,10 @@ export function buildJanmaPhalaHintParts(
     if (!phala) continue;
     parts.push({
       grahaKey: g.grahaKey,
-      grahaLabel: t(g.labelKey),
+      grahaLabel: lang === "ne" ? g.ne : g.en,
       house,
-      houseLabel: houseHintLabel(house, tab, t),
-      bhavaTag: t("kundali.x.bhava_tag", { n: digits(house) }),
+      houseLabel: houseHintLabel(house, tab, lang),
+      bhavaTag: lang === "ne" ? `भाव ${digits(house)}` : `H ${digits(house)}`,
       phala,
     });
   }
@@ -454,31 +476,49 @@ export function buildJanmaPhalaHintParts(
 export function buildJanmaPhalaHintLine(
   planetBhavas: Partial<Record<string, number>>,
   tab: "male" | "female",
-  t: TFn,
+  lang: "en" | "ne",
   digits: (v: string | number) => string = String,
 ): string | null {
-  const parts = buildJanmaPhalaHintParts(planetBhavas, tab, t, digits);
+  const parts = buildJanmaPhalaHintParts(planetBhavas, tab, lang, digits);
   if (parts.length === 0) return null;
   return `→ ${parts.map((p) => `${p.grahaLabel}: ${p.houseLabel} (${p.bhavaTag}) — ${p.phala}`).join(" | ")}`;
 }
 
-/** Catalogue key for each house's short name, 1st house first. */
-const HOUSE_HINT_KEYS = [
-  "kundali.x.house_hint_tanu",
-  "kundali.x.house_hint_dhana",
-  "kundali.x.house_hint_bhrata",
-  "kundali.x.house_hint_sukha",
-  "kundali.x.house_hint_putra",
-  "kundali.x.house_hint_ripu",
-  "kundali.x.house_hint_kalatra",
-  "kundali.x.house_hint_ayus",
-  "kundali.x.house_hint_dharma",
-  "kundali.x.house_hint_karma",
-  "choghadiya.types.labha.name",
-  "samvatsara_names.vyaya",
+const HOUSE_HINT_NE = [
+  "तनु",
+  "धन",
+  "भ्राता",
+  "सुख",
+  "पुत्र",
+  "रिपु",
+  "कलत्र",
+  "आयु",
+  "धर्म",
+  "कर्म",
+  "लाभ",
+  "व्यय",
 ] as const;
 
-function houseHintLabel(house: number, tab: "male" | "female", t: TFn): string {
-  if (house === 7 && tab === "female") return t("kundali.x.house_hint_stri");
-  return t(HOUSE_HINT_KEYS[house - 1]!);
+const HOUSE_HINT_EN = [
+  "Tanu",
+  "Dhana",
+  "Bhrata",
+  "Sukha",
+  "Putra",
+  "Ripu",
+  "Kalatra",
+  "Ayus",
+  "Dharma",
+  "Karma",
+  "Labha",
+  "Vyaya",
+] as const;
+
+function houseHintLabel(house: number, tab: "male" | "female", lang: "en" | "ne"): string {
+  if (house === 7) {
+    if (lang === "ne") return tab === "female" ? "स्त्री" : "कलत्र";
+    return tab === "female" ? "Stri" : "Kalatra";
+  }
+  const idx = house - 1;
+  return lang === "ne" ? HOUSE_HINT_NE[idx]! : HOUSE_HINT_EN[idx]!;
 }

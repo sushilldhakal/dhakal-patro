@@ -77,7 +77,7 @@ export function HoraWeekdayCycle() {
   const RING = [
     "learn.diagrams.hora_ring_saturn",
     "learn.diagrams.hora_ring_jupiter",
-    "learn.diagrams.hora_ring_mars",
+    "learn.diagrams.graha_mars",
     "grahas.sun",
     "learn.diagrams.hora_ring_venus",
     "learn.diagrams.hora_ring_mercury",

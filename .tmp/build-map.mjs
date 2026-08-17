@@ -10,6 +10,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const pass1 = JSON.parse(readFileSync(".tmp/extract-raw.json", "utf8"));
 const pass2 = JSON.parse(readFileSync(".tmp/extract2.json", "utf8"));
+/* Once a call site has been rewritten its pair is only in the map, so the map
+   already written is the third place to look. */
+let written = {};
+try {
+  written = JSON.parse(readFileSync("scripts/i18n-maps/learn-diagrams.json", "utf8"));
+} catch {
+  /* first run */
+}
 
 const P = "learn.diagrams.";
 
@@ -23,7 +31,7 @@ const ROWS = [
   [`${P}hora_ring_saturn`, "calendar-cycle-diagrams:71#object*"],
   [`${P}hora_ring_jupiter`, "calendar-cycle-diagrams:72#object*"],
   // Not grahas.mars: the catalogue spells the Nepali "मङ्गल", these files "मंगल".
-  [`${P}graha_mars`, "calendar-cycle-diagrams:73#object*"],
+  [`${P}graha_mars`, "calendar-cycle-diagrams:73#object*", `${P}hora_ring_mars`],
   ["grahas.sun", "calendar-cycle-diagrams:74#object*"],
   [`${P}hora_ring_venus`, "calendar-cycle-diagrams:75#object*"],
   [`${P}hora_ring_mercury`, "calendar-cycle-diagrams:76#object*"],
@@ -199,8 +207,8 @@ const ROWS = [
 
 const map = {};
 const seenPair = new Map();
-for (const [key, id] of ROWS) {
-  const src = pass2[id] ?? pass1[id];
+for (const [key, id, wasKey] of ROWS) {
+  const src = pass2[id] ?? pass1[id] ?? written[wasKey ?? key];
   if (!src) throw new Error(`no source pair for ${key} (${id})`);
   const pair = JSON.stringify([src.ne, src.en]);
   if (seenPair.has(pair)) throw new Error(`${key} duplicates ${seenPair.get(pair)}`);
@@ -209,8 +217,9 @@ for (const [key, id] of ROWS) {
   map[key] = { ne: src.ne, en: src.en };
 }
 
-/* HeliocentricOrbitDiagram is Nepali-only — no English ever existed. Read the
-   Nepali out of the file so it is not retyped; the English is new copy. */
+/* HeliocentricOrbitDiagram was Nepali-only — no English ever existed, so the
+   English below is new copy. The Nepali is checked against the file (or, once
+   the file has been rewritten, against the map) so it is never mistyped. */
 const helio = readFileSync("src/components/learn/HeliocentricOrbitDiagram.tsx", "utf8");
 const HELIO = [
   [`${P}orbit_perihelion`, "उपसौर (नजिक)", "Perihelion (nearest)"],
@@ -224,7 +233,9 @@ const HELIO = [
   [`${P}orbit_speed_mean`, "मध्यम", "mean"],
 ];
 for (const [key, ne, en] of HELIO) {
-  if (!helio.includes(ne)) throw new Error(`not in HeliocentricOrbitDiagram: ${ne}`);
+  if (!helio.includes(ne) && written[key]?.ne !== ne) {
+    throw new Error(`not in HeliocentricOrbitDiagram: ${ne}`);
+  }
   map[key] = { ne, en };
 }
 

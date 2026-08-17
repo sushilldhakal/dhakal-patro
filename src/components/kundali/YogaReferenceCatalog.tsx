@@ -126,7 +126,7 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
             {t("kundali.yoga_reference_catalog_162_combinations")}
           </span>
           <span className="text-xs text-muted-foreground">
-            {bilingualText(lang, "बी. वी. रमनको “Three Hundred Important Combinations”, भाग I")}
+            {t("kundali.x.yoga_catalog_source")}
           </span>
         </span>
         <ChevronDown
@@ -154,7 +154,7 @@ export function YogaReferenceCatalog({ excludeIds }: YogaReferenceCatalogProps =
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={bilingualText(lang, "नाम, नियम वा फलले खोज्नुहोस्…")}
+                  placeholder={t("kundali.x.yoga_catalog_search_placeholder")}
                   className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
               </label>

@@ -155,6 +155,10 @@
     "ne": "भाव (% मा)",
     "en": "Bhava (in %)"
   },
+  "kundali.x.bhava_tag": {
+    "ne": "भाव {{n}}",
+    "en": "H {{n}}"
+  },
   "kundali.x.dasha_level_antar": {
     "ne": "अन्तर्दशा",
     "en": "Antar Dasha"
@@ -227,9 +231,101 @@
     "ne": "राहु, केतु",
     "en": "Rahu, Ketu"
   },
+  "kundali.x.house_hint_ayus": {
+    "ne": "आयु",
+    "en": "Ayus"
+  },
+  "kundali.x.house_hint_bhrata": {
+    "ne": "भ्राता",
+    "en": "Bhrata"
+  },
+  "kundali.x.house_hint_dhana": {
+    "ne": "धन",
+    "en": "Dhana"
+  },
+  "kundali.x.house_hint_dharma": {
+    "ne": "धर्म",
+    "en": "Dharma"
+  },
+  "kundali.x.house_hint_kalatra": {
+    "ne": "कलत्र",
+    "en": "Kalatra"
+  },
+  "kundali.x.house_hint_karma": {
+    "ne": "कर्म",
+    "en": "Karma"
+  },
+  "kundali.x.house_hint_putra": {
+    "ne": "पुत्र",
+    "en": "Putra"
+  },
+  "kundali.x.house_hint_ripu": {
+    "ne": "रिपु",
+    "en": "Ripu"
+  },
+  "kundali.x.house_hint_stri": {
+    "ne": "स्त्री",
+    "en": "Stri"
+  },
+  "kundali.x.house_hint_sukha": {
+    "ne": "सुख",
+    "en": "Sukha"
+  },
+  "kundali.x.house_hint_tanu": {
+    "ne": "तनु",
+    "en": "Tanu"
+  },
   "kundali.x.ishta_phala": {
     "ne": "इष्ट फल",
     "en": "Ishta Phala"
+  },
+  "kundali.x.janma_house_bhrata_3": {
+    "ne": "भ्राता ३",
+    "en": "Bhrata 3"
+  },
+  "kundali.x.janma_house_dhana_2": {
+    "ne": "धनम् २",
+    "en": "Dhana 2"
+  },
+  "kundali.x.janma_house_dharma_9": {
+    "ne": "धर्मः ९",
+    "en": "Dharma 9"
+  },
+  "kundali.x.janma_house_karma_10": {
+    "ne": "कर्म १०",
+    "en": "Karma 10"
+  },
+  "kundali.x.janma_house_labha_11": {
+    "ne": "लाभः ११",
+    "en": "Labha 11"
+  },
+  "kundali.x.janma_house_mrityu_8": {
+    "ne": "मृत्युः ८",
+    "en": "Mrityu 8"
+  },
+  "kundali.x.janma_house_putra_5": {
+    "ne": "पुत्रः ५",
+    "en": "Putra 5"
+  },
+  "kundali.x.janma_house_shatru_6": {
+    "ne": "शत्रुः ६",
+    "en": "Shatru 6"
+  },
+  "kundali.x.janma_house_stri_7": {
+    "ne": "स्त्री ७",
+    "en": "Stri 7"
+  },
+  "kundali.x.janma_house_sukha_4": {
+    "ne": "सुखम् ४",
+    "en": "Sukha 4"
+  },
+  "kundali.x.janma_house_tanu_1": {
+    "ne": "तनूः १",
+    "en": "Tanu 1"
+  },
+  "kundali.x.janma_house_vyaya_12": {
+    "ne": "व्ययः १२",
+    "en": "Vyaya 12"
   },
   "kundali.x.kala_horadhipati": {
     "ne": "होराधिपति",
@@ -470,6 +566,14 @@
   "kundali.x.strength_ratio": {
     "ne": "शक्ति अनुपात",
     "en": "Strength Ratio"
+  },
+  "kundali.x.yoga_catalog_search_placeholder": {
+    "ne": "नाम, नियम वा फलले खोज्नुहोस्…",
+    "en": "Search by name, rule or result…"
+  },
+  "kundali.x.yoga_catalog_source": {
+    "ne": "बी. वी. रमनको “Three Hundred Important Combinations”, भाग I",
+    "en": "B. V. Raman's “Three Hundred Important Combinations”, Part I"
   },
   "kundali.yoga": {
     "ne": "योग",
