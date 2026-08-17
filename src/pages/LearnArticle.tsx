@@ -103,8 +103,7 @@ export function LearnArticle() {
         <div className={tmWrap}>
           <header className={tmHero}>
             <div className={tmHeroEyebrow}>
-              {category ? `${bilingualText(lang, category.ne, category.en)} · ` : ""}
-              {bilingualText(lang, topic.titleEn, topic.titleNe)}
+              {category ? bilingualText(lang, category.ne, category.en) : ""}
             </div>
             <h1 className={tmHeroTitle}>{bilingualText(lang, topic.titleNe, topic.titleEn)}</h1>
             <p className={tmHeroSub}>{bilingualText(lang, topic.summary, topic.summaryEn)}</p>

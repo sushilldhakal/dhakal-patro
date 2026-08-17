@@ -93,13 +93,13 @@ export const locationDifferentResults: ArticleData = {
       ],
     },
     {
-      title: { ne: "Vedic Patro ले कसरी सम्हाल्छ", en: "How Vedic Patro handles it" },
+      title: { ne: "वेदिक पात्रोले कसरी सम्हाल्छ", en: "How Vedic Patro handles it" },
       eyebrow: "Location as an input",
       blocks: [
         {
           kind: "lede",
           text: {
-            ne: "Vedic Patro ले स्थानलाई **इनपुट** मान्छ, स्थिर मान होइन। तपाईंले छानेको स्थानको अक्षांश, देशान्तर, उचाइ र समय क्षेत्रले सबै स्थानसापेक्ष परिमाण पुनः गणना हुन्छन्।",
+            ne: "वेदिक पात्रोले स्थानलाई **इनपुट** मान्छ, स्थिर मान होइन। तपाईंले छानेको स्थानको अक्षांश, देशान्तर, उचाइ र समय क्षेत्रले सबै स्थानसापेक्ष परिमाण पुनः गणना हुन्छन्।",
             en: "Vedic Patro treats location as an **input**, not a constant. The latitude, longitude, altitude and timezone you choose drive a recomputation of every location-dependent quantity.",
           },
         },

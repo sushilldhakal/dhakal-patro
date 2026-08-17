@@ -11,7 +11,7 @@ export const axialTilt: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "पृथ्वीको घुर्णन अक्ष यसको कक्षीय तलसँग ठाडो छैन — यो `२३.४४°` ले ढल्केको छ। यसलाई ~अक्ष झुकाव~ वा क्रान्तिवृत्तको तिर्यकता (obliquity) भनिन्छ।",
+            ne: "पृथ्वीको घुर्णन अक्ष यसको कक्षीय तलसँग ठाडो छैन — यो `२३.४४°` ले ढल्केको छ। यसलाई ~अक्ष झुकाव~ वा क्रान्तिवृत्तको तिर्यकता भनिन्छ।",
             en: "Earth's axis of rotation is not perpendicular to its orbital plane — it leans by `23.44°`. This is the ~axial tilt~, or the obliquity of the ecliptic.",
           },
         },
@@ -72,7 +72,7 @@ export const axialTilt: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "**कर्क रेखा** (Tropic of Cancer) नेपालको दक्षिणबाट जान्छ। नेपाल यसभन्दा उत्तर पर्ने हुनाले सूर्य कहिल्यै ठीक शिरमा आउँदैन — सधैँ केही दक्षिणतिर झुकेको हुन्छ।",
+            ne: "**कर्क रेखा** नेपालको दक्षिणबाट जान्छ। नेपाल यसभन्दा उत्तर पर्ने हुनाले सूर्य कहिल्यै ठीक शिरमा आउँदैन — सधैँ केही दक्षिणतिर झुकेको हुन्छ।",
             en: "The **Tropic of Cancer** passes south of Nepal. Being north of it, Nepal never sees the Sun exactly overhead — it always stands a little to the south.",
           },
         },

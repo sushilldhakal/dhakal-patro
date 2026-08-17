@@ -50,10 +50,10 @@ export const ancientSky: ArticleData = {
             { ne: "विषुवको नक्षत्र", en: "Equinox nakshatra" },
           ],
           rows: [
-            ["~4000 BCE", "मृगशिरा · Mrigashira"],
-            ["~2500 BCE", "कृत्तिका · Krittika"],
-            ["~500 BCE", "अश्विनी · Ashwini"],
-            [{ ne: "आज / today", en: "Today" }, "उत्तरभाद्रपद–रेवती · Uttarabhadrapada–Revati"],
+            [{ ne: "~४००० ई.पू.", en: "~4000 BCE" }, { ne: "मृगशिरा", en: "Mrigashira" }],
+            [{ ne: "~२५०० ई.पू.", en: "~2500 BCE" }, { ne: "कृत्तिका", en: "Krittika" }],
+            [{ ne: "~५०० ई.पू.", en: "~500 BCE" }, { ne: "अश्विनी", en: "Ashwini" }],
+            [{ ne: "आज", en: "Today" }, { ne: "उत्तरभाद्रपद–रेवती", en: "Uttarabhadrapada–Revati" }],
           ],
         },
         {
@@ -80,7 +80,7 @@ export const ancientSky: ArticleData = {
           kind: "list",
           items: [
             {
-              ne: "**ध्रुव तारा** — `३०००` ई.पू.मा Thuban ध्रुवमा थियो, Polaris होइन।",
+              ne: "**ध्रुव तारा** — `३०००` ई.पू.मा थुबन ध्रुवमा थियो, ध्रुवतारा (पोलारिस) होइन।",
               en: "**The pole star** — at `3000` BCE it was Thuban, not Polaris.",
             },
             {

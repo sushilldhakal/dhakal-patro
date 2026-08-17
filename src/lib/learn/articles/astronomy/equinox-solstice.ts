@@ -20,7 +20,7 @@ export const equinoxSolstice: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "पृथ्वीको `२३.४४°` झुकावका कारण सूर्यको *क्रान्ति* (declination) वर्षभरि `+२३.४४°` देखि `−२३.४४°` सम्म झुल्छ। यही एउटा झुलाइका **चार बिन्दु** ले विषुव र अयनान्त बनाउँछन्।",
+            ne: "पृथ्वीको `२३.४४°` झुकावका कारण सूर्यको *क्रान्ति* वर्षभरि `+२३.४४°` देखि `−२३.४४°` सम्म झुल्छ। यही एउटा झुलाइका **चार बिन्दु** ले विषुव र अयनान्त बनाउँछन्।",
             en: "Because of Earth's `23.44°` tilt, the Sun's *declination* swings from `+23.44°` to `−23.44°` and back once a year. Four points on that one swing give us the equinoxes and the solstices.",
           },
         },
@@ -151,7 +151,7 @@ export const equinoxSolstice: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "दिन र रात साँच्चै बराबर हुने दिनलाई ~इक्विलक्स~ (equilux) भनिन्छ, र यो विषुवभन्दा केही दिन अगाडि वा पछाडि पर्छ — अक्षांशअनुसार फरक।",
+            ne: "दिन र रात साँच्चै बराबर हुने दिनलाई ~इक्विलक्स~ भनिन्छ, र यो विषुवभन्दा केही दिन अगाडि वा पछाडि पर्छ — अक्षांशअनुसार फरक।",
             en: "The day on which they truly are equal is called the ~equilux~, and it falls a few days before or after the equinox, depending on latitude.",
           },
         },

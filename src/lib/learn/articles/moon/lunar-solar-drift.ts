@@ -71,7 +71,7 @@ export const lunarSolarDrift: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "समाधान चलाखीपूर्ण छ: चान्द्र मासको लम्बाइ नबदली, बीचमा **एउटा थप मास** राखिन्छ। यसलाई ~अन्तर्वेशन~ (intercalation) भनिन्छ।",
+            ne: "समाधान चलाखीपूर्ण छ: चान्द्र मासको लम्बाइ नबदली, बीचमा **एउटा थप मास** राखिन्छ। यसलाई ~अन्तर्वेशन~ भनिन्छ।",
             en: "The fix is neat: without altering the length of a lunar month, an **extra month** is inserted. This is ~intercalation~.",
           },
         },

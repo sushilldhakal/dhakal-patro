@@ -62,6 +62,24 @@ function cellText(lang: Lang, cell: Cell): string {
   return typeof cell === "string" ? cell : pick(lang, cell);
 }
 
+const DEVANAGARI = /[\u0900-\u097F]/;
+
+/**
+ * Section gloss. English-only strings stay in English UI and drop out of
+ * Nepali. Mixed "नेपाली · English" labels keep only the Devanagari side.
+ */
+function eyebrowLabel(lang: Lang, eyebrow: Bi | string | undefined): string | null {
+  if (!eyebrow) return null;
+  if (typeof eyebrow !== "string") {
+    const text = pick(lang, eyebrow).trim();
+    return text || null;
+  }
+  if (lang === "en") return eyebrow;
+  if (!DEVANAGARI.test(eyebrow)) return null;
+  if (!eyebrow.includes(" · ")) return eyebrow;
+  return eyebrow.split(" · ").map((part) => part.trim()).find((part) => DEVANAGARI.test(part)) ?? eyebrow;
+}
+
 /* ------------------------------------------------------------------ */
 /* Inline markup                                                       */
 /* ------------------------------------------------------------------ */
@@ -311,12 +329,13 @@ export function ArticleBody({
     <>
       {article.sections.map((section, index) => {
         const kicker = sectionKicker(index + sectionOffset);
+        const gloss = eyebrowLabel(lang, section.eyebrow);
         return (
           <section className={tmSection} key={section.title.en || section.title.ne}>
             <div className={tmSecHead}>
               <span className={tmSecKicker}>{pick(lang, kicker)}</span>
               <h3 className={tmSecTitle}>{pick(lang, section.title)}</h3>
-              {section.eyebrow && <span className={tmSecEn}>{section.eyebrow}</span>}
+              {gloss ? <span className={tmSecEn}>{gloss}</span> : null}
             </div>
             {section.blocks.map((block, bi) => (
               <Fragment key={bi}>

@@ -87,7 +87,7 @@ export const whyLocationMatters: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "Vedic Patro ले पञ्चाङ्ग देखाउँदा तपाईंले छानेको स्थानको अक्षांश, देशान्तर र समय क्षेत्र प्रयोग गर्छ। स्थान बदल्दा तिथि, सूर्योदय र कहिलेकाहीँ **पर्वको दिन** पनि बदलिन सक्छ।",
+            ne: "वेदिक पात्रोले पञ्चाङ्ग देखाउँदा तपाईंले छानेको स्थानको अक्षांश, देशान्तर र समय क्षेत्र प्रयोग गर्छ। स्थान बदल्दा तिथि, सूर्योदय र कहिलेकाहीँ **पर्वको दिन** पनि बदलिन सक्छ।",
             en: "When Vedic Patro shows a panchanga it uses the latitude, longitude and time zone of the location you have chosen. Change the location and the tithi, the sunrise and sometimes even the **day of a festival** can change with it.",
           },
         },

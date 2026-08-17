@@ -20,7 +20,7 @@ export const amavasyaPurnima: ArticleData = {
           cards: [
             {
               big: "0°",
-              label: { ne: "औंसी · Amāvasyā", en: "Amāvasyā" },
+              label: { ne: "औंसी", en: "Amāvasyā" },
               desc: {
                 ne: "चन्द्र र सूर्य एउटै दिशामा — चन्द्रको उज्यालो भाग पृथ्वीबाट देखिँदैन।",
                 en: "Moon and Sun in the same direction — the lit face turns away from Earth.",
@@ -28,7 +28,7 @@ export const amavasyaPurnima: ArticleData = {
             },
             {
               big: "180°",
-              label: { ne: "पूर्णिमा · Pūrṇimā", en: "Pūrṇimā" },
+              label: { ne: "पूर्णिमा", en: "Pūrṇimā" },
               desc: {
                 ne: "चन्द्र सूर्यको ठीक विपरीत — पूरै उज्यालो भाग पृथ्वीतिर फर्किन्छ।",
                 en: "Moon opposite the Sun — the whole lit face faces Earth.",
@@ -74,7 +74,7 @@ export const amavasyaPurnima: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "ग्रहण त्यतिबेला मात्र सम्भव हुन्छ जब औंसी वा पूर्णिमा ~पात~ (node) नजिक पर्छ — जहाँ चन्द्रको कक्ष क्रान्तिवृत्त काट्छ। परम्परामा यी दुई बिन्दुलाई **राहु** र **केतु** भनिन्छ।",
+            ne: "ग्रहण त्यतिबेला मात्र सम्भव हुन्छ जब औंसी वा पूर्णिमा ~पात~ नजिक पर्छ — जहाँ चन्द्रको कक्ष क्रान्तिवृत्त काट्छ। परम्परामा यी दुई बिन्दुलाई **राहु** र **केतु** भनिन्छ।",
             en: "An eclipse is possible only when a new or full moon falls near a ~node~ — where the Moon's orbit crosses the ecliptic. Tradition names those two points **Rāhu** and **Ketu**.",
           },
         },

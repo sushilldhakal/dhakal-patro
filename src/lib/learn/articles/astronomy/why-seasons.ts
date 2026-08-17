@@ -105,15 +105,15 @@ export const whySeasons: ArticleData = {
           headers: [
             { ne: "ऋतु", en: "Ṛtu" },
             { ne: "महिना", en: "Months" },
-            { ne: "अङ्ग्रेजी", en: "English" },
+            { ne: "अङ्ग्रेजी नाम", en: "English" },
           ],
           rows: [
-            [{ ne: "वसन्त", en: "Vasanta" }, { ne: "चैत–बैशाख", en: "Chaitra–Baisakh" }, "Spring"],
-            [{ ne: "ग्रीष्म", en: "Grīṣma" }, { ne: "जेठ–असार", en: "Jestha–Asar" }, "Summer"],
-            [{ ne: "वर्षा", en: "Varṣā" }, { ne: "साउन–भदौ", en: "Shrawan–Bhadra" }, "Monsoon"],
-            [{ ne: "शरद्", en: "Śarad" }, { ne: "असोज–कात्तिक", en: "Ashwin–Kartik" }, "Autumn"],
-            [{ ne: "हेमन्त", en: "Hemanta" }, { ne: "मंसिर–पुष", en: "Mangsir–Poush" }, "Pre-winter"],
-            [{ ne: "शिशिर", en: "Śiśira" }, { ne: "माघ–फागुन", en: "Magh–Falgun" }, "Winter"],
+            [{ ne: "वसन्त", en: "Vasanta" }, { ne: "चैत–बैशाख", en: "Chaitra–Baisakh" }, { ne: "वसन्त ऋतु", en: "Spring" }],
+            [{ ne: "ग्रीष्म", en: "Grīṣma" }, { ne: "जेठ–असार", en: "Jestha–Asar" }, { ne: "ग्रीष्म ऋतु", en: "Summer" }],
+            [{ ne: "वर्षा", en: "Varṣā" }, { ne: "साउन–भदौ", en: "Shrawan–Bhadra" }, { ne: "मनसुन", en: "Monsoon" }],
+            [{ ne: "शरद्", en: "Śarad" }, { ne: "असोज–कात्तिक", en: "Ashwin–Kartik" }, { ne: "शरद् ऋतु", en: "Autumn" }],
+            [{ ne: "हेमन्त", en: "Hemanta" }, { ne: "मंसिर–पुष", en: "Mangsir–Poush" }, { ne: "हेमन्त ऋतु", en: "Pre-winter" }],
+            [{ ne: "शिशिर", en: "Śiśira" }, { ne: "माघ–फागुन", en: "Magh–Falgun" }, { ne: "शिशिर ऋतु", en: "Winter" }],
           ],
         },
         {

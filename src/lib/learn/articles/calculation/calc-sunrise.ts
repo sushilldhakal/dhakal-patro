@@ -18,7 +18,7 @@ export const calcSunrise: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "मानक परिभाषा: **सूर्यको माथिल्लो किनारा वास्तविक क्षितिजमा देखा पर्ने क्षण**, वायुमण्डलीय अपवर्तन समेत गणना गरेर। Vedic Patro यही प्रयोग गर्छ।",
+            ne: "मानक परिभाषा: **सूर्यको माथिल्लो किनारा वास्तविक क्षितिजमा देखा पर्ने क्षण**, वायुमण्डलीय अपवर्तन समेत गणना गरेर। वेदिक पात्रो यही प्रयोग गर्छ।",
             en: "The standard definition is **the instant the Sun's upper limb appears on the true horizon**, with atmospheric refraction accounted for. That is what Vedic Patro uses.",
           },
         },
@@ -65,7 +65,7 @@ export const calcSunrise: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "सिद्धान्ततः सूर्योदय **घण्टा कोण** (hour angle) बाट निस्कन्छ — अक्षांश र सूर्यको क्रान्ति दिइएपछि।",
+            ne: "सिद्धान्ततः सूर्योदय **घण्टा कोण** बाट निस्कन्छ — अक्षांश र सूर्यको क्रान्ति दिइएपछि।",
             en: "In principle sunrise follows from the **hour angle**, once you have the latitude and the Sun's declination.",
           },
         },
@@ -97,7 +97,7 @@ export const calcSunrise: ArticleData = {
       ],
     },
     {
-      title: { ne: "Vedic Patro ले के गर्छ", en: "What Vedic Patro actually does" },
+      title: { ne: "वेदिक पात्रोले के गर्छ", en: "What Vedic Patro actually does" },
       eyebrow: "Swiss Ephemeris",
       blocks: [
         {
@@ -127,7 +127,7 @@ export const calcSunrise: ArticleData = {
         {
           kind: "note",
           text: {
-            ne: "यही कारण Vedic Patro मा स्थान छान्दा अक्षांश–देशान्तर मात्र होइन, **उचाइ र समय क्षेत्र** पनि चाहिन्छ। सूर्योदय पञ्चाङ्गको दिन–सीमा भएकाले यसको शुद्धताले तिथि, वार र पर्वको दिन सबै तय गर्छ।",
+            ne: "यही कारण वेदिक पात्रोमा स्थान छान्दा अक्षांश–देशान्तर मात्र होइन, **उचाइ र समय क्षेत्र** पनि चाहिन्छ। सूर्योदय पञ्चाङ्गको दिन–सीमा भएकाले यसको शुद्धताले तिथि, वार र पर्वको दिन सबै तय गर्छ।",
             en: "This is why choosing a location in Vedic Patro needs altitude and timezone, not just latitude and longitude. Sunrise is the panchanga's day boundary, so its accuracy decides the tithi, the vāra and the day a festival lands on.",
           },
         },

@@ -98,7 +98,7 @@ export const lunarLongitude: ArticleData = {
       ],
     },
     {
-      title: { ne: "सिद्धान्तदेखि Swiss Ephemeris सम्म", en: "From the siddhantas to Swiss Ephemeris" },
+      title: { ne: "सिद्धान्तदेखि स्विस एफेमेरिससम्म", en: "From the siddhantas to Swiss Ephemeris" },
       eyebrow: "Same problem, better tools",
       blocks: [
         {
@@ -111,7 +111,7 @@ export const lunarLongitude: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "आधुनिक पञ्चाङ्ग — Vedic Patro सहित — **Swiss Ephemeris** प्रयोग गर्छ, जुन NASA/JPL को DE431 ग्रहपातमा आधारित छ। यसले चन्द्रको स्थान विकलाभन्दा राम्रो शुद्धतामा दिन्छ।",
+            ne: "आधुनिक पञ्चाङ्ग — वेदिक पात्रो सहित — **स्विस एफेमेरिस** प्रयोग गर्छ, जुन नासा/जेपीएल को ग्रहपातमा आधारित छ। यसले चन्द्रको स्थान विकलाभन्दा राम्रो शुद्धतामा दिन्छ।",
             en: "Modern panchangas — Vedic Patro included — use the **Swiss Ephemeris**, built on NASA/JPL's DE431. It gives the Moon's position to better than an arc-second.",
           },
         },

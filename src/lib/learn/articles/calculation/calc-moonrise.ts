@@ -26,7 +26,7 @@ export const calcMoonrise: ArticleData = {
               },
             },
             {
-              h: { ne: "लम्बन (parallax)", en: "Parallax" },
+              h: { ne: "लम्बन", en: "Parallax" },
               p: {
                 ne: "चन्द्र नजिक भएकाले पृथ्वीको कुन ठाउँबाट हेर्ने भन्नेले स्थान `~१°` सम्म फरक पार्छ।",
                 en: "Being close, where on Earth you stand shifts its apparent place by up to `~1°`.",

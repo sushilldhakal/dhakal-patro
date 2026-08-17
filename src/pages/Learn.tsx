@@ -222,9 +222,6 @@ function TopicCard({ topic }: { topic: LearnTopic }) {
           <h3 className="text-base font-bold leading-snug text-foreground">
             {bilingualText(lang, topic.titleNe, topic.titleEn)}
           </h3>
-          {bilingualText(lang, topic.titleEn, "") && (
-            <p className="mt-0.5 text-sm leading-snug">{bilingualText(lang, topic.titleEn, "")}</p>
-          )}
         </div>
         {category && meta && (
           <span

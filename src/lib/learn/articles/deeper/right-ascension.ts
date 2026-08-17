@@ -11,7 +11,7 @@ export const rightAscension: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "*विषुवांश* (right ascension) विषुवत् प्रणालीको देशान्तर हो — वसन्त विषुव बिन्दुबाट पूर्वतिर नापिने। यसको विचित्रता — यो प्रायः **अंशमा होइन, घण्टामा** दिइन्छ।",
+            ne: "*विषुवांश* विषुवत् प्रणालीको देशान्तर हो — वसन्त विषुव बिन्दुबाट पूर्वतिर नापिने। यसको विचित्रता — यो प्रायः **अंशमा होइन, घण्टामा** दिइन्छ।",
             en: "*Right ascension* is longitude in the equatorial system, measured eastward from the vernal equinox. Its quirk is that it is usually given **in hours rather than degrees**.",
           },
         },
@@ -83,8 +83,8 @@ export const rightAscension: ArticleData = {
             ],
             [
               { ne: "जोडी समन्वय", en: "Paired with" },
-              { ne: "शर (latitude)", en: "ecliptic latitude" },
-              { ne: "क्रान्ति (declination)", en: "Declination" },
+              { ne: "शर (अक्षांश)", en: "ecliptic latitude" },
+              { ne: "क्रान्ति", en: "Declination" },
             ],
             [
               { ne: "प्रयोग", en: "Used for" },

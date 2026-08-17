@@ -31,7 +31,7 @@ export const tithiNot24Hours: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "चन्द्रको कक्ष वृत्ताकार होइन, ~अण्डाकार~ छ। पृथ्वीको नजिक (उपभू / perigee) हुँदा चन्द्र छिटो हिँड्छ, टाढा (अपभू / apogee) हुँदा ढिलो।",
+            ne: "चन्द्रको कक्ष वृत्ताकार होइन, ~अण्डाकार~ छ। पृथ्वीको नजिक (उपभू) हुँदा चन्द्र छिटो हिँड्छ, टाढा (अपभू) हुँदा ढिलो।",
             en: "The Moon's orbit is not circular but ~elliptical~. Near Earth (perigee) it moves faster; far from Earth (apogee) it moves slower.",
           },
         },

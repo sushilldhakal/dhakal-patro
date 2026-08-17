@@ -51,7 +51,7 @@ export const siderealVsTropical: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "पृथ्वीको घुर्णन अक्ष स्थिर छैन — यो लट्टुझैँ बिस्तारै घुम्छ, र एक फेरो पूरा गर्न झन्डै `२६,०००` वर्ष लाग्छ। यसलाई ~अयन चलन~ (precession) भनिन्छ।",
+            ne: "पृथ्वीको घुर्णन अक्ष स्थिर छैन — यो लट्टुझैँ बिस्तारै घुम्छ, र एक फेरो पूरा गर्न झन्डै `२६,०००` वर्ष लाग्छ। यसलाई ~अयन चलन~ भनिन्छ।",
             en: "Earth's axis of rotation is not fixed — it wobbles like a top, taking about `26,000` years for one full turn. This is ~precession~.",
           },
         },

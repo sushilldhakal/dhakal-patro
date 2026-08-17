@@ -11,7 +11,7 @@ export const calcSankranti: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "सङ्क्रान्ति खोज्नु भनेको **मूल खोज्नु** (root finding) हो। हामीसँग एउटा फलन छ — कुनै क्षणमा सूर्यको निरयन देशान्तर — र हामी त्यो `३०°` को गुणाङ्क छुने क्षण खोज्दै छौँ।",
+            ne: "सङ्क्रान्ति खोज्नु भनेको **मूल खोज्नु** हो। हामीसँग एउटा फलन छ — कुनै क्षणमा सूर्यको निरयन देशान्तर — र हामी त्यो `३०°` को गुणाङ्क छुने क्षण खोज्दै छौँ।",
             en: "Finding a sankranti is a **root-finding** problem. We have a function — the Sun's sidereal longitude at an instant — and we want the moment it crosses a multiple of `30°`.",
           },
         },
@@ -41,13 +41,13 @@ export const calcSankranti: ArticleData = {
       ],
     },
     {
-      title: { ne: "Brent विधि, bisection सहित", en: "Brent's method, with bisection behind it" },
+      title: { ne: "ब्रेन्ट विधि, द्विभाजन सहित", en: "Brent's method, with bisection behind it" },
       eyebrow: "How the engine solves it",
       blocks: [
         {
           kind: "lede",
           text: {
-            ne: "Vedic Patro को engine ले **Brent को विधि** प्रयोग गर्छ — द्विभाजन (bisection) को निश्चित अभिसरण र सेकेन्ट विधिको गतिलाई जोड्ने एक मानक अङ्कगणितीय विधि।",
+            ne: "वेदिक पात्रोको इन्जिनले **ब्रेन्टको विधि** प्रयोग गर्छ — द्विभाजनको निश्चित अभिसरण र सेकेन्ट विधिको गतिलाई जोड्ने एक मानक अङ्कगणितीय विधि।",
             en: "The Vedic Patro engine uses **Brent's method** — a standard numerical technique combining the guaranteed convergence of bisection with the speed of the secant method.",
           },
         },

@@ -56,7 +56,7 @@ export const uttarayanaDakshinayana: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "“सूर्य उत्तर लाग्यो” भन्नुको खगोलीय अर्थ हो — सूर्यको ~क्रान्ति~ (declination) बढ्दै छ, अर्थात् सूर्य खगोलीय विषुवत् रेखाभन्दा उत्तरतिर सर्दै छ।",
+            ne: "“सूर्य उत्तर लाग्यो” भन्नुको खगोलीय अर्थ हो — सूर्यको ~क्रान्ति~ बढ्दै छ, अर्थात् सूर्य खगोलीय विषुवत् रेखाभन्दा उत्तरतिर सर्दै छ।",
             en: "Astronomically, \"the Sun turns north\" means its ~declination~ is increasing — the Sun is moving north of the celestial equator.",
           },
         },

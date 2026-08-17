@@ -18,7 +18,7 @@ export const eclipseSeasons: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "कारण सरल छ: ग्रहण पात नजिक मात्र सम्भव छ, र सूर्य वर्षमा दुई पटक मात्र पात रेखा नजिक पुग्छ। त्यो अवधिलाई *ग्रहण ऋतु* (eclipse season) भनिन्छ।",
+            ne: "कारण सरल छ: ग्रहण पात नजिक मात्र सम्भव छ, र सूर्य वर्षमा दुई पटक मात्र पात रेखा नजिक पुग्छ। त्यो अवधिलाई *ग्रहण ऋतु* भनिन्छ।",
             en: "The reason is simple: eclipses need a node, and the Sun passes near the node line only twice a year. Those windows are the *eclipse seasons*.",
           },
         },

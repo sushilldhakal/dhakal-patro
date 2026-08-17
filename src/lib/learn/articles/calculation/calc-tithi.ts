@@ -64,7 +64,7 @@ export const calcTithi: ArticleData = {
               en: "It computes the tithi at the midpoint. If it is **the same**, the boundary lies later; if **different**, earlier.",
             },
             {
-              ne: "यसरी सञ्झ्याल आधा–आधा गर्दै जान्छ — **द्विआधारी खोज** (binary search), बढीमा `५०` पटक।",
+              ne: "यसरी सञ्झ्याल आधा–आधा गर्दै जान्छ — **द्विआधारी खोज**, बढीमा `५०` पटक।",
               en: "The window halves each time — a **binary search**, capped at `50` iterations.",
             },
             {

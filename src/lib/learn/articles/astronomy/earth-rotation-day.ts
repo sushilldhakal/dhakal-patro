@@ -93,7 +93,7 @@ export const earthRotationDay: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "यी दुईको संयुक्त प्रभावलाई ~कालसमीकरण~ (equation of time) भनिन्छ। यसैले वास्तविक मध्याह्न र घडीको १२ बजे वर्षभरि `−१४` देखि `+१६` मिनेटसम्म फरक पर्छ।",
+            ne: "यी दुईको संयुक्त प्रभावलाई ~कालसमीकरण~ भनिन्छ। यसैले वास्तविक मध्याह्न र घडीको १२ बजे वर्षभरि `−१४` देखि `+१६` मिनेटसम्म फरक पर्छ।",
             en: "Their combined effect is the ~equation of time~, which is why true noon and clock noon differ by anywhere from `−14` to `+16` minutes across the year.",
           },
         },

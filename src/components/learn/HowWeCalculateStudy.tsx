@@ -38,12 +38,13 @@ function Section({
   en?: string;
   children: React.ReactNode;
 }) {
+  const { lang } = useLocale();
   return (
     <section className={tmSection}>
       <div className={tmSecHead}>
         <span className={tmSecKicker}>{kicker}</span>
         <h3 className={tmSecTitle}>{title}</h3>
-        {en && <span className={tmSecEn}>{en}</span>}
+        {lang === "en" && en ? <span className={tmSecEn}>{en}</span> : null}
       </div>
       {children}
     </section>
@@ -92,35 +93,35 @@ function ArticleNe() {
       <Section kicker="००" title="सारांश" en="Summary">
         <Lede>
           भारी खगोलशास्त्र र पञ्चाङ्ग गणना{" "}
-          <span className="hl">nepali-holiday-api</span> (FastAPI +{" "}
-          <span className="hl-amber">Swiss Ephemeris / JPL</span>, Lahiri अयनांश) मा
-          हुन्छ। React एप <span className="hl">Vedic Patro</span> API बोलाएर लेबल
-          देखाउँछ — उही ephemeris फेरि चलाउँदैन।
+          <span className="hl">नेपाली-होलिडे-एपीआई</span> (फास्टएपीआई +{" "}
+          <span className="hl-amber">स्विस एफेमेरिस / जेपीएल</span>, लाहिरी अयनांश) मा
+          हुन्छ। रियाक्ट एप <span className="hl">वेदिक पात्रो</span> एपीआई बोलाएर लेबल
+          देखाउँछ — उही ग्रहपात फेरि चलाउँदैन।
         </Lede>
         <ServerPipelineDiagram lang="ne" />
       </Section>
 
       <Section kicker="०१" title="राशि भनेको के?" en="What is rashi?">
         <Lede>
-          <span className="hl">राशि (rashi)</span> भनेको कक्षीय (ecliptic) मार्गमा बाँडिएका{" "}
-          <b>१२ equal sectors</b>, प्रत्येक <span className="hl-amber">३०°</span> — मेष ०° देखि
-          मीन ३५०°–३६०° सम्म। यो <span className="hl">निरयन (sidereal)</span> चक्र तारापुञ्जसँग
-          जोडिएको छ; पश्चिमी horoscope को “Sun sign” प्रायः <b>सायन (tropical)</b> हुन्छ, नेपाली
+          <span className="hl">राशि</span> भनेको क्रान्तिवृत्त मार्गमा बाँडिएका{" "}
+          <b>१२ बराबर खण्ड</b>, प्रत्येक <span className="hl-amber">३०°</span> — मेष ०° देखि
+          मीन ३५०°–३६०° सम्म। यो <span className="hl">निरयन</span> चक्र तारापुञ्जसँग
+          जोडिएको छ; पश्चिमी राशिफलको “सूर्य राशि” प्रायः <b>सायन</b> हुन्छ, नेपाली
           पात्रो/पञ्चाङ्ग <b>निरयन</b>।
         </Lede>
         <KeysBlock
           items={[
             {
-              h: "कक्षा (ecliptic)",
-              p: "सूर्य, चन्द्र र ग्रहहरू प्रायः एउटै तल्लो कक्षीय plane मा हिँड्छन् — पृथ्वीको वरिपरि “राशि पट्टी” यही कक्षाको ३६०° कोठा हो।",
+              h: "कक्षा (क्रान्तिवृत्त)",
+              p: "सूर्य, चन्द्र र ग्रहहरू प्रायः एउटै तल्लो कक्षीय तलमा हिँड्छन् — पृथ्वीको वरिपरि “राशि पट्टी” यही कक्षाको ३६०° कोठा हो।",
             },
             {
               h: "नक्षत्र",
-              p: "उही कक्षामा २७ भाग, प्रत्येक १३°२०′ — चन्द्रको नक्षत्र यही finer grid बाट।",
+              p: "उही कक्षामा २७ भाग, प्रत्येक १३°२०′ — चन्द्रको नक्षत्र यही सूक्ष्म जालबाट।",
             },
             {
-              h: "लग्न (ascendant)",
-              p: "पूर्व क्षितिजमा उदाउँदै गरेको कक्षीय बिन्दु — तपाईंको अक्षांश, देशान्तर र घण्टाअनुसार ephemeris बाट ascendant कोण निकालिन्छ।",
+              h: "लग्न",
+              p: "पूर्व क्षितिजमा उदाउँदै गरेको कक्षीय बिन्दु — तपाईंको अक्षांश, देशान्तर र घण्टाअनुसार ग्रहपातबाट लग्न कोण निकालिन्छ।",
             },
           ]}
         />
@@ -129,9 +130,9 @@ function ArticleNe() {
             <div className="big">
               floor(λ ÷ 30) <span className="u">→ ०–११</span>
             </div>
-            <div className="lbl">राशि index</div>
+            <div className="lbl">राशि सूचकाङ्क</div>
             <div className="desc">
-              Lahiri निरयन देशान्तर λ लाई ३०° मा भाग — मेष ०° देखि मीन सम्म
+              लाहिरी निरयन देशान्तर λ लाई ३०° मा भाग — मेष ०° देखि मीन सम्म
             </div>
           </div>
           <div className={tmFcard}>
@@ -139,7 +140,7 @@ function ArticleNe() {
               floor(λ ÷ 13°20′) <span className="u">→ ०–२६</span>
             </div>
             <div className="lbl">नक्षत्र</div>
-            <div className="desc">चन्द्रको λ; पद = नक्षत्र भित्रको remainder ÷ ३°२०′</div>
+            <div className="desc">चन्द्रको λ; पद = नक्षत्र भित्रको बाँकी ÷ ३°२०′</div>
           </div>
         </div>
       </Section>
@@ -150,56 +151,56 @@ function ArticleNe() {
         en="Earth, ecliptic & the rashi belt"
       >
         <Lede>
-          तलको चित्र <span className="hl">geocentric</span> दृश्य हो: पृथ्वी बीचमा, सूर्य दूर
-          (दिशा मात्र), चन्द्रको orbit, र बाहिर{" "}
-          <span className="hl-amber">१२ राशि + २७ नक्षत्र</span> को grid — सूर्यको निरयन
-          देशान्तर अनुसार कुन sector highlight हुन्छ हेर्नुहोस्। वर्ष slider / play ले सूर्यलाई
-          पट्टीमा सार्छ; readout मा <b>सूर्य राशि</b>, <b>नक्षत्र</b>, <b>तिथि कोण</b> (चन्द्र−सूर्य)
-          देखिन्छ — यही कोण server मा तिथि बनाउँछ।
+          तलको चित्र <span className="hl">भूकेन्द्रित</span> दृश्य हो: पृथ्वी बीचमा, सूर्य दूर
+          (दिशा मात्र), चन्द्रको कक्ष, र बाहिर{" "}
+          <span className="hl-amber">१२ राशि + २७ नक्षत्र</span> को जाल — सूर्यको निरयन
+          देशान्तर अनुसार कुन खण्ड उज्यालो हुन्छ हेर्नुहोस्। वर्ष स्लाइडर / चलाउनुहोस् ले सूर्यलाई
+          पट्टीमा सार्छ; पढाइमा <b>सूर्य राशि</b>, <b>नक्षत्र</b>, <b>तिथि कोण</b> (चन्द्र−सूर्य)
+          देखिन्छ — यही कोण सर्भरमा तिथि बनाउँछ।
         </Lede>
         <EclipticBeltStudy />
         <Note>
-          यो diagram शिक्षाका लागि simplified orbit हो; production मा Swiss Ephemeris ले JPL
-          ephemeris + refraction + observer elevation प्रयोग गर्छ।
+          यो चित्र शिक्षाका लागि सरलीकृत कक्ष हो; उत्पादनमा स्विस एफेमेरिसले जेपीएल
+          ग्रहपात, अपवर्तन र अवलोककको उचाइ प्रयोग गर्छ।
         </Note>
       </Section>
 
       <Section kicker="०३" title="झुकाव, विषुव र अयन चलन" en="Tilt, equinox & precession">
         <Lede>
           पृथ्वीको धुरी <span className="hl-amber">≈ २३°२६′</span> ले कक्षासँग झुकिएको छ —
-          त्यसैले <b>वसन्त/शरद विषुव</b> र <b>ग्रीष्म/हेमन्त अयनान्त</b> बन्छन्। अक्ष लठ्ठा
-          झैँ <span className="hl">२६,००० वर्ष</span> को cone मा डुल्दा विषुव बिन्दु तारापुञ्ज
-          माथि पछाडि सर्छ — <b>अयनांश (Lahiri)</b>। API मा प्रत्येक instant को Lahiri ayanamsa
-          Swiss Ephemeris बाट; daily payload मा उदय JD मा पनि लेखिन्छ।
+          त्यसैले <b>वसन्त/शरद विषुव</b> र <b>ग्रीष्म/हेमन्त अयनान्त</b> बन्छन्। अक्ष लट्टु
+          झैँ <span className="hl">२६,००० वर्ष</span> को शंकुमा डुल्दा विषुव बिन्दु तारापुञ्ज
+          माथि पछाडि सर्छ — <b>अयनांश (लाहिरी)</b>। एपीआईमा प्रत्येक क्षणको लाहिरी अयनांश
+          स्विस एफेमेरिसबाट; दैनिक पेलोडमा उदय जुलियन दिनमा पनि लेखिन्छ।
         </Lede>
         <Lede>
-          पहिलो ठूलो diagram: <b>निरयन राशि ring fixed</b>, equator र equinox cross precession
-          सँग घुम्छ। दोस्रो: <b>ध्रुव तारा</b> बदल्दै axis cone — अयनांश किन वर्षेनि बढ्छ।
+          पहिलो ठूलो चित्र: <b>निरयन राशि चक्र स्थिर</b>, विषुवत् रेखा र विषुव काट अयन चलन
+          सँग घुम्छ। दोस्रो: <b>ध्रुव तारा</b> बदल्दै अक्ष शंकु — अयनांश किन वर्षेनि बढ्छ।
         </Lede>
         <PrecessionSkyStudy />
       </Section>
 
-      <Section kicker="०४" title="आधार — स्थान, समय, ephemeris" en="Foundation — place, time, ephemeris">
+      <Section kicker="०४" title="आधार — स्थान, समय, ग्रहपात" en="Foundation — place, time, ephemeris">
         <Lede>
           हरेक गणना एउटै सूत्रबाट सुरु हुन्छ: <span className="hl">अवलोककको स्थान</span>{" "}
-          (अक्षांश, देशान्तर, समय क्षेत्र, उचाइ), <span className="hl">नागरिक दिन</span> (Gregorian,
-          BCE, वा बि.सं. URL), र त्यो दिनको <span className="hl-amber">Julian Day</span>। स्थानीय
-          घडी IANA समय क्षेत्रबाट; उदय/अस्तका लागि साँचो क्षितिज, refraction र horizon dip
+          (अक्षांश, देशान्तर, समय क्षेत्र, उचाइ), <span className="hl">नागरिक दिन</span> (ग्रेगोरियन,
+          ई.पू., वा बि.सं. ठेगाना), र त्यो दिनको <span className="hl-amber">जुलियन दिन</span>। स्थानीय
+          घडी आईएएनए समय क्षेत्रबाट; उदय/अस्तका लागि साँचो क्षितिज, अपवर्तन र क्षितिज झुकाव
           समावेश।
         </Lede>
         <KeysBlock
           items={[
             {
-              h: "Swiss Ephemeris (JPL)",
-              p: "सूर्य, चन्द्र, ग्रह, nodes का geometric positions — गति, rise/set, अयनांश सहित। सबै निरयन देशान्तर Lahiri अयनांश घटाएर।",
+              h: "स्विस एफेमेरिस (जेपीएल)",
+              p: "सूर्य, चन्द्र, ग्रह, पातका ज्यामितीय स्थान — गति, उदय/अस्त, अयनांश सहित। सबै निरयन देशान्तर लाहिरी अयनांश घटाएर।",
             },
             {
               h: "उदय–आधारित दिन",
-              p: "पात्रो/पञ्चाङ्गको मुख्य दिन = स्थानीय सूर्योदयदेखि अर्को सूर्योदयसम्म (वैकल्पिक: civil midnight snapshot)।",
+              p: "पात्रो/पञ्चाङ्गको मुख्य दिन = स्थानीय सूर्योदयदेखि अर्को सूर्योदयसम्म (वैकल्पिक: नागरिक मध्यरातको झलक)।",
             },
             {
               h: "सङ्क्रान्ति",
-              p: "निरयन सूर्य जब ०°, ३०°, ६०°… काट्छ — bisection ले crossing instant खोजिन्छ; Mesh/Makara वर्षारम्भ र ऋतु यहीबाट।",
+              p: "निरयन सूर्य जब ०°, ३०°, ६०°… काट्छ — द्विभाजनले काट्ने क्षण खोजिन्छ; मेष/मकर वर्षारम्भ र ऋतु यहीबाट।",
             },
           ]}
         />
@@ -210,7 +211,7 @@ function ArticleNe() {
         <Lede>
           <span className="hl">पञ्चाङ्गका अङ्ग</span> सबै निरयन देशान्तरबाट — चन्द्र र सूर्यको कोणीय
           अन्तर वा जोड। <span className="hl-amber">उदय तिथि</span> = तपाईंको स्थानमा सूर्योदय
-          भएको क्षणमा; नक्षत्र/योग/करण पनि उही sidereal λ बाट।
+          भएको क्षणमा; नक्षत्र/योग/करण पनि उही निरयन देशान्तरबाट।
         </Lede>
         <div className={tmFormula}>
           <div className={tmFcard}>
@@ -218,7 +219,7 @@ function ArticleNe() {
               (चन्द्र − सूर्य) ÷ 12° <span className="u">→ तिथि १–३०</span>
             </div>
             <div className="lbl">तिथि</div>
-            <div className="desc">१२° = एक तिथि; शुक्ल/कृष्ण पक्ष चन्द्रको elongation बाट</div>
+            <div className="desc">१२° = एक तिथि; शुक्ल/कृष्ण पक्ष चन्द्रको कोणान्तरबाट</div>
           </div>
           <div className={tmFcard}>
             <div className="big">
@@ -232,7 +233,7 @@ function ArticleNe() {
               (सूर्य + चन्द्र) ÷ (360/27) <span className="u">→ योग</span>
             </div>
             <div className="lbl">योग</div>
-            <div className="desc">२७ योग — longitude sum mod 360°</div>
+            <div className="desc">२७ योग — देशान्तर जोड ३६०° मा बेरेर</div>
           </div>
           <div className={tmFcard}>
             <div className="big">
@@ -243,85 +244,85 @@ function ArticleNe() {
           </div>
         </div>
         <Lede>
-          <span className="hl-amber">अङ्ग समाप्ति समय</span>: ephemeris मा Moon−Sun (वा Moon-only) कोण
-          threshold cross गर्ने instant binary search — UI wheel र timeline यही boundary JD
+          <span className="hl-amber">अङ्ग समाप्ति समय</span>: ग्रहपातमा चन्द्र−सूर्य (वा चन्द्र मात्र) कोण
+          सीमा काट्ने क्षण द्विआधारी खोज — चक्र र समयरेखा यही सीमा जुलियन दिन
           प्रयोग गर्छ।
         </Lede>
         <RefTable
           caption="एक पञ्चाङ्ग दिन — गणनाको क्रम (विधि)"
           headers={["क्रम", "के गणना", "कसरी"]}
           rows={[
-            ["१", "सूर्योदय, सूर्यास्त, अर्को उदय", "Swiss rise/set — observer lat/lon, refraction"],
-            ["२", "चन्द्र उदय/अस्त", "उदय पछिको चन्द्र rise/set"],
-            ["३", "उदय तिथि, वार (vara)", "उदय JD मा Moon−Sun → tithi index"],
-            ["४", "दिनमान · रात्रिमान", "उदय–अस्त–अर्को उदय को duration"],
-            ["५", "मध्याह्न, Lahiri अयनांश", "local noon JD; ayanamsa at sunrise"],
-            ["६", "पक्ष; तिथि/नक्षत्र/योग/करण + अन्त", "sidereal formulas + boundary search"],
-            ["७", "चान्द्र/पूर्णिमान्त मास", "Sun–Moon phase rules; adhik/kshaya maas"],
-            ["८", "९ graha @ उदय", "प्रत्येक graha λ, rashi, nakshatra, pada, speed"],
-            ["९", "लग्न spans", "दिनभर ascendant crossing ३०° rashi boundaries"],
-            ["१०", "मुहूर्त, चौघडी, होरा", "उदय–अर्को उदय विभाजन — traditional divisions"],
-            ["११", "सम्वत्सर, बि.सं./ने.सं.", "सङ्क्रान्ति वर्ष + lunar month rules"],
+            ["१", "सूर्योदय, सूर्यास्त, अर्को उदय", "स्विस उदय/अस्त — अवलोककको अक्षांश/देशान्तर, अपवर्तन"],
+            ["२", "चन्द्र उदय/अस्त", "उदयपछिको चन्द्र उदय/अस्त"],
+            ["३", "उदय तिथि, वार", "उदय जुलियन दिनमा चन्द्र−सूर्य → तिथि सूचकाङ्क"],
+            ["४", "दिनमान · रात्रिमान", "उदय–अस्त–अर्को उदयको अवधि"],
+            ["५", "मध्याह्न, लाहिरी अयनांश", "स्थानीय मध्याह्न जुलियन दिन; सूर्योदयमा अयनांश"],
+            ["६", "पक्ष; तिथि/नक्षत्र/योग/करण + अन्त", "निरयन सूत्र + सीमा खोज"],
+            ["७", "चान्द्र/पूर्णिमान्त मास", "सूर्य–चन्द्र पक्ष नियम; अधिक/क्षय मास"],
+            ["८", "९ ग्रह उदयमा", "प्रत्येक ग्रहको देशान्तर, राशि, नक्षत्र, पद, गति"],
+            ["९", "लग्न अवधि", "दिनभर लग्नले ३०° राशि सीमा काट्ने"],
+            ["१०", "मुहूर्त, चौघडी, होरा", "उदय–अर्को उदय विभाजन — परम्परागत खण्ड"],
+            ["११", "सम्वत्सर, बि.सं./ने.सं.", "सङ्क्रान्ति वर्ष + चान्द्र मास नियम"],
           ]}
           highlightRow={0}
         />
         <Note>
-          कुनै घण्टामा snapshot चाहिन्छ भने उही ephemeris instant मा angas पुन: गणना — civil
-          midnight दिन भने दुई उदय payload बीच interpolate (display मात्र, दोस्रो ephemeris pass
+          कुनै घण्टामा झलक चाहिन्छ भने उही ग्रहपात क्षणमा अङ्ग पुन: गणना — नागरिक
+          मध्यरात दिन भने दुई उदय पेलोड बीच मिलाइन्छ (देखाउन मात्र, दोस्रो ग्रहपात पास
           होइन)।
         </Note>
       </Section>
 
       <Section kicker="०६" title="ग्रह गोचर कसरी गणना हुन्छ" en="How graha gochar is computed">
         <Lede>
-          <span className="hl">गोचर</span> = कुनै instant मा प्रत्येक graha कुन{" "}
+          <span className="hl">गोचर</span> = कुनै क्षणमा प्रत्येक ग्रह कुन{" "}
           <span className="hl-amber">निरयन राशि / नक्षत्र / पद</span> मा छ र कहिले अर्को
-          मा प्रवेश गर्छ। Patro gochar सामान्यतः <b>स्थानीय सूर्योदय (udaya)</b> मा snapshot;
-          ingress सूची महिनाभरका crossing events।
+          मा प्रवेश गर्छ। पात्रो गोचर सामान्यतः <b>स्थानीय सूर्योदय</b> मा झलक;
+          प्रवेश सूची महिनाभरका काट्ने घटना।
         </Lede>
         <RefTable
-          caption="गोचर — मुख्य steps"
+          caption="गोचर — मुख्य चरण"
           headers={["विषय", "गणना"]}
           rows={[
             [
               "वर्तमान स्थिति",
-              "प्रत्येक graha को Lahiri sidereal λ → rashi (÷30°), nakshatra (÷13°20′), pada (÷3°20′); Ketu = Rahu + 180°",
+              "प्रत्येक ग्रहको लाहिरी निरयन देशान्तर → राशि (÷३०°), नक्षत्र (÷१३°२०′), पद (÷३°२०′); केतु = राहु + १८०°",
             ],
             [
               "वक्री / मार्गी",
-              "ecliptic longitude को derivative (speed) को चिन्ह — Mars…Saturn; Rahu/Ketu सधैं वक्री convention",
+              "क्रान्तिवृत्तीय देशान्तरको गति चिन्ह — मंगल…शनि; राहु/केतु सधैँ वक्री परम्परा",
             ],
             [
-              "अस्त (combust)",
-              "ग्रह Sun नजिक — angular separation threshold (graha-specific)",
+              "अस्त",
+              "ग्रह सूर्य नजिक — कोणीय दूरीको सीमा (ग्रहअनुसार फरक)",
             ],
             [
               "अर्को राशि प्रवेश",
-              "λ crossing ०°, ३०°, … — पहिले coarse time scan, त्यसपछि bisection (~१५ मिनट tolerance)",
+              "देशान्तर ०°, ३०°, … काट्ने — पहिले मोटो समय खोज, त्यसपछि द्विभाजन (~१५ मिनेट सहिष्णुता)",
             ],
             [
               "अर्को नक्षत्र / पद",
-              "उही bisection — nakshatra index वा flat pada slot change",
+              "उही द्विभाजन — नक्षत्र सूचकाङ्क वा पद खण्ड परिवर्तन",
             ],
             [
-              "वक्री/मार्गी station",
-              "speed sign change को instant search (ingress range भित्र)",
+              "वक्री/मार्गी स्थान",
+              "गति चिन्ह फेरिने क्षणको खोज (प्रवेश दायराभित्र)",
             ],
             [
               "आगामी घटना सूची",
-              "चयनित महिनाका AD bounds भित्र सबै ingress/station events → स्थानीय समय + बि.सं. दिन",
+              "चयनित महिनाका ई.सं. सीमाभित्र सबै प्रवेश/स्थान घटना → स्थानीय समय + बि.सं. दिन",
             ],
           ]}
         />
         <KeysBlock
           items={[
             {
-              h: "Slow vs fast grahas",
-              p: "चन्द्र/बुध छिटो — राशि बदल्न दिन/हप्ता; शनि/राहु महिना/वर्ष। Search window graha अनुसार ठूलो राखिन्छ ताकि retrograde loop पनि नछुटोस्।",
+              h: "ढिलो र छिटो ग्रह",
+              p: "चन्द्र/बुध छिटो — राशि बदल्न दिन/हप्ता; शनि/राहु महिना/वर्ष। खोज सञ्झ्याल ग्रहअनुसार ठूलो राखिन्छ ताकि वक्री घुम्ती पनि नछुटोस्।",
             },
             {
-              h: "Patro vs kundali",
-              p: "Gochar पृष्ठ = transit table + ingress; कुण्डली = जन्म instant / divisional charts — उही sidereal engine, फरक anchor time।",
+              h: "पात्रो र कुण्डली",
+              p: "गोचर पृष्ठ = यात्रा तालिका + प्रवेश; कुण्डली = जन्म क्षण / वर्गीय चार्ट — उही निरयन इन्जिन, फरक अङ्कुर समय।",
             },
           ]}
         />
@@ -329,56 +330,56 @@ function ArticleNe() {
 
       <Section kicker="०७" title="ग्रहण कसरी गणना हुन्छ" en="How eclipses are computed">
         <Lede>
-          <span className="hl">सूर्यग्रहण</span> र <span className="hl">चन्द्रग्रहण</span> Swiss
-          Ephemeris को dedicated eclipse routines बाट — geometric syzygy र shadow cone, JPL
-          ephemeris माथि। पर्व/पञ्चाङ्ग UI ले वर्षभरि past + upcoming सूची देखाउँछ।
+          <span className="hl">सूर्यग्रहण</span> र <span className="hl">चन्द्रग्रहण</span> स्विस
+          एफेमेरिसका समर्पित ग्रहण विधिबाट — ज्यामितीय युति र छाया शंकु, जेपीएल
+          ग्रहपातमाथि। पर्व/पञ्चाङ्ग दृश्यले वर्षभरि गएका र आउने सूची देखाउँछ।
         </Lede>
         <RefTable
           caption="ग्रहण — विधि"
           headers={["चरण", "के हुन्छ"]}
           rows={[
             [
-              "Global maximum",
-              "अर्को/अघिल्लो eclipse को maximum JD — solar: Sun–Moon alignment; lunar: Full Moon through Earth shadow",
+              "विश्वव्यापी चरम",
+              "अर्को/अघिल्लो ग्रहणको चरम जुलियन दिन — सूर्य: सूर्य–चन्द्र पङ्क्ति; चन्द्र: पूर्णिमा पृथ्वीको छायाँबाट",
             ],
             [
-              "प्रकार (type)",
-              "Solar: total, annular, hybrid, partial; Lunar: total, partial, penumbral — ephemeris retflag बाट",
+              "प्रकार",
+              "सूर्य: पूर्ण, वलयाकार, मिश्र, आंशिक; चन्द्र: पूर्ण, आंशिक, उपछाया — ग्रहपातको सङ्केतबाट",
             ],
             [
               "स्थानीय दृश्यता",
-              "Observer (lon, lat, elevation) दिएपछि local contact times — केही ठाउँमा partial/total देखिन्छ कि छैन",
+              "अवलोकक (देशान्तर, अक्षांश, उचाइ) दिएपछि स्थानीय सम्पर्क समय — केही ठाउँमा आंशिक/पूर्ण देखिन्छ कि छैन",
             ],
             [
-              "Solar local search",
-              "Global maximum नजिक local maximum — invisible भए अर्को eclipse सम्म advance",
+              "स्थानीय सूर्य खोज",
+              "विश्वव्यापी चरम नजिक स्थानीय चरम — नदेखिए अर्को ग्रहणसम्म अगाडि",
             ],
             [
-              "Lunar local",
-              "Moon above horizon at maximum / penumbral start — visible flag",
+              "स्थानीय चन्द्र",
+              "चरम / उपछाया सुरुमा चन्द्र क्षितिजमाथि — देखिने झण्डा",
             ],
             [
-              "Patro display",
-              "Nepali/English labels, BS/AD dates, link to daily panchanga for that civil day",
+              "पात्रो प्रदर्शन",
+              "नेपाली लेबल, बि.सं./ई.सं. मिति, त्यो नागरिक दिनको दैनिक पञ्चाङ्ग लिङ्क",
             ],
           ]}
         />
         <Note>
-          ग्रहण समय UTC/JD मा exact; स्थानीय पात्रो मिति = तपाईंको timezone + vedic sunrise rule
-          (उदय अघिको रात्रि घटना अघिल्लो पञ्चाङ्ग दिनमा) जहाँ लागू हुन्छ।
+          ग्रहण समय विश्वव्यापी समय/जुलियन दिनमा शुद्ध; स्थानीय पात्रो मिति = तपाईंको समय क्षेत्र + वैदिक सूर्योदय नियम
+          (उदयअघिको रात्रि घटना अघिल्लो पञ्चाङ्ग दिनमा) जहाँ लागू हुन्छ।
         </Note>
       </Section>
 
       <Section kicker="०८" title="यो वेबसाइट के देखाउँछ" en="What this site displays">
         <Lede>
-          <span className="hl">Vedic Patro</span> मुख्यतया API बाट आएको गणित{" "}
-          <span className="hl-amber">format</span> गर्छ — Nepali अंक, URL browse, layout।
-          तिथि/नक्षत्र समय, rise/set, ग्रह, गोचर ingress, ग्रहण, मुहूर्त, पर्व, साइत, कुण्डली
-          strength — production मा server-side ephemeris बाट; browser ले positions फेरि compute
+          <span className="hl">वेदिक पात्रो</span> मुख्यतया एपीआईबाट आएको गणित{" "}
+          <span className="hl-amber">स्वरूप</span> गर्छ — नेपाली अङ्क, ठेगाना ब्राउज, लेआउट।
+          तिथि/नक्षत्र समय, उदय/अस्त, ग्रह, गोचर प्रवेश, ग्रहण, मुहूर्त, पर्व, साइत, कुण्डली
+          बल — उत्पादनमा सर्भर-पक्ष ग्रहपातबाट; ब्राउजरले स्थान फेरि गणना
           गर्दैन।
         </Lede>
         <Note>
-          Cached वर्ष/दिन पछि plain GET छिटो हुन सक्छ — गणना पहिले नै भइसकेको payload।
+          क्यास भएको वर्ष/दिनपछि सादा प्राप्ति छिटो हुन सक्छ — गणना पहिले नै भइसकेको पेलोड।
         </Note>
       </Section>
     </>

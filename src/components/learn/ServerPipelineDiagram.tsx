@@ -19,24 +19,24 @@ const LABELS: Record<
 > = {
   ne: {
     caption:
-      "अनुरोध → स्थान र समय → Swiss Ephemeris → पञ्चाङ्ग अङ्ग → उदय–आधारित दैनिक सेट → पात्रो, पर्व, साइत, कुण्डली",
+      "अनुरोध → स्थान र समय → स्विस एफेमेरिस → पञ्चाङ्ग अङ्ग → उदय–आधारित दैनिक सेट → पात्रो, पर्व, साइत, कुण्डली",
     foundation: "आधार",
     raw: "खगोलीय मात्रा",
     angas: "पञ्चाङ्ग अङ्ग",
     daily: "दैनिक सेट",
     apps: "उत्पादन",
     nodes: {
-      loc: "अवलोकक\n(Kathmandu TZ)",
-      jd: "जुलियन दिन\nAD / BS / BCE",
-      ephe: "Swiss Ephemeris\nLahiri ayanamsa",
+      loc: "अवलोकक\n(काठमाडौँ समय)",
+      jd: "जुलियन दिन\nई.सं. / बि.सं. / ई.पू.",
+      ephe: "स्विस एफेमेरिस\nलाहिरी अयनांश",
       rs: "उदय / अस्त",
       lon: "निरयन देशान्तर",
       lag: "लग्न · राशि",
       five: "तिथि · नक्षत्र\nयोग · करण · वार",
-      bnd: "अन्त समय\n(bisection)",
+      bnd: "अन्त समय\n(द्विभाजन)",
       uday: "उदय → अर्को उदय\n(पञ्चाङ्ग दिन)",
-      civ: "Civil timeline",
-      at: "at-time",
+      civ: "नागरिक समयरेखा",
+      at: "कुनै क्षण",
       patro: "महिना / वर्ष",
       fest: "पर्व नियम",
       sait: "साइत स्क्यान",
@@ -184,10 +184,10 @@ export function ServerPipelineDiagram({ lang }: { lang: Lang }) {
 
         <image href={earthUrl} x="24" y="36" width="48" height="48" opacity={0.92} />
         <text x="80" y="58" className="fill-[var(--tm-ink-dim)] text-[11px]">
-          nepali-holiday-api
+          {lang === "ne" ? "नेपाली-होलिडे-एपीआई" : "nepali-holiday-api"}
         </text>
         <text x="80" y="74" className="fill-[var(--tm-teal)] text-[11px] font-semibold">
-          Vedic Patro → HTTP
+          {lang === "ne" ? "वेदिक पात्रो → एचटीटीपी" : "Vedic Patro → HTTP"}
         </text>
 
         <GroupLabel x={32} y={118} text={L.foundation} />
@@ -232,7 +232,7 @@ export function ServerPipelineDiagram({ lang }: { lang: Lang }) {
             ),
           )}
           <text x={0} y={118} className="fill-[var(--tm-ink-faint)] text-[10px]">
-            {lang === "ne" ? "९ ग्रह — spashta @ उदय" : "9 grahas — positions at sunrise"}
+            {lang === "ne" ? "९ ग्रह — स्पष्ट स्थान उदयमा" : "9 grahas — positions at sunrise"}
           </text>
         </g>
 

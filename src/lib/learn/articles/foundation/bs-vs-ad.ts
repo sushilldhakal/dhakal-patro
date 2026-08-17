@@ -108,7 +108,7 @@ export const bsVsAd: ArticleData = {
         {
           kind: "note",
           text: {
-            ne: "यसैले नेपाली पात्रो प्रत्येक वर्ष **गणना गरेर** बनाइन्छ, पुरानो पात्रो सारेर होइन। यो प्रणाली Vedic Patro भित्र कसरी चल्छ भन्ने *हामी यो कसरी गणना गर्छौं* मा छ।",
+            ne: "यसैले नेपाली पात्रो प्रत्येक वर्ष **गणना गरेर** बनाइन्छ, पुरानो पात्रो सारेर होइन। यो प्रणाली वेदिक पात्रोभित्र कसरी चल्छ भन्ने *हामी यो कसरी गणना गर्छौं* मा छ।",
             en: "This is why the Nepali calendar is **computed** each year rather than copied forward. How that computation runs inside Vedic Patro is covered in *How We Calculate It*.",
           },
         },

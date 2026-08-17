@@ -11,7 +11,7 @@ export const declination: ArticleData = {
         {
           kind: "lede",
           text: {
-            ne: "*क्रान्ति* (declination) कुनै खगोलीय पिण्ड खगोलीय विषुवत् रेखाभन्दा कति उत्तर वा दक्षिण छ भन्ने नाप हो — पृथ्वीको अक्षांशकै आकाशीय संस्करण।",
+            ne: "*क्रान्ति* कुनै खगोलीय पिण्ड खगोलीय विषुवत् रेखाभन्दा कति उत्तर वा दक्षिण छ भन्ने नाप हो — पृथ्वीको अक्षांशकै आकाशीय संस्करण।",
             en: "*Declination* measures how far north or south of the celestial equator a body lies — the sky's version of terrestrial latitude.",
           },
         },

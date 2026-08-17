@@ -18,7 +18,7 @@ export const chandramana: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "ध्यान दिनुपर्ने कुरा — यो चन्द्रको आकार वा स्थान मात्रको नाप होइन। मूल परिमाण चन्द्र र सूर्यको **कोणीय दूरी** (elongation) हो।",
+            ne: "ध्यान दिनुपर्ने कुरा — यो चन्द्रको आकार वा स्थान मात्रको नाप होइन। मूल परिमाण चन्द्र र सूर्यको **कोणीय दूरी** हो।",
             en: "Note what it is not: it is not a measure of the Moon's shape or position alone. The fundamental quantity is the **angular separation** between Moon and Sun — the elongation.",
           },
         },

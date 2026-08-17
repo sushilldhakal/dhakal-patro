@@ -85,11 +85,11 @@ export interface ArticleSection {
   /** Section heading. */
   title: Bi;
   /**
-   * Small uppercase gloss beside the heading. Not bilingual — like the
-   * hand-built articles, it stays in English in both languages so a Nepali
-   * heading always carries its English term alongside.
+   * Small uppercase gloss beside the heading. English-only strings are shown
+   * in English and hidden in Nepali. Mixed or bilingual values keep the
+   * Nepali part when the UI is Nepali.
    */
-  eyebrow?: string;
+  eyebrow?: Bi | string;
   blocks: Block[];
 }
 

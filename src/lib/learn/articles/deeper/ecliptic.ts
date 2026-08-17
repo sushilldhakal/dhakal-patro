@@ -53,7 +53,7 @@ export const ecliptic: ArticleData = {
         {
           kind: "para",
           text: {
-            ne: "संस्कृत नाम *क्रान्तिवृत्त* पनि अर्थपूर्ण छ — “क्रान्ति” (declination) को वृत्त, अर्थात् जुन रेखामा हिँड्दा सूर्यको क्रान्ति बदलिन्छ।",
+            ne: "संस्कृत नाम *क्रान्तिवृत्त* पनि अर्थपूर्ण छ — “क्रान्ति” को वृत्त, अर्थात् जुन रेखामा हिँड्दा सूर्यको क्रान्ति बदलिन्छ।",
             en: "The Sanskrit *krāntivṛtta* is equally apt — the circle of *krānti* (declination), the line along which the Sun's declination changes.",
           },
         },
