@@ -1194,7 +1194,7 @@ export function DainikKranti() {
                         }
                       }}
                     >
-                      <TableCell className="w-9 px-1 pointer-events-none">
+                      <TableCell className="w-9 px-1">
                         <span
                           className="flex h-7 w-7 items-center justify-center rounded-md"
                           aria-hidden

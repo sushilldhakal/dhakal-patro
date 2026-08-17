@@ -42,6 +42,7 @@ import * as THREE from "three";
 
 import rahuIconUrl from "@/assets/graha/rahu.svg?url";
 import ketuIconUrl from "@/assets/graha/ketu.svg?url";
+import earthToonUrl from "@/assets/graha/earth.png";
 import { KATHMANDU } from "@/lib/sky3d/horizon";
 import {
   atLonInto,
@@ -368,6 +369,61 @@ function makeLine(geometry: THREE.BufferGeometry, color: number, opacity: number
 }
 
 /**
+ * Solid globe. Scene lights and Mesh*Material blending are what made this look
+ * like glass — lines and the far hemisphere showing through. This shader paints
+ * the map, shades it by the Sun, and always writes opaque pixels.
+ */
+function makeOpaqueEarthMaterial(map: THREE.Texture) {
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      map: { value: map },
+      sunPosition: { value: new THREE.Vector3(MEAN_DISTANCE, 0, 0) },
+      ambient: { value: 0.58 },
+      sunOn: { value: 1 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNormal;
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        vec4 world = modelMatrix * vec4(position, 1.0);
+        vWorldPos = world.xyz;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * world;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D map;
+      uniform vec3 sunPosition;
+      uniform float ambient;
+      uniform float sunOn;
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNormal;
+      varying vec2 vUv;
+      void main() {
+        vec3 tex = texture2D(map, vUv).rgb;
+        vec3 n = normalize(vWorldNormal);
+        vec3 toSun = normalize(sunPosition - vWorldPos);
+        float ndl = dot(n, toSun);
+        float day = smoothstep(-0.12, 0.28, ndl);
+        float light = mix(ambient, 1.0, sunOn > 0.5 ? day : 1.0);
+        gl_FragColor = vec4(tex * light, 1.0);
+      }
+    `,
+    transparent: false,
+    depthWrite: true,
+    depthTest: true,
+    side: THREE.FrontSide,
+    blending: THREE.NoBlending,
+    toneMapped: false,
+    fog: false,
+  });
+  mat.opacity = 1;
+  return mat;
+}
+
+/**
  * Tip the Moon's plane around a travelling node line.
  *
  * `rotY(Ω) · rotX(i) · rotY(-Ω)` leaves longitudes in the parent frame alone
@@ -525,11 +581,15 @@ function DaySimScene({
   const { camera: cam, size } = useThree();
 
   const [earthMap, sunMap, skyMap, moonMap] = useLoader(THREE.TextureLoader, [
-    `${import.meta.env.BASE_URL}sky3d/earth.jpg`,
+    earthToonUrl,
     `${import.meta.env.BASE_URL}sky3d/sun.jpg`,
     `${import.meta.env.BASE_URL}sky3d/background.jpg`,
     `${import.meta.env.BASE_URL}sky3d/moon.jpg`,
   ]);
+  earthMap.colorSpace = THREE.NoColorSpace;
+  earthMap.anisotropy = 4;
+  const earthMat = useMemo(() => makeOpaqueEarthMaterial(earthMap), [earthMap]);
+  useEffect(() => () => earthMat.dispose(), [earthMat]);
 
   /* ── refs into the scene graph ───────────────────────────────────── */
   const arcRoot = useRef<THREE.Group>(null!);
@@ -986,6 +1046,14 @@ function DaySimScene({
     sunGroup.current.rotation.y = M * 15;
     sunLight.current.position.copy(sunPos);
     sunOrbitGroup.current.position.copy(sunPos);
+    {
+      const mat = planetMesh.current.material as THREE.ShaderMaterial;
+      if (mat.uniforms?.sunPosition) {
+        sunLight.current.getWorldPosition(mat.uniforms.sunPosition.value);
+        mat.uniforms.ambient.value = toggles.trueSun ? 0.58 : 0.85;
+        mat.uniforms.sunOn.value = toggles.trueSun ? 1 : 0;
+      }
+    }
 
     /* Vertical drop from the true sun to the equatorial plane — the part of
        the offset that the tilt alone is responsible for. */
@@ -1487,12 +1555,10 @@ function DaySimScene({
 
   return (
     <>
-      {/* Ambient kept very low on purpose: at 0.45 the night side was lit
-          almost as brightly as the day side, which flattened the terminator
-          and left the Moon a uniform disc at every phase. The Sun's own light
-          does the modelling, so अमावस्या goes properly dark and पूर्णिमा
-          lights the full face. */}
-      <ambientLight intensity={toggles.trueSun ? 0.1 : 0.8} />
+      {/* Same fill as what-is-a-day: the night side stays a readable map.
+          The Sun's point light does the spherical shading — curved terminator,
+          sliding north/south with the Sun. */}
+      <ambientLight intensity={toggles.trueSun ? 0.4 : 0.7} />
 
       {/* Sky. `BackSide` alone turns the sphere outside-in — a negative scale
           as well would cancel it out and cull every face. */}
@@ -1530,7 +1596,7 @@ function DaySimScene({
           origin. Positions inside are written in the scene's own coordinates,
           exactly as before — the group carries the frame change. */}
       <group ref={frameRoot}>
-      <pointLight ref={sunLight} intensity={520} distance={0} decay={2} />
+      <pointLight ref={sunLight} intensity={0.85} distance={0} decay={0} />
 
       {/* राशि · नक्षत्र · बिक्रम महिना.
 
@@ -1671,9 +1737,9 @@ function DaySimScene({
 
       {/* Planet and its three day-arcs */}
       <group ref={arcRoot}>
-        <mesh ref={planetMesh}>
+        <mesh ref={planetMesh} renderOrder={1} frustumCulled={false}>
           <sphereGeometry args={[PLANET_R, 48, 32]} />
-          <meshStandardMaterial map={earthMap} roughness={0.92} metalness={0} />
+          <primitive object={earthMat} attach="material" />
           <primitive object={localMeridian} visible={toggles.primeMeridian} />
         </mesh>
 

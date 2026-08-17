@@ -507,7 +507,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       >
         <Canvas
           camera={{ position: [0, 40, 26], fov: 46, near: 0.1, far: 600 }}
-          gl={{ antialias: true }}
+          gl={{ antialias: true, alpha: false }}
           onCreated={({ gl }) => gl.setClearColor(CANVAS_BG)}
         >
           <Suspense fallback={null}>
@@ -744,7 +744,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             read against the sim's own motion, so it has to be on screen at the
             same time as the thing it is describing. */}
         {graphOpen && (
-          <div className="absolute bottom-3 left-3 z-10 w-[min(420px,calc(100%-1.5rem))] rounded-xl border border-white/15 bg-black/85 p-3 text-white backdrop-blur">
+          <div className="absolute bottom-3 left-3 z-10 w-[min(320px,calc(100%-1.5rem))] max-h-[calc(100%-4.5rem)] overflow-y-auto rounded-xl border border-white/15 bg-black/85 p-2.5 text-white backdrop-blur">
             <EotGraph
               eccentricity={eccentricity}
               tilt={tilt}

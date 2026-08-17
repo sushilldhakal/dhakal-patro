@@ -1,33 +1,103 @@
 /**
- * The equation of time, drawn as a curve.
+ * The equation of time, drawn the way a sundial would plot it.
  *
- * Two effects add here, and the graph exists so they can be pulled apart by
- * hand. The **eccentricity** term is one hump per year — the planet runs fast
- * near perihelion and slow near aphelion. The **tilt** term is two humps per
- * year — the Sun's motion along the ecliptic projects onto the equator at a
- * changing rate, which is zero at the solstices and largest at the equinoxes.
+ * Year runs **down** the page (बैशाख to बैशाख) and the offset runs across
+ * — late to the left, early to the right. Two fills, not a line: the red lobe
+ * is when a sundial lags a clock, the olive lobe when it leads. Zero the
+ * eccentricity in the playground and one wave survives; zero the tilt and the
+ * other does.
  *
- * Set eccentricity to zero in the playground and one hump survives; set the
- * tilt to zero and the other does. On Earth's real values they combine into
- * the familiar lopsided double wave, which is the same shape as the long axis
- * of an analemma.
- *
- * Drawn by hand rather than by a chart library: the article's other diagrams
- * are inline SVG, and the whole curve is 240 points of arithmetic.
+ * Sampled from मेष सङ्क्रान्ति, because a बिक्रम month is 30° of the Sun's
+ * travel rather than a fixed run of days — their unevenness is the same
+ * eccentricity the curve is plotting.
  */
 
 import { useMemo } from "react";
 
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
-import { eotCurve, solarMonthStarts } from "@/lib/sky3d/day-mechanics";
+import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
+import {
+  eotCurve,
+  equationOfTime,
+  euclideanModulo,
+  meanAnomalyAt,
+  solarMonthStarts,
+  PERIHELION,
+  VERNAL,
+} from "@/lib/sky3d/day-mechanics";
 
-const W = 520;
-const H = 158;
-const PAD = { l: 34, r: 8, t: 12, b: 26 };
+const W = 336;
+const H = 400;
+const PAD = { l: 54, r: 10, t: 8, b: 28 };
 
-const SOLAR = "#dddd00";
+const PI2 = Math.PI * 2;
+const NOW = "#2888e4";
+const GRID = "#1a4a7c";
+const LATE = "hsla(3, 80%, 55%, 0.5)";
+const EARLY = "hsla(60, 100%, 43%, 0.5)";
+
+type Pt = { t: number; minutes: number };
+
+function eotYearCurve(e: number, tilt: number): Pt[] {
+  return eotCurve(e, tilt).map((p) => ({ t: p.day / 365, minutes: p.minutes }));
+}
+
+/** Insert the exact zero-crossing so the late/early fills meet the axis cleanly. */
+function withZeroCrossings(pts: Pt[]): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 0; i < pts.length; i += 1) {
+    const cur = pts[i]!;
+    if (i > 0) {
+      const prev = pts[i - 1]!;
+      if (prev.minutes * cur.minutes < 0) {
+        const u = prev.minutes / (prev.minutes - cur.minutes);
+        out.push({ t: prev.t + u * (cur.t - prev.t), minutes: 0 });
+      }
+    }
+    out.push(cur);
+  }
+  return out;
+}
+
+function areaPath(
+  pts: Pt[],
+  x: (min: number) => number,
+  y: (t: number) => number,
+  side: "late" | "early",
+): string {
+  if (pts.length === 0) return "";
+  const clamp = (m: number) => (side === "late" ? Math.min(m, 0) : Math.max(m, 0));
+  const x0 = x(0);
+  let d = `M ${x0.toFixed(1)} ${y(pts[0]!.t).toFixed(1)}`;
+  for (const p of pts) {
+    d += ` L ${x(clamp(p.minutes)).toFixed(1)} ${y(p.t).toFixed(1)}`;
+  }
+  d += ` L ${x0.toFixed(1)} ${y(pts[pts.length - 1]!.t).toFixed(1)} Z`;
+  return d;
+}
+
+/** Chart.js-style duration ticks, in minutes, labelled like `-16m` / `0s`. */
+function durationTicks(peakMin: number): { minutes: number; sec: number }[] {
+  const peakSec = peakMin * 60;
+  const stepSec = peakSec > 480 ? 200 : peakSec > 240 ? 100 : 60;
+  const axisSec = Math.max(stepSec * Math.ceil(peakSec / stepSec), stepSec);
+  const out: { minutes: number; sec: number }[] = [];
+  for (let s = -axisSec; s <= axisSec + 1e-6; s += stepSec) {
+    out.push({ minutes: s / 60, sec: s });
+  }
+  return out;
+}
+
+function formatDuration(sec: number, num: (v: number | string) => string): string {
+  if (Math.abs(sec) < 30) return `${num(0)}s`;
+  const sign = sec < 0 ? "−" : "";
+  const n = Math.abs(sec);
+  const hours = Math.floor(n / 3600);
+  const minutes = Math.floor((n - hours * 3600) / 60);
+  if (hours !== 0) return `${sign}${num(hours)}h${minutes ? `${num(minutes)}m` : ""}`;
+  return `${sign}${num(minutes)}m`;
+}
 
 export interface EotGraphProps {
   eccentricity: number;
@@ -44,51 +114,61 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
   const ne = lang !== "en";
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
 
-  const curve = useMemo(() => eotCurve(eccentricity, tilt), [eccentricity, tilt]);
-
-  /**
-   * Symmetric scale, floored at ±4 min.
-   *
-   * Without the floor, a circular upright orbit — where the answer is a
-   * dead-flat zero — would rescale until numerical noise filled the frame and
-   * looked like signal.
-   */
-  const peak = useMemo(() => {
-    const m = curve.reduce((a, p) => Math.max(a, Math.abs(p.minutes)), 0);
-    return Math.max(4, Math.ceil(m / 4) * 4);
-  }, [curve]);
-
-  const x = (day: number) => PAD.l + (day / 365) * (W - PAD.l - PAD.r);
-  const y = (min: number) => {
-    const h = H - PAD.t - PAD.b;
-    return PAD.t + h / 2 - (min / peak) * (h / 2);
-  };
-
-  const path = useMemo(
-    () => curve.map((p, i) => `${i ? "L" : "M"}${x(p.day).toFixed(1)} ${y(p.minutes).toFixed(1)}`).join(" "),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [curve, peak],
+  const curve = useMemo(
+    () => withZeroCrossings(eotYearCurve(eccentricity, tilt)),
+    [eccentricity, tilt],
   );
 
-  /* The sim's year may be any length; the curve is always a real 365. */
-  const markerDay = ((dayOfYear / daysPerYear) * 365) % 365;
-  const markerMin = curve[Math.round((markerDay / 365) * (curve.length - 1))]?.minutes ?? 0;
+  const peak = useMemo(() => {
+    const m = curve.reduce((a, p) => Math.max(a, Math.abs(p.minutes)), 0);
+    return Math.max(4, m);
+  }, [curve]);
 
-  const ticks = [peak, peak / 2, 0, -peak / 2, -peak];
+  const ticks = useMemo(() => durationTicks(peak), [peak]);
+  const axisMin = ticks[0]?.minutes ?? -peak;
+  const axisMax = ticks[ticks.length - 1]?.minutes ?? peak;
 
-  /* बिक्रम months, not Gregorian ones — and they are not evenly spaced, because
-     a बिक्रम month is 30° of the Sun's travel rather than a fixed run of days.
-     Their unevenness is the same eccentricity the curve is plotting. */
+  const plotL = PAD.l;
+  const plotR = W - PAD.r;
+  const plotT = PAD.t;
+  const plotB = H - PAD.b;
+  const x = (min: number) => plotL + ((min - axisMin) / (axisMax - axisMin)) * (plotR - plotL);
+  const y = (t: number) => plotT + t * (plotB - plotT);
+
+  const latePath = useMemo(() => areaPath(curve, x, y, "late"), [curve, axisMin, axisMax]);
+  const earlyPath = useMemo(() => areaPath(curve, x, y, "early"), [curve, axisMin, axisMax]);
+
+  const markerM = meanAnomalyAt(dayOfYear / daysPerYear);
+  const markerT = euclideanModulo(dayOfYear / daysPerYear, 1);
+  const markerMin =
+    (equationOfTime(markerM, eccentricity, tilt, PERIHELION - VERNAL) * 24 * 60) / PI2;
+
   const monthStarts = useMemo(() => solarMonthStarts(eccentricity), [eccentricity]);
+  const monthTicks = useMemo(() => [...monthStarts, 365], [monthStarts]);
   const monthNames = ne ? BS_MONTHS_NE : ([...BS_MONTH_NAMES] as string[]);
   const currentMonth = useMemo(() => {
+    const day = markerT * 365;
     let idx = 0;
-    for (let i = 0; i < 12; i += 1) if (markerDay >= monthStarts[i]!) idx = i;
+    for (let i = 0; i < 12; i += 1) if (day >= monthStarts[i]!) idx = i;
     return idx;
-  }, [markerDay, monthStarts]);
+  }, [markerT, monthStarts]);
+
+  const legend = [
+    { color: NOW, label: bilingualText(lang, "अहिले", "Now") },
+    { color: LATE, label: bilingualText(lang, "घाम पछाडि", "Sundial Late") },
+    { color: EARLY, label: bilingualText(lang, "घाम अगाडि", "Sundial Early") },
+  ];
 
   return (
     <figure className="m-0 w-full">
+      <ul className="mb-1.5 flex list-none flex-wrap items-center justify-center gap-x-3 gap-y-1 p-0 text-[10px] text-white/80">
+        {legend.map((item) => (
+          <li key={item.label} className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 shrink-0 rounded-[2px]" style={{ background: item.color }} />
+            {item.label}
+          </li>
+        ))}
+      </ul>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
@@ -99,83 +179,77 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
           "The equation of time — true solar time minus mean solar time across a year",
         )}
       >
-        {/* horizontal grid + minute labels */}
-        {ticks.map((t) => (
-          <g key={t}>
-            <line
-              x1={PAD.l}
-              x2={W - PAD.r}
-              y1={y(t)}
-              y2={y(t)}
-              stroke="currentColor"
-              strokeOpacity={t === 0 ? 0.42 : 0.14}
-              strokeWidth={t === 0 ? 1 : 0.6}
-            />
-            <text
-              x={PAD.l - 5}
-              y={y(t) + 3}
-              textAnchor="end"
-              className="fill-current text-[8px] tabular-nums opacity-55"
-            >
-              {num(t === 0 ? 0 : `${t > 0 ? "+" : "−"}${Math.abs(t)}`)}
-            </text>
-          </g>
-        ))}
-
-        {/* बिक्रम month boundaries, each one a सङ्क्रान्ति */}
-        {monthStarts.map((d, i) => {
-          const next = i === 11 ? 365 : monthStarts[i + 1]!;
+        {/* vertical grid + minute labels */}
+        {ticks.map((tick) => {
+          const px = x(tick.minutes);
+          const isZero = tick.sec === 0;
           return (
-            <g key={i}>
+            <g key={tick.sec}>
               <line
-                x1={x(d)}
-                x2={x(d)}
-                y1={PAD.t}
-                y2={H - PAD.b + 3}
-                stroke="currentColor"
-                strokeOpacity={i === 0 ? 0.34 : 0.14}
-                strokeWidth={0.7}
+                x1={px}
+                x2={px}
+                y1={plotT}
+                y2={plotB}
+                stroke={GRID}
+                strokeOpacity={isZero ? 0.85 : 0.45}
+                strokeWidth={isZero ? 1 : 0.6}
               />
               <text
-                x={x((d + next) / 2)}
-                y={H - PAD.b + 12}
+                x={px}
+                y={H - 8}
                 textAnchor="middle"
-                className="fill-current text-[7.5px]"
-                style={{ opacity: i === currentMonth ? 0.95 : 0.45 }}
-                fontWeight={i === currentMonth ? 700 : 400}
+                className="fill-current font-num text-[8px] tabular-nums opacity-55"
               >
-                {monthNames[i]}
+                {formatDuration(tick.sec, num)}
               </text>
             </g>
           );
         })}
 
-        <path d={path} fill="none" stroke={SOLAR} strokeWidth={1.8} strokeLinejoin="round" />
+        {/* month grid + labels */}
+        {monthTicks.map((day, i) => {
+          const t = day / 365;
+          const py = y(t);
+          const name = monthNames[i % 12];
+          const active = i < 12 && i === currentMonth;
+          return (
+            <g key={`m-${i}`}>
+              <line
+                x1={plotL}
+                x2={plotR}
+                y1={py}
+                y2={py}
+                stroke={GRID}
+                strokeOpacity={i === 0 || i === 12 ? 0.7 : 0.45}
+                strokeWidth={i === 12 ? 1 : 0.6}
+              />
+              <text
+                x={plotL - 6}
+                y={py + 3}
+                textAnchor="end"
+                className="fill-current text-[8px]"
+                style={{ opacity: active ? 0.95 : 0.5 }}
+                fontWeight={active ? 700 : 400}
+              >
+                {name}
+              </text>
+            </g>
+          );
+        })}
+
+        <path d={latePath} fill={LATE} />
+        <path d={earlyPath} fill={EARLY} />
 
         {/* where the sim is now */}
         <line
-          x1={x(markerDay)}
-          x2={x(markerDay)}
-          y1={PAD.t}
-          y2={H - PAD.b}
-          stroke="currentColor"
-          strokeOpacity={0.45}
-          strokeWidth={0.9}
-          strokeDasharray="3 3"
+          x1={plotL}
+          x2={plotR}
+          y1={y(markerT)}
+          y2={y(markerT)}
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth={1}
         />
-        <circle cx={x(markerDay)} cy={y(markerMin)} r={3.6} fill={SOLAR} />
-
-        <text
-          x={W - PAD.r}
-          y={PAD.t + 1}
-          textAnchor="end"
-          className="fill-current text-[9px] font-semibold tabular-nums"
-          style={{ fill: SOLAR }}
-        >
-          {markerMin >= 0 ? "+" : "−"}
-          {num(Math.abs(markerMin).toFixed(1))}{" "}
-          {bilingualText(lang, "मिनेट", "min")}
-        </text>
+        <circle cx={x(markerMin)} cy={y(markerT)} r={5} fill={NOW} />
       </svg>
       <figcaption className="mt-1.5 text-[11px] leading-snug text-white/45">
         {bilingualText(
