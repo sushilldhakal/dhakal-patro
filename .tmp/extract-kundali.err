@@ -1,0 +1,4 @@
+
+41 distinct pair(s) across 16 file(s).
+1 key collision(s) auto-suffixed — review these:
+  kundali.x.beeja_mantra -> kundali.x.beeja_mantra_2  (ShantiVidhiPanel:304)

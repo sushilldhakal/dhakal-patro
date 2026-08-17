@@ -42,8 +42,9 @@ import * as THREE from "three";
 
 import rahuIconUrl from "@/assets/graha/rahu.svg?url";
 import ketuIconUrl from "@/assets/graha/ketu.svg?url";
-import earthToonUrl from "@/assets/graha/earth.png";
+import earthToonUrl from "@/assets/graha/earth-orig.png";
 import { KATHMANDU } from "@/lib/sky3d/horizon";
+import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import {
   atLonInto,
   BELT_MID,
@@ -364,64 +365,16 @@ function setRingArc(mesh: THREE.Mesh, angle: number, segments: number) {
 function makeLine(geometry: THREE.BufferGeometry, color: number, opacity: number) {
   return new THREE.Line(
     geometry,
-    new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
+    new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity,
+      depthTest: true,
+      depthWrite: false,
+    }),
   );
 }
 
-/**
- * Solid globe. Scene lights and Mesh*Material blending are what made this look
- * like glass — lines and the far hemisphere showing through. This shader paints
- * the map, shades it by the Sun, and always writes opaque pixels.
- */
-function makeOpaqueEarthMaterial(map: THREE.Texture) {
-  const mat = new THREE.ShaderMaterial({
-    uniforms: {
-      map: { value: map },
-      sunPosition: { value: new THREE.Vector3(MEAN_DISTANCE, 0, 0) },
-      ambient: { value: 0.58 },
-      sunOn: { value: 1 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vWorldPos;
-      varying vec3 vWorldNormal;
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        vec4 world = modelMatrix * vec4(position, 1.0);
-        vWorldPos = world.xyz;
-        vWorldNormal = normalize(mat3(modelMatrix) * normal);
-        gl_Position = projectionMatrix * viewMatrix * world;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform sampler2D map;
-      uniform vec3 sunPosition;
-      uniform float ambient;
-      uniform float sunOn;
-      varying vec3 vWorldPos;
-      varying vec3 vWorldNormal;
-      varying vec2 vUv;
-      void main() {
-        vec3 tex = texture2D(map, vUv).rgb;
-        vec3 n = normalize(vWorldNormal);
-        vec3 toSun = normalize(sunPosition - vWorldPos);
-        float ndl = dot(n, toSun);
-        float day = smoothstep(-0.12, 0.28, ndl);
-        float light = mix(ambient, 1.0, sunOn > 0.5 ? day : 1.0);
-        gl_FragColor = vec4(tex * light, 1.0);
-      }
-    `,
-    transparent: false,
-    depthWrite: true,
-    depthTest: true,
-    side: THREE.FrontSide,
-    blending: THREE.NoBlending,
-    toneMapped: false,
-    fog: false,
-  });
-  mat.opacity = 1;
-  return mat;
-}
 
 /**
  * Tip the Moon's plane around a travelling node line.
@@ -586,9 +539,11 @@ function DaySimScene({
     `${import.meta.env.BASE_URL}sky3d/background.jpg`,
     `${import.meta.env.BASE_URL}sky3d/moon.jpg`,
   ]);
+  /* Raw texels: the globe's own shader writes final pixels and does no
+     colour-space conversion of its own. See `makeEarthMaterial`. */
   earthMap.colorSpace = THREE.NoColorSpace;
   earthMap.anisotropy = 4;
-  const earthMat = useMemo(() => makeOpaqueEarthMaterial(earthMap), [earthMap]);
+  const earthMat = useMemo(() => makeEarthMaterial(earthMap), [earthMap]);
   useEffect(() => () => earthMat.dispose(), [earthMat]);
 
   /* ── refs into the scene graph ───────────────────────────────────── */
@@ -643,6 +598,14 @@ function DaySimScene({
   const yAxis = useRef(new THREE.Vector3(0, 1, 0));
   const scratch = useRef(new THREE.Vector3());
   const lookAt = useRef(new THREE.Vector3());
+  /* The label occlusion test's own three. It runs inside `push`, after the
+     frame's positions are built — borrowing `scratch` or `vTmp` there would
+     overwrite `planetPos`, which is `scratch`, and throw every body label that
+     is placed from it to the far side of the scene. */
+  const vEarth = useRef(new THREE.Vector3());
+  const vRay = useRef(new THREE.Vector3());
+  const vOc = useRef(new THREE.Vector3());
+  const vWorld = useRef(new THREE.Vector3());
   const followYaw = useRef(0);
   /* Where the camera is actually pointed this frame, and how far through a
      change of focus it is. See the camera block in the frame loop. */
@@ -1046,13 +1009,14 @@ function DaySimScene({
     sunGroup.current.rotation.y = M * 15;
     sunLight.current.position.copy(sunPos);
     sunOrbitGroup.current.position.copy(sunPos);
+
+    /* The globe shades itself against the Sun's *world* place, which the frame
+       shift moves — read it back off the light rather than from `sunPos`, or
+       the lit side stops tracking the moment the reader changes focus. */
     {
-      const mat = planetMesh.current.material as THREE.ShaderMaterial;
-      if (mat.uniforms?.sunPosition) {
-        sunLight.current.getWorldPosition(mat.uniforms.sunPosition.value);
-        mat.uniforms.ambient.value = toggles.trueSun ? 0.58 : 0.85;
-        mat.uniforms.sunOn.value = toggles.trueSun ? 1 : 0;
-      }
+      const u = earthMat.uniforms;
+      sunLight.current.getWorldPosition(u.sunPosition.value as THREE.Vector3);
+      u.sunOn.value = toggles.trueSun ? 1 : 0;
     }
 
     /* Vertical drop from the true sun to the equatorial plane — the part of
@@ -1433,13 +1397,35 @@ function DaySimScene({
       /* `at` is built in the scene's own coordinates, which the frame shift
          then slides; project from the shifted position or every label sits
          where its body used to be. */
-      proj.copy(at).add(frameRoot.current.position).project(cam);
+      const world = vWorld.current.copy(at).add(frameRoot.current.position);
+      proj.copy(world).project(cam);
       const node = labelNodes.current.get(id);
       const behind = proj.z > 1;
       const x = (proj.x * 0.5 + 0.5) * size.width;
       const y = (-proj.y * 0.5 + 0.5) * size.height;
+      let hidByEarth = false;
+      if (kind !== "body") {
+        planetMesh.current.getWorldPosition(vEarth.current);
+        const maxT = vRay.current.copy(world).sub(cam.position).length();
+        if (maxT > 1e-4) {
+          const dir = vRay.current.multiplyScalar(1 / maxT);
+          const oc = vOc.current.copy(cam.position).sub(vEarth.current);
+          const b = oc.dot(dir);
+          const c = oc.dot(oc) - PLANET_R * PLANET_R;
+          const disc = b * b - c;
+          if (disc > 0) {
+            const tHit = -b - Math.sqrt(disc);
+            hidByEarth = tHit > 0.08 && tHit < maxT - 0.02;
+          }
+        }
+      }
       const off =
-        behind || x < -80 || y < -30 || x > size.width + 80 || y > size.height + 30;
+        behind ||
+        hidByEarth ||
+        x < -80 ||
+        y < -30 ||
+        x > size.width + 80 ||
+        y > size.height + 30;
 
       if (node) {
         /* `transform` rather than left/top: it is composited, so moving fifty
@@ -1516,10 +1502,13 @@ function DaySimScene({
       push("b-rahu", "body", bodyNames.rahu, nodeAt(anchor, MOON_ORBIT), false);
       push("b-ketu", "body", bodyNames.ketu, nodeAt(anchor, -MOON_ORBIT), false);
     }
+    /* Names sit a fixed clearance off the *surface*, not a multiple of the
+       radius: scaled by radius the mean sun's name crowded its disc while the
+       true sun's floated away from one twice the size. */
     if (toggles.trueSun)
-      push("b-sun", "body", bodyNames.sun, anchor.copy(sunPos).setY(sunPos.y + SUN_R * 2.2), false);
+      push("b-sun", "body", bodyNames.sun, anchor.copy(sunPos).setY(sunPos.y + SUN_R + 0.34), false);
     if (toggles.meanSun)
-      push("b-mean", "body", bodyNames.meanSun, anchor.set(0, MEAN_SUN_R * 2.6, 0), false);
+      push("b-mean", "body", bodyNames.meanSun, anchor.set(0, MEAN_SUN_R + 0.34, 0), false);
 
     /* Clock labels ride the tick that marks each arc's zero direction.
        Their angles converge — the three ticks sit on top of each other at day 0,
@@ -1555,10 +1544,10 @@ function DaySimScene({
 
   return (
     <>
-      {/* Same fill as what-is-a-day: the night side stays a readable map.
-          The Sun's point light does the spherical shading — curved terminator,
-          sliding north/south with the Sun. */}
-      <ambientLight intensity={toggles.trueSun ? 0.4 : 0.7} />
+      {/* Lights are the **Moon's** now — the globe shades itself in its own
+          shader. Kept low so the Moon's phases stay phases: raise the fill and
+          the crescent fills in. */}
+      <ambientLight intensity={toggles.trueSun ? 0.22 : 0.7} />
 
       {/* Sky. `BackSide` alone turns the sphere outside-in — a negative scale
           as well would cancel it out and cull every face. */}
@@ -1596,7 +1585,10 @@ function DaySimScene({
           origin. Positions inside are written in the scene's own coordinates,
           exactly as before — the group carries the frame change. */}
       <group ref={frameRoot}>
-      <pointLight ref={sunLight} intensity={0.85} distance={0} decay={0} />
+      {/* No falloff: at this scale a physical inverse-square would leave the
+          Moon almost unlit. It also doubles as the globe's own sun position —
+          the shader reads its world place every frame. */}
+      <pointLight ref={sunLight} intensity={2.2} distance={0} decay={0} />
 
       {/* राशि · नक्षत्र · बिक्रम महिना.
 
@@ -1737,9 +1729,8 @@ function DaySimScene({
 
       {/* Planet and its three day-arcs */}
       <group ref={arcRoot}>
-        <mesh ref={planetMesh} renderOrder={1} frustumCulled={false}>
-          <sphereGeometry args={[PLANET_R, 48, 32]} />
-          <primitive object={earthMat} attach="material" />
+        <mesh ref={planetMesh} material={earthMat} frustumCulled={false}>
+          <sphereGeometry args={[PLANET_R, 64, 48]} />
           <primitive object={localMeridian} visible={toggles.primeMeridian} />
         </mesh>
 

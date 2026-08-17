@@ -83,6 +83,8 @@ import {
   SKY_TEXTURE_SOURCES,
   type SkyTextureKey,
 } from "@/lib/sky3d/sky-textures";
+import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
+import earthToonUrl from "@/assets/graha/earth-orig.png";
 
 /** Same wheel as Learn — radii come from {@link EclipticWheel}. */
 export const RASHI_INNER = BELT_INNER;
@@ -623,7 +625,15 @@ function MoonEclipseFx({
   );
 }
 
-/** राहु / केतु as the same SVG used on the 2D wheels, always facing the camera. */
+/**
+ * राहु / केतु as the same SVG used on the 2D wheels, always facing the camera.
+ *
+ * Depth-tested like every other graha. They used to be drawn with the test off
+ * and a `renderOrder` of 8, which put them in front of the Earth and of any
+ * planet they passed behind — the two bodies in the scene that are *not* bodies
+ * were the only two nothing could hide. Being occluded is how a reader sees
+ * that a node has gone round the far side.
+ */
 function NodeSprite({
   graha,
   radius,
@@ -637,8 +647,8 @@ function NodeSprite({
   if (!map) return null;
   const size = radius * 4;
   return (
-    <sprite onClick={onSelect} scale={[size, size, 1]} renderOrder={8}>
-      <spriteMaterial map={map} transparent depthTest={false} depthWrite={false} />
+    <sprite onClick={onSelect} scale={[size, size, 1]}>
+      <spriteMaterial map={map} transparent depthWrite={false} />
     </sprite>
   );
 }
@@ -811,6 +821,22 @@ export function AakashGocharScene({
     return map;
   }, [loaded, gl]);
 
+  /**
+   * अन्तरिक्ष's Earth wears the Learn playground's cartoon map, not the
+   * photograph the globe view uses.
+   *
+   * At the space view's scale the planet is a couple of hundred pixels across
+   * and half of it is in shadow: a photograph at that size is mud, while flat
+   * colour still reads as continents when dimmed to a third. Raw texels — the
+   * shader writes final pixels itself. See `makeEarthMaterial`.
+   */
+  const earthToon = useLoader(THREE.TextureLoader, earthToonUrl);
+  const spaceEarthMat = useMemo(() => {
+    earthToon.colorSpace = THREE.NoColorSpace;
+    earthToon.anisotropy = gl.capabilities.getMaxAnisotropy?.() ?? 1;
+    return makeEarthMaterial(earthToon);
+  }, [earthToon, gl]);
+  useEffect(() => () => spaceEarthMat.dispose(), [spaceEarthMat]);
 
   const bodyRefs = useRef<Partial<Record<GrahaKey, THREE.Group>>>({});
   const spinRefs = useRef<Partial<Record<GrahaKey, THREE.Mesh>>>({});
@@ -1922,6 +1948,9 @@ export function AakashGocharScene({
     if (sunLightRef.current) {
       const sunGroup = bodyRefs.current.sun;
       if (sunGroup) sunLightRef.current.position.copy(sunGroup.position);
+      /* The globe shades itself, so it needs the Sun's place rather than its
+         light. Read it off the light, which is already there. */
+      sunLightRef.current.getWorldPosition(spaceEarthMat.uniforms.sunPosition.value);
       /* Space: no inverse-square falloff. The shells are schematic (Moon at
          ~5, Sun at ~10), so decay would make पूर्णिमा dimmer than औंसी just
          because the Moon is drawn farther from the Sun. A constant light lets
@@ -2121,11 +2150,13 @@ export function AakashGocharScene({
 
       {/* Space view: the Earth itself, tilted by the obliquity of the ecliptic. */}
       <group ref={earthGroupRef}>
-        <mesh ref={earthRef}>
+        {/* The same globe the Learn playground draws: opaque, and shading
+            itself against the Sun so the terminator is a curve that follows the
+            Sun north and south. Its night side stays a readable map at
+            `EARTH_NIGHT`, which is what lets you orbit round the back of the
+            planet and still see where you are looking. */}
+        <mesh ref={earthRef} material={spaceEarthMat}>
           <sphereGeometry args={[EARTH_RADIUS, 64, 64]} />
-          {/* Same material as the Learn playground: the Sun's point light
-              models the terminator. Emissive glow washed day and night out. */}
-          <meshStandardMaterial map={textures.earth} roughness={0.92} metalness={0} />
         </mesh>
         {/* Polar axis — the diurnal spin that walks the lagna round the zodiac. */}
         <mesh>

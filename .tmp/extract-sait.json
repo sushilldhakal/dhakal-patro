@@ -1,0 +1,950 @@
+{
+  "sait.x.a_boy_s_annapr_ana_falls": {
+    "ne": "बालकको अन्नप्रासन सम महिना (जन्मपछि ६,८,१०,१२) मा र बालिकाको विषम महिना (५,७,९,११) मा; मृदु, लघु, चर र स्थिर वर्गका नक्षत्रमा; रिक्ता (४,९,१४), नन्द (१,६,११), अष्टमी, अमावस्या र द्वादशी बाहेक; आइत (अर्क), मंगल (कुज) र शनि (अर्कि) बाहेकका वारमा।",
+    "en": "A boy's annaprāśana falls in an even month after birth (6,8,10,12) and a girl's in an odd month (5,7,9,11); in Mṛdu, Laghu, Chara and Sthira nakṣatras; excluding Rikta (4,9,14), Nanda (1,6,11), Aṣṭamī, Amāvasyā and Dvādaśī; and avoiding Sun (Arka), Tue (Kuja) and Sat (Arki).",
+    "_via": "object",
+    "_at": "sait-rules-content:74"
+  },
+  "sait.x.add_1_to_the_tithi_then": {
+    "ne": "तिथिमा १ जोडी वार थप्ने; ४ ले भाग गर्दा शेष ३ (गुण) वा ० आए अग्नि पृथ्वी (भुवि) मा — होम सुखदायी। शेष १ (शशि) स्वर्गमा प्राणनाश; शेष २ (गुग्म) पातालमा अर्थनाश।",
+    "en": "Add 1 to the tithi, then the weekday; divide by 4. Remainder 3 (guṇa) or 0 places Agni on Earth (bhūvi) — the homa brings happiness. Remainder 1 (śaśi) = Heaven (loss of life); remainder 2 (gugma) = Pātāla (loss of wealth).",
+    "_via": "object",
+    "_at": "sait-rules-content:30"
+  },
+  "sait.x.adhim_sa_malm_sa_bars_new": {
+    "ne": "अधिमास (मलमास) मा नयाँ व्यापार वा भवनारम्भ जस्ता कार्य वर्जित। संक्रान्तिको अघिल्लो र पछिल्लो १६–१६ घडी (कुल ३२ घडी / संक्रान्तिको दिन) सबै शुभ कार्यका लागि त्याज्य — प्रणालीले संक्रान्तिको दिन नै वर्जित गर्छ।",
+    "en": "Adhimāsa (Malmāsa) bars new trade and building rites. Around Sankrānti, 16 nāḍīs before and after (32 nāḍīs / the Sankrānti day) are barred for auspicious work — the system excludes the Sankrānti day itself.",
+    "_via": "object",
+    "_at": "sait-rules-content:715"
+  },
+  "sait.x.arkakuj_rkibhirvin_excluding_arka_sun_kuja": {
+    "ne": "«अर्ककुजार्किभिर्विना» — अर्क (आइत), कुज (मंगल) र अर्कि (शनि) बाहेकका वारमा अन्नप्रासन शुभ; सोम, बुध, बिही, शुक्र लिइन्छ।",
+    "en": "«arkakujārkibhirvinā» — excluding Arka (Sun), Kuja (Tue) and Arki (Sat); Mon, Wed, Thu and Fri are kept.",
+    "_via": "object",
+    "_at": "sait-rules-content:997"
+  },
+  "sait.x.auspicious_dates_for_a_baby_s": {
+    "ne": "शिशुलाई पहिलो पटक अन्न ख्वाउने (अन्नप्रासन) संस्कारका लागि शुभ मिति।",
+    "en": "Auspicious dates for a baby's first feeding of solid food (Annaprasan).",
+    "_via": "object",
+    "_at": "sait-rules-content:958"
+  },
+  "sait.x.auspicious_dates_for_entering_and_settling": {
+    "ne": "नयाँ घरमा प्रवेश (गृह प्रवेश) का लागि शुभ मिति — सपरिवार नयाँ निवासमा बसाइँ सर्ने शुभ दिन।",
+    "en": "Auspicious dates for entering and settling into a new home.",
+    "_via": "object",
+    "_at": "sait-rules-content:632"
+  },
+  "sait.x.auspicious_dates_for_establishing_the_sacred": {
+    "ne": "यज्ञ/हवनका लागि अग्नि स्थापना गर्ने शुभ मिति।",
+    "en": "Auspicious dates for establishing the sacred fire (Agni) to begin a yajña or homa.",
+    "_via": "object",
+    "_at": "sait-rules-content:893"
+  },
+  "sait.x.auspicious_dates_for_opening_a_new": {
+    "ne": "नयाँ व्यापार, पसल वा प्रतिष्ठान उद्घाटनका लागि शुभ मिति।",
+    "en": "Auspicious dates for opening a new business, shop or establishment.",
+    "_via": "object",
+    "_at": "sait-rules-content:700"
+  },
+  "sait.x.auspicious_dates_for_the_marriage_ceremony": {
+    "ne": "विवाह संस्कारका लागि शुभ साइत — शुभ तिथि, नक्षत्र र लग्न विचार गरी गणना गरिएका शुद्ध विवाह मुहूर्तहरू।",
+    "en": "Auspicious dates for the marriage ceremony — clean vivāha muhūrtas computed on favourable tithi, nakṣatra and lagna.",
+    "_via": "object",
+    "_at": "sait-rules-content:191"
+  },
+  "sait.x.auspicious_dates_for_the_rudri_recitation": {
+    "ne": "रुद्री पाठ तथा हवनका लागि शुभ मिति — शिव आराधनासम्बन्धी अनुष्ठानका दिन।",
+    "en": "Auspicious dates for the Rudri recitation and homa in worship of Śiva.",
+    "_via": "object",
+    "_at": "sait-rules-content:806"
+  },
+  "sait.x.auspicious_dates_for_the_upanayana_bratabandha": {
+    "ne": "उपनयन (ब्रतबन्ध) संस्कारका लागि शुभ मिति — बालकको विद्यारम्भ र यज्ञोपवीत धारणका शुभ दिन।",
+    "en": "Auspicious dates for the Upanayana (Bratabandha) sacred-thread rite marking the start of a boy's formal study.",
+    "_via": "object",
+    "_at": "sait-rules-content:318"
+  },
+  "sait.x.auspicious_dates_to_begin_house_construction": {
+    "ne": "घर निर्माण आरम्भ (जग हाल्ने) का लागि शुभ मिति — भवन निर्माणको मंगलमय शुरुवात।",
+    "en": "Auspicious dates to begin house construction (laying the foundation).",
+    "_via": "object",
+    "_at": "sait-rules-content:460"
+  },
+  "sait.x.auspicious_in_m_gha_ph_lguna": {
+    "ne": "माघ, फाल्गुन, वैशाख, ज्येष्ठ र आषाढमा शुभ; सूर्य उत्तरतिर (उत्तरायण) हुँदा। अधिकमास र चातुर्मास वर्जित।",
+    "en": "Auspicious in Māgha, Phālguna, Vaiśākha, Jyeṣṭha and Āṣāḍha when the Sun is in the northern course (Uttarāyaṇa). Adhik-māsa and Chaturmāsa are barred.",
+    "_via": "object",
+    "_at": "sait-rules-content:332"
+  },
+  "sait.x.b_hat_sa_hit_1_4": {
+    "ne": "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि",
+    "en": "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi",
+    "_via": "object",
+    "_at": "sait-rules-content:264, sait-rules-content:374"
+  },
+  "sait.x.b_hat_sa_hit_1_4_2": {
+    "ne": "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि १२.१८",
+    "en": "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi 12.18",
+    "_via": "object",
+    "_at": "sait-rules-content:538"
+  },
+  "sait.x.b_hat_sa_hit_1_4_3": {
+    "ne": "बृहत्संहिता १.४ · मुहूर्त चिन्तामणि २.१७",
+    "en": "Bṛhat Saṃhitā 1.4 · Muhūrta Chintāmaṇi 2.17",
+    "_via": "object",
+    "_at": "sait-rules-content:751"
+  },
+  "sait.x.benefics_in_a_kendra_1_4": {
+    "ne": "शुभ ग्रह केन्द्र (१,४,७,१०), त्रिकोण (५,९) वा आय (११) मा; दशम भाव (ख) रिक्त; पाप ग्रह उपचय (३,६,११) मा; चन्द्रमा लग्न (१), षष्ठ वा अष्टम (मृत्यु) मा नहोस् — यस्तो लग्नशुद्धि आदर्श।",
+    "en": "Benefics in a kendra (1,4,7,10), trikoṇa (5,9) or the 11th (āya); the 10th house (kha) empty; malefics in the upachaya houses (3,6,11); and the Moon NOT in the 1st (lagna), 6th or 8th (mṛtyu) — such lagna-śuddhi is ideal.",
+    "_via": "object",
+    "_at": "sait-rules-content:83"
+  },
+  "sait.x.birth_star_month_tithi_vyat_p": {
+    "ne": "जन्म नक्षत्र/मास/तिथि, व्यतीपात, भद्रा (विष्टि), वैधृति, अमावस्या, पितृ-मृत्यु दिन, दुई तिथि क्षय भएको पक्ष (१३ दिनको पक्ष), अधिकमास आदि वर्ज्य — शुभ कार्यमा महादोष।",
+    "en": "Birth star/month/tithi, Vyatīpāta, Bhadrā (Viṣṭi), Vaidhṛti, Amāvasyā, parental-death days, a fortnight with two lost tithis (13-day pakṣa), Adhik-māsa and related defects are barred as mahā-doṣa for auspicious rites.",
+    "_via": "object",
+    "_at": "sait-rules-content:21"
+  },
+  "sait.x.classically_time_around_sankr_nti_is": {
+    "ne": "शास्त्रमा संक्रान्ति आसपासको अवधि त्याज्य मानिएको छ (संस्करणअनुसार घटी फरक हुन सक्छ)। प्रणालीले त्यसलाई व्यावहारिक रूपमा साधारण ±६ र प्रमुख ±१६ घण्टाको सुरक्षा अवधिका रूपमा लागू गर्छ; दुर्मुहूर्त घडी र ग्रहणको दिन पनि छाडिन्छ।",
+    "en": "Classically, time around Sankrānti is rejected (ghaṭī values vary by edition). The system applies this practically as ±6h ordinary and ±16h cardinal buffers; Dur-muhūrta slices and the eclipse day are also skipped.",
+    "_via": "object",
+    "_at": "sait-rules-content:612"
+  },
+  "sait.x.construction_and_entry_should_always_be": {
+    "ne": "गृहनिर्माण र प्रवेश सधैं स्थिर लग्नमा गर्नुपर्छ, चर लग्नमा कहिल्यै होइन; द्विस्वभाव लग्न अन्य दोषरहित भए स्वीकार्य। (वसिष्ठ-वचन)",
+    "en": "Construction and entry should always be done in a fixed (sthira) lagna, never in a movable (chara) one; a dual (dvisvabhāva) sign is acceptable if free of other defects. (attributed to Sage Vasiṣṭha)",
+    "_via": "object",
+    "_at": "sait-rules-content:138"
+  },
+  "sait.x.count_absolute_tithis_from_ukla_pratipad": {
+    "ne": "शुक्ल प्रतिपदादेखि कृष्ण अमावस्यासम्म ३० तिथि गनिन्छ — शुक्ल १–१५, कृष्णलाई १६–३०। वर्तमान तिथिमा १ जोडी वार संख्या (रवि=१ … शनि=७) थप्ने; ४ ले भाग दिएर शेष हेर्ने।",
+    "en": "Count absolute tithis from śukla Pratipadā through kṛṣṇa Amāvasyā (30) — śukla 1–15, kṛṣṇa as 16–30. Add 1 plus the weekday number (Sun=1 … Sat=7) to the current tithi; divide by 4 and read the remainder.",
+    "_via": "object",
+    "_at": "sait-rules-content:930"
+  },
+  "sait.x.da_am_ek_da_dv_da": {
+    "ne": "दशमी, एकादशी, द्वादशी, द्वितीया, तृतीया र पञ्चमी — उपनयनका शुभ तिथि।",
+    "en": "Daśamī, Ekādaśī, Dvādaśī, Dvitīyā, Tṛtīyā and Pañcamī are the favourable Upanayana tithis.",
+    "_via": "object",
+    "_at": "sait-rules-content:343"
+  },
+  "sait.x.dagdha_and_nya_tithi_defects_and": {
+    "ne": "दग्धा र शून्य तिथि दोष, तथा मंगल/राहुको लत्ताले नक्षत्र बिग्रेको दिन — दिन-शुद्धि अन्तर्गत हटाइन्छ।",
+    "en": "Dagdha and Śūnya tithi defects, and days whose nakṣatra is struck by Mars/Rāhu Latta, are scrubbed under day-śuddhi.",
+    "_via": "object",
+    "_at": "sait-rules-content:452"
+  },
+  "sait.x.defines_the_latta_defect_where_a": {
+    "ne": "लत्ता दोष — ग्रहले आफ्नो स्थानबाट निश्चित नक्षत्रलाई 'लात हान्छ'; त्यस्तो दिन त्याज्य।",
+    "en": "Defines the Latta defect, where a planet 'kicks' specific nakṣatras from its position — such days are scrubbed.",
+    "_via": "object",
+    "_at": "sait-rules-content:277"
+  },
+  "sait.x.defines_the_portions_of_the_8th": {
+    "ne": "अष्टमी, पूर्णिमा, चतुर्थी, एकादशी, तृतीया, दशमी, सप्तमी र चतुर्दशीका भद्रा (विष्टि) पर्ने भाग वर्जित।",
+    "en": "Defines the portions of the 8th, 15th, 4th, 11th, 3rd, 10th, 7th and 14th tithis occupied by Bhadrā (Viṣṭi), which must be barred.",
+    "_via": "object",
+    "_at": "sait-rules-content:255"
+  },
+  "sait.x.dharma_sindhu_1_malm_se_varjy": {
+    "ne": "धर्मसिन्धु १ — मलमासे वर्ज्यानि (प्रथम परिच्छेद)",
+    "en": "Dharma Sindhu 1 — Malmāse Varjyāni (Prathama Pariccheda)",
+    "_via": "object",
+    "_at": "sait-rules-content:469"
+  },
+  "sait.x.dharma_sindhu_1_malm_se_varjy_2": {
+    "ne": "धर्मसिन्धु १ — मलमासे वर्ज्यानि (प्रथम परिच्छेद · निषेध सूचीको सीमा)",
+    "en": "Dharma Sindhu 1 — Malmāse Varjyāni (Prathama Pariccheda · scope of the ban list)",
+    "_via": "object",
+    "_at": "sait-rules-content:620"
+  },
+  "sait.x.dharma_sindhu_1_prathama_pariccheda": {
+    "ne": "धर्मसिन्धु १ (प्रथम परिच्छेद)",
+    "en": "Dharma Sindhu 1 (Prathama Pariccheda)",
+    "_via": "object",
+    "_at": "sait-rules-content:286"
+  },
+  "sait.x.dharma_sindhu_1_prathama_pariccheda_simhastha": {
+    "ne": "धर्मसिन्धु १ (प्रथम परिच्छेद · सिंहस्थ)",
+    "en": "Dharma Sindhu 1 (Prathama Pariccheda · Simhastha)",
+    "_via": "object",
+    "_at": "sait-rules-content:297, sait-rules-content:407"
+  },
+  "sait.x.dharma_sindhu_1_prathama_pariccheda_ukr": {
+    "ne": "धर्मसिन्धु १ (प्रथम परिच्छेद · शुक्रास्त) · मुहूर्त चिन्तामणि १.४७",
+    "en": "Dharma Sindhu 1 (Prathama Pariccheda · Śukrāsta) · Muhūrta Chintāmaṇi 1.47",
+    "_via": "object",
+    "_at": "sait-rules-content:549"
+  },
+  "sait.x.dharma_sindhu_does_not_explicitly_ban": {
+    "ne": "धर्मसिन्धुले चातुर्मासमा निर्माण रोक्न स्पष्ट निषेध गरेको छैन — चातुर्मास विशेष गरी विवाह, ब्रतबन्ध, प्रतिष्ठा जस्ता संस्कारमा कडा हेरिन्छ। प्रणालीले वास्तुकर्ममा चातुर्मास फिल्टर लगाउँदैन; नयाँ गृहप्रवेशमा भने चातुर्मास/अधिकमास विचार गरिन्छ।",
+    "en": "Dharma Sindhu does not explicitly ban continuing construction in Chaturmāsa — that season is strict mainly for vivāha, bratabandha and pratiṣṭhā. The system does not apply a Chaturmāsa filter to vāstu construction; new gṛha-praveśa still weighs Chaturmāsa/Adhik-māsa.",
+    "_via": "object",
+    "_at": "sait-rules-content:624"
+  },
+  "sait.x.dharma_sindhu_ukr_st_di_varjy": {
+    "ne": "धर्मसिन्धु — शुक्रास्तादि वर्ज्याणि (प्रथम परिच्छेद)",
+    "en": "Dharma Sindhu — Śukrāstādi Varjyāṇi (Prathama Pariccheda)",
+    "_via": "object",
+    "_at": "sait-rules-content:396"
+  },
+  "sait.x.dharma_sindhu_v_stu_karma": {
+    "ne": "धर्मसिन्धु (वास्तुकर्म)",
+    "en": "Dharma Sindhu (vāstu karma)",
+    "_via": "object",
+    "_at": "sait-rules-content:676"
+  },
+  "sait.x.divine_sa_sk_ra_rites_are": {
+    "ne": "दैव/संस्कार कार्य पूर्वाह्नमा उत्तम; अन्नप्रासन राति गर्ने विधान छैन। प्रणालीले दिवाकाल (सूर्योदय–सूर्यास्त) स्क्यान गर्छ — दिवा लग्न शोधन; पूर्वाह्न वरीयता शास्त्रीय आदर्श हो।",
+    "en": "Divine/saṃskāra rites are best in the forenoon (pūrvāhṇa); annaprāśana is not done at night. The system scans daytime (sunrise→sunset) — diurnal lagna search; pūrvāhṇa preference is the classical ideal.",
+    "_via": "object",
+    "_at": "sait-rules-content:1050"
+  },
+  "sait.x.double_the_current_tithi_and_add": {
+    "ne": "वर्तमान तिथिलाई २ ले गुणा गरी ५ जोड्ने; योगफललाई ७ ले भाग गर्दा आउने शेषले शिवको निवास जनाउँछ। शेष १ कैलाश, २ गौरी-सन्निधि, ३ वृषभारूढ/नन्दी — तीनै अत्यन्त/शुभ। गणना सूर्योदयकालीन तिथिमा गरिन्छ।",
+    "en": "Double the current tithi and add 5; divide by 7 — the remainder is Śiva's abode. Remainder 1 = Kailāsa, 2 = with Gaurī, 3 = mounted on the bull/Nandi — all three auspicious. Computed on the sunrise tithi.",
+    "_via": "object",
+    "_at": "sait-rules-content:824"
+  },
+  "sait.x.for_trade_srag_vikraya_vipa_i": {
+    "ne": "व्यापार (स्रग्विक्रय / विपणि) का लागि ध्रुव (रोहिणी, तीन उत्तरा), मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), क्षिप्र (हस्त, अश्विनी, पुष्य) र चर (स्वाती, पुनर्वसु, श्रवण, धनिष्ठा, शतभिषा) — जम्मा १६ नक्षत्र शुभ। श्लोकमै रिक्ता र भौम (मंगलवार) पनि निषेधमा उल्लिखित छन्।",
+    "en": "For trade (srag-vikraya / vipaṇi) the auspicious stars are Dhruva (Rohiṇī, the three Uttarās), Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Kṣipra (Hasta, Aśvinī, Puṣya) and Chara (Svātī, Punarvasu, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā) — 16 in all. The same verse also names Riktā and Bhauma (Tuesday) among the prohibitions.",
+    "_via": "object",
+    "_at": "sait-rules-content:743"
+  },
+  "sait.x.from_the_verse_m_du_m": {
+    "ne": "श्लोकअनुसार: मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), कु/रोहिणी, ध्रुव (तीन उत्तरा), वारुण (शतभिषा), मारुत (स्वाती), धनिष्ठा, कर (हस्त), तिष्य (पुष्य) — यी १३ नक्षत्रमा गृहारम्भ 'शुभद' (सुखदायी)। श्लोकको उत्तरार्धले खात (जग खन्ने) र वास्तुपूजा पनि यिनै नक्षत्रमा शुभ भन्छ। पुनर्वसु र श्रवण नेपाली पञ्चाङ्ग तथा अन्य वास्तु परम्परामा ग्राह्य मानिएकाले प्रणालीले पनि स्वीकार गर्छ — यी दुई उक्त श्लोकबाट लिइएका होइनन्।",
+    "en": "From the verse: Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Ku/Rohiṇī, Dhruva (the three Uttarās), Vāruṇa (Śatabhiṣā), Māruta (Svātī), Dhaniṣṭhā, Kara (Hasta), Tiṣya (Puṣya) — house-start in these 13 stars is 'śubhada' (giver of happiness). The verse's second half adds that foundation-digging (khāta) and the Vāstu Pūjā are likewise auspicious in these stars. Punarvasu and Śravaṇa are accepted because Nepali panchāṅga and other vāstu traditions admit them — they are not taken from this quoted verse.",
+    "_via": "object",
+    "_at": "sait-rules-content:529"
+  },
+  "sait.x.g_ha_prave_a_is_auspicious": {
+    "ne": "ज्येष्ठ, माघ, फाल्गुन, वैशाख (र मार्गशीर्ष) मा, उत्तरायण (सौम्ययन) मा, स्थिर लग्नमा तथा मृदु/ध्रुव/मिश्र/क्षिप्र/चर नक्षत्रमा गृहप्रवेश शुभ हुन्छ। (छानो/खरले ढाकिएको घरमा भने दक्षिणायनमा पनि प्रवेश गर्न सकिने अपवाद छ।)",
+    "en": "Gṛha-praveśa is auspicious in Jyeṣṭha, Māgha, Phālguna, Vaiśākha (and Mārgaśīrṣa), during Uttarāyaṇa (Saumyāyana), in a fixed (sthira) lagna, and in the Mṛdu/Dhruva/Miśra/Kṣipra/Chara nakṣatras. (For a house covered in grass/straw, entry may also be done in Dakṣiṇāyana.)",
+    "_via": "object",
+    "_at": "sait-rules-content:104"
+  },
+  "sait.x.g_ha_prave_a_is_auspicious_2": {
+    "ne": "मृदु, ध्रुव (स्थिर), मिश्र, क्षिप्र (लघु) र चर वर्गका नक्षत्रमा गृहप्रवेश शुभ मानिन्छ।",
+    "en": "Gṛha-praveśa is auspicious in the Mṛdu, Dhruva (fixed), Miśra, Kṣipra (Laghu) and Chara nakṣatra classes.",
+    "_via": "object",
+    "_at": "sait-rules-content:129"
+  },
+  "sait.x.grahas_strong_auspicious": {
+    "ne": "ग्रह शुद्ध — शुभ",
+    "en": "Grahas strong — auspicious",
+    "_via": "object",
+    "_at": "SaitDayCard:44"
+  },
+  "sait.x.house_construction_should_be_done_in": {
+    "ne": "स्थिर लग्नमा गृहकार्य गर्नुपर्छ; चर लग्न कहिल्यै छनोट गर्नु हुँदैन। द्विस्वभाव लग्न स्वीकार्य हुन्छ यदि लग्न दोषबाट रहित छ भने। वास्तुशास्त्रीय परम्पराअनुसार स्थिर लग्नमा जग हाल्दा भवनको स्थिरता बढ्ने मानिन्छ। प्रणालीले चर लग्न त्याग्छ; द्विस्वभाव स्वीकार्य राख्छ।",
+    "en": "House construction should be done in a fixed lagna; movable lagna must never be chosen. Dual-natured lagna is acceptable if free from lagna defects. Per vāstu tradition, a fixed lagna is favoured for the building's stability. The system drops movable lagnas and keeps dual (dvisvabhāva) acceptable.",
+    "_via": "object",
+    "_at": "sait-rules-content:587"
+  },
+  "sait.x.in_a_13_day_fortnight_where": {
+    "ne": "दुई तिथि क्षय भई १३ दिनको पक्ष बन्दा 'पक्ष नष्ट भए सबै नष्ट' भनी सबै आचार्य भन्छन्।",
+    "en": "In a 13-day fortnight where two tithis are lost, 'when the pakṣa is destroyed, all is destroyed,' say all the Ācāryas.",
+    "_via": "object",
+    "_at": "sait-rules-content:310"
+  },
+  "sait.x.in_m_rga_r_a_m": {
+    "ne": "मार्गशीर्ष, माघ, फाल्गुन, वैशाख, ज्येष्ठ र आषाढमा विवाह शुभ हुन्छ।",
+    "en": "In Mārgaśīrṣa, Māgha, Phālguna, Vaiśākha, Jyeṣṭha and Āṣāḍha, marriage is auspicious.",
+    "_via": "object",
+    "_at": "sait-rules-content:203"
+  },
+  "sait.x.in_the_g_ha_chakra_rikta": {
+    "ne": "गृहचक्रमा रिक्ता (४,९,१४), अमावस्या र प्रतिपदा तिथि वर्ज्य। प्रणालीले यसबाहेक शुक्ल पक्षका वृद्धि तिथि २,३,५,७,१०,११,१३ मात्र लिन्छ।",
+    "en": "In the gṛha-chakra, rikta (4,9,14), Amāvasyā and Pratipadā are barred. Beyond these the system keeps only the śukla-pakṣa growth tithis 2,3,5,7,10,11,13.",
+    "_via": "object",
+    "_at": "sait-rules-content:121"
+  },
+  "sait.x.iva_v_sa_is_based_on": {
+    "ne": "शिववास दिनको सूर्योदयकालीन तिथिमा आधारित हुन्छ। विवाह/व्रतबन्ध जस्तो विशेष लग्न विण्डो चाहिँदैन — शिववास अनुकूल भएको दिनभरि रुद्री गर्न सकिन्छ।",
+    "en": "Śiva-vāsa is based on the day's sunrise tithi. No special lagna window (as for vivāha/bratabandha) is required — Rudri may be done throughout a day when Śiva-vāsa is favourable.",
+    "_via": "object",
+    "_at": "sait-rules-content:885"
+  },
+  "sait.x.iva_v_sa_method_sunrise_tithi": {
+    "ne": "शिववास गणना विधि (सूर्योदय तिथि)",
+    "en": "Śiva-vāsa method (sunrise tithi)",
+    "_via": "object",
+    "_at": "sait-rules-content:881"
+  },
+  "sait.x.janm_rk_a_own_birth_star": {
+    "ne": "«जन्मार्क्ष…» — आफ्नै जन्मनक्षत्र (१), अनुजन्म (१०), त्रिजन्म (१९) र मानस (२५) शुभ कार्यमा वर्ज्य। यो जातक-सापेक्ष भएकाले सामान्य अन्नप्रासन सूचीमा लागू गरिएको छैन — व्यक्तिगत कुण्डलीमा हेर्नुपर्छ।",
+    "en": "«janmārkṣa…» — own birth star (1), anujanma (10), trijanma (19) and mānasa (25) are barred for śubha work. Being native-specific, this is not applied in the general annaprāśana list — check the child's chart.",
+    "_via": "object",
+    "_at": "sait-rules-content:1024"
+  },
+  "sait.x.jupiter": {
+    "ne": "गुरु",
+    "en": "Jupiter",
+    "_via": "object",
+    "_at": "SaitDayCard:27"
+  },
+  "sait.x.m_dulaghucarasthiro_u_u_m_du": {
+    "ne": "«मृदुलघुचरस्थिरोडुषु» — मृदु (मृगशिरा, रेवती, चित्रा, अनुराधा), लघु/क्षिप्र (हस्त, अश्विनी, पुष्य), चर (स्वाती, पुनर्वसु, श्रवण, धनिष्ठा, शतभिषा), स्थिर/ध्रुव (रोहिणी, तीन उत्तरा) — जम्मा १६ नक्षत्र।",
+    "en": "«mṛdulaghucarasthiroḍuṣu» — Mṛdu (Mṛgaśira, Revatī, Chitrā, Anurādhā), Laghu/Kṣipra (Hasta, Aśvinī, Puṣya), Chara (Svātī, Punarvasu, Śravaṇa, Dhaniṣṭhā, Śatabhiṣā), Sthira/Dhruva (Rohiṇī, the three Uttarās) — 16 stars in all.",
+    "_via": "object",
+    "_at": "sait-rules-content:987"
+  },
+  "sait.x.m_ga_ira_hasta_m_la": {
+    "ne": "मृगशिरा, हस्त, मूल, अनुराधा, मघा, रोहिणी, रेवती, तीन उत्तरा र स्वाती — विवाहका नक्षत्र हुन्।",
+    "en": "Mṛgaśira, Hasta, Mūla, Anurādhā, Maghā, Rohiṇī, Revatī, the three Uttarās and Svātī are the marriage stars.",
+    "_via": "object",
+    "_at": "sait-rules-content:236"
+  },
+  "sait.x.marriage_is_auspicious_when_the_sun": {
+    "ne": "सूर्य मेष, वृष, मिथुन, वृश्चिक, मकर वा कुम्भमा रहँदा विवाह शुभ हुन्छ।",
+    "en": "Marriage is auspicious when the Sun stands in Meṣa, Vṛṣabha, Mithuna, Vṛśchika, Makara or Kumbha.",
+    "_via": "object",
+    "_at": "sait-rules-content:214"
+  },
+  "sait.x.moon": {
+    "ne": "चन्द्र",
+    "en": "Moon",
+    "_via": "object",
+    "_at": "SaitDayCard:26"
+  },
+  "sait.x.muh_rta_chint_ma_i_1": {
+    "ne": "मुहूर्त चिन्तामणि १.३६ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.36 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:223"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_10": {
+    "ne": "मुहूर्त चिन्तामणि १.४७ · १.१८ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.47 · 1.18 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:709"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_11": {
+    "ne": "मुहूर्त चिन्तामणि १.४ · १.३६ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.4 · 1.36 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:723"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_12": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:778"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_13": {
+    "ne": "मुहूर्त चिन्तामणि १.४६–४७ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.46–47 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:792"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_14": {
+    "ne": "मुहूर्त चिन्तामणि १.३",
+    "en": "Muhūrta Chintāmaṇi 1.3",
+    "_via": "object",
+    "_at": "sait-rules-content:874"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_15": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ / नक्षत्र प्रकरण (जन्मर्क्ष · तारा)",
+    "en": "Muhūrta Chintāmaṇi 1.34 / Nakṣatra Prakaraṇa (janmarkṣa · tārā)",
+    "_via": "object",
+    "_at": "sait-rules-content:1019"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_16": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ · ग्रहण १.३२ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 · eclipse 1.32 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:1032"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_2": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:245"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_3": {
+    "ne": "मुहूर्त चिन्तामणि १.४३ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.43 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:253"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_4": {
+    "ne": "मुहूर्त चिन्तामणि १.४८ भाष्य (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.48 comm. (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:308"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_5": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:418"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_6": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ · १.४३ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 · 1.43 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:429"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_7": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:560"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_8": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:572"
+  },
+  "sait.x.muh_rta_chint_ma_i_1_9": {
+    "ne": "मुहूर्त चिन्तामणि १.३४ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 1.34 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:669"
+  },
+  "sait.x.muh_rta_chint_ma_i_12": {
+    "ne": "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · दिवाकाल निर्देश)",
+    "en": "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · daytime instruction)",
+    "_via": "object",
+    "_at": "sait-rules-content:483"
+  },
+  "sait.x.muh_rta_chint_ma_i_12_2": {
+    "ne": "मुहूर्त चिन्तामणि १२.१८ (वास्तु प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 12.18 (Vāstu Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:510"
+  },
+  "sait.x.muh_rta_chint_ma_i_12_3": {
+    "ne": "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · वसिष्ठ)",
+    "en": "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · Vasiṣṭha)",
+    "_via": "object",
+    "_at": "sait-rules-content:584"
+  },
+  "sait.x.muh_rta_chint_ma_i_12_4": {
+    "ne": "मुहूर्त चिन्तामणि १२.२२ (वास्तु प्रकरण · आचार्य श्रीराम)",
+    "en": "Muhūrta Chintāmaṇi 12.22 (Vāstu Prakaraṇa · Ācārya Śrīrāma)",
+    "_via": "object",
+    "_at": "sait-rules-content:596"
+  },
+  "sait.x.muh_rta_chint_ma_i_12_5": {
+    "ne": "मुहूर्त चिन्तामणि १२.१६ (वास्तु प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 12.16 (Vāstu Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:648"
+  },
+  "sait.x.muh_rta_chint_ma_i_12_6": {
+    "ne": "मुहूर्त चिन्तामणि १२ (वास्तु प्रकरण · वसिष्ठ-वचन)",
+    "en": "Muhūrta Chintāmaṇi 12 (Vāstu Prakaraṇa · Vasiṣṭha)",
+    "_via": "object",
+    "_at": "sait-rules-content:686"
+  },
+  "sait.x.muh_rta_chint_ma_i_13": {
+    "ne": "मुहूर्त चिन्तामणि १३.१ (गृहप्रवेश प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 13.1 (Gṛhapraveśa Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:641"
+  },
+  "sait.x.muh_rta_chint_ma_i_13_2": {
+    "ne": "मुहूर्त चिन्तामणि १३.५ (गृहप्रवेश प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 13.5 (Gṛhapraveśa Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:655"
+  },
+  "sait.x.muh_rta_chint_ma_i_13_3": {
+    "ne": "मुहूर्त चिन्तामणि १३.१ (सूची १३.३/भाष्य)",
+    "en": "Muhūrta Chintāmaṇi 13.1 (list in 13.3 / comm.)",
+    "_via": "object",
+    "_at": "sait-rules-content:662"
+  },
+  "sait.x.muh_rta_chint_ma_i_2": {
+    "ne": "मुहूर्त चिन्तामणि २.१७ (नक्षत्र प्रकरणम्)",
+    "en": "Muhūrta Chintāmaṇi 2.17 (Nakṣatra Prakaraṇam)",
+    "_via": "object",
+    "_at": "sait-rules-content:737"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_2": {
+    "ne": "मुहूर्त चिन्तामणि २.१७ (नक्षत्र प्रकरणम् · लग्न निर्देश)",
+    "en": "Muhūrta Chintāmaṇi 2.17 (Nakṣatra Prakaraṇam · lagna instruction)",
+    "_via": "object",
+    "_at": "sait-rules-content:764"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_3": {
+    "ne": "मुहूर्त चिन्तामणि २.३६",
+    "en": "Muhūrta Chintāmaṇi 2.36",
+    "_via": "object",
+    "_at": "sait-rules-content:846"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_4": {
+    "ne": "मुहूर्त चिन्तामणि २.३६ (भाष्य)",
+    "en": "Muhūrta Chintāmaṇi 2.36 (comm.)",
+    "_via": "object",
+    "_at": "sait-rules-content:853"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_5": {
+    "ne": "मुहूर्त चिन्तामणि २.३६ (अग्न्याधान प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 2.36 (Agnyādhāna Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:905"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_6": {
+    "ne": "मुहूर्त चिन्तामणि २.३६ · पीयूषधारा टीका",
+    "en": "Muhūrta Chintāmaṇi 2.36 · Pīyūṣadhārā commentary",
+    "_via": "object",
+    "_at": "sait-rules-content:915"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_7": {
+    "ne": "मुहूर्त चिन्तामणि २.३६ · पीयूषधारा (गणना विधि)",
+    "en": "Muhūrta Chintāmaṇi 2.36 · Pīyūṣadhārā (computation method)",
+    "_via": "object",
+    "_at": "sait-rules-content:925"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_8": {
+    "ne": "मुहूर्त चिन्तामणि २.३६ (भाष्य)",
+    "en": "Muhūrta Chintāmaṇi 2.36 (comm.)",
+    "_via": "object",
+    "_at": "sait-rules-content:938"
+  },
+  "sait.x.muh_rta_chint_ma_i_2_9": {
+    "ne": "मुहूर्त चिन्तामणि २.३६ (गणना आधार)",
+    "en": "Muhūrta Chintāmaṇi 2.36 (computation basis)",
+    "_via": "object",
+    "_at": "sait-rules-content:945"
+  },
+  "sait.x.muh_rta_chint_ma_i_5": {
+    "ne": "मुहूर्त चिन्तामणि ५.३९ (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.39 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:330"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_10": {
+    "ne": "मुहूर्त चिन्तामणि ५.१७ (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.17 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:1005"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_11": {
+    "ne": "मुहूर्त चिन्तामणि ५ (श्लोक ४६–४७ भाष्य)",
+    "en": "Muhūrta Chintāmaṇi 5 (comm. on 46–47)",
+    "_via": "object",
+    "_at": "sait-rules-content:1012"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_12": {
+    "ne": "मुहूर्त चिन्तामणि ५.१६ (युग्म/अयुग्म मास)",
+    "en": "Muhūrta Chintāmaṇi 5.16 (even/odd month)",
+    "_via": "object",
+    "_at": "sait-rules-content:1058"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_2": {
+    "ne": "मुहूर्त चिन्तामणि ५.४० (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.40 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:341"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_3": {
+    "ne": "मुहूर्त चिन्तामणि ५ (संस्कार प्रकरण · भाष्य)",
+    "en": "Muhūrta Chintāmaṇi 5 (Saṃskāra Prakaraṇa, comm.)",
+    "_via": "object",
+    "_at": "sait-rules-content:352"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_4": {
+    "ne": "मुहूर्त चिन्तामणि ५.३९–४० (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.39–40 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:363"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_5": {
+    "ne": "मुहूर्त चिन्तामणि ५ (संस्कार प्रकरण · भाष्य)",
+    "en": "Muhūrta Chintāmaṇi 5 (Saṃskāra Prakaraṇa, comm.)",
+    "_via": "object",
+    "_at": "sait-rules-content:385"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_6": {
+    "ne": "मुहूर्त चिन्तामणि ५.१६ (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.16 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:968"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_7": {
+    "ne": "मुहूर्त चिन्तामणि ५.१६ (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.16 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:975"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_8": {
+    "ne": "मुहूर्त चिन्तामणि ५.१६ (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.16 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:985"
+  },
+  "sait.x.muh_rta_chint_ma_i_5_9": {
+    "ne": "मुहूर्त चिन्तामणि ५.१६ (संस्कार प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 5.16 (Saṃskāra Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:995"
+  },
+  "sait.x.muh_rta_chint_ma_i_6": {
+    "ne": "मुहूर्त चिन्तामणि ६.१ (विवाह प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 6.1 (Vivāha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:201, sait-rules-content:212"
+  },
+  "sait.x.muh_rta_chint_ma_i_6_2": {
+    "ne": "मुहूर्त चिन्तामणि ६.५५ (विवाह प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi 6.55 (Vivāha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:234"
+  },
+  "sait.x.muh_rta_chint_ma_i_6_3": {
+    "ne": "मुहूर्त चिन्तामणि ६.१९ (विवाह प्रकरण · लत्ता)",
+    "en": "Muhūrta Chintāmaṇi 6.19 (Vivāha Prakaraṇa · Latta)",
+    "_via": "object",
+    "_at": "sait-rules-content:275"
+  },
+  "sait.x.muh_rta_chint_ma_i_dharma": {
+    "ne": "मुहूर्त चिन्तामणि / धर्मसिन्धु (शिववास सूत्र)",
+    "en": "Muhūrta Chintāmaṇi / Dharma Sindhu (Śiva-vāsa formula)",
+    "_via": "object",
+    "_at": "sait-rules-content:818"
+  },
+  "sait.x.muh_rta_chint_ma_i_dharma_2": {
+    "ne": "मुहूर्त चिन्तामणि / धर्मसिन्धु (शिववास फल · अमावस्या)",
+    "en": "Muhūrta Chintāmaṇi / Dharma Sindhu (Śiva-vāsa fruits · Amāvasyā)",
+    "_via": "object",
+    "_at": "sait-rules-content:832"
+  },
+  "sait.x.muh_rta_chint_ma_i_dharma_3": {
+    "ne": "मुहूर्त चिन्तामणि · धर्मसिन्धु (महादोष · भद्रा)",
+    "en": "Muhūrta Chintāmaṇi · Dharma Sindhu (mahā-doṣa · Bhadrā)",
+    "_via": "object",
+    "_at": "sait-rules-content:860"
+  },
+  "sait.x.muh_rta_chint_ma_i_directs": {
+    "ne": "मुहूर्त चिन्तामणिले शिलान्यास रात्रिमा नगरी दिवाकालमा गर्न निर्देश गर्छ। प्रणालीले यसलाई सूर्योदय–सूर्यास्तसम्मको स्क्यानका रूपमा लागू गर्छ।",
+    "en": "Muhūrta Chintāmaṇi directs that foundation-laying be done in daytime, not at night. The system applies this as a sunrise→sunset scan.",
+    "_via": "object",
+    "_at": "sait-rules-content:486"
+  },
+  "sait.x.muh_rta_chint_ma_i_eclipse": {
+    "ne": "मुहूर्त चिन्तामणि — ग्रहण १.३२, दुर्मुहूर्त १.३७–४० (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi — eclipse 1.32, Dur-muhūrta 1.37–40 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:439"
+  },
+  "sait.x.muh_rta_chint_ma_i_eclipse_2": {
+    "ne": "मुहूर्त चिन्तामणि — ग्रहण १.३२ · दुर्मुहूर्त १.३७–४० (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi — eclipse 1.32 · Dur-muhūrta 1.37–40 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:607"
+  },
+  "sait.x.muh_rta_chint_ma_i_eclipse_3": {
+    "ne": "मुहूर्त चिन्तामणि — ग्रहण १.३२, दग्धा १.८, शून्य १.१०, महादोष १.३४ (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi — eclipse 1.32, Dagdha 1.8, Śūnya 1.10, mahā-doṣa 1.34 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:693"
+  },
+  "sait.x.muh_rta_chint_ma_i_eclipse_4": {
+    "ne": "मुहूर्त चिन्तामणि — ग्रहण १.३२ · दुर्मुहूर्त १.३७–४० (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi — eclipse 1.32 · Dur-muhūrta 1.37–40 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:785"
+  },
+  "sait.x.muh_rta_chint_ma_i_latta": {
+    "ne": "मुहूर्त चिन्तामणि — लत्ता ६.१९, दग्धा १.८, शून्य १.१० (शुभाशुभ प्रकरण)",
+    "en": "Muhūrta Chintāmaṇi — Latta 6.19, Dagdha 1.8, Śūnya 1.10 (Śubhāśubha Prakaraṇa)",
+    "_via": "object",
+    "_at": "sait-rules-content:450"
+  },
+  "sait.x.muh_rta_chint_ma_i_sa": {
+    "ne": "मुहूर्त चिन्तामणि (संस्कार · पूर्वाह्न निर्देश) · पीयूषधारा",
+    "en": "Muhūrta Chintāmaṇi (saṃskāra · pūrvāhṇa) · Pīyūṣadhārā",
+    "_via": "object",
+    "_at": "sait-rules-content:1045"
+  },
+  "sait.x.muh_rta_chint_ma_i_v": {
+    "ne": "मुहूर्त चिन्तामणि — वास्तु १२.१६ · वसिष्ठ मत (व्याख्या)",
+    "en": "Muhūrta Chintāmaṇi — Vāstu 12.16 · Vasiṣṭha’s view (commentary)",
+    "_via": "object",
+    "_at": "sait-rules-content:495"
+  },
+  "sait.x.muh_rta_chint_ma_i_v_2": {
+    "ne": "मुहूर्त चिन्तामणि — वास्तु प्रकरण अध्याय १२, श्लोक १५ (आचार्य श्रीराम / राम दैवज्ञ)",
+    "en": "Muhūrta Chintāmaṇi — Vāstu prakaraṇa ch. 12, verse 15 (Ācārya Śrīrāma / Rāma Daivajña)",
+    "_via": "object",
+    "_at": "sait-rules-content:524"
+  },
+  "sait.x.needs_nti": {
+    "ne": "शान्ति आवश्यक",
+    "en": "needs śānti",
+    "_via": "object",
+    "_at": "SaitDayCard:45"
+  },
+  "sait.x.per_pit_maha_brahm_tuesday_is": {
+    "ne": "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार हुन् — ब्रतबन्धमा वर्जित। रविवार, बुधवार, गुरुवार, शुक्रवार र सोमवार शुभ।",
+    "en": "Per Pitāmaha (Brahmā), Tuesday is not auspicious; Saturday and Tuesday are krūra vāra — barred for Bratabandha. Sunday, Wednesday, Thursday, Friday and Monday are auspicious.",
+    "_via": "object",
+    "_at": "sait-rules-content:376"
+  },
+  "sait.x.per_pit_maha_brahm_tuesday_is_2": {
+    "ne": "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार हुन् — गृहचक्रमा (भवन निर्माण) रवि, मंगलवार र पर्व, अमावस्या, प्रतिपदा वर्जित। यद्यपि यहाँ रविवार पनि निषेधमा उल्लिखित छ, नेपाली परम्परा र प्रणालीको व्यावहारिक नियममा आइतवार स्वीकार्य मानिएको छ; मंगल र शनि मात्र वर्जित।",
+    "en": "Per Pitāmaha (Brahmā), Tuesday is inauspicious; Saturn and Mars are krūra vāras — in gṛha-cakra (house construction) Sunday, Tuesday, parva, Amāvasyā and Pratipadā are barred. Though Sunday is also mentioned in the prohibition, in Nepali tradition and the system's practical rule, Sunday is accepted; only Tuesday and Saturday are barred.",
+    "_via": "object",
+    "_at": "sait-rules-content:540"
+  },
+  "sait.x.per_pit_maha_brahm_tuesday_is_3": {
+    "ne": "पितामह (ब्रह्मा) का अनुसार मङ्गलबार अशुभ; शनि र मंगल क्रूर वार — व्यापार आरम्भमा आइत/मंगल/शनि त्यागी सोम, बुध, बिहीबार र शुक्रबार लिइन्छ। मुहूर्त चिन्तामणि २.१७ ले पनि भौम (मंगलवार) निषेध गर्छ।",
+    "en": "Per Pitāmaha (Brahmā), Tuesday is inauspicious; Saturn and Mars are krūra vāra — for a business opening Sun/Tue/Sat are dropped, keeping Mon, Wed, Thu and Fri. Muhūrta Chintāmaṇi 2.17 likewise bars Bhauma (Tuesday).",
+    "_via": "object",
+    "_at": "sait-rules-content:756"
+  },
+  "sait.x.per_the_b_hat_sa_hit": {
+    "ne": "बृहत्संहिता (१.४) अनुसार ब्रह्माले नै मंगलबारलाई अशुभ भनेका; शनि र मंगल 'क्रूर वार' हुन् — मुहूर्त चिन्तामणिले विवाहका लागि सोम, बुध, बिहीबार र शुक्रबार मात्र प्रशस्त मानेको छ (रवि-कुज-शनि विशेष त्याज्य)।",
+    "en": "Per the Bṛhat Saṃhitā (1.4), Brahmā himself declared Tuesday inauspicious; Saturday and Tuesday are 'krūra vāra' — the Muhūrta Chintāmaṇi admits only Mon, Wed, Thu and Fri for marriage (Ravi-Kuja-Śani especially avoided).",
+    "_via": "object",
+    "_at": "sait-rules-content:266"
+  },
+  "sait.x.per_the_sages_for_nitya_regular": {
+    "ne": "मुनिहरूका अनुसार नित्य र नैमित्तिक कर्म (जस्तै सामान्य रुद्राभिषेक), वार्षिक अनुष्ठान, संस्कार तथा वैष्णव कार्यमा यस अग्निवासको विचार अनिवार्य छैन।",
+    "en": "Per the sages, for Nitya (regular) and Naimittika (occasional) rites — such as a general Rudrābhiṣeka — for annual observances, saṃskāras and Vaiṣṇava acts, this Agni-vāsa need not be strictly considered.",
+    "_via": "object",
+    "_at": "sait-rules-content:62"
+  },
+  "sait.x.pratipad_caturth_saptam_a_am_navam": {
+    "ne": "प्रतिपदा, चतुर्थी, सप्तमी, अष्टमी, नवमी, त्रयोदशी, चतुर्दशी र पूर्णिमा/अमावस्या — गलग्रह दोषले उपनयनमा वर्जित।",
+    "en": "Pratipadā, Caturthī, Saptamī, Aṣṭamī, Navamī, Trayodaśī, Caturdaśī and Pūrṇimā/Amāvasyā are barred as Galagraha defects for Upanayana.",
+    "_via": "object",
+    "_at": "sait-rules-content:355"
+  },
+  "sait.x.remainder_1_r_pe_agni_in": {
+    "ne": "शेष १ (रूपे) — अग्नि व्यौम्नि/स्वर्गमा, वित्त–प्राण विनाश। शेष २ (द्विक) — पातालमा, धनसञ्चय नाश। शेष ३ वा ० (गुण–वेद) — भूमौ, विपुल सौख्य।",
+    "en": "Remainder 1 (rūpe) — Agni in Heaven (vyoman), destroys wealth and life. Remainder 2 (dvik) — in Pātāla, destroys accumulated wealth. Remainder 3 or 0 (guṇa–veda) — on Earth (bhūmi), gives abundant happiness.",
+    "_via": "object",
+    "_at": "sait-rules-content:41"
+  },
+  "sait.x.remainder_4_sabh_progeny_trouble_5": {
+    "ne": "शेष ४ सभा (सन्तानकष्ट), ५ भोजन (धनहानि), ६ क्रीडा (रोग/कष्ट), ० वा ७ श्मशान (मृत्युतुल्य अमङ्गल) — सबै वर्जित। अमावस्या (औंसी) रुद्रीका लागि सधैं त्याज्य।",
+    "en": "Remainder 4 = Sabhā (progeny trouble), 5 = Bhojana (wealth loss), 6 = Krīḍā (illness), 0 or 7 = Śmaśāna (death-like inauspiciousness) — all barred. Amāvasyā is always excluded for Rudri.",
+    "_via": "object",
+    "_at": "sait-rules-content:838"
+  },
+  "sait.x.rikt_4_9_14_are_inauspicious": {
+    "ne": "रिक्ता (४,९,१४) शुभ कार्यमा अशुभ; पक्षरन्ध्र (४,६,८,९,१२,१४) पनि त्याज्य। यी कटाउँदा २,३,५,७,१०,११,१३ र पूर्णिमा (१५) मात्र बाँकी रहन्छन् — यही प्रणालीको तिथि सूची हो।",
+    "en": "Riktā (4,9,14) are inauspicious for śubha work; Pakṣa-randhra (4,6,8,9,12,14) are likewise dropped. What remains are 2,3,5,7,10,11,13 and Pūrṇimā (15) — the system's tithi list.",
+    "_via": "object",
+    "_at": "sait-rules-content:729"
+  },
+  "sait.x.s_manta_j_takarma_n_makara": {
+    "ne": "सीमन्त, जातकर्म, नामकरण, अन्नप्रासन आदि काल-सापेक्ष (नित्य) संस्कार गुरु वा शुक्र अस्त भएको बेला पनि गर्न सकिन्छ — यी अस्त-दोषका अपवाद हुन्।",
+    "en": "Sīmanta, Jātakarma, Nāmakaraṇa, Annaprāśana and similar time-bound (nitya) saṃskāras may be performed even when Jupiter or Venus is combust (asta) — they are exceptions to the asta-doṣa.",
+    "_via": "object",
+    "_at": "sait-rules-content:95"
+  },
+  "sait.x.seven_days_before_setting_is_old": {
+    "ne": "अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष।",
+    "en": "Seven days before setting is old age (vṛddha); seven days after rising is infancy (bāla) — the medium rule.",
+    "_via": "object",
+    "_at": "sait-rules-content:288"
+  },
+  "sait.x.sun": {
+    "ne": "सूर्य",
+    "en": "Sun",
+    "_via": "object",
+    "_at": "SaitDayCard:25"
+  },
+  "sait.x.the_4th_6th_8th_9th_12th": {
+    "ne": "चतुर्थी, षष्ठी, अष्टमी, नवमी, द्वादशी र चतुर्दशी — पक्षरन्ध्र तिथि हुन् (वर्जित)।",
+    "en": "The 4th, 6th, 8th, 9th, 12th and 14th are the Pakṣa-randhra tithis (and are barred).",
+    "_via": "object",
+    "_at": "sait-rules-content:225"
+  },
+  "sait.x.the_classical_prohibition_covers_sunday_tuesday": {
+    "ne": "शास्त्रीय निषेधमा आइत/मंगल, रिक्ता (४,९,१४), पर्व (८,१४,१५), औंसी र प्रतिपदा पर्छन्। हाम्रो उदार नियम: प्रतिपदा, रिक्ता र अमावस्या मात्र वर्जित — बाँकी ग्राह्य (शास्त्रबाट प्रेरित भएर प्रणालीले यसरी लागू गर्छ)।",
+    "en": "The classical prohibition covers Sunday/Tuesday, rikta (4,9,14), parva (8,14,15), Amāvasyā and Pratipadā. Our lenient gate: only Pratipadā, rikta and Amāvasyā are barred — the rest qualify (inspired by the śāstra, applied this way by the system).",
+    "_via": "object",
+    "_at": "sait-rules-content:515"
+  },
+  "sait.x.the_clause_rikt_nand_am_dar": {
+    "ne": "श्लोकको «रिक्तानन्दाष्टमीदर्शद्वादशी…विना» ले रिक्ता (४,९,१४), नन्द (१,६,११), अष्टमी, अमावस्या (दर्श) र द्वादशी वर्जित गर्छ — बाँकी २,३,५,७,१०,१३ र पूर्णिमा शुभ।",
+    "en": "The clause «riktānandāṣṭamīdarśadvādaśī…vinā» bars Riktā (4,9,14), Nanda (1,6,11), Aṣṭamī, Amāvasyā (darśa) and Dvādaśī — leaving 2,3,5,7,10,13 and Pūrṇimā as śubha.",
+    "_via": "object",
+    "_at": "sait-rules-content:977"
+  },
+  "sait.x.the_period_around_an_eclipse_solar": {
+    "ne": "ग्रहण (सूर्य/चन्द्र) को अगाडि–पछाडिको अवधि — सामान्यतः तीन दिन — शुभ कार्यका लागि वर्ज्य।",
+    "en": "The period around an eclipse (solar/lunar) — typically three days before and after — is barred for auspicious work.",
+    "_via": "object",
+    "_at": "sait-rules-content:147"
+  },
+  "sait.x.the_presiding_deities_of_the_tithis": {
+    "ne": "तिथिका अधिपति देवता क्रमशः — अष्टमी र चतुर्दशीका अधिपति शिव हुन्, त्यसैले यी तिथि शिव आराधनाका लागि स्वाभाविक अनुकूल मानिन्छन्।",
+    "en": "The presiding deities of the tithis in order — Aṣṭamī and Chaturdaśī are ruled by Śiva, so these tithis are held naturally suited to Śiva worship.",
+    "_via": "object",
+    "_at": "sait-rules-content:50"
+  },
+  "sait.x.the_root_verse_itself_derives_agni": {
+    "ne": "मूल श्लोकले नै तिथि–वार योगबाट अग्निवास निकाल्छ — लग्न वा अन्य पञ्चाङ्ग अङ्गको छुट्टै नियम होइन; प्रणालीले त्यही दुई आधार मात्र प्रयोग गर्छ।",
+    "en": "The root verse itself derives Agni-vāsa from tithi + weekday alone — not a separate lagna/panchāṅga rule; the system uses only those two inputs.",
+    "_via": "object",
+    "_at": "sait-rules-content:950"
+  },
+  "sait.x.the_stra_favours_hasta_a_vin": {
+    "ne": "शास्त्रले हस्त, अश्विनी, पुष्य, मृगशिरा, पुनर्वसु, मघा, तीन उत्तरा, मूल र चर नक्षत्र आदि — करिब १९ नक्षत्रलाई शुभ मान्छ (शास्त्रीय मोड)।",
+    "en": "The śāstra favours Hasta, Aśvinī, Puṣya, Mṛgaśira, Punarvasu, Maghā, the three Uttarās, Mūla and the cara stars — about 19 nakṣatras (Classical mode).",
+    "_via": "object",
+    "_at": "sait-rules-content:365"
+  },
+  "sait.x.the_sun_sign_result_me_a": {
+    "ne": "सूर्यको राशि–फल: मेष (चैत्र) लाभ, वृष (ज्येष्ठ) मृत्यु, सिंह (भाद्र) लाभ, तुला (कार्तिक) मृत्यु, वृश्चिक (मार्गशीर्ष) मृत्यु, मकर (पौष) धन, कुम्भ (माघ) लाभ, मीन (फाल्गुन) मृत्यु। यसैले प्रणालीले सूर्य मिथुन, वृश्चिक वा मीनमा (मलमास-तुल्य/मृत्युफल) हुँदा वर्ज्य गर्छ।",
+    "en": "The Sun-sign result: Meṣa (Chaitra) gain, Vṛṣabha (Jyeṣṭha) death, Siṃha (Bhādra) gain, Tulā (Kārtika) death, Vṛśchika (Mārgaśīrṣa) death, Makara (Pauṣa) wealth, Kumbha (Māgha) gain, Mīna (Phālguna) death. Accordingly the system bars the Sun in Mithuna, Vṛśchika or Mīna (Malamas-like / death-result).",
+    "_via": "object",
+    "_at": "sait-rules-content:113"
+  },
+  "sait.x.the_verse_explicitly_bars_gha_a": {
+    "ne": "श्लोकले 'घट' (कुम्भ) लग्न र त्यसको नवांशलाई 'विना' भन्दै निषेध गर्छ। व्यापार टिकिरहोस् भन्नका लागि स्थिर लग्न (वृष, सिंह, वृश्चिक) र द्विस्वभाव लग्न (मिथुन, कन्या, धनु, मीन) उत्तम; चर लग्न (मेष, कर्कट, तुला, मकर) चलायमान भएकाले वर्जित। प्रणालीले स्थिर/द्विस्वभाव मात्र स्वीकार्छ।",
+    "en": "The verse explicitly bars 'ghaṭa' (Kumbha) lagna and its navāṃśa with 'vinā' (except). For lasting trade, fixed lagnas (Vṛṣabha, Siṃha, Vṛśchika) and dual ones (Mithuna, Kanyā, Dhanu, Mīna) are preferred; movable lagnas (Meṣa, Karkaṭa, Tulā, Makara) bring instability and are barred. The system accepts only sthira/dvisvabhāva.",
+    "_via": "object",
+    "_at": "sait-rules-content:770"
+  },
+  "sait.x.the_word_bhadr_in_this_verse": {
+    "ne": "यस श्लोकमा उल्लिखित 'भद्रा' ले विष्टि करण जनाउँछ। प्रणालीले सम्पूर्ण विष्टि करणलाई वर्जित मान्छ।",
+    "en": "The word 'Bhadrā' in this verse denotes Viṣṭi karaṇa. The system treats the entire Viṣṭi karaṇa as barred.",
+    "_via": "object",
+    "_at": "sait-rules-content:431, sait-rules-content:575"
+  },
+  "sait.x.these_dates_are_computed_by_our": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि अर्को सूर्योदयसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका शास्त्रीय नियमहरू लगाइन्छ। कुनै एक शुद्ध लग्न विण्डो भेटिए मात्र दिन प्रकाशित हुन्छ।",
+    "en": "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to the next sunrise, then applies the classical rules below. A day is published only if at least one clean lagna window survives.",
+    "_via": "object",
+    "_at": "sait-rules-content:179"
+  },
+  "sait.x.these_dates_are_computed_by_our_2": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि सूर्यास्तसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका नियमहरू लगाइन्छ। दिनको शुद्ध मुहूर्त भेटिए मात्र दिन प्रकाशित हुन्छ।",
+    "en": "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to sunset, then applies the rules below. A day is published only if a clean daytime muhūrta survives.",
+    "_via": "object",
+    "_at": "sait-rules-content:184"
+  },
+  "sait.x.these_dates_are_computed_by_our_3": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि मध्याह्नसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका उपनयन नियमहरू लगाइन्छ। मध्याह्नअघि शुद्ध मुहूर्त भेटिए मात्र दिन प्रकाशित हुन्छ।",
+    "en": "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to madhyāhna, then applies the Upanayana rules below. A day is published only if a clean pre-noon muhūrta survives.",
+    "_via": "object",
+    "_at": "sait-rules-content:322"
+  },
+  "sait.x.these_dates_are_computed_by_our_4": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले गणना गर्छ। यो साइत लग्नमा आधारित होइन — रुद्री हवनसहित हुने भएकाले प्रत्येक दिनको तिथिबाट शिववास र तिथि-वारबाट अग्निवास दुवै हेरी शुभ दिन निकालिन्छ।",
+    "en": "These dates are computed by our own system. This sāit is not lagna-based — since Rudri includes a homa, each day is judged by BOTH the Śiva-vāsa formula (deity's abode) and the Agni-vāsa formula (fire's abode).",
+    "_via": "object",
+    "_at": "sait-rules-content:810"
+  },
+  "sait.x.these_dates_are_computed_by_our_5": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले गणना गर्छ। यो साइत लग्नमा आधारित होइन — प्रत्येक दिनको तिथि र वारबाट तलको अग्निवास सूत्र लगाएर शुभ दिन निकालिन्छ।",
+    "en": "These dates are computed by our own system. This sāit is not lagna-based — for each day the Agni-vāsa formula below is applied to the tithi and weekday.",
+    "_via": "object",
+    "_at": "sait-rules-content:897"
+  },
+  "sait.x.this_verse_lists_several_defects_to": {
+    "ne": "यस श्लोकमा व्यतीपात, भद्रा र वैधृति लगायत शुभकार्यमा त्याज्य दोषहरूको उल्लेख छ। शास्त्रीय आधारमा हाम्रो प्रणालीले यसमध्ये व्यतीपात र वैधृतिलाई योगदोषका रूपमा लागू गर्छ।",
+    "en": "This verse lists several defects to avoid in auspicious work, including Vyatīpāta, Bhadrā and Vaidhṛti. On that classical basis, our system applies Vyatīpāta and Vaidhṛti as yoga defects.",
+    "_via": "object",
+    "_at": "sait-rules-content:420"
+  },
+  "sait.x.this_verse_lists_several_defects_to_2": {
+    "ne": "यस श्लोकमा व्यतीपात, भद्रा र वैधृति लगायत शुभकार्यमा त्याज्य दोषहरूको उल्लेख गरिएको छ। शास्त्रीय आधारमा हाम्रो प्रणालीले यसमध्ये व्यतीपात र वैधृतिलाई योगदोषका रूपमा लागू गर्छ।",
+    "en": "This verse lists several defects to avoid in auspicious work, including Vyatīpāta, Bhadrā and Vaidhṛti. On that classical basis, our system applies Vyatīpāta and Vaidhṛti as yoga defects.",
+    "_via": "object",
+    "_at": "sait-rules-content:563"
+  },
+  "sait.x.time_around_sankr_nti_and_eclipse": {
+    "ne": "संक्रान्ति र ग्रहणका वरिपरिको समय त्याज्य; दुर्मुहूर्त भनेको केवल त्यो घडी छाडिन्छ — दिन पूरै होइन।",
+    "en": "Time around Sankrānti and eclipse is rejected; Dur-muhūrta drops only the affected clock slice — not the whole day.",
+    "_via": "object",
+    "_at": "sait-rules-content:441"
+  },
+  "sait.x.up_karma_utsarjana_a_ak_r": {
+    "ne": "उपाकर्म, उत्सर्जन, अष्टका श्राद्ध, गृहप्रवेश, चूडाकर्म, ब्रतबन्ध (मौञ्जीबन्धन), विवाह, तीर्थयात्रा र वास्तुकर्म — यी सबै मलमासमा निषेध। गुरु–शुक्र अस्त/बाल्य/वृद्ध र मलिम्लुच हुँदा वास्तुकर्म त्याज्य।",
+    "en": "Upākarma, utsarjana, aṣṭakā-śrāddha, gṛha-praveśa, cūḍākarma, bratabandha (mauñjī-bandhana), vivāha, tīrtha-yātrā and vāstu karma — all barred in Malmāsa. When Guru/Śukra are combust, bāla or vṛddha, and malimluca runs, vāstu karma is prohibited.",
+    "_via": "object",
+    "_at": "sait-rules-content:475"
+  },
+  "sait.x.upanayana_must_not_be_done_in": {
+    "ne": "उपनयन अपराह्नमा गर्नु हुँदैन — पूर्वाह्न वा मध्याह्न मात्र।",
+    "en": "Upanayana must not be done in the afternoon — only forenoon or midday.",
+    "_via": "object",
+    "_at": "sait-rules-content:387"
+  },
+  "sait.x.vasi_ha_s_verse_is_the": {
+    "ne": "यो वसिष्ठ मत प्रणालीको मुख्य आधार हो — मेष, वृष, सिंह, वृश्चिक, मकर, कुम्भमा सूर्य हुँदा गृह आरम्भ धन–सुखप्रद। अध्याय १२ श्लोक १६ ले सामान्य सूर्य-फल भन्छ («चैत्रेऽर्के मेषगे लाभो… माघे कुम्भगते लाभः…»); त्यहाँ वृष/वृश्चिकलाई सामान्यतया त्यागिएको भए तापनि चिन्तामणिकै व्याख्यामा वसिष्ठ (र मन्थर आदि) ले यी ६ राशि अत्यन्त शुभ मानेका छन् — हाम्रो सूची त्यसैमा आधारित।",
+    "en": "Vasiṣṭha’s verse is the system’s main basis — Sun in Meṣa, Vṛṣabha, Siṃha, Vṛśchika, Makara or Kumbha makes starting a house wealth- and comfort-giving. Ch. 12 verse 16 states general Sun-fruits («caitre’rke meṣage lābho… māghe kumbhagate lābhaḥ…»); though Vṛṣabha/Vṛśchika are often dropped in that general fruit scheme, Chintāmaṇi’s own commentary cites Vasiṣṭha (and Manthara et al.) favouring these six signs — our list follows that.",
+    "_via": "object",
+    "_at": "sait-rules-content:501"
+  },
+  "sait.x.venus": {
+    "ne": "शुक्र",
+    "en": "Venus",
+    "_via": "object",
+    "_at": "SaitDayCard:28"
+  },
+  "sait.x.verses_46_47_list_rites_barred": {
+    "ne": "श्लोक ४६–४७ ले गुरु/शुक्र अस्त वा मलमासमा त्याग्नुपर्ने कार्य सूची दिन्छ — विवाह, व्रतबन्ध, भवनारम्भ, प्रतिष्ठा आदि। त्यस निषेध सूचीमा 'विपणि' (व्यापार आरम्भ) उल्लेख छैन, त्यसैले गुरु–शुक्र उदय अनिवार्य मानिँदैन — अन्य संस्कारभन्दा उदार। समय भने दिवाकाल (सूर्योदय–सूर्यास्त) मा सीमित छ।",
+    "en": "Verses 46–47 list rites barred when Guru/Śukra are combust or during Malmāsa — vivāha, bratabandha, building-start, pratiṣṭhā, etc. 'Vipaṇi' (opening a shop/trade) is not on that prohibition list, so Guru/Śukra udaya is not mandatory — more lenient than other saṃskāras. Timing is still limited to daytime (sunrise→sunset).",
+    "_via": "object",
+    "_at": "sait-rules-content:798"
+  },
+  "sait.x.vyat_p_ta_and_vaidh_ti": {
+    "ne": "व्यतीपात र वैधृति (पात) सबै शुभ कार्यमा महादोष। भद्रा (विष्टि करण) मा मङ्गलकार्य नगर्ने — अभिषेकले कार्यको नाश गर्छ भन्ने शास्त्रीय चेतावनी।",
+    "en": "Vyatīpāta and Vaidhṛti (Pāta) are mahā-doṣa for all auspicious rites. Never do a maṅgala act in Viṣṭi (Bhadrā) — abhiṣeka in that karaṇa destroys the work.",
+    "_via": "object",
+    "_at": "sait-rules-content:866"
+  },
+  "sait.x.vyat_p_ta_bhadr_vi_i": {
+    "ne": "व्यतीपात, भद्रा (विष्टि) र वैधृति महादोष; ग्रहणको दिन र दुर्मुहूर्त अवधि पनि सामान्य मुहूर्त सुरक्षाका रूपमा हटाइन्छ — ५.१६ को छुट्टै खण्ड होइन।",
+    "en": "Vyatīpāta, Bhadrā (Viṣṭi) and Vaidhṛti are mahā-doṣa; the eclipse day and Dur-muhūrta period are also dropped as general muhūrta safeguards — not a separate clause of 5.16.",
+    "_via": "object",
+    "_at": "sait-rules-content:1037"
+  },
+  "sait.x.weak_graha_avoid": {
+    "ne": "त्याज्य ग्रहस्थिति",
+    "en": "weak graha — avoid",
+    "_via": "object",
+    "_at": "SaitDayCard:46"
+  },
+  "sait.x.when_jupiter_is_in_lagna_sun": {
+    "ne": "गुरु लग्नमा, सूर्य सप्तममा, बुध चतुर्थमा र शुक्र तृतीयमा हुँदा त्यस गृहको आयु सय वर्ष; तथा अर्को सय वर्ष भनिन्छ (अर्थात् शत–शत = दुई सय)। शास्त्रीय योगले गृहको दीर्घायु र समृद्धि सुनिश्चित गर्छ।",
+    "en": "When Jupiter is in lagna, Sun in the 7th, Mercury in the 4th and Venus in the 3rd, that house's lifespan is one hundred years; and another hundred years is said (i.e. hundred-hundred = two hundred). This classical yoga ensures the house's longevity and prosperity.",
+    "_via": "object",
+    "_at": "sait-rules-content:599"
+  },
+  "sait.x.when_jupiter_is_in_magh_nak": {
+    "ne": "बृहस्पति मघा नक्षत्र वा सिंह राशिमा हुँदा सबै देशमा सम्पूर्ण मांगलिक कर्म निषेध।",
+    "en": "When Jupiter is in Maghā nakṣatra or the sign Siṃha, all auspicious rites are prohibited in every region.",
+    "_via": "object",
+    "_at": "sait-rules-content:299, sait-rules-content:409"
+  },
+  "sait.x.when_jupiter_or_venus_is_combust": {
+    "ne": "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष।",
+    "en": "When Jupiter or Venus is combust (asta), bāla (infant), vṛddha (old) or during malimluca, auspicious works are barred. Seven days before setting is vṛddha; seven days after rising is bāla — the medium rule.",
+    "_via": "object",
+    "_at": "sait-rules-content:398"
+  },
+  "sait.x.when_jupiter_or_venus_is_combust_2": {
+    "ne": "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष। प्रणालीले वास्तुकर्ममा पनि यही बाल्य/वृद्ध र अस्त फिल्टर लागू गर्छ।",
+    "en": "When Jupiter or Venus is combust (asta), bāla, vṛddha or during malimluca, auspicious works are barred. Seven days before setting is vṛddha; seven days after rising is bāla — the medium rule. The system applies the same combust and bāla/vṛddha filter to vāstu karma.",
+    "_via": "object",
+    "_at": "sait-rules-content:551"
+  },
+  "sait.x.when_jupiter_or_venus_is_combust_3": {
+    "ne": "गुरु वा शुक्र अस्त, बाल्य, वृद्ध र मलिम्लुच अवस्थामा हुँदा शुभ कार्य वर्जित। अस्त हुनुभन्दा सात दिन अघि वृद्ध, उदय भएपछि सात दिन बाल्य — मध्यम पक्ष। प्रणालीले गृहप्रवेशमा पनि यही बाल्य/वृद्ध र अस्त फिल्टर लागू गर्छ।",
+    "en": "When Jupiter or Venus is combust (asta), bāla, vṛddha or during malimluca, auspicious works are barred. Seven days before setting is vṛddha; seven days after rising is bāla — the medium rule. The system applies the same combust and bāla/vṛddha filter to gṛha-praveśa.",
+    "_via": "object",
+    "_at": "sait-rules-content:678"
+  },
+  "sait.x.yugmam_se_pu_so_yugme_str": {
+    "ne": "«युग्ममासे पुंसोऽयुग्मे स्त्रीणां» — बालक सम महिना, बालिका विषम महिना। त्यसैले जन्ममिति बिना उमेर विण्डो मिलाउन सकिँदैन।",
+    "en": "«yugmamāse puṃso'yugme strīṇām» — even months for a boy, odd for a girl. Without the birth date the age window cannot be fixed.",
+    "_via": "object",
+    "_at": "sait-rules-content:1060"
+  }
+}

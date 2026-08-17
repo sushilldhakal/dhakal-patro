@@ -20,6 +20,7 @@
 
 import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { Canvas } from "@react-three/fiber";
 import { Link } from "@tanstack/react-router";
 import {
@@ -116,8 +117,11 @@ export interface DayPlaygroundStudyProps {
 }
 
 export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
+  // Only for bilingual fields that arrive as data (topic titles); all fixed copy
+  // comes from the catalogue through `t`.
   const pick = (a: string, b: string) => bilingualText(lang, a, b);
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
 
@@ -254,19 +258,18 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   );
   const bodyNames = useMemo(
     () => ({
-      planet: pick("पृथ्वी", "Earth"),
-      sun: pick("सूर्य", "Sun"),
-      meanSun: pick("माध्य सूर्य", "Mean Sun"),
-      moon: pick("चन्द्र", "Moon"),
-      rahu: pick("राहु", "Rāhu"),
-      ketu: pick("केतु", "Ketu"),
+      planet: t("grahas.earth"),
+      sun: t("grahas.sun"),
+      meanSun: t("learn.playground.mean_sun"),
+      moon: t("grahas.moon"),
+      rahu: t("grahas.rahu"),
+      ketu: t("grahas.ketu"),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [lang],
+    [t],
   );
 
   const setToggle = useCallback(
-    (k: keyof SimToggles) => setToggles((t) => ({ ...t, [k]: !t[k] })),
+    (k: keyof SimToggles) => setToggles((prev) => ({ ...prev, [k]: !prev[k] })),
     [],
   );
 
@@ -275,9 +278,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     [toggles],
   );
   const pressGroup = useCallback((g: GroupKey) => {
-    setToggles((t) => {
-      const on = GROUPS[g].every((k) => t[k]);
-      const next = { ...t };
+    setToggles((prev) => {
+      const on = GROUPS[g].every((k) => prev[k]);
+      const next = { ...prev };
       for (const k of GROUPS[g]) next[k] = !on;
       return next;
     });
@@ -345,7 +348,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     const m = abs - h * 60;
     return {
       sign,
-      text: h > 0 ? `${h}${pick("घ", "h")} ${m}${pick("मि", "m")}` : `${m} ${pick("मिनेट", "min")}`,
+      text: h > 0 ? `${h}${t("common.hour_short")} ${m}${t("common.minute_short")}` : `${m} ${t("common.minutes")}`,
     };
   };
 
@@ -356,7 +359,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     const h = Math.floor(total / 3600);
     const m = Math.floor((total - h * 3600) / 60);
     const s = total - h * 3600 - m * 60;
-    return `${h}${pick("घ", "h")} ${String(m).padStart(2, "0")}${pick("मि", "m")} ${String(s).padStart(2, "0")}${pick("से", "s")}`;
+    return `${h}${t("common.hour_short")} ${String(m).padStart(2, "0")}${t("common.minute_short")} ${String(s).padStart(2, "0")}${t("common.second_short")}`;
   };
 
   const chip = (active: boolean, label: string, onPress: () => void, key?: string) => (
@@ -390,20 +393,20 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   /** The filter row: four groups, then the three belts. */
   const filterChips = (
     <div className="flex flex-wrap items-center gap-1.5">
-      {chip(groupOn("year"), pick("बर्ष", "Year"), () => pressGroup("year"), "g-year")}
-      {chip(groupOn("sun"), pick("सूर्य", "Sun"), () => pressGroup("sun"), "g-sun")}
-      {chip(groupOn("day"), pick("दिन", "Day"), () => pressGroup("day"), "g-day")}
-      {chip(groupOn("tilt"), pick("अक्ष झुकाव", "Tilt"), () => pressGroup("tilt"), "g-tilt")}
+      {chip(groupOn("year"), t("learn.playground.year"), () => pressGroup("year"), "g-year")}
+      {chip(groupOn("sun"), t("grahas.sun"), () => pressGroup("sun"), "g-sun")}
+      {chip(groupOn("day"), t("learn.playground.day"), () => pressGroup("day"), "g-day")}
+      {chip(groupOn("tilt"), t("learn.playground.tilt"), () => pressGroup("tilt"), "g-tilt")}
       <span className="mx-0.5 h-4 w-px bg-white/20" />
-      {chip(toggles.rashiBelt, pick("राशि", "Rashi"), () => setToggle("rashiBelt"), "t-rashi")}
+      {chip(toggles.rashiBelt, t("learn.playground.rashi"), () => setToggle("rashiBelt"), "t-rashi")}
       {chip(
         toggles.nakshatraBelt,
-        pick("नक्षत्र", "Nakshatra"),
+        t("nakshatra"),
         () => setToggle("nakshatraBelt"),
         "t-nak",
       )}
-      {chip(toggles.monthRing, pick("महिना", "Months"), () => setToggle("monthRing"), "t-month")}
-      {chip(groupOn("moon"), pick("चन्द्र", "Moon"), () => pressGroup("moon"), "t-moon")}
+      {chip(toggles.monthRing, t("learn.playground.months"), () => setToggle("monthRing"), "t-month")}
+      {chip(groupOn("moon"), t("grahas.moon"), () => pressGroup("moon"), "t-moon")}
     </div>
   );
 
@@ -507,8 +510,11 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       >
         <Canvas
           camera={{ position: [0, 40, 26], fov: 46, near: 0.1, far: 600 }}
-          gl={{ antialias: true, alpha: false }}
-          onCreated={({ gl }) => gl.setClearColor(CANVAS_BG)}
+          gl={{ antialias: true, alpha: false, depth: true }}
+          onCreated={({ gl }) => {
+            gl.setClearColor(CANVAS_BG, 1);
+            gl.setClearAlpha(1);
+          }}
         >
           <Suspense fallback={null}>
             <Scene
@@ -538,7 +544,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
         <div className="pointer-events-none absolute left-2 top-2 rounded-lg border border-white/15 bg-black/45 px-2.5 py-1.5 backdrop-blur sm:left-3 sm:top-3">
           <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/50">
-            {pick("सूर्य राशि · महिना", "Sun's rashi · month")}
+            {t("learn.playground.sun_rashi_month")}
           </div>
           <div className="text-sm font-bold text-white">
             {rashiNames[rashi]} · {monthNames[rashi]}
@@ -547,14 +553,14 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             {eotMinutes >= 0 ? "+" : "−"}
             {num(Math.abs(eotMinutes).toFixed(1))}
             <span className="ml-1 text-[10px] font-semibold text-white/50">
-              {pick("मिनेट", "min")}
+              {t("common.minutes")}
             </span>
           </div>
         </div>
 
         {flash !== null && (
           <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-amber-400/60 bg-amber-500/20 px-4 py-1.5 text-sm font-bold text-amber-100 backdrop-blur">
-            {pick("सङ्क्रान्ति", "Sankranti")} · {rashiNames[flash]} · {monthNames[flash]} {num(1)}
+            {t("learn.playground.sankranti")} · {rashiNames[flash]} · {monthNames[flash]} {num(1)}
           </div>
         )}
 
@@ -564,7 +570,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               setControlsOpen((v) => !v);
               setFocusOpen(false);
             }}
-            label={pick("नियन्त्रण", "Controls")}
+            label={t("learn.playground.controls")}
             active={controlsOpen}
           >
             <SlidersHorizontal size={16} />
@@ -577,21 +583,21 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               setFocusOpen((v) => !v);
               setControlsOpen(false);
             }}
-            label={pick("केन्द्रविन्दु", "Focus")}
+            label={t("learn.playground.focus")}
             active={focusOpen}
           >
             <Focus size={16} />
           </IconButton>
           <IconButton
             onClick={() => setGraphOpen((v) => !v)}
-            label={pick("समयको समीकरण ग्राफ", "Equation-of-time graph")}
+            label={t("learn.playground.eot_graph")}
             active={graphOpen}
           >
             <LineChart size={16} />
           </IconButton>
           <IconButton
             onClick={onToggleFullscreen}
-            label={fullscreen ? pick("सामान्य दृश्य", "Exit fullscreen") : pick("पूर्ण स्क्रिन", "Fullscreen")}
+            label={fullscreen ? t("common.exit_fullscreen") : t("common.fullscreen")}
           >
             {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </IconButton>
@@ -607,24 +613,24 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 reader picks once. */}
             <label className="block">
               <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
-                {pick("ग्रह", "Planet")}
+                {t("learn.playground.planet")}
               </span>
               <select
                 className="h-8 w-full cursor-pointer rounded-lg border border-white/20 bg-black/60 px-2 text-xs font-semibold text-white/85 outline-none hover:border-white/45"
                 value={preset}
                 onChange={(e) => applyPreset(e.target.value)}
               >
-                <option value="">{pick("यो विषयमा फर्कनुहोस्", "Back to this topic")}</option>
+                <option value="">{t("learn.playground.back_to_topic")}</option>
                 {PLANET_PRESETS.map((p) => (
                   <option key={p.key} value={p.key}>
-                    {PLANET_NAMES[p.key]![ne ? 0 : 1]}
+                    {t(PLANET_NAME_KEYS[p.key] ?? p.key)}
                   </option>
                 ))}
               </select>
             </label>
 
             {slider(
-              pick("वर्षमा सौर दिन", "Solar days per year"),
+              t("learn.playground.solar_days_per_year"),
               solarDaysPerYear,
               num(solarDaysPerYear),
               1,
@@ -633,7 +639,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               setSolarDaysPerYear,
             )}
             {slider(
-              pick("उत्केन्द्रता", "Eccentricity"),
+              t("learn.playground.eccentricity"),
               eccentricity,
               num(eccentricity.toFixed(3)),
               0,
@@ -642,7 +648,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               setEccentricity,
             )}
             {slider(
-              pick("अक्ष झुकाव", "Axial tilt"),
+              t("learn.playground.axial_tilt"),
               tiltDeg,
               `${num(tiltDeg.toFixed(1))}°`,
               0,
@@ -656,27 +662,27 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 run of fifteen chips where the arcs sat next to the grid. Every
                 layer is still individually reachable; the toolbar's group chips
                 remain a shortcut, not a replacement. */}
-            {layerGroup(pick("मार्गदर्शक", "Guides"), [
-              ["grid", pick("ग्रिड", "Grid")],
-              ["planetOrbit", pick("कक्ष", "Orbit")],
-              ["sunOrbit", pick("सूर्यपथ", "Sun path")],
-              ["primeMeridian", pick("काठमाडौँ रेखा", "Kathmandu meridian")],
-              ["axis", pick("अक्ष", "Spin axis")],
+            {layerGroup(t("learn.playground.guides"), [
+              ["grid", t("learn.playground.grid")],
+              ["planetOrbit", t("learn.playground.orbit")],
+              ["sunOrbit", t("learn.playground.sun_path")],
+              ["primeMeridian", t("learn.playground.kathmandu_meridian")],
+              ["axis", t("learn.playground.spin_axis")],
             ])}
-            {layerGroup(pick("वस्तुहरू", "Elements"), [
-              ["trueSun", pick("साँचो सूर्य", "True Sun")],
-              ["meanSun", pick("माध्य सूर्य", "Mean Sun")],
-              ["moon", pick("चन्द्र", "Moon")],
-              ["eotWedge", pick("समय फरक", "EOT wedge")],
+            {layerGroup(t("learn.playground.elements"), [
+              ["trueSun", t("learn.playground.true_sun")],
+              ["meanSun", t("learn.playground.mean_sun")],
+              ["moon", t("grahas.moon")],
+              ["eotWedge", t("learn.playground.eot_wedge")],
             ])}
-            {layerGroup(pick("सङ्केत", "Indicators"), [
-              ["siderealArc", pick("नाक्षत्र चाप", "Sidereal arc")],
-              ["solarArc", pick("सौर चाप", "Solar arc")],
-              ["meanArc", pick("माध्य चाप", "Mean arc")],
-              ["sightline", pick("दृष्टिरेखा", "Sightline")],
-              ["moonSightline", pick("चन्द्र दृष्टिरेखा", "Moon sightline")],
-              ["moonTrail", pick("चन्द्रपथ", "Moon trail")],
-              ["moonLap", pick("मास फरक", "Month gap")],
+            {layerGroup(t("learn.playground.indicators"), [
+              ["siderealArc", t("learn.playground.sidereal_arc")],
+              ["solarArc", t("learn.playground.solar_arc")],
+              ["meanArc", t("learn.playground.mean_arc")],
+              ["sightline", t("learn.playground.sightline")],
+              ["moonSightline", t("learn.playground.moon_sightline")],
+              ["moonTrail", t("learn.playground.moon_trail")],
+              ["moonLap", t("learn.playground.month_gap")],
             ])}
           </div>
         )}
@@ -688,14 +694,14 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         {focusOpen && (
           <div className="absolute right-3 top-14 z-10 flex w-[min(230px,calc(100%-1.5rem))] flex-col gap-2.5 rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
             <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
-              {pick("केन्द्रविन्दु", "Focus")}
+              {t("learn.playground.focus")}
             </span>
             <div className="flex flex-col gap-1">
               {(
                 [
-                  ["meanSun", pick("माध्य सूर्य", "Mean Sun")],
-                  ["sun", pick("सूर्य", "Sun")],
-                  ["planet", pick("पृथ्वी", "Earth")],
+                  ["meanSun", t("learn.playground.mean_sun")],
+                  ["sun", t("grahas.sun")],
+                  ["planet", t("grahas.earth")],
                 ] as [CameraTarget, string][]
               ).map(([key, label]) => (
                 <label
@@ -720,7 +726,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 checked={cameraFollow}
                 onChange={() => setCameraFollow((v) => !v)}
               />
-              {pick("कक्ष पछ्याउनुहोस्", "Follow orbit")}
+              {t("learn.playground.follow_orbit")}
             </label>
 
             {/* Rate lives with focus, not with the orbit's own figures: it is
@@ -728,7 +734,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 rest of this menu answers. */}
             <div className="border-t border-white/10 pt-2.5">
               {slider(
-                pick("कक्षीय गति", "Orbit speed"),
+                t("learn.playground.orbit_speed"),
                 speed,
                 `${num(SPEED_MULTIPLIERS[speed]!)}×`,
                 0,
@@ -757,7 +763,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         <p className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] text-white/45">
           {fullscreen
             ? ""
-            : pick("तान्नुहोस् — घुमाउन · स्क्रोल — नजिक/टाढा", "Drag to orbit · scroll to zoom")}
+            : t("learn.playground.drag_hint")}
         </p>
       </div>
 
@@ -787,7 +793,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             type="button"
             className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border border-white/25 bg-white/10 text-white transition-colors hover:border-white/60 hover:bg-white/20"
             onClick={() => setPlaying((v) => !v)}
-            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+            aria-label={playing ? t("learn.pause") : t("learn.play")}
           >
             {playing ? (
               <Pause size={18} fill="currentColor" strokeWidth={0} />
@@ -807,13 +813,13 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               clock.current.day = Number(e.target.value);
               setPlaying(false);
             }}
-            aria-label={pick("वर्षभरि सार्नुहोस्", "Scrub through the year")}
+            aria-label={t("learn.playground.scrub_year")}
           />
           <button
             type="button"
             onClick={() => setDetailsOpen((v) => !v)}
             className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-white/20 text-white/70 hover:border-white/45 hover:text-white"
-            aria-label={detailsOpen ? pick("लुकाउनुहोस्", "Hide readings") : pick("देखाउनुहोस्", "Show readings")}
+            aria-label={detailsOpen ? t("learn.playground.hide_readings") : t("learn.playground.show_readings")}
           >
             {detailsOpen ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
           </button>
@@ -834,32 +840,32 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 [
                   [
                     "sidereal",
-                    pick("नाक्षत्र दिन", "Sidereal day"),
+                    t("learn.playground.sidereal_day"),
                     readings.sidereal,
                     /* Counted in *turns*, not days. A year holds one more turn
                        than it holds days, and calling that 366th one "day 366"
                        is what makes the sidereal system look like a calendar
                        with an extra day in it. It is not a calendar at all — it
                        is the planet's rotation count against the stars. */
-                    pick("फन्को", "turn"),
+                    t("learn.playground.turn"),
                     counts.sidereal,
                     gapLabel(siderealGainMinutes),
                     dayLengths.sidereal,
                   ],
                   [
                     "solar",
-                    pick("साँचो सौर दिन", "True solar day"),
+                    t("learn.playground.true_solar_day"),
                     readings.solar,
-                    pick("दिन", "day"),
+                    t("common.day"),
                     counts.solar,
                     gapLabel(eotMinutes),
                     dayLengths.solar,
                   ],
                   [
                     "mean",
-                    pick("माध्य सौर दिन", "Mean solar day"),
+                    t("learn.playground.mean_solar_day"),
                     readings.mean,
-                    pick("दिन", "day"),
+                    t("common.day"),
                     counts.mean,
                     null,
                     dayLengths.mean,
@@ -883,7 +889,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                     style={{ color: TONE[tone] }}
                   >
                     <span className="mr-1 font-sans text-[10px] font-semibold uppercase tracking-[0.08em] text-white/40">
-                      {pick("लम्बाइ", "lasts")}{" "}
+                      {t("learn.playground.lasts")}{" "}
                     </span>
                     {num(lengthLabel(length))}
                   </span>
@@ -913,10 +919,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   return (
     <div className="mt-5">
       <div className="rounded-2xl border border-dashed border-[var(--tm-border)] px-4 py-8 text-center text-sm text-[var(--tm-ink-faint)]">
-        {pick(
-          "पूर्ण स्क्रिनमा खुलेको छ — बन्द गर्न Esc थिच्नुहोस्",
-          "Open in fullscreen — press Esc to close",
-        )}
+        {t("learn.playground.fullscreen_notice")}
       </div>
       {createPortal(
         <div
@@ -937,13 +940,13 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 }
 
 /** Earth plus the five graha the eye can see. No Uranus, no Neptune. */
-const PLANET_NAMES: Record<string, [string, string]> = {
-  earth: ["पृथ्वी", "Earth"],
-  mars: ["मङ्गल", "Mars"],
-  mercury: ["बुध", "Mercury"],
-  jupiter: ["बृहस्पति", "Jupiter"],
-  venus: ["शुक्र", "Venus"],
-  saturn: ["शनि", "Saturn"],
+const PLANET_NAME_KEYS: Record<string, string> = {
+  earth: "grahas.earth",
+  mars: "grahas.mars",
+  mercury: "grahas.mercury",
+  jupiter: "grahas.jupiter",
+  venus: "grahas.venus",
+  saturn: "grahas.saturn",
 };
 
 function IconButton({

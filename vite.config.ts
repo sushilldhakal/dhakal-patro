@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import path from "path"
+import { spawnSync } from "node:child_process"
 
 function manualChunkId(id: string): string | undefined {
   if (id.includes("samvatsara-table.json")) return "samvatsara-data"
@@ -28,6 +29,35 @@ function manualChunkId(id: string): string | undefined {
     return "ui"
   }
   if (id.includes("react-dom") || id.includes("/react/")) return "react"
+}
+
+/**
+ * Regenerate ne.json / en.json whenever the bilingual catalogue changes, so
+ * editing a string in src/i18n/strings.ts hot-reloads like any other source
+ * file. Runs as a subprocess because the script reads strings.ts through a
+ * fresh module graph — an in-process import would serve a cached copy.
+ */
+function i18nBundles(): Plugin {
+  const catalogue = path.resolve(__dirname, "src/i18n/strings.ts")
+  return {
+    name: "i18n-bundles",
+    apply: "serve",
+    configureServer(server) {
+      server.watcher.add(catalogue)
+      server.watcher.on("change", (file) => {
+        if (path.resolve(file) !== catalogue) return
+        const result = spawnSync("npx", ["tsx", "scripts/generate-i18n.ts"], {
+          cwd: __dirname,
+          encoding: "utf8",
+        })
+        if (result.status !== 0) {
+          server.config.logger.error(
+            `[i18n] ${result.stderr?.trim() || "failed to regenerate language bundles"}`,
+          )
+        }
+      })
+    },
+  }
 }
 
 function injectGaSnippet(measurementId: string | undefined): Plugin {
@@ -58,7 +88,12 @@ export default defineConfig(({ mode, isSsrBuild }) => {
 
   return {
     base: "/",
-    plugins: [react(), tailwindcss(), ...(isSsrBuild ? [] : [injectGaSnippet(gaId)])],
+    plugins: [
+      react(),
+      tailwindcss(),
+      i18nBundles(),
+      ...(isSsrBuild ? [] : [injectGaSnippet(gaId)]),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

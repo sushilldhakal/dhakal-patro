@@ -55,11 +55,26 @@ function ellipseGeometry(semiMajor: number, semiMinor: number, segments = 128) {
 function makeLine(geometry: THREE.BufferGeometry, color: number, opacity: number) {
   return new THREE.Line(
     geometry,
-    new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
+    /* Never writes depth — every line here is a diagram mark and two of them
+       crossing must both survive. It still *tests*, so a body in front hides
+       it. */
+    new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity,
+      depthTest: true,
+      depthWrite: false,
+    }),
   );
 }
 
-/** Belt ticks must read on top of any star figures sitting in the same plane. */
+/**
+ * Belt ticks read on top of the star figures in the same plane, but **not**
+ * through a body. They keep `depthWrite` off so they never occlude each other,
+ * and `depthTest` on so the planet in front of them still hides them — with the
+ * test off the whole wheel painted straight over the globe, which is what made
+ * a solid Earth look like glass.
+ */
 function diagramLine(object: THREE.Object3D) {
   object.frustumCulled = false;
   object.renderOrder = 5;
@@ -69,7 +84,7 @@ function diagramLine(object: THREE.Object3D) {
     const mat = (o as THREE.Mesh).material as THREE.Material | undefined;
     if (mat) {
       mat.depthWrite = false;
-      mat.depthTest = false;
+      mat.depthTest = true;
     }
   });
   return object;
@@ -110,27 +125,38 @@ function buildGuideGrid(innerR = 4) {
   }
   const rg = new THREE.BufferGeometry();
   rg.setAttribute("position", new THREE.Float32BufferAttribute(rpts, 3));
+  /**
+   * The grid stays in the **transparent** pass, ahead of the disc.
+   *
+   * It is coplanar with the ecliptic disc it is drawn on, so whichever of the
+   * two goes last wins the pixel. Opaque geometry is drawn before transparent,
+   * so making these lines opaque hid the entire grid behind the disc's navy
+   * fill. Transparent plus `renderOrder` 1 puts them after it again.
+   *
+   * `depthTest` stays **on** so a body in front still hides them — that is the
+   * one thing this pair must not give up, or the grid draws over the globe.
+   */
   const spokes = new THREE.LineSegments(
     rg,
     new THREE.LineBasicMaterial({
       color: COLOR.grid,
       transparent: true,
       opacity: 0.5,
+      depthTest: true,
       depthWrite: false,
     }),
   );
+  spokes.renderOrder = 1;
+  spokes.frustumCulled = false;
   group.add(spokes);
   const rings = [innerR, 8, 12, MONTH_R, BELT_INNER, BELT_OUTER, NAK_OUTER];
   const unique = [...new Set(rings)].filter((r) => r >= innerR).sort((a, b) => a - b);
   for (const r of unique) {
     const ring = makeLine(ellipseGeometry(r, r, 96), COLOR.grid, 0.4);
-    (ring.material as THREE.LineBasicMaterial).depthWrite = false;
     ring.renderOrder = 1;
     ring.frustumCulled = false;
     group.add(ring);
   }
-  spokes.renderOrder = 1;
-  spokes.frustumCulled = false;
   return group;
 }
 

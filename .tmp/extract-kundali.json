@@ -1,0 +1,248 @@
+{
+  "kundali.x.adequate": {
+    "ne": "पर्याप्त",
+    "en": "Adequate",
+    "_via": "object",
+    "_at": "ShadbalaCard:77"
+  },
+  "kundali.x.antar_dasha": {
+    "ne": "अन्तर्दशा",
+    "en": "Antar Dasha",
+    "_via": "object",
+    "_at": "DashaTree:21"
+  },
+  "kundali.x.beeja_mantra": {
+    "ne": "बीज मन्त्र",
+    "en": "Beeja Mantra",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:258"
+  },
+  "kundali.x.beeja_mantra_2": {
+    "ne": "बीज मन्त्र",
+    "en": "Beeja mantra",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:304"
+  },
+  "kundali.x.bhava": {
+    "ne": "भाव",
+    "en": "Bhava",
+    "_via": "bilingualText",
+    "_at": "JanmaPhalaTables:199, JanmaPhalaTables:206"
+  },
+  "kundali.x.borderline": {
+    "ne": "सीमान्त",
+    "en": "Borderline",
+    "_via": "object",
+    "_at": "ShadbalaCard:78"
+  },
+  "kundali.x.could_not_load_the_calculation_check": {
+    "ne": "गणना ल्याउन सकिएन। मिति/समय/स्थान जाँचेर पुनः प्रयास गर्नुहोस्।",
+    "en": "Could not load the calculation. Check date/time/place and try again.",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:158"
+  },
+  "kundali.x.current_mahadasha_vimshottari": {
+    "ne": "वर्तमान महादशा (विंशोत्तरी)",
+    "en": "Current Mahadasha (Vimshottari)",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:166"
+  },
+  "kundali.x.daan": {
+    "ne": "दान",
+    "en": "Daan",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:309"
+  },
+  "kundali.x.day": {
+    "ne": "बार",
+    "en": "Day",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:303"
+  },
+  "kundali.x.days": {
+    "ne": "दिन",
+    "en": "Days",
+    "_via": "object",
+    "_at": "DashaTree:149"
+  },
+  "kundali.x.deity": {
+    "ne": "अधिदेवता",
+    "en": "Deity",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:272"
+  },
+  "kundali.x.donation_items": {
+    "ne": "दान सामग्री",
+    "en": "Donation items",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:278"
+  },
+  "kundali.x.duration_bs": {
+    "ne": "अवधि (BS)",
+    "en": "Duration (BS)",
+    "_via": "object",
+    "_at": "DashaTree:146"
+  },
+  "kundali.x.exceptional": {
+    "ne": "उत्कृष्ट",
+    "en": "Exceptional",
+    "_via": "object",
+    "_at": "ShadbalaCard:75"
+  },
+  "kundali.x.full": {
+    "ne": "पूर्ण",
+    "en": "Full",
+    "_via": "object",
+    "_at": "VimshopakaCard:26"
+  },
+  "kundali.x.gem": {
+    "ne": "रत्न",
+    "en": "Gem",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:270, ShantiVidhiPanel:307"
+  },
+  "kundali.x.incapable": {
+    "ne": "असमर्थ",
+    "en": "Incapable",
+    "_via": "object",
+    "_at": "VimshopakaCard:29"
+  },
+  "kundali.x.japa": {
+    "ne": "जप",
+    "en": "Japa",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:305"
+  },
+  "kundali.x.little": {
+    "ne": "अल्प",
+    "en": "Little",
+    "_via": "object",
+    "_at": "VimshopakaCard:28"
+  },
+  "kundali.x.maha_dasha": {
+    "ne": "महादशा",
+    "en": "Maha Dasha",
+    "_via": "object",
+    "_at": "DashaTree:20"
+  },
+  "kundali.x.mediocre": {
+    "ne": "मध्यम",
+    "en": "Mediocre",
+    "_via": "object",
+    "_at": "VimshopakaCard:27"
+  },
+  "kundali.x.metal": {
+    "ne": "धातु",
+    "en": "Metal",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:271, ShantiVidhiPanel:308"
+  },
+  "kundali.x.months": {
+    "ne": "मास",
+    "en": "Months",
+    "_via": "object",
+    "_at": "DashaTree:148"
+  },
+  "kundali.x.navagraha_shanti_table": {
+    "ne": "नवग्रह शान्ति तालिका",
+    "en": "Navagraha Shanti table",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:297"
+  },
+  "kundali.x.note_the_details_above_are_based": {
+    "ne": "सूचना: माथिका विवरण शास्त्रीय नवग्रह शान्ति परम्परामा आधारित छन्। रत्नधारण वा विधिवत् हवन गर्नुअघि योग्य ज्योतिषी/पुरोहितसँग परामर्श गर्नुहोस्।",
+    "en": "Note: the details above are based on the classical Navagraha Shanti tradition. Consult a qualified astrologer/priest before wearing gems or performing a formal homa.",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:340"
+  },
+  "kundali.x.planet": {
+    "ne": "ग्रह",
+    "en": "Planet",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:302"
+  },
+  "kundali.x.prana_dasha": {
+    "ne": "प्राण दशा",
+    "en": "Prana Dasha",
+    "_via": "object",
+    "_at": "DashaTree:24"
+  },
+  "kundali.x.pratyantar_dasha": {
+    "ne": "प्रत्यन्तर्दशा",
+    "en": "Pratyantar Dasha",
+    "_via": "object",
+    "_at": "DashaTree:22"
+  },
+  "kundali.x.purushajanmakundaly_tanv_dibh_vasthagrahaphal_ni": {
+    "ne": "पुरुषजन्मकुण्डल्यां तन्वादिभावस्थग्रहफलानि",
+    "en": "Purushajanmakundalyāṃ tanvādibhāvasthagrahaphalāni",
+    "_via": "bilingualText",
+    "_at": "JanmaPhalaTables:183"
+  },
+  "kundali.x.samidha": {
+    "ne": "समिधा",
+    "en": "Samidha",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:306"
+  },
+  "kundali.x.samidha_homa_wood": {
+    "ne": "समिधा (हवन काठ)",
+    "en": "Samidha (homa wood)",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:269"
+  },
+  "kundali.x.str_janmakundaly_tanv_dibh_vasthagrah_j": {
+    "ne": "स्त्रीजन्मकुण्डल्यां तन्वादिभावस्थग्रहाणां जातकोक्तं फलम्",
+    "en": "Strījanmakundalyāṃ tanvādibhāvasthagrahāṇāṃ jātakoktaṃ phalam",
+    "_via": "bilingualText",
+    "_at": "JanmaPhalaTables:188"
+  },
+  "kundali.x.strong": {
+    "ne": "बलियो",
+    "en": "Strong",
+    "_via": "object",
+    "_at": "ShadbalaCard:76"
+  },
+  "kundali.x.sukshma_dasha": {
+    "ne": "सूक्ष्म दशा",
+    "en": "Sukshma Dasha",
+    "_via": "object",
+    "_at": "DashaTree:23"
+  },
+  "kundali.x.the_calculation_is_based_on_the": {
+    "ne": "गणना जन्म समयको ग्रहस्थिति (विंशोत्तरी महादशा) र ग्रह बल (षड्बल) मा आधारित छ। यो सामान्य मार्गदर्शन हो — विधिवत् उपायका लागि योग्य ज्योतिषीसँग परामर्श गर्नुहोस्।",
+    "en": "The calculation is based on the birth-time planetary positions (Vimshottari mahadasha) and planetary strength (Shadbala). This is general guidance — consult a qualified astrologer for formal remedies.",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:199"
+  },
+  "kundali.x.use": {
+    "ne": "उपयोग:",
+    "en": "Use:",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:290"
+  },
+  "kundali.x.weak": {
+    "ne": "कमजोर",
+    "en": "Weak",
+    "_via": "object",
+    "_at": "ShadbalaCard:79"
+  },
+  "kundali.x.weakest_planet_shadbala": {
+    "ne": "सबैभन्दा बलहीन ग्रह (षड्बल)",
+    "en": "Weakest planet (Shadbala)",
+    "_via": "bilingualText",
+    "_at": "ShantiVidhiPanel:184"
+  },
+  "kundali.x.years": {
+    "ne": "वर्ष",
+    "en": "Years",
+    "_via": "object",
+    "_at": "DashaTree:147"
+  },
+  "kundali.x.yoga": {
+    "ne": "योग",
+    "en": "Yoga",
+    "_via": "object",
+    "_at": "DashaTree:150"
+  }
+}
