@@ -455,9 +455,9 @@ export function TithiAcrossZones() {
       {places.map((p, i) => {
         const y = 62 + i * 76;
         return (
-          <g key={p.en}>
+          <g key={p.key}>
             <text x={L - 10} y={y - 2} textAnchor="end" className="fill-current text-[8.5px] font-semibold opacity-75">
-              {lang === "en" ? p.en : p.ne}
+              {t(p.key)}
             </text>
             <text x={L - 10} y={y + 10} textAnchor="end" className="fill-current text-[7.5px] opacity-50">
               {p.tz}

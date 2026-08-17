@@ -1,0 +1,32 @@
+{
+  "sait.x.these_dates_are_computed_by_our": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि अर्को सूर्योदयसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका शास्त्रीय नियमहरू लगाइन्छ। कुनै एक शुद्ध लग्न विण्डो भेटिए मात्र दिन प्रकाशित हुन्छ।",
+    "en": "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to the next sunrise, then applies the classical rules below. A day is published only if at least one clean lagna window survives.",
+    "_via": "object",
+    "_at": "sait-rules-content:142"
+  },
+  "sait.x.these_dates_are_computed_by_our_2": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि सूर्यास्तसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका नियमहरू लगाइन्छ। दिनको शुद्ध मुहूर्त भेटिए मात्र दिन प्रकाशित हुन्छ।",
+    "en": "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to sunset, then applies the rules below. A day is published only if a clean daytime muhūrta survives.",
+    "_via": "object",
+    "_at": "sait-rules-content:147"
+  },
+  "sait.x.these_dates_are_computed_by_our_3": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले जेपीएल (NASA को Jet Propulsion Laboratory) बाट गणना गर्छ — कुनै बाह्य सूची पछ्याइएको छैन। प्रत्येक दिनको सूर्योदयदेखि मध्याह्नसम्म हरेक अन्तरालमा तिथि, नक्षत्र, योग, करण, वार र लग्न निकालेर तलका उपनयन नियमहरू लगाइन्छ। मध्याह्नअघि शुद्ध मुहूर्त भेटिए मात्र दिन प्रकाशित हुन्छ।",
+    "en": "These dates are computed by our own system from JPL (NASA's Jet Propulsion Laboratory) — no external list is followed. For each day the engine derives tithi, nakṣatra, yoga, karaṇa, vāra and lagna at every interval from sunrise to madhyāhna, then applies the Upanayana rules below. A day is published only if a clean pre-noon muhūrta survives.",
+    "_via": "object",
+    "_at": "sait-rules-content:238"
+  },
+  "sait.x.these_dates_are_computed_by_our_4": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले गणना गर्छ। यो साइत लग्नमा आधारित होइन — रुद्री हवनसहित हुने भएकाले प्रत्येक दिनको तिथिबाट शिववास र तिथि-वारबाट अग्निवास दुवै हेरी शुभ दिन निकालिन्छ।",
+    "en": "These dates are computed by our own system. This sāit is not lagna-based — since Rudri includes a homa, each day is judged by BOTH the Śiva-vāsa formula (deity's abode) and the Agni-vāsa formula (fire's abode).",
+    "_via": "object",
+    "_at": "sait-rules-content:541"
+  },
+  "sait.x.these_dates_are_computed_by_our_5": {
+    "ne": "यी मितिहरू हाम्रो आफ्नै प्रणालीले गणना गर्छ। यो साइत लग्नमा आधारित होइन — प्रत्येक दिनको तिथि र वारबाट तलको अग्निवास सूत्र लगाएर शुभ दिन निकालिन्छ।",
+    "en": "These dates are computed by our own system. This sāit is not lagna-based — for each day the Agni-vāsa formula below is applied to the tithi and weekday.",
+    "_via": "object",
+    "_at": "sait-rules-content:594"
+  }
+}

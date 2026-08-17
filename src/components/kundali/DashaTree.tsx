@@ -16,12 +16,13 @@ import {
 } from "@/lib/dasha";
 import { cn } from "@/lib/utils";
 
-const LEVEL_LABELS: { ne: string; en: string }[] = [
-  { ne: "महादशा", en: "Maha Dasha" },
-  { ne: "अन्तर्दशा", en: "Antar Dasha" },
-  { ne: "प्रत्यन्तर्दशा", en: "Pratyantar Dasha" },
-  { ne: "सूक्ष्म दशा", en: "Sukshma Dasha" },
-  { ne: "प्राण दशा", en: "Prana Dasha" },
+/** Catalogue keys, outermost dasha level first. */
+const LEVEL_LABELS: string[] = [
+  "kundali.maha_dasha",
+  "kundali.x.dasha_level_antar",
+  "kundali.x.dasha_level_pratyantar",
+  "kundali.x.dasha_level_sukshma",
+  "kundali.x.dasha_level_prana",
 ];
 
 const MAX_LEVEL = LEVEL_LABELS.length - 1;
@@ -143,11 +144,11 @@ function SpanProgress({ start, end, now, running }: { start: Date; end: Date; no
 }
 
 const DURATION_COLS = [
-  { ne: "अवधि (BS)", en: "Duration (BS)" },
-  { ne: "वर्ष", en: "Years" },
-  { ne: "मास", en: "Months" },
-  { ne: "दिन", en: "Days" },
-  { ne: "योग", en: "Yoga" },
+  "kundali.x.duration_bs",
+  "kundali.x.duration_years",
+  "kundali.x.duration_months",
+  "holidays.col_days",
+  "kundali.yoga",
 ] as const;
 
 function DashaDurationGrid({
@@ -161,6 +162,7 @@ function DashaDurationGrid({
   lang: string;
   digits: (v: string | number) => string;
 }) {
+  const { t } = useTranslation();
   const ms = end.getTime() - start.getTime();
   const parts = breakdownDashaDuration(ms);
   const locale = lang === "en" ? "en" : "ne";
@@ -180,10 +182,10 @@ function DashaDurationGrid({
           <tr>
             {DURATION_COLS.map((col) => (
               <th
-                key={col.ne}
+                key={col}
                 className="border border-border/50 bg-muted/30 px-1.5 py-1 text-left font-semibold text-sm uppercase tracking-wide"
               >
-                {bilingualText(lang, col.ne, col.en)}
+                {t(col)}
               </th>
             ))}
           </tr>
@@ -192,7 +194,7 @@ function DashaDurationGrid({
           <tr>
             {values.map((value, i) => (
               <td
-                key={DURATION_COLS[i]!.ne}
+                key={DURATION_COLS[i]}
                 className="border border-border/50 px-1.5 py-1 text-base tabular-nums text-foreground/90"
               >
                 {digits(value)}
@@ -265,7 +267,7 @@ function DashaNode({
   }, [open, expandable, span.childNodes, childQ.data]);
 
   const duration = formatDashaDuration(span.end.getTime() - span.start.getTime(), lang);
-  const levelLabel = bilingualText(lang, LEVEL_LABELS[level]!.ne, LEVEL_LABELS[level]!.en);
+  const levelLabel = t(LEVEL_LABELS[level]!);
   const accent = lordAccent(span.lord, system);
 
   return (

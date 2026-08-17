@@ -20,7 +20,9 @@
 
 import { useMemo } from "react";
 
-import { bilingualText, useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+
+import { useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import {
   BS_MONTHS_NE,
@@ -41,6 +43,7 @@ const MID = "#8fb6d8";
 const SAMPLE_YEARS = 10;
 
 export function SolarMonthLengths() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));

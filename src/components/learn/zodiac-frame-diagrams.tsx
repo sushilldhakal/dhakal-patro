@@ -7,6 +7,10 @@
  * once properly, most of them serve several articles.
  */
 
+import { useTranslation } from "react-i18next";
+
+/* TwoZeroPoints still calls bilingualText for the one label built around a
+   formatted number; everything else now comes from the catalogue. */
 import { bilingualText, useLocale, type Lang } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
@@ -60,6 +64,7 @@ function Frame({
  * one offset read in different units.
  */
 export function TwoZeroPoints() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -135,6 +140,7 @@ export function TwoZeroPoints() {
  * modest `५.१°` are visibly different sizes of claim.
  */
 export function ZodiacBeltWidth() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -146,9 +152,9 @@ export function ZodiacBeltWidth() {
   const y = (lat: number) => mid - lat * scale;
 
   const bodies = [
-    { lat: 0, ne: "सूर्य", en: "Sun", c: ECLIPTIC, note: { ne: "परिभाषाले नै ०°", en: "0° by definition" } },
-    { lat: 5.1, ne: "चन्द्र", en: "Moon", c: "#cbd5e1", note: { ne: "±५.१°", en: "±5.1°" } },
-    { lat: 7.0, ne: "बुध", en: "Mercury", c: "#10b981", note: { ne: "±७°", en: "±7°" } },
+    { lat: 0, body: "grahas.sun", c: ECLIPTIC, note: "learn.diagrams.belt_latitude_sun" },
+    { lat: 5.1, body: "grahas.moon", c: "#cbd5e1", note: "learn.diagrams.belt_latitude_moon" },
+    { lat: 7.0, body: "grahas.mercury", c: "#10b981", note: "learn.diagrams.belt_latitude_mercury" },
   ];
 
   return (
@@ -170,7 +176,7 @@ export function ZodiacBeltWidth() {
       ))}
 
       {bodies.map((b) => (
-        <g key={b.en}>
+        <g key={b.body}>
           {[1, -1].map((s) =>
             b.lat === 0 && s === -1 ? null : (
               <line
@@ -187,10 +193,10 @@ export function ZodiacBeltWidth() {
             ),
           )}
           <text x={L - 8} y={y(b.lat) + 3} textAnchor="end" className="fill-current text-[8px] opacity-70">
-            {lang === "en" ? b.en : b.ne}
+            {t(b.body)}
           </text>
           <text x={L - 8} y={y(b.lat) + 13} textAnchor="end" className="fill-current text-[7px] opacity-45">
-            {lang === "en" ? b.note.en : b.note.ne}
+            {t(b.note)}
           </text>
         </g>
       ))}
@@ -220,6 +226,7 @@ export function ZodiacBeltWidth() {
  * and the extremes are what matter, and a sphere hides both behind itself.
  */
 export function EclipticEquatorCross() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -238,10 +245,10 @@ export function EclipticEquatorCross() {
   }).join(" ");
 
   const marks = [
-    { lon: 0, ne: "वसन्त विषुव", en: "spring equinox", kind: "eq" },
-    { lon: 90, ne: "ग्रीष्म अयनान्त", en: "summer solstice", kind: "sol" },
-    { lon: 180, ne: "शरद् विषुव", en: "autumn equinox", kind: "eq" },
-    { lon: 270, ne: "शीत अयनान्त", en: "winter solstice", kind: "sol" },
+    { lon: 0, key: "learn.diagrams.spring_equinox", kind: "eq" },
+    { lon: 90, key: "learn.diagrams.summer_solstice", kind: "sol" },
+    { lon: 180, key: "learn.diagrams.autumn_equinox", kind: "eq" },
+    { lon: 270, key: "learn.diagrams.winter_solstice", kind: "sol" },
   ];
 
   return (
@@ -277,7 +284,7 @@ export function EclipticEquatorCross() {
         const c = m.kind === "eq" ? TROPICAL : SIDEREAL;
         const up = dec >= 0;
         return (
-          <g key={m.en}>
+          <g key={m.key}>
             <circle cx={x(m.lon)} cy={y(dec)} r={3.6} fill={c} />
             <text
               x={x(m.lon) + (m.lon > 300 ? -6 : 6)}
@@ -286,7 +293,7 @@ export function EclipticEquatorCross() {
               className="text-[7.5px] font-semibold"
               style={{ fill: c }}
             >
-              {lang === "en" ? m.en : m.ne}
+              {t(m.key)}
             </text>
           </g>
         );

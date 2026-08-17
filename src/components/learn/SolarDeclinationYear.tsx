@@ -30,7 +30,9 @@
 
 import { useMemo } from "react";
 
-import { bilingualText, useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+
+import { useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 import { solarMonthStarts } from "@/lib/sky3d/day-mechanics";
@@ -67,21 +69,22 @@ const dayOfLambda = (lambda: number) => (((lambda - AYANAMSHA + 360) % 360) / 36
 interface Marker {
   lambda: number;
   kind: "equinox" | "solstice";
-  ne: string;
-  en: string;
-  whenNe: string;
-  whenEn: string;
+  /** Catalogue key for the marker name — resolved at render, not at module load. */
+  key: string;
+  /** Catalogue key for the approximate date this marker falls on. */
+  whenKey: string;
 }
 
 /** The four turning points, in the order the बि.सं. year meets them. */
 const MARKERS: Marker[] = [
-  { lambda: 90, kind: "solstice", ne: "ग्रीष्म अयनान्त", en: "Summer solstice", whenNe: "~असार ६–७", whenEn: "~21 Jun" },
-  { lambda: 180, kind: "equinox", ne: "शरद् विषुव", en: "Autumn equinox", whenNe: "~असोज ६–७", whenEn: "~23 Sep" },
-  { lambda: 270, kind: "solstice", ne: "शीत अयनान्त", en: "Winter solstice", whenNe: "~पुष ६–७", whenEn: "~22 Dec" },
-  { lambda: 0, kind: "equinox", ne: "वसन्त विषुव", en: "Spring equinox", whenNe: "~चैत ६–७", whenEn: "~21 Mar" },
+  { lambda: 90, kind: "solstice", key: "learn.study.summer_solstice", whenKey: "learn.study.declination.when_summer_solstice" },
+  { lambda: 180, kind: "equinox", key: "learn.study.autumn_equinox", whenKey: "learn.study.declination.when_autumn_equinox" },
+  { lambda: 270, kind: "solstice", key: "learn.study.winter_solstice", whenKey: "learn.study.declination.when_winter_solstice" },
+  { lambda: 0, kind: "equinox", key: "learn.study.spring_equinox", whenKey: "learn.study.declination.when_spring_equinox" },
 ];
 
 export function SolarDeclinationYear() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
@@ -214,7 +217,7 @@ export function SolarDeclinationYear() {
           const above = m.kind === "solstice" ? deg > 0 : true;
           const edge = day > DAYS * 0.86;
           return (
-            <g key={m.en}>
+            <g key={m.key}>
               <circle cx={x(day)} cy={y(deg)} r={3.4} fill={colour} />
               <text
                 x={x(day) + (edge ? -6 : 6)}
@@ -223,7 +226,7 @@ export function SolarDeclinationYear() {
                 className="text-[8.5px] font-semibold"
                 style={{ fill: colour }}
               >
-                {ne ? m.ne : m.en}
+                {t(m.key)}
               </text>
               <text
                 x={x(day) + (edge ? -6 : 6)}
@@ -231,7 +234,7 @@ export function SolarDeclinationYear() {
                 textAnchor={edge ? "end" : "start"}
                 className="fill-current text-[7.5px] opacity-55"
               >
-                {ne ? m.whenNe : m.whenEn}
+                {t(m.whenKey)}
               </text>
             </g>
           );

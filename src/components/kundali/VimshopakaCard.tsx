@@ -22,11 +22,11 @@ const GRADE_STYLES: Record<VimshopakaGrade, string> = {
   incapable: "bg-destructive/15 text-destructive",
 };
 
-const GRADE_LABEL: Record<VimshopakaGrade, { ne: string; en: string }> = {
-  full: { ne: "पूर्ण", en: "Full" },
-  mediocre: { ne: "मध्यम", en: "Mediocre" },
-  little: { ne: "अल्प", en: "Little" },
-  incapable: { ne: "असमर्थ", en: "Incapable" },
+const GRADE_LABEL: Record<VimshopakaGrade, string> = {
+  full: "kundali.x.vimshopaka_grade_full",
+  mediocre: "kundali.x.vimshopaka_grade_mediocre",
+  little: "kundali.x.vimshopaka_grade_little",
+  incapable: "kundali.x.vimshopaka_grade_incapable",
 };
 
 export function VimshopakaCard({ data }: { data: VimshopakaData }) {
@@ -88,7 +88,7 @@ export function VimshopakaCard({ data }: { data: VimshopakaData }) {
                             "inline-flex min-w-[3.25rem] items-center justify-center gap-1 rounded-md px-2 py-0.5 font-num tabular-nums",
                             GRADE_STYLES[s.grade],
                           )}
-                          title={bilingualText(lang, GRADE_LABEL[s.grade].ne, GRADE_LABEL[s.grade].en)}
+                          title={t(GRADE_LABEL[s.grade])}
                         >
                           {digits(s.score.toFixed(2))}
                         </span>
@@ -107,7 +107,7 @@ export function VimshopakaCard({ data }: { data: VimshopakaData }) {
         {(["full", "mediocre", "little", "incapable"] as VimshopakaGrade[]).map((g) => (
           <span key={g} className="inline-flex items-center gap-1.5">
             <span className={cn("h-2.5 w-2.5 rounded-sm", GRADE_STYLES[g])} />
-            {bilingualText(lang, GRADE_LABEL[g].ne, GRADE_LABEL[g].en)}
+            {t(GRADE_LABEL[g])}
             <span className="text-xs">
               {g === "full"
                 ? "15–20"

@@ -23,7 +23,9 @@
  * check that the projection is right.
  */
 
-import { bilingualText, useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+
+import { useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
 const W = 520;
@@ -74,18 +76,16 @@ function chord(dec: number): [number, number, number, number] {
 interface Track {
   dec: number;
   kind: "never-sets" | "rises" | "never-rises";
-  ne: string;
-  en: string;
 }
 
 const TRACKS: Track[] = [
-  { dec: 78, kind: "never-sets", ne: "ध्रुव तारा ~+८९°", en: "Pole star ~+89°" },
-  { dec: LIMIT, kind: "never-sets", ne: "सीमा +६२.३°", en: "limit +62.3°" },
-  { dec: 20, kind: "rises", ne: "", en: "" },
-  { dec: 0, kind: "rises", ne: "खगोलीय विषुवत् रेखा ०°", en: "celestial equator 0°" },
-  { dec: -40, kind: "rises", ne: "", en: "" },
-  { dec: -LIMIT, kind: "never-rises", ne: "सीमा −६२.३°", en: "limit −62.3°" },
-  { dec: -78, kind: "never-rises", ne: "", en: "" },
+  { dec: 78, kind: "never-sets" },
+  { dec: LIMIT, kind: "never-sets" },
+  { dec: 20, kind: "rises" },
+  { dec: 0, kind: "rises" },
+  { dec: -40, kind: "rises" },
+  { dec: -LIMIT, kind: "never-rises" },
+  { dec: -78, kind: "never-rises" },
 ];
 
 const COLOUR = {
@@ -95,6 +95,7 @@ const COLOUR = {
 } as const;
 
 export function CircumpolarSky() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
@@ -121,22 +122,22 @@ export function CircumpolarSky() {
         <circle cx={CX} cy={CY} r={R} fill="none" stroke="currentColor" strokeOpacity={0.22} strokeWidth={0.9} />
 
         {/* diurnal chords */}
-        {TRACKS.map((t) => {
-          const [x1, y1, x2, y2] = chord(t.dec);
-          const isLimit = Math.abs(Math.abs(t.dec) - LIMIT) < 0.01;
+        {TRACKS.map((track) => {
+          const [x1, y1, x2, y2] = chord(track.dec);
+          const isLimit = Math.abs(Math.abs(track.dec) - LIMIT) < 0.01;
           return (
-            <g key={t.dec}>
+            <g key={track.dec}>
               <line
                 x1={x1}
                 y1={y1}
                 x2={x2}
                 y2={y2}
-                stroke={COLOUR[t.kind]}
+                stroke={COLOUR[track.kind]}
                 strokeWidth={isLimit ? 1.6 : 1.1}
                 strokeDasharray={isLimit ? "4 2.5" : undefined}
                 opacity={isLimit ? 0.95 : 0.6}
               />
-              <circle cx={x2} cy={y2} r={2.4} fill={COLOUR[t.kind]} opacity={0.9} />
+              <circle cx={x2} cy={y2} r={2.4} fill={COLOUR[track.kind]} opacity={0.9} />
             </g>
           );
         })}

@@ -7,6 +7,10 @@
  * really about proportion, which box characters cannot hold.
  */
 
+import { useTranslation } from "react-i18next";
+
+/* PakshaStrip still calls bilingualText for its one caption built around a
+   formatted number; everything else now comes from the catalogue. */
 import { bilingualText, useLocale, type Lang } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
@@ -58,7 +62,7 @@ function Frame({
  * honest way round.
  */
 export function RetrogradeLoop() {
-  const { lang } = useLocale();
+  const { t } = useTranslation();
   const W = 540;
   const H = 250;
   const sunX = W / 2;
@@ -69,9 +73,9 @@ export function RetrogradeLoop() {
 
   /* Equal steps of time; Earth runs about twice Mars's angular rate. */
   const steps = Array.from({ length: 9 }, (_, i) => {
-    const t = (i - 4) * 0.34;
-    const e = -90 + t * 57;
-    const m = -90 + t * 30;
+    const step = (i - 4) * 0.34;
+    const e = -90 + step * 57;
+    const m = -90 + step * 30;
     const D2R = Math.PI / 180;
     const ex = sunX + rE * Math.cos(e * D2R);
     const ey = sunY + rE * Math.sin(e * D2R) * 0.42;
@@ -150,7 +154,7 @@ export function RetrogradeLoop() {
  * separable, which is exactly how the texts applied them.
  */
 export function MandaShighra() {
-  const { lang } = useLocale();
+  const { t } = useTranslation();
   const W = 540;
   const H = 210;
   const L = 96;
@@ -160,27 +164,24 @@ export function MandaShighra() {
   const rows = [
     {
       y: 46,
-      ne: "मध्यम ग्रह",
-      en: "mean planet",
-      sub: { ne: "एकनास वृत्ताकार गति", en: "uniform circular motion" },
+      title: "learn.diagrams.manda_row_mean",
+      sub: "learn.diagrams.manda_row_mean_note",
       c: INK,
       f: () => 0,
     },
     {
       y: 106,
-      ne: "+ मन्द संस्कार",
-      en: "+ manda correction",
-      sub: { ne: "कक्ष हामीमा केन्द्रित छैन — एक फेरोमा एक लहर", en: "orbit not centred on us — one wave per revolution" },
+      title: "learn.diagrams.manda_row_manda",
+      sub: "learn.diagrams.manda_row_manda_note",
       c: MARK,
-      f: (t: number) => Math.sin(t * Math.PI * 2) * 15,
+      f: (f: number) => Math.sin(f * Math.PI * 2) * 15,
     },
     {
       y: 168,
-      ne: "+ शीघ्र संस्कार = स्फुट ग्रह",
-      en: "+ shighra = true planet",
-      sub: { ne: "हाम्रो आफ्नै गति — यहीँबाट वक्री लूप", en: "our own motion — this is where retrograde comes from" },
+      title: "learn.diagrams.manda_row_shighra",
+      sub: "learn.diagrams.manda_row_shighra_note",
       c: WARN,
-      f: (t: number) => Math.sin(t * Math.PI * 2) * 15 + Math.sin(t * Math.PI * 6) * 13,
+      f: (f: number) => Math.sin(f * Math.PI * 2) * 15 + Math.sin(f * Math.PI * 6) * 13,
     },
   ];
 
@@ -192,18 +193,18 @@ export function MandaShighra() {
       caption={t("learn.diagrams.manda_shighra_caption")}
     >
       {rows.map((r) => (
-        <g key={r.en}>
+        <g key={r.title}>
           <text x={L - 8} y={r.y + 2} textAnchor="end" className="fill-current text-[8px] font-semibold opacity-75">
-            {lang === "en" ? r.en : r.ne}
+            {t(r.title)}
           </text>
           <text x={L - 8} y={r.y + 13} textAnchor="end" className="fill-current text-[7px] opacity-45">
-            {lang === "en" ? r.sub.en : r.sub.ne}
+            {t(r.sub)}
           </text>
           <line x1={L} y1={r.y} x2={Rr} y2={r.y} stroke={INK} strokeOpacity={0.12} strokeWidth={0.7} strokeDasharray="3 3" />
           <path
             d={Array.from({ length: 97 }, (_, i) => {
-              const t = i / 96;
-              return `${i ? "L" : "M"}${x(t).toFixed(1)} ${(r.y - r.f(t)).toFixed(1)}`;
+              const f = i / 96;
+              return `${i ? "L" : "M"}${x(f).toFixed(1)} ${(r.y - r.f(f)).toFixed(1)}`;
             }).join(" ")}
             fill="none"
             stroke={r.c}
@@ -233,6 +234,7 @@ export function MandaShighra() {
  * the numbering and the phase line up by construction.
  */
 export function PakshaStrip() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -277,28 +279,38 @@ export function PakshaStrip() {
       })}
 
       {[
-        { f: 0.25, ne: "शुक्ल पक्ष", en: "Shukla paksha", sub: { ne: "तिथि १ → १५", en: "tithi 1 → 15" }, c: GOOD },
-        { f: 0.75, ne: "कृष्ण पक्ष", en: "Krishna paksha", sub: { ne: "तिथि १ → १५", en: "tithi 1 → 15" }, c: COOL },
+        {
+          f: 0.25,
+          title: "learn.diagrams.paksha_shukla",
+          sub: "learn.diagrams.paksha_tithi_range",
+          c: GOOD,
+        },
+        {
+          f: 0.75,
+          title: "learn.diagrams.paksha_krishna",
+          sub: "learn.diagrams.paksha_tithi_range",
+          c: COOL,
+        },
       ].map((p) => (
-        <g key={p.en}>
+        <g key={p.title}>
           <text x={x(p.f)} y={midY + 26} textAnchor="middle" className="text-[9px] font-semibold" style={{ fill: p.c }}>
-            {lang === "en" ? p.en : p.ne}
+            {t(p.title)}
           </text>
           <text x={x(p.f)} y={midY + 39} textAnchor="middle" className="fill-current text-[8px] opacity-60">
-            {lang === "en" ? p.sub.en : p.sub.ne}
+            {t(p.sub)}
           </text>
         </g>
       ))}
 
       {[
-        { f: 0, ne: "औंसी", en: "new" },
-        { f: 0.5, ne: "पूर्णिमा", en: "full" },
-        { f: 1, ne: "औंसी", en: "new" },
+        { f: 0, phase: "learn.diagrams.phase_new_short" },
+        { f: 0.5, phase: "learn.diagrams.phase_full_short" },
+        { f: 1, phase: "learn.diagrams.phase_new_short" },
       ].map((m, i) => (
         <g key={i}>
           <line x1={x(m.f)} y1={midY - 12} x2={x(m.f)} y2={midY + 10} stroke={MARK} strokeWidth={1.2} />
           <text x={x(m.f)} y={midY + 58} textAnchor="middle" className="text-[8px] font-semibold" style={{ fill: MARK }}>
-            {lang === "en" ? m.en : m.ne}
+            {t(m.phase)}
           </text>
         </g>
       ))}

@@ -19,84 +19,77 @@
  */
 
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
-import { bilingualText, useLocale } from "@/i18n/locale";
 import { tmCardCap, tmCardPadLg } from "@/lib/learn-classes";
 import { cn } from "@/lib/utils";
-import type { Bi } from "@/lib/learn/article-schema";
 
 type Accent = "teal" | "amber" | "sky";
 
+/**
+ * The tree is built at module scope, where no hook can run, so every node
+ * carries its catalogue key and the translation happens at the render site.
+ */
 type Branch = {
   id: string;
   accent: Accent;
-  source: Bi;
+  source: string;
   /** What the motion actually is, under the body's name. */
-  driver: Bi;
+  driver: string;
   /** The chain this motion produces, in order. */
-  steps: Bi[];
+  steps: string[];
   /** Edge annotations, one per step — the rule that produces it. */
-  rules: (Bi | null)[];
+  rules: (string | null)[];
   /** The measurement system this stream is called, where it has a name. */
-  mana: Bi | null;
+  mana: string | null;
 };
 
 const BRANCHES: Branch[] = [
   {
     id: "earth",
     accent: "teal",
-    source: { ne: "पृथ्वी", en: "Earth" },
-    driver: { ne: "आफ्नै अक्षमा घुर्णन", en: "spin on its own axis" },
-    steps: [
-      { ne: "दिन", en: "Day" },
-      { ne: "वार", en: "Vāra" },
-    ],
-    rules: [{ ne: "१ फेरो", en: "1 turn" }, null],
+    source: "grahas.earth",
+    driver: "learn.diagrams.hierarchy_driver_earth",
+    steps: ["learn.playground.day", "learn.diagrams.hierarchy_step_vaara"],
+    rules: ["learn.diagrams.hierarchy_rule_one_turn", null],
     mana: null,
   },
   {
     id: "sun",
     accent: "amber",
-    source: { ne: "सूर्य", en: "Sun" },
-    driver: { ne: "राशिचक्रमा वार्षिक गति", en: "annual path through the zodiac" },
+    source: "grahas.sun",
+    driver: "learn.diagrams.hierarchy_driver_sun",
     steps: [
-      { ne: "राशि", en: "Rāśi" },
-      { ne: "सङ्क्रान्ति", en: "Saṅkrānti" },
-      { ne: "सौर महिना · गते", en: "Solar month · gate" },
+      "learn.diagrams.hierarchy_step_rashi",
+      "learn.diagrams.hierarchy_step_sankranti",
+      "learn.diagrams.hierarchy_step_solar_month",
     ],
     rules: [
-      { ne: "३०° को भाग", en: "30° segment" },
-      { ne: "सीमा पार", en: "boundary crossed" },
+      "learn.diagrams.hierarchy_rule_rashi_span",
+      "learn.diagrams.hierarchy_rule_boundary",
       null,
     ],
-    mana: { ne: "सौरमान", en: "Sauramāna" },
+    mana: "learn.diagrams.hierarchy_mana_solar",
   },
   {
     id: "moon",
     accent: "sky",
-    source: { ne: "चन्द्र", en: "Moon" },
-    driver: { ne: "सूर्यसँगको कोणीय दूरी", en: "angular gap from the Sun" },
-    steps: [
-      { ne: "तिथि", en: "Tithi" },
-      { ne: "पक्ष", en: "Pakṣa" },
-      { ne: "चान्द्र मास", en: "Lunar month" },
-    ],
+    source: "grahas.moon",
+    driver: "learn.diagrams.hierarchy_driver_moon",
+    steps: ["tithi", "learn.diagrams.hierarchy_step_paksha", "learn.diagrams.hierarchy_step_lunar_month"],
     rules: [
-      { ne: "हरेक १२°", en: "every 12°" },
-      { ne: "१५ तिथि", en: "15 tithis" },
-      { ne: "३० तिथि", en: "30 tithis" },
+      "learn.diagrams.hierarchy_rule_tithi_span",
+      "learn.diagrams.hierarchy_rule_paksha_count",
+      "learn.diagrams.hierarchy_rule_month_count",
     ],
-    mana: { ne: "चान्द्रमान", en: "Chāndramāna" },
+    mana: "learn.diagrams.hierarchy_mana_lunar",
   },
 ];
 
-const TOP: Bi = { ne: "आकाशीय गति", en: "Celestial motion" };
-const CONVERGE: Bi = { ne: "पञ्चाङ्ग", en: "Panchanga" };
-const RESULT: Bi = { ne: "एउटा बि.सं. मिति", en: "One Bikram Sambat date" };
-const RESULT_SUB: Bi = {
-  ne: "वर्ष · महिना · गते · तिथि · वार",
-  en: "year · month · gate · tithi · vaara",
-};
+const TOP = "learn.diagrams.hierarchy_top";
+const CONVERGE = "learn.diagrams.hierarchy_converge";
+const RESULT = "learn.diagrams.hierarchy_result";
+const RESULT_SUB = "learn.diagrams.hierarchy_result_fields";
 
 function accentVar(accent: Accent): string {
   /* Only three accents exist as tokens; the Moon borrows the app's cool blue

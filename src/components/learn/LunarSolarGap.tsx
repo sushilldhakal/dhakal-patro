@@ -145,7 +145,7 @@ export function LunarSolarGap() {
           </text>
           <rect x={PAD.l + 290} y={10} width={9} height={7} fill={GAP} opacity={0.35} rx={1} />
           <text x={PAD.l + 303} y={16.5} className="fill-current text-[8px] opacity-65">
-            {bilingualText(lang, `फरक ${num(DRIFT.toFixed(2))} दिन/वर्ष`, `gap ${DRIFT.toFixed(2)} d/yr`)}
+            {t("learn.study.lunar_gap.legend_drift", { days: num(DRIFT.toFixed(2)) })}
           </text>
         </g>
 
@@ -156,11 +156,7 @@ export function LunarSolarGap() {
           className="text-[8.5px] font-semibold"
           style={{ fill: GAP }}
         >
-          {bilingualText(
-            lang,
-            `३ वर्षमा ${num((DRIFT * 3).toFixed(1))} दिन — एक चान्द्र मासभन्दा लामो → अधिक मास`,
-            `${(DRIFT * 3).toFixed(1)} days in 3 years — longer than a lunar month → adhika māsa`,
-          )}
+          {t("learn.study.lunar_gap.three_year_total", { days: num((DRIFT * 3).toFixed(1)) })}
         </text>
       </svg>
       <figcaption className="mt-1.5 text-[11px] leading-snug text-white/45">

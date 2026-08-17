@@ -14,7 +14,9 @@
 
 import { useMemo } from "react";
 
-import { bilingualText, useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+
+import { useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { BS_MONTH_NAMES, BS_MONTHS_NE } from "@/lib/bs-calendar";
 import {
@@ -63,7 +65,7 @@ function withZeroCrossings(pts: Pt[]): Pt[] {
 function areaPath(
   pts: Pt[],
   x: (min: number) => number,
-  y: (t: number) => number,
+  y: (frac: number) => number,
   side: "late" | "early",
 ): string {
   if (pts.length === 0) return "";
@@ -110,6 +112,7 @@ export interface EotGraphProps {
 }
 
 export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGraphProps) {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
@@ -133,7 +136,7 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
   const plotT = PAD.t;
   const plotB = H - PAD.b;
   const x = (min: number) => plotL + ((min - axisMin) / (axisMax - axisMin)) * (plotR - plotL);
-  const y = (t: number) => plotT + t * (plotB - plotT);
+  const y = (frac: number) => plotT + frac * (plotB - plotT);
 
   const latePath = useMemo(() => areaPath(curve, x, y, "late"), [curve, axisMin, axisMax]);
   const earlyPath = useMemo(() => areaPath(curve, x, y, "early"), [curve, axisMin, axisMax]);
@@ -204,8 +207,7 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
 
         {/* month grid + labels */}
         {monthTicks.map((day, i) => {
-          const t = day / 365;
-          const py = y(t);
+          const py = y(day / 365);
           const name = monthNames[i % 12];
           const active = i < 12 && i === currentMonth;
           return (

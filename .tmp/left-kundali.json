@@ -1,0 +1,26 @@
+{
+  "kundali.x.full": {
+    "ne": "पूर्ण",
+    "en": "Full",
+    "_via": "object",
+    "_at": "VimshopakaCard:26"
+  },
+  "kundali.x.incapable": {
+    "ne": "असमर्थ",
+    "en": "Incapable",
+    "_via": "object",
+    "_at": "VimshopakaCard:29"
+  },
+  "kundali.x.little": {
+    "ne": "अल्प",
+    "en": "Little",
+    "_via": "object",
+    "_at": "VimshopakaCard:28"
+  },
+  "kundali.x.mediocre": {
+    "ne": "मध्यम",
+    "en": "Mediocre",
+    "_via": "object",
+    "_at": "VimshopakaCard:27"
+  }
+}
