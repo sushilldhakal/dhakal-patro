@@ -403,6 +403,12 @@
     "remedy": "Remedy",
     "lord_line": "Sign lord {{lord}} is in {{sign}}, house {{house}} from the sign — {{dignity}}.",
     "gochar_hint": "{{graha}} — in {{sign}}, house {{house}} from the sign",
+    "flags": {
+      "vedha": "Vedha — transit blocked",
+      "vedha_by": "Vedha — blocked by {{graha}}",
+      "retrograde": "Retrograde",
+      "combust": "Combust"
+    },
     "window_days": "Strongest day {{best}}; the one to watch {{weak}}.",
     "range_prev": "Previous period",
     "range_next": "Next period",

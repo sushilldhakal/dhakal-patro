@@ -640,6 +640,24 @@ export const strings = {
     ne: "{{graha}} — {{sign}} राशि, जन्मराशिबाट {{house}} भाव",
     en: "{{graha}} — in {{sign}}, house {{house}} from the sign",
   },
+  // Gochar chip flags — icon-only on the chip, so each icon's tooltip and the
+  // legend under the strip both read from these.
+  "rashifal.flags.vedha": {
+    ne: "वेध — फल रोकिएको",
+    en: "Vedha — transit blocked",
+  },
+  "rashifal.flags.vedha_by": {
+    ne: "वेध — {{graha}} ले रोकेको",
+    en: "Vedha — blocked by {{graha}}",
+  },
+  "rashifal.flags.retrograde": {
+    ne: "वक्री",
+    en: "Retrograde",
+  },
+  "rashifal.flags.combust": {
+    ne: "अस्त",
+    en: "Combust",
+  },
   "rashifal.window_days": {
     ne: "सबैभन्दा अनुकूल दिन {{best}}; सबैभन्दा सतर्क रहनुपर्ने दिन {{weak}}।",
     en: "Strongest day {{best}}; the one to watch {{weak}}.",

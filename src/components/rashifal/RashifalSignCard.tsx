@@ -4,12 +4,12 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
+import { RashifalGocharChips } from "@/components/rashifal/RashifalGocharChips";
 import { getRashiName } from "@/lib/rashi-i18n";
 import type { NavataraTone, RashifalPeriod, RashifalSignBlock } from "@/lib/api";
 import { patroNavataraToneBg } from "@/lib/patro-classes";
 import {
   RASHIFAL_DOMAIN_ICON,
-  RASHIFAL_FLAG_ICON,
   RASHIFAL_LUCKY_ICON,
   rashifalToneBar,
   rashifalToneText,
@@ -234,39 +234,7 @@ export function RashifalSignCard({ sign, period, taraLine, tone }: Props) {
           ) : null}
 
           {sign.gochar?.length ? (
-            <ul className="m-0 mt-3 flex list-none flex-wrap gap-1.5 border-t border-border/60 p-0 pt-3">
-              {sign.gochar.map((row) => {
-                const Vedha = RASHIFAL_FLAG_ICON.vedha;
-                const Retro = RASHIFAL_FLAG_ICON.retrograde;
-                const Combust = RASHIFAL_FLAG_ICON.combust;
-                return (
-                  <li
-                    key={row.graha}
-                    className={cn(
-                      "m-0 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.65rem] font-semibold",
-                      row.vedha_by
-                        ? "bg-tone-neutral"
-                        : row.favourable
-                          ? "bg-tone-good"
-                          : "bg-tone-bad",
-                    )}
-                    title={t("rashifal.gochar_hint", {
-                      graha: ne ? row.graha_ne : row.graha_en,
-                      house: row.house,
-                      sign: ne ? row.sign_ne : row.sign_en,
-                    })}
-                  >
-                    <span>{ne ? row.graha_ne : row.graha_en}</span>
-                    <span className="font-num tabular-nums opacity-80">
-                      {toNepaliDigits(row.house, lang)}
-                    </span>
-                    {row.vedha_by ? <Vedha className="size-3" aria-hidden="true" /> : null}
-                    {row.retrograde ? <Retro className="size-3" aria-hidden="true" /> : null}
-                    {row.combust ? <Combust className="size-3" aria-hidden="true" /> : null}
-                  </li>
-                );
-              })}
-            </ul>
+            <RashifalGocharChips rows={sign.gochar} className="mt-3" />
           ) : null}
 
           {lord ? (

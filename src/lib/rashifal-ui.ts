@@ -1,5 +1,4 @@
 import {
-  Ban,
   Briefcase,
   CalendarDays,
   CalendarRange,
@@ -15,6 +14,7 @@ import {
   Palette,
   Plane,
   RotateCcw,
+  ShieldBan,
   Sun,
   type LucideIcon,
 } from "lucide-react";
@@ -51,9 +51,13 @@ export const RASHIFAL_LUCKY_ICON = {
   time: Clock,
 } satisfies Record<string, LucideIcon>;
 
-/** Flags on a single gochar row. */
+/**
+ * Flags on a single gochar row. वेध is a *blocked* transit, so it takes the
+ * shield rather than a bare Ban — a plain circle-slash on a chip reads as a
+ * glyph that failed to load, not as "this transit is cancelled".
+ */
 export const RASHIFAL_FLAG_ICON = {
-  vedha: Ban,
+  vedha: ShieldBan,
   retrograde: RotateCcw,
   combust: Flame,
 } satisfies Record<string, LucideIcon>;
