@@ -15,7 +15,9 @@
  * show the offset but hide the fact that it compounds.
  */
 
-import { bilingualText, useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+
+import { useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
 const W = 560;
@@ -53,11 +55,7 @@ export function LunarSolarGap() {
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
         role="img"
-        aria-label={bilingualText(
-          lang,
-          "चान्द्र वर्ष सौर वर्षभन्दा वर्षेनि ११ दिन छोटो — तीन वर्षमा फरक एक महिना नाघ्छ",
-          "A lunar year falls 11 days short of a solar year — in three years the gap exceeds a month",
-        )}
+        aria-label={t("learn.study.lunar_gap.aria")}
       >
         {/* Each row is left-aligned and *cumulative*: row i runs from day 0 to
             the end of year i+1. Anchoring every row at zero is what makes the
@@ -138,11 +136,11 @@ export function LunarSolarGap() {
         <g>
           <rect x={PAD.l} y={10} width={9} height={7} fill={SOLAR} opacity={0.45} rx={1} />
           <text x={PAD.l + 13} y={16.5} className="fill-current text-[8px] opacity-65">
-            {bilingualText(lang, "सौर वर्ष ३६५.२४", "solar year 365.24")}
+            {t("learn.study.lunar_gap.legend_solar_year")}
           </text>
           <rect x={PAD.l + 132} y={10} width={9} height={7} fill={LUNAR} opacity={0.5} rx={1} />
           <text x={PAD.l + 145} y={16.5} className="fill-current text-[8px] opacity-65">
-            {bilingualText(lang, "१२ चान्द्र मास ३५४.४", "12 lunar months 354.4")}
+            {t("learn.study.lunar_gap.legend_lunar_months")}
           </text>
           <rect x={PAD.l + 290} y={10} width={9} height={7} fill={GAP} opacity={0.35} rx={1} />
           <text x={PAD.l + 303} y={16.5} className="fill-current text-[8px] opacity-65">
@@ -165,11 +163,7 @@ export function LunarSolarGap() {
         </text>
       </svg>
       <figcaption className="mt-1.5 text-[11px] leading-snug text-white/45">
-        {bilingualText(
-          lang,
-          "बाह्र चान्द्र मास ३५४.४ दिनको हुन्छ, सौर वर्ष ३६५.२४ — हरेक वर्ष १०.८७ दिनको घाटा। घाटा जम्मा हुँदै जान्छ, र तेस्रो वर्षसम्ममा ३२.६ दिन पुग्छ, जुन एउटा चान्द्र मासभन्दै लामो। त्यही बेला एक अधिक मास थपेर हिसाब मिलाइन्छ — यही चान्द्र–सौर पात्रोको मूल व्यवस्था हो।",
-          "Twelve lunar months make 354.4 days against a solar year of 365.24 — a shortfall of 10.87 days each year. It accumulates, and by the third year it reaches 32.6 days, longer than a lunar month itself. That is when an extra month is inserted to settle the account — the central mechanism of a lunisolar calendar.",
-        )}
+        {t("learn.study.lunar_gap.caption")}
       </figcaption>
     </figure>
   );

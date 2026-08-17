@@ -74,16 +74,8 @@ export function TwoZeroPoints() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "सायन र निरयन राशिचक्रका दुई शून्य बिन्दु, बीचमा ~२४° को अयनांश",
-        "The tropical and sidereal zeros on one ruler, with the ~24° ayanamsha between them",
-      )}
-      caption={bilingualText(
-        lang,
-        "दुवै राशिचक्र उही क्रान्तिवृत्तमा ०° देखि ३६०° सम्म चल्छन् — फरक केवल शून्य कहाँ राखिएको छ भन्नेमा। सायन शून्य वसन्त विषुवमा अड्किएको छ; निरयन शून्य ताराको सापेक्ष स्थिर छ र अहिले त्योभन्दा ~२४° पछाडि पर्छ। यही एउटा फरकबाट सबै कुरा निस्कन्छ: नयाँ वर्ष विषुवभन्दा ~२४ दिन पछि किन पर्छ, मकर सङ्क्रान्ति शीत अयनान्तभन्दा ~२४ दिन पछि किन पर्छ — सबै यही अयनांश हो, फरक एकाइमा पढिएको।",
-        "Both zodiacs run 0° to 360° along the same ecliptic; all that differs is where the zero was put. The tropical zero is pinned to the spring equinox, the sidereal zero to the stars — and the second now sits about 24° behind the first. Everything else follows from that single offset: why the new year falls ~24 days after the equinox, why Makara Sankranti falls ~24 days after the winter solstice. It is one gap, read in different units.",
-      )}
+      label={t("learn.diagrams.two_zeros_label")}
+      caption={t("learn.diagrams.two_zeros_caption")}
     >
       {/* सायन scale */}
       <line x1={L} y1={58} x2={Rr} y2={58} stroke={TROPICAL} strokeWidth={1.6} opacity={0.85} />
@@ -96,7 +88,7 @@ export function TwoZeroPoints() {
         </g>
       ))}
       <text x={L} y={32} className="text-[8.5px] font-semibold" style={{ fill: TROPICAL }}>
-        {bilingualText(lang, "सायन — शून्य वसन्त विषुवमा", "tropical — zero at the spring equinox")}
+        {t("learn.diagrams.tropical_scale_zero")}
       </text>
 
       {/* निरयन scale, offset by the ayanamsha */}
@@ -114,7 +106,7 @@ export function TwoZeroPoints() {
         </g>
       ))}
       <text x={L} y={166} className="text-[8.5px] font-semibold" style={{ fill: SIDEREAL }}>
-        {bilingualText(lang, "निरयन — शून्य ताराको सापेक्ष स्थिर (बैशाख १)", "sidereal — zero fixed against the stars (बैशाख १)")}
+        {t("learn.diagrams.sidereal_scale_zero")}
       </text>
 
       {/* the gap itself */}
@@ -163,16 +155,8 @@ export function ZodiacBeltWidth() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "राशि पट्टीको चौडाइ — क्रान्तिवृत्तको दुवैतिर ~९°",
-        "The width of the zodiac belt — about 9° either side of the ecliptic",
-      )}
-      caption={bilingualText(
-        lang,
-        "सूर्य परिभाषाले नै क्रान्तिवृत्तमा हुन्छ — त्यसको शर सधैँ ०°। बाँकी सबै भने अलिअलि माथितल हुन्छन्: चन्द्र ±५.१°, बुध ±७° सम्म। सबैलाई समेट्न क्रान्तिवृत्तको दुवैतिर करिब ९° को पेटी चाहिन्छ, र त्यही राशि पट्टी हो। त्यसैले राशिचक्र रेखा होइन, पट्टी हो।",
-        "The Sun is on the ecliptic by definition — its latitude is always 0°. Everything else strays: the Moon by ±5.1°, Mercury by as much as ±7°. Containing all of them takes a band about 9° either side of the ecliptic, and that band is the zodiac belt. Which is why the zodiac is a belt rather than a line.",
-      )}
+      label={t("learn.diagrams.belt_width_label")}
+      caption={t("learn.diagrams.belt_width_caption")}
     >
       <rect x={L} y={y(9)} width={Rr - L} height={y(-9) - y(9)} fill={SIDEREAL} opacity={0.12} rx={3} />
       {[9, -9].map((d) => (
@@ -212,10 +196,10 @@ export function ZodiacBeltWidth() {
       ))}
 
       <text x={(L + Rr) / 2} y={y(0) - 7} textAnchor="middle" className="text-[8px] font-semibold" style={{ fill: ECLIPTIC }}>
-        {bilingualText(lang, "क्रान्तिवृत्त — शर ०°", "the ecliptic — latitude 0°")}
+        {t("learn.diagrams.ecliptic_latitude_zero")}
       </text>
       <text x={(L + Rr) / 2} y={H - 8} textAnchor="middle" className="text-[8.5px] font-semibold" style={{ fill: SIDEREAL }}>
-        {bilingualText(lang, "राशि पट्टी — जम्मा ~१८° चौडा", "the zodiac belt — about 18° wide in all")}
+        {t("learn.diagrams.belt_total_width")}
       </text>
     </Frame>
   );
@@ -264,21 +248,13 @@ export function EclipticEquatorCross() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "क्रान्तिवृत्त र खगोलीय विषुवत् रेखा — दुई ठाउँमा काटिन्छन्, र २३.४४° सम्म टाढा जान्छन्",
-        "The ecliptic and the celestial equator — crossing twice, parting by 23.44°",
-      )}
-      caption={bilingualText(
-        lang,
-        "एउटै गोलामा दुई बृहत् वृत्त भए दुई ठाउँमा काटिनैपर्छ, र यी ठ्याक्कै २३.४४° को कोणमा काटिन्छन् — त्यही अक्ष झुकाव हो। काटिने ती दुई बिन्दु नै विषुव हुन्, र विषुवत् रेखाबाट सबैभन्दा टाढा पुग्ने दुई बिन्दु अयनान्त। अर्थात् चारै मौसमी बिन्दु अलग–अलग तथ्य होइनन् — दुई वृत्त कहाँ भेटिन्छन् र कहाँ सबैभन्दा टाढा हुन्छन्, त्यही मात्र हो।",
-        "Two great circles on one sphere must cross twice, and these cross at exactly 23.44° — the axial tilt. Those crossings are the equinoxes, and the points farthest from the equator are the solstices. So the four seasonal markers are not four separate facts: they are where two circles meet and where they are farthest apart.",
-      )}
+      label={t("learn.diagrams.ecliptic_cross_label")}
+      caption={t("learn.diagrams.ecliptic_cross_caption")}
     >
       {/* the equator: declination zero by definition */}
       <line x1={L} y1={y(0)} x2={Rr} y2={y(0)} stroke={EQUATOR} strokeWidth={1.7} opacity={0.85} />
       <text x={Rr} y={y(0) - 6} textAnchor="end" className="text-[8px] font-semibold" style={{ fill: EQUATOR }}>
-        {bilingualText(lang, "खगोलीय विषुवत् रेखा", "celestial equator")}
+        {t("learn.diagrams.celestial_equator")}
       </text>
 
       {[23.44, -23.44].map((d) => (
@@ -293,7 +269,7 @@ export function EclipticEquatorCross() {
 
       <path d={path} fill="none" stroke={ECLIPTIC} strokeWidth={1.9} />
       <text x={x(45)} y={y(20) - 8} className="text-[8px] font-semibold" style={{ fill: ECLIPTIC }}>
-        {bilingualText(lang, "क्रान्तिवृत्त", "the ecliptic")}
+        {t("learn.diagrams.ecliptic_curve")}
       </text>
 
       {marks.map((m) => {
@@ -317,7 +293,7 @@ export function EclipticEquatorCross() {
       })}
 
       <text x={L} y={H - 8} className="fill-current text-[7.5px] opacity-50">
-        {bilingualText(lang, "क्रान्तिवृत्तीय देशान्तर ०° → ३६०° →", "ecliptic longitude 0° → 360° →")}
+        {t("learn.diagrams.ecliptic_longitude_axis")}
       </text>
     </Frame>
   );

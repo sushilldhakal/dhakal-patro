@@ -81,11 +81,7 @@ export function SolarMonthLengths() {
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
         role="img"
-        aria-label={bilingualText(
-          lang,
-          "बाह्र नेपाली महिनाको लम्बाइ — उपसौर नजिक छोटो, अपसौर नजिक लामो",
-          "The lengths of the twelve Nepali months — short near perihelion, long near aphelion",
-        )}
+        aria-label={t("learn.study.month_lengths.aria")}
       >
         {[29, 30, 31, 32].map((d) => (
           <g key={d}>
@@ -154,7 +150,7 @@ export function SolarMonthLengths() {
           className="text-[7.5px] font-semibold"
           style={{ fill: SHORT }}
         >
-          {bilingualText(lang, "उपसौर — सूर्य छिटो", "perihelion — Sun fastest")}
+          {t("learn.study.month_lengths.perihelion")}
         </text>
         <text
           x={x(longest)}
@@ -163,15 +159,11 @@ export function SolarMonthLengths() {
           className="text-[7.5px] font-semibold"
           style={{ fill: LONG }}
         >
-          {bilingualText(lang, "अपसौर — सूर्य ढिलो", "aphelion — Sun slowest")}
+          {t("learn.study.month_lengths.aphelion")}
         </text>
       </svg>
       <figcaption className="mt-1.5 text-[11px] leading-snug text-white/45">
-        {bilingualText(
-          lang,
-          "एक सौर मास भनेको दिनको गन्ती होइन — राशि पट्टीमा सूर्यले पार गर्ने ३०° हो। उपसौर नजिक (पुष–माघ) सूर्य छिटो हिँड्छ, त्यसैले ती ३० अंश कम दिनमै सकिन्छन्; अपसौर नजिक (असार) ढिलो, र महिना लामो हुन्छ। यही कारण नेपाली महिना २९ देखि ३२ दिनसम्मको हुन्छ।",
-          "A solar month is not a count of days but 30° of the Sun's travel along the zodiac. Near perihelion (पुष–माघ) the Sun moves fastest, so those 30° take fewer days; near aphelion (असार) it is slowest and the month stretches. That is why a Nepali month runs anywhere from 29 to 32 days.",
-        )}
+        {t("learn.study.month_lengths.caption")}
       </figcaption>
     </figure>
   );

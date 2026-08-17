@@ -1,0 +1,294 @@
+{
+  "learn.study.lunar_gap.legend_lunar_months": {
+    "ne": "१२ चान्द्र मास ३५४.४",
+    "en": "12 lunar months 354.4"
+  },
+  "learn.study.lunar_gap.aria": {
+    "ne": "चान्द्र वर्ष सौर वर्षभन्दा वर्षेनि ११ दिन छोटो — तीन वर्षमा फरक एक महिना नाघ्छ",
+    "en": "A lunar year falls 11 days short of a solar year — in three years the gap exceeds a month"
+  },
+  "learn.study.month_lengths.caption": {
+    "ne": "एक सौर मास भनेको दिनको गन्ती होइन — राशि पट्टीमा सूर्यले पार गर्ने ३०° हो। उपसौर नजिक (पुष–माघ) सूर्य छिटो हिँड्छ, त्यसैले ती ३० अंश कम दिनमै सकिन्छन्; अपसौर नजिक (असार) ढिलो, र महिना लामो हुन्छ। यही कारण नेपाली महिना २९ देखि ३२ दिनसम्मको हुन्छ।",
+    "en": "A solar month is not a count of days but 30° of the Sun's travel along the zodiac. Near perihelion (पुष–माघ) the Sun moves fastest, so those 30° take fewer days; near aphelion (असार) it is slowest and the month stretches. That is why a Nepali month runs anywhere from 29 to 32 days."
+  },
+  "learn.study.two_systems.chain_angular_gap": {
+    "ne": "☀️🌙 कोणीय दूरी",
+    "en": "☀️🌙 angular gap"
+  },
+  "learn.study.month_lengths.aphelion": {
+    "ne": "अपसौर — सूर्य ढिलो",
+    "en": "aphelion — Sun slowest"
+  },
+  "learn.study.two_systems.back_to_year_start": {
+    "ne": "वर्षारम्भमा फर्कनुहोस्",
+    "en": "Back to year start"
+  },
+  "learn.study.circumpolar.celestial_pole": {
+    "ne": "खगोलीय ध्रुव",
+    "en": "celestial pole"
+  },
+  "learn.study.circumpolar.crux_range": {
+    "ne": "क्रक्स: क्रान्ति −५७° … −६३°",
+    "en": "Crux: dec −57° … −63°"
+  },
+  "learn.study.declination.dakshinayana": {
+    "ne": "दक्षिणायन",
+    "en": "Dakshinayana"
+  },
+  "learn.study.orbit.day_of_year": {
+    "ne": "वर्षको दिन (लगभग)",
+    "en": "Day of year (approx)"
+  },
+  "learn.study.circumpolar.never_rises": {
+    "ne": "क्रान्ति < −६२.३° — कहिल्यै उदाउँदैन",
+    "en": "dec < −62.3° — never rises"
+  },
+  "learn.study.circumpolar.never_sets": {
+    "ne": "क्रान्ति > +६२.३° — कहिल्यै अस्ताउँदैन",
+    "en": "dec > +62.3° — never sets"
+  },
+  "learn.study.orbit.distance_from_sun": {
+    "ne": "सूर्यदेखि दूरी",
+    "en": "Distance from Sun"
+  },
+  "learn.playground.drag_hint": {
+    "ne": "तान्नुहोस् — घुमाउन · स्क्रोल — नजिक/टाढा",
+    "en": "Drag to orbit · scroll to zoom"
+  },
+  "learn.study.two_systems.chain_enters_rashi": {
+    "ne": "राशिमा प्रवेश",
+    "en": "enters a rashi"
+  },
+  "learn.study.orbit.event_season": {
+    "ne": "घटना · ऋतु",
+    "en": "Event · season"
+  },
+  "common.exit_fullscreen": {
+    "ne": "सामान्य दृश्य",
+    "en": "Exit fullscreen"
+  },
+  "learn.study.orbit.far_slow": {
+    "ne": "टाढा · ढिलो",
+    "en": "Far · slow"
+  },
+  "learn.study.two_systems.from_sun": {
+    "ne": "सूर्यबाट",
+    "en": "from Sun"
+  },
+  "common.fullscreen": {
+    "ne": "पूर्ण स्क्रिन",
+    "en": "Fullscreen"
+  },
+  "learn.study.circumpolar.horizon": {
+    "ne": "क्षितिज",
+    "en": "horizon"
+  },
+  "learn.study.eot.caption": {
+    "ne": "घडीभन्दा घामको समय कति अगाडि/पछाडि छ। उत्केन्द्रता शून्य पार्नुहोस् — एउटा लहर बाँकी रहन्छ; अक्ष झुकाव शून्य पार्नुहोस् — अर्को।",
+    "en": "How far a sundial runs ahead of or behind a clock. Zero the eccentricity and one wave survives; zero the tilt and the other does."
+  },
+  "learn.study.circumpolar.rises_and_sets": {
+    "ne": "बीचमा — उदाउँछ र अस्ताउँछ",
+    "en": "in between — rises and sets"
+  },
+  "learn.krishna": {
+    "ne": "कृष्ण",
+    "en": "Krishna"
+  },
+  "learn.study.two_systems.chain_lunar_month": {
+    "ne": "चान्द्र मास",
+    "en": "lunar month"
+  },
+  "learn.study.orbit.mean_angle": {
+    "ne": "माध्य कोण (वर्ष)",
+    "en": "Mean angle (year)"
+  },
+  "learn.study.medium": {
+    "ne": "मध्यम",
+    "en": "Medium"
+  },
+  "learn.study.two_systems.moon_in_rashi": {
+    "ne": "चन्द्र राशिमा",
+    "en": "Moon in rashi"
+  },
+  "learn.study.two_systems.moon_sun_angle": {
+    "ne": "चन्द्र–सूर्य कोण",
+    "en": "Moon–Sun angle"
+  },
+  "learn.study.two_systems.moon_travelled": {
+    "ne": "औंसीदेखि चन्द्र हिँडेको",
+    "en": "Moon travelled since amavasya"
+  },
+  "learn.study.circumpolar.north": {
+    "ne": "उत्तर",
+    "en": "N"
+  },
+  "learn.study.orbit.near_fast": {
+    "ne": "नजिक · छिटो",
+    "en": "Near · fast"
+  },
+  "learn.study.two_systems.chain_new_solar_month": {
+    "ne": "नयाँ सौर महिना",
+    "en": "new solar month"
+  },
+  "panchanga.day_cycle.now": {
+    "ne": "अहिले",
+    "en": "Now"
+  },
+  "learn.study.declination.caption": {
+    "ne": "एउटै वक्र, दुई फरक बिन्दु — विषुव त्यहाँ जहाँ वक्रले शून्य काट्छ (सूर्य विषुवत् रेखामा, दिन–रात बराबर, उत्तर–दक्षिण गति सबैभन्दा छिटो), अयनान्त त्यहाँ जहाँ वक्र फर्किन्छ (क्रान्ति ±२३.४४°, सबैभन्दा लामो र छोटो दिन)। तल बि.सं. महिना — चारै बिन्दु महिनाको सीमामा पर्दैनन्, र शताब्दीयौँमा सर्दै जान्छन्।",
+    "en": "One curve, two different points — an equinox is where it crosses zero (the Sun on the celestial equator, day equal to night, north–south motion at its fastest); a solstice is where it turns (declination ±23.44°, the longest and shortest day). The बि.सं. months run underneath: none of the four lands on a month boundary, and over centuries they drift against them."
+  },
+  "learn.study.two_systems.sidereal_vs_synodic": {
+    "ne": "एक फेरो — नक्षत्र मास — ठ्याक्कै ३६०°, २७.३ दिन। तर त्यतिन्जेल पृथ्वी सूर्यवरिपरि ~२९° सरिसक्छ, त्यसैले चन्द्र फेरि सूर्यको छेउमा पुग्दैन; भेट्न अझै ~२९° चाहिन्छ। त्यही हो चान्द्र मास: ~३८९°, २९.५ दिन। कक्षमा पहिलो फेरो भित्री रेखा, त्यसपछिको बढी भाग बाहिरी हरियो चापमा देखिन्छ।",
+    "en": "One lap — the sidereal month — is exactly 360° in 27.3 days. By then Earth has moved ~29° around the Sun, so the Moon is not beside the Sun again; it needs ~29° more to catch up. That is the synodic month: ~389° in 29.5 days. On the orbit, the first lap is the inner line and the overshoot is the outer green arc."
+  },
+  "learn.study.two_systems.one_timeline": {
+    "ne": "एउटै समयरेखा",
+    "en": "One shared timeline"
+  },
+  "learn.playground.fullscreen_notice": {
+    "ne": "पूर्ण स्क्रिनमा खुलेको छ — बन्द गर्न Esc थिच्नुहोस्",
+    "en": "Open in fullscreen — press Esc to close"
+  },
+  "learn.pause": {
+    "ne": "रोक्नुहोस्",
+    "en": "Pause"
+  },
+  "learn.study.month_lengths.perihelion": {
+    "ne": "उपसौर — सूर्य छिटो",
+    "en": "perihelion — Sun fastest"
+  },
+  "learn.play": {
+    "ne": "चलाउनुहोस्",
+    "en": "Play"
+  },
+  "learn.study.two_systems.readings": {
+    "ne": "विवरण",
+    "en": "Readings"
+  },
+  "learn.study.circumpolar.south": {
+    "ne": "दक्षिण",
+    "en": "S"
+  },
+  "learn.study.two_systems.chain_sankranti": {
+    "ne": "सङ्क्रान्ति",
+    "en": "sankranti"
+  },
+  "learn.playground.sankranti": {
+    "ne": "सङ्क्रान्ति",
+    "en": "Sankranti"
+  },
+  "learn.study.circumpolar.saptarishi_range": {
+    "ne": "सप्तर्षि: क्रान्ति +४९° … +६२°",
+    "en": "Saptarishi: dec +49° … +62°"
+  },
+  "learn.shukla": {
+    "ne": "शुक्ल",
+    "en": "Shukla"
+  },
+  "learn.study.two_systems.chain_paksha": {
+    "ne": "शुक्ल / कृष्ण पक्ष",
+    "en": "shukla / krishna paksha"
+  },
+  "dainik.sign": {
+    "ne": "राशि",
+    "en": "sign"
+  },
+  "learn.study.ritu.six_ritus": {
+    "ne": "छ ऋतु",
+    "en": "Six ṛtus"
+  },
+  "learn.study.two_systems.solar_month_gate": {
+    "ne": "सौर महिना · गते",
+    "en": "Solar month · gate"
+  },
+  "learn.study.two_systems.legend_solar_months": {
+    "ne": "सौर महिना — सङ्क्रान्तिबाट सङ्क्रान्ति",
+    "en": "Solar months — sankranti to sankranti"
+  },
+  "learn.study.lunar_gap.legend_solar_year": {
+    "ne": "सौर वर्ष ३६५.२४",
+    "en": "solar year 365.24"
+  },
+  "learn.study.two_systems.chain_sun": {
+    "ne": "☀️ सूर्य",
+    "en": "☀️ Sun"
+  },
+  "learn.study.two_systems.sun_in_rashi": {
+    "ne": "सूर्य राशिमा",
+    "en": "Sun in rashi"
+  },
+  "learn.study.two_systems.sun_travelled": {
+    "ne": "यो वर्षमा सूर्य हिँडेको",
+    "en": "Sun travelled this year"
+  },
+  "learn.study.eot.sundial_early": {
+    "ne": "घाम अगाडि",
+    "en": "Sundial Early"
+  },
+  "learn.study.eot.sundial_late": {
+    "ne": "घाम पछाडि",
+    "en": "Sundial Late"
+  },
+  "learn.study.circumpolar.caption": {
+    "ne": "आकाशी ध्रुव क्षितिजभन्दा ठ्याक्कै अक्षांश जति (काठमाडौँमा २७.७°) माथि हुन्छ, र हरेक तारा त्यही अक्षको वरिपरि वृत्त काट्छ। वृत्त पूरै क्षितिजमाथि परे तारा कहिल्यै अस्ताउँदैन; पूरै तल परे कहिल्यै उदाउँदैन। काठमाडौँको सीमा ±६२.३° हो — सप्तर्षि र क्रक्स दुवै यही सीमाको छेउछाउ पर्छन्, त्यसैले सप्तर्षिको पुच्छर वर्षको केही समय क्षितिजमुनि जान्छ र क्रक्सको माथिल्लो तारा दक्षिणी क्षितिजमा अलिकति देखिन्छ।",
+    "en": "The celestial pole stands above the horizon by exactly the observer's latitude — 27.7° at Kathmandu — and every star circles that axis. A circle entirely above the horizon never sets; entirely below, it never rises. Kathmandu's limits are ±62.3°, and both the Saptarishi and Crux straddle them: the Dipper's tail dips below the horizon for part of the year, and the top of Crux does clear the southern horizon by a few degrees."
+  },
+  "learn.study.eot.aria": {
+    "ne": "समयको समीकरण — वर्षभरि साँचो सौर समय र माध्य सौर समयबीचको फरक",
+    "en": "The equation of time — true solar time minus mean solar time across a year"
+  },
+  "learn.study.two_systems.adhik_maas_gap": {
+    "ne": "अधिक मासले पुर्ने खाडल",
+    "en": "the gap an adhik maas fills"
+  },
+  "learn.study.month_lengths.aria": {
+    "ne": "बाह्र नेपाली महिनाको लम्बाइ — उपसौर नजिक छोटो, अपसौर नजिक लामो",
+    "en": "The lengths of the twelve Nepali months — short near perihelion, long near aphelion"
+  },
+  "learn.study.two_systems.belt_pinned_to_stars": {
+    "ne": "राशि पट्टी ताराहरूमा गाडिएको छ, त्यसैले बि.सं.को वर्ष ठ्याक्कै ३६०° — ३६५.२६ दिनको नाक्षत्र वर्ष। कक्ष वृत्त होइन, दीर्घवृत्त हो: दूरी ०.९८३–१.०१७ AU (३.४%), र नजिक हुँदा सूर्य छिटो हिँड्छ — त्यसैले सौर महिना २९ देखि ३२ दिनसम्मको हुन्छ। दृश्यमा यो अन्तर ६ गुणा बढाइएको छ, नत्र आँखाले देख्दैन।",
+    "en": "The rashi belt is pinned to the stars, so a BS year is exactly 360° — the 365.26-day sidereal year. The orbit is an ellipse, not a circle: 0.983–1.017 AU (3.4%), and the Sun moves fastest when nearest — which is why a solar month runs 29 to 32 days. The scene exaggerates that gap 6× so the eye can see it."
+  },
+  "learn.study.two_systems.legend_remaining_gap": {
+    "ne": "बाँकी खाडल — अधिक मासले पुर्छ",
+    "en": "The remaining gap — what an adhik maas fills"
+  },
+  "learn.study.ritu.aria": {
+    "ne": "छ ऋतु, बाह्र महिना र चार सायन बिन्दु एउटै चक्रमा",
+    "en": "The six ṛtus, twelve months and four tropical markers on one wheel"
+  },
+  "learn.study.circumpolar.aria": {
+    "ne": "काठमाडौँको अक्षांशबाट आकाश — कुन तारा कहिल्यै अस्ताउँदैनन् र कुन कहिल्यै उदाउँदैनन्",
+    "en": "The sky from Kathmandu's latitude — which stars never set and which never rise"
+  },
+  "learn.study.declination.aria": {
+    "ne": "सूर्यको क्रान्ति वर्षभरि — विषुवमा शून्य, अयनान्तमा चरम",
+    "en": "The Sun's declination through the year — zero at the equinoxes, extreme at the solstices"
+  },
+  "learn.study.ritu.caption": {
+    "ne": "ऋतुको नाम महिनाले दिन्छ, तर ऋतु बनाउने कुरा सूर्यको उत्तर–दक्षिण यात्रा हो। दुई फरक ढाँचा भएकाले चारै सायन बिन्दु (हरियो = विषुव, सुन्तला = अयनान्त) महिनाको सीमामा नभई बीचमा पर्छन् — ग्रीष्म अयनान्त असारभित्र, जेठ–असारको सन्धिमा होइन। अयन चलनले हरेक ७२ वर्षमा १° का दरले यी बिन्दु सार्दै लैजान्छ; त्यसैले ऋतुको कुरा गर्दा महिना होइन, उत्तरायण–दक्षिणायन नै भरपर्दो सन्दर्भ हो।",
+    "en": "The ṛtus take their names from the months, but what makes a ṛtu is the Sun's north–south journey. Because those are two different frames, all four tropical markers (green = equinox, amber = solstice) fall inside a month rather than on its boundary — the summer solstice sits within असार, not at the जेठ–असार seam. Precession moves these markers 1° every 72 years, which is why the dependable reference for a ṛtu argument is Uttarāyaṇa and Dakṣiṇāyana, not the months."
+  },
+  "learn.study.two_systems.model_caveat": {
+    "ne": "यी अङ्क यही दृश्यको खगोलीय मोडेलबाट आउँछन् — सङ्क्रान्ति र तिथिको कोण सही, तर कुन तिथि कुन दिनको भन्ने सूर्योदय नियम यहाँ लागू हुँदैन। दैनिक पञ्चाङ्ग नै आधिकारिक हो।",
+    "en": "These readings come from this view's own astronomical model — the sankranti and the tithi angle are right, but the sunrise rule that assigns a tithi to a civil day is not applied here. The daily panchanga remains authoritative."
+  },
+  "learn.study.two_systems.tithi_paksha": {
+    "ne": "तिथि · पक्ष",
+    "en": "Tithi · paksha"
+  },
+  "learn.study.lunar_gap.caption": {
+    "ne": "बाह्र चान्द्र मास ३५४.४ दिनको हुन्छ, सौर वर्ष ३६५.२४ — हरेक वर्ष १०.८७ दिनको घाटा। घाटा जम्मा हुँदै जान्छ, र तेस्रो वर्षसम्ममा ३२.६ दिन पुग्छ, जुन एउटा चान्द्र मासभन्दै लामो। त्यही बेला एक अधिक मास थपेर हिसाब मिलाइन्छ — यही चान्द्र–सौर पात्रोको मूल व्यवस्था हो।",
+    "en": "Twelve lunar months make 354.4 days against a solar year of 365.24 — a shortfall of 10.87 days each year. It accumulates, and by the third year it reaches 32.6 days, longer than a lunar month itself. That is when an extra month is inserted to settle the account — the central mechanism of a lunisolar calendar."
+  },
+  "learn.study.ritu.two_months_each": {
+    "ne": "प्रत्येक दुई महिना",
+    "en": "two months each"
+  },
+  "learn.study.declination.uttarayana": {
+    "ne": "उत्तरायण",
+    "en": "Uttarayana"
+  }
+}

@@ -1,0 +1,618 @@
+{
+  "shadbala.row.rank": {
+    "ne": "सापेक्ष क्रम",
+    "en": "Relative Rank",
+    "reuse": null
+  },
+  "shadbala.row.sthana": {
+    "ne": "स्थान",
+    "en": "Sthana",
+    "reuse": null
+  },
+  "shadbala.row.disha": {
+    "ne": "दिशा",
+    "en": "Disha",
+    "reuse": [
+      "kundali.disha"
+    ]
+  },
+  "shadbala.row.kala": {
+    "ne": "काल",
+    "en": "Kala",
+    "reuse": [
+      "choghadiya.types.kala.name"
+    ]
+  },
+  "shadbala.row.chesta": {
+    "ne": "चेष्टा",
+    "en": "Chesta",
+    "reuse": null
+  },
+  "shadbala.row.naisargika": {
+    "ne": "नैसर्गिक",
+    "en": "Naisargika",
+    "reuse": null
+  },
+  "shadbala.row.drishti": {
+    "ne": "दृष्टि",
+    "en": "Drishti",
+    "reuse": [
+      "kundali.drishti"
+    ]
+  },
+  "shadbala.row.total_pinda": {
+    "ne": "कुल पिण्ड",
+    "en": "Total Pinda",
+    "reuse": [
+      "kundali.total_pinda"
+    ]
+  },
+  "shadbala.row.rupas": {
+    "ne": "रूप",
+    "en": "Rupas",
+    "reuse": [
+      "kundali.rupas"
+    ]
+  },
+  "shadbala.row.min_required": {
+    "ne": "न्यूनतम आवश्यक",
+    "en": "Min. Require",
+    "reuse": null
+  },
+  "shadbala.row.ratio": {
+    "ne": "शक्ति अनुपात",
+    "en": "Strength Ratio",
+    "reuse": null
+  },
+  "shadbala.row.bhava_pct": {
+    "ne": "भाव (% मा)",
+    "en": "Bhava (in %)",
+    "reuse": null
+  },
+  "shadbala.row.ishta": {
+    "ne": "इष्ट फल",
+    "en": "Ishta Phala",
+    "reuse": null
+  },
+  "shadbala.row.kashta": {
+    "ne": "कष्ट फल",
+    "en": "Kashta Phala",
+    "reuse": null
+  },
+  "shadbala.status.exceptional": {
+    "ne": "उत्कृष्ट",
+    "en": "Exceptional",
+    "reuse": null
+  },
+  "shadbala.status.strong": {
+    "ne": "बलियो",
+    "en": "Strong",
+    "reuse": [
+      "kundali.report.confidence_strong"
+    ]
+  },
+  "shadbala.status.adequate": {
+    "ne": "पर्याप्त",
+    "en": "Adequate",
+    "reuse": null
+  },
+  "shadbala.status.borderline": {
+    "ne": "सीमान्त",
+    "en": "Borderline",
+    "reuse": null
+  },
+  "shadbala.status.weak": {
+    "ne": "कमजोर",
+    "en": "Weak",
+    "reuse": null
+  },
+  "shadbala.sthana.uchcha": {
+    "ne": "उच्च",
+    "en": "Uchcha",
+    "reuse": null
+  },
+  "shadbala.sthana.saptavargaja": {
+    "ne": "सप्त वर्गीय",
+    "en": "Sapta Vargiya",
+    "reuse": null
+  },
+  "shadbala.sthana.oja_yugma": {
+    "ne": "ओज युग्म",
+    "en": "Oja Yugma",
+    "reuse": null
+  },
+  "shadbala.sthana.kendradi": {
+    "ne": "केन्द्रादि",
+    "en": "Kendradi",
+    "reuse": null
+  },
+  "shadbala.sthana.drekkana": {
+    "ne": "द्रेक्काण",
+    "en": "Drekkana",
+    "reuse": null
+  },
+  "shadbala.kala.nathonnatha": {
+    "ne": "नता उन्नत",
+    "en": "Nata Unnata",
+    "reuse": null
+  },
+  "shadbala.kala.paksha": {
+    "ne": "पक्ष",
+    "en": "Paksha",
+    "reuse": [
+      "sections.paksha",
+      "calendar.paksha_aria",
+      "learn.paksha"
+    ]
+  },
+  "shadbala.kala.tribhaga": {
+    "ne": "त्रि भाग",
+    "en": "Tri Bhaga",
+    "reuse": null
+  },
+  "shadbala.kala.varshadhipati": {
+    "ne": "वर्षाधिपति",
+    "en": "Varshadhipati",
+    "reuse": null
+  },
+  "shadbala.kala.masadhipati": {
+    "ne": "मासाधिपति",
+    "en": "Masadhipati",
+    "reuse": null
+  },
+  "shadbala.kala.varadhipati": {
+    "ne": "वाराधिपति",
+    "en": "Varadhipati",
+    "reuse": null
+  },
+  "shadbala.kala.horadhipati": {
+    "ne": "होराधिपति",
+    "en": "Horadhipati",
+    "reuse": null
+  },
+  "shadbala.kala.ayana": {
+    "ne": "अयन",
+    "en": "Ayana",
+    "reuse": [
+      "kundali.ayana"
+    ]
+  },
+  "shadbala.kala.yuddha": {
+    "ne": "युद्ध",
+    "en": "Yuddha",
+    "reuse": null
+  },
+  "dashatree.level.maha": {
+    "ne": "महादशा",
+    "en": "Maha Dasha",
+    "reuse": [
+      "kundali.maha_dasha"
+    ]
+  },
+  "dashatree.level.antar": {
+    "ne": "अन्तर्दशा",
+    "en": "Antar Dasha",
+    "reuse": null
+  },
+  "dashatree.level.pratyantar": {
+    "ne": "प्रत्यन्तर्दशा",
+    "en": "Pratyantar Dasha",
+    "reuse": null
+  },
+  "dashatree.level.sukshma": {
+    "ne": "सूक्ष्म दशा",
+    "en": "Sukshma Dasha",
+    "reuse": null
+  },
+  "dashatree.level.prana": {
+    "ne": "प्राण दशा",
+    "en": "Prana Dasha",
+    "reuse": null
+  },
+  "dashatree.col.duration": {
+    "ne": "अवधि (BS)",
+    "en": "Duration (BS)",
+    "reuse": null
+  },
+  "dashatree.col.years": {
+    "ne": "वर्ष",
+    "en": "Years",
+    "reuse": null
+  },
+  "dashatree.col.months": {
+    "ne": "मास",
+    "en": "Months",
+    "reuse": null
+  },
+  "dashatree.col.days": {
+    "ne": "दिन",
+    "en": "Days",
+    "reuse": [
+      "holidays.col_days"
+    ]
+  },
+  "dashatree.col.yoga": {
+    "ne": "योग",
+    "en": "Yoga",
+    "reuse": [
+      "kundali.yoga",
+      "sections.yoga",
+      "aside.yoga",
+      "sait.yoga",
+      "panchanga_elements.yoga.title",
+      "dainik.yoga",
+      "learn.yoga"
+    ]
+  },
+  "vimshopaka.grade.full": {
+    "ne": "पूर्ण",
+    "en": "Full",
+    "reuse": null
+  },
+  "vimshopaka.grade.mediocre": {
+    "ne": "मध्यम",
+    "en": "Mediocre",
+    "reuse": null
+  },
+  "vimshopaka.grade.little": {
+    "ne": "अल्प",
+    "en": "Little",
+    "reuse": null
+  },
+  "vimshopaka.grade.incapable": {
+    "ne": "असमर्थ",
+    "en": "Incapable",
+    "reuse": null
+  },
+  "ashtaka.metric.rashi": {
+    "ne": "राशि",
+    "en": "Rashi",
+    "reuse": [
+      "panchanga.wheel.rashi",
+      "kundali.rashi",
+      "avakahada.col_rashi",
+      "learn.rashi",
+      "learn.playground.rashi"
+    ]
+  },
+  "ashtaka.metric.graha": {
+    "ne": "ग्रह",
+    "en": "Graha",
+    "reuse": [
+      "kundali.graha",
+      "graha_pages.sthiti.columns.graha",
+      "learn.graha"
+    ]
+  },
+  "ashtaka.metric.shodhya": {
+    "ne": "शोध्य",
+    "en": "Shodhya",
+    "reuse": null
+  },
+  "dashasystem.vimshottari": {
+    "ne": "विंशोत्तरी",
+    "en": "Vimshottari",
+    "reuse": null
+  },
+  "dashasystem.tribhagi": {
+    "ne": "त्रिभागि",
+    "en": "Tribhagi",
+    "reuse": null
+  },
+  "dashasystem.yogini": {
+    "ne": "योगिनी",
+    "en": "Yogini",
+    "reuse": null
+  },
+  "adm.january": {
+    "ne": "जनवरी",
+    "en": "January",
+    "reuse": null
+  },
+  "adm.february": {
+    "ne": "फेब्रुअरी",
+    "en": "February",
+    "reuse": null
+  },
+  "adm.march": {
+    "ne": "मार्च",
+    "en": "March",
+    "reuse": null
+  },
+  "adm.april": {
+    "ne": "अप्रिल",
+    "en": "April",
+    "reuse": null
+  },
+  "adm.may": {
+    "ne": "मे",
+    "en": "May",
+    "reuse": null
+  },
+  "adm.june": {
+    "ne": "जुन",
+    "en": "June",
+    "reuse": null
+  },
+  "adm.july": {
+    "ne": "जुलाई",
+    "en": "July",
+    "reuse": null
+  },
+  "adm.august": {
+    "ne": "अगस्ट",
+    "en": "August",
+    "reuse": null
+  },
+  "adm.september": {
+    "ne": "सेप्टेम्बर",
+    "en": "September",
+    "reuse": null
+  },
+  "adm.october": {
+    "ne": "अक्टोबर",
+    "en": "October",
+    "reuse": null
+  },
+  "adm.november": {
+    "ne": "नोभेम्बर",
+    "en": "November",
+    "reuse": null
+  },
+  "adm.december": {
+    "ne": "डिसेम्बर",
+    "en": "December",
+    "reuse": null
+  },
+  "kuta.varna": {
+    "ne": "वर्ण",
+    "en": "Varna",
+    "reuse": [
+      "avakahada.col_varna"
+    ]
+  },
+  "kuta.vashya": {
+    "ne": "वश्य",
+    "en": "Vashya",
+    "reuse": [
+      "kundali.vashya",
+      "avakahada.col_vashya"
+    ]
+  },
+  "kuta.tara": {
+    "ne": "तारा",
+    "en": "Tara",
+    "reuse": [
+      "kundali.tara"
+    ]
+  },
+  "kuta.yoni": {
+    "ne": "योनि",
+    "en": "Yoni",
+    "reuse": [
+      "avakahada.col_yoni"
+    ]
+  },
+  "kuta.maitri": {
+    "ne": "मैत्री",
+    "en": "Maitri",
+    "reuse": null
+  },
+  "kuta.gana": {
+    "ne": "गण",
+    "en": "Gana",
+    "reuse": [
+      "kundali.gana",
+      "avakahada.col_gana"
+    ]
+  },
+  "kuta.bhakuta": {
+    "ne": "भकूट",
+    "en": "Bhakuta",
+    "reuse": null
+  },
+  "kuta.nadi": {
+    "ne": "नाडी",
+    "en": "Nadi",
+    "reuse": [
+      "kundali.nadi",
+      "avakahada.col_nadi"
+    ]
+  },
+  "milan.kuta_details": {
+    "ne": "कूट विवरण",
+    "en": "Kuta Details",
+    "reuse": null
+  },
+  "milan.kuta_points": {
+    "ne": "कूट अङ्क",
+    "en": "Kuta Points",
+    "reuse": null
+  },
+  "milan.col_guna": {
+    "ne": "गुण",
+    "en": "Guna",
+    "reuse": [
+      "milan.guna"
+    ]
+  },
+  "milan.col_max": {
+    "ne": "अधिकतम",
+    "en": "Max",
+    "reuse": null
+  },
+  "milan.col_obt": {
+    "ne": "प्राप्त",
+    "en": "Obt",
+    "reuse": null
+  },
+  "milan.col_area": {
+    "ne": "जीवन क्षेत्र",
+    "en": "Area of Life",
+    "reuse": null
+  },
+  "milan.footnote": {
+    "ne": "अधिकतम — अधिकतम अङ्क · प्राप्त — प्राप्त अङ्क",
+    "en": "Max — Maximum Point · Obt — Obtained Point",
+    "reuse": null
+  },
+  "sait.planet.sun": {
+    "ne": "सूर्य",
+    "en": "Sun",
+    "reuse": [
+      "kundali.report.meta_sun",
+      "grahas.sun"
+    ]
+  },
+  "sait.planet.moon": {
+    "ne": "चन्द्र",
+    "en": "Moon",
+    "reuse": [
+      "grahas.moon",
+      "dainik.moon"
+    ]
+  },
+  "sait.planet.jupiter": {
+    "ne": "गुरु",
+    "en": "Jupiter",
+    "reuse": null
+  },
+  "sait.planet.venus": {
+    "ne": "शुक्र",
+    "en": "Venus",
+    "reuse": [
+      "grahas.venus"
+    ]
+  },
+  "sait.shuddhi.good": {
+    "ne": "ग्रह शुद्ध — शुभ",
+    "en": "Grahas strong — auspicious",
+    "reuse": null
+  },
+  "sait.shuddhi.shanti": {
+    "ne": "शान्ति आवश्यक",
+    "en": "needs śānti",
+    "reuse": null
+  },
+  "sait.shuddhi.avoid": {
+    "ne": "त्याज्य ग्रहस्थिति",
+    "en": "weak graha — avoid",
+    "reuse": null
+  },
+  "d1.abbr.sun": {
+    "ne": "सू",
+    "en": "Su",
+    "reuse": null
+  },
+  "d1.abbr.moon": {
+    "ne": "चं",
+    "en": "Mo",
+    "reuse": null
+  },
+  "d1.abbr.mars": {
+    "ne": "मं",
+    "en": "Ma",
+    "reuse": null
+  },
+  "d1.abbr.mercury": {
+    "ne": "बु",
+    "en": "Me",
+    "reuse": null
+  },
+  "d1.abbr.jupiter": {
+    "ne": "गु",
+    "en": "Ju",
+    "reuse": null
+  },
+  "d1.abbr.venus": {
+    "ne": "शु",
+    "en": "Ve",
+    "reuse": null
+  },
+  "d1.abbr.saturn": {
+    "ne": "श",
+    "en": "Sa",
+    "reuse": null
+  },
+  "d1.abbr.rahu": {
+    "ne": "रा",
+    "en": "Ra",
+    "reuse": null
+  },
+  "d1.abbr.ketu": {
+    "ne": "के",
+    "en": "Ke",
+    "reuse": null
+  },
+  "jp.graha.sun": {
+    "ne": "सूर्य",
+    "en": "Sun",
+    "reuse": [
+      "kundali.report.meta_sun",
+      "grahas.sun"
+    ]
+  },
+  "jp.graha.moon": {
+    "ne": "चन्द्र",
+    "en": "Moon",
+    "reuse": [
+      "grahas.moon",
+      "dainik.moon"
+    ]
+  },
+  "jp.graha.mars": {
+    "ne": "भौम",
+    "en": "Mars",
+    "reuse": null
+  },
+  "jp.graha.mercury": {
+    "ne": "बुध",
+    "en": "Mercury",
+    "reuse": [
+      "grahas.mercury"
+    ]
+  },
+  "jp.graha.jupiter": {
+    "ne": "गुरु",
+    "en": "Jupiter",
+    "reuse": null
+  },
+  "jp.graha.venus": {
+    "ne": "शुक्र",
+    "en": "Venus",
+    "reuse": [
+      "grahas.venus"
+    ]
+  },
+  "jp.graha.saturn": {
+    "ne": "शनि",
+    "en": "Saturn",
+    "reuse": [
+      "grahas.saturn"
+    ]
+  },
+  "jp.graha.rahu": {
+    "ne": "राहु",
+    "en": "Rahu",
+    "reuse": [
+      "grahas.rahu"
+    ]
+  },
+  "jp.graha.ketu": {
+    "ne": "केतु",
+    "en": "Ketu",
+    "reuse": [
+      "grahas.ketu"
+    ]
+  },
+  "jp.graha.gulika": {
+    "ne": "गुलिक",
+    "en": "Gulika",
+    "reuse": null
+  },
+  "jp.graha.rahu_ketu": {
+    "ne": "राहु, केतु",
+    "en": "Rahu, Ketu",
+    "reuse": null
+  }
+}

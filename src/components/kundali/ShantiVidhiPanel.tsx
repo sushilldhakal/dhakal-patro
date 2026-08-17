@@ -155,15 +155,12 @@ export function ShantiVidhiPanel({
       {/* recommendations from this chart */}
       {isError ? (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-          {bilingualText(lang, 
-            "गणना ल्याउन सकिएन। मिति/समय/स्थान जाँचेर पुनः प्रयास गर्नुहोस्।",
-            "Could not load the calculation. Check date/time/place and try again.",
-          )}
+          {t("kundali.x.shanti_load_error")}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           <RecommendationCard
-            heading={bilingualText(lang, "वर्तमान महादशा (विंशोत्तरी)", "Current Mahadasha (Vimshottari)")}
+            heading={t("kundali.x.shanti_current_mahadasha")}
             grahaKey={currentDasha.key}
             detailNe={
               currentDasha.period
@@ -181,7 +178,7 @@ export function ShantiVidhiPanel({
             onSelect={selectAndScroll}
           />
           <RecommendationCard
-            heading={bilingualText(lang, "सबैभन्दा बलहीन ग्रह (षड्बल)", "Weakest planet (Shadbala)")}
+            heading={t("kundali.x.shanti_weakest_planet")}
             grahaKey={weakestKey}
             detailNe={
               weakest
@@ -196,10 +193,7 @@ export function ShantiVidhiPanel({
         </div>
       )}
       <p className="text-sm leading-relaxed">
-        {bilingualText(lang, 
-          "गणना जन्म समयको ग्रहस्थिति (विंशोत्तरी महादशा) र ग्रह बल (षड्बल) मा आधारित छ। यो सामान्य मार्गदर्शन हो — विधिवत् उपायका लागि योग्य ज्योतिषीसँग परामर्श गर्नुहोस्।",
-          "The calculation is based on the birth-time planetary positions (Vimshottari mahadasha) and planetary strength (Shadbala). This is general guidance — consult a qualified astrologer for formal remedies.",
-        )}
+        {t("kundali.x.shanti_basis_note")}
       </p>
 
       {/* graha selector */}
@@ -255,7 +249,7 @@ export function ShantiVidhiPanel({
         <div className="space-y-5 p-5">
           {/* mantra + japa */}
           <div className="rounded-xl border border-border bg-muted/30 p-4">
-            <div className="mb-1 text-sm text-base uppercase tracking-wide">{bilingualText(lang, "बीज मन्त्र", "Beeja Mantra")}</div>
+            <div className="mb-1 text-sm text-base uppercase tracking-wide">{t("kundali.x.shanti_beeja_mantra_heading")}</div>
             <p className="text-lg font-semibold leading-relaxed text-foreground">{graha.beejMantra}</p>
             <p className="mt-1.5 text-sm">
               {bilingualNode(lang, <>जप संख्या: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> पटक</>,
@@ -266,16 +260,16 @@ export function ShantiVidhiPanel({
 
           {/* tiles */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <InfoTile icon={<TreePine className="h-4 w-4" />} label={bilingualText(lang, "समिधा (हवन काठ)", "Samidha (homa wood)")} value={bilingualText(lang, graha.samidhaNe, graha.samidhaEn)} />
-            <InfoTile icon={<Gem className="h-4 w-4" />} label={bilingualText(lang, "रत्न", "Gem")} value={bilingualText(lang, graha.gemNe, graha.gemEn)} />
-            <InfoTile icon={<Sparkles className="h-4 w-4" />} label={bilingualText(lang, "धातु", "Metal")} value={bilingualText(lang, graha.metalNe, graha.metalEn)} />
-            <InfoTile icon={<Flame className="h-4 w-4" />} label={bilingualText(lang, "अधिदेवता", "Deity")} value={bilingualText(lang, graha.adhidevataNe, graha.adhidevataEn)} />
+            <InfoTile icon={<TreePine className="h-4 w-4" />} label={t("kundali.x.shanti_samidha_heading")} value={bilingualText(lang, graha.samidhaNe, graha.samidhaEn)} />
+            <InfoTile icon={<Gem className="h-4 w-4" />} label={t("kundali.x.shanti_gem")} value={bilingualText(lang, graha.gemNe, graha.gemEn)} />
+            <InfoTile icon={<Sparkles className="h-4 w-4" />} label={t("kundali.x.shanti_metal")} value={bilingualText(lang, graha.metalNe, graha.metalEn)} />
+            <InfoTile icon={<Flame className="h-4 w-4" />} label={t("kundali.x.shanti_deity")} value={bilingualText(lang, graha.adhidevataNe, graha.adhidevataEn)} />
           </div>
 
           {/* daan */}
           <div>
             <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <HandCoins className="h-4 w-4 text-secondary" /> {bilingualText(lang, "दान सामग्री", "Donation items")}
+              <HandCoins className="h-4 w-4 text-secondary" /> {t("kundali.x.shanti_donation_items")}
             </div>
             <div className="flex flex-wrap gap-2">
               {(lang === "en" ? graha.daanEn ?? graha.daan : graha.daan).map((item, idx) => (
@@ -287,26 +281,26 @@ export function ShantiVidhiPanel({
           </div>
 
           <p className="rounded-lg border border-border bg-card/30 p-3 text-sm leading-relaxed">
-            <span className="font-semibold text-foreground">{bilingualText(lang, "उपयोग:", "Use:")}</span> {bilingualText(lang, graha.remedyNe, graha.remedyEn)}
+            <span className="font-semibold text-foreground">{t("kundali.x.shanti_use_label")}</span> {bilingualText(lang, graha.remedyNe, graha.remedyEn)}
           </p>
         </div>
       </section>
 
       {/* full reference table */}
       <div>
-        <h3 className="mb-3 text-base font-bold text-foreground">{bilingualText(lang, "नवग्रह शान्ति तालिका", "Navagraha Shanti table")}</h3>
+        <h3 className="mb-3 text-base font-bold text-foreground">{t("kundali.x.shanti_reference_table")}</h3>
         <div className="overflow-x-auto rounded-xl border border-border">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted hover:bg-muted">
-                <TableHead className={th}>{bilingualText(lang, "ग्रह", "Planet")}</TableHead>
-                <TableHead className={th}>{bilingualText(lang, "बार", "Day")}</TableHead>
-                <TableHead className={th}>{bilingualText(lang, "बीज मन्त्र", "Beeja mantra")}</TableHead>
-                <TableHead className={th}>{bilingualText(lang, "जप", "Japa")}</TableHead>
-                <TableHead className={th}>{bilingualText(lang, "समिधा", "Samidha")}</TableHead>
-                <TableHead className={th}>{bilingualText(lang, "रत्न", "Gem")}</TableHead>
-                <TableHead className={th}>{bilingualText(lang, "धातु", "Metal")}</TableHead>
-                <TableHead className={th}>{bilingualText(lang, "दान", "Daan")}</TableHead>
+                <TableHead className={th}>{t("learn.playground.planet")}</TableHead>
+                <TableHead className={th}>{t("kundali.day")}</TableHead>
+                <TableHead className={th}>{t("kundali.x.shanti_beeja_mantra_column")}</TableHead>
+                <TableHead className={th}>{t("kundali.x.shanti_japa_column")}</TableHead>
+                <TableHead className={th}>{t("kundali.x.shanti_samidha_column")}</TableHead>
+                <TableHead className={th}>{t("kundali.x.shanti_gem")}</TableHead>
+                <TableHead className={th}>{t("kundali.x.shanti_metal")}</TableHead>
+                <TableHead className={th}>{t("kundali.x.shanti_daan_column")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -337,10 +331,7 @@ export function ShantiVidhiPanel({
           </Table>
         </div>
         <p className="mt-2 text-sm leading-relaxed">
-          {bilingualText(lang, 
-            "सूचना: माथिका विवरण शास्त्रीय नवग्रह शान्ति परम्परामा आधारित छन्। रत्नधारण वा विधिवत् हवन गर्नुअघि योग्य ज्योतिषी/पुरोहितसँग परामर्श गर्नुहोस्।",
-            "Note: the details above are based on the classical Navagraha Shanti tradition. Consult a qualified astrologer/priest before wearing gems or performing a formal homa.",
-          )}
+          {t("kundali.x.shanti_disclaimer")}
         </p>
       </div>
     </div>

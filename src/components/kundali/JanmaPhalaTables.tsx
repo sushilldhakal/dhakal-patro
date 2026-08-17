@@ -180,30 +180,22 @@ export function JanmaPhalaTables({
 
       <p className="text-xs font-medium text-muted-foreground">
         {tab === "male"
-          ? bilingualText(
-              lang,
-              "पुरुषजन्मकुण्डल्यां तन्वादिभावस्थग्रहफलानि",
-              "Purushajanmakundalyāṃ tanvādibhāvasthagrahaphalāni",
-            )
-          : bilingualText(
-              lang,
-              "स्त्रीजन्मकुण्डल्यां तन्वादिभावस्थग्रहाणां जातकोक्तं फलम्",
-              "Strījanmakundalyāṃ tanvādibhāvasthagrahāṇāṃ jātakoktaṃ phalam",
-            )}
+          ? t("kundali.x.purusha_janma_phala_caption")
+          : t("kundali.x.stree_janma_phala_caption")}
       </p>
 
       {tab === "male" ? (
         <JanmaPhalaTable
           rows={PURUSHA_JANMA_ROWS}
           grahas={PURUSHA_JANMA_GRAHAS}
-          houseColLabel={bilingualText(lang, "भाव", "Bhava")}
+          houseColLabel={t("kundali.bhava_19")}
           chartBhavas={chartBhavas}
         />
       ) : (
         <JanmaPhalaTable
           rows={STREI_JANMA_ROWS}
           grahas={STREI_JANMA_GRAHAS}
-          houseColLabel={bilingualText(lang, "भाव", "Bhava")}
+          houseColLabel={t("kundali.bhava_19")}
           chartBhavas={chartBhavas}
         />
       )}

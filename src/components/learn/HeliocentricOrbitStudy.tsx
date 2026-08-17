@@ -86,21 +86,21 @@ export function HeliocentricOrbitStudy() {
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>{bilingualText(lang, "माध्य कोण (वर्ष)", "Mean angle (year)")}</span>
+            <span className={edRoK}>{t("learn.study.orbit.mean_angle")}</span>
             <span className={edRoV({ mono: true })}>{fmt(Math.round(meanDeg))}°</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{bilingualText(lang, "वर्षको दिन (लगभग)", "Day of year (approx)")}</span>
+            <span className={edRoK}>{t("learn.study.orbit.day_of_year")}</span>
             <span className={edRoV({ mono: true })}>{fmt(dayOfYear)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{bilingualText(lang, "घटना · ऋतु", "Event · season")}</span>
+            <span className={edRoK}>{t("learn.study.orbit.event_season")}</span>
             <span className={edRoV({ amber: true })}>{orbitEvent(meanDeg, isEn)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>{bilingualText(lang, "सूर्यदेखि दूरी", "Distance from Sun")}</span>
+            <span className={edRoK}>{t("learn.study.orbit.distance_from_sun")}</span>
             <span className={edRoV({ mono: true })}>
-              {orbit.speed > 1.02 ? bilingualText(lang, "नजिक · छिटो", "Near · fast") : orbit.speed < 0.98 ? bilingualText(lang, "टाढा · ढिलो", "Far · slow") : bilingualText(lang, "मध्यम", "Medium")}
+              {orbit.speed > 1.02 ? t("learn.study.orbit.near_fast") : orbit.speed < 0.98 ? t("learn.study.orbit.far_slow") : t("learn.study.medium")}
             </span>
           </div>
         </div>
@@ -109,8 +109,8 @@ export function HeliocentricOrbitStudy() {
             type="button"
             className={edPlayBtn}
             onClick={() => setPlaying((p) => !p)}
-            title={playing ? bilingualText(lang, "रोक्नुहोस्", "Pause") : bilingualText(lang, "चलाउनुहोस्", "Play")}
-            aria-label={playing ? bilingualText(lang, "रोक्नुहोस्", "Pause") : bilingualText(lang, "चलाउनुहोस्", "Play")}
+            title={playing ? t("learn.pause") : t("learn.play")}
+            aria-label={playing ? t("learn.pause") : t("learn.play")}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>

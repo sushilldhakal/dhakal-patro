@@ -89,9 +89,16 @@ import earthToonUrl from "@/assets/graha/earth-orig.png";
 /** Same wheel as Learn — radii come from {@link EclipticWheel}. */
 export const RASHI_INNER = BELT_INNER;
 export const RASHI_OUTER = BELT_OUTER;
-/** Month names sit in the inner half of each राशि cell, rashi names in the outer. */
-const MONTH_LABEL_R = RASHI_INNER + 1.8;
-const RASHI_LABEL_R = RASHI_OUTER - 1.5;
+/**
+ * Month names sit in the inner half of each राशि cell, rashi names in the outer.
+ *
+ * Pushed to opposite edges of the band rather than either side of its middle.
+ * The pair separates radially, so on the left and right of the wheel — where
+ * "outward" is sideways — they were reading as one run of text, `वैशाख मेष`.
+ * Four units of band between them keeps them apart at every angle.
+ */
+const MONTH_LABEL_R = RASHI_INNER + 0.9;
+const RASHI_LABEL_R = RASHI_OUTER - 0.7;
 /**
  * Stretch the classical Moon→Saturn shells so Saturn sits just inside the
  * month ring — the same inner disk the Learn polar grid occupies. Without
@@ -99,6 +106,17 @@ const RASHI_LABEL_R = RASHI_OUTER - 1.5;
  * they never read as being *on* the grid.
  */
 const SPACE_SHELL_SCALE = MONTH_R / 9;
+/**
+ * How much bigger than schematic the grahas are drawn in अन्तरिक्ष.
+ *
+ * The shells were stretched out to the month ring but the bodies were not, so
+ * zoomed out to the whole wheel every graha was a two-pixel speck on a disc six
+ * hundred across — you could see *that* something was in कन्या without being
+ * able to see *what*. The shells have far more room between them than the
+ * bodies need, and doubling only closes the gap at a conjunction, where two
+ * grahas touching is the thing being shown.
+ */
+const SPACE_BODY_SCALE = 2.1;
 /** How far a नक्षत्र's figure is held clear of its segment's own boundaries. */
 const PANEL_INSET = 0.14;
 /**
@@ -877,45 +895,6 @@ export function AakashGocharScene({
     },
     [lunarUmbra, solarUmbra],
   );
-  /**
-   * Drop from a graha onto the ecliptic, and the blob it plants there — the
-   * same "under the plane" reading Learn's translucent disc gives the Sun.
-   * Only when the body is south of the ecliptic; north of it the body sits
-   * in front of the disc and needs no mark.
-   */
-  const planeShadows = useMemo(() => {
-    const out = {} as Record<GrahaKey, { foot: THREE.Mesh; drop: THREE.Line }>;
-    for (const key of GEO_BODY_ORDER) {
-      const foot = new THREE.Mesh(
-        new THREE.CircleGeometry(1, 20),
-        new THREE.MeshBasicMaterial({
-          color: 0x000010,
-          transparent: true,
-          opacity: 0.5,
-          side: THREE.DoubleSide,
-          depthWrite: false,
-        }),
-      );
-      foot.rotation.x = -Math.PI / 2;
-      foot.visible = false;
-      foot.renderOrder = 0;
-      const drop = makeDynamicLine(2, "#1a2a44", 0.45);
-      drop.visible = false;
-      out[key] = { foot, drop };
-    }
-    return out;
-  }, []);
-  useEffect(
-    () => () => {
-      for (const { foot, drop } of Object.values(planeShadows)) {
-        foot.geometry.dispose();
-        (foot.material as THREE.Material).dispose();
-        drop.geometry.dispose();
-        (drop.material as THREE.Material).dispose();
-      }
-    },
-    [planeShadows],
-  );
   const spaceMeridian = useMemo(() => makePrimeMeridian(EARTH_RADIUS), []);
   const globeMeridian = useMemo(() => makePrimeMeridian(GLOBE_R), []);
 
@@ -1193,6 +1172,8 @@ export function AakashGocharScene({
   const labels = useRef<ScreenLabel[]>([]);
   const scratch = useRef(new THREE.Vector3());
   const target = useRef(new THREE.Vector3());
+  /** Screen-up in world space, so a name can be hung off the edge of a disc. */
+  const screenUp = useRef(new THREE.Vector3());
   /** Your place on the globe, in world space — the camera's other lock target. */
   const observerTrack = useRef(new THREE.Vector3());
 
@@ -1350,7 +1331,38 @@ export function AakashGocharScene({
     const height = state.size.height;
     const collect = frame.current % 6 === 0;
     const collected: ScreenLabel[] = [];
+    // Second column of the camera's world matrix: which way is up on screen.
+    screenUp.current.setFromMatrixColumn(state.camera.matrixWorld, 1).normalize();
+    /**
+     * Is the Earth between the camera and this point?
+     *
+     * In अन्तरिक्ष the globe is opaque and sits at the origin, but the names are
+     * DOM nodes and a DOM node has no depth test — so `सूर्य` went on floating
+     * over the Pacific while the Sun itself was correctly hidden behind it. Ray
+     * against sphere, from the eye to the label: `oc` is the camera's own
+     * position because the sphere is centred on the origin.
+     */
+    const behindEarth = (at: [number, number, number]) => {
+      if (!space) return false;
+      const cam = state.camera.position;
+      const dx = at[0] - cam.x;
+      const dy = at[1] - cam.y;
+      const dz = at[2] - cam.z;
+      const reach = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (reach < 1e-4) return false;
+      const ix = dx / reach;
+      const iy = dy / reach;
+      const iz = dz / reach;
+      const b = cam.x * ix + cam.y * iy + cam.z * iz;
+      const c = cam.lengthSq() - EARTH_RADIUS * EARTH_RADIUS;
+      const disc = b * b - c;
+      if (disc <= 0) return false;
+      const hit = -b - Math.sqrt(disc);
+      return hit > 0 && hit < reach;
+    };
+
     const project = (label: Omit<ScreenLabel, "x" | "y">, at: [number, number, number]) => {
+      if (behindEarth(at)) return;
       scratch.current.set(at[0], at[1], at[2]).project(state.camera);
       if (scratch.current.z > 1) return;
       const x = (scratch.current.x * 0.5 + 0.5) * width;
@@ -1371,15 +1383,17 @@ export function AakashGocharScene({
         sunAltitude = alt;
       }
 
+      /** The body's radius as actually drawn, in world units. */
+      const drawnR = globe
+        ? DOME_RADIUS[key] * GLOBE_BODY_SCALE
+        : horizon
+          ? DOME_RADIUS[key]
+          : bodyRadius(key, body.distanceAu) * SPACE_SHELL_SCALE * SPACE_BODY_SCALE;
+
       const group = bodyRefs.current[key];
       if (group) {
         group.position.set(at[0], at[1], at[2]);
-        const scale = globe
-          ? (DOME_RADIUS[key] * GLOBE_BODY_SCALE) / BODY_RADIUS[key]
-          : horizon
-            ? DOME_RADIUS[key] / BODY_RADIUS[key]
-            : (bodyRadius(key, body.distanceAu) * SPACE_SHELL_SCALE) / BODY_RADIUS[key];
-        group.scale.setScalar(scale);
+        group.scale.setScalar(drawnR / BODY_RADIUS[key]);
         // Below the horizon a graha is simply not in the sky.
         group.visible = !horizon || at[1] > -DOME * 0.06;
       }
@@ -1398,23 +1412,6 @@ export function AakashGocharScene({
            left the plane empty — the grid is the plane, the shells are the
            grahas' paths across it. */
         shell.visible = space;
-      }
-
-      const shadow = planeShadows[key];
-      if (space && toggles.grid && body.latitude < -0.15) {
-        const local = eclipticToVec3(body.longitude, body.latitude, spaceR);
-        const localFoot = eclipticToVec3(body.longitude, 0, spaceR);
-        shadow.foot.position.set(localFoot[0], localFoot[1] - 0.03, localFoot[2]);
-        const br = bodyRadius(key, body.distanceAu) * SPACE_SHELL_SCALE;
-        shadow.foot.scale.setScalar(Math.max(0.35, br * 2.2));
-        shadow.foot.visible = true;
-        setPoint(shadow.drop, 0, local);
-        setPoint(shadow.drop, 1, localFoot);
-        flushLine(shadow.drop);
-        shadow.drop.visible = true;
-      } else {
-        shadow.foot.visible = false;
-        shadow.drop.visible = false;
       }
 
       const ray = rays[key];
@@ -1440,7 +1437,15 @@ export function AakashGocharScene({
       // Below the horizon the ground hides the body, but a DOM label has no
       // depth test — so it has to be filtered out explicitly.
       if (collect && labelVisible(at)) {
-        project({ id: `g-${key}`, kind: "graha", key }, at);
+        /* Hung below the disc rather than pinned to the centre. A fixed pixel
+           nudge cannot do this once a body can be anything from a speck to
+           half the screen: the offset has to be the body's own radius. */
+        const up = screenUp.current;
+        project({ id: `g-${key}`, kind: "graha", key }, [
+          at[0] - up.x * drawnR,
+          at[1] - up.y * drawnR,
+          at[2] - up.z * drawnR,
+        ]);
       }
 
       /* ── the selected graha, marked against the belt ─────────────────
@@ -2312,13 +2317,11 @@ export function AakashGocharScene({
           <ShellLine key={key} points={points} attach={attach} />
         ))}
 
-        {GEO_BODY_ORDER.map((key) => (
-          <group key={`shadow-${key}`}>
-            <primitive object={planeShadows[key].foot} />
-            <primitive object={planeShadows[key].drop} />
-          </group>
-        ))}
-
+        {/* How far a graha stands off the ecliptic is drawn for the *selected*
+            one only — its शर, in its own colour. Every body used to plant a
+            dark blob on the plane below it as well, which read as a shadow
+            cast by nothing and only ever appeared on whichever one or two
+            happened to be south of the plane that day. */}
         <primitive object={sharaLine} />
         <mesh ref={sharaFootRef} visible={false}>
           <circleGeometry args={[0.13, 20]} />

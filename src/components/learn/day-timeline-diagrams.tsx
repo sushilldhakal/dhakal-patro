@@ -11,6 +11,10 @@
  * a rule with hour ticks, events as dots on it, and the reading underneath.
  */
 
+import { useTranslation } from "react-i18next";
+
+/* The figures that still call bilingualText are the ones whose text is built
+   around a formatted number, so they are not single catalogue strings. */
 import { bilingualText, useLocale, type Lang } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
@@ -65,6 +69,7 @@ function Frame({
  * comes from Earth having *moved* between them.
  */
 export function SiderealSolarDay() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -75,8 +80,8 @@ export function SiderealSolarDay() {
      true value, and the caption says the drawing is exaggerated. */
   const SHOWN = 22;
   const panels = [
-    { cx: 150, sun: 0, mark: 0, ne: "सुरु — दुवै सूर्य र ताराको सिधामा", en: "start — lined up on both Sun and star" },
-    { cx: 400, sun: SHOWN, mark: 0, ne: "२३घ ५६मि पछि — एक पूरा घुर्णन", en: "after 23h 56m — one full rotation" },
+    { cx: 150, sun: 0, mark: 0, caption: "learn.diagrams.sidereal_panel_start" },
+    { cx: 400, sun: SHOWN, mark: 0, caption: "learn.diagrams.sidereal_panel_one_rotation" },
   ];
   const cy = 108;
   const pt = (cx: number, deg: number, rad: number): [number, number] => [
@@ -88,19 +93,11 @@ export function SiderealSolarDay() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "नाक्षत्र दिन र सौर दिनको फरक — कक्षमा सरेको १° ले थपिने ४ मिनेट",
-        "Sidereal versus solar day — the four minutes added by 1° of orbital motion",
-      )}
-      caption={bilingualText(
-        lang,
-        "पृथ्वीको एउटा दाग सुरुमा सूर्य र टाढाको तारा दुवैको सिधामा छ। एक पूरा घुर्णन (२३घ ५६मि) पछि त्यो दाग फेरि ताराकै सिधामा आइपुग्छ — तारा यति टाढा छ कि दिशा बदलिँदैन। तर त्यति बेरमा पृथ्वी कक्षमा ~१° सरिसकेको हुन्छ, त्यसैले सूर्यलाई फेरि ठीक माथि ल्याउन त्यो १° थप घुम्नुपर्छ, जुन करिब ४ मिनेट हो। चित्रमा कोण देखिने बनाउन बढाइएको छ।",
-        "A mark on Earth starts lined up with both the Sun and a distant star. After one full rotation — 23h 56m — the mark points at the star again, because the star is far enough away that its direction has not changed. But Earth has moved about 1° along its orbit in that time, so it must turn that extra 1° to bring the Sun overhead again: roughly four minutes. The angle is exaggerated here to be visible.",
-      )}
+      label={t("learn.diagrams.sidereal_day_label")}
+      caption={t("learn.diagrams.sidereal_day_caption")}
     >
       <text x={W / 2} y={18} textAnchor="middle" className="fill-current text-[8.5px] opacity-60">
-        ★ {bilingualText(lang, "टाढाको ताराको दिशा — दुवै चित्रमा उही", "direction to the distant star — the same in both")}
+        ★ {t("learn.diagrams.sidereal_star_direction")}
       </text>
 
       {panels.map((p, i) => (
@@ -134,7 +131,7 @@ export function SiderealSolarDay() {
           <circle cx={pt(p.cx, p.sun, r + 30)[0]} cy={pt(p.cx, p.sun, r + 30)[1]} r={7} fill={SUN} opacity={0.6} />
 
           <text x={p.cx} y={cy + r + 26} textAnchor="middle" className="fill-current text-[8px] opacity-65">
-            {lang === "en" ? p.en : p.ne}
+            {t(p.caption)}
           </text>
         </g>
       ))}
@@ -154,7 +151,7 @@ export function SiderealSolarDay() {
         {bilingualText(lang, `त्यो ~${n(1)}° = ~${n(4)} मिनेट थप घुर्णन`, `that ~${n(1)}° = ~${n(4)} more minutes of spin`)}
       </text>
       <text x={W / 2} y={H - 8} textAnchor="middle" className="fill-current text-[9px] font-semibold opacity-80">
-        {bilingualText(lang, "२३घ ५६मि (नाक्षत्र दिन) + ४मि = २४ घण्टा (सौर दिन)", "23h 56m (sidereal day) + 4m = 24 hours (solar day)")}
+        {t("learn.diagrams.sidereal_day_total")}
       </text>
     </Frame>
   );
@@ -175,6 +172,7 @@ export function SiderealSolarDay() {
  * because the symmetry is only interesting once you see H itself change.
  */
 export function DayLengthHourAngle() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -184,8 +182,8 @@ export function DayLengthHourAngle() {
   const noon = (L + Rr) / 2;
 
   const rows = [
-    { h: 6.92, y: 62, ne: "ग्रीष्म अयनान्त", en: "summer solstice", len: "~13h 50m", c: SUN },
-    { h: 5.21, y: 126, ne: "शीत अयनान्त", en: "winter solstice", len: "~10h 25m", c: ALT },
+    { h: 6.92, y: 62, key: "learn.diagrams.summer_solstice", len: "~13h 50m", c: SUN },
+    { h: 5.21, y: 126, key: "learn.diagrams.winter_solstice", len: "~10h 25m", c: ALT },
   ];
   /* Scale so the longer of the two fills the frame. */
   const px = (hours: number) => ((Rr - L) / 2) * (hours / 7.4);
@@ -194,26 +192,18 @@ export function DayLengthHourAngle() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "दिनमान = २H — स्थानीय मध्याह्नको दुवैतिर बराबर घण्टा कोण",
-        "Day length = 2H — the hour angle on either side of local noon",
-      )}
-      caption={bilingualText(
-        lang,
-        "सूर्योदयको समीकरणले दिने H भनेको आधा दिन हो। स्थानीय मध्याह्न ठीक बीचमा पर्छ, सूर्योदय मध्याह्न − H मा र सूर्यास्त मध्याह्न + H मा — त्यसैले एउटै गणनाले दुवै दिन्छ र दिनमान सिधै २H हुन्छ। काठमाडौँमा H ग्रीष्म अयनान्तमा ~६घ ५५मि र शीत अयनान्तमा ~५घ १३मि हुन्छ।",
-        "The H that the sunrise equation gives you is half a day. Local noon sits in the middle, sunrise at noon − H and sunset at noon + H — so one solve gives both, and day length is simply 2H. At Kathmandu H runs about 6h 55m at the summer solstice and 5h 13m at the winter one.",
-      )}
+      label={t("learn.diagrams.day_length_label")}
+      caption={t("learn.diagrams.day_length_caption")}
     >
       <line x1={noon} y1={34} x2={noon} y2={H - 34} stroke={MARK} strokeWidth={1.2} strokeDasharray="3 3" opacity={0.8} />
       <text x={noon} y={26} textAnchor="middle" className="text-[8.5px] font-semibold" style={{ fill: MARK }}>
-        {bilingualText(lang, "स्थानीय मध्याह्न", "local noon")}
+        {t("learn.diagrams.local_noon")}
       </text>
 
       {rows.map((r) => (
-        <g key={r.en}>
+        <g key={r.key}>
           <text x={L - 10} y={r.y + 3} textAnchor="end" className="fill-current text-[8px] opacity-60">
-            {lang === "en" ? r.en : r.ne}
+            {t(r.key)}
           </text>
           <line
             x1={noon - px(r.h)}
@@ -229,10 +219,10 @@ export function DayLengthHourAngle() {
             <circle key={s} cx={noon + s * px(r.h)} cy={r.y} r={3.4} fill={r.c} />
           ))}
           <text x={noon - px(r.h) - 6} y={r.y + 3} textAnchor="end" className="fill-current text-[7.5px] opacity-65">
-            {bilingualText(lang, "सूर्योदय", "sunrise")}
+            {t("panchanga.wheel.sunrise")}
           </text>
           <text x={noon + px(r.h) + 6} y={r.y + 3} className="fill-current text-[7.5px] opacity-65">
-            {bilingualText(lang, "सूर्यास्त", "sunset")}
+            {t("learn.diagrams.sunset")}
           </text>
           <text x={noon} y={r.y + 17} textAnchor="middle" className="fill-current text-[7.5px] opacity-55">
             {bilingualText(lang, `२H = ${n(r.len)}`, `2H = ${r.len}`)}
@@ -267,6 +257,7 @@ export function DayLengthHourAngle() {
  * so the slip is a slope rather than a list.
  */
 export function MoonriseSlip() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -291,16 +282,8 @@ export function MoonriseSlip() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "चन्द्रोदय हरेक दिन ~५० मिनेट ढिलो — कुनै दिन दुई पटक, कुनै दिन एकै पटक पनि होइन",
-        "Moonrise slips ~50 minutes a day — some days get two, some get none",
-      )}
-      caption={bilingualText(
-        lang,
-        "चन्द्रमा आफ्नै कक्षमा दैनिक ~१३° सर्ने भएकाले लगातार दुई चन्द्रोदयबीच ~२४ घण्टा ५० मिनेट लाग्छ — अर्थात् एक दिनभन्दा सधैँ बढी। त्यसैले ढिलाइ जम्मा हुँदै गएर कुनै दिन पूरै नाघ्छ र त्यो दिन चन्द्रोदयै हुँदैन। उल्टो भने सम्भव छैन: अन्तराल २४ घण्टाभन्दा लामो हुनाले एउटै दिनमा दुई चन्द्रोदय कहिल्यै पर्दैनन्।",
-        "The Moon moves about 13° along its own orbit each day, so successive moonrises are about 24h 50m apart — always more than one civil day. The slip therefore accumulates until it steps clean over a day, which then has no moonrise at all. The reverse cannot happen: because the interval exceeds 24 hours, two moonrises never fall inside one day.",
-      )}
+      label={t("learn.diagrams.moonrise_slip_label")}
+      caption={t("learn.diagrams.moonrise_slip_caption")}
     >
       {[0, 6, 12, 18, 24].map((h) => (
         <g key={h}>
@@ -322,7 +305,7 @@ export function MoonriseSlip() {
           ))}
           {row.rises.length === 0 && (
             <text x={(L + Rr) / 2} y={rowY(i) + 3} textAnchor="middle" className="text-[8px] font-semibold" style={{ fill: WARN }}>
-              {bilingualText(lang, "यो दिन चन्द्रोदय छैन", "no moonrise this day")}
+              {t("learn.diagrams.moonrise_none")}
             </text>
           )}
           {/* the slip label flips inboard near the right edge, where a
@@ -363,6 +346,7 @@ export function MoonriseSlip() {
  * which is the entire rule in one mark.
  */
 export function SunriseSamplesTithi() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -376,23 +360,15 @@ export function SunriseSamplesTithi() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "सूर्योदयमा जुन तिथि चलिरहेको छ, त्यही दिनभरिको तिथि",
-        "The tithi running at sunrise is the tithi for the whole day",
-      )}
-      caption={bilingualText(
-        lang,
-        "तिथि जुनसुकै घडीमा सुरु र अन्त्य हुन सक्छ, तर पात्रोलाई दिनको एउटै नाम चाहिन्छ। नियम सरल छ — सूर्योदयको क्षणमा जुन तिथि चलिरहेको हुन्छ, त्यही दिनभरिको तिथि। त्यसैले सूर्योदयअघि सकिने तिथिले दिन पाउँदैन। यही एउटा नियमबाट तिथि स्थानसापेक्ष बन्छ, किनभने सूर्योदय आफैँ स्थानसापेक्ष छ।",
-        "A tithi can start and end at any hour, but a calendar needs one name per day. The rule is simply this: whichever tithi is running at the moment of sunrise is the tithi for that whole day. A tithi that ends before sunrise therefore never gets a day of its own. That one rule is what makes tithi local, because sunrise itself is local.",
-      )}
+      label={t("learn.diagrams.sunrise_sample_label")}
+      caption={t("learn.diagrams.sunrise_sample_caption")}
     >
       {/* the तिथि strip, with a boundary before dawn and one after */}
       {[
-        { a: 0, b: 4.5, ne: "तृतीया", en: "Tritiya", c: 0.1 },
-        { a: 4.5, b: 24, ne: "चतुर्थी", en: "Chaturthi", c: 0.2 },
+        { a: 0, b: 4.5, key: "learn.diagrams.tithi_tritiya", c: 0.1 },
+        { a: 4.5, b: 24, key: "learn.diagrams.tithi_chaturthi", c: 0.2 },
       ].map((seg) => (
-        <g key={seg.en}>
+        <g key={seg.key}>
           <rect
             x={x(seg.a)}
             y={barY}
@@ -408,7 +384,7 @@ export function SunriseSamplesTithi() {
             textAnchor="middle"
             className="fill-current text-[8.5px] opacity-75"
           >
-            {lang === "en" ? seg.en : seg.ne}
+            {t(seg.key)}
           </text>
         </g>
       ))}
@@ -431,7 +407,7 @@ export function SunriseSamplesTithi() {
         {n("24:00")}
       </text>
       <text x={(L + Rr) / 2} y={30} textAnchor="middle" className="fill-current text-[8.5px] font-semibold opacity-70">
-        {bilingualText(lang, "एक दिन", "one civil day")}
+        {t("learn.diagrams.one_civil_day")}
       </text>
     </Frame>
   );
@@ -451,6 +427,7 @@ export function SunriseSamplesTithi() {
  * both are correct is the sunrise rule, not a difference in the astronomy.
  */
 export function TithiAcrossZones() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -460,24 +437,16 @@ export function TithiAcrossZones() {
   const x = (h: number) => L + (h / 12) * (Rr - L);
 
   const places = [
-    { ne: "काठमाडौँ", en: "Kathmandu", tz: "UTC+05:45", end: 3.75, rise: 6.17, before: true },
-    { ne: "सिड्नी", en: "Sydney", tz: "UTC+11:00", end: 9.0, rise: 6.5, before: false },
+    { key: "learn.diagrams.city_kathmandu", tz: "UTC+05:45", end: 3.75, rise: 6.17, before: true },
+    { key: "learn.diagrams.city_sydney", tz: "UTC+11:00", end: 9.0, rise: 6.5, before: false },
   ];
 
   return (
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "एउटै तिथि–सीमा दुई सहरमा — सूर्योदयको कुन तिर पर्छ भन्नेले उत्तर बदल्छ",
-        "One tithi boundary, two cities — which side of sunrise it falls on changes the answer",
-      )}
-      caption={bilingualText(
-        lang,
-        "तिथि सकिने क्षण पूरै पृथ्वीका लागि एउटै हो — यहाँ २२:०० UTC। फरक पर्ने कुरा त्यो क्षण कुन ठाउँको सूर्योदयभन्दा अगाडि पर्छ कि पछाडि भन्ने मात्र हो। काठमाडौँमा सीमा सूर्योदयअघि परेकाले त्यो दिनले अर्को तिथि पाउँछ; सिड्नीमा सूर्योदयपछि परेकाले पुरानै तिथि रहन्छ। दुवै सही छन् — फरक खगोलशास्त्रमा होइन, सूर्योदयको नियममा छ।",
-        "The tithi ends at one absolute moment for the whole planet — 22:00 UTC here. All that differs is whether that moment falls before or after each place's sunrise. At Kathmandu it lands before dawn, so that day takes the next tithi; at Sydney it lands after, so the day keeps the earlier one. Both are right; the difference is in the sunrise rule, not in the astronomy.",
-      )}
+      label={t("learn.diagrams.tithi_zones_label")}
+      caption={t("learn.diagrams.tithi_zones_caption")}
     >
       <text x={W / 2} y={20} textAnchor="middle" className="fill-current text-[9px] font-semibold opacity-75">
         {bilingualText(lang, `तिथि सकिने क्षण — ${n("22:00")} UTC`, `tithi ends — ${n("22:00")} UTC`)}
@@ -498,7 +467,7 @@ export function TithiAcrossZones() {
             {/* sunrise */}
             <circle cx={x(p.rise)} cy={y} r={3.8} fill={MARK} />
             <text x={x(p.rise)} y={y - 8} textAnchor="middle" className="text-[7.5px]" style={{ fill: MARK }}>
-              {bilingualText(lang, "सूर्योदय", "sunrise")}
+              {t("panchanga.wheel.sunrise")}
             </text>
 
             {/* the boundary */}
@@ -515,8 +484,8 @@ export function TithiAcrossZones() {
               style={{ fill: p.before ? WARN : MARK }}
             >
               {p.before
-                ? bilingualText(lang, "सूर्योदयअघि सकियो → अर्को तिथि", "ended before sunrise → next tithi")
-                : bilingualText(lang, "सूर्योदयपछि सकियो → पुरानै तिथि", "ended after sunrise → same tithi")}
+                ? t("learn.diagrams.tithi_ended_before_sunrise")
+                : t("learn.diagrams.tithi_ended_after_sunrise")}
             </text>
           </g>
         );

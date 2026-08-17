@@ -1,0 +1,167 @@
+{
+  "kundali.x.relative_rank": { "ne": "सापेक्ष क्रम", "en": "Relative Rank" },
+  "kundali.x.bala_sthana": { "ne": "स्थान", "en": "Sthana" },
+  "kundali.disha": { "ne": "दिशा", "en": "Disha" },
+  "choghadiya.types.kala.name": { "ne": "काल", "en": "Kala" },
+  "kundali.x.bala_chesta": { "ne": "चेष्टा", "en": "Chesta" },
+  "kundali.x.bala_naisargika": { "ne": "नैसर्गिक", "en": "Naisargika" },
+  "kundali.drishti": { "ne": "दृष्टि", "en": "Drishti" },
+  "kundali.total_pinda": { "ne": "कुल पिण्ड", "en": "Total Pinda" },
+  "kundali.rupas": { "ne": "रूप", "en": "Rupas" },
+  "kundali.x.min_required": { "ne": "न्यूनतम आवश्यक", "en": "Min. Require" },
+  "kundali.x.strength_ratio": { "ne": "शक्ति अनुपात", "en": "Strength Ratio" },
+  "kundali.x.bhava_percent": { "ne": "भाव (% मा)", "en": "Bhava (in %)" },
+  "kundali.x.ishta_phala": { "ne": "इष्ट फल", "en": "Ishta Phala" },
+  "kundali.x.kashta_phala": { "ne": "कष्ट फल", "en": "Kashta Phala" },
+
+  "kundali.x.status_exceptional": { "ne": "उत्कृष्ट", "en": "Exceptional" },
+  "kundali.report.confidence_strong": { "ne": "बलियो", "en": "Strong" },
+  "kundali.x.status_adequate": { "ne": "पर्याप्त", "en": "Adequate" },
+  "kundali.x.status_borderline": { "ne": "सीमान्त", "en": "Borderline" },
+  "kundali.x.status_weak": { "ne": "कमजोर", "en": "Weak" },
+
+  "kundali.x.sthana_uchcha": { "ne": "उच्च", "en": "Uchcha" },
+  "kundali.x.sthana_saptavargaja": { "ne": "सप्त वर्गीय", "en": "Sapta Vargiya" },
+  "kundali.x.sthana_oja_yugma": { "ne": "ओज युग्म", "en": "Oja Yugma" },
+  "kundali.x.sthana_kendradi": { "ne": "केन्द्रादि", "en": "Kendradi" },
+  "kundali.x.sthana_drekkana": { "ne": "द्रेक्काण", "en": "Drekkana" },
+
+  "kundali.x.kala_nathonnatha": { "ne": "नता उन्नत", "en": "Nata Unnata" },
+  "sections.paksha": { "ne": "पक्ष", "en": "Paksha" },
+  "kundali.x.kala_tribhaga": { "ne": "त्रि भाग", "en": "Tri Bhaga" },
+  "kundali.x.kala_varshadhipati": { "ne": "वर्षाधिपति", "en": "Varshadhipati" },
+  "kundali.x.kala_masadhipati": { "ne": "मासाधिपति", "en": "Masadhipati" },
+  "kundali.x.kala_varadhipati": { "ne": "वाराधिपति", "en": "Varadhipati" },
+  "kundali.x.kala_horadhipati": { "ne": "होराधिपति", "en": "Horadhipati" },
+  "kundali.ayana": { "ne": "अयन", "en": "Ayana" },
+  "kundali.x.kala_yuddha": { "ne": "युद्ध", "en": "Yuddha" },
+
+  "kundali.maha_dasha": { "ne": "महादशा", "en": "Maha Dasha" },
+  "kundali.x.dasha_level_antar": { "ne": "अन्तर्दशा", "en": "Antar Dasha" },
+  "kundali.x.dasha_level_pratyantar": { "ne": "प्रत्यन्तर्दशा", "en": "Pratyantar Dasha" },
+  "kundali.x.dasha_level_sukshma": { "ne": "सूक्ष्म दशा", "en": "Sukshma Dasha" },
+  "kundali.x.dasha_level_prana": { "ne": "प्राण दशा", "en": "Prana Dasha" },
+
+  "kundali.x.duration_bs": { "ne": "अवधि (BS)", "en": "Duration (BS)" },
+  "kundali.x.duration_years": { "ne": "वर्ष", "en": "Years" },
+  "kundali.x.duration_months": { "ne": "मास", "en": "Months" },
+  "holidays.col_days": { "ne": "दिन", "en": "Days" },
+  "kundali.yoga": { "ne": "योग", "en": "Yoga" },
+
+  "kundali.x.grade_full": { "ne": "पूर्ण", "en": "Full" },
+  "kundali.x.grade_mediocre": { "ne": "मध्यम", "en": "Mediocre" },
+  "kundali.x.grade_little": { "ne": "अल्प", "en": "Little" },
+  "kundali.x.grade_incapable": { "ne": "असमर्थ", "en": "Incapable" },
+
+  "kundali.rashi": { "ne": "राशि", "en": "Rashi" },
+  "kundali.graha": { "ne": "ग्रह", "en": "Graha" },
+  "kundali.x.pinda_shodhya": { "ne": "शोध्य", "en": "Shodhya" },
+
+  "kundali.x.dasha_system_vimshottari": { "ne": "विंशोत्तरी", "en": "Vimshottari" },
+  "kundali.x.dasha_system_tribhagi": { "ne": "त्रिभागि", "en": "Tribhagi" },
+  "kundali.x.dasha_system_yogini": { "ne": "योगिनी", "en": "Yogini" },
+
+  "kundali.x.month_january": { "ne": "जनवरी", "en": "January" },
+  "kundali.x.month_february": { "ne": "फेब्रुअरी", "en": "February" },
+  "kundali.x.month_march": { "ne": "मार्च", "en": "March" },
+  "kundali.x.month_april": { "ne": "अप्रिल", "en": "April" },
+  "kundali.x.month_may": { "ne": "मे", "en": "May" },
+  "kundali.x.month_june": { "ne": "जुन", "en": "June" },
+  "kundali.x.month_july": { "ne": "जुलाई", "en": "July" },
+  "kundali.x.month_august": { "ne": "अगस्ट", "en": "August" },
+  "kundali.x.month_september": { "ne": "सेप्टेम्बर", "en": "September" },
+  "kundali.x.month_october": { "ne": "अक्टोबर", "en": "October" },
+  "kundali.x.month_november": { "ne": "नोभेम्बर", "en": "November" },
+  "kundali.x.month_december": { "ne": "डिसेम्बर", "en": "December" },
+
+  "avakahada.col_varna": { "ne": "वर्ण", "en": "Varna" },
+  "kundali.vashya": { "ne": "वश्य", "en": "Vashya" },
+  "kundali.tara": { "ne": "तारा", "en": "Tara" },
+  "avakahada.col_yoni": { "ne": "योनि", "en": "Yoni" },
+  "kundali.x.kuta_maitri": { "ne": "मैत्री", "en": "Maitri" },
+  "kundali.gana": { "ne": "गण", "en": "Gana" },
+  "kundali.x.kuta_bhakuta": { "ne": "भकूट", "en": "Bhakuta" },
+  "kundali.nadi": { "ne": "नाडी", "en": "Nadi" },
+
+  "kundali.x.kuta_details_heading": { "ne": "कूट विवरण", "en": "Kuta Details" },
+  "kundali.x.kuta_points_label": { "ne": "कूट अङ्क", "en": "Kuta Points" },
+  "milan.guna": { "ne": "गुण", "en": "Guna" },
+  "kundali.x.milan_col_max": { "ne": "अधिकतम", "en": "Max" },
+  "kundali.x.milan_col_obtained": { "ne": "प्राप्त", "en": "Obt" },
+  "kundali.x.milan_col_area_of_life": { "ne": "जीवन क्षेत्र", "en": "Area of Life" },
+  "kundali.x.milan_points_footnote": {
+    "ne": "अधिकतम — अधिकतम अङ्क · प्राप्त — प्राप्त अङ्क",
+    "en": "Max — Maximum Point · Obt — Obtained Point"
+  },
+
+  "grahas.sun": { "ne": "सूर्य", "en": "Sun" },
+  "grahas.moon": { "ne": "चन्द्र", "en": "Moon" },
+  "grahas.mercury": { "ne": "बुध", "en": "Mercury" },
+  "grahas.venus": { "ne": "शुक्र", "en": "Venus" },
+  "grahas.saturn": { "ne": "शनि", "en": "Saturn" },
+  "grahas.rahu": { "ne": "राहु", "en": "Rahu" },
+  "grahas.ketu": { "ne": "केतु", "en": "Ketu" },
+  "kundali.x.graha_bhauma": { "ne": "भौम", "en": "Mars" },
+  "kundali.x.graha_guru": { "ne": "गुरु", "en": "Jupiter" },
+  "kundali.x.graha_gulika": { "ne": "गुलिक", "en": "Gulika" },
+  "kundali.x.graha_rahu_ketu": { "ne": "राहु, केतु", "en": "Rahu, Ketu" },
+
+  "kundali.x.abbr_sun": { "ne": "सू", "en": "Su" },
+  "kundali.x.abbr_moon": { "ne": "चं", "en": "Mo" },
+  "kundali.x.abbr_mars": { "ne": "मं", "en": "Ma" },
+  "kundali.x.abbr_mercury": { "ne": "बु", "en": "Me" },
+  "kundali.x.abbr_jupiter": { "ne": "गु", "en": "Ju" },
+  "kundali.x.abbr_venus": { "ne": "शु", "en": "Ve" },
+  "kundali.x.abbr_saturn": { "ne": "श", "en": "Sa" },
+  "kundali.x.abbr_rahu": { "ne": "रा", "en": "Ra" },
+  "kundali.x.abbr_ketu": { "ne": "के", "en": "Ke" },
+
+  "kundali.bhava_19": { "ne": "भाव", "en": "Bhava" },
+  "kundali.x.purusha_janma_phala_caption": {
+    "ne": "पुरुषजन्मकुण्डल्यां तन्वादिभावस्थग्रहफलानि",
+    "en": "Purushajanmakundalyāṃ tanvādibhāvasthagrahaphalāni"
+  },
+  "kundali.x.stree_janma_phala_caption": {
+    "ne": "स्त्रीजन्मकुण्डल्यां तन्वादिभावस्थग्रहाणां जातकोक्तं फलम्",
+    "en": "Strījanmakundalyāṃ tanvādibhāvasthagrahāṇāṃ jātakoktaṃ phalam"
+  },
+
+  "kundali.x.shanti_load_error": {
+    "ne": "गणना ल्याउन सकिएन। मिति/समय/स्थान जाँचेर पुनः प्रयास गर्नुहोस्।",
+    "en": "Could not load the calculation. Check date/time/place and try again."
+  },
+  "kundali.x.shanti_current_mahadasha": {
+    "ne": "वर्तमान महादशा (विंशोत्तरी)",
+    "en": "Current Mahadasha (Vimshottari)"
+  },
+  "kundali.x.shanti_weakest_planet": {
+    "ne": "सबैभन्दा बलहीन ग्रह (षड्बल)",
+    "en": "Weakest planet (Shadbala)"
+  },
+  "kundali.x.shanti_basis_note": {
+    "ne": "गणना जन्म समयको ग्रहस्थिति (विंशोत्तरी महादशा) र ग्रह बल (षड्बल) मा आधारित छ। यो सामान्य मार्गदर्शन हो — विधिवत् उपायका लागि योग्य ज्योतिषीसँग परामर्श गर्नुहोस्।",
+    "en": "The calculation is based on the birth-time planetary positions (Vimshottari mahadasha) and planetary strength (Shadbala). This is general guidance — consult a qualified astrologer for formal remedies."
+  },
+  "kundali.x.shanti_disclaimer": {
+    "ne": "सूचना: माथिका विवरण शास्त्रीय नवग्रह शान्ति परम्परामा आधारित छन्। रत्नधारण वा विधिवत् हवन गर्नुअघि योग्य ज्योतिषी/पुरोहितसँग परामर्श गर्नुहोस्।",
+    "en": "Note: the details above are based on the classical Navagraha Shanti tradition. Consult a qualified astrologer/priest before wearing gems or performing a formal homa."
+  },
+  "kundali.x.shanti_beeja_mantra_heading": { "ne": "बीज मन्त्र", "en": "Beeja Mantra" },
+  "kundali.x.shanti_beeja_mantra_column": { "ne": "बीज मन्त्र", "en": "Beeja mantra" },
+  "kundali.x.shanti_samidha_heading": { "ne": "समिधा (हवन काठ)", "en": "Samidha (homa wood)" },
+  "kundali.x.shanti_samidha_column": { "ne": "समिधा", "en": "Samidha" },
+  "kundali.x.shanti_gem": { "ne": "रत्न", "en": "Gem" },
+  "kundali.x.shanti_metal": { "ne": "धातु", "en": "Metal" },
+  "kundali.x.shanti_deity": { "ne": "अधिदेवता", "en": "Deity" },
+  "kundali.x.shanti_donation_items": { "ne": "दान सामग्री", "en": "Donation items" },
+  "kundali.x.shanti_daan_column": { "ne": "दान", "en": "Daan" },
+  "kundali.x.shanti_japa_column": { "ne": "जप", "en": "Japa" },
+  "kundali.x.shanti_use_label": { "ne": "उपयोग:", "en": "Use:" },
+  "kundali.x.shanti_reference_table": { "ne": "नवग्रह शान्ति तालिका", "en": "Navagraha Shanti table" },
+  "learn.playground.planet": { "ne": "ग्रह", "en": "Planet" },
+  "kundali.day": { "ne": "बार", "en": "Day" },
+
+  "sait.x.shuddhi_good": { "ne": "ग्रह शुद्ध — शुभ", "en": "Grahas strong — auspicious" },
+  "sait.x.shuddhi_shanti": { "ne": "शान्ति आवश्यक", "en": "needs śānti" },
+  "sait.x.shuddhi_avoid": { "ne": "त्याज्य ग्रहस्थिति", "en": "weak graha — avoid" }
+}

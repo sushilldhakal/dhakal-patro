@@ -40,24 +40,25 @@ const STATUS_STYLES: Record<ShadbalaStatus, string> = {
 /** Classical display order for the matrix columns. */
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
-const STHANA_SUBS: { key: string; ne: string; en: string }[] = [
-  { key: "uchcha", ne: "उच्च", en: "Uchcha" },
-  { key: "saptavargaja", ne: "सप्त वर्गीय", en: "Sapta Vargiya" },
-  { key: "oja_yugma", ne: "ओज युग्म", en: "Oja Yugma" },
-  { key: "kendradi", ne: "केन्द्रादि", en: "Kendradi" },
-  { key: "drekkana", ne: "द्रेक्काण", en: "Drekkana" },
+/** Sub-bala rows: `key` indexes the API payload, `label` the string catalogue. */
+const STHANA_SUBS: { key: string; label: string }[] = [
+  { key: "uchcha", label: "kundali.x.sthana_uchcha" },
+  { key: "saptavargaja", label: "kundali.x.sthana_saptavargaja" },
+  { key: "oja_yugma", label: "kundali.x.sthana_oja_yugma" },
+  { key: "kendradi", label: "kundali.x.sthana_kendradi" },
+  { key: "drekkana", label: "kundali.x.sthana_drekkana" },
 ];
 
-const KALA_SUBS: { key: string; ne: string; en: string }[] = [
-  { key: "nathonnatha", ne: "नता उन्नत", en: "Nata Unnata" },
-  { key: "paksha", ne: "पक्ष", en: "Paksha" },
-  { key: "tribhaga", ne: "त्रि भाग", en: "Tri Bhaga" },
-  { key: "varshadhipati", ne: "वर्षाधिपति", en: "Varshadhipati" },
-  { key: "masadhipati", ne: "मासाधिपति", en: "Masadhipati" },
-  { key: "varadhipati", ne: "वाराधिपति", en: "Varadhipati" },
-  { key: "horadhipati", ne: "होराधिपति", en: "Horadhipati" },
-  { key: "ayana", ne: "अयन", en: "Ayana" },
-  { key: "yuddha", ne: "युद्ध", en: "Yuddha" },
+const KALA_SUBS: { key: string; label: string }[] = [
+  { key: "nathonnatha", label: "kundali.x.kala_nathonnatha" },
+  { key: "paksha", label: "sections.paksha" },
+  { key: "tribhaga", label: "kundali.x.kala_tribhaga" },
+  { key: "varshadhipati", label: "kundali.x.kala_varshadhipati" },
+  { key: "masadhipati", label: "kundali.x.kala_masadhipati" },
+  { key: "varadhipati", label: "kundali.x.kala_varadhipati" },
+  { key: "horadhipati", label: "kundali.x.kala_horadhipati" },
+  { key: "ayana", label: "kundali.ayana" },
+  { key: "yuddha", label: "kundali.x.kala_yuddha" },
 ];
 
 const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
@@ -71,12 +72,12 @@ function fmt(value: number | undefined, digits: (v: string | number) => string, 
   return digits(signed);
 }
 
-const STATUS_LABEL: Record<ShadbalaStatus, { ne: string; en: string }> = {
-  Exceptional: { ne: "उत्कृष्ट", en: "Exceptional" },
-  Strong: { ne: "बलियो", en: "Strong" },
-  Adequate: { ne: "पर्याप्त", en: "Adequate" },
-  Borderline: { ne: "सीमान्त", en: "Borderline" },
-  Weak: { ne: "कमजोर", en: "Weak" },
+const STATUS_LABEL: Record<ShadbalaStatus, string> = {
+  Exceptional: "kundali.x.status_exceptional",
+  Strong: "kundali.report.confidence_strong",
+  Adequate: "kundali.x.status_adequate",
+  Borderline: "kundali.x.status_borderline",
+  Weak: "kundali.x.status_weak",
 };
 
 /** Yuddha virupas for display — API sub-bala value overlaid with the war table. */
@@ -87,8 +88,7 @@ function yuddhaVirupasForPlanet(planet: ShadbalaPlanet, yuddha: YuddhaData): num
 }
 
 function StatusBadge({ status }: { status: ShadbalaStatus }) {
-  const { lang } = useLocale();
-  const label = bilingualText(lang, STATUS_LABEL[status].ne, STATUS_LABEL[status].en);
+  const { t } = useTranslation();
   return (
     <span
       className={cn(
@@ -96,7 +96,7 @@ function StatusBadge({ status }: { status: ShadbalaStatus }) {
         STATUS_STYLES[status]
       )}
     >
-      {label}
+      {t(STATUS_LABEL[status])}
     </span>
   );
 }
@@ -208,8 +208,6 @@ export function ShadbalaCard({
   const hasPhala = ordered.some((p) => p.ishta_phala != null);
   const hasYuddhaActivity = (yuddha?.wars.length ?? 0) > 0;
 
-  const rowLabel = (ne: string, en: string) => bilingualText(lang, ne, en);
-
   return (
     <div className="space-y-6">
       <div>
@@ -283,7 +281,7 @@ export function ShadbalaCard({
                       : "border-border"
                   )}
                 >
-                  {bilingualText(lang, STATUS_LABEL[s].ne, STATUS_LABEL[s].en)}{" "}
+                  {t(STATUS_LABEL[s])}{" "}
                   {digits(summary.counts[s])}
                 </span>
               ))}
@@ -315,13 +313,13 @@ export function ShadbalaCard({
             </TableHeader>
             <TableBody>
               <MatrixRow
-                label={rowLabel("सापेक्ष क्रम", "Relative Rank")}
+                label={t("kundali.x.relative_rank")}
                 planets={ordered}
                 value={(p) => digits(String(rankByKey.get(p.key) ?? "—"))}
                 bold
               />
               <MatrixRow
-                label={rowLabel("स्थान", "Sthana")}
+                label={t("kundali.x.bala_sthana")}
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.sthana, digits)}
                 expandable={hasSubs}
@@ -333,7 +331,7 @@ export function ShadbalaCard({
                   {STHANA_SUBS.map((row) => (
                     <MatrixRow
                       key={row.key}
-                      label={bilingualText(lang, row.ne, row.en)}
+                      label={t(row.label)}
                       planets={ordered}
                       value={(p) => fmt(p.sub_balas?.sthana?.[row.key], digits)}
                       sub
@@ -342,12 +340,12 @@ export function ShadbalaCard({
                 </Fragment>
               )}
               <MatrixRow
-                label={rowLabel("दिशा", "Disha")}
+                label={t("kundali.disha")}
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.dig, digits)}
               />
               <MatrixRow
-                label={rowLabel("काल", "Kala")}
+                label={t("choghadiya.types.kala.name")}
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.kala, digits)}
                 expandable={hasSubs}
@@ -359,7 +357,7 @@ export function ShadbalaCard({
                   {KALA_SUBS.map((row) => (
                     <MatrixRow
                       key={row.key}
-                      label={bilingualText(lang, row.ne, row.en)}
+                      label={t(row.label)}
                       planets={ordered}
                       value={(p) =>
                         row.key === "yuddha" && yuddha
@@ -372,45 +370,45 @@ export function ShadbalaCard({
                 </Fragment>
               )}
               <MatrixRow
-                label={rowLabel("चेष्टा", "Chesta")}
+                label={t("kundali.x.bala_chesta")}
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.cheshta, digits)}
               />
               <MatrixRow
-                label={rowLabel("नैसर्गिक", "Naisargika")}
+                label={t("kundali.x.bala_naisargika")}
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.naisargika, digits)}
               />
               <MatrixRow
-                label={rowLabel("दृष्टि", "Drishti")}
+                label={t("kundali.drishti")}
                 planets={ordered}
                 value={(p) => fmt(p.breakdown.drik, digits)}
               />
               <MatrixRow
-                label={rowLabel("कुल पिण्ड", "Total Pinda")}
+                label={t("kundali.total_pinda")}
                 planets={ordered}
                 value={(p) => fmt(p.total_virupas, digits)}
                 bold
               />
               <MatrixRow
-                label={rowLabel("रूप", "Rupas")}
+                label={t("kundali.rupas")}
                 planets={ordered}
                 value={(p) => fmt(p.rupas, digits)}
               />
               <MatrixRow
-                label={rowLabel("न्यूनतम आवश्यक", "Min. Require")}
+                label={t("kundali.x.min_required")}
                 planets={ordered}
                 value={(p) => fmt(p.required / 60, digits)}
               />
               <MatrixRow
-                label={rowLabel("शक्ति अनुपात", "Strength Ratio")}
+                label={t("kundali.x.strength_ratio")}
                 planets={ordered}
                 value={(p) => fmt(p.ratio, digits, 4)}
                 bold
               />
               {bhavaBala && (
                 <MatrixRow
-                  label={rowLabel("भाव (% मा)", "Bhava (in %)")}
+                  label={t("kundali.x.bhava_percent")}
                   planets={ordered}
                   value={(p) => {
                     const pct = bhavaBala.rulershipPercent[p.key];
@@ -422,12 +420,12 @@ export function ShadbalaCard({
               {hasPhala && (
                 <Fragment>
                   <MatrixRow
-                    label={rowLabel("इष्ट फल", "Ishta Phala")}
+                    label={t("kundali.x.ishta_phala")}
                     planets={ordered}
                     value={(p) => fmt(p.ishta_phala, digits)}
                   />
                   <MatrixRow
-                    label={rowLabel("कष्ट फल", "Kashta Phala")}
+                    label={t("kundali.x.kashta_phala")}
                     planets={ordered}
                     value={(p) => fmt(p.kashta_phala, digits)}
                   />

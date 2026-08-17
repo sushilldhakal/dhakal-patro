@@ -86,21 +86,13 @@ export function RetrogradeLoop() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "वक्री गति — पृथ्वीले उछिन्दा दृष्टिरेखा पछाडि सर्छ",
-        "Retrograde motion — the sightline slides backwards as Earth overtakes",
-      )}
-      caption={bilingualText(
-        lang,
-        "पृथ्वी भित्री कक्षमा छिटो हिँड्छ, मंगल बाहिरी कक्षमा ढिलो। बराबर समयका अन्तरालमा पृथ्वीबाट मंगलतिर तानिएका दृष्टिरेखा हेर्नुहोस् — उछिनुअघि अगाडि सर्छन्, उछिन्ने बेला पछाडि सर्छन्, अनि फेरि अगाडि। आकाशमा देखिने त्यो फन्को दृष्टिरेखाले बनाएको हो; मंगल कहिल्यै पछाडि हिँड्दैन।",
-        "Earth runs fast on the inner orbit, Mars slowly on the outer one. Follow the sightlines drawn from Earth to Mars at equal intervals: they sweep forward before the overtaking, backward through it, then forward again. The loop you see on the sky is made by those sightlines — Mars never actually moves backwards.",
-      )}
+      label={t("learn.diagrams.retrograde_label")}
+      caption={t("learn.diagrams.retrograde_caption")}
     >
       {/* the backdrop of fixed stars */}
       <line x1={16} y1={skyY} x2={W - 16} y2={skyY} stroke={INK} strokeOpacity={0.22} strokeWidth={1} />
       <text x={16} y={skyY - 8} className="fill-current text-[8px] opacity-55">
-        {bilingualText(lang, "स्थिर ताराको पृष्ठभूमि — यहाँ देखिने बाटो", "the fixed-star backdrop — the apparent path")}
+        {t("learn.diagrams.retrograde_star_backdrop")}
       </text>
 
       {/* orbits */}
@@ -130,13 +122,13 @@ export function RetrogradeLoop() {
       })}
 
       <text x={sunX - rE - 8} y={sunY + 26} textAnchor="end" className="text-[8px] font-semibold" style={{ fill: COOL }}>
-        {bilingualText(lang, "पृथ्वी — छिटो", "Earth — faster")}
+        {t("learn.diagrams.retrograde_earth_faster")}
       </text>
       <text x={sunX + rM + 8} y={sunY + 26} className="text-[8px] font-semibold" style={{ fill: WARN }}>
-        {bilingualText(lang, "मंगल — ढिलो", "Mars — slower")}
+        {t("learn.diagrams.retrograde_mars_slower")}
       </text>
       <text x={W / 2} y={H - 8} textAnchor="middle" className="text-[8.5px] font-semibold" style={{ fill: WARN }}>
-        {bilingualText(lang, "रातो खण्ड = वक्री — दृष्टिरेखा पछाडि सर्दै", "red span = retrograde — the sightline sliding back")}
+        {t("learn.diagrams.retrograde_red_span")}
       </text>
     </Frame>
   );
@@ -196,16 +188,8 @@ export function MandaShighra() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "मध्यम ग्रहमा मन्द र शीघ्र संस्कार थपेर स्फुट ग्रह",
-        "Manda and shighra corrections turning a mean planet into a true one",
-      )}
-      caption={bilingualText(
-        lang,
-        "मध्यम ग्रह एकनास गतिले वृत्तमा हिँड्छ — गणना गर्न सजिलो, तर आकाशमा गलत। दुई संस्कारले मिलाउँछन्: मन्द संस्कारले कक्ष हामीमा केन्द्रित नभएको कुरा सम्हाल्छ, जसले एक फेरोमा एउटा लहर दिन्छ; शीघ्र संस्कारले हाम्रो आफ्नै परिक्रमा सम्हाल्छ, र वक्री लूप यहीँबाट निस्कन्छ। दुवै क्रमशः लगाएपछि बाँकी रहन्छ स्फुट ग्रह — वास्तविक स्थिति।",
-        "A mean planet moves at a dead-constant rate around a circle: easy to compute and wrong on the sky. Two corrections repair it. The manda term accounts for the orbit not being centred on us, giving one wave per revolution; the shighra term accounts for our own orbital motion, and that is where the retrograde loop comes from. Applied in turn they leave the true position — the sphuta graha.",
-      )}
+      label={t("learn.diagrams.manda_shighra_label")}
+      caption={t("learn.diagrams.manda_shighra_caption")}
     >
       {rows.map((r) => (
         <g key={r.en}>
@@ -229,7 +213,7 @@ export function MandaShighra() {
         </g>
       ))}
       <text x={Rr} y={H - 6} textAnchor="end" className="fill-current text-[7.5px] opacity-45">
-        {bilingualText(lang, "एक परिक्रमा →", "one revolution →")}
+        {t("learn.diagrams.one_revolution_axis")}
       </text>
     </Frame>
   );
@@ -264,16 +248,8 @@ export function PakshaStrip() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "शुक्ल र कृष्ण पक्ष — एक चान्द्र मासका दुई आधा",
-        "Shukla and Krishna paksha — the two halves of one lunation",
-      )}
-      caption={bilingualText(
-        lang,
-        "एक चान्द्र मास औंसीबाट सुरु भई पूर्णिमा हुँदै फेरि औंसीमा टुङ्गिन्छ। बढ्दो आधा शुक्ल पक्ष, घट्दो आधा कृष्ण पक्ष — प्रत्येकमा पन्ध्र तिथि। त्यसैले तिथिको गणना १ देखि ३० सम्म एकपटक होइन, १ देखि १५ सम्म दुई पटक चल्छ, र पन्ध्रौँ तिथिको नाम पक्षअनुसार फरक हुन्छ: शुक्लको पूर्णिमा, कृष्णको औंसी।",
-        "A lunation runs from new Moon through full and back to new. The waxing half is Shukla paksha and the waning half Krishna, fifteen tithis each — so the count runs 1 to 15 twice rather than 1 to 30 once, and the fifteenth takes a different name in each half: पूर्णिमा in the bright, औंसी in the dark.",
-      )}
+      label={t("learn.diagrams.paksha_strip_label")}
+      caption={t("learn.diagrams.paksha_strip_caption")}
     >
       <rect x={x(0)} y={midY - 4} width={x(0.5) - x(0)} height={8} fill={MOONLIT} opacity={0.5} rx={2} />
       <rect x={x(0.5)} y={midY - 4} width={x(1) - x(0.5)} height={8} fill={INK} opacity={0.16} rx={2} />

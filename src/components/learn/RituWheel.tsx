@@ -89,11 +89,7 @@ export function RituWheel() {
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         className="block w-full max-w-[500px]"
         role="img"
-        aria-label={bilingualText(
-          lang,
-          "छ ऋतु, बाह्र महिना र चार सायन बिन्दु एउटै चक्रमा",
-          "The six ṛtus, twelve months and four tropical markers on one wheel",
-        )}
+        aria-label={t("learn.study.ritu.aria")}
       >
         {/* ऋतु band — two महिना each */}
         {RITUS.map((r, i) => (
@@ -177,18 +173,14 @@ export function RituWheel() {
           textAnchor="middle"
           className="fill-current text-[10px] font-semibold opacity-75"
         >
-          {bilingualText(lang, "छ ऋतु", "Six ṛtus")}
+          {t("learn.study.ritu.six_ritus")}
         </text>
         <text x={CX} y={CY + 9} textAnchor="middle" className="fill-current text-[8px] opacity-50">
-          {bilingualText(lang, "प्रत्येक दुई महिना", "two months each")}
+          {t("learn.study.ritu.two_months_each")}
         </text>
       </svg>
       <figcaption className="mt-2 text-[11px] leading-snug text-white/45">
-        {bilingualText(
-          lang,
-          "ऋतुको नाम महिनाले दिन्छ, तर ऋतु बनाउने कुरा सूर्यको उत्तर–दक्षिण यात्रा हो। दुई फरक ढाँचा भएकाले चारै सायन बिन्दु (हरियो = विषुव, सुन्तला = अयनान्त) महिनाको सीमामा नभई बीचमा पर्छन् — ग्रीष्म अयनान्त असारभित्र, जेठ–असारको सन्धिमा होइन। अयन चलनले हरेक ७२ वर्षमा १° का दरले यी बिन्दु सार्दै लैजान्छ; त्यसैले ऋतुको कुरा गर्दा महिना होइन, उत्तरायण–दक्षिणायन नै भरपर्दो सन्दर्भ हो।",
-          "The ṛtus take their names from the months, but what makes a ṛtu is the Sun's north–south journey. Because those are two different frames, all four tropical markers (green = equinox, amber = solstice) fall inside a month rather than on its boundary — the summer solstice sits within असार, not at the जेठ–असार seam. Precession moves these markers 1° every 72 years, which is why the dependable reference for a ṛtu argument is Uttarāyaṇa and Dakṣiṇāyana, not the months.",
-        )}
+        {t("learn.study.ritu.caption")}
       </figcaption>
     </figure>
   );

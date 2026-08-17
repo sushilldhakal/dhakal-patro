@@ -108,11 +108,7 @@ export function CircumpolarSky() {
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
         role="img"
-        aria-label={bilingualText(
-          lang,
-          "काठमाडौँको अक्षांशबाट आकाश — कुन तारा कहिल्यै अस्ताउँदैनन् र कुन कहिल्यै उदाउँदैनन्",
-          "The sky from Kathmandu's latitude — which stars never set and which never rise",
-        )}
+        aria-label={t("learn.study.circumpolar.aria")}
       >
         {/* the sky below the horizon, never in view at this instant */}
         <path
@@ -149,7 +145,7 @@ export function CircumpolarSky() {
         <line x1={sx1} y1={sy1} x2={px1} y2={py1} stroke={AXIS} strokeWidth={1.3} opacity={0.85} />
         <circle cx={px1} cy={py1} r={3.4} fill={AXIS} />
         <text x={px1 - 4} y={py1 - 7} textAnchor="middle" className="text-[8.5px] font-semibold" style={{ fill: AXIS }}>
-          {bilingualText(lang, "खगोलीय ध्रुव", "celestial pole")}
+          {t("learn.study.circumpolar.celestial_pole")}
         </text>
         <path
           d={`M${CX - 54} ${CY} A54 54 0 0 1 ${CX + 54 * ux} ${CY + 54 * uy}`}
@@ -179,40 +175,36 @@ export function CircumpolarSky() {
           strokeWidth={1.2}
         />
         <text x={CX - R - 16} y={CY + 12} className="fill-current text-[8px] opacity-55">
-          {bilingualText(lang, "उत्तर", "N")}
+          {t("learn.study.circumpolar.north")}
         </text>
         <text x={CX + R + 16} y={CY + 12} textAnchor="end" className="fill-current text-[8px] opacity-55">
-          {bilingualText(lang, "दक्षिण", "S")}
+          {t("learn.study.circumpolar.south")}
         </text>
         <text x={CX} y={CY + 13} textAnchor="middle" className="fill-current text-[8px] opacity-45">
-          {bilingualText(lang, "क्षितिज", "horizon")}
+          {t("learn.study.circumpolar.horizon")}
         </text>
 
         {/* the three verdicts */}
         <text x={W - 8} y={30} textAnchor="end" className="text-[8.5px] font-semibold" style={{ fill: NEVER_SETS }}>
-          {bilingualText(lang, "क्रान्ति > +६२.३° — कहिल्यै अस्ताउँदैन", "dec > +62.3° — never sets")}
+          {t("learn.study.circumpolar.never_sets")}
         </text>
         <text x={W - 8} y={44} textAnchor="end" className="text-[8.5px]" style={{ fill: RISES }}>
-          {bilingualText(lang, "बीचमा — उदाउँछ र अस्ताउँछ", "in between — rises and sets")}
+          {t("learn.study.circumpolar.rises_and_sets")}
         </text>
         <text x={W - 8} y={H - 10} textAnchor="end" className="text-[8.5px] font-semibold" style={{ fill: NEVER_RISES }}>
-          {bilingualText(lang, "क्रान्ति < −६२.३° — कहिल्यै उदाउँदैन", "dec < −62.3° — never rises")}
+          {t("learn.study.circumpolar.never_rises")}
         </text>
 
         {/* where the two famous asterisms actually fall */}
         <text x={8} y={H - 24} className="fill-current text-[8px] opacity-70">
-          {bilingualText(lang, "सप्तर्षि: क्रान्ति +४९° … +६२°", "Saptarishi: dec +49° … +62°")}
+          {t("learn.study.circumpolar.saptarishi_range")}
         </text>
         <text x={8} y={H - 12} className="fill-current text-[8px] opacity-70">
-          {bilingualText(lang, "क्रक्स: क्रान्ति −५७° … −६३°", "Crux: dec −57° … −63°")}
+          {t("learn.study.circumpolar.crux_range")}
         </text>
       </svg>
       <figcaption className="mt-1.5 text-[11px] leading-snug text-white/45">
-        {bilingualText(
-          lang,
-          "आकाशी ध्रुव क्षितिजभन्दा ठ्याक्कै अक्षांश जति (काठमाडौँमा २७.७°) माथि हुन्छ, र हरेक तारा त्यही अक्षको वरिपरि वृत्त काट्छ। वृत्त पूरै क्षितिजमाथि परे तारा कहिल्यै अस्ताउँदैन; पूरै तल परे कहिल्यै उदाउँदैन। काठमाडौँको सीमा ±६२.३° हो — सप्तर्षि र क्रक्स दुवै यही सीमाको छेउछाउ पर्छन्, त्यसैले सप्तर्षिको पुच्छर वर्षको केही समय क्षितिजमुनि जान्छ र क्रक्सको माथिल्लो तारा दक्षिणी क्षितिजमा अलिकति देखिन्छ।",
-          "The celestial pole stands above the horizon by exactly the observer's latitude — 27.7° at Kathmandu — and every star circles that axis. A circle entirely above the horizon never sets; entirely below, it never rises. Kathmandu's limits are ±62.3°, and both the Saptarishi and Crux straddle them: the Dipper's tail dips below the horizon for part of the year, and the top of Crux does clear the southern horizon by a few degrees.",
-        )}
+        {t("learn.study.circumpolar.caption")}
       </figcaption>
     </figure>
   );

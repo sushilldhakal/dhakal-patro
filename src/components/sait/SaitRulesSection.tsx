@@ -8,12 +8,14 @@ import { Switch } from "@/components/ui/switch";
 export interface SaitRule {
   /** Stable id matching the engine's toggleable rules; when set the rule can be switched off. */
   id?: string;
-  ne: string;
-  en: string;
-  source?: { ne: string; en: string };
-  /** Sanskrit verse (Devanāgarī) the rule derives from. */
+  /** Catalogue key for the plain-language rule. */
+  text: string;
+  /** Catalogue key for the short citation. */
+  source?: string;
+  /** Sanskrit verse (Devanāgarī) the rule derives from — not translated. */
   shloka?: string;
-  gloss?: { ne: string; en: string };
+  /** Catalogue key for the translation of `shloka`. */
+  gloss?: string;
 }
 
 /**
@@ -136,7 +138,7 @@ export function SaitRulesSection({
                             off ? "text-muted-foreground" : "text-foreground",
                           )}
                         >
-                          {bilingualText(lang, r.ne, r.en)}
+                          {t(r.text)}
                         </p>
                         {toggleable ? (
                           <Switch
@@ -158,7 +160,7 @@ export function SaitRulesSection({
                         >
                           {r.source ? (
                             <p className="m-0 text-sm font-semibold text-muted-foreground">
-                              {bilingualText(lang, r.source.ne, r.source.en)}
+                              {t(r.source)}
                             </p>
                           ) : null}
                           {r.shloka ? (
@@ -171,7 +173,7 @@ export function SaitRulesSection({
                           ) : null}
                           {r.gloss ? (
                             <p className="m-0 text-sm leading-relaxed text-muted-foreground">
-                              {bilingualText(lang, r.gloss.ne, r.gloss.en)}
+                              {t(r.gloss)}
                             </p>
                           ) : null}
                         </div>

@@ -108,10 +108,10 @@ const MC_GP_GRAHANA_SHLOKA =
 const MC_GP_GRAHANA_GLOSS = "sait.x.mc_gp_grahana_gloss";
 
 /**
- * One rule the engine applies. Every field except `shloka` holds a catalogue
- * key, not text — the copy lives in src/i18n/strings.ts and is resolved with
- * `t()` where the rule is rendered. `shloka` is the Sanskrit verse itself
- * (Devanāgarī), which reads the same in either UI language.
+ * One rule the engine applies. `ne`/`en` are the plain-language rule; the
+ * optional `source` (short citation), `shloka` (Sanskrit verse, Devanāgarī) and
+ * `gloss` (a bilingual translation of the verse) let a rule cite the classical
+ * text it comes from. Only vivāha carries shlokas today.
  */
 export interface SaitRuleEntry {
   /**

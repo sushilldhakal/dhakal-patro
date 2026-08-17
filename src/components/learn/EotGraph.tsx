@@ -154,9 +154,9 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
   }, [markerT, monthStarts]);
 
   const legend = [
-    { color: NOW, label: bilingualText(lang, "अहिले", "Now") },
-    { color: LATE, label: bilingualText(lang, "घाम पछाडि", "Sundial Late") },
-    { color: EARLY, label: bilingualText(lang, "घाम अगाडि", "Sundial Early") },
+    { color: NOW, label: t("panchanga.day_cycle.now") },
+    { color: LATE, label: t("learn.study.eot.sundial_late") },
+    { color: EARLY, label: t("learn.study.eot.sundial_early") },
   ];
 
   return (
@@ -173,11 +173,7 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
         role="img"
-        aria-label={bilingualText(
-          lang,
-          "समयको समीकरण — वर्षभरि साँचो सौर समय र माध्य सौर समयबीचको फरक",
-          "The equation of time — true solar time minus mean solar time across a year",
-        )}
+        aria-label={t("learn.study.eot.aria")}
       >
         {/* vertical grid + minute labels */}
         {ticks.map((tick) => {
@@ -252,11 +248,7 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
         <circle cx={x(markerMin)} cy={y(markerT)} r={5} fill={NOW} />
       </svg>
       <figcaption className="mt-1.5 text-[11px] leading-snug text-white/45">
-        {bilingualText(
-          lang,
-          "घडीभन्दा घामको समय कति अगाडि/पछाडि छ। उत्केन्द्रता शून्य पार्नुहोस् — एउटा लहर बाँकी रहन्छ; अक्ष झुकाव शून्य पार्नुहोस् — अर्को।",
-          "How far a sundial runs ahead of or behind a clock. Zero the eccentricity and one wave survives; zero the tilt and the other does.",
-        )}
+        {t("learn.study.eot.caption")}
       </figcaption>
     </figure>
   );

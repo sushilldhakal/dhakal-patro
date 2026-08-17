@@ -488,11 +488,7 @@ export function HierarchyDiagram() {
         <StackedLayout pick={pick} />
       </div>
       <figcaption className={tmCardCap}>
-        {bilingualText(
-          lang,
-          "तीन गति, तीन धारा, एउटा मिति। पृथ्वीको घुर्णनले दिन र वार, सूर्यको राशि–गतिले सङ्क्रान्ति र सौर महिना, चन्द्र–सूर्य कोणले तिथि, पक्ष र चान्द्र मास — बीचका दुई धारा नै सौरमान र चान्द्रमान हुन्, र तीनै मिलेर पञ्चाङ्ग बन्छ।",
-          "Three motions, three streams, one date. Earth's spin gives the day and the vaara, the Sun's travel through the zodiac gives sankranti and the solar month, the Moon's angle from the Sun gives tithi, paksha and the lunar month — the middle two streams are exactly sauramāna and chāndramāna, and all three together make the panchanga.",
-        )}
+        {t("learn.diagrams.hierarchy_caption")}
       </figcaption>
     </figure>
   );

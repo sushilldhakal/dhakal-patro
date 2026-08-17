@@ -226,31 +226,31 @@ export function TwoSystemsStudy() {
     <>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 min-[620px]:grid-cols-3 min-[900px]:grid-cols-5">
         <div className={edRo}>
-          <span className={edRoK}>{pick("सौर महिना · गते", "Solar month · gate")}</span>
+          <span className={edRoK}>{t("learn.study.two_systems.solar_month_gate")}</span>
           <span className={edRoV({ amber: true })}>
             {ne ? solar.monthNameNe : solar.monthName} {num(solar.gate)}
           </span>
         </div>
         <div className={edRo}>
-          <span className={edRoK}>{pick("सूर्य राशिमा", "Sun in rashi")}</span>
+          <span className={edRoK}>{t("learn.study.two_systems.sun_in_rashi")}</span>
           <span className={edRoV()}>
-            {num(Math.floor(solar.longitude))}° · {pick("राशि", "sign")} {num(solar.rashiIndex + 1)}
+            {num(Math.floor(solar.longitude))}° · {t("dainik.sign")} {num(solar.rashiIndex + 1)}
           </span>
         </div>
         <div className={edRo}>
-          <span className={edRoK}>{pick("चन्द्र राशिमा", "Moon in rashi")}</span>
+          <span className={edRoK}>{t("learn.study.two_systems.moon_in_rashi")}</span>
           <span className={edRoV()}>
             {RASHI_NE[moonRashi]} · {num(Math.floor(moonLongitude))}°
           </span>
         </div>
         <div className={edRo}>
-          <span className={edRoK}>{pick("चन्द्र–सूर्य कोण", "Moon–Sun angle")}</span>
+          <span className={edRoK}>{t("learn.study.two_systems.moon_sun_angle")}</span>
           <span className={edRoV({ mono: true })}>{num(lunar.elongation.toFixed(1))}°</span>
         </div>
         <div className={edRo}>
-          <span className={edRoK}>{pick("तिथि · पक्ष", "Tithi · paksha")}</span>
+          <span className={edRoK}>{t("learn.study.two_systems.tithi_paksha")}</span>
           <span className={edRoV()}>
-            {tithiName(lunar)} · {lunar.shukla ? pick("शुक्ल", "Shukla") : pick("कृष्ण", "Krishna")}
+            {tithiName(lunar)} · {lunar.shukla ? t("learn.shukla") : t("learn.krishna")}
           </span>
         </div>
       </div>
@@ -263,7 +263,7 @@ export function TwoSystemsStudy() {
       <div className="mt-2.5 grid grid-cols-1 gap-2 rounded-lg border border-white/10 bg-white/[0.04] p-2.5 text-[11px] min-[620px]:grid-cols-2">
         <div>
           <div className="font-semibold text-sky-200">
-            {pick("औंसीदेखि चन्द्र हिँडेको", "Moon travelled since amavasya")}
+            {t("learn.study.two_systems.moon_travelled")}
           </div>
           <div className="mt-0.5 font-num text-base font-bold text-white">
             {num(travelled.moon.toFixed(1))}°
@@ -287,28 +287,22 @@ export function TwoSystemsStudy() {
             </span>
           </div>
           <div className="mt-0.5 leading-snug text-white/55">
-            {pick(
-              "एक फेरो — नक्षत्र मास — ठ्याक्कै ३६०°, २७.३ दिन। तर त्यतिन्जेल पृथ्वी सूर्यवरिपरि ~२९° सरिसक्छ, त्यसैले चन्द्र फेरि सूर्यको छेउमा पुग्दैन; भेट्न अझै ~२९° चाहिन्छ। त्यही हो चान्द्र मास: ~३८९°, २९.५ दिन। कक्षमा पहिलो फेरो भित्री रेखा, त्यसपछिको बढी भाग बाहिरी हरियो चापमा देखिन्छ।",
-              "One lap — the sidereal month — is exactly 360° in 27.3 days. By then Earth has moved ~29° around the Sun, so the Moon is not beside the Sun again; it needs ~29° more to catch up. That is the synodic month: ~389° in 29.5 days. On the orbit, the first lap is the inner line and the overshoot is the outer green arc.",
-            )}
+            {t("learn.study.two_systems.sidereal_vs_synodic")}
           </div>
         </div>
         <div>
           <div className="font-semibold text-amber-200">
-            {pick("यो वर्षमा सूर्य हिँडेको", "Sun travelled this year")}
+            {t("learn.study.two_systems.sun_travelled")}
           </div>
           <div className="mt-0.5 font-num text-base font-bold text-white">
             {num(travelled.sunThisYear.toFixed(1))}°
             <span className="ml-1.5 text-[11px] font-normal text-white/50">/ {num(360)}°</span>
             <span className="ml-2 text-[11px] font-normal text-sky-200/80">
-              {pick("सूर्यबाट", "from Sun")} {num(distanceAu.toFixed(4))} AU
+              {t("learn.study.two_systems.from_sun")} {num(distanceAu.toFixed(4))} AU
             </span>
           </div>
           <div className="mt-0.5 leading-snug text-white/55">
-            {pick(
-              "राशि पट्टी ताराहरूमा गाडिएको छ, त्यसैले बि.सं.को वर्ष ठ्याक्कै ३६०° — ३६५.२६ दिनको नाक्षत्र वर्ष। कक्ष वृत्त होइन, दीर्घवृत्त हो: दूरी ०.९८३–१.०१७ AU (३.४%), र नजिक हुँदा सूर्य छिटो हिँड्छ — त्यसैले सौर महिना २९ देखि ३२ दिनसम्मको हुन्छ। दृश्यमा यो अन्तर ६ गुणा बढाइएको छ, नत्र आँखाले देख्दैन।",
-              "The rashi belt is pinned to the stars, so a BS year is exactly 360° — the 365.26-day sidereal year. The orbit is an ellipse, not a circle: 0.983–1.017 AU (3.4%), and the Sun moves fastest when nearest — which is why a solar month runs 29 to 32 days. The scene exaggerates that gap 6× so the eye can see it.",
-            )}
+            {t("learn.study.two_systems.belt_pinned_to_stars")}
           </div>
         </div>
       </div>
@@ -397,10 +391,10 @@ export function TwoSystemsStudy() {
             <Chain
               tone="sun"
               steps={[
-                pick("☀️ सूर्य", "☀️ Sun"),
-                pick("राशिमा प्रवेश", "enters a rashi"),
-                pick("सङ्क्रान्ति", "sankranti"),
-                pick("नयाँ सौर महिना", "new solar month"),
+                t("learn.study.two_systems.chain_sun"),
+                t("learn.study.two_systems.chain_enters_rashi"),
+                t("learn.study.two_systems.chain_sankranti"),
+                t("learn.study.two_systems.chain_new_solar_month"),
               ]}
             />
           )}
@@ -408,10 +402,10 @@ export function TwoSystemsStudy() {
             <Chain
               tone="moon"
               steps={[
-                pick("☀️🌙 कोणीय दूरी", "☀️🌙 angular gap"),
+                t("learn.study.two_systems.chain_angular_gap"),
                 pick(`हरेक ${num(TITHI_ARC)}° = १ तिथि`, `every ${TITHI_ARC}° = 1 tithi`),
-                pick("शुक्ल / कृष्ण पक्ष", "shukla / krishna paksha"),
-                pick("चान्द्र मास", "lunar month"),
+                t("learn.study.two_systems.chain_paksha"),
+                t("learn.study.two_systems.chain_lunar_month"),
               ]}
             />
           )}
@@ -419,7 +413,7 @@ export function TwoSystemsStudy() {
 
         {flash && (
           <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-amber-400/60 bg-amber-500/20 px-4 py-1.5 text-sm font-bold text-amber-100 backdrop-blur">
-            {pick("सङ्क्रान्ति", "Sankranti")} · {ne ? year.solar[flash.index]?.nameNe : year.solar[flash.index]?.name}{" "}
+            {t("learn.playground.sankranti")} · {ne ? year.solar[flash.index]?.nameNe : year.solar[flash.index]?.name}{" "}
             {num(1)}
           </div>
         )}
@@ -430,23 +424,20 @@ export function TwoSystemsStudy() {
               clock.current.dt = year.yearStartDt;
               setPlaying(false);
             }}
-            label={pick("वर्षारम्भमा फर्कनुहोस्", "Back to year start")}
+            label={t("learn.study.two_systems.back_to_year_start")}
           >
             <RotateCcw size={16} />
           </IconButton>
           <IconButton
             onClick={onToggleFullscreen}
-            label={fullscreen ? pick("सामान्य दृश्य", "Exit fullscreen") : pick("पूर्ण स्क्रिन", "Fullscreen")}
+            label={fullscreen ? t("common.exit_fullscreen") : t("common.fullscreen")}
           >
             {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </IconButton>
         </div>
 
         <p className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] text-white/45">
-          {pick(
-            "तान्नुहोस् — घुमाउन · स्क्रोल — नजिक/टाढा",
-            "Drag to orbit · scroll to zoom",
-          )}
+          {t("learn.playground.drag_hint")}
         </p>
       </div>
 
@@ -501,7 +492,7 @@ export function TwoSystemsStudy() {
               className="ml-1 inline-flex h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-full border border-white/20 px-2.5 text-xs font-semibold text-white/70 hover:border-white/50 hover:text-white"
             >
               {detailsOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-              {pick("विवरण", "Readings")}
+              {t("learn.study.two_systems.readings")}
             </button>
           )}
         </div>
@@ -511,7 +502,7 @@ export function TwoSystemsStudy() {
             type="button"
             className={cn(edPlayBtn, "border-white/25 bg-white/10 text-white hover:bg-white/20")}
             onClick={() => setPlaying((p) => !p)}
-            aria-label={playing ? pick("रोक्नुहोस्", "Pause") : pick("चलाउनुहोस्", "Play")}
+            aria-label={playing ? t("learn.pause") : t("learn.play")}
           >
             {playing ? <Pause size={16} /> : <Play size={16} />}
           </button>
@@ -557,10 +548,7 @@ export function TwoSystemsStudy() {
       <div className="mt-5">
         {body}
         <p className="mt-2 text-sm text-[var(--tm-ink-faint)]">
-          {pick(
-            "यी अङ्क यही दृश्यको खगोलीय मोडेलबाट आउँछन् — सङ्क्रान्ति र तिथिको कोण सही, तर कुन तिथि कुन दिनको भन्ने सूर्योदय नियम यहाँ लागू हुँदैन। दैनिक पञ्चाङ्ग नै आधिकारिक हो।",
-            "These readings come from this view's own astronomical model — the sankranti and the tithi angle are right, but the sunrise rule that assigns a tithi to a civil day is not applied here. The daily panchanga remains authoritative.",
-          )}
+          {t("learn.study.two_systems.model_caveat")}
         </p>
       </div>
     );
@@ -581,7 +569,7 @@ export function TwoSystemsStudy() {
   return (
     <div className="mt-5">
       <div className="rounded-2xl border border-dashed border-[var(--tm-border)] px-4 py-8 text-center text-sm text-[var(--tm-ink-faint)]">
-        {pick("पूर्ण स्क्रिनमा खुलेको छ — बन्द गर्न Esc थिच्नुहोस्", "Open in fullscreen — press Esc to close")}
+        {t("learn.playground.fullscreen_notice")}
       </div>
       {createPortal(
         <div
@@ -693,7 +681,7 @@ function DriftLadder({
   return (
     <div className="select-none">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-3 text-[11px] text-white/60">
-        <span>{pick("एउटै समयरेखा", "One shared timeline")}</span>
+        <span>{t("learn.study.two_systems.one_timeline")}</span>
         <span className="font-num">
           {pick(
             `सौर वर्ष ${num(span.toFixed(0))} दिन · १२ चान्द्र मास ${num(year.twelveLunarDays.toFixed(0))} दिन → ~${num(shortfall.toFixed(0))} दिनको खाडल`,
@@ -761,7 +749,7 @@ function DriftLadder({
             <div
               className="absolute inset-y-0 right-0 flex items-center justify-center bg-emerald-400/35 text-[10px] font-bold text-emerald-50"
               style={{ width: pct(shortfall) }}
-              title={pick("अधिक मासले पुर्ने खाडल", "the gap an adhik maas fills")}
+              title={t("learn.study.two_systems.adhik_maas_gap")}
             >
               <span className="truncate px-0.5">{num(shortfall.toFixed(0))}</span>
             </div>
@@ -779,7 +767,7 @@ function DriftLadder({
       <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/55">
         <span>
           <i className="mr-1 inline-block h-2 w-2 rounded-sm bg-amber-500/60 align-middle" />
-          {pick("सौर महिना — सङ्क्रान्तिबाट सङ्क्रान्ति", "Solar months — sankranti to sankranti")}
+          {t("learn.study.two_systems.legend_solar_months")}
         </span>
         <span>
           <i className="mr-1 inline-block h-2 w-2 rounded-sm bg-sky-400/60 align-middle" />
@@ -790,7 +778,7 @@ function DriftLadder({
         </span>
         <span>
           <i className="mr-1 inline-block h-2 w-2 rounded-sm bg-emerald-400/70 align-middle" />
-          {pick("बाँकी खाडल — अधिक मासले पुर्छ", "The remaining gap — what an adhik maas fills")}
+          {t("learn.study.two_systems.legend_remaining_gap")}
         </span>
       </div>
     </div>

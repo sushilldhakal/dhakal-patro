@@ -8,6 +8,10 @@
  * just a number; drawn to scale it becomes an argument.
  */
 
+import { useTranslation } from "react-i18next";
+
+/* The figures that still call bilingualText are the ones whose text is built
+   around a formatted number, so they are not single catalogue strings. */
 import { bilingualText, useLocale, type Lang } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 
@@ -60,21 +64,24 @@ function Frame({
  * from it.
  */
 export function HoraWeekdayCycle() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const S = 300;
   const C = S / 2;
   const R = 104;
 
-  /* Classical order by period, slowest first — the hora sequence. */
+  /* Classical order by period, slowest first — the hora sequence. The labels
+     are abbreviated to fit the ring, so only the three that are already short
+     share a key with the canonical graha names. */
   const RING = [
-    { ne: "शनि", en: "Sat" },
-    { ne: "बृहस्पति", en: "Jup" },
-    { ne: "मंगल", en: "Mars" },
-    { ne: "सूर्य", en: "Sun" },
-    { ne: "शुक्र", en: "Ven" },
-    { ne: "बुध", en: "Mer" },
-    { ne: "चन्द्र", en: "Moon" },
+    "learn.diagrams.hora_ring_saturn",
+    "learn.diagrams.hora_ring_jupiter",
+    "learn.diagrams.hora_ring_mars",
+    "grahas.sun",
+    "learn.diagrams.hora_ring_venus",
+    "learn.diagrams.hora_ring_mercury",
+    "grahas.moon",
   ];
   const at = (i: number, r: number): [number, number] => {
     const a = ((i / 7) * 360 - 90) * (Math.PI / 180);
@@ -91,16 +98,8 @@ export function HoraWeekdayCycle() {
     <Frame
       w={S}
       h={S}
-      label={bilingualText(
-        lang,
-        "सात ग्रहको होरा चक्र र त्यसबाट निस्कने बारको क्रम",
-        "The seven-graha hora cycle and the weekday order it generates",
-      )}
-      caption={bilingualText(
-        lang,
-        "सात ग्रह परम्परागत परिक्रमा–कालको क्रममा चक्रमा बस्छन्, र दिनको हरेक घण्टा (होरा) क्रमको अर्को ग्रहले चलाउँछ। एक दिनमा २४ होरा हुन्छन्, र २४ ÷ ७ ले ३ बाँकी छाड्छ — त्यसैले भोलिको पहिलो होरा चक्रमा तीन स्थान अगाडि पर्छ। सूर्यबाट तीन–तीन गन्दै जानुहोस्: सूर्य → चन्द्र → मंगल → बुध → बृहस्पति → शुक्र → शनि। बारको क्रम मनपरी होइन, यही गणनाबाट आएको हो।",
-        "The seven grahas sit in a ring ordered by classical orbital period, and each hour of the day — each hora — is ruled by the next one along. A day holds 24 horas, and 24 ÷ 7 leaves 3, so tomorrow's first hora lands three places further round. Count in threes from the Sun: Sun → Moon → Mars → Mercury → Jupiter → Venus → Saturn. The weekday order is not arbitrary; it is that arithmetic.",
-      )}
+      label={t("learn.diagrams.hora_cycle_label")}
+      caption={t("learn.diagrams.hora_cycle_caption")}
     >
       {/* the three-step chords that generate the week */}
       {week.map((idx, k) => {
@@ -112,15 +111,15 @@ export function HoraWeekdayCycle() {
 
       <circle cx={C} cy={C} r={R} fill="none" stroke={INK} strokeOpacity={0.16} strokeWidth={0.8} />
 
-      {RING.map((g, i) => {
+      {RING.map((key, i) => {
         const [x, y] = at(i, R);
         const order = week.indexOf(i) + 1;
         return (
-          <g key={g.en}>
+          <g key={key}>
             <circle cx={x} cy={y} r={15} fill={INK} opacity={0.07} />
             <circle cx={x} cy={y} r={15} fill="none" stroke={MARK} strokeOpacity={0.45} strokeWidth={0.9} />
             <text x={x} y={y + 3} textAnchor="middle" className="fill-current text-[8px] font-semibold opacity-85">
-              {lang === "en" ? g.en : g.ne}
+              {t(key)}
             </text>
             <text
               x={at(i, R + 25)[0]}
@@ -136,10 +135,10 @@ export function HoraWeekdayCycle() {
       })}
 
       <text x={C} y={C - 6} textAnchor="middle" className="fill-current text-[8.5px] font-semibold opacity-75">
-        {bilingualText(lang, "२४ ÷ ७ → बाँकी ३", "24 ÷ 7 → remainder 3")}
+        {t("learn.diagrams.hora_cycle_remainder")}
       </text>
       <text x={C} y={C + 8} textAnchor="middle" className="text-[8px] font-semibold" style={{ fill: MARK }}>
-        {bilingualText(lang, "→ ३ स्थान अगाडि", "→ 3 places along")}
+        {t("learn.diagrams.hora_cycle_step")}
       </text>
     </Frame>
   );
@@ -161,6 +160,7 @@ export function HoraWeekdayCycle() {
  * scale all three are the same bar.
  */
 export function YearLengthLadder() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -170,38 +170,30 @@ export function YearLengthLadder() {
   const scale = 4400;
 
   const rows = [
-    { ne: "जुलियन औसत", en: "Julian mean", len: "365.2500", excess: 0.0078, c: WARN },
-    { ne: "ग्रेगोरियन औसत", en: "Gregorian mean", len: "365.2425", excess: 0.0003, c: GOOD },
-    { ne: "वास्तविक सायन वर्ष", en: "true tropical year", len: "365.2422", excess: 0, c: INK },
+    { key: "learn.diagrams.year_length_row_julian", len: "365.2500", excess: 0.0078, c: WARN },
+    { key: "learn.diagrams.year_length_row_gregorian", len: "365.2425", excess: 0.0003, c: GOOD },
+    { key: "learn.diagrams.year_length_row_true", len: "365.2422", excess: 0, c: INK },
   ];
 
   return (
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "जुलियन, ग्रेगोरियन र वास्तविक वर्षको लम्बाइ — र त्यसको जोडिँदो त्रुटि",
-        "Julian, Gregorian and true year lengths, and the error each accumulates",
-      )}
-      caption={bilingualText(
-        lang,
-        "जुलियन नियमले वर्षमा ३६५.२५ दिन मान्छ, वास्तविक सायन वर्ष ३६५.२४२२ को हो — वर्षेनि ०.००७८ दिन बढी। एक जीवनकालमा बेवास्ता गर्न मिल्ने यही सानो रकमले १२८ वर्षमा एक दिन र १५८२ सम्ममा दस दिन बनाइदियो। ग्रेगोरियन सुधारले हरेक चार शताब्दीमा तीन लीप दिन घटाएर औसत ३६५.२४२५ मा झार्छ — अब एक दिन बिग्रन करिब ३,००० वर्ष लाग्छ।",
-        "The Julian rule calls a year 365.25 days when the true tropical year is 365.2422 — an overpayment of 0.0078 days annually. That amount, negligible over a lifetime, becomes a full day in 128 years and ten days by 1582. The Gregorian correction drops three leap days every four centuries, bringing the mean to 365.2425 — now it takes about 3,000 years to lose a day.",
-      )}
+      label={t("learn.diagrams.year_length_label")}
+      caption={t("learn.diagrams.year_length_caption")}
     >
       <line x1={zero} y1={30} x2={zero} y2={H - 46} stroke={INK} strokeOpacity={0.35} strokeWidth={1} />
       <text x={zero} y={24} textAnchor="middle" className="fill-current text-[7.5px] opacity-55">
-        {bilingualText(lang, "शून्य त्रुटि", "zero error")}
+        {t("learn.diagrams.year_length_zero_error")}
       </text>
 
       {rows.map((r, i) => {
         const y = 48 + i * 30;
         const w = r.excess * scale;
         return (
-          <g key={r.en}>
+          <g key={r.key}>
             <text x={L - 6} y={y + 3} textAnchor="end" className="fill-current text-[8px] opacity-65">
-              {lang === "en" ? r.en : r.ne}
+              {t(r.key)}
             </text>
             <text x={L + 2} y={y + 3} className="fill-current text-[8px] tabular-nums opacity-80">
               {n(r.len)}
@@ -209,7 +201,7 @@ export function YearLengthLadder() {
             {w > 0 && <rect x={zero} y={y - 6} width={w} height={12} fill={r.c} opacity={0.45} rx={1.5} />}
             {w > 0 && (
               <text x={zero + w + 6} y={y + 3} className="text-[7.5px] font-semibold" style={{ fill: r.c }}>
-                +{n(r.excess.toFixed(4))} {bilingualText(lang, "दिन/वर्ष", "d/yr")}
+                +{n(r.excess.toFixed(4))} {t("learn.diagrams.year_length_excess_unit")}
               </text>
             )}
           </g>
@@ -220,7 +212,7 @@ export function YearLengthLadder() {
         {bilingualText(lang, `जुलियन: ~१ दिन प्रति ${n(128)} वर्ष → ${n(1582)} सम्ममा १० दिन`, `Julian: ~1 day per ${n(128)} years → ten days by ${n(1582)}`)}
       </text>
       <text x={zero} y={H - 10} className="text-[8px] font-semibold" style={{ fill: GOOD }}>
-        {bilingualText(lang, `ग्रेगोरियन: ~१ दिन प्रति ~३,००० वर्ष`, `Gregorian: ~1 day per ~3,000 years`)}
+        {t("learn.diagrams.year_length_gregorian_drift")}
       </text>
     </Frame>
   );
@@ -241,6 +233,7 @@ export function YearLengthLadder() {
  * eleven, Russia thirteen.
  */
 export function GregorianJump() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -251,29 +244,21 @@ export function GregorianJump() {
   const before = [1, 2, 3, 4];
   const after = [15, 16, 17, 18];
   const adopters = [
-    { y: 1582, days: 10, ne: "इटाली, स्पेन, पोर्चुगल", en: "Italy, Spain, Portugal" },
-    { y: 1752, days: 11, ne: "बेलायत", en: "Britain" },
-    { y: 1918, days: 13, ne: "रुस", en: "Russia" },
-    { y: 1923, days: 13, ne: "ग्रीस", en: "Greece" },
+    { y: 1582, days: 10, key: "learn.diagrams.country_italy_spain_portugal" },
+    { y: 1752, days: 11, key: "learn.diagrams.country_britain" },
+    { y: 1918, days: 13, key: "learn.diagrams.country_russia" },
+    { y: 1923, days: 13, key: "learn.diagrams.country_greece" },
   ];
 
   return (
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "अक्टोबर १५८२ मा हटाइएका दस दिन, र देशैपिच्छे फरक अपनाउने साल",
-        "The ten days removed from October 1582, and the staggered adoption that followed",
-      )}
-      caption={bilingualText(
-        lang,
-        "जुलियन नियमको जम्मा भएको त्रुटि मिलाउन अक्टोबर १५८२ बाट दस दिन एकैचोटि हटाइयो — ४ गतेको भोलिपल्ट सिधै १५ गते भयो, र बीचका दस दिन कहीँ पनि अस्तित्वमा आएनन्। तर सबैले एकैचोटि अपनाएनन्, र त्रुटि चलिरहेकै हुनाले पछि अपनाउनेले झन् धेरै दिन हटाउनुपर्‍यो — बेलायतले ११, रुसले १३।",
-        "Ten days were struck from October 1582 to clear the accumulated Julian error: the 4th was followed directly by the 15th, and the days between never existed anywhere. Adoption was not simultaneous, though, and because the error kept accruing, later adopters had to remove more days — eleven for Britain, thirteen for Russia.",
-      )}
+      label={t("learn.diagrams.gregorian_jump_label")}
+      caption={t("learn.diagrams.gregorian_jump_caption")}
     >
       <text x={startX} y={22} className="fill-current text-[8.5px] font-semibold opacity-75">
-        {bilingualText(lang, "अक्टोबर १५८२", "October 1582")}
+        {t("learn.diagrams.gregorian_jump_month")}
       </text>
 
       {[...before, ...after].map((d, i) => {
@@ -299,7 +284,7 @@ export function GregorianJump() {
         strokeWidth={2}
       />
       <text x={startX + before.length * cell + 14} y={34 + cell + 16} className="text-[8px] font-semibold" style={{ fill: WARN }}>
-        {bilingualText(lang, "१० दिन हटाइयो — यी कहिल्यै भएनन्", "ten days removed — these never happened")}
+        {t("learn.diagrams.gregorian_jump_lost_days")}
       </text>
 
       {/* staggered adoption */}
@@ -312,7 +297,7 @@ export function GregorianJump() {
             </text>
             <rect x={startX + 40} y={y - 7} width={a.days * 7} height={9} fill={WARN} opacity={0.34} rx={1.5} />
             <text x={startX + 40 + a.days * 7 + 6} y={y} className="fill-current text-[8px] opacity-65">
-              {n(a.days)} {bilingualText(lang, "दिन", "days")} · {lang === "en" ? a.en : a.ne}
+              {n(a.days)} {t("common.days")} · {t(a.key)}
             </text>
           </g>
         );
@@ -336,6 +321,7 @@ export function GregorianJump() {
  * drawn to scale rather than listed.
  */
 export function EclipseSeasonWindow() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const n = (v: string | number) => digits(lang, v);
   const W = 540;
@@ -348,16 +334,8 @@ export function EclipseSeasonWindow() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "ग्रहण ऋतुको ~३४ दिनको झ्याल, र त्यसभित्र पर्ने औंसी–पूर्णिमा जोडी",
-        "The ~34-day eclipse window and the new–full Moon pair it catches",
-      )}
-      caption={bilingualText(
-        lang,
-        "ग्रहण हुन सूर्य चन्द्रकक्षको पात नजिक हुनुपर्छ, र सूर्य त्यति नजिक करिब ३४ दिन बस्छ — त्यही ग्रहण ऋतु हो। औंसी र पूर्णिमाबीच सधैँ करिब १४ दिनको फासला हुने भएकाले, ३४ दिनको झ्यालले प्रायः दुवै समात्छ: औंसीमा सूर्यग्रहण र पूर्णिमामा चन्द्रग्रहण। त्यसैले ग्रहण एक्लै नआई जोडीमा आउँछन्।",
-        "An eclipse needs the Sun near a node of the Moon's orbit, and the Sun stays that close for about 34 days — that window is the eclipse season. Since a new Moon and a full Moon are always about 14 days apart, a 34-day window almost always catches both: a solar eclipse at new Moon and a lunar one at full. That is why eclipses arrive in pairs rather than singly.",
-      )}
+      label={t("learn.diagrams.eclipse_season_label")}
+      caption={t("learn.diagrams.eclipse_season_caption")}
     >
       <rect x={L} y={54} width={Rr - L} height={30} fill={MARK} opacity={0.16} rx={3} />
       <text x={(L + Rr) / 2} y={44} textAnchor="middle" className="text-[8.5px] font-semibold" style={{ fill: MARK }}>
@@ -368,16 +346,26 @@ export function EclipseSeasonWindow() {
       ))}
 
       {[
-        { d: 9, fill: "#1b2430", ne: "औंसी", en: "new moon", ev: "सूर्यग्रहण", evEn: "solar eclipse" },
-        { d: 23, fill: "#e8eef6", ne: "पूर्णिमा", en: "full moon", ev: "चन्द्रग्रहण", evEn: "lunar eclipse" },
+        {
+          d: 9,
+          fill: "#1b2430",
+          phase: "learn.diagrams.eclipse_phase_new_moon",
+          event: "learn.diagrams.eclipse_event_solar",
+        },
+        {
+          d: 23,
+          fill: "#e8eef6",
+          phase: "learn.diagrams.eclipse_phase_full_moon",
+          event: "learn.diagrams.eclipse_event_lunar",
+        },
       ].map((m) => (
-        <g key={m.en}>
+        <g key={m.phase}>
           <circle cx={x(m.d)} cy={69} r={8} fill={m.fill} stroke={INK} strokeOpacity={0.4} strokeWidth={0.8} />
           <text x={x(m.d)} y={104} textAnchor="middle" className="fill-current text-[8px] font-semibold opacity-75">
-            {lang === "en" ? m.en : m.ne}
+            {t(m.phase)}
           </text>
           <text x={x(m.d)} y={117} textAnchor="middle" className="text-[7.5px]" style={{ fill: COOL }}>
-            {lang === "en" ? m.evEn : m.ev}
+            {t(m.event)}
           </text>
         </g>
       ))}
@@ -407,6 +395,7 @@ export function EclipseSeasonWindow() {
  * *input* is identical and only the footprint differs.
  */
 export function SunRayAngle() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const W = 540;
   const H = 210;
@@ -437,24 +426,26 @@ export function SunRayAngle() {
     <Frame
       w={W}
       h={H}
-      label={bilingualText(
-        lang,
-        "उही मात्राको किरण ठाडो र छड्के कोणमा — फरक क्षेत्रफलमा फिँजिन्छ",
-        "The same quantity of light arriving steeply and at a slant — spread over different areas",
-      )}
-      caption={bilingualText(
-        lang,
-        "दुवैतिर किरणको पुञ्ज उही चौडाइको छ — सूर्यले पठाएको ऊर्जा उही हो। ठाडो पर्दा त्यो सानो क्षेत्रमा केन्द्रित हुन्छ, छड्के पर्दा फराकिलो क्षेत्रमा फिँजिन्छ, र प्रति वर्ग मिटर ताप घट्छ। ऋतु बनाउने यही हो: झुकावले वर्षभरि किरणको कोण बदल्छ, दूरीले होइन।",
-        "The beam is the same width on both sides — the Sun is sending the same energy. Arriving steeply it concentrates on a short footprint; arriving at a slant it spreads across a long one, and the heat per square metre drops. This is what makes the seasons: the tilt changes the angle of the light through the year, not the distance.",
-      )}
+      label={t("learn.diagrams.ray_angle_label")}
+      caption={t("learn.diagrams.ray_angle_caption")}
     >
       {[
-        { b: steep, cx: 148, ne: "ठाडो किरण", en: "steep rays", res: "बढी ताप → गर्मी", resEn: "more heat → summer" },
-        { b: shallow, cx: 392, ne: "छड्के किरण", en: "slanting rays", res: "कम ताप → जाडो", resEn: "less heat → winter" },
+        {
+          b: steep,
+          cx: 148,
+          angle: "learn.diagrams.ray_steep",
+          result: "learn.diagrams.ray_steep_result",
+        },
+        {
+          b: shallow,
+          cx: 392,
+          angle: "learn.diagrams.ray_slant",
+          result: "learn.diagrams.ray_slant_result",
+        },
       ].map((p) => (
-        <g key={p.en}>
+        <g key={p.angle}>
           <text x={p.cx} y={20} textAnchor="middle" className="fill-current text-[8.5px] font-semibold opacity-75">
-            {lang === "en" ? p.en : p.ne}
+            {t(p.angle)}
           </text>
           {p.b.rays.map((r, i) => (
             <line key={i} x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} stroke={SUN} strokeWidth={1.6} opacity={0.75} />
@@ -467,7 +458,7 @@ export function SunRayAngle() {
               : `क्षेत्रफल ×${digits(lang, (p.b.foot / 74).toFixed(1))}`}
           </text>
           <text x={p.cx} y={ground + 36} textAnchor="middle" className="fill-current text-[8px] opacity-70">
-            {lang === "en" ? p.resEn : p.res}
+            {t(p.result)}
           </text>
         </g>
       ))}

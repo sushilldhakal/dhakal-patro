@@ -13,8 +13,8 @@
  */
 
 import { lazy, Suspense, useSyncExternalStore } from "react";
+import { useTranslation } from "react-i18next";
 
-import { useLocale, bilingualText } from "@/i18n/locale";
 import { importWithRetry } from "@/lib/lazy-route";
 
 const Study = lazy(() =>
@@ -22,13 +22,13 @@ const Study = lazy(() =>
 );
 
 function Placeholder() {
-  const { lang } = useLocale();
+  const { t } = useTranslation();
   return (
     <div
       className="mt-5 grid place-items-center rounded-2xl border border-[var(--tm-border)] bg-[color-mix(in_srgb,var(--tm-teal)_6%,transparent)] text-sm text-[var(--tm-ink-faint)]"
       style={{ height: "clamp(340px, 52vh, 560px)" }}
     >
-      {bilingualText(lang, "आकाश तयार हुँदैछ…", "Preparing the sky…")}
+      {t("learn.diagrams.scene_loading")}
     </div>
   );
 }

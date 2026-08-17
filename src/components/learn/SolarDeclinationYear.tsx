@@ -118,11 +118,7 @@ export function SolarDeclinationYear() {
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
         role="img"
-        aria-label={bilingualText(
-          lang,
-          "सूर्यको क्रान्ति वर्षभरि — विषुवमा शून्य, अयनान्तमा चरम",
-          "The Sun's declination through the year — zero at the equinoxes, extreme at the solstices",
-        )}
+        aria-label={t("learn.study.declination.aria")}
       >
         {/* दक्षिणायन shading: the falling half, ग्रीष्म → शीत अयनान्त */}
         <rect
@@ -139,7 +135,7 @@ export function SolarDeclinationYear() {
           textAnchor="middle"
           className="fill-current text-[9px] font-semibold opacity-60"
         >
-          {bilingualText(lang, "दक्षिणायन", "Dakshinayana")}
+          {t("learn.study.declination.dakshinayana")}
         </text>
         {/* उत्तरायण is the rising half, and a बि.सं. year opens partway through
             it — so it shows as two flanks either side of दक्षिणायन, not one
@@ -156,7 +152,7 @@ export function SolarDeclinationYear() {
             textAnchor="middle"
             className="fill-current text-[9px] font-semibold opacity-60"
           >
-            {bilingualText(lang, "उत्तरायण", "Uttarayana")}
+            {t("learn.study.declination.uttarayana")}
           </text>
         ))}
 
@@ -242,11 +238,7 @@ export function SolarDeclinationYear() {
         })}
       </svg>
       <figcaption className="mt-1.5 text-[11px] leading-snug text-white/45">
-        {bilingualText(
-          lang,
-          "एउटै वक्र, दुई फरक बिन्दु — विषुव त्यहाँ जहाँ वक्रले शून्य काट्छ (सूर्य विषुवत् रेखामा, दिन–रात बराबर, उत्तर–दक्षिण गति सबैभन्दा छिटो), अयनान्त त्यहाँ जहाँ वक्र फर्किन्छ (क्रान्ति ±२३.४४°, सबैभन्दा लामो र छोटो दिन)। तल बि.सं. महिना — चारै बिन्दु महिनाको सीमामा पर्दैनन्, र शताब्दीयौँमा सर्दै जान्छन्।",
-          "One curve, two different points — an equinox is where it crosses zero (the Sun on the celestial equator, day equal to night, north–south motion at its fastest); a solstice is where it turns (declination ±23.44°, the longest and shortest day). The बि.सं. months run underneath: none of the four lands on a month boundary, and over centuries they drift against them.",
-        )}
+        {t("learn.study.declination.caption")}
       </figcaption>
     </figure>
   );

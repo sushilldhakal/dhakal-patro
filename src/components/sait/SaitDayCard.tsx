@@ -18,14 +18,11 @@ import { SuitabilityBadge } from "@/components/sait/sait-suitability";
  * One qualifying muhūrta day: the representative clean window plus the
  * panchāṅga that made the day survive the rules.
  */
-const SHUDDHI_PLANET_LABEL: Record<
-  SaitShuddhiPlanet["planet"],
-  { ne: string; en: string }
-> = {
-  sun: { ne: "सूर्य", en: "Sun" },
-  moon: { ne: "चन्द्र", en: "Moon" },
-  guru: { ne: "गुरु", en: "Jupiter" },
-  shukra: { ne: "शुक्र", en: "Venus" },
+const SHUDDHI_PLANET_LABEL: Record<SaitShuddhiPlanet["planet"], string> = {
+  sun: "grahas.sun",
+  moon: "grahas.moon",
+  guru: "kundali.x.graha_guru",
+  shukra: "grahas.venus",
 };
 
 const SHUDDHI_TONE_TEXT: Record<SaitShuddhiTone, string> = {
@@ -40,10 +37,10 @@ const SHUDDHI_TONE_CHIP: Record<SaitShuddhiTone, string> = {
   avoid: "bg-danger/12 text-danger",
 };
 
-const SHUDDHI_SUMMARY: Record<SaitShuddhiTone, { ne: string; en: string }> = {
-  good: { ne: "ग्रह शुद्ध — शुभ", en: "Grahas strong — auspicious" },
-  shanti: { ne: "शान्ति आवश्यक", en: "needs śānti" },
-  avoid: { ne: "त्याज्य ग्रहस्थिति", en: "weak graha — avoid" },
+const SHUDDHI_SUMMARY: Record<SaitShuddhiTone, string> = {
+  good: "sait.x.shuddhi_good",
+  shanti: "sait.x.shuddhi_shanti",
+  avoid: "sait.x.shuddhi_avoid",
 };
 
 export function SaitDayCard({
@@ -149,13 +146,13 @@ export function SaitDayCard({
                   SHUDDHI_TONE_CHIP[p.tone],
                 )}
               >
-                {bilingualText(lang, SHUDDHI_PLANET_LABEL[p.planet].ne, SHUDDHI_PLANET_LABEL[p.planet].en)}
+                {t(SHUDDHI_PLANET_LABEL[p.planet])}
                 <span>{digits(p.house)}</span>
               </span>
             ))}
           </div>
           <p className={cn("m-0 mt-1.5 text-xs font-semibold", SHUDDHI_TONE_TEXT[shuddhi.tone])}>
-            {bilingualText(lang, SHUDDHI_SUMMARY[shuddhi.tone].ne, SHUDDHI_SUMMARY[shuddhi.tone].en)}
+            {t(SHUDDHI_SUMMARY[shuddhi.tone])}
             <span className="ml-1 font-normal text-muted-foreground">
               {t("sait.house_from_janma_r_i")}
             </span>
