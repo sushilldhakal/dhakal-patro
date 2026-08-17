@@ -26,19 +26,20 @@ const AD_YEARS = Array.from(
   (_, i) => AD_BOUNDS.minYear + i,
 );
 
-const AD_MONTHS = [
-  { en: "January", ne: "जनवरी" },
-  { en: "February", ne: "फेब्रुअरी" },
-  { en: "March", ne: "मार्च" },
-  { en: "April", ne: "अप्रिल" },
-  { en: "May", ne: "मे" },
-  { en: "June", ne: "जुन" },
-  { en: "July", ne: "जुलाई" },
-  { en: "August", ne: "अगस्ट" },
-  { en: "September", ne: "सेप्टेम्बर" },
-  { en: "October", ne: "अक्टोबर" },
-  { en: "November", ne: "नोभेम्बर" },
-  { en: "December", ne: "डिसेम्बर" },
+/** Catalogue keys for the Gregorian month names, January first. */
+const AD_MONTH_KEYS = [
+  "kundali.x.month_january",
+  "kundali.x.month_february",
+  "kundali.x.month_march",
+  "kundali.x.month_april",
+  "kundali.x.month_may",
+  "kundali.x.month_june",
+  "kundali.x.month_july",
+  "kundali.x.month_august",
+  "kundali.x.month_september",
+  "kundali.x.month_october",
+  "kundali.x.month_november",
+  "kundali.x.month_december",
 ];
 
 const selectClass =
@@ -151,9 +152,9 @@ export function KundaliControls({
             aria-label={t("kundali.month")}
             onChange={(e) => pickAd(adYear, Number(e.target.value) + 1, adDay)}
           >
-            {AD_MONTHS.map((m, i) => (
-              <option key={m.en} value={i}>
-                {bilingualText(lang, m.ne, m.en)}
+            {AD_MONTH_KEYS.map((monthKey, i) => (
+              <option key={monthKey} value={i}>
+                {t(monthKey)}
               </option>
             ))}
           </select>

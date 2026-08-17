@@ -137,12 +137,11 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
 
   const metricRows: {
     key: keyof Pick<ShodhyaPindaRow, "rashiPinda" | "grahaPinda" | "shodhyaPinda">;
-    ne: string;
-    en: string;
+    label: string;
   }[] = [
-    { key: "rashiPinda", ne: "राशि", en: "Rashi" },
-    { key: "grahaPinda", ne: "ग्रह", en: "Graha" },
-    { key: "shodhyaPinda", ne: "शोध्य", en: "Shodhya" },
+    { key: "rashiPinda", label: "kundali.rashi" },
+    { key: "grahaPinda", label: "kundali.graha" },
+    { key: "shodhyaPinda", label: "kundali.x.pinda_shodhya" },
   ];
 
   return (
@@ -169,7 +168,7 @@ function ShodhyaPindaTable({ rows }: { rows: ShodhyaPindaRow[] }) {
                 className={metric.key === "shodhyaPinda" ? "bg-muted/20 font-semibold" : undefined}
               >
                 <TableCell className={cn(td, "sticky left-0 z-10 bg-card pl-3 font-semibold")}>
-                  {bilingualText(lang, metric.ne, metric.en)}
+                  {t(metric.label)}
                 </TableCell>
                 {ASHTAKAVARGA_TARGETS.map((t) => {
                   const row = rows.find((r) => r.target === t);

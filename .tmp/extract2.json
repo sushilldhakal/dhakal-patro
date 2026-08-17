@@ -1,330 +1,74 @@
 {
-  "calendar-cycle-diagrams:71#object*": {
-    "ne": "शनि",
-    "en": "Sat"
+  "PanchangaReferenceGuide:28#object*": {
+    "ne": "सूर्य",
+    "en": "Sun"
   },
-  "calendar-cycle-diagrams:72#object*": {
-    "ne": "बृहस्पति",
-    "en": "Jup"
+  "PanchangaReferenceGuide:29#object*": {
+    "ne": "चन्द्र",
+    "en": "Moon"
   },
-  "calendar-cycle-diagrams:73#object*": {
+  "PanchangaReferenceGuide:30#object*": {
     "ne": "मंगल",
     "en": "Mars"
   },
-  "calendar-cycle-diagrams:74#object*": {
-    "ne": "सूर्य",
-    "en": "Sun"
-  },
-  "calendar-cycle-diagrams:75#object*": {
-    "ne": "शुक्र",
-    "en": "Ven"
-  },
-  "calendar-cycle-diagrams:76#object*": {
-    "ne": "बुध",
-    "en": "Mer"
-  },
-  "calendar-cycle-diagrams:77#object*": {
-    "ne": "चन्द्र",
-    "en": "Moon"
-  },
-  "calendar-cycle-diagrams:173#object*": {
-    "ne": "जुलियन औसत",
-    "en": "Julian mean"
-  },
-  "calendar-cycle-diagrams:174#object*": {
-    "ne": "ग्रेगोरियन औसत",
-    "en": "Gregorian mean"
-  },
-  "calendar-cycle-diagrams:175#object*": {
-    "ne": "वास्तविक सायन वर्ष",
-    "en": "true tropical year"
-  },
-  "calendar-cycle-diagrams:254#object*": {
-    "ne": "इटाली, स्पेन, पोर्चुगल",
-    "en": "Italy, Spain, Portugal"
-  },
-  "calendar-cycle-diagrams:255#object*": {
-    "ne": "बेलायत",
-    "en": "Britain"
-  },
-  "calendar-cycle-diagrams:256#object*": {
-    "ne": "रुस",
-    "en": "Russia"
-  },
-  "calendar-cycle-diagrams:257#object*": {
-    "ne": "ग्रीस",
-    "en": "Greece"
-  },
-  "calendar-cycle-diagrams:371#object*": {
-    "ne": "औंसी",
-    "en": "new moon"
-  },
-  "calendar-cycle-diagrams:372#object*": {
-    "ne": "पूर्णिमा",
-    "en": "full moon"
-  },
-  "calendar-cycle-diagrams:452#object*": {
-    "ne": "ठाडो किरण",
-    "en": "steep rays"
-  },
-  "calendar-cycle-diagrams:453#object*": {
-    "ne": "छड्के किरण",
-    "en": "slanting rays"
-  },
-  "calendar-cycle-diagrams:371#xEn": {
-    "ne": "सूर्यग्रहण",
-    "en": "solar eclipse"
-  },
-  "calendar-cycle-diagrams:372#xEn": {
-    "ne": "चन्द्रग्रहण",
-    "en": "lunar eclipse"
-  },
-  "calendar-cycle-diagrams:452#xEn": {
-    "ne": "बढी ताप → गर्मी",
-    "en": "more heat → summer"
-  },
-  "calendar-cycle-diagrams:453#xEn": {
-    "ne": "कम ताप → जाडो",
-    "en": "less heat → winter"
-  },
-  "calendar-cycle-diagrams:223#tmpl": {
-    "ne": "ग्रेगोरियन: ~१ दिन प्रति ~३,००० वर्ष",
-    "en": "Gregorian: ~1 day per ~3,000 years"
-  },
-  "day-timeline-diagrams:78#object*": {
-    "ne": "सुरु — दुवै सूर्य र ताराको सिधामा",
-    "en": "start — lined up on both Sun and star"
-  },
-  "day-timeline-diagrams:79#object*": {
-    "ne": "२३घ ५६मि पछि — एक पूरा घुर्णन",
-    "en": "after 23h 56m — one full rotation"
-  },
-  "day-timeline-diagrams:187#object*": {
-    "ne": "ग्रीष्म अयनान्त",
-    "en": "summer solstice"
-  },
-  "day-timeline-diagrams:188#object*": {
-    "ne": "शीत अयनान्त",
-    "en": "winter solstice"
-  },
-  "day-timeline-diagrams:392#object*": {
-    "ne": "तृतीया",
-    "en": "Tritiya"
-  },
-  "day-timeline-diagrams:393#object*": {
-    "ne": "चतुर्थी",
-    "en": "Chaturthi"
-  },
-  "day-timeline-diagrams:463#object*": {
-    "ne": "काठमाडौँ",
-    "en": "Kathmandu"
-  },
-  "day-timeline-diagrams:464#object*": {
-    "ne": "सिड्नी",
-    "en": "Sydney"
-  },
-  "motion-and-month-diagrams:171#object*": {
-    "ne": "मध्यम ग्रह",
-    "en": "mean planet"
-  },
-  "motion-and-month-diagrams:173#object*": {
-    "ne": "एकनास वृत्ताकार गति",
-    "en": "uniform circular motion"
-  },
-  "motion-and-month-diagrams:179#object*": {
-    "ne": "+ मन्द संस्कार",
-    "en": "+ manda correction"
-  },
-  "motion-and-month-diagrams:181#object*": {
-    "ne": "कक्ष हामीमा केन्द्रित छैन — एक फेरोमा एक लहर",
-    "en": "orbit not centred on us — one wave per revolution"
-  },
-  "motion-and-month-diagrams:187#object*": {
-    "ne": "+ शीघ्र संस्कार = स्फुट ग्रह",
-    "en": "+ shighra = true planet"
-  },
-  "motion-and-month-diagrams:189#object*": {
-    "ne": "हाम्रो आफ्नै गति — यहीँबाट वक्री लूप",
-    "en": "our own motion — this is where retrograde comes from"
-  },
-  "motion-and-month-diagrams:304#object*": {
-    "ne": "शुक्ल पक्ष",
-    "en": "Shukla paksha"
-  },
-  "motion-and-month-diagrams:304#object*#2": {
-    "ne": "तिथि १ → १५",
-    "en": "tithi 1 → 15"
-  },
-  "motion-and-month-diagrams:305#object*": {
-    "ne": "कृष्ण पक्ष",
-    "en": "Krishna paksha"
-  },
-  "motion-and-month-diagrams:305#object*#2": {
-    "ne": "तिथि १ → १५",
-    "en": "tithi 1 → 15"
-  },
-  "motion-and-month-diagrams:318#object*": {
-    "ne": "औंसी",
-    "en": "new"
-  },
-  "motion-and-month-diagrams:319#object*": {
-    "ne": "पूर्णिमा",
-    "en": "full"
-  },
-  "motion-and-month-diagrams:320#object*": {
-    "ne": "औंसी",
-    "en": "new"
-  },
-  "zodiac-frame-diagrams:157#object*": {
-    "ne": "सूर्य",
-    "en": "Sun"
-  },
-  "zodiac-frame-diagrams:157#object*#2": {
-    "ne": "परिभाषाले नै ०°",
-    "en": "0° by definition"
-  },
-  "zodiac-frame-diagrams:158#object*": {
-    "ne": "चन्द्र",
-    "en": "Moon"
-  },
-  "zodiac-frame-diagrams:158#object*#2": {
-    "ne": "±५.१°",
-    "en": "±5.1°"
-  },
-  "zodiac-frame-diagrams:159#object*": {
+  "PanchangaReferenceGuide:31#object*": {
     "ne": "बुध",
     "en": "Mercury"
   },
-  "zodiac-frame-diagrams:159#object*#2": {
-    "ne": "±७°",
-    "en": "±7°"
+  "PanchangaReferenceGuide:32#object*": {
+    "ne": "बृहस्पति",
+    "en": "Jupiter"
   },
-  "zodiac-frame-diagrams:257#object*": {
-    "ne": "वसन्त विषुव",
-    "en": "spring equinox"
+  "PanchangaReferenceGuide:33#object*": {
+    "ne": "शुक्र",
+    "en": "Venus"
   },
-  "zodiac-frame-diagrams:258#object*": {
-    "ne": "ग्रीष्म अयनान्त",
-    "en": "summer solstice"
+  "PanchangaReferenceGuide:34#object*": {
+    "ne": "शनि",
+    "en": "Saturn"
   },
-  "zodiac-frame-diagrams:259#object*": {
-    "ne": "शरद् विषुव",
-    "en": "autumn equinox"
+  "PanchangaReferenceGuide:35#object*": {
+    "ne": "राहु",
+    "en": "Rahu"
   },
-  "zodiac-frame-diagrams:260#object*": {
-    "ne": "शीत अयनान्त",
-    "en": "winter solstice"
+  "PanchangaReferenceGuide:36#object*": {
+    "ne": "केतु",
+    "en": "Ketu"
   },
-  "HierarchyDiagram:48#object*": {
-    "ne": "पृथ्वी",
-    "en": "Earth"
+  "PanchangaReferenceGuide:28#xEn": {
+    "ne": "आत्मा, पिता, अधिकार — राशि र सङ्क्रान्तिको माप",
+    "en": "Soul, father, authority — measures rashi and sankranti"
   },
-  "HierarchyDiagram:49#object*": {
-    "ne": "आफ्नै अक्षमा घुर्णन",
-    "en": "spin on its own axis"
+  "PanchangaReferenceGuide:29#xEn": {
+    "ne": "मन, माता — तिथि, नक्षत्र, पक्ष",
+    "en": "Mind, mother — tithi, nakshatra, paksha"
   },
-  "HierarchyDiagram:51#object*": {
-    "ne": "दिन",
-    "en": "Day"
+  "PanchangaReferenceGuide:30#xEn": {
+    "ne": "साहस, भाइ — मङ्गलवार, होरा",
+    "en": "Courage, siblings — Tuesday, hora"
   },
-  "HierarchyDiagram:52#object*": {
-    "ne": "वार",
-    "en": "Vāra"
+  "PanchangaReferenceGuide:31#xEn": {
+    "ne": "बुद्धि, वाणी — बुधवार",
+    "en": "Intellect, speech — Wednesday"
   },
-  "HierarchyDiagram:54#object*": {
-    "ne": "१ फेरो",
-    "en": "1 turn"
+  "PanchangaReferenceGuide:32#xEn": {
+    "ne": "गुरु, ज्ञान — बिहीवार",
+    "en": "Teacher, knowledge — Thursday"
   },
-  "HierarchyDiagram:60#object*": {
-    "ne": "सूर्य",
-    "en": "Sun"
+  "PanchangaReferenceGuide:33#xEn": {
+    "ne": "प्रेम, सौन्दर्य — शुक्रवार",
+    "en": "Love, beauty — Friday"
   },
-  "HierarchyDiagram:61#object*": {
-    "ne": "राशिचक्रमा वार्षिक गति",
-    "en": "annual path through the zodiac"
+  "PanchangaReferenceGuide:34#xEn": {
+    "ne": "कर्म, धैर्य — शनिवार",
+    "en": "Karma, patience — Saturday"
   },
-  "HierarchyDiagram:63#object*": {
-    "ne": "राशि",
-    "en": "Rāśi"
+  "PanchangaReferenceGuide:35#xEn": {
+    "ne": "छाया ग्रह — ग्रहण, अप्रत्याशित परिवर्तन",
+    "en": "Shadow planet — eclipses, sudden change"
   },
-  "HierarchyDiagram:64#object*": {
-    "ne": "सङ्क्रान्ति",
-    "en": "Saṅkrānti"
-  },
-  "HierarchyDiagram:65#object*": {
-    "ne": "सौर महिना · गते",
-    "en": "Solar month · gate"
-  },
-  "HierarchyDiagram:68#object*": {
-    "ne": "३०° को भाग",
-    "en": "30° segment"
-  },
-  "HierarchyDiagram:69#object*": {
-    "ne": "सीमा पार",
-    "en": "boundary crossed"
-  },
-  "HierarchyDiagram:72#object*": {
-    "ne": "सौरमान",
-    "en": "Sauramāna"
-  },
-  "HierarchyDiagram:77#object*": {
-    "ne": "चन्द्र",
-    "en": "Moon"
-  },
-  "HierarchyDiagram:78#object*": {
-    "ne": "सूर्यसँगको कोणीय दूरी",
-    "en": "angular gap from the Sun"
-  },
-  "HierarchyDiagram:80#object*": {
-    "ne": "तिथि",
-    "en": "Tithi"
-  },
-  "HierarchyDiagram:81#object*": {
-    "ne": "पक्ष",
-    "en": "Pakṣa"
-  },
-  "HierarchyDiagram:82#object*": {
-    "ne": "चान्द्र मास",
-    "en": "Lunar month"
-  },
-  "HierarchyDiagram:85#object*": {
-    "ne": "हरेक १२°",
-    "en": "every 12°"
-  },
-  "HierarchyDiagram:86#object*": {
-    "ne": "१५ तिथि",
-    "en": "15 tithis"
-  },
-  "HierarchyDiagram:87#object*": {
-    "ne": "३० तिथि",
-    "en": "30 tithis"
-  },
-  "HierarchyDiagram:89#object*": {
-    "ne": "चान्द्रमान",
-    "en": "Chāndramāna"
-  },
-  "HierarchyDiagram:93#object*": {
-    "ne": "आकाशीय गति",
-    "en": "Celestial motion"
-  },
-  "HierarchyDiagram:94#object*": {
-    "ne": "पञ्चाङ्ग",
-    "en": "Panchanga"
-  },
-  "HierarchyDiagram:95#object*": {
-    "ne": "एउटा बि.सं. मिति",
-    "en": "One Bikram Sambat date"
-  },
-  "HierarchyDiagram:97#object*": {
-    "ne": "वर्ष · महिना · गते · तिथि · वार",
-    "en": "year · month · gate · tithi · vaara"
-  },
-  "HierarchyDiagram:253#object*": {
-    "ne": "पृथ्वी, सूर्य र चन्द्रको गतिबाट दिन, सौर महिना र चान्द्र मास बन्छन्, र तीनै मिलेर पञ्चाङ्ग र बि.सं. मिति बनाउँछन्।",
-    "en": "Earth's, the Sun's and the Moon's motions produce the day, the solar month and the lunar month; together they make the panchanga and a Bikram Sambat date."
-  },
-  "HierarchyDiagram:443#object*": {
-    "ne": "आकाशीय गतिबाट पञ्चाङ्ग र बि.सं. मितिसम्मको क्रम।",
-    "en": "The chain from celestial motion to the panchanga and a Bikram Sambat date."
+  "PanchangaReferenceGuide:36#xEn": {
+    "ne": "छाया ग्रह — मोक्ष, आध्यात्म",
+    "en": "Shadow planet — moksha, spirituality"
   }
 }

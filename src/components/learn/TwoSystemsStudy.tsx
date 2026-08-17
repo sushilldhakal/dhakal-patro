@@ -24,8 +24,9 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
 import { ChevronDown, ChevronUp, Maximize2, Minimize2, Pause, Play, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-import { bilingualText, useLocale } from "@/i18n/locale";
+import { useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
 import { edPlayBtn, edRo, edRoK, edRoV, edScrubWrap } from "@/lib/learn-classes";
@@ -66,10 +67,10 @@ const RASHI_NE = [
   "तुला", "वृश्चिक", "धनु", "मकर", "कुम्भ", "मीन",
 ];
 
-const FOCUS_CHIPS: { id: Focus; ne: string; en: string }[] = [
-  { id: "solar", ne: "☀️ सौरमान", en: "☀️ Sauramāna" },
-  { id: "lunar", ne: "🌙 चान्द्रमान", en: "🌙 Chāndramāna" },
-  { id: "both", ne: "☀️🌙 दुवै", en: "☀️🌙 Both" },
+const FOCUS_CHIPS: { id: Focus; key: string }[] = [
+  { id: "solar", key: "learn.study.two_systems.focus_solar" },
+  { id: "lunar", key: "learn.study.two_systems.focus_lunar" },
+  { id: "both", key: "learn.study.two_systems.focus_both" },
 ];
 
 function clampPitch(p: number) {
@@ -79,10 +80,10 @@ function clampPitch(p: number) {
 }
 
 export function TwoSystemsStudy() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const num = useCallback((v: number | string) => (ne ? toNepaliDigits(v) : String(v)), [ne]);
-  const pick = useCallback((a: string, b: string) => bilingualText(lang, a, b), [lang]);
 
   /* The year on screen: the solar year that contains today, so the reader
      recognises the months going past. Built once — the ladder costs a few
@@ -276,14 +277,12 @@ export function TwoSystemsStudy() {
               )}
             >
               {travelled.moon >= 360
-                ? pick(
-                    `नक्षत्र मास पूरा +${num((travelled.moon - 360).toFixed(1))}°`,
-                    `sidereal lap done +${(travelled.moon - 360).toFixed(1)}°`,
-                  )
-                : pick(
-                    `३६०° सम्म ${num((360 - travelled.moon).toFixed(1))}° बाँकी`,
-                    `${(360 - travelled.moon).toFixed(1)}° to the 360° lap`,
-                  )}
+                ? t("learn.study.two_systems.sidereal_lap_done", {
+                    degrees: num((travelled.moon - 360).toFixed(1)),
+                  })
+                : t("learn.study.two_systems.sidereal_lap_remaining", {
+                    degrees: num((360 - travelled.moon).toFixed(1)),
+                  })}
             </span>
           </div>
           <div className="mt-0.5 leading-snug text-white/55">
@@ -403,7 +402,7 @@ export function TwoSystemsStudy() {
               tone="moon"
               steps={[
                 t("learn.study.two_systems.chain_angular_gap"),
-                pick(`हरेक ${num(TITHI_ARC)}° = १ तिथि`, `every ${TITHI_ARC}° = 1 tithi`),
+                t("learn.study.two_systems.chain_tithi_arc", { degrees: num(TITHI_ARC) }),
                 t("learn.study.two_systems.chain_paksha"),
                 t("learn.study.two_systems.chain_lunar_month"),
               ]}
@@ -464,7 +463,7 @@ export function TwoSystemsStudy() {
                   : "border-white/20 text-white/70 hover:border-white/50 hover:text-white",
               )}
             >
-              {pick(c.ne, c.en)}
+              {t(c.key)}
             </button>
           ))}
           <span className="ml-auto flex gap-1.5">
@@ -535,7 +534,6 @@ export function TwoSystemsStudy() {
               lunarDone={lunarDone}
               ne={ne}
               num={num}
-              pick={pick}
             />
           </>
         )}
@@ -664,15 +662,14 @@ function DriftLadder({
   lunarDone,
   ne,
   num,
-  pick,
 }: {
   year: ReturnType<typeof buildYearLadders>;
   dayOfYear: number;
   lunarDone: number;
   ne: boolean;
   num: (v: number | string) => string;
-  pick: (a: string, b: string) => string;
 }) {
+  const { t } = useTranslation();
   const span = year.yearDays;
   const pct = (days: number) => `${(days / span) * 100}%`;
   const playhead = Math.min(Math.max(dayOfYear, 0), span);
@@ -683,10 +680,11 @@ function DriftLadder({
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-3 text-[11px] text-white/60">
         <span>{t("learn.study.two_systems.one_timeline")}</span>
         <span className="font-num">
-          {pick(
-            `सौर वर्ष ${num(span.toFixed(0))} दिन · १२ चान्द्र मास ${num(year.twelveLunarDays.toFixed(0))} दिन → ~${num(shortfall.toFixed(0))} दिनको खाडल`,
-            `Solar year ${span.toFixed(0)} d · 12 lunar months ${year.twelveLunarDays.toFixed(0)} d → a ~${shortfall.toFixed(0)} day gap`,
-          )}
+          {t("learn.study.two_systems.ladder_summary", {
+            solarDays: num(span.toFixed(0)),
+            lunarDays: num(year.twelveLunarDays.toFixed(0)),
+            gapDays: num(shortfall.toFixed(0)),
+          })}
         </span>
       </div>
 
@@ -742,7 +740,9 @@ function DriftLadder({
             style={{ width: pct(year.twelveLunarDays) }}
           >
             <span className="truncate px-1">
-              {pick(`१२ चान्द्र मास = ${num(year.twelveLunarDays.toFixed(0))} दिन`, `12 lunar months = ${year.twelveLunarDays.toFixed(0)} d`)}
+              {t("learn.study.two_systems.twelve_lunar_months_days", {
+                days: num(year.twelveLunarDays.toFixed(0)),
+              })}
             </span>
           </div>
           {shortfall > 0 && (
@@ -771,10 +771,7 @@ function DriftLadder({
         </span>
         <span>
           <i className="mr-1 inline-block h-2 w-2 rounded-sm bg-sky-400/60 align-middle" />
-          {pick(
-            `चान्द्र मास — औंसीबाट औंसी · वर्षभित्र अहिलेसम्म ${num(lunarDone)}`,
-            `Lunar months — amavasya to amavasya · ${lunarDone} begun so far this year`,
-          )}
+          {t("learn.study.two_systems.legend_lunar_months", { begun: num(lunarDone) })}
         </span>
         <span>
           <i className="mr-1 inline-block h-2 w-2 rounded-sm bg-emerald-400/70 align-middle" />

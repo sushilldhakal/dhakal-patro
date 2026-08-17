@@ -98,7 +98,8 @@ export function D1Chart({ houses }: Props) {
                 const x = cx + (col - (itemsInRow - 1) / 2) * layout.colGap;
                 const y = cy + row * layout.rowGap;
                 const markSize = layout.fontSize * 0.5;
-                const abbr = bilingualText(lang, PLANET_ABBR_NE[planet.key] ?? planet.labelNe.slice(0, 2), PLANET_ABBR_EN[planet.key] ?? planet.labelNe.slice(0, 2));
+                const abbrKey = PLANET_ABBR_KEY[planet.key];
+                const abbr = abbrKey ? t(abbrKey) : planet.labelNe.slice(0, 2);
                 return (
                   <g key={planet.key}>
                     <text

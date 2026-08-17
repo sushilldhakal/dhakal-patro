@@ -14,8 +14,8 @@ import { cn } from "@/lib/utils";
 
 type DashaTab = {
   id: DashaSystem;
-  labelNe: string;
-  labelEn: string;
+  /** Catalogue key for the tab label. */
+  labelKey: string;
   data: DashaTreeResponse | null | undefined;
   maxLevel: number;
 };
@@ -38,22 +38,19 @@ export function DashaSystemPanel({
   const tabs: DashaTab[] = [
     {
       id: "vimshottari",
-      labelNe: "विंशोत्तरी",
-      labelEn: "Vimshottari",
+      labelKey: "kundali.x.dasha_system_vimshottari",
       data: vimshottari,
       maxLevel: 4,
     },
     {
       id: "tribhagi",
-      labelNe: "त्रिभागि",
-      labelEn: "Tribhagi",
+      labelKey: "kundali.x.dasha_system_tribhagi",
       data: tribhagi,
       maxLevel: 4,
     },
     {
       id: "yogini",
-      labelNe: "योगिनी",
-      labelEn: "Yogini",
+      labelKey: "kundali.x.dasha_system_yogini",
       data: yogini,
       maxLevel: 1,
     },
@@ -85,7 +82,7 @@ export function DashaSystemPanel({
                 : "hover:text-foreground",
             )}
           >
-            {bilingualText(lang, tab.labelNe, tab.labelEn)}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

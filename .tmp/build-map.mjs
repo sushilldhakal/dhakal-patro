@@ -22,7 +22,8 @@ const ROWS = [
   [`${P}hora_cycle_step`, "learn.diagrams.3_places_along"],
   [`${P}hora_ring_saturn`, "calendar-cycle-diagrams:71#object*"],
   [`${P}hora_ring_jupiter`, "calendar-cycle-diagrams:72#object*"],
-  [`${P}hora_ring_mars`, "calendar-cycle-diagrams:73#object*"],
+  // Not grahas.mars: the catalogue spells the Nepali "मङ्गल", these files "मंगल".
+  [`${P}graha_mars`, "calendar-cycle-diagrams:73#object*"],
   ["grahas.sun", "calendar-cycle-diagrams:74#object*"],
   [`${P}hora_ring_venus`, "calendar-cycle-diagrams:75#object*"],
   [`${P}hora_ring_mercury`, "calendar-cycle-diagrams:76#object*"],
@@ -178,6 +179,22 @@ const ROWS = [
 
   /* ── TwoSystemsDiagram, DayPlaygroundDiagram ────────────────────────── */
   [`${P}scene_loading`, "learn.diagrams.preparing_the_sky"],
+
+  /* ── PanchangaReferenceGuide: the nava-graha table ──────────────────── */
+  ["grahas.jupiter", "PanchangaReferenceGuide:32#object*"],
+  ["grahas.venus", "PanchangaReferenceGuide:33#object*"],
+  ["grahas.saturn", "PanchangaReferenceGuide:34#object*"],
+  ["grahas.rahu", "PanchangaReferenceGuide:35#object*"],
+  ["grahas.ketu", "PanchangaReferenceGuide:36#object*"],
+  [`${P}graha_meaning_sun`, "PanchangaReferenceGuide:28#xEn"],
+  [`${P}graha_meaning_moon`, "PanchangaReferenceGuide:29#xEn"],
+  [`${P}graha_meaning_mars`, "PanchangaReferenceGuide:30#xEn"],
+  [`${P}graha_meaning_mercury`, "PanchangaReferenceGuide:31#xEn"],
+  [`${P}graha_meaning_jupiter`, "PanchangaReferenceGuide:32#xEn"],
+  [`${P}graha_meaning_venus`, "PanchangaReferenceGuide:33#xEn"],
+  [`${P}graha_meaning_saturn`, "PanchangaReferenceGuide:34#xEn"],
+  [`${P}graha_meaning_rahu`, "PanchangaReferenceGuide:35#xEn"],
+  [`${P}graha_meaning_ketu`, "PanchangaReferenceGuide:36#xEn"],
 ];
 
 const map = {};
