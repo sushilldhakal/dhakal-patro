@@ -76,8 +76,8 @@ export function PrecessionCone() {
     const r = Math.round(bs);
     const year = N(Math.abs(r).toLocaleString("en-US"));
     return r < 0
-      ? t("learn.study.precession.year_before_bs", { year })
-      : t("learn.study.precession.year_bs", { year });
+      ? t("learn.study.year_before_bs", { year })
+      : t("learn.study.year_bs", { year });
   };
 
   const [phi, setPhi] = useState(0); // precession phase (0 = year 2000)
@@ -238,64 +238,74 @@ export function PrecessionCone() {
         {/* current north pole position */}
         <circle cx={topEnd[0]} cy={topEnd[1]} r={5.5} fill="var(--tm-amber)" stroke="var(--tm-card)" strokeWidth={1.5} />
         <text x={topEnd[0]} y={topEnd[1] + 116} fill="var(--tm-amber)" textAnchor="middle" style={{ font: "700 10px var(--pn-font)" }}>
-          उत्तर ध्रुव
+          {t("learn.study.precession.north_pole")}
         </text>
 
         {/* equinox label */}
         <text x={eqEnd[0]} y={eqEnd[1] - 8} fill="var(--tm-amber)" textAnchor="middle" style={{ font: "700 11px var(--pn-font)" }}>
-          विषुव → {eqRashi}
+          {t("learn.study.precession.equinox_to_rashi_value", { rashi: eqRashi })}
         </text>
 
         {/* cycle caption inside the scene */}
         <text x={26} y={VB.H - 40} fill="var(--tm-ink-dim)" style={{ font: "600 15px var(--pn-font)" }}>
-          एक चक्र
+          {t("learn.study.precession.one_cycle")}
         </text>
         <text x={26} y={VB.H - 18} fill="var(--tm-gold)" style={{ font: "700 20px var(--pn-num)" }}>
-          {N("26,000")} वर्ष
+          {t("learn.study.precession.cycle_years", { years: N("26,000") })}
         </text>
 
         {/* legend */}
         <g transform="translate(516 22)">
           <line x1={0} y1={6} x2={20} y2={6} stroke="var(--tm-ink)" strokeWidth={2.6} />
-          <text x={26} y={6} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>अक्ष (२३.५°)</text>
+          <text x={26} y={6} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>
+            {t("learn.study.precession.legend_axis", { tilt: N("23.5") })}
+          </text>
           <line x1={0} y1={24} x2={20} y2={24} stroke="var(--tm-ink-faint)" strokeWidth={1.4} strokeDasharray="3 4" />
-          <text x={26} y={24} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>क्रान्तिवृत्त ध्रुव</text>
+          <text x={26} y={24} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>
+            {t("learn.study.precession.ecliptic_pole")}
+          </text>
           <line x1={0} y1={42} x2={20} y2={42} stroke="var(--tm-gold)" strokeWidth={2.2} />
-          <text x={26} y={42} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>ध्रुव-पथ</text>
+          <text x={26} y={42} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>
+            {t("learn.study.precession.pole_path")}
+          </text>
           <line x1={0} y1={60} x2={20} y2={60} stroke="var(--tm-amber)" strokeWidth={2.4} markerEnd="url(#pc-arrow)" />
-          <text x={26} y={60} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>विषुव रेखा</text>
+          <text x={26} y={60} fill="var(--tm-ink-dim)" dominantBaseline="central" style={{ font: "500 10.5px var(--pn-font)" }}>
+            {t("learn.study.precession.equinox_line")}
+          </text>
         </g>
       </svg>
 
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>वर्ष</span>
+            <span className={edRoK}>{t("learn.study.year")}</span>
             <span className={edRoV({ mono: true })}>{fmtYear(year)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>ध्रुव तारा</span>
-            <span className={edRoV({ amber: true })}>{nearStar.ne}</span>
+            <span className={edRoK}>{t("learn.study.precession.pole_star")}</span>
+            <span className={edRoV({ amber: true })}>{t(nearStar.key)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>विषुव → राशि</span>
+            <span className={edRoK}>{t("learn.study.precession.equinox_to_rashi")}</span>
             <span className={edRoV()}>{eqRashi}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>अक्ष झुकाव</span>
+            <span className={edRoK}>{t("learn.study.precession.axial_tilt")}</span>
             <span className={edRoV({ mono: true })}>{N("23.5")}°</span>
           </div>
         </div>
 
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>↻ अयन चलन — एक पूरा चक्र = {N("26,000")} वर्ष</span>
+          <span className={motSliderLabel}>
+            {t("learn.study.precession.slider", { years: N("26,000") })}
+          </span>
           <div className={edScrubWrap}>
             <button
               type="button"
               className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
-              title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+              title={playing ? t("learn.pause") : t("learn.play")}
+              aria-label={playing ? t("learn.pause") : t("learn.play")}
             >
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
@@ -318,24 +328,25 @@ export function PrecessionCone() {
         <div className={edPresets}>
           {POLE_STARS.map((s) => (
             <button
-              key={s.ne}
+              key={s.key}
               type="button"
               className={edPreset(s === nearStar)}
               onClick={() => { setPlaying(false); setPhi(s.phi); }}
             >
-              {s.ne} · {fmtYear(s.bs)}
+              {t(s.key)} · {fmtYear(s.bs)}
             </button>
           ))}
         </div>
       </div>
 
       <p className={tmCardCap}>
-        पृथ्वीको अक्ष <b>{N("23.5")}°</b> झुकेरै रहन्छ तर लठ्ठाझैँ <span className={cn("hl")}>क्रान्तिवृत्त ध्रुव</span>{" "}
-        वरिपरि बिस्तारै घुम्छ — पूरा एक फेरो <b>~{N("26,000")} वर्ष</b>। त्यसैले उत्तर ध्रुवले
-        फरक-फरक <span className={cn("hl-amber")}>ध्रुव तारा</span> देखाउँछ — कुनै बेला थुबन, अहिले ध्रुव, र
-        ~१३,७८४ बि.सं. मा अभिजित। ऋतु-आधारित <span className={cn("hl-amber")}>विषुव रेखा</span> राशिचक्रमा
-        घुम्दै जान्छ — यही{" "}
-        <b>अयन चलन</b> ले माथिको अयनांश खाँडो बढाउँछ।
+        {t("learn.study.precession.caption_lead", { tilt: N("23.5") })}{" "}
+        <span className={cn("hl")}>{t("learn.study.precession.ecliptic_pole")}</span>{" "}
+        {t("learn.study.precession.caption_cycle", { years: N("26,000") })}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.precession.pole_star")}</span>{" "}
+        {t("learn.study.precession.caption_stars", { year: N("13,784") })}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.precession.equinox_line")}</span>{" "}
+        {t("learn.study.precession.caption_tail")}
       </p>
     </div>
   );

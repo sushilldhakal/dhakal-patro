@@ -206,8 +206,8 @@ function ObserverInset({ m }: { m: Model }) {
       : type === "annular"
         ? t("learn.study.solar_eclipse.inset_annular")
         : type === "partial"
-          ? t("learn.study.solar_eclipse.partial")
-          : t("learn.study.solar_eclipse.none");
+          ? t("learn.study.eclipse.status_partial")
+          : t("learn.study.eclipse.status_none");
 
   return (
     <g>
@@ -268,8 +268,8 @@ export function SolarEclipseStudy() {
       : m.type === "annular"
         ? t("learn.study.solar_eclipse.annular")
         : m.type === "partial"
-          ? t("learn.study.solar_eclipse.partial")
-          : t("learn.study.solar_eclipse.none");
+          ? t("learn.study.eclipse.status_partial")
+          : t("learn.study.eclipse.status_none");
 
   const distLabel =
     d < 0.4
@@ -329,7 +329,7 @@ export function SolarEclipseStudy() {
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>{t("learn.study.solar_eclipse.type")}</span>
+            <span className={edRoK}>{t("learn.type")}</span>
             <span className={edRoV({ amber: m.type === "total" || m.type === "annular" })}>{typeText}</span>
           </div>
           <div className={edRo}>

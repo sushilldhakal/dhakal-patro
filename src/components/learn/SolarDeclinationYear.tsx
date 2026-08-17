@@ -102,7 +102,6 @@ export function SolarDeclinationYear() {
       pts.push(`${i ? "L" : "M"}${x(day).toFixed(1)} ${y(declAt(day)).toFixed(1)}`);
     }
     return pts.join(" ");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* Real बि.सं. month boundaries, not twelve equal slices. A month is 30° of the

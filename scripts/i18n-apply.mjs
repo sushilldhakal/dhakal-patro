@@ -43,6 +43,7 @@ const map = JSON.parse(readFileSync(mapPath, "utf8"));
 
 /** pair -> key, so identical copy anywhere collapses onto one entry. */
 const byPair = new Map();
+const duplicatePairs = [];
 for (const [key, value] of Object.entries(map)) {
   const { ne, en } = value;
   if (typeof ne !== "string" || typeof en !== "string") {
@@ -51,8 +52,15 @@ for (const [key, value] of Object.entries(map)) {
   }
   const pair = JSON.stringify([ne, en]);
   if (byPair.has(pair)) {
-    console.error(`Pair for ${key} is already mapped to ${byPair.get(pair)}.`);
-    process.exit(1);
+    // Rewriting needs one key per pair or the replacement is ambiguous. Merely
+    // adding keys does not, so two keys holding the same text is only worth a
+    // note — usually a reused key sitting alongside a redundant new one.
+    if (!keysOnly) {
+      console.error(`Pair for ${key} is already mapped to ${byPair.get(pair)}.`);
+      process.exit(1);
+    }
+    duplicatePairs.push(`${key} duplicates ${byPair.get(pair)}`);
+    continue;
   }
   byPair.set(pair, key);
 }
@@ -157,6 +165,11 @@ if (toAdd.length && !dry && !noCatalogue) {
   }
   catalogue = lines.join("\n");
   writeFileSync(CATALOGUE, catalogue, "utf8");
+}
+
+if (duplicatePairs.length) {
+  console.log(`\n${duplicatePairs.length} key(s) hold text another key already has (worth collapsing later):`);
+  for (const line of duplicatePairs) console.log(`  ${line}`);
 }
 
 console.log(`\n${replacedTotal} call site(s) rewritten, ${usedKeys.size} key(s) used.`);

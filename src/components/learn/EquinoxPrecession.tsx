@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { patroMono } from "@/lib/patro-classes";
 import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useTranslation } from "react-i18next";
+import { useLocaleDigits } from "@/i18n/digits";
+import { useLocale } from "@/i18n/locale";
 import { getRashiList } from "@/lib/rashi-i18n";
 import { RashiGlyph } from "./rashi-icons";
 
@@ -26,7 +27,6 @@ import { RashiGlyph } from "./rashi-icons";
  * spring equinox slide from राशि to राशि — one full lap ≈ 25,772 years.
  */
 
-const N = toNepaliDigits;
 const TAU = Math.PI * 2;
 const D2R = Math.PI / 180;
 
@@ -42,12 +42,8 @@ const BS_AYAN_ZERO = 342;
 const Y_MIN = 0;
 const Y_MAX = CYCLE;
 
-const RASHI_NE = getRashiList("ne");
-const RASHI_EN = getRashiList("en");
-
 const rashiIndex = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30);
 const norm360 = (a: number) => ((a % 360) + 360) % 360;
-const fmtDeg = (a: number) => `${N(Math.floor(a))}°${N(String(Math.round((a - Math.floor(a)) * 60)).padStart(2, "0"))}′`;
 
 /* ---- geometry ---------------------------------------------------------- */
 const VB = { W: 900, H: 560 };
@@ -72,14 +68,27 @@ function proj3(x: number, y: number, z: number, f = 1): [number, number] {
 }
 const fmtPt = (p: [number, number]) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
 
+/**
+ * The four cardinal points of the tropical year, anticlockwise from the spring
+ * equinox. `gloss` is the small English caption printed under the Nepali name,
+ * so it is its own key — the English bundle is loaded on demand and cannot be
+ * read while the app is in Nepali.
+ */
 const CARDINALS = [
-  { ne: "वसन्त विषुव", en: "Spring Equinox", point0: true },
-  { ne: "ग्रीष्म अयनान्त", en: "Summer Solstice", point0: false },
-  { ne: "शरद् विषुव", en: "Fall Equinox", point0: false },
-  { ne: "हेमन्त अयनान्त", en: "Winter Solstice", point0: false },
+  { key: "learn.study.spring_equinox", gloss: null, point0: true },
+  { key: "learn.study.summer_solstice", gloss: "learn.study.equinox.gloss_summer_solstice", point0: false },
+  { key: "learn.study.autumn_equinox", gloss: "learn.study.equinox.gloss_fall_equinox", point0: false },
+  { key: "learn.study.equinox.hemanta_solstice", gloss: "learn.study.equinox.gloss_winter_solstice", point0: false },
 ] as const;
 
 export function EquinoxPrecession() {
+  const { t } = useTranslation();
+  const N = useLocaleDigits();
+  const { lang } = useLocale();
+  const RASHI = useMemo(() => getRashiList(lang), [lang]);
+  const fmtDeg = (a: number) =>
+    `${N(Math.floor(a))}°${N(String(Math.round((a - Math.floor(a)) * 60)).padStart(2, "0"))}′`;
+
   const nowBs = new Date().getFullYear() + 57; // ≈ current बि.सं.
   const [year, setYear] = useState(nowBs);
   const [playing, setPlaying] = useState(false);
@@ -135,8 +144,7 @@ export function EquinoxPrecession() {
     return { eqSid, ayanamsha, sinceBs0, alphaEq, equatorPath, poleVec };
   }, [year]);
 
-  const eqRashiNe = RASHI_NE[rashiIndex(model.eqSid)];
-  const eqRashiEn = RASHI_EN[rashiIndex(model.eqSid)];
+  const eqRashi = RASHI[rashiIndex(model.eqSid)];
 
   const amber = "var(--tm-amber)";
   const gold = "var(--tm-gold)";
@@ -160,7 +168,12 @@ export function EquinoxPrecession() {
 
   return (
     <div className={tmCardPadLg}>
-      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg()} role="img" aria-label="अयन चलन — विषुव सर्ने चित्र">
+      <svg
+        viewBox={`0 0 ${VB.W} ${VB.H}`}
+        className={edSvg()}
+        role="img"
+        aria-label={t("learn.study.equinox.aria")}
+      >
         <defs>
           <radialGradient id="ep-earth" cx="42%" cy="38%" r="65%">
             <stop offset="0%" stopColor="#bfe3ff" />
@@ -177,7 +190,7 @@ export function EquinoxPrecession() {
         {/* ── zodiac band (FIXED sidereal राशि) ── */}
         <ellipse cx={CX} cy={CY} rx={RX * bandOuter} ry={RY * bandOuter} fill="color-mix(in srgb, var(--tm-teal) 14%, var(--tm-card))" stroke="var(--tm-border)" strokeWidth={1} />
         <ellipse cx={CX} cy={CY} rx={RX * bandInner} ry={RY * bandInner} fill={card} stroke="var(--tm-border)" strokeWidth={1} />
-        {RASHI_NE.map((name, i) => {
+        {RASHI.map((name, i) => {
           const a0 = i * 30;
           const [ix, iy] = projPlane(alphaOf(a0), bandInner);
           const [ox, oy] = projPlane(alphaOf(a0), bandOuter);
@@ -211,12 +224,16 @@ export function EquinoxPrecession() {
         {CARDINALS.map((c, k) => {
           const [lx, ly] = projPlane(model.alphaEq + k * 90, bandOuter + 0.13);
           return (
-            <g key={c.en}>
+            <g key={c.key}>
               <text x={lx} y={ly - 5} fill={red} textAnchor="middle" dominantBaseline="central" style={{ font: "700 11.5px var(--pn-font)" }}>
-                {c.ne}
+                {t(c.key)}
               </text>
               <text x={lx} y={ly + 8} fill={dim} textAnchor="middle" dominantBaseline="central" style={{ font: "500 9.5px var(--pn-font)" }}>
-                {c.point0 ? "Point 0" : c.en}
+                {c.point0
+                  ? t("learn.study.equinox.point_zero")
+                  : lang === "en"
+                    ? ""
+                    : t(c.gloss)}
               </text>
             </g>
           );
@@ -246,39 +263,49 @@ export function EquinoxPrecession() {
         {/* legend */}
         <g transform="translate(14 14)">
           <line x1={0} y1={6} x2={22} y2={6} stroke={gold} strokeWidth={2.4} />
-          <text x={28} y={6} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>क्रान्तिवृत्त (ecliptic)</text>
+          <text x={28} y={6} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>
+            {t("learn.study.equinox.legend_ecliptic")}
+          </text>
           <line x1={0} y1={24} x2={22} y2={24} stroke="#3f86c4" strokeWidth={2.4} />
-          <text x={28} y={24} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>खगोलीय विषुवत् (Celestial Equator)</text>
+          <text x={28} y={24} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>
+            {t("learn.study.equinox.legend_equator")}
+          </text>
         </g>
       </svg>
 
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>वर्ष</span>
-            <span className={edRoV({ mono: true })}>{N(Math.round(year))} बि.सं.</span>
+            <span className={edRoK}>{t("learn.study.year")}</span>
+            <span className={edRoV({ mono: true })}>
+              {t("learn.study.year_bs", { year: N(Math.round(year)) })}
+            </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>विषुव अहिले</span>
-            <span className={edRoV({ amber: true })}>{eqRashiNe} <span className={cn(patroMono)} style={{ fontSize: "0.85em" }}>{eqRashiEn}</span></span>
+            <span className={edRoK}>{t("learn.study.equinox.equinox_now")}</span>
+            <span className={edRoV({ amber: true })}>{eqRashi}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>विषुव सरेको (बि.सं. ० देखि)</span>
+            <span className={edRoK}>{t("learn.study.equinox.shift_since_bs0")}</span>
             <span className={edRoV({ mono: true, amber: true })}>{fmtDeg(model.sinceBs0)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>अयनांश (मेष ०° बाट)</span>
+            <span className={edRoK}>{t("learn.study.equinox.ayanamsha_from_mesha")}</span>
             <span className={edRoV({ mono: true })}>{model.ayanamsha < 0 ? `−${fmtDeg(-model.ayanamsha)}` : fmtDeg(model.ayanamsha)}</span>
           </div>
         </div>
 
         <div className={motSliderRow}>
           <span className={motSliderLabel}>
-            वर्ष — अक्ष-चलनले विषुव सर्छ (बि.सं. {N(Y_MIN)} → {N(Y_MAX)}; एक पूरा फेरो ~{N(CYCLE)} वर्ष)
+            {t("learn.study.equinox.slider", {
+              from: N(Y_MIN),
+              to: N(Y_MAX),
+              cycle: N(CYCLE),
+            })}
           </span>
           <div className={edScrubWrap}>
             <button type="button" className={edPlayBtn} onClick={() => setPlaying((p) => !p)}
-              title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"} aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}>
+              title={playing ? t("learn.pause") : t("learn.play")} aria-label={playing ? t("learn.pause") : t("learn.play")}>
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
             <input className={edScrub} type="range" min={Y_MIN} max={Y_MAX} step={1} value={Math.round(year)}
@@ -288,16 +315,21 @@ export function EquinoxPrecession() {
         </div>
 
         <div className={edPresets}>
-          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setYear(0); }}>बि.सं. आरम्भ</button>
-          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setYear(nowBs); }}>↺ अहिले</button>
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setYear(0); }}>
+            {t("learn.study.equinox.preset_bs_start")}
+          </button>
+          <button type="button" className={edPreset()} onClick={() => { setPlaying(false); setYear(nowBs); }}>
+            {t("learn.study.equinox.preset_now")}
+          </button>
         </div>
       </div>
 
       <p className={tmCardCap}>
-        बाहिरी <b>१२ राशि</b> ताराका सापेक्ष <span className={cn("hl")}>स्थिर</span> छन् (निरयन)। पृथ्वीको अक्ष लट्टू
-        झैँ घुम्दा <span className={cn("hl-amber")}>वसन्त-विषुव (Point 0)</span> बिस्तारै राशिचक्रमा पछाडि सर्छ —
-        प्रति ~{N(72)} वर्षमा १°। त्यसैले आज विषुव <b>{eqRashiNe}</b> मा छ, अनि सायन ऋतु निरयन महिनासँग
-        बिस्तारै फरक पर्दै जान्छ।
+        {t("learn.study.equinox.caption_lead")}{" "}
+        <span className={cn("hl")}>{t("learn.study.equinox.caption_fixed")}</span>{" "}
+        {t("learn.study.equinox.caption_wobble")}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.equinox.caption_point_zero")}</span>{" "}
+        {t("learn.study.equinox.caption_tail", { years: N(72), rashi: eqRashi })}
       </p>
     </div>
   );

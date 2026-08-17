@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { edScrub } from "@/lib/diagram-classes";
 import { motSliderLabel, motSliderRow, tmCardCap, tmCardPadLg, edControls, edPlayBtn, edPresets, edPreset, edReadout, edRo, edRoK, edRoV, edScrubWrap, edSvg } from "@/lib/learn-classes";
 import { Pause, Play } from "lucide-react";
-import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useTranslation } from "react-i18next";
+import { useLocaleDigits } from "@/i18n/digits";
+import { useLocale } from "@/i18n/locale";
 import { getRashiList } from "@/lib/rashi-i18n";
 
 /**
@@ -20,7 +22,6 @@ import { getRashiList } from "@/lib/rashi-i18n";
  * shows how one and the same sky position is read as two different rāśi.
  */
 
-const N = toNepaliDigits;
 const TAU = Math.PI * 2;
 
 /* precession rate, degrees / year (≈ 50.2879″) */
@@ -32,9 +33,9 @@ const ceToBs = (ce: number) => Math.round(ce) + 57;
 
 /* each system's ayanāṁśa at year 2000 CE (degrees) */
 const SYSTEMS = {
-  lahiri: { ne: "लाहिरी", en: "Lahiri", base2000: 23.85 },
-  raman: { ne: "रमन", en: "Raman", base2000: 22.5 },
-  kp: { ne: "कृष्णमूर्ति (KP)", en: "KP", base2000: 23.71 },
+  lahiri: { key: "learn.study.ayanamsha.system_lahiri", base2000: 23.85 },
+  raman: { key: "learn.study.ayanamsha.system_raman", base2000: 22.5 },
+  kp: { key: "learn.study.ayanamsha.system_kp", base2000: 23.71 },
 } as const;
 type SystemKey = keyof typeof SYSTEMS;
 
@@ -42,17 +43,7 @@ function ayanamsha(year: number, sys: SystemKey): number {
   return Math.max(0, SYSTEMS[sys].base2000 + (year - 2000) * RATE);
 }
 
-const RASHI = getRashiList("ne");
-
 const rashiIndex = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30);
-
-/** "DD°MM′" in Nepali digits. */
-function fmtDM(a: number): string {
-  let d = Math.floor(a);
-  let m = Math.round((a - d) * 60);
-  if (m === 60) { d += 1; m = 0; }
-  return `${N(d)}°${N(String(m).padStart(2, "0"))}′`;
-}
 
 /* ---- geometry ---------------------------------------------------------- */
 const VB = { W: 640, H: 640 };
@@ -101,6 +92,19 @@ function computeModel(year: number, sys: SystemKey, graha: number): Model {
 }
 
 export function AyanamshaWheel() {
+  const { t } = useTranslation();
+  const N = useLocaleDigits();
+  const { lang } = useLocale();
+  const RASHI = useMemo(() => getRashiList(lang), [lang]);
+
+  /** "DD°MM′" in locale digits. */
+  const fmtDM = (a: number): string => {
+    let d = Math.floor(a);
+    let m = Math.round((a - d) * 60);
+    if (m === 60) { d += 1; m = 0; }
+    return `${N(d)}°${N(String(m).padStart(2, "0"))}′`;
+  };
+
   const [year, setYear] = useState(2026);
   const [sys, setSys] = useState<SystemKey>("lahiri");
   const [graha, setGraha] = useState(25);
@@ -147,7 +151,12 @@ export function AyanamshaWheel() {
 
   return (
     <div className={tmCardPadLg}>
-      <svg viewBox={`0 0 ${VB.W} ${VB.H}`} className={edSvg()} role="img" aria-label="अयनांश चक्र">
+      <svg
+        viewBox={`0 0 ${VB.W} ${VB.H}`}
+        className={edSvg()}
+        role="img"
+        aria-label={t("learn.study.ayanamsha.aria")}
+      >
         <defs>
           <radialGradient id="ay-sun" cx="50%" cy="45%" r="60%">
             <stop offset="0%" stopColor="#fff6d8" />
@@ -210,10 +219,10 @@ export function AyanamshaWheel() {
         <line x1={CX} y1={CY} x2={polar(R_RIM, 0)[0]} y2={polar(R_RIM, 0)[1]} stroke={teal} strokeWidth={2.4} />
         <g transform={`translate(${pt(R_OUT + 4, 0)})`}>
           <text fill={teal} textAnchor="start" dominantBaseline="central" style={{ font: "700 12px var(--pn-font)" }}>
-            निरयन ०°
+            {t("learn.study.ayanamsha.nirayana_zero")}
           </text>
           <text y={15} fill={faint} textAnchor="start" dominantBaseline="central" style={{ font: "500 10px var(--pn-font)" }}>
-            (मेष आरम्भ · तारा)
+            {t("learn.study.ayanamsha.nirayana_zero_sub")}
           </text>
         </g>
 
@@ -239,10 +248,10 @@ export function AyanamshaWheel() {
         </g>
         <g transform={`translate(${polar(R_OUT + 36, m.equinoxLon)[0].toFixed(1)} ${polar(R_OUT + 36, m.equinoxLon)[1].toFixed(1)})`}>
           <text fill={amber} textAnchor="middle" dominantBaseline="central" style={{ font: "700 12px var(--pn-font)" }}>
-            सायन ०°
+            {t("learn.study.ayanamsha.sayana_zero")}
           </text>
           <text y={14} fill={faint} textAnchor="middle" dominantBaseline="central" style={{ font: "500 10px var(--pn-font)" }}>
-            वसन्त विषुव
+            {t("learn.study.spring_equinox")}
           </text>
         </g>
 
@@ -265,28 +274,28 @@ export function AyanamshaWheel() {
           dominantBaseline="central"
           style={{ font: "700 12px var(--pn-font)" }}
         >
-          ग्रह
+          {t("learn.study.ayanamsha.graha")}
         </text>
 
         {/* centre — Earth / observer */}
         <circle cx={CX} cy={CY} r={16} fill="color-mix(in srgb, var(--tm-teal) 30%, var(--tm-card))" stroke={teal} strokeWidth={1.5} />
         <text x={CX} y={CY} fill={dim} textAnchor="middle" dominantBaseline="central" style={{ font: "600 9.5px var(--pn-font)" }}>
-          पृथ्वी
+          {t("grahas.earth")}
         </text>
 
         {/* legend */}
         <g transform="translate(16 16)">
           <line x1={0} y1={6} x2={22} y2={6} stroke={teal} strokeWidth={2.4} />
           <text x={28} y={6} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>
-            निरयन — तारापुञ्जमा अडिएको
+            {t("learn.study.ayanamsha.legend_nirayana")}
           </text>
           <line x1={0} y1={26} x2={22} y2={26} stroke={amber} strokeWidth={2.4} markerEnd="url(#ay-arrow)" />
           <text x={28} y={26} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>
-            सायन — ऋतु/विषुवमा अडिएको
+            {t("learn.study.ayanamsha.legend_sayana")}
           </text>
           <rect x={0} y={36} width={22} height={11} rx={2} fill="color-mix(in srgb, var(--tm-amber) 30%, transparent)" stroke={amber} strokeWidth={1} />
           <text x={28} y={42} fill={dim} dominantBaseline="central" style={{ font: "500 11px var(--pn-font)" }}>
-            अयनांश — दुईबीचको कोण
+            {t("learn.study.ayanamsha.legend_ayanamsha")}
           </text>
         </g>
       </svg>
@@ -294,19 +303,21 @@ export function AyanamshaWheel() {
       <div className={edControls}>
         <div className={edReadout}>
           <div className={edRo}>
-            <span className={edRoK}>वर्ष</span>
-            <span className={edRoV({ mono: true })}>{N(ceToBs(m.year))} बि.सं.</span>
+            <span className={edRoK}>{t("learn.study.year")}</span>
+            <span className={edRoV({ mono: true })}>
+              {t("learn.study.year_bs", { year: N(ceToBs(m.year)) })}
+            </span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>प्रणाली</span>
-            <span className={edRoV()}>{SYSTEMS[m.sys].ne}</span>
+            <span className={edRoK}>{t("learn.study.ayanamsha.system")}</span>
+            <span className={edRoV()}>{t(SYSTEMS[m.sys].key)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>अयनांश</span>
+            <span className={edRoK}>{t("kundali.ayanamsha")}</span>
             <span className={edRoV({ mono: true, amber: true })}>{fmtDM(m.A)}</span>
           </div>
           <div className={edRo}>
-            <span className={edRoK}>ग्रह राशि</span>
+            <span className={edRoK}>{t("learn.study.ayanamsha.graha_rashi")}</span>
             <span className={edRoV({ amber: differ })}>
               {niRashi}
               {differ ? ` → ${saRashi}` : ""}
@@ -316,15 +327,18 @@ export function AyanamshaWheel() {
 
         <div className={motSliderRow}>
           <span className={motSliderLabel}>
-            वर्ष — अक्ष-चलनले विषुव बिन्दु सर्छ ({N(ceToBs(285))} → {N(ceToBs(2200))} बि.सं.)
+            {t("learn.study.ayanamsha.slider_year", {
+              from: N(ceToBs(285)),
+              to: N(ceToBs(2200)),
+            })}
           </span>
           <div className={edScrubWrap}>
             <button
               type="button"
               className={edPlayBtn}
               onClick={() => setPlaying((p) => !p)}
-              title={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
-              aria-label={playing ? "रोक्नुहोस्" : "चलाउनुहोस्"}
+              title={playing ? t("learn.pause") : t("learn.play")}
+              aria-label={playing ? t("learn.pause") : t("learn.play")}
             >
               {playing ? <Pause size={16} /> : <Play size={16} />}
             </button>
@@ -345,7 +359,7 @@ export function AyanamshaWheel() {
         </div>
 
         <div className={motSliderRow}>
-          <span className={motSliderLabel}>● ग्रह — निरयन देशान्तर (एउटै आकाश-स्थान, दुई पढाइ)</span>
+          <span className={motSliderLabel}>{t("learn.study.ayanamsha.slider_graha")}</span>
           <input
             className={edScrub}
             type="range"
@@ -366,7 +380,7 @@ export function AyanamshaWheel() {
               className={edPreset(sys === k)}
               onClick={() => setSys(k)}
             >
-              {SYSTEMS[k].ne}
+              {t(SYSTEMS[k].key)}
             </button>
           ))}
           <button
@@ -379,18 +393,20 @@ export function AyanamshaWheel() {
               setGraha(25);
             }}
           >
-            ↺ आज
+            {t("learn.study.ayanamsha.preset_today")}
           </button>
         </div>
       </div>
 
       <p className={tmCardCap}>
-        बाहिरी १२ <b>राशि</b> तारापुञ्जमा अडिएका छन् (<span className={cn("hl")}>निरयन</span>)। पृथ्वीको अक्ष
-        बिस्तारै घुम्दा (अयन चलन) <span className={cn("hl-amber")}>वसन्त-विषुव</span> बिन्दु — सायन शून्य —
-        ताराका सापेक्ष पछाडि सर्छ। यी दुई शून्यबीचको कोण नै <b>अयनांश</b> हो। एउटै ग्रह त्यसैले
-        निरयनमा <b>{niRashi}</b>
-        {differ ? <> भए पनि सायनमा <b>{saRashi}</b></> : <> र सायनमा पनि <b>{saRashi}</b></>} मा पर्न
-        सक्छ — त्यसैले कुण्डलीमा कुन प्रणाली रोजियो भन्ने महत्त्वपूर्ण।
+        {t("learn.study.ayanamsha.caption_lead")}
+        <span className={cn("hl")}>{t("learn.study.ayanamsha.nirayana")}</span>
+        {t("learn.study.ayanamsha.caption_wobble")}{" "}
+        <span className={cn("hl-amber")}>{t("learn.study.ayanamsha.spring_equinox_point")}</span>{" "}
+        {t("learn.study.ayanamsha.caption_angle")}{" "}
+        {differ
+          ? t("learn.study.ayanamsha.caption_differs", { nirayana: niRashi, sayana: saRashi })
+          : t("learn.study.ayanamsha.caption_agrees", { nirayana: niRashi, sayana: saRashi })}
       </p>
     </div>
   );

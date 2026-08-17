@@ -78,7 +78,7 @@ export function SunTimesYear() {
         </p>
         {locationLabel ? (
           <p className="m-0 text-xs text-base">
-            {lang === "en" ? "Location" : "स्थान"}: {locationLabel}
+            {t("location.label")}: {locationLabel}
           </p>
         ) : null}
       </section>
