@@ -23,10 +23,10 @@ const GRADE_STYLES: Record<VimshopakaGrade, string> = {
 };
 
 const GRADE_LABEL: Record<VimshopakaGrade, string> = {
-  full: "kundali.x.vimshopaka_grade_full",
-  mediocre: "kundali.x.vimshopaka_grade_mediocre",
-  little: "kundali.x.vimshopaka_grade_little",
-  incapable: "kundali.x.vimshopaka_grade_incapable",
+  full: "kundali.x.grade_full",
+  mediocre: "kundali.x.grade_mediocre",
+  little: "kundali.x.grade_little",
+  incapable: "kundali.x.grade_incapable",
 };
 
 export function VimshopakaCard({ data }: { data: VimshopakaData }) {

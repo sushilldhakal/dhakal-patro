@@ -18,7 +18,9 @@
  * a ऋतु argument has to be made in उत्तरायण/दक्षिणायन rather than in महिना.
  */
 
-import { bilingualText, useLocale } from "@/i18n/locale";
+import { useTranslation } from "react-i18next";
+
+import { useLocale } from "@/i18n/locale";
 import { BS_MONTHS_NE, BS_MONTH_NAMES } from "@/lib/bs-calendar";
 
 /* The viewBox is wider than the wheel on purpose: the four marker labels sit
@@ -40,26 +42,26 @@ const SOLSTICE = "#f59e0b";
 const AYANAMSHA = 24;
 
 interface Ritu {
-  ne: string;
-  en: string;
+  /** Catalogue key for the ऋतु name — resolved at render, not at module load. */
+  key: string;
   colour: string;
 }
 
 /** Six ऋतु, starting at बैशाख — वसन्त straddles चैत–बैशाख, so it opens here. */
 const RITUS: Ritu[] = [
-  { ne: "वसन्त", en: "Vasanta", colour: "#7ec850" },
-  { ne: "ग्रीष्म", en: "Grīṣma", colour: "#f0a020" },
-  { ne: "वर्षा", en: "Varṣā", colour: "#3aa0d8" },
-  { ne: "शरद्", en: "Śarad", colour: "#c8a020" },
-  { ne: "हेमन्त", en: "Hemanta", colour: "#8a9ab8" },
-  { ne: "शिशिर", en: "Śiśira", colour: "#9fb8d0" },
+  { key: "learn.study.ritu.vasanta", colour: "#7ec850" },
+  { key: "learn.study.ritu.grishma", colour: "#f0a020" },
+  { key: "learn.study.ritu.varsha", colour: "#3aa0d8" },
+  { key: "learn.study.ritu.sharad", colour: "#c8a020" },
+  { key: "learn.study.ritu.hemanta", colour: "#8a9ab8" },
+  { key: "learn.study.ritu.shishira", colour: "#9fb8d0" },
 ];
 
 const MARKERS = [
-  { lambda: 90, kind: "solstice", ne: "ग्रीष्म अयनान्त", en: "Summer solstice" },
-  { lambda: 180, kind: "equinox", ne: "शरद् विषुव", en: "Autumn equinox" },
-  { lambda: 270, kind: "solstice", ne: "शीत अयनान्त", en: "Winter solstice" },
-  { lambda: 0, kind: "equinox", ne: "वसन्त विषुव", en: "Spring equinox" },
+  { lambda: 90, kind: "solstice", key: "learn.study.summer_solstice" },
+  { lambda: 180, kind: "equinox", key: "learn.study.autumn_equinox" },
+  { lambda: 270, kind: "solstice", key: "learn.study.winter_solstice" },
+  { lambda: 0, kind: "equinox", key: "learn.study.spring_equinox" },
 ] as const;
 
 const D2R = Math.PI / 180;
@@ -79,6 +81,7 @@ function arc(from: number, to: number, rOut: number, rIn: number) {
 }
 
 export function RituWheel() {
+  const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const monthNames = ne ? BS_MONTHS_NE : ([...BS_MONTH_NAMES] as string[]);
@@ -93,7 +96,7 @@ export function RituWheel() {
       >
         {/* ऋतु band — two महिना each */}
         {RITUS.map((r, i) => (
-          <g key={r.en}>
+          <g key={r.key}>
             <path d={arc(i * 60, (i + 1) * 60, R_RITU_OUT, R_RITU_IN)} fill={r.colour} opacity={0.3} />
             <path
               d={arc(i * 60, (i + 1) * 60, R_RITU_OUT, R_RITU_IN)}
@@ -108,7 +111,7 @@ export function RituWheel() {
               textAnchor="middle"
               className="fill-current text-[10px] font-semibold opacity-85"
             >
-              {ne ? r.ne : r.en}
+              {t(r.key)}
             </text>
           </g>
         ))}
@@ -151,7 +154,7 @@ export function RituWheel() {
           const right = Math.cos((deg - 90) * D2R) > 0.15;
           const flat = Math.abs(Math.cos((deg - 90) * D2R)) <= 0.15;
           return (
-            <g key={k.en}>
+            <g key={k.key}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={colour} strokeWidth={1.4} opacity={0.9} />
               <circle cx={x2} cy={y2} r={3.2} fill={colour} />
               <text
@@ -161,7 +164,7 @@ export function RituWheel() {
                 className="text-[8px] font-semibold"
                 style={{ fill: colour }}
               >
-                {ne ? k.ne : k.en}
+                {t(k.key)}
               </text>
             </g>
           );

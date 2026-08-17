@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { edBodyLabel, edRay, hoCalloutNe, hoEarthGroup, hoEquator, hoFocusAphelion, hoFocusLabel, hoFocusLine, hoMarkerDetail, hoMarkerDot, hoMarkerNe, hoMarkerTag, hoNorthPole, hoOrbitDir, hoOrbitEllipse, hoOrbitGuide, hoPoleAxis, hoPoleLabel, hoSunRay, hoSweep, hoTiltArc, hoTiltRef } from "@/lib/diagram-classes";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { edSvg } from "@/lib/learn-classes";
@@ -89,6 +90,7 @@ export function HeliocentricOrbitDiagram({
   meanDeg = meanFromTrue(180),
   onMeanDeg,
 }: Props) {
+  const { t } = useTranslation();
   const fmt = (n: number) => toNepaliDigits(n);
   const orbit = orbitFromMeanAnomaly(meanDeg);
   const { ex, ey, speed } = orbit;
@@ -114,7 +116,12 @@ export function HeliocentricOrbitDiagram({
   const southX = -axisUx * HO.axisLen * 0.42;
   const southY = -axisUy * HO.axisLen * 0.42;
 
-  const speedLabel = speed > 1.02 ? "छिटो" : speed < 0.98 ? "ढिलो" : "मध्यम";
+  const speedKey =
+    speed > 1.02
+      ? "learn.diagrams.orbit_speed_fast"
+      : speed < 0.98
+        ? "learn.diagrams.orbit_speed_slow"
+        : "learn.diagrams.orbit_speed_mean";
 
   const sweepPath = useMemo(() => {
     const pts: string[] = [];
@@ -221,7 +228,7 @@ export function HeliocentricOrbitDiagram({
         className={hoFocusLabel}
         textAnchor="middle"
       >
-        उपसौर (नजिक)
+        {t("learn.diagrams.orbit_perihelion")}
       </text>
       <text
         x={(ORBIT.cx + aphe.ex) / 2}

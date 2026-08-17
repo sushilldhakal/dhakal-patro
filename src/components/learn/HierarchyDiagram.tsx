@@ -220,7 +220,8 @@ function ArrowDefs() {
 
 const W = { colW: 214, gap: 24, nodeH: 46, srcH: 54 };
 
-function WideLayout({ pick }: { pick: (b: Bi) => string }) {
+function WideLayout() {
+  const { t } = useTranslation();
   const cols = BRANCHES.length;
   const width = cols * W.colW + (cols - 1) * W.gap + 32;
   const xs = BRANCHES.map((_, i) => 16 + i * (W.colW + W.gap) + W.colW / 2);
@@ -242,10 +243,7 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
       viewBox={`0 0 ${width} ${height}`}
       className="block h-auto w-full text-[var(--tm-ink-faint)]"
       role="img"
-      aria-label={pick({
-        ne: "पृथ्वी, सूर्य र चन्द्रको गतिबाट दिन, सौर महिना र चान्द्र मास बन्छन्, र तीनै मिलेर पञ्चाङ्ग र बि.सं. मिति बनाउँछन्।",
-        en: "Earth's, the Sun's and the Moon's motions produce the day, the solar month and the lunar month; together they make the panchanga and a Bikram Sambat date.",
-      })}
+      aria-label={t("learn.diagrams.hierarchy_wide_aria")}
     >
       <ArrowDefs />
 
@@ -254,7 +252,7 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
         y={yTop}
         w={220}
         h={W.nodeH}
-        title={pick(TOP)}
+        title={t(TOP)}
         strong
       />
 
@@ -280,11 +278,11 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
               w={W.colW}
               h={W.srcH}
               accent={b.accent}
-              title={pick(b.source)}
-              sub={pick(b.driver)}
+              title={t(b.source)}
+              sub={t(b.driver)}
               strong
             />
-            <Down x={x} from={ySrc + W.srcH} to={yStep[0]!} color={color} rule={b.rules[0] ? pick(b.rules[0]) : undefined} />
+            <Down x={x} from={ySrc + W.srcH} to={yStep[0]!} color={color} rule={b.rules[0] ? t(b.rules[0]) : undefined} />
             {b.steps.map((s, k) => (
               <g key={k}>
                 <Node
@@ -293,7 +291,7 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
                   w={W.colW}
                   h={W.nodeH}
                   accent={b.accent}
-                  title={pick(s)}
+                  title={t(s)}
                 />
                 {k < b.steps.length - 1 && (
                   <Down
@@ -301,7 +299,7 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
                     from={yStep[k]! + W.nodeH}
                     to={yStep[k + 1]!}
                     color={color}
-                    rule={b.rules[k + 1] ? pick(b.rules[k + 1]!) : undefined}
+                    rule={b.rules[k + 1] ? t(b.rules[k + 1]!) : undefined}
                   />
                 )}
               </g>
@@ -316,7 +314,7 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
                   w={W.colW}
                   h={W.nodeH}
                   accent={b.accent}
-                  title={pick(b.mana)}
+                  title={t(b.mana)}
                   strong
                 />
                 <path
@@ -352,7 +350,7 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
       <g style={{ color: "var(--tm-gold)" }}>
         <Down x={mid} from={yConverge - 26} to={yConverge} color="var(--tm-gold)" />
       </g>
-      <Node x={mid - 118} y={yConverge} w={236} h={W.nodeH} title={pick(CONVERGE)} strong />
+      <Node x={mid - 118} y={yConverge} w={236} h={W.nodeH} title={t(CONVERGE)} strong />
       <g style={{ color: "var(--tm-gold)" }}>
         <Down x={mid} from={yConverge + W.nodeH} to={yResult} color="var(--tm-gold)" />
       </g>
@@ -361,8 +359,8 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
         y={yResult}
         w={300}
         h={62}
-        title={pick(RESULT)}
-        sub={pick(RESULT_SUB)}
+        title={t(RESULT)}
+        sub={t(RESULT_SUB)}
         strong
       />
     </svg>
@@ -371,7 +369,8 @@ function WideLayout({ pick }: { pick: (b: Bi) => string }) {
 
 /* ── narrow: the same nodes, stacked ──────────────────────────────────── */
 
-function StackedLayout({ pick }: { pick: (b: Bi) => string }) {
+function StackedLayout() {
+  const { t } = useTranslation();
   const width = 340;
   const nodeW = 250;
   const x = width / 2;
@@ -404,38 +403,35 @@ function StackedLayout({ pick }: { pick: (b: Bi) => string }) {
       y += h + gapArrow;
     };
 
-    push(nodeH, pick(TOP), "var(--tm-gold)", { strong: true });
+    push(nodeH, t(TOP), "var(--tm-gold)", { strong: true });
     for (const b of BRANCHES) {
       const color = accentVar(b.accent);
-      push(srcH, pick(b.source), color, {
-        sub: pick(b.driver),
+      push(srcH, t(b.source), color, {
+        sub: t(b.driver),
         accent: b.accent,
         strong: true,
       });
       b.steps.forEach((s, k) => {
-        push(nodeH, pick(s), color, {
+        push(nodeH, t(s), color, {
           accent: b.accent,
-          ruleAbove: b.rules[k] ? pick(b.rules[k]!) : undefined,
+          ruleAbove: b.rules[k] ? t(b.rules[k]!) : undefined,
         });
       });
       if (b.mana) {
-        push(nodeH, pick(b.mana), color, { accent: b.accent, strong: true });
+        push(nodeH, t(b.mana), color, { accent: b.accent, strong: true });
       }
     }
-    push(nodeH, pick(CONVERGE), "var(--tm-gold)", { strong: true });
-    push(56, pick(RESULT), "var(--tm-gold)", { sub: pick(RESULT_SUB), strong: true });
+    push(nodeH, t(CONVERGE), "var(--tm-gold)", { strong: true });
+    push(56, t(RESULT), "var(--tm-gold)", { sub: t(RESULT_SUB), strong: true });
     return { out, height: y - gapArrow + 12 };
-  }, [pick]);
+  }, [t]);
 
   return (
     <svg
       viewBox={`0 0 ${width} ${rows.height}`}
       className="block h-auto w-full text-[var(--tm-ink-faint)]"
       role="img"
-      aria-label={pick({
-        ne: "आकाशीय गतिबाट पञ्चाङ्ग र बि.सं. मितिसम्मको क्रम।",
-        en: "The chain from celestial motion to the panchanga and a Bikram Sambat date.",
-      })}
+      aria-label={t("learn.diagrams.hierarchy_stacked_aria")}
     >
       <ArrowDefs />
       {rows.out.map((r, i) => {
@@ -469,16 +465,15 @@ function StackedLayout({ pick }: { pick: (b: Bi) => string }) {
 }
 
 export function HierarchyDiagram() {
-  const { lang } = useLocale();
-  const pick = useMemo(() => (b: Bi) => bilingualText(lang, b.ne, b.en), [lang]);
+  const { t } = useTranslation();
 
   return (
     <figure className={tmCardPadLg}>
       <div className="hidden min-[720px]:block">
-        <WideLayout pick={pick} />
+        <WideLayout />
       </div>
       <div className="min-[720px]:hidden">
-        <StackedLayout pick={pick} />
+        <StackedLayout />
       </div>
       <figcaption className={tmCardCap}>
         {t("learn.diagrams.hierarchy_caption")}
