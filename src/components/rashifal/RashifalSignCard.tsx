@@ -241,7 +241,7 @@ export function RashifalSignCard({ sign, period, taraLine, tone }: Props) {
             <p className="m-0 mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
               {t("rashifal.lord_line", {
                 lord: ne ? lord.lord_ne : lord.lord_en,
-                house: lord.house,
+                house: toNepaliDigits(lord.house, lang),
                 sign: ne ? lord.sign_ne : lord.sign_en,
                 dignity: ne ? lord.dignity_ne : lord.dignity_en,
               })}

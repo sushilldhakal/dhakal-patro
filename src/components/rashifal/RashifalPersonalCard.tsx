@@ -7,7 +7,8 @@ import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon"
 import { RashifalGocharChips } from "@/components/rashifal/RashifalGocharChips";
 import { getRashiName } from "@/lib/rashi-i18n";
 import type { RashifalPersonal } from "@/lib/api";
-import { civilIsoFromDate } from "@/lib/patro-day";
+import { formatBsDateLong } from "@/lib/bs-calendar";
+import { civilIsoFromDate, parseCivilIsoToDate } from "@/lib/patro-day";
 import { formatPatroCivilDayLabel } from "@/lib/patro-headline-subtitle";
 import {
   RASHIFAL_DOMAIN_ICON,
@@ -54,13 +55,22 @@ function LuckyCell({
 }
 
 /**
- * Dasha end date, in the same locale-aware AD label the rest of the app uses
- * (static month-name tables + digit localisation) — not the browser's own
- * Intl data, which cannot be relied on to carry full Nepali month names.
+ * Dasha end date. The server sends AD only, so Nepali gets the Vikram date
+ * (असार १५, २०९३) from the offline BS table — the same label the kundali
+ * dasha tree shows — rather than a Gregorian date in Nepali digits, which is
+ * what "२९ अप्रिल २०३६" was. English keeps the AD label.
+ *
+ * Both come from the app's own static month-name tables plus digit
+ * localisation, not the browser's Intl data, which cannot be relied on to
+ * carry full Nepali month names.
  */
 function formatDasha(iso: string, lang: string, digitFn: (n: number | string) => string): string {
   try {
-    return formatPatroCivilDayLabel(civilIsoFromDate(new Date(iso)), lang, digitFn);
+    const civilIso = civilIsoFromDate(new Date(iso));
+    if (lang.slice(0, 2) === "ne") {
+      return formatBsDateLong(parseCivilIsoToDate(civilIso), lang, digitFn);
+    }
+    return formatPatroCivilDayLabel(civilIso, lang, digitFn);
   } catch {
     return iso.slice(0, 10);
   }
@@ -236,7 +246,7 @@ export function RashifalPersonalCard({ name, personal }: Props) {
             <p className="m-0 mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
               {t("rashifal.personal.lord_line", {
                 lord: ne ? lord.lord_ne : lord.lord_en,
-                house: lord.house,
+                house: toNepaliDigits(lord.house, lang),
                 sign: ne ? lord.sign_ne : lord.sign_en,
                 dignity: ne ? lord.dignity_ne : lord.dignity_en,
               })}
