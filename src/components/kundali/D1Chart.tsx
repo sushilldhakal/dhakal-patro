@@ -11,21 +11,17 @@ import { GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 
-const PLANET_ABBR_NE: Record<string, string> = {
-  sun: "सू",
-  moon: "चं",
-  mars: "मं",
-  mercury: "बु",
-  jupiter: "गु",
-  venus: "शु",
-  saturn: "श",
-  rahu: "रा",
-  ketu: "के",
-};
-
-const PLANET_ABBR_EN: Record<string, string> = {
-  sun: "Su", moon: "Mo", mars: "Ma", mercury: "Me", jupiter: "Ju",
-  venus: "Ve", saturn: "Sa", rahu: "Ra", ketu: "Ke",
+/** Catalogue key for each planet's two-letter glyph label. */
+const PLANET_ABBR_KEY: Record<string, string> = {
+  sun: "kundali.x.abbr_sun",
+  moon: "kundali.x.abbr_moon",
+  mars: "kundali.x.abbr_mars",
+  mercury: "kundali.x.abbr_mercury",
+  jupiter: "kundali.x.abbr_jupiter",
+  venus: "kundali.x.abbr_venus",
+  saturn: "kundali.x.abbr_saturn",
+  rahu: "kundali.x.abbr_rahu",
+  ketu: "kundali.x.abbr_ketu",
 };
 
 /** Western signs from i18n (Aries, Leo, …). */

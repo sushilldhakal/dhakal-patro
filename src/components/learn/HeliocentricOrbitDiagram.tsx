@@ -236,7 +236,7 @@ export function HeliocentricOrbitDiagram({
         className={hoFocusLabel}
         textAnchor="middle"
       >
-        अपसौर (टाढा)
+        {t("learn.diagrams.orbit_aphelion")}
       </text>
 
       {ORBIT_MARKERS.map((m) => {
@@ -263,7 +263,7 @@ export function HeliocentricOrbitDiagram({
       {sweepPath && <path d={sweepPath} className={hoSweep} fill="none" />}
 
       <text x={HO.W / 2} y={HO.H - 22} className={hoOrbitDir} textAnchor="middle">
-        ↺ वामावर्त (वास्तविक दिशा)
+        {t("learn.diagrams.orbit_direction")}
       </text>
 
       <line x1={ex} y1={ey} x2={ORBIT.cx} y2={ORBIT.cy} className={hoSunRay} />
@@ -271,7 +271,7 @@ export function HeliocentricOrbitDiagram({
       {rays}
       <circle cx={ORBIT.cx} cy={ORBIT.cy} r={HO.sunR} fill="url(#ho-sun)" />
       <text x={ORBIT.cx} y={ORBIT.cy + HO.sunR + 28} className={edBodyLabel} textAnchor="middle">
-        सूर्य (केन्द्रबिन्दु)
+        {t("learn.diagrams.orbit_sun_focus")}
       </text>
 
       <g className={hoEarthGroup} transform={`translate(${ex} ${ey})`}>
@@ -292,10 +292,10 @@ export function HeliocentricOrbitDiagram({
           y={northY + axisUy * 14 + eqUy * 6}
           className={hoPoleLabel}
         >
-          उत्तर · {fmt(TILT)}°
+          {t("learn.diagrams.orbit_north_pole")} · {fmt(TILT)}°
         </text>
         <text y={HO.earthR + 24} className={edBodyLabel} textAnchor="middle">
-          पृथ्वी
+          {t("grahas.earth")}
         </text>
       </g>
 
@@ -303,7 +303,7 @@ export function HeliocentricOrbitDiagram({
         transform={`translate(${ex + sunUx * 72},${ey + sunUy * 72})`}
       >
         <text className={hoCalloutNe} textAnchor="middle" y={-6}>
-          गति: {speedLabel}
+          {t("learn.diagrams.orbit_speed")}: {t(speedKey)}
         </text>
       </g>
     </svg>
