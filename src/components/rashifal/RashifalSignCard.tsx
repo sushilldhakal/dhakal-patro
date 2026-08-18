@@ -6,7 +6,13 @@ import { useLocale } from "@/i18n/locale";
 import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
 import { RashifalGocharChips } from "@/components/rashifal/RashifalGocharChips";
 import { getRashiName } from "@/lib/rashi-i18n";
-import type { NavataraTone, RashifalPeriod, RashifalSignBlock } from "@/lib/api";
+import type {
+  NavataraTone,
+  RashifalDayMarker,
+  RashifalPeriod,
+  RashifalSignBlock,
+} from "@/lib/api";
+import { formatBsCivilIsoLong } from "@/lib/bs-calendar";
 import { patroNavataraToneBg } from "@/lib/patro-classes";
 import {
   RASHIFAL_DOMAIN_ICON,
@@ -55,6 +61,20 @@ function LuckyCell({
       <span className="sr-only">{label}: </span>
       <span className="truncate text-xs font-semibold text-foreground">{value}</span>
     </div>
+  );
+}
+
+/**
+ * Best/weak day of a weekly, monthly or yearly window. The server's own BS
+ * label wins when it sends one; without it, Nepali still gets a Vikram date
+ * from the offline table rather than the bare `2026-08-20` the AD fallback
+ * used to leak onto a Nepali card.
+ */
+function dayMarkerLabel(marker: RashifalDayMarker, lang: string): string {
+  if (lang.slice(0, 2) !== "ne") return marker.date_ad;
+  return (
+    marker.date_bs ??
+    formatBsCivilIsoLong(marker.date_ad, lang, (n) => toNepaliDigits(n, lang))
   );
 }
 
@@ -251,8 +271,8 @@ export function RashifalSignCard({ sign, period, taraLine, tone }: Props) {
           {period !== "daily" && sign.best_day && sign.weak_day ? (
             <p className="m-0 mt-2 text-xs text-muted-foreground">
               {t("rashifal.window_days", {
-                best: (ne ? sign.best_day.date_bs : null) ?? sign.best_day.date_ad,
-                weak: (ne ? sign.weak_day.date_bs : null) ?? sign.weak_day.date_ad,
+                best: dayMarkerLabel(sign.best_day, lang),
+                weak: dayMarkerLabel(sign.weak_day, lang),
               })}
             </p>
           ) : null}

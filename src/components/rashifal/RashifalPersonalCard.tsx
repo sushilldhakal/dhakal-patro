@@ -7,8 +7,8 @@ import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon"
 import { RashifalGocharChips } from "@/components/rashifal/RashifalGocharChips";
 import { getRashiName } from "@/lib/rashi-i18n";
 import type { RashifalPersonal } from "@/lib/api";
-import { formatBsDateLong } from "@/lib/bs-calendar";
-import { civilIsoFromDate, parseCivilIsoToDate } from "@/lib/patro-day";
+import { formatBsCivilIsoLong } from "@/lib/bs-calendar";
+import { civilIsoFromDate } from "@/lib/patro-day";
 import { formatPatroCivilDayLabel } from "@/lib/patro-headline-subtitle";
 import {
   RASHIFAL_DOMAIN_ICON,
@@ -68,7 +68,7 @@ function formatDasha(iso: string, lang: string, digitFn: (n: number | string) =>
   try {
     const civilIso = civilIsoFromDate(new Date(iso));
     if (lang.slice(0, 2) === "ne") {
-      return formatBsDateLong(parseCivilIsoToDate(civilIso), lang, digitFn);
+      return formatBsCivilIsoLong(civilIso, lang, digitFn);
     }
     return formatPatroCivilDayLabel(civilIso, lang, digitFn);
   } catch {
