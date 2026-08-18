@@ -83,6 +83,7 @@ import {
   SKY_TEXTURE_SOURCES,
   type SkyTextureKey,
 } from "@/lib/sky3d/sky-textures";
+import { makeMoonMaterial, type MoonMaterial } from "@/lib/sky3d/moon-material";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import earthToonUrl from "@/assets/graha/earth-orig.png";
 
@@ -720,6 +721,7 @@ function GrahaBody({
   retroRef,
   onSelect,
   sunLit,
+  phaseMaterial,
   eclipse,
 }: {
   graha: GrahaKey;
@@ -731,6 +733,11 @@ function GrahaBody({
   onSelect: () => void;
   /** Space view: the Sun's point light models the terminator (औंसी / पूर्णिमा). */
   sunLit?: boolean;
+  /**
+   * The Moon, in the two views whose fixed-radius projection makes the Sun's
+   * light useless — it carries the phase as a direction instead.
+   */
+  phaseMaterial?: MoonMaterial;
   eclipse?: React.RefObject<{ kind: "solar" | "lunar" | null; mag: number }>;
 }) {
   const texKey = BODY_TEXTURE[graha];
@@ -745,6 +752,8 @@ function GrahaBody({
             <meshBasicMaterial map={textures.sun} />
           ) : graha === "moon" && sunLit ? (
             <meshStandardMaterial map={textures.moon} roughness={1} metalness={0} />
+          ) : graha === "moon" && phaseMaterial ? (
+            <primitive object={phaseMaterial} attach="material" />
           ) : (
             <meshStandardMaterial
               map={textures[texKey]}
@@ -904,6 +913,29 @@ export function AakashGocharScene({
     return makeEarthMaterial(earthToon);
   }, [earthToon, gl]);
   useEffect(() => () => spaceEarthMat.dispose(), [spaceEarthMat]);
+
+  /**
+   * The Moon's own face for the dome and the globe — see `makeMoonMaterial`
+   * for why those two cannot simply be lit.
+   *
+   * Its own copy of the map, because the shader writes final pixels and so
+   * wants raw texels, while the space view's `meshStandardMaterial` wants the
+   * same image tagged sRGB. One `Texture` cannot answer both, and the clone
+   * shares the decoded image either way.
+   */
+  const moonPhaseMat = useMemo(() => {
+    const map = textures.moon.clone();
+    map.colorSpace = THREE.NoColorSpace;
+    map.needsUpdate = true;
+    return makeMoonMaterial(map);
+  }, [textures]);
+  useEffect(
+    () => () => {
+      moonPhaseMat.uniforms.map.value.dispose();
+      moonPhaseMat.dispose();
+    },
+    [moonPhaseMat],
+  );
 
   const bodyRefs = useRef<Partial<Record<GrahaKey, THREE.Group>>>({});
   const spinRefs = useRef<Partial<Record<GrahaKey, THREE.Mesh>>>({});
@@ -2033,6 +2065,12 @@ export function AakashGocharScene({
          face toward Earth at पूर्णिमा. */
       sunLightRef.current.decay = space ? 0 : 2;
       sunLightRef.current.intensity = horizon ? 1400 : globe ? 700 : 4.5;
+      /* The Moon's phase runs off the Sun's *direction* from the centre — the
+         observer on the dome, the Earth on the globe — which is the one thing
+         a fixed-radius projection keeps true. */
+      if (sunGroup) {
+        moonPhaseMat.uniforms.sunDirection.value.copy(sunGroup.position).normalize();
+      }
     }
     if (ambientRef.current) ambientRef.current.intensity = space ? 0.1 : 0.28;
     if (fillLightRef.current) fillLightRef.current.intensity = space ? 0 : 0.1;
@@ -2440,6 +2478,7 @@ export function AakashGocharScene({
           retroRef={handles[key].retro}
           onSelect={() => onSelect(key)}
           sunLit={mode === "space"}
+          phaseMaterial={key === "moon" ? moonPhaseMat : undefined}
           eclipse={key === "moon" ? moonEclipse : undefined}
         />
       ))}
