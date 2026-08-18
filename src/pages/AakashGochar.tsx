@@ -31,7 +31,11 @@ import type { GrahaKey } from "@/lib/graha-details";
 import { pickAdDate, pickBrowseVikramDate } from "@/lib/patro-date-options";
 import { toAdStr } from "@/lib/patro-day";
 import { KATHMANDU, type Observer } from "@/lib/sky3d/horizon";
-import { todayAdStringInTimezone, zonedWallTimeToInstant } from "@/lib/zoned-time";
+import {
+  clockStringInTimezone,
+  todayAdStringInTimezone,
+  zonedWallTimeToInstant,
+} from "@/lib/zoned-time";
 
 /** Canvas height when the page is not fullscreen. */
 const SCENE_HEIGHT = 560;
@@ -46,8 +50,46 @@ export function AakashGochar() {
      Nepal time rather than letting it read "UTC" over a Kathmandu sky. */
   const tz = resolveLocationTimezone(location);
   const todayAd = todayAdStringInTimezone(new Date(), tz);
+  /* Noon rather than midnight, and only ever read for its year/month/day: an
+     hour in the middle of the day cannot be tipped onto the day either side by
+     the device's own offset the way `T00:00:00` can. The time of day the scene
+     actually opens at is {@link clock}. */
   const [date, setDate] = useState(() => new Date(`${todayAd}T12:00:00`));
-  const [clock, setClock] = useState("12:00");
+
+  /**
+   * The time of day the sky opens at — the place's own wall clock, now.
+   *
+   * The page is "what is overhead here", so a fixed midday meant every visit
+   * outside the middle of the day opened on a sky that was not the one outside
+   * the window, and the reader had to correct the clock before the view said
+   * anything true. Read in the location's zone, not the device's, for the same
+   * reason the rest of the page is: the pickers offer that place's wall clock
+   * and the HUD reads it back the same way.
+   */
+  const [clock, setClock] = useState(() => clockStringInTimezone(new Date(), tz));
+
+  /**
+   * Whether the reader has set a time themselves.
+   *
+   * Until they have, the clock is a default rather than a choice, so it follows
+   * the place: picking Tokyo should open on Tokyo's sky now, not on Tokyo at
+   * Kathmandu's hour. Once they have chosen an hour it is theirs, and changing
+   * the location must not quietly overwrite it.
+   */
+  const [clockChosen, setClockChosen] = useState(false);
+  const changeClock = useCallback((next: string) => {
+    setClockChosen(true);
+    setClock(next);
+  }, []);
+
+  /* Re-anchor on the new zone during the render that first sees it — the
+     derived-state-from-props pattern, rather than an effect that would paint
+     the old place's hour for one frame first. */
+  const [clockTz, setClockTz] = useState(tz);
+  if (clockTz !== tz) {
+    setClockTz(tz);
+    if (!clockChosen) setClock(clockStringInTimezone(new Date(), tz));
+  }
 
   /**
    * Which calendar the date nav is browsing in.
@@ -246,7 +288,7 @@ export function AakashGochar() {
         civilDateAd={dateAd}
         todayAd={todayAd}
         clock={clock}
-        onClockChange={setClock}
+        onClockChange={changeClock}
         location={location}
         onLocationChange={setLocation}
       />
@@ -270,7 +312,7 @@ export function AakashGochar() {
           vikram={vikram}
           onEraChange={handleEraChange}
           clock={clock}
-          onClockChange={setClock}
+          onClockChange={changeClock}
           observer={observer}
           timeZone={tz}
           height={SCENE_HEIGHT}
