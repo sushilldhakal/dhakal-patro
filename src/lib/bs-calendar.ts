@@ -357,6 +357,59 @@ export function formatBsDateLong(
 }
 
 /**
+ * BS parts for a calendar-only AD date (`YYYY-MM-DD`), with no timezone in the
+ * middle: the string is read as civil parts and converted straight through, so
+ * the same day never lands on two different Vikram dates depending on where the
+ * reader is sitting.
+ */
+export function bsFromCivilIso(iso: string): BikramSambatDate {
+  return adToBS(new Date(parseAdDateOnly(iso)))
+}
+
+function bsMonthName(month: number, isEn: boolean): string {
+  return (isEn ? BS_MONTH_NAMES[month - 1] : BS_MONTHS_NE[month - 1]) ?? ""
+}
+
+/** Long BS label for a calendar-only AD date — {@link formatBsDateLong}, timezone-free. */
+export function formatBsCivilIsoLong(
+  iso: string,
+  lang?: string,
+  digits?: (v: string | number) => string,
+): string {
+  const bs = bsFromCivilIso(iso)
+  const d = digits ?? String
+  const isEn = (lang ?? "ne").slice(0, 2) === "en"
+  return `${bsMonthName(bs.month, isEn)} ${d(bs.day)}, ${d(bs.year)}`
+}
+
+/**
+ * BS label for a span between two calendar-only AD dates, collapsing whatever
+ * the two ends share — साउन २९ – ३२, २०८३ inside one month, साउन २९ – भदौ ४,
+ * २०८३ across months, both years spelled out only when the span crosses a
+ * Vikram new year.
+ */
+export function formatBsCivilIsoRange(
+  startIso: string,
+  endIso: string,
+  lang?: string,
+  digits?: (v: string | number) => string,
+): string {
+  const a = bsFromCivilIso(startIso)
+  const b = bsFromCivilIso(endIso)
+  const d = digits ?? String
+  const isEn = (lang ?? "ne").slice(0, 2) === "en"
+  const startMonth = bsMonthName(a.month, isEn)
+  const endMonth = bsMonthName(b.month, isEn)
+  if (a.year !== b.year) {
+    return `${startMonth} ${d(a.day)}, ${d(a.year)} – ${endMonth} ${d(b.day)}, ${d(b.year)}`
+  }
+  if (a.month !== b.month) {
+    return `${startMonth} ${d(a.day)} – ${endMonth} ${d(b.day)}, ${d(a.year)}`
+  }
+  return `${startMonth} ${d(a.day)} – ${d(b.day)}, ${d(a.year)}`
+}
+
+/**
  * Compact weekday + BS month/day + AD short for element span cards.
  * e.g. सोम असार ३१ · Jun १४ / Mon Ashadh 31 · Jun 14
  */

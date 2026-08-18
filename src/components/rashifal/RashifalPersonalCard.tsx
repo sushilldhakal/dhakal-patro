@@ -4,13 +4,14 @@ import { ChevronDown, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
+import { RashifalGocharChips } from "@/components/rashifal/RashifalGocharChips";
 import { getRashiName } from "@/lib/rashi-i18n";
 import type { RashifalPersonal } from "@/lib/api";
+import { formatBsCivilIsoLong } from "@/lib/bs-calendar";
 import { civilIsoFromDate } from "@/lib/patro-day";
 import { formatPatroCivilDayLabel } from "@/lib/patro-headline-subtitle";
 import {
   RASHIFAL_DOMAIN_ICON,
-  RASHIFAL_FLAG_ICON,
   RASHIFAL_LUCKY_ICON,
   rashifalToneBar,
   rashifalToneText,
@@ -54,13 +55,22 @@ function LuckyCell({
 }
 
 /**
- * Dasha end date, in the same locale-aware AD label the rest of the app uses
- * (static month-name tables + digit localisation) — not the browser's own
- * Intl data, which cannot be relied on to carry full Nepali month names.
+ * Dasha end date. The server sends AD only, so Nepali gets the Vikram date
+ * (असार १५, २०९३) from the offline BS table — the same label the kundali
+ * dasha tree shows — rather than a Gregorian date in Nepali digits, which is
+ * what "२९ अप्रिल २०३६" was. English keeps the AD label.
+ *
+ * Both come from the app's own static month-name tables plus digit
+ * localisation, not the browser's Intl data, which cannot be relied on to
+ * carry full Nepali month names.
  */
 function formatDasha(iso: string, lang: string, digitFn: (n: number | string) => string): string {
   try {
-    return formatPatroCivilDayLabel(civilIsoFromDate(new Date(iso)), lang, digitFn);
+    const civilIso = civilIsoFromDate(new Date(iso));
+    if (lang.slice(0, 2) === "ne") {
+      return formatBsCivilIsoLong(civilIso, lang, digitFn);
+    }
+    return formatPatroCivilDayLabel(civilIso, lang, digitFn);
   } catch {
     return iso.slice(0, 10);
   }
@@ -229,42 +239,14 @@ export function RashifalPersonalCard({ name, personal }: Props) {
           ) : null}
 
           {personal.gochar?.length ? (
-            <ul className="m-0 mt-3 flex list-none flex-wrap gap-1.5 border-t border-border/60 p-0 pt-3">
-              {personal.gochar.map((row) => {
-                const Vedha = RASHIFAL_FLAG_ICON.vedha;
-                const Retro = RASHIFAL_FLAG_ICON.retrograde;
-                const Combust = RASHIFAL_FLAG_ICON.combust;
-                return (
-                  <li
-                    key={row.graha}
-                    className={cn(
-                      "m-0 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.65rem] font-semibold",
-                      row.vedha_by ? "bg-tone-neutral" : row.favourable ? "bg-tone-good" : "bg-tone-bad",
-                    )}
-                    title={t("rashifal.gochar_hint", {
-                      graha: ne ? row.graha_ne : row.graha_en,
-                      house: row.house,
-                      sign: ne ? row.sign_ne : row.sign_en,
-                    })}
-                  >
-                    <span>{ne ? row.graha_ne : row.graha_en}</span>
-                    <span className="font-num tabular-nums opacity-80">
-                      {toNepaliDigits(row.house, lang)}
-                    </span>
-                    {row.vedha_by ? <Vedha className="size-3" aria-hidden="true" /> : null}
-                    {row.retrograde ? <Retro className="size-3" aria-hidden="true" /> : null}
-                    {row.combust ? <Combust className="size-3" aria-hidden="true" /> : null}
-                  </li>
-                );
-              })}
-            </ul>
+            <RashifalGocharChips rows={personal.gochar} className="mt-3" />
           ) : null}
 
           {lord ? (
             <p className="m-0 mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
               {t("rashifal.personal.lord_line", {
                 lord: ne ? lord.lord_ne : lord.lord_en,
-                house: lord.house,
+                house: toNepaliDigits(lord.house, lang),
                 sign: ne ? lord.sign_ne : lord.sign_en,
                 dignity: ne ? lord.dignity_ne : lord.dignity_en,
               })}

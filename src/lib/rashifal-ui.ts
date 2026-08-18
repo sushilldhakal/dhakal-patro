@@ -1,5 +1,4 @@
 import {
-  Ban,
   Briefcase,
   CalendarDays,
   CalendarRange,
@@ -15,12 +14,13 @@ import {
   Palette,
   Plane,
   RotateCcw,
+  ShieldBan,
   Sun,
   type LucideIcon,
 } from "lucide-react";
 import type { NavataraTone, RashifalDomainKey, RashifalPeriod } from "@/lib/api";
+import { formatBsCivilIsoRange } from "@/lib/bs-calendar";
 import { addCivilDays, parseCivilIsoToDate } from "@/lib/patro-day";
-import { formatPatroCivilDayLabel } from "@/lib/patro-headline-subtitle";
 
 /**
  * Period tabs are icon-only on the page, so each icon has to carry the whole
@@ -51,9 +51,13 @@ export const RASHIFAL_LUCKY_ICON = {
   time: Clock,
 } satisfies Record<string, LucideIcon>;
 
-/** Flags on a single gochar row. */
+/**
+ * Flags on a single gochar row. वेध is a *blocked* transit, so it takes the
+ * shield rather than a bare Ban — a plain circle-slash on a chip reads as a
+ * glyph that failed to load, not as "this transit is cancelled".
+ */
 export const RASHIFAL_FLAG_ICON = {
-  vedha: Ban,
+  vedha: ShieldBan,
   retrograde: RotateCcw,
   combust: Flame,
 } satisfies Record<string, LucideIcon>;
@@ -123,10 +127,11 @@ export function rashifalRangeLabel(
 ): string | undefined {
   if (!source) return undefined;
   const digitFn = (n: number | string) => toNepaliDigits(n, lang);
+  // Weekly gets the Vikram span, not the Gregorian one in Nepali digits: the
+  // monthly and yearly tabs beside it are already BS, and this page is browsed
+  // in BS (`era=bs`), so an AD week here was the odd label out.
   if (period === "weekly" && source.range_start_ad && source.range_end_ad) {
-    const start = formatPatroCivilDayLabel(source.range_start_ad, lang, digitFn);
-    const end = formatPatroCivilDayLabel(source.range_end_ad, lang, digitFn);
-    return `${start} – ${end}`;
+    return formatBsCivilIsoRange(source.range_start_ad, source.range_end_ad, lang, digitFn);
   }
   if (period === "monthly" && source.bs_year != null) {
     const monthName = lang === "ne" ? source.bs_month_name_ne : source.bs_month_name_en;

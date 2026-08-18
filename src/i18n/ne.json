@@ -403,6 +403,12 @@
     "remedy": "उपाय",
     "lord_line": "राशिस्वामी {{lord}} {{sign}} राशिमा, जन्मराशिबाट {{house}} भावमा — {{dignity}}।",
     "gochar_hint": "{{graha}} — {{sign}} राशि, जन्मराशिबाट {{house}} भाव",
+    "flags": {
+      "vedha": "वेध — फल रोकिएको",
+      "vedha_by": "वेध — {{graha}} ले रोकेको",
+      "retrograde": "वक्री",
+      "combust": "अस्त"
+    },
     "window_days": "सबैभन्दा अनुकूल दिन {{best}}; सबैभन्दा सतर्क रहनुपर्ने दिन {{weak}}।",
     "range_prev": "अघिल्लो अवधि",
     "range_next": "अर्को अवधि",

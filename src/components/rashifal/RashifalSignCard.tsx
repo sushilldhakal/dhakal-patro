@@ -4,12 +4,18 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/locale";
 import { RashiGlyphIcon } from "@/components/panchanga/element/ElementGlyphIcon";
+import { RashifalGocharChips } from "@/components/rashifal/RashifalGocharChips";
 import { getRashiName } from "@/lib/rashi-i18n";
-import type { NavataraTone, RashifalPeriod, RashifalSignBlock } from "@/lib/api";
+import type {
+  NavataraTone,
+  RashifalDayMarker,
+  RashifalPeriod,
+  RashifalSignBlock,
+} from "@/lib/api";
+import { formatBsCivilIsoLong } from "@/lib/bs-calendar";
 import { patroNavataraToneBg } from "@/lib/patro-classes";
 import {
   RASHIFAL_DOMAIN_ICON,
-  RASHIFAL_FLAG_ICON,
   RASHIFAL_LUCKY_ICON,
   rashifalToneBar,
   rashifalToneText,
@@ -55,6 +61,20 @@ function LuckyCell({
       <span className="sr-only">{label}: </span>
       <span className="truncate text-xs font-semibold text-foreground">{value}</span>
     </div>
+  );
+}
+
+/**
+ * Best/weak day of a weekly, monthly or yearly window. The server's own BS
+ * label wins when it sends one; without it, Nepali still gets a Vikram date
+ * from the offline table rather than the bare `2026-08-20` the AD fallback
+ * used to leak onto a Nepali card.
+ */
+function dayMarkerLabel(marker: RashifalDayMarker, lang: string): string {
+  if (lang.slice(0, 2) !== "ne") return marker.date_ad;
+  return (
+    marker.date_bs ??
+    formatBsCivilIsoLong(marker.date_ad, lang, (n) => toNepaliDigits(n, lang))
   );
 }
 
@@ -234,46 +254,14 @@ export function RashifalSignCard({ sign, period, taraLine, tone }: Props) {
           ) : null}
 
           {sign.gochar?.length ? (
-            <ul className="m-0 mt-3 flex list-none flex-wrap gap-1.5 border-t border-border/60 p-0 pt-3">
-              {sign.gochar.map((row) => {
-                const Vedha = RASHIFAL_FLAG_ICON.vedha;
-                const Retro = RASHIFAL_FLAG_ICON.retrograde;
-                const Combust = RASHIFAL_FLAG_ICON.combust;
-                return (
-                  <li
-                    key={row.graha}
-                    className={cn(
-                      "m-0 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.65rem] font-semibold",
-                      row.vedha_by
-                        ? "bg-tone-neutral"
-                        : row.favourable
-                          ? "bg-tone-good"
-                          : "bg-tone-bad",
-                    )}
-                    title={t("rashifal.gochar_hint", {
-                      graha: ne ? row.graha_ne : row.graha_en,
-                      house: row.house,
-                      sign: ne ? row.sign_ne : row.sign_en,
-                    })}
-                  >
-                    <span>{ne ? row.graha_ne : row.graha_en}</span>
-                    <span className="font-num tabular-nums opacity-80">
-                      {toNepaliDigits(row.house, lang)}
-                    </span>
-                    {row.vedha_by ? <Vedha className="size-3" aria-hidden="true" /> : null}
-                    {row.retrograde ? <Retro className="size-3" aria-hidden="true" /> : null}
-                    {row.combust ? <Combust className="size-3" aria-hidden="true" /> : null}
-                  </li>
-                );
-              })}
-            </ul>
+            <RashifalGocharChips rows={sign.gochar} className="mt-3" />
           ) : null}
 
           {lord ? (
             <p className="m-0 mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
               {t("rashifal.lord_line", {
                 lord: ne ? lord.lord_ne : lord.lord_en,
-                house: lord.house,
+                house: toNepaliDigits(lord.house, lang),
                 sign: ne ? lord.sign_ne : lord.sign_en,
                 dignity: ne ? lord.dignity_ne : lord.dignity_en,
               })}
@@ -283,8 +271,8 @@ export function RashifalSignCard({ sign, period, taraLine, tone }: Props) {
           {period !== "daily" && sign.best_day && sign.weak_day ? (
             <p className="m-0 mt-2 text-xs text-muted-foreground">
               {t("rashifal.window_days", {
-                best: (ne ? sign.best_day.date_bs : null) ?? sign.best_day.date_ad,
-                weak: (ne ? sign.weak_day.date_bs : null) ?? sign.weak_day.date_ad,
+                best: dayMarkerLabel(sign.best_day, lang),
+                weak: dayMarkerLabel(sign.weak_day, lang),
               })}
             </p>
           ) : null}
