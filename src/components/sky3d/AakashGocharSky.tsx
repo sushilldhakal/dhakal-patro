@@ -185,6 +185,20 @@ const SYSTEM_PITCH = 1.15;
 const SYSTEM_DISTANCE = 70;
 /** Zoom value that opens the horizon view out to a ~120° fisheye. */
 const HORIZON_WIDE = 45;
+/**
+ * Where the horizon camera starts: due south, a little above the skyline.
+ *
+ * South because that is where the zodiac rides from Kathmandu's latitude — the
+ * ecliptic crosses the meridian in the southern sky, so facing north opens on
+ * the one quarter with no grahas in it. The pitch lifts the view just enough to
+ * put the horizon ring along the bottom of the frame rather than through the
+ * middle of it.
+ *
+ * Yaw is measured with +X east and −Z north (see `altAzToVec3`), so π faces
+ * south.
+ */
+const HORIZON_YAW = Math.PI;
+const HORIZON_PITCH = 0.35;
 /** Default zoom in the Earth-globe view — frames the globe and its ring. */
 const GLOBE_VIEW = 78;
 /**
@@ -1053,6 +1067,18 @@ export function AakashGocharSky({
         onPress={() => {
           setMode("space");
           view.current = { yaw: SYSTEM_YAW, pitch: SYSTEM_PITCH, distance: SYSTEM_DISTANCE };
+        }}
+      />
+      <Chip
+        active={mode === "horizon"}
+        label={pick("क्षितिज", "Horizon")}
+        onPress={() => {
+          setMode("horizon");
+          /* You are standing on your own place here, so following it is a lock
+             on nothing — the globe view is the one where that marker moves. */
+          setLockObserver(false);
+          setToggles((t) => (t.lockCenter && !selectedKey ? { ...t, lockCenter: false } : t));
+          view.current = { yaw: HORIZON_YAW, pitch: HORIZON_PITCH, distance: HORIZON_WIDE };
         }}
       />
       <Chip
