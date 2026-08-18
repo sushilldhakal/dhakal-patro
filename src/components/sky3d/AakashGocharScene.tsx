@@ -242,6 +242,12 @@ export type ScreenLabel = {
   deg?: number;
   /** True when this label is not the live rashi / month / नक्षत्र. */
   dim?: boolean;
+  /**
+   * Horizon view: this label is under the observer's feet — the half of the
+   * sphere the ground is standing in the way of. Drawn faded rather than
+   * dropped, so a graha can be followed all the way round.
+   */
+  below?: boolean;
   x: number;
   y: number;
 };
@@ -311,6 +317,17 @@ export type SceneToggles = {
    * reckoned against. Same object as the Learn playground's काठमाडौँ रेखा.
    */
   primeMeridian: boolean;
+  /**
+   * Horizon view: keep drawing the half of the sky that is under the ground.
+   *
+   * The zodiac is a great circle and only ever half of it is up at once, so
+   * with the ground opaque the belt ran off at the east and west points and a
+   * graha vanished the moment it set — you could not see where a body was
+   * heading, or where the rest of the circle went. With this on the ground is a
+   * veil rather than a slab: the belt closes, and everything under it stays on
+   * screen, dimmed to say that it is below the skyline rather than in view.
+   */
+  belowHorizon: boolean;
 };
 
 /* ── shared primitives ─────────────────────────────────────────────────── */
@@ -774,7 +791,16 @@ function labelsMoved(prev: ScreenLabel[], next: ScreenLabel[]): boolean {
     /* `dim` counts as movement: which राशि and नक्षत्र are lit changes on
        selection, and on a paused sky nothing else about the label does — so
        leaving it out froze the bright pair on whoever was picked first. */
-    if (a.id !== b.id || a.dim !== b.dim || Math.abs(a.x - b.x) >= 1 || Math.abs(a.y - b.y) >= 1)
+    if (
+      a.id !== b.id ||
+      a.dim !== b.dim ||
+      /* Same reason as `dim`: crossing the skyline changes nothing about where
+         a label sits, only how brightly it is drawn, so on a paused sky the
+         fade would never be handed over. */
+      a.below !== b.below ||
+      Math.abs(a.x - b.x) >= 1 ||
+      Math.abs(a.y - b.y) >= 1
+    )
       return true;
   }
   return false;
@@ -1314,13 +1340,21 @@ export function AakashGocharScene({
     };
 
     /**
+     * Under the observer's feet, with a little slack so the compass points and
+     * the skyline furniture — which sit at altitude zero — are not swept up as
+     * "below" and faded.
+     */
+    const belowSky = (at: [number, number, number]) => horizon && at[1] < -0.5;
+
+    /**
      * Whether a label anchor should be drawn. Overlay text has no depth test,
-     * so inside the dome anything under the horizon has to be culled by hand,
-     * and from outside the sphere anything on the far hemisphere does.
+     * so from outside the sphere anything on the far hemisphere has to be
+     * culled by hand — and inside the dome, anything under the horizon too
+     * unless क्षितिजमुनि is asking for the other half.
      */
     const labelVisible = (at: [number, number, number]) => {
       if (space) return true;
-      if (horizon) return at[1] > 0.5;
+      if (horizon) return toggles.belowHorizon || at[1] > 0.5;
       // Facing hemisphere only — the globe is opaque, so far-side names would
       // otherwise float over it.
       const c = state.camera.position;
@@ -1361,14 +1395,24 @@ export function AakashGocharScene({
       return hit > 0 && hit < reach;
     };
 
-    const project = (label: Omit<ScreenLabel, "x" | "y">, at: [number, number, number]) => {
+    /**
+     * `at` is where the text goes, which is not always where the thing is: a
+     * graha's name is hung a body-radius below its disc. `anchor` is the thing
+     * itself, so a graha sitting right on the skyline is not called "below"
+     * merely because its label hangs under it.
+     */
+    const project = (
+      label: Omit<ScreenLabel, "x" | "y">,
+      at: [number, number, number],
+      anchor: [number, number, number] = at,
+    ) => {
       if (behindEarth(at)) return;
       scratch.current.set(at[0], at[1], at[2]).project(state.camera);
       if (scratch.current.z > 1) return;
       const x = (scratch.current.x * 0.5 + 0.5) * width;
       const y = (-scratch.current.y * 0.5 + 0.5) * height;
       if (x < -60 || y < -30 || x > width + 60 || y > height + 30) return;
-      collected.push({ ...label, x, y });
+      collected.push({ ...label, x, y, ...(belowSky(anchor) ? { below: true } : {}) });
     };
 
     /* ── bodies ─────────────────────────────────────────────────────── */
@@ -1394,8 +1438,11 @@ export function AakashGocharScene({
       if (group) {
         group.position.set(at[0], at[1], at[2]);
         group.scale.setScalar(drawnR / BODY_RADIUS[key]);
-        // Below the horizon a graha is simply not in the sky.
-        group.visible = !horizon || at[1] > -DOME * 0.06;
+        /* Below the horizon a graha is not in the sky — but it is still in the
+           picture, and losing it at the skyline meant a body could not be
+           followed through the half of its circuit that happens underfoot. The
+           ground veil is what says it has set. */
+        group.visible = !horizon || toggles.belowHorizon || at[1] > -DOME * 0.06;
       }
 
       const spin = spinRefs.current[key];
@@ -1434,18 +1481,18 @@ export function AakashGocharScene({
           ? key !== "sun" && key === selectedKey
           : at[1] > 0;
 
-      // Below the horizon the ground hides the body, but a DOM label has no
-      // depth test — so it has to be filtered out explicitly.
+      // A DOM label has no depth test, so the ground cannot hide it the way it
+      // hides the body — {@link labelVisible} has to do it by hand.
       if (collect && labelVisible(at)) {
         /* Hung below the disc rather than pinned to the centre. A fixed pixel
            nudge cannot do this once a body can be anything from a speck to
            half the screen: the offset has to be the body's own radius. */
         const up = screenUp.current;
-        project({ id: `g-${key}`, kind: "graha", key }, [
-          at[0] - up.x * drawnR,
-          at[1] - up.y * drawnR,
-          at[2] - up.z * drawnR,
-        ]);
+        project(
+          { id: `g-${key}`, kind: "graha", key },
+          [at[0] - up.x * drawnR, at[1] - up.y * drawnR, at[2] - up.z * drawnR],
+          at,
+        );
       }
 
       /* ── the selected graha, marked against the belt ─────────────────
@@ -2179,13 +2226,17 @@ export function AakashGocharScene({
         <group ref={groundRef} visible={false}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]}>
             <circleGeometry args={[DOME * 1.02, 96]} />
-            {/* Not opaque: the sky below your feet still belongs to the sphere,
-                so it stays faintly readable rather than becoming a black slab. */}
+            {/* Never opaque: the sky below your feet still belongs to the
+                sphere. With क्षितिजमुनि on it thins to a veil, so the zodiac
+                closes its circle through the ground and a set graha stays
+                followable — the ground still shades that half, which is what
+                keeps "up" and "down" readable at a glance. Off, it goes back to
+                nearly a slab and the culling above hides what is under it. */}
             <meshBasicMaterial
               color="#06110f"
               side={THREE.DoubleSide}
               transparent
-              opacity={0.82}
+              opacity={toggles.belowHorizon ? 0.35 : 0.82}
             />
           </mesh>
         </group>
