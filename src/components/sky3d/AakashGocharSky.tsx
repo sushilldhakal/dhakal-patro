@@ -29,18 +29,23 @@ import { createPortal } from "react-dom";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
   Calendar,
+  CaseSensitive,
   ChevronDown,
   ChevronUp,
   FastForward,
   Focus,
+  Globe2,
+  Grid3x3,
   MapPin,
   Maximize2,
   Minimize2,
+  Mountain,
   Pause,
   Play,
   Rewind,
   RotateCcw,
   SlidersHorizontal,
+  Sparkles,
 } from "lucide-react";
 import type { GocharGraha } from "@/lib/api";
 import type { Era } from "@/lib/era";
@@ -432,6 +437,9 @@ export function AakashGocharSky({
     tilt: true,
     primeMeridian: true,
     belowHorizon: true,
+    constellations: true,
+    landscape: true,
+    labels: true,
   });
   const [flash, setFlash] = useState<number | null>(null);
   const lastRashi = useRef<number | null>(null);
@@ -967,19 +975,38 @@ export function AakashGocharSky({
     // 1 BC, so anything at or below it reads with the era spelled out.
     const adYear = y > 0 ? `${y}` : `${1 - y} BC`;
 
+    /* Past बि.सं. २२०० the compiled table has nothing, so the Sun becomes the
+       calendar it always was — see [[bikram-solar]]. Marked with ≈ so it never
+       passes for the almanac. The civil day goes with it, so the table is asked
+       about the place's day rather than the device's.
+
+       Computed for both languages, not just नेपाली: the corner readout names
+       the day in बिक्रम whichever language the page is in — an English reader
+       of a Nepali almanac still wants "Asar 10", not the Gregorian date the HUD
+       already carries. */
+    const bs = bikramFromSun(simDate, sunLongitude ?? 0, sunSpeed, zoneMidnight(local));
+
+    /* The corner readout: the day, and the clock as a clock is read — twelve
+       hours and a half-of-day word, not the 24-hour stamp the HUD keeps. */
+    const h24 = local.getUTCHours();
+    const minute = String(local.getUTCMinutes()).padStart(2, "0");
+    const h12 = h24 % 12 || 12;
+    const half =
+      lang === "en" ? (h24 < 12 ? "AM" : "PM") : h24 < 12 ? "पूर्वाह्न" : "अपराह्न";
+    const short = {
+      day: `${bsMonthLabel(bs.month, lang)} ${digits(bs.day)}`,
+      clock: `${digits(h12)}:${digits(minute)} ${half}`,
+    };
+
     if (lang === "en") {
-      return { date: `${adYear}-${mo}-${d}`, time: `${wall} · ${place}` };
+      return { date: `${adYear}-${mo}-${d}`, time: `${wall} · ${place}`, short };
     }
 
     const adYearNe = y > 0 ? `${digits(y)} ई.` : `${digits(1 - y)} ई.पू.`;
 
-    /* Past बि.सं. २२०० the compiled table has nothing, so the Sun becomes the
-       calendar it always was — see [[bikram-solar]]. Marked with ≈ so it never
-       passes for the almanac. The civil day goes with it, so the table is asked
-       about the place's day rather than the device's. */
-    const bs = bikramFromSun(simDate, sunLongitude ?? 0, sunSpeed, zoneMidnight(local));
     const mark = bs.approximate ? "≈" : "";
     return {
+      short,
       date: `${mark}${digits(bs.year)} ${bsMonthLabel(bs.month, "ne")} ${digits(bs.day)}, ${
         WEEKDAYS_SHORT_NE[weekday]
       }बार`,
@@ -994,6 +1021,8 @@ export function AakashGocharSky({
   /* Fullscreen runs edge to edge; the HUD and the zoom column start below any
      notch the browser reports. */
   const overlayTop = fullscreen ? "calc(env(safe-area-inset-top, 0px) + 16px)" : "12px";
+  /* The two bottom corners, clear of the home indicator in fullscreen. */
+  const overlayBottom = fullscreen ? "calc(env(safe-area-inset-bottom, 0px) + 16px)" : "12px";
   /**
    * The HUD's own top, which in fullscreen is lower than everything else's.
    *
@@ -1151,7 +1180,7 @@ export function AakashGocharSky({
 
         {/* Labels ride over the canvas rather than in it — real Devanagari type,
             positioned from the scene's own projection of each anchor. */}
-        {sample ? (
+        {sample && toggles.labels ? (
           <SkyLabels
             labels={sample.labels}
             scale={labelScale}
@@ -1251,15 +1280,6 @@ export function AakashGocharSky({
 
         <div className="absolute right-3 flex gap-2" style={{ top: overlayTop }}>
           <IconButton
-            icon={<SlidersHorizontal size={16} />}
-            label={pick("नियन्त्रण", "Controls")}
-            active={drawerOpen}
-            onPress={() => {
-              setDrawerOpen((v) => !v);
-              setFocusOpen(false);
-            }}
-          />
-          <IconButton
             icon={<Focus size={16} />}
             label={pick("केन्द्रविन्दु", "Focus")}
             active={focusOpen}
@@ -1280,21 +1300,59 @@ export function AakashGocharSky({
           />
         </div>
 
-        {drawerOpen ? (
+        {/* The view panel, in the corner of the sky itself rather than up in
+            the chrome: what it switches is all *in* the picture, and the two
+            corners below the canvas are the two hands holding the phone. */}
+        <div
+          className="absolute left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-start gap-2"
+          style={{ bottom: overlayBottom }}
+        >
+          {drawerOpen ? (
           <div
             data-sky-controls
-            className="absolute right-3 z-10 flex max-h-[calc(100%-4.5rem)] w-[min(260px,calc(100%-1.5rem))] flex-col gap-3 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur"
-            style={{ top: `calc(${overlayTop} + 2.75rem)` }}
+            className="flex max-h-[calc(100%-1rem)] w-[min(300px,calc(100vw-1.5rem))] flex-col gap-3 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur"
           >
+            {/* The four the sky is mostly read through, as tiles rather than
+                chips — big enough to hit with a thumb, and each one a picture
+                of what it turns on. */}
+            <div className="grid grid-cols-4 gap-1">
+              <ViewTile
+                icon={<Grid3x3 className="size-full" />}
+                label={pick("ग्रिड", "Grids")}
+                active={toggles.grid}
+                onPress={() => setToggles((t) => ({ ...t, grid: !t.grid }))}
+              />
+              <ViewTile
+                icon={<Sparkles className="size-full" />}
+                label={pick("तारापुञ्ज", "Figures")}
+                active={toggles.constellations}
+                onPress={() => setToggles((t) => ({ ...t, constellations: !t.constellations }))}
+              />
+              <ViewTile
+                icon={mode === "horizon" ? <Mountain className="size-full" /> : <Globe2 className="size-full" />}
+                label={pick("भूभाग", "Landscape")}
+                active={toggles.landscape}
+                /* Only the horizon view stands on ground; the other two are
+                   looking at the Earth from outside it, where there is no
+                   landscape to switch. Kept on screen and disabled rather than
+                   dropped, so the panel does not reshuffle under the thumb as
+                   the view changes. */
+                disabled={mode !== "horizon"}
+                onPress={() => setToggles((t) => ({ ...t, landscape: !t.landscape }))}
+              />
+              <ViewTile
+                icon={<CaseSensitive className="size-full" />}
+                label={pick("नाम", "Labels")}
+                active={toggles.labels}
+                onPress={() => setToggles((t) => ({ ...t, labels: !t.labels }))}
+              />
+            </div>
             <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
               {pick("मार्गदर्शक", "Guides")}
             </span>
+            {/* ग्रिड is a tile above; the rest are the finer guides, which
+                stay as chips because they are read before they are pressed. */}
             <div className="flex flex-wrap gap-1.5">
-              <Chip
-                active={toggles.grid}
-                label={pick("ग्रिड", "Grid")}
-                onPress={() => setToggles((t) => ({ ...t, grid: !t.grid }))}
-              />
               <Chip
                 active={toggles.lockStars}
                 label={pick("तारा स्थिर", "Lock to stars")}
@@ -1348,7 +1406,32 @@ export function AakashGocharSky({
               />
             </div>
           </div>
-        ) : null}
+          ) : null}
+          <IconButton
+            icon={<SlidersHorizontal size={16} />}
+            label={pick("दृश्य नियन्त्रण", "View controls")}
+            active={drawerOpen}
+            onPress={() => {
+              setDrawerOpen((v) => !v);
+              setFocusOpen(false);
+            }}
+          />
+        </div>
+
+        {/* The instant the sky is actually showing, named in बिक्रम — and the
+            way into changing it. The nav above the canvas cannot be reached in
+            fullscreen, and once the clock is running it is showing the day you
+            arrived on rather than the one on screen. */}
+        <button
+          type="button"
+          data-sky-controls
+          onClick={() => setDatePickerOpen(true)}
+          className="absolute right-3 z-10 flex flex-col items-end rounded-xl border border-white/15 bg-black/60 px-2.5 py-1.5 text-right leading-tight backdrop-blur transition-colors hover:border-white/40"
+          style={{ bottom: overlayBottom }}
+        >
+          <span className="text-sm font-bold text-white">{simStamp.short.day}</span>
+          <span className="text-[11px] font-semibold text-white/70">{simStamp.short.clock}</span>
+        </button>
 
         {focusOpen ? (
           <div
@@ -1927,6 +2010,49 @@ const SkyLabels = memo(function SkyLabels({
     </div>
   );
 });
+
+/**
+ * One switch in the view panel, drawn as a picture with its name under it.
+ *
+ * Square and thumb-sized, unlike {@link Chip}: these are the handful you reach
+ * for while looking at the sky rather than while reading the panel, so they are
+ * findable by shape without reading anything.
+ */
+function ViewTile({
+  icon,
+  label,
+  active,
+  disabled,
+  onPress,
+}: {
+  icon: ReactNode;
+  label: string;
+  active: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-pressed={active}
+      onClick={onPress}
+      className={cn(
+        "flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-1.5 transition-colors",
+        disabled
+          ? "cursor-not-allowed text-white/25"
+          : active
+            ? "bg-white/15 text-white"
+            : "text-white/45 hover:bg-white/10 hover:text-white/80",
+      )}
+    >
+      <span className="size-6">{icon}</span>
+      <span className="w-full truncate text-center text-[10px] font-semibold leading-none">
+        {label}
+      </span>
+    </button>
+  );
+}
 
 function Chip({
   active,
