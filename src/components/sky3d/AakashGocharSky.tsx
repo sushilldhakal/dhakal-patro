@@ -431,6 +431,7 @@ export function AakashGocharSky({
     poleStars: true,
     tilt: true,
     primeMeridian: true,
+    belowHorizon: true,
   });
   const [flash, setFlash] = useState<number | null>(null);
   const lastRashi = useRef<number | null>(null);
@@ -1311,6 +1312,13 @@ export function AakashGocharSky({
                   onPress={() => setToggles((t) => ({ ...t, poleStars: !t.poleStars }))}
                 />
               ) : null}
+              {mode === "horizon" ? (
+                <Chip
+                  active={toggles.belowHorizon}
+                  label={pick("क्षितिजमुनि", "Below horizon")}
+                  onPress={() => setToggles((t) => ({ ...t, belowHorizon: !t.belowHorizon }))}
+                />
+              ) : null}
               {mode === "globe" ? (
                 <Chip
                   active={toggles.tilt}
@@ -1670,7 +1678,10 @@ const SkyLabels = memo(function SkyLabels({
   return (
     <div className="pointer-events-none absolute inset-0">
       {labels.map((label) => {
-        const dim = flatBelts && label.dim ? 0.4 : 1;
+        /* Two independent fades that multiply: the space wheel greys the spans
+           that are not the live one, and the horizon view greys whatever is
+           under the ground. A नक्षत्र can be both at once. */
+        const dim = (flatBelts && label.dim ? 0.4 : 1) * (label.below ? 0.45 : 1);
         if (label.kind === "rashi" && label.index) {
           const iconSize = 22 * scale;
           const boxWidth = 76 * scale;
@@ -1787,7 +1798,9 @@ const SkyLabels = memo(function SkyLabels({
               style={{
                 ...labelBox(label.x, label.y, 60, 6),
                 color: LABEL_COLOR.asterism,
-                opacity: 0.45,
+                /* Already the faintest thing on the dome; under the ground it
+                   goes fainter still, like everything else down there. */
+                opacity: 0.45 * dim,
               }}
             >
               {nak ? (lang === "en" ? nak.en : nak.ne) : ""}
@@ -1899,7 +1912,11 @@ const SkyLabels = memo(function SkyLabels({
             <span
               key={label.id}
               className="text-[10px] font-bold"
-              style={{ ...labelBox(label.x, label.y, 90, 10), color: GRAHA_COLOR[label.key] }}
+              style={{
+                ...labelBox(label.x, label.y, 90, 10),
+                color: GRAHA_COLOR[label.key],
+                opacity: dim,
+              }}
             >
               {lang === "en" ? GRAHA_NAME[label.key].en : GRAHA_NAME[label.key].ne}
             </span>

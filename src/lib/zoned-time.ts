@@ -125,6 +125,17 @@ export function minutesSinceMidnightInTimezone(
   return hour * 60 + minute + (includeSeconds ? second / 60 : 0);
 }
 
+/**
+ * HH:MM — the wall clock a place is reading right now.
+ *
+ * The `24:00` midnight hour is already folded back to `00` by
+ * {@link getZonedTimeParts}, so this is safe to hand straight to a time picker.
+ */
+export function clockStringInTimezone(date: Date, timeZone: string): string {
+  const { hour, minute } = getZonedTimeParts(date, timeZone);
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 /** YYYY-MM-DD for "today" in the given timezone. */
 export function todayAdStringInTimezone(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-CA", {
