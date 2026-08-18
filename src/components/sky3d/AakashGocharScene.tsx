@@ -328,6 +328,29 @@ export type SceneToggles = {
    * screen, dimmed to say that it is below the skyline rather than in view.
    */
   belowHorizon: boolean;
+  /**
+   * The star figures themselves — the points and the lines joining them into
+   * the तारापुञ्ज each नक्षत्र is named for, plus those names.
+   *
+   * Its own switch rather than a rider on {@link nakshatraBelt}: the belt is
+   * the 27-fold division of the ecliptic, the figures are the stars the
+   * divisions were named after, and wanting one without the other is the
+   * ordinary case — a clean zodiac with no star clutter, or the sky's own
+   * figures with no measuring band across them.
+   */
+  constellations: boolean;
+  /**
+   * Horizon view: the ground underfoot and the horizon ring drawn on it.
+   *
+   * Off, the sphere is drawn whole and unobstructed — the observer's frame
+   * without the observer's floor, which is the view an orrery gives.
+   */
+  landscape: boolean;
+  /**
+   * Every name the sky writes over itself — राशि, नक्षत्र, grahas, the compass,
+   * the star groups. The lines and the bodies stay; only the type goes.
+   */
+  labels: boolean;
 };
 
 /* ── shared primitives ─────────────────────────────────────────────────── */
@@ -1217,7 +1240,7 @@ export function AakashGocharScene({
     lastBelt.current = null;
     // The wheel rebuilds its highlight meshes with it, so the tint is gone too.
     lastBeltKey.current = null;
-  }, [toggles.rashiBelt, toggles.nakshatraBelt, toggles.monthRing]);
+  }, [toggles.rashiBelt, toggles.nakshatraBelt, toggles.monthRing, toggles.constellations]);
 
   useFrame((state, delta) => {
     try {
@@ -1616,7 +1639,7 @@ export function AakashGocharScene({
          frame everything is drawn in. Do it in that order and the belt stays
          glued to its stars while both walk away from वसन्त सम्पात — which is
          the whole thing the ayanamsa measures. */
-      if (toggles.nakshatraBelt) {
+      if (toggles.constellations) {
         const precession = precessionSinceJ2000(dtDays);
         const dpr = state.gl.getPixelRatio();
         for (const { indices, object } of starField.groups) {
@@ -1816,7 +1839,7 @@ export function AakashGocharScene({
        depth from the figure it names and drift against it as the view turns. */
     /* Dome and globe only. In the space view each figure is drawn inside the
        segment named after it, so its own name would be that name twice. */
-    if (collect && zodiac && toggles.nakshatraBelt) {
+    if (collect && zodiac && toggles.constellations) {
       const precession = precessionSinceJ2000(dtDays);
       for (const [nak, indices] of starField.byNakshatra) {
         let x = 0;
@@ -1925,7 +1948,7 @@ export function AakashGocharScene({
     if (earthGroupRef.current) earthGroupRef.current.visible = space;
     // The globe replaces the ground: from out here you are looking at the whole
     // Earth, not standing on a patch of it.
-    if (groundRef.current) groundRef.current.visible = horizon && !globe;
+    if (groundRef.current) groundRef.current.visible = horizon && !globe && toggles.landscape;
     if (spaceOnlyRef.current) {
       spaceOnlyRef.current.visible = space;
       spaceOnlyRef.current.rotation.x = space ? eps * DEG : 0;
@@ -1942,9 +1965,9 @@ export function AakashGocharScene({
     }
     // The star groups belong to the sky, so they live wherever the belt does.
     for (const { object } of starField.groups) {
-      object.visible = (zodiac || space) && toggles.nakshatraBelt;
+      object.visible = (zodiac || space) && toggles.constellations;
     }
-    starField.lines.visible = (zodiac || space) && toggles.nakshatraBelt;
+    starField.lines.visible = (zodiac || space) && toggles.constellations;
     poleField.points.visible = zodiac && toggles.poleStars;
     poleField.crown.visible = zodiac && toggles.poleStars;
     poleField.trackLine.visible = zodiac && toggles.poleStars;
@@ -1953,7 +1976,7 @@ export function AakashGocharScene({
     tiltMarks.arc.visible = globe && toggles.tilt;
     equatorLine.visible = horizon && !globe && (toggles.rashiBelt || toggles.nakshatraBelt);
     gridSegments.object.visible = horizon && !globe && toggles.grid;
-    horizonRing.visible = horizon && !globe;
+    horizonRing.visible = horizon && !globe && toggles.landscape;
     if (horizonGroupRef.current) horizonGroupRef.current.quaternion.identity();
 
     /* ── the Earth globe ────────────────────────────────────────────── */
