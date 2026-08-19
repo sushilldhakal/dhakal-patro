@@ -22,7 +22,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -58,7 +57,7 @@ import {
   bsToAD,
   WEEKDAYS_SHORT_NE,
 } from "@/lib/bs-calendar";
-import { dragScaleForZoom, SPACE_FOV } from "@/lib/sky3d/sky-zoom";
+import { dragScaleForZoom, fovForZoom, SPACE_FOV } from "@/lib/sky3d/sky-zoom";
 import { SkyDateTimePicker } from "@/components/sky3d/SkyDateTimePicker";
 import { bikramFromSun } from "@/lib/sky3d/bikram-solar";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
@@ -189,22 +188,22 @@ const SPEED_LADDER = [
 const SYSTEM_YAW = 0.2;
 const SYSTEM_PITCH = 1.15;
 const SYSTEM_DISTANCE = 70;
-/** Zoom value that opens the horizon view out to a ~120° fisheye. */
-const HORIZON_WIDE = 45;
+/** Zoom value that opens the horizon view at a ~70° lens — wide enough to
+ *  read the sky, narrow enough that the rashi belt does not stretch. */
+const HORIZON_WIDE = 26;
 /**
  * Where the horizon camera starts: due south, a little above the skyline.
  *
  * South because that is where the zodiac rides from Kathmandu's latitude — the
  * ecliptic crosses the meridian in the southern sky, so facing north opens on
- * the one quarter with no grahas in it. The pitch lifts the view just enough to
- * put the horizon ring along the bottom of the frame rather than through the
- * middle of it.
+ * the one quarter with no grahas in it. The pitch is small so the hills sit
+ * in the lower half of the frame, the way a planetarium opens on the horizon.
  *
  * Yaw is measured with +X east and −Z north (see `altAzToVec3`), so π faces
  * south.
  */
 const HORIZON_YAW = Math.PI;
-const HORIZON_PITCH = 0.35;
+const HORIZON_PITCH = 0.12;
 /** Default zoom in the Earth-globe view — frames the globe and its ring. */
 const GLOBE_VIEW = 78;
 /**
@@ -266,9 +265,9 @@ const CONTROL_SELECTOR = "button, input, select, [role='button'], [data-sky-cont
  */
 const LABEL_SCALE_MAX = 1.3;
 
-/** Same pitch limits as the Learn playground — under the wheel is allowed. */
+/** Look all the way up to the zenith, and almost to the nadir. */
 function clampPitch(p: number) {
-  return Math.max(-1.45, Math.min(1.45, p));
+  return Math.max(-1.52, Math.min(1.52, p));
 }
 /**
  * Points shaved off the belt text at the widest zoom, ramped in with the scale.
@@ -528,12 +527,13 @@ export function AakashGocharSky({
    * Live pointers on the canvas, by pointerId. One drags the sky; two pinch it.
    * A Map rather than state — the whole point is that dragging never renders.
    */
-  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pointers = useRef(new Map<number, { x: number; y: number; type: string }>());
   const gestureStart = useRef({ yaw: 0, pitch: 0, distance: 0, pinch: 0 });
   /** Where the current one-finger drag started, in client px. */
   const dragOrigin = useRef({ x: 0, y: 0 });
-  /** Pointers this wrapper has taken capture of — see {@link captureDrag}. */
-  const captured = useRef(new Set<number>());
+  /** The pointer that owns the pan — a stray second id must not switch us to pinch. */
+  const dragId = useRef<number | null>(null);
+  const dragging = useRef(false);
 
   /**
    * Re-anchor the gesture on where the camera is now and on whichever pointer
@@ -543,93 +543,10 @@ export function AakashGocharSky({
    */
   const reanchor = useCallback(() => {
     gestureStart.current = { ...view.current, pinch: 0 };
-    const first = pointers.current.values().next();
-    if (!first.done) dragOrigin.current = { ...first.value };
+    const id = dragId.current;
+    const live = id != null ? pointers.current.get(id) : [...pointers.current.values()][0];
+    if (live) dragOrigin.current = { x: live.x, y: live.y };
   }, []);
-
-  /**
-   * Take capture of a pointer, once — so a drag that runs off the canvas keeps
-   * steering it.
-   *
-   * Deliberately *not* done on pointerdown. Capture retargets every later event
-   * for that pointer at this wrapper, and the browser then fires `click` on the
-   * nearest common ancestor rather than on what was pressed. Grabbing it up
-   * front therefore swallowed both the overlay buttons (zoom, fullscreen) and
-   * the canvas's own hit-testing, which is how a graha gets selected. So the
-   * press is left alone until it has actually moved — a tap reaches its target,
-   * a drag still steers.
-   */
-  const captureDrag = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    if (captured.current.has(e.pointerId)) return;
-    captured.current.add(e.pointerId);
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-  }, []);
-
-  const onPointerDown = useCallback(
-    (e: ReactPointerEvent<HTMLDivElement>) => {
-      /* A press that lands on a control is that control's, not the sky's —
-         otherwise a slightly shaky press on "+" starts a camera drag. */
-      if ((e.target as HTMLElement | null)?.closest?.(CONTROL_SELECTOR)) {
-        return;
-      }
-      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      reanchor();
-    },
-    [reanchor],
-  );
-
-  const endPointer = useCallback(
-    (e: ReactPointerEvent<HTMLDivElement>) => {
-      pointers.current.delete(e.pointerId);
-      if (captured.current.delete(e.pointerId)) {
-        e.currentTarget.releasePointerCapture?.(e.pointerId);
-      }
-      reanchor();
-    },
-    [reanchor],
-  );
-
-  const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!pointers.current.has(e.pointerId)) return;
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-    const live = [...pointers.current.values()];
-
-    if (live.length >= 2) {
-      captureDrag(e);
-      const [a, b] = live;
-      const dist = Math.hypot(a.x - b.x, a.y - b.y);
-      if (!dist) return;
-      if (!gestureStart.current.pinch) gestureStart.current.pinch = dist;
-      view.current.distance = clampZoom(
-        gestureStart.current.distance * (gestureStart.current.pinch / dist),
-        modeRef.current,
-      );
-      return;
-    }
-
-    const dx = e.clientX - dragOrigin.current.x;
-    const dy = e.clientY - dragOrigin.current.y;
-    /* Learn updates the orbit from the first pixel. Space does the same.
-       Globe/horizon keep the slop so a tap still selects a graha. */
-    if (
-      modeRef.current !== "space" &&
-      !captured.current.has(e.pointerId) &&
-      Math.hypot(dx, dy) < DRAG_SLOP
-    ) {
-      return;
-    }
-    captureDrag(e);
-    /* A fixed angle per pixel is only right at one zoom — see
-       {@link dragScaleForZoom}. */
-    const mode = modeRef.current;
-    const zoomScale = dragScaleForZoom(mode, view.current.distance, HOME_DISTANCE[mode]);
-    /* Drag the sphere, don't drive the camera: pulling right swings the face
-       you are looking at to the right, which means the camera has to go the
-       other way round. */
-    view.current.yaw = gestureStart.current.yaw - dx * 0.006 * zoomScale;
-    view.current.pitch = clampPitch(gestureStart.current.pitch + dy * 0.005 * zoomScale);
-  }, [captureDrag]);
 
   const zoomBy = useCallback((factor: number) => {
     view.current.distance = clampZoom(view.current.distance * factor, modeRef.current);
@@ -658,6 +575,96 @@ export function AakashGocharSky({
   }, [zoomBy, fullscreen]);
 
   /*
+   * Pointer drag is bound on the wrapper (down) and on window in the capture
+   * phase (move/up). React-three-fiber also listens on the canvas; a window
+   * capture listener still sees the event first, so a graha hit cannot swallow
+   * the pan. preventDefault stops the browser taking a sideways swipe as
+   * back-navigation — that was "cannot side drag".
+   */
+  useEffect(() => {
+    const el = canvasWrapRef.current;
+    if (!el) return;
+
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.(CONTROL_SELECTOR)) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
+      if (dragId.current == null) {
+        dragId.current = e.pointerId;
+        dragging.current = false;
+        reanchor();
+      }
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (!pointers.current.has(e.pointerId)) return;
+      if (e.cancelable) e.preventDefault();
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
+
+      const touches = [...pointers.current.values()].filter((p) => p.type === "touch");
+      if (touches.length >= 2) {
+        const [a, b] = touches;
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        if (!dist) return;
+        if (!gestureStart.current.pinch) gestureStart.current.pinch = dist;
+        view.current.distance = clampZoom(
+          gestureStart.current.distance * (gestureStart.current.pinch / dist),
+          modeRef.current,
+        );
+        dragging.current = true;
+        return;
+      }
+
+      if (e.pointerId !== dragId.current) return;
+
+      const dx = e.clientX - dragOrigin.current.x;
+      const dy = e.clientY - dragOrigin.current.y;
+      const mode = modeRef.current;
+      if (mode !== "space" && !dragging.current && Math.hypot(dx, dy) < DRAG_SLOP) {
+        return;
+      }
+      dragging.current = true;
+
+      if (mode === "horizon") {
+        /* Grab the sky: one screen-height of drag is one vertical field, so a
+           sideways pull pans by the same angle the image actually covers. */
+        const h = Math.max(el.clientHeight, 1);
+        const k = ((fovForZoom("horizon", view.current.distance) * Math.PI) / 180) / h;
+        view.current.yaw = gestureStart.current.yaw + dx * k;
+        view.current.pitch = clampPitch(gestureStart.current.pitch + dy * k);
+      } else {
+        const zoomScale = dragScaleForZoom(mode, view.current.distance, HOME_DISTANCE[mode]);
+        view.current.yaw = gestureStart.current.yaw - dx * 0.006 * zoomScale;
+        view.current.pitch = clampPitch(gestureStart.current.pitch + dy * 0.005 * zoomScale);
+      }
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (!pointers.current.has(e.pointerId)) return;
+      pointers.current.delete(e.pointerId);
+      if (dragId.current === e.pointerId) {
+        dragId.current = null;
+        dragging.current = false;
+        const next = pointers.current.keys().next();
+        if (!next.done) dragId.current = next.value;
+      }
+      reanchor();
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove, { capture: true, passive: false });
+    window.addEventListener("pointerup", onUp, { capture: true });
+    window.addEventListener("pointercancel", onUp, { capture: true });
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove, { capture: true });
+      window.removeEventListener("pointerup", onUp, { capture: true });
+      window.removeEventListener("pointercancel", onUp, { capture: true });
+    };
+  }, [fullscreen, reanchor]);
+
+  /*
    * Touch drags belong to the sky, and have to say so to the browser.
    *
    * Safari on iPad reads a downward swipe over a fullscreened element as "leave
@@ -669,11 +676,10 @@ export function AakashGocharSky({
    * imperative non-passive listener, exactly as the wheel above is.
    */
   useEffect(() => {
-    /* Space (and fullscreen) take the vertical swipe for the orbit, the way
-       the Learn playground does. Globe/horizon still leave page-scroll alone
-       while the canvas sits in the document. */
+    /* Space, horizon, and fullscreen take the swipe for the sky. Globe still
+       leaves page-scroll alone while the canvas sits in the document. */
     const el = canvasWrapRef.current;
-    if (!el || !(fullscreen || mode === "space")) return;
+    if (!el || !(fullscreen || mode === "space" || mode === "horizon")) return;
     const onTouchMove = (e: TouchEvent) => {
       /* The control row floats over the sky in fullscreen, so a touch there
          reaches this listener on its way up. That row scrolls sideways on a
@@ -1152,26 +1158,25 @@ export function AakashGocharSky({
         ref={canvasWrapRef}
         className={cn(
           "relative min-h-0 w-full select-none overscroll-none",
-          /* Space matches Learn: the drag *is* the orbit, so vertical swipe
-             cannot belong to the page. Globe/horizon in the page still yield
-             vertical swipes so you can scroll past the canvas. */
-          fullscreen || mode === "space" ? "flex-1 touch-none" : "touch-pan-y",
+          /* Space and horizon own both axes — pan-y was eating sideways drags
+             on the trackpad (browser back-swipe) and leaving only an inverted
+             vertical turn. Globe in the page still yields vertical swipes so
+             you can scroll past the canvas. */
+          (fullscreen || mode === "space") && "flex-1",
+          fullscreen || mode === "space" || mode === "horizon" ? "touch-none" : "touch-pan-y",
         )}
         style={{
           height: fullscreen ? "100%" : height,
           backgroundColor: CANVAS_BG,
           cursor: "grab",
+          touchAction: "none",
         }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endPointer}
-        onPointerCancel={endPointer}
       >
         <Canvas
           camera={{ position: [0, 40, 26], fov: SPACE_FOV, near: 0.1, far: 600 }}
           gl={{ antialias: true }}
           resize={{ debounce: 0, offsetSize: true }}
-          style={{ width: "100%", height: "100%", display: "block" }}
+          style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}
           onCreated={({ camera, gl }) => {
             gl.setClearColor(CANVAS_BG);
             camera.lookAt(0, 0, 0);
@@ -1392,6 +1397,8 @@ export function AakashGocharSky({
                 <Chip
                   active={toggles.belowHorizon}
                   label={pick("क्षितिजमुनि", "Below horizon")}
+                  /* The 360° valley underfoot. Off, the ground lifts so the
+                     half of the sky that has set stays in the picture. */
                   onPress={() => setToggles((t) => ({ ...t, belowHorizon: !t.belowHorizon }))}
                 />
               ) : null}
@@ -1734,6 +1741,33 @@ function formatPoleYear(
 }
 
 /** Absolutely placed, centred on the anchor, and never wrapping. */
+/**
+ * A grid degree, hung *inside* the border it belongs to.
+ *
+ * These are not anchored on a point in the sky like every other label — they
+ * sit where a line crosses the edge of the frame, so centring the text on that
+ * crossing would push half of it off the canvas. Each border pulls its numbers
+ * inwards instead, and the ones riding the skyline are centred just above it
+ * so they do not sit on the horizon line itself.
+ */
+function gridDegreeBox(
+  x: number,
+  y: number,
+  side: ScreenLabel["side"],
+): CSSProperties {
+  const base: CSSProperties = {
+    position: "absolute",
+    whiteSpace: "nowrap",
+    pointerEvents: "none",
+  };
+  if (side === "left") return { ...base, left: x + 3, top: y - 6 };
+  if (side === "right") return { ...base, left: x - 3, top: y - 6, transform: "translateX(-100%)" };
+  if (side === "top") return { ...base, left: x, top: y, transform: "translateX(-50%)" };
+  if (side === "bottom") return { ...base, left: x, top: y - 12, transform: "translateX(-50%)" };
+  // The skyline: lifted clear of the horizon line it is measuring.
+  return { ...base, left: x, top: y - 13, transform: "translateX(-50%)", opacity: 0.75 };
+}
+
 function labelBox(x: number, y: number, width: number, top: number): CSSProperties {
   return {
     position: "absolute",
@@ -1782,7 +1816,7 @@ const SkyLabels = memo(function SkyLabels({
         /* Two independent fades that multiply: the space wheel greys the spans
            that are not the live one, and the horizon view greys whatever is
            under the ground. A नक्षत्र can be both at once. */
-        const dim = (flatBelts && label.dim ? 0.4 : 1) * (label.below ? 0.45 : 1);
+        const dim = (flatBelts && label.dim ? 0.4 : 1) * (label.below ? 0.75 : 1);
         if (label.kind === "rashi" && label.index) {
           const iconSize = 22 * scale;
           const boxWidth = 76 * scale;
@@ -2001,10 +2035,10 @@ const SkyLabels = memo(function SkyLabels({
           return (
             <span
               key={label.id}
-              className="text-[9px]"
-              style={{ ...labelBox(label.x, label.y, 32, -6), color: LABEL_COLOR.azimuth }}
+              className="text-[9px] tabular-nums"
+              style={{ ...gridDegreeBox(label.x, label.y, label.side), color: LABEL_COLOR.azimuth }}
             >
-              {label.text}
+              {digits(label.text ?? "")}
             </span>
           );
         }

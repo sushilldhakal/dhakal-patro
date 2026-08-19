@@ -16,12 +16,11 @@
  * via `onSample`.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { EclipticWheel, BELT_INNER, BELT_OUTER, MONTH_R, NAK_INNER, NAK_OUTER } from "@/components/learn/EclipticWheel";
 import type { GrahaKey } from "@/lib/graha-details";
-import { GRAHA_PLANET_ICON_URL } from "@/lib/graha-planet-icons";
 import {
   DEG,
   eclipticToVec3,
@@ -61,15 +60,15 @@ import {
   SOLAR_STATIONS,
   type GeoPoint,
   DEGREE_TICKS,
-  GRID_AZIMUTH_LABELS,
-  GRID_LINES,
+  buildAzimuthGridPairs,
+  gridStepForFov,
+  GRID_TIERS,
   NAK_LABEL_LAT,
   NAKSHATRA_DIVIDERS,
   PADA_TICKS,
   RASHI_DIVIDERS,
   RASHI_LABEL_LAT,
   type eclipticPoint,
-  type HorizonPoint,
 } from "@/lib/sky3d/sky-geometry";
 import { flattenAsterisms, precessionSinceJ2000 } from "@/lib/sky3d/nakshatra-stars";
 import {
@@ -91,9 +90,17 @@ import {
   SPACE_FOV,
   type SkyMode,
 } from "@/lib/sky3d/sky-zoom";
+import {
+  createHorizonFisheyeUniforms,
+  injectHorizonFisheyeIn,
+  projectHorizon,
+} from "@/lib/sky3d/horizon-projection";
+import { buildGridLabels } from "@/lib/sky3d/grid-labels";
 import { makeMoonMaterial, type MoonMaterial } from "@/lib/sky3d/moon-material";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
+import { applyNadirStereographicUVs, prepareKathmanduGround } from "@/lib/sky3d/terrain";
 import earthToonUrl from "@/assets/graha/earth-orig.png";
+import kathmanduUrl from "@/assets/kathmandu.jpeg?url";
 
 /** Same wheel as Learn — radii come from {@link EclipticWheel}. */
 export const RASHI_INNER = BELT_INNER;
@@ -141,6 +148,23 @@ const NAK_MID = (NAK_INNER + NAK_OUTER) / 2;
 
 /** Radius of the horizon dome. Everything on the sky sits on it. */
 const DOME = 100;
+
+/**
+ * How the landscape texture is tinted from night to day. White at noon so the
+ * painted grass reads; a dim warm grey after dark so the hills are still there
+ * without glowing.
+ */
+const GROUND_NIGHT = new THREE.Color("#3a3834");
+const GROUND_DAY = new THREE.Color("#ffffff");
+/**
+ * Sun altitudes the ground crosses from night colour to day colour, degrees.
+ *
+ * Spanning the civil twilight rather than switching at the horizon: the ground
+ * is still lit well after sunset and the Sun's own disc is only half up at 0°,
+ * so a hard cut at zero reads as the hills changing colour in one frame.
+ */
+const GROUND_DUSK = -6;
+const GROUND_DAWN = 4;
 /** How far back the camera sits in the Earth-globe view. */
 
 /** Radius of the Earth globe in the zoomed-out view. */
@@ -160,7 +184,7 @@ const INK_DIM = "#a7c4c3";
 const RETRO = "#ef4444";
 const ZODIAC = "#d8c84a";
 const NAKSHATRA = "#35d05a";
-const GRID = "#4d7fb5";
+const GRID = "#6fdf4a";
 /**
  * The globe's own graticule. Lighter than {@link GRID}, which was picked to sit
  * on a black sky: the same blue over ocean and forest is a line you have to go
@@ -239,6 +263,13 @@ export type ScreenLabel = {
   index?: number;
   key?: GrahaKey;
   text?: string;
+  /**
+   * Grid degrees only: which border of the frame the number is pinned to, so
+   * the overlay can hang it inside that edge instead of centring it on the
+   * line and letting half of it fall off the canvas. `horizon` rides the
+   * skyline itself.
+   */
+  side?: "left" | "right" | "top" | "bottom" | "horizon";
   /** Pole stars only: the Gregorian year the pole passes closest to this one. */
   year?: number;
   /**
@@ -291,7 +322,7 @@ export type SceneToggles = {
    * the 12-fold is already the राशि.
    */
   monthRing: boolean;
-  /** The alt-az cage: almucantars and verticals every 15°. */
+  /** The azimuth grid: almucantars and verticals, 10° down to 1° as you zoom. */
   grid: boolean;
   /**
    * Freeze the Earth's spin. The diurnal rotation drags the whole sky round
@@ -324,14 +355,12 @@ export type SceneToggles = {
    */
   primeMeridian: boolean;
   /**
-   * Horizon view: keep drawing the half of the sky that is under the ground.
+   * Horizon view: the ground underfoot — a 360° valley of hills and water.
    *
-   * The zodiac is a great circle and only ever half of it is up at once, so
-   * with the ground opaque the belt ran off at the east and west points and a
-   * graha vanished the moment it set — you could not see where a body was
-   * heading, or where the rest of the circle went. With this on the ground is a
-   * veil rather than a slab: the belt closes, and everything under it stays on
-   * screen, dimmed to say that it is below the skyline rather than in view.
+   * On, you are standing in it, the same kind of ground the eclipses view
+   * stands on. Off, the ground goes away and the zodiac closes its circle
+   * through your feet, so a set graha stays followable. The chip that drives
+   * this is क्षितिजमुनि.
    */
   belowHorizon: boolean;
   /**
@@ -426,6 +455,20 @@ function makeDynamicSegments(count: number, color: string, opacity: number) {
   );
   segments.frustumCulled = false;
   return segments;
+}
+
+function bakeHorizonGrid(step: number, skipMultiplesOf: readonly number[], opacity: number) {
+  const pairs = buildAzimuthGridPairs(step, skipMultiplesOf);
+  const object = makeDynamicSegments(pairs.length, GRID, opacity);
+  object.renderOrder = 4;
+  const mat = object.material as THREE.LineBasicMaterial;
+  mat.depthTest = false;
+  mat.depthWrite = false;
+  for (let i = 0; i < pairs.length; i += 1) {
+    setPoint(object, i, altAzToVec3(pairs[i].alt, pairs[i].az, DOME * 0.995));
+  }
+  flushLine(object);
+  return object;
 }
 
 function setPoint(line: THREE.Line, i: number, v: [number, number, number]) {
@@ -531,48 +574,6 @@ function SaturnRing({ texture, radius }: { texture: THREE.Texture; radius: numbe
       />
     </mesh>
   );
-}
-
-/** Rasterize an SVG (viewBox-only files load as 0×0 in WebGL TextureLoader). */
-function useSvgTexture(url: string) {
-  const [map, setMap] = useState<THREE.CanvasTexture | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    let blobUrl: string | undefined;
-    const texRef: { current: THREE.CanvasTexture | null } = { current: null };
-    (async () => {
-      const text = await fetch(url).then((r) => r.text());
-      const sized = text.replace(/<svg\b/, '<svg width="256" height="256"');
-      const blob = new Blob([sized], { type: "image/svg+xml;charset=utf-8" });
-      blobUrl = URL.createObjectURL(blob);
-      const img = new Image();
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error(`failed to rasterize ${url}`));
-        img.src = blobUrl!;
-      });
-      if (cancelled) return;
-      const canvas = document.createElement("canvas");
-      canvas.width = 256;
-      canvas.height = 256;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, 256, 256);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.minFilter = THREE.LinearFilter;
-      tex.generateMipmaps = false;
-      tex.needsUpdate = true;
-      texRef.current = tex;
-      setMap(tex);
-    })().catch(() => {
-      /* Sprite stays hidden if the file cannot be painted. */
-    });
-    return () => {
-      cancelled = true;
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
-      texRef.current?.dispose();
-    };
-  }, [url]);
-  return map;
 }
 
 /** How close a new/full moon must be to a node before it is an eclipse. */
@@ -689,34 +690,6 @@ function MoonEclipseFx({
   );
 }
 
-/**
- * राहु / केतु as the same SVG used on the 2D wheels, always facing the camera.
- *
- * Depth-tested like every other graha. They used to be drawn with the test off
- * and a `renderOrder` of 8, which put them in front of the Earth and of any
- * planet they passed behind — the two bodies in the scene that are *not* bodies
- * were the only two nothing could hide. Being occluded is how a reader sees
- * that a node has gone round the far side.
- */
-function NodeSprite({
-  graha,
-  radius,
-  onSelect,
-}: {
-  graha: "rahu" | "ketu";
-  radius: number;
-  onSelect: () => void;
-}) {
-  const map = useSvgTexture(GRAHA_PLANET_ICON_URL[graha]);
-  if (!map) return null;
-  const size = radius * 4;
-  return (
-    <sprite onClick={onSelect} scale={[size, size, 1]}>
-      <spriteMaterial map={map} transparent depthWrite={false} />
-    </sprite>
-  );
-}
-
 function GrahaBody({
   graha,
   textures,
@@ -773,7 +746,19 @@ function GrahaBody({
           )}
         </mesh>
       ) : (
-        <NodeSprite graha={graha as "rahu" | "ketu"} radius={radius} onSelect={onSelect} />
+        /* राहु / केतु have no photographic texture. A sphere on the same
+           material path as the other grahas stays on the belt under the
+           stereographic sky; the old SVG sprites did not. */
+        <mesh ref={spinRef} onClick={onSelect}>
+          <sphereGeometry args={[radius, 40, 40]} />
+          <meshStandardMaterial
+            color={GRAHA_COLOR[graha]}
+            emissive={GRAHA_COLOR[graha]}
+            emissiveIntensity={0.45}
+            roughness={0.85}
+            metalness={0.03}
+          />
+        </mesh>
       )}
       {graha === "moon" && eclipse ? <MoonEclipseFx eclipse={eclipse} radius={radius} /> : null}
 
@@ -953,6 +938,7 @@ export function AakashGocharScene({
   const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
   const starsRef = useRef<THREE.Mesh | null>(null);
   const groundRef = useRef<THREE.Group | null>(null);
+  const groundMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const horizonGroupRef = useRef<THREE.Group | null>(null);
   const shellRef = useRef<THREE.Mesh | null>(null);
   const globeRootRef = useRef<THREE.Group | null>(null);
@@ -1181,16 +1167,46 @@ export function AakashGocharScene({
   /** The celestial equator — the reference the ecliptic is visibly tilted against. */
   const equatorLine = useMemo(() => makeDynamicLine(ecliptic_STEPS + 1, "#5aa9e6", 0.45), []);
 
-  /** Almucantars and verticals, flattened into one segment list. */
-  const gridSegments = useMemo(() => {
-    const pairs: HorizonPoint[] = [];
-    for (const line of GRID_LINES) {
-      for (let i = 0; i < line.length - 1; i += 1) pairs.push(line[i], line[i + 1]);
-    }
-    return { src: pairs, object: makeDynamicSegments(pairs.length, GRID, 0.32) };
+  /**
+   * Almucantars and verticals, one tier per zoom band — and each tier is built
+   * the first time the lens is tight enough to want it, not at mount.
+   *
+   * The 1° cage alone is some eighty thousand vertices. Baking all four up
+   * front spent that on a sky that opens with no cage at all, and the hitch
+   * landed on the first frame of the view rather than on a zoom the reader
+   * asked for. The group is created empty and fills in as they push in.
+   */
+  const gridGroup = useMemo(() => {
+    const group = new THREE.Group();
+    group.name = "horizon-grid";
+    return group;
+  }, []);
+  const gridTiers = useRef<(THREE.LineSegments | null)[]>(GRID_TIERS.map(() => null));
+
+  const horizonRing = useMemo(() => {
+    const line = makeLine(circlePoints(DOME * 0.999, 180), "#c8ff7a", 0.9);
+    line.renderOrder = 5;
+    const mat = line.material as THREE.LineBasicMaterial;
+    mat.depthTest = false;
+    mat.depthWrite = false;
+    return line;
   }, []);
 
-  const horizonRing = useMemo(() => makeLine(circlePoints(DOME * 0.999, 128), "#8fbfc1", 0.5), []);
+  /**
+   * काठमाडौँ as a 360° ground: the JPEG is a little-planet (nadir in the
+   * middle), remapped onto the inner sky sphere so the city is underfoot and
+   * the hills sit on the horizon. Its sky is punched out so the राशि belt
+   * still shows through.
+   */
+  const kathmanduRaw = useLoader(THREE.TextureLoader, kathmanduUrl);
+  const landscapeMap = useMemo(() => prepareKathmanduGround(kathmanduRaw), [kathmanduRaw]);
+  useEffect(() => () => landscapeMap.dispose(), [landscapeMap]);
+  const groundGeo = useMemo(() => {
+    const g = new THREE.SphereGeometry(DOME * 0.96, 128, 64);
+    applyNadirStereographicUVs(g);
+    return g;
+  }, []);
+  useEffect(() => () => groundGeo.dispose(), [groundGeo]);
 
   const shells = useMemo(
     () =>
@@ -1234,7 +1250,6 @@ export function AakashGocharScene({
   );
 
   const frame = useRef(0);
-  const gridBuilt = useRef(false);
   const lockedLst = useRef<number | null>(null);
   const lastSample = useRef(0);
   const lastTrailKey = useRef("");
@@ -1262,6 +1277,7 @@ export function AakashGocharScene({
   const screenUp = useRef(new THREE.Vector3());
   /** Your place on the globe, in world space — the camera's other lock target. */
   const observerTrack = useRef(new THREE.Vector3());
+  const fisheye = useMemo(() => createHorizonFisheyeUniforms(), []);
 
   // Re-derive the trail as soon as the graha or the calibration changes, and
   // re-anchor a locked sky to whatever date the nav has just jumped to.
@@ -1409,12 +1425,13 @@ export function AakashGocharScene({
     /**
      * Whether a label anchor should be drawn. Overlay text has no depth test,
      * so from outside the sphere anything on the far hemisphere has to be
-     * culled by hand — and inside the dome, anything under the horizon too
-     * unless क्षितिजमुनि is asking for the other half.
+     * culled by hand — and inside the dome, anything under the ground too
+     * unless क्षितिजमुनि is off and that half of the sky is in the picture.
      */
     const labelVisible = (at: [number, number, number]) => {
       if (space) return true;
-      if (horizon) return toggles.belowHorizon || at[1] > 0.5;
+      /* Ground is see-through, so राशि names underfoot stay on the belt. */
+      if (horizon) return true;
       // Facing hemisphere only — the globe is opaque, so far-side names would
       // otherwise float over it.
       const c = state.camera.position;
@@ -1467,11 +1484,28 @@ export function AakashGocharScene({
       anchor: [number, number, number] = at,
     ) => {
       if (behindEarth(at)) return;
-      scratch.current.set(at[0], at[1], at[2]).project(state.camera);
-      if (scratch.current.z > 1) return;
-      const x = (scratch.current.x * 0.5 + 0.5) * width;
-      const y = (-scratch.current.y * 0.5 + 0.5) * height;
-      if (x < -60 || y < -30 || x > width + 60 || y > height + 30) return;
+      let x: number;
+      let y: number;
+      if (horizon) {
+        scratch.current.set(at[0], at[1], at[2]);
+        const hit = projectHorizon(
+          scratch.current,
+          state.camera,
+          fisheye.uHorizonFov.value,
+          width,
+          height,
+          scratch.current,
+        );
+        if (!hit) return;
+        x = hit.x;
+        y = hit.y;
+      } else {
+        scratch.current.set(at[0], at[1], at[2]).project(state.camera);
+        if (scratch.current.z > 1) return;
+        x = (scratch.current.x * 0.5 + 0.5) * width;
+        y = (-scratch.current.y * 0.5 + 0.5) * height;
+        if (x < -60 || y < -30 || x > width + 60 || y > height + 30) return;
+      }
       collected.push({ ...label, x, y, ...(belowSky(anchor) ? { below: true } : {}) });
     };
 
@@ -1498,11 +1532,9 @@ export function AakashGocharScene({
       if (group) {
         group.position.set(at[0], at[1], at[2]);
         group.scale.setScalar(drawnR / BODY_RADIUS[key]);
-        /* Below the horizon a graha is not in the sky — but it is still in the
-           picture, and losing it at the skyline meant a body could not be
-           followed through the half of its circuit that happens underfoot. The
-           ground veil is what says it has set. */
-        group.visible = !horizon || toggles.belowHorizon || at[1] > -DOME * 0.06;
+        /* Translucent ground no longer hides the underfoot half — the belt
+           and the grahas on it stay in the picture through the hills. */
+        group.visible = true;
       }
 
       const spin = spinRefs.current[key];
@@ -1785,16 +1817,6 @@ export function AakashGocharScene({
       }
     }
 
-    if (horizon && toggles.grid && !gridBuilt.current) {
-      // The cage is fixed to the observer, so it only needs building once.
-      gridBuilt.current = true;
-      for (let i = 0; i < gridSegments.src.length; i += 1) {
-        const p = gridSegments.src[i];
-        setPoint(gridSegments.object, i, altAzToVec3(p.alt, p.az, DOME * 0.995));
-      }
-      flushLine(gridSegments.object);
-    }
-
     if (collect && (toggles.rashiBelt || toggles.nakshatraBelt || (space && toggles.monthRing))) {
       /**
        * Space view: names sit on the wheel, in the ecliptic plane, the way the
@@ -1853,6 +1875,7 @@ export function AakashGocharScene({
     }
 
     if (collect && horizon && !globe) {
+      (window as any).__gridDebug = { horizon, globe, grid: toggles.grid, field: fovForZoom("horizon", view.current.distance), step: gridStepForFov(fovForZoom("horizon", view.current.distance)), width, height, before: collected.length };
       for (const c of COMPASS_POINTS) {
         project(
           { id: `c-${c.en}`, kind: "cardinal", text: c.en },
@@ -1860,14 +1883,34 @@ export function AakashGocharScene({
         );
       }
       if (toggles.grid) {
-        for (const az of GRID_AZIMUTH_LABELS) {
-          if (az % 45 === 0) continue; // the compass already names those
-          project(
-            { id: `az-${az}`, kind: "azimuth", text: `${az}°` },
-            altAzToVec3(4, az, DOME * 0.93),
-          );
+        /* Degree numbers only once the cage is actually on — they used to
+           carpet a wide sky. A step of 0 is the opening view: compass only.
+
+           Placing them is its own problem — a line has to be *walked* to find
+           where it leaves the frame, or an almucantar lying along the bottom
+           edge stamps its number across the whole width — so it lives in
+           `grid-labels`. */
+        const field = fovForZoom("horizon", view.current.distance);
+        for (const g of buildGridLabels({
+          camera: state.camera,
+          fovDeg: field,
+          width,
+          height,
+          radius: DOME * 0.995,
+          gridStep: gridStepForFov(field),
+          scratch: scratch.current,
+        })) {
+          collected.push({
+            id: g.id,
+            kind: "azimuth",
+            text: g.kind === "alt" && g.value < 0 ? `\u2212${-g.value}\u00b0` : `${g.value}\u00b0`,
+            side: g.side,
+            x: g.x,
+            y: g.y,
+          });
         }
       }
+      (window as any).__gridDebug.after = collected.length;
     }
 
     /* Each star group's own name, anchored on the group.
@@ -1985,7 +2028,26 @@ export function AakashGocharScene({
     if (earthGroupRef.current) earthGroupRef.current.visible = space;
     // The globe replaces the ground: from out here you are looking at the whole
     // Earth, not standing on a patch of it.
-    if (groundRef.current) groundRef.current.visible = horizon && !globe && toggles.landscape;
+    /* क्षितिजमुनि is the ground itself — on, a 360° valley; off, the sky
+       underfoot stays in the picture. भूभाग is the coarser switch: off, there
+       is no landscape at all. */
+    const showGround = horizon && !globe && toggles.landscape && toggles.belowHorizon;
+    /* 50% at the home/wide lens so the rashi belt reads through the valley.
+       Zooming in (FOV under 90°) fades the ground away — a tight crop is the
+       sky, not a wall of grass. */
+    const horizonFov = fovForZoom("horizon", view.current.distance);
+    const zoomFade = horizonFov >= 90 ? 1 : Math.max(0, (horizonFov - 28) / (90 - 28));
+    const groundOpacity = 0.5 * zoomFade;
+    if (groundRef.current) groundRef.current.visible = showGround && groundOpacity > 0.02;
+    /* Light on the hills, following the Sun through the twilight. The map is
+       a daytime valley; this tints it down to night without rebuilding it. */
+    const x = (sunAltitude - GROUND_DUSK) / (GROUND_DAWN - GROUND_DUSK);
+    const dusk = Math.min(1, Math.max(0, x));
+    const landT = dusk * dusk * (3 - 2 * dusk);
+    if (groundMatRef.current) {
+      groundMatRef.current.color.copy(GROUND_NIGHT).lerp(GROUND_DAY, landT);
+      groundMatRef.current.opacity = groundOpacity;
+    }
     if (spaceOnlyRef.current) {
       spaceOnlyRef.current.visible = space;
       spaceOnlyRef.current.rotation.x = space ? eps * DEG : 0;
@@ -2012,8 +2074,21 @@ export function AakashGocharScene({
     tiltMarks.eclipticAxis.visible = globe && toggles.tilt;
     tiltMarks.arc.visible = globe && toggles.tilt;
     equatorLine.visible = horizon && !globe && (toggles.rashiBelt || toggles.nakshatraBelt);
-    gridSegments.object.visible = horizon && !globe && toggles.grid;
-    horizonRing.visible = horizon && !globe && toggles.landscape;
+    const gridOn = horizon && !globe && toggles.grid;
+    gridGroup.visible = gridOn;
+    for (let i = 0; i < GRID_TIERS.length; i += 1) {
+      const tier = GRID_TIERS[i];
+      const wanted = gridOn && horizonFov < tier.maxFov;
+      let object = gridTiers.current[i];
+      if (wanted && !object) {
+        object = bakeHorizonGrid(tier.step, tier.skipMultiplesOf, tier.opacity);
+        injectHorizonFisheyeIn(object, fisheye);
+        gridTiers.current[i] = object;
+        gridGroup.add(object);
+      }
+      if (object) object.visible = wanted;
+    }
+    horizonRing.visible = gridOn;
     if (horizonGroupRef.current) horizonGroupRef.current.quaternion.identity();
 
     /* ── the Earth globe ────────────────────────────────────────────── */
@@ -2109,27 +2184,33 @@ export function AakashGocharScene({
       trackAt = observerTrack.current;
     }
     if (horizon) {
-      /* Standing at the centre, the only thing zoom can do is change the lens:
-         a 6° telescopic crop at one end, a 160° fisheye that swallows nearly
-         the whole dome at the other. The sky itself never changes shape. */
-      const cosP = Math.cos(v.pitch);
+      /* Equidistant fisheye: screen radius is angle from the look direction.
+         A perspective 170° lens is what pinched the nadir into a spike; this
+         is the projection Stellarium uses, so zooming out to 180° really does
+         put zenith at the top and nadir at the bottom. The camera matrix stays
+         a quiet 60° perspective — only used for depth — and lookAt is not
+         used, because near the zenith it rolls the cage. */
       cam.position.set(0, 0, 0);
+      cam.up.set(0, 1, 0);
       if (trackAt) {
+        const len = Math.hypot(trackAt.x, trackAt.y, trackAt.z) || 1;
+        v.pitch = Math.asin(Math.max(-1, Math.min(1, trackAt.y / len)));
+        v.yaw = Math.atan2(trackAt.x, -trackAt.z);
         target.current.copy(trackAt);
-      } else {
-        target.current.set(
-          DOME * cosP * Math.sin(v.yaw),
-          DOME * Math.sin(v.pitch),
-          -DOME * cosP * Math.cos(v.yaw),
-        );
       }
-      cam.lookAt(target.current);
-      const fov = fovForZoom("horizon", v.distance);
-      if (Math.abs(cam.fov - fov) > 0.01) {
-        cam.fov = fov;
+      cam.rotation.order = "YXZ";
+      cam.rotation.set(-v.pitch, v.yaw, 0);
+      const field = fovForZoom("horizon", v.distance);
+      fisheye.uHorizonStereo.value = 1;
+      fisheye.uHorizonFov.value = field;
+      fisheye.uHorizonAspect.value = state.size.width / Math.max(state.size.height, 1);
+      if (Math.abs(cam.fov - 60) > 0.01) {
+        cam.fov = 60;
         cam.updateProjectionMatrix();
       }
+      injectHorizonFisheyeIn(state.scene, fisheye);
     } else if (globe) {
+      fisheye.uHorizonStereo.value = 0;
       /* A long lens from far back — as close to an orthographic globe as a
          perspective camera gets. The +Y matters: the camera has to stay on the
          side of the ecliptic the pitch asks for, because from underneath the
@@ -2170,6 +2251,7 @@ export function AakashGocharScene({
         cam.updateProjectionMatrix();
       }
     } else {
+      fisheye.uHorizonStereo.value = 0;
       /* Same orbit as the Learn playground: the reader's yaw/pitch, no floor
          that keeps you north of the ecliptic. Drag under the wheel and you
          go under the wheel. */
@@ -2257,7 +2339,7 @@ export function AakashGocharScene({
       <directionalLight ref={fillLightRef} position={[0, 12, 0]} intensity={0.1} />
 
       <mesh ref={starsRef}>
-        <sphereGeometry args={[400, 48, 48]} />
+        <sphereGeometry args={[400, 64, 48]} />
         {/* Opaque, depthWrite off — same as Learn's sky. The ecliptic disc is
             transparent, so it has to paint *after* this sphere or the stars
             cover the plane and it never reads as a surface. */}
@@ -2288,37 +2370,30 @@ export function AakashGocharScene({
           stays nailed to the stars. */}
       <group ref={horizonGroupRef}>
         <group ref={groundRef} visible={false}>
-          {/* Drawn last and writing no depth. As an ordinary transparent mesh
-              it sorted by its own origin — half a unit from the eye, while the
-              sky it is standing in front of is a hundred — so it went down
-              first and its depth then culled everything behind it outright.
-              The alt-az cage under the horizon was not being dimmed by the
-              veil; it was being thrown away before it could be blended, and no
-              amount of thinning the veil would have brought it back. */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]} renderOrder={2}>
-            <circleGeometry args={[DOME * 1.02, 96]} />
-            {/* Never opaque: the sky below your feet still belongs to the
-                sphere. With क्षितिजमुनि on it thins to a veil, so the zodiac
-                closes its circle through the ground and a set graha stays
-                followable — the ground still shades that half, which is what
-                keeps "up" and "down" readable at a glance. Off, it goes back to
-                nearly a slab and the culling above hides what is under it. */}
+          {/* Inner sky sphere with काठमाडौँ underfoot: little-planet photo
+              mapped from the nadir so the hills are the skyline. Its own sky
+              is alpha 0 (`alphaTest`) so the stars and the राशि belt pass.
+              Turn क्षितिजमुनि off and the group hides. */}
+          <mesh
+            geometry={groundGeo}
+            frustumCulled={false}
+            renderOrder={1}
+            raycast={() => {}}
+          >
             <meshBasicMaterial
-              color="#06110f"
-              side={THREE.DoubleSide}
+              ref={groundMatRef}
+              map={landscapeMap}
+              side={THREE.BackSide}
               transparent
+              opacity={0.5}
+              alphaTest={0.12}
               depthWrite={false}
-              /* Thin enough to read straight through. The alt-az cage is drawn
-                 at 0.32 and the belt is not much stronger, so anything heavier
-                 here takes the lower half of both below the point where they
-                 register at all — which is the whole reason for drawing them
-                 down there. It is a tint saying "under your feet", not a lid. */
-              opacity={toggles.belowHorizon ? 0.16 : 0.82}
+              color="#ffffff"
             />
           </mesh>
         </group>
         <primitive object={horizonRing} />
-        <primitive object={gridSegments.object} />
+        <primitive object={gridGroup} />
       </group>
 
       {/* The Earth globe: a dark ball carrying nothing but its graticule, with

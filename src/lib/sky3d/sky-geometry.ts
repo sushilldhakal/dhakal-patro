@@ -92,17 +92,97 @@ export const DEGREE_TICKS: SegmentPairs = (() => {
 })();
 
 /**
- * Alt-az grid: almucantars every 15° of altitude and verticals every 15° of
- * azimuth — the blue cage a planetarium draws over the local sky.
+ * The alt-az cage, one tier per zoom band.
+ *
+ * The whole web cannot be on screen at once: a 1° cage over a 90° sky is a
+ * grey wash, and over a 240° sky it packs into a ball at the zenith and hides
+ * the belt. So the cage is built once as four fixed layers and each is shown
+ * only under its own field of view — 10° opens, then 5°, then 2°, then 1° as
+ * the lens tightens, each layer skipping the degrees a coarser one already
+ * draws so no line is drawn twice.
+ *
+ * `maxFov` is exclusive: the tier is on while the vertical field is *below*
+ * it. Ordered coarse to fine.
+ */
+export type GridTier = {
+  /** Spacing in degrees, both in altitude and in azimuth. */
+  step: number;
+  /** Shown while the vertical field of view is under this, degrees. */
+  maxFov: number;
+  /** Degrees a coarser tier already draws — left out of this one. */
+  skipMultiplesOf: number[];
+  /** Fainter as the tiers get finer, so the round lines still read. */
+  opacity: number;
+};
+
+export const GRID_TIERS: readonly GridTier[] = [
+  { step: 10, maxFov: 85, skipMultiplesOf: [], opacity: 0.58 },
+  { step: 5, maxFov: 50, skipMultiplesOf: [10], opacity: 0.4 },
+  { step: 2, maxFov: 30, skipMultiplesOf: [10], opacity: 0.28 },
+  { step: 1, maxFov: 18, skipMultiplesOf: [2, 5], opacity: 0.2 },
+];
+
+/**
+ * The finest spacing the cage is drawing at this field of view, degrees, or 0
+ * at the opening sky where no tier is on yet.
+ */
+export function gridStepForFov(fovDeg: number): number {
+  let step = 0;
+  for (const tier of GRID_TIERS) {
+    if (fovDeg < tier.maxFov) step = tier.step;
+  }
+  return step;
+}
+
+/**
+ * Disconnected segment pairs for the azimuth cage. `skipMultiplesOf` leaves
+ * those degrees to a coarser layer so 10° / 5° / 2° / 1° can sit on top of
+ * each other without drawing the same line twice.
+ */
+export function buildAzimuthGridPairs(
+  step: number,
+  skipMultiplesOf: readonly number[] = [],
+): HorizonPoint[] {
+  const skip = (v: number) => skipMultiplesOf.some((m) => v % m === 0);
+  const circleSteps = step <= 1 ? 240 : 180;
+  const verticalSteps = step <= 1 ? 180 : 72;
+  const pairs: HorizonPoint[] = [];
+  for (let alt = -90 + step; alt <= 90 - step; alt += step) {
+    if (skip(alt)) continue;
+    for (let i = 0; i < circleSteps; i += 1) {
+      pairs.push(
+        { alt, az: (i / circleSteps) * 360 },
+        { alt, az: ((i + 1) / circleSteps) * 360 },
+      );
+    }
+  }
+  for (let az = 0; az < 360; az += step) {
+    if (skip(az)) continue;
+    for (let i = 0; i < verticalSteps; i += 1) {
+      pairs.push(
+        { alt: -90 + (i / verticalSteps) * 180, az },
+        { alt: -90 + ((i + 1) / verticalSteps) * 180, az },
+      );
+    }
+  }
+  return pairs;
+}
+
+/**
+ * Azimuth grid: almucantars every 10° of altitude and verticals every 10° of
+ * azimuth — the green cage Stellarium draws over the local sky.
+ *
+ * Verticals run zenith to nadir so they really do meet at one point when you
+ * look up; almucantars skip the poles (a circle of radius zero) and include
+ * the horizon. Both hemispheres, so क्षितिजमुनि off still has a cage underfoot.
  */
 export const GRID_LINES: HorizonPoint[][] = (() => {
   const lines: HorizonPoint[][] = [];
-  // Both hemispheres: from outside the sphere the cage has to close underneath,
-  // or the lower half reads as a hole rather than the sky under your feet.
-  for (let alt = -75; alt <= 75; alt += 15) {
-    lines.push(Array.from({ length: 145 }, (_, i) => ({ alt, az: (i / 144) * 360 })));
+  for (let alt = -80; alt <= 80; alt += 10) {
+    const steps = alt === 0 ? 180 : 144;
+    lines.push(Array.from({ length: steps + 1 }, (_, i) => ({ alt, az: (i / steps) * 360 })));
   }
-  for (let az = 0; az < 360; az += 15) {
+  for (let az = 0; az < 360; az += 10) {
     lines.push(
       Array.from({ length: 73 }, (_, i) => ({ alt: -90 + (i / 72) * 180, az })),
     );
@@ -176,7 +256,7 @@ export const SOLAR_STATIONS: {
 ];
 
 /** Azimuth readings that get a degree label on the horizon. */
-export const GRID_AZIMUTH_LABELS = Array.from({ length: 24 }, (_, i) => i * 15);
+export const GRID_AZIMUTH_LABELS = Array.from({ length: 36 }, (_, i) => i * 10);
 
 /** The eight compass points, with the four cardinals called out. */
 export const COMPASS_POINTS: { az: number; en: string; ne: string; major: boolean }[] = [

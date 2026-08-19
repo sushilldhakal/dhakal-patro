@@ -31,7 +31,23 @@ const DEG = Math.PI / 180;
  * the one mapping lives here and both callers read it.
  */
 export function fovForZoom(mode: SkyMode, distance: number): number {
-  if (mode === "horizon") return Math.min(160, Math.max(6, (distance / 26) * 70));
+  /* Horizon zoom is the *vertical* field of a stereographic projection.
+     Stellarium's wide view is ~235°; we open at 90° and pull out to 240° so
+     the sky fills the rectangle (corners included), not a circle in a black
+     frame. */
+  if (mode === "horizon") {
+    const home = 26;
+    const minD = 0.35;
+    const maxD = 120;
+    if (distance <= home) {
+      const t = Math.min(1, Math.max(0, (distance - minD) / (home - minD)));
+      /* Tight crop is ~12° so a 1° cage actually fills the frame, not two
+         lonely 10° lines. */
+      return 12 + t * (90 - 12);
+    }
+    const t = Math.min(1, Math.max(0, (distance - home) / (maxD - home)));
+    return 90 + t * (240 - 90);
+  }
   if (mode === "globe") {
     const t = Math.min(1, Math.max(0, distance / OUTSIDE_ZOOM_MAX));
     const framed = 1.4 + Math.pow(t, 1.25) * (GLOBE_BAND_R * 2 - 1.4);
@@ -50,7 +66,7 @@ export function fovForZoom(mode: SkyMode, distance: number): number {
  * not the same thing in all three. The dome and the globe narrow the lens, so
  * the field of view is the measure, and the scaling keeps a drag worth a fixed
  * fraction of the *screen*: flick the same distance and the same amount of what
- * you can see goes past, whether that is a 160° fisheye or a 6° crop. Without
+ * you can see goes past, whether that is a 240° sky or a 12° crop. Without
  * it, pushing in to the crop turns a nudge into twenty times as much sky, and
  * looking slightly left throws whatever you were inspecting out of frame.
  *
