@@ -32,8 +32,6 @@ import * as THREE from "three";
 import { altAzToVec3 } from "@/lib/sky3d/horizon";
 import { horizonViewWindow, projectHorizonRaw } from "@/lib/sky3d/horizon-projection";
 
-const RAD = Math.PI / 180;
-
 /**
  * Where a number is pinned. The four borders, plus the two lines of the sky
  * that carry a scale of their own: the skyline, which bearings are read off,
@@ -45,16 +43,36 @@ export type GridLabel = {
   id: string;
   /** An altitude above the horizon, or an azimuth from north. */
   kind: "alt" | "az";
-  /** The degree the line stands for. */
+  /** The line's own value, in arcminutes. */
   value: number;
+  /** Already formatted — `12°`, `1° 10′`, `−5° 25′` — in ASCII digits. */
+  text: string;
   x: number;
   y: number;
   side: GridLabelSide;
 };
 
+/**
+ * An arcminute count as a reader wants it: whole degrees while the ruler is
+ * on whole degrees, degrees and minutes once it is finer than one.
+ *
+ * The minus is U+2212, which is the width of a digit — an ASCII hyphen next to
+ * tabular numerals reads as a hyphenated word.
+ */
+export function formatArcminutes(valueMin: number): string {
+  const negative = valueMin < 0;
+  const v = Math.abs(valueMin);
+  const deg = Math.floor(v / 60);
+  const min = v % 60;
+  const core = min === 0 ? `${deg}\u00b0` : deg === 0 ? `${min}\u2032` : `${deg}\u00b0 ${min}\u2032`;
+  return negative ? `\u2212${core}` : core;
+}
+
 /** How much of a border a single number claims, px. */
 const SEP_VERTICAL = 30;
-const SEP_HORIZONTAL = 40;
+/* Wider than the vertical lanes: `1° 10\u2032` is three times the width of `10°`,
+   and the top and bottom borders stack their numbers side by side. */
+const SEP_HORIZONTAL = 58;
 /** And how far apart the numbers riding the skyline and the meridian must sit. */
 const SEP_HORIZON = 52;
 const SEP_MERIDIAN = 26;
@@ -65,8 +83,8 @@ const INSET = 17;
 /** Points along one line, per line. More than this is wasted on a 40px gap. */
 const SAMPLES = 72;
 
-/** Intervals a ruler is allowed to use, coarsest last. */
-const LADDER = [1, 2, 5, 10, 15, 30, 45, 90] as const;
+/** Intervals a ruler is allowed to use, arcminutes, coarsest last. */
+const LADDER = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 2700, 5400] as const;
 
 /**
  * Smallest gap between two numbers on the same border before we thin out, px.
@@ -81,17 +99,18 @@ const LADDER = [1, 2, 5, 10, 15, 30, 45, 90] as const;
 const MIN_LABEL_PITCH = 40;
 
 /**
- * The interval the ruler ticks at: the finest rung of {@link LADDER} that is
- * both a multiple of the cage's own spacing (so every number sits on a drawn
- * line) and still {@link MIN_LABEL_PITCH} apart on screen.
+ * The interval the ruler ticks at, arcminutes: the finest rung of
+ * {@link LADDER} that is both a multiple of the cage's own spacing (so every
+ * number sits on a drawn line) and still {@link MIN_LABEL_PITCH} apart on
+ * screen.
  */
 function labelStepFor(fovDeg: number, heightPx: number, gridStep: number): number {
-  const perDeg = heightPx / Math.max(fovDeg, 1e-3);
+  const perMin = heightPx / Math.max(fovDeg * 60, 1e-3);
   for (const rung of LADDER) {
     if (rung < gridStep || rung % gridStep !== 0) continue;
-    if (rung * perDeg >= MIN_LABEL_PITCH) return rung;
+    if (rung * perMin >= MIN_LABEL_PITCH) return rung;
   }
-  return 90;
+  return LADDER[LADDER.length - 1];
 }
 
 /**
@@ -105,15 +124,18 @@ function labelStepFor(fovDeg: number, heightPx: number, gridStep: number): numbe
  */
 const WRONG_SIDE = 10;
 
-/** How round a degree is — 0 is the roundest, and wins a contested spot. */
-function roundness(deg: number): number {
-  const v = Math.abs(deg);
-  if (v % 90 === 0) return 0;
-  if (v % 30 === 0) return 1;
-  if (v % 10 === 0) return 2;
-  if (v % 5 === 0) return 3;
-  if (v % 2 === 0) return 4;
-  return 5;
+/** How round a value is — 0 is the roundest, and wins a contested spot. */
+function roundness(valueMin: number): number {
+  const v = Math.abs(valueMin);
+  if (v % 5400 === 0) return 0;
+  if (v % 1800 === 0) return 1;
+  if (v % 600 === 0) return 2;
+  if (v % 300 === 0) return 3;
+  if (v % 60 === 0) return 4;
+  if (v % 30 === 0) return 5;
+  if (v % 10 === 0) return 6;
+  if (v % 5 === 0) return 7;
+  return 8;
 }
 
 type Candidate = GridLabel & { rank: number; key: number };
@@ -135,8 +157,7 @@ const TEXT_PAD = 3;
  * a rectangle test knows they are about to sit on each other.
  */
 function boxFor(c: Candidate): Rect {
-  const chars = String(Math.abs(c.value)).length + (c.value < 0 ? 1 : 0) + 1;
-  const w = chars * 6.2 + 2;
+  const w = c.text.length * 6.2 + 2;
   if (c.side === "left") return { x: c.x + 3, y: c.y - 6, w, h: TEXT_H };
   if (c.side === "right") return { x: c.x - 3 - w, y: c.y - 6, w, h: TEXT_H };
   if (c.side === "top") return { x: c.x - w / 2, y: c.y, w, h: TEXT_H };
@@ -207,7 +228,7 @@ export type GridLabelParams = {
   height: number;
   /** Dome radius the cage is drawn on. */
   radius: number;
-  /** Finest spacing the cage is currently drawing, degrees. 0 draws nothing. */
+  /** Finest spacing the cage is currently drawing, arcminutes. */
   gridStep: number;
   scratch: THREE.Vector3;
 };
@@ -235,15 +256,15 @@ export function buildGridLabels({
 
   /* Only the lines that can reach the frame are walked; everything outside
      the visible cone is skipped before a point is projected. */
-  const { centreAlt, centreAz, altLo, altHi, azHalf } = horizonViewWindow(
+  const { centreAz, altLo, altHi, azHalf } = horizonViewWindow(
     camera,
     fovDeg,
     width,
     height,
   );
 
-  const project = (alt: number, az: number) => {
-    const v = altAzToVec3(alt, az, radius);
+  const project = (altMin: number, azMin: number) => {
+    const v = altAzToVec3(altMin / 60, azMin / 60, radius);
     scratch.set(v[0], v[1], v[2]);
     return projectHorizonRaw(scratch, camera, fovDeg, width, height, scratch);
   };
@@ -253,43 +274,49 @@ export function buildGridLabels({
 
   /* Almucantars — one number per border, on the left and right by preference,
      which is where a circle of equal altitude naturally leaves the frame. */
-  const azSpan = azHalf * 2;
+  const azSpanMin = azHalf * 120;
+  const azCentreMin = centreAz * 60;
   for (
-    let alt = Math.ceil(altLo / step) * step;
-    alt <= altHi;
-    alt += step
+    let altMin = Math.ceil((altLo * 60) / step) * step;
+    altMin <= altHi * 60;
+    altMin += step
   ) {
-    if (Math.abs(alt) >= 90) continue;
+    if (Math.abs(altMin) >= 5400) continue;
     for (let i = 0; i <= SAMPLES; i += 1) {
-      line[i] = project(alt, centreAz - azHalf + (i / SAMPLES) * azSpan);
+      line[i] = project(altMin, azCentreMin - azSpanMin / 2 + (i / SAMPLES) * azSpanMin);
     }
+    const text = formatArcminutes(altMin);
     crossings(line, frame, maxJump, (side, x, y) => {
       candidates.push({
-        id: `alt-${alt}-${side}`,
+        id: `alt-${altMin}-${side}`,
         kind: "alt",
-        value: alt,
+        value: altMin,
+        text,
         x,
         y,
         side,
         key: side === "left" || side === "right" ? y : x,
-        rank: roundness(alt) + (side === "left" || side === "right" ? 0 : WRONG_SIDE),
+        rank: roundness(altMin) + (side === "left" || side === "right" ? 0 : WRONG_SIDE),
       });
     });
   }
 
   /* Verticals — the same, preferring the top and bottom. */
-  const altSpan = altHi - altLo;
-  const azFrom = Math.ceil((centreAz - azHalf) / step) * step;
-  for (let az = azFrom; az <= centreAz + azHalf; az += step) {
+  const altSpanMin = (altHi - altLo) * 60;
+  const altLoMin = altLo * 60;
+  const azFrom = Math.ceil((azCentreMin - azSpanMin / 2) / step) * step;
+  for (let azMin = azFrom; azMin <= azCentreMin + azSpanMin / 2; azMin += step) {
     for (let i = 0; i <= SAMPLES; i += 1) {
-      line[i] = project(altLo + (i / SAMPLES) * altSpan, az);
+      line[i] = project(altLoMin + (i / SAMPLES) * altSpanMin, azMin);
     }
-    const value = ((az % 360) + 360) % 360;
+    const value = ((azMin % 21600) + 21600) % 21600;
+    const text = formatArcminutes(value);
     crossings(line, frame, maxJump, (side, x, y) => {
       candidates.push({
         id: `az-${value}-${side}`,
         kind: "az",
         value,
+        text,
         x,
         y,
         side,
@@ -303,16 +330,17 @@ export function buildGridLabels({
      for a bearing. The four cardinals already carry N/E/S/W, so their own
      degrees are left out rather than stacked under the letter. Ranked below
      the borders, so where the two meet the border keeps its number. */
-  for (let az = azFrom; az <= centreAz + azHalf; az += step) {
-    const value = ((az % 360) + 360) % 360;
-    if (value % 90 === 0) continue;
-    const hit = project(0, az);
+  for (let azMin = azFrom; azMin <= azCentreMin + azSpanMin / 2; azMin += step) {
+    const value = ((azMin % 21600) + 21600) % 21600;
+    if (value % 5400 === 0) continue;
+    const hit = project(0, azMin);
     if (!hit) continue;
     if (hit.x < frame.xL || hit.x > frame.xR || hit.y < frame.yT || hit.y > frame.yB) continue;
     candidates.push({
       id: `az-${value}-horizon`,
       kind: "az",
       value,
+      text: formatArcminutes(value),
       x: hit.x,
       y: hit.y,
       side: "horizon",
@@ -356,7 +384,7 @@ export function buildGridLabels({
     lane.push(c.key);
     placed.push(box);
     seen.add(c.id);
-    out.push({ id: c.id, kind: c.kind, value: c.value, x: c.x, y: c.y, side: c.side });
+    out.push({ id: c.id, kind: c.kind, value: c.value, text: c.text, x: c.x, y: c.y, side: c.side });
   }
 
   /* Altitudes that never reached a border.
@@ -368,20 +396,25 @@ export function buildGridLabels({
    * its scale and where the eye is already looking. */
   const numbered = new Set(out.filter((l) => l.kind === "alt").map((l) => l.value));
   const spare: Candidate[] = [];
-  for (let alt = Math.ceil(altLo / step) * step; alt <= altHi; alt += step) {
-    if (Math.abs(alt) >= 90 || numbered.has(alt)) continue;
-    const hit = project(alt, centreAz);
+  for (
+    let altMin = Math.ceil((altLo * 60) / step) * step;
+    altMin <= altHi * 60;
+    altMin += step
+  ) {
+    if (Math.abs(altMin) >= 5400 || numbered.has(altMin)) continue;
+    const hit = project(altMin, azCentreMin);
     if (!hit) continue;
     if (hit.x < frame.xL || hit.x > frame.xR || hit.y < frame.yT || hit.y > frame.yB) continue;
     spare.push({
-      id: `alt-${alt}-meridian`,
+      id: `alt-${altMin}-meridian`,
       kind: "alt",
-      value: alt,
+      value: altMin,
+      text: formatArcminutes(altMin),
       x: hit.x,
       y: hit.y,
       side: "meridian",
       key: hit.y,
-      rank: roundness(alt),
+      rank: roundness(altMin),
     });
   }
   spare.sort((a, b) => a.rank - b.rank || a.key - b.key);
@@ -391,7 +424,7 @@ export function buildGridLabels({
     if (placed.some((r) => overlaps(r, box))) continue;
     lanes.meridian.push(c.key);
     placed.push(box);
-    out.push({ id: c.id, kind: c.kind, value: c.value, x: c.x, y: c.y, side: c.side });
+    out.push({ id: c.id, kind: c.kind, value: c.value, text: c.text, x: c.x, y: c.y, side: c.side });
   }
 
   return out;

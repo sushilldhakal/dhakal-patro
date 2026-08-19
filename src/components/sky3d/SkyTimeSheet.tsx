@@ -8,7 +8,7 @@
  * Nepali UI steps विक्रम संवत् year / month / day. English UI keeps Gregorian.
  */
 
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -21,12 +21,12 @@ import {
 } from "lucide-react";
 import {
   adToBS,
-  BS_OFFLINE_TABLE_START_YEAR,
-  BS_SUPPORTED_END_YEAR,
   bsToAdOrNull,
   getBSMonthLength,
   shiftBsMonth,
 } from "@/lib/bs-calendar";
+import { civilGregorianToUtcMs } from "@/lib/patro-day";
+import { PATRO_SIGNED_YEAR_MAX, PATRO_SIGNED_YEAR_MIN } from "@/lib/patro-year-axis";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 
@@ -105,11 +105,12 @@ export function wallPartsFromMs(timeMs: number, zoneOffsetMs: number): WallParts
 }
 
 function utcMsFromWall(p: WallParts): number {
-  const ms = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second, 0);
-  if (p.year < 0 || p.year > 99) return ms;
-  const d = new Date(ms);
-  d.setUTCFullYear(p.year);
-  return d.getTime();
+  return (
+    civilGregorianToUtcMs(p.year, p.month, p.day) +
+    p.hour * 3_600_000 +
+    p.minute * 60_000 +
+    p.second * 1000
+  );
 }
 
 export function instantFromWall(p: WallParts, zoneOffsetMs: number): number {
@@ -123,26 +124,89 @@ function wallCivilUtc(p: WallParts): Date {
   return d;
 }
 
-function applyBsYmd(p: WallParts, year: number, month: number, day: number): WallParts | null {
-  const y = Math.min(BS_SUPPORTED_END_YEAR, Math.max(BS_OFFLINE_TABLE_START_YEAR, year));
+function applyBsYmd(p: WallParts, signedYear: number, month: number, day: number): WallParts | null {
+  if (signedYear === 0) return null;
+  if (signedYear < PATRO_SIGNED_YEAR_MIN || signedYear > PATRO_SIGNED_YEAR_MAX) return null;
   const m = ((month - 1 + 12) % 12) + 1;
-  const length = getBSMonthLength(y, m);
-  const ad = bsToAdOrNull(y, m, Math.min(Math.max(1, day), length));
-  if (!ad) return null;
-  return {
-    ...p,
-    year: ad.getUTCFullYear(),
-    month: ad.getUTCMonth() + 1,
-    day: ad.getUTCDate(),
-  };
+  const length = getBSMonthLength(signedYear, m) || 30;
+  const d = Math.min(Math.max(1, day), length);
+  const ad = bsToAdOrNull(signedYear, m, d);
+  if (ad) {
+    return {
+      ...p,
+      year: ad.getUTCFullYear(),
+      month: ad.getUTCMonth() + 1,
+      day: ad.getUTCDate(),
+    };
+  }
+  const gMonthRaw = m + 3;
+  const yearDelta = gMonthRaw > 12 ? 1 : 0;
+  const gMonth = ((gMonthRaw - 1) % 12) + 1;
+  return { ...p, year: signedYear - 57 + yearDelta, month: gMonth, day: Math.min(d, 28) };
 }
 
+function nepaliYmd(p: WallParts): { year: number; month: number; day: number } {
+  if (p.year >= 1643 && p.year <= 2144) {
+    const bs = adToBS(wallCivilUtc(p));
+    return { year: bs.year, month: bs.month, day: bs.day };
+  }
+  const signed = p.year + (p.month < 4 ? 56 : 57);
+  const bsMonth = ((p.month - 4 + 12) % 12) + 1;
+  return { year: signed === 0 ? -1 : signed, month: bsMonth, day: Math.min(Math.max(1, p.day), 32) };
+}
+
+function gregDisplayYear(astro: number): string {
+  return astro > 0 ? String(astro) : `-${1 - astro}`;
+}
+
+function bsDisplayYear(signed: number): string {
+  return signed > 0 ? String(signed) : `-${-signed}`;
+}
+
+const NE_DIGIT = "०१२३४५६७८९";
+
+function parseTyped(raw: string, allowMinus: boolean): { abs: number; neg: boolean } | null {
+  let s = raw.trim().replace(/[०-९]/g, (ch) => String(NE_DIGIT.indexOf(ch)));
+  if (allowMinus) {
+    const neg = s.startsWith("-");
+    s = s.replace(/-/g, "");
+    if (!s) return null;
+    const n = Number(s);
+    if (!Number.isFinite(n) || n < 0) return null;
+    return { abs: Math.trunc(n), neg };
+  }
+  s = s.replace(/\D/g, "");
+  if (!s) return null;
+  const n = Number(s);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return { abs: Math.trunc(n), neg: false };
+}
+
+function filterDraft(raw: string, allowMinus: boolean): string {
+  let s = raw.replace(/[०-९]/g, (ch) => String(NE_DIGIT.indexOf(ch)));
+  if (allowMinus) {
+    const neg = s.startsWith("-") || s.startsWith("−");
+    s = s.replace(/[-−]/g, "").replace(/\D/g, "");
+    return (neg ? "-" : "") + s.slice(0, 6);
+  }
+  return s.replace(/\D/g, "").slice(0, 2);
+}
+
+type Field = keyof WallParts;
+
+const FIELD_ORDER: Field[] = ["year", "month", "day", "hour", "minute", "second"];
+
 function stepBsField(p: WallParts, field: "year" | "month" | "day", delta: number): WallParts | null {
-  const bs = adToBS(wallCivilUtc(p));
-  if (field === "year") return applyBsYmd(p, bs.year + delta, bs.month, bs.day);
+  const bs = nepaliYmd(p);
+  if (field === "year") {
+    let next = bs.year + delta;
+    if (next === 0) next = delta < 0 ? -1 : 1;
+    return applyBsYmd(p, next, bs.month, bs.day);
+  }
   if (field === "month") {
     const next = shiftBsMonth(bs.year, bs.month, delta);
-    return applyBsYmd(p, next.year, next.month, bs.day);
+    const year = next.year === 0 ? (delta < 0 ? -1 : 1) : next.year;
+    return applyBsYmd(p, year, next.month, bs.day);
   }
   let day = bs.day + delta;
   let { year, month } = bs;
@@ -158,10 +222,8 @@ function stepBsField(p: WallParts, field: "year" | "month" | "day", delta: numbe
     month = prev.month;
     day += getBSMonthLength(year, month);
   }
-  return applyBsYmd(p, year, month, day);
+  return applyBsYmd(p, year === 0 ? (delta < 0 ? -1 : 1) : year, month, day);
 }
-
-type Field = keyof WallParts;
 
 function addField(p: WallParts, field: Field, delta: number): WallParts {
   const d = new Date(utcMsFromWall(p));
@@ -219,15 +281,21 @@ export function SkyTimeSheet({
   const pick = (ne: string, en: string) => bilingualText(lang, ne, en);
   const nepaliCal = lang !== "en";
   const parts = wallPartsFromMs(timeMs, zoneOffsetMs);
-  const bs = nepaliCal ? adToBS(wallCivilUtc(parts)) : null;
+  const ne = nepaliCal ? nepaliYmd(parts) : null;
   const paused = timeRate === 0;
   const playing = !paused;
   const absRate = Math.abs(timeRate);
   const daySec = parts.hour * 3600 + parts.minute * 60 + parts.second;
   const activePeriod = periodIdAtHour(parts.hour);
+  const [edit, setEdit] = useState<Field | null>(null);
+  const [draft, setDraft] = useState("");
+  const editRef = useRef<Field | null>(null);
+  const inputRefs = useRef<Partial<Record<Field, HTMLInputElement | null>>>({});
 
   const apply = (next: WallParts) => onApplyMs(instantFromWall(next, zoneOffsetMs));
   const step = (field: Field, delta: number) => {
+    editRef.current = null;
+    setEdit(null);
     if (nepaliCal && (field === "year" || field === "month" || field === "day")) {
       const next = stepBsField(parts, field, delta);
       if (next) apply(next);
@@ -236,9 +304,129 @@ export function SkyTimeSheet({
     apply(addField(parts, field, delta));
   };
 
+  const plain = (field: Field): string => {
+    if (field === "year") return ne ? bsDisplayYear(ne.year) : gregDisplayYear(parts.year);
+    if (field === "month") return pad2(ne ? ne.month : parts.month);
+    if (field === "day") return pad2(ne ? ne.day : parts.day);
+    if (field === "hour") return pad2(parts.hour);
+    if (field === "minute") return pad2(parts.minute);
+    return pad2(parts.second);
+  };
+
+  const commitField = (field: Field, raw: string) => {
+    const parsed = parseTyped(raw, field === "year");
+    if (!parsed) {
+      if (editRef.current === field) {
+        editRef.current = null;
+        setEdit(null);
+      }
+      return;
+    }
+    if (field === "year") {
+      if (nepaliCal) {
+        const signed = parsed.neg ? -parsed.abs : parsed.abs;
+        const next = applyBsYmd(parts, signed, ne?.month ?? parts.month, ne?.day ?? parts.day);
+        if (next) apply(next);
+      } else {
+        const astro = parsed.neg ? 1 - Math.max(1, parsed.abs) : Math.max(1, parsed.abs);
+        apply({ ...parts, year: astro });
+      }
+    } else if (field === "month") {
+      const month = Math.min(12, Math.max(1, parsed.abs));
+      if (nepaliCal) {
+        const next = applyBsYmd(parts, ne?.year ?? 1, month, ne?.day ?? 1);
+        if (next) apply(next);
+      } else apply({ ...parts, month });
+    } else if (field === "day") {
+      const day = Math.max(1, parsed.abs);
+      if (nepaliCal) {
+        const next = applyBsYmd(parts, ne?.year ?? 1, ne?.month ?? 1, day);
+        if (next) apply(next);
+      } else {
+        const nextMonth = parts.month === 12 ? 1 : parts.month + 1;
+        const nextYear = parts.month === 12 ? parts.year + 1 : parts.year;
+        const dim =
+          (civilGregorianToUtcMs(nextYear, nextMonth, 1) -
+            civilGregorianToUtcMs(parts.year, parts.month, 1)) /
+          86_400_000;
+        apply({ ...parts, day: Math.min(day, dim) });
+      }
+    } else if (field === "hour") apply({ ...parts, hour: Math.min(23, parsed.abs) });
+    else if (field === "minute") apply({ ...parts, minute: Math.min(59, parsed.abs) });
+    else apply({ ...parts, second: Math.min(59, parsed.abs) });
+    if (editRef.current === field) {
+      editRef.current = null;
+      setEdit(null);
+    }
+  };
+
+  const focusField = (field: Field) => {
+    editRef.current = field;
+    setEdit(field);
+    setDraft(plain(field));
+    requestAnimationFrame(() => inputRefs.current[field]?.select());
+  };
+
+  const onFieldKey = (field: Field, e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitField(field, draft);
+      return;
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setEdit(null);
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      step(field, 1);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      step(field, -1);
+      return;
+    }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      commitField(field, draft);
+      const i = FIELD_ORDER.indexOf(field);
+      const next = FIELD_ORDER[i + (e.shiftKey ? -1 : 1)];
+      if (next) focusField(next);
+    }
+  };
+
   const speedLabel = paused
     ? pick("रोकिएको", "Paused")
     : `${pick("गति", "Speed")} ×${timeRate < 0 ? "-" : ""}${digits(String(Math.round(absRate)))}`;
+
+  const stepper = (
+    field: Field,
+    upLabel: string,
+    downLabel: string,
+    wide?: boolean,
+  ) => (
+    <Stepper
+      field={field}
+      display={digits(plain(field))}
+      editing={edit === field}
+      draft={edit === field ? draft : digits(plain(field))}
+      allowMinus={field === "year"}
+      wide={wide}
+      inputRef={(el) => {
+        inputRefs.current[field] = el;
+      }}
+      onUp={() => step(field, 1)}
+      onDown={() => step(field, -1)}
+      upLabel={upLabel}
+      downLabel={downLabel}
+      onStartEdit={() => focusField(field)}
+      onDraft={(v) => setDraft(filterDraft(v, field === "year"))}
+      onCommit={(v) => commitField(field, v)}
+      onKey={onFieldKey}
+    />
+  );
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col justify-end">
@@ -255,55 +443,46 @@ export function SkyTimeSheet({
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/30" />
 
-        <div className="flex items-end justify-center gap-0.5 xs:gap-1.5">
-          <Stepper
-            value={digits(String(bs ? bs.year : parts.year))}
-            onUp={() => step("year", 1)}
-            onDown={() => step("year", -1)}
-            upLabel={pick("वर्ष बढाउनुहोस्", "Increase year")}
-            downLabel={pick("वर्ष घटाउनुहोस्", "Decrease year")}
-            wide
-          />
-          <Sep>/</Sep>
-          <Stepper
-            value={digits(pad2(bs ? bs.month : parts.month))}
-            onUp={() => step("month", 1)}
-            onDown={() => step("month", -1)}
-            upLabel={pick("महिना बढाउनुहोस्", "Increase month")}
-            downLabel={pick("महिना घटाउनुहोस्", "Decrease month")}
-          />
-          <Sep>/</Sep>
-          <Stepper
-            value={digits(pad2(bs ? bs.day : parts.day))}
-            onUp={() => step("day", 1)}
-            onDown={() => step("day", -1)}
-            upLabel={pick("दिन बढाउनुहोस्", "Increase day")}
-            downLabel={pick("दिन घटाउनुहोस्", "Decrease day")}
-          />
-          <span className="w-2 shrink-0 xs:w-3" />
-          <Stepper
-            value={digits(pad2(parts.hour))}
-            onUp={() => step("hour", 1)}
-            onDown={() => step("hour", -1)}
-            upLabel={pick("घण्टा बढाउनुहोस्", "Increase hour")}
-            downLabel={pick("घण्टा घटाउनुहोस्", "Decrease hour")}
-          />
-          <Sep>:</Sep>
-          <Stepper
-            value={digits(pad2(parts.minute))}
-            onUp={() => step("minute", 1)}
-            onDown={() => step("minute", -1)}
-            upLabel={pick("मिनेट बढाउनुहोस्", "Increase minute")}
-            downLabel={pick("मिनेट घटाउनुहोस्", "Decrease minute")}
-          />
-          <Sep>:</Sep>
-          <Stepper
-            value={digits(pad2(parts.second))}
-            onUp={() => step("second", 1)}
-            onDown={() => step("second", -1)}
-            upLabel={pick("सेकेन्ड बढाउनुहोस्", "Increase second")}
-            downLabel={pick("सेकेन्ड घटाउनुहोस्", "Decrease second")}
-          />
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center gap-0.5">
+            {stepper(
+              "year",
+              pick("वर्ष बढाउनुहोस्", "Increase year"),
+              pick("वर्ष घटाउनुहोस्", "Decrease year"),
+              true,
+            )}
+            <Sep>/</Sep>
+            {stepper(
+              "month",
+              pick("महिना बढाउनुहोस्", "Increase month"),
+              pick("महिना घटाउनुहोस्", "Decrease month"),
+            )}
+            <Sep>/</Sep>
+            {stepper(
+              "day",
+              pick("दिन बढाउनुहोस्", "Increase day"),
+              pick("दिन घटाउनुहोस्", "Decrease day"),
+            )}
+          </div>
+          <div className="flex items-center gap-0.5">
+            {stepper(
+              "hour",
+              pick("घण्टा बढाउनुहोस्", "Increase hour"),
+              pick("घण्टा घटाउनुहोस्", "Decrease hour"),
+            )}
+            <Sep>:</Sep>
+            {stepper(
+              "minute",
+              pick("मिनेट बढाउनुहोस्", "Increase minute"),
+              pick("मिनेट घटाउनुहोस्", "Decrease minute"),
+            )}
+            <Sep>:</Sep>
+            {stepper(
+              "second",
+              pick("सेकेन्ड बढाउनुहोस्", "Increase second"),
+              pick("सेकेन्ड घटाउनुहोस्", "Decrease second"),
+            )}
+          </div>
         </div>
 
         <p className="mt-4 mb-1 text-center text-sm font-semibold tracking-wide text-white/90">
@@ -459,42 +638,63 @@ export function SkyTimeSheet({
 
 function Sep({ children }: { children: string }) {
   return (
-    <span className="mb-[0.35rem] pb-0.5 text-lg font-semibold text-white/80 xs:text-xl">
+    <span className="pointer-events-none w-2.5 shrink-0 text-center text-lg font-semibold leading-none text-white/80 xs:text-xl">
       {children}
     </span>
   );
 }
 
 function Stepper({
-  value,
+  field,
+  display,
+  editing,
+  draft,
+  allowMinus,
+  wide,
+  inputRef,
   onUp,
   onDown,
   upLabel,
   downLabel,
-  wide,
-  tabular = true,
+  onStartEdit,
+  onDraft,
+  onCommit,
+  onKey,
 }: {
-  value: string;
+  field: Field;
+  display: string;
+  editing: boolean;
+  draft: string;
+  allowMinus: boolean;
+  wide?: boolean;
+  inputRef: (el: HTMLInputElement | null) => void;
   onUp: () => void;
   onDown: () => void;
   upLabel: string;
   downLabel: string;
-  wide?: boolean;
-  tabular?: boolean;
+  onStartEdit: () => void;
+  onDraft: (v: string) => void;
+  onCommit: (value: string) => void;
+  onKey: (field: Field, e: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <div className={cn("flex flex-col items-center", wide ? "min-w-[3.25rem]" : "min-w-[1.7rem]")}>
+    <div className={cn("flex flex-col items-center", wide ? "w-12" : "w-8")}>
       <HoldButton label={upLabel} onStep={onUp}>
         <ChevronUp className="size-4 text-white" strokeWidth={2.5} />
       </HoldButton>
-      <span
-        className={cn(
-          "select-none text-lg font-semibold leading-none tracking-wide xs:text-xl",
-          tabular && "tabular-nums",
-        )}
-      >
-        {value}
-      </span>
+      <input
+        ref={inputRef}
+        value={editing ? draft : display}
+        inputMode={allowMinus ? "text" : "numeric"}
+        enterKeyHint="next"
+        autoComplete="off"
+        aria-label={upLabel.replace(/बढाउनुहोस्|Increase /, "")}
+        className="w-full bg-transparent p-0 text-center text-lg font-semibold tabular-nums leading-none text-white outline-none xs:text-xl caret-white"
+        onFocus={onStartEdit}
+        onChange={(e) => onDraft(e.target.value)}
+        onBlur={(e) => onCommit(e.currentTarget.value)}
+        onKeyDown={(e) => onKey(field, e)}
+      />
       <HoldButton label={downLabel} onStep={onDown}>
         <ChevronDown className="size-4 text-white" strokeWidth={2.5} />
       </HoldButton>
@@ -527,9 +727,8 @@ function HoldButton({
     <button
       type="button"
       aria-label={label}
-      className="flex size-7 items-center justify-center rounded-md text-white/90 hover:bg-white/10 active:bg-white/20"
+      className="flex size-6 items-center justify-center rounded-md text-white/90 hover:bg-white/10 active:bg-white/20"
       onPointerDown={(e) => {
-        e.preventDefault();
         e.currentTarget.setPointerCapture(e.pointerId);
         onStepRef.current();
         hold.current = window.setTimeout(() => {

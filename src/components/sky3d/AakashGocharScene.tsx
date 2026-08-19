@@ -61,8 +61,11 @@ import {
   type GeoPoint,
   DEGREE_TICKS,
   buildAzimuthGridPairs,
+  buildLocalGridPairs,
   gridStepForFov,
   GRID_TIERS,
+  LOCAL_GRID_CAPACITY,
+  type HorizonPoint,
   NAK_LABEL_LAT,
   NAKSHATRA_DIVIDERS,
   PADA_TICKS,
@@ -92,6 +95,7 @@ import {
 } from "@/lib/sky3d/sky-zoom";
 import {
   createHorizonFisheyeUniforms,
+  horizonViewWindow,
   injectHorizonFisheyeIn,
   projectHorizon,
 } from "@/lib/sky3d/horizon-projection";
@@ -454,21 +458,44 @@ function makeDynamicSegments(count: number, color: string, opacity: number) {
   return segments;
 }
 
+/**
+ * Where the cage hangs: *outside* the shell the grahas sit on.
+ *
+ * The grahas are opaque meshes, and three.js draws every opaque object before
+ * any transparent one — so `renderOrder` cannot put a transparent line behind
+ * them, and with the depth test off the cage repainted itself over every disc
+ * on the belt no matter what order it was given. The fix is depth, not order:
+ * the grahas write the depth buffer, and a cage further out than they are gets
+ * rejected where they cover it. Which only works if it really is further out.
+ */
+const GRID_R = DOME * 1.04;
+
+/**
+ * The cage's shared look.
+ *
+ * Order and depth do two different jobs here and both are needed. The cage
+ * paints *after* the ground (renderOrder 1), or the hillside's half-opaque
+ * photo washes a 0.17-alpha line away to nothing and the cage under the
+ * horizon disappears. It is kept off the grahas by the depth buffer instead:
+ * they are opaque, so they are drawn and their depth written before any
+ * transparent line, and a cage hung further out than they are simply fails the
+ * test where a disc covers it.
+ */
+function dressGrid(object: THREE.LineSegments) {
+  object.renderOrder = 2;
+  const mat = object.material as THREE.LineBasicMaterial;
+  mat.depthTest = true;
+  /* Reads the depth buffer but never writes it, so the tiers do not cut holes
+     in each other and whatever is behind still comes through the mesh. */
+  mat.depthWrite = false;
+  return object;
+}
+
 function bakeHorizonGrid(step: number, skipMultiplesOf: readonly number[], opacity: number) {
   const pairs = buildAzimuthGridPairs(step, skipMultiplesOf);
-  const object = makeDynamicSegments(pairs.length, GRID, opacity);
-  /* Behind everything the cage is a reference *for*.
-     It draws with the depth test off, so whatever order it is given it paints
-     straight over what came before it — at renderOrder 4 that was the राशि
-     belt and the graha discs themselves, crosshatched by a bright green line
-     every 15°. Drawn first instead, it is a backdrop: the belt, the grahas and
-     the skyline all lay over it. */
-  object.renderOrder = -2;
-  const mat = object.material as THREE.LineBasicMaterial;
-  mat.depthTest = false;
-  mat.depthWrite = false;
+  const object = dressGrid(makeDynamicSegments(pairs.length, GRID, opacity));
   for (let i = 0; i < pairs.length; i += 1) {
-    setPoint(object, i, altAzToVec3(pairs[i].alt, pairs[i].az, DOME * 0.995));
+    setPoint(object, i, altAzToVec3(pairs[i].alt, pairs[i].az, GRID_R));
   }
   flushLine(object);
   return object;
@@ -1185,8 +1212,21 @@ export function AakashGocharScene({
     /* The group and the slots it fills are made together and never apart: a
        tier remembered without the group it was added to, or a fresh group
        beside tiers that think they are already in one, is a cage that never
-       gets drawn. */
-    return { group, tiers: GRID_TIERS.map(() => null as THREE.LineSegments | null) };
+       gets drawn.
+
+       `local` is one buffer, allocated once at its worst case and refilled
+       from the view each frame — the arcminute tiers exist for a window a
+       degree across, and baking those as whole spheres is millions of
+       vertices to draw a few dozen lines. */
+    const local = dressGrid(makeDynamicSegments(LOCAL_GRID_CAPACITY, GRID, 0.14));
+    local.visible = false;
+    group.add(local);
+    return {
+      group,
+      tiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
+      local,
+      localPairs: [] as HorizonPoint[],
+    };
   }, []);
 
   const horizonRing = useMemo(() => {
@@ -1905,7 +1945,7 @@ export function AakashGocharScene({
           collected.push({
             id: g.id,
             kind: "azimuth",
-            text: g.kind === "alt" && g.value < 0 ? `\u2212${-g.value}\u00b0` : `${g.value}\u00b0`,
+            text: g.text,
             side: g.side,
             x: g.x,
             y: g.y,
@@ -2077,9 +2117,17 @@ export function AakashGocharScene({
     equatorLine.visible = horizon && !globe && (toggles.rashiBelt || toggles.nakshatraBelt);
     const gridOn = horizon && !globe && toggles.grid;
     grid.group.visible = gridOn;
+    /* The finest local tier that is on — only one is ever drawn, because they
+       nest by a factor of two or three and stacking them over a one-degree
+       window is a wash rather than a grid. */
+    let localTier: (typeof GRID_TIERS)[number] | null = null;
     for (let i = 0; i < GRID_TIERS.length; i += 1) {
       const tier = GRID_TIERS[i];
       const wanted = gridOn && horizonFov < tier.maxFov;
+      if (tier.local) {
+        if (wanted) localTier = tier;
+        continue;
+      }
       let object = grid.tiers[i];
       if (wanted && !object) {
         object = bakeHorizonGrid(tier.step, tier.skipMultiplesOf, tier.opacity);
@@ -2090,6 +2138,31 @@ export function AakashGocharScene({
         if (object.parent !== grid.group) grid.group.add(object);
         object.visible = wanted;
       }
+    }
+    if (localTier) {
+      const view = horizonViewWindow(state.camera, horizonFov, width, height);
+      const count = buildLocalGridPairs(
+        localTier.step,
+        localTier.skipMultiplesOf,
+        {
+          altLo: view.altLo,
+          altHi: view.altHi,
+          azLo: view.centreAz - view.azHalf,
+          azHi: view.centreAz + view.azHalf,
+        },
+        grid.localPairs,
+      );
+      for (let i = 0; i < count; i += 1) {
+        const p = grid.localPairs[i];
+        setPoint(grid.local, i, altAzToVec3(p.alt, p.az, GRID_R));
+      }
+      grid.local.geometry.setDrawRange(0, count);
+      (grid.local.material as THREE.LineBasicMaterial).opacity = localTier.opacity;
+      flushLine(grid.local);
+      injectHorizonFisheyeIn(grid.local, fisheye);
+      grid.local.visible = true;
+    } else {
+      grid.local.visible = false;
     }
     horizonRing.visible = gridOn;
     if (horizonGroupRef.current) horizonGroupRef.current.quaternion.identity();
