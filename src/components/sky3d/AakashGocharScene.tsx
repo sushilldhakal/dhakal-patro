@@ -83,6 +83,14 @@ import {
   SKY_TEXTURE_SOURCES,
   type SkyTextureKey,
 } from "@/lib/sky3d/sky-textures";
+import {
+  fovForZoom,
+  GLOBE_BAND_R,
+  GLOBE_CAM_R,
+  GLOBE_R,
+  SPACE_FOV,
+  type SkyMode,
+} from "@/lib/sky3d/sky-zoom";
 import { makeMoonMaterial, type MoonMaterial } from "@/lib/sky3d/moon-material";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import earthToonUrl from "@/assets/graha/earth-orig.png";
@@ -134,10 +142,8 @@ const NAK_MID = (NAK_INNER + NAK_OUTER) / 2;
 /** Radius of the horizon dome. Everything on the sky sits on it. */
 const DOME = 100;
 /** How far back the camera sits in the Earth-globe view. */
-const OUTSIDE_ZOOM_MAX = 120;
 
 /** Radius of the Earth globe in the zoomed-out view. */
-const GLOBE_R = 30;
 /**
  * Radius the "you are here" marker sits at — the globe's own surface, near
  * enough. Both the dot and its label are placed here, so they stay the same
@@ -146,9 +152,7 @@ const GLOBE_R = 30;
  */
 const OBSERVER_R = GLOBE_R * 1.006;
 /** Radius the zodiac ring hugs the globe at. */
-const GLOBE_BAND_R = GLOBE_R * 1.42;
 /** Where the globe camera sits — far enough back to read as orthographic. */
-const GLOBE_CAM_R = 300;
 /** Bodies are tuned for the 100-unit dome; bring them down to the ring's scale. */
 const GLOBE_BODY_SCALE = 0.55;
 
@@ -189,7 +193,8 @@ const DOME_RADIUS: Record<GrahaKey, number> = {
   ketu: 0.7,
 };
 
-export type SkyMode = "space" | "horizon" | "globe";
+export type { SkyMode };
+
 
 /** What the camera is looking at. `earth` means the Earth itself / the observer. */
 export type FocusKey = GrahaKey | "earth";
@@ -2119,7 +2124,7 @@ export function AakashGocharScene({
         );
       }
       cam.lookAt(target.current);
-      const fov = Math.min(160, Math.max(6, (v.distance / 26) * 70));
+      const fov = fovForZoom("horizon", v.distance);
       if (Math.abs(cam.fov - fov) > 0.01) {
         cam.fov = fov;
         cam.updateProjectionMatrix();
@@ -2133,10 +2138,8 @@ export function AakashGocharScene({
       /* Zoom is optical, not positional: the camera stays parked well outside
          the globe and the lens narrows, so you can push in to a couple of
          degrees of ring without ever ending up inside the Earth. */
-      const t = Math.min(1, Math.max(0, v.distance / OUTSIDE_ZOOM_MAX));
-      const framed = 1.4 + Math.pow(t, 1.25) * (GLOBE_BAND_R * 2 - 1.4);
       const radius = GLOBE_CAM_R;
-      const fov = (2 * Math.atan(framed / radius)) / DEG;
+      const fov = fovForZoom("globe", v.distance);
       if (trackAt) {
         target.current.copy(trackAt);
         scratch.current.copy(target.current);
@@ -2179,8 +2182,8 @@ export function AakashGocharScene({
         target.current.z + v.distance * cosP * Math.cos(v.yaw),
       );
       cam.lookAt(target.current);
-      if (Math.abs(cam.fov - 46) > 0.01) {
-        cam.fov = 46;
+      if (Math.abs(cam.fov - SPACE_FOV) > 0.01) {
+        cam.fov = SPACE_FOV;
         cam.updateProjectionMatrix();
       }
     }
@@ -2285,7 +2288,14 @@ export function AakashGocharScene({
           stays nailed to the stars. */}
       <group ref={horizonGroupRef}>
         <group ref={groundRef} visible={false}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]}>
+          {/* Drawn last and writing no depth. As an ordinary transparent mesh
+              it sorted by its own origin — half a unit from the eye, while the
+              sky it is standing in front of is a hundred — so it went down
+              first and its depth then culled everything behind it outright.
+              The alt-az cage under the horizon was not being dimmed by the
+              veil; it was being thrown away before it could be blended, and no
+              amount of thinning the veil would have brought it back. */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]} renderOrder={2}>
             <circleGeometry args={[DOME * 1.02, 96]} />
             {/* Never opaque: the sky below your feet still belongs to the
                 sphere. With क्षितिजमुनि on it thins to a veil, so the zodiac
@@ -2297,7 +2307,13 @@ export function AakashGocharScene({
               color="#06110f"
               side={THREE.DoubleSide}
               transparent
-              opacity={toggles.belowHorizon ? 0.35 : 0.82}
+              depthWrite={false}
+              /* Thin enough to read straight through. The alt-az cage is drawn
+                 at 0.32 and the belt is not much stronger, so anything heavier
+                 here takes the lower half of both below the point where they
+                 register at all — which is the whole reason for drawing them
+                 down there. It is a tint saying "under your feet", not a lid. */
+              opacity={toggles.belowHorizon ? 0.16 : 0.82}
             />
           </mesh>
         </group>

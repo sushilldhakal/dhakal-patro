@@ -58,6 +58,7 @@ import {
   bsToAD,
   WEEKDAYS_SHORT_NE,
 } from "@/lib/bs-calendar";
+import { dragScaleForZoom, SPACE_FOV } from "@/lib/sky3d/sky-zoom";
 import { SkyDateTimePicker } from "@/components/sky3d/SkyDateTimePicker";
 import { bikramFromSun } from "@/lib/sky3d/bikram-solar";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
@@ -213,6 +214,19 @@ const GLOBE_VIEW = 78;
  * standing on — the page is Kathmandu's sky, and opening on the Pacific would
  * put the marker round the back.
  */
+/**
+ * The zoom each view opens at — the one where its drag speed is calibrated.
+ *
+ * Dragging turns the sky by an angle, and an angle is worth a different number
+ * of pixels at every zoom. Anchoring on each view's own opening zoom keeps the
+ * feel each one already had and only changes what zooming in does to it.
+ */
+const HOME_DISTANCE: Record<SkyMode, number> = {
+  space: SYSTEM_DISTANCE,
+  horizon: HORIZON_WIDE,
+  globe: GLOBE_VIEW,
+};
+
 const GLOBE_YAW = Math.PI - 0.6;
 const GLOBE_PITCH = 0.42;
 
@@ -606,11 +620,15 @@ export function AakashGocharSky({
       return;
     }
     captureDrag(e);
+    /* A fixed angle per pixel is only right at one zoom — see
+       {@link dragScaleForZoom}. */
+    const mode = modeRef.current;
+    const zoomScale = dragScaleForZoom(mode, view.current.distance, HOME_DISTANCE[mode]);
     /* Drag the sphere, don't drive the camera: pulling right swings the face
        you are looking at to the right, which means the camera has to go the
        other way round. */
-    view.current.yaw = gestureStart.current.yaw - dx * 0.006;
-    view.current.pitch = clampPitch(gestureStart.current.pitch + dy * 0.005);
+    view.current.yaw = gestureStart.current.yaw - dx * 0.006 * zoomScale;
+    view.current.pitch = clampPitch(gestureStart.current.pitch + dy * 0.005 * zoomScale);
   }, [captureDrag]);
 
   const zoomBy = useCallback((factor: number) => {
@@ -1150,7 +1168,7 @@ export function AakashGocharSky({
         onPointerCancel={endPointer}
       >
         <Canvas
-          camera={{ position: [0, 40, 26], fov: 46, near: 0.1, far: 600 }}
+          camera={{ position: [0, 40, 26], fov: SPACE_FOV, near: 0.1, far: 600 }}
           gl={{ antialias: true }}
           resize={{ debounce: 0, offsetSize: true }}
           style={{ width: "100%", height: "100%", display: "block" }}
