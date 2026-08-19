@@ -30,7 +30,7 @@
 import * as THREE from "three";
 
 import { altAzToVec3 } from "@/lib/sky3d/horizon";
-import { horizonConeRadiusDeg, projectHorizonRaw } from "@/lib/sky3d/horizon-projection";
+import { horizonViewWindow, projectHorizonRaw } from "@/lib/sky3d/horizon-projection";
 
 const RAD = Math.PI / 180;
 
@@ -233,23 +233,14 @@ export function buildGridLabels({
   };
   const maxJump = Math.max(width, height) * 0.4;
 
-  /* Where the lens is pointing, and how wide a cone the corners of the frame
-     reach — everything outside it is skipped unprojected. */
-  const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-  const centreAlt = Math.asin(Math.min(1, Math.max(-1, forward.y))) / RAD;
-  const centreAz = Math.atan2(forward.x, -forward.z) / RAD;
-  const cone = Math.min(179, horizonConeRadiusDeg(fovDeg, width, height) * 1.06);
-
-  const altLo = Math.max(-89.5, centreAlt - cone);
-  const altHi = Math.min(89.5, centreAlt + cone);
-  /* Meridians crowd together towards the poles, so a cone that reaches high
-     altitudes spans far more azimuth than it does altitude. Over-estimating is
-     safe (a few lines walked for nothing); under-estimating drops numbers. */
-  const reachAlt = Math.min(89, Math.max(Math.abs(altLo), Math.abs(altHi)));
-  const azHalf =
-    cone >= 90 || Math.abs(centreAlt) + cone >= 89
-      ? 180
-      : Math.min(180, cone / Math.cos(reachAlt * RAD));
+  /* Only the lines that can reach the frame are walked; everything outside
+     the visible cone is skipped before a point is projected. */
+  const { centreAlt, centreAz, altLo, altHi, azHalf } = horizonViewWindow(
+    camera,
+    fovDeg,
+    width,
+    height,
+  );
 
   const project = (alt: number, az: number) => {
     const v = altAzToVec3(alt, az, radius);
