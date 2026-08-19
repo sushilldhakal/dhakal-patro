@@ -108,11 +108,47 @@ export function zonedWallTimeToInstant(
   day: number,
   hour: number,
   minute: number,
-  timeZone: string
+  timeZone: string,
+  second = 0
 ): Date {
-  const wallAsUtc = utcMsFromParts(year, month, day, hour, minute);
+  const wallAsUtc = utcMsFromParts(year, month, day, hour, minute, second);
   const first = wallAsUtc - zoneOffsetMs(new Date(wallAsUtc), timeZone);
   return new Date(wallAsUtc - zoneOffsetMs(new Date(first), timeZone));
+}
+
+export function getZonedDateTimeParts(
+  date: Date,
+  timeZone: string
+): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+} {
+  const t = getZonedTimeParts(date, timeZone);
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    era: "short",
+  });
+  const bag: Record<string, string> = {};
+  for (const p of dtf.formatToParts(date)) {
+    if (p.type !== "literal") bag[p.type] = p.value;
+  }
+  let year = Number(bag.year);
+  if (bag.era === "BC" || bag.era === "BCE") year = 1 - year;
+  return {
+    year,
+    month: Number(bag.month),
+    day: Number(bag.day),
+    hour: t.hour,
+    minute: t.minute,
+    second: t.second,
+  };
 }
 
 /** Minutes since local midnight in the given timezone. */
@@ -131,9 +167,14 @@ export function minutesSinceMidnightInTimezone(
  * The `24:00` midnight hour is already folded back to `00` by
  * {@link getZonedTimeParts}, so this is safe to hand straight to a time picker.
  */
-export function clockStringInTimezone(date: Date, timeZone: string): string {
-  const { hour, minute } = getZonedTimeParts(date, timeZone);
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+export function clockStringInTimezone(
+  date: Date,
+  timeZone: string,
+  withSeconds = false,
+): string {
+  const { hour, minute, second } = getZonedTimeParts(date, timeZone);
+  const hm = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  return withSeconds ? `${hm}:${String(second).padStart(2, "0")}` : hm;
 }
 
 /** YYYY-MM-DD for "today" in the given timezone. */

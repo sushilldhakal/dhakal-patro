@@ -224,3 +224,43 @@ export function horizonConeRadiusDeg(fovDeg: number, width: number, height: numb
   const corner = maxR * Math.hypot(aspect, 1);
   return (2 * Math.atan(corner / 2) * 180) / Math.PI;
 }
+
+/**
+ * The patch of sky the canvas is showing: where the lens points, and how far
+ * the corners of the frame reach around it.
+ *
+ * The grid ruler uses it to walk only the lines that can reach the frame, and
+ * the fine cage tiers to build only the piece of sphere in view. Both would
+ * otherwise be doing whole-sky work for a one-degree window.
+ *
+ * The azimuth half-width is a deliberate over-estimate: meridians crowd
+ * together towards the poles, so a cone that reaches high altitudes spans far
+ * more azimuth than altitude. Too wide costs a few lines drawn off-screen;
+ * too narrow drops them where they were wanted.
+ */
+export function horizonViewWindow(
+  camera: THREE.Camera,
+  fovDeg: number,
+  width: number,
+  height: number,
+): {
+  centreAlt: number;
+  centreAz: number;
+  cone: number;
+  altLo: number;
+  altHi: number;
+  azHalf: number;
+} {
+  const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  const centreAlt = (Math.asin(Math.min(1, Math.max(-1, forward.y))) * 180) / Math.PI;
+  const centreAz = (Math.atan2(forward.x, -forward.z) * 180) / Math.PI;
+  const cone = Math.min(179, horizonConeRadiusDeg(fovDeg, width, height) * 1.06);
+  const altLo = Math.max(-89.5, centreAlt - cone);
+  const altHi = Math.min(89.5, centreAlt + cone);
+  const reachAlt = Math.min(89, Math.max(Math.abs(altLo), Math.abs(altHi)));
+  const azHalf =
+    cone >= 90 || Math.abs(centreAlt) + cone >= 89
+      ? 180
+      : Math.min(180, cone / Math.cos((reachAlt * Math.PI) / 180));
+  return { centreAlt, centreAz, cone, altLo, altHi, azHalf };
+}

@@ -50,15 +50,13 @@ import type { GocharGraha } from "@/lib/api";
 import type { Era } from "@/lib/era";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import {
-  adToBS,
   BS_MONTH_NAMES,
   BS_MONTHS_NE,
   bsMonthLabel,
-  bsToAD,
   WEEKDAYS_SHORT_NE,
 } from "@/lib/bs-calendar";
 import { dragScaleForZoom, fovForZoom, SPACE_FOV } from "@/lib/sky3d/sky-zoom";
-import { SkyDateTimePicker } from "@/components/sky3d/SkyDateTimePicker";
+import { SkyTimeSheet } from "@/components/sky3d/SkyTimeSheet";
 import { bikramFromSun } from "@/lib/sky3d/bikram-solar";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { NAKSHATRA_SHORT } from "@/lib/sky3d/nakshatra-stars";
@@ -382,10 +380,6 @@ export function AakashGocharSky({
   ayanamsaDeg,
   date,
   onDateChange,
-  era = "bs",
-  vikram,
-  onEraChange,
-  clock,
   onClockChange,
   observer = KATHMANDU,
   timeZone = "Asia/Kathmandu",
@@ -430,9 +424,20 @@ export function AakashGocharSky({
   });
 
   const [mode, setMode] = useState<SkyMode>("space");
-  const [playing, setPlaying] = useState(true);
-  const [speedIndex, setSpeedIndex] = useState(0);
-  const [reverse, setReverse] = useState(false);
+  /** Signed simulated seconds per real second. 0 is paused; ±1 is wall time. */
+  const [timeRate, setTimeRate] = useState(1);
+  const lastRate = useRef(1);
+  const playing = timeRate !== 0;
+  const reverse = timeRate < 0;
+  const speedIndex = SPEED_LADDER.findIndex((s) => s.seconds === Math.abs(timeRate));
+  const speed =
+    speedIndex >= 0
+      ? SPEED_LADDER[speedIndex]
+      : {
+          seconds: Math.abs(timeRate) || 1,
+          ne: `×${Math.round(Math.abs(timeRate))}`,
+          en: `×${Math.round(Math.abs(timeRate))}`,
+        };
   /* Controlled when the page passes a key, uncontrolled otherwise — the inner
      state is kept either way so an uncontrolled sky still works on its own. */
   const [ownSelectedKey, setOwnSelectedKey] = useState<GrahaKey | null>(null);
@@ -482,12 +487,10 @@ export function AakashGocharSky({
     sim.current.timeMs = date.getTime();
   }, [date]);
 
-  const speed = SPEED_LADDER[speedIndex];
-
   useEffect(() => {
-    sim.current.playing = playing;
-    sim.current.secondsPerRealSecond = speed.seconds * (reverse ? -1 : 1);
-  }, [playing, speed, reverse]);
+    sim.current.playing = timeRate !== 0;
+    sim.current.secondsPerRealSecond = timeRate === 0 ? 1 : timeRate;
+  }, [timeRate]);
 
   /**
    * A press of either fast button. Coming from a standstill or from the other
@@ -495,25 +498,33 @@ export function AakashGocharSky({
    * fast, real time being the one below it; otherwise it climbs a rung and
    * stops at the top, seventy-two years a second.
    */
-  const stepSpeed = useCallback(
-    (direction: "forward" | "back") => {
-      const wantReverse = direction === "back";
-      const fromRest = !playing || reverse !== wantReverse;
-      setSpeedIndex((i) => (fromRest ? 1 : Math.min(SPEED_LADDER.length - 1, i + 1)));
-      setReverse(wantReverse);
-      setPlaying(true);
-    },
-    [playing, reverse],
-  );
+  const stepSpeed = useCallback((direction: "forward" | "back") => {
+    const wantReverse = direction === "back";
+    setTimeRate((current) => {
+      const mag = Math.abs(current) || Math.abs(lastRate.current) || 1;
+      const fromRest = current === 0 || current < 0 !== wantReverse;
+      let idx = 0;
+      for (let i = 0; i < SPEED_LADDER.length; i += 1) {
+        if (SPEED_LADDER[i].seconds <= mag) idx = i;
+      }
+      const next = fromRest
+        ? SPEED_LADDER[1]
+        : SPEED_LADDER[Math.min(SPEED_LADDER.length - 1, idx + 1)];
+      const signed = (wantReverse ? -1 : 1) * next.seconds;
+      lastRate.current = signed;
+      return signed;
+    });
+  }, []);
 
-  /** Pause always returns the clock to real time, running forward. */
   const togglePlay = useCallback(() => {
-    if (playing) {
-      setSpeedIndex(0);
-      setReverse(false);
-    }
-    setPlaying((p) => !p);
-  }, [playing]);
+    setTimeRate((current) => {
+      if (current !== 0) {
+        lastRate.current = current;
+        return 0;
+      }
+      return lastRate.current || 1;
+    });
+  }, []);
 
   /* ── gestures ─────────────────────────────────────────────────────────── */
 
@@ -933,45 +944,26 @@ export function AakashGocharSky({
     return delta * 60000;
   }, [date, timeZone]);
 
-  /**
-   * The day the date picker opens on — the one the place is having, not the
-   * device.
-   *
-   * `adToBS` reads a mid-day instant off the device's own calendar, so at 20:30
-   * in Kathmandu a reader in Melbourne was shown tomorrow, and setting the hour
-   * looked like it moved the day. Normalising through the observed zone, and
-   * handing over a UTC midnight, makes the picker agree with the HUD above it
-   * wherever it is read from.
-   */
-  const dateBs = useMemo(
-    () => adToBS(zoneMidnight(new Date(date.getTime() + zoneOffsetMs))),
-    [date, zoneOffsetMs],
-  );
-
-  /**
-   * The day the picker opens on, in the era it is showing.
-   *
-   * The page's own parts win when they are for this era: they are the ones that
-   * were asked for, and below the Vikram epoch they are the only ones there
-   * are — `adToBS` has no table down there and pins to its first month, so a
-   * पू.वि.सं. instant comes back as वि.सं. १७०० every time.
-   */
-  const pickerDate = useMemo(() => {
-    if (vikram && vikram.era === era) return vikram;
-    if (era === "ad" || era === "bc") {
-      /* Gregorian browse reads straight off the instant. Every era takes a
-         positive year and carries the sign itself, so a BCE date is named by
-         the era: astronomical 0 is 1 BC. */
-      const local = zoneMidnight(new Date(date.getTime() + zoneOffsetMs));
+  const applyInstant = useCallback(
+    (ms: number) => {
+      sim.current.timeMs = ms;
+      const local = new Date(ms + zoneOffsetMs);
       const y = local.getUTCFullYear();
-      return {
-        year: era === "bc" ? Math.max(1, 1 - y) : Math.max(1, y),
-        month: local.getUTCMonth() + 1,
-        day: local.getUTCDate(),
-      };
-    }
-    return dateBs;
-  }, [vikram, era, dateBs, date, zoneOffsetMs]);
+      const mo = local.getUTCMonth() + 1;
+      const d = local.getUTCDate();
+      const hh = local.getUTCHours();
+      const mm = local.getUTCMinutes();
+      const ss = local.getUTCSeconds();
+      const civil = new Date(0);
+      civil.setFullYear(y, mo - 1, d);
+      civil.setHours(12, 0, 0, 0);
+      onDateChange?.(civil);
+      onClockChange?.(
+        `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`,
+      );
+    },
+    [onDateChange, onClockChange, zoneOffsetMs],
+  );
 
   /**
    * The clock reading, in the calendar the reader is using and on the wall of
@@ -1650,36 +1642,24 @@ export function AakashGocharSky({
         </div>
       ) : null}
 
-      {/* An in-tree overlay rather than a portal: it belongs to the fullscreen
-          layer it opens over, so it inherits that layer's stacking and theme
-          without either being re-applied. */}
+      {/* In-tree, not portalled: this has to paint inside the fullscreen layer. */}
       {datePickerOpen ? (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <button
-            type="button"
-            aria-label={pick("बन्द गर्नुहोस्", "Close")}
-            className="absolute inset-0 cursor-default"
-            onClick={() => setDatePickerOpen(false)}
-          />
-          <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-4">
-            <SkyDateTimePicker
-              era={era}
-              year={pickerDate.year}
-              month={pickerDate.month}
-              day={pickerDate.day}
-              clock={clock}
-              onSelectDate={(nextEra, y, m, d) => {
-                /* The page converts when it can take the era back — that is the
-                   path a पू.वि.सं. day has to go down. Falling back to the
-                   offline table keeps a sky mounted on its own working. */
-                if (onEraChange) onEraChange(nextEra, { year: y, month: m, day: d });
-                else onDateChange?.(bsToAD(y, m, d));
-              }}
-              onClockChange={onClockChange}
-              onDone={() => setDatePickerOpen(false)}
-            />
-          </div>
-        </div>
+        <SkyTimeSheet
+          timeMs={sample?.timeMs ?? date.getTime()}
+          zoneOffsetMs={zoneOffsetMs}
+          timeRate={timeRate}
+          onClose={() => setDatePickerOpen(false)}
+          onApplyMs={applyInstant}
+          onTimeRate={(rate) => {
+            if (rate !== 0) lastRate.current = rate;
+            setTimeRate(rate);
+          }}
+          onTogglePlay={togglePlay}
+          onResetRate={() => {
+            lastRate.current = 1;
+            setTimeRate(1);
+          }}
+        />
       ) : null}
     </div>
   );
@@ -1764,6 +1744,8 @@ function gridDegreeBox(
   if (side === "right") return { ...base, left: x - 3, top: y - 6, transform: "translateX(-100%)" };
   if (side === "top") return { ...base, left: x, top: y, transform: "translateX(-50%)" };
   if (side === "bottom") return { ...base, left: x, top: y - 12, transform: "translateX(-50%)" };
+  // The meridian's own scale: set beside the line rather than across it.
+  if (side === "meridian") return { ...base, left: x + 4, top: y - 6, opacity: 0.8 };
   // The skyline: lifted clear of the horizon line it is measuring.
   return { ...base, left: x, top: y - 13, transform: "translateX(-50%)", opacity: 0.75 };
 }
@@ -1909,16 +1891,19 @@ const SkyLabels = memo(function SkyLabels({
           );
         }
         if (label.kind === "pada" && label.index) {
-          /* The quarter's own number, and which नक्षत्र it is a quarter of —
-             the belt already carries the ticks, this says which is which. */
-          const nak = label.deg ? NAKSHATRA_SHORT[label.deg - 1] : undefined;
+          /* Just the quarter's number, 1 to 4.
+             It used to carry its नक्षत्र's name too, which meant the same name
+             printed four times in a row across a strip that already sits under
+             that name on the belt — 108 of them, each wide enough to run into
+             its neighbour. The ticks say where the quarters are; the number
+             says which one you are looking at. */
           return (
             <span
               key={label.id}
-              className="text-[9px]"
-              style={{ ...labelBox(label.x, label.y, 54, -5), color: LABEL_COLOR.pada }}
+              className="text-[9px] tabular-nums"
+              style={{ ...labelBox(label.x, label.y, 14, -5), color: LABEL_COLOR.pada }}
             >
-              {`${nak ? (lang === "en" ? nak.en : nak.ne) : ""} ${digits(label.index)}`}
+              {digits(label.index)}
             </span>
           );
         }

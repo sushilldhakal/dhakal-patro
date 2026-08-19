@@ -41,9 +41,11 @@ export function fovForZoom(mode: SkyMode, distance: number): number {
     const maxD = 120;
     if (distance <= home) {
       const t = Math.min(1, Math.max(0, (distance - minD) / (home - minD)));
-      /* Tight crop is ~12° so a 1° cage actually fills the frame, not two
-         lonely 10° lines. */
-      return 12 + t * (90 - 12);
+      /* The tight end is 4°, about eight times a full Moon across the frame —
+         close enough to separate a graha from the star it is passing, which
+         12° was not. The cage follows it down to a half-degree so the crop
+         still has a grid in it rather than two lonely lines. */
+      return 4 + t * (90 - 4);
     }
     const t = Math.min(1, Math.max(0, (distance - home) / (maxD - home)));
     return 90 + t * (240 - 90);

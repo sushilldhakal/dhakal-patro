@@ -34,8 +34,12 @@ import { horizonConeRadiusDeg, projectHorizonRaw } from "@/lib/sky3d/horizon-pro
 
 const RAD = Math.PI / 180;
 
-/** Which border a number is pinned to; `horizon` is the skyline itself. */
-export type GridLabelSide = "left" | "right" | "top" | "bottom" | "horizon";
+/**
+ * Where a number is pinned. The four borders, plus the two lines of the sky
+ * that carry a scale of their own: the skyline, which bearings are read off,
+ * and the meridian the view is centred on, which altitudes climb.
+ */
+export type GridLabelSide = "left" | "right" | "top" | "bottom" | "horizon" | "meridian";
 
 export type GridLabel = {
   id: string;
@@ -51,8 +55,9 @@ export type GridLabel = {
 /** How much of a border a single number claims, px. */
 const SEP_VERTICAL = 30;
 const SEP_HORIZONTAL = 40;
-/** And how far apart the numbers riding the skyline must sit. */
+/** And how far apart the numbers riding the skyline and the meridian must sit. */
 const SEP_HORIZON = 52;
+const SEP_MERIDIAN = 26;
 
 /** How far in from the canvas edge the ruler sits, px. */
 const INSET = 17;
@@ -63,8 +68,17 @@ const SAMPLES = 72;
 /** Intervals a ruler is allowed to use, coarsest last. */
 const LADDER = [1, 2, 5, 10, 15, 30, 45, 90] as const;
 
-/** Smallest gap between two numbers on the same border before we thin out, px. */
-const MIN_LABEL_PITCH = 46;
+/**
+ * Smallest gap between two numbers on the same border before we thin out, px.
+ *
+ * Set so a 12° field over a canvas around 560px tall still ticks every 1°.
+ * Tighter than that the ruler simply stays on whole degrees — the cage goes on
+ * to half a degree, but half-degree numbers would want arcminutes to read
+ * properly and the borders have no room for them. Nothing collides at this
+ * pitch: the numbers are 12px of type, and the rectangle test is the real
+ * guard.
+ */
+const MIN_LABEL_PITCH = 40;
 
 /**
  * The interval the ruler ticks at: the finest rung of {@link LADDER} that is
@@ -80,6 +94,17 @@ function labelStepFor(fovDeg: number, heightPx: number, gridStep: number): numbe
   return 90;
 }
 
+/**
+ * What a number pays for being on a border that is not its own.
+ *
+ * Big enough to outrank roundness entirely, so the left and right borders read
+ * as an altitude ruler and the top and bottom as an azimuth one, rather than
+ * as the two interleaved wherever a vertical happened to cross the side of the
+ * frame. A wrong-side number is still allowed — it just waits until nothing
+ * else wants the spot.
+ */
+const WRONG_SIDE = 10;
+
 /** How round a degree is — 0 is the roundest, and wins a contested spot. */
 function roundness(deg: number): number {
   const v = Math.abs(deg);
@@ -94,6 +119,40 @@ function roundness(deg: number): number {
 type Candidate = GridLabel & { rank: number; key: number };
 
 type Frame = { xL: number; xR: number; yT: number; yB: number };
+
+type Rect = { x: number; y: number; w: number; h: number };
+
+/** Line height of the 9px overlay type, and the gap kept around each number. */
+const TEXT_H = 12;
+const TEXT_PAD = 3;
+
+/**
+ * The box a number will occupy once the overlay has hung it on its border.
+ *
+ * It has to agree with `gridDegreeBox` over in the sky shell — that is what
+ * actually positions the text — because the corners are decided here: a
+ * left-border number and a top-border number are in different lanes and only
+ * a rectangle test knows they are about to sit on each other.
+ */
+function boxFor(c: Candidate): Rect {
+  const chars = String(Math.abs(c.value)).length + (c.value < 0 ? 1 : 0) + 1;
+  const w = chars * 6.2 + 2;
+  if (c.side === "left") return { x: c.x + 3, y: c.y - 6, w, h: TEXT_H };
+  if (c.side === "right") return { x: c.x - 3 - w, y: c.y - 6, w, h: TEXT_H };
+  if (c.side === "top") return { x: c.x - w / 2, y: c.y, w, h: TEXT_H };
+  if (c.side === "bottom") return { x: c.x - w / 2, y: c.y - 12, w, h: TEXT_H };
+  if (c.side === "meridian") return { x: c.x + 4, y: c.y - 6, w, h: TEXT_H };
+  return { x: c.x - w / 2, y: c.y - 13, w, h: TEXT_H };
+}
+
+function overlaps(a: Rect, b: Rect): boolean {
+  return (
+    a.x - TEXT_PAD < b.x + b.w &&
+    b.x - TEXT_PAD < a.x + a.w &&
+    a.y - TEXT_PAD < b.y + b.h &&
+    b.y - TEXT_PAD < a.y + a.h
+  );
+}
 
 /**
  * Where a polyline crosses each border, at most once per border.
@@ -222,7 +281,7 @@ export function buildGridLabels({
         y,
         side,
         key: side === "left" || side === "right" ? y : x,
-        rank: roundness(alt) + (side === "left" || side === "right" ? 0 : 0.5),
+        rank: roundness(alt) + (side === "left" || side === "right" ? 0 : WRONG_SIDE),
       });
     });
   }
@@ -244,8 +303,30 @@ export function buildGridLabels({
         y,
         side,
         key: side === "left" || side === "right" ? y : x,
-        rank: roundness(value) + (side === "top" || side === "bottom" ? 0 : 0.5),
+        rank: roundness(value) + (side === "top" || side === "bottom" ? 0 : WRONG_SIDE),
       });
+    });
+  }
+
+  /* And the ground itself: azimuth read off the skyline, where the eye looks
+     for a bearing. The four cardinals already carry N/E/S/W, so their own
+     degrees are left out rather than stacked under the letter. Ranked below
+     the borders, so where the two meet the border keeps its number. */
+  for (let az = azFrom; az <= centreAz + azHalf; az += step) {
+    const value = ((az % 360) + 360) % 360;
+    if (value % 90 === 0) continue;
+    const hit = project(0, az);
+    if (!hit) continue;
+    if (hit.x < frame.xL || hit.x > frame.xR || hit.y < frame.yT || hit.y > frame.yB) continue;
+    candidates.push({
+      id: `az-${value}-horizon`,
+      kind: "az",
+      value,
+      x: hit.x,
+      y: hit.y,
+      side: "horizon",
+      key: hit.x,
+      rank: roundness(value) + WRONG_SIDE * 2,
     });
   }
 
@@ -253,32 +334,73 @@ export function buildGridLabels({
      are the ones a reader would have picked. */
   candidates.sort((a, b) => a.rank - b.rank || a.key - b.key);
 
-  const taken: Record<string, number[]> = { left: [], right: [], top: [], bottom: [] };
+  const lanes: Record<string, number[]> = {
+    left: [],
+    right: [],
+    top: [],
+    bottom: [],
+    horizon: [],
+    meridian: [],
+  };
+  const placed: Rect[] = [];
   const out: GridLabel[] = [];
   const seen = new Set<string>();
   for (const c of candidates) {
     if (seen.has(c.id)) continue;
-    const lane = taken[c.side];
-    const sep = c.side === "left" || c.side === "right" ? SEP_VERTICAL : SEP_HORIZONTAL;
+    const lane = lanes[c.side];
+    const sep =
+      c.side === "left" || c.side === "right"
+        ? SEP_VERTICAL
+        : c.side === "horizon"
+          ? SEP_HORIZON
+          : c.side === "meridian"
+            ? SEP_MERIDIAN
+            : SEP_HORIZONTAL;
     if (lane.some((v) => Math.abs(v - c.key) < sep)) continue;
+    /* The lanes are policed one at a time, so nothing in them knows about the
+       corners, where the left border's numbers and the top border's meet. One
+       rectangle test over all of them catches that. */
+    const box = boxFor(c);
+    if (placed.some((r) => overlaps(r, box))) continue;
     lane.push(c.key);
+    placed.push(box);
     seen.add(c.id);
     out.push({ id: c.id, kind: c.kind, value: c.value, x: c.x, y: c.y, side: c.side });
   }
 
-  /* And the ground itself: azimuth read off the skyline, where the eye looks
-     for a bearing. The four cardinals already carry N/E/S/W, so their own
-     degrees are left out rather than stacked under the letter. */
-  const placed: { x: number; y: number }[] = [];
-  for (let az = azFrom; az <= centreAz + azHalf; az += step) {
-    const value = ((az % 360) + 360) % 360;
-    if (value % 90 === 0) continue;
-    const hit = project(0, az);
+  /* Altitudes that never reached a border.
+   *
+   * Pulled right out to the fisheye, an almucantar is a closed ring sitting
+   * whole inside the frame — it crosses no edge, so the wide sky came out with
+   * bearings all round it and not one altitude on it. Number those where the
+   * meridian the view is centred on cuts them, which is where an atlas runs
+   * its scale and where the eye is already looking. */
+  const numbered = new Set(out.filter((l) => l.kind === "alt").map((l) => l.value));
+  const spare: Candidate[] = [];
+  for (let alt = Math.ceil(altLo / step) * step; alt <= altHi; alt += step) {
+    if (Math.abs(alt) >= 90 || numbered.has(alt)) continue;
+    const hit = project(alt, centreAz);
     if (!hit) continue;
     if (hit.x < frame.xL || hit.x > frame.xR || hit.y < frame.yT || hit.y > frame.yB) continue;
-    if (placed.some((p) => Math.hypot(p.x - hit.x, p.y - hit.y) < SEP_HORIZON)) continue;
-    placed.push(hit);
-    out.push({ id: `az-${value}-horizon`, kind: "az", value, x: hit.x, y: hit.y, side: "horizon" });
+    spare.push({
+      id: `alt-${alt}-meridian`,
+      kind: "alt",
+      value: alt,
+      x: hit.x,
+      y: hit.y,
+      side: "meridian",
+      key: hit.y,
+      rank: roundness(alt),
+    });
+  }
+  spare.sort((a, b) => a.rank - b.rank || a.key - b.key);
+  for (const c of spare) {
+    if (lanes.meridian.some((v) => Math.abs(v - c.key) < SEP_MERIDIAN)) continue;
+    const box = boxFor(c);
+    if (placed.some((r) => overlaps(r, box))) continue;
+    lanes.meridian.push(c.key);
+    placed.push(box);
+    out.push({ id: c.id, kind: c.kind, value: c.value, x: c.x, y: c.y, side: c.side });
   }
 
   return out;

@@ -171,7 +171,7 @@ export function AakashGochar() {
      the instant with `setHours` would land whoever is not sitting in that zone
      on a different moment than the one they chose. */
   const sceneDate = useMemo(() => {
-    const [hour, minute] = clock.split(":").map(Number);
+    const [hour = 0, minute = 0, second = 0] = clock.split(":").map(Number);
     return zonedWallTimeToInstant(
       date.getFullYear(),
       date.getMonth() + 1,
@@ -179,6 +179,7 @@ export function AakashGochar() {
       hour || 0,
       minute || 0,
       tz,
+      second || 0,
     );
   }, [date, clock, tz]);
 

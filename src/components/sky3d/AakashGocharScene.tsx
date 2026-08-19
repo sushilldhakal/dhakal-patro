@@ -269,13 +269,10 @@ export type ScreenLabel = {
    * line and letting half of it fall off the canvas. `horizon` rides the
    * skyline itself.
    */
-  side?: "left" | "right" | "top" | "bottom" | "horizon";
+  side?: "left" | "right" | "top" | "bottom" | "horizon" | "meridian";
   /** Pole stars only: the Gregorian year the pole passes closest to this one. */
   year?: number;
-  /**
-   * The obliquity marker: the angle it is calling out, degrees. On a पाद, the
-   * 1–27 नक्षत्र it belongs to, so the overlay can name its own quarter.
-   */
+  /** The obliquity marker: the angle it is calling out, degrees. */
   deg?: number;
   /** True when this label is not the live rashi / month / नक्षत्र. */
   dim?: boolean;
@@ -460,7 +457,13 @@ function makeDynamicSegments(count: number, color: string, opacity: number) {
 function bakeHorizonGrid(step: number, skipMultiplesOf: readonly number[], opacity: number) {
   const pairs = buildAzimuthGridPairs(step, skipMultiplesOf);
   const object = makeDynamicSegments(pairs.length, GRID, opacity);
-  object.renderOrder = 4;
+  /* Behind everything the cage is a reference *for*.
+     It draws with the depth test off, so whatever order it is given it paints
+     straight over what came before it — at renderOrder 4 that was the राशि
+     belt and the graha discs themselves, crosshatched by a bright green line
+     every 15°. Drawn first instead, it is a backdrop: the belt, the grahas and
+     the skyline all lay over it. */
+  object.renderOrder = -2;
   const mat = object.material as THREE.LineBasicMaterial;
   mat.depthTest = false;
   mat.depthWrite = false;
@@ -1176,12 +1179,15 @@ export function AakashGocharScene({
    * landed on the first frame of the view rather than on a zoom the reader
    * asked for. The group is created empty and fills in as they push in.
    */
-  const gridGroup = useMemo(() => {
+  const grid = useMemo(() => {
     const group = new THREE.Group();
     group.name = "horizon-grid";
-    return group;
+    /* The group and the slots it fills are made together and never apart: a
+       tier remembered without the group it was added to, or a fresh group
+       beside tiers that think they are already in one, is a cage that never
+       gets drawn. */
+    return { group, tiers: GRID_TIERS.map(() => null as THREE.LineSegments | null) };
   }, []);
-  const gridTiers = useRef<(THREE.LineSegments | null)[]>(GRID_TIERS.map(() => null));
 
   const horizonRing = useMemo(() => {
     const line = makeLine(circlePoints(DOME * 0.999, 180), "#c8ff7a", 0.9);
@@ -1865,7 +1871,7 @@ export function AakashGocharScene({
             const at = place(lon, NAK_LABEL_LAT, NAK_OUTER - 0.32);
             if (labelVisible(at)) {
               project(
-                { id: `p-${i}`, kind: "pada", index: (i % 4) + 1, deg: Math.floor(i / 4) + 1 },
+                { id: `p-${i}`, kind: "pada", index: (i % 4) + 1 },
                 at,
               );
             }
@@ -1875,7 +1881,6 @@ export function AakashGocharScene({
     }
 
     if (collect && horizon && !globe) {
-      (window as any).__gridDebug = { horizon, globe, grid: toggles.grid, field: fovForZoom("horizon", view.current.distance), step: gridStepForFov(fovForZoom("horizon", view.current.distance)), width, height, before: collected.length };
       for (const c of COMPASS_POINTS) {
         project(
           { id: `c-${c.en}`, kind: "cardinal", text: c.en },
@@ -1883,13 +1888,10 @@ export function AakashGocharScene({
         );
       }
       if (toggles.grid) {
-        /* Degree numbers only once the cage is actually on — they used to
-           carpet a wide sky. A step of 0 is the opening view: compass only.
-
-           Placing them is its own problem — a line has to be *walked* to find
-           where it leaves the frame, or an almucantar lying along the bottom
-           edge stamps its number across the whole width — so it lives in
-           `grid-labels`. */
+        /* The numbers on the cage. Placing them is its own problem — a line
+           has to be *walked* to find where it leaves the frame, or an
+           almucantar lying along the bottom edge stamps its number across the
+           whole width — so it lives in `grid-labels`. */
         const field = fovForZoom("horizon", view.current.distance);
         for (const g of buildGridLabels({
           camera: state.camera,
@@ -1910,7 +1912,6 @@ export function AakashGocharScene({
           });
         }
       }
-      (window as any).__gridDebug.after = collected.length;
     }
 
     /* Each star group's own name, anchored on the group.
@@ -2075,18 +2076,20 @@ export function AakashGocharScene({
     tiltMarks.arc.visible = globe && toggles.tilt;
     equatorLine.visible = horizon && !globe && (toggles.rashiBelt || toggles.nakshatraBelt);
     const gridOn = horizon && !globe && toggles.grid;
-    gridGroup.visible = gridOn;
+    grid.group.visible = gridOn;
     for (let i = 0; i < GRID_TIERS.length; i += 1) {
       const tier = GRID_TIERS[i];
       const wanted = gridOn && horizonFov < tier.maxFov;
-      let object = gridTiers.current[i];
+      let object = grid.tiers[i];
       if (wanted && !object) {
         object = bakeHorizonGrid(tier.step, tier.skipMultiplesOf, tier.opacity);
         injectHorizonFisheyeIn(object, fisheye);
-        gridTiers.current[i] = object;
-        gridGroup.add(object);
+        grid.tiers[i] = object;
       }
-      if (object) object.visible = wanted;
+      if (object) {
+        if (object.parent !== grid.group) grid.group.add(object);
+        object.visible = wanted;
+      }
     }
     horizonRing.visible = gridOn;
     if (horizonGroupRef.current) horizonGroupRef.current.quaternion.identity();
@@ -2393,7 +2396,7 @@ export function AakashGocharScene({
           </mesh>
         </group>
         <primitive object={horizonRing} />
-        <primitive object={gridGroup} />
+        <primitive object={grid.group} />
       </group>
 
       {/* The Earth globe: a dark ball carrying nothing but its graticule, with
