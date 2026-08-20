@@ -27,6 +27,11 @@
 const STAR_NAME_NE: Record<string, string> = {
   Pollux: "दिति",
   Castor: "अदिति",
+  // हस्त नक्षत्रका पाँच तारा — योगतारा (Algorab) आफैं हस्त हो; बाँकी चार साथी तारा।
+  Gienah: "सवितृ",
+  Minkar: "अर्थवा",
+  Kraz: "प्रभा",
+  Alchiba: "साध्य",
 };
 
 /**
@@ -259,7 +264,7 @@ export const NAKSHATRA_ASTERISMS: NakshatraAsterism[] = [
     stars: [
       { name: "δ Crv (Algorab)", ra: 187.466, dec: -16.516, mag: 2.95 },
       { name: "γ Crv (Gienah)", ra: 183.952, dec: -17.542, mag: 2.59 },
-      { name: "ε Crv", ra: 182.532, dec: -22.62, mag: 3.02 },
+      { name: "ε Crv (Minkar)", ra: 182.532, dec: -22.62, mag: 3.02 },
       { name: "β Crv (Kraz)", ra: 188.597, dec: -23.397, mag: 2.65 },
       { name: "α Crv (Alchiba)", ra: 182.103, dec: -24.729, mag: 4.02 },
     ],

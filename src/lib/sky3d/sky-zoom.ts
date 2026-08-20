@@ -56,9 +56,8 @@ export function fovForZoom(mode: SkyMode, distance: number): number {
     if (distance <= home) {
       const t = Math.min(1, Math.max(0, (distance - minD) / (home - minD)));
       /* The tight end is 1° — two full Moons across the frame. The cage
-         follows it down in arcminutes (30′, 10′, 5′) and the ruler numbers
-         itself `1° 10′`, so the crop is still something you can measure on
-         rather than an empty patch of sky. */
+         follows it down (10° → 5° → 1° → ½°) so the crop is still something
+         you can measure on rather than an empty patch of sky. */
       return 1 + t * (90 - 1);
     }
     const t = Math.min(1, Math.max(0, (distance - home) / (maxD - home)));

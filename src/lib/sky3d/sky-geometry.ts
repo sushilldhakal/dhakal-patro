@@ -129,19 +129,16 @@ export type GridTier = {
 export const ARCMIN = 1 / 60;
 
 export const GRID_TIERS: readonly GridTier[] = [
-  /* One tier, and only one. The Alt-Az grid is a coordinate system, not a
-     decoration: an almucantar every 10° of altitude and a vertical every 10°
-     of azimuth, fixed in the observer's local horizon frame, built once and
-     never rebuilt. Zoom moves the camera through it and nothing else — the
-     spacing does not change, the coordinates do not change, and 0° is उत्तर at
-     every field of view.
-
-     This replaced a ladder of eight tiers that swapped 30° for 15° for 5° and
-     on down to 5′ as the lens narrowed. It read well at any single zoom and
-     was wrong in principle: the grid the reader was measuring against was not
-     the same grid from one moment to the next. The cost of dropping it is that
-     an arcminute crop now has 10° lines and no finer ones. */
+  /* Coarse → fine as the क्षितिज lens narrows. 10° is the opening cage; 5°,
+     1°, then ½° fade in so a tight crop still has lines you can count against.
+     Coarser lines stay on (each finer tier skips them) so the round numbers
+     do not vanish the moment a denser web appears. ½° is rebuilt over the
+     visible patch — a whole-sky ½° cage is hundreds of thousands of vertices
+     for a window a dozen degrees across. */
   { step: 600, maxFov: Infinity, skipMultiplesOf: [], opacity: 0.34 },
+  { step: 300, maxFov: 70, skipMultiplesOf: [600], opacity: 0.26 },
+  { step: 60, maxFov: 28, skipMultiplesOf: [300, 600], opacity: 0.18 },
+  { step: 30, maxFov: 12, skipMultiplesOf: [60, 300, 600], opacity: 0.14, local: true },
 ];
 
 /** The finest spacing the cage is drawing at this field of view, arcminutes. */
@@ -257,8 +254,9 @@ export type GridWindow = {
 
 /** Segments along one line of a local patch. The window is small; this is ample. */
 const LOCAL_SEGMENTS = 48;
-/** Lines per axis a local patch will draw before it gives up and thins out. */
-const LOCAL_MAX_LINES = 96;
+/** Lines per axis a local patch will draw before it gives up and thins out.
+ *  ½° around the zenith is ~360 extra meridians (the 1° set is already baked). */
+const LOCAL_MAX_LINES = 400;
 
 /**
  * The same cage, but only over `window` — for the tiers whose whole-sky form

@@ -77,6 +77,7 @@ import {
   type eclipticPoint,
 } from "@/lib/sky3d/sky-geometry";
 import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000, starOverlayNames } from "@/lib/sky3d/nakshatra-stars";
+import { VEDIC_CONSTELLATION_LINKS } from "@/lib/sky3d/vedic-constellations";
 import {
   placedPoleStars,
   poleStarEpoch,
@@ -158,8 +159,12 @@ const NAK_MID = (NAK_INNER + NAK_OUTER) / 2;
 /** Radius of the horizon dome. Everything on the sky sits on it. */
 const DOME = 100;
 
-/** Size of the नामाङ्कित वैदिक तारा catalogue — see [[vedicField]]. */
-const VEDIC_STAR_CAPACITY = 40;
+/**
+ * Size of the नामाङ्कित वैदिक तारा catalogue — see [[vedicField]]. The server
+ * currently sends 46 (`build_vedic_stars`); kept with headroom so a future
+ * addition there does not silently truncate the list again.
+ */
+const VEDIC_STAR_CAPACITY = 64;
 
 /** Pixel size from visual magnitude — Sirius (−1.5) reads as a disc, Alcor (4) as a point. */
 function vedicStarSize(mag: number): number {
@@ -343,7 +348,7 @@ export type SceneToggles = {
    * the 12-fold is already the राशि.
    */
   monthRing: boolean;
-  /** The azimuth grid: almucantars and verticals, 10° down to 1° as you zoom. */
+  /** The azimuth grid: almucantars and verticals, 10° down to ½° as you zoom. */
   grid: boolean;
   /**
    * Freeze the Earth's spin. The diurnal rotation drags the whole sky round
@@ -1297,8 +1302,8 @@ export function AakashGocharScene({
    * Unlike every other star field on this page, these carry no client-side
    * precession formula: the server positions them (Swiss Ephemeris
    * fixed-star catalogue, sidereal, for the date on screen) and this just
-   * plots what it was given. The buffer is sized to the catalogue's own
-   * count (32) and `setDrawRange` trims it to however many the current
+   * plots what it was given. The buffer is sized to `VEDIC_STAR_CAPACITY`
+   * and `setDrawRange` trims it to however many the current
    * response actually carried — fewer while it is still loading, or if the
    * server's star layer failed soft.
    */
@@ -1310,6 +1315,21 @@ export function AakashGocharScene({
     crown.renderOrder = 5;
     crown.visible = false;
     return { points, crown };
+  }, []);
+
+  /**
+   * Lines joining the वैदिक तारा that belong to a named figure — सप्तर्षि's
+   * bowl and handle, and whatever else [[VEDIC_CONSTELLATION_LINKS]] lists.
+   * Sized once for every link every known figure could draw; a figure whose
+   * member stars are not all in the current response simply writes nothing,
+   * so the buffer only ever carries the shapes that actually resolved.
+   */
+  const vedicConstLines = useMemo(() => {
+    const total = VEDIC_CONSTELLATION_LINKS.reduce((n, g) => n + g.links.length, 0);
+    const lines = makeDynamicSegments(total * 2, "#e8c179", 0.45);
+    lines.geometry.setDrawRange(0, 0);
+    lines.renderOrder = 3;
+    return lines;
   }, []);
 
   const vedicStarsRef = useRef(vedicStars);
@@ -2258,6 +2278,7 @@ export function AakashGocharScene({
       const n = Math.min(vedicStars.length, VEDIC_STAR_CAPACITY);
       const sizes = vedicField.points.geometry.getAttribute("aSize") as THREE.BufferAttribute;
       let crowned: [number, number, number] | null = null;
+      const byEn = new Map<string, [number, number, number]>();
       for (let i = 0; i < n; i += 1) {
         const s = vedicStars[i];
         const at = place(s.lon, s.lat, DOME * 0.995);
@@ -2265,6 +2286,7 @@ export function AakashGocharScene({
         sizes.setX(i, vedicStarSize(s.mag));
         vedicPickRef.current[i].index = i;
         vedicPickRef.current[i].world.set(at[0], at[1], at[2]);
+        byEn.set(s.en, at);
         if (i === aimedVedic) crowned = at;
       }
       sizes.needsUpdate = true;
@@ -2280,7 +2302,25 @@ export function AakashGocharScene({
       } else {
         vedicField.crown.visible = false;
       }
+
+      /* Each figure's own lines, written back to back — a figure whose
+         members are not all present this frame (still loading, or a name
+         the server dropped) simply contributes nothing, so the shape
+         quietly disappears instead of drawing with a vertex missing. */
+      let vIdx = 0;
+      for (const group of VEDIC_CONSTELLATION_LINKS) {
+        const pts = group.members.map((name) => byEn.get(name));
+        if (pts.some((p) => !p)) continue;
+        for (const [a, b] of group.links) {
+          setVertex(vedicConstLines, vIdx, pts[a]!);
+          setVertex(vedicConstLines, vIdx + 1, pts[b]!);
+          vIdx += 2;
+        }
+      }
+      vedicConstLines.geometry.setDrawRange(0, vIdx);
+      flushLine(vedicConstLines);
     } else {
+      vedicConstLines.geometry.setDrawRange(0, 0);
       vedicPickCount.current = 0;
       vedicField.points.geometry.setDrawRange(0, 0);
       vedicField.crown.visible = false;
@@ -2403,8 +2443,13 @@ export function AakashGocharScene({
        to where the stars are — otherwise the text would sit at a different
        depth from the figure it names and drift against it as the view turns. */
     /* Dome and globe only. In the space view each figure is drawn inside the
-       segment named after it, so its own name would be that name twice. */
-    if (collect && zodiac && toggles.constellations) {
+       segment named after it, so its own name would be that name twice.
+       Once the lens is tight enough to show individual star names too, the
+       group label is dropped — a नक्षत्र's योगतारा often shares its name
+       with the नक्षत्र itself, so both together would repeat the same text. */
+    const closeField = fovForZoom(mode, view.current.distance);
+    const close = space ? view.current.distance <= 32 : closeField < 24;
+    if (collect && zodiac && toggles.constellations && !close) {
       const precession = precessionSinceJ2000(dtDays);
       for (const [nak, indices] of starField.byNakshatra) {
         let x = 0;
@@ -2452,8 +2497,6 @@ export function AakashGocharScene({
        is tight enough that the names do not sit on top of each other. */
     if (collect && toggles.constellations && (zodiac || space)) {
       const precession = precessionSinceJ2000(dtDays);
-      const field = fovForZoom(mode, view.current.distance);
-      const close = space ? view.current.distance <= 32 : field < 24;
       for (let i = 0; i < starField.stars.length; i += 1) {
         const s = starField.stars[i];
         if (!s.junction && !close) continue;
@@ -3213,6 +3256,7 @@ export function AakashGocharScene({
       <primitive object={poleField.crown} />
       <primitive object={vedicField.points} />
       <primitive object={vedicField.crown} />
+      <primitive object={vedicConstLines} />
 
       {GEO_BODY_ORDER.map((key) => (
         <GrahaBody
