@@ -15,6 +15,16 @@
  * bring the overlay down with it, or the page is left in a fullscreen layout
  * that is no longer fullscreen — which is what `fullscreenchange` is watched
  * for.
+ *
+ * iPad is the one platform that gets none of this: iPadOS 15 gained element
+ * fullscreen, so `requestFullscreen` *succeeds* there and Safari takes over
+ * the presentation — along with its own way out of it, a downward swipe. A
+ * one-finger drag to look toward the ground (or scroll a diagram) then reads
+ * as "leave fullscreen" and `fullscreenchange` pulls the overlay down before
+ * the drag ever reaches the canvas underneath. iPhone never had this problem
+ * because the request is refused there and the fixed overlay was doing all
+ * the work already. So on Apple touch devices the native call is skipped
+ * outright — no browser presentation means no gesture to lose the drag to.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -25,6 +35,18 @@ type FullscreenDoc = Document & {
 };
 
 type FullscreenEl = HTMLElement & { webkitRequestFullscreen?: () => void };
+
+/**
+ * An iPhone or an iPad — the platforms whose own fullscreen fights a drag.
+ *
+ * iPadOS reports itself as a Macintosh and has done since 13, so the user
+ * agent alone cannot tell them apart. A real Mac has no touch points; every
+ * iPad has five. The pair together is the test.
+ */
+function isAppleTouch(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return navigator.maxTouchPoints > 1 && /iP(hone|ad|od)|Macintosh/.test(navigator.userAgent);
+}
 
 export function useFullscreen<T extends HTMLElement = HTMLDivElement>() {
   const [active, setActive] = useState(false);
@@ -60,6 +82,10 @@ export function useFullscreen<T extends HTMLElement = HTMLDivElement>() {
 
     const el = ref.current as FullscreenEl | null;
     if (!el) return;
+    /* iPad drags the page out of fullscreen, so it never goes in — see
+       {@link isAppleTouch}. The fixed overlay above is the whole of
+       fullscreen there. */
+    if (isAppleTouch()) return;
     /* `navigationUI` is a hint; browsers that do not know it ignore the
        dictionary rather than the call. */
     void Promise.resolve(
