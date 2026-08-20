@@ -883,6 +883,7 @@ export function AakashGocharScene({
   toggles,
   onSelect,
   onFollow,
+  onEmptyPress,
   onSelectObserver,
   onSample,
 }: {
@@ -927,6 +928,8 @@ export function AakashGocharScene({
   onSelect: (key: GrahaKey) => void;
   /** Pressed twice — select it *and* turn following on. */
   onFollow: (key: GrahaKey) => void;
+  /** A press that landed on nothing — empty sky, not a graha. */
+  onEmptyPress?: () => void;
   /** The marker on the globe was pressed — your place, chosen as the target. */
   onSelectObserver?: () => void;
   onSample: (sample: SkySample) => void;
@@ -1389,10 +1392,29 @@ export function AakashGocharScene({
    * A second press on the same graha inside {@link DOUBLE_MS} means follow it
    * rather than merely look at it.
    */
+  /* onSelect / onFollow / onEmptyPress are new functions every time the
+     selection changes — their own deps include the very state a press just
+     set. Read through refs instead of putting them in the effect below, or
+     every press tears the listeners down and rebuilds them, wiping the
+     `lastKey` / `lastAt` closure that tells a double press from two singles —
+     which is what made a double press silently stop working the moment the
+     first press of it landed. */
+  const onSelectRef = useRef(onSelect);
+  const onFollowRef = useRef(onFollow);
+  const onEmptyPressRef = useRef(onEmptyPress);
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+    onFollowRef.current = onFollow;
+    onEmptyPressRef.current = onEmptyPress;
+  }, [onSelect, onFollow, onEmptyPress]);
+
   useEffect(() => {
     const el = gl.domElement;
     const at = new THREE.Vector3();
+    const edge = new THREE.Vector3();
+    const rightAxis = new THREE.Vector3();
     const scratchPick = new THREE.Vector3();
+    const scratchEdge = new THREE.Vector3();
     let downX = 0;
     let downY = 0;
     let downId: number | null = null;
@@ -1406,33 +1428,55 @@ export function AakashGocharScene({
       downY = e.clientY;
     };
 
+    /* Where a world point lands on screen, mode-aware — the same map the
+       labels and the reticle use. Null past the edge of what is drawn. */
+    const project = (
+      world: THREE.Vector3,
+      rect: DOMRect,
+      field: number,
+      scratch: THREE.Vector3,
+    ): { x: number; y: number } | null => {
+      if (mode === "horizon") return projectHorizonRaw(world, camera, field, rect.width, rect.height, scratch);
+      scratch.copy(world).project(camera);
+      if (scratch.z > 1) return null;
+      return { x: (scratch.x * 0.5 + 0.5) * rect.width, y: (-scratch.y * 0.5 + 0.5) * rect.height };
+    };
+
+    /**
+     * The graha nearest the press, with a hit radius that grows with how big
+     * the thing actually is on screen.
+     *
+     * {@link PICK_RADIUS} alone is only right at the distance the sky opens
+     * at. Push in on Jupiter in अन्तरिक्ष until it fills a third of the frame
+     * and a press anywhere on that disc — which is most of the screen near it
+     * — has to count, or the one thing you can no longer miss becomes the one
+     * thing you can no longer select. So each body's own apparent size is
+     * measured every press, by projecting a point one radius off its centre
+     * and reading the gap in pixels, and the hit test uses whichever of that
+     * or {@link PICK_RADIUS} is larger.
+     */
     const pick = (e: PointerEvent): GrahaKey | null => {
       const rect = el.getBoundingClientRect();
       const px = e.clientX - rect.left;
       const py = e.clientY - rect.top;
       const field = fovForZoom("horizon", view.current.distance);
+      rightAxis.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
       let best: GrahaKey | null = null;
-      let bestDistance = PICK_RADIUS;
+      let bestD = Infinity;
       for (const key of GEO_BODY_ORDER) {
         const group = bodyRefs.current[key];
         if (!group || !group.visible) continue;
         group.getWorldPosition(at);
-        let x: number;
-        let y: number;
-        if (mode === "horizon") {
-          const hit = projectHorizonRaw(at, camera, field, rect.width, rect.height, scratchPick);
-          if (!hit) continue;
-          x = hit.x;
-          y = hit.y;
-        } else {
-          scratchPick.copy(at).project(camera);
-          if (scratchPick.z > 1) continue;
-          x = (scratchPick.x * 0.5 + 0.5) * rect.width;
-          y = (-scratchPick.y * 0.5 + 0.5) * rect.height;
-        }
-        const d = Math.hypot(x - px, y - py);
-        if (d < bestDistance) {
-          bestDistance = d;
+        const centre = project(at, rect, field, scratchPick);
+        if (!centre) continue;
+        const d = Math.hypot(centre.x - px, centre.y - py);
+        const worldRadius = group.scale.x * BODY_RADIUS[key];
+        edge.copy(at).addScaledVector(rightAxis, worldRadius);
+        const edgeHit = project(edge, rect, field, scratchEdge);
+        const apparentPx = edgeHit ? Math.hypot(edgeHit.x - centre.x, edgeHit.y - centre.y) : 0;
+        const radius = Math.max(PICK_RADIUS, apparentPx * 1.15);
+        if (d < radius && d < bestD) {
+          bestD = d;
           best = key;
         }
       }
@@ -1444,13 +1488,20 @@ export function AakashGocharScene({
       downId = null;
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_SLOP) return;
       const key = pick(e);
-      if (!key) return;
+      if (!key) {
+        onEmptyPressRef.current?.();
+        return;
+      }
       const now = performance.now();
       const again = key === lastKey && now - lastAt < DOUBLE_MS;
       lastKey = key;
       lastAt = now;
-      if (again) onFollow(key);
-      else onSelect(key);
+      if (again) {
+        lastKey = null;
+        onFollowRef.current(key);
+      } else {
+        onSelectRef.current(key);
+      }
     };
     const onCancel = () => {
       downId = null;
@@ -1464,7 +1515,7 @@ export function AakashGocharScene({
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onCancel);
     };
-  }, [camera, gl, mode, onFollow, onSelect, view]);
+  }, [camera, gl, mode, view]);
   /** The last focus request answered, and whether one is still outstanding. */
   const lastFocusNonce = useRef(focusNonce);
   const recentre = useRef(false);
@@ -2604,8 +2655,9 @@ export function AakashGocharScene({
        every one of them, on the same thread that is drawing the sky. */
     if (collect && labelsMoved(labels.current, collected)) labels.current = collected;
 
-    if (state.clock.elapsedTime - lastSample.current > 0.2) {
-      lastSample.current = state.clock.elapsedTime;
+    lastSample.current += delta;
+    if (lastSample.current > 0.2) {
+      lastSample.current = 0;
       onSample({
         timeMs: s.timeMs,
         sky,

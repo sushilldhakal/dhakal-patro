@@ -60,6 +60,40 @@ function i18nBundles(): Plugin {
   }
 }
 
+/**
+ * @react-three/fiber 9 still does `new THREE.Clock()` when Canvas mounts.
+ * three r183+ warns on that constructor. Swap in our Timer-backed Clock
+ * façade so the console stays quiet until fiber v10 drops Clock.
+ */
+function rewriteFiberClock(code: string) {
+  if (
+    !code.includes("new THREE.Clock()") &&
+    !code.includes("new THREE__namespace.Clock()")
+  ) {
+    return null
+  }
+  const timerClock = JSON.stringify(
+    path.resolve(__dirname, "./src/lib/sky3d/timer-clock.ts"),
+  )
+  return `import { TimerClock as __R3FTimerClock } from ${timerClock};\n${code
+    .replaceAll("new THREE.Clock()", "new __R3FTimerClock()")
+    .replaceAll("new THREE__namespace.Clock()", "new __R3FTimerClock()")}`
+}
+
+function r3fTimerClock(): Plugin {
+  return {
+    name: "r3f-timer-clock",
+    enforce: "pre",
+    transform(code, id) {
+      const file = id.split("?")[0].replace(/\\/g, "/")
+      if (!file.includes("/node_modules/@react-three/fiber/")) return
+      if (file.includes(".cjs")) return
+      const next = rewriteFiberClock(code)
+      return next ? { code: next, map: null } : undefined
+    },
+  }
+}
+
 function injectGaSnippet(measurementId: string | undefined): Plugin {
   return {
     name: "inject-ga-snippet",
@@ -92,6 +126,7 @@ export default defineConfig(({ mode, isSsrBuild }) => {
       react(),
       tailwindcss(),
       i18nBundles(),
+      r3fTimerClock(),
       ...(isSsrBuild ? [] : [injectGaSnippet(gaId)]),
     ],
     resolve: {
@@ -107,6 +142,22 @@ export default defineConfig(({ mode, isSsrBuild }) => {
         "react-i18next",
         "i18next",
       ],
+    },
+    optimizeDeps: {
+      rolldownOptions: {
+        plugins: [
+          {
+            name: "r3f-timer-clock",
+            transform(code: string, id: string) {
+              const file = id.split("?")[0].replace(/\\/g, "/")
+              if (!file.includes("/node_modules/@react-three/fiber/")) return
+              if (file.includes(".cjs")) return
+              const next = rewriteFiberClock(code)
+              return next ? { code: next, map: null } : undefined
+            },
+          },
+        ],
+      },
     },
     // In dev, mirror the production nginx setup: forward "/api/*" to the local
     // FastAPI server with the prefix stripped, so the app is same-origin here too.

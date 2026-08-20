@@ -805,27 +805,6 @@ export function AakashGocharSky({
   }, [fullscreen, mode]);
 
   /**
-   * Nothing behind the overlay scrolls while it is up.
-   *
-   * The fixed layer covers the page but does not stop it moving underneath, and
-   * on iPad a drag that the sky declines — one that starts on a control, or a
-   * rubber-band at the end of a turn — reaches the document and slides the
-   * whole app about behind the sky. Since the sky is now its own presentation
-   * rather than the browser's, holding the document still is this component's
-   * job. Restored exactly as found, so a page that was already locked by
-   * something else is not unlocked on the way out.
-   */
-  useEffect(() => {
-    if (!fullscreen) return;
-    const body = document.body;
-    const previous = body.style.overflow;
-    body.style.overflow = "hidden";
-    return () => {
-      body.style.overflow = previous;
-    };
-  }, [fullscreen]);
-
-  /**
    * A press in the sky puts every panel away.
    *
    * फिल्टर and केन्द्रविन्दु open over the picture, and the thing they are for
@@ -862,28 +841,26 @@ export function AakashGocharSky({
   }, [aimed, drawerOpen, focusOpen, grahaPickerOpen, searchOpen]);
 
   const onSample = useCallback((next: SkySample) => setSample(next), []);
-  /* Clicking the graha already selected clears it, in both modes. */
-  /**
-   * When the last press landed, and on what.
-   *
-   * A double press arrives as click, click, dblclick — so the second click
-   * reaches {@link onSelect} while the graha is already selected, and the
-   * plain toggle would let it go a moment before {@link onFollow} asks to ride
-   * it. Inside the double-press window a repeat press on the same graha is
-   * therefore left alone: releasing it needs a press the reader meant as one.
-   */
-  const lastPress = useRef<{ key: GrahaKey | null; at: number }>({ key: null, at: 0 });
 
+  /**
+   * One press: mark it, nothing else.
+   *
+   * The camera stays put and ग्रह पछ्याउनुहोस् goes off — a single press names
+   * what you are looking at, it does not ask to be shown it, and it is not a
+   * standing order to keep riding whatever was selected before. Only a second
+   * press inside {@link onFollow}'s window means either of those, and the
+   * scene's own picker already tells the two apart before either handler is
+   * called — so this one never has to guess, and never has to undo a camera
+   * move the other press is about to make.
+   *
+   * Pressing the graha already selected clears it, in both modes.
+   */
   const onSelect = useCallback(
     (key: GrahaKey) => {
       setAimed(null);
-      const now = performance.now();
-      const doubling = lastPress.current.key === key && now - lastPress.current.at < 400;
-      lastPress.current = { key, at: now };
-      const clearing = !doubling && (controlled ? selectedKeyProp : ownSelectedKey) === key;
-      /* Picking one swings the camera onto it, once. Picking it again lets it
-         go, and there is nothing to look at, so nothing is asked for. */
-      if (!clearing) askFocus();
+      const current = controlled ? selectedKeyProp : ownSelectedKey;
+      const clearing = current === key;
+      setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
       if (controlled) {
         onSelectedKeyChange?.(clearing ? null : key);
         return;
@@ -891,8 +868,15 @@ export function AakashGocharSky({
       setOwnSelectedKey(clearing ? null : key);
       onSelectedKeyChange?.(clearing ? null : key);
     },
-    [askFocus, controlled, onSelectedKeyChange, ownSelectedKey, selectedKeyProp],
+    [controlled, onSelectedKeyChange, ownSelectedKey, selectedKeyProp],
   );
+
+  /** A press that landed on nothing — the follow lock lets go, same as a
+      press on a different graha. Selection itself is left alone: emptying it
+      too was not asked for, and a stray tap should not lose your place. */
+  const onEmptyPress = useCallback(() => {
+    setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
+  }, []);
 
 
   /** Select outright — the picker names a graha, so it never toggles it off. */
@@ -1008,9 +992,17 @@ export function AakashGocharSky({
       ? GRAHA_NAME[selectedKey]
       : null;
 
-  /* Fullscreen takes the viewport, so the page behind it must not scroll — and
-     Escape has to get out, which is the one affordance a fixed overlay owes a
-     keyboard. */
+  /* Fullscreen takes the viewport, so the page behind it must not scroll — not
+     only when the browser's own presentation is doing the covering, but on
+     iPad too, where {@link isAppleTouch} skips that API and the fixed layer
+     below is the whole of fullscreen: a drag the sky declines there — one that
+     starts on a control, or a rubber-band at the end of a turn — would
+     otherwise reach the document and slide the app around behind the sky.
+     Escape has to get out either way, which is the one affordance a fixed
+     overlay owes a keyboard. One lock for both cases, or two independent locks
+     racing to restore the same global leave it stuck on whichever wrote last —
+     which is exactly what left scrolling dead after fullscreen until a reload,
+     the one time this existed twice. */
   useEffect(() => {
     if (!fullscreen) return;
     const previous = document.body.style.overflow;
@@ -1427,6 +1419,7 @@ export function AakashGocharSky({
               toggles={toggles}
               onSelect={onSelect}
               onFollow={onFollow}
+              onEmptyPress={onEmptyPress}
               onSelectObserver={toggleObserver}
               onSample={onSample}
             />

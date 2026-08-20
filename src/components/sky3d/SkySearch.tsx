@@ -65,7 +65,7 @@ export function SkySearch({
       case "favourites":
         return {
           rows: favourites.map((id) => SKY_BY_ID.get(id)).filter((t): t is SkyTarget => !!t),
-          empty: pick("अझै कुनै पसन्द छैन", "No favourites yet"),
+          empty: pick("अझै कुनै मनपर्ने छैन", "No favourites yet"),
         };
       case "recents":
         return {
@@ -80,12 +80,14 @@ export function SkySearch({
   };
 
   const shortcut = (
+    key: string,
     icon: React.ReactNode,
     label: string,
     count: number | null,
     onPress: () => void,
   ) => (
     <button
+      key={key}
       type="button"
       onClick={onPress}
       className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white"
@@ -182,13 +184,13 @@ export function SkySearch({
           )
         ) : pane.view === "home" ? (
           <div className="flex flex-col">
-            {shortcut(<Star className="size-4" />, pick("पसन्द", "Favourites"), favourites.length, () =>
+            {shortcut("favourites", <Star className="size-4" />, pick("मनपर्ने", "Favourites"), favourites.length, () =>
               setPane({ view: "favourites" }),
             )}
-            {shortcut(<Clock className="size-4" />, pick("भर्खरै", "Recents"), recentIds.length, () =>
+            {shortcut("recents", <Clock className="size-4" />, pick("हालैको", "Recents"), recentIds.length, () =>
               setPane({ view: "recents" }),
             )}
-            {shortcut(<List className="size-4" />, pick("ब्राउज", "Browse"), null, () =>
+            {shortcut("browse", <List className="size-4" />, pick("सूची", "Browse"), null, () =>
               setPane({ view: "browse" }),
             )}
           </div>
@@ -197,6 +199,7 @@ export function SkySearch({
             {back(pick("पछाडि", "Back"), { view: "home" })}
             {SKY_KINDS.map((k) =>
               shortcut(
+                k.kind,
                 <List className="size-4" />,
                 pick(k.ne, k.en),
                 skyTargetsOfKind(k.kind).length,

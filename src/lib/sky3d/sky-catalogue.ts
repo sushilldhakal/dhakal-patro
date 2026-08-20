@@ -91,11 +91,17 @@ export const SKY_CATALOGUE: SkyTarget[] = (() => {
       out.push({
         id: `star:${nak.index}:${star.name}`,
         kind: "star",
-        /* Star designations are Bayer/Flamsteed and are not translated — the
-           same string in both languages, with the nakshatra as the hint. */
-        ne: star.name,
+        /* Most of these stars have no Nepali name of their own — भरणी's three
+           are catalogued only as "41 Ari", "39 Ari", "35 Ari", nothing else.
+           Printing the Bayer/Flamsteed tag as if it were the name read as
+           English dropped into a Nepali sentence. So in Nepali the tara is
+           named after the नक्षत्र it belongs to, and the designation moves to
+           the small hint that tells the stars in one नक्षत्र apart. English
+           keeps the designation as the name — the convention that string
+           actually is one — with the नक्षत्र as its hint instead. */
+        ne: nak.ne,
         en: star.name,
-        hintNe: nak.ne,
+        hintNe: star.name,
         hintEn: nak.en,
         at: "sky",
         lon: p.lon,

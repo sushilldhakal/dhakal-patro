@@ -37,6 +37,8 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
+import { GRAHA_PLANET_ICON_URL } from "@/lib/graha-planet-icons";
+import earthToonUrl from "@/assets/graha/earth-orig.png";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { cn } from "@/lib/utils";
@@ -67,6 +69,7 @@ import EotGraph from "./EotGraph";
 import Scene, {
   type CameraState,
   type CameraTarget,
+  type PlaygroundGlobe,
   type SceneLabel,
   type SceneSample,
   type SimClock,
@@ -151,6 +154,8 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
   /** Which planet preset is showing in the drawer; `""` is this topic's own. */
   const [preset, setPreset] = useState("");
+  /** Earth (and the topic default) keep the Moon. Other graha do not. */
+  const hasMoon = preset === "" || preset === "earth";
 
   const [solarDaysPerYear, setSolarDaysPerYear] = useState(initial.params.daysPerYear - 1);
   const [eccentricity, setEccentricity] = useState(initial.params.eccentricity);
@@ -258,33 +263,40 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   );
   const bodyNames = useMemo(
     () => ({
-      planet: t("grahas.earth"),
+      planet: t(PLANET_NAME_KEYS[preset || "earth"] ?? "grahas.earth"),
       sun: t("grahas.sun"),
       meanSun: t("learn.playground.mean_sun"),
       moon: t("grahas.moon"),
       rahu: t("grahas.rahu"),
       ketu: t("grahas.ketu"),
     }),
-    [t],
+    [t, preset],
   );
 
   const setToggle = useCallback(
-    (k: keyof SimToggles) => setToggles((prev) => ({ ...prev, [k]: !prev[k] })),
-    [],
+    (k: keyof SimToggles) => {
+      if (!hasMoon && (GROUPS.moon as readonly string[]).includes(k)) return;
+      setToggles((prev) => ({ ...prev, [k]: !prev[k] }));
+    },
+    [hasMoon],
   );
 
   const groupOn = useCallback(
     (g: GroupKey) => GROUPS[g].every((k) => toggles[k]),
     [toggles],
   );
-  const pressGroup = useCallback((g: GroupKey) => {
-    setToggles((prev) => {
-      const on = GROUPS[g].every((k) => prev[k]);
-      const next = { ...prev };
-      for (const k of GROUPS[g]) next[k] = !on;
-      return next;
-    });
-  }, []);
+  const pressGroup = useCallback(
+    (g: GroupKey) => {
+      if (g === "moon" && !hasMoon) return;
+      setToggles((prev) => {
+        const on = GROUPS[g].every((k) => prev[k]);
+        const next = { ...prev };
+        for (const k of GROUPS[g]) next[k] = !on;
+        return next;
+      });
+    },
+    [hasMoon],
+  );
 
   /** Empty key means this topic's own settings — the way back from a preset. */
   const applyPreset = useCallback(
@@ -301,6 +313,14 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       setSolarDaysPerYear(Math.max(1, Math.min(365, Math.round(p.daysPerYear - 1))));
       setEccentricity(p.eccentricity);
       setTiltDeg(p.tilt);
+      /* A borrowed graha has no Moon, so the lunar layers go with it. */
+      if (key !== "earth") {
+        setToggles((prev) => {
+          const next = { ...prev };
+          for (const k of GROUPS.moon) next[k] = false;
+          return next;
+        });
+      }
     },
     [initial],
   );
@@ -362,16 +382,25 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     return `${h}${t("common.hour_short")} ${String(m).padStart(2, "0")}${t("common.minute_short")} ${String(s).padStart(2, "0")}${t("common.second_short")}`;
   };
 
-  const chip = (active: boolean, label: string, onPress: () => void, key?: string) => (
+  const chip = (
+    active: boolean,
+    label: string,
+    onPress: () => void,
+    key?: string,
+    disabled?: boolean,
+  ) => (
     <button
       key={key ?? label}
       type="button"
+      disabled={disabled}
       onClick={onPress}
       className={cn(
-        "h-[28px] cursor-pointer rounded-full border px-2.5 text-xs font-semibold transition-colors",
-        active
-          ? "border-transparent bg-white/85 text-black"
-          : "border-white/20 bg-transparent text-white/60 hover:border-white/45 hover:text-white",
+        "h-[28px] rounded-full border px-2.5 text-xs font-semibold transition-colors",
+        disabled
+          ? "cursor-not-allowed border-white/10 bg-transparent text-white/30"
+          : active
+            ? "cursor-pointer border-transparent bg-white/85 text-black"
+            : "cursor-pointer border-white/20 bg-transparent text-white/60 hover:border-white/45 hover:text-white",
       )}
     >
       {label}
@@ -385,7 +414,15 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         {title}
       </span>
       <div className="flex flex-wrap gap-1.5">
-        {items.map(([k, label]) => chip(toggles[k], label, () => setToggle(k), k))}
+        {items.map(([k, label]) =>
+          chip(
+            toggles[k],
+            label,
+            () => setToggle(k),
+            k,
+            !hasMoon && (GROUPS.moon as readonly string[]).includes(k),
+          ),
+        )}
       </div>
     </div>
   );
@@ -406,7 +443,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         "t-nak",
       )}
       {chip(toggles.monthRing, t("learn.playground.months"), () => setToggle("monthRing"), "t-month")}
-      {chip(groupOn("moon"), t("grahas.moon"), () => pressGroup("moon"), "t-moon")}
+      {chip(groupOn("moon"), t("grahas.moon"), () => pressGroup("moon"), "t-moon", !hasMoon)}
     </div>
   );
 
@@ -532,6 +569,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               clockText={clockText}
               labelNodes={labelNodes}
               onSample={onSample}
+              planetBody={(preset || "earth") as PlaygroundGlobe}
             />
           </Suspense>
         </Canvas>
@@ -611,23 +649,45 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             {/* A world to borrow, in one line. Six buttons and a paragraph of
                 caveats were the widest thing in the panel for something a
                 reader picks once. */}
-            <label className="block">
+            <div>
               <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
                 {t("learn.playground.planet")}
               </span>
-              <select
-                className="h-8 w-full cursor-pointer rounded-lg border border-white/20 bg-black/60 px-2 text-xs font-semibold text-white/85 outline-none hover:border-white/45"
-                value={preset}
-                onChange={(e) => applyPreset(e.target.value)}
-              >
-                <option value="">{t("learn.playground.back_to_topic")}</option>
-                {PLANET_PRESETS.map((p) => (
-                  <option key={p.key} value={p.key}>
-                    {t(PLANET_NAME_KEYS[p.key] ?? p.key)}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {PLANET_PRESETS.map((p) => {
+                  const on = preset === p.key;
+                  const icon =
+                    p.key === "earth"
+                      ? earthToonUrl
+                      : GRAHA_PLANET_ICON_URL[p.key as keyof typeof GRAHA_PLANET_ICON_URL];
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => applyPreset(on ? "" : p.key)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg border px-1.5 py-1.5 text-left text-[11px] font-semibold transition-colors",
+                        on
+                          ? "border-white/55 bg-white/15 text-white"
+                          : "border-white/15 bg-black/40 text-white/75 hover:border-white/40 hover:text-white",
+                      )}
+                    >
+                      <img src={icon} alt="" className="size-6 shrink-0 rounded-full object-cover" />
+                      <span className="truncate">{t(PLANET_NAME_KEYS[p.key] ?? p.key)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {preset ? (
+                <button
+                  type="button"
+                  onClick={() => applyPreset("")}
+                  className="mt-1.5 text-[11px] font-semibold text-white/50 hover:text-white"
+                >
+                  {t("learn.playground.back_to_topic")}
+                </button>
+              ) : null}
+            </div>
 
             {slider(
               t("learn.playground.solar_days_per_year"),
@@ -701,7 +761,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 [
                   ["meanSun", t("learn.playground.mean_sun")],
                   ["sun", t("grahas.sun")],
-                  ["planet", t("grahas.earth")],
+                  ["planet", bodyNames.planet],
                 ] as [CameraTarget, string][]
               ).map(([key, label]) => (
                 <label

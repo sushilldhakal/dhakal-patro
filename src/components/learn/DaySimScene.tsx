@@ -513,7 +513,16 @@ export interface SceneProps {
    */
   labelNodes: MutableRefObject<Map<string, HTMLElement>>;
   onSample: (s: SceneSample) => void;
+  /**
+   * Which world the globe is. Earth keeps the cartoon map and the Moon;
+   * any other graha swaps the surface for that planet's texture and drops
+   * the Moon, Rāhu and Ketu — those three belong to Earth.
+   */
+  planetBody?: PlaygroundGlobe;
 }
+
+/** Worlds the adjust drawer can put in Earth's place. */
+export type PlaygroundGlobe = "earth" | "mars" | "mercury" | "jupiter" | "venus" | "saturn";
 
 function DaySimScene({
   clock,
@@ -530,6 +539,7 @@ function DaySimScene({
   clockText,
   labelNodes,
   onSample,
+  planetBody = "earth",
 }: SceneProps) {
   const { camera: cam, size } = useThree();
 
@@ -545,6 +555,41 @@ function DaySimScene({
   earthMap.anisotropy = 4;
   const earthMat = useMemo(() => makeEarthMaterial(earthMap), [earthMap]);
   useEffect(() => () => earthMat.dispose(), [earthMat]);
+
+  /* Only Earth carries a Moon (and therefore Rāhu / Ketu). A borrowed
+     graha is just a spinning world with its own tilt and ellipse. */
+  const hasMoon = planetBody === "earth";
+  const showMoon = hasMoon && toggles.moon;
+  const showMoonTrail = hasMoon && toggles.moonTrail;
+  const showMoonLap = hasMoon && toggles.moonLap;
+  const showMoonSight = hasMoon && toggles.moonSightline;
+
+  useEffect(() => {
+    if (planetBody === "earth") {
+      earthMat.uniforms.map.value = earthMap;
+      return;
+    }
+    let cancelled = false;
+    const url = `${import.meta.env.BASE_URL}sky3d/${planetBody}.jpg`;
+    const tex = new THREE.TextureLoader().load(url, (loaded) => {
+      if (cancelled) {
+        loaded.dispose();
+        return;
+      }
+      loaded.colorSpace = THREE.NoColorSpace;
+      loaded.anisotropy = 4;
+      loaded.needsUpdate = true;
+      earthMat.uniforms.map.value = loaded;
+    });
+    tex.colorSpace = THREE.NoColorSpace;
+    return () => {
+      cancelled = true;
+      if (earthMat.uniforms.map.value === tex) {
+        earthMat.uniforms.map.value = earthMap;
+      }
+      tex.dispose();
+    };
+  }, [planetBody, earthMap, earthMat]);
 
   /* ── refs into the scene graph ───────────────────────────────────── */
   const arcRoot = useRef<THREE.Group>(null!);
@@ -1101,7 +1146,7 @@ function DaySimScene({
     );
     moonPlane.current.quaternion.copy(moonPlaneQ.current);
     nodeAxis.current.rotation.y = omegaRad.current;
-    if (toggles.moon || toggles.moonTrail || toggles.moonLap) {
+    if (showMoon || showMoonTrail || showMoonLap) {
       const moonLon = moonLonAt(day);
       atLonInto(moonMesh.current.position, moonLon, MOON_ORBIT);
       /* Tidally locked — the same face stays turned toward the planet. */
@@ -1117,7 +1162,7 @@ function DaySimScene({
         (MOON_SYNODIC_PER_YEAR * 360);
       const travelled = MOON_LAPS_PER_YEAR * 360 * ((day - monthStartDay) / daysPerYear);
 
-      if (toggles.moonLap) {
+      if (showMoonLap) {
         /* Both arcs start at the Moon's place when the month opened. */
         const startLon = moonLonAt(monthStartDay);
         lapArc.first.rotation.z = startLon * (Math.PI / 180);
@@ -1186,7 +1231,7 @@ function DaySimScene({
          Placed at the sub-lunar point rather than by intersecting the drawn
          ray, for the same reason the test is angular: at this scale the drawn
          ray hits the planet at every अमावस्या. */
-      const show = toggles.moon && solar > 0.02;
+      const show = showMoon && solar > 0.02;
       solarShadow.current.visible = show;
       if (show) {
         const hit = vShadow.current.copy(toMoon).multiplyScalar(PLANET_R).add(planetPos);
@@ -1291,8 +1336,8 @@ function DaySimScene({
     const moonNak =
       Math.floor((euclideanModulo(moonEclLon - beltZeroDeg, 360) * 27) / 360) % 27;
     moonNakHighlight.rotation.z = moonNak * (PI2 / 27);
-    moonNakHighlight.visible = toggles.nakshatraBelt && toggles.moonSightline && geocentric;
-    moonSightline.visible = toggles.moonSightline && geocentric;
+    moonNakHighlight.visible = toggles.nakshatraBelt && showMoonSight && geocentric;
+    moonSightline.visible = showMoonSight && geocentric;
 
     if (moonSightline.visible) {
       /* Rebuilt rather than read off the mesh: `getWorldPosition` would use a
@@ -1367,7 +1412,7 @@ function DaySimScene({
     /* The trail is world-space and 160 points, so it is rebuilt on the sample
        tick rather than every frame — five times a second is smooth enough for
        a curve that takes a whole month to be drawn. */
-    if (sampling && toggles.moonTrail) {
+    if (sampling && showMoonTrail) {
       const synodicDays = daysPerYear / MOON_SYNODIC_PER_YEAR;
       const a = moonTrail.geometry.getAttribute("position") as THREE.BufferAttribute;
       const v = vAnchor.current;
@@ -1487,7 +1532,7 @@ function DaySimScene({
        never keeps the vector, so it is safe to overwrite between calls. */
     const anchor = vAnchor.current;
     push("b-planet", "body", bodyNames.planet, anchor.copy(planetPos).setY(PLANET_R * 2.2), false);
-    if (toggles.moon) {
+    if (showMoon) {
       /*
        * Built from the model, not read back with `getWorldPosition`.
        *
@@ -1703,19 +1748,19 @@ function DaySimScene({
       </group>
 
       {/* The Moon, on its own inclined plane, carried along with the planet */}
-      <primitive object={moonTrail} visible={toggles.moonTrail} />
-      <group ref={moonRoot}>
+      <primitive object={moonTrail} visible={showMoonTrail} />
+      <group ref={moonRoot} visible={hasMoon}>
         <group ref={moonPlane}>
-          <primitive object={moonOrbitLine} visible={toggles.moon} />
-          <primitive object={lapArc.first} visible={toggles.moonLap} />
-          <primitive object={lapArc.over} visible={toggles.moonLap} />
-          <primitive object={monthStartTick} visible={toggles.moonLap} />
-          <mesh ref={moonMesh} visible={toggles.moon}>
+          <primitive object={moonOrbitLine} visible={showMoon} />
+          <primitive object={lapArc.first} visible={showMoonLap} />
+          <primitive object={lapArc.over} visible={showMoonLap} />
+          <primitive object={monthStartTick} visible={showMoonLap} />
+          <mesh ref={moonMesh} visible={showMoon}>
             <sphereGeometry args={[MOON_R, 32, 24]} />
             <meshStandardMaterial map={moonMap} roughness={1} metalness={0} />
           </mesh>
           {/* Rāhu at +X, Ketu at −X of this axis; the axis itself is Ω. */}
-          <group ref={nodeAxis} visible={toggles.moon}>
+          <group ref={nodeAxis} visible={showMoon}>
             <primitive object={nodeLine} />
             <group position={[MOON_ORBIT, 0, 0]}>
               <ShadowGraha color={COLOR.rahu} map={rahuIcon} />
