@@ -245,9 +245,9 @@ export function shiftBsMonth(year: number, month: number, delta: number): { year
   return { year: y, month: m };
 }
 
-export function getCurrentBs(): { year: number; month: number } {
+export function getCurrentBs(): { year: number; month: number; day: number } {
   const bs = adToBS(new Date())
-  return { year: bs.year, month: bs.month }
+  return { year: bs.year, month: bs.month, day: bs.day }
 }
 
 /** Supported Gregorian bounds aligned with BS calendar tables. */

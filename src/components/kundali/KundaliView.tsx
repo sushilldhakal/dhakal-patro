@@ -350,7 +350,7 @@ export function KundaliView({
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
                 <Clock className="w-3.5 h-3.5 shrink-0" />
-                {digits(clock)}
+                {digits(birthMoment.clock)}
               </span>
             </div>
           </div>

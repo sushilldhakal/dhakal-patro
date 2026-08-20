@@ -1950,11 +1950,11 @@ export function getAbhijitMuhurta(p: PanchangaDay): AbhijitMuhurtaInfo | null {
 }
 
 /** Abhijit window the month calendar already computed. */
-export function abhijitFromCalendarDay(day: {
-  abhijit?: { start_time?: string; end_time?: string; solar_noon?: string };
-  panchanga?: { muhurta?: { abhijit?: { start_time?: string; end_time?: string; solar_noon?: string } } };
-}): AbhijitMuhurtaInfo | null {
-  return abhijitFromWindow(day.abhijit ?? day.panchanga?.muhurta?.abhijit);
+export function abhijitFromCalendarDay(day: CalendarDay): AbhijitMuhurtaInfo | null {
+  const nested = day.panchanga as
+    | { muhurta?: { abhijit?: { start_time?: string; end_time?: string; solar_noon?: string } } }
+    | undefined;
+  return abhijitFromWindow(day.abhijit ?? nested?.muhurta?.abhijit);
 }
 
 function abhijitFromWindow(
