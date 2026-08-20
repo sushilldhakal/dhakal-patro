@@ -316,6 +316,9 @@ export function AakashGochar() {
           onClockChange={changeClock}
           observer={observer}
           timeZone={tz}
+          /* The sky names its observer-meridian toggle after this, so switching
+             the page to another city renames the line with it. */
+          placeLabel={locationLabel}
           height={SCENE_HEIGHT}
           selectedKey={selectedKey}
           onSelectedKeyChange={setSelectedKey}

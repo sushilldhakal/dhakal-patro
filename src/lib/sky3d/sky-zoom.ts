@@ -30,11 +30,25 @@ const DEG = Math.PI / 180;
  * but the drag handlers need it too, to know how much sky a pixel is worth. So
  * the one mapping lives here and both callers read it.
  */
+/**
+ * The widest the क्षितिज lens opens — vertical field, degrees.
+ *
+ * 235° is Stellarium's own limit on the same projection, and a half-field of
+ * 117° is well past both poles: held level the frame reaches over the zenith
+ * and under the nadir, so the whole dome is in one shot with the horizon a ring
+ * around it and the ground opening out beyond that to the edges of the picture.
+ *
+ * Nothing about the shape of the canvas comes into it. Stereographic sends the
+ * antipode to infinity, so the frame is full at any field on any frame — there
+ * is no width at which the sky runs out.
+ */
+export function horizonFovMax(): number {
+  return 235;
+}
+
 export function fovForZoom(mode: SkyMode, distance: number): number {
-  /* Horizon zoom is the *vertical* field of a stereographic projection.
-     Stellarium's wide view is ~235°; we open at 90° and pull out to 240° so
-     the sky fills the rectangle (corners included), not a circle in a black
-     frame. */
+  /* Horizon zoom is the *vertical* field of the equidistant fisheye: 1° at the
+     tight end, and at the wide end whatever fills the frame to its corners. */
   if (mode === "horizon") {
     const home = 26;
     const minD = 0.35;
@@ -48,7 +62,7 @@ export function fovForZoom(mode: SkyMode, distance: number): number {
       return 1 + t * (90 - 1);
     }
     const t = Math.min(1, Math.max(0, (distance - home) / (maxD - home)));
-    return 90 + t * (240 - 90);
+    return 90 + t * (horizonFovMax() - 90);
   }
   if (mode === "globe") {
     const t = Math.min(1, Math.max(0, distance / OUTSIDE_ZOOM_MAX));

@@ -62,7 +62,9 @@ import {
   DEGREE_TICKS,
   buildAzimuthGridPairs,
   buildLocalGridPairs,
+  CARDINAL_VERTICALS,
   gridStepForFov,
+  POLE_MARKS,
   GRID_TIERS,
   LOCAL_GRID_CAPACITY,
   type HorizonPoint,
@@ -96,6 +98,7 @@ import {
 import {
   createHorizonFisheyeUniforms,
   horizonViewWindow,
+  projectHorizonRaw,
   injectHorizonFisheyeIn,
   projectHorizon,
 } from "@/lib/sky3d/horizon-projection";
@@ -356,15 +359,6 @@ export type SceneToggles = {
    */
   primeMeridian: boolean;
   /**
-   * Horizon view: the ground underfoot — a 360° valley of hills and water.
-   *
-   * On, you are standing in it, the same kind of ground the eclipses view
-   * stands on. Off, the ground goes away and the zodiac closes its circle
-   * through your feet, so a set graha stays followable. The chip that drives
-   * this is क्षितिजमुनि.
-   */
-  belowHorizon: boolean;
-  /**
    * The star figures themselves — the points and the lines joining them into
    * the तारापुञ्ज each नक्षत्र is named for, plus those names.
    *
@@ -469,6 +463,25 @@ function makeDynamicSegments(count: number, color: string, opacity: number) {
  * rejected where they cover it. Which only works if it really is further out.
  */
 const GRID_R = DOME * 1.04;
+
+/**
+ * How near a press has to land, in pixels, to count as being on a graha.
+ *
+ * Generous on purpose: pulled out to the whole dome a graha is a couple of
+ * pixels across, and a target you have to hit exactly is one you cannot hit at
+ * all on a phone. Nearest-wins, so an over-large radius costs nothing where
+ * they are far apart and still picks sensibly where they crowd.
+ */
+const PICK_RADIUS = 26;
+
+/** Movement past this during a press makes it a drag, not a click. Pixels. */
+const DRAG_SLOP = 6;
+
+/** Two presses on one graha inside this are a double press. Milliseconds. */
+const DOUBLE_MS = 400;
+
+/** Grahas are picked by hand in every view, so the raycaster must not also try. */
+const NO_RAYCAST = () => {};
 
 /**
  * The cage's shared look.
@@ -727,7 +740,6 @@ function GrahaBody({
   groupRef,
   spinRef,
   retroRef,
-  onSelect,
   sunLit,
   phaseMaterial,
   eclipse,
@@ -738,7 +750,6 @@ function GrahaBody({
   groupRef: (o: THREE.Group | null) => void;
   spinRef: (o: THREE.Mesh | null) => void;
   retroRef: (o: THREE.Group | null) => void;
-  onSelect: () => void;
   /** Space view: the Sun's point light models the terminator (औंसी / पूर्णिमा). */
   sunLit?: boolean;
   /**
@@ -754,7 +765,7 @@ function GrahaBody({
   return (
     <group ref={groupRef}>
       {texKey ? (
-        <mesh ref={spinRef} onClick={onSelect}>
+        <mesh ref={spinRef} raycast={NO_RAYCAST}>
           <sphereGeometry args={[radius, 40, 40]} />
           {graha === "sun" ? (
             <meshBasicMaterial map={textures.sun} />
@@ -779,7 +790,7 @@ function GrahaBody({
         /* राहु / केतु have no photographic texture. A sphere on the same
            material path as the other grahas stays on the belt under the
            stereographic sky; the old SVG sprites did not. */
-        <mesh ref={spinRef} onClick={onSelect}>
+        <mesh ref={spinRef} raycast={NO_RAYCAST}>
           <sphereGeometry args={[radius, 40, 40]} />
           <meshStandardMaterial
             color={GRAHA_COLOR[graha]}
@@ -867,8 +878,10 @@ export function AakashGocharScene({
   ayanamsaShift = 0,
   selectedKey,
   lockObserver = false,
+  focusNonce = 0,
   toggles,
   onSelect,
+  onFollow,
   onSelectObserver,
   onSample,
 }: {
@@ -889,13 +902,26 @@ export function AakashGocharScene({
    * answers to the same question, "what is the camera following?".
    */
   lockObserver?: boolean;
+  /**
+   * Bumped every time the reader *asks* to focus something — pressing
+   * केन्द्रविन्दु, picking a graha behind it, turning ग्रह पछ्याउनुहोस् on.
+   *
+   * The lock itself only holds the camera while the clock is running; on a
+   * paused sky the drag is the reader's again. So asking to focus has to be
+   * its own event rather than a state the camera can read, or pressing it on a
+   * paused sky would centre nothing.
+   */
+  focusNonce?: number;
   toggles: SceneToggles;
   onSelect: (key: GrahaKey) => void;
+  /** Pressed twice — select it *and* turn following on. */
+  onFollow: (key: GrahaKey) => void;
   /** The marker on the globe was pressed — your place, chosen as the target. */
   onSelectObserver?: () => void;
   onSample: (sample: SkySample) => void;
 }) {
   const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
   const loaded = useLoader(THREE.TextureLoader, SKY_TEXTURE_SOURCES as string[]);
   const textures = useMemo(() => {
     /* Anisotropic filtering, at whatever the card will give. A sphere shows its
@@ -1221,11 +1247,23 @@ export function AakashGocharScene({
     const local = dressGrid(makeDynamicSegments(LOCAL_GRID_CAPACITY, GRID, 0.14));
     local.visible = false;
     group.add(local);
+    /* उ / पू / द / प, plus the mark on the zenith and the nadir. Baked once
+       and never rebuilt: the four ribs of the dome do not depend on the lens,
+       and every tier leaves them out so this is the only thing drawing them. */
+    const frame = dressGrid(
+      makeDynamicSegments(CARDINAL_VERTICALS.length + POLE_MARKS.length, GRID, 0.62),
+    );
+    [...CARDINAL_VERTICALS, ...POLE_MARKS].forEach((p, i) => {
+      setPoint(frame, i, altAzToVec3(p.alt, p.az, GRID_R));
+    });
+    flushLine(frame);
+    group.add(frame);
     return {
       group,
       tiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
       local,
       localPairs: [] as HorizonPoint[],
+      frame,
     };
   }, []);
 
@@ -1318,6 +1356,107 @@ export function AakashGocharScene({
   const tropicEps = useRef(Number.NaN);
   const labels = useRef<ScreenLabel[]>([]);
   const scratch = useRef(new THREE.Vector3());
+
+  /**
+   * Picking a graha, by hand, in all three views.
+   *
+   * Two things rule out the ordinary way. The raycaster is wrong in क्षितिज:
+   * every material there has the fisheye injected into its vertex shader, so
+   * what is *drawn* is nowhere the camera matrix knows about — the camera stays
+   * a quiet 60° perspective used only for depth — and three was testing a
+   * picture nobody is looking at. And the `click` event is unreliable
+   * everywhere, because the drag handler calls `preventDefault` on every
+   * pointermove, which is enough to stop the browser ever synthesising one. A
+   * press that worked before a drag would silently stop working after.
+   *
+   * So: `pointerup`, with the movement since `pointerdown` deciding whether it
+   * was a press or a drag, and the graha found by projecting each body to the
+   * screen the same way its label is placed — the fisheye in क्षितिज, the plain
+   * camera in the other two — and taking the nearest within {@link PICK_RADIUS}.
+   * One path, one behaviour, three views.
+   *
+   * A second press on the same graha inside {@link DOUBLE_MS} means follow it
+   * rather than merely look at it.
+   */
+  useEffect(() => {
+    const el = gl.domElement;
+    const at = new THREE.Vector3();
+    const scratchPick = new THREE.Vector3();
+    let downX = 0;
+    let downY = 0;
+    let downId: number | null = null;
+    let lastKey: GrahaKey | null = null;
+    let lastAt = 0;
+
+    const onDown = (e: PointerEvent) => {
+      if (downId !== null) return;
+      downId = e.pointerId;
+      downX = e.clientX;
+      downY = e.clientY;
+    };
+
+    const pick = (e: PointerEvent): GrahaKey | null => {
+      const rect = el.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const field = fovForZoom("horizon", view.current.distance);
+      let best: GrahaKey | null = null;
+      let bestDistance = PICK_RADIUS;
+      for (const key of GEO_BODY_ORDER) {
+        const group = bodyRefs.current[key];
+        if (!group || !group.visible) continue;
+        group.getWorldPosition(at);
+        let x: number;
+        let y: number;
+        if (mode === "horizon") {
+          const hit = projectHorizonRaw(at, camera, field, rect.width, rect.height, scratchPick);
+          if (!hit) continue;
+          x = hit.x;
+          y = hit.y;
+        } else {
+          scratchPick.copy(at).project(camera);
+          if (scratchPick.z > 1) continue;
+          x = (scratchPick.x * 0.5 + 0.5) * rect.width;
+          y = (-scratchPick.y * 0.5 + 0.5) * rect.height;
+        }
+        const d = Math.hypot(x - px, y - py);
+        if (d < bestDistance) {
+          bestDistance = d;
+          best = key;
+        }
+      }
+      return best;
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerId !== downId) return;
+      downId = null;
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_SLOP) return;
+      const key = pick(e);
+      if (!key) return;
+      const now = performance.now();
+      const again = key === lastKey && now - lastAt < DOUBLE_MS;
+      lastKey = key;
+      lastAt = now;
+      if (again) onFollow(key);
+      else onSelect(key);
+    };
+    const onCancel = () => {
+      downId = null;
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onCancel);
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onCancel);
+    };
+  }, [camera, gl, mode, onFollow, onSelect, view]);
+  /** The last focus request answered, and whether one is still outstanding. */
+  const lastFocusNonce = useRef(focusNonce);
+  const recentre = useRef(false);
   const target = useRef(new THREE.Vector3());
   /** Screen-up in world space, so a name can be hung off the edge of a disc. */
   const screenUp = useRef(new THREE.Vector3());
@@ -2069,15 +2208,20 @@ export function AakashGocharScene({
     if (earthGroupRef.current) earthGroupRef.current.visible = space;
     // The globe replaces the ground: from out here you are looking at the whole
     // Earth, not standing on a patch of it.
-    /* क्षितिजमुनि is the ground itself — on, a 360° valley; off, the sky
-       underfoot stays in the picture. भूभाग is the coarser switch: off, there
-       is no landscape at all. */
-    const showGround = horizon && !globe && toggles.landscape && toggles.belowHorizon;
-    /* 50% at the home/wide lens so the rashi belt reads through the valley.
-       Zooming in (FOV under 90°) fades the ground away — a tight crop is the
-       sky, not a wall of grass. */
+    /* One switch, not two: भूभाग *is* the ground. `belowHorizon` used to be a
+       second chip that had to agree with it before any hillside appeared,
+       which meant a reader could turn the landscape on and get nothing. */
+    const showGround = horizon && !globe && toggles.landscape;
+    /* Half-opaque, so the राशि belt reads through the valley.
+     *
+     * The fade only starts once the lens is tighter than a 20° crop, and is
+     * gone by 6°. It used to begin the moment you left the 90° opening view
+     * and be finished by 28° — which was most of the zoom range even before
+     * the lens gained its arcminute end, so pressing भूभाग anywhere but the
+     * widest view turned on a landscape you could not see. A switch that
+     * appears to do nothing is worse than no switch. */
     const horizonFov = fovForZoom("horizon", view.current.distance);
-    const zoomFade = horizonFov >= 90 ? 1 : Math.max(0, (horizonFov - 28) / (90 - 28));
+    const zoomFade = horizonFov >= 20 ? 1 : Math.max(0, (horizonFov - 6) / (20 - 6));
     const groundOpacity = 0.5 * zoomFade;
     if (groundRef.current) groundRef.current.visible = showGround && groundOpacity > 0.02;
     /* Light on the hills, following the Sun through the twilight. The map is
@@ -2117,6 +2261,8 @@ export function AakashGocharScene({
     equatorLine.visible = horizon && !globe && (toggles.rashiBelt || toggles.nakshatraBelt);
     const gridOn = horizon && !globe && toggles.grid;
     grid.group.visible = gridOn;
+    /* Version-guarded inside, so this is a no-op after the first frame. */
+    if (gridOn) injectHorizonFisheyeIn(grid.frame, fisheye);
     /* The finest local tier that is on — only one is ever drawn, because they
        nest by a factor of two or three and stacking them over a one-degree
        window is a wash rather than a grid. */
@@ -2246,7 +2392,19 @@ export function AakashGocharScene({
      * the Earth turns as it always did and your place simply stays in the
      * middle of the screen, which is what the lock is for.
      */
-    const trackKey = toggles.lockCenter && !lockObserver && selectedKey ? selectedKey : null;
+    /* A press of केन्द्रविन्दु centres its target once, whatever the clock is
+       doing; after that the hold is only for as long as the sky is moving. */
+    if (focusNonce !== lastFocusNonce.current) {
+      lastFocusNonce.current = focusNonce;
+      recentre.current = true;
+    }
+    /* `recentre` alone is enough to pick a target: a single press on a graha
+       asks to be *shown* it once, which is a different thing from asking the
+       camera to ride it, and only the second of those turns केन्द्रविन्दु on. */
+    const trackKey =
+      (toggles.lockCenter || recentre.current) && !lockObserver && selectedKey
+        ? selectedKey
+        : null;
     const trackGroup = trackKey ? bodyRefs.current[trackKey] : null;
     let trackAt: THREE.Vector3 | null = trackGroup ? trackGroup.position : null;
     if (toggles.lockCenter && lockObserver && globe) {
@@ -2259,6 +2417,18 @@ export function AakashGocharScene({
       }
       trackAt = observerTrack.current;
     }
+    /**
+     * Whether the camera is being *held* on the target this frame.
+     *
+     * Following is for watching something move: run the clock and the graha
+     * stays nailed to the middle while the sky slides past it. Paused, there
+     * is nothing to follow — the reader wants to look around the thing they
+     * just centred, and a camera that snaps back every frame reads as a broken
+     * drag. So the hold lasts as long as the clock runs, plus the one frame
+     * that answers a press of केन्द्रविन्दु.
+     */
+    const holdCentre = trackAt != null && (s.playing || recentre.current);
+    if (holdCentre) recentre.current = false;
     if (horizon) {
       /* Equidistant fisheye: screen radius is angle from the look direction.
          A perspective 170° lens is what pinched the nadir into a spike; this
@@ -2268,10 +2438,19 @@ export function AakashGocharScene({
          used, because near the zenith it rolls the cage. */
       cam.position.set(0, 0, 0);
       cam.up.set(0, 1, 0);
-      if (trackAt) {
+      if (holdCentre && trackAt) {
+        /* Both negated, because the camera's angles run opposite the sky's.
+         *
+         * `cam.rotation.set(-pitch, yaw, 0)` in YXZ sends the view direction to
+         * (−cos p·sin y, −sin p, −cos p·cos y), which against a point at
+         * (cos a·sin A, sin a, −cos a·cos A) gives pitch = −altitude and
+         * yaw = −azimuth. Taken straight — as this did — केन्द्रविन्दु aimed at
+         * the mirror image of its target: a graha high in the south-east put
+         * the camera low in the south-west, and the thing you asked to look at
+         * was the one place on the dome you were not looking. */
         const len = Math.hypot(trackAt.x, trackAt.y, trackAt.z) || 1;
-        v.pitch = Math.asin(Math.max(-1, Math.min(1, trackAt.y / len)));
-        v.yaw = Math.atan2(trackAt.x, -trackAt.z);
+        v.pitch = -Math.asin(Math.max(-1, Math.min(1, trackAt.y / len)));
+        v.yaw = -Math.atan2(trackAt.x, -trackAt.z);
         target.current.copy(trackAt);
       }
       cam.rotation.order = "YXZ";
@@ -2301,7 +2480,16 @@ export function AakashGocharScene({
         target.current.copy(trackAt);
         scratch.current.copy(target.current);
         const bodyR = scratch.current.length();
-        if (bodyR < 1e-5) {
+        if (!holdCentre) {
+          /* Released: the camera goes back to answering the drag, but keeps
+             looking at what it was following, so letting go of the clock does
+             not throw the target 8° off the middle of the screen. */
+          cam.position.set(
+            radius * cosP * Math.sin(v.yaw),
+            radius * Math.sin(v.pitch),
+            radius * cosP * Math.cos(v.yaw),
+          );
+        } else if (bodyR < 1e-5) {
           cam.position.set(radius * cosP * Math.sin(v.yaw), radius * Math.sin(v.pitch), radius * cosP * Math.cos(v.yaw));
           target.current.set(0, 0, 0);
         } else {
@@ -2643,7 +2831,6 @@ export function AakashGocharScene({
           groupRef={handles[key].group}
           spinRef={handles[key].spin}
           retroRef={handles[key].retro}
-          onSelect={() => onSelect(key)}
           sunLit={mode === "space"}
           phaseMaterial={key === "moon" ? moonPhaseMat : undefined}
           eclipse={key === "moon" ? moonEclipse : undefined}

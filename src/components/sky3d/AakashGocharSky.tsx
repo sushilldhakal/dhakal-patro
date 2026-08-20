@@ -27,13 +27,11 @@ import {
 import { createPortal } from "react-dom";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
-  Calendar,
   CaseSensitive,
   ChevronDown,
   ChevronUp,
   FastForward,
   Focus,
-  Globe2,
   Grid3x3,
   MapPin,
   Maximize2,
@@ -250,6 +248,18 @@ const DRAG_SLOP = 5;
  * floats *over* the canvas, so both handlers meet its events and both have to
  * hand them back.
  */
+/**
+ * An iPhone or an iPad — the platforms whose own fullscreen fights the sky.
+ *
+ * iPadOS reports itself as a Macintosh and has done since 13, so the user agent
+ * alone cannot tell them apart. A real Mac has no touch points; every iPad has
+ * five. The pair together is the test.
+ */
+function isAppleTouch(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return navigator.maxTouchPoints > 1 && /iP(hone|ad|od)|Macintosh/.test(navigator.userAgent);
+}
+
 const CONTROL_SELECTOR = "button, input, select, [role='button'], [data-sky-controls]";
 
 /**
@@ -364,6 +374,13 @@ export type AakashGocharSkyProps = {
   /** The place's timezone — the clock in the HUD reads on its wall, not UTC. */
   timeZone?: string;
   /**
+   * What to call the place on screen — the city the page is set to, already in
+   * the reader's language. The meridian toggle is named after it: the line is
+   * drawn through wherever you are watching from, so calling it काठमाडौँ रेखा
+   * while the page is set to Tokyo names the wrong city.
+   */
+  placeLabel?: string;
+  /**
    * The graha the sky is focused on. Optional: pass it with
    * {@link onSelectedKeyChange} to drive selection from outside — the page pairs
    * the sky with its detail cards that way — or leave both off and the sky keeps
@@ -383,7 +400,8 @@ export function AakashGocharSky({
   onClockChange,
   observer = KATHMANDU,
   timeZone = "Asia/Kathmandu",
-  height = 460,
+  placeLabel,
+  height = 660,
   selectedKey: selectedKeyProp,
   onSelectedKeyChange,
 }: AakashGocharSkyProps) {
@@ -424,6 +442,13 @@ export function AakashGocharSky({
   });
 
   const [mode, setMode] = useState<SkyMode>("space");
+  /**
+   * The city the page is set to, for anything named after the observer.
+   *
+   * Just the city: the page's own label carries the country too — "काठमाडौँ,
+   * NP" — which reads as a postal address once "रेखा" is appended to it.
+   */
+  const placeName = placeLabel?.split(",")[0].trim() || pick("काठमाडौँ", "Kathmandu");
   /** Signed simulated seconds per real second. 0 is paused; ±1 is wall time. */
   const [timeRate, setTimeRate] = useState(1);
   const lastRate = useRef(1);
@@ -444,20 +469,24 @@ export function AakashGocharSky({
   const controlled = selectedKeyProp !== undefined;
   const selectedKey = controlled ? selectedKeyProp : ownSelectedKey;
   const [sample, setSample] = useState<SkySample | null>(null);
+  /* The sky opens on four: the degree cage, the names, the राशि belt and the
+     line through the place you are watching from. Everything else — the
+     नक्षत्र and महिना rings, the figures, the pole stars, the तिल्ट, the
+     landscape — is a layer you go and ask for. Opening with all twelve on was
+     a wall of text and line over the one thing most people came to read. */
   const [toggles, setToggles] = useState<SceneToggles>({
-    rashiBelt: true,
-    nakshatraBelt: true,
-    monthRing: true,
     grid: true,
-    lockStars: true,
-    lockCenter: false,
-    poleStars: true,
-    tilt: true,
-    primeMeridian: true,
-    belowHorizon: true,
-    constellations: true,
-    landscape: true,
     labels: true,
+    rashiBelt: true,
+    poleStars: true,
+    constellations: true,
+    primeMeridian: true,
+    nakshatraBelt: false,
+    monthRing: false,
+    lockStars: false,
+    lockCenter: false,
+    tilt: false,
+    landscape: false,
   });
   const [flash, setFlash] = useState<number | null>(null);
   const lastRashi = useRef<number | null>(null);
@@ -481,6 +510,12 @@ export function AakashGocharSky({
      holds it under the camera while the sky turns overhead. Exclusive with a
      graha — the lock has one target. */
   const [lockObserver, setLockObserver] = useState(false);
+  /* Every press that *asks* to centre something bumps this; the scene answers
+     it with one snap. Following holds the camera only while the clock runs, so
+     "focus this" has to be an event rather than a state — on a paused sky the
+     state alone would centre nothing. */
+  const [focusNonce, setFocusNonce] = useState(0);
+  const askFocus = useCallback(() => setFocusNonce((n) => n + 1), []);
 
   // Following the date nav above the canvas keeps the two in step.
   useEffect(() => {
@@ -600,11 +635,39 @@ export function AakashGocharSky({
       const t = e.target as HTMLElement | null;
       if (t?.closest?.(CONTROL_SELECTOR)) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
+      /*
+       * A primary pointer down means no other finger is on the glass — so
+       * anything still in the map is a ghost, and the map is cleared before it
+       * is believed.
+       *
+       * Ghosts happen: a pointerup swallowed by the browser taking the touch
+       * for itself, or a gesture in flight when this effect rebinds (it does,
+       * on entering fullscreen) and its release lands on a listener that no
+       * longer exists. The ref outlives the listener either way. One ghost is
+       * all it takes — the next single-finger drag then counts two pointers,
+       * takes itself for a pinch, and zooms the sky instead of turning it,
+       * which is a sky that cannot be dragged at all until the page reloads.
+       */
+      if (e.isPrimary) pointers.current.clear();
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
       if (dragId.current == null) {
         dragId.current = e.pointerId;
         dragging.current = false;
         reanchor();
+      }
+      /* The gesture belongs to the sky from here until the finger lifts. With
+         the capture, every move and the release are delivered to this element
+         whatever they pass over on the way — a control that floats above the
+         canvas, the edge of the screen — instead of the drag being handed off
+         mid-turn. Safari can still steal a touch for a system gesture, which is
+         what the ghost-clearing above exists for. */
+      if (e.pointerType !== "mouse") {
+        try {
+          el.setPointerCapture(e.pointerId);
+        } catch {
+          /* Already captured, or the pointer is gone. Neither is worth failing
+             the drag over. */
+        }
       }
     };
 
@@ -639,11 +702,19 @@ export function AakashGocharSky({
 
       if (mode === "horizon") {
         /* Grab the sky: one screen-height of drag is one vertical field, so a
-           sideways pull pans by the same angle the image actually covers. */
+           pull pans by the same angle the image actually covers.
+         *
+         * Both signs are "the sky follows the finger" — pull down and the sky
+         * comes down with you. `pitch` counts *downward* from the horizon (the
+         * camera reads it as `rotation.x = -pitch`), so following the finger
+         * means subtracting dy, not adding it. Adding it turned क्षितिज into
+         * the one view of the three that pushed the sky away from the drag:
+         * space and globe both already move theirs with it. */
         const h = Math.max(el.clientHeight, 1);
-        const k = ((fovForZoom("horizon", view.current.distance) * Math.PI) / 180) / h;
+        const k =
+          ((fovForZoom("horizon", view.current.distance) * Math.PI) / 180) / h;
         view.current.yaw = gestureStart.current.yaw + dx * k;
-        view.current.pitch = clampPitch(gestureStart.current.pitch + dy * k);
+        view.current.pitch = clampPitch(gestureStart.current.pitch - dy * k);
       } else {
         const zoomScale = dragScaleForZoom(mode, view.current.distance, HOME_DISTANCE[mode]);
         view.current.yaw = gestureStart.current.yaw - dx * 0.006 * zoomScale;
@@ -704,22 +775,83 @@ export function AakashGocharSky({
     return () => el.removeEventListener("touchmove", onTouchMove);
   }, [fullscreen, mode]);
 
+  /**
+   * Nothing behind the overlay scrolls while it is up.
+   *
+   * The fixed layer covers the page but does not stop it moving underneath, and
+   * on iPad a drag that the sky declines — one that starts on a control, or a
+   * rubber-band at the end of a turn — reaches the document and slides the
+   * whole app about behind the sky. Since the sky is now its own presentation
+   * rather than the browser's, holding the document still is this component's
+   * job. Restored exactly as found, so a page that was already locked by
+   * something else is not unlocked on the way out.
+   */
+  useEffect(() => {
+    if (!fullscreen) return;
+    const body = document.body;
+    const previous = body.style.overflow;
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = previous;
+    };
+  }, [fullscreen]);
+
+  /**
+   * A press in the sky puts every panel away.
+   *
+   * फिल्टर and केन्द्रविन्दु open over the picture, and the thing they are for
+   * is the picture — so reaching past one to touch what it covers is the plain
+   * way to say you are done with it. Leaving them up until their own button is
+   * pressed again meant every look at the sky cost two presses.
+   *
+   * On `pointerdown`, so it clears out of the way before the drag it is part
+   * of rather than after it, and only when something is actually open.
+   */
+  useEffect(() => {
+    const el = canvasWrapRef.current;
+    if (!el) return;
+    if (!drawerOpen && !focusOpen && !grahaPickerOpen) return;
+    const dismiss = () => {
+      setDrawerOpen(false);
+      setFocusOpen(false);
+      setGrahaPickerOpen(false);
+    };
+    el.addEventListener("pointerdown", dismiss);
+    return () => el.removeEventListener("pointerdown", dismiss);
+  }, [drawerOpen, focusOpen, grahaPickerOpen]);
+
   const onSample = useCallback((next: SkySample) => setSample(next), []);
   /* Clicking the graha already selected clears it, in both modes. */
+  /**
+   * When the last press landed, and on what.
+   *
+   * A double press arrives as click, click, dblclick — so the second click
+   * reaches {@link onSelect} while the graha is already selected, and the
+   * plain toggle would let it go a moment before {@link onFollow} asks to ride
+   * it. Inside the double-press window a repeat press on the same graha is
+   * therefore left alone: releasing it needs a press the reader meant as one.
+   */
+  const lastPress = useRef<{ key: GrahaKey | null; at: number }>({ key: null, at: 0 });
+
   const onSelect = useCallback(
     (key: GrahaKey) => {
+      const now = performance.now();
+      const doubling = lastPress.current.key === key && now - lastPress.current.at < 400;
+      lastPress.current = { key, at: now };
+      const clearing = !doubling && (controlled ? selectedKeyProp : ownSelectedKey) === key;
+      /* Picking one swings the camera onto it, once. Picking it again lets it
+         go, and there is nothing to look at, so nothing is asked for. */
+      if (!clearing) askFocus();
       if (controlled) {
-        onSelectedKeyChange?.(selectedKeyProp === key ? null : key);
+        onSelectedKeyChange?.(clearing ? null : key);
         return;
       }
-      setOwnSelectedKey((prev) => {
-        const next = prev === key ? null : key;
-        onSelectedKeyChange?.(next);
-        return next;
-      });
+      setOwnSelectedKey(clearing ? null : key);
+      onSelectedKeyChange?.(clearing ? null : key);
     },
-    [controlled, onSelectedKeyChange, selectedKeyProp],
+    [askFocus, controlled, onSelectedKeyChange, ownSelectedKey, selectedKeyProp],
   );
+
 
   /** Select outright — the picker names a graha, so it never toggles it off. */
   const setSelected = useCallback(
@@ -728,6 +860,27 @@ export function AakashGocharSky({
       onSelectedKeyChange?.(key);
     },
     [controlled, onSelectedKeyChange],
+  );
+
+  /**
+   * Pressed twice — ride it.
+   *
+   * One press is "show me this", which centres it and then hands the drag back.
+   * Two is "stay on it": ग्रह पछ्याउनुहोस् goes on and the camera holds the
+   * graha in the middle while the clock runs and the sky slides past behind it.
+   */
+  const onFollow = useCallback(
+    (key: GrahaKey) => {
+      setSelected(key);
+      /* `lockStars` off, always. Following a graha means the camera rides it —
+         it does not mean the sky stops. Left on, the local horizon and its
+         Alt-Az grid freeze with the stars and the whole view reads as locked,
+         which is not what a second press asked for. The other two ways in,
+         followGraha and followObserver, have always cleared it here too. */
+      setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
+      askFocus();
+    },
+    [askFocus, setSelected],
   );
 
   /**
@@ -741,26 +894,36 @@ export function AakashGocharSky({
   const followObserver = useCallback(() => {
     setLockObserver(true);
     setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
-  }, []);
+    askFocus();
+  }, [askFocus]);
 
   /* Pressing the marker again lets it go, the same way pressing the graha
      already selected clears that. */
   const toggleObserver = useCallback(() => {
     setLockObserver((on) => {
       if (on) setToggles((t) => ({ ...t, lockCenter: false }));
-      else setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
+      else {
+        setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
+        askFocus();
+      }
       return !on;
     });
-  }, []);
+  }, [askFocus]);
 
   /** Follow a graha instead — which is the other half of the same choice. */
   const followGraha = useCallback(
     (key: GrahaKey) => {
       setLockObserver(false);
       setSelected(key);
-      setToggles((t) => ({ ...t, lockCenter: true }));
+      /* `lockStars` off, always. Following a graha means the camera rides it —
+         it does not mean the sky stops. Left on, the local horizon and its
+         Alt-Az grid freeze with the stars and the whole view reads as locked,
+         which is not what a second press asked for. The other two ways in,
+         followGraha and followObserver, have always cleared it here too. */
+      setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
+      askFocus();
     },
-    [setSelected],
+    [setSelected, askFocus],
   );
 
   /* No target, nothing to centre on: the lock cannot stay on once its graha is
@@ -811,6 +974,20 @@ export function AakashGocharSky({
    * by it: iOS Safari has the API on <video> alone and refuses this outright,
    * and a request can also be denied by permissions policy. Either way the
    * overlay is already on screen and nothing is lost.
+   *
+   * On iPad the API is *not* refused, and that was the bug. iPadOS 15 gained
+   * element fullscreen, so the request succeeded there and the browser took
+   * over the presentation — along with its own way out of it, which on iPad is
+   * a downward swipe. A one-finger drag to look at the ground was therefore
+   * read by Safari as "leave fullscreen", `fullscreenchange` fired, and the
+   * handler below pulled the overlay down with it. The sky never got the
+   * gesture. iPhone was fine only because the request failed there and the
+   * fixed layer was doing all the work already.
+   *
+   * So on Apple touch devices it is the fixed layer and nothing else: no
+   * browser presentation to swipe out of, and the only way back is the button.
+   * Everywhere else the native call still runs, where it buys a hidden URL bar
+   * and has no gesture attached to it.
    */
   useEffect(() => {
     const el = overlayRef.current;
@@ -825,6 +1002,9 @@ export function AakashGocharSky({
       return;
     }
     if (!el) return;
+    /* iPad drags the sky out of fullscreen, so it never goes in. See
+       {@link isAppleTouch}: the fixed layer is the whole of fullscreen there. */
+    if (isAppleTouch()) return;
 
     const target = el as HTMLDivElement & { webkitRequestFullscreen?: () => void };
     /* navigationUI: "hide" is a hint; browsers that do not know it ignore the
@@ -1082,26 +1262,10 @@ export function AakashGocharSky({
         compact={fullscreen}
         onPress={() => stepSpeed("forward")}
       />
-      <IconButton
-        icon={<RotateCcw className="size-full" />}
-        label={pick("मितिमा फर्कनुहोस्", "Back to the chosen date")}
-        active={false}
-        compact={fullscreen}
-        onPress={() => {
-          /* The nav above starts on today, so with no date chosen this is
-             simply "back to now". */
-          sim.current.timeMs = date.getTime();
-        }}
-      />
-      {onDateChange ? (
-        <IconButton
-          icon={<Calendar className="size-full" />}
-          label={pick("मिति छान्नुहोस्", "Choose a date")}
-          active={datePickerOpen}
-          compact={fullscreen}
-          onPress={() => setDatePickerOpen(true)}
-        />
-      ) : null}
+      {/* मिति and मितिमा फर्कनुहोस् used to sit here too. The date is already
+          chosen from the nav above the sky, and the reset now lives in the top
+          corner with the other two view buttons — this row is left as the
+          transport alone, which is what it will be reduced to. */}
     </>
   );
 
@@ -1172,6 +1336,13 @@ export function AakashGocharSky({
           onCreated={({ camera, gl }) => {
             gl.setClearColor(CANVAS_BG);
             camera.lookAt(0, 0, 0);
+            /* `style` on <Canvas> lands on the wrapper R3F renders, not on the
+               <canvas> inside it, which was therefore still `touch-action:
+               auto`. The wrapper's `none` does cover its descendants, but
+               Safari has been uneven about honouring an ancestor's value, and
+               this is the element the finger actually lands on. Set it where it
+               cannot be argued with. */
+            gl.domElement.style.touchAction = "none";
           }}
         >
           <FitCanvas />
@@ -1185,8 +1356,10 @@ export function AakashGocharSky({
               ayanamsaShift={ayanamsaShift}
               selectedKey={selectedKey}
               lockObserver={lockObserver}
+              focusNonce={focusNonce}
               toggles={toggles}
               onSelect={onSelect}
+              onFollow={onFollow}
               onSelectObserver={toggleObserver}
               onSample={onSample}
             />
@@ -1295,6 +1468,16 @@ export function AakashGocharSky({
 
         <div className="absolute right-3 flex gap-2" style={{ top: overlayTop }}>
           <IconButton
+            icon={<RotateCcw size={16} />}
+            label={pick("मितिमा फर्कनुहोस्", "Back to the chosen date")}
+            active={false}
+            onPress={() => {
+              /* The nav above starts on today, so with no date chosen this is
+                 simply "back to now". */
+              sim.current.timeMs = date.getTime();
+            }}
+          />
+          <IconButton
             icon={<Focus size={16} />}
             label={pick("केन्द्रविन्दु", "Focus")}
             active={focusOpen}
@@ -1330,7 +1513,7 @@ export function AakashGocharSky({
             {/* The four the sky is mostly read through, as tiles rather than
                 chips — big enough to hit with a thumb, and each one a picture
                 of what it turns on. */}
-            <div className="grid grid-cols-4 gap-1">
+            <div className={mode === "horizon" ? "grid grid-cols-4 gap-1" : "grid grid-cols-3 gap-1"}>
               <ViewTile
                 icon={<Grid3x3 className="size-full" />}
                 label={pick("ग्रिड", "Grids")}
@@ -1343,18 +1526,20 @@ export function AakashGocharSky({
                 active={toggles.constellations}
                 onPress={() => setToggles((t) => ({ ...t, constellations: !t.constellations }))}
               />
-              <ViewTile
-                icon={mode === "horizon" ? <Mountain className="size-full" /> : <Globe2 className="size-full" />}
-                label={pick("भूभाग", "Landscape")}
-                active={toggles.landscape}
-                /* Only the horizon view stands on ground; the other two are
-                   looking at the Earth from outside it, where there is no
-                   landscape to switch. Kept on screen and disabled rather than
-                   dropped, so the panel does not reshuffle under the thumb as
-                   the view changes. */
-                disabled={mode !== "horizon"}
-                onPress={() => setToggles((t) => ({ ...t, landscape: !t.landscape }))}
-              />
+              {/* Only क्षितिज stands on ground; the other two look at the Earth
+                  from outside it, where there is no landscape to switch. A
+                  control that can never do anything in this view is not a
+                  control, so it is dropped rather than shown greyed. In
+                  क्षितिज it is the single switch for the hillside — there is no
+                  second chip that has to agree with it. */}
+              {mode === "horizon" ? (
+                <ViewTile
+                  icon={<Mountain className="size-full" />}
+                  label={pick("भूभाग", "Landscape")}
+                  active={toggles.landscape}
+                  onPress={() => setToggles((t) => ({ ...t, landscape: !t.landscape }))}
+                />
+              ) : null}
               <ViewTile
                 icon={<CaseSensitive className="size-full" />}
                 label={pick("नाम", "Labels")}
@@ -1368,30 +1553,35 @@ export function AakashGocharSky({
             {/* ग्रिड is a tile above; the rest are the finer guides, which
                 stay as chips because they are read before they are pressed. */}
             <div className="flex flex-wrap gap-1.5">
-              <Chip
-                active={toggles.lockStars}
-                label={pick("तारा स्थिर", "Lock to stars")}
-                onPress={() => setToggles((t) => ({ ...t, lockStars: !t.lockStars }))}
-              />
-              <Chip
-                active={toggles.primeMeridian}
-                label={pick("काठमाडौँ रेखा", "Kathmandu meridian")}
-                onPress={() => setToggles((t) => ({ ...t, primeMeridian: !t.primeMeridian }))}
-              />
+              {/* Only पृथ्वी गोला, where the Earth turning under the zodiac is
+                  the thing on screen and holding it still is how you read the
+                  ring against it. अन्तरिक्ष is already in the stars' own
+                  frame, and in क्षितिज a frozen sky is just a stopped clock. */}
+              {mode === "globe" ? (
+                <Chip
+                  active={toggles.lockStars}
+                  label={pick("तारा स्थिर", "Lock to stars")}
+                  onPress={() => setToggles((t) => ({ ...t, lockStars: !t.lockStars }))}
+                />
+              ) : null}
+              {/* The observer's meridian is a line drawn on a globe you are
+                  looking *at* — in अन्तरिक्ष and पृथ्वी गोला. Standing on the
+                  dome you are on that line, so there is nothing to draw and
+                  the scene never drew one; the chip was a switch wired to
+                  nothing. Named after wherever the page is set to, not after
+                  Kathmandu. */}
+              {mode === "horizon" ? null : (
+                <Chip
+                  active={toggles.primeMeridian}
+                  label={pick(`${placeName} रेखा`, `${placeName} meridian`)}
+                  onPress={() => setToggles((t) => ({ ...t, primeMeridian: !t.primeMeridian }))}
+                />
+              )}
               {mode !== "space" ? (
                 <Chip
                   active={toggles.poleStars}
                   label={pick("ध्रुव तारा", "Pole stars")}
                   onPress={() => setToggles((t) => ({ ...t, poleStars: !t.poleStars }))}
-                />
-              ) : null}
-              {mode === "horizon" ? (
-                <Chip
-                  active={toggles.belowHorizon}
-                  label={pick("क्षितिजमुनि", "Below horizon")}
-                  /* The 360° valley underfoot. Off, the ground lifts so the
-                     half of the sky that has set stays in the picture. */
-                  onPress={() => setToggles((t) => ({ ...t, belowHorizon: !t.belowHorizon }))}
                 />
               ) : null}
               {mode === "globe" ? (
@@ -1416,11 +1606,16 @@ export function AakashGocharSky({
                 label={pick("नक्षत्र", "Nakshatra")}
                 onPress={() => setToggles((t) => ({ ...t, nakshatraBelt: !t.nakshatraBelt }))}
               />
-              <Chip
-                active={toggles.monthRing}
-                label={pick("महिना", "Months")}
-                onPress={() => setToggles((t) => ({ ...t, monthRing: !t.monthRing }))}
-              />
+              {/* The बिक्रम month ring belongs to the wheel views. On the dome
+                  it is a fourth band stacked on the राशि and नक्षत्र strips
+                  over a sky that is already carrying stars and a cage. */}
+              {mode === "horizon" ? null : (
+                <Chip
+                  active={toggles.monthRing}
+                  label={pick("महिना", "Months")}
+                  onPress={() => setToggles((t) => ({ ...t, monthRing: !t.monthRing }))}
+                />
+              )}
             </div>
           </div>
           ) : null}
@@ -1470,6 +1665,8 @@ export function AakashGocharSky({
                   ["jupiter", pick("बृहस्पति", "Jupiter")],
                   ["saturn", pick("शनि", "Saturn")],
                   ["mars", pick("मंगल", "Mars")],
+                  ["rahu", pick("राहु", "Rahu")],
+                  ["ketu", pick("केतु", "Ketu")],
                 ] as const
               ).map(([key, label]) => {
                 const checked = key === "earth" ? !selectedKey : selectedKey === key;
@@ -1504,9 +1701,13 @@ export function AakashGocharSky({
                 className="size-3.5 accent-white"
                 checked={toggles.lockCenter && !!selectedKey}
                 disabled={!selectedKey}
-                onChange={() =>
-                  setToggles((t) => ({ ...t, lockCenter: !t.lockCenter }))
-                }
+                onChange={() => {
+                  /* Read outside the updater: React may run an updater more
+                     than once, and a nonce bumped in there would fire twice
+                     for one press. */
+                  if (!toggles.lockCenter) askFocus();
+                  setToggles((t) => ({ ...t, lockCenter: !t.lockCenter }));
+                }}
               />
               {pick("ग्रह पछ्याउनुहोस्", "Follow graha")}
             </label>

@@ -129,13 +129,19 @@ export type GridTier = {
 export const ARCMIN = 1 / 60;
 
 export const GRID_TIERS: readonly GridTier[] = [
-  { step: 900, maxFov: Infinity, skipMultiplesOf: [], opacity: 0.6 },
-  { step: 300, maxFov: 55, skipMultiplesOf: [900], opacity: 0.42 },
-  { step: 120, maxFov: 28, skipMultiplesOf: [300], opacity: 0.28 },
-  { step: 60, maxFov: 15, skipMultiplesOf: [120, 300], opacity: 0.2 },
-  { step: 30, maxFov: 8, skipMultiplesOf: [60], opacity: 0.17, local: true },
-  { step: 10, maxFov: 3.5, skipMultiplesOf: [30], opacity: 0.14, local: true },
-  { step: 5, maxFov: 1.6, skipMultiplesOf: [10], opacity: 0.12, local: true },
+  /* One tier, and only one. The Alt-Az grid is a coordinate system, not a
+     decoration: an almucantar every 10° of altitude and a vertical every 10°
+     of azimuth, fixed in the observer's local horizon frame, built once and
+     never rebuilt. Zoom moves the camera through it and nothing else — the
+     spacing does not change, the coordinates do not change, and 0° is उत्तर at
+     every field of view.
+
+     This replaced a ladder of eight tiers that swapped 30° for 15° for 5° and
+     on down to 5′ as the lens narrowed. It read well at any single zoom and
+     was wrong in principle: the grid the reader was measuring against was not
+     the same grid from one moment to the next. The cost of dropping it is that
+     an arcminute crop now has 10° lines and no finer ones. */
+  { step: 600, maxFov: Infinity, skipMultiplesOf: [], opacity: 0.34 },
 ];
 
 /** The finest spacing the cage is drawing at this field of view, arcminutes. */
@@ -146,6 +152,64 @@ export function gridStepForFov(fovDeg: number): number {
   }
   return step;
 }
+
+/**
+ * 90° of azimuth, in arcminutes — the spacing of उ / पू / द / प.
+ *
+ * Every tier leaves these four verticals out and {@link CARDINAL_VERTICALS}
+ * draws them instead, at full length and full strength, so N–E–S–W read as the
+ * ribs of the dome at any zoom rather than dissolving into whatever spacing
+ * the lens happens to be showing.
+ */
+const CARDINAL_AZ_MIN = 5400;
+
+/** True for azimuth 0° / 90° / 180° / 270°, wrapped, in arcminutes. */
+function isCardinalAz(azMin: number): boolean {
+  return ((azMin % CARDINAL_AZ_MIN) + CARDINAL_AZ_MIN) % CARDINAL_AZ_MIN === 0;
+}
+
+/** Segments along a meridian of constant azimuth, nadir to zenith. */
+function verticalArc(az: number, steps: number): HorizonPoint[] {
+  const out: HorizonPoint[] = [];
+  for (let i = 0; i < steps; i += 1) {
+    out.push(
+      { alt: -90 + (i / steps) * 180, az },
+      { alt: -90 + ((i + 1) / steps) * 180, az },
+    );
+  }
+  return out;
+}
+
+/**
+ * The four cardinal verticals — great-circle arcs at azimuth 0° (उत्तर), 90°
+ * (पूर्व), 180° (दक्षिण) and 270° (पश्चिम), each running from the nadir up
+ * through the horizon to the zenith.
+ *
+ * Their own always-on layer rather than part of a tier: they are the frame you
+ * take a bearing against, and at a 260° field the tier they would belong to is
+ * thirty-six equally faint lines with no way to tell which one is north.
+ */
+export const CARDINAL_VERTICALS: HorizonPoint[] = [0, 90, 180, 270].flatMap((az) =>
+  verticalArc(az, 120),
+);
+
+/**
+ * A small diagonal cross on the zenith, and its twin on the nadir.
+ *
+ * Altitude 90° is a *point*, not a ring — every vertical ends there — so it
+ * gets a mark instead of a circle. Laid along the intercardinals so it never
+ * sits on top of {@link CARDINAL_VERTICALS}, and stopped short of the pole
+ * itself so the four strokes read as a cross rather than a blot.
+ */
+export const POLE_MARKS: HorizonPoint[] = (() => {
+  const out: HorizonPoint[] = [];
+  for (const pole of [1, -1]) {
+    for (const az of [45, 135, 225, 315]) {
+      out.push({ alt: pole * 86, az }, { alt: pole * 89.4, az });
+    }
+  }
+  return out;
+})();
 
 /**
  * Disconnected segment pairs for the whole-sky azimuth cage, spacing in
@@ -171,7 +235,7 @@ export function buildAzimuthGridPairs(
     }
   }
   for (let azMin = 0; azMin < 21600; azMin += stepMin) {
-    if (skip(azMin)) continue;
+    if (skip(azMin) || isCardinalAz(azMin)) continue;
     const az = azMin * ARCMIN;
     for (let i = 0; i < verticalSteps; i += 1) {
       pairs.push(
@@ -239,7 +303,7 @@ export function buildLocalGridPairs(
   lines = 0;
   for (let azMin = azFrom; azMin <= window.azHi * 60; azMin += stepMin) {
     if (lines >= LOCAL_MAX_LINES) break;
-    if (skip(azMin)) continue;
+    if (skip(azMin) || isCardinalAz(azMin)) continue;
     lines += 1;
     const az = azMin * ARCMIN;
     for (let i = 0; i < LOCAL_SEGMENTS; i += 1) {

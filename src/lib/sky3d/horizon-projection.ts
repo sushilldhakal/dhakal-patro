@@ -1,18 +1,29 @@
 /**
- * Stereographic projection for the क्षितिज view — the same mapping Stellarium
- * uses (their status bar's "FOV 235°").
+ * Equidistant fisheye for the क्षितिज view — the mapping a planetarium dome
+ * uses, and the one Stellarium is drawing in its all-sky shots.
  *
- * Equidistant fisheye drew a *circle* on the screen and threw the rest away:
- * `theta > halfFov` discarded every ray that would have landed in a corner, so
- * zooming out left a disc in a black rectangle. Stereographic does not clip to
- * that disc. Vertical FOV still maps to the top and bottom of the frame; the
- * sides and corners keep going, which is how a 180°+ sky fills a rectangle
- * and still flips as a dome.
+ * `r = θ`: screen radius is simply the angle from the look direction. Every
+ * direction on the sphere lands somewhere finite — the antipode at `r = π` —
+ * so the whole sky is a bounded disc and a line can only ever be as long as
+ * the sky is wide.
  *
- * `r = 2 tan(θ/2)` sends circles on the sphere to circles on the screen, and
- * it is defined past 180° (the antipode is at infinity). The 4×4 projection
- * matrix cannot do this, so the clip is injected into every material and
- * {@link projectHorizon} is the same maths for the DOM labels.
+ * This replaced stereographic (`r = 2·tan(θ/2)`), which sends the antipode to
+ * infinity. That is fine while the field is narrow and the two are
+ * indistinguishable, but opened out past 180° it tore the cage apart: a
+ * vertical circle is a great circle through the zenith and the nadir, and
+ * under stereographic it maps to a screen circle through both pole images —
+ * one that grows without bound as the meridian turns side-on. The result was
+ * a handful of enormous arcs sweeping across the whole canvas and crossing
+ * everything, which is not a grid you can read a bearing off.
+ *
+ * The reason stereographic was reached for — that equidistant "drew a circle
+ * and threw the rest away" — was a clip, not the mapping: the old code
+ * discarded any ray with `theta > halfFov`, which is what left a disc in a
+ * black rectangle. Nothing here clips to the vertical field. The sides and
+ * corners keep going exactly as they did, up to the edge of the sphere itself.
+ *
+ * The 4×4 projection matrix cannot express this, so the mapping is injected
+ * into every material and {@link projectHorizon} repeats it for the DOM labels.
  */
 
 import * as THREE from "three";
@@ -31,7 +42,7 @@ export function createHorizonFisheyeUniforms(): HorizonFisheyeUniforms {
   };
 }
 
-/** θ past this and tan(θ/2) blows up — a few degrees short of the antipode. */
+/** θ past this and tan(θ/2) runs away — a few degrees short of the antipode. */
 const THETA_MAX = 3.0543; // 175°
 
 const CLIP_GLSL = /* glsl */ `
@@ -45,18 +56,19 @@ vec4 horizonClipPosition(vec4 mvPosition) {
   vec3 p = mvPosition.xyz;
   float rxy = length(p.xy);
   float theta = atan(rxy, -p.z);
+  float halfFov = radians(uHorizonFov) * 0.5;
+  /* Stereographic: r = 2·tan(θ/2), scaled so the vertical field hits y = ±1.
+     The antipode goes to infinity rather than to a finite radius, so whatever
+     is behind the observer opens out and fills the frame however wide the lens
+     is opened — which is why there is never a disc of sky in a black rectangle
+     and never a dark wedge down the sides. It is what Stellarium draws. */
   if (theta > 3.0543) {
     return vec4(2.0, 2.0, 2.0, 1.0);
   }
-  float halfFov = radians(uHorizonFov) * 0.5;
-  /* Stereographic radius. Scale so the *vertical* field hits y = ±1; do not
-     also clip x to the same circle — that is what left the black corners.
-     Horizontal and diagonal rays are allowed a larger θ, which is how the
-     sky fills the rectangle the way Stellarium does. */
-  float rSt = 2.0 * tan(theta * 0.5);
+  float rEq = 2.0 * tan(theta * 0.5);
   float maxR = 2.0 * tan(max(halfFov, 1e-4) * 0.5);
   vec2 dir = rxy > 1e-8 ? p.xy / rxy : vec2(0.0);
-  vec2 film = dir * rSt;
+  vec2 film = dir * rEq;
   float x = film.x / maxR / max(uHorizonAspect, 1e-4);
   float y = film.y / maxR;
   float zEye = -length(p);
@@ -96,7 +108,7 @@ const SPRITE_GL_POSITION = /* glsl */ `
 `;
 
 /** Bump when the injected GLSL changes so already-patched materials recompile. */
-const HORIZON_FISHEYE_VERSION = 3;
+const HORIZON_FISHEYE_VERSION = 6;
 
 /**
  * Patch a material so its vertices go through {@link CLIP_GLSL} when
@@ -143,7 +155,7 @@ export function injectHorizonFisheye(
   };
   const prevKey = material.customProgramCacheKey;
   material.customProgramCacheKey = () =>
-    `${prevKey.call(material)}|horizon-stereo-fullframe-v${HORIZON_FISHEYE_VERSION}`;
+    `${prevKey.call(material)}|horizon-stereographic-v${HORIZON_FISHEYE_VERSION}`;
   material.needsUpdate = true;
 }
 
@@ -180,12 +192,11 @@ export function projectHorizonRaw(
   const rxy = Math.hypot(scratch.x, scratch.y);
   const theta = Math.atan2(rxy, -scratch.z);
   if (theta > THETA_MAX) return null;
-  const half = (fovDeg * Math.PI) / 360;
-  const rSt = 2 * Math.tan(theta * 0.5);
-  const maxR = 2 * Math.tan(Math.max(half, 1e-4) * 0.5);
+  const maxR = 2 * Math.tan(Math.max((fovDeg * Math.PI) / 360, 1e-4) / 2);
   const dirX = rxy > 1e-8 ? scratch.x / rxy : 0;
   const dirY = rxy > 1e-8 ? scratch.y / rxy : 0;
   const aspect = width / Math.max(height, 1);
+  const rSt = 2 * Math.tan(theta / 2);
   const nx = (dirX * rSt) / maxR / aspect;
   const ny = (dirY * rSt) / maxR;
   return { x: (nx * 0.5 + 0.5) * width, y: (-ny * 0.5 + 0.5) * height };
@@ -220,9 +231,9 @@ export function projectHorizon(
  */
 export function horizonConeRadiusDeg(fovDeg: number, width: number, height: number): number {
   const aspect = width / Math.max(height, 1);
-  const maxR = 2 * Math.tan(Math.max((fovDeg * Math.PI) / 360, 1e-4) * 0.5);
+  const maxR = 2 * Math.tan(Math.max((fovDeg * Math.PI) / 360, 1e-4) / 2);
   const corner = maxR * Math.hypot(aspect, 1);
-  return (2 * Math.atan(corner / 2) * 180) / Math.PI;
+  return Math.min(175, (2 * Math.atan(corner / 2) * 180) / Math.PI);
 }
 
 /**
