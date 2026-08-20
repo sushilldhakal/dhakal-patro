@@ -12,8 +12,9 @@
  *   overhead. This is the view where the ecliptic is emphatically *not* flat.
  *
  * Per-frame work is deliberately imperative: positions are written straight
- * onto object refs and React only hears from the scene a few times a second,
- * via `onSample`.
+ * onto object refs. Overlay names follow the same projection as the star
+ * points, so they do not lag behind a turning sky. The HUD clock still samples
+ * a few times a second via `onSample`.
  */
 
 import { useEffect, useMemo, useRef } from "react";
@@ -75,7 +76,7 @@ import {
   RASHI_LABEL_LAT,
   type eclipticPoint,
 } from "@/lib/sky3d/sky-geometry";
-import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000 } from "@/lib/sky3d/nakshatra-stars";
+import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000, starOverlayNames } from "@/lib/sky3d/nakshatra-stars";
 import {
   placedPoleStars,
   poleStarEpoch,
@@ -158,7 +159,7 @@ const NAK_MID = (NAK_INNER + NAK_OUTER) / 2;
 const DOME = 100;
 
 /** Size of the नामाङ्कित वैदिक तारा catalogue — see [[vedicField]]. */
-const VEDIC_STAR_CAPACITY = 32;
+const VEDIC_STAR_CAPACITY = 40;
 
 /** Pixel size from visual magnitude — Sirius (−1.5) reads as a disc, Alcor (4) as a point. */
 function vedicStarSize(mag: number): number {
@@ -888,12 +889,30 @@ function labelsMoved(prev: ScreenLabel[], next: ScreenLabel[]): boolean {
          a label sits, only how brightly it is drawn, so on a paused sky the
          fade would never be handed over. */
       a.below !== b.below ||
-      Math.abs(a.x - b.x) >= 1 ||
-      Math.abs(a.y - b.y) >= 1
+      Math.abs(a.x - b.x) >= 0.5 ||
+      Math.abs(a.y - b.y) >= 0.5
     )
       return true;
   }
   return false;
+}
+
+const NAMED_LABEL_KINDS = new Set(["star", "asterism", "vedicstar", "polestar"]);
+
+/** Prefer the figure name, then drop any name sitting on top of one already kept. */
+function cullOverlappingNames(labels: ScreenLabel[], minDist = 36): ScreenLabel[] {
+  const named = labels.filter((l) => NAMED_LABEL_KINDS.has(l.kind));
+  if (named.length < 2) return labels;
+  const rest = labels.filter((l) => !NAMED_LABEL_KINDS.has(l.kind));
+  const rank = (l: ScreenLabel) =>
+    l.kind === "asterism" ? 0 : l.kind === "vedicstar" ? 1 : l.kind === "polestar" ? 2 : 3;
+  named.sort((a, b) => rank(a) - rank(b));
+  const kept: ScreenLabel[] = [];
+  for (const label of named) {
+    if (kept.some((k) => Math.hypot(k.x - label.x, k.y - label.y) < minDist)) continue;
+    kept.push(label);
+  }
+  return [...rest, ...kept];
 }
 
 export function AakashGocharScene({
@@ -1636,10 +1655,11 @@ export function AakashGocharScene({
         const s = asterismPickRef.current[hit.index];
         const star = starField.stars[hit.index];
         const nak = NAKSHATRA_ASTERISMS[star.nakshatra - 1];
+        const names = nak ? starOverlayNames(star, nak) : null;
         onAimSkyRef.current?.({
           id: `star:${star.nakshatra}:${star.name}`,
-          ne: star.junction && nak ? nak.ne : star.name,
-          en: star.name,
+          ne: names?.ne ?? nak?.ne ?? star.name,
+          en: names?.en ?? nak?.en ?? star.name,
           hintNe: nak?.ne,
           hintEn: nak?.en,
           lon: s.lon,
@@ -1845,7 +1865,7 @@ export function AakashGocharScene({
 
     const width = state.size.width;
     const height = state.size.height;
-    const collect = frame.current % 6 === 0;
+    const collect = Boolean(toggles.labels);
     const collected: ScreenLabel[] = [];
     // Second column of the camera's world matrix: which way is up on screen.
     screenUp.current.setFromMatrixColumn(state.camera.matrixWorld, 1).normalize();
@@ -2441,12 +2461,14 @@ export function AakashGocharScene({
         const at = starPlace(i, lon, s.lat);
         if (!labelVisible(at)) continue;
         const nak = NAKSHATRA_ASTERISMS[s.nakshatra - 1];
+        const names = nak ? starOverlayNames(s, nak) : null;
+        if (!names) continue;
         project(
           {
             id: `star:${s.nakshatra}:${s.name}`,
             kind: "star",
-            text: s.name,
-            textNe: s.junction && nak ? nak.ne : s.name,
+            text: names.en,
+            textNe: names.ne,
             index: i,
             lon,
             lat: s.lat,
@@ -2935,14 +2957,22 @@ export function AakashGocharScene({
       flushLine(line);
     }
 
-    /* Keep the previous array whenever nothing has moved a pixel. The overlay
-       is fifty-odd Devanagari text nodes; handing React a new array re-renders
-       every one of them, on the same thread that is drawing the sky. */
-    if (collect && labelsMoved(labels.current, collected)) labels.current = collected;
+    /* Keep the previous array whenever nothing has moved half a pixel. Names
+       have to follow the star points on the same turn; the HUD clock still
+       only ticks five times a second. */
+    let labelsChanged = false;
+    if (collect) {
+      const culled = cullOverlappingNames(collected);
+      if (labelsMoved(labels.current, culled)) {
+        labels.current = culled;
+        labelsChanged = true;
+      }
+    }
 
     lastSample.current += delta;
-    if (lastSample.current > 0.2) {
-      lastSample.current = 0;
+    const hudDue = lastSample.current > 0.2;
+    if (hudDue) lastSample.current = 0;
+    if (labelsChanged || hudDue) {
       onSample({
         timeMs: s.timeMs,
         sky,

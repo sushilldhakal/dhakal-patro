@@ -20,9 +20,37 @@
  * start of मेष over the centuries.
  */
 
+/**
+ * Traditional Nepali names for stars that have one of their own — not the
+ * नक्षत्र they sit in. Overlay and search prefer these when the UI is Nepali.
+ */
+const STAR_NAME_NE: Record<string, string> = {
+  Pollux: "दिति",
+  Castor: "अदिति",
+};
+
+/**
+ * The name drawn on the sky: the proper / common name inside `(…)`, never the
+ * Bayer/Flamsteed/Messier tag. `β Gem (Pollux)` → Pollux; `σ Hya` → none.
+ */
+export function skyStarCommonName(catalogueName: string): string | null {
+  const paren = /\(([^)]+)\)\s*$/.exec(catalogueName);
+  if (paren?.[1]) return paren[1].trim();
+  if (/^M\d+\b/.test(catalogueName)) return null;
+  if (/[αβγδεζηθικλμνξοπρστυφχψω]/.test(catalogueName)) return null;
+  if (/^\d+\s+[A-Z]/.test(catalogueName)) return null;
+  if (/^[A-Za-z]{1,3}[¹²³]?\s+[A-Z]/.test(catalogueName)) return null;
+  return catalogueName;
+}
+
+export function skyStarNameNe(catalogueName: string): string | undefined {
+  const common = skyStarCommonName(catalogueName);
+  return common ? STAR_NAME_NE[common] : undefined;
+}
+
 /** One catalogued star. Magnitude only sets how big it is drawn. */
 export type SkyStar = {
-  /** Bayer/Flamsteed designation, or the proper name where there is one. */
+  /** Catalogue string — Bayer plus proper name in parentheses when there is one. */
   name: string;
   /** Right ascension, J2000, degrees. */
   ra: number;
@@ -171,7 +199,7 @@ export const NAKSHATRA_ASTERISMS: NakshatraAsterism[] = [
     stars: [
       { name: "ε Hya", ra: 133.847, dec: 6.419, mag: 3.38 },
       { name: "δ Hya", ra: 131.694, dec: 5.704, mag: 4.14 },
-      { name: "σ Hya", ra: 132.989, dec: 3.342, mag: 4.44 },
+      { name: "σ Hya (Minchir)", ra: 132.989, dec: 3.342, mag: 4.44 },
       { name: "η Hya", ra: 133.113, dec: 3.399, mag: 4.3 },
       { name: "ρ Hya", ra: 133.376, dec: 5.841, mag: 4.35 },
       { name: "ζ Hya", ra: 135.62, dec: 5.946, mag: 3.11 },
@@ -517,8 +545,12 @@ export type FlatStar = {
   nakshatra: number;
   /** True for the योगतारा, which is drawn larger. */
   junction: boolean;
-  /** Bayer/Flamsteed designation, or the proper name where there is one. */
+  /** Catalogue string — kept stable for search/favourite ids. */
   name: string;
+  /** Common / proper name for the overlay. Null when the catalogue has only a Bayer tag. */
+  nameEn: string | null;
+  /** Traditional Nepali name when the star has one of its own. */
+  nameNe: string | null;
 };
 
 /** Every catalogued star in one array, with the link pairs re-indexed onto it. */
@@ -530,9 +562,29 @@ export function flattenAsterisms(): { stars: FlatStar[]; links: [number, number]
     for (let i = 0; i < nak.stars.length; i += 1) {
       const s = nak.stars[i];
       const { lon, lat } = equatorialToeclipticJ2000(s.ra, s.dec);
-      stars.push({ lon, lat, mag: s.mag, nakshatra: nak.index, junction: i === 0, name: s.name });
+      stars.push({
+        lon,
+        lat,
+        mag: s.mag,
+        nakshatra: nak.index,
+        junction: i === 0,
+        name: s.name,
+        nameEn: skyStarCommonName(s.name),
+        nameNe: skyStarNameNe(s.name) ?? null,
+      });
     }
     for (const [a, b] of nak.links) links.push([base + a, base + b]);
   }
   return { stars, links };
+}
+
+/** Overlay copy for one नक्षत्र member. Companions without a common name stay unlabeled. */
+export function starOverlayNames(
+  star: Pick<FlatStar, "junction" | "nameEn" | "nameNe">,
+  nak: Pick<NakshatraAsterism, "ne" | "en">,
+): { en: string; ne: string } | null {
+  if (!star.nameEn && !star.junction) return null;
+  const en = star.nameEn ?? nak.en;
+  const ne = star.nameNe ?? (star.junction ? nak.ne : en);
+  return { en, ne };
 }

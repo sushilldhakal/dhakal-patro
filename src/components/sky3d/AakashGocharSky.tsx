@@ -2171,21 +2171,21 @@ function gridDegreeBox(
 function labelBox(x: number, y: number, width: number, top: number): CSSProperties {
   return {
     position: "absolute",
-    left: x - width / 2,
-    top: y + top,
+    left: 0,
+    top: 0,
     width,
+    transform: `translate3d(${x - width / 2}px, ${y + top}px, 0)`,
     textAlign: "center",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
+    willChange: "transform",
   };
 }
 
 /**
- * The text over the canvas. Memoised, and fed an array the scene only replaces
- * when a label has actually moved a pixel: the HUD clock ticks five times a
- * second, and re-rendering fifty Devanagari labels alongside it would stutter
- * the very animation they are labelling.
+ * The text over the canvas. Memoised. Positions follow the star points on the
+ * same camera move; the HUD clock still samples on its own slower tick.
  */
 const SkyLabels = memo(function SkyLabels({
   labels,
@@ -2387,7 +2387,7 @@ const SkyLabels = memo(function SkyLabels({
                 padding: 0,
               }}
             >
-              {(lang === "en" ? label.text : label.textNe) ?? ""}
+              {(lang === "en" ? label.text : label.textNe ?? label.text) ?? ""}
             </button>
           );
         }
@@ -2493,7 +2493,7 @@ const SkyLabels = memo(function SkyLabels({
                 padding: 0,
               }}
             >
-              {(lang === "en" ? label.text : label.textNe) ?? ""}
+              {(lang === "en" ? label.text : label.textNe ?? label.text) ?? ""}
             </button>
           );
         }

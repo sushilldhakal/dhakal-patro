@@ -18,6 +18,8 @@ import { GEO_BODY_ORDER } from "@/lib/sky3d/orbital-model";
 import {
   equatorialToeclipticJ2000,
   NAKSHATRA_ASTERISMS,
+  skyStarCommonName,
+  skyStarNameNe,
 } from "@/lib/sky3d/nakshatra-stars";
 
 /**
@@ -89,20 +91,14 @@ export const SKY_CATALOGUE: SkyTarget[] = (() => {
     });
     for (const star of nak.stars) {
       const p = equatorialToeclipticJ2000(star.ra, star.dec);
+      const common = skyStarCommonName(star.name);
+      const neOwn = skyStarNameNe(star.name);
       out.push({
         id: `star:${nak.index}:${star.name}`,
         kind: "star",
-        /* Most of these stars have no Nepali name of their own — भरणी's three
-           are catalogued only as "41 Ari", "39 Ari", "35 Ari", nothing else.
-           Printing the Bayer/Flamsteed tag as if it were the name read as
-           English dropped into a Nepali sentence. So in Nepali the tara is
-           named after the नक्षत्र it belongs to, and the designation moves to
-           the small hint that tells the stars in one नक्षत्र apart. English
-           keeps the designation as the name — the convention that string
-           actually is one — with the नक्षत्र as its hint instead. */
-        ne: nak.ne,
-        en: star.name,
-        hintNe: star.name,
+        ne: neOwn ?? nak.ne,
+        en: common ?? nak.en,
+        hintNe: nak.ne,
         hintEn: nak.en,
         at: "sky",
         lon: p.lon,
@@ -154,25 +150,56 @@ const VEDIC_LATIN: Record<string, string> = {
   Orion: "Prajapati",
   "Ursa Major / Big Dipper": "Saptarishi",
   "Southern Cross / Crux": "Trisanku",
+  Diti: "Diti",
+  Aditi: "Aditi",
+  Pollux: "Diti Soma Chandra",
+  Castor: "Aditi Aditya",
+  Ashvinau: "Ashvinau Asvinau Punarvasu",
+  Gemini: "Mithuna Mithuna Mandala",
 };
+
+/** Extra search names that sit on an already-drawn वैदिक तारा. No extra dots. */
+const VEDIC_ALIASES: { matchNe: string; ne: string; en: string; hintEn: string }[] = [
+  { matchNe: "दिति", ne: "सोम", en: "Soma", hintEn: "Pollux" },
+  { matchNe: "दिति", ne: "चन्द्र", en: "Chandra", hintEn: "Pollux" },
+  { matchNe: "दिति", ne: "मिथुनस्य १", en: "Mithunasya 1", hintEn: "Pollux" },
+  { matchNe: "अदिति", ne: "आदित्य", en: "Aditya", hintEn: "Castor" },
+  { matchNe: "अदिति", ne: "मिथुनस्य २", en: "Mithunasya 2", hintEn: "Castor" },
+  { matchNe: "मिथुन", ne: "मिथुन मण्डल", en: "Mithuna Mandala", hintEn: "Gemini" },
+  { matchNe: "अश्विनौ", ne: "पुनर्वसु", en: "Punarvasu", hintEn: "Castor & Pollux" },
+];
 
 /** Live server positions → search/aim targets. Ids are stable for one payload. */
 export function vedicStarTargets(stars: VedicStarPosition[]): SkyTarget[] {
-  return stars.map((star, index) => {
+  const primary = stars.map((star, index) => {
     const latin = VEDIC_LATIN[star.en] ?? "";
-    const hint = [latin, star.designation].filter(Boolean).join(" · ");
+    const hint = [latin, star.en].filter(Boolean).join(" · ");
     return {
       id: `vedic:${index}`,
-      kind: "star",
+      kind: "star" as const,
       ne: star.ne,
       en: star.en,
       hintNe: hint,
       hintEn: hint,
-      at: "sky",
+      at: "sky" as const,
       lon: star.lon,
       lat: star.lat,
     };
   });
+  const aliases: SkyTarget[] = [];
+  for (const alias of VEDIC_ALIASES) {
+    const host = primary.find((t) => t.ne.split(/[ /]/)[0] === alias.matchNe || t.ne === alias.matchNe);
+    if (!host) continue;
+    aliases.push({
+      ...host,
+      id: `vedic-alias:${alias.en}`,
+      ne: alias.ne,
+      en: alias.en,
+      hintNe: host.ne,
+      hintEn: alias.hintEn,
+    });
+  }
+  return [...primary, ...aliases];
 }
 
 /** Everything of one kind, for the browse tree. */

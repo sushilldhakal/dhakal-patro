@@ -741,7 +741,7 @@ export interface GocharGraha {
 }
 
 /**
- * One of the 32 named वैदिक तारा — अगस्त्य, अभिजित्, सप्तर्षि and the rest —
+ * One of the named वैदिक तारा — अगस्त्य, अभिजित्, सप्तर्षि and the rest —
  * positioned server-side from the Swiss Ephemeris fixed-star catalogue
  * (sefstars.txt). `lon`/`lat` are already sidereal ecliptic degrees for the
  * date this response was computed for; the client plots them as-is; it does

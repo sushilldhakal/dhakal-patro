@@ -73,6 +73,8 @@ function MetaItem({
     </div>
   );
 }
+
+export function KundaliDetail() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { isAuthenticated, loading: authLoading } = useAuth();
