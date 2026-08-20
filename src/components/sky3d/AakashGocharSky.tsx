@@ -839,7 +839,7 @@ export function AakashGocharSky({
   useEffect(() => {
     const el = canvasWrapRef.current;
     if (!el) return;
-    if (!drawerOpen && !focusOpen && !grahaPickerOpen && !searchOpen) return;
+    if (!drawerOpen && !focusOpen && !grahaPickerOpen && !searchOpen && !aimed) return;
     const dismiss = (e: PointerEvent) => {
       /* Outside the panel only. The panels float over the canvas, so every
          press on a checkbox inside one also reaches this listener on its way
@@ -853,10 +853,13 @@ export function AakashGocharSky({
       setFocusOpen(false);
       setGrahaPickerOpen(false);
       setSearchOpen(false);
+      /* And the reticle. It marks the one thing the reader asked to be shown;
+         touching the sky is asking for something else. */
+      setAimed(null);
     };
     el.addEventListener("pointerdown", dismiss);
     return () => el.removeEventListener("pointerdown", dismiss);
-  }, [drawerOpen, focusOpen, grahaPickerOpen, searchOpen]);
+  }, [aimed, drawerOpen, focusOpen, grahaPickerOpen, searchOpen]);
 
   const onSample = useCallback((next: SkySample) => setSample(next), []);
   /* Clicking the graha already selected clears it, in both modes. */
@@ -873,6 +876,7 @@ export function AakashGocharSky({
 
   const onSelect = useCallback(
     (key: GrahaKey) => {
+      setAimed(null);
       const now = performance.now();
       const doubling = lastPress.current.key === key && now - lastPress.current.at < 400;
       lastPress.current = { key, at: now };
@@ -909,6 +913,7 @@ export function AakashGocharSky({
    */
   const onFollow = useCallback(
     (key: GrahaKey) => {
+      setAimed(null);
       setSelected(key);
       /* `lockStars` off, always. Following a graha means the camera rides it —
          it does not mean the sky stops. Left on, the local horizon and its
