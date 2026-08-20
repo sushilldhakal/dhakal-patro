@@ -41,6 +41,7 @@ import {
   Play,
   Rewind,
   RotateCcw,
+  Search,
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
@@ -54,7 +55,22 @@ import {
   WEEKDAYS_SHORT_NE,
 } from "@/lib/bs-calendar";
 import { dragScaleForZoom, fovForZoom, SPACE_FOV } from "@/lib/sky3d/sky-zoom";
+import {
+  DEFAULT_STEP_INDEX,
+  nearestStepIndex,
+  TIME_STEPS,
+} from "@/lib/sky3d/time-steps";
 import { SkyTimeSheet } from "@/components/sky3d/SkyTimeSheet";
+import { SkySearch } from "@/components/sky3d/SkySearch";
+import type { SkyTarget } from "@/lib/sky3d/sky-catalogue";
+import {
+  localFavourites,
+  pushRecent,
+  putFavourites,
+  recents as readRecents,
+  syncFavourites,
+} from "@/lib/sky3d/sky-bookmarks";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { bikramFromSun } from "@/lib/sky3d/bikram-solar";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { NAKSHATRA_SHORT } from "@/lib/sky3d/nakshatra-stars";
@@ -156,30 +172,6 @@ const LABEL_COLOR = {
   overlayDim: "rgba(236,242,244,0.62)",
 } as const;
 
-/**
- * The speed ladder, in simulated seconds per real second. Pressing a fast
- * button repeatedly climbs it; pause drops back to the first rung.
- */
-const SPEED_LADDER = [
-  /* The bottom rung is the clock on the wall: play runs the sky at the rate the
-     sky actually runs. Everything above it is a fast button away. */
-  { seconds: 1, ne: "१ सेकेन्ड/से", en: "1 sec/s" },
-  { seconds: 60, ne: "१ मिनेट/से", en: "1 min/s" },
-  { seconds: 7200, ne: "२ घण्टा/से", en: "2 hr/s" },
-  { seconds: 172800, ne: "२ दिन/से", en: "2 days/s" },
-  { seconds: 604800, ne: "१ हप्ता/से", en: "1 week/s" },
-  { seconds: 5184000, ne: "२ महिना/से", en: "2 months/s" },
-  /* The top two rungs are for one thing: precession. The ayanamsa moves a
-     degree in seventy-two years, so at any calendar speed the belt looks
-     nailed down. At 20 years a second मेष visibly walks away from वसन्त
-     सम्पात, and the whole 26,000-year turn takes about twenty minutes. */
-  { seconds: 63113904, ne: "२ वर्ष/से", en: "2 years/s" },
-  { seconds: 631139040, ne: "२० वर्ष/से", en: "20 years/s" },
-  /* The top rung is precession at one degree a second: the ayanamsa moves a
-     degree in 72 years, so मेष crosses a whole rashi boundary every half
-     minute and the pole hands over its star while you watch. */
-  { seconds: 2272100544, ne: "७२ वर्ष/से", en: "72 years/s" },
-];
 /** Learn year-mode framing — same wheel scale, same seat above it. */
 const SYSTEM_YAW = 0.2;
 const SYSTEM_PITCH = 1.15;
@@ -429,7 +421,7 @@ export function AakashGocharSky({
 
   const sim = useRef<SimState>({
     timeMs: date.getTime(),
-    secondsPerRealSecond: SPEED_LADDER[0].seconds,
+    secondsPerRealSecond: TIME_STEPS[DEFAULT_STEP_INDEX].seconds,
     playing: true,
   });
   /* Opens on अन्तरिक्ष from above, so the rashi / नक्षत्र / month wheel
@@ -449,20 +441,20 @@ export function AakashGocharSky({
    * NP" — which reads as a postal address once "रेखा" is appended to it.
    */
   const placeName = placeLabel?.split(",")[0].trim() || pick("काठमाडौँ", "Kathmandu");
-  /** Signed simulated seconds per real second. 0 is paused; ±1 is wall time. */
-  const [timeRate, setTimeRate] = useState(1);
-  const lastRate = useRef(1);
-  const playing = timeRate !== 0;
-  const reverse = timeRate < 0;
-  const speedIndex = SPEED_LADDER.findIndex((s) => s.seconds === Math.abs(timeRate));
-  const speed =
-    speedIndex >= 0
-      ? SPEED_LADDER[speedIndex]
-      : {
-          seconds: Math.abs(timeRate) || 1,
-          ne: `×${Math.round(Math.abs(timeRate))}`,
-          en: `×${Math.round(Math.abs(timeRate))}`,
-        };
+  /**
+   * The clock, as one chosen step and two switches.
+   *
+   * The step is the single source of truth — {@link TIME_STEPS} — and the
+   * arrows, the play button and the rate readout all measure themselves
+   * against the same rung. `timeRate` below is derived rather than stored, so
+   * the two can never say different things about how fast the sky is running.
+   */
+  const [stepIndex, setStepIndex] = useState(DEFAULT_STEP_INDEX);
+  const [playing, setPlaying] = useState(true);
+  const [reverse, setReverse] = useState(false);
+  const speed = TIME_STEPS[stepIndex];
+  /** Signed simulated seconds per real second. 0 is paused. */
+  const timeRate = playing ? (reverse ? -speed.seconds : speed.seconds) : 0;
   /* Controlled when the page passes a key, uncontrolled otherwise — the inner
      state is kept either way so an uncontrolled sky still works on its own. */
   const [ownSelectedKey, setOwnSelectedKey] = useState<GrahaKey | null>(null);
@@ -514,6 +506,47 @@ export function AakashGocharSky({
      it with one snap. Following holds the camera only while the clock runs, so
      "focus this" has to be an event rather than a state — on a paused sky the
      state alone would centre nothing. */
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [favourites, setFavourites] = useState<string[]>(() => localFavourites());
+  const [recentIds, setRecentIds] = useState<string[]>(() => readRecents());
+  /**
+   * Where the camera has been asked to look, for anything that is not a graha.
+   *
+   * A graha already has a way to be centred — select it and ask for focus — but
+   * a star has no object in the scene to select. So a fixed target is passed
+   * down as a position and a nonce, and the scene aims at it the same way it
+   * aims at a followed graha, for one frame.
+   */
+  const [skyAim, setSkyAim] = useState<{ lon: number; lat: number; nonce: number } | null>(null);
+  /** What the reticle is currently sitting on, for the caption under it. */
+  const [aimed, setAimed] = useState<SkyTarget | null>(null);
+  const { user } = useAuth();
+  const signedIn = !!user;
+
+  /* Signing in pulls the account's list down and folds this browser's into it. */
+  useEffect(() => {
+    let alive = true;
+    void syncFavourites(signedIn).then((ids) => {
+      if (alive) setFavourites(ids);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [signedIn]);
+
+  const toggleFavourite = useCallback(
+    (id: string) => {
+      setFavourites((current) => {
+        const next = current.includes(id)
+          ? current.filter((v) => v !== id)
+          : [...current, id];
+        void putFavourites(next, signedIn);
+        return next;
+      });
+    },
+    [signedIn],
+  );
+
   const [focusNonce, setFocusNonce] = useState(0);
   const askFocus = useCallback(() => setFocusNonce((n) => n + 1), []);
 
@@ -533,33 +566,29 @@ export function AakashGocharSky({
    * fast, real time being the one below it; otherwise it climbs a rung and
    * stops at the top, seventy-two years a second.
    */
-  const stepSpeed = useCallback((direction: "forward" | "back") => {
-    const wantReverse = direction === "back";
-    setTimeRate((current) => {
-      const mag = Math.abs(current) || Math.abs(lastRate.current) || 1;
-      const fromRest = current === 0 || current < 0 !== wantReverse;
-      let idx = 0;
-      for (let i = 0; i < SPEED_LADDER.length; i += 1) {
-        if (SPEED_LADDER[i].seconds <= mag) idx = i;
+  /**
+   * पछाडि and अगाडि, which now move the clock rather than the throttle.
+   *
+   * One press is one step of the chosen size — pick १ दिन and अगाडि is
+   * tomorrow, pick १ वर्ष and it is next year. Running, they turn the sky
+   * round instead: the same step, applied every second, in the direction
+   * pressed. Either way the number on the readout is what happens, which is
+   * the whole point of there being one ladder.
+   */
+  const stepTime = useCallback(
+    (direction: "forward" | "back") => {
+      const wantReverse = direction === "back";
+      if (playing) {
+        setReverse(wantReverse);
+        return;
       }
-      const next = fromRest
-        ? SPEED_LADDER[1]
-        : SPEED_LADDER[Math.min(SPEED_LADDER.length - 1, idx + 1)];
-      const signed = (wantReverse ? -1 : 1) * next.seconds;
-      lastRate.current = signed;
-      return signed;
-    });
-  }, []);
+      const delta = (wantReverse ? -1 : 1) * TIME_STEPS[stepIndex].seconds * 1000;
+      sim.current.timeMs += delta;
+    },
+    [playing, stepIndex],
+  );
 
-  const togglePlay = useCallback(() => {
-    setTimeRate((current) => {
-      if (current !== 0) {
-        lastRate.current = current;
-        return 0;
-      }
-      return lastRate.current || 1;
-    });
-  }, []);
+  const togglePlay = useCallback(() => setPlaying((p) => !p), []);
 
   /* ── gestures ─────────────────────────────────────────────────────────── */
 
@@ -810,15 +839,24 @@ export function AakashGocharSky({
   useEffect(() => {
     const el = canvasWrapRef.current;
     if (!el) return;
-    if (!drawerOpen && !focusOpen && !grahaPickerOpen) return;
-    const dismiss = () => {
+    if (!drawerOpen && !focusOpen && !grahaPickerOpen && !searchOpen) return;
+    const dismiss = (e: PointerEvent) => {
+      /* Outside the panel only. The panels float over the canvas, so every
+         press on a checkbox inside one also reaches this listener on its way
+         up — which closed the panel under the finger before the box it was
+         aimed at could be ticked. `CONTROL_SELECTOR` is the same test the drag
+         handler uses to leave controls alone, and the panels carry
+         `data-sky-controls` for exactly this. */
+      const t = e.target;
+      if (t instanceof Element && t.closest(CONTROL_SELECTOR)) return;
       setDrawerOpen(false);
       setFocusOpen(false);
       setGrahaPickerOpen(false);
+      setSearchOpen(false);
     };
     el.addEventListener("pointerdown", dismiss);
     return () => el.removeEventListener("pointerdown", dismiss);
-  }, [drawerOpen, focusOpen, grahaPickerOpen]);
+  }, [drawerOpen, focusOpen, grahaPickerOpen, searchOpen]);
 
   const onSample = useCallback((next: SkySample) => setSample(next), []);
   /* Clicking the graha already selected clears it, in both modes. */
@@ -879,6 +917,29 @@ export function AakashGocharSky({
          followGraha and followObserver, have always cleared it here too. */
       setToggles((t) => ({ ...t, lockCenter: true, lockStars: false }));
       askFocus();
+    },
+    [askFocus, setSelected],
+  );
+
+  /**
+   * A search result was chosen: put it in the middle and mark it.
+   *
+   * Grahas go through the path that already exists — select, then ask to focus
+   * — so the selection panel, the follow toggle and the graha's own card all
+   * agree with what the camera is doing. Anything fixed is handed to the scene
+   * as a position instead. Either way it lands under the reticle.
+   */
+  const pickTarget = useCallback(
+    (target: SkyTarget) => {
+      setAimed(target);
+      setRecentIds(pushRecent(target.id));
+      if (target.at === "graha") {
+        setSelected(target.graha);
+        askFocus();
+      } else {
+        setSkyAim({ lon: target.lon, lat: target.lat, nonce: Date.now() });
+      }
+      setSearchOpen(false);
     },
     [askFocus, setSelected],
   );
@@ -1243,10 +1304,10 @@ export function AakashGocharSky({
     <>
       <IconButton
         icon={<Rewind className="size-full" />}
-        label={pick("पछाडि छिटो", "Faster backward")}
-        active={!playing ? false : reverse && speedIndex > 0}
+        label={pick("एक पाइला पछाडि", "One step back")}
+        active={playing && reverse}
         compact={fullscreen}
-        onPress={() => stepSpeed("back")}
+        onPress={() => stepTime("back")}
       />
       <IconButton
         icon={playing ? <Pause className="size-full" /> : <Play className="size-full" />}
@@ -1257,10 +1318,10 @@ export function AakashGocharSky({
       />
       <IconButton
         icon={<FastForward className="size-full" />}
-        label={pick("अगाडि छिटो", "Faster forward")}
-        active={!playing ? false : !reverse && speedIndex > 0}
+        label={pick("एक पाइला अगाडि", "One step forward")}
+        active={playing && !reverse}
         compact={fullscreen}
-        onPress={() => stepSpeed("forward")}
+        onPress={() => stepTime("forward")}
       />
       {/* मिति and मितिमा फर्कनुहोस् used to sit here too. The date is already
           chosen from the nav above the sky, and the reset now lives in the top
@@ -1355,6 +1416,7 @@ export function AakashGocharSky({
               calibration={calibration}
               ayanamsaShift={ayanamsaShift}
               selectedKey={selectedKey}
+              skyAim={skyAim}
               lockObserver={lockObserver}
               focusNonce={focusNonce}
               toggles={toggles}
@@ -1467,6 +1529,16 @@ export function AakashGocharSky({
         ) : null}
 
         <div className="absolute right-3 flex gap-2" style={{ top: overlayTop }}>
+          <IconButton
+            icon={<Search size={16} />}
+            label={pick("आकाशमा खोज्नुहोस्", "Search the sky")}
+            active={searchOpen}
+            onPress={() => {
+              setSearchOpen((v) => !v);
+              setFocusOpen(false);
+              setDrawerOpen(false);
+            }}
+          />
           <IconButton
             icon={<RotateCcw size={16} />}
             label={pick("मितिमा फर्कनुहोस्", "Back to the chosen date")}
@@ -1644,6 +1716,42 @@ export function AakashGocharSky({
           <span className="text-sm font-bold text-white">{simStamp.short.day}</span>
           <span className="text-[11px] font-semibold text-white/70">{simStamp.short.clock}</span>
         </button>
+
+        {searchOpen ? (
+          <div
+            className="absolute right-3 z-20"
+            style={{ top: `calc(${overlayTop} + 2.75rem)` }}
+          >
+            <SkySearch
+              favourites={favourites}
+              recentIds={recentIds}
+              onPick={pickTarget}
+              onToggleFavourite={toggleFavourite}
+              onClose={() => setSearchOpen(false)}
+            />
+          </div>
+        ) : null}
+
+        {/* The reticle: what the camera has been aimed at is in the middle, and
+            this says so. Drawn as four ticks with the middle left open, so the
+            thing it marks is never covered by the mark. */}
+        {aimed ? (
+          <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
+            <div className="relative grid place-items-center">
+              <svg viewBox="0 0 48 48" className="size-12 text-amber-300/80" aria-hidden>
+                <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <line x1="24" y1="2" x2="24" y2="13" />
+                  <line x1="24" y1="35" x2="24" y2="46" />
+                  <line x1="2" y1="24" x2="13" y2="24" />
+                  <line x1="35" y1="24" x2="46" y2="24" />
+                </g>
+              </svg>
+              <span className="absolute top-[calc(50%+1.9rem)] whitespace-nowrap rounded-full border border-amber-300/40 bg-black/70 px-2 py-0.5 text-[11px] font-bold text-amber-100 backdrop-blur">
+                {lang === "en" ? aimed.en : aimed.ne}
+              </span>
+            </div>
+          </div>
+        ) : null}
 
         {focusOpen ? (
           <div
@@ -1852,13 +1960,19 @@ export function AakashGocharSky({
           onClose={() => setDatePickerOpen(false)}
           onApplyMs={applyInstant}
           onTimeRate={(rate) => {
-            if (rate !== 0) lastRate.current = rate;
-            setTimeRate(rate);
+            if (rate === 0) {
+              setPlaying(false);
+              return;
+            }
+            setStepIndex(nearestStepIndex(rate));
+            setReverse(rate < 0);
+            setPlaying(true);
           }}
           onTogglePlay={togglePlay}
           onResetRate={() => {
-            lastRate.current = 1;
-            setTimeRate(1);
+            setStepIndex(DEFAULT_STEP_INDEX);
+            setReverse(false);
+            setPlaying(true);
           }}
         />
       ) : null}

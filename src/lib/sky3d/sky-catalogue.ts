@@ -1,0 +1,139 @@
+/**
+ * Everything in the sky that can be looked up by name, in one list.
+ *
+ * The search box, the browse tree, the favourites and the recents all read from
+ * here, so a thing is nameable in exactly one place. Adding धूमकेतु (comets) or
+ * galaxies later is a matter of adding a `kind` and a builder — nothing that
+ * consumes this list needs to know what is in it.
+ *
+ * Every entry carries a position the camera can be aimed at. Grahas move, so
+ * theirs is a key the scene resolves live; stars and asterisms are fixed, so
+ * theirs is an ecliptic longitude and latitude and the scene places them the
+ * same way it places anything else.
+ */
+
+import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { GEO_BODY_ORDER } from "@/lib/sky3d/orbital-model";
+import {
+  equatorialToeclipticJ2000,
+  NAKSHATRA_ASTERISMS,
+} from "@/lib/sky3d/nakshatra-stars";
+
+/**
+ * What sort of thing it is. The browse tree is built from this, so a new kind
+ * appears as a new branch without anything else being touched.
+ */
+export type SkyTargetKind = "planet" | "star" | "constellation";
+
+/** Where the camera is pointed to find it. */
+export type SkyTargetAt =
+  /** A graha: it moves, so the scene looks up where it is right now. */
+  | { at: "graha"; graha: GrahaKey }
+  /** Fixed sky: ecliptic longitude and latitude at J2000, degrees. */
+  | { at: "sky"; lon: number; lat: number };
+
+export type SkyTarget = {
+  /** Stable across sessions — favourites and recents are stored by this. */
+  id: string;
+  kind: SkyTargetKind;
+  ne: string;
+  en: string;
+  /** Shown under the name in a result row: the नक्षत्र it sits in, and so on. */
+  hintNe?: string;
+  hintEn?: string;
+} & SkyTargetAt;
+
+/** The browse tree's branches, in the order they are offered. */
+export const SKY_KINDS: { kind: SkyTargetKind; ne: string; en: string }[] = [
+  { kind: "planet", ne: "ग्रह", en: "Planets" },
+  { kind: "star", ne: "तारा", en: "Stars" },
+  { kind: "constellation", ne: "नक्षत्र", en: "Constellations" },
+];
+
+/**
+ * The catalogue, built once.
+ *
+ * Stars come out of the nakshatra asterisms, which is every star the sky
+ * actually draws — there is no point offering a name the view cannot show. The
+ * asterism itself is offered too, aimed at its योगतारा, which is the star the
+ * nakshatra is named for and the sensible thing to centre.
+ */
+export const SKY_CATALOGUE: SkyTarget[] = (() => {
+  const out: SkyTarget[] = [];
+
+  for (const key of GEO_BODY_ORDER) {
+    out.push({
+      id: `planet:${key}`,
+      kind: "planet",
+      ne: GRAHA_NAME[key].ne,
+      en: GRAHA_NAME[key].en,
+      at: "graha",
+      graha: key,
+    });
+  }
+
+  for (const nak of NAKSHATRA_ASTERISMS) {
+    const junction = nak.stars[0];
+    const { lon, lat } = equatorialToeclipticJ2000(junction.ra, junction.dec);
+    out.push({
+      id: `constellation:${nak.index}`,
+      kind: "constellation",
+      ne: nak.ne,
+      en: nak.en,
+      hintNe: `नक्षत्र ${nak.index}`,
+      hintEn: `Nakshatra ${nak.index}`,
+      at: "sky",
+      lon,
+      lat,
+    });
+    for (const star of nak.stars) {
+      const p = equatorialToeclipticJ2000(star.ra, star.dec);
+      out.push({
+        id: `star:${nak.index}:${star.name}`,
+        kind: "star",
+        /* Star designations are Bayer/Flamsteed and are not translated — the
+           same string in both languages, with the nakshatra as the hint. */
+        ne: star.name,
+        en: star.name,
+        hintNe: nak.ne,
+        hintEn: nak.en,
+        at: "sky",
+        lon: p.lon,
+        lat: p.lat,
+      });
+    }
+  }
+
+  return out;
+})();
+
+/** By id, for reading a favourites or recents list back into real entries. */
+export const SKY_BY_ID = new Map(SKY_CATALOGUE.map((t) => [t.id, t]));
+
+/** Everything of one kind, for the browse tree. */
+export function skyTargetsOfKind(kind: SkyTargetKind): SkyTarget[] {
+  return SKY_CATALOGUE.filter((t) => t.kind === kind);
+}
+
+/**
+ * Name search, both languages at once.
+ *
+ * Deliberately not fuzzy. A prefix match on either name, then a contains match,
+ * so typing "ma" puts मंगल / Mars above "Alcyone" rather than burying it. The
+ * catalogue is a few hundred entries, so this runs on every keystroke without
+ * anything cleverer.
+ */
+export function searchSky(query: string, limit = 40): SkyTarget[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const starts: SkyTarget[] = [];
+  const contains: SkyTarget[] = [];
+  for (const t of SKY_CATALOGUE) {
+    const ne = t.ne.toLowerCase();
+    const en = t.en.toLowerCase();
+    if (ne.startsWith(q) || en.startsWith(q)) starts.push(t);
+    else if (ne.includes(q) || en.includes(q)) contains.push(t);
+    if (starts.length >= limit) break;
+  }
+  return [...starts, ...contains].slice(0, limit);
+}

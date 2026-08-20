@@ -27,12 +27,9 @@ import {
 } from "@/lib/bs-calendar";
 import { civilGregorianToUtcMs } from "@/lib/patro-day";
 import { PATRO_SIGNED_YEAR_MAX, PATRO_SIGNED_YEAR_MIN } from "@/lib/patro-year-axis";
+import { nearestStepIndex, TIME_STEPS } from "@/lib/sky3d/time-steps";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
-
-const SLIDER_MAX = 1000;
-const RATE_MAX = 10_000;
-const DEADZONE = 36;
 
 /** Starts at बिहान (~04:00) so the labels read left → right as named. */
 const DAY_ORIGIN_SEC = 4 * 3600;
@@ -69,19 +66,28 @@ function sliderToDaySec(slider: number): number {
   return (slider + DAY_ORIGIN_SEC) % 86_400;
 }
 
+/**
+ * The speed slider, in rungs of {@link TIME_STEPS} rather than in multiples.
+ *
+ * One notch is one rung, the sign is the direction, and 0 is paused. It used to
+ * be a continuous logarithmic multiplier, which could land on ×43 — a number
+ * that says nothing about what you are watching. Now every position on it is a
+ * step you can name, and it is the same step पछाडि and अगाडि move by.
+ */
 export function sliderToRate(slider: number): number {
-  const a = Math.abs(slider);
-  if (a < DEADZONE) return 0;
-  const u = (a - DEADZONE) / (SLIDER_MAX - DEADZONE);
-  return Math.sign(slider) * RATE_MAX ** u;
+  const notch = Math.round(slider);
+  if (notch === 0) return 0;
+  const index = Math.min(TIME_STEPS.length - 1, Math.abs(notch) - 1);
+  return Math.sign(notch) * TIME_STEPS[index].seconds;
 }
 
 export function rateToSlider(rate: number): number {
   if (rate === 0 || !Number.isFinite(rate)) return 0;
-  const abs = Math.min(RATE_MAX, Math.max(1, Math.abs(rate)));
-  const u = Math.log(abs) / Math.log(RATE_MAX);
-  return Math.sign(rate) * (DEADZONE + u * (SLIDER_MAX - DEADZONE));
+  return Math.sign(rate) * (nearestStepIndex(rate) + 1);
 }
+
+/** Notches either side of centre — one per rung. */
+const RATE_NOTCHES = TIME_STEPS.length;
 
 export type WallParts = {
   year: number;
@@ -284,7 +290,6 @@ export function SkyTimeSheet({
   const ne = nepaliCal ? nepaliYmd(parts) : null;
   const paused = timeRate === 0;
   const playing = !paused;
-  const absRate = Math.abs(timeRate);
   const daySec = parts.hour * 3600 + parts.minute * 60 + parts.second;
   const activePeriod = periodIdAtHour(parts.hour);
   const [edit, setEdit] = useState<Field | null>(null);
@@ -397,9 +402,11 @@ export function SkyTimeSheet({
     }
   };
 
+  /* Named in the units the step is actually in — "१ दिन/से", not "×86400". */
+  const activeStep = TIME_STEPS[nearestStepIndex(timeRate)];
   const speedLabel = paused
     ? pick("रोकिएको", "Paused")
-    : `${pick("गति", "Speed")} ×${timeRate < 0 ? "-" : ""}${digits(String(Math.round(absRate)))}`;
+    : `${timeRate < 0 ? "◀◀ " : "▶▶ "}${pick(activeStep.ne, activeStep.en)}`;
 
   const stepper = (
     field: Field,
@@ -497,8 +504,8 @@ export function SkyTimeSheet({
           </IconRound>
           <input
             type="range"
-            min={-SLIDER_MAX}
-            max={SLIDER_MAX}
+            min={-RATE_NOTCHES}
+            max={RATE_NOTCHES}
             step={1}
             value={Math.round(rateToSlider(timeRate))}
             aria-label={pick("गति", "Speed")}

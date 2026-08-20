@@ -879,6 +879,7 @@ export function AakashGocharScene({
   selectedKey,
   lockObserver = false,
   focusNonce = 0,
+  skyAim = null,
   toggles,
   onSelect,
   onFollow,
@@ -912,6 +913,16 @@ export function AakashGocharScene({
    * paused sky would centre nothing.
    */
   focusNonce?: number;
+  /**
+   * A fixed point in the sky to centre, from the search box — ecliptic
+   * longitude and latitude at J2000, plus a nonce that changes each time it is
+   * asked for.
+   *
+   * Grahas are centred by being selected, because they are objects in the scene
+   * with a live position. A star is not: it is a direction. So it arrives as a
+   * direction and is aimed at through the same one-frame recentre.
+   */
+  skyAim?: { lon: number; lat: number; nonce: number } | null;
   toggles: SceneToggles;
   onSelect: (key: GrahaKey) => void;
   /** Pressed twice — select it *and* turn following on. */
@@ -1457,6 +1468,8 @@ export function AakashGocharScene({
   /** The last focus request answered, and whether one is still outstanding. */
   const lastFocusNonce = useRef(focusNonce);
   const recentre = useRef(false);
+  const lastAim = useRef(0);
+  const aimAt = useRef(new THREE.Vector3());
   const target = useRef(new THREE.Vector3());
   /** Screen-up in world space, so a name can be hung off the edge of a disc. */
   const screenUp = useRef(new THREE.Vector3());
@@ -2407,6 +2420,16 @@ export function AakashGocharScene({
         : null;
     const trackGroup = trackKey ? bodyRefs.current[trackKey] : null;
     let trackAt: THREE.Vector3 | null = trackGroup ? trackGroup.position : null;
+    /* A star from the search box. Placed through the same `place` every other
+       fixed thing goes through, so it lands wherever the view would have drawn
+       it — and taken as the target for the one frame the aim is fresh. */
+    if (skyAim && skyAim.nonce !== lastAim.current) {
+      lastAim.current = skyAim.nonce;
+      recentre.current = true;
+      const at = place(skyAim.lon, skyAim.lat, DOME);
+      aimAt.current.set(at[0], at[1], at[2]);
+      trackAt = aimAt.current;
+    }
     if (toggles.lockCenter && lockObserver && globe) {
       const at = geoToVec3(observer.lat, observer.lon, GLOBE_R);
       observerTrack.current.set(at[0], at[1], at[2]);
