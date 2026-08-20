@@ -4,6 +4,7 @@
 import { buildApiQuery, getLanguageForEra, type Era } from "@/lib/era";
 import {
   appendInstantParams,
+  appendBirthInstantParams,
   instantCacheKey,
   type InstantQuery,
 } from "@/lib/instant-query";
@@ -29,11 +30,11 @@ const DATA_BASE = `${BASE}/${API_VERSION}`;
  * `cv=` on panchanga URLs so Cloudflare edge keys change on engine deploys
  * without a manual purge.
  */
-// Keep in step with CACHE_PAYLOAD_VERSION in services/panchanga_cache.py — it had
-// drifted (29 vs 32), which lets the edge serve payloads from before an engine fix.
-// Must match services/panchanga_cache.CACHE_PAYLOAD_VERSION (compose of domain + astronomy).
+// Keep in step with CACHE_PAYLOAD_VERSION in services/panchanga_cache.py.
+// Prefer GET /meta/capabilities `cache_payload_version` at runtime; this is
+// the bootstrap until that response arrives.
 export const PANCHANGA_CACHE_VERSION =
-  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "4303";
+  import.meta.env.VITE_PANCHANGA_CACHE_VERSION ?? "4703";
 
 /**
  * Sait listings are CDN-cached too. Appended as `sv=` so a change in the sait
@@ -47,6 +48,38 @@ export const SAIT_CACHE_VERSION =
 export const API_BASE = BASE;
 /** Versioned base for public, cacheable data endpoints. */
 export const API_DATA_BASE = DATA_BASE;
+
+export interface PatroApiLimits {
+  signed_year_min: number;
+  signed_year_max: number;
+  ephemeris_signed_min: number;
+  ephemeris_signed_max: number;
+  ad_year_min: number;
+  ad_year_max: number;
+  bc_year_min: number;
+  bc_year_max: number;
+  bbs_url_year_max: number;
+  festival_stack_min_year: number;
+  cache_payload_version?: number;
+}
+
+export const patroCapabilitiesKey = ["meta", "capabilities"] as const;
+
+/** Host-owned year bounds and cache version — not mirrored in the client. */
+export const fetchPatroCapabilities = async (): Promise<PatroApiLimits> => {
+  const res = await fetch(`${API_BASE}/meta/capabilities`);
+  if (!res.ok) {
+    let detail: string | undefined;
+    try {
+      const body = await res.json();
+      if (typeof body?.detail === "string") detail = body.detail;
+    } catch {
+      /* non-JSON */
+    }
+    throw new ApiError(res.status, detail, "/meta/capabilities");
+  }
+  return res.json();
+};
 
 /** Error from a failed API call, carrying the backend's own explanation. */
 export class ApiError extends Error {
@@ -300,12 +333,11 @@ export interface JanmaRashi {
 
 /**
  * A saved profile's janma (birth Moon) rashi — 1..12, matching
- * {@link RashifalSignBlock.id}. `birth` is a naive local ISO datetime
- * (`YYYY-MM-DDTHH:MM`), already resolved to Gregorian client-side (a BS-era
- * profile is converted before this call, same as the kundali profile flow).
+ * {@link RashifalSignBlock.id}. Send the stored era + civil parts; the API
+ * resolves the instant.
  */
-export function fetchJanmaRashi(birth: string, birthTz: string) {
-  const qs = new URLSearchParams({ birth, birth_tz: birthTz }).toString();
+export function fetchJanmaRashi(moment: InstantQuery, birthTz: string) {
+  const qs = appendBirthInstantParams(new URLSearchParams({ birth_tz: birthTz }), moment).toString();
   return get<JanmaRashi>(`/panchanga/rashifal/janma?${qs}`);
 }
 
@@ -373,27 +405,25 @@ export interface RashifalPersonal {
 }
 
 /**
- * The personal endpoint takes the profile's birth date/time already resolved
- * to Gregorian (BS→AD conversion happens client-side via profileChartParams,
- * same as {@link fetchJanmaRashi}) plus the birth place — needed once, to
- * cast the Lagna, which unlike the Moon is not geocentric. `location` is
- * where the transits are read *from* (the viewer's current place).
+ * The personal endpoint takes the profile's stored birth era + civil parts
+ * (the API converts) plus the birth place — needed once, to cast the Lagna.
+ * `location` is where the transits are read *from* (the viewer's current place).
  */
 export function fetchPersonalRashifal(
   state: import("@/lib/patro-day-url").PatroDayFetchState,
   period: RashifalPeriod,
-  birth: { birth: string; birthLat: number; birthLon: number; birthTz: string },
+  birth: { moment: InstantQuery; birthLat: number; birthLon: number; birthTz: string },
   location?: LocationParams,
 ) {
   const qs = buildPatroDayApiQuery(state, {
     period,
-    birth: birth.birth,
     birth_lat: birth.birthLat,
     birth_lon: birth.birthLon,
     birth_tz: birth.birthTz,
     cv: PANCHANGA_CACHE_VERSION,
-  }).toString();
-  return get<RashifalPersonal>(appendLocation(`/panchanga/rashifal/personal?${qs}`, location));
+  });
+  appendBirthInstantParams(qs, birth.moment);
+  return get<RashifalPersonal>(appendLocation(`/panchanga/rashifal/personal?${qs.toString()}`, location));
 }
 
 /**
@@ -697,6 +727,37 @@ export interface GocharGraha {
   next_rashi_entry?: GocharNextEntry | null;
   next_nakshatra_entry?: GocharNextEntry | null;
   next_pada_entry?: GocharNextEntry | null;
+  nakshatra_no?: number;
+  nakshatra?: string;
+  nakshatra_ne?: string;
+  pada?: number;
+  nakshatra_lord?: string;
+  nakshatra_lord_ne?: string;
+  nakshatra_lord_en?: string;
+  sub_lord?: string;
+  sub_lord_ne?: string;
+  sub_lord_en?: string;
+  is_exalted?: boolean;
+}
+
+/**
+ * One of the 32 named वैदिक तारा — अगस्त्य, अभिजित्, सप्तर्षि and the rest —
+ * positioned server-side from the Swiss Ephemeris fixed-star catalogue
+ * (sefstars.txt). `lon`/`lat` are already sidereal ecliptic degrees for the
+ * date this response was computed for; the client plots them as-is; it does
+ * not re-derive or precess them.
+ */
+export interface VedicStarPosition {
+  ne: string;
+  en: string;
+  /** Bayer designation and catalogue number, for a hint line. */
+  designation: string;
+  /** Sidereal ecliptic longitude, degrees. */
+  lon: number;
+  /** Ecliptic latitude, degrees. */
+  lat: number;
+  /** Apparent visual magnitude. */
+  mag: number;
 }
 
 export interface GocharResponse {
@@ -709,6 +770,8 @@ export interface GocharResponse {
    */
   ayanamsa?: { name: string; degrees: number };
   gochar: Record<string, GocharGraha>;
+  /** Optional: older cached responses predate the field. */
+  vedic_stars?: VedicStarPosition[];
 }
 
 export const gocharKeys = {
@@ -1493,7 +1556,7 @@ export const saitPersonalizeKey = (
   year: number,
   category: string,
   location: LocationParams | undefined,
-  birthDatetime: string,
+  birth: InstantQuery | null,
   birthTz: string,
   gender?: string | null,
 ) =>
@@ -1504,23 +1567,22 @@ export const saitPersonalizeKey = (
     year,
     category,
     locationCacheKey(location),
-    birthDatetime,
+    birth ? instantCacheKey(birth) : "",
     birthTz,
     gender ?? "",
   ] as const;
 
-/** Annotate the year's general dates with a native verdict from a birth moment.
- * `birthDatetime` is a naive local ISO (`YYYY-MM-DDTHH:MM`) read in `birthTz`. */
+/** Annotate the year's general dates with a native verdict from a birth moment. */
 export const fetchSaitPersonalize = (
   year: number,
   category: string,
   location: LocationParams | undefined,
-  birthDatetime: string,
+  birth: InstantQuery,
   birthTz: string,
   gender?: string | null,
 ) => {
   let path = appendLocation(`/nepal/sait/${year}/${category}/personalize`, location);
-  const params = new URLSearchParams({ birth: birthDatetime, birth_tz: birthTz });
+  const params = appendBirthInstantParams(new URLSearchParams({ birth_tz: birthTz }), birth);
   if (gender) params.set("gender", gender);
   path = `${path}${path.includes("?") ? "&" : "?"}${params.toString()}`;
   return get<SaitPersonalizeResponse>(path);
@@ -2973,6 +3035,8 @@ export interface MonthCalendar {
   month_name_ne?: string;
   month_start_ad: string;
   month_length: number;
+  first_weekday?: number;
+  limits?: PatroApiLimits;
   mode?: "ephemeris" | "udaya";
   clock?: string;
   calendar: CalendarDay[];
@@ -3115,6 +3179,11 @@ export interface CalendarDay {
   moonset?: string;
   moonset_local?: string;
   festivals: string[];
+  abhijit?: {
+    start_time: string;
+    end_time: string;
+    solar_noon?: string;
+  };
   /** Embedded full panchanga (present when the month is fetched with `full=true`). */
   panchanga?: CalendarDayDetail;
   mode?: "ephemeris";

@@ -5,14 +5,12 @@ import { GRAHA_NAME } from "@/lib/graha-details";
 import {
   adToBS,
   adMonthLabel,
-  bsToAdOrNull,
   BS_MONTHS_NE,
   BS_MONTHS_SHORT,
-  getBSMonthLength,
 } from "@/lib/bs-calendar";
 import type { Era } from "@/lib/era";
 import { signedPatroYearFromBrowse } from "@/lib/patro-year-axis";
-import { formatBsIsoDateNepali, nakshatraFieldsFromLongitude } from "@/lib/panchanga-format";
+import { formatBsIsoDateNepali } from "@/lib/panchanga-format";
 import { formatPatroCivilDayLabel } from "@/lib/patro-headline-subtitle";
 import { resolveRashiDisplay, toWesternRashi } from "@/lib/rashi-i18n";
 import { civilIsoDatePart, civilIsoFromDate, parseCivilIsoToDate, canonicalCivilIso, formatBsDateKey } from "@/lib/patro-day";
@@ -23,21 +21,8 @@ import {
 
 export type IngressFilter = "all" | "rashi" | "nakshatra" | "retrograde" | "asta";
 
-/** Rashi number (1–12) where each graha is exalted in Lahiri sidereal reckoning. */
-const EXALTATION_RASHI: Partial<Record<GrahaKey, number>> = {
-  sun: 1,
-  moon: 2,
-  mars: 10,
-  mercury: 6,
-  jupiter: 4,
-  venus: 12,
-  saturn: 7,
-};
-
-export function grahaExalted(key: GrahaKey, g: GocharGraha): boolean {
-  const target = EXALTATION_RASHI[key];
-  if (!target || g.rashi_no == null) return false;
-  return g.rashi_no === target;
+export function grahaExalted(_key: GrahaKey, g: GocharGraha): boolean {
+  return Boolean(g.is_exalted);
 }
 
 export function grahaNakshatraLine(
@@ -45,11 +30,13 @@ export function grahaNakshatraLine(
   lang: "ne" | "en" | "hi",
   digits?: (v: number | string) => string,
 ): string {
-  if (g.longitude == null) return "—";
-  const { nakshatraNe, nakshatraEn, pada } = nakshatraFieldsFromLongitude(g.longitude);
-  const nak = lang === "en" ? nakshatraEn ?? nakshatraNe : nakshatraNe ?? nakshatraEn;
-  if (pada == null) return nak ?? "—";
-  const p = lang === "en" ? String(pada) : (digits ?? String)(pada);
+  const nak =
+    lang === "en"
+      ? (g.nakshatra ?? g.nakshatra_ne)
+      : (g.nakshatra_ne ?? g.nakshatra);
+  if (!nak) return "—";
+  if (g.pada == null) return nak;
+  const p = lang === "en" ? String(g.pada) : (digits ?? String)(g.pada);
   return `${nak} · ${p}`;
 }
 
@@ -144,12 +131,7 @@ export function ingressBrowseMonthAdRange(
     const to = civilIsoFromDate(new Date(browseYear, browseMonth - 1, lastDay));
     return { from, to };
   }
-  const signed = signedPatroYearFromBrowse(era, browseYear);
-  const len = getBSMonthLength(signed, browseMonth);
-  const start = bsToAdOrNull(signed, browseMonth, 1);
-  const end = bsToAdOrNull(signed, browseMonth, len);
-  if (!start || !end) return null;
-  return { from: civilIsoFromDate(start), to: civilIsoFromDate(end) };
+  return null;
 }
 
 /** True when the ingress entry falls in the browsed Vikram or Gregorian month. */
@@ -192,22 +174,22 @@ export function ingressFetchRangeForBrowseMonth(
   allDays: CalendarDay[],
 ): { from: string; to: string } | null {
   const isGregorian = patroEra === "ad" || patroEra === "bc";
+  const inMonth = allDays.filter((d) => !d.outsideMonth);
+  const first = inMonth[0] ?? allDays[0];
+  const last = inMonth[inMonth.length - 1] ?? allDays[allDays.length - 1];
   if (isGregorian) {
-    const first = allDays[0]?.date_ad;
-    const last = allDays[allDays.length - 1]?.date_ad;
-    if (first && last) {
+    if (first?.date_ad && last?.date_ad) {
       return {
-        from: canonicalCivilIso(first),
-        to: canonicalCivilIso(last),
+        from: canonicalCivilIso(first.date_ad),
+        to: canonicalCivilIso(last.date_ad),
       };
     }
     return ingressBrowseMonthAdRange(patroEra, browseYear, browseMonth);
   }
-  const signed = signedPatroYearFromBrowse(patroEra, browseYear);
-  const len = getBSMonthLength(signed, browseMonth);
+  if (!first || !last) return null;
   return {
-    from: formatBsDateKey(browseYear, browseMonth, 1),
-    to: formatBsDateKey(browseYear, browseMonth, len),
+    from: formatBsDateKey(browseYear, browseMonth, first.day),
+    to: formatBsDateKey(browseYear, browseMonth, last.day),
   };
 }
 

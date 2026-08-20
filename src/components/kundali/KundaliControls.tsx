@@ -4,8 +4,6 @@ import {
   BS_MONTHS_NE,
   BS_SUPPORTED_END_YEAR,
   BS_SUPPORTED_START_YEAR,
-  adToBS,
-  bsToAD,
   getBSMonthLength,
   getSupportedAdBounds,
 } from "@/lib/bs-calendar";
@@ -13,6 +11,7 @@ import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { LocationSelector } from "@/components/panchanga/LocationSelector";
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
+import type { InstantQuery } from "@/lib/instant-query";
 
 const BS_YEARS = Array.from(
   { length: BS_SUPPORTED_END_YEAR - BS_SUPPORTED_START_YEAR + 1 },
@@ -48,20 +47,25 @@ function getADMonthLength(year: number, month: number): number {
   return new Date(year, month, 0).getDate();
 }
 
+function monthLengthForPicker(era: "bs" | "ad", year: number, month: number): number {
+  if (era === "ad") return getADMonthLength(year, month);
+  try {
+    return getBSMonthLength(year, month);
+  } catch {
+    return 30;
+  }
+}
+
 interface Props {
-  date: Date;
-  onDateChange: (d: Date) => void;
-  clock: string;
-  onClockChange: (clock: string) => void;
+  moment: InstantQuery;
+  onMomentChange: (q: InstantQuery) => void;
   location: PanchangaLocation;
   onLocationChange: (location: PanchangaLocation) => void;
 }
 
 export function KundaliControls({
-  date,
-  onDateChange,
-  clock,
-  onClockChange,
+  moment,
+  onMomentChange,
   location,
   onLocationChange,
 }: Props) {
@@ -69,22 +73,22 @@ export function KundaliControls({
   const calendarEra = useCalendarEra();
   const era: "bs" | "ad" =
     calendarEra === "ad" || calendarEra === "bc" ? "ad" : "bs";
-  const bs = adToBS(date);
-  const adYear = date.getFullYear();
-  const adMonth = date.getMonth() + 1;
-  const adDay = date.getDate();
 
-  const pickBs = (year: number, month: number, day: number) => {
-    const safeDay = Math.min(day, getBSMonthLength(year, month));
-    onDateChange(bsToAD(year, month, safeDay));
+  const pick = (year: number, month: number, day: number) => {
+    const monthLen = monthLengthForPicker(era, year, month);
+    onMomentChange({
+      inputEra: era,
+      year,
+      month,
+      day: Math.min(day, monthLen),
+      clock: moment.clock,
+    });
   };
 
-  const pickAd = (year: number, month: number, day: number) => {
-    const safeDay = Math.min(day, getADMonthLength(year, month));
-    onDateChange(new Date(year, month - 1, safeDay));
-  };
-
-  const monthLen = era === "bs" ? getBSMonthLength(bs.year, bs.month) : getADMonthLength(adYear, adMonth);
+  const year = moment.year;
+  const month = moment.month;
+  const day = moment.day;
+  const monthLen = monthLengthForPicker(era, year, month);
 
   return (
     <div className="w-full flex flex-wrap items-center gap-2 rounded-xl bg-card px-3 py-2.5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)]">
@@ -92,9 +96,9 @@ export function KundaliControls({
         <>
           <select
             className={selectClass}
-            value={bs.year}
+            value={year}
             aria-label={t("kundali.year")}
-            onChange={(e) => pickBs(Number(e.target.value), bs.month, bs.day)}
+            onChange={(e) => pick(Number(e.target.value), month, day)}
           >
             {BS_YEARS.map((y) => (
               <option key={y} value={y}>
@@ -105,9 +109,9 @@ export function KundaliControls({
 
           <select
             className={selectClass}
-            value={bs.month - 1}
+            value={month - 1}
             aria-label={t("kundali.month")}
-            onChange={(e) => pickBs(bs.year, Number(e.target.value) + 1, bs.day)}
+            onChange={(e) => pick(year, Number(e.target.value) + 1, day)}
           >
             {BS_MONTHS_NE.map((ne, i) => (
               <option key={ne} value={i}>
@@ -118,9 +122,9 @@ export function KundaliControls({
 
           <select
             className={selectClass}
-            value={bs.day}
+            value={day}
             aria-label={t("kundali.day")}
-            onChange={(e) => pickBs(bs.year, bs.month, Number(e.target.value))}
+            onChange={(e) => pick(year, month, Number(e.target.value))}
           >
             {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
               <option key={dd} value={dd}>
@@ -133,9 +137,9 @@ export function KundaliControls({
         <>
           <select
             className={selectClass}
-            value={adYear}
+            value={year}
             aria-label={t("kundali.year")}
-            onChange={(e) => pickAd(Number(e.target.value), adMonth, adDay)}
+            onChange={(e) => pick(Number(e.target.value), month, day)}
           >
             {AD_YEARS.map((y) => (
               <option key={y} value={y}>
@@ -146,9 +150,9 @@ export function KundaliControls({
 
           <select
             className={selectClass}
-            value={adMonth - 1}
+            value={month - 1}
             aria-label={t("kundali.month")}
-            onChange={(e) => pickAd(adYear, Number(e.target.value) + 1, adDay)}
+            onChange={(e) => pick(year, Number(e.target.value) + 1, day)}
           >
             {AD_MONTH_KEYS.map((monthKey, i) => (
               <option key={monthKey} value={i}>
@@ -159,9 +163,9 @@ export function KundaliControls({
 
           <select
             className={selectClass}
-            value={adDay}
+            value={day}
             aria-label={t("kundali.day")}
-            onChange={(e) => pickAd(adYear, adMonth, Number(e.target.value))}
+            onChange={(e) => pick(year, month, Number(e.target.value))}
           >
             {Array.from({ length: monthLen }, (_, i) => i + 1).map((dd) => (
               <option key={dd} value={dd}>
@@ -176,8 +180,8 @@ export function KundaliControls({
         <Clock className="w-3.5 h-3.5 shrink-0" />
         <input
           type="time"
-          value={clock}
-          onChange={(e) => onClockChange(e.target.value)}
+          value={moment.clock}
+          onChange={(e) => onMomentChange({ ...moment, clock: e.target.value })}
           className="bg-transparent border-0 p-0 m-0 w-full text-sm font-mono font-semibold text-foreground focus:outline-none focus:ring-0"
           aria-label={t("kundali.birth_time")}
         />

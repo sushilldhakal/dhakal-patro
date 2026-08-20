@@ -124,15 +124,14 @@ export function SaitPage() {
   // since they may be planning from somewhere other than their birth place.
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const birth = selectedProfile ? profileChartParams(selectedProfile) : null;
-  const birthDatetime = birth ? `${birth.adDate}T${birth.clock}` : "";
   const birthTz = selectedProfile?.timezone ?? "Asia/Kathmandu";
   const gender = selectedProfile?.gender ?? "";
 
   const personalizeQuery = useQuery({
-    queryKey: saitPersonalizeKey(browseYear, category ?? "", location.params, birthDatetime, birthTz, gender),
+    queryKey: saitPersonalizeKey(browseYear, category ?? "", location.params, birth?.moment ?? null, birthTz, gender),
     queryFn: () =>
-      fetchSaitPersonalize(browseYear, category!, location.params, birthDatetime, birthTz, gender),
-    enabled: Boolean(category) && Boolean(selectedProfile) && Boolean(birthDatetime),
+      fetchSaitPersonalize(browseYear, category!, location.params, birth!.moment, birthTz, gender),
+    enabled: Boolean(category) && Boolean(selectedProfile) && Boolean(birth),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
   });

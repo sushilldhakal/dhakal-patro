@@ -30,12 +30,14 @@ type Pane =
   | { view: "kind"; kind: SkyTargetKind };
 
 export function SkySearch({
+  extra = [],
   favourites,
   recentIds,
   onPick,
   onToggleFavourite,
   onClose,
 }: {
+  extra?: SkyTarget[];
   favourites: string[];
   recentIds: string[];
   onPick: (target: SkyTarget) => void;
@@ -57,23 +59,29 @@ export function SkySearch({
     inputRef.current?.focus();
   }, []);
 
-  const results = useMemo(() => searchSky(query), [query]);
+  const byId = useMemo(() => {
+    const map = new Map(SKY_BY_ID);
+    for (const t of extra) map.set(t.id, t);
+    return map;
+  }, [extra]);
+
+  const results = useMemo(() => searchSky(query, 40, extra), [query, extra]);
   const favourited = useMemo(() => new Set(favourites), [favourites]);
 
   const rowsFor = (): { rows: SkyTarget[]; empty: string } => {
     switch (pane.view) {
       case "favourites":
         return {
-          rows: favourites.map((id) => SKY_BY_ID.get(id)).filter((t): t is SkyTarget => !!t),
+          rows: favourites.map((id) => byId.get(id)).filter((t): t is SkyTarget => !!t),
           empty: pick("अझै कुनै मनपर्ने छैन", "No favourites yet"),
         };
       case "recents":
         return {
-          rows: recentIds.map((id) => SKY_BY_ID.get(id)).filter((t): t is SkyTarget => !!t),
+          rows: recentIds.map((id) => byId.get(id)).filter((t): t is SkyTarget => !!t),
           empty: pick("अझै केही हेरिएको छैन", "Nothing looked at yet"),
         };
       case "kind":
-        return { rows: skyTargetsOfKind(pane.kind), empty: "" };
+        return { rows: skyTargetsOfKind(pane.kind, extra), empty: "" };
       default:
         return { rows: [], empty: "" };
     }
@@ -202,7 +210,7 @@ export function SkySearch({
                 k.kind,
                 <List className="size-4" />,
                 pick(k.ne, k.en),
-                skyTargetsOfKind(k.kind).length,
+                skyTargetsOfKind(k.kind, extra).length,
                 () => setPane({ view: "kind", kind: k.kind }),
               ),
             )}

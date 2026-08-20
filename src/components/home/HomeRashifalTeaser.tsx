@@ -51,8 +51,7 @@ export function HomeRashifalTeaser({
     queryKey: [
       "home-rashifal-personal",
       defaultProfile?.id,
-      profileChart?.adDate,
-      profileChart?.clock,
+      profileChart?.moment,
       ...panchangaKeys.daySelection(dayState, location.params),
       "monthly",
     ],
@@ -61,7 +60,7 @@ export function HomeRashifalTeaser({
         dayState,
         "monthly",
         {
-          birth: `${profileChart!.adDate}T${profileChart!.clock}`,
+          moment: profileChart!.moment,
           birthLat: profileChart!.location.params.lat as number,
           birthLon: profileChart!.location.params.lon as number,
           birthTz: profileChart!.location.params.timezone ?? "Asia/Kathmandu",

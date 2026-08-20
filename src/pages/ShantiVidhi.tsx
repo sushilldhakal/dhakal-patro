@@ -10,45 +10,52 @@ import {
   vimshottariKeys,
   shadbalaKeys,
 } from "@/lib/api";
-import { instantFromCivilIso } from "@/lib/instant-query";
+import type { InstantQuery } from "@/lib/instant-query";
 import { KundaliControls } from "@/components/kundali/KundaliControls";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { defaultClockForTimezone } from "@/components/panchanga/use-panchanga-mode";
+import { useCalendarEra } from "@/hooks/use-calendar-era";
+import { getCurrentBs } from "@/lib/bs-calendar";
 
-function toAdStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+function nowMoment(clock: string, pickerEra: "bs" | "ad"): InstantQuery {
+  if (pickerEra === "bs") {
+    const bs = getCurrentBs();
+    return { inputEra: "bs", year: bs.year, month: bs.month, day: bs.day, clock };
+  }
+  const n = new Date();
+  return {
+    inputEra: "ad",
+    year: n.getFullYear(),
+    month: n.getMonth() + 1,
+    day: n.getDate(),
+    clock,
+  };
 }
 
 export function ShantiVidhi() {
   const { t } = useTranslation();
   const { location, setLocation } = usePanchangaLocation();
-  const [date, setDate] = useState(() => new Date());
+  const calendarEra = useCalendarEra();
+  const pickerEra: "bs" | "ad" =
+    calendarEra === "ad" || calendarEra === "bc" ? "ad" : "bs";
   const timezone = location.params.timezone ?? "Asia/Kathmandu";
-  const [clock, setClock] = useState(() => defaultClockForTimezone(timezone));
-
-  const adDateStr = toAdStr(date);
-  // Memoised — a new object each render would re-key every dependent query.
-  const birthMoment = useMemo(
-    () => instantFromCivilIso(adDateStr, clock),
-    [adDateStr, clock],
+  const [moment, setMoment] = useState<InstantQuery>(() =>
+    nowMoment(defaultClockForTimezone(timezone), pickerEra),
   );
+
+  const birthMoment = useMemo(() => moment, [moment]);
 
   const vimshottariQ = useQuery({
     queryKey: vimshottariKeys.atTime(birthMoment, location.params),
     queryFn: () => fetchVimshottari(birthMoment, location.params),
     staleTime: 1000 * 60 * 5,
-    enabled: Boolean(adDateStr),
   });
 
   const shadbalaQ = useQuery({
     queryKey: shadbalaKeys.atTime(birthMoment, location.params),
     queryFn: () => fetchShadbala(birthMoment, location.params),
     staleTime: 1000 * 60 * 5,
-    enabled: Boolean(adDateStr),
   });
 
   useRouteLoading(vimshottariQ.isLoading || shadbalaQ.isLoading);
@@ -70,10 +77,8 @@ export function ShantiVidhi() {
 
         <div className="space-y-4 p-4">
           <KundaliControls
-            date={date}
-            onDateChange={setDate}
-            clock={clock}
-            onClockChange={setClock}
+            moment={moment}
+            onMomentChange={setMoment}
             location={location}
             onLocationChange={setLocation}
           />

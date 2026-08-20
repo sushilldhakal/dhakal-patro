@@ -517,6 +517,8 @@ export type FlatStar = {
   nakshatra: number;
   /** True for the योगतारा, which is drawn larger. */
   junction: boolean;
+  /** Bayer/Flamsteed designation, or the proper name where there is one. */
+  name: string;
 };
 
 /** Every catalogued star in one array, with the link pairs re-indexed onto it. */
@@ -528,7 +530,7 @@ export function flattenAsterisms(): { stars: FlatStar[]; links: [number, number]
     for (let i = 0; i < nak.stars.length; i += 1) {
       const s = nak.stars[i];
       const { lon, lat } = equatorialToeclipticJ2000(s.ra, s.dec);
-      stars.push({ lon, lat, mag: s.mag, nakshatra: nak.index, junction: i === 0 });
+      stars.push({ lon, lat, mag: s.mag, nakshatra: nak.index, junction: i === 0, name: s.name });
     }
     for (const [a, b] of nak.links) links.push([base + a, base + b]);
   }

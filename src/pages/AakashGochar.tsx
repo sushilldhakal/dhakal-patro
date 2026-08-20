@@ -304,6 +304,7 @@ export function AakashGochar() {
         <AakashGocharSky
           gochar={gochar}
           ayanamsaDeg={query.data?.ayanamsa?.degrees}
+          vedicStars={query.data?.vedic_stars}
           date={sceneDate}
           onDateChange={changeDate}
           /* The sky's own date picker is the only one within reach in

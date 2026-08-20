@@ -13,10 +13,9 @@ import {
   type PanchangaDay,
   type PlanetInfo,
 } from "@/lib/api";
-import { formatBsDateLong } from "@/lib/bs-calendar";
-import { civilIsoFromDate } from "@/lib/patro-day";
 import { normalizeEphemerisDay } from "@/lib/ephemeris-adapters";
-import { instantCacheKey, instantFromCivilIso } from "@/lib/instant-query";
+import { instantCacheKey, type InstantQuery } from "@/lib/instant-query";
+import { formatMomentDateLabel } from "@/lib/kundali/profile-chart";
 import {
   getInstantLagna,
   getLagnaDisplay,
@@ -104,10 +103,8 @@ function astroPointsFromPanchanga(p: PanchangaDay): Partial<Record<string, Graha
 }
 
 export interface KundaliViewProps {
-  /** Birth moment as an AD Date (local civil date at the chart's place). */
-  date: Date;
-  /** HH:MM birth clock. */
-  clock: string;
+  /** Birth moment as era + civil parts + clock — the API converts nothing else. */
+  moment: InstantQuery;
   /** Resolved observer/location query params for the API. */
   locationParams: LocationParams | undefined;
   /** Human label for the birth place. */
@@ -130,8 +127,7 @@ export interface KundaliViewProps {
  * so this component (and any future mobile client) only renders.
  */
 export function KundaliView({
-  date,
-  clock,
+  moment: birthMoment,
   locationParams,
   locationLabel: locationLabelProp,
   ayanamshaMode,
@@ -142,13 +138,6 @@ export function KundaliView({
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
   const [janmaPhalaTab, setJanmaPhalaTab] = useState<"male" | "female">("male");
-  const adDateStr = civilIsoFromDate(date);
-  // Memoised: this object is an effect/callback dependency in KundaliReport, so a
-  // fresh identity every render would restart the report stream endlessly.
-  const birthMoment = useMemo(
-    () => instantFromCivilIso(adDateStr, clock),
-    [adDateStr, clock],
-  );
 
   const detailQ = useQuery({
     queryKey: kundaliDetailKeys.atTime(birthMoment, locationParams, ayanamshaMode),
@@ -319,8 +308,8 @@ export function KundaliView({
   const showSection = (id: KundaliSectionId) => section == null || section === id;
 
   const birthBsLabel = useMemo(
-    () => formatBsDateLong(date, lang, digits),
-    [date, lang, digits],
+    () => formatMomentDateLabel(birthMoment, lang, digits),
+    [birthMoment, lang, digits],
   );
 
   if (isError) {

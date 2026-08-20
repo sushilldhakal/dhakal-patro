@@ -14,11 +14,10 @@ import {
   BBS_URL_YEAR_MAX,
   BBS_URL_YEAR_MIN,
   BS_FESTIVAL_STACK_MIN_YEAR,
+  getPatroLimits,
   maxBrowseYearForEra,
-  PATRO_AD_BROWSE_YEAR_MIN,
-  PATRO_BC_BROWSE_YEAR_MIN,
-  PATRO_EPHEMERIS_SIGNED_MAX,
 } from "@/lib/patro-year-axis";
+import { applyMonthLimits } from "@/hooks/use-patro-capabilities";
 import { civilIsoFromDate, parseCivilIso, parseCivilIsoToDate } from "@/lib/patro-day";
 
 import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
@@ -177,7 +176,7 @@ export function CalendarView({
     era === "bbs"
       ? !(month === 12 && year <= BBS_URL_YEAR_MIN)
       : era === "bs"
-        ? !(month === 12 && year >= PATRO_EPHEMERIS_SIGNED_MAX)
+        ? !(month === 12 && year >= (maxBrowseYearForEra("bs") ?? 1))
         : true;
 
   const prevAd = useMemo(() => shiftAdMonth(year, month, -1), [year, month]);
@@ -251,6 +250,10 @@ export function CalendarView({
     (_q, i) =>
       requiredBsMonths[i]?.year === year && requiredBsMonths[i]?.month === month,
   );
+
+  useEffect(() => {
+    applyMonthLimits(currentMonthQ?.data?.limits);
+  }, [currentMonthQ?.data?.limits]);
 
   const prevMonthQ = !isGregorian
     ? monthQueries.find(
@@ -595,26 +598,27 @@ export function CalendarView({
     monthBrowse.setYearMonth(nextYearValue, monthBrowse.month);
   }
 
+  const limits = getPatroLimits();
   const headerPrevDisabled =
     monthBrowse.month > 1
       ? false
       : isGregorianEraBrowse(era)
         ? era === "bc"
-          ? year <= PATRO_BC_BROWSE_YEAR_MIN
-          : year <= PATRO_AD_BROWSE_YEAR_MIN
+          ? year <= limits.bcBrowseYearMin
+          : year <= limits.adBrowseYearMin
         : era === "bbs"
           ? year <= BBS_URL_YEAR_MIN
           : year <= 1;
 
-  const gregorianMax = maxBrowseYearForEra(era) ?? PATRO_AD_BROWSE_YEAR_MIN;
+  const gregorianMax = maxBrowseYearForEra(era) ?? limits.adBrowseYearMin;
   const headerNextDisabled =
     monthBrowse.month < 12
       ? false
       : isGregorianEraBrowse(era)
         ? year >= gregorianMax
         : era === "bbs"
-          ? year >= BBS_URL_YEAR_MAX
-          : year >= PATRO_EPHEMERIS_SIGNED_MAX;
+          ? year >= limits.bbsUrlYearMax
+          : year >= limits.ephemerisSignedMax;
 
 
   const monthHeader = showMonthHeader ? (

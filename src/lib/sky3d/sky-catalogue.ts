@@ -13,6 +13,7 @@
  */
 
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import type { VedicStarPosition } from "@/lib/api";
 import { GEO_BODY_ORDER } from "@/lib/sky3d/orbital-model";
 import {
   equatorialToeclipticJ2000,
@@ -116,9 +117,69 @@ export const SKY_CATALOGUE: SkyTarget[] = (() => {
 /** By id, for reading a favourites or recents list back into real entries. */
 export const SKY_BY_ID = new Map(SKY_CATALOGUE.map((t) => [t.id, t]));
 
+/**
+ * Latin Vedic names for the 32-star catalogue, keyed on the server's English
+ * modern name. The API stores `ne` in Devanagari and `en` as Canopus / Vega /
+ * … — without these, typing "Agastya" or "Abhijit" would miss.
+ */
+const VEDIC_LATIN: Record<string, string> = {
+  Canopus: "Agastya",
+  Sirius: "Mrgavyadha Lubdhaka",
+  Elnath: "Agni Hutabhuk",
+  Capella: "Brahmahrdaya",
+  Spica: "Apamvatsa",
+  Auva: "Apas",
+  Vega: "Abhijit",
+  Alkaid: "Marici",
+  Mizar: "Vasishtha",
+  Alcor: "Arundhati",
+  Alioth: "Angira",
+  Megrez: "Atri",
+  Phecda: "Pulastya",
+  Merak: "Pulaha",
+  Dubhe: "Kratu",
+  "Alpha Centauri": "Mitra",
+  "Beta Centauri / Hadar": "Mitraka",
+  Deneb: "Hamsa",
+  Fomalhaut: "Minasa",
+  Rigel: "Rajanaya Rajanya",
+  Procyon: "Prasva Prasu Lubdhaka-bandhu",
+  Betelgeuse: "Ardra",
+  Adhara: "Adhara",
+  Saiph: "Kartavirya",
+  Mintaka: "Chitralekha",
+  Alnilam: "Aniruddha",
+  Alnitak: "Usha",
+  "Meissa / Lambda Orionis region": "Mrgasira",
+  Orion: "Prajapati",
+  "Ursa Major / Big Dipper": "Saptarishi",
+  "Southern Cross / Crux": "Trisanku",
+};
+
+/** Live server positions → search/aim targets. Ids are stable for one payload. */
+export function vedicStarTargets(stars: VedicStarPosition[]): SkyTarget[] {
+  return stars.map((star, index) => {
+    const latin = VEDIC_LATIN[star.en] ?? "";
+    const hint = [latin, star.designation].filter(Boolean).join(" · ");
+    return {
+      id: `vedic:${index}`,
+      kind: "star",
+      ne: star.ne,
+      en: star.en,
+      hintNe: hint,
+      hintEn: hint,
+      at: "sky",
+      lon: star.lon,
+      lat: star.lat,
+    };
+  });
+}
+
 /** Everything of one kind, for the browse tree. */
-export function skyTargetsOfKind(kind: SkyTargetKind): SkyTarget[] {
-  return SKY_CATALOGUE.filter((t) => t.kind === kind);
+export function skyTargetsOfKind(kind: SkyTargetKind, extra: SkyTarget[] = []): SkyTarget[] {
+  const fromExtra = extra.filter((t) => t.kind === kind);
+  const fromCat = SKY_CATALOGUE.filter((t) => t.kind === kind);
+  return fromExtra.length ? [...fromExtra, ...fromCat] : fromCat;
 }
 
 /**
@@ -128,17 +189,25 @@ export function skyTargetsOfKind(kind: SkyTargetKind): SkyTarget[] {
  * so typing "ma" puts मंगल / Mars above "Alcyone" rather than burying it. The
  * catalogue is a few hundred entries, so this runs on every keystroke without
  * anything cleverer.
+ *
+ * {@link extra} is searched first — the named वैदिक तारा, whose live positions
+ * come from the gochar payload rather than the static asterism list.
  */
-export function searchSky(query: string, limit = 40): SkyTarget[] {
+export function searchSky(query: string, limit = 40, extra: SkyTarget[] = []): SkyTarget[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const starts: SkyTarget[] = [];
   const contains: SkyTarget[] = [];
-  for (const t of SKY_CATALOGUE) {
-    const ne = t.ne.toLowerCase();
-    const en = t.en.toLowerCase();
-    if (ne.startsWith(q) || en.startsWith(q)) starts.push(t);
-    else if (ne.includes(q) || en.includes(q)) contains.push(t);
+  const hay = (t: SkyTarget) =>
+    `${t.ne} ${t.en} ${t.hintNe ?? ""} ${t.hintEn ?? ""}`.toLowerCase();
+  for (const t of extra.length ? [...extra, ...SKY_CATALOGUE] : SKY_CATALOGUE) {
+    const names = `${t.ne} ${t.en}`.toLowerCase();
+    const blob = hay(t);
+    if (names.startsWith(q) || t.ne.toLowerCase().startsWith(q) || t.en.toLowerCase().startsWith(q)) {
+      starts.push(t);
+    } else if (blob.includes(q)) {
+      contains.push(t);
+    }
     if (starts.length >= limit) break;
   }
   return [...starts, ...contains].slice(0, limit);

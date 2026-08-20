@@ -41,13 +41,12 @@ export function MarriageSait() {
 
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const birth = selectedProfile ? profileChartParams(selectedProfile) : null;
-  const birthDatetime = birth ? `${birth.adDate}T${birth.clock}` : "";
   const birthTz = selectedProfile?.timezone ?? "Asia/Kathmandu";
 
   const personalizeQuery = useQuery({
-    queryKey: saitPersonalizeKey(year, "vivah", location.params, birthDatetime, birthTz),
-    queryFn: () => fetchSaitPersonalize(year, "vivah", location.params, birthDatetime, birthTz),
-    enabled: Boolean(selectedProfile) && Boolean(birthDatetime),
+    queryKey: saitPersonalizeKey(year, "vivah", location.params, birth?.moment ?? null, birthTz),
+    queryFn: () => fetchSaitPersonalize(year, "vivah", location.params, birth!.moment, birthTz),
+    enabled: Boolean(selectedProfile) && Boolean(birth),
     staleTime: 1000 * 60 * 60,
     placeholderData: keepPreviousData,
   });

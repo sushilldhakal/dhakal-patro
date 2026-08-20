@@ -18,7 +18,7 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { civilIsoDayOfMonth } from "@/lib/patro-day";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import {
-  computeAbhijitFromSunTimes,
+  abhijitFromCalendarDay,
   formatClockNepali,
 } from "@/lib/panchanga-format";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
@@ -36,14 +36,13 @@ const routeApi = getRouteApi("/panchanga-shell/abhijit-muhurta");
 
 type AbhijitRow = {
   day: CalendarDay;
-  abhijit: NonNullable<ReturnType<typeof computeAbhijitFromSunTimes>>;
+  abhijit: NonNullable<ReturnType<typeof abhijitFromCalendarDay>>;
 };
 
 function buildRows(days: CalendarDay[]): AbhijitRow[] {
   return days
     .map((day) => {
-      if (!day.sunrise || !day.sunset) return null;
-      const abhijit = computeAbhijitFromSunTimes(day.sunrise, day.sunset);
+      const abhijit = abhijitFromCalendarDay(day);
       if (!abhijit) return null;
       return { day, abhijit };
     })

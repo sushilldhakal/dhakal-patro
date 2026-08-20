@@ -73,3 +73,16 @@ export function appendInstantParams(
   params.set("clock", q.clock);
   return params;
 }
+
+/** Namespaced birth-moment params for rashifal / sait personalize. */
+export function appendBirthInstantParams(
+  params: URLSearchParams,
+  q: InstantQuery,
+): URLSearchParams {
+  params.set("birth_era", q.inputEra);
+  params.set("birth_year", String(q.year));
+  params.set("birth_month", String(q.month));
+  params.set("birth_day", String(q.day));
+  params.set("birth_clock", q.clock);
+  return params;
+}

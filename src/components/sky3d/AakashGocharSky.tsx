@@ -45,7 +45,7 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
-import type { GocharGraha } from "@/lib/api";
+import type { GocharGraha, VedicStarPosition } from "@/lib/api";
 import type { Era } from "@/lib/era";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import {
@@ -62,7 +62,7 @@ import {
 } from "@/lib/sky3d/time-steps";
 import { SkyTimeSheet } from "@/components/sky3d/SkyTimeSheet";
 import { SkySearch } from "@/components/sky3d/SkySearch";
-import type { SkyTarget } from "@/lib/sky3d/sky-catalogue";
+import { vedicStarTargets, type SkyTarget } from "@/lib/sky3d/sky-catalogue";
 import {
   localFavourites,
   pushRecent,
@@ -164,6 +164,7 @@ const LABEL_COLOR = {
   tilt: "#ffd166",
   axis: "#9fc4f0",
   poleStar: "#cfe0ff",
+  vedicStar: "#ffe08a",
   asterism: "#e6efff",
   tropic: "#e2d264",
   observer: "#ff6b6b",
@@ -264,6 +265,8 @@ const CONTROL_SELECTOR = "button, input, select, [role='button'], [data-sky-cont
  * *least* room between labels, not most.
  */
 const LABEL_SCALE_MAX = 1.3;
+/** Close-up: names grow as the lens tightens, capped so a 1° crop is not a wall of type. */
+const CLOSE_LABEL_SCALE_MAX = 2.8;
 
 /** Look all the way up to the zenith, and almost to the nadir. */
 function clampPitch(p: number) {
@@ -321,6 +324,10 @@ function NakshatraFigure({ svg, size }: { svg?: string; size: number }) {
   );
 }
 
+/** Overlay font size that grows with zoom-in, without the belt's far-zoom trim. */
+const zoomFont = (base: number, scale: number) =>
+  Math.min(22, Math.round(base * scale * 10) / 10);
+
 /** Belt-label font size at `scale`, with the wide-zoom trim applied. */
 const beltFontSize = (base: number, scale: number) =>
   base * scale - (LABEL_WIDE_TRIM * (scale - 1)) / (LABEL_SCALE_MAX - 1);
@@ -333,6 +340,12 @@ export type AakashGocharSkyProps = {
    * zero stands against the equinox. The scene pins its own fit to it.
    */
   ayanamsaDeg?: number;
+  /**
+   * The 32 named वैदिक तारा, positioned server-side for {@link date} from the
+   * Swiss Ephemeris fixed-star catalogue. Plotted as-is in the horizon and
+   * globe views — see [[VedicStarPosition]].
+   */
+  vedicStars?: VedicStarPosition[];
   /** The date the gochar rows describe; the simulation starts here. */
   date: Date;
   /**
@@ -387,6 +400,7 @@ export type AakashGocharSkyProps = {
 export function AakashGocharSky({
   gochar,
   ayanamsaDeg,
+  vedicStars,
   date,
   onDateChange,
   onClockChange,
@@ -471,6 +485,7 @@ export function AakashGocharSky({
     labels: true,
     rashiBelt: true,
     poleStars: true,
+    vedicStars: true,
     constellations: true,
     primeMeridian: true,
     nakshatraBelt: false,
@@ -875,6 +890,7 @@ export function AakashGocharSky({
       press on a different graha. Selection itself is left alone: emptying it
       too was not asked for, and a stray tap should not lose your place. */
   const onEmptyPress = useCallback(() => {
+    setAimed(null);
     setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
   }, []);
 
@@ -931,6 +947,54 @@ export function AakashGocharSky({
       setSearchOpen(false);
     },
     [askFocus, setSelected],
+  );
+
+  const namedStars = useMemo(() => vedicStarTargets(vedicStars ?? []), [vedicStars]);
+
+  const onSelectStar = useCallback(
+    (star: VedicStarPosition, index: number) => {
+      setToggles((t) => (t.vedicStars ? t : { ...t, vedicStars: true }));
+      pickTarget(
+        namedStars[index] ?? {
+          id: `vedic:${index}`,
+          kind: "star",
+          ne: star.ne,
+          en: star.en,
+          hintNe: star.designation,
+          hintEn: star.designation,
+          at: "sky",
+          lon: star.lon,
+          lat: star.lat,
+        },
+      );
+    },
+    [namedStars, pickTarget],
+  );
+
+  const onAimSky = useCallback(
+    (hit: {
+      id: string;
+      ne: string;
+      en: string;
+      lon: number;
+      lat: number;
+      hintNe?: string;
+      hintEn?: string;
+    }) => {
+      setToggles((t) => (t.constellations ? t : { ...t, constellations: true }));
+      pickTarget({
+        id: hit.id,
+        kind: "star",
+        ne: hit.ne,
+        en: hit.en,
+        hintNe: hit.hintNe,
+        hintEn: hit.hintEn,
+        at: "sky",
+        lon: hit.lon,
+        lat: hit.lat,
+      });
+    },
+    [pickTarget],
   );
 
   /**
@@ -1146,20 +1210,28 @@ export function AakashGocharSky({
     return () => clearTimeout(id);
   }, [phaseFlash]);
 
-  /* Rashi/nakshatra text grows past its base size once the camera pulls back
-     beyond the mode's own default framing — capped so it never swamps the
-     screen at the very widest zoom.
-
-     Through a square root, not straight off the ratio: the space view can pull
-     back to nearly five times its own framing, and taken linearly that put the
-     text at the cap long before the zoom got there, so most of the range was
-     spent at the largest size. The root keeps it near its own size through the
-     middle of the range and only leans on the cap at the very end. */
+  /* Names grow both ways: a little as the camera pulls back (the belt shrinks
+     to a ring), and more as it pushes in (fixed 9px type on a 1° crop reads as
+     dust). Close-up uses field of view so a tight क्षितिज crop and a tight
+     globe crop scale the same way. */
   const modeBaseline =
     mode === "space" ? SYSTEM_DISTANCE : mode === "globe" ? GLOBE_VIEW : HORIZON_WIDE;
-  const labelScale = sample
-    ? Math.min(LABEL_SCALE_MAX, Math.sqrt(Math.max(1, sample.zoomDistance / modeBaseline)))
-    : 1;
+  const labelScale = (() => {
+    if (!sample) return 1;
+    const d = sample.zoomDistance;
+    if (mode === "space") {
+      if (d >= SYSTEM_DISTANCE) {
+        return Math.min(LABEL_SCALE_MAX, Math.sqrt(d / SYSTEM_DISTANCE));
+      }
+      return Math.min(CLOSE_LABEL_SCALE_MAX, Math.sqrt(SYSTEM_DISTANCE / Math.max(d, 10)));
+    }
+    const homeFov = fovForZoom(mode, modeBaseline);
+    const nowFov = fovForZoom(mode, d);
+    if (nowFov >= homeFov - 0.05) {
+      return Math.min(LABEL_SCALE_MAX, Math.sqrt(Math.max(1, d / modeBaseline)));
+    }
+    return Math.min(CLOSE_LABEL_SCALE_MAX, Math.sqrt(homeFov / Math.max(nowFov, 1)));
+  })();
   /* Close enough for the belt to carry its detail — the same threshold the
      scene uses to decide whether to offer पाद anchors at all, so the figures
      and the quarter numbers arrive together rather than one zoom apart. */
@@ -1412,13 +1484,17 @@ export function AakashGocharSky({
               observer={observer}
               calibration={calibration}
               ayanamsaShift={ayanamsaShift}
+              vedicStars={vedicStars}
               selectedKey={selectedKey}
               skyAim={skyAim}
+              aimedId={aimed?.id ?? null}
               lockObserver={lockObserver}
               focusNonce={focusNonce}
               toggles={toggles}
               onSelect={onSelect}
               onFollow={onFollow}
+              onSelectStar={onSelectStar}
+              onAimSky={onAimSky}
               onEmptyPress={onEmptyPress}
               onSelectObserver={toggleObserver}
               onSample={onSample}
@@ -1434,6 +1510,27 @@ export function AakashGocharSky({
             scale={labelScale}
             detail={labelDetail}
             flatBelts={mode === "space"}
+            selectedId={aimed?.id}
+            onAimLabel={(label) => {
+              if (label.kind === "vedicstar" && label.index != null) {
+                const star = vedicStars?.[label.index];
+                if (star) onSelectStar(star, label.index);
+                return;
+              }
+              if (
+                (label.kind === "star" || label.kind === "asterism") &&
+                label.lon != null &&
+                label.lat != null
+              ) {
+                onAimSky({
+                  id: label.id,
+                  ne: label.textNe ?? label.text ?? "",
+                  en: label.text ?? label.textNe ?? "",
+                  lon: label.lon,
+                  lat: label.lat,
+                });
+              }
+            }}
           />
         ) : null}
 
@@ -1654,6 +1751,13 @@ export function AakashGocharSky({
                   onPress={() => setToggles((t) => ({ ...t, poleStars: !t.poleStars }))}
                 />
               ) : null}
+              {mode !== "space" ? (
+                <Chip
+                  active={toggles.vedicStars}
+                  label={pick("वैदिक तारा", "Vedic stars")}
+                  onPress={() => setToggles((t) => ({ ...t, vedicStars: !t.vedicStars }))}
+                />
+              ) : null}
               {mode === "globe" ? (
                 <Chip
                   active={toggles.tilt}
@@ -1721,6 +1825,7 @@ export function AakashGocharSky({
             style={{ top: `calc(${overlayTop} + 2.75rem)` }}
           >
             <SkySearch
+              extra={namedStars}
               favourites={favourites}
               recentIds={recentIds}
               onPick={pickTarget}
@@ -2087,6 +2192,8 @@ const SkyLabels = memo(function SkyLabels({
   scale = 1,
   detail = false,
   flatBelts = false,
+  selectedId,
+  onAimLabel,
 }: {
   labels: ScreenLabel[];
   /** Grows the rashi/nakshatra belt text as the camera pulls back — a fixed
@@ -2098,6 +2205,8 @@ const SkyLabels = memo(function SkyLabels({
   detail?: boolean;
   /** Space-view wheel: Learn playground colours, and dim the inactive spans. */
   flatBelts?: boolean;
+  selectedId?: string;
+  onAimLabel?: (label: ScreenLabel) => void;
 }) {
   const { lang, digits } = useLocale();
   const pick = (ne: string, en: string) => bilingualText(lang, ne, en);
@@ -2213,8 +2322,12 @@ const SkyLabels = memo(function SkyLabels({
           return (
             <span
               key={label.id}
-              className="text-[9px] tabular-nums"
-              style={{ ...labelBox(label.x, label.y, 14, -5), color: LABEL_COLOR.pada }}
+              className="tabular-nums"
+              style={{
+                ...labelBox(label.x, label.y, 16 * scale, -5 * scale),
+                fontSize: zoomFont(9, scale),
+                color: LABEL_COLOR.pada,
+              }}
             >
               {digits(label.index)}
             </span>
@@ -2224,20 +2337,58 @@ const SkyLabels = memo(function SkyLabels({
           /* The name of the star group itself, sitting on the stars. Short, so
              it does not smother the figure it belongs to. */
           const nak = NAKSHATRA_SHORT[label.index - 1];
+          const selected = selectedId === label.id;
           return (
-            <span
+            <button
               key={label.id}
-              className="text-[10px] font-bold"
+              type="button"
+              onClick={() =>
+                onAimLabel?.({
+                  ...label,
+                  text: nak?.en,
+                  textNe: nak?.ne,
+                })
+              }
+              className="truncate font-bold"
               style={{
-                ...labelBox(label.x, label.y, 60, 6),
-                color: LABEL_COLOR.asterism,
-                /* Already the faintest thing on the dome; under the ground it
-                   goes fainter still, like everything else down there. */
-                opacity: 0.45 * dim,
+                ...labelBox(label.x, label.y, 72 * scale, 6 * scale),
+                pointerEvents: "auto",
+                cursor: "pointer",
+                fontSize: zoomFont(10, scale),
+                color: selected ? "#fff6c8" : LABEL_COLOR.asterism,
+                textShadow: "0 1px 4px rgba(0,0,0,0.95)",
+                opacity: selected ? 1 : 0.85 * dim,
+                background: "transparent",
+                border: 0,
+                padding: 0,
               }}
             >
               {nak ? (lang === "en" ? nak.en : nak.ne) : ""}
-            </span>
+            </button>
+          );
+        }
+        if (label.kind === "star") {
+          const selected = selectedId === label.id;
+          return (
+            <button
+              key={label.id}
+              type="button"
+              onClick={() => onAimLabel?.(label)}
+              className="truncate font-semibold"
+              style={{
+                ...labelBox(label.x, label.y, 130 * scale, 8 * scale),
+                pointerEvents: "auto",
+                cursor: "pointer",
+                fontSize: zoomFont(selected ? 11 : 9, scale),
+                color: selected ? "#fff6c8" : LABEL_COLOR.asterism,
+                textShadow: "0 1px 4px rgba(0,0,0,0.95)",
+                background: "transparent",
+                border: 0,
+                padding: 0,
+              }}
+            >
+              {(lang === "en" ? label.text : label.textNe) ?? ""}
+            </button>
           );
         }
         if (label.kind === "cardinal") {
@@ -2296,14 +2447,20 @@ const SkyLabels = memo(function SkyLabels({
             <div
               key={label.id}
               className="flex flex-col items-center"
-              style={{ position: "absolute", left: label.x - 55, top: label.y + 8, width: 110 }}
+              style={{
+                position: "absolute",
+                left: label.x - 55 * scale,
+                top: label.y + 8 * scale,
+                width: 110 * scale,
+              }}
             >
               <span
-                className={cn(
-                  "max-w-full truncate",
-                  reigning ? "text-[11px] font-bold" : "text-[9px]",
-                )}
-                style={{ color: reigning ? LABEL_COLOR.station : LABEL_COLOR.poleStar }}
+                className={cn("max-w-full truncate", reigning ? "font-bold" : "")}
+                style={{
+                  fontSize: zoomFont(reigning ? 11 : 9, scale),
+                  color: reigning ? LABEL_COLOR.station : LABEL_COLOR.poleStar,
+                  textShadow: "0 1px 4px rgba(0,0,0,0.95)",
+                }}
               >
                 {lang === "en" ? star.en.replace(/\s*\(.*\)$/, "") : star.ne}
               </span>
@@ -2314,6 +2471,30 @@ const SkyLabels = memo(function SkyLabels({
                 {formatPoleYear(label.year, lang, digits)}
               </span>
             </div>
+          );
+        }
+        if (label.kind === "vedicstar") {
+          const selected = selectedId === label.id;
+          return (
+            <button
+              key={label.id}
+              type="button"
+              onClick={() => onAimLabel?.(label)}
+              className="truncate font-semibold"
+              style={{
+                ...labelBox(label.x, label.y, 140 * scale, 8 * scale),
+                pointerEvents: "auto",
+                cursor: "pointer",
+                fontSize: zoomFont(selected ? 11 : 9, scale),
+                color: selected ? "#fff6c8" : LABEL_COLOR.vedicStar,
+                textShadow: "0 1px 4px rgba(0,0,0,0.95)",
+                background: "transparent",
+                border: 0,
+                padding: 0,
+              }}
+            >
+              {(lang === "en" ? label.text : label.textNe) ?? ""}
+            </button>
           );
         }
         if (label.kind === "tropic") {
@@ -2344,11 +2525,13 @@ const SkyLabels = memo(function SkyLabels({
           return (
             <span
               key={label.id}
-              className="text-[10px] font-bold"
+              className="font-bold"
               style={{
-                ...labelBox(label.x, label.y, 90, 10),
+                ...labelBox(label.x, label.y, 90 * scale, 10 * scale),
+                fontSize: zoomFont(10, scale),
                 color: GRAHA_COLOR[label.key],
                 opacity: dim,
+                textShadow: "0 1px 4px rgba(0,0,0,0.95)",
               }}
             >
               {lang === "en" ? GRAHA_NAME[label.key].en : GRAHA_NAME[label.key].ne}

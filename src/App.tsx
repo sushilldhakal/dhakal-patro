@@ -10,6 +10,7 @@ import { router } from "./router.tsx";
 import { AuthProvider } from "./lib/auth/AuthContext";
 import { isBrowser } from "./lib/browser";
 import { syncDocumentLang } from "./lib/fonts";
+import { usePatroCapabilities } from "./hooks/use-patro-capabilities";
 import {
   getStoredLanguage,
   setStoredLanguage,
@@ -74,6 +75,11 @@ function LanguageBootstrap() {
   return null;
 }
 
+function CapabilitiesBootstrap() {
+  usePatroCapabilities();
+  return null;
+}
+
 function AppRoutes({ appRouter }: { appRouter: AnyRouter }) {
   useTranslation();
   return <RouterProvider router={appRouter} />;
@@ -98,6 +104,7 @@ export function AppProviders({
         <QueryClientProvider client={queryClient}>
           <AuthProvider ssr={ssr}>
             {!ssr && isBrowser ? <LanguageBootstrap /> : null}
+            {!ssr && isBrowser ? <CapabilitiesBootstrap /> : null}
             {children}
           </AuthProvider>
         </QueryClientProvider>

@@ -11,8 +11,7 @@ import {
 import { KundaliMilanResult } from "@/components/kundali/KundaliMilanResult";
 import { PageShell } from "@/components/PageShell";
 import { AYANAMSHA_MODES, getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
-import { instantFromCivilIso } from "@/lib/instant-query";
-import { profileChartParams } from "@/lib/kundali/profile-chart";
+import { formatProfileBirthLabel, profileChartParams } from "@/lib/kundali/profile-chart";
 import { useLocale } from "@/i18n/locale";
 import {
   fetchKundaliMilan,
@@ -43,15 +42,6 @@ function ayanamshaLabel(mode: AyanamshaMode, lang?: string): string {
   return (lang ?? "ne").startsWith("en") ? info.label : info.labelNe;
 }
 
-function formatAdDateLong(d: Date, locale: string): string {
-  return d.toLocaleDateString(locale.startsWith("en") ? "en-US" : "ne-NP", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 function formatDms(deg: number): string {
   const abs = Math.abs(deg);
   const d = Math.floor(abs);
@@ -77,7 +67,7 @@ function milanQueryFromProfile(profile: Profile): MilanPersonQuery | null {
   const chart = profileChartParams(profile);
   if (!chart) return null;
   return {
-    moment: instantFromCivilIso(chart.adDate, chart.clock),
+    moment: chart.moment,
     lat: chart.location.params.lat,
     lon: chart.location.params.lon,
     timezone: chart.location.params.timezone,
@@ -101,7 +91,7 @@ function BirthDetailsTable({ role, profile, person, ayanamsha, lang }: BirthDeta
     { label: t("milan.name"), value: profile.full_name || "—" },
     {
       label: t("milan.date_of_birth"),
-      value: chart ? formatAdDateLong(chart.date, lang) : "—",
+      value: formatProfileBirthLabel(profile, lang),
     },
     { label: t("milan.time_of_birth"), value: chart?.clock ?? profile.birth_time ?? "—" },
     { label: t("milan.city"), value: profile.city || profile.location_label?.split(",")[0] || "—" },

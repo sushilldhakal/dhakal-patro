@@ -75,13 +75,14 @@ import {
   RASHI_LABEL_LAT,
   type eclipticPoint,
 } from "@/lib/sky3d/sky-geometry";
-import { flattenAsterisms, precessionSinceJ2000 } from "@/lib/sky3d/nakshatra-stars";
+import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000 } from "@/lib/sky3d/nakshatra-stars";
 import {
   placedPoleStars,
   poleStarEpoch,
   poleTrackPoints,
   reigningPoleStar,
 } from "@/lib/sky3d/pole-stars";
+import type { VedicStarPosition } from "@/lib/api";
 import {
   SKY_TEXTURE_KEYS,
   SKY_TEXTURE_SOURCES,
@@ -155,6 +156,14 @@ const NAK_MID = (NAK_INNER + NAK_OUTER) / 2;
 
 /** Radius of the horizon dome. Everything on the sky sits on it. */
 const DOME = 100;
+
+/** Size of the नामाङ्कित वैदिक तारा catalogue — see [[vedicField]]. */
+const VEDIC_STAR_CAPACITY = 32;
+
+/** Pixel size from visual magnitude — Sirius (−1.5) reads as a disc, Alcor (4) as a point. */
+function vedicStarSize(mag: number): number {
+  return Math.max(7, Math.min(20, 13.5 - mag * 1.7));
+}
 
 /**
  * How the landscape texture is tinted from night to day. White at noon so the
@@ -262,7 +271,9 @@ export type ScreenLabel = {
     | "obliquity"
     | "axis"
     | "asterism"
-    | "pada";
+    | "pada"
+    | "vedicstar"
+    | "star";
   /**
    * 1–12 for rashi, 1–27 for nakshatra, 1–4 for a पाद; for a pole star, 1 marks
    * the one the pole is nearest at the moment on screen.
@@ -270,6 +281,11 @@ export type ScreenLabel = {
   index?: number;
   key?: GrahaKey;
   text?: string;
+  /** वैदिक तारा / नक्षत्र stars: the नेपाली name — {@link text} carries the English one. */
+  textNe?: string;
+  /** Aimable overlay labels: sidereal ecliptic degrees, for a press on the name. */
+  lon?: number;
+  lat?: number;
   /**
    * Grid degrees only: which border of the frame the number is pinned to, so
    * the overlay can hang it inside that edge instead of centring it on the
@@ -346,6 +362,12 @@ export type SceneToggles = {
    * of precession, the one the ayanamsa does not show.
    */
   poleStars: boolean;
+  /**
+   * Thirty-two individually named bright stars — अगस्त्य, अभिजित्, सप्तर्षि and
+   * the rest — the ones classical texts single out by name rather than only
+   * as नक्षत्र members. See [[vedic-stars]].
+   */
+  vedicStars: boolean;
   /**
    * The obliquity, drawn as the angle it is: the Earth's axis against the
    * perpendicular to its orbit. In the globe view the Earth is held upright and
@@ -532,6 +554,9 @@ function flushLine(line: THREE.Line) {
 function makeStarPoints(count: number, color: string, size: number, opacity: number) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(count * 3), 3));
+  const sizes = new Float32Array(count);
+  sizes.fill(size);
+  geometry.setAttribute("aSize", new THREE.Float32BufferAttribute(sizes, 1));
   /* A raw GL point is a square. Rather than ship a sprite texture — which the
      native GL bridge would have to decode — the fragment shader throws away
      everything outside the disc and feathers the last of it, which is both
@@ -544,11 +569,12 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
       uPixelRatio: { value: 1 },
     },
     vertexShader: `
+      attribute float aSize;
       uniform float uSize;
       uniform float uPixelRatio;
       void main() {
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = uSize * uPixelRatio;
+        gl_PointSize = aSize * uPixelRatio;
       }
     `,
     fragmentShader: `
@@ -567,6 +593,7 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
     `,
     transparent: true,
     depthWrite: false,
+    toneMapped: false,
   });
   const points = new THREE.Points(geometry, material);
   points.frustumCulled = false;
@@ -876,13 +903,17 @@ export function AakashGocharScene({
   observer,
   calibration,
   ayanamsaShift = 0,
+  vedicStars,
   selectedKey,
   lockObserver = false,
   focusNonce = 0,
   skyAim = null,
+  aimedId = null,
   toggles,
   onSelect,
   onFollow,
+  onSelectStar,
+  onAimSky,
   onEmptyPress,
   onSelectObserver,
   onSample,
@@ -897,6 +928,12 @@ export function AakashGocharScene({
    * for the date on screen. Zero until the gochar response has arrived.
    */
   ayanamsaShift?: number;
+  /**
+   * The 32 named वैदिक तारा, already positioned (sidereal ecliptic degrees)
+   * for the date on screen by the Swiss Ephemeris fixed-star catalogue on the
+   * server. Plotted as-is — see [[VedicStarPosition]].
+   */
+  vedicStars?: VedicStarPosition[];
   selectedKey: GrahaKey | null;
   /**
    * Lock onto the observer's own place on the globe rather than onto a graha.
@@ -924,10 +961,30 @@ export function AakashGocharScene({
    * direction and is aimed at through the same one-frame recentre.
    */
   skyAim?: { lon: number; lat: number; nonce: number } | null;
+  /**
+   * Search/pick id of the named star currently under the reticle (`vedic:3`).
+   * The matching point is crowned so it is obvious which of the 32 was chosen.
+   */
+  aimedId?: string | null;
   toggles: SceneToggles;
   onSelect: (key: GrahaKey) => void;
   /** Pressed twice — select it *and* turn following on. */
   onFollow: (key: GrahaKey) => void;
+  /** A named वैदिक तारा was pressed — aim the camera at it. */
+  onSelectStar?: (star: VedicStarPosition, index: number) => void;
+  /**
+   * A नक्षत्र member (or the figure's own name) was pressed. `lon`/`lat` are
+   * already sidereal ecliptic degrees of date, same frame {@link place} uses.
+   */
+  onAimSky?: (hit: {
+    id: string;
+    ne: string;
+    en: string;
+    lon: number;
+    lat: number;
+    hintNe?: string;
+    hintEn?: string;
+  }) => void;
   /** A press that landed on nothing — empty sky, not a graha. */
   onEmptyPress?: () => void;
   /** The marker on the globe was pressed — your place, chosen as the target. */
@@ -1148,11 +1205,11 @@ export function AakashGocharScene({
       links,
       byNakshatra: [...byNakshatra.entries()],
       groups: [
-        { indices: junction, object: makeStarPoints(junction.length, "#ffd98a", 6.5, 0.45) },
-        { indices: bright, object: makeStarPoints(bright.length, "#eaf2ff", 4.6, 0.38) },
-        { indices: faint, object: makeStarPoints(faint.length, "#c8d8ee", 3.2, 0.28) },
+        { indices: junction, object: makeStarPoints(junction.length, "#ffd98a", 8, 0.95) },
+        { indices: bright, object: makeStarPoints(bright.length, "#eaf2ff", 6, 0.82) },
+        { indices: faint, object: makeStarPoints(faint.length, "#c8d8ee", 4.2, 0.58) },
       ],
-      lines: makeDynamicSegments(links.length * 2, "#9db9dd", 0.28),
+      lines: makeDynamicSegments(links.length * 2, "#9db9dd", 0.5),
     };
   }, []);
 
@@ -1214,6 +1271,46 @@ export function AakashGocharScene({
       crown: makeStarPoints(1, "#ffd166", 8, 1),
     };
   }, []);
+
+  /**
+   * The named वैदिक तारा — अगस्त्य, अभिजित्, सप्तर्षि and the rest.
+   *
+   * Unlike every other star field on this page, these carry no client-side
+   * precession formula: the server positions them (Swiss Ephemeris
+   * fixed-star catalogue, sidereal, for the date on screen) and this just
+   * plots what it was given. The buffer is sized to the catalogue's own
+   * count (32) and `setDrawRange` trims it to however many the current
+   * response actually carried — fewer while it is still loading, or if the
+   * server's star layer failed soft.
+   */
+  const vedicField = useMemo(() => {
+    const points = makeStarPoints(VEDIC_STAR_CAPACITY, "#ffe08a", 12, 1);
+    points.geometry.setDrawRange(0, 0);
+    points.renderOrder = 4;
+    const crown = makeStarPoints(1, "#fff6c8", 18, 1);
+    crown.renderOrder = 5;
+    crown.visible = false;
+    return { points, crown };
+  }, []);
+
+  const vedicStarsRef = useRef(vedicStars);
+  vedicStarsRef.current = vedicStars;
+  const vedicPickRef = useRef(
+    Array.from({ length: VEDIC_STAR_CAPACITY }, () => ({
+      index: -1,
+      world: new THREE.Vector3(),
+    })),
+  );
+  const vedicPickCount = useRef(0);
+  const asterismPickRef = useRef(
+    starField.stars.map(() => ({
+      index: -1,
+      lon: 0,
+      lat: 0,
+      world: new THREE.Vector3(),
+    })),
+  );
+  const asterismPickCount = useRef(0);
 
   /**
    * The obliquity, drawn as an angle rather than left implicit.
@@ -1402,11 +1499,15 @@ export function AakashGocharScene({
   const onSelectRef = useRef(onSelect);
   const onFollowRef = useRef(onFollow);
   const onEmptyPressRef = useRef(onEmptyPress);
+  const onSelectStarRef = useRef(onSelectStar);
+  const onAimSkyRef = useRef(onAimSky);
   useEffect(() => {
     onSelectRef.current = onSelect;
     onFollowRef.current = onFollow;
     onEmptyPressRef.current = onEmptyPress;
-  }, [onSelect, onFollow, onEmptyPress]);
+    onSelectStarRef.current = onSelectStar;
+    onAimSkyRef.current = onAimSky;
+  }, [onSelect, onFollow, onEmptyPress, onSelectStar, onAimSky]);
 
   useEffect(() => {
     const el = gl.domElement;
@@ -1455,7 +1556,13 @@ export function AakashGocharScene({
      * and reading the gap in pixels, and the hit test uses whichever of that
      * or {@link PICK_RADIUS} is larger.
      */
-    const pick = (e: PointerEvent): GrahaKey | null => {
+    const pick = (
+      e: PointerEvent,
+    ):
+      | { kind: "graha"; key: GrahaKey }
+      | { kind: "vedicstar"; index: number }
+      | { kind: "skystar"; index: number }
+      | null => {
       const rect = el.getBoundingClientRect();
       const px = e.clientX - rect.left;
       const py = e.clientY - rect.top;
@@ -1480,18 +1587,67 @@ export function AakashGocharScene({
           best = key;
         }
       }
-      return best;
+      if (best) return { kind: "graha", key: best };
+      let starKind: "vedicstar" | "skystar" | null = null;
+      let starIndex = -1;
+      const nVedic = vedicPickCount.current;
+      for (let i = 0; i < nVedic; i += 1) {
+        const hit = vedicPickRef.current[i];
+        const centre = project(hit.world, rect, field, scratchPick);
+        if (!centre) continue;
+        const d = Math.hypot(centre.x - px, centre.y - py);
+        if (d < PICK_RADIUS && d < bestD) {
+          bestD = d;
+          starKind = "vedicstar";
+          starIndex = hit.index;
+        }
+      }
+      const nAst = asterismPickCount.current;
+      for (let i = 0; i < nAst; i += 1) {
+        const hit = asterismPickRef.current[i];
+        const centre = project(hit.world, rect, field, scratchPick);
+        if (!centre) continue;
+        const d = Math.hypot(centre.x - px, centre.y - py);
+        if (d < PICK_RADIUS && d < bestD) {
+          bestD = d;
+          starKind = "skystar";
+          starIndex = hit.index;
+        }
+      }
+      if (starKind && starIndex >= 0) return { kind: starKind, index: starIndex };
+      return null;
     };
 
     const onUp = (e: PointerEvent) => {
       if (e.pointerId !== downId) return;
       downId = null;
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_SLOP) return;
-      const key = pick(e);
-      if (!key) {
+      const hit = pick(e);
+      if (!hit) {
         onEmptyPressRef.current?.();
         return;
       }
+      if (hit.kind === "vedicstar") {
+        const star = vedicStarsRef.current?.[hit.index];
+        if (star) onSelectStarRef.current?.(star, hit.index);
+        return;
+      }
+      if (hit.kind === "skystar") {
+        const s = asterismPickRef.current[hit.index];
+        const star = starField.stars[hit.index];
+        const nak = NAKSHATRA_ASTERISMS[star.nakshatra - 1];
+        onAimSkyRef.current?.({
+          id: `star:${star.nakshatra}:${star.name}`,
+          ne: star.junction && nak ? nak.ne : star.name,
+          en: star.name,
+          hintNe: nak?.ne,
+          hintEn: nak?.en,
+          lon: s.lon,
+          lat: s.lat,
+        });
+        return;
+      }
+      const key = hit.key;
       const now = performance.now();
       const again = key === lastKey && now - lastAt < DOUBLE_MS;
       lastKey = key;
@@ -2066,6 +2222,71 @@ export function AakashGocharScene({
       }
     }
 
+    /* ── the named वैदिक तारा ─────────────────────────────────────────
+       No precession formula here: `s.lon`/`s.lat` are already sidereal
+       ecliptic degrees for the date on screen, computed server-side from
+       the Swiss Ephemeris fixed-star catalogue. Runs every frame, not only
+       when the belt rebuilds: the payload can arrive after the first bake,
+       and a paused क्षितिज would otherwise leave every point at the origin. */
+    const aimedVedic =
+      aimedId && aimedId.startsWith("vedic:") ? Number(aimedId.slice(6)) : -1;
+    if (toggles.vedicStars && zodiac && vedicStars && vedicStars.length > 0) {
+      (vedicField.points.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value =
+        state.gl.getPixelRatio();
+      (vedicField.crown.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value =
+        state.gl.getPixelRatio();
+      const n = Math.min(vedicStars.length, VEDIC_STAR_CAPACITY);
+      const sizes = vedicField.points.geometry.getAttribute("aSize") as THREE.BufferAttribute;
+      let crowned: [number, number, number] | null = null;
+      for (let i = 0; i < n; i += 1) {
+        const s = vedicStars[i];
+        const at = place(s.lon, s.lat, DOME * 0.995);
+        setVertex(vedicField.points, i, at);
+        sizes.setX(i, vedicStarSize(s.mag));
+        vedicPickRef.current[i].index = i;
+        vedicPickRef.current[i].world.set(at[0], at[1], at[2]);
+        if (i === aimedVedic) crowned = at;
+      }
+      sizes.needsUpdate = true;
+      vedicField.points.geometry.setDrawRange(0, n);
+      (vedicField.points.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate =
+        true;
+      vedicPickCount.current = n;
+      if (crowned) {
+        setVertex(vedicField.crown, 0, crowned);
+        (vedicField.crown.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate =
+          true;
+        vedicField.crown.visible = true;
+      } else {
+        vedicField.crown.visible = false;
+      }
+    } else {
+      vedicPickCount.current = 0;
+      vedicField.points.geometry.setDrawRange(0, 0);
+      vedicField.crown.visible = false;
+    }
+
+    /* नक्षत्र member positions for picking — every frame, because a paused
+       globe never rebuilds the belt again and the first bake can land before
+       the figures are even switched on. */
+    if (toggles.constellations && (zodiac || space)) {
+      const precession = precessionSinceJ2000(dtDays);
+      const n = starField.stars.length;
+      for (let i = 0; i < n; i += 1) {
+        const s = starField.stars[i];
+        const lon = s.lon + precession - ayan;
+        const at = starPlace(i, lon, s.lat);
+        const slot = asterismPickRef.current[i];
+        slot.index = i;
+        slot.lon = lon;
+        slot.lat = s.lat;
+        slot.world.set(at[0], at[1], at[2]);
+      }
+      asterismPickCount.current = n;
+    } else {
+      asterismPickCount.current = 0;
+    }
+
     if (collect && (toggles.rashiBelt || toggles.nakshatraBelt || (space && toggles.monthRing))) {
       /**
        * Space view: names sit on the wheel, in the ecliptic plane, the way the
@@ -2192,8 +2413,46 @@ export function AakashGocharScene({
           at = [(x / len) * radius, (y / len) * radius, (z / len) * radius];
         }
         if (labelVisible(at)) {
-          project({ id: `ast-${nak}`, kind: "asterism", index: nak }, at);
+          const junction = starField.stars[indices[0]];
+          project(
+            {
+              id: `ast-${nak}`,
+              kind: "asterism",
+              index: nak,
+              lon: junction.lon + precession - ayan,
+              lat: junction.lat,
+            },
+            at,
+          );
         }
+      }
+    }
+
+    /* Individual नक्षत्र members — योगतारा always, companions once the lens
+       is tight enough that the names do not sit on top of each other. */
+    if (collect && toggles.constellations && (zodiac || space)) {
+      const precession = precessionSinceJ2000(dtDays);
+      const field = fovForZoom(mode, view.current.distance);
+      const close = space ? view.current.distance <= 32 : field < 24;
+      for (let i = 0; i < starField.stars.length; i += 1) {
+        const s = starField.stars[i];
+        if (!s.junction && !close) continue;
+        const lon = s.lon + precession - ayan;
+        const at = starPlace(i, lon, s.lat);
+        if (!labelVisible(at)) continue;
+        const nak = NAKSHATRA_ASTERISMS[s.nakshatra - 1];
+        project(
+          {
+            id: `star:${s.nakshatra}:${s.name}`,
+            kind: "star",
+            text: s.name,
+            textNe: s.junction && nak ? nak.ne : s.name,
+            index: i,
+            lon,
+            lat: s.lat,
+          },
+          at,
+        );
       }
     }
 
@@ -2232,6 +2491,30 @@ export function AakashGocharScene({
             text: s.en,
             year: Math.round(poleStarEpoch(s.lon, simYear)),
             index: reigning && reigning.star.en === s.en ? 1 : 0,
+          },
+          at,
+        );
+      }
+    }
+
+    /* Named वैदिक तारा labels — server-positioned, no year or reigning flag,
+       just the name in whichever language is live. Indexed ids: a couple of
+       entries (प्रस्वा and लुब्धक-बन्धु) name the same physical star, so an
+       id keyed on the name would collide. */
+    if (collect && zodiac && toggles.vedicStars && vedicStars) {
+      for (let i = 0; i < vedicStars.length && i < VEDIC_STAR_CAPACITY; i += 1) {
+        const s = vedicStars[i];
+        const at = place(s.lon, s.lat, DOME * 0.995);
+        if (!labelVisible(at)) continue;
+        project(
+          {
+            id: `vedic:${i}`,
+            kind: "vedicstar",
+            text: s.en,
+            textNe: s.ne,
+            index: i,
+            lon: s.lon,
+            lat: s.lat,
           },
           at,
         );
@@ -2319,6 +2602,8 @@ export function AakashGocharScene({
     poleField.points.visible = zodiac && toggles.poleStars;
     poleField.crown.visible = zodiac && toggles.poleStars;
     poleField.trackLine.visible = zodiac && toggles.poleStars;
+    vedicField.points.visible = zodiac && toggles.vedicStars && (vedicStars?.length ?? 0) > 0;
+    if (!vedicField.points.visible) vedicField.crown.visible = false;
     // The tilt is only drawn where the Earth is: the globe view.
     tiltMarks.eclipticAxis.visible = globe && toggles.tilt;
     tiltMarks.arc.visible = globe && toggles.tilt;
@@ -2896,6 +3181,8 @@ export function AakashGocharScene({
       <primitive object={poleField.trackLine} />
       <primitive object={poleField.points} />
       <primitive object={poleField.crown} />
+      <primitive object={vedicField.points} />
+      <primitive object={vedicField.crown} />
 
       {GEO_BODY_ORDER.map((key) => (
         <GrahaBody

@@ -183,7 +183,13 @@ export function buildAdCalendarGridDays(
   adMonth: number,
   enrichedDays?: CalendarDay[],
 ): CalendarDay[] {
-  const currentLocal = buildLocalAdMonthDays(adYear, adMonth);
+  const ym = `${String(adYear).padStart(4, "0")}-${String(adMonth).padStart(2, "0")}-`;
+  const currentFromServer = (enrichedDays ?? []).filter(
+    (d) => d.date_ad.startsWith(ym) && !d.outsideMonth,
+  );
+  const currentLocal = currentFromServer.length
+    ? currentFromServer
+    : buildLocalAdMonthDays(adYear, adMonth);
   const first = currentLocal[0];
   if (!first) return currentLocal;
 
@@ -191,7 +197,12 @@ export function buildAdCalendarGridDays(
   const prevAd = shiftAdMonth(adYear, adMonth, -1);
   const nextAd = shiftAdMonth(adYear, adMonth, 1);
 
-  const prevLocal = buildLocalAdMonthDays(prevAd.year, prevAd.month);
+  const prevYm = `${String(prevAd.year).padStart(4, "0")}-${String(prevAd.month).padStart(2, "0")}-`;
+  const nextYm = `${String(nextAd.year).padStart(4, "0")}-${String(nextAd.month).padStart(2, "0")}-`;
+  const prevFromServer = (enrichedDays ?? []).filter((d) => d.date_ad.startsWith(prevYm));
+  const nextFromServer = (enrichedDays ?? []).filter((d) => d.date_ad.startsWith(nextYm));
+
+  const prevLocal = prevFromServer.length ? prevFromServer : buildLocalAdMonthDays(prevAd.year, prevAd.month);
   const leading: CalendarDay[] =
     startOffset > 0
       ? prevLocal.slice(-startOffset).map((d) => ({
@@ -207,7 +218,7 @@ export function buildAdCalendarGridDays(
 
   const totalCells = Math.ceil((startOffset + current.length) / 7) * 7;
   const trailingCount = totalCells - startOffset - current.length;
-  const nextLocal = buildLocalAdMonthDays(nextAd.year, nextAd.month);
+  const nextLocal = nextFromServer.length ? nextFromServer : buildLocalAdMonthDays(nextAd.year, nextAd.month);
   const trailing: CalendarDay[] = nextLocal.slice(0, trailingCount).map((d) => ({
     ...d,
     outsideMonth: true,

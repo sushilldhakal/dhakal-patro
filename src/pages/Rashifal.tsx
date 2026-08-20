@@ -83,13 +83,9 @@ export function Rashifal() {
   useRouteLoading(loading);
 
   // Selected profile → a reading cast on that profile's own birth chart
-  // (Lagna, natal Ashtakavarga, running dasha) rather than a filter down to
-  // whichever of the twelve general cards matches their Moon sign. A BS-era
-  // profile's birth date is converted to AD client-side first (same helper
-  // the kundali profile flow already uses), so the server only ever sees
-  // Gregorian dates.
+  // (Lagna, natal Ashtakavarga, running dasha). The stored era + civil parts
+  // go to the API as-is; this host does not convert BS→AD.
   const profileChart = selectedProfile ? profileChartParams(selectedProfile) : null;
-  const birthIso = profileChart ? `${profileChart.adDate}T${profileChart.clock}` : null;
   const birthTz = profileChart?.location.params.timezone ?? "Asia/Kathmandu";
   const birthLat = profileChart?.location.params.lat;
   const birthLon = profileChart?.location.params.lon;
@@ -98,7 +94,7 @@ export function Rashifal() {
     queryKey: [
       "rashifal-personal",
       selectedProfile?.id,
-      birthIso,
+      profileChart?.moment,
       birthTz,
       birthLat,
       birthLon,
@@ -109,10 +105,15 @@ export function Rashifal() {
       fetchPersonalRashifal(
         dayState,
         period,
-        { birth: birthIso as string, birthLat: birthLat as number, birthLon: birthLon as number, birthTz },
+        {
+          moment: profileChart!.moment,
+          birthLat: birthLat as number,
+          birthLon: birthLon as number,
+          birthTz,
+        },
         location.params,
       ),
-    enabled: Boolean(selectedProfile && birthIso && birthLat != null && birthLon != null),
+    enabled: Boolean(selectedProfile && profileChart && birthLat != null && birthLon != null),
     staleTime: 1000 * 60 * 10,
   });
 

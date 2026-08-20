@@ -35,12 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { formatBsDateLong } from "@/lib/bs-calendar";
-import {
-  parseBirthDate,
-  profileClock,
-  profileLocation,
-} from "@/lib/kundali/profile-chart";
+import { formatProfileBirthLabel, profileBirthMoment, profileLocation } from "@/lib/kundali/profile-chart";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
 import { cn } from "@/lib/utils";
@@ -78,12 +73,6 @@ function MetaItem({
     </div>
   );
 }
-
-function formatBsDate(d: Date): string {
-  return formatBsDateLong(d, "ne", toNepaliDigits);
-}
-
-export function KundaliDetail() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -127,21 +116,13 @@ export function KundaliDetail() {
     [profiles, profileId],
   );
 
-  const birthDate = useMemo(() => (profile ? parseBirthDate(profile) : null), [profile]);
+  const birthMoment = useMemo(() => (profile ? profileBirthMoment(profile) : null), [profile]);
   const location = useMemo(() => (profile ? profileLocation(profile) : null), [profile]);
-  const clock = profile ? profileClock(profile) : "12:00";
 
   const birthDateMeta = useMemo(() => {
     if (!profile?.birth_date) return { value: "—", sub: undefined as string | undefined };
-    if (!birthDate) {
-      const era = profile.birth_era ?? "bs";
-      return {
-        value: `${toNepaliDigits(profile.birth_date)} ${era.toUpperCase()}`,
-        sub: undefined,
-      };
-    }
-    return { value: formatBsDate(birthDate), sub: undefined };
-  }, [profile, birthDate]);
+    return { value: formatProfileBirthLabel(profile, "ne", toNepaliDigits), sub: undefined };
+  }, [profile]);
 
   useRouteLoading(authLoading);
 
@@ -195,7 +176,7 @@ export function KundaliDetail() {
 
   const place = profile.location_label || profile.city || "—";
   const birthTime = profile.birth_time ? toNepaliDigits(profile.birth_time) : "—";
-  const canShowChart = Boolean(birthDate && location);
+  const canShowChart = Boolean(birthMoment && location);
 
   return (
     <PageShell className="space-y-6 pb-20">
@@ -269,8 +250,7 @@ export function KundaliDetail() {
             variant="horizontal"
           />
           <KundaliView
-            date={birthDate!}
-            clock={clock}
+            moment={birthMoment!}
             locationParams={location!.params}
             locationLabel={location!.label}
             ayanamshaMode={ayanamshaMode}

@@ -11,7 +11,7 @@ import { patroBrowseTodayEra } from "@/hooks/use-patro-year-browse";
 import { shiftPatroBrowseMonth } from "@/lib/patro-year-browse-step";
 import {
   isValidBrowseYear,
-  PATRO_EPHEMERIS_SIGNED_MAX,
+  maxBrowseYearForEra,
 } from "@/lib/patro-year-axis";
 
 function positiveInt(y: number): number {
@@ -109,14 +109,14 @@ export function usePatroMonthBrowse(
     setYearState(n);
   };
   const setEra = (next: Era) => {
-    if (next === "bs" && year > PATRO_EPHEMERIS_SIGNED_MAX) return;
+    if (next === "bs" && year > (maxBrowseYearForEra("bs") ?? 1)) return;
     setEraState(next);
   };
 
   /** Apply era + year together (e.g. year picker after a draft BBS/BS toggle). */
   const commitEraYear = (nextEra: Era, y: number) => {
     const n = positiveInt(y);
-    if (nextEra === "bs" && n > PATRO_EPHEMERIS_SIGNED_MAX) return;
+    if (nextEra === "bs" && n > (maxBrowseYearForEra("bs") ?? 1)) return;
     if (!isValidBrowseYear(nextEra, n)) return;
     setEraState(nextEra);
     setYearState(n);

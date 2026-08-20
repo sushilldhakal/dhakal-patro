@@ -17,47 +17,86 @@
 import type { Era } from "@/lib/era";
 
 /**
- * The axis — what a URL, picker or label may name. Sized to the full Swiss
- * Ephemeris span (11 Aug 13000 BCE, JD −3026604.5 … 7 Jan 17000 CE), i.e. the
- * deepest the library can reach once every `.se1` file is installed.
+ * Bootstrap until `GET /meta/capabilities` arrives. Functions below read the
+ * live copy (`getPatroLimits`); do not treat these constants as the host's
+ * installed ephemeris window.
  */
 export const PATRO_SIGNED_YEAR_MIN = -13202;
 export const PATRO_SIGNED_YEAR_MAX = 17248;
-
-/**
- * What the server's installed `.se1` set can actually compute — mirrors
- * `PATRO_EPHEMERIS_SIGNED_MIN/MAX` in engine/vedic/patro_year_axis.py. Outside
- * this the API answers 400 with an "install more .se1" message, so the UI should
- * not offer those years. Keep both files in step when ephemeris files change.
- */
-export const PATRO_EPHEMERIS_SIGNED_MIN = -13201; // BBS 13201 ≈ 13201 BCE
-export const PATRO_EPHEMERIS_SIGNED_MAX = 17247; // BS 17247 ≈ AD 17191 CE
-
-/** Retained aliases — both gates are the same ephemeris window now. */
+export const PATRO_EPHEMERIS_SIGNED_MIN = -13201;
+export const PATRO_EPHEMERIS_SIGNED_MAX = 17247;
 export const PATRO_SANKRANTI_SIGNED_MIN = PATRO_EPHEMERIS_SIGNED_MIN;
 export const PATRO_PANCHANGA_SIGNED_MIN = PATRO_EPHEMERIS_SIGNED_MIN;
-
-/** MoHA / lunar festival rules — same floor as `BS_PANCHANGA_SIGNED_MIN` on the API. */
 export const BS_FESTIVAL_STACK_MIN_YEAR = 60;
-
-/** Positive BBS year bounds in share URLs (`era=bbs&year=…`). */
 export const BBS_URL_YEAR_MIN = 1;
 export const BBS_URL_YEAR_MAX = -PATRO_EPHEMERIS_SIGNED_MIN;
-
-/** Gregorian browse pickers — mirror ``AD_YEAR_*`` / ``BC_YEAR_*`` on the API. */
 export const PATRO_AD_BROWSE_YEAR_MIN = 1;
 export const PATRO_AD_BROWSE_YEAR_MAX = 17191;
 export const PATRO_BC_BROWSE_YEAR_MIN = 1;
 export const PATRO_BC_BROWSE_YEAR_MAX = BBS_URL_YEAR_MAX;
 
+export type PatroLiveLimits = {
+  signedYearMin: number;
+  signedYearMax: number;
+  ephemerisSignedMin: number;
+  ephemerisSignedMax: number;
+  adBrowseYearMin: number;
+  adBrowseYearMax: number;
+  bcBrowseYearMin: number;
+  bcBrowseYearMax: number;
+  bbsUrlYearMax: number;
+  festivalStackMinYear: number;
+};
+
+let live: PatroLiveLimits = {
+  signedYearMin: PATRO_SIGNED_YEAR_MIN,
+  signedYearMax: PATRO_SIGNED_YEAR_MAX,
+  ephemerisSignedMin: PATRO_EPHEMERIS_SIGNED_MIN,
+  ephemerisSignedMax: PATRO_EPHEMERIS_SIGNED_MAX,
+  adBrowseYearMin: PATRO_AD_BROWSE_YEAR_MIN,
+  adBrowseYearMax: PATRO_AD_BROWSE_YEAR_MAX,
+  bcBrowseYearMin: PATRO_BC_BROWSE_YEAR_MIN,
+  bcBrowseYearMax: PATRO_BC_BROWSE_YEAR_MAX,
+  bbsUrlYearMax: BBS_URL_YEAR_MAX,
+  festivalStackMinYear: BS_FESTIVAL_STACK_MIN_YEAR,
+};
+
+export function getPatroLimits(): PatroLiveLimits {
+  return live;
+}
+
+/** Apply host-owned bounds from `/meta/capabilities` or a month `limits` block. */
+export function applyPatroApiLimits(c: {
+  signed_year_min?: number;
+  signed_year_max?: number;
+  ephemeris_signed_min?: number;
+  ephemeris_signed_max?: number;
+  ad_year_min?: number;
+  ad_year_max?: number;
+  bc_year_min?: number;
+  bc_year_max?: number;
+  bbs_url_year_max?: number;
+  festival_stack_min_year?: number;
+}): void {
+  live = {
+    signedYearMin: c.signed_year_min ?? live.signedYearMin,
+    signedYearMax: c.signed_year_max ?? live.signedYearMax,
+    ephemerisSignedMin: c.ephemeris_signed_min ?? live.ephemerisSignedMin,
+    ephemerisSignedMax: c.ephemeris_signed_max ?? live.ephemerisSignedMax,
+    adBrowseYearMin: c.ad_year_min ?? live.adBrowseYearMin,
+    adBrowseYearMax: c.ad_year_max ?? live.adBrowseYearMax,
+    bcBrowseYearMin: c.bc_year_min ?? live.bcBrowseYearMin,
+    bcBrowseYearMax: c.bc_year_max ?? live.bcBrowseYearMax,
+    bbsUrlYearMax: c.bbs_url_year_max ?? live.bbsUrlYearMax,
+    festivalStackMinYear: c.festival_stack_min_year ?? live.festivalStackMinYear,
+  };
+}
+
 export function validatePatroSignedYear(year: number): void {
-  if (
-    year === 0 ||
-    year < PATRO_SIGNED_YEAR_MIN ||
-    year > PATRO_SIGNED_YEAR_MAX
-  ) {
+  const { signedYearMin, signedYearMax } = live;
+  if (year === 0 || year < signedYearMin || year > signedYearMax) {
     throw new Error(
-      `Patro year must be ${PATRO_SIGNED_YEAR_MIN}..-1 or 1..${PATRO_SIGNED_YEAR_MAX} (0 invalid)`,
+      `Patro year must be ${signedYearMin}..-1 or 1..${signedYearMax} (0 invalid)`,
     );
   }
 }
@@ -82,7 +121,7 @@ export function signedFromBbs(bbs: number): number {
 
 export function clampPatroSignedYear(year: number): number {
   if (year === 0) return year < 0 ? -1 : 1;
-  return Math.min(Math.max(year, PATRO_SIGNED_YEAR_MIN), PATRO_SIGNED_YEAR_MAX);
+  return Math.min(Math.max(year, live.signedYearMin), live.signedYearMax);
 }
 
 /** Step by one on the signed axis (skips invalid year 0). */
@@ -96,8 +135,8 @@ export function stepPatroSignedYear(year: number, delta: -1 | 1): number {
 export function patroYearWithinEphemeris(signed: number): boolean {
   return (
     signed !== 0 &&
-    signed >= PATRO_EPHEMERIS_SIGNED_MIN &&
-    signed <= PATRO_EPHEMERIS_SIGNED_MAX
+    signed >= live.ephemerisSignedMin &&
+    signed <= live.ephemerisSignedMax
   );
 }
 
@@ -110,30 +149,30 @@ export function signedPatroYearFromBrowse(era: Era, browseYear: number): number 
 /** Ephemeris window check for positive browse URL years. */
 export function patroBrowseYearWithinEphemeris(era: Era, browseYear: number): boolean {
   if (era === "ad") {
-    return browseYear >= PATRO_AD_BROWSE_YEAR_MIN && browseYear <= PATRO_AD_BROWSE_YEAR_MAX;
+    return browseYear >= live.adBrowseYearMin && browseYear <= live.adBrowseYearMax;
   }
   if (era === "bc") {
-    return browseYear >= PATRO_BC_BROWSE_YEAR_MIN && browseYear <= PATRO_BC_BROWSE_YEAR_MAX;
+    return browseYear >= live.bcBrowseYearMin && browseYear <= live.bcBrowseYearMax;
   }
   return patroYearWithinEphemeris(signedPatroYearFromBrowse(era, browseYear));
 }
 
 /** Max positive year in the year picker for the active browse era. */
 export function maxBrowseYearForEra(era: Era): number | undefined {
-  if (era === "bs") return PATRO_EPHEMERIS_SIGNED_MAX;
-  if (era === "bbs") return BBS_URL_YEAR_MAX;
-  if (era === "ad") return PATRO_AD_BROWSE_YEAR_MAX;
-  if (era === "bc") return PATRO_BC_BROWSE_YEAR_MAX;
+  if (era === "bs") return live.ephemerisSignedMax;
+  if (era === "bbs") return live.bbsUrlYearMax;
+  if (era === "ad") return live.adBrowseYearMax;
+  if (era === "bc") return live.bcBrowseYearMax;
   return undefined;
 }
 
 /** Whether `year` is allowed while `era` is selected (picker + URL, no era flip). */
 export function isValidBrowseYear(era: Era, year: number): boolean {
   if (!Number.isFinite(year) || year < 1) return false;
-  if (era === "bs") return year <= PATRO_EPHEMERIS_SIGNED_MAX;
-  if (era === "bbs") return year <= BBS_URL_YEAR_MAX;
-  if (era === "ad") return year <= PATRO_AD_BROWSE_YEAR_MAX;
-  if (era === "bc") return year <= PATRO_BC_BROWSE_YEAR_MAX;
+  if (era === "bs") return year <= live.ephemerisSignedMax;
+  if (era === "bbs") return year <= live.bbsUrlYearMax;
+  if (era === "ad") return year <= live.adBrowseYearMax;
+  if (era === "bc") return year <= live.bcBrowseYearMax;
   return true;
 }
 
