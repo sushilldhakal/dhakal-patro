@@ -154,7 +154,6 @@ const VEDIC_LATIN: Record<string, string> = {
   Aditi: "Aditi",
   Pollux: "Diti Soma Chandra",
   Castor: "Aditi Aditya",
-  Ashvinau: "Ashvinau Asvinau Punarvasu",
   Gemini: "Mithuna Mithuna Mandala",
 };
 
@@ -166,7 +165,6 @@ const VEDIC_ALIASES: { matchNe: string; ne: string; en: string; hintEn: string }
   { matchNe: "अदिति", ne: "आदित्य", en: "Aditya", hintEn: "Castor" },
   { matchNe: "अदिति", ne: "मिथुनस्य २", en: "Mithunasya 2", hintEn: "Castor" },
   { matchNe: "मिथुन", ne: "मिथुन मण्डल", en: "Mithuna Mandala", hintEn: "Gemini" },
-  { matchNe: "अश्विनौ", ne: "पुनर्वसु", en: "Punarvasu", hintEn: "Castor & Pollux" },
 ];
 
 /** Live server positions → search/aim targets. Ids are stable for one payload. */

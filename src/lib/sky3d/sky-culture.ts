@@ -18,6 +18,15 @@
  * even its Western proper name, so a rashi figure never mixes "Achernar"
  * into an otherwise Sanskrit sky — same convention as an unnamed नक्षत्र
  * companion.
+ *
+ * A handful of these stars — Aldebaran, Regulus, Spica, Antares, Castor,
+ * Pollux — are *also* a नक्षत्र's own योगतारा (रोहिणी, मघा, चित्रा, ज्येष्ठा,
+ * अदिति, दिति), already labelled by [[nakshatra-stars]] on the exact same
+ * point. Their `ne`/`en`/`pronounce` are left off here on purpose — a
+ * second, independent label on a star two layers already draw reads as a
+ * third star that never existed. The member still carries its real
+ * position, so the rashi's own lines still reach it; it just is not asked
+ * to speak for itself a second time.
  */
 
 /** One catalogued star, keyed by its Hipparcos number. */
@@ -28,7 +37,8 @@ export type SkyCultureStarData = {
   dec: number;
   /** Apparent visual magnitude. */
   mag: number;
-  /** Devanagari name — only set when the file names this star individually. */
+  /** Devanagari name — only set when the file names this star individually
+   *  *and* no other layer already labels the same point. */
   ne?: string;
   /** IAST transliteration of {@link ne}. */
   pronounce?: string;
@@ -91,7 +101,7 @@ export const SKY_CULTURE_STARS: Record<number, SkyCultureStarData> = {
   20889: { ra: 67.1541, dec: 19.1804, mag: 3.53 },
   20894: { ra: 67.1656, dec: 15.8709, mag: 3.4 },
   21393: { ra: 68.8877, dec: -30.5623, mag: 3.81 },
-  21421: { ra: 68.9802, dec: 16.5093, mag: 0.87, ne: "रोहिणी", pronounce: "Rohiṇī", en: "Red" },
+  21421: { ra: 68.9802, dec: 16.5093, mag: 0.87 },
   21444: { ra: 69.0798, dec: -3.3525, mag: 3.93 },
   21594: { ra: 69.5451, dec: -14.304, mag: 3.86 },
   21881: { ra: 70.5613, dec: 22.9569, mag: 4.27 },
@@ -140,10 +150,10 @@ export const SKY_CULTURE_STARS: Record<number, SkyCultureStarData> = {
   35550: { ra: 110.0307, dec: 21.9823, mag: 3.5 },
   35904: { ra: 111.0238, dec: -29.3031, mag: 2.45 },
   36046: { ra: 111.4317, dec: 27.7981, mag: 3.78 },
-  36850: { ra: 113.6495, dec: 31.8883, mag: 1.58, ne: "अदितिः", pronounce: "Aditi", en: "Uncut (Kashyapa's wife)" },
+  36850: { ra: 113.6495, dec: 31.8883, mag: 1.58 },
   36962: { ra: 113.9806, dec: 26.8957, mag: 4.06 },
   37740: { ra: 116.1119, dec: 24.398, mag: 3.57 },
-  37826: { ra: 116.3292, dec: 28.0262, mag: 1.16, ne: "दितिः", pronounce: "Diti", en: "Cut (Kashyapa's wife)" },
+  37826: { ra: 116.3292, dec: 28.0262, mag: 1.16 },
   40526: { ra: 124.1288, dec: 9.1855, mag: 3.53 },
   40843: { ra: 125.0161, dec: 27.2177, mag: 5.13 },
   41704: { ra: 127.5665, dec: 60.7182, mag: 3.35 },
@@ -161,7 +171,7 @@ export const SKY_CULTURE_STARS: Record<number, SkyCultureStarData> = {
   48402: { ra: 148.0265, dec: 54.0643, mag: 4.55 },
   48455: { ra: 148.191, dec: 26.007, mag: 3.88 },
   49583: { ra: 151.8331, dec: 16.7627, mag: 3.48 },
-  49669: { ra: 152.093, dec: 11.9672, mag: 1.36, ne: "मघा", pronounce: "Maghā", en: "Bountiful one" },
+  49669: { ra: 152.093, dec: 11.9672, mag: 1.36 },
   50335: { ra: 154.1726, dec: 23.4173, mag: 3.43 },
   50372: { ra: 154.2743, dec: 42.9144, mag: 3.45 },
   50583: { ra: 154.9931, dec: 19.8415, mag: 2.01 },
@@ -190,7 +200,7 @@ export const SKY_CULTURE_STARS: Record<number, SkyCultureStarData> = {
   63090: { ra: 193.9009, dec: 3.3975, mag: 3.39 },
   63608: { ra: 195.5442, dec: 10.9591, mag: 2.85 },
   65378: { ra: 200.9812, dec: 54.9254, mag: 2.23, ne: "वसिष्ठः", pronounce: "Vaśisṭha", en: "Vaśisṭha" },
-  65474: { ra: 201.2982, dec: -11.1613, mag: 0.98, ne: "चित्रा", pronounce: "Chitrā", en: "Spectacular" },
+  65474: { ra: 201.2982, dec: -11.1613, mag: 0.98 },
   66249: { ra: 203.6733, dec: -0.5958, mag: 3.38 },
   67301: { ra: 206.8853, dec: 49.3133, mag: 1.85, ne: "मरीचिः", pronounce: "Mārīchi", en: "Mārīchi" },
   68520: { ra: 210.4116, dec: 1.5445, mag: 4.23 },
@@ -215,7 +225,7 @@ export const SKY_CULTURE_STARS: Record<number, SkyCultureStarData> = {
   78820: { ra: 241.3593, dec: -19.8055, mag: 2.56 },
   80112: { ra: 245.2971, dec: -25.5928, mag: 2.9 },
   80331: { ra: 245.9979, dec: 61.5142, mag: 2.73 },
-  80763: { ra: 247.3519, dec: -26.432, mag: 1.06, ne: "ज्येष्ठा", pronounce: "jyeṣṭhā", en: "Eldest" },
+  80763: { ra: 247.3519, dec: -26.432, mag: 1.06 },
   81266: { ra: 248.9706, dec: -28.216, mag: 2.82 },
   82396: { ra: 252.5412, dec: -34.2932, mag: 2.29 },
   82545: { ra: 253.0839, dec: -38.0175, mag: 3.56 },

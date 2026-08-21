@@ -1229,6 +1229,7 @@ export function AakashGocharScene({
   const ambientRef = useRef<THREE.AmbientLight | null>(null);
   const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
   const starsRef = useRef<THREE.Mesh | null>(null);
+  const milkyWayMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const groundRef = useRef<THREE.Group | null>(null);
   const groundMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const horizonGroupRef = useRef<THREE.Group | null>(null);
@@ -2763,6 +2764,15 @@ export function AakashGocharScene({
        with the नक्षत्र itself, so both together would repeat the same text. */
     const closeField = fovForZoom(mode, view.current.distance);
     const close = space ? view.current.distance <= 32 : closeField < 24;
+
+    /* The Milky Way panorama fades out once the lens is tighter than a
+       normal wide-open sky — see the doc comment on its own material. Full
+       through the whole range अन्तरिक्ष's fixed 46° sits in and क्षितिज's
+       26° home opens at; gone by 8°, well before the texture's own texels
+       start showing as a blur. */
+    if (milkyWayMatRef.current) {
+      milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - 8) / (26 - 8)));
+    }
     if (collect && zodiac && toggles.constellations && !close) {
       const precession = precessionSinceJ2000(dtDays);
       for (const [nak, indices] of starField.byNakshatra) {
@@ -3444,10 +3454,23 @@ export function AakashGocharScene({
 
             skyBoost multiplies the sampled texel — a light lift over the
             panorama's own exposure, not a rescue of a near-black
-            placeholder any more. */}
+            placeholder any more.
+
+            `transparent` is for the fade only — depth is still off above, so
+            this never competes with anything for draw order. The panorama is
+            2048×1024 over the whole sphere: fine at the field it was framed
+            for, but a few degrees of that is a handful of texels blown up
+            into a soft blur once a press has pulled in on one star or
+            planet. Rather than ship a sharper file, the fade below just
+            takes it out of the picture before it gets that close — the same
+            call a real dark-sky photo would make, since the eye stops
+            reading it as the Milky Way and starts reading it as one smudged
+            star's neighbourhood at that magnification anyway. */}
         <meshBasicMaterial
+          ref={milkyWayMatRef}
           map={milkyWay}
           side={THREE.BackSide}
+          transparent
           depthWrite={false}
           depthTest={false}
           color={skyBoost}
