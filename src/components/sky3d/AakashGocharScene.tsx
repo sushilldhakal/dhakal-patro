@@ -1661,17 +1661,25 @@ export function AakashGocharScene({
     const faint: number[] = [];
     stars.forEach((s, i) => {
       if (s.mag <= 2) bright.push(i);
-      else if (s.mag <= 4) mid.push(i);
+      else if (s.mag <= 4.5) mid.push(i);
       else faint.push(i);
     });
     /* Stellarium never lets a star's radius fall below its own floor either
        (StelSkyDrawer::computeRCMag: under 1.2px it stops shrinking the dot
        and dims its luminance instead) — a sub-pixel point is one the
-       renderer may drop or alias into a flicker, not a fainter star. */
-    const sizeOpts = { faintest: 5.5, brightest: -1.5, minPx: 1, maxPx: 3 };
+       renderer may drop or alias into a flicker, not a fainter star.
+
+       Faintest raised from 5.5 to 7.5: at 5.5 this layer topped out around
+       2,900 stars, most of them nowhere near the galactic plane — nothing
+       left to fill the band itself in once the panorama fades on zoom, which
+       is what made it read as a photo rather than a sky dense with actual
+       points. 7.5 is a quarter of Stellarium's own default catalogue depth
+       and about 25,500 stars, dense enough for the plane to look like the
+       plane rather than a scatter of named dots on an empty background. */
+    const sizeOpts = { faintest: 7.5, brightest: -1.5, minPx: 1, maxPx: 3 };
     const brightPoints = makeStarPoints(bright.length, "#eef4ff", 2.6, 0.8);
-    const midPoints = makeStarPoints(mid.length, "#d7e2f5", 1.6, 0.55);
-    const faintPoints = makeStarPoints(faint.length, "#aebedb", 0.9, 0.32);
+    const midPoints = makeStarPoints(mid.length, "#d7e2f5", 1.6, 0.5);
+    const faintPoints = makeStarPoints(faint.length, "#aebedb", 0.9, 0.22);
     sizeStarsByMagnitude(brightPoints, bright.map((i) => stars[i].mag), sizeOpts);
     sizeStarsByMagnitude(midPoints, mid.map((i) => stars[i].mag), sizeOpts);
     sizeStarsByMagnitude(faintPoints, faint.map((i) => stars[i].mag), sizeOpts);
