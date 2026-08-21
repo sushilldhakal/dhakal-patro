@@ -17,7 +17,6 @@ const KEYS = [
   "jupiter",
   "saturn",
   "saturnring",
-  "background",
 ] as const;
 
 export type SkyTextureKey = (typeof KEYS)[number];

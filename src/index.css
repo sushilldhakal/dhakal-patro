@@ -558,6 +558,48 @@
   border-color: rgba(0, 0, 0, 0.6);
 }
 
+/* ── Sky time-rate slider — Aakash Gochar transport row + time sheet ── */
+.sky-time-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  touch-action: none;
+}
+.sky-time-slider:focus {
+  outline: none;
+}
+.sky-time-slider--thin {
+  height: 22px;
+}
+.sky-time-slider--thin::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: #5c5c5e;
+}
+.sky-time-slider--thin::-moz-range-track {
+  height: 3px;
+  border-radius: 999px;
+  background: #5c5c5e;
+}
+.sky-time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7.5px;
+  border-radius: 50%;
+  border: none;
+  background: #e8eef8;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.sky-time-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: #e8eef8;
+}
+
 /* ── Avakahada Chakra wheel ───────────────────────────────── */
 .av-wheel {
   --av-gana-dev: color-mix(in srgb, var(--brand-green) 38%, #0b181a);

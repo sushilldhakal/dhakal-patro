@@ -63,6 +63,70 @@ export const PLANET_ELEMENTS = {
 
 export type PlanetKey = keyof typeof PLANET_ELEMENTS;
 
+/**
+ * Uranus, Neptune, Pluto — J2000 mean elements, same table and same
+ * precision as {@link PLANET_ELEMENTS}. Deliberately *not* part of
+ * {@link GrahaKey}: the navagraha are exactly the nine the API computes
+ * dignities, relations and DMS for, and these three have none of that —
+ * they exist only so the sky scene has somewhere honest to draw them.
+ */
+export const OUTER_PLANET_ELEMENTS = {
+  uranus: {
+    a: 19.18916464,
+    e: 0.04725744,
+    i: 0.77263783,
+    node: 74.01692503,
+    peri: 170.9542763,
+    L0: 142.238514,
+    periodDays: 30685,
+  },
+  neptune: {
+    a: 30.06992276,
+    e: 0.00859048,
+    i: 1.77004347,
+    node: 131.78422574,
+    peri: 44.96476227,
+    L0: 256.228833,
+    periodDays: 60190,
+  },
+  pluto: {
+    a: 39.48211675,
+    e: 0.2488273,
+    i: 17.14001206,
+    node: 110.30393684,
+    peri: 224.06891629,
+    L0: 238.92903833,
+    periodDays: 90560,
+  },
+} satisfies Record<string, OrbitalElements>;
+
+export type OuterPlanetKey = keyof typeof OUTER_PLANET_ELEMENTS;
+
+/**
+ * Sidereal ecliptic longitude/latitude/distance for a decorative outer
+ * planet — {@link geocentricPointAt}'s counterpart for a body outside the
+ * navagraha the API knows about. No calibration, no speed/retrograde: these
+ * three are never selected, followed, or read as a chart value, only drawn.
+ */
+export function outerPlanetAt(
+  key: OuterPlanetKey,
+  dt: number,
+): { longitude: number; latitude: number; distanceAu: number } {
+  const earth = heliocentric(PLANET_ELEMENTS.earth, dt);
+  const body = heliocentric(OUTER_PLANET_ELEMENTS[key], dt);
+  const dx = body.x - earth.x;
+  const dy = body.y - earth.y;
+  const dz = body.z - earth.z;
+  const r = Math.hypot(dx, dy, dz);
+  const lon = normalizeDeg(Math.atan2(dy, dx) / RAD);
+  const lat = (r === 0 ? 0 : Math.asin(dz / r)) / RAD;
+  return {
+    longitude: normalizeDeg(lon - ayanamsa(dt)),
+    latitude: lat,
+    distanceAu: r,
+  };
+}
+
 /** Rectangular ecliptic coordinates, AU. */
 export type eclipticXYZ = { x: number; y: number; z: number };
 

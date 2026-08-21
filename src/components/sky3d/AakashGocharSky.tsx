@@ -61,6 +61,7 @@ import {
   TIME_STEPS,
 } from "@/lib/sky3d/time-steps";
 import { SkyTimeSheet } from "@/components/sky3d/SkyTimeSheet";
+import { RATE_NOTCHES, rateToSlider, sliderToRate } from "@/lib/sky3d/rate-slider";
 import { SkySearch } from "@/components/sky3d/SkySearch";
 import { vedicStarTargets, type SkyTarget } from "@/lib/sky3d/sky-catalogue";
 import {
@@ -101,6 +102,7 @@ import {
   type ViewState,
 } from "@/components/sky3d/AakashGocharScene";
 import { CompassControl } from "@/components/sky3d/CompassControl";
+import compassNeedle from "@/assets/compass.svg?raw";
 import { useDeviceOrientation } from "@/lib/sky3d/device-orientation";
 
 const Scene = memo(AakashGocharScene);
@@ -466,36 +468,64 @@ export function AakashGocharSky({
    * reads.
    */
   const [compassHeading, setCompassHeading] = useState(0);
+  /** The back camera is actually live behind the sky. Always false unless {@link gyroMode} is too. */
   const [arMode, setArMode] = useState(false);
+  /** The device's own tilt/turn is driving `view.current.yaw`/`pitch` — with or without the camera on. */
+  const [gyroMode, setGyroMode] = useState(false);
+  /** "फोन माथि उठाउनुहोस्" — up for the fixed window between the tap that asks for the gyro and it actually taking over. */
+  const [gyroPrompt, setGyroPrompt] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const deviceOrientation = useDeviceOrientation(arMode);
+  const deviceOrientation = useDeviceOrientation(gyroMode || arMode);
+  const gyroPromptTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(gyroPromptTimer.current), []);
 
   const onCompassHeadingChange = useCallback((heading: number) => {
     setCompassHeading(heading);
-    view.current.yaw = heading * DEG_TO_RAD;
+    // The horizon camera's own yaw runs opposite true azimuth (see the
+    // `cam.rotation.set` derivation in AakashGocharScene) — negate here so
+    // dragging the dial to W actually turns the camera to face west instead
+    // of its mirror image, east.
+    view.current.yaw = -heading * DEG_TO_RAD;
   }, []);
 
   const stopCameraStream = useCallback((stream: MediaStream | null) => {
     stream?.getTracks().forEach((track) => track.stop());
   }, []);
 
-  const toggleArMode = useCallback(() => {
-    if (arMode) {
-      setArMode(false);
-      // The effect below stops this stream's tracks once `cameraStream`
-      // actually changes — setting it here just triggers that.
-      setCameraStream(null);
-      view.current.roll = 0;
-      return;
-    }
+  /** The reader's own drag — on the dial or the sky itself — taking the
+      wheel back from whichever sensor was driving it. */
+  const stopSensorMode = useCallback(() => {
+    setGyroMode(false);
+    setArMode(false);
+    setCameraStream(null);
+    view.current.roll = 0;
+    window.clearTimeout(gyroPromptTimer.current);
+    setGyroPrompt(false);
+  }, []);
+
+  /** A tap on the dial while neither sensor is running: ask the reader to
+      raise the phone, then switch the dial over to the device's own tilt
+      once they've had the window to do it. `requestPermission` is fired
+      synchronously from this same tap, not from an effect — iOS only
+      honours it called inside a user-gesture handler's own call stack; see
+      the module doc comment on `useDeviceOrientation`. */
+  const requestGyro = useCallback(() => {
     setMode("horizon");
-    // Fired directly from the compass dial's own double-tap/double-click, not
-    // from an effect — iOS only honours `requestPermission()` when it is
-    // called inside a user-gesture handler's own call stack. See the module
-    // doc comment on `useDeviceOrientation`.
+    setGyroPrompt(true);
+    void deviceOrientation.requestPermission();
+    window.clearTimeout(gyroPromptTimer.current);
+    gyroPromptTimer.current = window.setTimeout(() => {
+      setGyroPrompt(false);
+      setGyroMode(true);
+    }, 3000);
+  }, [deviceOrientation]);
+
+  /** The dial's centre glyph, tapped once the gyro has already turned it
+      into a lens: opens the back camera without touching the tilt that's
+      already driving the view. */
+  const requestCamera = useCallback(() => {
     void (async () => {
-      await deviceOrientation.requestPermission();
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" },
@@ -504,12 +534,22 @@ export function AakashGocharSky({
         setCameraStream(stream);
         setArMode(true);
       } catch {
-        // Camera permission denied, or no back camera to ask for (a laptop) —
-        // AR mode needs the passthrough to mean anything, so it stays off
-        // rather than opening onto a black rectangle.
+        // Permission denied, or no back camera to ask for (a laptop) — the
+        // dial stays a gyro-only compass rather than opening onto a black
+        // rectangle.
       }
     })();
-  }, [arMode, deviceOrientation]);
+  }, []);
+
+  /** What a clean tap on the dial means depends entirely on which sensor,
+      if any, is already live — see {@link CompassControl}'s own doc comment. */
+  const onCompassTap = useCallback(() => {
+    if (gyroMode && !arMode) {
+      requestCamera();
+      return;
+    }
+    if (!gyroMode && !arMode) requestGyro();
+  }, [gyroMode, arMode, requestCamera, requestGyro]);
 
   // Release the camera hardware whenever the stream this component is
   // holding changes or the sky unmounts — a stream nobody stopped keeps the
@@ -522,14 +562,14 @@ export function AakashGocharSky({
     if (videoRef.current) videoRef.current.srcObject = cameraStream;
   }, [cameraStream]);
 
-  // The phone's own compass and tilt take the wheel while AR mode is on — the
-  // same `view.current` the manual drag gesture writes to the rest of the
+  // The phone's own compass and tilt take the wheel while a sensor is live —
+  // the same `view.current` the manual drag gesture writes to the rest of the
   // time, so the scene's camera code never has to know which one is live.
   // `onSample` below picks the new yaw back up for the dial. Left null (no
   // sensor data yet, or permission denied) simply leaves the last view alone,
   // so the reader can still drag the dial by hand rather than being frozen.
   useEffect(() => {
-    if (!arMode) return;
+    if (!gyroMode && !arMode) return;
     if (deviceOrientation.yaw != null) view.current.yaw = deviceOrientation.yaw;
     if (deviceOrientation.pitch != null) {
       // Same clamp the manual drag gesture uses in this view — short of true
@@ -537,7 +577,7 @@ export function AakashGocharSky({
       view.current.pitch = Math.min(1.45, Math.max(-1.45, deviceOrientation.pitch));
     }
     view.current.roll = deviceOrientation.roll ?? 0;
-  }, [arMode, deviceOrientation.yaw, deviceOrientation.pitch, deviceOrientation.roll]);
+  }, [gyroMode, arMode, deviceOrientation.yaw, deviceOrientation.pitch, deviceOrientation.roll]);
 
   /** Camera passthrough only once `getUserMedia` actually resolved — AR mode
       alone would otherwise leave a black rectangle where the lens should be. */
@@ -576,6 +616,12 @@ export function AakashGocharSky({
   const controlled = selectedKeyProp !== undefined;
   const selectedKey = controlled ? selectedKeyProp : ownSelectedKey;
   const [sample, setSample] = useState<SkySample | null>(null);
+  /* क्षितिज's own FOV readout — shown a moment after each real change in
+     zoom, not left standing. */
+  const [fovBadge, setFovBadge] = useState(false);
+  const lastFov = useRef<number | null>(null);
+  const fovHideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(fovHideTimer.current), []);
   /* The sky opens on four: the degree cage, the names, the राशि belt and the
      line through the place you are watching from. Everything else — the
      नक्षत्र and महिना rings, the figures, the pole stars, the तिल्ट, the
@@ -588,6 +634,7 @@ export function AakashGocharSky({
     poleStars: true,
     vedicStars: true,
     constellations: true,
+    skyCulture: true,
     primeMeridian: true,
     nakshatraBelt: false,
     monthRing: false,
@@ -636,6 +683,10 @@ export function AakashGocharSky({
   const [skyAim, setSkyAim] = useState<{ lon: number; lat: number; nonce: number } | null>(null);
   /** What the reticle is currently sitting on, for the caption under it. */
   const [aimed, setAimed] = useState<SkyTarget | null>(null);
+  /** Whether the camera actually centred on {@link aimed} — a follow/search
+      pick, not a bare select — which is the only time the fixed reticle
+      belongs on screen; a select-only pick leaves the camera where it was. */
+  const [aimedCentered, setAimedCentered] = useState(false);
   const { user } = useAuth();
   const signedIn = !!user;
 
@@ -706,6 +757,17 @@ export function AakashGocharSky({
 
   const togglePlay = useCallback(() => setPlaying((p) => !p), []);
 
+  /** Shared by the time-sheet's rate slider and the desktop transport row. */
+  const applyTimeRate = useCallback((rate: number) => {
+    if (rate === 0) {
+      setPlaying(false);
+      return;
+    }
+    setStepIndex(nearestStepIndex(rate));
+    setReverse(rate < 0);
+    setPlaying(true);
+  }, []);
+
   /* ── gestures ─────────────────────────────────────────────────────────── */
 
   /* The handlers are built once, so they read the live mode from a ref. */
@@ -713,11 +775,14 @@ export function AakashGocharSky({
   useEffect(() => {
     modeRef.current = mode;
   }, [mode]);
-  /** Same reasoning: the phone's own sensors own the camera in AR mode. */
-  const arModeRef = useRef(arMode);
+  /** Same reasoning: read fresh inside the imperative listeners below, which
+      close over this once and are not rebuilt on every render. Includes the
+      pending prompt too — a drag started while it's still up should cancel
+      the gyro that's about to take over, not just the ones already live. */
+  const sensorModeRef = useRef(gyroMode || arMode || gyroPrompt);
   useEffect(() => {
-    arModeRef.current = arMode;
-  }, [arMode]);
+    sensorModeRef.current = gyroMode || arMode || gyroPrompt;
+  }, [gyroMode, arMode, gyroPrompt]);
 
   /**
    * Live pointers on the canvas, by pointerId. One drags the sky; two pinch it.
@@ -782,7 +847,6 @@ export function AakashGocharSky({
     if (!el) return;
 
     const onDown = (e: PointerEvent) => {
-      if (arModeRef.current) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest?.(CONTROL_SELECTOR)) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -823,10 +887,18 @@ export function AakashGocharSky({
     };
 
     const onMove = (e: PointerEvent) => {
-      if (arModeRef.current) return;
       if (!pointers.current.has(e.pointerId)) return;
       if (e.cancelable) e.preventDefault();
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
+
+      /* A real drag starting while a sensor is driving the view is the
+         reader taking the wheel back — dropped the instant this gesture
+         actually turns into a drag rather than staying a tap, then the same
+         move goes on to pan the sky manually below. */
+      const wasDragging = dragging.current;
+      const cancelSensorIfDragging = () => {
+        if (!wasDragging && dragging.current && sensorModeRef.current) stopSensorMode();
+      };
 
       const touches = [...pointers.current.values()].filter((p) => p.type === "touch");
       if (touches.length >= 2) {
@@ -839,6 +911,7 @@ export function AakashGocharSky({
           modeRef.current,
         );
         dragging.current = true;
+        cancelSensorIfDragging();
         return;
       }
 
@@ -851,6 +924,7 @@ export function AakashGocharSky({
         return;
       }
       dragging.current = true;
+      cancelSensorIfDragging();
 
       if (mode === "horizon") {
         /* Grab the sky: one screen-height of drag is one vertical field, so a
@@ -896,7 +970,7 @@ export function AakashGocharSky({
       window.removeEventListener("pointerup", onUp, { capture: true });
       window.removeEventListener("pointercancel", onUp, { capture: true });
     };
-  }, [fullscreen, reanchor]);
+  }, [fullscreen, reanchor, stopSensorMode]);
 
   /*
    * Touch drags belong to the sky, and have to say so to the browser.
@@ -969,9 +1043,23 @@ export function AakashGocharSky({
     // written by the canvas drag, the view chips, a search pick's one-shot
     // aim, or (in AR mode) the device's own sensors. The dial just mirrors
     // whichever of those moved it most recently, sampled at the same rate
-    // everything else reads the scene at.
-    setCompassHeading(normalizeDeg(view.current.yaw / DEG_TO_RAD));
-  }, []);
+    // everything else reads the scene at. Negated for the same reason
+    // {@link onCompassHeadingChange} negates going the other way — camera
+    // yaw and true azimuth run opposite each other.
+    setCompassHeading(normalizeDeg(-view.current.yaw / DEG_TO_RAD));
+    // A brief FOV readout while क्षितिज actually zooms — a nicety only that
+    // view has a field of view worth naming, and only worth showing while
+    // the number is actually changing, not sitting on screen permanently.
+    if (mode === "horizon") {
+      const fov = fovForZoom("horizon", next.zoomDistance);
+      if (lastFov.current != null && Math.abs(fov - lastFov.current) > 0.05) {
+        setFovBadge(true);
+        window.clearTimeout(fovHideTimer.current);
+        fovHideTimer.current = window.setTimeout(() => setFovBadge(false), 1500);
+      }
+      lastFov.current = fov;
+    }
+  }, [mode]);
 
   /**
    * One press: mark it, nothing else.
@@ -1043,16 +1131,19 @@ export function AakashGocharSky({
   );
 
   /**
-   * A search result was chosen: put it in the middle and mark it.
+   * A search result was chosen, or a star was pressed twice: put it in the
+   * middle and mark it.
    *
    * Grahas go through the path that already exists — select, then ask to focus
    * — so the selection panel, the follow toggle and the graha's own card all
    * agree with what the camera is doing. Anything fixed is handed to the scene
-   * as a position instead. Either way it lands under the reticle.
+   * as a position instead. Either way it lands under the reticle, which is
+   * only drawn once something has actually been centred — see {@link aimedCentered}.
    */
   const pickTarget = useCallback(
     (target: SkyTarget) => {
       setAimed(target);
+      setAimedCentered(true);
       setRecentIds(pushRecent(target.id));
       if (target.at === "graha") {
         setSelected(target.graha);
@@ -1065,52 +1156,92 @@ export function AakashGocharSky({
     [askFocus, setSelected],
   );
 
+  /**
+   * One press: mark it where it already stands, camera untouched — the star
+   * equivalent of graha's {@link onSelect}. A named star already carries its
+   * own label in the sky (see `SkyLabels`), so there is nothing here for the
+   * reticle to draw; a वैदिक तारा gets its own in-scene crown instead (see
+   * `aimedId` in `AakashGocharScene`), which is why this never needs a
+   * screen-space marker of its own the way a centred pick does.
+   */
+  const selectTarget = useCallback((target: SkyTarget) => {
+    setAimed(target);
+    setAimedCentered(false);
+    setRecentIds(pushRecent(target.id));
+  }, []);
+
   const namedStars = useMemo(() => vedicStarTargets(vedicStars ?? []), [vedicStars]);
+
+  const starTarget = useCallback(
+    (star: VedicStarPosition, index: number): SkyTarget =>
+      namedStars[index] ?? {
+        id: `vedic:${index}`,
+        kind: "star",
+        ne: star.ne,
+        en: star.en,
+        hintNe: star.designation,
+        hintEn: star.designation,
+        at: "sky",
+        lon: star.lon,
+        lat: star.lat,
+      },
+    [namedStars],
+  );
 
   const onSelectStar = useCallback(
     (star: VedicStarPosition, index: number) => {
       setToggles((t) => (t.vedicStars ? t : { ...t, vedicStars: true }));
-      pickTarget(
-        namedStars[index] ?? {
-          id: `vedic:${index}`,
-          kind: "star",
-          ne: star.ne,
-          en: star.en,
-          hintNe: star.designation,
-          hintEn: star.designation,
-          at: "sky",
-          lon: star.lon,
-          lat: star.lat,
-        },
-      );
+      selectTarget(starTarget(star, index));
     },
-    [namedStars, pickTarget],
+    [starTarget, selectTarget],
+  );
+
+  const onFollowStar = useCallback(
+    (star: VedicStarPosition, index: number) => {
+      setToggles((t) => (t.vedicStars ? t : { ...t, vedicStars: true }));
+      pickTarget(starTarget(star, index));
+    },
+    [starTarget, pickTarget],
+  );
+
+  type SkyHit = {
+    id: string;
+    ne: string;
+    en: string;
+    lon: number;
+    lat: number;
+    hintNe?: string;
+    hintEn?: string;
+  };
+  const skyHitTarget = useCallback(
+    (hit: SkyHit): SkyTarget => ({
+      id: hit.id,
+      kind: "star",
+      ne: hit.ne,
+      en: hit.en,
+      hintNe: hit.hintNe,
+      hintEn: hit.hintEn,
+      at: "sky",
+      lon: hit.lon,
+      lat: hit.lat,
+    }),
+    [],
   );
 
   const onAimSky = useCallback(
-    (hit: {
-      id: string;
-      ne: string;
-      en: string;
-      lon: number;
-      lat: number;
-      hintNe?: string;
-      hintEn?: string;
-    }) => {
+    (hit: SkyHit) => {
       setToggles((t) => (t.constellations ? t : { ...t, constellations: true }));
-      pickTarget({
-        id: hit.id,
-        kind: "star",
-        ne: hit.ne,
-        en: hit.en,
-        hintNe: hit.hintNe,
-        hintEn: hit.hintEn,
-        at: "sky",
-        lon: hit.lon,
-        lat: hit.lat,
-      });
+      selectTarget(skyHitTarget(hit));
     },
-    [pickTarget],
+    [skyHitTarget, selectTarget],
+  );
+
+  const onFollowSky = useCallback(
+    (hit: SkyHit) => {
+      setToggles((t) => (t.constellations ? t : { ...t, constellations: true }));
+      pickTarget(skyHitTarget(hit));
+    },
+    [skyHitTarget, pickTarget],
   );
 
   /**
@@ -1626,7 +1757,9 @@ export function AakashGocharSky({
               onSelect={onSelect}
               onFollow={onFollow}
               onSelectStar={onSelectStar}
+              onFollowStar={onFollowStar}
               onAimSky={onAimSky}
+              onFollowSky={onFollowSky}
               onEmptyPress={onEmptyPress}
               onSelectObserver={toggleObserver}
               onSample={onSample}
@@ -1635,15 +1768,35 @@ export function AakashGocharSky({
           </Suspense>
         </Canvas>
 
-        {/* Bottom-centre, over the canvas: drag it to turn the sky,
-            double-click/double-tap for AR. See {@link CompassControl}. */}
+        {/* Bottom-centre, over the canvas: drag it to turn the sky, tap it
+            for the gyro, tap the lens it becomes for the camera. See
+            {@link CompassControl}. */}
         <CompassControl
           heading={compassHeading}
           onHeadingChange={onCompassHeadingChange}
-          arMode={arMode}
-          onToggleArMode={toggleArMode}
+          gyroMode={gyroMode}
+          cameraOn={arMode}
+          onTap={onCompassTap}
+          onManualDrag={stopSensorMode}
           visible={mode === "horizon"}
         />
+
+        {/* "फोन माथि उठाउनुहोस्" — the window between asking for the gyro and
+            it actually taking over. */}
+        {gyroPrompt ? (
+          <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-black/40">
+            <div className="flex flex-col items-center gap-3 px-6 text-center">
+              <span
+                aria-hidden
+                style={{ width: 56, height: 56, color: "#f4c542" }}
+                dangerouslySetInnerHTML={{ __html: compassNeedle }}
+              />
+              <p className="m-0 text-2xl font-extrabold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+                {pick("फोन माथि उठाउनुहोस्", "Point your device up")}
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {/* Labels ride over the canvas rather than in it — real Devanagari type,
             positioned from the scene's own projection of each anchor. */}
@@ -1675,6 +1828,16 @@ export function AakashGocharSky({
               }
             }}
           />
+        ) : null}
+
+        {/* क्षितिज's field of view — named only while it is actually moving,
+            same "flashes then fades" pattern as सङ्क्रान्ति above. Sits right
+            over the compass dial, the one other control down here, rather
+            than up with the HUD it has nothing to do with. */}
+        {mode === "horizon" && fovBadge && sample ? (
+          <div className="pointer-events-none absolute bottom-[88px] left-1/2 -translate-x-1/2 rounded-full border border-white/15 bg-black/60 px-3 py-1 text-xs font-bold text-white backdrop-blur">
+            {pick("दृश्य क्षेत्र", "FOV")} {digits(Math.round(fovForZoom("horizon", sample.zoomDistance)))}°
+          </div>
         ) : null}
 
         {/* HUD — the simulated instant, which drifts away from the nav once it runs. */}
@@ -1901,6 +2064,13 @@ export function AakashGocharSky({
                   onPress={() => setToggles((t) => ({ ...t, vedicStars: !t.vedicStars }))}
                 />
               ) : null}
+              {mode !== "space" ? (
+                <Chip
+                  active={toggles.skyCulture}
+                  label={pick("राशि आकृति", "Zodiac art")}
+                  onPress={() => setToggles((t) => ({ ...t, skyCulture: !t.skyCulture }))}
+                />
+              ) : null}
               {mode === "globe" ? (
                 <Chip
                   active={toggles.tilt}
@@ -1978,10 +2148,14 @@ export function AakashGocharSky({
           </div>
         ) : null}
 
-        {/* The reticle: what the camera has been aimed at is in the middle, and
-            this says so. Drawn as four ticks with the middle left open, so the
-            thing it marks is never covered by the mark. */}
-        {aimed ? (
+        {/* The reticle: what the camera has been *centred* on — a follow or a
+            search pick, never a bare select — is in the middle, and this says
+            so. Drawn as four ticks with the middle left open, so the thing it
+            marks is never covered by the mark. The name underneath is
+            skipped when the sky is already carrying that exact label on its
+            own (see `SkyLabels`) — showing it twice for the one thing you
+            just centred was the small text nobody asked to read again. */}
+        {aimed && aimedCentered ? (
           <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
             <div className="relative grid place-items-center">
               <svg viewBox="0 0 48 48" className="size-12 text-amber-300/80" aria-hidden>
@@ -1992,9 +2166,11 @@ export function AakashGocharSky({
                   <line x1="35" y1="24" x2="46" y2="24" />
                 </g>
               </svg>
-              <span className="absolute top-[calc(50%+1.9rem)] whitespace-nowrap rounded-full border border-amber-300/40 bg-black/70 px-2 py-0.5 text-[11px] font-bold text-amber-100 backdrop-blur">
-                {lang === "en" ? aimed.en : aimed.ne}
-              </span>
+              {sample?.labels.some((l) => l.id === aimed.id) ? null : (
+                <span className="absolute top-[calc(50%+1.9rem)] whitespace-nowrap rounded-full border border-amber-300/40 bg-black/70 px-2 py-0.5 text-[11px] font-bold text-amber-100 backdrop-blur">
+                  {lang === "en" ? aimed.en : aimed.ne}
+                </span>
+              )}
             </div>
           </div>
         ) : null}
@@ -2115,7 +2291,27 @@ export function AakashGocharSky({
                 </>
               ) : null}
             </div>
-            <div className="flex items-center gap-1.5">{transport}</div>
+            {/* The step buttons ask a lot of a touch screen — a phone or
+                tablet already has the same play/pause/rate control one tap
+                away in the time sheet (मिति बटन → SkyTimeSheet). On a
+                pointer-driven screen there is room to keep it right here, so
+                only xl+ gets this row (lg still matches an iPad in
+                landscape), now paired with the same bipolar rate slider so a
+                drag reaches every rung from १ से/से to १०० वर्ष/से without
+                opening the sheet. */}
+            <div className="hidden items-center gap-2.5 xl:flex">
+              {transport}
+              <input
+                type="range"
+                min={-RATE_NOTCHES}
+                max={RATE_NOTCHES}
+                step={1}
+                value={Math.round(rateToSlider(timeRate))}
+                aria-label={pick("गति", "Speed")}
+                className="sky-time-slider sky-time-slider--thin min-w-0 flex-1"
+                onChange={(e) => applyTimeRate(sliderToRate(Number(e.target.value)))}
+              />
+            </div>
           </>
         )}
       </div>
@@ -2205,15 +2401,7 @@ export function AakashGocharSky({
           timeRate={timeRate}
           onClose={() => setDatePickerOpen(false)}
           onApplyMs={applyInstant}
-          onTimeRate={(rate) => {
-            if (rate === 0) {
-              setPlaying(false);
-              return;
-            }
-            setStepIndex(nearestStepIndex(rate));
-            setReverse(rate < 0);
-            setPlaying(true);
-          }}
+          onTimeRate={applyTimeRate}
           onTogglePlay={togglePlay}
           onResetRate={() => {
             setStepIndex(DEFAULT_STEP_INDEX);
@@ -2510,6 +2698,34 @@ const SkyLabels = memo(function SkyLabels({
             </button>
           );
         }
+        if (label.kind === "culture") {
+          /* राशि figures and the mythological groups — same look as
+             asterism, but the name comes straight off the label rather than
+             a नक्षत्र-indexed table, since these are not नक्षत्र. */
+          const selected = selectedId === label.id;
+          return (
+            <button
+              key={label.id}
+              type="button"
+              onClick={() => onAimLabel?.(label)}
+              className="truncate font-bold"
+              style={{
+                ...labelBox(label.x, label.y, 90 * scale, 6 * scale),
+                pointerEvents: "auto",
+                cursor: "pointer",
+                fontSize: zoomFont(10, scale),
+                color: selected ? "#fff6c8" : LABEL_COLOR.asterism,
+                textShadow: "0 1px 4px rgba(0,0,0,0.95)",
+                opacity: selected ? 1 : 0.85 * dim,
+                background: "transparent",
+                border: 0,
+                padding: 0,
+              }}
+            >
+              {(lang === "en" ? label.text : label.textNe ?? label.text) ?? ""}
+            </button>
+          );
+        }
         if (label.kind === "star") {
           const selected = selectedId === label.id;
           return (
@@ -2661,6 +2877,23 @@ const SkyLabels = memo(function SkyLabels({
               style={{ ...gridDegreeBox(label.x, label.y, label.side), color: LABEL_COLOR.azimuth }}
             >
               {digits(label.text ?? "")}
+            </span>
+          );
+        }
+        if (label.kind === "outerplanet") {
+          return (
+            <span
+              key={label.id}
+              className="font-bold"
+              style={{
+                ...labelBox(label.x, label.y, 90 * scale, 10 * scale),
+                fontSize: zoomFont(9, scale),
+                color: label.color ?? "rgba(255,255,255,0.75)",
+                opacity: 0.85 * dim,
+                textShadow: "0 1px 4px rgba(0,0,0,0.95)",
+              }}
+            >
+              {lang === "en" ? label.text : (label.textNe ?? label.text)}
             </span>
           );
         }

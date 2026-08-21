@@ -28,6 +28,7 @@ import {
 import { civilGregorianToUtcMs } from "@/lib/patro-day";
 import { PATRO_SIGNED_YEAR_MAX, PATRO_SIGNED_YEAR_MIN } from "@/lib/patro-year-axis";
 import { nearestStepIndex, TIME_STEPS } from "@/lib/sky3d/time-steps";
+import { RATE_NOTCHES, rateToSlider, sliderToRate } from "@/lib/sky3d/rate-slider";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 
@@ -65,29 +66,6 @@ function daySecToSlider(daySec: number): number {
 function sliderToDaySec(slider: number): number {
   return (slider + DAY_ORIGIN_SEC) % 86_400;
 }
-
-/**
- * The speed slider, in rungs of {@link TIME_STEPS} rather than in multiples.
- *
- * One notch is one rung, the sign is the direction, and 0 is paused. It used to
- * be a continuous logarithmic multiplier, which could land on ×43 — a number
- * that says nothing about what you are watching. Now every position on it is a
- * step you can name, and it is the same step पछाडि and अगाडि move by.
- */
-function sliderToRate(slider: number): number {
-  const notch = Math.round(slider);
-  if (notch === 0) return 0;
-  const index = Math.min(TIME_STEPS.length - 1, Math.abs(notch) - 1);
-  return Math.sign(notch) * TIME_STEPS[index].seconds;
-}
-
-function rateToSlider(rate: number): number {
-  if (rate === 0 || !Number.isFinite(rate)) return 0;
-  return Math.sign(rate) * (nearestStepIndex(rate) + 1);
-}
-
-/** Notches either side of centre — one per rung. */
-const RATE_NOTCHES = TIME_STEPS.length;
 
 export type WallParts = {
   year: number;
@@ -578,26 +556,6 @@ export function SkyTimeSheet({
         </div>
 
         <style>{`
-          .sky-time-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-            touch-action: none;
-          }
-          .sky-time-slider:focus { outline: none; }
-          .sky-time-slider--thin {
-            height: 22px;
-          }
-          .sky-time-slider--thin::-webkit-slider-runnable-track {
-            height: 3px;
-            border-radius: 999px;
-            background: #5c5c5e;
-          }
-          .sky-time-slider--thin::-moz-range-track {
-            height: 3px;
-            border-radius: 999px;
-            background: #5c5c5e;
-          }
           .sky-time-slider--day {
             height: 32px;
           }
@@ -611,28 +569,10 @@ export function SkyTimeSheet({
             border-radius: 999px;
             background: ${DAYLIGHT_GRADIENT};
           }
-          .sky-time-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            margin-top: -7.5px;
-            border-radius: 50%;
-            border: none;
-            background: #e8eef8;
-            box-shadow: 0 0 0 1px rgba(0,0,0,0.35);
-          }
           .sky-time-slider--day::-webkit-slider-thumb {
             margin-top: -2px;
             background: #fff6e0;
             box-shadow: 0 0 0 2px rgba(0,0,0,0.35);
-          }
-          .sky-time-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border: none;
-            border-radius: 50%;
-            background: #e8eef8;
           }
           .sky-time-slider--day::-moz-range-thumb {
             background: #fff6e0;

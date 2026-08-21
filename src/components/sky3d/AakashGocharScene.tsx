@@ -48,8 +48,10 @@ import {
   geocentricSky,
   shellRadius,
   deltaLongitude,
+  outerPlanetAt,
   type GeoBody,
   type SkyCalibration,
+  type OuterPlanetKey,
 } from "@/lib/sky3d/orbital-model";
 import {
   BAND_EDGES,
@@ -78,6 +80,7 @@ import {
 } from "@/lib/sky3d/sky-geometry";
 import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000, starOverlayNames } from "@/lib/sky3d/nakshatra-stars";
 import { VEDIC_CONSTELLATION_LINKS } from "@/lib/sky3d/vedic-constellations";
+import { cultureStarLabel, flattenSkyCulture } from "@/lib/sky3d/sky-culture";
 import {
   placedPoleStars,
   poleStarEpoch,
@@ -110,6 +113,7 @@ import { makeMoonMaterial, type MoonMaterial } from "@/lib/sky3d/moon-material";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import { applyNadirStereographicUVs, prepareKathmanduGround } from "@/lib/sky3d/terrain";
 import earthToonUrl from "@/assets/graha/earth-orig.png";
+import milkyWayUrl from "@/assets/milkyway.png";
 import kathmanduUrl from "@/assets/kathmandu.jpeg?url";
 
 /** Same wheel as Learn — radii come from {@link EclipticWheel}. */
@@ -226,17 +230,62 @@ const BODY_TEXTURE: Partial<Record<GrahaKey, SkyTextureKey>> = {
   saturn: "saturn",
 };
 
-/** Apparent radii on the horizon dome — exaggerated, or they would be sub-pixel. */
+/** Apparent radii on the horizon dome — exaggerated, or they would be sub-pixel.
+    Ranked the way the naked eye actually reads them from the ground: सूर्य and
+    चन्द्र dwarf everything, and शुक्र/मंगल — the brightest, reddest points in the
+    sky — read bigger than बुध/बृहस्पति/शनि even though the schematic globes
+    those two use elsewhere are the other way round. */
 const DOME_RADIUS: Record<GrahaKey, number> = {
   sun: 1.7,
   moon: 1.7,
-  mercury: 0.8,
-  venus: 1.0,
-  mars: 0.85,
-  jupiter: 1.15,
-  saturn: 1.0,
+  venus: 1.3,
+  mars: 1.2,
+  jupiter: 1.0,
+  saturn: 0.9,
+  mercury: 0.75,
   rahu: 0.7,
   ketu: 0.7,
+};
+
+/**
+ * Wide open, {@link DOME_RADIUS} alone reads as a dusting of dots — the whole
+ * 235° dome in one frame gives every body a sliver of the pixels it had at
+ * 90°. So the *drawn* radius grows with the field itself: full triple size at
+ * the 235° edge, double at 130°, back to the plain table at 90° and tighter —
+ * three points, two straight lines between them, flat past either end.
+ */
+function horizonBodyScale(fovDeg: number): number {
+  if (fovDeg <= 30) return 1;
+  if (fovDeg <= 130) return 1 + (fovDeg - 30) / (130 - 30);
+  if (fovDeg <= 235) return 2 + (fovDeg - 130) / (235 - 130);
+  return 3;
+}
+
+/**
+ * यम, वरुण, अरुण — decorative only (see the doc comment on
+ * {@link OuterPlanetKey} in `orbital-model`): drawn on क्षितिज so they exist
+ * in the sky at all, never selectable, never part of a chart. Solid colour
+ * rather than a texture — nobody ships a photographic map for three dots
+ * this small — tinted toward how each actually reads through a telescope.
+ */
+const OUTER_PLANET_ORDER: OuterPlanetKey[] = ["uranus", "neptune", "pluto"];
+const OUTER_PLANET_NAME: Record<OuterPlanetKey, { ne: string; en: string }> = {
+  uranus: { ne: "अरुण", en: "Uranus" },
+  neptune: { ne: "वरुण", en: "Neptune" },
+  pluto: { ne: "यम", en: "Pluto" },
+};
+const OUTER_PLANET_COLOR: Record<OuterPlanetKey, string> = {
+  uranus: "#9fe8e6",
+  neptune: "#4d6fe0",
+  pluto: "#c9a27a",
+};
+/** Same table {@link DOME_RADIUS} is, scaled the same way by
+    {@link horizonBodyScale} — smaller than बुध, since none of the three has
+    ever been a naked-eye object. */
+const OUTER_PLANET_DOME_RADIUS: Record<OuterPlanetKey, number> = {
+  uranus: 0.55,
+  neptune: 0.5,
+  pluto: 0.4,
 };
 
 export type { SkyMode };
@@ -289,7 +338,9 @@ export type ScreenLabel = {
     | "asterism"
     | "pada"
     | "vedicstar"
-    | "star";
+    | "star"
+    | "culture"
+    | "outerplanet";
   /**
    * 1–12 for rashi, 1–27 for nakshatra, 1–4 for a पाद; for a pole star, 1 marks
    * the one the pole is nearest at the moment on screen.
@@ -315,6 +366,9 @@ export type ScreenLabel = {
   deg?: number;
   /** True when this label is not the live rashi / month / नक्षत्र. */
   dim?: boolean;
+  /** Outer planets only: their own tint, since they carry no {@link GrahaKey}
+      for `SkyLabels` to look one up by. */
+  color?: string;
   /**
    * Horizon view: this label is under the observer's feet — the half of the
    * sphere the ground is standing in the way of. Drawn faded rather than
@@ -407,6 +461,15 @@ export type SceneToggles = {
    * figures with no measuring band across them.
    */
   constellations: boolean;
+  /**
+   * The twelve राशि drawn as their own connect-the-dot figures — मेष the ram,
+   * वृष the bull, and the rest — plus सप्तर्षि, शिंशुमारः, सारथिः, त्रिशङ्कुः
+   * and the smaller mythological groups. Stellarium's own "indian" sky
+   * culture; see [[sky-culture]]. Dome and globe only, the same as
+   * {@link constellations} — क्षितिज / पृथ्वी गोला is where a sky reads as a
+   * sky rather than a measuring wheel.
+   */
+  skyCulture: boolean;
   /**
    * Horizon view: the ground underfoot and the horizon ring drawn on it.
    *
@@ -503,14 +566,29 @@ function makeDynamicSegments(count: number, color: string, opacity: number) {
 const GRID_R = DOME * 1.04;
 
 /**
- * How near a press has to land, in pixels, to count as being on a graha.
+ * How near a press has to land, in pixels, to count as being on a named star.
  *
- * Generous on purpose: pulled out to the whole dome a graha is a couple of
+ * Generous on purpose: pulled out to the whole dome a star is a couple of
  * pixels across, and a target you have to hit exactly is one you cannot hit at
  * all on a phone. Nearest-wins, so an over-large radius costs nothing where
  * they are far apart and still picks sensibly where they crowd.
  */
 const PICK_RADIUS = 26;
+/**
+ * The same floor for a graha, deliberately bigger.
+ *
+ * Grahas are already checked before stars — see {@link pick} below — so a
+ * press within a graha's own circle always wins. But a graha standing right
+ * on top of the नक्षत्र star it currently occupies (सूर्य in मघा is the
+ * everyday case) is a small, imprecise target sitting *inside* a star's own
+ * {@link PICK_RADIUS}: a press a few pixels off the graha's exact centre
+ * missed its floor and fell through to the star underneath it, which reads as
+ * "the star keeps stealing my taps." A wider floor here, floored only for
+ * grahas, is what a phone actually needs to hit the thing drawn as the
+ * visually larger, brighter body without giving stars anywhere near as much
+ * slack.
+ */
+const GRAHA_PICK_RADIUS = 34;
 
 /** Movement past this during a press makes it a drag, not a click. Pixels. */
 const DRAG_SLOP = 6;
@@ -912,7 +990,7 @@ function labelsMoved(prev: ScreenLabel[], next: ScreenLabel[]): boolean {
   return false;
 }
 
-const NAMED_LABEL_KINDS = new Set(["star", "asterism", "vedicstar", "polestar"]);
+const NAMED_LABEL_KINDS = new Set(["star", "asterism", "vedicstar", "polestar", "culture"]);
 
 /** Prefer the figure name, then drop any name sitting on top of one already kept. */
 function cullOverlappingNames(labels: ScreenLabel[], minDist = 36): ScreenLabel[] {
@@ -920,7 +998,15 @@ function cullOverlappingNames(labels: ScreenLabel[], minDist = 36): ScreenLabel[
   if (named.length < 2) return labels;
   const rest = labels.filter((l) => !NAMED_LABEL_KINDS.has(l.kind));
   const rank = (l: ScreenLabel) =>
-    l.kind === "asterism" ? 0 : l.kind === "vedicstar" ? 1 : l.kind === "polestar" ? 2 : 3;
+    l.kind === "asterism"
+      ? 0
+      : l.kind === "culture"
+        ? 1
+        : l.kind === "vedicstar"
+          ? 2
+          : l.kind === "polestar"
+            ? 3
+            : 4;
   named.sort((a, b) => rank(a) - rank(b));
   const kept: ScreenLabel[] = [];
   for (const label of named) {
@@ -947,7 +1033,9 @@ export function AakashGocharScene({
   onSelect,
   onFollow,
   onSelectStar,
+  onFollowStar,
   onAimSky,
+  onFollowSky,
   onEmptyPress,
   onSelectObserver,
   onSample,
@@ -1005,13 +1093,26 @@ export function AakashGocharScene({
   onSelect: (key: GrahaKey) => void;
   /** Pressed twice — select it *and* turn following on. */
   onFollow: (key: GrahaKey) => void;
-  /** A named वैदिक तारा was pressed — aim the camera at it. */
+  /** A named वैदिक तारा was pressed — mark it, camera stays put. */
   onSelectStar?: (star: VedicStarPosition, index: number) => void;
+  /** Pressed twice — mark it *and* centre the camera on it, same as {@link onFollow}. */
+  onFollowStar?: (star: VedicStarPosition, index: number) => void;
   /**
-   * A नक्षत्र member (or the figure's own name) was pressed. `lon`/`lat` are
-   * already sidereal ecliptic degrees of date, same frame {@link place} uses.
+   * A नक्षत्र member (or the figure's own name) was pressed — mark it, camera
+   * stays put. `lon`/`lat` are already sidereal ecliptic degrees of date,
+   * same frame {@link place} uses.
    */
   onAimSky?: (hit: {
+    id: string;
+    ne: string;
+    en: string;
+    lon: number;
+    lat: number;
+    hintNe?: string;
+    hintEn?: string;
+  }) => void;
+  /** Pressed twice — mark it *and* centre the camera on it, same as {@link onFollow}. */
+  onFollowSky?: (hit: {
     id: string;
     ne: string;
     en: string;
@@ -1054,6 +1155,26 @@ export function AakashGocharScene({
     });
     return map;
   }, [loaded, gl]);
+
+  /** The dome's own sky — a real equirectangular Milky Way panorama, loaded
+      apart from {@link SKY_TEXTURE_SOURCES} since it lives under `src/assets`
+      rather than `public/sky3d`. */
+  const milkyWayRaw = useLoader(THREE.TextureLoader, milkyWayUrl);
+  const milkyWay = useMemo(() => {
+    const maxAnisotropy = gl.capabilities.getMaxAnisotropy?.() ?? 1;
+    milkyWayRaw.colorSpace = THREE.SRGBColorSpace;
+    milkyWayRaw.anisotropy = maxAnisotropy;
+    milkyWayRaw.minFilter = THREE.LinearMipmapLinearFilter;
+    milkyWayRaw.magFilter = THREE.LinearFilter;
+    milkyWayRaw.generateMipmaps = true;
+    milkyWayRaw.needsUpdate = true;
+    return milkyWayRaw;
+  }, [milkyWayRaw, gl]);
+  /** See the doc comment on the sky sphere below — a flat brightness
+      multiplier over 1, which `color` on a hex/string prop cannot express.
+      This panorama already carries real exposure, unlike the old
+      near-black placeholder — a light lift, not the ×16 that one needed. */
+  const skyBoost = useMemo(() => new THREE.Color(2, 2, 2), []);
 
   /**
    * अन्तरिक्ष's Earth wears the Learn playground's cartoon map, not the
@@ -1154,6 +1275,29 @@ export function AakashGocharScene({
     for (const key of GEO_BODY_ORDER) out[key] = makeDynamicLine(TRAIL_STEPS + 1, GRAHA_COLOR[key], 0.4);
     return out;
   }, []);
+  /* The trails read as a belt themselves — nine criss-crossing arcs with
+     राशि belt off is just a mesh, not nine paths anyone can follow. They ride
+     the same switch rather than one of their own. */
+  useEffect(() => {
+    for (const key of GEO_BODY_ORDER) trails[key].visible = toggles.rashiBelt;
+  }, [toggles.rashiBelt, trails]);
+
+  /** यम/वरुण/अरुण — plain spheres, no texture, no pick target, no trail.
+      {@link runFrame} moves and sizes them; nothing else about a graha
+      applies. */
+  const outerPlanets = useMemo(() => {
+    const out = {} as Record<OuterPlanetKey, THREE.Mesh>;
+    const geometry = new THREE.SphereGeometry(1, 16, 16);
+    for (const key of OUTER_PLANET_ORDER) {
+      const mesh = new THREE.Mesh(
+        geometry,
+        new THREE.MeshBasicMaterial({ color: OUTER_PLANET_COLOR[key] }),
+      );
+      mesh.visible = false;
+      out[key] = mesh;
+    }
+    return out;
+  }, []);
 
   /**
    * Horizon view furniture: the banded zodiac, the nakshatra strip inside it,
@@ -1251,6 +1395,36 @@ export function AakashGocharScene({
         { indices: faint, object: makeStarPoints(faint.length, "#c8d8ee", 4.2, 0.58) },
       ],
       lines: makeDynamicSegments(links.length * 2, "#9db9dd", 0.5),
+    };
+  }, []);
+
+  /**
+   * The rest of the Indian sky culture: the twelve राशि as their own figures,
+   * plus सप्तर्षि, शिंशुमारः and the other mythological groups — everything
+   * [[sky-culture]] carries that the 27 नक्षत्र asterisms above do not
+   * already draw. Dome and globe only; unlike {@link starField} it has no
+   * रashi-belt layout, so it never appears in अन्तरिक्ष.
+   */
+  const cultureField = useMemo(() => {
+    const { stars, links, figures } = flattenSkyCulture();
+    const named: number[] = [];
+    const bright: number[] = [];
+    const faint: number[] = [];
+    stars.forEach((s, i) => {
+      if (s.ne || s.en) named.push(i);
+      else if (s.mag <= 3.4) bright.push(i);
+      else faint.push(i);
+    });
+    return {
+      stars,
+      links,
+      figures,
+      groups: [
+        { indices: named, object: makeStarPoints(named.length, "#ffd98a", 7, 0.9) },
+        { indices: bright, object: makeStarPoints(bright.length, "#dfe8fb", 5, 0.7) },
+        { indices: faint, object: makeStarPoints(faint.length, "#aebfdd", 3.4, 0.45) },
+      ],
+      lines: makeDynamicSegments(links.length * 2, "#7d93b8", 0.4),
     };
   }, []);
 
@@ -1505,6 +1679,7 @@ export function AakashGocharScene({
   const frame = useRef(0);
   const lockedLst = useRef<number | null>(null);
   const lastSample = useRef(0);
+  const lastLabelPush = useRef(0);
   const lastTrailKey = useRef("");
   /**
    * Which graha the trail sweep is up to — one per frame, never all at once.
@@ -1558,14 +1733,18 @@ export function AakashGocharScene({
   const onFollowRef = useRef(onFollow);
   const onEmptyPressRef = useRef(onEmptyPress);
   const onSelectStarRef = useRef(onSelectStar);
+  const onFollowStarRef = useRef(onFollowStar);
   const onAimSkyRef = useRef(onAimSky);
+  const onFollowSkyRef = useRef(onFollowSky);
   useEffect(() => {
     onSelectRef.current = onSelect;
     onFollowRef.current = onFollow;
     onEmptyPressRef.current = onEmptyPress;
     onSelectStarRef.current = onSelectStar;
+    onFollowStarRef.current = onFollowStar;
     onAimSkyRef.current = onAimSky;
-  }, [onSelect, onFollow, onEmptyPress, onSelectStar, onAimSky]);
+    onFollowSkyRef.current = onFollowSky;
+  }, [onSelect, onFollow, onEmptyPress, onSelectStar, onFollowStar, onAimSky, onFollowSky]);
 
   useEffect(() => {
     const el = gl.domElement;
@@ -1577,7 +1756,10 @@ export function AakashGocharScene({
     let downX = 0;
     let downY = 0;
     let downId: number | null = null;
-    let lastKey: GrahaKey | null = null;
+    /* Prefixed by kind so a graha and a star never collide on the same id —
+       "mercury" the graha and a differently-keyed star that happened to share
+       a raw name are still two different presses. */
+    let lastKey: string | null = null;
     let lastAt = 0;
 
     const onDown = (e: PointerEvent) => {
@@ -1639,7 +1821,7 @@ export function AakashGocharScene({
         edge.copy(at).addScaledVector(rightAxis, worldRadius);
         const edgeHit = project(edge, rect, field, scratchEdge);
         const apparentPx = edgeHit ? Math.hypot(edgeHit.x - centre.x, edgeHit.y - centre.y) : 0;
-        const radius = Math.max(PICK_RADIUS, apparentPx * 1.15);
+        const radius = Math.max(GRAHA_PICK_RADIUS, apparentPx * 1.15);
         if (d < radius && d < bestD) {
           bestD = d;
           best = key;
@@ -1685,9 +1867,28 @@ export function AakashGocharScene({
         onEmptyPressRef.current?.();
         return;
       }
+
+      /* One press marks it where it stands; a second press on the *same*
+         thing inside {@link DOUBLE_MS} rides it — a graha under
+         onSelect/onFollow, a star the same way now. Naming what a single
+         press is looking at should not also drag the camera there: that was
+         "the sky jumps the instant I touch a star." */
+      const thisKey =
+        hit.kind === "graha"
+          ? `graha:${hit.key}`
+          : hit.kind === "vedicstar"
+            ? `vedicstar:${hit.index}`
+            : `skystar:${hit.index}`;
+      const now = performance.now();
+      const again = thisKey === lastKey && now - lastAt < DOUBLE_MS;
+      lastKey = again ? null : thisKey;
+      lastAt = now;
+
       if (hit.kind === "vedicstar") {
         const star = vedicStarsRef.current?.[hit.index];
-        if (star) onSelectStarRef.current?.(star, hit.index);
+        if (!star) return;
+        if (again) onFollowStarRef.current?.(star, hit.index);
+        else onSelectStarRef.current?.(star, hit.index);
         return;
       }
       if (hit.kind === "skystar") {
@@ -1695,7 +1896,7 @@ export function AakashGocharScene({
         const star = starField.stars[hit.index];
         const nak = NAKSHATRA_ASTERISMS[star.nakshatra - 1];
         const names = nak ? starOverlayNames(star, nak) : null;
-        onAimSkyRef.current?.({
+        const payload = {
           id: `star:${star.nakshatra}:${star.name}`,
           ne: names?.ne ?? nak?.ne ?? star.name,
           en: names?.en ?? nak?.en ?? star.name,
@@ -1703,20 +1904,13 @@ export function AakashGocharScene({
           hintEn: nak?.en,
           lon: s.lon,
           lat: s.lat,
-        });
+        };
+        if (again) onFollowSkyRef.current?.(payload);
+        else onAimSkyRef.current?.(payload);
         return;
       }
-      const key = hit.key;
-      const now = performance.now();
-      const again = key === lastKey && now - lastAt < DOUBLE_MS;
-      lastKey = key;
-      lastAt = now;
-      if (again) {
-        lastKey = null;
-        onFollowRef.current(key);
-      } else {
-        onSelectRef.current(key);
-      }
+      if (again) onFollowRef.current(hit.key);
+      else onSelectRef.current(hit.key);
     };
     const onCancel = () => {
       downId = null;
@@ -1975,6 +2169,7 @@ export function AakashGocharScene({
 
     /* ── bodies ─────────────────────────────────────────────────────── */
     let sunAltitude = -90;
+    const horizonFovNow = horizon ? fovForZoom("horizon", view.current.distance) : 0;
     for (const key of GEO_BODY_ORDER) {
       const body = sky[key];
       const spaceR = shellRadius(key, body.distanceAu) * SPACE_SHELL_SCALE;
@@ -1989,7 +2184,7 @@ export function AakashGocharScene({
       const drawnR = globe
         ? DOME_RADIUS[key] * GLOBE_BODY_SCALE
         : horizon
-          ? DOME_RADIUS[key]
+          ? DOME_RADIUS[key] * horizonBodyScale(horizonFovNow)
           : bodyRadius(key, body.distanceAu) * SPACE_SHELL_SCALE * SPACE_BODY_SCALE;
 
       const group = bodyRefs.current[key];
@@ -2073,6 +2268,38 @@ export function AakashGocharScene({
         sharaLine.visible = true;
         sharaLine.material.color.set(GRAHA_COLOR[key]);
       }
+    }
+
+    /* ── यम/वरुण/अरुण ─────────────────────────────────────────────────
+       क्षितिज only — a decorative dot the moment अन्तरिक्ष or पृथ्वी गोला ask
+       for, since neither has ever needed them and they were never wired
+       into either view's own placement. */
+    if (horizon) {
+      const up = screenUp.current;
+      for (const key of OUTER_PLANET_ORDER) {
+        const pos = outerPlanetAt(key, dtDays);
+        const at = place(pos.longitude, pos.latitude, 0);
+        const drawnR = OUTER_PLANET_DOME_RADIUS[key] * horizonBodyScale(horizonFovNow);
+        const mesh = outerPlanets[key];
+        mesh.position.set(at[0], at[1], at[2]);
+        mesh.scale.setScalar(drawnR);
+        mesh.visible = true;
+        if (collect && labelVisible(at)) {
+          project(
+            {
+              id: `outer-${key}`,
+              kind: "outerplanet",
+              text: OUTER_PLANET_NAME[key].en,
+              textNe: OUTER_PLANET_NAME[key].ne,
+              color: OUTER_PLANET_COLOR[key],
+            },
+            [at[0] - up.x * drawnR, at[1] - up.y * drawnR, at[2] - up.z * drawnR],
+            at,
+          );
+        }
+      }
+    } else {
+      for (const key of OUTER_PLANET_ORDER) outerPlanets[key].visible = false;
     }
 
     const ecl = eclipseOf(sky);
@@ -2191,6 +2418,30 @@ export function AakashGocharScene({
           setVertex(starField.lines, i * 2 + 1, starPlace(b, sb.lon + precession - ayan, sb.lat));
         }
         flushLine(starField.lines);
+      }
+
+      /* ── the rest of the sky culture: राशि figures, सप्तर्षि, and the like
+         Dome and globe only — no space-view segment for these to sit flat
+         in, unlike the नक्षत्र figures above. */
+      if (zodiac && toggles.skyCulture) {
+        const precession = precessionSinceJ2000(dtDays);
+        const dpr = state.gl.getPixelRatio();
+        for (const { indices, object } of cultureField.groups) {
+          (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
+          for (let i = 0; i < indices.length; i += 1) {
+            const star = cultureField.stars[indices[i]];
+            setVertex(object, i, place(star.lon + precession - ayan, star.lat, starRadius));
+          }
+          (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
+        }
+        for (let i = 0; i < cultureField.links.length; i += 1) {
+          const [a, b] = cultureField.links[i];
+          const sa = cultureField.stars[a];
+          const sb = cultureField.stars[b];
+          setVertex(cultureField.lines, i * 2, place(sa.lon + precession - ayan, sa.lat, starRadius));
+          setVertex(cultureField.lines, i * 2 + 1, place(sb.lon + precession - ayan, sb.lat, starRadius));
+        }
+        flushLine(cultureField.lines);
       }
 
       /* ── the tilt, as an angle you can read ────────────────────────────
@@ -2540,6 +2791,67 @@ export function AakashGocharScene({
       }
     }
 
+    /* राशि / mythological figure labels — one per figure, at the mean of its
+       members, the same way नक्षत्र group names are placed above. */
+    if (collect && zodiac && toggles.skyCulture && !close) {
+      const precession = precessionSinceJ2000(dtDays);
+      for (const { figure, starIndices } of cultureField.figures) {
+        let x = 0;
+        let y = 0;
+        let z = 0;
+        let radius = 0;
+        for (const i of starIndices) {
+          const s = cultureField.stars[i];
+          const p = place(s.lon + precession - ayan, s.lat, starRadius);
+          x += p[0];
+          y += p[1];
+          z += p[2];
+          radius = Math.hypot(p[0], p[1], p[2]);
+        }
+        const len = Math.hypot(x, y, z) || 1;
+        const at: [number, number, number] = [(x / len) * radius, (y / len) * radius, (z / len) * radius];
+        if (!labelVisible(at)) continue;
+        const anchor = cultureField.stars[starIndices[0]];
+        project(
+          {
+            id: `culture-${figure.id}`,
+            kind: "culture",
+            text: figure.en,
+            textNe: figure.ne,
+            lon: anchor.lon + precession - ayan,
+            lat: anchor.lat,
+          },
+          at,
+        );
+      }
+    }
+
+    /* Individually named member stars — अग्नि, ब्रह्महृदयम् and the rest,
+       the ones classical texts singled out inside these figures. Shown at
+       any zoom, the same as a नक्षत्र's own योगतारा. */
+    if (collect && zodiac && toggles.skyCulture) {
+      const precession = precessionSinceJ2000(dtDays);
+      for (let i = 0; i < cultureField.stars.length; i += 1) {
+        const s = cultureField.stars[i];
+        const names = cultureStarLabel(s);
+        if (!names) continue;
+        const lon = s.lon + precession - ayan;
+        const at = place(lon, s.lat, starRadius);
+        if (!labelVisible(at)) continue;
+        project(
+          {
+            id: `culture-star:${s.hip}`,
+            kind: "star",
+            text: names.en,
+            textNe: names.ne,
+            lon,
+            lat: s.lat,
+          },
+          at,
+        );
+      }
+    }
+
     /* The two axes and the angle between them, named. */
     if (collect && globe && toggles.tilt) {
       const c = Math.cos(eps * DEG);
@@ -2683,6 +2995,10 @@ export function AakashGocharScene({
       object.visible = (zodiac || space) && toggles.constellations;
     }
     starField.lines.visible = (zodiac || space) && toggles.constellations;
+    for (const { object } of cultureField.groups) {
+      object.visible = zodiac && toggles.skyCulture;
+    }
+    cultureField.lines.visible = zodiac && toggles.skyCulture;
     poleField.points.visible = zodiac && toggles.poleStars;
     poleField.crown.visible = zodiac && toggles.poleStars;
     poleField.trackLine.visible = zodiac && toggles.poleStars;
@@ -3032,9 +3348,20 @@ export function AakashGocharScene({
     }
 
     lastSample.current += delta;
+    lastLabelPush.current += delta;
     const hudDue = lastSample.current > 0.2;
     if (hudDue) lastSample.current = 0;
-    if (labelsChanged || hudDue) {
+    /* Fast play (a century a second) moves every name every frame, which used
+       to push a `setState` at the full 60Hz right along with it. That is
+       enough main-thread churn on a phone to eat a tap on the pause button —
+       it would sit there needing three or four presses before one landed.
+       Labels still owe smooth tracking, just not a React commit for every
+       single one of the 60 frames it takes to deliver it — one twelfth of a
+       second (~12Hz) reads as continuous to an eye and leaves the thread free
+       for the touch that ends the ride. */
+    const labelPushDue = labelsChanged && lastLabelPush.current > 1 / 12;
+    if (labelPushDue) lastLabelPush.current = 0;
+    if (labelPushDue || hudDue) {
       onSample({
         timeMs: s.timeMs,
         sky,
@@ -3054,12 +3381,31 @@ export function AakashGocharScene({
           Space turns this off so Earth shows a real terminator, like Learn. */}
       <directionalLight ref={fillLightRef} position={[0, 12, 0]} intensity={0.1} />
 
-      <mesh ref={starsRef} visible={!arBackground}>
+      <mesh ref={starsRef} visible={!arBackground} renderOrder={-1}>
         <sphereGeometry args={[400, 64, 48]} />
-        {/* Opaque, depthWrite off — same as Learn's sky. The ecliptic disc is
-            transparent, so it has to paint *after* this sphere or the stars
-            cover the plane and it never reads as a surface. */}
-        <meshBasicMaterial map={textures.background} side={THREE.BackSide} depthWrite={false} />
+        {/* Opaque, no depth test or write — the standard skybox recipe. At
+            r=400 against a 0.1/600 near/far pair the perspective depth
+            buffer has compressed almost all of its precision into the near
+            field; this sphere's own fragments were landing a hair past the
+            far plane's 1.0 and losing the depth test on every one of them,
+            which is why the sky read as flat black regardless of the
+            texture. `depthTest={false}` plus `renderOrder={-1}` is what
+            every skybox actually wants — drawn first, behind everything,
+            never fighting the depth buffer at all. The ecliptic disc's own
+            transparency is what keeps stars off the belt, not draw order
+            against this any more.
+
+            skyBoost multiplies the sampled texel — a light lift over the
+            panorama's own exposure, not a rescue of a near-black
+            placeholder any more. */}
+        <meshBasicMaterial
+          map={milkyWay}
+          side={THREE.BackSide}
+          depthWrite={false}
+          depthTest={false}
+          color={skyBoost}
+          toneMapped={false}
+        />
       </mesh>
 
       {/* Space view: the Earth itself, tilted by the obliquity of the ecliptic. */}
@@ -3265,6 +3611,12 @@ export function AakashGocharScene({
         <primitive key={`stars-${i}`} object={object} />
       ))}
 
+      {/* The rest of the sky culture: राशि figures, सप्तर्षि, शिंशुमारः… */}
+      <primitive object={cultureField.lines} />
+      {cultureField.groups.map(({ object }, i) => (
+        <primitive key={`culture-${i}`} object={object} />
+      ))}
+
       {/* The obliquity: the orbit's perpendicular, and the angle off it. */}
       <primitive object={tiltMarks.eclipticAxis} />
       <primitive object={tiltMarks.arc} />
@@ -3298,6 +3650,9 @@ export function AakashGocharScene({
 
       {GEO_BODY_ORDER.map((key) => (
         <primitive key={`trail-${key}`} object={trails[key]} />
+      ))}
+      {OUTER_PLANET_ORDER.map((key) => (
+        <primitive key={`outer-${key}`} object={outerPlanets[key]} />
       ))}
       <primitive object={lunarUmbra} />
       <primitive object={solarUmbra} />
