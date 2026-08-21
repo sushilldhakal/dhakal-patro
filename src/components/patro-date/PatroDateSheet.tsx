@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarClock, ChevronDown, MapPin, Minus, Plus } from "lucide-react";
 import type { BsNativeSelectOption } from "@/components/BsNativeSelect";
@@ -205,14 +205,28 @@ export function PatroMobileDateSheetDraft({
   const [draftDay, setDraftDay] = useState(day);
   const [draftClock, setDraftClock] = useState(clock ?? "");
 
-  useEffect(() => {
-    if (!sheet.open) return;
-    setDraftEra(era);
-    setDraftYear(year);
-    setDraftMonth(month);
-    setDraftDay(day);
-    setDraftClock(clock ?? "");
-  }, [sheet.open, era, year, month, day, clock]);
+  // Re-seed the draft from the committed value whenever the sheet opens, or
+  // the committed value itself moves while it's open — adjusted during
+  // render, per React's guidance for state that mirrors props, rather than
+  // an effect that would show the stale draft for a frame.
+  const [prevSync, setPrevSync] = useState({ open: sheet.open, era, year, month, day, clock });
+  if (
+    prevSync.open !== sheet.open ||
+    prevSync.era !== era ||
+    prevSync.year !== year ||
+    prevSync.month !== month ||
+    prevSync.day !== day ||
+    prevSync.clock !== clock
+  ) {
+    setPrevSync({ open: sheet.open, era, year, month, day, clock });
+    if (sheet.open) {
+      setDraftEra(era);
+      setDraftYear(year);
+      setDraftMonth(month);
+      setDraftDay(day);
+      setDraftClock(clock ?? "");
+    }
+  }
 
   const clampDay = useCallback(
     (y: number, m: number, d: number, browseEra: Era) => {
@@ -356,11 +370,15 @@ export function PatroMobileYearSheetDraft({
   const [draftEra, setDraftEra] = useState(era);
   const [draftYear, setDraftYear] = useState(year);
 
-  useEffect(() => {
-    if (!sheet.open) return;
-    setDraftEra(era);
-    setDraftYear(year);
-  }, [sheet.open, era, year]);
+  // Same re-seed-on-open pattern as PatroDateSheetContent above.
+  const [prevSync, setPrevSync] = useState({ open: sheet.open, era, year });
+  if (prevSync.open !== sheet.open || prevSync.era !== era || prevSync.year !== year) {
+    setPrevSync({ open: sheet.open, era, year });
+    if (sheet.open) {
+      setDraftEra(era);
+      setDraftYear(year);
+    }
+  }
 
   const pickBrowseYear = (nextEra: Era, nextYear: number) => {
     setDraftEra(nextEra);
@@ -466,10 +484,12 @@ export function PatroDateSheet({
   const deferSheetCommits = Boolean(onDateCommit || onLocationCommit);
   const [draftLocation, setDraftLocation] = useState(location);
 
-  useEffect(() => {
-    if (!sheet.open || !location) return;
-    setDraftLocation(location);
-  }, [sheet.open, location]);
+  // Same re-seed-on-open pattern as PatroDateSheetContent above.
+  const [prevSync, setPrevSync] = useState({ open: sheet.open, location });
+  if (prevSync.open !== sheet.open || prevSync.location !== location) {
+    setPrevSync({ open: sheet.open, location });
+    if (sheet.open && location) setDraftLocation(location);
+  }
 
   const applyLocationDraft = () => {
     if (!onLocationChange || !draftLocation || !location) return;

@@ -156,7 +156,6 @@ export function usePatroMonthUrlBrowse(
     language,
   ]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     applyEraBrowseFromSearch(search, monthBrowse, language);
     const fp = locationSearchFingerprint(search);
@@ -165,8 +164,11 @@ export function usePatroMonthUrlBrowse(
     if (prev !== null && fp === prev) return;
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // `monthBrowse` is a fresh object every render (its setters aren't memoized),
+    // so listing it here would re-run this on every render rather than only when
+    // the URL changes — exactly what the fingerprint guard above exists to avoid.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, language, location, setLocation]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   return monthBrowse;
 }
@@ -207,7 +209,6 @@ export function usePatroYearUrlBrowse(
     }
   }, [location, yearBrowse.year, yearBrowse.era, search, navigate, language]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     applyEraBrowseFromSearch(search, yearBrowse, language);
     if (!setLocation || !location) return;
@@ -217,8 +218,11 @@ export function usePatroYearUrlBrowse(
     if (prev !== null && fp === prev) return;
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
+    // `yearBrowse` is a fresh object every render (its setters aren't memoized),
+    // so listing it here would re-run this on every render rather than only when
+    // the URL changes — exactly what the fingerprint guard above exists to avoid.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, language, location, setLocation]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   return yearBrowse;
 }
@@ -240,7 +244,7 @@ export function usePatroLocationUrlBrowse(
   useEffect(() => {
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
-  }, [search]);
+  }, [search, location, setLocation]);
 }
 
 export {
@@ -305,7 +309,6 @@ export function useElementPageUrlBrowse(
     language,
   ]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isSpan) {
       applyEraBrowseFromSearch(search, monthBrowse, language);
@@ -317,7 +320,6 @@ export function useElementPageUrlBrowse(
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, isSpan, language]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   return {
     monthBrowse,

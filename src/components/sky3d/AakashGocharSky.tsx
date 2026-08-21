@@ -100,10 +100,14 @@ import {
   type SkySample,
   type ViewState,
 } from "@/components/sky3d/AakashGocharScene";
+import { CompassControl } from "@/components/sky3d/CompassControl";
+import { useDeviceOrientation } from "@/lib/sky3d/device-orientation";
 
 const Scene = memo(AakashGocharScene);
 
 const CANVAS_BG = "#04070d";
+/** Degrees → radians, for the compass dial's heading → camera yaw. */
+const DEG_TO_RAD = Math.PI / 180;
 
 /**
  * Native fullscreen often does not fire a ResizeObserver. R3F then keeps the
@@ -448,6 +452,103 @@ export function AakashGocharSky({
   });
 
   const [mode, setMode] = useState<SkyMode>("space");
+
+  /** Captured once at Canvas creation, so AR mode can clear to transparent
+      instead of {@link CANVAS_BG} and let the camera behind it show through. */
+  const glRef = useRef<{ setClearColor: (color: number | string, alpha?: number) => void } | null>(
+    null,
+  );
+
+  /**
+   * The compass dial's own heading, degrees — 0 north, clockwise, same frame
+   * as the scene's az. Mirrors `view.current.yaw` in state only so the dial
+   * has something to re-render from; the ref stays the one the frame loop
+   * reads.
+   */
+  const [compassHeading, setCompassHeading] = useState(0);
+  const [arMode, setArMode] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const deviceOrientation = useDeviceOrientation(arMode);
+
+  const onCompassHeadingChange = useCallback((heading: number) => {
+    setCompassHeading(heading);
+    view.current.yaw = heading * DEG_TO_RAD;
+  }, []);
+
+  const stopCameraStream = useCallback((stream: MediaStream | null) => {
+    stream?.getTracks().forEach((track) => track.stop());
+  }, []);
+
+  const toggleArMode = useCallback(() => {
+    if (arMode) {
+      setArMode(false);
+      // The effect below stops this stream's tracks once `cameraStream`
+      // actually changes — setting it here just triggers that.
+      setCameraStream(null);
+      view.current.roll = 0;
+      return;
+    }
+    setMode("horizon");
+    // Fired directly from the compass dial's own double-tap/double-click, not
+    // from an effect — iOS only honours `requestPermission()` when it is
+    // called inside a user-gesture handler's own call stack. See the module
+    // doc comment on `useDeviceOrientation`.
+    void (async () => {
+      await deviceOrientation.requestPermission();
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false,
+        });
+        setCameraStream(stream);
+        setArMode(true);
+      } catch {
+        // Camera permission denied, or no back camera to ask for (a laptop) —
+        // AR mode needs the passthrough to mean anything, so it stays off
+        // rather than opening onto a black rectangle.
+      }
+    })();
+  }, [arMode, deviceOrientation]);
+
+  // Release the camera hardware whenever the stream this component is
+  // holding changes or the sky unmounts — a stream nobody stopped keeps the
+  // camera light on and the sensor busy behind whatever screen comes next.
+  useEffect(() => {
+    return () => stopCameraStream(cameraStream);
+  }, [cameraStream, stopCameraStream]);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.srcObject = cameraStream;
+  }, [cameraStream]);
+
+  // The phone's own compass and tilt take the wheel while AR mode is on — the
+  // same `view.current` the manual drag gesture writes to the rest of the
+  // time, so the scene's camera code never has to know which one is live.
+  // `onSample` below picks the new yaw back up for the dial. Left null (no
+  // sensor data yet, or permission denied) simply leaves the last view alone,
+  // so the reader can still drag the dial by hand rather than being frozen.
+  useEffect(() => {
+    if (!arMode) return;
+    if (deviceOrientation.yaw != null) view.current.yaw = deviceOrientation.yaw;
+    if (deviceOrientation.pitch != null) {
+      // Same clamp the manual drag gesture uses in this view — short of true
+      // vertical, where the yaw axis degenerates.
+      view.current.pitch = Math.min(1.45, Math.max(-1.45, deviceOrientation.pitch));
+    }
+    view.current.roll = deviceOrientation.roll ?? 0;
+  }, [arMode, deviceOrientation.yaw, deviceOrientation.pitch, deviceOrientation.roll]);
+
+  /** Camera passthrough only once `getUserMedia` actually resolved — AR mode
+      alone would otherwise leave a black rectangle where the lens should be. */
+  const showCamera = arMode && cameraStream != null;
+
+  // Transparent clear so the camera behind the Canvas shows through; opaque
+  // otherwise. Toggled here rather than in `onCreated`, which only fires once.
+  useEffect(() => {
+    glRef.current?.setClearColor(CANVAS_BG, showCamera ? 0 : 1);
+  }, [showCamera]);
+
   /**
    * The city the page is set to, for anything named after the observer.
    *
@@ -612,6 +713,11 @@ export function AakashGocharSky({
   useEffect(() => {
     modeRef.current = mode;
   }, [mode]);
+  /** Same reasoning: the phone's own sensors own the camera in AR mode. */
+  const arModeRef = useRef(arMode);
+  useEffect(() => {
+    arModeRef.current = arMode;
+  }, [arMode]);
 
   /**
    * Live pointers on the canvas, by pointerId. One drags the sky; two pinch it.
@@ -676,6 +782,7 @@ export function AakashGocharSky({
     if (!el) return;
 
     const onDown = (e: PointerEvent) => {
+      if (arModeRef.current) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest?.(CONTROL_SELECTOR)) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -716,6 +823,7 @@ export function AakashGocharSky({
     };
 
     const onMove = (e: PointerEvent) => {
+      if (arModeRef.current) return;
       if (!pointers.current.has(e.pointerId)) return;
       if (e.cancelable) e.preventDefault();
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
@@ -855,7 +963,15 @@ export function AakashGocharSky({
     return () => el.removeEventListener("pointerdown", dismiss);
   }, [aimed, drawerOpen, focusOpen, grahaPickerOpen, searchOpen]);
 
-  const onSample = useCallback((next: SkySample) => setSample(next), []);
+  const onSample = useCallback((next: SkySample) => {
+    setSample(next);
+    // `view.current.yaw` is the one place camera facing actually lives —
+    // written by the canvas drag, the view chips, a search pick's one-shot
+    // aim, or (in AR mode) the device's own sensors. The dial just mirrors
+    // whichever of those moved it most recently, sampled at the same rate
+    // everything else reads the scene at.
+    setCompassHeading(normalizeDeg(view.current.yaw / DEG_TO_RAD));
+  }, []);
 
   /**
    * One press: mark it, nothing else.
@@ -1042,9 +1158,12 @@ export function AakashGocharSky({
 
   /* No target, nothing to centre on: the lock cannot stay on once its graha is
      deselected and your place is not standing in for it, or the camera
-     silently stops following. */
+     silently stops following. An invariant over two pieces of state rather
+     than one prop mirrored into another, so it's enforced here rather than
+     at each place selectedKey/lockObserver can become falsy. */
   useEffect(() => {
     if (!selectedKey && !lockObserver) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
     }
   }, [selectedKey, lockObserver]);
@@ -1458,9 +1577,21 @@ export function AakashGocharSky({
           touchAction: "none",
         }}
       >
+        {/* AR mode's backdrop: the real world, behind a transparently-cleared
+            Canvas. A sibling underneath rather than inside it, so the GL
+            surface layers directly on top of it. */}
+        {showCamera ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
         <Canvas
           camera={{ position: [0, 40, 26], fov: SPACE_FOV, near: 0.1, far: 600 }}
-          gl={{ antialias: true }}
+          gl={{ antialias: true, alpha: true }}
           resize={{ debounce: 0, offsetSize: true }}
           style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}
           onCreated={({ camera, gl }) => {
@@ -1473,6 +1604,7 @@ export function AakashGocharSky({
                this is the element the finger actually lands on. Set it where it
                cannot be argued with. */
             gl.domElement.style.touchAction = "none";
+            glRef.current = gl;
           }}
         >
           <FitCanvas />
@@ -1498,9 +1630,20 @@ export function AakashGocharSky({
               onEmptyPress={onEmptyPress}
               onSelectObserver={toggleObserver}
               onSample={onSample}
+              arBackground={showCamera}
             />
           </Suspense>
         </Canvas>
+
+        {/* Bottom-centre, over the canvas: drag it to turn the sky,
+            double-click/double-tap for AR. See {@link CompassControl}. */}
+        <CompassControl
+          heading={compassHeading}
+          onHeadingChange={onCompassHeadingChange}
+          arMode={arMode}
+          onToggleArMode={toggleArMode}
+          visible={mode === "horizon"}
+        />
 
         {/* Labels ride over the canvas rather than in it — real Devanagari type,
             positioned from the scene's own projection of each anchor. */}

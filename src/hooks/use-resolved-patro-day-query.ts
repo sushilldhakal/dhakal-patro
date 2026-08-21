@@ -61,6 +61,10 @@ export function useResolvedPatroDayQuery(
             }
           : undefined,
     });
+    // `sync` itself is a fresh object every render (its callers rebuild it
+    // inline); the two members actually read are listed instead so this only
+    // reruns when one of them does, not on every render of the caller.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     syncFromData,
     query.data,

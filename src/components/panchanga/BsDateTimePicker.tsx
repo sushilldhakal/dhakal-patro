@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -104,10 +104,16 @@ export function BsDateTimePicker({
   const [draft, setDraft] = useState({ year, month, day, clock: clock ?? "" });
   const [draftBrowseEra, setDraftBrowseEra] = useState<Era>(displayEra ?? "bs");
 
-  useEffect(() => {
+  // Reset the draft whenever the committed value changes underneath it —
+  // adjusted during render, per React's guidance for state that mirrors
+  // props, rather than an effect that would show the stale draft for a frame.
+  const draftKey = `${year}-${month}-${day}-${clock ?? ""}-${displayEra ?? ""}`;
+  const [prevDraftKey, setPrevDraftKey] = useState(draftKey);
+  if (draftKey !== prevDraftKey) {
+    setPrevDraftKey(draftKey);
     setDraft({ year, month, day, clock: clock ?? "" });
     setDraftBrowseEra(displayEra ?? "bs");
-  }, [year, month, day, clock, displayEra]);
+  }
 
   const { year: dYear, month: dMonth, day: dDay } = draft;
   const monthFetchEra: Era = isAd ? "ad" : draftBrowseEra;

@@ -175,7 +175,7 @@ export function KundaliView({
     return d1AllJanmaPhalaBhavas(detail.vargaCharts, {
       gulikaLongitude: gulika?.longitude,
     });
-  }, [detail?.vargaCharts, detail?.upagrahas]);
+  }, [detail]);
 
   const janmaNakshatra = useMemo(() => {
     const meta = detail?.birthMeta.moonNakshatra;

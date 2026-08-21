@@ -45,8 +45,8 @@ import ketuIconUrl from "@/assets/graha/ketu.svg?url";
 import earthToonUrl from "@/assets/graha/earth-orig.png";
 import { KATHMANDU } from "@/lib/sky3d/horizon";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
+import { atLonInto } from "@/lib/sky3d/ecliptic-position";
 import {
-  atLonInto,
   BELT_MID,
   BELT_OUTER,
   EclipticWheel,

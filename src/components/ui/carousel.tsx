@@ -93,6 +93,10 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return
+    // The carousel (embla) only exists once mounted, so its current state
+    // can't be read during render — this seeds it once, and the two
+    // listeners below keep it synced afterward.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     onSelect(api)
     api.on("reInit", onSelect)
     api.on("select", onSelect)

@@ -368,7 +368,7 @@ export function ElementPage() {
   const isNavataraBal = name === "chandrabala" || name === "tarabala";
 
   const todayAd = todayAdStringInTimezone(
-    new Date(Date.now()),
+    new Date(),
     resolveTimeZone(undefined, location.params.timezone),
   );
   const isSpan = meta?.kind === "span";

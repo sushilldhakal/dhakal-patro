@@ -6,7 +6,7 @@
  * play walks the real gochar forward rather than an approximation of it.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Orbit, TriangleAlert } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -153,7 +153,7 @@ export function AakashGochar() {
    * previous day's rows on screen meanwhile, and the scene runs on its own
    * model regardless, so there is nothing to wait for.
    */
-  const skyShown = useRef(false);
+  const [skyShown, setSkyShown] = useState(false);
 
   /** Which Vikram pick is the live one — see {@link handleEraChange}. */
   const pickToken = useRef(0);
@@ -203,9 +203,12 @@ export function AakashGochar() {
     placeholderData: keepPreviousData,
   });
 
-  useEffect(() => {
-    if (hydrated && !query.isLoading) skyShown.current = true;
-  }, [hydrated, query.isLoading]);
+  // A one-way latch — once the sky has shown, it stays shown — so it's
+  // flipped directly during render rather than through an effect: there is
+  // no external system to synchronize with here, just a derived value.
+  if (!skyShown && hydrated && !query.isLoading) {
+    setSkyShown(true);
+  }
 
   /* Clicking the card already selected clears it, matching the canvas. */
   const toggleSelected = useCallback(
@@ -294,7 +297,7 @@ export function AakashGochar() {
         onLocationChange={setLocation}
       />
 
-      {!hydrated || (query.isLoading && !skyShown.current) ? (
+      {!hydrated || (query.isLoading && !skyShown) ? (
         <div className="flex items-center justify-center rounded-2xl border border-dashed border-border py-24">
           <VedicPatroLoader />
         </div>
