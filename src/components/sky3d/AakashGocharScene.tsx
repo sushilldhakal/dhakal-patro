@@ -705,6 +705,61 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
 }
 
 /**
+ * A dark sky is never actually black — real airglow and light pollution
+ * put a faint floor under it that is brightest low over the horizon, the
+ * thing every one of Stellarium's atmosphere models (`AtmosphereLightweight.
+ * cpp`'s own `bgLum`, the "assumed star background luminance" it adds even
+ * before light pollution) budgets for. Theirs is a full scattering
+ * simulation solving that properly at every wavelength; this is the lean
+ * version of the same idea — one soft additive glow, brightest at the
+ * horizon and fading out toward the zenith, so क्षितिज's empty patches of
+ * sky read as a dark night rather than a flat cutout.
+ */
+function makeHorizonGlow(radius: number, color: string, intensity: number) {
+  const geometry = new THREE.SphereGeometry(radius, 48, 32);
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uIntensity: { value: intensity },
+    },
+    vertexShader: `
+      varying float vAlt;
+      void main() {
+        /* The sphere is unrotated, so its own local +Y already is altitude,
+           the same as everywhere else in this file reads "up" against the
+           horizon frame. */
+        vAlt = normalize(position).y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uIntensity;
+      varying float vAlt;
+      void main() {
+        /* Brightest right at the horizon, gone within half a radian either
+           side of it — a glow along the skyline, not a wash over the whole
+           dome. */
+        float glow = uIntensity * (1.0 - smoothstep(0.0, 0.55, abs(vAlt)));
+        gl_FragColor = vec4(uColor, glow);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: false,
+    side: THREE.BackSide,
+    toneMapped: false,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  /* Just after the star sphere (-1) and well before anything else, so it
+     reads as part of the sky rather than a layer floating in front of it. */
+  mesh.renderOrder = -0.5;
+  mesh.frustumCulled = false;
+  return mesh;
+}
+
+/**
  * Star size as a continuous function of magnitude, not a handful of fixed
  * tiers.
  *
@@ -1292,6 +1347,7 @@ export function AakashGocharScene({
   const ambientRef = useRef<THREE.AmbientLight | null>(null);
   const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
   const starsRef = useRef<THREE.Mesh | null>(null);
+  const horizonGlow = useMemo(() => makeHorizonGlow(399, "#4a3626", 0.16), []);
   const milkyWayMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const groundRef = useRef<THREE.Group | null>(null);
   const groundMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
@@ -3155,6 +3211,8 @@ export function AakashGocharScene({
     for (const { object } of backgroundField.groups) {
       object.visible = zodiac;
     }
+    // A skyline glow means nothing without a skyline — only क्षितिज has one.
+    horizonGlow.visible = horizon;
     poleField.points.visible = zodiac && toggles.poleStars;
     poleField.crown.visible = zodiac && toggles.poleStars;
     poleField.trackLine.visible = zodiac && toggles.poleStars;
@@ -3585,6 +3643,9 @@ export function AakashGocharScene({
           toneMapped={false}
         />
       </mesh>
+      {/* The dark-night floor under an otherwise empty patch of sky — see the
+          doc comment on {@link makeHorizonGlow}. क्षितिज only. */}
+      <primitive object={horizonGlow} />
 
       {/* Space view: the Earth itself, tilted by the obliquity of the ecliptic. */}
       <group ref={earthGroupRef}>
