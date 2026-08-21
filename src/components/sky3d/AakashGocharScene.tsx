@@ -760,6 +760,84 @@ function makeHorizonGlow(radius: number, color: string, intensity: number) {
 }
 
 /**
+ * The Milky Way panorama's own geometry, built straight from real J2000
+ * equatorial coordinates rather than THREE's generic sphere UVs — so it
+ * samples the texture exactly the way Stellarium's own shader does
+ * (`MilkyWay.cpp`: `modelZenithAngle = acos(-z)`, `modelLongitude =
+ * atan2(x, y)`, both read off `core->getJ2000ModelViewTransform()` — plain
+ * equatorial, not galactic). Every vertex carries its own (RA, Dec) baked
+ * into its position, so rotating the whole mesh by
+ * {@link equatorialToHorizonMatrix} each frame is the same transform this
+ * file already gives every individual fixed star, just done once for the
+ * sphere instead of point by point. Before this the sphere was never
+ * rotated at all, so its texture's own pole sat glued to the zenith
+ * regardless of the date or the hour — the dark disc ringed by the band
+ * that never moved.
+ */
+function makeMilkyWayGeometry(radius: number, widthSeg = 96, heightSeg = 48) {
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  for (let iy = 0; iy <= heightSeg; iy += 1) {
+    const dec = 90 - (iy / heightSeg) * 180;
+    const decRad = dec * DEG;
+    for (let ix = 0; ix <= widthSeg; ix += 1) {
+      const ra = (ix / widthSeg) * 360;
+      const raRad = ra * DEG;
+      const x = Math.cos(decRad) * Math.cos(raRad);
+      const y = Math.cos(decRad) * Math.sin(raRad);
+      const z = Math.sin(decRad);
+      positions.push(x * radius, y * radius, z * radius);
+      const zenithAngle = Math.acos(-z);
+      const longitude = Math.atan2(x, y);
+      /* Left unwrapped on purpose — a smooth run past 0/1 samples correctly
+         under RepeatWrapping, and forcing it into [0, 1) here would cut a
+         seam across the one meridian where it happens to cross. */
+      uvs.push(longitude / (2 * Math.PI) + 0.5, zenithAngle / Math.PI);
+    }
+  }
+  for (let iy = 0; iy < heightSeg; iy += 1) {
+    for (let ix = 0; ix < widthSeg; ix += 1) {
+      const a = iy * (widthSeg + 1) + ix;
+      const b = a + widthSeg + 1;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  return geometry;
+}
+
+/**
+ * Equatorial J2000 → the current alt-az scene frame, as a rotation — the
+ * same hour-angle-then-latitude composition {@link equatorialToAltAz} (see
+ * `horizon.ts`) already does one point at a time, derived here as a single
+ * matrix so the whole Milky Way sphere turns by it at once. Two steps, same
+ * as an equatorial mount: spin around the pole by the hour angle (sidereal
+ * time, since every vertex already carries its own RA), then tip that pole
+ * down to its real altitude for the observer's latitude.
+ */
+function equatorialToHorizonMatrix(lstDegrees: number, latDeg: number): THREE.Matrix4 {
+  const lst = lstDegrees * DEG;
+  const lat = latDeg * DEG;
+  const sinLst = Math.sin(lst);
+  const cosLst = Math.cos(lst);
+  const sinLat = Math.sin(lat);
+  const cosLat = Math.cos(lat);
+  const m = new THREE.Matrix4();
+  // prettier-ignore
+  m.set(
+    -sinLst,          cosLst,          0,       0,
+    cosLst * cosLat,  sinLst * cosLat, sinLat,  0,
+    cosLst * sinLat,  sinLst * sinLat, -cosLat, 0,
+    0,                0,               0,       1,
+  );
+  return m;
+}
+
+/**
  * Star size as a continuous function of magnitude, not a handful of fixed
  * tiers.
  *
@@ -1284,9 +1362,14 @@ export function AakashGocharScene({
     milkyWayRaw.minFilter = THREE.LinearMipmapLinearFilter;
     milkyWayRaw.magFilter = THREE.LinearFilter;
     milkyWayRaw.generateMipmaps = true;
+    /* {@link makeMilkyWayGeometry}'s own U runs smoothly past 0 and 1 rather
+       than being clamped into range — this is what makes that safe to
+       sample instead of smearing the edge pixel across the seam. */
+    milkyWayRaw.wrapS = THREE.RepeatWrapping;
     milkyWayRaw.needsUpdate = true;
     return milkyWayRaw;
   }, [milkyWayRaw, gl]);
+  const milkyWayGeometry = useMemo(() => makeMilkyWayGeometry(400), []);
   /** See the doc comment on the sky sphere below — a flat brightness
       multiplier, which `color` on a hex/string prop cannot express. Their own
       MilkyWay.cpp caps its equivalent at 0.38 (`aLum = qMin(0.38f,
@@ -2185,6 +2268,19 @@ export function AakashGocharScene({
     if (!toggles.lockStars) lockedLst.current = null;
     else if (lockedLst.current == null) lockedLst.current = liveLst;
     const lst = lockedLst.current ?? liveLst;
+
+    /* The Milky Way sphere turns with the actual sky in क्षितिज — see the
+       doc comment on {@link equatorialToHorizonMatrix}. Left untouched in
+       globe/space for now: both place things through their own separate
+       transforms (`globePlace`, the space wheel), and folding this into
+       either is a bigger job than the one this fixes. */
+    if (starsRef.current) {
+      if (horizon) {
+        starsRef.current.quaternion.setFromRotationMatrix(equatorialToHorizonMatrix(lst, observer.lat));
+      } else {
+        starsRef.current.quaternion.identity();
+      }
+    }
 
     /**
      * How far the Earth has turned, as an angle — Greenwich's hour angle from
@@ -3596,7 +3692,7 @@ export function AakashGocharScene({
       <directionalLight ref={fillLightRef} position={[0, 12, 0]} intensity={0.1} />
 
       <mesh ref={starsRef} visible={!arBackground} renderOrder={-1}>
-        <sphereGeometry args={[400, 64, 48]} />
+        <primitive object={milkyWayGeometry} attach="geometry" />
         {/* Opaque, no depth test or write — the standard skybox recipe. At
             r=400 against a 0.1/600 near/far pair the perspective depth
             buffer has compressed almost all of its precision into the near
