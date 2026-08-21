@@ -81,6 +81,7 @@ import {
 import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000, starOverlayNames } from "@/lib/sky3d/nakshatra-stars";
 import { VEDIC_CONSTELLATION_LINKS } from "@/lib/sky3d/vedic-constellations";
 import { cultureStarLabel, flattenSkyCulture } from "@/lib/sky3d/sky-culture";
+import { flattenBackgroundStars } from "@/lib/sky3d/background-stars";
 import {
   placedPoleStars,
   poleStarEpoch,
@@ -1171,10 +1172,12 @@ export function AakashGocharScene({
     return milkyWayRaw;
   }, [milkyWayRaw, gl]);
   /** See the doc comment on the sky sphere below — a flat brightness
-      multiplier over 1, which `color` on a hex/string prop cannot express.
-      This panorama already carries real exposure, unlike the old
-      near-black placeholder — a light lift, not the ×16 that one needed. */
-  const skyBoost = useMemo(() => new THREE.Color(2, 2, 2), []);
+      multiplier, which `color` on a hex/string prop cannot express. At 2 the
+      panorama's own exposure plus the lift read as a lit photograph pasted
+      across the whole dome — outshining every point-star drawn over it,
+      named or background. Held under 1 instead: a dim wash the band shows
+      through, not the thing the eye lands on first. */
+  const skyBoost = useMemo(() => new THREE.Color(0.6, 0.6, 0.6), []);
 
   /**
    * अन्तरिक्ष's Earth wears the Learn playground's cartoon map, not the
@@ -1425,6 +1428,32 @@ export function AakashGocharScene({
         { indices: faint, object: makeStarPoints(faint.length, "#aebfdd", 3.4, 0.45) },
       ],
       lines: makeDynamicSegments(links.length * 2, "#7d93b8", 0.4),
+    };
+  }, []);
+
+  /**
+   * The naked-eye sky itself, under every named figure — see
+   * [[background-stars]]. No lines, no labels, no toggle: the same as the
+   * Milky Way panorama it sits alongside, this is what the dome and globe
+   * are drawn on rather than a layer you can ask for.
+   */
+  const backgroundField = useMemo(() => {
+    const stars = flattenBackgroundStars();
+    const bright: number[] = [];
+    const mid: number[] = [];
+    const faint: number[] = [];
+    stars.forEach((s, i) => {
+      if (s.mag <= 2) bright.push(i);
+      else if (s.mag <= 4) mid.push(i);
+      else faint.push(i);
+    });
+    return {
+      stars,
+      groups: [
+        { indices: bright, object: makeStarPoints(bright.length, "#eef4ff", 3.6, 0.8) },
+        { indices: mid, object: makeStarPoints(mid.length, "#d7e2f5", 2.4, 0.55) },
+        { indices: faint, object: makeStarPoints(faint.length, "#aebedb", 1.5, 0.32) },
+      ],
     };
   }, []);
 
@@ -2444,6 +2473,21 @@ export function AakashGocharScene({
         flushLine(cultureField.lines);
       }
 
+      /* ── the naked-eye sky itself — no toggle, drawn wherever the dome or
+         globe is, the same as the Milky Way panorama it sits under. */
+      if (zodiac) {
+        const precession = precessionSinceJ2000(dtDays);
+        const dpr = state.gl.getPixelRatio();
+        for (const { indices, object } of backgroundField.groups) {
+          (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
+          for (let i = 0; i < indices.length; i += 1) {
+            const star = backgroundField.stars[indices[i]];
+            setVertex(object, i, place(star.lon + precession - ayan, star.lat, starRadius));
+          }
+          (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
+        }
+      }
+
       /* ── the tilt, as an angle you can read ────────────────────────────
          The axis is +Y and the ecliptic pole is `eps` off it, in the plane of
          the solstices. Draw that second line and put an arc between them and
@@ -2999,6 +3043,9 @@ export function AakashGocharScene({
       object.visible = zodiac && toggles.skyCulture;
     }
     cultureField.lines.visible = zodiac && toggles.skyCulture;
+    for (const { object } of backgroundField.groups) {
+      object.visible = zodiac;
+    }
     poleField.points.visible = zodiac && toggles.poleStars;
     poleField.crown.visible = zodiac && toggles.poleStars;
     poleField.trackLine.visible = zodiac && toggles.poleStars;
@@ -3615,6 +3662,11 @@ export function AakashGocharScene({
       <primitive object={cultureField.lines} />
       {cultureField.groups.map(({ object }, i) => (
         <primitive key={`culture-${i}`} object={object} />
+      ))}
+
+      {/* The naked-eye sky itself, everything down to magnitude 5.5. */}
+      {backgroundField.groups.map(({ object }, i) => (
+        <primitive key={`bg-${i}`} object={object} />
       ))}
 
       {/* The obliquity: the orbit's perpendicular, and the angle off it. */}
