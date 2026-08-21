@@ -8,7 +8,7 @@
  * Nepali UI steps विक्रम संवत् year / month / day. English UI keeps Gregorian.
  */
 
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -74,14 +74,14 @@ function sliderToDaySec(slider: number): number {
  * that says nothing about what you are watching. Now every position on it is a
  * step you can name, and it is the same step पछाडि and अगाडि move by.
  */
-export function sliderToRate(slider: number): number {
+function sliderToRate(slider: number): number {
   const notch = Math.round(slider);
   if (notch === 0) return 0;
   const index = Math.min(TIME_STEPS.length - 1, Math.abs(notch) - 1);
   return Math.sign(notch) * TIME_STEPS[index].seconds;
 }
 
-export function rateToSlider(rate: number): number {
+function rateToSlider(rate: number): number {
   if (rate === 0 || !Number.isFinite(rate)) return 0;
   return Math.sign(rate) * (nearestStepIndex(rate) + 1);
 }
@@ -98,7 +98,7 @@ export type WallParts = {
   second: number;
 };
 
-export function wallPartsFromMs(timeMs: number, zoneOffsetMs: number): WallParts {
+function wallPartsFromMs(timeMs: number, zoneOffsetMs: number): WallParts {
   const local = new Date(timeMs + zoneOffsetMs);
   return {
     year: local.getUTCFullYear(),
@@ -119,7 +119,7 @@ function utcMsFromWall(p: WallParts): number {
   );
 }
 
-export function instantFromWall(p: WallParts, zoneOffsetMs: number): number {
+function instantFromWall(p: WallParts, zoneOffsetMs: number): number {
   return utcMsFromWall(p) - zoneOffsetMs;
 }
 
@@ -721,7 +721,9 @@ function HoldButton({
   const hold = useRef(0);
   const repeat = useRef(0);
   const onStepRef = useRef(onStep);
-  onStepRef.current = onStep;
+  useEffect(() => {
+    onStepRef.current = onStep;
+  }, [onStep]);
 
   const stop = () => {
     window.clearTimeout(hold.current);

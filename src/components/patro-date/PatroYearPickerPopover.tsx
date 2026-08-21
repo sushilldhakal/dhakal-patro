@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Era, Language } from "@/lib/era";
@@ -42,9 +42,15 @@ export function PatroYearPickerPopover({
   const [query, setQuery] = useState("");
   const [draftEra, setDraftEra] = useState(era);
 
-  useEffect(() => {
+  // Re-seed the draft era whenever the popover opens, or `era` itself moves
+  // while it's open — adjusted during render, per React's guidance for state
+  // that mirrors a prop, rather than an effect that would show the stale
+  // draft for a frame.
+  const [prevSync, setPrevSync] = useState({ open, era });
+  if (prevSync.open !== open || prevSync.era !== era) {
+    setPrevSync({ open, era });
     if (open) setDraftEra(era);
-  }, [open, era]);
+  }
 
   const pickerEra = onBrowseCommit ? draftEra : era;
   const draftYearRange = useMemo(

@@ -94,12 +94,22 @@ function partBody(slug: string, offset: number): { node: React.ReactNode; sectio
  */
 function MergedBody({ page }: { page: MergedPage }) {
   const { lang } = useLocale();
-  let offset = 0;
-  const chapters = page.parts.map((part) => {
-    const { node, sections } = partBody(part.slug, offset);
-    offset += sections;
-    return { part, node };
-  });
+  // Section numbers run continuously across chapters, so each chapter's
+  // offset depends on every one before it — threaded through `reduce`
+  // rather than an outer counter mutated as the map runs.
+  const { chapters } = page.parts.reduce<{
+    chapters: { part: MergedPage["parts"][number]; node: React.ReactNode }[];
+    offset: number;
+  }>(
+    (acc, part) => {
+      const { node, sections } = partBody(part.slug, acc.offset);
+      return {
+        chapters: [...acc.chapters, { part, node }],
+        offset: acc.offset + sections,
+      };
+    },
+    { chapters: [], offset: 0 },
+  );
 
   return (
     <>

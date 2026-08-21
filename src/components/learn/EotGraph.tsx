@@ -138,7 +138,12 @@ export function EotGraph({ eccentricity, tilt, dayOfYear, daysPerYear }: EotGrap
   const x = (min: number) => plotL + ((min - axisMin) / (axisMax - axisMin)) * (plotR - plotL);
   const y = (frac: number) => plotT + frac * (plotB - plotT);
 
+  // `x`/`y` are plain closures rebuilt every render; `axisMin`/`axisMax` (and the
+  // plot-box constants they close over) are the values that actually change them,
+  // so those are listed instead of the functions themselves.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const latePath = useMemo(() => areaPath(curve, x, y, "late"), [curve, axisMin, axisMax]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const earlyPath = useMemo(() => areaPath(curve, x, y, "early"), [curve, axisMin, axisMax]);
 
   const markerM = meanAnomalyAt(dayOfYear / daysPerYear);

@@ -44,6 +44,7 @@ export default defineConfig([
       'src/components/home/PanchangaAsideTabs.tsx',
       'src/components/tithi-mechanics/ElongationDiagram.tsx',
       'src/components/avakahada/AvakahadaWheel.tsx',
+      'src/lib/learn/learn-topics.tsx',
     ],
     rules: {
       'react-refresh/only-export-components': 'off',

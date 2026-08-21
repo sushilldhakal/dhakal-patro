@@ -29,6 +29,16 @@ export function HomeRashifalSignPicker({ signs, defaultSignId }: Props) {
   const [selectedId, setSelectedId] = useState(defaultSignId ?? signs[0]?.id ?? 1);
   const [api, setApi] = useState<CarouselApi>();
 
+  // Reset the selection when `defaultSignId` itself changes (a new month's
+  // preselected sign) — adjusted during render, per React's guidance for
+  // state that mirrors a prop, rather than via an effect that would commit
+  // the old selection for one frame first.
+  const [prevDefaultSignId, setPrevDefaultSignId] = useState(defaultSignId);
+  if (defaultSignId !== prevDefaultSignId) {
+    setPrevDefaultSignId(defaultSignId);
+    if (defaultSignId != null) setSelectedId(defaultSignId);
+  }
+
   const indexForId = useCallback(
     (id: number) => {
       const i = signs.findIndex((s) => s.id === id);
@@ -36,10 +46,6 @@ export function HomeRashifalSignPicker({ signs, defaultSignId }: Props) {
     },
     [signs],
   );
-
-  useEffect(() => {
-    if (defaultSignId != null) setSelectedId(defaultSignId);
-  }, [defaultSignId]);
 
   useEffect(() => {
     if (!api || defaultSignId == null) return;
@@ -56,6 +62,10 @@ export function HomeRashifalSignPicker({ signs, defaultSignId }: Props) {
 
   useEffect(() => {
     if (!api) return;
+    // The carousel (embla) only exists once mounted, so its current snap
+    // can't be read during render — this call seeds `selectedId` from it
+    // once, and the two listeners below keep it synced afterward.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     syncFromCarousel();
     api.on("select", syncFromCarousel).on("reInit", syncFromCarousel);
     return () => {

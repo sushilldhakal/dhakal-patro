@@ -70,7 +70,7 @@ export function compareBrowseMonth(
 export function normalizePatroBrowseRange(raw: PatroBrowseRange): PatroBrowseRange {
   const era = raw.era;
   let startYear = clampBrowseYear(era, raw.startYear);
-  let startMonth = clampBrowseMonth(raw.startMonth);
+  const startMonth = clampBrowseMonth(raw.startMonth);
   let endYear = clampBrowseYear(era, raw.endYear);
   let endMonth = clampBrowseMonth(raw.endMonth);
   if (!isValidBrowseYear(era, startYear)) startYear = minBrowseYearForEra(era);

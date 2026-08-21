@@ -106,7 +106,6 @@ export function usePatroDayUrlBrowse(
     }
   }, [location, dayState, search, navigate, mirrorUrl, language]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const fp = locationSearchFingerprint(search);
     const prev = seenUrlLocationRef.current;
@@ -115,7 +114,6 @@ export function usePatroDayUrlBrowse(
     const loc = searchToLocation(search);
     if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
   }, [search, location, setLocation]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const setDayState = useCallback(
     (next: PatroDayFetchState) => {
@@ -251,7 +249,6 @@ export function usePatroPanchangaUrlBrowse(
     }
   }, [location, dayState, clock, search, navigate, language]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     // `clock` and `search.time` mirror each other, so exactly one of them has to
     // win when they disagree. The effect above owns clock → URL; this one adopts
@@ -276,7 +273,6 @@ export function usePatroPanchangaUrlBrowse(
       if (loc && !sameLocationParams(loc.params, location.params)) setLocation(loc);
     }
   }, [search, clock, setClock, location, setLocation]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const syncResolvedPatroDay = useCallback(
     (resolved: ResolvedPatroDayFields) => {

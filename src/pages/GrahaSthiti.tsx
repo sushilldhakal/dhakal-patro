@@ -113,7 +113,7 @@ export function GrahaSthiti() {
     dayBrowse;
   const displayLanguage = dayState.display.language;
   const todayAd = todayAdStringInTimezone(
-    new Date(Date.now()),
+    new Date(),
     resolveTimeZone(undefined, location.params.timezone),
   );
 

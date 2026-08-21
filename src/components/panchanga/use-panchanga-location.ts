@@ -146,7 +146,6 @@ export function usePanchangaLocation(initial?: PanchangaLocation) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!ctx || !initial || bootstrappedRef.current) return;
     bootstrappedRef.current = true;
@@ -154,7 +153,6 @@ export function usePanchangaLocation(initial?: PanchangaLocation) {
       ctx.setLocation(initial);
     }
   }, [ctx, initial]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (ctx) {
     return ctx;

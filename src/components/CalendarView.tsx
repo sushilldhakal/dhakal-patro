@@ -361,6 +361,7 @@ export function CalendarView({
     nextMonthQ?.data?.calendar,
     yearFestivals,
     lang,
+    era,
   ]);
 
   useEffect(() => {

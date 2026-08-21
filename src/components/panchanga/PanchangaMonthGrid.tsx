@@ -91,6 +91,10 @@ export function PanchangaMonthGrid({
       browseYear != null && browseMonth != null
         ? { year: browseYear, month: browseMonth }
         : bsFromDate,
+    // `bsFromDate` is a fresh object every render (`adToBS(date)` above); its
+    // year/month are the values that actually decide this, so those are
+    // listed instead of the object reference.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [browseYear, browseMonth, bsFromDate.year, bsFromDate.month],
   );
   const adYear = date.getFullYear();
@@ -137,6 +141,7 @@ export function PanchangaMonthGrid({
     );
   }, [
     isAdCalendar,
+    monthFetchEra,
     bs.year,
     bs.month,
     prevBs,

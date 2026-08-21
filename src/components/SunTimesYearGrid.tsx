@@ -188,7 +188,7 @@ function gregorianMonthLengthsFromData(
 function defaultMonthFromResponse(months: SunYearMonth[] | undefined): string {
   if (!months?.length) return "month-1";
   const today = todayAdStringInTimezone(
-    new Date(Date.now()),
+    new Date(),
     Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   for (const m of months) {

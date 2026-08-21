@@ -1333,7 +1333,9 @@ export function AakashGocharScene({
   }, []);
 
   const vedicStarsRef = useRef(vedicStars);
-  vedicStarsRef.current = vedicStars;
+  useEffect(() => {
+    vedicStarsRef.current = vedicStars;
+  }, [vedicStars]);
   const vedicPickRef = useRef(
     Array.from({ length: VEDIC_STAR_CAPACITY }, () => ({
       index: -1,
@@ -1711,7 +1713,7 @@ export function AakashGocharScene({
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onCancel);
     };
-  }, [camera, gl, mode, view]);
+  }, [camera, gl, mode, view, starField.stars]);
   /** The last focus request answered, and whether one is still outstanding. */
   const lastFocusNonce = useRef(focusNonce);
   const recentre = useRef(false);

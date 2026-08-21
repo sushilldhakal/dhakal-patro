@@ -31,14 +31,9 @@ const COLOR = {
 } as const;
 
 /** ecliptic longitude → a point in the equatorial / belt plane, app convention. */
-export function atLon(lonDeg: number, radius: number) {
+function atLon(lonDeg: number, radius: number) {
   const a = lonDeg * (Math.PI / 180);
   return new THREE.Vector3(radius * Math.cos(a), 0, -radius * Math.sin(a));
-}
-
-export function atLonInto(out: THREE.Vector3, lonDeg: number, radius: number) {
-  const a = lonDeg * (Math.PI / 180);
-  return out.set(radius * Math.cos(a), 0, -radius * Math.sin(a));
 }
 
 function ellipseGeometry(semiMajor: number, semiMinor: number, segments = 128) {

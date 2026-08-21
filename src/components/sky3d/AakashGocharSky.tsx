@@ -1042,9 +1042,12 @@ export function AakashGocharSky({
 
   /* No target, nothing to centre on: the lock cannot stay on once its graha is
      deselected and your place is not standing in for it, or the camera
-     silently stops following. */
+     silently stops following. An invariant over two pieces of state rather
+     than one prop mirrored into another, so it's enforced here rather than
+     at each place selectedKey/lockObserver can become falsy. */
   useEffect(() => {
     if (!selectedKey && !lockObserver) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToggles((t) => (t.lockCenter ? { ...t, lockCenter: false } : t));
     }
   }, [selectedKey, lockObserver]);

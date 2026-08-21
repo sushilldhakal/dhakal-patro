@@ -56,7 +56,7 @@ export function Gochar() {
   const displayLanguage = dayState.display.language;
   const calendarEra = useCalendarEra();
   const todayAd = todayAdStringInTimezone(
-    new Date(Date.now()),
+    new Date(),
     resolveTimeZone(undefined, location.params.timezone),
   );
 
@@ -203,7 +203,7 @@ export function Gochar() {
     }
     if (refDateAd) return formatPatroCivilDayLabel(refDateAd, lang, digits);
     return "—";
-  }, [dayQ.data, gocharQ.data?.date_bs, refDateAd, lang, digits]);
+  }, [dayQ.data, gocharQ.data, refDateAd, lang, digits]);
 
   useRouteLoading((dayQ.isLoading && !dayQ.data) || (gocharQ.isLoading && !gocharQ.data));
 

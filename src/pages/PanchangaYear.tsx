@@ -121,7 +121,7 @@ export function PanchangaYear() {
   const [monthsBack, setMonthsBack] = useState(1);
   const [monthsFwd, setMonthsFwd] = useState(1);
   const scrubbingRef = useRef(false);
-  const lastWheelDataRef = useRef<PanchangaDay | undefined>(undefined);
+  const [lastWheelData, setLastWheelData] = useState<PanchangaDay | undefined>(undefined);
   const prevPlayDirRef = useRef(play.dir);
 
   useEffect(() => {
@@ -150,6 +150,11 @@ export function PanchangaYear() {
     // setDate ↔ setDayAd loop and "Maximum update depth exceeded".
     if (wasPlaying) return;
     if (dayAd === adDateStr) return;
+    // Syncing the wheel back to the browsed date once autoplay has settled —
+    // not a prop mirrored into state, but a resync gated on `wasPlaying` and
+    // `scrubbingRef` above. Moving it out of the effect reintroduces the
+    // setDate <-> setDayAd loop the comment above this effect documents.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDayAd(adDateStr);
     setAnchor(parseAdStr(adDateStr));
   }, [adDateStr, play.dir, dayAd]);
@@ -202,8 +207,14 @@ export function PanchangaYear() {
   const clamped = foundIndex ?? 1;
   const current = days[clamped - 1];
   const wheelData = current?.p;
-  if (wheelData) lastWheelDataRef.current = wheelData;
-  const displayWheelData = wheelData ?? lastWheelDataRef.current;
+  // Keep showing the last good row through a momentary gap (a scrub or a
+  // window edge with no data yet) — adjusted during render, per React's
+  // guidance for state derived from other state, rather than a ref mutated
+  // and read back in the same render pass.
+  if (wheelData && wheelData !== lastWheelData) {
+    setLastWheelData(wheelData);
+  }
+  const displayWheelData = wheelData ?? lastWheelData;
 
   useEffect(() => {
     if (scrubbingRef.current || play.dir !== 0) return;
@@ -228,6 +239,11 @@ export function PanchangaYear() {
     if (play.dir === 0 || !total) return;
     const margin = EXTEND_MARGIN_PLAY;
     if (play.dir === 1 && total - clamped <= margin && !atLimit.end) {
+      // Autoplay approaching the loaded window's edge: widen it, which feeds
+      // back through `bounds`/`queryYears` to fetch the next year-wheel data.
+      // A data fetch triggered from derived state, not a prop mirrored into
+      // state — see react.dev's "Update external systems" case for effects.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (monthsFwd < MAX_MONTHS_EACH) setMonthsFwd((m) => m + 1);
       else setAnchor((a) => shiftAnchorMonths(a, 1));
     }
