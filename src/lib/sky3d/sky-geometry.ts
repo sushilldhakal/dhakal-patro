@@ -130,15 +130,29 @@ export const ARCMIN = 1 / 60;
 
 export const GRID_TIERS: readonly GridTier[] = [
   /* Coarse → fine as the क्षितिज lens narrows. 10° is the opening cage; 5°,
-     1°, then ½° fade in so a tight crop still has lines you can count against.
-     Coarser lines stay on (each finer tier skips them) so the round numbers
-     do not vanish the moment a denser web appears. ½° is rebuilt over the
-     visible patch — a whole-sky ½° cage is hundreds of thousands of vertices
-     for a window a dozen degrees across. */
+     1°, ½°, then 10′, 5′ and 2′ fade in so a tight crop still has lines you
+     can count against all the way to horizon's own 1° floor — Stellarium's
+     own grid (GridLinesMgr.cpp's STEP_SIZES tables) keeps refining the same
+     way, through a much longer list of "nice" steps, to hold roughly the
+     same on-screen spacing at any zoom rather than letting the web go sparse
+     once ½° stopped being fine enough. Coarser lines stay on (each finer
+     tier skips them) so the round numbers do not vanish the moment a denser
+     web appears. ½° and finer are rebuilt over the visible patch — a
+     whole-sky ½° cage, let alone 2′, is a hopeless vertex count for a window
+     a few degrees across. */
   { step: 600, maxFov: Infinity, skipMultiplesOf: [], opacity: 0.34 },
   { step: 300, maxFov: 70, skipMultiplesOf: [600], opacity: 0.26 },
   { step: 60, maxFov: 28, skipMultiplesOf: [300, 600], opacity: 0.18 },
   { step: 30, maxFov: 12, skipMultiplesOf: [60, 300, 600], opacity: 0.14, local: true },
+  { step: 10, maxFov: 5, skipMultiplesOf: [30, 60, 300, 600], opacity: 0.11, local: true },
+  { step: 5, maxFov: 2, skipMultiplesOf: [10, 30, 60, 300, 600], opacity: 0.09, local: true },
+  {
+    step: 2,
+    maxFov: 0.9,
+    skipMultiplesOf: [5, 10, 30, 60, 300, 600],
+    opacity: 0.07,
+    local: true,
+  },
 ];
 
 /** The finest spacing the cage is drawing at this field of view, arcminutes. */

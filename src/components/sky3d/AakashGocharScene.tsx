@@ -679,13 +679,22 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
         vec2 d = gl_PointCoord - vec2(0.5);
         float r2 = dot(d, d);
         if (r2 > 0.25) discard;
-        /* Solid to the edge, with only the last of it feathered. Ramping the
-           alpha all the way from the centre made every star a soft blob —
-           read as out of focus rather than as a point of light. */
-        float alpha = 1.0 - smoothstep(0.185, 0.25, r2);
+        /* A real star's point-spread function, not a flat disc with a hard
+           edge — Stellarium's own point-source shader draws the same
+           Gaussian falloff (StelSkyDrawer::computeRCMag / its halo texture)
+           rather than the solid-then-feathered disc this used to be, which
+           is why that version read as flat coloured dots instead of points
+           of light. */
+        float alpha = exp(-r2 * 12.0);
         gl_FragColor = vec4(uColor, uOpacity * alpha);
       }
     `,
+    /* Additive, the same as Stellarium's own point-source pass (GL_ONE,
+       GL_ONE — see StelSkyDrawer::preDrawPointSource): two overlapping
+       glows brighten into each other instead of one flat colour painting
+       over the other, which is what makes a tight pair or a dense field
+       read as light rather than as stacked tiles. */
+    blending: THREE.AdditiveBlending,
     transparent: true,
     depthWrite: false,
     toneMapped: false,
@@ -693,6 +702,58 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
   const points = new THREE.Points(geometry, material);
   points.frustumCulled = false;
   return points;
+}
+
+/**
+ * Star size as a continuous function of magnitude, not a handful of fixed
+ * tiers.
+ *
+ * `makeStarPoints` gave every star in a bucket the same flat size — which
+ * read as three or four discrete disc sizes stamped across the sky, each
+ * one considerably bigger than a planetarium actually draws a star. A real
+ * one carries no apparent size at all; the size on screen is standing in
+ * for brightness, so it wants to slide smoothly with magnitude the way
+ * Sirius visibly outshining a मघा companion does, not jump in steps.
+ * Linear in magnitude and clamped at both ends, capped modestly — a couple
+ * of pixels for the faintest included, four or five for the very brightest.
+ */
+function starPixelSize(
+  mag: number,
+  { faintest, brightest, minPx, maxPx }: { faintest: number; brightest: number; minPx: number; maxPx: number },
+): number {
+  const t = Math.min(1, Math.max(0, (faintest - mag) / (faintest - brightest)));
+  return minPx + t * (maxPx - minPx);
+}
+
+/** Write each star's own pixel size into a group's `aSize` buffer, by magnitude. */
+function sizeStarsByMagnitude(
+  points: THREE.Points,
+  mags: number[],
+  opts: { faintest: number; brightest: number; minPx: number; maxPx: number },
+) {
+  const attr = points.geometry.getAttribute("aSize") as THREE.BufferAttribute;
+  for (let i = 0; i < mags.length; i += 1) {
+    attr.setX(i, starPixelSize(mags[i], opts));
+  }
+  attr.needsUpdate = true;
+}
+
+/**
+ * A companion star's own name-reveal threshold, continuous in field of
+ * view — Stellarium's `StarMgr::maxMagStarName` rises the same way with its
+ * limiting magnitude, itself a function of FOV (`StarMgr.cpp:1420-1424`,
+ * `StelSkyDrawer::computeLimitMagnitude`), rather than every companion
+ * switching on together at one zoom threshold. Wide open, nothing passes;
+ * by the time the lens has pulled in to {@link close}'s own 24°, every
+ * companion this file ever draws (faintest is 5.5) already clears it — so
+ * the old hard cut and this one agree exactly at that edge, and only the
+ * approach to it now reveals gradually instead of jumping.
+ */
+function companionMagLimit(fovDeg: number): number {
+  const wide = 40;
+  const tight = 24;
+  const t = Math.min(1, Math.max(0, (wide - fovDeg) / (wide - tight)));
+  return -2 + t * (5.5 - -2);
 }
 
 /** Write one vertex of any position-buffered object. */
@@ -1172,12 +1233,14 @@ export function AakashGocharScene({
     return milkyWayRaw;
   }, [milkyWayRaw, gl]);
   /** See the doc comment on the sky sphere below — a flat brightness
-      multiplier, which `color` on a hex/string prop cannot express. At 2 the
-      panorama's own exposure plus the lift read as a lit photograph pasted
-      across the whole dome — outshining every point-star drawn over it,
-      named or background. Held under 1 instead: a dim wash the band shows
-      through, not the thing the eye lands on first. */
-  const skyBoost = useMemo(() => new THREE.Color(0.6, 0.6, 0.6), []);
+      multiplier, which `color` on a hex/string prop cannot express. Their own
+      MilkyWay.cpp caps its equivalent at 0.38 (`aLum = qMin(0.38f,
+      aLum*2.f)`, MilkyWay.cpp:339) and draws it additive — that is the
+      number this is matched to, not a guess: any higher and the panorama's
+      own exposure reads as a lit photograph pasted across the dome,
+      outshining every point-star drawn with it rather than sitting among
+      them. */
+  const skyBoost = useMemo(() => new THREE.Color(0.38, 0.38, 0.38), []);
 
   /**
    * अन्तरिक्ष's Earth wears the Learn playground's cartoon map, not the
@@ -1389,14 +1452,21 @@ export function AakashGocharScene({
       if (list) list.push(i);
       else byNakshatra.set(s.nakshatra, [i]);
     });
+    const sizeOpts = { faintest: 5.5, brightest: -1.5, minPx: 1.4, maxPx: 5 };
+    const junctionPoints = makeStarPoints(junction.length, "#ffd98a", 5, 0.95);
+    const brightPoints = makeStarPoints(bright.length, "#eaf2ff", 4, 0.82);
+    const faintPoints = makeStarPoints(faint.length, "#c8d8ee", 2.6, 0.58);
+    sizeStarsByMagnitude(junctionPoints, junction.map((i) => stars[i].mag), sizeOpts);
+    sizeStarsByMagnitude(brightPoints, bright.map((i) => stars[i].mag), sizeOpts);
+    sizeStarsByMagnitude(faintPoints, faint.map((i) => stars[i].mag), sizeOpts);
     return {
       stars,
       links,
       byNakshatra: [...byNakshatra.entries()],
       groups: [
-        { indices: junction, object: makeStarPoints(junction.length, "#ffd98a", 8, 0.95) },
-        { indices: bright, object: makeStarPoints(bright.length, "#eaf2ff", 6, 0.82) },
-        { indices: faint, object: makeStarPoints(faint.length, "#c8d8ee", 4.2, 0.58) },
+        { indices: junction, object: junctionPoints },
+        { indices: bright, object: brightPoints },
+        { indices: faint, object: faintPoints },
       ],
       lines: makeDynamicSegments(links.length * 2, "#9db9dd", 0.5),
     };
@@ -1419,14 +1489,21 @@ export function AakashGocharScene({
       else if (s.mag <= 3.4) bright.push(i);
       else faint.push(i);
     });
+    const sizeOpts = { faintest: 5.5, brightest: -1.5, minPx: 1.2, maxPx: 4.4 };
+    const namedPoints = makeStarPoints(named.length, "#ffd98a", 4.4, 0.9);
+    const brightPoints = makeStarPoints(bright.length, "#dfe8fb", 3.4, 0.7);
+    const faintPoints = makeStarPoints(faint.length, "#aebfdd", 2, 0.45);
+    sizeStarsByMagnitude(namedPoints, named.map((i) => stars[i].mag), sizeOpts);
+    sizeStarsByMagnitude(brightPoints, bright.map((i) => stars[i].mag), sizeOpts);
+    sizeStarsByMagnitude(faintPoints, faint.map((i) => stars[i].mag), sizeOpts);
     return {
       stars,
       links,
       figures,
       groups: [
-        { indices: named, object: makeStarPoints(named.length, "#ffd98a", 7, 0.9) },
-        { indices: bright, object: makeStarPoints(bright.length, "#dfe8fb", 5, 0.7) },
-        { indices: faint, object: makeStarPoints(faint.length, "#aebfdd", 3.4, 0.45) },
+        { indices: named, object: namedPoints },
+        { indices: bright, object: brightPoints },
+        { indices: faint, object: faintPoints },
       ],
       lines: makeDynamicSegments(links.length * 2, "#7d93b8", 0.4),
     };
@@ -1448,12 +1525,23 @@ export function AakashGocharScene({
       else if (s.mag <= 4) mid.push(i);
       else faint.push(i);
     });
+    /* Stellarium never lets a star's radius fall below its own floor either
+       (StelSkyDrawer::computeRCMag: under 1.2px it stops shrinking the dot
+       and dims its luminance instead) — a sub-pixel point is one the
+       renderer may drop or alias into a flicker, not a fainter star. */
+    const sizeOpts = { faintest: 5.5, brightest: -1.5, minPx: 1, maxPx: 3 };
+    const brightPoints = makeStarPoints(bright.length, "#eef4ff", 2.6, 0.8);
+    const midPoints = makeStarPoints(mid.length, "#d7e2f5", 1.6, 0.55);
+    const faintPoints = makeStarPoints(faint.length, "#aebedb", 0.9, 0.32);
+    sizeStarsByMagnitude(brightPoints, bright.map((i) => stars[i].mag), sizeOpts);
+    sizeStarsByMagnitude(midPoints, mid.map((i) => stars[i].mag), sizeOpts);
+    sizeStarsByMagnitude(faintPoints, faint.map((i) => stars[i].mag), sizeOpts);
     return {
       stars,
       groups: [
-        { indices: bright, object: makeStarPoints(bright.length, "#eef4ff", 3.6, 0.8) },
-        { indices: mid, object: makeStarPoints(mid.length, "#d7e2f5", 2.4, 0.55) },
-        { indices: faint, object: makeStarPoints(faint.length, "#aebedb", 1.5, 0.32) },
+        { indices: bright, object: brightPoints },
+        { indices: mid, object: midPoints },
+        { indices: faint, object: faintPoints },
       ],
     };
   }, []);
@@ -1511,9 +1599,9 @@ export function AakashGocharScene({
       stars,
       track: poleTrackPoints(23.4392911),
       trackLine: makeDynamicLine(181, "#8ab4f8", 0.62),
-      points: makeStarPoints(stars.length, "#dceaff", 5, 1),
+      points: makeStarPoints(stars.length, "#dceaff", 3, 1),
       /* The reigning one is drawn on top of its own dot, larger and gold. */
-      crown: makeStarPoints(1, "#ffd166", 8, 1),
+      crown: makeStarPoints(1, "#ffd166", 4.6, 1),
     };
   }, []);
 
@@ -1529,10 +1617,10 @@ export function AakashGocharScene({
    * server's star layer failed soft.
    */
   const vedicField = useMemo(() => {
-    const points = makeStarPoints(VEDIC_STAR_CAPACITY, "#ffe08a", 12, 1);
+    const points = makeStarPoints(VEDIC_STAR_CAPACITY, "#ffe08a", 4.6, 1);
     points.geometry.setDrawRange(0, 0);
     points.renderOrder = 4;
-    const crown = makeStarPoints(1, "#fff6c8", 18, 1);
+    const crown = makeStarPoints(1, "#fff6c8", 6.4, 1);
     crown.renderOrder = 5;
     crown.visible = false;
     return { points, crown };
@@ -2769,9 +2857,18 @@ export function AakashGocharScene({
        normal wide-open sky — see the doc comment on its own material. Full
        through the whole range अन्तरिक्ष's fixed 46° sits in and क्षितिज's
        26° home opens at; gone by 8°, well before the texture's own texels
-       start showing as a blur. */
+       start showing as a blur.
+
+       पृथ्वी गोला cannot share those two numbers: its own lens (see
+       `fovForZoom("globe", …)`) only ever spans about 0.53°–31.7°, nothing
+       like क्षितिज's 1°–235°. Fed the horizon thresholds, "full" (26°) sat
+       almost at globe's own widest possible frame — so short of the single
+       most zoomed-out view, the panorama was already most of the way faded,
+       which read as the sky behind the Earth having gone dark rather than as
+       a lens effect. Its own pair, scaled to its own range instead. */
     if (milkyWayMatRef.current) {
-      milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - 8) / (26 - 8)));
+      const [fadeLo, fadeHi] = globe ? [2, 20] : [8, 26];
+      milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
     }
     if (collect && zodiac && toggles.constellations && !close) {
       const precession = precessionSinceJ2000(dtDays);
@@ -2817,13 +2914,15 @@ export function AakashGocharScene({
       }
     }
 
-    /* Individual नक्षत्र members — योगतारा always, companions once the lens
-       is tight enough that the names do not sit on top of each other. */
+    /* Individual नक्षत्र members — योगतारा always, companions revealed
+       gradually by their own brightness as the lens tightens (see
+       {@link companionMagLimit}), not all at once past one threshold. */
     if (collect && toggles.constellations && (zodiac || space)) {
       const precession = precessionSinceJ2000(dtDays);
+      const companionLimit = space ? (close ? 99 : -99) : companionMagLimit(closeField);
       for (let i = 0; i < starField.stars.length; i += 1) {
         const s = starField.stars[i];
-        if (!s.junction && !close) continue;
+        if (!s.junction && s.mag > companionLimit) continue;
         const lon = s.lon + precession - ayan;
         const at = starPlace(i, lon, s.lat);
         if (!labelVisible(at)) continue;
@@ -3465,11 +3564,20 @@ export function AakashGocharScene({
             takes it out of the picture before it gets that close — the same
             call a real dark-sky photo would make, since the eye stops
             reading it as the Milky Way and starts reading it as one smudged
-            star's neighbourhood at that magnification anyway. */}
+            star's neighbourhood at that magnification anyway.
+
+            Additive, the same as their own `glBlendFunc(GL_ONE, GL_ONE)` —
+            it lets the star points sitting in front of it glow *through* the
+            band rather than the band painting over them as a normal-blended
+            layer would, and it is why theirs never reads as a brighter
+            rectangle laid on top of a dimmer sky: the whole picture is one
+            additive stack, this panorama included, not a photo behind a
+            layer of dots. */}
         <meshBasicMaterial
           ref={milkyWayMatRef}
           map={milkyWay}
           side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
           transparent
           depthWrite={false}
           depthTest={false}
