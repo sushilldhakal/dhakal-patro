@@ -259,7 +259,17 @@ export type SimState = {
  * In `space` view `distance` is how far the camera sits from its target; in
  * `horizon` view the observer cannot move, so it drives the field of view.
  */
-export type ViewState = { yaw: number; pitch: number; distance: number };
+export type ViewState = {
+  yaw: number;
+  pitch: number;
+  distance: number;
+  /**
+   * Rotation about the view direction itself — the horizon camera's third
+   * Euler axis, left at 0 by every manual drag and view chip. Only AR mode
+   * writes a nonzero value here, from the phone's own tilt-sideways.
+   */
+  roll?: number;
+};
 
 /** A 3D anchor projected to canvas pixels, for the text overlay. */
 export type ScreenLabel = {
@@ -941,6 +951,7 @@ export function AakashGocharScene({
   onEmptyPress,
   onSelectObserver,
   onSample,
+  arBackground = false,
 }: {
   sim: React.RefObject<SimState>;
   view: React.RefObject<ViewState>;
@@ -1014,6 +1025,12 @@ export function AakashGocharScene({
   /** The marker on the globe was pressed — your place, chosen as the target. */
   onSelectObserver?: () => void;
   onSample: (sample: SkySample) => void;
+  /**
+   * AR mode: the real world shows through a transparently-cleared canvas
+   * behind this, so the synthetic backdrop that normally stands in for it —
+   * the star sphere, the horizon hillside — has nothing left to do here.
+   */
+  arBackground?: boolean;
 }) {
   const gl = useThree((s) => s.gl);
   const camera = useThree((s) => s.camera);
@@ -2625,7 +2642,7 @@ export function AakashGocharScene({
     /* One switch, not two: भूभाग *is* the ground. `belowHorizon` used to be a
        second chip that had to agree with it before any hillside appeared,
        which meant a reader could turn the landscape on and get nothing. */
-    const showGround = horizon && !globe && toggles.landscape;
+    const showGround = horizon && !globe && toggles.landscape && !arBackground;
     /* Half-opaque, so the राशि belt reads through the valley.
      *
      * The fade only starts once the lens is tighter than a 20° crop, and is
@@ -2880,7 +2897,7 @@ export function AakashGocharScene({
         target.current.copy(trackAt);
       }
       cam.rotation.order = "YXZ";
-      cam.rotation.set(-v.pitch, v.yaw, 0);
+      cam.rotation.set(-v.pitch, v.yaw, v.roll ?? 0);
       const field = fovForZoom("horizon", v.distance);
       fisheye.uHorizonStereo.value = 1;
       fisheye.uHorizonFov.value = field;
@@ -3037,7 +3054,7 @@ export function AakashGocharScene({
           Space turns this off so Earth shows a real terminator, like Learn. */}
       <directionalLight ref={fillLightRef} position={[0, 12, 0]} intensity={0.1} />
 
-      <mesh ref={starsRef}>
+      <mesh ref={starsRef} visible={!arBackground}>
         <sphereGeometry args={[400, 64, 48]} />
         {/* Opaque, depthWrite off — same as Learn's sky. The ecliptic disc is
             transparent, so it has to paint *after* this sphere or the stars
