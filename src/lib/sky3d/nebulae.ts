@@ -6,13 +6,15 @@
  * the full ~130MB set.
  *
  * Each is a real astrophoto placed at its true sky coordinates and true
- * angular size — the thing that actually gives Stellarium's zoomed-in view
- * its detail, not a higher-resolution version of the whole-sky Milky Way
- * panorama. Sized in real degrees, so a small one (a planetary nebula) is
- * genuinely a speck at the default view and only reads as a photograph
- * once the lens has actually pulled in on it — no separate LOD gate is
- * needed, unlike Stellarium's own `minResolution` field, which this
- * catalogue keeps but does not currently use.
+ * angular size. `maxBrightness` is carried straight from their own
+ * catalogue too — it is what actually gates when an entry shows in
+ * Stellarium (`StelSkyImageTile::getTilesToDraw`: hidden while
+ * `luminance < limitLuminance`, the same current-sky-depth test every
+ * star gets from `StelSkyDrawer::computeLimitMagnitude`). Their
+ * `minResolution` field, despite the name, is not that gate at all — it
+ * only decides when to swap a tile for a *sharper child tile*, which
+ * none of these 25 single-image entries have; kept here for reference,
+ * not read by the renderer.
  */
 
 export type Nebula = {
@@ -34,6 +36,9 @@ export type Nebula = {
   widthDeg: number;
   /** True angular height, degrees. */
   heightDeg: number;
+  /** Stellarium's own per-image depth cutoff — the sky has to be zoomed
+   *  in deep enough to reach this magnitude before the photo shows. */
+  maxBrightness: number;
 };
 
 export const NEBULAE: Nebula[] = [
@@ -48,6 +53,7 @@ export const NEBULAE: Nebula[] = [
     dec: 22.0181,
     widthDeg: 0.1572,
     heightDeg: 0.1452,
+    maxBrightness: 13.1,
   },
   {
     id: "m101",
@@ -60,6 +66,7 @@ export const NEBULAE: Nebula[] = [
     dec: 54.3661,
     widthDeg: 1.1913,
     heightDeg: 0.6889,
+    maxBrightness: 13.4,
   },
   {
     id: "m104",
@@ -72,6 +79,7 @@ export const NEBULAE: Nebula[] = [
     dec: -11.6295,
     widthDeg: 0.2645,
     heightDeg: 0.2587,
+    maxBrightness: 12.0,
   },
   {
     id: "m11",
@@ -84,6 +92,7 @@ export const NEBULAE: Nebula[] = [
     dec: -6.2653,
     widthDeg: 0.2359,
     heightDeg: 0.2344,
+    maxBrightness: 12.2,
   },
   {
     id: "m13",
@@ -96,6 +105,7 @@ export const NEBULAE: Nebula[] = [
     dec: 36.4604,
     widthDeg: 0.559,
     heightDeg: 0.4499,
+    maxBrightness: 13.4,
   },
   {
     id: "m16",
@@ -108,6 +118,7 @@ export const NEBULAE: Nebula[] = [
     dec: -13.8064,
     widthDeg: 1.8681,
     heightDeg: 1.8152,
+    maxBrightness: 13.6,
   },
   {
     id: "m17",
@@ -120,6 +131,7 @@ export const NEBULAE: Nebula[] = [
     dec: -16.1241,
     widthDeg: 0.9464,
     heightDeg: 0.9091,
+    maxBrightness: 13.4,
   },
   {
     id: "m20",
@@ -132,6 +144,7 @@ export const NEBULAE: Nebula[] = [
     dec: -22.9744,
     widthDeg: 0.6053,
     heightDeg: 0.5569,
+    maxBrightness: 14.2,
   },
   {
     id: "m22",
@@ -144,6 +157,7 @@ export const NEBULAE: Nebula[] = [
     dec: -23.8983,
     widthDeg: 0.4806,
     heightDeg: 0.4413,
+    maxBrightness: 12.8,
   },
   {
     id: "m27",
@@ -156,6 +170,7 @@ export const NEBULAE: Nebula[] = [
     dec: 22.7216,
     widthDeg: 0.1541,
     heightDeg: 0.1426,
+    maxBrightness: 13.5,
   },
   {
     id: "m31",
@@ -168,6 +183,7 @@ export const NEBULAE: Nebula[] = [
     dec: 41.1598,
     widthDeg: 3.9746,
     heightDeg: 2.9894,
+    maxBrightness: 13.5,
   },
   {
     id: "m33",
@@ -180,6 +196,7 @@ export const NEBULAE: Nebula[] = [
     dec: 30.6601,
     widthDeg: 2.1129,
     heightDeg: 1.8169,
+    maxBrightness: 13.4,
   },
   {
     id: "m4",
@@ -192,6 +209,7 @@ export const NEBULAE: Nebula[] = [
     dec: -26.5335,
     widthDeg: 0.8069,
     heightDeg: 0.7227,
+    maxBrightness: 13.6,
   },
   {
     id: "m42",
@@ -204,6 +222,7 @@ export const NEBULAE: Nebula[] = [
     dec: -5.726,
     widthDeg: 3.6144,
     heightDeg: 3.5894,
+    maxBrightness: 12.5,
   },
   {
     id: "m45",
@@ -216,6 +235,7 @@ export const NEBULAE: Nebula[] = [
     dec: 24.1139,
     widthDeg: 2.3033,
     heightDeg: 2.1021,
+    maxBrightness: 12.5,
   },
   {
     id: "m51",
@@ -228,6 +248,7 @@ export const NEBULAE: Nebula[] = [
     dec: 47.2274,
     widthDeg: 0.669,
     heightDeg: 0.4542,
+    maxBrightness: 13.4,
   },
   {
     id: "m57",
@@ -240,6 +261,7 @@ export const NEBULAE: Nebula[] = [
     dec: 33.0281,
     widthDeg: 0.0736,
     heightDeg: 0.062,
+    maxBrightness: 12.2,
   },
   {
     id: "m8",
@@ -252,6 +274,7 @@ export const NEBULAE: Nebula[] = [
     dec: -24.0736,
     widthDeg: 2.8032,
     heightDeg: 2.5579,
+    maxBrightness: 13.8,
   },
   {
     id: "m81",
@@ -264,6 +287,7 @@ export const NEBULAE: Nebula[] = [
     dec: 69.0644,
     widthDeg: 1.345,
     heightDeg: 0.477,
+    maxBrightness: 13.4,
   },
   {
     id: "m83",
@@ -276,6 +300,7 @@ export const NEBULAE: Nebula[] = [
     dec: -29.8705,
     widthDeg: 0.3732,
     heightDeg: 0.3235,
+    maxBrightness: 12.8,
   },
   {
     id: "m97",
@@ -288,6 +313,7 @@ export const NEBULAE: Nebula[] = [
     dec: 55.0193,
     widthDeg: 0.4395,
     heightDeg: 0.2519,
+    maxBrightness: 13.4,
   },
   {
     id: "ngc3372",
@@ -300,6 +326,7 @@ export const NEBULAE: Nebula[] = [
     dec: -59.8211,
     widthDeg: 6.1699,
     heightDeg: 2.9893,
+    maxBrightness: 13.0,
   },
   {
     id: "ngc6960",
@@ -312,6 +339,7 @@ export const NEBULAE: Nebula[] = [
     dec: 30.6402,
     widthDeg: 5.7652,
     heightDeg: 4.9554,
+    maxBrightness: 13.4,
   },
   {
     id: "ngc7000",
@@ -324,6 +352,7 @@ export const NEBULAE: Nebula[] = [
     dec: 44.0165,
     widthDeg: 6.0819,
     heightDeg: 4.3642,
+    maxBrightness: 13.2,
   },
   {
     id: "ngc7293",
@@ -336,6 +365,7 @@ export const NEBULAE: Nebula[] = [
     dec: -20.8332,
     widthDeg: 0.4966,
     heightDeg: 0.4634,
+    maxBrightness: 13.4,
   },
 ];
 

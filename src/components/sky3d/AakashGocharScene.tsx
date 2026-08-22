@@ -900,6 +900,32 @@ function companionMagLimit(fovDeg: number): number {
   return -2 + t * (5.5 - -2);
 }
 
+/**
+ * The sky's own current depth limit for deep-sky photographs, as a
+ * magnitude — verified against their actual source, not guessed: a nebula
+ * image in Stellarium is *not* gated by its `minResolution`
+ * (`StelSkyImageTile::getTilesToDraw` only reads that to decide whether to
+ * fetch a *sharper child tile* — irrelevant for a single-image entry with
+ * none) but by `luminance < limitLuminance`, i.e. the image's own
+ * `maxBrightness` against the sky's current limiting magnitude, the same
+ * `StelSkyDrawer::computeLimitMagnitude()` every star is tested against
+ * too. That function is a full eye-adaptation solve this does not attempt
+ * to reproduce; what is reproduced is its shape — limiting magnitude gets
+ * deeper the tighter the lens, on the standard aperture relation (each
+ * 2.5× narrower field is one magnitude deeper) — anchored so it lands on
+ * this file's own naked-eye ceiling (mag 7.5, {@link backgroundField}'s own
+ * faintest) at क्षितिज's 26° home, which is what makes every one of these
+ * (maxBrightness 12–14.2) sit well below the limit at the ordinary view and
+ * only clear it once a press has pulled in on that patch of sky — the
+ * brightest around a 10° field, the faintest not until about 3.7°, each on
+ * its own crossing rather than every one of the 25 popping in together.
+ */
+function nebulaLimitMagnitude(fovDeg: number): number {
+  const referenceFov = 80;
+  const referenceMag = 7.5;
+  return referenceMag + 5 * Math.log10(referenceFov / Math.max(fovDeg, 0.05));
+}
+
 /** Write one vertex of any position-buffered object. */
 function setVertex(
   object: THREE.Object3D & { geometry: THREE.BufferGeometry },
@@ -2791,21 +2817,23 @@ export function AakashGocharScene({
          the sky at two very different radii and a fixed world size would
          read as the right size in one and wildly wrong in the other.
 
-         Opposite of the Milky Way's own fade: these come *up* as the lens
-         tightens rather than fading out, gone at the wide default view and
-         full once a press has actually pulled in toward that patch of sky
-         — a real photograph turning up uninvited at the ordinary view read
-         as clutter, not detail. */
+         Each fades in on its own `maxBrightness`, not one shared threshold
+         for all 25 — see {@link nebulaLimitMagnitude}. A half-magnitude
+         band around the crossing point, not a hard cut: real enough to be
+         verifiable against their own gate, narrow enough that it still
+         reads as "there" rather than as a long, uncertain fade. */
       if (zodiac && toggles.nebulae) {
         const precession = precessionSinceJ2000(dtDays);
         const nebulaFov = fovForZoom(mode, view.current.distance);
-        const nebulaFade = Math.max(0, Math.min(1, (20 - nebulaFov) / (20 - 6)));
-        for (const { lon, lat, widthRad, heightRad, sprite, material } of nebulaField) {
+        const limitMag = nebulaLimitMagnitude(nebulaFov);
+        for (const { nebula, lon, lat, widthRad, heightRad, sprite, material } of nebulaField) {
           const at = place(lon + precession - ayan, lat, starRadius);
           sprite.position.set(at[0], at[1], at[2]);
           const radius = Math.hypot(at[0], at[1], at[2]);
           sprite.scale.set(radius * widthRad, radius * heightRad, 1);
-          material.opacity = 0.92 * nebulaFade;
+          const depthPastLimit = limitMag - nebula.maxBrightness;
+          const reveal = Math.max(0, Math.min(1, depthPastLimit / 0.5 + 0.5));
+          material.opacity = 0.92 * reveal;
         }
       }
 
