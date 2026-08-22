@@ -32,7 +32,16 @@ const COLOR = {
   solar: 0xdddd00,
   belt: 0x8a7c2e,
   nakshatra: 0x4a6b8a,
-  grid: ECLIPTIC_GRID_COLOR,
+  /**
+   * The spokes and rings — deliberately *not* {@link ECLIPTIC_GRID_COLOR}.
+   *
+   * They were the same blue as the disc, which was invisible only because
+   * the disc used to be near-black. Filling the disc in that blue put blue
+   * lines on a blue plane and the grid disappeared. A pale sky-blue is
+   * light enough to read against the filled disc and still reads against
+   * Learn's dark one.
+   */
+  grid: 0xa9d4ff,
   gridPlane: 0x001b3d,
 } as const;
 
@@ -115,6 +124,16 @@ function buildMonthRing() {
   return diagramLine(makeLine(ellipseGeometry(MONTH_R, MONTH_R), 0xe3d9a8, 0.5));
 }
 
+/**
+ * How strongly the spokes and rings are drawn.
+ *
+ * The two used to sit at 0.5 and 0.4 — the rings the fainter of the pair —
+ * chosen when they were the only thing on a near-black plane. Over a filled
+ * disc they both need to carry, and the ring/spoke split had no reason to
+ * exist beyond how it was first written.
+ */
+const GRID_LINE_OPACITY = 0.85;
+
 /** Polar grid around the origin. `innerR` is where the spokes leave the body. */
 function buildGuideGrid(innerR = 4) {
   const group = new THREE.Group();
@@ -142,7 +161,7 @@ function buildGuideGrid(innerR = 4) {
     new THREE.LineBasicMaterial({
       color: COLOR.grid,
       transparent: true,
-      opacity: 0.5,
+      opacity: GRID_LINE_OPACITY,
       depthTest: true,
       depthWrite: false,
     }),
@@ -153,7 +172,7 @@ function buildGuideGrid(innerR = 4) {
   const rings = [innerR, 8, 12, MONTH_R, BELT_INNER, BELT_OUTER, NAK_OUTER];
   const unique = [...new Set(rings)].filter((r) => r >= innerR).sort((a, b) => a - b);
   for (const r of unique) {
-    const ring = makeLine(ellipseGeometry(r, r, 96), COLOR.grid, 0.4);
+    const ring = makeLine(ellipseGeometry(r, r, 96), COLOR.grid, GRID_LINE_OPACITY);
     ring.renderOrder = 1;
     ring.frustumCulled = false;
     group.add(ring);
