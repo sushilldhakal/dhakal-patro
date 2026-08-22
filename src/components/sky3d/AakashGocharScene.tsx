@@ -686,6 +686,18 @@ const NEBULA_MAX_FOV = 30;
 const MILKY_WAY_TILE = 3;
 
 /**
+ * Fill strength of अन्तरिक्ष's ecliptic disc — the blue circle running from
+ * the Earth out to the नक्षत्र rim.
+ *
+ * 0.7 was chosen against a flat near-black sky. With a lit Milky Way behind
+ * it, that much of the backdrop came through and the plane stopped reading
+ * as a solid surface the grahas sit on. Still under 1, which is what keeps
+ * it in the transparent pass so a body behind it reads as *under* the plane
+ * rather than being hidden outright.
+ */
+const SPACE_PLANE_OPACITY = 0.8;
+
+/**
  * A cloud of stars whose positions are rewritten with the sky. Point size is in
  * pixels rather than world units — a star has no apparent size, so it must not
  * grow as you zoom in on it.
@@ -4394,7 +4406,7 @@ export function AakashGocharScene({
           rashiBelt={toggles.rashiBelt}
           nakshatraBelt={toggles.nakshatraBelt}
           monthRing={false}
-          planeOpacity={0.7}
+          planeOpacity={SPACE_PLANE_OPACITY}
           gridInnerR={EARTH_RADIUS}
           planeInnerR={EARTH_RADIUS}
           planeY={0}
