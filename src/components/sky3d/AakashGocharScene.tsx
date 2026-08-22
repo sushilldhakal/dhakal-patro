@@ -2991,7 +2991,9 @@ export function AakashGocharScene({
          patch of sky rather than as wallpaper — see {@link nebulaReveal} —
          and its texture is not even fetched until it first earns one.
 
-         The ceiling is low on purpose. These are additive, and in the
+         The ceiling is low on purpose, and lower again now that the band
+         reaches 30°: a wider field fits more of these at once, so the same
+         per-image strength stacks further. These are additive, and in the
          galactic plane several of them genuinely overlap: Barnard's Loop's
          own four tiles, plus the Lambda Orionis ring over the same stars.
          Additive means those *sum*, so a per-image opacity that looks
@@ -3006,7 +3008,17 @@ export function AakashGocharScene({
         for (const entry of nebulaField) {
           const { spanDeg, lon, lat, widthRad, heightRad, sprite, material } = entry;
           const reveal = nebulaReveal(spanDeg, nebulaFov);
-          sprite.visible = reveal > 0;
+          /* Visible only once the photograph is actually here. A
+             `SpriteMaterial` with no `map` is not empty — it is a solid
+             white quad at the material's colour, so a revealed-but-unloaded
+             image paints a flat white rectangle the full angular size of
+             the object. On the wide fields that rectangle is 14° across,
+             which is most of the frame at these zooms, and several of them
+             additive is a white screen. Loading is deliberately lazy,
+             throttled and view-gated, so "revealed" and "has a texture" are
+             now two different things and only the second may draw. */
+          const drawable = reveal > 0 && entry.loadState === "ready";
+          sprite.visible = drawable;
           if (reveal <= 0) continue;
           const at = place(lon + precession - ayan, lat, starRadius);
           sprite.position.set(at[0], at[1], at[2]);
@@ -3019,8 +3031,9 @@ export function AakashGocharScene({
             loadNebulaTexture(entry);
           }
           const radius = Math.hypot(at[0], at[1], at[2]);
+          if (!drawable) continue;
           sprite.scale.set(radius * widthRad, radius * heightRad, 1);
-          material.opacity = 0.1 * reveal;
+          material.opacity = 0.06 * reveal;
         }
       }
 
