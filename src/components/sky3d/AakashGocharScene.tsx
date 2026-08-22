@@ -659,6 +659,12 @@ function flushLine(line: THREE.Line) {
 const STAR_HALO_SCALE = 3;
 
 /**
+ * The widest field any deep-sky photograph is drawn at, degrees. Above
+ * this the sky is being read as a whole and these are only clutter.
+ */
+const NEBULA_MAX_FOV = 22;
+
+/**
  * A cloud of stars whose positions are rewritten with the sky. Point size is in
  * pixels rather than world units — a star has no apparent size, so it must not
  * grow as you zoom in on it.
@@ -953,10 +959,60 @@ function companionMagLimit(fovDeg: number): number {
  * but a dot, and stays away until then.
  */
 function nebulaReveal(spanDeg: number, fovDeg: number): number {
-  const fraction = spanDeg / Math.max(fovDeg, 0.05);
-  /* Below a twentieth of the frame it is not yet worth a texture; by a
-     tenth it is fully there. */
-  return Math.max(0, Math.min(1, (fraction - 0.05) / (0.1 - 0.05)));
+  /* Nothing at all until the lens has actually pulled in. At the ordinary
+     wide view these are not what the reader came for, and the previous
+     version — which showed the big fields immediately — put a dozen
+     overlapping additive photographs over the whole sky at once, which is
+     not "background texture", it is a wash. */
+  if (fovDeg > NEBULA_MAX_FOV) return 0;
+  const fraction = spanDeg / Math.max(fovDeg, 0.02);
+  /* Two edges, and the upper one is the one that was missing. Below a
+     sixteenth of the frame an image is too small to read as anything and
+     is not worth its texture. Above about half the frame it has stopped
+     being a *patch* of sky and started being a wallpaper behind
+     everything — which is exactly the failure the wide fields showed. So
+     it fades back out again as it grows past that, and each photograph is
+     only drawn across the band of zoom where it genuinely looks like an
+     object sitting in the sky. */
+  const fadeIn = Math.min(1, Math.max(0, (fraction - 0.06) / 0.06));
+  const fadeOut = Math.min(1, Math.max(0, (1.1 - fraction) / 0.45));
+  return fadeIn * fadeOut;
+}
+
+type LoadState = "idle" | "loading" | "ready";
+
+/**
+ * Fetch one deep-sky photograph, the first time anything actually needs it.
+ *
+ * The catalogue is ~17MB of PNG across 38 files and none of it is visible
+ * until {@link nebulaReveal} says so, so loading it up front cost every
+ * reader the whole download for something most of them never zoom in far
+ * enough to see. Mutates the entry in place: `loadState` guards against a
+ * second fetch while the first is still in the air.
+ */
+function loadNebulaTexture(entry: {
+  url: string;
+  material: THREE.SpriteMaterial;
+  loadState: LoadState;
+}) {
+  if (entry.loadState !== "idle") return;
+  entry.loadState = "loading";
+  new THREE.TextureLoader().load(
+    entry.url,
+    (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+      entry.material.map = tex;
+      entry.material.needsUpdate = true;
+      entry.loadState = "ready";
+    },
+    undefined,
+    () => {
+      /* Left at "loading" on purpose: a failed image is simply never
+         drawn, rather than retried on every frame it happens to be in
+         view. */
+    },
+  );
 }
 
 /** Write one vertex of any position-buffered object. */
@@ -1458,14 +1514,15 @@ export function AakashGocharScene({
    * ordering job here; depth has nothing left to add and only something to
    * break.
    */
-  const nebulaTextures = useLoader(THREE.TextureLoader, NEBULA_SOURCES as string[]);
   const nebulaField = useMemo(() => {
     return flattenNebulae().map((entry, i) => {
-      const tex = nebulaTextures[i];
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.needsUpdate = true;
       const material = new THREE.SpriteMaterial({
-        map: tex,
+        /* No map yet — see {@link loadNebulaTexture}. Every one of these is
+           a photograph of a few hundred KB, and `useLoader` over the whole
+           catalogue fetched and decoded all of them before the sky could
+           draw its first frame, for images that are invisible until the
+           lens has pulled in on one. They are fetched on first need
+           instead. */
         transparent: true,
         /* Additive, exactly as their own tile pass does it
            (`StelSkyImageTile::draw`: `setBlending(true, GL_ONE, GL_ONE)`).
@@ -1483,9 +1540,10 @@ export function AakashGocharScene({
       const sprite = new THREE.Sprite(material);
       sprite.renderOrder = -0.3;
       sprite.frustumCulled = false;
-      return { ...entry, sprite, material };
+      sprite.visible = false;
+      return { ...entry, sprite, material, url: NEBULA_SOURCES[i], loadState: "idle" as LoadState };
     });
-  }, [nebulaTextures]);
+  }, []);
   /** See the doc comment on the sky sphere below — a flat brightness
       multiplier, which `color` on a hex/string prop cannot express. Their own
       MilkyWay.cpp caps its equivalent at 0.38 (`aLum = qMin(0.38f,
@@ -2859,22 +2917,31 @@ export function AakashGocharScene({
          the sky at two very different radii and a fixed world size would
          read as the right size in one and wildly wrong in the other.
 
-         Each fades in on how much of the frame it covers — see
-         {@link nebulaReveal} — so the wide fields are background you find
-         already there and the small objects wait until you have pulled in
-         on them. Held under half opacity: these are additive-lit
-         photographs sitting behind the star field, and at full strength a
-         14° field like Barnard's Loop washes out the very stars it is
-         supposed to sit behind. */
+         Each is drawn only across the band of zoom where it reads as a
+         patch of sky rather than as wallpaper — see {@link nebulaReveal} —
+         and its texture is not even fetched until it first earns one.
+
+         The ceiling is low on purpose. These are additive, and in the
+         galactic plane several of them genuinely overlap: Barnard's Loop's
+         own four tiles, plus the Lambda Orionis ring over the same stars.
+         Additive means those *sum*, so a per-image opacity that looks
+         right alone is several times too strong where they stack — which
+         is how the whole sky went white. A tenth each keeps a pile-up
+         readable and still shows plainly where only one is in view. */
       if (zodiac && toggles.nebulae) {
         const precession = precessionSinceJ2000(dtDays);
         const nebulaFov = fovForZoom(mode, view.current.distance);
-        for (const { spanDeg, lon, lat, widthRad, heightRad, sprite, material } of nebulaField) {
+        for (const entry of nebulaField) {
+          const { spanDeg, lon, lat, widthRad, heightRad, sprite, material } = entry;
+          const reveal = nebulaReveal(spanDeg, nebulaFov);
+          sprite.visible = reveal > 0;
+          if (reveal <= 0) continue;
+          loadNebulaTexture(entry);
           const at = place(lon + precession - ayan, lat, starRadius);
           sprite.position.set(at[0], at[1], at[2]);
           const radius = Math.hypot(at[0], at[1], at[2]);
           sprite.scale.set(radius * widthRad, radius * heightRad, 1);
-          material.opacity = 0.55 * nebulaReveal(spanDeg, nebulaFov);
+          material.opacity = 0.1 * reveal;
         }
       }
 
@@ -3473,8 +3540,11 @@ export function AakashGocharScene({
     for (const { object } of backgroundField.groups) {
       object.visible = zodiac;
     }
-    for (const { sprite } of nebulaField) {
-      sprite.visible = zodiac && toggles.nebulae;
+    /* Only ever forces them *off* — which of them are on is the reveal's
+       own decision, per sprite, in the block above. Setting `visible` true
+       here as well would put every photograph back on screen at once. */
+    if (!zodiac || !toggles.nebulae) {
+      for (const { sprite } of nebulaField) sprite.visible = false;
     }
     // A skyline glow means nothing without a skyline — only क्षितिज has one.
     horizonGlow.visible = horizon;
