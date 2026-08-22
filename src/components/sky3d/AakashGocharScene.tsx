@@ -661,8 +661,17 @@ const STAR_HALO_SCALE = 3;
 /**
  * The widest field any deep-sky photograph is drawn at, degrees. Above
  * this the sky is being read as a whole and these are only clutter.
+ *
+ * 30° is the handover point, and it is deliberately the same number the
+ * Milky Way panorama starts fading at (see the fade thresholds in the
+ * frame loop): as the lens pulls in past 30° the single low-resolution
+ * whole-sky photograph eases out while the individual, correctly-placed
+ * astrophotos ease in over the same span, so one picture of the sky
+ * becomes another instead of the panorama vanishing and leaving bare
+ * stars. Stellarium does the same handover for the same reason — the
+ * panorama is a resolution floor, and these images are what is under it.
  */
-const NEBULA_MAX_FOV = 22;
+const NEBULA_MAX_FOV = 30;
 
 /**
  * A cloud of stars whose positions are rewritten with the sky. Point size is in
@@ -990,13 +999,31 @@ type LoadState = "idle" | "loading" | "ready";
  * enough to see. Mutates the entry in place: `loadState` guards against a
  * second fetch while the first is still in the air.
  */
+/**
+ * How many photographs may be in the air at once.
+ *
+ * The point of loading these lazily is that the reader waits for the few
+ * images actually in front of them, not for the catalogue. Without a cap,
+ * one press of zoom-in can put every image that clears
+ * {@link nebulaReveal} into flight in a single frame — which is the whole
+ * download again, just started later. Three at a time keeps the ones in
+ * the centre of the view arriving in seconds, and the rest queue behind
+ * them: an entry that is turned away here stays `idle`, so the next frame
+ * asks again and it starts as soon as a slot frees.
+ */
+const NEBULA_MAX_CONCURRENT_LOADS = 3;
+
+let nebulaLoadsInFlight = 0;
+
 function loadNebulaTexture(entry: {
   url: string;
   material: THREE.SpriteMaterial;
   loadState: LoadState;
 }) {
   if (entry.loadState !== "idle") return;
+  if (nebulaLoadsInFlight >= NEBULA_MAX_CONCURRENT_LOADS) return;
   entry.loadState = "loading";
+  nebulaLoadsInFlight += 1;
   new THREE.TextureLoader().load(
     entry.url,
     (tex) => {
@@ -1005,14 +1032,57 @@ function loadNebulaTexture(entry: {
       entry.material.map = tex;
       entry.material.needsUpdate = true;
       entry.loadState = "ready";
+      nebulaLoadsInFlight = Math.max(0, nebulaLoadsInFlight - 1);
     },
     undefined,
     () => {
       /* Left at "loading" on purpose: a failed image is simply never
          drawn, rather than retried on every frame it happens to be in
-         view. */
+         view. The slot is still given back, or a handful of broken files
+         would eventually stall every later load. */
+      nebulaLoadsInFlight = Math.max(0, nebulaLoadsInFlight - 1);
     },
   );
+}
+
+/* Scratch vectors for {@link nebulaInView}: the frame loop runs this per
+   image per frame, and allocating there is how a smooth pan turns into a
+   sawtooth of garbage collections. */
+const nebulaCamDir = new THREE.Vector3();
+const nebulaToImage = new THREE.Vector3();
+
+/**
+ * Is this photograph anywhere near what the camera is actually pointed at?
+ *
+ * This is the cheap equivalent of `StelSkyImageTile::getTilesToDraw`'s real
+ * test — does the image's sky polygon intersect the current field of view —
+ * and it is what keeps the catalogue from loading all at once. Zoom alone
+ * is not enough of a gate: at 30° every wide field in the catalogue clears
+ * {@link nebulaReveal} simultaneously, wherever in the sky it happens to
+ * be, so without this the first press of zoom-in fetches images that are
+ * behind the reader's head.
+ *
+ * A sprite is a flat patch centred on one direction, so the polygon test
+ * collapses to an angle: the separation between the view axis and the
+ * image's own direction, against the frame's half-diagonal plus the
+ * image's own half-span. The half-diagonal, not the half-height — an image
+ * in a screen corner is in view — and a further 1.35 of margin so an image
+ * is fetched slightly before it is panned onto, not as it appears.
+ */
+function nebulaInView(
+  camera: THREE.Camera,
+  at: THREE.Vector3,
+  fovDeg: number,
+  spanDeg: number,
+  aspect: number,
+): boolean {
+  camera.getWorldDirection(nebulaCamDir);
+  nebulaToImage.copy(at).sub(camera.position);
+  if (nebulaToImage.lengthSq() === 0) return true;
+  nebulaToImage.normalize();
+  const sep = Math.acos(Math.min(1, Math.max(-1, nebulaCamDir.dot(nebulaToImage)))) / DEG;
+  const halfDiagonal = (fovDeg / 2) * Math.hypot(1, Math.max(1, aspect));
+  return sep <= halfDiagonal * 1.35 + spanDeg / 2;
 }
 
 /** Write one vertex of any position-buffered object. */
@@ -2931,14 +3001,23 @@ export function AakashGocharScene({
       if (zodiac && toggles.nebulae) {
         const precession = precessionSinceJ2000(dtDays);
         const nebulaFov = fovForZoom(mode, view.current.distance);
+        const nebulaAspect =
+          state.camera instanceof THREE.PerspectiveCamera ? state.camera.aspect : 1;
         for (const entry of nebulaField) {
           const { spanDeg, lon, lat, widthRad, heightRad, sprite, material } = entry;
           const reveal = nebulaReveal(spanDeg, nebulaFov);
           sprite.visible = reveal > 0;
           if (reveal <= 0) continue;
-          loadNebulaTexture(entry);
           const at = place(lon + precession - ayan, lat, starRadius);
           sprite.position.set(at[0], at[1], at[2]);
+          /* Position first, then the view test, then the fetch: an image
+             outside the frame is left placed and invisible rather than
+             downloaded — see {@link nebulaInView}. It is still scaled
+             below, so when the pan does bring it in it is already correct
+             and only the texture is missing. */
+          if (nebulaInView(state.camera, sprite.position, nebulaFov, spanDeg, nebulaAspect)) {
+            loadNebulaTexture(entry);
+          }
           const radius = Math.hypot(at[0], at[1], at[2]);
           sprite.scale.set(radius * widthRad, radius * heightRad, 1);
           material.opacity = 0.1 * reveal;
@@ -3223,18 +3302,21 @@ export function AakashGocharScene({
 
     /* The Milky Way panorama fades out once the lens is tighter than a
        normal wide-open sky — see the doc comment on its own material.
-       Starts fading at 20° now instead of holding full all the way to 26°
-       — क्षितिज's own 26° home was staying fully bright until the press had
-       already started pulling in, then fading out abruptly; 20°→16° is a
-       tighter, earlier transition so it visibly eases out as soon as the
-       zoom begins rather than holding steady then dropping late.
+       30°→16° is a crossfade, not just a fade: 30° is exactly
+       {@link NEBULA_MAX_FOV}, so the panorama begins easing out on the
+       same degree the individual deep-sky photographs begin easing in, and
+       by 16° the sky in front of the reader is made of the real images
+       rather than of one stretched whole-sky frame. Fading it any later
+       left the panorama at full brightness *over* the photographs, which
+       is the low-resolution picture winning exactly where the detailed one
+       had arrived.
 
        पृथ्वी गोला cannot share those two numbers: its own lens (see
        `fovForZoom("globe", …)`) only ever spans about 0.53°–31.7°, nothing
        like क्षितिज's 1°–235°. Its own pair, scaled to its own range and
        moved the same way. */
     if (milkyWayMatRef.current) {
-      const [fadeLo, fadeHi] = globe ? [5, 15] : [16, 20];
+      const [fadeLo, fadeHi] = globe ? [8, 22] : [16, 30];
       milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
     }
     /* The horizon glow needs the same fade, for a reason the Milky Way
@@ -3251,7 +3333,7 @@ export function AakashGocharScene({
        panorama. Same thresholds as the Milky Way's own fade, since the
        failure mode is the same shrinking-frame effect. */
     {
-      const [glowLo, glowHi] = globe ? [5, 15] : [16, 20];
+      const [glowLo, glowHi] = globe ? [8, 22] : [16, 30];
       const glowMat = horizonGlow.material as THREE.ShaderMaterial;
       glowMat.uniforms.uIntensity.value = 0.16 * Math.max(0, Math.min(1, (closeField - glowLo) / (glowHi - glowLo)));
     }
