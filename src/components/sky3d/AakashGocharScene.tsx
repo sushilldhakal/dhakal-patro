@@ -1388,6 +1388,16 @@ export function AakashGocharScene({
    * placed at its true position and true angular size. A `Sprite` always
    * faces the camera, which is exactly right here: these are flat
    * photographs of a small patch of sky, not solid bodies with a far side.
+   *
+   * `depthTest: false` is not optional the way it might look — every one of
+   * these sits exactly on the same shell as the star sphere and the Milky
+   * Way panorama (`place(…, starRadius)`, the identical radius all three
+   * use), so with depth testing on, a sprite and the surface behind it are
+   * at the same depth-buffer value and the GPU's rounding decides which
+   * wins on any given frame — different sprites winning on different
+   * frames is exactly a flicker. `renderOrder` already does the real
+   * ordering job here; depth has nothing left to add and only something to
+   * break.
    */
   const nebulaTextures = useLoader(THREE.TextureLoader, NEBULA_SOURCES as string[]);
   const nebulaField = useMemo(() => {
@@ -1399,12 +1409,13 @@ export function AakashGocharScene({
         map: tex,
         transparent: true,
         depthWrite: false,
-        opacity: 0.92,
+        depthTest: false,
+        opacity: 0,
       });
       const sprite = new THREE.Sprite(material);
       sprite.renderOrder = -0.3;
       sprite.frustumCulled = false;
-      return { ...entry, sprite };
+      return { ...entry, sprite, material };
     });
   }, [nebulaTextures]);
   /** See the doc comment on the sky sphere below — a flat brightness
@@ -2778,14 +2789,23 @@ export function AakashGocharScene({
          the actual radius `place` put them at (`Math.hypot` of the result),
          not a mode-specific constant, since क्षितिज and पृथ्वी गोला place
          the sky at two very different radii and a fixed world size would
-         read as the right size in one and wildly wrong in the other. */
+         read as the right size in one and wildly wrong in the other.
+
+         Opposite of the Milky Way's own fade: these come *up* as the lens
+         tightens rather than fading out, gone at the wide default view and
+         full once a press has actually pulled in toward that patch of sky
+         — a real photograph turning up uninvited at the ordinary view read
+         as clutter, not detail. */
       if (zodiac && toggles.nebulae) {
         const precession = precessionSinceJ2000(dtDays);
-        for (const { lon, lat, widthRad, heightRad, sprite } of nebulaField) {
+        const nebulaFov = fovForZoom(mode, view.current.distance);
+        const nebulaFade = Math.max(0, Math.min(1, (20 - nebulaFov) / (20 - 6)));
+        for (const { lon, lat, widthRad, heightRad, sprite, material } of nebulaField) {
           const at = place(lon + precession - ayan, lat, starRadius);
           sprite.position.set(at[0], at[1], at[2]);
           const radius = Math.hypot(at[0], at[1], at[2]);
           sprite.scale.set(radius * widthRad, radius * heightRad, 1);
+          material.opacity = 0.92 * nebulaFade;
         }
       }
 
