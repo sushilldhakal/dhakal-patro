@@ -653,6 +653,12 @@ function flushLine(line: THREE.Line) {
 }
 
 /**
+ * How much wider than its own radius a star's sprite is drawn, to leave the
+ * halo somewhere to fall off. See {@link makeStarPoints}'s shaders.
+ */
+const STAR_HALO_SCALE = 3;
+
+/**
  * A cloud of stars whose positions are rewritten with the sky. Point size is in
  * pixels rather than world units — a star has no apparent size, so it must not
  * grow as you zoom in on it.
@@ -680,7 +686,11 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
       uniform float uPixelRatio;
       void main() {
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = aSize * uPixelRatio;
+        /* Sized for core *and* halo — see the fragment stage. The star's
+           own radius is still aSize; the extra is empty room for the
+           glow to fall off in, which a sprite exactly one star wide has
+           nowhere to put. */
+        gl_PointSize = aSize * uPixelRatio * ${STAR_HALO_SCALE.toFixed(1)};
       }
     `,
     fragmentShader: `
@@ -690,13 +700,23 @@ function makeStarPoints(count: number, color: string, size: number, opacity: num
         vec2 d = gl_PointCoord - vec2(0.5);
         float r2 = dot(d, d);
         if (r2 > 0.25) discard;
-        /* A real star's point-spread function, not a flat disc with a hard
-           edge — Stellarium's own point-source shader draws the same
-           Gaussian falloff (StelSkyDrawer::computeRCMag / its halo texture)
-           rather than the solid-then-feathered disc this used to be, which
-           is why that version read as flat coloured dots instead of points
-           of light. */
-        float alpha = exp(-r2 * 12.0);
+        /* Core plus halo, which is what actually makes a point read as a
+           *star* rather than as a small dot of paint.
+
+           A single Gaussian across the whole sprite — what this was — is
+           still only as wide as the sprite, and at the 1–3px these are
+           sized to, "a Gaussian" and "a hard dot" are the same handful of
+           pixels. Stellarium gets around this the same way every
+           planetarium does: its halo texture is drawn much larger than the
+           star's own computed radius, so the bright core stays a point
+           while the glow around it has real room to fall off. The vertex
+           stage now allows that room ({@link STAR_HALO_SCALE}), and this
+           splits the budget: a tight core carrying the star's identity,
+           and a wide, faint skirt carrying the glow. */
+        float rNorm = sqrt(r2) * 2.0;
+        float core = exp(-(rNorm * rNorm) / (0.16 * 0.16));
+        float halo = 0.22 * exp(-(rNorm * rNorm) / (0.62 * 0.62));
+        float alpha = min(1.0, core + halo);
         gl_FragColor = vec4(uColor, uOpacity * alpha);
       }
     `,
@@ -912,29 +932,31 @@ function companionMagLimit(fovDeg: number): number {
 }
 
 /**
- * The sky's own current depth limit for deep-sky photographs, as a
- * magnitude — verified against their actual source, not guessed: a nebula
- * image in Stellarium is *not* gated by its `minResolution`
- * (`StelSkyImageTile::getTilesToDraw` only reads that to decide whether to
- * fetch a *sharper child tile* — irrelevant for a single-image entry with
- * none) but by `luminance < limitLuminance`, i.e. the image's own
- * `maxBrightness` against the sky's current limiting magnitude, the same
- * `StelSkyDrawer::computeLimitMagnitude()` every star is tested against
- * too. That function is a full eye-adaptation solve this does not attempt
- * to reproduce; what is reproduced is its shape — limiting magnitude gets
- * deeper the tighter the lens, on the standard aperture relation (each
- * 2.5× narrower field is one magnitude deeper) — anchored so it lands on
- * this file's own naked-eye ceiling (mag 7.5, {@link backgroundField}'s own
- * faintest) at क्षितिज's 26° home, which is what makes every one of these
- * (maxBrightness 12–14.2) sit well below the limit at the ordinary view and
- * only clear it once a press has pulled in on that patch of sky — the
- * brightest around a 10° field, the faintest not until about 3.7°, each on
- * its own crossing rather than every one of the 25 popping in together.
+ * How strongly one deep-sky photograph is showing, 0–1, from how much of
+ * the frame it actually covers.
+ *
+ * The previous attempt gated these on `maxBrightness` against a synthesised
+ * limiting magnitude. That was the right *field* — it is what
+ * `StelSkyImageTile::getTilesToDraw` really tests — but reproducing
+ * `StelSkyDrawer::computeLimitMagnitude()`'s eye-adaptation solve by
+ * guessing an anchor produced numbers with no relation to theirs, and the
+ * practical result was a catalogue that never appeared at any zoom a reader
+ * would actually reach.
+ *
+ * This is the honest version of the same intent: a photograph is worth
+ * drawing when it is big enough on screen to read as a photograph, and not
+ * before. `span / fov` is exactly that ratio — no invented constants, and
+ * it needs nothing from Stellarium's tone reproducer. It also produces the
+ * layering their sky has for free: Barnard's Loop at 14° covers half a 26°
+ * frame and is therefore *background*, present the moment you look; the
+ * Ring Nebula at 0.06° needs a field under a degree before it is anything
+ * but a dot, and stays away until then.
  */
-function nebulaLimitMagnitude(fovDeg: number): number {
-  const referenceFov = 80;
-  const referenceMag = 7.5;
-  return referenceMag + 5 * Math.log10(referenceFov / Math.max(fovDeg, 0.05));
+function nebulaReveal(spanDeg: number, fovDeg: number): number {
+  const fraction = spanDeg / Math.max(fovDeg, 0.05);
+  /* Below a twentieth of the frame it is not yet worth a texture; by a
+     tenth it is fully there. */
+  return Math.max(0, Math.min(1, (fraction - 0.05) / (0.1 - 0.05)));
 }
 
 /** Write one vertex of any position-buffered object. */
@@ -2828,23 +2850,22 @@ export function AakashGocharScene({
          the sky at two very different radii and a fixed world size would
          read as the right size in one and wildly wrong in the other.
 
-         Each fades in on its own `maxBrightness`, not one shared threshold
-         for all 25 — see {@link nebulaLimitMagnitude}. A half-magnitude
-         band around the crossing point, not a hard cut: real enough to be
-         verifiable against their own gate, narrow enough that it still
-         reads as "there" rather than as a long, uncertain fade. */
+         Each fades in on how much of the frame it covers — see
+         {@link nebulaReveal} — so the wide fields are background you find
+         already there and the small objects wait until you have pulled in
+         on them. Held under half opacity: these are additive-lit
+         photographs sitting behind the star field, and at full strength a
+         14° field like Barnard's Loop washes out the very stars it is
+         supposed to sit behind. */
       if (zodiac && toggles.nebulae) {
         const precession = precessionSinceJ2000(dtDays);
         const nebulaFov = fovForZoom(mode, view.current.distance);
-        const limitMag = nebulaLimitMagnitude(nebulaFov);
-        for (const { nebula, lon, lat, widthRad, heightRad, sprite, material } of nebulaField) {
+        for (const { spanDeg, lon, lat, widthRad, heightRad, sprite, material } of nebulaField) {
           const at = place(lon + precession - ayan, lat, starRadius);
           sprite.position.set(at[0], at[1], at[2]);
           const radius = Math.hypot(at[0], at[1], at[2]);
           sprite.scale.set(radius * widthRad, radius * heightRad, 1);
-          const depthPastLimit = limitMag - nebula.maxBrightness;
-          const reveal = Math.max(0, Math.min(1, depthPastLimit / 0.5 + 0.5));
-          material.opacity = 0.92 * reveal;
+          material.opacity = 0.55 * nebulaReveal(spanDeg, nebulaFov);
         }
       }
 
