@@ -22,11 +22,17 @@ export const NAK_INNER = BELT_OUTER;
 export const NAK_MID = 29;
 export const NAK_OUTER = 32;
 
+/**
+ * The grid's own blue, for a scene that wants the ecliptic disc filled in a
+ * colour that actually shows rather than the near-black `COLOR.gridPlane`.
+ */
+export const ECLIPTIC_GRID_COLOR = 0x2761a1;
+
 const COLOR = {
   solar: 0xdddd00,
   belt: 0x8a7c2e,
   nakshatra: 0x4a6b8a,
-  grid: 0x2761a1,
+  grid: ECLIPTIC_GRID_COLOR,
   gridPlane: 0x001b3d,
 } as const;
 
@@ -258,12 +264,22 @@ export function GuideGrid({
   innerR = 4,
   planeInnerR = 0,
   planeOpacity = 0.7,
+  planeColor = COLOR.gridPlane,
   planeY = -0.05,
 }: {
   visible?: boolean;
   innerR?: number;
   planeInnerR?: number;
   planeOpacity?: number;
+  /**
+   * Fill colour of the ecliptic disc. Defaults to {@link COLOR.gridPlane},
+   * which is a near-black navy — it was picked to sit under a dark sky, and
+   * against a lit backdrop no amount of opacity can make it read, because
+   * the darkness is in the *colour*, not the alpha. A scene that needs the
+   * plane to be seen passes a real colour instead; see
+   * {@link ECLIPTIC_GRID_COLOR}.
+   */
+  planeColor?: number;
   planeY?: number;
 }) {
   const grid = useMemo(() => buildGuideGrid(innerR), [innerR]);
@@ -272,14 +288,19 @@ export function GuideGrid({
   return (
     <group visible={visible} position={[0, planeY, 0]}>
       <primitive object={grid} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1} raycast={() => {}}>
+      {/* renderOrder 0, not −1. At −1 this shared it with the Milky Way
+          backdrop, which draws *additively with the depth test off* — so the
+          backdrop was painted straight over the disc and raising
+          `planeOpacity` did nothing you could see. Still below the grid
+          lines' own 1, which is the ordering that matters here. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={0} raycast={() => {}}>
         {planeInnerR > 0 ? (
           <ringGeometry args={[planeInnerR, NAK_OUTER, 64]} />
         ) : (
           <circleGeometry args={[NAK_OUTER, 64]} />
         )}
         <meshBasicMaterial
-          color={COLOR.gridPlane}
+          color={planeColor}
           transparent={planeOpacity < 1}
           opacity={planeOpacity}
           side={THREE.DoubleSide}
@@ -301,6 +322,8 @@ export type EclipticWheelToggles = {
    * transparent pass and bodies behind it read as under the plane.
    */
   planeOpacity?: number;
+  /** Fill colour of that disc — see {@link GuideGrid}'s own `planeColor`. */
+  planeColor?: number;
   /** Where the polar spokes leave the origin. Learn uses 4; space uses Earth. */
   gridInnerR?: number;
   /**
@@ -323,6 +346,7 @@ export function EclipticWheel({
   nakshatraBelt,
   monthRing,
   planeOpacity = 0.7,
+  planeColor,
   gridInnerR = 4,
   planeInnerR = 0,
   planeY = -0.05,
@@ -374,6 +398,7 @@ export function EclipticWheel({
         innerR={gridInnerR}
         planeInnerR={planeInnerR}
         planeOpacity={planeOpacity}
+        planeColor={planeColor}
         planeY={planeY}
       />
       <primitive object={parts.monthRingLine} visible={monthRing} />

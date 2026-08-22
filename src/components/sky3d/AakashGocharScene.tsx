@@ -20,7 +20,15 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { EclipticWheel, BELT_INNER, BELT_OUTER, MONTH_R, NAK_INNER, NAK_OUTER } from "@/components/learn/EclipticWheel";
+import {
+  EclipticWheel,
+  ECLIPTIC_GRID_COLOR,
+  BELT_INNER,
+  BELT_OUTER,
+  MONTH_R,
+  NAK_INNER,
+  NAK_OUTER,
+} from "@/components/learn/EclipticWheel";
 import type { GrahaKey } from "@/lib/graha-details";
 import {
   DEG,
@@ -4407,6 +4415,7 @@ export function AakashGocharScene({
           nakshatraBelt={toggles.nakshatraBelt}
           monthRing={false}
           planeOpacity={SPACE_PLANE_OPACITY}
+          planeColor={ECLIPTIC_GRID_COLOR}
           gridInnerR={EARTH_RADIUS}
           planeInnerR={EARTH_RADIUS}
           planeY={0}
