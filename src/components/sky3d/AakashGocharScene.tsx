@@ -800,11 +800,22 @@ function makeMilkyWayGeometry(radius: number, widthSeg = 96, heightSeg = 48) {
       const z = Math.sin(decRad);
       positions.push(x * radius, y * radius, z * radius);
       const zenithAngle = Math.acos(-z);
-      const longitude = Math.atan2(x, y);
-      /* Left unwrapped on purpose — a smooth run past 0/1 samples correctly
-         under RepeatWrapping, and forcing it into [0, 1) here would cut a
-         seam across the one meridian where it happens to cross. */
-      uvs.push(longitude / (2 * Math.PI) + 0.5, zenithAngle / Math.PI);
+      /* Stellarium's own shader gets this same value from `atan2(x, y)` —
+         but atan2 forces its result into (-π, π], which for this sweep
+         means a hidden wrap at ra≈270° (RIGHT IN THE MIDDLE of the mesh,
+         not at its own 0°/360° seam). Two adjacent columns straddling that
+         ra then carry UVs on opposite sides of the wrap — one at u≈0,
+         its neighbour at u≈1 — and the GPU has no idea those are the same
+         point on the texture; it interpolates the *raw* numbers across the
+         quad between them, smearing every column of the texture into that
+         one strip. Magnified at a tight zoom, that smear is a flat,
+         muddy, wrong-coloured patch covering real screen space — the red
+         patch, not a rendering coincidence. Computing the identical
+         quantity straight from `ra` avoids the forced wrap entirely: nothing
+         needs re-wrapping until the sampler does it via RepeatWrapping,
+         where it is actually safe. */
+      const longitudeDeg = 90 - ra;
+      uvs.push(longitudeDeg / 360 + 0.5, zenithAngle / Math.PI);
     }
   }
   for (let iy = 0; iy < heightSeg; iy += 1) {
@@ -3114,24 +3125,19 @@ export function AakashGocharScene({
     const close = space ? view.current.distance <= 32 : closeField < 24;
 
     /* The Milky Way panorama fades out once the lens is tighter than a
-       normal wide-open sky — see the doc comment on its own material. Full
-       through the whole range अन्तरिक्ष's fixed 46° sits in and क्षितिज's
-       26° home opens at; gone by 14° now instead of 8° — the texture is
-       still only 2048×1024 over the whole sphere, and that much of the
-       window still left it opaque enough to show its own texels as a
-       blur. Pulling the transition earlier gets it out of the picture well
-       before a press has pulled in far enough to see that.
+       normal wide-open sky — see the doc comment on its own material.
+       Starts fading at 20° now instead of holding full all the way to 26°
+       — क्षितिज's own 26° home was staying fully bright until the press had
+       already started pulling in, then fading out abruptly; 20°→16° is a
+       tighter, earlier transition so it visibly eases out as soon as the
+       zoom begins rather than holding steady then dropping late.
 
        पृथ्वी गोला cannot share those two numbers: its own lens (see
        `fovForZoom("globe", …)`) only ever spans about 0.53°–31.7°, nothing
-       like क्षितिज's 1°–235°. Fed the horizon thresholds, "full" (26°) sat
-       almost at globe's own widest possible frame — so short of the single
-       most zoomed-out view, the panorama was already most of the way faded,
-       which read as the sky behind the Earth having gone dark rather than as
-       a lens effect. Its own pair, scaled to its own range and raised the
-       same way. */
+       like क्षितिज's 1°–235°. Its own pair, scaled to its own range and
+       moved the same way. */
     if (milkyWayMatRef.current) {
-      const [fadeLo, fadeHi] = globe ? [6, 20] : [14, 26];
+      const [fadeLo, fadeHi] = globe ? [5, 15] : [16, 20];
       milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
     }
     /* The horizon glow needs the same fade, for a reason the Milky Way
@@ -3148,7 +3154,7 @@ export function AakashGocharScene({
        panorama. Same thresholds as the Milky Way's own fade, since the
        failure mode is the same shrinking-frame effect. */
     {
-      const [glowLo, glowHi] = globe ? [6, 20] : [14, 26];
+      const [glowLo, glowHi] = globe ? [5, 15] : [16, 20];
       const glowMat = horizonGlow.material as THREE.ShaderMaterial;
       glowMat.uniforms.uIntensity.value = 0.16 * Math.max(0, Math.min(1, (closeField - glowLo) / (glowHi - glowLo)));
     }
