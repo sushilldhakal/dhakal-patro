@@ -1467,6 +1467,15 @@ export function AakashGocharScene({
       const material = new THREE.SpriteMaterial({
         map: tex,
         transparent: true,
+        /* Additive, exactly as their own tile pass does it
+           (`StelSkyImageTile::draw`: `setBlending(true, GL_ONE, GL_ONE)`).
+           Not a stylistic choice — these PNGs carry no alpha, their sky is
+           *black pixels*, and under normal blending black is a colour that
+           gets painted: every image lands as an opaque black rectangle over
+           the stars, with its own edges showing. Additive makes black
+           contribute nothing, so only the nebulosity is added and the
+           rectangle disappears on its own. */
+        blending: THREE.AdditiveBlending,
         depthWrite: false,
         depthTest: false,
         opacity: 0,
