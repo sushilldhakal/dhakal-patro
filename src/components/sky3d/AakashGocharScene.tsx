@@ -3016,8 +3016,11 @@ export function AakashGocharScene({
     /* The Milky Way panorama fades out once the lens is tighter than a
        normal wide-open sky — see the doc comment on its own material. Full
        through the whole range अन्तरिक्ष's fixed 46° sits in and क्षितिज's
-       26° home opens at; gone by 8°, well before the texture's own texels
-       start showing as a blur.
+       26° home opens at; gone by 14° now instead of 8° — the texture is
+       still only 2048×1024 over the whole sphere, and that much of the
+       window still left it opaque enough to show its own texels as a
+       blur. Pulling the transition earlier gets it out of the picture well
+       before a press has pulled in far enough to see that.
 
        पृथ्वी गोला cannot share those two numbers: its own lens (see
        `fovForZoom("globe", …)`) only ever spans about 0.53°–31.7°, nothing
@@ -3025,9 +3028,10 @@ export function AakashGocharScene({
        almost at globe's own widest possible frame — so short of the single
        most zoomed-out view, the panorama was already most of the way faded,
        which read as the sky behind the Earth having gone dark rather than as
-       a lens effect. Its own pair, scaled to its own range instead. */
+       a lens effect. Its own pair, scaled to its own range and raised the
+       same way. */
     if (milkyWayMatRef.current) {
-      const [fadeLo, fadeHi] = globe ? [2, 20] : [8, 26];
+      const [fadeLo, fadeHi] = globe ? [6, 20] : [14, 26];
       milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
     }
     if (collect && zodiac && toggles.constellations && !close) {
