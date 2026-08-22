@@ -2889,6 +2889,27 @@ export function AakashGocharScene({
     const starRadius = space ? NAK_OUTER + 0.25 : DOME * 0.995;
 
     /**
+     * Where the *far* sky goes — stars, figures, deep-sky photographs.
+     *
+     * Not {@link place}, and that is the whole point: `place`'s globe branch
+     * ignores the radius it is handed and returns `GLOBE_BAND_R` (about 43)
+     * for everything, because it was written for the zodiac band, which
+     * really does belong hugging the Earth. Feeding the star fields through
+     * it put every star on that same little shell — and since पृथ्वी गोला's
+     * camera sits right out at {@link GLOBE_CAM_R} (300), the reader was
+     * looking at that shell *from outside*: a ball of stars wrapped around
+     * the Earth with black beyond it, which is exactly the "circular disk
+     * the globe sits on" and why the Milky Way behind it never showed.
+     *
+     * The sky is not a ball you stand outside. It goes just inside the
+     * Milky Way panorama's own 400, well past the camera, so the globe view
+     * looks *out* at it the same way the dome view does.
+     */
+    const GLOBE_SKY_R = 396;
+    const skyPlace = (lonSid: number, latEc: number): [number, number, number] =>
+      globe ? globePlace(lonSid, latEc, GLOBE_SKY_R) : place(lonSid, latEc, starRadius);
+
+    /**
      * A fixed star's place, in whichever frame is live.
      *
      * Inside the dome and around the globe the sky is a sphere and the star
@@ -2896,7 +2917,7 @@ export function AakashGocharScene({
      * goes where the diagram wants it — see {@link spaceStarPos}.
      */
     const starPlace = (index: number, lonSid: number, latEc: number): [number, number, number] =>
-      space ? tiltEcliptic(spaceStarPos[index] ?? [0, 0, 0]) : place(lonSid, latEc, starRadius);
+      space ? tiltEcliptic(spaceStarPos[index] ?? [0, 0, 0]) : skyPlace(lonSid, latEc);
 
     if ((zodiac || space) && beltMoved) {
       lastBelt.current = { mode, lst: beltLst, ayan: beltAyan, eps: beltEps };
@@ -2952,7 +2973,7 @@ export function AakashGocharScene({
           (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
           for (let i = 0; i < indices.length; i += 1) {
             const star = cultureField.stars[indices[i]];
-            setVertex(object, i, place(star.lon + precession - ayan, star.lat, starRadius));
+            setVertex(object, i, skyPlace(star.lon + precession - ayan, star.lat));
           }
           (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
         }
@@ -2960,8 +2981,8 @@ export function AakashGocharScene({
           const [a, b] = cultureField.links[i];
           const sa = cultureField.stars[a];
           const sb = cultureField.stars[b];
-          setVertex(cultureField.lines, i * 2, place(sa.lon + precession - ayan, sa.lat, starRadius));
-          setVertex(cultureField.lines, i * 2 + 1, place(sb.lon + precession - ayan, sb.lat, starRadius));
+          setVertex(cultureField.lines, i * 2, skyPlace(sa.lon + precession - ayan, sa.lat));
+          setVertex(cultureField.lines, i * 2 + 1, skyPlace(sb.lon + precession - ayan, sb.lat));
         }
         flushLine(cultureField.lines);
       }
@@ -2975,7 +2996,7 @@ export function AakashGocharScene({
           (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
           for (let i = 0; i < indices.length; i += 1) {
             const star = backgroundField.stars[indices[i]];
-            setVertex(object, i, place(star.lon + precession - ayan, star.lat, starRadius));
+            setVertex(object, i, skyPlace(star.lon + precession - ayan, star.lat));
           }
           (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
         }
@@ -3020,7 +3041,7 @@ export function AakashGocharScene({
           const drawable = reveal > 0 && entry.loadState === "ready";
           sprite.visible = drawable;
           if (reveal <= 0) continue;
-          const at = place(lon + precession - ayan, lat, starRadius);
+          const at = skyPlace(lon + precession - ayan, lat);
           sprite.position.set(at[0], at[1], at[2]);
           /* Position first, then the view test, then the fetch: an image
              outside the frame is left placed and invisible rather than
@@ -3090,7 +3111,7 @@ export function AakashGocharScene({
         }
         for (let i = 0; i < poleField.stars.length; i += 1) {
           const s = poleField.stars[i];
-          setVertex(poleField.points, i, place(s.lon + precession - ayan, s.lat, DOME * 0.995));
+          setVertex(poleField.points, i, skyPlace(s.lon + precession - ayan, s.lat));
         }
         (poleField.points.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate =
           true;
@@ -3144,7 +3165,7 @@ export function AakashGocharScene({
       const byEn = new Map<string, [number, number, number]>();
       for (let i = 0; i < n; i += 1) {
         const s = vedicStars[i];
-        const at = place(s.lon, s.lat, DOME * 0.995);
+        const at = skyPlace(s.lon, s.lat);
         setVertex(vedicField.points, i, at);
         sizes.setX(i, vedicStarSize(s.mag));
         vedicPickRef.current[i].index = i;
@@ -3435,7 +3456,7 @@ export function AakashGocharScene({
         let radius = 0;
         for (const i of starIndices) {
           const s = cultureField.stars[i];
-          const p = place(s.lon + precession - ayan, s.lat, starRadius);
+          const p = skyPlace(s.lon + precession - ayan, s.lat);
           x += p[0];
           y += p[1];
           z += p[2];
@@ -3469,7 +3490,7 @@ export function AakashGocharScene({
         const names = cultureStarLabel(s);
         if (!names) continue;
         const lon = s.lon + precession - ayan;
-        const at = place(lon, s.lat, starRadius);
+        const at = skyPlace(lon, s.lat);
         if (!labelVisible(at)) continue;
         project(
           {
@@ -3511,7 +3532,7 @@ export function AakashGocharScene({
       const simYear = 2000 + dtDays / 365.25;
       const reigning = reigningPoleStar(poleField.stars, dtDays, eps);
       for (const s of poleField.stars) {
-        const at = place(s.lon + precession - ayan, s.lat, DOME * 0.995);
+        const at = skyPlace(s.lon + precession - ayan, s.lat);
         if (!labelVisible(at)) continue;
         project(
           {
@@ -3533,7 +3554,7 @@ export function AakashGocharScene({
     if (collect && zodiac && toggles.vedicStars && vedicStars) {
       for (let i = 0; i < vedicStars.length && i < VEDIC_STAR_CAPACITY; i += 1) {
         const s = vedicStars[i];
-        const at = place(s.lon, s.lat, DOME * 0.995);
+        const at = skyPlace(s.lon, s.lat);
         if (!labelVisible(at)) continue;
         project(
           {
