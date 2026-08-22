@@ -3134,6 +3134,24 @@ export function AakashGocharScene({
       const [fadeLo, fadeHi] = globe ? [6, 20] : [14, 26];
       milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
     }
+    /* The horizon glow needs the same fade, for a reason the Milky Way
+       panorama does not have to worry about: it is a gradient by *altitude
+       across the frame*, and a narrow field of view does not span enough
+       altitude for that gradient to read as one any more. At 90° it is a
+       soft brightening toward the skyline, barely noticeable against
+       everything else in view; by 8° the entire frame sits inside a few
+       degrees of altitude, so the "gradient" is now a single, almost
+       constant value — and painted at full screen coverage, that constant
+       is a flat colour wash, not a glow. Confirmed with the Milky Way
+       correctly at zero at that same field: this was the actual source of
+       "the whole sky turns into a flat colour when I zoom in", not the
+       panorama. Same thresholds as the Milky Way's own fade, since the
+       failure mode is the same shrinking-frame effect. */
+    {
+      const [glowLo, glowHi] = globe ? [6, 20] : [14, 26];
+      const glowMat = horizonGlow.material as THREE.ShaderMaterial;
+      glowMat.uniforms.uIntensity.value = 0.16 * Math.max(0, Math.min(1, (closeField - glowLo) / (glowHi - glowLo)));
+    }
     if (collect && zodiac && toggles.constellations && !close) {
       const precession = precessionSinceJ2000(dtDays);
       for (const [nak, indices] of starField.byNakshatra) {
