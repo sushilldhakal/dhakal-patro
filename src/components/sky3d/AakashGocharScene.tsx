@@ -17,7 +17,7 @@
  * a few times a second via `onSample`.
  */
 
-import { useEffect, useMemo, useRef } from "react";
+import { Fragment, useEffect, useMemo, useRef } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { EclipticWheel, BELT_INNER, BELT_OUTER, MONTH_R, NAK_INNER, NAK_OUTER } from "@/components/learn/EclipticWheel";
@@ -81,7 +81,7 @@ import {
 import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000, starOverlayNames } from "@/lib/sky3d/nakshatra-stars";
 import { VEDIC_CONSTELLATION_LINKS } from "@/lib/sky3d/vedic-constellations";
 import { cultureStarLabel, flattenSkyCulture } from "@/lib/sky3d/sky-culture";
-import { NEBULA_SOURCES, flattenNebulae } from "@/lib/sky3d/nebulae";
+import { NEBULAE, NEBULA_SOURCES, type Nebula } from "@/lib/sky3d/nebulae";
 import { flattenBackgroundStars } from "@/lib/sky3d/background-stars";
 import {
   placedPoleStars,
@@ -947,45 +947,54 @@ function companionMagLimit(fovDeg: number): number {
 }
 
 /**
- * How strongly one deep-sky photograph is showing, 0–1, from how much of
- * the frame it actually covers.
+ * `?skydebug=1` on the URL draws every deep-sky quad's four corners — an
+ * outline through them and a point on each — whether or not its photograph
+ * has loaded, and prints one table of corner → scene-vector for M8.
  *
- * The previous attempt gated these on `maxBrightness` against a synthesised
- * limiting magnitude. That was the right *field* — it is what
- * `StelSkyImageTile::getTilesToDraw` really tests — but reproducing
- * `StelSkyDrawer::computeLimitMagnitude()`'s eye-adaptation solve by
- * guessing an anchor produced numbers with no relation to theirs, and the
- * practical result was a catalogue that never appeared at any zoom a reader
- * would actually reach.
- *
- * This is the honest version of the same intent: a photograph is worth
- * drawing when it is big enough on screen to read as a photograph, and not
- * before. `span / fov` is exactly that ratio — no invented constants, and
- * it needs nothing from Stellarium's tone reproducer. It also produces the
- * layering their sky has for free: Barnard's Loop at 14° covers half a 26°
- * frame and is therefore *background*, present the moment you look; the
- * Ring Nebula at 0.06° needs a field under a degree before it is anything
- * but a dot, and stays away until then.
+ * This is the check that the geometry, and not the texture, is right: if
+ * the outline is a small quadrilateral sitting among the correct stars and
+ * staying there as you pan, the coordinate mapping is correct and anything
+ * still wrong is the image or the blending. If the outline is the size of
+ * the screen, nothing about the texture is worth looking at yet.
  */
-function nebulaReveal(spanDeg: number, fovDeg: number): number {
-  /* Nothing at all until the lens has actually pulled in. At the ordinary
-     wide view these are not what the reader came for, and the previous
-     version — which showed the big fields immediately — put a dozen
-     overlapping additive photographs over the whole sky at once, which is
-     not "background texture", it is a wash. */
-  if (fovDeg > NEBULA_MAX_FOV) return 0;
-  const fraction = spanDeg / Math.max(fovDeg, 0.02);
-  /* Two edges, and the upper one is the one that was missing. Below a
-     sixteenth of the frame an image is too small to read as anything and
-     is not worth its texture. Above about half the frame it has stopped
-     being a *patch* of sky and started being a wallpaper behind
-     everything — which is exactly the failure the wide fields showed. So
-     it fades back out again as it grows past that, and each photograph is
-     only drawn across the band of zoom where it genuinely looks like an
-     object sitting in the sky. */
-  const fadeIn = Math.min(1, Math.max(0, (fraction - 0.06) / 0.06));
-  const fadeOut = Math.min(1, Math.max(0, (1.1 - fraction) / 0.45));
-  return fadeIn * fadeOut;
+const NEBULA_DEBUG =
+  typeof window !== "undefined" && new URLSearchParams(window.location.search).has("skydebug");
+
+/**
+ * Print one image's corners: catalogue sky coordinates in, scene vector out,
+ * plus the angular size the four of them actually enclose.
+ *
+ * Read the last two numbers first. They are the catalogue's own angular
+ * width and height, measured back off the vectors that were just handed to
+ * the GPU — so if they say 2.5° and the image covers the screen, the fault
+ * is downstream of the geometry, and if they say 90°, it is the geometry.
+ */
+function reportNebulaGeometry(nebula: Nebula, position: THREE.BufferAttribute) {
+  const vectors: THREE.Vector3[] = [];
+  const rows = nebula.corners.map(([lon, lat], c) => {
+    const v = new THREE.Vector3(position.getX(c), position.getY(c), position.getZ(c));
+    vectors.push(v);
+    return {
+      corner: c,
+      "ecliptic lon°": Number(lon.toFixed(4)),
+      "ecliptic lat°": Number(lat.toFixed(4)),
+      uv: `[${nebula.uv[c][0]}, ${nebula.uv[c][1]}]`,
+      x: Number(v.x.toFixed(3)),
+      y: Number(v.y.toFixed(3)),
+      z: Number(v.z.toFixed(3)),
+    };
+  });
+  const angle = (a: THREE.Vector3, b: THREE.Vector3) =>
+    (a.angleTo(b) * 180) / Math.PI;
+  const width = (angle(vectors[0], vectors[1]) + angle(vectors[2], vectors[3])) / 2;
+  const height = (angle(vectors[1], vectors[2]) + angle(vectors[3], vectors[0])) / 2;
+  console.groupCollapsed(`[sky] ${nebula.catalog} ${nebula.en} — ${nebula.file}`);
+  console.table(rows);
+  console.log(
+    `angular size on the sky: ${width.toFixed(4)}° wide x ${height.toFixed(4)}° high`,
+    `\nscene radius: ${vectors[0].length().toFixed(2)} (must match the star sphere)`,
+  );
+  console.groupEnd();
 }
 
 type LoadState = "idle" | "loading" | "ready";
@@ -1017,7 +1026,7 @@ let nebulaLoadsInFlight = 0;
 
 function loadNebulaTexture(entry: {
   url: string;
-  material: THREE.SpriteMaterial;
+  material: THREE.MeshBasicMaterial;
   loadState: LoadState;
 }) {
   if (entry.loadState !== "idle") return;
@@ -1050,6 +1059,8 @@ function loadNebulaTexture(entry: {
    sawtooth of garbage collections. */
 const nebulaCamDir = new THREE.Vector3();
 const nebulaToImage = new THREE.Vector3();
+/* The quad's centroid in scene space, for the same test. */
+const nebulaCentre = new THREE.Vector3();
 
 /**
  * Is this photograph anywhere near what the camera is actually pointed at?
@@ -1585,33 +1596,93 @@ export function AakashGocharScene({
    * break.
    */
   const nebulaField = useMemo(() => {
-    return flattenNebulae().map((entry, i) => {
-      const material = new THREE.SpriteMaterial({
-        /* No map yet — see {@link loadNebulaTexture}. Every one of these is
-           a photograph of a few hundred KB, and `useLoader` over the whole
-           catalogue fetched and decoded all of them before the sky could
-           draw its first frame, for images that are invisible until the
-           lens has pulled in on one. They are fetched on first need
-           instead. */
+    return NEBULAE.map((nebula, i) => {
+      /* Four vertices. Not a PlaneGeometry, not a Sprite — the four
+         directions the catalogue names, and nothing else. The positions are
+         filled in each frame by {@link place}, the same function every star
+         goes through, so the patch sits in whatever frame the view is
+         currently in (dome alt-az, globe, or space) and turns with the sky
+         exactly as the stars around it do. `setUsage(DynamicDrawUsage)`
+         because those four vertices are rewritten every frame. */
+      const geometry = new THREE.BufferGeometry();
+      const position = new THREE.BufferAttribute(new Float32Array(12), 3);
+      position.setUsage(THREE.DynamicDrawUsage);
+      geometry.setAttribute("position", position);
+      /* Straight from the catalogue's own `textureCoords`, corner for
+         corner with `worldCoords`. Which image corner lands on which sky
+         corner is *its* decision, not ours — that is what the second array
+         in the JSON is for, and it is why a mirrored or upside-down image
+         is fixed here and never by moving the geometry. */
+      geometry.setAttribute(
+        "uv",
+        new THREE.BufferAttribute(
+          new Float32Array(nebula.uv.flatMap(([u, v]) => [u, v])),
+          2,
+        ),
+      );
+      /* The quad, as two triangles over the four corners in catalogue
+         order. `DoubleSide` because these are patches of sky seen from
+         inside the celestial sphere in two of the three views and from
+         outside it in the third — a patch of sky has no back. */
+      geometry.setIndex([0, 1, 2, 0, 2, 3]);
+
+      const material = new THREE.MeshBasicMaterial({
+        /* No map yet — see {@link loadNebulaTexture}. Nothing is drawn
+           until one arrives: an unmapped MeshBasicMaterial is white. */
+        map: null,
         transparent: true,
         /* Additive, exactly as their own tile pass does it
            (`StelSkyImageTile::draw`: `setBlending(true, GL_ONE, GL_ONE)`).
-           Not a stylistic choice — these PNGs carry no alpha, their sky is
-           *black pixels*, and under normal blending black is a colour that
-           gets painted: every image lands as an opaque black rectangle over
-           the stars, with its own edges showing. Additive makes black
-           contribute nothing, so only the nebulosity is added and the
-           rectangle disappears on its own. */
+           These PNGs carry no alpha — their sky is *black pixels* — so
+           under normal blending each lands as an opaque black rectangle
+           over the stars. Additive makes black contribute nothing, so only
+           the nebulosity is added and the rectangle disappears on its own. */
         blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
         depthWrite: false,
         depthTest: false,
         opacity: 0,
       });
-      const sprite = new THREE.Sprite(material);
-      sprite.renderOrder = -0.3;
-      sprite.frustumCulled = false;
-      sprite.visible = false;
-      return { ...entry, sprite, material, url: NEBULA_SOURCES[i], loadState: "idle" as LoadState };
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.renderOrder = -0.3;
+      /* The vertices move every frame and THREE's own bounding sphere would
+         be a frame behind; the view test below does this job properly. */
+      mesh.frustumCulled = false;
+      mesh.visible = false;
+      /* Debug only — see {@link NEBULA_DEBUG}. Shares nothing with the
+         quad but the four corner positions, which is the point: if the
+         outline and the image disagree, the bug is in the material, and if
+         they agree and both are wrong, it is in the coordinates. */
+      let outline: THREE.LineLoop | null = null;
+      let corners: THREE.Points | null = null;
+      if (NEBULA_DEBUG) {
+        const debugGeometry = new THREE.BufferGeometry();
+        debugGeometry.setAttribute("position", position);
+        outline = new THREE.LineLoop(
+          debugGeometry,
+          new THREE.LineBasicMaterial({ color: "#39ff88", depthTest: false }),
+        );
+        outline.renderOrder = 5;
+        outline.frustumCulled = false;
+        corners = new THREE.Points(
+          debugGeometry,
+          new THREE.PointsMaterial({ color: "#ff3b6b", size: 6, sizeAttenuation: false, depthTest: false }),
+        );
+        corners.renderOrder = 5;
+        corners.frustumCulled = false;
+      }
+
+      return {
+        nebula,
+        mesh,
+        geometry,
+        material,
+        position,
+        outline,
+        corners,
+        url: NEBULA_SOURCES[i],
+        loadState: "idle" as LoadState,
+      };
     });
   }, []);
   /** See the doc comment on the sky sphere below — a flat brightness
@@ -1676,6 +1747,8 @@ export function AakashGocharScene({
   const starsRef = useRef<THREE.Mesh | null>(null);
   const horizonGlow = useMemo(() => makeHorizonGlow(399, "#4a3626", 0.16), []);
   const milkyWayMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
+  /** {@link NEBULA_DEBUG}: the M8 corner table is printed once, not per frame. */
+  const nebulaDebugPrinted = useRef(false);
   const groundRef = useRef<THREE.Group | null>(null);
   const groundMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const horizonGroupRef = useRef<THREE.Group | null>(null);
@@ -2981,59 +3054,93 @@ export function AakashGocharScene({
         }
       }
 
-      /* ── the curated deep-sky photographs — see [[nebulae]]. Scaled off
-         the actual radius `place` put them at (`Math.hypot` of the result),
-         not a mode-specific constant, since क्षितिज and पृथ्वी गोला place
-         the sky at two very different radii and a fixed world size would
-         read as the right size in one and wildly wrong in the other.
+      /* ── the curated deep-sky photographs — see [[nebulae]].
+         Stellarium's model, and the whole of it: each image is a quad of
+         four *sky* directions, and the camera's only say in the matter is
+         whether you are looking at it. Nothing here reads the viewport,
+         scales anything by the field of view, or faces the camera. An
+         image grows on screen when you zoom in for the one reason a real
+         object does — the same patch of sky now covers more pixels.
 
-         Each is drawn only across the band of zoom where it reads as a
-         patch of sky rather than as wallpaper — see {@link nebulaReveal} —
-         and its texture is not even fetched until it first earns one.
+         Every corner goes through `place`, the same function the stars
+         beside it use, so the patch lands in the live frame (dome alt-az,
+         globe, or space) and turns with the sky rather than drifting
+         against it. Precession and the ayanamsa are applied to the corner's
+         own longitude, exactly as they are for a star.
 
-         The ceiling is low on purpose, and lower again now that the band
-         reaches 30°: a wider field fits more of these at once, so the same
-         per-image strength stacks further. These are additive, and in the
-         galactic plane several of them genuinely overlap: Barnard's Loop's
-         own four tiles, plus the Lambda Orionis ring over the same stars.
-         Additive means those *sum*, so a per-image opacity that looks
-         right alone is several times too strong where they stack — which
-         is how the whole sky went white. A tenth each keeps a pile-up
-         readable and still shows plainly where only one is in view. */
+         The field-of-view ceiling only enables or disables the layer: above
+         it the sky is being read as a whole and these are clutter. It never
+         touches an image's size or position. */
       if (zodiac && toggles.nebulae) {
         const precession = precessionSinceJ2000(dtDays);
         const nebulaFov = fovForZoom(mode, view.current.distance);
         const nebulaAspect =
           state.camera instanceof THREE.PerspectiveCamera ? state.camera.aspect : 1;
+        /* One fade across the top of the band so the layer eases in rather
+           than switching on. It is the *layer's* opacity, the same for every
+           image in it — not a per-image size or position term. */
+        const layer = Math.min(1, Math.max(0, (NEBULA_MAX_FOV - nebulaFov) / 4));
         for (const entry of nebulaField) {
-          const { spanDeg, lon, lat, widthRad, heightRad, sprite, material } = entry;
-          const reveal = nebulaReveal(spanDeg, nebulaFov);
-          /* Visible only once the photograph is actually here. A
-             `SpriteMaterial` with no `map` is not empty — it is a solid
-             white quad at the material's colour, so a revealed-but-unloaded
-             image paints a flat white rectangle the full angular size of
-             the object. On the wide fields that rectangle is 14° across,
-             which is most of the frame at these zooms, and several of them
-             additive is a white screen. Loading is deliberately lazy,
-             throttled and view-gated, so "revealed" and "has a texture" are
-             now two different things and only the second may draw. */
-          const drawable = reveal > 0 && entry.loadState === "ready";
-          sprite.visible = drawable;
-          if (reveal <= 0) continue;
-          const at = place(lon + precession - ayan, lat, starRadius);
-          sprite.position.set(at[0], at[1], at[2]);
-          /* Position first, then the view test, then the fetch: an image
-             outside the frame is left placed and invisible rather than
-             downloaded — see {@link nebulaInView}. It is still scaled
-             below, so when the pan does bring it in it is already correct
-             and only the texture is missing. */
-          if (nebulaInView(state.camera, sprite.position, nebulaFov, spanDeg, nebulaAspect)) {
-            loadNebulaTexture(entry);
+          const { nebula, mesh, position, material } = entry;
+          if (layer <= 0) {
+            mesh.visible = false;
+            if (entry.outline) entry.outline.visible = false;
+            if (entry.corners) entry.corners.visible = false;
+            continue;
           }
-          const radius = Math.hypot(at[0], at[1], at[2]);
-          if (!drawable) continue;
-          sprite.scale.set(radius * widthRad, radius * heightRad, 1);
-          material.opacity = 0.06 * reveal;
+          /* Is it in front of us at all? The cheap stand-in for
+             `StelSkyImageTile::getTilesToDraw`'s polygon-intersects-viewport
+             test — centroid direction against the frame's half-diagonal plus
+             the quad's own bounding radius. This is what keeps 38 images
+             from all loading at once, and it is a *loading* and *culling*
+             decision only. */
+          const centre = place(nebula.lon + precession - ayan, nebula.lat, starRadius);
+          nebulaCentre.set(centre[0], centre[1], centre[2]);
+          const inView = nebulaInView(
+            state.camera,
+            nebulaCentre,
+            nebulaFov,
+            nebula.radiusDeg,
+            nebulaAspect,
+          );
+          /* Too small to be worth a draw call: under a fifth of a percent of
+             the frame is a sub-pixel smudge on any sane viewport. Stellarium
+             makes the same call by comparing degrees-per-pixel against the
+             tile's own resolution. */
+          const tooSmall = nebula.radiusDeg * 2 < nebulaFov * 0.002;
+          if (!inView || tooSmall) {
+            mesh.visible = false;
+            if (entry.outline) entry.outline.visible = false;
+            if (entry.corners) entry.corners.visible = false;
+            continue;
+          }
+          loadNebulaTexture(entry);
+          /* The four corners — the whole of the geometry. Written before the
+             texture gate so the debug outline can be drawn for an image that
+             has not arrived yet. */
+          for (let c = 0; c < 4; c += 1) {
+            const [cLon, cLat] = nebula.corners[c];
+            const at = place(cLon + precession - ayan, cLat, starRadius);
+            position.setXYZ(c, at[0], at[1], at[2]);
+          }
+          position.needsUpdate = true;
+          if (entry.outline) entry.outline.visible = true;
+          if (entry.corners) entry.corners.visible = true;
+          if (NEBULA_DEBUG && nebula.id === "m8" && !nebulaDebugPrinted.current) {
+            nebulaDebugPrinted.current = true;
+            reportNebulaGeometry(nebula, position);
+          }
+          /* Nothing is drawn before its texture arrives: a MeshBasicMaterial
+             with no map is white, and a white quad the angular size of
+             Barnard's Loop is most of the frame. */
+          if (entry.loadState !== "ready") {
+            mesh.visible = false;
+            continue;
+          }
+          mesh.visible = true;
+          /* Additive and unclamped is how their own tile pass draws these;
+             the layer fade is the only multiplier. */
+          material.opacity = layer;
         }
       }
 
@@ -3639,7 +3746,11 @@ export function AakashGocharScene({
        own decision, per sprite, in the block above. Setting `visible` true
        here as well would put every photograph back on screen at once. */
     if (!zodiac || !toggles.nebulae) {
-      for (const { sprite } of nebulaField) sprite.visible = false;
+      for (const { mesh, outline, corners } of nebulaField) {
+        mesh.visible = false;
+        if (outline) outline.visible = false;
+        if (corners) corners.visible = false;
+      }
     }
     // A skyline glow means nothing without a skyline — only क्षितिज has one.
     horizonGlow.visible = horizon;
@@ -4292,8 +4403,12 @@ export function AakashGocharScene({
       ))}
 
       {/* A curated set of Stellarium's own deep-sky photographs. */}
-      {nebulaField.map(({ sprite }, i) => (
-        <primitive key={`neb-${i}`} object={sprite} />
+      {nebulaField.map(({ mesh, outline, corners }, i) => (
+        <Fragment key={`neb-${i}`}>
+          <primitive object={mesh} />
+          {outline ? <primitive object={outline} /> : null}
+          {corners ? <primitive object={corners} /> : null}
+        </Fragment>
       ))}
 
       {/* The obliquity: the orbit's perpendicular, and the angle off it. */}
