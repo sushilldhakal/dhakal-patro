@@ -81,6 +81,7 @@ import {
 import { flattenAsterisms, NAKSHATRA_ASTERISMS, precessionSinceJ2000, starOverlayNames } from "@/lib/sky3d/nakshatra-stars";
 import { VEDIC_CONSTELLATION_LINKS } from "@/lib/sky3d/vedic-constellations";
 import { cultureStarLabel, flattenSkyCulture } from "@/lib/sky3d/sky-culture";
+import { NEBULA_SOURCES, flattenNebulae } from "@/lib/sky3d/nebulae";
 import { flattenBackgroundStars } from "@/lib/sky3d/background-stars";
 import {
   placedPoleStars,
@@ -471,6 +472,16 @@ export type SceneToggles = {
    * sky rather than a measuring wheel.
    */
   skyCulture: boolean;
+  /**
+   * A small curated set of Stellarium's own deep-sky object photos — see
+   * [[nebulae]] — placed at their true sky position and true angular size.
+   * This, not a higher-resolution Milky Way panorama, is what actually gives
+   * a zoomed-in view real detail: each one is a small real photograph, only
+   * reading as one once the lens has pulled in enough to make its true
+   * (usually under a degree) size worth anything on screen. Dome and globe
+   * only, same as {@link skyCulture}.
+   */
+  nebulae: boolean;
   /**
    * Horizon view: the ground underfoot and the horizon ring drawn on it.
    *
@@ -1370,6 +1381,32 @@ export function AakashGocharScene({
     return milkyWayRaw;
   }, [milkyWayRaw, gl]);
   const milkyWayGeometry = useMemo(() => makeMilkyWayGeometry(400), []);
+
+  /**
+   * A small curated set of Stellarium's own deep-sky object photographs —
+   * see [[nebulae]] — each a real astrophoto rather than a synthesised dot,
+   * placed at its true position and true angular size. A `Sprite` always
+   * faces the camera, which is exactly right here: these are flat
+   * photographs of a small patch of sky, not solid bodies with a far side.
+   */
+  const nebulaTextures = useLoader(THREE.TextureLoader, NEBULA_SOURCES as string[]);
+  const nebulaField = useMemo(() => {
+    return flattenNebulae().map((entry, i) => {
+      const tex = nebulaTextures[i];
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+      const material = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.92,
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.renderOrder = -0.3;
+      sprite.frustumCulled = false;
+      return { ...entry, sprite };
+    });
+  }, [nebulaTextures]);
   /** See the doc comment on the sky sphere below — a flat brightness
       multiplier, which `color` on a hex/string prop cannot express. Their own
       MilkyWay.cpp caps its equivalent at 0.38 (`aLum = qMin(0.38f,
@@ -2737,6 +2774,21 @@ export function AakashGocharScene({
         }
       }
 
+      /* ── the curated deep-sky photographs — see [[nebulae]]. Scaled off
+         the actual radius `place` put them at (`Math.hypot` of the result),
+         not a mode-specific constant, since क्षितिज and पृथ्वी गोला place
+         the sky at two very different radii and a fixed world size would
+         read as the right size in one and wildly wrong in the other. */
+      if (zodiac && toggles.nebulae) {
+        const precession = precessionSinceJ2000(dtDays);
+        for (const { lon, lat, widthRad, heightRad, sprite } of nebulaField) {
+          const at = place(lon + precession - ayan, lat, starRadius);
+          sprite.position.set(at[0], at[1], at[2]);
+          const radius = Math.hypot(at[0], at[1], at[2]);
+          sprite.scale.set(radius * widthRad, radius * heightRad, 1);
+        }
+      }
+
       /* ── the tilt, as an angle you can read ────────────────────────────
          The axis is +Y and the ecliptic pole is `eps` off it, in the plane of
          the solstices. Draw that second line and put an arc between them and
@@ -3318,6 +3370,9 @@ export function AakashGocharScene({
     cultureField.lines.visible = zodiac && toggles.skyCulture;
     for (const { object } of backgroundField.groups) {
       object.visible = zodiac;
+    }
+    for (const { sprite } of nebulaField) {
+      sprite.visible = zodiac && toggles.nebulae;
     }
     // A skyline glow means nothing without a skyline — only क्षितिज has one.
     horizonGlow.visible = horizon;
@@ -3964,9 +4019,14 @@ export function AakashGocharScene({
         <primitive key={`culture-${i}`} object={object} />
       ))}
 
-      {/* The naked-eye sky itself, everything down to magnitude 5.5. */}
+      {/* The naked-eye sky itself, everything down to magnitude 7.5. */}
       {backgroundField.groups.map(({ object }, i) => (
         <primitive key={`bg-${i}`} object={object} />
+      ))}
+
+      {/* A curated set of Stellarium's own deep-sky photographs. */}
+      {nebulaField.map(({ sprite }, i) => (
+        <primitive key={`neb-${i}`} object={sprite} />
       ))}
 
       {/* The obliquity: the orbit's perpendicular, and the angle off it. */}

@@ -635,6 +635,7 @@ export function AakashGocharSky({
     vedicStars: true,
     constellations: true,
     skyCulture: true,
+    nebulae: true,
     primeMeridian: true,
     nakshatraBelt: false,
     monthRing: false,
@@ -2069,6 +2070,13 @@ export function AakashGocharSky({
                   active={toggles.skyCulture}
                   label={pick("राशि आकृति", "Zodiac art")}
                   onPress={() => setToggles((t) => ({ ...t, skyCulture: !t.skyCulture }))}
+                />
+              ) : null}
+              {mode !== "space" ? (
+                <Chip
+                  active={toggles.nebulae}
+                  label={pick("नेब्युला तस्बिर", "Nebula photos")}
+                  onPress={() => setToggles((t) => ({ ...t, nebulae: !t.nebulae }))}
                 />
               ) : null}
               {mode === "globe" ? (
