@@ -674,6 +674,18 @@ const STAR_HALO_SCALE = 3;
 const NEBULA_MAX_FOV = 30;
 
 /**
+ * How many times the Milky Way panorama is repeated across the sky sphere.
+ *
+ * At 1 the 2048×1024 file is stretched over the whole sphere in a single
+ * pass, which is what made it soft — one texel ends up covering a large
+ * patch of screen and no filtering can put that detail back. At 3 each copy
+ * spans a third of the sky, so the same pixels are packed three times as
+ * densely and the band stays sharp at the zooms this view is actually used
+ * at. The file itself is untouched.
+ */
+const MILKY_WAY_TILE = 3;
+
+/**
  * A cloud of stars whose positions are rewritten with the sky. Point size is in
  * pixels rather than world units — a star has no apparent size, so it must not
  * grow as you zoom in on it.
@@ -1562,10 +1574,60 @@ export function AakashGocharScene({
        than being clamped into range — this is what makes that safe to
        sample instead of smearing the edge pixel across the seam. */
     milkyWayRaw.wrapS = THREE.RepeatWrapping;
+    milkyWayRaw.wrapT = THREE.RepeatWrapping;
+    /* Drawn at {@link MILKY_WAY_TILE}× smaller, which is the whole fix for
+       "it is blurry". The file is 2048×1024 and it was being stretched
+       across the entire sphere in one pass — a single texel ends up
+       covering a large patch of screen, and no amount of filtering can put
+       detail back into something magnified that far. Repeating it instead
+       means each copy spans a third of the sky, so the same texels are
+       packed three times as densely and the band is sharp at the zooms this
+       view actually gets used at. Nothing about the file changes; only how
+       far it is stretched. */
+    milkyWayRaw.repeat.set(MILKY_WAY_TILE, MILKY_WAY_TILE);
     milkyWayRaw.needsUpdate = true;
     return milkyWayRaw;
   }, [milkyWayRaw, gl]);
   const milkyWayGeometry = useMemo(() => makeMilkyWayGeometry(400), []);
+
+  /**
+   * The same panorama rolled into a cylinder, for अन्तरिक्ष and पृथ्वी गोला.
+   *
+   * Those two views look at the sky from *outside* the thing they are
+   * about — the solar system, the Earth — so wrapping the picture onto a
+   * sphere around the camera fights them: it is a dome, and a dome only
+   * makes sense standing inside it, which is क्षितिज's job. Rolled instead,
+   * the strip stands around the scene the way the galactic band really
+   * does, and reads as a backdrop the diagram sits inside rather than as a
+   * lid over it.
+   *
+   * Height is not a taste decision: the file is 2:1, its width wraps the
+   * full circumference `2πr`, so the undistorted height is half that, `πr`.
+   * Open-ended — a cylinder with caps would put the texture's poles on a
+   * flat disc overhead, which is the stretching this is meant to avoid.
+   */
+  const milkyWayCylinderGeometry = useMemo(() => {
+    const radius = 400;
+    return new THREE.CylinderGeometry(radius, radius, Math.PI * radius, 96, 1, true);
+  }, []);
+  useEffect(() => () => milkyWayCylinderGeometry.dispose(), [milkyWayCylinderGeometry]);
+
+  /**
+   * The cylinder's own copy of the texture: one clean wrap around the roll,
+   * where the sphere's copy is tiled ({@link MILKY_WAY_TILE}) to keep its
+   * much larger stretch sharp.
+   */
+  const milkyWayRolled = useMemo(() => {
+    const tex = milkyWay.clone();
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.repeat.set(1, 1);
+    tex.needsUpdate = true;
+    return tex;
+  }, [milkyWay]);
+  useEffect(() => () => milkyWayRolled.dispose(), [milkyWayRolled]);
+  const milkyWayCylMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
+  const milkyWayCylRef = useRef<THREE.Mesh | null>(null);
 
   /**
    * A small curated set of Stellarium's own deep-sky object photographs —
@@ -2532,6 +2594,32 @@ export function AakashGocharScene({
       } else {
         starsRef.current.quaternion.identity();
       }
+      /* Ride the camera, which is what a sky at infinity actually does.
+         The sphere is centred on the *origin*, so in पृथ्वी गोला and
+         अन्तरिक्ष — the two views whose camera sits well out from it — one
+         side of it was only 100 units away while the other was 700. That
+         near side is a small patch of texture stretched across most of the
+         screen, which is why the Milky Way read as enormous and coarse in
+         those two views but fine from inside the dome, where the camera is
+         at the centre and every direction is the same 400 away.
+         Re-centring it on the camera each frame restores that: every point
+         of the sky is equidistant again, so the band is drawn at one honest
+         scale and simply looks like the sky rather than a wall a few units
+         from the lens. Rotation is untouched — only the centre moves, so no
+         star drifts against its own position. */
+      starsRef.current.position.copy(state.camera.position);
+      /* The dome belongs to क्षितिज, where the reader is standing inside it.
+         The other two get the rolled strip instead — see
+         {@link milkyWayCylinderGeometry}. */
+      starsRef.current.visible = !arBackground && horizon;
+    }
+    if (milkyWayCylRef.current) {
+      milkyWayCylRef.current.visible = !arBackground && !horizon;
+      /* Rides the camera for the same reason the sphere does: a backdrop
+         that stays put would slide past as the view orbits, which reads as
+         a wall nearby rather than as sky. Upright — the roll stands around
+         the scene, so its axis is the scene's own up. */
+      milkyWayCylRef.current.position.copy(state.camera.position);
     }
 
     /**
@@ -3333,25 +3421,27 @@ export function AakashGocharScene({
     const closeField = fovForZoom(mode, view.current.distance);
     const close = space ? view.current.distance <= 32 : closeField < 24;
 
-    /* The Milky Way panorama fades out once the lens is tighter than a
-       normal wide-open sky — see the doc comment on its own material.
-       30°→16° is a crossfade, not just a fade: 30° is exactly
-       {@link NEBULA_MAX_FOV}, so the panorama begins easing out on the
-       same degree the individual deep-sky photographs begin easing in, and
-       by 16° the sky in front of the reader is made of the real images
-       rather than of one stretched whole-sky frame. Fading it any later
-       left the panorama at full brightness *over* the photographs, which
-       is the low-resolution picture winning exactly where the detailed one
-       had arrived.
+    /* The panorama holds now instead of bowing out early.
 
-       पृथ्वी गोला cannot share those two numbers: its own lens (see
-       `fovForZoom("globe", …)`) only ever spans about 0.53°–31.7°, nothing
-       like क्षितिज's 1°–235°. Its own pair, scaled to its own range and
-       moved the same way. */
-    if (milkyWayMatRef.current) {
-      const [fadeLo, fadeHi] = globe ? [8, 22] : [16, 30];
-      milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
-    }
+       The old 30°→16° fade existed for one reason: stretched over the whole
+       sphere in a single pass the texture went soft the moment you pushed
+       in, so it was taken off the screen before that showed. Repeating it
+       ({@link MILKY_WAY_TILE}) packs the same pixels three times as densely,
+       which moves that softening point about three times deeper — so the
+       fade can move with it and the sky keeps its band through the range
+       the view is actually read at, in every direction, rather than
+       emptying out as soon as the reader leans in.
+
+       पृथ्वी गोला keeps its own pair: its lens (see `fovForZoom("globe",
+       …)`) only ever spans about 0.53°–31.7°, nothing like क्षितिज's
+       1°–235°, so the same degrees would mean something quite different
+       there. */
+    const [fadeLo, fadeHi] = globe ? [1.5, 4] : [4, 9];
+    const skyFade = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
+    if (milkyWayMatRef.current) milkyWayMatRef.current.opacity = skyFade;
+    /* The roll carries the same fade — whichever of the two is on screen,
+       it behaves the same way as the lens narrows. */
+    if (milkyWayCylMatRef.current) milkyWayCylMatRef.current.opacity = skyFade;
     /* The horizon glow needs the same fade, for a reason the Milky Way
        panorama does not have to worry about: it is a gradient by *altitude
        across the frame*, and a narrow field of view does not span enough
@@ -4093,6 +4183,28 @@ export function AakashGocharScene({
           toneMapped={false}
         />
       </mesh>
+
+      {/* The panorama rolled into a cylinder — see
+          {@link milkyWayCylinderGeometry}. अन्तरिक्ष and पृथ्वी गोला only;
+          क्षितिज keeps the sphere above, because standing inside the dome is
+          exactly the case a sphere is right for. Same additive, depth-free
+          skybox treatment as the sphere, and the same renderOrder, since
+          only one of the two is ever visible at a time. */}
+      <mesh ref={milkyWayCylRef} visible={false} renderOrder={-1}>
+        <primitive object={milkyWayCylinderGeometry} attach="geometry" />
+        <meshBasicMaterial
+          ref={milkyWayCylMatRef}
+          map={milkyWayRolled}
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          transparent
+          depthWrite={false}
+          depthTest={false}
+          color={skyBoost}
+          toneMapped={false}
+        />
+      </mesh>
+
       {/* The dark-night floor under an otherwise empty patch of sky — see the
           doc comment on {@link makeHorizonGlow}. क्षितिज only. */}
       <primitive object={horizonGlow} />
