@@ -108,6 +108,20 @@ import { useDeviceOrientation } from "@/lib/sky3d/device-orientation";
 const Scene = memo(AakashGocharScene);
 
 const CANVAS_BG = "#04070d";
+
+/**
+ * The camera's far clip plane.
+ *
+ * It has to clear the far side of the sky sphere, not just the near side.
+ * पृथ्वी गोला parks its camera at `GLOBE_CAM_R` (300) while the sky is a
+ * sphere of radius 400 around the *origin* — so the far half of that sphere
+ * is 700 units from the camera. At the old 600 everything past the plane was
+ * cut, and cutting a sphere at a constant distance from the camera leaves a
+ * perfectly circular hole: that was the black disc the globe appeared to sit
+ * on, and the same cut was eating the background stars behind it. 1000
+ * clears 300 + 400 with room to spare.
+ */
+const SKY_FAR = 1000;
 /** Degrees → radians, for the compass dial's heading → camera yaw. */
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -1722,7 +1736,7 @@ export function AakashGocharSky({
           />
         ) : null}
         <Canvas
-          camera={{ position: [0, 40, 26], fov: SPACE_FOV, near: 0.1, far: 600 }}
+          camera={{ position: [0, 40, 26], fov: SPACE_FOV, near: 0.1, far: SKY_FAR }}
           gl={{ antialias: true, alpha: true }}
           resize={{ debounce: 0, offsetSize: true }}
           style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}

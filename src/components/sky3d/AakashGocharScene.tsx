@@ -2889,25 +2889,24 @@ export function AakashGocharScene({
     const starRadius = space ? NAK_OUTER + 0.25 : DOME * 0.995;
 
     /**
-     * Where the *far* sky goes — stars, figures, deep-sky photographs.
+     * Where the stars, figures and deep-sky photographs go.
      *
-     * Not {@link place}, and that is the whole point: `place`'s globe branch
-     * ignores the radius it is handed and returns `GLOBE_BAND_R` (about 43)
-     * for everything, because it was written for the zodiac band, which
-     * really does belong hugging the Earth. Feeding the star fields through
-     * it put every star on that same little shell — and since पृथ्वी गोला's
-     * camera sits right out at {@link GLOBE_CAM_R} (300), the reader was
-     * looking at that shell *from outside*: a ball of stars wrapped around
-     * the Earth with black beyond it, which is exactly the "circular disk
-     * the globe sits on" and why the Milky Way behind it never showed.
+     * Straight through {@link place}, which in पृथ्वी गोला means they land
+     * on `GLOBE_BAND_R` — the same shell the zodiac band sits on, wrapped
+     * close around the Earth. That is deliberate and long-standing: the
+     * globe view is a diagram of the ring *around* the Earth, and the
+     * नक्षत्र clusters belong on that ring where they can be read against
+     * it, not thrown out to infinity where the whole point of the view is
+     * lost.
      *
-     * The sky is not a ball you stand outside. It goes just inside the
-     * Milky Way panorama's own 400, well past the camera, so the globe view
-     * looks *out* at it the same way the dome view does.
+     * (An earlier pass moved them out to ~396 on the theory that the ball
+     * of stars around the globe was the "black disc" being complained
+     * about. It was not — that was the camera's far plane cutting the sky
+     * sphere, see `SKY_FAR`. Moving the stars only deleted the ring
+     * clusters and fixed nothing.)
      */
-    const GLOBE_SKY_R = 396;
     const skyPlace = (lonSid: number, latEc: number): [number, number, number] =>
-      globe ? globePlace(lonSid, latEc, GLOBE_SKY_R) : place(lonSid, latEc, starRadius);
+      place(lonSid, latEc, starRadius);
 
     /**
      * A fixed star's place, in whichever frame is live.
