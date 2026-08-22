@@ -109,15 +109,6 @@ function buildMonthRing() {
   return diagramLine(makeLine(ellipseGeometry(MONTH_R, MONTH_R), 0xe3d9a8, 0.5));
 }
 
-/**
- * How strongly the polar grid — spokes and rings alike — is drawn.
- *
- * The pair used to sit at 0.5 and 0.4, chosen against a flat near-black
- * sky. अन्तरिक्ष now has a lit Milky Way behind it, and at those values the
- * grid washed out into it rather than reading as a measuring frame over it.
- */
-const GRID_OPACITY = 0.8;
-
 /** Polar grid around the origin. `innerR` is where the spokes leave the body. */
 function buildGuideGrid(innerR = 4) {
   const group = new THREE.Group();
@@ -139,18 +130,13 @@ function buildGuideGrid(innerR = 4) {
    *
    * `depthTest` stays **on** so a body in front still hides them — that is the
    * one thing this pair must not give up, or the grid draws over the globe.
-   *
-   * Held at {@link GRID_OPACITY}: these were set when the sky behind them was
-   * flat near-black, and a half-opacity line was plenty against that. It is
-   * now a lit Milky Way backdrop, which the fainter setting simply lost
-   * against.
    */
   const spokes = new THREE.LineSegments(
     rg,
     new THREE.LineBasicMaterial({
       color: COLOR.grid,
       transparent: true,
-      opacity: GRID_OPACITY,
+      opacity: 0.5,
       depthTest: true,
       depthWrite: false,
     }),
@@ -161,7 +147,7 @@ function buildGuideGrid(innerR = 4) {
   const rings = [innerR, 8, 12, MONTH_R, BELT_INNER, BELT_OUTER, NAK_OUTER];
   const unique = [...new Set(rings)].filter((r) => r >= innerR).sort((a, b) => a - b);
   for (const r of unique) {
-    const ring = makeLine(ellipseGeometry(r, r, 96), COLOR.grid, GRID_OPACITY);
+    const ring = makeLine(ellipseGeometry(r, r, 96), COLOR.grid, 0.4);
     ring.renderOrder = 1;
     ring.frustumCulled = false;
     group.add(ring);
