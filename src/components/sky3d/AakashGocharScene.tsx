@@ -2486,14 +2486,36 @@ export function AakashGocharScene({
     const onCancel = () => {
       downId = null;
     };
+    /**
+     * Clear the press even when its release never reached the canvas.
+     *
+     * `onUp` only runs for a `pointerup` on the canvas itself, and it is the
+     * only thing that puts `downId` back to null — so a drag that ends with
+     * the finger off the edge of the canvas, or a release the browser
+     * retargets elsewhere, leaves `downId` set. `onDown` then refuses every
+     * later press (`if (downId !== null) return`), and from that moment
+     * nothing in the sky can be selected at all: not a graha, not a star,
+     * for the rest of the session. Orbiting a view by dragging past the
+     * edge is an ordinary thing to do, which is how a sky ends up
+     * permanently unclickable without anything looking broken.
+     */
+    const onWindowUp = () => {
+      downId = null;
+    };
 
     el.addEventListener("pointerdown", onDown);
     el.addEventListener("pointerup", onUp);
     el.addEventListener("pointercancel", onCancel);
+    /* Bubble phase, so the canvas's own `onUp` has already run and done the
+       picking by the time this clears the latch. */
+    window.addEventListener("pointerup", onWindowUp);
+    window.addEventListener("pointercancel", onWindowUp);
     return () => {
       el.removeEventListener("pointerdown", onDown);
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("pointerup", onWindowUp);
+      window.removeEventListener("pointercancel", onWindowUp);
     };
   }, [camera, gl, mode, view, starField.stars]);
   /** The last focus request answered, and whether one is still outstanding. */
