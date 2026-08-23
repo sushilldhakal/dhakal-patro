@@ -92,12 +92,20 @@ export const DEGREE_TICKS: SegmentPairs = (() => {
 })();
 
 /**
- * The alt-az cage, one tier per zoom band.
+ * The alt-az cage, one resolution on screen at a time.
  *
  * The cage is never off — pulled all the way out to the 240° fisheye you still
  * get the full web, verticals running pole to pole through the zenith and the
  * nadir and almucantars ringing them. What changes with zoom is only how fine
  * it is, because the whole web cannot be on screen at once.
+ *
+ * Only one tier is ever drawn. Stellarium's own grid (GridLinesMgr.cpp's
+ * `getClosestResolutionDMS`) picks a single step that keeps the on-screen
+ * spacing roughly constant and draws exactly that — never a coarse cage with
+ * a finer one layered on top of it. Stacking tiers (an earlier version of
+ * this file did) reads as a muddy crosshatch the moment two or three
+ * thresholds are satisfied at once; a single resolution is what actually
+ * looks like a grid at every zoom.
  *
  * Spacing is in **arcminutes**, not degrees. Once the lens reaches a 1° crop
  * the interesting steps are 30′, 10′, 5′, and stepping a loop by 1/6 of a
@@ -117,10 +125,6 @@ export type GridTier = {
   step: number;
   /** Shown while the vertical field of view is under this, degrees. */
   maxFov: number;
-  /** Arcminute steps a coarser tier already draws — left out of this one. */
-  skipMultiplesOf: number[];
-  /** Fainter as the tiers get finer, so the round lines still read. */
-  opacity: number;
   /** Rebuilt per frame over the visible patch instead of baked whole. */
   local?: boolean;
 };
@@ -128,31 +132,30 @@ export type GridTier = {
 /** One arcminute, in degrees. */
 export const ARCMIN = 1 / 60;
 
+/** The one line opacity the active tier draws at — Stellarium's grid is a flat grey at any zoom, not fainter the finer it gets. */
+export const GRID_OPACITY = 0.22;
+
 export const GRID_TIERS: readonly GridTier[] = [
-  /* Coarse → fine as the क्षितिज lens narrows. 10° is the opening cage; 5°,
-     1°, ½°, then 10′, 5′ and 2′ fade in so a tight crop still has lines you
-     can count against all the way to horizon's own 1° floor — Stellarium's
-     own grid (GridLinesMgr.cpp's STEP_SIZES tables) keeps refining the same
-     way, through a much longer list of "nice" steps, to hold roughly the
-     same on-screen spacing at any zoom rather than letting the web go sparse
-     once ½° stopped being fine enough. Coarser lines stay on (each finer
-     tier skips them) so the round numbers do not vanish the moment a denser
-     web appears. ½° and finer are rebuilt over the visible patch — a
-     whole-sky ½° cage, let alone 2′, is a hopeless vertex count for a window
-     a few degrees across. */
-  { step: 600, maxFov: Infinity, skipMultiplesOf: [], opacity: 0.34 },
-  { step: 300, maxFov: 70, skipMultiplesOf: [600], opacity: 0.26 },
-  { step: 60, maxFov: 28, skipMultiplesOf: [300, 600], opacity: 0.18 },
-  { step: 30, maxFov: 12, skipMultiplesOf: [60, 300, 600], opacity: 0.14, local: true },
-  { step: 10, maxFov: 5, skipMultiplesOf: [30, 60, 300, 600], opacity: 0.11, local: true },
-  { step: 5, maxFov: 2, skipMultiplesOf: [10, 30, 60, 300, 600], opacity: 0.09, local: true },
-  {
-    step: 2,
-    maxFov: 0.9,
-    skipMultiplesOf: [5, 10, 30, 60, 300, 600],
-    opacity: 0.07,
-    local: true,
-  },
+  /* Coarse → fine as the क्षितिज lens narrows: 10° is the opening cage, then
+     5°, 1°, ½°, 10′, 5′ and 2′ take over in turn so a tight crop still has
+     lines to count against all the way to horizon's own 1° floor. ½° and
+     finer are rebuilt over the visible patch — a whole-sky ½° cage, let
+     alone 2′, is a hopeless vertex count for a window a few degrees across.
+
+     The 1° tier used to take over at 28° — at, say, 27° that is roughly 27
+     lines each way stacked into a crop still wide enough to read as the
+     "open" view, which is exactly what reads as *too many lines* rather
+     than a grid. 16° holds the 5° tier — a fifth as many lines — through
+     the whole of that range instead, and only actually needs the 1° tier
+     once the crop has narrowed enough that a handful of 5° lines would
+     otherwise leave most of the frame bare. */
+  { step: 600, maxFov: Infinity },
+  { step: 300, maxFov: 70 },
+  { step: 60, maxFov: 16 },
+  { step: 30, maxFov: 12, local: true },
+  { step: 10, maxFov: 5, local: true },
+  { step: 5, maxFov: 2, local: true },
+  { step: 2, maxFov: 0.9, local: true },
 ];
 
 /** The finest spacing the cage is drawing at this field of view, arcminutes. */
@@ -224,19 +227,15 @@ export const POLE_MARKS: HorizonPoint[] = (() => {
 
 /**
  * Disconnected segment pairs for the whole-sky azimuth cage, spacing in
- * arcminutes. `skipMultiplesOf` leaves those steps to a coarser layer so the
- * tiers can stack without drawing the same line twice.
+ * arcminutes. Only one tier is ever on screen (see {@link GRID_TIERS}), so
+ * this draws every line at its own step rather than leaving the round
+ * numbers to a coarser layer underneath.
  */
-export function buildAzimuthGridPairs(
-  stepMin: number,
-  skipMultiplesOf: readonly number[] = [],
-): HorizonPoint[] {
-  const skip = (v: number) => skipMultiplesOf.some((m) => v % m === 0);
+export function buildAzimuthGridPairs(stepMin: number): HorizonPoint[] {
   const circleSteps = stepMin <= 60 ? 240 : 180;
   const verticalSteps = stepMin <= 60 ? 180 : 72;
   const pairs: HorizonPoint[] = [];
   for (let altMin = -5400 + stepMin; altMin <= 5400 - stepMin; altMin += stepMin) {
-    if (skip(altMin)) continue;
     const alt = altMin * ARCMIN;
     for (let i = 0; i < circleSteps; i += 1) {
       pairs.push(
@@ -246,7 +245,7 @@ export function buildAzimuthGridPairs(
     }
   }
   for (let azMin = 0; azMin < 21600; azMin += stepMin) {
-    if (skip(azMin) || isCardinalAz(azMin)) continue;
+    if (isCardinalAz(azMin)) continue;
     const az = azMin * ARCMIN;
     for (let i = 0; i < verticalSteps; i += 1) {
       pairs.push(
@@ -275,15 +274,15 @@ const LOCAL_MAX_LINES = 400;
 /**
  * The same cage, but only over `window` — for the tiers whose whole-sky form
  * would be millions of vertices. Written into `out` and the count returned, so
- * the caller can keep one buffer and refill it per frame.
+ * the caller can keep one buffer and refill it per frame. Only one tier is
+ * ever on screen (see {@link GRID_TIERS}), so — like {@link
+ * buildAzimuthGridPairs} — this draws every line at its own step.
  */
 export function buildLocalGridPairs(
   stepMin: number,
-  skipMultiplesOf: readonly number[],
   window: GridWindow,
   out: HorizonPoint[],
 ): number {
-  const skip = (v: number) => skipMultiplesOf.some((m) => v % m === 0);
   let n = 0;
   const push = (alt: number, az: number) => {
     const p = out[n];
@@ -300,7 +299,7 @@ export function buildLocalGridPairs(
   let lines = 0;
   for (let altMin = altFrom; altMin <= window.altHi * 60; altMin += stepMin) {
     if (lines >= LOCAL_MAX_LINES) break;
-    if (skip(altMin) || Math.abs(altMin) >= 5400) continue;
+    if (Math.abs(altMin) >= 5400) continue;
     lines += 1;
     const alt = altMin * ARCMIN;
     for (let i = 0; i < LOCAL_SEGMENTS; i += 1) {
@@ -315,7 +314,7 @@ export function buildLocalGridPairs(
   lines = 0;
   for (let azMin = azFrom; azMin <= window.azHi * 60; azMin += stepMin) {
     if (lines >= LOCAL_MAX_LINES) break;
-    if (skip(azMin) || isCardinalAz(azMin)) continue;
+    if (isCardinalAz(azMin)) continue;
     lines += 1;
     const az = azMin * ARCMIN;
     for (let i = 0; i < LOCAL_SEGMENTS; i += 1) {

@@ -282,6 +282,7 @@ export function GuideGrid({
   visible = true,
   innerR = 4,
   planeInnerR = 0,
+  planeOuterR = NAK_OUTER,
   planeOpacity = 0.7,
   planeColor = COLOR.gridPlane,
   planeY = -0.05,
@@ -289,6 +290,8 @@ export function GuideGrid({
   visible?: boolean;
   innerR?: number;
   planeInnerR?: number;
+  /** Outer radius of the filled disc. Defaults to the नक्षत्र rim. */
+  planeOuterR?: number;
   planeOpacity?: number;
   /**
    * Fill colour of the ecliptic disc. Defaults to {@link COLOR.gridPlane},
@@ -305,18 +308,17 @@ export function GuideGrid({
   useEffect(() => () => disposeObject(grid), [grid]);
 
   return (
-    <group visible={visible} position={[0, planeY, 0]}>
-      <primitive object={grid} />
-      {/* renderOrder 0, not −1. At −1 this shared it with the Milky Way
-          backdrop, which draws *additively with the depth test off* — so the
-          backdrop was painted straight over the disc and raising
-          `planeOpacity` did nothing you could see. Still below the grid
-          lines' own 1, which is the ordering that matters here. */}
+    <group position={[0, planeY, 0]}>
+      <primitive object={grid} visible={visible} />
+      {/* Disc stays up with the belts even when the polar grid is off, so
+          the fill still reaches the नक्षत्र rim. renderOrder 0, not −1 —
+          at −1 this shared it with the Milky Way backdrop, which draws
+          additively with the depth test off. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={0} raycast={() => {}}>
         {planeInnerR > 0 ? (
-          <ringGeometry args={[planeInnerR, NAK_OUTER, 64]} />
+          <ringGeometry args={[planeInnerR, planeOuterR, 64]} />
         ) : (
-          <circleGeometry args={[NAK_OUTER, 64]} />
+          <circleGeometry args={[planeOuterR, 64]} />
         )}
         <meshBasicMaterial
           color={planeColor}
@@ -351,6 +353,8 @@ export type EclipticWheelToggles = {
    * the planet.
    */
   planeInnerR?: number;
+  /** Outer radius of the filled disc. Defaults to the नक्षत्र rim. */
+  planeOuterR?: number;
   /** Shift the polar disc/grid along ecliptic Y. Learn sits it just under the belts. */
   planeY?: number;
 };
@@ -368,6 +372,7 @@ export function EclipticWheel({
   planeColor,
   gridInnerR = 4,
   planeInnerR = 0,
+  planeOuterR = NAK_OUTER,
   planeY = -0.05,
   rashiHighlightRef,
   nakHighlightRef,
@@ -416,6 +421,7 @@ export function EclipticWheel({
         visible={grid}
         innerR={gridInnerR}
         planeInnerR={planeInnerR}
+        planeOuterR={planeOuterR}
         planeOpacity={planeOpacity}
         planeColor={planeColor}
         planeY={planeY}

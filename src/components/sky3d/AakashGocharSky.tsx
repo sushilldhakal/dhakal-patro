@@ -101,6 +101,7 @@ import {
   type SkySample,
   type ViewState,
 } from "@/components/sky3d/AakashGocharScene";
+import { HIPS_ATTRIBUTION, readHipsDebugSnapshot, type HipsDebugSnapshot } from "@/lib/sky3d/hips";
 import { CompassControl } from "@/components/sky3d/CompassControl";
 import compassNeedle from "@/assets/compass.svg?raw";
 import { useDeviceOrientation } from "@/lib/sky3d/device-orientation";
@@ -168,6 +169,36 @@ function FitCanvas() {
 }
 
 /**
+ * Step-14 temporary debug HUD for the HiPS Milky Way tile layer. The tile
+ * LOD/visibility work happens inside the Canvas (see `hipsGroupRef`'s
+ * per-frame block in {@link AakashGocharScene}), but this is a plain DOM
+ * overlay outside it, so it polls the module-level snapshot that scene
+ * writes into each frame ({@link writeHipsDebugSnapshot}) rather than
+ * receiving it as a prop — a prop would either force Scene to re-render at
+ * frame rate or need its own ref-forwarding plumbing, both overkill for a
+ * HUD meant to be deleted once the tile renderer is verified. Off (renders
+ * nothing) unless `?hipsdebug` is in the URL or `window.__hipsDebug()` was
+ * called from the console.
+ */
+function HipsDebugHud() {
+  const [snap, setSnap] = useState<HipsDebugSnapshot>(() => readHipsDebugSnapshot());
+  useEffect(() => {
+    const id = window.setInterval(() => setSnap(readHipsDebugSnapshot()), 200);
+    return () => window.clearInterval(id);
+  }, []);
+  if (!snap.on) return null;
+  return (
+    <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-lg border border-emerald-400/30 bg-black/70 px-2.5 py-1.5 font-mono text-[11px] leading-tight text-emerald-200 backdrop-blur">
+      <div>hips fov {snap.fovDeg.toFixed(1)}° · order {snap.order}/{snap.maxOrder} · r {snap.tileRadiusDeg.toFixed(2)}°</div>
+      <div>
+        tiles visible {snap.visibleCount} · ready {snap.readyCount} · loading {snap.loadingCount} · cached {snap.cachedCount} ·
+        inflight {snap.inFlight}
+      </div>
+    </div>
+  );
+}
+
+/**
  * Overlay label colours, applied inline.
  *
  * These sit on the black canvas in both themes, so they must never inherit the
@@ -185,6 +216,7 @@ const LABEL_COLOR = {
   axis: "#9fc4f0",
   poleStar: "#cfe0ff",
   vedicStar: "#ffe08a",
+  nebula: "#e39bff",
   asterism: "#e6efff",
   tropic: "#e2d264",
   observer: "#ff6b6b",
@@ -695,7 +727,12 @@ export function AakashGocharSky({
    * down as a position and a nonce, and the scene aims at it the same way it
    * aims at a followed graha, for one frame.
    */
-  const [skyAim, setSkyAim] = useState<{ lon: number; lat: number; nonce: number } | null>(null);
+  const [skyAim, setSkyAim] = useState<{
+    lon: number;
+    lat: number;
+    nonce: number;
+    fov?: number;
+  } | null>(null);
   /** What the reticle is currently sitting on, for the caption under it. */
   const [aimed, setAimed] = useState<SkyTarget | null>(null);
   /** Whether the camera actually centred on {@link aimed} — a follow/search
@@ -1164,7 +1201,7 @@ export function AakashGocharSky({
         setSelected(target.graha);
         askFocus();
       } else {
-        setSkyAim({ lon: target.lon, lat: target.lat, nonce: Date.now() });
+        setSkyAim({ lon: target.lon, lat: target.lat, nonce: Date.now(), fov: target.aimFov });
       }
       setSearchOpen(false);
     },
@@ -1783,6 +1820,21 @@ export function AakashGocharSky({
           </Suspense>
         </Canvas>
 
+        {/* Step-14 tile HUD — temporary, `?hipsdebug` only; see
+            {@link HipsDebugHud}. */}
+        <HipsDebugHud />
+
+        {/* Step-17 credit for the HiPS Milky Way tiles, required by the
+            DSS2 Color survey's ODbL licence — visible whenever the tile
+            layer itself can be on screen (horizon mode, camera background
+            off). Bottom-right, clear of the compass dial docked
+            bottom-centre (see {@link CompassControl}). */}
+        {mode === "horizon" && !showCamera ? (
+          <div className="pointer-events-none absolute bottom-2 right-2 z-10 max-w-[70%] text-right text-[9px] leading-tight text-white/35">
+            {HIPS_ATTRIBUTION}
+          </div>
+        ) : null}
+
         {/* Bottom-centre, over the canvas: drag it to turn the sky, tap it
             for the gyro, tap the lens it becomes for the camera. See
             {@link CompassControl}. */}
@@ -1829,7 +1881,7 @@ export function AakashGocharSky({
                 return;
               }
               if (
-                (label.kind === "star" || label.kind === "asterism") &&
+                (label.kind === "star" || label.kind === "asterism" || label.kind === "nebula") &&
                 label.lon != null &&
                 label.lat != null
               ) {
@@ -2171,31 +2223,47 @@ export function AakashGocharSky({
         ) : null}
 
         {/* The reticle: what the camera has been *centred* on — a follow or a
-            search pick, never a bare select — is in the middle, and this says
-            so. Drawn as four ticks with the middle left open, so the thing it
-            marks is never covered by the mark. The name underneath is
-            skipped when the sky is already carrying that exact label on its
-            own (see `SkyLabels`) — showing it twice for the one thing you
-            just centred was the small text nobody asked to read again. */}
-        {aimed && aimedCentered ? (
-          <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-            <div className="relative grid place-items-center">
-              <svg viewBox="0 0 48 48" className="size-12 text-amber-300/80" aria-hidden>
-                <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <line x1="24" y1="2" x2="24" y2="13" />
-                  <line x1="24" y1="35" x2="24" y2="46" />
-                  <line x1="2" y1="24" x2="13" y2="24" />
-                  <line x1="35" y1="24" x2="46" y2="24" />
-                </g>
-              </svg>
-              {sample?.labels.some((l) => l.id === aimed.id) ? null : (
-                <span className="absolute top-[calc(50%+1.9rem)] whitespace-nowrap rounded-full border border-amber-300/40 bg-black/70 px-2 py-0.5 text-[11px] font-bold text-amber-100 backdrop-blur">
-                  {lang === "en" ? aimed.en : aimed.ne}
-                </span>
-              )}
+            search pick, never a bare select — is marked here. Nailed to the
+            middle of the screen used to be the whole implementation, which is
+            only ever true for the one frame right after the pick lands the
+            camera on it; drag the view at all afterwards (नक्षत्र/नेबुला
+            picks hold the camera for a single frame, not continuously — see
+            the doc comment on `skyAim` handling in `AakashGocharScene`) and
+            the mark stayed dead centre while the thing it was marking slid
+            out from under it. Reading its live screen position off the same
+            `sample.labels` the sky's own names come from — matched by the
+            same id `SkySearch`/`sky-catalogue.ts` hand out — keeps it glued
+            to the actual object instead. Nothing carries a live label until
+            it clears its own reveal threshold (a graha has none; an ordinary
+            नक्षत्र star only picks one up once bright enough; a नेबुला once
+            the photograph itself is showing), so those fall back to the old
+            centred mark, which is still correct for the one frame it takes
+            the camera to get there. */}
+        {aimed && aimedCentered ? (() => {
+          const live = sample?.labels.find((l) => l.id === aimed.id);
+          const style = live
+            ? { left: live.x, top: live.y, transform: "translate(-50%, -50%)" }
+            : { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+          return (
+            <div className="pointer-events-none absolute z-10" style={style}>
+              <div className="relative grid place-items-center">
+                <svg viewBox="0 0 48 48" className="size-12 text-amber-300/80" aria-hidden>
+                  <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <line x1="24" y1="2" x2="24" y2="13" />
+                    <line x1="24" y1="35" x2="24" y2="46" />
+                    <line x1="2" y1="24" x2="13" y2="24" />
+                    <line x1="35" y1="24" x2="46" y2="24" />
+                  </g>
+                </svg>
+                {live ? null : (
+                  <span className="absolute top-[calc(50%+1.9rem)] whitespace-nowrap rounded-full border border-amber-300/40 bg-black/70 px-2 py-0.5 text-[11px] font-bold text-amber-100 backdrop-blur">
+                    {lang === "en" ? aimed.en : aimed.ne}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        ) : null}
+          );
+        })() : null}
 
         {focusOpen ? (
           <div
@@ -2744,11 +2812,13 @@ const SkyLabels = memo(function SkyLabels({
                 padding: 0,
               }}
             >
-              {(lang === "en" ? label.text : label.textNe ?? label.text) ?? ""}
+              {(lang === "en" ? label.text : label.textNe) ?? ""}
             </button>
           );
         }
         if (label.kind === "star") {
+          const text = lang === "en" ? label.text : label.textNe;
+          if (!text) return null;
           const selected = selectedId === label.id;
           return (
             <button
@@ -2768,7 +2838,7 @@ const SkyLabels = memo(function SkyLabels({
                 padding: 0,
               }}
             >
-              {(lang === "en" ? label.text : label.textNe ?? label.text) ?? ""}
+              {text}
             </button>
           );
         }
@@ -2874,7 +2944,7 @@ const SkyLabels = memo(function SkyLabels({
                 padding: 0,
               }}
             >
-              {(lang === "en" ? label.text : label.textNe ?? label.text) ?? ""}
+              {(lang === "en" ? label.text : label.textNe) ?? ""}
             </button>
           );
         }
@@ -2917,6 +2987,30 @@ const SkyLabels = memo(function SkyLabels({
             >
               {lang === "en" ? label.text : (label.textNe ?? label.text)}
             </span>
+          );
+        }
+        if (label.kind === "nebula") {
+          const selected = selectedId === label.id;
+          return (
+            <button
+              key={label.id}
+              type="button"
+              onClick={() => onAimLabel?.(label)}
+              className="truncate font-semibold"
+              style={{
+                ...labelBox(label.x, label.y, 150 * scale, 8 * scale),
+                pointerEvents: "auto",
+                cursor: "pointer",
+                fontSize: zoomFont(selected ? 11 : 9, scale),
+                color: selected ? "#fff6c8" : LABEL_COLOR.nebula,
+                textShadow: "0 1px 4px rgba(0,0,0,0.95)",
+                background: "transparent",
+                border: 0,
+                padding: 0,
+              }}
+            >
+              {(lang === "en" ? label.text : label.textNe) ?? ""}
+            </button>
           );
         }
         if (label.kind === "graha" && label.key) {

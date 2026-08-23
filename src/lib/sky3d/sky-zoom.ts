@@ -74,6 +74,21 @@ export function fovForZoom(mode: SkyMode, distance: number): number {
 }
 
 /**
+ * The क्षितिज zoom `distance` that lands on a given vertical field, degrees —
+ * the inverse of {@link fovForZoom}'s tight-zoom branch (1°–90°, `distance`
+ * 0.35–26). Search/aim uses this to land a deep-sky photograph already
+ * framed instead of centred at whatever zoom the reader happened to be at,
+ * which for most of the catalogue (under a degree across) is too wide to
+ * show anything at all.
+ */
+export function distanceForHorizonFov(fovDeg: number): number {
+  const home = 26;
+  const minD = 0.35;
+  const t = (Math.min(90, Math.max(1, fovDeg)) - 1) / (90 - 1);
+  return minD + t * (home - minD);
+}
+
+/**
  * How far to wind back a drag at the zoom we are at, against the zoom the view
  * opened at. 1 is the opening feel; smaller is a gentler turn.
  *

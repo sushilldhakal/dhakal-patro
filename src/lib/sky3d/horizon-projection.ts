@@ -91,17 +91,29 @@ const PROJECT_VERTEX = /* glsl */ `
  * SpriteMaterial never includes `project_vertex`. It billboards in view space
  * then does `gl_Position = projectionMatrix * mvPosition`, so राहु / केतु sat
  * on the leftover 60° perspective camera while the belt used stereographic.
- * Project the sprite *origin* through the same map, then keep the quad offset
- * in NDC so the icon stays a round billboard on the ecliptic.
+ *
+ * `mvPosition` at this point is already the *corner*, not the sprite's own
+ * origin — Three's own sprite shader has already done `mvPosition.xy +=
+ * rotatedPosition` above this — so it can go through {@link
+ * horizonClipPosition} directly, the same way any other vertex in the scene
+ * does. An earlier version routed it through the sprite's *centre* instead —
+ * `horizonClipPosition(mvCenter)` plus a corner offset borrowed from the
+ * ordinary `projectionMatrix` — on the theory that running each corner
+ * through the fisheye map independently would warp a photo into a
+ * trapezoid. That borrowed offset is the real bug: it is the delta a plain
+ * 60°-perspective camera would draw, which does not shrink or grow with
+ * {@link HorizonFisheyeUniforms.uHorizonFov} at all, so every sprite kept
+ * whatever size it happened to have at 60° regardless of how far the लेन्स
+ * had actually zoomed — planted at the wrong scale for any other field, most
+ * visibly the deep-sky photographs never growing as the reader pushed in on
+ * one. Since the map is conformal — angle-preserving at every point, not
+ * only at its centre — sending each corner through it independently does not
+ * warp a sprite that is a reasonable fraction of the sky; it makes the size
+ * agree with the zoom, which the centre-plus-borrowed-delta version never did.
  */
 const SPRITE_GL_POSITION = /* glsl */ `
-	vec4 mvCenter = vec4(mvPosition.xy - rotatedPosition, mvPosition.zw);
 	if (uHorizonStereo > 0.5) {
-		vec4 pCenter = projectionMatrix * mvCenter;
-		vec4 pFull = projectionMatrix * mvPosition;
-		vec2 ndcDelta = pFull.xy / max(pFull.w, 1e-4) - pCenter.xy / max(pCenter.w, 1e-4);
-		vec4 stereo = horizonClipPosition(mvCenter);
-		gl_Position = vec4(stereo.xy + ndcDelta, stereo.z, 1.0);
+		gl_Position = horizonClipPosition(mvPosition);
 	} else {
 		gl_Position = projectionMatrix * mvPosition;
 	}

@@ -21,12 +21,13 @@ import {
   skyStarCommonName,
   skyStarNameNe,
 } from "@/lib/sky3d/nakshatra-stars";
+import { NEBULAE } from "@/lib/sky3d/nebulae";
 
 /**
  * What sort of thing it is. The browse tree is built from this, so a new kind
  * appears as a new branch without anything else being touched.
  */
-export type SkyTargetKind = "planet" | "star" | "constellation";
+export type SkyTargetKind = "planet" | "star" | "constellation" | "nebula";
 
 /** Where the camera is pointed to find it. */
 export type SkyTargetAt =
@@ -44,6 +45,15 @@ export type SkyTarget = {
   /** Shown under the name in a result row: the नक्षत्र it sits in, and so on. */
   hintNe?: string;
   hintEn?: string;
+  /**
+   * The vertical field, degrees, that frames this target instead of leaving
+   * it centred at whatever zoom the reader was already at. Only the deep-sky
+   * photographs set this: most of the catalogue is under a degree across, and
+   * a wide field on pick would centre the point correctly and still show
+   * nothing — {@link nebulaReveal} in `AakashGocharScene` needs the image to
+   * cover a real fraction of the frame before it draws at all.
+   */
+  aimFov?: number;
 } & SkyTargetAt;
 
 /** The browse tree's branches, in the order they are offered. */
@@ -51,6 +61,7 @@ export const SKY_KINDS: { kind: SkyTargetKind; ne: string; en: string }[] = [
   { kind: "planet", ne: "ग्रह", en: "Planets" },
   { kind: "star", ne: "तारा", en: "Stars" },
   { kind: "constellation", ne: "नक्षत्र", en: "Constellations" },
+  { kind: "nebula", ne: "नेबुला", en: "Nebulae" },
 ];
 
 /**
@@ -105,6 +116,41 @@ export const SKY_CATALOGUE: SkyTarget[] = (() => {
         lat: p.lat,
       });
     }
+  }
+
+  /* Deep-sky photographs, one search result per named object rather than per
+     tile — Barnard's Loop is four overlapping images under one Sh2-276, and
+     a search for it should not offer the same name four times. The largest
+     tile stands for the whole field, both as its centre and as the size the
+     aimed zoom frames to. */
+  const byDesignation = new Map<string, (typeof NEBULAE)[number]>();
+  for (const n of NEBULAE) {
+    const key = n.catalog || n.id;
+    const current = byDesignation.get(key);
+    if (!current || n.widthDeg * n.heightDeg > current.widthDeg * current.heightDeg) {
+      byDesignation.set(key, n);
+    }
+  }
+  for (const n of byDesignation.values()) {
+    const p = equatorialToeclipticJ2000(n.ra, n.dec);
+    const span = Math.max(n.widthDeg, n.heightDeg);
+    out.push({
+      id: `nebula:${n.id}`,
+      kind: "nebula",
+      ne: n.ne,
+      en: n.en,
+      hintNe: n.catalog,
+      hintEn: n.catalog,
+      at: "sky",
+      lon: p.lon,
+      lat: p.lat,
+      /* Framed at three times the image's own span — squarely inside
+         {@link nebulaReveal}'s full-strength band (6%–65% of the frame)
+         rather than right at its edge, and capped so a sprawling field like
+         Barnard's Loop still lands at a field that reads as sky and not as
+         wallpaper. */
+      aimFov: Math.min(20, Math.max(1, span * 3)),
+    });
   }
 
   return out;

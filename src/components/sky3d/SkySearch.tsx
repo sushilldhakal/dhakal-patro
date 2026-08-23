@@ -155,7 +155,11 @@ export function SkySearch({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={pick("ग्रह, तारा, नक्षत्र…", "Planet, star, constellation…")}
           aria-label={pick("आकाशमा खोज्नुहोस्", "Search the sky")}
-          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-white outline-none placeholder:text-white/35"
+          /* text-base, not text-sm: iOS Safari auto-zooms the whole page —
+             canvas included — into any input under 16px on focus, which is
+             what read as "the 3D animation zooms in" the moment search
+             opened on a phone. 16px is the floor that keeps it from firing. */
+          className="min-w-0 flex-1 bg-transparent text-base font-semibold text-white outline-none placeholder:text-white/35"
         />
         {query ? (
           <button

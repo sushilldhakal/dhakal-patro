@@ -588,8 +588,12 @@ export function starOverlayNames(
   star: Pick<FlatStar, "junction" | "nameEn" | "nameNe">,
   nak: Pick<NakshatraAsterism, "ne" | "en">,
 ): { en: string; ne: string } | null {
-  if (!star.nameEn && !star.junction) return null;
-  const en = star.nameEn ?? nak.en;
-  const ne = star.nameNe ?? (star.junction ? nak.ne : en);
-  return { en, ne };
+  /* Never put an English proper name in `ne`. Acrab / Aldulfin have no
+     traditional Nepali name — they stay unlabeled when the UI is Nepali,
+     rather than leaking Latin onto the sky. योगतारा without its own name
+     still takes the नक्षत्र's. */
+  const en = star.nameEn ?? (star.junction ? nak.en : null);
+  const ne = star.nameNe ?? (star.junction ? nak.ne : null);
+  if (!en && !ne) return null;
+  return { en: en ?? "", ne: ne ?? "" };
 }
