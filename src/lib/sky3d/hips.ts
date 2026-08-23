@@ -250,16 +250,21 @@ export function hipsTileRadiusDeg(order: number): number {
  * extra tiles loaded off-screen, not a hole in the sky.
  *
  * `coneDeg + tileRadius` alone is a rigorous bound *if* `coneDeg` itself
- * never underestimates the frame's real angular reach — but a single tile
- * right at that boundary was observed missing in practice (a real,
- * reproducible dark wedge at deep zoom, not a loading race: the tile
- * simply never made the candidate list), meaning `coneDeg` does come up
- * a little short of the true corner reach sometimes. `EXTRA_MARGIN_DEG`
- * is a flat buffer on top of the existing margin for exactly that gap —
- * a few more off-screen tiles loaded is a cost this brief already accepts;
- * a hole in the Milky Way is not.
+ * never underestimates the frame's real angular reach — but tiles right at
+ * that boundary were observed missing in practice (reproducible dark
+ * wedges, and on a tall phone screen a whole band across the frame, not a
+ * loading race: the tiles simply never made the candidate list). `coneDeg`
+ * comes from {@link horizonViewWindow}'s own corner-reach formula, tuned
+ * against the grid ruler's roughly-square desktop frame; a phone in
+ * portrait reaches much further top-to-bottom relative to its own field
+ * than that formula's aspect correction was ever exercised against, so a
+ * flat few degrees of slack was nowhere near enough. Scaling the margin
+ * with `coneDeg` itself, not just adding a flat buffer, is what actually
+ * keeps pace as the frame gets more extreme — a proportionally wider net
+ * costs a few more off-screen tiles loaded, never a hole in the sky.
  */
-const HIPS_VISIBLE_EXTRA_MARGIN_DEG = 3;
+const HIPS_VISIBLE_MARGIN_FACTOR = 1.3;
+const HIPS_VISIBLE_EXTRA_MARGIN_DEG = 6;
 
 export function hipsVisibleTiles(
   order: number,
@@ -268,7 +273,7 @@ export function hipsVisibleTiles(
 ): number[] {
   const nside = order2nside(order);
   const n = hipsTileCount(order);
-  const limit = coneDeg + hipsTileRadiusDeg(order) + HIPS_VISIBLE_EXTRA_MARGIN_DEG;
+  const limit = coneDeg * HIPS_VISIBLE_MARGIN_FACTOR + hipsTileRadiusDeg(order) + HIPS_VISIBLE_EXTRA_MARGIN_DEG;
   const cosLimit = Math.cos((limit * Math.PI) / 180);
   const out: number[] = [];
   for (let pix = 0; pix < n; pix += 1) {

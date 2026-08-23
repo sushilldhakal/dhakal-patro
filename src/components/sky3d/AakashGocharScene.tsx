@@ -1025,6 +1025,26 @@ function nebulaReveal(spanDeg: number, fovDeg: number): number {
   return Math.min(1, Math.max(0, (fraction - 0.06) / 0.06));
 }
 
+/**
+ * The locator ring's own reveal — unlike {@link nebulaReveal} for the
+ * photograph itself, this one *does* fade back out once the object is
+ * plainly on screen. Its whole job is flagging something too small yet to
+ * read as a photo; once the photograph is actually filling a fair chunk of
+ * the frame, a ring around it stops being a locator and starts being a
+ * circle that just keeps growing as the reader zooms in — exactly the
+ * "why is this thing so big" a flag-before-the-fact marker should never
+ * cause once the thing itself has arrived. Fades out over the same width
+ * it fades in with, so the two ends read as one smooth pulse rather than a
+ * ring that snaps to full size the instant it appears and vanishes just as
+ * abruptly once the photo has grown enough.
+ */
+function nebulaMarkerReveal(spanDeg: number, fovDeg: number): number {
+  const fraction = spanDeg / Math.max(fovDeg, 0.02);
+  const fadeIn = Math.min(1, Math.max(0, (fraction / 1.6 - 0.06) / 0.06));
+  const fadeOut = 1 - Math.min(1, Math.max(0, (fraction - 0.3) / 0.12));
+  return Math.min(fadeIn, fadeOut);
+}
+
 type LoadState = "idle" | "loading" | "ready";
 
 let ringTextureCache: THREE.CanvasTexture | null = null;
@@ -3687,7 +3707,7 @@ export function AakashGocharScene({
         const { nebulaIndex, marker, markerMaterial } = nebulaMarkers[mi];
         const entry = nebulaField[nebulaIndex];
         const { spanDeg, lon, lat, widthRad, heightRad } = entry;
-        const markerReveal = nebulaReveal(spanDeg, nebulaFov / 1.6);
+        const markerReveal = nebulaMarkerReveal(spanDeg, nebulaFov);
         marker.visible = markerReveal > 0;
         if (markerReveal <= 0) continue;
         const at = skyPlace(lon + precession - ayan, lat);
