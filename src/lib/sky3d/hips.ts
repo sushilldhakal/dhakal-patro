@@ -248,7 +248,19 @@ export function hipsTileRadiusDeg(order: number): number {
  * 768 tiles, cheap enough to walk in full every time the view changes
  * rather than needing a spatial index, and a little margin costs a few
  * extra tiles loaded off-screen, not a hole in the sky.
+ *
+ * `coneDeg + tileRadius` alone is a rigorous bound *if* `coneDeg` itself
+ * never underestimates the frame's real angular reach — but a single tile
+ * right at that boundary was observed missing in practice (a real,
+ * reproducible dark wedge at deep zoom, not a loading race: the tile
+ * simply never made the candidate list), meaning `coneDeg` does come up
+ * a little short of the true corner reach sometimes. `EXTRA_MARGIN_DEG`
+ * is a flat buffer on top of the existing margin for exactly that gap —
+ * a few more off-screen tiles loaded is a cost this brief already accepts;
+ * a hole in the Milky Way is not.
  */
+const HIPS_VISIBLE_EXTRA_MARGIN_DEG = 3;
+
 export function hipsVisibleTiles(
   order: number,
   dirEquatorial: THREE.Vector3,
@@ -256,7 +268,7 @@ export function hipsVisibleTiles(
 ): number[] {
   const nside = order2nside(order);
   const n = hipsTileCount(order);
-  const limit = coneDeg + hipsTileRadiusDeg(order);
+  const limit = coneDeg + hipsTileRadiusDeg(order) + HIPS_VISIBLE_EXTRA_MARGIN_DEG;
   const cosLimit = Math.cos((limit * Math.PI) / 180);
   const out: number[] = [];
   for (let pix = 0; pix < n; pix += 1) {
@@ -303,6 +315,42 @@ export function hipsLoadsInFlightCount(): number {
  * name is meant to signal: this makes sure the *object* exists, nothing
  * about whether it belongs on screen this frame.
  */
+/**
+ * Real DSS2 tiles are individual photographic plates, each with its own
+ * exposure and colour balance — CDS's own colouring pass narrows that gap
+ * but does not erase it, so two neighbouring tiles from different plates
+ * can meet at a visibly harder edge than anything in the sky itself. A
+ * plain edge-to-edge tile grid puts that seam at full opacity, which reads
+ * as a bug (an unnaturally straight "cut" through the Milky Way) even
+ * though every pixel on both sides is genuine image data.
+ *
+ * Fading each tile's own opacity out near its border — in `ne`/`nw` space,
+ * so the fade width is proportional regardless of order — softens that
+ * edge into whatever is drawn underneath: the parent-order tile from the
+ * crossfade (Step 11), which is coarser but the same DSS2 family and
+ * usually closer in tone, or the panorama for an order-0 tile with no
+ * parent. Normal (not additive) blending is what makes that reveal work —
+ * `diffuseColor.a` fading to 0 lets the frame behind show through rather
+ * than just dimming this tile's own colour toward black.
+ */
+function injectHipsEdgeFeather(material: THREE.MeshBasicMaterial): void {
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    prev?.(shader, renderer);
+    if (shader.fragmentShader.includes("hipsEdgeFeather")) return;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <dithering_fragment>",
+      `
+#ifdef USE_UV
+  float hipsEdgeFeather = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+  gl_FragColor.a *= smoothstep(0.0, 0.06, hipsEdgeFeather);
+#endif
+  #include <dithering_fragment>`,
+    );
+  };
+  material.needsUpdate = true;
+}
+
 export function ensureHipsTile(
   cache: Map<string, HipsTileEntry>,
   order: number,
@@ -335,6 +383,7 @@ export function ensureHipsTile(
     side: THREE.DoubleSide,
     toneMapped: false,
   });
+  injectHipsEdgeFeather(material);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   mesh.visible = false;
