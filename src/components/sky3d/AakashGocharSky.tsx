@@ -187,9 +187,13 @@ function HipsDebugHud() {
     return () => window.clearInterval(id);
   }, []);
   if (!snap.on) return null;
+  const tilesOn = snap.order >= 0;
   return (
     <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-lg border border-emerald-400/30 bg-black/70 px-2.5 py-1.5 font-mono text-[11px] leading-tight text-emerald-200 backdrop-blur">
-      <div>hips fov {snap.fovDeg.toFixed(1)}° · order {snap.order}/{snap.maxOrder} · r {snap.tileRadiusDeg.toFixed(2)}°</div>
+      <div>
+        hips fov {snap.fovDeg.toFixed(1)}° ·{" "}
+        {tilesOn ? `order ${snap.order}/${snap.maxOrder} · r ${snap.tileRadiusDeg.toFixed(2)}°` : "panorama (above threshold)"}
+      </div>
       <div>
         tiles visible {snap.visibleCount} · ready {snap.readyCount} · loading {snap.loadingCount} · cached {snap.cachedCount} ·
         inflight {snap.inFlight}

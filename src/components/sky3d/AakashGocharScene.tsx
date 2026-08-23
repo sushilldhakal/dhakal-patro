@@ -1167,6 +1167,19 @@ const HIPS_RENDER_ORDER_PARENT = -0.6;
 const HIPS_RENDER_ORDER_TARGET = -0.55;
 /** `n×n` vertex grid per tile — see {@link buildHipsTileGeometry}'s own doc comment on why a flat quad is not enough. */
 const HIPS_TILE_SUBDIVISIONS = 8;
+/**
+ * Above this field the panorama alone shows; at or below it the real DSS2
+ * tiles take over. Order-0 tiles are individually only a little sharper
+ * than the panorama's own 2048×1024 wrapped over the whole sky, so at a
+ * very wide field they read as a patchwork of soft, differently-exposed
+ * plates rather than an improvement — the panorama is the better image
+ * until the field has narrowed enough that a handful of tiles are actually
+ * standing in for a small, sharply-cropped piece of sky instead of the
+ * whole dome. One threshold, one direction: crossing above 80° is the only
+ * thing that hides the tiles, so panning near the line does not flicker
+ * them on and off against the panorama underneath.
+ */
+const HIPS_FOV_SHOW_THRESHOLD = 80;
 
 function loadNebulaTexture(entry: {
   url: string;
@@ -2898,8 +2911,11 @@ export function AakashGocharScene({
     }
     /* The HiPS tile group rides the exact same rotation {@link starsRef}
        does, verbatim — see the doc comment where {@link hipsGroupRef} is
-       declared. */
-    const hipsOn = horizon && !arBackground;
+       declared. FOV has to be known before deciding `hipsOn` itself — see
+       {@link HIPS_FOV_SHOW_THRESHOLD} — so it is read here rather than
+       inside the block below that used to be its only consumer. */
+    const hipsFov = fovForZoom("horizon", view.current.distance);
+    const hipsOn = horizon && !arBackground && hipsFov <= HIPS_FOV_SHOW_THRESHOLD;
     if (hipsGroupRef.current) {
       if (horizon) {
         hipsGroupRef.current.quaternion.setFromRotationMatrix(
@@ -2910,6 +2926,22 @@ export function AakashGocharScene({
       }
       hipsGroupRef.current.position.copy(state.camera.position);
       hipsGroupRef.current.visible = hipsOn;
+    }
+    /* Above {@link HIPS_FOV_SHOW_THRESHOLD} the block below never runs, so
+       without this the HUD would freeze on whatever counts it last saw
+       while still under the threshold instead of showing the panorama
+       having taken back over. */
+    if (hipsDebugOn && !hipsOn) {
+      writeHipsDebugSnapshot({
+        fovDeg: hipsFov,
+        order: -1,
+        tileRadiusDeg: 0,
+        visibleCount: 0,
+        readyCount: 0,
+        loadingCount: 0,
+        cachedCount: hipsCache.current.size,
+        inFlight: hipsLoadsInFlightCount(),
+      });
     }
     /**
      * Steps 7–11: pick the order the current field actually earns, work out
@@ -2930,7 +2962,6 @@ export function AakashGocharScene({
       const group = hipsGroupRef.current;
       const width = state.size.width;
       const height = state.size.height;
-      const hipsFov = fovForZoom("horizon", view.current.distance);
       const targetOrder = hipsOrderForFov(hipsFov);
       const parentOrder = Math.max(0, targetOrder - 1);
       const win = horizonViewWindow(state.camera, hipsFov, width, height);
