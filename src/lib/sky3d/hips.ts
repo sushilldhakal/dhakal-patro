@@ -319,7 +319,20 @@ export function ensureHipsTile(
     opacity: 1,
     depthWrite: false,
     depthTest: false,
-    side: THREE.BackSide,
+    /* `BackSide` is what a viewer standing inside the panorama sphere
+       wants — same as {@link makeMilkyWayGeometry}'s own sphere — but
+       HEALPix base pixels are rotated four different ways around the
+       sky (NESTED's own `pixcoord2VecNest` ne/nw axes do not wind the
+       same way in every base pixel), so a single fixed triangle index
+       order in `buildHipsTileGeometry` cannot match `BackSide`'s
+       expected winding for all twelve of them at once. `BackSide` alone
+       silently back-face-culled every tile — nothing rendered even
+       though position, texture, and the fisheye shader patch were all
+       correct (confirmed by forcing `DoubleSide` and watching a `ff00ff`
+       debug tint fill the whole dome). `DoubleSide` costs nothing
+       noticeable for an 8×8-subdivided patch and needs no per-base-pixel
+       winding table. */
+    side: THREE.DoubleSide,
     toneMapped: false,
   });
   const mesh = new THREE.Mesh(geometry, material);
