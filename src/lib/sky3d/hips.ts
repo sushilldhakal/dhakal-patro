@@ -334,9 +334,9 @@ export function hipsLoadsInFlightCount(): number {
  * edge into whatever is drawn underneath: the parent-order tile from the
  * crossfade (Step 11), which is coarser but the same DSS2 family and
  * usually closer in tone, or the panorama for an order-0 tile with no
- * parent. Normal (not additive) blending is what makes that reveal work —
- * `diffuseColor.a` fading to 0 lets the frame behind show through rather
- * than just dimming this tile's own colour toward black.
+ * parent. Normal blending is what makes that reveal work — `diffuseColor.a`
+ * fading to 0 lets the frame behind show through rather than just dimming
+ * this tile's own colour toward black.
  */
 function injectHipsEdgeFeather(material: THREE.MeshBasicMaterial): void {
   const prev = material.onBeforeCompile;
@@ -387,6 +387,23 @@ export function ensureHipsTile(
        winding table. */
     side: THREE.DoubleSide,
     toneMapped: false,
+    /* Tried `AdditiveBlending` here on the theory that it would let the
+       panorama's own brightness keep showing through underneath, the same
+       way it already lets stars glow through it (see the panorama
+       sphere's own doc comment in `AakashGocharScene.tsx`). In practice a
+       real DSS2 tile's "black" sky background is not actually zero —
+       photographic noise, sky glow in the plate itself — so *every* pixel
+       added a little more on top of the panorama's own glow rather than
+       just the stars doing it, and the result was a flat, washed-out
+       brownish haze with none of a plain tile's own contrast left.
+       `NormalBlending` (the default, so nothing to set here) is what a
+       photograph wants: each tile replaces what is behind it with its own
+       real exposure, which is the crisp result the tile viewer was
+       already giving before this was tried. See {@link
+       HIPS_FADE_HALF_WIDTH_DEG} in `AakashGocharScene.tsx` for the actual
+       fix to "the panorama disappears the instant a tile loads" — a
+       cross-fade at the panorama/tile boundary itself, not a blend mode
+       that changes what every tile looks like everywhere. */
   });
   injectHipsEdgeFeather(material);
   const mesh = new THREE.Mesh(geometry, material);

@@ -1212,6 +1212,23 @@ const HIPS_TILE_SUBDIVISIONS = 8;
  * them on and off against the panorama underneath.
  */
 const HIPS_FOV_SHOW_THRESHOLD = 80;
+/**
+ * How many degrees of field, below {@link HIPS_FOV_SHOW_THRESHOLD}, the
+ * tiles spend fading in rather than snapping straight to full opacity.
+ *
+ * The threshold itself still only ever fires in one direction, exactly as
+ * settled before — tiles do not load, LOD-select, or mount above 80° field,
+ * full stop. This only softens what happens *at* that edge on the way
+ * there: a tile that has just turned visible was popping in at full
+ * strength the instant it crossed the line, so the panorama read as
+ * vanishing out from under the reader rather than the two handing off to
+ * each other. Ramping opacity from 0 at 80° up to 1 by
+ * `80 - HIPS_FADE_HALF_WIDTH_DEG` gives the panorama's own brightness room
+ * to still be doing most of the work right at the boundary, with tiles
+ * only fully taking over once the field has narrowed enough that they are
+ * clearly the better image anyway.
+ */
+const HIPS_FADE_HALF_WIDTH_DEG = 20;
 
 function loadNebulaTexture(entry: {
   url: string;
@@ -2994,6 +3011,14 @@ export function AakashGocharScene({
       const group = hipsGroupRef.current;
       const width = state.size.width;
       const height = state.size.height;
+      /* See {@link HIPS_FADE_HALF_WIDTH_DEG}: 0 right at the threshold,
+         ramping to 1 by `HIPS_FOV_SHOW_THRESHOLD - HIPS_FADE_HALF_WIDTH_DEG`,
+         so a tile popping in the instant it is needed does not read as the
+         panorama vanishing out from under the reader. */
+      const hipsFadeOpacity = Math.min(
+        1,
+        Math.max(0, (HIPS_FOV_SHOW_THRESHOLD - hipsFov) / HIPS_FADE_HALF_WIDTH_DEG),
+      );
       const targetOrder = hipsOrderForFov(hipsFov);
       const parentOrder = Math.max(0, targetOrder - 1);
       const win = horizonViewWindow(state.camera, hipsFov, width, height);
@@ -3022,6 +3047,7 @@ export function AakashGocharScene({
           if (entry.state === "ready") {
             readyCount += 1;
             entry.mesh.visible = needed.has(pix);
+            entry.material.opacity = hipsFadeOpacity;
           } else {
             entry.mesh.visible = false;
           }
