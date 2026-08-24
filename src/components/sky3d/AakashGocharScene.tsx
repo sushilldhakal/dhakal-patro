@@ -3053,8 +3053,22 @@ export function AakashGocharScene({
           }
         }
       };
-      activate(targetOrder, targetPixList, HIPS_RENDER_ORDER_TARGET, neededTarget);
+      /* Parent first, target second — `loadHipsTileTexture`'s concurrency
+         cap is shared between both calls, so whichever `activate()` runs
+         first claims the load slots for this frame. Target-first left the
+         crossfade's whole premise broken on a fast zoom or pan: the coarse
+         parent tile that Step 11 promises would "stay visible while the
+         child loads" could itself still be sitting `idle`, competing with
+         the target tiles it was supposed to be a guaranteed fallback for.
+         The result was a real, reproducible patchwork — some patches at
+         full target detail, neighbouring ones showing nothing at all
+         (neither order loaded yet) rather than the blurrier parent — which
+         reads as a hard-edged "cut" through the sky, not a loading state.
+         Parent tiles are far cheaper to have ready (order 2 is at most 192
+         tiles total, order 1 only 48) and are what every target tile is
+         supposed to fall back to, so they get first claim on the queue. */
       activate(parentOrder, parentPixList, HIPS_RENDER_ORDER_PARENT, neededParent);
+      activate(targetOrder, targetPixList, HIPS_RENDER_ORDER_TARGET, neededTarget);
 
       // Hide every cached tile that isn't part of this frame's target/parent
       // selection — tiles from a previous camera direction or a previously
