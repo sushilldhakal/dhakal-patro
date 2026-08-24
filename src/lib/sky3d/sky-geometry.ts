@@ -133,7 +133,7 @@ export type GridTier = {
 export const ARCMIN = 1 / 60;
 
 /** The one line opacity the active tier draws at — Stellarium's grid is a flat grey at any zoom, not fainter the finer it gets. */
-export const GRID_OPACITY = 0.22;
+export const GRID_OPACITY = 0.8;
 
 /**
  * The exact spacing table from stellarium-web-engine's `src/modules/lines.c`
