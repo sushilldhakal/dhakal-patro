@@ -891,7 +891,21 @@ function makeMilkyWayGeometry(radius: number, widthSeg = 96, heightSeg = 48) {
          needs re-wrapping until the sampler does it via RepeatWrapping,
          where it is actually safe. */
       const longitudeDeg = 90 - ra;
-      uvs.push(longitudeDeg / 360 + 0.5, zenithAngle / Math.PI);
+      /* No "+ 0.5" here — real MilkyWay.cpp's own texc.x is
+         `modelLongitude / (2π)`, full stop, and a `+ 0.5` shifts the
+         sampled column by exactly half the texture's width: 180° of
+         celestial longitude, putting whatever is actually behind the
+         observer in front of them instead. Not a guess — checked directly
+         against `milkyway.png` itself: its own brightest column (summed
+         over every row, so it is not sensitive to which declination band
+         happens to be widest) measures at u≈0.498, and the real Galactic
+         Centre (RA 266.4168°) predicts u≈0.51 through this exact formula
+         with no offset — a clean match. The same formula *with* the old
+         `+ 0.5` predicts u≈0.01, on the opposite side of the image
+         entirely, which is exactly the "bright region is on the wrong
+         side of the sky, sometimes below the horizon where Stellarium has
+         it above" symptom this was reported as. */
+      uvs.push(longitudeDeg / 360, zenithAngle / Math.PI);
     }
   }
   for (let iy = 0; iy < heightSeg; iy += 1) {
