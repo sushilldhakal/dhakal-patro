@@ -1120,9 +1120,21 @@ function injectMilkyWayExtinction(material: THREE.MeshBasicMaterial): void {
         `#include <common>
 varying float vSinAlt;
 /* Young (1994)'s fit, geometric altitude — {@link Extinction::airmass}'s
-   own "apparent_z = false" branch, which is the one MilkyWay.cpp calls. */
+   own "apparent_z = false" branch, which is the one MilkyWay.cpp calls.
+   Stellarium never evaluates this below the horizon at all — its ground
+   blocks the view, so the branch below never mattered there. This dome
+   has no such floor at a wide enough field (a fisheye past ~180° shows
+   sky *and* what would be underground in every direction at once), and
+   "0.0" read as "no airmass" — full, undimmed brightness — the instant
+   the true curve would have been near-total extinction anyway (at the
+   cutoff itself the real formula already gives an airmass over 60, i.e.
+   essentially black). That flipped the two sides of the horizon exactly
+   backwards: realistically dimmed above it, brighter than anything above
+   it the moment you crossed below. A large fixed airmass keeps the same
+   near-black the real curve was already heading toward, continuous
+   across the line instead of jumping to full brightness. */
 float milkyWayAirmass(float cosZ) {
-  if (cosZ < -0.035) return 0.0;
+  if (cosZ < -0.035) return 200.0;
   float nom = (1.002432 * cosZ + 0.148386) * cosZ + 0.0096467;
   float denom = ((cosZ + 0.149864) * cosZ + 0.0102963) * cosZ + 0.000303978;
   return nom / denom;
