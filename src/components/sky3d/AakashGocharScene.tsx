@@ -1102,6 +1102,19 @@ function ringTexture(): THREE.CanvasTexture {
  * interpolated float instead of a second matrix multiply in the fragment
  * stage.
  */
+/**
+ * Real MilkyWay.cpp's own light-pollution correction is `1.1 -
+ * bortleIntensity * 0.1`, `bortleIntensity` built from the simulated
+ * observer's naked-eye limiting magnitude — a live measurement this app has
+ * no sky-glow model to drive. `HIPS_BORTLE = 2` is a fixed stand-in for the
+ * dark rural site this feature is actually framed around, not a
+ * measurement; {@link HIPS_BORTLE_FACTOR} is that same formula evaluated
+ * once at that fixed value (0.9) rather than a uniform recomputed
+ * per-frame, since nothing here ever changes it.
+ */
+const HIPS_BORTLE = 2;
+const HIPS_BORTLE_FACTOR = 1.1 - HIPS_BORTLE * 0.1;
+
 function injectMilkyWayExtinction(material: THREE.MeshBasicMaterial): void {
   if (material.userData.extinction) return;
   material.userData.extinction = true;
@@ -1160,10 +1173,15 @@ float milkyWayAirmass(float cosZ) {
    default Stellarium ships. 0.3 as the base, not the photometric 2.512:
    the same deliberate choice already made for {@link skyBoost}'s sibling
    comment, "one magnitude ≈ 30%", so a dim band still reads as present
-   near the horizon instead of clipping straight to black a touch too soon. */
+   near the horizon instead of clipping straight to black a touch too soon.
+
+   Real MilkyWay.cpp multiplies this same pow(0.3, mag) by a second term,
+   its own light-pollution correction built from a live Bortle-scale
+   estimate — see {@link HIPS_BORTLE_FACTOR}'s own doc comment for why this
+   uses a fixed stand-in instead. */
 {
   float mag = milkyWayAirmass(vSinAlt) * 0.2;
-  diffuseColor.rgb *= pow(0.3, mag);
+  diffuseColor.rgb *= pow(0.3, mag) * ${HIPS_BORTLE_FACTOR};
 }`,
       );
   };
@@ -1944,14 +1962,27 @@ export function AakashGocharScene({
     });
   }, [nebulaField, nebulaMarkerTex]);
 
-  /** See the doc comment on the sky sphere below — a flat brightness
-      multiplier, which `color` on a hex/string prop cannot express. Their own
-      MilkyWay.cpp caps its equivalent at 0.38 (`aLum = qMin(0.38f,
-      aLum*2.f)`, MilkyWay.cpp:339) and draws it additive — that is the
-      number this is matched to, not a guess: any higher and the panorama's
-      own exposure reads as a lit photograph pasted across the dome,
-      outshining every point-star drawn with it rather than sitting among
-      them. */
+  /**
+   * See the doc comment on the sky sphere below — a flat brightness
+   * multiplier, which `color` on a hex/string prop cannot express.
+   *
+   * Real MilkyWay.cpp's own equivalent is not a fixed number: `aLum =
+   * qMin(0.38f, aLum*2.f)` (MilkyWay.cpp:339) only *caps* a value built by
+   * `eye->adaptLuminanceScaled(...)` — a whole simulated eye-adaptation
+   * curve this file has no access to reproduce — and that capped `aLum` is
+   * then itself multiplied by `intensity * intensityFovScale`
+   * (MilkyWay.cpp:343) before ever reaching the texture. Matching the
+   * literal `0.38` while skipping the rest of that chain is what actually
+   * produced a washed-out panorama next to real Stellarium's own — a
+   * ceiling on a curve is not the curve. `intensityFovScale` itself is a
+   * no-op here regardless: it only fades the band out below a 2.5° field
+   * (MilkyWay.cpp:59-60), and this panorama never renders below 80° — see
+   * `HIPS_FOV_SHOW_THRESHOLD` — because the real DSS2 tiles own that whole
+   * range instead. `0.9` is an empirical stand-in for the net result of
+   * the chain this file cannot reproduce piece by piece, checked directly
+   * against a real Stellarium screenshot at the same location and time
+   * rather than derived from the formula alone.
+   */
   const skyBoost = useMemo(() => new THREE.Color(0.9, 0.9, 0.9), []);
 
   /**
