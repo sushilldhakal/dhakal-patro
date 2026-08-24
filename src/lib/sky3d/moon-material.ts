@@ -97,7 +97,15 @@ export function makeMoonMaterial(map: THREE.Texture): MoonMaterial {
         gl_FragColor = vec4(tex * min(1.0, mix(earthshine, 1.35, day)), 1.0);
       }
     `,
-    transparent: false,
+    /* Transparent (with alpha pinned at 1.0 in the shader above, so this
+       changes nothing about how it looks) so the Moon lands in the same
+       render queue a HiPS tile does — see the identical reasoning on the
+       graha body materials in `AakashGocharScene.tsx`'s `GrahaBody`. An
+       opaque Moon always renders before any tile regardless of actual
+       distance, and a tile's own `depthTest: false` means it paints over
+       whatever is there without checking; the Moon needs its own explicit
+       renderOrder in that same queue to still win. */
+    transparent: true,
     depthWrite: true,
     depthTest: true,
     side: THREE.FrontSide,

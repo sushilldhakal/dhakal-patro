@@ -1521,12 +1521,29 @@ function GrahaBody({
   return (
     <group ref={groupRef}>
       {texKey ? (
-        <mesh ref={spinRef} raycast={NO_RAYCAST}>
+        /* `transparent` plus an explicit `renderOrder` well above every
+           HiPS tile's (see `HIPS_RENDER_ORDER_TARGET`/`_PARENT` in
+           `AakashGocharScene.tsx`'s own module scope) is what keeps a graha
+           from vanishing behind one. Three.js renders *all* opaque objects
+           before *any* transparent one — that split is decided purely by
+           this flag, not by `renderOrder`, which only sorts within
+           whichever of the two queues an object already landed in. A tile
+           is transparent with `depthTest` off (the same skybox recipe the
+           panorama already uses; re-enabling it here would reintroduce the
+           far-plane precision bug that made the panorama read as flat
+           black in the first place — see that material's own doc comment),
+           so it paints over *anything* opaque in its footprint regardless
+           of actual distance. An opaque graha sitting where a tile's
+           footprint lands was exactly that: correct depth, wrong queue.
+           Every material below keeps alpha pinned at 1 (no map used here
+           has its own alpha channel), so this changes which pass a graha
+           draws in, not how it looks. */
+        <mesh ref={spinRef} raycast={NO_RAYCAST} renderOrder={1}>
           <sphereGeometry args={[radius, 40, 40]} />
           {graha === "sun" ? (
-            <meshBasicMaterial map={textures.sun} />
+            <meshBasicMaterial map={textures.sun} transparent />
           ) : graha === "moon" && sunLit ? (
-            <meshStandardMaterial map={textures.moon} roughness={1} metalness={0} />
+            <meshStandardMaterial map={textures.moon} roughness={1} metalness={0} transparent />
           ) : graha === "moon" && phaseMaterial ? (
             <primitive object={phaseMaterial} attach="material" />
           ) : (
@@ -1539,14 +1556,17 @@ function GrahaBody({
               emissiveIntensity={0.22}
               roughness={0.85}
               metalness={0.03}
+              transparent
             />
           )}
         </mesh>
       ) : (
         /* राहु / केतु have no photographic texture. A sphere on the same
            material path as the other grahas stays on the belt under the
-           stereographic sky; the old SVG sprites did not. */
-        <mesh ref={spinRef} raycast={NO_RAYCAST}>
+           stereographic sky; the old SVG sprites did not. Same
+           transparent-plus-renderOrder reasoning as the textured branch
+           above. */
+        <mesh ref={spinRef} raycast={NO_RAYCAST} renderOrder={1}>
           <sphereGeometry args={[radius, 40, 40]} />
           <meshStandardMaterial
             color={GRAHA_COLOR[graha]}
@@ -1554,6 +1574,7 @@ function GrahaBody({
             emissiveIntensity={0.45}
             roughness={0.85}
             metalness={0.03}
+            transparent
           />
         </mesh>
       )}
@@ -1931,7 +1952,7 @@ export function AakashGocharScene({
       own exposure reads as a lit photograph pasted across the dome,
       outshining every point-star drawn with it rather than sitting among
       them. */
-  const skyBoost = useMemo(() => new THREE.Color(0.38, 0.38, 0.38), []);
+  const skyBoost = useMemo(() => new THREE.Color(0.9, 0.9, 0.9), []);
 
   /**
    * अन्तरिक्ष's Earth wears the Learn playground's cartoon map, not the
