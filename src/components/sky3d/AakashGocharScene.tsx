@@ -1210,8 +1210,17 @@ const HIPS_RADIUS = 398;
 /** Draw order: parent-fallback tiles under target-order tiles, both after the panorama (-1) and before nebula photos (-0.3) — see Step 11's crossfade. */
 const HIPS_RENDER_ORDER_PARENT = -0.6;
 const HIPS_RENDER_ORDER_TARGET = -0.55;
-/** `n×n` vertex grid per tile — see {@link buildHipsTileGeometry}'s own doc comment on why a flat quad is not enough. */
-const HIPS_TILE_SUBDIVISIONS = 8;
+/**
+ * `n×n` vertex grid per tile — see {@link buildHipsTileGeometry}'s own doc
+ * comment on why a flat quad is not enough. 8 was enough to avoid visible
+ * faceting near the equator but still let a tile far enough from it — where
+ * a HEALPix cell's true shape departs furthest from square — warp visibly
+ * between grid points; 16 quadruples the triangle count for a patch that
+ * is at most a few hundred tiles on screen at once, cheap insurance against
+ * the same failure mode the doc comment already describes for a single flat
+ * quad, just at a finer scale.
+ */
+const HIPS_TILE_SUBDIVISIONS = 16;
 /**
  * Above this field the panorama alone shows; at or below it the real DSS2
  * tiles take over. Order-0 tiles are individually only a little sharper

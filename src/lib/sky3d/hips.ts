@@ -110,14 +110,22 @@ export function hipsTileCornersRaDec(order: number, pix: number): [number, numbe
  * curved interior at every grid vertex instead of interpolating between
  * corners in the wrong (flat) space.
  *
- * UV is `(ne, nw)` directly — HiPS's own per-pixel image layout is a
- * further NESTED subdivision, not a plain grid, so this is the same
- * "naive"/affine approximation real HiPS clients fall back to for quick
- * display (the `hips` Python package's own drawing algorithm does the
- * same thing) rather than a bit-exact per-texel remap. Close, not
- * pixel-perfect — and the one piece of this file that a visual check
- * against a known object (M8 again) can catch and correct if the image
- * comes out mirrored or rotated.
+ * UV is `(ne, nw)` directly, relying on THREE.js's default `flipY = true`
+ * (`loadHipsTileTexture` never overrides it) to land `nw = 1` on the file's
+ * own row 0 — not assumed: checked against the real downloaded tiles by
+ * finding two genuinely adjacent pixels (via `pixcoord2VecNest` itself, not
+ * guessed neighbours) and comparing their shared boundary's actual pixels
+ * under every plausible flip/transpose. The current mapping wins clearly
+ * both ways — e.g. an east/west pair scored 26.7 mean pixel difference for
+ * "A's right edge vs B's left edge" against 67–75 for the wrong pairings —
+ * so there is no orientation bug here to chase. What is left is a real,
+ * unavoidable HEALPix property this mapping cannot remove: a cell's true
+ * shape is not square and departs further from it away from the equator,
+ * so a uniform `(ne, nw)` grid still visibly warps a tile at those
+ * declinations. {@link HIPS_TILE_SUBDIVISIONS} (`AakashGocharScene.tsx`)
+ * is the mitigation — more grid points sampling the pixel's own true
+ * curved interior — not a UV-formula fix, because there isn't one at this
+ * end: the tile image itself was already rendered flat by HipsGen.
  */
 export function buildHipsTileGeometry(
   order: number,
