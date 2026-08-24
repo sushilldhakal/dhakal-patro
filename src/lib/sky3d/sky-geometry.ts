@@ -136,26 +136,32 @@ export const ARCMIN = 1 / 60;
 export const GRID_OPACITY = 0.22;
 
 export const GRID_TIERS: readonly GridTier[] = [
-  /* Coarse → fine as the क्षितिज lens narrows: 10° is the opening cage, then
-     5°, 1°, ½°, 10′, 5′ and 2′ take over in turn so a tight crop still has
-     lines to count against all the way to horizon's own 1° floor. ½° and
-     finer are rebuilt over the visible patch — a whole-sky ½° cage, let
-     alone 2′, is a hopeless vertex count for a window a few degrees across.
+  /* Each tier's own `maxFov` is picked so the cage holds roughly five lines
+     across the frame at any zoom — `step ≈ field / 5`, snapped to the
+     nearest "nice" round angle (60°, 30°, 15°, 10°, 5°, 2°, 1°, 30′, 15′,
+     10′) rather than a continuous formula, so a reader can actually read a
+     line's own spacing off it. A fixed *angular* step (the previous table)
+     necessarily draws more lines the tighter the crop gets for any given
+     tier's own range — at 2° field the 10′ tier it used to fall into drew
+     a dozen lines each way over a photograph that fills the whole frame,
+     which reads as the grid replacing the image rather than annotating it.
+     Every tier here is sized for its own range instead, so "how many
+     lines" stays roughly constant instead of climbing as the lens tightens.
 
-     The 1° tier used to take over at 28° — at, say, 27° that is roughly 27
-     lines each way stacked into a crop still wide enough to read as the
-     "open" view, which is exactly what reads as *too many lines* rather
-     than a grid. 16° holds the 5° tier — a fifth as many lines — through
-     the whole of that range instead, and only actually needs the 1° tier
-     once the crop has narrowed enough that a handful of 5° lines would
-     otherwise leave most of the frame bare. */
-  { step: 600, maxFov: Infinity },
-  { step: 300, maxFov: 70 },
-  { step: 60, maxFov: 16 },
-  { step: 30, maxFov: 12, local: true },
-  { step: 10, maxFov: 5, local: true },
-  { step: 5, maxFov: 2, local: true },
-  { step: 2, maxFov: 0.9, local: true },
+     30′ and finer are rebuilt over the visible patch each frame rather
+     than baked as whole-sky meshes — a whole-sky 15′ cage is a hopeless
+     vertex count for a window a couple of degrees across; 1° and coarser
+     stay cheap enough to bake once and reuse. */
+  { step: 3600, maxFov: Infinity },
+  { step: 1800, maxFov: 150 },
+  { step: 900, maxFov: 75 },
+  { step: 600, maxFov: 50 },
+  { step: 300, maxFov: 25 },
+  { step: 120, maxFov: 10 },
+  { step: 60, maxFov: 5 },
+  { step: 30, maxFov: 2.5, local: true },
+  { step: 15, maxFov: 1.25, local: true },
+  { step: 10, maxFov: 0.85, local: true },
 ];
 
 /** The finest spacing the cage is drawing at this field of view, arcminutes. */
