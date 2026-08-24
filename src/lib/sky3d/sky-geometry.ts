@@ -135,33 +135,45 @@ export const ARCMIN = 1 / 60;
 /** The one line opacity the active tier draws at — Stellarium's grid is a flat grey at any zoom, not fainter the finer it gets. */
 export const GRID_OPACITY = 0.22;
 
-export const GRID_TIERS: readonly GridTier[] = [
-  /* Each tier's own `maxFov` is picked so the cage holds roughly five lines
-     across the frame at any zoom — `step ≈ field / 5`, snapped to the
-     nearest "nice" round angle (60°, 30°, 15°, 10°, 5°, 2°, 1°, 30′, 15′,
-     10′) rather than a continuous formula, so a reader can actually read a
-     line's own spacing off it. A fixed *angular* step (the previous table)
-     necessarily draws more lines the tighter the crop gets for any given
-     tier's own range — at 2° field the 10′ tier it used to fall into drew
-     a dozen lines each way over a photograph that fills the whole frame,
-     which reads as the grid replacing the image rather than annotating it.
-     Every tier here is sized for its own range instead, so "how many
-     lines" stays roughly constant instead of climbing as the lens tightens.
+/**
+ * The exact spacing table from stellarium-web-engine's `src/modules/lines.c`
+ * (`STEPS_AZ`) — 15°, 5°, 1°, 20′, 10′, 5′, 1′, 20″, 10″, 5″, 1″ — in
+ * arcminutes. Not a round-number ladder of our own choosing: this is the
+ * literal list the reference implementation snaps to.
+ */
+const STEPS_AZ_ARCMIN = [900, 300, 60, 20, 10, 5, 1, 1 / 3, 1 / 6, 1 / 12, 1 / 60];
 
-     30′ and finer are rebuilt over the visible patch each frame rather
-     than baked as whole-sky meshes — a whole-sky 15′ cage is a hopeless
-     vertex count for a window a couple of degrees across; 1° and coarser
-     stay cheap enough to bake once and reuse. */
-  { step: 3600, maxFov: Infinity },
-  { step: 1800, maxFov: 150 },
-  { step: 900, maxFov: 75 },
-  { step: 600, maxFov: 50 },
-  { step: 300, maxFov: 25 },
-  { step: 120, maxFov: 10 },
-  { step: 60, maxFov: 5 },
-  { step: 30, maxFov: 2.5, local: true },
-  { step: 15, maxFov: 1.25, local: true },
-  { step: 10, maxFov: 0.85, local: true },
+/**
+ * `get_steps()` in `lines.c` targets `fov / 6` (so the frame carries roughly
+ * six lines along that axis) and `steps_lookup()` snaps that target to the
+ * nearest entry in `STEPS_AZ`. Only one entry is ever selected — zooming
+ * *replaces* the active step, it never layers a finer grid on top of a
+ * coarser one still on screen, which this table already does by construction
+ * (see {@link gridStepForFov}).
+ *
+ * The boundary between two neighbouring steps A > B is the field of view
+ * where the target `fov * 10` arcmin (`fov/6` in degrees, times 60) sits
+ * exactly halfway between them, i.e. `fov = (A + B) / 20`. That's what
+ * `maxFov` below is, worked out from {@link STEPS_AZ_ARCMIN} rather than
+ * picked by eye.
+ *
+ * This app's field of view only ever runs 1°–235°, so the sub-arcminute
+ * entries (20″ and finer) never actually get selected — they're kept in the
+ * table anyway for fidelity to the reference, as harmless dead entries
+ * rather than a truncated copy of it.
+ */
+export const GRID_TIERS: readonly GridTier[] = [
+  { step: 900, maxFov: Infinity }, // 15°
+  { step: 300, maxFov: 60 }, // 5°
+  { step: 60, maxFov: 18 }, // 1°
+  { step: 20, maxFov: 4, local: true }, // 20′
+  { step: 10, maxFov: 1.5, local: true }, // 10′
+  { step: 5, maxFov: 0.75, local: true }, // 5′
+  { step: 1, maxFov: 0.3, local: true }, // 1′
+  { step: 1 / 3, maxFov: 1 / 15, local: true }, // 20″
+  { step: 1 / 6, maxFov: 1 / 40, local: true }, // 10″
+  { step: 1 / 12, maxFov: 1 / 80, local: true }, // 5″
+  { step: 1 / 60, maxFov: 1 / 200, local: true }, // 1″
 ];
 
 /** The finest spacing the cage is drawing at this field of view, arcminutes. */
@@ -171,6 +183,12 @@ export function gridStepForFov(fovDeg: number): number {
     if (fovDeg < tier.maxFov) step = tier.step;
   }
   return step;
+}
+
+/* Sanity check the table was built consistently with STEPS_AZ_ARCMIN, since
+   the boundary values above are hand-derived from it. */
+if (GRID_TIERS.length !== STEPS_AZ_ARCMIN.length) {
+  throw new Error("GRID_TIERS must mirror STEPS_AZ_ARCMIN one-for-one");
 }
 
 /**
