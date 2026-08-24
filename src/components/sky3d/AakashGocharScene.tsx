@@ -3064,6 +3064,21 @@ export function AakashGocharScene({
           const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
           if (entry.mesh.parent !== group) group.add(entry.mesh);
           entry.mesh.renderOrder = renderOrder;
+          /* The panorama sphere gets both of these — {@link skyBoost} as its
+             own `color` and {@link injectMilkyWayExtinction} in a
+             useEffect — but a tile created fresh here got neither: full
+             raw DSS2 exposure, no altitude dimming, while whatever the
+             panorama is showing right at the 80° threshold is running
+             38% dimmer before extinction even starts. That mismatch is
+             exactly "the same patch of sky looks like a different image
+             the instant you cross the zoom threshold" — real HiPS viewers
+             build every order of a pyramid to agree with its neighbours
+             for precisely this reason. `injectMilkyWayExtinction` already
+             guards against re-patching a material it has seen before, so
+             calling it here every frame for every active tile is a no-op
+             once each tile's shader has actually been patched. */
+          injectMilkyWayExtinction(entry.material);
+          entry.material.color.copy(skyBoost);
           if (entry.state === "idle") loadHipsTileTexture(entry);
           if (entry.state === "loading") loadingCount += 1;
           if (entry.state === "ready") {
