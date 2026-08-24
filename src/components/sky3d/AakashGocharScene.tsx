@@ -3064,21 +3064,21 @@ export function AakashGocharScene({
           const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
           if (entry.mesh.parent !== group) group.add(entry.mesh);
           entry.mesh.renderOrder = renderOrder;
-          /* The panorama sphere gets both of these — {@link skyBoost} as its
-             own `color` and {@link injectMilkyWayExtinction} in a
-             useEffect — but a tile created fresh here got neither: full
-             raw DSS2 exposure, no altitude dimming, while whatever the
-             panorama is showing right at the 80° threshold is running
-             38% dimmer before extinction even starts. That mismatch is
-             exactly "the same patch of sky looks like a different image
-             the instant you cross the zoom threshold" — real HiPS viewers
-             build every order of a pyramid to agree with its neighbours
-             for precisely this reason. `injectMilkyWayExtinction` already
-             guards against re-patching a material it has seen before, so
-             calling it here every frame for every active tile is a no-op
-             once each tile's shader has actually been patched. */
-          injectMilkyWayExtinction(entry.material);
-          entry.material.color.copy(skyBoost);
+          /* Tried matching the panorama's own `skyBoost` (a flat 0.38×
+             dim) and `injectMilkyWayExtinction` (altitude-based
+             atmospheric dimming) here on the theory that it would remove
+             a brightness jump at the 80° threshold — reverted after a
+             direct comparison against real Stellarium: a DSS2 tile is
+             already correctly exposed astrophotography, and dragging it
+             down to a stylized panorama's own deliberately-dim colour
+             plus a second, aggressive dimming curve on top left every
+             tile looking flat and washed out next to Stellarium's own
+             vivid, punchy version of the same object. The panorama being
+             dim is the panorama's own tuning for a painterly backdrop
+             texture, not a target a real photograph should be pulled
+             down to. Whatever residual mismatch exists right at the
+             threshold is the smaller problem — a tile that actually
+             looks like its own real astrophotography is worth more. */
           if (entry.state === "idle") loadHipsTileTexture(entry);
           if (entry.state === "loading") loadingCount += 1;
           if (entry.state === "ready") {
