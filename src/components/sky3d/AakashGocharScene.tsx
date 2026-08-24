@@ -1124,19 +1124,32 @@ varying float vSinAlt;
    Stellarium never evaluates this below the horizon at all — its ground
    blocks the view, so the branch below never mattered there. This dome
    has no such floor at a wide enough field (a fisheye past ~180° shows
-   sky *and* what would be underground in every direction at once), and
-   "0.0" read as "no airmass" — full, undimmed brightness — the instant
-   the true curve would have been near-total extinction anyway (at the
-   cutoff itself the real formula already gives an airmass over 60, i.e.
-   essentially black). That flipped the two sides of the horizon exactly
-   backwards: realistically dimmed above it, brighter than anything above
-   it the moment you crossed below. A large fixed airmass keeps the same
-   near-black the real curve was already heading toward, continuous
-   across the line instead of jumping to full brightness. */
+   sky *and* what would be underground in every direction at once).
+
+   The fit itself is a rational polynomial only well-behaved for the
+   *above*-horizon domain it was built for: fed a large negative cosZ
+   (deep "underground") the denominator changes sign and the whole
+   fraction goes negative, which as an exponent on 0.3 *brightens* the
+   pixel past its own original colour — worse than doing nothing.
+   Clamping that blow-up to a single large fixed airmass instead (an
+   earlier version of this fix) swung the other way: the real curve is
+   already near-total extinction within a couple of degrees of the
+   horizon on either side, so *any* "big number" clamp reads as flat
+   black the instant the horizon is crossed, and the band simply stopped
+   existing below it.
+
+   Mirroring the input around the horizon — abs(cosZ) — sidesteps both
+   failure modes at once instead of patching either one: it never leaves
+   the polynomial's own well-behaved domain (abs keeps the argument in
+   the same [0, 1] range zenith-to-horizon already uses without
+   incident), so ten degrees under the horizon gets exactly the
+   extinction ten degrees above it already had — a real, continuously
+   fading band on both sides of the line, not a cliff to full brightness
+   or a cliff to black. */
 float milkyWayAirmass(float cosZ) {
-  if (cosZ < -0.035) return 200.0;
-  float nom = (1.002432 * cosZ + 0.148386) * cosZ + 0.0096467;
-  float denom = ((cosZ + 0.149864) * cosZ + 0.0102963) * cosZ + 0.000303978;
+  float z = abs(cosZ);
+  float nom = (1.002432 * z + 0.148386) * z + 0.0096467;
+  float denom = ((z + 0.149864) * z + 0.0102963) * z + 0.000303978;
   return nom / denom;
 }`,
       )
