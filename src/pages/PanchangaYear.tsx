@@ -372,7 +372,7 @@ export function PanchangaYear() {
   useRouteLoading(YEAR_ROUTE_LOADING);
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-md:px-4 max-md:pb-16 max-md:pt-0">
+    <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-md:px-0 max-md:pb-16 max-md:pt-0">
       <div className="mb-3 mt-2">
         <Link
           to="/panchanga"
@@ -408,6 +408,14 @@ export function PanchangaYear() {
             className="h-[30px] min-w-0 w-auto max-w-[10rem] shrink-0 px-1.5 md:h-8 md:max-w-[12.5rem] md:px-3"
           />
         }
+        /* `toolbar` is desktop-only furniture — on mobile PatroDateNavCore
+           already adds its own location chip in the lower slot from
+           `location`/`onLocationChange` below, so without this the same
+           city showed twice (see Panchanga.tsx, which overrides
+           `mobileToolbar` the same way). `false` (not `undefined`) so the
+           `resolvedMobileToolbar ?? toolbar` fallback in PatroDayTimeNav
+           doesn't quietly put the desktop toolbar back. */
+        mobileToolbar={false}
       />
 
       <div className="mt-4 flex flex-col gap-4">
