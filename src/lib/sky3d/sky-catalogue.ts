@@ -33,8 +33,30 @@ export type SkyTargetKind = "planet" | "star" | "constellation" | "nebula";
 export type SkyTargetAt =
   /** A graha: it moves, so the scene looks up where it is right now. */
   | { at: "graha"; graha: GrahaKey }
-  /** Fixed sky: ecliptic longitude and latitude at J2000, degrees. */
-  | { at: "sky"; lon: number; lat: number };
+  /**
+   * Fixed sky: ecliptic longitude and latitude, degrees.
+   *
+   * `sidereal` says which convention `lon` is in, because the scene's own
+   * aim handler needs to know before it can place it — see that handler's
+   * own doc comment in `AakashGocharScene.tsx` for the two formulas this
+   * distinguishes between:
+   *
+   * - unset/`false` (the historical default, still every catalogue star
+   *   and every नेबुला): a raw J2000 *tropical* longitude, precessing
+   *   client-side from there — {@link equatorialToeclipticJ2000}'s own
+   *   output, untouched by the ayanamsa.
+   * - `true`: an already-current, already-sidereal (nirayana) longitude —
+   *   what the वैदिक तारा endpoint returns, computed server-side for the
+   *   exact date on screen, nothing left for the client to add.
+   *
+   * Mixing the two up is exactly the bug this field exists to prevent: a
+   * वैदिक तारा target built with a bare `{ at: "sky", lon, lat }} landed the
+   * reticle a whole ayanamsa — upwards of 24° — from the star whose name
+   * was right there in the label, because the aim handler applied the
+   * *tropical* target's own precession-and-ayanamsa correction to a
+   * longitude that had already been converted.
+   */
+  | { at: "sky"; lon: number; lat: number; sidereal?: boolean };
 
 export type SkyTarget = {
   /** Stable across sessions — favourites and recents are stored by this. */
@@ -228,6 +250,10 @@ export function vedicStarTargets(stars: VedicStarPosition[]): SkyTarget[] {
       at: "sky" as const,
       lon: star.lon,
       lat: star.lat,
+      /* Already the current, live sidereal longitude the server computed for
+         this exact date — not a J2000 tropical value. See {@link
+         SkyTargetAt}'s own doc comment for why this has to be marked. */
+      sidereal: true,
     };
   });
   const aliases: SkyTarget[] = [];

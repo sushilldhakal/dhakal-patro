@@ -754,6 +754,11 @@ export function AakashGocharSky({
     lat: number;
     nonce: number;
     fov?: number;
+    /** See {@link SkyTargetAt}'s own doc comment — whether `lon` is already
+     *  a current sidereal longitude (वैदिक तारा) or a raw J2000 tropical one
+     *  (everything else), since the scene's aim handler converts the two
+     *  differently. */
+    sidereal?: boolean;
   } | null>(null);
   /** What the reticle is currently sitting on, for the caption under it. */
   const [aimed, setAimed] = useState<SkyTarget | null>(null);
@@ -1223,7 +1228,13 @@ export function AakashGocharSky({
         setSelected(target.graha);
         askFocus();
       } else {
-        setSkyAim({ lon: target.lon, lat: target.lat, nonce: Date.now(), fov: target.aimFov });
+        setSkyAim({
+          lon: target.lon,
+          lat: target.lat,
+          nonce: Date.now(),
+          fov: target.aimFov,
+          sidereal: target.sidereal,
+        });
       }
       setSearchOpen(false);
     },
@@ -1258,6 +1269,7 @@ export function AakashGocharSky({
         at: "sky",
         lon: star.lon,
         lat: star.lat,
+        sidereal: true,
       },
     [namedStars],
   );

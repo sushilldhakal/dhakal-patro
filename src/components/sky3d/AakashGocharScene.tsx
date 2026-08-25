@@ -1859,7 +1859,7 @@ export function AakashGocharScene({
    * with a live position. A star is not: it is a direction. So it arrives as a
    * direction and is aimed at through the same one-frame recentre.
    */
-  skyAim?: { lon: number; lat: number; nonce: number; fov?: number } | null;
+  skyAim?: { lon: number; lat: number; nonce: number; fov?: number; sidereal?: boolean } | null;
   /**
    * Search/pick id of the named star currently under the reticle (`vedic:3`).
    * The matching point is crowned so it is obvious which of the 32 was chosen.
@@ -2970,7 +2970,6 @@ export function AakashGocharScene({
         return;
       }
       if (hit.kind === "skystar") {
-        const s = asterismPickRef.current[hit.index];
         const star = starField.stars[hit.index];
         const nak = NAKSHATRA_ASTERISMS[star.nakshatra - 1];
         const names = nak ? starOverlayNames(star, nak) : null;
@@ -2980,8 +2979,18 @@ export function AakashGocharScene({
           en: names?.en ?? nak?.en ?? star.name,
           hintNe: nak?.ne,
           hintEn: nak?.en,
-          lon: s.lon,
-          lat: s.lat,
+          /* `star.lon` — the raw catalogue longitude — not `asterismPickRef`'s
+             own copy: that copy carries `s.lon + precession - ayan` (see
+             where it's populated a few hundred lines up), the *sidereal*
+             value this same frame's render already converted to for
+             `skyPlace()`. `onAimSky`/`onFollowSky` feed straight into
+             `skyAim`, whose own handler expects a raw tropical longitude and
+             applies that exact precession-and-ayanamsa conversion itself —
+             handing it an already-converted value applied the correction
+             twice, landing the reticle a full ayanamsa short of the star
+             whose name was right there in the label. */
+          lon: star.lon,
+          lat: star.lat,
         };
         if (again) onFollowSkyRef.current?.(payload);
         else onAimSkyRef.current?.(payload);
@@ -4883,21 +4892,31 @@ export function AakashGocharScene({
         : null;
     const trackGroup = trackKey ? bodyRefs.current[trackKey] : null;
     let trackAt: THREE.Vector3 | null = trackGroup ? trackGroup.position : null;
-    /* A star from the search box. `skyAim.lon/lat` are the catalogue's raw
-       J2000 tropical ecliptic coordinates ({@link equatorialToeclipticJ2000},
-       untouched by precession or the ayanamsa) — the same numbers every fixed
-       star in `sky-catalogue.ts` carries. `place` always treats its longitude
-       as *sidereal* and adds the ayanamsa back on to reach the tropical value
-       it actually needs, exactly like {@link skyPlace} does for every star
-       this file draws (`star.lon + precession - ayan`, so `place`'s own
-       `+ayan` cancels back to `star.lon + precession`). Aiming has to do the
-       same cancellation, or the target `place` draws sits a whole ayanamsa —
-       upwards of 24° — from the point it just centred on. */
+    /* A star from the search box. Two different conventions arrive here —
+       see {@link SkyTargetAt}'s own doc comment in `sky-catalogue.ts`, which
+       `skyAim.sidereal` carries straight through from:
+       - unset/false: `skyAim.lon/lat` are the catalogue's raw J2000
+         tropical ecliptic coordinates ({@link equatorialToeclipticJ2000},
+         untouched by precession or the ayanamsa) — the same numbers every
+         fixed star and नेबुला in `sky-catalogue.ts` carries. `place` always
+         treats its longitude as *sidereal* and adds the ayanamsa back on to
+         reach the tropical value it actually needs, exactly like {@link
+         skyPlace} does for every star this file draws (`star.lon +
+         precession - ayan`, so `place`'s own `+ayan` cancels back to
+         `star.lon + precession`). Aiming has to do the same cancellation.
+       - true: a वैदिक तारा, already the current sidereal longitude the
+         server computed for the exact date on screen — `place` wants
+         exactly this, unmodified; applying the tropical correction above to
+         an already-sidereal value was the actual bug (a target landing a
+         whole ayanamsa — upwards of 24° — from the star whose name was
+         right there in the label): found via a live screenshot showing the
+         reticle and the "अभिजित्" star clearly apart, traced to this
+         mismatch, not guessed. */
     if (skyAim && skyAim.nonce !== lastAim.current) {
       lastAim.current = skyAim.nonce;
       recentre.current = true;
-      const aimPrecession = precessionSinceJ2000(dtDays);
-      const at = place(skyAim.lon + aimPrecession - ayan, skyAim.lat, DOME);
+      const aimLon = skyAim.sidereal ? skyAim.lon : skyAim.lon + precessionSinceJ2000(dtDays) - ayan;
+      const at = place(aimLon, skyAim.lat, DOME);
       aimAt.current.set(at[0], at[1], at[2]);
       trackAt = aimAt.current;
       /* A deep-sky photograph asks to be framed, not just centred — most of
