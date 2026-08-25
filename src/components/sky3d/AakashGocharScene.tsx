@@ -129,12 +129,17 @@ import {
   clearHipsDebugSnapshot,
   ensureHipsFallbackTexture,
   ensureHipsTile,
+  evictHipsTiles,
   findReadyHipsAncestor,
+  getHipsSiblings,
   HIPS_MAX_LOCAL_ORDER,
   hipsLoadsInFlightCount,
   hipsTileCount,
   hipsTileKey,
+  hipsTileNeedsLoad,
+  hipsTilePriority,
   loadHipsTileTexture,
+  nextHipsFrame,
   writeHipsDebugSnapshot,
   type HipsDebugTile,
   type HipsTileEntry,
@@ -1260,6 +1265,36 @@ const HIPS_RADIUS = 398;
  */
 const HIPS_RENDER_ORDER = -0.55;
 /**
+ * Phase 9's cache budget — {@link evictHipsTiles} reclaims the least-
+ * recently-touched tile once the cache holds more than this many.
+ *
+ * The full local order 0–3 set is ~1020 tiles (~45MB, per the module's own
+ * earlier "safe to keep forever" reasoning) — this is deliberately well
+ * under that, so a long session that has panned across a good fraction of
+ * the sky actually reclaims memory instead of the cache quietly growing
+ * back toward "keep everything," which is what motivated adding eviction
+ * in the first place. 400 comfortably covers what the recursive traversal
+ * (`hips-lod.ts`) touches in one frame even at the densest FOV measured so
+ * far (452 leaves at 100°, see that module's own doc comment) plus a
+ * working margin for tiles just panned away from.
+ */
+const HIPS_CACHE_MAX_RESIDENT = 400;
+/**
+ * Phase 8's fade-in window, milliseconds — how long a tile's opacity takes
+ * to reach full strength after its own real texture (not a Phase 1
+ * fallback) arrives. This app only ever has one mesh per leaf (its own
+ * geometry, showing either its own texture or a borrowed ancestor's — see
+ * {@link HIPS_RENDER_ORDER}'s own doc comment), so there is no second layer
+ * to literally cross-fade against; ramping this leaf's own opacity up from
+ * a partial start on arrival softens the swap from "ancestor's cropped
+ * quarter" to "this tile's real detail" into a brief reveal instead of an
+ * instant pop, which is the visible effect a real two-layer crossfade
+ * would give without needing a temporary second mesh to get there.
+ */
+const HIPS_FADE_IN_MS = 220;
+/** The opacity a tile's fade-in starts from — not 0: dropping all the way to invisible would flash the panorama or an even-coarser ancestor through for a moment, trading one pop for another. */
+const HIPS_FADE_IN_START = 0.55;
+/**
  * `n×n` vertex grid per tile — see {@link buildHipsTileGeometry}'s own doc
  * comment on why a flat quad is not enough. 8 was enough to avoid visible
  * faceting near the equator but still let a tile far enough from it — where
@@ -1346,6 +1381,10 @@ const hipsDirEquatorial = new THREE.Vector3();
 
 /** The recursive traversal's own leaf list — {@link evaluateHipsTiles} clears and refills this in place every frame rather than allocating a fresh array, same reasoning as the vectors above. */
 const hipsLodLeaves: HipsLodLeaf[] = [];
+/** Phase 6's per-frame load candidates — cleared and refilled every frame rather than allocated fresh, same reasoning as the vectors above. */
+const hipsLoadCandidates: { entry: HipsTileEntry; priority: number }[] = [];
+/** Every `(order, pix)` the traversal actually touched this frame — leaves and every ancestor refined through on the way to them alike. Doubles as Phase 9's eviction protection set: nothing this frame's LOD walk needed is a safe target to reclaim. */
+const hipsTouchedKeys = new Set<string>();
 /** Reused across frames so `evaluateHipsTiles` doesn't need a fresh options object every call. */
 const hipsLodFrame: HipsLodFrame = {
   camera: null as unknown as THREE.Camera,
@@ -3168,6 +3207,24 @@ export function AakashGocharScene({
       hipsInvQuat.copy(group.quaternion).invert();
       hipsDirEquatorial.copy(hipsForwardWorld).applyQuaternion(hipsInvQuat);
 
+      /* One counter per frame, stamped onto every entry `ensureHipsTile`
+         touches this frame (hit or miss) — Phase 9's eviction recency
+         clock, and (via `hipsTouchedKeys` below) its protection set. */
+      const frame = nextHipsFrame();
+      hipsLoadCandidates.length = 0;
+      hipsTouchedKeys.clear();
+
+      /* Phase 6: collect rather than immediately load — {@link
+         hipsTilePriority} (closest to view centre wins, `hips.ts`'s own
+         doc comment) decides who actually claims one of the limited
+         concurrent slots once every candidate this frame is known, not
+         whichever happened to be visited first in the traversal's own
+         DFS order. */
+      const queueLoad = (entry: HipsTileEntry, order: number, pix: number) => {
+        hipsTouchedKeys.add(hipsTileKey(order, pix));
+        if (hipsTileNeedsLoad(entry)) hipsLoadCandidates.push({ entry, priority: hipsTilePriority(order, pix, hipsDirEquatorial) });
+      };
+
       /* A guaranteed fallback floor — Stellarium's `hips_get_tile_texture()`
          recurses to grandparent, great-grandparent, etc. when a tile isn't
          loaded, but that recursion can only find an ancestor entry {@link
@@ -3176,20 +3233,22 @@ export function AakashGocharScene({
          than only reaching for it once a multi-level gap actually happens —
          e.g. right after the HiPS layer first turns on, before the
          recursive traversal below has had a chance to touch order 0 itself
-         (Step 7). `ensureHipsTile`/`loadHipsTileTexture` are both no-ops
-         once already idle→loading→ready, so looping all 12 every frame
-         costs nothing once they land. */
+         (Step 7). Routed through the same priority queue as everything
+         else below now, rather than loading immediately: once order 0 is
+         fully cached (after its first couple of frames) every call here is
+         a no-op `idle` check anyway, so folding it in costs nothing and
+         keeps exactly one place deciding load order. */
       for (let pix0 = 0; pix0 < hipsTileCount(0); pix0 += 1) {
-        const entry0 = ensureHipsTile(hipsCache.current, 0, pix0, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
-        if (entry0.state === "idle") loadHipsTileTexture(entry0);
+        const entry0 = ensureHipsTile(hipsCache.current, 0, pix0, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
+        queueLoad(entry0, 0, pix0);
       }
 
       const controls = hipsDebugControls.current;
 
       /* Phase 2/3: the recursive HEALPix quadtree walk (`hips-lod.ts`)
          replaces the old "one FOV → one global order" selector. Every node
-         it visits — leaf or not — gets `ensureHipsTile`/`loadHipsTileTexture`
-         via `onVisit`, so a tile being split into four children is still
+         it visits — leaf or not — gets `ensureHipsTile`/queued via {@link
+         queueLoad}, so a tile being split into four children is still
          itself a valid, loading/loaded ancestor the Phase 1 fallback can
          hand to those children while they arrive (Step 10's "parent remains
          visible while children load" falls out of composing the two
@@ -3203,8 +3262,8 @@ export function AakashGocharScene({
       hipsLodFrame.height = height;
 
       const onVisit = (order: number, pix: number) => {
-        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
-        if (entry.state === "idle") loadHipsTileTexture(entry);
+        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
+        queueLoad(entry, order, pix);
       };
 
       if (controls.disableLod) {
@@ -3225,6 +3284,34 @@ export function AakashGocharScene({
         );
       }
 
+      /* Phase 6: highest priority — closest to view centre — claims the
+         concurrency-capped slots first. `loadHipsTileTexture` still no-ops
+         past {@link HIPS_MAX_CONCURRENT_LOADS} on its own, so feeding
+         candidates in priority order is the whole mechanism; nothing else
+         needs to know about slots directly. */
+      if (!controls.disableLod) {
+        hipsLoadCandidates.sort((a, b) => b.priority - a.priority);
+      }
+      for (const { entry } of hipsLoadCandidates) loadHipsTileTexture(entry);
+
+      /* Phase 11: low-priority prefetch — every current leaf's own
+         siblings (the rest of its parent's four children), requested only
+         *after* every real candidate above has already had first claim on
+         this frame's load slots. A small pan tends to need exactly these
+         next, and `loadHipsTileTexture`'s own no-op-past-the-cap behaviour
+         is what keeps this from ever outbidding something actually
+         visible — there is no separate "low priority" queue to maintain,
+         just a later turn at the same gate. */
+      if (!controls.disableLod) {
+        for (const { order, pix } of hipsLodLeaves) {
+          for (const [so, sp] of getHipsSiblings(order, pix)) {
+            const sibling = ensureHipsTile(hipsCache.current, so, sp, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
+            hipsTouchedKeys.add(hipsTileKey(so, sp));
+            if (hipsTileNeedsLoad(sibling)) loadHipsTileTexture(sibling);
+          }
+        }
+      }
+
       const leaves = controls.onlyOrder !== null ? hipsLodLeaves.filter((l) => l.order === controls.onlyOrder) : controls.onlyPix ? hipsLodLeaves.filter((l) => l.order === controls.onlyPix!.order && l.pix === controls.onlyPix!.pix) : hipsLodLeaves;
 
       let readyCount = 0;
@@ -3237,7 +3324,7 @@ export function AakashGocharScene({
 
       for (const { order, pix } of leaves) {
         neededLeaves.add(hipsTileKey(order, pix));
-        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
+        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
         if (entry.mesh.parent !== group) group.add(entry.mesh);
         entry.mesh.renderOrder = HIPS_RENDER_ORDER;
         /* Tried matching the panorama's own `skyBoost` (a flat 0.38× dim)
@@ -3257,7 +3344,17 @@ export function AakashGocharScene({
         if (entry.state === "ready") {
           readyCount += 1;
           entry.mesh.visible = true;
-          entry.material.opacity = hipsFadeOpacity;
+          /* Phase 8: ramp opacity up from {@link HIPS_FADE_IN_START} over
+             {@link HIPS_FADE_IN_MS} after this tile's own real texture
+             arrived (`entry.readyAt`) — a brief reveal instead of an
+             instant swap from whatever ancestor quarter Phase 1 had been
+             showing. `entry.readyAt` is only ever set the instant a load
+             succeeds (`loadHipsTileTexture`), so a tile that has been
+             `ready` for a while (well past the fade window) always lands
+             on exactly `hipsFadeOpacity`, not a stale partial value. */
+          const fadeT =
+            entry.readyAt !== null ? Math.min(1, (performance.now() - entry.readyAt) / HIPS_FADE_IN_MS) : 1;
+          entry.material.opacity = hipsFadeOpacity * (HIPS_FADE_IN_START + (1 - HIPS_FADE_IN_START) * fadeT);
           if (minOrderPresent < 0 || order < minOrderPresent) minOrderPresent = order;
           if (order > maxOrderPresent) maxOrderPresent = order;
         } else if (!controls.disableFallback) {
@@ -3304,6 +3401,16 @@ export function AakashGocharScene({
       for (const entry of hipsCache.current.values()) {
         if (!neededLeaves.has(hipsTileKey(entry.order, entry.pix))) entry.mesh.visible = false;
       }
+
+      /* Phase 9: reclaim tiles nothing this frame's LOD walk needed —
+         `hipsTouchedKeys` is exactly "every leaf, every ancestor refined
+         through on the way to one, and every prefetched sibling" (built
+         alongside the traversal and the prefetch pass above), so anything
+         left out genuinely has not been part of the picture this frame.
+         `disposeHipsTile` (inside `evictHipsTiles`) frees geometry,
+         material, and textures and detaches the mesh — Phase 10's GPU
+         disposal is this same call, not a separate pass. */
+      evictHipsTiles(hipsCache.current, hipsTouchedKeys, HIPS_CACHE_MAX_RESIDENT);
 
       /* Step 12's optional tile-boundary visualization — rebuilt from
          scratch each time it's on, since the leaf set itself changes every

@@ -251,6 +251,13 @@ export function getHipsChildren(order: number, pix: number): [number, number][] 
   ];
 }
 
+/** The other three NESTED children of `(order, pix)`'s own parent — Phase 11's prefetch candidates: a leaf tile's siblings are the ones most likely to be needed next on a small pan, at zero extra HEALPix work since they share the parent's own `pix*4+i` arithmetic. Empty at order 0 (no parent to share). */
+export function getHipsSiblings(order: number, pix: number): [number, number][] {
+  if (order <= 0) return [];
+  const parentPix = Math.floor(pix / 4);
+  return getHipsChildren(order - 1, parentPix).filter(([, p]) => p !== pix);
+}
+
 /**
  * The old global "one order for the whole frame" selector — `fovDeg →
  * order` off a fixed breakpoint table — replaced by the recursive,
@@ -309,17 +316,35 @@ export function hipsVisibleConeLimitDeg(order: number, coneDeg: number): number 
 }
 
 /** Whether one tile could still be in view — see {@link hipsVisibleTiles}'s own doc comment for the margin's reasoning; this is that same test for a single `(order, pix)` instead of a whole order's worth. */
+/** Cosine of the angle between a tile's own centre and `dirEquatorial` — 1 dead-on, falling toward -1 the further away. {@link isHipsTileVisible}'s own inner test, exposed separately for {@link hipsTilePriority} (Phase 6) to reuse rather than recomputing the same dot product. */
+export function hipsTileCosSep(order: number, pix: number, dirEquatorial: THREE.Vector3): number {
+  const nside = order2nside(order);
+  const [x, y, z] = pix2VecNest(nside, pix);
+  return dirEquatorial.x * x + dirEquatorial.y * y + dirEquatorial.z * z;
+}
+
 export function isHipsTileVisible(
   order: number,
   pix: number,
   dirEquatorial: THREE.Vector3,
   coneDeg: number,
 ): boolean {
-  const nside = order2nside(order);
-  const [x, y, z] = pix2VecNest(nside, pix);
-  const cosSep = dirEquatorial.x * x + dirEquatorial.y * y + dirEquatorial.z * z;
+  const cosSep = hipsTileCosSep(order, pix, dirEquatorial);
   const cosLimit = Math.cos((hipsVisibleConeLimitDeg(order, coneDeg) * Math.PI) / 180);
   return cosSep >= cosLimit;
+}
+
+/**
+ * Phase 6: how urgently a tile deserves one of the limited concurrent load
+ * slots — higher loads first. Closer to the camera's own view centre wins
+ * ("tiles the user is actually looking at first," per the brief); a small
+ * bonus for deeper orders breaks ties in favour of the tile actually
+ * showing detail over a coarser one sitting at the same screen position
+ * during a LOD transition, without letting order dominate over position
+ * the way multiplying by `order` outright would.
+ */
+export function hipsTilePriority(order: number, pix: number, dirEquatorial: THREE.Vector3): number {
+  return hipsTileCosSep(order, pix, dirEquatorial) + order * 0.001;
 }
 
 export function hipsVisibleTiles(
@@ -337,9 +362,18 @@ export function hipsVisibleTiles(
 
 /* ── tile lifecycle (Steps 9–11) ──────────────────────────────────────── */
 
-export type HipsTileState = "idle" | "loading" | "ready" | "failed";
+/**
+ * `evicted` is terminal — {@link evictHipsTiles} deletes the entry from the
+ * cache map in the same step it sets this, so nothing actually reads a
+ * `HipsTileEntry` sitting in this state; it exists as a value so a mesh
+ * mid-disposal (its material/geometry already freed, briefly still
+ * reachable through a stale closure or in-flight callback) has an honest
+ * state to report rather than silently reporting `idle` and inviting a
+ * second load onto disposed GPU objects.
+ */
+export type HipsTileState = "idle" | "loading" | "ready" | "failed" | "evicted";
 
-/** One tile's live GPU/network state — created lazily, cached by {@link hipsTileKey}, never discarded (see the module doc comment: the whole order 0–3 set is ~45MB, well inside what is safe to keep once fetched). */
+/** One tile's live GPU/network state — created lazily, cached by {@link hipsTileKey}. Not immortal any more (Phase 9): {@link evictHipsTiles} can reclaim one that has fallen out of use, unlike the original "whole order 0–3 set is 45MB, keep it all forever" design. */
 export type HipsTileEntry = {
   order: number;
   pix: number;
@@ -356,6 +390,12 @@ export type HipsTileEntry = {
    *  shares the ancestor's `.source`, so cloning costs no extra upload —
    *  see {@link ensureHipsFallbackTexture}'s own doc comment. */
   fallbackTexture: THREE.Texture | null;
+  /** The frame counter (see {@link touchHipsTile}) this entry was last part of the LOD traversal — {@link evictHipsTiles}'s recency clock. Not a timestamp: frame count is what "still in use" actually means here, and comparing counts sidesteps clock/timer-precision questions entirely. */
+  lastUsedFrame: number;
+  /** `performance.now()` when a load attempt last failed, or `null` if it never has — {@link loadHipsTileTexture}'s retry-cooldown gate. */
+  failedAt: number | null;
+  /** `performance.now()` when this entry's own real texture (not a Phase 1 fallback) last became ready — Phase 8's fade-in timer. `null` before the first real arrival. */
+  readyAt: number | null;
 };
 
 /** The cache key a tile lives under — `"order/pix"`. */
@@ -417,16 +457,26 @@ function injectHipsEdgeFeather(material: THREE.MeshBasicMaterial): void {
   material.needsUpdate = true;
 }
 
+/**
+ * @param frame The scene's own per-frame counter ({@link nextHipsFrame}) —
+ *   recorded on the entry every call, hit or miss, so {@link
+ *   evictHipsTiles} can tell "still in use this frame" from "not touched in
+ *   a while" without any wall-clock timer.
+ */
 export function ensureHipsTile(
   cache: Map<string, HipsTileEntry>,
   order: number,
   pix: number,
   radius: number,
   subdivisions = 8,
+  frame = 0,
 ): HipsTileEntry {
   const key = hipsTileKey(order, pix);
   const existing = cache.get(key);
-  if (existing) return existing;
+  if (existing) {
+    existing.lastUsedFrame = frame;
+    return existing;
+  }
   const geometry = buildHipsTileGeometry(order, pix, radius, subdivisions);
   const material = new THREE.MeshBasicMaterial({
     transparent: true,
@@ -478,9 +528,20 @@ export function ensureHipsTile(
     material,
     fallbackAncestorOrder: null,
     fallbackTexture: null,
+    lastUsedFrame: frame,
+    failedAt: null,
+    readyAt: null,
   };
   cache.set(key, entry);
   return entry;
+}
+
+let hipsFrameCounter = 0;
+
+/** Advances and returns the scene's per-frame counter — call once per `useFrame`, before touching any tile this frame, so every {@link ensureHipsTile} call this frame stamps the same value. */
+export function nextHipsFrame(): number {
+  hipsFrameCounter += 1;
+  return hipsFrameCounter;
 }
 
 /**
@@ -612,8 +673,32 @@ export function findReadyHipsAncestor(
  * `AakashGocharScene.tsx` almost exactly: lazy, capped concurrency, a
  * failed tile is left `failed` rather than retried every frame.
  */
+/** How long a failed tile sits out before {@link loadHipsTileTexture} will retry it — long enough that a real, still-broken URL doesn't get hammered every frame, short enough that a transient network blip during a fast pan recovers within the same viewing session. */
+export const HIPS_FAILED_RETRY_COOLDOWN_MS = 15000;
+
+/**
+ * Whether `entry` is worth a load attempt right now — `idle`, or `failed`
+ * past its own cooldown. The one place this decision is made: {@link
+ * loadHipsTileTexture} uses it as its own early-return gate, and the
+ * scene's per-frame candidate collection (`AakashGocharScene.tsx`) uses it
+ * to decide whether a tile belongs in this frame's priority queue at all.
+ * Duplicating "idle or cooled-down-failed" in both places invites exactly
+ * the bug this function replaced: the candidate list checking only `idle`
+ * meant a `failed` tile past its cooldown could sit in the cache forever,
+ * since `loadHipsTileTexture` was willing to retry it but nothing was ever
+ * calling that function on it again.
+ */
+export function hipsTileNeedsLoad(entry: HipsTileEntry): boolean {
+  if (entry.state === "idle") return true;
+  return (
+    entry.state === "failed" &&
+    entry.failedAt !== null &&
+    performance.now() - entry.failedAt >= HIPS_FAILED_RETRY_COOLDOWN_MS
+  );
+}
+
 export function loadHipsTileTexture(entry: HipsTileEntry): void {
-  if (entry.state !== "idle") return;
+  if (!hipsTileNeedsLoad(entry)) return;
   if (hipsLoadsInFlight >= HIPS_MAX_CONCURRENT_LOADS) return;
   entry.state = "loading";
   hipsLoadsInFlight += 1;
@@ -625,15 +710,86 @@ export function loadHipsTileTexture(entry: HipsTileEntry): void {
       entry.material.map = tex;
       entry.material.needsUpdate = true;
       entry.state = "ready";
+      entry.readyAt = performance.now();
       clearHipsFallbackTexture(entry);
       hipsLoadsInFlight = Math.max(0, hipsLoadsInFlight - 1);
     },
     undefined,
     () => {
       entry.state = "failed";
+      entry.failedAt = performance.now();
       hipsLoadsInFlight = Math.max(0, hipsLoadsInFlight - 1);
     },
   );
+}
+
+/**
+ * Frees every GPU-side resource an entry holds — geometry, material (and
+ * with it, `map` if it points at this tile's *own* texture rather than a
+ * shared ancestor's — see the guard below), and any {@link
+ * ensureHipsFallbackTexture} clone — and detaches the mesh from whatever
+ * group it was in. Does not touch the cache map itself; {@link
+ * evictHipsTiles} deletes the entry separately, and disposal is also what
+ * a full teardown (unmount) wants without necessarily going through
+ * eviction's "is it still needed" logic.
+ *
+ * The one thing this must *not* do is dispose a texture some other entry
+ * currently has cloned out for its own Phase 1 fallback: `fallbackTexture`
+ * clones share their ancestor's `.source` (see {@link
+ * ensureHipsFallbackTexture}), but disposing the *ancestor's own* `THREE.
+ * Texture` object still frees that shared source's GPU upload out from
+ * under every clone still pointing at it. Evicting a tile currently serving
+ * as someone else's fallback ancestor is exactly what {@link
+ * evictHipsTiles}'s own protection set exists to prevent — this function
+ * trusts that guarantee rather than re-deriving it.
+ */
+export function disposeHipsTile(entry: HipsTileEntry): void {
+  entry.mesh.removeFromParent();
+  entry.mesh.geometry.dispose();
+  entry.material.map?.dispose();
+  entry.material.dispose();
+  entry.fallbackTexture?.dispose();
+  entry.state = "evicted";
+}
+
+/**
+ * Phase 9's LRU cache: reclaims entries {@link ensureHipsTile} hasn't
+ * touched in a while, once the cache holds more than `maxResident`.
+ *
+ * `protectedKeys` is the caller's job to build correctly, not this
+ * function's — it needs to know both this frame's LOD leaves *and* every
+ * ancestor {@link findReadyHipsAncestor} could still reach for one of them
+ * (which the recursive traversal's own `onVisit` already touches, so
+ * "touched this frame" and "protected" end up the same set in practice —
+ * see `AakashGocharScene.tsx`'s own per-frame block). A tile mid-`loading`
+ * is protected unconditionally regardless of `protectedKeys`: disposing a
+ * mesh a `TextureLoader` callback is still going to write into later would
+ * either throw or silently leak a texture with nowhere left to attach.
+ *
+ * Evicts strictly least-recently-used first (by {@link
+ * HipsTileEntry.lastUsedFrame}) until at or under budget, or until nothing
+ * left is safe to take.
+ */
+export function evictHipsTiles(
+  cache: Map<string, HipsTileEntry>,
+  protectedKeys: ReadonlySet<string>,
+  maxResident: number,
+): number {
+  if (cache.size <= maxResident) return 0;
+  const candidates: HipsTileEntry[] = [];
+  for (const entry of cache.values()) {
+    if (entry.state === "loading") continue;
+    if (protectedKeys.has(hipsTileKey(entry.order, entry.pix))) continue;
+    candidates.push(entry);
+  }
+  candidates.sort((a, b) => a.lastUsedFrame - b.lastUsedFrame);
+  const overBudget = cache.size - maxResident;
+  const toEvict = candidates.slice(0, Math.max(0, overBudget));
+  for (const entry of toEvict) {
+    disposeHipsTile(entry);
+    cache.delete(hipsTileKey(entry.order, entry.pix));
+  }
+  return toEvict.length;
 }
 
 /**
