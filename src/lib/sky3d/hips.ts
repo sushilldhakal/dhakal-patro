@@ -110,22 +110,43 @@ export function hipsTileCornersRaDec(order: number, pix: number): [number, numbe
  * curved interior at every grid vertex instead of interpolating between
  * corners in the wrong (flat) space.
  *
- * UV is `(ne, nw)` directly, relying on THREE.js's default `flipY = true`
- * (`loadHipsTileTexture` never overrides it) to land `nw = 1` on the file's
- * own row 0 — not assumed: checked against the real downloaded tiles by
- * finding two genuinely adjacent pixels (via `pixcoord2VecNest` itself, not
- * guessed neighbours) and comparing their shared boundary's actual pixels
- * under every plausible flip/transpose. The current mapping wins clearly
- * both ways — e.g. an east/west pair scored 26.7 mean pixel difference for
- * "A's right edge vs B's left edge" against 67–75 for the wrong pairings —
- * so there is no orientation bug here to chase. What is left is a real,
- * unavoidable HEALPix property this mapping cannot remove: a cell's true
- * shape is not square and departs further from it away from the equator,
- * so a uniform `(ne, nw)` grid still visibly warps a tile at those
- * declinations. {@link HIPS_TILE_SUBDIVISIONS} (`AakashGocharScene.tsx`)
- * is the mitigation — more grid points sampling the pixel's own true
- * curved interior — not a UV-formula fix, because there isn't one at this
- * end: the tile image itself was already rendered flat by HipsGen.
+ * UV is `(nw, 1 - ne)` — **not** `(ne, nw)`, which is what this used to be
+ * and is wrong. That earlier mapping was checked against the real
+ * downloaded tiles by finding two genuinely adjacent pixels (via
+ * `pixcoord2VecNest` itself) and comparing their shared boundary under
+ * every plausible flip/transpose — e.g. an east/west pair scored 26.7 mean
+ * pixel difference for "A's right edge vs B's left edge" against 67–75 for
+ * the wrong pairings. That test only proves neighbouring tiles agree with
+ * *each other*; a transform applied uniformly to every tile still passes
+ * it even when the whole tile set is wrong relative to the sky, because
+ * every tile's swapped edge still meets its neighbour's swapped edge.
+ *
+ * The actual bug surfaced by rendering a real tile (order 3, pix 451, which
+ * contains M8) through the true Three.js pipeline and checking where the
+ * bright nebula landed relative to a marker placed at M8's real celestial
+ * position (RA 271.5359°, Dec −24.0736° → `ne=0.689066 nw=0.416017` in this
+ * tile). `stellarium-web-engine`'s own `hips.c` (`render_visitor`) swaps
+ * the texture axes relative to the geometry-placement grid — confirmed by
+ * fetching and reading the real `src/hips.c`/`src/uv_map.c` source — but a
+ * literal `(nw, ne)` swap still measured dark/empty at the marker
+ * (mean luma 8.87 in a 24px window) because our texture loader leaves
+ * `THREE.Texture.flipY = true` (the default; `loadHipsTileTexture` never
+ * overrides it), which Stellarium's own OpenGL path does not carry the
+ * same way. Combining the swap with `flipY`'s own `row = (1 - v) * height`
+ * gives `(nw, 1 - ne)`, which measured mean luma 72.58 / max 237.2 at the
+ * same marker — the bright nebula itself, not background sky — against
+ * 8.61 for the old `(ne, nw)` mapping. Cross-checked independently by
+ * reading the tile JPEG's own raw pixels directly (bypassing Three.js
+ * entirely): the file-space location this predicts scored mean luma 68.22
+ * against 7.7–8.9 for every other candidate. Both methods agree.
+ *
+ * A HEALPix cell's true shape is still not square and departs further from
+ * it away from the equator, so a uniform grid still visibly warps a tile at
+ * those declinations regardless of which UV formula is used.
+ * {@link HIPS_TILE_SUBDIVISIONS} (`AakashGocharScene.tsx`) is the
+ * mitigation for that — more grid points sampling the pixel's own true
+ * curved interior — not something a UV formula can fix, because the tile
+ * image itself was already rendered flat by HipsGen.
  */
 export function buildHipsTileGeometry(
   order: number,
@@ -148,8 +169,8 @@ export function buildHipsTileGeometry(
       positions[vi++] = x * radius;
       positions[vi++] = y * radius;
       positions[vi++] = z * radius;
-      uvs[ui++] = ne;
       uvs[ui++] = nw;
+      uvs[ui++] = 1 - ne;
     }
   }
   const indices: number[] = [];
