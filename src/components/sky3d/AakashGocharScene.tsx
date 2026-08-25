@@ -1306,35 +1306,54 @@ const HIPS_FADE_IN_START = 0.55;
  */
 const HIPS_TILE_SUBDIVISIONS = 16;
 /**
- * Above this field the panorama alone shows; at or below it the real DSS2
- * tiles take over. Order-0 tiles are individually only a little sharper
- * than the panorama's own 2048×1024 wrapped over the whole sky, so at a
- * very wide field they read as a patchwork of soft, differently-exposed
- * plates rather than an improvement — the panorama is the better image
- * until the field has narrowed enough that a handful of tiles are actually
- * standing in for a small, sharply-cropped piece of sky instead of the
- * whole dome. One threshold, one direction: crossing above 80° is the only
- * thing that hides the tiles, so panning near the line does not flicker
- * them on and off against the panorama underneath.
- */
-const HIPS_FOV_SHOW_THRESHOLD = 80;
-/**
- * How many degrees of field, below {@link HIPS_FOV_SHOW_THRESHOLD}, the
- * tiles spend fading in rather than snapping straight to full opacity.
+ * The two-layer crossfade's outer edge — at or above this field, {@link
+ * hipsVisibility} is 0 and the panorama alone shows. Still what gates
+ * whether the HiPS system runs at all (traversal, loading, mounting):
+ * above this field {@link hipsVisibility} is already 0, so there is
+ * nothing for the tile system to contribute and no reason to pay for it.
  *
- * The threshold itself still only ever fires in one direction, exactly as
- * settled before — tiles do not load, LOD-select, or mount above 80° field,
- * full stop. This only softens what happens *at* that edge on the way
- * there: a tile that has just turned visible was popping in at full
- * strength the instant it crossed the line, so the panorama read as
- * vanishing out from under the reader rather than the two handing off to
- * each other. Ramping opacity from 0 at 80° up to 1 by
- * `80 - HIPS_FADE_HALF_WIDTH_DEG` gives the panorama's own brightness room
- * to still be doing most of the work right at the boundary, with tiles
- * only fully taking over once the field has narrowed enough that they are
- * clearly the better image anyway.
+ * Same 80° the old one-directional `HIPS_FOV_SHOW_THRESHOLD` used — kept
+ * as the outer boundary deliberately (see the real Stellarium Web Engine
+ * investigation this replaces: `src/modules/milkyway.c`/`dss.c` cross-fade
+ * their own two HiPS layers over a 10°–20° field with `smoothstep()`, not
+ * a hard cut — but their `dss` layer is a real, deep survey blending
+ * against a *second, purpose-built low-order HiPS* tuned to match it,
+ * where ours is blending against a fixed painterly panorama with its own
+ * different exposure and content, and our own DSS2 set stops at order 3
+ * rather than going as deep as theirs — copying their literal numbers
+ * would not carry the reasoning that produced them).
  */
-const HIPS_FADE_HALF_WIDTH_DEG = 20;
+const HIPS_BLEND_START_FOV = 80;
+/**
+ * The crossfade's inner edge — at or below this field, {@link
+ * hipsVisibility} is 1 and the tiles alone carry the sky (modulo the
+ * panorama's own separate near-zoom fade, {@link HIPS_BLEND_START_FOV}'s
+ * own doc comment).
+ *
+ * An initial, explicitly provisional value — wider than Stellarium's own
+ * 10° inner edge on purpose: their `dss` blends against a survey built to
+ * match it tonally, ours against a fixed panorama that was never tuned
+ * against DSS2's own exposure, so easing across a wider band gives that
+ * mismatch more room to not read as a seam. Meant to be tuned by eye once
+ * this mechanism itself is confirmed stable — see the visual test this
+ * change shipped with.
+ */
+const HIPS_BLEND_END_FOV = 30;
+
+/**
+ * GLSL-style smoothstep — the same shape Stellarium Web Engine's own
+ * `milkyway.c`/`dss.c` use for their cross-fade (`smoothstep()` from
+ * `<utils/vec.h>`-adjacent math there), reproduced here since nothing in
+ * this file already has a generic one. Works with `edge0 > edge1` exactly
+ * as it does the usual way round — the clamp and division both stay
+ * correct — which is what lets {@link hipsVisibility} below hand it `
+ * (start=80, end=30)` and get a value that *falls* as field grows, without
+ * needing a second, inverted formula.
+ */
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
 function loadNebulaTexture(entry: {
   url: string;
@@ -2059,9 +2078,10 @@ export function AakashGocharScene({
    * produced a washed-out panorama next to real Stellarium's own — a
    * ceiling on a curve is not the curve. `intensityFovScale` itself is a
    * no-op here regardless: it only fades the band out below a 2.5° field
-   * (MilkyWay.cpp:59-60), and this panorama never renders below 80° — see
-   * `HIPS_FOV_SHOW_THRESHOLD` — because the real DSS2 tiles own that whole
-   * range instead. `0.9` is an empirical stand-in for the net result of
+   * (MilkyWay.cpp:59-60), and this panorama fades toward the real DSS2
+   * tiles well before that — see {@link HIPS_BLEND_START_FOV}/{@link
+   * HIPS_BLEND_END_FOV} — rather than owning that whole range outright the
+   * way it once did. `0.9` is an empirical stand-in for the net result of
    * the chain this file cannot reproduce piece by piece, checked directly
    * against a real Stellarium screenshot at the same location and time
    * rather than derived from the formula alone.
@@ -3140,10 +3160,28 @@ export function AakashGocharScene({
     /* The HiPS tile group rides the exact same rotation {@link starsRef}
        does, verbatim — see the doc comment where {@link hipsGroupRef} is
        declared. FOV has to be known before deciding `hipsOn` itself — see
-       {@link HIPS_FOV_SHOW_THRESHOLD} — so it is read here rather than
+       {@link HIPS_BLEND_START_FOV} — so it is read here rather than
        inside the block below that used to be its only consumer. */
     const hipsFov = fovForZoom("horizon", view.current.distance);
-    const hipsOn = horizon && !arBackground && hipsFov <= HIPS_FOV_SHOW_THRESHOLD;
+    /**
+     * How much of the composite is HiPS's to own right now, 0–1 — the
+     * two-layer cross-fade this replaced a one-directional threshold with.
+     * `smoothstep(START, END, hipsFov)` with `START(80) > END(30)` falls
+     * from 1 to 0 as `hipsFov` *grows* (see {@link smoothstep}'s own doc
+     * comment on why the same function handles both directions), landing
+     * exactly the shape the brief's own comparison table describes: 0 at
+     * wide field, 1 once the field has narrowed past {@link
+     * HIPS_BLEND_END_FOV}, easing smoothly between.
+     *
+     * Computed once, here, rather than separately inside the HiPS block
+     * and the panorama block that consume it — the panorama's own
+     * compositing fade ({@link HIPS_BLEND_END_FOV}'s doc comment, "concept
+     * B") lives much later in this same function, after `hipsOn`'s own
+     * block has already returned, so both need this same number in scope
+     * rather than each re-deriving it.
+     */
+    const hipsVisibility = smoothstep(HIPS_BLEND_START_FOV, HIPS_BLEND_END_FOV, hipsFov);
+    const hipsOn = horizon && !arBackground && hipsFov <= HIPS_BLEND_START_FOV;
     if (hipsGroupRef.current) {
       if (horizon) {
         hipsGroupRef.current.quaternion.setFromRotationMatrix(
@@ -3155,7 +3193,7 @@ export function AakashGocharScene({
       hipsGroupRef.current.position.copy(state.camera.position);
       hipsGroupRef.current.visible = hipsOn;
     }
-    /* Above {@link HIPS_FOV_SHOW_THRESHOLD} the block below never runs, so
+    /* Above {@link HIPS_BLEND_START_FOV} the block below never runs, so
        without this the HUD would freeze on whatever counts it last saw
        while still under the threshold instead of showing the panorama
        having taken back over. */
@@ -3193,14 +3231,9 @@ export function AakashGocharScene({
       const group = hipsGroupRef.current;
       const width = state.size.width;
       const height = state.size.height;
-      /* See {@link HIPS_FADE_HALF_WIDTH_DEG}: 0 right at the threshold,
-         ramping to 1 by `HIPS_FOV_SHOW_THRESHOLD - HIPS_FADE_HALF_WIDTH_DEG`,
-         so a tile popping in the instant it is needed does not read as the
-         panorama vanishing out from under the reader. */
-      const hipsFadeOpacity = Math.min(
-        1,
-        Math.max(0, (HIPS_FOV_SHOW_THRESHOLD - hipsFov) / HIPS_FADE_HALF_WIDTH_DEG),
-      );
+      /* Tile opacity now rides {@link hipsVisibility} directly — the same
+         number the panorama's own complementary fade uses, computed once
+         above rather than re-derived here. */
       const win = horizonViewWindow(state.camera, hipsFov, width, height);
 
       hipsForwardWorld.set(0, 0, -1).applyQuaternion(state.camera.quaternion);
@@ -3351,10 +3384,10 @@ export function AakashGocharScene({
              showing. `entry.readyAt` is only ever set the instant a load
              succeeds (`loadHipsTileTexture`), so a tile that has been
              `ready` for a while (well past the fade window) always lands
-             on exactly `hipsFadeOpacity`, not a stale partial value. */
+             on exactly `hipsVisibility`, not a stale partial value. */
           const fadeT =
             entry.readyAt !== null ? Math.min(1, (performance.now() - entry.readyAt) / HIPS_FADE_IN_MS) : 1;
-          entry.material.opacity = hipsFadeOpacity * (HIPS_FADE_IN_START + (1 - HIPS_FADE_IN_START) * fadeT);
+          entry.material.opacity = hipsVisibility * (HIPS_FADE_IN_START + (1 - HIPS_FADE_IN_START) * fadeT);
           if (minOrderPresent < 0 || order < minOrderPresent) minOrderPresent = order;
           if (order > maxOrderPresent) maxOrderPresent = order;
         } else if (!controls.disableFallback) {
@@ -3372,7 +3405,7 @@ export function AakashGocharScene({
               entry.material.needsUpdate = true;
             }
             entry.mesh.visible = true;
-            entry.material.opacity = hipsFadeOpacity;
+            entry.material.opacity = hipsVisibility;
             fallbackCount += 1;
             shownState = "fallback";
             if (minOrderPresent < 0 || ancestor.order < minOrderPresent) minOrderPresent = ancestor.order;
@@ -4358,8 +4391,22 @@ export function AakashGocharScene({
        1°–235°, so the same degrees would mean something quite different
        there. */
     const [fadeLo, fadeHi] = globe ? [1.5, 4] : [1, 4];
+    /* Concept A — the near-zoom blur fade above, entirely unrelated to
+       HiPS: even with the real DSS2 tiles never in the picture (globe,
+       space, or क्षितिज with HiPS switched off) this panorama still wants
+       to fade out once a press has pulled in far enough that its own
+       2048×1024 texels are showing.
+       Concept B — the panorama's own half of the two-layer cross-fade
+       ({@link HIPS_BLEND_START_FOV}'s doc comment): the complement of
+       {@link hipsVisibility}, so as the tiles ease in this eases out to
+       match, deliberately kept as its own separate multiplier rather than
+       folded into `skyFade` above — the two fade the panorama out for
+       completely different reasons (one because the reader zoomed in past
+       what the texture can resolve, the other because a *better* image
+       has taken over) and only one of them exists outside क्षितिज. */
+    const panoramaHipsFade = horizon && !arBackground ? 1 - hipsVisibility : 1;
     const skyFade = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
-    if (milkyWayMatRef.current) milkyWayMatRef.current.opacity = skyFade;
+    if (milkyWayMatRef.current) milkyWayMatRef.current.opacity = skyFade * panoramaHipsFade;
     /* The horizon glow needs the same fade, for a reason the Milky Way
        panorama does not have to worry about: it is a gradient by *altitude
        across the frame*, and a narrow field of view does not span enough

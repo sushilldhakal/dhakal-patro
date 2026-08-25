@@ -511,10 +511,11 @@ export function ensureHipsTile(
        photograph wants: each tile replaces what is behind it with its own
        real exposure, which is the crisp result the tile viewer was
        already giving before this was tried. See {@link
-       HIPS_FADE_HALF_WIDTH_DEG} in `AakashGocharScene.tsx` for the actual
-       fix to "the panorama disappears the instant a tile loads" — a
-       cross-fade at the panorama/tile boundary itself, not a blend mode
-       that changes what every tile looks like everywhere. */
+       HIPS_BLEND_START_FOV}/{@link HIPS_BLEND_END_FOV} in
+       `AakashGocharScene.tsx` for the actual fix to "the panorama
+       disappears the instant a tile loads" — a two-layer cross-fade
+       across a field-of-view band, not a blend mode that changes what
+       every tile looks like everywhere. */
   });
   injectHipsEdgeFeather(material);
   const mesh = new THREE.Mesh(geometry, material);
