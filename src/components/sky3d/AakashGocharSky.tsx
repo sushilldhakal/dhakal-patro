@@ -1298,6 +1298,7 @@ export function AakashGocharSky({
     lat: number;
     hintNe?: string;
     hintEn?: string;
+    sidereal?: boolean;
   };
   const skyHitTarget = useCallback(
     (hit: SkyHit): SkyTarget => ({
@@ -1310,6 +1311,7 @@ export function AakashGocharSky({
       at: "sky",
       lon: hit.lon,
       lat: hit.lat,
+      sidereal: hit.sidereal,
     }),
     [],
   );

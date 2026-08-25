@@ -1886,6 +1886,7 @@ export function AakashGocharScene({
     lat: number;
     hintNe?: string;
     hintEn?: string;
+    sidereal?: boolean;
   }) => void;
   /** Pressed twice — mark it *and* centre the camera on it, same as {@link onFollow}. */
   onFollowSky?: (hit: {
@@ -1896,6 +1897,7 @@ export function AakashGocharScene({
     lat: number;
     hintNe?: string;
     hintEn?: string;
+    sidereal?: boolean;
   }) => void;
   /** A press that landed on nothing — empty sky, not a graha. */
   onEmptyPress?: () => void;
@@ -2274,8 +2276,18 @@ export function AakashGocharScene({
     for (const key of OUTER_PLANET_ORDER) {
       const mesh = new THREE.Mesh(
         geometry,
-        new THREE.MeshBasicMaterial({ color: OUTER_PLANET_COLOR[key] }),
+        /* `transparent` (alpha still pinned at 1 — purely a render-queue
+           change) plus an explicit `renderOrder` above every HiPS tile's
+           own — see the identical fix and reasoning on `GrahaBody`'s own
+           materials. Missing here until now: these three were built as
+           their own separate system (see the doc comment on {@link
+           OUTER_PLANET_ORDER}) and never got it, so a HiPS tile with
+           `depthTest: false` painted straight over an opaque यम/वरुण/अरुण
+           the instant one shared its screen position — "getting lost on
+           zoom" was that, not the dot actually leaving the sky. */
+        new THREE.MeshBasicMaterial({ color: OUTER_PLANET_COLOR[key], transparent: true }),
       );
+      mesh.renderOrder = 1;
       mesh.visible = false;
       out[key] = mesh;
     }
@@ -2852,6 +2864,7 @@ export function AakashGocharScene({
       e: PointerEvent,
     ):
       | { kind: "graha"; key: GrahaKey }
+      | { kind: "outerplanet"; key: OuterPlanetKey }
       | { kind: "vedicstar"; index: number }
       | { kind: "skystar"; index: number }
       | { kind: "nebula"; index: number }
@@ -2881,6 +2894,33 @@ export function AakashGocharScene({
         }
       }
       if (best) return { kind: "graha", key: best };
+      /* यम/वरुण/अरुण — decorative, so checked after every real graha (one
+         must never steal a press meant for something that actually belongs
+         to the chart) but before stars/नेबुला, the same priority a graha
+         itself gets and for the same reason: three small, similarly-sized
+         dots that would otherwise lose every close call to whichever
+         background star or नेबुला ring happened to be checked first. */
+      let bestOuter: OuterPlanetKey | null = null;
+      if (mode === "horizon") {
+        for (const key of OUTER_PLANET_ORDER) {
+          const mesh = outerPlanets[key];
+          if (!mesh.visible) continue;
+          mesh.getWorldPosition(at);
+          const centre = project(at, rect, field, scratchPick);
+          if (!centre) continue;
+          const d = Math.hypot(centre.x - px, centre.y - py);
+          const worldRadius = mesh.scale.x;
+          edge.copy(at).addScaledVector(rightAxis, worldRadius);
+          const edgeHit = project(edge, rect, field, scratchEdge);
+          const apparentPx = edgeHit ? Math.hypot(edgeHit.x - centre.x, edgeHit.y - centre.y) : 0;
+          const radius = Math.max(GRAHA_PICK_RADIUS, apparentPx * 1.15);
+          if (d < radius && d < bestD) {
+            bestD = d;
+            bestOuter = key;
+          }
+        }
+      }
+      if (bestOuter) return { kind: "outerplanet", key: bestOuter };
       let starKind: "vedicstar" | "skystar" | "nebula" | null = null;
       let starIndex = -1;
       const nVedic = vedicPickCount.current;
@@ -2952,15 +2992,44 @@ export function AakashGocharScene({
       const thisKey =
         hit.kind === "graha"
           ? `graha:${hit.key}`
-          : hit.kind === "vedicstar"
-            ? `vedicstar:${hit.index}`
-            : hit.kind === "nebula"
-              ? `nebula:${hit.index}`
-              : `skystar:${hit.index}`;
+          : hit.kind === "outerplanet"
+            ? `outerplanet:${hit.key}`
+            : hit.kind === "vedicstar"
+              ? `vedicstar:${hit.index}`
+              : hit.kind === "nebula"
+                ? `nebula:${hit.index}`
+                : `skystar:${hit.index}`;
       const now = performance.now();
       const again = thisKey === lastKey && now - lastAt < DOUBLE_MS;
       lastKey = again ? null : thisKey;
       lastAt = now;
+
+      if (hit.kind === "outerplanet") {
+        /* Identify-only, on purpose — see {@link OUTER_PLANET_ORDER}'s own
+           doc comment: "never part of a chart." Routed through the same
+           generic sky-aim path a नेबुला or background star click already
+           uses, not the graha `onSelect`/`onFollow`/kundali system, so
+           clicking यम never pretends it belongs to the nine-graha chart.
+           `pos.longitude/latitude` is already the exact current sidereal
+           value the render loop itself places the dot with (`place(pos.
+           longitude, pos.latitude, 0)`, no separate precession/ayanamsa
+           step) — `sidereal: true` here is what tells `skyAim`'s own
+           handler to hand it to `place()` unmodified instead of running it
+           through the tropical-target conversion, the exact mismatch
+           {@link SkyTargetAt} was added to stop happening again. */
+        const pos = outerPlanetAt(hit.key, daysSinceJ2000(new Date(sim.current.timeMs)));
+        const payload = {
+          id: `outerplanet:${hit.key}`,
+          ne: OUTER_PLANET_NAME[hit.key].ne,
+          en: OUTER_PLANET_NAME[hit.key].en,
+          lon: pos.longitude,
+          lat: pos.latitude,
+          sidereal: true,
+        };
+        if (again) onFollowSkyRef.current?.(payload);
+        else onAimSkyRef.current?.(payload);
+        return;
+      }
 
       if (hit.kind === "vedicstar") {
         const star = vedicStarsRef.current?.[hit.index];
@@ -3048,7 +3117,7 @@ export function AakashGocharScene({
       window.removeEventListener("pointerup", onWindowUp);
       window.removeEventListener("pointercancel", onWindowUp);
     };
-  }, [camera, gl, mode, view, starField.stars, nebulaField, nebulaMarkers]);
+  }, [camera, gl, mode, view, starField.stars, nebulaField, nebulaMarkers, outerPlanets, sim]);
   /** The last focus request answered, and whether one is still outstanding. */
   const lastFocusNonce = useRef(focusNonce);
   const recentre = useRef(false);
