@@ -187,17 +187,35 @@ function HipsDebugHud() {
     return () => window.clearInterval(id);
   }, []);
   if (!snap.on) return null;
-  const tilesOn = snap.order >= 0;
+  const tilesOn = snap.maxOrderPresent >= 0;
+  /* `minOrderPresent !== maxOrderPresent` is the direct, visible proof the
+     recursive per-tile traversal (Phase 2/3) is actually choosing different
+     resolutions in different parts of the frame — not the same order for
+     everything, which is exactly what the old FOV→order table always did. */
+  const mixedOrders = tilesOn && snap.minOrderPresent !== snap.maxOrderPresent;
   return (
-    <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-lg border border-emerald-400/30 bg-black/70 px-2.5 py-1.5 font-mono text-[11px] leading-tight text-emerald-200 backdrop-blur">
+    <div className="pointer-events-none absolute left-3 top-3 z-20 max-h-[70vh] overflow-hidden rounded-lg border border-emerald-400/30 bg-black/70 px-2.5 py-1.5 font-mono text-[11px] leading-tight text-emerald-200 backdrop-blur">
       <div>
         hips fov {snap.fovDeg.toFixed(1)}° ·{" "}
-        {tilesOn ? `order ${snap.order}/${snap.maxOrder} · r ${snap.tileRadiusDeg.toFixed(2)}°` : "panorama (above threshold)"}
+        {tilesOn
+          ? `orders ${snap.minOrderPresent}${mixedOrders ? `–${snap.maxOrderPresent}` : ""}/${snap.maxOrder}${
+              mixedOrders ? " (mixed)" : ""
+            } · refine>${snap.refinePixels}px`
+          : "panorama (above threshold)"}
       </div>
       <div>
-        tiles visible {snap.visibleCount} · ready {snap.readyCount} · loading {snap.loadingCount} · cached {snap.cachedCount} ·
-        inflight {snap.inFlight}
+        leaves {snap.leafCount} · ready {snap.readyCount} · fallback {snap.fallbackCount} · loading {snap.loadingCount} ·
+        cached {snap.cachedCount} · inflight {snap.inFlight}
       </div>
+      {snap.tiles.length > 0 && (
+        <div className="mt-1 max-h-[50vh] overflow-y-auto border-t border-emerald-400/20 pt-1">
+          {snap.tiles.map((t) => (
+            <div key={`${t.order}/${t.pix}`}>
+              O{t.order} P{t.pix} · {t.state} · {t.screenPx}px
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

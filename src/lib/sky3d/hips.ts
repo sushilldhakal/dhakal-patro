@@ -27,6 +27,7 @@ import * as THREE from "three";
 import {
   order2nside,
   pixcoord2VecNest,
+  cornersNest,
   cornersNestLonLat,
   pix2VecNest,
   maxPixelRadius,
@@ -89,6 +90,17 @@ export function hipsAllskyPath(): string {
 export function hipsTileCornersRaDec(order: number, pix: number): [number, number][] {
   const nside = order2nside(order);
   return cornersNestLonLat(nside, pix);
+}
+
+/**
+ * A tile's four corners as unit vectors in the same equatorial frame
+ * {@link buildHipsTileGeometry} bakes its own positions in — for
+ * `hips-lod.ts`'s screen-size estimate, which needs real 3D points to run
+ * through the camera's actual projection rather than a flat angular size.
+ */
+export function hipsTileCornerVecs(order: number, pix: number): [number, number, number][] {
+  const nside = order2nside(order);
+  return cornersNest(nside, pix) as [number, number, number][];
 }
 
 /**
@@ -221,37 +233,33 @@ export function buildHipsTileOutline(
   return out;
 }
 
-/* ── LOD selection (Step 7) ──────────────────────────────────────────── */
+/* ── HEALPix quadtree (Phase 2/3) ─────────────────────────────────────── */
 
 /**
- * The field of view, degrees, below which a given order takes over —
- * descending, so {@link hipsOrderForFov} can just walk the list and stop at
- * the first one the current field still clears.
- *
- * Chosen off each order's own angular tile size (order 0 ≈ 58.6° a side,
- * halving each order after), aiming for a handful of tiles across the
- * frame rather than one giant tile filling it or dozens of tiny ones: order
- * 0 alone reads as one soft wash once the field drops much past 90°, order
- * 1 the same past roughly 45°, and so on. Matches the brief's own worked
- * examples (180°→order 0, 60°→order 1, 30°→order 2, 10°→order 3) rather
- * than a single continuous formula, the same "tier table" style
- * {@link GRID_TIERS} (`sky-geometry.ts`) already uses for the alt-az cage.
+ * A tile's four NESTED children — `pix*4 + i` for `i` in 0..3, one order
+ * deeper. NESTED's own definition (confirmed against `stellarium-web-
+ * engine`'s `hips.c`, see the module doc comment); nothing to compute
+ * beyond the arithmetic itself.
  */
-const HIPS_ORDER_BREAKPOINTS: readonly { maxFov: number; order: number }[] = [
-  { maxFov: Infinity, order: 0 },
-  { maxFov: 90, order: 1 },
-  { maxFov: 45, order: 2 },
-  { maxFov: 20, order: HIPS_MAX_LOCAL_ORDER },
-];
-
-/** Which order best serves a given vertical field of view, degrees. */
-export function hipsOrderForFov(fovDeg: number): number {
-  let order = HIPS_ORDER_BREAKPOINTS[0].order;
-  for (const tier of HIPS_ORDER_BREAKPOINTS) {
-    if (fovDeg < tier.maxFov) order = tier.order;
-  }
-  return Math.min(order, HIPS_MAX_LOCAL_ORDER);
+export function getHipsChildren(order: number, pix: number): [number, number][] {
+  const base = pix * 4;
+  return [
+    [order + 1, base],
+    [order + 1, base + 1],
+    [order + 1, base + 2],
+    [order + 1, base + 3],
+  ];
 }
+
+/**
+ * The old global "one order for the whole frame" selector — `fovDeg →
+ * order` off a fixed breakpoint table — replaced by the recursive,
+ * per-tile, projected-screen-size traversal in `hips-lod.ts`
+ * (`evaluateHipsTile`), which is what actually decides refinement now.
+ * Removed rather than left unused: keeping a whole-frame order selector
+ * around next to a per-tile one invites something reaching for the wrong
+ * one later.
+ */
 
 /* ── tile visibility (Step 8) ─────────────────────────────────────────── */
 
@@ -295,20 +303,34 @@ export function hipsTileRadiusDeg(order: number): number {
 const HIPS_VISIBLE_MARGIN_FACTOR = 1.3;
 const HIPS_VISIBLE_EXTRA_MARGIN_DEG = 6;
 
+/** The same margin `hipsVisibleTiles` bakes in, exposed per-tile so the recursive traversal in `hips-lod.ts` can prune a single node without enumerating a whole order. */
+export function hipsVisibleConeLimitDeg(order: number, coneDeg: number): number {
+  return coneDeg * HIPS_VISIBLE_MARGIN_FACTOR + hipsTileRadiusDeg(order) + HIPS_VISIBLE_EXTRA_MARGIN_DEG;
+}
+
+/** Whether one tile could still be in view — see {@link hipsVisibleTiles}'s own doc comment for the margin's reasoning; this is that same test for a single `(order, pix)` instead of a whole order's worth. */
+export function isHipsTileVisible(
+  order: number,
+  pix: number,
+  dirEquatorial: THREE.Vector3,
+  coneDeg: number,
+): boolean {
+  const nside = order2nside(order);
+  const [x, y, z] = pix2VecNest(nside, pix);
+  const cosSep = dirEquatorial.x * x + dirEquatorial.y * y + dirEquatorial.z * z;
+  const cosLimit = Math.cos((hipsVisibleConeLimitDeg(order, coneDeg) * Math.PI) / 180);
+  return cosSep >= cosLimit;
+}
+
 export function hipsVisibleTiles(
   order: number,
   dirEquatorial: THREE.Vector3,
   coneDeg: number,
 ): number[] {
-  const nside = order2nside(order);
   const n = hipsTileCount(order);
-  const limit = coneDeg * HIPS_VISIBLE_MARGIN_FACTOR + hipsTileRadiusDeg(order) + HIPS_VISIBLE_EXTRA_MARGIN_DEG;
-  const cosLimit = Math.cos((limit * Math.PI) / 180);
   const out: number[] = [];
   for (let pix = 0; pix < n; pix += 1) {
-    const [x, y, z] = pix2VecNest(nside, pix);
-    const cosSep = dirEquatorial.x * x + dirEquatorial.y * y + dirEquatorial.z * z;
-    if (cosSep >= cosLimit) out.push(pix);
+    if (isHipsTileVisible(order, pix, dirEquatorial, coneDeg)) out.push(pix);
   }
   return out;
 }
@@ -624,42 +646,63 @@ export function loadHipsTileTexture(entry: HipsTileEntry): void {
  * React state on the write side — this runs inside `useFrame` and must never
  * trigger a re-render of the 3D scene.
  */
+/** One rendered leaf, for the per-tile debug listing (Step 12). */
+export interface HipsDebugTile {
+  order: number;
+  pix: number;
+  state: HipsTileState | "fallback";
+  screenPx: number;
+}
+
 export interface HipsDebugSnapshot {
   on: boolean;
   fovDeg: number;
-  order: number;
+  /** The lowest and highest order actually present among this frame's leaves — `-1` for both when nothing is on screen. Two different numbers here is the direct proof the recursive traversal (Phase 2/3) is choosing different resolutions in different parts of the frame, not one order for everything. */
+  minOrderPresent: number;
+  maxOrderPresent: number;
   maxOrder: number;
-  tileRadiusDeg: number;
-  visibleCount: number;
+  refinePixels: number;
+  leafCount: number;
   readyCount: number;
   loadingCount: number;
+  fallbackCount: number;
   cachedCount: number;
   inFlight: number;
+  /** Capped list of the actual leaves this frame, for the "O3 P451 READY 184px" style per-tile readout. */
+  tiles: HipsDebugTile[];
 }
+
+const HIPS_DEBUG_TILE_LIST_CAP = 60;
 
 const hipsDebugSnapshot: HipsDebugSnapshot = {
   on: false,
   fovDeg: 0,
-  order: 0,
+  minOrderPresent: -1,
+  maxOrderPresent: -1,
   maxOrder: HIPS_MAX_LOCAL_ORDER,
-  tileRadiusDeg: 0,
-  visibleCount: 0,
+  refinePixels: 0,
+  leafCount: 0,
   readyCount: 0,
   loadingCount: 0,
+  fallbackCount: 0,
   cachedCount: 0,
   inFlight: 0,
+  tiles: [],
 };
 
 export function writeHipsDebugSnapshot(next: Omit<HipsDebugSnapshot, "on" | "maxOrder">): void {
   hipsDebugSnapshot.on = true;
   hipsDebugSnapshot.fovDeg = next.fovDeg;
-  hipsDebugSnapshot.order = next.order;
-  hipsDebugSnapshot.tileRadiusDeg = next.tileRadiusDeg;
-  hipsDebugSnapshot.visibleCount = next.visibleCount;
+  hipsDebugSnapshot.minOrderPresent = next.minOrderPresent;
+  hipsDebugSnapshot.maxOrderPresent = next.maxOrderPresent;
+  hipsDebugSnapshot.refinePixels = next.refinePixels;
+  hipsDebugSnapshot.leafCount = next.leafCount;
   hipsDebugSnapshot.readyCount = next.readyCount;
   hipsDebugSnapshot.loadingCount = next.loadingCount;
+  hipsDebugSnapshot.fallbackCount = next.fallbackCount;
   hipsDebugSnapshot.cachedCount = next.cachedCount;
   hipsDebugSnapshot.inFlight = next.inFlight;
+  hipsDebugSnapshot.tiles = next.tiles.slice(0, HIPS_DEBUG_TILE_LIST_CAP);
 }
 
 export function clearHipsDebugSnapshot(): void {

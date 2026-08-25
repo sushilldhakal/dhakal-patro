@@ -125,19 +125,27 @@ import { makeMoonMaterial, type MoonMaterial } from "@/lib/sky3d/moon-material";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import { applyNadirStereographicUVs, prepareKathmanduGround } from "@/lib/sky3d/terrain";
 import {
+  buildHipsTileOutline,
   clearHipsDebugSnapshot,
   ensureHipsFallbackTexture,
   ensureHipsTile,
   findReadyHipsAncestor,
+  HIPS_MAX_LOCAL_ORDER,
   hipsLoadsInFlightCount,
-  hipsOrderForFov,
   hipsTileCount,
-  hipsTileRadiusDeg,
-  hipsVisibleTiles,
+  hipsTileKey,
   loadHipsTileTexture,
   writeHipsDebugSnapshot,
+  type HipsDebugTile,
   type HipsTileEntry,
 } from "@/lib/sky3d/hips";
+import {
+  evaluateHipsTiles,
+  getHipsTileScreenSizePx,
+  HIPS_TILE_REFINE_PIXELS,
+  type HipsLodFrame,
+  type HipsLodLeaf,
+} from "@/lib/sky3d/hips-lod";
 import earthToonUrl from "@/assets/graha/earth-orig.png";
 import milkyWayUrl from "@/assets/milkyway.png";
 import kathmanduUrl from "@/assets/kathmandu.jpeg?url";
@@ -1237,14 +1245,20 @@ let nebulaLoadsInFlight = 0;
  * sphere's 400 ({@link makeMilkyWayGeometry}'s own call site), so the real
  * DSS2 tiles draw in front of the low-resolution panorama without
  * z-fighting (both have `depthTest` off, so draw order — `renderOrder`,
- * see {@link HIPS_RENDER_ORDER_PARENT} — is what actually decides the
+ * see {@link HIPS_RENDER_ORDER} — is what actually decides the
  * front/back relationship, not this number; it only has to be close enough
  * that neither sphere reads as visibly nearer or farther than the other).
  */
 const HIPS_RADIUS = 398;
-/** Draw order: parent-fallback tiles under target-order tiles, both after the panorama (-1) and before nebula photos (-0.3) — see Step 11's crossfade. */
-const HIPS_RENDER_ORDER_PARENT = -0.6;
-const HIPS_RENDER_ORDER_TARGET = -0.55;
+/**
+ * Draw order for every HiPS leaf tile — after the panorama (-1), before
+ * nebula photos (-0.3). One value now, not a parent/target pair: the
+ * recursive traversal (`hips-lod.ts`) only ever marks a tile's own leaf
+ * mesh visible, borrowing an ancestor's *texture* (Phase 1 fallback) rather
+ * than rendering the ancestor as a separate coarser mesh underneath, so
+ * there is no second layer left to order against.
+ */
+const HIPS_RENDER_ORDER = -0.55;
 /**
  * `n×n` vertex grid per tile — see {@link buildHipsTileGeometry}'s own doc
  * comment on why a flat quad is not enough. 8 was enough to avoid visible
@@ -1329,6 +1343,19 @@ const nebulaToImage = new THREE.Vector3();
 const hipsForwardWorld = new THREE.Vector3();
 const hipsInvQuat = new THREE.Quaternion();
 const hipsDirEquatorial = new THREE.Vector3();
+
+/** The recursive traversal's own leaf list — {@link evaluateHipsTiles} clears and refills this in place every frame rather than allocating a fresh array, same reasoning as the vectors above. */
+const hipsLodLeaves: HipsLodLeaf[] = [];
+/** Reused across frames so `evaluateHipsTiles` doesn't need a fresh options object every call. */
+const hipsLodFrame: HipsLodFrame = {
+  camera: null as unknown as THREE.Camera,
+  groupQuaternion: new THREE.Quaternion(),
+  groupPosition: new THREE.Vector3(),
+  radius: 0,
+  fovDeg: 0,
+  width: 0,
+  height: 0,
+};
 
 /**
  * Is this photograph anywhere near what the camera is actually pointed at?
@@ -1557,10 +1584,10 @@ function GrahaBody({
     <group ref={groupRef}>
       {texKey ? (
         /* `transparent` plus an explicit `renderOrder` well above every
-           HiPS tile's (see `HIPS_RENDER_ORDER_TARGET`/`_PARENT` in
-           `AakashGocharScene.tsx`'s own module scope) is what keeps a graha
-           from vanishing behind one. Three.js renders *all* opaque objects
-           before *any* transparent one — that split is decided purely by
+           HiPS tile's (see `HIPS_RENDER_ORDER` in `AakashGocharScene.tsx`'s
+           own module scope) is what keeps a graha from vanishing behind
+           one. Three.js renders *all* opaque objects before *any*
+           transparent one — that split is decided purely by
            this flag, not by `renderOrder`, which only sorts within
            whichever of the two queues an object already landed in. A tile
            is transparent with `depthTest` off (the same skybox recipe the
@@ -2073,14 +2100,36 @@ export function AakashGocharScene({
    */
   const hipsGroupRef = useRef<THREE.Group | null>(null);
   const hipsCache = useRef(new Map<string, HipsTileEntry>());
+  /** Step 12's optional tile-boundary visualization — one `THREE.Line` per current leaf tile, rebuilt only while `hipsDebugControls.current.showBoundaries` is on (see the per-frame block). Lives in `hipsGroupRef` so it inherits the same rotation as the tiles it outlines. */
+  const hipsDebugOutlines = useRef<THREE.Group | null>(null);
   const [hipsDebugOn, setHipsDebugOn] = useState(
     () => typeof window !== "undefined" && window.location.search.includes("hipsdebug"),
   );
+  /**
+   * Step 13 isolation controls — developer-only, `null`/`false` (their
+   * default) means "no override," so normal production selection runs
+   * untouched. A `ref`, not state: these are read once per frame inside
+   * `useFrame` and must never themselves trigger a React re-render.
+   */
+  const hipsDebugControls = useRef<{
+    onlyOrder: number | null;
+    onlyPix: { order: number; pix: number } | null;
+    disableFallback: boolean;
+    disableLod: boolean;
+    showBoundaries: boolean;
+  }>({ onlyOrder: null, onlyPix: null, disableFallback: false, disableLod: false, showBoundaries: false });
   useEffect(() => {
-    (window as unknown as { __hipsDebug?: (on?: boolean) => void }).__hipsDebug = (on) =>
-      setHipsDebugOn((prev) => on ?? !prev);
+    type HipsDebugApi = (on?: boolean | Partial<(typeof hipsDebugControls)["current"]>) => void;
+    (window as unknown as { __hipsDebug?: HipsDebugApi }).__hipsDebug = (arg) => {
+      if (typeof arg === "object" && arg !== null) {
+        Object.assign(hipsDebugControls.current, arg);
+        setHipsDebugOn(true);
+        return;
+      }
+      setHipsDebugOn((prev) => arg ?? !prev);
+    };
     return () => {
-      delete (window as unknown as { __hipsDebug?: (on?: boolean) => void }).__hipsDebug;
+      delete (window as unknown as { __hipsDebug?: HipsDebugApi }).__hipsDebug;
     };
   }, []);
   /** The HUD outside the Canvas polls a module-level snapshot (see
@@ -3074,13 +3123,16 @@ export function AakashGocharScene({
     if (hipsDebugOn && !hipsOn) {
       writeHipsDebugSnapshot({
         fovDeg: hipsFov,
-        order: -1,
-        tileRadiusDeg: 0,
-        visibleCount: 0,
+        minOrderPresent: -1,
+        maxOrderPresent: -1,
+        refinePixels: HIPS_TILE_REFINE_PIXELS,
+        leafCount: 0,
         readyCount: 0,
         loadingCount: 0,
+        fallbackCount: 0,
         cachedCount: hipsCache.current.size,
         inFlight: hipsLoadsInFlightCount(),
+        tiles: [],
       });
     }
     /**
@@ -3110,129 +3162,198 @@ export function AakashGocharScene({
         1,
         Math.max(0, (HIPS_FOV_SHOW_THRESHOLD - hipsFov) / HIPS_FADE_HALF_WIDTH_DEG),
       );
-      const targetOrder = hipsOrderForFov(hipsFov);
-      const parentOrder = Math.max(0, targetOrder - 1);
       const win = horizonViewWindow(state.camera, hipsFov, width, height);
 
       hipsForwardWorld.set(0, 0, -1).applyQuaternion(state.camera.quaternion);
       hipsInvQuat.copy(group.quaternion).invert();
       hipsDirEquatorial.copy(hipsForwardWorld).applyQuaternion(hipsInvQuat);
 
-      const targetPixList = hipsVisibleTiles(targetOrder, hipsDirEquatorial, win.cone);
-      const parentPixList =
-        targetOrder > 0 ? hipsVisibleTiles(parentOrder, hipsDirEquatorial, win.cone) : [];
-
-      const neededTarget = new Set<number>(targetPixList);
-      const neededParent = new Set<number>(parentPixList);
-
       /* A guaranteed fallback floor — Stellarium's `hips_get_tile_texture()`
-         recurses to grandparent, great-grandparent, etc. when the immediate
-         parent isn't loaded either, but that recursion can only find an
-         ancestor entry {@link findReadyHipsAncestor} already knows about.
-         Order 0 is the whole sky in 12 tiles total, cheap enough to always
-         have requested rather than only reaching for it once a multi-level
-         gap actually happens — the common single-level case (parent ready,
-         target not) is served by the existing `parentOrder` pass below, so
-         this is specifically for "neither target nor parent has loaded yet",
-         e.g. right after the HiPS layer first turns on. `ensureHipsTile`/
-         `loadHipsTileTexture` are both no-ops once already idle→loading→
-         ready, so looping all 12 every frame costs nothing once they land. */
+         recurses to grandparent, great-grandparent, etc. when a tile isn't
+         loaded, but that recursion can only find an ancestor entry {@link
+         findReadyHipsAncestor} already knows about. Order 0 is the whole
+         sky in 12 tiles total, cheap enough to always have requested rather
+         than only reaching for it once a multi-level gap actually happens —
+         e.g. right after the HiPS layer first turns on, before the
+         recursive traversal below has had a chance to touch order 0 itself
+         (Step 7). `ensureHipsTile`/`loadHipsTileTexture` are both no-ops
+         once already idle→loading→ready, so looping all 12 every frame
+         costs nothing once they land. */
       for (let pix0 = 0; pix0 < hipsTileCount(0); pix0 += 1) {
         const entry0 = ensureHipsTile(hipsCache.current, 0, pix0, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
         if (entry0.state === "idle") loadHipsTileTexture(entry0);
       }
 
+      const controls = hipsDebugControls.current;
+
+      /* Phase 2/3: the recursive HEALPix quadtree walk (`hips-lod.ts`)
+         replaces the old "one FOV → one global order" selector. Every node
+         it visits — leaf or not — gets `ensureHipsTile`/`loadHipsTileTexture`
+         via `onVisit`, so a tile being split into four children is still
+         itself a valid, loading/loaded ancestor the Phase 1 fallback can
+         hand to those children while they arrive (Step 10's "parent remains
+         visible while children load" falls out of composing the two
+         systems, not from any special-casing here). */
+      hipsLodFrame.camera = state.camera;
+      hipsLodFrame.groupQuaternion = group.quaternion;
+      hipsLodFrame.groupPosition = group.position;
+      hipsLodFrame.radius = HIPS_RADIUS;
+      hipsLodFrame.fovDeg = hipsFov;
+      hipsLodFrame.width = width;
+      hipsLodFrame.height = height;
+
+      const onVisit = (order: number, pix: number) => {
+        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
+        if (entry.state === "idle") loadHipsTileTexture(entry);
+      };
+
+      if (controls.disableLod) {
+        // Step 13 isolation: skip refinement entirely, order 0 only.
+        hipsLodLeaves.length = 0;
+        for (let pix0 = 0; pix0 < hipsTileCount(0); pix0 += 1) {
+          onVisit(0, pix0);
+          hipsLodLeaves.push({ order: 0, pix: pix0 });
+        }
+      } else {
+        evaluateHipsTiles(
+          hipsLodFrame,
+          hipsDirEquatorial,
+          win.cone,
+          HIPS_MAX_LOCAL_ORDER,
+          onVisit,
+          hipsLodLeaves,
+        );
+      }
+
+      const leaves = controls.onlyOrder !== null ? hipsLodLeaves.filter((l) => l.order === controls.onlyOrder) : controls.onlyPix ? hipsLodLeaves.filter((l) => l.order === controls.onlyPix!.order && l.pix === controls.onlyPix!.pix) : hipsLodLeaves;
+
       let readyCount = 0;
       let loadingCount = 0;
+      let fallbackCount = 0;
+      let minOrderPresent = -1;
+      let maxOrderPresent = -1;
+      const neededLeaves = new Set<string>();
+      const debugTiles: HipsDebugTile[] = hipsDebugOn ? [] : [];
 
-      const activate = (order: number, pixList: number[], renderOrder: number, needed: Set<number>) => {
-        for (const pix of pixList) {
-          const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
-          if (entry.mesh.parent !== group) group.add(entry.mesh);
-          entry.mesh.renderOrder = renderOrder;
-          /* Tried matching the panorama's own `skyBoost` (a flat 0.38×
-             dim) and `injectMilkyWayExtinction` (altitude-based
-             atmospheric dimming) here on the theory that it would remove
-             a brightness jump at the 80° threshold — reverted after a
-             direct comparison against real Stellarium: a DSS2 tile is
-             already correctly exposed astrophotography, and dragging it
-             down to a stylized panorama's own deliberately-dim colour
-             plus a second, aggressive dimming curve on top left every
-             tile looking flat and washed out next to Stellarium's own
-             vivid, punchy version of the same object. The panorama being
-             dim is the panorama's own tuning for a painterly backdrop
-             texture, not a target a real photograph should be pulled
-             down to. Whatever residual mismatch exists right at the
-             threshold is the smaller problem — a tile that actually
-             looks like its own real astrophotography is worth more. */
-          if (entry.state === "idle") loadHipsTileTexture(entry);
-          if (entry.state === "loading") loadingCount += 1;
-          if (entry.state === "ready") {
-            readyCount += 1;
-            entry.mesh.visible = needed.has(pix);
-            entry.material.opacity = hipsFadeOpacity;
-          } else if (needed.has(pix)) {
-            /* Not ready yet — Phase 1 parent fallback: show this tile's own
-               (correctly HEALPix-curved) geometry with the nearest already-
-               loaded ancestor's texture, cropped to the right quadrant via
-               {@link ensureHipsFallbackTexture}, rather than leaving a hole.
-               Verified empirically against real downloaded tiles — see that
-               function's own doc comment. */
-            const ancestor = findReadyHipsAncestor(hipsCache.current, order, pix);
-            if (ancestor?.material.map) {
-              const fallbackTex = ensureHipsFallbackTexture(entry, ancestor.material.map, ancestor.order);
-              if (entry.material.map !== fallbackTex) {
-                entry.material.map = fallbackTex;
-                entry.material.needsUpdate = true;
-              }
-              entry.mesh.visible = true;
-              entry.material.opacity = hipsFadeOpacity;
-            } else {
-              entry.mesh.visible = false;
+      for (const { order, pix } of leaves) {
+        neededLeaves.add(hipsTileKey(order, pix));
+        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
+        if (entry.mesh.parent !== group) group.add(entry.mesh);
+        entry.mesh.renderOrder = HIPS_RENDER_ORDER;
+        /* Tried matching the panorama's own `skyBoost` (a flat 0.38× dim)
+           and `injectMilkyWayExtinction` (altitude-based atmospheric
+           dimming) here on the theory that it would remove a brightness
+           jump at the 80° threshold — reverted after a direct comparison
+           against real Stellarium: a DSS2 tile is already correctly
+           exposed astrophotography, and dragging it down to a stylized
+           panorama's own deliberately-dim colour plus a second, aggressive
+           dimming curve on top left every tile looking flat and washed out
+           next to Stellarium's own vivid, punchy version of the same
+           object. Whatever residual mismatch exists right at the threshold
+           is the smaller problem — a tile that actually looks like its own
+           real astrophotography is worth more. */
+        if (entry.state === "loading") loadingCount += 1;
+        let shownState: HipsDebugTile["state"] = entry.state;
+        if (entry.state === "ready") {
+          readyCount += 1;
+          entry.mesh.visible = true;
+          entry.material.opacity = hipsFadeOpacity;
+          if (minOrderPresent < 0 || order < minOrderPresent) minOrderPresent = order;
+          if (order > maxOrderPresent) maxOrderPresent = order;
+        } else if (!controls.disableFallback) {
+          /* Phase 1 parent fallback: show this tile's own (correctly
+             HEALPix-curved) geometry with the nearest already-loaded
+             ancestor's texture, cropped to the right quadrant via {@link
+             ensureHipsFallbackTexture}, rather than leaving a hole.
+             Verified empirically against real downloaded tiles — see that
+             function's own doc comment. */
+          const ancestor = findReadyHipsAncestor(hipsCache.current, order, pix);
+          if (ancestor?.material.map) {
+            const fallbackTex = ensureHipsFallbackTexture(entry, ancestor.material.map, ancestor.order);
+            if (entry.material.map !== fallbackTex) {
+              entry.material.map = fallbackTex;
+              entry.material.needsUpdate = true;
             }
+            entry.mesh.visible = true;
+            entry.material.opacity = hipsFadeOpacity;
+            fallbackCount += 1;
+            shownState = "fallback";
+            if (minOrderPresent < 0 || ancestor.order < minOrderPresent) minOrderPresent = ancestor.order;
+            if (ancestor.order > maxOrderPresent) maxOrderPresent = ancestor.order;
           } else {
             entry.mesh.visible = false;
           }
+        } else {
+          entry.mesh.visible = false;
         }
-      };
-      /* Parent first, target second — `loadHipsTileTexture`'s concurrency
-         cap is shared between both calls, so whichever `activate()` runs
-         first claims the load slots for this frame. Target-first left the
-         crossfade's whole premise broken on a fast zoom or pan: the coarse
-         parent tile that Step 11 promises would "stay visible while the
-         child loads" could itself still be sitting `idle`, competing with
-         the target tiles it was supposed to be a guaranteed fallback for.
-         The result was a real, reproducible patchwork — some patches at
-         full target detail, neighbouring ones showing nothing at all
-         (neither order loaded yet) rather than the blurrier parent — which
-         reads as a hard-edged "cut" through the sky, not a loading state.
-         Parent tiles are far cheaper to have ready (order 2 is at most 192
-         tiles total, order 1 only 48) and are what every target tile is
-         supposed to fall back to, so they get first claim on the queue. */
-      activate(parentOrder, parentPixList, HIPS_RENDER_ORDER_PARENT, neededParent);
-      activate(targetOrder, targetPixList, HIPS_RENDER_ORDER_TARGET, neededTarget);
+        if (hipsDebugOn) {
+          debugTiles.push({
+            order,
+            pix,
+            state: shownState,
+            screenPx: Math.round(getHipsTileScreenSizePx(order, pix, hipsLodFrame)),
+          });
+        }
+      }
 
-      // Hide every cached tile that isn't part of this frame's target/parent
-      // selection — tiles from a previous camera direction or a previously
-      // selected order would otherwise stay visible forever, since the loops
-      // above only touch the current frame's pix lists.
+      // Hide every cached tile that isn't one of this frame's leaves — a
+      // tile from a previous camera direction, a previous LOD selection, or
+      // (while `onlyOrder`/`onlyPix` is set) filtered out by the isolation
+      // controls above would otherwise stay visible forever, since the loop
+      // above only touches the current frame's leaf set.
       for (const entry of hipsCache.current.values()) {
-        const stillNeeded =
-          (entry.order === targetOrder && neededTarget.has(entry.pix)) ||
-          (entry.order === parentOrder && neededParent.has(entry.pix));
-        if (!stillNeeded) entry.mesh.visible = false;
+        if (!neededLeaves.has(hipsTileKey(entry.order, entry.pix))) entry.mesh.visible = false;
+      }
+
+      /* Step 12's optional tile-boundary visualization — rebuilt from
+         scratch each time it's on, since the leaf set itself changes every
+         frame; cheap at at most a few dozen leaves, and only runs at all
+         while debug mode is both on and this specific toggle is set. */
+      if (hipsDebugOn && controls.showBoundaries) {
+        if (!hipsDebugOutlines.current) {
+          const outlineGroup = new THREE.Group();
+          outlineGroup.name = "hips-debug-outlines";
+          group.add(outlineGroup);
+          hipsDebugOutlines.current = outlineGroup;
+        }
+        const outlineGroup = hipsDebugOutlines.current;
+        while (outlineGroup.children.length > leaves.length) {
+          const last = outlineGroup.children[outlineGroup.children.length - 1] as THREE.Line;
+          outlineGroup.remove(last);
+          last.geometry.dispose();
+        }
+        leaves.forEach((leaf, i) => {
+          const points = buildHipsTileOutline(leaf.order, leaf.pix, HIPS_RADIUS * 1.001, 6);
+          let line = outlineGroup.children[i] as THREE.Line | undefined;
+          if (!line) {
+            const mat = new THREE.LineBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.6, depthTest: false });
+            line = new THREE.Line(new THREE.BufferGeometry(), mat);
+            line.renderOrder = HIPS_RENDER_ORDER + 0.01;
+            outlineGroup.add(line);
+          }
+          line.geometry.dispose();
+          line.geometry = new THREE.BufferGeometry().setFromPoints(points);
+        });
+      } else if (hipsDebugOutlines.current) {
+        hipsDebugOutlines.current.visible = false;
+      }
+      if (hipsDebugOutlines.current) {
+        hipsDebugOutlines.current.visible = hipsDebugOn && controls.showBoundaries;
       }
 
       if (hipsDebugOn) {
         writeHipsDebugSnapshot({
           fovDeg: hipsFov,
-          order: targetOrder,
-          tileRadiusDeg: hipsTileRadiusDeg(targetOrder),
-          visibleCount: targetPixList.length + parentPixList.length,
+          minOrderPresent,
+          maxOrderPresent,
+          refinePixels: HIPS_TILE_REFINE_PIXELS,
+          leafCount: leaves.length,
           readyCount,
           loadingCount,
+          fallbackCount,
           cachedCount: hipsCache.current.size,
           inFlight: hipsLoadsInFlightCount(),
+          tiles: debugTiles,
         });
       }
     }
