@@ -126,9 +126,12 @@ import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import { applyNadirStereographicUVs, prepareKathmanduGround } from "@/lib/sky3d/terrain";
 import {
   clearHipsDebugSnapshot,
+  ensureHipsFallbackTexture,
   ensureHipsTile,
+  findReadyHipsAncestor,
   hipsLoadsInFlightCount,
   hipsOrderForFov,
+  hipsTileCount,
   hipsTileRadiusDeg,
   hipsVisibleTiles,
   loadHipsTileTexture,
@@ -3122,6 +3125,23 @@ export function AakashGocharScene({
       const neededTarget = new Set<number>(targetPixList);
       const neededParent = new Set<number>(parentPixList);
 
+      /* A guaranteed fallback floor — Stellarium's `hips_get_tile_texture()`
+         recurses to grandparent, great-grandparent, etc. when the immediate
+         parent isn't loaded either, but that recursion can only find an
+         ancestor entry {@link findReadyHipsAncestor} already knows about.
+         Order 0 is the whole sky in 12 tiles total, cheap enough to always
+         have requested rather than only reaching for it once a multi-level
+         gap actually happens — the common single-level case (parent ready,
+         target not) is served by the existing `parentOrder` pass below, so
+         this is specifically for "neither target nor parent has loaded yet",
+         e.g. right after the HiPS layer first turns on. `ensureHipsTile`/
+         `loadHipsTileTexture` are both no-ops once already idle→loading→
+         ready, so looping all 12 every frame costs nothing once they land. */
+      for (let pix0 = 0; pix0 < hipsTileCount(0); pix0 += 1) {
+        const entry0 = ensureHipsTile(hipsCache.current, 0, pix0, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS);
+        if (entry0.state === "idle") loadHipsTileTexture(entry0);
+      }
+
       let readyCount = 0;
       let loadingCount = 0;
 
@@ -3151,6 +3171,25 @@ export function AakashGocharScene({
             readyCount += 1;
             entry.mesh.visible = needed.has(pix);
             entry.material.opacity = hipsFadeOpacity;
+          } else if (needed.has(pix)) {
+            /* Not ready yet — Phase 1 parent fallback: show this tile's own
+               (correctly HEALPix-curved) geometry with the nearest already-
+               loaded ancestor's texture, cropped to the right quadrant via
+               {@link ensureHipsFallbackTexture}, rather than leaving a hole.
+               Verified empirically against real downloaded tiles — see that
+               function's own doc comment. */
+            const ancestor = findReadyHipsAncestor(hipsCache.current, order, pix);
+            if (ancestor?.material.map) {
+              const fallbackTex = ensureHipsFallbackTexture(entry, ancestor.material.map, ancestor.order);
+              if (entry.material.map !== fallbackTex) {
+                entry.material.map = fallbackTex;
+                entry.material.needsUpdate = true;
+              }
+              entry.mesh.visible = true;
+              entry.material.opacity = hipsFadeOpacity;
+            } else {
+              entry.mesh.visible = false;
+            }
           } else {
             entry.mesh.visible = false;
           }

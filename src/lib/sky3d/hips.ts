@@ -324,6 +324,16 @@ export type HipsTileEntry = {
   state: HipsTileState;
   mesh: THREE.Mesh;
   material: THREE.MeshBasicMaterial;
+  /** Which ancestor order {@link fallbackTexture} was built from, or `null`
+   *  if this tile is currently showing its own texture. See {@link
+   *  ensureHipsFallbackTexture}. */
+  fallbackAncestorOrder: number | null;
+  /** A cloned-and-cropped view of an ancestor's texture, standing in while
+   *  this tile's own texture is still loading. Owns its own GPU-side
+   *  `THREE.Texture` object (for an independent `offset`/`repeat`) but
+   *  shares the ancestor's `.source`, so cloning costs no extra upload —
+   *  see {@link ensureHipsFallbackTexture}'s own doc comment. */
+  fallbackTexture: THREE.Texture | null;
 };
 
 /** The cache key a tile lives under — `"order/pix"`. */
@@ -438,9 +448,140 @@ export function ensureHipsTile(
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   mesh.visible = false;
-  const entry: HipsTileEntry = { order, pix, state: "idle", mesh, material };
+  const entry: HipsTileEntry = {
+    order,
+    pix,
+    state: "idle",
+    mesh,
+    material,
+    fallbackAncestorOrder: null,
+    fallbackTexture: null,
+  };
   cache.set(key, entry);
   return entry;
+}
+
+/**
+ * Stellarium's `hips_get_tile_texture()` parent-fallback (`src/hips.c`),
+ * adapted to our `(nw, 1 - ne)` UV convention and expressed as Three.js's
+ * native `texture.offset`/`texture.repeat` instead of a hand-rolled shader
+ * transform — that pair already computes exactly `sampledUV = uv * repeat +
+ * offset` in the built-in shader chunk, which is precisely the scale+
+ * translate this needs.
+ *
+ * The quadrant arithmetic itself (`pix % 4` picking one quarter of the
+ * parent) is Stellarium's own `(pix%4)/2, (pix%4)%2` — but which axis each
+ * of those lands on, combined with our own `(nw, 1-ne)` convention rather
+ * than Stellarium's, is not something the C source states directly and
+ * was not assumed here. Verified empirically: cropped a real downloaded
+ * parent tile (order 2, pix 112) into its four quadrants under this exact
+ * formula and compared each against all four of its real, already-
+ * downloaded children (order 3, pix 448–451, `childIndex = pix % 4` 0–3).
+ * Every child scored >0.999 correlation against exactly the quadrant this
+ * formula predicts for its own `childIndex`, and ~0 or negative against
+ * the other three — `childIndex` 0,1,2,3 → `(tx,ty)` `(0,0),(0,1),(1,0),
+ * (1,1)`, `tx` on the nw/column axis, `ty` on the ne/row axis.
+ *
+ * Composes across more than one level (grandparent, great-grandparent…) by
+ * walking up one order at a time: each step is `next = 0.5*next + newOff`,
+ * `repeat *= 0.5`, which is the standard "compose a chain of scale+
+ * translate maps" accumulation — verified algebraically by expanding two
+ * steps by hand (`u2 = 0.5*(0.5*u0+off1)+off2 = 0.25*u0 + 0.5*off1 +
+ * off2`, matching what the loop below produces for two iterations).
+ */
+export function hipsAncestorUvTransform(
+  order: number,
+  pix: number,
+  ancestorOrder: number,
+): { repeat: number; offsetX: number; offsetY: number } {
+  let repeat = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let o = order;
+  let p = pix;
+  while (o > ancestorOrder) {
+    const q = p % 4;
+    const tx = q >> 1;
+    const ty = q & 1;
+    offsetX = 0.5 * offsetX + 0.5 * tx;
+    offsetY = 0.5 * offsetY + 0.5 * (1 - ty);
+    repeat *= 0.5;
+    p = Math.floor(p / 4);
+    o -= 1;
+  }
+  return { repeat, offsetX, offsetY };
+}
+
+/**
+ * Points `entry` at a cropped view of `ancestorTexture` (an already-loaded
+ * texture from `entry`'s own ancestor chain, `ancestorOrder` levels up) via
+ * {@link hipsAncestorUvTransform}, so its mesh shows the right quadrant of
+ * the parent — not the whole parent stretched — while its own tile is
+ * still loading.
+ *
+ * Cheap to call every frame: `THREE.Texture.clone()` shares the source
+ * ancestor's `.source` (confirmed in the installed three@0.185.1's own
+ * `Texture.prototype.copy`, `this.source = source.source`), which is what
+ * `WebGLTextures` keys its GPU cache on — cloning never re-uploads. Still
+ * only clones when the ancestor actually changed (`fallbackAncestorOrder`
+ * mismatch), not every call, and disposes the outgoing clone so the GPU
+ * side doesn't accumulate one-per-frame.
+ */
+export function ensureHipsFallbackTexture(
+  entry: HipsTileEntry,
+  ancestorTexture: THREE.Texture,
+  ancestorOrder: number,
+): THREE.Texture {
+  if (entry.fallbackAncestorOrder === ancestorOrder && entry.fallbackTexture) {
+    return entry.fallbackTexture;
+  }
+  const { repeat, offsetX, offsetY } = hipsAncestorUvTransform(entry.order, entry.pix, ancestorOrder);
+  const tex = ancestorTexture.clone();
+  tex.repeat.set(repeat, repeat);
+  tex.offset.set(offsetX, offsetY);
+  tex.colorSpace = ancestorTexture.colorSpace;
+  tex.needsUpdate = true;
+  entry.fallbackTexture?.dispose();
+  entry.fallbackTexture = tex;
+  entry.fallbackAncestorOrder = ancestorOrder;
+  return tex;
+}
+
+/** Releases `entry`'s fallback texture (if any) and clears the tracking fields — called once the tile's own real texture takes over, or the tile is discarded. */
+export function clearHipsFallbackTexture(entry: HipsTileEntry): void {
+  entry.fallbackTexture?.dispose();
+  entry.fallbackTexture = null;
+  entry.fallbackAncestorOrder = null;
+}
+
+/**
+ * Walks up from `(order, pix)`'s immediate parent through its
+ * grandparent, great-grandparent, etc. — `Stellarium`'s own recursive
+ * search in `hips_get_tile_texture()` — and returns the first ancestor
+ * entry already `"ready"` in `cache`, or `null` if none of them are (an
+ * order-0 ancestor with nothing loaded yet, e.g. right at startup).
+ *
+ * Only finds ancestors that already have a cache entry — i.e. that some
+ * caller has already run through {@link ensureHipsTile} at least once.
+ * The scene proactively does this for every order-0 tile (cheap: 12
+ * total) as soon as the HiPS layer turns on, so a fallback is available
+ * almost immediately rather than only once the immediate parent order
+ * happens to have loaded.
+ */
+export function findReadyHipsAncestor(
+  cache: Map<string, HipsTileEntry>,
+  order: number,
+  pix: number,
+): HipsTileEntry | null {
+  let o = order - 1;
+  let p = Math.floor(pix / 4);
+  while (o >= 0) {
+    const entry = cache.get(hipsTileKey(o, p));
+    if (entry && entry.state === "ready" && entry.material.map) return entry;
+    p = Math.floor(p / 4);
+    o -= 1;
+  }
+  return null;
 }
 
 /**
@@ -462,6 +603,7 @@ export function loadHipsTileTexture(entry: HipsTileEntry): void {
       entry.material.map = tex;
       entry.material.needsUpdate = true;
       entry.state = "ready";
+      clearHipsFallbackTexture(entry);
       hipsLoadsInFlight = Math.max(0, hipsLoadsInFlight - 1);
     },
     undefined,
