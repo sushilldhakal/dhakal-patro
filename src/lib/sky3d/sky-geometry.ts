@@ -145,17 +145,28 @@ const STEPS_AZ_ARCMIN = [900, 300, 60, 20, 10, 5, 1, 1 / 3, 1 / 6, 1 / 12, 1 / 6
 
 /**
  * `get_steps()` in `lines.c` targets `fov / 6` (so the frame carries roughly
- * six lines along that axis) and `steps_lookup()` snaps that target to the
- * nearest entry in `STEPS_AZ`. Only one entry is ever selected — zooming
- * *replaces* the active step, it never layers a finer grid on top of a
- * coarser one still on screen, which this table already does by construction
- * (see {@link gridStepForFov}).
+ * six lines along that axis) and `steps_lookup()` snaps that target to a step
+ * from `STEPS_AZ`. Only one entry is ever selected — zooming *replaces* the
+ * active step, it never layers a finer grid on top of a coarser one still on
+ * screen, which this table already does by construction (see
+ * {@link gridStepForFov}).
  *
- * The boundary between two neighbouring steps A > B is the field of view
- * where the target `fov * 10` arcmin (`fov/6` in degrees, times 60) sits
- * exactly halfway between them, i.e. `fov = (A + B) / 20`. That's what
- * `maxFov` below is, worked out from {@link STEPS_AZ_ARCMIN} rather than
- * picked by eye.
+ * A step S stays the right choice for as long as it's no finer than the
+ * target, i.e. while `S >= fov/6` — the moment `fov/6` grows past S, S would
+ * be drawing *more* than six lines and the next coarser entry takes over.
+ * So the field of view at which a step stops being valid is `fov = 6 * S`
+ * (in arcmin, `S/10`, since target-in-arcmin is `fov * 10`). That's what
+ * `maxFov` below is for each entry, worked out from {@link STEPS_AZ_ARCMIN}
+ * rather than picked by eye.
+ *
+ * This is a ceiling, not a nearest-match: {@link STEPS_AZ_ARCMIN} has real
+ * gaps in it (5° to 1° is a 5× jump, with nothing at 2° or 3°), and snapping
+ * to whichever entry is numerically *closest* to the target lets the step
+ * undershoot badly in the middle of a gap — at fov=15° the nearest entry to
+ * a 2.5° target is 1°, which draws fifteen lines instead of six. Snapping up
+ * to the smallest entry still `>= target` instead caps the line count at
+ * six everywhere, at the cost of sometimes drawing fewer than six right
+ * before the next finer step kicks in — sparse reads better than crowded.
  *
  * This app's field of view only ever runs 1°–235°, so the sub-arcminute
  * entries (20″ and finer) never actually get selected — they're kept in the
@@ -163,17 +174,17 @@ const STEPS_AZ_ARCMIN = [900, 300, 60, 20, 10, 5, 1, 1 / 3, 1 / 6, 1 / 12, 1 / 6
  * rather than a truncated copy of it.
  */
 export const GRID_TIERS: readonly GridTier[] = [
-  { step: 900, maxFov: Infinity }, // 15°
-  { step: 300, maxFov: 60 }, // 5°
-  { step: 60, maxFov: 18 }, // 1°
-  { step: 20, maxFov: 4, local: true }, // 20′
-  { step: 10, maxFov: 1.5, local: true }, // 10′
-  { step: 5, maxFov: 0.75, local: true }, // 5′
-  { step: 1, maxFov: 0.3, local: true }, // 1′
-  { step: 1 / 3, maxFov: 1 / 15, local: true }, // 20″
-  { step: 1 / 6, maxFov: 1 / 40, local: true }, // 10″
-  { step: 1 / 12, maxFov: 1 / 80, local: true }, // 5″
-  { step: 1 / 60, maxFov: 1 / 200, local: true }, // 1″
+  { step: 900, maxFov: Infinity }, // 15° — also the floor: nothing coarser exists above fov=90
+  { step: 300, maxFov: 30 }, // 5°
+  { step: 60, maxFov: 6 }, // 1°
+  { step: 20, maxFov: 2, local: true }, // 20′
+  { step: 10, maxFov: 1, local: true }, // 10′
+  { step: 5, maxFov: 0.5, local: true }, // 5′
+  { step: 1, maxFov: 0.1, local: true }, // 1′
+  { step: 1 / 3, maxFov: 1 / 30, local: true }, // 20″
+  { step: 1 / 6, maxFov: 1 / 60, local: true }, // 10″
+  { step: 1 / 12, maxFov: 1 / 120, local: true }, // 5″
+  { step: 1 / 60, maxFov: 1 / 600, local: true }, // 1″
 ];
 
 /** The finest spacing the cage is drawing at this field of view, arcminutes. */
