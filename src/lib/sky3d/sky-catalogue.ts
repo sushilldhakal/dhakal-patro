@@ -235,9 +235,19 @@ const VEDIC_ALIASES: { matchNe: string; ne: string; en: string; hintEn: string }
   { matchNe: "मिथुन", ne: "मिथुन मण्डल", en: "Mithuna Mandala", hintEn: "Gemini" },
 ];
 
+/**
+ * अश्विनौ are the Aśvins — the pair that names अश्विनी (β/γ Arietis), not
+ * a third star between दिति and अदिति. An older gochar catalogue sat that
+ * name on the Castor–Pollux midpoint; drop it here so a stale payload cannot
+ * draw or search it.
+ */
+export function displayVedicStars(stars: VedicStarPosition[]): VedicStarPosition[] {
+  return stars.filter((s) => s.ne !== "अश्विनौ" && s.en !== "Ashvinau");
+}
+
 /** Live server positions → search/aim targets. Ids are stable for one payload. */
 export function vedicStarTargets(stars: VedicStarPosition[]): SkyTarget[] {
-  const primary = stars.map((star, index) => {
+  const primary = displayVedicStars(stars).map((star, index) => {
     const latin = VEDIC_LATIN[star.en] ?? "";
     const hint = [latin, star.en].filter(Boolean).join(" · ");
     return {

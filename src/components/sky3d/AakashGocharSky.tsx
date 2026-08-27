@@ -69,7 +69,7 @@ import {
 import { SkyTimeSheet } from "@/components/sky3d/SkyTimeSheet";
 import { RATE_NOTCHES, rateToSlider, sliderToRate } from "@/lib/sky3d/rate-slider";
 import { SkySearch } from "@/components/sky3d/SkySearch";
-import { vedicStarTargets, type SkyTarget } from "@/lib/sky3d/sky-catalogue";
+import { displayVedicStars, vedicStarTargets, type SkyTarget } from "@/lib/sky3d/sky-catalogue";
 import {
   localFavourites,
   pushRecent,
@@ -1261,7 +1261,8 @@ export function AakashGocharSky({
     setRecentIds(pushRecent(target.id));
   }, []);
 
-  const namedStars = useMemo(() => vedicStarTargets(vedicStars ?? []), [vedicStars]);
+  const catalogStars = useMemo(() => displayVedicStars(vedicStars ?? []), [vedicStars]);
+  const namedStars = useMemo(() => vedicStarTargets(catalogStars), [catalogStars]);
 
   const starTarget = useCallback(
     (star: VedicStarPosition, index: number): SkyTarget =>
@@ -1841,7 +1842,7 @@ export function AakashGocharSky({
               observer={observer}
               calibration={calibration}
               ayanamsaShift={ayanamsaShift}
-              vedicStars={vedicStars}
+              vedicStars={catalogStars}
               selectedKey={selectedKey}
               skyAim={skyAim}
               aimedId={aimed?.id ?? null}
@@ -1918,7 +1919,7 @@ export function AakashGocharSky({
             selectedId={aimed?.id}
             onAimLabel={(label) => {
               if (label.kind === "vedicstar" && label.index != null) {
-                const star = vedicStars?.[label.index];
+                const star = catalogStars[label.index];
                 if (star) onSelectStar(star, label.index);
                 return;
               }
