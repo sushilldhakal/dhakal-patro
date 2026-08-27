@@ -77,7 +77,13 @@ export const OUTER_PLANET_ELEMENTS = {
     i: 0.77263783,
     node: 74.01692503,
     peri: 170.9542763,
-    L0: 142.238514,
+    /* JPL's mean longitude at J2000, which is what {@link heliocentric} wants
+       (it forms M = L0 − ϖ itself). The two numbers that stood here before
+       were already JPL's L − ϖ, so the perihelion came off twice and अरुण
+       drew ~195° from where it is — it was reading as a plausible dot in
+       plainly the wrong राशि. वरुण was out the same way; यम was always
+       right, which is why the error never looked systematic. */
+    L0: 313.23810451,
     periodDays: 30685,
   },
   neptune: {
@@ -86,7 +92,7 @@ export const OUTER_PLANET_ELEMENTS = {
     i: 1.77004347,
     node: 131.78422574,
     peri: 44.96476227,
-    L0: 256.228833,
+    L0: 304.87997031,
     periodDays: 60190,
   },
   pluto: {

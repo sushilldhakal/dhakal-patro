@@ -8,7 +8,7 @@
  * going back anywhere first. The only thing that closes it is a press outside.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Clock, List, Search, Star, X } from "lucide-react";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import {
@@ -54,10 +54,11 @@ export function SkySearch({
   const [pane, setPane] = useState<Pane>({ view: "home" });
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  /* Opening the box means wanting to type in it. */
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  /* Deliberately *not* focused on open. Opening the panel is how you browse
+     what is up there — the कोटि rows, the favourites, the recents — and
+     stealing focus put a keyboard over the top of exactly that, on a phone
+     covering most of it. The field is focused when it is pressed, which is
+     when someone has decided to type. */
 
   const byId = useMemo(() => {
     const map = new Map(SKY_BY_ID);
@@ -98,7 +99,7 @@ export function SkySearch({
       key={key}
       type="button"
       onClick={onPress}
-      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-base font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white"
     >
       <span className="grid size-5 shrink-0 place-items-center text-white/60">{icon}</span>
       <span className="flex-1 truncate">{label}</span>
@@ -114,8 +115,8 @@ export function SkySearch({
         onClick={() => onPick(t)}
         className="flex min-w-0 flex-1 items-baseline gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-white/10"
       >
-        <span className="truncate text-sm font-semibold text-white/90">{name(t)}</span>
-        {hint(t) ? <span className="shrink-0 text-[11px] text-white/45">{hint(t)}</span> : null}
+        <span className="truncate text-base font-semibold text-white/90">{name(t)}</span>
+        {hint(t) ? <span className="shrink-0 text-xs text-white/45">{hint(t)}</span> : null}
       </button>
       <button
         type="button"
@@ -145,7 +146,10 @@ export function SkySearch({
   return (
     <div
       data-sky-controls
-      className="flex w-[min(320px,calc(100vw-1.5rem))] flex-col gap-2 rounded-xl border border-white/15 bg-black/90 p-2.5 backdrop-blur"
+      /* Wider and taller than it was (320/52vh). This panel is a list you read
+         — कोटि rows, favourites, recents — and at the old width the longer
+         नक्षत्र and नेब्युला names truncated on nearly every row. */
+      className="flex w-[min(400px,calc(100vw-1.5rem))] flex-col gap-2 rounded-xl border border-white/15 bg-black/90 p-3 backdrop-blur"
     >
       <div className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5">
         <Search className="size-4 shrink-0 text-white/50" />
@@ -185,7 +189,7 @@ export function SkySearch({
         )}
       </div>
 
-      <div className="max-h-[min(52vh,360px)] overflow-y-auto overscroll-contain">
+      <div className="max-h-[min(64vh,460px)] overflow-y-auto overscroll-contain">
         {searching ? (
           results.length ? (
             <div className="flex flex-col">{results.map(row)}</div>

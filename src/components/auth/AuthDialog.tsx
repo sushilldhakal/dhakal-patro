@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -254,6 +255,19 @@ export function AuthDialog({
             </button>
           )}
         </div>
+
+        {mode !== "forgot" ? (
+          <p className="text-center text-xs text-muted-foreground">
+            {t("auth.legal_agree")}{" "}
+            <Link to="/privacy" className="text-secondary hover:underline" onClick={() => onOpenChange(false)}>
+              {t("auth.privacy")}
+            </Link>
+            {" · "}
+            <Link to="/terms" className="text-secondary hover:underline" onClick={() => onOpenChange(false)}>
+              {t("auth.terms")}
+            </Link>
+          </p>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

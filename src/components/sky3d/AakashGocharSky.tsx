@@ -54,7 +54,13 @@ import {
   bsMonthLabel,
   WEEKDAYS_SHORT_NE,
 } from "@/lib/bs-calendar";
-import { dragScaleForZoom, fovForZoom, SPACE_FOV } from "@/lib/sky3d/sky-zoom";
+import {
+  dragScaleForZoom,
+  fovForZoom,
+  HORIZON_ZOOM_MAX,
+  HORIZON_ZOOM_MIN,
+  SPACE_FOV,
+} from "@/lib/sky3d/sky-zoom";
 import {
   DEFAULT_STEP_INDEX,
   nearestStepIndex,
@@ -292,9 +298,12 @@ const HOME_DISTANCE: Record<SkyMode, number> = {
 const GLOBE_YAW = Math.PI - 0.6;
 const GLOBE_PITCH = 0.42;
 
-/** The camera never comes closer than this, nor pulls back further. */
-const ZOOM_MIN = 0.35;
-const ZOOM_MAX = 120;
+/** The camera never comes closer than this, nor pulls back further — क्षितिज's
+ *  own range, so a full zoom in lands on 1° and a full zoom out on 235°. From
+ *  `sky-zoom` rather than repeated here: these two numbers and the field the
+ *  lens is set to have to be the same pair or the ends become unreachable. */
+const ZOOM_MIN = HORIZON_ZOOM_MIN;
+const ZOOM_MAX = HORIZON_ZOOM_MAX;
 /** Space view matches the Learn playground's orbit range. */
 const SPACE_ZOOM_MIN = 6;
 const SPACE_ZOOM_MAX = 130;
@@ -699,11 +708,8 @@ export function AakashGocharSky({
     grid: true,
     labels: true,
     rashiBelt: true,
-    poleStars: true,
     vedicStars: true,
     constellations: true,
-    skyCulture: true,
-    nebulae: true,
     primeMeridian: true,
     nakshatraBelt: false,
     monthRing: false,
@@ -2155,30 +2161,9 @@ export function AakashGocharSky({
               )}
               {mode !== "space" ? (
                 <Chip
-                  active={toggles.poleStars}
-                  label={pick("ध्रुव तारा", "Pole stars")}
-                  onPress={() => setToggles((t) => ({ ...t, poleStars: !t.poleStars }))}
-                />
-              ) : null}
-              {mode !== "space" ? (
-                <Chip
                   active={toggles.vedicStars}
                   label={pick("वैदिक तारा", "Vedic stars")}
                   onPress={() => setToggles((t) => ({ ...t, vedicStars: !t.vedicStars }))}
-                />
-              ) : null}
-              {mode !== "space" ? (
-                <Chip
-                  active={toggles.skyCulture}
-                  label={pick("राशि आकृति", "Zodiac art")}
-                  onPress={() => setToggles((t) => ({ ...t, skyCulture: !t.skyCulture }))}
-                />
-              ) : null}
-              {mode !== "space" ? (
-                <Chip
-                  active={toggles.nebulae}
-                  label={pick("नेब्युला तस्बिर", "Nebula photos")}
-                  onPress={() => setToggles((t) => ({ ...t, nebulae: !t.nebulae }))}
                 />
               ) : null}
               {mode === "globe" ? (
@@ -2203,10 +2188,13 @@ export function AakashGocharSky({
                 label={pick("नक्षत्र", "Nakshatra")}
                 onPress={() => setToggles((t) => ({ ...t, nakshatraBelt: !t.nakshatraBelt }))}
               />
-              {/* The बिक्रम month ring belongs to the wheel views. On the dome
-                  it is a fourth band stacked on the राशि and नक्षत्र strips
-                  over a sky that is already carrying stars and a cage. */}
-              {mode === "horizon" ? null : (
+              {/* The बिक्रम month ring belongs to अन्तरिक्ष, where the wheel is
+                  the subject. On the dome it is a fourth band stacked on the
+                  राशि and नक्षत्र strips over a sky already carrying stars and a
+                  cage; on the globe it drew nothing at all — the ring lives in
+                  the space-only wheel — so the chip there was a switch wired to
+                  nothing. */}
+              {mode !== "space" ? null : (
                 <Chip
                   active={toggles.monthRing}
                   label={pick("महिना", "Months")}

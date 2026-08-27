@@ -21,7 +21,7 @@ import {
 
 export function Account() {
   const { t } = useTranslation();
-  const { user, loading: authLoading, refreshUser } = useAuth();
+  const { user, loading: authLoading, refreshUser, deleteAccount } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const profilesQuery = useQuery({
@@ -159,6 +159,27 @@ export function Account() {
           ))}
         </ul>
       )}
+
+      <div className="mt-10 border-t border-border pt-6">
+        <h2 className="text-lg font-semibold text-destructive">{t("account_page.delete_account")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("account_page.delete_account_confirm")}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 border-destructive text-destructive hover:bg-destructive/10"
+          onClick={async () => {
+            if (!confirm(t("account_page.delete_account_confirm"))) return;
+            try {
+              await deleteAccount();
+              void navigate({ to: "/" });
+            } catch {
+              alert(t("account_page.delete_account_error"));
+            }
+          }}
+        >
+          {t("account_page.delete_account")}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -57,7 +57,17 @@ vec4 horizonClipPosition(vec4 mvPosition) {
   float rxy = length(p.xy);
   float theta = atan(rxy, -p.z);
   float halfFov = radians(uHorizonFov) * 0.5;
-  /* Stereographic: r = 2·tan(θ/2), scaled so the vertical field hits y = ±1.
+  /* Stereographic: r = 2·tan(θ/2), scaled so the *shorter* screen axis hits
+     ±1 at the nominal field.
+
+     This used to normalise y by maxR alone and divide x by the aspect, which
+     pins the field to the vertical no matter the shape of the canvas. On a
+     landscape canvas that is the short axis anyway and nothing changes — but
+     on a portrait phone the short axis is the *width*, so a nominal 235° gave
+     235° top-to-bottom and only about 200° across, and the same number showed
+     visibly less sky than the same number on a wide desktop canvas. Keying it
+     to the shorter axis makes the reading mean "at least this much, both
+     ways" on any shape of screen.
      The antipode goes to infinity rather than to a finite radius, so whatever
      is behind the observer opens out and fills the frame however wide the lens
      is opened — which is why there is never a disc of sky in a black rectangle
@@ -69,8 +79,13 @@ vec4 horizonClipPosition(vec4 mvPosition) {
   float maxR = 2.0 * tan(max(halfFov, 1e-4) * 0.5);
   vec2 dir = rxy > 1e-8 ? p.xy / rxy : vec2(0.0);
   vec2 film = dir * rEq;
-  float x = film.x / maxR / max(uHorizonAspect, 1e-4);
-  float y = film.y / maxR;
+  float aspect = max(uHorizonAspect, 1e-4);
+  /* Whichever axis is shorter gets divisor 1 — that is the one the field is
+     quoted against; the longer axis is stretched by the ratio and shows more. */
+  float sx = max(aspect, 1.0);
+  float sy = max(1.0 / aspect, 1.0);
+  float x = film.x / (maxR * sx);
+  float y = film.y / (maxR * sy);
   float zEye = -length(p);
   vec4 depth = projectionMatrix * vec4(0.0, 0.0, zEye, 1.0);
   float ndcZ = depth.w != 0.0 ? depth.z / depth.w : 0.0;
@@ -208,9 +223,13 @@ export function projectHorizonRaw(
   const dirX = rxy > 1e-8 ? scratch.x / rxy : 0;
   const dirY = rxy > 1e-8 ? scratch.y / rxy : 0;
   const aspect = width / Math.max(height, 1);
+  /* Must match `CLIP_GLSL` above exactly, or every label and every hit test
+     drifts away from the star it belongs to. */
+  const sx = Math.max(aspect, 1);
+  const sy = Math.max(1 / aspect, 1);
   const rSt = 2 * Math.tan(theta / 2);
-  const nx = (dirX * rSt) / maxR / aspect;
-  const ny = (dirY * rSt) / maxR;
+  const nx = (dirX * rSt) / (maxR * sx);
+  const ny = (dirY * rSt) / (maxR * sy);
   return { x: (nx * 0.5 + 0.5) * width, y: (-ny * 0.5 + 0.5) * height };
 }
 
@@ -244,7 +263,9 @@ export function projectHorizon(
 export function horizonConeRadiusDeg(fovDeg: number, width: number, height: number): number {
   const aspect = width / Math.max(height, 1);
   const maxR = 2 * Math.tan(Math.max((fovDeg * Math.PI) / 360, 1e-4) / 2);
-  const corner = maxR * Math.hypot(aspect, 1);
+  /* The film rectangle's own half-extents — same `sx`/`sy` the projection
+     uses, so the cone still just reaches the corner on either orientation. */
+  const corner = maxR * Math.hypot(Math.max(aspect, 1), Math.max(1 / aspect, 1));
   return Math.min(175, (2 * Math.atan(corner / 2) * 180) / Math.PI);
 }
 

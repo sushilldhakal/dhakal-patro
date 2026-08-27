@@ -276,8 +276,16 @@ export function Header() {
                 <div className="flex-1 overflow-y-auto">
                   <MobileNavMenu onNavigate={() => setMobileOpen(false)} />
                 </div>
-                <DrawerFooter className="border-t border-border">
+                <DrawerFooter className="border-t border-border gap-3">
                   <MenuPreferences />
+                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <Link to="/privacy" onClick={() => setMobileOpen(false)}>
+                      {t("footer.privacy")}
+                    </Link>
+                    <Link to="/terms" onClick={() => setMobileOpen(false)}>
+                      {t("footer.terms")}
+                    </Link>
+                  </div>
                 </DrawerFooter>
               </DrawerContent>
             </Drawer>

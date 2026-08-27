@@ -24,6 +24,20 @@ export const OUTSIDE_ZOOM_MAX = 120;
 const DEG = Math.PI / 180;
 
 /**
+ * The क्षितिज zoom range, and so the two ends of its field of view: pinched
+ * fully in it is {@link HORIZON_ZOOM_MIN} → 1°, opened fully out it is
+ * {@link HORIZON_ZOOM_MAX} → {@link horizonFovMax}'s 235°.
+ *
+ * Exported because the pointer handlers have to clamp to exactly these — a
+ * clamp of its own that stops a little short (or a little wide) of them is how
+ * the widest and tightest zooms quietly become unreachable.
+ */
+export const HORIZON_ZOOM_MIN = 0.35;
+export const HORIZON_ZOOM_MAX = 120;
+/** Where the क्षितिज lens sits at 90° — the view's own opening framing. */
+export const HORIZON_ZOOM_HOME = 26;
+
+/**
  * The vertical field of view a zoom value lands on, in degrees.
  *
  * The camera branches are the only things that need this to *place* the lens —
@@ -50,9 +64,9 @@ export function fovForZoom(mode: SkyMode, distance: number): number {
   /* Horizon zoom is the *vertical* field of the equidistant fisheye: 1° at the
      tight end, and at the wide end whatever fills the frame to its corners. */
   if (mode === "horizon") {
-    const home = 26;
-    const minD = 0.35;
-    const maxD = 120;
+    const home = HORIZON_ZOOM_HOME;
+    const minD = HORIZON_ZOOM_MIN;
+    const maxD = HORIZON_ZOOM_MAX;
     if (distance <= home) {
       const t = Math.min(1, Math.max(0, (distance - minD) / (home - minD)));
       /* The tight end is 1° — two full Moons across the frame. The cage
@@ -82,8 +96,8 @@ export function fovForZoom(mode: SkyMode, distance: number): number {
  * show anything at all.
  */
 export function distanceForHorizonFov(fovDeg: number): number {
-  const home = 26;
-  const minD = 0.35;
+  const home = HORIZON_ZOOM_HOME;
+  const minD = HORIZON_ZOOM_MIN;
   const t = (Math.min(90, Math.max(1, fovDeg)) - 1) / (90 - 1);
   return minD + t * (home - minD);
 }

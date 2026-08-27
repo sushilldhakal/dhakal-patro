@@ -220,6 +220,18 @@ export const strings = {
   "seo.routes.reset_password.title": { ne: "पासवर्ड रिसेट | वैदिक पात्रो", en: "Reset Password | Vedic Patro" },
   "seo.routes.reset_password.description": { ne: "नयाँ पासवर्ड सेट गर्नुहोस्।", en: "Set a new password." },
   "seo.routes.reset_password.keywords": { ne: "", en: "" },
+  "seo.routes.privacy.title": { ne: "गोपनीयता नीति | वैदिक पात्रो", en: "Privacy Policy | Vedic Patro" },
+  "seo.routes.privacy.description": {
+    ne: "वैदिक पात्रो वेब र मोबाइल एपले कुन डेटा सङ्कलन गर्छ, कसरी प्रयोग गर्छ, र खाता कसरी मेटाउने।",
+    en: "What Vedic Patro collects on web and mobile, how we use it, and how to delete your account.",
+  },
+  "seo.routes.privacy.keywords": { ne: "गोपनीयता, privacy policy", en: "privacy policy, Vedic Patro" },
+  "seo.routes.terms.title": { ne: "प्रयोगका सर्त | वैदिक पात्रो", en: "Terms of Use | Vedic Patro" },
+  "seo.routes.terms.description": {
+    ne: "वैदिक पात्रो वेबसाइट र मोबाइल एपका प्रयोगका सर्त।",
+    en: "Terms of use for the Vedic Patro website and mobile apps.",
+  },
+  "seo.routes.terms.keywords": { ne: "सर्त, terms of use", en: "terms of use, Vedic Patro" },
   "seo.routes.graha_sthiti.title": { ne: "ग्रह स्थिति | वैदिक पात्रो", en: "Planetary Positions | Vedic Patro" },
   "seo.routes.graha_sthiti.description": {
     ne: "नौ ग्रह र लग्नको दैनिक स्पष्ट स्थिति — राशि, नक्षत्र, पद, स्वामी/उप स्वामी, गति, विषुवांश र क्रान्ति।",
@@ -1376,6 +1388,12 @@ export const strings = {
   },
   "auth.facebook_checking": { ne: "फेसबुक जाँच गर्दै…", en: "Checking Facebook…" },
   "auth.continue_with_facebook": { ne: "फेसबुकबाट जारी राख्नुहोस्", en: "Continue with Facebook" },
+  "auth.legal_agree": {
+    ne: "जारी राखेर तपाईं गोपनीयता नीति र प्रयोगका सर्त मान्नुहुन्छ।",
+    en: "By continuing you agree to the Privacy Policy and Terms of Use.",
+  },
+  "auth.privacy": { ne: "गोपनीयता नीति", en: "Privacy Policy" },
+  "auth.terms": { ne: "प्रयोगका सर्त", en: "Terms of Use" },
   "auth.email_placeholder": { ne: "you@example.com", en: "you@example.com" },
   "auth.reset_invalid_link": {
     ne: "यो रिसेट लिङ्क अमान्य छ वा म्याद सकिएको छ।",
@@ -2756,6 +2774,20 @@ export const strings = {
   "account_page.email_unverified": { ne: "इमेल प्रमाणित भएको छैन", en: "Email not verified" },
   "account_page.my_profiles": { ne: "मेरा प्रोफाइलहरू", en: "My profiles" },
   "account_page.sign_out": { ne: "लग-आउट", en: "Sign out" },
+  "account_page.delete_account": { ne: "खाता मेटाउनुहोस्", en: "Delete account" },
+  "account_page.delete_account_confirm": {
+    ne: "खाता र सबै कुण्डली प्रोफाइल स्थायी रूपमा मेटिनेछन्। यो फिर्ता हुँदैन।",
+    en: "Your account and all kundali profiles will be permanently deleted. This cannot be undone.",
+  },
+  "account_page.delete_account_error": { ne: "खाता मेटाउन सकिएन।", en: "Could not delete the account." },
+
+  /* ── legal / footer ──────────────────────────────────────────────────── */
+  "legal.privacy_title": { ne: "गोपनीयता नीति", en: "Privacy Policy" },
+  "legal.terms_title": { ne: "प्रयोगका सर्त", en: "Terms of Use" },
+  "legal.updated": { ne: "अद्यावधिक: {{date}}", en: "Updated: {{date}}" },
+  "footer.privacy": { ne: "गोपनीयता", en: "Privacy" },
+  "footer.terms": { ne: "सर्त", en: "Terms" },
+  "footer.support": { ne: "सहायता", en: "Support" },
 
   /* ── ritu ────────────────────────────────────────────────────────────── */
   "ritu.title": { ne: "ऋतु", en: "Season" },

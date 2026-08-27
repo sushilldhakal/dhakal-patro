@@ -121,7 +121,14 @@ import {
   projectHorizon,
 } from "@/lib/sky3d/horizon-projection";
 import { buildGridLabels } from "@/lib/sky3d/grid-labels";
-import { makeMoonMaterial, type MoonMaterial } from "@/lib/sky3d/moon-material";
+import {
+  makeMoonMaterial,
+  MOON_EARTHSHINE,
+  MOON_PHASE_FOV_TIGHT,
+  MOON_PHASE_FOV_WIDE,
+  MOON_UNLIT_FAR,
+  type MoonMaterial,
+} from "@/lib/sky3d/moon-material";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import { applyNadirStereographicUVs, prepareKathmanduGround } from "@/lib/sky3d/terrain";
 import {
@@ -249,7 +256,14 @@ const INK_DIM = "#a7c4c3";
 const RETRO = "#ef4444";
 const ZODIAC = "#d8c84a";
 const NAKSHATRA = "#35d05a";
-const GRID = "#6fdf4a";
+/**
+ * The क्षितिज alt/az cage. Brown, not the green it used to be: this grid is
+ * drawn over the काठमाडौँ ground panorama and a warm horizon glow, and a
+ * saturated green cage on top of that read as a separate overlay laid across
+ * the photograph rather than part of the same scene. Only क्षितिज uses this —
+ * the globe has {@link GLOBE_GRID}, अन्तरिक्ष the ecliptic wheel's own colour.
+ */
+const GRID = "#b5824a";
 /**
  * The globe's own graticule. Lighter than {@link GRID}, which was picked to sit
  * on a black sky: the same blue over ocean and forest is a line you have to go
@@ -468,11 +482,6 @@ export type SceneToggles = {
    */
   lockCenter: boolean;
   /**
-   * The ध्रुव तारा and the circle the pole walks between them — the other half
-   * of precession, the one the ayanamsa does not show.
-   */
-  poleStars: boolean;
-  /**
    * Thirty-two individually named bright stars — अगस्त्य, अभिजित्, सप्तर्षि and
    * the rest — the ones classical texts single out by name rather than only
    * as नक्षत्र members. See [[vedic-stars]].
@@ -499,27 +508,16 @@ export type SceneToggles = {
    * divisions were named after, and wanting one without the other is the
    * ordinary case — a clean zodiac with no star clutter, or the sky's own
    * figures with no measuring band across them.
+   *
+   * Carries the राशि figures too — मेष the ram, वृष the bull and the rest,
+   * plus सप्तर्षि, शिंशुमारः, सारथिः, त्रिशङ्कुः and the smaller mythological
+   * groups (Stellarium's own "indian" sky culture; see [[sky-culture]]).
+   * Those had their own राशि आकृति switch until it turned out nobody wants
+   * half the figures: they are all the same act — joining stars into a shape
+   * — drawn in the same view, and two chips for it only asked the reader to
+   * make a distinction the sky does not.
    */
   constellations: boolean;
-  /**
-   * The twelve राशि drawn as their own connect-the-dot figures — मेष the ram,
-   * वृष the bull, and the rest — plus सप्तर्षि, शिंशुमारः, सारथिः, त्रिशङ्कुः
-   * and the smaller mythological groups. Stellarium's own "indian" sky
-   * culture; see [[sky-culture]]. Dome and globe only, the same as
-   * {@link constellations} — क्षितिज / पृथ्वी गोला is where a sky reads as a
-   * sky rather than a measuring wheel.
-   */
-  skyCulture: boolean;
-  /**
-   * A small curated set of Stellarium's own deep-sky object photos — see
-   * [[nebulae]] — placed at their true sky position and true angular size.
-   * This, not a higher-resolution Milky Way panorama, is what actually gives
-   * a zoomed-in view real detail: each one is a small real photograph, only
-   * reading as one once the lens has pulled in enough to make its true
-   * (usually under a degree) size worth anything on screen. Dome and globe
-   * only, same as {@link skyCulture}.
-   */
-  nebulae: boolean;
   /**
    * Horizon view: the ground underfoot and the horizon ring drawn on it.
    *
@@ -947,7 +945,12 @@ function makeMilkyWayGeometry(radius: number, widthSeg = 96, heightSeg = 48) {
  * time, since every vertex already carries its own RA), then tip that pole
  * down to its real altitude for the observer's latitude.
  */
-function equatorialToHorizonMatrix(lstDegrees: number, latDeg: number): THREE.Matrix4 {
+function equatorialToHorizonMatrix(
+  lstDegrees: number,
+  latDeg: number,
+  precessionDeg = 0,
+  epsDateDeg = obliquity(0),
+): THREE.Matrix4 {
   const lst = lstDegrees * DEG;
   const lat = latDeg * DEG;
   const sinLst = Math.sin(lst);
@@ -962,6 +965,31 @@ function equatorialToHorizonMatrix(lstDegrees: number, latDeg: number): THREE.Ma
     cosLst * sinLat,  sinLst * sinLat, -cosLat, 0,
     0,                0,               0,       1,
   );
+  /**
+   * J2000 → equatorial of date, applied *before* the hour angle above.
+   *
+   * The survey's tiles and the panorama are J2000; every star drawn over them
+   * is carried to the date (`s.lon + precessionSinceJ2000(dtDays)`, then
+   * `eclipticToAltAz` with the obliquity of date). Feeding a date-based `lst`
+   * to un-precessed J2000 coordinates silently treats them as equatorial *of
+   * date*, so the whole imagery layer sat a general precession behind the
+   * points drawn on it — about 0.36° in 2026. Nothing at a wide field, a third
+   * of the frame at the 1° end, which is exactly where a नक्षत्र's stars stop
+   * landing on the ones in the photograph.
+   *
+   * Precession is a rotation in *ecliptic* longitude, so it is composed the
+   * way the stars' own path composes it: out of the equator into the ecliptic
+   * of J2000, round the ecliptic pole by the accumulated angle, then back out
+   * to the equator using the obliquity of date. `Rx(-eps)` is equatorial →
+   * ecliptic in this codebase's own convention — read straight off
+   * `equatorialToecliptic` in `horizon.ts`.
+   */
+  if (precessionDeg !== 0) {
+    const toEclipticJ2000 = new THREE.Matrix4().makeRotationX(-obliquity(0) * DEG);
+    const spin = new THREE.Matrix4().makeRotationZ(precessionDeg * DEG);
+    const toEquatorialOfDate = new THREE.Matrix4().makeRotationX(epsDateDeg * DEG);
+    m.multiply(toEquatorialOfDate).multiply(spin).multiply(toEclipticJ2000);
+  }
   return m;
 }
 
@@ -1967,7 +1995,7 @@ export function AakashGocharScene({
 
   /**
    * A small curated set of Stellarium's own deep-sky object photographs —
-   * see [[nebulae]] — each a real astrophoto rather than a synthesised dot,
+   * see {@link module:lib/sky3d/nebulae} — each a real astrophoto rather than a synthesised dot,
    * placed at its true position and true angular size. A `Sprite` always
    * faces the camera, which is exactly right here: these are flat
    * photographs of a small patch of sky, not solid bodies with a far side.
@@ -2212,6 +2240,17 @@ export function AakashGocharScene({
   const globeRootRef = useRef<THREE.Group | null>(null);
   const globeSpinRef = useRef<THREE.Group | null>(null);
   const subsolarRef = useRef<THREE.Mesh | null>(null);
+  /**
+   * The point the *selected* graha stands over, the same mark the Sun gets.
+   *
+   * Without it the globe drew only a ray from the Earth's centre out to the
+   * body, and a line ending at a centre marks nothing on the surface: where it
+   * appears to cross the map is pure parallax, so it slid across the Earth as
+   * the camera turned and looked like a broken pointer. One dot planted on the
+   * surface along the same direction is what makes it a place. One ref, not
+   * nine — only one graha is selected at a time.
+   */
+  const subGrahaRef = useRef<THREE.Mesh | null>(null);
   const spaceOnlyRef = useRef<THREE.Group | null>(null);
   const sharaFootRef = useRef<THREE.Mesh | null>(null);
   const rashiHiRef = useRef<THREE.Mesh | null>(null);
@@ -3212,7 +3251,9 @@ export function AakashGocharScene({
        either is a bigger job than the one this fixes. */
     if (starsRef.current) {
       if (horizon) {
-        starsRef.current.quaternion.setFromRotationMatrix(equatorialToHorizonMatrix(lst, observer.lat));
+        starsRef.current.quaternion.setFromRotationMatrix(
+          equatorialToHorizonMatrix(lst, observer.lat, precessionSinceJ2000(dtDays), eps),
+        );
       } else {
         starsRef.current.quaternion.identity();
       }
@@ -3263,7 +3304,7 @@ export function AakashGocharScene({
     if (hipsGroupRef.current) {
       if (horizon) {
         hipsGroupRef.current.quaternion.setFromRotationMatrix(
-          equatorialToHorizonMatrix(lst, observer.lat),
+          equatorialToHorizonMatrix(lst, observer.lat, precessionSinceJ2000(dtDays), eps),
         );
       } else {
         hipsGroupRef.current.quaternion.identity();
@@ -3734,6 +3775,9 @@ export function AakashGocharScene({
     /* ── bodies ─────────────────────────────────────────────────────── */
     let sunAltitude = -90;
     const horizonFovNow = horizon ? fovForZoom("horizon", view.current.distance) : 0;
+    /* Off unless this frame's loop plants it — one selected graha at most, and
+       none at all outside पृथ्वी गोला. */
+    if (subGrahaRef.current) subGrahaRef.current.visible = false;
     for (const key of GEO_BODY_ORDER) {
       const body = sky[key];
       const spaceR = shellRadius(key, body.distanceAu) * SPACE_SHELL_SCALE;
@@ -3774,6 +3818,22 @@ export function AakashGocharScene({
            left the plane empty — the grid is the plane, the shells are the
            grahas' paths across it. */
         shell.visible = space;
+      }
+
+      /* The selected graha's own sub-point, planted on the globe exactly the
+         way the subsolar dot is: normalise the body's direction and drop it on
+         the surface. Same frame as the Sun's — celestial, not geographic, so
+         the Earth's texture turns underneath it, which is what a sub-point
+         does. */
+      if (globe && key === selectedKey && key !== "sun" && subGrahaRef.current) {
+        const subLen = Math.hypot(at[0], at[1], at[2]) || 1;
+        subGrahaRef.current.position.set(
+          (at[0] / subLen) * GLOBE_R * 1.01,
+          (at[1] / subLen) * GLOBE_R * 1.01,
+          (at[2] / subLen) * GLOBE_R * 1.01,
+        );
+        (subGrahaRef.current.material as THREE.MeshBasicMaterial).color.set(GRAHA_COLOR[key]);
+        subGrahaRef.current.visible = true;
       }
 
       const ray = rays[key];
@@ -4008,7 +4068,7 @@ export function AakashGocharScene({
       /* ── the rest of the sky culture: राशि figures, सप्तर्षि, and the like
          Dome and globe only — no space-view segment for these to sit flat
          in, unlike the नक्षत्र figures above. */
-      if (zodiac && toggles.skyCulture) {
+      if (zodiac && toggles.constellations) {
         const precession = precessionSinceJ2000(dtDays);
         const dpr = state.gl.getPixelRatio();
         for (const { indices, object } of cultureField.groups) {
@@ -4095,7 +4155,7 @@ export function AakashGocharScene({
          is what stands still, so it is the pole *circle* that wheels past it —
          the equivalent picture to the axis sweeping its cone, and the one that
          shows you which star is on duty. */
-      if (toggles.poleStars && zodiac) {
+      if (zodiac && (toggles.vedicStars || toggles.constellations)) {
         const precession = precessionSinceJ2000(dtDays);
         const dpr = state.gl.getPixelRatio();
         for (const object of [poleField.points, poleField.crown]) {
@@ -4138,7 +4198,7 @@ export function AakashGocharScene({
       }
     }
 
-    /* ── the curated deep-sky photographs — see [[nebulae]]. Scaled off
+    /* ── the curated deep-sky photographs, क्षितिज-only and always on. Scaled off
        the actual radius `place` put them at (`Math.hypot` of the result),
        not a mode-specific constant, since क्षितिज and पृथ्वी गोला place
        the sky at two very different radii and a fixed world size would
@@ -4170,7 +4230,12 @@ export function AakashGocharScene({
        ticked, which for a still sky is never again, and the same held for
        the name label below: it never appeared unless the belt happened to
        rebuild in the same frame the reveal crossed its own threshold. */
-    if (zodiac && toggles.nebulae) {
+    /* Always on, and क्षितिज's alone. There is no chip for this any more:
+       on the dome the photographs *are* the detail a zoomed-in sky has, so
+       switching them off only ever emptied it, and on the globe they sat
+       behind a wheel you are looking at from outside — never the thing being
+       looked at, and never worth the fill. */
+    if (horizon) {
       const precession = precessionSinceJ2000(dtDays);
       const nebulaFov = fovForZoom(mode, view.current.distance);
       const nebulaAspect =
@@ -4579,7 +4644,7 @@ export function AakashGocharScene({
 
     /* राशि / mythological figure labels — one per figure, at the mean of its
        members, the same way नक्षत्र group names are placed above. */
-    if (collect && zodiac && toggles.skyCulture && !close) {
+    if (collect && zodiac && toggles.constellations && !close) {
       const precession = precessionSinceJ2000(dtDays);
       for (const { figure, starIndices } of cultureField.figures) {
         let x = 0;
@@ -4615,7 +4680,7 @@ export function AakashGocharScene({
     /* Individually named member stars — अग्नि, ब्रह्महृदयम् and the rest,
        the ones classical texts singled out inside these figures. Shown at
        any zoom, the same as a नक्षत्र's own योगतारा. */
-    if (collect && zodiac && toggles.skyCulture) {
+    if (collect && zodiac && toggles.constellations) {
       const precession = precessionSinceJ2000(dtDays);
       for (let i = 0; i < cultureField.stars.length; i += 1) {
         const s = cultureField.stars[i];
@@ -4659,7 +4724,7 @@ export function AakashGocharScene({
 
     /* Pole-star names, with the year each takes its turn. The reigning one is
        flagged so the overlay can crown it. */
-    if (collect && zodiac && toggles.poleStars) {
+    if (collect && zodiac && toggles.vedicStars) {
       const precession = precessionSinceJ2000(dtDays);
       const simYear = 2000 + dtDays / 365.25;
       const reigning = reigningPoleStar(poleField.stars, dtDays, eps);
@@ -4776,29 +4841,50 @@ export function AakashGocharScene({
             : toggles.nakshatraBelt;
       object.visible = zodiac && on;
     }
-    // The star groups belong to the sky, so they live wherever the belt does.
+    /* The star groups belong to the sky, so they live wherever the belt does.
+       Split along the same seam as ध्रुव तारा below: the नक्षत्र member stars
+       are stars and answer to वैदिक तारा, the lines joining them into a figure
+       answer to तारापुञ्ज. Both used to sit under तारापुञ्ज, which meant
+       turning the figures off also deleted the stars they were drawn between —
+       and left तारापुञ्ज as a switch that removed half the sky. */
     for (const { object } of starField.groups) {
-      object.visible = (zodiac || space) && toggles.constellations;
+      object.visible = (zodiac || space) && toggles.vedicStars;
     }
     starField.lines.visible = (zodiac || space) && toggles.constellations;
+    /* Figure lines, so तारापुञ्ज owns them — but their geometry is only
+       written while वैदिक तारा is on (the block that computes it needs the
+       star positions), and its draw range collapses to zero otherwise. Lines
+       between stars that are not on screen would have nothing to join. */
+    vedicConstLines.visible = zodiac && toggles.constellations;
     for (const { object } of cultureField.groups) {
-      object.visible = zodiac && toggles.skyCulture;
+      object.visible = zodiac && toggles.constellations;
     }
-    cultureField.lines.visible = zodiac && toggles.skyCulture;
+    cultureField.lines.visible = zodiac && toggles.constellations;
+    /* The naked-eye background field — every star that is not a नक्षत्र member,
+       a वैदिक तारा or a pole star. वैदिक तारा is the one switch for stars now,
+       so this goes with them rather than being the one star layer with no way
+       to turn it off. */
     for (const { object } of backgroundField.groups) {
-      object.visible = zodiac || space;
+      object.visible = (zodiac || space) && toggles.vedicStars;
     }
     /* Only ever forces them *off* — which of them are on is the reveal's
        own decision, per sprite, in the block above. Setting `visible` true
        here as well would put every photograph back on screen at once. */
-    if (!zodiac || !toggles.nebulae) {
+    if (!horizon) {
       for (const { sprite } of nebulaField) sprite.visible = false;
     }
     // A skyline glow means nothing without a skyline — only क्षितिज has one.
     horizonGlow.visible = horizon;
-    poleField.points.visible = zodiac && toggles.poleStars;
-    poleField.crown.visible = zodiac && toggles.poleStars;
-    poleField.trackLine.visible = zodiac && toggles.poleStars;
+    /* ध्रुव तारा has no switch of its own any more, and the two things it used
+       to draw never belonged under one anyway. The dots — and the gold crown on
+       whichever one is currently on duty — are *stars*, so they go off only
+       when वैदिक तारा turns every star off. The circle joining them is the
+       precession track: a figure drawn between stars, exactly what तारापुञ्ज
+       governs everywhere else on this page. Together they meant that hiding a
+       line you did not want also took the pole star off the sky. */
+    poleField.points.visible = zodiac && toggles.vedicStars;
+    poleField.crown.visible = zodiac && toggles.vedicStars;
+    poleField.trackLine.visible = zodiac && toggles.constellations;
     vedicField.points.visible = zodiac && toggles.vedicStars && (vedicStars?.length ?? 0) > 0;
     if (!vedicField.points.visible) vedicField.crown.visible = false;
     // The tilt is only drawn where the Earth is: the globe view.
@@ -4926,6 +5012,21 @@ export function AakashGocharScene({
          a fixed-radius projection keeps true. */
       if (sunGroup) {
         moonPhaseMat.uniforms.sunDirection.value.copy(sunGroup.position).normalize();
+        /* How dark the unlit face is allowed to get, this frame.
+         *
+         * The phase is the point of this shader, but only while the Moon is
+         * big enough to read one off. On पृथ्वी गोला it never is — the Moon
+         * is a dot on a ring seen from outside — and in a wide क्षितिज it is
+         * not either, so the true 10% earthshine was rendering a black dot on
+         * a black sky and the Moon was simply missing for half of every month.
+         * Ramped instead: a real terminator once the lens is tight enough to
+         * show one, a plainly visible disc whenever it is not. See
+         * {@link MOON_UNLIT_FAR}. */
+        moonPhaseMat.uniforms.earthshine.value = horizon
+          ? MOON_EARTHSHINE +
+            (MOON_UNLIT_FAR - MOON_EARTHSHINE) *
+              smoothstep(MOON_PHASE_FOV_TIGHT, MOON_PHASE_FOV_WIDE, horizonFovNow)
+          : MOON_UNLIT_FAR;
       }
     }
     if (ambientRef.current) ambientRef.current.intensity = space ? 0.1 : 0.28;
@@ -5418,6 +5519,11 @@ export function AakashGocharScene({
         <mesh ref={subsolarRef}>
           <sphereGeometry args={[GLOBE_R * 0.014, 12, 12]} />
           <meshBasicMaterial color="#ffd166" />
+        </mesh>
+        {/* The same mark for whichever graha is selected — see {@link subGrahaRef}. */}
+        <mesh ref={subGrahaRef} visible={false}>
+          <sphereGeometry args={[GLOBE_R * 0.014, 12, 12]} />
+          <meshBasicMaterial color="#ffffff" />
         </mesh>
 
         {/* Earth's axis, drawn out past the poles. */}

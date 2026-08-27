@@ -71,6 +71,8 @@ export const ROUTES: RouteMeta[] = [
   { id: "account", path: "/account", seoKey: "seo.routes.account", noindex: true, prerender: true },
   { id: "verify-email", path: "/verify-email", seoKey: "seo.routes.verify_email", noindex: true, prerender: true },
   { id: "reset-password", path: "/reset-password", seoKey: "seo.routes.reset_password", noindex: true, prerender: true },
+  { id: "privacy", path: "/privacy", seoKey: "seo.routes.privacy", sitemap: { changefreq: "monthly", priority: "0.3" }, prerender: true },
+  { id: "terms", path: "/terms", seoKey: "seo.routes.terms", sitemap: { changefreq: "monthly", priority: "0.3" }, prerender: true },
 ];
 
 export const ROUTE_SEO_KEYS: Record<string, string> = Object.fromEntries(

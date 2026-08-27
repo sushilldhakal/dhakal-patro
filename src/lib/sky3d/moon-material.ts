@@ -45,6 +45,27 @@ import * as THREE from "three";
  */
 export const MOON_EARTHSHINE = 0.1;
 
+/**
+ * The floor the unlit face is lifted to once the Moon is too small to read a
+ * phase off anyway.
+ *
+ * True earthshine is right when the Moon is a disc you can actually study. It
+ * is wrong when the Moon is a dot: at पृथ्वी गोला's scale, and at any wide
+ * क्षितिज field, a 10% face against a black sky is not a thin crescent — it is
+ * nothing at all, and around औंसी the Moon simply disappeared from the sky it
+ * is supposed to be gochar-ing across.
+ *
+ * At this floor the lit and unlit faces still differ plainly (0.55 against a
+ * clamped 1.0), so the phase is not thrown away — the whole disc is just
+ * always *there*. `earthshine` is a uniform, so the scene ramps between the
+ * two per frame off the field of view; nothing in the shader changes.
+ */
+export const MOON_UNLIT_FAR = 0.55;
+
+/** क्षितिज fields between these ramp the floor: true phase tight, visible disc wide. */
+export const MOON_PHASE_FOV_TIGHT = 15;
+export const MOON_PHASE_FOV_WIDE = 60;
+
 export type MoonMaterial = THREE.ShaderMaterial & {
   uniforms: {
     map: { value: THREE.Texture };

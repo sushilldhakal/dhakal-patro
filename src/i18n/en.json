@@ -104,6 +104,16 @@
         "description": "Set a new password.",
         "keywords": ""
       },
+      "privacy": {
+        "title": "Privacy Policy | Vedic Patro",
+        "description": "What Vedic Patro collects on web and mobile, how we use it, and how to delete your account.",
+        "keywords": "privacy policy, Vedic Patro"
+      },
+      "terms": {
+        "title": "Terms of Use | Vedic Patro",
+        "description": "Terms of use for the Vedic Patro website and mobile apps.",
+        "keywords": "terms of use, Vedic Patro"
+      },
       "graha_sthiti": {
         "title": "Planetary Positions | Vedic Patro",
         "description": "Daily sphuta of the nine grahas and the ascendant — sign, nakshatra, pada, lord/sub-lord, speed, right ascension and declination.",
@@ -913,6 +923,9 @@
     "facebook_not_authorized": "Allow email access in Facebook to sign in",
     "facebook_checking": "Checking Facebook…",
     "continue_with_facebook": "Continue with Facebook",
+    "legal_agree": "By continuing you agree to the Privacy Policy and Terms of Use.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
     "email_placeholder": "you@example.com",
     "reset_invalid_link": "This reset link is invalid or has expired.",
     "reset_failed": "Reset failed.",
@@ -1533,7 +1546,20 @@
     "verified": "Verified",
     "email_unverified": "Email not verified",
     "my_profiles": "My profiles",
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "delete_account": "Delete account",
+    "delete_account_confirm": "Your account and all kundali profiles will be permanently deleted. This cannot be undone.",
+    "delete_account_error": "Could not delete the account."
+  },
+  "legal": {
+    "privacy_title": "Privacy Policy",
+    "terms_title": "Terms of Use",
+    "updated": "Updated: {{date}}"
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "support": "Support"
   },
   "ritu": {
     "title": "Season",

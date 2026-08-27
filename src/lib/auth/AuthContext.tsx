@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  apiDeleteAccount,
   apiFacebook,
   apiGoogle,
   apiLogin,
@@ -35,6 +36,7 @@ interface AuthContextValue {
   loginWithGoogle: (idToken: string) => Promise<void>;
   loginWithFacebook: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -145,6 +147,17 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
     await Promise.all([apiLogout(), facebookLogout()]);
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    authEpoch.current += 1;
+    skipFacebookAutoLogin();
+    try {
+      await apiDeleteAccount();
+    } finally {
+      setUser(null);
+      await facebookLogout();
+    }
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -155,9 +168,10 @@ export function AuthProvider({ children, ssr = false }: { children: ReactNode; s
       loginWithGoogle,
       loginWithFacebook,
       logout,
+      deleteAccount,
       refreshUser,
     }),
-    [user, loading, login, signup, loginWithGoogle, loginWithFacebook, logout, refreshUser]
+    [user, loading, login, signup, loginWithGoogle, loginWithFacebook, logout, deleteAccount, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

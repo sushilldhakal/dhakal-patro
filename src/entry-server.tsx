@@ -27,6 +27,8 @@ const LAZY_LOADERS = [
   () => import("./pages/Account"),
   () => import("./pages/VerifyEmail"),
   () => import("./pages/ResetPassword"),
+  () => import("./pages/Legal"),
+  () => import("./pages/Legal"),
 ] as const;
 
 const LAZY_NAMES = [
@@ -47,6 +49,8 @@ const LAZY_NAMES = [
   "Account",
   "VerifyEmail",
   "ResetPassword",
+  "Privacy",
+  "Terms",
 ] as const;
 
 export async function buildHeadHtmlForPath(pathname: string): Promise<string> {
