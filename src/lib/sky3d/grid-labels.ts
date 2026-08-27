@@ -230,6 +230,9 @@ export type GridLabelParams = {
   radius: number;
   /** Finest spacing the cage is currently drawing, arcminutes. */
   gridStep: number;
+  /** The verticals' own spacing — coarser than `gridStep` near the poles,
+   *  where meridians converge. See `verticalStepForFov`. */
+  azGridStep: number;
   scratch: THREE.Vector3;
 };
 
@@ -241,11 +244,16 @@ export function buildGridLabels({
   height,
   radius,
   gridStep,
+  azGridStep,
   scratch,
 }: GridLabelParams): GridLabel[] {
-  if (gridStep <= 0 || width < 80 || height < 80) return [];
+  if (gridStep <= 0 || azGridStep <= 0 || width < 80 || height < 80) return [];
 
+  /* Two rulers, two spacings. Numbering azimuths at the almucantars' pitch
+     put bearings on meridians that are not drawn near the pole, where the
+     verticals are deliberately far coarser than the circles. */
   const step = labelStepFor(fovDeg, height, gridStep);
+  const azStep = labelStepFor(fovDeg, height, azGridStep);
   const frame: Frame = {
     xL: INSET,
     xR: width - INSET,
@@ -304,8 +312,8 @@ export function buildGridLabels({
   /* Verticals — the same, preferring the top and bottom. */
   const altSpanMin = (altHi - altLo) * 60;
   const altLoMin = altLo * 60;
-  const azFrom = Math.ceil((azCentreMin - azSpanMin / 2) / step) * step;
-  for (let azMin = azFrom; azMin <= azCentreMin + azSpanMin / 2; azMin += step) {
+  const azFrom = Math.ceil((azCentreMin - azSpanMin / 2) / azStep) * azStep;
+  for (let azMin = azFrom; azMin <= azCentreMin + azSpanMin / 2; azMin += azStep) {
     for (let i = 0; i <= SAMPLES; i += 1) {
       line[i] = project(altLoMin + (i / SAMPLES) * altSpanMin, azMin);
     }
@@ -330,7 +338,7 @@ export function buildGridLabels({
      for a bearing. The four cardinals already carry N/E/S/W, so their own
      degrees are left out rather than stacked under the letter. Ranked below
      the borders, so where the two meet the border keeps its number. */
-  for (let azMin = azFrom; azMin <= azCentreMin + azSpanMin / 2; azMin += step) {
+  for (let azMin = azFrom; azMin <= azCentreMin + azSpanMin / 2; azMin += azStep) {
     const value = ((azMin % 21600) + 21600) % 21600;
     if (value % 5400 === 0) continue;
     const hit = project(0, azMin);

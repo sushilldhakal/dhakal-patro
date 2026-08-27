@@ -71,10 +71,12 @@ import {
   SOLAR_STATIONS,
   type GeoPoint,
   DEGREE_TICKS,
-  buildAzimuthGridPairs,
+  buildAlmucantarPairs,
+  buildVerticalPairs,
   buildLocalGridPairs,
   CARDINAL_VERTICALS,
   gridStepForFov,
+  verticalStepForFov,
   POLE_MARKS,
   GRID_TIERS,
   GRID_OPACITY,
@@ -217,6 +219,38 @@ const DOME = 100;
 const VEDIC_STAR_CAPACITY = 64;
 
 /** Pixel size from visual magnitude — Sirius (−1.5) reads as a disc, Alcor (4) as a point. */
+/**
+ * The angular radius a star's glare covers, degrees, by magnitude.
+ *
+ * Not the rendered point — that is a fixed handful of pixels — but the
+ * saturated disc the DSS2 plate has in place of a bright star, which is what
+ * a name laid over it disappears into. Capella at magnitude 0.1 burns about a
+ * quarter-degree of plate; by magnitude 6 there is nothing to clear.
+ */
+function starGlowDeg(mag: number): number {
+  return 0.3 * Math.pow(10, -Math.max(mag, -1.5) / 6);
+}
+
+/** Breathing room between the glare and the top of the text, degrees. */
+const GLOW_PAD_DEG = 0.02;
+
+/**
+ * That angular radius in pixels at the current lens, floored and capped.
+ *
+ * Converted per frame rather than baked, because the whole point is that the
+ * gap is angular: the same glare is 6 px across at 90° and 300 px across at
+ * 2°, and only one of those needs the name moved.
+ */
+function labelClearPx(
+  glowDeg: number,
+  fovDeg: number,
+  heightPx: number,
+  floor: number,
+): number {
+  const px = ((glowDeg + GLOW_PAD_DEG) / Math.max(fovDeg, 1e-3)) * heightPx;
+  return Math.max(floor, Math.min(heightPx * 0.22, px));
+}
+
 function vedicStarSize(mag: number): number {
   return Math.max(7, Math.min(20, 13.5 - mag * 1.7));
 }
@@ -418,6 +452,17 @@ export type ScreenLabel = {
   year?: number;
   /** The obliquity marker: the angle it is calling out, degrees. */
   deg?: number;
+  /**
+   * How far under the point the name has to sit to clear the object, px.
+   *
+   * A bright star is not the few-pixel dot the renderer draws: on the survey
+   * plates behind it, it is a saturated blob a third of a degree across, and
+   * that blob's *angular* size does not change with the lens. A fixed pixel
+   * offset that looks generous at 90° therefore lands the name inside the
+   * glare at 2°, which is exactly where the names stopped being readable.
+   * See {@link labelClearPx}.
+   */
+  clear?: number;
   /** True when this label is not the live rashi / month / नक्षत्र. */
   dim?: boolean;
   /** Outer planets only: their own tint, since they carry no {@link GrahaKey}
@@ -668,8 +713,7 @@ function dressGrid(object: THREE.LineSegments) {
   return object;
 }
 
-function bakeHorizonGrid(step: number) {
-  const pairs = buildAzimuthGridPairs(step);
+function bakeHorizonGrid(pairs: HorizonPoint[]) {
   const object = dressGrid(makeDynamicSegments(pairs.length, GRID, GRID_OPACITY));
   for (let i = 0; i < pairs.length; i += 1) {
     setPoint(object, i, altAzToVec3(pairs[i].alt, pairs[i].az, GRID_R));
@@ -2706,7 +2750,11 @@ export function AakashGocharScene({
     group.add(frame);
     return {
       group,
-      tiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
+      /* Two families, two caches. They no longer share a spacing — the
+         verticals' is chosen against the pole, see `verticalStepForFov` — so
+         a single per-tier slot could not hold both. */
+      altTiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
+      azTiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
       local,
       localPairs: [] as HorizonPoint[],
       frame,
@@ -4284,6 +4332,19 @@ export function AakashGocharScene({
               textNe: entry.nebula.ne,
               lon,
               lat,
+              /* A नेबुला carries its own angular size — the sprite is drawn
+                 at it — so the name clears the photograph itself rather than
+                 a brightness guess. */
+              ...(horizon
+                ? {
+                    clear: labelClearPx(
+                      ((heightRad / 2) * 180) / Math.PI,
+                      horizonFovNow,
+                      height,
+                      6,
+                    ),
+                  }
+                : {}),
             },
             at,
           );
@@ -4490,6 +4551,14 @@ export function AakashGocharScene({
           height,
           radius: DOME * 0.995,
           gridStep: gridStepForFov(field),
+          /* The bearings have to be numbered at the verticals' own spacing,
+             not the almucantars' — near the pole those are far apart, and
+             labelling at the finer pitch put numbers on meridians that are
+             not drawn. */
+          azGridStep: verticalStepForFov(
+            field,
+            horizonViewWindow(state.camera, field, width, height).centreAlt,
+          ),
           scratch: scratch.current,
         })) {
           collected.push({
@@ -4636,6 +4705,9 @@ export function AakashGocharScene({
             index: i,
             lon,
             lat: s.lat,
+            ...(horizon
+              ? { clear: labelClearPx(starGlowDeg(s.mag), horizonFovNow, height, 8) }
+              : {}),
           },
           at,
         );
@@ -4697,6 +4769,9 @@ export function AakashGocharScene({
             textNe: names.ne,
             lon,
             lat: s.lat,
+            ...(horizon
+              ? { clear: labelClearPx(starGlowDeg(s.mag), horizonFovNow, height, 8) }
+              : {}),
           },
           at,
         );
@@ -4762,6 +4837,9 @@ export function AakashGocharScene({
             index: i,
             lon: s.lon,
             lat: s.lat,
+            ...(horizon
+              ? { clear: labelClearPx(starGlowDeg(s.mag), horizonFovNow, height, 8) }
+              : {}),
           },
           at,
         );
@@ -4902,34 +4980,63 @@ export function AakashGocharScene({
        threshold happened to be satisfied was what made the web read as a
        crosshatch instead of a grid. */
     let activeIndex = -1;
-    if (gridOn) {
+    let azIndex = -1;
+    /* Where the lens is pointing — the verticals' spacing depends on it, so
+       it is needed on every frame the cage is on, not only the fine ones. */
+    const gridView = gridOn
+      ? horizonViewWindow(state.camera, horizonFov, width, height)
+      : null;
+    if (gridOn && gridView) {
       for (let i = 0; i < GRID_TIERS.length; i += 1) {
         if (horizonFov < GRID_TIERS[i].maxFov) activeIndex = i;
       }
+      /* The same ladder, asked with the field widened by 1/cos(alt) — so the
+         verticals thin out as the pole is approached instead of collapsing
+         into a fan. Away from the pole this lands on the same tier as the
+         almucantars and the cage is square again. */
+      const azStep = verticalStepForFov(horizonFov, gridView.centreAlt);
+      for (let i = 0; i < GRID_TIERS.length; i += 1) {
+        if (GRID_TIERS[i].step === azStep) azIndex = i;
+      }
     }
-    let localTier: (typeof GRID_TIERS)[number] | null = null;
+    let localAltTier: (typeof GRID_TIERS)[number] | null = null;
+    let localAzTier: (typeof GRID_TIERS)[number] | null = null;
     for (let i = 0; i < GRID_TIERS.length; i += 1) {
       const tier = GRID_TIERS[i];
-      const wanted = i === activeIndex && !tier.local;
       if (tier.local) {
-        if (i === activeIndex) localTier = tier;
-        continue;
+        if (i === activeIndex) localAltTier = tier;
+        if (i === azIndex) localAzTier = tier;
       }
-      let object = grid.tiers[i];
-      if (wanted && !object) {
-        object = bakeHorizonGrid(tier.step);
-        injectHorizonFisheyeIn(object, fisheye);
-        grid.tiers[i] = object;
+      /* Each family shows the baked whole-sky object for its own tier, unless
+         that tier is fine enough to be drawn locally instead. */
+      const wantAlt = i === activeIndex && !tier.local;
+      const wantAz = i === azIndex && !tier.local;
+      let altObject = grid.altTiers[i];
+      if (wantAlt && !altObject) {
+        altObject = bakeHorizonGrid(buildAlmucantarPairs(tier.step));
+        injectHorizonFisheyeIn(altObject, fisheye);
+        grid.altTiers[i] = altObject;
       }
-      if (object) {
-        if (object.parent !== grid.group) grid.group.add(object);
-        object.visible = wanted;
+      if (altObject) {
+        if (altObject.parent !== grid.group) grid.group.add(altObject);
+        altObject.visible = wantAlt;
+      }
+      let azObject = grid.azTiers[i];
+      if (wantAz && !azObject) {
+        azObject = bakeHorizonGrid(buildVerticalPairs(tier.step));
+        injectHorizonFisheyeIn(azObject, fisheye);
+        grid.azTiers[i] = azObject;
+      }
+      if (azObject) {
+        if (azObject.parent !== grid.group) grid.group.add(azObject);
+        azObject.visible = wantAz;
       }
     }
-    if (localTier) {
-      const view = horizonViewWindow(state.camera, horizonFov, width, height);
+    if ((localAltTier || localAzTier) && gridView) {
+      const view = gridView;
       const count = buildLocalGridPairs(
-        localTier.step,
+        localAltTier ? localAltTier.step : null,
+        localAzTier ? localAzTier.step : null,
         {
           altLo: view.altLo,
           altHi: view.altHi,

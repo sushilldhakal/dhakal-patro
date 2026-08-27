@@ -2852,7 +2852,7 @@ const SkyLabels = memo(function SkyLabels({
               onClick={() => onAimLabel?.(label)}
               className="truncate font-semibold"
               style={{
-                ...labelBox(label.x, label.y, 130 * scale, 8 * scale),
+                ...labelBox(label.x, label.y, 130 * scale, label.clear ?? 8 * scale),
                 pointerEvents: "auto",
                 cursor: "pointer",
                 fontSize: zoomFont(selected ? 11 : 9, scale),
@@ -2958,7 +2958,7 @@ const SkyLabels = memo(function SkyLabels({
               onClick={() => onAimLabel?.(label)}
               className="truncate font-semibold"
               style={{
-                ...labelBox(label.x, label.y, 140 * scale, 8 * scale),
+                ...labelBox(label.x, label.y, 140 * scale, label.clear ?? 8 * scale),
                 pointerEvents: "auto",
                 cursor: "pointer",
                 fontSize: zoomFont(selected ? 11 : 9, scale),
@@ -3023,7 +3023,7 @@ const SkyLabels = memo(function SkyLabels({
               onClick={() => onAimLabel?.(label)}
               className="truncate font-semibold"
               style={{
-                ...labelBox(label.x, label.y, 150 * scale, 8 * scale),
+                ...labelBox(label.x, label.y, 150 * scale, label.clear ?? 8 * scale),
                 pointerEvents: "auto",
                 cursor: "pointer",
                 fontSize: zoomFont(selected ? 11 : 9, scale),
