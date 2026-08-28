@@ -352,8 +352,27 @@ const LABEL_SCALE_MAX = 1.3;
 const CLOSE_LABEL_SCALE_MAX = 2.8;
 
 /** Look all the way up to the zenith, and almost to the nadir. */
-function clampPitch(p: number) {
-  return Math.max(-1.52, Math.min(1.52, p));
+/**
+ * How far क्षितिज may tip: all the way to the zenith and the nadir.
+ *
+ * The dome view writes the camera's rotation directly (`rotation.set(-pitch,
+ * yaw, 0)` in YXZ), so a pole is an ordinary direction there — nothing
+ * degenerates at it. Stopping three degrees short, which is what ±1.52 did,
+ * meant the one thing you cannot reach is the point every vertical converges
+ * on: pushed in to a one-degree field the pole sat off the edge of the frame
+ * and the centre of the grid could not be looked at at all.
+ */
+const DOME_PITCH_MAX = Math.PI / 2;
+/**
+ * अन्तरिक्ष and पृथ्वी गोला stop short of it, and have to.
+ *
+ * Those two orbit the target and aim with `lookAt`, which needs an up vector
+ * that is not parallel to the view — exactly at the pole it is, and the frame
+ * rolls right over. This is the original limit, kept where it is load-bearing.
+ */
+const ORBIT_PITCH_MAX = 1.52;
+function clampPitch(p: number, max: number = ORBIT_PITCH_MAX) {
+  return Math.max(-max, Math.min(max, p));
 }
 /**
  * Points shaved off the belt text at the widest zoom, ramped in with the scale.
@@ -1025,7 +1044,7 @@ export function AakashGocharSky({
         const k =
           ((fovForZoom("horizon", view.current.distance) * Math.PI) / 180) / h;
         view.current.yaw = gestureStart.current.yaw + dx * k;
-        view.current.pitch = clampPitch(gestureStart.current.pitch - dy * k);
+        view.current.pitch = clampPitch(gestureStart.current.pitch - dy * k, DOME_PITCH_MAX);
       } else {
         const zoomScale = dragScaleForZoom(mode, view.current.distance, HOME_DISTANCE[mode]);
         view.current.yaw = gestureStart.current.yaw - dx * 0.006 * zoomScale;

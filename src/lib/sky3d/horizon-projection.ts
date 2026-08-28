@@ -299,8 +299,13 @@ export function horizonViewWindow(
   const centreAlt = (Math.asin(Math.min(1, Math.max(-1, forward.y))) * 180) / Math.PI;
   const centreAz = (Math.atan2(forward.x, -forward.z) * 180) / Math.PI;
   const cone = Math.min(179, horizonConeRadiusDeg(fovDeg, width, height) * 1.06);
-  const altLo = Math.max(-89.5, centreAlt - cone);
-  const altHi = Math.min(89.5, centreAlt + cone);
+  /* Right up to the pole, not half a degree short of it. The fine cage is
+     built only inside this window, so clipping it at 89.5° meant the last
+     circles — 89°30′, 89°40′, 89°45′, the ones a one-degree field centred on
+     the zenith is entirely made of — were never generated, and the middle of
+     the grid came out empty. */
+  const altLo = Math.max(-89.99, centreAlt - cone);
+  const altHi = Math.min(89.99, centreAlt + cone);
   const reachAlt = Math.min(89, Math.max(Math.abs(altLo), Math.abs(altHi)));
   const azHalf =
     cone >= 90 || Math.abs(centreAlt) + cone >= 89
