@@ -44,6 +44,7 @@ const Kundali = lazyRoute(() => import("./pages/Kundali"), "Kundali");
 const KundaliDetail = lazyRoute(() => import("./pages/KundaliDetail"), "KundaliDetail");
 const KundaliMilan = lazyRoute(() => import("./pages/KundaliMilan"), "KundaliMilan");
 const Rashifal = lazyRoute(() => import("./pages/Rashifal"), "Rashifal");
+const Vastu = lazyRoute(() => import("./pages/Vastu"), "Vastu");
 const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
@@ -182,6 +183,7 @@ const rashifalRoute = createRoute({
   validateSearch: validatePanchangaSearch,
   component: Rashifal,
 });
+const vastuRoute = createRoute({ getParentRoute: () => rootRoute, path: "/vastu", component: Vastu });
 const learnRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn", component: Learn });
 const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/$slug", component: LearnArticle });
 const suryakrantiRoute = createRoute({
@@ -325,6 +327,7 @@ const routeTree = rootRoute.addChildren([
   chandraKrantiLegacyRoute,
   dainikKrantiNeLegacyRoute,
   shantiVidhiRoute,
+  vastuRoute,
   learnRoute,
   historyRoute,
   learnArticleRoute,

@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CalendarRange,
   Clock3,
+  Compass,
   Eclipse,
   Grid3x3,
   Heart,
@@ -216,6 +217,9 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
         </DrawerClose>
         <DrawerClose asChild>
           <NavDrawerLinkCard to="/panchanga" search={patroRouteLinkSearch("/panchanga", location, era, { year: urlBrowse.year, month: urlBrowse.month })} label={t("nav.surya_panchanga")} icon={Star} onClick={onNavigate} />
+        </DrawerClose>
+        <DrawerClose asChild>
+          <NavDrawerLinkCard to="/vastu" label={t("nav.vastu")} icon={Compass} onClick={onNavigate} />
         </DrawerClose>
         <DrawerClose asChild>
           <NavDrawerLinkCard to="/learn" label={t("nav.learn")} icon={BookOpen} onClick={onNavigate} />
