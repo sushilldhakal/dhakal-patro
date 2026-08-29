@@ -772,6 +772,7 @@ function PanchangaWheelBody({
           <DialogContent
             overlayClassName="z-[125] bg-black/70"
             className="z-[130] max-w-[22rem] border-[#3d5c58] bg-[#0d2428] p-4 text-[#e9f3f1] shadow-2xl"
+            onCloseAutoFocus={(e) => e.preventDefault()}
             onPointerDownOutside={(e) => {
               const t = e.target as HTMLElement | null;
               if (t?.closest("[data-slot='popover-content']")) e.preventDefault();

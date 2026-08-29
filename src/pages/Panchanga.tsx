@@ -93,6 +93,9 @@ export function Panchanga() {
   });
 
   useEffect(() => {
+    // keepPreviousData leaves yesterday's payload in `data` while the new day
+    // loads. Syncing that back undoes the wheel date jump and scrolls to top.
+    if (udayaQuery.isPlaceholderData) return;
     const payload = udayaQuery.data;
     if (!payload) return;
     const ad = civilAnchorFromPanchangaDay(payload);
@@ -109,7 +112,7 @@ export function Panchanga() {
             }
           : undefined,
     });
-  }, [udayaQuery.data, syncPickerFromDateAd, syncResolvedPatroDay]);
+  }, [udayaQuery.data, udayaQuery.isPlaceholderData, syncPickerFromDateAd, syncResolvedPatroDay]);
 
   const wheelData = udayaQuery.data;
   const civilAnchor = wheelData ? civilAnchorFromPanchangaDay(wheelData) : "";

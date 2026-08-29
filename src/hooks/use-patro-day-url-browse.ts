@@ -90,6 +90,7 @@ export function usePatroDayUrlBrowse(
       navigate({
         search: patroDayBrowseNavigateSearch(location, next),
         replace: true,
+        resetScroll: false,
       });
     },
     [location, navigate, mirrorUrl],
@@ -102,7 +103,7 @@ export function usePatroDayUrlBrowse(
       patroDayFetchWithUiLanguage(dayState, language),
     );
     if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
+      navigate({ search: desired, replace: true, resetScroll: false });
     }
   }, [location, dayState, search, navigate, mirrorUrl, language]);
 
@@ -245,6 +246,7 @@ export function usePatroPanchangaUrlBrowse(
       navigate({
         search: desired,
         replace: true,
+        resetScroll: false,
       });
     },
     [location, navigate],
@@ -272,7 +274,7 @@ export function usePatroPanchangaUrlBrowse(
       return;
     }
     lastMirrorFp.current = fp;
-    navigate({ search: desired, replace: true });
+    navigate({ search: desired, replace: true, resetScroll: false });
   }, [location, dayState, clock, search, navigate, language]);
 
   useEffect(() => {
