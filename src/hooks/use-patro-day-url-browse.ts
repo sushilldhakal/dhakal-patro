@@ -217,35 +217,55 @@ export function usePatroPanchangaUrlBrowse(
     [search, language],
   );
   const timezone = location.params.timezone ?? "Asia/Kathmandu";
-  const { clock, setClock } = usePanchangaClock(timezone, { clock: search.time });
+  const { clock, setClock: setClockState } = usePanchangaClock(timezone, { clock: search.time });
+  /** Latest clock, including a setClock that has not re-rendered yet — date
+   *  jumps must write `?time=` in the same navigate or the URL mirror puts
+   *  the old clock (or the old date) back. */
+  const clockRef = useRef(clock);
+  clockRef.current = clock;
+  const setClock = useCallback((next: string) => {
+    clockRef.current = next;
+    setClockState(next);
+  }, [setClockState]);
   /** Last `?time=` this hook has observed — distinguishes an external change from our own echo. */
   const seenUrlTimeRef = useRef(search.time);
   const seenUrlLocationRef = useRef<string | null>(null);
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
+  const lastMirrorFp = useRef<string | null>(null);
+  const pendingDayWriteRef = useRef(false);
 
   const replaceDayState = useCallback(
     (next: PatroDayFetchState) => {
+      const desired = {
+        ...patroDayBrowseNavigateSearch(location, next),
+        time: clockRef.current,
+      };
+      lastMirrorFp.current = JSON.stringify(desired);
+      pendingDayWriteRef.current = true;
       navigate({
-        search: {
-          ...patroDayBrowseNavigateSearch(location, next),
-          time: clock,
-        },
+        search: desired,
         replace: true,
       });
     },
-    [location, clock, navigate],
+    [location, navigate],
   );
 
-  const lastMirrorFp = useRef<string | null>(null);
   useEffect(() => {
     const desired = {
       ...patroDayBrowseNavigateSearch(
         location,
         patroDayFetchWithUiLanguage(dayState, language),
       ),
-      time: clock,
+      time: clockRef.current,
     };
     const fp = JSON.stringify(desired);
+    if (pendingDayWriteRef.current) {
+      pendingDayWriteRef.current = false;
+      lastMirrorFp.current = fp;
+      // `setClock` + `setDate` in one click: dayState is still the previous
+      // URL this frame. Writing that + the new clock would undo the jump.
+      return;
+    }
     if (lastMirrorFp.current === fp) return;
     if (sameSearch(desired, search)) {
       lastMirrorFp.current = fp;

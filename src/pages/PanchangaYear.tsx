@@ -377,9 +377,11 @@ export function PanchangaYear() {
       }
       pickBrowseVikramDate(
         (picked) => {
+          const ad = toAdStr(picked);
+          clockSyncedKeyRef.current = `${ad}|${locationCacheKey(location.params)}`;
           setDate(picked);
           setAnchor(picked);
-          setDayAd(toAdStr(picked));
+          setDayAd(ad);
           setMonthsBack(1);
           setMonthsFwd(1);
         },

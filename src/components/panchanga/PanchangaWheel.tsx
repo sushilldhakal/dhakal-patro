@@ -83,6 +83,13 @@ function bsMonthEnOf(ne: string): string {
 }
 
 const wheelDockIcon = "h-3.5 w-3.5 max-[480px]:h-3 max-[480px]:w-3";
+
+function gFromClock(clock: string, sunriseMin: number): number {
+  const { hour, minute } = parseClockParts(clock);
+  let g = (hour * 60 + minute - sunriseMin) / 24;
+  if (g < 0) g += 60;
+  return Math.max(0, Math.min(60, g));
+}
 const wheelCornerBtn =
   "flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(143,191,193,0.32)] bg-[rgba(11,20,22,0.96)] text-[var(--w-ink)] shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-colors hover:border-[var(--w-accent)] max-[480px]:h-8 max-[480px]:w-8";
 
@@ -338,11 +345,9 @@ function PanchangaWheelBody({
   const rangeMode = Boolean(yearScrub);
   const clockG = useMemo(() => {
     if (!clock) return null;
-    const { hour, minute } = parseClockParts(clock);
-    let g = (hour * 60 + minute - det.sunriseMin) / 24;
-    if (g < 0) g += 60;
-    return Math.max(0, Math.min(60, g));
+    return gFromClock(clock, det.sunriseMin);
   }, [clock, det.sunriseMin]);
+  const pendingJumpClockRef = useRef<string | null>(null);
 
   const [scrubG, setScrubG] = useState(() => (isToday ? nowG : 0));
   const [debouncedScrubG, setDebouncedScrubG] = useState(scrubG);
@@ -460,6 +465,16 @@ function PanchangaWheelBody({
     setCalendarOpen(true);
   }, [yearScrub]);
 
+  const commitCalendarJump = useCallback(
+    (nextEra: Era, y: number, m: number, d: number, nextClock: string) => {
+      pendingJumpClockRef.current = nextClock;
+      setScrubPinned(true);
+      setScrubG(gFromClock(nextClock, det.sunriseMin));
+      activeCalendar?.onCommit(nextEra, y, m, d, nextClock);
+    },
+    [activeCalendar, det.sunriseMin],
+  );
+
   const snapToNow = useCallback(() => {
     setScrubPinned(false);
     setSpin(0);
@@ -486,9 +501,16 @@ function PanchangaWheelBody({
   const [trackedDayKey, setTrackedDayKey] = useState(dayKey);
   if (dayKey !== trackedDayKey) {
     setTrackedDayKey(dayKey);
-    setScrubPinned(false);
     setSpin(0);
-    setScrubG(isToday ? nowG : 0);
+    const jumpClock = pendingJumpClockRef.current;
+    pendingJumpClockRef.current = null;
+    if (jumpClock) {
+      setScrubPinned(true);
+      setScrubG(gFromClock(jumpClock, det.sunriseMin));
+    } else {
+      setScrubPinned(false);
+      setScrubG(isToday ? nowG : 0);
+    }
   }
 
   useEffect(() => {
@@ -785,7 +807,7 @@ function PanchangaWheelBody({
               minuteAriaLabel={bilingualText(lang, "मिनेट", "Minute")}
               showTime
               locationParams={activeCalendar.locationParams}
-              onCommitDateTime={activeCalendar.onCommit}
+              onCommitDateTime={commitCalendarJump}
               afterCommit={() => setCalendarOpen(false)}
               solidSurface
             />

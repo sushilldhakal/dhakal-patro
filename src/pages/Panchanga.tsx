@@ -216,10 +216,16 @@ export function Panchanga() {
 
   const hadUrlTimeRef = useRef(Boolean(search.time));
   const clockSyncedKeyRef = useRef<string | null>(null);
+  const keepClockOnDateRef = useRef(false);
   const [trackedAdDate, setTrackedAdDate] = useState(adDateStr);
   if (adDateStr !== trackedAdDate) {
     setTrackedAdDate(adDateStr);
-    setClockUserAdjusted(false);
+    if (keepClockOnDateRef.current) {
+      keepClockOnDateRef.current = false;
+      clockSyncedKeyRef.current = `${adDateStr}|${locationCacheKey(location.params)}`;
+    } else {
+      setClockUserAdjusted(false);
+    }
   }
 
   const handleClockChange = useCallback(
@@ -242,6 +248,9 @@ export function Panchanga() {
 
   const handleCalendarCommit = useCallback(
     (nextEra: Era, y: number, m: number, d: number, nextClock: string) => {
+      const dateChanged =
+        nextEra !== browseEra || y !== pickerYear || m !== pickerMonth || d !== pickerDay;
+      if (dateChanged) keepClockOnDateRef.current = true;
       setClockUserAdjusted(true);
       setClock(nextClock);
       if (nextEra !== browseEra) {
@@ -254,7 +263,7 @@ export function Panchanga() {
       }
       pickBrowseVikramDate(setDate, nextEra, y, m, d, location.params);
     },
-    [setClock, setDate, setDisplayEra, browseEra, location.params],
+    [setClock, setDate, setDisplayEra, browseEra, location.params, pickerYear, pickerMonth, pickerDay],
   );
 
   // Seed the chosen time once per date/location. When the viewed date is today,
