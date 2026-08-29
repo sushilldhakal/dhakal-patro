@@ -38,14 +38,19 @@ export function usePanchangaClock(
   initial?: { clock?: string },
 ) {
   const [clock, setClockState] = useState(() => {
-    if (initial?.clock) return initial.clock;
-    const saved = getLocalStorageItem(CLOCK_KEY);
-    return saved ?? defaultClockForTimezone(defaultTimezone);
+    const raw = initial?.clock ?? getLocalStorageItem(CLOCK_KEY);
+    if (raw) {
+      const { hour, minute } = parseClockParts(raw);
+      return formatClockParts(hour, minute);
+    }
+    return defaultClockForTimezone(defaultTimezone);
   });
 
   const setClock = useCallback((next: string) => {
-    setClockState(next);
-    setLocalStorageItem(CLOCK_KEY, next);
+    const { hour, minute } = parseClockParts(next);
+    const normalized = formatClockParts(hour, minute);
+    setClockState(normalized);
+    setLocalStorageItem(CLOCK_KEY, normalized);
   }, []);
 
   return { clock, setClock };

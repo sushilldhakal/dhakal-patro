@@ -432,7 +432,12 @@ export function BsDateTimePicker({
               ariaLabel={minuteAriaLabel}
               onChange={(m) => setTime(hour12, m, meridiem)}
             />
-            <div className="ml-auto inline-flex overflow-hidden rounded-md border border-border">
+            <div
+              className={cn(
+                "ml-auto inline-flex overflow-hidden rounded-md border",
+                solidSurface ? "border-[#3d5c58]" : "border-border",
+              )}
+            >
               {(["AM", "PM"] as const).map((mer) => (
                 <button
                   key={mer}
@@ -443,7 +448,9 @@ export function BsDateTimePicker({
                     "px-2.5 py-1 text-sm font-bold transition-colors",
                     meridiem === mer
                       ? "bg-secondary text-secondary-foreground"
-                      : "bg-card hover:bg-surface-hover",
+                      : solidSurface
+                        ? "bg-[#243f3c] text-[#e9f3f1] hover:bg-[#2d4f4b]"
+                        : "bg-card text-foreground hover:bg-surface-hover",
                   )}
                 >
                   {mer}

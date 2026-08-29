@@ -137,7 +137,7 @@ export function PatroYearPickerPopover({
         collisionPadding={{ top: 8, bottom: 88, left: 8, right: 8 }}
         data-vaul-no-drag
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="z-[120] w-[min(calc(100vw-2rem),14rem)] gap-0 p-0"
+        className="pointer-events-auto z-[140] w-[min(calc(100vw-2rem),14rem)] gap-0 p-0"
       >
         {onBrowseCommit ? (
           <PatroYearEraToggle

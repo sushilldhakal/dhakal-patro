@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MoonPhaseIcon } from "./MoonPhaseIcon";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { getBSMonthLength } from "@/lib/bs-calendar";
@@ -15,8 +15,8 @@ import {
   type WheelTweaks,
 } from "@/lib/wheel-data";
 import { useLocale, bilingualText } from "@/i18n/locale";
-import { KARANA_SEQ, karanaColor, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
-import { wheelSvg, wheelSvgWrap, wheelSvgWrapSheetInset } from "@/lib/wheel-classes";
+import { KARANA_SEQ, WHEEL_TITHIS, WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
+import { wheelSvg, wheelSvgWrap } from "@/lib/wheel-classes";
 import { cn } from "@/lib/utils";
 import { NAKSHATRA_GLYPHS, RASHI_GLYPHS } from "@/lib/wheel-glyph-art";
 import { WheelGlyph } from "@/lib/wheel-glyphs";
@@ -97,8 +97,27 @@ const R = {
 const RASHI_GLYPH_SIZE = 30;
 const NAK_GLYPH_SIZE = 26;
 
+function planetVisualRadius(index: number): number {
+  const meta = GRAHA_META[index];
+  if (!meta) return 8;
+  if ("big" in meta && meta.big) return 15;
+  if (index === 1) return 10;
+  return 8;
+}
+
+function planetHitRadius(index: number): number {
+  const r = planetVisualRadius(index);
+  if (index === 0) return r + 26;
+  if (index >= 6) return r + 32;
+  return r + 24;
+}
+
+function planetSvgPosition(lon: number, orbit: number, spinDeg: number): [number, number] {
+  const a = (lon + spinDeg) * DEG;
+  return [CX - orbit * ORBIT_SCALE * Math.sin(a), CY - orbit * ORBIT_SCALE * Math.cos(a)];
+}
+
 export type WheelHover = { type: "nak"; i: number } | { type: "rashi"; i: number };
-export type WheelPick = WheelHover;
 
 /** Split a ring label on whitespace so each word gets its own radial row. */
 function labelRows(label: string): string[] {
@@ -158,18 +177,16 @@ interface WheelChartProps {
   spin: number;
   tw: WheelTweaks;
   bsYear: number;
-  sel: WheelPick | null;
   hover: WheelHover | null;
   onHover: (h: WheelHover) => void;
   onLeave: () => void;
-  onPick: (p: WheelPick) => void;
   onSpin: (deg: number) => void;
   zoom: number;
   onZoom: (z: number) => void;
   pan: { x: number; y: number };
   onPan: (x: number, y: number) => void;
-  /** Detail sheet is open — inset the wheel so it is not covered by it. */
-  sheetOpen?: boolean;
+  lineTarget?: number;
+  onLineTargetChange?: (index: number) => void;
 }
 
 function WheelChartImpl({
@@ -178,17 +195,16 @@ function WheelChartImpl({
   spin,
   tw,
   bsYear,
-  sel,
   hover,
   onHover,
   onLeave,
-  onPick,
   onSpin,
   zoom,
   onZoom,
   pan,
   onPan,
-  sheetOpen = false,
+  lineTarget: lineTargetProp,
+  onLineTargetChange,
 }: WheelChartProps) {
   const dragRef = useRef<
     | { mode: "r"; a: number; spin0: number; moved: boolean }
@@ -198,16 +214,55 @@ function WheelChartImpl({
   const [isDragging, setIsDragging] = useState(false);
   const [dragMoved, setDragMoved] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   /** Active pointer positions for pinch-to-zoom. */
   const ptrRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinchRef = useRef<{ dist: number; zoom0: number } | null>(null);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  const onZoomRef = useRef(onZoom);
+  onZoomRef.current = onZoom;
   /**
    * Graha the alignment needle points at (0..8 in GRAHA order). Defaults to
    * the Moon; tapping a planet moves the needle to it so you can read which
    * rashi / nakshatra that planet falls in.
    */
-  const [lineTarget, setLineTarget] = useState(1);
+  const [innerTarget, setInnerTarget] = useState(1);
+  const lineTarget = lineTargetProp ?? innerTarget;
+  const setLineTarget = (index: number) => {
+    if (lineTargetProp === undefined) setInnerTarget(index);
+    onLineTargetChange?.(index);
+  };
   const { lang } = useLocale();
+  const markersRef = useRef(markers);
+  markersRef.current = markers;
+  const spinRef = useRef(spin);
+  spinRef.current = spin;
+  const detRef = useRef(det);
+  detRef.current = det;
+
+  const pickPlanetAtClient = useCallback((clientX: number, clientY: number): number => {
+    const wrap = wrapRef.current;
+    if (!wrap) return -1;
+    const r = wrap.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return -1;
+    const svgX = 42 + ((clientX - r.left) / r.width) * 916;
+    const svgY = 42 + ((clientY - r.top) / r.height) * 916;
+    let best = -1;
+    let bestD = Infinity;
+    const lons = markersRef.current.planetLons;
+    for (let i = 0; i < detRef.current.grahas.length; i++) {
+      const meta = GRAHA_META[i]!;
+      const [px, py] = planetSvgPosition(lons[i] ?? 0, meta.orbit, spinRef.current);
+      const d = Math.hypot(svgX - px, svgY - py);
+      const hitR = planetHitRadius(i);
+      if (d <= hitR && d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    return best;
+  }, []);
 
   const pol = useCallback(
     (L: number, r: number): [number, number] => {
@@ -229,7 +284,7 @@ function WheelChartImpl({
     [pol]
   );
 
-  const { moonLon, moonNak, planetLons, sunLon } = markers;
+  const { moonLon, planetLons, sunLon } = markers;
 
   // The static rings \u2014 nakshatra / rashi / pada arcs, day ticks, hit targets and
   // the Gregorian month labels \u2014 depend only on the wheel's geometry (spin),
@@ -246,12 +301,11 @@ function WheelChartImpl({
       const Lm = (L0 + L1) / 2;
       const ico = NAKSHATRA_ICONS[i]!;
       const isHot = hover?.type === "nak" && hover.i === i;
-      const isSel = sel?.type === "nak" && sel.i === i;
       nakSegs.push(
         <path
           key={`ns${i}`}
           d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
-          className={wSegNak({ alt: i % 2 === 1, hot: isHot, sel: isSel })}
+          className={wSegNak({ alt: i % 2 === 1, hot: isHot })}
         />
       );
       // The name used to sit alone at the band's midpoint; it moves in to
@@ -266,13 +320,13 @@ function WheelChartImpl({
             size={NAK_GLYPH_SIZE}
             cx={nx}
             cy={ny}
-            className={wNakName(isSel || isHot)}
+            className={wNakName(isHot)}
             title={bilingualText(lang, ico.ne, ico.en)}
           />
           <RingLabel
             L={Lm}
             r={R.nakName}
-            cls={wNakName(isSel || isHot)}
+            cls={wNakName(isHot)}
             spin={spin}
             rows={labelRows(bilingualText(lang, ico.ne, ico.en))}
           />
@@ -288,12 +342,11 @@ function WheelChartImpl({
       const Lm = L0 + 15;
       const rs = rashis[i]!;
       const isHot = hover?.type === "rashi" && hover.i === i;
-      const isSel = sel?.type === "rashi" && sel.i === i;
       rashiSegs.push(
         <path
           key={`rs${i}`}
           d={arcSeg(L0, L1, R.rashiIn, R.rashiOut)}
-          className={wSegRashi({ alt: i % 2 === 1, hot: isHot, sel: isSel })}
+          className={wSegRashi({ alt: i % 2 === 1, hot: isHot })}
         />
       );
       const [gx, gy] = pol(Lm, R.rashiGlyph);
@@ -302,17 +355,16 @@ function WheelChartImpl({
           {/* Left upright rather than rotated with the ring: a crab or a pair of
               scales is only recognisable the right way up, and the Unicode symbol
               this replaced sat upright too. */}
-          {/* Same class as the name, so hovering or selecting a sign tints its
-              glyph too — the nakshatra glyph below does the same. */}
+          {/* Same class as the name, so hovering a sign tints its glyph too. */}
           <WheelGlyph
             art={RASHI_GLYPHS[i]}
             size={RASHI_GLYPH_SIZE}
             cx={gx}
             cy={gy}
-            className={wRashiName(isSel || isHot)}
+            className={wRashiName(isHot)}
             title={bilingualText(lang, rs.ne, rs.en)}
           />
-          <RingLabel L={Lm} r={R.rashiName} cls={wRashiName(isSel || isHot)} spin={spin}>
+          <RingLabel L={Lm} r={R.rashiName} cls={wRashiName(isHot)} spin={spin}>
             {bilingualText(lang, rs.ne, rs.en)}
           </RingLabel>
         </g>
@@ -373,7 +425,6 @@ function WheelChartImpl({
           className={wHit}
           onMouseEnter={() => onHover({ type: "nak", i })}
           onMouseLeave={onLeave}
-          onClick={() => onPick({ type: "nak", i })}
         />
       );
     }
@@ -387,7 +438,6 @@ function WheelChartImpl({
           className={wHit}
           onMouseEnter={() => onHover({ type: "rashi", i })}
           onMouseLeave={onLeave}
-          onClick={() => onPick({ type: "rashi", i })}
         />
       );
     }
@@ -410,7 +460,7 @@ function WheelChartImpl({
       : [];
 
     return { nakSegs, nakDecor, rashiSegs, rashiDecor, padaCells, dayTicks, hits, rashiRays, gregLabels };
-  }, [spin, hover, sel, bsYear, tw, pol, arcSeg, onHover, onLeave, onPick, lang]);
+  }, [spin, hover, bsYear, tw, pol, arcSeg, onHover, onLeave, lang]);
 
   // The data layers — current-time markers, the inner tithi/karana/yoga rings
   // and the planet core — are the only parts that depend on the panchanga data
@@ -418,30 +468,9 @@ function WheelChartImpl({
   // pan) from rebuilding them, and isolates the work done per day while scrubbing.
   const dataLayers = useMemo(() => {
     const sunRashiIdx = Math.floor(normDeg(sunLon) / 30);
-    const moonRashiIdx = Math.floor(normDeg(moonLon) / 30);
 
     const markerNodes: React.ReactNode[] = [];
     if (tw.show_today) {
-    const L0 = moonNak * (360 / 27);
-    const L1 = (moonNak + 1) * (360 / 27);
-    markerNodes.push(
-      <path
-        key="nowwedge"
-        d={arcSeg(L0, L1, R.nakIn, R.nakOut)}
-        className={wSegNow}
-        style={{ pointerEvents: "none" }}
-      />
-    );
-    const rL0 = moonRashiIdx * 30;
-    const rL1 = rL0 + 30;
-    markerNodes.push(
-      <path
-        key="nowwedge-rashi"
-        d={arcSeg(rL0, rL1, R.rashiIn, R.rashiOut)}
-        className={wSegNow}
-        style={{ pointerEvents: "none" }}
-      />
-    );
     const mL0 = sunRashiIdx * 30;
     const mL1 = mL0 + 30;
     markerNodes.push(
@@ -513,16 +542,9 @@ function WheelChartImpl({
         <path
           key={`yog${y}`}
           d={arcSeg(L0, L1, R_YOGA_I, R_YOGA_O)}
-          fill={
-            isCur
-              ? "color-mix(in srgb, #a07de8 38%, #10063a)"
-              : y % 2
-              ? "color-mix(in srgb, #7c5cbf 22%, #08041a)"
-              : "color-mix(in srgb, #6448a8 16%, #06031a)"
-          }
-          stroke={isCur ? "#c4a8f0" : "rgba(100,72,168,.25)"}
+          fill={isCur ? "rgba(160,125,232,0.20)" : "transparent"}
+          stroke={isCur ? "#c4a8f0" : "rgba(169,212,212,0.28)"}
           strokeWidth={isCur ? 1.6 : 0.4}
-          opacity={isCur ? 1 : 0.82}
         />
       );
       innerRings.push(
@@ -561,10 +583,9 @@ function WheelChartImpl({
         <path
           key={`kar${k}`}
           d={arcSeg(L0, L1, R_KAR_I, R_KAR_O)}
-          fill={karanaColor(kd)}
-          stroke={isCur ? "var(--w-accent)" : "rgba(0,0,0,.32)"}
+          fill={isCur ? "rgba(198,40,40,0.16)" : "transparent"}
+          stroke={isCur ? "var(--w-accent)" : "rgba(169,212,212,0.28)"}
           strokeWidth={isCur ? 1.7 : 0.4}
-          opacity={isCur ? 1 : 0.78}
         />
       );
       innerRings.push(
@@ -761,11 +782,22 @@ function WheelChartImpl({
           key={`hit${i}`}
           cx={px}
           cy={py}
-          r={rad + 7}
+          r={planetHitRadius(i)}
           fill="transparent"
-          style={{ cursor: "pointer" }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => setLineTarget(i)}
+          style={{ cursor: "pointer", touchAction: "manipulation" }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setLineTarget(i);
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            setLineTarget(i);
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setLineTarget(i);
+          }}
         >
           <title>{bilingualText(lang, g.ne, g.en)}</title>
         </circle>
@@ -796,7 +828,7 @@ function WheelChartImpl({
       : [];
 
     return { markerNodes, innerRings, core, bsLabels };
-  }, [markers, det, spin, tw, moonNak, moonLon, sunLon, planetLons, lineTarget, pol, arcSeg, lang]);
+  }, [markers, det, spin, tw, moonLon, sunLon, planetLons, lineTarget, pol, arcSeg, lang]);
 
   const angleAt = (e: React.PointerEvent) => {
     const r = wrapRef.current!.getBoundingClientRect();
@@ -813,6 +845,31 @@ function WheelChartImpl({
     if (pts.length < 2) return 0;
     return Math.hypot(pts[1]!.x - pts[0]!.x, pts[1]!.y - pts[0]!.y);
   };
+
+  // Desktop mouse / trackpad: zoom only when the cursor is on the circular
+  // disc. The stage box is a tall rectangle — capturing scroll there blocked
+  // the page. Touch-only phones keep page scroll.
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      const finePointer = window.matchMedia("(pointer: fine)").matches;
+      if (!finePointer && !e.ctrlKey) return;
+      const box = el.getBoundingClientRect();
+      const cx = box.left + box.width / 2;
+      const cy = box.top + box.height / 2;
+      const radius = Math.min(box.width, box.height) / 2;
+      if (Math.hypot(e.clientX - cx, e.clientY - cy) > radius) return;
+      e.preventDefault();
+      e.stopPropagation();
+      let dy = e.deltaY;
+      if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) dy *= 16;
+      else if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) dy *= 400;
+      onZoomRef.current(zoomRef.current * Math.exp(-dy * 0.0016));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   const onDown = (e: React.PointerEvent<SVGSVGElement>) => {
     ptrRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -862,11 +919,16 @@ function WheelChartImpl({
     }
   };
   const onUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    const moved = dragRef.current?.moved ?? dragMoved;
     e.currentTarget.releasePointerCapture(e.pointerId);
     ptrRef.current.delete(e.pointerId);
     dragRef.current = null;
     setIsDragging(false);
     if (ptrRef.current.size < 2) pinchRef.current = null;
+    if (!moved && ptrRef.current.size === 0) {
+      const idx = pickPlanetAtClient(e.clientX, e.clientY);
+      if (idx >= 0) setLineTarget(idx);
+    }
   };
 
   const { nakSegs, nakDecor, rashiSegs, rashiDecor, padaCells, dayTicks, hits, rashiRays, gregLabels } =
@@ -875,11 +937,12 @@ function WheelChartImpl({
 
   return (
     <div
-      className={cn(wheelSvgWrap, sheetOpen && wheelSvgWrapSheetInset, "transition-[padding] duration-200 ease-out")}
+      className={cn(wheelSvgWrap, "transition-[padding] duration-200 ease-out")}
       ref={wrapRef}
       style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "center", transition: isDragging ? "none" : "transform 0.12s ease-out" }}
     >
       <svg
+        ref={svgRef}
         viewBox="42 42 916 916"
         className={wheelSvg(dragMoved)}
         onPointerDown={onDown}

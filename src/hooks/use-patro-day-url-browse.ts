@@ -236,6 +236,7 @@ export function usePatroPanchangaUrlBrowse(
     [location, clock, navigate],
   );
 
+  const lastMirrorFp = useRef<string | null>(null);
   useEffect(() => {
     const desired = {
       ...patroDayBrowseNavigateSearch(
@@ -244,9 +245,14 @@ export function usePatroPanchangaUrlBrowse(
       ),
       time: clock,
     };
-    if (!sameSearch(desired, search)) {
-      navigate({ search: desired, replace: true });
+    const fp = JSON.stringify(desired);
+    if (lastMirrorFp.current === fp) return;
+    if (sameSearch(desired, search)) {
+      lastMirrorFp.current = fp;
+      return;
     }
+    lastMirrorFp.current = fp;
+    navigate({ search: desired, replace: true });
   }, [location, dayState, clock, search, navigate, language]);
 
   useEffect(() => {

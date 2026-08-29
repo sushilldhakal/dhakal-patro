@@ -472,12 +472,17 @@ export function buildWheelMarkers(
   scrubG: number
 ): WheelMarkers {
   const lagnaLon = lagnaLongitudeAtG(p, scrubG) ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", en: "", rashi: getWheelRashis()[0]!, deg: [0, 0, 0] });
+  // Tithi / karana rings stay on the udaya-calibrated elongation so the
+  // highlighted band matches the calendar. The moon *body* uses mean motion
+  // so a sunrise→sunrise scrub arrives at the next sunrise, not yesterday's.
   const moonLon = moonLonAtG(p, det, scrubG);
-  const moonNak = Math.floor(normDeg(moonLon) / (360 / 27));
+  const moon0 = det.grahas[1] ? grahaLon(det.grahas[1]) : 0;
+  const moonBody = normDeg(moon0 + (scrubG / 60) * MEAN_MOTION_PER_DAY[1]);
+  const moonNak = Math.floor(normDeg(moonBody) / (360 / 27));
 
-  const rahuBase = det.grahas[7] ? grahaLonAtG(det.grahas[7], 7, scrubG, moonLon) : undefined;
+  const rahuBase = det.grahas[7] ? grahaLonAtG(det.grahas[7], 7, scrubG, moonBody) : undefined;
   const planetLons = det.grahas.map((gr, i) =>
-    grahaLonAtG(gr, i, scrubG, moonLon, rahuBase)
+    i === 1 ? moonBody : grahaLonAtG(gr, i, scrubG, moonBody, rahuBase)
   );
   const sunLon = planetLons[0] ?? grahaLon(det.grahas[0] ?? { sym: "", ne: "", en: "", rashi: getWheelRashis()[0]!, deg: [0, 0, 0] });
 

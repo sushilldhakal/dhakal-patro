@@ -111,8 +111,20 @@ function toStr(v: unknown): string | undefined {
   return typeof v === "string" && v.trim() !== "" ? v : undefined;
 }
 
+/** Shareable clock (`HH:MM`). Accepts `H:MM` / `HH:MM:SS` so URL sync cannot ping-pong. */
+function normalizeClock(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  const match = v.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return undefined;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return undefined;
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return undefined;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 function validClock(v: unknown): string | undefined {
-  return typeof v === "string" && /^\d{2}:\d{2}$/.test(v) ? v : undefined;
+  return normalizeClock(v);
 }
 
 /** Keys owned by day-browse routes (panchanga day, gochar, graha-sthiti) — not month/span grids. */
@@ -588,6 +600,10 @@ export function sameSearch(a: object, b: object): boolean {
     if (k === "paksha") {
       av = av ?? "all";
       bv = bv ?? "all";
+    }
+    if (k === "time") {
+      av = normalizeClock(av) ?? av;
+      bv = normalizeClock(bv) ?? bv;
     }
     return av === bv;
   });
