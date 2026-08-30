@@ -1,11 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Star, Sparkles, Moon, BookOpen } from "lucide-react";
+import { Home, Star, Sparkles, Moon, Compass, BookOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
   isDainikkrantiTabRoute,
   isJyotishRoute,
   isLearnRoute,
   isPanchangaTabRoute,
+  isVastuRoute,
 } from "@/lib/app-routes";
 import { cn } from "@/lib/utils";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -19,7 +20,7 @@ type Tab = {
   match: (pathname: string) => boolean;
 };
 
-// Home · Panchanga · Kundali · Dainik Kranti · Learn — the five primary
+// Home · Panchanga · Kundali · Dainik Kranti · Vastu · Learn — primary
 // destinations. Kept in sync with the hamburger nav in Header.tsx.
 const TABS: Tab[] = [
   { to: "/", icon: Home, ne: "गृह", en: "Home", match: (p) => p === "/" },
@@ -43,6 +44,13 @@ const TABS: Tab[] = [
     ne: "दैनिक",
     en: "Daily",
     match: isDainikkrantiTabRoute,
+  },
+  {
+    to: "/vastu",
+    icon: Compass,
+    ne: "वास्तु",
+    en: "Vastu",
+    match: isVastuRoute,
   },
   {
     to: "/learn",

@@ -1,0 +1,377 @@
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/i18n/locale";
+import type { BHole, BWall, BuildingLayer, FloorConcept, HouseConcept, PlannedRoom, RoomFixture } from "@/lib/house-plan/types";
+
+const SCALE = 28;
+
+function px(n: number): number {
+  return n * SCALE;
+}
+
+function roomFill(kind: PlannedRoom["kind"], id: string): string {
+  if (kind === "brahmasthan") {
+    return id.startsWith("center_")
+      ? "color-mix(in srgb, var(--primary) 18%, var(--card))"
+      : "color-mix(in srgb, var(--primary) 10%, var(--card))";
+  }
+  if (kind === "verandah" || kind === "hall" || kind === "landing") {
+    return "color-mix(in srgb, var(--secondary) 12%, var(--card))";
+  }
+  if (kind === "foyer") return "color-mix(in srgb, var(--secondary) 22%, var(--card))";
+  if (kind === "staircase") return "color-mix(in srgb, var(--foreground) 7%, var(--card))";
+  if (kind === "courtyard" || kind === "garden" || kind === "balcony" || kind === "garage") {
+    return "color-mix(in srgb, var(--primary) 8%, var(--card))";
+  }
+  return "var(--card)";
+}
+
+function StairTreads({ room }: { room: PlannedRoom }) {
+  const r = room.rect;
+  const steps = 8;
+  const along = r.h >= r.w;
+  return (
+    <g>
+      {Array.from({ length: steps - 1 }, (_, i) => {
+        if (along) {
+          const y = r.y + ((i + 1) * r.h) / steps;
+          return <line key={i} x1={px(r.x)} y1={px(y)} x2={px(r.x + r.w)} y2={px(y)} stroke="currentColor" strokeOpacity={0.35} />;
+        }
+        const x = r.x + ((i + 1) * r.w) / steps;
+        return <line key={i} x1={px(x)} y1={px(r.y)} x2={px(x)} y2={px(r.y + r.h)} stroke="currentColor" strokeOpacity={0.35} />;
+      })}
+    </g>
+  );
+}
+
+function FixturePlan({ fixture }: { fixture: RoomFixture }) {
+  const r = fixture.rect;
+  const x = px(r.x);
+  const y = px(r.y);
+  const w = px(r.w);
+  const h = px(r.h);
+  const stroke = "color-mix(in srgb, var(--foreground) 55%, var(--card))";
+  const fill = "color-mix(in srgb, var(--card) 86%, var(--foreground))";
+  const wood = "color-mix(in srgb, #8b6a42 38%, var(--card))";
+  const soft = "color-mix(in srgb, var(--secondary) 22%, var(--card))";
+
+  if (fixture.kind === "bed") {
+    const headSouth = fixture.facing !== "e";
+    const pillow = headSouth
+      ? { x: r.x + r.w * 0.12, y: r.y + r.h * 0.72, w: r.w * 0.76, h: r.h * 0.16 }
+      : { x: r.x + r.w * 0.72, y: r.y + r.h * 0.12, w: r.w * 0.16, h: r.h * 0.76 };
+    return (
+      <g>
+        <rect x={x} y={y} width={w} height={h} rx={4} fill={soft} stroke={stroke} strokeWidth={1.1} />
+        <rect x={px(pillow.x)} y={px(pillow.y)} width={px(pillow.w)} height={px(pillow.h)} rx={2} fill="color-mix(in srgb, var(--card) 70%, var(--foreground))" opacity={0.45} />
+      </g>
+    );
+  }
+  if (fixture.kind === "basin" || fixture.kind === "sink") {
+    return (
+      <g>
+        <rect x={x} y={y} width={w} height={h} rx={3} fill={fill} stroke={stroke} strokeWidth={1.1} />
+        <ellipse cx={x + w / 2} cy={y + h / 2} rx={w * 0.32} ry={h * 0.28} fill="color-mix(in srgb, var(--secondary) 16%, var(--card))" stroke={stroke} strokeWidth={1} />
+      </g>
+    );
+  }
+  if (fixture.kind === "wc") {
+    const sitSouth = fixture.facing !== "n";
+    const tank = sitSouth ? { x, y, w, h: h * 0.28 } : { x, y: y + h * 0.72, w, h: h * 0.28 };
+    const bowl = sitSouth
+      ? { cx: x + w / 2, cy: y + h * 0.64, rx: w * 0.42, ry: h * 0.28 }
+      : { cx: x + w / 2, cy: y + h * 0.36, rx: w * 0.42, ry: h * 0.28 };
+    return (
+      <g>
+        <rect x={tank.x} y={tank.y} width={tank.w} height={tank.h} rx={2} fill={fill} stroke={stroke} strokeWidth={1.1} />
+        <ellipse cx={bowl.cx} cy={bowl.cy} rx={bowl.rx} ry={bowl.ry} fill={fill} stroke={stroke} strokeWidth={1.1} />
+      </g>
+    );
+  }
+  if (fixture.kind === "sofa" || fixture.kind === "armchair") {
+    const back =
+      fixture.facing === "s"
+        ? { x, y, w, h: h * 0.22 }
+        : fixture.facing === "n"
+          ? { x, y: y + h * 0.78, w, h: h * 0.22 }
+          : fixture.facing === "e"
+            ? { x, y, w: w * 0.22, h }
+            : { x: x + w * 0.78, y, w: w * 0.22, h };
+    return (
+      <g>
+        <rect x={x} y={y} width={w} height={h} rx={5} fill={soft} stroke={stroke} strokeWidth={1.1} />
+        <rect x={back.x} y={back.y} width={back.w} height={back.h} rx={2} fill="color-mix(in srgb, var(--secondary) 40%, var(--card))" />
+      </g>
+    );
+  }
+  if (fixture.kind === "chair") {
+    return <rect x={x} y={y} width={w} height={h} rx={3} fill={wood} stroke={stroke} strokeWidth={1} />;
+  }
+  if (fixture.kind === "table" || fixture.kind === "desk") {
+    return (
+      <g>
+        <rect x={x} y={y} width={w} height={h} rx={2} fill={wood} stroke={stroke} strokeWidth={1.1} />
+        <rect x={x + w * 0.12} y={y + h * 0.12} width={w * 0.76} height={h * 0.76} rx={1} fill="none" stroke={stroke} strokeOpacity={0.35} />
+      </g>
+    );
+  }
+  if (fixture.kind === "wardrobe" || fixture.kind === "cupboard" || fixture.kind === "bookcase" || fixture.kind === "fridge") {
+    const split = r.w >= r.h;
+    return (
+      <g>
+        <rect x={x} y={y} width={w} height={h} rx={2} fill={fixture.kind === "fridge" ? fill : wood} stroke={stroke} strokeWidth={1.1} />
+        {split ? <line x1={x + w / 2} y1={y + 2} x2={x + w / 2} y2={y + h - 2} stroke={stroke} strokeWidth={1} /> : <line x1={x + 2} y1={y + h / 2} x2={x + w - 2} y2={y + h / 2} stroke={stroke} strokeWidth={1} />}
+      </g>
+    );
+  }
+  if (fixture.kind === "stove") {
+    const r1 = Math.min(w, h) * 0.16;
+    return (
+      <g>
+        <rect x={x} y={y} width={w} height={h} rx={2} fill="color-mix(in srgb, #333 45%, var(--card))" stroke={stroke} strokeWidth={1.1} />
+        {[
+          [0.3, 0.3],
+          [0.7, 0.3],
+          [0.3, 0.7],
+          [0.7, 0.7],
+        ].map(([tx, ty], i) => (
+          <circle key={i} cx={x + w * tx} cy={y + h * ty} r={r1} fill="none" stroke={stroke} strokeWidth={1} />
+        ))}
+      </g>
+    );
+  }
+  if (fixture.kind === "tv" || fixture.kind === "ac") {
+    return <rect x={x} y={y} width={w} height={h} rx={1} fill={fixture.kind === "tv" ? "#2a2b2e" : fill} stroke={stroke} strokeWidth={1} />;
+  }
+  return <rect x={x} y={y} width={w} height={h} rx={2} fill={fill} stroke={stroke} strokeWidth={1} />;
+}
+
+function NorthArrow({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${px(x)} ${px(y)})`} className="text-foreground">
+      <polygon points="0,-16 -6,8 0,4 6,8" fill="currentColor" />
+      <text y={20} textAnchor="middle" fontSize={9} fontWeight={700} fill="currentColor">
+        N
+      </text>
+    </g>
+  );
+}
+
+function wallEnds(layer: BuildingLayer, wall: BWall): { x1: number; y1: number; x2: number; y2: number; len: number } | null {
+  const a = layer.vertices.find((v) => v.id === wall.a);
+  const b = layer.vertices.find((v) => v.id === wall.b);
+  if (!a || !b) return null;
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  if (len < 0.04) return null;
+  return { x1: a.x, y1: a.y, x2: b.x, y2: b.y, len };
+}
+
+function ThickWall({ layer, wall, holes }: { layer: BuildingLayer; wall: BWall; holes: BHole[] }) {
+  const ends = wallEnds(layer, wall);
+  if (!ends) return null;
+  const { x1, y1, x2, y2, len } = ends;
+  const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+  const half = wall.thickness / 2;
+  const cuts = holes
+    .filter((h) => h.wallId === wall.id)
+    .map((h) => ({ lo: h.offset - h.width / 2 / len, hi: h.offset + h.width / 2 / len }))
+    .sort((a, b) => a.lo - b.lo);
+  const spans: { lo: number; hi: number }[] = [];
+  let cursor = 0;
+  for (const cut of cuts) {
+    const lo = Math.max(0, cut.lo);
+    const hi = Math.min(1, cut.hi);
+    if (lo > cursor + 0.01) spans.push({ lo: cursor, hi: lo });
+    cursor = Math.max(cursor, hi);
+  }
+  if (cursor < 0.99) spans.push({ lo: cursor, hi: 1 });
+
+  return (
+    <g transform={`translate(${px(x1)} ${px(y1)}) rotate(${angle})`}>
+      {spans.map((span, i) => (
+        <rect
+          key={i}
+          x={px(span.lo * len)}
+          y={px(-half)}
+          width={px((span.hi - span.lo) * len)}
+          height={px(wall.thickness)}
+          fill="color-mix(in srgb, var(--foreground) 72%, var(--card))"
+        />
+      ))}
+    </g>
+  );
+}
+
+function Opening({ layer, hole }: { layer: BuildingLayer; hole: BHole }) {
+  const wall = layer.walls.find((w) => w.id === hole.wallId);
+  if (!wall) return null;
+  const ends = wallEnds(layer, wall);
+  if (!ends) return null;
+  const { x1, y1, x2, y2, len } = ends;
+  const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+  const along = hole.offset * len;
+  const w = hole.width;
+  if (hole.type === "window") {
+    return (
+      <g transform={`translate(${px(x1)} ${px(y1)}) rotate(${angle})`}>
+        <line x1={px(along - w / 2)} y1={0} x2={px(along + w / 2)} y2={0} stroke="var(--card)" strokeWidth={5} />
+        <line
+          x1={px(along - w / 2)}
+          y1={0}
+          x2={px(along + w / 2)}
+          y2={0}
+          stroke="currentColor"
+          strokeWidth={1.4}
+          strokeDasharray="3 2"
+        />
+      </g>
+    );
+  }
+  const flip = hole.swing === "right" ? 1 : -1;
+  return (
+    <g transform={`translate(${px(x1)} ${px(y1)}) rotate(${angle})`}>
+      <line x1={px(along - w / 2)} y1={0} x2={px(along + w / 2)} y2={0} stroke="var(--card)" strokeWidth={6} />
+      <path
+        d={`M ${px(along - w / 2)} 0 A ${px(w)} ${px(w)} 0 0 ${flip > 0 ? 1 : 0} ${px(along - w / 2)} ${px(w * flip)}`}
+        fill="none"
+        stroke="var(--secondary)"
+        strokeWidth={1.3}
+        strokeDasharray="4 3"
+      />
+      <line
+        x1={px(along - w / 2)}
+        y1={0}
+        x2={px(along - w / 2)}
+        y2={px(w * flip)}
+        stroke="var(--secondary)"
+        strokeWidth={1.4}
+      />
+    </g>
+  );
+}
+
+export function HouseFloorPlan({
+  concept,
+  floor,
+}: {
+  concept: HouseConcept;
+  floor: FloorConcept;
+}) {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  const pad = 1.2;
+  const svgW = px(concept.width + pad * 2);
+  const svgH = px(concept.height + pad * 2);
+  const layer = floor.layer;
+
+  function labelOf(room: PlannedRoom): string {
+    if (room.kind === "brahmasthan") {
+      const courts = floor.rooms.filter((r) => r.kind === "brahmasthan");
+      const main = courts.reduce((a, b) => (a.rect.w * a.rect.h >= b.rect.w * b.rect.h ? a : b));
+      return room.id === main.id ? t("vastu.dir.center.name") : "";
+    }
+    if (room.kind === "verandah") return "";
+    if (room.kind === "hall" || room.kind === "landing") return t("vastu.plan.hall_label");
+    if (room.kind === "foyer") return t("vastu.plan.foyer_label");
+    const many = floor.rooms.filter((r) => r.kind === room.kind).length > 1;
+    if (many && room.index != null) return t(`vastu.plan.space.${room.kind}_n`, { n: digits(room.index) });
+    return t(`vastu.plan.space.${room.kind}`);
+  }
+
+  return (
+    <div className="space-y-2">
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        className="h-auto w-full rounded-lg border border-border bg-[color-mix(in_srgb,var(--background)_70%,var(--card))]"
+        role="img"
+        aria-label={t("vastu.plan.layout_heading")}
+      >
+        <g transform={`translate(${px(pad)} ${px(pad)})`}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <line
+              key={`vg${i}`}
+              x1={px((concept.width * i) / 3)}
+              y1={0}
+              x2={px((concept.width * i) / 3)}
+              y2={px(concept.height)}
+              stroke="currentColor"
+              strokeOpacity={0.05}
+            />
+          ))}
+          {Array.from({ length: 4 }).map((_, i) => (
+            <line
+              key={`hg${i}`}
+              x1={0}
+              y1={px((concept.height * i) / 3)}
+              x2={px(concept.width)}
+              y2={px((concept.height * i) / 3)}
+              stroke="currentColor"
+              strokeOpacity={0.05}
+            />
+          ))}
+
+          {floor.rooms.map((room) => (
+            <rect
+              key={`${room.id}-fill`}
+              x={px(room.rect.x)}
+              y={px(room.rect.y)}
+              width={px(room.rect.w)}
+              height={px(room.rect.h)}
+              fill={roomFill(room.kind, room.id)}
+              stroke="none"
+            />
+          ))}
+
+          {floor.rooms.map((room) => (room.kind === "staircase" ? <StairTreads key={`${room.id}-stair`} room={room} /> : null))}
+
+          {floor.rooms.flatMap((room) =>
+            (room.fixtures ?? []).map((fixture) => <FixturePlan key={fixture.id} fixture={fixture} />),
+          )}
+
+          {layer.walls.map((wall) => (
+            <ThickWall key={wall.id} layer={layer} wall={wall} holes={layer.holes} />
+          ))}
+
+          {layer.holes.map((hole) => (
+            <Opening key={hole.id} layer={layer} hole={hole} />
+          ))}
+
+          {floor.rooms.map((room) => {
+            const name = labelOf(room);
+            if (!name) return null;
+            const size = t("vastu.plan.room_size", {
+              w: digits(room.rect.w.toFixed(1)),
+              h: digits(room.rect.h.toFixed(1)),
+            });
+            const cx = px(room.rect.x + room.rect.w / 2);
+            const cy = px(room.rect.y + room.rect.h / 2);
+            const small = room.rect.w < 2.2 || room.rect.h < 1.8;
+            return (
+              <g key={`${room.id}-lab`}>
+                <text
+                  x={cx}
+                  y={cy - (small ? 0 : 6)}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="currentColor"
+                  fontSize={small ? 8 : 10}
+                  fontWeight={600}
+                >
+                  {name}
+                </text>
+                {!small && (
+                  <text x={cx} y={cy + 10} textAnchor="middle" fill="currentColor" fillOpacity={0.65} fontSize={8}>
+                    {size}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          <NorthArrow x={concept.width - 0.55} y={0.7} />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+export default HouseFloorPlan;

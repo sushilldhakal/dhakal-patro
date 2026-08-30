@@ -852,15 +852,6 @@ export function PatroDateNavCore({
                 >
                   <ChevronRight size={15} strokeWidth={2} />
                 </button>
-                <button
-                  type="button"
-                  onClick={onToday}
-                  aria-label={todayAriaLabel}
-                  title={todayAriaLabel}
-                  className="h-[25px] shrink-0 rounded-lg bg-primary px-2 text-xs font-semibold text-primary-foreground"
-                >
-                  {todayAriaLabel}
-                </button>
               </div>
             ) : useCalendarPicker ? (
               calendarControl(patroMobileStepBtn)

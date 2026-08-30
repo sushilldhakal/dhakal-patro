@@ -42,6 +42,14 @@ export interface PlaygroundConfig {
   layers?: Partial<SimToggles>;
   params?: Partial<SimParams>;
   camera?: Partial<CameraState>;
+  /**
+   * Guided chapter tour (welcome → stellar → … → playground).
+   *
+   * The scene is the same one — राशि, नक्षत्र, month and Moon stay in it for
+   * later chapters. This flag only adds the player chrome and the opening
+   * keyframes.
+   */
+  guided?: boolean;
 }
 
 const DEG = Math.PI / 180;
@@ -196,7 +204,7 @@ export const MODE_CAMERA: Record<PlaygroundMode, CameraState> = {
 export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   /* ── the day itself ──────────────────────────────────────────────── */
   "what-is-a-day": { mode: "day" },
-  "earth-rotation-day": { mode: "day" },
+  "earth-rotation-day": { mode: "day", guided: true },
   "sidereal-time": { mode: "day", layers: { siderealArc: true, solarArc: false } },
   vara: { mode: "day", layers: { eotWedge: false } },
   "how-we-calculate": { mode: "day" },
