@@ -2662,8 +2662,8 @@ export const strings = {
   /* ── vastu ───────────────────────────────────────────────────────────── */
   "vastu.title": { ne: "वास्तु", en: "Vastu" },
   "vastu.subtitle": {
-    ne: "वास्तुशास्त्रको दिशा चक्र — कुन कुनामा कुन कोठा, कुन तत्त्व र कुन देवता; सामान्य वास्तु दोष र घरमै गर्न सकिने उपाय।",
-    en: "The Vastu direction wheel — which room belongs in which corner, its element and its deity, plus common vastu doshas and practical remedies.",
+    ne: "वास्तुको घर नक्सा — कुन कुनामा कुन कोठा, कुन तत्त्व र कुन देवता; सामान्य वास्तु दोष र घरमै गर्न सकिने उपाय।",
+    en: "A Vastu house map — which room belongs in which corner, its element and its deity, plus common vastu doshas and practical remedies.",
   },
 
   "vastu.wheel.heading": { ne: "दिशा चक्र", en: "Direction wheel" },
@@ -2672,6 +2672,16 @@ export const strings = {
     en: "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
   },
   "vastu.wheel.hint": { ne: "दिशा छान्न थिच्नुहोस्", en: "Tap a direction" },
+
+  "vastu.plan.heading": { ne: "घरको नक्सा (२डी)", en: "House layout (2D)" },
+  "vastu.plan.blurb": {
+    ne: "उत्तर माथि राखेर घरलाई नौ भागमा बाँडिएको वास्तु पुरुष मण्डल — बीचमा ब्रह्मस्थान, वरिपरि अष्ट दिशा। कुनै भाग वा कोठा छान्नुहोस्।",
+    en: "The Vastu Purusha Mandala — the house split into nine zones with north at the top: the Brahmasthan at the centre, the eight directions around it. Tap any zone or room.",
+  },
+  "vastu.plan.hint": { ne: "भाग वा कोठा छान्न थिच्नुहोस्", en: "Tap a zone or room" },
+  "vastu.plan.north": { ne: "उत्तर", en: "North" },
+  "vastu.plan.center_open": { ne: "खुला राख्नुहोस्", en: "Keep open" },
+  "vastu.plan.elements": { ne: "पञ्चतत्त्व", en: "Five elements" },
 
   "vastu.rooms.heading": { ne: "कोठा अनुसार दिशा", en: "Room by direction" },
   "vastu.rooms.blurb": {
