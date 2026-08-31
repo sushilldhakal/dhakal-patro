@@ -159,7 +159,7 @@ function pinToilet(cell: Rect, w: number, h: number, zone: ZoneId, avoid: Rect[]
   return spots[0]!;
 }
 
-function attachToilet(host: PlannedRoom, wet: PlannedSpace, floor: StoreyId): PlannedRoom | null {
+function attachToilet(host: PlannedRoom, wet: PlannedSpace, floor: StoreyId, rooms: PlannedRoom[]): PlannedRoom | null {
   if (toiletForbidden(host.vastuRegion)) return null;
   if (host.vastuRegion !== "south" && host.vastuRegion !== "northwest" && host.vastuRegion !== "west") return null;
   const r = host.rect;
@@ -177,8 +177,10 @@ function attachToilet(host: PlannedRoom, wet: PlannedSpace, floor: StoreyId): Pl
     w: tw,
     h: th,
   };
-  const remain = largest(splitBy(r, bath));
+  const pieces = splitBy(r, bath);
+  const remain = largest(pieces);
   if (!remain || !boxFits(remain.w, remain.h, IDEAL_SIZE[host.kind as SpaceKind])) return null;
+  addLeftovers(rooms, pieces, remain, host.id, floor, false);
   host.rect = remain;
   const room = makeRoom(wet, bath, floor, host.vastuRegion);
   addDoor(room, west ? "e" : "w", 0.55, host.id, WET_DOOR_W);
@@ -201,22 +203,28 @@ function isWet(kind: PlannedRoom["kind"]): boolean {
 function placeFoyer(rooms: PlannedRoom[], foyer: Rect, storey: StoreyId, facing: CardinalWall): PlannedRoom | null {
   for (const room of rooms) {
     if (!isWet(room.kind) || overlapArea(room.rect, foyer) < 0.08) continue;
-    const keep = largest(
-      splitBy(room.rect, foyer).filter((p) => boxFits(p.w, p.h, IDEAL_SIZE[room.kind as SpaceKind])),
-    );
-    if (keep) room.rect = keep;
+    const pieces = splitBy(room.rect, foyer);
+    const keep = largest(pieces.filter((p) => boxFits(p.w, p.h, IDEAL_SIZE[room.kind as SpaceKind])));
+    if (keep) {
+      addLeftovers(rooms, pieces, keep, room.id, storey, false);
+      room.rect = keep;
+    }
   }
 
   const hits = rooms.filter(
     (r) => !isWet(r.kind) && r.life !== "circulation" && r.life !== "outdoor" && overlapArea(r.rect, foyer) >= 0.15,
   );
-  const carved: { room: PlannedRoom; remain: Rect }[] = [];
+  const carved: { room: PlannedRoom; remain: Rect; pieces: Rect[] }[] = [];
   for (const hit of hits) {
-    const remain = largest(splitBy(hit.rect, foyer));
+    const pieces = splitBy(hit.rect, foyer);
+    const remain = largest(pieces);
     if (!remain || !boxFits(remain.w, remain.h, IDEAL_SIZE[hit.kind as SpaceKind])) return null;
-    carved.push({ room: hit, remain });
+    carved.push({ room: hit, remain, pieces });
   }
-  for (const { room, remain } of carved) room.rect = remain;
+  for (const { room, remain, pieces } of carved) {
+    addLeftovers(rooms, pieces, remain, room.id, storey, false);
+    room.rect = remain;
+  }
 
   for (const room of [...rooms]) {
     if (room.kind !== "brahmasthan") continue;
@@ -228,9 +236,10 @@ function placeFoyer(rooms: PlannedRoom[], foyer: Rect, storey: StoreyId, facing:
       continue;
     }
     room.rect = keep;
+    let cutIndex = 0;
     for (const piece of pieces) {
       if (piece === keep) continue;
-      rooms.push(openPiece(`${room.id}_cut`, piece, storey, room.life === "outdoor"));
+      rooms.push(openPiece(`${room.id}_cut${cutIndex++}`, piece, storey, room.life === "outdoor"));
     }
   }
 
@@ -285,12 +294,18 @@ function pickZone(
   return null;
 }
 
+/**
+ * Door a room onto whichever open space it shares the longest wall with,
+ * biggest first. Area — not the id — is what tells a real hub (the
+ * Brahmasthan, the foyer, the hall) apart from a carve's small leftover
+ * sliver: an id-prefix check used to stand in for that and would tie a
+ * sliver with the true centre, occasionally routing a room's only door into
+ * a dead pocket instead of the actual circulation spine.
+ */
 function doorOntoOpen(room: PlannedRoom, open: PlannedRoom[]): void {
   if (room.doors.length) return;
-  const ranked = [...open].sort((a, b) => {
-    const score = (s: PlannedRoom) => (s.id.startsWith("center_") ? 0 : s.kind === "brahmasthan" ? 1 : 2);
-    return score(a) - score(b);
-  });
+  const area = (s: PlannedRoom) => s.rect.w * s.rect.h;
+  const ranked = [...open].sort((a, b) => area(b) - area(a));
   for (const space of ranked) {
     const seg = sharedSeg(room.rect, space.rect);
     if (seg) {
@@ -300,6 +315,95 @@ function doorOntoOpen(room: PlannedRoom, open: PlannedRoom[]): void {
   }
 }
 
+/**
+ * A closed room only ever gets one door — the best one, via
+ * {@link doorOntoOpen}. That leaves open spaces free to end up with none at
+ * all: a leftover carve sliver wedged between two real rooms gets a wall
+ * from each side (only closed rooms draw walls) but neither room was
+ * obliged to put its one door there. The result reads as a room sealed
+ * behind two blank walls. Every open space needs at least one way in from
+ * whatever real room it borders — this is that guarantee, run once all the
+ * rooms' own doors are already placed.
+ */
+function sealCirculation(rooms: PlannedRoom[]): void {
+  const hosts = rooms.filter((r) => r.life !== "circulation" && r.life !== "outdoor");
+  for (const space of rooms) {
+    if (space.life !== "circulation" && space.life !== "outdoor") continue;
+    if (space.doors.length) continue;
+    for (const host of hosts) {
+      const seg = sharedSeg(space.rect, host.rect);
+      if (seg) {
+        addDoor(space, seg.wall, 0.5, host.id);
+        break;
+      }
+    }
+  }
+}
+
+function reachableFrom(rooms: PlannedRoom[], byId: Map<string, PlannedRoom>, rootId: string): Set<string> {
+  const isOpen = (r: PlannedRoom) => r.life === "circulation" || r.life === "outdoor";
+  const seen = new Set([rootId]);
+  const queue = [rootId];
+  while (queue.length) {
+    const cur = byId.get(queue.pop()!);
+    if (!cur) continue;
+    for (const d of cur.doors) {
+      if (d.connectsTo !== "outside" && !seen.has(d.connectsTo)) {
+        seen.add(d.connectsTo);
+        queue.push(d.connectsTo);
+      }
+    }
+    for (const r of rooms) {
+      if (seen.has(r.id)) continue;
+      if (r.doors.some((d) => d.connectsTo === cur.id)) {
+        seen.add(r.id);
+        queue.push(r.id);
+      } else if (isOpen(cur) && isOpen(r) && sharedSeg(cur.rect, r.rect)) {
+        seen.add(r.id);
+        queue.push(r.id);
+      }
+    }
+  }
+  return seen;
+}
+
+/**
+ * A closed room only ever gets its one door where {@link doorOntoOpen}
+ * chose to spend it, and a shared micro-hub (a sealed sliver bridged by
+ * {@link sealCirculation}) only ever bridges to the one host that happened
+ * to claim it — locally sound choices that can still leave a whole cluster
+ * of rooms cut off from the front door if none of them individually chose
+ * the path that would have connected the group. This is the final check:
+ * BFS from the entrance, and for whatever's still unreached, give it one
+ * more door — even a second one on an already-doored room — to whichever
+ * already-reachable neighbour it borders. Repeats since bridging one room
+ * can bring its whole stranded cluster in behind it.
+ */
+function ensureReachable(rooms: PlannedRoom[], rootId: string): void {
+  const byId = new Map(rooms.map((r) => [r.id, r]));
+  if (!byId.has(rootId)) return;
+  for (let guard = 0; guard < rooms.length; guard++) {
+    const seen = reachableFrom(rooms, byId, rootId);
+    const stuck = rooms.filter((r) => !seen.has(r.id));
+    if (!stuck.length) return;
+    let bridged = false;
+    for (const room of stuck) {
+      const neighbor = rooms.find((r) => seen.has(r.id) && sharedSeg(room.rect, r.rect));
+      if (!neighbor) continue;
+      const seg = sharedSeg(room.rect, neighbor.rect)!;
+      addDoor(room, seg.wall, 0.5, neighbor.id);
+      bridged = true;
+    }
+    if (!bridged) return;
+  }
+}
+
+/**
+ * The mandala's corner notches are a deliberate decorative cut, not a carve
+ * leftover — the sliver they leave behind stays unclaimed on purpose (it's
+ * the same treatment the four Brahmasthan-corner notches already get), so
+ * this returns only the one usable rectangle, not the offcut.
+ */
 function usableCell(cell: Rect, cuts: Rect[]): Rect {
   let pieces = [cell];
   for (const cut of cuts) {
@@ -320,6 +424,30 @@ function openPiece(id: string, rect: Rect, storey: StoreyId, wantCourt: boolean)
     windows: [],
     adjacentTo: [],
   };
+}
+
+/**
+ * Rectangles from {@link splitBy} that aren't `keep` and are still big enough
+ * to stand as their own space — the piece of floor a carve otherwise throws
+ * away. Every carve site must reclaim these as open rooms; leaving them out
+ * produces floor area with no room, no wall and no door — a gap a reader has
+ * to cross to reach whatever the carve was for.
+ */
+function splitLeftovers(pieces: Rect[], keep: Rect | null): Rect[] {
+  return pieces.filter((p) => p !== keep && p.w >= 0.9 && p.h >= 0.9);
+}
+
+function addLeftovers(
+  rooms: PlannedRoom[],
+  pieces: Rect[],
+  keep: Rect | null,
+  idPrefix: string,
+  storey: StoreyId,
+  wantCourt: boolean,
+): void {
+  splitLeftovers(pieces, keep).forEach((rect, i) => {
+    rooms.push(openPiece(`${idPrefix}_gap${i}_${storey}`, rect, storey, wantCourt));
+  });
 }
 
 function buildFloor(
@@ -384,9 +512,9 @@ function buildFloor(
     const rect = wetRectInCell(cell, wet.kind, picked.zone, [foyer]);
     free.splice(free.indexOf(picked.zone), 1);
     rooms.push(makeRoom(wet, rect, storey, ZONE_DIR[picked.zone]));
-    for (const piece of splitBy(cell, rect)) {
-      if (piece.w >= 0.9 && piece.h >= 0.9) rooms.push(openPiece(`center_${picked.zone}_${storey}`, piece, storey, wantCourt));
-    }
+    splitBy(cell, rect).forEach((piece, i) => {
+      if (piece.w >= 0.9 && piece.h >= 0.9) rooms.push(openPiece(`center_${picked.zone}_${i}_${storey}`, piece, storey, wantCourt));
+    });
     return true;
   };
 
@@ -410,8 +538,10 @@ function buildFloor(
       return contains(r.rect, stair.rect) || overlapArea(r.rect, stair.rect) > 0.4;
     });
     if (hostRoom) {
-      const remain = largest(splitBy(hostRoom.rect, stair.rect));
+      const pieces = splitBy(hostRoom.rect, stair.rect);
+      const remain = largest(pieces);
       if (remain && boxFits(remain.w, remain.h, IDEAL_SIZE[hostRoom.kind as SpaceKind])) {
+        addLeftovers(rooms, pieces, remain, hostRoom.id, storey, false);
         hostRoom.rect = remain;
       }
     }
@@ -430,8 +560,7 @@ function buildFloor(
 
   for (const id of free) {
     const rect = cellRect(id);
-    if (rect.w < 0.9 || rect.h < 0.9) continue;
-    rooms.push(openPiece(`center_${id}_${storey}`, rect, storey, wantCourt));
+    if (rect.w >= 0.9 && rect.h >= 0.9) rooms.push(openPiece(`center_${id}_${storey}`, rect, storey, wantCourt));
   }
 
   const boxedFoyer = placeFoyer(rooms, foyer, storey, site.facing);
@@ -440,7 +569,7 @@ function buildFloor(
     let done = false;
     for (const host of rooms) {
       if (!HOST_KINDS.has(host.kind as SpaceKind) || usedHosts.has(host.id)) continue;
-      const attached = attachToilet(host, wet, storey);
+      const attached = attachToilet(host, wet, storey, rooms);
       if (attached) {
         usedHosts.add(host.id);
         rooms.push(attached);
@@ -458,6 +587,8 @@ function buildFloor(
     if (room.life === "circulation" || room.life === "outdoor") continue;
     doorOntoOpen(room, open);
   }
+  sealCirculation(rooms);
+  ensureReachable(rooms, boxedFoyer?.id ?? centerId);
 
   for (let i = 0; i < rooms.length; i++) {
     for (let j = i + 1; j < rooms.length; j++) {
