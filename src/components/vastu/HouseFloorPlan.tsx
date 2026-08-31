@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
-import type { BHole, BWall, BuildingLayer, FloorConcept, HouseConcept, PlannedRoom, RoomFixture } from "@/lib/house-plan/types";
+import type { BHole, BWall, BuildingLayer, FloorConcept, HouseConcept, PlannedRoom } from "@/lib/house-plan/types";
 
 const SCALE = 28;
 
@@ -41,108 +41,6 @@ function StairTreads({ room }: { room: PlannedRoom }) {
       })}
     </g>
   );
-}
-
-function FixturePlan({ fixture }: { fixture: RoomFixture }) {
-  const r = fixture.rect;
-  const x = px(r.x);
-  const y = px(r.y);
-  const w = px(r.w);
-  const h = px(r.h);
-  const stroke = "color-mix(in srgb, var(--foreground) 55%, var(--card))";
-  const fill = "color-mix(in srgb, var(--card) 86%, var(--foreground))";
-  const wood = "color-mix(in srgb, #8b6a42 38%, var(--card))";
-  const soft = "color-mix(in srgb, var(--secondary) 22%, var(--card))";
-
-  if (fixture.kind === "bed") {
-    const headSouth = fixture.facing !== "e";
-    const pillow = headSouth
-      ? { x: r.x + r.w * 0.12, y: r.y + r.h * 0.72, w: r.w * 0.76, h: r.h * 0.16 }
-      : { x: r.x + r.w * 0.72, y: r.y + r.h * 0.12, w: r.w * 0.16, h: r.h * 0.76 };
-    return (
-      <g>
-        <rect x={x} y={y} width={w} height={h} rx={4} fill={soft} stroke={stroke} strokeWidth={1.1} />
-        <rect x={px(pillow.x)} y={px(pillow.y)} width={px(pillow.w)} height={px(pillow.h)} rx={2} fill="color-mix(in srgb, var(--card) 70%, var(--foreground))" opacity={0.45} />
-      </g>
-    );
-  }
-  if (fixture.kind === "basin" || fixture.kind === "sink") {
-    return (
-      <g>
-        <rect x={x} y={y} width={w} height={h} rx={3} fill={fill} stroke={stroke} strokeWidth={1.1} />
-        <ellipse cx={x + w / 2} cy={y + h / 2} rx={w * 0.32} ry={h * 0.28} fill="color-mix(in srgb, var(--secondary) 16%, var(--card))" stroke={stroke} strokeWidth={1} />
-      </g>
-    );
-  }
-  if (fixture.kind === "wc") {
-    const sitSouth = fixture.facing !== "n";
-    const tank = sitSouth ? { x, y, w, h: h * 0.28 } : { x, y: y + h * 0.72, w, h: h * 0.28 };
-    const bowl = sitSouth
-      ? { cx: x + w / 2, cy: y + h * 0.64, rx: w * 0.42, ry: h * 0.28 }
-      : { cx: x + w / 2, cy: y + h * 0.36, rx: w * 0.42, ry: h * 0.28 };
-    return (
-      <g>
-        <rect x={tank.x} y={tank.y} width={tank.w} height={tank.h} rx={2} fill={fill} stroke={stroke} strokeWidth={1.1} />
-        <ellipse cx={bowl.cx} cy={bowl.cy} rx={bowl.rx} ry={bowl.ry} fill={fill} stroke={stroke} strokeWidth={1.1} />
-      </g>
-    );
-  }
-  if (fixture.kind === "sofa" || fixture.kind === "armchair") {
-    const back =
-      fixture.facing === "s"
-        ? { x, y, w, h: h * 0.22 }
-        : fixture.facing === "n"
-          ? { x, y: y + h * 0.78, w, h: h * 0.22 }
-          : fixture.facing === "e"
-            ? { x, y, w: w * 0.22, h }
-            : { x: x + w * 0.78, y, w: w * 0.22, h };
-    return (
-      <g>
-        <rect x={x} y={y} width={w} height={h} rx={5} fill={soft} stroke={stroke} strokeWidth={1.1} />
-        <rect x={back.x} y={back.y} width={back.w} height={back.h} rx={2} fill="color-mix(in srgb, var(--secondary) 40%, var(--card))" />
-      </g>
-    );
-  }
-  if (fixture.kind === "chair") {
-    return <rect x={x} y={y} width={w} height={h} rx={3} fill={wood} stroke={stroke} strokeWidth={1} />;
-  }
-  if (fixture.kind === "table" || fixture.kind === "desk") {
-    return (
-      <g>
-        <rect x={x} y={y} width={w} height={h} rx={2} fill={wood} stroke={stroke} strokeWidth={1.1} />
-        <rect x={x + w * 0.12} y={y + h * 0.12} width={w * 0.76} height={h * 0.76} rx={1} fill="none" stroke={stroke} strokeOpacity={0.35} />
-      </g>
-    );
-  }
-  if (fixture.kind === "wardrobe" || fixture.kind === "cupboard" || fixture.kind === "bookcase" || fixture.kind === "fridge") {
-    const split = r.w >= r.h;
-    return (
-      <g>
-        <rect x={x} y={y} width={w} height={h} rx={2} fill={fixture.kind === "fridge" ? fill : wood} stroke={stroke} strokeWidth={1.1} />
-        {split ? <line x1={x + w / 2} y1={y + 2} x2={x + w / 2} y2={y + h - 2} stroke={stroke} strokeWidth={1} /> : <line x1={x + 2} y1={y + h / 2} x2={x + w - 2} y2={y + h / 2} stroke={stroke} strokeWidth={1} />}
-      </g>
-    );
-  }
-  if (fixture.kind === "stove") {
-    const r1 = Math.min(w, h) * 0.16;
-    return (
-      <g>
-        <rect x={x} y={y} width={w} height={h} rx={2} fill="color-mix(in srgb, #333 45%, var(--card))" stroke={stroke} strokeWidth={1.1} />
-        {[
-          [0.3, 0.3],
-          [0.7, 0.3],
-          [0.3, 0.7],
-          [0.7, 0.7],
-        ].map(([tx, ty], i) => (
-          <circle key={i} cx={x + w * tx} cy={y + h * ty} r={r1} fill="none" stroke={stroke} strokeWidth={1} />
-        ))}
-      </g>
-    );
-  }
-  if (fixture.kind === "tv" || fixture.kind === "ac") {
-    return <rect x={x} y={y} width={w} height={h} rx={1} fill={fixture.kind === "tv" ? "#2a2b2e" : fill} stroke={stroke} strokeWidth={1} />;
-  }
-  return <rect x={x} y={y} width={w} height={h} rx={2} fill={fill} stroke={stroke} strokeWidth={1} />;
 }
 
 function NorthArrow({ x, y }: { x: number; y: number }) {
@@ -322,10 +220,6 @@ export function HouseFloorPlan({
           ))}
 
           {floor.rooms.map((room) => (room.kind === "staircase" ? <StairTreads key={`${room.id}-stair`} room={room} /> : null))}
-
-          {floor.rooms.flatMap((room) =>
-            (room.fixtures ?? []).map((fixture) => <FixturePlan key={fixture.id} fixture={fixture} />),
-          )}
 
           {layer.walls.map((wall) => (
             <ThickWall key={wall.id} layer={layer} wall={wall} holes={layer.holes} />

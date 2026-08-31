@@ -14,7 +14,6 @@ import {
 } from "@/lib/vastu-plan";
 import { compileLayer, DOOR_W, sharedSeg, WET_DOOR_W } from "./building";
 import { foyerRect, largest, splitBy, toiletForbidden } from "./classical";
-import { furnishRoom } from "./furniture";
 import { allowedRegions, HOST_KINDS, lifeZoneOf, vastuCost } from "./prefs";
 import type {
   FloorConcept,
@@ -458,7 +457,6 @@ function buildFloor(
   for (const room of rooms) {
     if (room.life === "circulation" || room.life === "outdoor") continue;
     doorOntoOpen(room, open);
-    room.fixtures = furnishRoom(room);
   }
 
   for (let i = 0; i < rooms.length; i++) {

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTranslation } from "react-i18next";
-import { FURNITURE } from "@/lib/house-plan/furniture";
-import type { BWall, FloorConcept, HouseConcept, PlannedRoom, RoomFixture } from "@/lib/house-plan/types";
+import type { BWall, FloorConcept, HouseConcept, PlannedRoom } from "@/lib/house-plan/types";
 
 const WALL_H = 2.75;
 const DOOR_H = 2.1;
@@ -21,22 +20,6 @@ type Piece = {
   angle: number;
   color: string;
 };
-
-function furnBox(item: RoomFixture, ox: number, oz: number, baseY: number) {
-  const spec = item.kind === "wc" || item.kind === "basin" ? { h: item.height ?? 0.42, color: item.kind === "wc" ? "#dfe4e8" : "#cfd6da" } : FURNITURE[item.kind];
-  const h = item.height ?? spec.h;
-  const lift = item.lift ?? 0;
-  return {
-    key: item.id,
-    x: item.rect.x + item.rect.w / 2 - ox,
-    y: baseY + lift + h / 2,
-    z: item.rect.y + item.rect.h / 2 - oz,
-    w: item.rect.w,
-    h,
-    d: item.rect.h,
-    color: spec.color,
-  };
-}
 
 function floorTint(kind: PlannedRoom["kind"], id: string): string {
   if (kind === "brahmasthan" && id.startsWith("center_")) return "#7f9a68";
@@ -169,7 +152,6 @@ function HouseMesh({ concept }: { concept: HouseConcept }) {
     const slabs: { key: string; x: number; z: number; w: number; h: number; y: number; color: string }[] = [];
     const stairs: { key: string; x: number; z: number; w: number; h: number; y: number }[] = [];
     const doors: { key: string; x: number; z: number; y: number; w: number; h: number; angle: number; swing: number }[] = [];
-    const furniture: { key: string; x: number; y: number; z: number; w: number; h: number; d: number; color: string }[] = [];
     for (const floor of concept.floors) {
       const baseY = floor.storey * STOREY_H;
       pieces.push(...wallPieces(floor, ox, oz, baseY));
@@ -184,9 +166,6 @@ function HouseMesh({ concept }: { concept: HouseConcept }) {
           y: baseY + 0.03,
           color: floorTint(room.kind, room.id),
         });
-        for (const item of room.fixtures ?? []) {
-          furniture.push(furnBox(item, ox, oz, baseY));
-        }
         if (room.kind === "staircase") {
           const steps = 8;
           for (let i = 0; i < steps; i++) {
@@ -225,7 +204,7 @@ function HouseMesh({ concept }: { concept: HouseConcept }) {
         });
       }
     }
-    return { pieces, slabs, stairs, doors, furniture };
+    return { pieces, slabs, stairs, doors };
   }, [concept, ox, oz]);
 
   return (
@@ -255,12 +234,6 @@ function HouseMesh({ concept }: { concept: HouseConcept }) {
         >
           <boxGeometry args={[0.04, d.h, d.w]} />
           <meshStandardMaterial color="#8b5a32" roughness={0.7} />
-        </mesh>
-      ))}
-      {built.furniture.map((f) => (
-        <mesh key={f.key} position={[f.x, f.y, f.z]} castShadow receiveShadow>
-          <boxGeometry args={[f.w, f.h, f.d]} />
-          <meshStandardMaterial color={f.color} roughness={0.78} />
         </mesh>
       ))}
       {built.stairs.map((s) => (
