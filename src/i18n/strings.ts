@@ -2672,6 +2672,9 @@ export const strings = {
     en: "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
   },
   "vastu.wheel.hint": { ne: "दिशा छान्न थिच्नुहोस्", en: "Tap a direction" },
+  "vastu.wheel.status.good": { ne: "शुभ", en: "Good" },
+  "vastu.wheel.status.ok": { ne: "मध्यम", en: "Okay" },
+  "vastu.wheel.status.bad": { ne: "अशुभ", en: "Bad" },
 
   "vastu.plan.heading": { ne: "घरको नक्सा (२डी)", en: "House layout (2D)" },
   "vastu.plan.blurb": {

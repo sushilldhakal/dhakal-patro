@@ -1471,6 +1471,11 @@
       "heading": "Direction wheel",
       "blurb": "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
       "hint": "Tap a direction",
+      "status": {
+        "good": "Good",
+        "ok": "Okay",
+        "bad": "Bad"
+      },
       "attr": {
         "money": "Money",
         "health": "Health",
