@@ -3,8 +3,8 @@ import { ArrowUp, DoorOpen } from "lucide-react";
 import {
   VASTU_ELEMENT_COLOR,
   VASTU_GRID_LAYOUT,
+  roomsForDirection,
   vastuDirection,
-  vastuRoomsForDirection,
   type VastuDirectionId,
 } from "@/lib/vastu";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ function ZoneCell({
   const { t } = useTranslation();
   const dir = vastuDirection(id);
   const color = VASTU_ELEMENT_COLOR[dir.element];
-  const rooms = vastuRoomsForDirection(id);
+  const rooms = roomsForDirection(id);
   const isCenter = id === "center";
 
   return (
