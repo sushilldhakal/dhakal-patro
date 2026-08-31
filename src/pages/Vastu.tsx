@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Compass } from "lucide-react";
 import { PageShell, PageHeader } from "../components/PageShell";
-import { VastuHousePlan } from "../components/VastuHousePlan";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PlotPlanner } from "@/components/vastu/PlotPlanner";
 import { VastuPurushaWheel } from "@/components/vastu/VastuPurushaWheel";
