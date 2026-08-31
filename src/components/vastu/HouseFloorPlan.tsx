@@ -1,7 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
-import { CARDINAL_WALLS } from "@/lib/vastu";
-import { pada32Points } from "@/lib/house-plan/classical";
 import type { BHole, BWall, BuildingLayer, FloorConcept, HouseConcept, PlannedRoom } from "@/lib/house-plan/types";
 
 const SCALE = 28;
@@ -41,32 +39,6 @@ function StairTreads({ room }: { room: PlannedRoom }) {
         const x = r.x + ((i + 1) * r.w) / steps;
         return <line key={i} x1={px(x)} y1={px(r.y)} x2={px(x)} y2={px(r.y + r.h)} stroke="currentColor" strokeOpacity={0.35} />;
       })}
-    </g>
-  );
-}
-
-/** The 32-pada Dvāra-vinyāsa boundary marks — a "+" or "−" just outside each wall's 8 sectors. */
-function PadaMarks({ width, height }: { width: number; height: number }) {
-  const offset = 0.42;
-  return (
-    <g className="select-none">
-      {CARDINAL_WALLS.flatMap((wall) =>
-        pada32Points(wall, width, height).map((p) => (
-          <text
-            key={`${wall}-${p.id}`}
-            x={px(p.x + p.nx * offset)}
-            y={px(p.y + p.ny * offset)}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={9}
-            fontWeight={700}
-            fill={p.good ? "var(--color-success)" : "var(--color-danger)"}
-          >
-            <title>{`${p.id} · ${p.name} · ${p.good ? "+" : "−"}`}</title>
-            {p.good ? "+" : "−"}
-          </text>
-        )),
-      )}
     </g>
   );
 }
@@ -289,7 +261,6 @@ export function HouseFloorPlan({
             );
           })}
 
-          <PadaMarks width={concept.width} height={concept.height} />
           <NorthArrow x={concept.width - 0.55} y={0.7} />
         </g>
       </svg>

@@ -1,4 +1,4 @@
-import type { CardinalWall, Point } from "@/lib/vastu";
+import type { CardinalWall } from "@/lib/vastu";
 import type { Rect, Wall } from "./types";
 
 /** 1 hasta-adjacent clearance: bed must not touch the south or west wall. */
@@ -40,86 +40,6 @@ export const DOOR_PADA: Record<CardinalWall, { best: number; ok: number; avoid: 
 
 export function padaCenterT(pada: number): number {
   return (pada - 0.5) / 9;
-}
-
-export type Pada32 = { id: string; name: string; good: boolean };
-
-/**
- * The 32-pada Dvāra-vinyāsa boundary devatās (Viśvakarmā Prakāśa /
- * Mayamata), 8 per wall — a separate, finer-grained scheme from the 9-pada
- * {@link DOOR_PADA} table above, used only to mark each wall's auspicious
- * (+) and inauspicious (−) sectors, not to place the door itself. Each
- * wall's 8 entries walk the same direction as {@link WALL_CORNERS}' pair for
- * that wall, i.e. clockwise around the plot: north NW→NE, east NE→SE,
- * south SE→SW, west SW→NW.
- */
-export const PADA_32: Record<CardinalWall, Pada32[]> = {
-  north: [
-    { id: "N1", name: "Roga", good: false },
-    { id: "N2", name: "Naga", good: false },
-    { id: "N3", name: "Mukhya", good: true },
-    { id: "N4", name: "Bhallat", good: true },
-    { id: "N5", name: "Soma", good: true },
-    { id: "N6", name: "Bhujang", good: false },
-    { id: "N7", name: "Aditi", good: true },
-    { id: "N8", name: "Diti", good: true },
-  ],
-  east: [
-    { id: "E1", name: "Shikhi", good: false },
-    { id: "E2", name: "Parjanya", good: false },
-    { id: "E3", name: "Jayant", good: true },
-    { id: "E4", name: "Mahendra", good: true },
-    { id: "E5", name: "Surya", good: false },
-    { id: "E6", name: "Satya", good: false },
-    { id: "E7", name: "Bhrisha", good: false },
-    { id: "E8", name: "Antariksha", good: false },
-  ],
-  south: [
-    { id: "S1", name: "Anil", good: false },
-    { id: "S2", name: "Pusha", good: false },
-    { id: "S3", name: "Vitatha", good: false },
-    { id: "S4", name: "Grihakshat", good: true },
-    { id: "S5", name: "Yama", good: false },
-    { id: "S6", name: "Gandharv", good: true },
-    { id: "S7", name: "Bhringaraja", good: false },
-    { id: "S8", name: "Mruga", good: false },
-  ],
-  west: [
-    { id: "W1", name: "Pitra", good: false },
-    { id: "W2", name: "Dwarika", good: false },
-    { id: "W3", name: "Sugreev", good: false },
-    { id: "W4", name: "Pushpdant", good: true },
-    { id: "W5", name: "Varun", good: true },
-    { id: "W6", name: "Asur", good: false },
-    { id: "W7", name: "Shosha", good: false },
-    { id: "W8", name: "Papyakshma", good: false },
-  ],
-};
-
-const PADA_32_ENDS: Record<CardinalWall, (w: number, h: number) => [Point, Point]> = {
-  north: (w) => [{ x: 0, y: 0 }, { x: w, y: 0 }],
-  east: (w, h) => [{ x: w, y: 0 }, { x: w, y: h }],
-  south: (w, h) => [{ x: w, y: h }, { x: 0, y: h }],
-  west: (_w, h) => [{ x: 0, y: h }, { x: 0, y: 0 }],
-};
-
-const PADA_32_OUTWARD: Record<CardinalWall, Point> = {
-  north: { x: 0, y: -1 },
-  south: { x: 0, y: 1 },
-  east: { x: 1, y: 0 },
-  west: { x: -1, y: 0 },
-};
-
-export type Pada32Point = Pada32 & { x: number; y: number; nx: number; ny: number };
-
-/** Midpoint of each of a wall's 8 pada sectors, plus the outward unit normal to offset a marker along. */
-export function pada32Points(wall: CardinalWall, width: number, height: number): Pada32Point[] {
-  const [a, b] = PADA_32_ENDS[wall](width, height);
-  const out = PADA_32_OUTWARD[wall];
-  return PADA_32[wall].map((pada, i) => {
-    const t = (i + 0.5) / 8;
-    return { ...pada, x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, nx: out.x, ny: out.y };
-  });
 }
 
 /** Door center on the facing wall, off the Vaṁśadvāra median. */
