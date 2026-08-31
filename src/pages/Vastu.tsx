@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Compass } from "lucide-react";
 import { PageShell, PageHeader } from "../components/PageShell";
+import { VastuHousePlan } from "../components/VastuHousePlan";
 import { useRouteLoading } from "@/lib/route-loading";
 import { PlotPlanner } from "@/components/vastu/PlotPlanner";
 import { VastuPurushaWheel } from "@/components/vastu/VastuPurushaWheel";
@@ -72,8 +73,8 @@ export function Vastu() {
       <section className="rounded-2xl border border-border">
         <header className="flex flex-wrap items-center gap-1.5 border-b border-border px-4 py-3">
           <Compass className="h-4 w-4 shrink-0 text-secondary" />
-          <h2 className="text-sm font-semibold text-foreground">{t("vastu.wheel.heading")}</h2>
-          <span className="ml-auto text-sm">{t("vastu.wheel.hint")}</span>
+          <h2 className="text-sm font-semibold text-foreground">{t("vastu.plan.heading")}</h2>
+          <span className="ml-auto text-sm">{t("vastu.plan.hint")}</span>
         </header>
 
         <div className="space-y-4 p-3 sm:p-4">

@@ -87,6 +87,40 @@ export const VASTU_DOSHAS: string[] = [
   "blocked_door",
 ];
 
+/**
+ * The eight directions + Brahmasthan laid out as a North-up 3×3 house grid
+ * (Vastu Purusha Mandala), in reading order — top-left → bottom-right:
+ *
+ *   NW │ N │ NE
+ *   ───┼───┼───
+ *    W │ C │ E
+ *   ───┼───┼───
+ *   SW │ S │ SE
+ *
+ * Shared with the mobile app so both platforms draw the same floor plan.
+ */
+export const VASTU_GRID_LAYOUT: VastuDirectionId[] = [
+  "northwest",
+  "north",
+  "northeast",
+  "west",
+  "center",
+  "east",
+  "southwest",
+  "south",
+  "southeast",
+];
+
+/** Rooms grouped by their ideal direction, in the walk-through order of {@link VASTU_ROOMS}. */
+export const VASTU_ROOMS_BY_DIRECTION: Record<VastuDirectionId, VastuRoom[]> =
+  VASTU_DIRECTIONS.reduce(
+    (acc, dir) => {
+      acc[dir.id] = VASTU_ROOMS.filter((room) => room.direction === dir.id);
+      return acc;
+    },
+    {} as Record<VastuDirectionId, VastuRoom[]>,
+  );
+
 export function vastuDirection(id: VastuDirectionId): VastuDirection {
   return VASTU_DIRECTIONS.find((d) => d.id === id) ?? VASTU_CENTER;
 }
