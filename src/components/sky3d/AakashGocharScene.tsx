@@ -17,10 +17,20 @@
  * a few times a second via `onSample`.
  */
 
+
 import { Fragment, useEffect, useMemo, useRef } from "react";
+
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { EclipticWheel, BELT_INNER, BELT_OUTER, MONTH_R, NAK_INNER, NAK_OUTER } from "@/components/learn/EclipticWheel";
+import {
+  EclipticWheel,
+  ECLIPTIC_GRID_COLOR,
+  BELT_INNER,
+  BELT_OUTER,
+  MONTH_R,
+  NAK_INNER,
+  NAK_OUTER,
+} from "@/components/learn/EclipticWheel";
 import type { GrahaKey } from "@/lib/graha-details";
 import {
   DEG,
@@ -63,12 +73,15 @@ import {
   SOLAR_STATIONS,
   type GeoPoint,
   DEGREE_TICKS,
-  buildAzimuthGridPairs,
+  buildAlmucantarPairs,
+  buildVerticalPairs,
   buildLocalGridPairs,
   CARDINAL_VERTICALS,
   gridStepForFov,
+  verticalStepForFov,
   POLE_MARKS,
   GRID_TIERS,
+  GRID_OPACITY,
   LOCAL_GRID_CAPACITY,
   type HorizonPoint,
   NAK_LABEL_LAT,
@@ -96,6 +109,7 @@ import {
   type SkyTextureKey,
 } from "@/lib/sky3d/sky-textures";
 import {
+  distanceForHorizonFov,
   fovForZoom,
   GLOBE_BAND_R,
   GLOBE_CAM_R,
@@ -111,9 +125,43 @@ import {
   projectHorizon,
 } from "@/lib/sky3d/horizon-projection";
 import { buildGridLabels } from "@/lib/sky3d/grid-labels";
-import { makeMoonMaterial, type MoonMaterial } from "@/lib/sky3d/moon-material";
+import {
+  makeMoonMaterial,
+  MOON_EARTHSHINE,
+  MOON_PHASE_FOV_TIGHT,
+  MOON_PHASE_FOV_WIDE,
+  MOON_UNLIT_FAR,
+  type MoonMaterial,
+} from "@/lib/sky3d/moon-material";
 import { makeEarthMaterial } from "@/lib/sky3d/earth-material";
 import { applyNadirStereographicUVs, prepareKathmanduGround } from "@/lib/sky3d/terrain";
+import {
+  buildHipsTileOutline,
+  clearHipsDebugSnapshot,
+  ensureHipsFallbackTexture,
+  ensureHipsTile,
+  evictHipsTiles,
+  findReadyHipsAncestor,
+  getHipsSiblings,
+  HIPS_MAX_LOCAL_ORDER,
+  hipsLoadsInFlightCount,
+  hipsTileCount,
+  hipsTileKey,
+  hipsTileNeedsLoad,
+  hipsTilePriority,
+  loadHipsTileTexture,
+  nextHipsFrame,
+  writeHipsDebugSnapshot,
+  type HipsDebugTile,
+  type HipsTileEntry,
+} from "@/lib/sky3d/hips";
+import {
+  evaluateHipsTiles,
+  getHipsTileScreenSizePx,
+  HIPS_TILE_REFINE_PIXELS,
+  type HipsLodFrame,
+  type HipsLodLeaf,
+} from "@/lib/sky3d/hips-lod";
 import earthToonUrl from "@/assets/graha/earth-orig.png";
 import milkyWayUrl from "@/assets/milkyway.png";
 import kathmanduUrl from "@/assets/kathmandu.jpeg?url";
@@ -173,6 +221,38 @@ const DOME = 100;
 const VEDIC_STAR_CAPACITY = 64;
 
 /** Pixel size from visual magnitude — Sirius (−1.5) reads as a disc, Alcor (4) as a point. */
+/**
+ * The angular radius a star's glare covers, degrees, by magnitude.
+ *
+ * Not the rendered point — that is a fixed handful of pixels — but the
+ * saturated disc the DSS2 plate has in place of a bright star, which is what
+ * a name laid over it disappears into. Capella at magnitude 0.1 burns about a
+ * quarter-degree of plate; by magnitude 6 there is nothing to clear.
+ */
+function starGlowDeg(mag: number): number {
+  return 0.3 * Math.pow(10, -Math.max(mag, -1.5) / 6);
+}
+
+/** Breathing room between the glare and the top of the text, degrees. */
+const GLOW_PAD_DEG = 0.02;
+
+/**
+ * That angular radius in pixels at the current lens, floored and capped.
+ *
+ * Converted per frame rather than baked, because the whole point is that the
+ * gap is angular: the same glare is 6 px across at 90° and 300 px across at
+ * 2°, and only one of those needs the name moved.
+ */
+function labelClearPx(
+  glowDeg: number,
+  fovDeg: number,
+  heightPx: number,
+  floor: number,
+): number {
+  const px = ((glowDeg + GLOW_PAD_DEG) / Math.max(fovDeg, 1e-3)) * heightPx;
+  return Math.max(floor, Math.min(heightPx * 0.22, px));
+}
+
 function vedicStarSize(mag: number): number {
   return Math.max(7, Math.min(20, 13.5 - mag * 1.7));
 }
@@ -212,7 +292,14 @@ const INK_DIM = "#a7c4c3";
 const RETRO = "#ef4444";
 const ZODIAC = "#d8c84a";
 const NAKSHATRA = "#35d05a";
-const GRID = "#6fdf4a";
+/**
+ * The क्षितिज alt/az cage. Brown, not the green it used to be: this grid is
+ * drawn over the काठमाडौँ ground panorama and a warm horizon glow, and a
+ * saturated green cage on top of that read as a separate overlay laid across
+ * the photograph rather than part of the same scene. Only क्षितिज uses this —
+ * the globe has {@link GLOBE_GRID}, अन्तरिक्ष the ecliptic wheel's own colour.
+ */
+const GRID = "#b5824a";
 /**
  * The globe's own graticule. Lighter than {@link GRID}, which was picked to sit
  * on a black sky: the same blue over ocean and forest is a line you have to go
@@ -342,7 +429,8 @@ export type ScreenLabel = {
     | "vedicstar"
     | "star"
     | "culture"
-    | "outerplanet";
+    | "outerplanet"
+    | "nebula";
   /**
    * 1–12 for rashi, 1–27 for nakshatra, 1–4 for a पाद; for a pole star, 1 marks
    * the one the pole is nearest at the moment on screen.
@@ -366,6 +454,17 @@ export type ScreenLabel = {
   year?: number;
   /** The obliquity marker: the angle it is calling out, degrees. */
   deg?: number;
+  /**
+   * How far under the point the name has to sit to clear the object, px.
+   *
+   * A bright star is not the few-pixel dot the renderer draws: on the survey
+   * plates behind it, it is a saturated blob a third of a degree across, and
+   * that blob's *angular* size does not change with the lens. A fixed pixel
+   * offset that looks generous at 90° therefore lands the name inside the
+   * glare at 2°, which is exactly where the names stopped being readable.
+   * See {@link labelClearPx}.
+   */
+  clear?: number;
   /** True when this label is not the live rashi / month / नक्षत्र. */
   dim?: boolean;
   /** Outer planets only: their own tint, since they carry no {@link GrahaKey}
@@ -430,11 +529,6 @@ export type SceneToggles = {
    */
   lockCenter: boolean;
   /**
-   * The ध्रुव तारा and the circle the pole walks between them — the other half
-   * of precession, the one the ayanamsa does not show.
-   */
-  poleStars: boolean;
-  /**
    * Thirty-two individually named bright stars — अगस्त्य, अभिजित्, सप्तर्षि and
    * the rest — the ones classical texts single out by name rather than only
    * as नक्षत्र members. See [[vedic-stars]].
@@ -461,27 +555,16 @@ export type SceneToggles = {
    * divisions were named after, and wanting one without the other is the
    * ordinary case — a clean zodiac with no star clutter, or the sky's own
    * figures with no measuring band across them.
+   *
+   * Carries the राशि figures too — मेष the ram, वृष the bull and the rest,
+   * plus सप्तर्षि, शिंशुमारः, सारथिः, त्रिशङ्कुः and the smaller mythological
+   * groups (Stellarium's own "indian" sky culture; see [[sky-culture]]).
+   * Those had their own राशि आकृति switch until it turned out nobody wants
+   * half the figures: they are all the same act — joining stars into a shape
+   * — drawn in the same view, and two chips for it only asked the reader to
+   * make a distinction the sky does not.
    */
   constellations: boolean;
-  /**
-   * The twelve राशि drawn as their own connect-the-dot figures — मेष the ram,
-   * वृष the bull, and the rest — plus सप्तर्षि, शिंशुमारः, सारथिः, त्रिशङ्कुः
-   * and the smaller mythological groups. Stellarium's own "indian" sky
-   * culture; see [[sky-culture]]. Dome and globe only, the same as
-   * {@link constellations} — क्षितिज / पृथ्वी गोला is where a sky reads as a
-   * sky rather than a measuring wheel.
-   */
-  skyCulture: boolean;
-  /**
-   * A small curated set of Stellarium's own deep-sky object photos — see
-   * [[nebulae]] — placed at their true sky position and true angular size.
-   * This, not a higher-resolution Milky Way panorama, is what actually gives
-   * a zoomed-in view real detail: each one is a small real photograph, only
-   * reading as one once the lens has pulled in enough to make its true
-   * (usually under a degree) size worth anything on screen. Dome and globe
-   * only, same as {@link skyCulture}.
-   */
-  nebulae: boolean;
   /**
    * Horizon view: the ground underfoot and the horizon ring drawn on it.
    *
@@ -632,9 +715,8 @@ function dressGrid(object: THREE.LineSegments) {
   return object;
 }
 
-function bakeHorizonGrid(step: number, skipMultiplesOf: readonly number[], opacity: number) {
-  const pairs = buildAzimuthGridPairs(step, skipMultiplesOf);
-  const object = dressGrid(makeDynamicSegments(pairs.length, GRID, opacity));
+function bakeHorizonGrid(pairs: HorizonPoint[]) {
+  const object = dressGrid(makeDynamicSegments(pairs.length, GRID, GRID_OPACITY));
   for (let i = 0; i < pairs.length; i += 1) {
     setPoint(object, i, altAzToVec3(pairs[i].alt, pairs[i].az, GRID_R));
   }
@@ -659,19 +741,38 @@ function flushLine(line: THREE.Line) {
 const STAR_HALO_SCALE = 3;
 
 /**
- * The widest field any deep-sky photograph is drawn at, degrees. Above
- * this the sky is being read as a whole and these are only clutter.
- *
- * 30° is the handover point, and it is deliberately the same number the
- * Milky Way panorama starts fading at (see the fade thresholds in the
- * frame loop): as the lens pulls in past 30° the single low-resolution
- * whole-sky photograph eases out while the individual, correctly-placed
- * astrophotos ease in over the same span, so one picture of the sky
- * becomes another instead of the panorama vanishing and leaving bare
- * stars. Stellarium does the same handover for the same reason — the
- * panorama is a resolution floor, and these images are what is under it.
+ * There used to be a flat ceiling here — no photograph drawn past 30° of
+ * field, on the theory that above that the sky is being read as a whole and
+ * these are only clutter. That was wrong for anything bigger than a small
+ * object: {@link nebulaReveal}'s own `spanDeg / fovDeg` ratio already goes
+ * to zero on its own once a field is too small a fraction of the frame to
+ * read as anything, so a wide field like Barnard's Loop (14° across) or the
+ * Sagittarius Star Cloud (4°) was being held at zero by the flat ceiling
+ * right up until the reader crossed it, then popped in from nothing — the
+ * one number was fighting the ratio that already does the job everywhere
+ * else. Stellarium has no such ceiling either: `StelSkyImageTile` gates a
+ * tile on being on screen and above its own limiting luminance, never on a
+ * fixed field. Letting the ratio alone decide means a big, bright field
+ * starts easing in as far out as 80–100° — genuinely visible at that
+ * range, the same as it would be in Stellarium — while a small object still
+ * waits for its own tight crop, because its ratio does not clear 6% until
+ * then.
  */
-const NEBULA_MAX_FOV = 30;
+
+/**
+ * Fill of अन्तरिक्ष's ecliptic disc — Earth out to the नक्षत्र rim.
+ *
+ * Kept well under 0.5 so the Milky Way still reads through it. Still under
+ * 1 so the disc stays in the transparent pass and a body behind it reads as
+ * under the plane rather than being hidden outright.
+ */
+const SPACE_PLANE_OPACITY = 0.55;
+/**
+ * Where the background stars sit in अन्तरिक्ष — a sphere well outside the
+ * नक्षत्र rim (32) and outside the furthest camera (130), so the disc is
+ * surrounded by sky rather than sitting on a black void.
+ */
+const SPACE_STAR_R = 220;
 
 /**
  * A cloud of stars whose positions are rewritten with the sky. Point size is in
@@ -850,7 +951,21 @@ function makeMilkyWayGeometry(radius: number, widthSeg = 96, heightSeg = 48) {
          needs re-wrapping until the sampler does it via RepeatWrapping,
          where it is actually safe. */
       const longitudeDeg = 90 - ra;
-      uvs.push(longitudeDeg / 360 + 0.5, zenithAngle / Math.PI);
+      /* No "+ 0.5" here — real MilkyWay.cpp's own texc.x is
+         `modelLongitude / (2π)`, full stop, and a `+ 0.5` shifts the
+         sampled column by exactly half the texture's width: 180° of
+         celestial longitude, putting whatever is actually behind the
+         observer in front of them instead. Not a guess — checked directly
+         against `milkyway.png` itself: its own brightest column (summed
+         over every row, so it is not sensitive to which declination band
+         happens to be widest) measures at u≈0.498, and the real Galactic
+         Centre (RA 266.4168°) predicts u≈0.51 through this exact formula
+         with no offset — a clean match. The same formula *with* the old
+         `+ 0.5` predicts u≈0.01, on the opposite side of the image
+         entirely, which is exactly the "bright region is on the wrong
+         side of the sky, sometimes below the horizon where Stellarium has
+         it above" symptom this was reported as. */
+      uvs.push(longitudeDeg / 360, zenithAngle / Math.PI);
     }
   }
   for (let iy = 0; iy < heightSeg; iy += 1) {
@@ -876,7 +991,12 @@ function makeMilkyWayGeometry(radius: number, widthSeg = 96, heightSeg = 48) {
  * time, since every vertex already carries its own RA), then tip that pole
  * down to its real altitude for the observer's latitude.
  */
-function equatorialToHorizonMatrix(lstDegrees: number, latDeg: number): THREE.Matrix4 {
+function equatorialToHorizonMatrix(
+  lstDegrees: number,
+  latDeg: number,
+  precessionDeg = 0,
+  epsDateDeg = obliquity(0),
+): THREE.Matrix4 {
   const lst = lstDegrees * DEG;
   const lat = latDeg * DEG;
   const sinLst = Math.sin(lst);
@@ -891,6 +1011,31 @@ function equatorialToHorizonMatrix(lstDegrees: number, latDeg: number): THREE.Ma
     cosLst * sinLat,  sinLst * sinLat, -cosLat, 0,
     0,                0,               0,       1,
   );
+  /**
+   * J2000 → equatorial of date, applied *before* the hour angle above.
+   *
+   * The survey's tiles and the panorama are J2000; every star drawn over them
+   * is carried to the date (`s.lon + precessionSinceJ2000(dtDays)`, then
+   * `eclipticToAltAz` with the obliquity of date). Feeding a date-based `lst`
+   * to un-precessed J2000 coordinates silently treats them as equatorial *of
+   * date*, so the whole imagery layer sat a general precession behind the
+   * points drawn on it — about 0.36° in 2026. Nothing at a wide field, a third
+   * of the frame at the 1° end, which is exactly where a नक्षत्र's stars stop
+   * landing on the ones in the photograph.
+   *
+   * Precession is a rotation in *ecliptic* longitude, so it is composed the
+   * way the stars' own path composes it: out of the equator into the ecliptic
+   * of J2000, round the ecliptic pole by the accumulated angle, then back out
+   * to the equator using the obliquity of date. `Rx(-eps)` is equatorial →
+   * ecliptic in this codebase's own convention — read straight off
+   * `equatorialToecliptic` in `horizon.ts`.
+   */
+  if (precessionDeg !== 0) {
+    const toEclipticJ2000 = new THREE.Matrix4().makeRotationX(-obliquity(0) * DEG);
+    const spin = new THREE.Matrix4().makeRotationZ(precessionDeg * DEG);
+    const toEquatorialOfDate = new THREE.Matrix4().makeRotationX(epsDateDeg * DEG);
+    m.multiply(toEquatorialOfDate).multiply(spin).multiply(toEclipticJ2000);
+  }
   return m;
 }
 
@@ -999,6 +1144,149 @@ function reportNebulaGeometry(nebula: Nebula, position: THREE.BufferAttribute) {
 
 type LoadState = "idle" | "loading" | "ready";
 
+let ringTextureCache: THREE.CanvasTexture | null = null;
+
+/**
+ * A thin ring, drawn once on a canvas and shared by every deep-sky marker —
+ * Stellarium's own way of flagging a catalogued object before you have
+ * pulled in far enough to see it as a photograph (see their `NebulaMgr`
+ * marker pass). One circle is all this ever draws: each marker is a `Sprite`
+ * scaled non-uniformly to the object's own width and height, the same trick
+ * {@link nebulaField}'s photographs already use, so the single texture comes
+ * out an ellipse exactly where the object actually is elongated and a circle
+ * where it is not — nothing here needs to know either number.
+ */
+function ringTexture(): THREE.CanvasTexture {
+  if (ringTextureCache) return ringTextureCache;
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = size * 0.035;
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  ringTextureCache = tex;
+  return tex;
+}
+
+/**
+ * Real atmospheric extinction on the Milky Way panorama — the dimming that
+ * comes from actually looking through more air the lower a patch of sky
+ * sits, not a flat brightness the same wherever it happens to be in the
+ * frame. Stellarium runs its own copy of this exact panorama through this
+ * exact curve (`RefractionExtinction.cpp`'s `Extinction::airmass`, the
+ * geometric-altitude fit from Young 1994, the same one `MilkyWay.cpp`'s own
+ * shader calls) — the galactic bulge's own warm colour dims and reddens
+ * toward black as it swings down near the skyline the same way any real
+ * patch of sky does, which without this ours had no way to do: the same
+ * bright pixel read exactly the same whether it was sitting at the zenith
+ * or grazing the horizon.
+ *
+ * Computed once per vertex rather than per pixel: `vSinAlt` is
+ * `sin(altitude)`, read straight off the sphere's own rotated position
+ * (`mat3(modelMatrix) * position` — this mesh is re-quaternioned to the
+ * observer's horizon every frame, so `modelMatrix` alone already carries
+ * the sky's current orientation, with no separate altitude lookup needed).
+ * The extinction gradient is smooth enough that the sphere's own vertex
+ * density loses nothing visible carrying it this way, and it is one
+ * interpolated float instead of a second matrix multiply in the fragment
+ * stage.
+ */
+/**
+ * Real MilkyWay.cpp's own light-pollution correction is `1.1 -
+ * bortleIntensity * 0.1`, `bortleIntensity` built from the simulated
+ * observer's naked-eye limiting magnitude — a live measurement this app has
+ * no sky-glow model to drive. `HIPS_BORTLE = 2` is a fixed stand-in for the
+ * dark rural site this feature is actually framed around, not a
+ * measurement; {@link HIPS_BORTLE_FACTOR} is that same formula evaluated
+ * once at that fixed value (0.9) rather than a uniform recomputed
+ * per-frame, since nothing here ever changes it.
+ */
+const HIPS_BORTLE = 2;
+const HIPS_BORTLE_FACTOR = 1.1 - HIPS_BORTLE * 0.1;
+
+function injectMilkyWayExtinction(material: THREE.MeshBasicMaterial): void {
+  if (material.userData.extinction) return;
+  material.userData.extinction = true;
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    prev?.(shader, renderer);
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying float vSinAlt;")
+      .replace(
+        "#include <begin_vertex>",
+        "#include <begin_vertex>\nvSinAlt = normalize(mat3(modelMatrix) * position).y;",
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying float vSinAlt;
+/* Young (1994)'s fit, geometric altitude — {@link Extinction::airmass}'s
+   own "apparent_z = false" branch, which is the one MilkyWay.cpp calls.
+   Stellarium never evaluates this below the horizon at all — its ground
+   blocks the view, so the branch below never mattered there. This dome
+   has no such floor at a wide enough field (a fisheye past ~180° shows
+   sky *and* what would be underground in every direction at once).
+
+   The fit itself is a rational polynomial only well-behaved for the
+   *above*-horizon domain it was built for: fed a large negative cosZ
+   (deep "underground") the denominator changes sign and the whole
+   fraction goes negative, which as an exponent on 0.3 *brightens* the
+   pixel past its own original colour — worse than doing nothing.
+   Clamping that blow-up to a single large fixed airmass instead (an
+   earlier version of this fix) swung the other way: the real curve is
+   already near-total extinction within a couple of degrees of the
+   horizon on either side, so *any* "big number" clamp reads as flat
+   black the instant the horizon is crossed, and the band simply stopped
+   existing below it.
+
+   Mirroring the input around the horizon — abs(cosZ) — sidesteps both
+   failure modes at once instead of patching either one: it never leaves
+   the polynomial's own well-behaved domain (abs keeps the argument in
+   the same [0, 1] range zenith-to-horizon already uses without
+   incident), so ten degrees under the horizon gets exactly the
+   extinction ten degrees above it already had — a real, continuously
+   fading band on both sides of the line, not a cliff to full brightness
+   or a cliff to black. */
+float milkyWayAirmass(float cosZ) {
+  float z = abs(cosZ);
+  float nom = (1.002432 * z + 0.148386) * z + 0.0096467;
+  float denom = ((z + 0.149864) * z + 0.0102963) * z + 0.000303978;
+  return nom / denom;
+}`,
+      )
+      .replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+/* 0.2 mag/airmass — a typical clear-sky extinction coefficient, the same
+   default Stellarium ships. 0.3 as the base, not the photometric 2.512:
+   the same deliberate choice already made for {@link skyBoost}'s sibling
+   comment, "one magnitude ≈ 30%", so a dim band still reads as present
+   near the horizon instead of clipping straight to black a touch too soon.
+
+   Real MilkyWay.cpp multiplies this same pow(0.3, mag) by a second term,
+   its own light-pollution correction built from a live Bortle-scale
+   estimate — see {@link HIPS_BORTLE_FACTOR}'s own doc comment for why this
+   uses a fixed stand-in instead. */
+{
+  float mag = milkyWayAirmass(vSinAlt) * 0.2;
+  diffuseColor.rgb *= pow(0.3, mag) * ${HIPS_BORTLE_FACTOR};
+}`,
+      );
+  };
+  const prevKey = material.customProgramCacheKey;
+  material.customProgramCacheKey = () => `${prevKey.call(material)}|milkyway-extinction-v1`;
+  material.needsUpdate = true;
+}
+
 /**
  * Fetch one deep-sky photograph, the first time anything actually needs it.
  *
@@ -1023,6 +1311,116 @@ type LoadState = "idle" | "loading" | "ready";
 const NEBULA_MAX_CONCURRENT_LOADS = 3;
 
 let nebulaLoadsInFlight = 0;
+
+/**
+ * The HiPS Milky Way tile sphere's own radius — just inside the panorama
+ * sphere's 400 ({@link makeMilkyWayGeometry}'s own call site), so the real
+ * DSS2 tiles draw in front of the low-resolution panorama without
+ * z-fighting (both have `depthTest` off, so draw order — `renderOrder`,
+ * see {@link HIPS_RENDER_ORDER} — is what actually decides the
+ * front/back relationship, not this number; it only has to be close enough
+ * that neither sphere reads as visibly nearer or farther than the other).
+ */
+const HIPS_RADIUS = 398;
+/**
+ * Draw order for every HiPS leaf tile — after the panorama (-1), before
+ * nebula photos (-0.3). One value now, not a parent/target pair: the
+ * recursive traversal (`hips-lod.ts`) only ever marks a tile's own leaf
+ * mesh visible, borrowing an ancestor's *texture* (Phase 1 fallback) rather
+ * than rendering the ancestor as a separate coarser mesh underneath, so
+ * there is no second layer left to order against.
+ */
+const HIPS_RENDER_ORDER = -0.55;
+/**
+ * Phase 9's cache budget — {@link evictHipsTiles} reclaims the least-
+ * recently-touched tile once the cache holds more than this many.
+ *
+ * The full local order 0–3 set is ~1020 tiles (~45MB, per the module's own
+ * earlier "safe to keep forever" reasoning) — this is deliberately well
+ * under that, so a long session that has panned across a good fraction of
+ * the sky actually reclaims memory instead of the cache quietly growing
+ * back toward "keep everything," which is what motivated adding eviction
+ * in the first place. 400 comfortably covers what the recursive traversal
+ * (`hips-lod.ts`) touches in one frame even at the densest FOV measured so
+ * far (452 leaves at 100°, see that module's own doc comment) plus a
+ * working margin for tiles just panned away from.
+ */
+const HIPS_CACHE_MAX_RESIDENT = 400;
+/**
+ * Phase 8's fade-in window, milliseconds — how long a tile's opacity takes
+ * to reach full strength after its own real texture (not a Phase 1
+ * fallback) arrives. This app only ever has one mesh per leaf (its own
+ * geometry, showing either its own texture or a borrowed ancestor's — see
+ * {@link HIPS_RENDER_ORDER}'s own doc comment), so there is no second layer
+ * to literally cross-fade against; ramping this leaf's own opacity up from
+ * a partial start on arrival softens the swap from "ancestor's cropped
+ * quarter" to "this tile's real detail" into a brief reveal instead of an
+ * instant pop, which is the visible effect a real two-layer crossfade
+ * would give without needing a temporary second mesh to get there.
+ */
+const HIPS_FADE_IN_MS = 220;
+/** The opacity a tile's fade-in starts from — not 0: dropping all the way to invisible would flash the panorama or an even-coarser ancestor through for a moment, trading one pop for another. */
+const HIPS_FADE_IN_START = 0.55;
+/**
+ * `n×n` vertex grid per tile — see {@link buildHipsTileGeometry}'s own doc
+ * comment on why a flat quad is not enough. 8 was enough to avoid visible
+ * faceting near the equator but still let a tile far enough from it — where
+ * a HEALPix cell's true shape departs furthest from square — warp visibly
+ * between grid points; 16 quadruples the triangle count for a patch that
+ * is at most a few hundred tiles on screen at once, cheap insurance against
+ * the same failure mode the doc comment already describes for a single flat
+ * quad, just at a finer scale.
+ */
+const HIPS_TILE_SUBDIVISIONS = 16;
+/**
+ * The two-layer crossfade's outer edge — at or above this field, {@link
+ * hipsVisibility} is 0 and the panorama alone shows. Still what gates
+ * whether the HiPS system runs at all (traversal, loading, mounting):
+ * above this field {@link hipsVisibility} is already 0, so there is
+ * nothing for the tile system to contribute and no reason to pay for it.
+ *
+ * Same 80° the old one-directional `HIPS_FOV_SHOW_THRESHOLD` used — kept
+ * as the outer boundary deliberately (see the real Stellarium Web Engine
+ * investigation this replaces: `src/modules/milkyway.c`/`dss.c` cross-fade
+ * their own two HiPS layers over a 10°–20° field with `smoothstep()`, not
+ * a hard cut — but their `dss` layer is a real, deep survey blending
+ * against a *second, purpose-built low-order HiPS* tuned to match it,
+ * where ours is blending against a fixed painterly panorama with its own
+ * different exposure and content, and our own DSS2 set stops at order 3
+ * rather than going as deep as theirs — copying their literal numbers
+ * would not carry the reasoning that produced them).
+ */
+const HIPS_BLEND_START_FOV = 80;
+/**
+ * The crossfade's inner edge — at or below this field, {@link
+ * hipsVisibility} is 1 and the tiles alone carry the sky (modulo the
+ * panorama's own separate near-zoom fade, {@link HIPS_BLEND_START_FOV}'s
+ * own doc comment).
+ *
+ * An initial, explicitly provisional value — wider than Stellarium's own
+ * 10° inner edge on purpose: their `dss` blends against a survey built to
+ * match it tonally, ours against a fixed panorama that was never tuned
+ * against DSS2's own exposure, so easing across a wider band gives that
+ * mismatch more room to not read as a seam. Meant to be tuned by eye once
+ * this mechanism itself is confirmed stable — see the visual test this
+ * change shipped with.
+ */
+const HIPS_BLEND_END_FOV = 30;
+
+/**
+ * GLSL-style smoothstep — the same shape Stellarium Web Engine's own
+ * `milkyway.c`/`dss.c` use for their cross-fade (`smoothstep()` from
+ * `<utils/vec.h>`-adjacent math there), reproduced here since nothing in
+ * this file already has a generic one. Works with `edge0 > edge1` exactly
+ * as it does the usual way round — the clamp and division both stay
+ * correct — which is what lets {@link hipsVisibility} below hand it `
+ * (start=80, end=30)` and get a value that *falls* as field grows, without
+ * needing a second, inverted formula.
+ */
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
 function loadNebulaTexture(entry: {
   url: string;
@@ -1061,6 +1459,30 @@ const nebulaCamDir = new THREE.Vector3();
 const nebulaToImage = new THREE.Vector3();
 /* The quad's centroid in scene space, for the same test. */
 const nebulaCentre = new THREE.Vector3();
+
+/* Scratch for the HiPS tile-visibility test, same reasoning: the camera's
+   forward direction, then that same vector re-expressed in the tiles' own
+   equatorial frame by the group's own (inverse) rotation. */
+const hipsForwardWorld = new THREE.Vector3();
+const hipsInvQuat = new THREE.Quaternion();
+const hipsDirEquatorial = new THREE.Vector3();
+
+/** The recursive traversal's own leaf list — {@link evaluateHipsTiles} clears and refills this in place every frame rather than allocating a fresh array, same reasoning as the vectors above. */
+const hipsLodLeaves: HipsLodLeaf[] = [];
+/** Phase 6's per-frame load candidates — cleared and refilled every frame rather than allocated fresh, same reasoning as the vectors above. */
+const hipsLoadCandidates: { entry: HipsTileEntry; priority: number }[] = [];
+/** Every `(order, pix)` the traversal actually touched this frame — leaves and every ancestor refined through on the way to them alike. Doubles as Phase 9's eviction protection set: nothing this frame's LOD walk needed is a safe target to reclaim. */
+const hipsTouchedKeys = new Set<string>();
+/** Reused across frames so `evaluateHipsTiles` doesn't need a fresh options object every call. */
+const hipsLodFrame: HipsLodFrame = {
+  camera: null as unknown as THREE.Camera,
+  groupQuaternion: new THREE.Quaternion(),
+  groupPosition: new THREE.Vector3(),
+  radius: 0,
+  fovDeg: 0,
+  width: 0,
+  height: 0,
+};
 
 /**
  * Is this photograph anywhere near what the camera is actually pointed at?
@@ -1288,12 +1710,29 @@ function GrahaBody({
   return (
     <group ref={groupRef}>
       {texKey ? (
-        <mesh ref={spinRef} raycast={NO_RAYCAST}>
+        /* `transparent` plus an explicit `renderOrder` well above every
+           HiPS tile's (see `HIPS_RENDER_ORDER` in `AakashGocharScene.tsx`'s
+           own module scope) is what keeps a graha from vanishing behind
+           one. Three.js renders *all* opaque objects before *any*
+           transparent one — that split is decided purely by
+           this flag, not by `renderOrder`, which only sorts within
+           whichever of the two queues an object already landed in. A tile
+           is transparent with `depthTest` off (the same skybox recipe the
+           panorama already uses; re-enabling it here would reintroduce the
+           far-plane precision bug that made the panorama read as flat
+           black in the first place — see that material's own doc comment),
+           so it paints over *anything* opaque in its footprint regardless
+           of actual distance. An opaque graha sitting where a tile's
+           footprint lands was exactly that: correct depth, wrong queue.
+           Every material below keeps alpha pinned at 1 (no map used here
+           has its own alpha channel), so this changes which pass a graha
+           draws in, not how it looks. */
+        <mesh ref={spinRef} raycast={NO_RAYCAST} renderOrder={1}>
           <sphereGeometry args={[radius, 40, 40]} />
           {graha === "sun" ? (
-            <meshBasicMaterial map={textures.sun} />
+            <meshBasicMaterial map={textures.sun} transparent />
           ) : graha === "moon" && sunLit ? (
-            <meshStandardMaterial map={textures.moon} roughness={1} metalness={0} />
+            <meshStandardMaterial map={textures.moon} roughness={1} metalness={0} transparent />
           ) : graha === "moon" && phaseMaterial ? (
             <primitive object={phaseMaterial} attach="material" />
           ) : (
@@ -1306,14 +1745,17 @@ function GrahaBody({
               emissiveIntensity={0.22}
               roughness={0.85}
               metalness={0.03}
+              transparent
             />
           )}
         </mesh>
       ) : (
         /* राहु / केतु have no photographic texture. A sphere on the same
            material path as the other grahas stays on the belt under the
-           stereographic sky; the old SVG sprites did not. */
-        <mesh ref={spinRef} raycast={NO_RAYCAST}>
+           stereographic sky; the old SVG sprites did not. Same
+           transparent-plus-renderOrder reasoning as the textured branch
+           above. */
+        <mesh ref={spinRef} raycast={NO_RAYCAST} renderOrder={1}>
           <sphereGeometry args={[radius, 40, 40]} />
           <meshStandardMaterial
             color={GRAHA_COLOR[graha]}
@@ -1321,6 +1763,7 @@ function GrahaBody({
             emissiveIntensity={0.45}
             roughness={0.85}
             metalness={0.03}
+            transparent
           />
         </mesh>
       )}
@@ -1485,7 +1928,7 @@ export function AakashGocharScene({
    * with a live position. A star is not: it is a direction. So it arrives as a
    * direction and is aimed at through the same one-frame recentre.
    */
-  skyAim?: { lon: number; lat: number; nonce: number } | null;
+  skyAim?: { lon: number; lat: number; nonce: number; fov?: number; sidereal?: boolean } | null;
   /**
    * Search/pick id of the named star currently under the reticle (`vedic:3`).
    * The matching point is crowned so it is obvious which of the 32 was chosen.
@@ -1512,6 +1955,7 @@ export function AakashGocharScene({
     lat: number;
     hintNe?: string;
     hintEn?: string;
+    sidereal?: boolean;
   }) => void;
   /** Pressed twice — mark it *and* centre the camera on it, same as {@link onFollow}. */
   onFollowSky?: (hit: {
@@ -1522,6 +1966,7 @@ export function AakashGocharScene({
     lat: number;
     hintNe?: string;
     hintEn?: string;
+    sidereal?: boolean;
   }) => void;
   /** A press that landed on nothing — empty sky, not a graha. */
   onEmptyPress?: () => void;
@@ -1573,14 +2018,25 @@ export function AakashGocharScene({
        than being clamped into range — this is what makes that safe to
        sample instead of smearing the edge pixel across the seam. */
     milkyWayRaw.wrapS = THREE.RepeatWrapping;
+    /* Clamp the poles — repeating the panorama in V stacked three copies
+       of the band on top of each other and stretched each one. One wrap
+       around the sphere, 2:1, is the file's own aspect. */
+    milkyWayRaw.wrapT = THREE.ClampToEdgeWrapping;
+    milkyWayRaw.repeat.set(1, 1);
     milkyWayRaw.needsUpdate = true;
     return milkyWayRaw;
   }, [milkyWayRaw, gl]);
   const milkyWayGeometry = useMemo(() => makeMilkyWayGeometry(400), []);
 
   /**
+   * The marker ring, sized and positioned exactly like the photograph it
+   * belongs to — see the doc comment where it is built, just below.
+   */
+  const nebulaMarkerTex = useMemo(() => ringTexture(), []);
+
+  /**
    * A small curated set of Stellarium's own deep-sky object photographs —
-   * see [[nebulae]] — each a real astrophoto rather than a synthesised dot,
+   * see {@link module:lib/sky3d/nebulae} — each a real astrophoto rather than a synthesised dot,
    * placed at its true position and true angular size. A `Sprite` always
    * faces the camera, which is exactly right here: these are flat
    * photographs of a small patch of sky, not solid bodies with a far side.
@@ -1685,15 +2141,77 @@ export function AakashGocharScene({
       };
     });
   }, []);
-  /** See the doc comment on the sky sphere below — a flat brightness
-      multiplier, which `color` on a hex/string prop cannot express. Their own
-      MilkyWay.cpp caps its equivalent at 0.38 (`aLum = qMin(0.38f,
-      aLum*2.f)`, MilkyWay.cpp:339) and draws it additive — that is the
-      number this is matched to, not a guess: any higher and the panorama's
-      own exposure reads as a lit photograph pasted across the dome,
-      outshining every point-star drawn with it rather than sitting among
-      them. */
-  const skyBoost = useMemo(() => new THREE.Color(0.38, 0.38, 0.38), []);
+
+  /**
+   * One marker ring per *named object*, not one per catalogue tile.
+   *
+   * Barnard's Loop alone is four overlapping photographs — real, correctly
+   * placed detail, worth every one of those sprites. A ring is a different
+   * thing: it says "an object is here," and four rings all saying that for
+   * the one loop, each labelled बर्नार्ड लूप, is not four facts — it is the
+   * same fact drawn four times, right on top of itself. Grouped by
+   * catalogue designation exactly the way `sky-catalogue.ts` groups them for
+   * search, so the ring a reader sees and the target a search pick lands on
+   * are the same object measured the same way: the tile with the largest
+   * angular area stands for the whole field, both as the ring's centre and
+   * as the size it is measured against.
+   */
+  const nebulaMarkers = useMemo(() => {
+    const byDesignation = new Map<string, number>();
+    nebulaField.forEach((entry, i) => {
+      const key = entry.nebula.catalog || entry.nebula.id;
+      const current = byDesignation.get(key);
+      if (current == null || entry.spanDeg > nebulaField[current].spanDeg) {
+        byDesignation.set(key, i);
+      }
+    });
+    return Array.from(byDesignation.values()).map((nebulaIndex) => {
+      /* Normal blending, not additive — a ring is meant to read as a crisp
+         line against whatever is behind it, not brighten it, and additive
+         would wash the outline out against the Milky Way panorama it is
+         usually sitting on top of. Needs no texture of its own to wait for,
+         so it can show well before the photograph behind it has finished
+         loading — the whole point of a marker. */
+      const markerMaterial = new THREE.SpriteMaterial({
+        map: nebulaMarkerTex,
+        color: "#7fd4ff",
+        transparent: true,
+        depthWrite: false,
+        depthTest: false,
+        opacity: 0,
+        sizeAttenuation: true,
+      });
+      const marker = new THREE.Sprite(markerMaterial);
+      marker.renderOrder = -0.29;
+      marker.frustumCulled = false;
+      marker.visible = false;
+      return { nebulaIndex, marker, markerMaterial };
+    });
+  }, [nebulaField, nebulaMarkerTex]);
+
+  /**
+   * See the doc comment on the sky sphere below — a flat brightness
+   * multiplier, which `color` on a hex/string prop cannot express.
+   *
+   * Real MilkyWay.cpp's own equivalent is not a fixed number: `aLum =
+   * qMin(0.38f, aLum*2.f)` (MilkyWay.cpp:339) only *caps* a value built by
+   * `eye->adaptLuminanceScaled(...)` — a whole simulated eye-adaptation
+   * curve this file has no access to reproduce — and that capped `aLum` is
+   * then itself multiplied by `intensity * intensityFovScale`
+   * (MilkyWay.cpp:343) before ever reaching the texture. Matching the
+   * literal `0.38` while skipping the rest of that chain is what actually
+   * produced a washed-out panorama next to real Stellarium's own — a
+   * ceiling on a curve is not the curve. `intensityFovScale` itself is a
+   * no-op here regardless: it only fades the band out below a 2.5° field
+   * (MilkyWay.cpp:59-60), and this panorama fades toward the real DSS2
+   * tiles well before that — see {@link HIPS_BLEND_START_FOV}/{@link
+   * HIPS_BLEND_END_FOV} — rather than owning that whole range outright the
+   * way it once did. `0.9` is an empirical stand-in for the net result of
+   * the chain this file cannot reproduce piece by piece, checked directly
+   * against a real Stellarium screenshot at the same location and time
+   * rather than derived from the formula alone.
+   */
+  const skyBoost = useMemo(() => new THREE.Color(0.9, 0.9, 0.9), []);
 
   /**
    * अन्तरिक्ष's Earth wears the Learn playground's cartoon map, not the
@@ -1745,6 +2263,66 @@ export function AakashGocharScene({
   const ambientRef = useRef<THREE.AmbientLight | null>(null);
   const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
   const starsRef = useRef<THREE.Mesh | null>(null);
+
+  /**
+   * The HiPS Milky Way — real DSS2 tiles standing in for the single fixed
+   * panorama, verified against M8 before any of this was built (see
+   * `hips.ts`'s own module doc comment for that whole derivation).
+   *
+   * `hipsGroupRef` gets the exact same per-frame rotation {@link starsRef}
+   * does, a few lines below: tile geometry is built in the same equatorial
+   * frame {@link makeMilkyWayGeometry} already uses, so the two share one
+   * rotation with nothing extra to keep in sync.
+   *
+   * `hipsCache` holds every tile mesh ever created for the life of the
+   * component — never disposed, never removed from the group, only shown
+   * or hidden — because the whole local order 0–3 set is ~45MB, well
+   * inside what is safe to keep once fetched (Step 10: "do not build a
+   * complicated cache system initially"). What actually varies frame to
+   * frame is `.visible` and, on first need, `.state` going from `idle` to
+   * `loading` to `ready`.
+   */
+  const hipsGroupRef = useRef<THREE.Group | null>(null);
+  const hipsCache = useRef(new Map<string, HipsTileEntry>());
+  /** Step 12's optional tile-boundary visualization — one `THREE.Line` per current leaf tile, rebuilt only while `hipsDebugControls.current.showBoundaries` is on (see the per-frame block). Lives in `hipsGroupRef` so it inherits the same rotation as the tiles it outlines. */
+  const hipsDebugOutlines = useRef<THREE.Group | null>(null);
+  const [hipsDebugOn, setHipsDebugOn] = useState(
+    () => typeof window !== "undefined" && window.location.search.includes("hipsdebug"),
+  );
+  /**
+   * Step 13 isolation controls — developer-only, `null`/`false` (their
+   * default) means "no override," so normal production selection runs
+   * untouched. A `ref`, not state: these are read once per frame inside
+   * `useFrame` and must never themselves trigger a React re-render.
+   */
+  const hipsDebugControls = useRef<{
+    onlyOrder: number | null;
+    onlyPix: { order: number; pix: number } | null;
+    disableFallback: boolean;
+    disableLod: boolean;
+    showBoundaries: boolean;
+  }>({ onlyOrder: null, onlyPix: null, disableFallback: false, disableLod: false, showBoundaries: false });
+  useEffect(() => {
+    type HipsDebugApi = (on?: boolean | Partial<(typeof hipsDebugControls)["current"]>) => void;
+    (window as unknown as { __hipsDebug?: HipsDebugApi }).__hipsDebug = (arg) => {
+      if (typeof arg === "object" && arg !== null) {
+        Object.assign(hipsDebugControls.current, arg);
+        setHipsDebugOn(true);
+        return;
+      }
+      setHipsDebugOn((prev) => arg ?? !prev);
+    };
+    return () => {
+      delete (window as unknown as { __hipsDebug?: HipsDebugApi }).__hipsDebug;
+    };
+  }, []);
+  /** The HUD outside the Canvas polls a module-level snapshot (see
+      {@link writeHipsDebugSnapshot}) — clear it on unmount and whenever
+      debug is switched off, so a stale HUD never lingers after the toggle. */
+  useEffect(() => {
+    if (!hipsDebugOn) clearHipsDebugSnapshot();
+    return () => clearHipsDebugSnapshot();
+  }, [hipsDebugOn]);
   const horizonGlow = useMemo(() => makeHorizonGlow(399, "#4a3626", 0.16), []);
   const milkyWayMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   /** {@link NEBULA_DEBUG}: the M8 corner table is printed once, not per frame. */
@@ -1756,6 +2334,17 @@ export function AakashGocharScene({
   const globeRootRef = useRef<THREE.Group | null>(null);
   const globeSpinRef = useRef<THREE.Group | null>(null);
   const subsolarRef = useRef<THREE.Mesh | null>(null);
+  /**
+   * The point the *selected* graha stands over, the same mark the Sun gets.
+   *
+   * Without it the globe drew only a ray from the Earth's centre out to the
+   * body, and a line ending at a centre marks nothing on the surface: where it
+   * appears to cross the map is pure parallax, so it slid across the Earth as
+   * the camera turned and looked like a broken pointer. One dot planted on the
+   * surface along the same direction is what makes it a place. One ref, not
+   * nine — only one graha is selected at a time.
+   */
+  const subGrahaRef = useRef<THREE.Mesh | null>(null);
   const spaceOnlyRef = useRef<THREE.Group | null>(null);
   const sharaFootRef = useRef<THREE.Mesh | null>(null);
   const rashiHiRef = useRef<THREE.Mesh | null>(null);
@@ -1782,11 +2371,17 @@ export function AakashGocharScene({
   const spaceMeridian = useMemo(() => makePrimeMeridian(EARTH_RADIUS), []);
   const globeMeridian = useMemo(() => makePrimeMeridian(GLOBE_R), []);
 
-  /* Sight rays: one two-point line per graha, rewritten every frame. */
+  /* Sight rays: Earth → through the graha → नक्षत्र rim. Depth is off so the
+     ecliptic disc cannot bury a line that lives in the same plane. */
   const rays = useMemo(() => {
     const out = {} as Record<GrahaKey, THREE.Line>;
     for (const key of GEO_BODY_ORDER) {
-      out[key] = makeDynamicLine(2, GRAHA_COLOR[key], 0.5);
+      const line = makeDynamicLine(2, GRAHA_COLOR[key], 0.92);
+      line.renderOrder = 6;
+      const mat = line.material as THREE.LineBasicMaterial;
+      mat.depthTest = false;
+      mat.depthWrite = false;
+      out[key] = line;
     }
     return out;
   }, []);
@@ -1814,8 +2409,18 @@ export function AakashGocharScene({
     for (const key of OUTER_PLANET_ORDER) {
       const mesh = new THREE.Mesh(
         geometry,
-        new THREE.MeshBasicMaterial({ color: OUTER_PLANET_COLOR[key] }),
+        /* `transparent` (alpha still pinned at 1 — purely a render-queue
+           change) plus an explicit `renderOrder` above every HiPS tile's
+           own — see the identical fix and reasoning on `GrahaBody`'s own
+           materials. Missing here until now: these three were built as
+           their own separate system (see the doc comment on {@link
+           OUTER_PLANET_ORDER}) and never got it, so a HiPS tile with
+           `depthTest: false` painted straight over an opaque यम/वरुण/अरुण
+           the instant one shared its screen position — "getting lost on
+           zoom" was that, not the dot actually leaving the sky. */
+        new THREE.MeshBasicMaterial({ color: OUTER_PLANET_COLOR[key], transparent: true }),
       );
+      mesh.renderOrder = 1;
       mesh.visible = false;
       out[key] = mesh;
     }
@@ -1968,8 +2573,8 @@ export function AakashGocharScene({
   /**
    * The naked-eye sky itself, under every named figure — see
    * [[background-stars]]. No lines, no labels, no toggle: the same as the
-   * Milky Way panorama it sits alongside, this is what the dome and globe
-   * are drawn on rather than a layer you can ask for.
+   * Milky Way panorama it sits alongside. Dome and globe put it on the sky
+   * sphere; अन्तरिक्ष puts it outside the ecliptic disc.
    */
   const backgroundField = useMemo(() => {
     const stars = flattenBackgroundStars();
@@ -2125,6 +2730,16 @@ export function AakashGocharScene({
     })),
   );
   const asterismPickCount = useRef(0);
+  /** One slot per catalogue entry is a safe upper bound: at most this many
+      markers can ever be "on and pickable" in a single frame. */
+  const nebulaPickRef = useRef(
+    nebulaMarkers.map(() => ({
+      index: -1,
+      world: new THREE.Vector3(),
+      worldRadius: 0,
+    })),
+  );
+  const nebulaPickCount = useRef(0);
 
   /**
    * The obliquity, drawn as an angle rather than left implicit.
@@ -2169,7 +2784,7 @@ export function AakashGocharScene({
        from the view each frame — the arcminute tiers exist for a window a
        degree across, and baking those as whole spheres is millions of
        vertices to draw a few dozen lines. */
-    const local = dressGrid(makeDynamicSegments(LOCAL_GRID_CAPACITY, GRID, 0.14));
+    const local = dressGrid(makeDynamicSegments(LOCAL_GRID_CAPACITY, GRID, GRID_OPACITY));
     local.visible = false;
     group.add(local);
     /* उ / पू / द / प, plus the mark on the zenith and the nadir. Baked once
@@ -2185,7 +2800,11 @@ export function AakashGocharScene({
     group.add(frame);
     return {
       group,
-      tiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
+      /* Two families, two caches. They no longer share a spacing — the
+         verticals' is chosen against the pole, see `verticalStepForFov` — so
+         a single per-tier slot could not hold both. */
+      altTiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
+      azTiers: GRID_TIERS.map(() => null as THREE.LineSegments | null),
       local,
       localPairs: [] as HorizonPoint[],
       frame,
@@ -2382,8 +3001,10 @@ export function AakashGocharScene({
       e: PointerEvent,
     ):
       | { kind: "graha"; key: GrahaKey }
+      | { kind: "outerplanet"; key: OuterPlanetKey }
       | { kind: "vedicstar"; index: number }
       | { kind: "skystar"; index: number }
+      | { kind: "nebula"; index: number }
       | null => {
       const rect = el.getBoundingClientRect();
       const px = e.clientX - rect.left;
@@ -2410,7 +3031,34 @@ export function AakashGocharScene({
         }
       }
       if (best) return { kind: "graha", key: best };
-      let starKind: "vedicstar" | "skystar" | null = null;
+      /* यम/वरुण/अरुण — decorative, so checked after every real graha (one
+         must never steal a press meant for something that actually belongs
+         to the chart) but before stars/नेबुला, the same priority a graha
+         itself gets and for the same reason: three small, similarly-sized
+         dots that would otherwise lose every close call to whichever
+         background star or नेबुला ring happened to be checked first. */
+      let bestOuter: OuterPlanetKey | null = null;
+      if (mode === "horizon") {
+        for (const key of OUTER_PLANET_ORDER) {
+          const mesh = outerPlanets[key];
+          if (!mesh.visible) continue;
+          mesh.getWorldPosition(at);
+          const centre = project(at, rect, field, scratchPick);
+          if (!centre) continue;
+          const d = Math.hypot(centre.x - px, centre.y - py);
+          const worldRadius = mesh.scale.x;
+          edge.copy(at).addScaledVector(rightAxis, worldRadius);
+          const edgeHit = project(edge, rect, field, scratchEdge);
+          const apparentPx = edgeHit ? Math.hypot(edgeHit.x - centre.x, edgeHit.y - centre.y) : 0;
+          const radius = Math.max(GRAHA_PICK_RADIUS, apparentPx * 1.15);
+          if (d < radius && d < bestD) {
+            bestD = d;
+            bestOuter = key;
+          }
+        }
+      }
+      if (bestOuter) return { kind: "outerplanet", key: bestOuter };
+      let starKind: "vedicstar" | "skystar" | "nebula" | null = null;
       let starIndex = -1;
       const nVedic = vedicPickCount.current;
       for (let i = 0; i < nVedic; i += 1) {
@@ -2436,6 +3084,29 @@ export function AakashGocharScene({
           starIndex = hit.index;
         }
       }
+      /* Checked last, same reason a graha is checked first: a नेबुला marker
+         can be enormous on screen (Barnard's Loop's own ring is most of a
+         wide frame), and a huge hit radius going first would steal presses
+         plainly meant for a star or a ग्रह sitting inside it. Sized the same
+         way a ग्रह is — the apparent radius on screen, not a flat pixel
+         count — because a ring that fills a third of the frame needs a press
+         anywhere near its own edge to count, not just its exact centre. */
+      const nNeb = nebulaPickCount.current;
+      for (let i = 0; i < nNeb; i += 1) {
+        const hit = nebulaPickRef.current[i];
+        const centre = project(hit.world, rect, field, scratchPick);
+        if (!centre) continue;
+        const d = Math.hypot(centre.x - px, centre.y - py);
+        edge.copy(hit.world).addScaledVector(rightAxis, hit.worldRadius);
+        const edgeHit = project(edge, rect, field, scratchEdge);
+        const apparentPx = edgeHit ? Math.hypot(edgeHit.x - centre.x, edgeHit.y - centre.y) : 0;
+        const radius = Math.max(PICK_RADIUS, apparentPx);
+        if (d < radius && d < bestD) {
+          bestD = d;
+          starKind = "nebula";
+          starIndex = hit.index;
+        }
+      }
       if (starKind && starIndex >= 0) return { kind: starKind, index: starIndex };
       return null;
     };
@@ -2458,13 +3129,44 @@ export function AakashGocharScene({
       const thisKey =
         hit.kind === "graha"
           ? `graha:${hit.key}`
-          : hit.kind === "vedicstar"
-            ? `vedicstar:${hit.index}`
-            : `skystar:${hit.index}`;
+          : hit.kind === "outerplanet"
+            ? `outerplanet:${hit.key}`
+            : hit.kind === "vedicstar"
+              ? `vedicstar:${hit.index}`
+              : hit.kind === "nebula"
+                ? `nebula:${hit.index}`
+                : `skystar:${hit.index}`;
       const now = performance.now();
       const again = thisKey === lastKey && now - lastAt < DOUBLE_MS;
       lastKey = again ? null : thisKey;
       lastAt = now;
+
+      if (hit.kind === "outerplanet") {
+        /* Identify-only, on purpose — see {@link OUTER_PLANET_ORDER}'s own
+           doc comment: "never part of a chart." Routed through the same
+           generic sky-aim path a नेबुला or background star click already
+           uses, not the graha `onSelect`/`onFollow`/kundali system, so
+           clicking यम never pretends it belongs to the nine-graha chart.
+           `pos.longitude/latitude` is already the exact current sidereal
+           value the render loop itself places the dot with (`place(pos.
+           longitude, pos.latitude, 0)`, no separate precession/ayanamsa
+           step) — `sidereal: true` here is what tells `skyAim`'s own
+           handler to hand it to `place()` unmodified instead of running it
+           through the tropical-target conversion, the exact mismatch
+           {@link SkyTargetAt} was added to stop happening again. */
+        const pos = outerPlanetAt(hit.key, daysSinceJ2000(new Date(sim.current.timeMs)));
+        const payload = {
+          id: `outerplanet:${hit.key}`,
+          ne: OUTER_PLANET_NAME[hit.key].ne,
+          en: OUTER_PLANET_NAME[hit.key].en,
+          lon: pos.longitude,
+          lat: pos.latitude,
+          sidereal: true,
+        };
+        if (again) onFollowSkyRef.current?.(payload);
+        else onAimSkyRef.current?.(payload);
+        return;
+      }
 
       if (hit.kind === "vedicstar") {
         const star = vedicStarsRef.current?.[hit.index];
@@ -2474,7 +3176,6 @@ export function AakashGocharScene({
         return;
       }
       if (hit.kind === "skystar") {
-        const s = asterismPickRef.current[hit.index];
         const star = starField.stars[hit.index];
         const nak = NAKSHATRA_ASTERISMS[star.nakshatra - 1];
         const names = nak ? starOverlayNames(star, nak) : null;
@@ -2484,8 +3185,33 @@ export function AakashGocharScene({
           en: names?.en ?? nak?.en ?? star.name,
           hintNe: nak?.ne,
           hintEn: nak?.en,
-          lon: s.lon,
-          lat: s.lat,
+          /* `star.lon` — the raw catalogue longitude — not `asterismPickRef`'s
+             own copy: that copy carries `s.lon + precession - ayan` (see
+             where it's populated a few hundred lines up), the *sidereal*
+             value this same frame's render already converted to for
+             `skyPlace()`. `onAimSky`/`onFollowSky` feed straight into
+             `skyAim`, whose own handler expects a raw tropical longitude and
+             applies that exact precession-and-ayanamsa conversion itself —
+             handing it an already-converted value applied the correction
+             twice, landing the reticle a full ayanamsa short of the star
+             whose name was right there in the label. */
+          lon: star.lon,
+          lat: star.lat,
+        };
+        if (again) onFollowSkyRef.current?.(payload);
+        else onAimSkyRef.current?.(payload);
+        return;
+      }
+      if (hit.kind === "nebula") {
+        const entry = nebulaField[nebulaMarkers[hit.index].nebulaIndex];
+        const payload = {
+          id: `nebula:${entry.nebula.id}`,
+          ne: entry.nebula.ne,
+          en: entry.nebula.en,
+          hintNe: entry.nebula.catalog,
+          hintEn: entry.nebula.catalog,
+          lon: entry.lon,
+          lat: entry.lat,
         };
         if (again) onFollowSkyRef.current?.(payload);
         else onAimSkyRef.current?.(payload);
@@ -2497,16 +3223,38 @@ export function AakashGocharScene({
     const onCancel = () => {
       downId = null;
     };
+    /**
+     * Clear the press even when its release never reached the canvas.
+     *
+     * `onUp` only runs for a `pointerup` on the canvas itself, and it is the
+     * only thing that puts `downId` back to null — so a drag that ends with
+     * the finger off the edge of the canvas, or a release the browser
+     * retargets elsewhere, leaves `downId` set. `onDown` then refuses every
+     * later press (`if (downId !== null) return`), and from that moment
+     * nothing in the sky can be selected at all: not a graha, not a star,
+     * for the rest of the session. Orbiting a view by dragging past the
+     * edge is an ordinary thing to do, which is how a sky ends up
+     * permanently unclickable without anything looking broken.
+     */
+    const onWindowUp = () => {
+      downId = null;
+    };
 
     el.addEventListener("pointerdown", onDown);
     el.addEventListener("pointerup", onUp);
     el.addEventListener("pointercancel", onCancel);
+    /* Bubble phase, so the canvas's own `onUp` has already run and done the
+       picking by the time this clears the latch. */
+    window.addEventListener("pointerup", onWindowUp);
+    window.addEventListener("pointercancel", onWindowUp);
     return () => {
       el.removeEventListener("pointerdown", onDown);
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("pointerup", onWindowUp);
+      window.removeEventListener("pointercancel", onWindowUp);
     };
-  }, [camera, gl, mode, view, starField.stars]);
+  }, [camera, gl, mode, view, starField.stars, nebulaField, nebulaMarkers, outerPlanets, sim]);
   /** The last focus request answered, and whether one is still outstanding. */
   const lastFocusNonce = useRef(focusNonce);
   const recentre = useRef(false);
@@ -2601,9 +3349,369 @@ export function AakashGocharScene({
        either is a bigger job than the one this fixes. */
     if (starsRef.current) {
       if (horizon) {
-        starsRef.current.quaternion.setFromRotationMatrix(equatorialToHorizonMatrix(lst, observer.lat));
+        starsRef.current.quaternion.setFromRotationMatrix(
+          equatorialToHorizonMatrix(lst, observer.lat, precessionSinceJ2000(dtDays), eps),
+        );
       } else {
         starsRef.current.quaternion.identity();
+      }
+      /* Ride the camera, which is what a sky at infinity actually does.
+         The sphere is centred on the *origin*, so in पृथ्वी गोला and
+         अन्तरिक्ष — the two views whose camera sits well out from it — one
+         side of it was only 100 units away while the other was 700. That
+         near side is a small patch of texture stretched across most of the
+         screen, which is why the Milky Way read as enormous and coarse in
+         those two views but fine from inside the dome, where the camera is
+         at the centre and every direction is the same 400 away.
+         Re-centring it on the camera each frame restores that: every point
+         of the sky is equidistant again, so the band is drawn at one honest
+         scale and simply looks like the sky rather than a wall a few units
+         from the lens. Rotation is untouched — only the centre moves, so no
+         star drifts against its own position. */
+      starsRef.current.position.copy(state.camera.position);
+      /* Sphere around the camera in every view. A cylinder around the same
+         camera squeezed the 2:1 panorama into ~115° of elevation and
+         stretched the band; the sphere keeps one texel per direction. */
+      starsRef.current.visible = !arBackground;
+    }
+    /* The HiPS tile group rides the exact same rotation {@link starsRef}
+       does, verbatim — see the doc comment where {@link hipsGroupRef} is
+       declared. FOV has to be known before deciding `hipsOn` itself — see
+       {@link HIPS_BLEND_START_FOV} — so it is read here rather than
+       inside the block below that used to be its only consumer. */
+    const hipsFov = fovForZoom("horizon", view.current.distance);
+    /**
+     * How much of the composite is HiPS's to own right now, 0–1 — the
+     * two-layer cross-fade this replaced a one-directional threshold with.
+     * `smoothstep(START, END, hipsFov)` with `START(80) > END(30)` falls
+     * from 1 to 0 as `hipsFov` *grows* (see {@link smoothstep}'s own doc
+     * comment on why the same function handles both directions), landing
+     * exactly the shape the brief's own comparison table describes: 0 at
+     * wide field, 1 once the field has narrowed past {@link
+     * HIPS_BLEND_END_FOV}, easing smoothly between.
+     *
+     * Computed once, here, rather than separately inside the HiPS block
+     * and the panorama block that consume it — the panorama's own
+     * compositing fade ({@link HIPS_BLEND_END_FOV}'s doc comment, "concept
+     * B") lives much later in this same function, after `hipsOn`'s own
+     * block has already returned, so both need this same number in scope
+     * rather than each re-deriving it.
+     */
+    const hipsVisibility = smoothstep(HIPS_BLEND_START_FOV, HIPS_BLEND_END_FOV, hipsFov);
+    const hipsOn = horizon && !arBackground && hipsFov <= HIPS_BLEND_START_FOV;
+    if (hipsGroupRef.current) {
+      if (horizon) {
+        hipsGroupRef.current.quaternion.setFromRotationMatrix(
+          equatorialToHorizonMatrix(lst, observer.lat, precessionSinceJ2000(dtDays), eps),
+        );
+      } else {
+        hipsGroupRef.current.quaternion.identity();
+      }
+      hipsGroupRef.current.position.copy(state.camera.position);
+      hipsGroupRef.current.visible = hipsOn;
+    }
+    /* Above {@link HIPS_BLEND_START_FOV} the block below never runs, so
+       without this the HUD would freeze on whatever counts it last saw
+       while still under the threshold instead of showing the panorama
+       having taken back over. */
+    if (hipsDebugOn && !hipsOn) {
+      writeHipsDebugSnapshot({
+        fovDeg: hipsFov,
+        minOrderPresent: -1,
+        maxOrderPresent: -1,
+        refinePixels: HIPS_TILE_REFINE_PIXELS,
+        leafCount: 0,
+        readyCount: 0,
+        loadingCount: 0,
+        fallbackCount: 0,
+        cachedCount: hipsCache.current.size,
+        inFlight: hipsLoadsInFlightCount(),
+        tiles: [],
+      });
+    }
+    /**
+     * Steps 7–11: pick the order the current field actually earns, work out
+     * which tiles at that order (and its immediate parent, for the
+     * crossfade) the camera can actually see, make sure each one exists and
+     * is on its way in if it is not loaded yet, and only then decide what
+     * is actually visible this frame.
+     *
+     * Runs every frame the HiPS layer is on, not gated behind
+     * {@link beltMoved}: field of view changes on every scroll, not on the
+     * clock, and a LOD system that only re-evaluated when the sidereal time
+     * ticked would leave a paused reader zooming in on tiles chosen for
+     * whatever field was live the last time the belt happened to rebuild —
+     * the exact bug the Milky Way's own fade and the nebula photographs
+     * both already hit this same session.
+     */
+    if (hipsOn && hipsGroupRef.current) {
+      const group = hipsGroupRef.current;
+      const width = state.size.width;
+      const height = state.size.height;
+      /* Tile opacity now rides {@link hipsVisibility} directly — the same
+         number the panorama's own complementary fade uses, computed once
+         above rather than re-derived here. */
+      const win = horizonViewWindow(state.camera, hipsFov, width, height);
+
+      hipsForwardWorld.set(0, 0, -1).applyQuaternion(state.camera.quaternion);
+      hipsInvQuat.copy(group.quaternion).invert();
+      hipsDirEquatorial.copy(hipsForwardWorld).applyQuaternion(hipsInvQuat);
+
+      /* One counter per frame, stamped onto every entry `ensureHipsTile`
+         touches this frame (hit or miss) — Phase 9's eviction recency
+         clock, and (via `hipsTouchedKeys` below) its protection set. */
+      const frame = nextHipsFrame();
+      hipsLoadCandidates.length = 0;
+      hipsTouchedKeys.clear();
+
+      /* Phase 6: collect rather than immediately load — {@link
+         hipsTilePriority} (closest to view centre wins, `hips.ts`'s own
+         doc comment) decides who actually claims one of the limited
+         concurrent slots once every candidate this frame is known, not
+         whichever happened to be visited first in the traversal's own
+         DFS order. */
+      const queueLoad = (entry: HipsTileEntry, order: number, pix: number) => {
+        hipsTouchedKeys.add(hipsTileKey(order, pix));
+        if (hipsTileNeedsLoad(entry)) hipsLoadCandidates.push({ entry, priority: hipsTilePriority(order, pix, hipsDirEquatorial) });
+      };
+
+      /* A guaranteed fallback floor — Stellarium's `hips_get_tile_texture()`
+         recurses to grandparent, great-grandparent, etc. when a tile isn't
+         loaded, but that recursion can only find an ancestor entry {@link
+         findReadyHipsAncestor} already knows about. Order 0 is the whole
+         sky in 12 tiles total, cheap enough to always have requested rather
+         than only reaching for it once a multi-level gap actually happens —
+         e.g. right after the HiPS layer first turns on, before the
+         recursive traversal below has had a chance to touch order 0 itself
+         (Step 7). Routed through the same priority queue as everything
+         else below now, rather than loading immediately: once order 0 is
+         fully cached (after its first couple of frames) every call here is
+         a no-op `idle` check anyway, so folding it in costs nothing and
+         keeps exactly one place deciding load order. */
+      for (let pix0 = 0; pix0 < hipsTileCount(0); pix0 += 1) {
+        const entry0 = ensureHipsTile(hipsCache.current, 0, pix0, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
+        queueLoad(entry0, 0, pix0);
+      }
+
+      const controls = hipsDebugControls.current;
+
+      /* Phase 2/3: the recursive HEALPix quadtree walk (`hips-lod.ts`)
+         replaces the old "one FOV → one global order" selector. Every node
+         it visits — leaf or not — gets `ensureHipsTile`/queued via {@link
+         queueLoad}, so a tile being split into four children is still
+         itself a valid, loading/loaded ancestor the Phase 1 fallback can
+         hand to those children while they arrive (Step 10's "parent remains
+         visible while children load" falls out of composing the two
+         systems, not from any special-casing here). */
+      hipsLodFrame.camera = state.camera;
+      hipsLodFrame.groupQuaternion = group.quaternion;
+      hipsLodFrame.groupPosition = group.position;
+      hipsLodFrame.radius = HIPS_RADIUS;
+      hipsLodFrame.fovDeg = hipsFov;
+      hipsLodFrame.width = width;
+      hipsLodFrame.height = height;
+
+      const onVisit = (order: number, pix: number) => {
+        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
+        queueLoad(entry, order, pix);
+      };
+
+      if (controls.disableLod) {
+        // Step 13 isolation: skip refinement entirely, order 0 only.
+        hipsLodLeaves.length = 0;
+        for (let pix0 = 0; pix0 < hipsTileCount(0); pix0 += 1) {
+          onVisit(0, pix0);
+          hipsLodLeaves.push({ order: 0, pix: pix0 });
+        }
+      } else {
+        evaluateHipsTiles(
+          hipsLodFrame,
+          hipsDirEquatorial,
+          win.cone,
+          HIPS_MAX_LOCAL_ORDER,
+          onVisit,
+          hipsLodLeaves,
+        );
+      }
+
+      /* Phase 6: highest priority — closest to view centre — claims the
+         concurrency-capped slots first. `loadHipsTileTexture` still no-ops
+         past {@link HIPS_MAX_CONCURRENT_LOADS} on its own, so feeding
+         candidates in priority order is the whole mechanism; nothing else
+         needs to know about slots directly. */
+      if (!controls.disableLod) {
+        hipsLoadCandidates.sort((a, b) => b.priority - a.priority);
+      }
+      for (const { entry } of hipsLoadCandidates) loadHipsTileTexture(entry);
+
+      /* Phase 11: low-priority prefetch — every current leaf's own
+         siblings (the rest of its parent's four children), requested only
+         *after* every real candidate above has already had first claim on
+         this frame's load slots. A small pan tends to need exactly these
+         next, and `loadHipsTileTexture`'s own no-op-past-the-cap behaviour
+         is what keeps this from ever outbidding something actually
+         visible — there is no separate "low priority" queue to maintain,
+         just a later turn at the same gate. */
+      if (!controls.disableLod) {
+        for (const { order, pix } of hipsLodLeaves) {
+          for (const [so, sp] of getHipsSiblings(order, pix)) {
+            const sibling = ensureHipsTile(hipsCache.current, so, sp, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
+            hipsTouchedKeys.add(hipsTileKey(so, sp));
+            if (hipsTileNeedsLoad(sibling)) loadHipsTileTexture(sibling);
+          }
+        }
+      }
+
+      const leaves = controls.onlyOrder !== null ? hipsLodLeaves.filter((l) => l.order === controls.onlyOrder) : controls.onlyPix ? hipsLodLeaves.filter((l) => l.order === controls.onlyPix!.order && l.pix === controls.onlyPix!.pix) : hipsLodLeaves;
+
+      let readyCount = 0;
+      let loadingCount = 0;
+      let fallbackCount = 0;
+      let minOrderPresent = -1;
+      let maxOrderPresent = -1;
+      const neededLeaves = new Set<string>();
+      const debugTiles: HipsDebugTile[] = hipsDebugOn ? [] : [];
+
+      for (const { order, pix } of leaves) {
+        neededLeaves.add(hipsTileKey(order, pix));
+        const entry = ensureHipsTile(hipsCache.current, order, pix, HIPS_RADIUS, HIPS_TILE_SUBDIVISIONS, frame);
+        if (entry.mesh.parent !== group) group.add(entry.mesh);
+        entry.mesh.renderOrder = HIPS_RENDER_ORDER;
+        /* Tried matching the panorama's own `skyBoost` (a flat 0.38× dim)
+           and `injectMilkyWayExtinction` (altitude-based atmospheric
+           dimming) here on the theory that it would remove a brightness
+           jump at the 80° threshold — reverted after a direct comparison
+           against real Stellarium: a DSS2 tile is already correctly
+           exposed astrophotography, and dragging it down to a stylized
+           panorama's own deliberately-dim colour plus a second, aggressive
+           dimming curve on top left every tile looking flat and washed out
+           next to Stellarium's own vivid, punchy version of the same
+           object. Whatever residual mismatch exists right at the threshold
+           is the smaller problem — a tile that actually looks like its own
+           real astrophotography is worth more. */
+        if (entry.state === "loading") loadingCount += 1;
+        let shownState: HipsDebugTile["state"] = entry.state;
+        if (entry.state === "ready") {
+          readyCount += 1;
+          entry.mesh.visible = true;
+          /* Phase 8: ramp opacity up from {@link HIPS_FADE_IN_START} over
+             {@link HIPS_FADE_IN_MS} after this tile's own real texture
+             arrived (`entry.readyAt`) — a brief reveal instead of an
+             instant swap from whatever ancestor quarter Phase 1 had been
+             showing. `entry.readyAt` is only ever set the instant a load
+             succeeds (`loadHipsTileTexture`), so a tile that has been
+             `ready` for a while (well past the fade window) always lands
+             on exactly `hipsVisibility`, not a stale partial value. */
+          const fadeT =
+            entry.readyAt !== null ? Math.min(1, (performance.now() - entry.readyAt) / HIPS_FADE_IN_MS) : 1;
+          entry.material.opacity = hipsVisibility * (HIPS_FADE_IN_START + (1 - HIPS_FADE_IN_START) * fadeT);
+          if (minOrderPresent < 0 || order < minOrderPresent) minOrderPresent = order;
+          if (order > maxOrderPresent) maxOrderPresent = order;
+        } else if (!controls.disableFallback) {
+          /* Phase 1 parent fallback: show this tile's own (correctly
+             HEALPix-curved) geometry with the nearest already-loaded
+             ancestor's texture, cropped to the right quadrant via {@link
+             ensureHipsFallbackTexture}, rather than leaving a hole.
+             Verified empirically against real downloaded tiles — see that
+             function's own doc comment. */
+          const ancestor = findReadyHipsAncestor(hipsCache.current, order, pix);
+          if (ancestor?.material.map) {
+            const fallbackTex = ensureHipsFallbackTexture(entry, ancestor.material.map, ancestor.order);
+            if (entry.material.map !== fallbackTex) {
+              entry.material.map = fallbackTex;
+              entry.material.needsUpdate = true;
+            }
+            entry.mesh.visible = true;
+            entry.material.opacity = hipsVisibility;
+            fallbackCount += 1;
+            shownState = "fallback";
+            if (minOrderPresent < 0 || ancestor.order < minOrderPresent) minOrderPresent = ancestor.order;
+            if (ancestor.order > maxOrderPresent) maxOrderPresent = ancestor.order;
+          } else {
+            entry.mesh.visible = false;
+          }
+        } else {
+          entry.mesh.visible = false;
+        }
+        if (hipsDebugOn) {
+          debugTiles.push({
+            order,
+            pix,
+            state: shownState,
+            screenPx: Math.round(getHipsTileScreenSizePx(order, pix, hipsLodFrame)),
+          });
+        }
+      }
+
+      // Hide every cached tile that isn't one of this frame's leaves — a
+      // tile from a previous camera direction, a previous LOD selection, or
+      // (while `onlyOrder`/`onlyPix` is set) filtered out by the isolation
+      // controls above would otherwise stay visible forever, since the loop
+      // above only touches the current frame's leaf set.
+      for (const entry of hipsCache.current.values()) {
+        if (!neededLeaves.has(hipsTileKey(entry.order, entry.pix))) entry.mesh.visible = false;
+      }
+
+      /* Phase 9: reclaim tiles nothing this frame's LOD walk needed —
+         `hipsTouchedKeys` is exactly "every leaf, every ancestor refined
+         through on the way to one, and every prefetched sibling" (built
+         alongside the traversal and the prefetch pass above), so anything
+         left out genuinely has not been part of the picture this frame.
+         `disposeHipsTile` (inside `evictHipsTiles`) frees geometry,
+         material, and textures and detaches the mesh — Phase 10's GPU
+         disposal is this same call, not a separate pass. */
+      evictHipsTiles(hipsCache.current, hipsTouchedKeys, HIPS_CACHE_MAX_RESIDENT);
+
+      /* Step 12's optional tile-boundary visualization — rebuilt from
+         scratch each time it's on, since the leaf set itself changes every
+         frame; cheap at at most a few dozen leaves, and only runs at all
+         while debug mode is both on and this specific toggle is set. */
+      if (hipsDebugOn && controls.showBoundaries) {
+        if (!hipsDebugOutlines.current) {
+          const outlineGroup = new THREE.Group();
+          outlineGroup.name = "hips-debug-outlines";
+          group.add(outlineGroup);
+          hipsDebugOutlines.current = outlineGroup;
+        }
+        const outlineGroup = hipsDebugOutlines.current;
+        while (outlineGroup.children.length > leaves.length) {
+          const last = outlineGroup.children[outlineGroup.children.length - 1] as THREE.Line;
+          outlineGroup.remove(last);
+          last.geometry.dispose();
+        }
+        leaves.forEach((leaf, i) => {
+          const points = buildHipsTileOutline(leaf.order, leaf.pix, HIPS_RADIUS * 1.001, 6);
+          let line = outlineGroup.children[i] as THREE.Line | undefined;
+          if (!line) {
+            const mat = new THREE.LineBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.6, depthTest: false });
+            line = new THREE.Line(new THREE.BufferGeometry(), mat);
+            line.renderOrder = HIPS_RENDER_ORDER + 0.01;
+            outlineGroup.add(line);
+          }
+          line.geometry.dispose();
+          line.geometry = new THREE.BufferGeometry().setFromPoints(points);
+        });
+      } else if (hipsDebugOutlines.current) {
+        hipsDebugOutlines.current.visible = false;
+      }
+      if (hipsDebugOutlines.current) {
+        hipsDebugOutlines.current.visible = hipsDebugOn && controls.showBoundaries;
+      }
+
+      if (hipsDebugOn) {
+        writeHipsDebugSnapshot({
+          fovDeg: hipsFov,
+          minOrderPresent,
+          maxOrderPresent,
+          refinePixels: HIPS_TILE_REFINE_PIXELS,
+          leafCount: leaves.length,
+          readyCount,
+          loadingCount,
+          fallbackCount,
+          cachedCount: hipsCache.current.size,
+          inFlight: hipsLoadsInFlightCount(),
+          tiles: debugTiles,
+        });
       }
     }
 
@@ -2765,6 +3873,9 @@ export function AakashGocharScene({
     /* ── bodies ─────────────────────────────────────────────────────── */
     let sunAltitude = -90;
     const horizonFovNow = horizon ? fovForZoom("horizon", view.current.distance) : 0;
+    /* Off unless this frame's loop plants it — one selected graha at most, and
+       none at all outside पृथ्वी गोला. */
+    if (subGrahaRef.current) subGrahaRef.current.visible = false;
     for (const key of GEO_BODY_ORDER) {
       const body = sky[key];
       const spaceR = shellRadius(key, body.distanceAu) * SPACE_SHELL_SCALE;
@@ -2807,20 +3918,37 @@ export function AakashGocharScene({
         shell.visible = space;
       }
 
+      /* The selected graha's own sub-point, planted on the globe exactly the
+         way the subsolar dot is: normalise the body's direction and drop it on
+         the surface. Same frame as the Sun's — celestial, not geographic, so
+         the Earth's texture turns underneath it, which is what a sub-point
+         does. */
+      if (globe && key === selectedKey && key !== "sun" && subGrahaRef.current) {
+        const subLen = Math.hypot(at[0], at[1], at[2]) || 1;
+        subGrahaRef.current.position.set(
+          (at[0] / subLen) * GLOBE_R * 1.01,
+          (at[1] / subLen) * GLOBE_R * 1.01,
+          (at[2] / subLen) * GLOBE_R * 1.01,
+        );
+        (subGrahaRef.current.material as THREE.MeshBasicMaterial).color.set(GRAHA_COLOR[key]);
+        subGrahaRef.current.visible = true;
+      }
+
       const ray = rays[key];
       if (space) {
-        setPoint(ray, 0, at);
-        setPoint(ray, 1, place(body.longitude, 0, NAK_OUTER));
+        /* Same direction as the body, so Earth, the graha, and the belt hit
+           stay colinear — the line runs through the selected planet. */
+        setPoint(ray, 0, place(body.longitude, body.latitude, EARTH_RADIUS));
+        setPoint(ray, 1, place(body.longitude, body.latitude, NAK_OUTER));
       } else {
         setPoint(ray, 0, [0, 0, 0]);
         setPoint(ray, 1, at);
       }
       flushLine(ray);
-      /* Space: one sightline only, running out through both belts — for the
-         graha you picked, or the Sun until you pick one, so it always matches
-         the lit राशि and नक्षत्र segments. Globe keeps the Sun's ray off (it
-         would run through the Earth) and shows any other when selected.
-         Horizon: whatever is above the ground. */
+      /* Space: one sightline, Earth through the graha you picked (Sun until
+         you pick one) and on through both belts. Globe keeps the Sun's ray
+         off (it would run through the Earth) and shows any other when
+         selected. Horizon: whatever is above the ground. */
       ray.visible = space
         ? key === beltKey
         : globe
@@ -2962,6 +4090,26 @@ export function AakashGocharScene({
     const starRadius = space ? NAK_OUTER + 0.25 : DOME * 0.995;
 
     /**
+     * Where the stars, figures and deep-sky photographs go.
+     *
+     * Straight through {@link place}, which in पृथ्वी गोला means they land
+     * on `GLOBE_BAND_R` — the same shell the zodiac band sits on, wrapped
+     * close around the Earth. That is deliberate and long-standing: the
+     * globe view is a diagram of the ring *around* the Earth, and the
+     * नक्षत्र clusters belong on that ring where they can be read against
+     * it, not thrown out to infinity where the whole point of the view is
+     * lost.
+     *
+     * (An earlier pass moved them out to ~396 on the theory that the ball
+     * of stars around the globe was the "black disc" being complained
+     * about. It was not — that was the camera's far plane cutting the sky
+     * sphere, see `SKY_FAR`. Moving the stars only deleted the ring
+     * clusters and fixed nothing.)
+     */
+    const skyPlace = (lonSid: number, latEc: number): [number, number, number] =>
+      place(lonSid, latEc, starRadius);
+
+    /**
      * A fixed star's place, in whichever frame is live.
      *
      * Inside the dome and around the globe the sky is a sphere and the star
@@ -2969,7 +4117,7 @@ export function AakashGocharScene({
      * goes where the diagram wants it — see {@link spaceStarPos}.
      */
     const starPlace = (index: number, lonSid: number, latEc: number): [number, number, number] =>
-      space ? tiltEcliptic(spaceStarPos[index] ?? [0, 0, 0]) : place(lonSid, latEc, starRadius);
+      space ? tiltEcliptic(spaceStarPos[index] ?? [0, 0, 0]) : skyPlace(lonSid, latEc);
 
     if ((zodiac || space) && beltMoved) {
       lastBelt.current = { mode, lst: beltLst, ayan: beltAyan, eps: beltEps };
@@ -3018,14 +4166,14 @@ export function AakashGocharScene({
       /* ── the rest of the sky culture: राशि figures, सप्तर्षि, and the like
          Dome and globe only — no space-view segment for these to sit flat
          in, unlike the नक्षत्र figures above. */
-      if (zodiac && toggles.skyCulture) {
+      if (zodiac && toggles.constellations) {
         const precession = precessionSinceJ2000(dtDays);
         const dpr = state.gl.getPixelRatio();
         for (const { indices, object } of cultureField.groups) {
           (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
           for (let i = 0; i < indices.length; i += 1) {
             const star = cultureField.stars[indices[i]];
-            setVertex(object, i, place(star.lon + precession - ayan, star.lat, starRadius));
+            setVertex(object, i, skyPlace(star.lon + precession - ayan, star.lat));
           }
           (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
         }
@@ -3033,22 +4181,28 @@ export function AakashGocharScene({
           const [a, b] = cultureField.links[i];
           const sa = cultureField.stars[a];
           const sb = cultureField.stars[b];
-          setVertex(cultureField.lines, i * 2, place(sa.lon + precession - ayan, sa.lat, starRadius));
-          setVertex(cultureField.lines, i * 2 + 1, place(sb.lon + precession - ayan, sb.lat, starRadius));
+          setVertex(cultureField.lines, i * 2, skyPlace(sa.lon + precession - ayan, sa.lat));
+          setVertex(cultureField.lines, i * 2 + 1, skyPlace(sb.lon + precession - ayan, sb.lat));
         }
         flushLine(cultureField.lines);
       }
 
-      /* ── the naked-eye sky itself — no toggle, drawn wherever the dome or
-         globe is, the same as the Milky Way panorama it sits under. */
-      if (zodiac) {
+      /* ── the naked-eye sky itself — no toggle. Dome and globe put it on
+         the sky sphere; अन्तरिक्ष puts it on a sphere outside the disc so
+         the wheel is surrounded by stars instead of sitting in a black hole. */
+      if (zodiac || space) {
         const precession = precessionSinceJ2000(dtDays);
         const dpr = state.gl.getPixelRatio();
         for (const { indices, object } of backgroundField.groups) {
           (object.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = dpr;
           for (let i = 0; i < indices.length; i += 1) {
             const star = backgroundField.stars[indices[i]];
-            setVertex(object, i, place(star.lon + precession - ayan, star.lat, starRadius));
+            const lon = star.lon + precession - ayan;
+            setVertex(
+              object,
+              i,
+              space ? place(lon, star.lat, SPACE_STAR_R) : skyPlace(lon, star.lat),
+            );
           }
           (object.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
         }
@@ -3189,7 +4343,7 @@ export function AakashGocharScene({
          is what stands still, so it is the pole *circle* that wheels past it —
          the equivalent picture to the axis sweeping its cone, and the one that
          shows you which star is on duty. */
-      if (toggles.poleStars && zodiac) {
+      if (zodiac && (toggles.vedicStars || toggles.constellations)) {
         const precession = precessionSinceJ2000(dtDays);
         const dpr = state.gl.getPixelRatio();
         for (const object of [poleField.points, poleField.crown]) {
@@ -3197,7 +4351,7 @@ export function AakashGocharScene({
         }
         for (let i = 0; i < poleField.stars.length; i += 1) {
           const s = poleField.stars[i];
-          setVertex(poleField.points, i, place(s.lon + precession - ayan, s.lat, DOME * 0.995));
+          setVertex(poleField.points, i, skyPlace(s.lon + precession - ayan, s.lat));
         }
         (poleField.points.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate =
           true;
@@ -3232,6 +4386,149 @@ export function AakashGocharScene({
       }
     }
 
+    /* ── the curated deep-sky photographs, क्षितिज-only and always on. Scaled off
+       the actual radius `place` put them at (`Math.hypot` of the result),
+       not a mode-specific constant, since क्षितिज and पृथ्वी गोला place
+       the sky at two very different radii and a fixed world size would
+       read as the right size in one and wildly wrong in the other.
+
+       Each is drawn only across the band of zoom where it reads as a
+       patch of sky rather than as wallpaper — see {@link nebulaReveal} —
+       and its texture is not even fetched until it first earns one.
+
+       Additive, and in the galactic plane a few of these genuinely
+       overlap — Barnard's Loop's own four tiles, the Lambda Orionis ring
+       over the same stars, Heart and Soul side by side in Cassiopeia —
+       so a strength that looks right for one image sums brighter where
+       two or three stack, and the Milky Way panorama sitting under all of
+       them is itself additive. 0.4 is chosen against that pile-up: high
+       enough that a single photograph — the ordinary case, and the whole
+       point of searching one up — reads as a photograph and not a
+       barely-there haze, low enough that two or three genuinely
+       overlapping fields still separate instead of clipping to flat
+       white or pink.
+
+       Runs every frame, not only when the belt rebuilds ({@link beltMoved}
+       above only ticks on a real sidereal-time/ayanamsa/obliquity change):
+       `reveal` is a function of the zoom the reader is *at right now*
+       (`view.current.distance`), which changes on every scroll and not at
+       all on the clock. Gated behind the belt's own throttle, a paused
+       क्षितिज never recomputed it — zooming in on a photograph left it at
+       whatever opacity, scale and reveal it had the moment the clock last
+       ticked, which for a still sky is never again, and the same held for
+       the name label below: it never appeared unless the belt happened to
+       rebuild in the same frame the reveal crossed its own threshold. */
+    /* Always on, and क्षितिज's alone. There is no chip for this any more:
+       on the dome the photographs *are* the detail a zoomed-in sky has, so
+       switching them off only ever emptied it, and on the globe they sat
+       behind a wheel you are looking at from outside — never the thing being
+       looked at, and never worth the fill. */
+    if (horizon) {
+      const precession = precessionSinceJ2000(dtDays);
+      const nebulaFov = fovForZoom(mode, view.current.distance);
+      const nebulaAspect =
+        state.camera instanceof THREE.PerspectiveCamera ? state.camera.aspect : 1;
+      for (const entry of nebulaField) {
+        const { spanDeg, lon, lat, widthRad, heightRad, sprite, material } = entry;
+        const reveal = nebulaReveal(spanDeg, nebulaFov);
+        /* Visible only once the photograph is actually here. A
+           `SpriteMaterial` with no `map` is not empty — it is a solid
+           white quad at the material's colour, so a revealed-but-unloaded
+           image paints a flat white rectangle the full angular size of
+           the object. On the wide fields that rectangle is 14° across,
+           which is most of the frame at these zooms, and several of them
+           additive is a white screen. Loading is deliberately lazy,
+           throttled and view-gated, so "revealed" and "has a texture" are
+           now two different things and only the second may draw. */
+        const drawable = reveal > 0 && entry.loadState === "ready";
+        sprite.visible = drawable;
+        if (reveal <= 0) continue;
+        const at = skyPlace(lon + precession - ayan, lat);
+        sprite.position.set(at[0], at[1], at[2]);
+        /* Position first, then the view test, then the fetch: an image
+           outside the frame is left placed and invisible rather than
+           downloaded — see {@link nebulaInView}. It is still scaled
+           below, so when the pan does bring it in it is already correct
+           and only the texture is missing. */
+        if (nebulaInView(state.camera, sprite.position, nebulaFov, spanDeg, nebulaAspect)) {
+          loadNebulaTexture(entry);
+        }
+        const radius = Math.hypot(at[0], at[1], at[2]);
+        if (!drawable) continue;
+        sprite.scale.set(radius * widthRad, radius * heightRad, 1);
+        material.opacity = 0.4 * reveal;
+        /* Named once it actually reads as a photograph rather than the
+           instant it starts fading in — half strength is comfortably past
+           {@link nebulaReveal}'s own fade-in band. Shares the reticle's id
+           format (`nebula:${...}`) with `sky-catalogue.ts`, so a search
+           pick and a reader zooming in unprompted onto the same object
+           produce the same label instead of two competing ones. */
+        if (collect && reveal > 0.5) {
+          project(
+            {
+              id: `nebula:${entry.nebula.id}`,
+              kind: "nebula",
+              text: entry.nebula.en,
+              textNe: entry.nebula.ne,
+              lon,
+              lat,
+              /* A नेबुला carries its own angular size — the sprite is drawn
+                 at it — so the name clears the photograph itself rather than
+                 a brightness guess. */
+              ...(horizon
+                ? {
+                    clear: labelClearPx(
+                      ((heightRad / 2) * 180) / Math.PI,
+                      horizonFovNow,
+                      height,
+                      6,
+                    ),
+                  }
+                : {}),
+            },
+            at,
+          );
+        }
+      }
+
+      /* The marker rings — one per named object (see {@link nebulaMarkers}),
+         not one per catalogue tile. Earns its keep a little before the
+         photograph does — Stellarium's own marker flags a catalogued object
+         before the lens has pulled in far enough to show it as a
+         photograph — but modestly: the first pass here fed the same ratio a
+         flat quarter of the field and scaled the ring 18% past the object's
+         own size, and the ring it drew was routinely bigger than anything
+         actually visible inside it. 1.6× the field and 8% of headroom is
+         close enough to read as "just outside the edge" instead of "empty
+         circle floating over black sky". */
+      let pickN = 0;
+      for (let mi = 0; mi < nebulaMarkers.length; mi += 1) {
+        const { nebulaIndex, marker, markerMaterial } = nebulaMarkers[mi];
+        const entry = nebulaField[nebulaIndex];
+        const { spanDeg, lon, lat, widthRad, heightRad } = entry;
+        const markerReveal = nebulaMarkerReveal(spanDeg, nebulaFov);
+        marker.visible = markerReveal > 0;
+        if (markerReveal <= 0) continue;
+        const at = skyPlace(lon + precession - ayan, lat);
+        marker.position.set(at[0], at[1], at[2]);
+        const radius = Math.hypot(at[0], at[1], at[2]);
+        marker.scale.set(radius * widthRad * 1.08, radius * heightRad * 1.08, 1);
+        markerMaterial.opacity = 0.6 * markerReveal;
+        /* Clickable the moment the ring is — nearest-press picking reads
+           this list the same way it already reads grahas and वैदिक तारा
+           (see the pointer handler below), so a marker with no photograph
+           loaded yet is still a real target, not just a decoration. */
+        const slot = nebulaPickRef.current[pickN];
+        slot.index = mi;
+        slot.world.set(at[0], at[1], at[2]);
+        slot.worldRadius = (radius * Math.max(widthRad, heightRad) * 1.08) / 2;
+        pickN += 1;
+      }
+      nebulaPickCount.current = pickN;
+    } else {
+      nebulaPickCount.current = 0;
+    }
+
     /* ── the named वैदिक तारा ─────────────────────────────────────────
        No precession formula here: `s.lon`/`s.lat` are already sidereal
        ecliptic degrees for the date on screen, computed server-side from
@@ -3251,7 +4548,7 @@ export function AakashGocharScene({
       const byEn = new Map<string, [number, number, number]>();
       for (let i = 0; i < n; i += 1) {
         const s = vedicStars[i];
-        const at = place(s.lon, s.lat, DOME * 0.995);
+        const at = skyPlace(s.lon, s.lat);
         setVertex(vedicField.points, i, at);
         sizes.setX(i, vedicStarSize(s.mag));
         vedicPickRef.current[i].index = i;
@@ -3394,6 +4691,14 @@ export function AakashGocharScene({
           height,
           radius: DOME * 0.995,
           gridStep: gridStepForFov(field),
+          /* The bearings have to be numbered at the verticals' own spacing,
+             not the almucantars' — near the pole those are far apart, and
+             labelling at the finer pitch put numbers on meridians that are
+             not drawn. */
+          azGridStep: verticalStepForFov(
+            field,
+            horizonViewWindow(state.camera, field, width, height).centreAlt,
+          ),
           scratch: scratch.current,
         })) {
           collected.push({
@@ -3420,25 +4725,40 @@ export function AakashGocharScene({
     const closeField = fovForZoom(mode, view.current.distance);
     const close = space ? view.current.distance <= 32 : closeField < 24;
 
-    /* The Milky Way panorama fades out once the lens is tighter than a
-       normal wide-open sky — see the doc comment on its own material.
-       30°→16° is a crossfade, not just a fade: 30° is exactly
-       {@link NEBULA_MAX_FOV}, so the panorama begins easing out on the
-       same degree the individual deep-sky photographs begin easing in, and
-       by 16° the sky in front of the reader is made of the real images
-       rather than of one stretched whole-sky frame. Fading it any later
-       left the panorama at full brightness *over* the photographs, which
-       is the low-resolution picture winning exactly where the detailed one
-       had arrived.
+    /* The panorama holds on nearly the whole way in — Stellarium's own
+       `MilkyWay.cpp` keeps this exact texture at full brightness down to a
+       2.5° field and only dims inside that, so hiding ours by 16°, a
+       version of this file tried for one turn, was hiding the one thing
+       there was to see: the galactic bulge visibly dimming and reddening
+       toward the skyline as it swings down (see
+       {@link injectMilkyWayExtinction}) only happens if the panorama is
+       still on screen to show it. [1, 4] is that same shape scaled to
+       where it actually finishes on this file's own range — the tightest
+       field क्षितिज ever reaches is 1°, not Stellarium's 0.25°, so the ramp
+       is moved in to land inside range instead of asymptoting toward a
+       field the lens can never reach.
 
-       पृथ्वी गोला cannot share those two numbers: its own lens (see
-       `fovForZoom("globe", …)`) only ever spans about 0.53°–31.7°, nothing
-       like क्षितिज's 1°–235°. Its own pair, scaled to its own range and
-       moved the same way. */
-    if (milkyWayMatRef.current) {
-      const [fadeLo, fadeHi] = globe ? [8, 22] : [16, 30];
-      milkyWayMatRef.current.opacity = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
-    }
+       पृथ्वी गोला keeps its own pair: its lens (see `fovForZoom("globe",
+       …)`) only ever spans about 0.53°–31.7°, nothing like क्षितिज's
+       1°–235°, so the same degrees would mean something quite different
+       there. */
+    const [fadeLo, fadeHi] = globe ? [1.5, 4] : [1, 4];
+    /* Concept A — the near-zoom blur fade above, entirely unrelated to
+       HiPS: even with the real DSS2 tiles never in the picture (globe,
+       space, or क्षितिज with HiPS switched off) this panorama still wants
+       to fade out once a press has pulled in far enough that its own
+       2048×1024 texels are showing.
+       Concept B — the panorama's own half of the two-layer cross-fade
+       ({@link HIPS_BLEND_START_FOV}'s doc comment): the complement of
+       {@link hipsVisibility}, so as the tiles ease in this eases out to
+       match, deliberately kept as its own separate multiplier rather than
+       folded into `skyFade` above — the two fade the panorama out for
+       completely different reasons (one because the reader zoomed in past
+       what the texture can resolve, the other because a *better* image
+       has taken over) and only one of them exists outside क्षितिज. */
+    const panoramaHipsFade = horizon && !arBackground ? 1 - hipsVisibility : 1;
+    const skyFade = Math.max(0, Math.min(1, (closeField - fadeLo) / (fadeHi - fadeLo)));
+    if (milkyWayMatRef.current) milkyWayMatRef.current.opacity = skyFade * panoramaHipsFade;
     /* The horizon glow needs the same fade, for a reason the Milky Way
        panorama does not have to worry about: it is a gradient by *altitude
        across the frame*, and a narrow field of view does not span enough
@@ -3525,6 +4845,9 @@ export function AakashGocharScene({
             index: i,
             lon,
             lat: s.lat,
+            ...(horizon
+              ? { clear: labelClearPx(starGlowDeg(s.mag), horizonFovNow, height, 8) }
+              : {}),
           },
           at,
         );
@@ -3533,7 +4856,7 @@ export function AakashGocharScene({
 
     /* राशि / mythological figure labels — one per figure, at the mean of its
        members, the same way नक्षत्र group names are placed above. */
-    if (collect && zodiac && toggles.skyCulture && !close) {
+    if (collect && zodiac && toggles.constellations && !close) {
       const precession = precessionSinceJ2000(dtDays);
       for (const { figure, starIndices } of cultureField.figures) {
         let x = 0;
@@ -3542,7 +4865,7 @@ export function AakashGocharScene({
         let radius = 0;
         for (const i of starIndices) {
           const s = cultureField.stars[i];
-          const p = place(s.lon + precession - ayan, s.lat, starRadius);
+          const p = skyPlace(s.lon + precession - ayan, s.lat);
           x += p[0];
           y += p[1];
           z += p[2];
@@ -3569,14 +4892,14 @@ export function AakashGocharScene({
     /* Individually named member stars — अग्नि, ब्रह्महृदयम् and the rest,
        the ones classical texts singled out inside these figures. Shown at
        any zoom, the same as a नक्षत्र's own योगतारा. */
-    if (collect && zodiac && toggles.skyCulture) {
+    if (collect && zodiac && toggles.constellations) {
       const precession = precessionSinceJ2000(dtDays);
       for (let i = 0; i < cultureField.stars.length; i += 1) {
         const s = cultureField.stars[i];
         const names = cultureStarLabel(s);
         if (!names) continue;
         const lon = s.lon + precession - ayan;
-        const at = place(lon, s.lat, starRadius);
+        const at = skyPlace(lon, s.lat);
         if (!labelVisible(at)) continue;
         project(
           {
@@ -3586,6 +4909,9 @@ export function AakashGocharScene({
             textNe: names.ne,
             lon,
             lat: s.lat,
+            ...(horizon
+              ? { clear: labelClearPx(starGlowDeg(s.mag), horizonFovNow, height, 8) }
+              : {}),
           },
           at,
         );
@@ -3613,12 +4939,12 @@ export function AakashGocharScene({
 
     /* Pole-star names, with the year each takes its turn. The reigning one is
        flagged so the overlay can crown it. */
-    if (collect && zodiac && toggles.poleStars) {
+    if (collect && zodiac && toggles.vedicStars) {
       const precession = precessionSinceJ2000(dtDays);
       const simYear = 2000 + dtDays / 365.25;
       const reigning = reigningPoleStar(poleField.stars, dtDays, eps);
       for (const s of poleField.stars) {
-        const at = place(s.lon + precession - ayan, s.lat, DOME * 0.995);
+        const at = skyPlace(s.lon + precession - ayan, s.lat);
         if (!labelVisible(at)) continue;
         project(
           {
@@ -3640,7 +4966,7 @@ export function AakashGocharScene({
     if (collect && zodiac && toggles.vedicStars && vedicStars) {
       for (let i = 0; i < vedicStars.length && i < VEDIC_STAR_CAPACITY; i += 1) {
         const s = vedicStars[i];
-        const at = place(s.lon, s.lat, DOME * 0.995);
+        const at = skyPlace(s.lon, s.lat);
         if (!labelVisible(at)) continue;
         project(
           {
@@ -3651,6 +4977,9 @@ export function AakashGocharScene({
             index: i,
             lon: s.lon,
             lat: s.lat,
+            ...(horizon
+              ? { clear: labelClearPx(starGlowDeg(s.mag), horizonFovNow, height, 8) }
+              : {}),
           },
           at,
         );
@@ -3730,17 +5059,31 @@ export function AakashGocharScene({
             : toggles.nakshatraBelt;
       object.visible = zodiac && on;
     }
-    // The star groups belong to the sky, so they live wherever the belt does.
+    /* The star groups belong to the sky, so they live wherever the belt does.
+       Split along the same seam as ध्रुव तारा below: the नक्षत्र member stars
+       are stars and answer to वैदिक तारा, the lines joining them into a figure
+       answer to तारापुञ्ज. Both used to sit under तारापुञ्ज, which meant
+       turning the figures off also deleted the stars they were drawn between —
+       and left तारापुञ्ज as a switch that removed half the sky. */
     for (const { object } of starField.groups) {
-      object.visible = (zodiac || space) && toggles.constellations;
+      object.visible = (zodiac || space) && toggles.vedicStars;
     }
     starField.lines.visible = (zodiac || space) && toggles.constellations;
+    /* Figure lines, so तारापुञ्ज owns them — but their geometry is only
+       written while वैदिक तारा is on (the block that computes it needs the
+       star positions), and its draw range collapses to zero otherwise. Lines
+       between stars that are not on screen would have nothing to join. */
+    vedicConstLines.visible = zodiac && toggles.constellations;
     for (const { object } of cultureField.groups) {
-      object.visible = zodiac && toggles.skyCulture;
+      object.visible = zodiac && toggles.constellations;
     }
-    cultureField.lines.visible = zodiac && toggles.skyCulture;
+    cultureField.lines.visible = zodiac && toggles.constellations;
+    /* The naked-eye background field — every star that is not a नक्षत्र member,
+       a वैदिक तारा or a pole star. वैदिक तारा is the one switch for stars now,
+       so this goes with them rather than being the one star layer with no way
+       to turn it off. */
     for (const { object } of backgroundField.groups) {
-      object.visible = zodiac;
+      object.visible = (zodiac || space) && toggles.vedicStars;
     }
     /* Only ever forces them *off* — which of them are on is the reveal's
        own decision, per sprite, in the block above. Setting `visible` true
@@ -3754,9 +5097,16 @@ export function AakashGocharScene({
     }
     // A skyline glow means nothing without a skyline — only क्षितिज has one.
     horizonGlow.visible = horizon;
-    poleField.points.visible = zodiac && toggles.poleStars;
-    poleField.crown.visible = zodiac && toggles.poleStars;
-    poleField.trackLine.visible = zodiac && toggles.poleStars;
+    /* ध्रुव तारा has no switch of its own any more, and the two things it used
+       to draw never belonged under one anyway. The dots — and the gold crown on
+       whichever one is currently on duty — are *stars*, so they go off only
+       when वैदिक तारा turns every star off. The circle joining them is the
+       precession track: a figure drawn between stars, exactly what तारापुञ्ज
+       governs everywhere else on this page. Together they meant that hiding a
+       line you did not want also took the pole star off the sky. */
+    poleField.points.visible = zodiac && toggles.vedicStars;
+    poleField.crown.visible = zodiac && toggles.vedicStars;
+    poleField.trackLine.visible = zodiac && toggles.constellations;
     vedicField.points.visible = zodiac && toggles.vedicStars && (vedicStars?.length ?? 0) > 0;
     if (!vedicField.points.visible) vedicField.crown.visible = false;
     // The tilt is only drawn where the Earth is: the globe view.
@@ -3767,33 +5117,70 @@ export function AakashGocharScene({
     grid.group.visible = gridOn;
     /* Version-guarded inside, so this is a no-op after the first frame. */
     if (gridOn) injectHorizonFisheyeIn(grid.frame, fisheye);
-    /* The finest local tier that is on — only one is ever drawn, because they
-       nest by a factor of two or three and stacking them over a one-degree
-       window is a wash rather than a grid. */
-    let localTier: (typeof GRID_TIERS)[number] | null = null;
-    for (let i = 0; i < GRID_TIERS.length; i += 1) {
-      const tier = GRID_TIERS[i];
-      const wanted = gridOn && horizonFov < tier.maxFov;
-      if (tier.local) {
-        if (wanted) localTier = tier;
-        continue;
+    /* Exactly one tier on screen at a time — the finest whose `maxFov`
+       still clears the current field, same rule as {@link gridStepForFov}.
+       Stellarium draws one grid resolution and swaps it as you zoom rather
+       than layering a coarse cage under a fine one; showing every tier whose
+       threshold happened to be satisfied was what made the web read as a
+       crosshatch instead of a grid. */
+    let activeIndex = -1;
+    let azIndex = -1;
+    /* Where the lens is pointing — the verticals' spacing depends on it, so
+       it is needed on every frame the cage is on, not only the fine ones. */
+    const gridView = gridOn
+      ? horizonViewWindow(state.camera, horizonFov, width, height)
+      : null;
+    if (gridOn && gridView) {
+      for (let i = 0; i < GRID_TIERS.length; i += 1) {
+        if (horizonFov < GRID_TIERS[i].maxFov) activeIndex = i;
       }
-      let object = grid.tiers[i];
-      if (wanted && !object) {
-        object = bakeHorizonGrid(tier.step, tier.skipMultiplesOf, tier.opacity);
-        injectHorizonFisheyeIn(object, fisheye);
-        grid.tiers[i] = object;
-      }
-      if (object) {
-        if (object.parent !== grid.group) grid.group.add(object);
-        object.visible = wanted;
+      /* The same ladder, asked with the field widened by 1/cos(alt) — so the
+         verticals thin out as the pole is approached instead of collapsing
+         into a fan. Away from the pole this lands on the same tier as the
+         almucantars and the cage is square again. */
+      const azStep = verticalStepForFov(horizonFov, gridView.centreAlt);
+      for (let i = 0; i < GRID_TIERS.length; i += 1) {
+        if (GRID_TIERS[i].step === azStep) azIndex = i;
       }
     }
-    if (localTier) {
-      const view = horizonViewWindow(state.camera, horizonFov, width, height);
+    let localAltTier: (typeof GRID_TIERS)[number] | null = null;
+    let localAzTier: (typeof GRID_TIERS)[number] | null = null;
+    for (let i = 0; i < GRID_TIERS.length; i += 1) {
+      const tier = GRID_TIERS[i];
+      if (tier.local) {
+        if (i === activeIndex) localAltTier = tier;
+        if (i === azIndex) localAzTier = tier;
+      }
+      /* Each family shows the baked whole-sky object for its own tier, unless
+         that tier is fine enough to be drawn locally instead. */
+      const wantAlt = i === activeIndex && !tier.local;
+      const wantAz = i === azIndex && !tier.local;
+      let altObject = grid.altTiers[i];
+      if (wantAlt && !altObject) {
+        altObject = bakeHorizonGrid(buildAlmucantarPairs(tier.step));
+        injectHorizonFisheyeIn(altObject, fisheye);
+        grid.altTiers[i] = altObject;
+      }
+      if (altObject) {
+        if (altObject.parent !== grid.group) grid.group.add(altObject);
+        altObject.visible = wantAlt;
+      }
+      let azObject = grid.azTiers[i];
+      if (wantAz && !azObject) {
+        azObject = bakeHorizonGrid(buildVerticalPairs(tier.step));
+        injectHorizonFisheyeIn(azObject, fisheye);
+        grid.azTiers[i] = azObject;
+      }
+      if (azObject) {
+        if (azObject.parent !== grid.group) grid.group.add(azObject);
+        azObject.visible = wantAz;
+      }
+    }
+    if ((localAltTier || localAzTier) && gridView) {
+      const view = gridView;
       const count = buildLocalGridPairs(
-        localTier.step,
-        localTier.skipMultiplesOf,
+        localAltTier ? localAltTier.step : null,
+        localAzTier ? localAzTier.step : null,
         {
           altLo: view.altLo,
           altHi: view.altHi,
@@ -3807,7 +5194,7 @@ export function AakashGocharScene({
         setPoint(grid.local, i, altAzToVec3(p.alt, p.az, GRID_R));
       }
       grid.local.geometry.setDrawRange(0, count);
-      (grid.local.material as THREE.LineBasicMaterial).opacity = localTier.opacity;
+      (grid.local.material as THREE.LineBasicMaterial).opacity = GRID_OPACITY;
       flushLine(grid.local);
       injectHorizonFisheyeIn(grid.local, fisheye);
       grid.local.visible = true;
@@ -3876,6 +5263,21 @@ export function AakashGocharScene({
          a fixed-radius projection keeps true. */
       if (sunGroup) {
         moonPhaseMat.uniforms.sunDirection.value.copy(sunGroup.position).normalize();
+        /* How dark the unlit face is allowed to get, this frame.
+         *
+         * The phase is the point of this shader, but only while the Moon is
+         * big enough to read one off. On पृथ्वी गोला it never is — the Moon
+         * is a dot on a ring seen from outside — and in a wide क्षितिज it is
+         * not either, so the true 10% earthshine was rendering a black dot on
+         * a black sky and the Moon was simply missing for half of every month.
+         * Ramped instead: a real terminator once the lens is tight enough to
+         * show one, a plainly visible disc whenever it is not. See
+         * {@link MOON_UNLIT_FAR}. */
+        moonPhaseMat.uniforms.earthshine.value = horizon
+          ? MOON_EARTHSHINE +
+            (MOON_UNLIT_FAR - MOON_EARTHSHINE) *
+              smoothstep(MOON_PHASE_FOV_TIGHT, MOON_PHASE_FOV_WIDE, horizonFovNow)
+          : MOON_UNLIT_FAR;
       }
     }
     if (ambientRef.current) ambientRef.current.intensity = space ? 0.1 : 0.28;
@@ -3911,15 +5313,41 @@ export function AakashGocharScene({
         : null;
     const trackGroup = trackKey ? bodyRefs.current[trackKey] : null;
     let trackAt: THREE.Vector3 | null = trackGroup ? trackGroup.position : null;
-    /* A star from the search box. Placed through the same `place` every other
-       fixed thing goes through, so it lands wherever the view would have drawn
-       it — and taken as the target for the one frame the aim is fresh. */
+    /* A star from the search box. Two different conventions arrive here —
+       see {@link SkyTargetAt}'s own doc comment in `sky-catalogue.ts`, which
+       `skyAim.sidereal` carries straight through from:
+       - unset/false: `skyAim.lon/lat` are the catalogue's raw J2000
+         tropical ecliptic coordinates ({@link equatorialToeclipticJ2000},
+         untouched by precession or the ayanamsa) — the same numbers every
+         fixed star and नेबुला in `sky-catalogue.ts` carries. `place` always
+         treats its longitude as *sidereal* and adds the ayanamsa back on to
+         reach the tropical value it actually needs, exactly like {@link
+         skyPlace} does for every star this file draws (`star.lon +
+         precession - ayan`, so `place`'s own `+ayan` cancels back to
+         `star.lon + precession`). Aiming has to do the same cancellation.
+       - true: a वैदिक तारा, already the current sidereal longitude the
+         server computed for the exact date on screen — `place` wants
+         exactly this, unmodified; applying the tropical correction above to
+         an already-sidereal value was the actual bug (a target landing a
+         whole ayanamsa — upwards of 24° — from the star whose name was
+         right there in the label): found via a live screenshot showing the
+         reticle and the "अभिजित्" star clearly apart, traced to this
+         mismatch, not guessed. */
     if (skyAim && skyAim.nonce !== lastAim.current) {
       lastAim.current = skyAim.nonce;
       recentre.current = true;
-      const at = place(skyAim.lon, skyAim.lat, DOME);
+      const aimLon = skyAim.sidereal ? skyAim.lon : skyAim.lon + precessionSinceJ2000(dtDays) - ayan;
+      const at = place(aimLon, skyAim.lat, DOME);
       aimAt.current.set(at[0], at[1], at[2]);
       trackAt = aimAt.current;
+      /* A deep-sky photograph asks to be framed, not just centred — most of
+         the catalogue is under a degree across, and landing at whatever zoom
+         the reader was already at would put it dead centre and still show
+         nothing (see {@link nebulaReveal}). Stars/constellations carry no
+         `fov`, so this leaves an ordinary aim exactly as it was. */
+      if (horizon && skyAim.fov != null) {
+        v.distance = distanceForHorizonFov(skyAim.fov);
+      }
     }
     if (toggles.lockCenter && lockObserver && globe) {
       const at = geoToVec3(observer.lat, observer.lon, GLOBE_R);
@@ -4184,6 +5612,16 @@ export function AakashGocharScene({
           toneMapped={false}
         />
       </mesh>
+
+      {/* HiPS Milky Way tile layer — an independent group of real DSS2 tile
+          patches, riding the same equatorial→horizon rotation the panorama
+          sphere above already uses. Tiles themselves are not JSX children:
+          the visible set changes every frame as the camera moves, so they
+          are added/removed imperatively (`group.add(entry.mesh)`) from the
+          `hipsCache` Map in the per-frame block above, keyed by
+          `order/pix` so a tile already downloaded is never re-fetched. */}
+      <group ref={hipsGroupRef} />
+
       {/* The dark-night floor under an otherwise empty patch of sky — see the
           doc comment on {@link makeHorizonGlow}. क्षितिज only. */}
       <primitive object={horizonGlow} />
@@ -4333,6 +5771,11 @@ export function AakashGocharScene({
           <sphereGeometry args={[GLOBE_R * 0.014, 12, 12]} />
           <meshBasicMaterial color="#ffd166" />
         </mesh>
+        {/* The same mark for whichever graha is selected — see {@link subGrahaRef}. */}
+        <mesh ref={subGrahaRef} visible={false}>
+          <sphereGeometry args={[GLOBE_R * 0.014, 12, 12]} />
+          <meshBasicMaterial color="#ffffff" />
+        </mesh>
 
         {/* Earth's axis, drawn out past the poles. */}
         <mesh>
@@ -4351,9 +5794,11 @@ export function AakashGocharScene({
           rashiBelt={toggles.rashiBelt}
           nakshatraBelt={toggles.nakshatraBelt}
           monthRing={false}
-          planeOpacity={0.7}
+          planeOpacity={SPACE_PLANE_OPACITY}
+          planeColor={ECLIPTIC_GRID_COLOR}
           gridInnerR={EARTH_RADIUS}
           planeInnerR={EARTH_RADIUS}
+          planeOuterR={NAK_OUTER + 1.1}
           planeY={0}
           rashiHighlightRef={rashiHiRef}
           nakHighlightRef={nakHiRef}
@@ -4409,6 +5854,10 @@ export function AakashGocharScene({
           {outline ? <primitive object={outline} /> : null}
           {corners ? <primitive object={corners} /> : null}
         </Fragment>
+      ))}
+      {/* One marker ring per named object — see {@link nebulaMarkers}. */}
+      {nebulaMarkers.map(({ marker }, i) => (
+        <primitive key={`neb-ring-${i}`} object={marker} />
       ))}
 
       {/* The obliquity: the orbit's perpendicular, and the angle off it. */}

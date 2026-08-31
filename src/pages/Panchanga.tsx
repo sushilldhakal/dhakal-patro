@@ -12,8 +12,9 @@ import {
   locationCacheKey,
   panchangaKeys,
 } from "@/lib/api";
-import { civilAnchorFromPanchangaDay, parseCivilIso } from "@/lib/patro-day";
+import { civilAnchorFromPanchangaDay, civilPartsFromPickerDate, parseCivilIso } from "@/lib/patro-day";
 import { adToBS, BS_MONTHS_NE } from "@/lib/bs-calendar";
+import { isGregorianEraBrowse } from "@/components/patro-date/patro-month-labels";
 import {
   fetchEphemerisPanchangaDay,
   isEphemerisPanchanga,
@@ -54,6 +55,8 @@ import {
   SunMoonSamvatSection,
 } from "@/components/panchanga/PanchangaSections";
 import { useRouteLoading } from "@/lib/route-loading";
+import { buildPatroBrowseYearOptions, pickAdDate, pickBrowseVikramDate } from "@/lib/patro-date-options";
+import type { Era } from "@/lib/era";
 
 /** Panchanga scrubs date/time in-place; never block the whole page with the route overlay. */
 const PANCHANGA_ROUTE_LOADING = false;
@@ -90,6 +93,9 @@ export function Panchanga() {
   });
 
   useEffect(() => {
+    // keepPreviousData leaves yesterday's payload in `data` while the new day
+    // loads. Syncing that back undoes the wheel date jump and scrolls to top.
+    if (udayaQuery.isPlaceholderData) return;
     const payload = udayaQuery.data;
     if (!payload) return;
     const ad = civilAnchorFromPanchangaDay(payload);
@@ -106,7 +112,7 @@ export function Panchanga() {
             }
           : undefined,
     });
-  }, [udayaQuery.data, syncPickerFromDateAd, syncResolvedPatroDay]);
+  }, [udayaQuery.data, udayaQuery.isPlaceholderData, syncPickerFromDateAd, syncResolvedPatroDay]);
 
   const wheelData = udayaQuery.data;
   const civilAnchor = wheelData ? civilAnchorFromPanchangaDay(wheelData) : "";
@@ -213,10 +219,16 @@ export function Panchanga() {
 
   const hadUrlTimeRef = useRef(Boolean(search.time));
   const clockSyncedKeyRef = useRef<string | null>(null);
+  const keepClockOnDateRef = useRef(false);
   const [trackedAdDate, setTrackedAdDate] = useState(adDateStr);
   if (adDateStr !== trackedAdDate) {
     setTrackedAdDate(adDateStr);
-    setClockUserAdjusted(false);
+    if (keepClockOnDateRef.current) {
+      keepClockOnDateRef.current = false;
+      clockSyncedKeyRef.current = `${adDateStr}|${locationCacheKey(location.params)}`;
+    } else {
+      setClockUserAdjusted(false);
+    }
   }
 
   const handleClockChange = useCallback(
@@ -225,6 +237,36 @@ export function Panchanga() {
       setClock(next);
     },
     [setClock],
+  );
+
+  const pickerYearOptions = useMemo(
+    () => buildPatroBrowseYearOptions(browseEra),
+    [browseEra],
+  );
+  const isGregorianBrowse = isGregorianEraBrowse(browseEra);
+  const civilParts = civilPartsFromPickerDate(date);
+  const pickerYear = isGregorianBrowse ? civilParts.year : bs.year;
+  const pickerMonth = isGregorianBrowse ? civilParts.month : bs.month;
+  const pickerDay = isGregorianBrowse ? civilParts.day : bs.day;
+
+  const handleCalendarCommit = useCallback(
+    (nextEra: Era, y: number, m: number, d: number, nextClock: string) => {
+      const dateChanged =
+        nextEra !== browseEra || y !== pickerYear || m !== pickerMonth || d !== pickerDay;
+      if (dateChanged) keepClockOnDateRef.current = true;
+      setClockUserAdjusted(true);
+      setClock(nextClock);
+      if (nextEra !== browseEra) {
+        setDisplayEra(nextEra, { year: y, month: m, day: d });
+        return;
+      }
+      if (isGregorianEraBrowse(nextEra)) {
+        pickAdDate(setDate, y, m, d);
+        return;
+      }
+      pickBrowseVikramDate(setDate, nextEra, y, m, d, location.params);
+    },
+    [setClock, setDate, setDisplayEra, browseEra, location.params, pickerYear, pickerMonth, pickerDay],
   );
 
   // Seed the chosen time once per date/location. When the viewed date is today,
@@ -365,6 +407,19 @@ export function Panchanga() {
               locationLabel={locationLabel}
               civil={isCivilMode}
               atTimeDayState={dayState.kind === "input" ? dayState : undefined}
+              calendarPick={{
+                era: browseEra,
+                year: pickerYear,
+                month: pickerMonth,
+                day: pickerDay,
+                yearOptions: pickerYearOptions,
+                todayAd,
+                clock,
+                locationParams: location.params,
+                onCommit: handleCalendarCommit,
+                onEraChange: setDisplayEra,
+                gridEra: isGregorianBrowse ? "ad" : "bs",
+              }}
             />
             {wheelData ? (
               <Link

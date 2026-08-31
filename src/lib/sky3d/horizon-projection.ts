@@ -57,7 +57,17 @@ vec4 horizonClipPosition(vec4 mvPosition) {
   float rxy = length(p.xy);
   float theta = atan(rxy, -p.z);
   float halfFov = radians(uHorizonFov) * 0.5;
-  /* Stereographic: r = 2·tan(θ/2), scaled so the vertical field hits y = ±1.
+  /* Stereographic: r = 2·tan(θ/2), scaled so the *shorter* screen axis hits
+     ±1 at the nominal field.
+
+     This used to normalise y by maxR alone and divide x by the aspect, which
+     pins the field to the vertical no matter the shape of the canvas. On a
+     landscape canvas that is the short axis anyway and nothing changes — but
+     on a portrait phone the short axis is the *width*, so a nominal 235° gave
+     235° top-to-bottom and only about 200° across, and the same number showed
+     visibly less sky than the same number on a wide desktop canvas. Keying it
+     to the shorter axis makes the reading mean "at least this much, both
+     ways" on any shape of screen.
      The antipode goes to infinity rather than to a finite radius, so whatever
      is behind the observer opens out and fills the frame however wide the lens
      is opened — which is why there is never a disc of sky in a black rectangle
@@ -69,8 +79,13 @@ vec4 horizonClipPosition(vec4 mvPosition) {
   float maxR = 2.0 * tan(max(halfFov, 1e-4) * 0.5);
   vec2 dir = rxy > 1e-8 ? p.xy / rxy : vec2(0.0);
   vec2 film = dir * rEq;
-  float x = film.x / maxR / max(uHorizonAspect, 1e-4);
-  float y = film.y / maxR;
+  float aspect = max(uHorizonAspect, 1e-4);
+  /* Whichever axis is shorter gets divisor 1 — that is the one the field is
+     quoted against; the longer axis is stretched by the ratio and shows more. */
+  float sx = max(aspect, 1.0);
+  float sy = max(1.0 / aspect, 1.0);
+  float x = film.x / (maxR * sx);
+  float y = film.y / (maxR * sy);
   float zEye = -length(p);
   vec4 depth = projectionMatrix * vec4(0.0, 0.0, zEye, 1.0);
   float ndcZ = depth.w != 0.0 ? depth.z / depth.w : 0.0;
@@ -91,17 +106,29 @@ const PROJECT_VERTEX = /* glsl */ `
  * SpriteMaterial never includes `project_vertex`. It billboards in view space
  * then does `gl_Position = projectionMatrix * mvPosition`, so राहु / केतु sat
  * on the leftover 60° perspective camera while the belt used stereographic.
- * Project the sprite *origin* through the same map, then keep the quad offset
- * in NDC so the icon stays a round billboard on the ecliptic.
+ *
+ * `mvPosition` at this point is already the *corner*, not the sprite's own
+ * origin — Three's own sprite shader has already done `mvPosition.xy +=
+ * rotatedPosition` above this — so it can go through {@link
+ * horizonClipPosition} directly, the same way any other vertex in the scene
+ * does. An earlier version routed it through the sprite's *centre* instead —
+ * `horizonClipPosition(mvCenter)` plus a corner offset borrowed from the
+ * ordinary `projectionMatrix` — on the theory that running each corner
+ * through the fisheye map independently would warp a photo into a
+ * trapezoid. That borrowed offset is the real bug: it is the delta a plain
+ * 60°-perspective camera would draw, which does not shrink or grow with
+ * {@link HorizonFisheyeUniforms.uHorizonFov} at all, so every sprite kept
+ * whatever size it happened to have at 60° regardless of how far the लेन्स
+ * had actually zoomed — planted at the wrong scale for any other field, most
+ * visibly the deep-sky photographs never growing as the reader pushed in on
+ * one. Since the map is conformal — angle-preserving at every point, not
+ * only at its centre — sending each corner through it independently does not
+ * warp a sprite that is a reasonable fraction of the sky; it makes the size
+ * agree with the zoom, which the centre-plus-borrowed-delta version never did.
  */
 const SPRITE_GL_POSITION = /* glsl */ `
-	vec4 mvCenter = vec4(mvPosition.xy - rotatedPosition, mvPosition.zw);
 	if (uHorizonStereo > 0.5) {
-		vec4 pCenter = projectionMatrix * mvCenter;
-		vec4 pFull = projectionMatrix * mvPosition;
-		vec2 ndcDelta = pFull.xy / max(pFull.w, 1e-4) - pCenter.xy / max(pCenter.w, 1e-4);
-		vec4 stereo = horizonClipPosition(mvCenter);
-		gl_Position = vec4(stereo.xy + ndcDelta, stereo.z, 1.0);
+		gl_Position = horizonClipPosition(mvPosition);
 	} else {
 		gl_Position = projectionMatrix * mvPosition;
 	}
@@ -196,9 +223,13 @@ export function projectHorizonRaw(
   const dirX = rxy > 1e-8 ? scratch.x / rxy : 0;
   const dirY = rxy > 1e-8 ? scratch.y / rxy : 0;
   const aspect = width / Math.max(height, 1);
+  /* Must match `CLIP_GLSL` above exactly, or every label and every hit test
+     drifts away from the star it belongs to. */
+  const sx = Math.max(aspect, 1);
+  const sy = Math.max(1 / aspect, 1);
   const rSt = 2 * Math.tan(theta / 2);
-  const nx = (dirX * rSt) / maxR / aspect;
-  const ny = (dirY * rSt) / maxR;
+  const nx = (dirX * rSt) / (maxR * sx);
+  const ny = (dirY * rSt) / (maxR * sy);
   return { x: (nx * 0.5 + 0.5) * width, y: (-ny * 0.5 + 0.5) * height };
 }
 
@@ -232,7 +263,9 @@ export function projectHorizon(
 export function horizonConeRadiusDeg(fovDeg: number, width: number, height: number): number {
   const aspect = width / Math.max(height, 1);
   const maxR = 2 * Math.tan(Math.max((fovDeg * Math.PI) / 360, 1e-4) / 2);
-  const corner = maxR * Math.hypot(aspect, 1);
+  /* The film rectangle's own half-extents — same `sx`/`sy` the projection
+     uses, so the cone still just reaches the corner on either orientation. */
+  const corner = maxR * Math.hypot(Math.max(aspect, 1), Math.max(1 / aspect, 1));
   return Math.min(175, (2 * Math.atan(corner / 2) * 180) / Math.PI);
 }
 
@@ -266,8 +299,13 @@ export function horizonViewWindow(
   const centreAlt = (Math.asin(Math.min(1, Math.max(-1, forward.y))) * 180) / Math.PI;
   const centreAz = (Math.atan2(forward.x, -forward.z) * 180) / Math.PI;
   const cone = Math.min(179, horizonConeRadiusDeg(fovDeg, width, height) * 1.06);
-  const altLo = Math.max(-89.5, centreAlt - cone);
-  const altHi = Math.min(89.5, centreAlt + cone);
+  /* Right up to the pole, not half a degree short of it. The fine cage is
+     built only inside this window, so clipping it at 89.5° meant the last
+     circles — 89°30′, 89°40′, 89°45′, the ones a one-degree field centred on
+     the zenith is entirely made of — were never generated, and the middle of
+     the grid came out empty. */
+  const altLo = Math.max(-89.99, centreAlt - cone);
+  const altHi = Math.min(89.99, centreAlt + cone);
   const reachAlt = Math.min(89, Math.max(Math.abs(altLo), Math.abs(altHi)));
   const azHalf =
     cone >= 90 || Math.abs(centreAlt) + cone >= 89

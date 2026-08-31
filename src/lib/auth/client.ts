@@ -182,6 +182,11 @@ export async function apiLogout(): Promise<void> {
 
 export const apiMe = () => authFetch<AuthUser>("/auth/me");
 
+export async function apiDeleteAccount(): Promise<void> {
+  await authFetch<void>("/auth/me", { method: "DELETE" });
+  tokenStore.clear();
+}
+
 export async function apiForgotPassword(email: string): Promise<string> {
   const res = await raw("/auth/forgot-password", {
     method: "POST",

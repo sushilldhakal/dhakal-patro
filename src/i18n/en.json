@@ -34,6 +34,11 @@
         "description": "Shanti vidhi and related patro guidance.",
         "keywords": "Shanti vidhi, Vedic remedies"
       },
+      "vastu": {
+        "title": "Vastu — Direction Wheel, Room Placement & Doshas | Vedic Patro",
+        "description": "Vastu Shastra explained simply — the element, deity and use of each of the eight directions and the Brahmasthan, ideal placement for kitchen, bedroom, puja room and water tank, plus common doshas and their remedies.",
+        "keywords": "vastu, vastu shastra, vastu dosha, ishan corner, kitchen direction, house vastu, vastu remedies"
+      },
       "converter": {
         "title": "Nepali Date Converter — BS to AD, AD to BS | Vedic Patro",
         "description": "Convert Nepali dates instantly: Bikram Sambat (BS) to English (AD) and AD to BS. Accurate results for birth dates, documents and official use.",
@@ -104,6 +109,16 @@
         "description": "Set a new password.",
         "keywords": ""
       },
+      "privacy": {
+        "title": "Privacy Policy | Vedic Patro",
+        "description": "What Vedic Patro collects on web and mobile, how we use it, and how to delete your account.",
+        "keywords": "privacy policy, Vedic Patro"
+      },
+      "terms": {
+        "title": "Terms of Use | Vedic Patro",
+        "description": "Terms of use for the Vedic Patro website and mobile apps.",
+        "keywords": "terms of use, Vedic Patro"
+      },
       "graha_sthiti": {
         "title": "Planetary Positions | Vedic Patro",
         "description": "Daily sphuta of the nine grahas and the ascendant — sign, nakshatra, pada, lord/sub-lord, speed, right ascension and declination.",
@@ -172,6 +187,7 @@
     "jyotish_rashifal": "Rashifal",
     "kundali": "Kundali",
     "learn": "Learn",
+    "vastu": "Vastu",
     "abhijit_muhurta": "Abhijit Moment",
     "vivah_sait": "Marriage Saait",
     "panchanga_details": "Almanac Details"
@@ -913,6 +929,9 @@
     "facebook_not_authorized": "Allow email access in Facebook to sign in",
     "facebook_checking": "Checking Facebook…",
     "continue_with_facebook": "Continue with Facebook",
+    "legal_agree": "By continuing you agree to the Privacy Policy and Terms of Use.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
     "email_placeholder": "you@example.com",
     "reset_invalid_link": "This reset link is invalid or has expired.",
     "reset_failed": "Reset failed.",
@@ -1445,6 +1464,162 @@
     "birth_section": "Calculate from birth details",
     "birth_meta": "Date · time · place"
   },
+  "vastu": {
+    "title": "Vastu",
+    "subtitle": "The Vastu direction wheel — which room belongs in which corner, its element and its deity, plus common vastu doshas and practical remedies.",
+    "wheel": {
+      "heading": "Direction wheel",
+      "blurb": "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
+      "hint": "Tap a direction"
+    },
+    "rooms": {
+      "heading": "Room by direction",
+      "blurb": "The question asked most while building or arranging a home — where each room belongs.",
+      "ideal": "Ideal direction"
+    },
+    "dosha": {
+      "heading": "Vastu dosha & remedies",
+      "blurb": "A finished house rarely needs rebuilding — most doshas have a simple correction.",
+      "problem_label": "Dosha",
+      "remedy_label": "Remedy",
+      "northeast_fire": {
+        "problem": "Kitchen or toilet in the north-east",
+        "remedy": "Move the kitchen to the south-east if you can. If not, keep that corner spotless, place water in a copper vessel there and use light colours."
+      },
+      "center_heavy": {
+        "problem": "Staircase, toilet or heavy structure in the Brahmasthan",
+        "remedy": "Keep the centre clear. Where it cannot be removed, add light, keep only light furniture and let the floor read as open."
+      },
+      "southwest_light": {
+        "problem": "A south-west corner left open, light or full of windows",
+        "remedy": "Add weight there — a heavy wardrobe or store; make the windows smaller or hang heavy curtains."
+      },
+      "northeast_heavy": {
+        "problem": "Heavy load or clutter in the north-east",
+        "remedy": "Keep the north-east light and open — clear shoes, waste and heavy items; a small water feature or green plant suits it."
+      },
+      "head_north": {
+        "problem": "Sleeping with your head to the north",
+        "remedy": "Turn the bed so your head points south or east — sleep is said to settle deeper."
+      },
+      "blocked_door": {
+        "problem": "A pillar, tree or clutter blocking the main door",
+        "remedy": "Keep the entry open, lit and clean; repair a door that creaks or sticks."
+      }
+    },
+    "labels": {
+      "deity": "Deity",
+      "element": "Element",
+      "best": "Best for",
+      "avoid": "Avoid"
+    },
+    "element": {
+      "earth": "Earth",
+      "water": "Water",
+      "fire": "Fire",
+      "air": "Air",
+      "space": "Space"
+    },
+    "dir": {
+      "east": {
+        "name": "East",
+        "deity": "Indra",
+        "best": "Main door, large windows, wherever morning light should reach",
+        "avoid": "Blocking it with tall walls or heavy structures"
+      },
+      "southeast": {
+        "name": "South-East",
+        "deity": "Agni",
+        "best": "Kitchen, stove, electrical appliances, inverter",
+        "avoid": "Master bedroom, underground water tank"
+      },
+      "south": {
+        "name": "South",
+        "deity": "Yama",
+        "best": "Bedrooms, heavy cupboards, storage",
+        "avoid": "A large open gap, or the main entrance"
+      },
+      "southwest": {
+        "name": "South-West",
+        "deity": "Nirriti",
+        "best": "Master bedroom, the heaviest part of the house, overhead water tank",
+        "avoid": "Open courtyard, large windows, underground water"
+      },
+      "west": {
+        "name": "West",
+        "deity": "Varuna",
+        "best": "Dining room, study, children's room",
+        "avoid": "The main puja room"
+      },
+      "northwest": {
+        "name": "North-West",
+        "deity": "Vayu",
+        "best": "Guest room, storage, toilet, garage",
+        "avoid": "Master bedroom — it is held to keep the mind restless"
+      },
+      "north": {
+        "name": "North",
+        "deity": "Kubera",
+        "best": "Treasury or safe, living room, water source, open and light space",
+        "avoid": "Heavy loads, piles of waste"
+      },
+      "northeast": {
+        "name": "North-East",
+        "deity": "Isha (Shiva)",
+        "best": "Puja room, underground water tank, well — the most sacred corner of a home",
+        "avoid": "Kitchen, toilet, staircase, heavy objects"
+      },
+      "center": {
+        "name": "Brahmasthan",
+        "deity": "Brahma",
+        "best": "Open, lit and empty — the part of the house that breathes",
+        "avoid": "Staircase, toilet, pillar, heavy furniture"
+      }
+    },
+    "room": {
+      "main_door": {
+        "name": "Main door",
+        "note": "East or north is best; the door should open inward and the approach stay clear."
+      },
+      "kitchen": {
+        "name": "Kitchen",
+        "note": "Face east while cooking; keep stove and sink apart — fire and water clash."
+      },
+      "master_bedroom": {
+        "name": "Master bedroom",
+        "note": "Sleep with your head to the south or east; no mirror facing the bed."
+      },
+      "puja": {
+        "name": "Puja room",
+        "note": "Face the murti east or west; never share a wall with a toilet."
+      },
+      "living": {
+        "name": "Living room",
+        "note": "Keep the north-east open and light; heavy furniture to the south-west."
+      },
+      "study": {
+        "name": "Study",
+        "note": "Face east or north while studying; a wall behind the desk, not a window."
+      },
+      "bathroom": {
+        "name": "Toilet & bath",
+        "note": "Never in the north-east or the centre; keep the door closed."
+      },
+      "staircase": {
+        "name": "Staircase",
+        "note": "Rising clockwise; never through the middle of the house."
+      },
+      "water_tank": {
+        "name": "Water tank",
+        "note": "Underground tank in the north-east, overhead tank in the south-west or west."
+      },
+      "storage": {
+        "name": "Storage",
+        "note": "Heavy goods to the south-west — that is what balances the weight of the house."
+      }
+    },
+    "note": "These are the traditional rules of Vastu Shastra, offered for cultural and educational reading. For a decision about building or buying, consult a qualified vastu adviser and an engineer."
+  },
   "learn_page": {
     "eyebrow": "Knowledge hub",
     "title": "Nepali Patro & Almanac",
@@ -1533,7 +1708,20 @@
     "verified": "Verified",
     "email_unverified": "Email not verified",
     "my_profiles": "My profiles",
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "delete_account": "Delete account",
+    "delete_account_confirm": "Your account and all kundali profiles will be permanently deleted. This cannot be undone.",
+    "delete_account_error": "Could not delete the account."
+  },
+  "legal": {
+    "privacy_title": "Privacy Policy",
+    "terms_title": "Terms of Use",
+    "updated": "Updated: {{date}}"
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "support": "Support"
   },
   "ritu": {
     "title": "Season",

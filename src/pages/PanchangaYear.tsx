@@ -41,6 +41,7 @@ import {
   wheelWindowAtLimit,
   wheelWindowBounds,
   yearWheelIndexOfAdDate,
+  type YearWheelDay,
 } from "@/lib/panchanga-year-wheel";
 import {
   formatWheelPlaybackRate,
@@ -122,6 +123,7 @@ export function PanchangaYear() {
   const [monthsFwd, setMonthsFwd] = useState(1);
   const scrubbingRef = useRef(false);
   const [lastWheelData, setLastWheelData] = useState<PanchangaDay | undefined>(undefined);
+  const lastGoodRowRef = useRef<YearWheelDay | undefined>(undefined);
   const prevPlayDirRef = useRef(play.dir);
 
   useEffect(() => {
@@ -204,13 +206,16 @@ export function PanchangaYear() {
 
   const total = days.length;
   const foundIndex = yearWheelIndexOfAdDate(days, dayAd);
-  const clamped = foundIndex ?? 1;
-  const current = days[clamped - 1];
+  const foundRow = foundIndex !== null ? days[foundIndex - 1] : undefined;
+  /* `foundIndex` is null for one render whenever `days` is mid-rebuild
+     (window growing/sliding, or a high-speed tick that outran the slice).
+     Falling back to `days[0]` used to flash the window-start day's planets
+     — the moon jumping forward, then snapping back. Repeat the last row
+     that resolved instead. */
+  const current = foundIndex !== null ? foundRow : lastGoodRowRef.current;
+  if (current) lastGoodRowRef.current = current;
+  const clamped = foundIndex ?? (current ? yearWheelIndexOfAdDate(days, current.dateAd) : null) ?? 1;
   const wheelData = current?.p;
-  // Keep showing the last good row through a momentary gap (a scrub or a
-  // window edge with no data yet) — adjusted during render, per React's
-  // guidance for state derived from other state, rather than a ref mutated
-  // and read back in the same render pass.
   if (wheelData && wheelData !== lastWheelData) {
     setLastWheelData(wheelData);
   }
@@ -228,7 +233,10 @@ export function PanchangaYear() {
     const id = setInterval(() => {
       setDayAd((ad) => {
         const i = days.findIndex((d) => d.dateAd === ad);
-        const next = (i < 0 ? 0 : i) + play.dir;
+        /* A missed lookup used to treat the current day as index 0, so
+           playback jumped to the start of the window and the moon reversed. */
+        if (i < 0) return ad;
+        const next = i + play.dir;
         return days[next]?.dateAd ?? ad;
       });
     }, tick);
@@ -237,7 +245,18 @@ export function PanchangaYear() {
 
   useEffect(() => {
     if (play.dir === 0 || !total) return;
-    const margin = EXTEND_MARGIN_PLAY;
+    if (foundIndex === null) {
+      if (play.dir === 1 && !atLimit.end) {
+        if (monthsFwd < MAX_MONTHS_EACH) setMonthsFwd((m) => m + 1);
+        else setAnchor((a) => shiftAnchorMonths(a, 1));
+      }
+      if (play.dir === -1 && !atLimit.start) {
+        if (monthsBack < MAX_MONTHS_EACH) setMonthsBack((m) => m + 1);
+        else setAnchor((a) => shiftAnchorMonths(a, -1));
+      }
+      return;
+    }
+    const margin = Math.max(EXTEND_MARGIN_PLAY, play.speed);
     if (play.dir === 1 && total - clamped <= margin && !atLimit.end) {
       // Autoplay approaching the loaded window's edge: widen it, which feeds
       // back through `bounds`/`queryYears` to fetch the next year-wheel data.
@@ -251,7 +270,7 @@ export function PanchangaYear() {
       if (monthsBack < MAX_MONTHS_EACH) setMonthsBack((m) => m + 1);
       else setAnchor((a) => shiftAnchorMonths(a, -1));
     }
-  }, [play.dir, clamped, total, atLimit, monthsBack, monthsFwd]);
+  }, [play.dir, play.speed, foundIndex, clamped, total, atLimit, monthsBack, monthsFwd]);
 
   const pausePlay = useCallback(() => setPlay({ dir: 0, speed: 1 }), []);
 
@@ -305,6 +324,11 @@ export function PanchangaYear() {
   );
 
   useEffect(() => {
+    /* During autoplay the day changes every tick; snapping the clock to each
+       day's sunrise used to feed a stale ghati into planet interpolation.
+       Planets now use the day's snapshot, but skip the resync while playing
+       so the chrome does not flicker either. */
+    if (play.dir !== 0) return;
     const syncKey = `${adDateStr}|${locationCacheKey(location.params)}`;
     if (clockSyncedKeyRef.current === syncKey) return;
     if (clockUserAdjusted) return;
@@ -319,7 +343,7 @@ export function PanchangaYear() {
     if (!sunriseClock) return;
     clockSyncedKeyRef.current = syncKey;
     setClock(sunriseClock);
-  }, [adDateStr, location.params, isToday, tz, clockUserAdjusted, wheelData, setClock]);
+  }, [play.dir, adDateStr, location.params, isToday, tz, clockUserAdjusted, wheelData, setClock]);
 
   const monthNe = current ? (BS_MONTHS_NE[current.bsMonth - 1] ?? "") : "";
   const locationLabel = displayLocationLabel(location, wheelData?.location?.name, lang);
@@ -353,9 +377,11 @@ export function PanchangaYear() {
       }
       pickBrowseVikramDate(
         (picked) => {
+          const ad = toAdStr(picked);
+          clockSyncedKeyRef.current = `${ad}|${locationCacheKey(location.params)}`;
           setDate(picked);
           setAnchor(picked);
-          setDayAd(toAdStr(picked));
+          setDayAd(ad);
           setMonthsBack(1);
           setMonthsFwd(1);
         },
@@ -372,7 +398,7 @@ export function PanchangaYear() {
   useRouteLoading(YEAR_ROUTE_LOADING);
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-md:px-4 max-md:pb-16 max-md:pt-0">
+    <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-4 max-md:px-0 max-md:pb-16 max-md:pt-0">
       <div className="mb-3 mt-2">
         <Link
           to="/panchanga"
@@ -408,6 +434,14 @@ export function PanchangaYear() {
             className="h-[30px] min-w-0 w-auto max-w-[10rem] shrink-0 px-1.5 md:h-8 md:max-w-[12.5rem] md:px-3"
           />
         }
+        /* `toolbar` is desktop-only furniture — on mobile PatroDateNavCore
+           already adds its own location chip in the lower slot from
+           `location`/`onLocationChange` below, so without this the same
+           city showed twice (see Panchanga.tsx, which overrides
+           `mobileToolbar` the same way). `false` (not `undefined`) so the
+           `resolvedMobileToolbar ?? toolbar` fallback in PatroDayTimeNav
+           doesn't quietly put the desktop toolbar back. */
+        mobileToolbar={false}
       />
 
       <div className="mt-4 flex flex-col gap-4">

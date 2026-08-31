@@ -94,6 +94,18 @@ export const strings = {
     en: "Shanti vidhi and related patro guidance.",
   },
   "seo.routes.shanti_vidhi.keywords": { ne: "शान्ति विधि, वैदिक शान्ति", en: "Shanti vidhi, Vedic remedies" },
+  "seo.routes.vastu.title": {
+    ne: "वास्तु — दिशा चक्र, कोठाको स्थान र वास्तु दोष | वैदिक पात्रो",
+    en: "Vastu — Direction Wheel, Room Placement & Doshas | Vedic Patro",
+  },
+  "seo.routes.vastu.description": {
+    ne: "वास्तुशास्त्र सरल भाषामा — अष्ट दिशा र ब्रह्मस्थानको तत्त्व, देवता र प्रयोग; भान्सा, शयनकक्ष, पूजा कोठा र पानी ट्यांकीको उपयुक्त दिशा; सामान्य वास्तु दोष र उपाय।",
+    en: "Vastu Shastra explained simply — the element, deity and use of each of the eight directions and the Brahmasthan, ideal placement for kitchen, bedroom, puja room and water tank, plus common doshas and their remedies.",
+  },
+  "seo.routes.vastu.keywords": {
+    ne: "वास्तु, वास्तुशास्त्र, वास्तु दोष, ईशान कुना, भान्सा कुन दिशा, घरको वास्तु, वास्तु उपाय",
+    en: "vastu, vastu shastra, vastu dosha, ishan corner, kitchen direction, house vastu, vastu remedies",
+  },
   "seo.routes.converter.title": {
     ne: "नेपाली मिति रूपान्तरण — बि.सं. ⇄ ई.सं. Date Converter | वैदिक पात्रो",
     en: "Nepali Date Converter — BS to AD, AD to BS | Vedic Patro",
@@ -220,6 +232,18 @@ export const strings = {
   "seo.routes.reset_password.title": { ne: "पासवर्ड रिसेट | वैदिक पात्रो", en: "Reset Password | Vedic Patro" },
   "seo.routes.reset_password.description": { ne: "नयाँ पासवर्ड सेट गर्नुहोस्।", en: "Set a new password." },
   "seo.routes.reset_password.keywords": { ne: "", en: "" },
+  "seo.routes.privacy.title": { ne: "गोपनीयता नीति | वैदिक पात्रो", en: "Privacy Policy | Vedic Patro" },
+  "seo.routes.privacy.description": {
+    ne: "वैदिक पात्रो वेब र मोबाइल एपले कुन डेटा सङ्कलन गर्छ, कसरी प्रयोग गर्छ, र खाता कसरी मेटाउने।",
+    en: "What Vedic Patro collects on web and mobile, how we use it, and how to delete your account.",
+  },
+  "seo.routes.privacy.keywords": { ne: "गोपनीयता, privacy policy", en: "privacy policy, Vedic Patro" },
+  "seo.routes.terms.title": { ne: "प्रयोगका सर्त | वैदिक पात्रो", en: "Terms of Use | Vedic Patro" },
+  "seo.routes.terms.description": {
+    ne: "वैदिक पात्रो वेबसाइट र मोबाइल एपका प्रयोगका सर्त।",
+    en: "Terms of use for the Vedic Patro website and mobile apps.",
+  },
+  "seo.routes.terms.keywords": { ne: "सर्त, terms of use", en: "terms of use, Vedic Patro" },
   "seo.routes.graha_sthiti.title": { ne: "ग्रह स्थिति | वैदिक पात्रो", en: "Planetary Positions | Vedic Patro" },
   "seo.routes.graha_sthiti.description": {
     ne: "नौ ग्रह र लग्नको दैनिक स्पष्ट स्थिति — राशि, नक्षत्र, पद, स्वामी/उप स्वामी, गति, विषुवांश र क्रान्ति।",
@@ -346,6 +370,7 @@ export const strings = {
   "nav.jyotish_rashifal": { ne: "राशिफल", en: "Rashifal" },
   "nav.kundali": { ne: "कुण्डली", en: "Kundali" },
   "nav.learn": { ne: "सिकाइ", en: "Learn" },
+  "nav.vastu": { ne: "वास्तु", en: "Vastu" },
   "nav.abhijit_muhurta": { ne: "अभिजित् मुहूर्त", en: "Abhijit Moment" },
   "nav.vivah_sait": { ne: "विवाह साइत", en: "Marriage Saait" },
   "nav.panchanga_details": { ne: "पञ्चाङ्ग विवरण", en: "Almanac Details" },
@@ -1376,6 +1401,12 @@ export const strings = {
   },
   "auth.facebook_checking": { ne: "फेसबुक जाँच गर्दै…", en: "Checking Facebook…" },
   "auth.continue_with_facebook": { ne: "फेसबुकबाट जारी राख्नुहोस्", en: "Continue with Facebook" },
+  "auth.legal_agree": {
+    ne: "जारी राखेर तपाईं गोपनीयता नीति र प्रयोगका सर्त मान्नुहुन्छ।",
+    en: "By continuing you agree to the Privacy Policy and Terms of Use.",
+  },
+  "auth.privacy": { ne: "गोपनीयता नीति", en: "Privacy Policy" },
+  "auth.terms": { ne: "प्रयोगका सर्त", en: "Terms of Use" },
   "auth.email_placeholder": { ne: "you@example.com", en: "you@example.com" },
   "auth.reset_invalid_link": {
     ne: "यो रिसेट लिङ्क अमान्य छ वा म्याद सकिएको छ।",
@@ -2628,6 +2659,223 @@ export const strings = {
   "shanti_vidhi.birth_section": { ne: "जन्म विवरणबाट गणना", en: "Calculate from birth details" },
   "shanti_vidhi.birth_meta": { ne: "मिति · समय · स्थान", en: "Date · time · place" },
 
+  /* ── vastu ───────────────────────────────────────────────────────────── */
+  "vastu.title": { ne: "वास्तु", en: "Vastu" },
+  "vastu.subtitle": {
+    ne: "वास्तुशास्त्रको दिशा चक्र — कुन कुनामा कुन कोठा, कुन तत्त्व र कुन देवता; सामान्य वास्तु दोष र घरमै गर्न सकिने उपाय।",
+    en: "The Vastu direction wheel — which room belongs in which corner, its element and its deity, plus common vastu doshas and practical remedies.",
+  },
+
+  "vastu.wheel.heading": { ne: "दिशा चक्र", en: "Direction wheel" },
+  "vastu.wheel.blurb": {
+    ne: "अष्ट दिशा र बीचको ब्रह्मस्थान — प्रत्येकको आफ्नै तत्त्व, अधिपति देवता र उपयुक्त प्रयोग छ। कुनै दिशा छान्नुहोस्।",
+    en: "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
+  },
+  "vastu.wheel.hint": { ne: "दिशा छान्न थिच्नुहोस्", en: "Tap a direction" },
+
+  "vastu.rooms.heading": { ne: "कोठा अनुसार दिशा", en: "Room by direction" },
+  "vastu.rooms.blurb": {
+    ne: "घर बनाउँदा वा सजाउँदा सबैभन्दा धेरै सोधिने कुरा — कुन कोठा कता पर्नुपर्छ।",
+    en: "The question asked most while building or arranging a home — where each room belongs.",
+  },
+  "vastu.rooms.ideal": { ne: "उपयुक्त दिशा", en: "Ideal direction" },
+
+  "vastu.dosha.heading": { ne: "वास्तु दोष र उपाय", en: "Vastu dosha & remedies" },
+  "vastu.dosha.blurb": {
+    ne: "बनिसकेको घर भत्काउनु पर्दैन। धेरैजसो दोषका लागि सजिलो सुधार हुन्छ।",
+    en: "A finished house rarely needs rebuilding — most doshas have a simple correction.",
+  },
+  "vastu.dosha.problem_label": { ne: "दोष", en: "Dosha" },
+  "vastu.dosha.remedy_label": { ne: "उपाय", en: "Remedy" },
+
+  "vastu.labels.deity": { ne: "देवता", en: "Deity" },
+  "vastu.labels.element": { ne: "तत्त्व", en: "Element" },
+  "vastu.labels.best": { ne: "उपयुक्त", en: "Best for" },
+  "vastu.labels.avoid": { ne: "जोगिने", en: "Avoid" },
+
+  "vastu.element.earth": { ne: "पृथ्वी", en: "Earth" },
+  "vastu.element.water": { ne: "जल", en: "Water" },
+  "vastu.element.fire": { ne: "अग्नि", en: "Fire" },
+  "vastu.element.air": { ne: "वायु", en: "Air" },
+  "vastu.element.space": { ne: "आकाश", en: "Space" },
+
+  "vastu.dir.east.name": { ne: "पूर्व", en: "East" },
+  "vastu.dir.east.deity": { ne: "इन्द्र", en: "Indra" },
+  "vastu.dir.east.best": {
+    ne: "मुख्य ढोका, ठूला झ्याल, बिहानको घाम भित्रिने ठाउँ",
+    en: "Main door, large windows, wherever morning light should reach",
+  },
+  "vastu.dir.east.avoid": { ne: "अग्लो पर्खाल वा गह्रौँ संरचनाले छेक्नु", en: "Blocking it with tall walls or heavy structures" },
+
+  "vastu.dir.southeast.name": { ne: "आग्नेय", en: "South-East" },
+  "vastu.dir.southeast.deity": { ne: "अग्नि", en: "Agni" },
+  "vastu.dir.southeast.best": {
+    ne: "भान्सा, चुल्हो, बिजुलीका उपकरण, इन्भर्टर",
+    en: "Kitchen, stove, electrical appliances, inverter",
+  },
+  "vastu.dir.southeast.avoid": { ne: "मुख्य शयनकक्ष, पानीको भूमिगत ट्यांकी", en: "Master bedroom, underground water tank" },
+
+  "vastu.dir.south.name": { ne: "दक्षिण", en: "South" },
+  "vastu.dir.south.deity": { ne: "यम", en: "Yama" },
+  "vastu.dir.south.best": {
+    ne: "शयनकक्ष, गह्रौँ अलमारी, भण्डार",
+    en: "Bedrooms, heavy cupboards, storage",
+  },
+  "vastu.dir.south.avoid": { ne: "ठूलो खुला भाग वा मुख्य प्रवेश", en: "A large open gap, or the main entrance" },
+
+  "vastu.dir.southwest.name": { ne: "नैऋत्य", en: "South-West" },
+  "vastu.dir.southwest.deity": { ne: "निरृति", en: "Nirriti" },
+  "vastu.dir.southwest.best": {
+    ne: "मुख्य शयनकक्ष, घरको सबैभन्दा गह्रौँ भाग, माथिल्लो पानी ट्यांकी",
+    en: "Master bedroom, the heaviest part of the house, overhead water tank",
+  },
+  "vastu.dir.southwest.avoid": { ne: "खुला आँगन, ठूलो झ्याल, भूमिगत पानी", en: "Open courtyard, large windows, underground water" },
+
+  "vastu.dir.west.name": { ne: "पश्चिम", en: "West" },
+  "vastu.dir.west.deity": { ne: "वरुण", en: "Varuna" },
+  "vastu.dir.west.best": {
+    ne: "भोजन कक्ष, अध्ययन कोठा, बालबालिकाको कोठा",
+    en: "Dining room, study, children's room",
+  },
+  "vastu.dir.west.avoid": { ne: "मुख्य पूजा कोठा", en: "The main puja room" },
+
+  "vastu.dir.northwest.name": { ne: "वायव्य", en: "North-West" },
+  "vastu.dir.northwest.deity": { ne: "वायु", en: "Vayu" },
+  "vastu.dir.northwest.best": {
+    ne: "पाहुना कोठा, भण्डार, शौचालय, गाडी राख्ने ठाउँ",
+    en: "Guest room, storage, toilet, garage",
+  },
+  "vastu.dir.northwest.avoid": { ne: "मुख्य शयनकक्ष — यहाँ मन अस्थिर रहन्छ भनिन्छ", en: "Master bedroom — it is held to keep the mind restless" },
+
+  "vastu.dir.north.name": { ne: "उत्तर", en: "North" },
+  "vastu.dir.north.deity": { ne: "कुबेर", en: "Kubera" },
+  "vastu.dir.north.best": {
+    ne: "ढुकुटी, बैठक, पानीको स्रोत, खुला र हल्का भाग",
+    en: "Treasury or safe, living room, water source, open and light space",
+  },
+  "vastu.dir.north.avoid": { ne: "गह्रौँ भार, फोहोरको थुप्रो", en: "Heavy loads, piles of waste" },
+
+  "vastu.dir.northeast.name": { ne: "ईशान", en: "North-East" },
+  "vastu.dir.northeast.deity": { ne: "ईश (शिव)", en: "Isha (Shiva)" },
+  "vastu.dir.northeast.best": {
+    ne: "पूजा कोठा, भूमिगत पानी ट्यांकी, इनार — घरको सबैभन्दा पवित्र कुना",
+    en: "Puja room, underground water tank, well — the most sacred corner of a home",
+  },
+  "vastu.dir.northeast.avoid": { ne: "भान्सा, शौचालय, सिँढी, भारी सामान", en: "Kitchen, toilet, staircase, heavy objects" },
+
+  "vastu.dir.center.name": { ne: "ब्रह्मस्थान", en: "Brahmasthan" },
+  "vastu.dir.center.deity": { ne: "ब्रह्मा", en: "Brahma" },
+  "vastu.dir.center.best": {
+    ne: "खुला, उज्यालो र खाली — घरको सास फेर्ने ठाउँ",
+    en: "Open, lit and empty — the part of the house that breathes",
+  },
+  "vastu.dir.center.avoid": { ne: "सिँढी, शौचालय, खम्बा, गह्रौँ फर्निचर", en: "Staircase, toilet, pillar, heavy furniture" },
+
+  "vastu.room.main_door.name": { ne: "मुख्य ढोका", en: "Main door" },
+  "vastu.room.main_door.note": {
+    ne: "पूर्व वा उत्तर उत्तम; ढोका भित्रतिर खुलोस् र अगाडिको बाटो खुला रहोस्।",
+    en: "East or north is best; the door should open inward and the approach stay clear.",
+  },
+  "vastu.room.kitchen.name": { ne: "भान्सा", en: "Kitchen" },
+  "vastu.room.kitchen.note": {
+    ne: "पकाउँदा मुख पूर्वतिर; चुल्हो र सिंक छेउछाउ नजोड्नुहोस् — अग्नि र जल बाझिन्छन्।",
+    en: "Face east while cooking; keep stove and sink apart — fire and water clash.",
+  },
+  "vastu.room.master_bedroom.name": { ne: "मुख्य शयनकक्ष", en: "Master bedroom" },
+  "vastu.room.master_bedroom.note": {
+    ne: "टाउको दक्षिण वा पूर्वतिर पारेर सुत्नुहोस्; ओछ्यान अगाडि ऐना नराख्नुहोस्।",
+    en: "Sleep with your head to the south or east; no mirror facing the bed.",
+  },
+  "vastu.room.puja.name": { ne: "पूजा कोठा", en: "Puja room" },
+  "vastu.room.puja.note": {
+    ne: "मूर्ति पूर्व वा पश्चिम फर्काउनुहोस्; शौचालयको भित्तासँग जोडिनु हुँदैन।",
+    en: "Face the murti east or west; never share a wall with a toilet.",
+  },
+  "vastu.room.living.name": { ne: "बैठक", en: "Living room" },
+  "vastu.room.living.note": {
+    ne: "उत्तर–पूर्व भाग खुला र हल्का; गह्रौँ फर्निचर दक्षिण–पश्चिममा।",
+    en: "Keep the north-east open and light; heavy furniture to the south-west.",
+  },
+  "vastu.room.study.name": { ne: "अध्ययन कोठा", en: "Study" },
+  "vastu.room.study.note": {
+    ne: "पढ्दा मुख पूर्व वा उत्तरतिर; टेबल पछाडि भित्ता होस्, झ्याल होइन।",
+    en: "Face east or north while studying; a wall behind the desk, not a window.",
+  },
+  "vastu.room.bathroom.name": { ne: "शौचालय तथा स्नान", en: "Toilet & bath" },
+  "vastu.room.bathroom.note": {
+    ne: "ईशान र ब्रह्मस्थानमा कहिल्यै नराख्नुहोस्; ढोका सधैँ बन्द राख्नुहोस्।",
+    en: "Never in the north-east or the centre; keep the door closed.",
+  },
+  "vastu.room.staircase.name": { ne: "सिँढी", en: "Staircase" },
+  "vastu.room.staircase.note": {
+    ne: "घडीको दिशामा चढ्ने गरी; घरको बीचमा कहिल्यै नराख्नुहोस्।",
+    en: "Rising clockwise; never through the middle of the house.",
+  },
+  "vastu.room.water_tank.name": { ne: "पानी ट्यांकी", en: "Water tank" },
+  "vastu.room.water_tank.note": {
+    ne: "भूमिगत ट्यांकी ईशानमा, माथिल्लो ट्यांकी नैऋत्य वा पश्चिममा।",
+    en: "Underground tank in the north-east, overhead tank in the south-west or west.",
+  },
+  "vastu.room.storage.name": { ne: "भण्डार", en: "Storage" },
+  "vastu.room.storage.note": {
+    ne: "गह्रौँ सामान दक्षिण–पश्चिममा — त्यसैले घरको भार सन्तुलित हुन्छ।",
+    en: "Heavy goods to the south-west — that is what balances the weight of the house.",
+  },
+
+  "vastu.dosha.northeast_fire.problem": {
+    ne: "ईशान कुनामा भान्सा वा शौचालय",
+    en: "Kitchen or toilet in the north-east",
+  },
+  "vastu.dosha.northeast_fire.remedy": {
+    ne: "सम्भव भए भान्सा आग्नेयमा सार्नुहोस्। नसके ईशान कुना सधैँ सफा राख्नुहोस्, तामाको कलशमा पानी राख्नुहोस् र त्यहाँ हल्का रङ प्रयोग गर्नुहोस्।",
+    en: "Move the kitchen to the south-east if you can. If not, keep that corner spotless, place water in a copper vessel there and use light colours.",
+  },
+  "vastu.dosha.center_heavy.problem": {
+    ne: "ब्रह्मस्थानमा सिँढी, शौचालय वा गह्रौँ संरचना",
+    en: "Staircase, toilet or heavy structure in the Brahmasthan",
+  },
+  "vastu.dosha.center_heavy.remedy": {
+    ne: "केन्द्र खाली राख्नुहोस्। भत्काउन नसकिने भए त्यहाँ उज्यालो बढाउनुहोस्, हल्का फर्निचर मात्र राख्नुहोस् र भुइँ खुला देखिने बनाउनुहोस्।",
+    en: "Keep the centre clear. Where it cannot be removed, add light, keep only light furniture and let the floor read as open.",
+  },
+  "vastu.dosha.southwest_light.problem": {
+    ne: "नैऋत्य कुना खुला, हल्का वा झ्यालैझ्याल",
+    en: "A south-west corner left open, light or full of windows",
+  },
+  "vastu.dosha.southwest_light.remedy": {
+    ne: "त्यहाँ गह्रौँ अलमारी वा भण्डार राखेर भार बढाउनुहोस्; झ्याल सानो पार्नुहोस् वा गाढा पर्दा लगाउनुहोस्।",
+    en: "Add weight there — a heavy wardrobe or store; make the windows smaller or hang heavy curtains.",
+  },
+  "vastu.dosha.northeast_heavy.problem": {
+    ne: "उत्तर–पूर्वमा गह्रौँ भार वा सामानको थुप्रो",
+    en: "Heavy load or clutter in the north-east",
+  },
+  "vastu.dosha.northeast_heavy.remedy": {
+    ne: "ईशान हल्का र खुला राख्नुहोस् — जुत्ता, फोहोर र भारी सामान हटाउनुहोस्; सानो पानीको स्रोत वा हरियो बिरुवा राख्न सकिन्छ।",
+    en: "Keep the north-east light and open — clear shoes, waste and heavy items; a small water feature or green plant suits it.",
+  },
+  "vastu.dosha.head_north.problem": {
+    ne: "उत्तरतिर टाउको पारेर सुत्नु",
+    en: "Sleeping with your head to the north",
+  },
+  "vastu.dosha.head_north.remedy": {
+    ne: "ओछ्यान घुमाएर टाउको दक्षिण वा पूर्वतिर पार्नुहोस् — निद्रा गहिरो हुन्छ भनिन्छ।",
+    en: "Turn the bed so your head points south or east — sleep is said to settle deeper.",
+  },
+  "vastu.dosha.blocked_door.problem": {
+    ne: "मुख्य ढोका अगाडि खम्बा, रूख वा फोहोरको अवरोध",
+    en: "A pillar, tree or clutter blocking the main door",
+  },
+  "vastu.dosha.blocked_door.remedy": {
+    ne: "प्रवेश खुला, उज्यालो र सफा राख्नुहोस्; ढोका बजाउने वा अड्किने भए मर्मत गर्नुहोस्।",
+    en: "Keep the entry open, lit and clean; repair a door that creaks or sticks.",
+  },
+
+  "vastu.note": {
+    ne: "यी वास्तुशास्त्रका परम्परागत नियम हुन्, सांस्कृतिक र शैक्षिक प्रयोजनका लागि राखिएका। घर बनाउने वा किन्ने निर्णय गर्दा योग्य वास्तुविद् र इन्जिनियरको सल्लाह लिनुहोस्।",
+    en: "These are the traditional rules of Vastu Shastra, offered for cultural and educational reading. For a decision about building or buying, consult a qualified vastu adviser and an engineer.",
+  },
+
   /* ── learn_page ──────────────────────────────────────────────────────── */
   "learn_page.eyebrow": { ne: "ज्ञानकेन्द्र", en: "Knowledge hub" },
   "learn_page.title": { ne: "नेपाली पात्रो र पञ्चाङ्ग", en: "Nepali Patro & Almanac" },
@@ -2756,6 +3004,20 @@ export const strings = {
   "account_page.email_unverified": { ne: "इमेल प्रमाणित भएको छैन", en: "Email not verified" },
   "account_page.my_profiles": { ne: "मेरा प्रोफाइलहरू", en: "My profiles" },
   "account_page.sign_out": { ne: "लग-आउट", en: "Sign out" },
+  "account_page.delete_account": { ne: "खाता मेटाउनुहोस्", en: "Delete account" },
+  "account_page.delete_account_confirm": {
+    ne: "खाता र सबै कुण्डली प्रोफाइल स्थायी रूपमा मेटिनेछन्। यो फिर्ता हुँदैन।",
+    en: "Your account and all kundali profiles will be permanently deleted. This cannot be undone.",
+  },
+  "account_page.delete_account_error": { ne: "खाता मेटाउन सकिएन।", en: "Could not delete the account." },
+
+  /* ── legal / footer ──────────────────────────────────────────────────── */
+  "legal.privacy_title": { ne: "गोपनीयता नीति", en: "Privacy Policy" },
+  "legal.terms_title": { ne: "प्रयोगका सर्त", en: "Terms of Use" },
+  "legal.updated": { ne: "अद्यावधिक: {{date}}", en: "Updated: {{date}}" },
+  "footer.privacy": { ne: "गोपनीयता", en: "Privacy" },
+  "footer.terms": { ne: "सर्त", en: "Terms" },
+  "footer.support": { ne: "सहायता", en: "Support" },
 
   /* ── ritu ────────────────────────────────────────────────────────────── */
   "ritu.title": { ne: "ऋतु", en: "Season" },

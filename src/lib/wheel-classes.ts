@@ -177,7 +177,7 @@ export function wheelSvg(dragging?: boolean) {
 
 /** Range input in wheel dock — pair with `.wheel-scrub` for thumb pseudo-elements. */
 export const wheelScrub =
-  "wheel-scrub h-2 w-[168px] shrink cursor-pointer touch-pan-x select-none [-webkit-tap-highlight-color:transparent] max-[720px]:w-[88px] max-[480px]:w-[72px] max-[480px]:h-1.5";
+  "wheel-scrub h-2 w-[168px] min-w-0 shrink cursor-pointer touch-pan-x select-none [-webkit-tap-highlight-color:transparent] max-[720px]:w-auto max-[720px]:min-w-[48px] max-[720px]:flex-1 max-[480px]:h-1.5";
 
 /** Active rewind/forward button — tinted when that direction is playing. */
 export const wheelYearScrubBtnActive =

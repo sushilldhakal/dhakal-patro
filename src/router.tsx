@@ -11,6 +11,7 @@ import { Header } from "./components/Header";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { RouteSeo } from "./components/seo/RouteSeo";
+import { SiteFooter } from "./components/SiteFooter";
 import { PanchangaShellLayout } from "./components/panchanga/PanchangaShellLayout";
 import { PanchangaLocationProvider } from "./components/panchanga/use-panchanga-location";
 import { Home } from "./pages/Home";
@@ -43,6 +44,7 @@ const Kundali = lazyRoute(() => import("./pages/Kundali"), "Kundali");
 const KundaliDetail = lazyRoute(() => import("./pages/KundaliDetail"), "KundaliDetail");
 const KundaliMilan = lazyRoute(() => import("./pages/KundaliMilan"), "KundaliMilan");
 const Rashifal = lazyRoute(() => import("./pages/Rashifal"), "Rashifal");
+const Vastu = lazyRoute(() => import("./pages/Vastu"), "Vastu");
 const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
@@ -62,6 +64,8 @@ const MarriageSait = lazyRoute(() => import("./pages/MarriageSait"), "MarriageSa
 const Account = lazyRoute(() => import("./pages/Account"), "Account");
 const VerifyEmail = lazyRoute(() => import("./pages/VerifyEmail"), "VerifyEmail");
 const ResetPassword = lazyRoute(() => import("./pages/ResetPassword"), "ResetPassword");
+const Privacy = lazyRoute(() => import("./pages/Legal"), "Privacy");
+const Terms = lazyRoute(() => import("./pages/Legal"), "Terms");
 
 const rootRoute = createRootRoute({
   component: function RootLayout() {
@@ -90,6 +94,7 @@ const rootRoute = createRootRoute({
                 MobileBottomNav; removed at lg where the bar is hidden. */}
             <div className="pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
               <Outlet />
+              <SiteFooter />
             </div>
             <MobileBottomNav />
           </div>
@@ -178,6 +183,7 @@ const rashifalRoute = createRoute({
   validateSearch: validatePanchangaSearch,
   component: Rashifal,
 });
+const vastuRoute = createRoute({ getParentRoute: () => rootRoute, path: "/vastu", component: Vastu });
 const learnRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn", component: Learn });
 const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/$slug", component: LearnArticle });
 const suryakrantiRoute = createRoute({
@@ -283,6 +289,8 @@ const marriageSaitRoute = createRoute({
 const accountRoute = createRoute({ getParentRoute: () => rootRoute, path: "/account", component: Account });
 const verifyEmailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 const resetPasswordRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
+const privacyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/privacy", component: Privacy });
+const termsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/terms", component: Terms });
 
 /** Children of panchangaShellRoute — the persistent sidebar shell. Also the source of
  *  truth for PANCHANGA_SHELL_PATHS below; don't list these routes anywhere else. */
@@ -319,6 +327,7 @@ const routeTree = rootRoute.addChildren([
   chandraKrantiLegacyRoute,
   dainikKrantiNeLegacyRoute,
   shantiVidhiRoute,
+  vastuRoute,
   learnRoute,
   historyRoute,
   learnArticleRoute,
@@ -329,6 +338,8 @@ const routeTree = rootRoute.addChildren([
   accountRoute,
   verifyEmailRoute,
   resetPasswordRoute,
+  privacyRoute,
+  termsRoute,
 ]);
 
 const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");

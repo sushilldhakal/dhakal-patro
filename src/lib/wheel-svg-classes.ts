@@ -105,15 +105,15 @@ export const wTwPaksha =
 
 export function wKarLbl(sel?: boolean) {
   return cn(
-    "fill-[rgba(0,0,0,0.82)] text-sm font-bold [font-family:var(--pn-font)] [paint-order:stroke_fill] stroke-[rgba(255,255,255,0.55)] [stroke-width:0.4px]",
-    sel && "fill-[var(--w-accent)] stroke-[rgba(0,0,0,0.55)]",
+    "fill-[var(--w-ink)] text-sm font-bold [font-family:var(--pn-font)] [paint-order:stroke_fill] stroke-[rgba(6,31,33,0.85)] [stroke-width:0.7px]",
+    sel && "fill-[#ffe8e4]",
   );
 }
 
 export function wYogaLbl(sel?: boolean) {
   return cn(
-    "fill-[#b09dd4] text-sm font-semibold [font-family:var(--pn-font)]",
-    sel && "fill-[#e0d0ff]",
+    "fill-[var(--w-ink)] text-sm font-semibold [font-family:var(--pn-font)] [paint-order:stroke_fill] stroke-[rgba(6,31,33,0.85)] [stroke-width:0.7px]",
+    sel && "fill-[#f3edff]",
   );
 }
 

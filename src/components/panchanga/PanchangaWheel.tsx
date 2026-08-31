@@ -11,8 +11,6 @@ import {
   Play,
   Rewind,
   RotateCcw,
-  ZoomIn,
-  ZoomOut,
 } from "lucide-react";
 import type { PanchangaDay } from "@/lib/api";
 import { fetchPanchangaAtTimeForDay, fetchPanchangaAtTimeJd, panchangaKeys } from "@/lib/api";
@@ -24,6 +22,7 @@ import {
   buildWheelDetail,
   buildWheelMarkers,
   buildWheelMarkersAtTime,
+  buildWheelMarkersFromDetail,
   DEFAULT_WHEEL_TWEAKS,
   gClock,
   scrubGToAtTimeQuery,
@@ -31,8 +30,8 @@ import {
   type WheelDetail,
 } from "@/lib/wheel-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
-import { WheelChart, type WheelHover, type WheelPick } from "./WheelChart";
-import { WheelPanel } from "./WheelPanel";
+import { WheelChart, type WheelHover } from "./WheelChart";
+import { PlanetSelectMenu } from "./PlanetSelectMenu";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { patroSkel, patroWheelShell } from "@/lib/patro-classes";
 import {
@@ -85,6 +84,15 @@ function bsMonthEnOf(ne: string): string {
 
 const wheelDockIcon = "h-3.5 w-3.5 max-[480px]:h-3 max-[480px]:w-3";
 
+function gFromClock(clock: string, sunriseMin: number): number {
+  const { hour, minute } = parseClockParts(clock);
+  let g = (hour * 60 + minute - sunriseMin) / 24;
+  if (g < 0) g += 60;
+  return Math.max(0, Math.min(60, g));
+}
+const wheelCornerBtn =
+  "flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(143,191,193,0.32)] bg-[rgba(11,20,22,0.96)] text-[var(--w-ink)] shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-colors hover:border-[var(--w-accent)] max-[480px]:h-8 max-[480px]:w-8";
+
 export type YearWheelCalendarPick = {
   era: Era;
   year: number;
@@ -96,6 +104,8 @@ export type YearWheelCalendarPick = {
   locationParams?: LocationParams;
   onCommit: (era: Era, year: number, month: number, day: number, clock: string) => void;
   onEraChange?: (era: Era) => void;
+  /** Month grid calendar — Vikram (bs/bbs) by default; ad for Gregorian browse. */
+  gridEra?: "bs" | "bbs" | "ad";
 };
 
 export type YearWheelScrub = {
@@ -223,6 +233,8 @@ interface Props {
   civil?: boolean;
   /** Year view: vertical day scrub + autoplay on the right inside the wheel. */
   yearScrub?: YearWheelScrub;
+  /** Date + time jump dialog from the wheel dock (day page, or year page via yearScrub). */
+  calendarPick?: YearWheelCalendarPick;
   /** When set with {@link yearScrub}, the needle follows this clock instead of the wheel time slider. */
   clock?: string;
   /** When set, wheel scrub uses calendar at-time (BBS/BC) instead of raw `jd`. */
@@ -275,9 +287,11 @@ function PanchangaWheelBody({
   atTimeScrubOnly = false,
   civil = false,
   yearScrub,
+  calendarPick,
   clock,
   atTimeDayState,
 }: WheelBodyProps & { atTimeScrubOnly?: boolean; civil?: boolean; yearScrub?: YearWheelScrub; clock?: string }) {
+  const activeCalendar = calendarPick ?? yearScrub?.calendarPick;
   // दिन-रात re-anchors the time scrubber to midnight: sunriseMin drives every
   // g↔clock / now-needle / scrub-datetime calc, so overriding it to 0 makes the
   // wheel's time axis run 00:00 → 24:00 instead of sunrise → sunrise.
@@ -291,30 +305,15 @@ function PanchangaWheelBody({
   const [spin, setSpin] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [picked, setPicked] = useState<WheelPick | null>(null);
   const [hover, setHover] = useState<WheelHover | null>(null);
+  const [lineTarget, setLineTarget] = useState(1);
   const [tip, setTip] = useState({ x: 0, y: 0 });
   const [scrubPinned, setScrubPinned] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const expandedHistoryRef = useRef(false);
-  const ignorePopRef = useRef(false);
 
   const setExpandedMode = useCallback((next: boolean) => {
-    if (next) {
-      if (!expandedHistoryRef.current) {
-        window.history.pushState({ panchangaWheelExpanded: true }, "");
-        expandedHistoryRef.current = true;
-      }
-      setExpanded(true);
-      return;
-    }
-    setExpanded(false);
-    if (expandedHistoryRef.current) {
-      expandedHistoryRef.current = false;
-      ignorePopRef.current = true;
-      window.history.back();
-    }
+    setExpanded(next);
   }, []);
 
   const toggleExpanded = useCallback(
@@ -335,13 +334,6 @@ function PanchangaWheelBody({
   const handlePan = useCallback((x: number, y: number) => setPan({ x, y }), []);
 
   const handleLeave = useCallback(() => setHover(null), []);
-  const handlePick = useCallback(
-    (pick: WheelPick) =>
-      setPicked((prev) =>
-        prev && prev.type === pick.type && prev.i === pick.i ? null : pick
-      ),
-    []
-  );
 
   const nowG = useMemo(() => {
     const mins = minutesSinceMidnightInTimezone(now, tz, true);
@@ -353,11 +345,9 @@ function PanchangaWheelBody({
   const rangeMode = Boolean(yearScrub);
   const clockG = useMemo(() => {
     if (!clock) return null;
-    const { hour, minute } = parseClockParts(clock);
-    let g = (hour * 60 + minute - det.sunriseMin) / 24;
-    if (g < 0) g += 60;
-    return Math.max(0, Math.min(60, g));
+    return gFromClock(clock, det.sunriseMin);
   }, [clock, det.sunriseMin]);
+  const pendingJumpClockRef = useRef<string | null>(null);
 
   const [scrubG, setScrubG] = useState(() => (isToday ? nowG : 0));
   const [debouncedScrubG, setDebouncedScrubG] = useState(scrubG);
@@ -405,26 +395,30 @@ function PanchangaWheelBody({
   const canFetchAtTime = scrubAtTime != null || atTimeDayState != null;
   const needsAtTime =
     canFetchAtTime && !rangeMode && (scrubbing || (isToday && !atTimeScrubOnly));
+  // JD + day-offset wins over calendar-day+clock. After midnight the clock
+  // wraps to 00:00–sunrise on the *next* civil day; asking at-time for that
+  // clock on today's y/m/d snaps the moon back to this morning's sunrise.
+  const useJdAtTime = scrubAtTime != null;
 
   const scrubQ = useQuery({
     queryKey:
       !needsAtTime
         ? (["panchanga", "at-time", "idle"] as const)
-        : atTimeDayState != null
-          ? panchangaKeys.atTimeDay(atTimeDayState, scrubClockQuery, locationParams)
-          : scrubAtTime != null
-            ? panchangaKeys.atTime(scrubAtTime.jd, scrubAtTime.clock, locationParams)
+        : useJdAtTime
+          ? panchangaKeys.atTime(scrubAtTime.jd, scrubAtTime.clock, locationParams)
+          : atTimeDayState != null
+            ? panchangaKeys.atTimeDay(atTimeDayState, scrubClockQuery, locationParams)
             : (["panchanga", "at-time", "idle"] as const),
     queryFn: () => {
+      if (useJdAtTime) {
+        return fetchPanchangaAtTimeJd(scrubAtTime.jd, scrubAtTime.clock, locationParams);
+      }
       if (atTimeDayState != null) {
         return fetchPanchangaAtTimeForDay(atTimeDayState, scrubClockQuery, locationParams, {
           resolvedJdUt: anchorJd ?? undefined,
         });
       }
-      if (scrubAtTime == null) {
-        throw new Error("at-time fetch requires jd or atTimeDayState");
-      }
-      return fetchPanchangaAtTimeJd(scrubAtTime.jd, scrubAtTime.clock, locationParams);
+      throw new Error("at-time fetch requires jd or atTimeDayState");
     },
     staleTime: 1000 * 60,
     placeholderData: keepPreviousData,
@@ -432,22 +426,32 @@ function PanchangaWheelBody({
   });
 
   /**
-   * The exact-moment `/panchanga/at-time` payload is only trustworthy when the
-   * at-time query is actually driving the current view (`needsAtTime`) AND the
-   * data belongs to the settled datetime rather than a leftover from a previous
-   * scrub/day (`!isPlaceholderData`). A disabled query keeps its last `data`, so
-   * without this guard the wheel would freeze on stale markers when the day
-   * changes via the year-view autoplay / day slider (and would lag the time
-   * slider during the debounced refetch). When the guard fails we fall back to
-   * the live sunrise-extrapolated estimate, which tracks `p`/`scrubG` instantly.
+   * Exact-moment `/panchanga/at-time` is only trustworthy when the query is
+   * driving the view AND the payload matches the slider's settled time.
+   *
+   * The fetch key follows `debouncedScrubG` (400ms), so while the user is
+   * still dragging `isPlaceholderData` stays false and the last snapshot
+   * would pin the moon in place. Mid-drag we drop it and extrapolate from
+   * sunrise so planets follow `scrubG` immediately. Same guard also covers
+   * keepPreviousData leftovers when the day changes under year-view autoplay.
    */
+  const scrubAheadOfQuery = Math.abs(scrubG - debouncedScrubG) > 0.02;
   const atTimeData =
-    needsAtTime && !scrubQ.isPlaceholderData ? scrubQ.data : undefined;
+    needsAtTime && !scrubAheadOfQuery && !scrubQ.isPlaceholderData
+      ? scrubQ.data
+      : undefined;
 
-  const markers = useMemo(
-    () => (atTimeData ? buildWheelMarkersAtTime(atTimeData) : buildWheelMarkers(p, det, markerG)),
-    [atTimeData, p, det, markerG],
-  );
+  const markers = useMemo(() => {
+    if (atTimeData) return buildWheelMarkersAtTime(atTimeData);
+    /* Year playback steps a day at a time. Each payload already has that day's
+       sunrise graha longitudes. Feeding `markerG` (from the page clock) through
+       `moonLonAtG` then extrapolates another half-day of motion on top — and
+       when the clock later snaps to the new sunrise, the moon jumps back. At
+       2×/4×/8× that reads as planets circling, then reversing. Use the day's
+       own snapshot so they only ever advance along the orbit. */
+    if (rangeMode) return buildWheelMarkersFromDetail(det);
+    return buildWheelMarkers(p, det, markerG);
+  }, [atTimeData, p, det, markerG, rangeMode]);
 
   const handleScrubChange = useCallback((g: number) => {
     setScrubG(g);
@@ -460,6 +464,16 @@ function PanchangaWheelBody({
     yearScrub?.onPause();
     setCalendarOpen(true);
   }, [yearScrub]);
+
+  const commitCalendarJump = useCallback(
+    (nextEra: Era, y: number, m: number, d: number, nextClock: string) => {
+      pendingJumpClockRef.current = nextClock;
+      setScrubPinned(true);
+      setScrubG(gFromClock(nextClock, det.sunriseMin));
+      activeCalendar?.onCommit(nextEra, y, m, d, nextClock);
+    },
+    [activeCalendar, det.sunriseMin],
+  );
 
   const snapToNow = useCallback(() => {
     setScrubPinned(false);
@@ -487,9 +501,16 @@ function PanchangaWheelBody({
   const [trackedDayKey, setTrackedDayKey] = useState(dayKey);
   if (dayKey !== trackedDayKey) {
     setTrackedDayKey(dayKey);
-    setScrubPinned(false);
     setSpin(0);
-    setScrubG(isToday ? nowG : 0);
+    const jumpClock = pendingJumpClockRef.current;
+    pendingJumpClockRef.current = null;
+    if (jumpClock) {
+      setScrubPinned(true);
+      setScrubG(gFromClock(jumpClock, det.sunriseMin));
+    } else {
+      setScrubPinned(false);
+      setScrubG(isToday ? nowG : 0);
+    }
   }
 
   useEffect(() => {
@@ -512,19 +533,6 @@ function PanchangaWheelBody({
       window.removeEventListener("keydown", onKey);
     };
   }, [expanded, setExpandedMode]);
-
-  useEffect(() => {
-    const onPopState = () => {
-      if (ignorePopRef.current) {
-        ignorePopRef.current = false;
-        return;
-      }
-      expandedHistoryRef.current = false;
-      setExpanded(false);
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
 
   const { lang, digits } = useLocale();
   const stageRef = useRef<HTMLDivElement>(null);
@@ -599,8 +607,11 @@ function PanchangaWheelBody({
           }
           sub={
             <>
-              {bilingualText(lang, det.weekday.ne, det.weekday.en)}, {bilingualText(lang, bsMonthNe, bsMonthEnOf(bsMonthNe))}{" "}
-              {num(bsDay)} · {bilingualText(lang, tithiNe, tithiEn)} · {locLabel}
+              {bilingualText(lang, det.weekday.ne, det.weekday.en)},{" "}
+              {bilingualText(lang, bsMonthNe, bsMonthEnOf(bsMonthNe))} {num(bsDay)}, {num(bsYear)} ·{" "}
+              <span className="font-num tabular-nums text-[var(--w-ink)]">{num(scrubClock)}</span>
+              {" · "}
+              {bilingualText(lang, tithiNe, tithiEn)} · {locLabel}
             </>
           }
           playRate={
@@ -613,38 +624,79 @@ function PanchangaWheelBody({
           }
         />
 
+        <div className="pointer-events-auto absolute top-4 right-3 z-30 flex items-center gap-1.5">
+          {activeCalendar ? (
+            <button
+              type="button"
+              className={wheelCornerBtn}
+              title={bilingualText(lang, "मिति र समय छान्नुहोस्", "Pick date and time")}
+              aria-label={bilingualText(lang, "मिति र समय छान्नुहोस्", "Pick date and time")}
+              onClick={openYearCalendar}
+            >
+              <CalendarDays className="h-4 w-4" strokeWidth={2} aria-hidden />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={wheelCornerBtn}
+            title={bilingualText(
+              lang,
+              `रिलोड · जुम रिसेट · ${civil ? "मध्यरात" : "सूर्योदय"}`,
+              `Reload · reset zoom · ${civil ? "midnight" : "sunrise"}`,
+            )}
+            aria-label={bilingualText(lang, "रिलोड", "Reload")}
+            onClick={resetToSunrise}
+          >
+            <RotateCcw className="h-4 w-4" strokeWidth={2} aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={wheelCornerBtn}
+            title={
+              expanded
+                ? bilingualText(lang, "सामान्य दृश्य", "Exit full width")
+                : bilingualText(lang, "पूर्ण चौडाइ", "Full width view")
+            }
+            aria-label={
+              expanded
+                ? bilingualText(lang, "सामान्य दृश्य", "Exit full width")
+                : bilingualText(lang, "पूर्ण चौडाइ", "Full width view")
+            }
+            aria-pressed={expanded}
+            onClick={toggleExpanded}
+          >
+            {expanded ? (
+              <Minimize2 className="h-4 w-4" strokeWidth={2} aria-hidden />
+            ) : (
+              <Fullscreen className="h-4 w-4" strokeWidth={2} aria-hidden />
+            )}
+          </button>
+        </div>
+
         <WheelChart
           det={det}
           markers={markers}
           spin={spin}
           tw={DEFAULT_WHEEL_TWEAKS}
           bsYear={bsYear}
-          sel={picked}
           hover={hover}
           onHover={setHover}
           onLeave={handleLeave}
-          onPick={handlePick}
           onSpin={setSpin}
           zoom={zoom}
           onZoom={handleZoom}
           pan={pan}
           onPan={handlePan}
-          sheetOpen={!!picked}
+          lineTarget={lineTarget}
+          onLineTargetChange={setLineTarget}
         />
 
         {tipNode}
 
-        <WheelPanel
-          sel={picked}
-          open={!!picked}
-          num={num}
-          onClose={() => setPicked(null)}
-        />
-
         <div className={wheelLegend}>
           <div className={wheelLegendRow}>
             <span className={wheelLegendDot} style={{ background: "var(--w-accent)" }} />
-            {bilingualText(lang, "लग्न · वर्तमान नक्षत्र · तिथि", "Lagna · current nakshatra · tithi")}
+            {bilingualText(lang, "वर्तमान नक्षत्र · तिथि", "Current nakshatra · tithi")}
           </div>
           <div className={wheelLegendRow}>
             <span className={wheelLegendDot} style={{ background: "#f2a81d" }} />
@@ -655,7 +707,7 @@ function PanchangaWheelBody({
             {bilingualText(lang, "चन्द्र राशि", "Moon sign")}
           </div>
           <div className={cn(wheelLegendRow, "mt-0.5 opacity-70")}>
-            {bilingualText(lang, "घुमाउन तान्नुहोस् · जुम गर्नुहोस्", "Drag to rotate · pinch to zoom")}
+            {bilingualText(lang, "घुमाउन तान्नुहोस् · स्क्रोल गरेर जुम गर्नुहोस्", "Drag to rotate · scroll to zoom")}
           </div>
         </div>
 
@@ -664,65 +716,14 @@ function PanchangaWheelBody({
             <>
               <WheelYearPlayback scrub={yearScrub} />
               <div className={wheelDockSep} />
-              {yearScrub.calendarPick ? (
-                <div className={cn(wheelDockGrp, "shrink-0")}>
-                  <button
-                    type="button"
-                    className={wheelIconBtn}
-                    title={bilingualText(lang, "मिति र समय छान्नुहोस्", "Pick date and time")}
-                    aria-label={bilingualText(lang, "मिति र समय छान्नुहोस्", "Pick date and time")}
-                    onClick={openYearCalendar}
-                  >
-                    <CalendarDays className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                  </button>
-                </div>
-              ) : null}
-              <div className={wheelDockSep} />
               <div className={cn(wheelDockGrp, "shrink-0")}>
-                <button
-                  type="button"
+                <PlanetSelectMenu
+                  grahas={det.grahas}
+                  selected={lineTarget}
+                  onSelect={setLineTarget}
                   className={wheelIconBtn}
-                  title={bilingualText(lang, 
-                    `रिलोड · जुम रिसेट · ${civil ? "मध्यरात" : "सूर्योदय"}`,
-                    `Reload · reset zoom · ${civil ? "midnight" : "sunrise"}`,
-                  )}
-                  onClick={resetToSunrise}
-                >
-                  <RotateCcw className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  className={wheelIconBtn}
-                  title={bilingualText(lang, "जुम इन", "Zoom in")}
-                  onClick={() => handleZoom(zoom * 1.4)}
-                >
-                  <ZoomIn className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  className={wheelIconBtn}
-                  title={bilingualText(lang, "जुम आउट", "Zoom out")}
-                  onClick={() => handleZoom(zoom / 1.4)}
-                >
-                  <ZoomOut className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  className={wheelIconBtn}
-                  title={
-                    expanded
-                      ? bilingualText(lang, "सामान्य दृश्य", "Exit full width")
-                      : bilingualText(lang, "पूर्ण चौडाइ", "Full width view")
-                  }
-                  aria-pressed={expanded}
-                  onClick={toggleExpanded}
-                >
-                  {expanded ? (
-                    <Minimize2 className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                  ) : (
-                    <Fullscreen className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                  )}
-                </button>
+                  iconSize={18}
+                />
               </div>
             </>
           ) : (
@@ -753,61 +754,37 @@ function PanchangaWheelBody({
                     {bilingualText(lang, "आज", "Now")}
                   </button>
                 )}
-                <button
-                  type="button"
+                <PlanetSelectMenu
+                  grahas={det.grahas}
+                  selected={lineTarget}
+                  onSelect={setLineTarget}
                   className={wheelIconBtn}
-                  title={bilingualText(lang, 
-                    `उत्तर सिधा · जुम रिसेट · ${civil ? "मध्यरात" : "सूर्योदय"}`,
-                    `North up · reset zoom · ${civil ? "midnight" : "sunrise"}`,
-                  )}
-                  onClick={resetToSunrise}
-                >
-                  ⟳
-                </button>
-                <button
-                  type="button"
-                  className={wheelIconBtn}
-                  title={bilingualText(lang, "जुम इन", "Zoom in")}
-                  onClick={() => handleZoom(zoom * 1.4)}
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  className={wheelIconBtn}
-                  title={bilingualText(lang, "जुम आउट", "Zoom out")}
-                  onClick={() => handleZoom(zoom / 1.4)}
-                >
-                  −
-                </button>
-                <button
-                  type="button"
-                  className={wheelIconBtn}
-                  title={
-                    expanded
-                      ? bilingualText(lang, "सामान्य दृश्य", "Exit full width")
-                      : bilingualText(lang, "पूर्ण चौडाइ", "Full width view")
-                  }
-                  aria-pressed={expanded}
-                  onClick={toggleExpanded}
-                >
-                  {expanded ? (
-                    <Minimize2 className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                  ) : (
-                    <Fullscreen className={wheelDockIcon} strokeWidth={2} aria-hidden />
-                  )}
-                </button>
+                  iconSize={18}
+                />
               </div>
             </>
           )}
         </div>
       </div>
 
-      {yearScrub?.calendarPick ? (
+      {activeCalendar ? (
         <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <DialogContent
             overlayClassName="z-[125] bg-black/70"
             className="z-[130] max-w-[22rem] border-[#3d5c58] bg-[#0d2428] p-4 text-[#e9f3f1] shadow-2xl"
+            onCloseAutoFocus={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => {
+              const t = e.target as HTMLElement | null;
+              if (t?.closest("[data-slot='popover-content']")) e.preventDefault();
+            }}
+            onFocusOutside={(e) => {
+              const t = e.target as HTMLElement | null;
+              if (t?.closest("[data-slot='popover-content']")) e.preventDefault();
+            }}
+            onInteractOutside={(e) => {
+              const t = e.target as HTMLElement | null;
+              if (t?.closest("[data-slot='popover-content']")) e.preventDefault();
+            }}
           >
             <DialogHeader>
               <DialogTitle className="text-[#e9f3f1]">
@@ -815,23 +792,23 @@ function PanchangaWheelBody({
               </DialogTitle>
             </DialogHeader>
             <BsDateTimePicker
-              gridEra="bs"
-              displayEra={yearScrub.calendarPick.era}
-              onEraChange={yearScrub.calendarPick.onEraChange}
-              year={yearScrub.calendarPick.year}
-              month={yearScrub.calendarPick.month}
-              day={yearScrub.calendarPick.day}
-              yearOptions={yearScrub.calendarPick.yearOptions}
-              todayAd={yearScrub.calendarPick.todayAd}
+              gridEra={activeCalendar.gridEra ?? "bs"}
+              displayEra={activeCalendar.era}
+              onEraChange={activeCalendar.onEraChange}
+              year={activeCalendar.year}
+              month={activeCalendar.month}
+              day={activeCalendar.day}
+              yearOptions={activeCalendar.yearOptions}
+              todayAd={activeCalendar.todayAd}
               onSelectDate={() => {}}
               monthAriaLabel={bilingualText(lang, "महिना", "Month")}
               yearAriaLabel={bilingualText(lang, "वर्ष", "Year")}
-              clock={yearScrub.calendarPick.clock}
+              clock={activeCalendar.clock}
               hourAriaLabel={bilingualText(lang, "घण्टा", "Hour")}
               minuteAriaLabel={bilingualText(lang, "मिनेट", "Minute")}
               showTime
-              locationParams={yearScrub.calendarPick.locationParams}
-              onCommitDateTime={yearScrub.calendarPick.onCommit}
+              locationParams={activeCalendar.locationParams}
+              onCommitDateTime={commitCalendarJump}
               afterCommit={() => setCalendarOpen(false)}
               solidSurface
             />
@@ -845,7 +822,7 @@ function PanchangaWheelBody({
 }
 
 function PanchangaWheelImpl(props: Props) {
-  const { loading = false, p, atTimeScrubOnly, yearScrub, ...rest } = props;
+  const { loading = false, p, atTimeScrubOnly, yearScrub, calendarPick, ...rest } = props;
   if (loading || !p) {
     return (
       <PanchangaWheelSkeleton
@@ -861,6 +838,7 @@ function PanchangaWheelImpl(props: Props) {
       p={p}
       atTimeScrubOnly={atTimeScrubOnly}
       yearScrub={yearScrub}
+      calendarPick={calendarPick}
       {...rest}
     />
   );
