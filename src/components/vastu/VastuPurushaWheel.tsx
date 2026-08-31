@@ -170,6 +170,10 @@ const PADA_32 = [
   "bhallata",
 ] as const;
 
+/** N1 sits on Roga (NW), matching the 32-pada chart — same slot as {@link PADA_32}'s roga. */
+const N1_SLOT = PADA_32.indexOf("roga");
+const PADA_STEP = 360 / PADA_32.length;
+
 const INNER_4 = [
   { bearing: 0, id: "bhudhara" },
   { bearing: 90, id: "aryama" },
@@ -417,16 +421,17 @@ export function VastuPurushaWheel({
         );
       })}
 
-      {/* 32 pada codes */}
-      {Array.from({ length: 32 }, (_, i) => {
-        const bearing = 315 + 5.625 + i * 11.25;
+      {/* 32 pada codes — N1 is the same wedge as Roga */}
+      {PADA_32.map((_, slot) => {
+        const bearing = slot * PADA_STEP;
         const color = groupColor(bearing);
+        const i = (slot - N1_SLOT + PADA_32.length) % PADA_32.length;
         const quad = CODE_QUAD[Math.floor(i / 8)]!;
         const n = (i % 8) + 1;
         return (
           <g key={`code-${quad}${n}`} aria-hidden="true">
             <path
-              d={annularSectorPath(bearing, 5.625, CODE_OUTER, CODE_INNER)}
+              d={annularSectorPath(bearing, PADA_STEP / 2, CODE_OUTER, CODE_INNER)}
               fill={color}
               fillOpacity={0.12}
               stroke={color}
@@ -442,13 +447,13 @@ export function VastuPurushaWheel({
 
       {/* 32 perimeter deities */}
       {PADA_32.map((id, i) => {
-        const bearing = i * 11.25;
+        const bearing = i * PADA_STEP;
         const color = groupColor(bearing);
         return (
           <g key={id} aria-hidden="true">
             <title>{t(`vastu.pada.${id}.name`)}</title>
             <path
-              d={annularSectorPath(bearing, 5.625, DEITY_OUTER, DEITY_INNER)}
+              d={annularSectorPath(bearing, PADA_STEP / 2, DEITY_OUTER, DEITY_INNER)}
               fill="var(--card)"
               fillOpacity={0.45}
               stroke={color}
