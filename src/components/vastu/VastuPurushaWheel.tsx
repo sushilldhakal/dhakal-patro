@@ -374,7 +374,7 @@ export function VastuPurushaWheel({
               strokeOpacity={0.28}
               strokeWidth={0.4}
             />
-            <ArcLabel bearing={point.bearing} radius={DIR16_LABEL_R} fontSize={16} className="font-bold" fillOpacity={0.9}>
+            <ArcLabel bearing={point.bearing} radius={DIR16_LABEL_R} fontSize={11} className="font-bold" fillOpacity={0.9}>
               {point.abbr}
             </ArcLabel>
           </g>
@@ -460,7 +460,7 @@ export function VastuPurushaWheel({
               strokeOpacity={0.2}
               strokeWidth={0.35}
             />
-            <ArcLabel bearing={bearing} radius={DEITY_LABEL_R} fontSize={12} className="font-semibold" fillOpacity={0.88}>
+            <ArcLabel bearing={bearing} radius={DEITY_LABEL_R} fontSize={9} className="font-semibold" fillOpacity={0.88}>
               {t(`vastu.pada.${id}.name`)}
             </ArcLabel>
           </g>
@@ -581,7 +581,7 @@ export function VastuPurushaWheel({
             )}
             fill="currentColor"
             fillOpacity={active ? 1 : 0.8}
-            fontSize={14}
+            fontSize={11}
           >
             {t(`vastu.dir.${dir.id}.name`)}
           </text>
