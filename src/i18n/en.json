@@ -1466,11 +1466,19 @@
   },
   "vastu": {
     "title": "Vastu",
-    "subtitle": "The Vastu direction wheel — which room belongs in which corner, its element and its deity, plus common vastu doshas and practical remedies.",
+    "subtitle": "A Vastu house map — which room belongs in which corner, its element and its deity, plus common vastu doshas and practical remedies.",
     "wheel": {
       "heading": "Direction wheel",
       "blurb": "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
       "hint": "Tap a direction"
+    },
+    "plan": {
+      "heading": "House layout (2D)",
+      "blurb": "The Vastu Purusha Mandala — the house split into nine zones with north at the top: the Brahmasthan at the centre, the eight directions around it. Tap any zone or room.",
+      "hint": "Tap a zone or room",
+      "north": "North",
+      "center_open": "Keep open",
+      "elements": "Five elements"
     },
     "rooms": {
       "heading": "Room by direction",
