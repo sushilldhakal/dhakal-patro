@@ -519,7 +519,23 @@ export interface SceneProps {
    * the Moon, Rāhu and Ketu — those three belong to Earth.
    */
   planetBody?: PlaygroundGlobe;
+  /**
+   * Pointer picking the playground uses to drag Earth around the orbit
+   * the way the original lab does — filled in on mount, cleared on unmount.
+   */
+  pick?: MutableRefObject<ScenePick | null>;
+  /** Outline a named mesh (`stellar-day-arc`, `earth`) — chapter tour only. */
+  highlight?: string;
+  /** Show the globe's rotation in degrees, next to the planet. */
+  showDegrees?: boolean;
 }
+
+/** Screen-space hits against the globe and the equatorial plane. */
+export type ScenePick = {
+  hitsPlanet: (clientX: number, clientY: number, rect: DOMRect) => boolean;
+  /** Mean anomaly under the pointer on y = 0, or null if the ray misses. */
+  anomalyAt: (clientX: number, clientY: number, rect: DOMRect) => number | null;
+};
 
 /** Worlds the adjust drawer can put in Earth's place. */
 export type PlaygroundGlobe = "earth" | "mars" | "mercury" | "jupiter" | "venus" | "saturn";
@@ -540,8 +556,41 @@ function DaySimScene({
   labelNodes,
   onSample,
   planetBody = "earth",
+  pick,
+  highlight = "",
+  showDegrees = false,
 }: SceneProps) {
   const { camera: cam, size } = useThree();
+
+  useEffect(() => {
+    if (!pick) return;
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const hit = new THREE.Vector3();
+    const toNdc = (cx: number, cy: number, rect: DOMRect) => {
+      ndc.x = ((cx - rect.left) / rect.width) * 2 - 1;
+      ndc.y = -((cy - rect.top) / rect.height) * 2 + 1;
+    };
+    pick.current = {
+      hitsPlanet(cx, cy, rect) {
+        toNdc(cx, cy, rect);
+        raycaster.setFromCamera(ndc, cam);
+        const target = planetHit.current ?? planetMesh.current;
+        return target ? raycaster.intersectObject(target, true).length > 0 : false;
+      },
+      anomalyAt(cx, cy, rect) {
+        toNdc(cx, cy, rect);
+        raycaster.setFromCamera(ndc, cam);
+        if (!raycaster.ray.intersectPlane(plane, hit)) return null;
+        if (hit.x === 0 && hit.z === 0) return null;
+        return Math.atan2(-hit.z, hit.x);
+      },
+    };
+    return () => {
+      pick.current = null;
+    };
+  }, [cam, pick, size]);
 
   const [earthMap, sunMap, skyMap, moonMap] = useLoader(THREE.TextureLoader, [
     earthToonUrl,
@@ -594,6 +643,7 @@ function DaySimScene({
   /* ── refs into the scene graph ───────────────────────────────────── */
   const arcRoot = useRef<THREE.Group>(null!);
   const planetMesh = useRef<THREE.Mesh>(null!);
+  const planetHit = useRef<THREE.Mesh>(null!);
   const siderealGroup = useRef<THREE.Group>(null!);
   const solarGroup = useRef<THREE.Group>(null!);
   const siderealArc = useRef<THREE.Mesh>(null!);
@@ -675,6 +725,8 @@ function DaySimScene({
     () => makeLine(ellipseGeometry(MEAN_DISTANCE, MEAN_DISTANCE), COLOR.mean, 0.55),
     [],
   );
+  /** How far the earth-orbit rings have faded in (0–1). Null until the first frame. */
+  const orbitFade = useRef<number | null>(null);
   /**
    * The spin axis, run out well past both poles.
    *
@@ -992,6 +1044,28 @@ function DaySimScene({
         yearCount.current += wrappedYears;
         c.day -= wrappedYears * daysPerYear;
       }
+    }
+
+    /* Earth-orbit rings fade in over a second. Snap off so a chapter that
+       wants a bare globe (stellar days) does not keep last chapter's rings. */
+    const wantOrbit = toggles.planetOrbit ? 1 : 0;
+    if (orbitFade.current === null) orbitFade.current = wantOrbit;
+    else if (wantOrbit < orbitFade.current) orbitFade.current = wantOrbit;
+    else {
+      const step = Math.min(delta, 0.1) / 1;
+      orbitFade.current = Math.min(wantOrbit, orbitFade.current + step);
+    }
+    const fade = orbitFade.current;
+    const meanMat = meanOrbitLine.material as THREE.LineBasicMaterial;
+    meanMat.opacity = 0.55 * fade;
+    meanOrbitLine.visible = fade > 0.01 && toggles.meanSun;
+    const trueMat = trueOrbitLine.material as THREE.LineBasicMaterial;
+    if (toggles.sunOrbit && !toggles.planetOrbit) {
+      trueMat.opacity = 0.5;
+      sunOrbitGroup.current.visible = toggles.trueSun;
+    } else {
+      trueMat.opacity = 0.5 * fade;
+      sunOrbitGroup.current.visible = toggles.trueSun && fade > 0.01;
     }
 
     /* ── where everything is ─────────────────────────────────────────── */
@@ -1573,6 +1647,15 @@ function DaySimScene({
     if (toggles.solarArc) push("c-solar", "clock", ct.solar, tick(-eot, 2.45), false, "solar");
     if (toggles.siderealArc)
       push("c-sidereal", "clock", ct.sidereal, tick(-spin, 3.15), false, "sidereal");
+    if (showDegrees) {
+      const deg = Math.round(euclideanModulo(day, 1) * 360);
+      push("c-deg", "body", `${deg}°`, anchor.copy(planetPos).setY(PLANET_R * 2.6), false);
+    }
+
+    const siderealMat = siderealArc.current.material as THREE.MeshBasicMaterial;
+    const arcOn = highlight === "stellar-day-arc";
+    siderealMat.opacity = arcOn ? 1 : 0.8;
+    siderealMat.color.setHex(arcOn ? 0x7ed0ff : COLOR.sidereal);
 
     if (!sampling) return;
     onSample({
@@ -1622,7 +1705,12 @@ function DaySimScene({
        */}
       <group ref={gridRoot}>
         <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
-          <GuideGrid visible={toggles.grid} innerR={focusRadius} planeInnerR={focusRadius} />
+          <GuideGrid
+            visible={toggles.grid}
+            showPlane={toggles.grid}
+            innerR={focusRadius}
+            planeInnerR={focusRadius}
+          />
         </group>
       </group>
 
@@ -1682,7 +1770,7 @@ function DaySimScene({
           not only alongside the mean sun: this circle *is* the path the planet
           travels in this scene, so gating it on another layer left the planet
           moving across empty space with no orbit shown at all. */}
-      <primitive object={meanOrbitLine} visible={toggles.planetOrbit} />
+      <primitive object={meanOrbitLine} />
 
       {/* True sun, its spin, and the orbit it really travels */}
       <group ref={sunGroup} visible={toggles.trueSun}>
@@ -1692,7 +1780,7 @@ function DaySimScene({
         </mesh>
       </group>
       <primitive object={dropLine} visible={toggles.trueSun && toggles.eotWedge} />
-      <group ref={sunOrbitGroup} visible={toggles.sunOrbit && toggles.trueSun}>
+      <group ref={sunOrbitGroup}>
         <group rotation={[0, VERNAL_FROM_PERIHELION, 0]}>
           <group rotation={[-params.tilt, -VERNAL_FROM_PERIHELION, 0]}>
             <primitive object={trueOrbitLine} rotation={[0, Math.PI, 0]} />
@@ -1777,6 +1865,14 @@ function DaySimScene({
         <mesh ref={planetMesh} material={earthMat} frustumCulled={false}>
           <sphereGeometry args={[PLANET_R, 64, 48]} />
           <primitive object={localMeridian} visible={toggles.primeMeridian} />
+        </mesh>
+        <mesh visible={highlight === "earth"} scale={1.12} frustumCulled={false}>
+          <sphereGeometry args={[PLANET_R, 32, 24]} />
+          <meshBasicMaterial color={0x7ed0ff} transparent opacity={0.28} depthWrite={false} />
+        </mesh>
+        <mesh ref={planetHit}>
+          <sphereGeometry args={[PLANET_R * 1.85, 16, 12]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
 
         {/* The spin axis: one line straight through the globe and out past both

@@ -280,6 +280,7 @@ function disposeObject(root: THREE.Object3D) {
  */
 export function GuideGrid({
   visible = true,
+  showPlane = true,
   innerR = 4,
   planeInnerR = 0,
   planeOuterR = NAK_OUTER,
@@ -288,6 +289,9 @@ export function GuideGrid({
   planeY = -0.05,
 }: {
   visible?: boolean;
+  /** The filled navy disc. Off when nothing is sitting on it — otherwise it
+      reads as a blue plate across the sky. */
+  showPlane?: boolean;
   innerR?: number;
   planeInnerR?: number;
   /** Outer radius of the filled disc. Defaults to the नक्षत्र rim. */
@@ -311,10 +315,12 @@ export function GuideGrid({
     <group position={[0, planeY, 0]}>
       <primitive object={grid} visible={visible} />
       {/* Disc stays up with the belts even when the polar grid is off, so
-          the fill still reaches the नक्षत्र rim. renderOrder 0, not −1 —
-          at −1 this shared it with the Milky Way backdrop, which draws
-          additively with the depth test off. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={0} raycast={() => {}}>
+          the fill still reaches the नक्षत्र rim. Hidden entirely when
+          nothing is on it — that leftover navy circle is the "blue plate"
+          on the welcome scene. renderOrder 0, not −1 — at −1 this shared
+          it with the Milky Way backdrop, which draws additively with the
+          depth test off. */}
+      <mesh visible={showPlane} rotation={[-Math.PI / 2, 0, 0]} renderOrder={0} raycast={() => {}}>
         {planeInnerR > 0 ? (
           <ringGeometry args={[planeInnerR, planeOuterR, 64]} />
         ) : (
@@ -415,10 +421,13 @@ export function EclipticWheel({
     [parts],
   );
 
+  const anyBelt = rashiBelt || nakshatraBelt || monthRing;
+
   return (
     <>
       <GuideGrid
         visible={grid}
+        showPlane={grid || anyBelt}
         innerR={gridInnerR}
         planeInnerR={planeInnerR}
         planeOuterR={planeOuterR}

@@ -54,23 +54,35 @@ import {
   clocks,
   dayCounts,
   equationOfTime,
+  euclideanModulo,
   meanAnomalyAt,
+  MESHA_FROM_PERIHELION,
   PERIHELION,
   PLANET_PRESETS,
   VERNAL,
 } from "@/lib/sky3d/day-mechanics";
+import { mixMeddle, type Meddle } from "@/lib/learn/chapter-player";
 import { adjacentTopicMetas } from "@/lib/learn/learn-topics-meta";
 import {
   resolvePlayground,
   SPEED_MULTIPLIERS,
   type PlaygroundConfig,
 } from "@/lib/learn/playground-config";
+import { useDayChapters } from "@/hooks/use-day-chapters";
+import {
+  cameraFromChapter,
+  DAY_CHAPTERS,
+  togglesFromChapter,
+  type ChapterSimState,
+} from "@/lib/learn/day-chapters";
+import { DayChapterBar, DayChapterWelcome } from "./DayChapterPlayer";
 import EotGraph from "./EotGraph";
 import Scene, {
   type CameraState,
   type CameraTarget,
   type PlaygroundGlobe,
   type SceneLabel,
+  type ScenePick,
   type SceneSample,
   type SimClock,
   type SimToggles,
@@ -128,14 +140,39 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const pick = (a: string, b: string) => bilingualText(lang, a, b);
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
 
-  const initial = useMemo(() => resolvePlayground(config), [config]);
+  const tour = useDayChapters(Boolean(config.guided));
+  const freePlay = Boolean(tour?.chapter.free);
+  const lesson = Boolean(tour) && !freePlay;
+
+  const initial = useMemo(() => {
+    const resolved = resolvePlayground(config);
+    if (!config.guided) return resolved;
+    const welcome = DAY_CHAPTERS[0]!.defaults;
+    return {
+      ...resolved,
+      toggles: togglesFromChapter(welcome),
+      params: {
+        daysPerYear: welcome.solarDaysPerYear + 1,
+        eccentricity: welcome.eccentricity,
+        tilt: welcome.tiltDeg * DEG,
+      },
+      camera: cameraFromChapter(welcome),
+    };
+  }, [config]);
 
   const clock = useRef<SimClock>({
     day: 0,
-    playing: false,
-    daysPerSecond: initial.speed * SPEED_MULTIPLIERS[DEFAULT_SPEED_RUNG]!,
+    playing: Boolean(config.guided),
+    daysPerSecond: config.guided
+      ? 0.35
+      : initial.speed * SPEED_MULTIPLIERS[DEFAULT_SPEED_RUNG]!,
   });
   const camera = useRef<CameraState>({ ...initial.camera });
+  const scenePick = useRef<ScenePick | null>(null);
+  const cameraMeddle = useRef<Meddle<CameraState> | null>(null);
+  const earthMeddle = useRef<Meddle<number> | null>(null);
+  const gestureMode = useRef<"camera" | "earth" | null>(null);
+  const wheelRelax = useRef(0);
   const clockText = useRef({ sidereal: "", solar: "", mean: "" });
   /* The label spans, by id. The scene moves these directly every frame; React
      only decides which exist and what they say. */
@@ -173,11 +210,116 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   }, [fullscreen, toggleFullscreen]);
 
   useEffect(() => {
+    if (config.guided && !freePlay) return;
     clock.current.playing = playing;
-  }, [playing]);
+  }, [playing, config.guided, freePlay]);
   useEffect(() => {
+    if (config.guided && !freePlay) return;
     clock.current.daysPerSecond = initial.speed * SPEED_MULTIPLIERS[speed]!;
-  }, [speed, initial.speed]);
+  }, [speed, initial.speed, config.guided, freePlay]);
+
+  /* Guided tour: camera + orbit every frame, layers on the React tick. */
+  const setTourFrame = tour?.setOnFrame;
+  const tourWelcomeRef = useRef(true);
+  const tourFreeRef = useRef(false);
+  const playingStateRef = useRef(false);
+  const handsOffOffset = useRef(0);
+  const wasHandsOff = useRef(false);
+  tourWelcomeRef.current = Boolean(tour?.showWelcome);
+  tourFreeRef.current = freePlay;
+  playingStateRef.current = playing;
+  useEffect(() => {
+    if (!setTourFrame) return;
+    setTourFrame((s: ChapterSimState) => {
+      if (tourFreeRef.current) return;
+      const dpy = s.solarDaysPerYear + 1;
+      const guidedDay = s.orbitalPosition * dpy;
+      const now = performance.now();
+      const welcome = tourWelcomeRef.current;
+      const handsOff = s.handsOff;
+
+      if (welcome || handsOff) {
+        clock.current.playing = true;
+        clock.current.daysPerSecond = 0.35;
+        handsOffOffset.current = clock.current.day - guidedDay;
+        wasHandsOff.current = true;
+      } else {
+        if (wasHandsOff.current) {
+          handsOffOffset.current = clock.current.day - guidedDay;
+          wasHandsOff.current = false;
+        }
+        clock.current.playing = false;
+      }
+
+      const targetDay = guidedDay + handsOffOffset.current;
+      const em = earthMeddle.current;
+      if (em && !welcome && !handsOff) {
+        const mix = mixMeddle(now, targetDay, em);
+        clock.current.day = mix.value;
+        clock.current.playing = false;
+        if (mix.done) earthMeddle.current = null;
+      } else if (!welcome && !handsOff) {
+        clock.current.day = targetDay;
+      }
+
+      const cm = cameraMeddle.current;
+      if (cm && !welcome && !handsOff) {
+        if (cm.frozen || cm.releasedAt === null) {
+          camera.current.yaw = cm.value.yaw;
+          camera.current.pitch = cm.value.pitch;
+          camera.current.distance = cm.value.distance;
+        } else {
+          const yaw = mixMeddle(now, s.cameraYaw, { ...cm, value: cm.value.yaw }, true);
+          const pitch = mixMeddle(now, s.cameraPitch, { ...cm, value: cm.value.pitch });
+          const dist = mixMeddle(now, s.cameraDistance, { ...cm, value: cm.value.distance });
+          camera.current.yaw = yaw.value;
+          camera.current.pitch = pitch.value;
+          camera.current.distance = dist.value;
+          if (yaw.done && pitch.done && dist.done) cameraMeddle.current = null;
+        }
+      } else if (!welcome && !handsOff && !cm) {
+        camera.current.yaw = s.cameraYaw;
+        camera.current.pitch = s.cameraPitch;
+        camera.current.distance = s.cameraDistance;
+      }
+    });
+  }, [setTourFrame]);
+
+  const tourState = tour?.state;
+  const tourChapterId = tour?.chapter.id;
+  useEffect(() => {
+    cameraMeddle.current = null;
+    earthMeddle.current = null;
+    handsOffOffset.current = 0;
+    wasHandsOff.current = false;
+    const ch = DAY_CHAPTERS.find((c) => c.id === tourChapterId);
+    if (!ch?.free) return;
+    const s = ch.defaults;
+    setSolarDaysPerYear(s.solarDaysPerYear);
+    setEccentricity(s.eccentricity);
+    setTiltDeg(s.tiltDeg);
+    setCameraTarget(s.cameraTarget);
+    setCameraFollow(s.cameraFollow);
+    setGraphOpen(false);
+    setToggles(togglesFromChapter(s));
+    setPreset(s.planet === "earth" ? "" : s.planet);
+    camera.current = cameraFromChapter(s);
+    clock.current.day = s.orbitalPosition * (s.solarDaysPerYear + 1);
+    clock.current.playing = false;
+    setPlaying(false);
+  }, [tourChapterId]);
+
+  useEffect(() => {
+    if (!tourState || tour?.chapter.free) return;
+    setSolarDaysPerYear(tourState.solarDaysPerYear);
+    setEccentricity(tourState.eccentricity);
+    setTiltDeg(tourState.tiltDeg);
+    setCameraTarget(tourState.cameraTarget);
+    setCameraFollow(tourState.cameraFollow);
+    setGraphOpen(tourState.graphOpen);
+    setToggles(togglesFromChapter(tourState));
+    setPreset(tourState.planet === "earth" ? "" : tourState.planet);
+  }, [tourState, tour?.chapter.free]);
 
   const onSample = useCallback((s: SceneSample) => {
     setSample(s);
@@ -339,6 +481,24 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   }, []);
 
   const canvasWrap = useRef<HTMLDivElement | null>(null);
+
+  const grabCamera = useCallback(() => {
+    if (tourFreeRef.current) return;
+    cameraMeddle.current = {
+      frozen: true,
+      releasedAt: null,
+      value: { ...camera.current },
+    };
+  }, []);
+  const releaseCamera = useCallback(() => {
+    if (tourFreeRef.current) return;
+    const slot = cameraMeddle.current;
+    if (!slot) return;
+    slot.frozen = false;
+    slot.releasedAt = performance.now();
+    slot.value = { ...camera.current };
+  }, []);
+
   useEffect(() => {
     const el = canvasWrap.current;
     if (!el) return;
@@ -348,10 +508,16 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         130,
         Math.max(4, camera.current.distance * Math.exp(e.deltaY * 0.0012)),
       );
+      grabCamera();
+      window.clearTimeout(wheelRelax.current);
+      wheelRelax.current = window.setTimeout(releaseCamera, 160);
     };
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, [fullscreen]);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      window.clearTimeout(wheelRelax.current);
+    };
+  }, [fullscreen, grabCamera, releaseCamera]);
 
   const canvasHeight = fullscreen ? "100%" : "clamp(380px, 58vh, 620px)";
 
@@ -514,6 +680,23 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         onPointerDown={(e) => {
           if ((e.target as HTMLElement | null)?.closest?.("button, input, a")) return;
           pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          const rect = canvasWrap.current?.getBoundingClientRect();
+          const onEarth = Boolean(
+            rect && scenePick.current?.hitsPlanet(e.clientX, e.clientY, rect),
+          );
+          gestureMode.current = onEarth ? "earth" : "camera";
+          if (onEarth) {
+            if (!tourFreeRef.current) {
+              earthMeddle.current = {
+                frozen: true,
+                releasedAt: null,
+                value: clock.current.day,
+              };
+            }
+            clock.current.playing = false;
+          } else {
+            grabCamera();
+          }
           reanchor();
         }}
         onPointerMove={(e) => {
@@ -529,19 +712,65 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               130,
               Math.max(4, gestureStart.current.distance * (gestureStart.current.pinch / d)),
             );
+            gestureMode.current = "camera";
+            grabCamera();
+            return;
+          }
+          if (gestureMode.current === "earth") {
+            const rect = canvasWrap.current?.getBoundingClientRect();
+            const M = rect ? scenePick.current?.anomalyAt(e.clientX, e.clientY, rect) : null;
+            if (M !== null && M !== undefined) {
+              const dpy = solarDaysPerYear + 1;
+              const frac = euclideanModulo((M - MESHA_FROM_PERIHELION) / PI2, 1);
+              const years = Math.floor(clock.current.day / dpy);
+              const day = years * dpy + frac * dpy;
+              clock.current.day = day;
+              clock.current.playing = false;
+              if (!tourFreeRef.current) {
+                earthMeddle.current = { frozen: true, releasedAt: null, value: day };
+              }
+            }
             return;
           }
           const dx = e.clientX - dragOrigin.current.x;
           const dy = e.clientY - dragOrigin.current.y;
           camera.current.yaw = gestureStart.current.yaw - dx * 0.006;
           camera.current.pitch = clampPitch(gestureStart.current.pitch + dy * 0.005);
+          if (cameraMeddle.current) {
+            cameraMeddle.current.frozen = true;
+            cameraMeddle.current.value = { ...camera.current };
+          }
         }}
         onPointerUp={(e) => {
           pointers.current.delete(e.pointerId);
+          if (pointers.current.size === 0) {
+            if (tourFreeRef.current) {
+              clock.current.playing = playingStateRef.current;
+            } else if (gestureMode.current === "earth" && earthMeddle.current) {
+              earthMeddle.current.frozen = false;
+              earthMeddle.current.releasedAt = performance.now();
+              earthMeddle.current.value = clock.current.day;
+            } else if (gestureMode.current === "camera") {
+              releaseCamera();
+            }
+            gestureMode.current = null;
+          }
           reanchor();
         }}
         onPointerCancel={(e) => {
           pointers.current.delete(e.pointerId);
+          if (pointers.current.size === 0) {
+            if (tourFreeRef.current) {
+              clock.current.playing = playingStateRef.current;
+            } else if (gestureMode.current === "earth" && earthMeddle.current) {
+              earthMeddle.current.frozen = false;
+              earthMeddle.current.releasedAt = performance.now();
+              earthMeddle.current.value = clock.current.day;
+            } else if (gestureMode.current === "camera") {
+              releaseCamera();
+            }
+            gestureMode.current = null;
+          }
           reanchor();
         }}
       >
@@ -570,6 +799,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               labelNodes={labelNodes}
               onSample={onSample}
               planetBody={(preset || "earth") as PlaygroundGlobe}
+              pick={scenePick}
+              highlight={tour?.state.highlight ?? ""}
+              showDegrees={Boolean(tour?.state.degrees)}
             />
           </Suspense>
         </Canvas>
@@ -580,59 +812,64 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           ))}
         </div>
 
-        <div className="pointer-events-none absolute left-2 top-2 rounded-lg border border-white/15 bg-black/45 px-2.5 py-1.5 backdrop-blur sm:left-3 sm:top-3">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/50">
-            {t("learn.playground.sun_rashi_month")}
-          </div>
-          <div className="text-sm font-bold text-white">
-            {rashiNames[rashi]} · {monthNames[rashi]}
-          </div>
-          <div className="mt-1 font-num text-sm font-bold tabular-nums" style={{ color: TONE.solar }}>
-            {eotMinutes >= 0 ? "+" : "−"}
-            {num(Math.abs(eotMinutes).toFixed(1))}
-            <span className="ml-1 text-[10px] font-semibold text-white/50">
-              {t("common.minutes")}
-            </span>
-          </div>
-        </div>
+        {tour ? <DayChapterWelcome player={tour} /> : null}
 
-        {flash !== null && (
+        {lesson ? null : (
+          <div className="pointer-events-none absolute left-2 top-2 rounded-lg border border-white/15 bg-black/45 px-2.5 py-1.5 backdrop-blur sm:left-3 sm:top-3">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/50">
+              {t("learn.playground.sun_rashi_month")}
+            </div>
+            <div className="text-sm font-bold text-white">
+              {rashiNames[rashi]} · {monthNames[rashi]}
+            </div>
+            <div className="mt-1 font-num text-sm font-bold tabular-nums" style={{ color: TONE.solar }}>
+              {eotMinutes >= 0 ? "+" : "−"}
+              {num(Math.abs(eotMinutes).toFixed(1))}
+              <span className="ml-1 text-[10px] font-semibold text-white/50">
+                {t("common.minutes")}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {lesson || flash === null ? null : (
           <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-amber-400/60 bg-amber-500/20 px-4 py-1.5 text-sm font-bold text-amber-100 backdrop-blur">
             {t("learn.playground.sankranti")} · {rashiNames[flash]} · {monthNames[flash]} {num(1)}
           </div>
         )}
 
         <div className="absolute right-3 top-3 flex gap-2">
-          <IconButton
-            onClick={() => {
-              setControlsOpen((v) => !v);
-              setFocusOpen(false);
-            }}
-            label={t("learn.playground.controls")}
-            active={controlsOpen}
-          >
-            <SlidersHorizontal size={16} />
-          </IconButton>
-          {/* Focus has its own button rather than a section of the drawer: it
-              is the control a reader reaches for while watching, and digging
-              past four sliders for it every time was the wrong trade. */}
-          <IconButton
-            onClick={() => {
-              setFocusOpen((v) => !v);
-              setControlsOpen(false);
-            }}
-            label={t("learn.playground.focus")}
-            active={focusOpen}
-          >
-            <Focus size={16} />
-          </IconButton>
-          <IconButton
-            onClick={() => setGraphOpen((v) => !v)}
-            label={t("learn.playground.eot_graph")}
-            active={graphOpen}
-          >
-            <LineChart size={16} />
-          </IconButton>
+          {lesson ? null : (
+            <>
+              <IconButton
+                onClick={() => {
+                  setControlsOpen((v) => !v);
+                  setFocusOpen(false);
+                }}
+                label={t("learn.playground.controls")}
+                active={controlsOpen}
+              >
+                <SlidersHorizontal size={16} />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  setFocusOpen((v) => !v);
+                  setControlsOpen(false);
+                }}
+                label={t("learn.playground.focus")}
+                active={focusOpen}
+              >
+                <Focus size={16} />
+              </IconButton>
+              <IconButton
+                onClick={() => setGraphOpen((v) => !v)}
+                label={t("learn.playground.eot_graph")}
+                active={graphOpen}
+              >
+                <LineChart size={16} />
+              </IconButton>
+            </>
+          )}
           <IconButton
             onClick={onToggleFullscreen}
             label={fullscreen ? t("common.exit_fullscreen") : t("common.fullscreen")}
@@ -644,7 +881,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         {/* Capped against the canvas, not the viewport: the drawer floats over
             the scene, so a 70vh panel on a short canvas would hang off the
             bottom of the thing it belongs to. */}
-        {controlsOpen && (
+        {!lesson && controlsOpen && (
           <div className="absolute right-3 top-14 z-10 flex max-h-[calc(100%-4.5rem)] w-[min(290px,calc(100%-1.5rem))] flex-col gap-4 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
             {/* A world to borrow, in one line. Six buttons and a paragraph of
                 caveats were the widest thing in the panel for something a
@@ -751,7 +988,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             round with the orbit. Radio, because the scene can only be centred
             on one thing; the follow switch is a separate question about that
             same choice, so it lives with it rather than among the layers. */}
-        {focusOpen && (
+        {!lesson && focusOpen && (
           <div className="absolute right-3 top-14 z-10 flex w-[min(230px,calc(100%-1.5rem))] flex-col gap-2.5 rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
             <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
               {t("learn.playground.focus")}
@@ -809,7 +1046,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         {/* The graph over the scene, not buried in the panel below it: it is
             read against the sim's own motion, so it has to be on screen at the
             same time as the thing it is describing. */}
-        {graphOpen && (
+        {!lesson && graphOpen && (
           <div className="absolute bottom-3 left-3 z-10 w-[min(320px,calc(100%-1.5rem))] max-h-[calc(100%-4.5rem)] overflow-y-auto rounded-xl border border-white/15 bg-black/85 p-2.5 text-white backdrop-blur">
             <EotGraph
               eccentricity={eccentricity}
@@ -820,11 +1057,11 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           </div>
         )}
 
-        <p className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] text-white/45">
-          {fullscreen
-            ? ""
-            : t("learn.playground.drag_hint")}
-        </p>
+        {lesson || fullscreen ? null : (
+          <p className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] text-white/45">
+            {t("learn.playground.drag_hint")}
+          </p>
+        )}
       </div>
 
       <div
@@ -844,48 +1081,59 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           </div>
         )}
 
-        {filterChips}
-
-        <div className="flex w-full items-center gap-2.5 sm:gap-3">
-          {/* Not `edPlayBtn`: that one colours its icon `--tm-ink`, which is
-              near-black in the light theme and so disappears on this panel. */}
-          <button
-            type="button"
-            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border border-white/25 bg-white/10 text-white transition-colors hover:border-white/60 hover:bg-white/20"
-            onClick={() => setPlaying((v) => !v)}
-            aria-label={playing ? t("learn.pause") : t("learn.play")}
-          >
-            {playing ? (
-              <Pause size={18} fill="currentColor" strokeWidth={0} />
-            ) : (
-              <Play size={18} fill="currentColor" strokeWidth={0} className="ml-[2px]" />
-            )}
-          </button>
-          <input
-            type="range"
-            className={cn(edScrub, "ed-scrub-dark")}
-            style={{ "--fill": `${(day / daysPerYear) * 100}%` } as React.CSSProperties}
-            min={0}
-            max={daysPerYear}
-            step={0.001}
-            value={day}
-            onChange={(e) => {
-              clock.current.day = Number(e.target.value);
-              setPlaying(false);
-            }}
-            aria-label={t("learn.playground.scrub_year")}
+        {tour ? (
+          <DayChapterBar
+            player={tour}
+            orbitPlaying={freePlay ? playing : undefined}
+            onOrbitToggle={freePlay ? () => setPlaying((v) => !v) : undefined}
           />
-          <button
-            type="button"
-            onClick={() => setDetailsOpen((v) => !v)}
-            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-white/20 text-white/70 hover:border-white/45 hover:text-white"
-            aria-label={detailsOpen ? t("learn.playground.hide_readings") : t("learn.playground.show_readings")}
-          >
-            {detailsOpen ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
-          </button>
-        </div>
+        ) : null}
 
-        {detailsOpen && (
+        {!lesson && (
+          <>
+            {filterChips}
+            <div className="flex w-full items-center gap-2.5 sm:gap-3">
+              {tour ? null : (
+                <button
+                  type="button"
+                  className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border border-white/25 bg-white/10 text-white transition-colors hover:border-white/60 hover:bg-white/20"
+                  onClick={() => setPlaying((v) => !v)}
+                  aria-label={playing ? t("learn.pause") : t("learn.play")}
+                >
+                  {playing ? (
+                    <Pause size={18} fill="currentColor" strokeWidth={0} />
+                  ) : (
+                    <Play size={18} fill="currentColor" strokeWidth={0} className="ml-[2px]" />
+                  )}
+                </button>
+              )}
+              <input
+                type="range"
+                className={cn(edScrub, "ed-scrub-dark")}
+                style={{ "--fill": `${(day / daysPerYear) * 100}%` } as React.CSSProperties}
+                min={0}
+                max={daysPerYear}
+                step={0.001}
+                value={day}
+                onChange={(e) => {
+                  clock.current.day = Number(e.target.value);
+                  setPlaying(false);
+                }}
+                aria-label={t("learn.playground.scrub_year")}
+              />
+              <button
+                type="button"
+                onClick={() => setDetailsOpen((v) => !v)}
+                className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-white/20 text-white/70 hover:border-white/45 hover:text-white"
+                aria-label={detailsOpen ? t("learn.playground.hide_readings") : t("learn.playground.show_readings")}
+              >
+                {detailsOpen ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
+              </button>
+            </div>
+          </>
+        )}
+
+        {!lesson && detailsOpen && (
           <>
             {/* The three clock faces alone do not carry the point at speed: a
                 year mode runs twelve rotations a second, so each face lands on

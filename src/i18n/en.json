@@ -1470,7 +1470,43 @@
     "wheel": {
       "heading": "Direction wheel",
       "blurb": "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
-      "hint": "Tap a direction"
+      "hint": "Tap a direction",
+      "attr": {
+        "money": "Money",
+        "health": "Health",
+        "clarity": "Clarity",
+        "joy": "Joy",
+        "social": "Social",
+        "anxiety": "Anxiety",
+        "liquidity": "Liquidity",
+        "power": "Power",
+        "fame": "Fame",
+        "expense": "Expense",
+        "bonds": "Bonds",
+        "learning": "Learning",
+        "gains": "Gains",
+        "detox": "Detox",
+        "support": "Support",
+        "attraction": "Attraction"
+      },
+      "organ": {
+        "kidney": "Kidney",
+        "pericardium": "Pericardium",
+        "tamas": "Tamas",
+        "circulation": "Circulation",
+        "liver": "Liver",
+        "gallbladder": "Gall Bladder",
+        "rajas": "Rajas",
+        "spleen": "Spleen",
+        "stomach": "Stomach",
+        "heart": "Heart",
+        "belly": "Belly",
+        "lung": "Lung",
+        "sattva": "Sattva",
+        "colon": "Colon",
+        "intestine": "Intestine",
+        "bladder": "Bladder"
+      }
     },
     "plan": {
       "heading": "House layout (2D)",
@@ -1484,6 +1520,205 @@
       "heading": "Room by direction",
       "blurb": "The question asked most while building or arranging a home — where each room belongs.",
       "ideal": "Ideal direction"
+    },
+    "checker": {
+      "score_heading": "Your Vastu score",
+      "score_good": "Well aligned",
+      "score_mixed": "Mixed results",
+      "score_poor": "Needs attention",
+      "no_selection": "Select each room's actual direction below to see your score.",
+      "progress": "{{done}} of {{total}} rooms checked",
+      "reset": "Reset",
+      "your_direction": "Your room is in",
+      "placeholder": "Select direction",
+      "match": "Well placed",
+      "mismatch": "Could be improved",
+      "element_tip": {
+        "earth": "Keep this area heavier and well-ordered — earthy tones or solid furniture help balance it.",
+        "water": "Light blue or black accents, or a small water feature, help balance this direction.",
+        "fire": "Good lighting or warm red/orange accents bring out this direction's element.",
+        "air": "Keep this space open and light — avoid storing heavy items here.",
+        "space": "Keep this space as open and clutter-free as possible."
+      }
+    },
+    "plot": {
+      "heading": "Plan your plot",
+      "blurb": "Enter the plot’s length and breadth, then which way the main door faces. The house plan is drawn on that rectangle.",
+      "length_label": "Length (North–South)",
+      "breadth_label": "Breadth (East–West)",
+      "north_label": "North wall",
+      "east_label": "East wall",
+      "south_label": "South wall",
+      "west_label": "West wall",
+      "facing_label": "Main entrance faces",
+      "unit_m": "m",
+      "unit_hasta": "hasta",
+      "range_error": "Enter a value between {{min}} and {{max}} meters.",
+      "invalid_shape": "These four lengths can't close into a plot — the east/west walls are too short to span the difference between north and south. Try adjusting the values.",
+      "buffer_note": "The house plan uses the length × breadth rectangle you entered. Leave setback or garden as a separate strip if you need it.",
+      "ayadi_heading": "Āyādi check (simplified)",
+      "footprint_length_label": "House footprint (North–South)",
+      "footprint_width_label": "House footprint (East–West)",
+      "ayadi_disclaimer": "A simplified version of one traditional method — not a substitute for a qualified Vastu consultant.",
+      "ayadi_hasta_label": "In hasta (cubits)",
+      "ayadi_remainder_label": "Remainder",
+      "ayadi_auspicious": "Auspicious remainder",
+      "ayadi_inauspicious": "Inauspicious remainder",
+      "ayadi_suggestion": "Try a width of {{hasta}} hasta (~{{meters}} m) instead for an auspicious remainder.",
+      "entrance_heading": "Suggested entrance zone",
+      "entrance_note": "{{wall}} wall, nearer the {{corner}} corner",
+      "entrance_disclaimer": "A general rule of thumb — the exact corner and the exact center are avoided regardless of facing.",
+      "marma_note": "The dashed lines are the plot's two main marma (energy) lines, corner to corner — traditional guidance keeps heavy pillars, walls, or toilets off them. This shows just the two main diagonals, not the complete traditional marma/rajju system.",
+      "owner_heading": "Owner & date compatibility",
+      "owner_blurb": "Select your profile, then check whether a date you're considering for starting construction is favorable for your birth star — using the traditional Tara Bala method.",
+      "construction_date_label": "Construction start date",
+      "construction_place_label": "Plot's location",
+      "owner_loading": "Calculating…",
+      "owner_error": "Couldn't calculate this right now — please try again.",
+      "owner_nakshatra_label": "Your birth Nakshatra",
+      "construction_result": "This is a {{tone}} day for the date you chose.",
+      "construction_disclaimer": "Tara Bala is one traditional check among several — also consult a qualified astrologer before fixing a Bhoomi Puja or construction-start date.",
+      "tone": {
+        "best": "excellent",
+        "good": "good",
+        "neutral": "neutral",
+        "bad": "unfavorable",
+        "worst": "very unfavorable"
+      }
+    },
+    "plan": {
+      "requirements_heading": "House requirements",
+      "requirements_blurb": "First say how many bedrooms, toilets and other spaces you need. Then the planner suggests a zone for each — preferred, acceptable, or shared — not a single locked direction.",
+      "bedrooms": "Number of bedrooms",
+      "toilets": "Number of toilets",
+      "bathrooms": "Number of bathrooms",
+      "combined": "Combined toilet + bathroom",
+      "wet_blurb": "A toilet, a bathroom, and a combined toilet-bath are treated as different placements in Vastu, so they are asked separately.",
+      "master_bedroom": "Which is the master bedroom?",
+      "bedroom_n": "Bedroom {{n}}",
+      "essential": "Essential spaces",
+      "optional": "Optional spaces",
+      "mode_label": "Vastu preference",
+      "mode": {
+        "strict": "Strict Vastu",
+        "flexible": "Flexible Vastu",
+        "strict_hint": "Rooms stay in their recommended zones only. If those fill up, they share a zone rather than moving elsewhere.",
+        "flexible_hint": "When a recommended zone is full, the room may move to an acceptable alternative — never into an avoid zone."
+      },
+      "floor_heading": "Which floor?",
+      "floor_blurb": "If a room must stay on a particular floor, say so here. The sketch is still a single-storey plan.",
+      "storeys": "Number of floors",
+      "storeys_1": "1 — ground only",
+      "storeys_2": "2 — ground + first",
+      "storeys_3": "3 — ground + first + third",
+      "floor": {
+        "any": "Any floor",
+        "ground": "Ground floor",
+        "first": "First floor",
+        "third": "Third floor",
+        "upper": "Third floor"
+      },
+      "zoning_heading": "Vastu zoning",
+      "zoning_blurb": "For each space: the recommended zone, acceptable alternatives, areas to avoid, and where this plan placed it.",
+      "why_note": "This is a simplified traditional guide — not a final architectural or construction plan.",
+      "col": {
+        "space": "Space",
+        "preferred": "Recommended",
+        "acceptable": "Acceptable",
+        "avoid": "Avoid",
+        "placed": "Placed"
+      },
+      "fit": {
+        "preferred": "recommended zone",
+        "acceptable": "acceptable zone",
+        "shared": "shared zone"
+      },
+      "view": {
+        "2d": "2D",
+        "3d": "3D",
+        "3d_hint": "Drag to rotate, scroll to zoom."
+      },
+      "layout_heading": "Rough house layout",
+      "layout_blurb": "A preliminary plan from the classical rules: auspicious pada for the door, empty Brahmasthan, passage around the court, bath in the east, latrine in WNW or SSW.",
+      "legend": {
+        "hall": "Passage / hall",
+        "door": "Door",
+        "window": "Window",
+        "stair": "Stair"
+      },
+      "hall_label": "Hall",
+      "foyer_label": "Foyer",
+      "valid": {
+        "missing_door": "A room is missing a door.",
+        "no_hall": "This floor has no hall.",
+        "isolated": "A room is not reachable from the hall.",
+        "private_through": "A private room is only reached through another private room.",
+        "stair": "The stair does not connect every floor.",
+        "kitchen_dining": "Kitchen and dining are not adjacent — the plan still works, but service flow is weaker.",
+        "wet_access": "A wet room does not open directly onto the hall.",
+        "vastu_relaxed": "A strict Vastu preference conflicted with circulation or room size, so the architectural arrangement was kept.",
+        "wet_separate": "In strict Vastu, bathing and the latrine are not combined in one room.",
+        "brahma_path": "A passage must not cross the Brahmasthan; it should wrap around.",
+        "toilet_zone": "A toilet must not sit in the north-east, south-west, or Brahmasthan."
+      },
+      "cannot_fit_heading": "Could not fit",
+      "cannot_fit_blurb": "These rooms need more space at a usable size. Add a storey, remove rooms, or enlarge the plot.",
+      "room_size": "{{w}} × {{h}} m",
+      "space": {
+        "master_bedroom": "Master bedroom",
+        "bedroom": "Bedroom",
+        "toilet": "Toilet",
+        "bathroom": "Bathroom",
+        "combined": "Toilet + bath",
+        "living": "Living room",
+        "kitchen": "Kitchen",
+        "dining": "Dining room",
+        "puja": "Puja / prayer room",
+        "study": "Study room",
+        "office": "Office",
+        "store": "Store room",
+        "laundry": "Laundry / utility",
+        "staircase": "Staircase",
+        "garage": "Garage / car parking",
+        "guest": "Guest bedroom",
+        "family": "Family / TV room",
+        "balcony": "Balcony",
+        "courtyard": "Courtyard",
+        "garden": "Garden",
+        "servant": "Servant room",
+        "gym": "Home gym",
+        "library": "Library",
+        "master_bedroom_n": "Master bedroom {{n}}",
+        "bedroom_n": "Bedroom {{n}}",
+        "toilet_n": "Toilet {{n}}",
+        "bathroom_n": "Bathroom {{n}}",
+        "combined_n": "Toilet + bath {{n}}"
+      },
+      "why": {
+        "master_bedroom": "Southwest is treated as a stable earth zone — traditionally the householder's rest and authority sit here.",
+        "bedroom": "West, northwest or south are usual for other bedrooms; northeast and southeast are traditionally kept lighter.",
+        "toilet": "Waste is kept toward the airy west/northwest and away from the northeast and the central Brahmasthan.",
+        "bathroom": "Bathing is a water activity — northwest or west is usual; the sacred northeast is avoided.",
+        "combined": "Even as one room, a toilet-bath is kept off the northeast and center, toward the air zone.",
+        "living": "A living room wants morning light and a welcoming path — north or east first.",
+        "kitchen": "The kitchen is fire — the southeast Agni corner is preferred; fire is kept out of the northeast.",
+        "dining": "Dining sits near the kitchen on the west or east; the northeast is kept open.",
+        "puja": "Puja belongs in Ishan (northeast) — the water/space corner, facing the sunrise.",
+        "study": "Study wants calm light — west, north or northeast; southwest is treated as too heavy.",
+        "office": "Work and income are linked with north/northwest; southeast fire is thought to add restlessness.",
+        "store": "Storage is heavy — southwest or south holds weight; northeast is kept light.",
+        "laundry": "Laundry is water and air — northwest is usual; dirty water is kept off the northeast.",
+        "staircase": "Stairs turn clockwise toward south or west; the northeast and center stay free of heavy structure.",
+        "garage": "Vehicles sit in the airy northwest or near the fire corner; the northeast stays open.",
+        "guest": "Guests are temporary — northwest; they are not placed in the householder's southwest.",
+        "family": "A family room rests in the north or west; southeast fire is busier.",
+        "balcony": "A balcony wants light and air — north, east or northeast; southwest stays more closed.",
+        "courtyard": "A courtyard keeps the Brahmasthan or northeast open — the house's breath.",
+        "garden": "A garden is green water-light in the northeast, north or east; large trees are kept off the southwest.",
+        "servant": "A service room sits northwest or west — apart from the northeast and the householder's corner.",
+        "gym": "Exercise belongs in the active west or south; the northeast stays quiet.",
+        "library": "A library likes quiet light in the north, northeast or west; southeast is busier."
+      }
     },
     "dosha": {
       "heading": "Vastu dosha & remedies",
@@ -1527,6 +1762,142 @@
       "fire": "Fire",
       "air": "Air",
       "space": "Space"
+    },
+    "dir16": {
+      "nne": {
+        "name": "North-Northeast"
+      },
+      "ene": {
+        "name": "East-Northeast"
+      },
+      "ese": {
+        "name": "East-Southeast"
+      },
+      "sse": {
+        "name": "South-Southeast"
+      },
+      "ssw": {
+        "name": "South-Southwest"
+      },
+      "wsw": {
+        "name": "West-Southwest"
+      },
+      "wnw": {
+        "name": "West-Northwest"
+      },
+      "nnw": {
+        "name": "North-Northwest"
+      }
+    },
+    "pada": {
+      "soma": {
+        "name": "Soma"
+      },
+      "bhujaga": {
+        "name": "Bhujaga"
+      },
+      "aditi": {
+        "name": "Aditi"
+      },
+      "diti": {
+        "name": "Diti"
+      },
+      "shikhi": {
+        "name": "Shikhi"
+      },
+      "parjanya": {
+        "name": "Parjanya"
+      },
+      "jayanta": {
+        "name": "Jayanta"
+      },
+      "mahendra": {
+        "name": "Mahendra"
+      },
+      "surya": {
+        "name": "Surya"
+      },
+      "satya": {
+        "name": "Satya"
+      },
+      "bhrisha": {
+        "name": "Bhrisha"
+      },
+      "aakasha": {
+        "name": "Aakasha"
+      },
+      "anila": {
+        "name": "Anila"
+      },
+      "pushan": {
+        "name": "Pushan"
+      },
+      "vitatha": {
+        "name": "Vitatha"
+      },
+      "grihakshata": {
+        "name": "Grihakshata"
+      },
+      "yama": {
+        "name": "Yama"
+      },
+      "gandharva": {
+        "name": "Gandharva"
+      },
+      "bhringraj": {
+        "name": "Bhringraj"
+      },
+      "mriga": {
+        "name": "Mriga"
+      },
+      "pitra": {
+        "name": "Pitra"
+      },
+      "dauvarika": {
+        "name": "Dauvarika"
+      },
+      "sugriva": {
+        "name": "Sugriva"
+      },
+      "pushpadanta": {
+        "name": "Pushpadanta"
+      },
+      "varuna": {
+        "name": "Varuna"
+      },
+      "asura": {
+        "name": "Asura"
+      },
+      "shosha": {
+        "name": "Shosha"
+      },
+      "papayakshma": {
+        "name": "Papayakshma"
+      },
+      "roga": {
+        "name": "Roga"
+      },
+      "naga": {
+        "name": "Naga"
+      },
+      "mukhya": {
+        "name": "Mukhya"
+      },
+      "bhallata": {
+        "name": "Bhallata"
+      },
+      "bhudhara": {
+        "name": "Bhudhara"
+      },
+      "aryama": {
+        "name": "Aryama"
+      },
+      "vivasvan": {
+        "name": "Vivasvan"
+      },
+      "mitra": {
+        "name": "Mitra"
+      }
     },
     "dir": {
       "east": {
@@ -2490,6 +2861,26 @@
     "illumination": "Illumination",
     "earth_arc": "Earth arc",
     "month_2_aaushi": "Month 2 Aaushi",
+    "chapters": {
+      "axial": "Earth's Axial Tilt",
+      "begin": "Begin",
+      "chapter": "Chapter",
+      "elliptic": "Earth's Elliptic Orbit",
+      "explore": "Explore freely",
+      "eyebrow": "An interactive adventure",
+      "next": "Next chapter",
+      "playground": "Playground",
+      "prev": "Previous chapter",
+      "reality": "A Realistic Picture",
+      "replay": "Play again",
+      "scrub": "Chapter time",
+      "solar": "Solar Days",
+      "stellar": "Stellar Days",
+      "voiceover_pending": "Voiceover comes later — the animation already runs on that clock.",
+      "welcome": "Welcome",
+      "welcome_subtitle": "Seven chapters — what a day is, and why one turn is not enough.",
+      "welcome_title": "What is a Day?"
+    },
     "playground": {
       "axial_tilt": "Axial tilt",
       "back_to_topic": "Back to this topic",
