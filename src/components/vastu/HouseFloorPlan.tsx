@@ -9,15 +9,18 @@ function px(n: number): number {
   return n * SCALE;
 }
 
-/** Only the true mandala centre — not a corner notch or a leftover unused zone that just happens to share the `center_` prefix. */
-const TRUE_CENTER_ID = /^center_\d+$/;
+/** Open/circulation kinds — Brahmasthan, its corner notches and other
+ * leftover fragments, the foyer, a hall, an upper-floor landing. These are
+ * all the same open floor (compileLayer draws no wall between adjacent
+ * ones, in engine/vedic/vastu/building.py), so they share one fill — a
+ * per-fragment opacity difference used to make the true mandala centre
+ * "pop" but left every smaller fragment reading as its own separate,
+ * disconnected patch instead of one continuous space. */
+const OPEN_KINDS = new Set(["brahmasthan", "foyer", "hall", "landing"]);
 
 function roomFill(room: PlannedRoom): string {
   const element = vastuDirection(room.vastuRegion).element;
-  if (room.kind === "brahmasthan") {
-    return vastuElementTint(element, TRUE_CENTER_ID.test(room.id) ? 0.38 : 0.2);
-  }
-  if (room.kind === "foyer" || room.kind === "hall" || room.kind === "landing") {
+  if (OPEN_KINDS.has(room.kind)) {
     return vastuElementTint(element, 0.3);
   }
   if (room.kind === "staircase") return vastuElementTint("earth", 0.18);
