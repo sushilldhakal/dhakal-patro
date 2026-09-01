@@ -48,6 +48,7 @@ const ZONE_DIR: Record<ZoneId, VastuDirectionId> = {
 const PLACE_ORDER: SpaceKind[] = [
   "puja",
   "kitchen",
+  "kitchen_dining",
   "master_bedroom",
   "living",
   "dining",
@@ -450,6 +451,76 @@ function addLeftovers(
   });
 }
 
+const MERGE_EPS = 0.05;
+
+/** A room a leftover mandala zone may be folded into — not circulation/outdoor/vertical, and not a wet room (an unused zone becoming part of a toilet would be architecturally wrong even when the rectangle math works out). */
+function isMergeTarget(room: PlannedRoom): boolean {
+  return (
+    room.life !== "circulation" &&
+    room.life !== "outdoor" &&
+    room.life !== "vertical" &&
+    !WET_KINDS.has(room.kind as SpaceKind)
+  );
+}
+
+/** True when `cell` sits flush against `r` on one side with the perpendicular dimension matching, so their union is still a single axis-aligned rectangle — not an L-shape this data model can't represent. */
+function formsRectangleWith(r: Rect, cell: Rect): boolean {
+  const sameHeight = Math.abs(r.h - cell.h) < MERGE_EPS && Math.abs(r.y - cell.y) < MERGE_EPS;
+  const sameWidth = Math.abs(r.w - cell.w) < MERGE_EPS && Math.abs(r.x - cell.x) < MERGE_EPS;
+  const touchesLeft = Math.abs(r.x - (cell.x + cell.w)) < MERGE_EPS;
+  const touchesRight = Math.abs(cell.x - (r.x + r.w)) < MERGE_EPS;
+  const touchesTop = Math.abs(r.y - (cell.y + cell.h)) < MERGE_EPS;
+  const touchesBottom = Math.abs(cell.y - (r.y + r.h)) < MERGE_EPS;
+  return (sameHeight && (touchesLeft || touchesRight)) || (sameWidth && (touchesTop || touchesBottom));
+}
+
+function mergeRectInto(room: PlannedRoom, cell: Rect): void {
+  const r = room.rect;
+  room.rect =
+    Math.abs(r.h - cell.h) < MERGE_EPS
+      ? { x: Math.min(r.x, cell.x), y: r.y, w: r.w + cell.w, h: r.h }
+      : { x: r.x, y: Math.min(r.y, cell.y), w: r.w, h: r.h + cell.h };
+}
+
+/**
+ * A mandala zone nobody wanted a room in used to become its own dim,
+ * unlabeled "brahmasthan" cell — visually indistinguishable from its
+ * neighbors since two open-life rooms never get a wall between them, so a
+ * run of them read as one shapeless blob eating real floor area. Real
+ * architects give unclaimed space to whatever sits next to it.
+ *
+ * First choice: fold into an adjacent real room, when the geometry allows a
+ * clean rectangle union. In practice this almost never fires for a *corner*
+ * zone — a corner room's kept rect is always inset from its notch-trimmed
+ * side, so it never actually touches its edge-zone neighbor; there's a
+ * permanent notch-width gap between them (verified against the real
+ * geometry, not assumed). Second choice, for the zones that gap doesn't
+ * affect: an *edge* zone (n/s/e/w) is never notch-trimmed and always aligns
+ * exactly with the true centre's own boundary — let the hall grow to absorb
+ * it rather than spawning another separate dim-tinted piece. A generously
+ * sized central hall is architecturally normal when there's less program to
+ * fill the zones around it, unlike a scatter of same-colored orphan cells.
+ */
+function tryMergeIntoNeighbor(rooms: PlannedRoom[], cell: Rect, centerId: string): boolean {
+  let best: PlannedRoom | null = null;
+  let bestArea = -1;
+  for (const room of rooms) {
+    if (!isMergeTarget(room) || !formsRectangleWith(room.rect, cell)) continue;
+    const area = room.rect.w * room.rect.h;
+    if (area > bestArea) {
+      best = room;
+      bestArea = area;
+    }
+  }
+  if (!best) {
+    const center = rooms.find((r) => r.id === centerId);
+    if (center && formsRectangleWith(center.rect, cell)) best = center;
+  }
+  if (!best) return false;
+  mergeRectInto(best, cell);
+  return true;
+}
+
 function buildFloor(
   storey: StoreyId,
   program: PlannedSpace[],
@@ -560,7 +631,9 @@ function buildFloor(
 
   for (const id of free) {
     const rect = cellRect(id);
-    if (rect.w >= 0.9 && rect.h >= 0.9) rooms.push(openPiece(`center_${id}_${storey}`, rect, storey, wantCourt));
+    if (rect.w < 0.9 || rect.h < 0.9) continue;
+    if (!wantCourt && tryMergeIntoNeighbor(rooms, rect, centerId)) continue;
+    rooms.push(openPiece(`center_${id}_${storey}`, rect, storey, wantCourt));
   }
 
   const boxedFoyer = placeFoyer(rooms, foyer, storey, site.facing);

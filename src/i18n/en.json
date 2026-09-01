@@ -1530,6 +1530,8 @@
       "master_bedroom": "Which is the master bedroom?",
       "bedroom_n": "Bedroom {{n}}",
       "essential": "Essential spaces",
+      "combine_kitchen_dining": "Combine kitchen & dining (modern)",
+      "combine_kitchen_dining_note": "Classical Vastu keeps them separate because of wood-fire smoke and ash. Modern gas or electric cooking removes that concern, so combining is offered as a valid modern choice — not the default.",
       "optional": "Optional spaces",
       "mode_label": "Vastu preference",
       "mode": {
@@ -1606,6 +1608,7 @@
         "living": "Living room",
         "kitchen": "Kitchen",
         "dining": "Dining room",
+        "kitchen_dining": "Kitchen + dining",
         "puja": "Puja / prayer room",
         "study": "Study room",
         "office": "Office",

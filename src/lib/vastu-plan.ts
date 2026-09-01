@@ -16,6 +16,7 @@ export type SpaceKind =
   | "living"
   | "kitchen"
   | "dining"
+  | "kitchen_dining"
   | "puja"
   | "study"
   | "office"
@@ -58,10 +59,15 @@ export const OPTIONAL_SPACES: SpaceKind[] = [
 
 export const FLOOR_SPACES: SpaceKind[] = ["puja", "kitchen", "living", "master_bedroom"];
 
+/** One answer from a classical source (or a reasoned modern adaptation of one), kept with the rule it justifies rather than in a separate table that can drift out of sync. */
+export type ZoneCitation = { source: string; note?: string };
+
 export type ZoneRule = {
   preferred: VastuDirectionId[];
   acceptable: VastuDirectionId[];
   avoid: VastuDirectionId[];
+  /** Provenance trail — append as new answers come in; never overwrite a prior entry. */
+  notes?: ZoneCitation[];
 };
 
 /** Viśvakarmā Prakāśa 16-zone mapping — preferred is the classical seat. */
@@ -85,6 +91,17 @@ export const SPACE_ZONE_RULES: Record<SpaceKind, ZoneRule> = {
     preferred: ["west"],
     acceptable: ["east"],
     avoid: ["northeast"],
+  },
+  kitchen_dining: {
+    preferred: ["southeast"],
+    acceptable: ["east", "south"],
+    avoid: ["northeast", "center"],
+    notes: [
+      {
+        source: "placeholder — pending source check",
+        note: "Mirrors kitchen's seat (southeast/fire) rather than dining's (west): cooking is treated as the dominant classical concern until confirmed otherwise. Classical kitchen/dining separation is rooted in wood-fire smoke and ash; with modern gas/electric cooking that constraint doesn't apply, so combining is offered as an opt-in modern choice, not the default.",
+      },
+    ],
   },
   master_bedroom: {
     preferred: ["southwest"],
@@ -223,6 +240,7 @@ export const IDEAL_SIZE: Record<SpaceKind, IdealSize> = {
   family: { minSide: 2.8, minArea: 10 },
   dining: { minSide: 2.4, minArea: 7 },
   kitchen: { minSide: 2.4, minArea: 7 },
+  kitchen_dining: { minSide: 2.9, minArea: 13 },
   puja: { minSide: 1.8, minArea: 3.5 },
   study: { minSide: 2.4, minArea: 6.5 },
   office: { minSide: 2.4, minArea: 7 },
@@ -320,6 +338,7 @@ const DEFAULT_STOREY: Record<SpaceKind, StoreyId> = {
   kitchen: 0,
   living: 0,
   dining: 0,
+  kitchen_dining: 0,
   garage: 0,
   store: 0,
   laundry: 0,
@@ -380,7 +399,10 @@ export function resolveStorey(space: PlannedSpace, plan: HousePlan): StoreyId {
   return Math.min(level, max) as StoreyId;
 }
 
-const EXTRA_KINDS = new Set<SpaceKind>([...ESSENTIAL_SPACES, ...OPTIONAL_SPACES]);
+// kitchen_dining isn't in ESSENTIAL_SPACES/OPTIONAL_SPACES — those drive independent
+// toggle buttons, but kitchen_dining is mutually exclusive with kitchen+dining and gets
+// its own dedicated checkbox in HouseRequirementsForm instead.
+const EXTRA_KINDS = new Set<SpaceKind>([...ESSENTIAL_SPACES, ...OPTIONAL_SPACES, "kitchen_dining"]);
 
 export function isExtraSpace(id: string): id is SpaceKind {
   return EXTRA_KINDS.has(id as SpaceKind);

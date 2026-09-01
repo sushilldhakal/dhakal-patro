@@ -39,7 +39,7 @@ export function lifeZoneOf(kind: PlanKind): LifeZone {
   }
   if (kind === "staircase") return "vertical";
   if (kind === "garden" || kind === "courtyard" || kind === "balcony" || kind === "garage") return "outdoor";
-  if (kind === "kitchen" || kind === "store" || kind === "laundry" || WET_KINDS.has(kind)) return "service";
+  if (kind === "kitchen" || kind === "kitchen_dining" || kind === "store" || kind === "laundry" || WET_KINDS.has(kind)) return "service";
   if (kind === "master_bedroom" || kind === "bedroom" || kind === "guest") return "private";
   if (kind === "dining" || kind === "family" || kind === "study" || kind === "puja" || kind === "office" || kind === "library") {
     return "semi";

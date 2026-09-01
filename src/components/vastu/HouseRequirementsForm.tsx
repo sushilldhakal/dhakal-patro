@@ -113,6 +113,17 @@ export function HouseRequirementsForm({
     commit({ ...plan, extras, storeys });
   }
 
+  // kitchen_dining is mutually exclusive with separate kitchen+dining — one dedicated
+  // checkbox swaps between the two rather than living alongside them as a third,
+  // independently-toggleable extra.
+  const combineKitchenDining = plan.extras.includes("kitchen_dining");
+  function toggleKitchenDining() {
+    const extras: SpaceKind[] = combineKitchenDining
+      ? [...plan.extras.filter((x) => x !== "kitchen_dining"), "kitchen", "dining"]
+      : [...plan.extras.filter((x) => x !== "kitchen" && x !== "dining"), "kitchen_dining"];
+    commit({ ...plan, extras });
+  }
+
   const counts = (min: number, max: number) =>
     Array.from({ length: max - min + 1 }, (_, i) => {
       const n = min + i;
@@ -215,6 +226,20 @@ export function HouseRequirementsForm({
             );
           })}
         </div>
+
+        <label className="mt-3 flex items-start gap-2 rounded-lg border border-border p-2.5 text-xs">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={combineKitchenDining}
+            onChange={toggleKitchenDining}
+          />
+          <span>
+            <span className="block font-semibold text-foreground">{t("vastu.plan.combine_kitchen_dining")}</span>
+            <span className="mt-0.5 block text-muted-foreground">{t("vastu.plan.combine_kitchen_dining_note")}</span>
+          </span>
+        </label>
+
         <p className="mb-2 mt-3 text-xs font-semibold text-muted-foreground">{t("vastu.plan.optional")}</p>
         <div className="flex flex-wrap gap-1.5">
           {OPTIONAL_SPACES.map((id) => {
