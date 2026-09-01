@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
+import { VASTU_ELEMENT_COLOR, VASTU_ELEMENT_ORDER, VASTU_INK, vastuDirection, vastuElementTint } from "@/lib/vastu";
 import type { BHole, BWall, BuildingLayer, FloorConcept, HouseConcept, PlannedRoom } from "@/lib/house-plan/types";
 
 const SCALE = 28;
@@ -11,21 +12,16 @@ function px(n: number): number {
 /** Only the true mandala centre — not a corner notch or a leftover unused zone that just happens to share the `center_` prefix. */
 const TRUE_CENTER_ID = /^center_\d+$/;
 
-function roomFill(kind: PlannedRoom["kind"], id: string): string {
-  if (kind === "brahmasthan") {
-    return TRUE_CENTER_ID.test(id)
-      ? "color-mix(in srgb, var(--primary) 18%, var(--card))"
-      : "color-mix(in srgb, var(--primary) 10%, var(--card))";
+function roomFill(room: PlannedRoom): string {
+  const element = vastuDirection(room.vastuRegion).element;
+  if (room.kind === "brahmasthan") {
+    return vastuElementTint(element, TRUE_CENTER_ID.test(room.id) ? 0.38 : 0.2);
   }
-  if (kind === "verandah" || kind === "hall" || kind === "landing") {
-    return "color-mix(in srgb, var(--secondary) 12%, var(--card))";
+  if (room.kind === "foyer" || room.kind === "hall" || room.kind === "landing") {
+    return vastuElementTint(element, 0.3);
   }
-  if (kind === "foyer") return "color-mix(in srgb, var(--secondary) 22%, var(--card))";
-  if (kind === "staircase") return "color-mix(in srgb, var(--foreground) 7%, var(--card))";
-  if (kind === "courtyard" || kind === "garden" || kind === "balcony" || kind === "garage") {
-    return "color-mix(in srgb, var(--primary) 8%, var(--card))";
-  }
-  return "var(--card)";
+  if (room.kind === "staircase") return vastuElementTint("earth", 0.18);
+  return vastuElementTint(element, 0.26);
 }
 
 function StairTreads({ room }: { room: PlannedRoom }) {
@@ -182,11 +178,12 @@ export function HouseFloorPlan({
     <div className="space-y-2">
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
-        className="h-auto w-full rounded-lg border border-border bg-[color-mix(in_srgb,var(--background)_70%,var(--card))]"
+        className="h-auto w-full rounded-lg border border-border"
+        style={{ backgroundColor: VASTU_INK.background }}
         role="img"
         aria-label={t("vastu.plan.layout_heading")}
       >
-        <g transform={`translate(${px(pad)} ${px(pad)})`}>
+        <g transform={`translate(${px(pad)} ${px(pad)})`} style={{ color: VASTU_INK.text }}>
           {Array.from({ length: 4 }).map((_, i) => (
             <line
               key={`vg${i}`}
@@ -194,8 +191,8 @@ export function HouseFloorPlan({
               y1={0}
               x2={px((concept.width * i) / 3)}
               y2={px(concept.height)}
-              stroke="currentColor"
-              strokeOpacity={0.05}
+              stroke={VASTU_INK.line}
+              strokeOpacity={0.45}
             />
           ))}
           {Array.from({ length: 4 }).map((_, i) => (
@@ -205,8 +202,8 @@ export function HouseFloorPlan({
               y1={px((concept.height * i) / 3)}
               x2={px(concept.width)}
               y2={px((concept.height * i) / 3)}
-              stroke="currentColor"
-              strokeOpacity={0.05}
+              stroke={VASTU_INK.line}
+              strokeOpacity={0.45}
             />
           ))}
 
@@ -217,7 +214,7 @@ export function HouseFloorPlan({
               y={px(room.rect.y)}
               width={px(room.rect.w)}
               height={px(room.rect.h)}
-              fill={roomFill(room.kind, room.id)}
+              fill={roomFill(room)}
               stroke="none"
             />
           ))}
@@ -249,14 +246,14 @@ export function HouseFloorPlan({
                   y={cy - (small ? 0 : 6)}
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fill="currentColor"
+                  fill={VASTU_INK.text}
                   fontSize={small ? 8 : 10}
                   fontWeight={600}
                 >
                   {name}
                 </text>
                 {!small && (
-                  <text x={cx} y={cy + 10} textAnchor="middle" fill="currentColor" fillOpacity={0.65} fontSize={8}>
+                  <text x={cx} y={cy + 10} textAnchor="middle" fill={VASTU_INK.text} fillOpacity={0.65} fontSize={8}>
                     {size}
                   </text>
                 )}
@@ -267,6 +264,15 @@ export function HouseFloorPlan({
           <NorthArrow x={concept.width - 0.55} y={0.7} />
         </g>
       </svg>
+      <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <li className="font-semibold text-foreground">{t("vastu.plan.elements")}</li>
+        {VASTU_ELEMENT_ORDER.map((element) => (
+          <li key={element} className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: VASTU_ELEMENT_COLOR[element] }} aria-hidden />
+            {t(`vastu.element.${element}`)}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -2,9 +2,25 @@ import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import {
+  VASTU_DIR16,
+  VASTU_DIR16_ATTR,
+  VASTU_ELEMENT_COLOR,
+  VASTU_ELEMENT_ORDER,
+  VASTU_GUNA_COLOR,
+  VASTU_INK,
+  VASTU_INNER4,
+  VASTU_PADAS,
   VASTU_WHEEL_DIRECTIONS,
+  isDir16,
+  isInner4,
+  isPada,
+  vastuDir16,
+  vastuDirection,
+  vastuElementAtBearing,
+  vastuPada,
   vastuWheelPoint,
-  type VastuDirectionId,
+  type VastuGunaId,
+  type VastuSelectionId,
 } from "@/lib/vastu";
 import { cn } from "@/lib/utils";
 
@@ -14,13 +30,11 @@ const CY = WHEEL_SIZE / 2;
 const PURUSHA_OPACITY = 0.2;
 
 /**
- * Concentric bands, outside → in. The 8 clickable दिशा wedges and the
- * Brahmasthan stay the same interaction; everything else is a decorative
- * Shakti-chakra layer (white degree rim, triguna ring, 16 compass
- * points merged with life attributes, 32 pada codes, 32 perimeter deities,
- * inner four).
+ * Concentric bands, outside → in. Each ring is its own hit target:
+ * guna + 16-dir (ENE / आनन्द), pada codes (E1), deities (शिखी / सूर्य),
+ * eight house wedges, inner-four, Brahmasthan. E1 and शिखी are the same pada.
  */
-const DEG_OUTER = 308;
+const DEG_OUTER = 304;
 const DEG_INNER = 288;
 const GUNA_OUTER = 288;
 const GUNA_INNER = 268;
@@ -45,14 +59,6 @@ const CODE_LABEL_R = (CODE_OUTER + CODE_INNER) / 2;
 const DEITY_LABEL_R = (DEITY_OUTER + DEITY_INNER) / 2;
 const WEDGE_LABEL_R = (WEDGE_OUTER + WEDGE_INNER) / 2;
 const INNER4_LABEL_R = (INNER4_OUTER + INNER4_INNER) / 2;
-
-/** Quadrant color groups — independent of VASTU_ELEMENT_COLOR. */
-const GROUP_COLORS = ["#2f8fa6", "#7a9a5b", "#d2622f", "#c9a23a"];
-
-function groupColor(bearing: number): string {
-  const idx16 = Math.round((((bearing % 360) + 360) % 360) / 22.5) % 16;
-  return GROUP_COLORS[Math.floor(idx16 / 4)]!;
-}
 
 function normBearing(bearing: number): number {
   return ((bearing % 360) + 360) % 360;
@@ -86,40 +92,21 @@ function annulusPath(outerR: number, innerR: number): string {
   ].join(" ");
 }
 
-const COMPASS_16: { bearing: number; abbr: string; nameKey: string }[] = [
-  { bearing: 0, abbr: "N", nameKey: "vastu.dir.north.name" },
-  { bearing: 22.5, abbr: "NNE", nameKey: "vastu.dir16.nne.name" },
-  { bearing: 45, abbr: "NE", nameKey: "vastu.dir.northeast.name" },
-  { bearing: 67.5, abbr: "ENE", nameKey: "vastu.dir16.ene.name" },
-  { bearing: 90, abbr: "E", nameKey: "vastu.dir.east.name" },
-  { bearing: 112.5, abbr: "ESE", nameKey: "vastu.dir16.ese.name" },
-  { bearing: 135, abbr: "SE", nameKey: "vastu.dir.southeast.name" },
-  { bearing: 157.5, abbr: "SSE", nameKey: "vastu.dir16.sse.name" },
-  { bearing: 180, abbr: "S", nameKey: "vastu.dir.south.name" },
-  { bearing: 202.5, abbr: "SSW", nameKey: "vastu.dir16.ssw.name" },
-  { bearing: 225, abbr: "SW", nameKey: "vastu.dir.southwest.name" },
-  { bearing: 247.5, abbr: "WSW", nameKey: "vastu.dir16.wsw.name" },
-  { bearing: 270, abbr: "W", nameKey: "vastu.dir.west.name" },
-  { bearing: 292.5, abbr: "WNW", nameKey: "vastu.dir16.wnw.name" },
-  { bearing: 315, abbr: "NW", nameKey: "vastu.dir.northwest.name" },
-  { bearing: 337.5, abbr: "NNW", nameKey: "vastu.dir16.nnw.name" },
-];
+const COMPASS_16 = VASTU_DIR16.map((d) => ({
+  bearing: d.bearing,
+  abbr: d.abbr,
+  zone: d.id,
+  nameKey: `vastu.dir16.${d.id}.name`,
+}));
 
-type GunaId = "tamas" | "rajas" | "sattva";
+type GunaId = VastuGunaId;
 
-/** Shared by door-pada status and the three gunas on the degree rim. */
-const STATUS_COLOR = {
-  good: "#2f8a4b",
-  ok: "#d4a017",
-  bad: "#c44536",
+/** Door-pada +/− marks only — sector fills use the five elements. */
+const STATUS_MARK = {
+  good: "#2f6b3c",
+  ok: VASTU_INK.line,
+  bad: "#8f2f28",
 } as const;
-const STATUS_FILL_OPACITY = 0.6;
-
-const GUNA_COLOR: Record<GunaId, string> = {
-  sattva: STATUS_COLOR.good,
-  rajas: STATUS_COLOR.ok,
-  tamas: STATUS_COLOR.bad,
-};
 
 /**
  * 16-direction status from Viśvakarmā Prakāśa (Shodasha-Griha). Mixed
@@ -143,7 +130,7 @@ const DIR16_STATUS = [
   "bad",
   "good",
   "ok",
-] as const satisfies readonly (keyof typeof STATUS_COLOR)[];
+] as const satisfies readonly ("good" | "ok" | "bad")[];
 
 /**
  * Triguna zones on the compass — Sattva 337.5°→112.5°, Rajas at SE (112.5°–157.5°)
@@ -156,128 +143,13 @@ const GUNA_BANDS: { id: GunaId; key: string; bearing: number; halfAngle: number 
   { id: "rajas", key: "rajas-nw", bearing: 315, halfAngle: 22.5 },
 ];
 
-const ATTR_16 = [
-  "vastu.wheel.attr.money",
-  "vastu.wheel.attr.health",
-  "vastu.wheel.attr.clarity",
-  "vastu.wheel.attr.joy",
-  "vastu.wheel.attr.social",
-  "vastu.wheel.attr.anxiety",
-  "vastu.wheel.attr.liquidity",
-  "vastu.wheel.attr.power",
-  "vastu.wheel.attr.fame",
-  "vastu.wheel.attr.expense",
-  "vastu.wheel.attr.bonds",
-  "vastu.wheel.attr.learning",
-  "vastu.wheel.attr.gains",
-  "vastu.wheel.attr.detox",
-  "vastu.wheel.attr.support",
-  "vastu.wheel.attr.attraction",
-] as const;
+const ATTR_16 = VASTU_DIR16_ATTR;
 
-/**
- * 32 perimeter padas, clockwise. Soma is the north-wall centre (N5), Shikhi
- * the first east-wall cell (E1, just past ईशान). Labels sit in the wall
- * cells — not on the 45° spokes that split the inner four — so Mriga stays
- * with Vivasvan (south) and Pitra with Mitra (west), matching the chart.
- */
-const PADA_32 = [
-  "soma",
-  "bhujaga",
-  "aditi",
-  "diti",
-  "shikhi",
-  "parjanya",
-  "jayanta",
-  "mahendra",
-  "surya",
-  "satya",
-  "bhrisha",
-  "aakasha",
-  "anila",
-  "pushan",
-  "vitatha",
-  "grihakshata",
-  "yama",
-  "gandharva",
-  "bhringraj",
-  "mriga",
-  "pitra",
-  "dauvarika",
-  "sugriva",
-  "pushpadanta",
-  "varuna",
-  "asura",
-  "shosha",
-  "papayakshma",
-  "roga",
-  "naga",
-  "mukhya",
-  "bhallata",
-] as const;
-
-/** N1 sits on Roga — first north-wall cell, just clockwise of NW. */
-const N1_SLOT = PADA_32.indexOf("roga");
-const PADA_STEP = 360 / PADA_32.length;
-const PADA_HALF = PADA_STEP / 2;
-
-function padaBearing(slot: number): number {
-  return slot * PADA_STEP + PADA_HALF;
-}
-
-type PadaStatus = "good" | "ok" | "bad";
-
-/** Door-pada quality from Mayamata / Viśvakarmā Prakāśa, wall by wall. */
-const PADA_STATUS: Record<(typeof PADA_32)[number], PadaStatus> = {
-  shikhi: "bad",
-  parjanya: "bad",
-  jayanta: "good",
-  mahendra: "good",
-  surya: "bad",
-  satya: "bad",
-  bhrisha: "bad",
-  aakasha: "bad",
-  anila: "bad",
-  pushan: "bad",
-  vitatha: "bad",
-  grihakshata: "good",
-  yama: "bad",
-  gandharva: "good",
-  bhringraj: "bad",
-  mriga: "bad",
-  pitra: "bad",
-  dauvarika: "bad",
-  sugriva: "bad",
-  pushpadanta: "good",
-  varuna: "good",
-  asura: "bad",
-  shosha: "bad",
-  papayakshma: "bad",
-  roga: "bad",
-  naga: "bad",
-  mukhya: "good",
-  bhallata: "good",
-  soma: "good",
-  bhujaga: "bad",
-  aditi: "good",
-  diti: "good",
-};
-
-const PADA_STATUS_COLOR: Record<PadaStatus, string> = STATUS_COLOR;
-
-const PADA_STATUS_ORDER: PadaStatus[] = ["good", "ok", "bad"];
-
-const INNER_4 = [
-  { bearing: 0, id: "bhudhara" },
-  { bearing: 90, id: "aryama" },
-  { bearing: 180, id: "vivasvan" },
-  { bearing: 270, id: "mitra" },
-] as const;
-
-const CODE_QUAD = ["N", "E", "S", "W"] as const;
+const PADA_HALF = 5.625;
 
 const RING_DIVIDERS = [
   DEG_OUTER,
+  DEG_INNER,
   GUNA_INNER,
   DIR16_INNER,
   CODE_INNER,
@@ -286,18 +158,111 @@ const RING_DIVIDERS = [
   INNER4_INNER,
 ] as const;
 
+/** Category edges for one ring only — never drawn through other rings. */
+function evenBearings(count: number, first: number): number[] {
+  const step = 360 / count;
+  return Array.from({ length: count }, (_, i) => first + i * step);
+}
+
+const GUNA_BOUNDARIES = [112.5, 157.5, 292.5, 337.5] as const;
+const DIR16_BOUNDARIES = evenBearings(16, 11.25);
+const PADA_BOUNDARIES = evenBearings(32, 0);
+const DIR8_BOUNDARIES = evenBearings(8, 22.5);
+const INNER4_BOUNDARIES = evenBearings(4, 45);
+
+function RingSeparators({
+  bearings,
+  innerR,
+  outerR,
+}: {
+  bearings: readonly number[];
+  innerR: number;
+  outerR: number;
+}) {
+  return bearings.map((bearing) => {
+    const a = vastuWheelPoint(bearing, innerR, CX, CY);
+    const b = vastuWheelPoint(bearing, outerR, CX, CY);
+    return (
+      <line
+        key={`sep-${innerR}-${outerR}-${bearing}`}
+        x1={a.x}
+        y1={a.y}
+        x2={b.x}
+        y2={b.y}
+        stroke={VASTU_INK.text}
+        strokeOpacity={0.4}
+        strokeWidth={0.75}
+      />
+    );
+  });
+}
+
+function PadaCodeLabel({
+  bearing,
+  radius,
+  code,
+  status,
+}: {
+  bearing: number;
+  radius: number;
+  code: string;
+  status: "good" | "ok" | "bad" | "mixed";
+}) {
+  const flip = normBearing(bearing) > 90 && normBearing(bearing) < 270;
+  const x = CX;
+  const y = CY - radius;
+  const signX = x + 8;
+  return (
+    <g transform={`rotate(${bearing} ${CX} ${CY})`}>
+      <g
+        transform={flip ? `rotate(180 ${x} ${y})` : undefined}
+        className="pointer-events-none select-none"
+        fill={VASTU_INK.text}
+      >
+        <text x={x + 1} y={y} textAnchor="end" dominantBaseline="central" fontSize={12} fontWeight={600} fillOpacity={0.92}>
+          {code}
+        </text>
+        {status === "mixed" ? (
+          <>
+            <text x={signX} y={y - 4.6} textAnchor="middle" dominantBaseline="central" fontSize={8} fontWeight={800} fill={STATUS_MARK.good}>
+              +
+            </text>
+            <text x={signX} y={y + 4.6} textAnchor="middle" dominantBaseline="central" fontSize={8} fontWeight={800} fill={STATUS_MARK.bad}>
+              −
+            </text>
+          </>
+        ) : status !== "ok" ? (
+          <text
+            x={signX}
+            y={y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={9}
+            fontWeight={800}
+            fill={STATUS_MARK[status]}
+          >
+            {status === "good" ? "+" : "−"}
+          </text>
+        ) : null}
+      </g>
+    </g>
+  );
+}
+
 function ArcLabel({
   bearing,
   radius,
   className,
   fontSize,
-  fillOpacity = 0.85,
+  fill = VASTU_INK.text,
+  fillOpacity = 0.92,
   children,
 }: {
   bearing: number;
   radius: number;
   className?: string;
   fontSize: number;
+  fill?: string;
   fillOpacity?: number;
   children: ReactNode;
 }) {
@@ -310,7 +275,7 @@ function ArcLabel({
         textAnchor="middle"
         dominantBaseline="central"
         className={cn("pointer-events-none select-none", className)}
-        fill="currentColor"
+        fill={fill}
         fillOpacity={fillOpacity}
         fontSize={fontSize}
         transform={flip ? `rotate(180 ${CX} ${CY - radius})` : undefined}
@@ -399,14 +364,90 @@ m1269 -317 c-2 -4 -96 89 -96 95 0 3 19 23 43 43 l42 37 6 -87 c3 -47 5 -87 5
   );
 }
 
+function HitSector({
+  d,
+  label,
+  active,
+  color,
+  onSelect,
+}: {
+  d: string;
+  label: string;
+  active: boolean;
+  color: string;
+  onSelect: () => void;
+}) {
+  return (
+    <path
+      role="button"
+      tabIndex={0}
+      aria-pressed={active}
+      aria-label={label}
+      d={d}
+      fill="transparent"
+      className="cursor-pointer outline-none focus-visible:stroke-[3]"
+      stroke={color}
+      strokeOpacity={0}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+    />
+  );
+}
+
+function selectionSlices(selected: VastuSelectionId): { d: string; color: string }[] {
+  if (isPada(selected)) {
+    const pada = vastuPada(selected);
+    return [
+      {
+        d: annularSectorPath(pada.bearing, PADA_HALF, CODE_OUTER, DEITY_INNER),
+        color: VASTU_ELEMENT_COLOR[pada.element],
+      },
+    ];
+  }
+  if (isInner4(selected)) {
+    const inner = VASTU_INNER4.find((d) => d.id === selected)!;
+    return [
+      {
+        d: annularSectorPath(inner.bearing, 45, INNER4_OUTER, INNER4_INNER),
+        color: VASTU_ELEMENT_COLOR[inner.element],
+      },
+    ];
+  }
+  if (isDir16(selected)) {
+    const zone = vastuDir16(selected);
+    return [
+      {
+        d: annularSectorPath(zone.bearing, 11.25, GUNA_OUTER, DIR16_INNER),
+        color: VASTU_ELEMENT_COLOR[zone.element],
+      },
+    ];
+  }
+  const dir = vastuDirection(selected);
+  if (dir.bearing === null) return [];
+  return [
+    {
+      d: annularSectorPath(dir.bearing, 22.5, WEDGE_OUTER, WEDGE_INNER),
+      color: VASTU_ELEMENT_COLOR[dir.element],
+    },
+  ];
+}
+
 export function VastuPurushaWheel({
   selected,
   onSelect,
   centerContent,
+  headingDeg = null,
 }: {
-  selected: VastuDirectionId;
-  onSelect: (id: VastuDirectionId) => void;
+  selected: VastuSelectionId;
+  onSelect: (id: VastuSelectionId) => void;
   centerContent?: ReactNode;
+  /** Compass heading (0 = north, clockwise). The facing wall sits at the top. */
+  headingDeg?: number | null;
 }) {
   const { t } = useTranslation();
   const { digits } = useLocale();
@@ -417,7 +458,7 @@ export function VastuPurushaWheel({
     <svg
       viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`}
       className="mx-auto block h-auto w-full"
-      overflow="hidden"
+      overflow="visible"
       role="group"
       aria-label={t("vastu.wheel.heading")}
     >
@@ -426,114 +467,105 @@ export function VastuPurushaWheel({
           <circle cx={CX} cy={CY} r={DIR16_INNER} />
         </clipPath>
       </defs>
-      <circle cx={CX} cy={CY} r={GUNA_INNER} fill="var(--card)" />
+      <g
+        transform={
+          headingDeg == null ? undefined : `rotate(${(-headingDeg).toFixed(2)} ${CX} ${CY})`
+        }
+      >
+      <circle cx={CX} cy={CY} r={DEG_OUTER} fill={VASTU_INK.background} />
 
-      {/* Triguna ring — outside N / NNE */}
+      {/* Triguna ring */}
       {GUNA_BANDS.map((band) => {
-        const color = GUNA_COLOR[band.id];
+        const color = VASTU_GUNA_COLOR[band.id];
+        const labelFill = band.id === "tamas" ? VASTU_INK.background : VASTU_INK.text;
         return (
           <g key={band.key} aria-hidden="true">
             <title>{t(`vastu.wheel.organ.${band.id}`)}</title>
             <path
               d={annularSectorPath(band.bearing, band.halfAngle, GUNA_OUTER, GUNA_INNER)}
               fill={color}
-              fillOpacity={STATUS_FILL_OPACITY}
+              fillOpacity={0.92}
             />
-            <ArcLabel bearing={band.bearing} radius={GUNA_LABEL_R} fontSize={10} className="font-bold" fillOpacity={0.95}>
+            <ArcLabel bearing={band.bearing} radius={GUNA_LABEL_R} fontSize={10} className="font-bold" fill={labelFill}>
               {t(`vastu.wheel.organ.${band.id}`)}
             </ArcLabel>
           </g>
         );
       })}
 
-      {/* 16 compass + life attribute — N on top, धन below */}
+      {/* 16 compass + life attribute — coloured by tattva */}
       {COMPASS_16.map((point, i) => {
         const status = DIR16_STATUS[i]!;
-        const color = STATUS_COLOR[status];
+        const color = VASTU_ELEMENT_COLOR[vastuElementAtBearing(point.bearing)];
         const attr = t(ATTR_16[i]!);
+        const active = point.zone === selected;
         return (
           <g key={point.abbr} aria-hidden="true">
-            <title>{`${t(point.nameKey)} · ${attr} · ${t(`vastu.wheel.status.${status}`)}`}</title>
+            <title>{`${t(point.nameKey)} · ${attr} · ${t(`vastu.element.${vastuElementAtBearing(point.bearing)}`)} · ${t(`vastu.wheel.status.${status}`)}`}</title>
             <path
               d={annularSectorPath(point.bearing, 11.25, DIR16_OUTER, DIR16_INNER)}
               fill={color}
-              fillOpacity={STATUS_FILL_OPACITY}
-              stroke={color}
-              strokeWidth={0.45}
+              fillOpacity={active ? 0.72 : 0.42}
             />
-            <ArcLabel bearing={point.bearing} radius={DIR16_LABEL_R + 11} fontSize={11} className="font-bold" fillOpacity={0.95}>
+            <ArcLabel bearing={point.bearing} radius={DIR16_LABEL_R + 11} fontSize={11} className="font-bold">
               {point.abbr}
             </ArcLabel>
-            <ArcLabel bearing={point.bearing} radius={DIR16_LABEL_R - 11} fontSize={9} className="font-semibold" fillOpacity={0.92}>
+            <ArcLabel bearing={point.bearing} radius={DIR16_LABEL_R - 11} fontSize={9} className="font-semibold">
               {attr}
             </ArcLabel>
           </g>
         );
       })}
 
-      {/* 32 pada codes — N1 is the same cell as Roga */}
-      {PADA_32.map((id, slot) => {
-        const bearing = padaBearing(slot);
-        const color = PADA_STATUS_COLOR[PADA_STATUS[id]];
-        const i = (slot - N1_SLOT + PADA_32.length) % PADA_32.length;
-        const quad = CODE_QUAD[Math.floor(i / 8)]!;
-        const n = (i % 8) + 1;
+      {VASTU_PADAS.map((pada) => {
+        const color = VASTU_ELEMENT_COLOR[pada.element];
+        const active = selected === pada.id;
         return (
-          <g key={`code-${quad}${n}`} aria-hidden="true">
-            <title>{`${quad}${n} · ${t(`vastu.pada.${id}.name`)} · ${t(`vastu.wheel.status.${PADA_STATUS[id]}`)}`}</title>
+          <g key={`code-${pada.code}`} aria-hidden="true">
+            <title>{`${pada.code} · ${t(`vastu.pada.${pada.id}.name`)} · ${t(`vastu.element.${pada.element}`)} · ${t(`vastu.wheel.status.${pada.status}`)}`}</title>
             <path
-              d={annularSectorPath(bearing, PADA_STEP / 2, CODE_OUTER, CODE_INNER)}
+              d={annularSectorPath(pada.bearing, PADA_HALF, CODE_OUTER, CODE_INNER)}
               fill={color}
-              fillOpacity={STATUS_FILL_OPACITY}
-              stroke={color}
-              strokeWidth={0.45}
+              fillOpacity={active ? 0.7 : 0.38}
             />
-            <ArcLabel bearing={bearing} radius={CODE_LABEL_R} fontSize={12} className="font-semibold" fillOpacity={0.9}>
-              {`${quad}${digits(n)}`}
-              {PADA_STATUS[id] !== "ok" && (
-                <tspan dx={1} fontWeight={800} fill={PADA_STATUS[id] === "good" ? STATUS_COLOR.good : STATUS_COLOR.bad}>
-                  {PADA_STATUS[id] === "good" ? "+" : "−"}
-                </tspan>
-              )}
+            <PadaCodeLabel
+              bearing={pada.bearing}
+              radius={CODE_LABEL_R}
+              code={`${pada.wall}${digits(pada.index)}`}
+              status={pada.status}
+            />
+          </g>
+        );
+      })}
+
+      {VASTU_PADAS.map((pada) => {
+        const color = VASTU_ELEMENT_COLOR[pada.element];
+        const active = selected === pada.id;
+        return (
+          <g key={`deity-${pada.id}`} aria-hidden="true">
+            <title>{`${t(`vastu.pada.${pada.id}.name`)} · ${t(`vastu.element.${pada.element}`)} · ${t(`vastu.wheel.status.${pada.status}`)}`}</title>
+            <path
+              d={annularSectorPath(pada.bearing, PADA_HALF, DEITY_OUTER, DEITY_INNER)}
+              fill={color}
+              fillOpacity={active ? 0.7 : 0.34}
+            />
+            <ArcLabel bearing={pada.bearing} radius={DEITY_LABEL_R} fontSize={9} className="font-semibold">
+              {t(`vastu.pada.${pada.id}.name`)}
             </ArcLabel>
           </g>
         );
       })}
 
-      {/* 32 perimeter deities */}
-      {PADA_32.map((id, i) => {
-        const bearing = padaBearing(i);
-        const color = PADA_STATUS_COLOR[PADA_STATUS[id]];
-        return (
-          <g key={id} aria-hidden="true">
-            <title>{`${t(`vastu.pada.${id}.name`)} · ${t(`vastu.wheel.status.${PADA_STATUS[id]}`)}`}</title>
-            <path
-              d={annularSectorPath(bearing, PADA_STEP / 2, DEITY_OUTER, DEITY_INNER)}
-              fill={color}
-              fillOpacity={STATUS_FILL_OPACITY}
-              stroke={color}
-              strokeWidth={0.45}
-            />
-            <ArcLabel bearing={bearing} radius={DEITY_LABEL_R} fontSize={9} className="font-semibold" fillOpacity={0.92}>
-              {t(`vastu.pada.${id}.name`)}
-            </ArcLabel>
-          </g>
-        );
-      })}
-
-      {/* Inner four — Bhudhara / Aryama / Vivasvan / Mitra */}
-      {INNER_4.map((devata) => {
-        const color = groupColor(devata.bearing);
+      {VASTU_INNER4.map((devata) => {
+        const color = VASTU_ELEMENT_COLOR[devata.element];
         const label = vastuWheelPoint(devata.bearing, INNER4_LABEL_R, CX, CY);
+        const active = selected === devata.id;
         return (
           <g key={devata.id} aria-hidden="true">
             <path
               d={annularSectorPath(devata.bearing, 45, INNER4_OUTER, INNER4_INNER)}
               fill={color}
-              fillOpacity={0.1}
-              stroke={color}
-              strokeOpacity={0.28}
-              strokeWidth={0.5}
+              fillOpacity={active ? 0.4 : 0.22}
             />
             <text
               x={label.x}
@@ -541,8 +573,8 @@ export function VastuPurushaWheel({
               textAnchor="middle"
               dominantBaseline="central"
               className="pointer-events-none select-none font-semibold"
-              fill="currentColor"
-              fillOpacity={0.8}
+              fill={VASTU_INK.text}
+              fillOpacity={0.88}
               fontSize={12}
             >
               {t(`vastu.pada.${devata.id}.name`)}
@@ -554,17 +586,14 @@ export function VastuPurushaWheel({
       {/* 8-direction fills sit under the Purusha so the figure stays visible. */}
       {VASTU_WHEEL_DIRECTIONS.map((dir) => {
         const active = dir.id === selected;
-        const color = groupColor(dir.bearing);
+        const color = VASTU_ELEMENT_COLOR[dir.element];
         return (
           <path
             key={`wedge-fill-${dir.id}`}
             d={annularSectorPath(dir.bearing, 22.5, WEDGE_OUTER, WEDGE_INNER)}
             fill={color}
-            fillOpacity={active ? 0.38 : 0.1}
-            stroke={color}
-            strokeOpacity={active ? 0.95 : 0.32}
-            strokeWidth={active ? 2.4 : 1}
-            className="pointer-events-none transition-[fill-opacity,stroke-opacity]"
+            fillOpacity={active ? 0.42 : 0.18}
+            className="pointer-events-none transition-[fill-opacity]"
           />
         );
       })}
@@ -572,39 +601,16 @@ export function VastuPurushaWheel({
         cx={CX}
         cy={CY}
         r={CENTER_R}
-        fill="var(--card)"
-        fillOpacity={0.08}
+        fill={VASTU_ELEMENT_COLOR.space}
+        fillOpacity={selected === "center" ? 0.28 : 0.14}
         className="pointer-events-none"
       />
 
       <g clipPath={`url(#${clipId})`} pointerEvents="none" aria-hidden>
-        <g
-          transform={`translate(${CX} ${CY})`}
-          opacity={PURUSHA_OPACITY}
-          className="text-foreground"
-        >
+        <g transform={`translate(${CX} ${CY})`} opacity={PURUSHA_OPACITY} style={{ color: VASTU_INK.text }}>
           <VastuPurushaSilhouette size={PURUSHA_SIZE} />
         </g>
       </g>
-
-      {Array.from({ length: 32 }, (_, i) => {
-        const bearing = i * 11.25;
-        const major = i % 2 === 0;
-        const inner = vastuWheelPoint(bearing, INNER4_INNER, CX, CY);
-        const outer = vastuWheelPoint(bearing, GUNA_INNER, CX, CY);
-        return (
-          <line
-            key={`spoke-${bearing}`}
-            x1={inner.x}
-            y1={inner.y}
-            x2={outer.x}
-            y2={outer.y}
-            stroke="currentColor"
-            strokeOpacity={major ? 0.16 : 0.08}
-            strokeWidth={major ? 0.6 : 0.4}
-          />
-        );
-      })}
 
       {RING_DIVIDERS.map((r) => (
         <circle
@@ -613,11 +619,17 @@ export function VastuPurushaWheel({
           cy={CY}
           r={r}
           fill="none"
-          stroke="currentColor"
-          strokeOpacity={0.14}
-          strokeWidth={0.6}
+          stroke={VASTU_INK.text}
+          strokeOpacity={0.48}
+          strokeWidth={0.95}
         />
       ))}
+      <RingSeparators bearings={GUNA_BOUNDARIES} innerR={GUNA_INNER} outerR={GUNA_OUTER} />
+      <RingSeparators bearings={DIR16_BOUNDARIES} innerR={DIR16_INNER} outerR={DIR16_OUTER} />
+      <RingSeparators bearings={PADA_BOUNDARIES} innerR={CODE_INNER} outerR={CODE_OUTER} />
+      <RingSeparators bearings={PADA_BOUNDARIES} innerR={DEITY_INNER} outerR={DEITY_OUTER} />
+      <RingSeparators bearings={DIR8_BOUNDARIES} innerR={WEDGE_INNER} outerR={WEDGE_OUTER} />
+      <RingSeparators bearings={INNER4_BOUNDARIES} innerR={INNER4_INNER} outerR={INNER4_OUTER} />
 
       {VASTU_WHEEL_DIRECTIONS.map((dir) => {
         const active = dir.id === selected;
@@ -629,12 +641,9 @@ export function VastuPurushaWheel({
             y={label.y}
             textAnchor="middle"
             dominantBaseline="central"
-            className={cn(
-                "pointer-events-none select-none",
-              active ? "font-bold" : "font-semibold",
-            )}
-            fill="currentColor"
-            fillOpacity={active ? 1 : 0.8}
+            className={cn("pointer-events-none select-none", active ? "font-bold" : "font-semibold")}
+            fill={VASTU_INK.text}
+            fillOpacity={active ? 1 : 0.82}
             fontSize={11}
           >
             {t(`vastu.dir.${dir.id}.name`)}
@@ -642,48 +651,88 @@ export function VastuPurushaWheel({
         );
       })}
 
-      <line x1={CX - 5} y1={CY} x2={CX + 5} y2={CY} stroke="currentColor" strokeOpacity={0.45} strokeWidth={1} />
-      <line x1={CX} y1={CY - 5} x2={CX} y2={CY + 5} stroke="currentColor" strokeOpacity={0.45} strokeWidth={1} />
+      <line x1={CX - 5} y1={CY} x2={CX + 5} y2={CY} stroke={VASTU_INK.text} strokeOpacity={0.45} strokeWidth={1} />
+      <line x1={CX} y1={CY - 5} x2={CX} y2={CY + 5} stroke={VASTU_INK.text} strokeOpacity={0.45} strokeWidth={1} />
       {centerContent ?? (
         <text
           x={CX}
           y={CY + 16}
           textAnchor="middle"
           dominantBaseline="central"
-            className="pointer-events-none select-none font-bold"
-            fill="currentColor"
-            fillOpacity={0.85}
-            fontSize={16}
+          className="pointer-events-none select-none font-bold"
+          fill={VASTU_INK.text}
+          fillOpacity={0.9}
+          fontSize={16}
         >
           {t("vastu.dir.center.deity")}
         </text>
       )}
 
-      {VASTU_WHEEL_DIRECTIONS.map((dir) => {
-        const active = dir.id === selected;
-        const color = groupColor(dir.bearing);
-        return (
-          <path
-            key={`wedge-hit-${dir.id}`}
-            role="button"
-            tabIndex={0}
-            aria-pressed={active}
-            aria-label={t(`vastu.dir.${dir.id}.name`)}
-            d={annularSectorPath(dir.bearing, 22.5, WEDGE_OUTER, WEDGE_INNER)}
-            fill="transparent"
-            className="cursor-pointer outline-none focus-visible:stroke-[3]"
-            stroke={color}
-            strokeOpacity={0}
-            onClick={() => onSelect(dir.id)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onSelect(dir.id);
-              }
-            }}
-          />
-        );
-      })}
+      {VASTU_DIR16.map((dir) => (
+        <HitSector
+          key={`hit-guna-${dir.id}`}
+          d={annularSectorPath(dir.bearing, 11.25, GUNA_OUTER, GUNA_INNER)}
+          label={t(`vastu.dir16.${dir.id}.name`)}
+          active={dir.id === selected}
+          color={VASTU_ELEMENT_COLOR[dir.element]}
+          onSelect={() => onSelect(dir.id)}
+        />
+      ))}
+
+      {VASTU_DIR16.map((dir) => (
+        <HitSector
+          key={`hit-16-${dir.id}`}
+          d={annularSectorPath(dir.bearing, 11.25, DIR16_OUTER, DIR16_INNER)}
+          label={`${t(`vastu.dir16.${dir.id}.name`)} · ${t(dir.attrKey)}`}
+          active={dir.id === selected}
+          color={VASTU_ELEMENT_COLOR[dir.element]}
+          onSelect={() => onSelect(dir.id)}
+        />
+      ))}
+
+      {VASTU_PADAS.map((pada) => (
+        <HitSector
+          key={`hit-code-${pada.id}`}
+          d={annularSectorPath(pada.bearing, PADA_HALF, CODE_OUTER, CODE_INNER)}
+          label={`${pada.code} · ${t(`vastu.pada.${pada.id}.name`)}`}
+          active={selected === pada.id}
+          color={VASTU_ELEMENT_COLOR[pada.element]}
+          onSelect={() => onSelect(pada.id)}
+        />
+      ))}
+
+      {VASTU_PADAS.map((pada) => (
+        <HitSector
+          key={`hit-deity-${pada.id}`}
+          d={annularSectorPath(pada.bearing, PADA_HALF, DEITY_OUTER, DEITY_INNER)}
+          label={t(`vastu.pada.${pada.id}.name`)}
+          active={selected === pada.id}
+          color={VASTU_ELEMENT_COLOR[pada.element]}
+          onSelect={() => onSelect(pada.id)}
+        />
+      ))}
+
+      {VASTU_WHEEL_DIRECTIONS.map((dir) => (
+        <HitSector
+          key={`hit-8-${dir.id}`}
+          d={annularSectorPath(dir.bearing, 22.5, WEDGE_OUTER, WEDGE_INNER)}
+          label={t(`vastu.dir.${dir.id}.name`)}
+          active={dir.id === selected}
+          color={VASTU_ELEMENT_COLOR[dir.element]}
+          onSelect={() => onSelect(dir.id)}
+        />
+      ))}
+
+      {VASTU_INNER4.map((devata) => (
+        <HitSector
+          key={`hit-inner4-${devata.id}`}
+          d={annularSectorPath(devata.bearing, 45, INNER4_OUTER, INNER4_INNER)}
+          label={t(`vastu.pada.${devata.id}.name`)}
+          active={selected === devata.id}
+          color={VASTU_ELEMENT_COLOR[devata.element]}
+          onSelect={() => onSelect(devata.id)}
+        />
+      ))}
 
       <circle
         role="button"
@@ -694,10 +743,9 @@ export function VastuPurushaWheel({
         cy={CY}
         r={CENTER_R}
         fill="transparent"
-        stroke="currentColor"
-        strokeOpacity={selected === "center" ? 0.8 : 0.28}
-        strokeWidth={selected === "center" ? 2.4 : 1}
-        className="cursor-pointer outline-none transition-[stroke-opacity] focus-visible:stroke-[3]"
+        className="cursor-pointer outline-none focus-visible:stroke-[3]"
+        stroke={VASTU_ELEMENT_COLOR.space}
+        strokeOpacity={0}
         onClick={() => onSelect("center")}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -707,8 +755,8 @@ export function VastuPurushaWheel({
         }}
       />
 
-      {/* Degree rim on top — white, so triguna colour cannot leak into 0°–360° */}
-      <path d={annulusPath(DEG_OUTER, DEG_INNER)} fill="#fff" fillRule="evenodd" />
+      {/* Degree rim on top — parchment, so triguna colour cannot leak into 0°–360° */}
+      <path d={annulusPath(DEG_OUTER, DEG_INNER)} fill={VASTU_INK.background} fillRule="evenodd" />
       {Array.from({ length: 360 }, (_, bearing) => {
         const every10 = bearing % 10 === 0;
         const every5 = bearing % 5 === 0;
@@ -723,9 +771,9 @@ export function VastuPurushaWheel({
               y1={inner.y}
               x2={outer.x}
               y2={outer.y}
-              stroke="#222"
-              strokeOpacity={cardinal ? 0.75 : every10 ? 0.55 : every5 ? 0.4 : 0.32}
-              strokeWidth={cardinal ? 1.1 : every10 ? 0.7 : 0.35}
+              stroke={VASTU_INK.text}
+              strokeOpacity={cardinal ? 0.9 : every10 ? 0.75 : every5 ? 0.55 : 0.32}
+              strokeWidth={cardinal ? 1.35 : every10 ? 0.85 : every5 ? 0.45 : 0.28}
             />
             {every10 ? (
               <ArcLabel bearing={bearing} radius={DEG_LABEL_R} fontSize={7} className="font-semibold" fillOpacity={0.8}>
@@ -735,16 +783,43 @@ export function VastuPurushaWheel({
           </g>
         );
       })}
+
+      {/* Selection outline last so rings, spokes, and the degree rim cannot cover it. */}
+      <g pointerEvents="none" fill="none" aria-hidden>
+        {selected === "center" ? (
+          <>
+            <circle cx={CX} cy={CY} r={CENTER_R} stroke={VASTU_INK.text} strokeWidth={4.2} />
+            <circle cx={CX} cy={CY} r={CENTER_R} stroke={VASTU_ELEMENT_COLOR.space} strokeWidth={2.2} />
+          </>
+        ) : (
+          selectionSlices(selected).map((slice, i) => (
+            <g key={`sel-${selected}-${i}`}>
+              <path d={slice.d} stroke={VASTU_INK.text} strokeWidth={4.2} strokeLinejoin="round" />
+              <path d={slice.d} stroke={slice.color} strokeWidth={2.2} strokeLinejoin="round" />
+            </g>
+          ))
+        )}
+      </g>
+      </g>
+      {headingDeg != null ? (
+        <g pointerEvents="none" aria-hidden>
+          <polygon points={`${CX - 9},6 ${CX + 9},6 ${CX},24`} fill={VASTU_INK.text} />
+        </g>
+      ) : null}
     </svg>
-    <ul className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      {PADA_STATUS_ORDER.map((status) => (
-        <li key={status} className="inline-flex items-center gap-1.5">
-          <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: PADA_STATUS_COLOR[status], opacity: STATUS_FILL_OPACITY }}
-            aria-hidden
-          />
-          {t(`vastu.wheel.status.${status}`)}
+    <ul className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+      {VASTU_ELEMENT_ORDER.map((element) => (
+        <li key={element} className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: VASTU_ELEMENT_COLOR[element] }} aria-hidden />
+          {t(`vastu.element.${element}`)}
+        </li>
+      ))}
+    </ul>
+    <ul className="mt-1.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      {(["sattva", "rajas", "tamas"] as const).map((guna) => (
+        <li key={guna} className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: VASTU_GUNA_COLOR[guna] }} aria-hidden />
+          {t(`vastu.wheel.organ.${guna}`)}
         </li>
       ))}
     </ul>

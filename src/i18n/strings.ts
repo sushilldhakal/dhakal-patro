@@ -2672,9 +2672,32 @@ export const strings = {
     en: "Eight directions around a central Brahmasthan — each with its own element, presiding deity and best use. Pick a direction.",
   },
   "vastu.wheel.hint": { ne: "दिशा छान्न थिच्नुहोस्", en: "Tap a direction" },
+  "vastu.compass.dialog_title": { ne: "ब्रह्मस्थानमा उभिनुहोस्", en: "Stand in the Brahmasthan" },
+  "vastu.compass.dialog_body": {
+    ne: "चक्र सही दिशामा मिलाउन फोनको कम्पास प्रयोग हुन्छ। घरको ठीक बीचमा — ब्रह्मस्थान, घरको केन्द्र — उभिनुहोस्, फोन अगाडि सोझो समात्नुहोस्, अनि भयो थिच्नुहोस्। तपाईं फर्केको भित्ता चक्रको माथिल्लो भागमा देखिन्छ।",
+    en: "The phone compass will turn the wheel to match the house. Stand at the exact centre of the house — the Brahmasthan — hold the phone upright in front of you, then tap Done. The wall you face will sit at the top of the ring.",
+  },
+  "vastu.compass.done": { ne: "भयो", en: "Done" },
+  "vastu.compass.cancel": { ne: "रद्द", en: "Cancel" },
+  "vastu.compass.stop": { ne: "रोक्नुहोस्", en: "Stop" },
+  "vastu.compass.live": { ne: "कम्पास चालू — तपाईं फर्केको दिशा चक्रको माथि छ।", en: "Compass live — the wall you face is at the top of the ring." },
+  "vastu.compass.facing": { ne: "अगाडि: {{name}} ({{abbr}})", en: "Facing: {{name}} ({{abbr}})" },
+  "vastu.compass.drifting": {
+    ne: "यो उपकरणमा पूर्ण कम्पास छैन — दिशा बिस्तारै सर्न सक्छ।",
+    en: "This device has no absolute compass — the heading may drift.",
+  },
+  "vastu.compass.denied": {
+    ne: "कम्पास अनुमति दिइएन। iPhone मा सेटिङ → साइट → चाल/अभिमुखीकरण खोल्नुहोस्।",
+    en: "Compass permission was denied. On iPhone, enable Motion & Orientation for this site in Settings.",
+  },
+  "vastu.compass.unavailable": {
+    ne: "कम्पास पढ्न सकिएन। मोबाइल फोनमा, सुरक्षित (https) साइटमा, घरको बीचमा उभिएर फेरि प्रयास गर्नुहोस्।",
+    en: "No compass reading. Try again on a phone, over https, standing at the centre of the house.",
+  },
   "vastu.wheel.status.good": { ne: "शुभ", en: "Good" },
   "vastu.wheel.status.ok": { ne: "मध्यम", en: "Okay" },
   "vastu.wheel.status.bad": { ne: "अशुभ", en: "Bad" },
+  "vastu.wheel.status.mixed": { ne: "शुभ/अशुभ", en: "Mixed" },
 
   "vastu.plan.heading": { ne: "घरको नक्सा (२डी)", en: "House layout (2D)" },
   "vastu.plan.blurb": {
@@ -3061,9 +3084,19 @@ export const strings = {
   "vastu.dosha.remedy_label": { ne: "उपाय", en: "Remedy" },
 
   "vastu.labels.deity": { ne: "देवता", en: "Deity" },
+  "vastu.labels.inner_deity": { ne: "आन्तरिक देवता", en: "Inner deity" },
   "vastu.labels.element": { ne: "तत्त्व", en: "Element" },
+  "vastu.labels.guna": { ne: "गुण", en: "Guna" },
+  "vastu.labels.importance": { ne: "महत्व", en: "Importance" },
+  "vastu.labels.description": { ne: "विवरण", en: "Detail" },
   "vastu.labels.best": { ne: "उपयुक्त", en: "Best for" },
   "vastu.labels.avoid": { ne: "जोगिने", en: "Avoid" },
+  "vastu.labels.pada": { ne: "पद", en: "Pada" },
+  "vastu.labels.quality": { ne: "मूल गुण", en: "Quality" },
+  "vastu.labels.kind.dir8": { ne: "८ दिशा", en: "8-direction" },
+  "vastu.labels.kind.dir16": { ne: "१६ दिशा", en: "16-direction" },
+  "vastu.labels.kind.pada": { ne: "पद / देवता", en: "Pada" },
+  "vastu.labels.kind.inner4": { ne: "आन्तरिक चार", en: "Inner four" },
 
   "vastu.element.earth": { ne: "पृथ्वी", en: "Earth" },
   "vastu.element.water": { ne: "जल", en: "Water" },
@@ -3072,13 +3105,164 @@ export const strings = {
   "vastu.element.space": { ne: "आकाश", en: "Space" },
 
   "vastu.dir16.nne.name": { ne: "उत्तर-उत्तरपूर्व", en: "North-Northeast" },
+  "vastu.dir16.nne.quality": { ne: "स्वास्थ्य र रोग प्रतिरोधात्मक क्षमता", en: "Health and immunity" },
+  "vastu.dir16.nne.deity": { ne: "मृग (शैल) / अदिति", en: "Mriga (Shaila) / Aditi" },
+  "vastu.dir16.nne.importance": {
+    ne: "NNE — जल र सत्त्व। शारीरिक स्वास्थ्य र औषधिको सकारात्मक प्रभाव बढाउने क्षेत्र। शास्त्रमा यसलाई औषधगृह भनिएको छ।",
+    en: "NNE — water and sattva. The zone that strengthens the body and the effect of medicine; the classical oshadhagriha.",
+  },
+  "vastu.dir16.nne.best": { ne: "प्राथमिक उपचार, औषधि भण्डारण, हल्का व्यायाम कोठा", en: "First-aid, medicine storage, a light exercise room" },
+  "vastu.dir16.nne.avoid": { ne: "शौचालय, फोहोर फ्याँक्ने ठाउँ, भारी ओभरहेड ट्यांकी", en: "Toilet, a waste dump, a heavy overhead tank" },
+
   "vastu.dir16.ene.name": { ne: "पूर्व-उत्तरपूर्व", en: "East-Northeast" },
+  "vastu.dir16.ene.quality": { ne: "आनन्द, ताजगी र सामाजिक चहलपहल", en: "Joy, freshness and social movement" },
+  "vastu.dir16.ene.deity": { ne: "जयन्त", en: "Jayanta" },
+  "vastu.dir16.ene.importance": {
+    ne: "ENE — वायु र सत्त्व। आनन्द, ताजगी र सामाजिक उत्साहको क्षेत्र। यो पूर्वको हावा हो, ईशान होइन।",
+    en: "ENE — air and sattva. Joy, freshness and social energy. This is the east wind, not Īśāna.",
+  },
+  "vastu.dir16.ene.best": { ne: "बगैंचा, ठूलो झ्याल, हल्का बैठक, खेलकुद", en: "Garden, large windows, a light sitting area, play" },
+  "vastu.dir16.ene.avoid": { ne: "शौचालय, गह्रौँ भण्डार, भान्सा", en: "Toilet, heavy storage, kitchen" },
+
   "vastu.dir16.ese.name": { ne: "पूर्व-दक्षिणपूर्व", en: "East-Southeast" },
+  "vastu.dir16.ese.quality": { ne: "विचार मन्थन र चिन्ता", en: "Churning and anxiety" },
+  "vastu.dir16.ese.deity": { ne: "सत्य / भृश", en: "Satya / Bhrisha" },
+  "vastu.dir16.ese.importance": {
+    ne: "ESE — वायु र रजस्। यो क्षेत्रले विचारहरूको मन्थनलाई प्रतिनिधित्व गर्छ। यहाँ बस्दा अत्यधिक सोच्ने बानी विकास हुन्छ।",
+    en: "ESE — air and rajas. This slice is mental churning; sitting here feeds overthinking.",
+  },
+  "vastu.dir16.ese.best": { ne: "वासिङ मेसिन, दही मन्थन, अनौपचारिक छलफल कक्ष", en: "Washing machine, a churning/work nook, an informal talk room" },
+  "vastu.dir16.ese.avoid": { ne: "ध्यान कक्ष, पूजा कोठा, सुत्ने ओछ्यान", en: "Meditation room, puja, a sleeping bed" },
+
   "vastu.dir16.sse.name": { ne: "दक्षिण-दक्षिणपूर्व", en: "South-Southeast" },
+  "vastu.dir16.sse.quality": { ne: "शारीरिक शक्ति र आत्मविश्वास", en: "Strength and confidence" },
+  "vastu.dir16.sse.deity": { ne: "पूषा / वितथ", en: "Pushan / Vitatha" },
+  "vastu.dir16.sse.importance": {
+    ne: "SSE — अग्नि र तमस्। यसले मानसिक डर भगाएर आत्मविश्वास र शारीरिक क्षमता प्रदान गर्दछ।",
+    en: "SSE — fire and tamas. It drives off fear and gives bodily strength and confidence.",
+  },
+  "vastu.dir16.sse.best": { ne: "व्यायामशाला, सुरक्षा गार्डको कोठा, खेलकुद सामग्री", en: "Gym, a guard room, sports storage" },
+  "vastu.dir16.sse.avoid": { ne: "शौचालय, फोहोर फ्याँक्ने ठाउँ", en: "Toilet, a waste dump" },
+
   "vastu.dir16.ssw.name": { ne: "दक्षिण-दक्षिणपश्चिम", en: "South-Southwest" },
+  "vastu.dir16.ssw.quality": { ne: "विसर्जन र खर्च", en: "Disposal and wastage" },
+  "vastu.dir16.ssw.deity": { ne: "गन्धर्व / भृङ्गराज", en: "Gandharva / Bhringraj" },
+  "vastu.dir16.ssw.importance": {
+    ne: "SSW — पृथ्वी र तमस्। विसर्जनको मुख्य क्षेत्र। यहाँको ऊर्जाले घरभित्रका नकारात्मक तत्व र फोहोर विसर्जन गर्न मद्दत गर्दछ।",
+    en: "SSW — earth and tamas. The main disposal slice; its energy helps the house shed waste and the negative.",
+  },
+  "vastu.dir16.ssw.best": { ne: "शौचालय, सेफ्टी ट्यांकी, डस्टबिन, फोहोर फ्याँक्ने ठाउँ", en: "Toilet, septic, dustbin, a waste dump" },
+  "vastu.dir16.ssw.avoid": { ne: "पूजा कोठा, तिजोरी, भान्सा, मुख्य ओछ्यान", en: "Puja, a safe, kitchen, the main bed" },
+
   "vastu.dir16.wsw.name": { ne: "पश्चिम-दक्षिणपश्चिम", en: "West-Southwest" },
+  "vastu.dir16.wsw.quality": { ne: "शिक्षा र बचत", en: "Education and savings" },
+  "vastu.dir16.wsw.deity": { ne: "दौवारिक / सुग्रीव", en: "Dauvarika / Sugriva" },
+  "vastu.dir16.wsw.importance": {
+    ne: "WSW — आकाश र तमस्। ज्ञान आर्जन गर्ने र संचित धन जोगाउने प्रमुख क्षेत्र।",
+    en: "WSW — space and tamas. The principal slice for study and for keeping savings.",
+  },
+  "vastu.dir16.wsw.best": { ne: "अध्ययन कोठा, किताबको दराज, बच्चाहरूको बेडरुम", en: "Study room, bookcase, children's bedroom" },
+  "vastu.dir16.wsw.avoid": { ne: "शौचालय, भान्साको ग्यास चुल्हो, विसर्जनको सामग्री", en: "Toilet, a gas stove, disposal fittings" },
+
   "vastu.dir16.wnw.name": { ne: "पश्चिम-उत्तरपश्चिम", en: "West-Northwest" },
+  "vastu.dir16.wnw.quality": { ne: "तनाव मुक्ति र रोदन", en: "Release and detoxification" },
+  "vastu.dir16.wnw.deity": { ne: "असुर / शोष", en: "Asura / Shosha" },
+  "vastu.dir16.wnw.importance": {
+    ne: "WNW — आकाश र रजस्। मनको दुःख र नकारात्मकता बाहिर फाल्ने क्षेत्र। शास्त्रमा यसलाई रोदनगृह पनि भनिएको छ।",
+    en: "WNW — space and rajas. The slice that throws grief and the negative out; classically a rodanagriha, a weeping-room.",
+  },
+  "vastu.dir16.wnw.best": { ne: "वासिङ मेसिन, शौचालय, फोहोर भण्डार, मानसिक शान्तिका लागि बस्ने ठाउँ", en: "Washing machine, toilet, waste store, a quiet sit for the mind" },
+  "vastu.dir16.wnw.avoid": { ne: "पूजा कोठा, नयाँ दुलहीको कोठा, गहिरो विश्रामको बेडरुम", en: "Puja, a new bride's room, a deep-rest bedroom" },
+
   "vastu.dir16.nnw.name": { ne: "उत्तर-उत्तरपश्चिम", en: "North-Northwest" },
+  "vastu.dir16.nnw.quality": { ne: "आकर्षण र सम्बन्ध सुधार", en: "Attraction and relationship" },
+  "vastu.dir16.nnw.deity": { ne: "नाग / मुख्य", en: "Naga / Mukhya" },
+  "vastu.dir16.nnw.importance": {
+    ne: "NNW — वायु र सत्त्व। दाम्पत्य जीवनको आकर्षण र प्रेम भावना बढाउने कोठा। शास्त्रमा यसलाई रतिगृह भनिन्छ।",
+    en: "NNW — air and sattva. The couple's attraction and affection; classically a ratigriha.",
+  },
+  "vastu.dir16.nnw.best": { ne: "नवविवाहित दम्पतीको बेडरुम, ड्रेसिङ रुम, सुगन्धित वस्तु राख्ने ठाउँ", en: "A newlyweds' bedroom, dressing room, a place for scents" },
+  "vastu.dir16.nnw.avoid": { ne: "पूजा कोठा, विद्यार्थीहरूको अध्ययन कोठा", en: "Puja, a student's study" },
+
+  "vastu.dir16.n.name": { ne: "उत्तर", en: "North" },
+  "vastu.dir16.n.quality": { ne: "धन र नयाँ अवसरहरू", en: "Wealth and opportunities" },
+  "vastu.dir16.n.deity": { ne: "भल्लाट / सोम", en: "Bhallata / Soma" },
+  "vastu.dir16.n.importance": {
+    ne: "N — जल र सत्त्व। कुबेरको दिशा। यसले नयाँ व्यवसायिक अवसर र पैसाको निरन्तर आगमनलाई आकर्षित गर्छ।",
+    en: "N — water and sattva. Kubera's quarter. It draws new work and a steady inflow of money.",
+  },
+  "vastu.dir16.n.best": { ne: "मुख्य ढोका, कार्यालय, पैसा राख्ने सेफ, खुल्ला बैठक", en: "Main door, office, a money safe, an open living room" },
+  "vastu.dir16.n.avoid": { ne: "शौचालय, भारी भण्डार कोठा, भान्सा", en: "Toilet, a heavy store, kitchen" },
+
+  "vastu.dir16.ne.name": { ne: "ईशान", en: "Ishana" },
+  "vastu.dir16.ne.quality": { ne: "विचारको स्पष्टता र अध्यात्म", en: "Clarity of mind and the spiritual" },
+  "vastu.dir16.ne.deity": { ne: "ईश (शिव)", en: "Isha (Shiva)" },
+  "vastu.dir16.ne.importance": {
+    ne: "NE — जल र सत्त्व। यो ब्रह्माण्डीय ऊर्जा प्रवेश गर्ने शिरोभाग हो। यसले मानसिक स्पष्टता र आध्यात्मिक उचाई प्रदान गर्दछ।",
+    en: "NE — water and sattva. The head of the house, where cosmic energy enters; it gives mental clarity and spiritual lift.",
+  },
+  "vastu.dir16.ne.best": { ne: "पूजा कोठा, ध्यान केन्द्र, योग स्थान, खुल्ला चोक वा आँगन", en: "Puja room, meditation, yoga, an open courtyard" },
+  "vastu.dir16.ne.avoid": { ne: "शौचालय, भारी भण्डार, भान्सा, ओभरहेड पानीको ट्यांकी", en: "Toilet, heavy storage, kitchen, an overhead water tank" },
+
+  "vastu.dir16.e.name": { ne: "पूर्व", en: "East" },
+  "vastu.dir16.e.quality": { ne: "सामाजिक सम्बन्ध र सम्पर्क", en: "Social connectivity" },
+  "vastu.dir16.e.deity": { ne: "महेन्द्र / सूर्य", en: "Mahendra / Surya" },
+  "vastu.dir16.e.importance": {
+    ne: "E — वायु र सत्त्व। यसले समाजमा मानिसको पहुँच र सम्बन्धलाई नियन्त्रण गर्दछ। यहाँबाट आउने बिहानीको सूर्यको प्रकाशले घरमा प्राण सञ्चार गर्छ।",
+    en: "E — air and sattva. It governs reach and ties in society. Morning sun from here puts prana into the house.",
+  },
+  "vastu.dir16.e.best": { ne: "स्नानगृह, पूर्व-मुखी मुख्य ढोका, बैठक कोठा", en: "Bathroom, an east-facing main door, living room" },
+  "vastu.dir16.e.avoid": { ne: "भारी दराज, शौचालय, दक्षिण-पश्चिम जस्तो बन्द पर्खाल", en: "Heavy cupboards, toilet, a closed southwest-like wall" },
+
+  "vastu.dir16.se.name": { ne: "आग्नेय", en: "Agneya" },
+  "vastu.dir16.se.quality": { ne: "नगद प्रवाह, ऊर्जा र जोश", en: "Cash flow, energy and drive" },
+  "vastu.dir16.se.deity": { ne: "अनिल (अग्नि) / अन्तरिक्ष", en: "Anila (Agni) / Antariksha" },
+  "vastu.dir16.se.importance": {
+    ne: "SE — अग्नि र रजस्। यसले घरको आर्थिक तरलता (नगद) र बासिन्दाहरूको पाचन शक्तिलाई नियन्त्रण गर्छ।",
+    en: "SE — fire and rajas. It governs cash liquidity and the household's digestive fire.",
+  },
+  "vastu.dir16.se.best": { ne: "मुख्य भान्सा, विद्युत मिटर, जेनेरेटर, हिटर", en: "Main kitchen, electrical meter, generator, heater" },
+  "vastu.dir16.se.avoid": { ne: "भूमिगत पानीको ट्यांकी, सेफ्टी ट्यांकी, बेडरुम", en: "Underground water tank, septic, bedroom" },
+
+  "vastu.dir16.s.name": { ne: "दक्षिण", en: "South" },
+  "vastu.dir16.s.quality": { ne: "विश्राम, सुप्रसिद्धि र शान्ति", en: "Relaxation, fame and rest" },
+  "vastu.dir16.s.deity": { ne: "गृहक्षत / यम", en: "Grihakshata / Yama" },
+  "vastu.dir16.s.importance": {
+    ne: "S — पृथ्वी र तमस्। यो विश्राम र गहिरो निन्द्राको क्षेत्र हो। यसले कामपछिको थकान मेटाउन र मानसिक शान्ति प्रदान गर्न मद्दत गर्छ।",
+    en: "S — earth and tamas. The slice of rest and deep sleep; it eases the day's fatigue and quiets the mind.",
+  },
+  "vastu.dir16.s.best": { ne: "बेडरुम, भारी सामान राख्ने दराज, घरको भित्ता उचाई", en: "Bedroom, heavy cupboards, a higher south wall" },
+  "vastu.dir16.s.avoid": { ne: "पानीको इनार वा बोरिङ, पूजा कोठा, खुल्ला आँगन", en: "A well or boring, puja, an open courtyard" },
+
+  "vastu.dir16.sw.name": { ne: "नैऋत्य", en: "Nairitya" },
+  "vastu.dir16.sw.quality": { ne: "सम्बन्ध र दक्षता", en: "Relationship and skills" },
+  "vastu.dir16.sw.deity": { ne: "पितृ / मृग", en: "Pitri / Mriga" },
+  "vastu.dir16.sw.importance": {
+    ne: "SW — पृथ्वी र तमस्। यसले पारिवारिक सम्बन्धको स्थायित्व र मानिसको कार्यक्षमतालाई स्थिर बनाउँछ।",
+    en: "SW — earth and tamas. It steadies family bonds and a person's working skill.",
+  },
+  "vastu.dir16.sw.best": { ne: "मुख्य बेडरुम, गह्रौँ दराज, सुनचाँदी राख्ने दराज", en: "Master bedroom, heavy cupboards, a jewellery locker" },
+  "vastu.dir16.sw.avoid": { ne: "शौचालय, भूमिगत पानी, मुख्य ढोका, खुल्ला बाल्कोनी", en: "Toilet, underground water, main door, an open balcony" },
+
+  "vastu.dir16.w.name": { ne: "पश्चिम", en: "West" },
+  "vastu.dir16.w.quality": { ne: "प्राप्ति, लाभ र भोजन", en: "Gains, profit and food" },
+  "vastu.dir16.w.deity": { ne: "पुष्पदन्त / वरुण", en: "Pushpadanta / Varuna" },
+  "vastu.dir16.w.importance": {
+    ne: "W — आकाश र तमस्। व्यापारिक नाफा, मिहिनेतको फल र भोजन ग्रहण गर्दा लाग्ने पोषणको क्षेत्र।",
+    en: "W — space and tamas. Trade profit, the fruit of work, and the nourishment of a meal.",
+  },
+  "vastu.dir16.w.best": { ne: "भोजन कक्ष, पश्चिम-मुखी मुख्य ढोका, तिजोरी", en: "Dining room, a west-facing main door, a safe" },
+  "vastu.dir16.w.avoid": { ne: "शौचालय, विसर्जन क्षेत्र, कबाड भण्डारण", en: "Toilet, a disposal zone, junk storage" },
+
+  "vastu.dir16.nw.name": { ne: "वायव्य", en: "Vayavya" },
+  "vastu.dir16.nw.quality": { ne: "बाह्य सहयोग र बैंकिङ", en: "Support and banking" },
+  "vastu.dir16.nw.deity": { ne: "पापयक्ष्मा / रोग", en: "Papayakshma / Roga" },
+  "vastu.dir16.nw.importance": {
+    ne: "NW — वायु र रजस्। छिमेकी, बैंकिङ संस्था र समाजबाट पाइने सहयोगको क्षेत्र। यो हावाको वाहक हो।",
+    en: "NW — air and rajas. Help from neighbours, banks and society; the carrier of wind.",
+  },
+  "vastu.dir16.nw.best": { ne: "अतिथि कोठा, अन्न भण्डार, सवारी साधन पार्किङ", en: "Guest room, grain store, vehicle parking" },
+  "vastu.dir16.nw.avoid": { ne: "भारी आरसीसी पिलर, मुख्य बेडरुम, सेफ्टी ट्यांकीको गलत विन्यास", en: "A heavy RCC pillar, master bedroom, a badly placed septic" },
 
   "vastu.wheel.attr.money": { ne: "धन अवसर", en: "Money" },
   "vastu.wheel.attr.health": { ne: "स्वास्थ्य", en: "Health" },
@@ -3099,7 +3283,7 @@ export const strings = {
 
   "vastu.wheel.organ.kidney": { ne: "मृगौला", en: "Kidney" },
   "vastu.wheel.organ.pericardium": { ne: "हृदयावरण", en: "Pericardium" },
-  "vastu.wheel.organ.tamas": { ne: "तमस", en: "Tamas" },
+  "vastu.wheel.organ.tamas": { ne: "तमस्", en: "Tamas" },
   "vastu.wheel.organ.circulation": { ne: "रक्तसञ्चार", en: "Circulation" },
   "vastu.wheel.organ.liver": { ne: "कलेजो", en: "Liver" },
   "vastu.wheel.organ.gallbladder": { ne: "पित्तथैली", en: "Gall Bladder" },
@@ -3115,7 +3299,7 @@ export const strings = {
   "vastu.wheel.organ.bladder": { ne: "मूत्राशय", en: "Bladder" },
 
   "vastu.pada.soma.name": { ne: "सोम", en: "Soma" },
-  "vastu.pada.bhujaga.name": { ne: "भुजग", en: "Bhujaga" },
+  "vastu.pada.bhujaga.name": { ne: "भुजङ्ग", en: "Bhujanga" },
   "vastu.pada.aditi.name": { ne: "अदिति", en: "Aditi" },
   "vastu.pada.diti.name": { ne: "दिति", en: "Diti" },
   "vastu.pada.shikhi.name": { ne: "शिखी", en: "Shikhi" },
@@ -3125,7 +3309,7 @@ export const strings = {
   "vastu.pada.surya.name": { ne: "सूर्य", en: "Surya" },
   "vastu.pada.satya.name": { ne: "सत्य", en: "Satya" },
   "vastu.pada.bhrisha.name": { ne: "भृश", en: "Bhrisha" },
-  "vastu.pada.aakasha.name": { ne: "आकाश", en: "Aakasha" },
+  "vastu.pada.aakasha.name": { ne: "अन्तरिक्ष", en: "Antariksha" },
   "vastu.pada.anila.name": { ne: "अनिल", en: "Anila" },
   "vastu.pada.pushan.name": { ne: "पूषा", en: "Pushan" },
   "vastu.pada.vitatha.name": { ne: "वितथ", en: "Vitatha" },
@@ -3151,8 +3335,168 @@ export const strings = {
   "vastu.pada.vivasvan.name": { ne: "विवस्वान्", en: "Vivasvan" },
   "vastu.pada.mitra.name": { ne: "मित्र", en: "Mitra" },
 
+  "vastu.pada.shikhi.deity": { ne: "ईश (शिव / अग्निको शिर)", en: "Isha (Shiva / the head of fire)" },
+  "vastu.pada.shikhi.best": { ne: "ध्यान कक्ष, पूजा कोठा, हल्का हावा आउने झ्याल, खुला स्थान", en: "Meditation, puja, a lightly ventilated window, open space" },
+  "vastu.pada.shikhi.avoid": { ne: "मुख्य ढोका (आगोको भय र शोक), शौचालय, भान्सा, भारी भण्डार", en: "Main door (fear of fire and grief), toilet, kitchen, heavy storage" },
+
+  "vastu.pada.parjanya.deity": { ne: "पर्जन्य (वर्षा र वनस्पति उत्पादक)", en: "Parjanya (rain and plant growth)" },
+  "vastu.pada.parjanya.best": { ne: "भूमिगत पानीको ट्याङ्की, बगैंचा, ठूलो झ्याल, हल्का बस्ने कोठा", en: "Underground water tank, garden, a large window, a light sitting room" },
+  "vastu.pada.parjanya.avoid": { ne: "शौचालय, कबाड भण्डार, भारी आरसीसी पिलर", en: "Toilet, junk storage, a heavy RCC pillar" },
+
+  "vastu.pada.jayanta.deity": { ne: "जयन्त (इन्द्रका पुत्र — विजय र उत्साह)", en: "Jayanta (Indra's son — victory and zest)" },
+  "vastu.pada.jayanta.best": { ne: "मुख्य ढोका (अत्यन्त शुभ — धन र सन्तान लाभ), अध्ययन कोठा, बैठक कोठा", en: "Main door (highly auspicious — wealth and children), study, living room" },
+  "vastu.pada.jayanta.avoid": { ne: "शौचालय, फोहोर फाल्ने ठाउँ, भारी ओभरहेड ट्याङ्की", en: "Toilet, a waste dump, a heavy overhead tank" },
+
+  "vastu.pada.mahendra.deity": { ne: "महेन्द्र (इन्द्र — शासन र राजकीय सुख)", en: "Mahendra (Indra — rule and royal ease)" },
+  "vastu.pada.mahendra.best": { ne: "मुख्य प्रवेशद्वार (राजकीय सम्मान र प्रसिद्धि), बैठक कोठा, अफिस", en: "Main entrance (honour and fame), living room, office" },
+  "vastu.pada.mahendra.avoid": { ne: "शौचालय, भान्सा, भारी कबाड", en: "Toilet, kitchen, heavy junk" },
+
+  "vastu.pada.surya.deity": { ne: "सूर्य (प्रकाश, प्राण र ऊर्जा)", en: "Surya (light, prana and energy)" },
+  "vastu.pada.surya.best": { ne: "स्नानगृह (बाथरुम — बिहानीको घाम पर्ने), ठूलो झ्याल, योग कक्ष", en: "Bathroom with morning sun, a large window, a yoga room" },
+  "vastu.pada.surya.avoid": { ne: "मुख्य ढोका (क्रोध र अहङ्कार), सुत्ने ओछ्यान, भारी फर्निचर", en: "Main door (anger and pride), a sleeping bed, heavy furniture" },
+
+  "vastu.pada.satya.deity": { ne: "सत्य (धर्म, निष्ठा र विचार)", en: "Satya (dharma, fidelity and thought)" },
+  "vastu.pada.satya.best": { ne: "बैठक कोठा, सामाजिक भेटघाटको ठाउँ, झ्याल", en: "Living room, a place for social visits, windows" },
+  "vastu.pada.satya.avoid": { ne: "मुख्य ढोका (बाहिरी मानिसबाट छल-कपटको भय), फोहोर मैला", en: "Main door (fear of deceit from outsiders), filth" },
+
+  "vastu.pada.bhrisha.deity": { ne: "भृश (भावना, इच्छा र घामको ताप)", en: "Bhrisha (feeling, desire and the sun's heat)" },
+  "vastu.pada.bhrisha.best": { ne: "वासिङ मेसिन, दराज, लुगा धुने ठाउँ", en: "Washing machine, cupboards, a laundry spot" },
+  "vastu.pada.bhrisha.avoid": { ne: "मुख्य बेडरुम, पूजा कोठा, मुख्य ढोका (अत्यधिक क्रोध र क्रूरता)", en: "Master bedroom, puja, main door (excess anger and cruelty)" },
+
+  "vastu.pada.aakasha.deity": { ne: "अन्तरिक्ष (शून्य आकाश र वायु)", en: "Antariksha (empty sky and wind)" },
+  "vastu.pada.aakasha.best": { ne: "भान्साको झ्याल, हावा बाहिर फाल्ने फ्यान, भेन्टिलेसन", en: "Kitchen window, exhaust fan, ventilation" },
+  "vastu.pada.aakasha.avoid": { ne: "मुख्य ढोका (चोरी र आकस्मिक नोक्सानी), भूमिगत पानी", en: "Main door (theft and sudden loss), underground water" },
+
+  "vastu.pada.anila.deity": { ne: "अनिल (वायु र आगोको वाहक)", en: "Anila (carrier of wind and fire)" },
+  "vastu.pada.anila.best": { ne: "भान्साको ग्यास चुल्हो, विद्युत मिटर, गिजर, हिटर", en: "Gas stove, electrical meter, geyser, heater" },
+  "vastu.pada.anila.avoid": { ne: "मुख्य ढोका (सन्तान कष्ट र आगलागी), भूमिगत पानी", en: "Main door (harm to children and fire), underground water" },
+
+  "vastu.pada.pushan.deity": { ne: "पूषा (पोषण र गोठका संरक्षक)", en: "Pushan (nourishment and guardian of cattle)" },
+  "vastu.pada.pushan.best": { ne: "पशुहरूको गोठ, सहायक गेट, भण्डार कोठा", en: "A cattle shed, a service gate, a store" },
+  "vastu.pada.pushan.avoid": { ne: "मुख्य ढोका (दासता र अत्यधिक कडा श्रम), पूजा कोठा", en: "Main door (servitude and hard labour), puja" },
+
+  "vastu.pada.vitatha.deity": { ne: "वितथ (असत्य, भ्रम र विलासिता)", en: "Vitatha (untruth, delusion and luxury)" },
+  "vastu.pada.vitatha.best": { ne: "भण्डार, सहायक गेस्ट बेडरुम", en: "Store room, a secondary guest bedroom" },
+  "vastu.pada.vitatha.avoid": { ne: "मुख्य ढोका (नैतिक पतन र झुटो बानी), पूजा कोठा", en: "Main door (moral decline and lying), puja" },
+
+  "vastu.pada.grihakshata.deity": { ne: "गृहक्षत (गृहको सुव्यवस्था र सन्तान)", en: "Grihakshata (household order and children)" },
+  "vastu.pada.grihakshata.best": { ne: "दक्षिण-मुखी मुख्य ढोका (अत्यन्त शुभ — धन र सुख), बेडरुम", en: "A south-facing main door (highly auspicious — wealth and ease), bedroom" },
+  "vastu.pada.grihakshata.avoid": { ne: "भूमिगत पानी, सेफ्टी ट्याङ्की, खुला ठाउँ", en: "Underground water, septic, an open gap" },
+
+  "vastu.pada.yama.deity": { ne: "यम (मृत्यु, काल र न्याय)", en: "Yama (death, time and justice)" },
+  "vastu.pada.yama.best": { ne: "भारी आरसीसी पिलर, फलामका सामान राख्ने ठाउँ, भर्याङ", en: "A heavy RCC pillar, iron storage, stairs" },
+  "vastu.pada.yama.avoid": { ne: "मुख्य ढोका (दीर्घकालीन रोग र अकाल मृत्यु), पूजा कोठा", en: "Main door (chronic illness and untimely death), puja" },
+
+  "vastu.pada.gandharva.deity": { ne: "गन्धर्व (कला, संगीत र सुख-भोग)", en: "Gandharva (art, music and pleasure)" },
+  "vastu.pada.gandharva.best": { ne: "मनोरञ्जन कक्ष, बैठक कोठा, गेस्ट बेडरुम", en: "A music or leisure room, living room, guest bedroom" },
+  "vastu.pada.gandharva.avoid": { ne: "मुख्य तिजोरी (पैसा बच्न गाह्रो हुने), कबाड कोठा", en: "The main safe (money is hard to keep), a junk room" },
+
+  "vastu.pada.bhringraj.deity": { ne: "भृङ्गराज (औषधीय शक्ति र रोग नासक)", en: "Bhringaraja (medicinal power, destroyer of disease)" },
+  "vastu.pada.bhringraj.best": { ne: "शौचालय, सेफ्टी ट्याङ्की, डस्टबिन राख्ने ठाउँ", en: "Toilet, septic, a dustbin" },
+  "vastu.pada.bhringraj.avoid": { ne: "मुख्य बेडरुम (शारीरिक कमजोरी), पूजा कोठा, मुख्य ढोका", en: "Master bedroom (bodily weakness), puja, main door" },
+
+  "vastu.pada.mriga.deity": { ne: "मृग (तपस्या, खोज र संकुचन)", en: "Mriga (austerity, search and contraction)" },
+  "vastu.pada.mriga.best": { ne: "भारी स्टोर रुम, भर्याङको तल्लो भाग, गह्रौँ सामग्री", en: "A heavy store, the foot of the stairs, heavy goods" },
+  "vastu.pada.mriga.avoid": { ne: "मुख्य ढोका (सन्तान र धनको क्षय), खुला बाल्कोनी", en: "Main door (loss of children and wealth), an open balcony" },
+
+  "vastu.pada.pitra.deity": { ne: "पितृ (पुर्खा र गहिरो जरा)", en: "Pitri (ancestors and deep roots)" },
+  "vastu.pada.pitra.best": { ne: "घरको सबैभन्दा भारी कोठा, गह्रौँ कपाट, मास्टर बेडरुम", en: "The heaviest room, heavy cupboards, master bedroom" },
+  "vastu.pada.pitra.avoid": { ne: "मुख्य ढोका (आयु र धन नाश), शौचालय, पानीको बोरिङ", en: "Main door (loss of lifespan and wealth), toilet, a water boring" },
+
+  "vastu.pada.dauvarika.deity": { ne: "दौवारिक (द्वारको रक्षक)", en: "Dauvarika (guardian of the door)" },
+  "vastu.pada.dauvarika.best": { ne: "सुरक्षा गार्ड कोठा, अध्ययन कोठा, घरको पछाडिको सहायक गेट", en: "A guard room, study, a rear service gate" },
+  "vastu.pada.dauvarika.avoid": { ne: "मुख्य तिजोरी, खुला बाल्कोनी", en: "The main safe, an open balcony" },
+
+  "vastu.pada.sugriva.deity": { ne: "सुग्रीव (ज्ञान, संचय र बुद्धिमत्ता)", en: "Sugriva (knowledge, store and wisdom)" },
+  "vastu.pada.sugriva.best": { ne: "बच्चाहरूको अध्ययन कोठा, किताबको दराज, अन्न भण्डार", en: "A children's study, bookcase, grain store" },
+  "vastu.pada.sugriva.avoid": { ne: "मुख्य ढोका (शोक र घाटा), शौचालय", en: "Main door (grief and loss), toilet" },
+
+  "vastu.pada.pushpadanta.deity": { ne: "पुष्पदन्त (पुष्प र वाहनका स्वामी)", en: "Pushpadanta (lord of flowers and vehicles)" },
+  "vastu.pada.pushpadanta.best": { ne: "पश्चिम-मुखी मुख्य ढोका (अत्यन्त शुभ — वंशवृद्धि र धन लाभ), भोजन कक्ष", en: "A west-facing main door (highly auspicious — lineage and wealth), dining room" },
+  "vastu.pada.pushpadanta.avoid": { ne: "शौचालय, सेफ्टी ट्याङ्की, फोहोर कबाड", en: "Toilet, septic, filthy junk" },
+
+  "vastu.pada.varuna.deity": { ne: "वरुण (महासागर र वैश्विक नियम)", en: "Varuna (the ocean and cosmic law)" },
+  "vastu.pada.varuna.best": { ne: "भोजन कक्ष, ओभरहेड पानीको ट्याङ्की, पश्चिमको ढोका", en: "Dining room, overhead water tank, a west door" },
+  "vastu.pada.varuna.avoid": { ne: "शौचालयको सेफ्टी ट्याङ्की, कबाड राख्ने ठाउँ", en: "A toilet septic, a junk pile" },
+
+  "vastu.pada.asura.deity": { ne: "असुर (भौतिक शक्ति र भ्रम)", en: "Asura (material force and delusion)" },
+  "vastu.pada.asura.best": { ne: "शौचालय, सेफ्टी ट्याङ्की, कबाड राख्ने कोठा, डस्टबिन", en: "Toilet, septic, a junk room, dustbin" },
+  "vastu.pada.asura.avoid": { ne: "पूजा कोठा, मुख्य बेडरुम, मुख्य ढोका (विवाद र अपमान)", en: "Puja, master bedroom, main door (quarrel and insult)" },
+
+  "vastu.pada.shosha.deity": { ne: "शोष (सुकाउने वा ऊर्जा क्षय गर्ने शक्ति)", en: "Shosha (the power that dries or drains energy)" },
+  "vastu.pada.shosha.best": { ne: "शौचालय, ओभन वा सुख्खा सामान भण्डारण गर्ने ठाउँ", en: "Toilet, an oven, or dry-goods storage" },
+  "vastu.pada.shosha.avoid": { ne: "मुख्य बेडरुम (निराशा र डिप्रेसन), बालबालिकाको ओछ्यान", en: "Master bedroom (despair), a child's bed" },
+
+  "vastu.pada.papayakshma.deity": { ne: "पापयक्ष्मा (रोग, शोक र क्षय)", en: "Papayakshma (disease, grief and decay)" },
+  "vastu.pada.papayakshma.best": { ne: "शौचालयको आउटलेट पाइप, सेफ्टी ट्याङ्की, कबाड", en: "Toilet outlet pipe, septic, junk" },
+  "vastu.pada.papayakshma.avoid": { ne: "मुख्य ढोका (रोग र कष्ट), भान्सा, पूजा कोठा", en: "Main door (illness and hardship), kitchen, puja" },
+
+  "vastu.pada.roga.deity": { ne: "रोग (कमजोरी, दुःख र शोक)", en: "Roga (weakness, sorrow and grief)" },
+  "vastu.pada.roga.best": { ne: "फोहोर राख्ने ठाउँ, सेफ्टी ट्याङ्की, आउटलेट पाइप", en: "A waste spot, septic, an outlet pipe" },
+  "vastu.pada.roga.avoid": { ne: "बेडरुम (दीर्घकालीन रोग), मुख्य ढोका, पानीको इनार", en: "Bedroom (chronic illness), main door, a well" },
+
+  "vastu.pada.naga.deity": { ne: "नाग (सर्प, गोप्य ज्ञान र क्रोध)", en: "Naga (serpents, secret knowledge and anger)" },
+  "vastu.pada.naga.best": { ne: "लुगा फेर्ने कोठा, वाशरुम", en: "Dressing room, washroom" },
+  "vastu.pada.naga.avoid": { ne: "मुख्य ढोका (शत्रुको षड्यन्त्र), पूजा कोठा, बेडरुम", en: "Main door (an enemy's plot), puja, bedroom" },
+
+  "vastu.pada.mukhya.deity": { ne: "मुख्य (विश्वकर्मा — वास्तु शिल्पका अधिपति)", en: "Mukhya (Vishvakarma — lord of Vastu craft)" },
+  "vastu.pada.mukhya.best": { ne: "उत्तर-मुखी मुख्य ढोका (अत्यन्त शुभ — धन र सुख), अध्ययन कक्ष", en: "A north-facing main door (highly auspicious — wealth and ease), study" },
+  "vastu.pada.mukhya.avoid": { ne: "शौचालय, भारी कपाट, भान्सा (आगो र पानीको वैरता)", en: "Toilet, heavy cupboards, kitchen (fire against water)" },
+
+  "vastu.pada.bhallata.deity": { ne: "भल्लाट (महान् सम्पत्ति र चन्द्रमाको चन्द्रिका)", en: "Bhallata (great wealth and moonlight)" },
+  "vastu.pada.bhallata.best": { ne: "मुख्य प्रवेशद्वार (अतुलनीय धन र भूमि प्राप्ति), तिजोरी, सेफ", en: "Main entrance (great wealth and land), a locker, a safe" },
+  "vastu.pada.bhallata.avoid": { ne: "शौचालय, भान्सा, भारी आरसीसी पिलर", en: "Toilet, kitchen, a heavy RCC pillar" },
+
+  "vastu.pada.soma.deity": { ne: "सोम (चन्द्रदेव — शीतलता, मानसिक शान्ति)", en: "Soma (the moon — coolness and mental peace)" },
+  "vastu.pada.soma.best": { ne: "मुख्य ढोका, ध्यान कोठा, हल्का बैठक, बहुमूल्य रत्न राख्ने ठाउँ", en: "Main door, meditation, a light sitting room, a place for gems" },
+  "vastu.pada.soma.avoid": { ne: "शौचालय, भान्सा, सेफ्टी ट्याङ्की", en: "Toilet, kitchen, septic" },
+
+  "vastu.pada.bhujaga.deity": { ne: "भुजङ्ग (सुरक्षात्मक नाग / उत्तरी जलदेवता)", en: "Bhujanga (a guardian naga / northern water deity)" },
+  "vastu.pada.bhujaga.best": { ne: "प्राथमिक उपचार बाकस, औषधि भण्डारण, हल्का व्यायाम कोठा", en: "First-aid, medicine storage, a light exercise room" },
+  "vastu.pada.bhujaga.avoid": { ne: "शौचालय, भारी ओभरहेड ट्याङ्की, कबाड", en: "Toilet, a heavy overhead tank, junk" },
+
+  "vastu.pada.aditi.deity": { ne: "अदिति (देवताहरूको माता — सुरक्षा र अनन्तता)", en: "Aditi (mother of the gods — protection and the boundless)" },
+  "vastu.pada.aditi.best": { ne: "हल्का बस्ने कोठा, ध्यान कोठा, पूजा कोठा, उत्तरको ढोका", en: "A light sitting room, meditation, puja, a north door" },
+  "vastu.pada.aditi.avoid": { ne: "शौचालय, भारी स्टोर रुम, सेफ्टी ट्याङ्की", en: "Toilet, a heavy store, septic" },
+
+  "vastu.pada.diti.deity": { ne: "दिति (असुरहरूको माता — दूरदृष्टि र संकल्प)", en: "Diti (mother of the asuras — foresight and resolve)" },
+  "vastu.pada.diti.best": { ne: "अध्ययन कोठा, बालबालिकाको ओछ्यान, हल्का झ्याल", en: "Study, a child's bed, a light window" },
+  "vastu.pada.diti.avoid": { ne: "शौचालय, भारी कबाड भण्डार, सेफ्टी ट्याङ्की", en: "Toilet, heavy junk storage, septic" },
+
+  "vastu.pada.bhudhara.importance": {
+    ne: "भूधर — उत्तरको आन्तरिक देवता। पृथ्वी थाम्ने; बैठक र स्थिरताको मूल, बाहिरी ३२ पद होइन।",
+    en: "Bhudhara — the inner deity of the north. The earth-bearer; stability at the core, not a wall pada.",
+  },
+  "vastu.pada.bhudhara.best": { ne: "खुला बीच, बैठक तर्फको मूल", en: "An open core toward the living room" },
+  "vastu.pada.bhudhara.avoid": { ne: "खम्बा, सिँढी, शौचालय", en: "A pillar, stair, toilet" },
+
+  "vastu.pada.aryama.importance": {
+    ne: "अर्यमा — पूर्वको आन्तरिक देवता। सूर्य-सम्मान; समाज र ढोकाको मूल।",
+    en: "Aryama — the inner deity of the east. Solar honour; the core of social life and the door.",
+  },
+  "vastu.pada.aryama.best": { ne: "उज्यालो, हावा, प्रवेश तर्फको मूल", en: "Light, air, the core toward the entrance" },
+  "vastu.pada.aryama.avoid": { ne: "अँध्यारो भण्डार, शौचालय", en: "A dark store, toilet" },
+
+  "vastu.pada.vivasvan.importance": {
+    ne: "विवस्वान् — दक्षिणको आन्तरिक देवता। धर्म-सूर्य; गह्रौँ आधारको मूल।",
+    en: "Vivasvan — the inner deity of the south. The dharma-sun; the core of a heavy base.",
+  },
+  "vastu.pada.vivasvan.best": { ne: "स्थिर भुइँ, गह्रौँ कोठा तर्फको मूल", en: "A firm floor, the core toward heavy rooms" },
+  "vastu.pada.vivasvan.avoid": { ne: "पूजा, भूमिगत पानी", en: "Puja, underground water" },
+
+  "vastu.pada.mitra.importance": {
+    ne: "मित्र — पश्चिमको आन्तरिक देवता। सन्धि र लाभको मूल।",
+    en: "Mitra — the inner deity of the west. The core of contracts and gain.",
+  },
+  "vastu.pada.mitra.best": { ne: "अध्ययन तर्फको मूल, खुला पश्चिम", en: "The core toward a study, an open west" },
+  "vastu.pada.mitra.avoid": { ne: "भान्सा, मुख्य पूजा", en: "Kitchen, the main puja" },
+
   "vastu.dir.east.name": { ne: "पूर्व", en: "East" },
   "vastu.dir.east.deity": { ne: "इन्द्र", en: "Indra" },
+  "vastu.dir.east.importance": {
+    ne: "इन्द्र र अर्यमाको पूर्व — वायु तत्त्व र सत्त्व। बिहानको प्राण, सामाजिक सम्बन्ध र जीवनशक्ति यहाँबाट घरभित्र पस्छ; घाम र हावा छेक्नु हुँदैन।",
+    en: "Indra and Aryama in the east — air and sattva. Morning prana, social life and vitality enter here; do not block the sun or the breeze.",
+  },
   "vastu.dir.east.best": {
     ne: "मुख्य ढोका, ठूला झ्याल, बिहानको घाम भित्रिने ठाउँ",
     en: "Main door, large windows, wherever morning light should reach",
@@ -3161,6 +3505,10 @@ export const strings = {
 
   "vastu.dir.southeast.name": { ne: "आग्नेय", en: "South-East" },
   "vastu.dir.southeast.deity": { ne: "अग्नि", en: "Agni" },
+  "vastu.dir.southeast.importance": {
+    ne: "अग्निकोण — रजस् र अग्नि तत्त्वको आसन। पाक, पाचन र बिजुलीको शक्ति यहीबाट चल्छ; जलसँग जुधाउनु हुँदैन।",
+    en: "Agneya — the seat of rajas and fire. Cooking, digestion and electrical heat belong here; do not let water oppose it.",
+  },
   "vastu.dir.southeast.best": {
     ne: "भान्सा, चुल्हो, बिजुलीका उपकरण, इन्भर्टर",
     en: "Kitchen, stove, electrical appliances, inverter",
@@ -3169,6 +3517,10 @@ export const strings = {
 
   "vastu.dir.south.name": { ne: "दक्षिण", en: "South" },
   "vastu.dir.south.deity": { ne: "यम", en: "Yama" },
+  "vastu.dir.south.importance": {
+    ne: "यम र विवस्वान् — अग्नि र तमसको दक्षिणी पीठ। बल, सुरक्षा र शयनका लागि; मुख्य ढोका वा ठूलो खाली भाग राख्नु हुँदैन।",
+    en: "Yama and Vivasvan — the southern seat of fire and tamas. Strength, security and bedrooms; not the main door or a wide gap.",
+  },
   "vastu.dir.south.best": {
     ne: "शयनकक्ष, गह्रौँ अलमारी, भण्डार",
     en: "Bedrooms, heavy cupboards, storage",
@@ -3177,6 +3529,10 @@ export const strings = {
 
   "vastu.dir.southwest.name": { ne: "नैऋत्य", en: "South-West" },
   "vastu.dir.southwest.deity": { ne: "निरृति", en: "Nirriti" },
+  "vastu.dir.southwest.importance": {
+    ne: "नैऋत्य — पृथ्वी तत्त्व र तमस, वास्तु पुरुषका पाउ। घरको गह्रौँ स्थिरता, मुख्य शयनकक्ष र सम्बन्धको जग यही हो।",
+    en: "Nairitya — earth and tamas, the Vastu Purusha's feet. The house's heavy stability, the master bedroom and the ground of the household.",
+  },
   "vastu.dir.southwest.best": {
     ne: "मुख्य शयनकक्ष, घरको सबैभन्दा गह्रौँ भाग, माथिल्लो पानी ट्यांकी",
     en: "Master bedroom, the heaviest part of the house, overhead water tank",
@@ -3185,6 +3541,10 @@ export const strings = {
 
   "vastu.dir.west.name": { ne: "पश्चिम", en: "West" },
   "vastu.dir.west.deity": { ne: "वरुण", en: "Varuna" },
+  "vastu.dir.west.importance": {
+    ne: "पश्चिम — आकाश तत्त्व, वरुण र मित्र। लाभ, भोजन र चिन्तनको ठाउँ; ब्रह्मस्थानजस्तै पूर्ण खाली होइन, पूजाको मूल कुना पनि होइन।",
+    en: "West — space, Varuna and Mitra. Gains, dining and contemplation; not as hollow as the Brahmasthan, and not the main shrine.",
+  },
   "vastu.dir.west.best": {
     ne: "भोजन कक्ष, अध्ययन कोठा, बालबालिकाको कोठा",
     en: "Dining room, study, children's room",
@@ -3193,6 +3553,10 @@ export const strings = {
 
   "vastu.dir.northwest.name": { ne: "वायव्य", en: "North-West" },
   "vastu.dir.northwest.deity": { ne: "वायु", en: "Vayu" },
+  "vastu.dir.northwest.importance": {
+    ne: "वायव्य — वायु र रजस्, गति र परिवर्तन। पाहुना, शौचालय र सवारी यहाँ चल्छन्; स्थायी मुख्य शयनकक्ष यहाँ अस्थिर हुन्छ।",
+    en: "Vayavya — air and rajas, motion and change. Guests, toilet and vehicles belong here; a permanent master bedroom stays restless.",
+  },
   "vastu.dir.northwest.best": {
     ne: "पाहुना कोठा, भण्डार, शौचालय, गाडी राख्ने ठाउँ",
     en: "Guest room, storage, toilet, garage",
@@ -3201,6 +3565,10 @@ export const strings = {
 
   "vastu.dir.north.name": { ne: "उत्तर", en: "North" },
   "vastu.dir.north.deity": { ne: "कुबेर", en: "Kubera" },
+  "vastu.dir.north.importance": {
+    ne: "कुबेरको दिशा — धन, अवसर र शीतल जल ऊर्जा। बैठक र ढुकुटी यहाँ राख्दा आयको प्रवाह खुला रहन्छ; गह्रौँ भारले थिच्नु हुँदैन।",
+    en: "Kubera's quarter — wealth, opportunity and cool water energy. A living room or treasury here keeps income flowing; do not weigh it down.",
+  },
   "vastu.dir.north.best": {
     ne: "ढुकुटी, बैठक, पानीको स्रोत, खुला र हल्का भाग",
     en: "Treasury or safe, living room, water source, open and light space",
@@ -3209,6 +3577,10 @@ export const strings = {
 
   "vastu.dir.northeast.name": { ne: "ईशान", en: "North-East" },
   "vastu.dir.northeast.deity": { ne: "ईश (शिव)", en: "Isha (Shiva)" },
+  "vastu.dir.northeast.importance": {
+    ne: "वास्तु पुरुषको शिर — जलतत्त्व र सत्त्व गुणको मूल कुना। स्वास्थ्य, ज्ञान र ईशान देवताको स्थान; घरको सबैभन्दा पवित्र र हल्का भाग।",
+    en: "The Vastu Purusha's head — the root of water and sattva. Health, clarity and Isha live here; keep this the lightest, most sacred corner.",
+  },
   "vastu.dir.northeast.best": {
     ne: "पूजा कोठा, भूमिगत पानी ट्यांकी, इनार — घरको सबैभन्दा पवित्र कुना",
     en: "Puja room, underground water tank, well — the most sacred corner of a home",
@@ -3217,6 +3589,10 @@ export const strings = {
 
   "vastu.dir.center.name": { ne: "ब्रह्मस्थान", en: "Brahmasthan" },
   "vastu.dir.center.deity": { ne: "ब्रह्मा", en: "Brahma" },
+  "vastu.dir.center.importance": {
+    ne: "ब्रह्मस्थान — आकाश तत्त्व र सत्त्व। सबै दिशा यहीबाट फैलिन्छन्; खम्बा, सिँढी वा गह्रौँ भारले थिच्नु ब्रह्माको सास छेक्नु हो।",
+    en: "Brahmasthan — space and sattva. Every direction unfolds from here; a pillar, stair or heavy load blocks Brahma's breath.",
+  },
   "vastu.dir.center.best": {
     ne: "खुला, उज्यालो र खाली — घरको सास फेर्ने ठाउँ",
     en: "Open, lit and empty — the part of the house that breathes",

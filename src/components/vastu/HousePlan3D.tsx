@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTranslation } from "react-i18next";
+import { vastuDirection, vastuElementTint } from "@/lib/vastu";
 import type { BWall, FloorConcept, HouseConcept, PlannedRoom } from "@/lib/house-plan/types";
 
 const WALL_H = 2.75;
@@ -21,15 +22,8 @@ type Piece = {
   color: string;
 };
 
-function floorTint(kind: PlannedRoom["kind"], id: string): string {
-  if (kind === "brahmasthan" && id.startsWith("center_")) return "#7f9a68";
-  if (kind === "brahmasthan" || kind === "verandah") return "#c8d0c2";
-  if (kind === "foyer" || kind === "hall" || kind === "landing") return "#d7c6a6";
-  if (kind === "kitchen") return "#e4cfc0";
-  if (kind === "puja") return "#ead9b4";
-  if (kind === "toilet" || kind === "bathroom" || kind === "combined") return "#cfd9de";
-  if (kind === "staircase") return "#c4beb4";
-  return "#efe7d8";
+function floorTint(room: PlannedRoom): string {
+  return vastuElementTint(vastuDirection(room.vastuRegion).element, room.kind === "brahmasthan" ? 0.36 : 0.28);
 }
 
 function wallEnds(wall: BWall, verts: Map<string, { x: number; y: number }>): { x1: number; y1: number; x2: number; y2: number; len: number } | null {
@@ -164,7 +158,7 @@ function HouseMesh({ concept }: { concept: HouseConcept }) {
           w: room.rect.w,
           h: room.rect.h,
           y: baseY + 0.03,
-          color: floorTint(room.kind, room.id),
+          color: floorTint(room),
         });
         if (room.kind === "staircase") {
           const steps = 8;

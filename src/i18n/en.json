@@ -1474,7 +1474,8 @@
       "status": {
         "good": "Good",
         "ok": "Okay",
-        "bad": "Bad"
+        "bad": "Bad",
+        "mixed": "Mixed"
       },
       "attr": {
         "money": "Money",
@@ -1512,6 +1513,18 @@
         "intestine": "Intestine",
         "bladder": "Bladder"
       }
+    },
+    "compass": {
+      "dialog_title": "Stand in the Brahmasthan",
+      "dialog_body": "The phone compass will turn the wheel to match the house. Stand at the exact centre of the house — the Brahmasthan — hold the phone upright in front of you, then tap Done. The wall you face will sit at the top of the ring.",
+      "done": "Done",
+      "cancel": "Cancel",
+      "stop": "Stop",
+      "live": "Compass live — the wall you face is at the top of the ring.",
+      "facing": "Facing: {{name}} ({{abbr}})",
+      "drifting": "This device has no absolute compass — the heading may drift.",
+      "denied": "Compass permission was denied. On iPhone, enable Motion & Orientation for this site in Settings.",
+      "unavailable": "No compass reading. Try again on a phone, over https, standing at the centre of the house."
     },
     "plan": {
       "heading": "House layout (2D)",
@@ -1758,9 +1771,21 @@
     },
     "labels": {
       "deity": "Deity",
+      "inner_deity": "Inner deity",
       "element": "Element",
+      "guna": "Guna",
+      "importance": "Importance",
+      "description": "Detail",
       "best": "Best for",
-      "avoid": "Avoid"
+      "avoid": "Avoid",
+      "pada": "Pada",
+      "quality": "Quality",
+      "kind": {
+        "dir8": "8-direction",
+        "dir16": "16-direction",
+        "pada": "Pada",
+        "inner4": "Inner four"
+      }
     },
     "element": {
       "earth": "Earth",
@@ -1771,192 +1796,413 @@
     },
     "dir16": {
       "nne": {
-        "name": "North-Northeast"
+        "name": "North-Northeast",
+        "quality": "Health and immunity",
+        "deity": "Mriga (Shaila) / Aditi",
+        "importance": "NNE — water and sattva. The zone that strengthens the body and the effect of medicine; the classical oshadhagriha.",
+        "best": "First-aid, medicine storage, a light exercise room",
+        "avoid": "Toilet, a waste dump, a heavy overhead tank"
       },
       "ene": {
-        "name": "East-Northeast"
+        "name": "East-Northeast",
+        "quality": "Joy, freshness and social movement",
+        "deity": "Jayanta",
+        "importance": "ENE — air and sattva. Joy, freshness and social energy. This is the east wind, not Īśāna.",
+        "best": "Garden, large windows, a light sitting area, play",
+        "avoid": "Toilet, heavy storage, kitchen"
       },
       "ese": {
-        "name": "East-Southeast"
+        "name": "East-Southeast",
+        "quality": "Churning and anxiety",
+        "deity": "Satya / Bhrisha",
+        "importance": "ESE — air and rajas. This slice is mental churning; sitting here feeds overthinking.",
+        "best": "Washing machine, a churning/work nook, an informal talk room",
+        "avoid": "Meditation room, puja, a sleeping bed"
       },
       "sse": {
-        "name": "South-Southeast"
+        "name": "South-Southeast",
+        "quality": "Strength and confidence",
+        "deity": "Pushan / Vitatha",
+        "importance": "SSE — fire and tamas. It drives off fear and gives bodily strength and confidence.",
+        "best": "Gym, a guard room, sports storage",
+        "avoid": "Toilet, a waste dump"
       },
       "ssw": {
-        "name": "South-Southwest"
+        "name": "South-Southwest",
+        "quality": "Disposal and wastage",
+        "deity": "Gandharva / Bhringraj",
+        "importance": "SSW — earth and tamas. The main disposal slice; its energy helps the house shed waste and the negative.",
+        "best": "Toilet, septic, dustbin, a waste dump",
+        "avoid": "Puja, a safe, kitchen, the main bed"
       },
       "wsw": {
-        "name": "West-Southwest"
+        "name": "West-Southwest",
+        "quality": "Education and savings",
+        "deity": "Dauvarika / Sugriva",
+        "importance": "WSW — space and tamas. The principal slice for study and for keeping savings.",
+        "best": "Study room, bookcase, children's bedroom",
+        "avoid": "Toilet, a gas stove, disposal fittings"
       },
       "wnw": {
-        "name": "West-Northwest"
+        "name": "West-Northwest",
+        "quality": "Release and detoxification",
+        "deity": "Asura / Shosha",
+        "importance": "WNW — space and rajas. The slice that throws grief and the negative out; classically a rodanagriha, a weeping-room.",
+        "best": "Washing machine, toilet, waste store, a quiet sit for the mind",
+        "avoid": "Puja, a new bride's room, a deep-rest bedroom"
       },
       "nnw": {
-        "name": "North-Northwest"
+        "name": "North-Northwest",
+        "quality": "Attraction and relationship",
+        "deity": "Naga / Mukhya",
+        "importance": "NNW — air and sattva. The couple's attraction and affection; classically a ratigriha.",
+        "best": "A newlyweds' bedroom, dressing room, a place for scents",
+        "avoid": "Puja, a student's study"
+      },
+      "n": {
+        "name": "North",
+        "quality": "Wealth and opportunities",
+        "deity": "Bhallata / Soma",
+        "importance": "N — water and sattva. Kubera's quarter. It draws new work and a steady inflow of money.",
+        "best": "Main door, office, a money safe, an open living room",
+        "avoid": "Toilet, a heavy store, kitchen"
+      },
+      "ne": {
+        "name": "Ishana",
+        "quality": "Clarity of mind and the spiritual",
+        "deity": "Isha (Shiva)",
+        "importance": "NE — water and sattva. The head of the house, where cosmic energy enters; it gives mental clarity and spiritual lift.",
+        "best": "Puja room, meditation, yoga, an open courtyard",
+        "avoid": "Toilet, heavy storage, kitchen, an overhead water tank"
+      },
+      "e": {
+        "name": "East",
+        "quality": "Social connectivity",
+        "deity": "Mahendra / Surya",
+        "importance": "E — air and sattva. It governs reach and ties in society. Morning sun from here puts prana into the house.",
+        "best": "Bathroom, an east-facing main door, living room",
+        "avoid": "Heavy cupboards, toilet, a closed southwest-like wall"
+      },
+      "se": {
+        "name": "Agneya",
+        "quality": "Cash flow, energy and drive",
+        "deity": "Anila (Agni) / Antariksha",
+        "importance": "SE — fire and rajas. It governs cash liquidity and the household's digestive fire.",
+        "best": "Main kitchen, electrical meter, generator, heater",
+        "avoid": "Underground water tank, septic, bedroom"
+      },
+      "s": {
+        "name": "South",
+        "quality": "Relaxation, fame and rest",
+        "deity": "Grihakshata / Yama",
+        "importance": "S — earth and tamas. The slice of rest and deep sleep; it eases the day's fatigue and quiets the mind.",
+        "best": "Bedroom, heavy cupboards, a higher south wall",
+        "avoid": "A well or boring, puja, an open courtyard"
+      },
+      "sw": {
+        "name": "Nairitya",
+        "quality": "Relationship and skills",
+        "deity": "Pitri / Mriga",
+        "importance": "SW — earth and tamas. It steadies family bonds and a person's working skill.",
+        "best": "Master bedroom, heavy cupboards, a jewellery locker",
+        "avoid": "Toilet, underground water, main door, an open balcony"
+      },
+      "w": {
+        "name": "West",
+        "quality": "Gains, profit and food",
+        "deity": "Pushpadanta / Varuna",
+        "importance": "W — space and tamas. Trade profit, the fruit of work, and the nourishment of a meal.",
+        "best": "Dining room, a west-facing main door, a safe",
+        "avoid": "Toilet, a disposal zone, junk storage"
+      },
+      "nw": {
+        "name": "Vayavya",
+        "quality": "Support and banking",
+        "deity": "Papayakshma / Roga",
+        "importance": "NW — air and rajas. Help from neighbours, banks and society; the carrier of wind.",
+        "best": "Guest room, grain store, vehicle parking",
+        "avoid": "A heavy RCC pillar, master bedroom, a badly placed septic"
       }
     },
     "pada": {
       "soma": {
-        "name": "Soma"
+        "name": "Soma",
+        "deity": "Soma (the moon — coolness and mental peace)",
+        "best": "Main door, meditation, a light sitting room, a place for gems",
+        "avoid": "Toilet, kitchen, septic"
       },
       "bhujaga": {
-        "name": "Bhujaga"
+        "name": "Bhujanga",
+        "deity": "Bhujanga (a guardian naga / northern water deity)",
+        "best": "First-aid, medicine storage, a light exercise room",
+        "avoid": "Toilet, a heavy overhead tank, junk"
       },
       "aditi": {
-        "name": "Aditi"
+        "name": "Aditi",
+        "deity": "Aditi (mother of the gods — protection and the boundless)",
+        "best": "A light sitting room, meditation, puja, a north door",
+        "avoid": "Toilet, a heavy store, septic"
       },
       "diti": {
-        "name": "Diti"
+        "name": "Diti",
+        "deity": "Diti (mother of the asuras — foresight and resolve)",
+        "best": "Study, a child's bed, a light window",
+        "avoid": "Toilet, heavy junk storage, septic"
       },
       "shikhi": {
-        "name": "Shikhi"
+        "name": "Shikhi",
+        "deity": "Isha (Shiva / the head of fire)",
+        "best": "Meditation, puja, a lightly ventilated window, open space",
+        "avoid": "Main door (fear of fire and grief), toilet, kitchen, heavy storage"
       },
       "parjanya": {
-        "name": "Parjanya"
+        "name": "Parjanya",
+        "deity": "Parjanya (rain and plant growth)",
+        "best": "Underground water tank, garden, a large window, a light sitting room",
+        "avoid": "Toilet, junk storage, a heavy RCC pillar"
       },
       "jayanta": {
-        "name": "Jayanta"
+        "name": "Jayanta",
+        "deity": "Jayanta (Indra's son — victory and zest)",
+        "best": "Main door (highly auspicious — wealth and children), study, living room",
+        "avoid": "Toilet, a waste dump, a heavy overhead tank"
       },
       "mahendra": {
-        "name": "Mahendra"
+        "name": "Mahendra",
+        "deity": "Mahendra (Indra — rule and royal ease)",
+        "best": "Main entrance (honour and fame), living room, office",
+        "avoid": "Toilet, kitchen, heavy junk"
       },
       "surya": {
-        "name": "Surya"
+        "name": "Surya",
+        "deity": "Surya (light, prana and energy)",
+        "best": "Bathroom with morning sun, a large window, a yoga room",
+        "avoid": "Main door (anger and pride), a sleeping bed, heavy furniture"
       },
       "satya": {
-        "name": "Satya"
+        "name": "Satya",
+        "deity": "Satya (dharma, fidelity and thought)",
+        "best": "Living room, a place for social visits, windows",
+        "avoid": "Main door (fear of deceit from outsiders), filth"
       },
       "bhrisha": {
-        "name": "Bhrisha"
+        "name": "Bhrisha",
+        "deity": "Bhrisha (feeling, desire and the sun's heat)",
+        "best": "Washing machine, cupboards, a laundry spot",
+        "avoid": "Master bedroom, puja, main door (excess anger and cruelty)"
       },
       "aakasha": {
-        "name": "Aakasha"
+        "name": "Antariksha",
+        "deity": "Antariksha (empty sky and wind)",
+        "best": "Kitchen window, exhaust fan, ventilation",
+        "avoid": "Main door (theft and sudden loss), underground water"
       },
       "anila": {
-        "name": "Anila"
+        "name": "Anila",
+        "deity": "Anila (carrier of wind and fire)",
+        "best": "Gas stove, electrical meter, geyser, heater",
+        "avoid": "Main door (harm to children and fire), underground water"
       },
       "pushan": {
-        "name": "Pushan"
+        "name": "Pushan",
+        "deity": "Pushan (nourishment and guardian of cattle)",
+        "best": "A cattle shed, a service gate, a store",
+        "avoid": "Main door (servitude and hard labour), puja"
       },
       "vitatha": {
-        "name": "Vitatha"
+        "name": "Vitatha",
+        "deity": "Vitatha (untruth, delusion and luxury)",
+        "best": "Store room, a secondary guest bedroom",
+        "avoid": "Main door (moral decline and lying), puja"
       },
       "grihakshata": {
-        "name": "Grihakshata"
+        "name": "Grihakshata",
+        "deity": "Grihakshata (household order and children)",
+        "best": "A south-facing main door (highly auspicious — wealth and ease), bedroom",
+        "avoid": "Underground water, septic, an open gap"
       },
       "yama": {
-        "name": "Yama"
+        "name": "Yama",
+        "deity": "Yama (death, time and justice)",
+        "best": "A heavy RCC pillar, iron storage, stairs",
+        "avoid": "Main door (chronic illness and untimely death), puja"
       },
       "gandharva": {
-        "name": "Gandharva"
+        "name": "Gandharva",
+        "deity": "Gandharva (art, music and pleasure)",
+        "best": "A music or leisure room, living room, guest bedroom",
+        "avoid": "The main safe (money is hard to keep), a junk room"
       },
       "bhringraj": {
-        "name": "Bhringraj"
+        "name": "Bhringraj",
+        "deity": "Bhringaraja (medicinal power, destroyer of disease)",
+        "best": "Toilet, septic, a dustbin",
+        "avoid": "Master bedroom (bodily weakness), puja, main door"
       },
       "mriga": {
-        "name": "Mriga"
+        "name": "Mriga",
+        "deity": "Mriga (austerity, search and contraction)",
+        "best": "A heavy store, the foot of the stairs, heavy goods",
+        "avoid": "Main door (loss of children and wealth), an open balcony"
       },
       "pitra": {
-        "name": "Pitra"
+        "name": "Pitra",
+        "deity": "Pitri (ancestors and deep roots)",
+        "best": "The heaviest room, heavy cupboards, master bedroom",
+        "avoid": "Main door (loss of lifespan and wealth), toilet, a water boring"
       },
       "dauvarika": {
-        "name": "Dauvarika"
+        "name": "Dauvarika",
+        "deity": "Dauvarika (guardian of the door)",
+        "best": "A guard room, study, a rear service gate",
+        "avoid": "The main safe, an open balcony"
       },
       "sugriva": {
-        "name": "Sugriva"
+        "name": "Sugriva",
+        "deity": "Sugriva (knowledge, store and wisdom)",
+        "best": "A children's study, bookcase, grain store",
+        "avoid": "Main door (grief and loss), toilet"
       },
       "pushpadanta": {
-        "name": "Pushpadanta"
+        "name": "Pushpadanta",
+        "deity": "Pushpadanta (lord of flowers and vehicles)",
+        "best": "A west-facing main door (highly auspicious — lineage and wealth), dining room",
+        "avoid": "Toilet, septic, filthy junk"
       },
       "varuna": {
-        "name": "Varuna"
+        "name": "Varuna",
+        "deity": "Varuna (the ocean and cosmic law)",
+        "best": "Dining room, overhead water tank, a west door",
+        "avoid": "A toilet septic, a junk pile"
       },
       "asura": {
-        "name": "Asura"
+        "name": "Asura",
+        "deity": "Asura (material force and delusion)",
+        "best": "Toilet, septic, a junk room, dustbin",
+        "avoid": "Puja, master bedroom, main door (quarrel and insult)"
       },
       "shosha": {
-        "name": "Shosha"
+        "name": "Shosha",
+        "deity": "Shosha (the power that dries or drains energy)",
+        "best": "Toilet, an oven, or dry-goods storage",
+        "avoid": "Master bedroom (despair), a child's bed"
       },
       "papayakshma": {
-        "name": "Papayakshma"
+        "name": "Papayakshma",
+        "deity": "Papayakshma (disease, grief and decay)",
+        "best": "Toilet outlet pipe, septic, junk",
+        "avoid": "Main door (illness and hardship), kitchen, puja"
       },
       "roga": {
-        "name": "Roga"
+        "name": "Roga",
+        "deity": "Roga (weakness, sorrow and grief)",
+        "best": "A waste spot, septic, an outlet pipe",
+        "avoid": "Bedroom (chronic illness), main door, a well"
       },
       "naga": {
-        "name": "Naga"
+        "name": "Naga",
+        "deity": "Naga (serpents, secret knowledge and anger)",
+        "best": "Dressing room, washroom",
+        "avoid": "Main door (an enemy's plot), puja, bedroom"
       },
       "mukhya": {
-        "name": "Mukhya"
+        "name": "Mukhya",
+        "deity": "Mukhya (Vishvakarma — lord of Vastu craft)",
+        "best": "A north-facing main door (highly auspicious — wealth and ease), study",
+        "avoid": "Toilet, heavy cupboards, kitchen (fire against water)"
       },
       "bhallata": {
-        "name": "Bhallata"
+        "name": "Bhallata",
+        "deity": "Bhallata (great wealth and moonlight)",
+        "best": "Main entrance (great wealth and land), a locker, a safe",
+        "avoid": "Toilet, kitchen, a heavy RCC pillar"
       },
       "bhudhara": {
-        "name": "Bhudhara"
+        "name": "Bhudhara",
+        "importance": "Bhudhara — the inner deity of the north. The earth-bearer; stability at the core, not a wall pada.",
+        "best": "An open core toward the living room",
+        "avoid": "A pillar, stair, toilet"
       },
       "aryama": {
-        "name": "Aryama"
+        "name": "Aryama",
+        "importance": "Aryama — the inner deity of the east. Solar honour; the core of social life and the door.",
+        "best": "Light, air, the core toward the entrance",
+        "avoid": "A dark store, toilet"
       },
       "vivasvan": {
-        "name": "Vivasvan"
+        "name": "Vivasvan",
+        "importance": "Vivasvan — the inner deity of the south. The dharma-sun; the core of a heavy base.",
+        "best": "A firm floor, the core toward heavy rooms",
+        "avoid": "Puja, underground water"
       },
       "mitra": {
-        "name": "Mitra"
+        "name": "Mitra",
+        "importance": "Mitra — the inner deity of the west. The core of contracts and gain.",
+        "best": "The core toward a study, an open west",
+        "avoid": "Kitchen, the main puja"
       }
     },
     "dir": {
       "east": {
         "name": "East",
         "deity": "Indra",
+        "importance": "Indra and Aryama in the east — air and sattva. Morning prana, social life and vitality enter here; do not block the sun or the breeze.",
         "best": "Main door, large windows, wherever morning light should reach",
         "avoid": "Blocking it with tall walls or heavy structures"
       },
       "southeast": {
         "name": "South-East",
         "deity": "Agni",
+        "importance": "Agneya — the seat of rajas and fire. Cooking, digestion and electrical heat belong here; do not let water oppose it.",
         "best": "Kitchen, stove, electrical appliances, inverter",
         "avoid": "Master bedroom, underground water tank"
       },
       "south": {
         "name": "South",
         "deity": "Yama",
+        "importance": "Yama and Vivasvan — the southern seat of fire and tamas. Strength, security and bedrooms; not the main door or a wide gap.",
         "best": "Bedrooms, heavy cupboards, storage",
         "avoid": "A large open gap, or the main entrance"
       },
       "southwest": {
         "name": "South-West",
         "deity": "Nirriti",
+        "importance": "Nairitya — earth and tamas, the Vastu Purusha's feet. The house's heavy stability, the master bedroom and the ground of the household.",
         "best": "Master bedroom, the heaviest part of the house, overhead water tank",
         "avoid": "Open courtyard, large windows, underground water"
       },
       "west": {
         "name": "West",
         "deity": "Varuna",
+        "importance": "West — space, Varuna and Mitra. Gains, dining and contemplation; not as hollow as the Brahmasthan, and not the main shrine.",
         "best": "Dining room, study, children's room",
         "avoid": "The main puja room"
       },
       "northwest": {
         "name": "North-West",
         "deity": "Vayu",
+        "importance": "Vayavya — air and rajas, motion and change. Guests, toilet and vehicles belong here; a permanent master bedroom stays restless.",
         "best": "Guest room, storage, toilet, garage",
         "avoid": "Master bedroom — it is held to keep the mind restless"
       },
       "north": {
         "name": "North",
         "deity": "Kubera",
+        "importance": "Kubera's quarter — wealth, opportunity and cool water energy. A living room or treasury here keeps income flowing; do not weigh it down.",
         "best": "Treasury or safe, living room, water source, open and light space",
         "avoid": "Heavy loads, piles of waste"
       },
       "northeast": {
         "name": "North-East",
         "deity": "Isha (Shiva)",
+        "importance": "The Vastu Purusha's head — the root of water and sattva. Health, clarity and Isha live here; keep this the lightest, most sacred corner.",
         "best": "Puja room, underground water tank, well — the most sacred corner of a home",
         "avoid": "Kitchen, toilet, staircase, heavy objects"
       },
       "center": {
         "name": "Brahmasthan",
         "deity": "Brahma",
+        "importance": "Brahmasthan — space and sattva. Every direction unfolds from here; a pillar, stair or heavy load blocks Brahma's breath.",
         "best": "Open, lit and empty — the part of the house that breathes",
         "avoid": "Staircase, toilet, pillar, heavy furniture"
       }

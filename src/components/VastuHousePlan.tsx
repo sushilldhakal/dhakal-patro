@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowUp, DoorOpen } from "lucide-react";
 import {
   VASTU_ELEMENT_COLOR,
+  VASTU_ELEMENT_ORDER,
   VASTU_GRID_LAYOUT,
   roomsForDirection,
   vastuDirection,
@@ -16,8 +17,6 @@ const CORNER_ROUNDING: Partial<Record<VastuDirectionId, string>> = {
   southwest: "rounded-bl-2xl",
   southeast: "rounded-br-2xl",
 };
-
-const ELEMENT_ORDER = ["earth", "water", "fire", "air", "space"] as const;
 
 function ZoneCell({
   id,
@@ -122,7 +121,7 @@ export function VastuHousePlan({
           {t("vastu.plan.elements")}
         </p>
         <ul className="flex flex-wrap gap-x-3 gap-y-1.5">
-          {ELEMENT_ORDER.map((element) => (
+          {VASTU_ELEMENT_ORDER.map((element) => (
             <li key={element} className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span
                 className="h-3 w-3 rounded-full"
