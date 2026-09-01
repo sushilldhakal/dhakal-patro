@@ -3710,14 +3710,17 @@ export const strings = {
   },
   "vastu.sources.mayamata.credit": { ne: "मयमतम् - मयमुनि वि.सं. ५००", en: "Mayamata - Mayamuni BS 500" },
   "vastu.sources.mayamata.edition": {
-    ne: "अनुवादक र सम्पादक डा. ब्रुनो डागेन्स वि.सं. २०५१",
-    en: "Translator & Editor Dr. Bruno Dagens BS 2051",
+    ne: "सम्पादक महामहोपाध्याय टी. गणपति शास्त्री वि.सं. १९७६। संस्कृतमात्र आलोचनात्मक पाण्डुलिपि संस्करण, तिरुवनन्तपुरम संस्कृत सिरिज (अङ्क ६५), त्रावणकोर महाराजको संरक्षणमा।",
+    en: "Editor Mahamahopadhyaya T. Ganapati Sastri BS 1976. Critical Sanskrit-only manuscript edition, Trivandrum Sanskrit Series (No. LXV), under the patronage of the Maharajah of Travancore.",
   },
   "vastu.sources.mayamata.used": {
     ne: "३२ देवताको दिति–अदिति बाह्य चक्र र कोठा बाँडफाँड।",
     en: "The 32-deity Diti–Aditi outer ring and room assignments.",
   },
-  "vastu.sources.manasara.credit": { ne: "मानसार - मानसारमुनि", en: "Manasara - Manasaramuni" },
+  "vastu.sources.manasara.credit": {
+    ne: "मानसार - मानसारमुनि वि.सं. लगभग ७५७",
+    en: "Manasara - Manasaramuni, about BS 757",
+  },
   "vastu.sources.manasara.edition": {
     ne: "अनुवादक र सम्पादक डा. प्रसन्न कुमार आचार्य वि.सं. १९९०",
     en: "Translator & Editor Dr. Prasanna Kumar Acharya BS 1990",
