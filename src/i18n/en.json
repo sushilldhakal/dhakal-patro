@@ -1587,6 +1587,8 @@
         "3d_hint": "Drag to rotate, scroll to zoom."
       },
       "layout_heading": "Rough house layout",
+      "loading": "Working out the layout...",
+      "load_failed": "Couldn't compute the layout. Please try again.",
       "layout_blurb": "A preliminary plan from the classical rules: auspicious pada for the door, empty Brahmasthan, passage around the court, bath in the east, latrine in WNW or SSW.",
       "legend": {
         "hall": "Passage / hall",

@@ -14,7 +14,8 @@ import {
   nearestAuspiciousWidthHasta,
   type CardinalWall,
 } from "@/lib/vastu";
-import { planHouse } from "@/lib/house-plan";
+import { fromApiHousePlan } from "@/lib/house-plan/from-api";
+import { useVastuHousePlan } from "@/hooks/use-vastu-house-plan";
 import {
   clampStoreys,
   kindCounts,
@@ -144,13 +145,12 @@ export function PlotPlanner() {
     [breadthM, lengthM],
   );
 
-  const concept = useMemo(
-    () =>
-      footprint
-        ? planHouse(house, { width: footprint.width, height: footprint.height, facing: plot.facing })
-        : null,
-    [house, footprint, plot.facing],
+  const site = useMemo(
+    () => ({ width: footprint.width, height: footprint.height, facing: plot.facing }),
+    [footprint, plot.facing],
   );
+  const planQuery = useVastuHousePlan(site, house);
+  const concept = useMemo(() => (planQuery.data ? fromApiHousePlan(planQuery.data) : null), [planQuery.data]);
   const leftover = concept?.leftover ?? [];
   const counts = useMemo(() => kindCounts(leftover), [leftover]);
 
@@ -290,6 +290,12 @@ export function PlotPlanner() {
                 })}
               </ul>
             </div>
+          )}
+          {planQuery.isLoading && (
+            <p className="py-6 text-center text-sm text-muted-foreground">{t("vastu.plan.loading")}</p>
+          )}
+          {planQuery.isError && (
+            <p className="py-6 text-center text-sm text-destructive">{t("vastu.plan.load_failed")}</p>
           )}
           {concept && view === "3d" && <HousePlan3D concept={concept} />}
           {concept && view === "2d" && (

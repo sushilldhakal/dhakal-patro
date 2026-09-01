@@ -1,6 +1,4 @@
-export { planHouse } from "./engine";
-export { validateConcept } from "./validate";
-export { vastuPreferences, preferenceFor, lifeZoneOf } from "./prefs";
+export { fromApiHousePlan } from "./from-api";
 export type {
   HouseConcept,
   FloorConcept,
@@ -10,4 +8,5 @@ export type {
   SiteInput,
   ValidationReport,
   PlanConflict,
+  PlanScore,
 } from "./types";

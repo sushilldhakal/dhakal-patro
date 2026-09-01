@@ -113,6 +113,28 @@ async function get<T>(path: string): Promise<T> {
   return res.json();
 }
 
+/** POST counterpart to `get()` — same error handling, for deterministic compute
+ * endpoints (not mutations) that need a request body too large/structured for
+ * query params. */
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${DATA_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail: string | undefined;
+    try {
+      const respBody = await res.json();
+      if (typeof respBody?.detail === "string") detail = respBody.detail;
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new ApiError(res.status, detail, path);
+  }
+  return res.json();
+}
+
 // ─── Location ─────────────────────────────────────────────────────────────────
 
 export interface LocationParams {
@@ -3288,6 +3310,175 @@ export interface KundaliResponse {
   planets?: Record<string, PlanetInfo | string>;
   planets_detail?: Record<string, PlanetInfo & { rashi_name?: string; is_retrograde?: boolean }>;
   lagna_note?: string;
+}
+
+// ─── Vastu house plan ───────────────────────────────────────────────────────
+// Wire-format types mirror services/vastu_schemas.py field-for-field
+// (snake_case, matching JSON exactly) — converting to the app's camelCase
+// HouseConcept display shape happens in src/lib/house-plan/from-api.ts, not here.
+
+export interface VastuSiteInputApi {
+  plot_width: number;
+  plot_depth: number;
+  unit: "m" | "ft";
+  facing: "north" | "east" | "south" | "west";
+  north_bearing?: number;
+  entrance_preference?: string | null;
+  floors?: number;
+}
+
+export interface VastuHouseRequirementInputApi {
+  bedrooms: number;
+  master_bedroom_index: number;
+  toilets: number;
+  bathrooms: number;
+  combined_toilet_bath: number;
+  extras: string[];
+  mode: "strict" | "balanced" | "flexible";
+  storeys: number;
+  floors: Record<string, "ground" | "first" | "third" | "any">;
+}
+
+export interface VastuPlannedDoorApi {
+  id: string;
+  room_id: string;
+  wall: "n" | "e" | "s" | "w";
+  t: number;
+  width: number;
+  swing: "in_left" | "in_right";
+  connects_to: string;
+}
+
+export interface VastuPlannedWindowApi {
+  id: string;
+  room_id: string;
+  wall: "n" | "e" | "s" | "w";
+  t: number;
+  width: number;
+  type: "full" | "high" | "vent";
+}
+
+export interface VastuPlannedRoomApi {
+  id: string;
+  kind: string;
+  floor: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  life: string;
+  vastu_region: string;
+  index?: number | null;
+  doors: VastuPlannedDoorApi[];
+  windows: VastuPlannedWindowApi[];
+  adjacent_to: string[];
+}
+
+export interface VastuBVertexApi {
+  id: string;
+  x: number;
+  y: number;
+}
+
+export interface VastuBWallApi {
+  id: string;
+  a: string;
+  b: string;
+  thickness: number;
+  role: "exterior" | "interior";
+}
+
+export interface VastuBHoleApi {
+  id: string;
+  wall_id: string;
+  offset: number;
+  width: number;
+  type: "door" | "window" | "entrance";
+  swing: "left" | "right";
+  from: string;
+  to: string;
+  height?: number | null;
+  sill?: number | null;
+}
+
+export interface VastuBuildingLayerApi {
+  vertices: VastuBVertexApi[];
+  walls: VastuBWallApi[];
+  holes: VastuBHoleApi[];
+}
+
+export interface VastuFloorConceptApi {
+  storey: number;
+  rooms: VastuPlannedRoomApi[];
+  layer: VastuBuildingLayerApi;
+}
+
+export interface VastuStairShaftApi {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  rise: "n" | "e" | "s" | "w";
+  floors: number[];
+  host_id?: string | null;
+}
+
+export interface VastuPlanConflictApi {
+  id: string;
+  severity: "info" | "warn";
+  message_key: string;
+}
+
+export interface VastuValidationReportApi {
+  all_reachable: boolean;
+  every_room_has_door: boolean;
+  stair_connects: boolean;
+  kitchen_near_dining: boolean;
+  private_through_private: boolean;
+  issues: VastuPlanConflictApi[];
+}
+
+export interface VastuLeftoverSpaceApi {
+  id: string;
+  kind: string;
+  index?: number | null;
+}
+
+export interface VastuScoreApi {
+  score: number;
+  vastu_score: number;
+  planning_score: number;
+  circulation_score: number;
+  satisfied_rules: string[];
+  relaxed_rules: string[];
+  conflicts: string[];
+}
+
+export interface VastuHousePlanResponseApi {
+  rule_version: string;
+  plot: VastuSiteInputApi;
+  width: number;
+  height: number;
+  facing: "north" | "east" | "south" | "west";
+  mode: string;
+  floors: VastuFloorConceptApi[];
+  stair: VastuStairShaftApi | null;
+  leftover: VastuLeftoverSpaceApi[];
+  validation: VastuValidationReportApi;
+  vastu_relaxed: VastuPlanConflictApi[];
+  score: VastuScoreApi;
+}
+
+/** Deterministic given (site, requirement, rule_version) — cache-safe, so
+ * this is fetched via useQuery (src/hooks/use-vastu-house-plan.ts) despite
+ * being a POST, matching the backend's own disk-cached, input-addressed
+ * design (api/vastu.py's vastu_house_plan_route). */
+export function fetchVastuHousePlan(
+  site: VastuSiteInputApi,
+  requirement: VastuHouseRequirementInputApi,
+): Promise<VastuHousePlanResponseApi> {
+  return postJson<VastuHousePlanResponseApi>("/vastu/house-plan", { site, requirement });
 }
 
 export interface CalendarHeader {

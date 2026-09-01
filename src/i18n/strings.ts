@@ -2905,6 +2905,11 @@ export const strings = {
   "vastu.plan.view.3d": { ne: "३डी", en: "3D" },
   "vastu.plan.view.3d_hint": { ne: "घुमाउन तान्नुहोस्, जुम गर्न स्क्रोल गर्नुहोस्।", en: "Drag to rotate, scroll to zoom." },
   "vastu.plan.layout_heading": { ne: "मोटामोटी घरको खाका", en: "Rough house layout" },
+  "vastu.plan.loading": { ne: "खाका तयार गर्दै...", en: "Working out the layout..." },
+  "vastu.plan.load_failed": {
+    ne: "खाका तयार गर्न सकिएन। पुनः प्रयास गर्नुहोस्।",
+    en: "Couldn't compute the layout. Please try again.",
+  },
   "vastu.plan.layout_blurb": {
     ne: "यो प्रारम्भिक घरको खाका हो — मयमत, मानसार र विश्वकर्मा प्रकाशअनुसार: पुष्पदन्त/वरुण ढोका, ब्रह्मस्थान खाली, बाटो घुमेर, शौचालय र स्नान छुट्टै।",
     en: "A preliminary plan from the classical rules: auspicious pada for the door, empty Brahmasthan, passage around the court, bath in the east, latrine in WNW or SSW.",

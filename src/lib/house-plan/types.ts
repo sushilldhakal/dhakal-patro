@@ -136,7 +136,18 @@ export type FloorConcept = {
   layer: BuildingLayer;
 };
 
+export type PlanScore = {
+  score: number;
+  vastuScore: number;
+  planningScore: number;
+  circulationScore: number;
+  satisfiedRules: string[];
+  relaxedRules: string[];
+  conflicts: string[];
+};
+
 export type HouseConcept = {
+  ruleVersion: string;
   width: number;
   height: number;
   facing: CardinalWall;
@@ -146,6 +157,7 @@ export type HouseConcept = {
   stair: StairShaft | null;
   validation: ValidationReport;
   vastuRelaxed: PlanConflict[];
+  score: PlanScore;
 };
 
 export type SiteInput = {
