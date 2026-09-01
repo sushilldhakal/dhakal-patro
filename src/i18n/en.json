@@ -2249,7 +2249,36 @@
         "note": "Heavy goods to the south-west — that is what balances the weight of the house."
       }
     },
-    "note": "These are the traditional rules of Vastu Shastra, offered for cultural and educational reading. For a decision about building or buying, consult a qualified vastu adviser and an engineer."
+    "note": "These are the traditional rules of Vastu Shastra, offered for cultural and educational reading. For a decision about building or buying, consult a qualified vastu adviser and an engineer.",
+    "sources": {
+      "heading": "Classical sources",
+      "blurb": "Calculations follow each treatise's traditional author and the Bikram Sambat year of the original text. The second line is the translator and editor's printed edition in BS.",
+      "mayamata": {
+        "credit": "Mayamata - Mayamuni BS 500",
+        "edition": "Translator & Editor Dr. Bruno Dagens BS 2051",
+        "used": "The 32-deity Diti–Aditi outer ring and room assignments."
+      },
+      "manasara": {
+        "credit": "Manasara - Manasaramuni",
+        "edition": "Translator & Editor Dr. Prasanna Kumar Acharya BS 1990",
+        "used": "Mathematical proportions, alignment of the Brahmasthan, and the inner deities (Aryama, Mitra, Vivasvan, Bhudhara)."
+      },
+      "vishvakarma": {
+        "credit": "Vishwakarma Prakash - Vishvakarma",
+        "edition": "Translator & Editor Maharshi Abhayakatayayan BS 2074",
+        "used": "Dvāra-vinyāsa (auspicious and inauspicious doors) and the Ṣoḍaśa-gṛha (16-direction rooms)."
+      },
+      "samarangana": {
+        "credit": "Samaranganasutradhara - King Bhojadeva BS 1057–1112",
+        "edition": "Translator & Editor Mahamahopadhyaya T. Ganapati Sastri BS 1981",
+        "used": "Integration of the five elements with spatial energy, and protection of the marma points."
+      },
+      "aparajita": {
+        "credit": "Aparajitaprccha - Bhuvanadeva BS 1232–1282",
+        "edition": "Translator & Editor Popatbhai Ambashankar Mankad BS 2007",
+        "used": "The twelve marmas (vital nodes of structural stability) — checking that interior walls do not cut those lines."
+      }
+    }
   },
   "learn_page": {
     "eyebrow": "Knowledge hub",

@@ -116,6 +116,31 @@ function PadaLinks({
   );
 }
 
+const VASTU_SOURCE_IDS = ["mayamata", "manasara", "vishvakarma", "samarangana", "aparajita"] as const;
+
+function VastuSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("vastu.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("vastu.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        {VASTU_SOURCE_IDS.map((id, i) => (
+          <li key={id} className="flex gap-3 text-sm">
+            <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(i + 1)}.</span>
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-semibold text-foreground">{t(`vastu.sources.${id}.credit`)}</p>
+              <p className="text-muted-foreground">{t(`vastu.sources.${id}.edition`)}</p>
+              <p className="text-muted-foreground">{t(`vastu.sources.${id}.used`)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function ZoneDetail({
   id,
   onSelect,
@@ -394,6 +419,8 @@ export function Vastu() {
       <p className="rounded-xl border border-border bg-muted/40 p-3.5 text-sm text-muted-foreground">
         {t("vastu.note")}
       </p>
+
+      <VastuSources />
 
       <Dialog open={alignOpen} onOpenChange={setAlignOpen}>
         <DialogContent>

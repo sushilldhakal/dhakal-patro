@@ -3703,6 +3703,62 @@ export const strings = {
     ne: "यी वास्तुशास्त्रका परम्परागत नियम हुन्, सांस्कृतिक र शैक्षिक प्रयोजनका लागि राखिएका। घर बनाउने वा किन्ने निर्णय गर्दा योग्य वास्तुविद् र इन्जिनियरको सल्लाह लिनुहोस्।",
     en: "These are the traditional rules of Vastu Shastra, offered for cultural and educational reading. For a decision about building or buying, consult a qualified vastu adviser and an engineer.",
   },
+  "vastu.sources.heading": { ne: "शास्त्रीय स्रोत", en: "Classical sources" },
+  "vastu.sources.blurb": {
+    ne: "गणना र चक्र यी ग्रन्थका मूल कर्ताको नाम र मूल पाठको वि.सं. वर्षमा आधारित छन्। दोस्रो हरफमा अनुवादक र सम्पादकको मुद्रित संस्करणको वि.सं. छ।",
+    en: "Calculations follow each treatise's traditional author and the Bikram Sambat year of the original text. The second line is the translator and editor's printed edition in BS.",
+  },
+  "vastu.sources.mayamata.credit": { ne: "मयमतम् - मयमुनि वि.सं. ५००", en: "Mayamata - Mayamuni BS 500" },
+  "vastu.sources.mayamata.edition": {
+    ne: "अनुवादक र सम्पादक डा. ब्रुनो डागेन्स वि.सं. २०५१",
+    en: "Translator & Editor Dr. Bruno Dagens BS 2051",
+  },
+  "vastu.sources.mayamata.used": {
+    ne: "३२ देवताको दिति–अदिति बाह्य चक्र र कोठा बाँडफाँड।",
+    en: "The 32-deity Diti–Aditi outer ring and room assignments.",
+  },
+  "vastu.sources.manasara.credit": { ne: "मानसार - मानसारमुनि", en: "Manasara - Manasaramuni" },
+  "vastu.sources.manasara.edition": {
+    ne: "अनुवादक र सम्पादक डा. प्रसन्न कुमार आचार्य वि.सं. १९९०",
+    en: "Translator & Editor Dr. Prasanna Kumar Acharya BS 1990",
+  },
+  "vastu.sources.manasara.used": {
+    ne: "गणितीय अनुपात, ब्रह्मस्थानको रेखाङ्कन, र आन्तरिक देवता (अर्यमा, मित्र, विवस्वान्, भूधर)।",
+    en: "Mathematical proportions, alignment of the Brahmasthan, and the inner deities (Aryama, Mitra, Vivasvan, Bhudhara).",
+  },
+  "vastu.sources.vishvakarma.credit": { ne: "विश्वकर्म प्रकाश - विश्वकर्मा", en: "Vishwakarma Prakash - Vishvakarma" },
+  "vastu.sources.vishvakarma.edition": {
+    ne: "अनुवादक र सम्पादक महर्षि अभयकटयायन वि.सं. २०७४",
+    en: "Translator & Editor Maharshi Abhayakatayayan BS 2074",
+  },
+  "vastu.sources.vishvakarma.used": {
+    ne: "द्वार-विन्यास (शुभ/अशुभ ढोका) र षोडश गृह (१६ दिशाका कोठा)।",
+    en: "Dvāra-vinyāsa (auspicious and inauspicious doors) and the Ṣoḍaśa-gṛha (16-direction rooms).",
+  },
+  "vastu.sources.samarangana.credit": {
+    ne: "समराङ्गणसूत्रधार - राजा भोजदेव वि.सं. १०५७–१११२",
+    en: "Samaranganasutradhara - King Bhojadeva BS 1057–1112",
+  },
+  "vastu.sources.samarangana.edition": {
+    ne: "अनुवादक र सम्पादक महामहोपाध्याय टी. गणपति शास्त्री वि.सं. १९८१",
+    en: "Translator & Editor Mahamahopadhyaya T. Ganapati Sastri BS 1981",
+  },
+  "vastu.sources.samarangana.used": {
+    ne: "पञ्चमहाभूत र स्थान-ऊर्जाको मेल, र मर्म बिन्दुको रक्षा।",
+    en: "Integration of the five elements with spatial energy, and protection of the marma points.",
+  },
+  "vastu.sources.aparajita.credit": {
+    ne: "अपराजितपृच्छा - भुवनदेव वि.सं. १२३२–१२८२",
+    en: "Aparajitaprccha - Bhuvanadeva BS 1232–1282",
+  },
+  "vastu.sources.aparajita.edition": {
+    ne: "अनुवादक र सम्पादक पोपटभाई अम्बाशंकर मानकड वि.सं. २००७",
+    en: "Translator & Editor Popatbhai Ambashankar Mankad BS 2007",
+  },
+  "vastu.sources.aparajita.used": {
+    ne: "द्वादश मर्म (संरचनाका १२ ऊर्जा रेखा) — भित्री भित्ता यी रेखा नकाट्ने जाँच।",
+    en: "The twelve marmas (vital nodes of structural stability) — checking that interior walls do not cut those lines.",
+  },
 
   /* ── learn_page ──────────────────────────────────────────────────────── */
   "learn_page.eyebrow": { ne: "ज्ञानकेन्द्र", en: "Knowledge hub" },
