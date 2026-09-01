@@ -104,10 +104,13 @@ export function HouseRequirementsForm({
   }
 
   function toggleExtra(id: SpaceKind) {
-    const extras = plan.extras.includes(id)
-      ? plan.extras.filter((x) => x !== id)
-      : [...plan.extras, id];
-    commit({ ...plan, extras });
+    const adding = !plan.extras.includes(id);
+    const extras = adding ? [...plan.extras, id] : plan.extras.filter((x) => x !== id);
+    // A staircase with nothing to climb to is never actually built — see engine.ts's
+    // wantStair. Checking it while on a single storey must bump storeys, not silently
+    // no-op.
+    const storeys = adding && id === "staircase" && plan.storeys === 1 ? 2 : plan.storeys;
+    commit({ ...plan, extras, storeys });
   }
 
   const counts = (min: number, max: number) =>

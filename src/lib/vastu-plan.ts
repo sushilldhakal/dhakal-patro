@@ -308,7 +308,7 @@ export const DEFAULT_HOUSE_PLAN: HousePlan = {
   bathrooms: 1,
   combined: 1,
   masterBedroom: 1,
-  extras: ["living", "kitchen", "dining", "puja", "staircase"],
+  extras: ["living", "kitchen", "dining", "puja"],
   mode: "flexible",
   storeys: 1,
   floors: {},

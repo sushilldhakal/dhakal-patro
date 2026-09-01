@@ -8,9 +8,12 @@ function px(n: number): number {
   return n * SCALE;
 }
 
+/** Only the true mandala centre — not a corner notch or a leftover unused zone that just happens to share the `center_` prefix. */
+const TRUE_CENTER_ID = /^center_\d+$/;
+
 function roomFill(kind: PlannedRoom["kind"], id: string): string {
   if (kind === "brahmasthan") {
-    return id.startsWith("center_")
+    return TRUE_CENTER_ID.test(id)
       ? "color-mix(in srgb, var(--primary) 18%, var(--card))"
       : "color-mix(in srgb, var(--primary) 10%, var(--card))";
   }
