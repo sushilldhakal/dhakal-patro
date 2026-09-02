@@ -1764,6 +1764,103 @@ export const strings = {
     ne: "{{year}} मा {{count}} शुद्ध विवाह दिन",
     en: "{{count}} strict vivāha days in {{year}}",
   },
+  "sait.sources.heading": { ne: "शास्त्रीय स्रोत", en: "Classical sources" },
+  "sait.sources.blurb": {
+    ne: "गणना र चक्र यी ग्रन्थका मूल कर्ताको नाम र मूल पाठको वि.सं. वर्षमा आधारित छन्। दोस्रो हरफमा अनुवादक र सम्पादकको मुद्रित संस्करणको वि.सं. छ।",
+    en: "Calculations follow each treatise's traditional author and the Bikram Sambat year of the original text. The second line is the translator and editor's printed edition in BS.",
+  },
+  "sait.sources.brihat_samhita.credit": {
+    ne: "बृहत्संहिता - आचार्य वराहमिहिर वि.सं. लगभग ५६२",
+    en: "Brihat Samhita - Acharya Varahamihira, about BS 562",
+  },
+  "sait.sources.brihat_samhita.edition": {
+    ne: "अनुवादक पण्डितभाषण वी. सुब्रह्मण्य शास्त्री र विद्वान् एम. रामकृष्ण भट्ट वि.सं. २००३। व्ही. बी. सूब्बैया एण्ड सन्स, बैंगलोर सिटी।",
+    en: "Translators Panditabhashana V. Subrahmanya Sastri and Vidwan M. Ramakrishna Bhat BS 2003. V. B. Soobbiah & Sons, Bangalore City.",
+  },
+  "sait.sources.brihat_samhita.used.vivah": {
+    ne: "विवाहका लागि क्रूर वार (मंगलबार र शनिबार) को निषेध।",
+    en: "The prohibition of krūra weekdays (Tuesday and Saturday) for marriage.",
+  },
+  "sait.sources.brihat_samhita.used.bratabandha": {
+    ne: "उपनयनका लागि क्रूर वार (मंगलबार र शनिबार) को निषेध।",
+    en: "The prohibition of krūra weekdays (Tuesday and Saturday) for Upanayana.",
+  },
+  "sait.sources.brihat_samhita.used.griha-aarambha": {
+    ne: "गृह आरम्भका लागि क्रूर वार (मंगलबार र शनिबार) को निषेध।",
+    en: "The prohibition of krūra weekdays (Tuesday and Saturday) for starting a house.",
+  },
+  "sait.sources.brihat_samhita.used.byaparik-pratisthan": {
+    ne: "व्यापार आरम्भका लागि क्रूर वार (आइत, मंगलबार र शनिबार) को निषेध।",
+    en: "The prohibition of krūra weekdays (Sunday, Tuesday and Saturday) for opening a business.",
+  },
+  "sait.sources.dharma_sindhu.credit": {
+    ne: "धर्मसिन्धु - काशिनाथ उपाध्याय वि.सं. १८४७",
+    en: "Dharma Sindhu - Kashinath Upadhyay BS 1847",
+  },
+  "sait.sources.dharma_sindhu.edition": {
+    ne: "हिन्दी टीकाकार महामहोपाध्याय पण्डित श्रीमिहिरचन्द्र वि.सं. २०१८। खेमराज श्रीकृष्णदास (श्री वेङ्कटेश्वर स्टीम प्रेस), बम्बई।",
+    en: "Hindi commentator Mahamahopadhyaya Pandit Shri Mihir Chandra BS 2018. Khemraj Shrikrishnadass (Shri Venkateshwar Steam Press), Bombay.",
+  },
+  "sait.sources.dharma_sindhu.used.vivah": {
+    ne: "गुरु–शुक्र अस्त, बाल्य र वृद्ध; सिंहस्थ गुरुको अवधिमा विवाह निषेध।",
+    en: "Jupiter and Venus combust, infant or aged; marriage barred for the whole Simhastha-Guru transit.",
+  },
+  "sait.sources.dharma_sindhu.used.bratabandha": {
+    ne: "गुरु–शुक्र अस्त, बाल्य र वृद्ध; सिंहस्थ गुरुको अवधिमा उपनयन निषेध।",
+    en: "Jupiter and Venus combust, infant or aged; Upanayana barred for the whole Simhastha-Guru transit.",
+  },
+  "sait.sources.dharma_sindhu.used.griha-aarambha": {
+    ne: "मलमासमा वास्तुकर्म निषेध; गुरु–शुक्र अस्त, बाल्य र वृद्ध।",
+    en: "Vāstu karma barred in Malmāsa; Jupiter and Venus combust, infant or aged.",
+  },
+  "sait.sources.dharma_sindhu.used.griha-pravesh": {
+    ne: "गुरु–शुक्र अस्त, बाल्य र वृद्ध (वास्तुकर्म)।",
+    en: "Jupiter and Venus combust, infant or aged (applied to vāstu karma).",
+  },
+  "sait.sources.dharma_sindhu.used.rudri-jurne": {
+    ne: "शिववास सूत्र र फल; अमावस्या निषेध।",
+    en: "The Śiva-vāsa formula and its fruits; Amāvasyā barred.",
+  },
+  "sait.sources.muhurta_chintamani.credit": {
+    ne: "मुहूर्तचिन्तामणिः - श्रीराम दैवज्ञ वि.सं. १६५५",
+    en: "Muhurta Chintamani - Shri Rama Daivajna BS 1655",
+  },
+  "sait.sources.muhurta_chintamani.edition": {
+    ne: "संस्कृत टीकाकार गोविन्द दैवज्ञ (पीयूषधारा); हिन्दी अनुवादक आचार्य केदारदत्त जोशी (पीताम्बरा)। डी.पी.बी. पब्लिकेशन्स, दिल्ली।",
+    en: "Sanskrit commentator Govinda Daivajna (Piyushadhara); Hindi translator Acharya Kedar Datt Joshi (Pitambara). D.P.B. Publications, Delhi.",
+  },
+  "sait.sources.muhurta_chintamani.used.vivah": {
+    ne: "विवाहका महिना, सौर मास, तिथि, नक्षत्र, योग, करण, लत्ता दोष र क्षय पक्ष।",
+    en: "Marriage months, solar months, tithi, nakṣatra, yoga, karaṇa, Latta doṣa and kṣaya-pakṣa.",
+  },
+  "sait.sources.muhurta_chintamani.used.bratabandha": {
+    ne: "उत्तरायण र महिना, तिथि, गलग्रह, नक्षत्र, मध्याह्नअघिको समय, योग, करण, ग्रहण र लत्ता/दग्धा दोष।",
+    en: "Uttarāyaṇa and months, tithi, Galagraha, nakṣatra, pre-noon timing, yoga, karaṇa, eclipse and Latta/Dagdha doṣa.",
+  },
+  "sait.sources.muhurta_chintamani.used.griha-aarambha": {
+    ne: "सूर्य राशि, तिथि, नक्षत्र, दिवाकाल, स्थिर/द्विस्वभाव लग्न, लग्न बल, योग, करण, ग्रहण र दुर्मुहूर्त।",
+    en: "Sun-sign, tithi, nakṣatra, daytime window, fixed/dual lagna, lagna strength, yoga, karaṇa, eclipse and Dur-muhūrta.",
+  },
+  "sait.sources.muhurta_chintamani.used.griha-pravesh": {
+    ne: "गृहप्रवेशका महिना, सूर्यबल, तिथि, नक्षत्र, योग/करण, लग्न, ग्रहण र दोष।",
+    en: "Housewarming months, Surya Bala, tithi, nakṣatra, yoga/karaṇa, lagna, eclipse and doṣa.",
+  },
+  "sait.sources.muhurta_chintamani.used.byaparik-pratisthan": {
+    ne: "महिना, तिथि, नक्षत्र, लग्न, योग/करण, ग्रहण र दुर्मुहूर्त; गुरु–शुक्र उदय अनिवार्य नहुने व्याख्या।",
+    en: "Month, tithi, nakṣatra, lagna, yoga/karaṇa, eclipse and Dur-muhūrta; the reading that Guru/Śukra udaya is not mandatory.",
+  },
+  "sait.sources.muhurta_chintamani.used.rudri-jurne": {
+    ne: "अग्निवास सूत्र, तिथि-अधिपति, महादोष र भद्रा।",
+    en: "The Agni-vāsa formula, tithi-lords, mahā-doṣa and Bhadrā.",
+  },
+  "sait.sources.muhurta_chintamani.used.agni-jurne": {
+    ne: "अग्निवास सूत्र, शेषफल (भूमि/स्वर्ग/पाताल) र नित्य–नैमित्तिक अपवाद।",
+    en: "The Agni-vāsa formula, remainder-fruits (Earth/Heaven/Pātāla) and the Nitya–Naimittika exception.",
+  },
+  "sait.sources.muhurta_chintamani.used.annaprasan": {
+    ne: "उमेर-मास, तिथि, नक्षत्र, वार, लग्नशुद्धि, अस्त-अपवाद, जन्मतारा र सुरक्षा दोष।",
+    en: "Age-month, tithi, nakṣatra, vāra, lagna-śuddhi, the asta exception, janma-tārā and safeguard doṣas.",
+  },
   "sait.tithi": { ne: "तिथि", en: "Tithi" },
   "sait.nak_atra": { ne: "नक्षत्र", en: "Nakṣatra" },
   "sait.yoga": { ne: "योग", en: "Yoga" },

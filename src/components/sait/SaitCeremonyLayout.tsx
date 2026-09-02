@@ -53,6 +53,8 @@ interface Props {
   children?: React.ReactNode;
   emptyLabel?: string;
   countLabel?: (count: number, year: number) => string;
+  /** Classical-source credits, rendered at the bottom of the page. */
+  footer?: React.ReactNode;
 }
 
 const NAKSHATRA_MODE_IDS = ["classical", "nepali", "liberal"] as const;
@@ -91,6 +93,7 @@ export function SaitCeremonyLayout({
   children,
   emptyLabel,
   countLabel,
+  footer,
 }: Props) {
   const { digits, lang } = useLocale();
   const { t } = useTranslation();
@@ -241,6 +244,8 @@ export function SaitCeremonyLayout({
           </p>
         )}
       </section>
+
+      {footer}
 
       <PanchangaDetailsBackLink labelKey="sait.all_ceremonies" variant="inline" />
     </PageShell>

@@ -7,6 +7,7 @@ import { useRouteLoading } from "@/lib/route-loading";
 import { usePatroYearDataPage } from "@/hooks/use-patro-year-data-page";
 import { SaitCeremonyLayout } from "@/components/sait/SaitCeremonyLayout";
 import { SaitProfilePicker } from "@/components/sait/SaitProfilePicker";
+import { SaitSources } from "@/components/sait/SaitSources";
 import { SuitabilityLegend } from "@/components/sait/sait-suitability";
 import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
 import {
@@ -97,6 +98,7 @@ export function MarriageSait() {
           { count: digits(count), year: digits(y) },
         )
       }
+      footer={<SaitSources category="vivah" />}
     />
   );
 }

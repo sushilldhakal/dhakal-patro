@@ -15,6 +15,7 @@ import { SAIT_RULES_CONTENT } from "@/lib/sait-rules-content";
 import { PanchangaDetailsBackLink } from "@/components/panchanga/PanchangaDetailsBackLink";
 import { SaitCeremonyLayout } from "@/components/sait/SaitCeremonyLayout";
 import { SaitProfilePicker } from "@/components/sait/SaitProfilePicker";
+import { SaitSources } from "@/components/sait/SaitSources";
 import { SuitabilityLegend } from "@/components/sait/sait-suitability";
 import { SUITABILITY_STYLE } from "@/lib/sait-suitability";
 import {
@@ -212,6 +213,7 @@ export function SaitPage() {
         emptyLabel: t("sait.empty_year"),
         countLabel: (count: number, y: number) =>
           t("sait.count_label", { count: digits(count), year: digits(y) }),
+        footer: <SaitSources category={meta.id as SaitCategoryId} />,
       } as React.ComponentProps<typeof SaitCeremonyLayout> & {
         era: typeof yearBrowse.era;
       })}

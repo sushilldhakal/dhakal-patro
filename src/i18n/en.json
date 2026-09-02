@@ -1188,6 +1188,45 @@
       "count_label_bs": "{{count}} strict vivāha days in BS {{year}}",
       "count_label_ad": "{{count}} strict vivāha days in {{year}}"
     },
+    "sources": {
+      "heading": "Classical sources",
+      "blurb": "Calculations follow each treatise's traditional author and the Bikram Sambat year of the original text. The second line is the translator and editor's printed edition in BS.",
+      "brihat_samhita": {
+        "credit": "Brihat Samhita - Acharya Varahamihira, about BS 562",
+        "edition": "Translators Panditabhashana V. Subrahmanya Sastri and Vidwan M. Ramakrishna Bhat BS 2003. V. B. Soobbiah & Sons, Bangalore City.",
+        "used": {
+          "vivah": "The prohibition of krūra weekdays (Tuesday and Saturday) for marriage.",
+          "bratabandha": "The prohibition of krūra weekdays (Tuesday and Saturday) for Upanayana.",
+          "griha-aarambha": "The prohibition of krūra weekdays (Tuesday and Saturday) for starting a house.",
+          "byaparik-pratisthan": "The prohibition of krūra weekdays (Sunday, Tuesday and Saturday) for opening a business."
+        }
+      },
+      "dharma_sindhu": {
+        "credit": "Dharma Sindhu - Kashinath Upadhyay BS 1847",
+        "edition": "Hindi commentator Mahamahopadhyaya Pandit Shri Mihir Chandra BS 2018. Khemraj Shrikrishnadass (Shri Venkateshwar Steam Press), Bombay.",
+        "used": {
+          "vivah": "Jupiter and Venus combust, infant or aged; marriage barred for the whole Simhastha-Guru transit.",
+          "bratabandha": "Jupiter and Venus combust, infant or aged; Upanayana barred for the whole Simhastha-Guru transit.",
+          "griha-aarambha": "Vāstu karma barred in Malmāsa; Jupiter and Venus combust, infant or aged.",
+          "griha-pravesh": "Jupiter and Venus combust, infant or aged (applied to vāstu karma).",
+          "rudri-jurne": "The Śiva-vāsa formula and its fruits; Amāvasyā barred."
+        }
+      },
+      "muhurta_chintamani": {
+        "credit": "Muhurta Chintamani - Shri Rama Daivajna BS 1655",
+        "edition": "Sanskrit commentator Govinda Daivajna (Piyushadhara); Hindi translator Acharya Kedar Datt Joshi (Pitambara). D.P.B. Publications, Delhi.",
+        "used": {
+          "vivah": "Marriage months, solar months, tithi, nakṣatra, yoga, karaṇa, Latta doṣa and kṣaya-pakṣa.",
+          "bratabandha": "Uttarāyaṇa and months, tithi, Galagraha, nakṣatra, pre-noon timing, yoga, karaṇa, eclipse and Latta/Dagdha doṣa.",
+          "griha-aarambha": "Sun-sign, tithi, nakṣatra, daytime window, fixed/dual lagna, lagna strength, yoga, karaṇa, eclipse and Dur-muhūrta.",
+          "griha-pravesh": "Housewarming months, Surya Bala, tithi, nakṣatra, yoga/karaṇa, lagna, eclipse and doṣa.",
+          "byaparik-pratisthan": "Month, tithi, nakṣatra, lagna, yoga/karaṇa, eclipse and Dur-muhūrta; the reading that Guru/Śukra udaya is not mandatory.",
+          "rudri-jurne": "The Agni-vāsa formula, tithi-lords, mahā-doṣa and Bhadrā.",
+          "agni-jurne": "The Agni-vāsa formula, remainder-fruits (Earth/Heaven/Pātāla) and the Nitya–Naimittika exception.",
+          "annaprasan": "Age-month, tithi, nakṣatra, vāra, lagna-śuddhi, the asta exception, janma-tārā and safeguard doṣas."
+        }
+      }
+    },
     "tithi": "Tithi",
     "nak_atra": "Nakṣatra",
     "yoga": "Yoga",
