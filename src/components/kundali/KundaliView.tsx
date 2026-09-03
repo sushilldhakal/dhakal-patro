@@ -571,13 +571,14 @@ export function KundaliView({
           lists the rest of Raman's 162 (the absent ones), with present ones removed
           so no combination appears twice. */}
       {showSection("kundali-yoga") && (
-        <div id="kundali-yoga" className="scroll-mt-24">
+        <div id="kundali-yoga" className="scroll-mt-24 space-y-6">
           <PanchangaSection titleNe="कुण्डली योग" titleEn="Kundali Yoga">
             {detail.yogas.some((y) => y.present) && <YogaList yogas={detail.yogas} />}
             <div className="px-3.5 pb-3.5">
               <YogaReferenceCatalog excludeIds={presentRefIds} />
             </div>
           </PanchangaSection>
+          <KundaliYogaSources />
         </div>
       )}
 
@@ -686,6 +687,27 @@ export function KundaliView({
       </div>
       )}
     </div>
+  );
+}
+
+function KundaliYogaSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("kundali.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("kundali.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        <li className="flex gap-3 text-sm">
+          <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(1)}.</span>
+          <div className="min-w-0 flex flex-col gap-1">
+            <p className="font-semibold text-foreground">{t("kundali.sources.bphs.credit")}</p>
+            <p className="text-muted-foreground">{t("kundali.sources.bphs.edition")}</p>
+            <p className="text-muted-foreground">{t("kundali.sources.bphs.used")}</p>
+          </div>
+        </li>
+      </ol>
+    </section>
   );
 }
 

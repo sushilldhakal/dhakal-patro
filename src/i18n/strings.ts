@@ -1183,6 +1183,23 @@ export const strings = {
     ne: "बी. वी. रमनको “Three Hundred Important Combinations”, भाग I–II",
     en: "B. V. Raman's “Three Hundred Important Combinations”, Parts I–II",
   },
+  "kundali.sources.heading": { ne: "शास्त्रीय स्रोत", en: "Classical sources" },
+  "kundali.sources.blurb": {
+    ne: "गणना र चक्र यी ग्रन्थका मूल कर्ताको नाम र मूल पाठको वि.सं. वर्षमा आधारित छन्। दोस्रो हरफमा अनुवादक र सम्पादकको मुद्रित संस्करणको वि.सं. छ।",
+    en: "Calculations follow each treatise's traditional author and the Bikram Sambat year of the original text. The second line is the translator and editor's printed edition in BS.",
+  },
+  "kundali.sources.bphs.credit": {
+    ne: "बृहत्पाराशरहोराशास्त्रम् - महर्षि पराशर",
+    en: "Brihat Parashara Hora Shastra - Maharishi Parashara",
+  },
+  "kundali.sources.bphs.edition": {
+    ne: "अनुवादक र सम्पादक पण्डित गणेशदत्त पाठक वि.सं. २०२९ (भूमिका); संशोधित परिवर्तित संस्करण वि.सं. २०५८। सावित्री ठाकुर प्रकाशन, रथयात्रा, वाराणसी।",
+    en: "Translator & Editor Pandit Ganesh Dutt Pathak BS 2029 (preface); revised edition BS 2058. Savitri Thakur Prakashan, Rathyatra, Varanasi.",
+  },
+  "kundali.sources.bphs.used": {
+    ne: "कुण्डलीमा बन्ने योगहरूको नियम र फल।",
+    en: "The rules and results of yogas formed in the birth chart.",
+  },
 
   /* ── milan ───────────────────────────────────────────────────────────── */
   "milan.eyebrow": { ne: "नेपाली पात्रो · ज्योतिष · कुण्डली मिलन", en: "Nepali Patro · Jyotish · Kundali Milan" },

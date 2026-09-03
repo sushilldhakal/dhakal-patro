@@ -785,6 +785,15 @@
       "strength_ratio": "Strength Ratio",
       "yoga_catalog_search_placeholder": "Search by name, rule or result…",
       "yoga_catalog_source": "B. V. Raman's “Three Hundred Important Combinations”, Parts I–II"
+    },
+    "sources": {
+      "heading": "Classical sources",
+      "blurb": "Calculations follow each treatise's traditional author and the Bikram Sambat year of the original text. The second line is the translator and editor's printed edition in BS.",
+      "bphs": {
+        "credit": "Brihat Parashara Hora Shastra - Maharishi Parashara",
+        "edition": "Translator & Editor Pandit Ganesh Dutt Pathak BS 2029 (preface); revised edition BS 2058. Savitri Thakur Prakashan, Rathyatra, Varanasi.",
+        "used": "The rules and results of yogas formed in the birth chart."
+      }
     }
   },
   "milan": {
