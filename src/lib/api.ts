@@ -2203,6 +2203,16 @@ export const kundaliDetailKeys = {
     ] as const,
 };
 
+/**
+ * Cloudflare caches /kundali/detail responses by full URL with no
+ * origin cache-control to bound it (unlike the yoga reference endpoint's
+ * `?v=`). A previously-viewed birth chart keeps serving its pre-change JSON
+ * from the edge indefinitely otherwise. Bump this whenever the chart/yoga
+ * engine changes so every request gets a fresh cache key.
+ */
+export const KUNDALI_ENGINE_VERSION =
+  import.meta.env.VITE_KUNDALI_ENGINE_VERSION ?? "2";
+
 export const fetchKundaliDetail = (
   moment: InstantQuery,
   location?: LocationParams,
@@ -2210,6 +2220,7 @@ export const fetchKundaliDetail = (
 ) => {
   const params = appendInstantParams(new URLSearchParams(), moment);
   if (options?.ayanamsha) params.set("ayanamsha", options.ayanamsha);
+  params.set("ev", KUNDALI_ENGINE_VERSION);
   return get<KundaliDetailResponse>(
     appendLocation(`/kundali/detail?${params.toString()}`, location)
   );
