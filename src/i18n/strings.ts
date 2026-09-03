@@ -1026,8 +1026,8 @@ export const strings = {
   "kundali.inauspicious": { ne: "अशुभ", en: "Inauspicious" },
   "kundali.present": { ne: "छ", en: "Present" },
   "kundali.yoga_reference_catalog_162_combinations": {
-    ne: "योग सन्दर्भ सूची (१६२ संयोग)",
-    en: "Yoga reference catalog (162 combinations)",
+    ne: "योग सन्दर्भ सूची (३०० संयोग)",
+    en: "Yoga reference catalog (300 combinations)",
   },
   "kundali.could_not_load_the_reference_catalog": {
     ne: "सन्दर्भ सूची लोड गर्न सकिएन।",
@@ -1180,8 +1180,8 @@ export const strings = {
     en: "Search by name, rule or result…",
   },
   "kundali.x.yoga_catalog_source": {
-    ne: "बी. वी. रमनको “Three Hundred Important Combinations”, भाग I",
-    en: "B. V. Raman's “Three Hundred Important Combinations”, Part I",
+    ne: "बी. वी. रमनको “Three Hundred Important Combinations”, भाग I–II",
+    en: "B. V. Raman's “Three Hundred Important Combinations”, Parts I–II",
   },
 
   /* ── milan ───────────────────────────────────────────────────────────── */
