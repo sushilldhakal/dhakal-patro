@@ -315,6 +315,9 @@ const clampZoom = (v: number, skyMode: SkyMode) =>
 
 /** How far a press may wander, in px, and still count as a tap rather than a drag. */
 const DRAG_SLOP = 5;
+/** Taking the wheel back from the gyro must be a real pan. A 5px slop is a
+    thumb resting on the glass while the phone is raised. */
+const SENSOR_RELEASE_SLOP = 40;
 
 /**
  * What counts as a control rather than sky.
@@ -580,6 +583,7 @@ export function AakashGocharSky({
     view.current.yaw = sample.yaw;
     view.current.pitch = clampPitch(sample.pitch, DOME_PITCH_MAX);
     view.current.roll = sample.roll;
+    setGyroPrompt((open) => (open ? false : open));
   }, []);
   const { requestPermission } = useDeviceOrientation(
     gyroMode || arMode || gyroPrompt,
@@ -614,22 +618,25 @@ export function AakashGocharSky({
   }, []);
 
   /** A tap on the dial while neither sensor is running: ask the reader to
-      raise the phone. Gyro mode starts on this same tap so the hook is
-      `active` (and applying samples) immediately — a three-second delay used
-      to leave the listener unhooked, so the sky never followed the phone.
-      `requestPermission` is fired synchronously from this tap, not from an
-      effect — iOS only honours it called inside a user-gesture handler's own
-      call stack; see the module doc comment on `useDeviceOrientation`. */
+      raise the phone, and start applying samples on this same tap.
+      `requestPermission` is fired synchronously from the tap — iOS only
+      honours it inside a user-gesture call stack. */
   const requestGyro = useCallback(() => {
     setMode("horizon");
     gyroLiveRef.current = true;
     setGyroPrompt(true);
     setGyroMode(true);
-    void requestPermission();
+    void requestPermission().then((ok) => {
+      if (ok) return;
+      gyroLiveRef.current = false;
+      setGyroMode(false);
+      setGyroPrompt(false);
+    });
     window.clearTimeout(gyroPromptTimer.current);
+    // Backstop only — the overlay normally lifts on the first sensor sample.
     gyroPromptTimer.current = window.setTimeout(() => {
       setGyroPrompt(false);
-    }, 3000);
+    }, 8000);
   }, [requestPermission]);
 
   /** The dial's centre glyph, tapped once the gyro has already turned it
@@ -1026,7 +1033,8 @@ export function AakashGocharSky({
       const dx = e.clientX - dragOrigin.current.x;
       const dy = e.clientY - dragOrigin.current.y;
       const mode = modeRef.current;
-      if (mode !== "space" && !dragging.current && Math.hypot(dx, dy) < DRAG_SLOP) {
+      const slop = sensorModeRef.current ? SENSOR_RELEASE_SLOP : DRAG_SLOP;
+      if (mode !== "space" && !dragging.current && Math.hypot(dx, dy) < slop) {
         return;
       }
       dragging.current = true;
@@ -1880,6 +1888,7 @@ export function AakashGocharSky({
               onSelectObserver={toggleObserver}
               onSample={onSample}
               arBackground={showCamera}
+              sensorDrive={gyroMode || arMode}
             />
           </Suspense>
         </Canvas>
@@ -1917,7 +1926,7 @@ export function AakashGocharSky({
         {gyroPrompt ? (
           <div
             data-sky-controls
-            className="absolute inset-0 z-40 flex items-center justify-center bg-black/40"
+            className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-black/40"
           >
             <div className="flex flex-col items-center gap-3 px-6 text-center">
               <span

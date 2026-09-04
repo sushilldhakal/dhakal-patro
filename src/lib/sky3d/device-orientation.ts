@@ -7,23 +7,20 @@
  * `cam.rotation.set(-pitch, yaw, roll)` — different sensors, because the
  * browser only offers one API for all three axes at once.
  *
- * ## Why a quaternion, not three independent angles
+ * ## Yaw from the compass, pitch from the back camera
  *
  * `DeviceOrientationEvent` reports `alpha`/`beta`/`gamma` — an intrinsic
- * Z-X'-Y'' Euler rotation of the device's own frame, per the W3C spec. Once
- * the phone is both tilted *and* rolled at the same time (exactly the AR
- * posture — held up to the sky, then turned a little to line up a
- * constellation), those three angles stop being separable: reading `beta`
- * alone as "pitch" and `gamma` alone as "roll" is only correct when the
- * other is zero. The standard fix — the technique three.js's own
- * `DeviceOrientationControls` example uses — is to build the *quaternion*
- * the three angles actually describe, rotate it so "forward" means out the
- * back of the phone (where the camera lens is) rather than out of the
- * screen, correct for the screen having been rotated into landscape, and
- * only then read off yaw/pitch/roll — as an Euler decomposition in the same
- * `'YXZ'` order the horizon camera already rotates in, so the three numbers
- * this module returns are exactly the three the camera wants, with no
- * further reinterpretation needed at the call site.
+ * Z-X'-Y'' Euler rotation of the device's own frame. Feeding those three
+ * into a quaternion and then splitting it back into YXZ (the three.js
+ * DeviceOrientationControls trick) is correct for a free camera, but the
+ * horizon view's look direction sits on the zenith the moment the reader
+ * does what the prompt asks — raise the phone. YXZ gimbal-locks there, the
+ * decomposed yaw stops changing, and the sky looks frozen.
+ *
+ * So yaw is taken from the compass heading instead (0 = north, clockwise,
+ * the same frame as the dial). Pitch is still the altitude of the back
+ * camera, read off that quaternion's look vector, so a rolled phone aims at
+ * the right height. Roll is `gamma`.
  *
  * ## Heading: two different sources depending on browser
  *
@@ -100,31 +97,40 @@ const worldQuat = new THREE.Quaternion();
 const screenTransform = new THREE.Quaternion();
 const cameraCorrection = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 const zAxis = new THREE.Vector3(0, 0, 1);
-const outEuler = new THREE.Euler();
+const lookDir = new THREE.Vector3();
 
 /**
- * `(alpha, beta, gamma, screenAngle)` in degrees → `{ yaw, pitch, roll }` in
- * radians, in the horizon camera's own `'YXZ'` convention. `alpha` must
- * already be compass-referenced (0 = north) — callers correct it from
- * `webkitCompassHeading` first where `.absolute` isn't available; see
- * {@link useDeviceOrientation}.
+ * Compass heading + device tilt → `{ yaw, pitch, roll }` in the horizon
+ * camera's `'YXZ'` convention, ready for `cam.rotation.set(-pitch, yaw, roll)`.
  *
- * Exported bare, with no browser-event or React dependency, so it can be
- * unit-tested (or reused by a future non-web platform) without a DOM.
+ * Yaw is taken from the compass (`headingDeg`: 0 = north, clockwise — the
+ * same frame as the dial), not from a quaternion Euler split. Pointing the
+ * phone at the sky puts the look direction on the zenith, where YXZ gimbal-
+ * locks and a decomposed yaw stops updating — the sky appeared frozen the
+ * moment the "raise your phone" prompt asked for that posture. Heading is
+ * well-defined even then, and turning on the spot still spins the dome.
+ *
+ * Pitch is the altitude of the back camera, from the same three.js
+ * quaternion the old path built (so a rolled phone still aims at the right
+ * height). `headingDeg` must already be compass-referenced; callers fold in
+ * `webkitCompassHeading` / absolute `alpha` before calling.
  */
 export function deviceOrientationToCameraEuler(
-  alphaDeg: number,
+  headingDeg: number,
   betaDeg: number,
   gammaDeg: number,
   screenAngleDeg: number,
 ): { yaw: number; pitch: number; roll: number } {
   const DEG = Math.PI / 180;
-  deviceEuler.set(betaDeg * DEG, alphaDeg * DEG, -gammaDeg * DEG, "YXZ");
+  const yaw = -headingDeg * DEG;
+
+  deviceEuler.set(betaDeg * DEG, 0, -gammaDeg * DEG, "YXZ");
   deviceQuat.setFromEuler(deviceEuler);
   worldQuat.copy(deviceQuat).multiply(cameraCorrection);
   worldQuat.multiply(screenTransform.setFromAxisAngle(zAxis, -screenAngleDeg * DEG));
-  outEuler.setFromQuaternion(worldQuat, "YXZ");
-  return { yaw: outEuler.y, pitch: -outEuler.x, roll: outEuler.z };
+  lookDir.set(0, 0, -1).applyQuaternion(worldQuat);
+  const altitude = Math.asin(Math.max(-1, Math.min(1, lookDir.y)));
+  return { yaw, pitch: -altitude, roll: -gammaDeg * DEG };
 }
 
 /**
@@ -159,7 +165,6 @@ export function useDeviceOrientation(
   );
 
   const listenerRef = useRef<((e: Event) => void) | null>(null);
-  const haveAbsoluteRef = useRef(false);
   const onSampleRef = useRef(onSample);
   useEffect(() => {
     onSampleRef.current = onSample;
@@ -171,39 +176,40 @@ export function useDeviceOrientation(
       window.removeEventListener(type, listenerRef.current);
     }
     listenerRef.current = null;
-    haveAbsoluteRef.current = false;
   }, []);
 
   const attach = useCallback(() => {
     if (listenerRef.current) return;
     const handler = (event: Event) => {
       const e = event as IOSOrientationEvent;
-      if (e.alpha == null || e.beta == null || e.gamma == null) return;
+      // Some browsers fire the event with nulls until permission lands, or
+      // omit gamma on cheap hardware — skip a frame, don't drop the listener.
+      if (e.beta == null && e.alpha == null) return;
+      const beta = e.beta ?? 90;
+      const gamma = e.gamma ?? 0;
+      const screen = screenAngleDeg();
 
       const absolute = "absolute" in e ? Boolean((e as DeviceOrientationEvent).absolute) : false;
       const compassHeading =
         typeof e.webkitCompassHeading === "number" && Number.isFinite(e.webkitCompassHeading);
       const isAbsolute =
         event.type === "deviceorientationabsolute" || absolute || compassHeading;
-      // Once a compass-referenced sample has arrived, ignore relative-only
-      // duplicates so the two event names cannot fight each other.
-      if (haveAbsoluteRef.current && !isAbsolute) return;
-      if (isAbsolute) haveAbsoluteRef.current = true;
 
-      let alpha = e.alpha;
+      // 0 = north, clockwise — same frame as the compass dial. iOS already
+      // reports that as `webkitCompassHeading`; everyone else inverts W3C
+      // alpha (0 = north, CCW) and folds in the screen angle.
+      let headingDeg: number;
       if (compassHeading) {
-        // iOS never sets `.absolute`; `webkitCompassHeading` is its own true
-        // heading, already 0 = north clockwise — invert back to the alpha
-        // the quaternion conversion expects (0 = north, counter-clockwise).
-        alpha = (360 - e.webkitCompassHeading!) % 360;
+        headingDeg = ((e.webkitCompassHeading! % 360) + 360) % 360;
         setDriftingHeading(false);
-      } else if (absolute || event.type === "deviceorientationabsolute") {
-        setDriftingHeading(false);
+      } else if (e.alpha != null) {
+        headingDeg = ((360 - e.alpha + screen) % 360 + 360) % 360;
+        setDriftingHeading(!isAbsolute);
       } else {
-        setDriftingHeading(true);
+        return;
       }
 
-      const result = deviceOrientationToCameraEuler(alpha, e.beta, e.gamma, screenAngleDeg());
+      const result = deviceOrientationToCameraEuler(headingDeg, beta, gamma, screen);
       setYaw(result.yaw);
       setPitch(result.pitch);
       setRoll(result.roll);
@@ -216,22 +222,53 @@ export function useDeviceOrientation(
     }
   }, []);
 
-  const requestPermission = useCallback(async (): Promise<boolean> => {
-    const ctor = window.DeviceOrientationEvent as IOSOrientationEventConstructor | undefined;
-    if (typeof ctor?.requestPermission !== "function") {
+  type PermissionAsk = () => Promise<"granted" | "denied">;
+  const requestPermission = useCallback((): Promise<boolean> => {
+    const orientCtor = window.DeviceOrientationEvent as IOSOrientationEventConstructor | undefined;
+    const motionCtor = window.DeviceMotionEvent as
+      | (typeof DeviceMotionEvent & { requestPermission?: PermissionAsk })
+      | undefined;
+
+    // Listeners first — iOS starts delivering in the same turn as the grant
+    // if they are already bound, and Android has no grant to wait for.
+    attach();
+
+    const orientAsk = orientCtor?.requestPermission;
+    if (typeof orientAsk !== "function") {
       setPermissionState("unnecessary");
-      attach();
-      return true;
+      return Promise.resolve(true);
     }
+
+    // The native call has to stay in this tap's synchronous stack. An
+    // `async` function is what made Safari treat it as *not* a user gesture,
+    // resolve "denied" (or never), and leave the sky with no samples.
+    let orientPromise: Promise<"granted" | "denied">;
     try {
-      const result = await ctor.requestPermission();
-      setPermissionState(result === "granted" ? "granted" : "denied");
-      if (result === "granted") attach();
-      return result === "granted";
+      orientPromise = orientAsk.call(orientCtor);
     } catch {
       setPermissionState("denied");
-      return false;
+      return Promise.resolve(false);
     }
+    const motionAsk = motionCtor?.requestPermission;
+    if (typeof motionAsk === "function") {
+      try {
+        void motionAsk.call(motionCtor);
+      } catch {
+        /* Orientation is the one the sky needs; motion is a courtesy. */
+      }
+    }
+
+    return Promise.resolve(orientPromise).then(
+      (result) => {
+        const ok = result === "granted";
+        setPermissionState(ok ? "granted" : "denied");
+        return ok;
+      },
+      () => {
+        setPermissionState("denied");
+        return false;
+      },
+    );
   }, [attach]);
 
   useEffect(() => {

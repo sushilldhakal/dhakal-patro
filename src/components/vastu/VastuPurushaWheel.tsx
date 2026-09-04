@@ -11,6 +11,8 @@ import {
   VASTU_INNER4,
   VASTU_PADAS,
   VASTU_WHEEL_DIRECTIONS,
+  annularSectorPath as annularSectorPathAt,
+  evenBearings,
   isDir16,
   isInner4,
   isPada,
@@ -24,7 +26,10 @@ import {
 } from "@/lib/vastu";
 import { cn } from "@/lib/utils";
 
-const WHEEL_SIZE = 620;
+/** ArcLabel/PadaCodeLabel/RingSeparators below all close over this wheel's own
+ * CX/CY rather than taking them as props — a reused ring (HouseFloorPlan's
+ * compass ring) must therefore share this exact centre, not just any size. */
+export const WHEEL_SIZE = 620;
 const CX = WHEEL_SIZE / 2;
 const CY = WHEEL_SIZE / 2;
 const PURUSHA_OPACITY = 0.2;
@@ -64,21 +69,9 @@ function normBearing(bearing: number): number {
   return ((bearing % 360) + 360) % 360;
 }
 
-/** Annular sector spanning `halfAngle` degrees on each side of `bearing`. */
+/** Annular sector spanning `halfAngle` degrees on each side of `bearing`, around this wheel's own centre. */
 function annularSectorPath(bearing: number, halfAngle: number, outerR: number, innerR: number): string {
-  const from = bearing - halfAngle;
-  const to = bearing + halfAngle;
-  const o1 = vastuWheelPoint(from, outerR, CX, CY);
-  const o2 = vastuWheelPoint(to, outerR, CX, CY);
-  const i1 = vastuWheelPoint(to, innerR, CX, CY);
-  const i2 = vastuWheelPoint(from, innerR, CX, CY);
-  return [
-    `M ${o1.x.toFixed(2)} ${o1.y.toFixed(2)}`,
-    `A ${outerR} ${outerR} 0 0 1 ${o2.x.toFixed(2)} ${o2.y.toFixed(2)}`,
-    `L ${i1.x.toFixed(2)} ${i1.y.toFixed(2)}`,
-    `A ${innerR} ${innerR} 0 0 0 ${i2.x.toFixed(2)} ${i2.y.toFixed(2)}`,
-    "Z",
-  ].join(" ");
+  return annularSectorPathAt(bearing, halfAngle, outerR, innerR, CX, CY);
 }
 
 function annulusPath(outerR: number, innerR: number): string {
@@ -158,19 +151,13 @@ const RING_DIVIDERS = [
   INNER4_INNER,
 ] as const;
 
-/** Category edges for one ring only — never drawn through other rings. */
-function evenBearings(count: number, first: number): number[] {
-  const step = 360 / count;
-  return Array.from({ length: count }, (_, i) => first + i * step);
-}
-
 const GUNA_BOUNDARIES = [112.5, 157.5, 292.5, 337.5] as const;
 const DIR16_BOUNDARIES = evenBearings(16, 11.25);
 const PADA_BOUNDARIES = evenBearings(32, 0);
 const DIR8_BOUNDARIES = evenBearings(8, 22.5);
 const INNER4_BOUNDARIES = evenBearings(4, 45);
 
-function RingSeparators({
+export function RingSeparators({
   bearings,
   innerR,
   outerR,
@@ -197,7 +184,7 @@ function RingSeparators({
   });
 }
 
-function PadaCodeLabel({
+export function PadaCodeLabel({
   bearing,
   radius,
   code,
@@ -249,7 +236,7 @@ function PadaCodeLabel({
   );
 }
 
-function ArcLabel({
+export function ArcLabel({
   bearing,
   radius,
   className,

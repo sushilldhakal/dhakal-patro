@@ -769,3 +769,33 @@ export function vastuWheelPoint(
   const rad = ((bearing - 90) * Math.PI) / 180;
   return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
 }
+
+/** Annular sector spanning `halfAngle` degrees on each side of `bearing`, around (cx, cy). */
+export function annularSectorPath(
+  bearing: number,
+  halfAngle: number,
+  outerR: number,
+  innerR: number,
+  cx = 0,
+  cy = 0,
+): string {
+  const from = bearing - halfAngle;
+  const to = bearing + halfAngle;
+  const o1 = vastuWheelPoint(from, outerR, cx, cy);
+  const o2 = vastuWheelPoint(to, outerR, cx, cy);
+  const i1 = vastuWheelPoint(to, innerR, cx, cy);
+  const i2 = vastuWheelPoint(from, innerR, cx, cy);
+  return [
+    `M ${o1.x.toFixed(2)} ${o1.y.toFixed(2)}`,
+    `A ${outerR} ${outerR} 0 0 1 ${o2.x.toFixed(2)} ${o2.y.toFixed(2)}`,
+    `L ${i1.x.toFixed(2)} ${i1.y.toFixed(2)}`,
+    `A ${innerR} ${innerR} 0 0 0 ${i2.x.toFixed(2)} ${i2.y.toFixed(2)}`,
+    "Z",
+  ].join(" ");
+}
+
+/** Category edges for one ring — `count` evenly-spaced bearings starting at `first`. */
+export function evenBearings(count: number, first: number): number[] {
+  const step = 360 / count;
+  return Array.from({ length: count }, (_, i) => first + i * step);
+}

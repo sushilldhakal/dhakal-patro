@@ -1888,6 +1888,7 @@ export function AakashGocharScene({
   onSelectObserver,
   onSample,
   arBackground = false,
+  sensorDrive = false,
 }: {
   sim: React.RefObject<SimState>;
   view: React.RefObject<ViewState>;
@@ -1982,6 +1983,12 @@ export function AakashGocharScene({
    * the star sphere, the horizon hillside — has nothing left to do here.
    */
   arBackground?: boolean;
+  /**
+   * The phone's own tilt is driving the horizon camera. Follow/lock-centre
+   * must not overwrite yaw/pitch every frame or the sky sits still while
+   * the device moves.
+   */
+  sensorDrive?: boolean;
 }) {
   const gl = useThree((s) => s.gl);
   const camera = useThree((s) => s.camera);
@@ -5225,7 +5232,8 @@ export function AakashGocharScene({
      * drag. So the hold lasts as long as the clock runs, plus the one frame
      * that answers a press of केन्द्रविन्दु.
      */
-    const holdCentre = trackAt != null && (s.playing || recentre.current);
+    const holdCentre =
+      !sensorDrive && trackAt != null && (s.playing || recentre.current);
     if (holdCentre) recentre.current = false;
     if (horizon) {
       /* Equidistant fisheye: screen radius is angle from the look direction.
