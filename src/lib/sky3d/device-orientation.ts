@@ -35,7 +35,10 @@
  * same way. Where neither is available, `alpha` is relative to wherever the
  * phone happened to be facing when tracking started, and drifts — used
  * anyway, so AR mode still does *something*, but flagged `driftingHeading`
- * so the UI can say so.
+ * so the UI can say so. Both event names are listened for: Chrome exposes
+ * `ondeviceorientationabsolute` even when only `deviceorientation` fires
+ * (DevTools Sensors, some Android builds), and listening to the absolute
+ * name alone is how the sky stopped following the phone.
  *
  * ## iOS's permission gate
  *
@@ -124,10 +127,14 @@ export function deviceOrientationToCameraEuler(
   return { yaw: outEuler.y, pitch: -outEuler.x, roll: outEuler.z };
 }
 
-const ORIENTATION_EVENT: "deviceorientationabsolute" | "deviceorientation" =
-  typeof window !== "undefined" && "ondeviceorientationabsolute" in window
-    ? "deviceorientationabsolute"
-    : "deviceorientation";
+/**
+ * Both event names, always. Chrome advertises `ondeviceorientationabsolute`
+ * even when the Sensors panel (and some phones) only ever dispatch the
+ * relative `deviceorientation` event — listening to the absolute name alone
+ * is how the compass dial went deaf. Absolute samples still win when they
+ * actually arrive; see the handler in {@link useDeviceOrientation}.
+ */
+const ORIENTATION_EVENTS = ["deviceorientationabsolute", "deviceorientation"] as const;
 
 function screenAngleDeg(): number {
   if (typeof screen !== "undefined" && screen.orientation) return screen.orientation.angle;
@@ -136,7 +143,12 @@ function screenAngleDeg(): number {
   return typeof legacy === "number" ? legacy : 0;
 }
 
-export function useDeviceOrientation(active: boolean): DeviceOrientationSample {
+export type OrientationSample = { yaw: number; pitch: number; roll: number };
+
+export function useDeviceOrientation(
+  active: boolean,
+  onSample?: (sample: OrientationSample) => void,
+): DeviceOrientationSample {
   const [yaw, setYaw] = useState<number | null>(null);
   const [pitch, setPitch] = useState<number | null>(null);
   const [roll, setRoll] = useState<number | null>(null);
@@ -147,21 +159,45 @@ export function useDeviceOrientation(active: boolean): DeviceOrientationSample {
   );
 
   const listenerRef = useRef<((e: Event) => void) | null>(null);
+  const haveAbsoluteRef = useRef(false);
+  const onSampleRef = useRef(onSample);
+  useEffect(() => {
+    onSampleRef.current = onSample;
+  }, [onSample]);
+
+  const detach = useCallback(() => {
+    if (!listenerRef.current) return;
+    for (const type of ORIENTATION_EVENTS) {
+      window.removeEventListener(type, listenerRef.current);
+    }
+    listenerRef.current = null;
+    haveAbsoluteRef.current = false;
+  }, []);
 
   const attach = useCallback(() => {
+    if (listenerRef.current) return;
     const handler = (event: Event) => {
       const e = event as IOSOrientationEvent;
       if (e.alpha == null || e.beta == null || e.gamma == null) return;
 
-      let alpha = e.alpha;
       const absolute = "absolute" in e ? Boolean((e as DeviceOrientationEvent).absolute) : false;
-      if (typeof e.webkitCompassHeading === "number") {
+      const compassHeading =
+        typeof e.webkitCompassHeading === "number" && Number.isFinite(e.webkitCompassHeading);
+      const isAbsolute =
+        event.type === "deviceorientationabsolute" || absolute || compassHeading;
+      // Once a compass-referenced sample has arrived, ignore relative-only
+      // duplicates so the two event names cannot fight each other.
+      if (haveAbsoluteRef.current && !isAbsolute) return;
+      if (isAbsolute) haveAbsoluteRef.current = true;
+
+      let alpha = e.alpha;
+      if (compassHeading) {
         // iOS never sets `.absolute`; `webkitCompassHeading` is its own true
         // heading, already 0 = north clockwise — invert back to the alpha
         // the quaternion conversion expects (0 = north, counter-clockwise).
-        alpha = (360 - e.webkitCompassHeading) % 360;
+        alpha = (360 - e.webkitCompassHeading!) % 360;
         setDriftingHeading(false);
-      } else if (absolute) {
+      } else if (absolute || event.type === "deviceorientationabsolute") {
         setDriftingHeading(false);
       } else {
         setDriftingHeading(true);
@@ -172,9 +208,12 @@ export function useDeviceOrientation(active: boolean): DeviceOrientationSample {
       setPitch(result.pitch);
       setRoll(result.roll);
       setAvailable(true);
+      onSampleRef.current?.(result);
     };
     listenerRef.current = handler;
-    window.addEventListener(ORIENTATION_EVENT, handler);
+    for (const type of ORIENTATION_EVENTS) {
+      window.addEventListener(type, handler);
+    }
   }, []);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
@@ -196,23 +235,19 @@ export function useDeviceOrientation(active: boolean): DeviceOrientationSample {
   }, [attach]);
 
   useEffect(() => {
-    // `available` is already false here whenever this branch matters: it
-    // starts false, and the cleanup below already reset it the moment
-    // `active` last went false.
     if (!active) return;
-    // Android/desktop: no gesture-gated permission, safe to attach from an
-    // effect. iOS: `needsIOSPermission()` is true and nothing is attached
-    // here — `requestPermission` above, called from the AR toggle's own tap
-    // handler, does it instead.
-    if (!needsIOSPermission()) {
-      attach();
-    }
+    // iOS: stay idle until the tap's `requestPermission` actually granted —
+    // attaching from an effect before that is what the gesture-gate exists
+    // to prevent. After a grant, attach here too so React Strict Mode's
+    // simulated unmount (which runs this cleanup) does not leave the sky
+    // deaf: the remount re-binds the same listeners.
+    if (needsIOSPermission() && permissionState !== "granted") return;
+    attach();
     return () => {
-      if (listenerRef.current) window.removeEventListener(ORIENTATION_EVENT, listenerRef.current);
-      listenerRef.current = null;
+      detach();
       setAvailable(false);
     };
-  }, [active, attach]);
+  }, [active, attach, detach, permissionState]);
 
   return { yaw, pitch, roll, available, driftingHeading, permissionState, requestPermission };
 }

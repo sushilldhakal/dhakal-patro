@@ -72,6 +72,8 @@ export function CompassControl({
   const gesture = useRef({
     startAngle: 0,
     startHeading: 0,
+    startX: 0,
+    startY: 0,
     moved: 0,
     pointerId: null as number | null,
     cancelledSensor: false,
@@ -90,6 +92,8 @@ export function CompassControl({
     gesture.current = {
       startAngle: angleAt(e.clientX, e.clientY, rect),
       startHeading: heading,
+      startX: e.clientX,
+      startY: e.clientY,
       moved: 0,
       pointerId: e.pointerId,
       cancelledSensor: false,
@@ -100,9 +104,13 @@ export function CompassControl({
     if (gesture.current.pointerId !== e.pointerId) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const angle = angleAt(e.clientX, e.clientY, rect);
+    // Straight-line pixels, not outer-edge arc. A tap on the centre needle is
+    // a few pixels of jitter at most, but atan2 there swings tens of degrees
+    // for a 1px wobble — measuring that as arc length at RADIUS made every
+    // click on the icon look like a spin, so the gyro never armed.
     gesture.current.moved = Math.max(
       gesture.current.moved,
-      Math.abs(angle - gesture.current.startAngle) * (RADIUS * Math.PI / 180),
+      Math.hypot(e.clientX - gesture.current.startX, e.clientY - gesture.current.startY),
     );
     if (sensorActive) {
       // A real drag on a sensor-driven dial is the reader grabbing the wheel
@@ -113,7 +121,7 @@ export function CompassControl({
       }
       return;
     }
-    const delta = angle - gesture.current.startAngle;
+    const delta = ((angle - gesture.current.startAngle + 540) % 360) - 180;
     onHeadingChange(normalizeDeg(gesture.current.startHeading + delta));
   };
 
@@ -133,7 +141,7 @@ export function CompassControl({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      className="absolute bottom-3 flex items-center justify-center"
+      className="absolute bottom-3 z-20 flex items-center justify-center"
       style={{
         width: DIAL_SIZE,
         height: DIAL_SIZE,

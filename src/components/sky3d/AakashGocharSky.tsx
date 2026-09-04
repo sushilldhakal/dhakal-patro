@@ -110,7 +110,7 @@ import {
 import { HIPS_ATTRIBUTION, readHipsDebugSnapshot, type HipsDebugSnapshot } from "@/lib/sky3d/hips";
 import { CompassControl } from "@/components/sky3d/CompassControl";
 import compassNeedle from "@/assets/compass.svg?raw";
-import { useDeviceOrientation } from "@/lib/sky3d/device-orientation";
+import { useDeviceOrientation, type OrientationSample } from "@/lib/sky3d/device-orientation";
 
 const Scene = memo(AakashGocharScene);
 
@@ -572,7 +572,19 @@ export function AakashGocharSky({
   const [gyroPrompt, setGyroPrompt] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const deviceOrientation = useDeviceOrientation(gyroMode || arMode);
+  /** Written from the sensor event itself, not a React effect — orientation
+      arrives at sensor rate and the frame loop already reads `view.current`. */
+  const gyroLiveRef = useRef(false);
+  const applyOrientationSample = useCallback((sample: OrientationSample) => {
+    if (!gyroLiveRef.current) return;
+    view.current.yaw = sample.yaw;
+    view.current.pitch = clampPitch(sample.pitch, DOME_PITCH_MAX);
+    view.current.roll = sample.roll;
+  }, []);
+  const { requestPermission } = useDeviceOrientation(
+    gyroMode || arMode || gyroPrompt,
+    applyOrientationSample,
+  );
   const gyroPromptTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(gyroPromptTimer.current), []);
 
@@ -592,6 +604,7 @@ export function AakashGocharSky({
   /** The reader's own drag — on the dial or the sky itself — taking the
       wheel back from whichever sensor was driving it. */
   const stopSensorMode = useCallback(() => {
+    gyroLiveRef.current = false;
     setGyroMode(false);
     setArMode(false);
     setCameraStream(null);
@@ -601,21 +614,23 @@ export function AakashGocharSky({
   }, []);
 
   /** A tap on the dial while neither sensor is running: ask the reader to
-      raise the phone, then switch the dial over to the device's own tilt
-      once they've had the window to do it. `requestPermission` is fired
-      synchronously from this same tap, not from an effect — iOS only
-      honours it called inside a user-gesture handler's own call stack; see
-      the module doc comment on `useDeviceOrientation`. */
+      raise the phone. Gyro mode starts on this same tap so the hook is
+      `active` (and applying samples) immediately — a three-second delay used
+      to leave the listener unhooked, so the sky never followed the phone.
+      `requestPermission` is fired synchronously from this tap, not from an
+      effect — iOS only honours it called inside a user-gesture handler's own
+      call stack; see the module doc comment on `useDeviceOrientation`. */
   const requestGyro = useCallback(() => {
     setMode("horizon");
+    gyroLiveRef.current = true;
     setGyroPrompt(true);
-    void deviceOrientation.requestPermission();
+    setGyroMode(true);
+    void requestPermission();
     window.clearTimeout(gyroPromptTimer.current);
     gyroPromptTimer.current = window.setTimeout(() => {
       setGyroPrompt(false);
-      setGyroMode(true);
     }, 3000);
-  }, [deviceOrientation]);
+  }, [requestPermission]);
 
   /** The dial's centre glyph, tapped once the gyro has already turned it
       into a lens: opens the back camera without touching the tilt that's
@@ -658,22 +673,9 @@ export function AakashGocharSky({
     if (videoRef.current) videoRef.current.srcObject = cameraStream;
   }, [cameraStream]);
 
-  // The phone's own compass and tilt take the wheel while a sensor is live —
-  // the same `view.current` the manual drag gesture writes to the rest of the
-  // time, so the scene's camera code never has to know which one is live.
-  // `onSample` below picks the new yaw back up for the dial. Left null (no
-  // sensor data yet, or permission denied) simply leaves the last view alone,
-  // so the reader can still drag the dial by hand rather than being frozen.
   useEffect(() => {
-    if (!gyroMode && !arMode) return;
-    if (deviceOrientation.yaw != null) view.current.yaw = deviceOrientation.yaw;
-    if (deviceOrientation.pitch != null) {
-      // Same clamp the manual drag gesture uses in this view — short of true
-      // vertical, where the yaw axis degenerates.
-      view.current.pitch = Math.min(1.45, Math.max(-1.45, deviceOrientation.pitch));
-    }
-    view.current.roll = deviceOrientation.roll ?? 0;
-  }, [gyroMode, arMode, deviceOrientation.yaw, deviceOrientation.pitch, deviceOrientation.roll]);
+    gyroLiveRef.current = gyroMode || arMode;
+  }, [gyroMode, arMode]);
 
   /** Camera passthrough only once `getUserMedia` actually resolved — AR mode
       alone would otherwise leave a black rectangle where the lens should be. */
@@ -1913,7 +1915,10 @@ export function AakashGocharSky({
         {/* "फोन माथि उठाउनुहोस्" — the window between asking for the gyro and
             it actually taking over. */}
         {gyroPrompt ? (
-          <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div
+            data-sky-controls
+            className="absolute inset-0 z-40 flex items-center justify-center bg-black/40"
+          >
             <div className="flex flex-col items-center gap-3 px-6 text-center">
               <span
                 aria-hidden
