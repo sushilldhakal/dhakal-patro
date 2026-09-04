@@ -21,6 +21,27 @@ const PLAN_KEY = "vp.vastu.house";
 const selectClass =
   "h-9 w-full min-w-0 rounded-lg border border-border bg-card px-2 text-sm text-foreground cursor-pointer";
 
+/**
+ * `kitchen_dining` is the *combined* room, so it can never coexist with a
+ * separate `kitchen` or `dining` — asking for both makes the engine dutifully
+ * build a kitchen, a dining room AND a kitchen+dining room (three cooking/
+ * eating spaces nobody asked for). The dedicated checkbox always swapped
+ * correctly, but the Essential-spaces "Kitchen"/"Dining room" buttons went
+ * through `toggleExtra`, which just appended — so turning either back on
+ * while combined was ticked produced exactly that. Enforced here, at the one
+ * place every extras change passes through, rather than per toggle.
+ *
+ * The separate rooms win: the only way to reach the invalid state is by
+ * turning `kitchen`/`dining` on, so honouring that most recent action is
+ * what the person actually asked for (and matches DEFAULT_HOUSE_PLAN, where
+ * combining is the opt-in, not the default).
+ */
+function normalizeExtras(extras: SpaceKind[]): SpaceKind[] {
+  if (!extras.includes("kitchen_dining")) return extras;
+  if (!extras.includes("kitchen") && !extras.includes("dining")) return extras;
+  return extras.filter((x) => x !== "kitchen_dining");
+}
+
 function readPlan(): HousePlan {
   const raw = getLocalStorageItem(PLAN_KEY);
   if (!raw) return DEFAULT_HOUSE_PLAN;
@@ -29,7 +50,7 @@ function readPlan(): HousePlan {
     if (!parsed || typeof parsed !== "object") return DEFAULT_HOUSE_PLAN;
     const p = parsed as Partial<HousePlan>;
     const extras = Array.isArray(p.extras)
-      ? p.extras.filter((id): id is SpaceKind => typeof id === "string" && isExtraSpace(id))
+      ? normalizeExtras(p.extras.filter((id): id is SpaceKind => typeof id === "string" && isExtraSpace(id)))
       : DEFAULT_HOUSE_PLAN.extras;
     const floors: HousePlan["floors"] = {};
     if (p.floors && typeof p.floors === "object") {
@@ -100,7 +121,7 @@ export function HouseRequirementsForm({
 
   function commit(next: HousePlan) {
     const masterBedroom = Math.min(next.masterBedroom, next.bedrooms);
-    onChange({ ...next, masterBedroom });
+    onChange({ ...next, masterBedroom, extras: normalizeExtras(next.extras) });
   }
 
   function toggleExtra(id: SpaceKind) {
