@@ -165,8 +165,18 @@ export function HouseFloorPlan({
 
   function labelOf(room: PlannedRoom): string {
     if (room.kind === "brahmasthan") {
+      // "brahmasthan" is the shared kind for every open/circulation
+      // fragment, not just the true centre — a leftover carve scrap in a
+      // corner is this kind too. Only a fragment the engine actually
+      // marked vastuRegion "center" (the real crossing of the corridor
+      // spine) is a candidate for the "ब्रह्मस्थान" label; picking the
+      // largest fragment *by area* regardless of where it is let a big
+      // merged scrap off in some other zone outrank the true (deliberately
+      // thin) centre band and get labeled the sacred centre in its place.
       const courts = floor.rooms.filter((r) => r.kind === "brahmasthan");
-      const main = courts.reduce((a, b) => (a.rect.w * a.rect.h >= b.rect.w * b.rect.h ? a : b));
+      const centreCourts = courts.filter((r) => r.vastuRegion === "center");
+      const pool = centreCourts.length > 0 ? centreCourts : courts;
+      const main = pool.reduce((a, b) => (a.rect.w * a.rect.h >= b.rect.w * b.rect.h ? a : b));
       return room.id === main.id ? t("vastu.dir.center.name") : "";
     }
     if (room.kind === "verandah") return "";
