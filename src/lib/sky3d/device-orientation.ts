@@ -134,6 +134,40 @@ export function deviceOrientationToCameraEuler(
 }
 
 /**
+ * Picks whichever of `angle` or `angle` rotated a half turn (±180°) is
+ * closer to `previous`, undoing exactly the flip raw `gamma` can report for
+ * the *same* physical orientation as `beta` crosses the edges of its own
+ * W3C-defined range: to keep reporting `gamma` within its fixed [-90°, 90°]
+ * bounds, some browsers switch to an equivalent (beta, gamma) pair — beta
+ * shifted by ~180°, gamma reflected — for a device that is tilting
+ * perfectly smoothly in the real world. `pitch` (altitude, computed above
+ * from the look vector) stays continuous through that exact switch, but
+ * `roll = -gamma` does not: it jumps by ~180° in one sensor tick, which is
+ * what reads as the whole sky flipping right as the view tips toward
+ * straight down (or up) instead of continuing smoothly. A real, fast
+ * physical roll never lands this close to exactly half a turn between two
+ * consecutive samples (sensors report far faster than a wrist can move), so
+ * this only ever fires on the artifact, never on an intentional fast roll —
+ * see the unit-style checks this shipped with for both cases.
+ *
+ * Returns `angle` unchanged whenever there is no `previous` sample yet to
+ * compare against (the very first reading).
+ */
+export function closestHalfTurn(angle: number, previous: number | null): number {
+  if (previous == null) return angle;
+  const TWO_PI = Math.PI * 2;
+  const norm = (a: number) => ((a % TWO_PI) + TWO_PI) % TWO_PI;
+  const circularDistance = (a: number, b: number) => {
+    let d = norm(a) - norm(b);
+    if (d > Math.PI) d -= TWO_PI;
+    if (d < -Math.PI) d += TWO_PI;
+    return Math.abs(d);
+  };
+  const flipped = angle + Math.PI;
+  return circularDistance(flipped, previous) < circularDistance(angle, previous) ? flipped : angle;
+}
+
+/**
  * Both event names, always. Chrome advertises `ondeviceorientationabsolute`
  * even when the Sensors panel (and some phones) only ever dispatch the
  * relative `deviceorientation` event — listening to the absolute name alone
@@ -166,6 +200,13 @@ export function useDeviceOrientation(
 
   const listenerRef = useRef<((e: Event) => void) | null>(null);
   const onSampleRef = useRef(onSample);
+  /** Last emitted roll, radians — for `closestHalfTurn` to unwrap the next
+      sample against. Lives outside React state so it updates every sensor
+      tick, not just every render. Reset with the listener: a fresh
+      attach() (permission just granted, or AR mode re-entered) should not
+      compare its first real reading against a stale roll from a previous
+      session. */
+  const lastRollRef = useRef<number | null>(null);
   useEffect(() => {
     onSampleRef.current = onSample;
   }, [onSample]);
@@ -180,6 +221,7 @@ export function useDeviceOrientation(
 
   const attach = useCallback(() => {
     if (listenerRef.current) return;
+    lastRollRef.current = null;
     const handler = (event: Event) => {
       const e = event as IOSOrientationEvent;
       // Some browsers fire the event with nulls until permission lands, or
@@ -210,11 +252,13 @@ export function useDeviceOrientation(
       }
 
       const result = deviceOrientationToCameraEuler(headingDeg, beta, gamma, screen);
+      const roll = closestHalfTurn(result.roll, lastRollRef.current);
+      lastRollRef.current = roll;
       setYaw(result.yaw);
       setPitch(result.pitch);
-      setRoll(result.roll);
+      setRoll(roll);
       setAvailable(true);
-      onSampleRef.current?.(result);
+      onSampleRef.current?.({ ...result, roll });
     };
     listenerRef.current = handler;
     for (const type of ORIENTATION_EVENTS) {
