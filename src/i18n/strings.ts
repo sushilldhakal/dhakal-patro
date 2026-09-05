@@ -3030,7 +3030,7 @@ export const strings = {
   },
   "vastu.plan.legend.hall": { ne: "बाटो / हल", en: "Passage / hall" },
   "vastu.plan.hall_label": { ne: "बाटो", en: "Hall" },
-  "vastu.plan.foyer_label": { ne: "प्रवेश / फोयर", en: "Foyer" },
+  "vastu.plan.foyer_label": { ne: "प्रवेश", en: "Foyer" },
   "vastu.plan.valid.missing_door": { ne: "कुनै कोठामा ढोका छैन।", en: "A room is missing a door." },
   "vastu.plan.valid.no_hall": { ne: "यस तल्लामा बाटो छैन।", en: "This floor has no hall." },
   "vastu.plan.valid.isolated": { ne: "कुनै कोठा बाटोबाट जोडिएको छैन।", en: "A room is not reachable from the hall." },
