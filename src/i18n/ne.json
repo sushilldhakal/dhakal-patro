@@ -1645,7 +1645,7 @@
         "stair": "सिँढी"
       },
       "hall_label": "बाटो",
-      "foyer_label": "प्रवेश / फोयर",
+      "foyer_label": "प्रवेश",
       "valid": {
         "missing_door": "कुनै कोठामा ढोका छैन।",
         "no_hall": "यस तल्लामा बाटो छैन।",
