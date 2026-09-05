@@ -666,13 +666,29 @@ export function AakashGocharSky({
   // so the reader can still drag the dial by hand rather than being frozen.
   useEffect(() => {
     if (!gyroMode && !arMode) return;
-    if (deviceOrientation.yaw != null) view.current.yaw = deviceOrientation.yaw;
     if (deviceOrientation.pitch != null) {
       // Same clamp the manual drag gesture uses in this view — short of true
       // vertical, where the yaw axis degenerates.
       view.current.pitch = Math.min(1.45, Math.max(-1.45, deviceOrientation.pitch));
     }
-    view.current.roll = deviceOrientation.roll ?? 0;
+    // Yaw and roll come off the same alpha/beta/gamma -> quaternion -> Euler
+    // decomposition as pitch (device-orientation.ts), and that decomposition
+    // is gimbal-locked right where pitch approaches vertical: yaw and roll
+    // collapse onto the same physical axis there, so a phone tipping smoothly
+    // toward straight down/up can report a yaw or roll that jumps by close
+    // to 180° between two consecutive readings — the whole sky appears to
+    // flip instead of the view continuing to tip down. The pitch clamp above
+    // only holds *pitch* back from the pole; yaw/roll still came straight off
+    // the unstable reading. Freezing them at their last good values whenever
+    // the raw reading is already this close to the pole avoids applying that
+    // jump — pitch keeps advancing (clamped above) so the view still visibly
+    // continues toward vertical, it just stops spinning when it gets there.
+    const PITCH_LOCK_THRESHOLD = 1.35; // ~77.3°, a margin short of the 1.45 clamp
+    const nearPole = deviceOrientation.pitch != null && Math.abs(deviceOrientation.pitch) > PITCH_LOCK_THRESHOLD;
+    if (!nearPole) {
+      if (deviceOrientation.yaw != null) view.current.yaw = deviceOrientation.yaw;
+      view.current.roll = deviceOrientation.roll ?? 0;
+    }
   }, [gyroMode, arMode, deviceOrientation.yaw, deviceOrientation.pitch, deviceOrientation.roll]);
 
   /** Camera passthrough only once `getUserMedia` actually resolved — AR mode
