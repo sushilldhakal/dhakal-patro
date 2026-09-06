@@ -7,35 +7,58 @@
  * `cam.rotation.set(-pitch, yaw, roll)` — different sensors, because the
  * browser only offers one API for all three axes at once.
  *
- * ## Yaw from the compass, pitch from the back camera
+ * ## One rotation, composed — never three angles taken from three places
  *
- * `DeviceOrientationEvent` reports `alpha`/`beta`/`gamma` — an intrinsic
- * Z-X'-Y'' Euler rotation of the device's own frame. Feeding those three
- * into a quaternion and then splitting it back into YXZ (the three.js
- * DeviceOrientationControls trick) is correct for a free camera, but the
- * horizon view's look direction sits on the zenith the moment the reader
- * does what the prompt asks — raise the phone. YXZ gimbal-locks there, the
- * decomposed yaw stops changing, and the sky looks frozen.
+ * `DeviceOrientationEvent` reports `alpha`/`beta`/`gamma`: an intrinsic
+ * Z-X'-Y'' Euler triple, `Rz(alpha)·Rx(beta)·Ry(gamma)`, carrying the phone's
+ * own axes into (east, north, up). Read one at a time those three numbers
+ * lie. The triple is only unique because the spec pins `gamma` into
+ * [-90°, 90°), so every posture on the far side of that fence is reported on
+ * the *other* branch — `alpha` jumps 180°, `beta` reflects about 90°, `gamma`
+ * changes sign, all inside one event — while the rotation they compose to
+ * does not move at all. The jumps cancel. Which is precisely why they have to
+ * be composed, and never consumed individually.
  *
- * So yaw is taken from the compass heading instead (0 = north, clockwise,
- * the same frame as the dial). Pitch is still the altitude of the back
- * camera, read off that quaternion's look vector, so a rolled phone aims at
- * the right height. Roll is `gamma`.
+ * Yaw straight off the compass, pitch out of an `asin`, roll from `-gamma` —
+ * what this used to do — breaks that cancellation three ways. The branch flip
+ * reaches the view as a 180° spin of the whole grid. `asin` cannot report an
+ * altitude past the zenith, so raising the phone over the top and bringing it
+ * down the far side folded the sky back onto the near side and left it facing
+ * the wrong way with the horizon upside down. And `gamma` is the least
+ * trustworthy of the three near vertical, which is where AR mode spends its
+ * whole life.
  *
- * ## Heading: two different sources depending on browser
+ * So: compose the whole quaternion, then decompose it once, in the camera's
+ * own `'YXZ'` convention. That round trip is exact — `cam.rotation.set` puts
+ * back the rotation this took apart — so whatever the sensor triple does at a
+ * branch boundary, the camera sees one continuous rotation. Nothing
+ * degenerates at the zenith either: YXZ's own lock sits exactly there, but a
+ * locked decomposition still reconstructs the rotation it came from, and the
+ * dome's pitch limit already reaches the pole.
  *
- * `alpha` is only compass-referenced (0 = true/magnetic north) when the
- * event fires as `deviceorientationabsolute`, or when `.absolute` is `true`
- * on a plain `deviceorientation` event — mostly an Android/Chrome thing.
- * Safari on iOS never sets that; instead it stamps every `deviceorientation`
- * event with `webkitCompassHeading`, a heading it derives internally the
- * same way. Where neither is available, `alpha` is relative to wherever the
- * phone happened to be facing when tracking started, and drifts — used
- * anyway, so AR mode still does *something*, but flagged `driftingHeading`
- * so the UI can say so. Both event names are listened for: Chrome exposes
- * `ondeviceorientationabsolute` even when only `deviceorientation` fires
- * (DevTools Sensors, some Android builds), and listening to the absolute
- * name alone is how the sky stopped following the phone.
+ * ## Heading: a slow offset, not a per-sample yaw
+ *
+ * `alpha` is compass-referenced (0 = north) only when the event arrives as
+ * `deviceorientationabsolute`, or with `.absolute` set — mostly an
+ * Android/Chrome thing. Safari never sets either; it stamps every
+ * `deviceorientation` event with `webkitCompassHeading` instead.
+ *
+ * That heading is a magnetometer's reading of where the phone's *top edge*
+ * points, and it falls apart exactly where AR mode asks the reader to hold
+ * the phone: aimed at the zenith the top edge is vertical, its bearing is
+ * whatever the noise says, and consecutive samples can differ by 180°.
+ * Driving yaw from it directly is what spun the sky while the phone was held
+ * still, pointing up.
+ *
+ * So the compass never drives yaw. It calibrates `alpha` — smooth,
+ * gyro-fused, but referenced to wherever the phone happened to be pointing
+ * when tracking started — through a single offset in degrees: snapped on the
+ * first reading, then damped hard, because it corrects a drifting reference
+ * rather than the reader's own movement, and frozen outright whenever the
+ * view is too steep for a bearing to mean anything. Turning on the spot is
+ * answered by `alpha` at sensor rate; the compass only says, slowly, which
+ * way north was. Where no absolute source exists at all the offset stays 0
+ * and `driftingHeading` tells the UI to say so.
  *
  * ## iOS's permission gate
  *
@@ -58,11 +81,14 @@ export type OrientationPermissionState =
   | "denied";
 
 export type DeviceOrientationSample = {
-  /** Radians, ready for `cam.rotation.set(-pitch, yaw, roll)`. Null until the first reading. */
-  yaw: number | null;
-  pitch: number | null;
-  roll: number | null;
-  /** Whether events are actually arriving — false before permission is granted. */
+  /**
+   * Whether events are actually arriving — false before permission is granted.
+   *
+   * The angles themselves are not here on purpose: they arrive at sensor
+   * rate, and holding them in React state re-rendered the whole sky sixty
+   * times a second for a value nothing rendered. They go to `onSample`, which
+   * writes the ref the frame loop already reads.
+   */
   available: boolean;
   /** No `deviceorientationabsolute`/`.absolute`/`webkitCompassHeading` seen yet — yaw will drift. */
   driftingHeading: boolean;
@@ -76,7 +102,11 @@ export type DeviceOrientationSample = {
 };
 
 /** iOS's non-standard extensions, absent from lib.dom's event/constructor types. */
-type IOSOrientationEvent = DeviceOrientationEvent & { webkitCompassHeading?: number };
+type IOSOrientationEvent = DeviceOrientationEvent & {
+  webkitCompassHeading?: number;
+  /** Degrees of slop, or negative when CoreLocation says the reading is junk. */
+  webkitCompassAccuracy?: number;
+};
 type IOSOrientationEventConstructor = typeof DeviceOrientationEvent & {
   requestPermission?: () => Promise<"granted" | "denied">;
 };
@@ -89,48 +119,90 @@ function needsIOSPermission(): boolean {
   return typeof ctor?.requestPermission === "function";
 }
 
+const DEG = Math.PI / 180;
+
 /* Scratch objects the conversion below writes into every event — this runs
    at sensor rate, not React's, so it must not allocate per call. */
 const deviceEuler = new THREE.Euler();
-const deviceQuat = new THREE.Quaternion();
-const worldQuat = new THREE.Quaternion();
+const cameraEuler = new THREE.Euler(0, 0, 0, "YXZ");
+const scratchQuat = new THREE.Quaternion();
 const screenTransform = new THREE.Quaternion();
+/**
+ * −90° about x, post-multiplied: the spec's world is (east, north, up) and
+ * its device frame has +z out of the *screen*; three.js wants y up with north
+ * at −z, and the camera has to look out of the *back*. One quarter turn
+ * reconciles both at once — `Rx(-90)·Rz(a)Rx(b)Ry(g)` is the same rotation as
+ * `Ry(a)·Rx(b-90)·Ry(g)`, which is what this composes.
+ */
 const cameraCorrection = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 const zAxis = new THREE.Vector3(0, 0, 1);
-const lookDir = new THREE.Vector3();
+
+const normalizeDeg = (d: number) => ((d % 360) + 360) % 360;
+
+/** Shortest-path blend, so 359° → 1° does not swing the long way round. */
+function dampDeg(prev: number, next: number, k: number): number {
+  const delta = ((next - prev + 540) % 360) - 180;
+  return normalizeDeg(prev + delta * k);
+}
 
 /**
- * Compass heading + device tilt → `{ yaw, pitch, roll }` in the horizon
- * camera's `'YXZ'` convention, ready for `cam.rotation.set(-pitch, yaw, roll)`.
+ * `alpha`/`beta`/`gamma` (+ the screen's own rotation) → the world rotation
+ * of a camera looking out of the phone's back lens, in the scene's frame
+ * (−z north, +y zenith).
  *
- * Yaw is taken from the compass (`headingDeg`: 0 = north, clockwise — the
- * same frame as the dial), not from a quaternion Euler split. Pointing the
- * phone at the sky puts the look direction on the zenith, where YXZ gimbal-
- * locks and a decomposed yaw stops updating — the sky appeared frozen the
- * moment the "raise your phone" prompt asked for that posture. Heading is
- * well-defined even then, and turning on the spot still spins the dome.
- *
- * Pitch is the altitude of the back camera, from the same three.js
- * quaternion the old path built (so a rolled phone still aims at the right
- * height). `headingDeg` must already be compass-referenced; callers fold in
- * `webkitCompassHeading` / absolute `alpha` before calling.
+ * `alphaDeg` is expected to be north-referenced; the hook folds its compass
+ * offset in before calling. Everything else is the raw event.
  */
-export function deviceOrientationToCameraEuler(
-  headingDeg: number,
+export function deviceOrientationToCameraQuaternion(
+  alphaDeg: number,
   betaDeg: number,
   gammaDeg: number,
   screenAngleDeg: number,
-): { yaw: number; pitch: number; roll: number } {
-  const DEG = Math.PI / 180;
-  const yaw = -headingDeg * DEG;
+  out: THREE.Quaternion,
+): THREE.Quaternion {
+  deviceEuler.set(betaDeg * DEG, alphaDeg * DEG, -gammaDeg * DEG, "YXZ");
+  out.setFromEuler(deviceEuler);
+  out.multiply(cameraCorrection);
+  // The reader turns the phone sideways and the *screen's* up is no longer
+  // the phone's up; the camera has to roll with it or landscape renders on
+  // its side.
+  out.multiply(screenTransform.setFromAxisAngle(zAxis, -screenAngleDeg * DEG));
+  return out;
+}
 
-  deviceEuler.set(betaDeg * DEG, 0, -gammaDeg * DEG, "YXZ");
-  deviceQuat.setFromEuler(deviceEuler);
-  worldQuat.copy(deviceQuat).multiply(cameraCorrection);
-  worldQuat.multiply(screenTransform.setFromAxisAngle(zAxis, -screenAngleDeg * DEG));
-  lookDir.set(0, 0, -1).applyQuaternion(worldQuat);
-  const altitude = Math.asin(Math.max(-1, Math.min(1, lookDir.y)));
-  return { yaw, pitch: -altitude, roll: -gammaDeg * DEG };
+/**
+ * The same rotation, split into what `cam.rotation.set(-pitch, yaw, roll)`
+ * takes — the exact inverse of what the camera does with it, so the split
+ * costs nothing even where the angles themselves are degenerate.
+ */
+export function cameraEulerFromQuaternion(q: THREE.Quaternion): OrientationSample {
+  cameraEuler.setFromQuaternion(q, "YXZ");
+  return { yaw: cameraEuler.y, pitch: -cameraEuler.x, roll: cameraEuler.z };
+}
+
+/** Device angles straight through to the camera's `{ yaw, pitch, roll }`. */
+export function deviceOrientationToCameraEuler(
+  alphaDeg: number,
+  betaDeg: number,
+  gammaDeg: number,
+  screenAngleDeg: number,
+): OrientationSample {
+  return cameraEulerFromQuaternion(
+    deviceOrientationToCameraQuaternion(alphaDeg, betaDeg, gammaDeg, screenAngleDeg, scratchQuat),
+  );
+}
+
+/**
+ * Altitude of the back camera in radians — how far above the horizon the lens
+ * is aimed, which is all the compass gate needs.
+ *
+ * Neither `alpha` nor the screen angle can move it (both are turns about an
+ * axis the look direction already lies on), so this is the whole of it:
+ * `Rx(beta-90)·Ry(gamma)` applied to −z.
+ */
+export function cameraAltitude(betaDeg: number, gammaDeg: number): number {
+  const y = Math.cos(gammaDeg * DEG) * Math.sin((betaDeg - 90) * DEG);
+  return Math.asin(Math.max(-1, Math.min(1, y)));
 }
 
 /**
@@ -176,6 +248,27 @@ export function closestHalfTurn(angle: number, previous: number | null): number 
  */
 const ORIENTATION_EVENTS = ["deviceorientationabsolute", "deviceorientation"] as const;
 
+/**
+ * Steeper than this and `webkitCompassHeading` is reading the bearing of an
+ * edge that is pointing at the sky — noise, and noise that flips by 180°. The
+ * offset it feeds is held at its last good value instead.
+ */
+const HEADING_TRUST_ALTITUDE = 60 * DEG;
+/**
+ * How fast the compass offset is allowed to move per sample. It corrects a
+ * reference that drifts over minutes, not the reader's own turning (that is
+ * `alpha`, at full rate), so it is deliberately slow enough that a bad
+ * magnetometer sample cannot jerk the sky.
+ */
+const HEADING_OFFSET_DAMP = 0.05;
+/**
+ * Slerp toward each new reading rather than snapping to it. Quaternions,
+ * because damping the angles one by one is the same mistake as reading them
+ * one by one — at the zenith yaw and roll trade places and a per-angle blend
+ * would rotate the sky through the whole gap.
+ */
+const ORIENTATION_SMOOTHING = 0.45;
+
 function screenAngleDeg(): number {
   if (typeof screen !== "undefined" && screen.orientation) return screen.orientation.angle;
   if (typeof window === "undefined") return 0;
@@ -189,9 +282,6 @@ export function useDeviceOrientation(
   active: boolean,
   onSample?: (sample: OrientationSample) => void,
 ): DeviceOrientationSample {
-  const [yaw, setYaw] = useState<number | null>(null);
-  const [pitch, setPitch] = useState<number | null>(null);
-  const [roll, setRoll] = useState<number | null>(null);
   const [available, setAvailable] = useState(false);
   const [driftingHeading, setDriftingHeading] = useState(false);
   const [permissionState, setPermissionState] = useState<OrientationPermissionState>(() =>
@@ -211,12 +301,24 @@ export function useDeviceOrientation(
     onSampleRef.current = onSample;
   }, [onSample]);
 
+  /** Degrees added to `alpha` to make it north-referenced. Null until the first compass reading. */
+  const headingOffset = useRef<number | null>(null);
+  /** An absolute source has spoken at least once — the relative twin is ignored from then on. */
+  const sawAbsolute = useRef(false);
+  const smoothed = useRef<THREE.Quaternion | null>(null);
+  const target = useRef(new THREE.Quaternion());
+
   const detach = useCallback(() => {
     if (!listenerRef.current) return;
     for (const type of ORIENTATION_EVENTS) {
       window.removeEventListener(type, listenerRef.current);
     }
     listenerRef.current = null;
+    // A fresh session recalibrates from scratch: the phone may well have been
+    // put down and picked up facing somewhere else.
+    headingOffset.current = null;
+    sawAbsolute.current = false;
+    smoothed.current = null;
   }, []);
 
   const attach = useCallback(() => {
@@ -226,37 +328,64 @@ export function useDeviceOrientation(
       const e = event as IOSOrientationEvent;
       // Some browsers fire the event with nulls until permission lands, or
       // omit gamma on cheap hardware — skip a frame, don't drop the listener.
-      if (e.beta == null && e.alpha == null) return;
+      if (e.alpha == null && e.beta == null && e.gamma == null) return;
+
+      // CoreLocation signals "no usable heading" — an uncalibrated
+      // magnetometer, or one sitting next to a magnet — by handing back
+      // negatives rather than nothing at all, and Safari passes them
+      // straight through. Taken at face value they normalise to a bearing
+      // near 359° and drag the offset with them.
+      const compass =
+        typeof e.webkitCompassHeading === "number" &&
+        Number.isFinite(e.webkitCompassHeading) &&
+        e.webkitCompassHeading >= 0 &&
+        !(typeof e.webkitCompassAccuracy === "number" && e.webkitCompassAccuracy < 0)
+          ? normalizeDeg(e.webkitCompassHeading)
+          : null;
+      const isAbsolute =
+        compass != null ||
+        event.type === "deviceorientationabsolute" ||
+        ("absolute" in e ? Boolean((e as DeviceOrientationEvent).absolute) : false);
+
+      // Chrome dispatches both names, with *different* alphas — one
+      // north-referenced, one not. Letting them take turns walked the sky
+      // back and forth between two headings every frame, so once an absolute
+      // source has been heard the relative one is dropped.
+      if (isAbsolute) sawAbsolute.current = true;
+      else if (sawAbsolute.current) return;
+
+      const alpha = e.alpha ?? 0;
       const beta = e.beta ?? 90;
       const gamma = e.gamma ?? 0;
-      const screen = screenAngleDeg();
+      const screenAngle = screenAngleDeg();
 
-      const absolute = "absolute" in e ? Boolean((e as DeviceOrientationEvent).absolute) : false;
-      const compassHeading =
-        typeof e.webkitCompassHeading === "number" && Number.isFinite(e.webkitCompassHeading);
-      const isAbsolute =
-        event.type === "deviceorientationabsolute" || absolute || compassHeading;
-
-      // 0 = north, clockwise — same frame as the compass dial. iOS already
-      // reports that as `webkitCompassHeading`; everyone else inverts W3C
-      // alpha (0 = north, CCW) and folds in the screen angle.
-      let headingDeg: number;
-      if (compassHeading) {
-        headingDeg = ((e.webkitCompassHeading! % 360) + 360) % 360;
-        setDriftingHeading(false);
-      } else if (e.alpha != null) {
-        headingDeg = ((360 - e.alpha + screen) % 360 + 360) % 360;
-        setDriftingHeading(!isAbsolute);
-      } else {
-        return;
+      if (compass != null) {
+        // W3C's absolute alpha counts anticlockwise from north and a compass
+        // bearing clockwise, hence `360 −`. What is wanted is the constant
+        // that turns this device's own `alpha` into that absolute one.
+        const want = normalizeDeg(360 - compass - alpha);
+        if (headingOffset.current == null) {
+          headingOffset.current = want;
+        } else if (Math.abs(cameraAltitude(beta, gamma)) <= HEADING_TRUST_ALTITUDE) {
+          headingOffset.current = dampDeg(headingOffset.current, want, HEADING_OFFSET_DAMP);
+        }
       }
 
-      const result = deviceOrientationToCameraEuler(headingDeg, beta, gamma, screen);
+      deviceOrientationToCameraQuaternion(
+        alpha + (headingOffset.current ?? 0),
+        beta,
+        gamma,
+        screenAngle,
+        target.current,
+      );
+      if (smoothed.current == null) smoothed.current = target.current.clone();
+      else smoothed.current.slerp(target.current, ORIENTATION_SMOOTHING);
+
+      const result = cameraEulerFromQuaternion(smoothed.current);
       const roll = closestHalfTurn(result.roll, lastRollRef.current);
       lastRollRef.current = roll;
-      setYaw(result.yaw);
-      setPitch(result.pitch);
-      setRoll(roll);
+
+      setDriftingHeading(!isAbsolute);
       setAvailable(true);
       onSampleRef.current?.({ ...result, roll });
     };
@@ -330,5 +459,5 @@ export function useDeviceOrientation(
     };
   }, [active, attach, detach, permissionState]);
 
-  return { yaw, pitch, roll, available, driftingHeading, permissionState, requestPermission };
+  return { available, driftingHeading, permissionState, requestPermission };
 }
