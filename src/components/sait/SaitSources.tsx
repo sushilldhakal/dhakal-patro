@@ -2,8 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useLocale } from "@/i18n/locale";
 import type { SaitCategoryId } from "@/lib/sait-data";
 
-const SAIT_SOURCE_IDS = ["brihat_samhita", "dharma_sindhu", "muhurta_chintamani"] as const;
-type SaitSourceId = (typeof SAIT_SOURCE_IDS)[number];
+type SaitSourceId = "brihat_samhita" | "dharma_sindhu" | "muhurta_chintamani";
 
 const SOURCES_BY_CATEGORY: Record<SaitCategoryId, readonly SaitSourceId[]> = {
   vivah: ["brihat_samhita", "dharma_sindhu", "muhurta_chintamani"],

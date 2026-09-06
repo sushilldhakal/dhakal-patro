@@ -1,4 +1,4 @@
-import * as Dialog from "@radix-ui/react-dialog";
+import { Dialog } from "radix-ui";
 import { useQuery } from "@tanstack/react-query";
 import { X, ChevronLeft, Sunrise, Sunset, Moon } from "lucide-react";
 import { useState } from "react";
