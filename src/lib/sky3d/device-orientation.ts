@@ -43,22 +43,52 @@
  * Android/Chrome thing. Safari never sets either; it stamps every
  * `deviceorientation` event with `webkitCompassHeading` instead.
  *
- * That heading is a magnetometer's reading of where the phone's *top edge*
- * points, and it falls apart exactly where AR mode asks the reader to hold
- * the phone: aimed at the zenith the top edge is vertical, its bearing is
- * whatever the noise says, and consecutive samples can differ by 180°.
- * Driving yaw from it directly is what spun the sky while the phone was held
- * still, pointing up.
- *
  * So the compass never drives yaw. It calibrates `alpha` — smooth,
  * gyro-fused, but referenced to wherever the phone happened to be pointing
  * when tracking started — through a single offset in degrees: snapped on the
  * first reading, then damped hard, because it corrects a drifting reference
- * rather than the reader's own movement, and frozen outright whenever the
- * view is too steep for a bearing to mean anything. Turning on the spot is
- * answered by `alpha` at sensor rate; the compass only says, slowly, which
- * way north was. Where no absolute source exists at all the offset stays 0
- * and `driftingHeading` tells the UI to say so.
+ * rather than the reader's own movement. Turning on the spot is answered by
+ * `alpha` at sensor rate; the compass only says, slowly, which way north
+ * was. Where no absolute source exists at all the offset stays 0 and
+ * `driftingHeading` tells the UI to say so.
+ *
+ * ### What the compass is the bearing of, and why `beta` has to be in the sum
+ *
+ * `webkitCompassHeading` is CoreLocation's bearing for the phone's *top
+ * edge* — its +y axis — projected onto the horizontal plane. Hold the phone
+ * flat, screen up, and it reads where the top of the phone points, which is
+ * the ordinary compass-app behaviour.
+ *
+ * Under `Rz(alpha)·Rx(beta)·Ry(gamma)` that axis lands at `(0, cos beta, sin
+ * beta)` before `alpha` turns it about the vertical, so its bearing is
+ * `psi − alpha`, where `psi` is 0° while `cos beta > 0` and 180° once `cos
+ * beta` goes negative — the phone tipped past upright, camera lifted above
+ * the horizon. The offset that makes `alpha` north-referenced is therefore
+ * `psi − alpha − compass`, and dropping `psi` — reading it as plain
+ * `360 − compass − alpha`, correct only for the half of the sphere where the
+ * camera points *down* — is what spun the sky. Tilt the phone from aimed at
+ * the sky to aimed at the ground and it crosses `beta = 90°`: the top edge
+ * swings through vertical, its bearing flips a half turn, and with no `psi`
+ * to cancel it the offset chases that flip and walks the whole view 180°
+ * round over about a third of a second.
+ *
+ * `psi` also makes the offset a function of the *rotation* rather than of
+ * the triple that reported it. On the far side of the `gamma` fence a
+ * browser reports `(alpha + 180, 180 − beta, gamma ∓ 180)` for the very same
+ * posture: `alpha` gains a half turn and `cos beta` changes sign, so `psi`
+ * gains one too and the difference is unchanged. Without it the offset
+ * jumped 180° every time the phone passed through screen-edge-on.
+ *
+ * ### Where the reading means nothing
+ *
+ * That same geometry says when to stop listening. The bearing of the top
+ * edge is a projection of length `|cos beta|`, so it is at its sharpest with
+ * the phone flat — camera at the zenith or the nadir — and degenerates to
+ * noise as the phone stands upright, which is exactly the posture AR mode
+ * asks for: the top edge points at the sky, its bearing is whatever the
+ * magnetometer's last digit says, and consecutive samples can differ by
+ * 180°. The damping is therefore weighted by that projection and frozen
+ * outright once it collapses, so the noise cannot drag the offset anywhere.
  *
  * ## iOS's permission gate
  *
@@ -193,50 +223,32 @@ export function deviceOrientationToCameraEuler(
 }
 
 /**
- * Altitude of the back camera in radians — how far above the horizon the lens
- * is aimed, which is all the compass gate needs.
+ * How much of the phone's top edge — the axis `webkitCompassHeading` reports
+ * the bearing of — survives being projected onto the horizontal plane, as a
+ * fraction in [0, 1].
  *
- * Neither `alpha` nor the screen angle can move it (both are turns about an
- * axis the look direction already lies on), so this is the whole of it:
- * `Rx(beta-90)·Ry(gamma)` applied to −z.
+ * `|cos beta|`: 1 with the phone flat on its face or its back, where the top
+ * edge lies along the ground and its bearing is as sharp as the magnetometer
+ * gets; 0 with the phone standing upright, where the edge points at the sky
+ * and the bearing is noise. `gamma` cannot move it — a turn about the top
+ * edge itself leaves the edge where it is — so `beta` is the whole of it.
  */
-export function cameraAltitude(betaDeg: number, gammaDeg: number): number {
-  const y = Math.cos(gammaDeg * DEG) * Math.sin((betaDeg - 90) * DEG);
-  return Math.asin(Math.max(-1, Math.min(1, y)));
+export function compassAxisHorizontality(betaDeg: number): number {
+  return Math.abs(Math.cos(betaDeg * DEG));
 }
 
 /**
- * Picks whichever of `angle` or `angle` rotated a half turn (±180°) is
- * closer to `previous`, undoing exactly the flip raw `gamma` can report for
- * the *same* physical orientation as `beta` crosses the edges of its own
- * W3C-defined range: to keep reporting `gamma` within its fixed [-90°, 90°]
- * bounds, some browsers switch to an equivalent (beta, gamma) pair — beta
- * shifted by ~180°, gamma reflected — for a device that is tilting
- * perfectly smoothly in the real world. `pitch` (altitude, computed above
- * from the look vector) stays continuous through that exact switch, but
- * `roll = -gamma` does not: it jumps by ~180° in one sensor tick, which is
- * what reads as the whole sky flipping right as the view tips toward
- * straight down (or up) instead of continuing smoothly. A real, fast
- * physical roll never lands this close to exactly half a turn between two
- * consecutive samples (sensors report far faster than a wrist can move), so
- * this only ever fires on the artifact, never on an intentional fast roll —
- * see the unit-style checks this shipped with for both cases.
+ * Degrees to add to `alpha` to make it north-referenced, from one compass
+ * reading — the derivation in the module doc comment, in one line.
  *
- * Returns `angle` unchanged whenever there is no `previous` sample yet to
- * compare against (the very first reading).
+ * The `beta` term is the load-bearing half: the top edge's bearing is
+ * `psi − alpha` with `psi` a half turn once `cos beta` goes negative, and
+ * leaving it out is a 180° error over the entire half of the sphere where the
+ * camera is raised above the horizon.
  */
-export function closestHalfTurn(angle: number, previous: number | null): number {
-  if (previous == null) return angle;
-  const TWO_PI = Math.PI * 2;
-  const norm = (a: number) => ((a % TWO_PI) + TWO_PI) % TWO_PI;
-  const circularDistance = (a: number, b: number) => {
-    let d = norm(a) - norm(b);
-    if (d > Math.PI) d -= TWO_PI;
-    if (d < -Math.PI) d += TWO_PI;
-    return Math.abs(d);
-  };
-  const flipped = angle + Math.PI;
-  return circularDistance(flipped, previous) < circularDistance(angle, previous) ? flipped : angle;
+export function headingOffsetDeg(compassDeg: number, alphaDeg: number, betaDeg: number): number {
+  const psi = Math.cos(betaDeg * DEG) >= 0 ? 0 : 180;
+  return normalizeDeg(psi - alphaDeg - compassDeg);
 }
 
 /**
@@ -249,16 +261,19 @@ export function closestHalfTurn(angle: number, previous: number | null): number 
 const ORIENTATION_EVENTS = ["deviceorientationabsolute", "deviceorientation"] as const;
 
 /**
- * Steeper than this and `webkitCompassHeading` is reading the bearing of an
- * edge that is pointing at the sky — noise, and noise that flips by 180°. The
- * offset it feeds is held at its last good value instead.
+ * Below this much horizontal projection ({@link compassAxisHorizontality}) the
+ * compass is reading the bearing of an edge that is pointing at the sky —
+ * noise, and noise that flips by 180°. The offset it feeds is held at its last
+ * good value instead. 0.25 is the phone within about 15° of upright.
  */
-const HEADING_TRUST_ALTITUDE = 60 * DEG;
+const HEADING_TRUST_HORIZONTALITY = 0.25;
 /**
- * How fast the compass offset is allowed to move per sample. It corrects a
- * reference that drifts over minutes, not the reader's own turning (that is
- * `alpha`, at full rate), so it is deliberately slow enough that a bad
- * magnetometer sample cannot jerk the sky.
+ * How fast the compass offset is allowed to move per sample, at the posture
+ * where the reading is sharpest — scaled down by
+ * {@link compassAxisHorizontality} everywhere else. It corrects a reference
+ * that drifts over minutes, not the reader's own turning (that is `alpha`, at
+ * full rate), so it is deliberately slow enough that a bad magnetometer
+ * sample cannot jerk the sky.
  */
 const HEADING_OFFSET_DAMP = 0.05;
 /**
@@ -290,19 +305,14 @@ export function useDeviceOrientation(
 
   const listenerRef = useRef<((e: Event) => void) | null>(null);
   const onSampleRef = useRef(onSample);
-  /** Last emitted roll, radians — for `closestHalfTurn` to unwrap the next
-      sample against. Lives outside React state so it updates every sensor
-      tick, not just every render. Reset with the listener: a fresh
-      attach() (permission just granted, or AR mode re-entered) should not
-      compare its first real reading against a stale roll from a previous
-      session. */
-  const lastRollRef = useRef<number | null>(null);
   useEffect(() => {
     onSampleRef.current = onSample;
   }, [onSample]);
 
   /** Degrees added to `alpha` to make it north-referenced. Null until the first compass reading. */
   const headingOffset = useRef<number | null>(null);
+  /** A compass reading has arrived from a posture where the bearing is worth something. */
+  const headingCalibrated = useRef(false);
   /** An absolute source has spoken at least once — the relative twin is ignored from then on. */
   const sawAbsolute = useRef(false);
   const smoothed = useRef<THREE.Quaternion | null>(null);
@@ -317,13 +327,13 @@ export function useDeviceOrientation(
     // A fresh session recalibrates from scratch: the phone may well have been
     // put down and picked up facing somewhere else.
     headingOffset.current = null;
+    headingCalibrated.current = false;
     sawAbsolute.current = false;
     smoothed.current = null;
   }, []);
 
   const attach = useCallback(() => {
     if (listenerRef.current) return;
-    lastRollRef.current = null;
     const handler = (event: Event) => {
       const e = event as IOSOrientationEvent;
       // Some browsers fire the event with nulls until permission lands, or
@@ -360,15 +370,29 @@ export function useDeviceOrientation(
       const screenAngle = screenAngleDeg();
 
       if (compass != null) {
-        // W3C's absolute alpha counts anticlockwise from north and a compass
-        // bearing clockwise, hence `360 −`. What is wanted is the constant
-        // that turns this device's own `alpha` into that absolute one.
-        const want = normalizeDeg(360 - compass - alpha);
+        // The constant that turns this device's own `alpha` into the absolute,
+        // north-referenced one — from the bearing of the top edge, which is
+        // what the compass actually measures, so `beta` is in the sum.
+        const want = headingOffsetDeg(compass, alpha, beta);
+        const trust = compassAxisHorizontality(beta);
+        const trusted = trust >= HEADING_TRUST_HORIZONTALITY;
         if (headingOffset.current == null) {
           headingOffset.current = want;
-        } else if (Math.abs(cameraAltitude(beta, gamma)) <= HEADING_TRUST_ALTITUDE) {
+        } else if (trusted) {
+          // Weighted by how square-on the reading is, so the offset creeps
+          // toward a glancing one and locks onto a flat-on one.
+          headingOffset.current = dampDeg(headingOffset.current, want, HEADING_OFFSET_DAMP * trust);
+        } else if (!headingCalibrated.current) {
+          // Nothing square-on has arrived yet and the phone is being held
+          // upright, which is where AR mode lives — so this is all there is.
+          // Keep averaging it at full rate: the reading is noisy there, not
+          // biased, and a sky frozen on whichever single sample happened to
+          // land first is worse than one that settles over a third of a
+          // second. The weighted branch above takes over the moment the
+          // reader tips the phone far enough for the edge to mean something.
           headingOffset.current = dampDeg(headingOffset.current, want, HEADING_OFFSET_DAMP);
         }
+        if (trusted) headingCalibrated.current = true;
       }
 
       deviceOrientationToCameraQuaternion(
@@ -381,13 +405,17 @@ export function useDeviceOrientation(
       if (smoothed.current == null) smoothed.current = target.current.clone();
       else smoothed.current.slerp(target.current, ORIENTATION_SMOOTHING);
 
+      // Straight out of the decomposition, all three together. Nudging one of
+      // them on its own — `roll` used to be unwrapped by a half turn whenever
+      // it moved fast, from before this composed quaternions — is not a
+      // correction but a 180° spin of the view about its own axis: the round
+      // trip is exact, so the only way to keep the camera on the rotation the
+      // sensors reported is to hand back what came out of it.
       const result = cameraEulerFromQuaternion(smoothed.current);
-      const roll = closestHalfTurn(result.roll, lastRollRef.current);
-      lastRollRef.current = roll;
 
       setDriftingHeading(!isAbsolute);
       setAvailable(true);
-      onSampleRef.current?.({ ...result, roll });
+      onSampleRef.current?.(result);
     };
     listenerRef.current = handler;
     for (const type of ORIENTATION_EVENTS) {
