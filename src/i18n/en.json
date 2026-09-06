@@ -1629,15 +1629,8 @@
         "acceptable": "acceptable zone",
         "shared": "shared zone"
       },
-      "view": {
-        "2d": "2D",
-        "3d": "3D",
-        "3d_hint": "Drag to rotate, scroll to zoom."
-      },
       "layout_heading": "Rough house layout",
-      "loading": "Working out the layout...",
-      "load_failed": "Couldn't compute the layout. Please try again.",
-      "layout_blurb": "A preliminary plan from the classical rules: auspicious pada for the door, empty Brahmasthan, passage around the court, bath in the east, latrine in WNW or SSW.",
+      "layout_blurb": "A rough sketch of the classical courtyard house: the Brahmasthan open in the middle, the alindra gallery around it, and each room in its own compass zone.",
       "legend": {
         "hall": "Passage / hall",
         "door": "Door",
@@ -1788,6 +1781,20 @@
         "bad": "unfavorable",
         "worst": "very unfavorable"
       }
+    },
+    "sketch": {
+      "aria": "Rough house zoning sketch",
+      "brahmasthan": "Brahmasthan",
+      "open_to_sky": "Open to the sky",
+      "door_pada": "Main door — pada {{n}} ({{pada}}) of the {{wall}} wall",
+      "legend_court": "Brahmasthan (open court)",
+      "legend_alindra": "Alindra (gallery)",
+      "legend_flow": "Clockwise movement",
+      "rule_court": "Brahmasthana: the centre stays open to the sky as a courtyard — nothing is built in it [Samarangana Sutradhara 13:22].",
+      "rule_alindra": "Alindra: a covered gallery rings the court on all four sides, so every room is reached without crossing it [Mayamata 26:15].",
+      "rule_flow": "Pradakshina: the red arrows show the auspicious clockwise path around the court.",
+      "rule_door": "The main door stands in an auspicious pada of the facing wall, and each room sits in its own classical zone.",
+      "disclaimer": "A rough zoning sketch, not a floor plan. It shows which compass zone each room belongs in and keeps the centre open — where the internal walls, doors and passages actually go is for an architect to draw."
     },
     "dosha": {
       "heading": "Vastu dosha & remedies",

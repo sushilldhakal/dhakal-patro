@@ -14,17 +14,17 @@ import {
   nearestAuspiciousWidthHasta,
   type CardinalWall,
 } from "@/lib/vastu";
-import { fromApiHousePlan } from "@/lib/house-plan/from-api";
-import { useVastuHousePlan } from "@/hooks/use-vastu-house-plan";
 import {
+  assignVastuSpaces,
+  assignmentsOnStorey,
   clampStoreys,
   kindCounts,
   storeyPref,
   type HousePlan,
+  type StoreyId,
 } from "@/lib/vastu-plan";
 import { HouseRequirementsForm, readPlan } from "./HouseRequirementsForm";
-import { HouseFloorPlan } from "./HouseFloorPlan";
-import { HousePlan3D } from "./HousePlan3D";
+import { HouseSketch } from "./HouseSketch";
 import { OwnerCompatibility } from "./OwnerCompatibility";
 import { cn } from "@/lib/utils";
 
@@ -110,7 +110,6 @@ export function PlotPlanner() {
   const digits = useLocaleDigits();
   const [plot, setPlot] = useState<PlotState>(() => readPlot());
   const [house, setHouse] = useState<HousePlan>(() => readPlan());
-  const [view, setView] = useState<"2d" | "3d">("2d");
 
   function updateHouse(next: HousePlan) {
     setHouse(next);
@@ -145,13 +144,14 @@ export function PlotPlanner() {
     [breadthM, lengthM],
   );
 
-  const site = useMemo(
-    () => ({ width: footprint.width, height: footprint.height, facing: plot.facing }),
-    [footprint, plot.facing],
+  // No server round-trip and no placement solver: each requested room is
+  // dropped into its own classical compass zone (SPACE_ZONE_RULES), which is
+  // all a rough sketch is claiming to show. `leftover` is what the zones
+  // genuinely can't seat at a usable size on this plot.
+  const { assignments, leftover } = useMemo(
+    () => assignVastuSpaces(house, footprint),
+    [house, footprint],
   );
-  const planQuery = useVastuHousePlan(site, house);
-  const concept = useMemo(() => (planQuery.data ? fromApiHousePlan(planQuery.data) : null), [planQuery.data]);
-  const leftover = concept?.leftover ?? [];
   const counts = useMemo(() => kindCounts(leftover), [leftover]);
 
   const ayadi = useMemo(() => {
@@ -240,33 +240,7 @@ export function PlotPlanner() {
         <HouseRequirementsForm plan={house} onChange={updateHouse} />
 
         <div className="rounded-xl border border-border bg-card p-3.5 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-base font-semibold text-foreground">{t("vastu.plan.layout_heading")}</h3>
-            <div className="inline-flex rounded-lg border border-border p-0.5">
-              <button
-                type="button"
-                className={cn(
-                  "h-8 rounded-md px-2.5 text-xs font-semibold",
-                  view === "2d" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground",
-                )}
-                onClick={() => setView("2d")}
-                aria-pressed={view === "2d"}
-              >
-                {t("vastu.plan.view.2d")}
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  "h-8 rounded-md px-2.5 text-xs font-semibold",
-                  view === "3d" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground",
-                )}
-                onClick={() => setView("3d")}
-                aria-pressed={view === "3d"}
-              >
-                {t("vastu.plan.view.3d")}
-              </button>
-            </div>
-          </div>
+          <h3 className="text-base font-semibold text-foreground">{t("vastu.plan.layout_heading")}</h3>
           <p className="mt-1 mb-4 text-sm text-muted-foreground">{t("vastu.plan.layout_blurb")}</p>
           {leftover.length > 0 && (
             <div className="mb-4 rounded-lg border border-border bg-background px-3 py-2.5">
@@ -291,41 +265,23 @@ export function PlotPlanner() {
               </ul>
             </div>
           )}
-          {planQuery.isLoading && (
-            <p className="py-6 text-center text-sm text-muted-foreground">{t("vastu.plan.loading")}</p>
-          )}
-          {planQuery.isError && (
-            <p className="py-6 text-center text-sm text-destructive">{t("vastu.plan.load_failed")}</p>
-          )}
-          {concept && view === "3d" && <HousePlan3D concept={concept} />}
-          {concept && view === "2d" && (
-            <div className="flex flex-col gap-8">
-              {concept.floors.map((floor) => (
-                <div key={floor.storey} className="min-w-0">
-                  {storeys > 1 && (
-                    <h4 className="mb-2 text-sm font-semibold text-foreground">
-                      {t(`vastu.plan.floor.${storeyPref(floor.storey)}`)}
-                    </h4>
-                  )}
-                  <HouseFloorPlan concept={concept} floor={floor} />
-                </div>
-              ))}
-            </div>
-          )}
-          {concept && concept.vastuRelaxed.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-              {[...new Set(concept.vastuRelaxed.map((row) => row.messageKey))].map((key) => (
-                <li key={key}>{t(key)}</li>
-              ))}
-            </ul>
-          )}
-          {concept && concept.validation.issues.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-              {concept.validation.issues.map((issue) => (
-                <li key={issue.id}>{t(issue.messageKey)}</li>
-              ))}
-            </ul>
-          )}
+          <div className="flex flex-col gap-8">
+            {Array.from({ length: storeys }, (_, i) => i as StoreyId).map((storey) => (
+              <div key={storey} className="min-w-0">
+                {storeys > 1 && (
+                  <h4 className="mb-2 text-sm font-semibold text-foreground">
+                    {t(`vastu.plan.floor.${storeyPref(storey)}`)}
+                  </h4>
+                )}
+                <HouseSketch
+                  plot={footprint}
+                  facing={plot.facing}
+                  assignments={assignmentsOnStorey(assignments, storey)}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">{t("vastu.sketch.disclaimer")}</p>
           <p className="mt-4 text-sm text-muted-foreground">{t("vastu.plot.buffer_note")}</p>
           <p className="text-sm text-muted-foreground">{t("vastu.plot.marma_note")}</p>
         </div>

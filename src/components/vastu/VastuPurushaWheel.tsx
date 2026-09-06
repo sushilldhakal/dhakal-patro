@@ -27,8 +27,8 @@ import {
 import { cn } from "@/lib/utils";
 
 /** ArcLabel/PadaCodeLabel/RingSeparators below all close over this wheel's own
- * CX/CY rather than taking them as props — a reused ring (HouseFloorPlan's
- * compass ring) must therefore share this exact centre, not just any size. */
+ * CX/CY rather than taking them as props, so anything reusing them has to
+ * share this exact centre, not merely this size. */
 export const WHEEL_SIZE = 620;
 const CX = WHEEL_SIZE / 2;
 const CY = WHEEL_SIZE / 2;

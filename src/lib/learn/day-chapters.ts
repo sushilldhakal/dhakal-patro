@@ -39,8 +39,12 @@ export type ChapterSimState = {
   cameraDistance: number;
   /** Outline a named mesh — same beats as the original lab (`stellar-day-arc`, `earth`). */
   highlight: string;
+  /** Pulse a control on the instrument panel (`settings`, `auto-orbit`, …). */
+  highlightControl: string;
   /** Rotation angle on the globe, in degrees. */
   degrees: boolean;
+  /** Sidereal clock on the stellar arc — original lab turns this on after the arc. */
+  stellarClock: boolean;
 } & SimToggles;
 
 export type DayChapter = {
@@ -55,12 +59,21 @@ export type DayChapter = {
   frames: Keyframe<ChapterSimState>[];
 };
 
+/**
+ * The original lab is orthographic: `zoom` magnifies, it does not dolly.
+ * Welcome was ported at zoom 30 → distance 30; every other zoom inverts from
+ * that so a close-up (80) is actually closer, not further away.
+ */
+function zoomToDistance(zoom: number) {
+  return (30 * 30) / zoom;
+}
+
 function cam(x: number, y: number, z: number, zoom: number) {
   const horiz = Math.hypot(x, z) || 1e-6;
   return {
     cameraYaw: Math.atan2(x, z),
     cameraPitch: Math.atan2(y, horiz),
-    cameraDistance: zoom,
+    cameraDistance: zoomToDistance(zoom),
   };
 }
 
@@ -102,7 +115,9 @@ function base(partial: Partial<ChapterSimState>): ChapterSimState {
     graphOpen: false,
     planet: "earth",
     highlight: "",
+    highlightControl: "",
     degrees: false,
+    stellarClock: false,
     ...cam(-5, 20, 30, 40),
     grid: false,
     planetOrbit: true,
@@ -159,6 +174,10 @@ const stellar: DayChapter = {
     cameraTarget: "planet",
     siderealArc: true,
     primeMeridian: true,
+    trueSun: true,
+    planetOrbit: true,
+    degrees: true,
+    stellarClock: true,
     ...cam(-5, 20, 30, 40),
   }),
   frames: [
@@ -170,12 +189,16 @@ const stellar: DayChapter = {
         trueSun: false,
         planetOrbit: false,
         degrees: false,
+        stellarClock: false,
         highlight: "",
         eccentricity: 0,
         tiltDeg: 0,
         ...cam(-5, 20, 30, 80),
       },
-      { at: 1, duration: 1 },
+      /* Copilot reaches this 1ms after play. `from: 1` keeps t=0 on the
+         defaults — the original's paused opening — instead of stepping the
+         booleans the instant the chapter loads. */
+      { at: 1, from: 1 },
     ),
     kf({ orbitalPosition: 0.135 }, { at: "8s", from: 0, ease: "linear" }),
     kf({ ...cam(-5, 50, 30, 80) }, { at: "8s", duration: "1s", ease: "quadInOut" }),
@@ -187,19 +210,30 @@ const stellar: DayChapter = {
     ),
     kf({ siderealArc: true, degrees: true }, { at: "15s", duration: "1s" }),
     kf({ orbitalPosition: 3 / (SOLAR_DAYS + 1) }, { at: "19s", from: "15s", ease: "quadInOut" }),
+    kf({ stellarClock: true }, { at: "20s" }),
     kf({ highlight: "stellar-day-arc" }, { at: "29s", duration: 1 }),
     kf({ highlight: "" }, { at: "35s", duration: 1 }),
     kf({ orbitalPosition: 8 / (SOLAR_DAYS + 1) }, { at: "35s", from: "19s", ease: "linear" }),
     kf(
-      { cameraDistance: 20, trueSun: true, planetOrbit: true },
+      { cameraDistance: zoomToDistance(20), trueSun: true, planetOrbit: true },
       { at: "56s", duration: "1s", ease: "quadInOut" },
     ),
     kf({ orbitalPosition: 1 }, { at: "01:00", from: "41s", ease: "linear" }),
     kf({ orbitalPosition: 1.5 }, { at: "01:16", from: "01:11", ease: "linear" }),
-    kf({ cameraDistance: 40 }, { at: "01:16", duration: "1s", ease: "quadInOut" }),
+    kf({ cameraDistance: zoomToDistance(40) }, { at: "01:16", duration: "1s", ease: "quadInOut" }),
     kf({ ...cam(-5, 20, 30, 40) }, { at: "01:29", duration: "1s", ease: "sineInOut" }),
     kf({ highlight: "earth" }, { at: "01:52", duration: 1 }),
     kf({ highlight: "" }, { at: "01:58", duration: 1 }),
+    kf({ highlightControl: "auto-orbit" }, { at: "01:58", duration: 1 }),
+    kf({ highlightControl: "" }, { at: "02:03", duration: 1 }),
+    kf({ highlightControl: "orbit-speed" }, { at: "02:04", duration: 1 }),
+    kf({ highlightControl: "" }, { at: "02:08", duration: 1 }),
+    kf({ highlightControl: "camera-target" }, { at: "02:12", duration: 1 }),
+    kf({ highlightControl: "" }, { at: "02:17", duration: 1 }),
+    kf({ highlightControl: "follow-orbit" }, { at: "02:18", duration: 1 }),
+    kf({ highlightControl: "" }, { at: "02:24", duration: 1 }),
+    kf({ highlightControl: "settings" }, { at: "02:31", duration: 1 }),
+    kf({ highlightControl: "" }, { at: "02:36", duration: 1 }),
     kf({ handsOff: true }, { at: "03:08", from: "01:29" }),
   ],
 };
@@ -220,7 +254,7 @@ const solar: DayChapter = {
     kf({ ...cam(0, 20, 0.1, 80) }, { at: "00:22", duration: "3s", ease: "quadInOut" }),
     kf({ orbitalPosition: 1 + 1 / (SOLAR_DAYS + 1) }, { at: "00:30", from: "00:25", ease: "linear" }),
     kf(
-      { orbitalPosition: 1 + 2 / (SOLAR_DAYS + 1), cameraDistance: 60 },
+      { orbitalPosition: 1 + 2 / (SOLAR_DAYS + 1), cameraDistance: zoomToDistance(60) },
       { at: "00:40", from: "00:36", ease: "linear" },
     ),
     kf({ orbitalPosition: 1 + pos(2) }, { at: "00:46", from: "00:44", ease: "linear" }),
@@ -263,12 +297,12 @@ const elliptic: DayChapter = {
     kf({ orbitalPosition: 12.15 }, { at: "02:40", from: "00:43", ease: "linear" }),
     kf({ cameraTarget: "planet" }, { at: "01:21", duration: 1 }),
     kf({ trueSun: false, planetOrbit: false }, { at: "01:25", duration: 1 }),
-    kf({ cameraDistance: 40 }, { at: "01:30", duration: "6s", ease: "quadInOut" }),
+    kf({ cameraDistance: zoomToDistance(40) }, { at: "01:30", duration: "6s", ease: "quadInOut" }),
     kf(
       { meanSun: true, meanArc: true, solarArc: false },
       { at: "02:11", duration: 1 },
     ),
-    kf({ cameraDistance: 30 }, { at: "02:29", duration: "6s", ease: "quadInOut" }),
+    kf({ cameraDistance: zoomToDistance(30) }, { at: "02:29", duration: "6s", ease: "quadInOut" }),
     kf({ trueSun: true, planetOrbit: true }, { at: "02:26", duration: 1 }),
     kf({ meanSun: true, trueSun: false }, { at: "02:44", duration: 1 }),
     kf({ orbitalPosition: 13 + pos(0) }, { at: "03:02", from: "02:52", ease: "linear" }),
@@ -279,7 +313,7 @@ const elliptic: DayChapter = {
     kf({ eotWedge: true }, { at: "03:27", duration: 1 }),
     kf({ orbitalPosition: 13 + pos(7) }, { at: "03:39", from: "03:37", ease: "linear" }),
     kf(
-      { orbitalPosition: 14 + pos(2), cameraDistance: 20 },
+      { orbitalPosition: 14 + pos(2), cameraDistance: zoomToDistance(20) },
       { at: "03:52", from: "03:49", ease: "quadInOut" },
     ),
     kf({ graphOpen: true }, { at: "04:03", duration: 1 }),

@@ -471,6 +471,28 @@ function isPrimary(kind: SpaceKind): boolean {
   return kind !== "staircase" && !WET_KINDS.has(kind);
 }
 
+/** A zone is one ninth of the plot, which on any normal plot is enough floor
+ * for two ordinary rooms side by side — a study beside an office, a store
+ * beside a laundry. Capped at two because past that the "zone" stops meaning
+ * anything and the sketch turns into a list. */
+const MAX_PRIMARIES_PER_ZONE = 2;
+
+/** Do these rooms fit side by side in a `w` x `h` zone at their minimum
+ * sizes? Cut across the zone's longer side (so every strip keeps the full
+ * short dimension) and give each room the length it needs for both its
+ * minimum side and its minimum area. */
+function primariesFit(w: number, h: number, kinds: SpaceKind[]): boolean {
+  if (kinds.length === 0) return true;
+  if (kinds.length === 1) return boxFits(w, h, IDEAL_SIZE[kinds[0]!]);
+  const long = Math.max(w, h);
+  const cross = Math.min(w, h);
+  const needs = kinds.map((k) =>
+    Math.max(IDEAL_SIZE[k].minSide, IDEAL_SIZE[k].minArea / cross),
+  );
+  if (needs.reduce((a, b) => a + b, 0) > long + 0.02) return false;
+  return kinds.every((k, i) => boxFits(needs[i]!, cross, IDEAL_SIZE[k]));
+}
+
 function canShare(zone: VastuDirectionId, space: PlannedSpace, placed: SpaceAssignment[]): boolean {
   const rule = SPACE_ZONE_RULES[space.kind];
   if (rule.avoid.includes(zone)) return false;
@@ -484,7 +506,12 @@ function canShare(zone: VastuDirectionId, space: PlannedSpace, placed: SpaceAssi
     if (primaries.length === 1 && !HOST_KINDS.has(primaries[0]!)) return false;
     return true;
   }
-  return primaries.length === 0 && wets.length <= 1;
+  // A second primary is allowed, but not on top of a wet room: the wet room
+  // is already sharing this zone with its host, and three ways is a split
+  // `roomFitsZone` has no honest way to size.
+  if (primaries.length === 0) return wets.length <= 1;
+  if (primaries.length < MAX_PRIMARIES_PER_ZONE) return wets.length === 0;
+  return false;
 }
 
 function roomFitsZone(
@@ -509,6 +536,10 @@ function roomFitsZone(
   }
   if (space.kind === "staircase") {
     return boxFits(STAIR_WIDTH_M, Math.max(w, h), IDEAL_SIZE.staircase);
+  }
+  const primaries = here.filter(isPrimary);
+  if (isPrimary(space.kind) && primaries.length > 0) {
+    return primariesFit(w, h, [...primaries, space.kind]);
   }
   return boxFits(w, h, IDEAL_SIZE[space.kind]);
 }

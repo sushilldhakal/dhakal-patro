@@ -273,11 +273,25 @@ export type SceneLabel = {
   index?: number;
   /** Unabbreviated name, nakshatra labels only, for the icon lookup. */
   full?: string;
+  /**
+   * How the HTML sits on the projected point. Clocks in the original lab
+   * hang off the tick (`right: 0; margin-top: -1rem`), not on its centre.
+   */
+  pin?: "center" | "clock" | "above";
   text: string;
   x: number;
   y: number;
   dim: boolean;
 };
+
+/** Screen transform for a projected label — matches the original lab's CSS pins. */
+export function labelPinCss(x: number, y: number, pin: SceneLabel["pin"] = "center") {
+  const pos = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+  if (pin === "clock") return `${pos} translate(-100%, 0) translateY(-1rem)`;
+  /* Original `.earth-label { bottom: 1em }` on a centred CSS2D node. */
+  if (pin === "above") return `${pos} translate(-50%, -50%) translateY(-1em)`;
+  return `${pos} translate(-50%, -50%)`;
+}
 
 export type SceneSample = {
   day: number;
@@ -359,7 +373,7 @@ function focalEllipseGeometry(semiMajor: number, e: number, segments = 128) {
  */
 function setRingArc(mesh: THREE.Mesh, angle: number, segments: number) {
   const frac = angle >= PI2 ? 1 : euclideanModulo(angle, PI2) / PI2;
-  mesh.geometry.setDrawRange(0, Math.max(1, Math.round(frac * segments)) * 6);
+  mesh.geometry.setDrawRange(0, Math.max(0, Math.round(frac * segments)) * 6);
 }
 
 function makeLine(geometry: THREE.BufferGeometry, color: number, opacity: number) {
@@ -528,6 +542,8 @@ export interface SceneProps {
   highlight?: string;
   /** Show the globe's rotation in degrees, next to the planet. */
   showDegrees?: boolean;
+  /** Sidereal clock on the stellar arc. Defaults to on whenever the arc is. */
+  showSiderealClock?: boolean;
 }
 
 /** Screen-space hits against the globe and the equatorial plane. */
@@ -559,6 +575,7 @@ function DaySimScene({
   pick,
   highlight = "",
   showDegrees = false,
+  showSiderealClock = true,
 }: SceneProps) {
   const { camera: cam, size } = useThree();
 
@@ -701,6 +718,7 @@ function DaySimScene({
   const vRay = useRef(new THREE.Vector3());
   const vOc = useRef(new THREE.Vector3());
   const vWorld = useRef(new THREE.Vector3());
+  const vCamUp = useRef(new THREE.Vector3());
   const followYaw = useRef(0);
   /* Where the camera is actually pointed this frame, and how far through a
      change of focus it is. See the camera block in the frame loop. */
@@ -784,6 +802,26 @@ function DaySimScene({
   useEffect(() => () => dispose(meanOrbitLine), [meanOrbitLine]);
   useEffect(() => () => dispose(localMeridian), [localMeridian]);
   useEffect(() => () => dispose(axisLine), [axisLine]);
+  const siderealTick = useMemo(
+    () =>
+      makeLine(
+        (() => {
+          const g = new THREE.BufferGeometry();
+          /* Original: from the surface (r = 1) out to the clock, so the blue
+             mark is visibly stuck to the globe even before the arc has any
+             sweep. */
+          g.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute([1, 0, 0.002, 1.8, 0, 0.002], 3),
+          );
+          return g;
+        })(),
+        COLOR.sidereal,
+        1,
+      ),
+    [],
+  );
+  useEffect(() => () => dispose(siderealTick), [siderealTick]);
 
   /**
    * Rotation carrying the equatorial plane onto the ecliptic.
@@ -1110,12 +1148,14 @@ function DaySimScene({
        is mean noon and every other arc is measured off the same origin. */
     arcRoot.current.position.copy(planetPos);
     arcRoot.current.rotation.y = M + Math.PI;
-    /* Backing the spin off by काठमाडौँ's longitude puts *its* meridian — the
-       red line, and the one every time in this app is reckoned from — under the
-       Sun, instead of Greenwich, which the equirectangular texture would
-       otherwise leave there. */
-    planetMesh.current.rotation.y = dayAngle - spin - KATHMANDU_LON;
-    siderealGroup.current.rotation.y = -spin;
+    /* The map's +X is Greenwich. Turning the globe back by काठमाडौँ's
+       longitude puts *that* meridian on +X — the direction `arcRoot` already
+       aims at the Sun — so noon, the red line, the blue tick and the lit
+       cap are all Nepal, not England. The sidereal group stays at 0 so the
+       growing edge of the ring is the same meridian: it stays painted on
+       काठमाडौँ as the planet turns. */
+    planetMesh.current.rotation.y = dayAngle - KATHMANDU_LON;
+    siderealGroup.current.rotation.y = 0;
     solarGroup.current.rotation.y = -eot;
 
     const setArc = (mesh: THREE.Mesh, angle: number) => setRingArc(mesh, angle, ARC_SEGMENTS);
@@ -1473,6 +1513,7 @@ function DaySimScene({
       v.distance * cosPitch * Math.cos(yaw),
     );
     cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
 
     /* The grid stays on the origin — which *is* the focused body now. It sits
        outside the shifted world for that reason: a plane a body is above or
@@ -1512,6 +1553,7 @@ function DaySimScene({
       tone?: SceneLabel["tone"],
       index?: number,
       full?: string,
+      pin: SceneLabel["pin"] = "center",
     ) => {
       /* `at` is built in the scene's own coordinates, which the frame shift
          then slides; project from the shifted position or every label sits
@@ -1523,7 +1565,10 @@ function DaySimScene({
       const x = (proj.x * 0.5 + 0.5) * size.width;
       const y = (-proj.y * 0.5 + 0.5) * size.height;
       let hidByEarth = false;
-      if (kind !== "body") {
+      /* Clocks in the original lab are CSS2D — they stay drawn even when the
+         globe sits in front. Hiding them is what made the time vanish or jump
+         to the far side of the planet. */
+      if (kind !== "body" && kind !== "clock") {
         planetMesh.current.getWorldPosition(vEarth.current);
         const maxT = vRay.current.copy(world).sub(cam.position).length();
         if (maxT > 1e-4) {
@@ -1549,11 +1594,11 @@ function DaySimScene({
       if (node) {
         /* `transform` rather than left/top: it is composited, so moving fifty
            labels a frame never triggers layout. */
-        node.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%)`;
+        node.style.transform = labelPinCss(x, y, pin);
         node.style.visibility = off ? "hidden" : "visible";
       }
       if (!sampling || off) return;
-      labels.push({ id, kind, text, x, y, dim, index, full });
+      labels.push({ id, kind, text, x, y, dim, index, full, pin });
       if (tone) labels[labels.length - 1]!.tone = tone;
     };
 
@@ -1605,7 +1650,11 @@ function DaySimScene({
     /* All the body anchors share one scratch: `push` projects immediately and
        never keeps the vector, so it is safe to overwrite between calls. */
     const anchor = vAnchor.current;
-    push("b-planet", "body", bodyNames.planet, anchor.copy(planetPos).setY(PLANET_R * 2.2), false);
+    /* The original lab's earth slot is the degree readout in this chapter —
+       it does not also write "Earth" on top of the globe. */
+    if (!showDegrees) {
+      push("b-planet", "body", bodyNames.planet, anchor.copy(planetPos).setY(PLANET_R * 2.2), false);
+    }
     if (showMoon) {
       /*
        * Built from the model, not read back with `getWorldPosition`.
@@ -1643,13 +1692,33 @@ function DaySimScene({
       );
     };
     const ct = clockText.current;
-    if (toggles.meanArc) push("c-mean", "clock", ct.mean, tick(0, 1.75), false, "mean");
-    if (toggles.solarArc) push("c-solar", "clock", ct.solar, tick(-eot, 2.45), false, "solar");
-    if (toggles.siderealArc)
-      push("c-sidereal", "clock", ct.sidereal, tick(-spin, 3.15), false, "sidereal");
+    /* Same local `[2, 0, 0]` the original lab pins its clocks to — just
+       outside the tick, not a third radius further out. */
+    if (toggles.meanArc) push("c-mean", "clock", ct.mean, tick(0, 2), false, "mean", undefined, undefined, "clock");
+    if (toggles.solarArc)
+      push("c-solar", "clock", ct.solar, tick(-eot, 2), false, "solar", undefined, undefined, "clock");
+    if (toggles.siderealArc && showSiderealClock) {
+      /* On the tick: local +X of the sidereal group, which is the Sun-ward
+         काठमाडौँ meridian, 2 units out — the original lab's `[2, 0, 0]`. */
+      push("c-sidereal", "clock", ct.sidereal, tick(0, 2), false, "sidereal", undefined, undefined, "clock");
+    }
     if (showDegrees) {
+      /* Billboarded like the original `labelUnrotation`: (0, 1, 0) in a
+         camera-facing frame at Earth's centre, so the number sits on the
+         top of the disc on screen, not stuck to the geographic pole. */
       const deg = Math.round(euclideanModulo(day, 1) * 360);
-      push("c-deg", "body", `${deg}°`, anchor.copy(planetPos).setY(PLANET_R * 2.6), false);
+      vCamUp.current.set(0, 1, 0).transformDirection(cam.matrixWorld);
+      push(
+        "c-deg",
+        "body",
+        `${deg}°`,
+        anchor.copy(planetPos).addScaledVector(vCamUp.current, PLANET_R),
+        false,
+        undefined,
+        undefined,
+        undefined,
+        "above",
+      );
     }
 
     const siderealMat = siderealArc.current.material as THREE.MeshBasicMaterial;
@@ -1908,6 +1977,7 @@ function DaySimScene({
         </group>
 
         <group ref={siderealGroup} visible={toggles.siderealArc}>
+          <primitive object={siderealTick} />
           <mesh geometry={siderealGeom} ref={siderealArc} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
             <meshBasicMaterial
               color={COLOR.sidereal}

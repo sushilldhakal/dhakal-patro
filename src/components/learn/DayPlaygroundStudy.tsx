@@ -32,6 +32,7 @@ import {
   LineChart,
   Maximize2,
   Minimize2,
+  Orbit,
   Pause,
   Play,
   SlidersHorizontal,
@@ -78,6 +79,7 @@ import {
 import { DayChapterBar, DayChapterWelcome } from "./DayChapterPlayer";
 import EotGraph from "./EotGraph";
 import Scene, {
+  labelPinCss,
   type CameraState,
   type CameraTarget,
   type PlaygroundGlobe,
@@ -239,7 +241,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       const handsOff = s.handsOff;
 
       if (welcome || handsOff) {
-        clock.current.playing = true;
+        clock.current.playing = welcome ? true : playingStateRef.current;
         clock.current.daysPerSecond = 0.35;
         handsOffOffset.current = clock.current.day - guidedDay;
         wasHandsOff.current = true;
@@ -293,8 +295,11 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     handsOffOffset.current = 0;
     wasHandsOff.current = false;
     const ch = DAY_CHAPTERS.find((c) => c.id === tourChapterId);
-    if (!ch?.free) return;
+    if (!ch) return;
     const s = ch.defaults;
+    camera.current = cameraFromChapter(s);
+    clock.current.day = s.orbitalPosition * (s.solarDaysPerYear + 1);
+    if (!ch.free) return;
     setSolarDaysPerYear(s.solarDaysPerYear);
     setEccentricity(s.eccentricity);
     setTiltDeg(s.tiltDeg);
@@ -303,8 +308,6 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     setGraphOpen(false);
     setToggles(togglesFromChapter(s));
     setPreset(s.planet === "earth" ? "" : s.planet);
-    camera.current = cameraFromChapter(s);
-    clock.current.day = s.orbitalPosition * (s.solarDaysPerYear + 1);
     clock.current.playing = false;
     setPlaying(false);
   }, [tourChapterId]);
@@ -320,6 +323,28 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     setToggles(togglesFromChapter(tourState));
     setPreset(tourState.planet === "earth" ? "" : tourState.planet);
   }, [tourState, tour?.chapter.free]);
+
+  const highlightControl = tour?.state.highlightControl ?? "";
+  const wasTourHandsOff = useRef(false);
+  useEffect(() => {
+    const on = Boolean(lesson && tourState?.handsOff);
+    if (on && !wasTourHandsOff.current) setPlaying(true);
+    wasTourHandsOff.current = on;
+  }, [lesson, tourState?.handsOff]);
+  useEffect(() => {
+    if (!highlightControl) return;
+    if (highlightControl === "settings") {
+      setControlsOpen(true);
+      setFocusOpen(false);
+    } else if (
+      highlightControl === "camera-target" ||
+      highlightControl === "follow-orbit" ||
+      highlightControl === "orbit-speed"
+    ) {
+      setFocusOpen(true);
+      setControlsOpen(false);
+    }
+  }, [highlightControl]);
 
   const onSample = useCallback((s: SceneSample) => {
     setSample(s);
@@ -802,6 +827,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               pick={scenePick}
               highlight={tour?.state.highlight ?? ""}
               showDegrees={Boolean(tour?.state.degrees)}
+              showSiderealClock={tour && !freePlay ? Boolean(tour.state.stellarClock) : true}
             />
           </Suspense>
         </Canvas>
@@ -839,36 +865,51 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         )}
 
         <div className="absolute right-3 top-3 flex gap-2">
+          {lesson ? (
+            <IconButton
+              onClick={() => setPlaying((v) => !v)}
+              label={playing ? t("learn.pause") : t("learn.play")}
+              active={playing}
+              pulse={highlightControl === "auto-orbit"}
+              disabled={!tour?.state.handsOff}
+            >
+              <Orbit size={16} />
+            </IconButton>
+          ) : null}
+          <IconButton
+            onClick={() => {
+              setControlsOpen((v) => !v);
+              setFocusOpen(false);
+            }}
+            label={t("learn.playground.controls")}
+            active={controlsOpen}
+            pulse={highlightControl === "settings"}
+          >
+            <SlidersHorizontal size={16} />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setFocusOpen((v) => !v);
+              setControlsOpen(false);
+            }}
+            label={t("learn.playground.focus")}
+            active={focusOpen}
+            pulse={
+              highlightControl === "camera-target" ||
+              highlightControl === "follow-orbit" ||
+              highlightControl === "orbit-speed"
+            }
+          >
+            <Focus size={16} />
+          </IconButton>
           {lesson ? null : (
-            <>
-              <IconButton
-                onClick={() => {
-                  setControlsOpen((v) => !v);
-                  setFocusOpen(false);
-                }}
-                label={t("learn.playground.controls")}
-                active={controlsOpen}
-              >
-                <SlidersHorizontal size={16} />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  setFocusOpen((v) => !v);
-                  setControlsOpen(false);
-                }}
-                label={t("learn.playground.focus")}
-                active={focusOpen}
-              >
-                <Focus size={16} />
-              </IconButton>
-              <IconButton
-                onClick={() => setGraphOpen((v) => !v)}
-                label={t("learn.playground.eot_graph")}
-                active={graphOpen}
-              >
-                <LineChart size={16} />
-              </IconButton>
-            </>
+            <IconButton
+              onClick={() => setGraphOpen((v) => !v)}
+              label={t("learn.playground.eot_graph")}
+              active={graphOpen}
+            >
+              <LineChart size={16} />
+            </IconButton>
           )}
           <IconButton
             onClick={onToggleFullscreen}
@@ -881,7 +922,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         {/* Capped against the canvas, not the viewport: the drawer floats over
             the scene, so a 70vh panel on a short canvas would hang off the
             bottom of the thing it belongs to. */}
-        {!lesson && controlsOpen && (
+        {controlsOpen && (
           <div className="absolute right-3 top-14 z-10 flex max-h-[calc(100%-4.5rem)] w-[min(290px,calc(100%-1.5rem))] flex-col gap-4 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
             {/* A world to borrow, in one line. Six buttons and a paragraph of
                 caveats were the widest thing in the panel for something a
@@ -988,7 +1029,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             round with the orbit. Radio, because the scene can only be centred
             on one thing; the follow switch is a separate question about that
             same choice, so it lives with it rather than among the layers. */}
-        {!lesson && focusOpen && (
+        {focusOpen && (
           <div className="absolute right-3 top-14 z-10 flex w-[min(230px,calc(100%-1.5rem))] flex-col gap-2.5 rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
             <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
               {t("learn.playground.focus")}
@@ -1003,7 +1044,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               ).map(([key, label]) => (
                 <label
                   key={key}
-                  className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-white/70 hover:text-white"
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 text-xs font-semibold text-white/70 hover:text-white",
+                    highlightControl === "camera-target" && "animate-pulse bg-sky-400/25 text-white",
+                  )}
                 >
                   <input
                     type="radio"
@@ -1016,7 +1060,12 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 </label>
               ))}
             </div>
-            <label className="flex cursor-pointer items-center gap-2 border-t border-white/10 pt-2.5 text-xs font-semibold text-white/70 hover:text-white">
+            <label
+              className={cn(
+                "flex cursor-pointer items-center gap-2 border-t border-white/10 pt-2.5 text-xs font-semibold text-white/70 hover:text-white",
+                highlightControl === "follow-orbit" && "animate-pulse text-white",
+              )}
+            >
               <input
                 type="checkbox"
                 className="size-3.5 accent-white"
@@ -1029,7 +1078,12 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             {/* Rate lives with focus, not with the orbit's own figures: it is
                 about how the reader watches the thing, the same question the
                 rest of this menu answers. */}
-            <div className="border-t border-white/10 pt-2.5">
+            <div
+              className={cn(
+                "border-t border-white/10 pt-2.5",
+                highlightControl === "orbit-speed" && "animate-pulse",
+              )}
+            >
               {slider(
                 t("learn.playground.orbit_speed"),
                 speed,
@@ -1261,11 +1315,15 @@ function IconButton({
   onClick,
   label,
   active,
+  pulse,
+  disabled,
   children,
 }: {
   onClick: () => void;
   label: string;
   active?: boolean;
+  pulse?: boolean;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -1274,11 +1332,14 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      disabled={disabled}
       className={cn(
         "grid h-9 w-9 cursor-pointer place-items-center rounded-full border backdrop-blur transition-colors",
         active
           ? "border-white/60 bg-white/85 text-black"
           : "border-white/20 bg-black/40 text-white/80 hover:border-white/50 hover:text-white",
+        pulse && "animate-pulse ring-2 ring-sky-300 ring-offset-2 ring-offset-black",
+        disabled && "cursor-not-allowed opacity-35",
       )}
     >
       {children}
@@ -1327,7 +1388,7 @@ const Label = memo(function Label({
       style={{
         /* Seeded from the sample so a new label lands in the right place on
            its first paint; the frame loop owns it from then on. */
-        transform: `translate3d(${label.x}px, ${label.y}px, 0) translate(-50%, -50%)`,
+        transform: labelPinCss(label.x, label.y, label.pin),
         color,
         opacity: label.dim ? 0.4 : 1,
         textShadow: "0 1px 3px rgba(0,0,0,0.95)",

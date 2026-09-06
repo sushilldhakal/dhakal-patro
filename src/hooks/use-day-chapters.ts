@@ -102,7 +102,9 @@ export function useDayChapters(enabled: boolean): DayChapterPlayer | null {
         next.cameraFollow !== stateRef.current.cameraFollow ||
         next.planet !== stateRef.current.planet ||
         next.highlight !== stateRef.current.highlight ||
-        next.degrees !== stateRef.current.degrees;
+        next.highlightControl !== stateRef.current.highlightControl ||
+        next.degrees !== stateRef.current.degrees ||
+        next.stellarClock !== stateRef.current.stellarClock;
       if (forceUi || stepped || now - lastUi.current > 80) {
         lastUi.current = now;
         setTime(clamped);
