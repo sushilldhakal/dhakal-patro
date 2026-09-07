@@ -379,7 +379,7 @@ export function storeyPref(id: StoreyId): FloorPref {
 export function resolveStorey(space: PlannedSpace, plan: HousePlan): StoreyId {
   const max = (clampStoreys(plan.storeys) - 1) as StoreyId;
   const pref = plan.floors[space.kind];
-  let level: StoreyId = 0;
+  let level: StoreyId;
   if (pref === "ground") level = 0;
   else if (pref === "first") level = 1;
   else if (pref === "third") level = 2;
