@@ -287,7 +287,7 @@ function BhavaDetailBody({
   const showYutiSection = occupantKeys.length >= 2;
 
   const applicableSutras = reference.naadiSutras
-    .filter((s) => s.grahas.some((g) => occupantKeys.includes(g)))
+    .filter((s) => s.grahas.every((g) => occupantKeys.includes(g)))
     .sort((a, b) => a.number - b.number);
   const lalKitabEntries = occupants
     .map((p) => ({ key: p.key, entry: reference.lalKitabHouse[p.key]?.[house.house] }))
