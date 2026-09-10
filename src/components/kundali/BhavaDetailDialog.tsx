@@ -150,6 +150,64 @@ function GrahaKarakatvaCard({
           </p>
         )}
       </div>
+
+      <PhaladeepikaSection grahaKey={grahaKey} house={house} reference={reference} lang={lang} digits={digits} />
+    </div>
+  );
+}
+
+/** Phaladeepika ch. 2 karakatva + traditional house-placement summary —
+ * separate classical source from the Uttara Kalamrita karakatva and the
+ * saravali table above, so shown as its own citation-backed block rather
+ * than merged into them. */
+function PhaladeepikaSection({
+  grahaKey,
+  house,
+  reference,
+  lang,
+  digits,
+}: {
+  grahaKey: string;
+  house: number;
+  reference: BhavaReferencePayload;
+  lang: "ne" | "en";
+  digits: (v: string | number) => string;
+}) {
+  const p = reference.phaladeepikaKarakatva[grahaKey];
+  if (!p) return null;
+  const houseResult = reference.phaladeepikaHouseResults[grahaKey]?.[house];
+
+  return (
+    <div className="border-l-2 border-secondary/40 pl-3">
+      <p className="text-sm font-semibold text-foreground">
+        📜 {bilingualText(lang, "फलदीपिका अनुसार", "Per the Phaladeepika")}
+      </p>
+      {p.shloka && (
+        <>
+          <p className="mt-1.5 text-sm font-semibold text-foreground">
+            {bilingualText(lang, "कारकत्व श्लोक", "Karakatva shloka")}
+            <span className="ml-1 font-normal text-muted-foreground">
+              — {bilingualText(lang, p.shlokaSourceNe, p.shlokaSourceEn)}
+            </span>
+          </p>
+          <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">{p.shloka}</p>
+          <p className="mt-1 text-sm leading-relaxed">{bilingualText(lang, p.translationNe, p.translationEn)}</p>
+        </>
+      )}
+      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+        {bilingualText(lang, p.natureNe, p.natureEn)}
+      </p>
+      {houseResult && (
+        <p className="mt-1.5 text-sm leading-relaxed">
+          <span className="font-semibold text-foreground">
+            {bilingualText(lang, `भाव ${digits(house)}:`, `House ${digits(house)}:`)}
+          </span>{" "}
+          {bilingualText(lang, houseResult.ne, houseResult.en)}
+        </p>
+      )}
+      <p className="mt-1.5 text-sm text-muted-foreground">
+        {bilingualText(lang, `स्रोत: ${reference.phaladeepikaSource}`, `Source: ${reference.phaladeepikaSource}`)}
+      </p>
     </div>
   );
 }
@@ -243,6 +301,7 @@ function BhavaDetailBody({
     HOUSE_LORD_TITLE_NE[house.house - 1],
     `Lord of house ${digits(house.house)}`,
   );
+  const classicalName = reference.houseClassicalName[house.house];
 
   return (
     <DialogContent className="flex max-h-[85vh] max-w-lg flex-col gap-0 overflow-hidden p-0">
@@ -252,6 +311,11 @@ function BhavaDetailBody({
             {digits(house.house)}
           </span>
           {ordinal} {bilingualText(lang, "भाव", "house")}
+          {classicalName && (
+            <span className="font-normal text-muted-foreground">
+              · {bilingualText(lang, classicalName.ne, classicalName.en)}
+            </span>
+          )}
         </DialogTitle>
         <p className="text-sm text-muted-foreground">{themes.join(" · ")}</p>
         <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
@@ -393,6 +457,30 @@ function BhavaDetailBody({
                 "No graha occupies this house, so there's no graha-in-house reading.",
               )}
             </p>
+          )}
+          {occupants.length > 0 && (
+            <Accordion type="single" collapsible className="mt-2">
+              <AccordionItem value="dustha-sustha" className="border-b-0">
+                <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
+                  {bilingualText(lang, "यी फल कहिले लागू हुन्छन्?", "When do these results apply?")}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+                    {reference.grahaDusthaSusthaRule.shloka}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {bilingualText(
+                      lang,
+                      reference.grahaDusthaSusthaRule.shlokaSourceNe,
+                      reference.grahaDusthaSusthaRule.shlokaSourceEn,
+                    )}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed">
+                    {bilingualText(lang, reference.grahaDusthaSusthaRule.ne, reference.grahaDusthaSusthaRule.en)}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
         </Section>
 

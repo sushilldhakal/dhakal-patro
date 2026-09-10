@@ -2139,10 +2139,37 @@ export interface BhavaReferenceLalKitabYuti {
   textEn: string;
 }
 
+/** Per-graha Phaladeepika (ch. 2) karakatva — real cited verses, distinct
+ * from `grahaKarakatva`'s Uttara Kalamrita source. Sparse (`shloka: ""`,
+ * `translation*: ""`) for rahu/ketu, which the source only gives a physical
+ * nature for. */
+export interface BhavaReferencePhaladeepikaKarakatva {
+  shloka: string;
+  shlokaSourceNe: string;
+  shlokaSourceEn: string;
+  karakatvaLineNe: string;
+  karakatvaLineEn: string;
+  translationNe: string;
+  translationEn: string;
+  natureNe: string;
+  natureEn: string;
+}
+
+/** The general "dusstha vs susstha" planetary-strength principle (combust /
+ * debilitated / enemy-sign / 6-8-12 house => can't give its full result) —
+ * chart-wide, not keyed by house or graha. */
+export interface BhavaReferenceDusthaSusthaRule extends BilingualValue {
+  shloka: string;
+  shlokaSourceNe: string;
+  shlokaSourceEn: string;
+}
+
 export interface BhavaReferencePayload {
   version: string;
   grahaDrishti: Record<string, BhavaReferenceGrahaDrishti>;
   houseInfo: Record<string, BhavaReferenceHouseInfo>;
+  /** Classical Sanskrit house names (तनु, धन, सहज, ... व्यय) — Phaladeepika ch. 2. */
+  houseClassicalName: Record<string, BilingualValue>;
   rashiLord: Record<string, string>;
   bhaveshPhala: Record<string, Record<string, BhavaReferenceBhaveshEntry>>;
   bhaveshPhalaSource: string;
@@ -2170,13 +2197,20 @@ export interface BhavaReferencePayload {
   grahaYuti2: Record<string, BhavaReferenceYuti>;
   grahaYuti3: Record<string, BhavaReferenceYuti>;
   grahaYutiGeneralRule: BilingualValue;
+  /** Phaladeepika ch. 2 karakatva, keyed by graha (9). */
+  phaladeepikaKarakatva: Record<string, BhavaReferencePhaladeepikaKarakatva>;
+  /** Phaladeepika-sourced traditional house-placement summary, per graha (7:
+   * sun-saturn only) x house (12) — the source has no rahu/ketu entries. */
+  phaladeepikaHouseResults: Record<string, Record<string, BilingualValue>>;
+  grahaDusthaSusthaRule: BhavaReferenceDusthaSusthaRule;
+  phaladeepikaSource: string;
   naadiSutras: BhavaReferenceNaadiSutra[];
   naadiSutraSource: string;
 }
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "4";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "5";
 
 /** Static graha/bhava reference content — same for every chart. Also folded
  * into `/kundali/detail` (as `bhavaReference`) for callers already fetching
