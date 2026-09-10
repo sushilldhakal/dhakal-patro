@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { drishtiTargetHouses, type BhavaHouse } from "@/lib/bhava";
+import { aspectHousesFor, drishtiTargetHouses, type BhavaHouse } from "@/lib/bhava";
 import { useTranslation } from "react-i18next";
 import {
   NI_HOUSE_POLYGONS,
@@ -76,8 +76,12 @@ function DrishtiPanel({
   const info = reference.grahaDrishti[grahaKey];
   if (!info) return null;
 
-  const targets = drishtiTargetHouses(selected.key, selected.house);
-  const houseList = formatHouseList(targets, lang, digits);
+  // The panel names the aspect by its classical offset (Jupiter is always
+  // "described" as casting its 5th/7th/9th aspect, regardless of which
+  // absolute house that lands on in this chart) — the arrows below still
+  // point at the resolved absolute houses via drishtiTargetHouses.
+  const offsets = aspectHousesFor(selected.key);
+  const houseList = formatHouseList(offsets, lang, digits);
   const name = bilingualText(lang, GRAHA_NAME[grahaKey]?.ne, GRAHA_NAME[grahaKey]?.en, grahaKey);
   const badge = drishtiBadgeText(grahaKey, reference, lang);
   const badgeCls = info.isMalefic
