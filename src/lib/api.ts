@@ -2180,12 +2180,75 @@ export interface BhavaReferenceDusthaSusthaRule extends BilingualValue {
   shlokaSourceEn: string;
 }
 
+/** Lal Kitab foundational classification for one rashi (1-12) — gati
+ * (motion), dwar/garbha (door/womb position), tattva (element), guna
+ * (nature), disha (direction). Chart-independent. */
+export interface BhavaReferenceRashiClassification {
+  rashiNe: string;
+  gatiNe: string;
+  dwarNe: string;
+  tattvaNe: string;
+  gunaNe: string;
+  dishaNe: string;
+}
+
+/** Classical exaltation/debilitation sign + degree for one graha (7:
+ * sun-saturn; rahu/ketu not classically assigned one in this source). */
+export interface BhavaReferenceExaltationDebilitation {
+  exaltRashiNe: string;
+  exaltDegree: string;
+  debilRashiNe: string;
+  debilDegree: string;
+}
+
+/** Naisargika (natural, chart-independent) friendship — graha keys in
+ * each bucket. Defined only for the 7 classical grahas. */
+export interface BhavaReferenceNaturalFriendship {
+  friends: string[];
+  neutral: string[];
+  enemies: string[];
+}
+
+export interface BhavaReferenceGrahaAnimalBird {
+  animalNe: string;
+  birdNe: string;
+}
+
+/** null fields where the source gives no value (rahu has no taste; ketu
+ * has neither metal nor taste). */
+export interface BhavaReferenceGrahaGrainMetalTaste {
+  grainNe: string | null;
+  metalNe: string | null;
+  tasteNe: string | null;
+}
+
+export interface BhavaReferenceGrahaRemedy {
+  deityNe: string;
+  regionNe: string;
+}
+
 export interface BhavaReferencePayload {
   version: string;
   grahaDrishti: Record<string, BhavaReferenceGrahaDrishti>;
   houseInfo: Record<string, BhavaReferenceHouseInfo>;
   /** Classical Sanskrit house names (तनु, धन, सहज, ... व्यय) — Phaladeepika ch. 2. */
   houseClassicalName: Record<string, BilingualValue>;
+  /** Lal Kitab's foundational reference tables — mostly chart-independent
+   * classification, not house/chart-specific, so only `grahaManifestationAge`
+   * and `houseBodyPart` are currently surfaced in the per-house dialog; the
+   * rest await a future general classical-reference page. */
+  rashiClassification: Record<string, BhavaReferenceRashiClassification>;
+  grahaExaltationDebilitation: Record<string, BhavaReferenceExaltationDebilitation>;
+  grahaNaturalFriendship: Record<string, BhavaReferenceNaturalFriendship>;
+  /** Kalapurusha body part per house (1-12). */
+  houseBodyPart: Record<string, BilingualValue>;
+  grahaAnimalBird: Record<string, BhavaReferenceGrahaAnimalBird>;
+  grahaGrainMetalTaste: Record<string, BhavaReferenceGrahaGrainMetalTaste>;
+  grahaRemedy: Record<string, BhavaReferenceGrahaRemedy>;
+  /** Lal Kitab's age (in years) at which a graha's effect fully activates. */
+  grahaManifestationAge: Record<string, number>;
+  lalKitabNapunsakNote: BilingualValue;
+  lalKitabTablesSource: string;
   rashiLord: Record<string, string>;
   bhaveshPhala: Record<string, Record<string, BhavaReferenceBhaveshEntry>>;
   bhaveshPhalaSource: string;
@@ -2211,6 +2274,14 @@ export interface BhavaReferencePayload {
   lalKitabHealthSignals: BilingualValue[];
   /** भाग १५: wealth, prosperity and vastu guidance. */
   lalKitabWealthVastu: BilingualValue[];
+  /** Lal Kitab's own Sustha/Dustha (well-placed/ill-placed) logic — Pakka
+   * Ghar + exaltation/debilitation based, distinct from (never merged
+   * with) Phaladeepika's `grahaDusthaSusthaRule`. Chart-independent. */
+  lalKitabSusthaDustha: BilingualValue[];
+  /** 10 general closing aphorisms from the same submission. */
+  lalKitabMahaSutraSummary: BilingualValue[];
+  /** Citation for the revised remedy table + Sustha/Dustha rules. */
+  lalKitabRevisionSource: string;
   /** Keyed by grahas sorted + joined with "+", e.g. "jupiter+venus". */
   grahaYuti2: Record<string, BhavaReferenceYuti>;
   grahaYuti3: Record<string, BhavaReferenceYuti>;
@@ -2228,7 +2299,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "6";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "8";
 
 /** Static graha/bhava reference content — same for every chart. Also folded
  * into `/kundali/detail` (as `bhavaReference`) for callers already fetching

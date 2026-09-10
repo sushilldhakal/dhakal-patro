@@ -304,6 +304,7 @@ function BhavaDetailBody({
     `Lord of house ${digits(house.house)}`,
   );
   const classicalName = reference.houseClassicalName[house.house];
+  const bodyPart = reference.houseBodyPart[house.house];
 
   return (
     <DialogContent className="flex max-h-[85vh] max-w-lg flex-col gap-0 overflow-hidden p-0">
@@ -373,9 +374,21 @@ function BhavaDetailBody({
                 const subjects = k
                   ? splitList(bilingualText(lang, k.subjectsNe, k.subjectsEn)).slice(0, 4).join(" · ")
                   : "";
+                const manifestationAge = reference.grahaManifestationAge[p.key];
                 return (
                   <div key={p.key}>
-                    <p className="text-sm font-semibold text-foreground">{grahaName(p.key, lang)}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {grahaName(p.key, lang)}
+                      {manifestationAge != null && (
+                        <span className="ml-2 font-normal text-muted-foreground">
+                          {bilingualText(
+                            lang,
+                            `· उन्नतिको उमेर ~${digits(manifestationAge)} वर्ष`,
+                            `· manifests fully ~age ${digits(manifestationAge)}`,
+                          )}
+                        </span>
+                      )}
+                    </p>
                     {subjects && <p className="text-sm text-muted-foreground">{subjects}</p>}
                   </div>
                 );
@@ -751,6 +764,33 @@ function BhavaDetailBody({
                 <p className="mt-2 text-sm text-muted-foreground">
                   {bilingualText(lang, "स्रोत: लाल किताब — भाग २–११", "Source: Lal Kitab, parts 2–11")}
                 </p>
+                <Accordion type="single" collapsible className="mt-2">
+                  <AccordionItem value="lalkitab-sustha-dustha" className="border-b-0">
+                    <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
+                      {bilingualText(
+                        lang,
+                        "लाल किताबको सुस्थ/दुःस्थ नियम के हो?",
+                        "What is Lal Kitab's sustha/dustha rule?",
+                      )}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-1.5">
+                        {reference.lalKitabSusthaDustha.map((rule, i) => (
+                          <p key={i} className="text-sm leading-relaxed">
+                            {bilingualText(lang, rule.ne, rule.en)}
+                          </p>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {bilingualText(
+                          lang,
+                          `स्रोत: ${reference.lalKitabRevisionSource}`,
+                          `Source: ${reference.lalKitabRevisionSource}`,
+                        )}
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -770,6 +810,11 @@ function BhavaDetailBody({
                   </span>{" "}
                   {bilingualText(lang, info.medicalNe, info.medicalEn)}
                 </p>
+                {bodyPart && (
+                  <p className="mb-2 text-sm text-muted-foreground">
+                    {bilingualText(lang, "कालपुरुष अनुसार:", "Per Kalapurusha:")} {bilingualText(lang, bodyPart.ne, bodyPart.en)}
+                  </p>
+                )}
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-semibold",
