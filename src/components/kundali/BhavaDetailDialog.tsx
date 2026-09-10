@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import type { BhavaHouse } from "@/lib/bhava";
@@ -68,7 +69,7 @@ export function BhavaDetailDialog({ houses, houseNumber, onClose }: Props) {
   return (
     <Dialog open={Boolean(house)} onOpenChange={(next) => !next && onClose()}>
       {house && (
-        <BhavaDetailBody house={house} houses={houses} lang={lang} digits={digits} />
+        <BhavaDetailBody house={house} houses={houses} lang={lang} digits={digits} onClose={onClose} />
       )}
     </Dialog>
   );
@@ -79,11 +80,13 @@ function BhavaDetailBody({
   houses,
   lang,
   digits,
+  onClose,
 }: {
   house: BhavaHouse;
   houses: BhavaHouse[];
   lang: "ne" | "en";
   digits: (v: string | number) => string;
+  onClose: () => void;
 }) {
   const info = HOUSE_INFO[house.house];
   const lordKey = RASHI_LORD[house.rashi];
@@ -108,12 +111,12 @@ function BhavaDetailBody({
   );
 
   return (
-    <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto gap-4">
-      <DialogHeader>
+    <DialogContent className="flex max-h-[85vh] max-w-lg flex-col gap-0 overflow-hidden p-0">
+      <DialogHeader className="border-b border-border px-6 py-4">
         <DialogTitle>{title}</DialogTitle>
       </DialogHeader>
 
-      <div className="space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-6">
         {/* भाव फलादेश */}
         <Section
           title={bilingualText(
@@ -282,6 +285,12 @@ function BhavaDetailBody({
         <Section title={bilingualText(lang, "📘 लागू भएका भृगु नन्दी नाडी सूत्र", "📘 Applicable Bhrigu Nandi Nadi sutras")}>
           <NotAvailable lang={lang} />
         </Section>
+      </div>
+
+      <div className="flex justify-end border-t border-border px-6 py-3.5">
+        <Button variant="outline" onClick={onClose}>
+          {bilingualText(lang, "बन्द गर्नुहोस्", "Close")}
+        </Button>
       </div>
     </DialogContent>
   );
