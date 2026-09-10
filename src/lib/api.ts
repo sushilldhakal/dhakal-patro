@@ -2133,11 +2133,12 @@ export interface BhavaReferenceBhaveshEntry extends BilingualValue {
 
 /** A second, separately-cited house-lord-placement source (BPHS /
  * Phaladeepika, collected across several rounds) — shown alongside, not
- * instead of, `bhaveshPhala`. `ne`/`en` hold the analysis text (English
- * primary; `ne` mirrors `en` as translation debt); `translationNe`/
- * `translationEn` hold the shloka's literal translation, same debt.
+ * instead of, `bhaveshPhala`. `ne`/`en` hold the analysis text and
+ * `translationNe`/`translationEn` the shloka's literal translation — both
+ * pairs hand-translated to real Nepali (source was 100% English).
  * `shloka`/`iast` are null for the 38 of 144 pairs this source only has a
- * short prose summary for (no verse). */
+ * short prose summary for (no verse), and those pairs' `translationNe`/
+ * `translationEn` are empty strings rather than translated. */
 export interface BhavaReferenceBhaveshSupplementaryEntry {
   shloka: string | null;
   iast: string | null;
@@ -2299,7 +2300,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "8";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "9";
 
 /** Static graha/bhava reference content — same for every chart. Also folded
  * into `/kundali/detail` (as `bhavaReference`) for callers already fetching
