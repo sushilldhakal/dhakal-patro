@@ -1,18 +1,13 @@
 import type { GocharGraha } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import {
-  buildPlanetsByRashi,
+  buildGocharBhavaHouses,
   formatGocharBsLabel,
 } from "@/lib/dainikKranti/gochar-display";
-import { getRashiList } from "@/lib/rashi-i18n";
-import {
-  GOCHAR_RASHI_TO_HOUSE,
-  NI_HOUSE_POLYGONS,
-  polygonCentroid,
-} from "@/lib/kundali/north-indian-layout";
+import { D1Chart } from "@/components/kundali/D1Chart";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
-import { GrahaStatusLegend, GrahaStatusMarksSvg } from "@/components/graha/GrahaStatusBadges";
+import { GrahaStatusLegend } from "@/components/graha/GrahaStatusBadges";
 import { useLocale, bilingualText } from "@/i18n/locale";
 
 type GrahaRow = GocharGraha & { key: string };
@@ -40,9 +35,7 @@ export function GocharKundaliChart({
 }: Props) {
   const { t } = useTranslation();
   const { lang } = useLocale();
-  const planetsByRashi = buildPlanetsByRashi(grahas);
   const dateLabel = formatGocharBsLabel(dateBs, dateAd);
-  const rashiListNe = getRashiList("ne");
 
   return (
     <div className={cn("rounded-xl border border-border p-4", className)}>
@@ -70,73 +63,7 @@ export function GocharKundaliChart({
       ) : grahas.length === 0 ? (
         <p className="py-8 text-center text-sm">{t("dainik.no_details_available")}</p>
       ) : (
-        <svg
-          viewBox="0 0 300 300"
-          className="mx-auto h-auto w-full max-w-[300px] text-foreground"
-          role="img"
-          aria-label={t("dainik.transit_chart_19")}
-        >
-          <rect
-            x="0"
-            y="0"
-            width="300"
-            height="300"
-            className="fill-background"
-            rx="2"
-          />
-
-          {rashiListNe.map((rashiNe, idx) => {
-            const rashiNo = idx + 1;
-            const house = GOCHAR_RASHI_TO_HOUSE[rashiNo]!;
-            const points = NI_HOUSE_POLYGONS[house]!;
-            const [cx, cy] = polygonCentroid(points);
-            const planets = planetsByRashi[rashiNo] ?? [];
-
-            const slot = planets.length > 3 ? 15 : 18;
-            return (
-              <g key={rashiNe}>
-                {planets.map((planet, i) => {
-                  const px = cx + (i - (planets.length - 1) / 2) * slot;
-                  return (
-                    <g key={planet.key}>
-                      <text
-                        x={px}
-                        y={cy - 6}
-                        textAnchor="middle"
-                        className="fill-foreground text-sm font-semibold"
-                      >
-                        {planet.label}
-                      </text>
-                      <GrahaStatusMarksSvg
-                        planetKey={planet.key}
-                        isRetrograde={planet.isRetrograde}
-                        isCombust={planet.isCombust}
-                        x={px + 3}
-                        y={cy - 18}
-                        size={7}
-                      />
-                    </g>
-                  );
-                })}
-                <text
-                  x={cx}
-                  y={cy + (planets.length ? 14 : 4)}
-                  textAnchor="middle"
-                  className="fill-foreground/80 text-sm text-base"
-                >
-                  {rashiNe}
-                </text>
-              </g>
-            );
-          })}
-
-          <g className="stroke-current" fill="none" strokeWidth="1.75" strokeLinejoin="miter">
-            <rect x="0" y="0" width="300" height="300" rx="2" />
-            <line x1="0" y1="0" x2="300" y2="300" />
-            <line x1="300" y1="0" x2="0" y2="300" />
-            <polygon points="150,0 300,150 150,300 0,150" />
-          </g>
-        </svg>
+        <D1Chart houses={buildGocharBhavaHouses(grahas)} />
       )}
 
       {grahas.some((g) => g.is_retrograde || g.is_combust) ? (

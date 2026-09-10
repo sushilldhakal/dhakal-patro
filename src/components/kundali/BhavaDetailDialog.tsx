@@ -407,7 +407,14 @@ function BhavaDetailBody({
             </p>
           )}
           {bhaveshEntry ? (
-            <p className="mt-2 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
+            <>
+              {bhaveshEntry.shloka && (
+                <p className="mt-2 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+                  {bhaveshEntry.shloka}
+                </p>
+              )}
+              <p className="mt-1.5 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
+            </>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
               {bilingualText(
@@ -418,7 +425,7 @@ function BhavaDetailBody({
             </p>
           )}
           <p className="mt-2 text-sm text-muted-foreground">
-            {bilingualText(lang, "स्रोत: बृहत्पाराशर होराशास्त्र, अध्याय २७", "Source: Brihat Parashara Hora Shastra, ch. 27")}
+            {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
           </p>
         </Section>
 

@@ -1,5 +1,6 @@
 import type { GocharGraha } from "@/lib/api";
 import { adToBS } from "@/lib/bs-calendar";
+import type { BhavaHouse, BhavaPlanetEntry } from "@/lib/bhava";
 import { GOCHAR_RASHI_TO_HOUSE } from "@/lib/kundali/north-indian-layout";
 import {
   formatRashiByNumber,
@@ -71,6 +72,57 @@ export function buildPlanetsByRashi(
     });
   }
   return out;
+}
+
+/** Inverse of GOCHAR_RASHI_TO_HOUSE — which rashi sits in a given gochar slot. */
+const HOUSE_TO_GOCHAR_RASHI: Record<number, number> = Object.fromEntries(
+  Object.entries(GOCHAR_RASHI_TO_HOUSE).map(([rashi, house]) => [house, Number(rashi)]),
+);
+
+/**
+ * Synthesizes a `BhavaHouse[]` from today's gochar (fixed rashi→slot)
+ * positions, so the shared D1Chart component — and with it, the click-to-
+ * drishti and click-to-detail-dialog features already built for the natal
+ * kundali chart — can render this transit chart too.
+ *
+ * There is no natal lagna on this page: "house 1" is just whichever rashi
+ * the fixed Surya-patro convention slots there, not a birth-chart bhava. The
+ * bhava-relative content the detail dialog shows (bhavesh phal, per-house
+ * saravali, Lal Kitab-by-house) is written assuming a real lagna, so on this
+ * chart it describes the fixed slot number as if it were that bhava — a
+ * deliberate simplification (same visual/interaction design everywhere)
+ * rather than an astrologically precise transit reading.
+ */
+export function buildGocharBhavaHouses(
+  grahas: Array<GocharGraha & { key: string }>,
+): BhavaHouse[] {
+  const houses: BhavaHouse[] = Array.from({ length: 12 }, (_, i) => {
+    const house = i + 1;
+    const rashi = HOUSE_TO_GOCHAR_RASHI[house] ?? house;
+    return {
+      house,
+      rashi,
+      rashiNe: formatRashiByNumber(rashi, "ne"),
+      isLagna: house === 1,
+      planets: [],
+    };
+  });
+
+  for (const g of grahas) {
+    const rashi = rashiNoFromGraha(g);
+    if (rashi == null) continue;
+    const house = GOCHAR_RASHI_TO_HOUSE[rashi];
+    if (house == null) continue;
+    const entry: BhavaPlanetEntry = {
+      key: g.key,
+      labelNe: grahaChartLabel(g.key, g),
+      isRetrograde: g.is_retrograde,
+      isCombust: g.is_combust,
+    };
+    houses[house - 1]!.planets.push(entry);
+  }
+
+  return houses;
 }
 
 /** पापाशाः — पाप ग्रहको गोचर कुण्डली घर (जस्तै म.८, रा.५, के.११) */
