@@ -21,6 +21,22 @@ export const HOUSE_ORDINAL_EN = [
   "Seventh", "Eighth", "Ninth", "Tenth", "Eleventh", "Twelfth",
 ] as const;
 
+/** Classical "lord of house N" terms (लग्नेश, द्वितीयेश, …), 1st house
+ * first — used in the bhavesh (house-lord) section of the detail dialog. */
+export const HOUSE_LORD_TITLE_NE = [
+  "लग्नेश", "द्वितीयेश", "तृतीयेश", "चतुर्थेश", "पञ्चमेश", "षष्ठेश",
+  "सप्तमेश", "अष्टमेश", "नवमेश", "दशमेश", "एकादशेश", "द्वादशेश",
+] as const;
+
+/** Comma-separated reference strings (house themes, graha subjects) split
+ * into their individual items for chip/list rendering. */
+export function splitList(text: string): string[] {
+  return text
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /** Every graha that casts a graha-drishti onto `targetHouse`, given where each
  * graha sits across the whole chart. Mirrors buildBhavaTable's aspectedBy
  * logic in bhava.ts, recomputed here since D1Chart doesn't carry that table. */
