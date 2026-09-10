@@ -105,10 +105,18 @@ export function useDayChapters(enabled: boolean): DayChapterPlayer | null {
         next.highlightControl !== stateRef.current.highlightControl ||
         next.degrees !== stateRef.current.degrees ||
         next.stellarClock !== stateRef.current.stellarClock;
-      if (forceUi || stepped || now - lastUi.current > 80) {
+      /* Time on the scrubber can tick without cloning the whole sim state.
+         Pushing a new `state` every 80ms was resetting focus / layers in React
+         while the reader was using them — especially once `handsOff` is on
+         and the instruments are supposed to belong to them. */
+      if (forceUi || stepped) {
         lastUi.current = now;
         setTime(clamped);
         setState(next);
+      } else if (playingRef.current && now - lastUi.current > 80) {
+        lastUi.current = now;
+        setTime(clamped);
+        if (!stateRef.current.handsOff) setState(next);
       }
     },
     [compiled],

@@ -204,6 +204,28 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const [cameraFollow, setCameraFollow] = useState(false);
   const [toggles, setToggles] = useState<SimToggles>(initial.toggles);
 
+  /**
+   * Reader overrides on a guided chapter.
+   *
+   * The tour writes camera target, layers and sliders from keyframes. Without
+   * this, a focus or filter click lasted one frame and then snapped back —
+   * including after `handsOff`, when the instruments are meant to work.
+   * A new chapter clears the bag; seeking keeps what they chose.
+   */
+  const controlOverride = useRef<{
+    cameraTarget?: CameraTarget;
+    cameraFollow?: boolean;
+    toggles?: Partial<SimToggles>;
+    solarDaysPerYear?: number;
+    eccentricity?: number;
+    tiltDeg?: number;
+    preset?: string;
+  }>({});
+  const speedRef = useRef(speed);
+  const initialSpeedRef = useRef(initial.speed);
+  speedRef.current = speed;
+  initialSpeedRef.current = initial.speed;
+
   const { active: fullscreen, ref: overlayRef, toggle: toggleFullscreen } = useFullscreen();
 
   const onToggleFullscreen = useCallback(() => {
@@ -242,7 +264,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
       if (welcome || handsOff) {
         clock.current.playing = welcome ? true : playingStateRef.current;
-        clock.current.daysPerSecond = 0.35;
+        clock.current.daysPerSecond = welcome
+          ? 0.35
+          : initialSpeedRef.current * SPEED_MULTIPLIERS[speedRef.current]!;
         handsOffOffset.current = clock.current.day - guidedDay;
         wasHandsOff.current = true;
       } else {
@@ -294,6 +318,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     earthMeddle.current = null;
     handsOffOffset.current = 0;
     wasHandsOff.current = false;
+    controlOverride.current = {};
     const ch = DAY_CHAPTERS.find((c) => c.id === tourChapterId);
     if (!ch) return;
     const s = ch.defaults;
@@ -314,14 +339,19 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
   useEffect(() => {
     if (!tourState || tour?.chapter.free) return;
-    setSolarDaysPerYear(tourState.solarDaysPerYear);
-    setEccentricity(tourState.eccentricity);
-    setTiltDeg(tourState.tiltDeg);
-    setCameraTarget(tourState.cameraTarget);
-    setCameraFollow(tourState.cameraFollow);
+    /* Hands-off: the chapter has given the panel back. Keep writing graph /
+       highlight-driven UI from `tour.state` elsewhere, but do not stomp
+       focus, filters or sliders. */
+    if (tourState.handsOff) return;
+    const o = controlOverride.current;
+    setSolarDaysPerYear(o.solarDaysPerYear ?? tourState.solarDaysPerYear);
+    setEccentricity(o.eccentricity ?? tourState.eccentricity);
+    setTiltDeg(o.tiltDeg ?? tourState.tiltDeg);
+    setCameraTarget(o.cameraTarget ?? tourState.cameraTarget);
+    setCameraFollow(o.cameraFollow ?? tourState.cameraFollow);
     setGraphOpen(tourState.graphOpen);
-    setToggles(togglesFromChapter(tourState));
-    setPreset(tourState.planet === "earth" ? "" : tourState.planet);
+    setToggles({ ...togglesFromChapter(tourState), ...o.toggles });
+    setPreset(o.preset ?? (tourState.planet === "earth" ? "" : tourState.planet));
   }, [tourState, tour?.chapter.free]);
 
   const highlightControl = tour?.state.highlightControl ?? "";
@@ -443,7 +473,11 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const setToggle = useCallback(
     (k: keyof SimToggles) => {
       if (!hasMoon && (GROUPS.moon as readonly string[]).includes(k)) return;
-      setToggles((prev) => ({ ...prev, [k]: !prev[k] }));
+      setToggles((prev) => {
+        const next = { ...prev, [k]: !prev[k] };
+        controlOverride.current.toggles = { ...controlOverride.current.toggles, [k]: next[k] };
+        return next;
+      });
     },
     [hasMoon],
   );
@@ -458,7 +492,12 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       setToggles((prev) => {
         const on = GROUPS[g].every((k) => prev[k]);
         const next = { ...prev };
-        for (const k of GROUPS[g]) next[k] = !on;
+        const bag = { ...controlOverride.current.toggles };
+        for (const k of GROUPS[g]) {
+          next[k] = !on;
+          bag[k] = !on;
+        }
+        controlOverride.current.toggles = bag;
         return next;
       });
     },
@@ -469,22 +508,36 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const applyPreset = useCallback(
     (key: string) => {
       setPreset(key);
+      controlOverride.current.preset = key;
       const p = PLANET_PRESETS.find((x) => x.key === key);
       if (!p) {
         setToggles(initial.toggles);
         setSolarDaysPerYear(initial.params.daysPerYear - 1);
         setEccentricity(initial.params.eccentricity);
         setTiltDeg(initial.params.tilt / DEG);
+        controlOverride.current.solarDaysPerYear = initial.params.daysPerYear - 1;
+        controlOverride.current.eccentricity = initial.params.eccentricity;
+        controlOverride.current.tiltDeg = initial.params.tilt / DEG;
+        controlOverride.current.toggles = { ...initial.toggles };
         return;
       }
-      setSolarDaysPerYear(Math.max(1, Math.min(365, Math.round(p.daysPerYear - 1))));
+      const days = Math.max(1, Math.min(365, Math.round(p.daysPerYear - 1)));
+      setSolarDaysPerYear(days);
       setEccentricity(p.eccentricity);
       setTiltDeg(p.tilt);
+      controlOverride.current.solarDaysPerYear = days;
+      controlOverride.current.eccentricity = p.eccentricity;
+      controlOverride.current.tiltDeg = p.tilt;
       /* A borrowed graha has no Moon, so the lunar layers go with it. */
       if (key !== "earth") {
         setToggles((prev) => {
           const next = { ...prev };
-          for (const k of GROUPS.moon) next[k] = false;
+          const bag = { ...controlOverride.current.toggles };
+          for (const k of GROUPS.moon) {
+            next[k] = false;
+            bag[k] = false;
+          }
+          controlOverride.current.toggles = bag;
           return next;
         });
       }
@@ -974,7 +1027,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               1,
               365,
               1,
-              setSolarDaysPerYear,
+              (v) => {
+                controlOverride.current.solarDaysPerYear = v;
+                setSolarDaysPerYear(v);
+              },
             )}
             {slider(
               t("learn.playground.eccentricity"),
@@ -983,7 +1039,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               0,
               0.4,
               0.001,
-              setEccentricity,
+              (v) => {
+                controlOverride.current.eccentricity = v;
+                setEccentricity(v);
+              },
             )}
             {slider(
               t("learn.playground.axial_tilt"),
@@ -992,7 +1051,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               0,
               90,
               0.1,
-              setTiltDeg,
+              (v) => {
+                controlOverride.current.tiltDeg = v;
+                setTiltDeg(v);
+              },
             )}
 
             {/* Grouped the way the reference sim groups them — guides, then the
@@ -1054,7 +1116,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                     name="playground-focus"
                     className="size-3.5 accent-white"
                     checked={cameraTarget === key}
-                    onChange={() => setCameraTarget(key)}
+                    onChange={() => {
+                      controlOverride.current.cameraTarget = key;
+                      setCameraTarget(key);
+                    }}
                   />
                   {label}
                 </label>
@@ -1070,7 +1135,13 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                 type="checkbox"
                 className="size-3.5 accent-white"
                 checked={cameraFollow}
-                onChange={() => setCameraFollow((v) => !v)}
+                onChange={() => {
+                  setCameraFollow((v) => {
+                    const next = !v;
+                    controlOverride.current.cameraFollow = next;
+                    return next;
+                  });
+                }}
               />
               {t("learn.playground.follow_orbit")}
             </label>
@@ -1143,9 +1214,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           />
         ) : null}
 
+        {filterChips}
+
         {!lesson && (
           <>
-            {filterChips}
             <div className="flex w-full items-center gap-2.5 sm:gap-3">
               {tour ? null : (
                 <button

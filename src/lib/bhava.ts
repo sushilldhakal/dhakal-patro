@@ -171,8 +171,15 @@ const SPECIAL_ASPECT_HOUSES: Record<string, number[]> = {
   ketu: [5, 7, 9],
 };
 
-function aspectHousesFor(key: string): number[] {
+export function aspectHousesFor(key: string): number[] {
   return SPECIAL_ASPECT_HOUSES[key] ?? [7];
+}
+
+/** Houses a planet in `fromHouse` casts its graha-drishti onto. */
+export function drishtiTargetHouses(key: string, fromHouse: number): number[] {
+  return aspectHousesFor(key)
+    .map((distance) => ((fromHouse - 1 + distance - 1) % 12) + 1)
+    .sort((a, b) => a - b);
 }
 
 export interface BhavaTableRow {

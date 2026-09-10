@@ -482,3 +482,11 @@ function houseHintLabel(house: number, tab: "male" | "female", t: TFn): string {
   if (house === 7 && tab === "female") return t("kundali.x.house_hint_stri");
   return t(HOUSE_HINT_KEYS[house - 1]!);
 }
+
+/** Purusha-table terse classical phala for one graha occupying one house (1-12). */
+export function janmaPhalaFor(grahaKey: string, house: number): string | undefined {
+  const colIdx = PURUSHA_JANMA_GRAHAS.findIndex((c) => c.id === grahaKey);
+  if (colIdx < 0) return undefined;
+  const row = PURUSHA_JANMA_ROWS[house - 1];
+  return row?.phala[colIdx]?.trim() || undefined;
+}
