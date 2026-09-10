@@ -2131,6 +2131,22 @@ export interface BhavaReferenceBhaveshEntry extends BilingualValue {
   shloka: string | null;
 }
 
+/** A second, separately-cited house-lord-placement source (BPHS /
+ * Phaladeepika, collected across several rounds) — shown alongside, not
+ * instead of, `bhaveshPhala`. `ne`/`en` hold the analysis text (English
+ * primary; `ne` mirrors `en` as translation debt); `translationNe`/
+ * `translationEn` hold the shloka's literal translation, same debt.
+ * `shloka`/`iast` are null for the 38 of 144 pairs this source only has a
+ * short prose summary for (no verse). */
+export interface BhavaReferenceBhaveshSupplementaryEntry {
+  shloka: string | null;
+  iast: string | null;
+  ne: string;
+  en: string;
+  translationNe: string;
+  translationEn: string;
+}
+
 /** A 2- or 3-graha Lal Kitab conjunction effect — same shape as
  * `BhavaReferenceYuti` minus the (unused here) yoga name. */
 export interface BhavaReferenceLalKitabYuti {
@@ -2173,6 +2189,8 @@ export interface BhavaReferencePayload {
   rashiLord: Record<string, string>;
   bhaveshPhala: Record<string, Record<string, BhavaReferenceBhaveshEntry>>;
   bhaveshPhalaSource: string;
+  bhaveshPhalaSupplementary: Record<string, Record<string, BhavaReferenceBhaveshSupplementaryEntry>>;
+  bhaveshPhalaSupplementarySource: string;
   grahaKarakatva: Record<string, BhavaReferenceGrahaKarakatva>;
   grahaHouseSaravali: Record<string, Record<string, BhavaReferenceHouseSaravali>>;
   ratingLabel: Record<BhavaReferenceRating, BilingualValue>;
@@ -2210,7 +2228,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "5";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "6";
 
 /** Static graha/bhava reference content — same for every chart. Also folded
  * into `/kundali/detail` (as `bhavaReference`) for callers already fetching

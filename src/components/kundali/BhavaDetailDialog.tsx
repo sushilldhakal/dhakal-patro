@@ -273,6 +273,8 @@ function BhavaDetailBody({
   const ordinal = bilingualText(lang, HOUSE_ORDINAL_NE[house.house - 1], HOUSE_ORDINAL_EN[house.house - 1]);
   const lalKitabFixedLord = reference.lalKitabFixedLord[house.house] ?? [];
   const bhaveshEntry = lordHouse != null ? reference.bhaveshPhala[house.house]?.[lordHouse] : undefined;
+  const bhaveshSupplementary =
+    lordHouse != null ? reference.bhaveshPhalaSupplementary[house.house]?.[lordHouse] : undefined;
 
   const occupantKeys = occupants.map((p) => p.key);
   const yuti2Entry = occupantKeys.length === 2 ? reference.grahaYuti2[yutiKey(occupantKeys)] : undefined;
@@ -571,6 +573,36 @@ function BhavaDetailBody({
                   <p className="mt-2 text-sm text-muted-foreground">
                     {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
                   </p>
+                  {bhaveshSupplementary && (
+                    <div className="mt-3 border-l-2 border-secondary/40 pl-3">
+                      <p className="text-sm font-semibold text-foreground">
+                        📜 {bilingualText(lang, "थप स्रोत", "Additional source")}
+                      </p>
+                      {bhaveshSupplementary.shloka && (
+                        <>
+                          <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+                            {bhaveshSupplementary.shloka}
+                          </p>
+                          {bhaveshSupplementary.iast && (
+                            <p className="mt-0.5 text-sm italic text-muted-foreground">{bhaveshSupplementary.iast}</p>
+                          )}
+                          <p className="mt-1 text-sm leading-relaxed">
+                            {bilingualText(lang, bhaveshSupplementary.translationNe, bhaveshSupplementary.translationEn)}
+                          </p>
+                        </>
+                      )}
+                      <p className="mt-1 text-sm leading-relaxed">
+                        {bilingualText(lang, bhaveshSupplementary.ne, bhaveshSupplementary.en)}
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {bilingualText(
+                          lang,
+                          `स्रोत: ${reference.bhaveshPhalaSupplementarySource}`,
+                          `Source: ${reference.bhaveshPhalaSupplementarySource}`,
+                        )}
+                      </p>
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
