@@ -232,6 +232,10 @@ function BhavaDetailBody({
   const lalKitabEntries = occupants
     .map((p) => ({ key: p.key, entry: reference.lalKitabHouse[p.key]?.[house.house] }))
     .filter((e): e is { key: string; entry: NonNullable<typeof e.entry> } => Boolean(e.entry));
+  const lalKitabYutiMatch =
+    occupantKeys.length >= 2 && occupantKeys.length <= 3
+      ? reference.lalKitabYuti.find((y) => yutiKey(y.grahas) === yutiKey(occupantKeys))
+      : undefined;
 
   const themes = splitList(bilingualText(lang, info.themeNe, info.themeEn));
   const lordTitle = bilingualText(
@@ -588,14 +592,22 @@ function BhavaDetailBody({
               <AccordionContent>
                 {lalKitabEntries.length > 0 ? (
                   <div className="space-y-3">
-                    {lalKitabEntries.map(({ key, entry }) => (
-                      <div key={key}>
-                        <p className="text-sm font-semibold text-foreground">
-                          🪐 {grahaName(key, lang)} — {bilingualText(lang, `भाव ${digits(house.house)}`, `house ${digits(house.house)}`)}
-                        </p>
-                        <p className="mt-0.5 text-sm leading-relaxed">{bilingualText(lang, entry.ne, entry.en)}</p>
-                      </div>
-                    ))}
+                    {lalKitabEntries.map(({ key, entry }) => {
+                      const tip = reference.lalKitabSafetyTips[key];
+                      return (
+                        <div key={key}>
+                          <p className="text-sm font-semibold text-foreground">
+                            🪐 {grahaName(key, lang)} — {bilingualText(lang, `भाव ${digits(house.house)}`, `house ${digits(house.house)}`)}
+                          </p>
+                          <p className="mt-0.5 text-sm leading-relaxed">{bilingualText(lang, entry.ne, entry.en)}</p>
+                          {tip && (
+                            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                              {bilingualText(lang, "सुरक्षित व्यवहार:", "Safe practice:")} {bilingualText(lang, tip.ne, tip.en)}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm leading-relaxed text-muted-foreground">
@@ -606,8 +618,18 @@ function BhavaDetailBody({
                     )}
                   </p>
                 )}
+                {lalKitabYutiMatch && (
+                  <div className="mt-3 border-l-2 border-secondary/40 pl-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      {bilingualText(lang, "👥 ग्रह युति —", "👥 Graha yuti —")} {joinNames(lalKitabYutiMatch.grahas, lang)}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed">
+                      {bilingualText(lang, lalKitabYutiMatch.textNe, lalKitabYutiMatch.textEn)}
+                    </p>
+                  </div>
+                )}
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {bilingualText(lang, "स्रोत: लाल किताब — भाग २–१०", "Source: Lal Kitab, parts 2–10")}
+                  {bilingualText(lang, "स्रोत: लाल किताब — भाग २–११", "Source: Lal Kitab, parts 2–11")}
                 </p>
               </AccordionContent>
             </AccordionItem>

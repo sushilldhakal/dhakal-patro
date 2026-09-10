@@ -2131,6 +2131,14 @@ export interface BhavaReferenceBhaveshEntry extends BilingualValue {
   shloka: string | null;
 }
 
+/** A 2- or 3-graha Lal Kitab conjunction effect — same shape as
+ * `BhavaReferenceYuti` minus the (unused here) yoga name. */
+export interface BhavaReferenceLalKitabYuti {
+  grahas: string[];
+  textNe: string;
+  textEn: string;
+}
+
 export interface BhavaReferencePayload {
   version: string;
   grahaDrishti: Record<string, BhavaReferenceGrahaDrishti>;
@@ -2143,6 +2151,21 @@ export interface BhavaReferencePayload {
   ratingLabel: Record<BhavaReferenceRating, BilingualValue>;
   lalKitabHouse: Record<string, Record<string, BilingualValue>>;
   lalKitabFixedLord: Record<string, string[]>;
+  /** One practical "safe behaviour" tip per graha, from the end of each
+   * Lal Kitab house-part (भाग २–१०). */
+  lalKitabSafetyTips: Record<string, BilingualValue>;
+  /** 2- and 3-graha Lal Kitab conjunction effects (भाग ११). */
+  lalKitabYuti: BhavaReferenceLalKitabYuti[];
+  /** Chart-independent Lal Kitab ground rules (भाग १) — not house-specific. */
+  lalKitabBasics: BilingualValue[];
+  /** भाग १२: traditional debt-view (ऋण-विचार) rules. */
+  lalKitabRinVichar: BilingualValue[];
+  /** भाग १३: annual chart (वर्षफल) rules. */
+  lalKitabVarshaphal: BilingualValue[];
+  /** भाग १४: traditional health signals — not a diagnosis. */
+  lalKitabHealthSignals: BilingualValue[];
+  /** भाग १५: wealth, prosperity and vastu guidance. */
+  lalKitabWealthVastu: BilingualValue[];
   /** Keyed by grahas sorted + joined with "+", e.g. "jupiter+venus". */
   grahaYuti2: Record<string, BhavaReferenceYuti>;
   grahaYuti3: Record<string, BhavaReferenceYuti>;
@@ -2153,7 +2176,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "3";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "4";
 
 /** Static graha/bhava reference content — same for every chart. Also folded
  * into `/kundali/detail` (as `bhavaReference`) for callers already fetching
