@@ -596,7 +596,7 @@ function BhavaDetailBody({
                           <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
                             {bhaveshSupplementary.shloka}
                           </p>
-                          {bhaveshSupplementary.iast && (
+                          {bhaveshSupplementary.iast && lang === "en" && (
                             <p className="mt-0.5 text-sm italic text-muted-foreground">{bhaveshSupplementary.iast}</p>
                           )}
                           <p className="mt-1 text-sm leading-relaxed">
