@@ -2300,7 +2300,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "10";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "11";
 
 /** Static graha/bhava reference content — same for every chart, fetched once
  * per session and cached by React Query / the CDN rather than being embedded
