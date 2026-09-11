@@ -70,6 +70,15 @@ export const tokenStore = {
   },
 };
 
+/** True as soon as a token is on disk, synchronously — before `apiMe()` has
+ * had a chance to confirm it's still valid. Lets a page start a request that
+ * needs "probably signed in" (e.g. warming the profile list) in parallel with
+ * the auth check instead of waiting on it, without changing what happens once
+ * that check resolves. */
+export function hasStoredSession(): boolean {
+  return Boolean(tokenStore.access || tokenStore.refresh);
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
