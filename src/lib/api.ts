@@ -2302,10 +2302,9 @@ export interface BhavaReferencePayload {
 export const BHAVA_REFERENCE_VERSION =
   import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "10";
 
-/** Static graha/bhava reference content — same for every chart. Also folded
- * into `/kundali/detail` (as `bhavaReference`) for callers already fetching
- * the full chart; this standalone route is for callers that aren't (e.g. the
- * panchanga transit D1 chart). */
+/** Static graha/bhava reference content — same for every chart, fetched once
+ * per session and cached by React Query / the CDN rather than being embedded
+ * in every `/kundali/detail` response. */
 export function fetchBhavaReference(): Promise<BhavaReferencePayload> {
   return get<BhavaReferencePayload>(
     `/kundali/reference/bhava?v=${BHAVA_REFERENCE_VERSION}`,
@@ -2433,7 +2432,6 @@ export interface KundaliDetailResponse {
   ayanamsha: string;
   location?: Record<string, unknown>;
   birth_instant: string;
-  bhavaReference?: BhavaReferencePayload;
 }
 
 export const kundaliDetailKeys = {

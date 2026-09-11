@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -28,29 +28,63 @@ import {
 } from "@/lib/panchanga-format";
 import { getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
 import { resolveTimeZone } from "@/lib/zoned-time";
+// DivisionalChartCompare stays a static import: it belongs to the default
+// landing tab (kundali-overview), so it should arrive with the route chunk
+// rather than costing that first view an extra chunk fetch. Every other
+// section below is a nav tab a user may never open, so each is its own
+// React.lazy chunk, fetched only when that section is actually shown.
 import { DivisionalChartCompare } from "@/components/kundali/DivisionalChartCompare";
-import { GrahaAstroTable, type GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
-import { UpagrahaTable } from "@/components/kundali/UpagrahaTable";
-import { YogaList } from "@/components/kundali/YogaList";
-import {
-  YogaReferenceCatalog,
-  ENGINE_KEY_TO_REF_ID,
-} from "@/components/kundali/YogaReferenceCatalog";
-import { DashaSystemPanel } from "@/components/kundali/DashaSystemPanel";
-import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
-import { ShadbalaCard } from "@/components/kundali/ShadbalaCard";
-import { BhavaBalaCard } from "@/components/kundali/BhavaBalaCard";
-import { JanmaPhalaTables } from "@/components/kundali/JanmaPhalaTables";
+import type { GrahaAstroPoint } from "@/components/kundali/GrahaAstroTable";
 import { d1AllJanmaPhalaBhavas } from "@/lib/bhava";
-import { VimshopakaCard } from "@/components/kundali/VimshopakaCard";
-import { AshtakavargaCard } from "@/components/kundali/AshtakavargaCard";
-import { KundaliReport } from "@/components/kundali/KundaliReport";
-import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
+import { ENGINE_KEY_TO_REF_ID } from "@/lib/kundali/yoga-reference-map";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { formatGhadiPalaVipala } from "@/lib/birth-panchanga-meta";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
+import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
+
+const GrahaAstroTable = lazy(() =>
+  import("@/components/kundali/GrahaAstroTable").then((m) => ({ default: m.GrahaAstroTable })),
+);
+const UpagrahaTable = lazy(() =>
+  import("@/components/kundali/UpagrahaTable").then((m) => ({ default: m.UpagrahaTable })),
+);
+const YogaList = lazy(() =>
+  import("@/components/kundali/YogaList").then((m) => ({ default: m.YogaList })),
+);
+const YogaReferenceCatalog = lazy(() =>
+  import("@/components/kundali/YogaReferenceCatalog").then((m) => ({
+    default: m.YogaReferenceCatalog,
+  })),
+);
+const DashaSystemPanel = lazy(() =>
+  import("@/components/kundali/DashaSystemPanel").then((m) => ({ default: m.DashaSystemPanel })),
+);
+const ShadbalaCard = lazy(() =>
+  import("@/components/kundali/ShadbalaCard").then((m) => ({ default: m.ShadbalaCard })),
+);
+const BhavaBalaCard = lazy(() =>
+  import("@/components/kundali/BhavaBalaCard").then((m) => ({ default: m.BhavaBalaCard })),
+);
+const JanmaPhalaTables = lazy(() =>
+  import("@/components/kundali/JanmaPhalaTables").then((m) => ({ default: m.JanmaPhalaTables })),
+);
+const VimshopakaCard = lazy(() => import("@/components/kundali/VimshopakaCard"));
+const AshtakavargaCard = lazy(() =>
+  import("@/components/kundali/AshtakavargaCard").then((m) => ({ default: m.AshtakavargaCard })),
+);
+const KundaliReport = lazy(() => import("@/components/kundali/KundaliReport"));
+const ShantiVidhiPanel = lazy(() => import("@/components/kundali/ShantiVidhiPanel"));
+
+/** Fallback for a lazy section chunk while it loads. */
+function SectionLoading() {
+  return (
+    <div className="flex items-center justify-center py-16 text-sm">
+      <Clock className="mr-2 h-4 w-4 animate-pulse" />
+    </div>
+  );
+}
 
 function DetailTraitRow({ label, value }: { label: string; value: string }) {
   return (
@@ -549,20 +583,22 @@ export function KundaliView({
       {showSection("kundali-graha") && d1Rows.length > 0 && (
         <div id="kundali-graha" className="scroll-mt-24">
           <PanchangaSection titleNe="ग्रह विवरण" titleEn="Graha Details">
-            <GrahaAstroTable
-              planets={astroPlanets}
-              lagna={astroLagna}
-              d1Rows={d1Rows}
-              combustion={detail.combustion}
-            />
-            {detail.upagrahas.length > 0 && (
-              <div className="border-t border-border">
-                <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider">
-                  {t("kundali.upagraha")}
-                </p>
-                <UpagrahaTable upagrahas={detail.upagrahas} />
-              </div>
-            )}
+            <Suspense fallback={<SectionLoading />}>
+              <GrahaAstroTable
+                planets={astroPlanets}
+                lagna={astroLagna}
+                d1Rows={d1Rows}
+                combustion={detail.combustion}
+              />
+              {detail.upagrahas.length > 0 && (
+                <div className="border-t border-border">
+                  <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider">
+                    {t("kundali.upagraha")}
+                  </p>
+                  <UpagrahaTable upagrahas={detail.upagrahas} />
+                </div>
+              )}
+            </Suspense>
           </PanchangaSection>
         </div>
       )}
@@ -573,10 +609,12 @@ export function KundaliView({
       {showSection("kundali-yoga") && (
         <div id="kundali-yoga" className="scroll-mt-24 space-y-6">
           <PanchangaSection titleNe="कुण्डली योग" titleEn="Kundali Yoga">
-            {detail.yogas.some((y) => y.present) && <YogaList yogas={detail.yogas} />}
-            <div className="px-3.5 pb-3.5">
-              <YogaReferenceCatalog excludeIds={presentRefIds} />
-            </div>
+            <Suspense fallback={<SectionLoading />}>
+              {detail.yogas.some((y) => y.present) && <YogaList yogas={detail.yogas} />}
+              <div className="px-3.5 pb-3.5">
+                <YogaReferenceCatalog excludeIds={presentRefIds} />
+              </div>
+            </Suspense>
           </PanchangaSection>
           <KundaliYogaSources />
         </div>
@@ -586,12 +624,14 @@ export function KundaliView({
         <div id="kundali-dasha" className="scroll-mt-24">
         <PanchangaSection titleNe="दशा" titleEn="Dasha">
           <div className="p-4">
-            <DashaSystemPanel
-              vimshottari={dasha}
-              tribhagi={tribhagiDasha}
-              yogini={yoginiDasha}
-              timeZone={effectiveTimezone}
-            />
+            <Suspense fallback={<SectionLoading />}>
+              <DashaSystemPanel
+                vimshottari={dasha}
+                tribhagi={tribhagiDasha}
+                yogini={yoginiDasha}
+                timeZone={effectiveTimezone}
+              />
+            </Suspense>
           </div>
         </PanchangaSection>
         </div>
@@ -599,11 +639,13 @@ export function KundaliView({
 
       {showSection("kundali-shadbala") && (
         <div id="kundali-shadbala" className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
-          <ShadbalaCard
-            data={detail.shadbala}
-            yuddha={detail.yuddha}
-            bhavaBala={detail.bhavaBala}
-          />
+          <Suspense fallback={<SectionLoading />}>
+            <ShadbalaCard
+              data={detail.shadbala}
+              yuddha={detail.yuddha}
+              bhavaBala={detail.bhavaBala}
+            />
+          </Suspense>
         </div>
       )}
 
@@ -612,18 +654,20 @@ export function KundaliView({
           id="kundali-bhava-bala"
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
-          {detail.bhavaBala ? (
-            <BhavaBalaCard data={detail.bhavaBala} />
-          ) : (
-            <p className="py-8 text-center text-sm">
-              {t("kundali.section_unavailable")}
-            </p>
-          )}
-          <JanmaPhalaTables
-            tab={janmaPhalaTab}
-            onTabChange={setJanmaPhalaTab}
-            chartBhavas={janmaPhalaPlanetBhavas}
-          />
+          <Suspense fallback={<SectionLoading />}>
+            {detail.bhavaBala ? (
+              <BhavaBalaCard data={detail.bhavaBala} />
+            ) : (
+              <p className="py-8 text-center text-sm">
+                {t("kundali.section_unavailable")}
+              </p>
+            )}
+            <JanmaPhalaTables
+              tab={janmaPhalaTab}
+              onTabChange={setJanmaPhalaTab}
+              chartBhavas={janmaPhalaPlanetBhavas}
+            />
+          </Suspense>
         </div>
       )}
 
@@ -632,13 +676,15 @@ export function KundaliView({
           id="kundali-ashtakavarga"
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
-          {detail.ashtakavarga ? (
-            <AshtakavargaCard data={detail.ashtakavarga} />
-          ) : (
-            <p className="py-8 text-center text-sm">
-              {t("kundali.section_unavailable")}
-            </p>
-          )}
+          <Suspense fallback={<SectionLoading />}>
+            {detail.ashtakavarga ? (
+              <AshtakavargaCard data={detail.ashtakavarga} />
+            ) : (
+              <p className="py-8 text-center text-sm">
+                {t("kundali.section_unavailable")}
+              </p>
+            )}
+          </Suspense>
         </div>
       )}
 
@@ -647,13 +693,15 @@ export function KundaliView({
           id="kundali-vimshopaka"
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
-          {detail.vimshopaka && detail.vimshopaka.classifications.length > 0 ? (
-            <VimshopakaCard data={detail.vimshopaka} />
-          ) : (
-            <p className="py-8 text-center text-sm">
-              {t("kundali.section_unavailable")}
-            </p>
-          )}
+          <Suspense fallback={<SectionLoading />}>
+            {detail.vimshopaka && detail.vimshopaka.classifications.length > 0 ? (
+              <VimshopakaCard data={detail.vimshopaka} />
+            ) : (
+              <p className="py-8 text-center text-sm">
+                {t("kundali.section_unavailable")}
+              </p>
+            )}
+          </Suspense>
         </div>
       )}
 
@@ -665,11 +713,13 @@ export function KundaliView({
               <Flame className="h-4 w-4 text-secondary" />
               {t("kundali.navagraha_shanti_suggested_from_this_chart_s_dasha_and_")}
             </div>
-            <ShantiVidhiPanel
-              vimshottari={dasha}
-              shadbala={detail.shadbala}
-              isError={isError}
-            />
+            <Suspense fallback={<SectionLoading />}>
+              <ShantiVidhiPanel
+                vimshottari={dasha}
+                shadbala={detail.shadbala}
+                isError={isError}
+              />
+            </Suspense>
           </div>
         </PanchangaSection>
         </div>
@@ -677,13 +727,15 @@ export function KundaliView({
 
       {showSection("kundali-report") && (
       <div id="kundali-report" className="scroll-mt-24">
-      <KundaliReport
-        key={`${instantCacheKey(birthMoment)}|${locationCacheKey(locationParams)}|${ayanamshaMode}`}
-        moment={birthMoment}
-        location={locationParams}
-        ayanamsha={ayanamshaMode}
-        disabled={isLoading || isError}
-      />
+      <Suspense fallback={<SectionLoading />}>
+        <KundaliReport
+          key={`${instantCacheKey(birthMoment)}|${locationCacheKey(locationParams)}|${ayanamshaMode}`}
+          moment={birthMoment}
+          location={locationParams}
+          ayanamsha={ayanamshaMode}
+          disabled={isLoading || isError}
+        />
+      </Suspense>
       </div>
       )}
     </div>

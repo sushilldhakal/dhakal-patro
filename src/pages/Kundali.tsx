@@ -8,9 +8,11 @@ import {
   type KundaliProfilePickerHandle,
 } from "@/components/kundali/KundaliProfilePicker";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasStoredSession } from "@/lib/auth/client";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { PageShell } from "@/components/PageShell";
 import { preloadPanchangaRoute } from "@/lib/panchanga-route-preload";
+import { useProfilesQuery } from "@/lib/kundali/profiles-query";
 import { useRouteLoading } from "@/lib/route-loading";
 
 export function Kundali() {
@@ -25,6 +27,12 @@ export function Kundali() {
   };
 
   const pickerRef = useRef<KundaliProfilePickerHandle>(null);
+
+  // Warm the shared profiles cache as soon as a token is on disk, in parallel
+  // with the auth check below, instead of waiting for `isAuthenticated` to
+  // resolve first. KundaliProfilePicker queries the same key and hits this
+  // cache once auth clears, rather than starting its own fetch from scratch.
+  useProfilesQuery(hasStoredSession());
 
   useRouteLoading(authLoading);
 

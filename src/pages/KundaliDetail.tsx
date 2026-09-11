@@ -13,7 +13,7 @@ import {
   Star,
   User,
 } from "lucide-react";
-import { type Profile } from "@/lib/auth/client";
+import { hasStoredSession, type Profile } from "@/lib/auth/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { PROFILES_QUERY_KEY, useProfilesQuery } from "@/lib/kundali/profiles-query";
 import { AYANAMSHA_MODES, type AyanamshaMode } from "@/lib/ayanamsha";
@@ -107,11 +107,15 @@ export function KundaliDetail() {
     navigate({ to: ".", hash: id, replace: true });
   };
 
+  // Gated on a stored token rather than the resolved `isAuthenticated`, so this
+  // fires in parallel with AuthContext's apiMe() call instead of waiting for it
+  // — collapsing what was a 3-hop waterfall (auth check -> profiles -> chart)
+  // into 2 parallel round trips followed by the chart fetch.
   const {
     data: profiles,
     isLoading,
     isError,
-  } = useProfilesQuery(isAuthenticated);
+  } = useProfilesQuery(hasStoredSession());
 
   const profile = useMemo<Profile | undefined>(
     () => profiles?.find((p) => p.id === profileId),

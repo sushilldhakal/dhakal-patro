@@ -26,6 +26,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Canvas, useThree } from "@react-three/fiber";
+import { DefaultLoadingManager } from "three";
 import {
   CaseSensitive,
   ChevronDown,
@@ -109,6 +110,7 @@ import {
 } from "@/components/sky3d/AakashGocharScene";
 import { HIPS_ATTRIBUTION, readHipsDebugSnapshot, type HipsDebugSnapshot } from "@/lib/sky3d/hips";
 import { CompassControl } from "@/components/sky3d/CompassControl";
+import { VedicPatroLoader } from "@/components/VedicPatroLoader";
 import compassNeedle from "@/assets/compass.svg?raw";
 import { useDeviceOrientation, type OrientationSample } from "@/lib/sky3d/device-orientation";
 
@@ -553,6 +555,32 @@ export function AakashGocharSky({
   });
 
   const [mode, setMode] = useState<SkyMode>("space");
+
+  /** True while the scene's `useLoader` textures (planet/star/milky-way/toon
+   * earth JPGs+PNGs, several MB combined) are still in flight. The Suspense
+   * boundary around `<Scene>` has a `null` fallback — R3F can't render DOM
+   * inside the WebGL tree — so this drives a DOM overlay instead, tracked via
+   * the shared `THREE.DefaultLoadingManager` every `useLoader` texture load
+   * reports to, rather than leaving the canvas a flat, unexplained color for
+   * as long as those assets take to fetch and decode. */
+  const [texturesLoading, setTexturesLoading] = useState(true);
+  useEffect(() => {
+    const manager = DefaultLoadingManager;
+    const prevOnStart = manager.onStart;
+    const prevOnLoad = manager.onLoad;
+    manager.onStart = (...args) => {
+      setTexturesLoading(true);
+      prevOnStart?.(...args);
+    };
+    manager.onLoad = () => {
+      setTexturesLoading(false);
+      prevOnLoad?.();
+    };
+    return () => {
+      manager.onStart = prevOnStart;
+      manager.onLoad = prevOnLoad;
+    };
+  }, []);
 
   /** Captured once at Canvas creation, so AR mode can clear to transparent
       instead of {@link CANVAS_BG} and let the camera behind it show through. */
@@ -1892,6 +1920,15 @@ export function AakashGocharSky({
             />
           </Suspense>
         </Canvas>
+
+        {texturesLoading ? (
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            style={{ backgroundColor: CANVAS_BG }}
+          >
+            <VedicPatroLoader />
+          </div>
+        ) : null}
 
         {/* Step-14 tile HUD — temporary, `?hipsdebug` only; see
             {@link HipsDebugHud}. */}
