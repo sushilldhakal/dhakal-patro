@@ -1427,6 +1427,15 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/**
+ * Its own manager, never the shared `THREE.DefaultLoadingManager` — a
+ * nebula photo loads on demand whenever the reader zooms in on one, long
+ * after the scene's own first-load textures are done, and reporting to the
+ * default manager made a global "is anything loading" overlay elsewhere in
+ * the app (see `AakashGocharSky.tsx`) flash back in on every such zoom.
+ */
+const nebulaLoadingManager = new THREE.LoadingManager();
+
 function loadNebulaTexture(entry: {
   url: string;
   material: THREE.SpriteMaterial;
@@ -1436,7 +1445,7 @@ function loadNebulaTexture(entry: {
   if (nebulaLoadsInFlight >= NEBULA_MAX_CONCURRENT_LOADS) return;
   entry.loadState = "loading";
   nebulaLoadsInFlight += 1;
-  new THREE.TextureLoader().load(
+  new THREE.TextureLoader(nebulaLoadingManager).load(
     entry.url,
     (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace;
