@@ -177,6 +177,71 @@ function GrahaKarakatvaCard({
       </div>
 
       <PhaladeepikaSection grahaKey={grahaKey} house={house} reference={reference} lang={lang} digits={digits} />
+      <GrahaBhaveshPhalaSection grahaKey={grahaKey} house={house} reference={reference} lang={lang} />
+    </div>
+  );
+}
+
+/** भावेश फल / भावेश फलम् — treats this graha as owning and occupying this
+ * house at once (a simpler framing than the real house-lordship
+ * `bhaveshPhala` shown later in the "भावेश सम्बन्ध" section), so labelled
+ * and shown separately rather than merged with it. Only present for
+ * grahas covered by the ग्रह-फलादेश batch so far. */
+function GrahaBhaveshPhalaSection({
+  grahaKey,
+  house,
+  reference,
+  lang,
+}: {
+  grahaKey: string;
+  house: number;
+  reference: BhavaReferencePayload;
+  lang: "ne" | "en";
+}) {
+  const houseKey = String(house);
+  const primary = reference.grahaBhaveshPhala?.[grahaKey]?.[houseKey];
+  const supplementary = reference.grahaBhaveshPhalaSupplementary?.[grahaKey]?.[houseKey];
+  if (!primary && !supplementary) return null;
+
+  return (
+    <div className="border-l-2 border-secondary/40 pl-3">
+      <p className="text-sm font-semibold text-foreground">
+        🏠 {bilingualText(lang, "भावेश फल", "Lordship result (as occupant)")}
+      </p>
+      {primary && (
+        <>
+          <p className="mt-1.5 text-sm font-semibold text-foreground">
+            📜 {bilingualText(lang, primary.shlokaSourceNe, primary.shlokaSourceEn)}
+          </p>
+          <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">{primary.shloka}</p>
+          <p className="mt-1.5 text-sm leading-relaxed">
+            <span className="font-semibold text-foreground">{bilingualText(lang, "अर्थ:", "Meaning:")}</span>{" "}
+            {bilingualText(lang, primary.meaningNe, primary.meaningEn)}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed">
+            <span className="font-semibold text-foreground">{bilingualText(lang, "व्याख्या:", "Explanation:")}</span>{" "}
+            {bilingualText(lang, primary.explanationNe, primary.explanationEn)}
+          </p>
+        </>
+      )}
+      {supplementary && (
+        <>
+          <p className="mt-2.5 text-sm font-semibold text-foreground">
+            🏠 {bilingualText(lang, "भावेश फलम्", "Lordship result (supplementary)")}
+          </p>
+          <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">{supplementary.shloka}</p>
+          <p className="mt-1.5 text-sm leading-relaxed">
+            <span className="font-semibold text-foreground">{bilingualText(lang, "अर्थ:", "Meaning:")}</span>{" "}
+            {bilingualText(lang, supplementary.meaningNe, supplementary.meaningEn)}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed">
+            <span className="font-semibold text-foreground">
+              {bilingualText(lang, "विस्तृत व्याख्या:", "Detailed explanation:")}
+            </span>{" "}
+            {bilingualText(lang, supplementary.explanationNe, supplementary.explanationEn)}
+          </p>
+        </>
+      )}
     </div>
   );
 }

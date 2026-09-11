@@ -2103,6 +2103,23 @@ export interface BhavaReferenceHouseSaravali {
   rating: BhavaReferenceRating;
 }
 
+/** Graha-specific "भावेश फल"/"भावेश फलम्" content from the same
+ * ग्रह-फलादेश markdown batch as `grahaHouseSaravali` — treats the graha
+ * as owning and occupying house N at once (not real house-lordship), so
+ * kept separate from (never merged into) `bhaveshPhala`/
+ * `bhaveshPhalaSupplementary`, which are keyed by actual house-ownership
+ * pairs shared across every ascendant. Keyed by graha, then house. */
+export interface BhavaReferenceGrahaBhaveshEntry {
+  house: number;
+  shloka: string;
+  shlokaSourceNe: string;
+  shlokaSourceEn: string;
+  meaningNe: string;
+  meaningEn: string;
+  explanationNe: string;
+  explanationEn: string;
+}
+
 /** 2- or 3-graha yuti (conjunction) result — shown when a house has that many occupants. */
 export interface BhavaReferenceYuti {
   grahas: string[];
@@ -2257,6 +2274,10 @@ export interface BhavaReferencePayload {
   bhaveshPhalaSupplementarySource: string;
   grahaKarakatva: Record<string, BhavaReferenceGrahaKarakatva>;
   grahaHouseSaravali: Record<string, Record<string, BhavaReferenceHouseSaravali>>;
+  /** Present only for grahas covered by the ग्रह-फलादेश batch so far
+   * (sun/mars/venus/saturn/ketu). */
+  grahaBhaveshPhala?: Record<string, Record<string, BhavaReferenceGrahaBhaveshEntry>>;
+  grahaBhaveshPhalaSupplementary?: Record<string, Record<string, BhavaReferenceGrahaBhaveshEntry>>;
   ratingLabel: Record<BhavaReferenceRating, BilingualValue>;
   lalKitabHouse: Record<string, Record<string, BilingualValue>>;
   lalKitabFixedLord: Record<string, string[]>;
@@ -2300,7 +2321,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "11";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "12";
 
 /** Static graha/bhava reference content — same for every chart, fetched once
  * per session and cached by React Query / the CDN rather than being embedded
