@@ -698,12 +698,23 @@ export function hipsTileNeedsLoad(entry: HipsTileEntry): boolean {
   );
 }
 
+/**
+ * Its own manager, never the shared `THREE.DefaultLoadingManager` — tiles
+ * stream in continuously as the view pans and zooms, long after the scene
+ * has finished its initial load. Reporting to the default manager made a
+ * global "is anything loading" overlay elsewhere in the app (see
+ * `AakashGocharSky.tsx`) flash back in on every pinch-zoom, since a fresh
+ * batch of tile fetches looks identical to that manager as the page's own
+ * first-load textures starting over.
+ */
+const hipsLoadingManager = new THREE.LoadingManager();
+
 export function loadHipsTileTexture(entry: HipsTileEntry): void {
   if (!hipsTileNeedsLoad(entry)) return;
   if (hipsLoadsInFlight >= HIPS_MAX_CONCURRENT_LOADS) return;
   entry.state = "loading";
   hipsLoadsInFlight += 1;
-  new THREE.TextureLoader().load(
+  new THREE.TextureLoader(hipsLoadingManager).load(
     hipsTilePath(entry.order, entry.pix),
     (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace;
