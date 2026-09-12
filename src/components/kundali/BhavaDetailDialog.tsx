@@ -8,7 +8,11 @@ import { useMediaQuery, BELOW_MD_MQ } from "@/hooks/use-media-query";
 import type { BhavaHouse } from "@/lib/bhava";
 import { houseBadge, formatHouseBadge, drishtiTargetHouses } from "@/lib/bhava";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
-import type { BhavaReferencePayload } from "@/lib/api";
+import type {
+  BhavaReferencePayload,
+  BhavaReferenceBhaveshEntry,
+  BhavaReferenceBhaveshSupplementaryEntry,
+} from "@/lib/api";
 import {
   HOUSE_ORDINAL_NE,
   HOUSE_ORDINAL_EN,
@@ -93,12 +97,27 @@ function GrahaKarakatvaCard({
   reference,
   lang,
   digits,
+  lordKey,
+  lordHouse,
+  lordTitle,
+  bhaveshEntry,
+  bhaveshSupplementary,
 }: {
   grahaKey: string;
   house: number;
   reference: BhavaReferencePayload;
   lang: "ne" | "en";
   digits: (v: string | number) => string;
+  /** This house's real (chart-specific) lord and where that lord actually
+   * sits — same values the "भावेश सम्बन्ध" section below uses, shown here
+   * too per-occupant so it's visible without scrolling past the yuti
+   * section. Not specific to `grahaKey`: every occupant of this house
+   * sees the same lord-placement fact. */
+  lordKey: string;
+  lordHouse: number | undefined;
+  lordTitle: string;
+  bhaveshEntry: BhavaReferenceBhaveshEntry | undefined;
+  bhaveshSupplementary: BhavaReferenceBhaveshSupplementaryEntry | undefined;
 }) {
   const k = reference.grahaKarakatva[grahaKey];
   if (!k) return null;
@@ -177,70 +196,94 @@ function GrahaKarakatvaCard({
       </div>
 
       <PhaladeepikaSection grahaKey={grahaKey} house={house} reference={reference} lang={lang} digits={digits} />
-      <GrahaBhaveshPhalaSection grahaKey={grahaKey} house={house} reference={reference} lang={lang} />
+      {lordHouse != null && (
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            👑 {bilingualText(lang, "भावेश फल", "Lord placement")}
+          </p>
+          <p className="mt-1 text-sm">
+            <span className="font-semibold text-foreground">{lordTitle}</span>{" "}
+            <span className="font-semibold text-secondary">{grahaName(lordKey, lang)}</span> →{" "}
+            {bilingualText(lang, `${digits(lordHouse)}औँ भाव`, `house ${digits(lordHouse)}`)}
+          </p>
+          <LordPlacementBlock
+            reference={reference}
+            lang={lang}
+            bhaveshEntry={bhaveshEntry}
+            bhaveshSupplementary={bhaveshSupplementary}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-/** भावेश फल / भावेश फलम् — treats this graha as owning and occupying this
- * house at once (a simpler framing than the real house-lordship
- * `bhaveshPhala` shown later in the "भावेश सम्बन्ध" section), so labelled
- * and shown separately rather than merged with it. Only present for
- * grahas covered by the ग्रह-फलादेश batch so far. */
-function GrahaBhaveshPhalaSection({
-  grahaKey,
-  house,
+/** The shloka/अर्थ/स्रोत content for a real (chart-specific) house-lord
+ * placement — shared by the "ग्रह फलादेश" per-occupant card above and the
+ * "भावेश सम्बन्ध" section below, so the two never drift apart. */
+function LordPlacementBlock({
   reference,
   lang,
+  bhaveshEntry,
+  bhaveshSupplementary,
 }: {
-  grahaKey: string;
-  house: number;
   reference: BhavaReferencePayload;
   lang: "ne" | "en";
+  bhaveshEntry: BhavaReferenceBhaveshEntry | undefined;
+  bhaveshSupplementary: BhavaReferenceBhaveshSupplementaryEntry | undefined;
 }) {
-  const houseKey = String(house);
-  const primary = reference.grahaBhaveshPhala?.[grahaKey]?.[houseKey];
-  const supplementary = reference.grahaBhaveshPhalaSupplementary?.[grahaKey]?.[houseKey];
-  if (!primary && !supplementary) return null;
-
   return (
-    <div className="border-l-2 border-secondary/40 pl-3">
-      <p className="text-sm font-semibold text-foreground">
-        🏠 {bilingualText(lang, "भावेश फल", "Lordship result (as occupant)")}
-      </p>
-      {primary && (
+    <div className="mt-2 border-l-2 border-secondary/40 pl-3">
+      {bhaveshEntry ? (
         <>
-          <p className="mt-1.5 text-sm font-semibold text-foreground">
-            📜 {bilingualText(lang, primary.shlokaSourceNe, primary.shlokaSourceEn)}
-          </p>
-          <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">{primary.shloka}</p>
-          <p className="mt-1.5 text-sm leading-relaxed">
-            <span className="font-semibold text-foreground">{bilingualText(lang, "अर्थ:", "Meaning:")}</span>{" "}
-            {bilingualText(lang, primary.meaningNe, primary.meaningEn)}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed">
-            <span className="font-semibold text-foreground">{bilingualText(lang, "व्याख्या:", "Explanation:")}</span>{" "}
-            {bilingualText(lang, primary.explanationNe, primary.explanationEn)}
-          </p>
+          {bhaveshEntry.shloka && (
+            <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+              {bhaveshEntry.shloka}
+            </p>
+          )}
+          <p className="mt-1.5 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
         </>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {bilingualText(
+            lang,
+            "यो विशेष स्थान-सम्बन्धको लागि श्लोक-व्याख्या अहिले उपलब्ध छैन — यो स्थान-सम्बन्ध मात्र देखाइएको हो।",
+            "No shloka commentary is available for this specific placement yet — only the placement fact is shown.",
+          )}
+        </p>
       )}
-      {supplementary && (
-        <>
-          <p className="mt-2.5 text-sm font-semibold text-foreground">
-            🏠 {bilingualText(lang, "भावेश फलम्", "Lordship result (supplementary)")}
+      <p className="mt-2 text-sm text-muted-foreground">
+        {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
+      </p>
+      {bhaveshSupplementary && (
+        <div className="mt-3 border-l-2 border-secondary/40 pl-3">
+          <p className="text-sm font-semibold text-foreground">
+            📜 {bilingualText(lang, "थप स्रोत", "Additional source")}
           </p>
-          <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">{supplementary.shloka}</p>
-          <p className="mt-1.5 text-sm leading-relaxed">
-            <span className="font-semibold text-foreground">{bilingualText(lang, "अर्थ:", "Meaning:")}</span>{" "}
-            {bilingualText(lang, supplementary.meaningNe, supplementary.meaningEn)}
-          </p>
+          {bhaveshSupplementary.shloka && (
+            <>
+              <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+                {bhaveshSupplementary.shloka}
+              </p>
+              {bhaveshSupplementary.iast && lang === "en" && (
+                <p className="mt-0.5 text-sm italic text-muted-foreground">{bhaveshSupplementary.iast}</p>
+              )}
+              <p className="mt-1 text-sm leading-relaxed">
+                {bilingualText(lang, bhaveshSupplementary.translationNe, bhaveshSupplementary.translationEn)}
+              </p>
+            </>
+          )}
           <p className="mt-1 text-sm leading-relaxed">
-            <span className="font-semibold text-foreground">
-              {bilingualText(lang, "विस्तृत व्याख्या:", "Detailed explanation:")}
-            </span>{" "}
-            {bilingualText(lang, supplementary.explanationNe, supplementary.explanationEn)}
+            {bilingualText(lang, bhaveshSupplementary.ne, bhaveshSupplementary.en)}
           </p>
-        </>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {bilingualText(
+              lang,
+              `स्रोत: ${reference.bhaveshPhalaSupplementarySource}`,
+              `Source: ${reference.bhaveshPhalaSupplementarySource}`,
+            )}
+          </p>
+        </div>
       )}
     </div>
   );
@@ -592,7 +635,18 @@ function BhavaDetailBody({
                         {bilingualText(lang, "श्लोक तथा स्रोत हेर्नुहोस्", "View shloka & source")}
                       </AccordionTrigger>
                       <AccordionContent>
-                        <GrahaKarakatvaCard grahaKey={p.key} house={house.house} reference={reference} lang={lang} digits={digits} />
+                        <GrahaKarakatvaCard
+                          grahaKey={p.key}
+                          house={house.house}
+                          reference={reference}
+                          lang={lang}
+                          digits={digits}
+                          lordKey={lordKey}
+                          lordHouse={lordHouse}
+                          lordTitle={lordTitle}
+                          bhaveshEntry={bhaveshEntry}
+                          bhaveshSupplementary={bhaveshSupplementary}
+                        />
                       </AccordionContent>
                     </AccordionItem>
                   );
@@ -705,60 +759,13 @@ function BhavaDetailBody({
                 )}
               </p>
             )}
-            {lordHouse && (
-              <div className="mt-2 border-l-2 border-secondary/40 pl-3">
-                {bhaveshEntry ? (
-                  <>
-                    {bhaveshEntry.shloka && (
-                      <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-                        {bhaveshEntry.shloka}
-                      </p>
-                    )}
-                    <p className="mt-1.5 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {bilingualText(
-                      lang,
-                      "यो विशेष स्थान-सम्बन्धको लागि श्लोक-व्याख्या अहिले उपलब्ध छैन — यो स्थान-सम्बन्ध मात्र देखाइएको हो।",
-                      "No shloka commentary is available for this specific placement yet — only the placement fact is shown.",
-                    )}
-                  </p>
-                )}
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
-                </p>
-                {bhaveshSupplementary && (
-                  <div className="mt-3 border-l-2 border-secondary/40 pl-3">
-                    <p className="text-sm font-semibold text-foreground">
-                      📜 {bilingualText(lang, "थप स्रोत", "Additional source")}
-                    </p>
-                    {bhaveshSupplementary.shloka && (
-                      <>
-                        <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-                          {bhaveshSupplementary.shloka}
-                        </p>
-                        {bhaveshSupplementary.iast && lang === "en" && (
-                          <p className="mt-0.5 text-sm italic text-muted-foreground">{bhaveshSupplementary.iast}</p>
-                        )}
-                        <p className="mt-1 text-sm leading-relaxed">
-                          {bilingualText(lang, bhaveshSupplementary.translationNe, bhaveshSupplementary.translationEn)}
-                        </p>
-                      </>
-                    )}
-                    <p className="mt-1 text-sm leading-relaxed">
-                      {bilingualText(lang, bhaveshSupplementary.ne, bhaveshSupplementary.en)}
-                    </p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {bilingualText(
-                        lang,
-                        `स्रोत: ${reference.bhaveshPhalaSupplementarySource}`,
-                        `Source: ${reference.bhaveshPhalaSupplementarySource}`,
-                      )}
-                    </p>
-                  </div>
-                )}
-              </div>
+            {lordHouse != null && (
+              <LordPlacementBlock
+                reference={reference}
+                lang={lang}
+                bhaveshEntry={bhaveshEntry}
+                bhaveshSupplementary={bhaveshSupplementary}
+              />
             )}
           </TopSection>
 
