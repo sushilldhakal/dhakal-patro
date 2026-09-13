@@ -505,48 +505,6 @@ function BhavaDetailBody({
           )}
         </TitleWrap>
         <p className="text-sm text-muted-foreground">{themes.join(" · ")}</p>
-        <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
-          <span>
-            <span className="font-semibold text-foreground">
-              {digits(house.rashi)} {formatRashiByNumber(house.rashi, lang)}
-            </span>{" "}
-            {bilingualText(lang, "राशि", "sign")}
-          </span>
-          <span className="text-border">·</span>
-          <span>
-            {bilingualText(lang, "स्वामी", "Lord")}{" "}
-            <span className="font-semibold text-secondary">{grahaName(lordKey, lang)}</span>
-          </span>
-          {badge && (
-            <>
-              <span className="text-border">·</span>
-              <span className="text-muted-foreground">{formatHouseBadge(badge, lang)}</span>
-            </>
-          )}
-          <span
-            className={cn(
-              "ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-sm font-semibold leading-none",
-              verdictCls,
-            )}
-          >
-            {verdictLabel}
-          </span>
-        </div>
-        <div className="pt-1">
-          <p className="text-sm leading-relaxed">{bilingualText(lang, info.summaryNe, info.summaryEn)}</p>
-          <p className="mt-2 text-sm leading-relaxed">
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-              {bilingualText(lang, "शुभ ग्रह:", "Benefics:")}
-            </span>{" "}
-            {bilingualText(lang, info.beneficEffectNe, info.beneficEffectEn)}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed">
-            <span className="font-semibold text-destructive">
-              {bilingualText(lang, "पापग्रह:", "Malefics:")}
-            </span>{" "}
-            {bilingualText(lang, info.maleficEffectNe, info.maleficEffectEn)}
-          </p>
-        </div>
       </HeaderWrap>
 
       {/* Tabs replace the old single long stacked-accordion list — only one
@@ -575,12 +533,32 @@ function BhavaDetailBody({
         {tab === "summary" && (
           <div className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
-              {/* यस भावमा — occupying grahas, condensed */}
+              {/* यस भावमा — occupying grahas, condensed; leads with the chart's
+                  actual sign/lord/type since that moved here out of the header */}
               <Block
                 icon="🪐"
                 title={bilingualText(lang, "यस भावमा", "Occupants")}
                 right={occupants.length === 0 ? bilingualText(lang, "रिक्त", "Empty") : undefined}
               >
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span>
+                    <span className="font-semibold text-foreground">
+                      {digits(house.rashi)} {formatRashiByNumber(house.rashi, lang)}
+                    </span>{" "}
+                    {bilingualText(lang, "राशि", "sign")}
+                  </span>
+                  <span className="text-border">·</span>
+                  <span>
+                    {bilingualText(lang, "स्वामी", "Lord")}{" "}
+                    <span className="font-semibold text-secondary">{grahaName(lordKey, lang)}</span>
+                  </span>
+                  {badge && (
+                    <>
+                      <span className="text-border">·</span>
+                      <span className="text-muted-foreground">{formatHouseBadge(badge, lang)}</span>
+                    </>
+                  )}
+                </div>
                 {occupants.length > 0 ? (
                   <div className="space-y-1.5">
                     {occupants.map((p) => {
@@ -714,25 +692,6 @@ function BhavaDetailBody({
               </Block>
             )}
 
-            {/* मुख्य संकेत — which occupying grahas influence each house theme */}
-            <Block icon="🔎" title={bilingualText(lang, "मुख्य संकेत", "Key signals")}>
-              <div className="space-y-1.5">
-                {themes.map((theme) => (
-                  <div key={theme} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="text-foreground">{theme}</span>
-                    {occupants.length > 0 ? (
-                      <span className="text-muted-foreground">
-                        ●{" "}
-                        <span className="font-medium text-foreground">{joinNames(occupantKeys, lang)}</span>{" "}
-                        {bilingualText(lang, "कारक", "karaka")}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Block>
           </div>
         )}
 
