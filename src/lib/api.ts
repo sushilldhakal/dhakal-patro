@@ -2117,18 +2117,39 @@ export interface BhavaReferenceGrahaKarakatva {
 
 export type BhavaReferenceRating = "uttam" | "shubh" | "mishrit" | "kamjor";
 
+/** One classical citation (a single grantha's shloka, optionally its own
+ * reading) for a graha-in-house placement — a house can carry more than
+ * one, each from a different source (सारावली, फलदीपिका, होरासार, जातक
+ * पारिजात, ...). Some sources give a per-citation meaning/explanation
+ * (`meaningNe`/`explanationNe` present); others only ever gave one combined
+ * reading across every citation for the house, surfaced instead as the
+ * parent `BhavaReferenceHouseSaravali.summaryNe`/`summaryEn` — in that case
+ * these four fields are absent here. */
+export interface BhavaReferenceHouseSaravaliEntry {
+  shloka: string;
+  shlokaSourceNe: string;
+  shlokaSourceEn: string;
+  meaningNe?: string;
+  meaningEn?: string;
+  explanationNe?: string;
+  explanationEn?: string;
+}
+
 export interface BhavaReferenceHouseSaravali {
   house: number;
   /** Only present on entries sourced from the newer full 12-house table. */
   houseTheme?: string;
-  shloka: string;
-  shlokaSourceNe: string;
-  shlokaSourceEn: string;
-  meaningNe: string;
-  meaningEn: string;
-  explanationNe: string;
-  explanationEn: string;
   rating: BhavaReferenceRating;
+  /** One or more classical citations for this graha-in-house placement —
+   * `rating`/`houseTheme` describe the placement itself, not any one
+   * citation of it, so they live here rather than per-entry. */
+  entries: BhavaReferenceHouseSaravaliEntry[];
+  /** A single reading covering every citation in `entries` together,
+   * instead of one reading per citation — present exactly when none of
+   * `entries[].meaningNe` is (the source gave one unified अर्थ+व्याख्या for
+   * all the shlokas in this house, not a separate one per grantha). */
+  summaryNe?: string;
+  summaryEn?: string;
 }
 
 /** 2- or 3-graha yuti (conjunction) result — shown when a house has that many occupants. */
@@ -2331,7 +2352,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "16";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "19";
 
 /** Static graha/bhava reference content — same for every chart, fetched once
  * per session and cached by React Query / the CDN rather than being embedded

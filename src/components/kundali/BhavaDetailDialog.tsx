@@ -154,7 +154,7 @@ function GrahaKarakatvaCard({
               `${grahaName(grahaKey, lang)} in house ${digits(house)}${house === 1 ? " (Lagna)" : ""}`,
             )}
           </p>
-          {saravali && house !== 4 && (
+          {saravali && (
             <span
               className={cn(
                 "shrink-0 rounded-full border px-2 py-0.5 text-sm font-semibold leading-none",
@@ -166,33 +166,42 @@ function GrahaKarakatvaCard({
           )}
         </div>
 
-        {/* भाव ४ को फल पुनःयाचन/पुनःसृजन हुँदैछ — verified content pending, so this
-            house is force-hidden here regardless of whatever the data holds. */}
-        {house === 4 ? (
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
-          </p>
-        ) : saravali ? (
-          <>
-            <p className="mt-2 text-sm font-semibold text-foreground">
-              📜 {bilingualText(lang, "श्लोक", "Shloka")} — {bilingualText(lang, saravali.shlokaSourceNe, saravali.shlokaSourceEn)}
-            </p>
-            <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">{saravali.shloka}</p>
-            <p className="mt-1.5 text-sm leading-relaxed">
-              <span className="font-semibold text-foreground">{bilingualText(lang, "अर्थ:", "Meaning:")}</span>{" "}
-              {bilingualText(lang, saravali.meaningNe, saravali.meaningEn)}
-            </p>
-            <p className="mt-1 text-sm leading-relaxed">
-              <span className="font-semibold text-foreground">{bilingualText(lang, "व्याख्या:", "Explanation:")}</span>{" "}
-              {bilingualText(lang, saravali.explanationNe, saravali.explanationEn)}
-            </p>
-          </>
+        {saravali ? (
+          /* एक भावमा एकभन्दा बढी ग्रन्थ (सारावली, फलदीपिका, होरासार, जातक पारिजात, ...)
+              उद्धृत हुन सक्छन् — सबै देखाइन्छ, प्रत्येकको आफ्नै श्लोक + ग्रन्थ-सन्दर्भ
+              छुट्टै राखिन्छ। अर्थ/व्याख्या या त प्रत्येक श्लोकसँगै (एउटै अनुच्छेदमा
+              गाभिएर, छुट्टाछुट्टै लेबल नराखी) आउँछ, या स्रोतले एउटै साझा अर्थ दिएको
+              भए `summaryNe`/`summaryEn` मार्फत सबै श्लोकपछि एकपटक मात्र आउँछ। */
+          <div className="space-y-3">
+            {saravali.entries.map((citation, i) => (
+              <div key={i} className={i > 0 ? "border-t border-border/50 pt-2" : undefined}>
+                <p className="text-sm font-semibold text-foreground">
+                  📜 {bilingualText(lang, citation.shlokaSourceNe, citation.shlokaSourceEn)}
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+                  {citation.shloka}
+                </p>
+                {citation.meaningNe && (
+                  <p className="mt-1.5 text-sm leading-relaxed">
+                    {bilingualText(lang, citation.meaningNe, citation.meaningEn ?? citation.meaningNe)}{" "}
+                    {citation.explanationNe &&
+                      bilingualText(lang, citation.explanationNe, citation.explanationEn ?? citation.explanationNe)}
+                  </p>
+                )}
+              </div>
+            ))}
+            {saravali.summaryNe && (
+              <p className="border-t border-border/50 pt-2 text-sm leading-relaxed">
+                {bilingualText(lang, saravali.summaryNe, saravali.summaryEn ?? saravali.summaryNe)}
+              </p>
+            )}
+          </div>
         ) : (
           <p className="mt-1.5 text-sm text-muted-foreground">
             {bilingualText(
               lang,
-              "यो भाव-ग्रह संयोजनको लागि सारावली श्लोक अहिले उपलब्ध छैन।",
-              "No saravali shloka is available for this house-graha combination yet.",
+              "यो भाव-ग्रह संयोजनको लागि शास्त्रीय श्लोक अहिले उपलब्ध छैन।",
+              "No classical shloka is available for this house-graha combination yet.",
             )}
           </p>
         )}
