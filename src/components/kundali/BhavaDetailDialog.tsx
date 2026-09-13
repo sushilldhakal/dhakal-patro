@@ -169,8 +169,9 @@ function GrahaKarakatvaCard({
         {saravali ? (
           /* एक भावमा एकभन्दा बढी ग्रन्थ (सारावली, फलदीपिका, होरासार, जातक पारिजात, ...)
               उद्धृत हुन सक्छन् — सबै देखाइन्छ, प्रत्येकको आफ्नै श्लोक + ग्रन्थ-सन्दर्भ
-              छुट्टै राखिन्छ, तर त्यसको अर्थ र व्याख्या एउटै अनुच्छेदमा गाभिन्छ (छुट्टाछुट्टै
-              लेबल राखिँदैन) ताकि पढ्दा एउटै भावको वर्णन जस्तो लागोस्। */
+              छुट्टै राखिन्छ। अर्थ/व्याख्या या त प्रत्येक श्लोकसँगै (एउटै अनुच्छेदमा
+              गाभिएर, छुट्टाछुट्टै लेबल नराखी) आउँछ, या स्रोतले एउटै साझा अर्थ दिएको
+              भए `summaryNe`/`summaryEn` मार्फत सबै श्लोकपछि एकपटक मात्र आउँछ। */
           <div className="space-y-3">
             {saravali.entries.map((citation, i) => (
               <div key={i} className={i > 0 ? "border-t border-border/50 pt-2" : undefined}>
@@ -180,12 +181,20 @@ function GrahaKarakatvaCard({
                 <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
                   {citation.shloka}
                 </p>
-                <p className="mt-1.5 text-sm leading-relaxed">
-                  {bilingualText(lang, citation.meaningNe, citation.meaningEn)}{" "}
-                  {bilingualText(lang, citation.explanationNe, citation.explanationEn)}
-                </p>
+                {citation.meaningNe && (
+                  <p className="mt-1.5 text-sm leading-relaxed">
+                    {bilingualText(lang, citation.meaningNe, citation.meaningEn ?? citation.meaningNe)}{" "}
+                    {citation.explanationNe &&
+                      bilingualText(lang, citation.explanationNe, citation.explanationEn ?? citation.explanationNe)}
+                  </p>
+                )}
               </div>
             ))}
+            {saravali.summaryNe && (
+              <p className="border-t border-border/50 pt-2 text-sm leading-relaxed">
+                {bilingualText(lang, saravali.summaryNe, saravali.summaryEn ?? saravali.summaryNe)}
+              </p>
+            )}
           </div>
         ) : (
           <p className="mt-1.5 text-sm text-muted-foreground">
