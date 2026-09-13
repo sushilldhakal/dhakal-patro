@@ -17,6 +17,7 @@ import type {
 import {
   HOUSE_ORDINAL_NE,
   HOUSE_ORDINAL_EN,
+  HOUSE_LORD_TITLE_NE,
   computeAspectedBy,
   splitList,
 } from "@/lib/kundali/bhava-detail";
@@ -244,19 +245,15 @@ function LordPlacementBlock({
             </p>
           )}
           <p className="mt-1.5 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
+          </p>
         </>
       ) : (
         <p className="text-sm text-muted-foreground">
-          {bilingualText(
-            lang,
-            "यो विशेष स्थान-सम्बन्धको लागि श्लोक-व्याख्या अहिले उपलब्ध छैन — यो स्थान-सम्बन्ध मात्र देखाइएको हो।",
-            "No shloka commentary is available for this specific placement yet — only the placement fact is shown.",
-          )}
+          🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
         </p>
       )}
-      <p className="mt-2 text-sm text-muted-foreground">
-        {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
-      </p>
       {bhaveshSupplementary && (
         <div className="mt-3 border-l-2 border-secondary/40 pl-3">
           <p className="text-sm font-semibold text-foreground">
@@ -420,6 +417,13 @@ function BhavaDetailBody({
 }) {
   const info = reference.houseInfo[house.house];
   const lordKey = reference.rashiLord[house.rashi];
+  const lordHouse = houses.find((h) => h.planets.some((p) => p.key === lordKey))?.house;
+  // भावेशफल data is emptied server-side pending re-verification (see
+  // GrahaKarakatvaCard's "भावेश फल" mini-section), so these resolve to
+  // `undefined` for every house right now — that's expected, not a bug.
+  const bhaveshEntry = lordHouse != null ? reference.bhaveshPhala[house.house]?.[lordHouse] : undefined;
+  const bhaveshSupplementary =
+    lordHouse != null ? reference.bhaveshPhalaSupplementary[house.house]?.[lordHouse] : undefined;
 
   const occupants = house.planets;
   const aspectedBy = computeAspectedBy(houses, house.house);
@@ -466,6 +470,11 @@ function BhavaDetailBody({
       : undefined;
 
   const themes = splitList(bilingualText(lang, info.themeNe, info.themeEn));
+  const lordTitle = bilingualText(
+    lang,
+    HOUSE_LORD_TITLE_NE[house.house - 1],
+    `Lord of house ${digits(house.house)}`,
+  );
   const classicalName = reference.houseClassicalName[house.house];
   const bodyPart = reference.houseBodyPart[house.house];
   const houseDetail = reference.houseDetail[house.house];
@@ -644,19 +653,12 @@ function BhavaDetailBody({
             {houseDetail && (
               <Block
                 icon="📖"
-                title={bilingualText(lang, "भाव विवरण", "House reference")}
-                right={bilingualText(lang, houseDetail.signNe, houseDetail.signEn)}
+                title={bilingualText(lang, "भावको स्थायी जानकारी", "General house reference")}
               >
                 <p className="text-sm text-muted-foreground">
                   {bilingualText(lang, houseDetail.titlesNe, houseDetail.titlesEn)}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                  <span>
-                    {bilingualText(lang, "राशि स्वामी", "Sign lord")}:{" "}
-                    <span className="font-semibold text-foreground">
-                      {bilingualText(lang, houseDetail.lordNe, houseDetail.lordEn)}
-                    </span>
-                  </span>
                   <span>
                     {bilingualText(lang, "स्वाभाविक कारक", "Natural significator")}:{" "}
                     <span className="font-semibold text-foreground">
@@ -666,6 +668,16 @@ function BhavaDetailBody({
                 </div>
                 <p className="mt-2 text-sm leading-relaxed">
                   {bilingualText(lang, houseDetail.descriptionNe, houseDetail.descriptionEn)}
+                </p>
+                {/* कालपुरुष कुण्डली अनुसार — यो सधैं मेष लग्न मानेर गणना गरिएको आदर्श/सैद्धान्तिक
+                    राशि-स्वामी हो, यस जातकको वास्तविक राशि/स्वामी होइन (त्यो माथि हेडरमा
+                    देखिन्छ)। दुवैलाई एउटै लेबलमा नराखिएकाले यहाँ छुट्टै र स्पष्ट चिनो दिइएको छ। */}
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {bilingualText(
+                    lang,
+                    `कालपुरुष कुण्डली अनुसार यो भाव ${houseDetail.signNe} राशिसँग मेल खान्छ (राशि स्वामी ${houseDetail.lordNe}) — यो यस जातकको वास्तविक राशि होइन, माथिको भावको वास्तविक राशि/स्वामी हेर्नुहोस्।`,
+                    `In the Kalapurusha (natural zodiac) chart this house corresponds to ${houseDetail.signEn} (ruled by ${houseDetail.lordEn}) — that's not this native's actual sign; see the real sign/lord for this house above.`,
+                  )}
                 </p>
                 <div className="mt-2 border-l-2 border-secondary/40 pl-3">
                   <p className="text-sm font-semibold text-foreground">
@@ -678,7 +690,14 @@ function BhavaDetailBody({
                     {houseDetail.shloka}
                   </p>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed">
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {bilingualText(
+                    lang,
+                    "ग्रहको वास्तविक प्रभाव यसको भावेशत्व, बल, दृष्टि, संयोजन, अस्त/वक्री जस्ता अवस्थामा भर पर्छ — तल दिइएको सामान्य शुभ/पाप वर्गीकरण एउटा आधारभूत सिद्धान्त मात्र हो, अनिवार्य नियम होइन।",
+                    "A graha's actual effect depends on its lordship, strength, aspects, conjunctions, combustion/retrogression and more — the general benefic/malefic classification below is only a baseline classical principle, not an unconditional rule.",
+                  )}
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed">
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                     {bilingualText(lang, "शुभ ग्रह", "Benefic grahas")} (
                     {bilingualText(lang, houseDetail.beneficGrahasNe, houseDetail.beneficGrahasEn)}):
@@ -738,7 +757,18 @@ function BhavaDetailBody({
                 <div className="divide-y divide-border/50">
                   {occupants.map((p) => (
                     <div key={p.key} className="py-3 first:pt-0 last:pb-0">
-                      <GrahaKarakatvaCard grahaKey={p.key} house={house.house} reference={reference} lang={lang} digits={digits} />
+                      <GrahaKarakatvaCard
+                        grahaKey={p.key}
+                        house={house.house}
+                        reference={reference}
+                        lang={lang}
+                        digits={digits}
+                        lordKey={lordKey}
+                        lordHouse={lordHouse}
+                        lordTitle={lordTitle}
+                        bhaveshEntry={bhaveshEntry}
+                        bhaveshSupplementary={bhaveshSupplementary}
+                      />
                     </div>
                   ))}
                 </div>
