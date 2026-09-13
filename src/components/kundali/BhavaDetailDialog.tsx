@@ -17,7 +17,6 @@ import type {
 import {
   HOUSE_ORDINAL_NE,
   HOUSE_ORDINAL_EN,
-  HOUSE_LORD_TITLE_NE,
   computeAspectedBy,
   splitList,
 } from "@/lib/kundali/bhava-detail";
@@ -245,15 +244,19 @@ function LordPlacementBlock({
             </p>
           )}
           <p className="mt-1.5 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
-          </p>
         </>
       ) : (
         <p className="text-sm text-muted-foreground">
-          🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
+          {bilingualText(
+            lang,
+            "यो विशेष स्थान-सम्बन्धको लागि श्लोक-व्याख्या अहिले उपलब्ध छैन — यो स्थान-सम्बन्ध मात्र देखाइएको हो।",
+            "No shloka commentary is available for this specific placement yet — only the placement fact is shown.",
+          )}
         </p>
       )}
+      <p className="mt-2 text-sm text-muted-foreground">
+        {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
+      </p>
       {bhaveshSupplementary && (
         <div className="mt-3 border-l-2 border-secondary/40 pl-3">
           <p className="text-sm font-semibold text-foreground">
@@ -417,13 +420,6 @@ function BhavaDetailBody({
 }) {
   const info = reference.houseInfo[house.house];
   const lordKey = reference.rashiLord[house.rashi];
-  const lordHouse = houses.find((h) => h.planets.some((p) => p.key === lordKey))?.house;
-  // भावेशफल data is emptied server-side pending re-verification (see
-  // GrahaKarakatvaCard's "भावेश फल" mini-section), so these resolve to
-  // `undefined` for every house right now — that's expected, not a bug.
-  const bhaveshEntry = lordHouse != null ? reference.bhaveshPhala[house.house]?.[lordHouse] : undefined;
-  const bhaveshSupplementary =
-    lordHouse != null ? reference.bhaveshPhalaSupplementary[house.house]?.[lordHouse] : undefined;
 
   const occupants = house.planets;
   const aspectedBy = computeAspectedBy(houses, house.house);
@@ -470,11 +466,6 @@ function BhavaDetailBody({
       : undefined;
 
   const themes = splitList(bilingualText(lang, info.themeNe, info.themeEn));
-  const lordTitle = bilingualText(
-    lang,
-    HOUSE_LORD_TITLE_NE[house.house - 1],
-    `Lord of house ${digits(house.house)}`,
-  );
   const classicalName = reference.houseClassicalName[house.house];
   const bodyPart = reference.houseBodyPart[house.house];
   const houseDetail = reference.houseDetail[house.house];
@@ -747,18 +738,7 @@ function BhavaDetailBody({
                 <div className="divide-y divide-border/50">
                   {occupants.map((p) => (
                     <div key={p.key} className="py-3 first:pt-0 last:pb-0">
-                      <GrahaKarakatvaCard
-                        grahaKey={p.key}
-                        house={house.house}
-                        reference={reference}
-                        lang={lang}
-                        digits={digits}
-                        lordKey={lordKey}
-                        lordHouse={lordHouse}
-                        lordTitle={lordTitle}
-                        bhaveshEntry={bhaveshEntry}
-                        bhaveshSupplementary={bhaveshSupplementary}
-                      />
+                      <GrahaKarakatvaCard grahaKey={p.key} house={house.house} reference={reference} lang={lang} digits={digits} />
                     </div>
                   ))}
                 </div>
