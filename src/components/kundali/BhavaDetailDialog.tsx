@@ -9,15 +9,10 @@ import { useMediaQuery, BELOW_MD_MQ } from "@/hooks/use-media-query";
 import type { BhavaHouse } from "@/lib/bhava";
 import { houseBadge, formatHouseBadge, drishtiTargetHouses } from "@/lib/bhava";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
-import type {
-  BhavaReferencePayload,
-  BhavaReferenceBhaveshEntry,
-  BhavaReferenceBhaveshSupplementaryEntry,
-} from "@/lib/api";
+import type { BhavaReferencePayload } from "@/lib/api";
 import {
   HOUSE_ORDINAL_NE,
   HOUSE_ORDINAL_EN,
-  HOUSE_LORD_TITLE_NE,
   computeAspectedBy,
   splitList,
 } from "@/lib/kundali/bhava-detail";
@@ -94,27 +89,12 @@ function GrahaKarakatvaCard({
   reference,
   lang,
   digits,
-  lordKey,
-  lordHouse,
-  lordTitle,
-  bhaveshEntry,
-  bhaveshSupplementary,
 }: {
   grahaKey: string;
   house: number;
   reference: BhavaReferencePayload;
   lang: "ne" | "en";
   digits: (v: string | number) => string;
-  /** This house's real (chart-specific) lord and where that lord actually
-   * sits — same values the "भावेश सम्बन्ध" section below uses, shown here
-   * too per-occupant so it's visible without scrolling past the yuti
-   * section. Not specific to `grahaKey`: every occupant of this house
-   * sees the same lord-placement fact. */
-  lordKey: string;
-  lordHouse: number | undefined;
-  lordTitle: string;
-  bhaveshEntry: BhavaReferenceBhaveshEntry | undefined;
-  bhaveshSupplementary: BhavaReferenceBhaveshSupplementaryEntry | undefined;
 }) {
   const k = reference.grahaKarakatva[grahaKey];
   if (!k) return null;
@@ -167,34 +147,25 @@ function GrahaKarakatvaCard({
         </div>
 
         {saravali ? (
-          /* एक भावमा एकभन्दा बढी ग्रन्थ (सारावली, फलदीपिका, होरासार, जातक पारिजात, ...)
-              उद्धृत हुन सक्छन् — सबै देखाइन्छ, प्रत्येकको आफ्नै श्लोक + ग्रन्थ-सन्दर्भ
-              छुट्टै राखिन्छ। अर्थ/व्याख्या या त प्रत्येक श्लोकसँगै (एउटै अनुच्छेदमा
-              गाभिएर, छुट्टाछुट्टै लेबल नराखी) आउँछ, या स्रोतले एउटै साझा अर्थ दिएको
-              भए `summaryNe`/`summaryEn` मार्फत सबै श्लोकपछि एकपटक मात्र आउँछ। */
+          /* एक भावमा जति ग्रन्थ (सारावली, फलदीपिका, होरासार, जातक पारिजात, ...)
+              उद्धृत छन् ती सबैका श्लोकहरू पहिले लगातार देखाइन्छ (प्रत्येकको आफ्नै
+              ग्रन्थ-सन्दर्भसहित, तर छुट्टै अर्थ/व्याख्या बिना), अनि अन्त्यमा एकपटक
+              मात्र समग्र अर्थ र व्याख्या (`summaryNe`/`summaryEn`) — हरेक ग्रहको
+              लागि सधैं यही एउटै ढाँचा। */
           <div className="space-y-3">
             {saravali.entries.map((citation, i) => (
-              <div key={i} className={i > 0 ? "border-t border-border/50 pt-2" : undefined}>
+              <div key={i}>
                 <p className="text-sm font-semibold text-foreground">
                   📜 {bilingualText(lang, citation.shlokaSourceNe, citation.shlokaSourceEn)}
                 </p>
                 <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
                   {citation.shloka}
                 </p>
-                {citation.meaningNe && (
-                  <p className="mt-1.5 text-sm leading-relaxed">
-                    {bilingualText(lang, citation.meaningNe, citation.meaningEn ?? citation.meaningNe)}{" "}
-                    {citation.explanationNe &&
-                      bilingualText(lang, citation.explanationNe, citation.explanationEn ?? citation.explanationNe)}
-                  </p>
-                )}
               </div>
             ))}
-            {saravali.summaryNe && (
-              <p className="border-t border-border/50 pt-2 text-sm leading-relaxed">
-                {bilingualText(lang, saravali.summaryNe, saravali.summaryEn ?? saravali.summaryNe)}
-              </p>
-            )}
+            <p className="border-t border-border/50 pt-2 text-sm leading-relaxed">
+              💡 {bilingualText(lang, saravali.summaryNe, saravali.summaryEn)}
+            </p>
           </div>
         ) : (
           <p className="mt-1.5 text-sm text-muted-foreground">
@@ -208,91 +179,6 @@ function GrahaKarakatvaCard({
       </div>
 
       <PhaladeepikaSection grahaKey={grahaKey} house={house} reference={reference} lang={lang} digits={digits} />
-      {lordHouse != null && (
-        <div>
-          <p className="text-sm font-semibold text-foreground">
-            👑 {bilingualText(lang, "भावेश फल", "Lord placement")}
-          </p>
-          <p className="mt-1 text-sm">
-            <span className="font-semibold text-foreground">{lordTitle}</span>{" "}
-            <span className="font-semibold text-secondary">{grahaName(lordKey, lang)}</span> →{" "}
-            {bilingualText(lang, `${digits(lordHouse)}औँ भाव`, `house ${digits(lordHouse)}`)}
-          </p>
-          <LordPlacementBlock
-            reference={reference}
-            lang={lang}
-            bhaveshEntry={bhaveshEntry}
-            bhaveshSupplementary={bhaveshSupplementary}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** The shloka/अर्थ/स्रोत content for a real (chart-specific) house-lord
- * placement — shared by the "ग्रह फलादेश" per-occupant card above and the
- * "भावेश सम्बन्ध" section below, so the two never drift apart. */
-function LordPlacementBlock({
-  reference,
-  lang,
-  bhaveshEntry,
-  bhaveshSupplementary,
-}: {
-  reference: BhavaReferencePayload;
-  lang: "ne" | "en";
-  bhaveshEntry: BhavaReferenceBhaveshEntry | undefined;
-  bhaveshSupplementary: BhavaReferenceBhaveshSupplementaryEntry | undefined;
-}) {
-  return (
-    <div className="mt-2 border-l-2 border-secondary/40 pl-3">
-      {bhaveshEntry ? (
-        <>
-          {bhaveshEntry.shloka && (
-            <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-              {bhaveshEntry.shloka}
-            </p>
-          )}
-          <p className="mt-1.5 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
-          </p>
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
-        </p>
-      )}
-      {bhaveshSupplementary && (
-        <div className="mt-3 border-l-2 border-secondary/40 pl-3">
-          <p className="text-sm font-semibold text-foreground">
-            📜 {bilingualText(lang, "थप स्रोत", "Additional source")}
-          </p>
-          {bhaveshSupplementary.shloka && (
-            <>
-              <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-                {bhaveshSupplementary.shloka}
-              </p>
-              {bhaveshSupplementary.iast && lang === "en" && (
-                <p className="mt-0.5 text-sm italic text-muted-foreground">{bhaveshSupplementary.iast}</p>
-              )}
-              <p className="mt-1 text-sm leading-relaxed">
-                {bilingualText(lang, bhaveshSupplementary.translationNe, bhaveshSupplementary.translationEn)}
-              </p>
-            </>
-          )}
-          <p className="mt-1 text-sm leading-relaxed">
-            {bilingualText(lang, bhaveshSupplementary.ne, bhaveshSupplementary.en)}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {bilingualText(
-              lang,
-              `स्रोत: ${reference.bhaveshPhalaSupplementarySource}`,
-              `Source: ${reference.bhaveshPhalaSupplementarySource}`,
-            )}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -426,13 +312,6 @@ function BhavaDetailBody({
 }) {
   const info = reference.houseInfo[house.house];
   const lordKey = reference.rashiLord[house.rashi];
-  const lordHouse = houses.find((h) => h.planets.some((p) => p.key === lordKey))?.house;
-  // भावेशफल data is emptied server-side pending re-verification (see
-  // GrahaKarakatvaCard's "भावेश फल" mini-section), so these resolve to
-  // `undefined` for every house right now — that's expected, not a bug.
-  const bhaveshEntry = lordHouse != null ? reference.bhaveshPhala[house.house]?.[lordHouse] : undefined;
-  const bhaveshSupplementary =
-    lordHouse != null ? reference.bhaveshPhalaSupplementary[house.house]?.[lordHouse] : undefined;
 
   const occupants = house.planets;
   const aspectedBy = computeAspectedBy(houses, house.house);
@@ -479,11 +358,6 @@ function BhavaDetailBody({
       : undefined;
 
   const themes = splitList(bilingualText(lang, info.themeNe, info.themeEn));
-  const lordTitle = bilingualText(
-    lang,
-    HOUSE_LORD_TITLE_NE[house.house - 1],
-    `Lord of house ${digits(house.house)}`,
-  );
   const classicalName = reference.houseClassicalName[house.house];
   const bodyPart = reference.houseBodyPart[house.house];
   const houseDetail = reference.houseDetail[house.house];
@@ -731,11 +605,6 @@ function BhavaDetailBody({
                         reference={reference}
                         lang={lang}
                         digits={digits}
-                        lordKey={lordKey}
-                        lordHouse={lordHouse}
-                        lordTitle={lordTitle}
-                        bhaveshEntry={bhaveshEntry}
-                        bhaveshSupplementary={bhaveshSupplementary}
                       />
                     </div>
                   ))}
@@ -748,30 +617,6 @@ function BhavaDetailBody({
                     "No graha occupies this house, so there's no graha-in-house reading.",
                   )}
                 </p>
-              )}
-              {occupants.length > 0 && (
-                <Accordion type="single" collapsible className="mt-2">
-                  <AccordionItem value="dustha-sustha" className="border-b-0">
-                    <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
-                      {bilingualText(lang, "यी फल कहिले लागू हुन्छन्?", "When do these results apply?")}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-                        {reference.grahaDusthaSusthaRule.shloka}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {bilingualText(
-                          lang,
-                          reference.grahaDusthaSusthaRule.shlokaSourceNe,
-                          reference.grahaDusthaSusthaRule.shlokaSourceEn,
-                        )}
-                      </p>
-                      <p className="mt-1.5 text-sm leading-relaxed">
-                        {bilingualText(lang, reference.grahaDusthaSusthaRule.ne, reference.grahaDusthaSusthaRule.en)}
-                      </p>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
               )}
             </Block>
 
