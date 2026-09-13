@@ -656,7 +656,11 @@ export function KundaliView({
         >
           <Suspense fallback={<SectionLoading />}>
             {detail.bhavaBala ? (
-              <BhavaBalaCard data={detail.bhavaBala} />
+              <BhavaBalaCard
+                data={detail.bhavaBala}
+                vargaCharts={detail.vargaCharts}
+                combustion={detail.combustion}
+              />
             ) : (
               <p className="py-8 text-center text-sm">
                 {t("kundali.section_unavailable")}

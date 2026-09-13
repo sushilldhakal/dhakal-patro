@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useTranslation } from "react-i18next";
-import type { BhavaBalaData, BhavaBalaHouse } from "@/lib/api";
+import type { BhavaBalaData, BhavaBalaHouse, VargaCharts } from "@/lib/api";
 import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
 import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
+import { BhavaBalaChart } from "@/components/kundali/BhavaBalaChart";
 import {
   Table,
   TableBody,
@@ -45,11 +47,40 @@ function GlanceTile({
   );
 }
 
-export function BhavaBalaCard({ data }: { data: BhavaBalaData }) {
-  return <BhavaBalaTable data={data} />;
+export function BhavaBalaCard({
+  data,
+  vargaCharts,
+  combustion,
+}: {
+  data: BhavaBalaData;
+  vargaCharts?: VargaCharts;
+  combustion?: Record<string, boolean | null>;
+}) {
+  const [selectedHouse, setSelectedHouse] = useState(data.strongest.house);
+
+  return (
+    <div className="space-y-6">
+      <BhavaBalaChart
+        data={data}
+        selectedHouse={selectedHouse}
+        onSelectHouse={setSelectedHouse}
+        vargaCharts={vargaCharts}
+        combustion={combustion}
+      />
+      <BhavaBalaTable data={data} selectedHouse={selectedHouse} onSelectHouse={setSelectedHouse} />
+    </div>
+  );
 }
 
-export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
+export function BhavaBalaTable({
+  data,
+  selectedHouse,
+  onSelectHouse,
+}: {
+  data: BhavaBalaData;
+  selectedHouse?: number;
+  onSelectHouse?: (house: number) => void;
+}) {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
 
@@ -120,23 +151,31 @@ export function BhavaBalaTable({ data }: { data: BhavaBalaData }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.houses.map((h) => (
-              <TableRow key={h.house}>
-                <TableCell className={cn(td, "font-semibold pl-3.5")}>
-                  {houseLabel(h.house)}
-                </TableCell>
-                <TableCell className={cn(td, "text-right")}>{lordCell(h.lordKey)}</TableCell>
-                <TableCell className={cn(td, num)}>{fmtNum(h.bhavadhipati, digits)}</TableCell>
-                <TableCell className={cn(td, num)}>{fmtNum(h.disha, digits)}</TableCell>
-                <TableCell className={cn(td, num)}>{fmtNum(h.drishti, digits)}</TableCell>
-                <TableCell className={cn(td, num, "font-semibold")}>
-                  {fmtNum(h.totalPinda, digits)}
-                </TableCell>
-                <TableCell className={cn(td, num, "font-semibold")}>
-                  {digits(h.percent.toFixed(1))}%
-                </TableCell>
-              </TableRow>
-            ))}
+            {data.houses.map((h) => {
+              const selected = selectedHouse === h.house;
+              return (
+                <TableRow
+                  key={h.house}
+                  data-state={selected ? "selected" : undefined}
+                  className={cn(onSelectHouse && "cursor-pointer", selected && "bg-primary/10")}
+                  onClick={onSelectHouse ? () => onSelectHouse(h.house) : undefined}
+                >
+                  <TableCell className={cn(td, "font-semibold pl-3.5")}>
+                    {houseLabel(h.house)}
+                  </TableCell>
+                  <TableCell className={cn(td, "text-right")}>{lordCell(h.lordKey)}</TableCell>
+                  <TableCell className={cn(td, num)}>{fmtNum(h.bhavadhipati, digits)}</TableCell>
+                  <TableCell className={cn(td, num)}>{fmtNum(h.disha, digits)}</TableCell>
+                  <TableCell className={cn(td, num)}>{fmtNum(h.drishti, digits)}</TableCell>
+                  <TableCell className={cn(td, num, "font-semibold")}>
+                    {fmtNum(h.totalPinda, digits)}
+                  </TableCell>
+                  <TableCell className={cn(td, num, "font-semibold")}>
+                    {digits(h.percent.toFixed(1))}%
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

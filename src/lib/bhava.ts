@@ -127,6 +127,20 @@ export function buildBhavaChart(
 
 const KENDRA_HOUSES = new Set([1, 4, 7, 10]);
 const TRIKONA_HOUSES = new Set([1, 5, 9]);
+const DUSTHANA_HOUSES = new Set([6, 8, 12]);
+const UPACHAYA_HOUSES = new Set([3, 6, 10, 11]);
+
+/** Classical house-type tags that can stack (house 1 is kendra + trikona). */
+export type HouseClass = "kendra" | "trikona" | "dusthana" | "upachaya";
+
+export function houseClasses(house: number): HouseClass[] {
+  const out: HouseClass[] = [];
+  if (KENDRA_HOUSES.has(house)) out.push("kendra");
+  if (TRIKONA_HOUSES.has(house)) out.push("trikona");
+  if (DUSTHANA_HOUSES.has(house)) out.push("dusthana");
+  if (UPACHAYA_HOUSES.has(house)) out.push("upachaya");
+  return out;
+}
 
 /** "Q" for kendra (angle), "T" for trikona (trine), else undefined. Houses
  * that are both (only house 1) show as kendra — the stronger classical label. */

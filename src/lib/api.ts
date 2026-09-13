@@ -2077,6 +2077,34 @@ export interface BhavaReferenceHouseInfo {
   maleficEffectEn: string;
 }
 
+/** Full-length per-house reference (sign, lord, natural significator, a
+ * classical description paragraph, a cited shloka, and separate benefic vs
+ * malefic effect notes) — richer than `houseInfo`'s short summary, sourced
+ * from the user's own house-by-house notes rather than a generic blurb. */
+export interface BhavaReferenceHouseDetail {
+  titlesNe: string;
+  titlesEn: string;
+  signNe: string;
+  signEn: string;
+  lordNe: string;
+  lordEn: string;
+  naturalNe: string;
+  naturalEn: string;
+  descriptionNe: string;
+  descriptionEn: string;
+  shloka: string;
+  shlokaSourceNe: string;
+  shlokaSourceEn: string;
+  beneficGrahasNe: string;
+  beneficGrahasEn: string;
+  beneficEffectNe: string;
+  beneficEffectEn: string;
+  maleficGrahasNe: string;
+  maleficGrahasEn: string;
+  maleficEffectNe: string;
+  maleficEffectEn: string;
+}
+
 export interface BhavaReferenceGrahaKarakatva {
   shloka: string;
   shlokaSourceNe: string;
@@ -2234,6 +2262,9 @@ export interface BhavaReferencePayload {
   houseInfo: Record<string, BhavaReferenceHouseInfo>;
   /** Classical Sanskrit house names (तनु, धन, सहज, ... व्यय) — Phaladeepika ch. 2. */
   houseClassicalName: Record<string, BilingualValue>;
+  /** Full-length house-by-house notes (sign, lord, natural significator,
+   * description, shloka, benefic/malefic effects) — one entry per house (1-12). */
+  houseDetail: Record<string, BhavaReferenceHouseDetail>;
   /** Lal Kitab's foundational reference tables — mostly chart-independent
    * classification, not house/chart-specific, so only `grahaManifestationAge`
    * and `houseBodyPart` are currently surfaced in the per-house dialog; the
@@ -2300,7 +2331,7 @@ export interface BhavaReferencePayload {
 
 /** Bump on a content edit so the CDN mints a fresh object (endpoint is cached ~1 day). */
 export const BHAVA_REFERENCE_VERSION =
-  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "13";
+  import.meta.env.VITE_BHAVA_REFERENCE_VERSION ?? "16";
 
 /** Static graha/bhava reference content — same for every chart, fetched once
  * per session and cached by React Query / the CDN rather than being embedded

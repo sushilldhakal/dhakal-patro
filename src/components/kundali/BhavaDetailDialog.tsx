@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -50,37 +51,33 @@ function subsetsOf3(keys: string[]): string[][] {
   return out;
 }
 
-/** A top-level, always-visible-with-a-chevron section of the dialog. Every
- * section uses the same AccordionItem/Trigger so the whole panel reads as
- * one consistent list — no mix of "just there" content and buried links,
- * which is what made earlier versions of this dialog hide content people
- * never found. `right` renders a small trailing hint (a count, a one-line
- * answer) in the trigger row itself, so the headline fact is visible even
- * collapsed. */
-function TopSection({
-  value,
+type TabId = "summary" | "lord" | "drishti" | "rules";
+
+/** A compact, always-visible card within a tab — replaces the old
+ * TopSection/AccordionItem pattern now that each tab already isolates its
+ * content, so there's no need for a second layer of collapsing on top. The
+ * `right` slot still carries the headline fact (a count, a badge) right in
+ * the card header, same as before. */
+function Block({
   icon,
   title,
   right,
   children,
 }: {
-  value: string;
   icon: string;
   title: string;
   right?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <AccordionItem value={value}>
-      <AccordionTrigger className="py-3 text-sm font-bold hover:no-underline">
-        <span className="flex flex-1 items-baseline gap-2 pr-2">
-          <span aria-hidden>{icon}</span>
-          <span>{title}</span>
-          {right && <span className="ml-auto shrink-0 text-sm font-normal text-muted-foreground">{right}</span>}
-        </span>
-      </AccordionTrigger>
-      <AccordionContent className="pb-4">{children}</AccordionContent>
-    </AccordionItem>
+    <div className="rounded-xl border border-border bg-muted/20 p-3">
+      <div className="mb-1.5 flex items-baseline gap-2">
+        <span aria-hidden>{icon}</span>
+        <span className="text-sm font-bold text-foreground">{title}</span>
+        {right && <span className="ml-auto shrink-0 text-sm font-normal text-muted-foreground">{right}</span>}
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -153,11 +150,11 @@ function GrahaKarakatvaCard({
             ⬡{" "}
             {bilingualText(
               lang,
-              `भाव ${digits(house)} मा ${grahaName(grahaKey, lang)}को फल`,
-              `${grahaName(grahaKey, lang)} in house ${digits(house)}`,
+              `भाव ${digits(house)}${house === 1 ? " (Lagna)" : ""} मा ${grahaName(grahaKey, lang)}को फल`,
+              `${grahaName(grahaKey, lang)} in house ${digits(house)}${house === 1 ? " (Lagna)" : ""}`,
             )}
           </p>
-          {saravali && (
+          {saravali && house !== 4 && (
             <span
               className={cn(
                 "shrink-0 rounded-full border px-2 py-0.5 text-sm font-semibold leading-none",
@@ -169,7 +166,13 @@ function GrahaKarakatvaCard({
           )}
         </div>
 
-        {saravali ? (
+        {/* भाव ४ को फल पुनःयाचन/पुनःसृजन हुँदैछ — verified content pending, so this
+            house is force-hidden here regardless of whatever the data holds. */}
+        {house === 4 ? (
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
+          </p>
+        ) : saravali ? (
           <>
             <p className="mt-2 text-sm font-semibold text-foreground">
               📜 {bilingualText(lang, "श्लोक", "Shloka")} — {bilingualText(lang, saravali.shlokaSourceNe, saravali.shlokaSourceEn)}
@@ -242,19 +245,15 @@ function LordPlacementBlock({
             </p>
           )}
           <p className="mt-1.5 text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
+          </p>
         </>
       ) : (
         <p className="text-sm text-muted-foreground">
-          {bilingualText(
-            lang,
-            "यो विशेष स्थान-सम्बन्धको लागि श्लोक-व्याख्या अहिले उपलब्ध छैन — यो स्थान-सम्बन्ध मात्र देखाइएको हो।",
-            "No shloka commentary is available for this specific placement yet — only the placement fact is shown.",
-          )}
+          🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
         </p>
       )}
-      <p className="mt-2 text-sm text-muted-foreground">
-        {bilingualText(lang, `स्रोत: ${reference.bhaveshPhalaSource}`, `Source: ${reference.bhaveshPhalaSource}`)}
-      </p>
       {bhaveshSupplementary && (
         <div className="mt-3 border-l-2 border-secondary/40 pl-3">
           <p className="text-sm font-semibold text-foreground">
@@ -419,6 +418,12 @@ function BhavaDetailBody({
   const info = reference.houseInfo[house.house];
   const lordKey = reference.rashiLord[house.rashi];
   const lordHouse = houses.find((h) => h.planets.some((p) => p.key === lordKey))?.house;
+  // भावेशफल data is emptied server-side pending re-verification (see
+  // GrahaKarakatvaCard's "भावेश फल" mini-section), so these resolve to
+  // `undefined` for every house right now — that's expected, not a bug.
+  const bhaveshEntry = lordHouse != null ? reference.bhaveshPhala[house.house]?.[lordHouse] : undefined;
+  const bhaveshSupplementary =
+    lordHouse != null ? reference.bhaveshPhalaSupplementary[house.house]?.[lordHouse] : undefined;
 
   const occupants = house.planets;
   const aspectedBy = computeAspectedBy(houses, house.house);
@@ -429,13 +434,19 @@ function BhavaDetailBody({
   const maleficPresent = [...occupants.map((p) => p.key), ...aspectedBy].some(
     (k) => reference.grahaDrishti[k]?.isMalefic === true,
   );
+  // The one-line takeaway for this house — computed once and surfaced both in
+  // the collapsed "Health signals" row and inside it, instead of being buried
+  // as the last accordion item where nobody scrolled to find it.
+  const verdictLabel = maleficPresent
+    ? bilingualText(lang, "⚠️ ध्यान दिनुपर्ने", "⚠️ Needs attention")
+    : bilingualText(lang, "✅ सामान्यतया ठीक", "✅ Generally fine");
+  const verdictCls = maleficPresent
+    ? "border-destructive/30 bg-destructive/10 text-destructive"
+    : "border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
 
   const badge = houseBadge(house.house);
   const ordinal = bilingualText(lang, HOUSE_ORDINAL_NE[house.house - 1], HOUSE_ORDINAL_EN[house.house - 1]);
   const lalKitabFixedLord = reference.lalKitabFixedLord[house.house] ?? [];
-  const bhaveshEntry = lordHouse != null ? reference.bhaveshPhala[house.house]?.[lordHouse] : undefined;
-  const bhaveshSupplementary =
-    lordHouse != null ? reference.bhaveshPhalaSupplementary[house.house]?.[lordHouse] : undefined;
 
   const occupantKeys = occupants.map((p) => p.key);
   const yuti2Entry = occupantKeys.length === 2 ? reference.grahaYuti2[yutiKey(occupantKeys)] : undefined;
@@ -466,11 +477,18 @@ function BhavaDetailBody({
   );
   const classicalName = reference.houseClassicalName[house.house];
   const bodyPart = reference.houseBodyPart[house.house];
+  const houseDetail = reference.houseDetail[house.house];
 
   const HeaderWrap = variant === "drawer" ? DrawerHeader : DialogHeader;
   const TitleWrap = variant === "drawer" ? DrawerTitle : DialogTitle;
 
-  const defaultOpenSections = ["occupants", "key-signals", "bhavesh"];
+  const tabs: { id: TabId; icon: string; label: string }[] = [
+    { id: "summary", icon: "🪐", label: bilingualText(lang, "सारांश", "Summary") },
+    { id: "lord", icon: "👑", label: bilingualText(lang, "स्वामी र फल", "Lord & results") },
+    { id: "drishti", icon: "👁️", label: bilingualText(lang, "दृष्टि", "Aspects") },
+    { id: "rules", icon: "📚", label: bilingualText(lang, "नियम", "Rules") },
+  ];
+  const [tab, setTab] = useState<TabId>("summary");
 
   return (
     <>
@@ -505,272 +523,327 @@ function BhavaDetailBody({
               <span className="text-muted-foreground">{formatHouseBadge(badge, lang)}</span>
             </>
           )}
+          <span
+            className={cn(
+              "ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-sm font-semibold leading-none",
+              verdictCls,
+            )}
+          >
+            {verdictLabel}
+          </span>
         </div>
-        <Accordion type="single" collapsible className="-mb-1">
-          <AccordionItem value="house-summary" className="border-b-0">
-            <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
-              {bilingualText(lang, "भाव विवरण हेर्नुहोस्", "View house description")}
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="text-sm leading-relaxed">{bilingualText(lang, info.summaryNe, info.summaryEn)}</p>
-              <p className="mt-2 text-sm leading-relaxed">
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {bilingualText(lang, "शुभ ग्रह:", "Benefics:")}
-                </span>{" "}
-                {bilingualText(lang, info.beneficEffectNe, info.beneficEffectEn)}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed">
-                <span className="font-semibold text-destructive">
-                  {bilingualText(lang, "पापग्रह:", "Malefics:")}
-                </span>{" "}
-                {bilingualText(lang, info.maleficEffectNe, info.maleficEffectEn)}
-              </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        <div className="pt-1">
+          <p className="text-sm leading-relaxed">{bilingualText(lang, info.summaryNe, info.summaryEn)}</p>
+          <p className="mt-2 text-sm leading-relaxed">
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+              {bilingualText(lang, "शुभ ग्रह:", "Benefics:")}
+            </span>{" "}
+            {bilingualText(lang, info.beneficEffectNe, info.beneficEffectEn)}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed">
+            <span className="font-semibold text-destructive">
+              {bilingualText(lang, "पापग्रह:", "Malefics:")}
+            </span>{" "}
+            {bilingualText(lang, info.maleficEffectNe, info.maleficEffectEn)}
+          </p>
+        </div>
       </HeaderWrap>
 
-      <div className="flex-1 overflow-y-auto px-4 py-1">
-        <Accordion type="multiple" defaultValue={defaultOpenSections}>
-          {/* यस भावमा — occupying grahas, condensed */}
-          <TopSection
-            value="occupants"
-            icon="🪐"
-            title={bilingualText(lang, "यस भावमा", "Occupants")}
-            right={occupants.length > 0 ? joinNames(occupantKeys, lang) : bilingualText(lang, "रिक्त", "Empty")}
+      {/* Tabs replace the old single long stacked-accordion list — only one
+          group is on screen at a time, so reading the dialog no longer means
+          scrolling past 7-8 sections to reach the one you want. */}
+      <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={cn(
+              "shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-sm font-semibold transition-colors",
+              tab === t.id
+                ? "border-secondary/40 bg-secondary/12 text-secondary"
+                : "border-border bg-transparent text-muted-foreground hover:text-foreground",
+            )}
           >
-            {occupants.length > 0 ? (
-              <div className="space-y-2">
-                {occupants.map((p) => {
-                  const k = reference.grahaKarakatva[p.key];
-                  const subjects = k
-                    ? splitList(bilingualText(lang, k.subjectsNe, k.subjectsEn)).slice(0, 4).join(" · ")
-                    : "";
-                  const manifestationAge = reference.grahaManifestationAge[p.key];
-                  return (
-                    <div key={p.key}>
-                      <p className="text-sm font-semibold text-foreground">
-                        {grahaName(p.key, lang)}
-                        {manifestationAge != null && (
-                          <span className="ml-2 font-normal text-muted-foreground">
-                            {bilingualText(
-                              lang,
-                              `· उन्नतिको उमेर ~${digits(manifestationAge)} वर्ष`,
-                              `· manifests fully ~age ${digits(manifestationAge)}`,
-                            )}
-                          </span>
-                        )}
-                      </p>
-                      {subjects && <p className="text-sm text-muted-foreground">{subjects}</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-sm leading-relaxed">
-                <p>
-                  <span className="font-semibold text-foreground">
-                    {bilingualText(lang, "रिक्त भाव:", "Empty house:")}
-                  </span>{" "}
-                  {bilingualText(
-                    lang,
-                    "यस भावमा कुनै ग्रह नभएमा भावस्वामी ग्रहको स्थिति र दृष्टिबाट फल निर्धारण हुन्छ।",
-                    "When no graha occupies this house, its result is read from the position and aspects of the house's ruling graha instead.",
-                  )}
-                </p>
-                <p className="mt-1.5">
-                  {bilingualText(
-                    lang,
-                    `राशि स्वामी ${grahaName(lordKey, lang)}को स्थिति हेर्नुहोस्।`,
-                    `See the placement of ${grahaName(lordKey, lang)}, this house's ruling graha.`,
-                  )}
-                </p>
-              </div>
-            )}
-          </TopSection>
+            <span aria-hidden className="mr-1">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-          {/* मुख्य संकेत — which occupying grahas influence each house theme */}
-          <TopSection value="key-signals" icon="🔎" title={bilingualText(lang, "मुख्य संकेत", "Key signals")}>
-            <div className="space-y-1.5">
-              {themes.map((theme) => (
-                <div key={theme} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="text-foreground">{theme}</span>
-                  {occupants.length > 0 ? (
-                    <span className="text-muted-foreground">
-                      ●{" "}
-                      <span className="font-medium text-foreground">{joinNames(occupantKeys, lang)}</span>{" "}
-                      {bilingualText(lang, "कारक", "karaka")}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </TopSection>
-
-          {/* ग्रह फलादेश — one worked saravali example per occupying graha, expandable for full karakatva */}
-          <TopSection
-            value="graha-phala"
-            icon="🪐"
-            title={bilingualText(lang, "ग्रह फलादेश", "Graha in this house")}
-            right={occupants.length > 0 ? digits(occupants.length) : undefined}
-          >
-            {occupants.length > 0 ? (
-              <Accordion type="multiple" className="divide-y divide-border/50">
-                {occupants.map((p) => {
-                  const saravali = reference.grahaHouseSaravali[p.key]?.[house.house];
-                  return (
-                    <AccordionItem key={p.key} value={p.key} className="border-b-0 py-2 first:pt-0 last:pb-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        🪐 {grahaName(p.key, lang)}{" "}
-                        {bilingualText(lang, `${digits(house.house)}औँ भावमा`, `in house ${digits(house.house)}`)}
-                      </p>
-                      {saravali && (
-                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                          {bilingualText(lang, saravali.meaningNe, saravali.meaningEn)}
-                        </p>
-                      )}
-                      <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
-                        {bilingualText(lang, "श्लोक तथा स्रोत हेर्नुहोस्", "View shloka & source")}
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <GrahaKarakatvaCard
-                          grahaKey={p.key}
-                          house={house.house}
-                          reference={reference}
-                          lang={lang}
-                          digits={digits}
-                          lordKey={lordKey}
-                          lordHouse={lordHouse}
-                          lordTitle={lordTitle}
-                          bhaveshEntry={bhaveshEntry}
-                          bhaveshSupplementary={bhaveshSupplementary}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {bilingualText(
-                  lang,
-                  "यस भावमा कुनै ग्रह नभएकाले ग्रह फलादेश छैन।",
-                  "No graha occupies this house, so there's no graha-in-house reading.",
-                )}
-              </p>
-            )}
-            {occupants.length > 0 && (
-              <Accordion type="single" collapsible className="mt-2">
-                <AccordionItem value="dustha-sustha" className="border-b-0">
-                  <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
-                    {bilingualText(lang, "यी फल कहिले लागू हुन्छन्?", "When do these results apply?")}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-                      {reference.grahaDusthaSusthaRule.shloka}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {bilingualText(
-                        lang,
-                        reference.grahaDusthaSusthaRule.shlokaSourceNe,
-                        reference.grahaDusthaSusthaRule.shlokaSourceEn,
-                      )}
-                    </p>
-                    <p className="mt-1.5 text-sm leading-relaxed">
-                      {bilingualText(lang, reference.grahaDusthaSusthaRule.ne, reference.grahaDusthaSusthaRule.en)}
-                    </p>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            )}
-          </TopSection>
-
-          {/* ग्रह युति फल — shown only when 2+ grahas share this house */}
-          {showYutiSection && (
-            <TopSection
-              value="yuti"
-              icon="👥"
-              title={bilingualText(lang, "ग्रह युति फल", "Graha conjunction (yuti) result")}
-            >
-              <div className="space-y-3">
-                {yuti2Entry && (
-                  <div className="border-l-2 border-secondary/40 pl-3">
-                    <p className="text-sm font-semibold text-foreground">
-                      {joinNames(occupantKeys, lang)}
-                      {yuti2Entry.yogaNameNe && (
-                        <span className="font-normal text-muted-foreground">
-                          {" "}
-                          ({bilingualText(lang, yuti2Entry.yogaNameNe, yuti2Entry.yogaNameEn ?? yuti2Entry.yogaNameNe)})
-                        </span>
-                      )}
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed">{bilingualText(lang, yuti2Entry.textNe, yuti2Entry.textEn)}</p>
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {tab === "summary" && (
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* यस भावमा — occupying grahas, condensed */}
+              <Block
+                icon="🪐"
+                title={bilingualText(lang, "यस भावमा", "Occupants")}
+                right={occupants.length === 0 ? bilingualText(lang, "रिक्त", "Empty") : undefined}
+              >
+                {occupants.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {occupants.map((p) => {
+                      const k = reference.grahaKarakatva[p.key];
+                      const subjects = k
+                        ? splitList(bilingualText(lang, k.subjectsNe, k.subjectsEn)).slice(0, 3).join(" · ")
+                        : "";
+                      return (
+                        <div key={p.key}>
+                          <p className="text-sm font-semibold text-foreground">{grahaName(p.key, lang)}</p>
+                          {subjects && <p className="text-sm text-muted-foreground">{subjects}</p>}
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-                {yuti3Entries.map((entry) => (
-                  <div key={yutiKey(entry.grahas)} className="border-l-2 border-secondary/40 pl-3">
-                    <p className="text-sm font-semibold text-foreground">{joinNames(entry.grahas, lang)}</p>
-                    <p className="mt-1 text-sm leading-relaxed">{bilingualText(lang, entry.textNe, entry.textEn)}</p>
-                  </div>
-                ))}
-                {occupantKeys.length >= 3 && (
+                ) : (
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    {bilingualText(lang, reference.grahaYutiGeneralRule.ne, reference.grahaYutiGeneralRule.en)}
-                  </p>
-                )}
-                {!yuti2Entry && yuti3Entries.length === 0 && occupantKeys.length < 3 && (
-                  <p className="text-sm text-muted-foreground">
                     {bilingualText(
                       lang,
-                      "यो विशेष ग्रह-युतिको लागि सन्दर्भ अहिले उपलब्ध छैन।",
-                      "No reference is available for this specific graha combination yet.",
+                      `कुनै ग्रह छैन — राशि स्वामी ${grahaName(lordKey, lang)}को स्थिति हेर्नुहोस्।`,
+                      `No graha here — see the placement of ${grahaName(lordKey, lang)}, this house's ruling graha.`,
                     )}
                   </p>
                 )}
-              </div>
-            </TopSection>
-          )}
+              </Block>
 
-          {/* भावेश सम्बन्ध */}
-          <TopSection
-            value="bhavesh"
-            icon="👑"
-            title={bilingualText(lang, "भावेश सम्बन्ध", "Lord placement")}
-            right={
-              lordHouse
-                ? bilingualText(lang, `${digits(lordHouse)}औँ भाव`, `house ${digits(lordHouse)}`)
-                : undefined
-            }
-          >
-            {lordHouse ? (
-              <p className="text-sm">
-                <span className="font-semibold text-foreground">{lordTitle}</span>{" "}
-                <span className="font-semibold text-secondary">{grahaName(lordKey, lang)}</span> →{" "}
-                {bilingualText(lang, `${digits(lordHouse)}औँ भाव`, `house ${digits(lordHouse)}`)}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {bilingualText(
-                  lang,
-                  `राशि स्वामी ${grahaName(lordKey, lang)} यो D1 चार्टमा फेला परेन।`,
-                  `Sign lord ${grahaName(lordKey, lang)} wasn't found placed in this D1 chart.`,
+              {/* स्वास्थ्य संकेत — the headline verdict, shown as a compact card
+                  next to Occupants instead of buried as the 8th accordion item */}
+              <Block
+                icon="🩺"
+                title={bilingualText(lang, "स्वास्थ्य संकेत", "Health signals")}
+                right={
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm font-semibold leading-none",
+                      verdictCls,
+                    )}
+                  >
+                    {verdictLabel}
+                  </span>
+                }
+              >
+                <p className="text-sm leading-relaxed">
+                  <span className="font-semibold text-foreground">
+                    {bilingualText(lang, "अंग:", "Parts:")}
+                  </span>{" "}
+                  {bilingualText(lang, info.medicalNe, info.medicalEn)}
+                </p>
+                {bodyPart && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {bilingualText(lang, bodyPart.ne, bodyPart.en)}
+                  </p>
                 )}
-              </p>
-            )}
-            {lordHouse != null && (
-              <LordPlacementBlock
-                reference={reference}
-                lang={lang}
-                bhaveshEntry={bhaveshEntry}
-                bhaveshSupplementary={bhaveshSupplementary}
-              />
-            )}
-          </TopSection>
+                {!maleficPresent && !beneficPresent && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {bilingualText(
+                      lang,
+                      "यस भावमा कुनै ग्रहको दृष्टि वा उपस्थिति छैन।",
+                      "No graha occupies or aspects this house.",
+                    )}
+                  </p>
+                )}
+              </Block>
+            </div>
 
-          {/* दृष्टि — outgoing aspects from occupants, expandable for the full incoming picture */}
-          <TopSection value="drishti" icon="👁️" title={bilingualText(lang, "दृष्टि", "Aspects")}>
+            {/* भाव विवरण — the full house-by-house reference notes (sign, lord,
+                natural significator, description, cited shloka, and separate
+                benefic/malefic effects), not just the one-line theme/summary
+                the header already carries */}
+            {houseDetail && (
+              <Block
+                icon="📖"
+                title={bilingualText(lang, "भाव विवरण", "House reference")}
+                right={bilingualText(lang, houseDetail.signNe, houseDetail.signEn)}
+              >
+                <p className="text-sm text-muted-foreground">
+                  {bilingualText(lang, houseDetail.titlesNe, houseDetail.titlesEn)}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                  <span>
+                    {bilingualText(lang, "राशि स्वामी", "Sign lord")}:{" "}
+                    <span className="font-semibold text-foreground">
+                      {bilingualText(lang, houseDetail.lordNe, houseDetail.lordEn)}
+                    </span>
+                  </span>
+                  <span>
+                    {bilingualText(lang, "स्वाभाविक कारक", "Natural significator")}:{" "}
+                    <span className="font-semibold text-foreground">
+                      {bilingualText(lang, houseDetail.naturalNe, houseDetail.naturalEn)}
+                    </span>
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed">
+                  {bilingualText(lang, houseDetail.descriptionNe, houseDetail.descriptionEn)}
+                </p>
+                <div className="mt-2 border-l-2 border-secondary/40 pl-3">
+                  <p className="text-sm font-semibold text-foreground">
+                    📜 {bilingualText(lang, "शास्त्रीय प्रमाण", "Classical citation")}
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      — {bilingualText(lang, houseDetail.shlokaSourceNe, houseDetail.shlokaSourceEn)}
+                    </span>
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+                    {houseDetail.shloka}
+                  </p>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    {bilingualText(lang, "शुभ ग्रह", "Benefic grahas")} (
+                    {bilingualText(lang, houseDetail.beneficGrahasNe, houseDetail.beneficGrahasEn)}):
+                  </span>{" "}
+                  {bilingualText(lang, houseDetail.beneficEffectNe, houseDetail.beneficEffectEn)}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed">
+                  <span className="font-semibold text-destructive">
+                    {bilingualText(lang, "पापग्रह", "Malefic grahas")} (
+                    {bilingualText(lang, houseDetail.maleficGrahasNe, houseDetail.maleficGrahasEn)}):
+                  </span>{" "}
+                  {bilingualText(lang, houseDetail.maleficEffectNe, houseDetail.maleficEffectEn)}
+                </p>
+              </Block>
+            )}
+
+            {/* मुख्य संकेत — which occupying grahas influence each house theme */}
+            <Block icon="🔎" title={bilingualText(lang, "मुख्य संकेत", "Key signals")}>
+              <div className="space-y-1.5">
+                {themes.map((theme) => (
+                  <div key={theme} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="text-foreground">{theme}</span>
+                    {occupants.length > 0 ? (
+                      <span className="text-muted-foreground">
+                        ●{" "}
+                        <span className="font-medium text-foreground">{joinNames(occupantKeys, lang)}</span>{" "}
+                        {bilingualText(lang, "कारक", "karaka")}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Block>
+          </div>
+        )}
+
+        {tab === "lord" && (
+          <div className="space-y-3">
+            {/* भावेश सम्बन्ध — content pulled pending re-verification/regeneration;
+                do not read bhaveshPhala/bhaveshPhalaSupplementary here until
+                that's done. */}
+            <Block icon="👑" title={bilingualText(lang, "भावेश सम्बन्ध", "Lord placement")}>
+              <p className="text-sm text-muted-foreground">
+                🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
+              </p>
+            </Block>
+
+            {/* ग्रह फलादेश — one worked saravali example per occupying graha, expandable for full karakatva */}
+            <Block
+              icon="🪐"
+              title={bilingualText(lang, "ग्रह फलादेश", "Graha in this house")}
+              right={occupants.length > 0 ? digits(occupants.length) : undefined}
+            >
+              {occupants.length > 0 ? (
+                <div className="divide-y divide-border/50">
+                  {occupants.map((p) => (
+                    <div key={p.key} className="py-3 first:pt-0 last:pb-0">
+                      <GrahaKarakatvaCard
+                        grahaKey={p.key}
+                        house={house.house}
+                        reference={reference}
+                        lang={lang}
+                        digits={digits}
+                        lordKey={lordKey}
+                        lordHouse={lordHouse}
+                        lordTitle={lordTitle}
+                        bhaveshEntry={bhaveshEntry}
+                        bhaveshSupplementary={bhaveshSupplementary}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {bilingualText(
+                    lang,
+                    "यस भावमा कुनै ग्रह नभएकाले ग्रह फलादेश छैन।",
+                    "No graha occupies this house, so there's no graha-in-house reading.",
+                  )}
+                </p>
+              )}
+              {occupants.length > 0 && (
+                <Accordion type="single" collapsible className="mt-2">
+                  <AccordionItem value="dustha-sustha" className="border-b-0">
+                    <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
+                      {bilingualText(lang, "यी फल कहिले लागू हुन्छन्?", "When do these results apply?")}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
+                        {reference.grahaDusthaSusthaRule.shloka}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {bilingualText(
+                          lang,
+                          reference.grahaDusthaSusthaRule.shlokaSourceNe,
+                          reference.grahaDusthaSusthaRule.shlokaSourceEn,
+                        )}
+                      </p>
+                      <p className="mt-1.5 text-sm leading-relaxed">
+                        {bilingualText(lang, reference.grahaDusthaSusthaRule.ne, reference.grahaDusthaSusthaRule.en)}
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              )}
+            </Block>
+
+            {/* ग्रह युति फल — shown only when 2+ grahas share this house */}
+            {showYutiSection && (
+              <Block icon="👥" title={bilingualText(lang, "ग्रह युति फल", "Graha conjunction (yuti) result")}>
+                <div className="space-y-3">
+                  {yuti2Entry && (
+                    <div className="border-l-2 border-secondary/40 pl-3">
+                      <p className="text-sm font-semibold text-foreground">
+                        {joinNames(occupantKeys, lang)}
+                        {yuti2Entry.yogaNameNe && (
+                          <span className="font-normal text-muted-foreground">
+                            {" "}
+                            ({bilingualText(lang, yuti2Entry.yogaNameNe, yuti2Entry.yogaNameEn ?? yuti2Entry.yogaNameNe)})
+                          </span>
+                        )}
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed">{bilingualText(lang, yuti2Entry.textNe, yuti2Entry.textEn)}</p>
+                    </div>
+                  )}
+                  {yuti3Entries.map((entry) => (
+                    <div key={yutiKey(entry.grahas)} className="border-l-2 border-secondary/40 pl-3">
+                      <p className="text-sm font-semibold text-foreground">{joinNames(entry.grahas, lang)}</p>
+                      <p className="mt-1 text-sm leading-relaxed">{bilingualText(lang, entry.textNe, entry.textEn)}</p>
+                    </div>
+                  ))}
+                  {occupantKeys.length >= 3 && (
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {bilingualText(lang, reference.grahaYutiGeneralRule.ne, reference.grahaYutiGeneralRule.en)}
+                    </p>
+                  )}
+                  {!yuti2Entry && yuti3Entries.length === 0 && occupantKeys.length < 3 && (
+                    <p className="text-sm text-muted-foreground">
+                      {bilingualText(
+                        lang,
+                        "यो विशेष ग्रह-युतिको लागि सन्दर्भ अहिले उपलब्ध छैन।",
+                        "No reference is available for this specific graha combination yet.",
+                      )}
+                    </p>
+                  )}
+                </div>
+              </Block>
+            )}
+          </div>
+        )}
+
+        {tab === "drishti" && (
+          /* दृष्टि — outgoing aspects from occupants, expandable for the full incoming picture */
+          <Block icon="👁️" title={bilingualText(lang, "दृष्टि", "Aspects")}>
             {occupants.length > 0 ? (
               <div className="space-y-1.5">
                 {occupants.map((p) => {
@@ -794,43 +867,41 @@ function BhavaDetailBody({
                 )}
               </p>
             )}
-            <Accordion type="single" collapsible className="mt-1">
-              <AccordionItem value="drishti-full" className="border-b-0">
-                <AccordionTrigger className="py-1.5 text-sm text-secondary hover:no-underline">
-                  {bilingualText(lang, "सबै दृष्टि हेर्नुहोस्", "View all aspects")}
-                </AccordionTrigger>
-                <AccordionContent>
-                  {aspectedBy.length > 0 ? (
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-foreground">
-                        {bilingualText(lang, "यस भावमा दृष्टि गर्ने ग्रहहरू:", "Grahas aspecting this house:")}
-                      </p>
-                      {aspectedBy.map((k) => {
-                        const d = reference.grahaDrishti[k];
-                        return (
-                          <div key={k}>
-                            <p className="text-sm font-semibold text-foreground">{grahaName(k, lang)}</p>
-                            {d && (
-                              <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
-                                {bilingualText(lang, d.summaryNe, d.summaryEn)}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {bilingualText(lang, "यस भावमा कुनै ग्रहको दृष्टि पर्दैन।", "No graha aspects this house.")}
-                    </p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </TopSection>
+            <div className="mt-3 border-t border-border/60 pt-3">
+              <p className="mb-1.5 text-sm font-semibold text-foreground">
+                {bilingualText(lang, "सबै दृष्टि", "All aspects")}
+              </p>
+              {aspectedBy.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">
+                    {bilingualText(lang, "यस भावमा दृष्टि गर्ने ग्रहहरू:", "Grahas aspecting this house:")}
+                  </p>
+                  {aspectedBy.map((k) => {
+                    const d = reference.grahaDrishti[k];
+                    return (
+                      <div key={k}>
+                        <p className="text-sm font-semibold text-foreground">{grahaName(k, lang)}</p>
+                        {d && (
+                          <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                            {bilingualText(lang, d.summaryNe, d.summaryEn)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {bilingualText(lang, "यस भावमा कुनै ग्रहको दृष्टि पर्दैन।", "No graha aspects this house.")}
+                </p>
+              )}
+            </div>
+          </Block>
+        )}
 
-          {/* सम्बन्धित नियम — Brighu Naadi sutras + Lal Kitab signals, collapsed by default */}
-          <TopSection value="rules" icon="📚" title={bilingualText(lang, "सम्बन्धित नियम", "Related rules")}>
+        {tab === "rules" && (
+          /* सम्बन्धित नियम — Brighu Naadi sutras + Lal Kitab signals */
+          <Block icon="📚" title={bilingualText(lang, "सम्बन्धित नियम", "Related rules")}>
             <Accordion type="multiple">
               <AccordionItem value="naadi">
                 <AccordionTrigger className="text-sm hover:no-underline">
@@ -941,44 +1012,8 @@ function BhavaDetailBody({
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-          </TopSection>
-
-          {/* स्वास्थ्य संकेत */}
-          <TopSection value="health" icon="🩺" title={bilingualText(lang, "स्वास्थ्य संकेत", "Health signals")}>
-            <p className="mb-2 text-sm">
-              <span className="font-semibold text-foreground">
-                {bilingualText(lang, "यस भावका शरीरका अंग:", "Body parts of this house:")}
-              </span>{" "}
-              {bilingualText(lang, info.medicalNe, info.medicalEn)}
-            </p>
-            {bodyPart && (
-              <p className="mb-2 text-sm text-muted-foreground">
-                {bilingualText(lang, "कालपुरुष अनुसार:", "Per Kalapurusha:")} {bilingualText(lang, bodyPart.ne, bodyPart.en)}
-              </p>
-            )}
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-semibold",
-                maleficPresent
-                  ? "border-destructive/30 bg-destructive/10 text-destructive"
-                  : "border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
-              )}
-            >
-              {maleficPresent
-                ? bilingualText(lang, "⚠️ ध्यान दिनुपर्ने", "⚠️ Needs attention")
-                : bilingualText(lang, "✅ सामान्यतया ठीक", "✅ Generally fine")}
-            </span>
-            {!maleficPresent && !beneficPresent && (
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                {bilingualText(
-                  lang,
-                  "यस भावमा कुनै ग्रहको दृष्टि वा उपस्थिति छैन।",
-                  "No graha occupies or aspects this house.",
-                )}
-              </p>
-            )}
-          </TopSection>
-        </Accordion>
+          </Block>
+        )}
       </div>
 
       <div className="flex justify-end border-t border-border px-4 py-3">

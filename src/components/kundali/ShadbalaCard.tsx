@@ -9,8 +9,17 @@ import type {
   ShadbalaStatus,
   YuddhaData,
 } from "@/lib/api";
-import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { type GrahaKey } from "@/lib/graha-details";
 import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
+import { ShadbalaChart, type ShadbalaScale } from "@/components/kundali/ShadbalaChart";
+import {
+  GRAHA_NAME_I18N,
+  KALA_SUBS,
+  STHANA_SUBS,
+  grahaDisplayName,
+  orderShadbalaPlanets,
+  yuddhaVirupasForPlanet,
+} from "@/lib/kundali/shadbala-display";
 import {
   Table,
   TableBody,
@@ -37,30 +46,6 @@ const STATUS_STYLES: Record<ShadbalaStatus, string> = {
   Weak: "bg-destructive/15 text-destructive border-destructive/30",
 };
 
-/** Classical display order for the matrix columns. */
-const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
-
-/** Sub-bala rows: `key` indexes the API payload, `label` the string catalogue. */
-const STHANA_SUBS: { key: string; label: string }[] = [
-  { key: "uchcha", label: "kundali.x.sthana_uchcha" },
-  { key: "saptavargaja", label: "kundali.x.sthana_saptavargaja" },
-  { key: "oja_yugma", label: "kundali.x.sthana_oja_yugma" },
-  { key: "kendradi", label: "kundali.x.sthana_kendradi" },
-  { key: "drekkana", label: "kundali.x.sthana_drekkana" },
-];
-
-const KALA_SUBS: { key: string; label: string }[] = [
-  { key: "nathonnatha", label: "kundali.x.kala_nathonnatha" },
-  { key: "paksha", label: "sections.paksha" },
-  { key: "tribhaga", label: "kundali.x.kala_tribhaga" },
-  { key: "varshadhipati", label: "kundali.x.kala_varshadhipati" },
-  { key: "masadhipati", label: "kundali.x.kala_masadhipati" },
-  { key: "varadhipati", label: "kundali.x.kala_varadhipati" },
-  { key: "horadhipati", label: "kundali.x.kala_horadhipati" },
-  { key: "ayana", label: "kundali.ayana" },
-  { key: "yuddha", label: "kundali.x.kala_yuddha" },
-];
-
 const th = "h-9 px-2.5 text-sm font-semibold uppercase tracking-wide";
 const td = "px-2.5 py-1.5 text-sm";
 const num = "text-right font-mono tabular-nums";
@@ -79,13 +64,6 @@ const STATUS_LABEL: Record<ShadbalaStatus, string> = {
   Borderline: "kundali.x.status_borderline",
   Weak: "kundali.x.status_weak",
 };
-
-/** Yuddha virupas for display — API sub-bala value overlaid with the war table. */
-function yuddhaVirupasForPlanet(planet: ShadbalaPlanet, yuddha: YuddhaData): number {
-  const api = planet.sub_balas?.kala?.yuddha;
-  if (api != null && api !== 0) return api;
-  return yuddha.byPlanet[planet.key] ?? 0;
-}
 
 function StatusBadge({ status }: { status: ShadbalaStatus }) {
   const { t } = useTranslation();
@@ -127,9 +105,10 @@ type MatrixRowProps = {
   open?: boolean;
   onToggle?: () => void;
   sub?: boolean;
+  selectedKey?: string;
 };
 
-function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, sub }: MatrixRowProps) {
+function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, sub, selectedKey }: MatrixRowProps) {
   const labelCell = (
     <TableCell
       className={cn(
@@ -163,7 +142,12 @@ function MatrixRow({ label, planets, value, bold, expandable, open, onToggle, su
       {planets.map((p) => (
         <TableCell
           key={p.key}
-          className={cn(td, num, bold ? "font-semibold text-foreground" : sub ? "" : "text-foreground/90")}
+          className={cn(
+            td,
+            num,
+            bold ? "font-semibold text-foreground" : sub ? "" : "text-foreground/90",
+            selectedKey === p.key && "bg-primary/10",
+          )}
         >
           {value(p)}
         </TableCell>
@@ -188,16 +172,12 @@ export function ShadbalaCard({
   const { planets, summary } = data;
   const [openSthana, setOpenSthana] = useState(false);
   const [openKala, setOpenKala] = useState(false);
+  const [scale, setScale] = useState<ShadbalaScale>("virupas");
 
-  const planetName = (p: ShadbalaPlanet) => bilingualText(lang, p.name_ne, p.name);
-  const grahaName = (key: string) => {
-    const g = GRAHA_NAME[key as GrahaKey];
-    return g ? bilingualText(lang, g.ne, g.en) : key;
-  };
-
-  const ordered = PLANET_ORDER
-    .map((key) => planets.find((p) => p.key === key))
-    .filter((p): p is ShadbalaPlanet => p != null);
+  const ordered = orderShadbalaPlanets(planets);
+  const [selectedKey, setSelectedKey] = useState(ordered[0]?.key ?? "sun");
+  const grahaName = (key: string) =>
+    GRAHA_NAME_I18N[key] ? t(GRAHA_NAME_I18N[key]) : grahaDisplayName(key, lang);
   const rankByKey = new Map(
     [...planets]
       .sort((a, b) => b.ratio - a.ratio)
@@ -223,7 +203,7 @@ export function ShadbalaCard({
             <p className="text-lg font-bold text-foreground">
               <span className="inline-flex items-center gap-2">
                 <GrahaPlanetIcon graha={summary.strongest.key as GrahaKey} size={28} />
-                {bilingualText(lang, summary.strongest.name_ne, summary.strongest.name)}
+                {grahaName(summary.strongest.key)}
               </span>
             </p>
             <div className="mt-1 flex items-center gap-2">
@@ -238,7 +218,7 @@ export function ShadbalaCard({
             <p className="text-lg font-bold text-foreground">
               <span className="inline-flex items-center gap-2">
                 <GrahaPlanetIcon graha={summary.weakest.key as GrahaKey} size={28} />
-                {bilingualText(lang, summary.weakest.name_ne, summary.weakest.name)}
+                {grahaName(summary.weakest.key)}
               </span>
             </p>
             <div className="mt-1 flex items-center gap-2">
@@ -290,6 +270,15 @@ export function ShadbalaCard({
         </div>
       </div>
 
+      <ShadbalaChart
+        planets={ordered}
+        selectedKey={selectedKey}
+        onSelect={setSelectedKey}
+        yuddha={yuddha}
+        scale={scale}
+        onScaleChange={setScale}
+      />
+
       <div>
         <h4 className="text-sm font-semibold text-foreground mb-2">
           {t("kundali.shadbala_table")}
@@ -302,11 +291,18 @@ export function ShadbalaCard({
                   {t("kundali.bala")}
                 </TableHead>
                 {ordered.map((p) => (
-                  <TableHead key={p.key} className={cn(th, "text-right min-w-[5.25rem]")}>
-                    <span className="inline-flex items-center justify-end gap-1.5">
+                  <TableHead
+                    key={p.key}
+                    className={cn(th, "text-right min-w-[5.25rem]", selectedKey === p.key && "bg-primary/10")}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedKey(p.key)}
+                      className="inline-flex items-center justify-end gap-1.5"
+                    >
                       <GrahaPlanetIcon graha={p.key as GrahaKey} size={20} />
-                      <span>{planetName(p)}</span>
-                    </span>
+                      <span>{grahaName(p.key)}</span>
+                    </button>
                   </TableHead>
                 ))}
               </TableRow>
@@ -315,12 +311,14 @@ export function ShadbalaCard({
               <MatrixRow
                 label={t("kundali.x.relative_rank")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => digits(String(rankByKey.get(p.key) ?? "—"))}
                 bold
               />
               <MatrixRow
                 label={t("kundali.x.bala_sthana")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.breakdown.sthana, digits)}
                 expandable={hasSubs}
                 open={openSthana}
@@ -333,6 +331,7 @@ export function ShadbalaCard({
                       key={row.key}
                       label={t(row.label)}
                       planets={ordered}
+                selectedKey={selectedKey}
                       value={(p) => fmt(p.sub_balas?.sthana?.[row.key], digits)}
                       sub
                     />
@@ -342,11 +341,13 @@ export function ShadbalaCard({
               <MatrixRow
                 label={t("kundali.disha")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.breakdown.dig, digits)}
               />
               <MatrixRow
                 label={t("choghadiya.types.kala.name")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.breakdown.kala, digits)}
                 expandable={hasSubs}
                 open={openKala}
@@ -359,6 +360,7 @@ export function ShadbalaCard({
                       key={row.key}
                       label={t(row.label)}
                       planets={ordered}
+                selectedKey={selectedKey}
                       value={(p) =>
                         row.key === "yuddha" && yuddha
                           ? fmt(yuddhaVirupasForPlanet(p, yuddha), digits)
@@ -372,37 +374,44 @@ export function ShadbalaCard({
               <MatrixRow
                 label={t("kundali.x.bala_chesta")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.breakdown.cheshta, digits)}
               />
               <MatrixRow
                 label={t("kundali.x.bala_naisargika")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.breakdown.naisargika, digits)}
               />
               <MatrixRow
                 label={t("kundali.drishti")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.breakdown.drik, digits)}
               />
               <MatrixRow
                 label={t("kundali.total_pinda")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.total_virupas, digits)}
                 bold
               />
               <MatrixRow
                 label={t("kundali.rupas")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.rupas, digits)}
               />
               <MatrixRow
                 label={t("kundali.x.min_required")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.required / 60, digits)}
               />
               <MatrixRow
                 label={t("kundali.x.strength_ratio")}
                 planets={ordered}
+                selectedKey={selectedKey}
                 value={(p) => fmt(p.ratio, digits, 4)}
                 bold
               />
@@ -410,6 +419,7 @@ export function ShadbalaCard({
                 <MatrixRow
                   label={t("kundali.x.bhava_percent")}
                   planets={ordered}
+                selectedKey={selectedKey}
                   value={(p) => {
                     const pct = bhavaBala.rulershipPercent[p.key];
                     return pct != null ? `${digits(pct.toFixed(1))}%` : "—";
@@ -422,11 +432,13 @@ export function ShadbalaCard({
                   <MatrixRow
                     label={t("kundali.x.ishta_phala")}
                     planets={ordered}
+                selectedKey={selectedKey}
                     value={(p) => fmt(p.ishta_phala, digits)}
                   />
                   <MatrixRow
                     label={t("kundali.x.kashta_phala")}
                     planets={ordered}
+                selectedKey={selectedKey}
                     value={(p) => fmt(p.kashta_phala, digits)}
                   />
                 </Fragment>
@@ -436,7 +448,10 @@ export function ShadbalaCard({
                   {t("kundali.status")}
                 </TableCell>
                 {ordered.map((p) => (
-                  <TableCell key={p.key} className={cn(td, "text-right")}>
+                  <TableCell
+                    key={p.key}
+                    className={cn(td, "text-right", selectedKey === p.key && "bg-primary/10")}
+                  >
                     <StatusBadge status={p.status} />
                   </TableCell>
                 ))}
