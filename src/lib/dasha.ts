@@ -68,9 +68,10 @@ export interface DashaSpan {
   end: Date;
 }
 
-const YEAR_DAYS = 365.2425;
+/** Savana year used by the dasha engine (12 × 30 days). */
+const YEAR_DAYS = 360;
 export const DASHA_YEAR_MS = YEAR_DAYS * 86400000;
-const MONTH_DAYS = 30.4369;
+const MONTH_DAYS = 30;
 /** Sub-day unit: 1 yoga ≈ 53m 20s (1/27 of a civil day). */
 const YOGA_MS = 86400000 / 27;
 
@@ -126,8 +127,8 @@ export function formatDashaDuration(ms: number, lang: "ne" | "en"): string {
     return m > 0 ? `${y}${unit.y}${unit.sep}${m}${unit.m}` : `${y}${unit.y}`;
   }
   if (days >= 60) {
-    const m = Math.floor(days / 30.44);
-    const d = Math.round(days - m * 30.44);
+    const m = Math.floor(days / MONTH_DAYS);
+    const d = Math.round(days - m * MONTH_DAYS);
     return d > 0 ? `${m}${unit.m}${unit.sep}${d}${unit.d}` : `${m}${unit.m}`;
   }
   if (days >= 2) return `${Math.round(days)}${unit.d}`;
