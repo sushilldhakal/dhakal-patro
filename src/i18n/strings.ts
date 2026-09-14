@@ -795,6 +795,7 @@ export const strings = {
   "kundali.nav_charts": { ne: "चक्र", en: "Charts" },
   "kundali.nav_overview": { ne: "जन्म पञ्चाङ्ग / कुण्डली चक्र", en: "Birth Almanac / Charts" },
   "kundali.nav_dasha": { ne: "दशा", en: "Dasha" },
+  "kundali.nav_bala": { ne: "बल", en: "Bala" },
   "kundali.nav_shadbala": { ne: "षड्बल", en: "Shadbala" },
   "kundali.nav_bhava_bala": { ne: "भाव बल", en: "Bhava Bala" },
   "kundali.nav_ashtakavarga": { ne: "अष्टकवर्ग", en: "Ashtakavarga" },

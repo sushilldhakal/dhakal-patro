@@ -25,6 +25,9 @@ type DashaSystemPanelProps = {
   tribhagi: DashaTreeResponse | null | undefined;
   yogini: DashaTreeResponse | null | undefined;
   timeZone?: string;
+  /** Controlled tab — used when the kundali hash names a dasha system. */
+  active?: DashaSystem;
+  onActiveChange?: (id: DashaSystem) => void;
 };
 
 export function DashaSystemPanel({
@@ -32,6 +35,8 @@ export function DashaSystemPanel({
   tribhagi,
   yogini,
   timeZone,
+  active: activeProp,
+  onActiveChange,
 }: DashaSystemPanelProps) {
   const { t } = useTranslation();
   const { lang } = useLocale();
@@ -55,7 +60,12 @@ export function DashaSystemPanel({
       maxLevel: 1,
     },
   ];
-  const [active, setActive] = useState<DashaSystem>("vimshottari");
+  const [uncontrolled, setUncontrolled] = useState<DashaSystem>("vimshottari");
+  const active = activeProp ?? uncontrolled;
+  const setActive = (id: DashaSystem) => {
+    onActiveChange?.(id);
+    if (activeProp == null) setUncontrolled(id);
+  };
   const current = tabs.find((tab) => tab.id === active) ?? tabs[0]!;
   const dasha = current.data;
 

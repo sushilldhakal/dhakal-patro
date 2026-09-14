@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
@@ -42,7 +43,15 @@ import { formatGhadiPalaVipala } from "@/lib/birth-panchanga-meta";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
-import type { KundaliSectionId } from "@/components/kundali/KundaliSectionNav";
+import {
+  BALA_TAB_SECTIONS,
+  contentSectionId,
+  dashaSectionId,
+  dashaSystemFromSection,
+  type KundaliContentSectionId,
+  type KundaliSectionId,
+} from "@/components/kundali/KundaliSectionNav";
+import { KundaliSubTabs } from "@/components/kundali/KundaliSubTabs";
 
 const GrahaAstroTable = lazy(() =>
   import("@/components/kundali/GrahaAstroTable").then((m) => ({ default: m.GrahaAstroTable })),
@@ -339,7 +348,13 @@ export function KundaliView({
   const effectiveTimezone = resolveTimeZone(data?.location?.timezone, locationParams?.timezone);
   const locationLabel = data?.location?.name ?? locationLabelProp;
 
-  const showSection = (id: KundaliSectionId) => section == null || section === id;
+  const navigate = useNavigate();
+  const showSection = (id: KundaliContentSectionId) =>
+    section == null || contentSectionId(section) === id;
+  const goSection = (id: KundaliSectionId) => {
+    navigate({ to: ".", hash: id, replace: true });
+  };
+  const dashaSystem = section ? (dashaSystemFromSection(section) ?? "vimshottari") : "vimshottari";
 
   const birthBsLabel = useMemo(
     () => formatMomentDateLabel(birthMoment, lang, digits),
@@ -630,6 +645,8 @@ export function KundaliView({
                 tribhagi={tribhagiDasha}
                 yogini={yoginiDasha}
                 timeZone={effectiveTimezone}
+                active={dashaSystem}
+                onActiveChange={(system) => goSection(dashaSectionId(system))}
               />
             </Suspense>
           </div>
@@ -640,6 +657,12 @@ export function KundaliView({
       {showSection("kundali-shadbala") && (
         <div id="kundali-shadbala" className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
           <Suspense fallback={<SectionLoading />}>
+            <KundaliSubTabs
+              items={BALA_TAB_SECTIONS}
+              activeId="kundali-shadbala"
+              onSelect={goSection}
+              ariaLabel={t("kundali.nav_bala")}
+            />
             <ShadbalaCard
               data={detail.shadbala}
               yuddha={detail.yuddha}
@@ -655,6 +678,12 @@ export function KundaliView({
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
           <Suspense fallback={<SectionLoading />}>
+            <KundaliSubTabs
+              items={BALA_TAB_SECTIONS}
+              activeId="kundali-bhava-bala"
+              onSelect={goSection}
+              ariaLabel={t("kundali.nav_bala")}
+            />
             {detail.bhavaBala ? (
               <BhavaBalaCard
                 data={detail.bhavaBala}
@@ -681,6 +710,12 @@ export function KundaliView({
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
           <Suspense fallback={<SectionLoading />}>
+            <KundaliSubTabs
+              items={BALA_TAB_SECTIONS}
+              activeId="kundali-ashtakavarga"
+              onSelect={goSection}
+              ariaLabel={t("kundali.nav_bala")}
+            />
             {detail.ashtakavarga ? (
               <AshtakavargaCard data={detail.ashtakavarga} />
             ) : (
@@ -698,6 +733,12 @@ export function KundaliView({
           className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
         >
           <Suspense fallback={<SectionLoading />}>
+            <KundaliSubTabs
+              items={BALA_TAB_SECTIONS}
+              activeId="kundali-vimshopaka"
+              onSelect={goSection}
+              ariaLabel={t("kundali.nav_bala")}
+            />
             {detail.vimshopaka && detail.vimshopaka.classifications.length > 0 ? (
               <VimshopakaCard data={detail.vimshopaka} />
             ) : (

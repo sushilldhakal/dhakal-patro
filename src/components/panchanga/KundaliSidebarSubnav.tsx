@@ -1,11 +1,29 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { ChevronDown } from "lucide-react";
 import {
-  KUNDALI_SECTIONS,
+  KUNDALI_NAV_GROUPS,
+  dashaSystemFromSection,
+  defaultChildForGroup,
+  isBalaSection,
   parseKundaliSectionFromHash,
   type KundaliSectionId,
 } from "@/components/kundali/KundaliSectionNav";
 import { cn } from "@/lib/utils";
+
+function isGroupActive(groupId: string, activeId: KundaliSectionId): boolean {
+  if (groupId === "kundali-dasha") return dashaSystemFromSection(activeId) != null;
+  if (groupId === "kundali-bala") return isBalaSection(activeId);
+  return activeId === groupId;
+}
+
+function isChildActive(childId: KundaliSectionId, activeId: KundaliSectionId): boolean {
+  if (childId === "kundali-dasha-vimshottari") {
+    return activeId === "kundali-dasha" || activeId === "kundali-dasha-vimshottari";
+  }
+  return activeId === childId;
+}
 
 /** Section tabs nested under जन्मकुण्डली निर्माण in the panchanga sidebar. */
 export function KundaliSidebarSubnav({
@@ -16,31 +34,104 @@ export function KundaliSidebarSubnav({
   activeSectionId: KundaliSectionId;
 }) {
   const { t } = useTranslation();
+  const activeGroup =
+    dashaSystemFromSection(activeSectionId) != null
+      ? "kundali-dasha"
+      : isBalaSection(activeSectionId)
+        ? "kundali-bala"
+        : null;
+  const [expandedId, setExpandedId] = useState<string | null>(activeGroup);
+
+  useEffect(() => {
+    if (activeGroup) setExpandedId(activeGroup);
+  }, [activeGroup]);
 
   return (
     <ul className="ml-2 flex flex-col gap-0.5 border-l border-border/70 pl-2 pb-1">
-      {KUNDALI_SECTIONS.map(({ id, labelKey, ...rest }) => {
-        const isChild = "parentId" in rest && rest.parentId != null;
-        const active = activeSectionId === id;
+      {KUNDALI_NAV_GROUPS.map((group) => {
+        const hasChildren = "children" in group;
+        const active = isGroupActive(group.id, activeSectionId);
+        const expanded = expandedId === group.id;
+        const children = hasChildren ? group.children : [];
+        if (!hasChildren) {
+          return (
+            <li key={group.id}>
+              <Link
+                to="/kundali/$profileId"
+                params={{ profileId }}
+                hash={group.id}
+                className={cn(
+                  "block rounded-lg px-2 py-1.5 text-left text-sm font-medium leading-snug transition-colors",
+                  active
+                    ? "bg-secondary/12 text-secondary ring-1 ring-secondary/20"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+                aria-current={active ? "true" : undefined}
+              >
+                {t(group.labelKey)}
+              </Link>
+            </li>
+          );
+        }
+
+        const defaultChild = defaultChildForGroup(group.id) ?? children[0]?.id;
         return (
-          <li key={id}>
-            <Link
-              to="/kundali/$profileId"
-              params={{ profileId }}
-              hash={id}
+          <li key={group.id}>
+            <div
               className={cn(
-                "block rounded-lg text-left leading-snug transition-colors",
-                isChild
-                  ? "py-2 pl-3 pr-2 text-base font-medium"
-                  : "px-2 py-1.5 text-sm font-medium",
+                "flex items-center rounded-lg",
                 active
                   ? "bg-secondary/12 text-secondary ring-1 ring-secondary/20"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
-              aria-current={active ? "true" : undefined}
             >
-              {t(labelKey)}
-            </Link>
+              <Link
+                to="/kundali/$profileId"
+                params={{ profileId }}
+                hash={defaultChild}
+                onClick={() => setExpandedId(group.id)}
+                className="min-w-0 flex-1 px-2 py-1.5 text-left text-sm font-medium leading-snug"
+              >
+                {t(group.labelKey)}
+              </Link>
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-label={t(group.labelKey)}
+                onClick={() => setExpandedId(expanded ? null : group.id)}
+                className="shrink-0 px-2 py-1.5"
+              >
+                <ChevronDown
+                  className={cn("size-3.5 transition-transform", expanded && "rotate-180")}
+                  aria-hidden
+                />
+              </button>
+            </div>
+            {expanded ? (
+              <ul className="mt-0.5 ml-2 flex flex-col gap-0.5 border-l border-border/60 pl-2">
+                {children.map((child) => {
+                  const childActive = isChildActive(child.id, activeSectionId);
+                  return (
+                    <li key={child.id}>
+                      <Link
+                        to="/kundali/$profileId"
+                        params={{ profileId }}
+                        hash={child.id}
+                        className={cn(
+                          "block rounded-lg px-2 py-1.5 text-left text-sm font-medium leading-snug transition-colors",
+                          childActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                        aria-current={childActive ? "true" : undefined}
+                      >
+                        {t(child.labelKey)}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
           </li>
         );
       })}
