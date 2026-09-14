@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowRight, Check } from "lucide-react";
+import { ArrowDown, ArrowRight, ChevronRight } from "lucide-react";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { dashaExpandKeys, fetchDashaChildren, type DashaSystem, type DashaTreeNode } from "@/lib/api";
 import { formatZonedAdMoment, formatZonedBsMoment } from "@/lib/bs-calendar";
@@ -29,6 +29,62 @@ const LEVEL_LABELS: string[] = [
 
 const MAX_LEVEL = LEVEL_LABELS.length - 1;
 
+const LORD_ACCENT: Record<DashaLord, string> = {
+  sun: "border-amber-500/35 bg-amber-500/[0.08]",
+  moon: "border-slate-400/35 bg-slate-400/[0.08]",
+  mars: "border-red-500/35 bg-red-500/[0.08]",
+  mercury: "border-emerald-500/35 bg-emerald-500/[0.08]",
+  jupiter: "border-yellow-600/35 bg-yellow-600/[0.08]",
+  venus: "border-pink-500/35 bg-pink-500/[0.08]",
+  saturn: "border-violet-500/35 bg-violet-500/[0.08]",
+  rahu: "border-neutral-500/35 bg-neutral-500/[0.08]",
+  ketu: "border-orange-600/35 bg-orange-600/[0.08]",
+};
+
+const YOGINI_ACCENT: Record<string, string> = {
+  mangala: "border-rose-500/35 bg-rose-500/[0.08]",
+  pingala: "border-orange-500/35 bg-orange-500/[0.08]",
+  dhanya: "border-amber-500/35 bg-amber-500/[0.08]",
+  bhramari: "border-yellow-600/35 bg-yellow-600/[0.08]",
+  bhadrika: "border-lime-600/35 bg-lime-600/[0.08]",
+  ulka: "border-cyan-500/35 bg-cyan-500/[0.08]",
+  siddha: "border-sky-500/35 bg-sky-500/[0.08]",
+  sankata: "border-violet-500/35 bg-violet-500/[0.08]",
+};
+
+const YOGINI_DOT: Record<string, string> = {
+  mangala: "bg-rose-500",
+  pingala: "bg-orange-500",
+  dhanya: "bg-amber-500",
+  bhramari: "bg-yellow-600",
+  bhadrika: "bg-lime-600",
+  ulka: "bg-cyan-500",
+  siddha: "bg-sky-500",
+  sankata: "bg-violet-500",
+};
+
+const LORD_DOT: Record<DashaLord, string> = {
+  sun: "bg-amber-500",
+  moon: "bg-slate-400",
+  mars: "bg-red-500",
+  mercury: "bg-emerald-500",
+  jupiter: "bg-yellow-600",
+  venus: "bg-pink-500",
+  saturn: "bg-violet-500",
+  rahu: "bg-neutral-500",
+  ketu: "bg-orange-600",
+};
+
+function lordAccent(lord: string, system: DashaSystem): string {
+  if (system === "yogini") return YOGINI_ACCENT[lord] ?? "border-border/50 bg-muted/20";
+  return LORD_ACCENT[(lord as DashaLord) in LORD_ACCENT ? (lord as DashaLord) : "ketu"];
+}
+
+function lordDot(lord: string, system: DashaSystem): string {
+  if (system === "yogini") return YOGINI_DOT[lord] ?? "bg-muted-foreground";
+  return LORD_DOT[(lord as DashaLord) in LORD_DOT ? (lord as DashaLord) : "ketu"];
+}
+
 /** A BS year like "2076" means nothing in English — English mode shows the
  * Gregorian calendar instead of translating BS month names into English. */
 function formatMoment(
@@ -41,6 +97,43 @@ function formatMoment(
   return isEn
     ? formatZonedAdMoment(date, { lang, timeZone, digits })
     : formatZonedBsMoment(date, { lang, timeZone, digits });
+}
+
+function MomentLine({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="text-sm leading-snug">
+      <span className="inline-block w-14 shrink-0 font-semibold uppercase tracking-wide text-sm">
+        {label}
+      </span>
+      <span className="text-base text-foreground/80">{value}</span>
+    </p>
+  );
+}
+
+function TimelineDot({
+  running,
+  level,
+  lord,
+  system,
+}: {
+  running: boolean;
+  level: number;
+  lord: string;
+  system: DashaSystem;
+}) {
+  const size =
+    level === 0 ? "size-3.5 -left-[8px]" : level === 1 ? "size-2.5 -left-[6px]" : "size-2 -left-[5px]";
+
+  return (
+    <span
+      className={cn(
+        "absolute top-[1.125rem] z-10 rounded-full border-2 border-background shadow-sm",
+        size,
+        running ? "bg-secondary ring-2 ring-secondary/35" : lordDot(lord, system),
+      )}
+      aria-hidden
+    />
+  );
 }
 
 function SpanProgress({ start, end, now }: { start: Date; end: Date; now: number }) {
@@ -166,54 +259,130 @@ function useLevelChildren(
   return (parent.childNodes ?? q.data?.children)?.map(toSpan);
 }
 
-function PeriodCard({
+/** Recursive accordion node — one mahadasha/antar/pratyantar/etc. row on the
+ * spine, expandable to reveal its own children. This is the full explorer
+ * ("browse every period", not just what's running now) that sits below the
+ * always-visible {@link ChainStack}. */
+function DashaNode({
   span,
-  system,
-  lang,
-  digits,
-  timeZone,
+  level,
   now,
-  selected,
-  onSelect,
+  timeZone,
+  isLast,
+  system,
+  maxLevel,
 }: {
   span: SpanWithChildren;
-  system: DashaSystem;
-  lang: string;
-  digits: (v: string | number) => string;
-  timeZone?: string;
+  level: number;
   now: number;
-  selected: boolean;
-  onSelect: () => void;
+  timeZone?: string;
+  isLast?: boolean;
+  system: DashaSystem;
+  maxLevel: number;
 }) {
   const { t } = useTranslation();
-  const grahaKey = dashaMahadashaGrahaKey(system, span.lord);
+  const { lang, digits } = useLocale();
   const running = isRunning(span, now);
+  const [open, setOpen] = useState(false);
+  const expandable = level < maxLevel;
+
+  const needsFetch = open && expandable && !span.childNodes;
+  const startIso = span.start.toISOString();
+  const endIso = span.end.toISOString();
+  const childQ = useQuery({
+    queryKey: dashaExpandKeys.span(span.lord, startIso, endIso, system),
+    queryFn: () => fetchDashaChildren(span.lord, startIso, endIso, system),
+    enabled: needsFetch,
+    staleTime: Infinity,
+  });
+
+  const children = useMemo<SpanWithChildren[] | null>(() => {
+    if (!open || !expandable) return null;
+    const nodes = span.childNodes ?? childQ.data?.children;
+    return nodes ? nodes.map(toSpan) : null;
+  }, [open, expandable, span.childNodes, childQ.data]);
+
+  const duration = formatDashaDuration(span.end.getTime() - span.start.getTime(), lang);
+  const levelLabel = t(LEVEL_LABELS[level]!);
+  const accent = lordAccent(span.lord, system);
+
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      className={cn(
-        "flex shrink-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
-        "min-w-[128px]",
-        selected
-          ? "border-secondary bg-secondary/10 shadow-[0_0_0_1px_var(--secondary)]"
-          : "border-border bg-card hover:bg-muted/40",
-      )}
-    >
-      <span className="flex items-center gap-1.5">
-        {grahaKey ? <GrahaPlanetIcon graha={grahaKey} size={18} /> : null}
-        <span className="text-sm font-bold text-foreground">{displayLordName(span, lang, system)}</span>
-        {selected && <Check className="size-3.5 shrink-0 text-secondary" aria-hidden />}
-      </span>
-      <span className="text-sm text-muted-foreground">
-        {running
-          ? t("kundali.running")
-          : bilingualText(lang, "अन्त्य", "Ends")}
-        {" "}
-        {formatMoment(span.end, lang, timeZone, digits)}
-      </span>
-    </button>
+    <li className={cn("relative", level === 0 ? "pb-4" : "pb-2", level > 0 && "ml-1")}>
+      <span
+        className={cn(
+          "absolute top-0 bottom-0 border-l-2",
+          level === 0 ? "-left-px border-border/80" : "left-0 border-border/50",
+          isLast && !open && "bottom-auto h-[1.125rem]",
+        )}
+        aria-hidden
+      />
+      <TimelineDot running={running} level={level} lord={span.lord} system={system} />
+
+      <article
+        className={cn(
+          "ml-5 overflow-hidden rounded-xl border transition-colors",
+          level === 0 ? "shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_4%,transparent)]" : "",
+          accent,
+          running && "border-secondary/40 ring-1 ring-secondary/20",
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => expandable && setOpen((v) => !v)}
+          disabled={!expandable}
+          aria-expanded={expandable ? open : undefined}
+          className={cn(
+            "w-full px-3 py-2.5 text-left transition-colors",
+            expandable && "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]",
+          )}
+        >
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {expandable ? (
+              <ChevronRight className={cn("size-3.5 shrink-0 transition-transform", open && "rotate-90")} aria-hidden />
+            ) : (
+              <span className="w-3.5 shrink-0" aria-hidden />
+            )}
+            <span className="text-sm font-bold text-foreground">{displayLordName(span, lang, system)}</span>
+            <span className="text-sm">
+              {levelLabel}
+              <span className="mx-1">·</span>
+              {digits(duration)}
+            </span>
+            {running && (
+              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-bold text-secondary">
+                {t("kundali.running")}
+              </span>
+            )}
+          </span>
+
+          <span className="mt-2 block space-y-0.5 pl-[22px]">
+            <MomentLine label={t("kundali.begin")} value={formatMoment(span.start, lang, timeZone, digits)} />
+            <MomentLine label={t("kundali.end")} value={formatMoment(span.end, lang, timeZone, digits)} />
+          </span>
+
+          {running && <SpanProgress start={span.start} end={span.end} now={now} />}
+        </button>
+
+        {children && (
+          <div className="border-t border-border/50 bg-card/40 px-2 pb-2 pt-1">
+            <ul className="relative ml-3 flex flex-col gap-0">
+              {children.map((child, i) => (
+                <DashaNode
+                  key={`${child.lord}-${child.start.getTime()}-${i}`}
+                  span={child}
+                  level={level + 1}
+                  now={now}
+                  timeZone={timeZone}
+                  isLast={i === children.length - 1}
+                  system={system}
+                  maxLevel={maxLevel}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
+      </article>
+    </li>
   );
 }
 
@@ -351,12 +520,10 @@ export type DashaTreeProps = {
 };
 
 /**
- * Dasha explorer: one level visible at a time (tabs across the top), instead
- * of an ever-growing accordion tree that buries "what's active right now"
- * several clicks and a long scroll down. Lands already showing the live
- * chain's deepest level; picking a different card at any level drills into
- * its own children at the next tab, so browsing other periods never grows
- * the page taller than one screen.
+ * Dasha timeline: an always-visible stack of the live chain (Mahadasha down
+ * to whatever level is known — nothing collapsed, no clicking needed to see
+ * "what's running right now"), followed by the full accordion tree for
+ * browsing every other period at every level.
  */
 export function DashaTree({
   tree,
@@ -370,40 +537,17 @@ export function DashaTree({
   const [now] = useState(() => Date.now());
   const mahadashas = useMemo(() => tree.map(toSpan), [tree]);
 
-  // `manualPath[i]` overrides level i once the user picks a card there —
-  // until then every level follows whichever period is genuinely running.
-  const [manualPath, setManualPath] = useState<(SpanWithChildren | undefined)[]>([]);
-  const [manualLevel, setManualLevel] = useState<number | null>(null);
-
-  const p0 = manualPath[0] ?? findRunning(mahadashas, now);
+  const p0 = findRunning(mahadashas, now);
   const list1 = useLevelChildren(p0, system, 0, maxLevel);
-  const p1 = manualPath[1] ?? findRunning(list1, now);
+  const p1 = findRunning(list1, now);
   const list2 = useLevelChildren(p1, system, 1, maxLevel);
-  const p2 = manualPath[2] ?? findRunning(list2, now);
+  const p2 = findRunning(list2, now);
   const list3 = useLevelChildren(p2, system, 2, maxLevel);
-  const p3 = manualPath[3] ?? findRunning(list3, now);
+  const p3 = findRunning(list3, now);
   const list4 = useLevelChildren(p3, system, 3, maxLevel);
-  const p4 = manualPath[4] ?? findRunning(list4, now);
+  const p4 = findRunning(list4, now);
 
-  const path = [p0, p1, p2, p3, p4];
-  const levelLists: (SpanWithChildren[] | undefined)[] = [mahadashas, list1, list2, list3, list4];
-
-  const deepestKnown = path.reduce((acc, s, i) => (s ? i : acc), 0);
-  const selectedLevel = Math.min(manualLevel ?? deepestKnown, maxLevel);
-  const cards = levelLists[selectedLevel] ?? [];
-  const knownPath = path.filter((s): s is SpanWithChildren => s != null);
-  const viewingLive = manualPath.length === 0;
-
-  function pick(level: number, span: SpanWithChildren) {
-    const next = [...path.slice(0, level), span];
-    setManualPath(next);
-    setManualLevel(Math.min(level + 1, maxLevel));
-  }
-
-  function backToNow() {
-    setManualPath([]);
-    setManualLevel(null);
-  }
+  const knownPath = [p0, p1, p2, p3, p4].filter((s): s is SpanWithChildren => s != null);
 
   const timelineStart = mahadashas[0]?.start;
   const timelineEnd = mahadashas[mahadashas.length - 1]?.end;
@@ -413,31 +557,18 @@ export function DashaTree({
       : null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {knownPath.length > 0 && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-bold uppercase tracking-wide text-secondary">
-              {viewingLive
-                ? t("kundali.running_dasha")
-                : bilingualText(lang, "हेर्दै हुनुहुन्छ", "Viewing")}
+              {t("kundali.running_dasha")}
             </p>
-            <div className="flex items-center gap-2">
-              {yoginiCycle ? (
-                <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
-                  {bilingualText(lang, `चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
-                </span>
-              ) : null}
-              {!viewingLive && (
-                <button
-                  type="button"
-                  onClick={backToNow}
-                  className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 text-sm font-semibold hover:bg-muted/40"
-                >
-                  {bilingualText(lang, "अहिले फर्कनुहोस्", "Back to now")}
-                </button>
-              )}
-            </div>
+            {yoginiCycle ? (
+              <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
+                {bilingualText(lang, `चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
+              </span>
+            ) : null}
           </div>
           <ChainStack
             path={knownPath}
@@ -470,52 +601,22 @@ export function DashaTree({
 
       <div>
         <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {bilingualText(lang, "अन्य अवधि हेर्नुहोस्", "Browse other periods")}
+          {t("kundali.x.dasha_full_timeline")}
         </p>
-        <div className="flex gap-1 overflow-x-auto pb-1" role="tablist">
-          {LEVEL_LABELS.slice(0, maxLevel + 1).map((key, i) => {
-            const disabled = levelLists[i] == null && i !== 0;
-            return (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={selectedLevel === i}
-                disabled={disabled}
-                onClick={() => setManualLevel(i)}
-                className={cn(
-                  "shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors",
-                  selectedLevel === i
-                    ? "border-secondary/40 bg-secondary/12 text-secondary"
-                    : "border-border bg-transparent text-muted-foreground hover:text-foreground",
-                  disabled && "cursor-not-allowed opacity-40",
-                )}
-              >
-                {t(key)}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-1 pt-1">
-          {cards.length > 0 ? (
-            cards.map((span, i) => (
-              <PeriodCard
-                key={`${span.lord}-${span.start.getTime()}-${i}`}
-                span={span}
-                system={system}
-                lang={lang}
-                digits={digits}
-                timeZone={timeZone}
-                now={now}
-                selected={path[selectedLevel]?.start.getTime() === span.start.getTime()}
-                onSelect={() => pick(selectedLevel, span)}
-              />
-            ))
-          ) : (
-            <p className="py-2 text-sm text-muted-foreground">{t("common.loading")}</p>
-          )}
-        </div>
+        <ol className="relative m-0 list-none pl-3">
+          {mahadashas.map((span, i) => (
+            <DashaNode
+              key={`${span.lord}-${span.start.getTime()}-${i}`}
+              span={span}
+              level={0}
+              now={now}
+              timeZone={timeZone}
+              isLast={i === mahadashas.length - 1}
+              system={system}
+              maxLevel={maxLevel}
+            />
+          ))}
+        </ol>
       </div>
     </div>
   );
