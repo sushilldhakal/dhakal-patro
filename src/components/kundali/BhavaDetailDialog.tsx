@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 import { useMediaQuery, BELOW_MD_MQ } from "@/hooks/use-media-query";
 import type { BhavaHouse } from "@/lib/bhava";
 import { houseBadge, formatHouseBadge, drishtiTargetHouses } from "@/lib/bhava";
-import { GRAHA_NAME, type GrahaKey } from "@/lib/graha-details";
+import { GRAHA_NAME, GRAHA_ICON, type GrahaKey } from "@/lib/graha-details";
 import type { BhavaReferencePayload } from "@/lib/api";
 import {
   HOUSE_ORDINAL_NE,
   HOUSE_ORDINAL_EN,
+  HOUSE_LORD_TITLE_NE,
   computeAspectedBy,
   splitList,
 } from "@/lib/kundali/bhava-detail";
@@ -83,6 +84,34 @@ const ratingBadgeCls: Record<string, string> = {
   kamjor: "border-destructive/20 bg-destructive/10 text-destructive",
 };
 
+/** A classical Sanskrit citation — book/label + shloka — as a distinct
+ * quote card instead of small italic prose, so it reads at a glance rather
+ * than blending into the surrounding text. `label` is the citation's own
+ * kind (e.g. "कारकत्व श्लोक"); when omitted, `source` (the scripture name)
+ * doubles as the badge text on its own, matching the saravali-citation use
+ * where there's no separate kind to name. */
+function ShlokaCard({
+  label,
+  source,
+  shloka,
+}: {
+  label?: string;
+  source: string;
+  shloka: string;
+}) {
+  return (
+    <div className="rounded-lg border border-secondary/25 bg-secondary/[0.06] p-2.5">
+      <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+        {label && <span className="text-sm font-semibold text-foreground">📜 {label}</span>}
+        <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-medium leading-none text-secondary">
+          {label ? source : `📜 ${source}`}
+        </span>
+      </div>
+      <p className="whitespace-pre-line text-base font-bold leading-relaxed text-foreground">{shloka}</p>
+    </div>
+  );
+}
+
 function GrahaKarakatvaCard({
   grahaKey,
   house,
@@ -102,17 +131,15 @@ function GrahaKarakatvaCard({
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-bold text-foreground">🪐 {grahaName(grahaKey, lang)}</p>
+      <p className="text-sm font-bold text-foreground">
+        {GRAHA_ICON[grahaKey as GrahaKey] ?? "🪐"} {grahaName(grahaKey, lang)}
+      </p>
 
-      <div>
-        <p className="text-sm font-semibold text-foreground">
-          📜 {bilingualText(lang, "कारकत्व श्लोक", "Karakatva shloka")}
-          <span className="ml-1 font-normal text-muted-foreground">
-            — {bilingualText(lang, k.shlokaSourceNe, k.shlokaSourceEn)}
-          </span>
-        </p>
-        <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">{k.shloka}</p>
-      </div>
+      <ShlokaCard
+        label={bilingualText(lang, "कारकत्व श्लोक", "Karakatva shloka")}
+        source={bilingualText(lang, k.shlokaSourceNe, k.shlokaSourceEn)}
+        shloka={k.shloka}
+      />
 
       <div>
         <p className="text-sm font-semibold text-foreground">📋 {bilingualText(lang, "कारकत्व विषयहरू", "Karakatva subjects")}</p>
@@ -152,16 +179,13 @@ function GrahaKarakatvaCard({
               ग्रन्थ-सन्दर्भसहित, तर छुट्टै अर्थ/व्याख्या बिना), अनि अन्त्यमा एकपटक
               मात्र समग्र अर्थ र व्याख्या (`summaryNe`/`summaryEn`) — हरेक ग्रहको
               लागि सधैं यही एउटै ढाँचा। */
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {saravali.entries.map((citation, i) => (
-              <div key={i}>
-                <p className="text-sm font-semibold text-foreground">
-                  📜 {bilingualText(lang, citation.shlokaSourceNe, citation.shlokaSourceEn)}
-                </p>
-                <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-                  {citation.shloka}
-                </p>
-              </div>
+              <ShlokaCard
+                key={i}
+                source={bilingualText(lang, citation.shlokaSourceNe, citation.shlokaSourceEn)}
+                shloka={citation.shloka}
+              />
             ))}
             <p className="border-t border-border/50 pt-2 text-sm leading-relaxed">
               💡 {bilingualText(lang, saravali.summaryNe, saravali.summaryEn)}
@@ -254,6 +278,13 @@ function BhavaDetailBody({
 }) {
   const info = reference.houseInfo[house.house];
   const lordKey = reference.rashiLord[house.rashi];
+  const lordHouse = houses.find((h) => h.planets.some((p) => p.key === lordKey))?.house;
+  const bhaveshEntry = lordHouse != null ? reference.bhaveshPhala[house.house]?.[lordHouse] : undefined;
+  const lordTitle = bilingualText(
+    lang,
+    HOUSE_LORD_TITLE_NE[house.house - 1],
+    `Lord of house ${digits(house.house)}`,
+  );
 
   const occupants = house.planets;
   const aspectedBy = computeAspectedBy(houses, house.house);
@@ -308,7 +339,7 @@ function BhavaDetailBody({
   const TitleWrap = variant === "drawer" ? DrawerTitle : DialogTitle;
 
   const tabs: { id: TabId; icon: string; label: string }[] = [
-    { id: "summary", icon: "🪐", label: bilingualText(lang, "सारांश", "Summary") },
+    { id: "summary", icon: "📋", label: bilingualText(lang, "सारांश", "Summary") },
     { id: "lord", icon: "👑", label: bilingualText(lang, "स्वामी र फल", "Lord & results") },
     { id: "drishti", icon: "👁️", label: bilingualText(lang, "दृष्टि", "Aspects") },
     { id: "rules", icon: "📚", label: bilingualText(lang, "नियम", "Rules") },
@@ -482,16 +513,12 @@ function BhavaDetailBody({
                     `In the Kalapurusha (natural zodiac) chart this house corresponds to ${houseDetail.signEn} (ruled by ${houseDetail.lordEn}) — that's not this native's actual sign; see the real sign/lord for this house above.`,
                   )}
                 </p>
-                <div className="mt-2 border-l-2 border-secondary/40 pl-3">
-                  <p className="text-sm font-semibold text-foreground">
-                    📜 {bilingualText(lang, "शास्त्रीय प्रमाण", "Classical citation")}
-                    <span className="ml-1 font-normal text-muted-foreground">
-                      — {bilingualText(lang, houseDetail.shlokaSourceNe, houseDetail.shlokaSourceEn)}
-                    </span>
-                  </p>
-                  <p className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-foreground/90">
-                    {houseDetail.shloka}
-                  </p>
+                <div className="mt-2">
+                  <ShlokaCard
+                    label={bilingualText(lang, "शास्त्रीय प्रमाण", "Classical citation")}
+                    source={bilingualText(lang, houseDetail.shlokaSourceNe, houseDetail.shlokaSourceEn)}
+                    shloka={houseDetail.shloka}
+                  />
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {bilingualText(
@@ -522,15 +549,6 @@ function BhavaDetailBody({
 
         {tab === "lord" && (
           <div className="space-y-3">
-            {/* भावेश सम्बन्ध — content pulled pending re-verification/regeneration;
-                do not read bhaveshPhala/bhaveshPhalaSupplementary here until
-                that's done. */}
-            <Block icon="👑" title={bilingualText(lang, "भावेश सम्बन्ध", "Lord placement")}>
-              <p className="text-sm text-muted-foreground">
-                🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
-              </p>
-            </Block>
-
             {/* ग्रह फलादेश — one worked saravali example per occupying graha, expandable for full karakatva */}
             <Block
               icon="🪐"
@@ -560,6 +578,55 @@ function BhavaDetailBody({
                   )}
                 </p>
               )}
+            </Block>
+
+            {/* भावेश सम्बन्ध — this house's real (chart-specific) lord and
+                where it actually sits, with the matching BPHS ch. 13
+                (भावेशफलाध्याय) shloka for that exact lord-house pair. */}
+            <Block
+              icon="👑"
+              title={bilingualText(lang, "भावेश सम्बन्ध", "Lord placement")}
+              right={
+                lordHouse != null
+                  ? bilingualText(lang, `${digits(lordHouse)}औँ भाव`, `house ${digits(lordHouse)}`)
+                  : undefined
+              }
+            >
+              {lordHouse != null ? (
+                <p className="text-sm">
+                  <span className="font-semibold text-foreground">{lordTitle}</span>{" "}
+                  <span className="font-semibold text-secondary">{grahaName(lordKey, lang)}</span> →{" "}
+                  {bilingualText(lang, `${digits(lordHouse)}औँ भाव`, `house ${digits(lordHouse)}`)}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {bilingualText(
+                    lang,
+                    `राशि स्वामी ${grahaName(lordKey, lang)} यो D1 चार्टमा फेला परेन।`,
+                    `Sign lord ${grahaName(lordKey, lang)} wasn't found placed in this D1 chart.`,
+                  )}
+                </p>
+              )}
+              {lordHouse != null &&
+                (bhaveshEntry ? (
+                  <div className="mt-2 space-y-1.5">
+                    {bhaveshEntry.shloka && (
+                      <ShlokaCard source={bilingualText(lang, "बृ.पा.हो.शा. (भावेशफलाध्याय)", "BPHS (ch. 13)")} shloka={bhaveshEntry.shloka} />
+                    )}
+                    <p className="text-sm leading-relaxed">{bilingualText(lang, bhaveshEntry.ne, bhaveshEntry.en)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {bilingualText(
+                        lang,
+                        `स्रोत: ${reference.bhaveshPhalaSource}`,
+                        `Source: ${reference.bhaveshPhalaSource}`,
+                      )}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    🚧 {bilingualText(lang, "चाँडै आउँदैछ", "Coming soon")}
+                  </p>
+                ))}
             </Block>
 
             {/* ग्रह युति फल — shown only when 2+ grahas share this house */}
@@ -713,7 +780,8 @@ function BhavaDetailBody({
                         return (
                           <div key={key}>
                             <p className="text-sm font-semibold text-foreground">
-                              🪐 {grahaName(key, lang)} — {bilingualText(lang, `भाव ${digits(house.house)}`, `house ${digits(house.house)}`)}
+                              {GRAHA_ICON[key as GrahaKey] ?? "🪐"} {grahaName(key, lang)} —{" "}
+                              {bilingualText(lang, `भाव ${digits(house.house)}`, `house ${digits(house.house)}`)}
                             </p>
                             <p className="mt-0.5 text-sm leading-relaxed">{bilingualText(lang, entry.ne, entry.en)}</p>
                             {tip && (
