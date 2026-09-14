@@ -35,11 +35,11 @@ export const KUNDALI_SECTIONS = [
     labelKey: "kundali.x.dasha_system_yogini",
     icon: "dasha" as const,
   },
+  { id: "kundali-shanti", labelKey: "kundali.nav_shanti_vidhi", icon: "shanti" as const },
   { id: "kundali-shadbala", labelKey: "kundali.nav_shadbala", icon: "shadbala" as const },
   { id: "kundali-bhava-bala", labelKey: "kundali.nav_bhava_bala", icon: "bhava" as const },
   { id: "kundali-ashtakavarga", labelKey: "kundali.nav_ashtakavarga", icon: "ashtakavarga" as const },
   { id: "kundali-vimshopaka", labelKey: "kundali.nav_vimshopaka", icon: "vimshopaka" as const },
-  { id: "kundali-shanti", labelKey: "kundali.nav_shanti_vidhi", icon: "shanti" as const },
   { id: "kundali-report", labelKey: "kundali.nav_analysis", icon: "analysis" as const },
 ] as const;
 
@@ -97,7 +97,10 @@ export const KUNDALI_NAV_GROUPS = [
     id: "kundali-dasha",
     labelKey: "kundali.nav_dasha",
     icon: "dasha" as const,
-    children: DASHA_TAB_SECTIONS.map(({ id, labelKey }) => ({ id, labelKey })),
+    children: [
+      ...DASHA_TAB_SECTIONS.map(({ id, labelKey }) => ({ id, labelKey })),
+      { id: "kundali-shanti" as const, labelKey: "kundali.nav_shanti_vidhi" },
+    ],
   },
   {
     id: "kundali-bala",
@@ -105,7 +108,6 @@ export const KUNDALI_NAV_GROUPS = [
     icon: "shadbala" as const,
     children: BALA_TAB_SECTIONS.map(({ id, labelKey }) => ({ id, labelKey })),
   },
-  { id: "kundali-shanti", labelKey: "kundali.nav_shanti_vidhi", icon: "shanti" as const },
   { id: "kundali-report", labelKey: "kundali.nav_analysis", icon: "analysis" as const },
 ] as const;
 
@@ -144,7 +146,7 @@ export function contentSectionId(id: KundaliSectionId): KundaliContentSectionId 
 }
 
 export function navGroupIdForSection(id: KundaliSectionId): string | null {
-  if (dashaSystemFromSection(id)) return "kundali-dasha";
+  if (dashaSystemFromSection(id) || id === "kundali-shanti") return "kundali-dasha";
   if (isBalaSection(id)) return "kundali-bala";
   return null;
 }
@@ -167,7 +169,7 @@ export function setKundaliSectionHash(id: KundaliSectionId) {
 }
 
 function isGroupActive(groupId: string, activeId: KundaliSectionId): boolean {
-  if (groupId === "kundali-dasha") return dashaSystemFromSection(activeId) != null;
+  if (groupId === "kundali-dasha") return dashaSystemFromSection(activeId) != null || activeId === "kundali-shanti";
   if (groupId === "kundali-bala") return isBalaSection(activeId);
   return activeId === groupId;
 }

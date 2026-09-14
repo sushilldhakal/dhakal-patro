@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 function isGroupActive(groupId: string, activeId: KundaliSectionId): boolean {
-  if (groupId === "kundali-dasha") return dashaSystemFromSection(activeId) != null;
+  if (groupId === "kundali-dasha") return dashaSystemFromSection(activeId) != null || activeId === "kundali-shanti";
   if (groupId === "kundali-bala") return isBalaSection(activeId);
   return activeId === groupId;
 }
@@ -35,7 +35,7 @@ export function KundaliSidebarSubnav({
 }) {
   const { t } = useTranslation();
   const activeGroup =
-    dashaSystemFromSection(activeSectionId) != null
+    dashaSystemFromSection(activeSectionId) != null || activeSectionId === "kundali-shanti"
       ? "kundali-dasha"
       : isBalaSection(activeSectionId)
         ? "kundali-bala"
