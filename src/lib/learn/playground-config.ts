@@ -17,6 +17,7 @@
  */
 
 import type { CameraState, SimParams, SimToggles } from "@/components/learn/DaySimScene";
+import type { TrackId } from "./chapter-tracks";
 
 /**
  * What the play button animates.
@@ -43,13 +44,16 @@ export interface PlaygroundConfig {
   params?: Partial<SimParams>;
   camera?: Partial<CameraState>;
   /**
-   * Guided chapter tour (welcome → stellar → … → playground).
+   * Which guided track this topic runs, if any.
    *
-   * The scene is the same one — राशि, नक्षत्र, month and Moon stay in it for
-   * later chapters. This flag only adds the player chrome and the opening
-   * keyframes.
+   * The scene is the same one either way — a track only adds the player chrome
+   * and takes the keyframes over. `"calendar"` is the long syllabus: the
+   * ported day chapters, then वार · महिना · वर्ष · the belts · ध्रुव तारा,
+   * ending in free explore. `"day"` is the faithful port on its own.
+   *
+   * @see {@link ./chapter-tracks}
    */
-  guided?: boolean;
+  guided?: TrackId;
 }
 
 const DEG = Math.PI / 180;
@@ -76,6 +80,12 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     moonTrail: false,
     moonLap: false,
     moonSightline: false,
+    /* The three faces open with their arcs, which is how every topic
+       outside the guided tour has always drawn them. */
+    siderealClock: true,
+    solarClock: true,
+    meanClock: true,
+    degrees: false,
   },
   year: {
     grid: false,
@@ -97,6 +107,12 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     moonTrail: true,
     moonLap: true,
     moonSightline: true,
+    /* The three faces open with their arcs, which is how every topic
+       outside the guided tour has always drawn them. */
+    siderealClock: true,
+    solarClock: true,
+    meanClock: true,
+    degrees: false,
   },
   sun: {
     grid: false,
@@ -118,6 +134,12 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     moonTrail: false,
     moonLap: false,
     moonSightline: false,
+    /* The three faces open with their arcs, which is how every topic
+       outside the guided tour has always drawn them. */
+    siderealClock: true,
+    solarClock: true,
+    meanClock: true,
+    degrees: false,
   },
   tilt: {
     grid: true,
@@ -141,6 +163,12 @@ export const MODE_LAYERS: Record<PlaygroundMode, SimToggles> = {
     moonTrail: false,
     moonLap: false,
     moonSightline: false,
+    /* The three faces open with their arcs, which is how every topic
+       outside the guided tour has always drawn them. */
+    siderealClock: true,
+    solarClock: true,
+    meanClock: true,
+    degrees: false,
   },
 };
 
@@ -203,8 +231,10 @@ export const MODE_CAMERA: Record<PlaygroundMode, CameraState> = {
  */
 export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   /* ── the day itself ──────────────────────────────────────────────── */
-  "what-is-a-day": { mode: "day" },
-  "earth-rotation-day": { mode: "day", guided: true },
+  /* The ported lab on its own, for the topic that is only about the day. */
+  "what-is-a-day": { mode: "day", guided: "day" },
+  /* The syllabus page: one scene, fourteen chapters, day through ध्रुव तारा. */
+  "earth-rotation-day": { mode: "day", guided: "calendar" },
   "sidereal-time": { mode: "day", layers: { siderealArc: true, solarArc: false } },
   vara: { mode: "day", layers: { eotWedge: false } },
   "how-we-calculate": { mode: "day" },
@@ -242,6 +272,26 @@ export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
     layers: { nakshatraBelt: true, moon: true, moonSightline: true },
   },
   ecliptic: { mode: "sun" },
+
+  /* ── the Moon, and the limbs read off it ─────────────────────────── */
+  "lunar-month": {
+    mode: "year",
+    /* The lap arc is the subject: one sidereal round, then the extra arc a
+       synodic month still needs. */
+    layers: { moonLap: true, nakshatraBelt: true, monthRing: false },
+  },
+  tithi: {
+    mode: "year",
+    /* A तिथि is the gap between two sightlines, so both open lit. */
+    layers: { moon: true, moonSightline: true, sightline: true, moonLap: false },
+  },
+  "five-limbs-together": {
+    mode: "sun",
+    /* Everything the almanac reads, at once — this topic is the assembly. */
+    layers: { nakshatraBelt: true, moon: true, moonSightline: true, moonTrail: true },
+  },
+  "what-is-panchang": { mode: "sun", layers: { moon: true, moonSightline: true } },
+  "geocentric-heliocentric": { mode: "year", layers: { sunOrbit: true } },
 
   /* ── the tilt and what it causes ─────────────────────────────────── */
   "axial-tilt": { mode: "tilt" },

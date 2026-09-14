@@ -1,81 +1,29 @@
 /**
- * The Earth / day tour: six timed chapters, then a free playground.
+ * The Earth / day tour — the first part of the guided track.
  *
- * Timed to the original Minute Labs "What is a Day" lab, so a voiceover
- * dropped in at `/learn/audio/<id>.mp3` will lock to the same beats. The
- * extra layers this scene already has — राशि, नक्षत्र, महिना, Moon — stay on
- * the state so later chapters can turn them on without a schema change.
- * The timed chapters leave them off; the playground can turn them on.
+ * A direct port of the Minute Labs "What is a Day" lab, beat for beat, so a
+ * voiceover recorded against the original locks to the same seconds. The
+ * shared vocabulary lives in {@link ./chapter-kit}; this file is only the
+ * script.
+ *
+ * The extra layers this scene already has — राशि, नक्षत्र, महिना, Moon — stay
+ * available on the state so a chapter can turn them on. The ported chapters
+ * leave them off, because the original had none of them; the chapters that are
+ * about them are in {@link ./calendar-chapters}, and {@link ./chapter-tracks}
+ * is what runs the two halves as one syllabus.
  */
 
-import type { CameraState, CameraTarget, PlaygroundGlobe, SimToggles } from "@/components/learn/DaySimScene";
 import { equationOfTime, PERIHELION, VERNAL } from "@/lib/sky3d/day-mechanics";
-import type { Keyframe } from "./chapter-player";
+import {
+  cam,
+  chapterState,
+  kf,
+  PI2,
+  zoomToDistance,
+  type Chapter,
+} from "./chapter-kit";
 
-const PI2 = Math.PI * 2;
 const SOLAR_DAYS = 8;
-
-export type ChapterId =
-  | "welcome"
-  | "stellar"
-  | "solar"
-  | "elliptic-orbit"
-  | "axial-tilt"
-  | "reality"
-  | "playground";
-
-export type ChapterSimState = {
-  handsOff: boolean;
-  orbitalPosition: number;
-  solarDaysPerYear: number;
-  tiltDeg: number;
-  eccentricity: number;
-  cameraTarget: CameraTarget;
-  cameraFollow: boolean;
-  graphOpen: boolean;
-  planet: PlaygroundGlobe;
-  cameraYaw: number;
-  cameraPitch: number;
-  cameraDistance: number;
-  /** Outline a named mesh — same beats as the original lab (`stellar-day-arc`, `earth`). */
-  highlight: string;
-  /** Pulse a control on the instrument panel (`settings`, `auto-orbit`, …). */
-  highlightControl: string;
-  /** Rotation angle on the globe, in degrees. */
-  degrees: boolean;
-  /** Sidereal clock on the stellar arc — original lab turns this on after the arc. */
-  stellarClock: boolean;
-} & SimToggles;
-
-export type DayChapter = {
-  id: ChapterId;
-  /** i18n key under `learn.chapters.<id>` */
-  titleKey: string;
-  /** Optional voiceover. Missing file → the chapter runs on its own clock. */
-  audio?: string;
-  /** Free explore — no keyframe takeover, no snap-back. The original lab's last stop. */
-  free?: boolean;
-  defaults: ChapterSimState;
-  frames: Keyframe<ChapterSimState>[];
-};
-
-/**
- * The original lab is orthographic: `zoom` magnifies, it does not dolly.
- * Welcome was ported at zoom 30 → distance 30; every other zoom inverts from
- * that so a close-up (80) is actually closer, not further away.
- */
-function zoomToDistance(zoom: number) {
-  return (30 * 30) / zoom;
-}
-
-function cam(x: number, y: number, z: number, zoom: number) {
-  const horiz = Math.hypot(x, z) || 1e-6;
-  return {
-    cameraYaw: Math.atan2(x, z),
-    cameraPitch: Math.atan2(y, horiz),
-    cameraDistance: zoomToDistance(zoom),
-  };
-}
 
 /** Orbital fraction that puts a given solar-day count on the meridian. */
 function pos(days: number, e = 0, yRad = 0) {
@@ -87,57 +35,15 @@ function pos(days: number, e = 0, yRad = 0) {
   return (days - PERIHELION / PI2 - eot / PI2) / (dpy - 1);
 }
 
-function kf(state: Partial<ChapterSimState>, meta: Keyframe<ChapterSimState>["meta"]): Keyframe<ChapterSimState> {
-  return { state, meta };
+/** This track's own quiet opening — the original lab's eight-day toy year. */
+function base(partial: Parameters<typeof chapterState>[0]) {
+  return chapterState({ solarDaysPerYear: SOLAR_DAYS, ...partial });
 }
 
-const OFF_BELTS = {
-  rashiBelt: false,
-  nakshatraBelt: false,
-  monthRing: false,
-  sightline: false,
-  moon: false,
-  moonTrail: false,
-  moonLap: false,
-  moonSightline: false,
-  axis: false,
-} satisfies Partial<SimToggles>;
-
-function base(partial: Partial<ChapterSimState>): ChapterSimState {
-  return {
-    handsOff: false,
-    orbitalPosition: 0,
-    solarDaysPerYear: SOLAR_DAYS,
-    tiltDeg: 0,
-    eccentricity: 0,
-    cameraTarget: "planet",
-    cameraFollow: false,
-    graphOpen: false,
-    planet: "earth",
-    highlight: "",
-    highlightControl: "",
-    degrees: false,
-    stellarClock: false,
-    ...cam(-5, 20, 30, 40),
-    grid: false,
-    planetOrbit: true,
-    sunOrbit: false,
-    trueSun: true,
-    meanSun: false,
-    eotWedge: false,
-    siderealArc: false,
-    solarArc: false,
-    meanArc: false,
-    primeMeridian: true,
-    ...OFF_BELTS,
-    ...partial,
-  };
-}
-
-const welcome: DayChapter = {
+const welcome: Chapter = {
   id: "welcome",
   titleKey: "learn.chapters.welcome",
-  audio: "/learn/audio/welcome.mp3",
+  partKey: "learn.chapters.part_day",
   defaults: base({
     handsOff: true,
     cameraTarget: "meanSun",
@@ -162,14 +68,17 @@ const welcome: DayChapter = {
       { at: "55s", duration: "1s" },
     ),
     kf({ orbitalPosition: 4 }, { at: "01:58", from: "54s", ease: "linear" }),
+    kf({ tip: "learn.chapters.tip_zoom" }, { at: "01:11", duration: 1 }),
+    kf({ tip: "" }, { at: "01:20", duration: 1 }),
     kf({ handsOff: true }, { at: "01:58", duration: "1s" }),
   ],
 };
 
-const stellar: DayChapter = {
+const stellar: Chapter = {
   id: "stellar",
+  audioAliases: ["stellar-days"],
   titleKey: "learn.chapters.stellar",
-  audio: "/learn/audio/stellar-days.mp3",
+  partKey: "learn.chapters.part_day",
   defaults: base({
     cameraTarget: "planet",
     siderealArc: true,
@@ -177,7 +86,7 @@ const stellar: DayChapter = {
     trueSun: true,
     planetOrbit: true,
     degrees: true,
-    stellarClock: true,
+    siderealClock: true,
     ...cam(-5, 20, 30, 40),
   }),
   frames: [
@@ -189,7 +98,7 @@ const stellar: DayChapter = {
         trueSun: false,
         planetOrbit: false,
         degrees: false,
-        stellarClock: false,
+        siderealClock: false,
         highlight: "",
         eccentricity: 0,
         tiltDeg: 0,
@@ -210,7 +119,7 @@ const stellar: DayChapter = {
     ),
     kf({ siderealArc: true, degrees: true }, { at: "15s", duration: "1s" }),
     kf({ orbitalPosition: 3 / (SOLAR_DAYS + 1) }, { at: "19s", from: "15s", ease: "quadInOut" }),
-    kf({ stellarClock: true }, { at: "20s" }),
+    kf({ siderealClock: true }, { at: "20s" }),
     kf({ highlight: "stellar-day-arc" }, { at: "29s", duration: 1 }),
     kf({ highlight: "" }, { at: "35s", duration: 1 }),
     kf({ orbitalPosition: 8 / (SOLAR_DAYS + 1) }, { at: "35s", from: "19s", ease: "linear" }),
@@ -238,10 +147,11 @@ const stellar: DayChapter = {
   ],
 };
 
-const solar: DayChapter = {
+const solar: Chapter = {
   id: "solar",
+  audioAliases: ["solar-days"],
   titleKey: "learn.chapters.solar",
-  audio: "/learn/audio/solar-days.mp3",
+  partKey: "learn.chapters.part_day",
   defaults: base({
     siderealArc: true,
     solarArc: true,
@@ -249,9 +159,12 @@ const solar: DayChapter = {
     ...cam(-5, 20, 30, 40),
   }),
   frames: [
-    kf({ orbitalPosition: pos(5) }, { at: 1, duration: 1 }),
+    kf({ orbitalPosition: pos(5), degrees: false }, { at: 1, duration: 1 }),
+    kf({ highlight: "solar-day-arc" }, { at: "8s", duration: 1 }),
+    kf({ highlight: "" }, { at: "12s", duration: 1 }),
     kf({ orbitalPosition: pos(8) }, { at: "00:20", from: 1, ease: "linear" }),
     kf({ ...cam(0, 20, 0.1, 80) }, { at: "00:22", duration: "3s", ease: "quadInOut" }),
+    kf({ degrees: true }, { at: "00:23", duration: 1 }),
     kf({ orbitalPosition: 1 + 1 / (SOLAR_DAYS + 1) }, { at: "00:30", from: "00:25", ease: "linear" }),
     kf(
       { orbitalPosition: 1 + 2 / (SOLAR_DAYS + 1), cameraDistance: zoomToDistance(60) },
@@ -263,10 +176,11 @@ const solar: DayChapter = {
   ],
 };
 
-const elliptic: DayChapter = {
+const elliptic: Chapter = {
   id: "elliptic-orbit",
+  audioAliases: ["eccentric-orbit"],
   titleKey: "learn.chapters.elliptic",
-  audio: "/learn/audio/elliptic-orbit.mp3",
+  partKey: "learn.chapters.part_day",
   defaults: base({
     cameraTarget: "sun",
     meanSun: true,
@@ -282,6 +196,8 @@ const elliptic: DayChapter = {
         orbitalPosition: pos(5),
         meanSun: false,
         meanArc: false,
+        meanClock: false,
+        degrees: false,
         monthRing: false,
       },
       { at: 1, duration: 1 },
@@ -294,19 +210,35 @@ const elliptic: DayChapter = {
     kf({ tiltDeg: 30 }, { at: "25s", duration: "1s", ease: "quadInOut" }),
     kf({ tiltDeg: 0 }, { at: "26s", duration: "1s", ease: "quadInOut" }),
     kf({ eccentricity: 0.5 }, { at: "00:38", duration: "2s", ease: "quadInOut" }),
+    kf({ highlightControl: "settings" }, { at: "39s", duration: 1 }),
+    kf({ highlightControl: "" }, { at: "44s", duration: 1 }),
     kf({ orbitalPosition: 12.15 }, { at: "02:40", from: "00:43", ease: "linear" }),
-    kf({ cameraTarget: "planet" }, { at: "01:21", duration: 1 }),
-    kf({ trueSun: false, planetOrbit: false }, { at: "01:25", duration: 1 }),
-    kf({ cameraDistance: zoomToDistance(40) }, { at: "01:30", duration: "6s", ease: "quadInOut" }),
+    kf({ cameraTarget: "planet", highlight: "solar-clock" }, { at: "01:21", duration: 1 }),
     kf(
-      { meanSun: true, meanArc: true, solarArc: false },
+      { highlight: "", trueSun: false, planetOrbit: false },
+      { at: "01:25", duration: 1 },
+    ),
+    kf({ cameraDistance: zoomToDistance(40) }, { at: "01:30", duration: "6s", ease: "quadInOut" }),
+    /* The mean arc arrives on its own, and the true Sun's goes: this is the
+       beat where the two are being compared, so only one is drawn. The mean
+       *Sun* does not appear until 02:44 — that is a separate beat, and turning
+       it on early gave the reader the answer before the question. */
+    kf(
+      {
+        meanArc: true,
+        meanClock: true,
+        solarArc: false,
+        solarClock: false,
+        highlight: "mean-day-arc",
+      },
       { at: "02:11", duration: 1 },
     ),
+    kf({ highlight: "" }, { at: "02:15", duration: 1 }),
     kf({ cameraDistance: zoomToDistance(30) }, { at: "02:29", duration: "6s", ease: "quadInOut" }),
     kf({ trueSun: true, planetOrbit: true }, { at: "02:26", duration: 1 }),
     kf({ meanSun: true, trueSun: false }, { at: "02:44", duration: 1 }),
     kf({ orbitalPosition: 13 + pos(0) }, { at: "03:02", from: "02:52", ease: "linear" }),
-    kf({ trueSun: true, solarArc: true }, { at: "03:02", duration: 1 }),
+    kf({ trueSun: true, solarArc: true, solarClock: true }, { at: "03:02", duration: 1 }),
     kf({ eccentricity: 0 }, { at: "03:10", duration: "1s", ease: "quadInOut" }),
     kf({ eccentricity: 0.5 }, { at: "03:13", duration: "1s", ease: "quadInOut" }),
     kf({ orbitalPosition: 13 + pos(7, 0.5) }, { at: "03:26", from: "03:13", ease: "linear" }),
@@ -321,10 +253,10 @@ const elliptic: DayChapter = {
   ],
 };
 
-const axial: DayChapter = {
+const axial: Chapter = {
   id: "axial-tilt",
   titleKey: "learn.chapters.axial",
-  audio: "/learn/audio/axial-tilt.mp3",
+  partKey: "learn.chapters.part_day",
   defaults: base({
     meanSun: true,
     monthRing: true,
@@ -335,7 +267,10 @@ const axial: DayChapter = {
     ...cam(0, 20, 0.1, 20),
   }),
   frames: [
-    kf({ orbitalPosition: 0, solarArc: true, meanArc: true }, { at: 1, duration: 1 }),
+    kf(
+      { orbitalPosition: 0, solarArc: true, meanArc: true, solarClock: false, meanClock: false },
+      { at: 1, duration: 1 },
+    ),
     kf({ ...cam(0, 0, 20, 20) }, { at: "00:05", duration: "4s", ease: "quadInOut" }),
     kf({ tiltDeg: 40, axis: true }, { at: "00:07", duration: "2s", ease: "quadInOut" }),
     kf({ cameraTarget: "meanSun" }, { at: "00:20", duration: 1 }),
@@ -365,14 +300,15 @@ const axial: DayChapter = {
     kf({ ...cam(40, 0.1, 0.1, 40) }, { at: "03:03", duration: "2s", ease: "quadInOut" }),
     kf({ orbitalPosition: 4 + pos(5, 0, 40 * (Math.PI / 180)) }, { at: "03:10", from: "03:04", ease: "quadInOut" }),
     kf({ ...cam(0.2, 40, 0.1, 40) }, { at: "03:10", duration: "2s", ease: "quadInOut" }),
+    kf({ solarClock: true, meanClock: true }, { at: "03:20", duration: 1 }),
     kf({ handsOff: true }, { at: "03:31", from: "03:20" }),
   ],
 };
 
-const reality: DayChapter = {
+const reality: Chapter = {
   id: "reality",
   titleKey: "learn.chapters.reality",
-  audio: "/learn/audio/reality.mp3",
+  partKey: "learn.chapters.part_day",
   defaults: base({
     cameraTarget: "meanSun",
     meanSun: true,
@@ -383,7 +319,10 @@ const reality: DayChapter = {
     ...cam(0, 20, 20, 20),
   }),
   frames: [
-    kf({ orbitalPosition: 0 }, { at: 1, duration: 1 }),
+    kf(
+      { orbitalPosition: 0, solarClock: false, meanClock: false },
+      { at: 1, duration: 1 },
+    ),
     kf({ eccentricity: 0.0167, eotWedge: true }, { at: "00:18", duration: "1s", ease: "quadInOut" }),
     kf({ tiltDeg: 23.439, axis: true }, { at: "00:21", duration: "1s", ease: "quadInOut" }),
     kf({ graphOpen: true }, { at: "00:26", duration: 1 }),
@@ -399,8 +338,12 @@ const reality: DayChapter = {
     kf({ orbitalPosition: 5 }, { at: "02:00", from: "01:20", ease: "linear" }),
     kf({ graphOpen: false }, { at: "02:00", duration: 1 }),
     kf({ cameraFollow: true }, { at: "02:03", duration: 1 }),
+    /* `solarDaysPerYear: 0` stops the spin dead — the original's `daysPerYear:
+       0`. The subject for the next minute is the shape of the orbit, and a
+       globe turning nine times across it is a strobe over the top of that. The
+       two faces are already off, so nothing is left reading a frozen clock. */
     kf(
-      { ...cam(20, 0.1, 0.1, 40), planetOrbit: false, eotWedge: false },
+      { ...cam(20, 0.1, 0.1, 40), planetOrbit: false, eotWedge: false, solarDaysPerYear: 0 },
       { at: "02:07", duration: "2s", ease: "quadInOut" },
     ),
     kf({ orbitalPosition: 8 }, { at: "02:39", from: "02:12", ease: "linear" }),
@@ -415,6 +358,9 @@ const reality: DayChapter = {
         planet: "earth",
         eccentricity: 0.0167,
         tiltDeg: 23.439,
+        solarDaysPerYear: SOLAR_DAYS,
+        solarClock: true,
+        meanClock: true,
       },
       { at: "03:02", duration: "2s", ease: "quadInOut" },
     ),
@@ -422,10 +368,17 @@ const reality: DayChapter = {
   ],
 };
 
-/** Same opening as the original lab's /playground — free camera, no snap-back. */
-const playground: DayChapter = {
+/**
+ * The original lab's own `/playground` — free camera, no snap-back.
+ *
+ * Kept for a track that stops at the day. The full syllabus ends on the
+ * calendar half's free stop instead, which opens with the belts and the Moon
+ * already showing because by then they have all been introduced.
+ */
+export const DAY_PLAYGROUND: Chapter = {
   id: "playground",
   titleKey: "learn.chapters.playground",
+  partKey: "learn.chapters.part_free",
   free: true,
   defaults: base({
     handsOff: true,
@@ -447,45 +400,5 @@ const playground: DayChapter = {
   frames: [],
 };
 
-/** The tour, in order. Push more chapters onto this list later. */
-export const DAY_CHAPTERS: DayChapter[] = [
-  welcome,
-  stellar,
-  solar,
-  elliptic,
-  axial,
-  reality,
-  playground,
-];
-
-export function chapterIndex(id: ChapterId): number {
-  return Math.max(0, DAY_CHAPTERS.findIndex((c) => c.id === id));
-}
-
-export function cameraFromChapter(s: ChapterSimState): CameraState {
-  return { yaw: s.cameraYaw, pitch: s.cameraPitch, distance: s.cameraDistance };
-}
-
-export function togglesFromChapter(s: ChapterSimState): SimToggles {
-  return {
-    grid: s.grid,
-    planetOrbit: s.planetOrbit,
-    sunOrbit: s.sunOrbit,
-    trueSun: s.trueSun,
-    meanSun: s.meanSun,
-    eotWedge: s.eotWedge,
-    siderealArc: s.siderealArc,
-    solarArc: s.solarArc,
-    meanArc: s.meanArc,
-    primeMeridian: s.primeMeridian,
-    axis: s.axis,
-    rashiBelt: s.rashiBelt,
-    nakshatraBelt: s.nakshatraBelt,
-    monthRing: s.monthRing,
-    sightline: s.sightline,
-    moon: s.moon,
-    moonTrail: s.moonTrail,
-    moonLap: s.moonLap,
-    moonSightline: s.moonSightline,
-  };
-}
+/** The ported chapters, in order. The free stop is composed on separately. */
+export const DAY_CHAPTERS: Chapter[] = [welcome, stellar, solar, elliptic, axial, reality];

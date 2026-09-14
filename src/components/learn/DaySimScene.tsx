@@ -260,6 +260,19 @@ export type SimToggles = {
   moonLap: boolean;
   /** Earth → Moon → नक्षत्र belt: the Moon's own nakshatra, read off the sky. */
   moonSightline: boolean;
+  /* ── the three clock faces ─────────────────────────────────────────
+     Each rides its own arc, so a face is only ever drawn when the arc it
+     belongs to is. Separating them from the arcs is what the reference lab
+     does, and it is the only way to show two arcs while reading one clock —
+     the beat where the sidereal arc has closed but the solar one has not. */
+  /** The sidereal (नाक्षत्र) clock face, on the stellar arc. */
+  siderealClock: boolean;
+  /** The true-Sun clock face, on the solar arc. */
+  solarClock: boolean;
+  /** The mean-time clock face, on the mean arc. */
+  meanClock: boolean;
+  /** The globe's rotation so far, in degrees, pinned above the planet. */
+  degrees: boolean;
 };
 
 export type CameraState = { yaw: number; pitch: number; distance: number };
@@ -282,6 +295,28 @@ export type SceneLabel = {
   x: number;
   y: number;
   dim: boolean;
+  /**
+   * The chapter is pointing at this one.
+   *
+   * The original lab has a `highlightSolarClock` beat — the narration says
+   * "watch this clock" and the reading it means swells and brightens. Meshes
+   * get that from the material; a label is HTML, so it travels on the sample
+   * and the span styles itself.
+   */
+  hot?: boolean;
+};
+
+/**
+ * Which label a `highlight` value points at.
+ *
+ * The mesh highlights (`earth`, the three arcs) are handled in the frame loop
+ * against their materials. These are the ones that land on HTML instead.
+ */
+const HIGHLIGHT_LABEL: Record<string, string> = {
+  "solar-clock": "c-solar",
+  "mean-clock": "c-mean",
+  "sidereal-clock": "c-sidereal",
+  "rotation-angle": "c-deg",
 };
 
 /** Screen transform for a projected label — matches the original lab's CSS pins. */
@@ -538,12 +573,13 @@ export interface SceneProps {
    * the way the original lab does — filled in on mount, cleared on unmount.
    */
   pick?: MutableRefObject<ScenePick | null>;
-  /** Outline a named mesh (`stellar-day-arc`, `earth`) — chapter tour only. */
+  /**
+   * Light a named piece of the scene — chapter tour only.
+   *
+   * `earth` gets a halo; `stellar-day-arc`, `solar-day-arc` and `mean-day-arc`
+   * go to full opacity in a paler shade of their own colour.
+   */
   highlight?: string;
-  /** Show the globe's rotation in degrees, next to the planet. */
-  showDegrees?: boolean;
-  /** Sidereal clock on the stellar arc. Defaults to on whenever the arc is. */
-  showSiderealClock?: boolean;
 }
 
 /** Screen-space hits against the globe and the equatorial plane. */
@@ -574,8 +610,6 @@ function DaySimScene({
   planetBody = "earth",
   pick,
   highlight = "",
-  showDegrees = false,
-  showSiderealClock = true,
 }: SceneProps) {
   const { camera: cam, size } = useThree();
 
@@ -1597,8 +1631,20 @@ function DaySimScene({
         node.style.transform = labelPinCss(x, y, pin);
         node.style.visibility = off ? "hidden" : "visible";
       }
+      if (node) node.dataset.hot = HIGHLIGHT_LABEL[highlight] === id ? "1" : "";
       if (!sampling || off) return;
-      labels.push({ id, kind, text, x, y, dim, index, full, pin });
+      labels.push({
+        id,
+        kind,
+        text,
+        x,
+        y,
+        dim,
+        index,
+        full,
+        pin,
+        hot: HIGHLIGHT_LABEL[highlight] === id,
+      });
       if (tone) labels[labels.length - 1]!.tone = tone;
     };
 
@@ -1652,7 +1698,7 @@ function DaySimScene({
     const anchor = vAnchor.current;
     /* The original lab's earth slot is the degree readout in this chapter —
        it does not also write "Earth" on top of the globe. */
-    if (!showDegrees) {
+    if (!toggles.degrees) {
       push("b-planet", "body", bodyNames.planet, anchor.copy(planetPos).setY(PLANET_R * 2.2), false);
     }
     if (showMoon) {
@@ -1694,15 +1740,16 @@ function DaySimScene({
     const ct = clockText.current;
     /* Same local `[2, 0, 0]` the original lab pins its clocks to — just
        outside the tick, not a third radius further out. */
-    if (toggles.meanArc) push("c-mean", "clock", ct.mean, tick(0, 2), false, "mean", undefined, undefined, "clock");
-    if (toggles.solarArc)
+    if (toggles.meanArc && toggles.meanClock)
+      push("c-mean", "clock", ct.mean, tick(0, 2), false, "mean", undefined, undefined, "clock");
+    if (toggles.solarArc && toggles.solarClock)
       push("c-solar", "clock", ct.solar, tick(-eot, 2), false, "solar", undefined, undefined, "clock");
-    if (toggles.siderealArc && showSiderealClock) {
+    if (toggles.siderealArc && toggles.siderealClock) {
       /* On the tick: local +X of the sidereal group, which is the Sun-ward
          काठमाडौँ meridian, 2 units out — the original lab's `[2, 0, 0]`. */
       push("c-sidereal", "clock", ct.sidereal, tick(0, 2), false, "sidereal", undefined, undefined, "clock");
     }
-    if (showDegrees) {
+    if (toggles.degrees) {
       /* Billboarded like the original `labelUnrotation`: (0, 1, 0) in a
          camera-facing frame at Earth's centre, so the number sits on the
          top of the disc on screen, not stuck to the geographic pole. */
@@ -1721,10 +1768,24 @@ function DaySimScene({
       );
     }
 
+    /* The named-mesh highlights the chapters call for. Both arcs are lit the
+       same way the original lab lights them — full opacity and a paler colour,
+       rather than an outline, because an arc is a flat wedge and an outline
+       round one reads as a fourth arc. */
     const siderealMat = siderealArc.current.material as THREE.MeshBasicMaterial;
-    const arcOn = highlight === "stellar-day-arc";
-    siderealMat.opacity = arcOn ? 1 : 0.8;
-    siderealMat.color.setHex(arcOn ? 0x7ed0ff : COLOR.sidereal);
+    const siderealOn = highlight === "stellar-day-arc";
+    siderealMat.opacity = siderealOn ? 1 : 0.8;
+    siderealMat.color.setHex(siderealOn ? 0x7ed0ff : COLOR.sidereal);
+
+    const meanArcMat = meanArc.current.material as THREE.MeshBasicMaterial;
+    const meanOn = highlight === "mean-day-arc";
+    meanArcMat.opacity = meanOn ? 1 : 0.8;
+    meanArcMat.color.setHex(meanOn ? 0xffb3ad : COLOR.mean);
+
+    const solarArcMat = solarArc.current.material as THREE.MeshBasicMaterial;
+    const solarOn = highlight === "solar-day-arc";
+    solarArcMat.opacity = solarOn ? 1 : 0.8;
+    solarArcMat.color.setHex(solarOn ? 0xfffbb0 : COLOR.solar);
 
     if (!sampling) return;
     onSample({

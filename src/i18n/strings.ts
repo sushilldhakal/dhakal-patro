@@ -5037,13 +5037,83 @@ export const strings = {
   },
   "learn.chapters.welcome": { ne: "स्वागत", en: "Welcome" },
   "learn.chapters.welcome_subtitle": {
+    ne: "दिनदेखि ध्रुव तारासम्म — पात्रोका हरेक एकाइ, एउटै आकाशमा।",
+    en: "From the day to the pole star — every unit of the calendar, in one sky.",
+  },
+  "learn.chapters.day_only_subtitle": {
     ne: "सात अध्यायमा — दिन के हो, र किन एउटा घुर्णन मात्र काफी छैन।",
     en: "Seven chapters — what a day is, and why one turn is not enough.",
   },
   "learn.chapters.welcome_title": { ne: "दिन के हो?", en: "What is a Day?" },
+
+  /* The syllabus: parts, then the chapters in each. */
+  "learn.chapters.part_day": { ne: "भाग १ · दिन", en: "Part 1 · The Day" },
+  "learn.chapters.part_week": { ne: "भाग २ · वार", en: "Part 2 · The Week" },
+  "learn.chapters.part_month": { ne: "भाग ३ · महिना", en: "Part 3 · The Month" },
+  "learn.chapters.part_year": { ne: "भाग ४ · वर्ष", en: "Part 4 · The Year" },
+  "learn.chapters.part_belts": { ne: "भाग ५ · राशि र नक्षत्र", en: "Part 5 · The Belts" },
+  "learn.chapters.part_pole": { ne: "भाग ६ · ध्रुव तारा", en: "Part 6 · The Pole Star" },
+  "learn.chapters.part_free": { ne: "स्वतन्त्र", en: "Free explore" },
+  "learn.chapters.week": { ne: "सात दिनको वार", en: "The Seven-Day Week" },
+  "learn.chapters.solar_month": {
+    ne: "सङ्क्रान्तिदेखि सङ्क्रान्तिसम्म",
+    en: "Sankranti to Sankranti",
+  },
+  "learn.chapters.lunar_month": { ne: "चन्द्रमाका दुई महिना", en: "The Moon's Two Months" },
+  "learn.chapters.year": { ne: "३६५ दिन, ३६६ फन्को", en: "365 Days, 366 Turns" },
+  "learn.chapters.rashi_belt": { ne: "राशि पेटी कसरी बन्यो", en: "How the Rashi Belt Forms" },
+  "learn.chapters.nakshatra_belt": {
+    ne: "नक्षत्र पेटी — सत्ताइस भाग",
+    en: "The Nakshatra Belt — Twenty-Seven",
+  },
+  "learn.chapters.pole_star": { ne: "ध्रुव तारा बदलिन्छ", en: "The Pole Star Changes" },
+  "learn.chapters.part_panchanga": { ne: "भाग ७ · पञ्चाङ्ग", en: "Part 7 · The Panchanga" },
+  "learn.chapters.tithi": { ne: "तिथि — बाह्र अंशको खुड्किलो", en: "Tithi — Twelve Degrees at a Time" },
+  "learn.chapters.paksha": { ne: "शुक्ल र कृष्ण पक्ष", en: "The Two Fortnights" },
+  "learn.chapters.adhik_maas": { ne: "अधिक मास किन चाहिन्छ", en: "Why There Is a Leap Month" },
+  "learn.chapters.five_limbs": { ne: "पाँच अङ्ग एकै ठाउँमा", en: "The Five Limbs Together" },
+
+  /* Stills a chapter holds up, and the hints it offers. */
+  "learn.chapters.still_mesha": {
+    ne: "मेष — वर्ष सुरु हुने राशि। बैशाख १ सूर्य यहाँ पुगेकै दिन हो।",
+    en: "Mesha — where the year opens. Baisakh 1 is the day the Sun arrives here.",
+  },
+  "learn.chapters.still_mrigashira": {
+    ne: "मृगशिरा — सत्ताइस नक्षत्रमध्ये एक। चन्द्रमा एक रातमा यत्ति टेक्छ।",
+    en: "Mrigashira — one of the twenty-seven. About one night's travel for the Moon.",
+  },
+  "learn.chapters.still_saptarshi": {
+    ne: "सप्तर्षि — यिनका दुई ताराले सधैँ ध्रुव तारातिर देखाउँछन्।",
+    en: "Saptarshi — its two end stars have always pointed at the pole.",
+  },
+  "learn.chapters.still_shishumara": {
+    ne: "शिंशुमार — ध्रुवको वरिपरि बेरिएको। चार हजार वर्षअघि ध्रुव यसैभित्रको थुबन थियो।",
+    en: "Shishumara, coiled round the pole. Four thousand years ago the pole star was Thuban, inside it.",
+  },
+  "learn.chapters.tip_zoom": {
+    ne: "सुझाव — स्क्रोल वा पिन्च गरेर नजिक-टाढा गर्न सकिन्छ।",
+    en: "Tip: scroll or pinch to zoom.",
+  },
+  "learn.chapters.tip_drag_earth": {
+    ne: "सुझाव — पृथ्वीलाई तानेर कक्षमा जहाँ पनि सार्न सकिन्छ।",
+    en: "Tip: drag the planet to move it anywhere on its orbit.",
+  },
+  "learn.chapters.tip_scrub": {
+    ne: "सुझाव — तलको पट्टीबाट वर्षभरि जहाँ पनि पुग्न सकिन्छ।",
+    en: "Tip: the bar below moves you anywhere in the year.",
+  },
+  "learn.chapters.tip_layers": {
+    ne: "सुझाव — तलका चिप्सले जुनसुकै तह खोल्न वा बन्द गर्न सकिन्छ।",
+    en: "Tip: the chips below turn any layer on or off.",
+  },
   "learn.playground.axial_tilt": { ne: "अक्ष झुकाव", en: "Axial tilt" },
   "learn.playground.back_to_topic": { ne: "यो विषयमा फर्कनुहोस्", en: "Back to this topic" },
   "learn.playground.controls": { ne: "नियन्त्रण", en: "Controls" },
+  "learn.playground.clocks": { ne: "घडी", en: "Clocks" },
+  "learn.playground.degrees": { ne: "घुर्णन कोण", en: "Rotation angle" },
+  "learn.playground.mean_clock": { ne: "माध्य घडी", en: "Mean-time clock" },
+  "learn.playground.sidereal_clock": { ne: "नाक्षत्र घडी", en: "Sidereal clock" },
+  "learn.playground.solar_clock": { ne: "सौर घडी", en: "Solar clock" },
   "learn.playground.day": { ne: "दिन", en: "Day" },
   "learn.playground.drag_hint": {
     ne: "तान्नुहोस् — घुमाउन · स्क्रोल — नजिक/टाढा",
@@ -5075,6 +5145,10 @@ export const strings = {
   "learn.playground.orbit": { ne: "कक्ष", en: "Orbit" },
   "learn.playground.orbit_speed": { ne: "कक्षीय गति", en: "Orbit speed" },
   "learn.playground.planet": { ne: "ग्रह", en: "Planet" },
+  "learn.playground.preset_caveat": {
+    ne: "प्रिसेटले उत्केन्द्रता र अक्ष झुकाव मात्र लागू गर्छ — वर्षमा कति दिन भन्ने होइन। शुक्रको झुकाव ९०° नाघेको छ, जसको अर्थ ऊ उल्टो घुम्छ।",
+    en: "A preset sets eccentricity and axial tilt only, not the days in its year. Venus's tilt is past 90°, which is how a backwards spin is written down.",
+  },
   "learn.playground.rashi": { ne: "राशि", en: "Rashi" },
   "learn.playground.sankranti": { ne: "सङ्क्रान्ति", en: "Sankranti" },
   "learn.playground.scrub_year": { ne: "वर्षभरि सार्नुहोस्", en: "Scrub through the year" },

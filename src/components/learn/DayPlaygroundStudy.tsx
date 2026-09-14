@@ -69,14 +69,17 @@ import {
   SPEED_MULTIPLIERS,
   type PlaygroundConfig,
 } from "@/lib/learn/playground-config";
-import { useDayChapters } from "@/hooks/use-day-chapters";
+import { useChapterTrack } from "@/hooks/use-chapter-track";
 import {
   cameraFromChapter,
-  DAY_CHAPTERS,
   togglesFromChapter,
+  type Chapter,
   type ChapterSimState,
-} from "@/lib/learn/day-chapters";
+} from "@/lib/learn/chapter-kit";
+import { trackFor } from "@/lib/learn/chapter-tracks";
 import { DayChapterBar, DayChapterWelcome } from "./DayChapterPlayer";
+import { ChapterOverlay } from "./ChapterOverlay";
+import { ChapterStill, ChapterTip } from "./ChapterStill";
 import EotGraph from "./EotGraph";
 import Scene, {
   labelPinCss,
@@ -142,14 +145,16 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const pick = (a: string, b: string) => bilingualText(lang, a, b);
   const num = (v: number | string) => (ne ? toNepaliDigits(String(v)) : String(v));
 
-  const tour = useDayChapters(Boolean(config.guided));
+  const track = useMemo(() => trackFor(config.guided), [config.guided]);
+  const tour = useChapterTrack(track);
   const freePlay = Boolean(tour?.chapter.free);
   const lesson = Boolean(tour) && !freePlay;
 
   const initial = useMemo(() => {
     const resolved = resolvePlayground(config);
-    if (!config.guided) return resolved;
-    const welcome = DAY_CHAPTERS[0]!.defaults;
+    const opening = track?.chapters[0];
+    if (!opening) return resolved;
+    const welcome = opening.defaults;
     return {
       ...resolved,
       toggles: togglesFromChapter(welcome),
@@ -160,7 +165,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       },
       camera: cameraFromChapter(welcome),
     };
-  }, [config]);
+  }, [config, track]);
 
   const clock = useRef<SimClock>({
     day: 0,
@@ -190,6 +195,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [focusOpen, setFocusOpen] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
+  /** A Learn diagram raised over the scene by the running chapter, by id. */
+  const [overlay, setOverlay] = useState("");
+  /** A still picture the running chapter is holding up, as a `public/` path. */
+  const [still, setStill] = useState("");
 
   /** Which planet preset is showing in the drawer; `""` is this topic's own. */
   const [preset, setPreset] = useState("");
@@ -215,6 +224,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const controlOverride = useRef<{
     cameraTarget?: CameraTarget;
     cameraFollow?: boolean;
+    graphOpen?: boolean;
+    overlay?: string;
+    still?: string;
     toggles?: Partial<SimToggles>;
     solarDaysPerYear?: number;
     eccentricity?: number;
@@ -222,9 +234,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     preset?: string;
   }>({});
   const speedRef = useRef(speed);
-  const initialSpeedRef = useRef(initial.speed);
   speedRef.current = speed;
-  initialSpeedRef.current = initial.speed;
 
   const { active: fullscreen, ref: overlayRef, toggle: toggleFullscreen } = useFullscreen();
 
@@ -237,10 +247,27 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     if (config.guided && !freePlay) return;
     clock.current.playing = playing;
   }, [playing, config.guided, freePlay]);
+  /**
+   * The pace of one rotation, at the 1× rung.
+   *
+   * {@link MODE_SPEED} is tuned per mode against that mode's own year: the day
+   * mode's 0.2 turns a second is a year in forty-five seconds *because its year
+   * is nine turns long*. A guided track moves between years — the ported
+   * chapters run an eight-day one, the calendar chapters the real 365 — so a
+   * fixed rate is a crawl in the second half. Scaling by how long this
+   * chapter's year actually is keeps an orbit taking about the same wall-clock
+   * time throughout, and leaves the ported chapters at exactly their old rate.
+   */
+  const basePace = config.guided
+    ? (initial.speed * (solarDaysPerYear + 1)) / initial.params.daysPerYear
+    : initial.speed;
+  const basePaceRef = useRef(basePace);
+  basePaceRef.current = basePace;
+
   useEffect(() => {
     if (config.guided && !freePlay) return;
-    clock.current.daysPerSecond = initial.speed * SPEED_MULTIPLIERS[speed]!;
-  }, [speed, initial.speed, config.guided, freePlay]);
+    clock.current.daysPerSecond = basePace * SPEED_MULTIPLIERS[speed]!;
+  }, [speed, basePace, config.guided, freePlay]);
 
   /* Guided tour: camera + orbit every frame, layers on the React tick. */
   const setTourFrame = tour?.setOnFrame;
@@ -266,7 +293,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         clock.current.playing = welcome ? true : playingStateRef.current;
         clock.current.daysPerSecond = welcome
           ? 0.35
-          : initialSpeedRef.current * SPEED_MULTIPLIERS[speedRef.current]!;
+          : basePaceRef.current * SPEED_MULTIPLIERS[speedRef.current]!;
         handsOffOffset.current = clock.current.day - guidedDay;
         wasHandsOff.current = true;
       } else {
@@ -313,13 +340,18 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
   const tourState = tour?.state;
   const tourChapterId = tour?.chapter.id;
+  /* The chapter object itself, for the reset below. Held in a ref so the reset
+     stays keyed on the *id* — it must run when the chapter changes and not on
+     every sampled frame. */
+  const tourChapterRef = useRef<Chapter | null>(null);
+  tourChapterRef.current = tour?.chapter ?? null;
   useEffect(() => {
     cameraMeddle.current = null;
     earthMeddle.current = null;
     handsOffOffset.current = 0;
     wasHandsOff.current = false;
     controlOverride.current = {};
-    const ch = DAY_CHAPTERS.find((c) => c.id === tourChapterId);
+    const ch = tourChapterRef.current;
     if (!ch) return;
     const s = ch.defaults;
     camera.current = cameraFromChapter(s);
@@ -331,6 +363,8 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     setCameraTarget(s.cameraTarget);
     setCameraFollow(s.cameraFollow);
     setGraphOpen(false);
+    setOverlay("");
+    setStill("");
     setToggles(togglesFromChapter(s));
     setPreset(s.planet === "earth" ? "" : s.planet);
     clock.current.playing = false;
@@ -349,12 +383,32 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     setTiltDeg(o.tiltDeg ?? tourState.tiltDeg);
     setCameraTarget(o.cameraTarget ?? tourState.cameraTarget);
     setCameraFollow(o.cameraFollow ?? tourState.cameraFollow);
-    setGraphOpen(tourState.graphOpen);
+    setGraphOpen(o.graphOpen ?? tourState.graphOpen);
+    setOverlay(o.overlay ?? tourState.overlay);
+    setStill(o.still ?? tourState.still);
     setToggles({ ...togglesFromChapter(tourState), ...o.toggles });
     setPreset(o.preset ?? (tourState.planet === "earth" ? "" : tourState.planet));
   }, [tourState, tour?.chapter.free]);
 
   const highlightControl = tour?.state.highlightControl ?? "";
+  const tourHandsOff = Boolean(tourState?.handsOff);
+  /**
+   * What the chrome shows during a chapter.
+   *
+   * The ported Minute Labs chapters want a bare scene — that is what the
+   * original does, and the corner readout and the clock columns would be
+   * talking over the narration. The calendar chapters want the opposite: the
+   * point of watching the Sun cross a boundary is reading which महिना just
+   * began, and the point of a year is the count underneath it. So a chapter
+   * asks, and outside a chapter everything is on.
+   *
+   * The transport is a third question again. A year scrubber while keyframes
+   * are driving the orbit is a control that does nothing, so it waits for the
+   * chapter to hand the instruments back.
+   */
+  const showHud = !lesson || Boolean(tourState?.hud);
+  const showReadings = !lesson || Boolean(tourState?.readings);
+  const showTransport = !lesson || tourHandsOff;
   const wasTourHandsOff = useRef(false);
   useEffect(() => {
     const on = Boolean(lesson && tourState?.handsOff);
@@ -375,6 +429,17 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       setControlsOpen(false);
     }
   }, [highlightControl]);
+
+  /* The free sim stops too. A WebGL canvas in a hidden tab still burns the
+     frame budget it is given, and an orbit that ran on for two minutes out of
+     sight is not where the reader left it. */
+  useEffect(() => {
+    const onHide = () => {
+      if (document.hidden) setPlaying(false);
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => document.removeEventListener("visibilitychange", onHide);
+  }, []);
 
   const onSample = useCallback((s: SceneSample) => {
     setSample(s);
@@ -651,20 +716,31 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     </button>
   );
 
-  /** One titled section of layer switches in the drawer. */
-  const layerGroup = (title: string, items: [keyof SimToggles, string][]) => (
+  /**
+   * One titled section of layer switches in the drawer.
+   *
+   * A third element is the layer this one rides on. The three clock faces are
+   * drawn on their arcs, so a face with its arc off has nowhere to sit — the
+   * reference lab greys the checkbox for exactly this reason rather than
+   * letting a reader turn on a clock that cannot appear.
+   */
+  const layerGroup = (
+    title: string,
+    items: ([keyof SimToggles, string] | [keyof SimToggles, string, keyof SimToggles])[],
+  ) => (
     <div className="flex flex-col gap-1.5">
       <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
         {title}
       </span>
       <div className="flex flex-wrap gap-1.5">
-        {items.map(([k, label]) =>
+        {items.map(([k, label, needs]) =>
           chip(
             toggles[k],
             label,
             () => setToggle(k),
             k,
-            !hasMoon && (GROUPS.moon as readonly string[]).includes(k),
+            (!hasMoon && (GROUPS.moon as readonly string[]).includes(k)) ||
+              (needs !== undefined && !toggles[needs]),
           ),
         )}
       </div>
@@ -879,8 +955,6 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               planetBody={(preset || "earth") as PlaygroundGlobe}
               pick={scenePick}
               highlight={tour?.state.highlight ?? ""}
-              showDegrees={Boolean(tour?.state.degrees)}
-              showSiderealClock={tour && !freePlay ? Boolean(tour.state.stellarClock) : true}
             />
           </Suspense>
         </Canvas>
@@ -893,7 +967,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
         {tour ? <DayChapterWelcome player={tour} /> : null}
 
-        {lesson ? null : (
+        {showHud ? (
           <div className="pointer-events-none absolute left-2 top-2 rounded-lg border border-white/15 bg-black/45 px-2.5 py-1.5 backdrop-blur sm:left-3 sm:top-3">
             <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/50">
               {t("learn.playground.sun_rashi_month")}
@@ -909,9 +983,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               </span>
             </div>
           </div>
-        )}
+        ) : null}
 
-        {lesson || flash === null ? null : (
+        {!showHud || flash === null ? null : (
           <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full border border-amber-400/60 bg-amber-500/20 px-4 py-1.5 text-sm font-bold text-amber-100 backdrop-blur">
             {t("learn.playground.sankranti")} · {rashiNames[flash]} · {monthNames[flash]} {num(1)}
           </div>
@@ -955,15 +1029,19 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           >
             <Focus size={16} />
           </IconButton>
-          {lesson ? null : (
-            <IconButton
-              onClick={() => setGraphOpen((v) => !v)}
-              label={t("learn.playground.eot_graph")}
-              active={graphOpen}
-            >
-              <LineChart size={16} />
-            </IconButton>
-          )}
+          <IconButton
+            onClick={() => {
+              setGraphOpen((v) => {
+                controlOverride.current.graphOpen = !v;
+                return !v;
+              });
+            }}
+            label={t("learn.playground.eot_graph")}
+            active={graphOpen}
+            pulse={highlightControl === "graph"}
+          >
+            <LineChart size={16} />
+          </IconButton>
           <IconButton
             onClick={onToggleFullscreen}
             label={fullscreen ? t("common.exit_fullscreen") : t("common.fullscreen")}
@@ -1009,6 +1087,13 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
                   );
                 })}
               </div>
+              {/* The caveat the reference lab puts behind a "read this" modal.
+                  It is two sentences and it is the difference between the
+                  presets teaching something and quietly lying, so it sits
+                  under the buttons rather than behind another click. */}
+              <p className="mt-1.5 text-[10px] leading-snug text-white/45">
+                {t("learn.playground.preset_caveat")}
+              </p>
               {preset ? (
                 <button
                   type="button"
@@ -1083,6 +1168,15 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               ["moonSightline", t("learn.playground.moon_sightline")],
               ["moonTrail", t("learn.playground.moon_trail")],
               ["moonLap", t("learn.playground.month_gap")],
+            ])}
+            {/* The three faces. They are what turns the arcs from coloured
+                wedges into a reading, and they are the only place the four
+                minutes appear as a time rather than as a gap. */}
+            {layerGroup(t("learn.playground.clocks"), [
+              ["siderealClock", t("learn.playground.sidereal_clock"), "siderealArc"],
+              ["solarClock", t("learn.playground.solar_clock"), "solarArc"],
+              ["meanClock", t("learn.playground.mean_clock"), "meanArc"],
+              ["degrees", t("learn.playground.degrees")],
             ])}
           </div>
         )}
@@ -1171,7 +1265,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         {/* The graph over the scene, not buried in the panel below it: it is
             read against the sim's own motion, so it has to be on screen at the
             same time as the thing it is describing. */}
-        {!lesson && graphOpen && (
+        {graphOpen && (
           <div className="absolute bottom-3 left-3 z-10 w-[min(320px,calc(100%-1.5rem))] max-h-[calc(100%-4.5rem)] overflow-y-auto rounded-xl border border-white/15 bg-black/85 p-2.5 text-white backdrop-blur">
             <EotGraph
               eccentricity={eccentricity}
@@ -1181,6 +1275,33 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             />
           </div>
         )}
+
+        {/* Under the corner readout, opposite the diagram panel — the three
+            can all be up at once without stacking. */}
+        {still ? (
+          <ChapterStill
+            key={still}
+            src={still}
+            captionKey={tourState?.stillKey || undefined}
+            onClose={() => {
+              controlOverride.current.still = "";
+              setStill("");
+            }}
+          />
+        ) : null}
+
+        {tourState?.tip ? <ChapterTip key={tourState.tip} tipKey={tourState.tip} /> : null}
+
+        {/* Opposite corner from the graph, so a chapter can raise both. */}
+        {overlay ? (
+          <ChapterOverlay
+            id={overlay}
+            onClose={() => {
+              controlOverride.current.overlay = "";
+              setOverlay("");
+            }}
+          />
+        ) : null}
 
         {lesson || fullscreen ? null : (
           <p className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] text-white/45">
@@ -1216,7 +1337,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
 
         {filterChips}
 
-        {!lesson && (
+        {showTransport && (
           <>
             <div className="flex w-full items-center gap-2.5 sm:gap-3">
               {tour ? null : (
@@ -1259,7 +1380,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           </>
         )}
 
-        {!lesson && detailsOpen && (
+        {showReadings && detailsOpen && (
           <>
             {/* The three clock faces alone do not carry the point at speed: a
                 year mode runs twelve rotations a second, so each face lands on
@@ -1456,6 +1577,9 @@ const Label = memo(function Label({
         label.kind === "clock" ? "font-num text-[11px] tabular-nums" : "",
         isNak ? "flex flex-col items-center gap-0.5 text-[14px] leading-none" : "",
         label.kind === "month" || label.kind === "body" ? "text-[11px]" : "",
+        /* The chapter is pointing at this reading. A ring rather than a colour
+           change, because the colour is what says *which* clock it is. */
+        label.hot && "rounded-md bg-white/15 px-1.5 py-0.5 ring-2 ring-white/70",
       )}
       style={{
         /* Seeded from the sample so a new label lands in the right place on
@@ -1464,6 +1588,7 @@ const Label = memo(function Label({
         color,
         opacity: label.dim ? 0.4 : 1,
         textShadow: "0 1px 3px rgba(0,0,0,0.95)",
+        fontSize: label.hot ? "13px" : undefined,
       }}
     >
       {isRashi && label.index ? <RashiSkyGlyph index={label.index} size={13} color={GOLD} /> : null}

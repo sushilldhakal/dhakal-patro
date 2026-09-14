@@ -6,7 +6,7 @@
  * off this page while the tour is running.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronUp, Pause, Play, RotateCcw, SkipBack, SkipForward } from "lucide-react";
 
@@ -15,7 +15,8 @@ import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 import { edScrub } from "@/lib/diagram-classes";
-import type { DayChapterPlayer } from "@/hooks/use-day-chapters";
+import { chapterParts } from "@/lib/learn/chapter-tracks";
+import type { DayChapterPlayer } from "@/hooks/use-chapter-track";
 
 export function DayChapterWelcome({
   player,
@@ -31,10 +32,10 @@ export function DayChapterWelcome({
           {t("learn.chapters.eyebrow")}
         </p>
         <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-          {t("learn.chapters.welcome_title")}
+          {t(player.track.titleKey)}
         </h2>
         <p className="mt-2 text-sm text-white/70 sm:text-base">
-          {t("learn.chapters.welcome_subtitle")}
+          {t(player.track.subtitleKey)}
         </p>
         <button
           type="button"
@@ -78,6 +79,7 @@ export function DayChapterBar({
     return () => document.removeEventListener("pointerdown", onDoc);
   }, [tocOpen]);
 
+  const parts = useMemo(() => chapterParts(player.chapters), [player.chapters]);
   const free = Boolean(player.chapter.free);
   const progress = player.duration > 0 ? (player.time / player.duration) * 100 : 0;
   const isLast = player.index >= player.chapters.length - 1;
@@ -121,23 +123,38 @@ export function DayChapterBar({
           <ChevronUp size={14} className={cn("shrink-0 text-white/50 transition-transform", tocOpen ? "" : "rotate-180")} />
         </button>
         {tocOpen && (
-          <div className="absolute bottom-[calc(100%+4px)] left-1/2 z-20 w-[min(280px,90vw)] -translate-x-1/2 overflow-hidden rounded-xl border border-white/15 bg-black/90 py-1 backdrop-blur">
-            {player.chapters.map((ch, i) => (
-              <button
-                key={ch.id}
-                type="button"
-                onClick={() => {
-                  player.goTo(i);
-                  setTocOpen(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold",
-                  i === player.index ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/8 hover:text-white",
-                )}
-              >
-                <span className="w-4 tabular-nums text-white/40">{num(String(i + 1))}</span>
-                {t(ch.titleKey)}
-              </button>
+          /* Capped and scrollable: the syllabus runs to a dozen-odd chapters,
+             and an uncapped menu grew straight off the top of the canvas. */
+          <div className="absolute bottom-[calc(100%+4px)] left-1/2 z-20 max-h-[min(60vh,22rem)] w-[min(300px,90vw)] -translate-x-1/2 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/90 py-1 backdrop-blur">
+            {parts.map((part, pi) => (
+              <div key={part.partKey ?? `p-${pi}`}>
+                {part.partKey ? (
+                  <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
+                    {t(part.partKey)}
+                  </div>
+                ) : null}
+                {part.items.map(({ chapter, index }) => (
+                  <button
+                    key={chapter.id}
+                    type="button"
+                    onClick={() => {
+                      player.goTo(index);
+                      setTocOpen(false);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-semibold",
+                      index === player.index
+                        ? "bg-white/15 text-white"
+                        : "text-white/70 hover:bg-white/8 hover:text-white",
+                    )}
+                  >
+                    <span className="w-5 shrink-0 tabular-nums text-white/40">
+                      {num(String(index + 1))}
+                    </span>
+                    <span className="truncate">{t(chapter.titleKey)}</span>
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
         )}
