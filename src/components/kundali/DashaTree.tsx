@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react";
+import { ArrowDown, ArrowRight, Check } from "lucide-react";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { dashaExpandKeys, fetchDashaChildren, type DashaSystem, type DashaTreeNode } from "@/lib/api";
 import { formatZonedAdMoment, formatZonedBsMoment } from "@/lib/bs-calendar";
@@ -41,17 +41,6 @@ function formatMoment(
   return isEn
     ? formatZonedAdMoment(date, { lang, timeZone, digits })
     : formatZonedBsMoment(date, { lang, timeZone, digits });
-}
-
-function MomentLine({ label, value }: { label: string; value: string }) {
-  return (
-    <p className="text-sm leading-snug">
-      <span className="inline-block w-14 shrink-0 font-semibold uppercase tracking-wide text-sm">
-        {label}
-      </span>
-      <span className="text-base text-foreground/80">{value}</span>
-    </p>
-  );
 }
 
 function SpanProgress({ start, end, now }: { start: Date; end: Date; now: number }) {
@@ -228,6 +217,127 @@ function PeriodCard({
   );
 }
 
+function ChainStackRow({
+  span,
+  level,
+  system,
+  lang,
+  digits,
+  timeZone,
+  now,
+  isLast,
+}: {
+  span: SpanWithChildren;
+  level: number;
+  system: DashaSystem;
+  lang: "ne" | "en";
+  digits: (v: string | number) => string;
+  timeZone?: string;
+  now: number;
+  isLast: boolean;
+}) {
+  const { t } = useTranslation();
+  const grahaKey = dashaMahadashaGrahaKey(system, span.lord);
+  const running = isRunning(span, now);
+
+  return (
+    <div className="px-4 py-3">
+      <p className="flex items-center gap-2">
+        {grahaKey ? <GrahaPlanetIcon graha={grahaKey} size={26} /> : null}
+        <span className="text-base font-bold text-foreground">
+          {displayLordName(span, lang, system)}
+          <span className="font-normal text-muted-foreground"> — {t(LEVEL_LABELS[level]!)}</span>
+        </span>
+        {running && (
+          <span className="ml-auto shrink-0 rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-bold text-secondary">
+            {t("kundali.running")}
+          </span>
+        )}
+      </p>
+      <div className="mt-1.5 space-y-1 pl-1">
+        <p className="flex items-center gap-1.5 text-sm">
+          <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="text-base text-foreground/80">
+            {formatMoment(span.start, lang, timeZone, digits)}
+          </span>
+        </p>
+        <p className="flex items-center gap-1.5 text-sm">
+          <ArrowRight className="size-3.5 shrink-0 text-foreground" aria-hidden />
+          <span className="text-base text-foreground/80">
+            {formatMoment(span.end, lang, timeZone, digits)}
+          </span>
+        </p>
+      </div>
+      <div className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 pl-1 text-sm">
+        <p>
+          <span>{t("kundali.total")} — </span>
+          <span className="font-semibold text-foreground">
+            {digits(formatDashaDuration(span.end.getTime() - span.start.getTime(), lang))}
+          </span>
+        </p>
+        {running && (
+          <p>
+            <span>{t("kundali.left")} — </span>
+            <span className="font-semibold text-foreground">
+              {digits(formatDashaDuration(span.end.getTime() - now, lang))}
+            </span>
+          </p>
+        )}
+      </div>
+      {running && <SpanProgress start={span.start} end={span.end} now={now} />}
+      {isLast && <DashaDurationGrid start={span.start} end={span.end} lang={lang} digits={digits} />}
+    </div>
+  );
+}
+
+/**
+ * The full active chain — Mahadasha down to whatever level is known — as one
+ * unified stack, each level a plain row connected by a down-arrow. Nothing
+ * here is collapsed or click-gated: every level's begin/end/total/left is
+ * visible the instant the page loads, so "what's running right now" needs
+ * no expanding and no scrolling to find.
+ */
+function ChainStack({
+  path,
+  system,
+  now,
+  timeZone,
+  lang,
+  digits,
+}: {
+  path: SpanWithChildren[];
+  system: DashaSystem;
+  now: number;
+  timeZone?: string;
+  lang: "ne" | "en";
+  digits: (v: string | number) => string;
+}) {
+  if (path.length === 0) return null;
+  return (
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-muted/40 divide-y divide-border/50">
+      {path.map((span, i) => (
+        <div key={`${span.lord}-${i}`}>
+          {i > 0 && (
+            <div className="flex justify-center py-0.5">
+              <ArrowDown className="size-4 text-muted-foreground" aria-hidden />
+            </div>
+          )}
+          <ChainStackRow
+            span={span}
+            level={i}
+            system={system}
+            lang={lang}
+            digits={digits}
+            timeZone={timeZone}
+            now={now}
+            isLast={i === path.length - 1}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export type DashaTreeProps = {
   /** Server-computed mahadasha tree (full spans, antar/pratyantar embedded). */
   tree: DashaTreeNode[];
@@ -281,7 +391,7 @@ export function DashaTree({
   const deepestKnown = path.reduce((acc, s, i) => (s ? i : acc), 0);
   const selectedLevel = Math.min(manualLevel ?? deepestKnown, maxLevel);
   const cards = levelLists[selectedLevel] ?? [];
-  const headline = path[selectedLevel];
+  const knownPath = path.filter((s): s is SpanWithChildren => s != null);
   const viewingLive = manualPath.length === 0;
 
   function pick(level: number, span: SpanWithChildren) {
@@ -304,64 +414,39 @@ export function DashaTree({
 
   return (
     <div className="space-y-4">
-      {headline && (
-        <div className="relative overflow-hidden rounded-xl border border-secondary/30 bg-secondary/[0.06] px-4 py-3 dark:bg-secondary/10">
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-secondary" aria-hidden />
-          <div className="pl-2">
-            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-              <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-secondary">
-                {isRunning(headline, now)
-                  ? t("kundali.running_dasha")
-                  : bilingualText(lang, "हेर्दै हुनुहुन्छ", "Viewing")}
-              </p>
-              <div className="flex items-center gap-2">
-                {yoginiCycle ? (
-                  <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
-                    {bilingualText(lang, `चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
-                  </span>
-                ) : null}
-                {!viewingLive && (
-                  <button
-                    type="button"
-                    onClick={backToNow}
-                    className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 text-sm font-semibold hover:bg-muted/40"
-                  >
-                    {bilingualText(lang, "अहिले फर्कनुहोस्", "Back to now")}
-                  </button>
-                )}
-              </div>
-            </div>
-            <p className="flex items-center gap-1.5 text-base font-bold text-foreground">
-              {(() => {
-                const grahaKey = dashaMahadashaGrahaKey(system, headline.lord);
-                return grahaKey ? <GrahaPlanetIcon graha={grahaKey} size={22} /> : null;
-              })()}
-              {displayLordName(headline, lang, system)}
-              <span className="font-normal text-muted-foreground">· {t(LEVEL_LABELS[selectedLevel]!)}</span>
+      {knownPath.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-bold uppercase tracking-wide text-secondary">
+              {viewingLive
+                ? t("kundali.running_dasha")
+                : bilingualText(lang, "हेर्दै हुनुहुन्छ", "Viewing")}
             </p>
-            <div className="mt-1.5 space-y-0.5">
-              <MomentLine label={t("kundali.begin")} value={formatMoment(headline.start, lang, timeZone, digits)} />
-              <MomentLine label={t("kundali.end")} value={formatMoment(headline.end, lang, timeZone, digits)} />
+            <div className="flex items-center gap-2">
+              {yoginiCycle ? (
+                <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
+                  {bilingualText(lang, `चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
+                </span>
+              ) : null}
+              {!viewingLive && (
+                <button
+                  type="button"
+                  onClick={backToNow}
+                  className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 text-sm font-semibold hover:bg-muted/40"
+                >
+                  {bilingualText(lang, "अहिले फर्कनुहोस्", "Back to now")}
+                </button>
+              )}
             </div>
-            <DashaDurationGrid start={headline.start} end={headline.end} lang={lang} digits={digits} />
-            {isRunning(headline, now) && (
-              <div className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-                <p>
-                  <span>{t("kundali.total")} — </span>
-                  <span className="font-semibold text-foreground">
-                    {digits(formatDashaDuration(headline.end.getTime() - headline.start.getTime(), lang))}
-                  </span>
-                </p>
-                <p>
-                  <span>{t("kundali.left")} — </span>
-                  <span className="font-semibold text-foreground">
-                    {digits(formatDashaDuration(headline.end.getTime() - now, lang))}
-                  </span>
-                </p>
-              </div>
-            )}
-            <SpanProgress start={headline.start} end={headline.end} now={now} />
           </div>
+          <ChainStack
+            path={knownPath}
+            system={system}
+            now={now}
+            timeZone={timeZone}
+            lang={lang}
+            digits={digits}
+          />
         </div>
       )}
 
@@ -384,6 +469,9 @@ export function DashaTree({
       )}
 
       <div>
+        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          {bilingualText(lang, "अन्य अवधि हेर्नुहोस्", "Browse other periods")}
+        </p>
         <div className="flex gap-1 overflow-x-auto pb-1" role="tablist">
           {LEVEL_LABELS.slice(0, maxLevel + 1).map((key, i) => {
             const disabled = levelLists[i] == null && i !== 0;
