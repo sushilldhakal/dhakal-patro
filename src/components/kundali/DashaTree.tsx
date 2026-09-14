@@ -4,11 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { dashaExpandKeys, fetchDashaChildren, type DashaSystem, type DashaTreeNode } from "@/lib/api";
-import { formatZonedBsMoment } from "@/lib/bs-calendar";
+import { formatZonedAdMoment, formatZonedBsMoment } from "@/lib/bs-calendar";
+import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import {
   DASHA_LORD_EN,
   DASHA_LORD_NE,
   breakdownDashaDuration,
+  dashaMahadashaGrahaKey,
   formatDashaDuration,
   formatDashaDurationParts,
   type DashaLord,
@@ -83,13 +85,18 @@ function lordDot(lord: string, system: DashaSystem): string {
   return LORD_DOT[(lord as DashaLord) in LORD_DOT ? (lord as DashaLord) : "ketu"];
 }
 
+/** A BS year like "2076" means nothing in English — English mode shows the
+ * Gregorian calendar instead of translating BS month names into English. */
 function formatMoment(
   date: Date,
   lang: string,
   timeZone?: string,
   digits?: (v: string | number) => string,
 ): string {
-  return formatZonedBsMoment(date, { lang, timeZone, digits });
+  const isEn = lang.slice(0, 2) === "en";
+  return isEn
+    ? formatZonedAdMoment(date, { lang, timeZone, digits })
+    : formatZonedBsMoment(date, { lang, timeZone, digits });
 }
 
 function MomentLine({ label, value }: { label: string; value: string }) {
@@ -226,6 +233,146 @@ function displayLordName(span: SpanWithChildren, lang: string, system: DashaSyst
   return lang === "en" ? DASHA_LORD_EN[lord] ?? span.lordNe : DASHA_LORD_NE[lord] ?? span.lordNe;
 }
 
+function findRunning(spans: SpanWithChildren[] | undefined, now: number): SpanWithChildren | undefined {
+  return spans?.find((s) => s.start.getTime() <= now && now < s.end.getTime());
+}
+
+/** The currently-running child of `parent`, fetching its children only when
+ * the API didn't already embed them (pratyantar and deeper). One call per
+ * hierarchy level — the fixed 4-call chain below keeps every render calling
+ * the same number of hooks regardless of how deep this chart's `maxLevel`
+ * goes (React's rules of hooks forbid a variable-length loop of useQuery). */
+function useRunningChild(
+  parent: SpanWithChildren | undefined,
+  now: number,
+  system: DashaSystem,
+  parentLevel: number,
+  maxLevel: number,
+): SpanWithChildren | undefined {
+  const enabled = parent != null && parentLevel < maxLevel && parent.childNodes == null;
+  const startIso = parent?.start.toISOString() ?? "";
+  const endIso = parent?.end.toISOString() ?? "";
+  const q = useQuery({
+    queryKey: dashaExpandKeys.span(parent?.lord ?? "", startIso, endIso, system),
+    queryFn: () => fetchDashaChildren(parent!.lord, startIso, endIso, system),
+    enabled,
+    staleTime: Infinity,
+  });
+  if (parent == null || parentLevel >= maxLevel) return undefined;
+  const children = (parent.childNodes ?? q.data?.children)?.map(toSpan);
+  return findRunning(children, now);
+}
+
+/** Every level's currently-running span, Mahadasha first — auto-fetched (not
+ * gated behind a click) down to whatever `maxLevel` allows, so "what's
+ * active right now" needs no expanding or scrolling to see. */
+function useDashaChain(
+  root: SpanWithChildren | undefined,
+  now: number,
+  system: DashaSystem,
+  maxLevel: number,
+): SpanWithChildren[] {
+  const l1 = useRunningChild(root, now, system, 0, maxLevel);
+  const l2 = useRunningChild(l1, now, system, 1, maxLevel);
+  const l3 = useRunningChild(l2, now, system, 2, maxLevel);
+  const l4 = useRunningChild(l3, now, system, 3, maxLevel);
+  return [root, l1, l2, l3, l4].filter((s): s is SpanWithChildren => s != null);
+}
+
+function ChainCrumb({
+  span,
+  level,
+  system,
+  lang,
+}: {
+  span: SpanWithChildren;
+  level: number;
+  system: DashaSystem;
+  lang: string;
+}) {
+  const { t } = useTranslation();
+  const grahaKey = dashaMahadashaGrahaKey(system, span.lord);
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/30 bg-card px-2 py-1">
+      {grahaKey ? <GrahaPlanetIcon graha={grahaKey} size={16} /> : null}
+      <span className="text-sm font-bold text-foreground">{displayLordName(span, lang, system)}</span>
+      <span className="text-sm text-muted-foreground">{t(LEVEL_LABELS[level]!)}</span>
+    </span>
+  );
+}
+
+/**
+ * "What's running right now" — every level in one glance, no clicking or
+ * scrolling into the tree below. A breadcrumb across all active levels, then
+ * full detail (begin/end/duration/progress) for just the deepest one, since
+ * that's the level actually changing soon enough to matter.
+ */
+function RunningChainSummary({
+  chain,
+  system,
+  now,
+  timeZone,
+  lang,
+  digits,
+  cycleBadge,
+}: {
+  chain: SpanWithChildren[];
+  system: DashaSystem;
+  now: number;
+  timeZone?: string;
+  lang: "ne" | "en";
+  digits: (v: string | number) => string;
+  cycleBadge?: React.ReactNode;
+}) {
+  const { t } = useTranslation();
+  if (chain.length === 0) return null;
+  const deepest = chain[chain.length - 1]!;
+  const deepestLevel = chain.length - 1;
+
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-secondary/30 bg-secondary/[0.06] px-4 py-3 dark:bg-secondary/10">
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-secondary" aria-hidden />
+      <div className="pl-2">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-bold uppercase tracking-wide text-secondary">
+            {t("kundali.running_dasha")}
+          </p>
+          {cycleBadge}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {chain.map((span, i) => (
+            <span key={`${span.lord}-${i}`} className="flex items-center gap-1.5">
+              {i > 0 && <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+              <ChainCrumb span={span} level={i} system={system} lang={lang} />
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-3 space-y-0.5 border-t border-secondary/20 pt-2.5">
+          <p className="text-sm font-semibold text-foreground">{t(LEVEL_LABELS[deepestLevel]!)}</p>
+          <MomentLine label={t("kundali.begin")} value={formatMoment(deepest.start, lang, timeZone, digits)} />
+          <MomentLine label={t("kundali.end")} value={formatMoment(deepest.end, lang, timeZone, digits)} />
+        </div>
+        <div className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          <p>
+            <span>{t("kundali.total")} — </span>
+            <span className="font-semibold text-foreground">
+              {digits(formatDashaDuration(deepest.end.getTime() - deepest.start.getTime(), lang))}
+            </span>
+          </p>
+          <p>
+            <span>{t("kundali.left")} — </span>
+            <span className="font-semibold text-foreground">
+              {digits(formatDashaDuration(deepest.end.getTime() - now, lang))}
+            </span>
+          </p>
+        </div>
+        <SpanProgress start={deepest.start} end={deepest.end} now={now} running />
+      </div>
+    </div>
+  );
+}
+
 function DashaNode({
   span,
   level,
@@ -245,9 +392,11 @@ function DashaNode({
 }) {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
-  const [open, setOpen] = useState(false);
-
   const running = span.start.getTime() <= now && now < span.end.getTime();
+  // Starts expanded when this node is the currently-running period, so the
+  // live chain (Mahadasha → ... → Prana) arrives already unfolded instead of
+  // requiring a click at every level to find "what's active right now".
+  const [open, setOpen] = useState(running);
   const expandable = level < maxLevel;
 
   const needsFetch = open && expandable && !span.childNodes;
@@ -407,9 +556,8 @@ export function DashaTree({
   const [now] = useState(() => Date.now());
   const mahadashas = useMemo(() => tree.map(toSpan), [tree]);
 
-  const running = mahadashas.find(
-    (m) => m.start.getTime() <= now && now < m.end.getTime(),
-  );
+  const running = findRunning(mahadashas, now);
+  const chain = useDashaChain(running, now, system, maxLevel);
 
   const timelineStart = mahadashas[0]?.start;
   const timelineEnd = mahadashas[mahadashas.length - 1]?.end;
@@ -443,78 +591,42 @@ export function DashaTree({
       )}
 
       {running && (
-        <div className="relative overflow-hidden rounded-xl border border-secondary/30 bg-secondary/[0.06] px-4 py-3 dark:bg-secondary/10">
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-secondary"
-            aria-hidden
-          />
-          <div className="flex flex-wrap items-center justify-between gap-2 pl-2">
-            <p className="text-sm font-bold text-foreground">
-              {displayLordName(running, lang, system)}
-              <span className="mx-1.5 font-normal">·</span>
-              {t("kundali.maha_dasha")}
-            </p>
-            <div className="flex items-center gap-2">
-              {yoginiCycle ? (
-                <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
-                  {bilingualText(lang, `चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
-                </span>
-              ) : null}
-              <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-sm font-bold text-secondary">
-                {t("kundali.running_dasha")}
+        <RunningChainSummary
+          chain={chain}
+          system={system}
+          now={now}
+          timeZone={timeZone}
+          lang={lang}
+          digits={digits}
+          cycleBadge={
+            yoginiCycle ? (
+              <span className="rounded-full border border-border/60 bg-card px-2 py-0.5 text-sm font-semibold">
+                {bilingualText(lang, `चक्र: ${digits(yoginiCycle)}`, `Cycle: ${digits(yoginiCycle)}`)}
               </span>
-            </div>
-          </div>
-          <div className="mt-1.5 space-y-0.5 pl-2">
-            <MomentLine
-              label={t("kundali.begin")}
-              value={formatMoment(running.start, lang, timeZone, digits)}
-            />
-            <MomentLine
-              label={t("kundali.end")}
-              value={formatMoment(running.end, lang, timeZone, digits)}
-            />
-          </div>
-          <div className="mt-2 pl-2">
-            <DashaDurationGrid
-              start={running.start}
-              end={running.end}
-              lang={lang}
-              digits={digits}
-            />
-          </div>
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 pl-2 text-sm">
-            <p>
-              <span>{t("kundali.total")} — </span>
-              <span className="font-semibold text-foreground">
-                {digits(formatDashaDuration(running.end.getTime() - running.start.getTime(), lang))}
-              </span>
-            </p>
-            <p>
-              <span>{t("kundali.left")} — </span>
-              <span className="font-semibold text-foreground">
-                {digits(formatDashaDuration(running.end.getTime() - now, lang))}
-              </span>
-            </p>
-          </div>
-          <SpanProgress start={running.start} end={running.end} now={now} running />
-        </div>
+            ) : undefined
+          }
+        />
       )}
 
-      <ol className="relative m-0 list-none pl-3">
-        {mahadashas.map((span, i) => (
-          <DashaNode
-            key={`${span.lord}-${span.start.getTime()}-${i}`}
-            span={span}
-            level={0}
-            now={now}
-            timeZone={timeZone}
-            isLast={i === mahadashas.length - 1}
-            system={system}
-            maxLevel={maxLevel}
-          />
-        ))}
-      </ol>
+      <div>
+        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          {t("kundali.x.dasha_full_timeline")}
+        </p>
+        <ol className="relative m-0 list-none pl-3">
+          {mahadashas.map((span, i) => (
+            <DashaNode
+              key={`${span.lord}-${span.start.getTime()}-${i}`}
+              span={span}
+              level={0}
+              now={now}
+              timeZone={timeZone}
+              isLast={i === mahadashas.length - 1}
+              system={system}
+              maxLevel={maxLevel}
+            />
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }

@@ -466,3 +466,34 @@ export function formatZonedBsMoment(
   const weekdayNe = WEEKDAY_FULL_NE[z.weekday] ?? ""
   return `${monthNe} ${digits(bs.day)}, ${digits(bs.year)}, ${weekdayNe} ${digits(time)}`
 }
+
+/**
+ * Zoned instant as AD (Gregorian) calendar date + weekday + clock — the
+ * English-mode counterpart to {@link formatZonedBsMoment}. A BS year number
+ * like "2076" means nothing to an English reader; a range like "2019–2036"
+ * does, so callers showing a long-spanning date range (e.g. a dasha period)
+ * in English should use this instead of translating BS month names.
+ * e.g. December 13, 2019, Friday at 22:29
+ */
+export function formatZonedAdMoment(
+  date: Date,
+  options?: {
+    lang?: string
+    timeZone?: string
+    digits?: (v: string | number) => string
+  },
+): string {
+  const { lang = "ne", timeZone, digits = String } = options ?? {}
+  const z = getZonedParts(date, timeZone)
+  const time = `${z.hour}:${z.minute}`
+  const isEn = lang.slice(0, 2) === "en"
+
+  if (isEn) {
+    const monthEn = AD_MONTH_NAMES[z.month - 1]
+    const weekdayEn = WEEKDAY_FULL_EN[z.weekday] ?? ""
+    return `${monthEn} ${z.day}, ${z.year}, ${weekdayEn} at ${time}`
+  }
+  const monthNe = AD_MONTH_NAMES_NE[z.month - 1]
+  const weekdayNe = WEEKDAY_FULL_NE[z.weekday] ?? ""
+  return `${monthNe} ${digits(z.day)}, ${digits(z.year)}, ${weekdayNe} ${digits(time)}`
+}

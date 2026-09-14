@@ -1109,6 +1109,7 @@ export const strings = {
   "kundali.x.bala_sthana": { ne: "स्थान", en: "Sthana" },
   "kundali.x.bhava_percent": { ne: "भाव (% मा)", en: "Bhava (in %)" },
   "kundali.x.bhava_tag": { ne: "भाव {{n}}", en: "H {{n}}" },
+  "kundali.x.dasha_full_timeline": { ne: "पूरा समयरेखा", en: "Full timeline" },
   "kundali.x.dasha_level_antar": { ne: "अन्तर्दशा", en: "Antar Dasha" },
   "kundali.x.dasha_level_prana": { ne: "प्राण दशा", en: "Prana Dasha" },
   "kundali.x.dasha_level_pratyantar": { ne: "प्रत्यन्तर्दशा", en: "Pratyantar Dasha" },
