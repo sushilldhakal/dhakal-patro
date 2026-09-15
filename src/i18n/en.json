@@ -833,6 +833,50 @@
         "credit": "Brihat Parashara Hora Shastra - Maharishi Parashara",
         "edition": "Translator & Editor Pandit Ganesh Dutt Pathak BS 2029 (preface); revised edition BS 2058. Savitri Thakur Prakashan, Rathyatra, Varanasi.",
         "used": "The rules and results of yogas formed in the birth chart."
+      },
+      "shadbala": {
+        "bphs": {
+          "credit": "Brihat Parashara Hora Shastra - Maharishi Parashara",
+          "edition": "Translator & Editor Pandit Ganesh Dutt Pathak BS 2029 (preface); revised edition BS 2058. Savitri Thakur Prakashan, Rathyatra, Varanasi.",
+          "used": "The Virupa scoring table for Saptavargaja Bala and the Ayana Bala formula in Shadbala (Chapter 27, Balachakra)."
+        },
+        "phaladeepika": {
+          "credit": "Phaladeepika - Mantreswara, about BS 1560",
+          "edition": "Translators Pandit Gopesh Kumar Ojha & Ashutosh Ojha BS 2065. Motilal Banarsidass Publishers, Delhi.",
+          "used": "The Virupa weights for Saptavargaja Bala, from exaltation/Moolatrikona (45 Virupas) down to great-enemy (1.875 Virupas) (Chapter 4, verses 2-5)."
+        },
+        "saravali": {
+          "credit": "Saravali - Kalyana Varma, about BS 857",
+          "edition": "Translator, commentator & editor R. Santhanam BS 2040. Ranjan Publications, New Delhi.",
+          "used": "The rule for which planets are strong in the northern and southern declinations for Ayana Bala (Chapter 4, verse 37)."
+        }
+      },
+      "bhavabala": {
+        "phaladeepika": {
+          "credit": "Phaladeepika - Mantreswara, about BS 1560",
+          "edition": "Translators Pandit Gopesh Kumar Ojha & Ashutosh Ojha BS 2065. Motilal Banarsidass Publishers, Delhi.",
+          "used": "The rules for Bhavadhipati Bala, Bhava Drishti Bala, and Scorpio's Bhava Digbala as a Keeta sign (Chapter 4, verses 6, 11-13, 24)."
+        },
+        "sripatipaddhati": {
+          "credit": "Sripati Paddhati - Sripati, BS 1076-1123",
+          "edition": "Translator & Editor V. Subrahmanya Sastri BS 1994. Bangalore.",
+          "used": "The house lord's baseline strength, the Bhava Madhya degree with its biped/quadruped split, and the Bhava % (residential strength) formula (Chapters 2, 4)."
+        },
+        "saravali": {
+          "credit": "Saravali - Kalyana Varma, about BS 857",
+          "edition": "Translator, commentator & editor R. Santhanam BS 2040. Ranjan Publications, New Delhi.",
+          "used": "The cardinal directions for Bhava Digbala (1st house = East, etc.) and the rule classifying Scorpio as a Keeta sign (Chapter 4, verse 35)."
+        },
+        "brihatjataka": {
+          "credit": "Brihat Jataka - Varahamihira, BS 562-644",
+          "edition": "Translator Bangalore Suryanarain Rao BS 2055. Motilal Banarsidass, New Delhi.",
+          "used": "The classification of Scorpio exclusively under the Keeta (insect) category (Chapter 1, verse 17)."
+        },
+        "horasara": {
+          "credit": "Hora Sara - Prithuyasas, about BS 650",
+          "edition": "Translator & Editor R. Santhanam BS 2039. Ranjan Publications, New Delhi.",
+          "used": "Splitting Sagittarius and Capricorn into their biped and quadruped halves when computing the Bhava Madhya degree (Chapter 2, verses 20-29)."
+        }
       }
     }
   },

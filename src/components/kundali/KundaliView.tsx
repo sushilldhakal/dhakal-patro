@@ -655,52 +655,55 @@ export function KundaliView({
       )}
 
       {showSection("kundali-shadbala") && (
-        <div id="kundali-shadbala" className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
-          <Suspense fallback={<SectionLoading />}>
-            <KundaliSubTabs
-              items={BALA_TAB_SECTIONS}
-              activeId="kundali-shadbala"
-              onSelect={goSection}
-              ariaLabel={t("kundali.nav_bala")}
-            />
-            <ShadbalaCard
-              data={detail.shadbala}
-              yuddha={detail.yuddha}
-              bhavaBala={detail.bhavaBala}
-            />
-          </Suspense>
+        <div id="kundali-shadbala" className="scroll-mt-24 space-y-6">
+          <div className="rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
+            <Suspense fallback={<SectionLoading />}>
+              <KundaliSubTabs
+                items={BALA_TAB_SECTIONS}
+                activeId="kundali-shadbala"
+                onSelect={goSection}
+                ariaLabel={t("kundali.nav_bala")}
+              />
+              <ShadbalaCard
+                data={detail.shadbala}
+                yuddha={detail.yuddha}
+                bhavaBala={detail.bhavaBala}
+              />
+            </Suspense>
+          </div>
+          <ShadbalaSources />
         </div>
       )}
 
       {showSection("kundali-bhava-bala") && (
-        <div
-          id="kundali-bhava-bala"
-          className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
-        >
-          <Suspense fallback={<SectionLoading />}>
-            <KundaliSubTabs
-              items={BALA_TAB_SECTIONS}
-              activeId="kundali-bhava-bala"
-              onSelect={goSection}
-              ariaLabel={t("kundali.nav_bala")}
-            />
-            {detail.bhavaBala ? (
-              <BhavaBalaCard
-                data={detail.bhavaBala}
-                vargaCharts={detail.vargaCharts}
-                combustion={detail.combustion}
+        <div id="kundali-bhava-bala" className="scroll-mt-24 space-y-6">
+          <div className="rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
+            <Suspense fallback={<SectionLoading />}>
+              <KundaliSubTabs
+                items={BALA_TAB_SECTIONS}
+                activeId="kundali-bhava-bala"
+                onSelect={goSection}
+                ariaLabel={t("kundali.nav_bala")}
               />
-            ) : (
-              <p className="py-8 text-center text-sm">
-                {t("kundali.section_unavailable")}
-              </p>
-            )}
-            <JanmaPhalaTables
-              tab={janmaPhalaTab}
-              onTabChange={setJanmaPhalaTab}
-              chartBhavas={janmaPhalaPlanetBhavas}
-            />
-          </Suspense>
+              {detail.bhavaBala ? (
+                <BhavaBalaCard
+                  data={detail.bhavaBala}
+                  vargaCharts={detail.vargaCharts}
+                  combustion={detail.combustion}
+                />
+              ) : (
+                <p className="py-8 text-center text-sm">
+                  {t("kundali.section_unavailable")}
+                </p>
+              )}
+              <JanmaPhalaTables
+                tab={janmaPhalaTab}
+                onTabChange={setJanmaPhalaTab}
+                chartBhavas={janmaPhalaPlanetBhavas}
+              />
+            </Suspense>
+          </div>
+          <BhavaBalaSources />
         </div>
       )}
 
@@ -803,6 +806,56 @@ function KundaliYogaSources() {
             <p className="text-muted-foreground">{t("kundali.sources.bphs.used")}</p>
           </div>
         </li>
+      </ol>
+    </section>
+  );
+}
+
+const SHADBALA_SOURCE_IDS = ["bphs", "phaladeepika", "saravali"] as const;
+
+function ShadbalaSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("kundali.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("kundali.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        {SHADBALA_SOURCE_IDS.map((id, i) => (
+          <li key={id} className="flex gap-3 text-sm">
+            <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(i + 1)}.</span>
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-semibold text-foreground">{t(`kundali.sources.shadbala.${id}.credit`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.shadbala.${id}.edition`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.shadbala.${id}.used`)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+const BHAVA_BALA_SOURCE_IDS = ["phaladeepika", "sripatipaddhati", "saravali", "brihatjataka", "horasara"] as const;
+
+function BhavaBalaSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("kundali.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("kundali.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        {BHAVA_BALA_SOURCE_IDS.map((id, i) => (
+          <li key={id} className="flex gap-3 text-sm">
+            <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(i + 1)}.</span>
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-semibold text-foreground">{t(`kundali.sources.bhavabala.${id}.credit`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.bhavabala.${id}.edition`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.bhavabala.${id}.used`)}</p>
+            </div>
+          </li>
+        ))}
       </ol>
     </section>
   );

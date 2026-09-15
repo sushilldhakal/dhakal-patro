@@ -1256,6 +1256,104 @@ export const strings = {
     en: "The rules and results of yogas formed in the birth chart.",
   },
 
+  "kundali.sources.shadbala.bphs.credit": {
+    ne: "बृहत्पाराशरहोराशास्त्रम् - महर्षि पराशर",
+    en: "Brihat Parashara Hora Shastra - Maharishi Parashara",
+  },
+  "kundali.sources.shadbala.bphs.edition": {
+    ne: "अनुवादक र सम्पादक पण्डित गणेशदत्त पाठक वि.सं. २०२९ (भूमिका); संशोधित परिवर्तित संस्करण वि.सं. २०५८। सावित्री ठाकुर प्रकाशन, रथयात्रा, वाराणसी।",
+    en: "Translator & Editor Pandit Ganesh Dutt Pathak BS 2029 (preface); revised edition BS 2058. Savitri Thakur Prakashan, Rathyatra, Varanasi.",
+  },
+  "kundali.sources.shadbala.bphs.used": {
+    ne: "षड्बलमा सप्तवर्गज बलको विरुपा तालिका, र अयन बलको सूत्र (अध्याय २७, बलचक्र)।",
+    en: "The Virupa scoring table for Saptavargaja Bala and the Ayana Bala formula in Shadbala (Chapter 27, Balachakra).",
+  },
+  "kundali.sources.shadbala.phaladeepika.credit": {
+    ne: "फलदीपिका - मन्त्रेश्वर वि.सं. लगभग १५६०",
+    en: "Phaladeepika - Mantreswara, about BS 1560",
+  },
+  "kundali.sources.shadbala.phaladeepika.edition": {
+    ne: "अनुवादक पण्डित गोपेश कुमार ओझा र आशुतोष ओझा वि.सं. २०६५। मोतीलाल बनारसीदास पब्लिशर्स, दिल्ली।",
+    en: "Translators Pandit Gopesh Kumar Ojha & Ashutosh Ojha BS 2065. Motilal Banarsidass Publishers, Delhi.",
+  },
+  "kundali.sources.shadbala.phaladeepika.used": {
+    ne: "सप्तवर्गज बलमा उच्च/मूलत्रिकोण (४५ विरुपा) देखि अतिशत्रु (१.८७५ विरुपा) सम्मको विरुपा तौल (अध्याय ४, श्लोक २–५)।",
+    en: "The Virupa weights for Saptavargaja Bala, from exaltation/Moolatrikona (45 Virupas) down to great-enemy (1.875 Virupas) (Chapter 4, verses 2-5).",
+  },
+  "kundali.sources.shadbala.saravali.credit": {
+    ne: "सारावली - कल्याणवर्मा वि.सं. लगभग ८५७",
+    en: "Saravali - Kalyana Varma, about BS 857",
+  },
+  "kundali.sources.shadbala.saravali.edition": {
+    ne: "अनुवादक, टिप्पणीकार र सम्पादक आर. सन्थानम् वि.सं. २०४०। रञ्जन पब्लिकेसन्स, नयाँ दिल्ली।",
+    en: "Translator, commentator & editor R. Santhanam BS 2040. Ranjan Publications, New Delhi.",
+  },
+  "kundali.sources.shadbala.saravali.used": {
+    ne: "अयन बलमा उत्तरायण र दक्षिणायनमा कुन ग्रह बलवान् हुन्छन् भन्ने नियम (अध्याय ४, श्लोक ३७)।",
+    en: "The rule for which planets are strong in the northern and southern declinations for Ayana Bala (Chapter 4, verse 37).",
+  },
+
+  "kundali.sources.bhavabala.phaladeepika.credit": {
+    ne: "फलदीपिका - मन्त्रेश्वर वि.सं. लगभग १५६०",
+    en: "Phaladeepika - Mantreswara, about BS 1560",
+  },
+  "kundali.sources.bhavabala.phaladeepika.edition": {
+    ne: "अनुवादक पण्डित गोपेश कुमार ओझा र आशुतोष ओझा वि.सं. २०६५। मोतीलाल बनारसीदास पब्लिशर्स, दिल्ली।",
+    en: "Translators Pandit Gopesh Kumar Ojha & Ashutosh Ojha BS 2065. Motilal Banarsidass Publishers, Delhi.",
+  },
+  "kundali.sources.bhavabala.phaladeepika.used": {
+    ne: "भावेश बल, भाव दृष्टि बल, र वृश्चिकको भाव दिग्बल (कीट राशि) सम्बन्धी नियम (अध्याय ४, श्लोक ६, ११–१३, २४)।",
+    en: "The rules for Bhavadhipati Bala, Bhava Drishti Bala, and Scorpio's Bhava Digbala as a Keeta sign (Chapter 4, verses 6, 11-13, 24).",
+  },
+  "kundali.sources.bhavabala.sripatipaddhati.credit": {
+    ne: "श्रीपति पद्धति - श्रीपति वि.सं. १०७६–११२३",
+    en: "Sripati Paddhati - Sripati, BS 1076-1123",
+  },
+  "kundali.sources.bhavabala.sripatipaddhati.edition": {
+    ne: "अनुवादक र सम्पादक भी. सुब्रह्मण्य शास्त्री वि.सं. १९९४। बंगलौर।",
+    en: "Translator & Editor V. Subrahmanya Sastri BS 1994. Bangalore.",
+  },
+  "kundali.sources.bhavabala.sripatipaddhati.used": {
+    ne: "भावेशको आधार बल, भावमध्य अंश (द्विपाद/चतुष्पाद विभाजनसहित), र भाव % (आवासीय बल) को सूत्र (अध्याय २, ४)।",
+    en: "The house lord's baseline strength, the Bhava Madhya degree with its biped/quadruped split, and the Bhava % (residential strength) formula (Chapters 2, 4).",
+  },
+  "kundali.sources.bhavabala.saravali.credit": {
+    ne: "सारावली - कल्याणवर्मा वि.सं. लगभग ८५७",
+    en: "Saravali - Kalyana Varma, about BS 857",
+  },
+  "kundali.sources.bhavabala.saravali.edition": {
+    ne: "अनुवादक, टिप्पणीकार र सम्पादक आर. सन्थानम् वि.सं. २०४०। रञ्जन पब्लिकेसन्स, नयाँ दिल्ली।",
+    en: "Translator, commentator & editor R. Santhanam BS 2040. Ranjan Publications, New Delhi.",
+  },
+  "kundali.sources.bhavabala.saravali.used": {
+    ne: "भाव दिग्बलका दिशा (लग्न=पूर्व आदि) र वृश्चिकलाई कीट राशि तोक्ने नियम (अध्याय ४, श्लोक ३५)।",
+    en: "The cardinal directions for Bhava Digbala (1st house = East, etc.) and the rule classifying Scorpio as a Keeta sign (Chapter 4, verse 35).",
+  },
+  "kundali.sources.bhavabala.brihatjataka.credit": {
+    ne: "बृहज्जातक - वराहमिहिर वि.सं. ५६२–६४४",
+    en: "Brihat Jataka - Varahamihira, BS 562-644",
+  },
+  "kundali.sources.bhavabala.brihatjataka.edition": {
+    ne: "अनुवादक बंगलौर सूर्यनारायण राव वि.सं. २०५५। मोतीलाल बनारसीदास, नयाँ दिल्ली।",
+    en: "Translator Bangalore Suryanarain Rao BS 2055. Motilal Banarsidass, New Delhi.",
+  },
+  "kundali.sources.bhavabala.brihatjataka.used": {
+    ne: "वृश्चिक राशिलाई कीट (कीरा) वर्गमा वर्गीकरण गर्ने प्रमाण (अध्याय १, श्लोक १७)।",
+    en: "The classification of Scorpio exclusively under the Keeta (insect) category (Chapter 1, verse 17).",
+  },
+  "kundali.sources.bhavabala.horasara.credit": {
+    ne: "होरासार - पृथुयशस् वि.सं. लगभग ६५०",
+    en: "Hora Sara - Prithuyasas, about BS 650",
+  },
+  "kundali.sources.bhavabala.horasara.edition": {
+    ne: "अनुवादक र सम्पादक आर. सन्थानम् वि.सं. २०३९। रञ्जन पब्लिकेसन्स, नयाँ दिल्ली।",
+    en: "Translator & Editor R. Santhanam BS 2039. Ranjan Publications, New Delhi.",
+  },
+  "kundali.sources.bhavabala.horasara.used": {
+    ne: "धनु र मकर राशिको पूर्वार्ध (द्विपाद) र उत्तरार्ध (चतुष्पाद) छुट्याई भावमध्य अंशको गणना (अध्याय २, श्लोक २०–२९)।",
+    en: "Splitting Sagittarius and Capricorn into their biped and quadruped halves when computing the Bhava Madhya degree (Chapter 2, verses 20-29).",
+  },
+
   /* ── milan ───────────────────────────────────────────────────────────── */
   "milan.eyebrow": { ne: "नेपाली पात्रो · ज्योतिष · कुण्डली मिलन", en: "Nepali Patro · Jyotish · Kundali Milan" },
   "milan.title": { ne: "कुण्डली मिलन", en: "Kundali Milan" },
