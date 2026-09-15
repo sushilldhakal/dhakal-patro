@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   ChevronUp,
@@ -18,6 +19,7 @@ import {
   Volume1,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react";
 
 import { formatChapterClock } from "@/lib/learn/chapter-player";
@@ -82,34 +84,20 @@ export function DayChapterWelcome({
   );
 }
 
-export function DayChapterBar({
-  player,
-  orbitPlaying,
-  onOrbitToggle,
-}: {
-  player: DayChapterPlayer;
-  /** Playground: the year orbit, not a chapter clock. */
-  orbitPlaying?: boolean;
-  onOrbitToggle?: () => void;
-}) {
+export function DayChapterBar({ player }: { player: DayChapterPlayer }) {
   const { t } = useTranslation();
   const { lang } = useLocale();
   const ne = lang !== "en";
   const num = (v: string) => (ne ? toNepaliDigits(v) : v);
   const [tocOpen, setTocOpen] = useState(false);
-  const tocRef = useRef<HTMLDivElement | null>(null);
   const [volumeOpen, setVolumeOpen] = useState(false);
   const volumeRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!tocOpen) return;
-    const onDoc = (e: PointerEvent) => {
-      if (!tocRef.current?.contains(e.target as Node)) setTocOpen(false);
-    };
-    document.addEventListener("pointerdown", onDoc);
-    return () => document.removeEventListener("pointerdown", onDoc);
-  }, [tocOpen]);
-
+  /* No outside-pointerdown listener here, unlike the volume popover below:
+     the TOC is portalled to <body> (see its own comment), so it is never a
+     descendant of anything in this component to test containment against.
+     Its own backdrop's onClick (with the panel's stopPropagation) does the
+     same job directly. */
   useEffect(() => {
     if (!volumeOpen) return;
     const onDoc = (e: PointerEvent) => {
@@ -124,8 +112,8 @@ export function DayChapterBar({
   const progress = player.duration > 0 ? (player.time / player.duration) * 100 : 0;
   const isLast = player.index >= player.chapters.length - 1;
   const isFirst = player.index <= 0;
-  const playing = free ? Boolean(orbitPlaying) : player.playing;
-  const ended = free ? false : player.ended;
+  const playing = player.playing;
+  const ended = player.ended;
   const VolumeIcon = player.volume === 0 ? VolumeX : player.volume < 0.5 ? Volume1 : Volume2;
 
   return (
@@ -150,7 +138,7 @@ export function DayChapterBar({
         </div>
       )}
 
-      <div className="relative mt-1 flex justify-center" ref={tocRef}>
+      <div className="relative mt-1 flex justify-center">
         <button
           type="button"
           onClick={() => setTocOpen((v) => !v)}
@@ -163,137 +151,167 @@ export function DayChapterBar({
           </span>
           <ChevronUp size={14} className={cn("shrink-0 text-white/50 transition-transform", tocOpen ? "" : "rotate-180")} />
         </button>
-        {tocOpen && (
-          <>
-            {/* A full-screen scrim, not just the panel's own opacity: opening
-                upward from a chapter row wedged between the scrub bar and the
-                prev/next-topic strip left both showing through around the
-                panel's edges on a short phone screen. The scrim is what
-                actually covers them, not the panel's own background. */}
+        {/*
+         * Portalled to <body>, not opened in place.
+         *
+         * This row sits inside the details panel, which scrolls in fullscreen
+         * (`overflow-y-auto` on an ancestor) — an `absolute` menu anchored here
+         * was clipped by that ancestor's overflow box instead of floating free
+         * of it, which is what actually made "pick a chapter" unusable in
+         * fullscreen: half the list was cut off or unreachable, not just
+         * visually cramped. A portal escapes that ancestor entirely, the same
+         * fix `DayPlaygroundStudy`'s own fullscreen view already uses to clear
+         * the app chrome — this clears the details panel instead.
+         */}
+        {tocOpen &&
+          createPortal(
             <div
-              className="fixed inset-0 z-10 bg-black/60"
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4"
               onClick={() => setTocOpen(false)}
-            />
-            {/* Capped and scrollable: the syllabus runs to a dozen-odd chapters,
-                and an uncapped menu grew straight off the top of the canvas. */}
-            <div className="absolute bottom-[calc(100%+4px)] left-1/2 z-20 max-h-[min(60vh,22rem)] w-[min(300px,90vw)] -translate-x-1/2 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/90 py-1 backdrop-blur">
-              {parts.map((part, pi) => (
-              <div key={part.partKey ?? `p-${pi}`}>
-                {part.partKey ? (
-                  <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
-                    {t(part.partKey)}
-                  </div>
-                ) : null}
-                {part.items.map(({ chapter, index }) => (
+            >
+              <div
+                data-ui-panel
+                onClick={(e) => e.stopPropagation()}
+                className="flex max-h-[80vh] w-full max-w-sm touch-auto flex-col overflow-hidden rounded-2xl border border-white/15 bg-black/95 backdrop-blur"
+              >
+                <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
+                  <span className="text-sm font-semibold text-white">
+                    {t("learn.chapters.chapter_list")}
+                  </span>
                   <button
-                    key={chapter.id}
                     type="button"
-                    onClick={() => {
-                      player.goTo(index);
-                      setTocOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-semibold",
-                      index === player.index
-                        ? "bg-white/15 text-white"
-                        : "text-white/70 hover:bg-white/8 hover:text-white",
-                    )}
+                    onClick={() => setTocOpen(false)}
+                    className="grid size-7 place-items-center rounded-full text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label={t("common.close")}
                   >
-                    <span className="w-5 shrink-0 tabular-nums text-white/40">
-                      {num(String(index + 1))}
-                    </span>
-                    <span className="truncate">{t(chapter.titleKey)}</span>
+                    <X size={16} />
                   </button>
-                ))}
+                </div>
+                <div className="touch-auto flex-1 overflow-y-auto overscroll-contain py-1">
+                  {parts.map((part, pi) => (
+                    <div key={part.partKey ?? `p-${pi}`}>
+                      {part.partKey ? (
+                        <div className="px-4 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
+                          {t(part.partKey)}
+                        </div>
+                      ) : null}
+                      {part.items.map(({ chapter, index }) => (
+                        <button
+                          key={chapter.id}
+                          type="button"
+                          onClick={() => {
+                            player.goTo(index);
+                            setTocOpen(false);
+                          }}
+                          className={cn(
+                            "flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-semibold",
+                            index === player.index
+                              ? "bg-white/15 text-white"
+                              : "text-white/70 hover:bg-white/8 hover:text-white",
+                          )}
+                        >
+                          <span className="w-5 shrink-0 tabular-nums text-white/40">
+                            {num(String(index + 1))}
+                          </span>
+                          <span className="truncate">{t(chapter.titleKey)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-            </div>
-          </>
-        )}
+            </div>,
+            document.body,
+          )}
       </div>
 
-      <div className="relative mt-1 flex items-center justify-center gap-5">
-        <button
-          type="button"
-          disabled={isFirst}
-          onClick={player.prev}
-          className="grid size-10 place-items-center text-white/80 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
-          aria-label={t("learn.chapters.prev")}
-        >
-          <SkipBack size={22} fill="currentColor" />
-        </button>
-        <button
-          type="button"
-          onClick={
-            free
-              ? onOrbitToggle
-              : ended
+      {/* Free play has no transport row at all in the reference lab — the
+          playground page is just the scene plus its own controls; auto-play
+          there is the orbit toggle up in that panel, not a bottom bar.
+          Narration is the only thing this row (play/pause/skip/volume)
+          belongs to, so it renders only where narration does. */}
+      {free ? null : (
+        <div className="relative mt-1 flex items-center justify-center gap-5">
+          <button
+            type="button"
+            disabled={isFirst}
+            onClick={player.prev}
+            className="grid size-10 place-items-center text-white/80 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+            aria-label={t("learn.chapters.prev")}
+          >
+            <SkipBack size={22} fill="currentColor" />
+          </button>
+          <button
+            type="button"
+            onClick={
+              ended
                 ? () => {
                     player.seek(0);
                     player.play();
                   }
                 : player.toggle
-          }
-          className="grid size-12 place-items-center text-white hover:text-white"
-          aria-label={ended ? t("learn.chapters.replay") : playing ? t("learn.pause") : t("learn.play")}
-        >
-          {ended ? (
-            <RotateCcw size={26} />
-          ) : playing ? (
-            <Pause size={28} fill="currentColor" strokeWidth={0} />
-          ) : (
-            <Play size={28} fill="currentColor" strokeWidth={0} className="ml-[3px]" />
-          )}
-        </button>
-        <button
-          type="button"
-          disabled={isLast}
-          onClick={player.next}
-          className={cn(
-            "grid size-10 place-items-center text-white/80 hover:text-white disabled:cursor-not-allowed disabled:opacity-30",
-            player.ended && !isLast && "text-amber-100",
-          )}
-          aria-label={t("learn.chapters.next")}
-        >
-          <SkipForward size={22} fill="currentColor" />
-        </button>
-
-        {/* The reference lab's speaker icon — tucked to a corner while the
-            transport stays centred, same as its bottom-left placement. */}
-        <div className="absolute right-0" ref={volumeRef}>
+            }
+            className="grid size-12 place-items-center text-white hover:text-white"
+            aria-label={ended ? t("learn.chapters.replay") : playing ? t("learn.pause") : t("learn.play")}
+          >
+            {ended ? (
+              <RotateCcw size={26} />
+            ) : playing ? (
+              <Pause size={28} fill="currentColor" strokeWidth={0} />
+            ) : (
+              <Play size={28} fill="currentColor" strokeWidth={0} className="ml-[3px]" />
+            )}
+          </button>
           <button
             type="button"
-            onClick={() => setVolumeOpen((v) => !v)}
-            className="grid size-9 place-items-center rounded-full text-white/60 hover:text-white"
-            aria-label={t("learn.chapters.volume")}
+            disabled={isLast}
+            onClick={player.next}
+            className={cn(
+              "grid size-10 place-items-center text-white/80 hover:text-white disabled:cursor-not-allowed disabled:opacity-30",
+              player.ended && !isLast && "text-amber-100",
+            )}
+            aria-label={t("learn.chapters.next")}
           >
-            <VolumeIcon size={18} />
+            <SkipForward size={22} fill="currentColor" />
           </button>
-          {volumeOpen && (
-            <div className="absolute bottom-[calc(100%+6px)] right-0 z-20 flex items-center gap-2 rounded-full border border-white/15 bg-black/90 px-3 py-2 backdrop-blur">
-              <button
-                type="button"
-                onClick={player.toggleMute}
-                className="shrink-0 text-white/70 hover:text-white"
-                aria-label={t("learn.chapters.volume")}
-              >
-                <VolumeIcon size={16} />
-              </button>
-              <input
-                type="range"
-                className={cn(edScrub, "ed-scrub-dark w-24")}
-                style={{ "--fill": `${player.volume * 100}%` } as React.CSSProperties}
-                min={0}
-                max={1}
-                step={0.01}
-                value={player.volume}
-                onChange={(e) => player.setVolume(Number(e.target.value))}
-                aria-label={t("learn.chapters.volume")}
-              />
-            </div>
-          )}
+
+          {/* The reference lab's speaker icon — tucked to a corner while the
+              transport stays centred, same as its bottom-left placement. */}
+          <div className="absolute right-0" ref={volumeRef}>
+            <button
+              type="button"
+              onClick={() => setVolumeOpen((v) => !v)}
+              className="grid size-9 place-items-center rounded-full text-white/60 hover:text-white"
+              aria-label={t("learn.chapters.volume")}
+            >
+              <VolumeIcon size={18} />
+            </button>
+            {volumeOpen && (
+              <div className="absolute bottom-[calc(100%+6px)] right-0 z-20 flex items-center gap-2 rounded-full border border-white/15 bg-black/90 px-3 py-2 backdrop-blur">
+                <button
+                  type="button"
+                  onClick={player.toggleMute}
+                  className="shrink-0 text-white/70 hover:text-white"
+                  aria-label={t("learn.chapters.volume")}
+                >
+                  <VolumeIcon size={16} />
+                </button>
+                <input
+                  type="range"
+                  className={cn(edScrub, "ed-scrub-dark w-24")}
+                  style={{ "--fill": `${player.volume * 100}%` } as React.CSSProperties}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={player.volume}
+                  onChange={(e) => player.setVolume(Number(e.target.value))}
+                  aria-label={t("learn.chapters.volume")}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

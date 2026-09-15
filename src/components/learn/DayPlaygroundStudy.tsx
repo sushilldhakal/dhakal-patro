@@ -425,16 +425,16 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
    * began, and the point of a year is the count underneath it. So a chapter
    * asks, and outside a chapter everything is on.
    *
-   * The transport is a third question again: the reference lab never shows a
-   * year scrubber during a narrated chapter — not mid-chapter, not once it
-   * ends either. A reader who wants to scrub the year freely moves on to the
-   * Playground chapter, the same way the original hands off to its own
-   * `/playground` route rather than growing a second transport bar under the
-   * one already on screen.
+   * "Outside a chapter" means genuinely outside a track — a topic with no
+   * `guided` config at all, which is most of them, and where this chrome is
+   * the only UI the playground has. The track's own free/Playground entry is
+   * not that: the reference lab's `/playground` route is bare — the scene and
+   * its own controls, nothing below it — so `freePlay` is excluded here the
+   * same as `lesson` is, rather than falling through to "everything is on."
    */
-  const showHud = !lesson || Boolean(tourState?.hud);
-  const showReadings = !lesson || Boolean(tourState?.readings);
-  const showTransport = !lesson;
+  const showHud = (!lesson && !freePlay) || Boolean(tourState?.hud);
+  const showReadings = (!lesson && !freePlay) || Boolean(tourState?.readings);
+  const showTransport = !lesson && !freePlay;
   const wasTourHandsOff = useRef(false);
   useEffect(() => {
     const on = Boolean(lesson && tourHandsOff);
@@ -1064,13 +1064,21 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         )}
 
         <div className="absolute right-3 top-3 flex gap-2">
-          {lesson ? (
+          {/* The reference lab's playground hardcodes `handsOff: true` for its
+             SimControls, so this button is always live there — it is *the*
+             auto-play control on that page, there being no transport bar at
+             all in free play. During a lesson it is rendered only once the
+             chapter has actually handed control back — a grayed-out button
+             sitting there through the whole narration (most of a chapter's
+             runtime; see {@link tourHandsOff}) read as broken, not as "wait
+             for this." Hiding it is what the transport bar does for the same
+             reason. */}
+          {freePlay || (lesson && tourHandsOff) ? (
             <IconButton
               onClick={() => setPlaying((v) => !v)}
               label={playing ? t("learn.pause") : t("learn.play")}
               active={playing}
               pulse={highlightControl === "auto-orbit"}
-              disabled={!tourHandsOff}
             >
               <Orbit size={16} />
             </IconButton>
@@ -1409,13 +1417,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           </div>
         )}
 
-        {tour ? (
-          <DayChapterBar
-            player={tour}
-            orbitPlaying={freePlay ? playing : undefined}
-            onOrbitToggle={freePlay ? () => setPlaying((v) => !v) : undefined}
-          />
-        ) : null}
+        {tour ? <DayChapterBar player={tour} /> : null}
 
         {showTransport && (
           <>

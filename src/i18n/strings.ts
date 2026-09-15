@@ -5118,6 +5118,7 @@ export const strings = {
   "learn.chapters.axial": { ne: "पृथ्वीको अक्ष झुकाव", en: "Earth's Axial Tilt" },
   "learn.chapters.begin": { ne: "सुरु गर्नुहोस्", en: "Begin" },
   "learn.chapters.chapter": { ne: "अध्याय", en: "Chapter" },
+  "learn.chapters.chapter_list": { ne: "अध्यायहरू", en: "Chapters" },
   "learn.chapters.elliptic": { ne: "पृथ्वीको अण्डाकार कक्षा", en: "Earth's Elliptic Orbit" },
   "learn.chapters.explore": { ne: "स्वतन्त्र रूपमा हेर्नुहोस्", en: "Explore freely" },
   "learn.chapters.eyebrow": { ne: "अन्तरक्रियात्मक अध्याय", en: "An interactive adventure" },
