@@ -213,6 +213,34 @@ const MOON_INCL_Q = new THREE.Quaternion().setFromAxisAngle(
 );
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
 
+/**
+ * `src/lib/transition-setter.js`'s own default — every camera setter in the
+ * reference lab's `day-sim.vue` (`referenceFramePositionSetter` and friends)
+ * leaves it unset, so all of them run at this duration and easing.
+ */
+const FOCUS_DURATION_MS = 1000;
+/** `Copilot.Easing.Quadratic.InOut`, transcribed exactly (`src/lib/copilot.js`). */
+function quadInOut(k: number): number {
+  if ((k *= 2) < 1) return 0.5 * k * k;
+  return -0.5 * (--k * (k - 2) - 1);
+}
+
+/**
+ * The width:height every chapter's `cam()` distance was tuned against — this
+ * scene's canvas on a normal desktop article width.
+ *
+ * A perspective camera's `fov` is its *vertical* field of view, so a fixed
+ * `distance` frames the same vertical slice of the scene on any aspect —
+ * portrait or landscape. On a tall phone canvas that slice is almost all
+ * empty sky above and below two small, distant bodies, because the extra
+ * *height* a portrait canvas has over the reference is height the scene was
+ * never asked to fill. Scaling distance down by how much narrower the canvas
+ * is than this reference pulls the camera in until the content fills the
+ * short dimension the same way it does at the reference aspect, in both
+ * axes — a dolly, not a stretch.
+ */
+const REFERENCE_ASPECT = 1.6;
+
 export type CameraTarget = "meanSun" | "planet" | "sun";
 
 export type SimClock = {
@@ -530,6 +558,16 @@ function ShadowGraha({
 export interface SceneProps {
   clock: MutableRefObject<SimClock>;
   camera: MutableRefObject<CameraState>;
+  /**
+   * Camera-drag inertia, in radians/second — `OrbitControls`' damping from
+   * the reference lab, ported since this scene has no OrbitControls instance
+   * of its own. Free play only; stays `{yaw:0, pitch:0}` everywhere else, so
+   * omitting it is exactly the same as passing an inert ref.
+   */
+  cameraVelocity?: MutableRefObject<{ yaw: number; pitch: number }>;
+  /** True while a camera drag owns `camera.current` directly — the decay
+   *  below must not also nudge it the same frame. */
+  cameraGrabbed?: MutableRefObject<boolean>;
   params: SimParams;
   toggles: SimToggles;
   cameraTarget: CameraTarget;
@@ -595,6 +633,8 @@ export type PlaygroundGlobe = "earth" | "mars" | "mercury" | "jupiter" | "venus"
 function DaySimScene({
   clock,
   camera,
+  cameraVelocity,
+  cameraGrabbed,
   params,
   toggles,
   cameraTarget,
@@ -755,10 +795,19 @@ function DaySimScene({
   const vCamUp = useRef(new THREE.Vector3());
   const followYaw = useRef(0);
   /* Where the camera is actually pointed this frame, and how far through a
-     change of focus it is. See the camera block in the frame loop. */
+     change of focus it is. See the camera block in the frame loop — this is
+     a direct port of the reference lab's `TransitionSetter`
+     (`src/lib/transition-setter.js`): a frozen start point eased toward a
+     freshly-recomputed target over a fixed 1000ms with `Quadratic.InOut`,
+     the same as every one of its camera setters (none pass a custom
+     duration or easing, so all of them use that default). */
   const camAnchor = useRef(new THREE.Vector3());
   const lastTarget = useRef<CameraTarget>("meanSun");
-  const focusEase = useRef(1);
+  const focusStart = useRef(new THREE.Vector3());
+  /* Starts "done" so the very first frame snaps straight to its target
+     instead of easing in from the origin — matching the original, which
+     only transitions on a *change* of target, never on mount. */
+  const focusElapsedMs = useRef(FOCUS_DURATION_MS);
 
   const siderealGeom = useArcGeometry(1.4, 1.6);
   const solarGeom = useArcGeometry(1.2, 1.4);
@@ -1518,33 +1567,59 @@ function DaySimScene({
      *
      * A hard cut between two bodies ten units apart reads as a teleport — the
      * reader loses which body they were looking at, which is the one thing the
-     * control exists to make obvious. So the anchor eases across on a change of
-     * target and then snaps to exact, because a permanent lerp would trail
-     * behind a planet moving twelve rotations a second.
+     * control exists to make obvious. So the anchor eases across on a change
+     * of target and then snaps to exact.
+     *
+     * This is `TransitionSetter` itself, not an approximation of it: `target`
+     * is recomputed fresh every frame exactly as `getCurrent(current)` is, and
+     * `focusStart` is the frozen snapshot `prev` was — so the lerp is from a
+     * fixed start toward a possibly-still-moving target (a planet doing twelve
+     * rotations a second), reaching wherever the target actually is by the
+     * time the 1000ms of `Quadratic.InOut` runs out. A permanent re-lerp
+     * toward the live target every frame — which is what this used to be —
+     * never actually finishes closing that gap while the target keeps moving.
      */
     if (cameraTarget !== lastTarget.current) {
       lastTarget.current = cameraTarget;
-      focusEase.current = 0;
+      focusStart.current.copy(camAnchor.current);
+      focusElapsedMs.current = 0;
     }
-    if (focusEase.current < 1) {
-      focusEase.current = Math.min(1, focusEase.current + delta * 2.5);
-      camAnchor.current.lerp(target, Math.min(1, delta * 6));
-    } else {
-      camAnchor.current.copy(target);
-    }
+    focusElapsedMs.current = Math.min(FOCUS_DURATION_MS, focusElapsedMs.current + delta * 1000);
+    const focusT = quadInOut(focusElapsedMs.current / FOCUS_DURATION_MS);
+    camAnchor.current.lerpVectors(focusStart.current, target, focusT);
     /* The world moves, not the camera: everything is slid by −anchor, which
        puts the focused body on the origin and leaves it there. */
     frameRoot.current.position.copy(camAnchor.current).negate();
+
+    /* Drag inertia — see {@link SceneProps.cameraVelocity}. Decays toward
+       zero rather than being consumed in one shot, so a hard flick keeps
+       coasting for a beat and a gentle one settles almost at once; ~5% of
+       the velocity survives each second, which is `OrbitControls`' own feel
+       at its `dampingFactor = 0.1` (this scene has no OrbitControls instance
+       to inherit that constant from, so it is reproduced here). */
+    if (cameraVelocity && !cameraGrabbed?.current) {
+      const cv = cameraVelocity.current;
+      if (cv.yaw !== 0 || cv.pitch !== 0) {
+        v.yaw += cv.yaw * delta;
+        v.pitch = Math.max(-1.45, Math.min(1.45, v.pitch + cv.pitch * delta));
+        const decay = Math.pow(0.05, delta);
+        cv.yaw *= decay;
+        cv.pitch *= decay;
+      }
+    }
 
     /* Follow eases the yaw round with the planet so it stays put on screen. */
     followYaw.current += shortestAngle((cameraFollow ? -M : 0) - followYaw.current) *
       Math.min(1, delta * 3);
     const yaw = v.yaw + followYaw.current;
     const cosPitch = Math.cos(v.pitch);
+    const canvasAspect = size.width / size.height;
+    const aspectDistance =
+      canvasAspect < REFERENCE_ASPECT ? v.distance * (canvasAspect / REFERENCE_ASPECT) : v.distance;
     cam.position.set(
-      v.distance * cosPitch * Math.sin(yaw),
-      v.distance * Math.sin(v.pitch),
-      v.distance * cosPitch * Math.cos(yaw),
+      aspectDistance * cosPitch * Math.sin(yaw),
+      aspectDistance * Math.sin(v.pitch),
+      aspectDistance * cosPitch * Math.cos(yaw),
     );
     cam.lookAt(0, 0, 0);
     cam.updateMatrixWorld();
@@ -1696,11 +1771,6 @@ function DaySimScene({
     /* All the body anchors share one scratch: `push` projects immediately and
        never keeps the vector, so it is safe to overwrite between calls. */
     const anchor = vAnchor.current;
-    /* The original lab's earth slot is the degree readout in this chapter —
-       it does not also write "Earth" on top of the globe. */
-    if (!toggles.degrees) {
-      push("b-planet", "body", bodyNames.planet, anchor.copy(planetPos).setY(PLANET_R * 2.2), false);
-    }
     if (showMoon) {
       /*
        * Built from the model, not read back with `getWorldPosition`.
@@ -1719,8 +1789,6 @@ function DaySimScene({
     /* Names sit a fixed clearance off the *surface*, not a multiple of the
        radius: scaled by radius the mean sun's name crowded its disc while the
        true sun's floated away from one twice the size. */
-    if (toggles.trueSun)
-      push("b-sun", "body", bodyNames.sun, anchor.copy(sunPos).setY(sunPos.y + SUN_R + 0.34), false);
     if (toggles.meanSun)
       push("b-mean", "body", bodyNames.meanSun, anchor.set(0, MEAN_SUN_R + 0.34, 0), false);
 

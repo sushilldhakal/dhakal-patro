@@ -89,6 +89,12 @@ export function LearnArticle() {
   const category = LEARN_CATEGORIES.find((c) => c.id === topic.category);
   const { prev, next } = adjacentTopics(topic.slug);
   const Content = topic.Content;
+  /* A topic with a guided (narrated) tour explains itself through the
+     playground and its voiceover — the written prose/diagrams below it
+     would just be saying the same thing twice, over video that already
+     says it. Topics whose playground has no `guided` track (most of them)
+     still need the prose; it is the only explanation they have. */
+  const hasGuidedTour = Boolean(playgroundConfig?.guided);
 
   return (
     <PageShell>
@@ -123,7 +129,7 @@ export function LearnArticle() {
             />
           ) : null}
 
-          <Content />
+          {hasGuidedTour ? null : <Content />}
 
           <nav className="mt-12 flex flex-col gap-3 sm:flex-row sm:justify-between">
             {prev ? (

@@ -5133,6 +5133,7 @@ export const strings = {
     ne: "आवाज पछि थपिनेछ — अहिले एनिमेसन आफ्नै समयमा चल्छ।",
     en: "Voiceover comes later — the animation already runs on that clock.",
   },
+  "learn.chapters.volume": { ne: "आवाज", en: "Volume" },
   "learn.chapters.welcome": { ne: "स्वागत", en: "Welcome" },
   "learn.chapters.welcome_subtitle": {
     ne: "दिनदेखि ध्रुव तारासम्म — पात्रोका हरेक एकाइ, एउटै आकाशमा।",
@@ -5204,6 +5205,7 @@ export const strings = {
     ne: "सुझाव — तलका चिप्सले जुनसुकै तह खोल्न वा बन्द गर्न सकिन्छ।",
     en: "Tip: the chips below turn any layer on or off.",
   },
+  "learn.playground.all": { ne: "सबै", en: "All" },
   "learn.playground.axial_tilt": { ne: "अक्ष झुकाव", en: "Axial tilt" },
   "learn.playground.back_to_topic": { ne: "यो विषयमा फर्कनुहोस्", en: "Back to this topic" },
   "learn.playground.controls": { ne: "नियन्त्रण", en: "Controls" },

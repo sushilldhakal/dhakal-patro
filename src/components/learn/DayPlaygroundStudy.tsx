@@ -72,6 +72,7 @@ import {
 import { useChapterTrack } from "@/hooks/use-chapter-track";
 import {
   cameraFromChapter,
+  firstActiveAt,
   togglesFromChapter,
   type Chapter,
   type ChapterSimState,
@@ -117,8 +118,10 @@ function clampPitch(p: number) {
  *
  * A group is on when every layer it owns is on, and pressing it turns the
  * whole set on or off together. This is the level a reader actually thinks at
- * — "show me the year" — while the drawer underneath still exposes each layer
- * on its own for when they want to take one thing away.
+ * — "show me the year" — while the drawer's own per-layer chips underneath
+ * still let them take one thing away. Used to live as an always-on row in the
+ * toolbar; now it is the first section inside the settings drawer instead, so
+ * it no longer competes for space with the transport controls on a phone.
  */
 const GROUPS = {
   year: ["planetOrbit", "monthRing", "rashiBelt"],
@@ -391,7 +394,27 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   }, [tourState, tour?.chapter.free]);
 
   const highlightControl = tour?.state.highlightControl ?? "";
-  const tourHandsOff = Boolean(tourState?.handsOff);
+  /**
+   * The timestamp a chapter's `handsOff` flips from "not started" to "genuine
+   * hand-back" — see {@link firstActiveAt}. `null` means every `handsOff` this
+   * chapter samples is the real thing (it never has a driven middle).
+   */
+  const chapterActiveAt = useMemo(
+    () => (tour ? firstActiveAt(tour.chapter) : null),
+    [tour?.chapter],
+  );
+  /**
+   * `handsOff`, but only once the chapter has actually reached that point.
+   *
+   * `welcome`'s own `defaults` open on `handsOff: true` — the quiet start,
+   * before the 55s reveal keyframe ever runs — which is the same value a
+   * chapter's *end* hand-back samples to. Reading it raw made both the
+   * transport bar below and the free-running clock think the chapter had
+   * already finished, frame one.
+   */
+  const tourHandsOff =
+    Boolean(tourState?.handsOff) &&
+    (chapterActiveAt === null || (tour?.time ?? 0) >= chapterActiveAt);
   /**
    * What the chrome shows during a chapter.
    *
@@ -402,19 +425,22 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
    * began, and the point of a year is the count underneath it. So a chapter
    * asks, and outside a chapter everything is on.
    *
-   * The transport is a third question again. A year scrubber while keyframes
-   * are driving the orbit is a control that does nothing, so it waits for the
-   * chapter to hand the instruments back.
+   * The transport is a third question again: the reference lab never shows a
+   * year scrubber during a narrated chapter — not mid-chapter, not once it
+   * ends either. A reader who wants to scrub the year freely moves on to the
+   * Playground chapter, the same way the original hands off to its own
+   * `/playground` route rather than growing a second transport bar under the
+   * one already on screen.
    */
   const showHud = !lesson || Boolean(tourState?.hud);
   const showReadings = !lesson || Boolean(tourState?.readings);
-  const showTransport = !lesson || tourHandsOff;
+  const showTransport = !lesson;
   const wasTourHandsOff = useRef(false);
   useEffect(() => {
-    const on = Boolean(lesson && tourState?.handsOff);
+    const on = Boolean(lesson && tourHandsOff);
     if (on && !wasTourHandsOff.current) setPlaying(true);
     wasTourHandsOff.current = on;
-  }, [lesson, tourState?.handsOff]);
+  }, [lesson, tourHandsOff]);
   useEffect(() => {
     if (!highlightControl) return;
     if (highlightControl === "settings") {
@@ -616,6 +642,22 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gestureStart = useRef({ yaw: 0, pitch: 0, distance: 0, pinch: 0 });
   const dragOrigin = useRef({ x: 0, y: 0 });
+  /**
+   * Camera-drag inertia — `OrbitControls`' `enableDamping` / `dampingFactor`
+   * from the reference lab's `day-sim.vue` (`controls.enableDamping = true;
+   * controls.dampingFactor = 0.1`), which this scene has no OrbitControls
+   * instance of its own to inherit it from.
+   *
+   * Free play only: a guided chapter's camera is owned by its keyframes, and
+   * a grab there already has its own release behaviour — easing back to the
+   * scripted value via `cameraMeddle`/`mixMeddle` — that independent coasting
+   * would fight. So `cameraGrabbed` only ever turns on when {@link
+   * tourFreeRef} is true, and the reference to it stays exactly `{yaw:0,
+   * pitch:0}` — inert — everywhere else.
+   */
+  const cameraVelocity = useRef({ yaw: 0, pitch: 0 });
+  const cameraGrabbed = useRef(false);
+  const dragSample = useRef({ t: 0, yaw: 0, pitch: 0 });
 
   const reanchor = useCallback(() => {
     gestureStart.current = { ...camera.current, pinch: 0 };
@@ -646,6 +688,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     const el = canvasWrap.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
+      /* A wheel over an open drawer should scroll it, not zoom the camera
+         underneath — same reasoning as the pointer-down bail-out above. */
+      if ((e.target as HTMLElement | null)?.closest?.("[data-ui-panel]")) return;
       e.preventDefault();
       camera.current.distance = Math.min(
         130,
@@ -717,21 +762,34 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   );
 
   /**
-   * One titled section of layer switches in the drawer.
+   * One card of layer switches, all serving the same action — "show me the
+   * year," "show me the tilt." Replaces two things that used to be separate
+   * and disconnected: a flat row of four bulk chips up top, and a
+   * `Guides`/`Elements`/`Indicators`/`Clocks` breakdown below it grouped by
+   * how a layer is *drawn* rather than what it is *for* (the grid, an
+   * unrelated guide, sat next to the orbit; the Sun's own arc sat three
+   * sections away from the Sun's own bulk chip). Each card now carries its
+   * own bulk toggle right in its header, next to the individual layers it
+   * covers — so switching a whole group and fine-tuning one layer within it
+   * are the same gesture, in the same place.
    *
-   * A third element is the layer this one rides on. The three clock faces are
-   * drawn on their arcs, so a face with its arc off has nowhere to sit — the
-   * reference lab greys the checkbox for exactly this reason rather than
-   * letting a reader turn on a clock that cannot appear.
+   * A third element in an item is the layer it rides on. The three clock
+   * faces are drawn on their arcs, so a face with its arc off has nowhere to
+   * sit — greyed for exactly that reason rather than letting a reader turn on
+   * a clock that cannot appear.
    */
-  const layerGroup = (
+  const actionGroup = (
+    g: GroupKey,
     title: string,
     items: ([keyof SimToggles, string] | [keyof SimToggles, string, keyof SimToggles])[],
   ) => (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
-        {title}
-      </span>
+    <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] p-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+          {title}
+        </span>
+        {chip(groupOn(g), t("learn.playground.all"), () => pressGroup(g), `all-${g}`, g === "moon" && !hasMoon)}
+      </div>
       <div className="flex flex-wrap gap-1.5">
         {items.map(([k, label, needs]) =>
           chip(
@@ -744,26 +802,6 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
           ),
         )}
       </div>
-    </div>
-  );
-
-  /** The filter row: four groups, then the three belts. */
-  const filterChips = (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {chip(groupOn("year"), t("learn.playground.year"), () => pressGroup("year"), "g-year")}
-      {chip(groupOn("sun"), t("grahas.sun"), () => pressGroup("sun"), "g-sun")}
-      {chip(groupOn("day"), t("learn.playground.day"), () => pressGroup("day"), "g-day")}
-      {chip(groupOn("tilt"), t("learn.playground.tilt"), () => pressGroup("tilt"), "g-tilt")}
-      <span className="mx-0.5 h-4 w-px bg-white/20" />
-      {chip(toggles.rashiBelt, t("learn.playground.rashi"), () => setToggle("rashiBelt"), "t-rashi")}
-      {chip(
-        toggles.nakshatraBelt,
-        t("nakshatra"),
-        () => setToggle("nakshatraBelt"),
-        "t-nak",
-      )}
-      {chip(toggles.monthRing, t("learn.playground.months"), () => setToggle("monthRing"), "t-month")}
-      {chip(groupOn("moon"), t("grahas.moon"), () => pressGroup("moon"), "t-moon", !hasMoon)}
     </div>
   );
 
@@ -832,7 +870,14 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         className={cn("relative w-full touch-none", fullscreen && "min-h-0 flex-1")}
         style={fullscreen ? undefined : { height: canvasHeight }}
         onPointerDown={(e) => {
-          if ((e.target as HTMLElement | null)?.closest?.("button, input, a")) return;
+          /* `[data-ui-panel]` covers the floating drawers (controls, focus,
+             graph): the canvas's own `touch-none` blocks native scrolling
+             everywhere under it unless a descendant opts back in, and a
+             touch landing on the drawer's padding or a section label — not
+             literally a button — still needs to start a scroll instead of a
+             camera drag. Bailing out here on the whole panel is what lets
+             `touch-auto` on it (below) actually do anything. */
+          if ((e.target as HTMLElement | null)?.closest?.("button, input, a, [data-ui-panel]")) return;
           pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
           const rect = canvasWrap.current?.getBoundingClientRect();
           const onEarth = Boolean(
@@ -850,6 +895,11 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             clock.current.playing = false;
           } else {
             grabCamera();
+            if (tourFreeRef.current) {
+              cameraVelocity.current = { yaw: 0, pitch: 0 };
+              cameraGrabbed.current = true;
+              dragSample.current = { t: performance.now(), yaw: camera.current.yaw, pitch: camera.current.pitch };
+            }
           }
           reanchor();
         }}
@@ -894,6 +944,24 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             cameraMeddle.current.frozen = true;
             cameraMeddle.current.value = { ...camera.current };
           }
+          if (cameraGrabbed.current) {
+            const now = performance.now();
+            const dt = (now - dragSample.current.t) / 1000;
+            /* A few ms of jitter between pointer events would divide by
+               near-nothing and throw the velocity to the moon; below that,
+               just keep the last good reading rather than sample. */
+            if (dt > 0.008) {
+              /* Clamped well above anything a real drag produces — only there
+                 to stop one freak sample (a tab-switch stutter between two
+                 pointer events, say) from flinging the camera into a spin. */
+              const clampRate = (r: number) => Math.max(-15, Math.min(15, r));
+              cameraVelocity.current = {
+                yaw: clampRate((camera.current.yaw - dragSample.current.yaw) / dt),
+                pitch: clampRate((camera.current.pitch - dragSample.current.pitch) / dt),
+              };
+              dragSample.current = { t: now, yaw: camera.current.yaw, pitch: camera.current.pitch };
+            }
+          }
         }}
         onPointerUp={(e) => {
           pointers.current.delete(e.pointerId);
@@ -906,6 +974,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               earthMeddle.current.value = clock.current.day;
             } else if (gestureMode.current === "camera") {
               releaseCamera();
+              cameraGrabbed.current = false;
             }
             gestureMode.current = null;
           }
@@ -922,6 +991,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               earthMeddle.current.value = clock.current.day;
             } else if (gestureMode.current === "camera") {
               releaseCamera();
+              cameraGrabbed.current = false;
             }
             gestureMode.current = null;
           }
@@ -940,6 +1010,8 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             <Scene
               clock={clock}
               camera={camera}
+              cameraVelocity={cameraVelocity}
+              cameraGrabbed={cameraGrabbed}
               params={params}
               toggles={toggles}
               cameraTarget={cameraTarget}
@@ -998,7 +1070,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               label={playing ? t("learn.pause") : t("learn.play")}
               active={playing}
               pulse={highlightControl === "auto-orbit"}
-              disabled={!tour?.state.handsOff}
+              disabled={!tourHandsOff}
             >
               <Orbit size={16} />
             </IconButton>
@@ -1054,55 +1126,51 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             the scene, so a 70vh panel on a short canvas would hang off the
             bottom of the thing it belongs to. */}
         {controlsOpen && (
-          <div className="absolute right-3 top-14 z-10 flex max-h-[calc(100%-4.5rem)] w-[min(290px,calc(100%-1.5rem))] flex-col gap-4 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
-            {/* A world to borrow, in one line. Six buttons and a paragraph of
-                caveats were the widest thing in the panel for something a
-                reader picks once. */}
+          <div
+            data-ui-panel
+            className="absolute right-3 top-14 z-10 flex max-h-[calc(100%-4.5rem)] w-[min(290px,calc(100%-1.5rem))] touch-auto flex-col gap-3 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/85 p-3 backdrop-blur"
+          >
+            {/* A native select, not a grid of six buttons: on a phone that
+                grid alone was two full rows before a single other layer was
+                reachable, in a panel that already has to hold four sliders
+                and four more sections below it. A select is one row at any
+                count, and on a touch device it hands the whole picking job
+                to the OS's own sheet — nothing here to fight the drawer's
+                scroll the way a custom dropdown would. */}
             <div>
               <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
                 {t("learn.playground.planet")}
               </span>
-              <div className="grid grid-cols-3 gap-1.5">
-                {PLANET_PRESETS.map((p) => {
-                  const on = preset === p.key;
-                  const icon =
-                    p.key === "earth"
+              <div className="flex items-center gap-2">
+                <img
+                  src={
+                    preset === "" || preset === "earth"
                       ? earthToonUrl
-                      : GRAHA_PLANET_ICON_URL[p.key as keyof typeof GRAHA_PLANET_ICON_URL];
-                  return (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onClick={() => applyPreset(on ? "" : p.key)}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-lg border px-1.5 py-1.5 text-left text-[11px] font-semibold transition-colors",
-                        on
-                          ? "border-white/55 bg-white/15 text-white"
-                          : "border-white/15 bg-black/40 text-white/75 hover:border-white/40 hover:text-white",
-                      )}
-                    >
-                      <img src={icon} alt="" className="size-6 shrink-0 rounded-full object-cover" />
-                      <span className="truncate">{t(PLANET_NAME_KEYS[p.key] ?? p.key)}</span>
-                    </button>
-                  );
-                })}
+                      : GRAHA_PLANET_ICON_URL[preset as keyof typeof GRAHA_PLANET_ICON_URL]
+                  }
+                  alt=""
+                  className="size-7 shrink-0 rounded-full object-cover"
+                />
+                <select
+                  value={preset}
+                  onChange={(e) => applyPreset(e.target.value)}
+                  className="w-full min-w-0 rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-sm font-semibold text-white [color-scheme:dark] focus:border-white/40 focus:outline-none"
+                >
+                  <option value="">{t("learn.playground.back_to_topic")}</option>
+                  {PLANET_PRESETS.map((p) => (
+                    <option key={p.key} value={p.key} className="bg-black text-white">
+                      {t(PLANET_NAME_KEYS[p.key] ?? p.key)}
+                    </option>
+                  ))}
+                </select>
               </div>
               {/* The caveat the reference lab puts behind a "read this" modal.
                   It is two sentences and it is the difference between the
                   presets teaching something and quietly lying, so it sits
-                  under the buttons rather than behind another click. */}
+                  under the picker rather than behind another click. */}
               <p className="mt-1.5 text-[10px] leading-snug text-white/45">
                 {t("learn.playground.preset_caveat")}
               </p>
-              {preset ? (
-                <button
-                  type="button"
-                  onClick={() => applyPreset("")}
-                  className="mt-1.5 text-[11px] font-semibold text-white/50 hover:text-white"
-                >
-                  {t("learn.playground.back_to_topic")}
-                </button>
-              ) : null}
             </div>
 
             {slider(
@@ -1142,41 +1210,49 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               },
             )}
 
-            {/* Grouped the way the reference sim groups them — guides, then the
-                bodies, then the things that measure them — rather than one flat
-                run of fifteen chips where the arcs sat next to the grid. Every
-                layer is still individually reachable; the toolbar's group chips
-                remain a shortcut, not a replacement. */}
-            {layerGroup(t("learn.playground.guides"), [
-              ["grid", t("learn.playground.grid")],
+            {/* Five cards, one per action — everything that turns the year on,
+                everything that turns the Sun on, and so on. Each card's own
+                header chip is the bulk switch for exactly the layers listed
+                under it; nothing here is a shortcut to something kept
+                somewhere else. `sunOrbit` is the one layer that honestly
+                belongs to two of these (the Sun's own path, and what a tilt
+                exploration needs to show it moving) and appears in both. */}
+            {actionGroup("year", t("learn.playground.year"), [
               ["planetOrbit", t("learn.playground.orbit")],
-              ["sunOrbit", t("learn.playground.sun_path")],
-              ["primeMeridian", t("learn.playground.kathmandu_meridian")],
-              ["axis", t("learn.playground.spin_axis")],
+              ["monthRing", t("learn.playground.months")],
+              ["rashiBelt", t("learn.playground.rashi")],
             ])}
-            {layerGroup(t("learn.playground.elements"), [
+            {actionGroup("sun", t("grahas.sun"), [
               ["trueSun", t("learn.playground.true_sun")],
-              ["meanSun", t("learn.playground.mean_sun")],
-              ["moon", t("grahas.moon")],
-              ["eotWedge", t("learn.playground.eot_wedge")],
+              ["sunOrbit", t("learn.playground.sun_path")],
+              ["sightline", t("learn.playground.sightline")],
             ])}
-            {layerGroup(t("learn.playground.indicators"), [
+            {/* The three arcs, the meridian they're measured against, and the
+                clock faces that ride them — everything about the length of a
+                day in one place. */}
+            {actionGroup("day", t("learn.playground.day"), [
               ["siderealArc", t("learn.playground.sidereal_arc")],
               ["solarArc", t("learn.playground.solar_arc")],
               ["meanArc", t("learn.playground.mean_arc")],
-              ["sightline", t("learn.playground.sightline")],
-              ["moonSightline", t("learn.playground.moon_sightline")],
-              ["moonTrail", t("learn.playground.moon_trail")],
-              ["moonLap", t("learn.playground.month_gap")],
-            ])}
-            {/* The three faces. They are what turns the arcs from coloured
-                wedges into a reading, and they are the only place the four
-                minutes appear as a time rather than as a gap. */}
-            {layerGroup(t("learn.playground.clocks"), [
+              ["primeMeridian", t("learn.playground.kathmandu_meridian")],
               ["siderealClock", t("learn.playground.sidereal_clock"), "siderealArc"],
               ["solarClock", t("learn.playground.solar_clock"), "solarArc"],
               ["meanClock", t("learn.playground.mean_clock"), "meanArc"],
               ["degrees", t("learn.playground.degrees")],
+            ])}
+            {actionGroup("tilt", t("learn.playground.tilt"), [
+              ["grid", t("learn.playground.grid")],
+              ["sunOrbit", t("learn.playground.sun_path")],
+              ["eotWedge", t("learn.playground.eot_wedge")],
+              ["meanSun", t("learn.playground.mean_sun")],
+              ["axis", t("learn.playground.spin_axis")],
+            ])}
+            {actionGroup("moon", t("grahas.moon"), [
+              ["moon", t("grahas.moon")],
+              ["moonTrail", t("learn.playground.moon_trail")],
+              ["moonLap", t("learn.playground.month_gap")],
+              ["moonSightline", t("learn.playground.moon_sightline")],
+              ["nakshatraBelt", t("nakshatra")],
             ])}
           </div>
         )}
@@ -1186,7 +1262,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             on one thing; the follow switch is a separate question about that
             same choice, so it lives with it rather than among the layers. */}
         {focusOpen && (
-          <div className="absolute right-3 top-14 z-10 flex w-[min(230px,calc(100%-1.5rem))] flex-col gap-2.5 rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur">
+          <div
+            data-ui-panel
+            className="absolute right-3 top-14 z-10 flex w-[min(230px,calc(100%-1.5rem))] touch-auto flex-col gap-2.5 rounded-xl border border-white/15 bg-black/85 p-3.5 backdrop-blur"
+          >
             <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
               {t("learn.playground.focus")}
             </span>
@@ -1266,7 +1345,10 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             read against the sim's own motion, so it has to be on screen at the
             same time as the thing it is describing. */}
         {graphOpen && (
-          <div className="absolute bottom-3 left-3 z-10 w-[min(320px,calc(100%-1.5rem))] max-h-[calc(100%-4.5rem)] overflow-y-auto rounded-xl border border-white/15 bg-black/85 p-2.5 text-white backdrop-blur">
+          <div
+            data-ui-panel
+            className="absolute bottom-3 left-3 z-10 w-[min(320px,calc(100%-1.5rem))] max-h-[calc(100%-4.5rem)] touch-auto overflow-y-auto rounded-xl border border-white/15 bg-black/85 p-2.5 text-white backdrop-blur"
+          >
             <EotGraph
               eccentricity={eccentricity}
               tilt={tilt}
@@ -1319,7 +1401,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         )}
       >
         {/* Prev / next topic. In the panel, not floating over the canvas: down
-            there they landed on top of the filter chips on a phone. */}
+            there they landed on top of the transport controls on a phone. */}
         {fullscreen && (prev || next) && (
           <div className="flex items-center justify-between gap-2">
             {navButton("prev") ?? <span />}
@@ -1334,8 +1416,6 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
             onOrbitToggle={freePlay ? () => setPlaying((v) => !v) : undefined}
           />
         ) : null}
-
-        {filterChips}
 
         {showTransport && (
           <>

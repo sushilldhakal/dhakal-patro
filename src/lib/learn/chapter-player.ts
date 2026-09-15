@@ -61,7 +61,10 @@ type Segment<V> = {
   ease: EaseName;
 };
 
-function interval(meta: FrameMeta): { from: number; at: number } {
+/** Exported so callers (e.g. {@link ../learn/chapter-kit}'s `firstActiveAt`) can
+ *  find where a keyframe's interval actually starts, matching `stateAt`'s own
+ *  reading of it exactly. */
+export function interval(meta: FrameMeta): { from: number; at: number } {
   const at = parseTime(meta.at);
   if (meta.from !== undefined) return { from: parseTime(meta.from), at };
   if (meta.duration !== undefined) {

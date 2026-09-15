@@ -12,10 +12,11 @@
  *     chapters unchanged and carries on through वार, महिना, वर्ष, the two
  *     belts and ध्रुव तारा, ending in free explore. This is the tour the
  *     पञ्चाङ्ग engine's own units are introduced in, in the order they are
- *     built on each other, and it is what `/learn/earth-rotation-day` runs.
- *   - **`day`** — the ported lab on its own, ending at the original's
- *     `/playground`. Kept because it is the faithful port and a topic that is
- *     only about the day should be able to run only that.
+ *     built on each other — not yet wired to a page, kept ready for one that
+ *     wants the full syllabus.
+ *   - **`day`** — the ported lab on its own, six narrated chapters ending at
+ *     the original's `/playground`. This is what `/learn/earth-rotation-day`
+ *     runs: that page is a day explainer, not the full calendar.
  *
  * Adding a track is an entry in {@link CHAPTER_TRACKS} and a `guided` on the
  * topic in {@link ./playground-config}. Adding a chapter to one is an entry in

@@ -5,7 +5,7 @@ export const tmPageShell =
   "tm-page relative overflow-hidden text-[var(--tm-ink)] font-sans bg-card shadow-sm dark:bg-transparent dark:shadow-none";
 
 export const tmWrap =
-  "relative z-[1] mx-auto max-w-[1140px] px-6 pb-12 max-[720px]:px-3.5 max-[720px]:pb-8";
+  "relative z-[1] mx-auto max-w-[1400px] px-4 py-8 space-y-8 sm:px-6";
 
 export const tmHero = "py-12 pb-5 text-center";
 

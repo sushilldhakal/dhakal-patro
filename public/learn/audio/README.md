@@ -13,7 +13,8 @@ public/learn/audio/<lang>/<track>/<chapter>.mp3     ← preferred
 public/learn/audio/<track>/<chapter>.mp3            ← one recording, both languages
 ```
 
-`<lang>` is `ne` or `en`. `.ogg` works too, and is tried after `.mp3`.
+`<lang>` is `ne` or `en`. `.ogg` works too, and is tried after `.mp3`; `.m4a`
+after that, so a phone or Voice Memos recording can be dropped in as-is.
 
 The language folder wins when both exist, so you can record Nepali first and
 leave the shared folder holding an English track until the rest is done.
@@ -23,7 +24,8 @@ is ever served from a sub-path.
 
 ## The tracks and their chapters
 
-`calendar` — the full syllabus, on `/learn/earth-rotation-day`:
+`calendar` — the full syllabus. Not wired to a page yet; kept ready for one
+that wants it:
 
 | # | file | chapter |
 |---|------|---------|
@@ -54,6 +56,7 @@ public/learn/audio/ne/calendar/welcome.mp3
 
 `day` — the faithful port of the Minute Labs lab on its own, ending at its
 `/playground`. Same first six filenames, under `day/` instead of `calendar/`.
+This is what `/learn/earth-rotation-day` and `/learn/what-is-a-day` both run.
 
 ## Names from the original lab
 

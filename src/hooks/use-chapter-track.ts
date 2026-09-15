@@ -28,6 +28,11 @@ export type DayChapterPlayer = {
   ended: boolean;
   showWelcome: boolean;
   hasAudio: boolean;
+  /** Narration volume, 0–1 — the reference lab's speaker-icon slider. */
+  volume: number;
+  setVolume: (v: number) => void;
+  /** Toggles to/from 0, remembering the level to come back to. */
+  toggleMute: () => void;
   state: ChapterSimState;
   play: () => void;
   pause: () => void;
@@ -69,22 +74,39 @@ export function useChapterTrack(track: ChapterTrack | null): DayChapterPlayer | 
   const [ended, setEnded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [hasAudio, setHasAudio] = useState(false);
+  const [volume, setVolumeState] = useState(1);
 
   const timeRef = useRef(0);
   const playingRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastUi = useRef(0);
   const onFrameRef = useRef<(s: ChapterSimState) => void>(() => {});
+  /** Level `toggleMute` restores to — the reference player's own behaviour. */
+  const prevVolumeRef = useRef(1);
 
   useEffect(() => {
     const el = new Audio();
     el.preload = "auto";
+    el.volume = volume;
     audioRef.current = el;
     return () => {
       el.pause();
       el.removeAttribute("src");
       audioRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one element for the hook's life; volume is applied by the effect below.
+  }, []);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+    if (volume > 0) prevVolumeRef.current = volume;
+  }, [volume]);
+
+  const setVolume = useCallback((v: number) => {
+    setVolumeState(Math.max(0, Math.min(1, v)));
+  }, []);
+  const toggleMute = useCallback(() => {
+    setVolumeState((v) => (v > 0 ? 0 : prevVolumeRef.current || 1));
   }, []);
 
   /* A null track still has to run the hooks below, so it falls back to an
@@ -141,28 +163,40 @@ export function useChapterTrack(track: ChapterTrack | null): DayChapterPlayer | 
     let cancelled = false;
     const onReady = () => setHasAudio(true);
     const onError = () => setHasAudio(false);
-    const onTime = () => {
-      if (!playingRef.current) return;
-      apply(el.currentTime * 1000);
-      if (el.ended) {
-        playingRef.current = false;
-        setPlaying(false);
-        setEnded(true);
-        apply(compiled.duration, true);
-      }
+    /**
+     * Chapter's end, from the audio element's own event — not from polling
+     * `el.ended` inside `timeupdate`. The clock this chapter actually runs on
+     * during narrated playback is the RAF poll below, which reads
+     * `currentTime` directly every frame; `timeupdate` itself is not used for
+     * that any more (see the poll's own comment for why), so nothing else was
+     * left checking for the end of the file.
+     */
+    const onEnded = () => {
+      playingRef.current = false;
+      setPlaying(false);
+      setEnded(true);
+      apply(compiled.duration, true);
     };
     el.addEventListener("canplaythrough", onReady);
     el.addEventListener("error", onError);
-    el.addEventListener("timeupdate", onTime);
+    el.addEventListener("ended", onEnded);
     /* Probe first so a missing voiceover is silence, not a red 404 in the
        console — and probe the candidates in order, so a language-specific
-       recording wins over the shared one when both exist. */
+       recording wins over the shared one when both exist.
+       Vite's dev server (and most static hosts serving an SPA) answer an
+       unmatched path with `index.html` at `200 OK` rather than a real 404 —
+       so `res.ok` alone reports every missing candidate as found. That locked
+       the loader onto the first name in the list (`welcome.mp3`, which does
+       not exist) and it never reached the real file (`welcome.m4a`) after it.
+       A `text/html` content-type is that fallback page, not an audio file. */
     void (async () => {
       for (const src of sources) {
         try {
           const res = await fetch(src, { method: "HEAD" });
           if (cancelled) return;
           if (!res.ok) continue;
+          const type = res.headers.get("content-type") ?? "";
+          if (type.startsWith("text/html")) continue;
           el.src = src;
           el.load();
           return;
@@ -175,7 +209,7 @@ export function useChapterTrack(track: ChapterTrack | null): DayChapterPlayer | 
       cancelled = true;
       el.removeEventListener("canplaythrough", onReady);
       el.removeEventListener("error", onError);
-      el.removeEventListener("timeupdate", onTime);
+      el.removeEventListener("ended", onEnded);
       el.pause();
       el.removeAttribute("src");
     };
@@ -190,9 +224,23 @@ export function useChapterTrack(track: ChapterTrack | null): DayChapterPlayer | 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       /* Always sample — even when paused — so a drag/zoom can ease back. */
-      if (isFree || !playingRef.current || hasAudio) {
+      if (isFree || !playingRef.current) {
         last = now;
         apply(timeRef.current);
+        return;
+      }
+      if (hasAudio) {
+        /* Narrated: the recording owns the clock, but `currentTime` has to be
+           read every frame, not waited for. `timeupdate` fires only a few
+           times a second — the spec's own floor is one per 250ms, and that
+           is close to what browsers actually give it — so driving the scene
+           from that event alone sampled the chapter in visible ~4Hz steps
+           instead of 60. Polling the same property this RAF already ticks on
+           is the fix: reading `currentTime` costs nothing and carries no
+           such throttle, only the event does. */
+        last = now;
+        const el = audioRef.current;
+        apply(el ? el.currentTime * 1000 : timeRef.current);
         return;
       }
       const dt = last ? now - last : 0;
@@ -294,6 +342,9 @@ export function useChapterTrack(track: ChapterTrack | null): DayChapterPlayer | 
     ended,
     showWelcome,
     hasAudio,
+    volume,
+    setVolume,
+    toggleMute,
     state,
     play,
     pause,

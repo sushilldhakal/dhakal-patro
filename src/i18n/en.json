@@ -3299,6 +3299,7 @@
       "solar": "Solar Days",
       "stellar": "Stellar Days",
       "voiceover_pending": "Voiceover comes later — the animation already runs on that clock.",
+      "volume": "Volume",
       "welcome": "Welcome",
       "welcome_subtitle": "From the day to the pole star — every unit of the calendar, in one sky.",
       "day_only_subtitle": "Seven chapters — what a day is, and why one turn is not enough.",
@@ -3332,6 +3333,7 @@
       "tip_layers": "Tip: the chips below turn any layer on or off."
     },
     "playground": {
+      "all": "All",
       "axial_tilt": "Axial tilt",
       "back_to_topic": "Back to this topic",
       "controls": "Controls",

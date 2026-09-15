@@ -21,7 +21,7 @@ import type {
   PlaygroundGlobe,
   SimToggles,
 } from "@/components/learn/DaySimScene";
-import type { Keyframe } from "./chapter-player";
+import { interval, type Keyframe } from "./chapter-player";
 
 /**
  * Everything a chapter can move.
@@ -243,6 +243,28 @@ export function chapterState(partial: Partial<ChapterSimState> = {}): ChapterSim
   };
 }
 
+/**
+ * When a chapter first actually starts driving the sim.
+ *
+ * `handsOff: true` opens most chapters — the quiet, undriven default — and
+ * also *closes* many of them, once a keyframe hands the instruments back.
+ * Same flag, two different moments; a UI that treats every `true` as "the
+ * reader has control" shows the transport bar (and lets the clock free-run)
+ * before the chapter has even started. This is the timestamp of the first
+ * keyframe that sets `handsOff: false`, or `null` if the chapter never does
+ * (always driven, or never driven at all) — a `handsOff: true` sampled before
+ * this point is the opening quiet, not a hand-back.
+ */
+export function firstActiveAt(chapter: Chapter): number | null {
+  let best: number | null = null;
+  for (const frame of chapter.frames) {
+    if (frame.state.handsOff !== false) continue;
+    const { from } = interval(frame.meta);
+    if (best === null || from < best) best = from;
+  }
+  return best;
+}
+
 export function cameraFromChapter(s: ChapterSimState): CameraState {
   return { yaw: s.cameraYaw, pitch: s.cameraPitch, distance: s.cameraDistance };
 }
@@ -283,7 +305,9 @@ export function togglesFromChapter(s: ChapterSimState): SimToggles {
  * `public/learn/audio/ne/calendar/stellar.mp3` is the Nepali recording of the
  * calendar track's stellar chapter. A track recorded only once can sit at
  * `public/learn/audio/calendar/stellar.mp3` and serve both languages. `.ogg`
- * follows each, the way the reference lab ships its own tracks.
+ * follows each, the way the reference lab ships its own tracks, and `.m4a`
+ * after that — the format a phone or Voice Memos recording actually comes in,
+ * so a voiceover does not need re-encoding before it can be dropped in.
  *
  * Everything is resolved against Vite's `BASE_URL` rather than written as a
  * root-absolute `/learn/...`, so the paths survive the app being served from a
@@ -303,5 +327,5 @@ export function chapterAudioSources(track: string, chapter: Chapter, lang: strin
      one recorded once, and an alias only ever answers when the chapter's own
      name has nothing at that level. */
   const paths = names.flatMap((name) => [`${root}/${lang}/${track}/${name}`, `${root}/${track}/${name}`]);
-  return paths.flatMap((n) => [`${n}.mp3`, `${n}.ogg`]);
+  return paths.flatMap((n) => [`${n}.mp3`, `${n}.ogg`, `${n}.m4a`]);
 }

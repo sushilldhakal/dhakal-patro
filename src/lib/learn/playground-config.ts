@@ -233,8 +233,10 @@ export const PLAYGROUND_BY_SLUG: Record<string, PlaygroundConfig> = {
   /* ── the day itself ──────────────────────────────────────────────── */
   /* The ported lab on its own, for the topic that is only about the day. */
   "what-is-a-day": { mode: "day", guided: "day" },
-  /* The syllabus page: one scene, fourteen chapters, day through ध्रुव तारा. */
-  "earth-rotation-day": { mode: "day", guided: "calendar" },
+  /* The day lab, on its own: six narrated chapters through free play — this
+     page is a day explainer, not the full calendar syllabus (that content
+     lives at `guided: "calendar"`, kept for a future page that wants it). */
+  "earth-rotation-day": { mode: "day", guided: "day" },
   "sidereal-time": { mode: "day", layers: { siderealArc: true, solarArc: false } },
   vara: { mode: "day", layers: { eotWedge: false } },
   "how-we-calculate": { mode: "day" },

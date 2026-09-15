@@ -8,7 +8,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronUp, Pause, Play, RotateCcw, SkipBack, SkipForward } from "lucide-react";
+import {
+  ChevronUp,
+  Pause,
+  Play,
+  RotateCcw,
+  SkipBack,
+  SkipForward,
+  Volume1,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 
 import { formatChapterClock } from "@/lib/learn/chapter-player";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -25,29 +35,48 @@ export function DayChapterWelcome({
 }) {
   const { t } = useTranslation();
   if (!player.showWelcome) return null;
+  const lastIndex = player.chapters.length - 1;
+  const hasPlayground = Boolean(player.chapters[lastIndex]?.free);
   return (
-    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-black/55 px-4 backdrop-blur-[2px] transition-opacity">
+    /* No `backdrop-blur` — the original's own welcome overlay is a plain
+       `rgba(0,0,0,0.5)` scrim over the running scene, not a frosted one. */
+    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-black/55 px-4 transition-opacity">
       <div className="flex max-w-md flex-col items-center text-center text-white">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
           {t("learn.chapters.eyebrow")}
         </p>
-        <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+        {/* Sans throughout, matching the original — it declares no serif
+            anywhere in its type scale (Source Sans Pro end to end). */}
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
           {t(player.track.titleKey)}
         </h2>
         <p className="mt-2 text-sm text-white/70 sm:text-base">
           {t(player.track.subtitleKey)}
         </p>
+        {/* `.is-gigantic` in the original — a button sized well past its
+            normal chrome, the one clearly-largest thing on the screen. */}
         <button
           type="button"
           onClick={player.play}
-          className="mt-6 grid size-16 cursor-pointer place-items-center rounded-full border border-white/30 bg-white text-black transition-transform hover:scale-105"
+          className="mt-6 grid size-24 cursor-pointer place-items-center rounded-full border border-white/30 bg-white text-black transition-transform hover:scale-105"
           aria-label={t("learn.chapters.begin")}
         >
-          <Play size={28} fill="currentColor" strokeWidth={0} className="ml-1" />
+          <Play size={40} fill="currentColor" strokeWidth={0} className="ml-1.5" />
         </button>
         <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
           {t("learn.chapters.begin")}
         </p>
+        {/* The original's second way in: "or … go to playground". Only when
+            this track actually ends on a free chapter to jump to. */}
+        {hasPlayground ? (
+          <button
+            type="button"
+            onClick={() => player.goTo(lastIndex)}
+            className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-white/60 underline-offset-4 hover:text-white hover:underline"
+          >
+            {t("learn.chapters.playground")}
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -69,6 +98,8 @@ export function DayChapterBar({
   const num = (v: string) => (ne ? toNepaliDigits(v) : v);
   const [tocOpen, setTocOpen] = useState(false);
   const tocRef = useRef<HTMLDivElement | null>(null);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const volumeRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!tocOpen) return;
@@ -79,6 +110,15 @@ export function DayChapterBar({
     return () => document.removeEventListener("pointerdown", onDoc);
   }, [tocOpen]);
 
+  useEffect(() => {
+    if (!volumeOpen) return;
+    const onDoc = (e: PointerEvent) => {
+      if (!volumeRef.current?.contains(e.target as Node)) setVolumeOpen(false);
+    };
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
+  }, [volumeOpen]);
+
   const parts = useMemo(() => chapterParts(player.chapters), [player.chapters]);
   const free = Boolean(player.chapter.free);
   const progress = player.duration > 0 ? (player.time / player.duration) * 100 : 0;
@@ -86,6 +126,7 @@ export function DayChapterBar({
   const isFirst = player.index <= 0;
   const playing = free ? Boolean(orbitPlaying) : player.playing;
   const ended = free ? false : player.ended;
+  const VolumeIcon = player.volume === 0 ? VolumeX : player.volume < 0.5 ? Volume1 : Volume2;
 
   return (
     <div className="flex flex-col">
@@ -123,10 +164,20 @@ export function DayChapterBar({
           <ChevronUp size={14} className={cn("shrink-0 text-white/50 transition-transform", tocOpen ? "" : "rotate-180")} />
         </button>
         {tocOpen && (
-          /* Capped and scrollable: the syllabus runs to a dozen-odd chapters,
-             and an uncapped menu grew straight off the top of the canvas. */
-          <div className="absolute bottom-[calc(100%+4px)] left-1/2 z-20 max-h-[min(60vh,22rem)] w-[min(300px,90vw)] -translate-x-1/2 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/90 py-1 backdrop-blur">
-            {parts.map((part, pi) => (
+          <>
+            {/* A full-screen scrim, not just the panel's own opacity: opening
+                upward from a chapter row wedged between the scrub bar and the
+                prev/next-topic strip left both showing through around the
+                panel's edges on a short phone screen. The scrim is what
+                actually covers them, not the panel's own background. */}
+            <div
+              className="fixed inset-0 z-10 bg-black/60"
+              onClick={() => setTocOpen(false)}
+            />
+            {/* Capped and scrollable: the syllabus runs to a dozen-odd chapters,
+                and an uncapped menu grew straight off the top of the canvas. */}
+            <div className="absolute bottom-[calc(100%+4px)] left-1/2 z-20 max-h-[min(60vh,22rem)] w-[min(300px,90vw)] -translate-x-1/2 overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-black/90 py-1 backdrop-blur">
+              {parts.map((part, pi) => (
               <div key={part.partKey ?? `p-${pi}`}>
                 {part.partKey ? (
                   <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
@@ -156,11 +207,12 @@ export function DayChapterBar({
                 ))}
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
 
-      <div className="mt-1 flex items-center justify-center gap-5">
+      <div className="relative mt-1 flex items-center justify-center gap-5">
         <button
           type="button"
           disabled={isFirst}
@@ -205,6 +257,42 @@ export function DayChapterBar({
         >
           <SkipForward size={22} fill="currentColor" />
         </button>
+
+        {/* The reference lab's speaker icon — tucked to a corner while the
+            transport stays centred, same as its bottom-left placement. */}
+        <div className="absolute right-0" ref={volumeRef}>
+          <button
+            type="button"
+            onClick={() => setVolumeOpen((v) => !v)}
+            className="grid size-9 place-items-center rounded-full text-white/60 hover:text-white"
+            aria-label={t("learn.chapters.volume")}
+          >
+            <VolumeIcon size={18} />
+          </button>
+          {volumeOpen && (
+            <div className="absolute bottom-[calc(100%+6px)] right-0 z-20 flex items-center gap-2 rounded-full border border-white/15 bg-black/90 px-3 py-2 backdrop-blur">
+              <button
+                type="button"
+                onClick={player.toggleMute}
+                className="shrink-0 text-white/70 hover:text-white"
+                aria-label={t("learn.chapters.volume")}
+              >
+                <VolumeIcon size={16} />
+              </button>
+              <input
+                type="range"
+                className={cn(edScrub, "ed-scrub-dark w-24")}
+                style={{ "--fill": `${player.volume * 100}%` } as React.CSSProperties}
+                min={0}
+                max={1}
+                step={0.01}
+                value={player.volume}
+                onChange={(e) => player.setVolume(Number(e.target.value))}
+                aria-label={t("learn.chapters.volume")}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
