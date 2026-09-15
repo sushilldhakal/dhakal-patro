@@ -49,6 +49,15 @@ import {
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 
+/** Promoted into the Main row so they are not repeated in later groups. */
+const DRAWER_MAIN_PROMOTED_IDS = new Set([
+  "kundali",
+  "dainikkranti",
+  "kundali-milan",
+  "rashifal",
+  "panchanga-year",
+]);
+
 const PATRO_ITEM_ICONS: Record<string, LucideIcon> = {
   holidays: PartyPopper,
   converter: ArrowLeftRight,
@@ -133,11 +142,17 @@ function NavSection({
   className?: string;
 }) {
   return (
-    <section className={cn("px-3 pb-4", className)}>
-      <h2 className="mb-2 text-center text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">
-        {title}
-      </h2>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
+    <section
+      className={cn(
+        "border-t border-border/50 px-3 pb-5 pt-4 first:border-t-0 first:pt-1",
+        className,
+      )}
+    >
+      <div className="mb-3">
+        <h2 className="text-sm font-semibold tracking-wide text-foreground">{title}</h2>
+        <span className="mt-1.5 block h-0.5 w-7 rounded-full bg-primary" aria-hidden />
+      </div>
+      <div className="flex flex-wrap gap-2.5">{children}</div>
     </section>
   );
 }
@@ -211,12 +226,27 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav className="flex flex-col gap-1 pb-3 pt-2" aria-label={t("sidebar_nav.nav_aria")}>
-      <NavSection title={bilingualText(lang, "मुख्य", "Main")} className="pb-2">
+      <NavSection title={bilingualText(lang, "मुख्य", "Main")}>
         <DrawerClose asChild>
           <NavDrawerLinkCard to="/" label={t("home")} icon={Home} onClick={onNavigate} />
         </DrawerClose>
         <DrawerClose asChild>
           <NavDrawerLinkCard to="/panchanga" search={patroRouteLinkSearch("/panchanga", location, era, { year: urlBrowse.year, month: urlBrowse.month })} label={t("nav.surya_panchanga")} icon={Star} onClick={onNavigate} />
+        </DrawerClose>
+        <DrawerClose asChild>
+          <NavDrawerLinkCard to="/kundali" label={t("sidebar_nav.items.kundali.label")} icon={Sparkles} onClick={onNavigate} />
+        </DrawerClose>
+        <DrawerClose asChild>
+          <NavDrawerLinkCard to="/dainikkranti" search={patroRouteLinkSearch("/dainikkranti", location, era, { year: urlBrowse.year, month: urlBrowse.month })} label={t("sidebar_nav.items.dainikkranti.label")} icon={Moon} onClick={onNavigate} />
+        </DrawerClose>
+        <DrawerClose asChild>
+          <NavDrawerLinkCard to="/jyotish/kundali-milan" label={t("sidebar_nav.items.kundali-milan.label")} icon={Heart} onClick={onNavigate} />
+        </DrawerClose>
+        <DrawerClose asChild>
+          <NavDrawerLinkCard to="/jyotish/rashifal" label={t("nav.jyotish_rashifal")} icon={Sun} onClick={onNavigate} />
+        </DrawerClose>
+        <DrawerClose asChild>
+          <NavDrawerLinkCard to="/panchanga/year" search={patroRouteLinkSearch("/panchanga/year", location, era, { year: urlBrowse.year, month: urlBrowse.month })} label={t("sidebar_nav.items.panchanga-year.label")} icon={CalendarRange} onClick={onNavigate} />
         </DrawerClose>
         <DrawerClose asChild>
           <NavDrawerLinkCard to="/vastu" label={t("nav.vastu")} icon={Compass} onClick={onNavigate} />
@@ -226,9 +256,12 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
         </DrawerClose>
       </NavSection>
 
-      {sections.map((section) => (
-        <NavSection key={section.id} title={t(section.titleKey)}>
-          {section.items.map((item) => {
+      {sections.map((section) => {
+        const items = section.items.filter((item) => !DRAWER_MAIN_PROMOTED_IDS.has(item.id));
+        if (items.length === 0) return null;
+        return (
+          <NavSection key={section.id} title={t(section.titleKey)}>
+          {items.map((item) => {
             const label = labelForItem(item);
             const search = itemSearch(item, location, era, {
               year: urlBrowse.year,
@@ -246,13 +279,13 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
                   onNavigate={onNavigate}
                   iconNode={
                     rituLoading ? (
-                      <Sprout size={20} strokeWidth={1.75} className="shrink-0 text-danger dark:text-danger" aria-hidden />
+                      <Sprout size={28} strokeWidth={1.75} className="shrink-0 text-danger dark:text-danger" aria-hidden />
                     ) : ritu?.emoji ? (
                       <span className="text-sm leading-none" aria-hidden>
                         {ritu.emoji}
                       </span>
                     ) : (
-                      <Sprout size={20} strokeWidth={1.75} className="shrink-0 text-danger dark:text-danger" aria-hidden />
+                      <Sprout size={28} strokeWidth={1.75} className="shrink-0 text-danger dark:text-danger" aria-hidden />
                     )
                   }
                 />
@@ -270,8 +303,9 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
               />
             );
           })}
-        </NavSection>
-      ))}
+          </NavSection>
+        );
+      })}
     </nav>
   );
 }

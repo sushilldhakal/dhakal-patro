@@ -40,15 +40,15 @@ const QUICK_LINKS = [
 
 const QUICK_LINK_ICON_SIZE = 28;
 const QUICK_LINK_ICON_STROKE = 1.75;
-const NAV_DRAWER_ICON_SIZE = 20;
+const NAV_DRAWER_ICON_SIZE = 28;
 const NAV_DRAWER_ICON_STROKE = 1.75;
 
 export const quickLinkCardClass =
   "group flex aspect-square w-[calc((100%-1.5rem)/3)] max-w-[7.25rem] shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-2.5 py-3.5 text-center no-underline transition-[border-color,background-color,transform] duration-200 hover:border-secondary/35 hover:bg-tab-hover active:scale-[0.98] sm:w-[calc((100%-2.25rem)/4)] sm:max-w-[8rem] md:w-[calc((100%-3rem)/5)] lg:max-w-none lg:w-[calc((100%-5.25rem)/8)]";
 
-/** Compact home-style card for the mobile drawer — 3 per row, icon + title only. */
+/** Flat drawer tile — 3 per row under 540px, 4 per row above. */
 export const navDrawerCardClass =
-  "group flex aspect-square w-[calc((100%-0.75rem)/3)] flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-1 py-2 text-center no-underline transition-[border-color,background-color,transform] duration-200 hover:border-secondary/35 hover:bg-tab-hover active:scale-[0.98] [&.active]:border-secondary/40 [&.active]:bg-secondary/10 [&.active]:text-secondary";
+  "group flex h-[6.25rem] w-[calc((100%-1.25rem)/3)] min-[540px]:w-[calc((100%-1.875rem)/4)] flex-col items-center justify-center gap-1.5 bg-transparent px-0.5 py-1 text-center no-underline shadow-none transition-colors duration-200 hover:text-secondary active:scale-[0.98] [&.active]:text-secondary";
 
 export const quickLinkIconClass = "shrink-0 text-danger dark:text-danger";
 
@@ -108,16 +108,20 @@ export function NavDrawerLinkCard({
       className={cn(navDrawerCardClass, className)}
       activeProps={{ className: "active" }}
     >
-      {iconNode ??
-        (Icon ? (
-          <Icon
-            size={NAV_DRAWER_ICON_SIZE}
-            strokeWidth={NAV_DRAWER_ICON_STROKE}
-            className={quickLinkIconClass}
-            aria-hidden
-          />
-        ) : null)}
-      <span className="w-full min-w-0 px-0.5 text-[0.62rem] font-bold leading-tight text-foreground line-clamp-3">
+      <span
+        className="flex size-12 items-center justify-center rounded-full bg-muted/80 group-hover:bg-secondary/10 group-[.active]:bg-secondary/15"
+        aria-hidden
+      >
+        {iconNode ??
+          (Icon ? (
+            <Icon
+              size={NAV_DRAWER_ICON_SIZE}
+              strokeWidth={NAV_DRAWER_ICON_STROKE}
+              className={cn(quickLinkIconClass, "group-hover:text-secondary group-[.active]:text-secondary")}
+            />
+          ) : null)}
+      </span>
+      <span className="w-full min-w-0 px-0.5 text-[0.8rem] font-bold leading-tight text-foreground line-clamp-2 group-[.active]:text-secondary">
         {label}
       </span>
     </Link>

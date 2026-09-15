@@ -2337,20 +2337,40 @@ export function AakashGocharScene({
   const spaceMeridian = useMemo(() => makePrimeMeridian(EARTH_RADIUS), []);
   const globeMeridian = useMemo(() => makePrimeMeridian(GLOBE_R), []);
 
-  /* Sight rays: Earth → through the graha → नक्षत्र rim. Depth is off so the
-     ecliptic disc cannot bury a line that lives in the same plane. */
+  /* Sight rays: Earth → through the graha → नक्षत्र rim. */
   const rays = useMemo(() => {
     const out = {} as Record<GrahaKey, THREE.Line>;
     for (const key of GEO_BODY_ORDER) {
       const line = makeDynamicLine(2, GRAHA_COLOR[key], 0.92);
       line.renderOrder = 6;
       const mat = line.material as THREE.LineBasicMaterial;
-      mat.depthTest = false;
       mat.depthWrite = false;
       out[key] = line;
     }
     return out;
   }, []);
+
+  /**
+   * Whether a solid body is allowed to hide a sightline.
+   *
+   * In अन्तरिक्ष and क्षितिज, no: the ray lies in the ecliptic plane and the
+   * disc drawn on that same plane would bury it along its whole length, which
+   * is a z-fight rather than an occlusion.
+   *
+   * In पृथ्वी गोला, yes — and it has to. There is a 30-unit opaque planet in
+   * the middle of that view, and the graha meshes are depth-tested against it,
+   * so a ray that ignores depth is drawn across the face of the Earth pointing
+   * at a body the Earth is hiding. Depth-writing stays off either way: these
+   * are overlay lines and must never occlude each other.
+   */
+  useEffect(() => {
+    const test = mode === "globe";
+    for (const key of GEO_BODY_ORDER) {
+      const mat = rays[key].material as THREE.LineBasicMaterial;
+      mat.depthTest = test;
+      mat.needsUpdate = true;
+    }
+  }, [mode, rays]);
 
   /* Every graha's path over ±45 days — where the vakri loops show. Each keeps
      its own colour so a crowded belt still reads. */
@@ -3906,15 +3926,37 @@ export function AakashGocharScene({
            stay colinear — the line runs through the selected planet. */
         setPoint(ray, 0, place(body.longitude, body.latitude, EARTH_RADIUS));
         setPoint(ray, 1, place(body.longitude, body.latitude, NAK_OUTER));
+      } else if (globe) {
+        /*
+         * From the graha down to the spot on the ground it stands over — not
+         * from the middle of the planet.
+         *
+         * The globe is a solid 30-unit sphere with the camera well outside it,
+         * so a ray starting at the origin spends its first 30 units buried in
+         * rock. Every such ray also converges on that one hidden point, which
+         * is why two of them read as a single bent line that changed direction
+         * somewhere behind the Earth.
+         *
+         * Starting at the radius the sub-point markers sit at puts the line's
+         * foot exactly on the sub-graha dot below — the same normalise-and-drop
+         * as that marker, so the two cannot disagree about where to look.
+         */
+        const footLen = Math.hypot(at[0], at[1], at[2]) || 1;
+        const foot = (GLOBE_R * 1.01) / footLen;
+        setPoint(ray, 0, [at[0] * foot, at[1] * foot, at[2] * foot]);
+        setPoint(ray, 1, at);
       } else {
+        /* क्षितिज: the camera *is* the origin, so a ray from it is the
+           observer's own line of sight and has nothing to pass through. */
         setPoint(ray, 0, [0, 0, 0]);
         setPoint(ray, 1, at);
       }
       flushLine(ray);
       /* Space: one sightline, Earth through the graha you picked (Sun until
-         you pick one) and on through both belts. Globe keeps the Sun's ray
-         off (it would run through the Earth) and shows any other when
-         selected. Horizon: whatever is above the ground. */
+         you pick one) and on through both belts. Globe shows the selected
+         graha's, and leaves the Sun's to the permanent subsolar ray further
+         down rather than drawing a second line along it. Horizon: whatever is
+         above the ground. */
       ray.visible = space
         ? key === beltKey
         : globe
@@ -5093,17 +5135,19 @@ export function AakashGocharScene({
          thing that climbs to the Tropic of Cancer and back. */
       const sunAt = place(sky.sun.longitude, sky.sun.latitude, GLOBE_BAND_R);
       const len = Math.hypot(sunAt[0], sunAt[1], sunAt[2]) || 1;
-      setPoint(sunRay, 0, [0, 0, 0]);
+      /* Foot on the subsolar dot, for the same reason the graha rays start on
+         theirs: the half of a centre-anchored ray that is inside the planet is
+         not a sightline, and depth-testing it away only hides the mistake. */
+      const sub: [number, number, number] = [
+        (sunAt[0] / len) * GLOBE_R * 1.01,
+        (sunAt[1] / len) * GLOBE_R * 1.01,
+        (sunAt[2] / len) * GLOBE_R * 1.01,
+      ];
+      setPoint(sunRay, 0, sub);
       setPoint(sunRay, 1, sunAt);
       flushLine(sunRay);
       sunRay.visible = true;
-      if (subsolarRef.current) {
-        subsolarRef.current.position.set(
-          (sunAt[0] / len) * GLOBE_R * 1.01,
-          (sunAt[1] / len) * GLOBE_R * 1.01,
-          (sunAt[2] / len) * GLOBE_R * 1.01,
-        );
-      }
+      if (subsolarRef.current) subsolarRef.current.position.set(sub[0], sub[1], sub[2]);
     } else {
       sunRay.visible = false;
     }
