@@ -18,7 +18,6 @@ const PATH_LOADERS: { match: RegExp; load: () => Promise<unknown> }[] = [
   { match: /^\/panchanga\/details$/, load: () => import("../pages/PanchangaDetailsHub") },
   { match: /^\/panchanga\/element\//, load: () => import("../pages/ElementPage") },
   { match: /^\/gochar$/, load: () => import("../pages/Gochar") },
-  { match: /^\/panchanga\/graha-sthiti$/, load: () => import("../pages/GrahaSthiti") },
   { match: /^\/panchanga\/graha-asta$/, load: () => import("../pages/GrahaAsta") },
   { match: /^\/panchanga\/graha-vakri$/, load: () => import("../pages/GrahaVakri") },
   { match: /^\/panchanga\/chandra-grahan$/, load: () => import("../pages/EclipsePage") },

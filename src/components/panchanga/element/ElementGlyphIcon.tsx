@@ -112,7 +112,6 @@ export function ElementDayRowIcon({
 
   if (
     elementId === "lagna" ||
-    elementId === "udaya-lagna" ||
     elementId === "pushkara" ||
     elementId === "panchaka-rahita"
   ) {

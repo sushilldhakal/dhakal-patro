@@ -127,7 +127,7 @@ function validClock(v: unknown): string | undefined {
   return normalizeClock(v);
 }
 
-/** Keys owned by day-browse routes (panchanga day, gochar, graha-sthiti) — not month/span grids. */
+/** Keys owned by day-browse routes (panchanga day, gochar, and the graha-sthiti alias) — not month/span grids. */
 const PATRO_DAY_ONLY_SEARCH_KEYS = [
   "jd",
   "day",

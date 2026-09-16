@@ -1,4 +1,4 @@
-import { getRouteApi, useParams } from "@tanstack/react-router";
+import { getRouteApi, Navigate, useParams } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -442,6 +442,17 @@ export function ElementPage() {
       ? dayResolveQ.isLoading && !dayResolveQ.data
       : dayQuery.isLoading && !dayQuery.data;
   useRouteLoading(Boolean(meta) && firstLoading);
+
+  if (name === "udaya-lagna") {
+    return (
+      <Navigate
+        to="/panchanga/element/$name"
+        params={{ name: "lagna" }}
+        search={search}
+        replace
+      />
+    );
+  }
 
   if (!meta) {
     return (

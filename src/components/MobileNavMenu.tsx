@@ -88,7 +88,6 @@ const TABLE_ITEM_ICONS: Record<string, LucideIcon> = {
   choghadiya: Clock3,
   hora: Clock3,
   lagna: Sunrise,
-  "udaya-lagna": Sunrise,
   chandrabala: MoonStar,
   tarabala: Star,
   "panchaka-rahita": CalendarClock,
@@ -97,7 +96,6 @@ const TABLE_ITEM_ICONS: Record<string, LucideIcon> = {
 
 const GRAHA_ITEM_ICONS: Record<string, LucideIcon> = {
   gochar: Route,
-  "graha-sthiti": Orbit,
   "graha-asta": Sunrise,
   "graha-vakri": RotateCcw,
   "chandra-grahan": MoonStar,

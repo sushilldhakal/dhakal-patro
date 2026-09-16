@@ -31,7 +31,6 @@ export const SITE_LINK_GROUPS = {
   graha: [
     "gochar",
     "aakash-gochar",
-    "graha-sthiti",
     "graha-asta",
     "graha-vakri",
     "chandra-grahan",
@@ -61,7 +60,6 @@ export const SITE_LINK_PATH: Record<string, string> = {
   "kundali-milan": "/jyotish/kundali-milan",
   rashifal: "/jyotish/rashifal",
   gochar: "/gochar",
-  "graha-sthiti": "/panchanga/graha-sthiti",
   "graha-asta": "/panchanga/graha-asta",
   "graha-vakri": "/panchanga/graha-vakri",
   "chandra-grahan": "/panchanga/chandra-grahan",
@@ -86,7 +84,6 @@ export const SITE_LINK_LABEL_KEY: Record<string, string> = {
   "kundali-milan": "sidebar_nav.items.kundali-milan.label",
   rashifal: "rashifal.title",
   gochar: "sidebar_nav.items.gochar.label",
-  "graha-sthiti": "sidebar_nav.items.graha-sthiti.label",
   "graha-asta": "sidebar_nav.items.graha-asta.label",
   "graha-vakri": "sidebar_nav.items.graha-vakri.label",
   "chandra-grahan": "sidebar_nav.items.chandra-grahan.label",
@@ -97,7 +94,6 @@ export const SITE_LINK_LABEL_KEY: Record<string, string> = {
 
 export const SITE_LINK_BLURB_KEY: Record<string, string> = {
   gochar: "sidebar_nav.items.gochar.blurb",
-  "graha-sthiti": "sidebar_nav.items.graha-sthiti.blurb",
   "graha-asta": "sidebar_nav.items.graha-asta.blurb",
   "graha-vakri": "sidebar_nav.items.graha-vakri.blurb",
   "chandra-grahan": "sidebar_nav.items.chandra-grahan.blurb",
@@ -123,7 +119,6 @@ const PAGE_LEARN_SLUGS: Record<string, string[]> = {
   ritu: ["sidereal-vs-tropical", "bikram-sambat"],
   gochar: ["geocentric-heliocentric", "earth-rotation-day"],
   "aakash-gochar": ["geocentric-heliocentric", "earth-rotation-day"],
-  "graha-sthiti": ["geocentric-heliocentric", "earth-rotation-day"],
   "graha-asta": ["geocentric-heliocentric", "earth-rotation-day"],
   "graha-vakri": ["geocentric-heliocentric", "earth-rotation-day"],
   "chandra-grahan": ["geocentric-heliocentric"],
@@ -141,7 +136,6 @@ const PAGE_LEARN_SLUGS: Record<string, string[]> = {
   "element:hora": ["five-limbs-together"],
   "element:choghadiya": ["five-limbs-together"],
   "element:lagna": ["what-is-panchang"],
-  "element:udaya-lagna": ["what-is-panchang"],
 };
 
 const EXCLUDED_PATH_PREFIXES = [

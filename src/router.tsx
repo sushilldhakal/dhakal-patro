@@ -54,7 +54,6 @@ const PanchangaDetailsHub = lazyRoute(() => import("./pages/PanchangaDetailsHub"
 const ElementPage = lazyRoute(() => import("./pages/ElementPage"), "ElementPage");
 const Gochar = lazyRoute(() => import("./pages/Gochar"), "Gochar");
 const AakashGochar = lazyRoute(() => import("./pages/AakashGochar"), "AakashGochar");
-const GrahaSthiti = lazyRoute(() => import("./pages/GrahaSthiti"), "GrahaSthiti");
 const GrahaAsta = lazyRoute(() => import("./pages/GrahaAsta"), "GrahaAsta");
 const GrahaVakri = lazyRoute(() => import("./pages/GrahaVakri"), "GrahaVakri");
 const SuryaGrahan = lazyRoute(() => import("./pages/EclipsePage"), "SuryaGrahan");
@@ -237,11 +236,14 @@ const gocharRoute = createRoute({
   validateSearch: validateGrahaDaySearch,
   component: Gochar,
 });
-const grahaSthitiRoute = createRoute({
-  getParentRoute: () => panchangaShellRoute,
+const grahaSthitiLegacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: "/panchanga/graha-sthiti",
   validateSearch: validateGrahaDaySearch,
-  component: GrahaSthiti,
+  component: function GrahaSthitiLegacyRedirect() {
+    const search = grahaSthitiLegacyRoute.useSearch();
+    return <Navigate to="/gochar" search={search} replace />;
+  },
 });
 const grahaAstaRoute = createRoute({
   getParentRoute: () => panchangaShellRoute,
@@ -311,7 +313,6 @@ const panchangaShellChildRoutes = [
   panchangaDetailsRoute,
   elementRoute,
   gocharRoute,
-  grahaSthitiRoute,
   grahaAstaRoute,
   grahaVakriRoute,
   suryaGrahanRoute,
@@ -333,6 +334,7 @@ const routeTree = rootRoute.addChildren([
   learnArticleRoute,
   sunTimesLegacyRoute,
   historyLegacyRoute,
+  grahaSthitiLegacyRoute,
   aakashGocharRoute,
   marriageSaitRoute,
   accountRoute,

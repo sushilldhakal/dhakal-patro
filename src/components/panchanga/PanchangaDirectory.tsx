@@ -3,7 +3,6 @@ import {
   Eclipse,
   HeartHandshake,
   MoonStar,
-  Orbit,
   RotateCcw,
   Route,
   Sunrise,
@@ -62,7 +61,6 @@ function DirectoryCard({
 
 const GRAHA_PAGES = [
   { to: "/gochar" as const, labelKey: "sidebar_nav.items.gochar.label", blurbKey: "sidebar_nav.items.gochar.blurb", icon: Route },
-  { to: "/panchanga/graha-sthiti" as const, labelKey: "sidebar_nav.items.graha-sthiti.label", blurbKey: "sidebar_nav.items.graha-sthiti.blurb", icon: Orbit },
   { to: "/panchanga/graha-asta" as const, labelKey: "sidebar_nav.items.graha-asta.label", blurbKey: "sidebar_nav.items.graha-asta.blurb", icon: Sunrise },
   { to: "/panchanga/graha-vakri" as const, labelKey: "sidebar_nav.items.graha-vakri.label", blurbKey: "sidebar_nav.items.graha-vakri.blurb", icon: RotateCcw },
   { to: "/panchanga/chandra-grahan" as const, labelKey: "sidebar_nav.items.chandra-grahan.label", blurbKey: "sidebar_nav.items.chandra-grahan.blurb", icon: MoonStar },

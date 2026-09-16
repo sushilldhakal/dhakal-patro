@@ -1,5 +1,3 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import type { GocharGraha } from "@/lib/api";
 import type { GrahaKey } from "@/lib/graha-details";
 import { GRAHA_NAME, GRAHA_DETAIL_ORDER } from "@/lib/graha-details";
@@ -12,18 +10,13 @@ import {
 } from "@/lib/gochar-page-utils";
 import { grahaRashiDisplay } from "@/lib/dainikKranti/gochar-display";
 import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
-import type { PanchangaLocation } from "@/components/panchanga/use-panchanga-location";
-import type { CalendarEra } from "@/lib/patro-era";
 import { useLocale, bilingualText } from "@/i18n/locale";
-import { patroRouteLinkSearch } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
 
 type Props = {
   gochar: Record<string, GocharGraha>;
   selected: GrahaKey;
   onSelect: (key: GrahaKey) => void;
-  location: PanchangaLocation;
-  era: CalendarEra;
 };
 
 function windowLine(
@@ -38,7 +31,7 @@ function windowLine(
   return lang === "en" ? `${labelEn} until ${when}` : `${labelNe} ${when} सम्म`;
 }
 
-export function GocharPlanetDeepDive({ gochar, selected, onSelect, location, era }: Props) {
+export function GocharPlanetDeepDive({ gochar, selected, onSelect }: Props) {
   const { lang, digits } = useLocale();
   const g = gochar[selected];
   if (!g) return null;
@@ -150,15 +143,6 @@ export function GocharPlanetDeepDive({ gochar, selected, onSelect, location, era
             </ul>
           </div>
         ) : null}
-
-        <Link
-          to="/panchanga/graha-sthiti"
-          search={patroRouteLinkSearch("/panchanga/graha-sthiti", location, era) as Record<string, unknown>}
-          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary hover:underline"
-        >
-          {bilingualText(lang, "पूर्ण ग्रह स्पष्ट विवरण →", "Open full graha sphuta table →")}
-          <ArrowRight className="size-4" aria-hidden />
-        </Link>
       </div>
     </section>
   );

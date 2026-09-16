@@ -17,7 +17,6 @@ export interface PanchangaSidebarSection {
 
 const GRAHA_SIDEBAR_ITEMS: PanchangaSidebarItem[] = [
   { id: "gochar", to: "/gochar", labelKey: "sidebar_nav.items.gochar.label", blurbKey: "sidebar_nav.items.gochar.blurb" },
-  { id: "graha-sthiti", to: "/panchanga/graha-sthiti", labelKey: "sidebar_nav.items.graha-sthiti.label", blurbKey: "sidebar_nav.items.graha-sthiti.blurb" },
   { id: "graha-asta", to: "/panchanga/graha-asta", labelKey: "sidebar_nav.items.graha-asta.label", blurbKey: "sidebar_nav.items.graha-asta.blurb" },
   { id: "graha-vakri", to: "/panchanga/graha-vakri", labelKey: "sidebar_nav.items.graha-vakri.label", blurbKey: "sidebar_nav.items.graha-vakri.blurb" },
   { id: "chandra-grahan", to: "/panchanga/chandra-grahan", labelKey: "sidebar_nav.items.chandra-grahan.label", blurbKey: "sidebar_nav.items.chandra-grahan.blurb" },

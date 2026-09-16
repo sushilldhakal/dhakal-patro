@@ -10,7 +10,6 @@ import { GocharPlanetDeepDive } from "@/components/gochar/GocharPlanetDeepDive";
 import { usePanchangaLocation } from "@/components/panchanga/use-panchanga-location";
 import { usePatroDayUrlBrowse } from "@/hooks/use-patro-url-browse";
 import { useResolvedPatroDayQuery } from "@/hooks/use-resolved-patro-day-query";
-import { useCalendarEra } from "@/hooks/use-calendar-era";
 import { useTranslation } from "react-i18next";
 import { useLocale, bilingualText } from "@/i18n/locale";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -54,7 +53,6 @@ export function Gochar() {
     dayBrowse;
   const patroEra = dayState.display.era;
   const displayLanguage = dayState.display.language;
-  const calendarEra = useCalendarEra();
   const todayAd = todayAdStringInTimezone(
     new Date(),
     resolveTimeZone(undefined, location.params.timezone),
@@ -323,8 +321,6 @@ export function Gochar() {
               gochar={gochar}
               selected={selectedPlanet}
               onSelect={setSelectedPlanet}
-              location={location}
-              era={calendarEra}
             />
           </div>
         </div>

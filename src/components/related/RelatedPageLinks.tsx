@@ -53,7 +53,6 @@ const SITE_LINK_ICONS: Record<string, LucideIcon> = {
   kundali: Sparkles,
   "kundali-milan": Heart,
   gochar: Route,
-  "graha-sthiti": Orbit,
   "graha-asta": Sunrise,
   "graha-vakri": RotateCcw,
   "chandra-grahan": MoonStar,

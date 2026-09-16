@@ -20,7 +20,6 @@ export const ELEMENT_META: ElementMeta[] = [
   { id: "choghadiya", kind: "table" },
   { id: "hora", kind: "table" },
   { id: "lagna", kind: "table" },
-  { id: "udaya-lagna", kind: "table" },
   { id: "chandrabala", kind: "table" },
   { id: "tarabala", kind: "table" },
   { id: "panchaka-rahita", kind: "table" },
