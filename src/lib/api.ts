@@ -2458,7 +2458,7 @@ export interface VimshopakaData {
 }
 
 /** Remedy shape for one `GrahaShantiFinding` — never mix a gem into a "pacify" remedy or a daan into "strengthen". */
-export type GrahaShantiRemedy = "shanti" | "strengthen" | "pacify" | "pacify_transit";
+export type GrahaShantiRemedy = "shanti" | "strengthen" | "pacify" | "pacify_transit" | "soothe";
 
 /**
  * One trigger of the classical 4-step Graha Shanti decision process
@@ -2523,7 +2523,7 @@ export const kundaliDetailKeys = {
  * engine changes so every request gets a fresh cache key.
  */
 export const KUNDALI_ENGINE_VERSION =
-  import.meta.env.VITE_KUNDALI_ENGINE_VERSION ?? "4";
+  import.meta.env.VITE_KUNDALI_ENGINE_VERSION ?? "5";
 
 export const fetchKundaliDetail = (
   moment: InstantQuery,

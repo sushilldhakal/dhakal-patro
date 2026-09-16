@@ -1221,6 +1221,7 @@ export const strings = {
   "kundali.x.shanti_remedy_pacify": { ne: "शान्त बनाउने (जप + हवन + दान)", en: "Pacify (japa + homa + daan)" },
   "kundali.x.shanti_remedy_pacify_transit": { ne: "गोचर शान्ति (शनि)", en: "Transit pacification (Saturn)" },
   "kundali.x.shanti_remedy_shanti": { ne: "अनिवार्य नवग्रह शान्ति", en: "Mandatory Navagraha Shanti" },
+  "kundali.x.shanti_remedy_soothe": { ne: "आफ्नै शान्ति (पीडित ग्रह)", en: "Own shanti (afflicted planet)" },
   "kundali.x.shanti_remedy_strengthen": { ne: "सबल बनाउने (रत्न + मन्त्र)", en: "Strengthen (gem + mantra)" },
   "kundali.x.shanti_samidha_column": { ne: "समिधा", en: "Samidha" },
   "kundali.x.shanti_samidha_heading": { ne: "समिधा (हवन काठ)", en: "Samidha (homa wood)" },

@@ -54,6 +54,7 @@ const REMEDY_BADGE_CLASS: Record<GrahaShantiFinding["remedy"], string> = {
   strengthen: "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   pacify: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
   pacify_transit: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  soothe: "border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-400",
 };
 
 /**
