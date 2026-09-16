@@ -21,39 +21,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { ShadbalaResponse, VimshottariResponse } from "@/lib/api";
+import type { GrahaShantiFinding, GrahaShantiRecommendation } from "@/lib/api";
 import { NAVAGRAHA_SHANTI, getGrahaShanti } from "@/lib/shanti/navagraha-shanti";
 import { useLocale, bilingualText, bilingualNode } from "@/i18n/locale";
 import { GrahaPlanetIcon } from "@/components/graha/GrahaPlanetIcon";
 import type { GrahaKey } from "@/lib/graha-details";
 
 const th = "whitespace-nowrap text-xs font-semibold";
-
-const SHADBALA_STATUS_NE: Record<string, string> = {
-  Exceptional: "उत्कृष्ट",
-  Strong: "बलियो",
-  Adequate: "पर्याप्त",
-  Borderline: "सीमान्त",
-  Weak: "कमजोर",
-};
-
-/** Graha name (English / Vedic) → NAVAGRAHA_SHANTI key. */
-const LORD_KEY: Record<string, string> = {
-  sun: "sun", surya: "sun",
-  moon: "moon", chandra: "moon",
-  mars: "mars", mangal: "mars", mangala: "mars", kuja: "mars",
-  mercury: "mercury", budha: "mercury", budh: "mercury",
-  jupiter: "jupiter", guru: "jupiter", brihaspati: "jupiter",
-  venus: "venus", shukra: "venus", sukra: "venus",
-  saturn: "saturn", shani: "saturn", sani: "saturn",
-  rahu: "rahu",
-  ketu: "ketu",
-};
-
-function lordToKey(name?: string): string | undefined {
-  if (!name) return undefined;
-  return LORD_KEY[name.toLowerCase().replace(/[^a-z]/g, "")];
-}
 
 function InfoTile({
   icon,
@@ -75,80 +49,81 @@ function InfoTile({
   );
 }
 
-function RecommendationCard({
-  heading,
-  grahaKey,
-  detailNe,
+const REMEDY_BADGE_CLASS: Record<GrahaShantiFinding["remedy"], string> = {
+  shanti: "border-secondary bg-secondary/10 text-secondary",
+  strengthen: "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  pacify: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  pacify_transit: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+};
+
+/**
+ * One trigger of the server-computed classical 4-step Graha Shanti decision
+ * process (see `GrahaShantiFinding`) — not a client-side heuristic.
+ */
+function ShantiFindingCard({
+  finding,
   onSelect,
 }: {
-  heading: string;
-  grahaKey?: string;
-  detailNe?: string;
+  finding: GrahaShantiFinding;
   onSelect: (key: string) => void;
 }) {
+  const { t } = useTranslation();
   const { lang } = useLocale();
-  const graha = grahaKey ? getGrahaShanti(grahaKey) : undefined;
+  const graha = getGrahaShanti(finding.graha);
+  const nameNe = graha?.nameNe ?? finding.grahaNe;
+  const nameEn = graha?.nameEn ?? finding.graha;
   return (
     <div className="rounded-xl border border-border bg-card/40 p-4">
-      <div className="text-sm text-base uppercase tracking-wide">{heading}</div>
-      {graha ? (
-        <>
-          <div className="mt-1 flex items-center gap-2">
-            <GrahaPlanetIcon graha={graha.key as GrahaKey} size={28} />
-            <span className="text-lg font-bold text-foreground">{bilingualText(lang, graha.nameNe, graha.nameEn)}</span>
-          </div>
-          {detailNe ? <p className="mt-0.5 text-xs">{detailNe}</p> : null}
-          <button
-            type="button"
-            onClick={() => onSelect(graha.key)}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-secondary bg-secondary/10 px-3 py-1.5 text-sm text-base text-secondary transition-colors hover:bg-secondary/20"
-          >
-            <ArrowDownToLine className="h-3.5 w-3.5" /> {bilingualText(lang, `${graha.nameNe} शान्ति हेर्नुहोस्`, `View ${graha.nameEn} shanti`)}
-          </button>
-        </>
-      ) : (
-        <p className="mt-1 text-sm">—</p>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-sm text-base uppercase tracking-wide">
+          {bilingualText(lang, finding.stepTitleNe, finding.stepTitleEn)}
+        </span>
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+            REMEDY_BADGE_CLASS[finding.remedy],
+          )}
+        >
+          {t(`kundali.x.shanti_remedy_${finding.remedy}`)}
+        </span>
+      </div>
+      <div className="mt-1.5 flex items-center gap-2">
+        <GrahaPlanetIcon graha={finding.graha as GrahaKey} size={28} />
+        <span className="text-lg font-bold text-foreground">{bilingualText(lang, nameNe, nameEn)}</span>
+      </div>
+      <p className="mt-1 text-sm leading-relaxed">{bilingualText(lang, finding.reasonNe, finding.reasonEn)}</p>
+      <button
+        type="button"
+        onClick={() => onSelect(finding.graha)}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-secondary bg-secondary/10 px-3 py-1.5 text-sm text-base text-secondary transition-colors hover:bg-secondary/20"
+      >
+        <ArrowDownToLine className="h-3.5 w-3.5" /> {bilingualText(lang, `${nameNe} शान्ति हेर्नुहोस्`, `View ${nameEn} shanti`)}
+      </button>
     </div>
   );
 }
 
 /**
- * Navagraha Shanti recommendations + reference, driven by an already-computed
- * Vimshottari dasha and Shadbala for a chart. Used standalone (ShantiVidhi page)
- * and embedded in each kundali (KundaliView). No data fetching of its own.
+ * Navagraha Shanti recommendations + reference. `grahaShanti` is the
+ * server-computed classical 4-step decision (dasha assessment, Lagnesha/
+ * Yogakaraka strength, Rahu-Ketu-Saturn affliction, Saturn's Sade Sati/
+ * Dhaiya transit) — see `GrahaShantiRecommendation` in `lib/api.ts`. Used
+ * standalone (ShantiVidhi page) and embedded in each kundali (KundaliView).
+ * No data fetching of its own.
  */
 export function ShantiVidhiPanel({
-  vimshottari,
-  shadbala,
+  grahaShanti,
   isError = false,
 }: {
-  vimshottari?: VimshottariResponse;
-  shadbala?: ShadbalaResponse;
+  grahaShanti?: GrahaShantiRecommendation;
   isError?: boolean;
 }) {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
   const [selectedKey, setSelectedKey] = useState("saturn");
-  const [nowMs] = useState(() => Date.now());
   const detailRef = useRef<HTMLDivElement>(null);
   const graha = useMemo(() => getGrahaShanti(selectedKey) ?? NAVAGRAHA_SHANTI[0], [selectedKey]);
-
-  // current Mahadasha lord = the sequence period containing "now"
-  const currentDasha = useMemo(() => {
-    const seq = vimshottari?.sequence ?? [];
-    const period = seq.find((p) => {
-      const s = new Date(p.start).getTime();
-      const e = new Date(p.end).getTime();
-      return Number.isFinite(s) && Number.isFinite(e) && s <= nowMs && nowMs < e;
-    });
-    const fallbackLord = vimshottari?.mahadasha_lord;
-    const key = lordToKey(period?.lord ?? fallbackLord);
-    return { key, period };
-  }, [vimshottari, nowMs]);
-
-  const weakest = shadbala?.summary.weakest;
-  const weakestKey = lordToKey(weakest?.key) ?? weakest?.key;
+  const findings = grahaShanti?.findings ?? [];
 
   const selectAndScroll = (key: string) => {
     setSelectedKey(key);
@@ -157,44 +132,24 @@ export function ShantiVidhiPanel({
 
   return (
     <div className="space-y-4">
-      {/* recommendations from this chart */}
+      {/* recommendations from this chart — server-computed 4-step decision */}
       {isError ? (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {t("kundali.x.shanti_load_error")}
         </div>
-      ) : (
+      ) : findings.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <RecommendationCard
-            heading={t("kundali.x.shanti_current_mahadasha")}
-            grahaKey={currentDasha.key}
-            detailNe={
-              currentDasha.period
-                ? bilingualText(lang, 
-                    `${currentDasha.period.lord_ne} महादशा चलिरहेको — यसको शान्ति उपयुक्त।`,
-                    `${currentDasha.period.lord} Mahadasha is running — its shanti is suitable.`,
-                  )
-                : vimshottari?.mahadasha_lord_ne
-                  ? bilingualText(lang, 
-                      `${vimshottari.mahadasha_lord_ne} महादशा (जन्मकालीन)।`,
-                      `${vimshottari.mahadasha_lord ?? vimshottari.mahadasha_lord_ne} Mahadasha (at birth).`,
-                    )
-                  : undefined
-            }
-            onSelect={selectAndScroll}
-          />
-          <RecommendationCard
-            heading={t("kundali.x.shanti_weakest_planet")}
-            grahaKey={weakestKey}
-            detailNe={
-              weakest
-                ? bilingualText(lang, 
-                    `${weakest.name_ne}: बल ${(weakest.ratio * 100).toFixed(0)}% (${SHADBALA_STATUS_NE[weakest.status] ?? weakest.status}) — बल बढाउन शान्ति गर्नुहोस्।`,
-                    `${weakest.name ?? weakest.name_ne}: strength ${(weakest.ratio * 100).toFixed(0)}% (${weakest.status}) — do shanti to strengthen it.`,
-                  )
-                : undefined
-            }
-            onSelect={selectAndScroll}
-          />
+          {findings.map((finding, idx) => (
+            <ShantiFindingCard
+              key={`${finding.step}-${finding.graha}-${idx}`}
+              finding={finding}
+              onSelect={selectAndScroll}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border bg-card/30 p-3 text-sm">
+          {t("kundali.x.shanti_findings_empty")}
         </div>
       )}
       <p className="text-sm leading-relaxed">

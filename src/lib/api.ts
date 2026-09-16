@@ -2457,6 +2457,30 @@ export interface VimshopakaData {
   method: string;
 }
 
+/** Remedy shape for one `GrahaShantiFinding` — never mix a gem into a "pacify" remedy or a daan into "strengthen". */
+export type GrahaShantiRemedy = "shanti" | "strengthen" | "pacify" | "pacify_transit";
+
+/**
+ * One trigger of the classical 4-step Graha Shanti decision process
+ * (Dasha assessment / Lagnesha-Yogakaraka strength / Rahu-Ketu-Saturn
+ * affliction / Saturn's Sade Sati-Dhaiya transit) — server-computed from
+ * the same chart used for shadbala/yogas, not a client-side heuristic.
+ */
+export interface GrahaShantiFinding {
+  step: 1 | 2 | 3 | 4;
+  stepTitleNe: string;
+  stepTitleEn: string;
+  graha: string;
+  grahaNe: string;
+  remedy: GrahaShantiRemedy;
+  reasonNe: string;
+  reasonEn: string;
+}
+
+export interface GrahaShantiRecommendation {
+  findings: GrahaShantiFinding[];
+}
+
 export interface KundaliDetailResponse {
   panchanga: PanchangaDay;
   shadbala: ShadbalaResponse;
@@ -2468,6 +2492,7 @@ export interface KundaliDetailResponse {
   vimshopaka: VimshopakaData | null;
   ashtakavarga: AshtakavargaData | null;
   yogas: KundaliYoga[];
+  grahaShanti: GrahaShantiRecommendation;
   vargaCharts: VargaCharts;
   upagrahas: UpagrahaDetailRow[];
   avakahada: JanmaAvakahadaData | null;
@@ -2498,7 +2523,7 @@ export const kundaliDetailKeys = {
  * engine changes so every request gets a fresh cache key.
  */
 export const KUNDALI_ENGINE_VERSION =
-  import.meta.env.VITE_KUNDALI_ENGINE_VERSION ?? "3";
+  import.meta.env.VITE_KUNDALI_ENGINE_VERSION ?? "4";
 
 export const fetchKundaliDetail = (
   moment: InstantQuery,

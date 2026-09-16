@@ -4,12 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Flame, UserSearch } from "lucide-react";
 import { PageShell, PageHeader } from "../components/PageShell";
 import { useRouteLoading } from "@/lib/route-loading";
-import {
-  fetchVimshottari,
-  fetchShadbala,
-  vimshottariKeys,
-  shadbalaKeys,
-} from "@/lib/api";
+import { fetchKundaliDetail, kundaliDetailKeys } from "@/lib/api";
 import type { InstantQuery } from "@/lib/instant-query";
 import { KundaliControls } from "@/components/kundali/KundaliControls";
 import { ShantiVidhiPanel } from "@/components/kundali/ShantiVidhiPanel";
@@ -46,19 +41,13 @@ export function ShantiVidhi() {
 
   const birthMoment = useMemo(() => moment, [moment]);
 
-  const vimshottariQ = useQuery({
-    queryKey: vimshottariKeys.atTime(birthMoment, location.params),
-    queryFn: () => fetchVimshottari(birthMoment, location.params),
+  const detailQ = useQuery({
+    queryKey: kundaliDetailKeys.atTime(birthMoment, location.params),
+    queryFn: () => fetchKundaliDetail(birthMoment, location.params),
     staleTime: 1000 * 60 * 5,
   });
 
-  const shadbalaQ = useQuery({
-    queryKey: shadbalaKeys.atTime(birthMoment, location.params),
-    queryFn: () => fetchShadbala(birthMoment, location.params),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  useRouteLoading(vimshottariQ.isLoading || shadbalaQ.isLoading);
+  useRouteLoading(detailQ.isLoading);
 
   return (
     <PageShell>
@@ -84,9 +73,8 @@ export function ShantiVidhi() {
           />
 
           <ShantiVidhiPanel
-            vimshottari={vimshottariQ.data}
-            shadbala={shadbalaQ.data}
-            isError={vimshottariQ.isError && shadbalaQ.isError}
+            grahaShanti={detailQ.data?.grahaShanti}
+            isError={detailQ.isError}
           />
         </div>
       </section>

@@ -764,8 +764,7 @@ export function KundaliView({
             </div>
             <Suspense fallback={<SectionLoading />}>
               <ShantiVidhiPanel
-                vimshottari={dasha}
-                shadbala={detail.shadbala}
+                grahaShanti={detail.grahaShanti}
                 isError={isError}
               />
             </Suspense>
