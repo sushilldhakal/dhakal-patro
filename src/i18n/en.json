@@ -776,15 +776,20 @@
       "shanti_daan_column": "Daan",
       "shanti_deity": "Deity",
       "shanti_disclaimer": "Note: the details above are based on the classical Navagraha Shanti tradition. Consult a qualified astrologer/priest before wearing gems or performing a formal homa.",
+      "shanti_disha": "Direction",
       "shanti_donation_items": "Donation items",
       "shanti_gem": "Gem",
       "shanti_japa_column": "Japa",
+      "shanti_kaliyuga_japa": "In Kali Yuga (×4)",
       "shanti_load_error": "Could not load the calculation. Check date/time/place and try again.",
       "shanti_metal": "Metal",
+      "shanti_pratyadhidevata": "Sub-deity (Pratyadhidevata)",
       "shanti_reference_table": "Navagraha Shanti table",
       "shanti_samidha_column": "Samidha",
       "shanti_samidha_heading": "Samidha (homa wood)",
+      "shanti_shubh_samaya": "Auspicious time",
       "shanti_use_label": "Use:",
+      "shanti_vedic_mantra_heading": "Vedic Mantra",
       "shanti_weakest_planet": "Weakest planet (Shadbala)",
       "status_adequate": "Adequate",
       "status_borderline": "Borderline",
@@ -833,6 +838,43 @@
         "credit": "Brihat Parashara Hora Shastra - Maharishi Parashara",
         "edition": "Translator & Editor Pandit Ganesh Dutt Pathak BS 2029 (preface); revised edition BS 2058. Savitri Thakur Prakashan, Rathyatra, Varanasi.",
         "used": "The rules and results of yogas formed in the birth chart."
+      },
+      "shanti": {
+        "yajnavalkya": {
+          "credit": "Yajnavalkya Smriti (Navagraha Shanti Prakarana) - Maharishi Yajnavalkya, traditionally dated about 1000 years before the Bikram Sambat epoch",
+          "edition": "Editor & Translator Umeshchandra Pandey BS 2024. Chaukhamba Sanskrit Series, Varanasi.",
+          "used": "The oldest classical basis for the Vedic Navagraha Shanti yajna. The first codification of the 9 grahas' samidha, adhidevata, pratyadhidevata, and the Vedic mantras and donation items for graha shanti."
+        },
+        "bphs": {
+          "credit": "Brihat Parashara Hora Shastra - Maharishi Parashara, traditionally dated about 1500 years before the Bikram Sambat epoch",
+          "edition": "Editor & Translator Pandit Devchandra Jha BS 2028. Chaukhamba Sanskrit Series, Varanasi.",
+          "used": "The Navagraha Shanti chapter and the Arishtabhanga/dasha-phala sections. The rules for japa, tarpana, marjana, homa, and direction-wise graha worship to avert affliction during the dasha/antardasha of a maraka, debilitated, combust, or trishadayesha planet."
+        },
+        "puranas": {
+          "credit": "Matsya Purana & Agni Purana - Maharishi Vedavyasa, traditionally dated about 3000 years before the Bikram Sambat epoch",
+          "edition": "Editor & Translator Dr. Ramprataap Tripathi Shastri BS 2046. Hindi Sahitya Sammelan, Prayag.",
+          "used": "The Navagraha Mandala diagram, the 9 grahas' colors, their cardinal directions (Sun-East, Moon-NW, Mars-South, Mercury-North, Jupiter-NE, Venus-SE, Saturn-West, Rahu-SW, Ketu-upward), the bija mantras for homa, and the samidha-homa/shanti procedure for health and prosperity."
+        },
+        "phaladeepika": {
+          "credit": "Phaladeepika - Mantreswara, BS 1457",
+          "edition": "Editor & Commentator Dr. Sureshchandra Mishra BS 2063. Ranjan Publications, New Delhi.",
+          "used": "Chapter 26 (Graha Dravyani and Shanti Vidhana). The classical table of the 9 grahas' gems, metals, preferred grains/havishya, and the stotra recitation and donation to ease an afflicted planet's harm."
+        },
+        "muhurtachintamani": {
+          "credit": "Muhurta Chintamani & Prayoga Ratna - Acharya Ram Daivajna / Narayana Bhatta, BS 1657",
+          "edition": "Editor & Translator Pandit Kedardutt Joshi BS 2036. Motilal Banarsidass, Delhi.",
+          "used": "The practical procedure for the karmakanda and Navagraha homa — sankalpa, graha avahana, the Kali Yuga ×4 japa multiplier, the 10% dashamsha homa, tarpana, marjana, and the full purnahuti method."
+        },
+        "uttarakalamrita": {
+          "credit": "Uttara Kalamrita - Kalidasa, traditionally dated about 57 years before the Bikram Sambat epoch",
+          "edition": "Editor & Translator Jagannath Bhasin BS 2041. Ranjan Publications, New Delhi.",
+          "used": "The second Kanda (Shanti and ritual section). The principle of averting affliction through deity worship and japa-homa to appease planets during a malefic dasha, maraka influence, or transit affliction (Sade Sati, Dhaiya)."
+        },
+        "lalkitab": {
+          "credit": "Jyotish Lal Kitab - Pt. Rupchand Joshi / Pt. Benimadhav Goswami, BS 1996",
+          "edition": "Editor B.M. Goswami BS 2065. Sagar Publications, New Delhi.",
+          "used": "Simple sattvic remedies for graha rin (planetary debt) and graha dosha — bija mantra japa, setting the related item afloat in running water, burying it, and feeding animals/birds for immediate graha shanti."
+        }
       },
       "dasha": {
         "vimshottari": {

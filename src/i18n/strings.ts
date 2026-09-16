@@ -1203,18 +1203,23 @@ export const strings = {
     ne: "सूचना: माथिका विवरण शास्त्रीय नवग्रह शान्ति परम्परामा आधारित छन्। रत्नधारण वा विधिवत् हवन गर्नुअघि योग्य ज्योतिषी/पुरोहितसँग परामर्श गर्नुहोस्।",
     en: "Note: the details above are based on the classical Navagraha Shanti tradition. Consult a qualified astrologer/priest before wearing gems or performing a formal homa.",
   },
+  "kundali.x.shanti_disha": { ne: "दिशा", en: "Direction" },
   "kundali.x.shanti_donation_items": { ne: "दान सामग्री", en: "Donation items" },
   "kundali.x.shanti_gem": { ne: "रत्न", en: "Gem" },
   "kundali.x.shanti_japa_column": { ne: "जप", en: "Japa" },
+  "kundali.x.shanti_kaliyuga_japa": { ne: "कलि युगमा (४ गुणा)", en: "In Kali Yuga (×4)" },
   "kundali.x.shanti_load_error": {
     ne: "गणना ल्याउन सकिएन। मिति/समय/स्थान जाँचेर पुनः प्रयास गर्नुहोस्।",
     en: "Could not load the calculation. Check date/time/place and try again.",
   },
   "kundali.x.shanti_metal": { ne: "धातु", en: "Metal" },
+  "kundali.x.shanti_pratyadhidevata": { ne: "प्रत्यधिदेवता", en: "Sub-deity (Pratyadhidevata)" },
   "kundali.x.shanti_reference_table": { ne: "नवग्रह शान्ति तालिका", en: "Navagraha Shanti table" },
   "kundali.x.shanti_samidha_column": { ne: "समिधा", en: "Samidha" },
   "kundali.x.shanti_samidha_heading": { ne: "समिधा (हवन काठ)", en: "Samidha (homa wood)" },
+  "kundali.x.shanti_shubh_samaya": { ne: "शुभ समय", en: "Auspicious time" },
   "kundali.x.shanti_use_label": { ne: "उपयोग:", en: "Use:" },
+  "kundali.x.shanti_vedic_mantra_heading": { ne: "वैदिक मन्त्र", en: "Vedic Mantra" },
   "kundali.x.shanti_weakest_planet": { ne: "सबैभन्दा बलहीन ग्रह (षड्बल)", en: "Weakest planet (Shadbala)" },
   "kundali.x.status_adequate": { ne: "पर्याप्त", en: "Adequate" },
   "kundali.x.status_borderline": { ne: "सीमान्त", en: "Borderline" },
@@ -1254,6 +1259,91 @@ export const strings = {
   "kundali.sources.bphs.used": {
     ne: "कुण्डलीमा बन्ने योगहरूको नियम र फल।",
     en: "The rules and results of yogas formed in the birth chart.",
+  },
+
+  "kundali.sources.shanti.yajnavalkya.credit": {
+    ne: "याज्ञवल्क्य स्मृति (नवग्रहशान्ति प्रकरण) - महर्षि याज्ञवल्क्य वि.सं. लगभग पूर्व १०००",
+    en: "Yajnavalkya Smriti (Navagraha Shanti Prakarana) - Maharishi Yajnavalkya, traditionally dated about 1000 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.shanti.yajnavalkya.edition": {
+    ne: "सम्पादक र अनुवादक उमेशचन्द्र पाण्डेय वि.सं. २०२४। चौखम्बा संस्कृत सिरिज, वाराणसी।",
+    en: "Editor & Translator Umeshchandra Pandey BS 2024. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.shanti.yajnavalkya.used": {
+    ne: "वैदिक नवग्रह शान्ति यज्ञको सर्वप्राचीन मूल शास्त्रीय आधार। ९ ग्रहका समिधा, अधिदेवता, प्रत्यधिदेवता, र ग्रह शान्तिका लागि वैदिक मन्त्र एवं दान सामग्रीको प्रथम शास्त्रीय विधान।",
+    en: "The oldest classical basis for the Vedic Navagraha Shanti yajna. The first codification of the 9 grahas' samidha, adhidevata, pratyadhidevata, and the Vedic mantras and donation items for graha shanti.",
+  },
+  "kundali.sources.shanti.bphs.credit": {
+    ne: "बृहत्पाराशर होराशास्त्र - महर्षि पराशर वि.सं. लगभग पूर्व १५००",
+    en: "Brihat Parashara Hora Shastra - Maharishi Parashara, traditionally dated about 1500 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.shanti.bphs.edition": {
+    ne: "सम्पादक र अनुवादक पंडित देवचन्द्र झा वि.सं. २०२८। चौखम्बा संस्कृत शृङ्खला, वाराणसी।",
+    en: "Editor & Translator Pandit Devchandra Jha BS 2028. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.shanti.bphs.used": {
+    ne: "नवग्रह शान्ति अध्याय, अरिष्टभङ्ग र दशा फल खण्ड। मारक, नीच, अस्त वा त्रिषडायेश ग्रहको दशा/अन्तर्दशामा हुने अनिष्ट निवारणका लागि जप, तर्पण, मार्जन, होम तथा दिशा अनुसार ग्रह पूजन र शान्ति अनुष्ठानको नियम।",
+    en: "The Navagraha Shanti chapter and the Arishtabhanga/dasha-phala sections. The rules for japa, tarpana, marjana, homa, and direction-wise graha worship to avert affliction during the dasha/antardasha of a maraka, debilitated, combust, or trishadayesha planet.",
+  },
+  "kundali.sources.shanti.puranas.credit": {
+    ne: "मत्स्य पुराण एवं अग्नि पुराण - महर्षि वेदव्यास वि.सं. लगभग पूर्व ३०००",
+    en: "Matsya Purana & Agni Purana - Maharishi Vedavyasa, traditionally dated about 3000 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.shanti.puranas.edition": {
+    ne: "सम्पादक र अनुवादक डा. रामप्रताप त्रिपाठी शास्त्री वि.सं. २०४६। हिन्दी साहित्य सम्मेलन, प्रयाग।",
+    en: "Editor & Translator Dr. Ramprataap Tripathi Shastri BS 2046. Hindi Sahitya Sammelan, Prayag.",
+  },
+  "kundali.sources.shanti.puranas.used": {
+    ne: "नवग्रह मण्डल रेखाङ्कन, ९ ग्रहका वर्ण/रङ्ग, चक्रवर्ती दिशा (सूर्य-पूर्व, चन्द्र-वायव्य, मङ्गल-दक्षिण, बुध-उत्तर, गुरु-ईशान, शुक्र-आग्नेय, शनि-पश्चिम, राहु-नैऋत्य, केतु-ऊर्ध्व), हवनका लागि बीज मन्त्र, समिधा होम र शान्ति अनुष्ठानबाट आरोग्यता एवं समृद्धि प्राप्त गर्ने विधान।",
+    en: "The Navagraha Mandala diagram, the 9 grahas' colors, their cardinal directions (Sun-East, Moon-NW, Mars-South, Mercury-North, Jupiter-NE, Venus-SE, Saturn-West, Rahu-SW, Ketu-upward), the bija mantras for homa, and the samidha-homa/shanti procedure for health and prosperity.",
+  },
+  "kundali.sources.shanti.phaladeepika.credit": {
+    ne: "फलदीपिका - मन्त्रेश्वर वि.सं. १४५७",
+    en: "Phaladeepika - Mantreswara, BS 1457",
+  },
+  "kundali.sources.shanti.phaladeepika.edition": {
+    ne: "सम्पादक र टीकाकार डा. सुरेशचन्द्र मिश्र वि.सं. २०६३। रञ्जन पब्लिकेशन्स, नयाँ दिल्ली।",
+    en: "Editor & Commentator Dr. Sureshchandra Mishra BS 2063. Ranjan Publications, New Delhi.",
+  },
+  "kundali.sources.shanti.phaladeepika.used": {
+    ne: "२६ औँ अध्याय (ग्रह द्रव्याणि एवं शान्ति विधान)। नवग्रहका रत्न, धातु, प्रिय अन्न/हविष्यान्न, र पीडित ग्रहको अनिष्ट कम गर्न स्तोत्र पाठ तथा दान दिने शास्त्रीय तालिका।",
+    en: "Chapter 26 (Graha Dravyani and Shanti Vidhana). The classical table of the 9 grahas' gems, metals, preferred grains/havishya, and the stotra recitation and donation to ease an afflicted planet's harm.",
+  },
+  "kundali.sources.shanti.muhurtachintamani.credit": {
+    ne: "मुहूर्त चिन्तामणि एवं प्रयोग रत्न - आचार्य राम दैवज्ञ / नारायण भट्ट वि.सं. १६५७",
+    en: "Muhurta Chintamani & Prayoga Ratna - Acharya Ram Daivajna / Narayana Bhatta, BS 1657",
+  },
+  "kundali.sources.shanti.muhurtachintamani.edition": {
+    ne: "सम्पादक र अनुवादक पंडित केदारदत्त जोशी वि.सं. २०३६। मोतीलाल बनारसीदास, दिल्ली।",
+    en: "Editor & Translator Pandit Kedardutt Joshi BS 2036. Motilal Banarsidass, Delhi.",
+  },
+  "kundali.sources.shanti.muhurtachintamani.used": {
+    ne: "कर्मकाण्ड तथा नवग्रह हवनको व्यावहारिक अनुष्ठान पद्धति। सङ्कल्प, ग्रह आह्वान, कलि युग अनुसार ४ गुणा जप सङ्ख्या, १०% दशांश हवन, तर्पण, मार्जन र पूर्णाहुतिको पूर्ण विधि।",
+    en: "The practical procedure for the karmakanda and Navagraha homa — sankalpa, graha avahana, the Kali Yuga ×4 japa multiplier, the 10% dashamsha homa, tarpana, marjana, and the full purnahuti method.",
+  },
+  "kundali.sources.shanti.uttarakalamrita.credit": {
+    ne: "उत्तरकालामृतम् - कालिदास वि.सं. लगभग पूर्व ५७",
+    en: "Uttara Kalamrita - Kalidasa, traditionally dated about 57 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.shanti.uttarakalamrita.edition": {
+    ne: "सम्पादक र अनुवादक जगन्नाथ भसीन वि.सं. २०४१। रञ्जन पब्लिकेशन्स, नयाँ दिल्ली।",
+    en: "Editor & Translator Jagannath Bhasin BS 2041. Ranjan Publications, New Delhi.",
+  },
+  "kundali.sources.shanti.uttarakalamrita.used": {
+    ne: "द्वितीय काण्ड (शान्ति एवं अनुष्ठान खण्ड)। दुष्ट दशा, मारक प्रभाव र गोचर पीडा (साढेसाती, ढैया) मा ग्रह अनुकूलताका लागि देव-देवी पूजन र जप-हवनद्वारा अरिष्ट निवारण गर्ने सिद्धान्त।",
+    en: "The second Kanda (Shanti and ritual section). The principle of averting affliction through deity worship and japa-homa to appease planets during a malefic dasha, maraka influence, or transit affliction (Sade Sati, Dhaiya).",
+  },
+  "kundali.sources.shanti.lalkitab.credit": {
+    ne: "ज्योतिष लाल किताब - पं. रूपचन्द जोशी / पं. बेनीमाधव गोस्वामी वि.सं. १९९६",
+    en: "Jyotish Lal Kitab - Pt. Rupchand Joshi / Pt. Benimadhav Goswami, BS 1996",
+  },
+  "kundali.sources.shanti.lalkitab.edition": {
+    ne: "सम्पादक बी.एम. गोस्वामी वि.सं. २०६५। सागर पब्लिकेशन्स, नयाँ दिल्ली।",
+    en: "Editor B.M. Goswami BS 2065. Sagar Publications, New Delhi.",
+  },
+  "kundali.sources.shanti.lalkitab.used": {
+    ne: "ग्रह ऋण र ग्रह दोष निवारणका लागि सात्विक एवं सरल उपाय विधान। बीज मन्त्र जप, सम्बन्धित वस्तु जल प्रवाह, माटोमुनि गाड्ने, तथा पशुपक्षीलाई भोजन गराएर तत्काल ग्रह शान्ति गर्ने अद्वितीय पद्धति।",
+    en: "Simple sattvic remedies for graha rin (planetary debt) and graha dosha — bija mantra japa, setting the related item afloat in running water, burying it, and feeding animals/birds for immediate graha shanti.",
   },
 
   "kundali.sources.dasha.vimshottari.credit": {

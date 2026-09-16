@@ -21,8 +21,10 @@ export interface GrahaShanti {
   /** Representative swatch colour (works on light + dark). */
   colorHex: string;
   beejMantra: string;
-  /** Traditional japa count for the bīja mantra. */
+  /** Traditional japa count for the bīja mantra. Kali Yuga count is japa × 4. */
   japa: number;
+  /** Longer Vedic (graha) mantra, distinct from the bīja mantra. */
+  vedicMantra: string;
   samidhaNe: string;
   samidhaEn: string;
   gemNe: string;
@@ -34,6 +36,15 @@ export interface GrahaShanti {
   daanEn: string[];
   adhidevataNe: string;
   adhidevataEn: string;
+  /** Secondary/co-presiding deity (pratyadhidevata). */
+  pratyadhidevataNe: string;
+  pratyadhidevataEn: string;
+  /** Direction associated with the graha, used for facing during the remedy. */
+  dishaNe: string;
+  dishaEn: string;
+  /** Auspicious time of day for the remedy (in addition to the weekday). */
+  shubhSamayaNe: string;
+  shubhSamayaEn: string;
   /** One-line note on the affliction this śānti addresses. */
   remedyNe: string;
   remedyEn: string;
@@ -52,6 +63,8 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#e23b3b",
     beejMantra: "ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः",
     japa: 7000,
+    vedicMantra:
+      "ॐ आ कृष्णेन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यञ्च। हिरण्ययेन सविता रथेना देवो याति भुवनानि पश्यन्॥",
     samidhaNe: "आक (मदार)",
     samidhaEn: "Arka / Calotropis",
     gemNe: "माणिक्य",
@@ -62,6 +75,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Wheat", "Jaggery", "Copper", "Red cloth", "Ruby"],
     adhidevataNe: "शिव / अग्नि",
     adhidevataEn: "Shiva / Agni",
+    pratyadhidevataNe: "रुद्र",
+    pratyadhidevataEn: "Rudra",
+    dishaNe: "पूर्व",
+    dishaEn: "East",
+    shubhSamayaNe: "सूर्योदयकाल",
+    shubhSamayaEn: "At sunrise",
     remedyNe: "आत्मबल, पिता, स्वास्थ्य र पदप्रतिष्ठाको पीडा शान्त गर्न।",
     remedyEn: "To ease afflictions of self-confidence, father, health and status.",
   },
@@ -77,6 +96,8 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#cfd6e6",
     beejMantra: "ॐ श्रां श्रीं श्रौं सः चन्द्राय नमः",
     japa: 11000,
+    vedicMantra:
+      "ॐ इमं देवा असपत्नं सुवध्वं महते क्षत्राय महते ज्येष्ठाय महते जानराज्यायेन्द्रस्येन्द्रियाय। इमममुष्य पुत्रममुष्यै पुत्रमस्यै विश एष वोऽमी राजा सोमोऽस्माकं ब्राह्मणानां राजा॥",
     samidhaNe: "पलाश (ढाक)",
     samidhaEn: "Palasha / Butea",
     gemNe: "मोती",
@@ -87,6 +108,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Rice", "White cloth", "Silver", "Pearl", "Curd", "Sugar"],
     adhidevataNe: "पार्वती / जल",
     adhidevataEn: "Parvati / Jala (Water)",
+    pratyadhidevataNe: "गौरी",
+    pratyadhidevataEn: "Gauri",
+    dishaNe: "वायव्य",
+    dishaEn: "North-West",
+    shubhSamayaNe: "सन्ध्याकाल वा रात्रि",
+    shubhSamayaEn: "In the evening or at night",
     remedyNe: "मन, माता, शान्ति र भावनात्मक स्थिरताको लागि।",
     remedyEn: "For the mind, mother, peace and emotional stability.",
   },
@@ -102,6 +129,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#d4452f",
     beejMantra: "ॐ क्रां क्रीं क्रौं सः भौमाय नमः",
     japa: 10000,
+    vedicMantra: "ॐ अग्निर्मूर्धा दिवः ककुत्पतिः पृथिव्या अयम्। अपां रेतांसि जिन्वति॥",
     samidhaNe: "खैर",
     samidhaEn: "Khadira / Acacia",
     gemNe: "मूँगा",
@@ -112,6 +140,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Red lentils", "Red cloth", "Copper", "Jaggery", "Red coral"],
     adhidevataNe: "स्कन्द (कार्तिकेय) / पृथ्वी",
     adhidevataEn: "Skanda (Kartikeya) / Prithvi (Earth)",
+    pratyadhidevataNe: "क्षेत्रपाल / कार्तिकेय (हनुमानजी)",
+    pratyadhidevataEn: "Kshetrapala / Kartikeya (Hanuman)",
+    dishaNe: "दक्षिण",
+    dishaEn: "South",
+    shubhSamayaNe: "प्रातः सूर्योदय पछि",
+    shubhSamayaEn: "Morning, after sunrise",
     remedyNe: "रक्त, ऋण, भाइ, साहस र मंगल दोष शान्त गर्न।",
     remedyEn: "To ease blood, debt, siblings, courage and Mangal dosha.",
   },
@@ -127,6 +161,8 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#2fae6a",
     beejMantra: "ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः",
     japa: 9000,
+    vedicMantra:
+      "ॐ उद्बुध्यस्वाग्ने प्रति जागृहि त्वमिष्टापूर्ते सं सृजेथामयं च। अस्मिन्त्सधस्थे अध्युत्तरस्मिन् विश्वे देवा यजमानश्च सीदत॥",
     samidhaNe: "अपामार्ग (दतिवन)",
     samidhaEn: "Apamarga / Achyranthes",
     gemNe: "पन्ना",
@@ -137,6 +173,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Green gram", "Green cloth", "Emerald", "Ivory", "Jaggery"],
     adhidevataNe: "विष्णु",
     adhidevataEn: "Vishnu",
+    pratyadhidevataNe: "नारायण",
+    pratyadhidevataEn: "Narayana",
+    dishaNe: "उत्तर",
+    dishaEn: "North",
+    shubhSamayaNe: "प्रातःकाल",
+    shubhSamayaEn: "In the morning",
     remedyNe: "बुद्धि, वाणी, व्यापार र शिक्षा सुधारका लागि।",
     remedyEn: "To improve intellect, speech, business and education.",
   },
@@ -152,6 +194,8 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#e0a92e",
     beejMantra: "ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः",
     japa: 19000,
+    vedicMantra:
+      "ॐ बृहस्पते अति यदर्यो अर्हाद् द्युमद्विभाति क्रतुमज्जनेषु। यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम्॥",
     samidhaNe: "पीपल",
     samidhaEn: "Pippala / Ashwattha",
     gemNe: "पुखराज",
@@ -162,6 +206,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Chickpea lentils", "Turmeric", "Yellow cloth", "Gold", "Yellow sapphire", "Books"],
     adhidevataNe: "ब्रह्मा / इन्द्र",
     adhidevataEn: "Brahma / Indra",
+    pratyadhidevataNe: "इन्द्र",
+    pratyadhidevataEn: "Indra",
+    dishaNe: "ईशान",
+    dishaEn: "North-East",
+    shubhSamayaNe: "प्रातःकाल",
+    shubhSamayaEn: "In the morning",
     remedyNe: "ज्ञान, सन्तान, विवाह र धन-धर्मको शुभताका लागि।",
     remedyEn: "For knowledge, children, marriage and prosperity of wealth & dharma.",
   },
@@ -177,6 +227,8 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#d9c7e8",
     beejMantra: "ॐ द्रां द्रीं द्रौं सः शुक्राय नमः",
     japa: 16000,
+    vedicMantra:
+      "ॐ अन्नात्परिस्रुतो रसं ब्रह्मणा व्यपिबत् क्षत्रं पयः सोमं प्रजापतिः। ऋतेन सत्यमिन्द्रियं विपानं शुक्रमन्धस इन्द्रस्येन्द्रियमिदं पयोऽमृतं मधु॥",
     samidhaNe: "गूलर (डुम्री)",
     samidhaEn: "Audumbara / Cluster Fig",
     gemNe: "हीरा",
@@ -187,6 +239,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Rice", "White/silk cloth", "Silver", "Diamond", "Ghee", "Perfume"],
     adhidevataNe: "इन्द्राणी / लक्ष्मी",
     adhidevataEn: "Indrani / Lakshmi",
+    pratyadhidevataNe: "मरुत्वान् (लक्ष्मी)",
+    pratyadhidevataEn: "Marutvan (Lakshmi)",
+    dishaNe: "आग्नेय",
+    dishaEn: "South-East",
+    shubhSamayaNe: "सूर्योदयकाल",
+    shubhSamayaEn: "At sunrise",
     remedyNe: "प्रेम, वैवाहिक सुख, सौन्दर्य र भोग-ऐश्वर्यका लागि।",
     remedyEn: "For love, marital happiness, beauty and comforts & luxury.",
   },
@@ -202,6 +260,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#3a4a6b",
     beejMantra: "ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः",
     japa: 23000,
+    vedicMantra: "ॐ शं नो देवीरभिष्टय आपो भवन्तु पीतये। शं योरभि स्रवन्तु नः॥",
     samidhaNe: "शमी (सजिवन)",
     samidhaEn: "Shami / Prosopis",
     gemNe: "नीलम",
@@ -212,6 +271,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Black sesame", "Black cloth", "Iron", "Blue sapphire", "Mustard oil", "Black gram", "Shoes"],
     adhidevataNe: "यम / प्रजापति",
     adhidevataEn: "Yama / Prajapati",
+    pratyadhidevataNe: "प्रजापति (भैरव)",
+    pratyadhidevataEn: "Prajapati (Bhairava)",
+    dishaNe: "पश्चिम",
+    dishaEn: "West",
+    shubhSamayaNe: "सन्ध्याकाल (साँझ)",
+    shubhSamayaEn: "In the evening",
     remedyNe: "साढेसाती, ढैया, बाधा, रोग र कर्मफल शान्त गर्न।",
     remedyEn: "To ease Sade-Sati, Dhaiya, obstacles, illness and karmic results.",
   },
@@ -227,6 +292,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#6b6f7a",
     beejMantra: "ॐ भ्रां भ्रीं भ्रौं सः राहवे नमः",
     japa: 18000,
+    vedicMantra: "ॐ कया नश्चित्र आ भुवदूती सदावृधः सखा। कया शचिष्ठया वृता॥",
     samidhaNe: "दुबो",
     samidhaEn: "Durva grass",
     gemNe: "गोमेद",
@@ -237,6 +303,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Black sesame", "Blue/mixed cloth", "Hessonite", "Mustard", "Blanket", "Coconut"],
     adhidevataNe: "दुर्गा / सर्प",
     adhidevataEn: "Durga / Sarpa (Serpent)",
+    pratyadhidevataNe: "सर्प (सरस्वती)",
+    pratyadhidevataEn: "Sarpa (Saraswati)",
+    dishaNe: "नैऋत्य",
+    dishaEn: "South-West",
+    shubhSamayaNe: "रात्रि वा सन्ध्याकाल",
+    shubhSamayaEn: "At night or in the evening",
     remedyNe: "भ्रम, अकस्मात बाधा, मानसिक तनाव र राहु दोष शान्त गर्न।",
     remedyEn: "To ease confusion, sudden obstacles, mental stress and Rahu dosha.",
   },
@@ -252,6 +324,7 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     colorHex: "#8a7a5c",
     beejMantra: "ॐ स्रां स्रीं स्रौं सः केतवे नमः",
     japa: 17000,
+    vedicMantra: "ॐ केतुं कृण्वन्नकेतवे पेशो मर्या अपेशसे। समुषद्भिरजायथाः॥",
     samidhaNe: "कुश",
     samidhaEn: "Kusha grass",
     gemNe: "लहसुनिया",
@@ -262,6 +335,12 @@ export const NAVAGRAHA_SHANTI: GrahaShanti[] = [
     daanEn: ["Sesame", "Mixed cloth", "Cat's Eye", "Blanket", "Goat"],
     adhidevataNe: "चित्रगुप्त / गणेश",
     adhidevataEn: "Chitragupta / Ganesha",
+    pratyadhidevataNe: "ब्रह्मा (गणेश)",
+    pratyadhidevataEn: "Brahma (Ganesha)",
+    dishaNe: "ऊर्ध्व",
+    dishaEn: "Upward (central axis)",
+    shubhSamayaNe: "रात्रि वा सन्ध्याकाल",
+    shubhSamayaEn: "At night or in the evening",
     remedyNe: "मोक्ष-बाधा, रहस्यमय रोग र केतु दोष शान्त गर्न।",
     remedyEn: "To ease obstacles to moksha, mysterious illness and Ketu dosha.",
   },

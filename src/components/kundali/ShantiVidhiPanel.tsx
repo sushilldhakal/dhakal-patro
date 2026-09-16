@@ -8,6 +8,9 @@ import {
   TreePine,
   CalendarDays,
   ArrowDownToLine,
+  Compass,
+  UserRound,
+  Clock,
 } from "lucide-react";
 import {
   Table,
@@ -241,6 +244,9 @@ export function ShantiVidhiPanel({
             <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1">
               <CalendarDays className="h-3.5 w-3.5" /> {bilingualText(lang, graha.vaaraNe, graha.vaaraEn)}
             </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1">
+              <Clock className="h-3.5 w-3.5" /> {bilingualText(lang, graha.shubhSamayaNe, graha.shubhSamayaEn)}
+            </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1">
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: graha.colorHex }} />
               {bilingualText(lang, graha.colorNe, graha.colorEn)}
@@ -254,18 +260,24 @@ export function ShantiVidhiPanel({
             <div className="mb-1 text-sm text-base uppercase tracking-wide">{t("kundali.x.shanti_beeja_mantra_heading")}</div>
             <p className="text-lg font-semibold leading-relaxed text-foreground">{graha.beejMantra}</p>
             <p className="mt-1.5 text-sm">
-              {bilingualNode(lang, <>जप संख्या: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> पटक</>,
-                <>Japa count: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> times</>,
+              {bilingualNode(lang, <>जप संख्या: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> पटक ({t("kundali.x.shanti_kaliyuga_japa")}: <span className="font-semibold text-foreground">{digits(graha.japa * 4)}</span> पटक)</>,
+                <>Japa count: <span className="font-semibold text-foreground">{digits(graha.japa)}</span> times ({t("kundali.x.shanti_kaliyuga_japa")}: <span className="font-semibold text-foreground">{digits(graha.japa * 4)}</span> times)</>,
               )}
             </p>
+            <div className="mt-3 border-t border-border pt-3">
+              <div className="mb-1 text-sm text-base uppercase tracking-wide">{t("kundali.x.shanti_vedic_mantra_heading")}</div>
+              <p className="text-sm leading-relaxed text-foreground">{graha.vedicMantra}</p>
+            </div>
           </div>
 
           {/* tiles */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <InfoTile icon={<TreePine className="h-4 w-4" />} label={t("kundali.x.shanti_samidha_heading")} value={bilingualText(lang, graha.samidhaNe, graha.samidhaEn)} />
             <InfoTile icon={<Gem className="h-4 w-4" />} label={t("kundali.x.shanti_gem")} value={bilingualText(lang, graha.gemNe, graha.gemEn)} />
             <InfoTile icon={<Sparkles className="h-4 w-4" />} label={t("kundali.x.shanti_metal")} value={bilingualText(lang, graha.metalNe, graha.metalEn)} />
             <InfoTile icon={<Flame className="h-4 w-4" />} label={t("kundali.x.shanti_deity")} value={bilingualText(lang, graha.adhidevataNe, graha.adhidevataEn)} />
+            <InfoTile icon={<UserRound className="h-4 w-4" />} label={t("kundali.x.shanti_pratyadhidevata")} value={bilingualText(lang, graha.pratyadhidevataNe, graha.pratyadhidevataEn)} />
+            <InfoTile icon={<Compass className="h-4 w-4" />} label={t("kundali.x.shanti_disha")} value={bilingualText(lang, graha.dishaNe, graha.dishaEn)} />
           </div>
 
           {/* daan */}

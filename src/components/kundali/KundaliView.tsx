@@ -755,7 +755,7 @@ export function KundaliView({
       )}
 
       {showSection("kundali-shanti") && showShanti && (
-        <div id="kundali-shanti" className="scroll-mt-24">
+        <div id="kundali-shanti" className="scroll-mt-24 space-y-6">
         <PanchangaSection titleNe="शान्ति विधि" titleEn="Navagraha Shanti">
           <div className="p-4">
             <div className="mb-3 flex items-center gap-1.5 text-sm">
@@ -771,6 +771,7 @@ export function KundaliView({
             </Suspense>
           </div>
         </PanchangaSection>
+        <ShantiSources />
         </div>
       )}
 
@@ -807,6 +808,39 @@ function KundaliYogaSources() {
             <p className="text-muted-foreground">{t("kundali.sources.bphs.used")}</p>
           </div>
         </li>
+      </ol>
+    </section>
+  );
+}
+
+const SHANTI_SOURCE_IDS = [
+  "yajnavalkya",
+  "bphs",
+  "puranas",
+  "phaladeepika",
+  "muhurtachintamani",
+  "uttarakalamrita",
+  "lalkitab",
+] as const;
+
+function ShantiSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("kundali.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("kundali.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        {SHANTI_SOURCE_IDS.map((id, i) => (
+          <li key={id} className="flex gap-3 text-sm">
+            <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(i + 1)}.</span>
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-semibold text-foreground">{t(`kundali.sources.shanti.${id}.credit`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.shanti.${id}.edition`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.shanti.${id}.used`)}</p>
+            </div>
+          </li>
+        ))}
       </ol>
     </section>
   );
