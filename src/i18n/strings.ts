@@ -1008,6 +1008,7 @@ export const strings = {
   "kundali.sun_sign": { ne: "सूर्य राशि", en: "Sun sign" },
   "kundali.surya_nakshatra": { ne: "सूर्य नक्षत्र", en: "Surya Nakshatra" },
   "kundali.avakahada": { ne: "अवकहडा", en: "Avakahada" },
+  "kundali.avakahada_shloka": { ne: "अवकहडा श्लोक", en: "Avakahada Shloka" },
   "kundali.rashi_paya": { ne: "राशि पाय", en: "Rashi Paya" },
   "kundali.nakshatra_paya": { ne: "नक्षत्र पाय", en: "Nakshatra Paya" },
   "kundali.tattva": { ne: "तत्त्व", en: "Tattva" },

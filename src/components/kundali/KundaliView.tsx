@@ -41,6 +41,7 @@ import { ENGINE_KEY_TO_REF_ID } from "@/lib/kundali/yoga-reference-map";
 import { PanchangaSection } from "@/components/panchanga/PanchangaLayout";
 import { formatGhadiPalaVipala } from "@/lib/birth-panchanga-meta";
 import { formatRashiByNumber } from "@/lib/rashi-i18n";
+import { generateAvakahadaShloka } from "@/lib/avakahada-data";
 import { NAKSHATRA_ICONS } from "@/lib/nakshatra-icons";
 import { WHEEL_YOGAS } from "@/lib/tithi-wheel-data";
 import {
@@ -244,6 +245,22 @@ export function KundaliView({
 
   const pickBi = (v?: BilingualValue | null) => (v ? bilingualText(lang, v.ne, v.en) : "—");
   const janmaAvakahada = detail?.avakahada ?? null;
+
+  const avakahadaShloka = useMemo(() => {
+    if (!janmaAvakahada || !lagna?.nameNe || !moonRow) return undefined;
+    return generateAvakahadaShloka({
+      lagnaRashiNe: lagna.nameNe,
+      moonRashiNe: formatRashiByNumber(moonRow.vargaRashi, "ne"),
+      nakshatraNe: janmaAvakahada.nakshatra.ne,
+      aksharaNe: janmaAvakahada.akshara.ne,
+      ganaNe: janmaAvakahada.gana.ne,
+      nadiNe: janmaAvakahada.nadi.ne,
+      yoniNe: janmaAvakahada.yoni.ne,
+      varnaNe: janmaAvakahada.jati.ne,
+      vashyaNe: janmaAvakahada.vashya.ne,
+      payaNe: janmaAvakahada.nakshatraPaya.ne,
+    });
+  }, [janmaAvakahada, lagna, moonRow]);
 
   const birthMeta = detail?.birthMeta;
   const ishtaKalaLabel = birthMeta?.ishtaKala
@@ -560,6 +577,16 @@ export function KundaliView({
                 <DetailTraitRow label={t("kundali.yoni")} value={pickBi(janmaAvakahada.yoni)} />
                 <DetailTraitRow label={t("kundali.jati")} value={pickBi(janmaAvakahada.jati)} />
               </div>
+              {avakahadaShloka ? (
+                <div className="mt-3 rounded-lg border border-border bg-muted/30 p-3">
+                  <p className="mb-1 text-sm text-base uppercase tracking-wide">
+                    {t("kundali.avakahada_shloka")}
+                  </p>
+                  <p className="whitespace-pre-line text-sm italic leading-relaxed text-foreground">
+                    {avakahadaShloka}
+                  </p>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
