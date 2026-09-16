@@ -279,6 +279,19 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   const playingStateRef = useRef(false);
   const handsOffOffset = useRef(0);
   const wasHandsOff = useRef(false);
+  /**
+   * The reader pressed the orbit icon mid-narration.
+   *
+   * `s.handsOff` alone only goes true in the last second or two of a chapter
+   * — that is the original's own script, not something to change — so a
+   * reader who wants to nudge the animation themselves the rest of the time
+   * has no such moment to press into. This is that moment, made on demand:
+   * folded into the local `handsOff` the frame loop already branches on
+   * below, it hands the clock and camera to the reader exactly the way the
+   * scripted end-of-chapter hand-back does, just triggered by a click instead
+   * of a keyframe. Cleared when the chapter changes or narration resumes.
+   */
+  const userDriving = useRef(false);
   tourWelcomeRef.current = Boolean(tour?.showWelcome);
   tourFreeRef.current = freePlay;
   playingStateRef.current = playing;
@@ -290,7 +303,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
       const guidedDay = s.orbitalPosition * dpy;
       const now = performance.now();
       const welcome = tourWelcomeRef.current;
-      const handsOff = s.handsOff;
+      const handsOff = s.handsOff || userDriving.current;
 
       if (welcome || handsOff) {
         clock.current.playing = welcome ? true : playingStateRef.current;
@@ -342,6 +355,16 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
   }, [setTourFrame]);
 
   const tourState = tour?.state;
+  const tourPlaying = tour?.playing;
+  /* Narration resuming — the reader pressed the chapter's own play button —
+     is what gives the script the clock back after {@link userDriving} took
+     it. Without this the reader's orbit toggle stayed stuck on, silently
+     fighting the keyframes the moment narration started moving again. */
+  useEffect(() => {
+    if (!tourPlaying) return;
+    userDriving.current = false;
+    setPlaying(false);
+  }, [tourPlaying]);
   const tourChapterId = tour?.chapter.id;
   /* The chapter object itself, for the reset below. Held in a ref so the reset
      stays keyed on the *id* — it must run when the chapter changes and not on
@@ -353,6 +376,7 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
     earthMeddle.current = null;
     handsOffOffset.current = 0;
     wasHandsOff.current = false;
+    userDriving.current = false;
     controlOverride.current = {};
     const ch = tourChapterRef.current;
     if (!ch) return;
@@ -1064,18 +1088,25 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
         )}
 
         <div className="absolute right-3 top-3 flex gap-2">
-          {/* The reference lab's playground hardcodes `handsOff: true` for its
-             SimControls, so this button is always live there — it is *the*
-             auto-play control on that page, there being no transport bar at
-             all in free play. During a lesson it is rendered only once the
-             chapter has actually handed control back — a grayed-out button
-             sitting there through the whole narration (most of a chapter's
-             runtime; see {@link tourHandsOff}) read as broken, not as "wait
-             for this." Hiding it is what the transport bar does for the same
-             reason. */}
-          {freePlay || (lesson && tourHandsOff) ? (
+          {/* Live in every chapter, not only once the script hands off on its
+             own: a reader who pauses mid-narration and wants to nudge the
+             animation themselves needs this the whole time, not just in the
+             last second before the chapter ends. Pressing it during a lesson
+             pauses narration and hands the clock to {@link userDriving};
+             narration resuming (the reader presses its own play button)
+             hands it back. */}
+          {tour ? (
             <IconButton
-              onClick={() => setPlaying((v) => !v)}
+              onClick={() => {
+                setPlaying((v) => {
+                  const next = !v;
+                  if (lesson) {
+                    userDriving.current = next;
+                    if (next) tour?.pause();
+                  }
+                  return next;
+                });
+              }}
               label={playing ? t("learn.pause") : t("learn.play")}
               active={playing}
               pulse={highlightControl === "auto-orbit"}

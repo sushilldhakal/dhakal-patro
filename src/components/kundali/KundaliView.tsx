@@ -636,7 +636,7 @@ export function KundaliView({
       )}
 
       {showSection("kundali-dasha") && (dasha || tribhagiDasha || yoginiDasha) && (
-        <div id="kundali-dasha" className="scroll-mt-24">
+        <div id="kundali-dasha" className="scroll-mt-24 space-y-6">
         <PanchangaSection titleNe="दशा" titleEn="Dasha">
           <div className="p-4">
             <Suspense fallback={<SectionLoading />}>
@@ -651,6 +651,7 @@ export function KundaliView({
             </Suspense>
           </div>
         </PanchangaSection>
+        <DashaSources />
         </div>
       )}
 
@@ -708,48 +709,48 @@ export function KundaliView({
       )}
 
       {showSection("kundali-ashtakavarga") && (
-        <div
-          id="kundali-ashtakavarga"
-          className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
-        >
-          <Suspense fallback={<SectionLoading />}>
-            <KundaliSubTabs
-              items={BALA_TAB_SECTIONS}
-              activeId="kundali-ashtakavarga"
-              onSelect={goSection}
-              ariaLabel={t("kundali.nav_bala")}
-            />
-            {detail.ashtakavarga ? (
-              <AshtakavargaCard data={detail.ashtakavarga} />
-            ) : (
-              <p className="py-8 text-center text-sm">
-                {t("kundali.section_unavailable")}
-              </p>
-            )}
-          </Suspense>
+        <div id="kundali-ashtakavarga" className="scroll-mt-24 space-y-6">
+          <div className="rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
+            <Suspense fallback={<SectionLoading />}>
+              <KundaliSubTabs
+                items={BALA_TAB_SECTIONS}
+                activeId="kundali-ashtakavarga"
+                onSelect={goSection}
+                ariaLabel={t("kundali.nav_bala")}
+              />
+              {detail.ashtakavarga ? (
+                <AshtakavargaCard data={detail.ashtakavarga} />
+              ) : (
+                <p className="py-8 text-center text-sm">
+                  {t("kundali.section_unavailable")}
+                </p>
+              )}
+            </Suspense>
+          </div>
+          <AshtakavargaSources />
         </div>
       )}
 
       {showSection("kundali-vimshopaka") && (
-        <div
-          id="kundali-vimshopaka"
-          className="scroll-mt-24 rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5"
-        >
-          <Suspense fallback={<SectionLoading />}>
-            <KundaliSubTabs
-              items={BALA_TAB_SECTIONS}
-              activeId="kundali-vimshopaka"
-              onSelect={goSection}
-              ariaLabel={t("kundali.nav_bala")}
-            />
-            {detail.vimshopaka && detail.vimshopaka.classifications.length > 0 ? (
-              <VimshopakaCard data={detail.vimshopaka} />
-            ) : (
-              <p className="py-8 text-center text-sm">
-                {t("kundali.section_unavailable")}
-              </p>
-            )}
-          </Suspense>
+        <div id="kundali-vimshopaka" className="scroll-mt-24 space-y-6">
+          <div className="rounded-2xl overflow-hidden bg-card shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_10%,transparent)] p-4 sm:p-5">
+            <Suspense fallback={<SectionLoading />}>
+              <KundaliSubTabs
+                items={BALA_TAB_SECTIONS}
+                activeId="kundali-vimshopaka"
+                onSelect={goSection}
+                ariaLabel={t("kundali.nav_bala")}
+              />
+              {detail.vimshopaka && detail.vimshopaka.classifications.length > 0 ? (
+                <VimshopakaCard data={detail.vimshopaka} />
+              ) : (
+                <p className="py-8 text-center text-sm">
+                  {t("kundali.section_unavailable")}
+                </p>
+              )}
+            </Suspense>
+          </div>
+          <VimshopakaSources />
         </div>
       )}
 
@@ -811,7 +812,32 @@ function KundaliYogaSources() {
   );
 }
 
-const SHADBALA_SOURCE_IDS = ["bphs", "phaladeepika", "saravali"] as const;
+const DASHA_SOURCE_IDS = ["vimshottari", "tribhagi", "yogini"] as const;
+
+function DashaSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("kundali.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("kundali.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        {DASHA_SOURCE_IDS.map((id, i) => (
+          <li key={id} className="flex gap-3 text-sm">
+            <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(i + 1)}.</span>
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-semibold text-foreground">{t(`kundali.sources.dasha.${id}.credit`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.dasha.${id}.edition`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.dasha.${id}.used`)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+const SHADBALA_SOURCE_IDS = ["bphs", "saravali", "jatakparijat"] as const;
 
 function ShadbalaSources() {
   const { t } = useTranslation();
@@ -836,7 +862,13 @@ function ShadbalaSources() {
   );
 }
 
-const BHAVA_BALA_SOURCE_IDS = ["phaladeepika", "sripatipaddhati", "saravali", "brihatjataka", "horasara"] as const;
+const BHAVA_BALA_SOURCE_IDS = [
+  "phaladeepika",
+  "brihatjataka",
+  "horasara",
+  "sripatipaddhati",
+  "jatakparijat",
+] as const;
 
 function BhavaBalaSources() {
   const { t } = useTranslation();
@@ -853,6 +885,56 @@ function BhavaBalaSources() {
               <p className="font-semibold text-foreground">{t(`kundali.sources.bhavabala.${id}.credit`)}</p>
               <p className="text-muted-foreground">{t(`kundali.sources.bhavabala.${id}.edition`)}</p>
               <p className="text-muted-foreground">{t(`kundali.sources.bhavabala.${id}.used`)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+const ASHTAKAVARGA_SOURCE_IDS = ["bphs", "jatakparijat"] as const;
+
+function AshtakavargaSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("kundali.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("kundali.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        {ASHTAKAVARGA_SOURCE_IDS.map((id, i) => (
+          <li key={id} className="flex gap-3 text-sm">
+            <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(i + 1)}.</span>
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-semibold text-foreground">{t(`kundali.sources.ashtakavarga.${id}.credit`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.ashtakavarga.${id}.edition`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.ashtakavarga.${id}.used`)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+const VIMSHOPAKA_SOURCE_IDS = ["bphs", "jatakparijat"] as const;
+
+function VimshopakaSources() {
+  const { t } = useTranslation();
+  const { digits } = useLocale();
+  return (
+    <section className="rounded-xl border border-border bg-muted/40 p-3.5 sm:p-5">
+      <h2 className="text-sm font-semibold text-foreground">{t("kundali.sources.heading")}</h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("kundali.sources.blurb")}</p>
+      <ol className="mt-4 flex flex-col gap-4">
+        {VIMSHOPAKA_SOURCE_IDS.map((id, i) => (
+          <li key={id} className="flex gap-3 text-sm">
+            <span className="w-5 shrink-0 font-semibold text-muted-foreground">{digits(i + 1)}.</span>
+            <div className="min-w-0 flex flex-col gap-1">
+              <p className="font-semibold text-foreground">{t(`kundali.sources.vimshopaka.${id}.credit`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.vimshopaka.${id}.edition`)}</p>
+              <p className="text-muted-foreground">{t(`kundali.sources.vimshopaka.${id}.used`)}</p>
             </div>
           </li>
         ))}

@@ -1256,102 +1256,189 @@ export const strings = {
     en: "The rules and results of yogas formed in the birth chart.",
   },
 
+  "kundali.sources.dasha.vimshottari.credit": {
+    ne: "विंशोत्तरी दशा (बृहत्पाराशर होराशास्त्र) - महर्षि पराशर वि.सं. लगभग पूर्व १५००",
+    en: "Vimshottari Dasha (Brihat Parashara Hora Shastra) - Maharishi Parashara, traditionally dated about 1500 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.dasha.vimshottari.edition": {
+    ne: "सम्पादक र अनुवादक पंडित देवचन्द्र झा वि.सं. २०२८। चौखम्बा संस्कृत शृङ्खला, वाराणसी।",
+    en: "Editor & Translator Pandit Devchandra Jha BS 2028. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.dasha.vimshottari.used": {
+    ne: "कलि युगका लागि सर्वोत्कृष्ट मानिएको १२० वर्षको नक्षत्रीय चक्र। ९ ग्रहको दशा वर्षक्रम (सूर्य ६, चन्द्र १०, मङ्गल ७, राहु १८, गुरु १६, शनि १९, बुध १७, केतु ७, शुक्र २० वर्ष)। कृत्तिकादि २७ नक्षत्रलाई ९ ग्रहका स्वामीत्वमा विभाजन गरी जन्म नक्षत्रको भुक्त/भोग्य अंशबाट प्रारम्भिक दशा र त्यसपछि महादशा, अन्तर्दशा, प्रत्यन्तर्दशा, सूक्ष्म र प्राण दशाको अनुपातिक गणितीय साधन एवं केन्द्र-त्रिकोण (योगकारक), त्रिषडायेश र मारक सिद्धान्तका आधारमा फल कथन।",
+    en: "The 120-year nakshatra cycle held as best suited to Kali Yuga. The 9-planet dasha year sequence (Sun 6, Moon 10, Mars 7, Rahu 18, Jupiter 16, Saturn 19, Mercury 17, Ketu 7, Venus 20 years). Dividing the 27 nakshatras from Krittika onward among the 9 planetary lords, deriving the starting dasha from the birth nakshatra's elapsed/remaining portion, and the proportional computation of Mahadasha, Antardasha, Pratyantardasha, Sookshma and Prana dasha, with results read through Kendra-Trikona (Yogakaraka), Trishadayesha and Maraka principles.",
+  },
+  "kundali.sources.dasha.tribhagi.credit": {
+    ne: "त्रिभागि दशा (केशव पद्धति एवं ज्योतिष रत्नमाला) - आचार्य केशव दैवज्ञ वि.सं. १६५३",
+    en: "Tribhagi Dasha (Keshava Paddhati & Jyotish Ratnamala) - Acharya Keshava Daivajna, BS 1653",
+  },
+  "kundali.sources.dasha.tribhagi.edition": {
+    ne: "सम्पादक र अनुवादक पंडित रामयत्न ओझा वि.सं. १९८१। चौखम्बा संस्कृत पुस्तकालय, बनारस।",
+    en: "Editor & Translator Pandit Ramyatna Ojha BS 1981. Chaukhamba Sanskrit Pustakalaya, Banaras.",
+  },
+  "kundali.sources.dasha.tribhagi.used": {
+    ne: "विंशोत्तरी दशाकै नक्षत्रीय आधारमा आधारित भए तापनि १२० वर्षको कुल अवधिलाई ३ भाग (१/३) मा विभाजित गरी ४० वर्षको चक्र बनाइने विशिष्ट पद्धति। यसमा प्रत्येक ग्रहको महादशा अवधि विंशोत्तरीको ठीक एक-तिहाइ हुन्छ (सूर्य २ वर्ष, चन्द्र ३ वर्ष ४ महिना, मङ्गल २ वर्ष ४ महिना, राहु ६ वर्ष, गुरु ५ वर्ष ४ महिना, शनि ६ वर्ष ४ महिना, बुध ५ वर्ष ८ महिना, केतु २ वर्ष ४ महिना, शुक्र ६ वर्ष ८ महिना)। विशेष गरी बालारिष्ट, अल्पायु र जीवनका तीव्र/त्वरित घटनाहरूको सूक्ष्म भविष्यवाणीका लागि प्रयोग गरिने नियम।",
+    en: "Built on the same nakshatra basis as Vimshottari Dasha, but dividing the total 120-year span into 3 equal parts to form a 40-year cycle. Each planet's Mahadasha is exactly one-third of its Vimshottari duration (Sun 2y, Moon 3y4m, Mars 2y4m, Rahu 6y, Jupiter 5y4m, Saturn 6y4m, Mercury 5y8m, Ketu 2y4m, Venus 6y8m). Used specifically for finer prediction of Balarishta, short lifespan, and rapid/urgent life events.",
+  },
+  "kundali.sources.dasha.yogini.credit": {
+    ne: "योगिनी दशा (रुद्रयामल तन्त्र एवं बृहत्पाराशर होराशास्त्र) - महर्षि पराशर / तन्त्र शास्त्र वि.सं. लगभग पूर्व १५००",
+    en: "Yogini Dasha (Rudrayamala Tantra & Brihat Parashara Hora Shastra) - Maharishi Parashara / Tantra Shastra, traditionally dated about 1500 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.dasha.yogini.edition": {
+    ne: "सम्पादक र अनुवादक डा. सुरेशचन्द्र मिश्र वि.सं. २०६५। रञ्जन पब्लिकेशन्स, नयाँ दिल्ली।",
+    en: "Editor & Translator Dr. Sureshchandra Mishra BS 2065. Ranjan Publications, New Delhi.",
+  },
+  "kundali.sources.dasha.yogini.used": {
+    ne: "कुल ३६ वर्षको चक्रमा आधारित ८ योगिनीहरूको दशा पद्धति। क्रम अनुसार मङ्गला (१ वर्ष - स्वामी चन्द्र), पिङ्गला (२ वर्ष - स्वामी सूर्य), धान्या (३ वर्ष - स्वामी गुरु), भ्रामरी (४ वर्ष - स्वामी मङ्गल), भद्रिका (५ वर्ष - स्वामी बुध), उल्का (६ वर्ष - स्वामी शनि), सिद्धा (७ वर्ष - स्वामी शुक्र), र सङ्कटा (८ वर्ष - स्वामी राहु/केतु)। जन्म नक्षत्र सङ्ख्यामा ३ जोडी ८ ले भाग गर्दा बाँकी रहने शेषका आधारमा प्रारम्भिक दशा निर्धारण र ३६ वर्षको चक्रमा शुभ/अशुभ परिणामको प्रत्यक्ष एवं त्वरित मूल्याङ्कन गर्ने शास्त्रीय विधि।",
+    en: "The 8-Yogini dasha system based on a total 36-year cycle: Mangala (1y - lord Moon), Pingala (2y - lord Sun), Dhanya (3y - lord Jupiter), Bhramari (4y - lord Mars), Bhadrika (5y - lord Mercury), Ulka (6y - lord Saturn), Siddha (7y - lord Venus), and Sankata (8y - lord Rahu/Ketu). The classical method of finding the starting dasha from the remainder when the birth nakshatra number is divided by 8 (via 3 rounds), and reading direct, rapid results across the 36-year cycle.",
+  },
+
   "kundali.sources.shadbala.bphs.credit": {
-    ne: "बृहत्पाराशरहोराशास्त्रम् - महर्षि पराशर",
-    en: "Brihat Parashara Hora Shastra - Maharishi Parashara",
+    ne: "बृहत्पाराशर होराशास्त्र - महर्षि पराशर वि.सं. लगभग पूर्व १५००",
+    en: "Brihat Parashara Hora Shastra - Maharishi Parashara, traditionally dated about 1500 years before the Bikram Sambat epoch",
   },
   "kundali.sources.shadbala.bphs.edition": {
-    ne: "अनुवादक र सम्पादक पण्डित गणेशदत्त पाठक वि.सं. २०२९ (भूमिका); संशोधित परिवर्तित संस्करण वि.सं. २०५८। सावित्री ठाकुर प्रकाशन, रथयात्रा, वाराणसी।",
-    en: "Translator & Editor Pandit Ganesh Dutt Pathak BS 2029 (preface); revised edition BS 2058. Savitri Thakur Prakashan, Rathyatra, Varanasi.",
+    ne: "सम्पादक र अनुवादक पंडित देवचन्द्र झा वि.सं. २०२८। चौखम्बा संस्कृत शृङ्खला, वाराणसी।",
+    en: "Editor & Translator Pandit Devchandra Jha BS 2028. Chaukhamba Sanskrit Series, Varanasi.",
   },
   "kundali.sources.shadbala.bphs.used": {
-    ne: "षड्बलमा सप्तवर्गज बलको विरुपा तालिका, र अयन बलको सूत्र (अध्याय २७, बलचक्र)।",
-    en: "The Virupa scoring table for Saptavargaja Bala and the Ayana Bala formula in Shadbala (Chapter 27, Balachakra).",
-  },
-  "kundali.sources.shadbala.phaladeepika.credit": {
-    ne: "फलदीपिका - मन्त्रेश्वर वि.सं. लगभग १५६०",
-    en: "Phaladeepika - Mantreswara, about BS 1560",
-  },
-  "kundali.sources.shadbala.phaladeepika.edition": {
-    ne: "अनुवादक पण्डित गोपेश कुमार ओझा र आशुतोष ओझा वि.सं. २०६५। मोतीलाल बनारसीदास पब्लिशर्स, दिल्ली।",
-    en: "Translators Pandit Gopesh Kumar Ojha & Ashutosh Ojha BS 2065. Motilal Banarsidass Publishers, Delhi.",
-  },
-  "kundali.sources.shadbala.phaladeepika.used": {
-    ne: "सप्तवर्गज बलमा उच्च/मूलत्रिकोण (४५ विरुपा) देखि अतिशत्रु (१.८७५ विरुपा) सम्मको विरुपा तौल (अध्याय ४, श्लोक २–५)।",
-    en: "The Virupa weights for Saptavargaja Bala, from exaltation/Moolatrikona (45 Virupas) down to great-enemy (1.875 Virupas) (Chapter 4, verses 2-5).",
+    ne: "सप्तवर्गज बलमा उच्च र मूलत्रिकोणलाई समान ४५ षष्टिअंश (विरूपा) दिने नियम, र षड्बलका १३ उप-विभाग।",
+    en: "The rule giving exaltation and Moolatrikona an equal 45 Shashtiamsha (Virupas) in Saptavargaja Bala, and Shadbala's 13 sub-divisions.",
   },
   "kundali.sources.shadbala.saravali.credit": {
-    ne: "सारावली - कल्याणवर्मा वि.सं. लगभग ८५७",
-    en: "Saravali - Kalyana Varma, about BS 857",
+    ne: "सारावली - कल्याण वर्मा वि.सं. ८५७",
+    en: "Saravali - Kalyana Varma, BS 857",
   },
   "kundali.sources.shadbala.saravali.edition": {
-    ne: "अनुवादक, टिप्पणीकार र सम्पादक आर. सन्थानम् वि.सं. २०४०। रञ्जन पब्लिकेसन्स, नयाँ दिल्ली।",
-    en: "Translator, commentator & editor R. Santhanam BS 2040. Ranjan Publications, New Delhi.",
+    ne: "सम्पादक र 'कान्तिमती' टीकाकार डा. मुरलीधर चतुर्वेदी वि.सं. २०३०। मोतीलाल बनारसीदास, दिल्ली।",
+    en: "Editor & 'Kantimati' Commentator Dr. Muralidhar Chaturvedi BS 2030. Motilal Banarsidass, Delhi.",
   },
   "kundali.sources.shadbala.saravali.used": {
-    ne: "अयन बलमा उत्तरायण र दक्षिणायनमा कुन ग्रह बलवान् हुन्छन् भन्ने नियम (अध्याय ४, श्लोक ३७)।",
-    en: "The rule for which planets are strong in the northern and southern declinations for Ayana Bala (Chapter 4, verse 37).",
+    ne: "अयन बलमा ग्रहहरूको क्रान्ति (Declination) प्राथमिकता नियम—सूर्य, मङ्गल, गुरु र शुक्र उत्तर अयनमा; चन्द्र र शनि दक्षिण अयनमा; र बुध दुवै अयन (उत्तर र दक्षिण) मा बलियो हुने विशिष्ट सिद्धान्त।",
+    en: "The declination-preference rule for Ayana Bala — Sun, Mars, Jupiter and Venus strong in the northern declination; Moon and Saturn in the southern; and the special principle that Mercury is strong in both declinations.",
+  },
+  "kundali.sources.shadbala.jatakparijat.credit": {
+    ne: "जातक पारिजात - वैद्यनाथ दीक्षित वि.सं. १४८२",
+    en: "Jataka Parijata - Vaidyanatha Dikshita, BS 1482",
+  },
+  "kundali.sources.shadbala.jatakparijat.edition": {
+    ne: "सम्पादक र अनुवादक पंडित कपिलेश्वर शास्त्री वि.सं. २०२०। चौखम्बा संस्कृत सिरिज, वाराणसी।",
+    en: "Editor & Translator Pandit Kapileshwar Shastri BS 2020. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.shadbala.jatakparijat.used": {
+    ne: "षड्बलको एकीकृत गणितीय मूल्याङ्कन गरी ग्रहको वास्तविक फल दिने क्षमता निर्धारण।",
+    en: "The integrated mathematical evaluation of Shadbala that determines a planet's actual capacity to give results.",
   },
 
   "kundali.sources.bhavabala.phaladeepika.credit": {
-    ne: "फलदीपिका - मन्त्रेश्वर वि.सं. लगभग १५६०",
-    en: "Phaladeepika - Mantreswara, about BS 1560",
+    ne: "फलदीपिका - मन्त्रेश्वर वि.सं. १४५७",
+    en: "Phaladeepika - Mantreswara, BS 1457",
   },
   "kundali.sources.bhavabala.phaladeepika.edition": {
-    ne: "अनुवादक पण्डित गोपेश कुमार ओझा र आशुतोष ओझा वि.सं. २०६५। मोतीलाल बनारसीदास पब्लिशर्स, दिल्ली।",
-    en: "Translators Pandit Gopesh Kumar Ojha & Ashutosh Ojha BS 2065. Motilal Banarsidass Publishers, Delhi.",
+    ne: "सम्पादक र टीकाकार डा. सुरेशचन्द्र मिश्र वि.सं. २०६३। रञ्जन पब्लिकेशन्स, नयाँ दिल्ली।",
+    en: "Editor & Commentator Dr. Sureshchandra Mishra BS 2063. Ranjan Publications, New Delhi.",
   },
   "kundali.sources.bhavabala.phaladeepika.used": {
-    ne: "भावेश बल, भाव दृष्टि बल, र वृश्चिकको भाव दिग्बल (कीट राशि) सम्बन्धी नियम (अध्याय ४, श्लोक ६, ११–१३, २४)।",
-    en: "The rules for Bhavadhipati Bala, Bhava Drishti Bala, and Scorpio's Bhava Digbala as a Keeta sign (Chapter 4, verses 6, 11-13, 24).",
-  },
-  "kundali.sources.bhavabala.sripatipaddhati.credit": {
-    ne: "श्रीपति पद्धति - श्रीपति वि.सं. १०७६–११२३",
-    en: "Sripati Paddhati - Sripati, BS 1076-1123",
-  },
-  "kundali.sources.bhavabala.sripatipaddhati.edition": {
-    ne: "अनुवादक र सम्पादक भी. सुब्रह्मण्य शास्त्री वि.सं. १९९४। बंगलौर।",
-    en: "Translator & Editor V. Subrahmanya Sastri BS 1994. Bangalore.",
-  },
-  "kundali.sources.bhavabala.sripatipaddhati.used": {
-    ne: "भावेशको आधार बल, भावमध्य अंश (द्विपाद/चतुष्पाद विभाजनसहित), र भाव % (आवासीय बल) को सूत्र (अध्याय २, ४)।",
-    en: "The house lord's baseline strength, the Bhava Madhya degree with its biped/quadruped split, and the Bhava % (residential strength) formula (Chapters 2, 4).",
-  },
-  "kundali.sources.bhavabala.saravali.credit": {
-    ne: "सारावली - कल्याणवर्मा वि.सं. लगभग ८५७",
-    en: "Saravali - Kalyana Varma, about BS 857",
-  },
-  "kundali.sources.bhavabala.saravali.edition": {
-    ne: "अनुवादक, टिप्पणीकार र सम्पादक आर. सन्थानम् वि.सं. २०४०। रञ्जन पब्लिकेसन्स, नयाँ दिल्ली।",
-    en: "Translator, commentator & editor R. Santhanam BS 2040. Ranjan Publications, New Delhi.",
-  },
-  "kundali.sources.bhavabala.saravali.used": {
-    ne: "भाव दिग्बलका दिशा (लग्न=पूर्व आदि) र वृश्चिकलाई कीट राशि तोक्ने नियम (अध्याय ४, श्लोक ३५)।",
-    en: "The cardinal directions for Bhava Digbala (1st house = East, etc.) and the rule classifying Scorpio as a Keeta sign (Chapter 4, verse 35).",
+    ne: "भाव बलका तीन मुख्य घटक (भावेश बल + भाव दिग्बल + भाव दृष्टि बल), भावेश बलमा मूल षड्बलको प्रयोग, र शुभ ग्रह वा भावेशको दृष्टि र स्थितिमा अनुपातिक (Graduated) दृष्टि बल थपिने नियम।",
+    en: "The three main components of Bhava Bala (Bhavadhipati Bala + Bhava Digbala + Bhava Drishti Bala), the use of the raw Shadbala total in Bhavadhipati Bala, and the rule for adding graduated Drishti Bala when a benefic or the house lord aspects or occupies the house.",
   },
   "kundali.sources.bhavabala.brihatjataka.credit": {
-    ne: "बृहज्जातक - वराहमिहिर वि.सं. ५६२–६४४",
-    en: "Brihat Jataka - Varahamihira, BS 562-644",
+    ne: "बृहज्जातक - वराहमिहिर वि.सं. ५६२",
+    en: "Brihat Jataka - Varahamihira, BS 562",
   },
   "kundali.sources.bhavabala.brihatjataka.edition": {
-    ne: "अनुवादक बंगलौर सूर्यनारायण राव वि.सं. २०५५। मोतीलाल बनारसीदास, नयाँ दिल्ली।",
-    en: "Translator Bangalore Suryanarain Rao BS 2055. Motilal Banarsidass, New Delhi.",
+    ne: "अनुवादक र सम्पादक स्वामी विज्ञानानन्द वि.सं. १९६९। इलाहाबाद पणिनी कार्यालय (अङ्क १२)।",
+    en: "Translator & Editor Swami Vijnanananda BS 1969. Allahabad Panini Office (No. 12).",
   },
   "kundali.sources.bhavabala.brihatjataka.used": {
-    ne: "वृश्चिक राशिलाई कीट (कीरा) वर्गमा वर्गीकरण गर्ने प्रमाण (अध्याय १, श्लोक १७)।",
-    en: "The classification of Scorpio exclusively under the Keeta (insect) category (Chapter 1, verse 17).",
+    ne: "भाव दिग्बल गणनामा वृश्चिक राशिलाई जलचरमा नराखी केवल 'कीट' राशिमा वर्गीकरण गरी ७ औँ भाव (पश्चिम) मा ६० विरूपाको पूर्ण दिग्बल दिने नियम।",
+    en: "The rule that classifies Scorpio not as a water sign but solely as a 'Keeta' sign for Bhava Digbala, granting full 60-Virupa Digbala in the 7th house (West).",
   },
   "kundali.sources.bhavabala.horasara.credit": {
-    ne: "होरासार - पृथुयशस् वि.सं. लगभग ६५०",
-    en: "Hora Sara - Prithuyasas, about BS 650",
+    ne: "होरासार - पृथुयशाः वि.सं. ६५७",
+    en: "Hora Sara - Prithuyasas, BS 657",
   },
   "kundali.sources.bhavabala.horasara.edition": {
-    ne: "अनुवादक र सम्पादक आर. सन्थानम् वि.सं. २०३९। रञ्जन पब्लिकेसन्स, नयाँ दिल्ली।",
-    en: "Translator & Editor R. Santhanam BS 2039. Ranjan Publications, New Delhi.",
+    ne: "अनुवादक र सम्पादक आर. सन्थानम् वि.सं. २०४१। रञ्जन पब्लिकेशन्स, नयाँ दिल्ली।",
+    en: "Translator & Editor R. Santhanam BS 2041. Ranjan Publications, New Delhi.",
   },
   "kundali.sources.bhavabala.horasara.used": {
-    ne: "धनु र मकर राशिको पूर्वार्ध (द्विपाद) र उत्तरार्ध (चतुष्पाद) छुट्याई भावमध्य अंशको गणना (अध्याय २, श्लोक २०–२९)।",
-    en: "Splitting Sagittarius and Capricorn into their biped and quadruped halves when computing the Bhava Madhya degree (Chapter 2, verses 20-29).",
+    ne: "भाव दिग्बलका लागि धनु र मकर राशिलाई दुई भागमा (०°–१५° र १५°–३०°) विभाजन गरी प्रथम आधा भाग र दोस्रो आधा भागको आधारमा चतुष्पाद, नर वा जलचर वर्गीकरण गर्ने सिद्धान्त।",
+    en: "The principle of splitting Sagittarius and Capricorn into two halves (0°-15° and 15°-30°) for Bhava Digbala, classifying each half as quadruped, human, or aquatic.",
+  },
+  "kundali.sources.bhavabala.sripatipaddhati.credit": {
+    ne: "श्रीपति पद्धति - श्रीपति भट्ट वि.सं. १०८५",
+    en: "Sripati Paddhati - Sripati Bhatta, BS 1085",
+  },
+  "kundali.sources.bhavabala.sripatipaddhati.edition": {
+    ne: "अनुवादक र सम्पादक वी. सुब्रह्मण्य शास्त्री वि.सं. १९९४। श्री मारुती प्रेस, बङ्गलोर।",
+    en: "Translator & Editor V. Subrahmanya Sastri BS 1994. Sri Maruti Press, Bangalore.",
+  },
+  "kundali.sources.bhavabala.sripatipaddhati.used": {
+    ne: "भाव % (Residential Strength / आवासीय बल) गणना गर्न भाव मध्य (Bhava Madhya) मा १००% र भाव सन्धि (Bhava Sandhi) मा ०% मान्दै भाव चापको दुरी (Linear Arc Ratio) अनुसार फल सामर्थ्य निकाल्ने गणितीय सूत्र।",
+    en: "The mathematical formula for Bhava % (residential strength) — deriving result-capacity from the linear arc-distance ratio, treating the Bhava Madhya as 100% and the Bhava Sandhi as 0%.",
+  },
+  "kundali.sources.bhavabala.jatakparijat.credit": {
+    ne: "जातक पारिजात - वैद्यनाथ दीक्षित वि.सं. १४८२",
+    en: "Jataka Parijata - Vaidyanatha Dikshita, BS 1482",
+  },
+  "kundali.sources.bhavabala.jatakparijat.edition": {
+    ne: "सम्पादक र अनुवादक पंडित कपिलेश्वर शास्त्री वि.सं. २०२०। चौखम्बा संस्कृत सिरिज, वाराणसी।",
+    en: "Editor & Translator Pandit Kapileshwar Shastri BS 2020. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.bhavabala.jatakparijat.used": {
+    ne: "भाव बलको एकीकृत गणितीय मूल्याङ्कन गरी भावको वास्तविक फल दिने क्षमता निर्धारण।",
+    en: "The integrated mathematical evaluation of Bhava Bala that determines a house's actual capacity to give results.",
+  },
+
+  "kundali.sources.ashtakavarga.bphs.credit": {
+    ne: "बृहत्पाराशर होराशास्त्र - महर्षि पराशर वि.सं. लगभग पूर्व १५००",
+    en: "Brihat Parashara Hora Shastra - Maharishi Parashara, traditionally dated about 1500 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.ashtakavarga.bphs.edition": {
+    ne: "सम्पादक र अनुवादक पंडित देवचन्द्र झा वि.सं. २०२८। चौखम्बा संस्कृत शृङ्खला, वाराणसी।",
+    en: "Editor & Translator Pandit Devchandra Jha BS 2028. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.ashtakavarga.bphs.used": {
+    ne: "३३७ विन्दुसहितको अष्टकवर्ग (त्रिकोण र एकाधिपत्य शोधन, शोध्य पिण्ड)।",
+    en: "The 337-point Ashtakavarga (Trikona and Ekadhipatya Shodhana, the reduced Shodhya Pinda).",
+  },
+  "kundali.sources.ashtakavarga.jatakparijat.credit": {
+    ne: "जातक पारिजात - वैद्यनाथ दीक्षित वि.सं. १४८२",
+    en: "Jataka Parijata - Vaidyanatha Dikshita, BS 1482",
+  },
+  "kundali.sources.ashtakavarga.jatakparijat.edition": {
+    ne: "सम्पादक र अनुवादक पंडित कपिलेश्वर शास्त्री वि.सं. २०२०। चौखम्बा संस्कृत सिरिज, वाराणसी।",
+    en: "Editor & Translator Pandit Kapileshwar Shastri BS 2020. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.ashtakavarga.jatakparijat.used": {
+    ne: "अष्टकवर्गको एकीकृत गणितीय मूल्याङ्कन गरी कुण्डलीका १२ भावको वास्तविक फल दिने क्षमता निर्धारण।",
+    en: "The integrated mathematical evaluation of Ashtakavarga that determines the actual result-capacity of the chart's 12 houses.",
+  },
+
+  "kundali.sources.vimshopaka.bphs.credit": {
+    ne: "बृहत्पाराशर होराशास्त्र - महर्षि पराशर वि.सं. लगभग पूर्व १५००",
+    en: "Brihat Parashara Hora Shastra - Maharishi Parashara, traditionally dated about 1500 years before the Bikram Sambat epoch",
+  },
+  "kundali.sources.vimshopaka.bphs.edition": {
+    ne: "सम्पादक र अनुवादक पंडित देवचन्द्र झा वि.सं. २०२८। चौखम्बा संस्कृत शृङ्खला, वाराणसी।",
+    en: "Editor & Translator Pandit Devchandra Jha BS 2028. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.vimshopaka.bphs.used": {
+    ne: "२० विश्वामा आधारित विंशोपक बल (षड्वर्ग, सप्तवर्ग, दशवर्ग, षोडशवर्ग)।",
+    en: "Vimshopaka Bala based on the 20 Vimshas (Shadvarga, Saptavarga, Dashavarga, Shodashavarga).",
+  },
+  "kundali.sources.vimshopaka.jatakparijat.credit": {
+    ne: "जातक पारिजात - वैद्यनाथ दीक्षित वि.सं. १४८२",
+    en: "Jataka Parijata - Vaidyanatha Dikshita, BS 1482",
+  },
+  "kundali.sources.vimshopaka.jatakparijat.edition": {
+    ne: "सम्पादक र अनुवादक पंडित कपिलेश्वर शास्त्री वि.सं. २०२०। चौखम्बा संस्कृत सिरिज, वाराणसी।",
+    en: "Editor & Translator Pandit Kapileshwar Shastri BS 2020. Chaukhamba Sanskrit Series, Varanasi.",
+  },
+  "kundali.sources.vimshopaka.jatakparijat.used": {
+    ne: "विंशोपक बलको एकीकृत गणितीय मूल्याङ्कन गरी ग्रहको वास्तविक फल दिने क्षमता निर्धारण।",
+    en: "The integrated mathematical evaluation of Vimshopaka Bala that determines a planet's actual capacity to give results.",
   },
 
   /* ── milan ───────────────────────────────────────────────────────────── */
