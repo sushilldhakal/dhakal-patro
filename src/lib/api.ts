@@ -2461,10 +2461,20 @@ export interface VimshopakaData {
 export type GrahaShantiRemedy = "shanti" | "strengthen" | "pacify" | "pacify_transit" | "soothe";
 
 /**
+ * "critical" — an active dasha/transit, or a yoga landing on a luminary or
+ * the Lagnesha. "core" — a real but less time-pressured affliction (a
+ * secondary stellium yuti, a weak trikona lord). Not a fine-grained 1-10
+ * score: the engine has no defensible methodology to rank dozens of rule
+ * branches against each other at that resolution.
+ */
+export type GrahaShantiTier = "critical" | "core";
+
+/**
  * One trigger of the classical 4-step Graha Shanti decision process
- * (Dasha assessment / Lagnesha-Yogakaraka strength / Rahu-Ketu-Saturn
- * affliction / Saturn's Sade Sati-Dhaiya transit) — server-computed from
- * the same chart used for shadbala/yogas, not a client-side heuristic.
+ * (Dasha assessment / Lagnesha-Yogakaraka strength / Rahu-Ketu-Saturn-Mars-
+ * Jupiter affliction incl. Vish/Grahan/Angarak/Guru-Chandal Yoga / Saturn's
+ * Sade Sati-Dhaiya transit) — server-computed from the same chart used for
+ * shadbala/yogas, not a client-side heuristic.
  */
 export interface GrahaShantiFinding {
   step: 1 | 2 | 3 | 4;
@@ -2475,6 +2485,7 @@ export interface GrahaShantiFinding {
   remedy: GrahaShantiRemedy;
   reasonNe: string;
   reasonEn: string;
+  tier: GrahaShantiTier;
 }
 
 export interface GrahaShantiRecommendation {

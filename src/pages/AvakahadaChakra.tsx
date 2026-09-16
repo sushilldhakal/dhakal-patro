@@ -36,21 +36,17 @@ import {
   type Gana,
 } from "@/lib/avakahada-data";
 import {
-  localizeDeity,
+  formatRashiSwami,
+  formatSanjnaMukha,
+  formatVarnaVashya,
+  formatYoniPair,
   localizeGana,
   localizeJati,
   localizeLord,
-  localizeMukha,
   localizeNadi,
   localizeNakshatra,
   localizeRashi,
-  localizeRashis,
-  localizeSanjna,
   localizeVarga,
-  localizeVarna,
-  localizeVashya,
-  localizeYoni,
-  rowMetaFromCharans,
   sanjnaTitle,
 } from "@/lib/avakahada-locale";
 import { AvakahadaWheel } from "@/components/avakahada/AvakahadaWheel";
@@ -68,44 +64,33 @@ interface Row {
   aksharas: string[];
   charanRashis: string[];
   aksharaText: string;
-  rashiText: string;
-  deity: string;
+  swami: string;
   jati: string;
-  sanjna: string;
-  mukha: string;
-  lord: string;
-  varna: string;
-  vashya: string;
-  yoni: string;
-  vairiYoni: string;
+  sanjnaMukha: string;
+  rashiSwami: string;
+  varnaVashya: string;
+  yoniVairi: string;
   gana: Gana;
   nadi: string;
 }
 
 function buildRows(lang: string): Row[] {
-  return AVAKAHADA.map((r) => {
-    const meta = rowMetaFromCharans(r.charanRashis);
-    return {
-      index: r.index,
-      ne: r.ne,
-      en: r.en,
-      aksharas: r.aksharas,
-      charanRashis: r.charanRashis,
-      aksharaText: r.aksharas.join(" "),
-      rashiText: localizeRashis(r.rashis, lang),
-      deity: localizeDeity(r.deity, lang),
-      jati: localizeJati(r.jati, lang),
-      sanjna: localizeSanjna(r.sanjna, lang),
-      mukha: localizeMukha(r.mukha, lang),
-      lord: localizeLord(meta.lord, lang),
-      varna: localizeVarna(meta.varna, lang),
-      vashya: localizeVashya(meta.vashya, lang),
-      yoni: localizeYoni(r.yoni, lang),
-      vairiYoni: localizeYoni(r.vairiYoni, lang),
-      gana: r.gana,
-      nadi: localizeNadi(r.nadi, lang),
-    };
-  });
+  return AVAKAHADA.map((r) => ({
+    index: r.index,
+    ne: r.ne,
+    en: r.en,
+    aksharas: r.aksharas,
+    charanRashis: r.charanRashis,
+    aksharaText: r.aksharas.join(" "),
+    swami: localizeLord(r.swami, lang),
+    jati: localizeJati(r.jati, lang),
+    sanjnaMukha: formatSanjnaMukha(r.sanjna, r.mukha, lang),
+    rashiSwami: formatRashiSwami(r.charanRashis, lang),
+    varnaVashya: formatVarnaVashya(r.charanRashis, lang),
+    yoniVairi: formatYoniPair(r.yoni, r.vairiYoni, lang),
+    gana: r.gana,
+    nadi: localizeNadi(r.nadi, lang),
+  }));
 }
 
 const fuzzy: FilterFn<Row> = (row, _id, value: string) => {
@@ -115,17 +100,13 @@ const fuzzy: FilterFn<Row> = (row, _id, value: string) => {
   return [
     o.ne,
     o.en,
-    o.deity,
+    o.swami,
     o.jati,
-    o.sanjna,
-    o.mukha,
+    o.sanjnaMukha,
     o.aksharaText,
-    o.rashiText,
-    o.lord,
-    o.varna,
-    o.vashya,
-    o.yoni,
-    o.vairiYoni,
+    o.rashiSwami,
+    o.varnaVashya,
+    o.yoniVairi,
     o.gana,
     localizeGana(o.gana, "en"),
     o.nadi,
@@ -168,11 +149,11 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
         cell: ({ row }) => <NakshatraCell row={row.original} lang={lang} />,
       },
       {
-        id: "deity",
-        header: t("avakahada.col_deity"),
-        accessorKey: "deity",
+        id: "swami",
+        header: t("avakahada.col_swami"),
+        accessorKey: "swami",
         cell: ({ row }) => (
-          <span className="whitespace-nowrap">{row.original.deity}</span>
+          <span className="whitespace-nowrap">{row.original.swami}</span>
         ),
       },
       {
@@ -182,24 +163,18 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
         cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
       },
       {
-        id: "sanjna",
-        header: t("avakahada.col_sanjna"),
-        accessorKey: "sanjna",
+        id: "sanjnaMukha",
+        header: t("avakahada.col_sanjna_mukha"),
+        accessorKey: "sanjnaMukha",
         cell: ({ row }) => {
           const raw = AVAKAHADA[row.original.index - 1]?.sanjna;
           const hint = raw ? sanjnaTitle(raw, lang) : undefined;
           return (
-            <span className="whitespace-nowrap font-mono text-sm" title={hint}>
-              {row.original.sanjna}
+            <span className="whitespace-nowrap text-sm" title={hint}>
+              {row.original.sanjnaMukha}
             </span>
           );
         },
-      },
-      {
-        id: "mukha",
-        header: t("avakahada.col_mukha"),
-        accessorKey: "mukha",
-        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
       },
       {
         id: "akshara",
@@ -224,39 +199,21 @@ function useColumns(lang: string, t: (key: string, opts?: Record<string, string>
         ),
       },
       {
-        id: "rashi",
-        header: t("avakahada.col_rashi"),
-        accessorKey: "rashiText",
+        id: "rashiSwami",
+        header: t("avakahada.col_rashi_swami"),
+        accessorKey: "rashiSwami",
         cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
       },
       {
-        id: "lord",
-        header: t("avakahada.col_rashi_lord"),
-        accessorKey: "lord",
+        id: "varnaVashya",
+        header: t("avakahada.col_varna_vashya"),
+        accessorKey: "varnaVashya",
         cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
       },
       {
-        id: "varna",
-        header: t("avakahada.col_varna"),
-        accessorKey: "varna",
-        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
-      },
-      {
-        id: "vashya",
-        header: t("avakahada.col_vashya"),
-        accessorKey: "vashya",
-        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
-      },
-      {
-        id: "yoni",
-        header: t("avakahada.col_yoni"),
-        accessorKey: "yoni",
-        cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
-      },
-      {
-        id: "vairi",
-        header: t("avakahada.col_vairi_yoni"),
-        accessorKey: "vairiYoni",
+        id: "yoniVairi",
+        header: t("avakahada.col_yoni_vairi"),
+        accessorKey: "yoniVairi",
         cell: (c) => <span className="whitespace-nowrap">{c.getValue<string>()}</span>,
       },
       {

@@ -11,6 +11,10 @@ import {
   Compass,
   UserRound,
   Clock,
+  ChevronDown,
+  ChevronUp,
+  BookOpenText,
+  Flower2,
 } from "lucide-react";
 import {
   Table,
@@ -105,6 +109,50 @@ function ShantiFindingCard({
 }
 
 /**
+ * One tier ("critical" or "core") of findings, collapsible so a chart with
+ * many simultaneous afflictions (a real stellium can produce 8-12 findings)
+ * doesn't dump every card on the user at once.
+ */
+function ShantiFindingsGroup({
+  title,
+  findings,
+  onSelect,
+  defaultOpen,
+}: {
+  title: string;
+  findings: GrahaShantiFinding[];
+  onSelect: (key: string) => void;
+  defaultOpen: boolean;
+}) {
+  const { digits } = useLocale();
+  const [open, setOpen] = useState(defaultOpen);
+  if (findings.length === 0) return null;
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-card/30 px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+      >
+        <span>{title} ({digits(findings.length)})</span>
+        {open ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
+      </button>
+      {open && (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {findings.map((finding, idx) => (
+            <ShantiFindingCard
+              key={`${finding.step}-${finding.graha}-${finding.remedy}-${idx}`}
+              finding={finding}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Navagraha Shanti recommendations + reference. `grahaShanti` is the
  * server-computed classical 4-step decision (dasha assessment, Lagnesha/
  * Yogakaraka strength, Rahu-Ketu-Saturn affliction, Saturn's Sade Sati/
@@ -124,7 +172,9 @@ export function ShantiVidhiPanel({
   const [selectedKey, setSelectedKey] = useState("saturn");
   const detailRef = useRef<HTMLDivElement>(null);
   const graha = useMemo(() => getGrahaShanti(selectedKey) ?? NAVAGRAHA_SHANTI[0], [selectedKey]);
-  const findings = grahaShanti?.findings ?? [];
+  const findings = useMemo(() => grahaShanti?.findings ?? [], [grahaShanti]);
+  const criticalFindings = useMemo(() => findings.filter((f) => f.tier === "critical"), [findings]);
+  const coreFindings = useMemo(() => findings.filter((f) => f.tier === "core"), [findings]);
 
   const selectAndScroll = (key: string) => {
     setSelectedKey(key);
@@ -139,14 +189,19 @@ export function ShantiVidhiPanel({
           {t("kundali.x.shanti_load_error")}
         </div>
       ) : findings.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {findings.map((finding, idx) => (
-            <ShantiFindingCard
-              key={`${finding.step}-${finding.graha}-${idx}`}
-              finding={finding}
-              onSelect={selectAndScroll}
-            />
-          ))}
+        <div className="space-y-3">
+          <ShantiFindingsGroup
+            title={t("kundali.x.shanti_tier_critical")}
+            findings={criticalFindings}
+            onSelect={selectAndScroll}
+            defaultOpen
+          />
+          <ShantiFindingsGroup
+            title={t("kundali.x.shanti_tier_core")}
+            findings={coreFindings}
+            onSelect={selectAndScroll}
+            defaultOpen={criticalFindings.length === 0}
+          />
         </div>
       ) : (
         <div className="rounded-lg border border-border bg-card/30 p-3 text-sm">
@@ -224,6 +279,33 @@ export function ShantiVidhiPanel({
               <div className="mb-1 text-sm text-base uppercase tracking-wide">{t("kundali.x.shanti_vedic_mantra_heading")}</div>
               <p className="text-sm leading-relaxed text-foreground">{graha.vedicMantra}</p>
             </div>
+            <div className="mt-3 border-t border-border pt-3">
+              <div className="mb-1 text-sm text-base uppercase tracking-wide">{t("kundali.x.shanti_tantrik_mantra_heading")}</div>
+              <p className="text-lg font-semibold leading-relaxed text-foreground">{graha.tantrikMantra}</p>
+            </div>
+          </div>
+
+          {/* stotram + yantra */}
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div className="rounded-xl border border-border bg-card/30 p-4">
+              <div className="mb-1 flex items-center gap-1.5 text-sm text-base uppercase tracking-wide">
+                <BookOpenText className="h-4 w-4 text-secondary" /> {t("kundali.x.shanti_stotram_heading")}
+              </div>
+              <p className="text-base italic leading-relaxed text-foreground">{graha.stotram}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card/30 p-4">
+              <div className="mb-2 text-center text-sm text-base uppercase tracking-wide">{t("kundali.x.shanti_yantra_heading")}</div>
+              <div className="mx-auto grid w-32 grid-cols-3 gap-1">
+                {graha.yantraGrid.map((n, i) => (
+                  <div
+                    key={i}
+                    className="flex aspect-square items-center justify-center rounded border border-border bg-background text-sm font-semibold text-foreground"
+                  >
+                    {digits(n)}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* tiles */}
@@ -234,7 +316,14 @@ export function ShantiVidhiPanel({
             <InfoTile icon={<Flame className="h-4 w-4" />} label={t("kundali.x.shanti_deity")} value={bilingualText(lang, graha.adhidevataNe, graha.adhidevataEn)} />
             <InfoTile icon={<UserRound className="h-4 w-4" />} label={t("kundali.x.shanti_pratyadhidevata")} value={bilingualText(lang, graha.pratyadhidevataNe, graha.pratyadhidevataEn)} />
             <InfoTile icon={<Compass className="h-4 w-4" />} label={t("kundali.x.shanti_disha")} value={bilingualText(lang, graha.dishaNe, graha.dishaEn)} />
+            <InfoTile icon={<Flower2 className="h-4 w-4" />} label={t("kundali.x.shanti_pooja")} value={bilingualText(lang, graha.poojaNe, graha.poojaEn)} />
           </div>
+
+          {/* gem-wearing method */}
+          <p className="rounded-lg border border-border bg-card/30 p-3 text-sm leading-relaxed">
+            <span className="font-semibold text-foreground">{t("kundali.x.shanti_gem_detail_label")}</span>{" "}
+            {bilingualText(lang, graha.gemDetailNe, graha.gemDetailEn)}
+          </p>
 
           {/* daan */}
           <div>

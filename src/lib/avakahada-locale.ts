@@ -16,6 +16,8 @@ const LORD_NE_TO_EN: Record<string, string> = {
   सूर्य: "Sun",
   गुरु: "Jupiter",
   शनि: "Saturn",
+  केतु: "Ketu",
+  राहु: "Rahu",
 };
 
 const VARNA_NE_TO_EN: Record<string, string> = {
@@ -46,6 +48,7 @@ const YONI_NE_TO_EN: Record<string, string> = {
   घोडा: "Horse",
   महिष: "Buffalo",
   भैंस: "Buffalo",
+  राँगो: "Buffalo",
   रांगो: "Buffalo",
   गज: "Elephant",
   हात्ती: "Elephant",
@@ -74,7 +77,7 @@ const YONI_NE_TO_EN: Record<string, string> = {
 /** Patro-style Nepali labels (not Sanskrit) for the योनि / वैरि-योनि columns. */
 const YONI_DISPLAY_NE: Record<string, string> = {
   अश्व: "घोडा",
-  महिष: "रांगो",
+  महिष: "राँगो",
   गज: "हात्ती",
   सिंह: "सिंह",
   अज: "बोका",
@@ -96,7 +99,7 @@ const GANA_NE_TO_EN: Record<Gana, string> = {
 };
 
 const NADI_NE_TO_EN: Record<Nadi, string> = {
-  आध्य: "Adya",
+  आद्य: "Adya",
   मध्य: "Madhya",
   अन्त्य: "Antya",
 };
@@ -150,12 +153,12 @@ function mapJoined(value: string, map: Record<string, string>): string {
 }
 
 export function localizeRashi(ne: string, lang?: string): string {
-  if (!isEnglishLocale(lang)) return ne;
-  return resolveRashiDisplay(ne, undefined, "en") ?? ne;
+  const display = RASHI_META[ne]?.ne ?? ne;
+  if (!isEnglishLocale(lang)) return display;
+  return resolveRashiDisplay(display, undefined, "en") ?? resolveRashiDisplay(ne, undefined, "en") ?? ne;
 }
 
 export function localizeRashis(rashis: string[], lang?: string): string {
-  if (!isEnglishLocale(lang)) return rashis.join(" / ");
   return rashis.map((r) => localizeRashi(r, lang)).join(" / ");
 }
 
@@ -217,14 +220,17 @@ export function localizeVarga(varga: string, lang?: string): string {
 }
 
 const DEITY_NE_TO_EN: Record<string, string> = {
+  अश्विनीकुमार: "Ashvini Kumaras",
   "अश्विनी कुमार": "Ashvini Kumaras",
   "अ.क.": "Ashvini Kumaras",
   यम: "Yama",
   अग्नि: "Agni",
+  ब्रह्मा: "Brahma",
   ब्रम्हा: "Brahma",
   चन्द्र: "Chandra",
   शिव: "Shiva",
   अदिति: "Aditi",
+  बृहस्पति: "Brihaspati",
   वृहस्पति: "Brihaspati",
   सर्प: "Serpent",
   पितर: "Pitrs",
@@ -236,61 +242,81 @@ const DEITY_NE_TO_EN: Record<string, string> = {
   इन्द्राग्नि: "Indra-Agni",
   मित्र: "Mitra",
   इन्द्र: "Indra",
+  निर्ऋति: "Nirriti",
   राक्षस: "Rakshasa",
   जल: "Jala",
   विश्वदेव: "Vishvedevas",
   विष्णु: "Vishnu",
   वसु: "Vasu",
   वरुण: "Varuna",
+  अजेकपाद: "Ajaikapada",
   अजेकपा: "Ajaikapada",
+  अहिर्बुध्न्य: "Ahirbudhnya",
   अहिध्य: "Ahirbudhnya",
   पूषा: "Pusha",
 };
 
 const JATI_NE_TO_EN: Record<string, string> = {
   वैश्य: "Vaishya",
+  म्लेच्छ: "Mleccha",
   चाण्डाल: "Chandala",
+  ब्राह्मण: "Brahmin",
   ब्राम्हण: "Brahmin",
   शूद्र: "Shudra",
   कृषक: "Krishaka (farmer)",
+  कूरजाति: "Kurajati",
   करजाति: "Karajati",
   क्षत्रिय: "Kshatriya",
-  कूरजाति: "Kurajati",
 };
 
 const SANJNA_NE_TO_EN: Record<string, string> = {
-  "ल.": "Laghu",
-  "क्षि.": "Kshipra",
-  "उ.कू.": "Ugra",
-  "उ.क.": "Ugra",
-  "मि.सा.": "Mishra",
-  "धु.स्थि.": "Dhruva-Sthira",
-  "ध्रु.स्थि.": "Dhruva-Sthira",
-  "धू.स्थि.": "Dhruva-Sthira",
-  "म.मै.": "Mridu",
-  "मु.मै.": "Mridu",
-  "ती.दा.": "Tikshna",
-  "च.च.": "Chara",
-  "ल.क्षि.": "Laghu-Kshipra",
+  लघु: "Laghu / Kshipra",
+  उग्र: "Ugra / Krura",
+  मिश्र: "Mishra / Sadharana",
+  ध्रुव: "Dhruva / Sthira",
+  मृदु: "Mridu / Maitri",
+  तीक्ष्ण: "Tikshna / Daruna",
+  चर: "Chara / Chala",
+  "ल.": "Laghu / Kshipra",
+  "उ.": "Ugra / Krura",
+  "मि.": "Mishra / Sadharana",
+  "ध्रु.": "Dhruva / Sthira",
+  "मृ.": "Mridu / Maitri",
+  "ती.": "Tikshna / Daruna",
+  "च.": "Chara / Chala",
+  "क्षि.": "Laghu / Kshipra",
+  "उ.कू.": "Ugra / Krura",
+  "उ.क.": "Ugra / Krura",
+  "मि.सा.": "Mishra / Sadharana",
+  "धु.स्थि.": "Dhruva / Sthira",
+  "ध्रु.स्थि.": "Dhruva / Sthira",
+  "धू.स्थि.": "Dhruva / Sthira",
+  "म.मै.": "Mridu / Maitri",
+  "मु.मै.": "Mridu / Maitri",
+  "ती.दा.": "Tikshna / Daruna",
+  "च.च.": "Chara / Chala",
+  "ल.क्षि.": "Laghu / Kshipra",
 };
 
 const SANJNA_FULL_NE: Record<string, string> = {
-  "ल.": "लघु",
-  "क्षि.": "क्षिप्र",
-  "उ.कू.": "उग्र",
-  "उ.क.": "उग्र",
-  "मि.सा.": "मिश्र",
-  "धु.स्थि.": "ध्रुव/स्थिर",
-  "ध्रु.स्थि.": "ध्रुव/स्थिर",
-  "धू.स्थि.": "ध्रुव/स्थिर",
-  "म.मै.": "मृदु",
-  "मु.मै.": "मृदु",
-  "ती.दा.": "तीक्ष्ण",
-  "च.च.": "चर",
-  "ल.क्षि.": "लघु-क्षिप्र",
+  लघु: "लघु / क्षिप्र",
+  उग्र: "उग्र / क्रूर",
+  मिश्र: "मिश्र / साधारण",
+  ध्रुव: "ध्रुव / स्थिर",
+  मृदु: "मृदु / मैत्री",
+  तीक्ष्ण: "तीक्ष्ण / दारुण",
+  चर: "चर / चल",
+  "ल.": "लघु / क्षिप्र",
+  "उ.": "उग्र / क्रूर",
+  "मि.": "मिश्र / साधारण",
+  "ध्रु.": "ध्रुव / स्थिर",
+  "मृ.": "मृदु / मैत्री",
+  "ती.": "तीक्ष्ण / दारुण",
+  "च.": "चर / चल",
 };
 
 const MUKHA_NE_TO_EN: Record<string, string> = {
+  तिर्यङ्: "Horizontal",
   तिर्यङ: "Horizontal",
   अधो: "Downward",
   ऊर्ध्व: "Upward",
@@ -329,4 +355,47 @@ export function rowMetaFromCharans(charanRashis: string[]) {
     varna: uniq(metas.map((m) => m.varna)).join(" / "),
     vashya: uniq(metas.map((m) => m.vashya)).join(" / "),
   };
+}
+
+function uniquePreserve(xs: string[]): string[] {
+  return [...new Set(xs)];
+}
+
+/** राशि / स्वामी — e.g. मेष (मंगल) or मेष / वृष (मंगल / शुक्र). */
+export function formatRashiSwami(charanRashis: string[], lang?: string): string {
+  const rashis = uniquePreserve(charanRashis.map((x) => RASHI_META[x]?.ne ?? x));
+  const lords = uniquePreserve(charanRashis.map((x) => RASHI_META[x]!.lord));
+  return `${rashis.map((r) => localizeRashi(r, lang)).join(" / ")} (${lords.map((l) => localizeLord(l, lang)).join(" / ")})`;
+}
+
+/** राशि वर्ण/वश्य — single: क्षत्रिय / चतुष्पद; split: क्षत्रिय / वैश्य (चतुष्पद). */
+export function formatVarnaVashya(charanRashis: string[], lang?: string): string {
+  const rashis = uniquePreserve(charanRashis);
+  const varnas = uniquePreserve(rashis.map((x) => RASHI_META[x]!.varna));
+  const vashyas = uniquePreserve(rashis.map((x) => RASHI_META[x]!.vashya));
+  const varnaText = varnas.map((v) => localizeVarna(v, lang)).join(" / ");
+  const vashyaText = vashyas.map((v) => localizeVashya(v, lang)).join(" / ");
+  if (rashis.length === 1) return `${varnaText} / ${vashyaText}`;
+  return `${varnaText} (${vashyaText})`;
+}
+
+const SANJNA_SHORT_EN: Record<string, string> = {
+  लघु: "Laghu",
+  उग्र: "Ugra",
+  मिश्र: "Mishra",
+  ध्रुव: "Dhruva",
+  मृदु: "Mridu",
+  तीक्ष्ण: "Tikshna",
+  चर: "Chara",
+};
+
+/** संज्ञा/मुख — e.g. लघु / तिर्यङ्. */
+export function formatSanjnaMukha(sanjna: string, mukha: string, lang?: string): string {
+  const s = isEnglishLocale(lang) ? (SANJNA_SHORT_EN[sanjna] ?? localizeSanjna(sanjna, lang)) : sanjna;
+  return `${s} / ${localizeMukha(mukha, lang)}`;
+}
+
+/** योनि / वैरी योनि — e.g. घोडा / राँगो. */
+export function formatYoniPair(yoni: string, vairiYoni: string, lang?: string): string {
+  return `${localizeYoni(yoni, lang)} / ${localizeYoni(vairiYoni, lang)}`;
 }
