@@ -34,6 +34,13 @@ export interface Shloka {
   /** null until the matching file is uploaded to R2. */
   audio_url?: string | null;
   audio_duration_seconds?: number | null;
+  /**
+   * Where this verse sits inside the document's `full_audio_url`, seconds —
+   * measured by cross-correlating this verse's own clip against the full
+   * recording's waveform. null until that's been run for this document.
+   */
+  full_audio_start?: number | null;
+  full_audio_end?: number | null;
 }
 
 export interface DocumentChapter {

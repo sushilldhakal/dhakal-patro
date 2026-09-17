@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
-import {
-  FullRecordingPlayer,
-  type FullRecordingPlayerHandle,
-} from "@/components/documents/FullRecordingPlayer";
+import { PlaybackBar } from "@/components/documents/PlaybackBar";
 import { ShlokaCard } from "@/components/documents/ShlokaCard";
-import { ShlokaPlayerBar } from "@/components/documents/ShlokaPlayerBar";
+import { useFullRecordingAudio } from "@/hooks/use-full-recording-audio";
 import { useShlokaPlayer } from "@/hooks/use-shloka-player";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { ApiError } from "@/lib/api";
@@ -34,18 +31,67 @@ export function DocumentDetail() {
   const doc = docQ.data;
   const shlokas = useMemo(() => (doc ? flattenShlokas(doc) : []), [doc]);
   const player = useShlokaPlayer(shlokas);
+  const fullAudio = useFullRecordingAudio(doc?.full_audio_url);
+
+  // Which player currently owns the floating bar / actual sound — null until
+  // the listener has engaged either one this visit.
+  const [mode, setMode] = useState<"full" | "verse" | null>(null);
+
+  const startFull = useCallback(() => {
+    setMode("full");
+    fullAudio.play();
+  }, [fullAudio]);
+
+  // A click on any individual verse always hands control to the per-verse
+  // engine and stops the full recording outright — `player.playing` alone
+  // isn't a reliable signal here (see the comment on `versePlayer` below),
+  // so both sides pause/switch explicitly on every call rather than reacting
+  // to a state transition that might not actually change value.
+  const versePlayer = useMemo(
+    () => ({
+      ...player,
+      play: (id: number) => {
+        setMode("verse");
+        fullAudio.pause();
+        player.play(id);
+      },
+      toggle: (id: number) => {
+        setMode("verse");
+        fullAudio.pause();
+        player.toggle(id);
+      },
+    }),
+    [player, fullAudio],
+  );
+
   const activeShloka = shlokas.find((s) => s.id === player.activeId) ?? null;
 
-  // The full-recording player and the per-verse player are two independent
-  // <audio>/engine instances — starting one must pause the other so they
-  // never sound at once. The per-verse side is covered here (whenever it
-  // starts playing, stop the full recording, via the imperative handle);
-  // FullRecordingPlayer's own `onPlay` covers the reverse direction.
-  const fullRecordingRef = useRef<FullRecordingPlayerHandle>(null);
+  const switchToFull = useCallback(() => {
+    if (activeShloka?.full_audio_start == null) return;
+    player.pause();
+    setMode("full");
+    fullAudio.playFrom(activeShloka.full_audio_start);
+  }, [activeShloka, player, fullAudio]);
+
+  // While the full recording plays, estimate which verse is currently
+  // sounding from each verse's *real* measured start/end within it (from
+  // cross-correlating its own clip against the full recording — see
+  // data/documents_source/README.md) and drive the same highlight/auto-scroll
+  // the per-verse player uses.
   useEffect(() => {
-    if (player.playing) fullRecordingRef.current?.pause();
-  }, [player.playing]);
-  const pauseVersePlayer = useCallback(() => player.pause(), [player]);
+    if (mode !== "full" || !fullAudio.playing) return;
+    let active: { id: number; progress: number } | null = null;
+    for (const s of shlokas) {
+      if (s.full_audio_start == null || s.full_audio_end == null) continue;
+      if (s.full_audio_start > fullAudio.currentTime) break;
+      const dur = s.full_audio_end - s.full_audio_start;
+      active = {
+        id: s.id,
+        progress: dur > 0 ? Math.min(1, Math.max(0, (fullAudio.currentTime - s.full_audio_start) / dur)) : 0,
+      };
+    }
+    if (active) player.setDisplayOverride(active);
+  }, [mode, fullAudio.playing, fullAudio.currentTime, shlokas, player]);
 
   const backLink = (
     <Link
@@ -92,12 +138,6 @@ export function DocumentDetail() {
             {t("documents.source")}: {source}
           </p>
         ) : null}
-        <FullRecordingPlayer
-          ref={fullRecordingRef}
-          audioUrl={doc.full_audio_url}
-          onPlay={pauseVersePlayer}
-          className="mt-3"
-        />
       </header>
 
       <div className="space-y-6">
@@ -113,7 +153,7 @@ export function DocumentDetail() {
               ) : null}
               <div className="space-y-3">
                 {chapter.shlokas.map((shloka) => (
-                  <ShlokaCard key={shloka.id} shloka={shloka} player={player} />
+                  <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
                 ))}
               </div>
             </div>
@@ -121,7 +161,28 @@ export function DocumentDetail() {
         })}
       </div>
 
-      <ShlokaPlayerBar player={player} activeShloka={activeShloka} documentTitle={title} />
+      {fullAudio.audioElement}
+      <PlaybackBar
+        mode={mode}
+        hasFullRecording={Boolean(doc.full_audio_url)}
+        documentTitle={title}
+        onStartFull={startFull}
+        fullPlaying={fullAudio.playing}
+        fullCurrentTime={fullAudio.currentTime}
+        fullDuration={fullAudio.duration}
+        onToggleFull={fullAudio.toggle}
+        onSeekFull={fullAudio.seek}
+        activeShloka={activeShloka}
+        versePlaying={mode === "verse" && player.playing}
+        verseCurrentTime={player.currentTime}
+        verseDuration={player.duration}
+        hasNext={player.hasNext}
+        hasPrev={player.hasPrev}
+        onToggleVerse={() => activeShloka && versePlayer.toggle(activeShloka.id)}
+        onNext={versePlayer.next}
+        onPrev={versePlayer.prev}
+        onSwitchToFull={switchToFull}
+      />
     </PageShell>
   );
 }

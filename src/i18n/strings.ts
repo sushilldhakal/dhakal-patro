@@ -6664,6 +6664,7 @@ export const strings = {
   "documents.next_verse": { ne: "अर्को श्लोक", en: "Next verse" },
   "documents.seek": { ne: "स्थिति सार्नुहोस्", en: "Seek" },
   "documents.play_full_recording": { ne: "पूरा रेकर्डिङ सुन्नुहोस्", en: "Play full recording" },
+  "documents.switch_to_full": { ne: "पूरा रेकर्डिङमा जानुहोस्", en: "Switch to full recording" },
   "documents.source": { ne: "स्रोत", en: "Source" },
 } satisfies Record<string, Translatable>;
 

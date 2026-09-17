@@ -24,6 +24,15 @@ export interface ShlokaPlayerState {
   toggleMeaning: (id: number) => void;
   hasNext: boolean;
   hasPrev: boolean;
+  /**
+   * Override which verse reads as active/playing — for a different playback
+   * source (the whole-document recording) to drive this engine's highlight
+   * and auto-scroll without actually starting this engine's own audio. Pass
+   * `null` to hand display back to whatever this engine is really doing.
+   * Calling `play()` also clears it, since the user asking for a specific
+   * verse's own clip means this engine should genuinely take over.
+   */
+  setDisplayOverride: (override: { id: number; progress: number } | null) => void;
 }
 
 /**
@@ -41,12 +50,19 @@ export interface ShlokaPlayerState {
  */
 export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
   const itemRefs = useRef(new Map<number, HTMLElement>());
-  const [activeId, setActiveId] = useState<number | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
+  // "engine*" is what this hook's own ShlokaAudioEngine is actually doing;
+  // the publicly returned activeId/playing/progress below fold in
+  // `displayOverride` on top of these, so a different playback source can
+  // drive highlighting without this engine believing it's playing anything.
+  const [engineActiveId, setEngineActiveId] = useState<number | null>(null);
+  const [enginePlaying, setEnginePlaying] = useState(false);
+  const [engineProgress, setEngineProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [openMeaningIds, setOpenMeaningIds] = useState<ReadonlySet<number>>(() => new Set());
+  const [displayOverride, setDisplayOverride] = useState<{ id: number; progress: number } | null>(
+    null,
+  );
 
   const order = useMemo(() => shlokas.map((s) => s.id), [shlokas]);
   const indexOf = useCallback((id: number | null) => (id == null ? -1 : order.indexOf(id)), [order]);
@@ -66,12 +82,12 @@ export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
 
   useEffect(() => {
     engine.setCallbacks({
-      onActiveChange: setActiveId,
-      onPlayingChange: setPlaying,
+      onActiveChange: setEngineActiveId,
+      onPlayingChange: setEnginePlaying,
       onTime: (t, d) => {
         setCurrentTime(t);
         setDuration(d);
-        setProgress(d > 0 ? t / d : 0);
+        setEngineProgress(d > 0 ? t / d : 0);
       },
       shouldHoldAtEnd: (id) => openMeaningIds.has(id),
       onError: (id, err) => {
@@ -95,6 +111,7 @@ export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
 
   const play = useCallback(
     (id: number) => {
+      setDisplayOverride(null);
       engine.play(id);
     },
     [engine],
@@ -106,20 +123,24 @@ export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
 
   const toggle = useCallback(
     (id: number) => {
-      if (id === activeId && playing) pause();
+      // Checked against the engine's own state, not the (possibly
+      // overridden) displayed one — a click always means "really play/pause
+      // this verse's own clip," regardless of what's shown as active while
+      // the full-recording player is driving the display.
+      if (id === engineActiveId && enginePlaying) pause();
       else play(id);
     },
-    [activeId, playing, play, pause],
+    [engineActiveId, enginePlaying, play, pause],
   );
 
   const advance = useCallback(
     (delta: 1 | -1) => {
-      const i = indexOf(activeId);
+      const i = indexOf(engineActiveId);
       const nextIndex = i + delta;
       if (nextIndex < 0 || nextIndex >= order.length) return;
       play(order[nextIndex]!);
     },
-    [activeId, indexOf, order, play],
+    [engineActiveId, indexOf, order, play],
   );
 
   const next = useCallback(() => advance(1), [advance]);
@@ -141,12 +162,18 @@ export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
     });
   }, []);
 
+  // Whatever is shown as active/playing/progressing — the engine's own state,
+  // unless a different playback source has claimed display via `setDisplayOverride`.
+  const activeId = displayOverride ? displayOverride.id : engineActiveId;
+  const playing = displayOverride ? true : enginePlaying;
+  const progress = displayOverride ? displayOverride.progress : engineProgress;
+
   useEffect(() => {
     if (activeId == null) return;
     itemRefs.current.get(activeId)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [activeId]);
 
-  const activeIndex = indexOf(activeId);
+  const activeIndex = indexOf(engineActiveId);
 
   return {
     activeId,
@@ -165,5 +192,6 @@ export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
     toggleMeaning,
     hasNext: activeIndex >= 0 && activeIndex < order.length - 1,
     hasPrev: activeIndex > 0,
+    setDisplayOverride,
   };
 }
