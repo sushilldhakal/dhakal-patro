@@ -1,0 +1,198 @@
+import { useMemo } from "react";
+import { Link, useParams } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { PageShell } from "@/components/PageShell";
+import { PlaybackBar } from "@/components/documents/PlaybackBar";
+import { ShlokaCard } from "@/components/documents/ShlokaCard";
+import { useDocumentPlayback } from "@/hooks/use-document-playback";
+import { bilingualText, useLocale } from "@/i18n/locale";
+import { ApiError } from "@/lib/api";
+import { documentsKeys, fetchDocumentChapter, fetchDocumentDetail } from "@/lib/documents-api";
+import { toNepaliDigits } from "@/lib/panchanga-format";
+import { useRouteLoading } from "@/lib/route-loading";
+
+/**
+ * One chapter of a chaptered document — verses fetched (and rendered) for
+ * this chapter alone, never the whole book. Sibling chapter numbers for the
+ * prev/next controls come from the already-cached document summary
+ * (`fetchDocumentDetail`), which carries chapter metadata only, not verses.
+ */
+export function DocumentChapterDetail() {
+  const { t } = useTranslation();
+  const { lang } = useLocale();
+  const { slug, chapter: chapterParam } = useParams({ strict: false }) as {
+    slug?: string;
+    chapter?: string;
+  };
+  const chapterNumber = chapterParam != null ? Number(chapterParam) : NaN;
+  const hasValidParams = Boolean(slug) && Number.isFinite(chapterNumber);
+
+  const docQ = useQuery({
+    queryKey: documentsKeys.detail(slug ?? ""),
+    queryFn: () => fetchDocumentDetail(slug!),
+    enabled: Boolean(slug),
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+
+  const chapterQ = useQuery({
+    queryKey: documentsKeys.chapter(slug ?? "", chapterNumber),
+    queryFn: () => fetchDocumentChapter(slug!, chapterNumber),
+    enabled: hasValidParams,
+    staleTime: 0,
+    refetchOnMount: "always",
+    retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
+  });
+
+  useRouteLoading(docQ.isLoading || chapterQ.isLoading);
+
+  const data = chapterQ.data;
+  const shlokas = useMemo(() => data?.chapter.shlokas ?? [], [data]);
+  const { player, versePlayer, fullAudio, mode, startFull, switchToFull, activeShloka } =
+    useDocumentPlayback(shlokas, data?.full_audio_url);
+
+  const num = (n: number) => (lang === "ne" ? toNepaliDigits(String(n)) : String(n));
+
+  const backToChaptersLink = hasValidParams ? (
+    <Link
+      to="/documents/$slug"
+      params={{ slug: slug! }}
+      className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="size-4" /> {t("documents.back_to_chapters")}
+    </Link>
+  ) : (
+    <Link
+      to="/documents"
+      search={{ category: "all" }}
+      className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="size-4" /> {t("documents.back_to_list")}
+    </Link>
+  );
+
+  if (!hasValidParams || (chapterQ.isError && !chapterQ.isLoading)) {
+    return (
+      <PageShell showRelatedLinks={false}>
+        {backToChaptersLink}
+        <p className="mt-4 text-sm text-muted-foreground">{t("documents.not_found")}</p>
+      </PageShell>
+    );
+  }
+
+  if (!data) {
+    return (
+      <PageShell showRelatedLinks={false}>
+        {backToChaptersLink}
+      </PageShell>
+    );
+  }
+
+  const docTitle = bilingualText(lang, data.title_ne, data.title_en);
+  const chapterTitle = bilingualText(lang, data.chapter.title_ne, data.chapter.title_en);
+
+  // All chapter numbers of the parent document, in order — for prev/next.
+  // Falls back to the current chapter alone if the summary hasn't loaded yet
+  // (e.g. a deep link opened straight to this chapter).
+  const chapterNumbers = (docQ.data?.chapters ?? [])
+    .map((c) => c.number)
+    .filter((n): n is number => n != null)
+    .sort((a, b) => a - b);
+  const currentIndex = chapterNumbers.indexOf(chapterNumber);
+  const prevChapter = currentIndex > 0 ? chapterNumbers[currentIndex - 1] : null;
+  const nextChapter =
+    currentIndex >= 0 && currentIndex < chapterNumbers.length - 1
+      ? chapterNumbers[currentIndex + 1]
+      : null;
+
+  return (
+    <PageShell showRelatedLinks={false} className="pb-28">
+      {backToChaptersLink}
+
+      <header className="space-y-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-secondary">{docTitle}</p>
+          {chapterNumbers.length > 0 ? (
+            <p className="text-xs font-semibold text-muted-foreground">
+              {t("documents.chapter_progress", {
+                current: num(chapterNumber),
+                total: num(chapterNumbers.length),
+              })}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary/10 text-base font-bold tabular-nums text-secondary">
+            {num(chapterNumber)}
+          </span>
+          <h1 className="min-w-0 text-2xl font-bold sm:text-3xl">
+            {t("documents.chapter_label", { number: num(chapterNumber) })}
+            {chapterTitle ? (
+              <span className="mt-0.5 block text-base font-semibold text-muted-foreground sm:text-lg">
+                {chapterTitle}
+              </span>
+            ) : null}
+          </h1>
+        </div>
+      </header>
+
+      <div className="space-y-3">
+        {shlokas.map((shloka) => (
+          <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+        ))}
+      </div>
+
+      <nav className="flex items-center justify-between gap-3 border-t border-border pt-4 text-sm font-semibold">
+        {prevChapter != null ? (
+          <Link
+            to="/documents/$slug/$chapter"
+            params={{ slug: slug!, chapter: String(prevChapter) }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 transition-colors hover:border-secondary/60 hover:text-secondary"
+          >
+            <ChevronLeft className="size-4" /> {t("documents.prev_chapter")}
+          </Link>
+        ) : (
+          <span />
+        )}
+        {nextChapter != null ? (
+          <Link
+            to="/documents/$slug/$chapter"
+            params={{ slug: slug!, chapter: String(nextChapter) }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 transition-colors hover:border-secondary/60 hover:text-secondary"
+          >
+            {t("documents.next_chapter")} <ChevronRight className="size-4" />
+          </Link>
+        ) : (
+          <span />
+        )}
+      </nav>
+
+      {fullAudio.audioElement}
+      <PlaybackBar
+        mode={mode}
+        hasFullRecording={Boolean(data.full_audio_url)}
+        documentTitle={docTitle}
+        onStartFull={startFull}
+        fullPlaying={fullAudio.playing}
+        fullCurrentTime={fullAudio.currentTime}
+        fullDuration={fullAudio.duration}
+        onToggleFull={fullAudio.toggle}
+        onSeekFull={fullAudio.seek}
+        activeShloka={activeShloka}
+        versePlaying={mode === "verse" && player.playing}
+        verseCurrentTime={player.currentTime}
+        verseDuration={player.duration}
+        hasNext={player.hasNext}
+        hasPrev={player.hasPrev}
+        onToggleVerse={() => activeShloka && versePlayer.toggle(activeShloka.id)}
+        onNext={versePlayer.next}
+        onPrev={versePlayer.prev}
+        onSwitchToFull={switchToFull}
+      />
+    </PageShell>
+  );
+}
+
+export default DocumentChapterDetail;

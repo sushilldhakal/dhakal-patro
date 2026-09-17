@@ -28,8 +28,11 @@ export function ShlokaCard({ shloka, player }: Props) {
   const isActive = player.activeId === shloka.id;
   const isPlaying = isActive && player.playing;
   const meaningOpen = player.openMeaningIds.has(shloka.id);
-  const meaning = bilingualText(lang, shloka.meaning_ne, shloka.meaning_en);
+  const meaning = bilingualText(lang, shloka.meaning_ne, shloka.meaning_en, "");
   const accordionValue = meaningOpen ? "meaning" : "";
+  const isClosing =
+    shloka.verse_label.startsWith("इति") || shloka.verse_label === "ध्यानम्";
+  const shlokaDomId = `shloka-${shloka.verse_label.replace(/\s+/g, "-")}`;
 
   // Split keeping whitespace as its own tokens (so it renders back exactly as
   // written) while indexing only the real words for the timing estimate below.
@@ -65,39 +68,47 @@ export function ShlokaCard({ shloka, player }: Props) {
   return (
     <section
       ref={(el) => player.registerItemRef(shloka.id, el)}
-      id={`shloka-${shloka.verse_label}`}
+      id={shlokaDomId}
       className={cn(
         "scroll-mt-24 rounded-xl border p-4 transition-colors sm:p-5",
         isActive ? "border-secondary/60 bg-secondary/5" : "border-border bg-card",
+        isClosing && !isActive && "border-secondary/35 bg-secondary/5",
       )}
     >
       <div className="flex items-start gap-3">
-        <button
-          type="button"
-          onClick={() => player.toggle(shloka.id)}
-          disabled={!shloka.audio_url}
-          aria-label={t(isPlaying ? "documents.pause_verse" : "documents.play_verse")}
-          title={shloka.audio_url ? undefined : t("documents.no_audio")}
-          className={cn(
-            "mt-0.5 grid size-9 shrink-0 place-items-center rounded-full border transition-colors",
-            shloka.audio_url
-              ? isActive
+        {shloka.audio_url ? (
+          <button
+            type="button"
+            onClick={() => player.toggle(shloka.id)}
+            aria-label={t(isPlaying ? "documents.pause_verse" : "documents.play_verse")}
+            className={cn(
+              "mt-0.5 grid size-9 shrink-0 place-items-center rounded-full border transition-colors",
+              isActive
                 ? "border-secondary bg-secondary text-secondary-foreground"
-                : "border-border text-secondary hover:border-secondary/60 hover:bg-secondary/10"
-              : "cursor-not-allowed border-border/60 text-muted-foreground/40",
-          )}
-        >
-          {isPlaying ? (
-            <Pause className="size-4" fill="currentColor" strokeWidth={0} />
-          ) : (
-            <Play className="ml-0.5 size-4" fill="currentColor" strokeWidth={0} />
-          )}
-        </button>
-
-        <div className="min-w-0 flex-1">
-          <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                : "border-border text-secondary hover:border-secondary/60 hover:bg-secondary/10",
+            )}
+          >
+            {isPlaying ? (
+              <Pause className="size-4" fill="currentColor" strokeWidth={0} />
+            ) : (
+              <Play className="ml-0.5 size-4" fill="currentColor" strokeWidth={0} />
+            )}
+          </button>
+        ) : (
+          <span
+            aria-hidden="true"
+            className="mt-0.5 grid size-9 shrink-0 place-items-center text-xs font-semibold tabular-nums text-muted-foreground/50"
+          >
             {shloka.verse_label}
           </span>
+        )}
+
+        <div className="min-w-0 flex-1">
+          {shloka.audio_url ? (
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+              {shloka.verse_label}
+            </span>
+          ) : null}
           <p className="mt-1 text-lg leading-relaxed sm:text-xl">
             {tokens.map((tok, i) =>
               i === activeTokenIndex ? (

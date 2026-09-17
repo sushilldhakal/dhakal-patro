@@ -4130,6 +4130,19 @@
     "seek": "Seek",
     "play_full_recording": "Play full recording",
     "switch_to_full": "Switch to full recording",
-    "source": "Source"
+    "source": "Source",
+    "category_tabs_label": "Document categories",
+    "category": {
+      "all": "All",
+      "mantra": "Mantra",
+      "stotram": "Stotram",
+      "scripture": "Scripture"
+    },
+    "empty_category": "No documents in this category yet.",
+    "chapter_label": "Chapter {{number}}",
+    "chapter_progress": "Chapter {{current}} of {{total}}",
+    "back_to_chapters": "All chapters",
+    "prev_chapter": "Previous chapter",
+    "next_chapter": "Next chapter"
   }
 }

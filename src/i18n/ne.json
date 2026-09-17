@@ -4130,6 +4130,19 @@
     "seek": "स्थिति सार्नुहोस्",
     "play_full_recording": "पूरा रेकर्डिङ सुन्नुहोस्",
     "switch_to_full": "पूरा रेकर्डिङमा जानुहोस्",
-    "source": "स्रोत"
+    "source": "स्रोत",
+    "category_tabs_label": "ग्रन्थका प्रकार",
+    "category": {
+      "all": "सबै",
+      "mantra": "मन्त्र",
+      "stotram": "स्तोत्र",
+      "scripture": "ग्रन्थ"
+    },
+    "empty_category": "यस वर्गमा हाल कुनै ग्रन्थ छैन।",
+    "chapter_label": "अध्याय {{number}}",
+    "chapter_progress": "अध्याय {{current}} / {{total}}",
+    "back_to_chapters": "सबै अध्याय",
+    "prev_chapter": "अघिल्लो अध्याय",
+    "next_chapter": "अर्को अध्याय"
   }
 }

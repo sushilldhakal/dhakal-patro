@@ -1,101 +1,55 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
+import { ChapterCard } from "@/components/documents/ChapterCard";
 import { PlaybackBar } from "@/components/documents/PlaybackBar";
 import { ShlokaCard } from "@/components/documents/ShlokaCard";
-import { useFullRecordingAudio } from "@/hooks/use-full-recording-audio";
-import { useShlokaPlayer } from "@/hooks/use-shloka-player";
+import { useDocumentPlayback } from "@/hooks/use-document-playback";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { ApiError } from "@/lib/api";
-import { documentsKeys, fetchDocumentDetail, flattenShlokas } from "@/lib/documents-api";
+import {
+  documentsKeys,
+  fetchDocumentDetail,
+  flattenShlokas,
+  type DocumentCategoryTab,
+} from "@/lib/documents-api";
+import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
 
 export function DocumentDetail() {
   const { t } = useTranslation();
   const { lang } = useLocale();
   const { slug } = useParams({ strict: false }) as { slug?: string };
+  // Which list-page tab this document was opened from (see DocumentCard) — so
+  // "back to list" returns there instead of always resetting to "all".
+  const { category } = useSearch({ strict: false }) as { category?: DocumentCategoryTab };
+  const num = (n: number) => (lang === "ne" ? toNepaliDigits(String(n)) : String(n));
 
   const docQ = useQuery({
     queryKey: documentsKeys.detail(slug ?? ""),
     queryFn: () => fetchDocumentDetail(slug!),
     enabled: Boolean(slug),
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
+    refetchOnMount: "always",
     retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
   });
 
   useRouteLoading(docQ.isLoading);
 
   const doc = docQ.data;
+  // Only populated for a non-chaptered document — a chaptered one's chapters
+  // carry no inline verses (see documents-api.ts), so this is [] for those.
   const shlokas = useMemo(() => (doc ? flattenShlokas(doc) : []), [doc]);
-  const player = useShlokaPlayer(shlokas);
-  const fullAudio = useFullRecordingAudio(doc?.full_audio_url);
-
-  // Which player currently owns the floating bar / actual sound — null until
-  // the listener has engaged either one this visit.
-  const [mode, setMode] = useState<"full" | "verse" | null>(null);
-
-  const startFull = useCallback(() => {
-    setMode("full");
-    fullAudio.play();
-  }, [fullAudio]);
-
-  // A click on any individual verse always hands control to the per-verse
-  // engine and stops the full recording outright — `player.playing` alone
-  // isn't a reliable signal here (see the comment on `versePlayer` below),
-  // so both sides pause/switch explicitly on every call rather than reacting
-  // to a state transition that might not actually change value.
-  const versePlayer = useMemo(
-    () => ({
-      ...player,
-      play: (id: number) => {
-        setMode("verse");
-        fullAudio.pause();
-        player.play(id);
-      },
-      toggle: (id: number) => {
-        setMode("verse");
-        fullAudio.pause();
-        player.toggle(id);
-      },
-    }),
-    [player, fullAudio],
-  );
-
-  const activeShloka = shlokas.find((s) => s.id === player.activeId) ?? null;
-
-  const switchToFull = useCallback(() => {
-    if (activeShloka?.full_audio_start == null) return;
-    player.pause();
-    setMode("full");
-    fullAudio.playFrom(activeShloka.full_audio_start);
-  }, [activeShloka, player, fullAudio]);
-
-  // While the full recording plays, estimate which verse is currently
-  // sounding from each verse's *real* measured start/end within it (from
-  // cross-correlating its own clip against the full recording — see
-  // data/documents_source/README.md) and drive the same highlight/auto-scroll
-  // the per-verse player uses.
-  useEffect(() => {
-    if (mode !== "full" || !fullAudio.playing) return;
-    let active: { id: number; progress: number } | null = null;
-    for (const s of shlokas) {
-      if (s.full_audio_start == null || s.full_audio_end == null) continue;
-      if (s.full_audio_start > fullAudio.currentTime) break;
-      const dur = s.full_audio_end - s.full_audio_start;
-      active = {
-        id: s.id,
-        progress: dur > 0 ? Math.min(1, Math.max(0, (fullAudio.currentTime - s.full_audio_start) / dur)) : 0,
-      };
-    }
-    if (active) player.setDisplayOverride(active);
-  }, [mode, fullAudio.playing, fullAudio.currentTime, shlokas, player]);
+  const { player, versePlayer, fullAudio, mode, startFull, switchToFull, activeShloka } =
+    useDocumentPlayback(shlokas, doc?.full_audio_url);
 
   const backLink = (
     <Link
       to="/documents"
+      search={{ category: category ?? "all" }}
       className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" /> {t("documents.back_to_list")}
@@ -124,41 +78,77 @@ export function DocumentDetail() {
   const description = bilingualText(lang, doc.description_ne, doc.description_en);
   const source = bilingualText(lang, doc.source_ne, doc.source_en);
 
+  const header = (
+    <header className="space-y-1.5">
+      <p className="text-sm font-medium text-secondary">{doc.title_sa}</p>
+      <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
+      {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+      {description ? <p className="max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
+      {source ? (
+        <p className="text-xs text-muted-foreground">
+          {t("documents.source")}: {source}
+        </p>
+      ) : null}
+    </header>
+  );
+
+  // A chaptered document never renders its verses on this page — pick a
+  // chapter card first, then /documents/$slug/$chapter reads (and only
+  // fetches) that chapter's shlokas. This is the one branch point every
+  // future, possibly much bigger, multi-chapter book goes through: split by
+  // chapter, never by an arbitrary verse count.
+  if (doc.has_chapters) {
+    const hasFullRecording = Boolean(doc.full_audio_url);
+    return (
+      <PageShell showRelatedLinks={false} className={hasFullRecording ? "pb-28" : undefined}>
+        {backLink}
+        {header}
+        <div className="flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+          <span>{t("documents.chapters_count", { count: num(doc.chapter_count) })}</span>
+          <span aria-hidden="true">·</span>
+          <span>{t("documents.shlokas_count", { count: num(doc.shloka_count) })}</span>
+        </div>
+        <div className="space-y-2">
+          {doc.chapters.map((chapter) => (
+            <ChapterCard key={chapter.number ?? "single"} slug={doc.slug} chapter={chapter} />
+          ))}
+        </div>
+
+        {fullAudio.audioElement}
+        <PlaybackBar
+          mode={mode === "verse" ? null : mode}
+          hasFullRecording={hasFullRecording}
+          documentTitle={title}
+          onStartFull={startFull}
+          fullPlaying={fullAudio.playing}
+          fullCurrentTime={fullAudio.currentTime}
+          fullDuration={fullAudio.duration}
+          onToggleFull={fullAudio.toggle}
+          onSeekFull={fullAudio.seek}
+          activeShloka={null}
+          versePlaying={false}
+          verseCurrentTime={0}
+          verseDuration={0}
+          hasNext={false}
+          hasPrev={false}
+          onToggleVerse={() => {}}
+          onNext={() => {}}
+          onPrev={() => {}}
+          onSwitchToFull={() => {}}
+        />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell showRelatedLinks={false} className="pb-28">
       {backLink}
+      {header}
 
-      <header className="space-y-1.5">
-        <p className="text-sm font-medium text-secondary">{doc.title_sa}</p>
-        <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
-        {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
-        {description ? <p className="max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
-        {source ? (
-          <p className="text-xs text-muted-foreground">
-            {t("documents.source")}: {source}
-          </p>
-        ) : null}
-      </header>
-
-      <div className="space-y-6">
-        {doc.chapters.map((chapter) => {
-          const chapterTitle = bilingualText(lang, chapter.title_ne, chapter.title_en);
-          return (
-            <div key={chapter.number ?? "single"} className="space-y-3">
-              {chapter.number != null ? (
-                <h2 className="text-lg font-semibold">
-                  {chapter.number}
-                  {chapterTitle ? ` · ${chapterTitle}` : ""}
-                </h2>
-              ) : null}
-              <div className="space-y-3">
-                {chapter.shlokas.map((shloka) => (
-                  <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-3">
+        {shlokas.map((shloka) => (
+          <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+        ))}
       </div>
 
       {fullAudio.audioElement}

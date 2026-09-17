@@ -30,6 +30,7 @@ import {
   validatePatroYearBrowseSearch,
   validateHolidaysSearch,
 } from "./lib/url-state";
+import { validateDocumentDetailSearch, validateDocumentsListSearch } from "./lib/documents-api";
 
 const Panchanga = lazyRoute(() => import("./pages/Panchanga"), "Panchanga");
 const PanchangaOgPreview = lazyRoute(() => import("./pages/PanchangaOgPreview"), "PanchangaOgPreview");
@@ -47,6 +48,10 @@ const Rashifal = lazyRoute(() => import("./pages/Rashifal"), "Rashifal");
 const Vastu = lazyRoute(() => import("./pages/Vastu"), "Vastu");
 const Documents = lazyRoute(() => import("./pages/Documents"), "Documents");
 const DocumentDetail = lazyRoute(() => import("./pages/DocumentDetail"), "DocumentDetail");
+const DocumentChapterDetail = lazyRoute(
+  () => import("./pages/DocumentChapterDetail"),
+  "DocumentChapterDetail",
+);
 const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
@@ -185,8 +190,24 @@ const rashifalRoute = createRoute({
   component: Rashifal,
 });
 const vastuRoute = createRoute({ getParentRoute: () => rootRoute, path: "/vastu", component: Vastu });
-const documentsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/documents", component: Documents });
-const documentDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/documents/$slug", component: DocumentDetail });
+const documentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/documents",
+  validateSearch: validateDocumentsListSearch,
+  component: Documents,
+});
+const documentDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/documents/$slug",
+  validateSearch: validateDocumentDetailSearch,
+  component: DocumentDetail,
+});
+const documentChapterDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/documents/$slug/$chapter",
+  validateSearch: validateDocumentDetailSearch,
+  component: DocumentChapterDetail,
+});
 const learnRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn", component: Learn });
 const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/$slug", component: LearnArticle });
 const suryakrantiRoute = createRoute({
@@ -335,6 +356,7 @@ const routeTree = rootRoute.addChildren([
   vastuRoute,
   documentsRoute,
   documentDetailRoute,
+  documentChapterDetailRoute,
   learnRoute,
   historyRoute,
   learnArticleRoute,

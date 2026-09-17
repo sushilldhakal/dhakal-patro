@@ -6666,6 +6666,23 @@ export const strings = {
   "documents.play_full_recording": { ne: "पूरा रेकर्डिङ सुन्नुहोस्", en: "Play full recording" },
   "documents.switch_to_full": { ne: "पूरा रेकर्डिङमा जानुहोस्", en: "Switch to full recording" },
   "documents.source": { ne: "स्रोत", en: "Source" },
+  "documents.category_tabs_label": { ne: "ग्रन्थका प्रकार", en: "Document categories" },
+  "documents.category.all": { ne: "सबै", en: "All" },
+  "documents.category.mantra": { ne: "मन्त्र", en: "Mantra" },
+  "documents.category.stotram": { ne: "स्तोत्र", en: "Stotram" },
+  "documents.category.scripture": { ne: "ग्रन्थ", en: "Scripture" },
+  "documents.empty_category": {
+    ne: "यस वर्गमा हाल कुनै ग्रन्थ छैन।",
+    en: "No documents in this category yet.",
+  },
+  "documents.chapter_label": { ne: "अध्याय {{number}}", en: "Chapter {{number}}" },
+  "documents.chapter_progress": {
+    ne: "अध्याय {{current}} / {{total}}",
+    en: "Chapter {{current}} of {{total}}",
+  },
+  "documents.back_to_chapters": { ne: "सबै अध्याय", en: "All chapters" },
+  "documents.prev_chapter": { ne: "अघिल्लो अध्याय", en: "Previous chapter" },
+  "documents.next_chapter": { ne: "अर्को अध्याय", en: "Next chapter" },
 } satisfies Record<string, Translatable>;
 
 export type StringKey = keyof typeof strings;

@@ -63,6 +63,7 @@ export const ROUTES: RouteMeta[] = [
   { id: "learn-article", path: "/learn/$slug" },
   { id: "documents", path: "/documents", seoKey: "seo.routes.documents", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },
   { id: "document-detail", path: "/documents/$slug" },
+  { id: "document-chapter-detail", path: "/documents/$slug/$chapter" },
   { id: "suryakranti", path: "/suryakranti", seoKey: "seo.routes.suryakranti", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },
   { id: "sun-times-legacy", path: "/sun-times" },
   { id: "abhijit-muhurta", path: "/abhijit-muhurta", seoKey: "seo.routes.abhijit_muhurta", sitemap: { changefreq: "weekly", priority: "0.7" }, prerender: true },

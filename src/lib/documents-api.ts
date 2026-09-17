@@ -3,9 +3,40 @@
 // this point) as its own small, self-contained client.
 import { API_DATA_BASE, ApiError } from "@/lib/api";
 
+export type DocumentCategory = "mantra" | "stotram" | "scripture";
+export type DocumentCategoryTab = "all" | DocumentCategory;
+
+const CATEGORY_TABS: readonly DocumentCategoryTab[] = ["all", "mantra", "stotram", "scripture"];
+
+function toCategoryTab(value: unknown): DocumentCategoryTab | undefined {
+  return CATEGORY_TABS.includes(value as DocumentCategoryTab)
+    ? (value as DocumentCategoryTab)
+    : undefined;
+}
+
+export interface DocumentsListSearch {
+  category: DocumentCategoryTab;
+}
+
+/** The list page's active category tab — kept in the URL so it survives a reload/share and so leaving a document can return to the same tab. */
+export function validateDocumentsListSearch(search: Record<string, unknown>): DocumentsListSearch {
+  return { category: toCategoryTab(search.category) ?? "all" };
+}
+
+export interface DocumentDetailSearch {
+  /** Which list-page tab this document was opened from, so its "back" link can return there. Absent for a direct/deep link. */
+  category?: DocumentCategoryTab;
+}
+
+export function validateDocumentDetailSearch(search: Record<string, unknown>): DocumentDetailSearch {
+  const category = toCategoryTab(search.category);
+  return category ? { category } : {};
+}
+
 export interface DocumentSummary {
   slug: string;
   order_index: number;
+  category: DocumentCategory;
   title_sa: string;
   title_ne: string;
   title_en: string;
@@ -48,13 +79,32 @@ export interface DocumentChapter {
   number: number | null;
   title_ne?: string | null;
   title_en?: string | null;
-  shlokas: Shloka[];
+  /**
+   * Present only when the document has no chapters — its one implicit
+   * chapter is small enough to embed inline. A chaptered document's chapters
+   * carry `shloka_count` instead (see `DocumentDetail`), and its verses are
+   * fetched per chapter via `fetchDocumentChapter`.
+   */
+  shlokas?: Shloka[];
+  /** Present only for a chaptered document's chapter entries (see above). */
+  shloka_count?: number;
 }
 
 export interface DocumentDetail extends DocumentSummary {
   source_ne?: string | null;
   source_en?: string | null;
   chapters: DocumentChapter[];
+}
+
+export interface DocumentChapterDetail extends DocumentSummary {
+  source_ne?: string | null;
+  source_en?: string | null;
+  chapter: {
+    number: number | null;
+    title_ne?: string | null;
+    title_en?: string | null;
+    shlokas: Shloka[];
+  };
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -75,6 +125,8 @@ async function get<T>(path: string): Promise<T> {
 export const documentsKeys = {
   list: () => ["documents", "list"] as const,
   detail: (slug: string) => ["documents", "detail", slug] as const,
+  chapter: (slug: string, chapterNumber: number) =>
+    ["documents", "detail", slug, "chapter", chapterNumber] as const,
 };
 
 export const fetchDocuments = () =>
@@ -83,7 +135,17 @@ export const fetchDocuments = () =>
 export const fetchDocumentDetail = (slug: string) =>
   get<DocumentDetail>(`/documents/${encodeURIComponent(slug)}`);
 
-/** Every shloka in a document, in reading order, across chapter boundaries. */
+export const fetchDocumentChapter = (slug: string, chapterNumber: number) =>
+  get<DocumentChapterDetail>(
+    `/documents/${encodeURIComponent(slug)}/chapters/${chapterNumber}`,
+  );
+
+/**
+ * Every shloka in a document, in reading order, across chapter boundaries.
+ * Only meaningful for a non-chaptered document — a chaptered one's chapters
+ * carry no inline `shlokas` (see `DocumentChapter`), so this returns [] for
+ * those; read a chapter's verses via `fetchDocumentChapter` instead.
+ */
 export function flattenShlokas(doc: DocumentDetail): Shloka[] {
-  return doc.chapters.flatMap((c) => c.shlokas);
+  return doc.chapters.flatMap((c) => c.shlokas ?? []);
 }
