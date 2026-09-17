@@ -100,7 +100,6 @@ export function DocumentDetail() {
         })}
       </div>
 
-      {player.audioElement}
       <ShlokaPlayerBar player={player} activeShloka={activeShloka} documentTitle={title} />
     </PageShell>
   );
