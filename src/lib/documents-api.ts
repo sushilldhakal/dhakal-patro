@@ -17,6 +17,8 @@ export interface DocumentSummary {
   has_chapters: boolean;
   chapter_count: number;
   shloka_count: number;
+  /** One continuous recording of the whole document, separate from the per-verse clips. */
+  full_audio_url?: string | null;
 }
 
 export interface Shloka {

@@ -1,9 +1,13 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
+import {
+  FullRecordingPlayer,
+  type FullRecordingPlayerHandle,
+} from "@/components/documents/FullRecordingPlayer";
 import { ShlokaCard } from "@/components/documents/ShlokaCard";
 import { ShlokaPlayerBar } from "@/components/documents/ShlokaPlayerBar";
 import { useShlokaPlayer } from "@/hooks/use-shloka-player";
@@ -31,6 +35,17 @@ export function DocumentDetail() {
   const shlokas = useMemo(() => (doc ? flattenShlokas(doc) : []), [doc]);
   const player = useShlokaPlayer(shlokas);
   const activeShloka = shlokas.find((s) => s.id === player.activeId) ?? null;
+
+  // The full-recording player and the per-verse player are two independent
+  // <audio>/engine instances — starting one must pause the other so they
+  // never sound at once. The per-verse side is covered here (whenever it
+  // starts playing, stop the full recording, via the imperative handle);
+  // FullRecordingPlayer's own `onPlay` covers the reverse direction.
+  const fullRecordingRef = useRef<FullRecordingPlayerHandle>(null);
+  useEffect(() => {
+    if (player.playing) fullRecordingRef.current?.pause();
+  }, [player.playing]);
+  const pauseVersePlayer = useCallback(() => player.pause(), [player]);
 
   const backLink = (
     <Link
@@ -77,6 +92,12 @@ export function DocumentDetail() {
             {t("documents.source")}: {source}
           </p>
         ) : null}
+        <FullRecordingPlayer
+          ref={fullRecordingRef}
+          audioUrl={doc.full_audio_url}
+          onPlay={pauseVersePlayer}
+          className="mt-3"
+        />
       </header>
 
       <div className="space-y-6">
