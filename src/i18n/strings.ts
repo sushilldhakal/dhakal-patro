@@ -106,6 +106,18 @@ export const strings = {
     ne: "वास्तु, वास्तुशास्त्र, वास्तु दोष, ईशान कुना, भान्सा कुन दिशा, घरको वास्तु, वास्तु उपाय",
     en: "vastu, vastu shastra, vastu dosha, ishan corner, kitchen direction, house vastu, vastu remedies",
   },
+  "seo.routes.documents.title": {
+    ne: "ग्रन्थ तथा स्तोत्र — श्लोक, अर्थ र श्रवण | वैदिक पात्रो",
+    en: "Documents — Scriptures & Stotram with Audio | Vedic Patro",
+  },
+  "seo.routes.documents.description": {
+    ne: "संस्कृत श्लोक, स्तोत्र र ग्रन्थहरू — देवनागरी पाठ, नेपाली/अङ्ग्रेजी अर्थ र श्लोकअनुसार श्रवण सहित।",
+    en: "Sanskrit scriptures and stotram — Devanagari text, Nepali/English meanings, with per-verse audio.",
+  },
+  "seo.routes.documents.keywords": {
+    ne: "स्तोत्र, श्लोक, संस्कृत, गीता, गायत्री मन्त्र, धार्मिक ग्रन्थ, मन्त्र अर्थ",
+    en: "stotram, shloka, sanskrit scripture, bhagavad gita, gayatri mantra, mantra meaning",
+  },
   "seo.routes.converter.title": {
     ne: "नेपाली मिति रूपान्तरण — बि.सं. ⇄ ई.सं. Date Converter | वैदिक पात्रो",
     en: "Nepali Date Converter — BS to AD, AD to BS | Vedic Patro",
@@ -371,6 +383,7 @@ export const strings = {
   "nav.kundali": { ne: "कुण्डली", en: "Kundali" },
   "nav.learn": { ne: "सिकाइ", en: "Learn" },
   "nav.vastu": { ne: "वास्तु", en: "Vastu" },
+  "nav.documents": { ne: "ई-पाठ", en: "Documents" },
   "nav.abhijit_muhurta": { ne: "अभिजित् मुहूर्त", en: "Abhijit Moment" },
   "nav.vivah_sait": { ne: "विवाह साइत", en: "Marriage Saait" },
   "nav.panchanga_details": { ne: "पञ्चाङ्ग विवरण", en: "Almanac Details" },
@@ -6618,6 +6631,39 @@ export const strings = {
     ne: "स्लाइड गर्नुहोस् वा राशि छान्नुहोस् — ठूलो स्क्रिनमा चार कार्ड देखिन्छ।",
     en: "Swipe or pick a rashi — four cards visible on wide screens.",
   },
+
+  /* ── documents ───────────────────────────────────────────────────────── */
+  "documents.eyebrow": { ne: "ई-पाठ — ग्रन्थ तथा स्तोत्र", en: "Scriptures & Stotram" },
+  "documents.page_title": { ne: "ई-पाठ", en: "Documents" },
+  "documents.page_subtitle": {
+    ne: "संस्कृत श्लोक, अर्थ र श्रवणसहित",
+    en: "Sanskrit verses with meaning and audio",
+  },
+  "documents.back_to_list": { ne: "सबै ग्रन्थ", en: "All documents" },
+  "documents.chapters_count": { ne: "{{count}} अध्याय", en: "{{count}} chapters" },
+  "documents.shlokas_count": { ne: "{{count}} श्लोक", en: "{{count}} verses" },
+  "documents.empty": {
+    ne: "अहिलेसम्म कुनै ग्रन्थ थपिएको छैन।",
+    en: "No documents have been added yet.",
+  },
+  "documents.not_found": {
+    ne: "यो ग्रन्थ फेला परेन।",
+    en: "This document could not be found.",
+  },
+  "documents.load_error": {
+    ne: "ग्रन्थ लोड गर्न सकिएन। पुनः प्रयास गर्नुहोस्।",
+    en: "Couldn't load this document. Please try again.",
+  },
+  "documents.play_verse": { ne: "श्लोक बजाउनुहोस्", en: "Play this verse" },
+  "documents.pause_verse": { ne: "रोक्नुहोस्", en: "Pause" },
+  "documents.no_audio": { ne: "श्रव्य उपलब्ध छैन", en: "No audio yet" },
+  "documents.meaning": { ne: "अर्थ", en: "Meaning" },
+  "documents.transliteration": { ne: "उच्चारण (IAST)", en: "Transliteration" },
+  "documents.now_playing": { ne: "बज्दैछ · श्लोक {{label}}", en: "Now playing · verse {{label}}" },
+  "documents.prev_verse": { ne: "अघिल्लो श्लोक", en: "Previous verse" },
+  "documents.next_verse": { ne: "अर्को श्लोक", en: "Next verse" },
+  "documents.seek": { ne: "स्थिति सार्नुहोस्", en: "Seek" },
+  "documents.source": { ne: "स्रोत", en: "Source" },
 } satisfies Record<string, Translatable>;
 
 export type StringKey = keyof typeof strings;

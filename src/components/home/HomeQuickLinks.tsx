@@ -1,6 +1,7 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
+  BookMarked,
   CalendarClock,
   CalendarRange,
   Grid3x3,
@@ -241,6 +242,8 @@ export function HomeQuickLinks({
             label={t(labelKey)}
           />
         ))}
+        {/* Not a patro/era route — no location or year search params to carry. */}
+        <QuickLinkCard to="/documents" icon={BookMarked} label={t("nav.documents")} />
       </LinkCategory>
     </div>
   );

@@ -558,6 +558,35 @@
   border-color: rgba(0, 0, 0, 0.6);
 }
 
+/* ── Shloka player scrubber — Documents reader's floating transport bar ── */
+.shloka-scrub {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--secondary) 0%,
+    var(--secondary) var(--fill, 0%),
+    var(--border) var(--fill, 0%)
+  );
+}
+.shloka-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: var(--secondary);
+  border: 2px solid var(--card);
+}
+.shloka-scrub::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: var(--secondary);
+  border: 2px solid var(--card);
+}
+
 /* ── Sky time-rate slider — Aakash Gochar transport row + time sheet ── */
 .sky-time-slider {
   -webkit-appearance: none;

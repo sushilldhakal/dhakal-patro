@@ -45,6 +45,8 @@ const KundaliDetail = lazyRoute(() => import("./pages/KundaliDetail"), "KundaliD
 const KundaliMilan = lazyRoute(() => import("./pages/KundaliMilan"), "KundaliMilan");
 const Rashifal = lazyRoute(() => import("./pages/Rashifal"), "Rashifal");
 const Vastu = lazyRoute(() => import("./pages/Vastu"), "Vastu");
+const Documents = lazyRoute(() => import("./pages/Documents"), "Documents");
+const DocumentDetail = lazyRoute(() => import("./pages/DocumentDetail"), "DocumentDetail");
 const Learn = lazyRoute(() => import("./pages/Learn"), "Learn");
 const LearnArticle = lazyRoute(() => import("./pages/LearnArticle"), "LearnArticle");
 const SunTimesYear = lazyRoute(() => import("./pages/SunTimesYear"), "SunTimesYear");
@@ -183,6 +185,8 @@ const rashifalRoute = createRoute({
   component: Rashifal,
 });
 const vastuRoute = createRoute({ getParentRoute: () => rootRoute, path: "/vastu", component: Vastu });
+const documentsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/documents", component: Documents });
+const documentDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/documents/$slug", component: DocumentDetail });
 const learnRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn", component: Learn });
 const learnArticleRoute = createRoute({ getParentRoute: () => rootRoute, path: "/learn/$slug", component: LearnArticle });
 const suryakrantiRoute = createRoute({
@@ -329,6 +333,8 @@ const routeTree = rootRoute.addChildren([
   dainikKrantiNeLegacyRoute,
   shantiVidhiRoute,
   vastuRoute,
+  documentsRoute,
+  documentDetailRoute,
   learnRoute,
   historyRoute,
   learnArticleRoute,

@@ -5,6 +5,7 @@ import {
   Star,
   Sparkles,
   BookOpen,
+  BookMarked,
   Compass,
   Sun,
   Moon,
@@ -51,6 +52,7 @@ const JYOTISH_LINKS = [
 const NAV = [
   { to: "/vastu" as const, labelKey: "nav.vastu", icon: Compass },
   { to: "/learn" as const, labelKey: "nav.learn", icon: BookOpen },
+  { to: "/documents" as const, labelKey: "nav.documents", icon: BookMarked },
 ] as const;
 
 const desktopLinkClass =

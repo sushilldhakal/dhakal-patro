@@ -39,6 +39,11 @@
         "description": "Vastu Shastra explained simply — the element, deity and use of each of the eight directions and the Brahmasthan, ideal placement for kitchen, bedroom, puja room and water tank, plus common doshas and their remedies.",
         "keywords": "vastu, vastu shastra, vastu dosha, ishan corner, kitchen direction, house vastu, vastu remedies"
       },
+      "documents": {
+        "title": "Documents — Scriptures & Stotram with Audio | Vedic Patro",
+        "description": "Sanskrit scriptures and stotram — Devanagari text, Nepali/English meanings, with per-verse audio.",
+        "keywords": "stotram, shloka, sanskrit scripture, bhagavad gita, gayatri mantra, mantra meaning"
+      },
       "converter": {
         "title": "Nepali Date Converter — BS to AD, AD to BS | Vedic Patro",
         "description": "Convert Nepali dates instantly: Bikram Sambat (BS) to English (AD) and AD to BS. Accurate results for birth dates, documents and official use.",
@@ -188,6 +193,7 @@
     "kundali": "Kundali",
     "learn": "Learn",
     "vastu": "Vastu",
+    "documents": "Documents",
     "abhijit_muhurta": "Abhijit Moment",
     "vivah_sait": "Marriage Saait",
     "panchanga_details": "Almanac Details"
@@ -4102,5 +4108,26 @@
     "see_full": "Full rashifal",
     "see_yours": "See your rashifal",
     "carousel_hint": "Swipe or pick a rashi — four cards visible on wide screens."
+  },
+  "documents": {
+    "eyebrow": "Scriptures & Stotram",
+    "page_title": "Documents",
+    "page_subtitle": "Sanskrit verses with meaning and audio",
+    "back_to_list": "All documents",
+    "chapters_count": "{{count}} chapters",
+    "shlokas_count": "{{count}} verses",
+    "empty": "No documents have been added yet.",
+    "not_found": "This document could not be found.",
+    "load_error": "Couldn't load this document. Please try again.",
+    "play_verse": "Play this verse",
+    "pause_verse": "Pause",
+    "no_audio": "No audio yet",
+    "meaning": "Meaning",
+    "transliteration": "Transliteration",
+    "now_playing": "Now playing · verse {{label}}",
+    "prev_verse": "Previous verse",
+    "next_verse": "Next verse",
+    "seek": "Seek",
+    "source": "Source"
   }
 }

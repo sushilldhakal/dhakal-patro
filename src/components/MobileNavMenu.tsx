@@ -3,6 +3,7 @@ import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import {
   ArrowLeftRight,
+  BookMarked,
   BookOpen,
   CalendarClock,
   CalendarDays,
@@ -251,6 +252,9 @@ export function MobileNavMenu({ onNavigate }: { onNavigate?: () => void }) {
         </DrawerClose>
         <DrawerClose asChild>
           <NavDrawerLinkCard to="/learn" label={t("nav.learn")} icon={BookOpen} onClick={onNavigate} />
+        </DrawerClose>
+        <DrawerClose asChild>
+          <NavDrawerLinkCard to="/documents" label={t("nav.documents")} icon={BookMarked} onClick={onNavigate} />
         </DrawerClose>
       </NavSection>
 
