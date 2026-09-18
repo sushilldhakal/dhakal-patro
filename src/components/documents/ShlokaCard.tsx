@@ -123,7 +123,7 @@ export function ShlokaCard({ shloka, player }: Props) {
               ),
             )}
           </p>
-          {shloka.transliteration ? (
+          {lang !== "ne" && shloka.transliteration ? (
             <p className="mt-1.5 text-sm italic text-muted-foreground">{shloka.transliteration}</p>
           ) : null}
 
