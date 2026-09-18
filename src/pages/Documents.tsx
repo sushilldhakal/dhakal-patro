@@ -6,7 +6,12 @@ import { BookOpen } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { DocumentCard } from "@/components/documents/DocumentCard";
 import { DocumentCategoryTabs } from "@/components/documents/DocumentCategoryTabs";
-import { documentsKeys, fetchDocuments, type DocumentCategoryTab } from "@/lib/documents-api";
+import {
+  DOCUMENTS_STALE_TIME,
+  documentsKeys,
+  fetchDocuments,
+  type DocumentCategoryTab,
+} from "@/lib/documents-api";
 import { useRouteLoading } from "@/lib/route-loading";
 
 const routeApi = getRouteApi("/documents");
@@ -21,8 +26,7 @@ export function Documents() {
   const docsQ = useQuery({
     queryKey: documentsKeys.list(),
     queryFn: fetchDocuments,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: DOCUMENTS_STALE_TIME,
   });
 
   useRouteLoading(docsQ.isLoading);

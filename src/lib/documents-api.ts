@@ -3,6 +3,15 @@
 // this point) as its own small, self-contained client.
 import { API_DATA_BASE, ApiError } from "@/lib/api";
 
+/**
+ * Scripture text and meanings don't change under a reader's feet — the backend
+ * only ever re-seeds on a content edit + redeploy. A long staleTime (plus the
+ * default `refetchOnMount`, not "always") means clicking through chapters or
+ * using back/forward serves cached data instantly instead of re-hitting the
+ * API on every mount.
+ */
+export const DOCUMENTS_STALE_TIME = 60 * 60 * 1000;
+
 export type DocumentCategory = "mantra" | "stotram" | "scripture";
 export type DocumentCategoryTab = "all" | DocumentCategory;
 

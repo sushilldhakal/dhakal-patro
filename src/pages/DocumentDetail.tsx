@@ -11,6 +11,7 @@ import { useDocumentPlayback } from "@/hooks/use-document-playback";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { ApiError } from "@/lib/api";
 import {
+  DOCUMENTS_STALE_TIME,
   documentsKeys,
   fetchDocumentDetail,
   flattenShlokas,
@@ -37,8 +38,7 @@ export function DocumentDetail() {
     queryKey: documentsKeys.detail(slug ?? ""),
     queryFn: () => fetchDocumentDetail(slug!),
     enabled: Boolean(slug),
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: DOCUMENTS_STALE_TIME,
     retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
   });
 
