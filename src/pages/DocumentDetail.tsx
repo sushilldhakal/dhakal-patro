@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -15,9 +15,14 @@ import {
   fetchDocumentDetail,
   flattenShlokas,
   type DocumentCategoryTab,
+  type DocumentChapter,
 } from "@/lib/documents-api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
+
+function chapterAnchor(number: number) {
+  return `chapter-${number}`;
+}
 
 export function DocumentDetail() {
   const { t } = useTranslation();
@@ -40,11 +45,23 @@ export function DocumentDetail() {
   useRouteLoading(docQ.isLoading);
 
   const doc = docQ.data;
-  // Only populated for a non-chaptered document — a chaptered one's chapters
-  // carry no inline verses (see documents-api.ts), so this is [] for those.
   const shlokas = useMemo(() => (doc ? flattenShlokas(doc) : []), [doc]);
   const { player, versePlayer, fullAudio, mode, startFull, switchToFull, activeShloka } =
     useDocumentPlayback(shlokas, doc?.full_audio_url);
+
+  const inlineChapters = useMemo(() => {
+    if (!doc?.inline_chapters) return [];
+    return doc.chapters.filter((chapter) => (chapter.shlokas?.length ?? 0) > 0);
+  }, [doc]);
+
+  useEffect(() => {
+    if (!doc) return;
+    const id = window.location.hash.replace(/^#/, "");
+    if (!id) return;
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [doc]);
 
   const backLink = (
     <Link
@@ -92,12 +109,36 @@ export function DocumentDetail() {
     </header>
   );
 
-  // A chaptered document never renders its verses on this page — pick a
-  // chapter card first, then /documents/$slug/$chapter reads (and only
-  // fetches) that chapter's shlokas. This is the one branch point every
-  // future, possibly much bigger, multi-chapter book goes through: split by
-  // chapter, never by an arbitrary verse count.
-  if (doc.has_chapters) {
+  const playback = (
+    <>
+      {fullAudio.audioElement}
+      <PlaybackBar
+        mode={mode}
+        hasFullRecording={Boolean(doc.full_audio_url)}
+        documentTitle={title}
+        onStartFull={startFull}
+        fullPlaying={fullAudio.playing}
+        fullCurrentTime={fullAudio.currentTime}
+        fullDuration={fullAudio.duration}
+        onToggleFull={fullAudio.toggle}
+        onSeekFull={fullAudio.seek}
+        activeShloka={activeShloka}
+        versePlaying={mode === "verse" && player.playing}
+        verseCurrentTime={player.currentTime}
+        verseDuration={player.duration}
+        hasNext={player.hasNext}
+        hasPrev={player.hasPrev}
+        onToggleVerse={() => activeShloka && versePlayer.toggle(activeShloka.id)}
+        onNext={versePlayer.next}
+        onPrev={versePlayer.prev}
+        onSwitchToFull={switchToFull}
+      />
+    </>
+  );
+
+  // Paginated books (Gita, Ashtavakra): chapter cards, then a separate route
+  // for verses. Inline-chapter documents stay on this page.
+  if (doc.has_chapters && !doc.inline_chapters) {
     const hasFullRecording = Boolean(doc.full_audio_url);
     return (
       <PageShell showRelatedLinks={false} className={hasFullRecording ? "pb-28" : undefined}>
@@ -113,7 +154,6 @@ export function DocumentDetail() {
             <ChapterCard key={chapter.number ?? "single"} slug={doc.slug} chapter={chapter} />
           ))}
         </div>
-
         {fullAudio.audioElement}
         <PlaybackBar
           mode={mode === "verse" ? null : mode}
@@ -145,35 +185,90 @@ export function DocumentDetail() {
       {backLink}
       {header}
 
-      <div className="space-y-3">
-        {shlokas.map((shloka) => (
-          <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
-        ))}
-      </div>
+      {doc.has_chapters ? (
+        <div className="flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+          <span>{t("documents.chapters_count", { count: num(doc.chapter_count) })}</span>
+          <span aria-hidden="true">·</span>
+          <span>{t("documents.shlokas_count", { count: num(doc.shloka_count) })}</span>
+        </div>
+      ) : null}
 
-      {fullAudio.audioElement}
-      <PlaybackBar
-        mode={mode}
-        hasFullRecording={Boolean(doc.full_audio_url)}
-        documentTitle={title}
-        onStartFull={startFull}
-        fullPlaying={fullAudio.playing}
-        fullCurrentTime={fullAudio.currentTime}
-        fullDuration={fullAudio.duration}
-        onToggleFull={fullAudio.toggle}
-        onSeekFull={fullAudio.seek}
-        activeShloka={activeShloka}
-        versePlaying={mode === "verse" && player.playing}
-        verseCurrentTime={player.currentTime}
-        verseDuration={player.duration}
-        hasNext={player.hasNext}
-        hasPrev={player.hasPrev}
-        onToggleVerse={() => activeShloka && versePlayer.toggle(activeShloka.id)}
-        onNext={versePlayer.next}
-        onPrev={versePlayer.prev}
-        onSwitchToFull={switchToFull}
-      />
+      {inlineChapters.length > 1 ? (
+        <nav aria-label={t("documents.chapter_nav")} className="flex gap-1.5 overflow-x-auto pb-1">
+          {inlineChapters.map((chapter) =>
+            chapter.number == null ? null : (
+              <a
+                key={chapter.number}
+                href={`#${chapterAnchor(chapter.number)}`}
+                className="grid size-9 shrink-0 place-items-center rounded-full border border-border text-sm font-bold tabular-nums text-muted-foreground transition-colors hover:border-secondary/60 hover:text-secondary"
+              >
+                {num(chapter.number)}
+              </a>
+            ),
+          )}
+        </nav>
+      ) : null}
+
+      {inlineChapters.length > 1 ? (
+        <div className="space-y-10">
+          {inlineChapters.map((chapter) => (
+            <InlineChapterSection
+              key={chapter.number ?? "single"}
+              chapter={chapter}
+              num={num}
+              versePlayer={versePlayer}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {shlokas.map((shloka) => (
+            <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+          ))}
+        </div>
+      )}
+
+      {playback}
     </PageShell>
+  );
+}
+
+function InlineChapterSection({
+  chapter,
+  num,
+  versePlayer,
+}: {
+  chapter: DocumentChapter;
+  num: (n: number) => string;
+  versePlayer: ReturnType<typeof useDocumentPlayback>["versePlayer"];
+}) {
+  const { t } = useTranslation();
+  const { lang } = useLocale();
+  const title = bilingualText(lang, chapter.title_ne, chapter.title_en);
+  const shlokas = chapter.shlokas ?? [];
+
+  return (
+    <section
+      id={chapter.number != null ? chapterAnchor(chapter.number) : undefined}
+      className="scroll-mt-24 space-y-3"
+    >
+      {chapter.number != null ? (
+        <header className="flex items-center gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary/10 text-base font-bold tabular-nums text-secondary">
+            {num(chapter.number)}
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold sm:text-xl">
+              {t("documents.chapter_label", { number: num(chapter.number) })}
+            </h2>
+            {title ? <p className="text-sm text-muted-foreground">{title}</p> : null}
+          </div>
+        </header>
+      ) : null}
+      {shlokas.map((shloka) => (
+        <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+      ))}
+    </section>
   );
 }
 

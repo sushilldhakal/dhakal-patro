@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, Navigate, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
@@ -9,7 +9,12 @@ import { ShlokaCard } from "@/components/documents/ShlokaCard";
 import { useDocumentPlayback } from "@/hooks/use-document-playback";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { ApiError } from "@/lib/api";
-import { documentsKeys, fetchDocumentChapter, fetchDocumentDetail } from "@/lib/documents-api";
+import {
+  documentsKeys,
+  fetchDocumentChapter,
+  fetchDocumentDetail,
+  type DocumentCategoryTab,
+} from "@/lib/documents-api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
 
@@ -28,6 +33,7 @@ export function DocumentChapterDetail() {
   };
   const chapterNumber = chapterParam != null ? Number(chapterParam) : NaN;
   const hasValidParams = Boolean(slug) && Number.isFinite(chapterNumber);
+  const { category } = useSearch({ strict: false }) as { category?: DocumentCategoryTab };
 
   const docQ = useQuery({
     queryKey: documentsKeys.detail(slug ?? ""),
@@ -40,7 +46,7 @@ export function DocumentChapterDetail() {
   const chapterQ = useQuery({
     queryKey: documentsKeys.chapter(slug ?? "", chapterNumber),
     queryFn: () => fetchDocumentChapter(slug!, chapterNumber),
-    enabled: hasValidParams,
+    enabled: hasValidParams && !docQ.data?.inline_chapters,
     staleTime: 0,
     refetchOnMount: "always",
     retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
@@ -54,6 +60,18 @@ export function DocumentChapterDetail() {
     useDocumentPlayback(shlokas, data?.full_audio_url);
 
   const num = (n: number) => (lang === "ne" ? toNepaliDigits(String(n)) : String(n));
+
+  if (docQ.data?.inline_chapters && slug && Number.isFinite(chapterNumber)) {
+    return (
+      <Navigate
+        to="/documents/$slug"
+        params={{ slug }}
+        search={category ? { category } : undefined}
+        hash={`chapter-${chapterNumber}`}
+        replace
+      />
+    );
+  }
 
   const backToChaptersLink = hasValidParams ? (
     <Link

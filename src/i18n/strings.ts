@@ -6675,6 +6675,7 @@ export const strings = {
     ne: "यस वर्गमा हाल कुनै ग्रन्थ छैन।",
     en: "No documents in this category yet.",
   },
+  "documents.chapter_nav": { ne: "अध्यायहरू", en: "Chapters" },
   "documents.chapter_label": { ne: "अध्याय {{number}}", en: "Chapter {{number}}" },
   "documents.chapter_progress": {
     ne: "अध्याय {{current}} / {{total}}",

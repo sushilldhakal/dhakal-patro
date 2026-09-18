@@ -46,6 +46,12 @@ export interface DocumentSummary {
   description_en?: string | null;
   cover_image_url?: string | null;
   has_chapters: boolean;
+  /**
+   * When true with `has_chapters`, every chapter's verses are embedded on the
+   * document detail response and the UI renders them as sections of one page
+   * instead of linking out to `/documents/$slug/$chapter`.
+   */
+  inline_chapters?: boolean;
   chapter_count: number;
   shloka_count: number;
   /** One continuous recording of the whole document, separate from the per-verse clips. */
@@ -80,10 +86,10 @@ export interface DocumentChapter {
   title_ne?: string | null;
   title_en?: string | null;
   /**
-   * Present only when the document has no chapters — its one implicit
-   * chapter is small enough to embed inline. A chaptered document's chapters
-   * carry `shloka_count` instead (see `DocumentDetail`), and its verses are
-   * fetched per chapter via `fetchDocumentChapter`.
+   * Present when verses are small enough to embed on the document page —
+   * either a document with no chapter routes, or one with `inline_chapters`.
+   * A paginated chaptered document's chapters carry `shloka_count` instead,
+   * and its verses are fetched per chapter via `fetchDocumentChapter`.
    */
   shlokas?: Shloka[];
   /** Present only for a chaptered document's chapter entries (see above). */
@@ -142,9 +148,8 @@ export const fetchDocumentChapter = (slug: string, chapterNumber: number) =>
 
 /**
  * Every shloka in a document, in reading order, across chapter boundaries.
- * Only meaningful for a non-chaptered document — a chaptered one's chapters
- * carry no inline `shlokas` (see `DocumentChapter`), so this returns [] for
- * those; read a chapter's verses via `fetchDocumentChapter` instead.
+ * Empty for a paginated chaptered document (those chapters carry no inline
+ * `shlokas`); read a chapter's verses via `fetchDocumentChapter` instead.
  */
 export function flattenShlokas(doc: DocumentDetail): Shloka[] {
   return doc.chapters.flatMap((c) => c.shlokas ?? []);
