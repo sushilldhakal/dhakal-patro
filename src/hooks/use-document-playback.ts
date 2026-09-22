@@ -54,6 +54,39 @@ export function useDocumentPlayback(shlokas: Shloka[], fullAudioUrl: string | nu
     fullAudio.playFrom(activeShloka.full_audio_start);
   }, [activeShloka, player, fullAudio]);
 
+  // Per-verse play button for documents that have only the full recording
+  // (no per-verse clips) but carry each verse's timestamp within it — e.g.
+  // Rudrashtadhyayi. Starts the full recording at that verse; a second press
+  // on the verse that is currently sounding pauses it instead.
+  const toggleFullAt = useCallback(
+    (id: number) => {
+      const shloka = shlokas.find((s) => s.id === id);
+      if (shloka?.full_audio_start == null) return;
+      if (mode === "full" && fullAudio.playing && player.activeId === id) {
+        fullAudio.pause();
+        return;
+      }
+      player.pause();
+      setMode("full");
+      // Claim the highlight right away so the card lights up before the
+      // first timeupdate arrives from the seek.
+      player.setDisplayOverride({ id, progress: 0 });
+      fullAudio.playFrom(shloka.full_audio_start);
+    },
+    [shlokas, mode, player, fullAudio],
+  );
+
+  // What each verse card needs to drive the full recording: whether it is
+  // actually sounding (the display override alone reports "playing" even
+  // while the full recording is paused) and the toggle above.
+  const fullRecordingControls = useMemo(
+    () =>
+      fullAudioUrl
+        ? { playing: mode === "full" && fullAudio.playing, toggleAt: toggleFullAt }
+        : undefined,
+    [fullAudioUrl, mode, fullAudio.playing, toggleFullAt],
+  );
+
   // While the full recording plays, estimate which verse is currently
   // sounding from each verse's *real* measured start/end within it (from
   // cross-correlating its own clip against the full recording — see
@@ -74,5 +107,14 @@ export function useDocumentPlayback(shlokas: Shloka[], fullAudioUrl: string | nu
     if (active) player.setDisplayOverride(active);
   }, [mode, fullAudio.playing, fullAudio.currentTime, shlokas, player]);
 
-  return { player, versePlayer, fullAudio, mode, startFull, switchToFull, activeShloka };
+  return {
+    player,
+    versePlayer,
+    fullAudio,
+    mode,
+    startFull,
+    switchToFull,
+    activeShloka,
+    fullRecordingControls,
+  };
 }

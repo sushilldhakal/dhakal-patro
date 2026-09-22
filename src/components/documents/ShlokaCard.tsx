@@ -15,6 +15,12 @@ import type { ShlokaPlayerState } from "@/hooks/use-shloka-player";
 interface Props {
   shloka: Shloka;
   player: ShlokaPlayerState;
+  /**
+   * Present when the document has a full recording. A verse with no clip of
+   * its own but a timestamp within that recording gets a play button that
+   * starts the full recording from that verse.
+   */
+  fullRecording?: { playing: boolean; toggleAt: (id: number) => void };
 }
 
 /**
@@ -22,11 +28,14 @@ interface Props {
  * meaning accordion. Registers itself with the player so it can be
  * scrolled into view and highlighted while its audio plays.
  */
-export function ShlokaCard({ shloka, player }: Props) {
+export function ShlokaCard({ shloka, player, fullRecording }: Props) {
   const { t } = useTranslation();
   const { lang } = useLocale();
   const isActive = player.activeId === shloka.id;
-  const isPlaying = isActive && player.playing;
+  const playsFromFull =
+    !shloka.audio_url && fullRecording != null && shloka.full_audio_start != null;
+  const canPlay = Boolean(shloka.audio_url) || playsFromFull;
+  const isPlaying = isActive && (playsFromFull ? fullRecording!.playing : player.playing);
   const meaningOpen = player.openMeaningIds.has(shloka.id);
   const meaning = bilingualText(lang, shloka.meaning_ne, shloka.meaning_en, "");
   const accordionValue = meaningOpen ? "meaning" : "";
@@ -56,12 +65,16 @@ export function ShlokaCard({ shloka, player }: Props) {
     }, 0);
     return starts;
   }, [tokens, wordTokenIndices]);
+  // From the full recording there is no per-clip time/duration, only the
+  // verse's progress between its start and end timestamps.
+  const verseFraction = playsFromFull
+    ? player.progress
+    : player.duration > 0
+      ? player.currentTime / player.duration
+      : -1;
   const activeWordPos =
-    isPlaying && player.duration > 0
-      ? wordStartFractions.reduce(
-          (best, start, i) => (start <= player.currentTime / player.duration ? i : best),
-          -1,
-        )
+    isPlaying && verseFraction >= 0
+      ? wordStartFractions.reduce((best, start, i) => (start <= verseFraction ? i : best), -1)
       : -1;
   const activeTokenIndex = activeWordPos >= 0 ? wordTokenIndices[activeWordPos]! : -1;
 
@@ -76,10 +89,12 @@ export function ShlokaCard({ shloka, player }: Props) {
       )}
     >
       <div className="flex items-start gap-3">
-        {shloka.audio_url ? (
+        {canPlay ? (
           <button
             type="button"
-            onClick={() => player.toggle(shloka.id)}
+            onClick={() =>
+              playsFromFull ? fullRecording!.toggleAt(shloka.id) : player.toggle(shloka.id)
+            }
             aria-label={t(isPlaying ? "documents.pause_verse" : "documents.play_verse")}
             className={cn(
               "mt-0.5 grid size-9 shrink-0 place-items-center rounded-full border transition-colors",
@@ -104,7 +119,7 @@ export function ShlokaCard({ shloka, player }: Props) {
         )}
 
         <div className="min-w-0 flex-1">
-          {shloka.audio_url ? (
+          {canPlay ? (
             <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
               {shloka.verse_label}
             </span>

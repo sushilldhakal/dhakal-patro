@@ -46,8 +46,16 @@ export function DocumentDetail() {
 
   const doc = docQ.data;
   const shlokas = useMemo(() => (doc ? flattenShlokas(doc) : []), [doc]);
-  const { player, versePlayer, fullAudio, mode, startFull, switchToFull, activeShloka } =
-    useDocumentPlayback(shlokas, doc?.full_audio_url);
+  const {
+    player,
+    versePlayer,
+    fullAudio,
+    mode,
+    startFull,
+    switchToFull,
+    activeShloka,
+    fullRecordingControls,
+  } = useDocumentPlayback(shlokas, doc?.full_audio_url);
 
   const inlineChapters = useMemo(() => {
     if (!doc?.inline_chapters) return [];
@@ -217,13 +225,19 @@ export function DocumentDetail() {
               chapter={chapter}
               num={num}
               versePlayer={versePlayer}
+              fullRecording={fullRecordingControls}
             />
           ))}
         </div>
       ) : (
         <div className="space-y-3">
           {shlokas.map((shloka) => (
-            <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+            <ShlokaCard
+              key={shloka.id}
+              shloka={shloka}
+              player={versePlayer}
+              fullRecording={fullRecordingControls}
+            />
           ))}
         </div>
       )}
@@ -237,10 +251,12 @@ function InlineChapterSection({
   chapter,
   num,
   versePlayer,
+  fullRecording,
 }: {
   chapter: DocumentChapter;
   num: (n: number) => string;
   versePlayer: ReturnType<typeof useDocumentPlayback>["versePlayer"];
+  fullRecording: ReturnType<typeof useDocumentPlayback>["fullRecordingControls"];
 }) {
   const { t } = useTranslation();
   const { lang } = useLocale();
@@ -266,7 +282,12 @@ function InlineChapterSection({
         </header>
       ) : null}
       {shlokas.map((shloka) => (
-        <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+        <ShlokaCard
+          key={shloka.id}
+          shloka={shloka}
+          player={versePlayer}
+          fullRecording={fullRecording}
+        />
       ))}
     </section>
   );
