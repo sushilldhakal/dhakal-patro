@@ -15,9 +15,37 @@ import {
   fetchDocumentChapter,
   fetchDocumentDetail,
   type DocumentCategoryTab,
+  type Shloka,
 } from "@/lib/documents-api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
+
+interface SuktaGroup {
+  /** null when this chapter's shlokas carry no sukta_number at all (most documents). */
+  suktaNumber: number | null;
+  shlokas: Shloka[];
+}
+
+/**
+ * Groups a chapter's shlokas by `sukta_number` (e.g. the Rigveda: Mandala →
+ * Sukta → rik). Shlokas already arrive in reading order, so this only needs
+ * to split on each change of `sukta_number` rather than re-sorting.
+ * A document without sukta_number returns a single ungrouped bucket, so the
+ * caller doesn't need a separate "flat" render path.
+ */
+function groupBySukta(shlokas: Shloka[]): SuktaGroup[] {
+  const groups: SuktaGroup[] = [];
+  for (const shloka of shlokas) {
+    const suktaNumber = shloka.sukta_number ?? null;
+    const last = groups[groups.length - 1];
+    if (last && last.suktaNumber === suktaNumber) {
+      last.shlokas.push(shloka);
+    } else {
+      groups.push({ suktaNumber, shlokas: [shloka] });
+    }
+  }
+  return groups;
+}
 
 /**
  * One chapter of a chaptered document — verses fetched (and rendered) for
@@ -55,6 +83,7 @@ export function DocumentChapterDetail() {
 
   const data = chapterQ.data;
   const shlokas = useMemo(() => data?.chapter.shlokas ?? [], [data]);
+  const suktaGroups = useMemo(() => groupBySukta(shlokas), [shlokas]);
   const { player, versePlayer, fullAudio, mode, startFull, switchToFull, activeShloka } =
     useDocumentPlayback(shlokas, data?.full_audio_url);
 
@@ -155,9 +184,18 @@ export function DocumentChapterDetail() {
         </div>
       </header>
 
-      <div className="space-y-3">
-        {shlokas.map((shloka) => (
-          <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+      <div className="space-y-6">
+        {suktaGroups.map((group) => (
+          <section key={group.suktaNumber ?? "ungrouped"} className="space-y-3">
+            {group.suktaNumber != null ? (
+              <h2 className="text-sm font-bold text-secondary">
+                {t("documents.sukta_label", { number: num(group.suktaNumber) })}
+              </h2>
+            ) : null}
+            {group.shlokas.map((shloka) => (
+              <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />
+            ))}
+          </section>
         ))}
       </div>
 

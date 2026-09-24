@@ -73,6 +73,12 @@ export interface Shloka {
   verse_number: number;
   /** Human-facing verse reference, e.g. "1.1" or "12" — matches the audio filenames. */
   verse_label: string;
+  /**
+   * Groups a chapter's shlokas one level below "chapter" — e.g. the Rigveda,
+   * where a chapter is a Mandala and this is the Sukta a rik belongs to.
+   * null for documents with no such sub-grouping (most of them).
+   */
+  sukta_number?: number | null;
   sanskrit: string;
   transliteration?: string | null;
   meaning_ne?: string | null;
