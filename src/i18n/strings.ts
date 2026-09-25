@@ -6677,6 +6677,9 @@ export const strings = {
   },
   "documents.chapter_nav": { ne: "अध्यायहरू", en: "Chapters" },
   "documents.sukta_label": { ne: "सूक्त {{number}}", en: "Sukta {{number}}" },
+  "documents.sukta_rishi": { ne: "ऋषि", en: "Rishi" },
+  "documents.sukta_devata": { ne: "देवता", en: "Devata" },
+  "documents.sukta_chhanda": { ne: "छन्द", en: "Chhanda" },
   "documents.chapter_label": { ne: "अध्याय {{number}}", en: "Chapter {{number}}" },
   "documents.chapter_progress": {
     ne: "अध्याय {{current}} / {{total}}",

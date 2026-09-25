@@ -23,6 +23,10 @@ import { useRouteLoading } from "@/lib/route-loading";
 interface SuktaGroup {
   /** null when this chapter's shlokas carry no sukta_number at all (most documents). */
   suktaNumber: number | null;
+  /** Traditional Anukramani attribution for this Sukta — from its first shloka, null until sourced. */
+  rishi: string | null;
+  devata: string | null;
+  chhanda: string | null;
   shlokas: Shloka[];
 }
 
@@ -41,7 +45,13 @@ function groupBySukta(shlokas: Shloka[]): SuktaGroup[] {
     if (last && last.suktaNumber === suktaNumber) {
       last.shlokas.push(shloka);
     } else {
-      groups.push({ suktaNumber, shlokas: [shloka] });
+      groups.push({
+        suktaNumber,
+        rishi: shloka.sukta_rishi ?? null,
+        devata: shloka.sukta_devata ?? null,
+        chhanda: shloka.sukta_chhanda ?? null,
+        shlokas: [shloka],
+      });
     }
   }
   return groups;
@@ -188,9 +198,32 @@ export function DocumentChapterDetail() {
         {suktaGroups.map((group) => (
           <section key={group.suktaNumber ?? "ungrouped"} className="space-y-3">
             {group.suktaNumber != null ? (
-              <h2 className="text-sm font-bold text-secondary">
-                {t("documents.sukta_label", { number: num(group.suktaNumber) })}
-              </h2>
+              <div>
+                <h2 className="text-sm font-bold text-secondary">
+                  {t("documents.sukta_label", { number: num(group.suktaNumber) })}
+                </h2>
+                {group.rishi || group.devata || group.chhanda ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {group.rishi ? (
+                      <span>
+                        {t("documents.sukta_rishi")}: {group.rishi}
+                      </span>
+                    ) : null}
+                    {group.devata ? (
+                      <span>
+                        {group.rishi ? " · " : ""}
+                        {t("documents.sukta_devata")}: {group.devata}
+                      </span>
+                    ) : null}
+                    {group.chhanda ? (
+                      <span>
+                        {group.rishi || group.devata ? " · " : ""}
+                        {t("documents.sukta_chhanda")}: {group.chhanda}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : null}
+              </div>
             ) : null}
             {group.shlokas.map((shloka) => (
               <ShlokaCard key={shloka.id} shloka={shloka} player={versePlayer} />

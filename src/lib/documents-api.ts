@@ -79,6 +79,10 @@ export interface Shloka {
    * null for documents with no such sub-grouping (most of them).
    */
   sukta_number?: number | null;
+  /** Traditional Anukramani attribution for this Sukta — null until sourced. */
+  sukta_rishi?: string | null;
+  sukta_devata?: string | null;
+  sukta_chhanda?: string | null;
   sanskrit: string;
   transliteration?: string | null;
   meaning_ne?: string | null;
