@@ -105,7 +105,12 @@ export function useDocumentPlayback(shlokas: Shloka[], fullAudioUrl: string | nu
       };
     }
     if (active) player.setDisplayOverride(active);
-  }, [mode, fullAudio.playing, fullAudio.currentTime, shlokas, player]);
+    // `player.setDisplayOverride`, not `player` itself: useShlokaPlayer
+    // returns a fresh object every render, so depending on the whole object
+    // re-ran this effect on every render — including the one this effect's
+    // own setState just caused — an infinite render loop. setDisplayOverride
+    // is a plain useState setter, stable for the component's lifetime.
+  }, [mode, fullAudio.playing, fullAudio.currentTime, shlokas, player.setDisplayOverride]);
 
   return {
     player,
