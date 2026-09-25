@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { ChapterCard } from "@/components/documents/ChapterCard";
+import { DocumentJumpForm } from "@/components/documents/DocumentJumpForm";
 import { PlaybackBar } from "@/components/documents/PlaybackBar";
 import { ShlokaCard } from "@/components/documents/ShlokaCard";
 import { useDocumentPlayback } from "@/hooks/use-document-playback";
@@ -23,6 +24,10 @@ import { useRouteLoading } from "@/lib/route-loading";
 
 function chapterAnchor(number: number) {
   return `chapter-${number}`;
+}
+
+function chapterNumbersOf(chapters: DocumentChapter[]): number[] {
+  return chapters.map((c) => c.number).filter((n): n is number => n != null);
 }
 
 export function DocumentDetail() {
@@ -157,6 +162,11 @@ export function DocumentDetail() {
           <span aria-hidden="true">·</span>
           <span>{t("documents.shlokas_count", { count: num(doc.shloka_count) })}</span>
         </div>
+        <DocumentJumpForm
+          slug={doc.slug}
+          category={category}
+          chapterNumbers={chapterNumbersOf(doc.chapters)}
+        />
         <div className="space-y-2">
           {doc.chapters.map((chapter) => (
             <ChapterCard key={chapter.number ?? "single"} slug={doc.slug} chapter={chapter} />

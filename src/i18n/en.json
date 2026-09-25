@@ -4136,6 +4136,9 @@
       "all": "All",
       "mantra": "Mantra",
       "stotram": "Stotram",
+      "shruti": "Shruti",
+      "gita": "Gita",
+      "upanishad": "Upanishad",
       "scripture": "Scripture"
     },
     "empty_category": "No documents in this category yet.",
@@ -4148,6 +4151,11 @@
     "chapter_progress": "Chapter {{current}} of {{total}}",
     "back_to_chapters": "All chapters",
     "prev_chapter": "Previous chapter",
-    "next_chapter": "Next chapter"
+    "next_chapter": "Next chapter",
+    "jump_chapter_label": "Chapter",
+    "jump_verse_label": "Verse",
+    "jump_verse_placeholder": "e.g. 5.2",
+    "jump_button": "Go",
+    "jump_not_found": "That chapter or verse couldn't be found."
   }
 }

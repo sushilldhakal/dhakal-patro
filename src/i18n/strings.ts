@@ -6670,6 +6670,9 @@ export const strings = {
   "documents.category.all": { ne: "सबै", en: "All" },
   "documents.category.mantra": { ne: "मन्त्र", en: "Mantra" },
   "documents.category.stotram": { ne: "स्तोत्र", en: "Stotram" },
+  "documents.category.shruti": { ne: "श्रुति", en: "Shruti" },
+  "documents.category.gita": { ne: "गीता", en: "Gita" },
+  "documents.category.upanishad": { ne: "उपनिषद्", en: "Upanishad" },
   "documents.category.scripture": { ne: "ग्रन्थ", en: "Scripture" },
   "documents.empty_category": {
     ne: "यस वर्गमा हाल कुनै ग्रन्थ छैन।",
@@ -6688,6 +6691,14 @@ export const strings = {
   "documents.back_to_chapters": { ne: "सबै अध्याय", en: "All chapters" },
   "documents.prev_chapter": { ne: "अघिल्लो अध्याय", en: "Previous chapter" },
   "documents.next_chapter": { ne: "अर्को अध्याय", en: "Next chapter" },
+  "documents.jump_chapter_label": { ne: "अध्याय", en: "Chapter" },
+  "documents.jump_verse_label": { ne: "श्लोक", en: "Verse" },
+  "documents.jump_verse_placeholder": { ne: "जस्तै: ५.२", en: "e.g. 5.2" },
+  "documents.jump_button": { ne: "जानुहोस्", en: "Go" },
+  "documents.jump_not_found": {
+    ne: "यो अध्याय वा श्लोक फेला परेन।",
+    en: "That chapter or verse couldn't be found.",
+  },
 } satisfies Record<string, Translatable>;
 
 export type StringKey = keyof typeof strings;

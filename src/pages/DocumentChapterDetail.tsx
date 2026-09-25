@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, Navigate, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
+import { DocumentJumpForm } from "@/components/documents/DocumentJumpForm";
 import { PlaybackBar } from "@/components/documents/PlaybackBar";
 import { ShlokaCard } from "@/components/documents/ShlokaCard";
 import { useDocumentPlayback } from "@/hooks/use-document-playback";
@@ -18,6 +19,7 @@ import {
   type Shloka,
 } from "@/lib/documents-api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
+import { suktaAttribution } from "@/lib/sukta-attribution";
 import { useRouteLoading } from "@/lib/route-loading";
 
 interface SuktaGroup {
@@ -98,6 +100,17 @@ export function DocumentChapterDetail() {
     useDocumentPlayback(shlokas, data?.full_audio_url);
 
   const num = (n: number) => (lang === "ne" ? toNepaliDigits(String(n)) : String(n));
+
+  // Deep link to a specific verse (e.g. from DocumentJumpForm) — scroll to it
+  // once this chapter's shlokas have rendered.
+  useEffect(() => {
+    if (!data) return;
+    const id = window.location.hash.replace(/^#/, "");
+    if (!id) return;
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [data]);
 
   if (docQ.data?.inline_chapters && slug && Number.isFinite(chapterNumber)) {
     return (
@@ -194,6 +207,13 @@ export function DocumentChapterDetail() {
         </div>
       </header>
 
+      <DocumentJumpForm
+        slug={slug!}
+        category={category}
+        chapterNumbers={chapterNumbers}
+        currentChapter={chapterNumber}
+      />
+
       <div className="space-y-6">
         {suktaGroups.map((group) => (
           <section key={group.suktaNumber ?? "ungrouped"} className="space-y-3">
@@ -206,19 +226,19 @@ export function DocumentChapterDetail() {
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {group.rishi ? (
                       <span>
-                        {t("documents.sukta_rishi")}: {group.rishi}
+                        {t("documents.sukta_rishi")}: {suktaAttribution(lang, group.rishi)}
                       </span>
                     ) : null}
                     {group.devata ? (
                       <span>
                         {group.rishi ? " · " : ""}
-                        {t("documents.sukta_devata")}: {group.devata}
+                        {t("documents.sukta_devata")}: {suktaAttribution(lang, group.devata)}
                       </span>
                     ) : null}
                     {group.chhanda ? (
                       <span>
                         {group.rishi || group.devata ? " · " : ""}
-                        {t("documents.sukta_chhanda")}: {group.chhanda}
+                        {t("documents.sukta_chhanda")}: {suktaAttribution(lang, group.chhanda)}
                       </span>
                     ) : null}
                   </p>

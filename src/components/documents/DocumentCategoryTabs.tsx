@@ -8,6 +8,9 @@ const TABS: { id: DocumentCategoryTab; labelKey: string }[] = [
   { id: "all", labelKey: "documents.category.all" },
   { id: "mantra", labelKey: "documents.category.mantra" },
   { id: "stotram", labelKey: "documents.category.stotram" },
+  { id: "shruti", labelKey: "documents.category.shruti" },
+  { id: "gita", labelKey: "documents.category.gita" },
+  { id: "upanishad", labelKey: "documents.category.upanishad" },
   { id: "scripture", labelKey: "documents.category.scripture" },
 ];
 
