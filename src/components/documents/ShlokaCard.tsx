@@ -163,7 +163,7 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
                 <AccordionTrigger className="w-fit gap-1.5 py-1.5 text-xs font-semibold text-secondary hover:no-underline">
                   {t("documents.meaning")}
                 </AccordionTrigger>
-                <AccordionContent className="pb-1 text-base leading-relaxed sm:text-lg">
+                <AccordionContent className="pb-1 whitespace-pre-line text-base leading-relaxed sm:text-lg">
                   {meaning}
                 </AccordionContent>
               </AccordionItem>

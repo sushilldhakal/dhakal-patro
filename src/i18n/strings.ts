@@ -6674,6 +6674,7 @@ export const strings = {
   "documents.category.gita": { ne: "गीता", en: "Gita" },
   "documents.category.upanishad": { ne: "उपनिषद्", en: "Upanishad" },
   "documents.category.scripture": { ne: "ग्रन्थ", en: "Scripture" },
+  "documents.category.ayurveda": { ne: "आयुर्वेद", en: "Ayurveda" },
   "documents.empty_category": {
     ne: "यस वर्गमा हाल कुनै ग्रन्थ छैन।",
     en: "No documents in this category yet.",
