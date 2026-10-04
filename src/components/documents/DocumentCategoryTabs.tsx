@@ -12,6 +12,7 @@ const TABS: { id: DocumentCategoryTab; labelKey: string }[] = [
   { id: "gita", labelKey: "documents.category.gita" },
   { id: "upanishad", labelKey: "documents.category.upanishad" },
   { id: "scripture", labelKey: "documents.category.scripture" },
+  { id: "ayurveda", labelKey: "documents.category.ayurveda" },
 ];
 
 export function DocumentCategoryTabs({

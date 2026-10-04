@@ -12,7 +12,7 @@ import { API_DATA_BASE, ApiError } from "@/lib/api";
  */
 export const DOCUMENTS_STALE_TIME = 60 * 60 * 1000;
 
-export type DocumentCategory = "mantra" | "stotram" | "shruti" | "gita" | "upanishad" | "scripture";
+export type DocumentCategory = "mantra" | "stotram" | "shruti" | "gita" | "upanishad" | "scripture" | "ayurveda";
 export type DocumentCategoryTab = "all" | DocumentCategory;
 
 const CATEGORY_TABS: readonly DocumentCategoryTab[] = [
@@ -23,6 +23,7 @@ const CATEGORY_TABS: readonly DocumentCategoryTab[] = [
   "gita",
   "upanishad",
   "scripture",
+  "ayurveda",
 ];
 
 function toCategoryTab(value: unknown): DocumentCategoryTab | undefined {
