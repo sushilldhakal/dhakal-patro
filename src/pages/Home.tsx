@@ -47,6 +47,7 @@ import {
 } from "@/components/home/PanchangaAsideTabs";
 import { prefetchAsidePanels } from "@/components/home/aside-prefetch";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
+import { TodayHighlightCard } from "@/components/home/TodayHighlightCard";
 import { HomeRashifalTeaser } from "@/components/home/HomeRashifalTeaser";
 import { HeroMonthArt } from "@/components/home/HeroMonthArt";
 import { PanchangaDirectory } from "@/components/panchanga/PanchangaDirectory";
@@ -434,7 +435,10 @@ export function Home() {
   useEffect(() => {
     if (!scrollToPanchangaRef.current || !selectedDay) return;
     scrollToPanchangaRef.current = false;
-    const el = panchangaAsideRef.current;
+    const el =
+      window.matchMedia("(max-width: 767px)").matches
+        ? document.getElementById("home-today-highlight")
+        : panchangaAsideRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
       smoothScrollToElement(el, {
@@ -617,7 +621,17 @@ export function Home() {
         onDaySelect={handleDaySelect}
         onMonthContextChange={handleMonthContextChange}
         belowPatro={
-          <AakashGocharEntryCard className="mt-3 max-sm:mx-2.5 border-secondary/40 bg-secondary/[0.07] shadow-sm" />
+          <>
+            <TodayHighlightCard
+              selectedDay={asideContextDay}
+              selectedAdDate={asideAdDate}
+              todayAd={todayAd}
+              monthContext={monthContext}
+              location={location}
+              p={asideP}
+            />
+            <AakashGocharEntryCard className="mt-3 max-sm:mx-2.5 border-secondary/40 bg-secondary/[0.07] shadow-sm" />
+          </>
         }
         aside={
           <PanchangaAside
