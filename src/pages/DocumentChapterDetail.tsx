@@ -13,9 +13,10 @@ import { ApiError } from "@/lib/api";
 import {
   DOCUMENTS_STALE_TIME,
   documentsKeys,
+  documentsListSearch,
   fetchDocumentChapter,
   fetchDocumentDetail,
-  type DocumentCategoryTab,
+  type DocumentDetailSearch,
   type Shloka,
 } from "@/lib/documents-api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
@@ -74,7 +75,7 @@ export function DocumentChapterDetail() {
   };
   const chapterNumber = chapterParam != null ? Number(chapterParam) : NaN;
   const hasValidParams = Boolean(slug) && Number.isFinite(chapterNumber);
-  const { category } = useSearch({ strict: false }) as { category?: DocumentCategoryTab };
+  const { category, topic } = useSearch({ strict: false }) as DocumentDetailSearch;
 
   const docQ = useQuery({
     queryKey: documentsKeys.detail(slug ?? ""),
@@ -117,7 +118,7 @@ export function DocumentChapterDetail() {
       <Navigate
         to="/documents/$slug"
         params={{ slug }}
-        search={category ? { category } : undefined}
+        search={category ? documentsListSearch(category, topic) : undefined}
         hash={`chapter-${chapterNumber}`}
         replace
       />
@@ -128,6 +129,7 @@ export function DocumentChapterDetail() {
     <Link
       to="/documents/$slug"
       params={{ slug: slug! }}
+      search={category ? documentsListSearch(category, topic) : undefined}
       className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" /> {t("documents.back_to_chapters")}
@@ -135,7 +137,7 @@ export function DocumentChapterDetail() {
   ) : (
     <Link
       to="/documents"
-      search={{ category: "all" }}
+      search={documentsListSearch("all")}
       className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" /> {t("documents.back_to_list")}
@@ -210,6 +212,7 @@ export function DocumentChapterDetail() {
       <DocumentJumpForm
         slug={slug!}
         category={category}
+        topic={topic}
         chapterNumbers={chapterNumbers}
         currentChapter={chapterNumber}
       />
@@ -257,6 +260,7 @@ export function DocumentChapterDetail() {
           <Link
             to="/documents/$slug/$chapter"
             params={{ slug: slug!, chapter: String(prevChapter) }}
+            search={category ? documentsListSearch(category, topic) : undefined}
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 transition-colors hover:border-secondary/60 hover:text-secondary"
           >
             <ChevronLeft className="size-4" /> {t("documents.prev_chapter")}
@@ -268,6 +272,7 @@ export function DocumentChapterDetail() {
           <Link
             to="/documents/$slug/$chapter"
             params={{ slug: slug!, chapter: String(nextChapter) }}
+            search={category ? documentsListSearch(category, topic) : undefined}
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 transition-colors hover:border-secondary/60 hover:text-secondary"
           >
             {t("documents.next_chapter")} <ChevronRight className="size-4" />
