@@ -41,6 +41,9 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
   const accordionValue = meaningOpen ? "meaning" : "";
   const isClosing =
     shloka.verse_label.startsWith("इति") || shloka.verse_label === "ध्यानम्";
+  // Procedure text (Nepali टीका / सामग्री lists) rather than a mantra — e.g. the
+  // Agni Sthapana Vidhi. Rendered as readable instructions, not as a verse.
+  const isNote = /^(टीका|सामग्री)/.test(shloka.verse_label);
   const shlokaDomId = `shloka-${shloka.verse_label.replace(/\s+/g, "-")}`;
 
   // Split keeping whitespace as its own tokens (so it renders back exactly as
@@ -86,6 +89,7 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
         "scroll-mt-24 rounded-xl border p-4 transition-colors sm:p-5",
         isActive ? "border-secondary/60 bg-secondary/5" : "border-border bg-card",
         isClosing && !isActive && "border-secondary/35 bg-secondary/5",
+        isNote && !isActive && "border-dashed bg-muted/30",
       )}
     >
       <div className="flex items-start gap-3">
@@ -124,7 +128,14 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
               {shloka.verse_label}
             </span>
           ) : null}
-          <p className="mt-1 text-lg leading-relaxed sm:text-xl">
+          <p
+            className={cn(
+              "mt-1 leading-relaxed",
+              isNote
+                ? "whitespace-pre-line text-base text-foreground/85 sm:text-lg"
+                : "text-lg sm:text-xl",
+            )}
+          >
             {tokens.map((tok, i) =>
               i === activeTokenIndex ? (
                 <span
