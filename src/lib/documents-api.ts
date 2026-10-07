@@ -162,8 +162,15 @@ export const documentsKeys = {
     ["documents", "detail", slug, "chapter", chapterNumber] as const,
 };
 
+// `?v=` is a one-off cache-buster: the list URL never changes when a document is
+// added, so copies cached by browsers/Cloudflare under the old 24-hour headers
+// would hide new documents. Bump the value to force every client to refetch.
+const DOCUMENTS_LIST_CACHE_VERSION = "2";
+
 export const fetchDocuments = () =>
-  get<{ count: number; documents: DocumentSummary[] }>("/documents");
+  get<{ count: number; documents: DocumentSummary[] }>(
+    `/documents?v=${DOCUMENTS_LIST_CACHE_VERSION}`,
+  );
 
 export const fetchDocumentDetail = (slug: string) =>
   get<DocumentDetail>(`/documents/${encodeURIComponent(slug)}`);
