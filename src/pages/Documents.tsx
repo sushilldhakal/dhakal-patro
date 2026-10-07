@@ -4,8 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { BookOpen } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/PageShell";
-import { DocumentCard } from "@/components/documents/DocumentCard";
-import { DocumentCategoryTabs } from "@/components/documents/DocumentCategoryTabs";
+import {
+  DocumentCategorySection,
+  DocumentCategoryTabs,
+  documentsInGroup,
+} from "@/components/documents/DocumentCategoryTabs";
+import { DOCUMENT_CATEGORY_GROUPS, type DocumentCategoryId } from "@/lib/document-categories";
 import {
   DOCUMENTS_STALE_TIME,
   documentsKeys,
@@ -20,7 +24,7 @@ export function Documents() {
   const { t } = useTranslation();
   const { category: activeCategory } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const setActiveCategory = (category: DocumentCategoryTab) =>
+  const setFilter = (category: DocumentCategoryTab) =>
     navigate({ search: { category }, replace: true });
 
   const docsQ = useQuery({
@@ -32,13 +36,18 @@ export function Documents() {
   useRouteLoading(docsQ.isLoading);
 
   const documents = docsQ.data?.documents ?? [];
-  const visibleDocuments = useMemo(
-    () =>
-      activeCategory === "all"
-        ? documents
-        : documents.filter((doc) => doc.category === activeCategory),
-    [documents, activeCategory],
-  );
+  const counts = useMemo(() => {
+    const next = {} as Record<DocumentCategoryId, number>;
+    for (const group of DOCUMENT_CATEGORY_GROUPS) {
+      next[group.id] = documentsInGroup(documents, group.id).length;
+    }
+    return next;
+  }, [documents]);
+
+  const groups =
+    activeCategory === "all"
+      ? DOCUMENT_CATEGORY_GROUPS.filter((group) => (counts[group.id] ?? 0) > 0)
+      : DOCUMENT_CATEGORY_GROUPS.filter((group) => group.id === activeCategory);
 
   return (
     <PageShell showRelatedLinks={false}>
@@ -54,16 +63,22 @@ export function Documents() {
         <p className="text-sm text-muted-foreground">{t("documents.empty")}</p>
       ) : (
         <>
-          <DocumentCategoryTabs activeId={activeCategory} onSelect={setActiveCategory} />
-          {visibleDocuments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("documents.empty_category")}</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleDocuments.map((doc) => (
-                <DocumentCard key={doc.slug} doc={doc} category={activeCategory} />
-              ))}
-            </div>
-          )}
+          <DocumentCategoryTabs activeId={activeCategory} counts={counts} onSelect={setFilter} />
+          <div className="space-y-10">
+            {groups.map((group) => (
+              <DocumentCategorySection
+                key={group.id}
+                group={group}
+                index={
+                  DOCUMENT_CATEGORY_GROUPS.filter((item) => (counts[item.id] ?? 0) > 0).findIndex(
+                    (item) => item.id === group.id,
+                  ) + 1
+                }
+                documents={documentsInGroup(documents, group.id)}
+                onSelectGroup={(id) => setFilter(id)}
+              />
+            ))}
+          </div>
         </>
       )}
     </PageShell>

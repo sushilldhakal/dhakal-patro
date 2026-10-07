@@ -3,15 +3,17 @@ import { BookOpen, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { toNepaliDigits } from "@/lib/panchanga-format";
-import type { DocumentCategoryTab, DocumentSummary } from "@/lib/documents-api";
+import { documentsListSearch, type DocumentCategoryTab, type DocumentSummary } from "@/lib/documents-api";
 
 interface Props {
   doc: DocumentSummary;
-  /** The list page's active tab — carried into the link so its "back" navigation returns to this same tab. */
+  /** The list page's active group — carried into the link so its "back" navigation returns here. */
   category?: DocumentCategoryTab;
+  /** Topic filter that was open when this card was clicked. */
+  topic?: string;
 }
 
-export function DocumentCard({ doc, category }: Props) {
+export function DocumentCard({ doc, category, topic }: Props) {
   const { t } = useTranslation();
   const { lang } = useLocale();
   const num = (n: number) => (lang === "ne" ? toNepaliDigits(String(n)) : String(n));
@@ -23,7 +25,7 @@ export function DocumentCard({ doc, category }: Props) {
     <Link
       to="/documents/$slug"
       params={{ slug: doc.slug }}
-      search={category && category !== "all" ? { category } : undefined}
+      search={category && category !== "all" ? documentsListSearch(category, topic) : undefined}
       className="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-secondary/60"
     >
       <div className="flex items-start justify-between gap-2">

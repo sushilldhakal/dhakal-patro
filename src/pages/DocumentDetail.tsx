@@ -14,10 +14,11 @@ import { ApiError } from "@/lib/api";
 import {
   DOCUMENTS_STALE_TIME,
   documentsKeys,
+  documentsListSearch,
   fetchDocumentDetail,
   flattenShlokas,
-  type DocumentCategoryTab,
   type DocumentChapter,
+  type DocumentDetailSearch,
 } from "@/lib/documents-api";
 import { toNepaliDigits } from "@/lib/panchanga-format";
 import { useRouteLoading } from "@/lib/route-loading";
@@ -36,7 +37,7 @@ export function DocumentDetail() {
   const { slug } = useParams({ strict: false }) as { slug?: string };
   // Which list-page tab this document was opened from (see DocumentCard) — so
   // "back to list" returns there instead of always resetting to "all".
-  const { category } = useSearch({ strict: false }) as { category?: DocumentCategoryTab };
+  const { category, topic } = useSearch({ strict: false }) as DocumentDetailSearch;
   const num = (n: number) => (lang === "ne" ? toNepaliDigits(String(n)) : String(n));
 
   const docQ = useQuery({
@@ -79,7 +80,7 @@ export function DocumentDetail() {
   const backLink = (
     <Link
       to="/documents"
-      search={{ category: category ?? "all" }}
+      search={documentsListSearch(category ?? "all", topic)}
       className="inline-flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" /> {t("documents.back_to_list")}
@@ -165,11 +166,18 @@ export function DocumentDetail() {
         <DocumentJumpForm
           slug={doc.slug}
           category={category}
+          topic={topic}
           chapterNumbers={chapterNumbersOf(doc.chapters)}
         />
         <div className="space-y-2">
           {doc.chapters.map((chapter) => (
-            <ChapterCard key={chapter.number ?? "single"} slug={doc.slug} chapter={chapter} />
+            <ChapterCard
+              key={chapter.number ?? "single"}
+              slug={doc.slug}
+              chapter={chapter}
+              category={category}
+              topic={topic}
+            />
           ))}
         </div>
         {fullAudio.audioElement}

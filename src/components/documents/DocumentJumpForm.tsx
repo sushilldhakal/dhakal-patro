@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { DocumentCategoryTab } from "@/lib/documents-api";
+import { documentsListSearch, type DocumentCategoryTab } from "@/lib/documents-api";
 
 /** Same id convention ShlokaCard gives every verse's <section>. */
 function shlokaAnchor(verseLabel: string) {
@@ -14,8 +14,9 @@ function shlokaAnchor(verseLabel: string) {
 
 interface Props {
   slug: string;
-  /** List-page tab this document was opened from — carried into the navigation. */
+  /** List-page group this document was opened from — carried into the navigation. */
   category?: DocumentCategoryTab;
+  topic?: string;
   /** Every valid chapter number for this document, for validating the input. */
   chapterNumbers: number[];
   /**
@@ -33,7 +34,7 @@ interface Props {
  * exactly (e.g. "5.2" for a Rigveda rik, "12" for a Yajurveda mantra), the
  * same reference already printed next to each verse.
  */
-export function DocumentJumpForm({ slug, category, chapterNumbers, currentChapter }: Props) {
+export function DocumentJumpForm({ slug, category, topic, chapterNumbers, currentChapter }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [chapterInput, setChapterInput] = useState(
@@ -71,7 +72,7 @@ export function DocumentJumpForm({ slug, category, chapterNumbers, currentChapte
     navigate({
       to: "/documents/$slug/$chapter",
       params: { slug, chapter: String(chapterNum) },
-      search: category ? { category } : undefined,
+      search: category ? documentsListSearch(category, topic) : undefined,
       hash,
     });
   };

@@ -6636,8 +6636,8 @@ export const strings = {
   "documents.eyebrow": { ne: "ई-पाठ — ग्रन्थ तथा स्तोत्र", en: "Scriptures & Stotram" },
   "documents.page_title": { ne: "ई-पाठ", en: "Documents" },
   "documents.page_subtitle": {
-    ne: "संस्कृत श्लोक, अर्थ र श्रवणसहित",
-    en: "Sanskrit verses with meaning and audio",
+    ne: "मन्त्र, स्तोत्र तथा वैदिक ग्रन्थ — संस्कृत श्लोक, अर्थ र श्रवणसहित",
+    en: "Mantras, stotras, and Vedic texts — Sanskrit verses with meaning and audio",
   },
   "documents.back_to_list": { ne: "सबै ग्रन्थ", en: "All documents" },
   "documents.chapters_count": { ne: "{{count}} अध्याय", en: "{{count}} chapters" },
@@ -6668,12 +6668,6 @@ export const strings = {
   "documents.source": { ne: "स्रोत", en: "Source" },
   "documents.category_tabs_label": { ne: "ग्रन्थका प्रकार", en: "Document categories" },
   "documents.category.all": { ne: "सबै", en: "All" },
-  "documents.category.mantra": { ne: "मन्त्र", en: "Mantra" },
-  "documents.category.stotram": { ne: "स्तोत्र", en: "Stotram" },
-  "documents.category.shruti": { ne: "श्रुति", en: "Shruti" },
-  "documents.category.gita": { ne: "गीता", en: "Gita" },
-  "documents.category.upanishad": { ne: "उपनिषद्", en: "Upanishad" },
-  "documents.category.scripture": { ne: "ग्रन्थ", en: "Scripture" },
   "documents.empty_category": {
     ne: "यस वर्गमा हाल कुनै ग्रन्थ छैन।",
     en: "No documents in this category yet.",
