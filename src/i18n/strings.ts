@@ -3443,6 +3443,11 @@ export const strings = {
     ne: "शौचालय ईशान, नैर्ऋत्य वा केन्द्रमा राख्न हुँदैन।",
     en: "A toilet must not sit in the north-east, south-west, or Brahmasthan.",
   },
+  "vastu.plan.sketch_loading": { ne: "नक्सा तयार हुँदैछ…", en: "Preparing the sketch…" },
+  "vastu.plan.sketch_error": {
+    ne: "नक्सा ल्याउन सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।",
+    en: "Couldn't load the sketch. Check your connection and try again.",
+  },
   "vastu.plan.cannot_fit_heading": { ne: "अटाएन", en: "Could not fit" },
   "vastu.plan.cannot_fit_blurb": {
     ne: "यी कोठा आरामदायी नापमा यो घडेरीमा अटाएनन्। तल्ला थप्नुहोस्, कोठा घटाउनुहोस्, वा घडेरी ठूलो पार्नुहोस्।",

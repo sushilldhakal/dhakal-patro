@@ -1,6 +1,8 @@
 // Same-origin by default: nginx proxies "/api" → the FastAPI backend, so the
 // browser never makes a cross-origin request (no CORS). Override with
 // VITE_API_BASE_URL for a split host (e.g. http://localhost:8080 in dev).
+import type { PlannedSpace, SpaceAssignment } from "@/lib/vastu-plan";
+import type { VastuDirectionId } from "@/lib/vastu";
 import { buildApiQuery, getLanguageForEra, type Era } from "@/lib/era";
 import {
   appendInstantParams,
@@ -3654,4 +3656,69 @@ export interface CalendarHeader {
   lunar_month: string;
   shaka_sambat: string;
   nepal_sambat: string;
+}
+
+// ─── Vastu plot sketch ───────────────────────────────────────────────────────
+// Which compass zone each requested room sits in, the Āyādi width check and the
+// preferred entrance corner are all computed by `POST /vastu/sketch`; the
+// client only draws the result.
+
+export interface VastuSketchRequest {
+  /** East–West plot size, metres. */
+  plot_width: number;
+  /** North–South plot size, metres. */
+  plot_depth: number;
+  facing: "north" | "east" | "south" | "west";
+  plan: {
+    bedrooms: number;
+    toilets: number;
+    bathrooms: number;
+    combined: number;
+    master_bedroom: number;
+    extras: string[];
+    mode: "strict" | "flexible";
+    storeys: number;
+    floors: Record<string, string>;
+  };
+}
+
+export interface VastuAyadi {
+  length_hasta: number;
+  width_hasta: number;
+  remainder: number;
+  auspicious: boolean;
+  suggested_hasta: number | null;
+  suggested_meters: number | null;
+}
+
+export interface VastuSketchResponse {
+  storeys: 1 | 2 | 3;
+  assignments: SpaceAssignment[];
+  leftover: PlannedSpace[];
+  ayadi: VastuAyadi;
+  entrance: { facing: VastuSketchRequest["facing"]; preferred_corner: VastuDirectionId };
+}
+
+export async function fetchVastuSketch(
+  body: VastuSketchRequest,
+  signal?: AbortSignal,
+): Promise<VastuSketchResponse> {
+  const path = "/vastu/sketch";
+  const res = await fetch(`${DATA_BASE}${path}`, {
+    method: "POST",
+    signal,
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail: string | undefined;
+    try {
+      const err = await res.json();
+      if (typeof err?.detail === "string") detail = err.detail;
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new ApiError(res.status, detail, path);
+  }
+  return res.json();
 }
