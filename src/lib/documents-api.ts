@@ -184,13 +184,13 @@ async function get<T>(path: string): Promise<T> {
 // `?v=` is a one-off cache-buster: the list URL never changes when a document is
 // added, so copies cached by browsers/Cloudflare under the old headers would
 // hide a newly filed text. Bump the value to force every client to refetch.
-const DOCUMENTS_LIST_CACHE_VERSION = "5";
+const DOCUMENTS_LIST_CACHE_VERSION = "6";
 
 export const documentsKeys = {
   list: () => ["documents", "list", DOCUMENTS_LIST_CACHE_VERSION] as const,
   detail: (slug: string) => ["documents", "detail", slug] as const,
   chapter: (slug: string, chapterNumber: number) =>
-    ["documents", "detail", slug, "chapter", chapterNumber] as const,
+    ["documents", "detail", slug, "chapter", chapterNumber, DOCUMENTS_LIST_CACHE_VERSION] as const,
 };
 
 export const fetchDocuments = () =>

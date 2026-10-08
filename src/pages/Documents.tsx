@@ -11,7 +11,6 @@ import {
 } from "@/components/documents/DocumentCategoryTabs";
 import { DOCUMENT_CATEGORY_GROUPS, type DocumentCategoryId } from "@/lib/document-categories";
 import {
-  DOCUMENTS_STALE_TIME,
   documentsKeys,
   fetchDocuments,
   type DocumentCategoryTab,
@@ -30,7 +29,9 @@ export function Documents() {
   const docsQ = useQuery({
     queryKey: documentsKeys.list(),
     queryFn: fetchDocuments,
-    staleTime: DOCUMENTS_STALE_TIME,
+    // The list is what changes when a document is added, so unlike a document's
+    // own text it is re-checked on every visit (the server answers 'no-cache').
+    staleTime: 0,
   });
 
   useRouteLoading(docsQ.isLoading);

@@ -8,6 +8,11 @@ interface Props {
   hasFullRecording: boolean;
   documentTitle: string;
   onStartFull: () => void;
+  /**
+   * Verses have their own clips and no single full-file recording. Starts at
+   * the first verse; each clip hands off to the next when it ends.
+   */
+  onPlayThrough?: () => void;
 
   fullPlaying: boolean;
   fullCurrentTime: number;
@@ -47,6 +52,7 @@ export function PlaybackBar({
   hasFullRecording,
   documentTitle,
   onStartFull,
+  onPlayThrough,
   fullPlaying,
   fullCurrentTime,
   fullDuration,
@@ -67,12 +73,12 @@ export function PlaybackBar({
   const { lang } = useLocale();
 
   if (mode == null) {
-    if (!hasFullRecording) return null;
+    if (!hasFullRecording && !onPlayThrough) return null;
     return (
       <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 mx-auto w-full max-w-2xl px-3 lg:bottom-4">
         <button
           type="button"
-          onClick={onStartFull}
+          onClick={hasFullRecording ? onStartFull : () => onPlayThrough?.()}
           className="flex w-full items-center gap-3 rounded-2xl border border-border bg-background/95 px-4 py-3 text-left shadow-lg backdrop-blur transition-colors hover:border-secondary/60"
         >
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">
@@ -80,7 +86,7 @@ export function PlaybackBar({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold">
-              {t("documents.play_full_recording")}
+              {t(hasFullRecording ? "documents.play_full_recording" : "documents.play_through")}
             </span>
             <span className="block truncate text-xs text-muted-foreground">{documentTitle}</span>
           </span>

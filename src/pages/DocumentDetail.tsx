@@ -131,6 +131,14 @@ export function DocumentDetail() {
         hasFullRecording={Boolean(doc.full_audio_url)}
         documentTitle={title}
         onStartFull={startFull}
+        onPlayThrough={
+          shlokas.some((s) => s.audio_url)
+            ? () => {
+                const first = shlokas.find((s) => s.audio_url);
+                if (first) versePlayer.play(first.id);
+              }
+            : undefined
+        }
         fullPlaying={fullAudio.playing}
         fullCurrentTime={fullAudio.currentTime}
         fullDuration={fullAudio.duration}
