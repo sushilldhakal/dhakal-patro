@@ -20,26 +20,16 @@ import {
   type PanchangaLocation,
 } from "@/components/panchanga/use-panchanga-location";
 import { todayAdStringInTimezone } from "@/lib/zoned-time";
-import { BS_MONTH_NAMES, BS_MONTHS_NE, adToBS, bsToAdOrNull, getCurrentBs } from "../lib/bs-calendar";
-import { useLocale, bilingualText } from "@/i18n/locale";
+import { adToBS, bsToAdOrNull, getCurrentBs } from "../lib/bs-calendar";
 import { cn } from "@/lib/utils";
-import { patroAsideLink, patroAsideTab, patroHeroMonthOverlay, patroHeroMonthShell, patroHeroPill, patroHeroPillEv } from "@/lib/patro-classes";
-import { bsMonthArtUrl } from "@/lib/month-art";
-import { resolveSamvatsaraForPatroYear } from "@/lib/samvatsara";
-import { patroEraShortLabel } from "@/components/patro-date/patro-era-short-label";
-import {
-  formatGregorianFromDateParts,
-  formatPatroCivilDayLabel,
-  patroHeadlineDigits,
-} from "@/lib/patro-headline-subtitle";
+import { patroAsideLink, patroAsideTab } from "@/lib/patro-classes";
 import { canonicalCivilIso, parseCivilIsoToDate } from "@/lib/patro-day";
-import { getLanguageForEra, type Era } from "@/lib/era";
+import { getLanguageForEra } from "@/lib/era";
 import {
   patroDayFetchFromApiDateAd,
   patroDayFetchFromBrowseGridParts,
   type PatroDayFetchState,
 } from "@/lib/patro-day-url";
-import { formatPakshaLabel } from "@/lib/panchanga-format";
 import {
   ASIDE_TAB_IDS,
   PanchangaAsideTabPanel,
@@ -49,7 +39,6 @@ import { prefetchAsidePanels } from "@/components/home/aside-prefetch";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { TodayHighlightCard } from "@/components/home/TodayHighlightCard";
 import { HomeRashifalTeaser } from "@/components/home/HomeRashifalTeaser";
-import { HeroMonthArt } from "@/components/home/HeroMonthArt";
 import { PanchangaDirectory } from "@/components/panchanga/PanchangaDirectory";
 import { Button } from "@/components/ui/button";
 import { usePatroMonthUrlBrowse } from "@/hooks/use-patro-url-browse";
@@ -122,8 +111,6 @@ const PanchangaAside = forwardRef(function PanchangaAside(
     p,
     loading,
     error,
-    placement = "sidebar",
-    browseEra = "bs",
   }: {
     selectedDay: CalendarDay | null;
     selectedAdDate: string;
@@ -134,13 +121,10 @@ const PanchangaAside = forwardRef(function PanchangaAside(
     /** True while the panchanga for the selected date/location is in flight. */
     loading: boolean;
     error: boolean;
-    placement?: "sidebar" | "below";
-    browseEra?: Era;
   },
   ref: React.ForwardedRef<HTMLElement>,
 ) {
   const { t } = useTranslation();
-  const { digits, lang } = useLocale();
   const [asideTab, setAsideTab] = useState<AsideTabId>("panchanga");
 
   const contextDay =
@@ -154,201 +138,35 @@ const PanchangaAside = forwardRef(function PanchangaAside(
 
   const isSelectedToday = selectedAdDate === todayAd;
 
-  const bsDisplay = bilingualText(lang, activeP?.display?.bs_ne, undefined) ?? activeP?.date_bs;
-  const adDisplay = (() => {
-    const digitFn = patroHeadlineDigits(lang);
-    const g = activeP?.date_parts?.gregorian;
-    if (g?.year && g.month && g.day) {
-      return formatGregorianFromDateParts(g, lang, digitFn);
-    }
-    if (activeP?.date_ad) {
-      return formatPatroCivilDayLabel(activeP.date_ad, lang, digitFn);
-    }
-    return formatPatroCivilDayLabel(selectedAdDate, lang, digitFn);
-  })();
-  const weekdayNe = bilingualText(lang, 
-    activeP?.weekday ?? contextDay?.weekday_ne ?? contextDay?.weekday,
-    contextDay?.weekday_en ?? activeP?.weekday ?? contextDay?.weekday,
-  );
-  const tithi = bilingualText(lang, 
-    activeP?.tithi?.name_ne ?? activeP?.tithi?.name ?? contextDay?.tithi_ne ?? contextDay?.tithi,
-    activeP?.tithi?.name ?? activeP?.tithi?.name_ne ?? contextDay?.tithi ?? contextDay?.tithi_ne,
-  );
-  const paksha = formatPakshaLabel(
-    activeP,
-    lang,
-    contextDay?.paksha_ne,
-    contextDay?.paksha,
-  );
-
-  // Local BS date for the selected AD day — lets the hero paint a real date
-  // instantly (and in the prerendered HTML) without waiting for the panchanga
-  // API. Improves LCP: the hero is the largest element on the home page.
-  const fallbackBs = useMemo(() => {
-    try {
-      return adToBS(new Date(`${selectedAdDate}T12:00:00`));
-    } catch {
-      return null;
-    }
-  }, [selectedAdDate]);
-
-  const displayHeroDate = (() => {
-    const v = activeP?.date_parts?.vikram;
-    if (v?.month && v.day) {
-      const monthName = bilingualText(
-        lang,
-        BS_MONTHS_NE[v.month - 1],
-        BS_MONTH_NAMES[v.month - 1],
-      );
-      return `${monthName} ${digits(v.day)}`;
-    }
-    if (activeP?.bs_date && typeof activeP.bs_date === "object") {
-      const monthName = bilingualText(
-        lang,
-        BS_MONTHS_NE[activeP.bs_date.month - 1],
-        BS_MONTH_NAMES[activeP.bs_date.month - 1],
-      );
-      return `${monthName} ${digits(activeP.bs_date.day)}`;
-    }
-    if (contextDay && !monthContext.isAdCalendar) {
-      const monthName = bilingualText(
-        lang,
-        BS_MONTHS_NE[monthContext.month - 1],
-        BS_MONTH_NAMES[monthContext.month - 1],
-      );
-      return `${monthName} ${digits(contextDay.day)}`;
-    }
-    if (contextDay) {
-      const bs = adToBS(parseCivilIsoToDate(contextDay.date_ad));
-      const monthName = bilingualText(lang, BS_MONTHS_NE[bs.month - 1], BS_MONTH_NAMES[bs.month - 1]);
-      return `${monthName} ${digits(bs.day)}`;
-    }
-    if (activeP?.display?.bs_ne) return digits(activeP.display.bs_ne);
-    if (activeP?.date_bs) return digits(activeP.date_bs);
-    if (bsDisplay) return digits(bsDisplay);
-    if (fallbackBs) {
-      const monthName = bilingualText(lang, BS_MONTHS_NE[fallbackBs.month - 1], BS_MONTH_NAMES[fallbackBs.month - 1]);
-      return `${monthName} ${digits(fallbackBs.day)}`;
-    }
-    return "—";
-  })();
-
-  // The day payload names festivals in `name` (Latin) + `name_ne`; only the
-  // yearly festivals API uses `name_en`. Read all three or English mode falls
-  // back to Devanagari.
-  const topFest = activeP?.festivals?.[0];
-  const topFestName = bilingualText(lang, 
-    topFest?.name_ne ?? topFest?.name_en ?? topFest?.name ?? contextDay?.festivals[0],
-    topFest?.name_en ?? topFest?.name ?? topFest?.name_ne ?? contextDay?.festivals[0],
-  );
-  const topFestIsPublic = activeP?.festivals?.[0]?.is_public_holiday ?? false;
-  const patroYearForLabel =
-    activeP?.date_parts?.vikram?.year ??
-    (activeP?.bs_date && typeof activeP.bs_date === "object" ? activeP.bs_date.year : monthContext.year);
-  const patroEraForLabel =
-    activeP?.date_parts?.vikram?.era ??
-    (activeP?.bs_date && typeof activeP.bs_date === "object" && activeP.bs_date.year < 0
-      ? "bbs"
-      : browseEra);
-  const vikramEraLabel = patroEraShortLabel(patroEraForLabel, t);
-  const samvatsara = resolveSamvatsaraForPatroYear(patroEraForLabel, patroYearForLabel, activeP?.samvatsara);
-  const samvatsaraLabel = samvatsara ? bilingualText(lang, samvatsara.name_ne, samvatsara.name_en) : undefined;
-  const isBelow = placement === "below";
-  const heroMonthArt = bsMonthArtUrl(monthContext.month);
-
   return (
     <aside
       ref={ref}
       id="home-panchanga-aside"
-      className={cn(
-        "scroll-mt-[4.5rem] flex flex-col gap-3 bg-transparent",
-        isBelow ? "w-full" : "xl:gap-0",
-      )}
+      className="scroll-mt-[4.5rem] flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card"
     >
-      <div
-        className={cn(
-          "flex flex-col gap-3",
-          isBelow ? "rounded-xl" : "xl:gap-0",
-        )}
-      >
-        <div
-          className={cn(
-            "flex items-baseline gap-2.5 pt-3.5 pb-3 bg-transparent",
-            !isBelow && "xl:shrink-0 xl:border-b xl:border-border",
-            isBelow && "border-b border-border",
-          )}
+      <div className="flex items-baseline gap-2.5 border-b border-border px-4 py-3.5">
+        <h2 className="m-0 flex-1 text-lg font-bold">
+          {isSelectedToday ? t("panchanga.today_title") : t("panchanga.title")}
+        </h2>
+        <Link
+          to="/panchanga"
+          search={currentPatroDayLinkSearch(location, selectedAdDate)}
+          className={patroAsideLink}
         >
-          <h2 className="m-0 flex-1 text-lg font-bold">
-            {isSelectedToday ? t("panchanga.today_title") : t("panchanga.title")}
-          </h2>
-          <Link
-            to="/panchanga"
-            search={currentPatroDayLinkSearch(location, selectedAdDate)}
-            className={patroAsideLink}
-          >
-            {t("panchanga.full_detail")} →
-          </Link>
-        </div>
+          {t("panchanga.full_detail")} →
+        </Link>
+      </div>
 
-        {/* Hero always renders from local BS data (no API wait) so it paints
-            as the LCP element immediately; the detail panel below shows its own
-            loading skeletons / error while the panchanga API is in flight. */}
-        <div
-          className={cn(
-            "flex flex-col gap-3",
-            isBelow
-              ? "lg:flex-row lg:items-stretch"
-              : "min-[1081px]:gap-0",
-          )}
-        >
-            <div
-              className={cn(
-                patroHeroMonthShell,
-                "shrink-0 rounded-xl p-5 text-white shadow-lg",
-                isBelow ? "mx-4 mt-4 lg:mx-0 lg:mt-0 lg:w-[min(100%,22rem)] lg:rounded-none lg:shadow-none" : "xl:rounded-none xl:p-5 xl:shadow-none",
-                !isBelow && "xl:rounded-none",
-              )}
-            >
-              <HeroMonthArt src={heroMonthArt} />
-              <div className={patroHeroMonthOverlay} aria-hidden />
-              <div className="relative z-10 text-white">
-              <div className="flex items-start justify-between gap-3.5">
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold tracking-[0.16em] text-white/70">
-                    {isSelectedToday
-                      ? t("panchanga.today_eyebrow").toUpperCase()
-                      : (weekdayNe ?? "").toUpperCase()}
-                  </div>
-                  <div className="mt-2.5 text-4xl font-bold leading-tight text-white xl:mt-2 xl:text-xl">
-                    {displayHeroDate}
-                  </div>
-                  <div className="mt-0.5 text-sm text-white/90">
-                    {weekdayNe}
-                    {`, ${vikramEraLabel} ${digits(patroYearForLabel)}`}
-                    {samvatsaraLabel ? (
-                      <span className="text-white/75"> · {samvatsaraLabel}</span>
-                    ) : null}
-                  </div>
-                  <div className="mt-1.5 text-xs text-white/70">
-                    {adDisplay}
-                  </div>
-                </div>
-                {(paksha || tithi || topFestName) ? (
-                  <div className="mt-0.5 flex max-w-[42%] shrink-0 flex-col items-end gap-1.5 xl:max-w-[46%]">
-                    {paksha && <span className={patroHeroPill}>{paksha}</span>}
-                    {tithi && <span className={patroHeroPill}>{tithi}</span>}
-                    {topFestName && (
-                      <span className={patroHeroPillEv(topFestIsPublic ? "public" : "festival")}>
-                        {topFestName}
-                      </span>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-              </div>
-            </div>
+      <TodayHighlightCard
+        selectedDay={contextDay}
+        selectedAdDate={selectedAdDate}
+        todayAd={todayAd}
+        monthContext={monthContext}
+        p={activeP}
+      />
 
-            <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-card xl:rounded-none">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-card">
+
             <div
               className="grid shrink-0 grid-cols-3 border-b border-border bg-surface-muted"
               role="tablist"
@@ -399,8 +217,6 @@ const PanchangaAside = forwardRef(function PanchangaAside(
                 </div>
               )}
             </div>
-            </div>
-        </div>
       </div>
     </aside>
   );
@@ -435,10 +251,7 @@ export function Home() {
   useEffect(() => {
     if (!scrollToPanchangaRef.current || !selectedDay) return;
     scrollToPanchangaRef.current = false;
-    const el =
-      window.matchMedia("(max-width: 767px)").matches
-        ? document.getElementById("home-today-highlight")
-        : panchangaAsideRef.current;
+    const el = panchangaAsideRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
       smoothScrollToElement(el, {
@@ -621,23 +434,12 @@ export function Home() {
         onDaySelect={handleDaySelect}
         onMonthContextChange={handleMonthContextChange}
         belowPatro={
-          <>
-            <TodayHighlightCard
-              selectedDay={asideContextDay}
-              selectedAdDate={asideAdDate}
-              todayAd={todayAd}
-              monthContext={monthContext}
-              location={location}
-              p={asideP}
-            />
-            <AakashGocharEntryCard className="mt-3 max-sm:mx-2.5 border-secondary/40 bg-secondary/[0.07] shadow-sm" />
-          </>
+          <AakashGocharEntryCard className="mt-3 max-sm:mx-2.5 border-secondary/40 bg-secondary/[0.07] shadow-sm" />
         }
         aside={
           <PanchangaAside
             key={selectedDay?.date_ad ?? "none"}
             ref={panchangaAsideRef}
-            placement="sidebar"
             selectedDay={selectedDay}
             selectedAdDate={asideAdDate}
             todayAd={todayAd}
@@ -646,7 +448,6 @@ export function Home() {
             p={asideP}
             loading={asideLoading}
             error={panchangaQ.isError}
-            browseEra={browseEra}
           />
         }
         holidays={
