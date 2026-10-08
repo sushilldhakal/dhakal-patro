@@ -382,9 +382,16 @@ export function EclipticWheel({
   planeY = -0.05,
   rashiHighlightRef,
   nakHighlightRef,
+  showPlane,
 }: EclipticWheelToggles & {
   rashiHighlightRef?: Ref<THREE.Mesh | null>;
   nakHighlightRef?: Ref<THREE.Mesh | null>;
+  /**
+   * The filled disc. Omit it and the disc follows the grid or any belt, which
+   * is what आकाश गोचर wants. The day scene passes false: its mesh is drawn
+   * once, on its own, and a second disc here is the extra surface.
+   */
+  showPlane?: boolean;
 }) {
   const parts = useMemo(
     () => ({
@@ -422,12 +429,13 @@ export function EclipticWheel({
   );
 
   const anyBelt = rashiBelt || nakshatraBelt || monthRing;
+  const planeOn = showPlane ?? (grid || anyBelt);
 
   return (
     <>
       <GuideGrid
         visible={grid}
-        showPlane={grid || anyBelt}
+        showPlane={planeOn}
         innerR={gridInnerR}
         planeInnerR={planeInnerR}
         planeOuterR={planeOuterR}

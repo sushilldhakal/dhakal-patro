@@ -5421,7 +5421,7 @@ export const strings = {
   "learn.playground.back_to_topic": { ne: "यो विषयमा फर्कनुहोस्", en: "Back to this topic" },
   "learn.playground.controls": { ne: "नियन्त्रण", en: "Controls" },
   "learn.playground.clocks": { ne: "घडी", en: "Clocks" },
-  "learn.playground.degrees": { ne: "घुर्णन कोण", en: "Rotation angle" },
+  "learn.playground.degrees": { ne: "डिग्री", en: "Degree" },
   "learn.playground.mean_clock": { ne: "माध्य घडी", en: "Mean-time clock" },
   "learn.playground.sidereal_clock": { ne: "नाक्षत्र घडी", en: "Sidereal clock" },
   "learn.playground.solar_clock": { ne: "सौर घडी", en: "Solar clock" },

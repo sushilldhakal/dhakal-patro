@@ -1827,7 +1827,7 @@ function DaySimScene({
         "c-deg",
         "body",
         `${deg}°`,
-        anchor.copy(planetPos).addScaledVector(vCamUp.current, PLANET_R),
+        anchor.copy(planetPos).addScaledVector(vCamUp.current, PLANET_R * 2.4),
         false,
         undefined,
         undefined,
@@ -1883,29 +1883,22 @@ function DaySimScene({
       </mesh>
 
       {/*
-        The polar grid, on the body the reader has focused.
-       *
-       * Its own root rather than a layer of the wheel: the belts are a sky ring
-       * and have to stay on the observer for the sightlines to read, while the
-       * grid is a *plane* — the thing a body is above or below — and that only
-       * means anything when it holds still. It sits outside the frame root, on
-       * the origin, which is where the focused body now is.
-       *
-       * **Equatorial, not ecliptic.** It used to carry `solarPlaneQ` like the
-       * belts do, and that made it useless as a reference: the planet's orbit
-       * *defines* the ecliptic, so laying the grid in that same plane left
-       * every body permanently flat in it and nothing could ever be seen to
-       * rise or dip. Declination — the whole of the equinoxes and the solstices
-       * — is height above the *equator*, which is this scene's y = 0. Leaving
-       * the grid there is what lets the ±23.44° swing be seen at all: with the
-       * Sun focused the planet rides up through it and back down over a year;
-       * with the planet focused, the Sun does.
+        One mesh, in the ecliptic, on the focused body.
+
+        It used to sit in the equator (y = 0) while the राशि and महिना belts
+        sat in `solarPlaneQ`. At 23.4° those are two surfaces: a flat grid
+        through the middle, and the tilted disc the belts stand on. The mesh
+        takes the same quaternion as the belts, so अक्ष झुकाव moves it with
+        them instead of leaving a straight line across the equator.
+
+        Lines only — the filled disc is the second surface. And only while
+        डिग्री is on; the belt disc is forced off below for the same reason.
        */}
-      <group ref={gridRoot}>
+      <group ref={gridRoot} quaternion={solarPlaneQ}>
         <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
           <GuideGrid
-            visible={toggles.grid}
-            showPlane={toggles.grid}
+            visible={toggles.degrees}
+            showPlane={false}
             innerR={focusRadius}
             planeInnerR={focusRadius}
           />
@@ -1935,9 +1928,10 @@ function DaySimScene({
             the labels and with the sightline's reading. */}
         <group rotation={[0, beltZeroDeg * (Math.PI / 180), 0]}>
           <EclipticWheel
-            /* The grid is not drawn here: it belongs to the focused body, not
-               to the observer the belts hang on. See `gridRoot` below. */
+            /* Mesh lives on `gridRoot`, already in this same plane. A disc
+               here would be the second surface. */
             grid={false}
+            showPlane={false}
             rashiBelt={toggles.rashiBelt}
             nakshatraBelt={toggles.nakshatraBelt}
             monthRing={toggles.monthRing}

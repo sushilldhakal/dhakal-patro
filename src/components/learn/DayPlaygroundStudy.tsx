@@ -127,7 +127,7 @@ const GROUPS = {
   year: ["planetOrbit", "monthRing", "rashiBelt"],
   sun: ["trueSun", "sightline", "sunOrbit"],
   day: ["siderealArc", "solarArc", "meanArc", "primeMeridian"],
-  tilt: ["sunOrbit", "grid", "eotWedge", "meanSun", "axis"],
+  tilt: ["degrees", "sunOrbit", "grid", "eotWedge", "meanSun", "axis"],
   moon: ["moon", "moonTrail", "moonLap", "moonSightline"],
 } satisfies Record<string, (keyof SimToggles)[]>;
 
@@ -1277,9 +1277,9 @@ export function DayPlaygroundStudy({ slug, config }: DayPlaygroundStudyProps) {
               ["siderealClock", t("learn.playground.sidereal_clock"), "siderealArc"],
               ["solarClock", t("learn.playground.solar_clock"), "solarArc"],
               ["meanClock", t("learn.playground.mean_clock"), "meanArc"],
-              ["degrees", t("learn.playground.degrees")],
             ])}
             {actionGroup("tilt", t("learn.playground.tilt"), [
+              ["degrees", t("learn.playground.degrees")],
               ["grid", t("learn.playground.grid")],
               ["sunOrbit", t("learn.playground.sun_path")],
               ["eotWedge", t("learn.playground.eot_wedge")],
@@ -1689,7 +1689,8 @@ const Label = memo(function Label({
         isRashi ? "flex flex-col items-center gap-0.5 text-[11px]" : "",
         label.kind === "clock" ? "font-num text-[11px] tabular-nums" : "",
         isNak ? "flex flex-col items-center gap-0.5 text-[14px] leading-none" : "",
-        label.kind === "month" || label.kind === "body" ? "text-[11px]" : "",
+        label.kind === "month" || (label.kind === "body" && label.id !== "c-deg") ? "text-[11px]" : "",
+        label.id === "c-deg" ? "font-num text-base font-bold tabular-nums" : "",
         /* The chapter is pointing at this reading. A ring rather than a colour
            change, because the colour is what says *which* clock it is. */
         label.hot && "rounded-md bg-white/15 px-1.5 py-0.5 ring-2 ring-white/70",
