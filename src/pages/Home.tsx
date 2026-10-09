@@ -435,7 +435,10 @@ export function Home() {
         onDaySelect={handleDaySelect}
         onMonthContextChange={handleMonthContextChange}
         belowPatro={
-          <AakashGocharEntryCard className="mt-3 max-sm:mx-2.5 border-secondary/40 bg-secondary/[0.07] shadow-sm" />
+          <>
+            <AakashGocharEntryCard className="mt-3 max-sm:mx-2.5 border-secondary/40 bg-secondary/[0.07] shadow-sm" />
+            <HomeVedaMantra dateAd={todayAd} className="mt-3 max-sm:mx-2.5" />
+          </>
         }
         aside={
           <PanchangaAside
@@ -453,7 +456,6 @@ export function Home() {
         }
         holidays={
           <section className="col-span-full mt-2 max-sm:px-2.5">
-            <HomeVedaMantra dateAd={todayAd} />
             <HomeRashifalTeaser location={location} dayState={asideDayState} />
             <div className="mt-8">
               <HomeQuickLinks location={location} />

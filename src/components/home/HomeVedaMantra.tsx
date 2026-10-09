@@ -11,6 +11,7 @@ import {
 } from "@/lib/documents-api";
 import { pickLocale, useLocale } from "@/i18n/locale";
 import { patroCard, patroSecBand } from "@/lib/patro-classes";
+import { cn } from "@/lib/utils";
 
 function sourceLine(data: VedaDaily, lang: string, digits: (v: string | number) => string): string {
   const parts = data.source_parts.map((part) => {
@@ -60,7 +61,7 @@ function MantraAudio({ url, label }: { url: string; label: { play: string; pause
 }
 
 /** Today's Veda mantra — Sanskrit, meaning where there is one, audio, and a link to the passage. */
-export function HomeVedaMantra({ dateAd }: { dateAd: string | undefined }) {
+export function HomeVedaMantra({ dateAd, className }: { dateAd: string | undefined; className?: string }) {
   const { t } = useTranslation();
   const { lang, digits } = useLocale();
   const { data } = useQuery({
@@ -76,7 +77,7 @@ export function HomeVedaMantra({ dateAd }: { dateAd: string | undefined }) {
   const anchor = `shloka-${data.read_verse.trim().replace(/\s+/g, "-")}`;
 
   return (
-    <section className={`${patroCard} mb-8`} aria-label={t("home_veda.title")}>
+    <section className={cn(patroCard, className)} aria-label={t("home_veda.title")}>
       <div className={patroSecBand}>
         <h2 className="min-w-0 flex-1 text-base font-bold text-secondary">{t("home_veda.title")}</h2>
         {shloka.audio_url ? (
