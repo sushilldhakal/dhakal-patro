@@ -128,10 +128,14 @@
   --silver: color-mix(in srgb, var(--brand-gold) 22%, #d8d4cc);
   --slate-input: #4a4540;
 
-  --midnight: #082628;
-  --midnight-card: #0b3d40;
-  --midnight-popover: #061f21;
-  --foam: var(--off-white);
+  --midnight: #0f1220;
+  --midnight-card: #171c31;
+  --midnight-popover: #0b0e1a;
+  --midnight-line: #272e4a;
+  --foam: #f3efe8;
+  --dark-saffron: #f59e42;
+  --dark-gold: #e8c36a;
+  --dark-vermilion: #ff8f85;
 
   --color-success: var(--brand-green);
   --color-warning: var(--brand-saffron-bright);
@@ -203,26 +207,26 @@
   --card-foreground: var(--foam);
   --popover: var(--midnight-popover);
   --popover-foreground: var(--foam);
-  --primary: var(--brand-saffron-bright);
-  --primary-foreground: #ffffff;
-  --secondary: var(--brand-gold);
-  --secondary-foreground: #ffffff;
-  --muted: color-mix(in srgb, var(--brand-blue) 45%, var(--midnight));
-  --muted-foreground: color-mix(in srgb, var(--foam) 72%, transparent);
-  --accent: var(--brand-gold);
+  --primary: var(--dark-saffron);
+  --primary-foreground: #1a1410;
+  --secondary: var(--dark-gold);
+  --secondary-foreground: #1a1410;
+  --muted: color-mix(in srgb, var(--midnight-line) 40%, var(--midnight));
+  --muted-foreground: #a6abc0;
+  --accent: var(--dark-gold);
   --accent-foreground: var(--ink);
-  --destructive: var(--brand-vermilion);
-  --destructive-foreground: #ffffff;
-  --border: color-mix(in srgb, var(--brand-blue) 55%, var(--midnight-card));
+  --destructive: var(--dark-vermilion);
+  --destructive-foreground: #1a1410;
+  --border: var(--midnight-line);
   --input: color-mix(in srgb, var(--foam) 18%, var(--midnight-card));
-  --ring: var(--brand-gold);
-  --sidebar-accent: var(--brand-saffron-bright);
+  --ring: var(--dark-gold);
+  --sidebar-accent: var(--dark-saffron);
 
-  --parchment-border: color-mix(in srgb, var(--brand-gold) 24%, var(--midnight-card));
-  --silver: color-mix(in srgb, var(--brand-gold) 18%, var(--midnight-card));
+  --parchment-border: color-mix(in srgb, var(--dark-gold) 20%, var(--midnight-card));
+  --silver: color-mix(in srgb, var(--dark-gold) 14%, var(--midnight-card));
 
-  --chart-4: var(--brand-gold);
-  --chart-5: var(--brand-saffron-bright);
+  --chart-4: var(--dark-gold);
+  --chart-5: var(--dark-saffron);
 
   --shadow-xs: 0px 2px 3px 0px hsl(0 0% 10.196% / 0.09);
   --shadow-sm: 0px 2px 3px 0px hsl(0 0% 10.196% / 0.18),
@@ -469,9 +473,9 @@
 }
 .dark .tm-page,
 .dark .tm-tokens {
-  --tm-sky-0: #0b3d40;
-  --tm-sky-1: #082628;
-  --tm-sky-2: #061f21;
+  --tm-sky-0: #171c31;
+  --tm-sky-1: #0f1220;
+  --tm-sky-2: #0b0e1a;
   --tm-ink: var(--foam);
   --tm-ink-dim: color-mix(in srgb, var(--foam) 78%, transparent);
   --tm-ink-faint: color-mix(in srgb, var(--foam) 60%, transparent);
