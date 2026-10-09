@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import type { Shloka } from "@/lib/documents-api";
+import { formatVedaCite, type Shloka } from "@/lib/documents-api";
 import type { ShlokaPlayerState } from "@/hooks/use-shloka-player";
 
 interface Props {
@@ -44,6 +44,7 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
   // Procedure text (Nepali टीका / सामग्री lists) rather than a mantra — e.g. the
   // Agni Sthapana Vidhi. Rendered as readable instructions, not as a verse.
   const isNote = /^(टीका|सामग्री)/.test(shloka.verse_label);
+  const vedaCite = formatVedaCite(shloka.veda_cite, lang);
   const shlokaDomId = `shloka-${shloka.verse_label.replace(/\s+/g, "-")}`;
 
   // Split keeping whitespace as its own tokens (so it renders back exactly as
@@ -123,10 +124,21 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
         )}
 
         <div className="min-w-0 flex-1">
-          {canPlay ? (
-            <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
-              {shloka.verse_label}
-            </span>
+          {canPlay || vedaCite ? (
+            <div className="flex items-start justify-between gap-3">
+              {canPlay ? (
+                <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+                  {shloka.verse_label}
+                </span>
+              ) : (
+                <span />
+              )}
+              {vedaCite ? (
+                <span className="ml-auto shrink-0 pt-0.5 text-right text-xs font-medium text-muted-foreground">
+                  {vedaCite}
+                </span>
+              ) : null}
+            </div>
           ) : null}
           <p
             className={cn(

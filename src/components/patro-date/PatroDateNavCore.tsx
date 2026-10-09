@@ -812,18 +812,17 @@ export function PatroDateNavCore({
 
       <div className="@container/month-head min-w-0 flex-1">
         {/* Mobile only (<768px): row1 title|toolbar, row2 picker|toolbarLower */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-0.5 md:hidden">
-          {/* self-center pairs with the fixed-height toolbar cell below: the
-              chip is taller than the title, so centring puts the two on one
-              line instead of leaving the difference as dead space above the
-              date row. */}
-          <div className="col-start-1 row-start-1 min-w-0 self-center">{mobileTitleBlock}</div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 md:hidden">
+          {/* Each row is at least one 30px control tall and centres its cells, so the
+              toolbar's height never decides where the date row sits (this used to
+              be hidden with a negative margin on the date row). */}
+          <div className="col-start-1 row-start-1 flex min-h-[30px] min-w-0 items-end"><div className="-mb-1 min-w-0">{mobileTitleBlock}</div></div>
           {mobileToolbar ? (
             // Every phone toolbar is pinned to the same 30px as the date,
             // location and step chips — each page passes its own control
             // (mode toggle, day cycle, paksha), and left to themselves they
             // came out 30/32/34px, so the top row never lined up.
-            <div className="col-start-2 row-start-1 flex h-[30px] shrink-0 items-center justify-end self-start [&>*]:h-full">
+            <div className="col-start-2 row-start-1 flex h-[30px] shrink-0 items-center justify-end [&>*]:h-full">
               {mobileToolbar}
             </div>
           ) : null}
@@ -832,7 +831,7 @@ export function PatroDateNavCore({
               // Below md every nav opens the same sheet, day views included —
               // the calendar popover stays for md+ only. Prev/next arrows flank
               // it so the day can be stepped without opening the sheet.
-              <div className="flex min-w-0 items-center gap-1 mt-[-7px]">
+              <div className="flex min-w-0 items-center gap-1">
                 <button
                   type="button"
                   className={patroMobileStepBtn}
