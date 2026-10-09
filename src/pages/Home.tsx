@@ -36,6 +36,7 @@ import {
   type AsideTabId,
 } from "@/components/home/PanchangaAsideTabs";
 import { prefetchAsidePanels } from "@/components/home/aside-prefetch";
+import { HomeVedaMantra } from "@/components/home/HomeVedaMantra";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { TodayHighlightCard } from "@/components/home/TodayHighlightCard";
 import { HomeRashifalTeaser } from "@/components/home/HomeRashifalTeaser";
@@ -452,6 +453,7 @@ export function Home() {
         }
         holidays={
           <section className="col-span-full mt-2 max-sm:px-2.5">
+            <HomeVedaMantra dateAd={todayAd} />
             <HomeRashifalTeaser location={location} dayState={asideDayState} />
             <div className="mt-8">
               <HomeQuickLinks location={location} />

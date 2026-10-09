@@ -4473,6 +4473,12 @@ export const strings = {
     en: "Sun Revolution — Annual sunrise & sunset",
   },
 
+  /* ── home_veda ───────────────────────────────────────────────────────── */
+  "home_veda.title": { ne: "आजको वेद मन्त्र", en: "Today's Veda mantra" },
+  "home_veda.meaning": { ne: "अर्थ", en: "Meaning" },
+  "home_veda.play": { ne: "सुन्नुहोस्", en: "Play" },
+  "home_veda.pause": { ne: "रोक्नुहोस्", en: "Pause" },
+
   /* ── home_quick ──────────────────────────────────────────────────────── */
   "home_quick.holidays_desc": { ne: "सार्वजनिक बिदा र पर्व", en: "Public holidays & festivals" },
   "home_quick.converter_desc": { ne: "वि.सं. ↔ ई.सं. मिति", en: "BS ↔ AD dates" },

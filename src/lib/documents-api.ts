@@ -241,3 +241,25 @@ export const fetchDocumentChapter = (slug: string, chapterNumber: number) =>
 export function flattenShlokas(doc: DocumentDetail): Shloka[] {
   return doc.chapters.flatMap((c) => c.shlokas ?? []);
 }
+
+// ─── Veda mantra of the day ──────────────────────────────────────────────────
+
+export interface VedaDaily {
+  date: string;
+  veda: { slug: string; name_ne: string; name_en: string };
+  source_ne?: string | null;
+  source_en?: string | null;
+  /** Citation trail, e.g. मण्डल 3 » सूक्त 27 » मन्त्र 1 — the first part has no value (its label is the chapter). */
+  source_parts: { label_ne: string | null; label_en: string | null; value: string | number | null }[];
+  read_slug: string;
+  read_chapter: number;
+  read_verse: string;
+  shloka: Shloka;
+}
+
+export const vedaDailyKeys = {
+  day: (dateAd: string) => ["veda", "daily", dateAd] as const,
+};
+
+export const fetchVedaDaily = (dateAd: string) =>
+  get<VedaDaily>(`/veda/daily?date=${encodeURIComponent(dateAd)}`);
