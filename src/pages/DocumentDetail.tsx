@@ -89,7 +89,7 @@ export function DocumentDetail() {
 
   if (!slug || (docQ.isError && !docQ.isLoading)) {
     return (
-      <PageShell showRelatedLinks={false}>
+      <PageShell showRelatedLinks={false} className="min-w-0 max-w-full [overflow-wrap:anywhere]">
         {backLink}
         <p className="mt-4 text-sm text-muted-foreground">{t("documents.not_found")}</p>
       </PageShell>
@@ -98,7 +98,7 @@ export function DocumentDetail() {
 
   if (!doc) {
     return (
-      <PageShell showRelatedLinks={false}>
+      <PageShell showRelatedLinks={false} className="min-w-0 max-w-full [overflow-wrap:anywhere]">
         {backLink}
       </PageShell>
     );
@@ -163,7 +163,7 @@ export function DocumentDetail() {
   if (doc.has_chapters && !doc.inline_chapters) {
     const hasFullRecording = Boolean(doc.full_audio_url);
     return (
-      <PageShell showRelatedLinks={false} className={hasFullRecording ? "pb-28" : undefined}>
+      <PageShell showRelatedLinks={false} className={`min-w-0 max-w-full [overflow-wrap:anywhere] ${hasFullRecording ? "pb-28" : ""}`}>
         {backLink}
         {header}
         <div className="flex items-center gap-3 text-xs font-semibold text-muted-foreground">
@@ -215,7 +215,7 @@ export function DocumentDetail() {
   }
 
   return (
-    <PageShell showRelatedLinks={false} className="pb-28">
+    <PageShell showRelatedLinks={false} className="min-w-0 max-w-full [overflow-wrap:anywhere] pb-28">
       {backLink}
       {header}
 

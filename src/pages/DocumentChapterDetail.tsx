@@ -146,7 +146,7 @@ export function DocumentChapterDetail() {
 
   if (!hasValidParams || (chapterQ.isError && !chapterQ.isLoading)) {
     return (
-      <PageShell showRelatedLinks={false}>
+      <PageShell showRelatedLinks={false} className="min-w-0 max-w-full [overflow-wrap:anywhere]">
         {backToChaptersLink}
         <p className="mt-4 text-sm text-muted-foreground">{t("documents.not_found")}</p>
       </PageShell>
@@ -155,7 +155,7 @@ export function DocumentChapterDetail() {
 
   if (!data) {
     return (
-      <PageShell showRelatedLinks={false}>
+      <PageShell showRelatedLinks={false} className="min-w-0 max-w-full [overflow-wrap:anywhere]">
         {backToChaptersLink}
       </PageShell>
     );
@@ -179,7 +179,7 @@ export function DocumentChapterDetail() {
       : null;
 
   return (
-    <PageShell showRelatedLinks={false} className="pb-28">
+    <PageShell showRelatedLinks={false} className="min-w-0 max-w-full [overflow-wrap:anywhere] pb-28">
       {backToChaptersLink}
 
       <header className="space-y-1.5">

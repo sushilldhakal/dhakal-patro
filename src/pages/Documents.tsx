@@ -51,7 +51,7 @@ export function Documents() {
       : DOCUMENT_CATEGORY_GROUPS.filter((group) => group.id === activeCategory);
 
   return (
-    <PageShell showRelatedLinks={false}>
+    <PageShell showRelatedLinks={false} className="min-w-0 max-w-full [overflow-wrap:anywhere]">
       <PageHeader
         icon={<BookOpen className="size-6 text-secondary" />}
         title={t("documents.page_title")}

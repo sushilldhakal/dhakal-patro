@@ -87,7 +87,7 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
       ref={(el) => player.registerItemRef(shloka.id, el)}
       id={shlokaDomId}
       className={cn(
-        "scroll-mt-24 rounded-xl border p-4 transition-colors sm:p-5",
+        "scroll-mt-24 min-w-0 max-w-full [overflow-wrap:anywhere] rounded-xl border p-4 transition-colors sm:p-5",
         isActive ? "border-secondary/60 bg-secondary/5" : "border-border bg-card",
         isClosing && !isActive && "border-secondary/35 bg-secondary/5",
         isNote && !isActive && "border-dashed bg-muted/30",
