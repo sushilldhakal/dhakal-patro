@@ -14,18 +14,18 @@ type ImgProps = {
   className?: string;
 };
 
+/**
+ * The राशि / नक्षत्र artwork is single-colour (`currentColor`), which an `<img>`
+ * cannot inherit — it would always draw black. Painting the SVG as a mask over a
+ * background colour lets one token, `--glyph-color` in index.css, recolour every
+ * glyph in light and dark mode.
+ */
 function GlyphImg({ src, size, className }: ImgProps) {
   return (
-    <img
-      src={src}
-      alt=""
-      width={size}
-      height={size}
-      className={cn("inline-block shrink-0 object-contain", className)}
+    <span
+      className={cn("glyph-icon", className)}
+      style={{ "--glyph-src": `url("${src}")`, width: size, height: size } as React.CSSProperties}
       aria-hidden
-      draggable={false}
-      loading="lazy"
-      decoding="async"
     />
   );
 }

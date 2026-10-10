@@ -200,6 +200,18 @@
   --chart-5: var(--brand-saffron-bright);
 }
 
+/* राशि / नक्षत्र glyph colour — one place for every glyph in the app. */
+:root {
+  --glyph-color: var(--foreground);
+}
+.glyph-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  background-color: var(--glyph-color);
+  -webkit-mask: var(--glyph-src) center / contain no-repeat;
+  mask: var(--glyph-src) center / contain no-repeat;
+}
+
 .dark {
   --background: var(--midnight);
   --foreground: var(--foam);
