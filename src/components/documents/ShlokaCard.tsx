@@ -3,6 +3,7 @@ import { Pause, Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { bilingualText, useLocale } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
+import { activeTokenAt, buildWordTrack } from "@/lib/word-tracking";
 import {
   Accordion,
   AccordionContent,
@@ -47,28 +48,9 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
   const vedaCite = formatVedaCite(shloka.veda_cite, lang);
   const shlokaDomId = `shloka-${shloka.verse_label.replace(/\s+/g, "-")}`;
 
-  // Split keeping whitespace as its own tokens (so it renders back exactly as
-  // written) while indexing only the real words for the timing estimate below.
-  const tokens = useMemo(() => shloka.sanskrit.split(/(\s+)/), [shloka.sanskrit]);
-  const wordTokenIndices = useMemo(
-    () => tokens.map((tok, i) => (tok.trim() ? i : -1)).filter((i) => i >= 0),
-    [tokens],
-  );
-  // No word-level timing from the audio (that needs a real forced-alignment
-  // pass over each recording) — this is an estimate. Weighted by character
-  // count rather than a flat per-word split, since Sanskrit compounds vary
-  // hugely in length ("न" vs. a 20-character compound) and take proportionally
-  // longer to chant; still an estimate, not a true speech-aligned sync.
-  const wordStartFractions = useMemo(() => {
-    const lengths = wordTokenIndices.map((idx) => tokens[idx]!.length);
-    const total = lengths.reduce((a, b) => a + b, 0) || 1;
-    const starts: number[] = [];
-    lengths.reduce((cumulative, len) => {
-      starts.push(cumulative / total);
-      return cumulative + len;
-    }, 0);
-    return starts;
-  }, [tokens, wordTokenIndices]);
+  // Estimated word timing — see lib/word-tracking.ts.
+  const wordTrack = useMemo(() => buildWordTrack(shloka.sanskrit), [shloka.sanskrit]);
+  const { tokens } = wordTrack;
   // From the full recording there is no per-clip time/duration, only the
   // verse's progress between its start and end timestamps.
   const verseFraction = playsFromFull
@@ -76,11 +58,7 @@ export function ShlokaCard({ shloka, player, fullRecording }: Props) {
     : player.duration > 0
       ? player.currentTime / player.duration
       : -1;
-  const activeWordPos =
-    isPlaying && verseFraction >= 0
-      ? wordStartFractions.reduce((best, start, i) => (start <= verseFraction ? i : best), -1)
-      : -1;
-  const activeTokenIndex = activeWordPos >= 0 ? wordTokenIndices[activeWordPos]! : -1;
+  const activeTokenIndex = isPlaying ? activeTokenAt(wordTrack, verseFraction) : -1;
 
   return (
     <section
