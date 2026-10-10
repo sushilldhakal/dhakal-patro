@@ -4,8 +4,7 @@
  * Every label lives in the bilingual catalogue under `vastu.*`, same as the
  * rest of the app; what is here is the part that is not copy: where each
  * direction sits on the compass, which element it carries, and which direction
- * each room belongs to. The mobile app keeps an identical copy of this file so
- * both platforms draw the same wheel from the same numbers.
+ * each room belongs to.
  */
 
 export type VastuElementId = "earth" | "water" | "fire" | "air" | "space";

@@ -1,5 +1,4 @@
 /**
- * Twin of dhakal-patro-mobile/lib/legal-copy.ts — keep the two in lockstep.
  * Canonical URLs: https://www.vedicpatro.com/privacy and /terms
  */
 export const LEGAL_UPDATED = "27 August 2026";

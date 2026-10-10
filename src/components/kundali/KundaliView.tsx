@@ -27,7 +27,7 @@ import {
   getVaaraNe,
   formatTithiWithPaksha,
 } from "@/lib/panchanga-format";
-import { getAyanamshaModeInfo, type AyanamshaMode } from "@/lib/ayanamsha";
+import { getAyanamshaModeInfo, type AyanamshaMode } from "@/shared/ayanamsha";
 import { resolveTimeZone } from "@/lib/zoned-time";
 // DivisionalChartCompare stays a static import: it belongs to the default
 // landing tab (kundali-overview), so it should arrive with the route chunk

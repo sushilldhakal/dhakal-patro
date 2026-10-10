@@ -9,7 +9,7 @@ import {
   TERMS_INTRO,
   TERMS_SECTIONS,
   type LegalSection,
-} from "@/lib/legal-copy";
+} from "@/shared/legal-copy";
 
 function LegalBody({ intro, sections }: { intro: { ne: string; en: string }; sections: LegalSection[] }) {
   const { lang } = useLocale();
