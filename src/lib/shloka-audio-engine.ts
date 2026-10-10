@@ -17,6 +17,8 @@
 export interface ShlokaAudioTrack {
   id: number;
   audioUrl: string | null;
+  /** Lock-screen title (verse label) — used by the `<audio>` engine only. */
+  title?: string;
 }
 
 export interface ShlokaEngineCallbacks {

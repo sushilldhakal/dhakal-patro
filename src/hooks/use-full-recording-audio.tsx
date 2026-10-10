@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import { setMediaHandlers, setMediaMetadata, setMediaPlaybackState } from "@/lib/media-session";
 
 export interface FullRecordingAudioState {
   audioElement: ReactElement;
@@ -27,8 +28,23 @@ export function useFullRecordingAudio(url: string | null | undefined): FullRecor
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
+    const onPlay = () => {
+      setPlaying(true);
+      // Lock-screen controls for the whole-document recording.
+      setMediaMetadata(document.title);
+      setMediaHandlers({
+        play: () => void audio.play().catch(() => {}),
+        pause: () => audio.pause(),
+        seekto: (t) => {
+          audio.currentTime = t;
+        },
+      });
+      setMediaPlaybackState("playing");
+    };
+    const onPause = () => {
+      setPlaying(false);
+      setMediaPlaybackState("paused");
+    };
     const onTime = () => setCurrentTime(audio.currentTime);
     const onLoadedMetadata = () => setDuration(audio.duration || 0);
     const onEnded = () => {

@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Shloka } from "@/lib/documents-api";
 import { ShlokaAudioEngine } from "@/lib/shloka-audio-engine";
+import { ShlokaElementEngine } from "@/lib/shloka-element-engine";
+
+/**
+ * Phones lock the Web Audio engine the moment the screen turns off or the user
+ * leaves the page, so touch devices use the `<audio>`-element engine, which
+ * keeps playing in the background with lock-screen controls. Desktop keeps the
+ * gapless Web Audio engine.
+ */
+function prefersBackgroundAudio(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
+}
 
 export interface ShlokaPlayerState {
   activeId: number | null;
@@ -73,7 +85,7 @@ export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
   // get their real (always-current) closures wired up by the effect below —
   // `play()`/`pause()` etc. are only ever called from post-mount user
   // interactions, never synchronously during this initializer.
-  const [engine] = useState(() => new ShlokaAudioEngine({
+  const [engine] = useState(() => new (prefersBackgroundAudio() ? ShlokaElementEngine : ShlokaAudioEngine)({
     onActiveChange: () => {},
     onPlayingChange: () => {},
     onTime: () => {},
@@ -97,7 +109,9 @@ export function useShlokaPlayer(shlokas: Shloka[]): ShlokaPlayerState {
   }, [engine, openMeaningIds]);
 
   useEffect(() => {
-    engine.setTracks(shlokas.map((s) => ({ id: s.id, audioUrl: s.audio_url ?? null })));
+    engine.setTracks(
+      shlokas.map((s) => ({ id: s.id, audioUrl: s.audio_url ?? null, title: s.verse_label })),
+    );
   }, [engine, shlokas]);
 
   useEffect(() => {
