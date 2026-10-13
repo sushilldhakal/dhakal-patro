@@ -1,21 +1,17 @@
-name: Deploy to Oracle VM
+name: Deploy (retired)
 
+# RETIRED — this repository is the old standalone website. Production now deploys from
+# https://github.com/sushilldhakal/patro (branch main), which serves the whole site.
+#
+# This workflow used to SSH into the production server on every push to main and publish
+# this repo's build over the live site. It is now manual-only and does nothing, so pushes
+# here can never touch production. (Archiving the repo and deleting its SERVER_IP /
+# SERVER_USER / SSH_KEY secrets in Settings is the belt-and-braces step.)
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script_stop: true
-          command_timeout: 15m
-          script: |
-            export VITE_GA_MEASUREMENT_ID="${{ secrets.VITE_GA_MEASUREMENT_ID }}"
-            bash /home/ubuntu/dhakal-patro/scripts/deploy.sh
+      - run: echo "dhakal-patro is retired. Production deploys from sushilldhakal/patro (main)."
